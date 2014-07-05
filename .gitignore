@@ -1,3 +1,9 @@
+# Vim
+*.swp
+
+_build/
+.env/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
