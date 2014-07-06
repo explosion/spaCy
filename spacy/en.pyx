@@ -6,6 +6,7 @@ from __future__ import unicode_literals
 
 from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport uint64_t
+from libcpp.vector cimport vector
 
 from spacy.lexeme cimport Lexeme
 from ext.murmurhash cimport MurmurHash64A
@@ -37,6 +38,47 @@ def load_tokenization(token_rules):
 
 
 load_tokenization(util.read_tokenization('en'))
+
+
+cpdef vector[Lexeme_addr] tokenize(unicode string) except *:
+    cdef size_t length = len(string)
+    cdef Py_UNICODE* characters = <Py_UNICODE*>string
+
+    cdef size_t i
+    cdef Py_UNICODE c
+
+    cdef vector[Lexeme_addr] tokens = vector[Lexeme_addr]()
+    cdef unicode current = u''
+    cdef Lexeme* token
+    for i in range(length):
+        c = characters[i]
+        if is_whitespace(c):
+            if current:
+                token = <Lexeme*>lookup(current)
+                while token != NULL:
+                    tokens.push_back(<Lexeme_addr>token)
+                    token = token.tail
+            current = u''
+        else:
+            current += c
+    if current:
+        token = <Lexeme*>lookup(current)
+        while token != NULL:
+            tokens.push_back(<Lexeme_addr>token)
+            token = token.tail
+    return tokens
+
+cdef inline bint is_whitespace(Py_UNICODE c):
+    # TODO: Support other unicode spaces
+    # https://www.cs.tut.fi/~jkorpela/chars/spaces.html
+    if c == u' ':
+        return True
+    elif c == u'\n':
+        return True
+    elif c == u'\t':
+        return True
+    else:
+        return False
 
 cpdef Lexeme_addr lookup(unicode string) except 0:
     '''.. function:: enumerate(sequence[, start=0])
@@ -179,13 +221,22 @@ cdef size_t _find_split(unicode word, size_t length):
     # Leading punctuation
     if is_punct(word, 0, length):
         return 1
-    elif length >= 1 and is_punct(word, length - 1, length):
+    elif length >= 1:
         # Split off all trailing punctuation characters
-        i = length - 1
-        while i >= 2 and is_punct(word, i-1, length):
-            i -= 1
+        i = 0
+        while i < length and not is_punct(word, i, length):
+            i += 1
     return i
 
 
 cdef bint is_punct(unicode word, size_t i, size_t length):
+    # Don't count appostrophes as punct if the next char is a letter
+    if word[i] == "'" and i < (length - 1) and word[i+1].isalpha():
+        return False
+    # Don't count commas as punct if the next char is a number
+    if word[i] == "," and i < (length - 1) and word[i+1].isdigit():
+        return False
+    # Don't count periods as punct if the next char is a number
+    if word[i] == "." and i < (length - 1) and word[i+1].isdigit():
+        return False
     return not word[i].isalnum()
