@@ -154,23 +154,23 @@ cdef Lexeme* _init_lexeme(unicode string, StringHash hashed,
 
 
 cdef size_t _find_split(unicode word, size_t length):
-    cdef size_t i = 0
-    if not is_punct(word, 0, length):
-        while i < length and not is_punct(word, i, length):
-            i += 1
+    cdef int i = 0
+    # Contractions
+    if word == "'s":
+        return 2
+    # Leading punctuation
+    if is_punct(word, 0, length):
+        return 1
+    elif length >= 1 and is_punct(word, length - 1, length):
+        # Split off all trailing punctuation characters
+        i = length - 1
+        while i >= 2 and is_punct(word, i-1, length):
+            i -= 1
     else:
-        # Split off a punctuation character, or a sequence of the same punctuation character
-        while i < length and is_punct(word, i, length) and (i == 0 or word[i-1] == word[i]):
+        # Doesn't start or end with the punct
+        while i < length and not is_punct(word, i, length):
             i += 1
     return i
 
 cdef bint is_punct(unicode word, size_t i, size_t length):
-    if word[i] == "'":
-        if i >= (length - 1):
-            return True
-        elif word[i + 1] == 's' and i != 0:
-            return True
-        else:
-            return False
-    else:
-        return not word[i].isalnum()
+    return not word[i].isalnum()
