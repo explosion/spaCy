@@ -10,6 +10,7 @@ from libc.stdint cimport uint64_t
 from spacy.lexeme cimport Lexeme
 from ext.murmurhash cimport MurmurHash64A
 from ext.murmurhash cimport MurmurHash64B
+from . import util
 
 
 STRINGS = {}
@@ -19,6 +20,23 @@ LEXEMES.set_empty_key(0)
 
 cdef Lexeme BLANK_WORD = Lexeme(0, 0, 0, 0, 0, 0.0, 0, False, False, NULL)
 
+
+def load_tokenization(token_rules):
+    cdef Lexeme* word
+    cdef StringHash hashed
+    for chunk, lex, tokens in token_rules:
+        hashed = hash_string(chunk, len(chunk))
+        assert LEXEMES[hashed] == NULL
+        word = _add(hashed, lex, len(lex), len(lex))
+        for i, lex in enumerate(tokens):
+            token_string = '%s:@:%d:@:%s' % (chunk, i, lex)
+            length = len(token_string)
+            hashed = hash_string(token_string, length)
+            word.tail = _add(hashed, lex, 0, len(lex))
+            word = word.tail
+
+
+load_tokenization(util.read_tokenization('en'))
 
 cpdef Lexeme_addr lookup(unicode string) except 0:
     '''.. function:: enumerate(sequence[, start=0])
@@ -156,8 +174,8 @@ cdef Lexeme* _init_lexeme(unicode string, StringHash hashed,
 cdef size_t _find_split(unicode word, size_t length):
     cdef int i = 0
     # Contractions
-    if word == "'s":
-        return 2
+    if word.endswith("'s"):
+        return length - 2
     # Leading punctuation
     if is_punct(word, 0, length):
         return 1
@@ -166,11 +184,8 @@ cdef size_t _find_split(unicode word, size_t length):
         i = length - 1
         while i >= 2 and is_punct(word, i-1, length):
             i -= 1
-    else:
-        # Doesn't start or end with the punct
-        while i < length and not is_punct(word, i, length):
-            i += 1
     return i
+
 
 cdef bint is_punct(unicode word, size_t i, size_t length):
     return not word[i].isalnum()

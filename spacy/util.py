@@ -1,3 +1,10 @@
+import os
+from os import path
+import codecs
+
+DATA_DIR = path.join(path.dirname(__file__), '..', 'data')
+
+
 def utf8open(loc, mode='r'):
     return codecs.open(loc, mode, 'utf8')
 
@@ -12,23 +19,23 @@ def load_case_stats(data_dir):
     return case_stats
 
 
-def load_clitics(data_dir):
-    clitics_loc = path.join(data_dir, 'clitics.txt')
+def read_tokenization(lang):
+    loc = path.join(DATA_DIR, lang, 'tokenization')
     entries = []
     seen = set()
-    with utf8open(clitics_loc) as clitics_file:
-        for line in clitics_file:
+    with utf8open(loc) as file_:
+        for line in file_:
             line = line.strip()
             if line.startswith('#'):
                 continue
             if not line:
                 continue
-            clitics = line.split()
-            word = clitics.pop(0)
-            norm_form = clitics.pop(0)
-            assert word not in seen, word
-            seen.add(word)
-            entries.append((word, norm_form, clitics))
+            pieces = line.split()
+            chunk = pieces.pop(0)
+            lex = pieces.pop(0)
+            assert chunk not in seen, chunk
+            seen.add(chunk)
+            entries.append((chunk, lex, pieces))
     return entries
  
 
