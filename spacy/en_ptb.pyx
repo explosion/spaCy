@@ -15,7 +15,7 @@ from . import util
 cimport spacy
 
 BACOV = {}
-VOCAB = Vocab()
+VOCAB = new Vocab(100000)
 VOCAB.set_empty_key(0)
 
 
@@ -27,7 +27,7 @@ cpdef vector[Lexeme_addr] tokenize(unicode string) except *:
  
 
 cpdef Lexeme_addr lookup(unicode string) except 0:
-    return spacy.lookup(VOCAB, BACOV, find_split, -1, string)
+    return spacy.lookup(VOCAB, BACOV, find_split, -1, string, len(string))
 
 
 cpdef unicode unhash(StringHash hash_value):

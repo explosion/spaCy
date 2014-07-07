@@ -1,3 +1,4 @@
+# cython: profile=True
 '''Serve pointers to Lexeme structs, given strings. Maintain a reverse index,
 so that strings can be retrieved from hashes.  Use 64-bit hash values and
 boldly assume no collisions.
@@ -15,19 +16,18 @@ from . import util
 cimport spacy
 
 BACOV = {}
-VOCAB = Vocab()
+VOCAB = new Vocab(100000)
 VOCAB.set_empty_key(0)
 
 
 spacy.load_tokenization(VOCAB, BACOV, util.read_tokenization('en'))
-
 
 cpdef vector[Lexeme_addr] tokenize(unicode string) except *:
     return spacy.tokenize(VOCAB, BACOV, find_split, string)
  
 
 cpdef Lexeme_addr lookup(unicode string) except 0:
-    return spacy.lookup(VOCAB, BACOV, find_split, -1, string)
+    return spacy.lookup(VOCAB, BACOV, find_split, -1, string, len(string))
 
 
 cpdef unicode unhash(StringHash hash_value):
@@ -72,3 +72,6 @@ cdef bint is_punct(unicode word, size_t i, size_t length):
     if word[i] == "." and i < (length - 1) and word[i+1].isdigit():
         return False
     return not word[i].isalnum()
+
+
+#spacy.load_browns(VOCAB, BACOV, find_split)

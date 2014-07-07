@@ -25,9 +25,9 @@ cdef struct Lexeme:
 
 cdef Lexeme BLANK_WORD = Lexeme(0, 0, 0, 0, 0, 0.0, 0, False, False, NULL)
 
-cdef Lexeme* init_lexeme(Vocab vocab, dict bacov, Splitter find_split,
+cdef Lexeme* init_lexeme(Vocab* vocab, dict bacov, Splitter find_split,
                          unicode string, StringHash hashed,
-                         int split, size_t length) except NULL
+                         int split, size_t length)
  
 # Use these to access the Lexeme fields via get_attr(Lexeme*, LexAttr), which
 # has a conditional to pick out the correct item.  This allows safe iteration

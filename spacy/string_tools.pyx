@@ -1,3 +1,5 @@
+# cython: profile=True
+
 cpdef unicode substr(unicode string, int start, int end, size_t length):
     if end >= length:
         end = -1

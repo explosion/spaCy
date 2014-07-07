@@ -1,3 +1,4 @@
+# cython: profile=True
 '''Accessors for Lexeme properties, given a lex_id, which is cast to a Lexeme*.
 Mostly useful from Python-space. From Cython-space, you can just cast to
 Lexeme* yourself.
@@ -13,9 +14,9 @@ from libc.stdint cimport uint64_t
 from libcpp.vector cimport vector
 
 
-cdef Lexeme* init_lexeme(Vocab vocab, dict bacov, Splitter find_split,
+cdef Lexeme* init_lexeme(Vocab* vocab, dict bacov, Splitter find_split,
                          unicode string, StringHash hashed,
-                         int split, size_t length) except NULL:
+                         int split, size_t length):
     assert split <= length
     cdef Lexeme* word = <Lexeme*>calloc(1, sizeof(Lexeme))
 
@@ -54,7 +55,8 @@ cdef Lexeme* init_lexeme(Vocab vocab, dict bacov, Splitter find_split,
     
     # Now recurse, and deal with the tail
     if tail_string:
-        word.tail = <Lexeme*>lookup(vocab, bacov, find_split, -1, tail_string)
+        word.tail = <Lexeme*>lookup(vocab, bacov, find_split, -1, tail_string,
+                                    len(tail_string))
     return word
 
 
