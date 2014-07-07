@@ -9,7 +9,6 @@ from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport uint64_t
 from libcpp.vector cimport vector
 
-from spacy.lexeme cimport Lexeme
 from spacy.string_tools cimport substr
 
 from . import util

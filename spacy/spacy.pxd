@@ -7,16 +7,27 @@ from ext.sparsehash cimport dense_hash_map
 # Circular import problems here
 ctypedef size_t Lexeme_addr
 ctypedef uint64_t StringHash
-ctypedef dense_hash_map[StringHash, Lexeme_addr] Vocab
-ctypedef int (*Splitter)(unicode word, size_t length)
+ctypedef dense_hash_map[StringHash, size_t] Vocab
+from spacy.lexeme cimport Lexeme
+
+from spacy.tokens cimport Tokens
+
+# Put these above import to avoid circular import problem
+ctypedef char Bits8
+ctypedef uint64_t Bits64
+ctypedef int ClusterID
 
 
 from spacy.lexeme cimport Lexeme
-from spacy.tokens cimport Tokens
+from spacy.lexeme cimport Distribution
+from spacy.lexeme cimport Orthography
+
 
 cdef class Language:
     cdef object name
     cdef Vocab* vocab
+    cdef Vocab* distri
+    cdef Vocab* ortho
     cdef dict bacov
     cdef int find_split(self, unicode word, size_t length)
 
@@ -26,3 +37,8 @@ cdef class Language:
     
     cpdef Tokens tokenize(self, unicode text)
     cdef Lexeme* _add(self, StringHash hashed, unicode string, int split, size_t length)
+    cdef Lexeme* init_lexeme(self, unicode string, StringHash hashed,
+                             int split, size_t length)
+    cdef Orthography* init_orth(self, StringHash hashed, unicode lex)
+
+ 

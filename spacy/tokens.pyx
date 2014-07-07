@@ -2,6 +2,11 @@ from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as inc
 
 
+from spacy.lexeme cimport Lexeme
+from spacy.lexeme cimport norm_of
+from spacy.spacy cimport StringHash
+
+
 cdef class Tokens:
     def __cinit__(self, Language lang):
         self.lang = lang
@@ -38,11 +43,11 @@ cdef class Tokens:
     cpdef dict count_by(self, Field attr):
         counts = {}
         cdef Lexeme_addr t
-        cdef Lexeme* word
+        cdef StringHash key
         for t in self.vctr[0]:
-            word = <Lexeme*>t
-            if word.lex not in counts:
-                counts[word.lex] = 0
-            counts[word.lex] += 1
+            key = norm_of(t)
+            if key not in counts:
+                counts[key] = 0
+            counts[key] += 1
         return counts
 

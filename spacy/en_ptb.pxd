@@ -2,8 +2,8 @@ from libcpp.vector cimport vector
 
 from spacy.spacy cimport StringHash
 from spacy.spacy cimport Language
-from spacy.lexeme cimport Lexeme
-from spacy.lexeme cimport Lexeme_addr
+from spacy.spacy cimport Lexeme
+from spacy.spacy cimport Lexeme_addr
 from spacy.tokens cimport Tokens
 
 
