@@ -46,7 +46,12 @@ exts = [
               language="c++",
               include_dirs=[path.join(HERE, 'ext')]),
     Extension("spacy.lexeme", ["spacy/lexeme.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.spacy", ["spacy/spacy.pyx"], language="c++", include_dirs=includes),
+    Extension("spacy.spacy",
+             ["spacy/spacy.pyx", "ext/MurmurHash3.cpp", "ext/MurmurHash2.cpp"],
+             language="c++", include_dirs=includes),
+    Extension("spacy.string_tools",
+             ["spacy/string_tools.pyx", "ext/MurmurHash3.cpp", "ext/MurmurHash2.cpp"],
+             language="c++", include_dirs=includes),
 ]
 
 
