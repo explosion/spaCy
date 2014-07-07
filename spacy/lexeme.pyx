@@ -2,6 +2,60 @@
 Mostly useful from Python-space. From Cython-space, you can just cast to
 Lexeme* yourself.
 '''
+from __future__ import unicode_literals
+
+from spacy.string_tools cimport substr
+from spacy.spacy cimport hash_string
+from spacy.spacy cimport lookup
+
+from libc.stdlib cimport malloc, calloc, free
+from libc.stdint cimport uint64_t
+from libcpp.vector cimport vector
+
+
+cdef Lexeme* init_lexeme(Vocab vocab, dict bacov, Splitter find_split,
+                         unicode string, StringHash hashed,
+                         int split, size_t length) except NULL:
+    assert split <= length
+    cdef Lexeme* word = <Lexeme*>calloc(1, sizeof(Lexeme))
+
+    word.first = <Py_UNICODE>(string[0] if string else 0)
+    word.sic = hashed
+    
+    cdef unicode tail_string
+    cdef unicode lex 
+    if split != 0 and split < length:
+        lex = substr(string, 0, split, length)
+        tail_string = substr(string, split, length, length)
+    else:
+        lex = string
+        tail_string = ''
+    assert lex
+    #cdef unicode normed = normalize_word_string(lex)
+    cdef unicode normed = '?'
+    cdef unicode last3 = substr(string, length - 3, length, length)
+
+    assert normed
+    assert len(normed)
+    
+    word.lex = hash_string(lex, len(lex))
+    word.normed = hash_string(normed, len(normed))
+    word.last3 = hash_string(last3, len(last3))
+
+    bacov[word.lex] = lex
+    bacov[word.normed] = normed
+    bacov[word.last3] = last3
+
+    # These are loaded later
+    word.prob = 0
+    word.cluster = 0
+    word.oft_upper = False
+    word.oft_title = False
+    
+    # Now recurse, and deal with the tail
+    if tail_string:
+        word.tail = <Lexeme*>lookup(vocab, bacov, find_split, -1, tail_string)
+    return word
 
 
 cpdef StringHash sic_of(size_t lex_id) except 0:
