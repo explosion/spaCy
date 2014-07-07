@@ -6,7 +6,7 @@ from spacy.lexeme cimport Lexeme
 from spacy.lexeme cimport Lexeme_addr
 
 
-cdef Vocab VOCAB
+cdef Vocab* VOCAB
 cdef dict BACOV
 
 

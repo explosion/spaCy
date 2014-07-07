@@ -12,12 +12,13 @@ ctypedef int (*Splitter)(unicode word, size_t length)
 
 from spacy.lexeme cimport Lexeme
 
-cdef load_tokenization(Vocab& vocab, dict bacov, token_rules)
-cdef vector[Lexeme_addr] tokenize(Vocab& vocab, dict bacov, Splitter splitter,
+cdef load_tokenization(Vocab* vocab, dict bacov, token_rules)
+cdef load_browns(Vocab* vocab, dict bacov, Splitter find_split)
+cdef vector[Lexeme_addr] tokenize(Vocab* vocab, dict bacov, Splitter splitter,
                                   unicode string) except *
-cdef Lexeme_addr lookup(Vocab& vocab, dict bacov, Splitter splitter, int start,
-                        unicode string) except 0
-cdef StringHash hash_string(unicode s, size_t length) except 0
+cdef Lexeme_addr lookup(Vocab* vocab, dict bacov, Splitter splitter, int start,
+                        Py_UNICODE* string, size_t length) except 0
+cdef StringHash hash_string(Py_UNICODE* s, size_t length) nogil
 cdef unicode unhash(dict bacov, StringHash hash_value)
  
  
