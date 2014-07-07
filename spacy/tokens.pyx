@@ -3,7 +3,7 @@ from cython.operator cimport preincrement as inc
 
 
 from spacy.lexeme cimport Lexeme
-from spacy.lexeme cimport norm_of, shape_of
+from spacy.lexeme cimport attr_of, norm_of, shape_of
 from spacy.spacy cimport StringHash
 
 
@@ -37,15 +37,28 @@ cdef class Tokens:
         for el in other:
             self.append(el)
 
-    cpdef list group_by(self, Field attr):
-        pass
+    cpdef list group_by(self, StringAttr attr):
+        cdef dict indices = {}
+        cdef vector[vector[Lexeme_addr]] groups = vector[vector[Lexeme_addr]]()
 
-    cpdef dict count_by(self, Field attr):
+        cdef StringHash key
+        cdef Lexeme_addr t
+        for t in self.vctr[0]:
+            key = attr_of(t, attr)
+            if key in indices:
+                groups[indices[key]].push_back(t)
+            else:
+                indices[key] = groups.size()
+                groups.push_back(vector[Lexeme_addr]())
+                groups.back().push_back(t)
+        return groups
+
+    cpdef dict count_by(self, StringAttr attr):
         counts = {}
         cdef Lexeme_addr t
         cdef StringHash key
         for t in self.vctr[0]:
-            key = (<Lexeme*>t).lex
+            key = attr_of(t, attr)
             if key not in counts:
                 counts[key] = 0
             counts[key] += 1

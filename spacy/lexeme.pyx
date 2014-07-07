@@ -13,6 +13,28 @@ from libcpp.vector cimport vector
 
 from spacy.spacy cimport StringHash
 
+# Reiterate the enum, for python
+#SIC = StringAttr.sic
+#LEX = StringAttr.lex
+#NORM = StringAttr.norm
+#SHAPE = StringAttr.shape
+#LAST3 = StringAttr.last3
+
+
+cpdef StringHash attr_of(size_t lex_id, StringAttr attr) except 0:
+    if attr == SIC:
+        return sic_of(lex_id)
+    elif attr == LEX:
+        return lex_of(lex_id)
+    elif attr == NORM:
+        return norm_of(lex_id)
+    elif attr == SHAPE:
+        return shape_of(lex_id)
+    elif attr == LAST3:
+        return last3_of(lex_id)
+    else:
+        raise StandardError
+
 
 cpdef StringHash sic_of(size_t lex_id) except 0:
     '''Access the `sic' field of the Lexeme pointed to by lex_id.
@@ -58,6 +80,17 @@ cpdef StringHash shape_of(size_t lex_id) except 0:
     return (<Lexeme*>lex_id).orth.shape
 
 
+cpdef StringHash last3_of(size_t lex_id) except 0:
+    '''Access the `last3' field of the Lexeme pointed to by lex_id, which stores
+    the hash of the last three characters of the word:
+
+    >>> lex_ids = [lookup(w) for w in (u'Hello', u'!')]
+    >>> [unhash(last3_of(lex_id)) for lex_id in lex_ids]
+    [u'llo', u'!']
+    '''
+    return (<Lexeme*>lex_id).orth.last3
+
+
 cpdef ClusterID cluster_of(size_t lex_id):
     '''Access the `cluster' field of the Lexeme pointed to by lex_id, which
     gives an integer representation of the cluster ID of the word, 
@@ -99,17 +132,6 @@ cpdef double prob_of(size_t lex_id):
     -20.10340371976182
     '''
     return (<Lexeme*>lex_id).dist.prob
-
-
-cpdef StringHash last3_of(size_t lex_id):
-    '''Access the `last3' field of the Lexeme pointed to by lex_id, which stores
-    the hash of the last three characters of the word:
-
-    >>> lex_ids = [lookup(w) for w in (u'Hello', u'!')]
-    >>> [unhash(last3_of(lex_id)) for lex_id in lex_ids]
-    [u'llo', u'!']
-    '''
-    return (<Lexeme*>lex_id).orth.last3
 
 
 cpdef bint is_oft_upper(size_t lex_id):

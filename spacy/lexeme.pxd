@@ -39,24 +39,18 @@ cdef struct Lexeme:
 cdef Lexeme BLANK_WORD = Lexeme(0, 0, NULL, NULL, NULL)
 
 
+cdef enum StringAttr:
+    SIC
+    LEX
+    NORM
+    SHAPE
+    LAST3
+
+
+cpdef StringHash attr_of(size_t lex_id, StringAttr attr) except 0
+
+cpdef StringHash sic_of(size_t lex_id) except 0
 cpdef StringHash lex_of(size_t lex_id) except 0
 cpdef StringHash norm_of(size_t lex_id) except 0
 cpdef StringHash shape_of(size_t lex_id) except 0
-#cdef Lexeme* init_lexeme(Language lang, unicode string, StringHash hashed,
-#                         int split, size_t length)
-                         
- 
-
-# Use these to access the Lexeme fields via get_attr(Lexeme*, LexAttr), which
-# has a conditional to pick out the correct item.  This allows safe iteration
-# over the Lexeme, via:
-# for field in range(LexAttr.n): get_attr(Lexeme*, field)
-cdef enum HashFields:
-    sic
-    lex
-    normed
-    cluster
-    n
-
-
-#cdef uint64_t get_attr(Lexeme* word, HashFields attr)
+cpdef StringHash last3_of(size_t lex_id) except 0
