@@ -1,6 +1,8 @@
 # cython: profile=True
 from __future__ import unicode_literals
 
+from libc.stdlib cimport calloc, free
+
 from ext.murmurhash cimport MurmurHash64A
 from ext.murmurhash cimport MurmurHash64B
 
@@ -60,9 +62,7 @@ cdef vector[Lexeme_addr] tokenize(Vocab* vocab, dict bacov, Splitter splitter,
     cdef Py_UNICODE c
 
     cdef vector[Lexeme_addr] tokens = vector[Lexeme_addr]()
-    cdef Py_UNICODE[1000] current
-    for i in range(1000):
-        current[i] = 0
+    cdef Py_UNICODE* current = <Py_UNICODE*>calloc(len(string), sizeof(Py_UNICODE))
     cdef size_t word_len = 0
     cdef Lexeme* token
     for i in range(length):
@@ -84,6 +84,7 @@ cdef vector[Lexeme_addr] tokenize(Vocab* vocab, dict bacov, Splitter splitter,
         while token != NULL:
             tokens.push_back(<Lexeme_addr>token)
             token = token.tail
+    free(current)
     return tokens
 
 cdef inline bint _is_whitespace(Py_UNICODE c) nogil:
