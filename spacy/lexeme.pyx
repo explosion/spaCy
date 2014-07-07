@@ -54,6 +54,10 @@ cpdef StringHash norm_of(size_t lex_id) except 0:
     return (<Lexeme*>lex_id).orth.norm
 
 
+cpdef StringHash shape_of(size_t lex_id) except 0:
+    return (<Lexeme*>lex_id).orth.shape
+
+
 cpdef ClusterID cluster_of(size_t lex_id):
     '''Access the `cluster' field of the Lexeme pointed to by lex_id, which
     gives an integer representation of the cluster ID of the word, 
@@ -94,7 +98,7 @@ cpdef double prob_of(size_t lex_id):
     >>> prob_of(lookup(u'world'))
     -20.10340371976182
     '''
-    pass
+    return (<Lexeme*>lex_id).dist.prob
 
 
 cpdef StringHash last3_of(size_t lex_id):
@@ -105,8 +109,7 @@ cpdef StringHash last3_of(size_t lex_id):
     >>> [unhash(last3_of(lex_id)) for lex_id in lex_ids]
     [u'llo', u'!']
     '''
-    cdef Lexeme* w = <Lexeme*>lex_id
-    return w.orth.last3 if w.orth != NULL else 0
+    return (<Lexeme*>lex_id).orth.last3
 
 
 cpdef bint is_oft_upper(size_t lex_id):

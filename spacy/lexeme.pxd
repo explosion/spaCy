@@ -41,6 +41,7 @@ cdef Lexeme BLANK_WORD = Lexeme(0, 0, NULL, NULL, NULL)
 
 cpdef StringHash lex_of(size_t lex_id) except 0
 cpdef StringHash norm_of(size_t lex_id) except 0
+cpdef StringHash shape_of(size_t lex_id) except 0
 #cdef Lexeme* init_lexeme(Language lang, unicode string, StringHash hashed,
 #                         int split, size_t length)
                          

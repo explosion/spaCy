@@ -25,7 +25,30 @@ def get_normalized(unicode lex, size_t length):
 
 
 def get_word_shape(lex, length):
-    return lex
+    shape = ""
+    last = ""
+    shape_char = ""
+    seq = 0
+    for c in lex:
+        if c.isalpha():
+            if c.isupper():
+                shape_char = "X"
+            else:
+                shape_char = "x"
+        elif c.isdigit():
+            shape_char = "d"
+        else:
+            shape_char = c
+        if shape_char == last:
+            seq += 1
+        else:
+            seq = 0
+            last = shape_char
+        if seq < 3:
+            shape += shape_char
+    assert shape
+    return shape
+
 
 
 def set_orth_flags(lex, length):
