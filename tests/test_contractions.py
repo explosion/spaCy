@@ -32,3 +32,13 @@ def test_aint():
     assert len(tokens) == 2
     assert unhash(lex_of(tokens[0])) == "are"
     assert unhash(lex_of(tokens[1])) == "not"
+
+
+def test_capitalized():
+    tokens = expand_chunk(lookup("can't"))
+    assert len(tokens) == 2
+    tokens = expand_chunk(lookup("Can't"))
+    assert len(tokens) == 2
+    tokens = expand_chunk(lookup("Ain't"))
+    assert len(tokens) == 2
+    assert unhash(lex_of(tokens[0])) == "Are"

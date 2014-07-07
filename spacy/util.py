@@ -36,6 +36,11 @@ def read_tokenization(lang):
             assert chunk not in seen, chunk
             seen.add(chunk)
             entries.append((chunk, lex, pieces))
+            if chunk[0].isalpha() and chunk[0].islower():
+                chunk = chunk[0].title() + chunk[1:]
+                lex = lex[0].title() + lex[1:]
+                seen.add(chunk)
+                entries.append((chunk, lex, pieces))
     return entries
  
 
