@@ -36,7 +36,8 @@ cdef class English(spacy.Language):
 cdef bint is_punct(unicode word, size_t i, size_t length):
     # Don't count appostrophes as punct if the next char is a letter
     if word[i] == "'" and i < (length - 1) and word[i+1].isalpha():
-        return False
+        # ...Unless we're at 0
+        return i == 0
     # Don't count commas as punct if the next char is a number
     if word[i] == "," and i < (length - 1) and word[i+1].isdigit():
         return False
