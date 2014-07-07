@@ -16,7 +16,7 @@ cdef load_tokenization(Vocab& vocab, dict bacov, token_rules):
     cdef StringHash hashed
     for chunk, lex, tokens in token_rules:
         hashed = hash_string(chunk, len(chunk))
-        assert vocab[hashed] == 0
+        assert vocab[hashed] == 0, chunk
         word = _add(vocab, bacov, <Splitter>NULL, hashed, lex, len(lex), len(lex))
         for i, lex in enumerate(tokens):
             token_string = '%s:@:%d:@:%s' % (chunk, i, lex)
