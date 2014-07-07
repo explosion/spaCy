@@ -43,8 +43,8 @@ def test_three_same_open(open_puncts):
     for p in open_puncts:
         string = p + p + p + word_str
         token = lookup(string)
-        assert unhash(lex_of(token)) == p + p + p
+        assert unhash(lex_of(token)) == p
         tokens = expand_chunk(token)
-        assert len(tokens) == 2
-        assert unhash(lex_of(tokens[0])) == p + p + p
-        assert unhash(lex_of(tokens[1])) == word_str
+        assert len(tokens) == 4
+        assert unhash(lex_of(tokens[0])) == p
+        assert unhash(lex_of(tokens[3])) == word_str

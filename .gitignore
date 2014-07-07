@@ -1,6 +1,10 @@
 # Vim
 *.swp
 
+spacy/*.cpp
+ext/murmurhash.cpp
+ext/sparsehash.cpp
+
 _build/
 .env/
 

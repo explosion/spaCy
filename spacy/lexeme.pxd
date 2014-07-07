@@ -1,9 +1,12 @@
 from libc.stdint cimport uint64_t
 
-
+# Put these above import to avoid circular import problem
 ctypedef int ClusterID
 ctypedef uint64_t StringHash
+ctypedef size_t Lexeme_addr
 
+from spacy.spacy cimport Vocab
+from spacy.spacy cimport Splitter
 
 cdef struct Lexeme:
     StringHash sic # Hash of the original string
@@ -20,6 +23,12 @@ cdef struct Lexeme:
     Lexeme* tail # Lexemes are linked lists, to deal with sub-tokens
 
 
+cdef Lexeme BLANK_WORD = Lexeme(0, 0, 0, 0, 0, 0.0, 0, False, False, NULL)
+
+cdef Lexeme* init_lexeme(Vocab vocab, dict bacov, Splitter find_split,
+                         unicode string, StringHash hashed,
+                         int split, size_t length) except NULL
+ 
 # Use these to access the Lexeme fields via get_attr(Lexeme*, LexAttr), which
 # has a conditional to pick out the correct item.  This allows safe iteration
 # over the Lexeme, via:

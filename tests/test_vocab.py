@@ -28,3 +28,10 @@ def test_case_neq():
 def test_punct_neq():
     addr = lookup('Hello')
     assert lookup('Hello,') != addr
+
+
+def test_short():
+    addr = lookup('I')
+    assert unhash(lex_of(addr)) == 'I'
+    addr = lookup('not')
+    assert unhash(lex_of(addr)) == 'not'
