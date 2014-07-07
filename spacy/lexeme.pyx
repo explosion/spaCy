@@ -6,16 +6,13 @@ Lexeme* yourself.
 from __future__ import unicode_literals
 
 from spacy.string_tools cimport substr
-from spacy.spacy cimport hash_string
-from spacy.spacy cimport lookup
 
 from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport uint64_t
 from libcpp.vector cimport vector
 
 
-cdef Lexeme* init_lexeme(Vocab* vocab, dict bacov, Splitter find_split,
-                         unicode string, StringHash hashed,
+cdef Lexeme* init_lexeme(Language lang, unicode string, StringHash hashed,
                          int split, size_t length):
     assert split <= length
     cdef Lexeme* word = <Lexeme*>calloc(1, sizeof(Lexeme))
@@ -39,13 +36,13 @@ cdef Lexeme* init_lexeme(Vocab* vocab, dict bacov, Splitter find_split,
     assert normed
     assert len(normed)
     
-    word.lex = hash_string(lex, len(lex))
-    word.normed = hash_string(normed, len(normed))
-    word.last3 = hash_string(last3, len(last3))
+    word.lex = lang.hash_string(lex, len(lex))
+    word.normed = lang.hash_string(normed, len(normed))
+    word.last3 = lang.hash_string(last3, len(last3))
 
-    bacov[word.lex] = lex
-    bacov[word.normed] = normed
-    bacov[word.last3] = last3
+    lang.bacov[word.lex] = lex
+    lang.bacov[word.normed] = normed
+    lang.bacov[word.last3] = last3
 
     # These are loaded later
     word.prob = 0
@@ -55,8 +52,7 @@ cdef Lexeme* init_lexeme(Vocab* vocab, dict bacov, Splitter find_split,
     
     # Now recurse, and deal with the tail
     if tail_string:
-        word.tail = <Lexeme*>lookup(vocab, bacov, find_split, -1, tail_string,
-                                    len(tail_string))
+        word.tail = <Lexeme*>lang.lookup(-1, tail_string, len(tail_string))
     return word
 
 

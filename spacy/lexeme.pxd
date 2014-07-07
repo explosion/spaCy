@@ -5,8 +5,7 @@ ctypedef int ClusterID
 ctypedef uint64_t StringHash
 ctypedef size_t Lexeme_addr
 
-from spacy.spacy cimport Vocab
-from spacy.spacy cimport Splitter
+from spacy.spacy cimport Language
 
 cdef struct Lexeme:
     StringHash sic # Hash of the original string
@@ -25,8 +24,7 @@ cdef struct Lexeme:
 
 cdef Lexeme BLANK_WORD = Lexeme(0, 0, 0, 0, 0, 0.0, 0, False, False, NULL)
 
-cdef Lexeme* init_lexeme(Vocab* vocab, dict bacov, Splitter find_split,
-                         unicode string, StringHash hashed,
+cdef Lexeme* init_lexeme(Language lang, unicode string, StringHash hashed,
                          int split, size_t length)
  
 # Use these to access the Lexeme fields via get_attr(Lexeme*, LexAttr), which

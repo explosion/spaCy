@@ -10,55 +10,27 @@ from libcpp.vector cimport vector
 
 from spacy.lexeme cimport Lexeme
 from spacy.string_tools cimport substr
+from spacy.spacy cimport Language
 from . import util
 
 cimport spacy
 
-BACOV = {}
-VOCAB = new Vocab(100000)
-VOCAB.set_empty_key(0)
 
-
-spacy.load_tokenization(VOCAB, BACOV, util.read_tokenization('en_ptb'))
-
-
-cpdef vector[Lexeme_addr] tokenize(unicode string) except *:
-    return spacy.tokenize(VOCAB, BACOV, find_split, string)
- 
-
-cpdef Lexeme_addr lookup(unicode string) except 0:
-    return spacy.lookup(VOCAB, BACOV, find_split, -1, string, len(string))
-
-
-cpdef unicode unhash(StringHash hash_value):
-    return spacy.unhash(BACOV, hash_value)
-
-
-cdef vector[StringHash] make_string_views(unicode word):
-    cdef unicode s
-    return vector[StringHash]()
-    #if word.isdigit() and len(word) == 4:
-    #    return '!YEAR'
-    #elif word[0].isdigit():
-    #    return '!DIGITS'
-    #else:
-    #    return word.lower()
-  
-
-cdef int find_split(unicode word, size_t length):
-    cdef int i = 0
-    # Contractions
-    if word.endswith("'s"):
-        return length - 2
-    # Leading punctuation
-    if is_punct(word, 0, length):
-        return 1
-    elif length >= 1:
-        # Split off all trailing punctuation characters
-        i = 0
-        while i < length and not is_punct(word, i, length):
-            i += 1
-    return i
+cdef class EnglishPTB(Language):
+    cdef int find_split(self, unicode word, size_t length):
+        cdef int i = 0
+        # Contractions
+        if word.endswith("'s"):
+            return length - 2
+        # Leading punctuation
+        if is_punct(word, 0, length):
+            return 1
+        elif length >= 1:
+            # Split off all trailing punctuation characters
+            i = 0
+            while i < length and not is_punct(word, i, length):
+                i += 1
+        return i
 
 
 cdef bint is_punct(unicode word, size_t i, size_t length):
@@ -72,3 +44,17 @@ cdef bint is_punct(unicode word, size_t i, size_t length):
         return False
     punct_chars = set(',;:' + '@#$%&' + '!?' + '[({' + '})]')
     return word[i] in punct_chars
+
+
+cdef EnglishPTB EN_PTB = EnglishPTB('en_ptb')
+
+cpdef Tokens tokenize(unicode string):
+    return EN_PTB.tokenize(string)
+
+
+cpdef Lexeme_addr lookup(unicode string) except 0:
+    return EN_PTB.lookup(-1, string, len(string))
+
+
+cpdef unicode unhash(StringHash hash_value):
+    return EN_PTB.unhash(hash_value)
