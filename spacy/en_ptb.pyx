@@ -19,7 +19,7 @@ VOCAB = Vocab()
 VOCAB.set_empty_key(0)
 
 
-spacy.load_tokenization(VOCAB, BACOV, util.read_tokenization('en'))
+spacy.load_tokenization(VOCAB, BACOV, util.read_tokenization('en_ptb'))
 
 
 cpdef vector[Lexeme_addr] tokenize(unicode string) except *:
@@ -62,13 +62,13 @@ cdef int find_split(unicode word, size_t length):
 
 
 cdef bint is_punct(unicode word, size_t i, size_t length):
+    is_final = i == (length - 1)
+    if word[i] == '.':
+        return False
+    if not is_final and word[i] == '-' and word[i+1] == '-':
+        return True
     # Don't count appostrophes as punct if the next char is a letter
     if word[i] == "'" and i < (length - 1) and word[i+1].isalpha():
         return False
-    # Don't count commas as punct if the next char is a number
-    if word[i] == "," and i < (length - 1) and word[i+1].isdigit():
-        return False
-    # Don't count periods as punct if the next char is a number
-    if word[i] == "." and i < (length - 1) and word[i+1].isdigit():
-        return False
-    return not word[i].isalnum()
+    punct_chars = set(',;:' + '@#$%&' + '!?' + '[({' + '})]')
+    return word[i] in punct_chars
