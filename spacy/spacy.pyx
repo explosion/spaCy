@@ -141,5 +141,3 @@ cdef Lexeme* _add(Vocab* vocab, dict bacov, Splitter find_split, StringHash hash
     vocab[0][hashed] = <Lexeme_addr>word
     bacov[hashed] = string
     return word
-
-
