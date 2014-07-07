@@ -12,6 +12,7 @@ from os import path
 
 HERE = path.dirname(__file__)
 
+
 @pytest.fixture
 def sun_txt():
     loc = path.join(HERE, 'sun.txt')
