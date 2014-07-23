@@ -1,3 +1,13 @@
+# Vim
+*.swp
+
+spacy/*.cpp
+ext/murmurhash.cpp
+ext/sparsehash.cpp
+
+_build/
+.env/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
