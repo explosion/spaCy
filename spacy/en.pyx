@@ -38,11 +38,13 @@ cdef bint is_punct(unicode word, size_t i, size_t length):
     if word[i] == "'" and i < (length - 1) and word[i+1].isalpha():
         # ...Unless we're at 0
         return i == 0
+    if word[i] == "-" and i < (length - 1) and word[i+1] == '-':
+        return False
     # Don't count commas as punct if the next char is a number
     if word[i] == "," and i < (length - 1) and word[i+1].isdigit():
         return False
-    # Don't count periods as punct if the next char is a number
-    if word[i] == "." and i < (length - 1) and word[i+1].isdigit():
+    # Don't count periods as punct if the next char is not whitespace
+    if word[i] == "." and i < (length - 1) and not word[i+1].isspace():
         return False
     return not word[i].isalnum()
 

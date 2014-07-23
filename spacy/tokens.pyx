@@ -37,21 +37,45 @@ cdef class Tokens:
         for el in other:
             self.append(el)
 
-    cpdef list group_by(self, StringAttr attr):
+    cpdef object group_by(self, StringAttr attr):
+        '''Group tokens that share the property attr into Tokens instances, and
+        return a list of them. Returns a tuple of three lists:
+        
+        (string names, hashes, tokens)
+
+        The lists are aligned, so the ith entry in string names is the string
+        that the ith entry in hashes unhashes to, which the Tokens instance
+        is grouped by.
+        
+        You can then use count_by or group_by on the Tokens
+        for further processing. Calling group_by and then asking the length
+        of the Tokens objects is equivalent to count_by, but somewhat slower.
+        '''
+        # Implementation here is working around some of the constraints in
+        # Cython about what type of thing can go in what type of container.
+        # Long story short, it's pretty hard to get a Python object like
+        # Tokens into a vector or array. If we really need this to run faster,
+        # we can be tricky and get the Python list access out of the loop. What
+        # we'd do is store pointers to the underlying vectors.
+        # So far, speed isn't mattering here.
         cdef dict indices = {}
-        cdef vector[vector[Lexeme_addr]] groups = vector[vector[Lexeme_addr]]()
+        cdef list groups = []
+        cdef list names = []
+        cdef list hashes = []
 
         cdef StringHash key
         cdef Lexeme_addr t
         for t in self.vctr[0]:
             key = attr_of(t, attr)
             if key in indices:
-                groups[indices[key]].push_back(t)
+                groups[indices[key]].append(t)
             else:
-                indices[key] = groups.size()
-                groups.push_back(vector[Lexeme_addr]())
-                groups.back().push_back(t)
-        return groups
+                indices[key] = len(groups)
+                groups.append(Tokens(self.lang))
+                names.append(self.lang.unhash(key))
+                hashes.append(key)
+                groups[-1].append(t)
+        return names, hashes, groups
 
     cpdef dict count_by(self, StringAttr attr):
         counts = {}

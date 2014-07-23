@@ -16,12 +16,12 @@ from . import util
 from os import path
 cimport cython
 
+
 def get_normalized(unicode lex, size_t length):
-    return lex.lower()
-    #if lex.isdigit():
-    #    return '!YEAR' if length == 4 else '!DIGIT'
-    #else:
-    #    return lex.lower()
+    if lex.isalpha() and lex.islower():
+        return lex
+    else:
+        return get_word_shape(lex, length)
 
 
 def get_word_shape(lex, length):
@@ -53,7 +53,6 @@ def get_word_shape(lex, length):
 
 def set_orth_flags(lex, length):
     return 0
-
 
 
 cdef class Language:

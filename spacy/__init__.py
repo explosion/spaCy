@@ -1,8 +1,17 @@
 from .lexeme import lex_of
 from .lexeme import sic_of
 
+from .tokens import Tokens
 
-__all__ = [lex_of, sic_of]
+# Don't know how to get the enum Python visible :(
+
+SIC = 0
+LEX = 1
+NORM = 2
+SHAPE = 3
+LAST3 = 4
+
+__all__ = [Tokens, lex_of, sic_of, SIC, LEX, NORM, SHAPE, LAST3]
 
 
 """

@@ -14,5 +14,5 @@ cdef class Tokens:
     cpdef int append(self, Lexeme_addr token)
     cpdef int extend(self, Tokens other) except -1
     
-    cpdef list group_by(self, StringAttr attr)
+    cpdef object group_by(self, StringAttr attr)
     cpdef dict count_by(self, StringAttr attr)
