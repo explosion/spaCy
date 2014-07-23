@@ -48,3 +48,10 @@ def test_three_same_open(open_puncts):
         assert len(tokens) == 4
         assert unhash(lex_of(tokens[0])) == p
         assert unhash(lex_of(tokens[3])) == word_str
+
+
+def test_open_appostrophe():
+    string = "'The"
+    tokens = expand_chunk(lookup(string))
+    assert len(tokens) == 2
+    assert unhash(lex_of(tokens[0])) == "'"

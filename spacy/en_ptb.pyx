@@ -4,11 +4,11 @@ boldly assume no collisions.
 '''
 from __future__ import unicode_literals
 
+
 from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport uint64_t
 from libcpp.vector cimport vector
 
-from spacy.lexeme cimport Lexeme
 from spacy.string_tools cimport substr
 from spacy.spacy cimport Language
 from . import util

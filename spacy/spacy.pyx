@@ -6,14 +6,53 @@ from libc.stdlib cimport calloc, free
 from ext.murmurhash cimport MurmurHash64A
 from ext.murmurhash cimport MurmurHash64B
 
-from spacy.lexeme cimport init_lexeme
+from spacy.lexeme cimport Lexeme
 from spacy.lexeme cimport BLANK_WORD
 
-from spacy.string_tools cimport is_whitespace
+from spacy.string_tools cimport substr
+
 
 from . import util
 from os import path
 cimport cython
+
+
+def get_normalized(unicode lex, size_t length):
+    if lex.isalpha() and lex.islower():
+        return lex
+    else:
+        return get_word_shape(lex, length)
+
+
+def get_word_shape(lex, length):
+    shape = ""
+    last = ""
+    shape_char = ""
+    seq = 0
+    for c in lex:
+        if c.isalpha():
+            if c.isupper():
+                shape_char = "X"
+            else:
+                shape_char = "x"
+        elif c.isdigit():
+            shape_char = "d"
+        else:
+            shape_char = c
+        if shape_char == last:
+            seq += 1
+        else:
+            seq = 0
+            last = shape_char
+        if seq < 3:
+            shape += shape_char
+    assert shape
+    return shape
+
+
+
+def set_orth_flags(lex, length):
+    return 0
 
 
 cdef class Language:
@@ -21,7 +60,11 @@ cdef class Language:
         self.name = name
         self.bacov = {}
         self.vocab = new Vocab()
+        self.ortho = new Vocab()
+        self.distri = new Vocab()
         self.vocab[0].set_empty_key(0)
+        self.distri[0].set_empty_key(0)
+        self.ortho[0].set_empty_key(0)
         self.load_tokenization(util.read_tokenization(name))
 
     def load_tokenization(self, token_rules=None):
@@ -80,7 +123,7 @@ cdef class Language:
         return <Lexeme_addr>word_ptr
 
     cdef Lexeme* _add(self, StringHash hashed, unicode string, int split, size_t length):
-        word = init_lexeme(self, string, hashed, split, length)
+        word = self.init_lexeme(string, hashed, split, length)
         self.vocab[0][hashed] = <Lexeme_addr>word
         self.bacov[hashed] = string
         return word   
@@ -121,6 +164,55 @@ cdef class Language:
     cdef int find_split(self, unicode word, size_t length):
         return -1
 
+    cdef Lexeme* init_lexeme(self, unicode string, StringHash hashed,
+                             int split, size_t length):
+        cdef Lexeme* word = <Lexeme*>calloc(1, sizeof(Lexeme))
+    
+        word.sic = hashed
+    
+        cdef unicode tail_string
+        cdef unicode lex 
+        if split != 0 and split < length:
+            lex = substr(string, 0, split, length)
+            tail_string = substr(string, split, length, length)
+        else:
+            lex = string
+            tail_string = ''
+    
+        word.lex = self.hash_string(lex, len(lex))
+        self.bacov[word.lex] = lex
+        word.orth = <Orthography*>self.ortho[0][word.lex]
+        if word.orth == NULL:
+            word.orth = self.init_orth(word.lex, lex)
+        word.dist = <Distribution*>self.distri[0][word.lex]
+    
+        # Now recurse, and deal with the tail
+        if tail_string:
+            word.tail = <Lexeme*>self.lookup(-1, tail_string, len(tail_string))
+        return word
+
+    cdef Orthography* init_orth(self, StringHash hashed, unicode lex):
+        cdef Orthography* orth = <Orthography*>calloc(1, sizeof(Orthography))
+        orth.first = <Py_UNICODE>lex[0]
+
+        cdef int length = len(lex)
+        
+        orth.flags = set_orth_flags(lex, length)
+        
+        cdef unicode last3 = substr(lex, length - 3, length, length)
+        cdef unicode norm = get_normalized(lex, length)
+        cdef unicode shape = get_word_shape(lex, length)
+
+        orth.last3 = self.hash_string(last3, len(last3))
+        orth.shape = self.hash_string(shape, len(shape))
+        orth.norm = self.hash_string(norm, len(norm))
+
+        self.bacov[orth.last3] = last3
+        self.bacov[orth.shape] = shape
+        self.bacov[orth.norm] = norm
+
+        self.ortho[0][hashed] = <size_t>orth
+        return orth
 
 
 cdef inline bint _is_whitespace(Py_UNICODE c) nogil:
@@ -137,7 +229,7 @@ cdef inline bint _is_whitespace(Py_UNICODE c) nogil:
 cpdef vector[size_t] expand_chunk(size_t addr) except *:
     cdef vector[size_t] tokens = vector[size_t]()
     word = <Lexeme*>addr
-    while word is not NULL:
+    while word != NULL:
         tokens.push_back(<size_t>word)
         word = word.tail
     return tokens
