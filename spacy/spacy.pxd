@@ -1,7 +1,7 @@
 from libcpp.vector cimport vector
 from libc.stdint cimport uint64_t
 
-from ext.sparsehash cimport dense_hash_map
+from sparsehash.dense_hash_map cimport dense_hash_map
 
 
 # Circular import problems here

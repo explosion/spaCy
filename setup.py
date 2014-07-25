@@ -7,6 +7,7 @@ import sys
 import os
 import os.path
 from os import path
+from glob import glob
 
 
 def clean(ext):
@@ -34,32 +35,22 @@ libs = []
 
 includes = []
 
-exts = [
-    Extension("ext.sparsehash", ["ext/sparsehash.pyx"], language="c++"),
-    Extension('ext.murmurhash',
-              ["ext/murmurhash.pyx", "ext/MurmurHash2.cpp",
-              "ext/MurmurHash3.cpp"], language="c++",
-              include_dirs=[path.join(HERE, 'ext')]),
 
-    Extension("spacy.en",
-              ["spacy/en.pyx", "ext/MurmurHash3.cpp", "ext/MurmurHash2.cpp"],
-              language="c++",
-              include_dirs=[path.join(HERE, 'ext')]),
-    Extension("spacy.en_ptb",
-              ["spacy/en_ptb.pyx", "ext/MurmurHash3.cpp", "ext/MurmurHash2.cpp"],
-              language="c++",
-              include_dirs=[path.join(HERE, 'ext')]),
- 
+if 'VIRTUAL_ENV' in os.environ:
+    includes += glob(path.join(os.environ['VIRTUAL_ENV'], 'include', 'site', '*'))
+else:
+    # If you're not using virtualenv, set your include dir here.
+    pass
+
+
+exts = [
+    Extension("spacy.en", ["spacy/en.pyx"], language="c++", include_dirs=includes),
+    Extension("spacy.en_ptb", ["spacy/en_ptb.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.lexeme", ["spacy/lexeme.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.spacy",
-             ["spacy/spacy.pyx", "ext/MurmurHash3.cpp", "ext/MurmurHash2.cpp"],
-             language="c++", include_dirs=includes),
-    Extension("spacy.tokens",
-             ["spacy/tokens.pyx", "ext/MurmurHash3.cpp", "ext/MurmurHash2.cpp"],
-             language="c++", include_dirs=includes),
-    Extension("spacy.string_tools",
-             ["spacy/string_tools.pyx", "ext/MurmurHash3.cpp", "ext/MurmurHash2.cpp"],
-             language="c++", include_dirs=includes),
+    Extension("spacy.spacy", ["spacy/spacy.pyx"], language="c++", include_dirs=includes),
+    Extension("spacy.tokens", ["spacy/tokens.pyx"], language="c++", include_dirs=includes),
+    Extension("spacy.string_tools", ["spacy/string_tools.pyx"], language="c++",
+              include_dirs=includes),
 ]
 
 
@@ -68,7 +59,7 @@ if sys.argv[1] == 'clean':
     map(clean, exts)
 
 distutils.core.setup(
-    name='Sparse linear models with Cython',
+    name='Lightning fast, full-cream NL tokenizer',
     packages=['thinc'],
     author='Matthew Honnibal',
     author_email='honnibal@gmail.com',
