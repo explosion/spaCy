@@ -146,7 +146,8 @@ cdef class Language:
             # Delete last element.
             last_elem = deref(self.happax[0].end())
             free(<Orthography*>self.ortho[0][last_elem.first])
-            free(<Distribution*>self.distri[0][last_elem.first])
+            # TODO: Do this when we set distributions
+            #free(<Distribution*>self.distri[0][last_elem.first])
             free(<Lexeme*>last_elem.second)
             self.happax[0].erase(last_elem.first)
             self.ortho[0].erase(last_elem.first)
