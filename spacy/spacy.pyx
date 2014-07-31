@@ -53,13 +53,18 @@ def set_orth_flags(lex, length):
     return 0
 
 
+DEF MAX_HAPPAX = 1000000
+
+
 cdef class Language:
     def __cinit__(self, name):
         self.name = name
         self.bacov = {}
+        self.happax = new SparseVocab()
         self.vocab = new Vocab()
         self.ortho = new Vocab()
         self.distri = new Vocab()
+        self.happax[0].set_deleted_key(0)
         self.vocab[0].set_empty_key(0)
         self.distri[0].set_empty_key(0)
         self.ortho[0].set_empty_key(0)
@@ -114,15 +119,28 @@ cdef class Language:
         if length == 0:
             return <Lexeme_addr>&BLANK_WORD
         cdef StringHash hashed = self.hash_string(string, length)
+        # First, check words seen 2+ times
         cdef Lexeme* word_ptr = <Lexeme*>self.vocab[0][hashed]
         if word_ptr == NULL:
-            start = self.find_split(string, length) if start == -1 else start
-            word_ptr = self._add(hashed, string, start, length)
+            # Now check words seen exactly once
+            word_ptr = <Lexeme*>self.happax[0][hashed]
+            if word_ptr == NULL:
+                start = self.find_split(string, length) if start == -1 else start
+                word_ptr = self._add(hashed, string, start, length)
+            else:
+                # Second time word seen, move to vocab
+                self.vocab[0][hashed] = <Lexeme_addr>word_ptr
+                self.happax[0].erase(hashed)
         return <Lexeme_addr>word_ptr
 
     cdef Lexeme* _add(self, StringHash hashed, unicode string, int split, size_t length):
+        cdef size_t i
+        cdef sparse_hash_map[StringHash, size_t].iterator it
+        if self.happax[0].size() >= MAX_HAPPAX:
+            # Delete last element.
+            self.happax[0].erase(self.happax[0].end())
         word = self.init_lexeme(string, hashed, split, length)
-        self.vocab[0][hashed] = <Lexeme_addr>word
+        self.happax[0][hashed] = <Lexeme_addr>word
         self.bacov[hashed] = string
         return word   
 

@@ -2,12 +2,14 @@ from libcpp.vector cimport vector
 from libc.stdint cimport uint64_t
 
 from sparsehash.dense_hash_map cimport dense_hash_map
+from sparsehash.sparse_hash_map cimport sparse_hash_map
 
 
 # Circular import problems here
 ctypedef size_t Lexeme_addr
 ctypedef uint64_t StringHash
 ctypedef dense_hash_map[StringHash, size_t] Vocab
+ctypedef sparse_hash_map[StringHash, size_t] SparseVocab
 from spacy.lexeme cimport Lexeme
 
 from spacy.tokens cimport Tokens
@@ -25,6 +27,7 @@ from spacy.lexeme cimport Orthography
 
 cdef class Language:
     cdef object name
+    cdef SparseVocab* happax
     cdef Vocab* vocab
     cdef Vocab* distri
     cdef Vocab* ortho
