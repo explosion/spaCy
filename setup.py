@@ -59,8 +59,8 @@ if sys.argv[1] == 'clean':
     map(clean, exts)
 
 distutils.core.setup(
-    name='Lightning fast, full-cream NL tokenizer',
-    packages=['thinc'],
+    name='spaCy'
+    packages=['spacy'],
     author='Matthew Honnibal',
     author_email='honnibal@gmail.com',
     version='1.0',
