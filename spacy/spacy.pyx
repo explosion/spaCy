@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 
 from libc.stdlib cimport calloc, free
+from libcpp.pair cimport pair
+from cython.operator cimport dereference as deref
 
 from murmurhash cimport mrmr
 from spacy.lexeme cimport Lexeme
@@ -68,6 +70,9 @@ cdef class Language:
         self.vocab[0].set_empty_key(0)
         self.distri[0].set_empty_key(0)
         self.ortho[0].set_empty_key(0)
+        self.vocab[0].set_deleted_key(1)
+        self.distri[0].set_deleted_key(1)
+        self.ortho[0].set_deleted_key(1)
         self.load_tokenization(util.read_tokenization(name))
 
     def load_tokenization(self, token_rules=None):
@@ -136,9 +141,16 @@ cdef class Language:
     cdef Lexeme* _add(self, StringHash hashed, unicode string, int split, size_t length):
         cdef size_t i
         cdef sparse_hash_map[StringHash, size_t].iterator it
+        cdef pair[StringHash, size_t] last_elem
         if self.happax[0].size() >= MAX_HAPPAX:
             # Delete last element.
-            self.happax[0].erase(self.happax[0].end())
+            last_elem = deref(self.happax[0].end())
+            free(<Orthography*>self.ortho[0][last_elem.first])
+            free(<Distribution*>self.distri[0][last_elem.first])
+            free(<Lexeme*>last_elem.second)
+            self.happax[0].erase(last_elem.first)
+            self.ortho[0].erase(last_elem.first)
+            self.distri[0].erase(last_elem.first)
         word = self.init_lexeme(string, hashed, split, length)
         self.happax[0][hashed] = <Lexeme_addr>word
         self.bacov[hashed] = string
