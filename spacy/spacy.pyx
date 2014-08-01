@@ -85,6 +85,7 @@ cdef class Language:
                 length = len(token_string)
                 hashed = self.hash_string(token_string, length)
                 word.tail = self._add(hashed, lex, 0, len(lex))
+                self._happax_to_vocab(hashed, <Lexeme_addr>word.tail)
                 word = word.tail
 
     def load_clusters(self):
@@ -133,19 +134,19 @@ cdef class Language:
                 word_ptr = self._add(hashed, string, start, length)
             else:
                 # Second time word seen, move to vocab
-                self.vocab[0][hashed] = <Lexeme_addr>word_ptr
-                self.happax.erase(hashed)
+                self._happax_to_vocab(hashed, <Lexeme_addr>word_ptr)
         return <Lexeme_addr>word_ptr
+
+    cdef int _happax_to_vocab(self, StringHash hashed, Lexeme_addr word_ptr):
+        self.vocab[0][hashed] = <Lexeme_addr>word_ptr
+        self.happax.erase(hashed)
 
     cdef Lexeme* _add(self, StringHash hashed, unicode string, int split, size_t length):
         cdef size_t i
         word = self.init_lexeme(string, hashed, split, length)
         cdef Lexeme* clobbered = <Lexeme*>self.happax.insert(hashed, <size_t>word)
         if clobbered != NULL:
-            # Can't do this --- we might be pointing to the Lexeme in .tail.
-            # Fix that to reduce memory, probably.
-            #free(clobbered)
-            pass
+            free(clobbered)
         self.bacov[hashed] = string
         return word   
 
@@ -210,6 +211,7 @@ cdef class Language:
         # Now recurse, and deal with the tail
         if tail_string:
             word.tail = <Lexeme*>self.lookup(-1, tail_string, len(tail_string))
+            self._happax_to_vocab(word.tail.sic, <Lexeme_addr>word.tail)
         return word
 
     cdef Orthography* init_orth(self, StringHash hashed, unicode lex):

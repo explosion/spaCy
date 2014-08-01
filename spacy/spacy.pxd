@@ -42,4 +42,6 @@ cdef class Language:
                              int split, size_t length)
     cdef Orthography* init_orth(self, StringHash hashed, unicode lex)
 
+    cdef int _happax_to_vocab(self, StringHash hashed, Lexeme_addr addr)
+
  
