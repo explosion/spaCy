@@ -107,7 +107,7 @@ cdef class Language:
    
     cdef StringHash hash_string(self, Py_UNICODE* s, size_t length) except 0:
         '''Hash unicode with MurmurHash64A'''
-        return mrmr.real_hash64(<Py_UNICODE*>s, length * sizeof(Py_UNICODE), 0)
+        return mrmr.hash64(<Py_UNICODE*>s, length * sizeof(Py_UNICODE), 0)
 
     cdef unicode unhash(self, StringHash hash_value):
         '''Fetch a string from the reverse index, given its hash value.'''
