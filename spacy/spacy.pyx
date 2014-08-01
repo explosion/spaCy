@@ -142,7 +142,10 @@ cdef class Language:
         word = self.init_lexeme(string, hashed, split, length)
         cdef Lexeme* clobbered = <Lexeme*>self.happax.insert(hashed, <size_t>word)
         if clobbered != NULL:
-            free(clobbered)
+            # Can't do this --- we might be pointing to the Lexeme in .tail.
+            # Fix that to reduce memory, probably.
+            #free(clobbered)
+            pass
         self.bacov[hashed] = string
         return word   
 
