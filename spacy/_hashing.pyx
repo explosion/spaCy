@@ -30,7 +30,7 @@ cdef class FixedTable:
         if self.values[bucket] == value:
             clobbered = 0
         else:
-            clobbered = self.values[clobbered]
+            clobbered = self.values[bucket]
         self.keys[bucket] = key
         self.values[bucket] = value
         return clobbered
