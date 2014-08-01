@@ -140,7 +140,9 @@ cdef class Language:
     cdef Lexeme* _add(self, StringHash hashed, unicode string, int split, size_t length):
         cdef size_t i
         word = self.init_lexeme(string, hashed, split, length)
-        self.happax.insert(hashed, <size_t>word)
+        cdef Lexeme* clobbered = <Lexeme*>self.happax.insert(hashed, <size_t>word)
+        if clobbered != NULL:
+            free(clobbered)
         self.bacov[hashed] = string
         return word   
 

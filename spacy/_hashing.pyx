@@ -24,10 +24,16 @@ cdef class FixedTable:
     def bucket(self, uint64_t key):
         return _find(key, self.size)
 
-    cdef int insert(self, uint64_t key, size_t value) nogil:
+    cdef size_t insert(self, uint64_t key, size_t value) nogil:
         cdef size_t bucket = _find(key, self.size)
+        cdef size_t clobbered
+        if self.values[bucket] == value:
+            clobbered = 0
+        else:
+            clobbered = self.values[clobbered]
         self.keys[bucket] = key
         self.values[bucket] = value
+        return clobbered
 
     cdef size_t get(self, uint64_t key) nogil:
         cdef size_t bucket = _find(key, self.size)
@@ -39,6 +45,7 @@ cdef class FixedTable:
     cdef int erase(self, uint64_t key) nogil:
         cdef size_t bucket = _find(key, self.size)
         self.keys[bucket] = 0
+        self.values[bucket] = 0
 
 
 @cython.cdivision
