@@ -55,18 +55,17 @@ def set_orth_flags(lex, length):
     return 0
 
 
-DEF MAX_HAPPAX = 1000000
+DEF MAX_HAPPAX = 1048576
 
 
 cdef class Language:
     def __cinit__(self, name):
         self.name = name
         self.bacov = {}
-        self.happax = new SparseVocab()
+        self.happax = FixedTable(MAX_HAPPAX)
         self.vocab = new Vocab()
         self.ortho = new Vocab()
         self.distri = new Vocab()
-        self.happax[0].set_deleted_key(0)
         self.vocab[0].set_empty_key(0)
         self.distri[0].set_empty_key(0)
         self.ortho[0].set_empty_key(0)
@@ -108,7 +107,7 @@ cdef class Language:
    
     cdef StringHash hash_string(self, Py_UNICODE* s, size_t length) except 0:
         '''Hash unicode with MurmurHash64A'''
-        return mrmr.hash64(<Py_UNICODE*>s, length * sizeof(Py_UNICODE), 0)
+        return mrmr.real_hash64(<Py_UNICODE*>s, length * sizeof(Py_UNICODE), 0)
 
     cdef unicode unhash(self, StringHash hash_value):
         '''Fetch a string from the reverse index, given its hash value.'''
@@ -128,32 +127,20 @@ cdef class Language:
         cdef Lexeme* word_ptr = <Lexeme*>self.vocab[0][hashed]
         if word_ptr == NULL:
             # Now check words seen exactly once
-            word_ptr = <Lexeme*>self.happax[0][hashed]
+            word_ptr = <Lexeme*>self.happax.get(hashed)
             if word_ptr == NULL:
                 start = self.find_split(string, length) if start == -1 else start
                 word_ptr = self._add(hashed, string, start, length)
             else:
                 # Second time word seen, move to vocab
                 self.vocab[0][hashed] = <Lexeme_addr>word_ptr
-                self.happax[0].erase(hashed)
+                self.happax.erase(hashed)
         return <Lexeme_addr>word_ptr
 
     cdef Lexeme* _add(self, StringHash hashed, unicode string, int split, size_t length):
         cdef size_t i
-        cdef sparse_hash_map[StringHash, size_t].iterator it
-        cdef pair[StringHash, size_t] last_elem
-        if self.happax[0].size() >= MAX_HAPPAX:
-            # Delete last element.
-            last_elem = deref(self.happax[0].end())
-            free(<Orthography*>self.ortho[0][last_elem.first])
-            # TODO: Do this when we set distributions
-            #free(<Distribution*>self.distri[0][last_elem.first])
-            free(<Lexeme*>last_elem.second)
-            self.happax[0].erase(last_elem.first)
-            self.ortho[0].erase(last_elem.first)
-            self.distri[0].erase(last_elem.first)
         word = self.init_lexeme(string, hashed, split, length)
-        self.happax[0][hashed] = <Lexeme_addr>word
+        self.happax.insert(hashed, <size_t>word)
         self.bacov[hashed] = string
         return word   
 
