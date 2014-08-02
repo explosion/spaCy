@@ -16,6 +16,7 @@ cdef struct Orthography:
     StringHash shape
     StringHash norm
 
+    size_t length
     Py_UNICODE first
     Bits8 flags
 
@@ -45,6 +46,7 @@ cdef enum StringAttr:
     NORM
     SHAPE
     LAST3
+    LENGTH
 
 
 cpdef StringHash attr_of(size_t lex_id, StringAttr attr) except 0
@@ -54,3 +56,4 @@ cpdef StringHash lex_of(size_t lex_id) except 0
 cpdef StringHash norm_of(size_t lex_id) except 0
 cpdef StringHash shape_of(size_t lex_id) except 0
 cpdef StringHash last3_of(size_t lex_id) except 0
+cpdef StringHash length_of(size_t lex_id)

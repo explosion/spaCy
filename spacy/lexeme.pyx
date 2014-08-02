@@ -32,6 +32,8 @@ cpdef StringHash attr_of(size_t lex_id, StringAttr attr) except 0:
         return shape_of(lex_id)
     elif attr == LAST3:
         return last3_of(lex_id)
+    elif attr == LENGTH:
+        return length_of(lex_id)
     else:
         raise StandardError
 
@@ -118,7 +120,18 @@ cpdef Py_UNICODE first_of(size_t lex_id):
     >>> unhash(first_of(lex_id))
     u'H'
     '''
+    if (<Lexeme*>lex_id).orth == NULL:
+        return 0
     return (<Lexeme*>lex_id).orth.first
+
+
+cpdef StringHash length_of(size_t lex_id):
+    '''Access the `length' field of the Lexeme pointed to by lex_id, which stores
+    the length of the string hashed by lex_of.'''
+    cdef Lexeme* word = <Lexeme*>lex_id
+    if (<Lexeme*>lex_id).orth == NULL:
+        return 0
+    return (<Lexeme*>lex_id).orth.length
 
 
 cpdef double prob_of(size_t lex_id):
