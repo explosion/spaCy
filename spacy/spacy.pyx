@@ -107,11 +107,11 @@ cdef class Language:
    
     cdef StringHash hash_string(self, Py_UNICODE* s, size_t length) except 0:
         '''Hash unicode with MurmurHash64A'''
-        return mrmr.hash64(<Py_UNICODE*>s, length * sizeof(Py_UNICODE), 0)
+        return mrmr.hash32(<Py_UNICODE*>s, length * sizeof(Py_UNICODE), 0)
 
     cdef unicode unhash(self, StringHash hash_value):
         '''Fetch a string from the reverse index, given its hash value.'''
-        return self.bacov[hash_value]
+        return self.bacov[hash_value].decode('utf8')
 
     cdef Lexeme_addr lookup(self, int start, Py_UNICODE* string, size_t length) except 0:
         '''Fetch a Lexeme representing a word string. If the word has not been seen,
@@ -147,7 +147,7 @@ cdef class Language:
             self._happax_to_vocab(self.happax.keys[hashed % self.happax.size],
                                   self.happax.values[hashed % self.happax.size])
         self.happax.insert(hashed, <size_t>word)
-        self.bacov[hashed] = string
+        self.bacov[hashed] = string.encode('utf8')
         return word   
 
     cpdef Tokens tokenize(self, unicode string):
@@ -202,7 +202,7 @@ cdef class Language:
             tail_string = ''
     
         word.lex = self.hash_string(lex, len(lex))
-        self.bacov[word.lex] = lex
+        self.bacov[word.lex] = lex.encode('utf8')
         word.orth = <Orthography*>self.ortho[0][word.lex]
         if word.orth == NULL:
             word.orth = self.init_orth(word.lex, lex)
@@ -231,9 +231,9 @@ cdef class Language:
         orth.shape = self.hash_string(shape, len(shape))
         orth.norm = self.hash_string(norm, len(norm))
 
-        self.bacov[orth.last3] = last3
-        self.bacov[orth.shape] = shape
-        self.bacov[orth.norm] = norm
+        self.bacov[orth.last3] = last3.encode('utf8')
+        self.bacov[orth.shape] = shape.encode('utf8')
+        self.bacov[orth.norm] = norm.encode('utf8')
 
         self.ortho[0][hashed] = <size_t>orth
         return orth

@@ -1,4 +1,5 @@
 from libcpp.vector cimport vector
+from libc.stdint cimport uint32_t
 from libc.stdint cimport uint64_t
 
 from sparsehash.dense_hash_map cimport dense_hash_map
@@ -6,7 +7,7 @@ from _hashing cimport FixedTable
 
 # Circular import problems here
 ctypedef size_t Lexeme_addr
-ctypedef uint64_t StringHash
+ctypedef uint32_t StringHash
 ctypedef dense_hash_map[StringHash, size_t] Vocab
 from spacy.lexeme cimport Lexeme
 

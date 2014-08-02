@@ -1,8 +1,9 @@
+from libc.stdint cimport uint32_t
 from libc.stdint cimport uint64_t
 
 # Put these above import to avoid circular import problem
 ctypedef int ClusterID
-ctypedef uint64_t StringHash
+ctypedef uint32_t StringHash
 ctypedef size_t Lexeme_addr
 ctypedef char Bits8
 ctypedef uint64_t Bits64
