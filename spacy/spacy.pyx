@@ -55,14 +55,10 @@ def set_orth_flags(lex, length):
     return 0
 
 
-DEF MAX_HAPPAX = 1048576
-
-
 cdef class Language:
     def __cinit__(self, name):
         self.name = name
         self.bacov = {}
-        self.happax = FixedTable(MAX_HAPPAX)
         self.vocab = new Vocab()
         self.ortho = new Vocab()
         self.distri = new Vocab()
@@ -85,7 +81,6 @@ cdef class Language:
                 length = len(token_string)
                 hashed = self.hash_string(token_string, length)
                 word.tail = self._add(hashed, lex, 0, len(lex))
-                self._happax_to_vocab(hashed, <Lexeme_addr>word.tail)
                 word = word.tail
 
     def load_clusters(self):
@@ -127,27 +122,14 @@ cdef class Language:
         # First, check words seen 2+ times
         cdef Lexeme* word_ptr = <Lexeme*>self.vocab[0][hashed]
         if word_ptr == NULL:
-            # Now check words seen exactly once
-            word_ptr = <Lexeme*>self.happax.get(hashed)
-            if word_ptr == NULL:
-                start = self.find_split(string, length) if start == -1 else start
-                word_ptr = self._add(hashed, string, start, length)
-            else:
-                # Second time word seen, move to vocab
-                self._happax_to_vocab(hashed, <Lexeme_addr>word_ptr)
+            start = self.find_split(string, length) if start == -1 else start
+            word_ptr = self._add(hashed, string, start, length)
         return <Lexeme_addr>word_ptr
-
-    cdef int _happax_to_vocab(self, StringHash hashed, Lexeme_addr word_ptr):
-        self.vocab[0][hashed] = word_ptr
-        self.happax.erase(hashed)
 
     cdef Lexeme* _add(self, StringHash hashed, unicode string, int split, size_t length):
         cdef size_t i
         word = self.init_lexeme(string, hashed, split, length)
-        cdef Lexeme* clobbered = <Lexeme*>self.happax.insert(hashed, <size_t>word)
-        if clobbered != NULL:
-            #free(clobbered)
-            pass
+        self.vocab[0][hashed] = <Lexeme_addr>word
         self.bacov[hashed] = string
         return word   
 
@@ -212,7 +194,6 @@ cdef class Language:
         # Now recurse, and deal with the tail
         if tail_string:
             word.tail = <Lexeme*>self.lookup(-1, tail_string, len(tail_string))
-            self._happax_to_vocab(word.tail.sic, <Lexeme_addr>word.tail)
         return word
 
     cdef Orthography* init_orth(self, StringHash hashed, unicode lex):
