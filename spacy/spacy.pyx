@@ -138,7 +138,7 @@ cdef class Language:
         return <Lexeme_addr>word_ptr
 
     cdef int _happax_to_vocab(self, StringHash hashed, Lexeme_addr word_ptr):
-        self.vocab[0][hashed] = <Lexeme_addr>word_ptr
+        self.vocab[0][hashed] = word_ptr
         self.happax.erase(hashed)
 
     cdef Lexeme* _add(self, StringHash hashed, unicode string, int split, size_t length):
@@ -146,7 +146,8 @@ cdef class Language:
         word = self.init_lexeme(string, hashed, split, length)
         cdef Lexeme* clobbered = <Lexeme*>self.happax.insert(hashed, <size_t>word)
         if clobbered != NULL:
-            free(clobbered)
+            #free(clobbered)
+            pass
         self.bacov[hashed] = string
         return word   
 
@@ -219,7 +220,8 @@ cdef class Language:
         orth.first = <Py_UNICODE>lex[0]
 
         cdef int length = len(lex)
-        
+
+        orth.length = length 
         orth.flags = set_orth_flags(lex, length)
         
         cdef unicode last3 = substr(lex, length - 3, length, length)
