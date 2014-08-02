@@ -1,5 +1,7 @@
 # Vim
 *.swp
+*.sw*
+Profile.prof
 
 spacy/*.cpp
 ext/murmurhash.cpp
