@@ -2,6 +2,7 @@ from libcpp.vector cimport vector
 from libc.stdint cimport uint64_t
 
 from sparsehash.dense_hash_map cimport dense_hash_map
+from _hashing cimport FixedTable
 
 # Circular import problems here
 ctypedef size_t Lexeme_addr
@@ -24,6 +25,7 @@ from spacy.lexeme cimport Orthography
 
 cdef class Language:
     cdef object name
+    cdef FixedTable happax
     cdef Vocab* vocab
     cdef Vocab* distri
     cdef Vocab* ortho
@@ -39,3 +41,5 @@ cdef class Language:
     cdef Lexeme* init_lexeme(self, unicode string, StringHash hashed,
                              int split, size_t length)
     cdef Orthography* init_orth(self, StringHash hashed, unicode lex)
+
+    cdef int _happax_to_vocab(self, StringHash hashed, Lexeme_addr addr)

@@ -51,5 +51,3 @@ cdef class FixedTable:
 @cython.cdivision
 cdef inline size_t _find(uint64_t key, size_t size) nogil:
     return key % size
-
-

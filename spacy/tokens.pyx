@@ -3,7 +3,7 @@ from cython.operator cimport preincrement as inc
 
 
 from spacy.lexeme cimport Lexeme
-from spacy.lexeme cimport attr_of, norm_of, shape_of
+from spacy.lexeme cimport attr_of, lex_of, norm_of, shape_of
 from spacy.spacy cimport StringHash
 
 
