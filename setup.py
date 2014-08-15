@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 import Cython.Distutils
-from distutils.extension import Extension
+from Cython.Distutils import Extension
 import distutils.core
 
 import sys
@@ -33,25 +33,39 @@ compile_args = []
 link_args = []
 libs = []
 
-includes = []
+includes = ['.', 'murmurhash/']
+cython_includes = ['.']
 
 
 if 'VIRTUAL_ENV' in os.environ:
     includes += glob(path.join(os.environ['VIRTUAL_ENV'], 'include', 'site', '*'))
+    cython_includes += glob(path.join(os.environ['VIRTUAL_ENV'], 'lib', '*'))
 else:
     # If you're not using virtualenv, set your include dir here.
     pass
 
+print includes
+print cython_includes
 
 exts = [
-    Extension("spacy.en", ["spacy/en.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.en_ptb", ["spacy/en_ptb.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.lexeme", ["spacy/lexeme.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.spacy", ["spacy/spacy.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy._hashing", ["spacy/_hashing.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.tokens", ["spacy/tokens.pyx"], language="c++", include_dirs=includes),
+    Extension("spacy.en", ["spacy/en.pyx"], language="c++",
+              include_dirs=includes, cython_include_dirs=cython_includes),
+    Extension("spacy.en_ptb", ["spacy/en_ptb.pyx"], language="c++", include_dirs=includes,
+              cython_include_dirs=cython_includes),
+    Extension("spacy.lexeme", ["spacy/lexeme.pyx"], language="c++", include_dirs=includes,
+              cython_include_dirs=cython_includes),
+    Extension("spacy.spacy", ["spacy/spacy.pyx"], language="c++", include_dirs=includes,
+              cython_include_dirs=cython_includes),
+    Extension("spacy._hashing", ["spacy/_hashing.pyx"], language="c++", include_dirs=includes,
+              cython_include_dirs=cython_includes),
+    Extension("spacy.chartree", ["spacy/chartree.pyx"], language="c++", include_dirs=includes,
+              cython_include_dirs=cython_includes),
+    Extension("spacy.tokens", ["spacy/tokens.pyx"], language="c++", include_dirs=includes,
+              cython_include_dirs=cython_includes),
     Extension("spacy.string_tools", ["spacy/string_tools.pyx"], language="c++",
-              include_dirs=includes),
+              include_dirs=includes, cython_include_dirs=cython_includes),
+    Extension("murmurhash.mrmr", ["murmurhash/mrmr.pyx", 'murmurhash/MurmurHash2.cpp', 'murmurhash/MurmurHash3.cpp'], language="c++",
+              include_dirs=includes, cython_include_dirs=cython_includes)
 ]
 
 
