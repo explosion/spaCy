@@ -1,6 +1,14 @@
 # cython: profile=True
 
 
+cpdef bytes to_bytes(unicode string):
+    return string.encode('utf8')
+
+
+cpdef unicode from_bytes(bytes string):
+    return string.decode('utf8')
+
+
 cpdef unicode substr(unicode string, int start, int end, size_t length):
     if end >= length:
         end = -1
