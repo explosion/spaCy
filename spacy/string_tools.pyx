@@ -1,4 +1,10 @@
 # cython: profile=True
+from murmurhash cimport mrmr
+
+
+cdef StringHash hash_string(self, unsigned char* s, size_t length) except 0:
+    '''Hash bytes with MurmurHash32'''
+    return mrmr.hash32(s, length * sizeof(unsigned char), 0)
 
 
 cpdef unicode substr(unicode string, int start, int end, size_t length):

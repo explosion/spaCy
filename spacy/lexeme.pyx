@@ -20,6 +20,11 @@ from spacy.spacy cimport StringHash
 #SHAPE = StringAttr.shape
 #LAST3 = StringAttr.last3
 
+cdef Lexeme* init(StringHash hashed, bytes lex_string) except NULL:
+    cdef Lexeme* word = <Lexeme*>calloc(1, sizeof(Lexeme))
+    word.lex = hashed
+    return word
+
 
 cpdef StringHash attr_of(size_t lex_id, StringAttr attr) except 0:
     if attr == SIC:

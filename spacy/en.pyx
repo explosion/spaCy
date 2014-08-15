@@ -43,9 +43,8 @@ cdef bint is_punct(unicode word, size_t i, size_t length):
     # Don't count commas as punct if the next char is a number
     if word[i] == "," and i < (length - 1) and word[i+1].isdigit():
         return False
-    # Don't count periods as punct if the next char is not whitespace
-    if word[i] == "." and i < (length - 1) and not word[i+1].isspace():
-        return False
+    if word[i] == ".":
+        return True
     return not word[i].isalnum()
 
 
@@ -62,3 +61,6 @@ cpdef Lexeme_addr lookup(unicode string) except 0:
 
 cpdef unicode unhash(StringHash hash_value):
     return EN.unhash(hash_value)
+
+def words():
+    return EN.words

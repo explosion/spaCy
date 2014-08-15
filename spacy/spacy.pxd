@@ -4,6 +4,7 @@ from libc.stdint cimport uint64_t
 
 from sparsehash.dense_hash_map cimport dense_hash_map
 from _hashing cimport FixedTable
+from _hashing cimport WordTree
 
 # Circular import problems here
 ctypedef size_t Lexeme_addr
@@ -26,7 +27,7 @@ from spacy.lexeme cimport Orthography
 
 cdef class Language:
     cdef object name
-    cdef Vocab* vocab
+    cdef WordTree vocab
     cdef Vocab* distri
     cdef Vocab* ortho
     cdef dict bacov
@@ -37,7 +38,7 @@ cdef class Language:
     cdef unicode unhash(self, StringHash hashed)
     
     cpdef Tokens tokenize(self, unicode text)
-    cdef Lexeme* _add(self, StringHash hashed, unicode string, int split, size_t length)
+    cdef Lexeme* _add(self, StringHash hashed, unicode string, int split, size_t length) except NULL
     cdef Lexeme* init_lexeme(self, unicode string, StringHash hashed,
                              int split, size_t length)
     cdef Orthography* init_orth(self, StringHash hashed, unicode lex)
