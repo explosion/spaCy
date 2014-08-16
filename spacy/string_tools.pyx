@@ -1,6 +1,4 @@
 # cython: profile=True
-from murmurhash cimport mrmr
-
 
 cpdef bytes to_bytes(unicode string):
     return string.encode('utf8')

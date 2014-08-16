@@ -44,8 +44,6 @@ else:
     # If you're not using virtualenv, set your include dir here.
     pass
 
-print includes
-print cython_includes
 
 exts = [
     Extension("spacy.en", ["spacy/en.pyx"], language="c++",
@@ -64,8 +62,6 @@ exts = [
               cython_include_dirs=cython_includes),
     Extension("spacy.string_tools", ["spacy/string_tools.pyx"], language="c++",
               include_dirs=includes, cython_include_dirs=cython_includes),
-    Extension("murmurhash.mrmr", ["murmurhash/mrmr.pyx", 'murmurhash/MurmurHash2.cpp', 'murmurhash/MurmurHash3.cpp'], language="c++",
-              include_dirs=includes, cython_include_dirs=cython_includes)
 ]
 
 

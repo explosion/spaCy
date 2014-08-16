@@ -5,7 +5,6 @@ from libc.stdlib cimport calloc, free
 from libcpp.pair cimport pair
 from cython.operator cimport dereference as deref
 
-from murmurhash cimport mrmr
 from spacy.lexeme cimport Lexeme
 from spacy.lexeme cimport BLANK_WORD
 
@@ -14,11 +13,6 @@ from spacy.string_tools cimport substr
 from . import util
 from os import path
 cimport cython
-
-
-cdef inline StringHash hash_string(Py_UNICODE* string, size_t length) nogil:
-    '''Hash unicode with MurmurHash64A'''
-    return mrmr.hash32(<Py_UNICODE*>string, length * sizeof(Py_UNICODE), 0)
 
 
 def get_normalized(unicode lex, size_t length):
@@ -97,7 +91,7 @@ cdef class Language:
         if length == 0:
             return <Lexeme_addr>&BLANK_WORD
 
-        cdef StringHash hashed = hash_string(string, len(string))
+        cdef StringHash hashed = hash(string)
         # First, check words seen 2+ times
         cdef Lexeme* word_ptr = <Lexeme*>self.vocab[0][hashed]
         if word_ptr == NULL:
@@ -112,7 +106,7 @@ cdef class Language:
         cdef size_t length = len(string)
         if length == 0:
             return <Lexeme_addr>&BLANK_WORD
-        cdef StringHash hashed = hash_string(string, length)
+        cdef StringHash hashed = hash(string)
         # First, check words seen 2+ times
         cdef Lexeme* word_ptr = <Lexeme*>self.vocab[0][hashed]
         cdef int split
@@ -141,7 +135,7 @@ cdef class Language:
     cdef Lexeme* new_lexeme(self, StringHash key, unicode string) except NULL:
         cdef Lexeme* word = <Lexeme*>calloc(1, sizeof(Lexeme))
         word.sic = key
-        word.lex = hash_string(string, len(string))
+        word.lex = hash(string)
         self.bacov[word.lex] = string
         word.orth = self.lookup_orth(word.lex, string)
         word.dist = self.lookup_dist(word.lex)
@@ -162,11 +156,11 @@ cdef class Language:
         orth.flags = set_orth_flags(lex, orth.length)
         orth.norm = hashed
         last3 = substr(lex, length - 3, length, length)
-        orth.last3 = hash_string(last3, len(last3))
+        orth.last3 = hash(last3)
         norm = get_normalized(lex, length)
-        orth.norm = hash_string(norm, len(norm))
+        orth.norm = hash(norm)
         shape = get_word_shape(lex, length)
-        orth.shape = hash_string(shape, len(shape))
+        orth.shape = hash(shape)
 
         self.bacov[orth.last3] = last3
         self.bacov[orth.norm] = norm
@@ -191,12 +185,12 @@ cdef class Language:
         cdef Lexeme* word
         cdef StringHash hashed
         for chunk, lex, tokens in token_rules:
-            hashed = hash_string(chunk, len(chunk))
+            hashed = hash(chunk)
             word = <Lexeme*>self.new_lexeme(hashed, lex)
             for i, lex in enumerate(tokens):
                 token_string = '%s:@:%d:@:%s' % (chunk, i, lex)
                 length = len(token_string)
-                hashed = hash_string(token_string, len(token_string))
+                hashed = hash(token_string)
                 word.tail = <Lexeme*>self.new_lexeme(hashed, lex)
                 word = word.tail
 
@@ -214,7 +208,7 @@ cdef class Language:
                 # the first 4 bits. See redshift._parse_features.pyx
                 cluster = int(cluster_str[::-1], 2)
                 upper_pc, title_pc = case_stats.get(token_string.lower(), (0.0, 0.0))
-                hashed = hash_string(token_string, len(token_string))
+                hashed = hash(token_string)
                 word = self.init_lexeme(hashed, token_string)
 
 
