@@ -10,9 +10,6 @@ from spacy.lexeme cimport Lexeme
 from spacy.lexeme cimport BLANK_WORD
 
 from spacy.string_tools cimport substr
-from spacy.string_tools cimport to_bytes
-from spacy.string_tools cimport from_bytes
-
 
 from . import util
 from os import path
@@ -26,7 +23,7 @@ def get_normalized(unicode lex, size_t length):
         return get_word_shape(lex, length)
 
 
-def get_word_shape(lex, length):
+def get_word_shape(unicode lex, length):
     shape = ""
     last = ""
     shape_char = ""
@@ -71,51 +68,38 @@ cdef class Language:
         self.ortho[0].set_deleted_key(1)
         self.load_tokenization(util.read_tokenization(name))
 
-    cpdef Tokens tokenize(self, unicode string):
-        cdef size_t length = len(string)
-        cdef Py_UNICODE* characters = <Py_UNICODE*>string
-
-        cdef size_t i
-        cdef Py_UNICODE c
+    cpdef Tokens tokenize(self, unicode characters):
+        cdef size_t i = 0
+        cdef size_t start = 0
 
         cdef Tokens tokens = Tokens(self)
-        cdef Py_UNICODE* current = <Py_UNICODE*>calloc(len(string), sizeof(Py_UNICODE))
-        cdef size_t word_len = 0
         cdef Lexeme* token
-        for i in range(length):
-            c = characters[i]
+        for c in characters:
             if _is_whitespace(c):
-                if word_len != 0:
-                    token = <Lexeme*>self.lookup_chunk(current)
+                if start < i:
+                    token = <Lexeme*>self.lookup_chunk(characters[start:i])
                     while token != NULL:
                         tokens.append(<Lexeme_addr>token)
                         token = token.tail
-                    for j in range(word_len+1):
-                        current[j] = 0
-                    word_len = 0
-            else:
-                current[word_len] = c
-                word_len += 1
-        if word_len != 0:
-            token = <Lexeme*>self.lookup_chunk(current)
+                start = i + 1
+            i += 1
+        if start < i:
+            token = <Lexeme*>self.lookup_chunk(characters[start:])
             while token != NULL:
                 tokens.append(<Lexeme_addr>token)
                 token = token.tail
-        free(current)
         return tokens
 
     cdef Lexeme_addr lookup(self, unicode string) except 0:
         cdef size_t length = len(string)
         if length == 0:
             return <Lexeme_addr>&BLANK_WORD
-        cdef bytes b = to_bytes(string)
 
-        cdef StringHash hashed = mrmr.hash32(<char*>b, len(b) * sizeof(char), 0)
+        cdef StringHash hashed = mrmr.hash32(<Py_UNICODE*>string, length * sizeof(Py_UNICODE), 0)
         # First, check words seen 2+ times
         cdef Lexeme* word_ptr = <Lexeme*>self.vocab[0][hashed]
         if word_ptr == NULL:
             word_ptr = self.new_lexeme(hashed, string)
-            self.bacov[hashed] = b
         return <Lexeme_addr>word_ptr
 
     cdef Lexeme_addr lookup_chunk(self, unicode string) except 0:
@@ -126,7 +110,7 @@ cdef class Language:
         cdef size_t length = len(string)
         if length == 0:
             return <Lexeme_addr>&BLANK_WORD
-        cdef StringHash hashed = self.hash_string(string)
+        cdef StringHash hashed = mrmr.hash32(<Py_UNICODE*>string, length * sizeof(Py_UNICODE), 0)
         # First, check words seen 2+ times
         cdef Lexeme* word_ptr = <Lexeme*>self.vocab[0][hashed]
         cdef int split
@@ -168,11 +152,11 @@ cdef class Language:
 
         length = len(lex)
         orth = <Orthography*>calloc(1, sizeof(Orthography))
-        orth.first = <Py_UNICODE>lex[0]
+        orth.first = lex[0]
             
         orth.length = length
         orth.flags = set_orth_flags(lex, orth.length)
-        
+        orth.norm = hashed
         orth.last3 = self.hash_string(substr(lex, length - 3, length, length))
         orth.norm = self.hash_string(get_normalized(lex, length))
         orth.shape = self.hash_string(get_word_shape(lex, length))
@@ -185,17 +169,14 @@ cdef class Language:
         self.distri[0][hashed] = <size_t>dist
         return dist
 
-    cdef StringHash hash_string(self, unicode s) except 0:
+    cdef StringHash hash_string(self, unicode string) except 0:
         '''Hash unicode with MurmurHash64A'''
-        cdef bytes byte_string = to_bytes(s)
-
-        cdef StringHash hashed = mrmr.hash32(<char*>byte_string, len(byte_string) * sizeof(char), 0)
-        self.bacov[hashed] = byte_string
+        cdef StringHash hashed = mrmr.hash32(<Py_UNICODE*>string, len(string) * sizeof(Py_UNICODE), 0)
         return hashed
 
     cdef unicode unhash(self, StringHash hash_value):
         '''Fetch a string from the reverse index, given its hash value.'''
-        return from_bytes(self.bacov[hash_value])
+        return self.bacov[hash_value]
 
     cdef int find_split(self, unicode word, size_t length):
         return -1
@@ -231,12 +212,12 @@ cdef class Language:
                 word = self.init_lexeme(hashed, token_string)
 
 
-cdef inline bint _is_whitespace(Py_UNICODE c) nogil:
-    if c == ' ':
+cdef inline bint _is_whitespace(unsigned char c) nogil:
+    if c == b' ':
         return True
-    elif c == '\n':
+    elif c == b'\n':
         return True
-    elif c == '\t':
+    elif c == b'\t':
         return True
     else:
         return False
