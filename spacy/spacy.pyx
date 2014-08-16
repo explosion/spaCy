@@ -5,6 +5,7 @@ from libc.stdlib cimport calloc, free
 from libcpp.pair cimport pair
 from cython.operator cimport dereference as deref
 
+from murmurhash cimport mrmr
 from spacy.lexeme cimport Lexeme
 from spacy.lexeme cimport BLANK_WORD
 
@@ -13,6 +14,13 @@ from spacy.string_tools cimport substr
 from . import util
 from os import path
 cimport cython
+
+
+#cdef inline StringHash hash_string(unicode string, size_t length):
+#    '''Hash unicode with MurmurHash64A'''
+#    return hash(string)
+#    #cdef bytes byte_string = string.encode('utf8')
+#    #return mrmr.hash32(<char*>byte_string, len(byte_string) * sizeof(char), 0)
 
 
 def get_normalized(unicode lex, size_t length):
@@ -56,10 +64,9 @@ cdef class Language:
     def __cinit__(self, name):
         self.name = name
         self.bacov = {}
-        self.vocab = new Vocab()
+        self.vocab = WordTree(0, 5)
         self.ortho = new Vocab()
         self.distri = new Vocab()
-        self.vocab[0].set_empty_key(0)
         self.distri[0].set_empty_key(0)
         self.ortho[0].set_empty_key(0)
         self.load_tokenization(util.read_tokenization(name))
@@ -93,9 +100,9 @@ cdef class Language:
 
         cdef StringHash hashed = hash(string)
         # First, check words seen 2+ times
-        cdef Lexeme* word_ptr = <Lexeme*>self.vocab[0][hashed]
+        cdef Lexeme* word_ptr = <Lexeme*>self.vocab.get(string)
         if word_ptr == NULL:
-            word_ptr = self.new_lexeme(hashed, string)
+            word_ptr = self.new_lexeme(string, string)
         return <Lexeme_addr>word_ptr
 
     cdef Lexeme_addr lookup_chunk(self, unicode string) except 0:
@@ -106,18 +113,16 @@ cdef class Language:
         cdef size_t length = len(string)
         if length == 0:
             return <Lexeme_addr>&BLANK_WORD
-        cdef StringHash hashed = hash(string)
         # First, check words seen 2+ times
-        cdef Lexeme* word_ptr = <Lexeme*>self.vocab[0][hashed]
+        cdef Lexeme* word_ptr = <Lexeme*>self.vocab.get(string)
         cdef int split
         if word_ptr == NULL:
             split = self.find_split(string, length)
             if split != 0 and split != -1 and split < length:
-                word_ptr = self.new_lexeme(hashed, string[:split])
+                word_ptr = self.new_lexeme(string, string[:split])
                 word_ptr.tail = <Lexeme*>self.lookup_chunk(string[split:])
-                self.bacov[hashed] = string
             else:
-                word_ptr = self.new_lexeme(hashed, string)
+                word_ptr = self.new_lexeme(string, string)
         return <Lexeme_addr>word_ptr
 
     cdef Orthography* lookup_orth(self, StringHash hashed, unicode lex):
@@ -132,14 +137,15 @@ cdef class Language:
             dist = self.new_dist(hashed)
         return dist
 
-    cdef Lexeme* new_lexeme(self, StringHash key, unicode string) except NULL:
+    cdef Lexeme* new_lexeme(self, unicode key, unicode string) except NULL:
         cdef Lexeme* word = <Lexeme*>calloc(1, sizeof(Lexeme))
-        word.sic = key
+        word.sic = hash(key)
         word.lex = hash(string)
         self.bacov[word.lex] = string
+        self.bacov[word.sic] = key
         word.orth = self.lookup_orth(word.lex, string)
         word.dist = self.lookup_dist(word.lex)
-        self.vocab[0][key] = <size_t>word
+        self.vocab.set(key, <size_t>word)
         return word   
 
     cdef Orthography* new_orth(self, StringHash hashed, unicode lex) except NULL:
@@ -185,13 +191,10 @@ cdef class Language:
         cdef Lexeme* word
         cdef StringHash hashed
         for chunk, lex, tokens in token_rules:
-            hashed = hash(chunk)
-            word = <Lexeme*>self.new_lexeme(hashed, lex)
+            word = <Lexeme*>self.new_lexeme(chunk, lex)
             for i, lex in enumerate(tokens):
                 token_string = '%s:@:%d:@:%s' % (chunk, i, lex)
-                length = len(token_string)
-                hashed = hash(token_string)
-                word.tail = <Lexeme*>self.new_lexeme(hashed, lex)
+                word.tail = <Lexeme*>self.new_lexeme(token_string, lex)
                 word = word.tail
 
     def load_clusters(self):
@@ -208,8 +211,7 @@ cdef class Language:
                 # the first 4 bits. See redshift._parse_features.pyx
                 cluster = int(cluster_str[::-1], 2)
                 upper_pc, title_pc = case_stats.get(token_string.lower(), (0.0, 0.0))
-                hashed = hash(token_string)
-                word = self.init_lexeme(hashed, token_string)
+                word = self.new_lexeme(token_string, token_string)
 
 
 cdef inline bint _is_whitespace(unsigned char c) nogil:
