@@ -30,14 +30,19 @@ cdef class Language:
     cdef Vocab* distri
     cdef Vocab* ortho
     cdef dict bacov
-    cdef int find_split(self, unicode word, size_t length)
 
-    cdef Lexeme_addr lookup(self, int split, Py_UNICODE* string, size_t length) except 0
-    cdef StringHash hash_string(self, Py_UNICODE* string, size_t length) except 0
+    cpdef Tokens tokenize(self, unicode text)
+
+    cdef Lexeme_addr lookup(self, unicode string) except 0
+    cdef Lexeme_addr lookup_chunk(self, unicode string) except 0
+    cdef Orthography* lookup_orth(self, StringHash key, unicode lex) except NULL
+    cdef Distribution* lookup_dist(self, StringHash key) except NULL
+    
+    cdef Lexeme* new_lexeme(self, StringHash key, unicode lex) except NULL
+    cdef Orthography* new_orth(self, StringHash hashed, unicode lex) except NULL
+    cdef Distribution* new_dist(self, StringHash key) except NULL
+    
+    cdef StringHash hash_string(self, unicode string) except 0
     cdef unicode unhash(self, StringHash hashed)
     
-    cpdef Tokens tokenize(self, unicode text)
-    cdef Lexeme* _add(self, StringHash hashed, unicode string, int split, size_t length)
-    cdef Lexeme* init_lexeme(self, unicode string, StringHash hashed,
-                             int split, size_t length)
-    cdef Orthography* init_orth(self, StringHash hashed, unicode lex)
+    cdef int find_split(self, unicode word, size_t length)

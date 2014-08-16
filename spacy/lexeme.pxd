@@ -9,9 +9,6 @@ ctypedef char Bits8
 ctypedef uint64_t Bits64
 
 
-from spacy.spacy cimport Language
-
-
 cdef struct Orthography:
     StringHash last3
     StringHash shape
