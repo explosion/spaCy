@@ -16,6 +16,11 @@ from os import path
 cimport cython
 
 
+cdef inline StringHash hash_string(Py_UNICODE* string, size_t length) nogil:
+    '''Hash unicode with MurmurHash64A'''
+    return mrmr.hash32(<Py_UNICODE*>string, length * sizeof(Py_UNICODE), 0)
+
+
 def get_normalized(unicode lex, size_t length):
     if lex.isalpha() and lex.islower():
         return lex
@@ -63,9 +68,6 @@ cdef class Language:
         self.vocab[0].set_empty_key(0)
         self.distri[0].set_empty_key(0)
         self.ortho[0].set_empty_key(0)
-        self.vocab[0].set_deleted_key(1)
-        self.distri[0].set_deleted_key(1)
-        self.ortho[0].set_deleted_key(1)
         self.load_tokenization(util.read_tokenization(name))
 
     cpdef Tokens tokenize(self, unicode characters):
@@ -95,7 +97,7 @@ cdef class Language:
         if length == 0:
             return <Lexeme_addr>&BLANK_WORD
 
-        cdef StringHash hashed = mrmr.hash32(<Py_UNICODE*>string, length * sizeof(Py_UNICODE), 0)
+        cdef StringHash hashed = hash_string(string, len(string))
         # First, check words seen 2+ times
         cdef Lexeme* word_ptr = <Lexeme*>self.vocab[0][hashed]
         if word_ptr == NULL:
@@ -110,7 +112,7 @@ cdef class Language:
         cdef size_t length = len(string)
         if length == 0:
             return <Lexeme_addr>&BLANK_WORD
-        cdef StringHash hashed = mrmr.hash32(<Py_UNICODE*>string, length * sizeof(Py_UNICODE), 0)
+        cdef StringHash hashed = hash_string(string, length)
         # First, check words seen 2+ times
         cdef Lexeme* word_ptr = <Lexeme*>self.vocab[0][hashed]
         cdef int split
@@ -119,6 +121,7 @@ cdef class Language:
             if split != 0 and split != -1 and split < length:
                 word_ptr = self.new_lexeme(hashed, string[:split])
                 word_ptr.tail = <Lexeme*>self.lookup_chunk(string[split:])
+                self.bacov[hashed] = string
             else:
                 word_ptr = self.new_lexeme(hashed, string)
         return <Lexeme_addr>word_ptr
@@ -138,7 +141,8 @@ cdef class Language:
     cdef Lexeme* new_lexeme(self, StringHash key, unicode string) except NULL:
         cdef Lexeme* word = <Lexeme*>calloc(1, sizeof(Lexeme))
         word.sic = key
-        word.lex = self.hash_string(string)
+        word.lex = hash_string(string, len(string))
+        self.bacov[word.lex] = string
         word.orth = self.lookup_orth(word.lex, string)
         word.dist = self.lookup_dist(word.lex)
         self.vocab[0][key] = <size_t>word
@@ -157,9 +161,16 @@ cdef class Language:
         orth.length = length
         orth.flags = set_orth_flags(lex, orth.length)
         orth.norm = hashed
-        orth.last3 = self.hash_string(substr(lex, length - 3, length, length))
-        orth.norm = self.hash_string(get_normalized(lex, length))
-        orth.shape = self.hash_string(get_word_shape(lex, length))
+        last3 = substr(lex, length - 3, length, length)
+        orth.last3 = hash_string(last3, len(last3))
+        norm = get_normalized(lex, length)
+        orth.norm = hash_string(norm, len(norm))
+        shape = get_word_shape(lex, length)
+        orth.shape = hash_string(shape, len(shape))
+
+        self.bacov[orth.last3] = last3
+        self.bacov[orth.norm] = norm
+        self.bacov[orth.shape] = shape
 
         self.ortho[0][hashed] = <size_t>orth
         return orth
@@ -168,11 +179,6 @@ cdef class Language:
         dist = <Distribution*>calloc(1, sizeof(Distribution))
         self.distri[0][hashed] = <size_t>dist
         return dist
-
-    cdef StringHash hash_string(self, unicode string) except 0:
-        '''Hash unicode with MurmurHash64A'''
-        cdef StringHash hashed = mrmr.hash32(<Py_UNICODE*>string, len(string) * sizeof(Py_UNICODE), 0)
-        return hashed
 
     cdef unicode unhash(self, StringHash hash_value):
         '''Fetch a string from the reverse index, given its hash value.'''
@@ -185,12 +191,12 @@ cdef class Language:
         cdef Lexeme* word
         cdef StringHash hashed
         for chunk, lex, tokens in token_rules:
-            hashed = self.hash_string(chunk)
+            hashed = hash_string(chunk, len(chunk))
             word = <Lexeme*>self.new_lexeme(hashed, lex)
             for i, lex in enumerate(tokens):
                 token_string = '%s:@:%d:@:%s' % (chunk, i, lex)
                 length = len(token_string)
-                hashed = self.hash_string(token_string)
+                hashed = hash_string(token_string, len(token_string))
                 word.tail = <Lexeme*>self.new_lexeme(hashed, lex)
                 word = word.tail
 
@@ -208,7 +214,7 @@ cdef class Language:
                 # the first 4 bits. See redshift._parse_features.pyx
                 cluster = int(cluster_str[::-1], 2)
                 upper_pc, title_pc = case_stats.get(token_string.lower(), (0.0, 0.0))
-                hashed = self.hash_string(token_string)
+                hashed = hash_string(token_string, len(token_string))
                 word = self.init_lexeme(hashed, token_string)
 
 

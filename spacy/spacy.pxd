@@ -42,7 +42,6 @@ cdef class Language:
     cdef Orthography* new_orth(self, StringHash hashed, unicode lex) except NULL
     cdef Distribution* new_dist(self, StringHash key) except NULL
     
-    cdef StringHash hash_string(self, unicode string) except 0
     cdef unicode unhash(self, StringHash hashed)
     
     cdef int find_split(self, unicode word, size_t length)

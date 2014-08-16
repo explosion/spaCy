@@ -15,7 +15,7 @@ cdef struct Orthography:
     StringHash norm
 
     size_t length
-    Py_UNICODE first
+    unsigned char first
     Bits8 flags
 
 
