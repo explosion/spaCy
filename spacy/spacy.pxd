@@ -29,20 +29,20 @@ from spacy._hashing cimport WordTree
 cdef class Language:
     cdef object name
     cdef WordTree vocab
-    cdef Vocab* distri
-    cdef Vocab* ortho
+    cdef WordTree distri
+    cdef WordTree ortho
     cdef dict bacov
 
     cpdef Tokens tokenize(self, unicode text)
 
     cdef Lexeme_addr lookup(self, unicode string) except 0
     cdef Lexeme_addr lookup_chunk(self, unicode string) except 0
-    cdef Orthography* lookup_orth(self, StringHash key, unicode lex) except NULL
-    cdef Distribution* lookup_dist(self, StringHash key) except NULL
+    cdef Orthography* lookup_orth(self, unicode lex) except NULL
+    cdef Distribution* lookup_dist(self, unicode lex) except NULL
     
     cdef Lexeme* new_lexeme(self, unicode key, unicode lex) except NULL
-    cdef Orthography* new_orth(self, StringHash hashed, unicode lex) except NULL
-    cdef Distribution* new_dist(self, StringHash key) except NULL
+    cdef Orthography* new_orth(self, unicode lex) except NULL
+    cdef Distribution* new_dist(self, unicode lex) except NULL
     
     cdef unicode unhash(self, StringHash hashed)
     

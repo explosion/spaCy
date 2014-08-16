@@ -65,10 +65,8 @@ cdef class Language:
         self.name = name
         self.bacov = {}
         self.vocab = WordTree(0, 5)
-        self.ortho = new Vocab()
-        self.distri = new Vocab()
-        self.distri[0].set_empty_key(0)
-        self.ortho[0].set_empty_key(0)
+        self.ortho = WordTree(0, 5)
+        self.distri = WordTree(0, 5)
         self.load_tokenization(util.read_tokenization(name))
 
     cpdef Tokens tokenize(self, unicode characters):
@@ -125,16 +123,16 @@ cdef class Language:
                 word_ptr = self.new_lexeme(string, string)
         return <Lexeme_addr>word_ptr
 
-    cdef Orthography* lookup_orth(self, StringHash hashed, unicode lex):
-        cdef Orthography* orth = <Orthography*>self.ortho[0][hashed]
+    cdef Orthography* lookup_orth(self, unicode lex):
+        cdef Orthography* orth = <Orthography*>self.ortho.get(lex)
         if orth == NULL:
-            orth = self.new_orth(hashed, lex)
+            orth = self.new_orth(lex)
         return orth
 
-    cdef Distribution* lookup_dist(self, StringHash hashed):
-        cdef Distribution* dist = <Distribution*>self.distri[0][hashed]
+    cdef Distribution* lookup_dist(self, unicode lex):
+        cdef Distribution* dist = <Distribution*>self.distri.get(lex)
         if dist == NULL:
-            dist = self.new_dist(hashed)
+            dist = self.new_dist(lex)
         return dist
 
     cdef Lexeme* new_lexeme(self, unicode key, unicode string) except NULL:
@@ -143,12 +141,12 @@ cdef class Language:
         word.lex = hash(string)
         self.bacov[word.lex] = string
         self.bacov[word.sic] = key
-        word.orth = self.lookup_orth(word.lex, string)
-        word.dist = self.lookup_dist(word.lex)
+        word.orth = self.lookup_orth(string)
+        word.dist = self.lookup_dist(string)
         self.vocab.set(key, <size_t>word)
-        return word   
+        return word
 
-    cdef Orthography* new_orth(self, StringHash hashed, unicode lex) except NULL:
+    cdef Orthography* new_orth(self, unicode lex) except NULL:
         cdef unicode last3
         cdef unicode norm
         cdef unicode shape
@@ -160,7 +158,7 @@ cdef class Language:
             
         orth.length = length
         orth.flags = set_orth_flags(lex, orth.length)
-        orth.norm = hashed
+        orth.norm = hash(lex)
         last3 = substr(lex, length - 3, length, length)
         orth.last3 = hash(last3)
         norm = get_normalized(lex, length)
@@ -172,12 +170,12 @@ cdef class Language:
         self.bacov[orth.norm] = norm
         self.bacov[orth.shape] = shape
 
-        self.ortho[0][hashed] = <size_t>orth
+        self.ortho.set(lex, <size_t>orth)
         return orth
 
-    cdef Distribution* new_dist(self, StringHash hashed) except NULL:
+    cdef Distribution* new_dist(self, unicode lex) except NULL:
         dist = <Distribution*>calloc(1, sizeof(Distribution))
-        self.distri[0][hashed] = <size_t>dist
+        self.distri.set(lex, <size_t>dist)
         return dist
 
     cdef unicode unhash(self, StringHash hash_value):
