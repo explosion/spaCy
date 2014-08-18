@@ -33,7 +33,7 @@ cdef class Language:
     cdef Tokens tokenize(self, unicode text)
 
     cdef Lexeme* lookup(self, unicode string) except NULL
-    cdef Lexeme** lookup_chunk(self, Py_UNICODE* chunk, size_t length) except NULL
+    cdef Lexeme** lookup_chunk(self, unicode chunk) except NULL
     
     cdef Lexeme** new_chunk(self, unicode string, list substrings) except NULL
     cdef Lexeme* new_lexeme(self, unicode lex) except NULL
