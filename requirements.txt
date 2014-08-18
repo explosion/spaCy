@@ -1,6 +1,5 @@
 cython
 sparsehash
-murmurhash
 fabric
 pytest
 
