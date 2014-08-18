@@ -73,10 +73,9 @@ cdef class Language:
     cdef Tokens tokenize(self, unicode string):
         cdef Lexeme** chunk
         cdef Tokens tokens = Tokens(self)
-        cdef bytes byte_string = string.encode('utf8')
-        cdef size_t length = len(byte_string)
-        cdef char* characters = <char*>byte_string
-        cdef char c
+        cdef size_t length = len(string)
+        cdef Py_UNICODE* characters = <Py_UNICODE*>string
+        cdef Py_UNICODE c
         cdef size_t start = 0
         cdef size_t i
         for i in range(length):
@@ -86,7 +85,6 @@ cdef class Language:
                     chunk = self.lookup_chunk(&characters[start], i - start)
                     _extend(tokens, chunk)
                 start = i + 1
-            i += 1
         if start < i:
             chunk = self.lookup_chunk(&characters[start], length - start)
             _extend(tokens, chunk)
@@ -100,14 +98,12 @@ cdef class Language:
             word = self.new_lexeme(string)
         return word
 
-    cdef Lexeme** lookup_chunk(self, char* c_string, size_t length) except NULL:
-        cdef StringHash h = mrmr.hash32(c_string, length * sizeof(char), 0)
+    cdef Lexeme** lookup_chunk(self, Py_UNICODE* c_string, size_t length) except NULL:
+        cdef StringHash h = mrmr.hash32(c_string, length * sizeof(Py_UNICODE), 0)
         cdef Lexeme** chunk = <Lexeme**>self.chunks[h]
         cdef int split
-        cdef unicode ustring
         if chunk == NULL:
-            ustring = c_string[:length].decode('utf8')
-            chunk = self.new_chunk(ustring, self.find_substrings(ustring))
+            chunk = self.new_chunk(c_string[:length], self.find_substrings(c_string[:length]))
             self.chunks[h] = <size_t>chunk
         return chunk
 
@@ -177,15 +173,13 @@ cdef class Language:
 
     def load_tokenization(self, token_rules=None):
         cdef StringHash h
-        cdef char* c_string
+        cdef Py_UNICODE* c_string
         cdef bytes byte_string
         for chunk, tokens in token_rules:
-            byte_string = chunk.encode('utf8')
-            length = len(byte_string)
-            c_string = <char*>byte_string
-            h = mrmr.hash32(c_string, length * sizeof(char), 0)
+            length = len(chunk)
+            c_string = <Py_UNICODE*>chunk
+            h = mrmr.hash32(c_string, length * sizeof(Py_UNICODE), 0)
             self.chunks[h] = <size_t>self.new_chunk(chunk, tokens)
-
 
     def load_clusters(self):
         cdef Lexeme* w
@@ -204,12 +198,12 @@ cdef class Language:
                 self.new_lexeme(token_string)
 
 
-cdef inline bint _is_whitespace(char c) nogil:
-    if c == b' ':
+cdef inline bint _is_whitespace(Py_UNICODE c) nogil:
+    if c == ' ':
         return True
-    elif c == b'\n':
+    elif c == '\n':
         return True
-    elif c == b'\t':
+    elif c == '\t':
         return True
     else:
         return False
