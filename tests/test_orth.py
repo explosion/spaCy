@@ -4,7 +4,7 @@ import pytest
 
 from spacy.en import lookup, unhash
 
-from spacy.lexeme import sic_of, lex_of, norm_of, shape_of, first_of, length_of
+from spacy.lexeme import lex_of, norm_of, shape_of, first_of, length_of
 from spacy.lexeme import shape_of
 
 @pytest.fixture

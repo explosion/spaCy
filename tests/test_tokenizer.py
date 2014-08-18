@@ -19,15 +19,12 @@ def test_two_words():
 
 
 def test_punct():
-    lex_ids = tokenize('hello, possums.')
-    assert len(lex_ids) == 4
-    assert lex_ids[0] != lookup('hello')
-    assert lex_of(lex_ids[0]) == lex_of(lookup('hello'))
-    assert lex_ids[2] == lookup('possums.')
-    assert lex_of(lex_ids[2]) == lex_of(lookup('possums.'))
-    assert lex_of(lex_ids[2]) == lex_of(lookup('possums'))
-    assert lex_of(lex_ids[1]) != lex_of(lookup('hello'))
-    assert lex_ids[0] != lookup('hello.')
+    tokens = tokenize('hello, possums.')
+    assert len(tokens) == 4
+    assert lex_of(tokens[0]) == lex_of(lookup('hello'))
+    assert lex_of(tokens[1]) == lex_of(lookup(','))
+    assert lex_of(tokens[2]) == lex_of(lookup('possums'))
+    assert lex_of(tokens[1]) != lex_of(lookup('hello'))
 
 
 def test_digits():

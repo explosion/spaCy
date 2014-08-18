@@ -32,14 +32,13 @@ cdef struct Lexeme:
 
     Distribution* dist # Distribution info, lazy loaded
     Orthography* orth  # Extra orthographic views
-    Lexeme* tail # Lexemes are linked lists, to deal with sub-tokens
+    #Lexeme* tail # Lexemes are linked lists, to deal with sub-tokens
 
 
 cdef Lexeme BLANK_WORD = Lexeme(0, 0, NULL, NULL, NULL)
 
 
 cdef enum StringAttr:
-    SIC
     LEX
     NORM
     SHAPE
@@ -49,7 +48,6 @@ cdef enum StringAttr:
 
 cpdef StringHash attr_of(size_t lex_id, StringAttr attr) except 0
 
-cpdef StringHash sic_of(size_t lex_id) except 0
 cpdef StringHash lex_of(size_t lex_id) except 0
 cpdef StringHash norm_of(size_t lex_id) except 0
 cpdef StringHash shape_of(size_t lex_id) except 0

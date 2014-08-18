@@ -22,9 +22,7 @@ from spacy.spacy cimport StringHash
 
 
 cpdef StringHash attr_of(size_t lex_id, StringAttr attr) except 0:
-    if attr == SIC:
-        return sic_of(lex_id)
-    elif attr == LEX:
+    if attr == LEX:
         return lex_of(lex_id)
     elif attr == NORM:
         return norm_of(lex_id)
@@ -36,18 +34,6 @@ cpdef StringHash attr_of(size_t lex_id, StringAttr attr) except 0:
         return length_of(lex_id)
     else:
         raise StandardError
-
-
-cpdef StringHash sic_of(size_t lex_id) except 0:
-    '''Access the `sic' field of the Lexeme pointed to by lex_id.
-    
-    The sic field stores the hash of the whitespace-delimited string-chunk used to
-    construct the Lexeme.
-    
-    >>> [unhash(sic_of(lex_id)) for lex_id in from_string(u'Hi! world')]
-    [u'Hi!', u'', u'world]
-    '''
-    return (<Lexeme*>lex_id).sic
 
 
 cpdef StringHash lex_of(size_t lex_id) except 0:

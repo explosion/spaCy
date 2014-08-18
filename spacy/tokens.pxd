@@ -1,5 +1,6 @@
 from libcpp.vector cimport vector
 from spacy.spacy cimport Lexeme_addr
+from spacy.lexeme cimport Lexeme
 
 from cython.operator cimport dereference as deref
 from spacy.spacy cimport Language

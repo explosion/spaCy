@@ -5,7 +5,7 @@ import pytest
 from spacy import en
 from spacy.lexeme import lex_of
 
-from spacy import SIC, LEX, NORM, SHAPE, LAST3
+from spacy import LEX, NORM, SHAPE, LAST3
 
 
 def test_group_by_lex():

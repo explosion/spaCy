@@ -32,13 +32,12 @@ def read_tokenization(lang):
                 continue
             pieces = line.split()
             chunk = pieces.pop(0)
-            lex = pieces.pop(0)
             assert chunk not in seen, chunk
             seen.add(chunk)
-            entries.append((chunk, lex, pieces))
+            entries.append((chunk, list(pieces)))
             if chunk[0].isalpha() and chunk[0].islower():
                 chunk = chunk[0].title() + chunk[1:]
-                lex = lex[0].title() + lex[1:]
+                pieces[0] = pieces[0][0].title() + pieces[0][1:]
                 seen.add(chunk)
-                entries.append((chunk, lex, pieces))
+                entries.append((chunk, pieces))
     return entries

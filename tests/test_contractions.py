@@ -1,44 +1,43 @@
 from __future__ import unicode_literals
 
-from spacy.spacy import expand_chunk
-from spacy.en import lookup, unhash
+from spacy.en import tokenize, lookup, unhash
 
 from spacy import lex_of
 
 
 def test_possess():
-    tokens = expand_chunk(lookup("Mike's"))
-    assert len(tokens) == 2
+    tokens = tokenize("Mike's")
     assert unhash(lex_of(tokens[0])) == "Mike"
     assert unhash(lex_of(tokens[1])) == "'s"
+    assert len(tokens) == 2
 
 
 def test_apostrophe():
-    tokens = expand_chunk(lookup("schools'"))
+    tokens = tokenize("schools'")
     assert len(tokens) == 2
     assert unhash(lex_of(tokens[1])) == "'"
     assert unhash(lex_of(tokens[0])) == "schools"
 
 
 def test_LL():
-    tokens = expand_chunk(lookup("we'll"))
+    tokens = tokenize("we'll")
     assert len(tokens) == 2
     assert unhash(lex_of(tokens[1])) == "will"
     assert unhash(lex_of(tokens[0])) == "we"
 
 
 def test_aint():
-    tokens = expand_chunk(lookup("ain't"))
+    tokens = tokenize("ain't")
     assert len(tokens) == 2
     assert unhash(lex_of(tokens[0])) == "are"
     assert unhash(lex_of(tokens[1])) == "not"
 
 
 def test_capitalized():
-    tokens = expand_chunk(lookup("can't"))
+    tokens = tokenize("can't")
     assert len(tokens) == 2
-    tokens = expand_chunk(lookup("Can't"))
+    tokens = tokenize("Can't")
     assert len(tokens) == 2
-    tokens = expand_chunk(lookup("Ain't"))
+    tokens = tokenize("Ain't")
     assert len(tokens) == 2
     assert unhash(lex_of(tokens[0])) == "Are"

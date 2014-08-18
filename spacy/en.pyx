@@ -17,10 +17,13 @@ cimport spacy
 
 
 cdef class English(spacy.Language):
-    cdef int find_split(self, unicode word, size_t length):
+    cdef int find_split(self, unicode word):
+        cdef size_t length = len(word)
         cdef int i = 0
+        if word.startswith("'s") or word.startswith("'S"):
+            return 2
         # Contractions
-        if word.endswith("'s"):
+        if word.endswith("'s") and length >= 3:
             return length - 2
         # Leading punctuation
         if is_punct(word, 0, length):
@@ -36,7 +39,6 @@ cdef class English(spacy.Language):
 cdef bint is_punct(unicode word, size_t i, size_t length):
     # Don't count appostrophes as punct if the next char is a letter
     if word[i] == "'" and i < (length - 1) and word[i+1].isalpha():
-        # ...Unless we're at 0
         return i == 0
     if word[i] == "-" and i < (length - 1) and word[i+1] == '-':
         return False
@@ -57,7 +59,7 @@ cpdef Tokens tokenize(unicode string):
  
 
 cpdef Lexeme_addr lookup(unicode string) except 0:
-    return EN.lookup_chunk(string)
+    return <Lexeme_addr>EN.lookup(string)
 
 
 cpdef unicode unhash(StringHash hash_value):

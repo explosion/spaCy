@@ -17,7 +17,8 @@ cimport spacy
 
 
 cdef class EnglishPTB(Language):
-    cdef int find_split(self, unicode word, size_t length):
+    cdef int find_split(self, unicode word):
+        length = len(word)
         cdef int i = 0
         # Contractions
         if word.endswith("'s"):
@@ -53,7 +54,7 @@ cpdef Tokens tokenize(unicode string):
 
 
 cpdef Lexeme_addr lookup(unicode string) except 0:
-    return EN_PTB.lookup_chunk(string)
+    return <Lexeme_addr>EN_PTB.lookup_chunk(string)
 
 
 cpdef unicode unhash(StringHash hash_value):

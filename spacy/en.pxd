@@ -9,7 +9,7 @@ from spacy.tokens cimport Tokens
 
 
 cdef class English(spacy.Language):
-    cdef int find_split(self, unicode word, size_t length)
+    cdef int find_split(self, unicode word)
 
 cdef English EN
 

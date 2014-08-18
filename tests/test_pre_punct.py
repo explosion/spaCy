@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
 
 from spacy import lex_of
-from spacy.spacy import expand_chunk
 from spacy.en import lookup
+from spacy.en import tokenize
 from spacy.en import unhash
 
 import pytest
@@ -17,9 +17,7 @@ def test_open(open_puncts):
     word_str = 'Hello'
     for p in open_puncts:
         string = p + word_str
-        token = lookup(string)
-        assert unhash(lex_of(token)) == p
-        tokens = expand_chunk(token)
+        tokens = tokenize(string)
         assert len(tokens) == 2
         assert unhash(lex_of(tokens[0])) == p
         assert unhash(lex_of(tokens[1])) == word_str
@@ -29,9 +27,7 @@ def test_two_different_open(open_puncts):
     word_str = 'Hello'
     for p in open_puncts:
         string = p + "`" + word_str
-        token = lookup(string)
-        assert unhash(lex_of(token)) == p
-        tokens = expand_chunk(token)
+        tokens = tokenize(string)
         assert len(tokens) == 3
         assert unhash(lex_of(tokens[0])) == p
         assert unhash(lex_of(tokens[1])) == "`"
@@ -42,9 +38,7 @@ def test_three_same_open(open_puncts):
     word_str = 'Hello'
     for p in open_puncts:
         string = p + p + p + word_str
-        token = lookup(string)
-        assert unhash(lex_of(token)) == p
-        tokens = expand_chunk(token)
+        tokens = tokenize(string)
         assert len(tokens) == 4
         assert unhash(lex_of(tokens[0])) == p
         assert unhash(lex_of(tokens[3])) == word_str
@@ -52,6 +46,6 @@ def test_three_same_open(open_puncts):
 
 def test_open_appostrophe():
     string = "'The"
-    tokens = expand_chunk(lookup(string))
+    tokens = tokenize(string)
     assert len(tokens) == 2
     assert unhash(lex_of(tokens[0])) == "'"

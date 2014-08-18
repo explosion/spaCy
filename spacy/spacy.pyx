@@ -5,7 +5,6 @@ from libc.stdlib cimport calloc, free
 from libcpp.pair cimport pair
 from cython.operator cimport dereference as deref
 
-from murmurhash cimport mrmr
 from spacy.lexeme cimport Lexeme
 from spacy.lexeme cimport BLANK_WORD
 
@@ -64,86 +63,56 @@ cdef class Language:
     def __cinit__(self, name):
         self.name = name
         self.bacov = {}
-        self.vocab = WordTree(0, 5)
-        self.ortho = WordTree(0, 5)
-        self.distri = WordTree(0, 5)
+        self.chunks = dense_hash_map[StringHash, size_t]()
+        self.vocab = dense_hash_map[StringHash, size_t]()
+        self.chunks.set_empty_key(0)
+        self.vocab.set_empty_key(0)
         self.load_tokenization(util.read_tokenization(name))
 
-    cpdef Tokens tokenize(self, unicode characters):
+    cdef Tokens tokenize(self, unicode characters):
         cdef size_t i = 0
         cdef size_t start = 0
-
+        cdef Lexeme** chunk
         cdef Tokens tokens = Tokens(self)
-        cdef Lexeme* token
-        for c in characters:
-            if _is_whitespace(c):
-                if start < i:
-                    token = <Lexeme*>self.lookup_chunk(characters[start:i])
-                    while token != NULL:
-                        tokens.append(<Lexeme_addr>token)
-                        token = token.tail
-                start = i + 1
-            i += 1
-        if start < i:
-            token = <Lexeme*>self.lookup_chunk(characters[start:])
-            while token != NULL:
-                tokens.append(<Lexeme_addr>token)
-                token = token.tail
+        for chunk_str in characters.split():
+            chunk = self.lookup_chunk(chunk_str)
+            i = 0
+            while chunk[i] != NULL:
+                tokens.append(<Lexeme_addr>chunk[i])
+                i += 1
         return tokens
 
-    cdef Lexeme_addr lookup(self, unicode string) except 0:
-        cdef size_t length = len(string)
-        if length == 0:
-            return <Lexeme_addr>&BLANK_WORD
+    cdef Lexeme* lookup(self, unicode string) except NULL:
+        if len(string) == 0:
+            return &BLANK_WORD
+        cdef Lexeme* word = <Lexeme*>self.vocab[hash(string)]
+        if word == NULL:
+            word = self.new_lexeme(string)
+        return word
 
-        cdef StringHash hashed = hash(string)
-        # First, check words seen 2+ times
-        cdef Lexeme* word_ptr = <Lexeme*>self.vocab.get(string)
-        if word_ptr == NULL:
-            word_ptr = self.new_lexeme(string, string)
-        return <Lexeme_addr>word_ptr
-
-    cdef Lexeme_addr lookup_chunk(self, unicode string) except 0:
-        '''Fetch a Lexeme representing a word string. If the word has not been seen,
-        construct one, splitting off any attached punctuation or clitics.  A
-        reference to BLANK_WORD is returned for the empty string.
-        '''
-        cdef size_t length = len(string)
-        if length == 0:
-            return <Lexeme_addr>&BLANK_WORD
-        # First, check words seen 2+ times
-        cdef Lexeme* word_ptr = <Lexeme*>self.vocab.get(string)
+    cdef Lexeme** lookup_chunk(self, unicode string) except NULL:
+        assert len(string) != 0
+        cdef Lexeme** chunk = <Lexeme**>self.chunks[hash(string)]
         cdef int split
-        if word_ptr == NULL:
-            split = self.find_split(string, length)
-            if split != 0 and split != -1 and split < length:
-                word_ptr = self.new_lexeme(string, string[:split])
-                word_ptr.tail = <Lexeme*>self.lookup_chunk(string[split:])
-            else:
-                word_ptr = self.new_lexeme(string, string)
-        return <Lexeme_addr>word_ptr
+        if chunk == NULL:
+            chunk = self.new_chunk(string, self.find_substrings(string))
+        return chunk
 
-    cdef Orthography* lookup_orth(self, unicode lex):
-        cdef Orthography* orth = <Orthography*>self.ortho.get(lex)
-        if orth == NULL:
-            orth = self.new_orth(lex)
-        return orth
+    cdef Lexeme** new_chunk(self, unicode string, list substrings) except NULL:
+        cdef Lexeme** chunk = <Lexeme**>calloc(len(substrings) + 1, sizeof(Lexeme*))
+        for i, substring in enumerate(substrings):
+            chunk[i] = self.lookup(substring)
+        chunk[i + 1] = NULL
+        self.chunks[hash(string)] = <size_t>chunk
+        return chunk
 
-    cdef Distribution* lookup_dist(self, unicode lex):
-        cdef Distribution* dist = <Distribution*>self.distri.get(lex)
-        if dist == NULL:
-            dist = self.new_dist(lex)
-        return dist
-
-    cdef Lexeme* new_lexeme(self, unicode key, unicode string) except NULL:
+    cdef Lexeme* new_lexeme(self, unicode string) except NULL:
         cdef Lexeme* word = <Lexeme*>calloc(1, sizeof(Lexeme))
-        word.sic = hash(key)
         word.lex = hash(string)
         self.bacov[word.lex] = string
-        self.bacov[word.sic] = key
-        word.orth = self.lookup_orth(string)
-        word.dist = self.lookup_dist(string)
-        self.vocab.set(key, <size_t>word)
+        word.orth = self.new_orth(string)
+        word.dist = self.new_dist(string)
+        self.vocab[word.lex] = <size_t>word
         return word
 
     cdef Orthography* new_orth(self, unicode lex) except NULL:
@@ -170,30 +139,33 @@ cdef class Language:
         self.bacov[orth.norm] = norm
         self.bacov[orth.shape] = shape
 
-        self.ortho.set(lex, <size_t>orth)
         return orth
 
     cdef Distribution* new_dist(self, unicode lex) except NULL:
         dist = <Distribution*>calloc(1, sizeof(Distribution))
-        self.distri.set(lex, <size_t>dist)
         return dist
 
     cdef unicode unhash(self, StringHash hash_value):
         '''Fetch a string from the reverse index, given its hash value.'''
         return self.bacov[hash_value]
 
-    cdef int find_split(self, unicode word, size_t length):
-        return -1
+    cpdef list find_substrings(self, unicode word):
+        substrings = []
+        while word:
+            split = self.find_split(word)
+            if split == 0:
+                substrings.append(word)
+                break
+            substrings.append(word[:split])
+            word = word[split:]
+        return substrings
+
+    cdef int find_split(self, unicode word):
+        return len(word)
 
     def load_tokenization(self, token_rules=None):
-        cdef Lexeme* word
-        cdef StringHash hashed
-        for chunk, lex, tokens in token_rules:
-            word = <Lexeme*>self.new_lexeme(chunk, lex)
-            for i, lex in enumerate(tokens):
-                token_string = '%s:@:%d:@:%s' % (chunk, i, lex)
-                word.tail = <Lexeme*>self.new_lexeme(token_string, lex)
-                word = word.tail
+        for chunk, tokens in token_rules:
+            self.new_chunk(chunk, tokens)
 
     def load_clusters(self):
         cdef Lexeme* w
@@ -209,24 +181,4 @@ cdef class Language:
                 # the first 4 bits. See redshift._parse_features.pyx
                 cluster = int(cluster_str[::-1], 2)
                 upper_pc, title_pc = case_stats.get(token_string.lower(), (0.0, 0.0))
-                word = self.new_lexeme(token_string, token_string)
-
-
-cdef inline bint _is_whitespace(unsigned char c) nogil:
-    if c == b' ':
-        return True
-    elif c == b'\n':
-        return True
-    elif c == b'\t':
-        return True
-    else:
-        return False
-
-
-cpdef vector[size_t] expand_chunk(size_t addr) except *:
-    cdef vector[size_t] tokens = vector[size_t]()
-    word = <Lexeme*>addr
-    while word != NULL:
-        tokens.push_back(<size_t>word)
-        word = word.tail
-    return tokens
+                self.new_lexeme(token_string)
