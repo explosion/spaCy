@@ -198,5 +198,3 @@ cdef inline int _extend(Tokens tokens, Lexeme** chunk) nogil:
         tokens.vctr[0].push_back(<Lexeme_addr>chunk[i])
         tokens.length += 1
         i += 1
-
-
