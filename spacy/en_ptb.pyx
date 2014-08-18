@@ -54,7 +54,7 @@ cpdef Tokens tokenize(unicode string):
 
 
 cpdef Lexeme_addr lookup(unicode string) except 0:
-    return <Lexeme_addr>EN_PTB.lookup_chunk(string)
+    return <Lexeme_addr>EN_PTB.lookup(string)
 
 
 cpdef unicode unhash(StringHash hash_value):

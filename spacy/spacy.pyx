@@ -7,6 +7,7 @@ from cython.operator cimport dereference as deref
 
 from spacy.lexeme cimport Lexeme
 from spacy.lexeme cimport BLANK_WORD
+from murmurhash cimport mrmr
 
 from spacy.string_tools cimport substr
 
@@ -69,17 +70,26 @@ cdef class Language:
         self.vocab.set_empty_key(0)
         self.load_tokenization(util.read_tokenization(name))
 
-    cdef Tokens tokenize(self, unicode characters):
-        cdef size_t i = 0
-        cdef size_t start = 0
+    cdef Tokens tokenize(self, unicode string):
         cdef Lexeme** chunk
         cdef Tokens tokens = Tokens(self)
-        for chunk_str in characters.split():
-            chunk = self.lookup_chunk(chunk_str)
-            i = 0
-            while chunk[i] != NULL:
-                tokens.append(<Lexeme_addr>chunk[i])
-                i += 1
+        cdef bytes byte_string = string.encode('utf8')
+        cdef size_t length = len(byte_string)
+        cdef char* characters = <char*>byte_string
+        cdef char c
+        cdef size_t start = 0
+        cdef size_t i
+        for i in range(length):
+            c = characters[i]
+            if _is_whitespace(c):
+                if start < i:
+                    chunk = self.lookup_chunk(&characters[start], i - start)
+                    _extend(tokens, chunk)
+                start = i + 1
+            i += 1
+        if start < i:
+            chunk = self.lookup_chunk(&characters[start], length - start)
+            _extend(tokens, chunk)
         return tokens
 
     cdef Lexeme* lookup(self, unicode string) except NULL:
@@ -90,12 +100,15 @@ cdef class Language:
             word = self.new_lexeme(string)
         return word
 
-    cdef Lexeme** lookup_chunk(self, unicode string) except NULL:
-        assert len(string) != 0
-        cdef Lexeme** chunk = <Lexeme**>self.chunks[hash(string)]
+    cdef Lexeme** lookup_chunk(self, char* c_string, size_t length) except NULL:
+        cdef StringHash h = mrmr.hash32(c_string, length * sizeof(char), 0)
+        cdef Lexeme** chunk = <Lexeme**>self.chunks[h]
         cdef int split
+        cdef unicode ustring
         if chunk == NULL:
-            chunk = self.new_chunk(string, self.find_substrings(string))
+            ustring = c_string[:length].decode('utf8')
+            chunk = self.new_chunk(ustring, self.find_substrings(ustring))
+            self.chunks[h] = <size_t>chunk
         return chunk
 
     cdef Lexeme** new_chunk(self, unicode string, list substrings) except NULL:
@@ -103,7 +116,6 @@ cdef class Language:
         for i, substring in enumerate(substrings):
             chunk[i] = self.lookup(substring)
         chunk[i + 1] = NULL
-        self.chunks[hash(string)] = <size_t>chunk
         return chunk
 
     cdef Lexeme* new_lexeme(self, unicode string) except NULL:
@@ -164,8 +176,16 @@ cdef class Language:
         return len(word)
 
     def load_tokenization(self, token_rules=None):
+        cdef StringHash h
+        cdef char* c_string
+        cdef bytes byte_string
         for chunk, tokens in token_rules:
-            self.new_chunk(chunk, tokens)
+            byte_string = chunk.encode('utf8')
+            length = len(byte_string)
+            c_string = <char*>byte_string
+            h = mrmr.hash32(c_string, length * sizeof(char), 0)
+            self.chunks[h] = <size_t>self.new_chunk(chunk, tokens)
+
 
     def load_clusters(self):
         cdef Lexeme* w
@@ -182,3 +202,23 @@ cdef class Language:
                 cluster = int(cluster_str[::-1], 2)
                 upper_pc, title_pc = case_stats.get(token_string.lower(), (0.0, 0.0))
                 self.new_lexeme(token_string)
+
+
+cdef inline bint _is_whitespace(char c) nogil:
+    if c == b' ':
+        return True
+    elif c == b'\n':
+        return True
+    elif c == b'\t':
+        return True
+    else:
+        return False
+
+
+cdef int _extend(Tokens tokens, Lexeme** chunk) except -1:
+    cdef size_t i = 0
+    while chunk[i] != NULL:
+        tokens.append(<Lexeme_addr>chunk[i])
+        i += 1
+
+
