@@ -19,6 +19,12 @@ def load_case_stats(data_dir):
     return case_stats
 
 
+def load_dist_info(lang):
+    with path.join(DATA_DIR, lang, 'distribution_info.json') as file_:
+        dist_info = json.load(file_)
+    return dist_info
+
+
 def read_tokenization(lang):
     loc = path.join(DATA_DIR, lang, 'tokenization')
     entries = []

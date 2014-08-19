@@ -60,6 +60,7 @@ cdef class Language:
         self.chunks.set_empty_key(0)
         self.vocab.set_empty_key(0)
         self.load_tokenization(util.read_tokenization(name))
+        self.load_dist_info(util.read_dist_info(name))
 
     cdef Tokens tokenize(self, unicode string):
         cdef Lexeme** chunk
@@ -108,7 +109,8 @@ cdef class Language:
         word.lex = hash(string)
         self.bacov[word.lex] = string
         word.orth = self.new_orth(string)
-        word.dist = self.new_dist(string)
+
+        word.dist = <Distribution*>calloc(1, sizeof(Distribution))
         self.vocab[word.lex] = <size_t>word
         return word
 
@@ -135,12 +137,7 @@ cdef class Language:
         self.bacov[orth.last3] = last3
         self.bacov[orth.norm] = norm
         self.bacov[orth.shape] = shape
-
         return orth
-
-    cdef Distribution* new_dist(self, unicode lex) except NULL:
-        dist = <Distribution*>calloc(1, sizeof(Distribution))
-        return dist
 
     cdef unicode unhash(self, StringHash hash_value):
         '''Fetch a string from the reverse index, given its hash value.'''
@@ -164,21 +161,18 @@ cdef class Language:
         for chunk, tokens in token_rules:
             self.new_chunk(chunk, tokens)
 
-    def load_clusters(self):
+    def load_dist_info(self, dist_info):
+        cdef unicode string
+        cdef dict word_dist
         cdef Lexeme* w
-        data_dir = path.join(path.dirname(__file__), '..', 'data', 'en')
-        case_stats = util.load_case_stats(data_dir)
-        brown_loc = path.join(data_dir, 'clusters')
-        cdef size_t start 
-        cdef int end 
-        with util.utf8open(brown_loc) as browns_file:
-            for i, line in enumerate(browns_file):
-                cluster_str, token_string, freq_str = line.split()
-                # Decode as a little-endian string, so that we can do & 15 to get
-                # the first 4 bits. See redshift._parse_features.pyx
-                cluster = int(cluster_str[::-1], 2)
-                upper_pc, title_pc = case_stats.get(token_string.lower(), (0.0, 0.0))
-                self.new_lexeme(token_string)
+        for string, word_dist in dist_info.items():
+            w = self.lookup(string)
+            w.prob = word_dist.prob
+            w.cluster = word_dist.cluster
+            for flag in word_dist.flags:
+                w.flags |= lexeme.DIST_FLAGS[flag]
+            for tag in word_dist.tagdict:
+                w.tagdict |= lexeme.TAGS[tag]
 
 
 cdef inline bint _is_whitespace(Py_UNICODE c) nogil:

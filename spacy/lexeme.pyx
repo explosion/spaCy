@@ -13,13 +13,6 @@ from libcpp.vector cimport vector
 
 from spacy.spacy cimport StringHash
 
-# Reiterate the enum, for python
-#SIC = StringAttr.sic
-#LEX = StringAttr.lex
-#NORM = StringAttr.norm
-#SHAPE = StringAttr.shape
-#LAST3 = StringAttr.last3
-
 
 cpdef StringHash attr_of(size_t lex_id, StringAttr attr) except 0:
     if attr == LEX:
@@ -133,37 +126,9 @@ cpdef double prob_of(size_t lex_id):
     return (<Lexeme*>lex_id).dist.prob
 
 
-cpdef bint is_oft_upper(size_t lex_id):
-    '''Access the `oft_upper' field of the Lexeme pointed to by lex_id, which
-    stores whether the lowered version of the string hashed by `lex' is found
-    in all-upper case frequently in a large sample of text.  Users are free
-    to load different data, by default we use a sample from Wikipedia, with
-    a threshold of 0.95, picked to maximize mutual information for POS tagging.
-
-    >>> is_oft_upper(lookup(u'abc'))
-    True
-    >>> is_oft_upper(lookup(u'aBc')) # This must get the same answer
-    True
-    '''
-    return False
-    #cdef Lexeme* w = <Lexeme*>lex_id
-    #return w.orth.last3 if w.orth != NULL else 0
+cpdef bint check_orth_flag(size_t lex, OrthFlag flag) except *:
+    return (<Lexeme*>lex_id).orth.flags & (1 << flag)
 
 
-    #return (<Lexeme*>lex_id).oft_upper
-
-
-cpdef bint is_oft_title(size_t lex_id):
-    '''Access the `oft_upper' field of the Lexeme pointed to by lex_id, which
-    stores whether the lowered version of the string hashed by `lex' is found
-    title-cased frequently in a large sample of text.  Users are free
-    to load different data, by default we use a sample from Wikipedia, with
-    a threshold of 0.3, picked to maximize mutual information for POS tagging.
-
-    >>> is_oft_title(lookup(u'marcus'))
-    True
-    >>> is_oft_title(lookup(u'MARCUS')) # This must get the same value
-    True
-    '''
-    return False
-    #return (<Lexeme*>lex_id).oft_title
+cpdef bint check_dist_flag(size_t lex, DistFlag flag) except *:
+    return (<Lexeme*>lex_id).dist.flags & (1 << flag)
