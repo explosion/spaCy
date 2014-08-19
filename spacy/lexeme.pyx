@@ -72,7 +72,7 @@ cpdef StringHash last3_of(size_t lex_id) except 0:
     return (<Lexeme*>lex_id).orth.last3
 
 
-cpdef ClusterID cluster_of(size_t lex_id):
+cpdef ClusterID cluster_of(size_t lex_id) except 0:
     '''Access the `cluster' field of the Lexeme pointed to by lex_id, which
     gives an integer representation of the cluster ID of the word, 
     which should be understood as a binary address:
@@ -99,21 +99,17 @@ cpdef Py_UNICODE first_of(size_t lex_id):
     >>> unhash(first_of(lex_id))
     u'H'
     '''
-    if (<Lexeme*>lex_id).orth == NULL:
-        return 0
     return (<Lexeme*>lex_id).orth.first
 
 
-cpdef StringHash length_of(size_t lex_id):
+cpdef size_t length_of(size_t lex_id) except *:
     '''Access the `length' field of the Lexeme pointed to by lex_id, which stores
     the length of the string hashed by lex_of.'''
     cdef Lexeme* word = <Lexeme*>lex_id
-    if (<Lexeme*>lex_id).orth == NULL:
-        return 0
-    return (<Lexeme*>lex_id).orth.length
+    return word.length
 
 
-cpdef double prob_of(size_t lex_id):
+cpdef double prob_of(size_t lex_id) except 0:
     '''Access the `prob' field of the Lexeme pointed to by lex_id, which stores
     the smoothed unigram log probability of the word, as estimated from a large
     text corpus.  By default, probabilities are based on counts from Gigaword,
@@ -126,9 +122,38 @@ cpdef double prob_of(size_t lex_id):
     return (<Lexeme*>lex_id).dist.prob
 
 
-cpdef bint check_orth_flag(size_t lex, OrthFlag flag) except *:
+cpdef bint is_oft_upper(size_t lex_id):
+    '''Access the `oft_upper' field of the Lexeme pointed to by lex_id, which
+    stores whether the lowered version of the string hashed by `lex' is found
+    in all-upper case frequently in a large sample of text.  Users are free
+    to load different data, by default we use a sample from Wikipedia, with
+    a threshold of 0.95, picked to maximize mutual information for POS tagging.
+
+    >>> is_oft_upper(lookup(u'abc'))
+    True
+    >>> is_oft_upper(lookup(u'aBc')) # This must get the same answer
+    True
+    '''
+    return (<Lexeme*>lex_id).dist.flags & OFT_UPPER
+
+
+cpdef bint is_oft_title(size_t lex_id):
+    '''Access the `oft_upper' field of the Lexeme pointed to by lex_id, which
+    stores whether the lowered version of the string hashed by `lex' is found
+    title-cased frequently in a large sample of text.  Users are free
+    to load different data, by default we use a sample from Wikipedia, with
+    a threshold of 0.3, picked to maximize mutual information for POS tagging.
+
+    >>> is_oft_title(lookup(u'marcus'))
+    True
+    >>> is_oft_title(lookup(u'MARCUS')) # This must get the same value
+    True
+    '''
+    return (<Lexeme*>lex_id).dist.flags & OFT_TITLE
+
+cpdef bint check_orth_flag(size_t lex_id, OrthFlag flag) except *:
     return (<Lexeme*>lex_id).orth.flags & (1 << flag)
 
 
-cpdef bint check_dist_flag(size_t lex, DistFlag flag) except *:
+cpdef bint check_dist_flag(size_t lex_id, DistFlag flag) except *:
     return (<Lexeme*>lex_id).dist.flags & (1 << flag)

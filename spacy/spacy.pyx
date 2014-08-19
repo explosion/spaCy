@@ -13,15 +13,19 @@ from spacy.string_tools cimport substr
 from . import util
 from os import path
 
+DIST_FLAGS = {}
+TAGS = {}
 
-def get_normalized(unicode lex, size_t length):
+
+def get_normalized(unicode lex):
     if lex.isalpha() and lex.islower():
         return lex
     else:
-        return get_word_shape(lex, length)
+        return get_word_shape(lex)
 
 
-def get_word_shape(unicode lex, length):
+def get_word_shape(unicode lex):
+    cdef size_t length = len(lex)
     shape = ""
     last = ""
     shape_char = ""
@@ -47,7 +51,7 @@ def get_word_shape(unicode lex, length):
     return shape
 
 
-def set_orth_flags(lex, length):
+def set_orth_flags(lex):
     return 0
 
 
@@ -60,7 +64,7 @@ cdef class Language:
         self.chunks.set_empty_key(0)
         self.vocab.set_empty_key(0)
         self.load_tokenization(util.read_tokenization(name))
-        self.load_dist_info(util.read_dist_info(name))
+        #self.load_dist_info(util.read_dist_info(name))
 
     cdef Tokens tokenize(self, unicode string):
         cdef Lexeme** chunk
@@ -106,38 +110,24 @@ cdef class Language:
 
     cdef Lexeme* new_lexeme(self, unicode string) except NULL:
         cdef Lexeme* word = <Lexeme*>calloc(1, sizeof(Lexeme))
+        cdef bytes byte_string = string.encode('utf8')
+        word.string = <char*>byte_string
+        word.length = len(byte_string)
+        word.orth.flags = set_orth_flags(string)
+        cdef unicode norm = get_normalized(string)
+        cdef unicode shape = get_word_shape(string)
+        cdef unicode last3 = string[-3:]
         word.lex = hash(string)
+        word.orth.norm = hash(norm)
+        word.orth.shape = hash(shape)
+        word.orth.last3 = hash(last3)
         self.bacov[word.lex] = string
-        word.orth = self.new_orth(string)
+        self.bacov[word.orth.norm] = norm
+        self.bacov[word.orth.shape] = shape
+        self.bacov[word.orth.last3] = last3
 
-        word.dist = <Distribution*>calloc(1, sizeof(Distribution))
-        self.vocab[word.lex] = <size_t>word
+        self.vocab[hash(string)] = <size_t>word
         return word
-
-    cdef Orthography* new_orth(self, unicode lex) except NULL:
-        cdef unicode last3
-        cdef unicode norm
-        cdef unicode shape
-        cdef int length 
-
-        length = len(lex)
-        orth = <Orthography*>calloc(1, sizeof(Orthography))
-        orth.first = lex[0]
-            
-        orth.length = length
-        orth.flags = set_orth_flags(lex, orth.length)
-        orth.norm = hash(lex)
-        last3 = substr(lex, length - 3, length, length)
-        orth.last3 = hash(last3)
-        norm = get_normalized(lex, length)
-        orth.norm = hash(norm)
-        shape = get_word_shape(lex, length)
-        orth.shape = hash(shape)
-
-        self.bacov[orth.last3] = last3
-        self.bacov[orth.norm] = norm
-        self.bacov[orth.shape] = shape
-        return orth
 
     cdef unicode unhash(self, StringHash hash_value):
         '''Fetch a string from the reverse index, given its hash value.'''
@@ -167,12 +157,12 @@ cdef class Language:
         cdef Lexeme* w
         for string, word_dist in dist_info.items():
             w = self.lookup(string)
-            w.prob = word_dist.prob
-            w.cluster = word_dist.cluster
+            w.dist.prob = word_dist.prob
+            w.dist.cluster = word_dist.cluster
             for flag in word_dist.flags:
-                w.flags |= lexeme.DIST_FLAGS[flag]
+                w.dist.flags |= DIST_FLAGS[flag]
             for tag in word_dist.tagdict:
-                w.tagdict |= lexeme.TAGS[tag]
+                w.dist.tagdict |= TAGS[tag]
 
 
 cdef inline bint _is_whitespace(Py_UNICODE c) nogil:

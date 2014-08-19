@@ -32,12 +32,9 @@ cdef enum DistFlag:
 
 
 cdef struct Orthography:
-    StringHash last3
     StringHash shape
     StringHash norm
-
-    size_t length
-    Py_UNICODE first
+    StringHash last3
     Bits8 flags
 
 
@@ -49,12 +46,17 @@ cdef struct Distribution:
 
 
 cdef struct Lexeme:
-    StringHash lex # Hash of the word
-    Orthography* orth  # Extra orthographic views
-    Distribution* dist # Distribution info
+    char* string
+    size_t length
+    StringHash lex
+    Orthography orth  # Extra orthographic views
+    Distribution dist # Distribution info
 
 
-cdef Lexeme BLANK_WORD = Lexeme(0, NULL, NULL)
+cdef Lexeme BLANK_WORD = Lexeme(NULL, 0, 0,
+    Orthography(0, 0, 0, 0),
+    Distribution(0.0, 0, 0, 0)
+)
 
 
 cdef enum StringAttr:
@@ -68,13 +70,11 @@ cdef enum StringAttr:
 cpdef StringHash attr_of(size_t lex_id, StringAttr attr) except 0
 
 cpdef StringHash lex_of(size_t lex_id) except 0
-
 cpdef StringHash norm_of(size_t lex_id) except 0
 cpdef StringHash shape_of(size_t lex_id) except 0
 cpdef StringHash last3_of(size_t lex_id) except 0
 
 cpdef size_t length_of(size_t lex_id) except *
-cpdef Py_UNICODE first_of(size_t lex_id) except *
 
 cpdef double prob_of(size_t lex_id) except 0
 cpdef ClusterID cluster_of(size_t lex_id) except 0

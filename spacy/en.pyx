@@ -66,31 +66,3 @@ cpdef unicode unhash(StringHash hash_value):
     return EN.unhash(hash_value)
 
 
-cpdef bint is_oft_upper(size_t lex_id):
-    '''Access the `oft_upper' field of the Lexeme pointed to by lex_id, which
-    stores whether the lowered version of the string hashed by `lex' is found
-    in all-upper case frequently in a large sample of text.  Users are free
-    to load different data, by default we use a sample from Wikipedia, with
-    a threshold of 0.95, picked to maximize mutual information for POS tagging.
-
-    >>> is_oft_upper(lookup(u'abc'))
-    True
-    >>> is_oft_upper(lookup(u'aBc')) # This must get the same answer
-    True
-    '''
-    return (<Lexeme*>lex_id).dist.flags & OFT_UPPER
-
-
-cpdef bint is_oft_title(size_t lex_id):
-    '''Access the `oft_upper' field of the Lexeme pointed to by lex_id, which
-    stores whether the lowered version of the string hashed by `lex' is found
-    title-cased frequently in a large sample of text.  Users are free
-    to load different data, by default we use a sample from Wikipedia, with
-    a threshold of 0.3, picked to maximize mutual information for POS tagging.
-
-    >>> is_oft_title(lookup(u'marcus'))
-    True
-    >>> is_oft_title(lookup(u'MARCUS')) # This must get the same value
-    True
-    '''
-    return (<Lexeme*>lex_id).dist.flags & OFT_TITLE

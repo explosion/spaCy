@@ -21,7 +21,6 @@ ctypedef int ClusterID
 from spacy.lexeme cimport Lexeme
 from spacy.lexeme cimport Distribution
 from spacy.lexeme cimport Orthography
-from spacy._hashing cimport WordTree
 
 
 cdef class Language:
@@ -37,8 +36,6 @@ cdef class Language:
     
     cdef Lexeme** new_chunk(self, unicode string, list substrings) except NULL
     cdef Lexeme* new_lexeme(self, unicode lex) except NULL
-    cdef Orthography* new_orth(self, unicode lex) except NULL
-    cdef Distribution* new_dist(self, unicode lex) except NULL
     
     cdef unicode unhash(self, StringHash hashed)
     
