@@ -33,7 +33,7 @@ compile_args = []
 link_args = []
 libs = []
 
-includes = ['.', 'murmurhash/']
+includes = ['.']
 cython_includes = ['.']
 
 
@@ -53,6 +53,8 @@ exts = [
     Extension("spacy.spacy", ["spacy/spacy.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.string_tools", ["spacy/string_tools.pyx"], language="c++",
               include_dirs=includes),
+    Extension("spacy.orthography.latin", ["spacy/orthography/latin.pyx"], language="c++",
+              include_dirs=includes)
 ]
 
 
