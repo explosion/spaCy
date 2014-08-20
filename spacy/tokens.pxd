@@ -4,7 +4,6 @@ from spacy.lexeme cimport Lexeme
 
 from cython.operator cimport dereference as deref
 from spacy.spacy cimport Language
-from spacy.lexeme cimport StringAttr
 
 
 cdef class Tokens:
@@ -15,5 +14,5 @@ cdef class Tokens:
     cpdef int append(self, Lexeme_addr token)
     cpdef int extend(self, Tokens other) except -1
     
-    cpdef object group_by(self, StringAttr attr)
-    cpdef dict count_by(self, StringAttr attr)
+    cpdef object group_by(self, size_t attr)
+    cpdef dict count_by(self, size_t attr)

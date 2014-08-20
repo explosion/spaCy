@@ -1,83 +1,34 @@
 from libc.stdint cimport uint32_t
 from libc.stdint cimport uint64_t
 
-# Put these above import to avoid circular import problem
+
 ctypedef int ClusterID
 ctypedef uint32_t StringHash
-ctypedef size_t Lexeme_addr
-ctypedef char Bits8
-ctypedef uint64_t Bits64
-
-
-cdef enum OrthFlag:
-    IS_ALPHA
-    IS_DIGIT
-    IS_PUNCT
-    IS_WHITE
-    IS_LOWER
-    IS_UPPER
-    IS_TITLE
-    IS_ASCII
-
-
-cdef enum DistFlag:
-    OFT_UPPER
-    OFT_TITLE
-    DIST_FLAG3
-    DIST_FLAG4
-    DIST_FLAG5
-    DIST_FLAG6
-    DIST_FLAG7
-    DIST_FLAG8
-
-
-cdef struct Orthography:
-    StringHash shape
-    StringHash norm
-    StringHash last3
-    Bits8 flags
-
-
-cdef struct Distribution:
-    double prob
-    ClusterID cluster
-    Bits64 tagdict
-    Bits8 flags
+ctypedef size_t LexID
+ctypedef char OrthFlags
+ctypedef char DistFlags
+ctypedef uint64_t TagFlags
 
 
 cdef struct Lexeme:
+    StringHash lex
     char* string
     size_t length
-    StringHash lex
-    Orthography orth  # Extra orthographic views
-    Distribution dist # Distribution info
+    double prob
+    ClusterID cluster
+    TagFlags possible_tags
+    DistFlags dist_flags
+    OrthFlags orth_flags
+    StringHash* string_views
 
 
-cdef Lexeme BLANK_WORD = Lexeme(NULL, 0, 0,
-    Orthography(0, 0, 0, 0),
-    Distribution(0.0, 0, 0, 0)
-)
+cpdef char first_of(LexID lex_id) except 0
+cpdef size_t length_of(LexID lex_id) except 0
+cpdef double prob_of(LexID lex_id) except 0
+cpdef ClusterID cluster_of(LexID lex_id) except 0
 
+cpdef bint check_tag_flag(LexID lex, TagFlags flag) except *
+cpdef bint check_dist_flag(LexID lex, DistFlags flag) except *
+cpdef bint check_orth_flag(LexID lex, OrthFlags flag) except *
 
-cdef enum StringAttr:
-    LEX
-    NORM
-    SHAPE
-    LAST3
-    LENGTH
-
-
-cpdef StringHash attr_of(size_t lex_id, StringAttr attr) except 0
-
-cpdef StringHash lex_of(size_t lex_id) except 0
-cpdef StringHash norm_of(size_t lex_id) except 0
-cpdef StringHash shape_of(size_t lex_id) except 0
-cpdef StringHash last3_of(size_t lex_id) except 0
-
-cpdef size_t length_of(size_t lex_id) except *
-
-cpdef double prob_of(size_t lex_id) except 0
-cpdef ClusterID cluster_of(size_t lex_id) except 0
-
-cpdef bint check_orth_flag(size_t lex, OrthFlag flag) except *
-cpdef bint check_dist_flag(size_t lex, DistFlag flag) except *
+cpdef StringHash view_of(LexID lex_id, size_t view) except 0

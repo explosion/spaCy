@@ -10,6 +10,7 @@ from spacy.tokens cimport Tokens
 
 cdef class English(spacy.Language):
     cdef int find_split(self, unicode word)
+    cdef int set_orth(self, unicode word, Lexeme* lex) except -1
 
 cdef English EN
 

@@ -19,8 +19,6 @@ ctypedef int ClusterID
 
 
 from spacy.lexeme cimport Lexeme
-from spacy.lexeme cimport Distribution
-from spacy.lexeme cimport Orthography
 
 
 cdef class Language:
@@ -29,7 +27,7 @@ cdef class Language:
     cdef dense_hash_map[StringHash, size_t] vocab
     cdef dict bacov
 
-    cdef Tokens tokenize(self, unicode text)
+    cpdef Tokens tokenize(self, unicode text)
 
     cdef Lexeme* lookup(self, unicode string) except NULL
     cdef Lexeme** lookup_chunk(self, unicode chunk) except NULL
@@ -37,7 +35,8 @@ cdef class Language:
     cdef Lexeme** new_chunk(self, unicode string, list substrings) except NULL
     cdef Lexeme* new_lexeme(self, unicode lex) except NULL
     
-    cdef unicode unhash(self, StringHash hashed)
+    cpdef unicode unhash(self, StringHash hashed)
     
-    cpdef list find_substrings(self, unicode word)
+    cpdef list find_substrings(self, unicode chunk)
     cdef int find_split(self, unicode word)
+    cdef int set_orth(self, unicode string, Lexeme* word)

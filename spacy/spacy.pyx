@@ -1,4 +1,13 @@
 # cython: profile=True
+# cython: embedsignature=True
+"""Common classes and utilities across languages.
+
+Provides the main implementation for the spacy tokenizer. Specific languages
+subclass the Language class, over-writing the tokenization rules as necessary.
+Special-case tokenization rules are read from data/<lang>/tokenization .
+"""
+
+ 
 from __future__ import unicode_literals
 
 from libc.stdlib cimport calloc, free
@@ -6,54 +15,13 @@ from libcpp.pair cimport pair
 from cython.operator cimport dereference as deref
 
 from spacy.lexeme cimport Lexeme
-from spacy.lexeme cimport BLANK_WORD
-
-from spacy.string_tools cimport substr
+from spacy.lexeme cimport LexID
 
 from . import util
 from os import path
 
-DIST_FLAGS = {}
 TAGS = {}
-
-
-def get_normalized(unicode lex):
-    if lex.isalpha() and lex.islower():
-        return lex
-    else:
-        return get_word_shape(lex)
-
-
-def get_word_shape(unicode lex):
-    cdef size_t length = len(lex)
-    shape = ""
-    last = ""
-    shape_char = ""
-    seq = 0
-    for c in lex:
-        if c.isalpha():
-            if c.isupper():
-                shape_char = "X"
-            else:
-                shape_char = "x"
-        elif c.isdigit():
-            shape_char = "d"
-        else:
-            shape_char = c
-        if shape_char == last:
-            seq += 1
-        else:
-            seq = 0
-            last = shape_char
-        if seq < 3:
-            shape += shape_char
-    assert shape
-    return shape
-
-
-def set_orth_flags(lex):
-    return 0
-
+DIST_FLAGS = {}
 
 cdef class Language:
     def __cinit__(self, name):
@@ -64,9 +32,19 @@ cdef class Language:
         self.chunks.set_empty_key(0)
         self.vocab.set_empty_key(0)
         self.load_tokenization(util.read_tokenization(name))
-        #self.load_dist_info(util.read_dist_info(name))
+        self.load_dist_info(util.read_dist_info(name))
 
-    cdef Tokens tokenize(self, unicode string):
+    cpdef Tokens tokenize(self, unicode string):
+        """Tokenize.
+
+        Split the string into tokens.
+
+        Args:
+            string (unicode): The string to split.
+
+        Returns:
+            tokens (Tokens): A Tokens object.
+        """
         cdef Lexeme** chunk
         cdef Tokens tokens = Tokens(self)
         cdef size_t length = len(string)
@@ -85,8 +63,7 @@ cdef class Language:
         return tokens
 
     cdef Lexeme* lookup(self, unicode string) except NULL:
-        if len(string) == 0:
-            return &BLANK_WORD
+        assert len(string) != 0
         cdef Lexeme* word = <Lexeme*>self.vocab[hash(string)]
         if word == NULL:
             word = self.new_lexeme(string)
@@ -113,56 +90,79 @@ cdef class Language:
         cdef bytes byte_string = string.encode('utf8')
         word.string = <char*>byte_string
         word.length = len(byte_string)
-        word.orth.flags = set_orth_flags(string)
-        cdef unicode norm = get_normalized(string)
-        cdef unicode shape = get_word_shape(string)
-        cdef unicode last3 = string[-3:]
-        word.lex = hash(string)
-        word.orth.norm = hash(norm)
-        word.orth.shape = hash(shape)
-        word.orth.last3 = hash(last3)
-        self.bacov[word.lex] = string
-        self.bacov[word.orth.norm] = norm
-        self.bacov[word.orth.shape] = shape
-        self.bacov[word.orth.last3] = last3
+        self.set_orth(string, word)
 
-        self.vocab[hash(string)] = <size_t>word
+        word.lex = hash(string)
+        self.bacov[word.lex] = string
+        self.vocab[word.lex] = <LexID>word
         return word
 
-    cdef unicode unhash(self, StringHash hash_value):
+    cpdef unicode unhash(self, StringHash hash_value):
         '''Fetch a string from the reverse index, given its hash value.'''
         return self.bacov[hash_value]
 
-    cpdef list find_substrings(self, unicode word):
+    cpdef list find_substrings(self, unicode chunk):
+        """Find how to split a chunk into substrings.
+
+        This method calls find_split repeatedly. Most languages will want to
+        override find_split, but it may be useful to override this instead.
+
+        Args:
+            chunk (unicode): The string to be split, e.g. u"Mike's!"
+
+        Returns:
+            substrings (list): The component substrings, e.g. [u"Mike", "'s", "!"].
+        """
         substrings = []
-        while word:
-            split = self.find_split(word)
+        while chunk:
+            split = self.find_split(chunk)
             if split == 0:
-                substrings.append(word)
+                substrings.append(chunk)
                 break
-            substrings.append(word[:split])
-            word = word[split:]
+            substrings.append(chunk[:split])
+            chunk = chunk[split:]
         return substrings
 
     cdef int find_split(self, unicode word):
         return len(word)
 
-    def load_tokenization(self, token_rules=None):
+    cdef int set_orth(self, unicode string, Lexeme* word):
+        pass
+
+    def load_tokenization(self, token_rules):
+        '''Load special-case tokenization rules.
+
+        Loads special-case tokenization rules into the Language.chunk cache,
+        read from data/<lang>/tokenization . The special cases are loaded before
+        any language data is tokenized, giving these priority.  For instance,
+        the English tokenization rules map "ain't" to ["are", "not"].
+
+        Args:
+            token_rules (list): A list of (chunk, tokens) pairs, where chunk is
+                a string and tokens is a list of strings.
+        '''
         for chunk, tokens in token_rules:
             self.new_chunk(chunk, tokens)
 
     def load_dist_info(self, dist_info):
+        '''Load distributional information for the known lexemes of the language.
+
+        The distributional information is read from data/<lang>/dist_info.json .
+        It contains information like the (smoothed) unigram log probability of
+        the word, how often the word is found upper-cased, how often the word
+        is found title-cased, etc.
+        '''
         cdef unicode string
         cdef dict word_dist
         cdef Lexeme* w
         for string, word_dist in dist_info.items():
             w = self.lookup(string)
-            w.dist.prob = word_dist.prob
-            w.dist.cluster = word_dist.cluster
+            w.prob = word_dist.prob
+            w.cluster = word_dist.cluster
             for flag in word_dist.flags:
-                w.dist.flags |= DIST_FLAGS[flag]
+                w.dist_flags |= DIST_FLAGS[flag]
             for tag in word_dist.tagdict:
-                w.dist.tagdict |= TAGS[tag]
+                w.possible_tags |= TAGS[tag]
 
 
 cdef inline bint _is_whitespace(Py_UNICODE c) nogil:

@@ -1,32 +1,32 @@
 # cython: profile=True
+# cython: embedsignature=True
 '''Accessors for Lexeme properties, given a lex_id, which is cast to a Lexeme*.
 Mostly useful from Python-space. From Cython-space, you can just cast to
 Lexeme* yourself.
 '''
 from __future__ import unicode_literals
 
-from spacy.string_tools cimport substr
-
 from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport uint64_t
-from libcpp.vector cimport vector
 
 from spacy.spacy cimport StringHash
 
 
-cpdef StringHash attr_of(size_t lex_id, StringAttr attr) except 0:
-    if attr == LEX:
-        return lex_of(lex_id)
-    elif attr == NORM:
-        return norm_of(lex_id)
-    elif attr == SHAPE:
-        return shape_of(lex_id)
-    elif attr == LAST3:
-        return last3_of(lex_id)
-    elif attr == LENGTH:
-        return length_of(lex_id)
-    else:
-        raise StandardError
+cpdef int set_flags(LexID lex_id, object active_flags) except *:
+    """Set orthographic bit flags for a Lexeme.
+
+    Args:
+        lex_id (LexemeID): A reference ID for a Lexeme.
+        active_flags: A sequence of bits to set as True.
+    """
+    cdef size_t flag
+    cdef Lexeme* w = <Lexeme*>lex_id
+    for flag in active_flags:
+        w.orth_flags |= 1 << flag
+
+
+cpdef StringHash view_of(LexID lex_id, size_t view) except 0:
+    return (<Lexeme*>lex_id).string_views[view]
 
 
 cpdef StringHash lex_of(size_t lex_id) except 0:
@@ -37,42 +37,14 @@ cpdef StringHash lex_of(size_t lex_id) except 0:
     delimited tokens split off.  The other fields refer to properties of the
     string that the lex field stores a hash of, except sic and tail.
 
-    >>> [unhash(lex_of(lex_id) for lex_id in from_string(u'Hi! world')]
+    >>> from spacy import en
+    >>> [en.unhash(lex_of(lex_id) for lex_id in en.tokenize(u'Hi! world')]
     [u'Hi', u'!', u'world']
     '''
     return (<Lexeme*>lex_id).lex
 
 
-cpdef StringHash norm_of(size_t lex_id) except 0:
-    '''Access the `lex' field of the Lexeme pointed to by lex_id.
-
-    The lex field is the hash of the string you would expect to get back from
-    a standard tokenizer, i.e. the word with punctuation and other non-whitespace
-    delimited tokens split off.  The other fields refer to properties of the
-    string that the lex field stores a hash of, except sic and tail.
-
-    >>> [unhash(lex_of(lex_id) for lex_id in from_string(u'Hi! world')]
-    [u'Hi', u'!', u'world']
-    '''
-    return (<Lexeme*>lex_id).orth.norm
-
-
-cpdef StringHash shape_of(size_t lex_id) except 0:
-    return (<Lexeme*>lex_id).orth.shape
-
-
-cpdef StringHash last3_of(size_t lex_id) except 0:
-    '''Access the `last3' field of the Lexeme pointed to by lex_id, which stores
-    the hash of the last three characters of the word:
-
-    >>> lex_ids = [lookup(w) for w in (u'Hello', u'!')]
-    >>> [unhash(last3_of(lex_id)) for lex_id in lex_ids]
-    [u'llo', u'!']
-    '''
-    return (<Lexeme*>lex_id).orth.last3
-
-
-cpdef ClusterID cluster_of(size_t lex_id) except 0:
+cpdef ClusterID cluster_of(LexID lex_id) except 0:
     '''Access the `cluster' field of the Lexeme pointed to by lex_id, which
     gives an integer representation of the cluster ID of the word, 
     which should be understood as a binary address:
@@ -88,10 +60,10 @@ cpdef ClusterID cluster_of(size_t lex_id) except 0:
     while "dapple" is totally different. On the other hand, "scalable" receives
     the same cluster ID as "pineapple", which is not what we'd like.
     '''
-    return (<Lexeme*>lex_id).dist.cluster
+    return (<Lexeme*>lex_id).cluster
 
 
-cpdef Py_UNICODE first_of(size_t lex_id):
+cpdef char first_of(size_t lex_id) except 0:
     '''Access the `first' field of the Lexeme pointed to by lex_id, which
     stores the first character of the lex string of the word.
 
@@ -99,10 +71,10 @@ cpdef Py_UNICODE first_of(size_t lex_id):
     >>> unhash(first_of(lex_id))
     u'H'
     '''
-    return (<Lexeme*>lex_id).orth.first
+    return (<Lexeme*>lex_id).string[0]
 
 
-cpdef size_t length_of(size_t lex_id) except *:
+cpdef size_t length_of(size_t lex_id) except 0:
     '''Access the `length' field of the Lexeme pointed to by lex_id, which stores
     the length of the string hashed by lex_of.'''
     cdef Lexeme* word = <Lexeme*>lex_id
@@ -119,8 +91,10 @@ cpdef double prob_of(size_t lex_id) except 0:
     >>> prob_of(lookup(u'world'))
     -20.10340371976182
     '''
-    return (<Lexeme*>lex_id).dist.prob
+    return (<Lexeme*>lex_id).prob
 
+DEF OFT_UPPER = 1
+DEF OFT_TITLE = 2
 
 cpdef bint is_oft_upper(size_t lex_id):
     '''Access the `oft_upper' field of the Lexeme pointed to by lex_id, which
@@ -134,7 +108,7 @@ cpdef bint is_oft_upper(size_t lex_id):
     >>> is_oft_upper(lookup(u'aBc')) # This must get the same answer
     True
     '''
-    return (<Lexeme*>lex_id).dist.flags & OFT_UPPER
+    return (<Lexeme*>lex_id).dist_flags & (1 << OFT_UPPER)
 
 
 cpdef bint is_oft_title(size_t lex_id):
@@ -149,11 +123,15 @@ cpdef bint is_oft_title(size_t lex_id):
     >>> is_oft_title(lookup(u'MARCUS')) # This must get the same value
     True
     '''
-    return (<Lexeme*>lex_id).dist.flags & OFT_TITLE
+    return (<Lexeme*>lex_id).dist_flags & (1 << OFT_TITLE)
 
-cpdef bint check_orth_flag(size_t lex_id, OrthFlag flag) except *:
-    return (<Lexeme*>lex_id).orth.flags & (1 << flag)
+cpdef bint check_orth_flag(size_t lex_id, OrthFlags flag) except *:
+    return (<Lexeme*>lex_id).orth_flags & (1 << flag)
 
 
-cpdef bint check_dist_flag(size_t lex_id, DistFlag flag) except *:
-    return (<Lexeme*>lex_id).dist.flags & (1 << flag)
+cpdef bint check_dist_flag(size_t lex_id, DistFlags flag) except *:
+    return (<Lexeme*>lex_id).dist_flags & (1 << flag)
+
+
+cpdef bint check_tag_flag(LexID lex_id, TagFlags flag) except *:
+    return (<Lexeme*>lex_id).possible_tags & (1 << flag)
