@@ -4,6 +4,7 @@
 Profile.prof
 
 spacy/*.cpp
+spacy/orthography/*.cpp
 ext/murmurhash.cpp
 ext/sparsehash.cpp
 
