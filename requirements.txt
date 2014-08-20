@@ -1,6 +1,4 @@
 cython
-sparsehash
-murmurhash
 fabric
 pytest
 sphinx
