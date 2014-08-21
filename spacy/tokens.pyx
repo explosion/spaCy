@@ -9,14 +9,14 @@ from spacy.spacy cimport StringHash
 cdef class Tokens:
     def __cinit__(self, Language lang):
         self.lang = lang
-        self.vctr = new vector[Lexeme_addr]()
+        self.vctr = new vector[LexID]()
         self.length = 0
 
     def __dealloc__(self):
         del self.vctr
 
     def __iter__(self):
-        cdef vector[Lexeme_addr].iterator it = self.vctr[0].begin()
+        cdef vector[LexID].iterator it = self.vctr[0].begin()
         while it != self.vctr[0].end():
             yield deref(it)
             inc(it)
@@ -27,16 +27,16 @@ cdef class Tokens:
     def __len__(self):
         return self.length
 
-    cpdef int append(self, Lexeme_addr token):
+    cpdef int append(self, LexID token):
         self.vctr[0].push_back(token)
         self.length += 1
 
     cpdef int extend(self, Tokens other) except -1:
-        cdef Lexeme_addr el
+        cdef LexID el
         for el in other:
             self.append(el)
 
-    cpdef object group_by(self, size_t attr):
+    cpdef object group_by(self, size_t view_idx):
         '''Group tokens that share the property attr into Tokens instances, and
         return a list of them. Returns a tuple of three lists:
         
@@ -63,9 +63,12 @@ cdef class Tokens:
         cdef list hashes = []
 
         cdef StringHash key
-        cdef Lexeme_addr t
+        cdef LexID t
         for t in self.vctr[0]:
-            key = self.lang.attr_of(t, attr)
+            if view_idx == 0:
+                key = (<Lexeme*>t).lex
+            else:
+                key = (<Lexeme*>t).string_views[view_idx - 1]
             if key in indices:
                 groups[indices[key]].append(t)
             else:
@@ -78,7 +81,7 @@ cdef class Tokens:
 
     cpdef dict count_by(self, size_t attr):
         counts = {}
-        cdef Lexeme_addr t
+        cdef LexID t
         cdef StringHash key
         for t in self.vctr[0]:
             #key = attr_of(t, attr)

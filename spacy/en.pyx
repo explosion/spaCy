@@ -76,27 +76,6 @@ cdef class English(spacy.Language):
                 i += 1
         return i
 
-    cdef AttrType attr_of(self, LexID lex_id, AttrName attr) except *:
-        cdef Lexeme* w = <Lexeme*>lex_id
-        if attr == LEX:
-            return <AttrType>w.lex
-        elif attr == FIRST:
-            return w.string[0]
-        elif attr == LENGTH:
-            return w.length
-        elif attr == CLUSTER:
-            return w.cluster
-        elif attr == NORM:
-            return w.string_views[0]
-        elif attr == SHAPE:
-            return w.string_views[1]
-        elif attr == LAST3:
-            return w.string_views[2]
-        else:
-            raise AttributeError(attr)
-
-
-
 
 cdef bint check_punct(unicode word, size_t i, size_t length):
     # Don't count appostrophes as punct if the next char is a letter
