@@ -14,11 +14,6 @@ spaCy Natural Language Tokenizer
     api/languages/index.rst
     api/modules/index.rst
 
-Project Home
-------------
-
-http://honnibal.github.io/spaCy/
-
 Source (GitHub)
 ----------------
 
@@ -27,4 +22,4 @@ http://github.com/honnibal/spaCy
 License
 -------
 
-TODO
+Copyright Matthew Honnibal
