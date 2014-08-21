@@ -3,7 +3,7 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-spaCy Natural Language Tokenizer
+spaCy NLP Tokenizer and Lexicon
 ================================
 
 .. toctree::
@@ -23,3 +23,9 @@ License
 -------
 
 Copyright Matthew Honnibal
+
+Non-commercial use: $0
+Commercial trial use: $0
+Full commercial license: $500
+
+honnibal@gmail.com
