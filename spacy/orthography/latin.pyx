@@ -1,20 +1,38 @@
 # cython: embedsignature=True
+from __future__ import unicode_literals
+
 from spacy.lexeme cimport Lexeme
 
-def get_normalized(unicode lex):
-    if lex.isalpha() and lex.islower():
-        return lex
+def get_normalized(unicode word):
+    """Todo.
+
+    Args:
+        word (unicode)
+
+    Returns:
+        normalized (unicode)
+    """
+    if word.isalpha() and word.islower():
+        return word
     else:
-        return get_word_shape(lex)
+        return get_word_shape(word)
 
 
-def get_word_shape(unicode lex):
-    cdef size_t length = len(lex)
+def get_word_shape(unicode word):
+    """Todo.
+
+    Args:
+        word (unicode)
+
+    Returns:
+        shape (unicode)
+    """
+    cdef size_t length = len(word)
     shape = ""
     last = ""
     shape_char = ""
     seq = 0
-    for c in lex:
+    for c in word:
         if c.isalpha():
             if c.isupper():
                 shape_char = "X"
@@ -35,8 +53,14 @@ def get_word_shape(unicode lex):
     return shape
 
 
+cpdef unicode get_last3(unicode string):
+    return string[-3:]
+
+
 cpdef bint is_alpha(LexID lex_id) except *:
-    """Give the result of unicode.isalpha() for a Lexeme ID.
+    """Check whether all characters in the word's string are alphabetic.
+    
+    Should match the :py:func:`unicode.isalpha()` function.
 
     >>> is_alpha(lookup(u'Hello'))
     True
@@ -49,7 +73,9 @@ cpdef bint is_alpha(LexID lex_id) except *:
 
 
 cpdef bint is_digit(LexID lex_id) except *:
-    """Give the result of unicode.isdigit() for a Lexeme ID.
+    """Check whether all characters in the word's string are numeric.
+    
+    Should match the :py:func:`unicode.isdigit()` function.
 
     >>> is_digit(lookup(u'10'))
     True
@@ -62,8 +88,8 @@ cpdef bint is_digit(LexID lex_id) except *:
 
 
 cpdef bint is_punct(LexID lex_id) except *:
-    """Give the result of checking whether all characters belong to a punctuation
-    unicode data category for a Lexeme ID.
+    """Check whether all characters belong to a punctuation unicode data category
+    for a Lexeme ID.
 
     >>> is_punct(lookup(u'.'))
     True
@@ -78,11 +104,11 @@ cpdef bint is_punct(LexID lex_id) except *:
 cpdef bint is_space(LexID lex_id) except *:
     """Give the result of unicode.isspace() for a Lexeme ID.
 
-    >>> is_space(lookup(u'\t'))
+    >>> is_space(lookup(u'\\t'))
     True
     >>> is_space(lookup(u'<unicode space>'))
     True
-    >>> is_space(lookup(u'Hi\n'))
+    >>> is_space(lookup(u'Hi\\n'))
     False
     """
     return (<Lexeme*>lex_id).orth_flags & 1 << IS_SPACE
@@ -144,8 +170,8 @@ cpdef StringHash norm_of(LexID lex_id) except 0:
     """Return the hash of a "normalized" version of the string.
 
     Normalized strings are intended to be less sparse, while still capturing
-    important lexical information.  See spacy.latin.orthography.normalize_string for details of the normalization
-    function.
+    important lexical information.  See :py:func:`spacy.latin.orthography.normalize_string`
+    for details of the normalization function.
 
     >>> unhash(norm_of(lookupu'Hi'))
     u'hi'
@@ -160,7 +186,7 @@ cpdef StringHash norm_of(LexID lex_id) except 0:
 cpdef StringHash shape_of(LexID lex_id) except 0:
     """Return the hash of a string describing the word's "orthograpgic shape".
 
-    Orthographic shapes are calculated by the spacy.orthography.latin.string_shape
+    Orthographic shapes are calculated by the :py:func:`spacy.orthography.latin.string_shape`
     function. Word shape features have been found useful for NER and POS tagging,
     e.g. Manning (2011)
 

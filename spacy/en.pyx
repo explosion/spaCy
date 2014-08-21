@@ -26,10 +26,8 @@ scheme in several important respects:
 
 Take care to ensure you training and run-time data is tokenized according to the
 same scheme. Tokenization problems are a major cause of poor performance for
-NLP tools.
-
-If you're using a pre-trained model, the spacy.ptb3 module provides a fully Penn
-Treebank 3-compliant tokenizer.
+NLP tools. If you're using a pre-trained model, the :py:mod:`spacy.ptb3` module
+provides a fully Penn Treebank 3-compliant tokenizer.
 '''
 #The script translate_treebank_tokenization can be used to transform a treebank's
 #annotation to use one of the spacy tokenization schemes.
@@ -53,8 +51,12 @@ from .lexeme import *
 
 
 cdef class English(spacy.Language):
-    cdef int set_orth(self, unicode word, Lexeme* lex) except -1:
-        pass
+    # How to ensure the order here aligns with orthography.latin?
+    view_funcs = [
+        get_normalized,
+        get_word_shape,
+        get_last3
+    ]
 
     cdef int find_split(self, unicode word):
         cdef size_t length = len(word)
@@ -73,6 +75,27 @@ cdef class English(spacy.Language):
             while i < length and not check_punct(word, i, length):
                 i += 1
         return i
+
+    cdef AttrType attr_of(self, LexID lex_id, AttrName attr) except *:
+        cdef Lexeme* w = <Lexeme*>lex_id
+        if attr == LEX:
+            return <AttrType>w.lex
+        elif attr == FIRST:
+            return w.string[0]
+        elif attr == LENGTH:
+            return w.length
+        elif attr == CLUSTER:
+            return w.cluster
+        elif attr == NORM:
+            return w.string_views[0]
+        elif attr == SHAPE:
+            return w.string_views[1]
+        elif attr == LAST3:
+            return w.string_views[2]
+        else:
+            raise AttributeError(attr)
+
+
 
 
 cdef bint check_punct(unicode word, size_t i, size_t length):
@@ -110,9 +133,6 @@ cpdef Tokens tokenize(unicode string):
     return EN.tokenize(string)
 
 
-# +49 151 4336 2587
-
-
 cpdef LexID lookup(unicode string) except 0:
     """Retrieve (or create, if not found) a Lexeme ID for a string.
 
@@ -124,7 +144,7 @@ cpdef LexID lookup(unicode string) except 0:
     Returns:
         lexeme (LexID): A reference to a lexical type.
     """
-    return <Lexeme_addr>EN.lookup(string)
+    return <LexID>EN.lookup(string)
 
 
 cpdef unicode unhash(StringHash hash_value):
@@ -142,3 +162,36 @@ cpdef unicode unhash(StringHash hash_value):
         string (unicode): A unicode string that hashes to the hash_value.
     """
     return EN.unhash(hash_value)
+
+
+def add_string_views(view_funcs):
+    """Add a string view to existing and previous lexical entries.
+
+    Args:
+        get_view (function): A unicode --> unicode function.
+
+    Returns:
+        view_id (int): An integer key you can use to access the view.
+    """
+    pass
+
+
+def load_clusters(location):
+    """Load cluster data.
+    """
+    pass
+
+def load_unigram_probs(location):
+    """Load unigram probabilities.
+    """
+    pass
+
+def load_case_stats(location):
+    """Load case stats.
+    """
+    pass
+
+def load_tag_stats(location):
+    """Load tag statistics.
+    """
+    pass

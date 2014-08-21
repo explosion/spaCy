@@ -1,6 +1,6 @@
 from libc.stdint cimport uint32_t
 from libc.stdint cimport uint64_t
-
+cimport cython
 
 ctypedef int ClusterID
 ctypedef uint32_t StringHash

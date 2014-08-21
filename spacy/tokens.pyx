@@ -3,7 +3,6 @@ from cython.operator cimport preincrement as inc
 
 
 from spacy.lexeme cimport Lexeme
-#from spacy.lexeme cimport attr_of, lex_of, norm_of, shape_of
 from spacy.spacy cimport StringHash
 
 
@@ -66,8 +65,7 @@ cdef class Tokens:
         cdef StringHash key
         cdef Lexeme_addr t
         for t in self.vctr[0]:
-            #key = attr_of(t, attr)
-            key = 0
+            key = self.lang.attr_of(t, attr)
             if key in indices:
                 groups[indices[key]].append(t)
             else:

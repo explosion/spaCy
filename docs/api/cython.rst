@@ -1,5 +1,0 @@
-Cython API
-==========
-
-Cheat Sheet
------------

@@ -24,6 +24,7 @@ TAGS = {}
 DIST_FLAGS = {}
 
 cdef class Language:
+    view_funcs = []
     def __cinit__(self, name):
         self.name = name
         self.bacov = {}
@@ -90,12 +91,40 @@ cdef class Language:
         cdef bytes byte_string = string.encode('utf8')
         word.string = <char*>byte_string
         word.length = len(byte_string)
-        self.set_orth(string, word)
-
         word.lex = hash(string)
+        word.string_views = <StringHash*>calloc(len(self.view_funcs), sizeof(StringHash))
+        cdef unicode view
+        cdef StringHash hashed
+        for i, view_func in enumerate(self.view_funcs):
+            view = view_func(string)
+            hashed = hash(view)
+            word.string_views[i] = hashed
+            self.bacov[hashed] = view
         self.bacov[word.lex] = string
         self.vocab[word.lex] = <LexID>word
         return word
+
+    def add_view_funcs(self, list view_funcs):
+        self.view_funcs.extend(view_funcs)
+        cdef size_t nr_views = len(self.view_funcs)
+
+        cdef unicode view
+        cdef StringHash hashed
+        cdef StringHash key
+        cdef unicode string
+        cdef LexID lex_id
+        cdef Lexeme* word
+
+        for key, lex_id in self.vocab:
+            word = <Lexeme*>lex_id
+            free(word.string_views)
+            word.string_views = <StringHash*>calloc(nr_views, sizeof(StringHash))
+            string = word.string[:word.length].decode('utf8')
+            for i, view_func in enumerate(self.view_funcs):
+                view = view_func(string)
+                hashed = hash(view)
+                word.string_views[i] = hashed
+                self.bacov[hashed] = view
 
     cpdef unicode unhash(self, StringHash hash_value):
         '''Fetch a string from the reverse index, given its hash value.'''

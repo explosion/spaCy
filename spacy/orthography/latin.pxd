@@ -10,10 +10,9 @@ cdef enum OrthFlag:
 
 
 cdef enum:
-    LEX
-    LAST3
     NORM
     SHAPE
+    LAST3
 
 from spacy.lexeme cimport LexID
 from spacy.lexeme cimport StringHash
