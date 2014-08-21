@@ -1,9 +1,40 @@
 # cython: profile=True
 # cython: embedsignature=True
-'''Tokenize English text, allowing some differences from the Penn Treebank
-tokenization, e.g. for email addresses, URLs, etc. Use en_ptb if full PTB
-compatibility is the priority.
+'''Tokenize English text, using a scheme that differs from the Penn Treebank 3
+scheme in several important respects:
+
+* Whitespace added as tokens, except for single spaces. e.g.,
+
+    >>> tokenize(u'\\nHello  \\tThere').strings
+    [u'\\n', u'Hello', u' ', u'\\t', u'There']
+
+* Contractions are normalized, e.g.
+
+    >>> tokenize(u"isn't ain't won't he's").strings
+    [u'is', u'not', u'are', u'not', u'will', u'not', u'he', u"__s"]
+  
+* Hyphenated words are split, with the hyphen preserved, e.g.:
+    
+    >>> tokenize(u'New York-based').strings
+    [u'New', u'York', u'-', u'based']
+
+* Full unicode support
+* Email addresses, URLs, European-formatted dates and other numeric entities not
+  found in the PTB are tokenized correctly
+* Heuristic handling of word-final periods (PTB expects sentence boundary detection
+  as a pre-process before tokenization.)
+
+Take care to ensure you training and run-time data is tokenized according to the
+same scheme. Tokenization problems are a major cause of poor performance for
+NLP tools.
+
+If you're using a pre-trained model, the spacy.ptb3 module provides a fully Penn
+Treebank 3-compliant tokenizer.
 '''
+#The script translate_treebank_tokenization can be used to transform a treebank's
+#annotation to use one of the spacy tokenization schemes.
+
+
 from __future__ import unicode_literals
 
 from libc.stdlib cimport malloc, calloc, free
