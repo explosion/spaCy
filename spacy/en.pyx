@@ -14,6 +14,10 @@ cimport spacy
 
 
 from spacy.orthography.latin cimport *
+from spacy.lexeme cimport *
+
+from .orthography.latin import *
+from .lexeme import *
 
 
 
@@ -61,34 +65,33 @@ EN = English('en')
 cpdef Tokens tokenize(unicode string):
     """Tokenize a string.
 
-    Wraps EN.tokenize, where EN is an instance of the class English. The global
-    variable manages the vocabulary, and memoizes tokenization rules.
+    The tokenization rules are defined in two places:
+
+    * The data/en/tokenization table, which handles special cases like contractions;
+    * The `spacy.en.English.find_split` function, which is used to split off punctuation etc.
 
     Args:
-        string (unicode): The string to be split. Must be unicode, not bytes.
+        string (unicode): The string to be tokenized. 
 
     Returns:
-        tokens (Tokens): A Tokens instance, managing a vector of pointers to
-        Lexeme structs. The Tokens instance supports sequence interfaces,
-        but also offers a range of sequence-level operations, which are computed
-        efficiently in Cython-space.
+        tokens (Tokens): A Tokens object, giving access to a sequence of LexIDs.
     """
     return EN.tokenize(string)
- 
 
-cpdef Lexeme_addr lookup(unicode string) except 0:
-    """Retrieve (or create) a Lexeme for a string.
 
-    Returns a Lexeme ID, which can be used via the accessor
-    methods in spacy.lexeme
+# +49 151 4336 2587
 
+
+cpdef LexID lookup(unicode string) except 0:
+    """Retrieve (or create, if not found) a Lexeme ID for a string.
+
+    The LexID is really a memory address, making dereferencing it essentially free.
+    
     Args:
         string (unicode):  The string to be looked up. Must be unicode, not bytes.
 
     Returns:
-        LexemeID (size_t): An unsigned integer that allows the Lexeme to be retrieved.
-        The LexemeID is really a memory address, making dereferencing it essentially
-        free.
+        lexeme (LexID): A reference to a lexical type.
     """
     return <Lexeme_addr>EN.lookup(string)
 
@@ -101,7 +104,7 @@ cpdef unicode unhash(StringHash hash_value):
     although no control is taken for hash collisions.
 
     Args:
-        hash_value (uint32_t): The hash of a string, returned by Python's hash()
+        hash_value (StringHash): The hash of a string, returned by Python's hash()
         function.
 
     Returns:
