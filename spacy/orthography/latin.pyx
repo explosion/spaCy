@@ -141,7 +141,11 @@ cpdef bint is_ascii(LexID lex_id) except *:
 
 
 cpdef StringHash norm_of(LexID lex_id) except 0:
-    """Return the hash of a normalized version of the string.
+    """Return the hash of a "normalized" version of the string.
+
+    Normalized strings are intended to be less sparse, while still capturing
+    important lexical information.  See spacy.latin.orthography.normalize_string for details of the normalization
+    function.
 
     >>> unhash(norm_of(lookupu'Hi'))
     u'hi'
@@ -154,7 +158,11 @@ cpdef StringHash norm_of(LexID lex_id) except 0:
 
 
 cpdef StringHash shape_of(LexID lex_id) except 0:
-    """Return the hash of the string shape.
+    """Return the hash of a string describing the word's "orthograpgic shape".
+
+    Orthographic shapes are calculated by the spacy.orthography.latin.string_shape
+    function. Word shape features have been found useful for NER and POS tagging,
+    e.g. Manning (2011)
 
     >>> unhash(shape_of(lookupu'Hi'))
     u'Xx'
@@ -168,8 +176,8 @@ cpdef StringHash shape_of(LexID lex_id) except 0:
 
 
 cpdef StringHash last3_of(LexID lex_id) except 0:
-    '''Access the `last3' field of the Lexeme pointed to by lex_id, which stores
-    the hash of the last three characters of the word:
+    '''Return the hash of string[-3:], i.e. the last three characters of the word.
+
     >>> lex_ids = [lookup(w) for w in (u'Hello', u'!')]
     >>> [unhash(last3_of(lex_id)) for lex_id in lex_ids]
     [u'llo', u'!']

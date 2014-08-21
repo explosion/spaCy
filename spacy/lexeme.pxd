@@ -22,6 +22,7 @@ cdef struct Lexeme:
     StringHash* string_views
 
 
+cpdef StringHash lex_of(LexID lex_id) except 0
 cpdef char first_of(LexID lex_id) except 0
 cpdef size_t length_of(LexID lex_id) except 0
 cpdef double prob_of(LexID lex_id) except 0

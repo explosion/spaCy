@@ -1,6 +1,7 @@
 import os
 from os import path
 import codecs
+import json
 
 DATA_DIR = path.join(path.dirname(__file__), '..', 'data')
 
@@ -19,9 +20,13 @@ def load_case_stats(data_dir):
     return case_stats
 
 
-def load_dist_info(lang):
-    with path.join(DATA_DIR, lang, 'distribution_info.json') as file_:
-        dist_info = json.load(file_)
+def read_dist_info(lang):
+    dist_path = path.join(DATA_DIR, lang, 'distribution_info.json')
+    if path.exists(dist_path):
+        with open(dist_path) as file_:
+            dist_info = json.load(file_)
+    else:
+        dist_info = {}
     return dist_info
 
 

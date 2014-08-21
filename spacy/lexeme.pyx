@@ -29,26 +29,21 @@ cpdef StringHash view_of(LexID lex_id, size_t view) except 0:
     return (<Lexeme*>lex_id).string_views[view]
 
 
-cpdef StringHash lex_of(size_t lex_id) except 0:
-    '''Access the `lex' field of the Lexeme pointed to by lex_id.
+cpdef StringHash lex_of(LexID lex_id) except 0:
+    '''Access a hash of the word's string.
 
-    The lex field is the hash of the string you would expect to get back from
-    a standard tokenizer, i.e. the word with punctuation and other non-whitespace
-    delimited tokens split off.  The other fields refer to properties of the
-    string that the lex field stores a hash of, except sic and tail.
-
-    >>> from spacy import en
-    >>> [en.unhash(lex_of(lex_id) for lex_id in en.tokenize(u'Hi! world')]
-    [u'Hi', u'!', u'world']
+    >>> lex_of(lookup(u'Hi')) == hash(u'Hi')
+    True
     '''
     return (<Lexeme*>lex_id).lex
 
 
 cpdef ClusterID cluster_of(LexID lex_id) except 0:
-    '''Access the `cluster' field of the Lexeme pointed to by lex_id, which
-    gives an integer representation of the cluster ID of the word, 
-    which should be understood as a binary address:
+    '''Access an integer representation of the word's Brown cluster.
 
+    A Brown cluster is an address into a binary tree, which gives some (noisy)
+    information about the word's distributional context.
+    
     >>> strings = (u'pineapple', u'apple', u'dapple', u'scalable')
     >>> token_ids = [lookup(s) for s in strings]
     >>> clusters = [cluster_of(t) for t in token_ids]
@@ -64,29 +59,28 @@ cpdef ClusterID cluster_of(LexID lex_id) except 0:
 
 
 cpdef char first_of(size_t lex_id) except 0:
-    '''Access the `first' field of the Lexeme pointed to by lex_id, which
-    stores the first character of the lex string of the word.
+    '''Access the first byte of a utf8 encoding of the word.
 
     >>> lex_id = lookup(u'Hello')
-    >>> unhash(first_of(lex_id))
-    u'H'
+    >>> chr(first_of(lex_id))
+    'H'
     '''
     return (<Lexeme*>lex_id).string[0]
 
 
 cpdef size_t length_of(size_t lex_id) except 0:
-    '''Access the `length' field of the Lexeme pointed to by lex_id, which stores
-    the length of the string hashed by lex_of.'''
+    '''Access the (unicode) length of the word.
+    '''
     cdef Lexeme* word = <Lexeme*>lex_id
     return word.length
 
 
 cpdef double prob_of(size_t lex_id) except 0:
-    '''Access the `prob' field of the Lexeme pointed to by lex_id, which stores
-    the smoothed unigram log probability of the word, as estimated from a large
-    text corpus.  By default, probabilities are based on counts from Gigaword,
-    smoothed using Knesser-Ney; but any probabilities file can be supplied to
-    load_probs.
+    '''Access an estimate of the word's unigram log probability.
+
+    Probabilities are calculated from a large text corpus, and smoothed using
+    simple Good-Turing.  Estimates are read from data/en/probabilities, and
+    can be replaced using spacy.en.load_probabilities.
     
     >>> prob_of(lookup(u'world'))
     -20.10340371976182
@@ -97,31 +91,39 @@ DEF OFT_UPPER = 1
 DEF OFT_TITLE = 2
 
 cpdef bint is_oft_upper(size_t lex_id):
-    '''Access the `oft_upper' field of the Lexeme pointed to by lex_id, which
-    stores whether the lowered version of the string hashed by `lex' is found
-    in all-upper case frequently in a large sample of text.  Users are free
-    to load different data, by default we use a sample from Wikipedia, with
-    a threshold of 0.95, picked to maximize mutual information for POS tagging.
-
-    >>> is_oft_upper(lookup(u'abc'))
+    '''Check the OFT_UPPER distributional flag for the word.
+    
+    The OFT_UPPER flag records whether a lower-cased version of the word
+    is found in all-upper case frequently in a large sample of text, where
+    "frequently" is defined as P >= 0.95 (chosen for high mutual information for
+    POS tagging).
+    
+    Case statistics are estimated from a large text corpus. Estimates are read
+    from data/en/case_stats, and can be replaced using spacy.en.load_case_stats.
+    
+    >>> is_oft_upper(lookup(u'nato'))
     True
-    >>> is_oft_upper(lookup(u'aBc')) # This must get the same answer
-    True
+    >>> is_oft_upper(lookup(u'the')) 
+    False
     '''
     return (<Lexeme*>lex_id).dist_flags & (1 << OFT_UPPER)
 
 
 cpdef bint is_oft_title(size_t lex_id):
-    '''Access the `oft_upper' field of the Lexeme pointed to by lex_id, which
-    stores whether the lowered version of the string hashed by `lex' is found
-    title-cased frequently in a large sample of text.  Users are free
-    to load different data, by default we use a sample from Wikipedia, with
-    a threshold of 0.3, picked to maximize mutual information for POS tagging.
-
-    >>> is_oft_title(lookup(u'marcus'))
+    '''Check the OFT_TITLE distributional flag for the word.
+    
+    The OFT_TITLE flag records whether a lower-cased version of the word
+    is found title-cased (see string.istitle) frequently in a large sample of text,
+    where "frequently" is defined as P >= 0.3 (chosen for high mutual information for
+    POS tagging).
+    
+    Case statistics are estimated from a large text corpus. Estimates are read
+    from data/en/case_stats, and can be replaced using spacy.en.load_case_stats.
+    
+    >>> is_oft_upper(lookup(u'john'))
     True
-    >>> is_oft_title(lookup(u'MARCUS')) # This must get the same value
-    True
+    >>> is_oft_upper(lookup(u'Bill')) 
+    False
     '''
     return (<Lexeme*>lex_id).dist_flags & (1 << OFT_TITLE)
 
