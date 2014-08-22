@@ -48,7 +48,7 @@ exts = [
     Extension("spacy.tokens", ["spacy/tokens.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.en", ["spacy/en.pyx"], language="c++",
               include_dirs=includes),
-    Extension("spacy.en_ptb", ["spacy/en_ptb.pyx"], language="c++", include_dirs=includes),
+    Extension("spacy.ptb3", ["spacy/ptb3.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.lexeme", ["spacy/lexeme.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.spacy", ["spacy/spacy.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.string_tools", ["spacy/string_tools.pyx"], language="c++",
