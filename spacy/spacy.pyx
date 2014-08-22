@@ -14,9 +14,6 @@ from libc.stdlib cimport calloc, free
 from libcpp.pair cimport pair
 from cython.operator cimport dereference as deref
 
-from spacy.lexeme cimport Lexeme
-from spacy.lexeme cimport LexID
-
 from . import util
 from os import path
 
@@ -33,7 +30,7 @@ cdef class Language:
         self.load_tokenization(util.read_tokenization(name))
         self.load_dist_info(util.read_dist_info(name))
 
-    cpdef Tokens tokenize(self, unicode string):
+    cpdef list tokenize(self, unicode string):
         """Tokenize.
 
         Split the string into tokens.
@@ -44,8 +41,8 @@ cdef class Language:
         Returns:
             tokens (Tokens): A Tokens object.
         """
-        cdef Lexeme** chunk
-        cdef Tokens tokens = Tokens(self)
+        cdef list chunk
+        cdef list tokens = []
         cdef size_t length = len(string)
         cdef size_t start = 0
         cdef size_t i = 0
@@ -53,64 +50,50 @@ cdef class Language:
             if _is_whitespace(c):
                 if start < i:
                     chunk = self.lookup_chunk(string[start:i])
-                    _extend(tokens, chunk)
+                    tokens.extend(chunk)
                 start = i + 1
             i += 1
         if start < i:
             chunk = self.lookup_chunk(string[start:])
-            _extend(tokens, chunk)
+            tokens.extend(chunk)
         return tokens
 
-    cdef Lexeme* lookup(self, unicode string) except NULL:
+    cdef Word lookup(self, unicode string):
         assert len(string) != 0
-        cdef Lexeme* word 
-        cdef LexID lex_id
+        cdef Word word 
         cdef StringHash h = hash(string)
         if h in self.vocab:
-            lex_id = self.vocab[h]
-            word = <Lexeme*>lex_id
+            word = self.vocab[h]
         else:
             word = self.new_lexeme(string)
         return word
 
-    cdef Lexeme** lookup_chunk(self, unicode string) except NULL:
+    cdef list lookup_chunk(self, unicode string):
         cdef StringHash h = hash(string)
-        cdef Lexeme** chunk
+        cdef list chunk
         cdef size_t chunk_id
         if h in self.chunks:
-            chunk_id = self.chunks[h]
-            chunk = <Lexeme**>chunk_id
+            chunk = self.chunks[h]
         else:
             chunk = self.new_chunk(string, self.find_substrings(string))
         return chunk
 
-    cdef Lexeme** new_chunk(self, unicode string, list substrings) except NULL:
-        cdef Lexeme** chunk = <Lexeme**>calloc(len(substrings) + 1, sizeof(Lexeme*))
+    cdef list new_chunk(self, unicode string, list substrings):
+        chunk = []
         for i, substring in enumerate(substrings):
-            chunk[i] = self.lookup(substring)
-        chunk[i + 1] = NULL
+            chunk.append(self.lookup(substring))
         cdef StringHash h = hash(string)
-        self.chunks[h] = <size_t>chunk
+        self.chunks[h] = chunk
         return chunk
 
-    cdef Lexeme* new_lexeme(self, unicode string) except NULL:
-        cdef Lexeme* word = <Lexeme*>calloc(1, sizeof(Lexeme))
-        cdef bytes byte_string = string.encode('utf8')
-        word.string = <char*>byte_string
-        word.length = len(byte_string)
-        word.lex = hash(string)
-        word.string_views = <StringHash*>calloc(len(self.view_funcs), sizeof(StringHash))
-        cdef unicode view
-        cdef StringHash hashed
-        for i, view_func in enumerate(self.view_funcs):
-            view = view_func(string)
-            hashed = hash(view)
-            word.string_views[i] = hashed
-            self.bacov[hashed] = view
+    cdef Word new_lexeme(self, unicode string):
+        string_views = [view_func(string) for view_func in self.view_funcs]
+        word = Word(string.encode('utf8'), string_views)
         self.bacov[word.lex] = string
-        self.vocab[word.lex] = <LexID>word
+        self.vocab[word.lex] = word
         return word
 
+    """
     def add_view_funcs(self, list view_funcs):
         self.view_funcs.extend(view_funcs)
         cdef size_t nr_views = len(self.view_funcs)
@@ -132,6 +115,7 @@ cdef class Language:
                 hashed = hash(view)
                 word.string_views[i] = hashed
                 self.bacov[hashed] = view
+    """
 
     cpdef unicode unhash(self, StringHash hash_value):
         '''Fetch a string from the reverse index, given its hash value.'''
@@ -162,7 +146,7 @@ cdef class Language:
     cdef int find_split(self, unicode word):
         return len(word)
 
-    cdef int set_orth(self, unicode string, Lexeme* word):
+    cdef int set_orth(self, unicode string, Word word):
         pass
 
     def load_tokenization(self, token_rules):
@@ -190,7 +174,7 @@ cdef class Language:
         '''
         cdef unicode string
         cdef dict word_dist
-        cdef Lexeme* w
+        cdef Word w
         for string, word_dist in dist_info.items():
             w = self.lookup(string)
             w.prob = word_dist.prob
@@ -212,9 +196,9 @@ cdef inline bint _is_whitespace(Py_UNICODE c) nogil:
         return False
 
 
-cdef inline int _extend(Tokens tokens, Lexeme** chunk) nogil:
-    cdef size_t i = 0
-    while chunk[i] != NULL:
-        tokens.vctr[0].push_back(<Lexeme_addr>chunk[i])
-        tokens.length += 1
-        i += 1
+#cdef inline int _extend(Tokens tokens, Lexeme** chunk) nogil:
+#    cdef size_t i = 0
+#    while chunk[i] != NULL:
+#        tokens.vctr[0].push_back(<Lexeme_addr>chunk[i])
+#        tokens.length += 1
+#        i += 1

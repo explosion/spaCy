@@ -1,21 +1,9 @@
-from libcpp.vector cimport vector
 from libc.stdint cimport uint32_t
 from libc.stdint cimport uint64_t
+from spacy.word cimport Word
 
-# Circular import problems here
-ctypedef size_t Lexeme_addr
 ctypedef uint32_t StringHash
-from spacy.lexeme cimport Lexeme
 
-from spacy.tokens cimport Tokens
-
-# Put these above import to avoid circular import problem
-ctypedef char Bits8
-ctypedef uint64_t Bits64
-ctypedef int ClusterID
-
-
-from spacy.lexeme cimport Lexeme
 
 
 cdef class Language:
@@ -24,16 +12,16 @@ cdef class Language:
     cdef dict vocab
     cdef dict bacov
 
-    cpdef Tokens tokenize(self, unicode text)
+    cpdef list tokenize(self, unicode text)
 
-    cdef Lexeme* lookup(self, unicode string) except NULL
-    cdef Lexeme** lookup_chunk(self, unicode chunk) except NULL
+    cdef Word lookup(self, unicode string)
+    cdef list lookup_chunk(self, unicode chunk)
     
-    cdef Lexeme** new_chunk(self, unicode string, list substrings) except NULL
-    cdef Lexeme* new_lexeme(self, unicode lex) except NULL
+    cdef list new_chunk(self, unicode string, list substrings)
+    cdef Word new_lexeme(self, unicode lex)
     
     cpdef unicode unhash(self, StringHash hashed)
     
     cpdef list find_substrings(self, unicode chunk)
     cdef int find_split(self, unicode word)
-    cdef int set_orth(self, unicode string, Lexeme* word)
+    cdef int set_orth(self, unicode string, Word word)

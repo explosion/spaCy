@@ -45,7 +45,6 @@ cimport spacy
 
 
 from spacy.orthography.latin cimport *
-from spacy.lexeme cimport *
 
 from .orthography.latin import *
 from .lexeme import *
@@ -96,7 +95,7 @@ cdef bint check_punct(unicode word, size_t i, size_t length):
 EN = English('en')
 
 
-cpdef Tokens tokenize(unicode string):
+cpdef list tokenize(unicode string):
     """Tokenize a string.
 
     The tokenization rules are defined in two places:
@@ -113,7 +112,7 @@ cpdef Tokens tokenize(unicode string):
     return EN.tokenize(string)
 
 
-cpdef LexID lookup(unicode string) except 0:
+cpdef Word lookup(unicode string):
     """Retrieve (or create, if not found) a Lexeme for a string, and return its ID.
 
     Properties of the Lexeme are accessed by passing LexID to the accessor methods.
@@ -125,7 +124,7 @@ cpdef LexID lookup(unicode string) except 0:
     Returns:
         lexeme (LexID): A reference to a lexical type.
     """
-    return <LexID>EN.lookup(string)
+    return EN.lookup(string)
 
 
 cpdef unicode unhash(StringHash hash_value):
