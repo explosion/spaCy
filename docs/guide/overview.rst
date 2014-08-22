@@ -19,18 +19,14 @@ an excellent set of pre-computed orthographic and distributional features:
 ::
 
     >>> from spacy import en
-    >>> apples, are, not, oranges, dots = en.tokenize(u"Apples aren't oranges...")
+    >>> apples, are, nt, oranges, dots = en.tokenize(u"Apples aren't oranges...")
     >>> en.is_lower(apples)
     False
-    # Distributional features calculated from large corpora
-    # Smoothed unigram log probability
-    >>> en.prob_of(are) > en.prob_of(oranges)
+    >>> en.prob_of(are) >= en.prob_of(oranges)
     True
-    # After POS tagging lots of text, is this word ever a noun?
     >>> en.can_tag(are, en.NOUN)
     False
-    # Is this word always title-cased?
-    >>> en.often_title(apples)
+    >>> en.is_often_titled(apples)
     False
 
 Accessing these properties is essentially free: the Lexeme IDs are actually
@@ -72,6 +68,7 @@ Pros:
 Cons:
 
 - It's new (released September 2014)
+- Security concerns, from memory management
 - Higher memory usage (up to 1gb)
 - More conceptually complicated
 - Tokenization rules expressed in code, not as data
