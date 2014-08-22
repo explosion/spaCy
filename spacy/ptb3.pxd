@@ -1,18 +1,15 @@
-from libcpp.vector cimport vector
-
-from spacy.spacy cimport StringHash
 from spacy.spacy cimport Language
-from spacy.spacy cimport Lexeme
-from spacy.spacy cimport Lexeme_addr
+from spacy.lexeme cimport LexID
 from spacy.tokens cimport Tokens
+from spacy.lexeme cimport StringHash
 
 
-cdef class EnglishPTB(Language):
-    cdef int find_split(self, unicode word)
+cdef class PennTreebank3(Language):
+    cpdef list find_substrings(self, unicode word)
     
 
-cdef EnglishPTB EN_PTB
+cdef PennTreebank3 PTB3
 
-cpdef Lexeme_addr lookup(unicode word) except 0
+cpdef LexID lookup(unicode word) except 0
 cpdef Tokens tokenize(unicode string)
 cpdef unicode unhash(StringHash hash_value)

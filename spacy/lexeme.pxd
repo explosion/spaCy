@@ -25,10 +25,15 @@ cdef struct Lexeme:
 cpdef StringHash lex_of(LexID lex_id) except 0
 cpdef char first_of(LexID lex_id) except 0
 cpdef size_t length_of(LexID lex_id) except 0
-cpdef double prob_of(LexID lex_id) except 0
+cpdef double prob_of(LexID lex_id) except 1
 cpdef ClusterID cluster_of(LexID lex_id) except 0
 
-cpdef bint check_tag_flag(LexID lex, TagFlags flag) except *
+
+cpdef bint is_often_titled(size_t lex_id)
+cpdef bint is_often_uppered(size_t lex_id)
+
+
+cpdef bint can_tag(LexID lex, TagFlags flag) except *
 cpdef bint check_dist_flag(LexID lex, DistFlags flag) except *
 cpdef bint check_orth_flag(LexID lex, OrthFlags flag) except *
 

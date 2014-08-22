@@ -11,6 +11,21 @@ from libc.stdint cimport uint64_t
 
 from spacy.spacy cimport StringHash
 
+# Python-visible enum for POS tags
+PUNCT = 0
+CONJ = 1
+NUM = 2
+X = 3
+DET = 4
+ADP = 5
+ADJ = 6
+ADV = 7
+VERB = 8
+NOUN = 9
+PDT = 10
+POS = 11
+PRON = 12
+PRT = 13
 
 cpdef int set_flags(LexID lex_id, object active_flags) except *:
     """Set orthographic bit flags for a Lexeme.
@@ -75,7 +90,7 @@ cpdef size_t length_of(size_t lex_id) except 0:
     return word.length
 
 
-cpdef double prob_of(size_t lex_id) except 0:
+cpdef double prob_of(size_t lex_id) except 1:
     '''Access an estimate of the word's unigram log probability.
 
     Probabilities are calculated from a large text corpus, and smoothed using
@@ -90,7 +105,7 @@ cpdef double prob_of(size_t lex_id) except 0:
 DEF OFT_UPPER = 1
 DEF OFT_TITLE = 2
 
-cpdef bint is_oft_upper(size_t lex_id):
+cpdef bint is_often_uppered(size_t lex_id):
     '''Check the OFT_UPPER distributional flag for the word.
     
     The OFT_UPPER flag records whether a lower-cased version of the word
@@ -101,15 +116,15 @@ cpdef bint is_oft_upper(size_t lex_id):
     Case statistics are estimated from a large text corpus. Estimates are read
     from data/en/case_stats, and can be replaced using spacy.en.load_case_stats.
     
-    >>> is_oft_upper(lookup(u'nato'))
+    >>> is_often_uppered(lookup(u'nato'))
     True
-    >>> is_oft_upper(lookup(u'the')) 
+    >>> is_often_uppered(lookup(u'the')) 
     False
     '''
     return (<Lexeme*>lex_id).dist_flags & (1 << OFT_UPPER)
 
 
-cpdef bint is_oft_title(size_t lex_id):
+cpdef bint is_often_titled(size_t lex_id):
     '''Check the OFT_TITLE distributional flag for the word.
     
     The OFT_TITLE flag records whether a lower-cased version of the word
@@ -127,6 +142,7 @@ cpdef bint is_oft_title(size_t lex_id):
     '''
     return (<Lexeme*>lex_id).dist_flags & (1 << OFT_TITLE)
 
+
 cpdef bint check_orth_flag(size_t lex_id, OrthFlags flag) except *:
     return (<Lexeme*>lex_id).orth_flags & (1 << flag)
 
@@ -135,5 +151,5 @@ cpdef bint check_dist_flag(size_t lex_id, DistFlags flag) except *:
     return (<Lexeme*>lex_id).dist_flags & (1 << flag)
 
 
-cpdef bint check_tag_flag(LexID lex_id, TagFlags flag) except *:
+cpdef bint can_tag(LexID lex_id, TagFlags flag) except *:
     return (<Lexeme*>lex_id).possible_tags & (1 << flag)

@@ -3,7 +3,7 @@
 '''Tokenize English text, using a scheme that differs from the Penn Treebank 3
 scheme in several important respects:
 
-* Whitespace added as tokens, except for single spaces. e.g.,
+* Whitespace is added as tokens, except for single spaces. e.g.,
 
     >>> tokenize(u'\\nHello  \\tThere').strings
     [u'\\n', u'Hello', u' ', u'\\t', u'There']
@@ -18,13 +18,15 @@ scheme in several important respects:
     >>> tokenize(u'New York-based').strings
     [u'New', u'York', u'-', u'based']
 
+Other improvements:
+
 * Full unicode support
 * Email addresses, URLs, European-formatted dates and other numeric entities not
   found in the PTB are tokenized correctly
 * Heuristic handling of word-final periods (PTB expects sentence boundary detection
   as a pre-process before tokenization.)
 
-Take care to ensure you training and run-time data is tokenized according to the
+Take care to ensure your training and run-time data is tokenized according to the
 same scheme. Tokenization problems are a major cause of poor performance for
 NLP tools. If you're using a pre-trained model, the :py:mod:`spacy.ptb3` module
 provides a fully Penn Treebank 3-compliant tokenizer.
@@ -47,7 +49,6 @@ from spacy.lexeme cimport *
 
 from .orthography.latin import *
 from .lexeme import *
-
 
 
 cdef class English(spacy.Language):
@@ -101,7 +102,7 @@ cpdef Tokens tokenize(unicode string):
     The tokenization rules are defined in two places:
 
     * The data/en/tokenization table, which handles special cases like contractions;
-    * The `spacy.en.English.find_split` function, which is used to split off punctuation etc.
+    * The :py:meth:`spacy.en.English.find_split` function, which is used to split off punctuation etc.
 
     Args:
         string (unicode): The string to be tokenized. 
@@ -113,9 +114,10 @@ cpdef Tokens tokenize(unicode string):
 
 
 cpdef LexID lookup(unicode string) except 0:
-    """Retrieve (or create, if not found) a Lexeme ID for a string.
+    """Retrieve (or create, if not found) a Lexeme for a string, and return its ID.
 
-    The LexID is really a memory address, making dereferencing it essentially free.
+    Properties of the Lexeme are accessed by passing LexID to the accessor methods.
+    Access is cheap/free, as the LexID is the memory address of the Lexeme.
     
     Args:
         string (unicode):  The string to be looked up. Must be unicode, not bytes.
