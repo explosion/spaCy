@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 from spacy.en import unhash
 from spacy import lex_of
 from spacy.util import utf8open
-from spacy.en_ptb import tokenize, lookup, unhash
+from spacy.ptb3 import tokenize, lookup, unhash
 
 import pytest
 import os
