@@ -28,10 +28,8 @@ cdef class Language:
     def __cinit__(self, name):
         self.name = name
         self.bacov = {}
-        self.chunks = dense_hash_map[StringHash, size_t]()
-        self.vocab = dense_hash_map[StringHash, size_t]()
-        self.chunks.set_empty_key(0)
-        self.vocab.set_empty_key(0)
+        self.chunks = {}
+        self.vocab = {}
         self.load_tokenization(util.read_tokenization(name))
         self.load_dist_info(util.read_dist_info(name))
 
@@ -65,16 +63,24 @@ cdef class Language:
 
     cdef Lexeme* lookup(self, unicode string) except NULL:
         assert len(string) != 0
-        cdef Lexeme* word = <Lexeme*>self.vocab[hash(string)]
-        if word == NULL:
+        cdef Lexeme* word 
+        cdef LexID lex_id
+        cdef StringHash h = hash(string)
+        if h in self.vocab:
+            lex_id = self.vocab[h]
+            word = <Lexeme*>lex_id
+        else:
             word = self.new_lexeme(string)
         return word
 
     cdef Lexeme** lookup_chunk(self, unicode string) except NULL:
         cdef StringHash h = hash(string)
-        cdef Lexeme** chunk = <Lexeme**>self.chunks[h]
-        cdef int split
-        if chunk == NULL:
+        cdef Lexeme** chunk
+        cdef size_t chunk_id
+        if h in self.chunks:
+            chunk_id = self.chunks[h]
+            chunk = <Lexeme**>chunk_id
+        else:
             chunk = self.new_chunk(string, self.find_substrings(string))
         return chunk
 
@@ -83,7 +89,8 @@ cdef class Language:
         for i, substring in enumerate(substrings):
             chunk[i] = self.lookup(substring)
         chunk[i + 1] = NULL
-        self.chunks[hash(string)] = <size_t>chunk
+        cdef StringHash h = hash(string)
+        self.chunks[h] = <size_t>chunk
         return chunk
 
     cdef Lexeme* new_lexeme(self, unicode string) except NULL:
@@ -115,7 +122,7 @@ cdef class Language:
         cdef LexID lex_id
         cdef Lexeme* word
 
-        for key, lex_id in self.vocab:
+        for key, lex_id in self.vocab.items():
             word = <Lexeme*>lex_id
             free(word.string_views)
             word.string_views = <StringHash*>calloc(nr_views, sizeof(StringHash))

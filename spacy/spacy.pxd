@@ -2,12 +2,9 @@ from libcpp.vector cimport vector
 from libc.stdint cimport uint32_t
 from libc.stdint cimport uint64_t
 
-from sparsehash.dense_hash_map cimport dense_hash_map
-
 # Circular import problems here
 ctypedef size_t Lexeme_addr
 ctypedef uint32_t StringHash
-ctypedef dense_hash_map[StringHash, size_t] Vocab
 from spacy.lexeme cimport Lexeme
 
 from spacy.tokens cimport Tokens
@@ -23,8 +20,8 @@ from spacy.lexeme cimport Lexeme
 
 cdef class Language:
     cdef object name
-    cdef dense_hash_map[StringHash, size_t] chunks
-    cdef dense_hash_map[StringHash, size_t] vocab
+    cdef dict chunks
+    cdef dict vocab
     cdef dict bacov
 
     cpdef Tokens tokenize(self, unicode text)
