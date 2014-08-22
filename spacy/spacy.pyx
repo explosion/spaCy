@@ -11,8 +11,6 @@ Special-case tokenization rules are read from data/<lang>/tokenization .
 from __future__ import unicode_literals
 
 from libc.stdlib cimport calloc, free
-from libcpp.pair cimport pair
-from cython.operator cimport dereference as deref
 
 from . import util
 from os import path
@@ -61,19 +59,17 @@ cdef class Language:
     cdef Word lookup(self, unicode string):
         assert len(string) != 0
         cdef Word word 
-        cdef StringHash h = hash(string)
-        if h in self.vocab:
-            word = self.vocab[h]
+        if string in self.vocab:
+            word = self.vocab[string]
         else:
             word = self.new_lexeme(string)
         return word
 
     cdef list lookup_chunk(self, unicode string):
-        cdef StringHash h = hash(string)
         cdef list chunk
         cdef size_t chunk_id
-        if h in self.chunks:
-            chunk = self.chunks[h]
+        if string in self.chunks:
+            chunk = self.chunks[string]
         else:
             chunk = self.new_chunk(string, self.find_substrings(string))
         return chunk
@@ -82,15 +78,14 @@ cdef class Language:
         chunk = []
         for i, substring in enumerate(substrings):
             chunk.append(self.lookup(substring))
-        cdef StringHash h = hash(string)
-        self.chunks[h] = chunk
+        self.chunks[string] = chunk
         return chunk
 
     cdef Word new_lexeme(self, unicode string):
         string_views = [view_func(string) for view_func in self.view_funcs]
         word = Word(string.encode('utf8'), string_views)
         self.bacov[word.lex] = string
-        self.vocab[word.lex] = word
+        self.vocab[string] = word
         return word
 
     """
