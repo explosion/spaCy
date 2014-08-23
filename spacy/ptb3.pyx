@@ -77,18 +77,21 @@ def nltk_regex_tokenize(text):
 cdef class PennTreebank3(Language):
     cpdef list find_substrings(self, unicode chunk):
         strings = nltk_regex_tokenize(chunk)
+        if strings[-1] == '.':
+            strings.pop()
+            strings[-1] += '.'
         assert strings
         return strings
     
 
 cdef PennTreebank3 PTB3 = PennTreebank3('ptb3')
 
-cpdef Tokens tokenize(unicode string):
+cpdef list tokenize(unicode string):
     return PTB3.tokenize(string)
 
 
-cpdef LexID lookup(unicode string) except 0:
-    return <LexID>PTB3.lookup(string)
+cpdef Word lookup(unicode string):
+    return PTB3.lookup(string)
 
 
 cpdef unicode unhash(StringHash hash_value):

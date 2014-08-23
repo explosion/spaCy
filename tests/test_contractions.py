@@ -2,35 +2,33 @@ from __future__ import unicode_literals
 
 from spacy.en import tokenize, lookup, unhash
 
-from spacy import lex_of
-
 
 def test_possess():
     tokens = tokenize("Mike's")
-    assert unhash(lex_of(tokens[0])) == "Mike"
-    assert unhash(lex_of(tokens[1])) == "'s"
+    assert unhash(tokens[0].lex) == "Mike"
+    assert unhash(tokens[1].lex) == "'s"
     assert len(tokens) == 2
 
 
 def test_apostrophe():
     tokens = tokenize("schools'")
     assert len(tokens) == 2
-    assert unhash(lex_of(tokens[1])) == "'"
-    assert unhash(lex_of(tokens[0])) == "schools"
+    assert unhash(tokens[1].lex) == "'"
+    assert unhash(tokens[0].lex) == "schools"
 
 
 def test_LL():
     tokens = tokenize("we'll")
     assert len(tokens) == 2
-    assert unhash(lex_of(tokens[1])) == "will"
-    assert unhash(lex_of(tokens[0])) == "we"
+    assert unhash(tokens[1].lex) == "will"
+    assert unhash(tokens[0].lex) == "we"
 
 
 def test_aint():
     tokens = tokenize("ain't")
     assert len(tokens) == 2
-    assert unhash(lex_of(tokens[0])) == "are"
-    assert unhash(lex_of(tokens[1])) == "not"
+    assert unhash(tokens[0].lex) == "are"
+    assert unhash(tokens[1].lex) == "not"
 
 
 def test_capitalized():
@@ -40,4 +38,4 @@ def test_capitalized():
     assert len(tokens) == 2
     tokens = tokenize("Ain't")
     assert len(tokens) == 2
-    assert unhash(lex_of(tokens[0])) == "Are"
+    assert unhash(tokens[0].lex) == "Are"

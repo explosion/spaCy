@@ -17,7 +17,7 @@ def test_eq():
 
 def test_round_trip():
     hello = lookup('Hello')
-    assert unhash(lex_of(hello)) == 'Hello'
+    assert unhash(hello.lex) == 'Hello'
 
 
 def test_case_neq():
@@ -32,6 +32,6 @@ def test_punct_neq():
 
 def test_short():
     addr = lookup('I')
-    assert unhash(lex_of(addr)) == 'I'
+    assert unhash(addr.lex) == 'I'
     addr = lookup('not')
-    assert unhash(lex_of(addr)) == 'not'
+    assert unhash(addr.lex) == 'not'
