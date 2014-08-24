@@ -9,7 +9,6 @@ def clean():
 def docs():
     with lcd('docs'):
         local('sphinx-build -b html . ./_build')
-        local('open _build/index.html')
 
 def test():
     local('py.test -x')

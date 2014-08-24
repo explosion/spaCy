@@ -11,8 +11,7 @@ spaCy NLP Tokenizer and Lexicon
     
     guide/overview
     guide/install
-    api/languages/index.rst
-    api/modules/index.rst
+    api/index.rst
 
 Source (GitHub)
 ----------------

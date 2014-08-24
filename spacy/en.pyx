@@ -5,17 +5,17 @@ scheme in several important respects:
 
 * Whitespace is added as tokens, except for single spaces. e.g.,
 
-    >>> tokenize(u'\\nHello  \\tThere').strings
+    >>> [w.string for w in tokenize(u'\\nHello  \\tThere')]
     [u'\\n', u'Hello', u' ', u'\\t', u'There']
 
 * Contractions are normalized, e.g.
 
-    >>> tokenize(u"isn't ain't won't he's").strings
+    >>> [w.string for w in u"isn't ain't won't he's")]
     [u'is', u'not', u'are', u'not', u'will', u'not', u'he', u"__s"]
   
 * Hyphenated words are split, with the hyphen preserved, e.g.:
     
-    >>> tokenize(u'New York-based').strings
+    >>> [w.string for w in tokenize(u'New York-based')]
     [u'New', u'York', u'-', u'based']
 
 Other improvements:
@@ -39,25 +39,11 @@ from __future__ import unicode_literals
 
 from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport uint64_t
-from libcpp.vector cimport vector
 
 cimport spacy
 
 
-from spacy.orthography.latin cimport *
-
-from .orthography.latin import *
-from .lexeme import *
-
-
 cdef class English(spacy.Language):
-    # How to ensure the order here aligns with orthography.latin?
-    view_funcs = [
-        get_normalized,
-        get_word_shape,
-        get_last3
-    ]
-
     cdef int find_split(self, unicode word):
         cdef size_t length = len(word)
         cdef int i = 0
