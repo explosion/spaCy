@@ -3,14 +3,13 @@ from libcpp.vector cimport vector
 from spacy.spacy cimport StringHash
 
 from spacy.spacy cimport Language
-from spacy.word cimport Word
-from spacy.tokens cimport Tokens
+from spacy.word cimport LatinWord
 cimport cython
 
 
 cdef class English(spacy.Language):
     cdef int find_split(self, unicode word)
-    cdef int set_orth(self, unicode word, Word lex) except -1
+    cdef LatinWord new_lexeme(self, unicode string)
 
 
 cdef English EN

@@ -44,6 +44,9 @@ cimport spacy
 
 
 cdef class English(spacy.Language):
+    cdef LatinWord new_lexeme(self, unicode string):
+        return LatinWord(string)
+
     cdef int find_split(self, unicode word):
         cdef size_t length = len(word)
         cdef int i = 0

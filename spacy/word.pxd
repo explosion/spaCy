@@ -29,18 +29,19 @@ cdef enum:
 cdef class Word:
     # NB: the readonly keyword refers to _Python_ access. The attributes are
     # writeable from Cython.
-    cdef readonly StringHash lex
-    cdef readonly char* string
+    cdef readonly StringHash key
+    cdef readonly char** utf8_strings
     cdef readonly size_t length
     cdef readonly double prob
     cdef readonly ClusterID cluster
     cdef readonly TagFlags possible_tags
     cdef readonly DistFlags dist_flags
     cdef readonly OrthFlags orth_flags
-    cdef StringHash* string_views
 
     cpdef StringHash get_view(self, size_t i) except 0
 
+
+cdef class CasedWord(Word):
     cpdef bint can_tag(self, TagFlags flag) except *
     cpdef bint check_dist_flag(self, DistFlags flag) except *
     cpdef bint check_orth_flag(self, OrthFlags flag) except *

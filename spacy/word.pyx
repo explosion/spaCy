@@ -60,11 +60,11 @@ cdef class Word:
             while "dapple" is totally different. On the other hand, "scalable" receives
             the same cluster ID as "pineapple", which is not what we'd like.
     """
-    def __cinit__(self, bytes string, list string_views):
+    def __cinit__(self, bytes string, list string_views, prob=0.0, cluster=0,
+                  orth_flags=0, dist_flags=0, possible_tags=0):
         self.string = <char*>string
         self.length = len(string)
-        self.lex = hash(string)
-        self.string_views = <StringHash*>calloc(len(string_views), sizeof(StringHash))
+        self.views = <char**>calloc(len(string_views), sizeof(StringHash))
         cdef unicode view
         for i in range(len(string_views)):
             view = string_views[i]
@@ -98,6 +98,12 @@ cdef class Word:
         corpus. "Often" is chosen by heuristic.
         """
         return self.possible_tags & (1 << flag)
+
+
+cdef class CasedWord(Word):
+    def __cinit__(self, bytes string):
+        string_views = [get_normaized(string), get_word_shape(string), string[-3:]]
+        Word.__cinit__(self, string, string_views)
     
     cpdef bint is_often_uppered(self) except *:
         '''Check the OFT_UPPER distributional flag for the word.
