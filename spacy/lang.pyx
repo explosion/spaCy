@@ -15,16 +15,13 @@ from libc.stdlib cimport calloc, free
 from . import util
 from os import path
 
-TAGS = {}
-DIST_FLAGS = {}
 
 cdef class Language:
     view_funcs = []
     def __cinit__(self, name):
         self.name = name
-        self.bacov = {}
-        self.chunks = {}
-        self.vocab = {}
+        self.blobs = {}
+        self.lexicon = {}
         self.load_tokenization(util.read_tokenization(name))
         self.load_dist_info(util.read_dist_info(name))
 
@@ -37,26 +34,26 @@ cdef class Language:
             string (unicode): The string to split.
 
         Returns:
-            tokens (Tokens): A Tokens object.
+            tokens (list): A list of Lexeme objects.
         """
-        cdef list chunk
+        cdef list blob
         cdef list tokens = []
         cdef size_t length = len(string)
         cdef size_t start = 0
         cdef size_t i = 0
         for c in string:
-            if _is_whitespace(c):
+            if c == ' ':
                 if start < i:
-                    chunk = self.lookup_chunk(string[start:i])
-                    tokens.extend(chunk)
+                    blob = self.lookup_blob(string[start:i])
+                    tokens.extend(blob)
                 start = i + 1
             i += 1
         if start < i:
-            chunk = self.lookup_chunk(string[start:])
+            chunk = self.lookup_blob(string[start:])
             tokens.extend(chunk)
         return tokens
 
-    cdef Word lookup(self, unicode string):
+    cdef Lexeme lookup(self, unicode string):
         assert len(string) != 0
         cdef Word word 
         if string in self.vocab:
@@ -65,28 +62,26 @@ cdef class Language:
             word = self.new_lexeme(string)
         return word
 
-    cdef list lookup_chunk(self, unicode string):
+    cdef list lookup_blob(self, unicode string):
         cdef list chunk
-        cdef size_t chunk_id
-        if string in self.chunks:
-            chunk = self.chunks[string]
+        cdef size_t blob_id
+        if string in self.blobs:
+            blob = self.blobs[string]
         else:
-            chunk = self.new_chunk(string, self.find_substrings(string))
+            blob = self.new_blob(string, self.find_substrings(string))
         return chunk
 
-    cdef list new_chunk(self, unicode string, list substrings):
-        chunk = []
+    cdef list new_blob(self, unicode string, list substrings):
+        blob = []
         for i, substring in enumerate(substrings):
-            chunk.append(self.lookup(substring))
-        self.chunks[string] = chunk
-        return chunk
+            blob.append(self.lookup(substring))
+        self.blobs[string] = chunk
+        return blob
 
     cdef Word new_lexeme(self, unicode string):
-        string_views = [view_func(string) for view_func in self.view_funcs]
-        word = Word(string.encode('utf8'), string_views)
-        self.bacov[word.lex] = string
-        self.vocab[string] = word
-        return word
+        # TODO
+        #lexeme = Lexeme(string.encode('utf8'), string_views)
+        #return lexeme
 
     """
     def add_view_funcs(self, list view_funcs):
@@ -112,11 +107,7 @@ cdef class Language:
                 self.bacov[hashed] = view
     """
 
-    cpdef unicode unhash(self, StringHash hash_value):
-        '''Fetch a string from the reverse index, given its hash value.'''
-        return self.bacov[hash_value]
-
-    cpdef list find_substrings(self, unicode chunk):
+    cpdef list find_substrings(self, unicode blob):
         """Find how to split a chunk into substrings.
 
         This method calls find_split repeatedly. Most languages will want to
@@ -129,20 +120,17 @@ cdef class Language:
             substrings (list): The component substrings, e.g. [u"Mike", "'s", "!"].
         """
         substrings = []
-        while chunk:
-            split = self.find_split(chunk)
+        while blob:
+            split = self.find_split(blob)
             if split == 0:
-                substrings.append(chunk)
+                substrings.append(blob)
                 break
-            substrings.append(chunk[:split])
-            chunk = chunk[split:]
+            substrings.append(blob[:split])
+            blob = blob[split:]
         return substrings
 
     cdef int find_split(self, unicode word):
         return len(word)
-
-    cdef int set_orth(self, unicode string, Word word):
-        pass
 
     def load_tokenization(self, token_rules):
         '''Load special-case tokenization rules.
@@ -178,22 +166,3 @@ cdef class Language:
                 w.dist_flags |= DIST_FLAGS[flag]
             for tag in word_dist.tagdict:
                 w.possible_tags |= TAGS[tag]
-
-
-cdef inline bint _is_whitespace(Py_UNICODE c) nogil:
-    if c == ' ':
-        return True
-    elif c == '\n':
-        return True
-    elif c == '\t':
-        return True
-    else:
-        return False
-
-
-#cdef inline int _extend(Tokens tokens, Lexeme** chunk) nogil:
-#    cdef size_t i = 0
-#    while chunk[i] != NULL:
-#        tokens.vctr[0].push_back(<Lexeme_addr>chunk[i])
-#        tokens.length += 1
-#        i += 1
