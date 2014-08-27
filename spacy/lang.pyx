@@ -20,7 +20,7 @@ cdef class Language:
         self.name = name
         self.cache = {}
         self.lexicon = Lexicon()
-        self.load_tokenization(util.read_tokenization(name))
+        #self.load_special_tokenization(util.read_tokenization(name))
 
     cpdef list tokenize(self, unicode string):
         """Tokenize a string.
@@ -57,7 +57,7 @@ cdef class Language:
         cdef list lexemes = []
         substrings = self._split(string)
         for i, substring in enumerate(substrings):
-            lexemes.append(self.lookup(substring))
+            lexemes.append(self.lexicon.lookup(substring))
         self.cache[string] = lexemes
         return lexemes
 
@@ -108,7 +108,11 @@ cdef class Language:
 cdef class Lexicon:
     def __cinit__(self):
         self.flag_checkers = []
-        self.string_transforms = []
+        self.string_transformers = []
+        self.probs = {}
+        self.clusters = {}
+        self.case_stats = {}
+        self.tag_stats = {}
         self.lexicon = {}
 
     cpdef Lexeme lookup(self, unicode string):
@@ -151,6 +155,7 @@ cdef class Lexicon:
     def load_probs(self, location):
         """Load unigram probabilities.
         """
+        # Dict mapping words to floats
         self.probs = json.load(location)
         
         cdef Lexeme word
@@ -161,18 +166,21 @@ cdef class Lexicon:
             word.prob = prob
 
     def load_clusters(self, location):
-        self.probs = json.load(location)
+        # TODO: Find out endianness
+        # Dict mapping words to ??-endian ints
+        self.clusters = json.load(location)
         
         cdef Lexeme word
         cdef unicode string
 
         for string, word in self.lexicon.items():
-            cluster = _pop_default(self.cluster, string, 0)
+            cluster = _pop_default(self.clusters, string, 0)
             word.cluster = cluster
 
     def load_stats(self, location):
         """Load distributional stats.
         """
+        # Dict mapping string to dict of arbitrary stuff.
         raise NotImplementedError
 
 

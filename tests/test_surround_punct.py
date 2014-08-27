@@ -1,8 +1,6 @@
 from __future__ import unicode_literals
 
-from spacy.en import tokenize
-from spacy.en import lookup
-from spacy.en import unhash
+from spacy.en import EN
 
 import pytest
 
@@ -16,22 +14,22 @@ def test_token(paired_puncts):
     word_str = 'Hello'
     for open_, close_ in paired_puncts:
         string = open_ + word_str + close_
-        tokens = tokenize(string)
+        tokens = EN.tokenize(string)
         assert len(tokens) == 3
-        assert unhash(tokens[0].lex) == open_
-        assert unhash(tokens[1].lex) == word_str
-        assert unhash(tokens[2].lex) == close_
+        assert tokens[0].string == open_
+        assert tokens[1].string == word_str
+        assert tokens[2].string == close_
 
 
 def test_two_different(paired_puncts):
     word_str = 'Hello'
     for open_, close_ in paired_puncts:
         string = "`" + open_ + word_str + close_ + "'"
-        tokens = tokenize(string)
+        tokens = EN.tokenize(string)
         assert len(tokens) == 5
-        assert unhash(tokens[0].lex) == "`"
-        assert unhash(tokens[1].lex) == open_
-        assert unhash(tokens[2].lex) == word_str
-        assert unhash(tokens[2].lex) == word_str
-        assert unhash(tokens[3].lex) == close_
-        assert unhash(tokens[4].lex) == "'"
+        assert tokens[0].string == "`"
+        assert tokens[1].string == open_
+        assert tokens[2].string == word_str
+        assert tokens[2].string == word_str
+        assert tokens[3].string == close_
+        assert tokens[4].string == "'"

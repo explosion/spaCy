@@ -84,10 +84,10 @@ EN = English('en')
 
 
 # Thresholds for frequency related flags
-TAG_THRESH = 0.5
-LOWER_THRESH = 0.5
-UPPER_THRESH = 0.3
-TITLE_THRESH = 0.9
+cdef double TAG_THRESH = 0.5
+cdef double LOWER_THRESH = 0.5
+cdef double UPPER_THRESH = 0.3
+cdef double TITLE_THRESH = 0.9
 
 
 # Python-readable flag constants --- can't read an enum from Python

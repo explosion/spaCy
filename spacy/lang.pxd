@@ -4,6 +4,10 @@ from spacy.word cimport Lexeme
 
 
 cdef class Lexicon:
+    cdef public dict probs
+    cdef public dict clusters
+    cdef public dict case_stats
+    cdef public dict tag_stats
     cdef public list flag_checkers
     cdef public list string_transformers
 

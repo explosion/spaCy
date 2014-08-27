@@ -49,35 +49,41 @@ cdef class Lexeme:
             while "dapple" is totally different. On the other hand, "scalable" receives
             the same cluster ID as "pineapple", which is not what we'd like.
     """
-    def __cinit__(self, utf8_t string, size_t length, list views, prob=0.0,
-                  flags=0):
-        self.id = <id_t>&string
-        self.length = length
-        self.nr_strings = 0
-        self.add_views(views)
+    def __cinit__(self, unicode string, prob, cluster, case_stats,
+                  tag_stats, flag_checkers, string_transformers):
+        self.prob = prob
+        self.cluster = cluster
+        self.length = len(string)
+        self.id = hash(string)
+
+        self.nr_views = len(string_transformers)
+        self.views = []
+        cdef unicode view
+        for i, string_transformer in enumerate(string_transformers):
+            view = string_transformer(string, prob, case_stats, tag_stats)
+            self.views.append(view)
+
+        for i, flag_checker in enumerate(flag_checkers):
+            if flag_checker(string, prob, case_stats, tag_stats):
+                self.set_flag(i)
 
     def __dealloc__(self):
-        free(self.views)
+        pass
 
     property string:
         def __get__(self):
-            return self.strings[0].decode('utf8')
+            return self.views[0]
 
     cpdef unicode get_view_string(self, size_t i):
-        assert i < self.nr_strings
-        return self.strings[i].decode('utf8')
+        assert i < self.nr_views
+        return self.views[i]
 
     cpdef id_t get_view_id(self, size_t i) except 0:
-        assert i < self.nr_strings
-        return <id_t>&self.views[i]
+        return <id_t>hash(self.views[i])
 
     cpdef int add_view(self, unicode view) except -1:
         self.nr_views += 1
-        self.views = <char**>realloc(self.views, self.nr_views * sizeof(utf8_t))
-        cdef bytes utf8_string = view.encode('utf8')
-        # Intern strings, allowing pointer comparison
-        utf8_string = intern(utf8_string)
-        self.views[self.nr_views - 1] = utf8_string
+        self.views.append(view)
 
     cpdef bint check_flag(self, size_t flag_id) except *:
         """Access the value of one of the pre-computed boolean distribution features.
