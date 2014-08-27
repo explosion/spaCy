@@ -20,7 +20,7 @@ cdef class Language:
         self.name = name
         self.cache = {}
         self.lexicon = Lexicon()
-        #self.load_special_tokenization(util.read_tokenization(name))
+        self.load_special_tokenization(util.read_tokenization(name))
 
     cpdef list tokenize(self, unicode string):
         """Tokenize a string.
@@ -49,6 +49,7 @@ cdef class Language:
             i += 1
         if start < i:
             tokens.extend(self._tokenize(string[start:]))
+        assert tokens
         return tokens
 
     cdef list _tokenize(self, unicode string):
@@ -101,7 +102,7 @@ cdef class Language:
         for string, substrings in token_rules:
             lexemes = []
             for i, substring in enumerate(substrings):
-                lexemes.append(self.lookup(substring))
+                lexemes.append(self.lexicon.lookup(substring))
             self.cache[string] = lexemes
  
 
@@ -143,13 +144,15 @@ cdef class Lexicon:
         cdef Lexeme word
         flag_id = len(self.flag_checkers)
         for string, word in self.lexicon.items():
-            if flag_checker(string, word.prob, {}):
+            if flag_checker(string, word.prob, {}, {}):
                 word.set_flag(flag_id)
         self.flag_checkers.append(flag_checker)
         return flag_id
 
     def add_transform(self, string_transform):
         self.string_transformers.append(string_transform)
+        for string, word in self.lexicon.items():
+            word.add_view(string_transform(string, word.prob, {}, {}))
         return len(self.string_transformers) - 1
 
     def load_probs(self, location):
