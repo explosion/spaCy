@@ -1,4 +1,4 @@
-from spacy.spacy cimport Language
+from spacy.lang cimport Language
 from spacy.word cimport Lexeme
 cimport cython
 
@@ -31,12 +31,14 @@ cpdef size_t POS
 cpdef size_t PRON
 cpdef size_t PRT
 
-cdef class English(spacy.Language):
-    cdef int find_split(self, unicode word)
+cpdef size_t SIC
+cpdef size_t CANON_CASED
+cpdef size_t SHAPE
+cpdef size_t NON_SPARSE
 
 
-cdef English EN
+cdef class English(Language):
+    cpdef int _split_one(self, unicode word)
 
 
-cpdef Word lookup(unicode word)
-cpdef list tokenize(unicode string)
+cpdef English EN
