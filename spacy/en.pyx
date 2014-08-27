@@ -46,7 +46,6 @@ cimport lang
 from spacy import orth
 
 
-
 cdef class English(Language):
     cpdef int _split_one(self, unicode word):
         cdef size_t length = len(word)
