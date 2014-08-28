@@ -4,4 +4,4 @@ cimport cython
 
 
 cdef class English(Language):
-    cpdef int _split_one(self, unicode word)
+    cdef int _split_one(self, unicode word)

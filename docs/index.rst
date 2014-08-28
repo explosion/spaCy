@@ -9,9 +9,13 @@ spaCy NLP Tokenizer and Lexicon
 .. toctree::
     :maxdepth: 3
     
-    guide/overview
-    guide/install
+    guide/overview.rst
+    guide/install.rst
+
     api/index.rst
+
+    modules/index.rst
+    
 
 Source (GitHub)
 ----------------

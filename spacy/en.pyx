@@ -5,22 +5,21 @@ scheme in several important respects:
 
 * Whitespace is added as tokens, except for single spaces. e.g.,
 
-    >>> [w.string for w in tokenize(u'\\nHello  \\tThere')]
+    >>> [w.string for w in EN.tokenize(u'\\nHello  \\tThere')]
     [u'\\n', u'Hello', u' ', u'\\t', u'There']
 
 * Contractions are normalized, e.g.
 
-    >>> [w.string for w in u"isn't ain't won't he's")]
+    >>> [w.string for w in EN.tokenize(u"isn't ain't won't he's")]
     [u'is', u'not', u'are', u'not', u'will', u'not', u'he', u"__s"]
   
 * Hyphenated words are split, with the hyphen preserved, e.g.:
     
-    >>> [w.string for w in tokenize(u'New York-based')]
+    >>> [w.string for w in EN.tokenize(u'New York-based')]
     [u'New', u'York', u'-', u'based']
 
 Other improvements:
 
-* Full unicode support
 * Email addresses, URLs, European-formatted dates and other numeric entities not
   found in the PTB are tokenized correctly
 * Heuristic handling of word-final periods (PTB expects sentence boundary detection
@@ -81,6 +80,13 @@ CAN_PRT = NR_FLAGS; NR_FLAGS += 1
 
 
 cdef class English(Language):
+    """English tokenizer, tightly coupled to lexicon.
+
+    Attributes:
+        name (unicode): The two letter code used by Wikipedia for the language.
+        lexicon (Lexicon): The lexicon. Exposes the lookup method.
+    """
+
     def __cinit__(self, name):
         flag_funcs = [0 for _ in range(NR_FLAGS)]
         
@@ -110,7 +116,7 @@ cdef class English(Language):
         
         Language.__init__(self, name, flag_funcs)
 
-    cpdef int _split_one(self, unicode word):
+    cdef int _split_one(self, unicode word):
         cdef size_t length = len(word)
         cdef int i = 0
         if word.startswith("'s") or word.startswith("'S"):

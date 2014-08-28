@@ -41,7 +41,7 @@ cdef class Language:
         rules, words, probs, clusters, case_stats, tag_stats = lang_data
         self.lexicon = Lexicon(words, probs, clusters, case_stats, tag_stats,
                                string_features, flag_features)
-        self.load_special_tokenization(rules)
+        self._load_special_tokenization(rules)
 
     cpdef list tokenize(self, unicode string):
         """Tokenize a string.
@@ -75,6 +75,17 @@ cdef class Language:
         assert tokens
         return tokens
 
+    cpdef Lexeme lookup(self, unicode string):
+        """Retrieve (or create, if not found) a Lexeme for a string, and return it.
+    
+        Args:
+            string (unicode): The string to be looked up. Must be unicode, not bytes.
+
+        Returns:
+            lexeme (Lexeme): A reference to a lexical type.
+        """
+        return self.lexicon.lookup(string)
+
     cdef list _tokenize(self, unicode string):
         if string in self.cache:
             return self.cache[string]
@@ -85,7 +96,7 @@ cdef class Language:
         self.cache[string] = lexemes
         return lexemes
 
-    cpdef list _split(self, unicode string):
+    cdef list _split(self, unicode string):
         """Find how to split a contiguous span of non-space characters into substrings.
 
         This method calls find_split repeatedly. Most languages will want to
@@ -107,10 +118,10 @@ cdef class Language:
             string = string[split:]
         return substrings
 
-    cpdef int _split_one(self, unicode word):
+    cdef int _split_one(self, unicode word):
         return len(word)
 
-    def load_special_tokenization(self, token_rules):
+    def _load_special_tokenization(self, token_rules):
         '''Load special-case tokenization rules.
 
         Loads special-case tokenization rules into the Language.cache cache,
@@ -132,14 +143,14 @@ cdef class Language:
 cdef class Lexicon:
     def __cinit__(self, words, probs, clusters, case_stats, tag_stats,
                   string_features, flag_features):
-        self.flag_features = flag_features
-        self.string_features = string_features
+        self._flag_features = flag_features
+        self._string_features = string_features
         self._dict = {}
         cdef Lexeme word
         for string in words:
             word = Lexeme(string, probs.get(string, 0.0), clusters.get(string, 0),
                           case_stats.get(string, {}), tag_stats.get(string, {}),
-                          self.string_features, self.flag_features)
+                          self._string_features, self._flag_features)
             self._dict[string] = word
 
     cpdef Lexeme lookup(self, unicode string):
@@ -155,7 +166,7 @@ cdef class Lexicon:
         if string in self._dict:
             return self._dict[string]
         
-        cdef Lexeme word = Lexeme(string, 0, 0, {}, {}, self.string_features,
-                                  self.flag_features)
+        cdef Lexeme word = Lexeme(string, 0, 0, {}, {}, self._string_features,
+                                  self._flag_features)
         self._dict[string] = word
         return word
