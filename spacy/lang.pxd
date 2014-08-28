@@ -4,14 +4,10 @@ from spacy.word cimport Lexeme
 
 
 cdef class Lexicon:
-    cdef public dict probs
-    cdef public dict clusters
-    cdef public dict case_stats
-    cdef public dict tag_stats
-    cdef public list flag_checkers
-    cdef public list string_transformers
+    cdef list string_features
+    cdef list flag_features
 
-    cdef dict lexicon
+    cdef dict _dict
 
     cpdef Lexeme lookup(self, unicode string)
 
@@ -26,4 +22,3 @@ cdef class Language:
     cdef list _tokenize(self, unicode string)
     cpdef list _split(self, unicode string)
     cpdef int _split_one(self, unicode word)
-    

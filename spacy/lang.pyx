@@ -10,17 +10,38 @@ from __future__ import unicode_literals
 
 from libc.stdlib cimport calloc, free
 
-from . import util
 import json
 from os import path
 
+from .util import read_lang_data
+
 
 cdef class Language:
-    def __cinit__(self, name):
+    """Base class for language-specific tokenizers.
+
+    Most subclasses will override the _split or _split_one methods, which take
+    a string of non-whitespace characters and output a list of strings.  This
+    function is called by _tokenize, which sits behind a cache and turns the
+    list of strings into Lexeme objects via the Lexicon. Most languages will not
+    need to override _tokenize or tokenize.
+
+    The language is supplied a list of boolean functions, used to compute flag
+    features. These are passed to the language's Lexicon object.
+
+    The language's name is used to look up default data-files, found in data/<name.
+    """
+    def __cinit__(self, name, string_features=None, flag_features=None):
+        if flag_features is None:
+            flag_features = []
+        if string_features is None:
+            string_features = []
         self.name = name
         self.cache = {}
-        self.lexicon = Lexicon()
-        self.load_special_tokenization(util.read_tokenization(name))
+        lang_data = read_lang_data(name)
+        rules, words, probs, clusters, case_stats, tag_stats = lang_data
+        self.lexicon = Lexicon(words, probs, clusters, case_stats, tag_stats,
+                               string_features, flag_features)
+        self.load_special_tokenization(rules)
 
     cpdef list tokenize(self, unicode string):
         """Tokenize a string.
@@ -37,6 +58,8 @@ cdef class Language:
         Returns:
             tokens (Tokens): A Tokens object, giving access to a sequence of LexIDs.
         """
+        if not string:
+            return []
         cdef list tokens = []
         cdef size_t length = len(string)
         cdef size_t start = 0
@@ -107,85 +130,32 @@ cdef class Language:
  
 
 cdef class Lexicon:
-    def __cinit__(self):
-        self.flag_checkers = []
-        self.string_transformers = []
-        self.probs = {}
-        self.clusters = {}
-        self.case_stats = {}
-        self.tag_stats = {}
-        self.lexicon = {}
+    def __cinit__(self, words, probs, clusters, case_stats, tag_stats,
+                  string_features, flag_features):
+        self.flag_features = flag_features
+        self.string_features = string_features
+        self._dict = {}
+        cdef Lexeme word
+        for string in words:
+            word = Lexeme(string, probs.get(string, 0.0), clusters.get(string, 0),
+                          case_stats.get(string, {}), tag_stats.get(string, {}),
+                          self.string_features, self.flag_features)
+            self._dict[string] = word
 
     cpdef Lexeme lookup(self, unicode string):
         """Retrieve (or create, if not found) a Lexeme for a string, and return it.
     
-        Args:
+        Args
             string (unicode):  The string to be looked up. Must be unicode, not bytes.
 
         Returns:
             lexeme (Lexeme): A reference to a lexical type.
         """
         assert len(string) != 0
-        if string in self.lexicon:
-            return self.lexicon[string]
+        if string in self._dict:
+            return self._dict[string]
         
-        prob = _pop_default(self.probs, string, 0.0)
-        cluster = _pop_default(self.clusters, string, 0.0)
-        case_stats = _pop_default(self.case_stats, string, {})
-        tag_stats = _pop_default(self.tag_stats, string, {})
-
-        cdef Lexeme word = Lexeme(string, prob, cluster, case_stats, tag_stats,
-                                  self.flag_checkers, self.string_transformers)
-        self.lexicon[string] = word
+        cdef Lexeme word = Lexeme(string, 0, 0, {}, {}, self.string_features,
+                                  self.flag_features)
+        self._dict[string] = word
         return word
-
-    def add_flag(self, flag_checker):
-        cdef unicode string
-        cdef Lexeme word
-        flag_id = len(self.flag_checkers)
-        for string, word in self.lexicon.items():
-            if flag_checker(string, word.prob, {}, {}):
-                word.set_flag(flag_id)
-        self.flag_checkers.append(flag_checker)
-        return flag_id
-
-    def add_transform(self, string_transform):
-        self.string_transformers.append(string_transform)
-        for string, word in self.lexicon.items():
-            word.add_view(string_transform(string, word.prob, {}, {}))
-        return len(self.string_transformers) - 1
-
-    def load_probs(self, location):
-        """Load unigram probabilities.
-        """
-        # Dict mapping words to floats
-        self.probs = json.load(location)
-        
-        cdef Lexeme word
-        cdef unicode string
-
-        for string, word in self.lexicon.items():
-            prob = _pop_default(self.probs, string, 0.0)
-            word.prob = prob
-
-    def load_clusters(self, location):
-        # TODO: Find out endianness
-        # Dict mapping words to ??-endian ints
-        self.clusters = json.load(location)
-        
-        cdef Lexeme word
-        cdef unicode string
-
-        for string, word in self.lexicon.items():
-            cluster = _pop_default(self.clusters, string, 0)
-            word.cluster = cluster
-
-    def load_stats(self, location):
-        """Load distributional stats.
-        """
-        # Dict mapping string to dict of arbitrary stuff.
-        raise NotImplementedError
-
-
-def _pop_default(dict d, key, default):
-    return d.pop(key) if key in d else default
