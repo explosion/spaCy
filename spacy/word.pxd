@@ -17,4 +17,4 @@ cdef class Lexeme:
     cdef readonly flag_t flags
 
     cpdef bint check_flag(self, size_t flag_id) except *
-    cpdef int set_flag(self, size_t flag_id) except -1
+    cpdef unicode string_view(self, size_t view_id)

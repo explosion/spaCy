@@ -5,20 +5,17 @@
 from libc.stdlib cimport calloc, free, realloc
 
 cdef class Lexeme:
-    """A lexical type.
+    """A lexical type --- a word, punctuation symbol, whitespace sequence, etc
+    keyed by a case-sensitive unicode string. All tokens with the same string,
+    e.g. all instances of "dog", ",", "NASA" etc should be mapped to the same
+    Lexeme.
 
-    Clients should avoid instantiating Lexemes directly, and instead use get_lexeme
-    from a language module, e.g. spacy.en.get_lexeme . This allows us to use only
-    one Lexeme object per lexical type.
+    You should avoid instantiating Lexemes directly, and instead use the
+    :py:meth:`space.lang.Language.tokenize` and :py:meth:`spacy.lang.Language.lookup`
+    methods on the global object exposed by the language you're working with,
+    e.g. :py:data:`spacy.en.EN`.
 
     Attributes:
-        id (view_id_t):
-            A unique ID of the word's string.
-
-            Implemented as the memory-address of the string,
-            as we use Python's string interning to guarantee that only one copy
-            of each string is seen.
-
         string (unicode):
             The unicode string.
             
@@ -34,7 +31,7 @@ cdef class Lexeme:
             simple Good-Turing.  Estimates are read from data/en/probabilities, and
             can be replaced using spacy.en.load_probabilities.
         
-        cluster (int):
+        cluster (size_t):
             An integer representation of the word's Brown cluster.
 
             A Brown cluster is an address into a binary tree, which gives some (noisy)
@@ -62,18 +59,43 @@ cdef class Lexeme:
 
         for i, flag_feature in enumerate(flag_features):
             if flag_feature(string, prob, case_stats, tag_stats):
-                self.set_flag(i)
+                self.flags |= (1 << i)
 
     def __dealloc__(self):
         pass
 
     cpdef bint check_flag(self, size_t flag_id) except *:
-        """Access the value of one of the pre-computed boolean distribution features.
+        """Lexemes may store language-specific boolean features in a bit-field,
+        with values accessed by providing an ID constant to this function.
 
-        Meanings depend on the language-specific distributional features being loaded.
-        The suggested features for latin-alphabet languages are: TODO
+        The ID constants are exposed as global variables in the language module,
+        e.g.
+
+        >>> from spacy.en import EN
+        >>> lexeme = EN.lookup(u'Nasa')
+        >>> lexeme.check_flag(EN.IS_UPPER)
+        False
+        >>> lexeme.check_flag(EN.OFT_UPPER)
+        True
         """
         return self.flags & (1 << flag_id)
 
-    cpdef int set_flag(self, size_t flag_id) except -1:
-        self.flags |= (1 << flag_id)
+    cpdef unicode string_view(self, size_t view_id):
+        """Lexemes may store language-specific string-view features, obtained
+        by transforming the string, possibly in light of distributional information.
+        The string-view features are accessed by providing an ID constant to this
+        function.
+
+        The ID constants are exposed as global variables in the language module,
+        e.g.
+
+        >>> from spacy.en import EN
+        >>> lexeme = EN.lookup(u'Nasa')
+        >>> lexeme.string_view(EN.CANON_CASED)
+        u'NASA'
+        >>> lexeme.string_view(EN.SHAPE)
+        u'Xxxx'
+        >>> lexeme.string_view(EN.NON_SPARSE)
+        u'Xxxx'
+        """
+        return self.views[view_id]
