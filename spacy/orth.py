@@ -41,7 +41,16 @@ def can_tag(name, thresh):
 
 # String features
 def canon_case(string, prob, cluster, case_stats, tag_stats):
-    return string
+    upper_pc = case_stats['upper']
+    title_pc = case_stats['title']
+    lower_pc = case_stats['lower']
+    
+    if upper_pc >= lower_pc and upper_pc >= title_pc:
+        return string.upper()
+    elif title_pc >= lower_pc:
+        return string.title()
+    else:
+        return string.lower()
 
 
 def word_shape(string, *args):
