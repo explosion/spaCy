@@ -54,6 +54,7 @@ cdef class Lexeme:
         self.string = string
 
         self.views = []
+        cdef unicode view
         for string_feature in string_features:
             view = string_feature(string, prob, cluster, case_stats, tag_stats)
             self.views.append(view)

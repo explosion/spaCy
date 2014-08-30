@@ -1,8 +1,6 @@
 from __future__ import unicode_literals
 
-from spacy.en import unhash
-from spacy import lex_of
-from spacy import en
+from spacy.en import EN
 from spacy.util import utf8open
 
 import pytest
@@ -21,5 +19,5 @@ def sun_txt():
 
 def test_tokenize(sun_txt):
     assert len(sun_txt) != 0
-    tokens = en.tokenize(sun_txt)
+    tokens = EN.tokenize(sun_txt)
     assert True

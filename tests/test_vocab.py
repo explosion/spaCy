@@ -1,37 +1,34 @@
 from __future__ import unicode_literals
 
-from spacy import lex_of
-from spacy.en import lookup
-from spacy.en import unhash
+from spacy.en import EN
 
 
 def test_neq():
-    addr = lookup('Hello')
-    assert lookup('bye') != addr
+    addr = EN.lookup('Hello')
+    assert EN.lookup('bye') != addr
 
 
 def test_eq():
-    addr = lookup('Hello')
-    assert lookup('Hello') == addr
+    addr = EN.lookup('Hello')
+    assert EN.lookup('Hello') == addr
 
 
 def test_round_trip():
-    hello = lookup('Hello')
-    assert unhash(hello.lex) == 'Hello'
+    hello = EN.lookup('Hello')
+    assert hello.string == 'Hello'
 
 
 def test_case_neq():
-    addr = lookup('Hello')
-    assert lookup('hello') != addr
+    addr = EN.lookup('Hello')
+    assert EN.lookup('hello') != addr
 
 
 def test_punct_neq():
-    addr = lookup('Hello')
-    assert lookup('Hello,') != addr
+    addr = EN.lookup('Hello')
+    assert EN.lookup('Hello,') != addr
 
 
 def test_short():
-    addr = lookup('I')
-    assert unhash(addr.lex) == 'I'
-    addr = lookup('not')
-    assert unhash(addr.lex) == 'not'
+    addr = EN.lookup('I')
+    assert addr.string == 'I'
+    assert addr.string != 'not'

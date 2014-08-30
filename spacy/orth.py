@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 # Binary string features
 def is_alpha(string, prob, case_stats, tag_stats):
     return False
@@ -40,6 +42,7 @@ def can_tag(name, thresh):
 # String features
 def canon_case(string, prob, cluster, case_stats, tag_stats):
     return string
+
 
 def word_shape(string, *args):
     length = len(string)

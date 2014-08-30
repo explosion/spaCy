@@ -11,7 +11,7 @@ cdef class Lexeme:
     cpdef readonly double prob
     cpdef readonly size_t cluster
 
-    cpdef readonly string
+    cpdef readonly unicode string
     cpdef readonly list views
 
     cdef readonly flag_t flags
