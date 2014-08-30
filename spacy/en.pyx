@@ -42,6 +42,8 @@ from libc.stdint cimport uint64_t
 
 cimport lang
 
+from spacy import util
+
 from spacy import orth
 
 TAG_THRESH = 0.5
@@ -78,6 +80,11 @@ CAN_POS = NR_FLAGS; NR_FLAGS += 1
 CAN_PRON = NR_FLAGS; NR_FLAGS += 1
 CAN_PRT = NR_FLAGS; NR_FLAGS += 1
 
+NR_VIEWS = 0
+CANON_CASED = NR_VIEWS; NR_VIEWS += 1
+SHAPE = NR_VIEWS; NR_VIEWS += 1
+NON_SPARSE = NR_VIEWS; NR_VIEWS += 1
+
 
 cdef class English(Language):
     """English tokenizer, tightly coupled to lexicon.
@@ -87,8 +94,8 @@ cdef class English(Language):
         lexicon (Lexicon): The lexicon. Exposes the lookup method.
     """
 
-    def __cinit__(self, name):
-        flag_funcs = [0 for _ in range(NR_FLAGS)]
+    def __cinit__(self, name, string_features, flag_features):
+        flag_funcs = [None for _ in range(NR_FLAGS)]
         
         flag_funcs[OFT_UPPER] = orth.oft_case('upper', UPPER_THRESH)
         flag_funcs[OFT_LOWER] = orth.oft_case('lower', LOWER_THRESH)
@@ -98,6 +105,7 @@ cdef class English(Language):
         flag_funcs[IS_DIGIT] = orth.is_digit
         flag_funcs[IS_PUNCT] = orth.is_punct
         flag_funcs[IS_SPACE] = orth.is_space
+        flag_funcs[IS_ASCII] = orth.is_ascii
         flag_funcs[IS_TITLE] = orth.is_title
         flag_funcs[IS_LOWER] = orth.is_lower
         flag_funcs[IS_UPPER] = orth.is_upper
@@ -108,13 +116,25 @@ cdef class English(Language):
         flag_funcs[CAN_DET] = orth.can_tag('DET', TAG_THRESH)
         flag_funcs[CAN_ADP] = orth.can_tag('ADP', TAG_THRESH)
         flag_funcs[CAN_ADJ] = orth.can_tag('ADJ', TAG_THRESH)
+        flag_funcs[CAN_ADV] = orth.can_tag('ADV', TAG_THRESH)
         flag_funcs[CAN_VERB] = orth.can_tag('VERB', TAG_THRESH)
         flag_funcs[CAN_NOUN] = orth.can_tag('NOUN', TAG_THRESH)
         flag_funcs[CAN_PDT] = orth.can_tag('PDT', TAG_THRESH)
         flag_funcs[CAN_POS] = orth.can_tag('POS', TAG_THRESH)
+        flag_funcs[CAN_PRON] = orth.can_tag('PRON', TAG_THRESH)
         flag_funcs[CAN_PRT] = orth.can_tag('PRT', TAG_THRESH)
-        
-        Language.__init__(self, name, flag_funcs)
+
+        string_funcs = [None for _ in range(NR_VIEWS)]
+        string_funcs[CANON_CASED] = orth.canon_case
+        string_funcs[SHAPE] = orth.word_shape
+        string_funcs[NON_SPARSE] = orth.non_sparse
+        self.name = name
+        self.cache = {}
+        lang_data = util.read_lang_data(name)
+        rules, words, probs, clusters, case_stats, tag_stats = lang_data
+        self.lexicon = lang.Lexicon(words, probs, clusters, case_stats, tag_stats,
+                                     string_funcs, flag_funcs)
+        self._load_special_tokenization(rules)
 
     cdef int _split_one(self, unicode word):
         cdef size_t length = len(word)
@@ -149,4 +169,4 @@ cdef bint _check_punct(unicode word, size_t i, size_t length):
     return not word[i].isalnum()
 
 
-EN = English('en')
+EN = English('en', [], [])

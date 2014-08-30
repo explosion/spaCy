@@ -30,7 +30,7 @@ cdef class Language:
 
     The language's name is used to look up default data-files, found in data/<name.
     """
-    def __cinit__(self, name, string_features=None, flag_features=None):
+    def __cinit__(self, name, string_features, flag_features):
         if flag_features is None:
             flag_features = []
         if string_features is None:

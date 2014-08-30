@@ -2,26 +2,27 @@ from __future__ import unicode_literals
 
 import pytest
 
-from spacy.en import lookup, unhash
 import spacy.word
+from spacy import en
+
+EN = en.EN
 
 
 @pytest.fixture
 def C3P0():
-    return lookup("C3P0")
+    return EN.lookup("C3P0")
 
 
 def test_shape(C3P0):
-    # TODO: Fix this
-    assert unhash(C3P0.get_view(2)) == "XdXd"
+    assert C3P0.string_view(en.SHAPE) == "XdXd"
 
 
 def test_length():
-    t = lookup('the')
+    t = EN.lookup('the')
     assert t.length == 3
-    t = lookup("n't")
+    t = EN.lookup("n't")
     assert t.length == 3
-    t = lookup("'s")
+    t = EN.lookup("'s")
     assert t.length == 2
-    t = lookup('Xxxx')
+    t = EN.lookup('Xxxx')
     assert t.length == 4
