@@ -1,29 +1,48 @@
+# -*- coding: utf8 -*-
 from __future__ import unicode_literals
+import unicodedata
+
+import math
 
 # Binary string features
 def is_alpha(string, prob, case_stats, tag_stats):
-    return False
+    return string.isalpha()
+
 
 def is_digit(string, prob, case_stats, tag_stats):
-    return False
+    return string.isdigit()
+
 
 def is_punct(string, prob, case_stats, tag_stats):
-    return False
+    for c in string:
+        if unicodedata.category(unichr(c)).startswith('P'):
+            return True
+    else:
+        return False
+
 
 def is_space(string, prob, case_stats, tag_stats):
-    return False
+    return string.isspace()
+
 
 def is_ascii(string, prob, case_stats, tag_stats):
-    return False
+    for c in string:
+        if unichr(c) >= 128:
+            return False
+    else:
+        return True
+
 
 def is_title(string, prob, case_stats, tag_stats):
-    return False
+    return string.istitle()
+
 
 def is_lower(string, prob, case_stats, tag_stats):
-    return False
+    return string.islower()
+
 
 def is_upper(string, prob, case_stats, tag_stats):
-    return False
+    return string.isupper()
 
 
 # Statistics features
@@ -74,10 +93,37 @@ def word_shape(string, *args):
         else:
             seq = 0
             last = shape_char
-        if seq < 3:
+        if seq < 5:
             shape += shape_char
     return shape
 
 
 def non_sparse(string, prob, cluster, case_stats, tag_stats):
-    return string
+    if is_alpha(string, prob, case_stats, tag_stats):
+        return canon_case(string, prob, cluster, case_stats, tag_stats)
+    elif prob >= math.log(0.0001):
+        return string
+    else:
+        return word_shape(string, prob, cluster, case_stats, tag_stats)
+
+
+def asciify(string):
+    '''"ASCIIfy" a Unicode string by stripping all umlauts, tildes, etc.''' 
+    # Snippet from
+    # http://www.physic.ut.ee/~kkannike/english/prog/python/util/asciify/index.html
+    # TODO: Rewrite and improve this
+    lookup_table = {
+        u'“': '"',
+        u'”': '"'
+    }
+    temp = u'' 
+    for char in string:
+        if char in lookup_table:
+            temp += lookup_table[char]
+        else:
+            decomp = unicodedata.decomposition(char)
+            if decomp: # Not an empty string 
+                temp += unichr(int(decomp.split()[0], 16))
+            else:
+                temp += char
+    return temp
