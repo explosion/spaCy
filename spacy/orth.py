@@ -41,9 +41,9 @@ def can_tag(name, thresh):
 
 # String features
 def canon_case(string, prob, cluster, case_stats, tag_stats):
-    upper_pc = case_stats['upper']
-    title_pc = case_stats['title']
-    lower_pc = case_stats['lower']
+    upper_pc = case_stats.get('upper', 0.0)
+    title_pc = case_stats.get('title', 0.0)
+    lower_pc = case_stats.get('lower', 0.0)
     
     if upper_pc >= lower_pc and upper_pc >= title_pc:
         return string.upper()
