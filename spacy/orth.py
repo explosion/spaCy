@@ -15,10 +15,10 @@ def is_digit(string, prob, case_stats, tag_stats):
 
 def is_punct(string, prob, case_stats, tag_stats):
     for c in string:
-        if unicodedata.category(unichr(c)).startswith('P'):
-            return True
+        if not unicodedata.category(c).startswith('P'):
+            return False
     else:
-        return False
+        return True
 
 
 def is_space(string, prob, case_stats, tag_stats):
@@ -27,7 +27,7 @@ def is_space(string, prob, case_stats, tag_stats):
 
 def is_ascii(string, prob, case_stats, tag_stats):
     for c in string:
-        if unichr(c) >= 128:
+        if ord(c) >= 128:
             return False
     else:
         return True
