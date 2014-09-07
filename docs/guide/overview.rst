@@ -4,8 +4,7 @@ Overview
 What and Why
 ------------
 
-spaCy is a lightning-fast, full-cream NLP tokenizer, tightly coupled to a
-global vocabulary store.
+spaCy is a lightning-fast, full-cream NLP tokenizer and lexicon.
 
 Most tokenizers give you a sequence of strings. That's barbaric.
 Giving you strings invites you to compute on every *token*, when what
@@ -13,33 +12,30 @@ you should be doing is computing on every *type*.  Remember
 `Zipf's law <http://en.wikipedia.org/wiki/Zipf's_law>`_: you'll
 see exponentially fewer types than tokens.
 
-Instead of strings, spacy gives you Lexeme IDs, from which you can access
-an excellent set of pre-computed orthographic and distributional features:
+Instead of strings, spaCy gives you references to Lexeme objects, from which you
+can access an excellent set of pre-computed orthographic and distributional features:
 
 ::
 
     >>> from spacy import en
-    >>> apples, are, nt, oranges, dots = en.tokenize(u"Apples aren't oranges...")
-    >>> en.is_lower(apples)
-    False
-    >>> en.prob_of(are) >= en.prob_of(oranges)
+    >>> apples, are, nt, oranges, dots = en.EN.tokenize(u"Apples aren't oranges...")
+    >>> are.prob >= oranges.prob
     True
-    >>> en.can_tag(are, en.NOUN)
+    >>> apples.check_flag(en.IS_TITLE)
+    True
+    >>> apples.check_flag(en.OFT_TITLE)
     False
-    >>> en.is_often_titled(apples)
+    >>> are.check_flag(en.CAN_NOUN)
     False
 
-Accessing these properties is essentially free: the Lexeme IDs are actually
-memory addresses that point to structs --- so the only cost is the Python
-function call overhead.  If you call the accessor functions from Cython,
-there's no overhead at all.
+spaCy makes it easy to write very efficient NLP applications, because your feature
+functions have to do almost no work: almost every lexical property you'll want
+is pre-computed for you.  See the tutorial for an example POS tagger.
 
 Benchmark
 ---------
 
-Because it exploits Zipf's law, spaCy is much more efficient than
-regular-expression based tokenizers.  See Algorithm and Implementation Details
-for an explanation of how this works.
+The tokenizer itself is also very efficient:
 
 +--------+-------+--------------+--------------+
 | System | Time	 | Words/second | Speed Factor |
