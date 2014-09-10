@@ -4,6 +4,10 @@ import unicodedata
 
 import math
 
+
+TAGS = 'adj adp adv conj det noun num pdt pos pron prt punct verb'.upper().split()
+
+
 # Binary string features
 def is_alpha(string, prob, case_stats, tag_stats):
     return string.isalpha()
@@ -107,7 +111,7 @@ def non_sparse(string, prob, cluster, case_stats, tag_stats):
         return word_shape(string, prob, cluster, case_stats, tag_stats)
 
 
-def asciify(string):
+def asciied(string):
     '''"ASCIIfy" a Unicode string by stripping all umlauts, tildes, etc.''' 
     # Snippet from
     # http://www.physic.ut.ee/~kkannike/english/prog/python/util/asciify/index.html

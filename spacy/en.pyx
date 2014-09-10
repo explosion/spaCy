@@ -46,44 +46,169 @@ from spacy import util
 
 from spacy import orth
 
-TAG_THRESH = 0.5
-UPPER_THRESH = 0.2
-LOWER_THRESH = 0.5
-TITLE_THRESH = 0.7
 
-NR_FLAGS = 0
+cdef enum Flags:
+    Flag_IsAlpha
+    Flag_IsAscii
+    Flag_IsDigit
+    Flag_IsLower
+    Flag_IsPunct
+    Flag_IsSpace
+    Flag_IsTitle
+    Flag_IsUpper
 
-OFT_UPPER = NR_FLAGS; NR_FLAGS += 1
-OFT_LOWER = NR_FLAGS; NR_FLAGS += 1
-OFT_TITLE = NR_FLAGS; NR_FLAGS += 1
+    Flag_CanAdj
+    Flag_CanAdp
+    Flag_CanAdv
+    Flag_CanConj
+    Flag_CanDet
+    Flag_CanNoun
+    Flag_CanNum
+    Flag_CanPdt
+    Flag_CanPos
+    Flag_CanPron
+    Flag_CanPrt
+    Flag_CanPunct
+    Flag_CanVerb
 
-IS_ALPHA = NR_FLAGS; NR_FLAGS += 1
-IS_DIGIT = NR_FLAGS; NR_FLAGS += 1
-IS_PUNCT = NR_FLAGS; NR_FLAGS += 1
-IS_SPACE = NR_FLAGS; NR_FLAGS += 1
-IS_ASCII = NR_FLAGS; NR_FLAGS += 1
-IS_TITLE = NR_FLAGS; NR_FLAGS += 1
-IS_LOWER = NR_FLAGS; NR_FLAGS += 1
-IS_UPPER = NR_FLAGS; NR_FLAGS += 1
+    Flag_OftLower
+    Flag_OftTitle
+    Flag_OftUpper
+    Flag_N
 
-CAN_PUNCT = NR_FLAGS; NR_FLAGS += 1
-CAN_CONJ = NR_FLAGS; NR_FLAGS += 1
-CAN_NUM = NR_FLAGS; NR_FLAGS += 1
-CAN_DET = NR_FLAGS; NR_FLAGS += 1
-CAN_ADP = NR_FLAGS; NR_FLAGS += 1
-CAN_ADJ = NR_FLAGS; NR_FLAGS += 1
-CAN_ADV = NR_FLAGS; NR_FLAGS += 1
-CAN_VERB = NR_FLAGS; NR_FLAGS += 1
-CAN_NOUN = NR_FLAGS; NR_FLAGS += 1
-CAN_PDT = NR_FLAGS; NR_FLAGS += 1
-CAN_POS = NR_FLAGS; NR_FLAGS += 1
-CAN_PRON = NR_FLAGS; NR_FLAGS += 1
-CAN_PRT = NR_FLAGS; NR_FLAGS += 1
 
-NR_VIEWS = 0
-CANON_CASED = NR_VIEWS; NR_VIEWS += 1
-SHAPE = NR_VIEWS; NR_VIEWS += 1
-NON_SPARSE = NR_VIEWS; NR_VIEWS += 1
+cdef enum Views:
+    View_CanonForm
+    View_WordShape
+    View_NonSparse
+    View_Asciied
+    View_N
+
+
+# Assign the flag and view functions by enum value.
+# This is verbose, but it ensures we don't get nasty order sensitivities.
+STRING_VIEW_FUNCS = [None] * View_N
+STRING_VIEW_FUNCS[View_CanonForm] = orth.canon_case
+STRING_VIEW_FUNCS[View_WordShape] = orth.word_shape
+STRING_VIEW_FUNCS[View_NonSparse] = orth.non_sparse
+STRING_VIEW_FUNCS[View_Asciied] = orth.asciied
+
+FLAG_FUNCS = [None] * Flag_N
+FLAG_FUNCS[Flag_IsAlpha] = orth.is_alpha
+FLAG_FUNCS[Flag_IsAscii] = orth.is_ascii
+FLAG_FUNCS[Flag_IsDigit] = orth.is_digit
+FLAG_FUNCS[Flag_IsLower] = orth.is_lower
+FLAG_FUNCS[Flag_IsPunct] = orth.is_punct
+FLAG_FUNCS[Flag_IsSpace] = orth.is_space
+FLAG_FUNCS[Flag_IsTitle] = orth.is_title
+FLAG_FUNCS[Flag_IsUpper] = orth.is_upper
+
+FLAG_FUNCS[Flag_CanAdj] = orth.can_tag('ADJ')
+FLAG_FUNCS[Flag_CanAdp] = orth.can_tag('ADP')
+FLAG_FUNCS[Flag_CanAdv] = orth.can_tag('ADV')
+FLAG_FUNCS[Flag_CanConj] = orth.can_tag('CONJ')
+FLAG_FUNCS[Flag_CanDet] = orth.can_tag('DET')
+FLAG_FUNCS[Flag_CanNoun] = orth.can_tag('NOUN')
+FLAG_FUNCS[Flag_CanNum] = orth.can_tag('NUM')
+FLAG_FUNCS[Flag_CanPdt] = orth.can_tag('PDT')
+FLAG_FUNCS[Flag_CanPos] = orth.can_tag('POS')
+FLAG_FUNCS[Flag_CanPron] = orth.can_tag('PRON')
+FLAG_FUNCS[Flag_CanPrt] = orth.can_tag('PRT')
+FLAG_FUNCS[Flag_CanPunct] = orth.can_tag('PUNCT')
+FLAG_FUNCS[Flag_CanVerb] = orth.can_tag('VERB')
+
+FLAG_FUNCS[Flag_OftLower] = orth.oft_case('lower', 0.7)
+FLAG_FUNCS[Flag_OftTitle] = orth.oft_case('title', 0.7)
+FLAG_FUNCS[Flag_OftUpper] = orth.oft_case('upper', 0.7)
+
+
+cdef class EnglishTokens(Tokens):
+    # Provide accessor methods for the features supported by the language.
+    # Without these, clients have to use the underlying string_view and check_flag
+    # methods, which requires them to know the IDs.
+    cpdef unicode canon_string(self, size_t i):
+        return self.lexemes[i].string_view(View_CanonForm)
+
+    cpdef unicode shape_string(self, size_t i):
+        return self.lexemes[i].string_view(View_WordShape)
+
+    cpdef unicode non_sparse_string(self, size_t i):
+        return self.lexemes[i].string_view(View_NonSparse)
+
+    cpdef unicode asciied(self, size_t i):
+        return self.lexemes[i].string_views(View_Asciied)
+    
+    cpdef bint is_alpha(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_IsAlpha)
+
+    cpdef bint is_ascii(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_IsAscii)
+
+    cpdef bint is_digit(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_IsDigit)
+
+    cpdef bint is_lower(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_IsLower)
+
+    cpdef bint is_punct(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_IsPunct)
+
+    cpdef bint is_space(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_IsSpace)
+
+    cpdef bint is_title(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_IsTitle)
+
+    cpdef bint is_upper(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_IsUpper)
+
+    cpdef bint can_adj(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_CanAdj)
+
+    cpdef bint can_adp(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_CanAdp)
+
+    cpdef bint can_adv(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_CanAdv)
+
+    cpdef bint can_conj(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_CanConj)
+
+    cpdef bint can_det(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_CanDet)
+
+    cpdef bint can_noun(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_CanNoun)
+
+    cpdef bint can_num(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_CanNum)
+
+    cpdef bint can_pdt(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_CanPdt)
+
+    cpdef bint can_pos(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_CanPos)
+
+    cpdef bint can_pron(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_CanPron)
+
+    cpdef bint can_prt(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_CanPrt)
+
+    cpdef bint can_punct(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_CanPunct)
+
+    cpdef bint can_verb(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_CanVerb)
+
+    cpdef bint oft_lower(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_OftLower)
+
+    cpdef bint oft_title(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_OftTitle)
+
+    cpdef bint oft_upper(self, size_t i):
+        return self.lexemes[i].check_flag(i, Flag_OftUpper)
 
 
 cdef class English(Language):
@@ -93,48 +218,15 @@ cdef class English(Language):
         name (unicode): The two letter code used by Wikipedia for the language.
         lexicon (Lexicon): The lexicon. Exposes the lookup method.
     """
-
-    def __cinit__(self, name, string_features, flag_features):
-        flag_funcs = [None for _ in range(NR_FLAGS)]
-        
-        flag_funcs[OFT_UPPER] = orth.oft_case('upper', UPPER_THRESH)
-        flag_funcs[OFT_LOWER] = orth.oft_case('lower', LOWER_THRESH)
-        flag_funcs[OFT_TITLE] = orth.oft_case('title', TITLE_THRESH)
-        
-        flag_funcs[IS_ALPHA] = orth.is_alpha
-        flag_funcs[IS_DIGIT] = orth.is_digit
-        flag_funcs[IS_PUNCT] = orth.is_punct
-        flag_funcs[IS_SPACE] = orth.is_space
-        flag_funcs[IS_ASCII] = orth.is_ascii
-        flag_funcs[IS_TITLE] = orth.is_title
-        flag_funcs[IS_LOWER] = orth.is_lower
-        flag_funcs[IS_UPPER] = orth.is_upper
-        
-        flag_funcs[CAN_PUNCT] = orth.can_tag('PUNCT', TAG_THRESH)
-        flag_funcs[CAN_CONJ] = orth.can_tag('CONJ', TAG_THRESH)
-        flag_funcs[CAN_NUM] = orth.can_tag('NUM', TAG_THRESH)
-        flag_funcs[CAN_DET] = orth.can_tag('DET', TAG_THRESH)
-        flag_funcs[CAN_ADP] = orth.can_tag('ADP', TAG_THRESH)
-        flag_funcs[CAN_ADJ] = orth.can_tag('ADJ', TAG_THRESH)
-        flag_funcs[CAN_ADV] = orth.can_tag('ADV', TAG_THRESH)
-        flag_funcs[CAN_VERB] = orth.can_tag('VERB', TAG_THRESH)
-        flag_funcs[CAN_NOUN] = orth.can_tag('NOUN', TAG_THRESH)
-        flag_funcs[CAN_PDT] = orth.can_tag('PDT', TAG_THRESH)
-        flag_funcs[CAN_POS] = orth.can_tag('POS', TAG_THRESH)
-        flag_funcs[CAN_PRON] = orth.can_tag('PRON', TAG_THRESH)
-        flag_funcs[CAN_PRT] = orth.can_tag('PRT', TAG_THRESH)
-
-        string_funcs = [None for _ in range(NR_VIEWS)]
-        string_funcs[CANON_CASED] = orth.canon_case
-        string_funcs[SHAPE] = orth.word_shape
-        string_funcs[NON_SPARSE] = orth.non_sparse
-        self.name = name
+    def __cinit__(self, name, user_string_features, user_flag_features):
         self.cache = {}
         lang_data = util.read_lang_data(name)
         rules, words, probs, clusters, case_stats, tag_stats = lang_data
         self.lexicon = lang.Lexicon(words, probs, clusters, case_stats, tag_stats,
-                                     string_funcs, flag_funcs)
+                                     STRING_VIEW_FUNCS + user_string_features,
+                                     FLAG_FUNCS + user_flag_features)
         self._load_special_tokenization(rules)
+        self.token_class = EnglishTokens
 
     cdef int _split_one(self, unicode word):
         cdef size_t length = len(word)
@@ -153,6 +245,7 @@ cdef class English(Language):
             while i < length and not _check_punct(word, i, length):
                 i += 1
         return i
+
 
 cdef bint _check_punct(unicode word, size_t i, size_t length):
     # Don't count appostrophes as punct if the next char is a letter

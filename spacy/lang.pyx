@@ -14,6 +14,7 @@ import json
 from os import path
 
 from .util import read_lang_data
+from spacy.tokens import Tokens
 
 
 cdef class Language:
@@ -42,6 +43,23 @@ cdef class Language:
         self.lexicon = Lexicon(words, probs, clusters, case_stats, tag_stats,
                                string_features, flag_features)
         self._load_special_tokenization(rules)
+        self.token_class = Tokens
+
+    property nr_types:
+        def __get__(self):
+            """Return the number of lexical types in the vocabulary"""
+            return self.lexicon.size
+
+    cpdef Lexeme lookup(self, unicode string):
+        """Retrieve (or create, if not found) a Lexeme for a string, and return it.
+    
+        Args:
+            string (unicode): The string to be looked up. Must be unicode, not bytes.
+
+        Returns:
+            lexeme (Lexeme): A reference to a lexical type.
+        """
+        return self.lexicon.lookup(string)
 
     cpdef list tokenize(self, unicode string):
         """Tokenize a string.
@@ -58,43 +76,39 @@ cdef class Language:
         Returns:
             tokens (Tokens): A Tokens object, giving access to a sequence of LexIDs.
         """
-        if not string:
-            return []
-        cdef list tokens = []
+        assert string
+
         cdef size_t length = len(string)
         cdef size_t start = 0
         cdef size_t i = 0
+        cdef Tokens tokens = self.token_class()
         for c in string:
             if c == ' ':
                 if start < i:
-                    tokens.extend(self._tokenize(string[start:i]))
+                    self._tokenize(tokens, string[start:i])
                 start = i + 1
             i += 1
         if start < i:
-            tokens.extend(self._tokenize(string[start:]))
+            self._tokenize(tokens, string[start:i])
         assert tokens
         return tokens
 
-    cpdef Lexeme lookup(self, unicode string):
-        """Retrieve (or create, if not found) a Lexeme for a string, and return it.
-    
-        Args:
-            string (unicode): The string to be looked up. Must be unicode, not bytes.
-
-        Returns:
-            lexeme (Lexeme): A reference to a lexical type.
-        """
-        return self.lexicon.lookup(string)
-
-    cdef list _tokenize(self, unicode string):
-        if string in self.cache:
-            return self.cache[string]
-        cdef list lexemes = []
-        substrings = self._split(string)
-        for i, substring in enumerate(substrings):
-            lexemes.append(self.lexicon.lookup(substring))
-        self.cache[string] = lexemes
-        return lexemes
+    cdef _tokenize(self, Tokens tokens, unicode string):
+        cdef list lexemes
+        if len(string) == 1:
+            lexemes = [self.lookup(string)]
+        elif string in self.cache:
+            lexemes = self.cache[string]
+        else:
+            lexemes = []
+            substrings = self._split(string)
+            for i, substring in enumerate(substrings):
+                lexemes.append(self.lexicon.lookup(substring))
+            self.cache[string] = lexemes
+        
+        cdef Lexeme lexeme
+        for lexeme in lexemes:
+            tokens.append(lexeme)
 
     cdef list _split(self, unicode string):
         """Find how to split a contiguous span of non-space characters into substrings.
@@ -146,12 +160,14 @@ cdef class Lexicon:
         self._flag_features = flag_features
         self._string_features = string_features
         self._dict = {}
+        self.size = 0
         cdef Lexeme word
         for string in words:
             word = Lexeme(string, probs.get(string, 0.0), clusters.get(string, 0),
                           case_stats.get(string, {}), tag_stats.get(string, {}),
                           self._string_features, self._flag_features)
             self._dict[string] = word
+            self.size += 1
 
     cpdef Lexeme lookup(self, unicode string):
         """Retrieve (or create, if not found) a Lexeme for a string, and return it.
@@ -169,4 +185,5 @@ cdef class Lexicon:
         cdef Lexeme word = Lexeme(string, 0, 0, {}, {}, self._string_features,
                                   self._flag_features)
         self._dict[string] = word
+        self.size += 1
         return word
