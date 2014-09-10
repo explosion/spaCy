@@ -5,14 +5,14 @@ from spacy.en import EN
 
 def test_single_word():
     lex_ids = EN.tokenize(u'hello')
-    assert lex_ids[0] == EN.lexicon.lookup(u'hello')
+    assert lex_ids[0].string == EN.lexicon.lookup(u'hello').string
 
 
 def test_two_words():
     words = EN.tokenize('hello possums')
     assert len(words) == 2
-    assert words[0] == EN.lexicon.lookup('hello')
-    assert words[0] != words[1]
+    assert words[0].string == EN.lexicon.lookup('hello').string
+    assert words[0].string != words[1].string
 
 
 def test_punct():
