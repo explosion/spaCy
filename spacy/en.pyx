@@ -218,6 +218,9 @@ cdef class English(Language):
         name (unicode): The two letter code used by Wikipedia for the language.
         lexicon (Lexicon): The lexicon. Exposes the lookup method.
     """
+    fl_is_alpha = Flag_IsAlpha
+    fl_is_digit = Flag_IsDigit
+    v_shape = View_WordShape
     def __cinit__(self, name, user_string_features, user_flag_features):
         self.cache = {}
         lang_data = util.read_lang_data(name)
@@ -226,7 +229,7 @@ cdef class English(Language):
                                      STRING_VIEW_FUNCS + user_string_features,
                                      FLAG_FUNCS + user_flag_features)
         self._load_special_tokenization(rules)
-        self.token_class = EnglishTokens
+        self.tokens_class = EnglishTokens
 
     cdef int _split_one(self, unicode word):
         cdef size_t length = len(word)

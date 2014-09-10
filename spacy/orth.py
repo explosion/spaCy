@@ -56,7 +56,7 @@ def oft_case(name, thresh):
     return wrapped
 
 
-def can_tag(name, thresh):
+def can_tag(name, thresh=0.5):
     def wrapped(string, prob, case_stats, tag_stats):
         return string
     return wrapped
@@ -111,7 +111,7 @@ def non_sparse(string, prob, cluster, case_stats, tag_stats):
         return word_shape(string, prob, cluster, case_stats, tag_stats)
 
 
-def asciied(string):
+def asciied(string, prob=0, cluster=0, case_stats=None, tag_stats=None):
     '''"ASCIIfy" a Unicode string by stripping all umlauts, tildes, etc.''' 
     # Snippet from
     # http://www.physic.ut.ee/~kkannike/english/prog/python/util/asciify/index.html

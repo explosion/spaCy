@@ -43,7 +43,7 @@ cdef class Language:
         self.lexicon = Lexicon(words, probs, clusters, case_stats, tag_stats,
                                string_features, flag_features)
         self._load_special_tokenization(rules)
-        self.token_class = Tokens
+        self.tokens_class = Tokens
 
     property nr_types:
         def __get__(self):
@@ -81,7 +81,7 @@ cdef class Language:
         cdef size_t length = len(string)
         cdef size_t start = 0
         cdef size_t i = 0
-        cdef Tokens tokens = self.token_class()
+        cdef Tokens tokens = self.tokens_class()
         for c in string:
             if c == ' ':
                 if start < i:
@@ -91,7 +91,7 @@ cdef class Language:
         if start < i:
             self._tokenize(tokens, string[start:i])
         assert tokens
-        return tokens
+        return tokens.lexemes
 
     cdef _tokenize(self, Tokens tokens, unicode string):
         cdef list lexemes

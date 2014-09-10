@@ -3,16 +3,16 @@
 from __future__ import unicode_literals
 import pytest
 
-from spacy.orth import asciify
+from spacy.orth import asciied
 
 
 def test_tilde():
     string = u'hõmbre'
-    assert asciify(string) == u'hombre'
+    assert asciied(string) == u'hombre'
 
 
 def test_smart_quote():
     string = u'“'
-    assert asciify(string) == '"'
+    assert asciied(string) == '"'
     string = u'”'
-    assert asciify(string) == '"'
+    assert asciied(string) == '"'

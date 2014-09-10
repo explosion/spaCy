@@ -3,9 +3,7 @@ from __future__ import unicode_literals
 import pytest
 
 import spacy.word
-from spacy import en
-
-EN = en.EN
+from spacy.en import EN
 
 
 @pytest.fixture
@@ -14,7 +12,7 @@ def C3P0():
 
 
 def test_shape(C3P0):
-    assert C3P0.string_view(en.SHAPE) == "XdXd"
+    assert C3P0.string_view(EN.v_shape) == "XdXd"
 
 
 def test_length():
