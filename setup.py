@@ -48,6 +48,8 @@ exts = [
     Extension("spacy.lang", ["spacy/lang.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.word", ["spacy/word.pyx"], language="c++",
               include_dirs=includes),
+    Extension("spacy.lexeme", ["spacy/lexeme.pyx"], language="c++",
+              include_dirs=includes),
     Extension("spacy.ptb3", ["spacy/ptb3.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.en", ["spacy/en.pyx"], language="c++",
               include_dirs=includes),
