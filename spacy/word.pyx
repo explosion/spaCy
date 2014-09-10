@@ -1,8 +1,11 @@
 # cython: profile=True
 # cython: embedsignature=True
 
-
 from libc.stdlib cimport calloc, free, realloc
+
+from spacy.lexeme cimport lexeme_free, lexeme_init
+from spacy.lexeme cimport lexeme_check_flag, lexeme_string_view
+
 
 cdef class Lexeme:
     """A lexical type --- a word, punctuation symbol, whitespace sequence, etc
@@ -48,23 +51,34 @@ cdef class Lexeme:
     """
     def __cinit__(self, unicode string, double prob, int cluster, dict case_stats,
                   dict tag_stats, list string_features, list flag_features):
-        self.prob = prob
-        self.cluster = cluster
-        self.length = len(string)
-        self.string = string
-
-        self.views = []
+        views = []
         cdef unicode view
         for string_feature in string_features:
             view = string_feature(string, prob, cluster, case_stats, tag_stats)
-            self.views.append(view)
+            views.append(view)
 
+        flags = set()
         for i, flag_feature in enumerate(flag_features):
             if flag_feature(string, prob, case_stats, tag_stats):
-                self.flags |= (1 << i)
+                if (1 << i):
+                    flags.add(i)
+        self._c = lexeme_init(string, prob, cluster, views, flags)
 
     def __dealloc__(self):
-        pass
+        lexeme_free(self._c)
+
+    property string:
+        def __get__(self):
+            cdef bytes utf8_string = self._c.string
+            cdef unicode string = utf8_string.decode('utf8')
+            return string
+
+    property prob:
+        def __get__(self): return self._c.prob
+    property cluster:
+        def __get__(self): return self._c.cluster
+    property length:
+        def __get__(self): return self._c.length
 
     cpdef bint check_flag(self, size_t flag_id) except *:
         """Lexemes may store language-specific boolean features in a bit-field,
@@ -80,7 +94,7 @@ cdef class Lexeme:
         >>> lexeme.check_flag(EN.OFT_UPPER)
         True
         """
-        return self.flags & (1 << flag_id)
+        return lexeme_check_flag(self._c, flag_id)
 
     cpdef unicode string_view(self, size_t view_id):
         """Lexemes may store language-specific string-view features, obtained
@@ -100,4 +114,4 @@ cdef class Lexeme:
         >>> lexeme.string_view(EN.NON_SPARSE)
         u'Xxxx'
         """
-        return self.views[view_id]
+        return lexeme_string_view(self._c, view_id)

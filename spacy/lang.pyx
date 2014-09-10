@@ -105,7 +105,6 @@ cdef class Language:
             for i, substring in enumerate(substrings):
                 lexemes.append(self.lexicon.lookup(substring))
             self.cache[string] = lexemes
-        
         cdef Lexeme lexeme
         for lexeme in lexemes:
             tokens.append(lexeme)
@@ -178,9 +177,11 @@ cdef class Lexicon:
         Returns:
             lexeme (Lexeme): A reference to a lexical type.
         """
+        cdef Lexeme lexeme
         assert len(string) != 0
         if string in self._dict:
-            return self._dict[string]
+            lexeme = self._dict[string]
+            return lexeme
         
         cdef Lexeme word = Lexeme(string, 0, 0, {}, {}, self._string_features,
                                   self._flag_features)
