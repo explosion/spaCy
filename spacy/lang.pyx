@@ -11,6 +11,7 @@ from __future__ import unicode_literals
 from libc.stdlib cimport calloc, free
 
 import json
+import random
 from os import path
 
 from .util import read_lang_data
@@ -85,7 +86,7 @@ cdef class Language:
         cdef size_t start = 0
         cdef size_t i = 0
         for c in string:
-            if c == ' ':
+            if c == ' ' or c == '\n' or c == '\t':
                 if start < i:
                     self._tokenize(tokens, string[start:i])
                 start = i + 1
@@ -96,20 +97,27 @@ cdef class Language:
 
     cdef _tokenize(self, Tokens tokens, unicode string):
         cdef LexemeC** lexemes
+        cdef bint free_chunk = False
+        cdef size_t i = 0
         if string in self.cache:
             lexemes = <LexemeC**><size_t>self.cache[string]
+            while lexemes[i] != NULL:
+                tokens.push_back(lexemes[i])
+                i += 1
         else:
             substrings = self._split(string)
             lexemes = <LexemeC**>calloc(len(substrings) + 1, sizeof(LexemeC*))
             for i, substring in enumerate(substrings):
                 lexemes[i] = <LexemeC*>self.lexicon.get(substring)
+                tokens.push_back(lexemes[i])
             lexemes[i + 1] = NULL
-            self.cache[string] = <size_t>lexemes
-        cdef LexemeC* lexeme
-        i = 0
-        while lexemes[i] != NULL:
-            tokens.push_back(lexemes[i])
-            i += 1
+            # The intuition here is that if an element belongs in the cache, it
+            # has several chances to get in. And if the cache is large, we less
+            # believe that the element belongs there.
+            if not self.cache or random.random() < (100000.0 / len(self.cache)):
+                self.cache[string] = <size_t>lexemes
+            else:
+                free(lexemes)
 
     cdef list _split(self, unicode string):
         """Find how to split a contiguous span of non-space characters into substrings.

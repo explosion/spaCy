@@ -24,11 +24,14 @@ cdef class Tokens:
     >>> tokens.can_noun(1)
     True
     """
-    def __cinit__(self, size=100):
-        assert size >= 1
+    def __cinit__(self, string_length=0):
+        size = int(string_length / 3) if string_length >= 3 else 1
         self.lexemes = <LexemeC**>calloc(size, sizeof(LexemeC*))
         self.size = size
         self.length = 0
+
+    def __dealloc__(self):
+        free(self.lexemes)
 
     def __getitem__(self, i):
         if i >= self.length:
