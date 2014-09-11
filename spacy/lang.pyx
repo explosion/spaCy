@@ -93,7 +93,10 @@ cdef class Language:
         if start < i:
             self._tokenize(tokens, string[start:i])
         assert tokens
-        return tokens.lexemes
+        output = []
+        for i in range(tokens.length):
+            output.append(Lexeme(<size_t>tokens.lexemes[i]))
+        return output
 
     cdef _tokenize(self, Tokens tokens, unicode string):
         cdef list lexemes

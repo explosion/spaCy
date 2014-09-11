@@ -1,6 +1,11 @@
+from spacy.lexeme cimport LexemeC
+
 cdef class Tokens:
-    cdef list lexemes
-    cpdef append(self, object lexeme)
+    cdef size_t length
+    cdef size_t size
+
+    cdef LexemeC** lexemes
+    cdef push_back(self, LexemeC* lexeme)
 
     cpdef unicode string(self, size_t i)
     cpdef double prob(self, size_t i)

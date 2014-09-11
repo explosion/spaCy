@@ -41,6 +41,8 @@ from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport uint64_t
 
 cimport lang
+from spacy.lexeme cimport lexeme_check_flag
+from spacy.lexeme cimport lexeme_string_view
 
 from spacy import util
 
@@ -127,88 +129,88 @@ cdef class EnglishTokens(Tokens):
     # Without these, clients have to use the underlying string_view and check_flag
     # methods, which requires them to know the IDs.
     cpdef unicode canon_string(self, size_t i):
-        return self.lexemes[i].string_view(View_CanonForm)
+        return lexeme_string_view(self.lexemes[i], View_CanonForm)
 
     cpdef unicode shape_string(self, size_t i):
-        return self.lexemes[i].string_view(View_WordShape)
+        return lexeme_string_view(self.lexemes[i], View_WordShape)
 
     cpdef unicode non_sparse_string(self, size_t i):
-        return self.lexemes[i].string_view(View_NonSparse)
+        return lexeme_string_view(self.lexemes[i], View_NonSparse)
 
     cpdef unicode asciied(self, size_t i):
-        return self.lexemes[i].string_views(View_Asciied)
+        return lexeme_check_flag(self.lexemes[i], View_Asciied)
     
     cpdef bint is_alpha(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_IsAlpha)
+        return lexeme_check_flag(self.lexemes[i], Flag_IsAlpha)
 
     cpdef bint is_ascii(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_IsAscii)
+        return lexeme_check_flag(self.lexemes[i], Flag_IsAscii)
 
     cpdef bint is_digit(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_IsDigit)
+        return lexeme_check_flag(self.lexemes[i], Flag_IsDigit)
 
     cpdef bint is_lower(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_IsLower)
+        return lexeme_check_flag(self.lexemes[i], Flag_IsLower)
 
     cpdef bint is_punct(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_IsPunct)
+        return lexeme_check_flag(self.lexemes[i], Flag_IsPunct)
 
     cpdef bint is_space(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_IsSpace)
+        return lexeme_check_flag(self.lexemes[i], Flag_IsSpace)
 
     cpdef bint is_title(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_IsTitle)
+        return lexeme_check_flag(self.lexemes[i], Flag_IsTitle)
 
     cpdef bint is_upper(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_IsUpper)
+        return lexeme_check_flag(self.lexemes[i], Flag_IsUpper)
 
     cpdef bint can_adj(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_CanAdj)
+        return lexeme_check_flag(self.lexemes[i], Flag_CanAdj)
 
     cpdef bint can_adp(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_CanAdp)
+        return lexeme_check_flag(self.lexemes[i], Flag_CanAdp)
 
     cpdef bint can_adv(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_CanAdv)
+        return lexeme_check_flag(self.lexemes[i], Flag_CanAdv)
 
     cpdef bint can_conj(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_CanConj)
+        return lexeme_check_flag(self.lexemes[i], Flag_CanConj)
 
     cpdef bint can_det(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_CanDet)
+        return lexeme_check_flag(self.lexemes[i], Flag_CanDet)
 
     cpdef bint can_noun(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_CanNoun)
+        return lexeme_check_flag(self.lexemes[i], Flag_CanNoun)
 
     cpdef bint can_num(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_CanNum)
+        return lexeme_check_flag(self.lexemes[i], Flag_CanNum)
 
     cpdef bint can_pdt(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_CanPdt)
+        return lexeme_check_flag(self.lexemes[i], Flag_CanPdt)
 
     cpdef bint can_pos(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_CanPos)
+        return lexeme_check_flag(self.lexemes[i], Flag_CanPos)
 
     cpdef bint can_pron(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_CanPron)
+        return lexeme_check_flag(self.lexemes[i], Flag_CanPron)
 
     cpdef bint can_prt(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_CanPrt)
+        return lexeme_check_flag(self.lexemes[i], Flag_CanPrt)
 
     cpdef bint can_punct(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_CanPunct)
+        return lexeme_check_flag(self.lexemes[i], Flag_CanPunct)
 
     cpdef bint can_verb(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_CanVerb)
+        return lexeme_check_flag(self.lexemes[i], Flag_CanVerb)
 
     cpdef bint oft_lower(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_OftLower)
+        return lexeme_check_flag(self.lexemes[i], Flag_OftLower)
 
     cpdef bint oft_title(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_OftTitle)
+        return lexeme_check_flag(self.lexemes[i], Flag_OftTitle)
 
     cpdef bint oft_upper(self, size_t i):
-        return self.lexemes[i].check_flag(i, Flag_OftUpper)
+        return lexeme_check_flag(self.lexemes[i], Flag_OftUpper)
 
 
 cdef class English(Language):

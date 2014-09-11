@@ -1,3 +1,10 @@
+from libc.stdlib cimport calloc, free, realloc
+
+from spacy.word cimport Lexeme
+from spacy.lexeme cimport lexeme_check_flag
+from spacy.lexeme cimport lexeme_string_view
+
+
 cdef class Tokens:
     """A sequence of references to Lexeme objects.
 
@@ -17,14 +24,25 @@ cdef class Tokens:
     >>> tokens.can_noun(1)
     True
     """
-    def __cinit__(self):
-        self.lexemes = []
+    def __cinit__(self, size=100):
+        assert size >= 1
+        self.lexemes = <LexemeC**>calloc(size, sizeof(LexemeC*))
+        self.size = size
+        self.length = 0
 
-    cpdef append(self, object lexeme):
-        self.lexemes.append(lexeme)
+    def append(self, Lexeme lexeme):
+        self.push_back(lexeme._c)
+
+    cdef push_back(self, LexemeC* lexeme):
+        if (self.size + 1) == self.length:
+            self.size *= 2
+            self.lexemes = <LexemeC**>realloc(self.lexemes, self.size * sizeof(LexemeC*))
+        self.lexemes[self.length] = lexeme
+        self.length += 1
 
     cpdef unicode string(self, size_t i):
-        return self.lexemes[i].string
+        cdef bytes byte_string = self.lexemes[i].string
+        return byte_string.decode('utf8')
 
     cpdef double prob(self, size_t i):
         return self.lexemes[i].prob
@@ -33,7 +51,7 @@ cdef class Tokens:
         return self.lexemes[i].cluster
 
     cpdef bint check_flag(self, size_t i, size_t flag_id):
-        return self.lexemes[i].check_flag(flag_id)
+        return lexeme_check_flag(self.lexemes[i], flag_id)
 
     cpdef unicode string_view(self, size_t i, size_t view_id):
-        return self.lexemes[i].string_view(view_id)
+        return lexeme_string_view(self.lexemes[i], view_id)
