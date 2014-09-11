@@ -30,6 +30,14 @@ cdef class Tokens:
         self.size = size
         self.length = 0
 
+    def __getitem__(self, i):
+        if i >= self.length:
+            raise IndexError
+        return Lexeme(<size_t>self.lexemes[i])
+
+    def __len__(self):
+        return self.length
+
     def append(self, Lexeme lexeme):
         self.push_back(lexeme._c)
 

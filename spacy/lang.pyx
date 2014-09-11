@@ -62,7 +62,7 @@ cdef class Language:
         """
         return self.lexicon.lookup(string)
 
-    cpdef list tokenize(self, unicode string):
+    cpdef Tokens tokenize(self, unicode string):
         """Tokenize a string.
 
         The tokenization rules are defined in two places:
@@ -78,12 +78,12 @@ cdef class Language:
             tokens (Tokens): A Tokens object, giving access to a sequence of LexIDs.
         """
         cdef size_t length = len(string)
+        cdef Tokens tokens = self.tokens_class(length)
         if length == 0:
-            return []
+            return tokens
 
         cdef size_t start = 0
         cdef size_t i = 0
-        cdef Tokens tokens = self.tokens_class()
         for c in string:
             if c == ' ':
                 if start < i:
@@ -92,11 +92,7 @@ cdef class Language:
             i += 1
         if start < i:
             self._tokenize(tokens, string[start:i])
-        assert tokens
-        output = []
-        for i in range(tokens.length):
-            output.append(Lexeme(<size_t>tokens.lexemes[i]))
-        return output
+        return tokens
 
     cdef _tokenize(self, Tokens tokens, unicode string):
         cdef list lexemes

@@ -30,7 +30,7 @@ cdef class Language:
     cpdef readonly Lexicon lexicon
     cpdef readonly object tokens_class
 
-    cpdef list tokenize(self, unicode text)
+    cpdef Tokens tokenize(self, unicode text)
     cpdef Lexeme lookup(self, unicode text)
 
     cdef _tokenize(self, Tokens tokens, unicode string)
