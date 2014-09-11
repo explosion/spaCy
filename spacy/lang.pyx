@@ -102,7 +102,7 @@ cdef class Language:
             substrings = self._split(string)
             lexemes = <LexemeC**>calloc(len(substrings) + 1, sizeof(LexemeC*))
             for i, substring in enumerate(substrings):
-                lexemes[i] = self.lexicon.lookup(substring)._c
+                lexemes[i] = <LexemeC*>self.lexicon.get(substring)
             lexemes[i + 1] = NULL
             self.cache[string] = <size_t>lexemes
         cdef LexemeC* lexeme
@@ -152,7 +152,7 @@ cdef class Language:
         for string, substrings in token_rules:
             lexemes = <LexemeC**>calloc(len(substrings) + 1, sizeof(LexemeC*))
             for i, substring in enumerate(substrings):
-                lexemes[i] = self.lexicon.lookup(substring)._c
+                lexemes[i] = <LexemeC*>self.lexicon.get(substring)
             lexemes[i + 1] = NULL
             self.cache[string] = <size_t>lexemes
  
@@ -180,19 +180,11 @@ cdef class Lexicon:
             self._dict[string] = <size_t>lexeme
             self.size += 1
 
-    cpdef Lexeme lookup(self, unicode string):
-        """Retrieve (or create, if not found) a Lexeme for a string, and return it.
-    
-        Args
-            string (unicode):  The string to be looked up. Must be unicode, not bytes.
-
-        Returns:
-            lexeme (Lexeme): A reference to a lexical type.
-        """
+    cdef size_t get(self, unicode string):
         cdef LexemeC* lexeme
         assert len(string) != 0
         if string in self._dict:
-            return Lexeme(self._dict[string])
+            return self._dict[string]
         
         views = [string_view(string, 0.0, 0, {}, {})
                  for string_view in self._string_features]
@@ -204,4 +196,16 @@ cdef class Lexicon:
         lexeme = lexeme_init(string, 0, 0, views, flags)
         self._dict[string] = <size_t>lexeme
         self.size += 1
-        return Lexeme(<size_t>lexeme)
+        return <size_t>lexeme
+
+    cpdef Lexeme lookup(self, unicode string):
+        """Retrieve (or create, if not found) a Lexeme for a string, and return it.
+    
+        Args
+            string (unicode):  The string to be looked up. Must be unicode, not bytes.
+
+        Returns:
+            lexeme (Lexeme): A reference to a lexical type.
+        """
+        cdef size_t lexeme = self.get(string)
+        return Lexeme(lexeme)

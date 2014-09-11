@@ -17,6 +17,7 @@ cdef class Lexicon:
     cpdef readonly size_t size
 
     cpdef Lexeme lookup(self, unicode string)
+    cdef size_t get(self, unicode string)
     
     cdef dict _dict
     
