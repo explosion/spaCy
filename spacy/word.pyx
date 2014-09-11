@@ -49,23 +49,8 @@ cdef class Lexeme:
             while "dapple" is totally different. On the other hand, "scalable" receives
             the same cluster ID as "pineapple", which is not what we'd like.
     """
-    def __cinit__(self, unicode string, double prob, int cluster, dict case_stats,
-                  dict tag_stats, list string_features, list flag_features):
-        views = []
-        cdef unicode view
-        for string_feature in string_features:
-            view = string_feature(string, prob, cluster, case_stats, tag_stats)
-            views.append(view)
-
-        flags = set()
-        for i, flag_feature in enumerate(flag_features):
-            if flag_feature(string, prob, case_stats, tag_stats):
-                if (1 << i):
-                    flags.add(i)
-        self._c = lexeme_init(string, prob, cluster, views, flags)
-
-    def __dealloc__(self):
-        lexeme_free(self._c)
+    def __cinit__(self, size_t lexeme_addr):
+        self._c = <LexemeC*>lexeme_addr
 
     property string:
         def __get__(self):

@@ -15,6 +15,7 @@ from os import path
 
 from .util import read_lang_data
 from spacy.tokens import Tokens
+from spacy.lexeme cimport LexemeC, lexeme_init
 
 
 cdef class Language:
@@ -76,9 +77,10 @@ cdef class Language:
         Returns:
             tokens (Tokens): A Tokens object, giving access to a sequence of LexIDs.
         """
-        assert string
-
         cdef size_t length = len(string)
+        if length == 0:
+            return []
+
         cdef size_t start = 0
         cdef size_t i = 0
         cdef Tokens tokens = self.tokens_class()
@@ -162,10 +164,18 @@ cdef class Lexicon:
         self.size = 0
         cdef Lexeme word
         for string in words:
-            word = Lexeme(string, probs.get(string, 0.0), clusters.get(string, 0),
-                          case_stats.get(string, {}), tag_stats.get(string, {}),
-                          self._string_features, self._flag_features)
-            self._dict[string] = word
+            prob = probs.get(string, 0.0)
+            cluster = clusters.get(string, 0.0)
+            cases = case_stats.get(string, {})
+            tags = tag_stats.get(string, {})
+            views = [string_view(string, prob, cluster, cases, tags)
+                     for string_view in self._string_features]
+            flags = set()
+            for i, flag_feature in enumerate(self._flag_features):
+                if flag_feature(string, prob, cluster, cases, tags):
+                    flags.add(i)
+            lexeme = lexeme_init(string, prob, cluster, views, flags)
+            self._dict[string] = <size_t>lexeme
             self.size += 1
 
     cpdef Lexeme lookup(self, unicode string):
@@ -177,14 +187,19 @@ cdef class Lexicon:
         Returns:
             lexeme (Lexeme): A reference to a lexical type.
         """
-        cdef Lexeme lexeme
+        cdef LexemeC* lexeme
         assert len(string) != 0
         if string in self._dict:
-            lexeme = self._dict[string]
-            return lexeme
+            return Lexeme(self._dict[string])
         
-        cdef Lexeme word = Lexeme(string, 0, 0, {}, {}, self._string_features,
-                                  self._flag_features)
-        self._dict[string] = word
+        views = [string_view(string, 0.0, 0, {}, {})
+                 for string_view in self._string_features]
+        flags = set()
+        for i, flag_feature in enumerate(self._flag_features):
+            if flag_feature(string, 0.0, {}, {}):
+                flags.add(i)
+ 
+        lexeme = lexeme_init(string, 0, 0, views, flags)
+        self._dict[string] = <size_t>lexeme
         self.size += 1
-        return word
+        return Lexeme(<size_t>lexeme)
