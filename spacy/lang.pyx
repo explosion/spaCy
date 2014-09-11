@@ -95,20 +95,21 @@ cdef class Language:
         return tokens
 
     cdef _tokenize(self, Tokens tokens, unicode string):
-        cdef list lexemes
-        if len(string) == 1:
-            lexemes = [self.lookup(string)]
-        elif string in self.cache:
-            lexemes = self.cache[string]
+        cdef LexemeC** lexemes
+        if string in self.cache:
+            lexemes = <LexemeC**><size_t>self.cache[string]
         else:
-            lexemes = []
             substrings = self._split(string)
+            lexemes = <LexemeC**>calloc(len(substrings) + 1, sizeof(LexemeC*))
             for i, substring in enumerate(substrings):
-                lexemes.append(self.lexicon.lookup(substring))
-            self.cache[string] = lexemes
-        cdef Lexeme lexeme
-        for lexeme in lexemes:
-            tokens.append(lexeme)
+                lexemes[i] = self.lexicon.lookup(substring)._c
+            lexemes[i + 1] = NULL
+            self.cache[string] = <size_t>lexemes
+        cdef LexemeC* lexeme
+        i = 0
+        while lexemes[i] != NULL:
+            tokens.push_back(lexemes[i])
+            i += 1
 
     cdef list _split(self, unicode string):
         """Find how to split a contiguous span of non-space characters into substrings.
@@ -147,11 +148,13 @@ cdef class Language:
             token_rules (list): A list of (chunk, tokens) pairs, where chunk is
                 a string and tokens is a list of strings.
         '''
+        cdef LexemeC** lexemes
         for string, substrings in token_rules:
-            lexemes = []
+            lexemes = <LexemeC**>calloc(len(substrings) + 1, sizeof(LexemeC*))
             for i, substring in enumerate(substrings):
-                lexemes.append(self.lexicon.lookup(substring))
-            self.cache[string] = lexemes
+                lexemes[i] = self.lexicon.lookup(substring)._c
+            lexemes[i + 1] = NULL
+            self.cache[string] = <size_t>lexemes
  
 
 cdef class Lexicon:
