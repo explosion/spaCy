@@ -119,6 +119,7 @@ cdef class Language:
         cdef uint64_t hashed = string.key
 
         cdef size_t first_token = tokens.length
+        cdef int split
         cdef int remaining = string.n
         cdef String prefix
         while remaining >= 1:
@@ -232,14 +233,13 @@ cdef void string_from_unicode(String* s, unicode uni):
     string_from_slice(s, <Py_UNICODE*>uni, 0, len(uni))
 
 
-cdef void string_from_slice(String* s, Py_UNICODE* chars, size_t start, size_t end):
+cdef inline void string_from_slice(String* s, Py_UNICODE* chars, size_t start, size_t end) nogil:
     s.chars = &chars[start]
     s.n = end - start
     s.key = hash64(s.chars, s.n * sizeof(Py_UNICODE), 0)
 
 
-cdef void string_slice_prefix(String* s, String* prefix, size_t n):
-    assert s.n >= n
+cdef inline void string_slice_prefix(String* s, String* prefix, size_t n) nogil:
     string_from_slice(prefix, s.chars, 0, n)
     s.chars += n
     s.n -= n
