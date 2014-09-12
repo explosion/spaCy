@@ -57,11 +57,17 @@ cdef extern from "sparsehash/dense_hash_map" namespace "google":
         D& operator[](K&) nogil
 
 
+cdef struct String:
+    Py_UNICODE* chars
+    size_t n
+    uint64_t key
+
+
 cdef class Lexicon:
     cpdef readonly size_t size
 
     cpdef Lexeme lookup(self, unicode string)
-    cdef size_t get(self, Py_UNICODE* characters, size_t length)
+    cdef size_t get(self, String* s)
     
     cdef dense_hash_map[uint64_t, size_t] _dict
     
@@ -71,13 +77,13 @@ cdef class Lexicon:
 
 cdef class Language:
     cdef unicode name
-    cdef dict cache
-    cdef dict specials
+    cdef dense_hash_map[uint64_t, size_t] cache
+    cdef dense_hash_map[uint64_t, size_t] specials
     cpdef readonly Lexicon lexicon
     cpdef readonly object tokens_class
 
     cpdef Tokens tokenize(self, unicode text)
     cpdef Lexeme lookup(self, unicode text)
 
-    cdef _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length)
+    cdef _tokenize(self, Tokens tokens, String* string)
     cdef int _split_one(self, Py_UNICODE* characters, size_t length)

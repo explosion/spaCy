@@ -40,14 +40,20 @@ cdef class Language:
         if string_features is None:
             string_features = []
         self.name = name
-        self.cache = {}
-        self.specials = {}
+        self.cache.set_empty_key(0)
+        self.specials.set_empty_key(0)
         lang_data = read_lang_data(name)
         rules, words, probs, clusters, case_stats, tag_stats = lang_data
         self.lexicon = Lexicon(words, probs, clusters, case_stats, tag_stats,
                                string_features, flag_features)
         self._load_special_tokenization(rules)
         self.tokens_class = Tokens
+
+    def __dealloc__(self):
+        cdef uint64_t hashed
+        cdef size_t lex_addr
+        for (hashed, lex_addr) in self.specials:
+            free(<LexemeC*>lex_addr)
 
     property nr_types:
         def __get__(self):
@@ -87,49 +93,48 @@ cdef class Language:
 
         cdef size_t start = 0
         cdef size_t i = 0
-        cdef Py_UNICODE* characters = string
+        cdef Py_UNICODE* chars = string
         cdef Py_UNICODE c
-        assert Py_UNICODE_ISSPACE(' ') == 1
+        cdef String span
         for i in range(length):
-            c = characters[i]
+            c = chars[i]
             if Py_UNICODE_ISSPACE(c) == 1:
                 if start < i:
-                    self._tokenize(tokens, &characters[start], i - start)
+                    string_from_slice(&span, chars, start, i)
+                    self._tokenize(tokens, &span)
                 start = i + 1
         i += 1
         if start < i:
-            self._tokenize(tokens, &characters[start], i - start)
+            string_from_slice(&span, chars, start, i)
+            self._tokenize(tokens, &span)
         return tokens
 
-    cdef _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length):
-        cdef list lexemes
-        cdef size_t lex_addr
-        cdef uint64_t hashed = hash64(characters, length * sizeof(Py_UNICODE), 0)
-        if hashed in self.specials:
-            for lex_addr in self.specials[hashed]:
-                tokens.push_back(<LexemeC*>lex_addr)
+    cdef _tokenize(self, Tokens tokens, String* string):
+        cdef LexemeC** lexemes = <LexemeC**>self.specials[string.key]
+        if lexemes == NULL:
+            lexemes = <LexemeC**>self.cache[string.key]
+        if lexemes != NULL:
+            _extend_tokens(tokens, lexemes)
             return 0
+        cdef uint64_t hashed = string.key
 
-        if hashed in self.cache:
-            for lex_addr in self.cache[hashed]:
-                tokens.push_back(<LexemeC*>lex_addr)
-            return 0
-
-        lexemes = []
+        cdef size_t first_token = tokens.length
         cdef size_t start = 0
-        cdef size_t split = 0
+        cdef size_t length = string.n
+        cdef String prefix
         while start < length:
-            split = self._split_one(&characters[start], length - start)
-            piece_hash = hash64(&characters[start], split * sizeof(Py_UNICODE), 0)
-            if piece_hash in self.specials:
-                lexemes.extend(self.specials[piece_hash])
+            split = self._split_one(string.chars, string.n)
+            string_slice_prefix(string, &prefix, split)
+            lexemes = <LexemeC**>self.specials[prefix.key]
+            if lexemes != NULL:
+                _extend_tokens(tokens, lexemes)
             else:
-                lexeme = <LexemeC*>self.lexicon.get(&characters[start], split)
-                lexemes.append(<size_t>lexeme)
-            start += split
-        for lex_addr in lexemes:
-            tokens.push_back(<LexemeC*>lex_addr)
-        self.cache[hashed] = lexemes
+                tokens.push_back(<LexemeC*>self.lexicon.get(&prefix))
+            start += prefix.n
+        lexemes = <LexemeC**>calloc(tokens.length - first_token, sizeof(LexemeC*))
+        for i, j in enumerate(range(first_token, tokens.length)):
+            lexemes[i] = tokens.lexemes[j]
+        self.cache[hashed] = <size_t>lexemes
 
     cdef int _split_one(self, Py_UNICODE* characters, size_t length):
         return length
@@ -146,15 +151,25 @@ cdef class Language:
             token_rules (list): A list of (chunk, tokens) pairs, where chunk is
                 a string and tokens is a list of strings.
         '''
-        cdef list lexemes
+        cdef LexemeC** lexemes
         cdef uint64_t hashed
-        for string, substrings in token_rules:
-            hashed = hash64(<Py_UNICODE*>string, len(string) * sizeof(Py_UNICODE), 0)
-            lexemes = []
-            for substring in substrings:
-                lexemes.append(self.lexicon.get(<Py_UNICODE*>substring, len(substring)))
-            self.specials[hashed] = lexemes
- 
+        cdef String string
+        for uni_string, substrings in token_rules:
+            lexemes = <LexemeC**>calloc(len(substrings) + 1, sizeof(LexemeC*))
+            for i, substring in enumerate(substrings):
+                string_from_unicode(&string, substring)
+                lexemes[i] = <LexemeC*>self.lexicon.get(&string)
+            lexemes[i + 1] = NULL
+            string_from_unicode(&string, uni_string)
+            self.specials[string.key] = <size_t>lexemes
+
+
+cdef _extend_tokens(Tokens tokens, LexemeC** lexemes):
+    cdef size_t i = 0
+    while lexemes[i] != NULL:
+        tokens.push_back(lexemes[i])
+        i += 1
+
 
 cdef class Lexicon:
     def __cinit__(self, words, probs, clusters, case_stats, tag_stats,
@@ -179,26 +194,25 @@ cdef class Lexicon:
             self._dict[string] = <size_t>lexeme
             self.size += 1
 
-    cdef size_t get(self, Py_UNICODE* characters, size_t length):
-        cdef uint64_t hashed = hash64(characters, length * sizeof(Py_UNICODE), 0)
-        cdef LexemeC* lexeme = <LexemeC*>self._dict[hashed]
+    cdef size_t get(self, String* string):
+        cdef LexemeC* lexeme = <LexemeC*>self._dict[string.key]
         if lexeme != NULL:
             return <size_t>lexeme
         
-        cdef unicode string = characters[:length]
-        views = [string_view(string, 0.0, 0, {}, {})
+        cdef unicode uni_string = string.chars[:string.n]
+        views = [string_view(uni_string, 0.0, 0, {}, {})
                  for string_view in self._string_features]
         flags = set()
         for i, flag_feature in enumerate(self._flag_features):
-            if flag_feature(string, 0.0, {}, {}):
+            if flag_feature(uni_string, 0.0, {}, {}):
                 flags.add(i)
  
-        lexeme = lexeme_init(string, 0, 0, views, flags)
-        self._dict[hashed] = <size_t>lexeme
+        lexeme = lexeme_init(uni_string, 0, 0, views, flags)
+        self._dict[string.key] = <size_t>lexeme
         self.size += 1
         return <size_t>lexeme
 
-    cpdef Lexeme lookup(self, unicode string):
+    cpdef Lexeme lookup(self, unicode uni_string):
         """Retrieve (or create, if not found) a Lexeme for a string, and return it.
     
         Args
@@ -207,5 +221,25 @@ cdef class Lexicon:
         Returns:
             lexeme (Lexeme): A reference to a lexical type.
         """
-        cdef size_t lexeme = self.get(<Py_UNICODE*>string, len(string))
+        cdef String string
+        string_from_unicode(&string, uni_string)
+        cdef size_t lexeme = self.get(&string)
         return Lexeme(lexeme)
+
+
+cdef string_from_unicode(String* s, unicode uni):
+    string_from_slice(s, <Py_UNICODE*>uni, 0, len(uni))
+
+
+cdef string_from_slice(String* s, Py_UNICODE* chars, size_t start, size_t end):
+    s.chars = &chars[start]
+    s.n = end - start
+    s.key = hash64(s.chars, s.n * sizeof(Py_UNICODE), 0)
+
+
+cdef string_slice_prefix(String* s, String* prefix, size_t n):
+    assert s.n >= n
+    string_from_slice(prefix, s.chars, 0, n)
+    s.chars += n
+    s.n -= n
+    s.key = hash64(s.chars, s.n * sizeof(Py_UNICODE), 0)

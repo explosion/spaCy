@@ -236,8 +236,8 @@ cdef class English(Language):
     fl_is_digit = Flag_IsDigit
     v_shape = View_WordShape
     def __cinit__(self, name, user_string_features, user_flag_features):
-        self.cache = {}
-        self.specials = {}
+        self.cache.set_empty_key(0)
+        self.specials.set_empty_key(0)
         lang_data = util.read_lang_data(name)
         rules, words, probs, clusters, case_stats, tag_stats = lang_data
         self.lexicon = lang.Lexicon(words, probs, clusters, case_stats, tag_stats,
