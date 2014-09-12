@@ -44,7 +44,7 @@ cdef class Tokens:
     def append(self, Lexeme lexeme):
         self.push_back(lexeme._c)
 
-    cdef push_back(self, LexemeC* lexeme):
+    cdef int push_back(self, LexemeC* lexeme) except -1:
         if (self.size + 1) == self.length:
             self.size *= 2
             self.lexemes = <LexemeC**>realloc(self.lexemes, self.size * sizeof(LexemeC*))

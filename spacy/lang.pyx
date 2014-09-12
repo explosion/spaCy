@@ -40,7 +40,8 @@ cdef class Language:
         if string_features is None:
             string_features = []
         self.name = name
-        self.cache = {}
+        self.cache.set_empty_key(0)
+        self.cache_size = 0
         lang_data = read_lang_data(name)
         rules, words, probs, clusters, case_stats, tag_stats = lang_data
         self.lexicon = Lexicon(words, probs, clusters, case_stats, tag_stats,
@@ -102,11 +103,10 @@ cdef class Language:
     cdef _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length):
         cdef uint64_t hashed = hash64(characters, length * sizeof(Py_UNICODE), 0)
         cdef unicode string
-        cdef LexemeC** lexemes
         cdef bint free_chunk = False
         cdef size_t i = 0
-        if hashed in self.cache:
-            lexemes = <LexemeC**><size_t>self.cache[hashed]
+        cdef LexemeC** lexemes = <LexemeC**>self.cache[hashed]
+        if lexemes is not NULL:
             while lexemes[i] != NULL:
                 tokens.push_back(lexemes[i])
                 i += 1
@@ -121,8 +121,9 @@ cdef class Language:
             # The intuition here is that if an element belongs in the cache, it
             # has several chances to get in. And if the cache is large, we less
             # believe that the element belongs there.
-            if not self.cache or random.random() < (100000.0 / len(self.cache)):
+            if self.cache_size == 0 or random.random() < (100000.0 / self.cache_size):
                 self.cache[hashed] = <size_t>lexemes
+                self.cache_size += 1
             else:
                 free(lexemes)
 
@@ -172,6 +173,7 @@ cdef class Language:
             lexemes[i + 1] = NULL
             hashed = hash64(<Py_UNICODE*>string, len(string) * sizeof(Py_UNICODE), 0)
             self.cache[hashed] = <size_t>lexemes
+            self.cache_size += 1
  
 
 cdef class Lexicon:
