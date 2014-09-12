@@ -100,32 +100,29 @@ cdef class Language:
             self._tokenize(tokens, &characters[start], i - start)
         return tokens
 
-    cdef _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length):
+    cdef int _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length) except -1:
         cdef uint64_t hashed = hash64(characters, length * sizeof(Py_UNICODE), 0)
-        cdef unicode string
-        cdef bint free_chunk = False
         cdef size_t i = 0
         cdef LexemeC** lexemes = <LexemeC**>self.cache[hashed]
         if lexemes is not NULL:
             while lexemes[i] != NULL:
                 tokens.push_back(lexemes[i])
                 i += 1
+            return 0
+    
+        cdef unicode string = characters[:length]
+        cdef list substrings = self._split(string)
+        lexemes = <LexemeC**>calloc(len(substrings) + 1, sizeof(LexemeC*))
+        cdef unicode substring
+        for i, substring in enumerate(substrings):
+            lexemes[i] = <LexemeC*>self.lexicon.get(substring)
+            tokens.push_back(lexemes[i])
+        lexemes[i + 1] = NULL
+        if self.cache_size < 1000000:
+            self.cache[hashed] = <size_t>lexemes
+            self.cache_size += 1
         else:
-            string = characters[:length]
-            substrings = self._split(string)
-            lexemes = <LexemeC**>calloc(len(substrings) + 1, sizeof(LexemeC*))
-            for i, substring in enumerate(substrings):
-                lexemes[i] = <LexemeC*>self.lexicon.get(substring)
-                tokens.push_back(lexemes[i])
-            lexemes[i + 1] = NULL
-            # The intuition here is that if an element belongs in the cache, it
-            # has several chances to get in. And if the cache is large, we less
-            # believe that the element belongs there.
-            if self.cache_size == 0 or random.random() < (100000.0 / self.cache_size):
-                self.cache[hashed] = <size_t>lexemes
-                self.cache_size += 1
-            else:
-                free(lexemes)
+            free(lexemes)
 
     cdef list _split(self, unicode string):
         """Find how to split a contiguous span of non-space characters into substrings.
