@@ -17,6 +17,7 @@ from os import path
 from .util import read_lang_data
 from spacy.tokens import Tokens
 from spacy.lexeme cimport LexemeC, lexeme_init
+from murmurhash.mrmr cimport hash64
 
 
 cdef class Language:
@@ -85,26 +86,32 @@ cdef class Language:
 
         cdef size_t start = 0
         cdef size_t i = 0
-        for c in string:
+        cdef Py_UNICODE* characters = string
+        cdef Py_UNICODE c
+        for i in range(length):
+            c = characters[i]
             if c == ' ' or c == '\n' or c == '\t':
                 if start < i:
-                    self._tokenize(tokens, string[start:i])
+                    self._tokenize(tokens, &characters[start], i - start)
                 start = i + 1
-            i += 1
+        i += 1
         if start < i:
-            self._tokenize(tokens, string[start:i])
+            self._tokenize(tokens, &characters[start], i - start)
         return tokens
 
-    cdef _tokenize(self, Tokens tokens, unicode string):
+    cdef _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length):
+        cdef uint64_t hashed = hash64(characters, length * sizeof(Py_UNICODE), 0)
+        cdef unicode string
         cdef LexemeC** lexemes
         cdef bint free_chunk = False
         cdef size_t i = 0
-        if string in self.cache:
-            lexemes = <LexemeC**><size_t>self.cache[string]
+        if hashed in self.cache:
+            lexemes = <LexemeC**><size_t>self.cache[hashed]
             while lexemes[i] != NULL:
                 tokens.push_back(lexemes[i])
                 i += 1
         else:
+            string = characters[:length]
             substrings = self._split(string)
             lexemes = <LexemeC**>calloc(len(substrings) + 1, sizeof(LexemeC*))
             for i, substring in enumerate(substrings):
@@ -115,7 +122,7 @@ cdef class Language:
             # has several chances to get in. And if the cache is large, we less
             # believe that the element belongs there.
             if not self.cache or random.random() < (100000.0 / len(self.cache)):
-                self.cache[string] = <size_t>lexemes
+                self.cache[hashed] = <size_t>lexemes
             else:
                 free(lexemes)
 
@@ -157,12 +164,14 @@ cdef class Language:
                 a string and tokens is a list of strings.
         '''
         cdef LexemeC** lexemes
+        cdef uint64_t hashed
         for string, substrings in token_rules:
             lexemes = <LexemeC**>calloc(len(substrings) + 1, sizeof(LexemeC*))
             for i, substring in enumerate(substrings):
                 lexemes[i] = <LexemeC*>self.lexicon.get(substring)
             lexemes[i + 1] = NULL
-            self.cache[string] = <size_t>lexemes
+            hashed = hash64(<Py_UNICODE*>string, len(string) * sizeof(Py_UNICODE), 0)
+            self.cache[hashed] = <size_t>lexemes
  
 
 cdef class Lexicon:
