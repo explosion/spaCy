@@ -234,37 +234,42 @@ cdef class English(Language):
         self.tokens_class = EnglishTokens
 
     cdef int _split_one(self, Py_UNICODE* characters, size_t length):
-        cdef unicode word = characters[:length]
-        cdef int i = 0
-        if word.startswith("'s") or word.startswith("'S"):
-            return 2
-        # Contractions
-        if word.endswith("'s") and length >= 3:
-            return length - 2
-        # Leading punctuation
-        if _check_punct(word, 0, length):
+        if length == 1:
             return 1
-        elif length >= 1:
+        if characters[0] == "'" and (characters[1] == "s" or characters[1] == "S"):
+            return 2
+        cdef int i = 0
+        # Leading punctuation
+        if _check_punct(characters, 0, length):
+            return 1
+        # Contractions
+        elif length >= 3 and characters[length - 2] == "'":
+            c2 = characters[length-1]
+            if c2 == "s" or c2 == "S":
+                return length - 2
+        if length >= 1:
             # Split off all trailing punctuation characters
             i = 0
-            while i < length and not _check_punct(word, i, length):
+            while i < length and not _check_punct(characters, i, length):
                 i += 1
         return i
 
 
-cdef bint _check_punct(unicode word, size_t i, size_t length):
+cdef bint _check_punct(Py_UNICODE* characters, size_t i, size_t length):
+    cdef unicode char_i = characters[i]
+    cdef unicode char_i1 = characters[i+1]
     # Don't count appostrophes as punct if the next char is a letter
-    if word[i] == "'" and i < (length - 1) and word[i+1].isalpha():
+    if characters[i] == "'" and i < (length - 1) and char_i1.isalpha():
         return i == 0
-    if word[i] == "-" and i < (length - 1) and word[i+1] == '-':
+    if characters[i] == "-" and i < (length - 1) and characters[i+1] == '-':
         return False
     # Don't count commas as punct if the next char is a number
-    if word[i] == "," and i < (length - 1) and word[i+1].isdigit():
+    if characters[i] == "," and i < (length - 1) and char_i1.isdigit():
         return False
     # Don't count periods as punct if the next char is not whitespace
-    if word[i] == "." and i < (length - 1) and not word[i+1].isspace():
+    if characters[i] == "." and i < (length - 1) and not char_i1.isspace():
         return False
-    return not word[i].isalnum()
+    return not char_i.isalnum()
 
 
 EN = English('en', [], [])
