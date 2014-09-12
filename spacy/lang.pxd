@@ -2,6 +2,7 @@ from libc.stdint cimport uint32_t
 from libc.stdint cimport uint64_t
 from spacy.word cimport Lexeme
 from spacy.tokens cimport Tokens
+from spacy.lexeme cimport LexemeC
 
 from libcpp.utility cimport pair
 from libcpp.vector cimport vector
@@ -50,6 +51,10 @@ cdef extern from "sparsehash/dense_hash_map" namespace "google":
         pair[iterator, iterator] equal_range(K& k)
         D& operator[](K&) nogil
 
+
+cdef struct LexList:
+    LexemeC* lex
+    LexList* tail
 
 cdef class Lexicon:
     cpdef readonly size_t size

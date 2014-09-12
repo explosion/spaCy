@@ -102,27 +102,37 @@ cdef class Language:
 
     cdef int _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length) except -1:
         cdef uint64_t hashed = hash64(characters, length * sizeof(Py_UNICODE), 0)
+        cdef LexList* node = <LexList*>self.cache[hashed]
         cdef size_t i = 0
-        cdef LexemeC** lexemes = <LexemeC**>self.cache[hashed]
-        if lexemes is not NULL:
-            while lexemes[i] != NULL:
-                tokens.push_back(lexemes[i])
-                i += 1
+        if node is not NULL:
+            while node != NULL:
+                tokens.push_back(node.lex)
+                node = node.tail
             return 0
-    
-        cdef unicode string = characters[:length]
-        cdef list substrings = self._split(string)
-        lexemes = <LexemeC**>calloc(len(substrings) + 1, sizeof(LexemeC*))
-        cdef unicode substring
-        for i, substring in enumerate(substrings):
-            lexemes[i] = <LexemeC*>self.lexicon.get(substring)
-            tokens.push_back(lexemes[i])
-        lexemes[i + 1] = NULL
-        if self.cache_size < 10000000:
-            self.cache[hashed] = <size_t>lexemes
-            self.cache_size += 1
-        else:
-            free(lexemes)
+   
+        node = <LexList*>calloc(1, sizeof(LexList))
+        self.cache[hashed] = <size_t>node
+        cdef size_t start = 0
+        cdef size_t split = 0
+        while start < length:
+            split = start + self._split_one(characters[start:length])
+            node.lex = <LexemeC*>self.lexicon.get(characters[start:split])
+            tokens.push_back(node.lex)
+            if split == length:
+                break
+            hashed = hash64(&characters[split], (length - split) * sizeof(Py_UNICODE), 0)
+            node.tail = <LexList*>self.cache[hashed]
+            if node.tail == NULL:
+                node.tail = <LexList*>calloc(1, sizeof(LexList))
+                self.cache[hashed] = <size_t>node.tail
+                start = split
+                node = node.tail
+            else:
+                node = node.tail
+                while node != NULL:
+                    tokens.push_back(node.lex)
+                    node = node.tail
+                break
 
     cdef list _split(self, unicode string):
         """Find how to split a contiguous span of non-space characters into substrings.
@@ -161,16 +171,17 @@ cdef class Language:
             token_rules (list): A list of (chunk, tokens) pairs, where chunk is
                 a string and tokens is a list of strings.
         '''
-        cdef LexemeC** lexemes
+        cdef LexList* node
         cdef uint64_t hashed
         for string, substrings in token_rules:
-            lexemes = <LexemeC**>calloc(len(substrings) + 1, sizeof(LexemeC*))
-            for i, substring in enumerate(substrings):
-                lexemes[i] = <LexemeC*>self.lexicon.get(substring)
-            lexemes[i + 1] = NULL
             hashed = hash64(<Py_UNICODE*>string, len(string) * sizeof(Py_UNICODE), 0)
-            self.cache[hashed] = <size_t>lexemes
-            self.cache_size += 1
+            node = <LexList*>calloc(1, sizeof(LexList))
+            self.cache[hashed] = <size_t>node
+            for substring in substrings[:-1]:
+                node.lex = <LexemeC*>self.lexicon.get(substring)
+                node.tail = <LexList*>calloc(1, sizeof(LexList))
+                node = node.tail
+            node.lex = <LexemeC*>self.lexicon.get(substrings[-1])
  
 
 cdef class Lexicon:
