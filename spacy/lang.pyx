@@ -118,7 +118,7 @@ cdef class Language:
             lexemes[i] = <LexemeC*>self.lexicon.get(substring)
             tokens.push_back(lexemes[i])
         lexemes[i + 1] = NULL
-        if self.cache_size < 1000000:
+        if self.cache_size < 10000000:
             self.cache[hashed] = <size_t>lexemes
             self.cache_size += 1
         else:
