@@ -60,9 +60,9 @@ cdef class Lexicon:
     cpdef readonly size_t size
 
     cpdef Lexeme lookup(self, unicode string)
-    cdef size_t get(self, unicode string)
+    cdef size_t get(self, Py_UNICODE* characters, size_t length)
     
-    cdef dict _dict
+    cdef dense_hash_map[uint64_t, size_t] _dict
     
     cdef list _string_features
     cdef list _flag_features
@@ -79,4 +79,4 @@ cdef class Language:
     cpdef Lexeme lookup(self, unicode text)
 
     cdef int _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length) except -1
-    cdef int _split_one(self, unicode word)
+    cdef int _split_one(self, Py_UNICODE* characters, size_t length)

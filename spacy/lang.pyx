@@ -103,7 +103,6 @@ cdef class Language:
     cdef int _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length) except -1:
         cdef uint64_t hashed = hash64(characters, length * sizeof(Py_UNICODE), 0)
         cdef LexList* node = <LexList*>self.cache[hashed]
-        cdef size_t i = 0
         if node is not NULL:
             while node != NULL:
                 tokens.push_back(node.lex)
@@ -115,17 +114,17 @@ cdef class Language:
         cdef size_t start = 0
         cdef size_t split = 0
         while start < length:
-            split = start + self._split_one(characters[start:length])
-            node.lex = <LexemeC*>self.lexicon.get(characters[start:split])
+            split = self._split_one(&characters[start], length - start)
+            node.lex = <LexemeC*>self.lexicon.get(&characters[start], split)
             tokens.push_back(node.lex)
-            if split == length:
+            start += split
+            if start >= length:
                 break
-            hashed = hash64(&characters[split], (length - split) * sizeof(Py_UNICODE), 0)
+            hashed = hash64(&characters[start], (length - start) * sizeof(Py_UNICODE), 0)
             node.tail = <LexList*>self.cache[hashed]
             if node.tail == NULL:
                 node.tail = <LexList*>calloc(1, sizeof(LexList))
                 self.cache[hashed] = <size_t>node.tail
-                start = split
                 node = node.tail
             else:
                 node = node.tail
@@ -134,8 +133,8 @@ cdef class Language:
                     node = node.tail
                 break
 
-    cdef int _split_one(self, unicode word):
-        return len(word)
+    cdef int _split_one(self, Py_UNICODE* characters, size_t length):
+        return length
 
     def _load_special_tokenization(self, token_rules):
         '''Load special-case tokenization rules.
@@ -156,10 +155,10 @@ cdef class Language:
             node = <LexList*>calloc(1, sizeof(LexList))
             self.cache[hashed] = <size_t>node
             for substring in substrings[:-1]:
-                node.lex = <LexemeC*>self.lexicon.get(substring)
+                node.lex = <LexemeC*>self.lexicon.get(<Py_UNICODE*>substring, len(substring))
                 node.tail = <LexList*>calloc(1, sizeof(LexList))
                 node = node.tail
-            node.lex = <LexemeC*>self.lexicon.get(substrings[-1])
+            node.lex = <LexemeC*>self.lexicon.get(<Py_UNICODE*>substrings[-1], len(substrings[-1]))
  
 
 cdef class Lexicon:
@@ -167,7 +166,7 @@ cdef class Lexicon:
                   string_features, flag_features):
         self._flag_features = flag_features
         self._string_features = string_features
-        self._dict = {}
+        self._dict.set_empty_key(0)
         self.size = 0
         cdef Lexeme word
         for string in words:
@@ -185,12 +184,13 @@ cdef class Lexicon:
             self._dict[string] = <size_t>lexeme
             self.size += 1
 
-    cdef size_t get(self, unicode string):
-        cdef LexemeC* lexeme
-        assert len(string) != 0
-        if string in self._dict:
-            return self._dict[string]
+    cdef size_t get(self, Py_UNICODE* characters, size_t length):
+        cdef uint64_t hashed = hash64(characters, length * sizeof(Py_UNICODE), 0)
+        cdef LexemeC* lexeme = <LexemeC*>self._dict[hashed]
+        if lexeme != NULL:
+            return <size_t>lexeme
         
+        cdef unicode string = characters[:length]
         views = [string_view(string, 0.0, 0, {}, {})
                  for string_view in self._string_features]
         flags = set()
@@ -199,7 +199,7 @@ cdef class Lexicon:
                 flags.add(i)
  
         lexeme = lexeme_init(string, 0, 0, views, flags)
-        self._dict[string] = <size_t>lexeme
+        self._dict[hashed] = <size_t>lexeme
         self.size += 1
         return <size_t>lexeme
 
@@ -212,5 +212,5 @@ cdef class Lexicon:
         Returns:
             lexeme (Lexeme): A reference to a lexical type.
         """
-        cdef size_t lexeme = self.get(string)
+        cdef size_t lexeme = self.get(<Py_UNICODE*>string, len(string))
         return Lexeme(lexeme)

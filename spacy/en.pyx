@@ -233,8 +233,8 @@ cdef class English(Language):
         self._load_special_tokenization(rules)
         self.tokens_class = EnglishTokens
 
-    cdef int _split_one(self, unicode word):
-        cdef size_t length = len(word)
+    cdef int _split_one(self, Py_UNICODE* characters, size_t length):
+        cdef unicode word = characters[:length]
         cdef int i = 0
         if word.startswith("'s") or word.startswith("'S"):
             return 2
