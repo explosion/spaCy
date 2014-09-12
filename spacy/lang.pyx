@@ -109,7 +109,7 @@ cdef class Language:
             self._tokenize(tokens, &span)
         return tokens
 
-    cdef _tokenize(self, Tokens tokens, String* string):
+    cdef int _tokenize(self, Tokens tokens, String* string):
         cdef LexemeC** lexemes = <LexemeC**>self.specials[string.key]
         if lexemes == NULL:
             lexemes = <LexemeC**>self.cache[string.key]
@@ -119,19 +119,20 @@ cdef class Language:
         cdef uint64_t hashed = string.key
 
         cdef size_t first_token = tokens.length
-        cdef size_t start = 0
-        cdef size_t length = string.n
+        cdef int remaining = string.n
         cdef String prefix
-        while start < length:
+        while remaining >= 1:
             split = self._split_one(string.chars, string.n)
+            remaining -= split
             string_slice_prefix(string, &prefix, split)
             lexemes = <LexemeC**>self.specials[prefix.key]
             if lexemes != NULL:
                 _extend_tokens(tokens, lexemes)
             else:
                 tokens.push_back(<LexemeC*>self.lexicon.get(&prefix))
-            start += prefix.n
         lexemes = <LexemeC**>calloc(tokens.length - first_token, sizeof(LexemeC*))
+        cdef size_t i
+        cdef size_t j
         for i, j in enumerate(range(first_token, tokens.length)):
             lexemes[i] = tokens.lexemes[j]
         self.cache[hashed] = <size_t>lexemes
@@ -164,7 +165,7 @@ cdef class Language:
             self.specials[string.key] = <size_t>lexemes
 
 
-cdef _extend_tokens(Tokens tokens, LexemeC** lexemes):
+cdef void _extend_tokens(Tokens tokens, LexemeC** lexemes):
     cdef size_t i = 0
     while lexemes[i] != NULL:
         tokens.push_back(lexemes[i])
@@ -227,17 +228,17 @@ cdef class Lexicon:
         return Lexeme(lexeme)
 
 
-cdef string_from_unicode(String* s, unicode uni):
+cdef void string_from_unicode(String* s, unicode uni):
     string_from_slice(s, <Py_UNICODE*>uni, 0, len(uni))
 
 
-cdef string_from_slice(String* s, Py_UNICODE* chars, size_t start, size_t end):
+cdef void string_from_slice(String* s, Py_UNICODE* chars, size_t start, size_t end):
     s.chars = &chars[start]
     s.n = end - start
     s.key = hash64(s.chars, s.n * sizeof(Py_UNICODE), 0)
 
 
-cdef string_slice_prefix(String* s, String* prefix, size_t n):
+cdef void string_slice_prefix(String* s, String* prefix, size_t n):
     assert s.n >= n
     string_from_slice(prefix, s.chars, 0, n)
     s.chars += n
