@@ -7,6 +7,7 @@ cdef class Tokens:
     cdef LexemeC** lexemes
     cdef int push_back(self, LexemeC* lexeme) except -1
 
+    cpdef size_t id(self, size_t i)
     cpdef unicode string(self, size_t i)
     cpdef double prob(self, size_t i)
     cpdef size_t cluster(self, size_t i)

@@ -55,6 +55,9 @@ cdef class Tokens:
         cdef bytes byte_string = self.lexemes[i].string
         return byte_string.decode('utf8')
 
+    cpdef size_t id(self, size_t i):
+        return id(self.lexemes[i].string)
+
     cpdef double prob(self, size_t i):
         return self.lexemes[i].prob
 

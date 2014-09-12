@@ -4,10 +4,14 @@ from spacy.tokens cimport Tokens
 
 
 cdef class EnglishTokens(Tokens):
+    cpdef size_t canon(self, size_t i)
+    cpdef size_t shape(self, size_t i)
+    cpdef size_t non_sparse(self, size_t i)
+    cpdef size_t asciied(self, size_t i)
     cpdef unicode canon_string(self, size_t i)
     cpdef unicode shape_string(self, size_t i)
     cpdef unicode non_sparse_string(self, size_t i)
-    cpdef unicode asciied(self, size_t i)
+    cpdef unicode asciied_string(self, size_t i)
     cpdef bint is_alpha(self, size_t i)
     cpdef bint is_ascii(self, size_t i)
     cpdef bint is_digit(self, size_t i)

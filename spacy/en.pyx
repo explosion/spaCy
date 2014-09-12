@@ -137,8 +137,20 @@ cdef class EnglishTokens(Tokens):
     cpdef unicode non_sparse_string(self, size_t i):
         return lexeme_string_view(self.lexemes[i], View_NonSparse)
 
-    cpdef unicode asciied(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], View_Asciied)
+    cpdef unicode asciied_string(self, size_t i):
+        return lexeme_string_view(self.lexemes[i], View_Asciied)
+
+    cpdef size_t canon(self, size_t i):
+        return id(self.lexemes[i].views[<size_t>View_CanonForm])
+
+    cpdef size_t shape(self, size_t i):
+        return id(self.lexemes[i].views[<size_t>View_WordShape])
+
+    cpdef size_t non_sparse(self, size_t i):
+        return id(self.lexemes[i].views[<size_t>View_NonSparse])
+
+    cpdef size_t asciied(self, size_t i):
+        return id(self.lexemes[i].views[<size_t>View_Asciied])
     
     cpdef bint is_alpha(self, size_t i):
         return lexeme_check_flag(self.lexemes[i], Flag_IsAlpha)
