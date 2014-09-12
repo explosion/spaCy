@@ -80,6 +80,7 @@ cdef class Language:
         Returns:
             tokens (Tokens): A Tokens object, giving access to a sequence of LexIDs.
         """
+        print repr(string)
         cdef size_t length = len(string)
         cdef Tokens tokens = self.tokens_class(length)
         if length == 0:
