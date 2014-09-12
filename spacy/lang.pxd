@@ -72,6 +72,7 @@ cdef class Lexicon:
 cdef class Language:
     cdef unicode name
     cdef dict cache
+    cdef dict specials
     cpdef readonly Lexicon lexicon
     cpdef readonly object tokens_class
 

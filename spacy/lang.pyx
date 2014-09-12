@@ -41,6 +41,7 @@ cdef class Language:
             string_features = []
         self.name = name
         self.cache = {}
+        self.specials = {}
         lang_data = read_lang_data(name)
         rules, words, probs, clusters, case_stats, tag_stats = lang_data
         self.lexicon = Lexicon(words, probs, clusters, case_stats, tag_stats,
@@ -88,6 +89,7 @@ cdef class Language:
         cdef size_t i = 0
         cdef Py_UNICODE* characters = string
         cdef Py_UNICODE c
+        assert Py_UNICODE_ISSPACE(' ') == 1
         for i in range(length):
             c = characters[i]
             if Py_UNICODE_ISSPACE(c) == 1:
@@ -103,6 +105,11 @@ cdef class Language:
         cdef list lexemes
         cdef size_t lex_addr
         cdef uint64_t hashed = hash64(characters, length * sizeof(Py_UNICODE), 0)
+        if hashed in self.specials:
+            for lex_addr in self.specials[hashed]:
+                tokens.push_back(<LexemeC*>lex_addr)
+            return 0
+
         if hashed in self.cache:
             for lex_addr in self.cache[hashed]:
                 tokens.push_back(<LexemeC*>lex_addr)
@@ -113,16 +120,16 @@ cdef class Language:
         cdef size_t split = 0
         while start < length:
             split = self._split_one(&characters[start], length - start)
-            hashed = hash64(&characters[start], split * sizeof(Py_UNICODE), 0)
-            if hashed in self.cache:
-                lexemes.extend(self.cache[hashed])
+            piece_hash = hash64(&characters[start], split * sizeof(Py_UNICODE), 0)
+            if piece_hash in self.specials:
+                lexemes.extend(self.specials[piece_hash])
             else:
                 lexeme = <LexemeC*>self.lexicon.get(&characters[start], split)
                 lexemes.append(<size_t>lexeme)
             start += split
         for lex_addr in lexemes:
             tokens.push_back(<LexemeC*>lex_addr)
-        #self.cache[hashed] = lexemes
+        self.cache[hashed] = lexemes
 
     cdef int _split_one(self, Py_UNICODE* characters, size_t length):
         return length
@@ -146,7 +153,7 @@ cdef class Language:
             lexemes = []
             for substring in substrings:
                 lexemes.append(self.lexicon.get(<Py_UNICODE*>substring, len(substring)))
-            self.cache[hashed] = lexemes
+            self.specials[hashed] = lexemes
  
 
 cdef class Lexicon:

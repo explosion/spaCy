@@ -237,6 +237,7 @@ cdef class English(Language):
     v_shape = View_WordShape
     def __cinit__(self, name, user_string_features, user_flag_features):
         self.cache = {}
+        self.specials = {}
         lang_data = util.read_lang_data(name)
         rules, words, probs, clusters, case_stats, tag_stats = lang_data
         self.lexicon = lang.Lexicon(words, probs, clusters, case_stats, tag_stats,
