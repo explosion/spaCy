@@ -9,6 +9,11 @@ from libcpp.vector cimport vector
 from libc.stdint cimport uint64_t, int64_t
 
 
+cdef extern from "Python.h":
+    cdef bint Py_UNICODE_ISSPACE(Py_UNICODE ch)
+    cdef bint Py_UNICODE_ISALNUM(Py_UNICODE ch)
+
+
 cdef extern from "sparsehash/dense_hash_map" namespace "google":
     cdef cppclass dense_hash_map[K, D]:
         K& key_type
@@ -52,10 +57,6 @@ cdef extern from "sparsehash/dense_hash_map" namespace "google":
         D& operator[](K&) nogil
 
 
-cdef struct LexList:
-    LexemeC* lex
-    LexList* tail
-
 cdef class Lexicon:
     cpdef readonly size_t size
 
@@ -70,13 +71,12 @@ cdef class Lexicon:
 
 cdef class Language:
     cdef unicode name
-    cdef dense_hash_map[uint64_t, size_t] cache
-    cdef size_t cache_size
+    cdef dict cache
     cpdef readonly Lexicon lexicon
     cpdef readonly object tokens_class
 
     cpdef Tokens tokenize(self, unicode text)
     cpdef Lexeme lookup(self, unicode text)
 
-    cdef int _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length) except -1
+    cdef _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length)
     cdef int _split_one(self, Py_UNICODE* characters, size_t length)

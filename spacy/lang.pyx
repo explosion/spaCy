@@ -40,8 +40,7 @@ cdef class Language:
         if string_features is None:
             string_features = []
         self.name = name
-        self.cache.set_empty_key(0)
-        self.cache_size = 0
+        self.cache = {}
         lang_data = read_lang_data(name)
         rules, words, probs, clusters, case_stats, tag_stats = lang_data
         self.lexicon = Lexicon(words, probs, clusters, case_stats, tag_stats,
@@ -80,7 +79,6 @@ cdef class Language:
         Returns:
             tokens (Tokens): A Tokens object, giving access to a sequence of LexIDs.
         """
-        print repr(string)
         cdef size_t length = len(string)
         cdef Tokens tokens = self.tokens_class(length)
         if length == 0:
@@ -92,7 +90,7 @@ cdef class Language:
         cdef Py_UNICODE c
         for i in range(length):
             c = characters[i]
-            if c == ' ' or c == '\n' or c == '\t':
+            if Py_UNICODE_ISSPACE(c) == 1:
                 if start < i:
                     self._tokenize(tokens, &characters[start], i - start)
                 start = i + 1
@@ -101,38 +99,30 @@ cdef class Language:
             self._tokenize(tokens, &characters[start], i - start)
         return tokens
 
-    cdef int _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length) except -1:
+    cdef _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length):
+        cdef list lexemes
+        cdef size_t lex_addr
         cdef uint64_t hashed = hash64(characters, length * sizeof(Py_UNICODE), 0)
-        cdef LexList* node = <LexList*>self.cache[hashed]
-        if node is not NULL:
-            while node != NULL:
-                tokens.push_back(node.lex)
-                node = node.tail
+        if hashed in self.cache:
+            for lex_addr in self.cache[hashed]:
+                tokens.push_back(<LexemeC*>lex_addr)
             return 0
-   
-        node = <LexList*>calloc(1, sizeof(LexList))
-        self.cache[hashed] = <size_t>node
+
+        lexemes = []
         cdef size_t start = 0
         cdef size_t split = 0
         while start < length:
             split = self._split_one(&characters[start], length - start)
-            node.lex = <LexemeC*>self.lexicon.get(&characters[start], split)
-            tokens.push_back(node.lex)
-            start += split
-            if start >= length:
-                break
-            hashed = hash64(&characters[start], (length - start) * sizeof(Py_UNICODE), 0)
-            node.tail = <LexList*>self.cache[hashed]
-            if node.tail == NULL:
-                node.tail = <LexList*>calloc(1, sizeof(LexList))
-                self.cache[hashed] = <size_t>node.tail
-                node = node.tail
+            hashed = hash64(&characters[start], split * sizeof(Py_UNICODE), 0)
+            if hashed in self.cache:
+                lexemes.extend(self.cache[hashed])
             else:
-                node = node.tail
-                while node != NULL:
-                    tokens.push_back(node.lex)
-                    node = node.tail
-                break
+                lexeme = <LexemeC*>self.lexicon.get(&characters[start], split)
+                lexemes.append(<size_t>lexeme)
+            start += split
+        for lex_addr in lexemes:
+            tokens.push_back(<LexemeC*>lex_addr)
+        #self.cache[hashed] = lexemes
 
     cdef int _split_one(self, Py_UNICODE* characters, size_t length):
         return length
@@ -149,17 +139,14 @@ cdef class Language:
             token_rules (list): A list of (chunk, tokens) pairs, where chunk is
                 a string and tokens is a list of strings.
         '''
-        cdef LexList* node
+        cdef list lexemes
         cdef uint64_t hashed
         for string, substrings in token_rules:
             hashed = hash64(<Py_UNICODE*>string, len(string) * sizeof(Py_UNICODE), 0)
-            node = <LexList*>calloc(1, sizeof(LexList))
-            self.cache[hashed] = <size_t>node
-            for substring in substrings[:-1]:
-                node.lex = <LexemeC*>self.lexicon.get(<Py_UNICODE*>substring, len(substring))
-                node.tail = <LexList*>calloc(1, sizeof(LexList))
-                node = node.tail
-            node.lex = <LexemeC*>self.lexicon.get(<Py_UNICODE*>substrings[-1], len(substrings[-1]))
+            lexemes = []
+            for substring in substrings:
+                lexemes.append(self.lexicon.get(<Py_UNICODE*>substring, len(substring)))
+            self.cache[hashed] = lexemes
  
 
 cdef class Lexicon:

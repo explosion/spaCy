@@ -40,3 +40,5 @@ cdef class EnglishTokens(Tokens):
 
 cdef class English(Language):
     cdef int _split_one(self, Py_UNICODE* characters, size_t length)
+
+
