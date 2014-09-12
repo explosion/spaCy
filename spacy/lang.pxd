@@ -79,5 +79,4 @@ cdef class Language:
     cpdef Lexeme lookup(self, unicode text)
 
     cdef int _tokenize(self, Tokens tokens, Py_UNICODE* characters, size_t length) except -1
-    cdef list _split(self, unicode string)
     cdef int _split_one(self, unicode word)

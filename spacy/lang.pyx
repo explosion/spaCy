@@ -134,28 +134,6 @@ cdef class Language:
                     node = node.tail
                 break
 
-    cdef list _split(self, unicode string):
-        """Find how to split a contiguous span of non-space characters into substrings.
-
-        This method calls find_split repeatedly. Most languages will want to
-        override _split_one, but it may be useful to override this instead.
-
-        Args:
-            chunk (unicode): The string to be split, e.g. u"Mike's!"
-
-        Returns:
-            substrings (list): The component substrings, e.g. [u"Mike", "'s", "!"].
-        """
-        substrings = []
-        while string:
-            split = self._split_one(string)
-            if split == 0:
-                substrings.append(string)
-                break
-            substrings.append(string[:split])
-            string = string[split:]
-        return substrings
-
     cdef int _split_one(self, unicode word):
         return len(word)
 
