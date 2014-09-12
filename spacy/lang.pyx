@@ -110,11 +110,14 @@ cdef class Language:
         return tokens
 
     cdef int _tokenize(self, Tokens tokens, String* string):
-        cdef LexemeC** lexemes = <LexemeC**>self.specials[string.key]
-        if lexemes == NULL:
-            lexemes = <LexemeC**>self.cache[string.key]
+        cdef LexemeC** lexemes = <LexemeC**>self.cache[string.key]
+        lexemes = <LexemeC**>self.cache[string.key]
+        cdef size_t i
         if lexemes != NULL:
-            _extend_tokens(tokens, lexemes)
+            i = 0
+            while lexemes[i] != NULL:
+                tokens.push_back(lexemes[i])
+                i += 1
             return 0
         cdef uint64_t hashed = string.key
 
@@ -128,11 +131,13 @@ cdef class Language:
             string_slice_prefix(string, &prefix, split)
             lexemes = <LexemeC**>self.specials[prefix.key]
             if lexemes != NULL:
-                _extend_tokens(tokens, lexemes)
+                i = 0
+                while lexemes[i] != NULL:
+                    tokens.push_back(lexemes[i])
+                    i += 1
             else:
                 tokens.push_back(<LexemeC*>self.lexicon.get(&prefix))
         lexemes = <LexemeC**>calloc(tokens.length - first_token, sizeof(LexemeC*))
-        cdef size_t i
         cdef size_t j
         for i, j in enumerate(range(first_token, tokens.length)):
             lexemes[i] = tokens.lexemes[j]
@@ -164,13 +169,7 @@ cdef class Language:
             lexemes[i + 1] = NULL
             string_from_unicode(&string, uni_string)
             self.specials[string.key] = <size_t>lexemes
-
-
-cdef void _extend_tokens(Tokens tokens, LexemeC** lexemes):
-    cdef size_t i = 0
-    while lexemes[i] != NULL:
-        tokens.push_back(lexemes[i])
-        i += 1
+            self.cache[string.key] = <size_t>lexemes
 
 
 cdef class Lexicon:
