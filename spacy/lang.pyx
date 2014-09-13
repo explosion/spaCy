@@ -19,6 +19,8 @@ from spacy.tokens import Tokens
 from spacy.lexeme cimport LexemeC, lexeme_init
 from murmurhash.mrmr cimport hash64
 
+from spacy._hashing cimport PointerHash
+from spacy._hashing cimport Cell
 
 cdef class Language:
     """Base class for language-specific tokenizers.
@@ -40,7 +42,7 @@ cdef class Language:
         if string_features is None:
             string_features = []
         self.name = name
-        self.cache.set_empty_key(0)
+        self.cache = PointerHash(2 ** 22)
         self.specials.set_empty_key(0)
         lang_data = read_lang_data(name)
         rules, words, probs, clusters, case_stats, tag_stats = lang_data
@@ -110,17 +112,19 @@ cdef class Language:
         return tokens
 
     cdef int _tokenize(self, Tokens tokens, String* string):
-        cdef LexemeC** lexemes = <LexemeC**>self.cache[string.key]
-        lexemes = <LexemeC**>self.cache[string.key]
+        cdef Cell* cell = self.cache.lookup(string.key)
+        cdef LexemeC** lexemes 
         cdef size_t i
-        if lexemes != NULL:
+        if cell.key != 0:
+            lexemes = <LexemeC**>cell.value
             i = 0
             while lexemes[i] != NULL:
                 tokens.push_back(lexemes[i])
                 i += 1
             return 0
-        cdef uint64_t hashed = string.key
 
+        cell.key = string.key
+        self.cache.filled += 1
         cdef size_t first_token = tokens.length
         cdef int split
         cdef int remaining = string.n
@@ -141,7 +145,7 @@ cdef class Language:
         cdef size_t j
         for i, j in enumerate(range(first_token, tokens.length)):
             lexemes[i] = tokens.lexemes[j]
-        self.cache[hashed] = <size_t>lexemes
+        cell.value = <size_t>lexemes
 
     cdef int _split_one(self, Py_UNICODE* characters, size_t length):
         return length
@@ -169,7 +173,7 @@ cdef class Language:
             lexemes[i + 1] = NULL
             string_from_unicode(&string, uni_string)
             self.specials[string.key] = <size_t>lexemes
-            self.cache[string.key] = <size_t>lexemes
+            self.cache.insert(string.key, <size_t>lexemes)
 
 
 cdef class Lexicon:

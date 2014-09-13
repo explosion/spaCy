@@ -1,3 +1,8 @@
+# cython: profile=True
+from libc.stdlib cimport calloc, free
+cimport cython
+
+
 cdef class PointerHash:
     def __cinit__(self, size_t initial_size=8):
         self.size = initial_size
@@ -10,20 +15,26 @@ cdef class PointerHash:
         free(self.cells)
 
     def __getitem__(self, key_t key):
+        assert key != 0
         cdef Cell* cell = self.lookup(key)
         return cell.value if cell.key != 0 else None
 
     def __setitem__(self, key_t key,  val_t value):
-        self.insert(key, value
+        assert key != 0
+        self.insert(key, value)
 
+    @cython.cdivision
     cdef size_t find_slot(self, key_t key):
-        cdef size_t i = key % self.size
+        cdef size_t i = (key % self.size)
         while self.cells[i].key != 0 and self.cells[i].key != key:
             i = (i + 1) % self.size
         return i
 
+    @cython.cdivision
     cdef Cell* lookup(self, key_t key):
-        cdef size_t i = self.find_slot(key)
+        cdef size_t i = (key % self.size)
+        while self.cells[i].key != 0 and self.cells[i].key != key:
+            i = (i + 1) % self.size
         return &self.cells[i]
 
     cdef void insert(self, key_t key, val_t value):
@@ -36,7 +47,7 @@ cdef class PointerHash:
             self.resize(self.size * 2)
 
     cdef void resize(self, size_t new_size):
-        assert new_size & (new_size - 1)) == 0 # Must be a power of 2
+        assert (new_size & (new_size - 1)) == 0 # Must be a power of 2
         assert self.filled * 4 <= new_size * 3
         
         self.size = new_size
@@ -46,6 +57,9 @@ cdef class PointerHash:
 
         self.size = new_size
         self.cells = <Cell*>calloc(new_size, sizeof(Cell))
-
+        
+        self.filled = 0
+        cdef size_t i
         for i in range(old_size):
-            self.insert(self.cells[i].key, self.cells[i].value)
+            if self.cells[i].key != 0:
+                self.insert(self.cells[i].key, self.cells[i].value)

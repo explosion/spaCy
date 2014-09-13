@@ -43,6 +43,7 @@ from libc.stdint cimport uint64_t
 cimport lang
 from spacy.lexeme cimport lexeme_check_flag
 from spacy.lexeme cimport lexeme_string_view
+from spacy._hashing cimport PointerHash
 
 from spacy import util
 
@@ -236,7 +237,7 @@ cdef class English(Language):
     fl_is_digit = Flag_IsDigit
     v_shape = View_WordShape
     def __cinit__(self, name, user_string_features, user_flag_features):
-        self.cache.set_empty_key(0)
+        self.cache = PointerHash(2 ** 25)
         self.specials.set_empty_key(0)
         lang_data = util.read_lang_data(name)
         rules, words, probs, clusters, case_stats, tag_stats = lang_data

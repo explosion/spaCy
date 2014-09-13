@@ -1,5 +1,7 @@
-ctypedef key_t size_t
-ctypedef val_t size_t
+from libc.stdint cimport uint64_t
+
+ctypedef uint64_t key_t
+ctypedef size_t val_t
 
 
 cdef struct Cell:
@@ -14,5 +16,5 @@ cdef class PointerHash:
 
     cdef size_t find_slot(self, key_t key)
     cdef Cell* lookup(self, key_t key)
-    cdef void insert(self, key_t key)
+    cdef void insert(self, key_t key, val_t value)
     cdef void resize(self, size_t new_size)

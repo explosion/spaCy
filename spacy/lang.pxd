@@ -3,6 +3,7 @@ from libc.stdint cimport uint64_t
 from spacy.word cimport Lexeme
 from spacy.tokens cimport Tokens
 from spacy.lexeme cimport LexemeC
+from spacy._hashing cimport PointerHash
 
 from libcpp.utility cimport pair
 from libcpp.vector cimport vector
@@ -77,7 +78,7 @@ cdef class Lexicon:
 
 cdef class Language:
     cdef unicode name
-    cdef dense_hash_map[uint64_t, size_t] cache
+    cdef PointerHash cache
     cdef dense_hash_map[uint64_t, size_t] specials
     cpdef readonly Lexicon lexicon
     cpdef readonly object tokens_class
