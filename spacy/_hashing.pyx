@@ -18,20 +18,19 @@ cdef class PointerHash:
 
     def __getitem__(self, key_t key):
         assert key != 0
-        cdef val_t value = self.lookup(key)
-        return value if value != 0 else None
+        cdef val_t value = self.get(key)
+        return <size_t>value if value != NULL else None
 
-    def __setitem__(self, key_t key,  val_t value):
-        assert key != 0
-        assert value != 0
-        self.insert(key, value)
+    def __setitem__(self, key_t key, size_t value):
+        assert key != 0 and value != 0
+        self.set(key, <val_t>value)
 
-    cdef val_t lookup(self, key_t key):
+    cdef val_t get(self, key_t key):
         cell = _find_cell(self.cells, self.size, key)
         self._last = cell
         return cell.value
 
-    cdef void insert(self, key_t key, val_t value) except *:
+    cdef void set(self, key_t key, val_t value) except *:
         cdef Cell* cell
         if self._last != NULL and key == self._last.key:
             cell = self._last
@@ -60,8 +59,8 @@ cdef class PointerHash:
         cdef size_t slot
         for i in range(old_size):
             if old_cells[i].key != 0:
-                assert old_cells[i].value != 0, i
-                self.insert(old_cells[i].key, old_cells[i].value)
+                assert old_cells[i].value != NULL, i
+                self.set(old_cells[i].key, old_cells[i].value)
         free(old_cells)
 
 

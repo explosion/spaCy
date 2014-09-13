@@ -109,7 +109,7 @@ cdef class Language:
         return tokens
 
     cdef int _tokenize(self, Tokens tokens, String* string):
-        cdef LexemeC** lexemes = <LexemeC**>self.cache.lookup(string.key)
+        cdef LexemeC** lexemes = <LexemeC**>self.cache.get(string.key)
         cdef size_t i
         if lexemes != NULL:
             i = 0
@@ -127,7 +127,7 @@ cdef class Language:
             split = self._split_one(string.chars, string.n)
             remaining -= split
             string_slice_prefix(string, &prefix, split)
-            lexemes = <LexemeC**>self.specials.lookup(prefix.key)
+            lexemes = <LexemeC**>self.specials.get(prefix.key)
             if lexemes != NULL:
                 i = 0
                 while lexemes[i] != NULL:
@@ -139,7 +139,7 @@ cdef class Language:
         cdef size_t j
         for i, j in enumerate(range(first_token, tokens.length)):
             lexemes[i] = tokens.lexemes[j]
-        self.cache.insert(key, <size_t>lexemes)
+        self.cache.set(key, lexemes)
 
     cdef int _split_one(self, Py_UNICODE* characters, size_t length):
         return length
@@ -166,8 +166,8 @@ cdef class Language:
                 lexemes[i] = <LexemeC*>self.lexicon.get(&string)
             lexemes[i + 1] = NULL
             string_from_unicode(&string, uni_string)
-            self.specials[string.key] = <size_t>lexemes
-            self.cache.insert(string.key, <size_t>lexemes)
+            self.specials.set(string.key, lexemes)
+            self.cache.set(string.key, lexemes)
 
 
 cdef class Lexicon:
@@ -177,26 +177,27 @@ cdef class Lexicon:
         self._string_features = string_features
         self._dict = PointerHash(2 ** 20)
         self.size = 0
-        cdef Lexeme word
-        for string in words:
-            prob = probs.get(string, 0.0)
-            cluster = clusters.get(string, 0.0)
-            cases = case_stats.get(string, {})
-            tags = tag_stats.get(string, {})
-            views = [string_view(string, prob, cluster, cases, tags)
+        cdef String string
+        for uni_string in words:
+            prob = probs.get(uni_string, 0.0)
+            cluster = clusters.get(uni_string, 0.0)
+            cases = case_stats.get(uni_string, {})
+            tags = tag_stats.get(uni_string, {})
+            views = [string_view(uni_string, prob, cluster, cases, tags)
                      for string_view in self._string_features]
             flags = set()
             for i, flag_feature in enumerate(self._flag_features):
-                if flag_feature(string, prob, cluster, cases, tags):
+                if flag_feature(uni_string, prob, cluster, cases, tags):
                     flags.add(i)
-            lexeme = lexeme_init(string, prob, cluster, views, flags)
-            self._dict[string] = <size_t>lexeme
+            lexeme = lexeme_init(uni_string, prob, cluster, views, flags)
+            string_from_unicode(&string, uni_string)
+            self._dict.set(string.key, lexeme)
             self.size += 1
 
     cdef size_t get(self, String* string):
-        cdef size_t lex_addr = self._dict.lookup(string.key)
-        if lex_addr != 0:
-            return lex_addr
+        cdef LexemeC* lex_addr = <LexemeC*>self._dict.get(string.key)
+        if lex_addr != NULL:
+            return <size_t>lex_addr
         
         cdef unicode uni_string = string.chars[:string.n]
         views = [string_view(uni_string, 0.0, 0, {}, {})
@@ -207,7 +208,7 @@ cdef class Lexicon:
                 flags.add(i)
  
         cdef LexemeC* lexeme = lexeme_init(uni_string, 0, 0, views, flags)
-        self._dict.insert(string.key, <size_t>lexeme)
+        self._dict.set(string.key, lexeme)
         self.size += 1
         return <size_t>lexeme
 
