@@ -1,7 +1,7 @@
 from libc.stdint cimport uint64_t
 
 ctypedef uint64_t key_t
-ctypedef size_t val_t
+ctypedef void* val_t
 
 
 cdef struct Cell:
@@ -15,6 +15,6 @@ cdef class PointerHash:
     cdef Cell* _last
     cdef Cell* cells
 
-    cdef val_t lookup(self, key_t key)
-    cdef void insert(self, key_t key, val_t value) except *
+    cdef val_t get(self, key_t key)
+    cdef void set(self, key_t key, val_t value) except *
     cdef void resize(self, size_t new_size) except *

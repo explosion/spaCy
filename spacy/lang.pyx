@@ -122,7 +122,6 @@ cdef class Language:
         cdef int split
         cdef int remaining = string.n
         cdef String prefix
-        cdef Cell* tmp_cell
         while remaining >= 1:
             split = self._split_one(string.chars, string.n)
             remaining -= split
@@ -194,10 +193,11 @@ cdef class Lexicon:
             self._dict.set(string.key, lexeme)
             self.size += 1
 
-    cdef size_t get(self, String* string):
-        cdef LexemeC* lex_addr = <LexemeC*>self._dict.get(string.key)
-        if lex_addr != NULL:
-            return <size_t>lex_addr
+    cdef LexemeC* get(self, String* string):
+        cdef LexemeC* lexeme
+        lexeme = <LexemeC*>self._dict.get(string.key)
+        if lexeme != NULL:
+            return lexeme
         
         cdef unicode uni_string = string.chars[:string.n]
         views = [string_view(uni_string, 0.0, 0, {}, {})
@@ -207,10 +207,10 @@ cdef class Lexicon:
             if flag_feature(uni_string, 0.0, {}, {}):
                 flags.add(i)
  
-        cdef LexemeC* lexeme = lexeme_init(uni_string, 0, 0, views, flags)
+        lexeme = lexeme_init(uni_string, 0, 0, views, flags)
         self._dict.set(string.key, lexeme)
         self.size += 1
-        return <size_t>lexeme
+        return lexeme
 
     cpdef Lexeme lookup(self, unicode uni_string):
         """Retrieve (or create, if not found) a Lexeme for a string, and return it.
@@ -223,8 +223,8 @@ cdef class Lexicon:
         """
         cdef String string
         string_from_unicode(&string, uni_string)
-        cdef size_t lexeme = self.get(&string)
-        return Lexeme(lexeme)
+        cdef LexemeC* lexeme = self.get(&string)
+        return Lexeme(<size_t>lexeme)
 
 
 cdef void string_from_unicode(String* s, unicode uni):

@@ -25,7 +25,7 @@ cdef class Lexicon:
     cpdef readonly size_t size
 
     cpdef Lexeme lookup(self, unicode string)
-    cdef size_t get(self, String* s)
+    cdef LexemeC* get(self, String* s)
     
     cdef PointerHash _dict
     
