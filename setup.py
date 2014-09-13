@@ -46,6 +46,7 @@ else:
 
 exts = [
     Extension("spacy.lang", ["spacy/lang.pyx"], language="c++", include_dirs=includes),
+    Extension("spacy._hashing", ["spacy/_hashing.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.word", ["spacy/word.pyx"], language="c++",
               include_dirs=includes),
     Extension("spacy.lexeme", ["spacy/lexeme.pyx"], language="c++",

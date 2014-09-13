@@ -43,7 +43,7 @@ cdef class Language:
             string_features = []
         self.name = name
         self.cache = PointerHash(2 ** 22)
-        self.specials.set_empty_key(0)
+        self.specials = PointerHash(2 ** 16)
         lang_data = read_lang_data(name)
         rules, words, probs, clusters, case_stats, tag_stats = lang_data
         self.lexicon = Lexicon(words, probs, clusters, case_stats, tag_stats,
@@ -52,10 +52,7 @@ cdef class Language:
         self.tokens_class = Tokens
 
     def __dealloc__(self):
-        cdef uint64_t hashed
-        cdef size_t lex_addr
-        for (hashed, lex_addr) in self.specials:
-            free(<LexemeC*>lex_addr)
+        pass
 
     property nr_types:
         def __get__(self):
@@ -112,28 +109,25 @@ cdef class Language:
         return tokens
 
     cdef int _tokenize(self, Tokens tokens, String* string):
-        cdef Cell* cell = self.cache.lookup(string.key)
-        cdef LexemeC** lexemes 
+        cdef LexemeC** lexemes = <LexemeC**>self.cache.lookup(string.key)
         cdef size_t i
-        if cell.key != 0:
-            lexemes = <LexemeC**>cell.value
+        if lexemes != NULL:
             i = 0
             while lexemes[i] != NULL:
                 tokens.push_back(lexemes[i])
                 i += 1
             return 0
-
-        cell.key = string.key
-        self.cache.filled += 1
+        cdef uint64_t key = string.key 
         cdef size_t first_token = tokens.length
         cdef int split
         cdef int remaining = string.n
         cdef String prefix
+        cdef Cell* tmp_cell
         while remaining >= 1:
             split = self._split_one(string.chars, string.n)
             remaining -= split
             string_slice_prefix(string, &prefix, split)
-            lexemes = <LexemeC**>self.specials[prefix.key]
+            lexemes = <LexemeC**>self.specials.lookup(prefix.key)
             if lexemes != NULL:
                 i = 0
                 while lexemes[i] != NULL:
@@ -145,7 +139,7 @@ cdef class Language:
         cdef size_t j
         for i, j in enumerate(range(first_token, tokens.length)):
             lexemes[i] = tokens.lexemes[j]
-        cell.value = <size_t>lexemes
+        self.cache.insert(key, <size_t>lexemes)
 
     cdef int _split_one(self, Py_UNICODE* characters, size_t length):
         return length
@@ -181,7 +175,7 @@ cdef class Lexicon:
                   string_features, flag_features):
         self._flag_features = flag_features
         self._string_features = string_features
-        self._dict.set_empty_key(0)
+        self._dict = PointerHash(2 ** 20)
         self.size = 0
         cdef Lexeme word
         for string in words:
@@ -200,9 +194,9 @@ cdef class Lexicon:
             self.size += 1
 
     cdef size_t get(self, String* string):
-        cdef LexemeC* lexeme = <LexemeC*>self._dict[string.key]
-        if lexeme != NULL:
-            return <size_t>lexeme
+        cdef size_t lex_addr = self._dict.lookup(string.key)
+        if lex_addr != 0:
+            return lex_addr
         
         cdef unicode uni_string = string.chars[:string.n]
         views = [string_view(uni_string, 0.0, 0, {}, {})
@@ -212,8 +206,8 @@ cdef class Lexicon:
             if flag_feature(uni_string, 0.0, {}, {}):
                 flags.add(i)
  
-        lexeme = lexeme_init(uni_string, 0, 0, views, flags)
-        self._dict[string.key] = <size_t>lexeme
+        cdef LexemeC* lexeme = lexeme_init(uni_string, 0, 0, views, flags)
+        self._dict.insert(string.key, <size_t>lexeme)
         self.size += 1
         return <size_t>lexeme
 
