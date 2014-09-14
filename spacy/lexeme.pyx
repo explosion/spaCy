@@ -1,17 +1,15 @@
 from libc.stdlib cimport calloc, free
 
-
 cdef LexemeC* lexeme_init(unicode string, double prob, size_t cluster,
                      list views, set flags):
     cdef LexemeC* lexeme = <LexemeC*>calloc(1, sizeof(LexemeC))
     lexeme.cluster = cluster
     lexeme.prob = prob
-    lexeme.length = len(string)
-    lexeme.string = intern_and_encode(string)
-
+    lexeme.string = intern_and_encode(string, &lexeme.length)
     lexeme.views = <char**>calloc(len(views), sizeof(char*))
+    cdef size_t length = 0
     for i, string in enumerate(views):
-        lexeme.views[i] = intern_and_encode(string)
+        lexeme.views[i] = intern_and_encode(string, &length)
 
     for active_flag in flags:
         lexeme.flags |= (1 << active_flag)
@@ -24,9 +22,11 @@ cdef int lexeme_free(LexemeC* lexeme) except -1:
     
 
 cdef set _strings = set()
-cdef char* intern_and_encode(unicode string):
+cdef char* intern_and_encode(unicode string, size_t* length):
     global _strings
-    cdef bytes utf8_string = intern(string.encode('utf8'))
+    cdef bytes decoded = string.encode('utf8')
+    cdef bytes utf8_string = intern(decoded)
+    length[0] = len(utf8_string)
     _strings.add(utf8_string)
     return <char*>utf8_string
 

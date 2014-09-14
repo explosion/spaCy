@@ -38,7 +38,6 @@ cdef class Language:
     cdef PointerHash cache
     cdef PointerHash specials
     cpdef readonly Lexicon lexicon
-    cpdef readonly object tokens_class
 
     cpdef Tokens tokenize(self, unicode text)
     cpdef Lexeme lookup(self, unicode text)
