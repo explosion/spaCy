@@ -6,7 +6,6 @@ cimport cython
 cdef class PointerHash:
     def __cinit__(self, size_t initial_size=8):
         self.size = initial_size
-        self.size = 8
         self.filled = 0
         self._last = NULL
         # Size must be power of two
