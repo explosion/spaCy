@@ -7,8 +7,8 @@ cdef class PointerHash:
     def __cinit__(self, size_t initial_size=8):
         self.size = initial_size
         self.filled = 0
-        self._last = NULL
         # Size must be power of two
+        assert self.size != 0
         assert self.size & (self.size - 1) == 0
         self.cells = <Cell*>calloc(self.size, sizeof(Cell))
 
@@ -24,18 +24,13 @@ cdef class PointerHash:
         assert key != 0 and value != 0
         self.set(key, <val_t>value)
 
-    cdef val_t get(self, key_t key):
-        cell = _find_cell(self.cells, self.size, key)
-        self._last = cell
+    cdef val_t get(self, key_t key) nogil:
+        cdef Cell* cell = _find_cell(self.cells, self.size, key)
         return cell.value
 
     cdef void set(self, key_t key, val_t value) except *:
         cdef Cell* cell
-        if self._last != NULL and key == self._last.key:
-            cell = self._last
-        else:
-            cell = _find_cell(self.cells, self.size, key)
-        self._last = NULL
+        cell = _find_cell(self.cells, self.size, key)
         if cell.key == 0:
             cell.key = key
             self.filled += 1
@@ -44,6 +39,7 @@ cdef class PointerHash:
             self.resize(self.size * 2)
 
     cdef void resize(self, size_t new_size) except *:
+        assert new_size != 0
         assert (new_size & (new_size - 1)) == 0 # Must be a power of 2
         assert self.filled * 4 <= new_size * 3
         
@@ -65,7 +61,8 @@ cdef class PointerHash:
 
 @cython.cdivision
 cdef inline Cell* _find_cell(Cell* cells, size_t size, key_t key) nogil:
-    cdef size_t i = (key % size)
+    # Modulo for powers-of-two via bitwise &
+    cdef size_t i = (key & (size - 1))
     while cells[i].key != 0 and cells[i].key != key:
-        i = (i + 1) % size
+        i = (i + 1) & (size - 1)
     return &cells[i]

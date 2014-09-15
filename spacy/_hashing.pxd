@@ -12,9 +12,8 @@ cdef struct Cell:
 cdef class PointerHash:
     cdef size_t size
     cdef size_t filled
-    cdef Cell* _last
     cdef Cell* cells
 
-    cdef val_t get(self, key_t key)
+    cdef val_t get(self, key_t key) nogil
     cdef void set(self, key_t key, val_t value) except *
     cdef void resize(self, size_t new_size) except *
