@@ -77,7 +77,7 @@ cdef class English(Language):
                 i += 1
         return i
 
-
+abbreviations = set(['U.S', 'u.s', 'U.N', 'Ms', 'Mr', 'P'])
 cdef bint _check_punct(Py_UNICODE* characters, size_t i, size_t length):
     cdef unicode char_i = characters[i]
     cdef unicode char_i1 = characters[i+1]
@@ -91,8 +91,9 @@ cdef bint _check_punct(Py_UNICODE* characters, size_t i, size_t length):
     # Don't count commas as punct if the next char is a number
     if characters[i] == "," and i < (length - 1) and char_i1.isdigit():
         return False
-    # Don't count periods as punct if the next char is not whitespace
-    if characters[i] == ".":
+    if characters[i] == "." and i < (length - 1):
+        return False
+    if characters[i] == "." and characters[:i] in abbreviations:
         return False
     return not char_i.isalnum()
 
