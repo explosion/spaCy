@@ -84,7 +84,7 @@ cdef class Tokens:
         self.push_back(lexeme._c)
 
     cdef int push_back(self, LexemeC* lexeme) except -1:
-        if (self.size + 1) == self.length:
+        if (self.length + 1) == self.size:
             self.size *= 2
             self.lexemes = <LexemeC**>realloc(self.lexemes, self.size * sizeof(LexemeC*))
         self.lexemes[self.length] = lexeme
