@@ -24,8 +24,8 @@ cdef int lexeme_free(LexemeC* lexeme) except -1:
     
 
 cdef char* intern_and_encode(unicode string, size_t* length):
-    global _strings
-    cdef bytes utf8_string = intern(string.encode('utf8'))
+    cdef bytes byte_string = string.encode('utf8')
+    cdef bytes utf8_string = intern(byte_string)
     Py_INCREF(utf8_string)
     length[0] = len(utf8_string)
     return <char*>utf8_string
