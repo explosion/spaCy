@@ -219,7 +219,7 @@ cdef class Language:
         lexemes = <LexemeC**>calloc(len(tokens) - first_token, sizeof(LexemeC*))
         cdef size_t j
         for i, j in enumerate(range(first_token, tokens.v.size())):
-            lexemes[i] = tokens.v[j]
+            lexemes[i] = tokens.v[0][j]
         self.cache.set(key, lexemes)
 
     cdef int _split_one(self, Py_UNICODE* characters, size_t length):

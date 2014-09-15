@@ -65,6 +65,7 @@ cdef class Tokens:
     """
     def __cinit__(self, string_length=0):
         size = int(string_length / 3) if string_length >= 3 else 1
+        self.v = new vector[LexemeC*]()
         self.v.reserve(size)
 
     def __getitem__(self, i):
@@ -73,11 +74,14 @@ cdef class Tokens:
     def __len__(self):
         return self.v.size()
 
+    def __dealloc__(self):
+        del self.v
+
     def append(self, Lexeme lexeme):
         self.v.push_back(lexeme._c)
 
     cpdef unicode string(self, size_t i):
-        cdef bytes utf8_string = self.v[i].string[:self.v[i].length]
+        cdef bytes utf8_string = self.v.at(i).string[:self.v.at(i).length]
         cdef unicode string = utf8_string.decode('utf8')
         return string
 
@@ -91,7 +95,7 @@ cdef class Tokens:
         return self.v.at(i).cluster
 
     cpdef bint check_flag(self, size_t i, size_t flag_id) except *:
-        return lexeme_check_flag(self.v[i], flag_id)
+        return lexeme_check_flag(self.v.at(i), flag_id)
 
     cpdef unicode string_view(self, size_t i, size_t view_id):
         return lexeme_string_view(self.v.at(i), view_id)

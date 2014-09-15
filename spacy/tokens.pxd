@@ -3,7 +3,7 @@ from libcpp.vector cimport vector
 
 
 cdef class Tokens:
-    cdef vector[LexemeC*] v
+    cdef vector[LexemeC*] *v
 
     cpdef size_t id(self, size_t i) except 0
     cpdef unicode string(self, size_t i)
