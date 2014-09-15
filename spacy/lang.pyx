@@ -182,25 +182,25 @@ cdef class Language:
             if Py_UNICODE_ISSPACE(c) == 1:
                 if start < i:
                     string_from_slice(&span, chars, start, i)
-                    self._tokenize(tokens, &span)
+                    self._tokenize(tokens.v, &span)
                 start = i + 1
         i += 1
         if start < i:
             string_from_slice(&span, chars, start, i)
-            self._tokenize(tokens, &span)
+            self._tokenize(tokens.v, &span)
         return tokens
 
-    cdef int _tokenize(self, Tokens tokens, String* string):
+    cdef int _tokenize(self, vector[LexemeC*] *tokens_v, String* string):
         cdef LexemeC** lexemes = <LexemeC**>self.cache.get(string.key)
         cdef size_t i
         if lexemes != NULL:
             i = 0
             while lexemes[i] != NULL:
-                tokens.v.push_back(lexemes[i])
+                tokens_v.push_back(lexemes[i])
                 i += 1
             return 0
         cdef uint64_t key = string.key 
-        cdef size_t first_token = len(tokens)
+        cdef size_t first_token = tokens_v.size()
         cdef int split
         cdef int remaining = string.n
         cdef String prefix
@@ -212,14 +212,14 @@ cdef class Language:
             if lexemes != NULL:
                 i = 0
                 while lexemes[i] != NULL:
-                    tokens.v.push_back(lexemes[i])
+                    tokens_v.push_back(lexemes[i])
                     i += 1
             else:
-                tokens.v.push_back(<LexemeC*>self.lexicon.get(&prefix))
-        lexemes = <LexemeC**>calloc(len(tokens) - first_token, sizeof(LexemeC*))
+                tokens_v.push_back(<LexemeC*>self.lexicon.get(&prefix))
+        lexemes = <LexemeC**>calloc(tokens_v.size() - first_token, sizeof(LexemeC*))
         cdef size_t j
-        for i, j in enumerate(range(first_token, tokens.v.size())):
-            lexemes[i] = tokens.v[0][j]
+        for i, j in enumerate(range(first_token, tokens_v.size())):
+            lexemes[i] = tokens_v[0][j]
         self.cache.set(key, lexemes)
 
     cdef int _split_one(self, Py_UNICODE* characters, size_t length):
