@@ -65,148 +65,132 @@ cdef class Tokens:
     """
     def __cinit__(self, string_length=0):
         size = int(string_length / 3) if string_length >= 3 else 1
-        self.lexemes = <LexemeC**>calloc(size, sizeof(LexemeC*))
-        self.size = size
-        self.length = 0
-
-    def __dealloc__(self):
-        free(self.lexemes)
+        self.v.reserve(size)
 
     def __getitem__(self, i):
-        if i >= self.length:
-            raise IndexError
-        return Lexeme(<size_t>self.lexemes[i])
+        return Lexeme(<size_t>self.v.at(i))
 
     def __len__(self):
-        return self.length
+        return self.v.size()
 
     def append(self, Lexeme lexeme):
-        self.push_back(lexeme._c)
-
-    cdef int push_back(self, LexemeC* lexeme) except -1:
-        if (self.length + 1) == self.size:
-            self.size *= 2
-            self.lexemes = <LexemeC**>realloc(self.lexemes, self.size * sizeof(LexemeC*))
-        self.lexemes[self.length] = lexeme
-        self.length += 1
+        self.v.push_back(lexeme._c)
 
     cpdef unicode string(self, size_t i):
-        cdef bytes utf8_string = self.lexemes[i].string[:self.lexemes[i].length]
+        cdef bytes utf8_string = self.v[i].string[:self.v[i].length]
         cdef unicode string = utf8_string.decode('utf8')
         return string
 
-    cpdef size_t id(self, size_t i):
-        return id(self.lexemes[i].string)
+    cpdef size_t id(self, size_t i) except 0:
+        return <size_t>&self.v.at(i).string
 
-    cpdef double prob(self, size_t i):
-        return self.lexemes[i].prob
+    cpdef double prob(self, size_t i) except 1:
+        return self.v.at(i).prob
 
-    cpdef size_t cluster(self, size_t i):
-        return self.lexemes[i].cluster
+    cpdef size_t cluster(self, size_t i) except *:
+        return self.v.at(i).cluster
 
-    cpdef bint check_flag(self, size_t i, size_t flag_id):
-        return lexeme_check_flag(self.lexemes[i], flag_id)
+    cpdef bint check_flag(self, size_t i, size_t flag_id) except *:
+        return lexeme_check_flag(self.v[i], flag_id)
 
     cpdef unicode string_view(self, size_t i, size_t view_id):
-        return lexeme_string_view(self.lexemes[i], view_id)
+        return lexeme_string_view(self.v.at(i), view_id)
 
     # Provide accessor methods for the features supported by the language.
     # Without these, clients have to use the underlying string_view and check_flag
     # methods, which requires them to know the IDs.
     cpdef unicode canon_string(self, size_t i):
-        return lexeme_string_view(self.lexemes[i], View_CanonForm)
+        return lexeme_string_view(self.v.at(i), View_CanonForm)
 
     cpdef unicode shape_string(self, size_t i):
-        return lexeme_string_view(self.lexemes[i], View_WordShape)
+        return lexeme_string_view(self.v.at(i), View_WordShape)
 
     cpdef unicode non_sparse_string(self, size_t i):
-        return lexeme_string_view(self.lexemes[i], View_NonSparse)
+        return lexeme_string_view(self.v.at(i), View_NonSparse)
 
     cpdef unicode asciied_string(self, size_t i):
-        return lexeme_string_view(self.lexemes[i], View_Asciied)
+        return lexeme_string_view(self.v.at(i), View_Asciied)
 
-    cpdef size_t canon(self, size_t i):
-        return id(self.lexemes[i].views[<size_t>View_CanonForm])
+    cpdef size_t canon(self, size_t i) except *:
+        return id(self.v.at(i).views[<size_t>View_CanonForm])
 
-    cpdef size_t shape(self, size_t i):
-        return id(self.lexemes[i].views[<size_t>View_WordShape])
+    cpdef size_t shape(self, size_t i) except *:
+        return id(self.v.at(i).views[<size_t>View_WordShape])
 
-    cpdef size_t non_sparse(self, size_t i):
-        return id(self.lexemes[i].views[<size_t>View_NonSparse])
+    cpdef size_t non_sparse(self, size_t i) except *:
+        return id(self.v.at(i).views[<size_t>View_NonSparse])
 
-    cpdef size_t asciied(self, size_t i):
-        return id(self.lexemes[i].views[<size_t>View_Asciied])
+    cpdef size_t asciied(self, size_t i) except *:
+        return id(self.v.at(i).views[<size_t>View_Asciied])
     
-    cpdef bint is_alpha(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_IsAlpha)
+    cpdef bint is_alpha(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_IsAlpha)
 
-    cpdef bint is_ascii(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_IsAscii)
+    cpdef bint is_ascii(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_IsAscii)
 
-    cpdef bint is_digit(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_IsDigit)
+    cpdef bint is_digit(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_IsDigit)
 
-    cpdef bint is_lower(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_IsLower)
+    cpdef bint is_lower(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_IsLower)
 
-    cpdef bint is_punct(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_IsPunct)
+    cpdef bint is_punct(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_IsPunct)
 
-    cpdef bint is_space(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_IsSpace)
+    cpdef bint is_space(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_IsSpace)
 
-    cpdef bint is_title(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_IsTitle)
+    cpdef bint is_title(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_IsTitle)
 
-    cpdef bint is_upper(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_IsUpper)
+    cpdef bint is_upper(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_IsUpper)
 
-    cpdef bint can_adj(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_CanAdj)
+    cpdef bint can_adj(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_CanAdj)
 
-    cpdef bint can_adp(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_CanAdp)
+    cpdef bint can_adp(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_CanAdp)
 
-    cpdef bint can_adv(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_CanAdv)
+    cpdef bint can_adv(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_CanAdv)
 
-    cpdef bint can_conj(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_CanConj)
+    cpdef bint can_conj(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_CanConj)
 
-    cpdef bint can_det(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_CanDet)
+    cpdef bint can_det(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_CanDet)
 
-    cpdef bint can_noun(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_CanNoun)
+    cpdef bint can_noun(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_CanNoun)
 
-    cpdef bint can_num(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_CanNum)
+    cpdef bint can_num(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_CanNum)
 
-    cpdef bint can_pdt(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_CanPdt)
+    cpdef bint can_pdt(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_CanPdt)
 
-    cpdef bint can_pos(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_CanPos)
+    cpdef bint can_pos(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_CanPos)
 
-    cpdef bint can_pron(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_CanPron)
+    cpdef bint can_pron(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_CanPron)
 
-    cpdef bint can_prt(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_CanPrt)
+    cpdef bint can_prt(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_CanPrt)
 
-    cpdef bint can_punct(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_CanPunct)
+    cpdef bint can_punct(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_CanPunct)
 
-    cpdef bint can_verb(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_CanVerb)
+    cpdef bint can_verb(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_CanVerb)
 
-    cpdef bint oft_lower(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_OftLower)
+    cpdef bint oft_lower(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_OftLower)
 
-    cpdef bint oft_title(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_OftTitle)
+    cpdef bint oft_title(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_OftTitle)
 
-    cpdef bint oft_upper(self, size_t i):
-        return lexeme_check_flag(self.lexemes[i], Flag_OftUpper)
-
-
+    cpdef bint oft_upper(self, size_t i) except *:
+        return lexeme_check_flag(self.v.at(i), Flag_OftUpper)

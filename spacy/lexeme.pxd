@@ -7,9 +7,8 @@ cdef struct LexemeC:
     size_t cluster
 
     char* string
-
+    
     char** views
-
     flag_t flags
 
 

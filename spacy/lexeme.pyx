@@ -1,4 +1,6 @@
 from libc.stdlib cimport calloc, free
+from cpython.ref cimport Py_INCREF
+
 
 cdef LexemeC* lexeme_init(unicode string, double prob, size_t cluster,
                      list views, set flags):
@@ -21,13 +23,11 @@ cdef int lexeme_free(LexemeC* lexeme) except -1:
     free(lexeme)
     
 
-cdef set _strings = set()
 cdef char* intern_and_encode(unicode string, size_t* length):
     global _strings
-    cdef bytes decoded = string.encode('utf8')
-    cdef bytes utf8_string = intern(decoded)
+    cdef bytes utf8_string = intern(string.encode('utf8'))
+    Py_INCREF(utf8_string)
     length[0] = len(utf8_string)
-    _strings.add(utf8_string)
     return <char*>utf8_string
 
 

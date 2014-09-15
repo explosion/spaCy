@@ -18,6 +18,8 @@ from .util import read_lang_data
 from spacy.tokens import Tokens
 from spacy.lexeme cimport LexemeC, lexeme_init
 from murmurhash.mrmr cimport hash64
+from cpython.ref cimport Py_INCREF
+
 
 from spacy._hashing cimport PointerHash
 from spacy import orth
@@ -194,11 +196,11 @@ cdef class Language:
         if lexemes != NULL:
             i = 0
             while lexemes[i] != NULL:
-                tokens.push_back(lexemes[i])
+                tokens.v.push_back(lexemes[i])
                 i += 1
             return 0
         cdef uint64_t key = string.key 
-        cdef size_t first_token = tokens.length
+        cdef size_t first_token = len(tokens)
         cdef int split
         cdef int remaining = string.n
         cdef String prefix
@@ -210,14 +212,14 @@ cdef class Language:
             if lexemes != NULL:
                 i = 0
                 while lexemes[i] != NULL:
-                    tokens.push_back(lexemes[i])
+                    tokens.v.push_back(lexemes[i])
                     i += 1
             else:
-                tokens.push_back(<LexemeC*>self.lexicon.get(&prefix))
-        lexemes = <LexemeC**>calloc(tokens.length - first_token, sizeof(LexemeC*))
+                tokens.v.push_back(<LexemeC*>self.lexicon.get(&prefix))
+        lexemes = <LexemeC**>calloc(len(tokens) - first_token, sizeof(LexemeC*))
         cdef size_t j
-        for i, j in enumerate(range(first_token, tokens.length)):
-            lexemes[i] = tokens.lexemes[j]
+        for i, j in enumerate(range(first_token, tokens.v.size())):
+            lexemes[i] = tokens.v[j]
         self.cache.set(key, lexemes)
 
     cdef int _split_one(self, Py_UNICODE* characters, size_t length):
@@ -307,10 +309,8 @@ cdef class Lexicon:
         return Lexeme(<size_t>lexeme)
 
 
-_unicodes = set()
 cdef void string_from_unicode(String* s, unicode uni):
-    global _unicodes
-    _unicodes.add(uni)
+    Py_INCREF(uni)
     cdef Py_UNICODE* c_uni = <Py_UNICODE*>uni
     string_from_slice(s, c_uni, 0, len(uni))
 
