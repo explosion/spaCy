@@ -190,7 +190,7 @@ cdef class Language:
             self._tokenize(tokens.v, &span)
         return tokens
 
-    cdef int _tokenize(self, vector[LexemeC*] *tokens_v, String* string):
+    cdef int _tokenize(self, vector[LexemeC*] *tokens_v, String* string) except -1:
         cdef LexemeC** lexemes = <LexemeC**>self.cache.get(string.key)
         cdef size_t i
         if lexemes != NULL:
@@ -204,6 +204,7 @@ cdef class Language:
         cdef int split
         cdef int remaining = string.n
         cdef String prefix
+        cdef LexemeC* lexeme
         while remaining >= 1:
             split = self._split_one(string.chars, string.n)
             remaining -= split
@@ -215,11 +216,13 @@ cdef class Language:
                     tokens_v.push_back(lexemes[i])
                     i += 1
             else:
-                tokens_v.push_back(<LexemeC*>self.lexicon.get(&prefix))
-        lexemes = <LexemeC**>calloc(tokens_v.size() - first_token, sizeof(LexemeC*))
+                lexeme = <LexemeC*>self.lexicon.get(&prefix)
+                tokens_v.push_back(lexeme)
+        lexemes = <LexemeC**>calloc((tokens_v.size() - first_token) + 1, sizeof(LexemeC*))
         cdef size_t j
         for i, j in enumerate(range(first_token, tokens_v.size())):
             lexemes[i] = tokens_v[0][j]
+        lexemes[i+1] = NULL
         self.cache.set(key, lexemes)
 
     cdef int _split_one(self, Py_UNICODE* characters, size_t length):
@@ -310,7 +313,6 @@ cdef class Lexicon:
 
 
 cdef void string_from_unicode(String* s, unicode uni):
-    Py_INCREF(uni)
     cdef Py_UNICODE* c_uni = <Py_UNICODE*>uni
     string_from_slice(s, c_uni, 0, len(uni))
 
