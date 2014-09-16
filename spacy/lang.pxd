@@ -42,5 +42,14 @@ cdef class Language:
     cpdef Tokens tokenize(self, unicode text)
     cpdef Lexeme lookup(self, unicode text)
 
+    cdef int _check_cache(self, vector[LexemeC*] *tokens, String* string) except -1
     cdef int _tokenize(self, vector[LexemeC*] *tokens_v, String* string) except -1
-    cdef int _split_one(self, Py_UNICODE* characters, size_t length)
+    cdef int _find_prefix(self, Py_UNICODE* characters, size_t length)
+    cdef int _find_suffix(self, Py_UNICODE* characters, size_t length)
+    
+    cdef int _attach_tokens(self, vector[LexemeC*] *tokens, String* string,
+                            vector[LexemeC*] *prefixes,
+                            vector[LexemeC*] *suffixes) except -1
+
+    cdef int _save_cached(self, vector[LexemeC*] *tokens, uint64_t key, size_t n) except -1
+ 

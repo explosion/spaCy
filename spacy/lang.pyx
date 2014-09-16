@@ -20,6 +20,9 @@ from spacy.lexeme cimport LexemeC, lexeme_init
 from murmurhash.mrmr cimport hash64
 from cpython.ref cimport Py_INCREF
 
+from cython.operator cimport preincrement as preinc
+from cython.operator cimport dereference as deref
+
 
 from spacy._hashing cimport PointerHash
 from spacy import orth
@@ -191,42 +194,77 @@ cdef class Language:
         return tokens
 
     cdef int _tokenize(self, vector[LexemeC*] *tokens_v, String* string) except -1:
-        cdef LexemeC** lexemes = <LexemeC**>self.cache.get(string.key)
-        cdef size_t i
-        if lexemes != NULL:
-            i = 0
-            while lexemes[i] != NULL:
-                tokens_v.push_back(lexemes[i])
-                i += 1
+        self._check_cache(tokens_v, string)
+        if not string.n:
             return 0
-        cdef uint64_t key = string.key 
-        cdef size_t first_token = tokens_v.size()
-        cdef int split
-        cdef int remaining = string.n
-        cdef String prefix
-        cdef LexemeC* lexeme
-        while remaining >= 1:
-            split = self._split_one(string.chars, string.n)
-            remaining -= split
-            string_slice_prefix(string, &prefix, split)
-            lexemes = <LexemeC**>self.specials.get(prefix.key)
-            if lexemes != NULL:
-                i = 0
-                while lexemes[i] != NULL:
-                    tokens_v.push_back(lexemes[i])
-                    i += 1
-            else:
-                lexeme = <LexemeC*>self.lexicon.get(&prefix)
-                tokens_v.push_back(lexeme)
-        lexemes = <LexemeC**>calloc((tokens_v.size() - first_token) + 1, sizeof(LexemeC*))
-        cdef size_t j
-        for i, j in enumerate(range(first_token, tokens_v.size())):
-            lexemes[i] = tokens_v[0][j]
-        lexemes[i+1] = NULL
-        self.cache.set(key, lexemes)
+        cdef uint64_t orig_key = string.key
+        cdef size_t orig_size = tokens_v.size()
 
-    cdef int _split_one(self, Py_UNICODE* characters, size_t length):
-        return length
+        cdef vector[LexemeC*] prefixes
+        cdef vector[LexemeC*] suffixes
+
+        cdef String affix
+        cdef int split = self._find_prefix(string.chars, string.n)
+        while string.n and split >= 1:
+            string_slice_prefix(string, &affix, split)
+            prefixes.push_back(self.lexicon.get(&affix))
+            split = self._find_prefix(string.chars, string.n)
+
+        split = self._find_suffix(string.chars, string.n)
+        while string.n and split >= 1:
+            string_slice_suffix(string, &affix, split)
+            suffixes.push_back(self.lexicon.get(&affix))
+            split = self._find_suffix(string.chars, string.n)
+ 
+        self._attach_tokens(tokens_v, string, &prefixes, &suffixes)
+        self._save_cached(tokens_v, orig_key, orig_size)
+
+    cdef int _check_cache(self, vector[LexemeC*] *tokens, String* string) except -1:
+        lexemes = <LexemeC**>self.cache.get(string.key)
+        cdef size_t i = 0
+        if lexemes != NULL:
+            while lexemes[i] != NULL:
+                tokens.push_back(lexemes[i])
+                i += 1
+            string.n = 0
+            string.key = 0
+            string.chars = NULL
+
+
+    cdef int _attach_tokens(self, vector[LexemeC*] *tokens, String* string,
+                            vector[LexemeC*] *prefixes,
+                            vector[LexemeC*] *suffixes) except -1:
+        cdef LexemeC* lexeme
+        for lexeme in prefixes[0]:
+            tokens.push_back(lexeme)
+        self._check_cache(tokens, string)
+        if string.n != 0:
+            tokens.push_back(self.lexicon.get(string))
+        cdef vector[LexemeC*].reverse_iterator it = suffixes.rbegin()
+        while it != suffixes.rend():
+            tokens.push_back(deref(it))
+            preinc(it)
+
+    cdef int _save_cached(self, vector[LexemeC*] *tokens,
+                          uint64_t key, size_t n) except -1:
+        pass
+        
+    cdef int _find_prefix(self, Py_UNICODE* characters, size_t length):
+        return 0
+
+    cdef int _find_suffix(self, Py_UNICODE* characters, size_t length):
+        if length < 2:
+            return 0
+        cdef unicode string = characters[:length]
+        print repr(string)
+        if string.endswith("'s") or string.endswith("'S"):
+            return 2
+        elif string.endswith("..."):
+            return 3
+        elif not string[-1].isalnum():
+            return 1
+        else:
+            return 0
 
     def _load_special_tokenization(self, token_rules):
         '''Load special-case tokenization rules.
@@ -328,3 +366,11 @@ cdef inline void string_slice_prefix(String* s, String* prefix, size_t n) nogil:
     s.chars += n
     s.n -= n
     s.key = hash64(s.chars, s.n * sizeof(Py_UNICODE), 0)
+
+
+cdef inline void string_slice_suffix(String* s, String* suffix, size_t n) nogil:
+    string_from_slice(suffix, s.chars, s.n - n, s.n)
+    s.n -= n
+    s.key = hash64(s.chars, s.n * sizeof(Py_UNICODE), 0)
+
+

@@ -56,27 +56,48 @@ cdef class English(Language):
         name (unicode): The two letter code used by Wikipedia for the language.
         lexicon (Lexicon): The lexicon. Exposes the lookup method.
     """
-    cdef int _split_one(self, Py_UNICODE* characters, size_t length):
-        if length == 1:
+    cdef int _find_prefix(self, Py_UNICODE* chars, size_t length) except -1:
+        cdef Py_UNICODE c0 = chars[0]
+        cdef Py_UNICODE c1 = chars[1]
+        if c0 == ",":
             return 1
-        if characters[0] == "'" and (characters[1] == "s" or characters[1] == "S"):
-            return 2
-        cdef int i = 0
-        # Leading punctuation
-        if _check_punct(characters, 0, length):
+        elif c0 == '"':
             return 1
-        # Contractions
-        elif length >= 3 and characters[length - 2] == "'":
-            c2 = characters[length-1]
-            if c2 == "s" or c2 == "S":
-                return length - 2
-        if length >= 1:
-            # Split off all trailing punctuation characters
-            i = 0
-            while i < length and not _check_punct(characters, i, length):
-                i += 1
-        return i
-
+        elif c0 == "(":
+            return 1
+        elif c0 == "[":
+            return 1
+        elif c0 == "{":
+            return 1
+        elif c0 == "*":
+            return 1
+        elif c0 == "<":
+            return 1
+        elif c0 == "$":
+            return 1
+        elif c0 == "£":
+            return 1
+        elif c0 == "€":
+            return 1
+        elif c0 == "\u201c":
+            return 1
+        elif c0 == "'":
+            if c1 == "s":
+                return 2
+            elif c1 == "S":
+                return 2
+            elif c1 == "'":
+                return 2
+            else:
+                return 1
+        elif c0 == "`":
+            if c1 == "`":
+                return 2
+            else:
+                return 1
+        else:
+            return 0
+        
 abbreviations = set(['U.S', 'u.s', 'U.N', 'Ms', 'Mr', 'P'])
 cdef bint _check_punct(Py_UNICODE* characters, size_t i, size_t length):
     cdef unicode char_i = characters[i]
