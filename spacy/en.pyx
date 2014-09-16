@@ -56,67 +56,7 @@ cdef class English(Language):
         name (unicode): The two letter code used by Wikipedia for the language.
         lexicon (Lexicon): The lexicon. Exposes the lookup method.
     """
-    cdef int _find_prefix(self, Py_UNICODE* chars, size_t length) except -1:
-        cdef Py_UNICODE c0 = chars[0]
-        cdef Py_UNICODE c1 = chars[1]
-        if c0 == ",":
-            return 1
-        elif c0 == '"':
-            return 1
-        elif c0 == "(":
-            return 1
-        elif c0 == "[":
-            return 1
-        elif c0 == "{":
-            return 1
-        elif c0 == "*":
-            return 1
-        elif c0 == "<":
-            return 1
-        elif c0 == "$":
-            return 1
-        elif c0 == "£":
-            return 1
-        elif c0 == "€":
-            return 1
-        elif c0 == "\u201c":
-            return 1
-        elif c0 == "'":
-            if c1 == "s":
-                return 2
-            elif c1 == "S":
-                return 2
-            elif c1 == "'":
-                return 2
-            else:
-                return 1
-        elif c0 == "`":
-            if c1 == "`":
-                return 2
-            else:
-                return 1
-        else:
-            return 0
-        
-abbreviations = set(['U.S', 'u.s', 'U.N', 'Ms', 'Mr', 'P'])
-cdef bint _check_punct(Py_UNICODE* characters, size_t i, size_t length):
-    cdef unicode char_i = characters[i]
-    cdef unicode char_i1 = characters[i+1]
-    # Don't count appostrophes as punct if the next char is a letter
-    if characters[i] == "'" and i < (length - 1) and char_i1.isalpha():
-        return i == 0
-    if characters[i] == "-":
-        return False
-        #and i < (length - 1) and characters[i+1] == '-':
-        #return False
-    # Don't count commas as punct if the next char is a number
-    if characters[i] == "," and i < (length - 1) and char_i1.isdigit():
-        return False
-    if characters[i] == "." and i < (length - 1):
-        return False
-    if characters[i] == "." and characters[:i] in abbreviations:
-        return False
-    return not char_i.isalnum()
+    pass
 
 
 EN = English('en', [], [])

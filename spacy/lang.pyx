@@ -185,7 +185,11 @@ cdef class Language:
             if Py_UNICODE_ISSPACE(c) == 1:
                 if start < i:
                     string_from_slice(&span, chars, start, i)
-                    self._tokenize(tokens.v, &span)
+                    try:
+                        self._tokenize(tokens.v, &span)
+                    except MemoryError:
+                        print chars[start:i]
+                        raise
                 start = i + 1
         i += 1
         if start < i:
@@ -194,28 +198,61 @@ cdef class Language:
         return tokens
 
     cdef int _tokenize(self, vector[LexemeC*] *tokens_v, String* string) except -1:
-        self._check_cache(tokens_v, string)
-        if not string.n:
+        cdef size_t i
+        lexemes = <LexemeC**>self.cache.get(string.key)
+        if lexemes != NULL:
+            i = 0
+            while lexemes[i] != NULL:
+                tokens.push_back(lexemes[i])
+                i += 1
             return 0
+
         cdef uint64_t orig_key = string.key
         cdef size_t orig_size = tokens_v.size()
 
         cdef vector[LexemeC*] prefixes
         cdef vector[LexemeC*] suffixes
 
-        cdef String affix
-        cdef int split = self._find_prefix(string.chars, string.n)
-        while string.n and split >= 1:
-            string_slice_prefix(string, &affix, split)
-            prefixes.push_back(self.lexicon.get(&affix))
-            split = self._find_prefix(string.chars, string.n)
+        cdef String prefix
+        cdef String suffix
+        cdef String minus_pre
+        cdef String minus_suf
+        cdef size_t last_size = 0
+        while string.n != 0 and string.n != last_size:
+            last_size = string.n
+            pre_len = self._find_prefix(string.chars, string.n)
+            if pre_len != 0:
+                string_from_slice(&prefix, string.chars, 0, pre_len)
+                string_from_slice(&minus_pre, string.chars, pre_len, string.n)
+                # Check whether we've hit a special-case
+                if minus_pre.n >= 1 and self.specials.get(minus_pre.key) != NULL:
+                    string = &minus_pre
+                    prefixes.push_back(self.lexicon.get(&prefix))
+                    break
+            suf_len = self._find_suffix(string.chars, string.n)
+            if suf_len != 0:
+                string_from_slice(&suffix, string.chars, string.n - suf_len, string.n)
+                string_from_slice(&minus_suf, string.chars, 0, string.n - suf_len)
+                # Check whether we've hit a special-case
+                if minus_suf.n >= 1 and self.specials.get(minus_suf.key) != NULL:
+                    string = &minus_suf
+                    suffixes.push_back(self.lexicon.get(&suffix))
+                    break
 
-        split = self._find_suffix(string.chars, string.n)
-        while string.n and split >= 1:
-            string_slice_suffix(string, &affix, split)
-            suffixes.push_back(self.lexicon.get(&affix))
-            split = self._find_suffix(string.chars, string.n)
- 
+            if pre_len and suf_len and (pre_len + suf_len) <= string.n:
+                string_from_slice(string, string.chars, pre_len, string.n - suf_len)
+                prefixes.push_back(self.lexicon.get(&prefix))
+                suffixes.push_back(self.lexicon.get(&suffix))
+            elif pre_len:
+                string = &minus_pre
+                prefixes.push_back(self.lexicon.get(&prefix))
+            elif suf_len:
+                string = &minus_suf
+                suffixes.push_back(self.lexicon.get(&suffix))
+
+            if self.specials.get(string.key):
+                break
+
         self._attach_tokens(tokens_v, string, &prefixes, &suffixes)
         self._save_cached(tokens_v, orig_key, orig_size)
 
@@ -230,16 +267,23 @@ cdef class Language:
             string.key = 0
             string.chars = NULL
 
-
     cdef int _attach_tokens(self, vector[LexemeC*] *tokens, String* string,
                             vector[LexemeC*] *prefixes,
                             vector[LexemeC*] *suffixes) except -1:
+        cdef size_t i
+        cdef LexemeC** lexemes
         cdef LexemeC* lexeme
-        for lexeme in prefixes[0]:
+        for lexeme in deref(prefixes):
             tokens.push_back(lexeme)
-        self._check_cache(tokens, string)
         if string.n != 0:
-            tokens.push_back(self.lexicon.get(string))
+            lexemes = <LexemeC**>self.specials.get(string.key)
+            if lexemes != NULL:
+                i = 0 
+                while lexemes[i] != NULL:
+                    tokens.push_back(lexemes[i])
+                    i += 1
+            else:
+                tokens.push_back(self.lexicon.get(string))
         cdef vector[LexemeC*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
             tokens.push_back(deref(it))
@@ -247,22 +291,100 @@ cdef class Language:
 
     cdef int _save_cached(self, vector[LexemeC*] *tokens,
                           uint64_t key, size_t n) except -1:
-        pass
-        
-    cdef int _find_prefix(self, Py_UNICODE* characters, size_t length):
-        return 0
-
-    cdef int _find_suffix(self, Py_UNICODE* characters, size_t length):
-        if length < 2:
-            return 0
-        cdef unicode string = characters[:length]
-        print repr(string)
-        if string.endswith("'s") or string.endswith("'S"):
-            return 2
-        elif string.endswith("..."):
-            return 3
-        elif not string[-1].isalnum():
+        assert tokens.size() > n
+        lexemes = <LexemeC**>calloc((tokens.size() - n) + 1, sizeof(LexemeC**))
+        cdef size_t i, j
+        for i, j in enumerate(range(n, tokens.size())):
+            lexemes[i] = tokens.at(j)
+        lexemes[i + 1] = NULL
+        self.cache.set(key, lexemes)
+    
+    cdef int _find_prefix(self, Py_UNICODE* chars, size_t length) except -1:
+        cdef Py_UNICODE c0 = chars[0]
+        cdef Py_UNICODE c1 = chars[1]
+        if c0 == ",":
             return 1
+        elif c0 == '"':
+            return 1
+        elif c0 == "(":
+            return 1
+        elif c0 == "[":
+            return 1
+        elif c0 == "{":
+            return 1
+        elif c0 == "*":
+            return 1
+        elif c0 == "<":
+            return 1
+        elif c0 == "$":
+            return 1
+        elif c0 == "£":
+            return 1
+        elif c0 == "€":
+            return 1
+        elif c0 == "\u201c":
+            return 1
+        elif c0 == "'":
+            return 1
+        elif c0 == "`":
+            if c1 == "`":
+                return 2
+            else:
+                return 1
+        else:
+            return 0
+ 
+    cdef int _find_suffix(self, Py_UNICODE* chars, size_t length):
+        cdef Py_UNICODE c0 = chars[length - 1]
+        cdef Py_UNICODE c1 = chars[length - 2] if length >= 2 else 0
+        cdef Py_UNICODE c2 = chars[length - 3] if length >= 3 else 0
+ 
+        if c0 == ",":
+            return 1
+        elif c0 == '"':
+            return 1
+        elif c0 == ')':
+            return 1
+        elif c0 == ']':
+            return 1
+        elif c0 == '}':
+            return 1
+        elif c0 == '*':
+            return 1
+        elif c0 == '!':
+            return 1
+        elif c0 == '?':
+            return 1
+        elif c0 == '%':
+            return 1
+        elif c0 == '$':
+            return 1
+        elif c0 == '>':
+            return 1
+        elif c0 == ':':
+            return 1
+        elif c0 == "'":
+            return 1
+        elif c0 == u'\u201d':
+            return 1
+        elif c0 == "s":
+            if c1 == "'":
+                return 2
+            else:
+                return 0
+        elif c0 == "S":
+            if c1 == "'":
+                return 2
+            else:
+                return 0
+        elif c0 == ".":
+            if c1 == ".":
+                if c2 == ".":
+                    return 3
+                else:
+                    return 2
+            else:
+                return 1
         else:
             return 0
 
@@ -316,7 +438,7 @@ cdef class Lexicon:
             self._dict.set(string.key, lexeme)
             self.size += 1
 
-    cdef LexemeC* get(self, String* string):
+    cdef LexemeC* get(self, String* string) except NULL:
         cdef LexemeC* lexeme
         lexeme = <LexemeC*>self._dict.get(string.key)
         if lexeme != NULL:
@@ -372,5 +494,3 @@ cdef inline void string_slice_suffix(String* s, String* suffix, size_t n) nogil:
     string_from_slice(suffix, s.chars, s.n - n, s.n)
     s.n -= n
     s.key = hash64(s.chars, s.n * sizeof(Py_UNICODE), 0)
-
-
