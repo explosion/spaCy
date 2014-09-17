@@ -1,9 +1,6 @@
 # cython: profile=True
 # cython: embedsignature=True
 
-from libc.stdlib cimport calloc, free, realloc
-
-from spacy.lexeme cimport lexeme_free, lexeme_init
 from spacy.lexeme cimport lexeme_check_flag, lexeme_string_view
 
 

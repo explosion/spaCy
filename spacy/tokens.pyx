@@ -1,6 +1,4 @@
 # cython: profile=True
-from libc.stdlib cimport calloc, free, realloc
-
 from spacy.word cimport Lexeme
 from spacy.lexeme cimport lexeme_check_flag
 from spacy.lexeme cimport lexeme_string_view

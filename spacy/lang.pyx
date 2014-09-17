@@ -8,8 +8,6 @@ Special-case tokenization rules are read from data/<lang>/tokenization .
 """
 from __future__ import unicode_literals
 
-from libc.stdlib cimport calloc, free
-
 import json
 import random
 from os import path
@@ -18,7 +16,10 @@ from .util import read_lang_data
 from spacy.tokens import Tokens
 from spacy.lexeme cimport LexemeC, lexeme_init
 from murmurhash.mrmr cimport hash64
+
 from cpython.ref cimport Py_INCREF
+
+from .memory cimport Pool
 
 from cython.operator cimport preincrement as preinc
 from cython.operator cimport dereference as deref
@@ -127,6 +128,7 @@ cdef class Language:
 
     def __cinit__(self, name, user_string_features, user_flag_features):
         self.name = name
+        self._mem = Pool()
         self.cache = PointerHash(2 ** 25)
         self.specials = PointerHash(2 ** 16)
         lang_data = util.read_lang_data(name)
@@ -203,7 +205,7 @@ cdef class Language:
         if lexemes != NULL:
             i = 0
             while lexemes[i] != NULL:
-                tokens.push_back(lexemes[i])
+                tokens_v.push_back(lexemes[i])
                 i += 1
             return 0
 
@@ -292,7 +294,7 @@ cdef class Language:
     cdef int _save_cached(self, vector[LexemeC*] *tokens,
                           uint64_t key, size_t n) except -1:
         assert tokens.size() > n
-        lexemes = <LexemeC**>calloc((tokens.size() - n) + 1, sizeof(LexemeC**))
+        lexemes = <LexemeC**>self._mem.alloc((tokens.size() - n) + 1, sizeof(LexemeC**))
         cdef size_t i, j
         for i, j in enumerate(range(n, tokens.size())):
             lexemes[i] = tokens.at(j)
@@ -404,7 +406,7 @@ cdef class Language:
         cdef uint64_t hashed
         cdef String string
         for uni_string, substrings in token_rules:
-            lexemes = <LexemeC**>calloc(len(substrings) + 1, sizeof(LexemeC*))
+            lexemes = <LexemeC**>self._mem.alloc(len(substrings) + 1, sizeof(LexemeC*))
             for i, substring in enumerate(substrings):
                 string_from_unicode(&string, substring)
                 lexemes[i] = <LexemeC*>self.lexicon.get(&string)
@@ -417,6 +419,7 @@ cdef class Language:
 cdef class Lexicon:
     def __cinit__(self, words, probs, clusters, case_stats, tag_stats,
                   string_features, flag_features):
+        self._mem = Pool()
         self._flag_features = flag_features
         self._string_features = string_features
         self._dict = PointerHash(2 ** 20)
@@ -433,7 +436,7 @@ cdef class Lexicon:
             for i, flag_feature in enumerate(self._flag_features):
                 if flag_feature(uni_string, prob, cluster, cases, tags):
                     flags.add(i)
-            lexeme = lexeme_init(uni_string, prob, cluster, views, flags)
+            lexeme = lexeme_init(self._mem, uni_string, prob, cluster, views, flags)
             string_from_unicode(&string, uni_string)
             self._dict.set(string.key, lexeme)
             self.size += 1
@@ -452,7 +455,7 @@ cdef class Lexicon:
             if flag_feature(uni_string, 0.0, {}, {}):
                 flags.add(i)
  
-        lexeme = lexeme_init(uni_string, 0, 0, views, flags)
+        lexeme = lexeme_init(self._mem, uni_string, 0, 0, views, flags)
         self._dict.set(string.key, lexeme)
         self.size += 1
         return lexeme

@@ -5,6 +5,8 @@ from spacy.tokens cimport Tokens
 from spacy.lexeme cimport LexemeC
 from spacy._hashing cimport PointerHash
 
+from spacy.memory cimport Pool
+
 from libcpp.utility cimport pair
 from libcpp.vector cimport vector
 from libc.stdint cimport uint64_t, int64_t
@@ -22,6 +24,7 @@ cdef struct String:
 
 
 cdef class Lexicon:
+    cdef Pool _mem
     cpdef readonly size_t size
 
     cpdef Lexeme lookup(self, unicode string)
@@ -34,6 +37,7 @@ cdef class Lexicon:
 
 
 cdef class Language:
+    cdef Pool _mem
     cdef unicode name
     cdef PointerHash cache
     cdef PointerHash specials

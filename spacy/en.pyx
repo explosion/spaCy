@@ -37,7 +37,6 @@ provides a fully Penn Treebank 3-compliant tokenizer.
 
 from __future__ import unicode_literals
 
-from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport uint64_t
 
 cimport lang

@@ -1,5 +1,5 @@
 # cython: profile=True
-from libc.stdlib cimport calloc, free
+from .memory cimport Address
 cimport cython
 
 
@@ -10,10 +10,8 @@ cdef class PointerHash:
         # Size must be power of two
         assert self.size != 0
         assert self.size & (self.size - 1) == 0
-        self.cells = <Cell*>calloc(self.size, sizeof(Cell))
-
-    def __dealloc__(self):
-        free(self.cells)
+        self._mem = Address(self.size, sizeof(Cell))
+        self.cells = <Cell*>self._mem.addr
 
     def __getitem__(self, key_t key):
         assert key != 0
@@ -47,7 +45,8 @@ cdef class PointerHash:
         cdef size_t old_size = self.size
 
         self.size = new_size
-        self.cells = <Cell*>calloc(new_size, sizeof(Cell))
+        cdef Address new_mem = Address(new_size, sizeof(Cell))
+        self.cells = <Cell*>new_mem.addr
         
         self.filled = 0
         cdef size_t i
@@ -56,7 +55,7 @@ cdef class PointerHash:
             if old_cells[i].key != 0:
                 assert old_cells[i].value != NULL, i
                 self.set(old_cells[i].key, old_cells[i].value)
-        free(old_cells)
+        self._mem = new_mem
 
 
 @cython.cdivision

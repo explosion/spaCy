@@ -5,7 +5,6 @@ boldly assume no collisions.
 from __future__ import unicode_literals
 
 
-from libc.stdlib cimport malloc, calloc, free
 from libc.stdint cimport uint64_t
 
 
