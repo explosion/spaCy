@@ -1,5 +1,6 @@
 cython
 fabric
+cymem
 pytest
 sphinx
 sphinxcontrib-napoleon

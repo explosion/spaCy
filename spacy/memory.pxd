@@ -1,6 +1,7 @@
 from libcpp.vector cimport vector
+from cymem.cymem cimport Pool
 
-cdef class Pool:
+cdef class _Pool:
     cdef vector[void*] _addresses
 
     cdef void* alloc(self, size_t number, size_t size) except NULL

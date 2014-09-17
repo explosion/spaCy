@@ -5,7 +5,7 @@ from spacy.tokens cimport Tokens
 from spacy.lexeme cimport LexemeC
 from spacy._hashing cimport PointerHash
 
-from spacy.memory cimport Pool
+from cymem.cymem cimport Pool
 
 from libcpp.utility cimport pair
 from libcpp.vector cimport vector

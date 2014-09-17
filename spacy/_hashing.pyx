@@ -1,5 +1,5 @@
 # cython: profile=True
-from .memory cimport Address
+from cymem.cymem cimport Address
 cimport cython
 
 

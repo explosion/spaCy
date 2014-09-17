@@ -1,5 +1,5 @@
 from .typedefs cimport hash_t, utf8_t, flag_t, id_t
-from .memory cimport Pool
+from cymem.cymem cimport Pool
 
 
 cdef struct LexemeC:

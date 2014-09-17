@@ -1,5 +1,5 @@
 from libc.stdint cimport uint64_t
-from .memory cimport Address
+from cymem.cymem cimport Address
 
 ctypedef uint64_t key_t
 ctypedef void* val_t

@@ -1,5 +1,5 @@
 from cpython.ref cimport Py_INCREF
-from .memory cimport Pool
+from cymem.cymem cimport Pool
 
 
 cdef LexemeC* lexeme_init(Pool mem, unicode string, double prob, size_t cluster,

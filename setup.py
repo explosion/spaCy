@@ -56,8 +56,6 @@ exts = [
               include_dirs=includes),
     Extension("spacy.tokens", ["spacy/tokens.pyx"], language="c++",
               include_dirs=includes),
-    Extension("spacy.memory", ["spacy/memory.pyx"], language="c++",
-              include_dirs=includes)
 ]
 
 

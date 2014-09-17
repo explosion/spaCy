@@ -19,7 +19,7 @@ from murmurhash.mrmr cimport hash64
 
 from cpython.ref cimport Py_INCREF
 
-from .memory cimport Pool
+from cymem.cymem cimport Pool
 
 from cython.operator cimport preincrement as preinc
 from cython.operator cimport dereference as deref

@@ -3,6 +3,8 @@ from libc.string cimport memset
 
 from libcpp.vector cimport vector
 
+from cymem cimport Pool
+
 
 cdef class Pool:
     def __cinit__(self):
