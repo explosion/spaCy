@@ -11,6 +11,7 @@ from __future__ import unicode_literals
 import json
 import random
 from os import path
+import re
 
 from .util import read_lang_data
 from spacy.tokens import Tokens
@@ -25,7 +26,7 @@ from cython.operator cimport preincrement as preinc
 from cython.operator cimport dereference as deref
 
 
-from spacy._hashing cimport PointerHash
+from trustyc.maps cimport PointerMap
 from spacy import orth
 from spacy import util
 
@@ -129,10 +130,12 @@ cdef class Language:
     def __cinit__(self, name, user_string_features, user_flag_features):
         self.name = name
         self._mem = Pool()
-        self.cache = PointerHash(2 ** 25)
-        self.specials = PointerHash(2 ** 16)
+        self.cache = PointerMap(2 ** 25)
+        self.specials = PointerMap(2 ** 16)
         lang_data = util.read_lang_data(name)
-        rules, words, probs, clusters, case_stats, tag_stats = lang_data
+        rules, prefix, suffix, words, probs, clusters, case_stats, tag_stats = lang_data
+        self.prefix_re = re.compile(prefix)
+        self.suffix_re = re.compile(suffix)
         self.lexicon = Lexicon(words, probs, clusters, case_stats, tag_stats,
                                STRING_VIEW_FUNCS + user_string_features,
                                FLAG_FUNCS + user_flag_features)
@@ -302,93 +305,20 @@ cdef class Language:
         self.cache.set(key, lexemes)
     
     cdef int _find_prefix(self, Py_UNICODE* chars, size_t length) except -1:
-        cdef Py_UNICODE c0 = chars[0]
-        cdef Py_UNICODE c1 = chars[1]
-        if c0 == ",":
-            return 1
-        elif c0 == '"':
-            return 1
-        elif c0 == "(":
-            return 1
-        elif c0 == "[":
-            return 1
-        elif c0 == "{":
-            return 1
-        elif c0 == "*":
-            return 1
-        elif c0 == "<":
-            return 1
-        elif c0 == "$":
-            return 1
-        elif c0 == "£":
-            return 1
-        elif c0 == "€":
-            return 1
-        elif c0 == "\u201c":
-            return 1
-        elif c0 == "'":
-            return 1
-        elif c0 == "`":
-            if c1 == "`":
-                return 2
-            else:
-                return 1
-        else:
+        cdef unicode string = chars[:length]
+        match = self.prefix_re.search(string)
+        if match is None:
             return 0
- 
+        else:
+            return match.end() - match.start()
+
     cdef int _find_suffix(self, Py_UNICODE* chars, size_t length):
-        cdef Py_UNICODE c0 = chars[length - 1]
-        cdef Py_UNICODE c1 = chars[length - 2] if length >= 2 else 0
-        cdef Py_UNICODE c2 = chars[length - 3] if length >= 3 else 0
- 
-        if c0 == ",":
-            return 1
-        elif c0 == '"':
-            return 1
-        elif c0 == ')':
-            return 1
-        elif c0 == ']':
-            return 1
-        elif c0 == '}':
-            return 1
-        elif c0 == '*':
-            return 1
-        elif c0 == '!':
-            return 1
-        elif c0 == '?':
-            return 1
-        elif c0 == '%':
-            return 1
-        elif c0 == '$':
-            return 1
-        elif c0 == '>':
-            return 1
-        elif c0 == ':':
-            return 1
-        elif c0 == "'":
-            return 1
-        elif c0 == u'\u201d':
-            return 1
-        elif c0 == "s":
-            if c1 == "'":
-                return 2
-            else:
-                return 0
-        elif c0 == "S":
-            if c1 == "'":
-                return 2
-            else:
-                return 0
-        elif c0 == ".":
-            if c1 == ".":
-                if c2 == ".":
-                    return 3
-                else:
-                    return 2
-            else:
-                return 1
-        else:
+        cdef unicode string = chars[:length]
+        match = self.suffix_re.search(string)
+        if match is None:
             return 0
+        else:
+            return match.end() - match.start()
 
     def _load_special_tokenization(self, token_rules):
         '''Load special-case tokenization rules.
@@ -422,7 +352,7 @@ cdef class Lexicon:
         self._mem = Pool()
         self._flag_features = flag_features
         self._string_features = string_features
-        self._dict = PointerHash(2 ** 20)
+        self._dict = PointerMap(2 ** 20)
         self.size = 0
         cdef String string
         for uni_string in words:

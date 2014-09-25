@@ -42,8 +42,6 @@ from libc.stdint cimport uint64_t
 cimport lang
 from spacy.lexeme cimport lexeme_check_flag
 from spacy.lexeme cimport lexeme_string_view
-from spacy._hashing cimport PointerHash
-
 
 from spacy import orth
 
