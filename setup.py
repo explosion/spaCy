@@ -50,7 +50,6 @@ exts = [
               include_dirs=includes),
     Extension("spacy.lexeme", ["spacy/lexeme.pyx"], language="c++",
               include_dirs=includes),
-    Extension("spacy.ptb3", ["spacy/ptb3.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.en", ["spacy/en.pyx"], language="c++",
               include_dirs=includes),
     Extension("spacy.tokens", ["spacy/tokens.pyx"], language="c++",
