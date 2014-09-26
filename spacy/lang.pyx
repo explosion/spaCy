@@ -26,7 +26,7 @@ from cython.operator cimport preincrement as preinc
 from cython.operator cimport dereference as deref
 
 
-from trustyc.maps cimport PointerMap
+from preshed.maps cimport PreshMap
 from spacy import orth
 from spacy import util
 
@@ -130,8 +130,8 @@ cdef class Language:
     def __cinit__(self, name, user_string_features, user_flag_features):
         self.name = name
         self._mem = Pool()
-        self.cache = PointerMap(2 ** 25)
-        self.specials = PointerMap(2 ** 16)
+        self.cache = PreshMap(2 ** 25)
+        self.specials = PreshMap(2 ** 16)
         lang_data = util.read_lang_data(name)
         rules, prefix, suffix, words, probs, clusters, case_stats, tag_stats = lang_data
         self.prefix_re = re.compile(prefix)
@@ -352,7 +352,7 @@ cdef class Lexicon:
         self._mem = Pool()
         self._flag_features = flag_features
         self._string_features = string_features
-        self._dict = PointerMap(2 ** 20)
+        self._dict = PreshMap(2 ** 20)
         self.size = 0
         cdef String string
         for uni_string in words:

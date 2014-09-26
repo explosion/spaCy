@@ -3,7 +3,7 @@ from libc.stdint cimport uint64_t
 from spacy.word cimport Lexeme
 from spacy.tokens cimport Tokens
 from spacy.lexeme cimport LexemeC
-from trustyc.maps cimport PointerMap
+from preshed.maps cimport PreshMap
 
 from cymem.cymem cimport Pool
 
@@ -30,7 +30,7 @@ cdef class Lexicon:
     cpdef Lexeme lookup(self, unicode string)
     cdef LexemeC* get(self, String* s) except NULL
     
-    cdef PointerMap _dict
+    cdef PreshMap _dict
     
     cdef list _string_features
     cdef list _flag_features
@@ -39,8 +39,8 @@ cdef class Lexicon:
 cdef class Language:
     cdef Pool _mem
     cdef unicode name
-    cdef PointerMap cache
-    cdef PointerMap specials
+    cdef PreshMap cache
+    cdef PreshMap specials
     cpdef readonly Lexicon lexicon
 
     cdef object prefix_re

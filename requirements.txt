@@ -1,6 +1,8 @@
 cython
 fabric
 cymem
+preshed
+murmurhash
 pytest
 sphinx
 sphinxcontrib-napoleon
