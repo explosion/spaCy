@@ -22,3 +22,4 @@ cdef unicode lexeme_string_view(LexemeC* lexeme, size_t view_id)
 
 
 cdef dict lexeme_pack(LexemeC* lexeme)
+cdef int lexeme_unpack(LexemeC* lexeme, dict p) except -1

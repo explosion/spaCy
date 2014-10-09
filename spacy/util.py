@@ -16,17 +16,15 @@ def read_lang_data(name):
     tokenization = read_tokenization(data_dir)
     prefix = read_prefix(data_dir)
     suffix = read_suffix(data_dir)
-    words = load_resource(data_dir, 'words')
-    probs = load_resource(data_dir, 'probs')
-    clusters = load_resource(data_dir, 'clusters')
-    case_stats = load_resource(data_dir, 'case_stats')
-    tag_stats = load_resource(data_dir, 'tag_stats')
-    return tokenization, prefix, suffix, words, probs, clusters, case_stats, tag_stats
+    
+    lex_loc = path.join(data_dir, 'lexemes.json')
+    if path.exists(lex_loc):
+        with open(lex_loc) as file_:
+            lexemes = ujson.load(file_)
+    else:
+        lexemes = []
+    return tokenization, prefix, suffix, lexemes
 
-
-def load_resource(data_dir, name):
-    loc = path.join(data_dir, name + '.json')
-    return json.load(loc) if path.exists(loc) else {}
 
 def read_prefix(data_dir):
     with  utf8open(path.join(data_dir, 'prefix')) as file_:

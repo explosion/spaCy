@@ -15,7 +15,7 @@ import re
 
 from .util import read_lang_data
 from spacy.tokens import Tokens
-from spacy.lexeme cimport LexemeC, lexeme_init
+from spacy.lexeme cimport LexemeC, lexeme_init, lexeme_pack, lexeme_unpack
 from murmurhash.mrmr cimport hash64
 
 from cpython.ref cimport Py_INCREF
@@ -24,7 +24,6 @@ from cymem.cymem cimport Pool
 
 from cython.operator cimport preincrement as preinc
 from cython.operator cimport dereference as deref
-
 
 from preshed.maps cimport PreshMap
 from spacy import orth
@@ -69,7 +68,6 @@ cdef enum Views:
     View_N
 
 
-
 # Assign the flag and view functions by enum value.
 # This is verbose, but it ensures we don't get nasty order sensitivities.
 STRING_VIEW_FUNCS = [None] * View_N
@@ -107,8 +105,6 @@ FLAG_FUNCS[Flag_OftTitle] = orth.oft_case('title', 0.7)
 FLAG_FUNCS[Flag_OftUpper] = orth.oft_case('upper', 0.7)
 
 
-
-
 cdef class Language:
     """Base class for language-specific tokenizers.
 
@@ -127,22 +123,18 @@ cdef class Language:
     fl_is_digit = Flag_IsDigit
     v_shape = View_WordShape
 
-    def __cinit__(self, name, user_string_features, user_flag_features):
+    def __init__(self, name, user_string_features, user_flag_features):
         self.name = name
         self._mem = Pool()
         self.cache = PreshMap(2 ** 25)
         self.specials = PreshMap(2 ** 16)
-        lang_data = util.read_lang_data(name)
-        rules, prefix, suffix, words, probs, clusters, case_stats, tag_stats = lang_data
+        rules, prefix, suffix, lexemes = util.read_lang_data(name)
         self.prefix_re = re.compile(prefix)
         self.suffix_re = re.compile(suffix)
-        self.lexicon = Lexicon(words, probs, clusters, case_stats, tag_stats,
+        self.lexicon = Lexicon(lexemes,
                                STRING_VIEW_FUNCS + user_string_features,
                                FLAG_FUNCS + user_flag_features)
         self._load_special_tokenization(rules)
-
-    def __dealloc__(self):
-        pass
 
     property nr_types:
         def __get__(self):
@@ -347,27 +339,20 @@ cdef class Language:
 
 
 cdef class Lexicon:
-    def __cinit__(self, words, probs, clusters, case_stats, tag_stats,
-                  string_features, flag_features):
+    def __cinit__(self, lexemes, string_features, flag_features):
         self._mem = Pool()
         self._flag_features = flag_features
         self._string_features = string_features
         self._dict = PreshMap(2 ** 20)
         self.size = 0
         cdef String string
-        for uni_string in words:
-            prob = probs.get(uni_string, 0.0)
-            cluster = clusters.get(uni_string, 0.0)
-            cases = case_stats.get(uni_string, {})
-            tags = tag_stats.get(uni_string, {})
-            views = [string_view(uni_string, prob, cluster, cases, tags)
-                     for string_view in self._string_features]
-            flags = set()
-            for i, flag_feature in enumerate(self._flag_features):
-                if flag_feature(uni_string, prob, cluster, cases, tags):
-                    flags.add(i)
-            lexeme = lexeme_init(self._mem, self.size, uni_string, prob, cluster, views, flags)
-            string_from_unicode(&string, uni_string)
+        cdef dict lexeme_dict
+        cdef LexemeC* lexeme
+        for lexeme_dict in lexemes:
+            string_from_unicode(&string, lexeme_dict['string'])
+            lexeme = <LexemeC*>self._mem.alloc(1, sizeof(LexemeC))
+            lexeme.views = <char**>self._mem.alloc(len(string_features), sizeof(char*))
+            lexeme_unpack(lexeme, lexeme_dict)
             self._dict.set(string.key, lexeme)
             self.size += 1
 
