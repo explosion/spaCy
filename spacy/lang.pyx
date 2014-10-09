@@ -366,7 +366,7 @@ cdef class Lexicon:
             for i, flag_feature in enumerate(self._flag_features):
                 if flag_feature(uni_string, prob, cluster, cases, tags):
                     flags.add(i)
-            lexeme = lexeme_init(self._mem, uni_string, prob, cluster, views, flags)
+            lexeme = lexeme_init(self._mem, self.size, uni_string, prob, cluster, views, flags)
             string_from_unicode(&string, uni_string)
             self._dict.set(string.key, lexeme)
             self.size += 1
@@ -385,7 +385,7 @@ cdef class Lexicon:
             if flag_feature(uni_string, 0.0, {}, {}):
                 flags.add(i)
  
-        lexeme = lexeme_init(self._mem, uni_string, 0, 0, views, flags)
+        lexeme = lexeme_init(self._mem, self.size, uni_string, 0, 0, views, flags)
         self._dict.set(string.key, lexeme)
         self.size += 1
         return lexeme

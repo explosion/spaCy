@@ -3,6 +3,7 @@ from cymem.cymem cimport Pool
 
 
 cdef struct LexemeC:
+    size_t i
     size_t length
     double prob
     size_t cluster
@@ -13,7 +14,7 @@ cdef struct LexemeC:
     flag_t flags
 
 
-cdef LexemeC* lexeme_init(Pool mem, unicode string, double prob, size_t cluster,
+cdef LexemeC* lexeme_init(Pool mem, size_t i, unicode string, double prob, size_t cluster,
                      list views, set flags)
 
 cdef bint lexeme_check_flag(LexemeC* lexeme, size_t flag_id)

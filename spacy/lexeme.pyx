@@ -2,9 +2,10 @@ from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 
 
-cdef LexemeC* lexeme_init(Pool mem, unicode string, double prob, size_t cluster,
-                     list views, set flags):
+cdef LexemeC* lexeme_init(Pool mem, size_t i, unicode string, double prob,
+                          size_t cluster, list views, set flags):
     cdef LexemeC* lexeme = <LexemeC*>mem.alloc(1, sizeof(LexemeC))
+    lexeme.i = i
     lexeme.cluster = cluster
     lexeme.prob = prob
     lexeme.string = intern_and_encode(string, &lexeme.length)
