@@ -19,3 +19,6 @@ cdef LexemeC* lexeme_init(Pool mem, size_t i, unicode string, double prob, size_
 
 cdef bint lexeme_check_flag(LexemeC* lexeme, size_t flag_id)
 cdef unicode lexeme_string_view(LexemeC* lexeme, size_t view_id)
+
+
+cdef dict lexeme_pack(LexemeC* lexeme)
