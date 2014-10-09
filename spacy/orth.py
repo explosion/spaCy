@@ -1,6 +1,7 @@
 # -*- coding: utf8 -*-
 from __future__ import unicode_literals
 import unicodedata
+from unidecode import unidecode
 
 import math
 
@@ -9,15 +10,15 @@ TAGS = 'adj adp adv conj det noun num pdt pos pron prt punct verb'.upper().split
 
 
 # Binary string features
-def is_alpha(string, prob, case_stats, tag_stats):
+def is_alpha(string):
     return string.isalpha()
 
 
-def is_digit(string, prob, case_stats, tag_stats):
+def is_digit(string):
     return string.isdigit()
 
 
-def is_punct(string, prob, case_stats, tag_stats):
+def is_punct(string):
     for c in string:
         if not unicodedata.category(c).startswith('P'):
             return False
@@ -25,11 +26,11 @@ def is_punct(string, prob, case_stats, tag_stats):
         return True
 
 
-def is_space(string, prob, case_stats, tag_stats):
+def is_space(string):
     return string.isspace()
 
 
-def is_ascii(string, prob, case_stats, tag_stats):
+def is_ascii(string):
     for c in string:
         if ord(c) >= 128:
             return False
@@ -37,15 +38,15 @@ def is_ascii(string, prob, case_stats, tag_stats):
         return True
 
 
-def is_title(string, prob, case_stats, tag_stats):
+def is_title(string):
     return string.istitle()
 
 
-def is_lower(string, prob, case_stats, tag_stats):
+def is_lower(string):
     return string.islower()
 
 
-def is_upper(string, prob, case_stats, tag_stats):
+def is_upper(string):
     return string.isupper()
 
 
@@ -103,7 +104,7 @@ def word_shape(string, *args):
 
 
 def non_sparse(string, prob, cluster, case_stats, tag_stats):
-    if is_alpha(string, prob, case_stats, tag_stats):
+    if is_alpha(string):
         return canon_case(string, prob, cluster, case_stats, tag_stats)
     elif prob >= math.log(0.0001):
         return string
@@ -112,22 +113,5 @@ def non_sparse(string, prob, cluster, case_stats, tag_stats):
 
 
 def asciied(string, prob=0, cluster=0, case_stats=None, tag_stats=None):
-    '''"ASCIIfy" a Unicode string by stripping all umlauts, tildes, etc.''' 
-    # Snippet from
-    # http://www.physic.ut.ee/~kkannike/english/prog/python/util/asciify/index.html
-    # TODO: Rewrite and improve this
-    lookup_table = {
-        u'“': '"',
-        u'”': '"'
-    }
-    temp = u'' 
-    for char in string:
-        if char in lookup_table:
-            temp += lookup_table[char]
-        else:
-            decomp = unicodedata.decomposition(char)
-            if decomp: # Not an empty string 
-                temp += unichr(int(decomp.split()[0], 16))
-            else:
-                temp += char
-    return temp
+    ascii_string = unidecode(string)
+    return ascii_string.decode('ascii')

@@ -5,21 +5,17 @@ from libcpp.vector cimport vector
 cdef class Tokens:
     cdef vector[LexemeC*] *v
 
-    cpdef size_t id(self, size_t i) except 0
     cpdef unicode string(self, size_t i)
-    cpdef double prob(self, size_t i) except 1
-    cpdef size_t cluster(self, size_t i) except *
-    cpdef bint check_flag(self, size_t i, size_t flag_id) except *
+    cpdef float prob(self, size_t i) except 1
+    cpdef int cluster(self, size_t i) except *
+    cpdef bint check_orth_flag(self, size_t i, size_t flag_id) except *
+    cpdef bint check_dist_flag(self, size_t i, size_t flag_id) except *
     cpdef unicode string_view(self, size_t i, size_t view_id)
 
-    cpdef size_t canon(self, size_t i) except 0
-    cpdef size_t shape(self, size_t i) except 0
-    cpdef size_t non_sparse(self, size_t i) except 0
-    cpdef size_t asciied(self, size_t i) except 0
-    cpdef unicode canon_string(self, size_t i)
-    cpdef unicode shape_string(self, size_t i) 
-    cpdef unicode non_sparse_string(self, size_t i)
-    cpdef unicode asciied_string(self, size_t i)
+    cpdef unicode casefix(self, size_t i)
+    cpdef unicode shape(self, size_t i) 
+    cpdef unicode unsparse(self, size_t i)
+    cpdef unicode asciied(self, size_t i)
     cpdef bint is_alpha(self, size_t i) except *
     cpdef bint is_ascii(self, size_t i) except * 
     cpdef bint is_digit(self, size_t i) except *

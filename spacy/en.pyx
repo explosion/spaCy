@@ -37,13 +37,7 @@ provides a fully Penn Treebank 3-compliant tokenizer.
 
 from __future__ import unicode_literals
 
-from libc.stdint cimport uint64_t
-
 cimport lang
-from spacy.lexeme cimport lexeme_check_flag
-from spacy.lexeme cimport lexeme_string_view
-
-from spacy import orth
 
 
 cdef class English(Language):

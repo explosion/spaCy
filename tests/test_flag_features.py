@@ -16,26 +16,26 @@ def words():
             "!d", "\nd"]
 
 def test_is_alpha(words):
-    assert is_alpha(words[0], 0, {}, {}) == False
-    assert is_alpha(words[1], 0, {}, {}) == False
-    assert is_alpha(words[2], 0, {}, {}) == False
-    assert is_alpha(words[3], 0, {}, {}) == True
-    assert is_alpha(words[4], 0, {}, {}) == True
-    assert is_alpha(words[5], 0, {}, {}) == False
-    assert is_alpha(words[6], 0, {}, {}) == False
-    assert is_alpha(words[7], 0, {}, {}) == False
-    assert is_alpha(words[8], 0, {}, {}) == False
-    assert is_alpha(words[9], 0, {}, {}) == False
+    assert not is_alpha(words[0])
+    assert not is_alpha(words[1])
+    assert not is_alpha(words[2])
+    assert is_alpha(words[3])
+    assert is_alpha(words[4])
+    assert not is_alpha(words[5])
+    assert not is_alpha(words[6])
+    assert not is_alpha(words[7])
+    assert not is_alpha(words[8])
+    assert not is_alpha(words[9])
 
 
 def test_is_digit(words):
-    assert is_digit(words[0], 0, {}, {}) == True
-    assert is_digit(words[1], 0, {}, {}) == False
-    assert is_digit(words[2], 0, {}, {}) == False
-    assert is_digit(words[3], 0, {}, {}) == False
-    assert is_digit(words[4], 0, {}, {}) == False
-    assert is_digit(words[5], 0, {}, {}) == False
-    assert is_digit(words[6], 0, {}, {}) == False
-    assert is_digit(words[7], 0, {}, {}) == False
-    assert is_digit(words[8], 0, {}, {}) == False
-    assert is_digit(words[9], 0, {}, {}) == False
+    assert is_digit(words[0])
+    assert not is_digit(words[1])
+    assert not is_digit(words[2])
+    assert not is_digit(words[3])
+    assert not is_digit(words[4])
+    assert not is_digit(words[5])
+    assert not is_digit(words[6])
+    assert not is_digit(words[7])
+    assert not is_digit(words[8])
+    assert not is_digit(words[9])

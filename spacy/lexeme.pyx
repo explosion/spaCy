@@ -6,7 +6,7 @@ import orth
 OOV_DIST_FLAGS = 0
 
 
-def get_lexeme_dict(size_t i, unicode string):
+cpdef dict get_lexeme_dict(size_t i, unicode string):
     ints = [None for _ in range(LexInt_N)]
     ints[<int>LexInt_i] = i
     ints[<int>LexInt_length] = len(string)
@@ -18,13 +18,12 @@ def get_lexeme_dict(size_t i, unicode string):
     floats[<int>LexFloat_prob] = 0
     floats[<int>LexFloat_sentiment] = 0
 
-    cdef size_t length
     strings = [None for _ in range(LexStr_N)]
-    strings[<int>LexStr_key] = intern_and_encode(string, &length)
+    strings[<int>LexStr_key] = string
     strings[<int>LexStr_casefix] = strings[<int>LexStr_key]
-    strings[<int>LexStr_shape] = intern_and_encode(orth.word_shape(string), &length)
+    strings[<int>LexStr_shape] = orth.word_shape(string)
     strings[<int>LexStr_unsparse] = strings[<int>LexStr_shape]
-    strings[<int>LexStr_asciied] = intern_and_encode(orth.asciied(string), &length)
+    strings[<int>LexStr_asciied] = orth.asciied(string)
 
     orth_flags = get_orth_flags(string)
     dist_flags = OOV_DIST_FLAGS
@@ -33,8 +32,18 @@ def get_lexeme_dict(size_t i, unicode string):
             'orth_flags': orth_flags, 'dist_flags': dist_flags}
 
 def get_orth_flags(unicode string):
-    return 0
+    cdef flag_t flags = 0
 
+    flags |= orth.is_ascii(string) << LexOrth_ascii
+    flags |= orth.is_alpha(string) << LexOrth_alpha
+    flags |= orth.is_digit(string) << LexOrth_digit
+    flags |= orth.is_lower(string) << LexOrth_lower
+    flags |= orth.is_punct(string) << LexOrth_punct
+    flags |= orth.is_space(string) << LexOrth_space
+    flags |= orth.is_title(string) << LexOrth_title
+    flags |= orth.is_upper(string) << LexOrth_upper
+    
+    return flags
 
 def get_dist_flags(unicode string):
     return 0
@@ -87,9 +96,9 @@ cdef int lexeme_unpack(LexemeC* lex, dict p) except -1:
     for i, lex_int in enumerate(p['ints']):
         lex.ints[i] = lex_int
     for i, lex_float in enumerate(p['floats']):
-        lex.ints[i] = lex_int
+        lex.floats[i] = lex_float
     cdef size_t _
     for i, lex_string in enumerate(p['strings']):
         lex.strings[i] = intern_and_encode(lex_string, &_)
     lex.orth_flags = p['orth_flags']
-    lex.orth_flags = p['orth_flags']
+    lex.dist_flags = p['dist_flags']

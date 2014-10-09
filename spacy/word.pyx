@@ -1,7 +1,10 @@
 # cython: profile=True
 # cython: embedsignature=True
 
-from spacy.lexeme cimport lexeme_check_flag, lexeme_string_view
+from .lexeme cimport lexeme_get_string
+from .lexeme cimport lexeme_check_orth_flag, lexeme_check_dist_flag
+
+from .lexeme cimport *
 
 
 cdef class Lexeme:
@@ -51,49 +54,27 @@ cdef class Lexeme:
 
     property string:
         def __get__(self):
-            cdef bytes utf8_string = self._c.string
+            cdef bytes utf8_string = self._c.strings[<int>LexStr_key]
             cdef unicode string = utf8_string.decode('utf8')
             return string
 
     property prob:
-        def __get__(self): return self._c.prob
+        def __get__(self):
+            return self._c.floats[<int>LexFloat_prob]
+
     property cluster:
-        def __get__(self): return self._c.cluster
+        def __get__(self):
+            return self._c.ints[<int>LexInt_cluster]
+
     property length:
-        def __get__(self): return self._c.length
+        def __get__(self):
+            return self._c.ints[<int>LexInt_length]
 
-    cpdef bint check_flag(self, size_t flag_id) except *:
-        """Lexemes may store language-specific boolean features in a bit-field,
-        with values accessed by providing an ID constant to this function.
+    cpdef bint check_orth_flag(self, size_t flag_id) except *:
+        return lexeme_check_orth_flag(self._c, flag_id)
 
-        The ID constants are exposed as global variables in the language module,
-        e.g.
-
-        >>> from spacy.en import EN
-        >>> lexeme = EN.lookup(u'Nasa')
-        >>> lexeme.check_flag(EN.IS_UPPER)
-        False
-        >>> lexeme.check_flag(EN.OFT_UPPER)
-        True
-        """
-        return lexeme_check_flag(self._c, flag_id)
+    cpdef bint check_dist_flag(self, size_t flag_id) except *:
+        return lexeme_check_dist_flag(self._c, flag_id)
 
     cpdef unicode string_view(self, size_t view_id):
-        """Lexemes may store language-specific string-view features, obtained
-        by transforming the string, possibly in light of distributional information.
-        The string-view features are accessed by providing an ID constant to this
-        function.
-
-        The ID constants are exposed as global variables in the language module,
-        e.g.
-
-        >>> from spacy.en import EN
-        >>> lexeme = EN.lookup(u'Nasa')
-        >>> lexeme.string_view(EN.CANON_CASED)
-        u'NASA'
-        >>> lexeme.string_view(EN.SHAPE)
-        u'Xxxx'
-        >>> lexeme.string_view(EN.NON_SPARSE)
-        u'Xxxx'
-        """
-        return lexeme_string_view(self._c, view_id)
+        return lexeme_get_string(self._c, view_id)

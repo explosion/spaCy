@@ -5,12 +5,12 @@ from spacy.orth import is_punct
 
 
 def test_comma():
-    assert is_punct(',', 0, {}, {}) == True
+    assert is_punct(',')
 
 
 def test_space():
-    assert is_punct(' ', 0, {}, {}) == False
+    assert not is_punct(' ')
 
 
 def test_letter():
-    assert is_punct('a', 0, {}, {}) == False
+    assert not is_punct('a')

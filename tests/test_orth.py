@@ -4,6 +4,7 @@ import pytest
 
 import spacy.word
 from spacy.en import EN
+from spacy.lexeme import *
 
 
 @pytest.fixture
@@ -12,7 +13,7 @@ def C3P0():
 
 
 def test_shape(C3P0):
-    assert C3P0.string_view(EN.v_shape) == "XdXd"
+    assert C3P0.string_view(LexStr_shape) == "XdXd"
 
 
 def test_length():

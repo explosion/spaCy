@@ -7,5 +7,6 @@ DEF MAX_FLAG = 64
 cdef class Lexeme:
     cdef LexemeC* _c
 
-    cpdef bint check_flag(self, size_t flag_id) except *
+    cpdef bint check_orth_flag(self, size_t flag_id) except *
+    cpdef bint check_dist_flag(self, size_t flag_id) except *
     cpdef unicode string_view(self, size_t view_id)
