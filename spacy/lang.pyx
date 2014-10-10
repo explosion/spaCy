@@ -86,24 +86,18 @@ cdef class Language:
             if Py_UNICODE_ISSPACE(chars[i]) == 1:
                 if start < i:
                     string_from_slice(&span, chars, start, i)
-                    self._tokenize(tokens.v, &span)
+                    if not _extend_from_map(tokens.v, &span, self.cache):
+                        self._tokenize(tokens.v, &span)
                 start = i + 1
         i += 1
         if start < i:
             string_from_slice(&span, chars, start, i)
-            self._tokenize(tokens.v, &span)
+            if not _extend_from_map(tokens.v, &span, self.cache):
+                self._tokenize(tokens.v, &span)
         return tokens
 
     cdef int _tokenize(self, vector[LexemeC*] *tokens_v, String* string) except -1:
         cdef size_t i
-        lexemes = <LexemeC**>self.cache.get(string.key)
-        if lexemes != NULL:
-            i = 0
-            while lexemes[i] != NULL:
-                tokens_v.push_back(lexemes[i])
-                i += 1
-            return 0
-
         cdef uint64_t orig_key = string.key
         cdef size_t orig_size = tokens_v.size()
 
@@ -162,13 +156,7 @@ cdef class Language:
         for lexeme in deref(prefixes):
             tokens.push_back(lexeme)
         if string.n != 0:
-            lexemes = <LexemeC**>self.specials.get(string.key)
-            if lexemes != NULL:
-                i = 0 
-                while lexemes[i] != NULL:
-                    tokens.push_back(lexemes[i])
-                    i += 1
-            else:
+            if not _extend_from_map(tokens, string, self.specials):
                 tokens.push_back(self.lexicon.get(string))
         cdef vector[LexemeC*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
@@ -270,6 +258,17 @@ cdef class Lexicon:
         string_from_unicode(&string, uni_string)
         cdef LexemeC* lexeme = self.get(&string)
         return Lexeme(<size_t>lexeme)
+
+
+cdef int _extend_from_map(vector[LexemeC*] *tokens, String* string, PreshMap map_) except -1:
+    lexemes = <LexemeC**>map_.get(string.key)
+    if lexemes == NULL:
+        return 0
+    cdef size_t i = 0
+    while lexemes[i] != NULL:
+        tokens.push_back(lexemes[i])
+        i += 1
+    return 1
 
 
 cdef void string_from_unicode(String* s, unicode uni):
