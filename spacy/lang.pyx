@@ -176,18 +176,12 @@ cdef class Language:
     cdef int _find_prefix(self, Py_UNICODE* chars, size_t length) except -1:
         cdef unicode string = chars[:length]
         match = self.prefix_re.search(string)
-        if match is None:
-            return 0
-        else:
-            return match.end() - match.start()
+        return (match.end() - match.start()) if match is not None else 0
 
     cdef int _find_suffix(self, Py_UNICODE* chars, size_t length):
         cdef unicode string = chars[:length]
         match = self.suffix_re.search(string)
-        if match is None:
-            return 0
-        else:
-            return match.end() - match.start()
+        return (match.end() - match.start()) if match is not None else 0
 
     def _load_special_tokenization(self, token_rules):
         '''Load special-case tokenization rules.
