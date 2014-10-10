@@ -21,7 +21,7 @@ cpdef enum LexFloats:
 
 
 cpdef enum LexStrs:
-    LexStr_key
+    LexStr_orig
     LexStr_casefix
     LexStr_shape
     LexStr_unsparse
@@ -69,6 +69,7 @@ cdef struct LexemeC:
     utf8_t[<int>LexStr_N] strings
     flag_t orth_flags
     flag_t dist_flags
+
 
 cpdef dict get_lexeme_dict(size_t i, unicode string)
 

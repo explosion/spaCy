@@ -54,7 +54,7 @@ cdef class Lexeme:
 
     property string:
         def __get__(self):
-            cdef bytes utf8_string = self._c.strings[<int>LexStr_key]
+            cdef bytes utf8_string = self._c.strings[<int>LexStr_orig]
             cdef unicode string = utf8_string.decode('utf8')
             return string
 

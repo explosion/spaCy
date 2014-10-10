@@ -40,8 +40,11 @@ cdef class Tokens:
     def append(self, Lexeme lexeme):
         self.v.push_back(lexeme._c)
 
+    cpdef int id(self, size_t i) except -1:
+        return self.v.at(i).ints[<int>LexInt_i]
+
     cpdef unicode string(self, size_t i):
-        cdef bytes utf8_string = self.v.at(i).strings[<int>LexStr_key]
+        cdef bytes utf8_string = self.v.at(i).strings[<int>LexStr_orig]
         cdef unicode string = utf8_string.decode('utf8')
         return string
 

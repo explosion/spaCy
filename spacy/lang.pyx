@@ -16,6 +16,7 @@ import re
 from .util import read_lang_data
 from spacy.tokens import Tokens
 from spacy.lexeme cimport LexemeC, get_lexeme_dict, lexeme_pack, lexeme_unpack
+from spacy.lexeme cimport LexStr_orig
 from murmurhash.mrmr cimport hash64
 
 from cpython.ref cimport Py_INCREF
@@ -45,11 +46,19 @@ cdef class Language:
         self.suffix_re = re.compile(suffix)
         self.lexicon = Lexicon(lexemes)
         self._load_special_tokenization(rules)
+        self.counts = vector[size_t]()
 
     property nr_types:
         def __get__(self):
             """Return the number of lexical types in the vocabulary"""
             return self.lexicon.size
+
+    property counts:
+        def __get__(self):
+            cdef size_t i
+            for i in range(self.lexicon.size):
+                count = self.counts[i] if i < self.counts.size() else 0
+                yield count, self.lexicon.lexemes[i].strings[<int>LexStr_orig].decode('utf8')
 
     cpdef Lexeme lookup(self, unicode string):
         """Retrieve (or create, if not found) a Lexeme for a string, and return it.
@@ -85,23 +94,23 @@ cdef class Language:
         cdef size_t start = 0
         cdef size_t i = 0
         cdef Py_UNICODE* chars = string
-        cdef Py_UNICODE c
         cdef String span
         for i in range(length):
-            c = chars[i]
-            if Py_UNICODE_ISSPACE(c) == 1:
+            if Py_UNICODE_ISSPACE(chars[i]) == 1:
                 if start < i:
                     string_from_slice(&span, chars, start, i)
-                    try:
-                        self._tokenize(tokens.v, &span)
-                    except MemoryError:
-                        print chars[start:i]
-                        raise
+                    self._tokenize(tokens.v, &span)
                 start = i + 1
         i += 1
         if start < i:
             string_from_slice(&span, chars, start, i)
             self._tokenize(tokens.v, &span)
+        cdef int id_
+        for i in range(tokens.v.size()):
+            id_ = tokens.id(i)
+            while id_ >= self.counts.size():
+                self.counts.push_back(0)
+            self.counts[id_] += 1
         return tokens
 
     cdef int _tokenize(self, vector[LexemeC*] *tokens_v, String* string) except -1:
@@ -162,17 +171,6 @@ cdef class Language:
 
         self._attach_tokens(tokens_v, string, &prefixes, &suffixes)
         self._save_cached(tokens_v, orig_key, orig_size)
-
-    cdef int _check_cache(self, vector[LexemeC*] *tokens, String* string) except -1:
-        lexemes = <LexemeC**>self.cache.get(string.key)
-        cdef size_t i = 0
-        if lexemes != NULL:
-            while lexemes[i] != NULL:
-                tokens.push_back(lexemes[i])
-                i += 1
-            string.n = 0
-            string.key = 0
-            string.chars = NULL
 
     cdef int _attach_tokens(self, vector[LexemeC*] *tokens, String* string,
                             vector[LexemeC*] *prefixes,
@@ -261,6 +259,7 @@ cdef class Lexicon:
             lexeme = <LexemeC*>self._mem.alloc(1, sizeof(LexemeC))
             lexeme_unpack(lexeme, lexeme_dict)
             self._dict.set(string.key, lexeme)
+            self.lexemes.push_back(lexeme)
             self.size += 1
 
     cdef LexemeC* get(self, String* string) except NULL:
@@ -273,6 +272,7 @@ cdef class Lexicon:
         cdef unicode unicode_string = string.chars[:string.n]
         lexeme_unpack(lex, get_lexeme_dict(self.size, unicode_string))
         self._dict.set(string.key, lex)
+        self.lexemes.push_back(lex)
         self.size += 1
         return lex
 

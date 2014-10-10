@@ -5,6 +5,7 @@ from libcpp.vector cimport vector
 cdef class Tokens:
     cdef vector[LexemeC*] *v
 
+    cpdef int id(self, size_t i) except -1
     cpdef unicode string(self, size_t i)
     cpdef float prob(self, size_t i) except 1
     cpdef int cluster(self, size_t i) except *

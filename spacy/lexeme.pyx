@@ -19,8 +19,8 @@ cpdef dict get_lexeme_dict(size_t i, unicode string):
     floats[<int>LexFloat_sentiment] = 0
 
     strings = [None for _ in range(LexStr_N)]
-    strings[<int>LexStr_key] = string
-    strings[<int>LexStr_casefix] = strings[<int>LexStr_key]
+    strings[<int>LexStr_orig] = string
+    strings[<int>LexStr_casefix] = strings[<int>LexStr_orig]
     strings[<int>LexStr_shape] = orth.word_shape(string)
     strings[<int>LexStr_unsparse] = strings[<int>LexStr_shape]
     strings[<int>LexStr_asciied] = orth.asciied(string)
@@ -42,8 +42,8 @@ def get_orth_flags(unicode string):
     flags |= orth.is_space(string) << LexOrth_space
     flags |= orth.is_title(string) << LexOrth_title
     flags |= orth.is_upper(string) << LexOrth_upper
-    
     return flags
+
 
 def get_dist_flags(unicode string):
     return 0
