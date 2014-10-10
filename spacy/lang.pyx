@@ -46,19 +46,6 @@ cdef class Language:
         self.suffix_re = re.compile(suffix)
         self.lexicon = Lexicon(lexemes)
         self._load_special_tokenization(rules)
-        self.counts = vector[size_t]()
-
-    property nr_types:
-        def __get__(self):
-            """Return the number of lexical types in the vocabulary"""
-            return self.lexicon.size
-
-    property counts:
-        def __get__(self):
-            cdef size_t i
-            for i in range(self.lexicon.size):
-                count = self.counts[i] if i < self.counts.size() else 0
-                yield count, self.lexicon.lexemes[i].strings[<int>LexStr_orig].decode('utf8')
 
     cpdef Lexeme lookup(self, unicode string):
         """Retrieve (or create, if not found) a Lexeme for a string, and return it.
@@ -105,12 +92,6 @@ cdef class Language:
         if start < i:
             string_from_slice(&span, chars, start, i)
             self._tokenize(tokens.v, &span)
-        cdef int id_
-        for i in range(tokens.v.size()):
-            id_ = tokens.id(i)
-            while id_ >= self.counts.size():
-                self.counts.push_back(0)
-            self.counts[id_] += 1
         return tokens
 
     cdef int _tokenize(self, vector[LexemeC*] *tokens_v, String* string) except -1:

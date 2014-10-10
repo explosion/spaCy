@@ -41,7 +41,6 @@ cdef class Lexicon:
 cdef class Language:
     cdef Pool _mem
     cdef unicode name
-    cdef vector[size_t] counts
     cdef PreshMap cache
     cdef PreshMap specials
     cpdef readonly Lexicon lexicon
