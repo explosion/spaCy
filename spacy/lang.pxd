@@ -52,6 +52,8 @@ cdef class Language:
     cpdef Lexeme lookup(self, unicode text)
 
     cdef int _tokenize(self, vector[LexemeC*] *tokens_v, String* string) except -1
+
+    cdef int _split_body_token(self, vector[LexemeC*] *tokens, String* string) except -1
     cdef int _find_prefix(self, Py_UNICODE* characters, size_t length)
     cdef int _find_suffix(self, Py_UNICODE* characters, size_t length)
     

@@ -155,16 +155,14 @@ cdef class Language:
         cdef LexemeC* lexeme
         for lexeme in deref(prefixes):
             tokens.push_back(lexeme)
-        if string.n != 0:
-            if not _extend_from_map(tokens, string, self.specials):
-                tokens.push_back(self.lexicon.get(string))
+        if not _extend_from_map(tokens, string, self.specials):
+            self._split_body_token(tokens, string)
         cdef vector[LexemeC*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
             tokens.push_back(deref(it))
             preinc(it)
 
-    cdef int _save_cached(self, vector[LexemeC*] *tokens,
-                          uint64_t key, size_t n) except -1:
+    cdef int _save_cached(self, vector[LexemeC*] *tokens, uint64_t key, size_t n) except -1:
         assert tokens.size() > n
         lexemes = <LexemeC**>self._mem.alloc((tokens.size() - n) + 1, sizeof(LexemeC**))
         cdef size_t i, j
@@ -172,6 +170,9 @@ cdef class Language:
             lexemes[i] = tokens.at(j)
         lexemes[i + 1] = NULL
         self.cache.set(key, lexemes)
+
+    cdef int _split_body_token(self, vector[LexemeC*] *tokens, String* string) except -1:
+        tokens.push_back(self.lexicon.get(string))
     
     cdef int _find_prefix(self, Py_UNICODE* chars, size_t length) except -1:
         cdef unicode string = chars[:length]
@@ -255,6 +256,8 @@ cdef class Lexicon:
 
 
 cdef int _extend_from_map(vector[LexemeC*] *tokens, String* string, PreshMap map_) except -1:
+    if string.n == 0:
+        return 1
     lexemes = <LexemeC**>map_.get(string.key)
     if lexemes == NULL:
         return 0
