@@ -67,12 +67,13 @@ cdef class Language:
         cdef Tokens tokens = Tokens(length)
         if length == 0:
             return tokens
-        cdef int start = 0
         cdef int i = 0
+        cdef int start = 0
         cdef Py_UNICODE* chars = string
+        cdef bint in_ws = Py_UNICODE_ISSPACE(chars[0])
         cdef String span
-        for i in range(length):
-            if Py_UNICODE_ISSPACE(chars[i]) == 1:
+        for i in range(1, length):
+            if Py_UNICODE_ISSPACE(chars[i]) != in_ws:
                 if start < i:
                     string_slice(&span, chars, start, i)
                     lexemes = <LexemeC**>self.cache.get(span.key)
@@ -80,7 +81,10 @@ cdef class Language:
                         tokens.extend(start, lexemes, 0)
                     else: 
                         self._tokenize(tokens, &span, start, i)
-                start = i + 1
+                in_ws = not in_ws
+                start = i
+                if chars[i] == ' ':
+                    start += 1
         i += 1
         if start < i:
             string_slice(&span, chars, start, i)
