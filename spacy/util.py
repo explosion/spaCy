@@ -1,7 +1,7 @@
 import os
 from os import path
 import codecs
-import json
+import ujson
 import re
 
 DATA_DIR = path.join(path.dirname(__file__), '..', 'data')
@@ -16,27 +16,35 @@ def read_lang_data(name):
     tokenization = read_tokenization(data_dir)
     prefix = read_prefix(data_dir)
     suffix = read_suffix(data_dir)
+    infix = read_infix(data_dir)
     
     lex_loc = path.join(data_dir, 'lexemes.json')
     if path.exists(lex_loc):
         with open(lex_loc) as file_:
             lexemes = ujson.load(file_)
     else:
-        lexemes = []
-    return tokenization, prefix, suffix, lexemes
+        lexemes = {}
+    return tokenization, prefix, suffix, infix, lexemes
 
 
 def read_prefix(data_dir):
     with  utf8open(path.join(data_dir, 'prefix')) as file_:
         entries = file_.read().split('\n')
-        expression = '|'.join(['^' + re.escape(piece) for piece in entries])
+        expression = '|'.join(['^' + re.escape(piece) for piece in entries if piece.strip()])
     return expression
 
 def read_suffix(data_dir):
     with  utf8open(path.join(data_dir, 'suffix')) as file_:
         entries = file_.read().split('\n')
-        expression = '|'.join([re.escape(piece) + '$' for piece in entries])
+        expression = '|'.join([re.escape(piece) + '$' for piece in entries if piece.strip()])
     return expression
+
+def read_infix(data_dir):
+    with utf8open(path.join(data_dir, 'infix')) as file_:
+        entries = file_.read().split('\n')
+        expression = '|'.join([piece for piece in entries if piece.strip()])
+    return expression
+
 
 def read_tokenization(lang):
     loc = path.join(DATA_DIR, lang, 'tokenization')
@@ -60,3 +68,16 @@ def read_tokenization(lang):
                 seen.add(chunk)
                 entries.append((chunk, pieces))
     return entries
+
+
+def align_tokens(ref, indices):
+    start = 0
+    queue = list(indices)
+    for token in ref:
+        end = start + len(token)
+        emit = []
+        while queue and queue[0][1] <= end:
+            emit.append(queue.pop(0))
+        yield token, emit
+        start = end
+    assert not queue

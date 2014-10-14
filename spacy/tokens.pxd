@@ -2,14 +2,10 @@ from spacy.lexeme cimport LexemeC
 from libcpp.vector cimport vector
 
 
-cdef struct Token:
-    int i
-    int pos
-    LexemeC* lex
-
-
 cdef class Tokens:
-    cdef vector[Token] v
+    cdef vector[LexemeC*] lex
+    cdef vector[int] idx
+    cdef vector[int] pos
 
     cdef int extend(self, int i, LexemeC** lexemes, int n) except -1
     cdef int push_back(self, int i, LexemeC* lexeme) except -1
@@ -21,6 +17,7 @@ cdef class Tokens:
     cpdef bint check_dist_flag(self, size_t i, size_t flag_id) except *
     cpdef unicode string_view(self, size_t i, size_t view_id)
 
+    cpdef unicode string(self, size_t i)
     cpdef unicode orig(self, size_t i)
     cpdef unicode norm(self, size_t i)
     cpdef unicode shape(self, size_t i)

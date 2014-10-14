@@ -79,7 +79,7 @@ def canon_case(string, prob, cluster, case_stats, tag_stats):
 
 def word_shape(string, *args):
     length = len(string)
-    shape = ""
+    shape = []
     last = ""
     shape_char = ""
     seq = 0
@@ -99,8 +99,8 @@ def word_shape(string, *args):
             seq = 0
             last = shape_char
         if seq < 5:
-            shape += shape_char
-    return shape
+            shape.append(shape_char)
+    return ''.join(shape)
 
 
 def non_sparse(string, prob, cluster, case_stats, tag_stats):

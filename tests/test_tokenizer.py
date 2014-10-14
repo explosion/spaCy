@@ -27,7 +27,7 @@ def test_punct():
 
 def test_digits():
     lex_ids = EN.tokenize('The year: 1984.')
-    assert lex_ids.string(3) == "1984"
+    assert lex_ids.orig(3) == "1984"
     assert len(lex_ids) == 5
     assert lex_ids[0].string == EN.lexicon.lookup('The').string
     assert lex_ids[3].string == EN.lexicon.lookup('1984').string
@@ -101,4 +101,4 @@ def test_cnts6():
 def test_cnts7():
     text = 'But then the 6,000-year ice age came...'
     tokens = EN.tokenize(text)
-    assert len(tokens) == 8
+    assert len(tokens) == 10

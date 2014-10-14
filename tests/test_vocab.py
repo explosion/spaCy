@@ -4,31 +4,31 @@ from spacy.en import EN
 
 
 def test_neq():
-    addr = EN.lookup('Hello')
-    assert EN.lookup('bye').string != addr.string
+    addr = EN.lexicon.lookup('Hello')
+    assert EN.lexicon.lookup('bye').string != addr.string
 
 
 def test_eq():
-    addr = EN.lookup('Hello')
-    assert EN.lookup('Hello').string == addr.string
+    addr = EN.lexicon.lookup('Hello')
+    assert EN.lexicon.lookup('Hello').string == addr.string
 
 
 def test_round_trip():
-    hello = EN.lookup('Hello')
+    hello = EN.lexicon.lookup('Hello')
     assert hello.string == 'Hello'
 
 
 def test_case_neq():
-    addr = EN.lookup('Hello')
-    assert EN.lookup('hello').string != addr.string
+    addr = EN.lexicon.lookup('Hello')
+    assert EN.lexicon.lookup('hello').string != addr.string
 
 
 def test_punct_neq():
-    addr = EN.lookup('Hello')
-    assert EN.lookup('Hello,').string != addr.string
+    addr = EN.lexicon.lookup('Hello')
+    assert EN.lexicon.lookup('Hello,').string != addr.string
 
 
 def test_short():
-    addr = EN.lookup('I')
+    addr = EN.lexicon.lookup('I')
     assert addr.string == 'I'
     assert addr.string != 'not'
