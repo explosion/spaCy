@@ -3,9 +3,9 @@ from libcpp.vector cimport vector
 
 
 cdef class Tokens:
-    cdef vector[LexemeC*] lex
-    cdef vector[int] idx
-    cdef vector[int] pos
+    cdef vector[LexemeC*] *lex
+    cdef vector[int] *idx
+    cdef vector[int] *pos
 
     cdef int extend(self, int i, LexemeC** lexemes, int n) except -1
     cdef int push_back(self, int i, LexemeC* lexeme) except -1

@@ -70,35 +70,40 @@ cdef class Language:
         cdef int start = 0
         cdef int i = 0
         cdef Py_UNICODE* chars = string
+        cdef String span
         for i in range(length):
             if Py_UNICODE_ISSPACE(chars[i]) == 1:
                 if start < i:
-                    self._tokenize(tokens, chars, start, i)
+                    string_slice(&span, chars, start, i)
+                    lexemes = <LexemeC**>self.cache.get(span.key)
+                    if lexemes != NULL:
+                        tokens.extend(start, lexemes, 0)
+                    else: 
+                        self._tokenize(tokens, &span, start, i)
                 start = i + 1
         i += 1
         if start < i:
-            self._tokenize(tokens, chars, start, i)
+            string_slice(&span, chars, start, i)
+            lexemes = <LexemeC**>self.cache.get(span.key)
+            if lexemes != NULL:
+                tokens.extend(start, lexemes, 0)
+            else: 
+                self._tokenize(tokens, &span, start, i)
         return tokens
 
-    cdef int _tokenize(self, Tokens tokens, Py_UNICODE* chars, int start, int end) except -1:
-        cdef String span
+    cdef int _tokenize(self, Tokens tokens, String* span, int start, int end) except -1:
         cdef vector[LexemeC*] prefixes
         cdef vector[LexemeC*] suffixes
         cdef uint64_t orig_key
         cdef int orig_size
-        string_slice(&span, chars, start, end)
-        lexemes = <LexemeC**>self.cache.get(span.key)
-        if lexemes != NULL:
-            tokens.extend(start, lexemes, 0)
-        else:
-            orig_key = span.key
-            orig_size = tokens.lex.size()
-            span = self._split_affixes(&span, &prefixes, &suffixes)[0]
-            self._attach_tokens(tokens, start, &span, &prefixes, &suffixes)
-            self._save_cached(&tokens.lex, orig_key, orig_size)
+        orig_key = span.key
+        orig_size = tokens.lex.size()
+        self._split_affixes(span, &prefixes, &suffixes)
+        self._attach_tokens(tokens, start, span, &prefixes, &suffixes)
+        self._save_cached(tokens.lex, orig_key, orig_size)
 
     cdef String* _split_affixes(self, String* string, vector[LexemeC*] *prefixes,
-            vector[LexemeC*] *suffixes) except NULL:
+                                vector[LexemeC*] *suffixes) except NULL:
         cdef size_t i
         cdef String prefix
         cdef String suffix
@@ -113,7 +118,7 @@ cdef class Language:
                 string_slice(&minus_pre, string.chars, pre_len, string.n)
                 # Check whether we've hit a special-case
                 if minus_pre.n >= 1 and self.specials.get(minus_pre.key) != NULL:
-                    string = &minus_pre
+                    string[0] = minus_pre
                     prefixes.push_back(self.lexicon.get(&prefix))
                     break
             suf_len = self._find_suffix(string.chars, string.n)
@@ -122,7 +127,7 @@ cdef class Language:
                 string_slice(&minus_suf, string.chars, 0, string.n - suf_len)
                 # Check whether we've hit a special-case
                 if minus_suf.n >= 1 and self.specials.get(minus_suf.key) != NULL:
-                    string = &minus_suf
+                    string[0] = minus_suf
                     suffixes.push_back(self.lexicon.get(&suffix))
                     break
             if pre_len and suf_len and (pre_len + suf_len) <= string.n:
@@ -130,10 +135,10 @@ cdef class Language:
                 prefixes.push_back(self.lexicon.get(&prefix))
                 suffixes.push_back(self.lexicon.get(&suffix))
             elif pre_len:
-                string = &minus_pre
+                string[0] = minus_pre
                 prefixes.push_back(self.lexicon.get(&prefix))
             elif suf_len:
-                string = &minus_suf
+                string[0] = minus_suf
                 suffixes.push_back(self.lexicon.get(&suffix))
             if self.specials.get(string.key):
                 break
@@ -271,7 +276,7 @@ cdef void string_from_unicode(String* s, unicode uni):
     string_slice(s, c_uni, 0, len(uni))
 
 
-cdef inline void string_slice(String* s, Py_UNICODE* chars, size_t start, size_t end) nogil:
+cdef inline void string_slice(String* s, Py_UNICODE* chars, int start, int end) nogil:
     s.chars = &chars[start]
     s.n = end - start
     s.key = hash64(s.chars, s.n * sizeof(Py_UNICODE), 0)

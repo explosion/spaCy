@@ -25,9 +25,17 @@ cdef class Tokens:
     """
     def __cinit__(self, string_length=0):
         size = int(string_length / 3) if string_length >= 3 else 1
+        self.lex = new vector[LexemeC*]()
+        self.idx = new vector[int]()
+        self.pos = new vector[int]()
         self.lex.reserve(size)
         self.idx.reserve(size)
         self.pos.reserve(size)
+
+    def __dealloc__(self):
+        del self.lex
+        del self.idx
+        del self.pos
 
     def __getitem__(self, i):
         return Lexeme(<size_t>self.lex.at(i))
@@ -38,7 +46,6 @@ cdef class Tokens:
     cdef int push_back(self, int idx, LexemeC* lexeme) except -1:
         self.lex.push_back(lexeme)
         self.idx.push_back(idx)
-        self.pos.push_back(0)
         return idx + lexeme.ints[<int>LexInt_length]
 
     cdef int extend(self, int idx, LexemeC** lexemes, int n) except -1:
@@ -48,11 +55,15 @@ cdef class Tokens:
         elif n == 0:
             i = 0
             while lexemes[i] != NULL:
-                idx = self.push_back(idx, lexemes[i])
+                self.lex.push_back(lexemes[i])
+                self.idx.push_back(idx)
+                idx += lexemes[i].ints[<int>LexInt_length]
                 i += 1
         else:
             for i in range(n):
-                idx = self.push_back(idx, lexemes[i])
+                self.lex.push_back(lexemes[i])
+                self.idx.push_back(idx)
+                idx += lexemes[i].ints[<int>LexInt_length]
         return idx
 
     cpdef int id(self, size_t i) except -1:

@@ -51,7 +51,7 @@ cdef class Language:
 
     cpdef Tokens tokenize(self, unicode text)
 
-    cdef int _tokenize(self, Tokens tokens, Py_UNICODE* chars, int start, int end) except -1
+    cdef int _tokenize(self, Tokens tokens, String* span, int start, int end) except -1
     cdef String* _split_affixes(self, String* string, vector[LexemeC*] *prefixes,
                              vector[LexemeC*] *suffixes) except NULL
     cdef int _attach_tokens(self, Tokens tokens, int idx, String* string,
