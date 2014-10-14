@@ -6,7 +6,7 @@ cpdef flag_t OOV_DIST_FLAGS
 
 
 cpdef enum LexInts:
-    LexInt_i
+    LexInt_id
     LexInt_length
     LexInt_cluster
     LexInt_pos
@@ -22,7 +22,7 @@ cpdef enum LexFloats:
 
 cpdef enum LexStrs:
     LexStr_orig
-    LexStr_casefix
+    LexStr_norm
     LexStr_shape
     LexStr_unsparse
     LexStr_asciied

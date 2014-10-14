@@ -8,7 +8,7 @@ OOV_DIST_FLAGS = 0
 
 cpdef dict get_lexeme_dict(size_t i, unicode string):
     ints = [None for _ in range(LexInt_N)]
-    ints[<int>LexInt_i] = i
+    ints[<int>LexInt_id] = i
     ints[<int>LexInt_length] = len(string)
     ints[<int>LexInt_cluster] = 0
     ints[<int>LexInt_pos] = 0
@@ -20,7 +20,7 @@ cpdef dict get_lexeme_dict(size_t i, unicode string):
 
     strings = [None for _ in range(LexStr_N)]
     strings[<int>LexStr_orig] = string
-    strings[<int>LexStr_casefix] = strings[<int>LexStr_orig]
+    strings[<int>LexStr_norm] = strings[<int>LexStr_orig]
     strings[<int>LexStr_shape] = orth.word_shape(string)
     strings[<int>LexStr_unsparse] = strings[<int>LexStr_shape]
     strings[<int>LexStr_asciied] = orth.asciied(string)
