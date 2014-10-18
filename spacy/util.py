@@ -81,3 +81,25 @@ def align_tokens(ref, indices):
         yield token, emit
         start = end
     assert not queue
+
+
+def detokenize(token_rules, words):
+    """To align with treebanks, return a list of "chunks", where a chunk is a 
+    sequence of tokens that are separated by whitespace in actual strings. Each
+    chunk should be a tuple of token indices, e.g.
+
+    >>> detokenize(["ca<SEP>n't", '<SEP>!'], ["I", "ca", "n't", "!"])
+    [(0,), (1, 2, 3)]
+    """
+    string = ' '.join(words)
+    for subtoks in token_rules:
+        # Algorithmically this is dumb, but writing a little list-based match
+        # machine? Ain't nobody got time for that.
+        string = string.replace(subtoks.replace('<SEP>', ' '), subtoks)
+    positions = []
+    i = 0
+    for chunk in string.split():
+        subtoks = chunk.split('<SEP>')
+        positions.append(tuple(range(i, i+len(subtoks))))
+        i += len(subtoks)
+    return positions
