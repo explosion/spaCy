@@ -6,6 +6,8 @@ import distutils.core
 import sys
 import os
 import os.path
+import numpy
+
 from os import path
 from glob import glob
 
@@ -33,7 +35,7 @@ compile_args = []
 link_args = []
 libs = []
 
-includes = ['.']
+includes = ['.', numpy.get_include()]
 cython_includes = ['.']
 
 
@@ -46,14 +48,11 @@ else:
 
 exts = [
     Extension("spacy.lang", ["spacy/lang.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.word", ["spacy/word.pyx"], language="c++",
-              include_dirs=includes),
-    Extension("spacy.lexeme", ["spacy/lexeme.pyx"], language="c++",
-              include_dirs=includes),
-    Extension("spacy.en", ["spacy/en.pyx"], language="c++",
-              include_dirs=includes),
-    Extension("spacy.tokens", ["spacy/tokens.pyx"], language="c++",
-              include_dirs=includes),
+    Extension("spacy.word", ["spacy/word.pyx"], language="c++", include_dirs=includes),
+    Extension("spacy.lexeme", ["spacy/lexeme.pyx"], language="c++", include_dirs=includes),
+    Extension("spacy.en", ["spacy/en.pyx"], language="c++", include_dirs=includes),
+    Extension("spacy.tokens", ["spacy/tokens.pyx"], language="c++", include_dirs=includes),
+    Extension("spacy.pos", ["spacy/pos.pyx"], language="c++", include_dirs=includes),
 ]
 
 
@@ -62,12 +61,14 @@ if sys.argv[1] == 'clean':
     map(clean, exts)
 
 distutils.core.setup(
-    name='spaCy',
+    name='spacy',
     packages=['spacy'],
     author='Matthew Honnibal',
     author_email='honnibal@gmail.com',
     version='1.0',
+    package_data={"spacy": ["*.pxd"]},
     cmdclass={'build_ext': Cython.Distutils.build_ext},
+ 
     ext_modules=exts,
 )
 
