@@ -119,26 +119,12 @@ cdef int get_atoms(atom_t* context, int i, Tokens tokens, class_t prev_tag,
     cdef int j
     for j in range(CONTEXT_SIZE):
         context[j] = 0
-    cdef int[5] indices
-    indices[0] = i-2
-    indices[1] = i-1
-    indices[2] = i
-    indices[3] = i+1
-    indices[4] = i+2
+    cdef int* indices = [i-2, i-1, i, i+1, i+2]
 
-    cdef int[2] int_feats
-    int_feats[0] = <int>LexInt_id
-    int_feats[1] = <int>LexInt_cluster
-
-    cdef int[4] string_feats
-    string_feats[0] = <int>LexStr_shape
-    string_feats[1] = <int>LexStr_suff
-    string_feats[2] = <int>LexStr_pre
-    string_feats[3] = <int>LexStr_norm
-
-    cdef int[2] bool_feats
-    bool_feats[0] = <int>LexDist_title
-    bool_feats[1] = <int>LexDist_upper
+    cdef int* int_feats = [<int>LexInt_id, <int>LexInt_cluster]
+    cdef int* string_feats = [<int>LexStr_shape, <int>LexStr_suff, <int>LexStr_pre,
+                              <int>LexStr_norm]
+    cdef int* bool_feats = [<int>LexDist_title, <int>LexDist_upper]
 
     cdef int c = 0
     c = tokens.int_array(context, c, indices, 5, int_feats, 2)
