@@ -1,21 +1,24 @@
+from cymem.cymem cimport Pool
+
 from spacy.lexeme cimport LexemeC
-from libcpp.vector cimport vector
 from thinc.typedefs cimport atom_t
 
 
 cdef class Tokens:
-    cdef vector[LexemeC*] *lex
-    cdef vector[int] *idx
-    cdef vector[int] *pos
+    cdef Pool mem
+
+    cdef LexemeC** _lex_ptr
+    cdef int* _idx_ptr
+    cdef int* _pos_ptr
+    cdef LexemeC** lex
+    cdef int* idx
+    cdef int* pos
+
+    cdef int length
+    cdef int max_length
 
     cdef int extend(self, int i, LexemeC** lexemes, int n) except -1
     cdef int push_back(self, int i, LexemeC* lexeme) except -1
-    cdef int int_array(self, atom_t* atoms, int i, int* indices, int n_idx,
-                       int* features, int n_feat) except -1
-    cdef int string_array(self, atom_t* atoms, int i, int* indices, int n_idx,
-                          int* features, int n_feat) except -1
-    cdef int bool_array(self, atom_t* atoms, int i, int* indices, int n_idx,
-                        int* features, int n_feat) except -1
 
     cpdef int id(self, size_t i) except -1
     cpdef float prob(self, size_t i) except 1

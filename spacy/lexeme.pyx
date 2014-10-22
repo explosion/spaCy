@@ -1,10 +1,13 @@
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 
+from libc.string cimport memset
+
 import orth
 
 OOV_DIST_FLAGS = 0
 
+memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
 
 cpdef dict get_lexeme_dict(size_t i, unicode string):
     ints = [None for _ in range(LexInt_N)]

@@ -59,5 +59,5 @@ cdef class Language:
     cdef int _find_prefix(self, Py_UNICODE* characters, size_t length) except -1
     cdef int _find_suffix(self, Py_UNICODE* characters, size_t length) except -1
     cdef int _find_infix(self, Py_UNICODE* characters, size_t length) except -1
-    cdef int _save_cached(self, vector[LexemeC*] *tokens, uint64_t key, size_t n) except -1
+    cdef int _save_cached(self, LexemeC** tokens, uint64_t key, int n) except -1
  

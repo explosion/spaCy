@@ -101,10 +101,10 @@ cdef class Language:
         cdef uint64_t orig_key
         cdef int orig_size
         orig_key = span.key
-        orig_size = tokens.lex.size()
+        orig_size = tokens.length
         self._split_affixes(span, &prefixes, &suffixes)
         self._attach_tokens(tokens, start, span, &prefixes, &suffixes)
-        self._save_cached(tokens.lex, orig_key, orig_size)
+        self._save_cached(&tokens.lex[orig_size], orig_key, tokens.length - orig_size)
 
     cdef String* _split_affixes(self, String* string, vector[LexemeC*] *prefixes,
                                 vector[LexemeC*] *suffixes) except NULL:
@@ -177,12 +177,11 @@ cdef class Language:
             idx = tokens.push_back(idx, deref(it))
             preinc(it)
 
-    cdef int _save_cached(self, vector[LexemeC*] *tokens, uint64_t key, size_t n) except -1:
-        assert tokens.size() > n
-        lexemes = <LexemeC**>self._mem.alloc((tokens.size() - n) + 1, sizeof(LexemeC**))
-        cdef size_t i, j
-        for i, j in enumerate(range(n, tokens.size())):
-            lexemes[i] = tokens.at(j)
+    cdef int _save_cached(self, LexemeC** tokens, uint64_t key, int n) except -1:
+        lexemes = <LexemeC**>self._mem.alloc(n + 1, sizeof(LexemeC**))
+        cdef int i
+        for i in range(n):
+            lexemes[i] = tokens[i]
         lexemes[i + 1] = NULL
         self.cache.set(key, lexemes)
 

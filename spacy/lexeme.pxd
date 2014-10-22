@@ -73,6 +73,9 @@ cdef struct LexemeC:
     flag_t dist_flags
 
 
+cdef LexemeC EMPTY_LEXEME
+
+
 cpdef dict get_lexeme_dict(size_t i, unicode string)
 
 cdef char* intern_and_encode(unicode string, size_t* length) except NULL

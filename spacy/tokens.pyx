@@ -6,6 +6,14 @@ cimport numpy
 cimport cython
 import numpy
 
+DEF PADDING = 5
+
+cdef int bounds_check(int i, int length, int padding) except -1:
+    if (i + padding) < 0:
+        raise IndexError
+    if (i - padding) >= length:
+        raise IndexError
+
 
 cdef class Tokens:
     """A sequence of references to Lexeme objects.
@@ -26,71 +34,58 @@ cdef class Tokens:
     >>> tokens.can_noun(1)
     True
     """
-    def __cinit__(self, string_length=0):
-        size = int(string_length / 3) if string_length >= 3 else 1
-        self.lex = new vector[LexemeC*]()
-        self.idx = new vector[int]()
-        self.pos = new vector[int]()
-        self.lex.reserve(size)
-        self.idx.reserve(size)
-        self.pos.reserve(size)
+    def __init__(self, string_length=0):
+        if string_length >= 3:
+            size = int(string_length / 3.0)
+        else:
+            size = 5
+        self.mem = Pool()
+        # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
+        # However, we need to remember the true starting places, so that we can
+        # realloc.
+        self._lex_ptr = <LexemeC**>self.mem.alloc(size + (PADDING*2), sizeof(LexemeC*))
+        self._idx_ptr = <int*>self.mem.alloc(size + (PADDING*2), sizeof(int))
+        self._pos_ptr = <int*>self.mem.alloc(size + (PADDING*2), sizeof(int))
+        self.lex = self._lex_ptr
+        self.idx = self._idx_ptr
+        self.pos = self._pos_ptr
+        for i in range(PADDING):
+            self.lex[i] = &EMPTY_LEXEME
+        for i in range(size, PADDING):
+            self.lex[i] = &EMPTY_LEXEME
+        self.lex += PADDING
+        self.idx += PADDING
+        self.pos += PADDING
 
-    def __dealloc__(self):
-        del self.lex
-        del self.idx
-        del self.pos
+        self.max_length = size
+        self.length = 0
 
     def __getitem__(self, i):
-        if i >= self.lex.size():
-            raise IndexError
-        return Lexeme(<size_t>self.lex.at(i))
+        bounds_check(i, self.length, PADDING)
+        return Lexeme(<size_t>self.lex[i])
 
     def __len__(self):
-        return self.lex.size()
+        return self.length
 
     cdef int push_back(self, int idx, LexemeC* lexeme) except -1:
-        self.lex.push_back(lexeme)
-        self.idx.push_back(idx)
+        if self.length == self.max_length:
+            self._realloc(self.length * 2)
+        self.lex[self.length] = lexeme
+        self.idx[self.length] = idx
+        self.pos[self.length] = 0
+        self.length += 1
         return idx + lexeme.ints[<int>LexInt_length]
 
-    cdef int int_array(self, atom_t* output, int i, int* indices, int n_idx,
-                       int* features, int n_feat):
-        cdef int feat_id, idx
-        cdef int length = self.lex.size()
-        for feat_id in features[:n_feat]:
-            for idx in indices[:n_idx]:
-                if idx < 0 or idx >= length:
-                    output[i] = 0
-                else:
-                    output[i] = self.lex[0][idx].ints[<int>feat_id]
-                i += 1
-        return i
+    def _realloc(self, new_size):
+        self.max_length = new_size
+        n = new_size + (PADDING * 2)
+        self._lex_ptr = <LexemeC**>self.mem.realloc(self._lex_ptr, n * sizeof(LexemeC*))
+        self._idx_ptr = <int*>self.mem.realloc(self._idx_ptr, n * sizeof(int))
+        self._pos_ptr = <int*>self.mem.realloc(self._pos_ptr, n * sizeof(int))
+        self.lex = self._lex_ptr + PADDING
+        self.idx = self._idx_ptr + PADDING
+        self.pos = self._pos_ptr + PADDING
 
-    cdef int string_array(self, atom_t* output, int i, int* indices, int n_idx,
-                          int* features, int n_feat):
-        cdef int feat_id, idx
-        cdef int length = self.lex.size()
-        for feat_id in features[:n_feat]:
-            for idx in indices[:n_idx]:
-                if idx < 0 or idx >= length:
-                    output[i] = 0
-                else:
-                    output[i] = <atom_t>self.lex[0][idx].strings[<int>feat_id]
-                i += 1
-        return i
-
-    cdef int bool_array(self, atom_t* output, int i, int* indices, int n_idx,
-                        int* features, int n_feat):
-        cdef int feat_id, idx
-        cdef int length = self.lex.size()
-        for feat_id in features[:n_feat]:
-            for idx in indices[:n_idx]:
-                if idx < 0 or idx >= length:
-                    output[i] = 0
-                else:
-                    output[i] = lexeme_check_dist_flag(self.lex[0][idx], feat_id)
-                i += 1
-        return i
 
     cdef int extend(self, int idx, LexemeC** lexemes, int n) except -1:
         cdef int i
@@ -99,131 +94,161 @@ cdef class Tokens:
         elif n == 0:
             i = 0
             while lexemes[i] != NULL:
-                self.lex.push_back(lexemes[i])
-                self.idx.push_back(idx)
-                idx += lexemes[i].ints[<int>LexInt_length]
+                idx = self.push_back(idx, lexemes[i])
                 i += 1
         else:
             for i in range(n):
-                self.lex.push_back(lexemes[i])
-                self.idx.push_back(idx)
-                idx += lexemes[i].ints[<int>LexInt_length]
+                idx = self.push_back(idx, lexemes[i])
         return idx
 
     cpdef int id(self, size_t i) except -1:
-        return self.lex.at(i).ints[<int>LexInt_id]
+        bounds_check(i, self.length, PADDING)
+        return self.lex[i].ints[<int>LexInt_id]
 
     cpdef float prob(self, size_t i) except 1:
-        return self.lex.at(i).floats[<int>LexFloat_prob]
+        bounds_check(i, self.length, PADDING)
+        return self.lex[i].floats[<int>LexFloat_prob]
 
     cpdef int cluster(self, size_t i) except *:
-        return self.lex.at(i).ints[<int>LexInt_cluster]
+        bounds_check(i, self.length, PADDING)
+        return self.lex[i].ints[<int>LexInt_cluster]
 
     cpdef bint check_orth_flag(self, size_t i, size_t flag_id) except *:
-        return lexeme_check_orth_flag(self.lex.at(i), flag_id)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_orth_flag(self.lex[i], flag_id)
 
     cpdef bint check_dist_flag(self, size_t i, size_t flag_id) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), flag_id)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], flag_id)
 
     cpdef unicode string_view(self, size_t i, size_t view_id):
-        return lexeme_get_string(self.lex.at(i), view_id)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_get_string(self.lex[i], view_id)
 
     # Provide accessor methods for the features supported by the language.
     # Without these, clients have to use the underlying string_view and check_flag
     # methods, which requires them to know the IDs.
 
     cpdef unicode string(self, size_t i):
-        if i >= self.lex.size():
-            raise IndexError
+        bounds_check(i, self.length, PADDING)
         return self.orig(i)
 
     cpdef unicode orig(self, size_t i):
-        cdef bytes utf8_string = self.lex.at(i).strings[<int>LexStr_orig]
+        bounds_check(i, self.length, PADDING)
+        cdef bytes utf8_string = self.lex[i].strings[<int>LexStr_orig]
         cdef unicode string = utf8_string.decode('utf8')
         return string
 
     cpdef unicode norm(self, size_t i):
-        cdef bytes utf8_string = self.lex.at(i).strings[<int>LexStr_norm]
+        bounds_check(i, self.length, PADDING)
+        cdef bytes utf8_string = self.lex[i].strings[<int>LexStr_norm]
         cdef unicode string = utf8_string.decode('utf8')
         return string
 
     cpdef unicode shape(self, size_t i):
-        return lexeme_get_string(self.lex.at(i), LexStr_shape)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_get_string(self.lex[i], LexStr_shape)
 
     cpdef unicode unsparse(self, size_t i):
-        return lexeme_get_string(self.lex.at(i), LexStr_unsparse)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_get_string(self.lex[i], LexStr_unsparse)
 
     cpdef unicode asciied(self, size_t i):
-        return lexeme_get_string(self.lex.at(i), LexStr_asciied)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_get_string(self.lex[i], LexStr_asciied)
 
     cpdef bint is_alpha(self, size_t i) except *:
-        return lexeme_check_orth_flag(self.lex.at(i), LexOrth_alpha)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_orth_flag(self.lex[i], LexOrth_alpha)
 
     cpdef bint is_ascii(self, size_t i) except *:
-        return lexeme_check_orth_flag(self.lex.at(i), LexOrth_ascii)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_orth_flag(self.lex[i], LexOrth_ascii)
 
     cpdef bint is_digit(self, size_t i) except *:
-        return lexeme_check_orth_flag(self.lex.at(i), LexOrth_digit)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_orth_flag(self.lex[i], LexOrth_digit)
 
     cpdef bint is_lower(self, size_t i) except *:
-        return lexeme_check_orth_flag(self.lex.at(i), LexOrth_lower)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_orth_flag(self.lex[i], LexOrth_lower)
 
     cpdef bint is_punct(self, size_t i) except *:
-        return lexeme_check_orth_flag(self.lex.at(i), LexOrth_punct)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_orth_flag(self.lex[i], LexOrth_punct)
 
     cpdef bint is_space(self, size_t i) except *:
-        return lexeme_check_orth_flag(self.lex.at(i), LexOrth_space)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_orth_flag(self.lex[i], LexOrth_space)
 
     cpdef bint is_title(self, size_t i) except *:
-        return lexeme_check_orth_flag(self.lex.at(i), LexOrth_title)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_orth_flag(self.lex[i], LexOrth_title)
 
     cpdef bint is_upper(self, size_t i) except *:
-        return lexeme_check_orth_flag(self.lex.at(i), LexOrth_upper)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_orth_flag(self.lex[i], LexOrth_upper)
 
     cpdef bint can_adj(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_adj)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_adj)
 
     cpdef bint can_adp(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_adp)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_adp)
 
     cpdef bint can_adv(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_adv)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_adv)
 
     cpdef bint can_conj(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_conj)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_conj)
 
     cpdef bint can_det(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_det)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_det)
 
     cpdef bint can_noun(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_noun)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_noun)
 
     cpdef bint can_num(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_num)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_num)
 
     cpdef bint can_pdt(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_pdt)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_pdt)
 
     cpdef bint can_pos(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_pos)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_pos)
 
     cpdef bint can_pron(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_pron)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_pron)
 
     cpdef bint can_prt(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_prt)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_prt)
 
     cpdef bint can_punct(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_punct)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_punct)
 
     cpdef bint can_verb(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_verb)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_verb)
 
     cpdef bint oft_lower(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_lower)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_lower)
 
     cpdef bint oft_title(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_title)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_title)
 
     cpdef bint oft_upper(self, size_t i) except *:
-        return lexeme_check_dist_flag(self.lex.at(i), LexDist_upper)
+        bounds_check(i, self.length, PADDING)
+        return lexeme_check_dist_flag(self.lex[i], LexDist_upper)
