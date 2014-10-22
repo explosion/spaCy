@@ -13,9 +13,8 @@ from thinc.features import NonZeroConjFeat
 from thinc.features import ConjFeat
 
 from .en import EN
-from .lexeme cimport LexStr_shape, LexStr_suff, LexStr_pre, LexStr_norm
-from .lexeme cimport LexDist_upper, LexDist_title
-from .lexeme cimport LexDist_upper, LexInt_cluster, LexInt_id
+
+from .lexeme cimport *
 
 
 NULL_TAG = 0
@@ -37,7 +36,9 @@ cdef class Tagger:
                 self.model.load(file_)
 
     cpdef class_t predict(self, int i, Tokens tokens, class_t prev, class_t prev_prev) except 0:
-        get_atoms(self._atoms, i, tokens, prev, prev_prev)
+        assert i >= 0
+        get_atoms(self._atoms, tokens.lex[i-2], tokens.lex[i-1], tokens.lex[i],
+                  tokens.lex[i+1], tokens.lex[i+2], prev, prev_prev)
         self.extractor.extract(self._feats, self._values, self._atoms, NULL)
         assert self._feats[self.extractor.n] == 0
         self._guess = self.model.score(self._scores, self._feats, self._values)
@@ -62,76 +63,77 @@ cdef class Tagger:
 
 cpdef enum:
     P2i
-    P1i
-    N0i
-    N1i
-    N2i
-    
     P2c
-    P1c
-    N0c
-    N1c
-    N2c
-    
-    P2shape
-    P1shape
-    N0shape
-    N1shape
-    N2shape
-
-    P2suff
-    P1suff
-    N0suff
-    N1suff
-    N2suff
-
-    P2pref
-    P1pref
-    N0pref
-    N1pref
-    N2pref
-
     P2w
-    P1w
-    N0w
-    N1w
-    N2w
-
+    P2shape
+    P2pref
+    P2suff
     P2oft_title
-    P1oft_title
-    N0oft_title
-    N1oft_title
-    N2oft_title
-
     P2oft_upper
+
+    P1i
+    P1c
+    P1w
+    P1shape
+    P1pre
+    P1suff
+    P1oft_title
     P1oft_upper
+
+    N0i
+    N0c
+    N0w
+    N0shape
+    N0pref
+    N0suff
+    N0oft_title
     N0oft_upper
+
+    N1i
+    N1c
+    N1w
+    N1shape
+    N1pref
+    N1suff
+    N1oft_title
     N1oft_upper
+
+    N2i
+    N2c
+    N2w
+    N2shape
+    N2pref
+    N2suff
+    N2oft_title
     N2oft_upper
 
-    P1t
     P2t
+    P1t
+
     CONTEXT_SIZE
 
 
-cdef int get_atoms(atom_t* context, int i, Tokens tokens, class_t prev_tag,
-                   class_t prev_prev_tag) except -1:
-    cdef int j
-    for j in range(CONTEXT_SIZE):
-        context[j] = 0
-    cdef int* indices = [i-2, i-1, i, i+1, i+2]
+cdef int get_atoms(atom_t* atoms, LexemeC* p2, LexemeC* p1, LexemeC* n0, LexemeC* n1,
+                   LexemeC* n2, class_t prev_tag, class_t prev_prev_tag) except -1:
+    _fill_token(&atoms[P2i], p2)
+    _fill_token(&atoms[P1i], p1)
+    _fill_token(&atoms[N0i], n0)
+    _fill_token(&atoms[N1i], n1)
+    _fill_token(&atoms[N2i], n2)
+    atoms[P1t] = prev_tag
+    atoms[P2t] = prev_prev_tag
 
-    cdef int* int_feats = [<int>LexInt_id, <int>LexInt_cluster]
-    cdef int* string_feats = [<int>LexStr_shape, <int>LexStr_suff, <int>LexStr_pre,
-                              <int>LexStr_norm]
-    cdef int* bool_feats = [<int>LexDist_title, <int>LexDist_upper]
 
-    cdef int c = 0
-    c = tokens.int_array(context, c, indices, 5, int_feats, 2)
-    c = tokens.string_array(context, c, indices, 5, string_feats, 4)
-    c = tokens.bool_array(context, c, indices, 5, bool_feats, 2)
-    context[P1t] = prev_tag
-    context[P2t] = prev_prev_tag
+cdef inline void _fill_token(atom_t* atoms, LexemeC* lex) nogil:
+    atoms[0] = lex.ints[<int>LexInt_id]
+    atoms[1] = lex.ints[<int>LexInt_cluster]
+    atoms[2] = <atom_t>lex.strings[<int>LexStr_norm]
+    atoms[3] = <atom_t>lex.strings[<int>LexStr_shape]
+    atoms[4] = <atom_t>lex.strings[<int>LexStr_pre]
+    atoms[5] = <atom_t>lex.strings[<int>LexStr_suff]
+
+    atoms[6] = lex.dist_flags & (1 << LexDist_title)
+    atoms[7] = lex.dist_flags & (1 << LexDist_upper)
 
 
 TEMPLATES = (
@@ -159,4 +161,3 @@ TEMPLATES = (
     (N0oft_upper,),
     (N0oft_title,),
 )
-
