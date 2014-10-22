@@ -49,9 +49,8 @@ cdef class Tokens:
         self.lex = self._lex_ptr
         self.idx = self._idx_ptr
         self.pos = self._pos_ptr
-        for i in range(PADDING):
-            self.lex[i] = &EMPTY_LEXEME
-        for i in range(size, PADDING):
+        cdef int i
+        for i in range(size + (PADDING*2)):
             self.lex[i] = &EMPTY_LEXEME
         self.lex += PADDING
         self.idx += PADDING
@@ -85,7 +84,8 @@ cdef class Tokens:
         self.lex = self._lex_ptr + PADDING
         self.idx = self._idx_ptr + PADDING
         self.pos = self._pos_ptr + PADDING
-
+        for i in range(self.length, self.max_length + PADDING):
+            self.lex[i] = &EMPTY_LEXEME
 
     cdef int extend(self, int idx, LexemeC** lexemes, int n) except -1:
         cdef int i
