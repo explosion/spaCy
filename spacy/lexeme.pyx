@@ -24,6 +24,8 @@ cpdef dict get_lexeme_dict(size_t i, unicode string):
     strings[<int>LexStr_shape] = orth.word_shape(string)
     strings[<int>LexStr_unsparse] = strings[<int>LexStr_shape]
     strings[<int>LexStr_asciied] = orth.asciied(string)
+    strings[<int>LexStr_pre] = string[0]
+    strings[<int>LexStr_suff] = string[-3:]
 
     orth_flags = get_orth_flags(string)
     dist_flags = OOV_DIST_FLAGS
@@ -98,7 +100,8 @@ cdef int lexeme_unpack(LexemeC* lex, dict p) except -1:
     for i, lex_float in enumerate(p['floats']):
         lex.floats[i] = lex_float
     cdef size_t _
-    for i, lex_string in enumerate(p['strings']):
+    for i in range(LexStr_N):
+        lex_string = p['strings'][i]
         lex.strings[i] = intern_and_encode(lex_string, &_)
     lex.orth_flags = p['orth_flags']
     lex.dist_flags = p['dist_flags']

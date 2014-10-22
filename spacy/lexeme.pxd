@@ -26,6 +26,8 @@ cpdef enum LexStrs:
     LexStr_shape
     LexStr_unsparse
     LexStr_asciied
+    LexStr_pre
+    LexStr_suff
     LexStr_N
 
 
