@@ -70,6 +70,15 @@ def read_tokenization(lang):
     return entries
 
 
+def read_detoken_rules(lang):
+    loc = path.join(DATA_DIR, lang, 'detokenize')
+    entries = []
+    with utf8open(loc) as file_:
+        for line in file_:
+            entries.append(line.strip())
+    return entries
+ 
+
 def align_tokens(ref, indices):
     start = 0
     queue = list(indices)
