@@ -2,6 +2,9 @@
 from .word cimport Lexeme
 
 from .lexeme cimport *
+cimport numpy
+cimport cython
+import numpy
 
 
 cdef class Tokens:
@@ -38,6 +41,8 @@ cdef class Tokens:
         del self.pos
 
     def __getitem__(self, i):
+        if i >= self.lex.size():
+            raise IndexError
         return Lexeme(<size_t>self.lex.at(i))
 
     def __len__(self):
@@ -47,6 +52,45 @@ cdef class Tokens:
         self.lex.push_back(lexeme)
         self.idx.push_back(idx)
         return idx + lexeme.ints[<int>LexInt_length]
+
+    cdef int int_array(self, atom_t* output, int i, int* indices, int n_idx,
+                       int* features, int n_feat):
+        cdef int feat_id, idx
+        cdef int length = self.lex.size()
+        for feat_id in features[:n_feat]:
+            for idx in indices[:n_idx]:
+                if idx < 0 or idx >= length:
+                    output[i] = 0
+                else:
+                    output[i] = self.lex[0][idx].ints[<int>feat_id]
+                i += 1
+        return i
+
+    cdef int string_array(self, atom_t* output, int i, int* indices, int n_idx,
+                          int* features, int n_feat):
+        cdef int feat_id, idx
+        cdef int length = self.lex.size()
+        for feat_id in features[:n_feat]:
+            for idx in indices[:n_idx]:
+                if idx < 0 or idx >= length:
+                    output[i] = 0
+                else:
+                    output[i] = <atom_t>self.lex[0][idx].strings[<int>feat_id]
+                i += 1
+        return i
+
+    cdef int bool_array(self, atom_t* output, int i, int* indices, int n_idx,
+                        int* features, int n_feat):
+        cdef int feat_id, idx
+        cdef int length = self.lex.size()
+        for feat_id in features[:n_feat]:
+            for idx in indices[:n_idx]:
+                if idx < 0 or idx >= length:
+                    output[i] = 0
+                else:
+                    output[i] = lexeme_check_dist_flag(self.lex[0][idx], feat_id)
+                i += 1
+        return i
 
     cdef int extend(self, int idx, LexemeC** lexemes, int n) except -1:
         cdef int i
@@ -89,6 +133,8 @@ cdef class Tokens:
     # methods, which requires them to know the IDs.
 
     cpdef unicode string(self, size_t i):
+        if i >= self.lex.size():
+            raise IndexError
         return self.orig(i)
 
     cpdef unicode orig(self, size_t i):
