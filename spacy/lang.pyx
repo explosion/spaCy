@@ -155,8 +155,10 @@ cdef class Language:
         cdef Lexeme** lexemes
         cdef Lexeme* lexeme
         cdef String span
-        idx = tokens.extend(idx, prefixes.data(), prefixes.size())
+        if prefixes.size():
+            idx = tokens.extend(idx, prefixes.data(), prefixes.size())
         if string.n != 0:
+
             lexemes = <Lexeme**>self.cache.get(string.key)
             if lexemes != NULL:
                 idx = tokens.extend(idx, lexemes, 0)

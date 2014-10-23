@@ -42,7 +42,8 @@ def _parse_line(line, sep):
         assert len(subtags) == len(subtokens), [t.string for t in subtokens]
         words.append(word)
         tags.extend([Tagger.encode_pos(ptb_to_univ(pos)) for pos in subtags])
-    return EN.tokenize(' '.join(words)), tags
+    tokens = EN.tokenize(' '.join(words)), tags
+    return tokens
 
 
 def get_tagdict(train_sents):
