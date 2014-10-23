@@ -5,41 +5,39 @@ from spacy.en import EN
 
 
 def test_single_word():
-    lex_ids = EN.tokenize(u'hello')
-    assert lex_ids[0].string == EN.lexicon.lookup(u'hello').string
+    tokens = EN.tokenize(u'hello')
+    assert tokens[0].string == 'hello'
 
 
 def test_two_words():
-    words = EN.tokenize('hello possums')
-    assert len(words) == 2
-    assert words[0].string == EN.lexicon.lookup('hello').string
-    assert words[0].string != words[1].string
+    tokens = EN.tokenize('hello possums')
+    assert len(tokens) == 2
+    assert tokens[0].string != tokens[1].string
 
 
 def test_punct():
     tokens = EN.tokenize('hello, possums.')
     assert len(tokens) == 4
-    assert tokens[0].string == EN.lexicon.lookup('hello').string
-    assert tokens[1].string == EN.lexicon.lookup(',').string
-    assert tokens[2].string == EN.lexicon.lookup('possums').string
-    assert tokens[1].string != EN.lexicon.lookup('hello').string
+    assert tokens[0].string == 'hello'
+    assert tokens[1].string == ','
+    assert tokens[2].string == 'possums'
+    assert tokens[1].string != 'hello'
 
 
 def test_digits():
-    lex_ids = EN.tokenize('The year: 1984.')
-    assert lex_ids.orig(3) == "1984"
-    assert len(lex_ids) == 5
-    assert lex_ids[0].string == EN.lexicon.lookup('The').string
-    assert lex_ids[3].string == EN.lexicon.lookup('1984').string
+    tokens = EN.tokenize('The year: 1984.')
+    assert len(tokens) == 5
+    assert tokens[0].id == EN.lexicon.lookup('The')['id']
+    assert tokens[3].id == EN.lexicon.lookup('1984')['id']
 
 
 def test_contraction():
-    lex_ids = EN.tokenize("don't giggle")
-    assert len(lex_ids) == 3
-    assert lex_ids[1].string == EN.lexicon.lookup("not").string
-    lex_ids = EN.tokenize("i said don't!")
-    assert len(lex_ids) == 5
-    assert lex_ids[4].string == EN.lexicon.lookup('!').string
+    tokens = EN.tokenize("don't giggle")
+    assert len(tokens) == 3
+    assert tokens[1].id == EN.lexicon.lookup("not")['id']
+    tokens = EN.tokenize("i said don't!")
+    assert len(tokens) == 5
+    assert tokens[4].id == EN.lexicon.lookup('!')['id']
 
 
 def test_contraction_punct():

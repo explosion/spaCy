@@ -5,106 +5,40 @@ from libc.string cimport memset
 
 import orth
 
+from .utf8string cimport Utf8Str
+
 OOV_DIST_FLAGS = 0
 
-memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
+memset(&EMPTY_LEXEME, 0, sizeof(Lexeme))
 
-cpdef dict get_lexeme_dict(size_t i, unicode string):
-    ints = [None for _ in range(LexInt_N)]
-    ints[<int>LexInt_id] = i
-    ints[<int>LexInt_length] = len(string)
-    ints[<int>LexInt_cluster] = 0
-    ints[<int>LexInt_pos] = 0
-    ints[<int>LexInt_supersense] = 0
-    
-    floats = [None for _ in range(LexFloat_N)]
-    floats[<int>LexFloat_prob] = 0
-    floats[<int>LexFloat_sentiment] = 0
 
-    strings = [None for _ in range(LexStr_N)]
-    strings[<int>LexStr_orig] = string
-    strings[<int>LexStr_norm] = strings[<int>LexStr_orig]
-    strings[<int>LexStr_shape] = orth.word_shape(string)
-    strings[<int>LexStr_unsparse] = strings[<int>LexStr_shape]
-    strings[<int>LexStr_asciied] = orth.asciied(string)
-    strings[<int>LexStr_pre] = string[0]
-    strings[<int>LexStr_suff] = string[-3:]
-
-    orth_flags = get_orth_flags(string)
-    dist_flags = OOV_DIST_FLAGS
-
-    return {'ints': ints, 'floats': floats, 'strings': strings,
-            'orth_flags': orth_flags, 'dist_flags': dist_flags}
-
-def get_orth_flags(unicode string):
+def get_flags(unicode string):
     cdef flag_t flags = 0
-
-    flags |= orth.is_ascii(string) << LexOrth_ascii
-    flags |= orth.is_alpha(string) << LexOrth_alpha
-    flags |= orth.is_digit(string) << LexOrth_digit
-    flags |= orth.is_lower(string) << LexOrth_lower
-    flags |= orth.is_punct(string) << LexOrth_punct
-    flags |= orth.is_space(string) << LexOrth_space
-    flags |= orth.is_title(string) << LexOrth_title
-    flags |= orth.is_upper(string) << LexOrth_upper
+    flags |= orth.is_alpha(string) << IS_ALPHA
+    flags |= orth.is_ascii(string) << IS_ASCII
+    flags |= orth.is_digit(string) << IS_DIGIT
+    flags |= orth.is_lower(string) << IS_LOWER
+    flags |= orth.is_punct(string) << IS_PUNCT
+    flags |= orth.is_space(string) << IS_SPACE
+    flags |= orth.is_title(string) << IS_TITLE
+    flags |= orth.is_upper(string) << IS_UPPER
     return flags
 
 
-def get_dist_flags(unicode string):
-    return 0
-
-
-cdef char* intern_and_encode(unicode string, size_t* length) except NULL:
+cdef int from_string(Lexeme* lex, unicode string, StringStore store) except -1:
     cdef bytes byte_string = string.encode('utf8')
-    cdef bytes utf8_string = intern(byte_string)
-    Py_INCREF(utf8_string)
-    length[0] = len(utf8_string)
-    return <char*>utf8_string
+    cdef Utf8Str* orig_str = store.intern(<char*>byte_string, len(byte_string))
+    lex.id = orig_str.i
+    lex.cluster = 0
+    lex.length = len(string)
+    lex.flags = get_flags(string)
+    # TODO: Hook this up
+    #lex.norm = norm_str.i
+    #lex.shape = norm_str.i
+    #lex.asciied = asciied_str.i
+    #lex.prefix = prefix_str.i
+    #lex.suffix = suffix_str.i
 
 
-cdef int lexeme_get_int(LexemeC* lexeme, size_t i) except *:
-    return lexeme.ints[i]
-
-
-cdef float lexeme_get_float(LexemeC* lexeme, size_t i) except *:
-    return lexeme.floats[i]
-
-
-cdef unicode lexeme_get_string(LexemeC* lexeme, size_t i):
-    cdef bytes byte_string = lexeme.strings[i]
-    return byte_string.decode('utf8')
-
-
-cdef bint lexeme_check_orth_flag(LexemeC* lexeme, size_t flag_id) except *:
-    return lexeme.orth_flags & (1 << flag_id)
-
-
-cdef bint lexeme_check_dist_flag(LexemeC* lexeme, size_t flag_id) except *:
-    return lexeme.dist_flags & (1 << flag_id)
-
-
-cdef dict lexeme_pack(LexemeC* lex):
-    cdef dict packed = {}
-    packed['ints'] = [lex.ints[i] for i in range(LexInt_N)]
-    packed['floats'] = [lex.floats[i] for i in range(LexFloat_N)]
-    packed['strings'] = [lex.strings[i].decode('utf8') for i in range(LexStr_N)]
-    packed['orth_flags'] = lex.orth_flags
-    packed['dist_flags'] = lex.orth_flags
-    return packed
-
-
-cdef int lexeme_unpack(LexemeC* lex, dict p) except -1:
-    cdef size_t i
-    cdef int lex_int
-    cdef float lex_float
-    cdef unicode string
-    for i, lex_int in enumerate(p['ints']):
-        lex.ints[i] = lex_int
-    for i, lex_float in enumerate(p['floats']):
-        lex.floats[i] = lex_float
-    cdef size_t _
-    for i in range(LexStr_N):
-        lex_string = p['strings'][i]
-        lex.strings[i] = intern_and_encode(lex_string, &_)
-    lex.orth_flags = p['orth_flags']
-    lex.dist_flags = p['dist_flags']
+cdef int from_dict(Lexeme* lex, dict props, StringStore stroe) except -1:
+    pass

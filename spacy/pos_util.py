@@ -20,6 +20,8 @@ def realign_tagged(token_rules, tagged_line, sep='/'):
 def read_tagged(detoken_rules, file_, sep='/'):
     sentences = []
     for line in file_:
+        if not line.strip():
+            continue
         line = realign_tagged(detoken_rules, line, sep=sep)
         tokens, tags = _parse_line(line, sep)
         assert len(tokens) == len(tags)
@@ -39,7 +41,7 @@ def _parse_line(line, sep):
             subtags.append('NULL')
         assert len(subtags) == len(subtokens), [t.string for t in subtokens]
         words.append(word)
-        tags.extend([Tagger.encode_pos(pos) for pos in subtags])
+        tags.extend([Tagger.encode_pos(ptb_to_univ(pos)) for pos in subtags])
     return EN.tokenize(' '.join(words)), tags
 
 
@@ -53,3 +55,86 @@ def get_tagdict(train_sents):
             tagdict.setdefault(word, {}).setdefault(tag, 0)
             tagdict[word][tag] += 1
     return tagdict
+
+
+def ptb_to_univ(tag):
+    mapping = dict(tuple(line.split()) for line in """
+NULL    NULL
+HYPH   .
+ADD X
+NFP .
+AFX X
+XX  X
+BES VERB
+HVS VERB
+GW  X
+!	.
+#	.
+$	.
+''	.
+(	.
+)	.
+,	.
+-LRB-	.
+-RRB-	.
+.	.
+:	.
+?	.
+CC	CONJ
+CD	NUM
+CD|RB	X
+DT	DET
+EX	DET
+FW	X
+IN	ADP
+IN|RP	ADP
+JJ	ADJ
+JJR	ADJ
+JJRJR	ADJ
+JJS	ADJ
+JJ|RB	ADJ
+JJ|VBG	ADJ
+LS	X
+MD	VERB
+NN	NOUN
+NNP	NOUN
+NNPS	NOUN
+NNS	NOUN
+NN|NNS	NOUN
+NN|SYM	NOUN
+NN|VBG	NOUN
+NP	NOUN
+PDT	DET
+POS	PRT
+PRP	PRON
+PRP$	PRON
+PRP|VBP	PRON
+PRT	PRT
+RB	ADV
+RBR	ADV
+RBS	ADV
+RB|RP	ADV
+RB|VBG	ADV
+RN	X
+RP	PRT
+SYM	X
+TO	PRT
+UH	X
+VB	VERB
+VBD	VERB
+VBD|VBN	VERB
+VBG	VERB
+VBG|NN	VERB
+VBN	VERB
+VBP	VERB
+VBP|TO	VERB
+VBZ	VERB
+VP	VERB
+WDT	DET
+WH	X
+WP	PRON
+WP$	PRON
+WRB	ADV
+``	.""".strip().split('\n'))
+    return mapping[tag]
+

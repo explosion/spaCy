@@ -113,8 +113,8 @@ cpdef enum:
     CONTEXT_SIZE
 
 
-cdef int get_atoms(atom_t* atoms, LexemeC* p2, LexemeC* p1, LexemeC* n0, LexemeC* n1,
-                   LexemeC* n2, class_t prev_tag, class_t prev_prev_tag) except -1:
+cdef int get_atoms(atom_t* atoms, Lexeme* p2, Lexeme* p1, Lexeme* n0, Lexeme* n1,
+                   Lexeme* n2, class_t prev_tag, class_t prev_prev_tag) except -1:
     _fill_token(&atoms[P2i], p2)
     _fill_token(&atoms[P1i], p1)
     _fill_token(&atoms[N0i], n0)
@@ -124,16 +124,16 @@ cdef int get_atoms(atom_t* atoms, LexemeC* p2, LexemeC* p1, LexemeC* n0, LexemeC
     atoms[P2t] = prev_prev_tag
 
 
-cdef inline void _fill_token(atom_t* atoms, LexemeC* lex) nogil:
-    atoms[0] = lex.ints[<int>LexInt_id]
-    atoms[1] = lex.ints[<int>LexInt_cluster]
-    atoms[2] = <atom_t>lex.strings[<int>LexStr_norm]
-    atoms[3] = <atom_t>lex.strings[<int>LexStr_shape]
-    atoms[4] = <atom_t>lex.strings[<int>LexStr_pre]
-    atoms[5] = <atom_t>lex.strings[<int>LexStr_suff]
+cdef inline void _fill_token(atom_t* atoms, Lexeme* lex) nogil:
+    atoms[0] = lex.id
+    atoms[1] = lex.cluster
+    atoms[2] = lex.norm
+    atoms[3] = lex.shape
+    atoms[4] = lex.prefix
+    atoms[5] = lex.suffix
 
-    atoms[6] = lex.dist_flags & (1 << LexDist_title)
-    atoms[7] = lex.dist_flags & (1 << LexDist_upper)
+    atoms[6] = lex.flags & (1 << OFT_TITLE)
+    atoms[7] = lex.flags & (1 << OFT_UPPER)
 
 
 TEMPLATES = (

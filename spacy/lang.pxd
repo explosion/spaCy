@@ -1,14 +1,12 @@
-from libc.stdint cimport uint32_t
-from libc.stdint cimport uint64_t
 from libcpp.vector cimport vector
-from libc.stdint cimport uint64_t, int64_t
 
 from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
 
-from .word cimport Lexeme
+from .typedefs cimport hash_t
 from .tokens cimport Tokens
-from .lexeme cimport LexemeC
+from .lexeme cimport Lexeme
+from .utf8string cimport StringStore
 
 
 cdef extern from "Python.h":
@@ -21,22 +19,24 @@ cdef extern from "Python.h":
 cdef struct String:
     Py_UNICODE* chars
     size_t n
-    uint64_t key
+    hash_t key
 
 
 cdef class Lexicon:
     cdef Pool mem
     cpdef readonly size_t size
+    cpdef readonly StringStore strings
 
-    cdef vector[LexemeC*] lexemes
+    cdef vector[Lexeme*] lexemes
 
     cpdef Lexeme lookup(self, unicode string)
-    cdef LexemeC* get(self, String* s) except NULL
+    cdef Lexeme* get(self, String* s) except NULL
     
     cdef PreshMap _dict
     
     cdef list _string_features
     cdef list _flag_features
+
 
 cdef class Language:
     cdef Pool _mem
@@ -52,12 +52,12 @@ cdef class Language:
     cpdef Tokens tokenize(self, unicode text)
 
     cdef int _tokenize(self, Tokens tokens, String* span, int start, int end) except -1
-    cdef String* _split_affixes(self, String* string, vector[LexemeC*] *prefixes,
-                             vector[LexemeC*] *suffixes) except NULL
+    cdef String* _split_affixes(self, String* string, vector[Lexeme*] *prefixes,
+                             vector[Lexeme*] *suffixes) except NULL
     cdef int _attach_tokens(self, Tokens tokens, int idx, String* string,
-                            vector[LexemeC*] *prefixes, vector[LexemeC*] *suffixes) except -1
+                            vector[Lexeme*] *prefixes, vector[Lexeme*] *suffixes) except -1
     cdef int _find_prefix(self, Py_UNICODE* characters, size_t length) except -1
     cdef int _find_suffix(self, Py_UNICODE* characters, size_t length) except -1
     cdef int _find_infix(self, Py_UNICODE* characters, size_t length) except -1
-    cdef int _save_cached(self, LexemeC** tokens, uint64_t key, int n) except -1
+    cdef int _save_cached(self, Lexeme** tokens, hash_t key, int n) except -1
  
