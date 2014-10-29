@@ -45,6 +45,8 @@ cdef class Language:
         self.suffix_re = re.compile(suffix)
         self.infix_re = re.compile(infix)
         self.lexicon = Lexicon(lexemes)
+        self.lexicon.load(path.join(util.DATA_DIR, name, 'lexemes'))
+        self.lexicon.strings.load(path.join(util.DATA_DIR, name, 'strings'))
         self._load_special_tokenization(rules)
 
     cpdef Tokens tokenize(self, unicode string):
@@ -244,6 +246,13 @@ cdef class Lexicon:
             self.lexemes.push_back(lexeme)
             self.size += 1
 
+    def set(self, unicode py_string, dict lexeme_dict):
+        cdef String string
+        string_from_unicode(&string, py_string)
+        cdef Lexeme* lex = self.get(&string)
+        lex[0] = lexeme_init(string.chars[:string.n], string.key, lex.i,
+                             self.strings, lexeme_dict)
+
     cdef Lexeme* get(self, String* string) except NULL:
         cdef Lexeme* lex
         lex = <Lexeme*>self._dict.get(string.key)
@@ -278,7 +287,7 @@ cdef class Lexicon:
         cdef FILE* fp = fopen(<char*>bytes_loc, 'wb')
         assert fp != NULL
         cdef size_t st
-        for i in range(self.size):
+        for i in range(self.size-1):
             st = fwrite(self.lexemes[i], sizeof(Lexeme), 1, fp)
             assert st == 1
         st = fclose(fp)
@@ -293,11 +302,12 @@ cdef class Lexicon:
         cdef Lexeme* lexeme
         while True:
             lexeme = <Lexeme*>self.mem.alloc(sizeof(Lexeme), 1)
-            st = fread(lexeme, sizeof(lexeme), 1, fp)
-            if st == 0:
+            st = fread(lexeme, sizeof(Lexeme), 1, fp)
+            if st != 1:
                 break
             self.lexemes.push_back(lexeme)
             self._dict.set(lexeme.hash, lexeme)
+        fclose(fp)
         
 
 cdef void string_from_unicode(String* s, unicode uni):

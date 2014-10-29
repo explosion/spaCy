@@ -13,7 +13,7 @@ def utf8open(loc, mode='r'):
 
 def read_lang_data(name):
     data_dir = path.join(DATA_DIR, name)
-    tokenization = read_tokenization(data_dir)
+    tokenization = read_tokenization(name)
     prefix = read_prefix(data_dir)
     suffix = read_suffix(data_dir)
     infix = read_infix(data_dir)

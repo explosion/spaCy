@@ -31,7 +31,6 @@ cpdef Lexeme init(unicode string, hash_t hashed, atom_t i,
     cdef Lexeme lex
     lex.hash = hashed
     lex.i = i
-    print string, i
     lex.length = len(string)
     lex.sic = get_string_id(string, store)
     
