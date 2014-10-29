@@ -101,16 +101,18 @@ cdef class Tokens:
 @cython.freelist(64)
 cdef class Token:
     def __init__(self, StringStore string_store, int i, int idx, int pos, dict lex):
+        assert i < 1000000
         self._string_store = string_store
-        self.i = i
+        self.id = i
         self.idx = idx
         self.pos = pos
         
-        self.id = lex['id']
+        self.id = lex['i']
         self.cluster = lex['cluster']
         self.length = lex['length']
         self.lex_pos = lex['pos']
         self.lex_supersense = lex['supersense']
+        self.sic = lex['sic']
         self.norm = lex['norm']
         self.shape = lex['shape']
         self.vocab10k = lex['vocab10k']
@@ -122,6 +124,6 @@ cdef class Token:
 
     property string:
         def __get__(self):
-            cdef bytes utf8string = self._string_store[self.id]
+            cdef bytes utf8string = self._string_store[self.sic]
             return utf8string.decode('utf8')
 

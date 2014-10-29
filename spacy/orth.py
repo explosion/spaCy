@@ -64,11 +64,7 @@ def can_tag(name, thresh=0.5):
 
 
 # String features
-def canon_case(string, prob, cluster, case_stats, tag_stats):
-    upper_pc = case_stats.get('upper', 0.0)
-    title_pc = case_stats.get('title', 0.0)
-    lower_pc = case_stats.get('lower', 0.0)
-    
+def canon_case(string, upper_pc=0.0, title_pc=0.0, lower_pc=0.0):
     if upper_pc >= lower_pc and upper_pc >= title_pc:
         return string.upper()
     elif title_pc >= lower_pc:
@@ -77,7 +73,7 @@ def canon_case(string, prob, cluster, case_stats, tag_stats):
         return string.lower()
 
 
-def word_shape(string, *args):
+def word_shape(string):
     length = len(string)
     shape = []
     last = ""
@@ -103,15 +99,15 @@ def word_shape(string, *args):
     return ''.join(shape)
 
 
-def non_sparse(string, prob, cluster, case_stats, tag_stats):
+def non_sparse(string, prob, cluster, upper_pc, title_pc, lower_pc):
     if is_alpha(string):
-        return canon_case(string, prob, cluster, case_stats, tag_stats)
+        return canon_case(string, upper_pc, title_pc, lower_pc)
     elif prob >= math.log(0.0001):
         return string
     else:
-        return word_shape(string, prob, cluster, case_stats, tag_stats)
+        return word_shape(string)
 
 
-def asciied(string, prob=0, cluster=0, case_stats=None, tag_stats=None):
+def asciied(string):
     ascii_string = unidecode(string)
     return ascii_string.decode('ascii')

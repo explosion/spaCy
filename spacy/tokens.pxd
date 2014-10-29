@@ -37,6 +37,7 @@ cdef class Token:
     cdef public atom_t lex_pos
     cdef public atom_t lex_supersense
 
+    cdef public atom_t sic
     cdef public atom_t norm
     cdef public atom_t shape
     cdef public atom_t vocab10k

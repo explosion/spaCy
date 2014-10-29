@@ -5,8 +5,8 @@ from spacy.en import EN
 
 def test_possess():
     tokens = EN.tokenize("Mike's")
-    assert EN.lexicon.strings[tokens[0].id] == "Mike"
-    assert EN.lexicon.strings[tokens[1].id] == "'s"
+    assert EN.lexicon.strings[tokens[0].sic] == "Mike"
+    assert EN.lexicon.strings[tokens[1].sic] == "'s"
     assert len(tokens) == 2
 
 

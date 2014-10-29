@@ -31,10 +31,15 @@ cdef class Tagger:
         self._values = <weight_t*>self.mem.alloc(self.extractor.n+1, sizeof(weight_t))
         self._scores = <weight_t*>self.mem.alloc(len(self.tags), sizeof(weight_t))
         self._guess = NULL_TAG
-        if path.exists(path.join(model_dir, 'model.gz')):
-            with gzip.open(path.join(model_dir, 'model.gz'), 'r') as file_:
-                self.model.load(file_)
-
+        if path.exists(path.join(model_dir, 'model')):
+            self.model.load(path.join(model_dir, 'model'))
+        tags_loc = path.join(model_dir, 'postags.json')
+        if path.exists(tags_loc):
+            with open(tags_loc) as file_:
+                Tagger.tags.update(ujson.load(file_))
+        if path.exists(path.join(model_dir, 'strings')):
+            EN.lexicon.strings.load(path.join(model_dir, 'strings'))
+            
     cpdef class_t predict(self, int i, Tokens tokens, class_t prev, class_t prev_prev) except 0:
         assert i >= 0
         get_atoms(self._atoms, tokens.lex[i-2], tokens.lex[i-1], tokens.lex[i],
@@ -125,7 +130,7 @@ cdef int get_atoms(atom_t* atoms, Lexeme* p2, Lexeme* p1, Lexeme* n0, Lexeme* n1
 
 
 cdef inline void _fill_token(atom_t* atoms, Lexeme* lex) nogil:
-    atoms[0] = lex.id
+    atoms[0] = lex.i
     atoms[1] = lex.cluster
     atoms[2] = lex.norm
     atoms[3] = lex.shape

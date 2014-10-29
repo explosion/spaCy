@@ -23,9 +23,11 @@ cpdef enum:
 
 
 cdef struct Lexeme:
-    atom_t id
+    hash_t hash
+    atom_t i
     atom_t length
-    
+   
+    atom_t sic
     atom_t norm
     atom_t shape
     atom_t vocab10k
@@ -44,12 +46,9 @@ cdef struct Lexeme:
 
 cdef Lexeme EMPTY_LEXEME
 
-
-cdef int from_string(Lexeme* lex, unicode string, StringStore store) except -1
-
-
-cdef int from_dict(Lexeme* lex, dict props, StringStore store) except -1
-
+cpdef Lexeme init(unicode string, hash_t hashed, atom_t i,
+                  StringStore store, dict props) except *
+ 
 
 cdef inline bint check_flag(Lexeme* lexeme, size_t flag_id) nogil:
     return lexeme.flags & (1 << flag_id)

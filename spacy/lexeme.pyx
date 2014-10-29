@@ -1,5 +1,6 @@
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
+from murmurhash.mrmr cimport hash64
 
 from libc.string cimport memset
 
@@ -12,7 +13,7 @@ OOV_DIST_FLAGS = 0
 memset(&EMPTY_LEXEME, 0, sizeof(Lexeme))
 
 
-def get_flags(unicode string):
+def get_flags(unicode string, float upper_pc, float title_pc, float lower_pc):
     cdef flag_t flags = 0
     flags |= orth.is_alpha(string) << IS_ALPHA
     flags |= orth.is_ascii(string) << IS_ASCII
@@ -25,20 +26,36 @@ def get_flags(unicode string):
     return flags
 
 
-cdef int from_string(Lexeme* lex, unicode string, StringStore store) except -1:
+cpdef Lexeme init(unicode string, hash_t hashed, atom_t i,
+                  StringStore store, dict props) except *:
+    cdef Lexeme lex
+    lex.hash = hashed
+    lex.i = i
+    print string, i
+    lex.length = len(string)
+    lex.sic = get_string_id(string, store)
+    
+    lex.cluster = props.get('cluster', 0)
+    lex.pos = props.get('pos', 0)
+    lex.supersense = props.get('supersense', 0)
+    lex.prob = props.get('prob', 0)
+
+    cdef float upper_pc = props.get('upper_pc', 0.0)
+    cdef float lower_pc = props.get('lower_pc', 0.0)
+    cdef float title_pc = props.get('title_pc', 0.0)
+
+    lex.prefix = get_string_id(string[0], store)
+    lex.suffix = get_string_id(string[-3:], store)
+    canon_cased = orth.canon_case(string, upper_pc, title_pc, lower_pc)
+    lex.norm = get_string_id(canon_cased, store)
+    lex.shape = get_string_id(orth.word_shape(string), store)
+    lex.asciied = get_string_id(orth.asciied(string), store)
+    non_sparse = orth.non_sparse(string, lex.prob, lex.cluster, upper_pc, title_pc, lower_pc)
+    lex.vocab10k = get_string_id(non_sparse, store)
+    lex.flags = get_flags(string, upper_pc, title_pc, lower_pc)
+    return lex
+
+cdef atom_t get_string_id(unicode string, StringStore store) except 0:
     cdef bytes byte_string = string.encode('utf8')
     cdef Utf8Str* orig_str = store.intern(<char*>byte_string, len(byte_string))
-    lex.id = orig_str.i
-    lex.cluster = 0
-    lex.length = len(string)
-    lex.flags = get_flags(string)
-    # TODO: Hook this up
-    #lex.norm = norm_str.i
-    #lex.shape = norm_str.i
-    #lex.asciied = asciied_str.i
-    #lex.prefix = prefix_str.i
-    #lex.suffix = suffix_str.i
-
-
-cdef int from_dict(Lexeme* lex, dict props, StringStore stroe) except -1:
-    pass
+    return orig_str.i

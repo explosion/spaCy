@@ -2,6 +2,8 @@ from libc.string cimport memcpy
 
 from murmurhash.mrmr cimport hash64
 
+import ujson
+
 
 cdef class StringStore:
     def __init__(self):
@@ -51,3 +53,20 @@ cdef class StringStore:
         else:
             i = <size_t>value
         return &self.strings[i]
+
+    def dump(self, loc):
+        strings = []
+        cdef Utf8Str* string
+        cdef bytes py_string
+        for i in range(self.size):
+            string = &self.strings[i]
+            py_string = string.chars[:string.length]
+            strings.append(py_string)
+        with open(loc, 'w') as file_:
+            ujson.dump(strings, file_, ensure_ascii=False)
+
+    def load(self, loc):
+        with open(loc) as file_:
+            strings = ujson.load(file_)
+        for string in strings[1:]:
+            self.intern(string, len(string))

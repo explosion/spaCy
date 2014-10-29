@@ -13,16 +13,16 @@ import random
 from os import path
 import re
 
-from cymem.cymem cimport Pool
 from cython.operator cimport preincrement as preinc
 from cython.operator cimport dereference as deref
+from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 
+from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
 from preshed.maps cimport PreshMap
 
 from .lexeme cimport Lexeme
-from .lexeme cimport from_dict as lexeme_from_dict
-from .lexeme cimport from_string as lexeme_from_string
+from .lexeme cimport init as lexeme_init
 
 from . import orth
 from . import util
@@ -232,26 +232,27 @@ cdef class Lexicon:
         self.mem = Pool()
         self._dict = PreshMap(2 ** 20)
         self.strings = StringStore()
-        self.size = 0
+        self.size = 1
         cdef String string
         cdef Lexeme* lexeme
-        #for py_string, lexeme_dict in lexemes.iteritems():
-        #    string_from_unicode(&string, py_string)
-        #    lexeme = <Lexeme*>self.mem.alloc(1, sizeof(Lexeme))
-        #    lexeme_from_dict(lexeme, lexeme_dict, self.strings)
-        #    self._dict.set(string.key, lexeme)
-        #    self.lexemes.push_back(lexeme)
-        #    self.size += 1
+        for py_string, lexeme_dict in lexemes.iteritems():
+            string_from_unicode(&string, py_string)
+            lexeme = <Lexeme*>self.mem.alloc(1, sizeof(Lexeme))
+            lexeme[0] = lexeme_init(string.chars[:string.n], string.key, self.size,
+                                    self.strings, lexeme_dict)
+            self._dict.set(lexeme.hash, lexeme)
+            self.lexemes.push_back(lexeme)
+            self.size += 1
 
     cdef Lexeme* get(self, String* string) except NULL:
         cdef Lexeme* lex
         lex = <Lexeme*>self._dict.get(string.key)
         if lex != NULL:
             return lex
-
-        lex = <Lexeme*>self.mem.alloc(1, sizeof(Lexeme))
-        lexeme_from_string(lex, string.chars[:string.n], self.strings)
-        self._dict.set(string.key, lex)
+        lex = <Lexeme*>self.mem.alloc(sizeof(Lexeme), 1)
+        lex[0] = lexeme_init(string.chars[:string.n], string.key, self.size,
+                             self.strings, {})
+        self._dict.set(lex.hash, lex)
         self.lexemes.push_back(lex)
         self.size += 1
         return lex
@@ -270,6 +271,34 @@ cdef class Lexicon:
         cdef Lexeme* lexeme = self.get(&string)
         return lexeme[0]
 
+    def dump(self, loc):
+        if path.exists(loc):
+            assert not path.isdir(loc)
+        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
+        cdef FILE* fp = fopen(<char*>bytes_loc, 'wb')
+        assert fp != NULL
+        cdef size_t st
+        for i in range(self.size):
+            st = fwrite(self.lexemes[i], sizeof(Lexeme), 1, fp)
+            assert st == 1
+        st = fclose(fp)
+        assert st == 0
+
+    def load(self, loc):
+        assert path.exists(loc)
+        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
+        cdef FILE* fp = fopen(<char*>bytes_loc, 'rb')
+        assert fp != NULL
+        cdef size_t st
+        cdef Lexeme* lexeme
+        while True:
+            lexeme = <Lexeme*>self.mem.alloc(sizeof(Lexeme), 1)
+            st = fread(lexeme, sizeof(lexeme), 1, fp)
+            if st == 0:
+                break
+            self.lexemes.push_back(lexeme)
+            self._dict.set(lexeme.hash, lexeme)
+        
 
 cdef void string_from_unicode(String* s, unicode uni):
     cdef Py_UNICODE* c_uni = <Py_UNICODE*>uni
