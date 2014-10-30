@@ -24,21 +24,19 @@ cdef class Tagger:
     tags = {'NULL': NULL_TAG}
     def __init__(self, model_dir):
         self.mem = Pool()
-        self.extractor = Extractor(TEMPLATES, [ConjFeat for _ in TEMPLATES])
+        tags_loc = path.join(model_dir, 'postags.json')
+        if path.exists(tags_loc):
+            with open(tags_loc) as file_:
+                Tagger.tags.update(ujson.load(file_))
         self.model = LinearModel(len(self.tags), self.extractor.n)
+        if path.exists(path.join(model_dir, 'model')):
+            self.model.load(path.join(model_dir, 'model'))
+        self.extractor = Extractor(TEMPLATES, [ConjFeat for _ in TEMPLATES])
         self._atoms = <atom_t*>self.mem.alloc(CONTEXT_SIZE, sizeof(atom_t))
         self._feats = <feat_t*>self.mem.alloc(self.extractor.n+1, sizeof(feat_t))
         self._values = <weight_t*>self.mem.alloc(self.extractor.n+1, sizeof(weight_t))
         self._scores = <weight_t*>self.mem.alloc(len(self.tags), sizeof(weight_t))
         self._guess = NULL_TAG
-        if path.exists(path.join(model_dir, 'model')):
-            self.model.load(path.join(model_dir, 'model'))
-        tags_loc = path.join(model_dir, 'postags.json')
-        if path.exists(tags_loc):
-            with open(tags_loc) as file_:
-                Tagger.tags.update(ujson.load(file_))
-        if path.exists(path.join(model_dir, 'strings')):
-            EN.lexicon.strings.load(path.join(model_dir, 'strings'))
             
     cpdef class_t predict(self, int i, Tokens tokens, class_t prev, class_t prev_prev) except 0:
         assert i >= 0

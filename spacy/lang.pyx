@@ -300,6 +300,7 @@ cdef class Lexicon:
         assert fp != NULL
         cdef size_t st
         cdef Lexeme* lexeme
+        i = 0
         while True:
             lexeme = <Lexeme*>self.mem.alloc(sizeof(Lexeme), 1)
             st = fread(lexeme, sizeof(Lexeme), 1, fp)
@@ -307,6 +308,8 @@ cdef class Lexicon:
                 break
             self.lexemes.push_back(lexeme)
             self._dict.set(lexeme.hash, lexeme)
+            i += 1
+        print "Load %d lexemes" % i
         fclose(fp)
         
 
