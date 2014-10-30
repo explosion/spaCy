@@ -27,8 +27,6 @@ cdef class Lexicon:
     cpdef readonly size_t size
     cpdef readonly StringStore strings
 
-    cdef vector[Lexeme*] lexemes
-
     cpdef Lexeme lookup(self, unicode string)
     cdef Lexeme* get(self, String* s) except NULL
     

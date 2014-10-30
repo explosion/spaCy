@@ -23,8 +23,6 @@ cpdef enum:
 
 
 cdef struct Lexeme:
-    hash_t hash
-    atom_t i
     atom_t length
    
     atom_t sic
@@ -46,7 +44,7 @@ cdef struct Lexeme:
 
 cdef Lexeme EMPTY_LEXEME
 
-cpdef Lexeme init(unicode string, hash_t hashed, atom_t i,
+cpdef Lexeme init(unicode string, hash_t hashed,
                   StringStore store, dict props) except *
  
 

@@ -31,7 +31,6 @@ cdef class Token:
     cdef public int idx
     cdef public int pos
 
-    cdef public atom_t id
     cdef public atom_t cluster
     cdef public atom_t length
     cdef public atom_t lex_pos

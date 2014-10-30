@@ -26,11 +26,9 @@ def get_flags(unicode string, float upper_pc, float title_pc, float lower_pc):
     return flags
 
 
-cpdef Lexeme init(unicode string, hash_t hashed, atom_t i,
+cpdef Lexeme init(unicode string, hash_t hashed,
                   StringStore store, dict props) except *:
     cdef Lexeme lex
-    lex.hash = hashed
-    lex.i = i
     lex.length = len(string)
     lex.sic = get_string_id(string, store)
     

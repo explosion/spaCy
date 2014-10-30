@@ -107,7 +107,6 @@ cdef class Token:
         self.idx = idx
         self.pos = pos
         
-        self.id = lex['i']
         self.cluster = lex['cluster']
         self.length = lex['length']
         self.lex_pos = lex['pos']

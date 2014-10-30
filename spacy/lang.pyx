@@ -45,8 +45,9 @@ cdef class Language:
         self.suffix_re = re.compile(suffix)
         self.infix_re = re.compile(infix)
         self.lexicon = Lexicon(lexemes)
-        self.lexicon.load(path.join(util.DATA_DIR, name, 'lexemes'))
-        self.lexicon.strings.load(path.join(util.DATA_DIR, name, 'strings'))
+        if path.exists(path.join(util.DATA_DIR, name, 'lexemes')):
+            self.lexicon.load(path.join(util.DATA_DIR, name, 'lexemes'))
+            self.lexicon.strings.load(path.join(util.DATA_DIR, name, 'strings'))
         self._load_special_tokenization(rules)
 
     cpdef Tokens tokenize(self, unicode string):
@@ -240,18 +241,16 @@ cdef class Lexicon:
         for py_string, lexeme_dict in lexemes.iteritems():
             string_from_unicode(&string, py_string)
             lexeme = <Lexeme*>self.mem.alloc(1, sizeof(Lexeme))
-            lexeme[0] = lexeme_init(string.chars[:string.n], string.key, self.size,
-                                    self.strings, lexeme_dict)
-            self._dict.set(lexeme.hash, lexeme)
-            self.lexemes.push_back(lexeme)
+            lexeme[0] = lexeme_init(string.chars[:string.n], string.key, self.strings,
+                                    lexeme_dict)
+            self._dict.set(string.key, lexeme)
             self.size += 1
 
     def set(self, unicode py_string, dict lexeme_dict):
         cdef String string
         string_from_unicode(&string, py_string)
         cdef Lexeme* lex = self.get(&string)
-        lex[0] = lexeme_init(string.chars[:string.n], string.key, lex.i,
-                             self.strings, lexeme_dict)
+        lex[0] = lexeme_init(string.chars[:string.n], string.key, self.strings, lexeme_dict)
 
     cdef Lexeme* get(self, String* string) except NULL:
         cdef Lexeme* lex
@@ -259,10 +258,8 @@ cdef class Lexicon:
         if lex != NULL:
             return lex
         lex = <Lexeme*>self.mem.alloc(sizeof(Lexeme), 1)
-        lex[0] = lexeme_init(string.chars[:string.n], string.key, self.size,
-                             self.strings, {})
-        self._dict.set(lex.hash, lex)
-        self.lexemes.push_back(lex)
+        lex[0] = lexeme_init(string.chars[:string.n], string.key, self.strings, {})
+        self._dict.set(string.key, lex)
         self.size += 1
         return lex
 
@@ -287,8 +284,15 @@ cdef class Lexicon:
         cdef FILE* fp = fopen(<char*>bytes_loc, 'wb')
         assert fp != NULL
         cdef size_t st
-        for i in range(self.size-1):
-            st = fwrite(self.lexemes[i], sizeof(Lexeme), 1, fp)
+        cdef hash_t key
+        for i in range(self._dict.length):
+            key = self._dict.c_map.cells[i].key
+            if key == 0:
+                continue
+            lexeme = <Lexeme*>self._dict.c_map.cells[i].value
+            st = fwrite(&key, sizeof(key), 1, fp)
+            assert st == 1
+            st = fwrite(lexeme, sizeof(Lexeme), 1, fp)
             assert st == 1
         st = fclose(fp)
         assert st == 0
@@ -300,14 +304,17 @@ cdef class Lexicon:
         assert fp != NULL
         cdef size_t st
         cdef Lexeme* lexeme
+        cdef hash_t key
         i = 0
         while True:
+            st = fread(&key, sizeof(key), 1, fp)
+            if st != 1:
+                break
             lexeme = <Lexeme*>self.mem.alloc(sizeof(Lexeme), 1)
             st = fread(lexeme, sizeof(Lexeme), 1, fp)
             if st != 1:
                 break
-            self.lexemes.push_back(lexeme)
-            self._dict.set(lexeme.hash, lexeme)
+            self._dict.set(key, lexeme)
             i += 1
         print "Load %d lexemes" % i
         fclose(fp)

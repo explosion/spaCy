@@ -128,7 +128,7 @@ cdef int get_atoms(atom_t* atoms, Lexeme* p2, Lexeme* p1, Lexeme* n0, Lexeme* n1
 
 
 cdef inline void _fill_token(atom_t* atoms, Lexeme* lex) nogil:
-    atoms[0] = lex.i
+    atoms[0] = lex.sic
     atoms[1] = lex.cluster
     atoms[2] = lex.norm
     atoms[3] = lex.shape
