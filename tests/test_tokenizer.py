@@ -27,17 +27,17 @@ def test_punct():
 def test_digits():
     tokens = EN.tokenize('The year: 1984.')
     assert len(tokens) == 5
-    assert tokens[0].sic == EN.lexicon.lookup('The')['sic']
-    assert tokens[3].sic == EN.lexicon.lookup('1984')['sic']
+    assert tokens[0].sic == EN.lexicon['The']['sic']
+    assert tokens[3].sic == EN.lexicon['1984']['sic']
 
 
 def test_contraction():
     tokens = EN.tokenize("don't giggle")
     assert len(tokens) == 3
-    assert tokens[1].sic == EN.lexicon.lookup("not")['sic']
+    assert tokens[1].sic == EN.lexicon["not"]['sic']
     tokens = EN.tokenize("i said don't!")
     assert len(tokens) == 5
-    assert tokens[4].sic == EN.lexicon.lookup('!')['sic']
+    assert tokens[4].sic == EN.lexicon['!']['sic']
 
 
 def test_contraction_punct():
