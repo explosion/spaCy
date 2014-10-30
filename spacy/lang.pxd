@@ -32,9 +32,6 @@ cdef class Lexicon:
     
     cdef PreshMap _dict
     
-    cdef list _string_features
-    cdef list _flag_features
-
 
 cdef class Language:
     cdef Pool _mem

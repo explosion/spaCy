@@ -266,10 +266,10 @@ cdef class Lexicon:
     cpdef Lexeme lookup(self, unicode uni_string):
         """Retrieve (or create, if not found) a Lexeme for a string, and return it.
     
-        Args
+       Args
             string (unicode):  The string to be looked up. Must be unicode, not bytes.
 
-        Returns:
+       Returns:
             lexeme (Lexeme): A reference to a lexical type.
         """
         cdef String string

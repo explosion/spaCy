@@ -1,8 +1,7 @@
-from .typedefs cimport hash_t, utf8_t, flag_t, id_t
-
-from thinc.typedefs cimport atom_t
+from .typedefs cimport hash_t, utf8_t, flag_t, id_t, len_t, tag_t
 
 from .utf8string cimport StringStore
+from libc.stdint cimport uint16_t
 
 cpdef flag_t OOV_DIST_FLAGS
 
@@ -23,23 +22,24 @@ cpdef enum:
 
 
 cdef struct Lexeme:
-    atom_t length
+    flag_t flags
    
-    atom_t sic
-    atom_t norm
-    atom_t shape
-    atom_t vocab10k
-    atom_t asciied
-    atom_t prefix
-    atom_t suffix
-
-    atom_t cluster
-    atom_t pos
-    atom_t supersense
+    id_t sic
+    id_t norm
+    id_t shape
+    id_t vocab10k
+    id_t asciied
+    id_t prefix
+    id_t suffix
 
     float prob
+    
+    len_t length
+    tag_t cluster
+    tag_t pos
+    tag_t supersense
 
-    flag_t flags
+
 
 
 cdef Lexeme EMPTY_LEXEME

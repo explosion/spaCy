@@ -52,7 +52,7 @@ cpdef Lexeme init(unicode string, hash_t hashed,
     lex.flags = get_flags(string, upper_pc, title_pc, lower_pc)
     return lex
 
-cdef atom_t get_string_id(unicode string, StringStore store) except 0:
+cdef id_t get_string_id(unicode string, StringStore store) except 0:
     cdef bytes byte_string = string.encode('utf8')
     cdef Utf8Str* orig_str = store.intern(<char*>byte_string, len(byte_string))
     return orig_str.i
