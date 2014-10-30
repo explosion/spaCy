@@ -35,15 +35,15 @@ cdef class Language:
 
     The language's name is used to look up default data-files, found in data/<name.
     """
-    def __init__(self, name, user_string_features, user_flag_features):
+    def __init__(self, name):
         self.name = name
-        self._mem = Pool()
-        self.cache = PreshMap(2 ** 25)
-        self.specials = PreshMap(2 ** 16)
+        self.mem = Pool()
+        self._cache = PreshMap(2 ** 25)
+        self._specials = PreshMap(2 ** 16)
         rules, prefix, suffix, infix, lexemes = util.read_lang_data(name)
-        self.prefix_re = re.compile(prefix)
-        self.suffix_re = re.compile(suffix)
-        self.infix_re = re.compile(infix)
+        self._prefix_re = re.compile(prefix)
+        self._suffix_re = re.compile(suffix)
+        self._infix_re = re.compile(infix)
         self.lexicon = Lexicon(lexemes)
         if path.exists(path.join(util.DATA_DIR, name, 'lexemes')):
             self.lexicon.load(path.join(util.DATA_DIR, name, 'lexemes'))
@@ -78,7 +78,7 @@ cdef class Language:
             if Py_UNICODE_ISSPACE(chars[i]) != in_ws:
                 if start < i:
                     string_slice(&span, chars, start, i)
-                    lexemes = <Lexeme**>self.cache.get(span.key)
+                    lexemes = <Lexeme**>self._cache.get(span.key)
                     if lexemes != NULL:
                         tokens.extend(start, lexemes, 0)
                     else: 
@@ -90,7 +90,7 @@ cdef class Language:
         i += 1
         if start < i:
             string_slice(&span, chars, start, i)
-            lexemes = <Lexeme**>self.cache.get(span.key)
+            lexemes = <Lexeme**>self._cache.get(span.key)
             if lexemes != NULL:
                 tokens.extend(start, lexemes, 0)
             else: 
@@ -123,7 +123,7 @@ cdef class Language:
                 string_slice(&prefix, string.chars, 0, pre_len)
                 string_slice(&minus_pre, string.chars, pre_len, string.n)
                 # Check whether we've hit a special-case
-                if minus_pre.n >= 1 and self.specials.get(minus_pre.key) != NULL:
+                if minus_pre.n >= 1 and self._specials.get(minus_pre.key) != NULL:
                     string[0] = minus_pre
                     prefixes.push_back(self.lexicon.get(&prefix))
                     break
@@ -132,7 +132,7 @@ cdef class Language:
                 string_slice(&suffix, string.chars, string.n - suf_len, string.n)
                 string_slice(&minus_suf, string.chars, 0, string.n - suf_len)
                 # Check whether we've hit a special-case
-                if minus_suf.n >= 1 and self.specials.get(minus_suf.key) != NULL:
+                if minus_suf.n >= 1 and self._specials.get(minus_suf.key) != NULL:
                     string[0] = minus_suf
                     suffixes.push_back(self.lexicon.get(&suffix))
                     break
@@ -146,7 +146,7 @@ cdef class Language:
             elif suf_len:
                 string[0] = minus_suf
                 suffixes.push_back(self.lexicon.get(&suffix))
-            if self.specials.get(string.key):
+            if self._specials.get(string.key):
                 break
         return string
 
@@ -162,7 +162,7 @@ cdef class Language:
             idx = tokens.extend(idx, prefixes.data(), prefixes.size())
         if string.n != 0:
 
-            lexemes = <Lexeme**>self.cache.get(string.key)
+            lexemes = <Lexeme**>self._cache.get(string.key)
             if lexemes != NULL:
                 idx = tokens.extend(idx, lexemes, 0)
             else:
@@ -182,32 +182,32 @@ cdef class Language:
             preinc(it)
 
     cdef int _save_cached(self, Lexeme** tokens, hash_t key, int n) except -1:
-        lexemes = <Lexeme**>self._mem.alloc(n + 1, sizeof(Lexeme**))
+        lexemes = <Lexeme**>self.mem.alloc(n + 1, sizeof(Lexeme**))
         cdef int i
         for i in range(n):
             lexemes[i] = tokens[i]
         lexemes[i + 1] = NULL
-        self.cache.set(key, lexemes)
+        self._cache.set(key, lexemes)
 
     cdef int _find_infix(self, Py_UNICODE* chars, size_t length) except -1:
         cdef unicode string = chars[:length]
-        match = self.infix_re.search(string)
+        match = self._infix_re.search(string)
         return match.start() if match is not None else 0
     
     cdef int _find_prefix(self, Py_UNICODE* chars, size_t length) except -1:
         cdef unicode string = chars[:length]
-        match = self.prefix_re.search(string)
+        match = self._prefix_re.search(string)
         return (match.end() - match.start()) if match is not None else 0
 
     cdef int _find_suffix(self, Py_UNICODE* chars, size_t length) except -1:
         cdef unicode string = chars[:length]
-        match = self.suffix_re.search(string)
+        match = self._suffix_re.search(string)
         return (match.end() - match.start()) if match is not None else 0
 
     def _load_special_tokenization(self, token_rules):
         '''Load special-case tokenization rules.
 
-        Loads special-case tokenization rules into the Language.cache cache,
+        Loads special-case tokenization rules into the Language._cache cache,
         read from data/<lang>/tokenization . The special cases are loaded before
         any language data is tokenized, giving these priority.  For instance,
         the English tokenization rules map "ain't" to ["are", "not"].
@@ -220,14 +220,14 @@ cdef class Language:
         cdef hash_t hashed
         cdef String string
         for uni_string, substrings in token_rules:
-            lexemes = <Lexeme**>self._mem.alloc(len(substrings) + 1, sizeof(Lexeme*))
+            lexemes = <Lexeme**>self.mem.alloc(len(substrings) + 1, sizeof(Lexeme*))
             for i, substring in enumerate(substrings):
                 string_from_unicode(&string, substring)
                 lexemes[i] = <Lexeme*>self.lexicon.get(&string)
             lexemes[i + 1] = NULL
             string_from_unicode(&string, uni_string)
-            self.specials.set(string.key, lexemes)
-            self.cache.set(string.key, lexemes)
+            self._specials.set(string.key, lexemes)
+            self._cache.set(string.key, lexemes)
 
 
 cdef class Lexicon:

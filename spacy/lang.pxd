@@ -34,15 +34,15 @@ cdef class Lexicon:
     
 
 cdef class Language:
-    cdef Pool _mem
-    cdef unicode name
-    cdef PreshMap cache
-    cdef PreshMap specials
+    cdef Pool mem
+    cdef readonly unicode name
+    cdef PreshMap _cache
+    cdef PreshMap _specials
     cpdef readonly Lexicon lexicon
 
-    cdef object prefix_re
-    cdef object suffix_re
-    cdef object infix_re
+    cdef object _prefix_re
+    cdef object _suffix_re
+    cdef object _infix_re
 
     cpdef Tokens tokenize(self, unicode text)
 
