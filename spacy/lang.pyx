@@ -1,11 +1,5 @@
 # cython: profile=True
 # cython: embedsignature=True
-"""Common classes and utilities across languages.
-
-Provides the main implementation for the spacy tokenizer. Specific languages
-subclass the Language class, over-writing the tokenization rules as necessary.
-Special-case tokenization rules are read from data/<lang>/tokenization .
-"""
 from __future__ import unicode_literals
 
 import json
@@ -24,27 +18,22 @@ from preshed.maps cimport PreshMap
 from .lexeme cimport Lexeme
 from .lexeme cimport init as lexeme_init
 
-from . import orth
 from . import util
 from .util import read_lang_data
 from .tokens import Tokens
 
 
 cdef class Language:
-    """Base class for language-specific tokenizers.
-
-    The language's name is used to look up default data-files, found in data/<name.
-    """
     def __init__(self, name):
         self.name = name
         self.mem = Pool()
         self._cache = PreshMap(2 ** 25)
         self._specials = PreshMap(2 ** 16)
-        rules, prefix, suffix, infix, lexemes = util.read_lang_data(name)
+        rules, prefix, suffix, infix = util.read_lang_data(name)
         self._prefix_re = re.compile(prefix)
         self._suffix_re = re.compile(suffix)
         self._infix_re = re.compile(infix)
-        self.lexicon = Lexicon(lexemes)
+        self.lexicon = Lexicon()
         if path.exists(path.join(util.DATA_DIR, name, 'lexemes')):
             self.lexicon.load(path.join(util.DATA_DIR, name, 'lexemes'))
             self.lexicon.strings.load(path.join(util.DATA_DIR, name, 'strings'))
@@ -231,26 +220,11 @@ cdef class Language:
 
 
 cdef class Lexicon:
-    def __init__(self, lexemes):
+    def __init__(self):
         self.mem = Pool()
         self._dict = PreshMap(2 ** 20)
         self.strings = StringStore()
         self.size = 1
-        cdef String string
-        cdef Lexeme* lexeme
-        for py_string, lexeme_dict in lexemes.iteritems():
-            string_from_unicode(&string, py_string)
-            lexeme = <Lexeme*>self.mem.alloc(1, sizeof(Lexeme))
-            lexeme[0] = lexeme_init(string.chars[:string.n], string.key, self.strings,
-                                    lexeme_dict)
-            self._dict.set(string.key, lexeme)
-            self.size += 1
-
-    def set(self, unicode py_string, dict lexeme_dict):
-        cdef String string
-        string_from_unicode(&string, py_string)
-        cdef Lexeme* lex = self.get(&string)
-        lex[0] = lexeme_init(string.chars[:string.n], string.key, self.strings, lexeme_dict)
 
     cdef Lexeme* get(self, String* string) except NULL:
         cdef Lexeme* lex
@@ -263,19 +237,17 @@ cdef class Lexicon:
         self.size += 1
         return lex
 
-    cpdef Lexeme lookup(self, unicode uni_string):
-        """Retrieve (or create, if not found) a Lexeme for a string, and return it.
-    
-       Args
-            string (unicode):  The string to be looked up. Must be unicode, not bytes.
-
-       Returns:
-            lexeme (Lexeme): A reference to a lexical type.
-        """
+    def __getitem__(self, unicode uni_string):
         cdef String string
         string_from_unicode(&string, uni_string)
         cdef Lexeme* lexeme = self.get(&string)
         return lexeme[0]
+
+    def __setitem__(self, unicode uni_string, dict props):
+        cdef String s
+        string_from_unicode(&s, uni_string)
+        cdef Lexeme* lex = self.get(&s)
+        lex[0] = lexeme_init(s.chars[:s.n], s.key, self.strings, props)
 
     def dump(self, loc):
         if path.exists(loc):
@@ -316,7 +288,6 @@ cdef class Lexicon:
                 break
             self._dict.set(key, lexeme)
             i += 1
-        print "Load %d lexemes" % i
         fclose(fp)
         
 

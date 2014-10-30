@@ -50,4 +50,4 @@ cdef class English(Language):
     pass
 
 
-EN = English('en', [], [])
+EN = English('en')

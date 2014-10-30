@@ -27,7 +27,6 @@ cdef class Lexicon:
     cpdef readonly size_t size
     cpdef readonly StringStore strings
 
-    cpdef Lexeme lookup(self, unicode string)
     cdef Lexeme* get(self, String* s) except NULL
     
     cdef PreshMap _dict

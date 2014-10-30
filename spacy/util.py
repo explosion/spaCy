@@ -17,14 +17,7 @@ def read_lang_data(name):
     prefix = read_prefix(data_dir)
     suffix = read_suffix(data_dir)
     infix = read_infix(data_dir)
-    
-    lex_loc = path.join(data_dir, 'lexemes.json')
-    if path.exists(lex_loc):
-        with open(lex_loc) as file_:
-            lexemes = ujson.load(file_)
-    else:
-        lexemes = {}
-    return tokenization, prefix, suffix, infix, lexemes
+    return tokenization, prefix, suffix, infix
 
 
 def read_prefix(data_dir):
