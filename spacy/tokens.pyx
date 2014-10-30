@@ -101,11 +101,10 @@ cdef class Tokens:
 @cython.freelist(64)
 cdef class Token:
     def __init__(self, StringStore string_store, int i, int idx, int pos, dict lex):
-        assert i < 1000000
         self._string_store = string_store
-        self.id = i
         self.idx = idx
         self.pos = pos
+        self.i = i
         
         self.cluster = lex['cluster']
         self.length = lex['length']
