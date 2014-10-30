@@ -43,8 +43,11 @@ cpdef Lexeme init(unicode string, hash_t hashed,
 
     lex.prefix = get_string_id(string[0], store)
     lex.suffix = get_string_id(string[-3:], store)
-    canon_cased = orth.canon_case(string, upper_pc, title_pc, lower_pc)
-    lex.norm = get_string_id(canon_cased, store)
+    if upper_pc or lower_pc or title_pc:
+        canon_cased = orth.canon_case(string, upper_pc, title_pc, lower_pc)
+        lex.norm = get_string_id(canon_cased, store)
+    else:
+        lex.norm = lex.sic
     lex.shape = get_string_id(orth.word_shape(string), store)
     lex.asciied = get_string_id(orth.asciied(string), store)
     non_sparse = orth.non_sparse(string, lex.prob, lex.cluster, upper_pc, title_pc, lower_pc)
