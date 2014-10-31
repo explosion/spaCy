@@ -58,12 +58,10 @@ cdef class StringStore:
         strings = []
         cdef Utf8Str* string
         cdef bytes py_string
-        print "Dump strings"
         for i in range(self.size):
             string = &self.strings[i]
             py_string = string.chars[:string.length]
             strings.append(py_string)
-        print len(strings)
         with open(loc, 'w') as file_:
             ujson.dump(strings, file_, ensure_ascii=False)
 
