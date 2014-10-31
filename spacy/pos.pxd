@@ -7,23 +7,6 @@ from thinc.typedefs cimport atom_t, feat_t, weight_t, class_t
 from .tokens cimport Tokens
 
 
-cpdef enum PosTag:
-    NONE
-    ADJ
-    ADP
-    ADV
-    CONJ
-    DET
-    NOUN
-    NUM
-    PDT
-    POS
-    PRON
-    PRT
-    PUNCT
-    VERB
-
-
 cdef class Tagger:
     cpdef readonly Extractor extractor
     cpdef readonly LinearModel model
