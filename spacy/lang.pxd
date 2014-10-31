@@ -26,6 +26,7 @@ cdef class Lexicon:
     cdef Pool mem
     cpdef readonly size_t size
     cpdef readonly StringStore strings
+    cdef vector[Lexeme*] lexemes
 
     cdef Lexeme* get(self, String* s) except NULL
     

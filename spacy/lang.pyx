@@ -16,6 +16,7 @@ from murmurhash.mrmr cimport hash64
 from preshed.maps cimport PreshMap
 
 from .lexeme cimport Lexeme
+from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport init as lexeme_init
 
 from . import util
@@ -224,6 +225,7 @@ cdef class Lexicon:
         self.mem = Pool()
         self._dict = PreshMap(2 ** 20)
         self.strings = StringStore()
+        self.lexemes.push_back(&EMPTY_LEXEME)
         self.size = 1
 
     cdef Lexeme* get(self, String* string) except NULL:
@@ -232,14 +234,19 @@ cdef class Lexicon:
         if lex != NULL:
             return lex
         lex = <Lexeme*>self.mem.alloc(sizeof(Lexeme), 1)
-        lex[0] = lexeme_init(string.chars[:string.n], string.key, self.strings, {})
+        lex[0] = lexeme_init(self.size, string.chars[:string.n], string.key, self.strings, {})
         self._dict.set(string.key, lex)
+        while self.lexemes.size() < (lex.id + 1):
+            self.lexemes.push_back(&EMPTY_LEXEME)
+        self.lexemes[lex.id] = lex
         self.size += 1
         return lex
 
-    def __getitem__(self, unicode uni_string):
+    def __getitem__(self,  id_or_string):
+        if type(id_or_string) == int:
+            return self.lexemes.at(id_or_string)[0]
         cdef String string
-        string_from_unicode(&string, uni_string)
+        string_from_unicode(&string, id_or_string)
         cdef Lexeme* lexeme = self.get(&string)
         return lexeme[0]
 
@@ -247,7 +254,7 @@ cdef class Lexicon:
         cdef String s
         string_from_unicode(&s, uni_string)
         cdef Lexeme* lex = self.get(&s)
-        lex[0] = lexeme_init(s.chars[:s.n], s.key, self.strings, props)
+        lex[0] = lexeme_init(lex.id, s.chars[:s.n], s.key, self.strings, props)
 
     def dump(self, loc):
         if path.exists(loc):
@@ -287,7 +294,11 @@ cdef class Lexicon:
             if st != 1:
                 break
             self._dict.set(key, lexeme)
+            while self.lexemes.size() < (lexeme.id + 1):
+                self.lexemes.push_back(&EMPTY_LEXEME)
+            self.lexemes[lexeme.id] = lexeme
             i += 1
+            self.size += 1
         fclose(fp)
         
 
