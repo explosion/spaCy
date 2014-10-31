@@ -26,14 +26,15 @@ def get_flags(unicode string, float upper_pc, float title_pc, float lower_pc):
     return flags
 
 
-cpdef Lexeme init(unicode string, hash_t hashed,
+cpdef Lexeme init(id_t i, unicode string, hash_t hashed,
                   StringStore store, dict props) except *:
     cdef Lexeme lex
+    lex.id = i
     lex.length = len(string)
     lex.sic = get_string_id(string, store)
     
     lex.cluster = props.get('cluster', 0)
-    lex.pos = props.get('pos', 0)
+    lex.postype = props.get('postype', 0)
     lex.supersense = props.get('supersense', 0)
     lex.prob = props.get('prob', 0)
 
@@ -54,6 +55,7 @@ cpdef Lexeme init(unicode string, hash_t hashed,
     lex.vocab10k = get_string_id(non_sparse, store)
     lex.flags = get_flags(string, upper_pc, title_pc, lower_pc)
     return lex
+
 
 cdef id_t get_string_id(unicode string, StringStore store) except 0:
     cdef bytes byte_string = string.encode('utf8')

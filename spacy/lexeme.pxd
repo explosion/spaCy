@@ -24,6 +24,7 @@ cpdef enum:
 cdef struct Lexeme:
     flag_t flags
    
+    id_t id
     id_t sic
     id_t norm
     id_t shape
@@ -36,7 +37,7 @@ cdef struct Lexeme:
     
     len_t length
     tag_t cluster
-    tag_t pos
+    tag_t postype
     tag_t supersense
 
 
@@ -44,7 +45,7 @@ cdef struct Lexeme:
 
 cdef Lexeme EMPTY_LEXEME
 
-cpdef Lexeme init(unicode string, hash_t hashed,
+cpdef Lexeme init(id_t i, unicode string, hash_t hashed,
                   StringStore store, dict props) except *
  
 
