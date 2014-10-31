@@ -105,11 +105,12 @@ cdef class Token:
         self.idx = idx
         self.pos = pos
         self.i = i
+        self.id = lex['id']
         
         self.cluster = lex['cluster']
         self.length = lex['length']
-        self.lex_pos = lex['pos']
-        self.lex_supersense = lex['supersense']
+        self.postype = lex['postype']
+        self.sensetype = lex['supersense']
         self.sic = lex['sic']
         self.norm = lex['norm']
         self.shape = lex['shape']
@@ -122,6 +123,8 @@ cdef class Token:
 
     property string:
         def __get__(self):
+            if self.sic == 0:
+                return ''
             cdef bytes utf8string = self._string_store[self.sic]
             return utf8string.decode('utf8')
 
