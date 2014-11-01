@@ -49,6 +49,7 @@ def is_lower(string):
 def is_upper(string):
     return string.isupper()
 
+
 TLDs = set("com|org|edu|gov|net|mil|aero|asia|biz|cat|coop|info|int|jobs|mobi|museum|"
         "name|pro|tel|travel|xxx|"
         "ac|ad|ae|af|ag|ai|al|am|an|ao|aq|ar|as|at|au|aw|ax|az|ba|bb|bd|be|bf|bg|"
@@ -62,6 +63,7 @@ TLDs = set("com|org|edu|gov|net|mil|aero|asia|biz|cat|coop|info|int|jobs|mobi|mu
         "sb|sc|sd|se|sg|sh|si|sj|sk|sl|sm|sn|so|sr|ss|st|su|sv|sy|sz|tc|td|tf|tg|th|"
         "tj|tk|tl|tm|tn|to|tp|tr|tt|tv|tw|tz|ua|ug|uk|us|uy|uz|va|vc|ve|vg|vi|vn|vu|"
         "wf|ws|ye|yt|za|zm|zw".split('|'))
+
 
 def is_urlish(string):
     # We're looking for things that function in text like URLs. So, valid URL
@@ -82,13 +84,23 @@ def is_urlish(string):
     return False
 
 
+NUM_WORDS = set('zero one two three four five six seven eight nine ten'
+                'eleven twelve thirteen fourteen fifteen sixteen seventeen'
+                'eighteen nineteen twenty thirty forty fifty sixty seventy'
+                'eighty ninety hundred thousand million billion trillion'
+                'quadrillion gajillion bazillion'.split())
 def is_number(string):
-    pass
-
-
-def is_emoticon(string):
-    pass
-
+    string = string.replace(',', '')
+    string = string.replace('.', '')
+    if string.isdigit():
+        return True
+    if string.count('/') == 1:
+        num, denom = string.split('/')
+        if is_number(num) and is_number(denom):
+            return True
+    if string in NUM_WORDS:
+        return True
+    return False
 
 # Statistics features
 def oft_case(name, thresh):
