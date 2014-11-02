@@ -39,7 +39,7 @@ cdef class Tagger:
         self._values = <weight_t*>self.mem.alloc(self.extractor.n+1, sizeof(weight_t))
         self._scores = <weight_t*>self.mem.alloc(len(self.tags), sizeof(weight_t))
         self._guess = NULL_TAG
-            
+
     cpdef class_t predict(self, int i, Tokens tokens, class_t prev, class_t prev_prev) except 0:
         get_atoms(self._atoms, tokens.lex[i-2], tokens.lex[i-1], tokens.lex[i],
                   tokens.lex[i+1], tokens.lex[i+2], prev, prev_prev)
