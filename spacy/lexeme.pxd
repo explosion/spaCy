@@ -16,6 +16,9 @@ cpdef enum:
     IS_TITLE
     IS_UPPER
 
+    LIKE_URL
+    LIKE_NUMBER
+
     OFT_LOWER
     OFT_TITLE
     OFT_UPPER

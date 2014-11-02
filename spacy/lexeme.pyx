@@ -23,6 +23,9 @@ def get_flags(unicode string, float upper_pc, float title_pc, float lower_pc):
     flags |= orth.is_space(string) << IS_SPACE
     flags |= orth.is_title(string) << IS_TITLE
     flags |= orth.is_upper(string) << IS_UPPER
+
+    flags |= orth.like_url(string) << LIKE_URL
+    flags |= orth.like_number(string) << LIKE_NUMBER
     return flags
 
 

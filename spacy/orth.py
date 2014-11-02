@@ -65,7 +65,7 @@ TLDs = set("com|org|edu|gov|net|mil|aero|asia|biz|cat|coop|info|int|jobs|mobi|mu
         "wf|ws|ye|yt|za|zm|zw".split('|'))
 
 
-def is_urlish(string):
+def like_url(string):
     # We're looking for things that function in text like URLs. So, valid URL
     # or not, anything they say http:// is going to be good.
     if string.startswith('http://'):
@@ -89,14 +89,14 @@ NUM_WORDS = set('zero one two three four five six seven eight nine ten'
                 'eighteen nineteen twenty thirty forty fifty sixty seventy'
                 'eighty ninety hundred thousand million billion trillion'
                 'quadrillion gajillion bazillion'.split())
-def is_number(string):
+def like_number(string):
     string = string.replace(',', '')
     string = string.replace('.', '')
     if string.isdigit():
         return True
     if string.count('/') == 1:
         num, denom = string.split('/')
-        if is_number(num) and is_number(denom):
+        if like_number(num) and like_number(denom):
             return True
     if string in NUM_WORDS:
         return True
