@@ -1,9 +1,9 @@
 from libc.string cimport memcpy
 
 from murmurhash.mrmr cimport hash64
+import codecs
 
-import ujson
-
+SEPARATOR = '\n|-SEP-|\n'
 
 cdef class StringStore:
     def __init__(self):
@@ -61,12 +61,15 @@ cdef class StringStore:
         for i in range(self.size):
             string = &self.strings[i]
             py_string = string.chars[:string.length]
-            strings.append(py_string)
-        with open(loc, 'w') as file_:
-            ujson.dump(strings, file_, ensure_ascii=False)
+            strings.append(py_string.decode('utf8'))
+        with codecs.open(loc, 'w', 'utf8') as file_:
+            file_.write(SEPARATOR.join(strings))
 
     def load(self, loc):
-        with open(loc) as file_:
-            strings = ujson.load(file_)
+        with codecs.open(loc, 'r', 'utf8') as file_:
+            strings = file_.read().split(SEPARATOR)
+        cdef unicode string
+        cdef bytes byte_string
         for string in strings[1:]:
-            self.intern(string, len(string))
+            byte_string = string.encode('utf8')
+            self.intern(byte_string, len(byte_string))
