@@ -86,6 +86,8 @@ cpdef enum:
     P2shape
     P2pref
     P2suff
+    P2title
+    P2upper
     P2oft_title
     P2oft_upper
     P2pos
@@ -98,6 +100,8 @@ cpdef enum:
     P1shape
     P1pre
     P1suff
+    P1title
+    P1upper
     P1oft_title
     P1oft_upper
     P1pos
@@ -110,6 +114,8 @@ cpdef enum:
     N0shape
     N0pref
     N0suff
+    N0title
+    N0upper
     N0oft_title
     N0oft_upper
     N0pos
@@ -122,6 +128,8 @@ cpdef enum:
     N1shape
     N1pref
     N1suff
+    N1title
+    N1upper
     N1oft_title
     N1oft_upper
     N1pos
@@ -134,6 +142,8 @@ cpdef enum:
     N2shape
     N2pref
     N2suff
+    N2title
+    N2upper
     N2oft_title
     N2oft_upper
     N2pos
@@ -160,17 +170,18 @@ cdef int get_atoms(atom_t* atoms, Lexeme* p2, Lexeme* p1, Lexeme* n0, Lexeme* n1
 cdef inline void _fill_token(atom_t* atoms, Lexeme* lex) nogil:
     atoms[0] = lex.sic
     atoms[1] = lex.cluster
-    atoms[2] = lex.norm
+    atoms[2] = lex.norm if (lex.prob != 0 and lex.prob >= -10) else lex.shape
     atoms[3] = lex.shape
     atoms[4] = lex.prefix
     atoms[5] = lex.suffix
 
-    atoms[6] = lex.flags & (1 << OFT_TITLE)
-    atoms[7] = lex.flags & (1 << OFT_UPPER)
-    atoms[8] = lex.postype
-    atoms[9] = lex.flags & (1 << LIKE_URL)
-    atoms[10] = lex.flags & (1 << LIKE_NUMBER)
-
+    atoms[6] = lex.flags & (1 << IS_TITLE)
+    atoms[7] = lex.flags & (1 << IS_UPPER)
+    atoms[8] = lex.flags & (1 << OFT_TITLE)
+    atoms[9] = lex.flags & (1 << OFT_UPPER)
+    atoms[10] = lex.postype
+    atoms[11] = lex.flags & (1 << LIKE_URL)
+    atoms[12] = lex.flags & (1 << LIKE_NUMBER)
 
 TEMPLATES = (
     (N0i,),
@@ -194,29 +205,25 @@ TEMPLATES = (
     (N2c,),
     (P1c,),
     (P2c,),
+    (P1c, N0c),
+    (N0c, N1c),
+    (P1c, P1t),
+    (P1c, P1t, N0c),
+    (P1t, N0c),
     (N0oft_upper,),
     (N0oft_title,),
 
-    (P1t, N1w),
-    (P1t, P2t, N1w),
-    (P1w, P2w, N1w),
-    (P2w, N1w, N2w),
+    (P1w, N0w),
+    (N0w, N1w),
 
     (N0pos,),
-    (N0w, N1pos),
-    (N0w, N1pos, N2pos),
-    (P1t, N0pos),
-    (P2t, P1t, N0pos),
+    (P1t, N0pos, N1pos),
+    (P1t, N1pos),
 
-    (P2url,),
-    (P1url,),
     (N0url,),
-    (N1url,),
-    (N2url,),
-
-    (P2num,),
-    (P1num,),
     (N0num,),
+    (P1url,),
+    (P1url,),
     (N1num,),
-    (N2num,),
+    (N1url,),
 )
