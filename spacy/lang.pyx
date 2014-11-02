@@ -23,6 +23,8 @@ from . import util
 from .util import read_lang_data
 from .tokens import Tokens
 
+from .pos cimport Tagger as PosTagger
+
 
 cdef class Language:
     def __init__(self, name):
@@ -39,6 +41,10 @@ cdef class Language:
             self.lexicon.load(path.join(util.DATA_DIR, name, 'lexemes'))
             self.lexicon.strings.load(path.join(util.DATA_DIR, name, 'strings'))
         self._load_special_tokenization(rules)
+        if path.exists(path.join(util.DATA_DIR, name, 'pos')):
+            self.pos_tagger = PosTagger(path.join(util.DATA_DIR, name, 'pos'))
+        else:
+            self.pos_tagger = None
 
     cpdef Tokens tokenize(self, unicode string):
         """Tokenize a string.
@@ -86,6 +92,16 @@ cdef class Language:
             else: 
                 self._tokenize(tokens, &span, start, i)
         return tokens
+
+    cpdef Tokens pos_tag(self, Tokens t):
+        if self.pos_tagger is None:
+            return t
+        cdef int i
+        t.pos[-1] = self.pos_tagger.encode_pos('EOL')
+        t.pos[-2] = self.pos_tagger.encode_pos('EOL')
+        for i in range(t.length):
+            t.pos[i] = self.pos_tagger.predict(i, t, t.pos[i-1], t.pos[i-2])
+        return t
 
     cdef int _tokenize(self, Tokens tokens, String* span, int start, int end) except -1:
         cdef vector[Lexeme*] prefixes

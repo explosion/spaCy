@@ -6,6 +6,7 @@ from cymem.cymem cimport Pool
 from .typedefs cimport hash_t
 from .tokens cimport Tokens
 from .lexeme cimport Lexeme
+from .pos cimport Tagger as PosTagger
 from .utf8string cimport StringStore
 
 
@@ -40,11 +41,14 @@ cdef class Language:
     cdef PreshMap _specials
     cpdef readonly Lexicon lexicon
 
+    cpdef readonly PosTagger pos_tagger
+
     cdef object _prefix_re
     cdef object _suffix_re
     cdef object _infix_re
 
     cpdef Tokens tokenize(self, unicode text)
+    cpdef Tokens pos_tag(self, Tokens t)
 
     cdef int _tokenize(self, Tokens tokens, String* span, int start, int end) except -1
     cdef String* _split_affixes(self, String* string, vector[Lexeme*] *prefixes,
