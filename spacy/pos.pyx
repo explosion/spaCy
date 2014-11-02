@@ -89,6 +89,8 @@ cpdef enum:
     P2oft_title
     P2oft_upper
     P2pos
+    P2url
+    P2num
 
     P1i
     P1c
@@ -99,6 +101,8 @@ cpdef enum:
     P1oft_title
     P1oft_upper
     P1pos
+    P1url
+    P1num
 
     N0i
     N0c
@@ -109,6 +113,8 @@ cpdef enum:
     N0oft_title
     N0oft_upper
     N0pos
+    N0url
+    N0num
 
     N1i
     N1c
@@ -119,6 +125,8 @@ cpdef enum:
     N1oft_title
     N1oft_upper
     N1pos
+    N1url
+    N1num
 
     N2i
     N2c
@@ -129,6 +137,8 @@ cpdef enum:
     N2oft_title
     N2oft_upper
     N2pos
+    N2url
+    N2num
 
     P2t
     P1t
@@ -158,6 +168,8 @@ cdef inline void _fill_token(atom_t* atoms, Lexeme* lex) nogil:
     atoms[6] = lex.flags & (1 << OFT_TITLE)
     atoms[7] = lex.flags & (1 << OFT_UPPER)
     atoms[8] = lex.postype
+    atoms[9] = lex.flags & (1 << LIKE_URL)
+    atoms[10] = lex.flags & (1 << LIKE_NUMBER)
 
 
 TEMPLATES = (
@@ -194,5 +206,17 @@ TEMPLATES = (
     (N0w, N1pos),
     (N0w, N1pos, N2pos),
     (P1t, N0pos),
-    (P2t, P1t, N0pos)
+    (P2t, P1t, N0pos),
+
+    (P2url,),
+    (P1url,),
+    (N0url,),
+    (N1url,),
+    (N2url,),
+
+    (P2num,),
+    (P1num,),
+    (N0num,),
+    (N1num,),
+    (N2num,),
 )
