@@ -6,36 +6,28 @@
 spaCy NLP Tokenizer and Lexicon
 ================================
 
-spaCy is an industrial-strength multi-language tokenizer, bristling with features
-you never knew you wanted. You do want these features though --- your current
-tokenizer has been doing it wrong.
-Where other tokenizers give you a list of strings, spaCy gives you references
-to rich lexical types, for easy, excellent and efficient feature extraction.
+spaCy is a library for industrial strength NLP in Python and Cython.  Its core
+values are efficiency, accuracy and minimalism.  
 
-* **Easy**: Tokenizer returns a sequence of rich lexical types, with features
-  pre-computed:
+* Efficiency: spaCy is 
 
-    >>> from spacy.en import EN
-    >>> for w in EN.tokenize(string):
-    ...   print w.sic, w.shape, w.cluster, w.oft_title, w.can_verb
+It does not attempt to be comprehensive,
+or to provide lavish syntactic sugar.  This isn't a library that covers 43 known
+algorithms to do X. You get 1 --- the best one --- with a simple, low-level interface. 
+For commercial users, the code is free but the data isn't.  For researchers, both
+are free and always will be.
 
-Check out the tutorial and API docs.
-
-* **Excellent**: Distributional and orthographic features are crucial to robust
-  NLP. Without them, models can only learn from tiny annotated training
-  corpora.  Read more.
-  
-* **Efficient**: spaCy serves you rich lexical objects faster than most
-  tokenizers can give you a list of strings.  
-
-+--------+-------+--------------+--------------+
-| System | Time	 | Words/second | Speed Factor |
-+--------+-------+--------------+--------------+
-| NLTK	 | 6m4s  | 89,000       | 1.00         |
-+--------+-------+--------------+--------------+
-| spaCy	 | 9.5s	 | 3,093,000	| 38.30        |
-+--------+-------+--------------+--------------+
-
+Comparison
+----------
++-------------+-------------+---+-----------+--------------+
+| POS taggers | Speed (w/s) | % Acc. (news) | % Acc. (web) |
++-------------+-------------+---------------+--------------+
+| spaCy       |             |               |              |
++-------------+-------------+---------------+--------------+
+| Stanford    | 16,000      |               |              |
++-------------+-------------+---------------+--------------+
+| NLTK        |             |               |              |
++-------------+-------------+---------------+--------------+
 
 
 .. toctree::
