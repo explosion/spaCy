@@ -1,34 +1,34 @@
-from spacy.orth import is_number
+from spacy.orth import like_number
 
 
 def test_digits():
-    assert is_number('10')
-    assert is_number('1')
+    assert like_number('10')
+    assert like_number('1')
 
 
 def test_comma():
-    assert is_number('10,000')
-    assert is_number('10,00')
-    assert is_number(',10')
+    assert like_number('10,000')
+    assert like_number('10,00')
+    assert like_number(',10')
 
 
 def test_period():
-    assert is_number('999.0')
-    assert is_number('.99')
+    assert like_number('999.0')
+    assert like_number('.99')
 
 
 def test_fraction():
-    assert is_number('1/2')
-    assert not is_number('1/2/3')
+    assert like_number('1/2')
+    assert not like_number('1/2/3')
 
 
 def test_word():
-    assert is_number('one')
-    assert is_number('two')
-    assert is_number('billion')
+    assert like_number('one')
+    assert like_number('two')
+    assert like_number('billion')
 
 
 def test_not_number():
-    assert not is_number('dog')
-    assert not is_number(',')
+    assert not like_number('dog')
+    assert not like_number(',')
 
