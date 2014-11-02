@@ -39,3 +39,9 @@ def test_three_same_close(close_puncts):
         assert len(tokens) == 4
         assert tokens[0].string == word_str
         assert tokens[1].string == p
+
+
+def test_double_end_quote():
+    assert len(EN.tokenize("Hello''")) == 2
+    assert len(EN.tokenize("''")) == 1
+
