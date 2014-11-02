@@ -54,9 +54,15 @@ cpdef Lexeme init(id_t i, unicode string, hash_t hashed,
         lex.norm = lex.sic
     lex.shape = get_string_id(orth.word_shape(string), store)
     lex.asciied = get_string_id(orth.asciied(string), store)
-    non_sparse = orth.non_sparse(string, lex.prob, lex.cluster, upper_pc, title_pc, lower_pc)
-    lex.vocab10k = get_string_id(non_sparse, store)
     lex.flags = get_flags(string, upper_pc, title_pc, lower_pc)
+    
+    lex.flags |= props.get('in_males', 0) << IN_MALES
+    lex.flags |= props.get('in_females', 0) << IN_FEMALES
+    lex.flags |= props.get('in_surnames', 0) << IN_SURNAMES
+    lex.flags |= props.get('in_places', 0) << IN_PLACES
+    lex.flags |= props.get('in_celebs', 0) << IN_CELEBS
+    lex.flags |= props.get('in_games', 0) << IN_GAMES
+    lex.flags |= props.get('in_names', 0) << IN_NAMES
     return lex
 
 

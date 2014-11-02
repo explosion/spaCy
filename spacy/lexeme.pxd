@@ -23,6 +23,14 @@ cpdef enum:
     OFT_TITLE
     OFT_UPPER
 
+    IN_MALES
+    IN_FEMALES
+    IN_SURNAMES
+    IN_PLACES
+    IN_GAMES
+    IN_CELEBS
+    IN_NAMES
+
 
 cdef struct Lexeme:
     flag_t flags
@@ -31,7 +39,6 @@ cdef struct Lexeme:
     id_t sic
     id_t norm
     id_t shape
-    id_t vocab10k
     id_t asciied
     id_t prefix
     id_t suffix
