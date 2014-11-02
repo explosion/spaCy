@@ -114,7 +114,6 @@ cdef class Token:
         self.sic = lex['sic']
         self.norm = lex['norm']
         self.shape = lex['shape']
-        self.vocab10k = lex['vocab10k']
         self.suffix = lex['asciied']
         self.prefix = lex['prefix']
 

@@ -40,7 +40,6 @@ cdef class Token:
     cdef public atom_t sic
     cdef public atom_t norm
     cdef public atom_t shape
-    cdef public atom_t vocab10k
     cdef public atom_t asciied
     cdef public atom_t prefix
     cdef public atom_t suffix
