@@ -151,15 +151,6 @@ def word_shape(string):
     return ''.join(shape)
 
 
-def non_sparse(string, prob, cluster, upper_pc, title_pc, lower_pc):
-    if is_alpha(string):
-        return canon_case(string, upper_pc, title_pc, lower_pc)
-    elif prob >= math.log(0.0001):
-        return string
-    else:
-        return word_shape(string)
-
-
 def asciied(string):
     ascii_string = unidecode(string)
     if not ascii_string:
