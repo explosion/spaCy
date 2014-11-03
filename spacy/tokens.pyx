@@ -59,6 +59,10 @@ cdef class Tokens:
         bounds_check(i, self.length, PADDING)
         return Token(self._string_store, i, self.idx[i], self.pos[i], self.lex[i][0])
 
+    def __iter__(self):
+        for i in range(self.length):
+            yield self[i]
+
     def __len__(self):
         return self.length
 
