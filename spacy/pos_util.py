@@ -6,9 +6,10 @@ from .en import EN
 from .pos import Tagger
 
 
-def read_gold(file_):
+def read_gold(file_, tag_list):
     paras = file_.read().strip().split('\n\n')
     golds = []
+    tag_ids = dict((tag, i) for i, tag in enumerate(tag_list))
     for para in paras:
         if not para.strip():
             continue
@@ -32,9 +33,15 @@ def read_gold(file_):
             else:
                 conll_toks.pop(0)
         assert len(tags) == len(tokens)
-        tags = [Tagger.encode_pos(t) for t in tags]
+        tags = [_encode_pos(t, tag_ids, tag_list) for t in tags]
         golds.append((tokens, tags))
     return golds
+
+def _encode_pos(tag, tag_ids, tag_list):
+    if tag not in tag_ids:
+        tag_ids[tag] = len(tag_list)
+        tag_list.append(tag)
+    return tag_ids[tag]
 
 
 def ptb_to_univ(tag):

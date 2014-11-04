@@ -3,6 +3,7 @@ from cymem.cymem cimport Pool
 from .lexeme cimport Lexeme
 from .typedefs cimport flag_t
 from .utf8string cimport StringStore
+from .tagger cimport TagType
 
 from thinc.typedefs cimport atom_t
 
@@ -23,6 +24,7 @@ cdef class Tokens:
 
     cdef int extend(self, int i, Lexeme** lexemes, int n) except -1
     cdef int push_back(self, int i, Lexeme* lexeme) except -1
+    cpdef int set_tag(self, int i, TagType tag_type, int tag) except -1
 
 
 cdef class Token:

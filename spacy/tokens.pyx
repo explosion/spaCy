@@ -4,6 +4,7 @@ cimport cython
 
 DEF PADDING = 5
 
+
 cdef int bounds_check(int i, int length, int padding) except -1:
     if (i + padding) < 0:
         raise IndexError
@@ -89,6 +90,9 @@ cdef class Tokens:
                 idx = self.push_back(idx, lexemes[i])
         return idx
 
+    cpdef int set_tag(self, int i, TagType tag_type, int tag) except -1:
+        self.pos[i] = tag
+
     def _realloc(self, new_size):
         self.max_length = new_size
         n = new_size + (PADDING * 2)
@@ -130,4 +134,3 @@ cdef class Token:
                 return ''
             cdef bytes utf8string = self._string_store[self.sic]
             return utf8string.decode('utf8')
-

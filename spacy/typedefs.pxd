@@ -6,5 +6,3 @@ ctypedef uint64_t flag_t
 ctypedef uint32_t id_t
 ctypedef uint16_t len_t
 ctypedef uint16_t tag_t
-
-

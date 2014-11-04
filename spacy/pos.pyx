@@ -30,7 +30,7 @@ cdef class Tagger:
         if path.exists(tags_loc):
             with open(tags_loc) as file_:
                 Tagger.tags.update(ujson.load(file_))
-        self.model = LinearModel(len(self.tags), self.extractor.n)
+        self.model = LinearModel(len(self.tags))
         if path.exists(path.join(model_dir, 'model')):
             self.model.load(path.join(model_dir, 'model'))
         self.extractor = Extractor(TEMPLATES, [ConjFeat for _ in TEMPLATES])

@@ -7,7 +7,7 @@ from thinc.typedefs cimport atom_t, feat_t, weight_t, class_t
 from .tokens cimport Tokens
 
 
-cdef enum TagType:
+cpdef enum TagType:
     POS
     ENTITY
     SENSE
