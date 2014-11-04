@@ -5,9 +5,9 @@ import pytest
 from spacy.en import EN
 
 
-def test_hyphen():
-    tokens = EN.tokenize('best-known')
-    assert len(tokens) == 3
+#def test_hyphen():
+#    tokens = EN.tokenize('best-known')
+#    assert len(tokens) == 3
 
 
 def test_period():
