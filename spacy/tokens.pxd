@@ -15,9 +15,11 @@ cdef class Tokens:
     cdef Lexeme** _lex_ptr
     cdef int* _idx_ptr
     cdef int* _pos_ptr
+    cdef int* _ner_ptr
     cdef Lexeme** lex
     cdef int* idx
     cdef int* pos
+    cdef int* ner
 
     cdef int length
     cdef int max_length
@@ -32,6 +34,7 @@ cdef class Token:
     cdef public int i
     cdef public int idx
     cdef public int pos
+    cdef public int ner
 
     cdef public atom_t id
     cdef public atom_t cluster

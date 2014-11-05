@@ -42,6 +42,7 @@ cdef class Language:
     cpdef readonly Lexicon lexicon
 
     cpdef readonly Tagger pos_tagger
+    cpdef readonly Tagger ner_tagger
 
     cdef object _prefix_re
     cdef object _suffix_re

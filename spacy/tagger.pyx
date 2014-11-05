@@ -10,8 +10,9 @@ import random
 import json
 import cython
 
-from .pos_feats cimport fill_context as pos_fill_context
-from .pos_feats cimport CONTEXT_SIZE as POS_CONTEXT_SIZE
+from .context cimport fill_slots
+from .context cimport fill_flat
+from .context cimport N_FIELDS
 
 from thinc.features cimport ConjFeat
 
@@ -46,6 +47,7 @@ def train(train_sents, model_dir, nr_iter=5):
                 if gold != NULL_TAG:
                     total += 1
                     n_corr += guess == gold
+                #print('%s\t%d\t%d' % (tokens[i].string, guess, gold))
         print('%.4f' % ((n_corr / total) * 100))
         random.shuffle(train_sents)
     tagger.model.end_training()
@@ -76,15 +78,12 @@ cdef class Tagger:
         self.tag_names = cfg['tag_names']
         self.tag_type = cfg['tag_type']
         self.extractor = Extractor(templates, [ConjFeat] * len(templates))
-        self.model = LinearModel(len(self.tag_names), self.extractor.n)
-        print("Load tagger model")
+        self.model = LinearModel(len(self.tag_names))
         if path.exists(path.join(model_dir, 'model')):
             self.model.load(path.join(model_dir, 'model'))
-        print("Done")
 
-        if self.tag_type == POS:
-            n_context = POS_CONTEXT_SIZE
-        self._context = <atom_t*>self.mem.alloc(n_context, sizeof(atom_t))
+        self._context_flat = <atom_t*>self.mem.alloc(N_FIELDS, sizeof(atom_t))
+        self._context_slots = Slots()
         self._feats = <feat_t*>self.mem.alloc(self.extractor.n+1, sizeof(feat_t))
         self._values = <weight_t*>self.mem.alloc(self.extractor.n+1, sizeof(weight_t))
         self._scores = <weight_t*>self.mem.alloc(self.model.nr_class, sizeof(weight_t))
@@ -110,11 +109,9 @@ cdef class Tagger:
         >>> tag = EN.pos_tagger.predict(0, tokens)
         >>> assert tag == EN.pos_tagger.tag_id('DT') == 5
         """
-        if self.tag_type == POS:
-            pos_fill_context(self._context, i, tokens)
-        else:
-            raise StandardError
-        self.extractor.extract(self._feats, self._values, self._context, NULL)
+        cdef hash_t hashed = fill_slots(self._context_slots, i, tokens)
+        fill_flat(self._context_flat, self._context_slots)
+        self.extractor.extract(self._feats, self._values, self._context_flat, NULL)
         self._guess = self.model.score(self._scores, self._feats, self._values)
         return self._guess
 

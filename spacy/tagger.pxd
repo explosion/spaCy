@@ -4,6 +4,8 @@ from thinc.learner cimport LinearModel
 from thinc.features cimport Extractor
 from thinc.typedefs cimport atom_t, feat_t, weight_t, class_t
 
+from .typedefs cimport hash_t
+from .context cimport Slots
 from .tokens cimport Tokens
 
 
@@ -26,7 +28,8 @@ cdef class Tagger:
     cpdef readonly list tag_names
 
     cdef class_t _guess
-    cdef atom_t* _context
+    cdef atom_t* _context_flat
+    cdef Slots _context_slots
     cdef feat_t* _feats
     cdef weight_t* _values
     cdef weight_t* _scores

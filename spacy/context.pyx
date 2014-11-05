@@ -2,7 +2,16 @@ from murmurhash.mrmr cimport hash64
 from .lexeme cimport *
 
 
-cdef void _number_token(Token* t, int* n_fields):
+cdef class Slots:
+    def __init__(self):
+        self.P2 = Token()
+        self.P1 = Token()
+        self.N0 = Token()
+        self.N1 = Token()
+        self.N2 = Token()
+
+
+cdef void _number_token(Token t, int* n_fields):
     cdef int i = n_fields[0]
     t.i = i; i += 1
     t.c = i; i += 1
@@ -27,7 +36,7 @@ cdef void _number_token(Token* t, int* n_fields):
     n_fields[0] = i
 
 
-cdef int fill_token(Token* t, Lexeme* lex, atom_t pos, atom_t ner):
+cdef int fill_token(Token t, Lexeme* lex, atom_t pos, atom_t ner):
     t.i = lex.sic
     t.c = lex.cluster
     t.w = lex.norm if (lex.prob != 0 and lex.prob >= -10) else lex.shape
@@ -48,7 +57,7 @@ cdef int fill_token(Token* t, Lexeme* lex, atom_t pos, atom_t ner):
     t.ner = ner
 
 
-cdef int _flatten_token(atom_t* context, Token* ids, Token* vals) except -1:
+cdef int _flatten_token(atom_t* context, Token ids, Token vals) except -1:
     context[ids.i] = vals.i
     context[ids.c] = vals.c
     context[ids.w] = vals.w
@@ -68,26 +77,27 @@ cdef int _flatten_token(atom_t* context, Token* ids, Token* vals) except -1:
     context[ids.ner] = vals.ner
 
 
-cdef hash_t fill_slots(Slots* s, int i, Tokens tokens) except 0:
-    fill_token(&s.P2, tokens.lex[i-2], tokens.pos[i-2], tokens.ner[i-2])
-    fill_token(&s.P1, tokens.lex[i-1], tokens.pos[i-1], tokens.ner[i-1])
-    fill_token(&s.N0, tokens.lex[i], tokens.pos[i], tokens.ner[i])
-    fill_token(&s.N1, tokens.lex[i+1], tokens.pos[i+1], tokens.ner[i+1])
-    fill_token(&s.N2, tokens.lex[i+2], tokens.pos[i+2], tokens.ner[i+2])
-    return hash64(s, sizeof(Slots), 0)
+cdef hash_t fill_slots(Slots s, int i, Tokens tokens) except 0:
+    fill_token(s.P2, tokens.lex[i-2], tokens.pos[i-2], tokens.ner[i-2])
+    fill_token(s.P1, tokens.lex[i-1], tokens.pos[i-1], tokens.ner[i-1])
+    fill_token(s.N0, tokens.lex[i], tokens.pos[i], tokens.ner[i])
+    fill_token(s.N1, tokens.lex[i+1], tokens.pos[i+1], tokens.ner[i+1])
+    fill_token(s.N2, tokens.lex[i+2], tokens.pos[i+2], tokens.ner[i+2])
+    return 1
 
 
-cdef int fill_flat(atom_t* context, Slots* s) except -1:
-    _flatten_token(context, &FIELD_IDS.P2, &s.P2)
-    _flatten_token(context, &FIELD_IDS.P1, &s.P1)
-    _flatten_token(context, &FIELD_IDS.N0, &s.N0)
-    _flatten_token(context, &FIELD_IDS.N1, &s.N1)
-    _flatten_token(context, &FIELD_IDS.N2, &s.N2)
+cdef int fill_flat(atom_t* context, Slots s) except -1:
+    _flatten_token(context, FIELD_IDS.P2, s.P2)
+    _flatten_token(context, FIELD_IDS.P1, s.P1)
+    _flatten_token(context, FIELD_IDS.N0, s.N0)
+    _flatten_token(context, FIELD_IDS.N1, s.N1)
+    _flatten_token(context, FIELD_IDS.N2, s.N2)
 
 
 N_FIELDS = 0
-_number_token(&FIELD_IDS.P2, &N_FIELDS)
-_number_token(&FIELD_IDS.P1, &N_FIELDS)
-_number_token(&FIELD_IDS.N0, &N_FIELDS)
-_number_token(&FIELD_IDS.N1, &N_FIELDS)
-_number_token(&FIELD_IDS.N2, &N_FIELDS)
+FIELD_IDS = Slots()
+_number_token(FIELD_IDS.P2, &N_FIELDS)
+_number_token(FIELD_IDS.P1, &N_FIELDS)
+_number_token(FIELD_IDS.N0, &N_FIELDS)
+_number_token(FIELD_IDS.N1, &N_FIELDS)
+_number_token(FIELD_IDS.N2, &N_FIELDS)

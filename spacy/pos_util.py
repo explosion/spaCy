@@ -3,10 +3,8 @@ from . import util
 from . import tokens
 from .en import EN
 
-from .pos import Tagger
 
-
-def read_gold(file_, tag_list):
+def read_gold(file_, tag_list, col):
     paras = file_.read().strip().split('\n\n')
     golds = []
     tag_ids = dict((tag, i) for i, tag in enumerate(tag_list))
@@ -21,7 +19,7 @@ def read_gold(file_, tag_list):
         conll_toks = []
         for line in lines:
             pieces = line.split()
-            conll_toks.append((int(pieces[0]), len(pieces[1]), pieces[3]))
+            conll_toks.append((int(pieces[0]), len(pieces[1]), pieces[col]))
         for i, token in enumerate(tokens):
             if not conll_toks:
                 tags.append('NULL')

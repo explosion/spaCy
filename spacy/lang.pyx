@@ -45,6 +45,8 @@ cdef class Language:
             self.pos_tagger = Tagger(path.join(util.DATA_DIR, name, 'pos'))
         else:
             self.pos_tagger = None
+        if path.exists(path.join(util.DATA_DIR, name, 'ner')):
+            self.ner_tagger = Tagger(path.join(util.DATA_DIR, name, 'ner'))
 
     cpdef Tokens tokenize(self, unicode string):
         """Tokenize a string.
