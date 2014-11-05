@@ -9,21 +9,21 @@ cdef Token N2 = FIELD_IDS.N2
 
 
 TEMPLATES = (
-    (N0.i,),
-    (N0.c,),
+    (N0.sic,),
+    (N0.cluster,),
 
     (P1.pos,),
-    (P1.i,),
+    (P1.sic,),
 
-    (N1.w,),
+    (N1.norm,),
     (N1.pos,),
 
     (P1.ner,),
     (P2.ner,),
 
-    (N0.c,),
-    (P1.c,),
-    (N1.c,),
+    (N0.cluster,),
+    (P1.cluster,),
+    (N1.cluster,),
 
     (N0.is_alpha,),
     (N0.is_digit,),
@@ -32,4 +32,10 @@ TEMPLATES = (
 
     (N0.is_title, N0.oft_title),
     (N0.is_upper, N0.oft_upper),
+
+    (P1.cluster, N0.norm),
+    (N0.norm, N1.cluster),
+
+    (P1.ner, N0.pos),
+    (P2.ner, P1.ner, N0.pos),
 )
