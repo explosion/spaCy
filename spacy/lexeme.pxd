@@ -51,8 +51,6 @@ cdef struct Lexeme:
     tag_t supersense
 
 
-
-
 cdef Lexeme EMPTY_LEXEME
 
 cpdef Lexeme init(id_t i, unicode string, hash_t hashed,
