@@ -29,6 +29,7 @@ def sbclean():
 
 
 def pos():
+    local('rm -rf data/en/pos')
     local('python tools/train.py pos ~/work_data/docparse/wsj02-21.conll data/en/pos')
     local('python tools/tag.py ~/work_data/docparse/wsj22.raw /tmp/tmp')
     local('python tools/eval_pos.py ~/work_data/docparse/wsj22.conll /tmp/tmp')
@@ -36,6 +37,6 @@ def pos():
 
 def ner():
     local('rm -rf data/en/ner')
-    local('python tools/train.py ner ~/work_data/ner/muc7.train data/en/ner')
-    local('python tools/tag.py ~/work_data/ner/muc7.raw /tmp/ner')
-    local('python tools/eval_ner.py ~/work_data/ner/muc7.dev /tmp/ner')
+    local('python tools/train.py ner ~/work_data/docparse/wsj02-21.conll data/en/ner')
+    local('python tools/tag.py ~/work_data/docparse/wsj22.raw /tmp/tmp')
+    local('python tools/eval_ner.py ~/work_data/docparse/wsj22.conll /tmp/tmp | tail')
