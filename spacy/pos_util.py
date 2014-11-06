@@ -36,6 +36,8 @@ def read_gold(file_, tag_list, col):
     return golds
 
 def _encode_pos(tag, tag_ids, tag_list):
+    if tag == '-':
+        return 0
     if tag not in tag_ids:
         tag_ids[tag] = len(tag_list)
         tag_list.append(tag)
