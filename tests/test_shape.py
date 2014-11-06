@@ -9,10 +9,10 @@ def test_capitalized():
     assert ws('Nasa') == 'Xxxx'
 
 def test_truncate():
-    assert ws('capitalized') == 'xxxxx'
+    assert ws('capitalized') == 'xxxx'
 
 def test_digits():
-    assert ws('999999999') == 'ddddd'
+    assert ws('999999999') == 'dddd'
 
 def test_mix():
     assert ws('C3P0') == 'XdXd'
