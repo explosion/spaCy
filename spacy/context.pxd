@@ -46,11 +46,15 @@ cdef class Token:
 
 
 cdef class Slots:
+    cdef readonly Token P4
+    cdef readonly Token P3
     cdef readonly Token P2
     cdef readonly Token P1
     cdef readonly Token N0
     cdef readonly Token N1
     cdef readonly Token N2
+    cdef readonly Token N3
+    cdef readonly Token N4
 
 
 cdef int N_FIELDS
