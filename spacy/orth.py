@@ -146,7 +146,7 @@ def word_shape(string):
         else:
             seq = 0
             last = shape_char
-        if seq < 5:
+        if seq < 4:
             shape.append(shape_char)
     return ''.join(shape)
 
