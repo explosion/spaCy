@@ -45,7 +45,7 @@ def train(train_sents, model_dir, nr_iter=10):
                 guess = tagger.predict(i, tokens)
                 tokens.set_tag(i, tagger.tag_type, guess)
                 if gold != NULL_TAG:
-                    tagger.tell_answer(gold)
+                    tagger.tell_answer([gold])
                     total += 1
                     n_corr += guess == gold
                 #print('%s\t%d\t%d' % (tokens[i].string, guess, gold))
@@ -116,7 +116,7 @@ cdef class Tagger:
         self._guess = self.model.score(self._scores, self._feats, self._values)
         return self._guess
 
-    cpdef int tell_answer(self, class_t gold) except -1:
+    cpdef int tell_answer(self, list golds) except -1:
         """Provide the correct tag for the word the tagger was last asked to predict.
         During Tagger.predict, the tagger remembers the features and prediction
         for the example. These are used to calculate a weight update given the
@@ -130,11 +130,17 @@ cdef class Tagger:
         >>> EN.pos_tagger.tell_answer(JJ)
         """
         cdef class_t guess = self._guess
-        if gold == guess or gold == NULL_TAG:
+        if guess in golds:
             self.model.update({})
             return 0
-        counts = {guess: {}, gold: {}}
-        self.extractor.count(counts[gold], self._feats, 1)
+        best_gold = golds[0]
+        best_score = self._scores[best_gold-1]
+        for gold in golds[1:]:
+            if self._scores[gold-1] > best_gold:
+                best_score = self._scores[best_gold-1]
+                best_gold = gold
+        counts = {guess: {}, best_gold: {}}
+        self.extractor.count(counts[best_gold], self._feats, 1)
         self.extractor.count(counts[guess], self._feats, -1)
         self.model.update(counts)
 

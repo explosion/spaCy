@@ -18,7 +18,7 @@ cpdef enum TagType:
 cdef class Tagger:
     cpdef int set_tags(self, Tokens tokens) except -1
     cpdef class_t predict(self, int i, Tokens tokens) except 0
-    cpdef int tell_answer(self, class_t gold) except -1
+    cpdef int tell_answer(self, list gold) except -1
  
     cpdef readonly Pool mem
     cpdef readonly Extractor extractor
