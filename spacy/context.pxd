@@ -60,9 +60,7 @@ cdef class Slots:
 cdef int N_FIELDS
 
 
-cdef hash_t fill_slots(Slots s, int i, Tokens tokens) except 0
-
-cdef int fill_flat(atom_t* context, Slots s) except -1
+cdef int fill_context(atom_t* context, int i, Tokens tokens) except -1
 
 
 cpdef Slots FIELD_IDS

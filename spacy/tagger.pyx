@@ -11,8 +11,7 @@ import json
 import cython
 
 
-from .context cimport fill_slots
-from .context cimport fill_flat
+from .context cimport fill_context
 from .context cimport N_FIELDS
 
 from thinc.features cimport ConjFeat
@@ -35,24 +34,43 @@ def setup_model_dir(tag_type, tag_names, templates, model_dir):
 
 
 def train(train_sents, model_dir, nr_iter=10):
+    cdef Tokens tokens
     tagger = Tagger(model_dir)
     for _ in range(nr_iter):
         n_corr = 0
         total = 0
         for tokens, golds in train_sents:
             assert len(tokens) == len(golds), [t.string for t in tokens]
-            for i, gold in enumerate(golds):
+            for i in range(tokens.length):
+                if tagger.tag_type == POS:
+                    gold = _get_gold_pos(i, golds, tokens.pos)
+                elif tagger.tag_type == ENTITY:
+                    gold = _get_gold_ner(i, golds, tokens.ner)
                 guess = tagger.predict(i, tokens)
                 tokens.set_tag(i, tagger.tag_type, guess)
-                if gold != NULL_TAG:
-                    tagger.tell_answer([gold])
+                if gold is not None:
+                    tagger.tell_answer(gold)
                     total += 1
-                    n_corr += guess == gold
+                    n_corr += guess in gold
                 #print('%s\t%d\t%d' % (tokens[i].string, guess, gold))
         print('%.4f' % ((n_corr / total) * 100))
         random.shuffle(train_sents)
     tagger.model.end_training()
     tagger.model.dump(path.join(model_dir, 'model'))
+
+
+cdef object _get_gold_pos(i, golds, int* pred):
+    if golds[i] == 0:
+        return None
+    else:
+        return [golds[i]]
+
+
+cdef object _get_gold_ner(i, golds, int* ner):
+    if golds[i] == 0:
+        return None
+    else:
+        return [golds[i]]
 
 
 def evaluate(tagger, sents):
@@ -83,8 +101,7 @@ cdef class Tagger:
         if path.exists(path.join(model_dir, 'model')):
             self.model.load(path.join(model_dir, 'model'))
 
-        self._context_flat = <atom_t*>self.mem.alloc(N_FIELDS, sizeof(atom_t))
-        self._context_slots = Slots()
+        self._context = <atom_t*>self.mem.alloc(N_FIELDS, sizeof(atom_t))
         self._feats = <feat_t*>self.mem.alloc(self.extractor.n+1, sizeof(feat_t))
         self._values = <weight_t*>self.mem.alloc(self.extractor.n+1, sizeof(weight_t))
         self._scores = <weight_t*>self.mem.alloc(self.model.nr_class, sizeof(weight_t))
@@ -110,9 +127,8 @@ cdef class Tagger:
         >>> tag = EN.pos_tagger.predict(0, tokens)
         >>> assert tag == EN.pos_tagger.tag_id('DT') == 5
         """
-        cdef hash_t hashed = fill_slots(self._context_slots, i, tokens)
-        fill_flat(self._context_flat, self._context_slots)
-        self.extractor.extract(self._feats, self._values, self._context_flat, NULL)
+        fill_context(self._context, i, tokens)
+        self.extractor.extract(self._feats, self._values, self._context, NULL)
         self._guess = self.model.score(self._scores, self._feats, self._values)
         return self._guess
 

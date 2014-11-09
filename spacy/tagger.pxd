@@ -28,8 +28,7 @@ cdef class Tagger:
     cpdef readonly list tag_names
 
     cdef class_t _guess
-    cdef atom_t* _context_flat
-    cdef Slots _context_slots
+    cdef atom_t* _context
     cdef feat_t* _feats
     cdef weight_t* _values
     cdef weight_t* _scores
