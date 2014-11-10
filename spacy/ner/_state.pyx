@@ -8,7 +8,8 @@ cdef int begin_entity(State* s, label) except -1:
 
 cdef int end_entity(State* s) except -1:
     s.curr.end = s.i + 1
-    s.curr[s.j] = s.curr
+    s.ents[s.j] = s.curr
+    s.j += 1
     s.curr.start = 0
     s.curr.label = -1
     s.curr.end = 0
@@ -16,7 +17,7 @@ cdef int end_entity(State* s) except -1:
 
 cdef State* init_state(Pool mem, int sent_length) except NULL:
     s = <State*>mem.alloc(1, sizeof(State))
-    s.j = -1
+    s.j = 0
     s.ents = <Entity*>mem.alloc(sent_length, sizeof(Entity))
     for i in range(sent_length):
         s.ents[i].label = -1
