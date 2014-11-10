@@ -12,3 +12,5 @@ cdef class PyState:
     
     cdef Move* _moves
     cdef State* _s
+
+    cdef Move* _get_move(self, unicode move_name) except NULL

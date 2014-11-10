@@ -1,7 +1,10 @@
+from __future__ import unicode_literals
+
 from ._state cimport begin_entity
 from ._state cimport end_entity
 from ._state cimport entity_is_open
 from ._state cimport entity_is_sunk
+
 
 ACTION_NAMES = ['' for _ in range(N_ACTIONS)]
 ACTION_NAMES[<int>BEGIN] = 'B'
@@ -16,11 +19,11 @@ cdef bint can_begin(State* s, int label):
 
 
 cdef bint can_in(State* s, int label):
-    return entity_is_open(s) and s.ents[s.j].tag == label
+    return entity_is_open(s) and s.ents[s.j].label == label
 
 
 cdef bint can_last(State* s, int label):
-    return entity_is_open(s) and s.ents[s.j].tag == label
+    return entity_is_open(s) and s.ents[s.j].label == label
 
 
 cdef bint can_unit(State* s, int label):
@@ -119,6 +122,7 @@ cdef int set_accept_if_valid(Move* moves, int n_classes, State* s) except 0:
         elif m.action == OUT:
             m.accept = can_out(s, m.label)
         n_accept += m.accept
+    assert n_accept != 0
     return n_accept
 
 
@@ -133,6 +137,7 @@ cdef int set_accept_if_oracle(Move* moves, Move* golds, int n_classes, State* s)
         m.accept = is_oracle(<ActionType>m.action, m.label, <ActionType>g.action,
                              g.label, next_act, is_sunk)
         n_accept += m.accept
+    assert n_accept != 0
     return n_accept
 
 
@@ -182,6 +187,7 @@ cdef int fill_moves(Move* moves, int n_tags) except -1:
     for label in range(n_tags):
         moves[i].action = IN
         moves[i].label = label
+        i += 1
     for label in range(n_tags):
         moves[i].action = LAST
         moves[i].label = label
@@ -190,4 +196,5 @@ cdef int fill_moves(Move* moves, int n_tags) except -1:
         moves[i].action = UNIT
         moves[i].label = label
         i += 1
-    moves[i].label == OUT
+    moves[i].action = OUT
+    moves[i].label = 0

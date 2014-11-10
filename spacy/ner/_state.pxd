@@ -9,6 +9,7 @@ cdef struct Entity:
 
 
 cdef struct State:
+    Entity curr
     Entity* ents
     int* tags
     int i

@@ -1,7 +1,10 @@
+from __future__ import unicode_literals
+
 from ._state cimport init_state
 from ._state cimport entity_is_open
 from .moves cimport fill_moves
 from .moves cimport transition
+from .moves cimport set_accept_if_valid
 from .moves import get_n_moves
 from .moves import ACTION_NAMES
 
@@ -19,16 +22,23 @@ cdef class PyState:
         for i in range(self.n_classes):
             m = &self._moves[i]
             action_name = ACTION_NAMES[m.action]
-            tag_name = tag_names[m.label]
-            self.moves_by_name['%s-%s' % (action_name, tag_name)] = i
+            if action_name == 'O':
+                self.moves_by_name['O'] = i
+            else:
+                tag_name = tag_names[m.label]
+                self.moves_by_name['%s-%s' % (action_name, tag_name)] = i
+
+    cdef Move* _get_move(self, unicode move_name) except NULL:
+        return &self._moves[self.moves_by_name[move_name]]
 
     def transition(self, unicode move_name):
-        cdef int m_i = self.moves_by_name[move_name]
-        cdef Move* m = &self._moves[m_i]
+        cdef Move* m = self._get_move(move_name)
         transition(self._s, m)
 
     def is_valid(self, unicode move_name):
-        pass
+        cdef Move* m = self._get_move(move_name)
+        set_accept_if_valid(self._moves, self.n_classes, self._s)
+        return m.accept
 
     def is_gold(self, unicode move_name):
         pass
