@@ -19,11 +19,11 @@ cdef bint can_begin(State* s, int label):
 
 
 cdef bint can_in(State* s, int label):
-    return entity_is_open(s) and s.ents[s.j].label == label
+    return entity_is_open(s) and s.curr.label == label
 
 
 cdef bint can_last(State* s, int label):
-    return entity_is_open(s) and s.ents[s.j].label == label
+    return entity_is_open(s) and s.curr.label == label
 
 
 cdef bint can_unit(State* s, int label):
@@ -127,13 +127,17 @@ cdef int set_accept_if_valid(Move* moves, int n_classes, State* s) except 0:
 
 
 cdef int set_accept_if_oracle(Move* moves, Move* golds, int n_classes, State* s) except 0:
+
     cdef Move* g = &golds[s.i]
     cdef ActionType next_act = <ActionType>golds[s.i+1].action if s.i < s.length else OUT
     cdef bint is_sunk = entity_is_sunk(s, golds)
     cdef Move* m
     cdef int n_accept = 0
+    set_accept_if_valid(moves, n_classes, s)
     for i in range(n_classes):
         m = &moves[i]
+        if not m.accept:
+            continue
         m.accept = is_oracle(<ActionType>m.action, m.label, <ActionType>g.action,
                              g.label, next_act, is_sunk)
         n_accept += m.accept
