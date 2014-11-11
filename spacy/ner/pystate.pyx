@@ -2,11 +2,11 @@ from __future__ import unicode_literals
 
 from ._state cimport init_state
 from ._state cimport entity_is_open
-from .moves cimport fill_moves
-from .moves cimport transition
-from .moves cimport set_accept_if_valid, set_accept_if_oracle
-from .moves import get_n_moves
-from .moves import ACTION_NAMES
+from .bilou_moves cimport fill_moves
+from .bilou_moves cimport transition
+from .bilou_moves cimport set_accept_if_valid, set_accept_if_oracle
+from .bilou_moves import get_n_moves
+from .bilou_moves import ACTION_NAMES
 
 
 cdef class PyState:

@@ -1,21 +1,5 @@
 from cymem.cymem cimport Pool
-from .moves cimport Move
-
-
-cdef struct Entity:
-    int start
-    int end
-    int label
-
-
-cdef struct State:
-    Entity curr
-    Entity* ents
-    int* tags
-    int i
-    int j
-    int length
-
+from .structs cimport State, Entity, Move
 
 cdef int begin_entity(State* s, label) except -1
 

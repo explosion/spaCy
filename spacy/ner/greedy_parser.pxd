@@ -6,7 +6,7 @@ from thinc.typedefs cimport *
 from ..tokens cimport Tokens
 from ..typedefs cimport *
 
-from .moves cimport Move
+from .bilou_moves cimport Move
 
 
 cdef class NERParser:

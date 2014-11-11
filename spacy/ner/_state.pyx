@@ -1,4 +1,4 @@
-from .moves cimport BEGIN, UNIT
+from .bilou_moves cimport BEGIN, UNIT
 
 
 cdef int begin_entity(State* s, label) except -1:

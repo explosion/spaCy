@@ -12,11 +12,11 @@ from thinc.features cimport ConjFeat
 
 from .context cimport fill_context
 from .context cimport N_FIELDS
-from .moves cimport Move
-from .moves cimport fill_moves, transition, best_accepted
-from .moves cimport set_accept_if_valid, set_accept_if_oracle
+from .bilou_moves cimport Move
+from .bilou_moves cimport fill_moves, transition, best_accepted
+from .bilou_moves cimport set_accept_if_valid, set_accept_if_oracle
 from ._state cimport entity_is_open
-from .moves import get_n_moves
+from .bilou_moves import get_n_moves
 from ._state cimport State
 from ._state cimport init_state
 
@@ -81,7 +81,7 @@ cdef class NERParser:
         n_correct = 0
         cdef int f = 0
         while s.i < tokens.length:
-            fill_context(self._context, s.i, tokens)
+            fill_context(self._context, s, tokens)
             self.extractor.extract(self._feats, self._values, self._context, NULL)
             self.model.score(self._scores, self._feats, self._values)
             
@@ -109,7 +109,7 @@ cdef class NERParser:
         cdef State* s = init_state(mem, tokens.length)
         cdef Move* move
         while s.i < tokens.length:
-            fill_context(self._context, s.i, tokens)
+            fill_context(self._context, s, tokens)
             self.extractor.extract(self._feats, self._values, self._context, NULL)
             self.model.score(self._scores, self._feats, self._values)
             set_accept_if_valid(self._moves, self.n_classes, s)

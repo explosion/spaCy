@@ -1,7 +1,6 @@
 from cymem.cymem cimport Pool
 
-from .moves cimport Move
-from ._state cimport State
+from .structs cimport Move, State
 
 
 cdef class PyState:

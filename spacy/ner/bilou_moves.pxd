@@ -3,7 +3,8 @@ from cymem.cymem cimport Pool
 from thinc.typedefs cimport class_t
 from thinc.typedefs cimport weight_t
 
-from ._state cimport State
+from .structs cimport State, Move
+
 
 cpdef enum ActionType:
     MISSING
@@ -13,13 +14,6 @@ cpdef enum ActionType:
     UNIT
     OUT
     N_ACTIONS
-
-
-cdef struct Move:
-    class_t clas
-    int action
-    int label
-    bint accept
 
 
 cdef int set_accept_if_oracle(Move* moves, Move* golds, int n, State* s) except 0
