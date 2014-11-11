@@ -49,6 +49,7 @@ cdef class Language:
     cdef object _suffix_re
     cdef object _infix_re
 
+    cpdef Tokens tokens_from_list(self, list strings)
     cpdef Tokens tokenize(self, unicode text)
 
     cdef int _tokenize(self, Tokens tokens, String* span, int start, int end) except -1

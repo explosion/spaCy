@@ -49,6 +49,20 @@ cdef class Language:
         if path.exists(path.join(util.DATA_DIR, name, 'ner')):
             self.ner_tagger = NERParser(path.join(util.DATA_DIR, name, 'ner'))
 
+    cpdef Tokens tokens_from_list(self, list strings):
+        cdef int length = sum([len(s) for s in strings])
+        cdef Tokens tokens = Tokens(self.lexicon.strings, length)
+        if length == 0:
+            return tokens
+        cdef String string_struct
+        cdef unicode py_string
+        cdef int idx = 0
+        for i, py_string in enumerate(strings):
+            string_from_unicode(&string_struct, py_string)
+            tokens.push_back(idx, self.lexicon.get(&string_struct))
+            idx += len(py_string) + 1
+        return tokens
+
     cpdef Tokens tokenize(self, unicode string):
         """Tokenize a string.
 
