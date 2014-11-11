@@ -7,6 +7,7 @@ from ._state cimport entity_is_sunk
 
 
 ACTION_NAMES = ['' for _ in range(N_ACTIONS)]
+ACTION_NAMES[<int>MISSING] = '?'
 ACTION_NAMES[<int>BEGIN] = 'B'
 ACTION_NAMES[<int>IN] = 'I'
 ACTION_NAMES[<int>LAST] = 'L'
@@ -36,6 +37,8 @@ cdef bint can_out(State* s, int label):
 
 cdef bint is_oracle(ActionType act, int tag, ActionType g_act, int g_tag,
                     ActionType next_act, bint is_sunk):
+    if g_act == MISSING:
+        return True
     if act == BEGIN:
         if g_act == BEGIN:
             # B, Gold B --> Label match
@@ -55,10 +58,10 @@ cdef bint is_oracle(ActionType act, int tag, ActionType g_act, int g_tag,
             return True
         elif g_act == LAST:
             # I, Gold L --> True iff this entity sunk and next tag == O
-            return is_sunk and next_act == OUT
+            return is_sunk and (next_act == OUT or next_act == MISSING)
         elif g_act == OUT:
             # I, Gold O --> True iff next tag == O
-            return next_act == OUT
+            return next_act == OUT or next_act == MISSING
         elif g_act == UNIT:
             # I, Gold U --> True iff next tag == O
             return next_act == OUT
@@ -109,7 +112,8 @@ cdef bint is_oracle(ActionType act, int tag, ActionType g_act, int g_tag,
 cdef int set_accept_if_valid(Move* moves, int n_classes, State* s) except 0:
     cdef int n_accept = 0
     cdef Move* m
-    for i in range(n_classes):
+    moves[0].accept = False
+    for i in range(1, n_classes):
         m = &moves[i]
         if m.action == BEGIN:
             m.accept = can_begin(s, m.label)
@@ -134,7 +138,7 @@ cdef int set_accept_if_oracle(Move* moves, Move* golds, int n_classes, State* s)
     cdef Move* m
     cdef int n_accept = 0
     set_accept_if_valid(moves, n_classes, s)
-    for i in range(n_classes):
+    for i in range(1, n_classes):
         m = &moves[i]
         if not m.accept:
             continue
@@ -146,19 +150,20 @@ cdef int set_accept_if_oracle(Move* moves, Move* golds, int n_classes, State* s)
 
 
 cdef Move* best_accepted(Move* moves, weight_t* scores, int n) except NULL:
-    cdef int first_accept
-    for first_accept in range(n):
+    cdef int first_accept = -1
+    for first_accept in range(1, n):
         if moves[first_accept].accept:
             break
     else:
         raise StandardError
+    assert first_accept != -1
     cdef int best = first_accept
-    cdef weight_t score = scores[first_accept]
+    cdef weight_t score = scores[first_accept-1]
     cdef int i
     for i in range(first_accept+1, n): 
-        if moves[i].accept and scores[i] > score:
+        if moves[i].accept and scores[i-1] > score:
             best = i
-            score = scores[i]
+            score = scores[i-1]
     return &moves[best]
 
 
@@ -182,23 +187,21 @@ def get_n_moves(n_tags):
     return n_tags + n_tags + n_tags + n_tags + 1
 
 
-cdef int fill_moves(Move* moves, int n_tags) except -1:
-    cdef int i = 0
-    for label in range(n_tags):
-        moves[i].action = BEGIN
-        moves[i].label = label
-        i += 1
-    for label in range(n_tags):
-        moves[i].action = IN
-        moves[i].label = label
-        i += 1
-    for label in range(n_tags):
-        moves[i].action = LAST
-        moves[i].label = label
-        i += 1
-    for label in range(n_tags):
-        moves[i].action = UNIT
-        moves[i].label = label
-        i += 1
-    moves[i].action = OUT
-    moves[i].label = 0
+cdef int fill_moves(Move* moves, list tag_names) except -1:
+    cdef Move* m
+    label_names = {'-': 0}
+    for i, tag_name in enumerate(tag_names):
+        m = &moves[i]
+        if '-' in tag_name:
+            action_str, label = tag_name.split('-')
+        elif tag_name == 'O':
+            action_str = 'O'
+            label = '-'
+        elif tag_name == 'NULL' or tag_name == 'EOL':
+            action_str = '?'
+            label = '-'
+        else:
+            raise StandardError(tag_name)
+        m.action = ACTION_NAMES.index(action_str)
+        m.label = label_names.setdefault(label, len(label_names))
+        m.clas = i

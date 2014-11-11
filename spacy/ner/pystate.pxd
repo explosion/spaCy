@@ -6,7 +6,7 @@ from ._state cimport State
 
 cdef class PyState:
     cdef Pool mem
-    cdef readonly list entity_types
+    cdef readonly list tag_names
     cdef readonly int n_classes
     cdef readonly dict moves_by_name
     

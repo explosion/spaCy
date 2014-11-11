@@ -13,6 +13,8 @@ cdef class NERParser:
     cdef Pool mem
     cdef Extractor extractor
     cdef LinearModel model
+    cdef readonly list tag_names
+    cdef readonly int n_classes
 
     cdef Move* _moves
     cdef atom_t* _context
@@ -21,5 +23,5 @@ cdef class NERParser:
     cdef weight_t* _scores
 
 
-    cpdef int train(self, Tokens tokens, golds)
+    cpdef int train(self, Tokens tokens, golds) except -1
     cpdef int set_tags(self, Tokens tokens) except -1

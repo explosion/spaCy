@@ -6,6 +6,7 @@ from thinc.typedefs cimport weight_t
 from ._state cimport State
 
 cpdef enum ActionType:
+    MISSING
     BEGIN
     IN
     LAST
@@ -29,4 +30,4 @@ cdef Move* best_accepted(Move* moves, weight_t* scores, int n) except NULL
 
 cdef int transition(State *s, Move* m) except -1
 
-cdef int fill_moves(Move* moves, int n_tags) except -1
+cdef int fill_moves(Move* moves, list tag_names) except -1
