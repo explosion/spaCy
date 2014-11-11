@@ -100,7 +100,7 @@ cdef class NERParser:
                 self.extractor.count(counts[guess.clas], self._feats, -1)
             self.model.update(counts)
             gold_str = self.tag_names[gold.clas]
-            transition(s, gold)
+            transition(s, guess)
             tokens.ner[s.i-1] = s.tags[s.i-1]
         return n_correct
 
