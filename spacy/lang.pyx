@@ -24,6 +24,7 @@ from .util import read_lang_data
 from .tokens import Tokens
 
 from .tagger cimport Tagger
+from .ner.greedy_parser cimport NERParser
 
 
 cdef class Language:
@@ -46,7 +47,7 @@ cdef class Language:
         else:
             self.pos_tagger = None
         if path.exists(path.join(util.DATA_DIR, name, 'ner')):
-            self.ner_tagger = Tagger(path.join(util.DATA_DIR, name, 'ner'))
+            self.ner_tagger = NERParser(path.join(util.DATA_DIR, name, 'ner'))
 
     cpdef Tokens tokenize(self, unicode string):
         """Tokenize a string.

@@ -7,6 +7,7 @@ from .typedefs cimport hash_t
 from .tokens cimport Tokens
 from .lexeme cimport Lexeme
 from .tagger cimport Tagger
+from .ner.greedy_parser cimport NERParser
 from .utf8string cimport StringStore
 
 
@@ -42,7 +43,7 @@ cdef class Language:
     cpdef readonly Lexicon lexicon
 
     cpdef readonly Tagger pos_tagger
-    cpdef readonly Tagger ner_tagger
+    cpdef readonly NERParser ner_tagger
 
     cdef object _prefix_re
     cdef object _suffix_re
