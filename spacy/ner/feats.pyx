@@ -98,9 +98,9 @@ STATE = (
    (E_label, W_sic),
    (E_label, W_pos),
    (E_label, W_cluster),
-   (E_label, E0_sic, W_sic),
-   (E_label, E0_pos, W_pos),
-   (E_label, E0_cluster, W_pos)
+   (E_label, W_shape),
+   (E_label, E_last_sic),
+   (E_label, E0_pos, E_last_pos),
 )
 
 
