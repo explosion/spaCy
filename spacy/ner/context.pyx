@@ -63,6 +63,7 @@ cdef int fill_context(atom_t* context, State* s, Tokens tokens) except -1:
 
     cdef atom_t[5] ent_vals
     if entity_is_open(s):
+        context[E_label] = s.curr.label
         context[E0_sic] = tokens.lex[s.curr.start].sic
         context[E0_cluster] = tokens.lex[s.curr.start].cluster
         context[E0_pos] = tokens.pos[s.curr.start]

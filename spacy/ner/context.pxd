@@ -133,6 +133,8 @@ cpdef enum:
     N2_pos
     N2_sense
 
+    E_label
+
     E0_sic
     E0_cluster
     E0_pos
