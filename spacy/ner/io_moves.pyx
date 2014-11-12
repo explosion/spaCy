@@ -32,23 +32,21 @@ cdef int set_accept_if_oracle(Move* moves, int n, State* s,
         g_start = g_starts[s.curr.start]
         g_end = g_ends[s.curr.start]
         accept_o = False
-        if g_start == s.curr.start and g_end >= s.i:
-            if g_end == s.i:
-                accept_r = True
-                r_label = g_labels[s.curr.start]
-                accept_s = False
-            else:
-                accept_s = True
-                accept_r = False
+        if g_start == s.curr.start and g_end == s.i:
+            accept_r = True
+            r_label = g_labels[s.curr.start]
+            accept_s = False
+        elif g_start == s.curr.start and g_end > s.i:
+            accept_s = True
+            accept_r = False
+        elif g_starts[s.i] == s.i:
+            accept_r = True
+            r_label = 0
+            accept_s = False
         else:
-            if g_starts[s.i] == s.i:
-                accept_r = True
-                r_label = 0
-                accept_s = False
-            else:
-                accept_r = True
-                accept_s = True
-                r_label = 0
+            accept_r = True
+            accept_s = True
+            r_label = 0
     else:
         accept_r = False
         if g_starts[s.i] == s.i:
