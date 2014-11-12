@@ -12,40 +12,51 @@ from thinc.features cimport ConjFeat
 
 from .context cimport fill_context
 from .context cimport N_FIELDS
-from .bilou_moves cimport Move
-from .bilou_moves cimport fill_moves, transition, best_accepted
-from .bilou_moves cimport set_accept_if_valid, set_accept_if_oracle
-from ._state cimport entity_is_open
-from .bilou_moves import get_n_moves
-from ._state cimport State
+from .structs cimport Move, State
+from .io_moves cimport fill_moves, transition, best_accepted
+from .io_moves cimport set_accept_if_valid, set_accept_if_oracle
+from .io_moves import get_n_moves
 from ._state cimport init_state
+from ._state cimport entity_is_open
+from ._state cimport end_entity
+from .annot cimport NERAnnotation
 
 
-def setup_model_dir(tag_names, templates, model_dir):
+def setup_model_dir(entity_types, templates, model_dir):
     if path.exists(model_dir):
         shutil.rmtree(model_dir)
     os.mkdir(model_dir)
     config = {
         'templates': templates,
-        'tag_names': tag_names,
+        'entity_types': entity_types,
     }
     with open(path.join(model_dir, 'config.json'), 'w') as file_:
         json.dump(config, file_)
 
 
-
 def train(train_sents, model_dir, nr_iter=10):
     cdef Tokens tokens
+    cdef NERAnnotation gold_ner
     parser = NERParser(model_dir)
     for _ in range(nr_iter):
-        n_corr = 0
-        total = 0
-        for i, (tokens, golds) in enumerate(train_sents):
-            if any([g == 0 for g in golds]):
-                continue
-            n_corr += parser.train(tokens, golds)
-            total += len([g for g in golds if g != 0])
-        print('%.4f' % ((n_corr / total) * 100))
+        tp = 0
+        fp = 0
+        fn = 0
+        for i, (tokens, gold_ner) in enumerate(train_sents):
+            #print [tokens[i].string for i in range(tokens.length)]
+            test_ents = set(parser.train(tokens, gold_ner))
+            #print 'Test', test_ents
+            gold_ents = set(gold_ner.entities)
+            #print 'Gold', set(gold_ner.entities)
+            tp += len(gold_ents.intersection(test_ents))
+            fp += len(test_ents - gold_ents)
+            fn += len(gold_ents - test_ents)
+        p = tp / (tp + fp)
+        r = tp / (tp + fn)
+        f = 2 * ((p * r) / (p + r))
+        print 'P: %.3f' % p,
+        print 'R: %.3f' % r,
+        print 'F: %.3f' % f
         random.shuffle(train_sents)
     parser.model.end_training()
     parser.model.dump(path.join(model_dir, 'model'))
@@ -56,11 +67,11 @@ cdef class NERParser:
         self.mem = Pool()
         cfg = json.load(open(path.join(model_dir, 'config.json')))
         templates = cfg['templates']
-        self.tag_names = cfg['tag_names']
         self.extractor = Extractor(templates, [ConjFeat] * len(templates))
-        self.n_classes = len(self.tag_names)
-        self._moves = <Move*>self.mem.alloc(len(self.tag_names), sizeof(Move))
-        fill_moves(self._moves, self.tag_names)
+        self.entity_types = cfg['entity_types']
+        self.n_classes = get_n_moves(len(self.entity_types))
+        self._moves = <Move*>self.mem.alloc(self.n_classes, sizeof(Move))
+        fill_moves(self._moves, self.n_classes, self.entity_types)
         self.model = LinearModel(self.n_classes)
         if path.exists(path.join(model_dir, 'model')):
             self.model.load(path.join(model_dir, 'model'))
@@ -70,14 +81,11 @@ cdef class NERParser:
         self._values = <weight_t*>self.mem.alloc(self.extractor.n+1, sizeof(weight_t))
         self._scores = <weight_t*>self.mem.alloc(self.model.nr_class, sizeof(weight_t))
 
-    cpdef int train(self, Tokens tokens, gold_classes) except -1:
+    cpdef list train(self, Tokens tokens, NERAnnotation annot):
         cdef Pool mem = Pool()
         cdef State* s = init_state(mem, tokens.length)
-        cdef Move* golds = <Move*>mem.alloc(len(gold_classes), sizeof(Move))
-        for tok_i, clas in enumerate(gold_classes):
-            golds[tok_i] = self._moves[clas]
-            assert golds[tok_i].clas == clas, '%d vs %d' % (golds[tok_i].clas, clas)
         cdef Move* guess
+        cdef Move* oracle_move
         n_correct = 0
         cdef int f = 0
         while s.i < tokens.length:
@@ -88,23 +96,29 @@ cdef class NERParser:
             set_accept_if_valid(self._moves, self.n_classes, s)
             guess = best_accepted(self._moves, self._scores, self.n_classes)
             assert guess.clas != 0
-            assert gold_classes[s.i] != 0
-            set_accept_if_oracle(self._moves, golds, self.n_classes, s)
-            gold = best_accepted(self._moves, self._scores, self.n_classes)
-            if guess.clas == gold.clas:
+            set_accept_if_oracle(self._moves, self.n_classes, s,
+                                 annot.starts, annot.ends, annot.labels)
+            oracle_move = best_accepted(self._moves, self._scores, self.n_classes)
+            assert oracle_move.clas != 0
+            if guess.clas == oracle_move.clas:
                 counts = {}
                 n_correct += 1
             else:
-                counts = {guess.clas: {}, gold.clas: {}}
-                self.extractor.count(counts[gold.clas], self._feats, 1)
+                counts = {guess.clas: {}, oracle_move.clas: {}}
+                self.extractor.count(counts[oracle_move.clas], self._feats, 1)
                 self.extractor.count(counts[guess.clas], self._feats, -1)
             self.model.update(counts)
-            gold_str = self.tag_names[gold.clas]
             transition(s, guess)
             tokens.ner[s.i-1] = s.tags[s.i-1]
-        return n_correct
+        if entity_is_open(s):
+            s.curr.label = annot.labels[s.curr.start]
+            end_entity(s)
+        entities = []
+        for i in range(s.j):
+            entities.append((s.ents[i].start, s.ents[i].end, s.ents[i].label))
+        return entities
 
-    cpdef int set_tags(self, Tokens tokens) except -1:
+    cpdef list set_tags(self, Tokens tokens):
         cdef Pool mem = Pool()
         cdef State* s = init_state(mem, tokens.length)
         cdef Move* move
@@ -116,3 +130,10 @@ cdef class NERParser:
             move = best_accepted(self._moves, self._scores, self.n_classes)
             transition(s, move)
             tokens.ner[s.i-1] = s.tags[s.i-1]
+        if entity_is_open(s):
+            s.curr.label = move.label
+            end_entity(s)
+        entities = []
+        for i in range(s.j):
+            entities.append((s.ents[i].start, s.ents[i].end, s.ents[i].label))
+        return entities

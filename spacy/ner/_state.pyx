@@ -7,7 +7,7 @@ cdef int begin_entity(State* s, label) except -1:
 
 
 cdef int end_entity(State* s) except -1:
-    s.curr.end = s.i + 1
+    s.curr.end = s.i
     s.ents[s.j] = s.curr
     s.j += 1
     s.curr.start = 0
