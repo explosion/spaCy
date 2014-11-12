@@ -40,3 +40,9 @@ def ner():
     local('python tools/train_ner.py ~/work_data/docparse/wsj02-21.conll data/en/ner')
     local('python tools/tag_ner.py ~/work_data/docparse/wsj22.raw /tmp/tmp')
     local('python tools/eval_ner.py ~/work_data/docparse/wsj22.conll /tmp/tmp | tail')
+
+
+def conll():
+    local('rm -rf data/en/ner')
+    local('python tools/conll03_train.py ~/work_data/ner/conll2003/eng.train data/en/ner/')
+    local('python tools/conll03_eval.py ~/work_data/ner/conll2003/eng.testa')
