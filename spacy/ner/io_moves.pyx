@@ -77,11 +77,16 @@ cdef int set_accept_if_valid(Move* moves, int n, State* s) except 0:
     moves[0].accept = False
     for i in range(1, n):
         if moves[i].action == SHIFT:
-            moves[i].accept = moves[i].label == s.curr.label or not entity_is_open(s)
+            if s.i >= s.length:
+                moves[i].accept = False
+            elif open_ent and moves[i].label != s.curr.label:
+                moves[i].accept = False
+            else:
+                moves[i].accept = True
         elif moves[i].action == REDUCE:
             moves[i].accept = open_ent
         elif moves[i].action == OUT:
-            moves[i].accept = not open_ent
+            moves[i].accept = s.i < s.length and not open_ent
         n_accept += moves[i].accept
     return n_accept
 
@@ -150,3 +155,7 @@ cdef int fill_moves(Move* moves, int n, list entity_types) except -1:
     moves[i].clas = i
     moves[i].label = 0
     i += 1
+
+
+cdef bint is_final(State* s):
+    return s.i == s.length and not entity_is_open(s)

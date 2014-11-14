@@ -1,44 +1,50 @@
-from .bilou_moves cimport BEGIN, UNIT
-
-
-cdef int begin_entity(State* s, label) except -1:
-    s.curr.start = s.i
-    s.curr.label = label
-
-
-cdef int end_entity(State* s) except -1:
-    s.curr.end = s.i
-    s.ents[s.j] = s.curr
+cdef void begin_entity(State* s, label):
     s.j += 1
-    s.curr.start = 0
-    s.curr.label = -1
-    s.curr.end = 0
+    s.ents[s.j].start = s.i
+    s.ents[s.j].tag = label
+    s.ents[s.j].end = s.i + 1
+
+
+cdef void end_entity(State* s):
+    s.ents[s.j].end = s.i + 1
 
 
 cdef State* init_state(Pool mem, int sent_length) except NULL:
     s = <State*>mem.alloc(1, sizeof(State))
-    s.j = 0
     s.ents = <Entity*>mem.alloc(sent_length, sizeof(Entity))
-    for i in range(sent_length):
-        s.ents[i].label = -1
-    s.curr.label = -1
     s.tags = <int*>mem.alloc(sent_length, sizeof(int))
     s.length = sent_length
-    return s
 
 
-cdef bint entity_is_open(State *s) except -1:
-    return s.curr.label != -1
+cdef bint entity_is_open(State *s):
+    return s.ents[s.j].start != 0
 
 
-cdef bint entity_is_sunk(State *s, Move* golds) except -1:
+cdef bint entity_is_sunk(State *s, Move* golds):
     if not entity_is_open(s):
         return False
 
-    cdef Move* gold = &golds[s.curr.start]
+    cdef Entity* ent = &s.ents[s.j]
+    cdef Move* gold = &golds[ent.start]
     if gold.action != BEGIN and gold.action != UNIT:
         return True
-    elif gold.label != s.curr.label:
+    elif gold.label != ent.label:
         return True
     else:
         return False
+
+
+cdef int copy_state(Pool mem, State* dest, State* source) except -1:
+    '''Copy state source into state dest.'''
+    if source.length > dest.length:
+        dest.ents = <Entity*>mem.realloc(dest.ents, source.length * sizeof(Entity))
+        dest.tags = <int*>mem.realloc(dest.tags, source.length * sizeof(int))
+    memcpy(dest.ents, source.ents, source.length * sizeof(Entity))
+    memcpy(dest.tags, source.tags, source.length * sizeof(int))
+    dest.length = source.length
+    dest.i = source.i
+    dest.j = source.j
+    dest.curr = source.curr
+
+
+
