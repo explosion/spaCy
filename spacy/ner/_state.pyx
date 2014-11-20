@@ -1,11 +1,14 @@
-cdef void begin_entity(State* s, label):
+from libc.string cimport memcpy
+
+
+cdef int begin_entity(State* s, label) except -1:
     s.j += 1
     s.ents[s.j].start = s.i
     s.ents[s.j].tag = label
     s.ents[s.j].end = s.i + 1
 
 
-cdef void end_entity(State* s):
+cdef int end_entity(State* s) except -1:
     s.ents[s.j].end = s.i + 1
 
 
@@ -16,22 +19,22 @@ cdef State* init_state(Pool mem, int sent_length) except NULL:
     s.length = sent_length
 
 
-cdef bint entity_is_open(State *s):
+cdef bint entity_is_open(State *s) except -1:
     return s.ents[s.j].start != 0
 
 
-cdef bint entity_is_sunk(State *s, Move* golds):
+cdef int entity_is_sunk(State *s, Move* golds) except -1:
     if not entity_is_open(s):
         return False
-
-    cdef Entity* ent = &s.ents[s.j]
-    cdef Move* gold = &golds[ent.start]
-    if gold.action != BEGIN and gold.action != UNIT:
-        return True
-    elif gold.label != ent.label:
-        return True
-    else:
-        return False
+    raise StandardError
+    #cdef Entity* ent = &s.ents[s.j]
+    #cdef Move* gold = &golds[ent.start]
+    #if gold.action != BEGIN and gold.action != UNIT:
+    #    return True
+    #elif gold.label != ent.label:
+    #    return True
+    #else:
+    #    return False
 
 
 cdef int copy_state(Pool mem, State* dest, State* source) except -1:
@@ -47,4 +50,5 @@ cdef int copy_state(Pool mem, State* dest, State* source) except -1:
     dest.curr = source.curr
 
 
-
+cdef int is_done(State* s) except -1:
+    return s.i >= s.length and not entity_is_open(s)

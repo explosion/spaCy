@@ -57,7 +57,7 @@ exts = [
     Extension("spacy.ner._state", ["spacy/ner/_state.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.ner.bilou_moves", ["spacy/ner/bilou_moves.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.ner.io_moves", ["spacy/ner/io_moves.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.ner.greedy_parser", ["spacy/ner/greedy_parser.pyx"], language="c++", include_dirs=includes),
+    #Extension("spacy.ner.greedy_parser", ["spacy/ner/greedy_parser.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.ner.pystate", ["spacy/ner/pystate.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.ner.context", ["spacy/ner/context.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.ner.feats", ["spacy/ner/feats.pyx"], language="c++", include_dirs=includes),

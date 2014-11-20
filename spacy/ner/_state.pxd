@@ -10,4 +10,6 @@ cdef int copy_state(Pool mem, State* dest, State* source) except -1
 
 cdef bint entity_is_open(State *s) except -1
 
-cdef bint entity_is_sunk(State *s, Move* golds) except -1
+cdef int entity_is_sunk(State *s, Move* golds) except -1
+
+cdef int is_done(State* s) except -1
