@@ -23,9 +23,6 @@ from . import util
 from .util import read_lang_data
 from .tokens import Tokens
 
-from .tagger cimport Tagger
-from .ner.greedy_parser cimport NERParser
-
 
 cdef class Language:
     def __init__(self, name):
@@ -42,12 +39,6 @@ cdef class Language:
             self.lexicon.load(path.join(util.DATA_DIR, name, 'lexemes'))
             self.lexicon.strings.load(path.join(util.DATA_DIR, name, 'strings'))
         self._load_special_tokenization(rules)
-        if path.exists(path.join(util.DATA_DIR, name, 'pos')):
-            self.pos_tagger = Tagger(path.join(util.DATA_DIR, name, 'pos'))
-        else:
-            self.pos_tagger = None
-        if path.exists(path.join(util.DATA_DIR, name, 'ner')):
-            self.ner_tagger = NERParser(path.join(util.DATA_DIR, name, 'ner'))
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
@@ -244,6 +235,10 @@ cdef class Language:
 
 
 cdef class Lexicon:
+    '''A map container for a language's Lexeme structs.
+    
+    Also interns UTF-8 strings, and maps them to consecutive integer IDs.
+    '''
     def __init__(self):
         self.mem = Pool()
         self._dict = PreshMap(2 ** 20)
@@ -252,6 +247,7 @@ cdef class Lexicon:
         self.size = 1
 
     cdef Lexeme* get(self, String* string) except NULL:
+        '''Retrieve a pointer to a Lexeme from the lexicon.'''
         cdef Lexeme* lex
         lex = <Lexeme*>self._dict.get(string.key)
         if lex != NULL:
@@ -266,6 +262,25 @@ cdef class Lexicon:
         return lex
 
     def __getitem__(self,  id_or_string):
+        '''Retrieve a lexeme, given an int ID or a unicode string.  If a previously
+        unseen unicode string is given, a new Lexeme is created and stored.
+
+        This function relies on Cython's struct-to-dict conversion.  Python clients
+        receive a dict keyed by strings (byte or unicode, depending on Python 2/3),
+        with int values.  Cython clients can instead receive a Lexeme struct value.
+        More efficient Cython access is provided by Lexicon.get, which returns
+        a Lexeme*.
+
+        Args:
+            id_or_string (int or unicode): The integer ID of a word, or its unicode
+                string.  If an int >= Lexicon.size, IndexError is raised.
+                If id_or_string is neither an int nor a unicode string, ValueError
+                is raised.
+
+        Returns:
+            lexeme (dict): A Lexeme struct instance, which Cython translates into
+                a dict if the operator is called from Python.
+        '''
         if type(id_or_string) == int:
             return self.lexemes.at(id_or_string)[0]
         cdef String string
