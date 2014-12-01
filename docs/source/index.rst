@@ -8,17 +8,81 @@ spaCy NLP Tokenizer and Lexicon
 ================================
 
 spaCy is a library for industrial-strength NLP in Python and Cython.  It
-assumes that NLP is mostly about solving machine learning problems, and that
+assumes that NLP is mostly about solving large machine learning problems, and that
 solving these problems is mostly about feature extraction.  So, spaCy helps you
-do feature extraction --- it helps you represent a linguistic context as
-a vector of numbers.  It's also a great way to create an inverted index,
-particularly if you want to index documents on fancier properties.
+do feature extraction --- it includes an excellent set of distributional and
+orthographic features, memoizes them efficiently, and maps strings to
+consecutive integer values.
 
 For commercial users, a trial license costs $0, with a one-time license fee of
 $1,000 to use spaCy in production.  For non-commercial users, a GPL license is
 available.  To quickly get the gist of the license terms, check out the license
 user stories.
 
+
+Tokenization done right
+=======================
+
+Most tokenizers rely on complicated regular expressions.  Often, they leave you
+with no way to align the tokens back to the original string --- a vital feature
+if you want to display some mark-up, such as spelling correction.  The regular
+expressions also interact, making it hard to accommodate special cases.
+
+spaCy introduces a **novel tokenization algorithm** that's much faster and much
+more flexible:
+
+.. code-block:: python
+
+    def tokenize(string, prefixes={}, suffixes={}, specials={}):
+        '''Sketch of spaCy's tokenization algorithm.'''
+        tokens = []
+        cache = {}
+        for chunk in string.split():
+            # Because of Zipf's law, the cache serves the majority of "chunks".
+            if chunk in cache:
+                tokens.extend(cache[chunl])
+                continue
+            key = chunk
+
+            subtokens = []
+            # Process a chunk by splitting off prefixes e.g. ( " { and suffixes e.g. , . :
+            # If we split one off, check whether we're left with a special-case, 
+            # e.g. contractions (can't, won't, etc), emoticons, abbreviations, etc.
+            # This makes the tokenization easy to update and customize.
+            while chunk:
+                prefix, chunk = _consume_prefix(chunk, prefixes)
+                if prefix:
+                    subtokens.append(prefix)
+                    if chunk in specials:
+                        subtokens.extend(specials[chunk])
+                        break
+                suffix, chunk = _consume_suffix(chunk, suffixes)
+                if suffix:
+                    subtokens.append(suffix)
+                    if chunk in specials:
+                        subtokens.extend(specials[chunk])
+                        break
+            cache[key] = subtokens
+
+Your data is going to have its own quirks, so it's really useful to have
+a tokenizer you can easily control.  To see the limitations of the standard
+regex-based approach, check out `CMU's recent work on tokenizing tweets <http://www.ark.cs.cmu.edu/TweetNLP/>`_. Despite a lot of careful attention, they can't handle all of their
+known emoticons correctly --- doing so would interfere with the way they
+process other punctuation.  This isn't a problem for spaCy: we just add them
+all to the special tokenization rules.
+
+spaCy's tokenizer is also incredibly efficient:
+
++--------+---------------+--------------+
+| System | Tokens/second | Speed Factor |
++--------+---------------+--------------+
+| NLTK   | 89 000        | 1.00         |
++--------+---------------+--------------+
+| spaCy  | 3 093 000     | 38.30        |
++--------+---------------+--------------+
+
+spaCy can create an inverted index of the 1.8 billion word Gigaword corpus,
+keyed by lemmas, in under half an hour --- on a Macbook Air.
 
 Unique Lexicon-centric design
 =============================
@@ -114,7 +178,7 @@ Here's a quick comparison of the following POS taggers:
 | nltk.tag.stanford | 209         | 96.7   |
 +-------------------+-------------+--------+
 
-Experimental details here.  Three things are apparent from this comparison:
+Experimental details TODO.  Three things are apparent from this comparison:
 
 1. The native NLTK tagger, nltk.pos_tag, is both slow and inaccurate;
 
