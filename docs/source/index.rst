@@ -7,18 +7,58 @@
 spaCy NLP Tokenizer and Lexicon
 ================================
 
-spaCy is a library for industrial-strength NLP in Python and Cython.  It
-assumes that NLP is mostly about solving large machine learning problems, and that
-solving these problems is mostly about feature extraction.  So, spaCy helps you
-do feature extraction --- it includes an excellent set of distributional and
-orthographic features, memoizes them efficiently, and maps strings to
-consecutive integer values.
+spaCy is a library for industrial-strength NLP in Python and Cython.  spaCy's
+take on NLP is that it's mostly about feature extraction --- that's the part
+that's specific to NLP, so that's what an NLP library should focus on.
+It should tell you what the current best-practice is, and help you do exactly
+that, quickly and efficiently.
 
-For commercial users, a trial license costs $0, with a one-time license fee of
-$1,000 to use spaCy in production.  For non-commercial users, a GPL license is
-available.  To quickly get the gist of the license terms, check out the license
-user stories.
+Best-practice is to **use lots of large lexicons**.  Let's say you hit the word
+*belieber* in production.  What will your system know about this word?  A bad
+system will only know things about the words in its training corpus, which
+probably consists of texts written before Justin Bieber was even born.
+It doesn't have to be like that.
 
+
+Unique Lexicon-centric design
+=============================
+
+spaCy helps you build models that generalise better, by making it easy to use
+more robust features.  Instead of a list of strings, the tokenizer returns
+references to rich lexical types.  Its tokenizer returns sequence of references
+to rich lexical types.  Features which ask about the word's Brown cluster, its
+typical part-of-speech tag, how it's usually cased etc require no extra effort:
+
+    >>> from spacy.en import EN
+    >>> from spacy.feature_names import *
+    >>> feats = (
+            SIC, # ID of the original word form
+            NORM, # ID of the normalized word form
+            CLUSTER, # ID of the word's Brown cluster
+            IS_TITLE, # Was the word title-cased?
+            POS_TYPE # A cluster ID describing what POS tags the word is usually assigned
+        )
+    >>> tokens = EN.tokenize(u'Split words, punctuation, emoticons etc.! ^_^')
+    >>> tokens.to_array(feats)[:5]
+        array([[    1,  2,  3,  4],
+               [...],
+               [...],
+               [...]])
+
+
+spaCy is designed to **make the right thing easy**, where the right thing is to:
+
+* **Use rich distributional and orthographic features**. Without these, your model
+  will be very brittle and domain dependent.
+
+* **Compute features per type, not per token**. Because of Zipf's law, you can
+  expect this to be exponentially more efficient.
+
+* **Minimize string processing**, and instead compute with arrays of ID ints.
+  
+For the current list of lexical features, see `Lexical Features`_.
+
+.. _lexical features: features.html
 
 Tokenization done right
 =======================
@@ -82,48 +122,10 @@ spaCy's tokenizer is also incredibly efficient:
 +--------+---------------+--------------+
 
 spaCy can create an inverted index of the 1.8 billion word Gigaword corpus,
-keyed by lemmas, in under half an hour --- on a Macbook Air.
+in under half an hour --- on a Macbook Air.  See the `inverted
+index tutorial`_.
 
-Unique Lexicon-centric design
-=============================
-
-spaCy takes care of all string-processing, efficiently and accurately.  This
-makes a night-and-day difference to your feature extraction code.
-Instead of a list of strings, spaCy's tokenizer gives you references to feature-rich
-lexeme objects:
-
-    >>> from spacy.en import EN
-    >>> from spacy.feature_names import SIC, NORM, SHAPE, ASCIIED, PREFIX, SUFFIX, \
-            LENGTH, CLUSTER, POS_TYPE, SENSE_TYPE, \
-            IS_ALPHA, IS_ASCII, IS_DIGIT, IS_PUNCT, IS_SPACE, IS_TITLE, IS_UPPER, \
-            LIKE_URL, LIKE_NUMBER
-    >>> feats = (
-            SIC, # ID of the original word form
-            NORM, # ID of the normalized word form
-            CLUSTER, # ID of the word's Brown cluster
-            IS_TITLE, # Was the word title-cased?
-            POS_TYPE # A cluster ID describing what POS tags the word is usually assigned
-        )
-    >>> tokens = EN.tokenize(u'Split words, punctuation, emoticons etc.! ^_^')
-    >>> tokens.to_strings()
-    [u'Split', u'words', u',', u'punctuation', u',', u'emoticons', u'etc.', u'!', u'^_^']
-    >>> tokens.to_array(feats)[:5]
-        array([[    1,  2,  3,  4],
-               [...],
-               [...],
-               [...]])
-
-
-spaCy is designed to **make the right thing easy**, where the right thing is to:
-
-* **Use rich distributional and orthographic features**. Without these, your model
-  will be very brittle and domain dependent.
-
-* **Compute features per type, not per token**. Because of Zipf's law, you can
-  expect this to be exponentially more efficient.
-
-* **Minimize string processing**, and instead compute with arrays of ID ints.
-  
+.. _inverted index tutorial: index_tutorial.html
 
 Comparison with NLTK
 ====================
@@ -221,4 +223,4 @@ performance you expect from a program written in C.
     :maxdepth: 3
 
     features.rst
-    
+    license_stories.rst 
