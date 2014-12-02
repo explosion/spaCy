@@ -19,8 +19,12 @@ def test_save_bytes(sstore):
 
 
 def test_save_unicode(sstore):
-    with pytest.raises(TypeError):
-        A_i = sstore['A']
+    Hello_i = sstore[u'Hello']
+    assert Hello_i == 1
+    assert sstore[u'Hello'] == 1
+    assert sstore[u'goodbye'] != Hello_i
+    assert sstore[u'hello'] != Hello_i
+    assert Hello_i == 1
 
 
 def test_zero_id(sstore):

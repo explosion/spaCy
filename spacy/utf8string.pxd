@@ -13,7 +13,7 @@ cdef struct Utf8Str:
 
 cdef class StringStore:
     cdef Pool mem
-    cdef PreshMap table
+    cdef PreshMap _map
     cdef Utf8Str* strings
     cdef int size
     cdef int _resize_at
