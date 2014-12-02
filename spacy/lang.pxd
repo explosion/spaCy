@@ -1,5 +1,7 @@
 from libcpp.vector cimport vector
 
+from cpython cimport Py_UNICODE_ISSPACE, Py_UNICODE_ISALPHA, Py_UNICODE_ISUPPER
+
 from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
 
@@ -7,15 +9,7 @@ from .typedefs cimport hash_t
 from .tokens cimport Tokens
 from .lexeme cimport Lexeme
 from .tagger cimport Tagger
-from .ner.greedy_parser cimport NERParser
 from .utf8string cimport StringStore
-
-
-cdef extern from "Python.h":
-    cdef bint Py_UNICODE_ISSPACE(Py_UNICODE ch)
-    cdef bint Py_UNICODE_ISALNUM(Py_UNICODE ch)
-    cdef bint Py_UNICODE_ISALPHA(Py_UNICODE ch)
-    cdef bint Py_UNICODE_ISUPPER(Py_UNICODE ch)
 
 
 cdef struct String:
@@ -32,7 +26,7 @@ cdef class Lexicon:
 
     cdef Lexeme* get(self, String* s) except NULL
     
-    cdef PreshMap _dict
+    cdef PreshMap _map
     
 
 cdef class Language:
@@ -41,9 +35,6 @@ cdef class Language:
     cdef PreshMap _cache
     cdef PreshMap _specials
     cpdef readonly Lexicon lexicon
-
-    cpdef readonly Tagger pos_tagger
-    cpdef readonly NERParser ner_tagger
 
     cdef object _prefix_re
     cdef object _suffix_re

@@ -241,7 +241,7 @@ cdef class Lexicon:
     '''
     def __init__(self):
         self.mem = Pool()
-        self._dict = PreshMap(2 ** 20)
+        self._map = PreshMap(2 ** 20)
         self.strings = StringStore()
         self.lexemes.push_back(&EMPTY_LEXEME)
         self.size = 1
@@ -249,12 +249,12 @@ cdef class Lexicon:
     cdef Lexeme* get(self, String* string) except NULL:
         '''Retrieve a pointer to a Lexeme from the lexicon.'''
         cdef Lexeme* lex
-        lex = <Lexeme*>self._dict.get(string.key)
+        lex = <Lexeme*>self._map.get(string.key)
         if lex != NULL:
             return lex
         lex = <Lexeme*>self.mem.alloc(sizeof(Lexeme), 1)
         lex[0] = lexeme_init(self.size, string.chars[:string.n], string.key, self.strings, {})
-        self._dict.set(string.key, lex)
+        self._map.set(string.key, lex)
         while self.lexemes.size() < (lex.id + 1):
             self.lexemes.push_back(&EMPTY_LEXEME)
         self.lexemes[lex.id] = lex
@@ -302,11 +302,11 @@ cdef class Lexicon:
         assert fp != NULL
         cdef size_t st
         cdef hash_t key
-        for i in range(self._dict.length):
-            key = self._dict.c_map.cells[i].key
+        for i in range(self._map.length):
+            key = self._map.c_map.cells[i].key
             if key == 0:
                 continue
-            lexeme = <Lexeme*>self._dict.c_map.cells[i].value
+            lexeme = <Lexeme*>self._map.c_map.cells[i].value
             st = fwrite(&key, sizeof(key), 1, fp)
             assert st == 1
             st = fwrite(lexeme, sizeof(Lexeme), 1, fp)
@@ -331,7 +331,7 @@ cdef class Lexicon:
             st = fread(lexeme, sizeof(Lexeme), 1, fp)
             if st != 1:
                 break
-            self._dict.set(key, lexeme)
+            self._map.set(key, lexeme)
             while self.lexemes.size() < (lexeme.id + 1):
                 self.lexemes.push_back(&EMPTY_LEXEME)
             self.lexemes[lexeme.id] = lexeme
