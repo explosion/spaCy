@@ -102,6 +102,16 @@ cdef class Tokens:
         elif tag_type == ENTITY:
             self.ner[i] = tag
 
+    cpdef np.ndarray[atom_t, ndim=2] get_array(self, list features):
+        cdef int i, j
+        cdef np.ndarray[atom_t, ndim=2] output
+        output = np.ndarray(shape=(self.length, len(features)), dtype=int)
+        for i in range(self.length):
+            for j, feature in enumerate(features):
+                output[i, j] = self.lex[i].sic
+                #output[i, j] = lexeme_get_feature(self.lex[i], feature)
+        return output
+
     def _realloc(self, new_size):
         self.max_length = new_size
         n = new_size + (PADDING * 2)

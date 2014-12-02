@@ -1,3 +1,6 @@
+import numpy as np
+cimport numpy as np
+
 from cymem.cymem cimport Pool
 
 from .lexeme cimport Lexeme
@@ -27,6 +30,8 @@ cdef class Tokens:
     cdef int extend(self, int i, Lexeme** lexemes, int n) except -1
     cdef int push_back(self, int i, Lexeme* lexeme) except -1
     cpdef int set_tag(self, int i, TagType tag_type, int tag) except -1
+
+    cpdef np.ndarray[atom_t, ndim=2] get_array(self, list features)
 
 
 cdef class Token:
