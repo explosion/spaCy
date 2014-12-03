@@ -18,7 +18,7 @@ cdef class Lexicon:
     cpdef readonly StringStore strings
     cdef vector[Lexeme*] lexemes
 
-    cdef Lexeme* get(self, UniStr* s) except NULL
+    cdef const Lexeme* get(self, UniStr* s) except NULL
     
     cdef PreshMap _map
     
@@ -45,5 +45,5 @@ cdef class Language:
     cdef int _find_prefix(self, Py_UNICODE* characters, size_t length) except -1
     cdef int _find_suffix(self, Py_UNICODE* characters, size_t length) except -1
     cdef int _find_infix(self, Py_UNICODE* characters, size_t length) except -1
-    cdef int _save_cached(self, Lexeme** tokens, hash_t key, int n) except -1
+    cdef int _save_cached(self, const Lexeme* const* tokens, hash_t key, int n) except -1
  

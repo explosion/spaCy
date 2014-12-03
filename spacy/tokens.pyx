@@ -44,7 +44,7 @@ cdef class Tokens:
         # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
         # realloc.
-        self._lex_ptr = <Lexeme**>self.mem.alloc(size + (PADDING*2), sizeof(Lexeme*))
+        self._lex_ptr = <const Lexeme**>self.mem.alloc(size + (PADDING*2), sizeof(Lexeme*))
         self._idx_ptr = <int*>self.mem.alloc(size + (PADDING*2), sizeof(int))
         self._pos_ptr = <int*>self.mem.alloc(size + (PADDING*2), sizeof(int))
         self._ner_ptr = <int*>self.mem.alloc(size + (PADDING*2), sizeof(int))
@@ -74,7 +74,7 @@ cdef class Tokens:
     def __len__(self):
         return self.length
 
-    cdef int push_back(self, int idx, Lexeme* lexeme) except -1:
+    cdef int push_back(self, int idx, const Lexeme* lexeme) except -1:
         if self.length == self.max_length:
             self._realloc(self.length * 2)
         self.lex[self.length] = lexeme
@@ -84,7 +84,7 @@ cdef class Tokens:
         self.length += 1
         return idx + lexeme.length
 
-    cdef int extend(self, int idx, Lexeme** lexemes, int n) except -1:
+    cdef int extend(self, int idx, const Lexeme* const* lexemes, int n) except -1:
         cdef int i
         if lexemes == NULL:
             return idx
@@ -116,7 +116,7 @@ cdef class Tokens:
     def _realloc(self, new_size):
         self.max_length = new_size
         n = new_size + (PADDING * 2)
-        self._lex_ptr = <Lexeme**>self.mem.realloc(self._lex_ptr, n * sizeof(Lexeme*))
+        self._lex_ptr = <const Lexeme**>self.mem.realloc(self._lex_ptr, n * sizeof(Lexeme*))
         self._idx_ptr = <int*>self.mem.realloc(self._idx_ptr, n * sizeof(int))
         self._pos_ptr = <int*>self.mem.realloc(self._pos_ptr, n * sizeof(int))
         self._ner_ptr = <int*>self.mem.realloc(self._ner_ptr, n * sizeof(int))

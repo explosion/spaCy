@@ -37,10 +37,11 @@ cdef class Language:
         self._suffix_re = re.compile(suffix)
         self._infix_re = re.compile(infix)
         self.lexicon = Lexicon(self.set_flags)
-        if path.exists(path.join(util.DATA_DIR, name, 'lexemes')):
-            self.lexicon.load(path.join(util.DATA_DIR, name, 'lexemes'))
-            self.lexicon.strings.load(path.join(util.DATA_DIR, name, 'strings'))
         self._load_special_tokenization(rules)
+
+    def load(self):
+        self.lexicon.load(path.join(util.DATA_DIR, self.name, 'lexemes'))
+        self.lexicon.strings.load(path.join(util.DATA_DIR, self.name, 'strings'))
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
@@ -84,7 +85,7 @@ cdef class Language:
             if Py_UNICODE_ISSPACE(chars[i]) != in_ws:
                 if start < i:
                     slice_unicode(&span, chars, start, i)
-                    lexemes = <Lexeme**>self._cache.get(span.key)
+                    lexemes = <const Lexeme* const*>self._cache.get(span.key)
                     if lexemes != NULL:
                         tokens.extend(start, lexemes, 0)
                     else: 
@@ -96,7 +97,7 @@ cdef class Language:
         i += 1
         if start < i:
             slice_unicode(&span, chars, start, i)
-            lexemes = <Lexeme**>self._cache.get(span.key)
+            lexemes = <const Lexeme* const*>self._cache.get(span.key)
             if lexemes != NULL:
                 tokens.extend(start, lexemes, 0)
             else: 
@@ -114,8 +115,8 @@ cdef class Language:
         self._attach_tokens(tokens, start, span, &prefixes, &suffixes)
         self._save_cached(&tokens.lex[orig_size], orig_key, tokens.length - orig_size)
 
-    cdef UniStr* _split_affixes(self, UniStr* string, vector[Lexeme*] *prefixes,
-                                vector[Lexeme*] *suffixes) except NULL:
+    cdef UniStr* _split_affixes(self, UniStr* string, vector[const Lexeme*] *prefixes,
+                                vector[const Lexeme*] *suffixes) except NULL:
         cdef size_t i
         cdef UniStr prefix
         cdef UniStr suffix
@@ -158,17 +159,17 @@ cdef class Language:
 
     cdef int _attach_tokens(self, Tokens tokens,
                             int idx, UniStr* string,
-                            vector[Lexeme*] *prefixes,
-                            vector[Lexeme*] *suffixes) except -1:
+                            vector[const Lexeme*] *prefixes,
+                            vector[const Lexeme*] *suffixes) except -1:
         cdef int split
-        cdef Lexeme** lexemes
+        cdef const Lexeme* const* lexemes
         cdef Lexeme* lexeme
         cdef UniStr span
         if prefixes.size():
             idx = tokens.extend(idx, prefixes.data(), prefixes.size())
         if string.n != 0:
 
-            lexemes = <Lexeme**>self._cache.get(string.key)
+            lexemes = <const Lexeme* const*>self._cache.get(string.key)
             if lexemes != NULL:
                 idx = tokens.extend(idx, lexemes, 0)
             else:
@@ -182,13 +183,13 @@ cdef class Language:
                     idx = tokens.push_back(idx, self.lexicon.get(&span))
                     slice_unicode(&span, string.chars, split + 1, string.n)
                     idx = tokens.push_back(idx, self.lexicon.get(&span))
-        cdef vector[Lexeme*].reverse_iterator it = suffixes.rbegin()
+        cdef vector[const Lexeme*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
             idx = tokens.push_back(idx, deref(it))
             preinc(it)
 
-    cdef int _save_cached(self, Lexeme** tokens, hash_t key, int n) except -1:
-        lexemes = <Lexeme**>self.mem.alloc(n + 1, sizeof(Lexeme**))
+    cdef int _save_cached(self, const Lexeme* const* tokens, hash_t key, int n) except -1:
+        lexemes = <const Lexeme**>self.mem.alloc(n + 1, sizeof(Lexeme**))
         cdef int i
         for i in range(n):
             lexemes[i] = tokens[i]
@@ -249,7 +250,7 @@ cdef class Lexicon:
         self.size = 1
         self.set_flags = set_flags
 
-    cdef Lexeme* get(self, UniStr* string) except NULL:
+    cdef const Lexeme* get(self, UniStr* string) except NULL:
         '''Retrieve a pointer to a Lexeme from the lexicon.'''
         cdef Lexeme* lex
         lex = <Lexeme*>self._map.get(string.key)
@@ -289,14 +290,14 @@ cdef class Lexicon:
             return self.lexemes.at(id_or_string)[0]
         cdef UniStr string
         slice_unicode(&string, id_or_string, 0, len(id_or_string))
-        cdef Lexeme* lexeme = self.get(&string)
+        cdef const Lexeme* lexeme = self.get(&string)
         return lexeme[0]
 
     def __setitem__(self, unicode uni_string, dict props):
         cdef UniStr s
         slice_unicode(&s, uni_string, 0, len(uni_string))
-        cdef Lexeme* lex = self.get(&s)
-        lex[0] = lexeme_init(lex.id, s.chars[:s.n], s.key, self.strings, props)
+        cdef const Lexeme* lex = self.get(&s)
+        self.lexemes[lex.id][0] = lexeme_init(lex.id, s.chars[:s.n], s.key, self.strings, props)
 
     def dump(self, loc):
         if path.exists(loc):
@@ -319,7 +320,8 @@ cdef class Lexicon:
         assert st == 0
 
     def load(self, loc):
-        assert path.exists(loc)
+        if not path.exists(loc):
+            raise IOError('Lexemes file not found at %s' % loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         cdef FILE* fp = fopen(<char*>bytes_loc, 'rb')
         assert fp != NULL

@@ -112,8 +112,8 @@ cpdef Lexeme init(id_t i, unicode string, hash_t hashed, StringStore store,
                   dict props) except *
  
 
-cdef inline bint check_flag(Lexeme* lexeme, attr_id_t flag_id) nogil:
+cdef inline bint check_flag(const Lexeme* lexeme, attr_id_t flag_id) nogil:
     return lexeme.flags & (1 << flag_id)
 
 
-cdef attr_t get_attr(Lexeme* lex, attr_id_t attr_id)
+cdef attr_t get_attr(const Lexeme* lex, attr_id_t attr_id)

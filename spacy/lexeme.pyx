@@ -35,7 +35,7 @@ cpdef Lexeme init(id_t i, unicode string, hash_t hashed,
     return lex
 
 
-cdef attr_t get_attr(Lexeme* lex, attr_id_t feat_name):
+cdef attr_t get_attr(const Lexeme* lex, attr_id_t feat_name):
     if feat_name < (sizeof(flags_t) * 8):
         return check_flag(lex, feat_name)
     elif feat_name == ID:
