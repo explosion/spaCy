@@ -31,4 +31,4 @@ cdef class StringStore:
     cdef int size
     cdef int _resize_at
     
-    cdef Utf8Str* intern(self, char* chars, int length) except NULL
+    cdef const Utf8Str* intern(self, char* chars, int length) except NULL

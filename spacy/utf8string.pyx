@@ -20,7 +20,7 @@ cdef class StringStore:
 
     def __getitem__(self, object string_or_id):
         cdef bytes byte_string
-        cdef Utf8Str* utf8str
+        cdef const Utf8Str* utf8str
         if isinstance(string_or_id, int) or isinstance(string_or_id, long):
             if string_or_id < 1 or string_or_id >= self.size:
                 raise IndexError(string_or_id)
@@ -36,7 +36,7 @@ cdef class StringStore:
         else:
             raise TypeError(type(string_or_id))
 
-    cdef Utf8Str* intern(self, char* chars, int length) except NULL:
+    cdef const Utf8Str* intern(self, char* chars, int length) except NULL:
         # 0 means missing, but we don't bother offsetting the index. We waste
         # slot 0 to simplify the code, because it doesn't matter.
         assert length != 0
