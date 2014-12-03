@@ -5,6 +5,7 @@ import codecs
 
 SEPARATOR = '\n|-SEP-|\n'
 
+
 cdef class StringStore:
     def __init__(self):
         self.mem = Pool()
@@ -20,7 +21,7 @@ cdef class StringStore:
     def __getitem__(self, object string_or_id):
         cdef bytes byte_string
         cdef Utf8Str* utf8str
-        if isinstance(string_or_id, int):
+        if isinstance(string_or_id, int) or isinstance(string_or_id, long):
             if string_or_id < 1 or string_or_id >= self.size:
                 raise IndexError(string_or_id)
             utf8str = &self.strings[<int>string_or_id]
