@@ -19,6 +19,8 @@ from .lexeme cimport Lexeme
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport init as lexeme_init
 
+from .utf8string cimport slice_unicode
+
 from . import util
 from .util import read_lang_data
 from .tokens import Tokens
@@ -34,7 +36,7 @@ cdef class Language:
         self._prefix_re = re.compile(prefix)
         self._suffix_re = re.compile(suffix)
         self._infix_re = re.compile(infix)
-        self.lexicon = Lexicon()
+        self.lexicon = Lexicon(self.set_flags)
         if path.exists(path.join(util.DATA_DIR, name, 'lexemes')):
             self.lexicon.load(path.join(util.DATA_DIR, name, 'lexemes'))
             self.lexicon.strings.load(path.join(util.DATA_DIR, name, 'strings'))
@@ -45,11 +47,11 @@ cdef class Language:
         cdef Tokens tokens = Tokens(self.lexicon.strings, length)
         if length == 0:
             return tokens
-        cdef String string_struct
+        cdef UniStr string_struct
         cdef unicode py_string
         cdef int idx = 0
         for i, py_string in enumerate(strings):
-            string_from_unicode(&string_struct, py_string)
+            slice_unicode(&string_struct, py_string, 0, len(py_string))
             tokens.push_back(idx, self.lexicon.get(&string_struct))
             idx += len(py_string) + 1
         return tokens
@@ -77,11 +79,11 @@ cdef class Language:
         cdef int start = 0
         cdef Py_UNICODE* chars = string
         cdef bint in_ws = Py_UNICODE_ISSPACE(chars[0])
-        cdef String span
+        cdef UniStr span
         for i in range(1, length):
             if Py_UNICODE_ISSPACE(chars[i]) != in_ws:
                 if start < i:
-                    string_slice(&span, chars, start, i)
+                    slice_unicode(&span, chars, start, i)
                     lexemes = <Lexeme**>self._cache.get(span.key)
                     if lexemes != NULL:
                         tokens.extend(start, lexemes, 0)
@@ -93,7 +95,7 @@ cdef class Language:
                     start += 1
         i += 1
         if start < i:
-            string_slice(&span, chars, start, i)
+            slice_unicode(&span, chars, start, i)
             lexemes = <Lexeme**>self._cache.get(span.key)
             if lexemes != NULL:
                 tokens.extend(start, lexemes, 0)
@@ -101,7 +103,7 @@ cdef class Language:
                 self._tokenize(tokens, &span, start, i)
         return tokens
 
-    cdef int _tokenize(self, Tokens tokens, String* span, int start, int end) except -1:
+    cdef int _tokenize(self, Tokens tokens, UniStr* span, int start, int end) except -1:
         cdef vector[Lexeme*] prefixes
         cdef vector[Lexeme*] suffixes
         cdef hash_t orig_key
@@ -112,20 +114,20 @@ cdef class Language:
         self._attach_tokens(tokens, start, span, &prefixes, &suffixes)
         self._save_cached(&tokens.lex[orig_size], orig_key, tokens.length - orig_size)
 
-    cdef String* _split_affixes(self, String* string, vector[Lexeme*] *prefixes,
+    cdef UniStr* _split_affixes(self, UniStr* string, vector[Lexeme*] *prefixes,
                                 vector[Lexeme*] *suffixes) except NULL:
         cdef size_t i
-        cdef String prefix
-        cdef String suffix
-        cdef String minus_pre
-        cdef String minus_suf
+        cdef UniStr prefix
+        cdef UniStr suffix
+        cdef UniStr minus_pre
+        cdef UniStr minus_suf
         cdef size_t last_size = 0
         while string.n != 0 and string.n != last_size:
             last_size = string.n
             pre_len = self._find_prefix(string.chars, string.n)
             if pre_len != 0:
-                string_slice(&prefix, string.chars, 0, pre_len)
-                string_slice(&minus_pre, string.chars, pre_len, string.n)
+                slice_unicode(&prefix, string.chars, 0, pre_len)
+                slice_unicode(&minus_pre, string.chars, pre_len, string.n)
                 # Check whether we've hit a special-case
                 if minus_pre.n >= 1 and self._specials.get(minus_pre.key) != NULL:
                     string[0] = minus_pre
@@ -133,15 +135,15 @@ cdef class Language:
                     break
             suf_len = self._find_suffix(string.chars, string.n)
             if suf_len != 0:
-                string_slice(&suffix, string.chars, string.n - suf_len, string.n)
-                string_slice(&minus_suf, string.chars, 0, string.n - suf_len)
+                slice_unicode(&suffix, string.chars, string.n - suf_len, string.n)
+                slice_unicode(&minus_suf, string.chars, 0, string.n - suf_len)
                 # Check whether we've hit a special-case
                 if minus_suf.n >= 1 and self._specials.get(minus_suf.key) != NULL:
                     string[0] = minus_suf
                     suffixes.push_back(self.lexicon.get(&suffix))
                     break
             if pre_len and suf_len and (pre_len + suf_len) <= string.n:
-                string_slice(string, string.chars, pre_len, string.n - suf_len)
+                slice_unicode(string, string.chars, pre_len, string.n - suf_len)
                 prefixes.push_back(self.lexicon.get(&prefix))
                 suffixes.push_back(self.lexicon.get(&suffix))
             elif pre_len:
@@ -155,13 +157,13 @@ cdef class Language:
         return string
 
     cdef int _attach_tokens(self, Tokens tokens,
-                            int idx, String* string,
+                            int idx, UniStr* string,
                             vector[Lexeme*] *prefixes,
                             vector[Lexeme*] *suffixes) except -1:
         cdef int split
         cdef Lexeme** lexemes
         cdef Lexeme* lexeme
-        cdef String span
+        cdef UniStr span
         if prefixes.size():
             idx = tokens.extend(idx, prefixes.data(), prefixes.size())
         if string.n != 0:
@@ -174,11 +176,11 @@ cdef class Language:
                 if split == 0 or split == -1:
                     idx = tokens.push_back(idx, self.lexicon.get(string))
                 else:
-                    string_slice(&span, string.chars, 0, split)
+                    slice_unicode(&span, string.chars, 0, split)
                     idx = tokens.push_back(idx, self.lexicon.get(&span))
-                    string_slice(&span, string.chars, split, split+1)
+                    slice_unicode(&span, string.chars, split, split+1)
                     idx = tokens.push_back(idx, self.lexicon.get(&span))
-                    string_slice(&span, string.chars, split + 1, string.n)
+                    slice_unicode(&span, string.chars, split + 1, string.n)
                     idx = tokens.push_back(idx, self.lexicon.get(&span))
         cdef vector[Lexeme*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
@@ -222,14 +224,14 @@ cdef class Language:
         '''
         cdef Lexeme** lexemes
         cdef hash_t hashed
-        cdef String string
+        cdef UniStr string
         for uni_string, substrings in token_rules:
             lexemes = <Lexeme**>self.mem.alloc(len(substrings) + 1, sizeof(Lexeme*))
             for i, substring in enumerate(substrings):
-                string_from_unicode(&string, substring)
+                slice_unicode(&string, substring, 0, len(substring))
                 lexemes[i] = <Lexeme*>self.lexicon.get(&string)
             lexemes[i + 1] = NULL
-            string_from_unicode(&string, uni_string)
+            slice_unicode(&string, uni_string, 0, len(uni_string))
             self._specials.set(string.key, lexemes)
             self._cache.set(string.key, lexemes)
 
@@ -239,21 +241,23 @@ cdef class Lexicon:
     
     Also interns UTF-8 strings, and maps them to consecutive integer IDs.
     '''
-    def __init__(self):
+    def __init__(self, object set_flags=None):
         self.mem = Pool()
         self._map = PreshMap(2 ** 20)
         self.strings = StringStore()
         self.lexemes.push_back(&EMPTY_LEXEME)
         self.size = 1
+        self.set_flags = set_flags
 
-    cdef Lexeme* get(self, String* string) except NULL:
+    cdef Lexeme* get(self, UniStr* string) except NULL:
         '''Retrieve a pointer to a Lexeme from the lexicon.'''
         cdef Lexeme* lex
         lex = <Lexeme*>self._map.get(string.key)
         if lex != NULL:
             return lex
         lex = <Lexeme*>self.mem.alloc(sizeof(Lexeme), 1)
-        lex[0] = lexeme_init(self.size, string.chars[:string.n], string.key, self.strings, {})
+        lex[0] = lexeme_init(self.size, string.chars[:string.n], string.key,
+                self.strings, {'flags': self.set_flags(string.chars[:string.n])})
         self._map.set(string.key, lex)
         while self.lexemes.size() < (lex.id + 1):
             self.lexemes.push_back(&EMPTY_LEXEME)
@@ -283,14 +287,14 @@ cdef class Lexicon:
         '''
         if type(id_or_string) == int:
             return self.lexemes.at(id_or_string)[0]
-        cdef String string
-        string_from_unicode(&string, id_or_string)
+        cdef UniStr string
+        slice_unicode(&string, id_or_string, 0, len(id_or_string))
         cdef Lexeme* lexeme = self.get(&string)
         return lexeme[0]
 
     def __setitem__(self, unicode uni_string, dict props):
-        cdef String s
-        string_from_unicode(&s, uni_string)
+        cdef UniStr s
+        slice_unicode(&s, uni_string, 0, len(uni_string))
         cdef Lexeme* lex = self.get(&s)
         lex[0] = lexeme_init(lex.id, s.chars[:s.n], s.key, self.strings, props)
 
@@ -338,14 +342,3 @@ cdef class Lexicon:
             i += 1
             self.size += 1
         fclose(fp)
-        
-
-cdef void string_from_unicode(String* s, unicode uni):
-    cdef Py_UNICODE* c_uni = <Py_UNICODE*>uni
-    string_slice(s, c_uni, 0, len(uni))
-
-
-cdef inline void string_slice(String* s, Py_UNICODE* chars, int start, int end) nogil:
-    s.chars = &chars[start]
-    s.n = end - start
-    s.key = hash64(s.chars, s.n * sizeof(Py_UNICODE), 0)

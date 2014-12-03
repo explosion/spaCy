@@ -8,23 +8,17 @@ from cymem.cymem cimport Pool
 from .typedefs cimport hash_t
 from .tokens cimport Tokens
 from .lexeme cimport Lexeme
-from .tagger cimport Tagger
-from .utf8string cimport StringStore
-
-
-cdef struct String:
-    Py_UNICODE* chars
-    size_t n
-    hash_t key
+from .utf8string cimport StringStore, UniStr
 
 
 cdef class Lexicon:
+    cpdef public set_flags
     cdef Pool mem
     cpdef readonly size_t size
     cpdef readonly StringStore strings
     cdef vector[Lexeme*] lexemes
 
-    cdef Lexeme* get(self, String* s) except NULL
+    cdef Lexeme* get(self, UniStr* s) except NULL
     
     cdef PreshMap _map
     
@@ -43,10 +37,10 @@ cdef class Language:
     cpdef Tokens tokens_from_list(self, list strings)
     cpdef Tokens tokenize(self, unicode text)
 
-    cdef int _tokenize(self, Tokens tokens, String* span, int start, int end) except -1
-    cdef String* _split_affixes(self, String* string, vector[Lexeme*] *prefixes,
+    cdef int _tokenize(self, Tokens tokens, UniStr* span, int start, int end) except -1
+    cdef UniStr* _split_affixes(self, UniStr* string, vector[Lexeme*] *prefixes,
                              vector[Lexeme*] *suffixes) except NULL
-    cdef int _attach_tokens(self, Tokens tokens, int idx, String* string,
+    cdef int _attach_tokens(self, Tokens tokens, int idx, UniStr* string,
                             vector[Lexeme*] *prefixes, vector[Lexeme*] *suffixes) except -1
     cdef int _find_prefix(self, Py_UNICODE* characters, size_t length) except -1
     cdef int _find_suffix(self, Py_UNICODE* characters, size_t length) except -1
