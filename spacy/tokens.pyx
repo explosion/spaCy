@@ -1,7 +1,9 @@
 # cython: profile=True
 from .lexeme cimport *
 cimport cython
-from .tagger cimport POS, ENTITY
+
+POS = 0
+ENTITY = 0
 
 DEF PADDING = 5
 
@@ -96,7 +98,7 @@ cdef class Tokens:
                 idx = self.push_back(idx, lexemes[i])
         return idx
 
-    cpdef int set_tag(self, int i, TagType tag_type, int tag) except -1:
+    cpdef int set_tag(self, int i, int tag_type, int tag) except -1:
         if tag_type == POS:
             self.pos[i] = tag
         elif tag_type == ENTITY:
@@ -108,8 +110,7 @@ cdef class Tokens:
         output = np.ndarray(shape=(self.length, len(features)), dtype=int)
         for i in range(self.length):
             for j, feature in enumerate(features):
-                output[i, j] = self.lex[i].sic
-                #output[i, j] = lexeme_get_feature(self.lex[i], feature)
+                output[i, j] = get_attr(self.lex[i], feature)
         return output
 
     def _realloc(self, new_size):
@@ -140,8 +141,8 @@ cdef class Token:
         
         self.cluster = lex['cluster']
         self.length = lex['length']
-        self.postype = lex['postype']
-        self.sensetype = lex['supersense']
+        self.postype = lex['pos_type']
+        self.sensetype = lex['sense_type']
         self.sic = lex['sic']
         self.norm = lex['norm']
         self.shape = lex['shape']
