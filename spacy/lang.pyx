@@ -296,8 +296,10 @@ cdef class Lexicon:
     def __setitem__(self, unicode uni_string, dict props):
         cdef UniStr s
         slice_unicode(&s, uni_string, 0, len(uni_string))
-        cdef const Lexeme* lex = self.get(&s)
-        self.lexemes[lex.id][0] = lexeme_init(lex.id, s.chars[:s.n], s.key, self.strings, props)
+        # Cast through the const here, since we're allowed to change our own
+        # Lexemes.
+        lex = <Lexeme*><void*>self.get(&s)
+        lex[0] = lexeme_init(lex.id, s.chars[:s.n], s.key, self.strings, props)
 
     def dump(self, loc):
         if path.exists(loc):
