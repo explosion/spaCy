@@ -22,8 +22,7 @@ cpdef Lexeme init(id_t i, unicode string, hash_t hashed,
     lex.sense_type = props.get('sense_type', 0)
     lex.prob = props.get('prob', 0)
 
-    lex.upper_pc = props.get('upper_pc', 0.0)
-    lex.title_pc = props.get('lower_pc', 0.0)
+    lex.lower_pc = props.get('lower_pc', 0.0)
 
     lex.prefix = string_store[string[:1]]
     lex.suffix = string_store[string[-3:]]
