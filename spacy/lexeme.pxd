@@ -103,8 +103,8 @@ cdef struct Lexeme:
     attr_t sense_type
 
     float prob
-    float upper_pc
-    float title_pc
+    float lower_pc
+    float sentiment
 
 
 cdef Lexeme EMPTY_LEXEME
