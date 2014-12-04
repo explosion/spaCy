@@ -18,7 +18,7 @@ cdef class Lexicon:
     cpdef readonly StringStore strings
     cdef vector[Lexeme*] lexemes
 
-    cdef const Lexeme* get(self, UniStr* s) except NULL
+    cdef const Lexeme* get(self, Pool mem, UniStr* s) except NULL
     
     cdef PreshMap _map
     
