@@ -72,7 +72,8 @@ cpdef enum attr_id_t:
 
     ID
     SIC
-    NORM
+    STEM
+    DENSE
     SHAPE
     ASCIIED
     PREFIX
@@ -89,7 +90,8 @@ cdef struct Lexeme:
    
     attr_t id
     attr_t sic
-    attr_t norm
+    attr_t stem
+    attr_t dense
     attr_t shape
     attr_t asciied
     attr_t prefix
@@ -116,4 +118,32 @@ cdef inline bint check_flag(const Lexeme* lexeme, attr_id_t flag_id) nogil:
     return lexeme.flags & (1 << flag_id)
 
 
-cdef attr_t get_attr(const Lexeme* lex, attr_id_t attr_id)
+cdef inline attr_t get_attr(const Lexeme* lex, attr_id_t feat_name) nogil:
+    if feat_name < (sizeof(flags_t) * 8):
+        return check_flag(lex, feat_name)
+    elif feat_name == ID:
+        return lex.id
+    elif feat_name == SIC:
+        return lex.sic
+    elif feat_name == DENSE:
+        return lex.dense
+    elif feat_name == STEM:
+        return lex.stem
+    elif feat_name == SHAPE:
+        return lex.shape
+    elif feat_name == ASCIIED:
+        return lex.asciied
+    elif feat_name == PREFIX:
+        return lex.prefix
+    elif feat_name == SUFFIX:
+        return lex.suffix
+    elif feat_name == LENGTH:
+        return lex.length
+    elif feat_name == CLUSTER:
+        return lex.cluster
+    elif feat_name == POS_TYPE:
+        return lex.pos_type
+    elif feat_name == SENSE_TYPE:
+        return lex.sense_type
+    else:
+        return 0

@@ -27,38 +27,10 @@ cpdef Lexeme init(id_t i, unicode string, hash_t hashed,
 
     lex.prefix = string_store[string[:1]]
     lex.suffix = string_store[string[-3:]]
-    lex.norm = lex.sic # TODO
     lex.shape = string_store[orth.word_shape(string)]
+    lex.dense = lex.sic if lex.prob >= -10 else lex.shape
+    lex.stem = string_store[props.get('stem', string)]
     lex.asciied = string_store[orth.asciied(string)]
    
     lex.flags = props.get('flags', 0)
     return lex
-
-
-cdef attr_t get_attr(const Lexeme* lex, attr_id_t feat_name):
-    if feat_name < (sizeof(flags_t) * 8):
-        return check_flag(lex, feat_name)
-    elif feat_name == ID:
-        return lex.id
-    elif feat_name == SIC:
-        return lex.sic
-    elif feat_name == NORM:
-        return lex.norm
-    elif feat_name == SHAPE:
-        return lex.shape
-    elif feat_name == ASCIIED:
-        return lex.asciied
-    elif feat_name == PREFIX:
-        return lex.prefix
-    elif feat_name == SUFFIX:
-        return lex.suffix
-    elif feat_name == LENGTH:
-        return lex.length
-    elif feat_name == CLUSTER:
-        return lex.cluster
-    elif feat_name == POS_TYPE:
-        return lex.pos_type
-    elif feat_name == SENSE_TYPE:
-        return lex.sense_type
-    else:
-        raise StandardError('Feature ID: %d not found' % feat_name)
