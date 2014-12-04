@@ -53,6 +53,7 @@ exts = [
     Extension("spacy.en", ["spacy/en.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.tokens", ["spacy/tokens.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.utf8string", ["spacy/utf8string.pyx"], language="c++", include_dirs=includes),
+    Extension("spacy.index", ["spacy/index.pyx"], language="c++", include_dirs=includes)
     #Extension("spacy.tagger", ["spacy/tagger.pyx"], language="c++", include_dirs=includes),
     #Extension("spacy.context", ["spacy/context.pyx"], language="c++", include_dirs=includes),
     #Extension("spacy.pos_feats", ["spacy/pos_feats.pyx"], language="c++", include_dirs=includes),
