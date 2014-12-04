@@ -2,12 +2,11 @@ import numpy as np
 cimport numpy as np
 
 from cymem.cymem cimport Pool
+from thinc.typedefs cimport atom_t
 
 from .lexeme cimport Lexeme
 from .typedefs cimport flags_t
 from .utf8string cimport StringStore
-
-from thinc.typedefs cimport atom_t
 
 
 cdef class Tokens:
@@ -30,7 +29,7 @@ cdef class Tokens:
     cdef int push_back(self, int i, const Lexeme* lexeme) except -1
     cpdef int set_tag(self, int i, int tag_type, int tag) except -1
 
-    cpdef np.ndarray[atom_t, ndim=2] get_array(self, list features)
+    cpdef np.ndarray[long, ndim=2] get_array(self, list features)
 
 
 cdef class Token:

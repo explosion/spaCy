@@ -1,6 +1,12 @@
 # cython: profile=True
+from preshed.maps cimport PreshMap
+from preshed.counter cimport PreshCounter
+
 from .lexeme cimport *
 cimport cython
+
+import numpy as np
+cimport numpy as np
 
 POS = 0
 ENTITY = 0
@@ -19,20 +25,10 @@ cdef class Tokens:
     """A sequence of references to Lexeme objects.
 
     The Tokens class provides fast and memory-efficient access to lexical features,
-    and can efficiently export the data to a numpy array.  Specific languages
-    create their own Tokens subclasses, to provide more convenient access to
-    language-specific features.
+    and can efficiently export the data to a numpy array.
 
     >>> from spacy.en import EN
     >>> tokens = EN.tokenize('An example sentence.')
-    >>> tokens.string(0)
-    'An'
-    >>> tokens.prob(0) > tokens.prob(1)
-    True
-    >>> tokens.can_noun(0)
-    False
-    >>> tokens.can_noun(1)
-    True
     """
     def __init__(self, StringStore string_store, string_length=0):
         self._string_store = string_store
@@ -104,14 +100,27 @@ cdef class Tokens:
         elif tag_type == ENTITY:
             self.ner[i] = tag
 
-    cpdef np.ndarray[atom_t, ndim=2] get_array(self, list features):
+    @cython.boundscheck(False)
+    cpdef np.ndarray[long, ndim=2] get_array(self, list attr_ids):
         cdef int i, j
-        cdef np.ndarray[atom_t, ndim=2] output
-        output = np.ndarray(shape=(self.length, len(features)), dtype=int)
+        cdef attr_id_t feature
+        cdef np.ndarray[long, ndim=2] output
+        output = np.ndarray(shape=(self.length, len(attr_ids)), dtype=int)
         for i in range(self.length):
-            for j, feature in enumerate(features):
+            for j, feature in enumerate(attr_ids):
                 output[i, j] = get_attr(self.lex[i], feature)
         return output
+
+    def count_by(self, attr_id_t attr_id):
+        cdef int i
+        cdef attr_t attr
+        cdef size_t count
+
+        cdef PreshCounter counts = PreshCounter(2 ** 8)
+        for i in range(self.length):
+            attr = get_attr(self.lex[i], attr_id)
+            counts.inc(attr, 1)
+        return dict(counts)
 
     def _realloc(self, new_size):
         self.max_length = new_size
