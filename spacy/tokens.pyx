@@ -153,7 +153,7 @@ cdef class Token:
         self.postype = lex['pos_type']
         self.sensetype = lex['sense_type']
         self.sic = lex['sic']
-        self.norm = lex['norm']
+        self.norm = lex['dense']
         self.shape = lex['shape']
         self.suffix = lex['asciied']
         self.prefix = lex['prefix']
