@@ -40,28 +40,18 @@ cdef class Tokens:
         # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
         # realloc.
-        self._lex_ptr = <const Lexeme**>self.mem.alloc(size + (PADDING*2), sizeof(Lexeme*))
-        self._idx_ptr = <int*>self.mem.alloc(size + (PADDING*2), sizeof(int))
-        self._pos_ptr = <int*>self.mem.alloc(size + (PADDING*2), sizeof(int))
-        self._ner_ptr = <int*>self.mem.alloc(size + (PADDING*2), sizeof(int))
-        self.lex = self._lex_ptr
-        self.idx = self._idx_ptr
-        self.pos = self._pos_ptr
-        self.ner = self._ner_ptr
+        self._data = <TokenC*>self.mem.alloc(size + (PADDING*2), sizeof(TokenC))
         cdef int i
         for i in range(size + (PADDING*2)):
-            self.lex[i] = &EMPTY_LEXEME
-        self.lex += PADDING
-        self.idx += PADDING
-        self.pos += PADDING
-        self.ner += PADDING
+            self._data[i] = EMPTY_TOKEN
+        self.data = self._data + PADDING
         self.max_length = size
         self.length = 0
 
     def __getitem__(self, i):
         bounds_check(i, self.length, PADDING)
-        return Token(self._string_store, i, self.idx[i], self.pos[i], self.ner[i],
-                     self.lex[i][0])
+        return Token(self._string_store, i, self.data[i].idx, self.data[i].pos,
+                     self.data[i].sense, self.data[i].lex[0])
 
     def __iter__(self):
         for i in range(self.length):
@@ -73,10 +63,11 @@ cdef class Tokens:
     cdef int push_back(self, int idx, const Lexeme* lexeme) except -1:
         if self.length == self.max_length:
             self._realloc(self.length * 2)
-        self.lex[self.length] = lexeme
-        self.idx[self.length] = idx
-        self.pos[self.length] = 0
-        self.ner[self.length] = 0
+        cdef TokenC* t = &self.data[self.length]
+        t.lex = lexeme
+        t.idx = idx
+        t.pos = 0
+        t.sense = 0
         self.length += 1
         return idx + lexeme.length
 
@@ -108,7 +99,7 @@ cdef class Tokens:
         output = np.ndarray(shape=(self.length, len(attr_ids)), dtype=int)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
-                output[i, j] = get_attr(self.lex[i], feature)
+                output[i, j] = get_attr(self.data[i].lex, feature)
         return output
 
     def count_by(self, attr_id_t attr_id):
@@ -118,23 +109,18 @@ cdef class Tokens:
 
         cdef PreshCounter counts = PreshCounter(2 ** 8)
         for i in range(self.length):
-            attr = get_attr(self.lex[i], attr_id)
+            attr = get_attr(self.data[i].lex, attr_id)
             counts.inc(attr, 1)
         return dict(counts)
 
     def _realloc(self, new_size):
         self.max_length = new_size
         n = new_size + (PADDING * 2)
-        self._lex_ptr = <const Lexeme**>self.mem.realloc(self._lex_ptr, n * sizeof(Lexeme*))
-        self._idx_ptr = <int*>self.mem.realloc(self._idx_ptr, n * sizeof(int))
-        self._pos_ptr = <int*>self.mem.realloc(self._pos_ptr, n * sizeof(int))
-        self._ner_ptr = <int*>self.mem.realloc(self._ner_ptr, n * sizeof(int))
-        self.lex = self._lex_ptr + PADDING
-        self.idx = self._idx_ptr + PADDING
-        self.pos = self._pos_ptr + PADDING
-        self.ner = self._ner_ptr + PADDING
+        self._data = <TokenC*>self.mem.realloc(self._data, n * sizeof(TokenC))
+        self.data = self._data + PADDING
+        cdef int i
         for i in range(self.length, self.max_length + PADDING):
-            self.lex[i] = &EMPTY_LEXEME
+            self.data[i] = EMPTY_TOKEN
 
 
 @cython.freelist(64)

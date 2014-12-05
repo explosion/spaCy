@@ -9,18 +9,22 @@ from .typedefs cimport flags_t
 from .utf8string cimport StringStore
 
 
+cdef struct TokenC:
+    const Lexeme* lex
+    int idx
+    int pos
+    int sense
+
+
+cdef TokenC EMPTY_TOKEN = TokenC(&EMPTY_LEXEME, 0, 0, 0)
+
+
 cdef class Tokens:
     cdef Pool mem
     cdef StringStore _string_store
 
-    cdef const Lexeme** _lex_ptr
-    cdef int* _idx_ptr
-    cdef int* _pos_ptr
-    cdef int* _ner_ptr
-    cdef const Lexeme** lex
-    cdef int* idx
-    cdef int* pos
-    cdef int* ner
+    cdef TokenC* _data
+    cdef TokenC* data
 
     cdef int length
     cdef int max_length

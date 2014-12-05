@@ -18,7 +18,7 @@ from preshed.maps cimport PreshMap
 from .lexeme cimport Lexeme
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport init as lexeme_init
-from .lexeme cimport check_flag, IS_ALPHA
+from .lexeme cimport check_flag
 
 from .utf8string cimport slice_unicode
 
@@ -114,7 +114,7 @@ cdef class Language:
         orig_size = tokens.length
         self._split_affixes(span, &prefixes, &suffixes)
         self._attach_tokens(tokens, start, span, &prefixes, &suffixes)
-        self._save_cached(&tokens.lex[orig_size], orig_key, tokens.length - orig_size)
+        self._save_cached(&tokens.data[orig_size], orig_key, tokens.length - orig_size)
 
     cdef UniStr* _split_affixes(self, UniStr* string, vector[const Lexeme*] *prefixes,
                                 vector[const Lexeme*] *suffixes) except NULL:
@@ -189,14 +189,14 @@ cdef class Language:
             idx = tokens.push_back(idx, deref(it))
             preinc(it)
 
-    cdef int _save_cached(self, const Lexeme* const* tokens, hash_t key, int n) except -1:
+    cdef int _save_cached(self, const TokenC* tokens, hash_t key, int n) except -1:
         cdef int i
         for i in range(n):
-            if tokens[i].id == 1:
+            if tokens[i].lex.id == 1:
                 return 0
         lexemes = <const Lexeme**>self.mem.alloc(n + 1, sizeof(Lexeme**))
         for i in range(n):
-            lexemes[i] = tokens[i]
+            lexemes[i] = tokens[i].lex
         lexemes[i + 1] = NULL
         self._cache.set(key, lexemes)
 
@@ -255,7 +255,9 @@ cdef class Lexicon:
         self.set_flags = set_flags
 
     cdef const Lexeme* get(self, Pool mem, UniStr* string) except NULL:
-        '''Retrieve a pointer to a Lexeme from the lexicon.'''
+        '''Get a pointer to a Lexeme from the lexicon, creating a new Lexeme
+        if necessary, using memory acquired from the given pool.  If the pool
+        is the lexicon's own memory, the lexeme is saved in the lexicon.'''
         cdef Lexeme* lex
         lex = <Lexeme*>self._map.get(string.key)
         if lex != NULL:

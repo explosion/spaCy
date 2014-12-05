@@ -6,7 +6,7 @@ from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
 
 from .typedefs cimport hash_t
-from .tokens cimport Tokens
+from .tokens cimport Tokens, TokenC
 from .lexeme cimport Lexeme
 from .utf8string cimport StringStore, UniStr
 
@@ -45,5 +45,5 @@ cdef class Language:
     cdef int _find_prefix(self, Py_UNICODE* characters, size_t length) except -1
     cdef int _find_suffix(self, Py_UNICODE* characters, size_t length) except -1
     cdef int _find_infix(self, Py_UNICODE* characters, size_t length) except -1
-    cdef int _save_cached(self, const Lexeme* const* tokens, hash_t key, int n) except -1
+    cdef int _save_cached(self, const TokenC* tokens, hash_t key, int n) except -1
  
