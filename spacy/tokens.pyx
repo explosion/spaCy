@@ -40,11 +40,11 @@ cdef class Tokens:
         # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
         # realloc.
-        self._data = <TokenC*>self.mem.alloc(size + (PADDING*2), sizeof(TokenC))
+        data_start = <TokenC*>self.mem.alloc(size + (PADDING*2), sizeof(TokenC))
         cdef int i
         for i in range(size + (PADDING*2)):
-            self._data[i] = EMPTY_TOKEN
-        self.data = self._data + PADDING
+            data_start[i] = EMPTY_TOKEN
+        self.data = data_start + PADDING
         self.max_length = size
         self.length = 0
 
@@ -116,8 +116,9 @@ cdef class Tokens:
     def _realloc(self, new_size):
         self.max_length = new_size
         n = new_size + (PADDING * 2)
-        self._data = <TokenC*>self.mem.realloc(self._data, n * sizeof(TokenC))
-        self.data = self._data + PADDING
+        cdef TokenC* data_start = self.data - PADDING
+        data_start = <TokenC*>self.mem.realloc(data_start, n * sizeof(TokenC))
+        self.data = data_start + PADDING
         cdef int i
         for i in range(self.length, self.max_length + PADDING):
             self.data[i] = EMPTY_TOKEN

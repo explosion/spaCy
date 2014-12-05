@@ -23,7 +23,6 @@ cdef class Tokens:
     cdef Pool mem
     cdef StringStore _string_store
 
-    cdef TokenC* _data
     cdef TokenC* data
 
     cdef int length
