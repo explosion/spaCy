@@ -39,3 +39,10 @@ def test_capitalized():
     tokens = EN.tokenize("Ain't")
     assert len(tokens) == 2
     assert tokens[0].string == "Are"
+
+
+def test_punct():
+    tokens = EN.tokenize("We've")
+    assert len(tokens) == 2
+    tokens = EN.tokenize("``We've")
+    assert len(tokens) == 3
