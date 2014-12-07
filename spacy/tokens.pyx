@@ -140,11 +140,11 @@ cdef class Token:
         self.cluster = lex['cluster']
         self.length = lex['length']
         self.postype = lex['pos_type']
-        self.sensetype = lex['sense_type']
+        self.sensetype = 0
         self.sic = lex['sic']
         self.norm = lex['dense']
         self.shape = lex['shape']
-        self.suffix = lex['asciied']
+        self.suffix = lex['suffix']
         self.prefix = lex['prefix']
 
         self.prob = lex['prob']

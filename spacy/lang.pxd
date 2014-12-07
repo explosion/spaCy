@@ -13,7 +13,7 @@ from .utf8string cimport StringStore, UniStr
 
 
 cdef class Lexicon:
-    cpdef public set_flags
+    cpdef public get_lex_props
     cdef Pool mem
     cpdef readonly size_t size
     cpdef readonly StringStore strings

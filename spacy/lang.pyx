@@ -37,7 +37,7 @@ cdef class Language:
         self._prefix_re = re.compile(prefix)
         self._suffix_re = re.compile(suffix)
         self._infix_re = re.compile(infix)
-        self.lexicon = Lexicon(self.set_flags)
+        self.lexicon = Lexicon(self.get_props)
         self._load_special_tokenization(rules)
         self.pos_tagger = None
 
@@ -249,13 +249,13 @@ cdef class Lexicon:
     
     Also interns UTF-8 strings, and maps them to consecutive integer IDs.
     '''
-    def __init__(self, object set_flags=None):
+    def __init__(self, object get_props):
         self.mem = Pool()
         self._map = PreshMap(2 ** 20)
         self.strings = StringStore()
         self.lexemes.push_back(&EMPTY_LEXEME)
         self.size = 2
-        self.set_flags = set_flags
+        self.get_lex_props = get_props
 
     cdef const Lexeme* get(self, Pool mem, UniStr* string) except NULL:
         '''Get a pointer to a Lexeme from the lexicon, creating a new Lexeme
@@ -267,9 +267,10 @@ cdef class Lexicon:
             return lex
         if string.n < 3:
             mem = self.mem
+        cdef unicode py_string = string.chars[:string.n]
         lex = <Lexeme*>mem.alloc(sizeof(Lexeme), 1)
-        lex[0] = lexeme_init(self.size, string.chars[:string.n], string.key,
-                self.strings, {'flags': self.set_flags(string.chars[:string.n])})
+        lex[0] = lexeme_init(self.size, py_string, string.key, self.strings,
+                             self.get_lex_props(py_string))
         if mem is self.mem:
             self._map.set(string.key, lex)
             while self.lexemes.size() < (lex.id + 1):

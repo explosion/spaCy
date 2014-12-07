@@ -2,9 +2,6 @@
 from __future__ import unicode_literals
 from __future__ import division
 
-from .context cimport fill_context
-from .context cimport N_FIELDS
-
 from os import path
 import os
 import shutil
@@ -15,41 +12,17 @@ import cython
 from thinc.features cimport Feature, count_feats
 
 
-def setup_model_dir(tag_type, tag_names, tag_counts, templates, model_dir):
+def setup_model_dir(tag_names, tag_counts, templates, model_dir):
     if path.exists(model_dir):
         shutil.rmtree(model_dir)
     os.mkdir(model_dir)
     config = {
-        'tag_type': tag_type,
         'templates': templates,
         'tag_names': tag_names,
         'tag_counts': tag_counts,
     }
     with open(path.join(model_dir, 'config.json'), 'w') as file_:
         json.dump(config, file_)
-
-
-def train(train_sents, model_dir, nr_iter=10):
-    cdef Tokens tokens
-    cdef Tagger tagger = Tagger(model_dir)
-    cdef int i
-    cdef class_t guess = 0
-    cdef class_t gold
-    for _ in range(nr_iter):
-        n_corr = 0
-        total = 0
-        for tokens, golds in train_sents:
-            assert len(tokens) == len(golds), [t.string for t in tokens]
-            for i in range(tokens.length):
-                gold = golds[i]
-                guess = tagger.predict(i, tokens, [gold])
-                tokens.set_tag(i, tagger.tag_type, guess)
-                total += 1
-                n_corr += guess == gold
-        print('%.4f' % ((n_corr / total) * 100))
-        random.shuffle(train_sents)
-    tagger.model.end_training()
-    tagger.model.dump(path.join(model_dir, 'model'))
 
 
 cdef class Tagger:
@@ -61,26 +34,13 @@ cdef class Tagger:
         cfg = json.load(open(path.join(model_dir, 'config.json')))
         templates = cfg['templates']
         self.tag_names = cfg['tag_names']
-        self.tag_type = cfg['tag_type']
         self.tagdict = _make_tag_dict(cfg['tag_counts'])
         self.extractor = Extractor(templates)
         self.model = LinearModel(len(self.tag_names), self.extractor.n_templ+2)
         if path.exists(path.join(model_dir, 'model')):
             self.model.load(path.join(model_dir, 'model'))
 
-    cpdef int set_tags(self, Tokens tokens) except -1:
-        """Assign tags to a Tokens object.
-
-        >>> tokens = EN.tokenize(u'An example sentence.')
-        >>> assert tokens[0].pos == 'NO_TAG'
-        >>> EN.pos_tagger.set_tags(tokens)
-        >>> assert tokens[0].pos == 'DT'
-        """
-        cdef int i
-        for i in range(tokens.length):
-            tokens.set_tag(i, self.tag_type, self.predict(i, tokens))
-
-    cpdef class_t predict(self, int i, Tokens tokens, object golds=None) except *:
+    cdef class_t predict(self, atom_t* context, object golds=None) except *:
         """Predict the tag of tokens[i].  The tagger remembers the features and
         prediction, in case you later call tell_answer.
 
@@ -88,11 +48,6 @@ cdef class Tagger:
         >>> tag = EN.pos_tagger.predict(0, tokens)
         >>> assert tag == EN.pos_tagger.tag_id('DT') == 5
         """
-        cdef atom_t sic = tokens.data[i].lex.sic
-        if sic in self.tagdict:
-            return self.tagdict[sic]
-        cdef atom_t[N_FIELDS] context
-        fill_context(context, i, tokens.data)
         cdef int n_feats
         cdef Feature* feats = self.extractor.get_feats(context, &n_feats)
         cdef weight_t* scores = self.model.get_scores(feats, n_feats)

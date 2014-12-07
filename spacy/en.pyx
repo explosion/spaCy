@@ -30,16 +30,37 @@ same scheme. Tokenization problems are a major cause of poor performance for
 NLP tools. If you're using a pre-trained model, the :py:mod:`spacy.ptb3` module
 provides a fully Penn Treebank 3-compliant tokenizer.
 '''
-# TODO
-#The script translate_treebank_tokenization can be used to transform a treebank's
-#annotation to use one of the spacy tokenization schemes.
-
-
 from __future__ import unicode_literals
 
 cimport lang
 from .typedefs cimport flags_t
 import orth
+
+
+POS_TEMPLATES = (
+    (W_sic,),
+    (P1_sic,),
+    (N1_sic,),
+    (N2_sic,),
+    (P2_sic,),
+
+    (W_suffix,),
+    (W_prefix,),
+
+    (P1_pos,),
+    (P2_pos,),
+    (P1_pos, P2_pos),
+    (P1_pos, W_sic),
+    (P1_suffix,),
+    (N1_suffix,),
+
+    (W_shape,),
+    (W_cluster,),
+    (N1_cluster,),
+    (N2_cluster,),
+    (P1_cluster,),
+    (P2_cluster,),
+)
 
 
 cdef class English(Language):
@@ -49,6 +70,9 @@ cdef class English(Language):
         name (unicode): The two letter code used by Wikipedia for the language.
         lexicon (Lexicon): The lexicon. Exposes the lookup method.
     """
+    def get_props(self, unicode string):
+        return {'flags': self.set_flags(string), 'dense': orth.word_shape(string)}
+
     def set_flags(self, unicode string):
         cdef flags_t flags = 0
         flags |= orth.is_alpha(string) << IS_ALPHA
@@ -63,6 +87,23 @@ cdef class English(Language):
         flags |= orth.like_url(string) << LIKE_URL
         flags |= orth.like_number(string) << LIKE_NUMBER
         return flags
+
+    def set_pos(self, Tokens tokens):
+        cdef int i
+        cdef atom_t[N_CONTEXT_FIELDS] context
+        for i in range(tokens.length):
+            fill_pos_context(context, i, tokens.data)
+            tokens.data[i].pos = self.pos_tagger.predict(context)
+
+    def train_pos(self, Tokens tokens, golds):
+        cdef int i
+        cdef atom_t[N_CONTEXT_FIELDS] context
+        c = 0
+        for i in range(tokens.length):
+            fill_pos_context(context, i, tokens.data)
+            tokens.data[i].pos = self.pos_tagger.predict(context, [golds[i]])
+            c += tokens.data[i].pos == golds[i]
+        return c
 
 
 EN = English('en')

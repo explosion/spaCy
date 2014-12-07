@@ -72,17 +72,14 @@ cpdef enum attr_id_t:
 
     ID
     SIC
-    STEM
     DENSE
     SHAPE
-    ASCIIED
     PREFIX
     SUFFIX
 
     LENGTH
     CLUSTER
     POS_TYPE
-    SENSE_TYPE
 
 
 cdef struct Lexeme:
@@ -90,20 +87,16 @@ cdef struct Lexeme:
    
     attr_t id
     attr_t sic
-    attr_t stem
     attr_t dense
     attr_t shape
-    attr_t asciied
     attr_t prefix
     attr_t suffix
  
     attr_t length
     attr_t cluster
     attr_t pos_type
-    attr_t sense_type
 
     float prob
-    float lower_pc
     float sentiment
 
 
@@ -127,12 +120,8 @@ cdef inline attr_t get_attr(const Lexeme* lex, attr_id_t feat_name) nogil:
         return lex.sic
     elif feat_name == DENSE:
         return lex.dense
-    elif feat_name == STEM:
-        return lex.stem
     elif feat_name == SHAPE:
         return lex.shape
-    elif feat_name == ASCIIED:
-        return lex.asciied
     elif feat_name == PREFIX:
         return lex.prefix
     elif feat_name == SUFFIX:
@@ -143,7 +132,5 @@ cdef inline attr_t get_attr(const Lexeme* lex, attr_id_t feat_name) nogil:
         return lex.cluster
     elif feat_name == POS_TYPE:
         return lex.pos_type
-    elif feat_name == SENSE_TYPE:
-        return lex.sense_type
     else:
         return 0
