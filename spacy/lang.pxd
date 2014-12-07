@@ -8,6 +8,7 @@ from cymem.cymem cimport Pool
 from .typedefs cimport hash_t
 from .tokens cimport Tokens, TokenC
 from .lexeme cimport Lexeme
+from .tagger cimport Tagger
 from .utf8string cimport StringStore, UniStr
 
 
@@ -29,6 +30,7 @@ cdef class Language:
     cdef PreshMap _cache
     cdef PreshMap _specials
     cpdef readonly Lexicon lexicon
+    cpdef readonly Tagger pos_tagger
 
     cdef object _prefix_re
     cdef object _suffix_re

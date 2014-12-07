@@ -39,10 +39,12 @@ cdef class Language:
         self._infix_re = re.compile(infix)
         self.lexicon = Lexicon(self.set_flags)
         self._load_special_tokenization(rules)
+        self.pos_tagger = None
 
     def load(self):
         self.lexicon.load(path.join(util.DATA_DIR, self.name, 'lexemes'))
         self.lexicon.strings.load(path.join(util.DATA_DIR, self.name, 'strings'))
+        self.pos_tagger = Tagger(path.join(util.DATA_DIR, self.name, 'pos'))
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
