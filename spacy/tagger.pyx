@@ -15,9 +15,6 @@ import cython
 from thinc.features cimport Feature, count_feats
 
 
-NULL_TAG = 0
-
-
 def setup_model_dir(tag_type, tag_names, tag_counts, templates, model_dir):
     if path.exists(model_dir):
         shutil.rmtree(model_dir)
@@ -53,33 +50,6 @@ def train(train_sents, model_dir, nr_iter=10):
         random.shuffle(train_sents)
     tagger.model.end_training()
     tagger.model.dump(path.join(model_dir, 'model'))
-
-
-cdef object _get_gold_pos(i, golds):
-    if golds[i] == 0:
-        return None
-    else:
-        return [golds[i]]
-
-
-cdef object _get_gold_ner(i, golds, int* ner):
-    if golds[i] == 0:
-        return None
-    else:
-        return [golds[i]]
-
-
-def evaluate(tagger, sents):
-    n_corr = 0
-    total = 0
-    for tokens, golds in sents:
-        for i, gold in enumerate(golds):
-            guess = tagger.predict(i, tokens)
-            tokens.set_tag(i, tagger.tag_type, guess)
-            if gold != NULL_TAG:
-                total += 1
-                n_corr += guess == gold
-    return n_corr / total
 
 
 cdef class Tagger:
