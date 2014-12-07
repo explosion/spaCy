@@ -43,7 +43,7 @@ cdef class Tokens:
         data_start = <TokenC*>self.mem.alloc(size + (PADDING*2), sizeof(TokenC))
         cdef int i
         for i in range(size + (PADDING*2)):
-            data_start[i] = EMPTY_TOKEN
+            data_start[i].lex = &EMPTY_LEXEME
         self.data = data_start + PADDING
         self.max_length = size
         self.length = 0
@@ -86,10 +86,7 @@ cdef class Tokens:
         return idx
 
     cpdef int set_tag(self, int i, int tag_type, int tag) except -1:
-        if tag_type == POS:
-            self.pos[i] = tag
-        elif tag_type == ENTITY:
-            self.ner[i] = tag
+        self.data[i].pos = tag
 
     @cython.boundscheck(False)
     cpdef np.ndarray[long, ndim=2] get_array(self, list attr_ids):
@@ -116,12 +113,17 @@ cdef class Tokens:
     def _realloc(self, new_size):
         self.max_length = new_size
         n = new_size + (PADDING * 2)
+        # What we're storing is a "padded" array. We've jumped forward PADDING
+        # places, and are storing the pointer to that. This way, we can access
+        # words out-of-bounds, and get out-of-bounds markers.
+        # Now that we want to realloc, we need the address of the true start,
+        # so we jump the pointer back PADDING places.
         cdef TokenC* data_start = self.data - PADDING
         data_start = <TokenC*>self.mem.realloc(data_start, n * sizeof(TokenC))
         self.data = data_start + PADDING
         cdef int i
         for i in range(self.length, self.max_length + PADDING):
-            self.data[i] = EMPTY_TOKEN
+            self.data[i].lex = &EMPTY_LEXEME
 
 
 @cython.freelist(64)

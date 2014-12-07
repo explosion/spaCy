@@ -16,9 +16,6 @@ cdef struct TokenC:
     int sense
 
 
-cdef TokenC EMPTY_TOKEN = TokenC(&EMPTY_LEXEME, 0, 0, 0)
-
-
 cdef class Tokens:
     cdef Pool mem
     cdef StringStore _string_store
