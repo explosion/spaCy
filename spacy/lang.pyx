@@ -44,7 +44,8 @@ cdef class Language:
     def load(self):
         self.lexicon.load(path.join(util.DATA_DIR, self.name, 'lexemes'))
         self.lexicon.strings.load(path.join(util.DATA_DIR, self.name, 'strings'))
-        self.pos_tagger = Tagger(path.join(util.DATA_DIR, self.name, 'pos'))
+        if path.exists(path.join(util.DATA_DIR, self.name, 'pos')):
+            self.pos_tagger = Tagger(path.join(util.DATA_DIR, self.name, 'pos'))
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
