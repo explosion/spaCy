@@ -26,8 +26,8 @@ def setup_model_dir(tag_names, tag_counts, templates, model_dir):
 
 
 cdef class Tagger:
-    """Assign part-of-speech, named entity or supersense tags, using greedy
-    decoding.  The tagger reads its model and configuration from disk.
+    """Predict some type of tag, using greedy decoding.  The tagger reads its
+    model and configuration from disk.
     """
     def __init__(self, model_dir):
         self.mem = Pool()
@@ -40,7 +40,7 @@ cdef class Tagger:
         if path.exists(path.join(model_dir, 'model')):
             self.model.load(path.join(model_dir, 'model'))
 
-    cdef class_t predict(self, atom_t* context, object golds=None) except *:
+    cdef class_t predict(self, const atom_t* context, object golds=None) except *:
         """Predict the tag of tokens[i].  The tagger remembers the features and
         prediction, in case you later call tell_answer.
 

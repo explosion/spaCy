@@ -9,7 +9,7 @@ from .tokens cimport Tokens
 
 
 cdef class Tagger:
-    cdef class_t predict(self, atom_t* context, object golds=*) except *
+    cdef class_t predict(self, const atom_t* context, object golds=*) except *
  
     cpdef readonly Pool mem
     cpdef readonly Extractor extractor
