@@ -1,66 +1,49 @@
 from thinc.typedefs cimport atom_t
-from .typedefs cimport hash_t
-from .tokens cimport Tokens
-from .lexeme cimport Lexeme
+from .tokens cimport TokenC
 
 
-cdef class Token:
-    cdef readonly atom_t sic
-    cdef readonly atom_t cluster
-    cdef readonly atom_t norm
-    cdef readonly atom_t shape
-    cdef readonly atom_t asciied
-    cdef readonly atom_t prefix
-    cdef readonly atom_t suffix
-    cdef readonly atom_t length
+cpdef enum:
+    P2_sic
+    P2_cluster
+    P2_shape
+    P2_prefix
+    P2_suffix
+    P2_pos
+    P2_sense
 
-    cdef readonly atom_t postype
-    cdef readonly atom_t nertype
-    cdef readonly atom_t sensetype
+    P1_sic
+    P1_cluster
+    P1_shape
+    P1_prefix
+    P1_suffix
+    P1_pos
+    P1_sense
 
-    cdef readonly atom_t is_alpha
-    cdef readonly atom_t is_ascii
-    cdef readonly atom_t is_digit
-    cdef readonly atom_t is_lower
-    cdef readonly atom_t is_punct
-    cdef readonly atom_t is_space
-    cdef readonly atom_t is_title
-    cdef readonly atom_t is_upper
-    cdef readonly atom_t like_url
-    cdef readonly atom_t like_number
-    cdef readonly atom_t oft_lower
-    cdef readonly atom_t oft_title
-    cdef readonly atom_t oft_upper
+    W_sic
+    W_cluster
+    W_shape
+    W_prefix
+    W_suffix
+    W_pos
+    W_sense
 
-    cdef readonly atom_t in_males
-    cdef readonly atom_t in_females
-    cdef readonly atom_t in_surnames
-    cdef readonly atom_t in_places
-    cdef readonly atom_t in_games
-    cdef readonly atom_t in_celebs
-    cdef readonly atom_t in_names
+    N1_sic
+    N1_cluster
+    N1_shape
+    N1_prefix
+    N1_suffix
+    N1_pos
+    N1_sense
 
-    cdef readonly atom_t pos
-    cdef readonly atom_t sense
-    cdef readonly atom_t ner
+    N2_sic
+    N2_cluster
+    N2_shape
+    N2_prefix
+    N2_suffix
+    N2_pos
+    N2_sense
 
-
-cdef class Slots:
-    cdef readonly Token P4
-    cdef readonly Token P3
-    cdef readonly Token P2
-    cdef readonly Token P1
-    cdef readonly Token N0
-    cdef readonly Token N1
-    cdef readonly Token N2
-    cdef readonly Token N3
-    cdef readonly Token N4
+    N_FIELDS
 
 
-cdef int N_FIELDS
-
-
-cdef int fill_context(atom_t* context, int i, Tokens tokens) except -1
-
-
-cpdef Slots FIELD_IDS
+cdef int fill_context(atom_t[N_FIELDS] context, const int i, TokenC* tokens) except -1
