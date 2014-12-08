@@ -5,6 +5,57 @@ from .tokens cimport Tokens
 from .tokens cimport TokenC
 
 
+cpdef enum en_person_t:
+    NO_PERSON
+    FIRST
+    SECOND
+    THIRD
+
+
+cpdef enum en_number_t:
+    NO_NUMBER
+    SINGULAR
+    PLURAL
+    MASS
+    CARDINAL
+    ORDINAL
+
+
+cpdef enum en_gender_t:
+    NO_GENDER
+    MASCULINE
+    FEMININE
+
+
+cpdef enum en_tenspect_t:
+    NO_TENSE
+    BASE_VERB
+    PRESENT
+    PAST
+    PASSIVE
+    ING
+    MODAL
+
+
+cpdef enum en_case_t:
+    NO_CASE
+    NOMINATIVE
+    ACCUSATIVE
+    GENITIVE
+    DEMONYM
+
+
+cpdef enum misc_t:
+    NO_MISC
+    COMPARATIVE
+    SUPERLATIVE
+    RELATIVE
+    NAME
+    URL
+    EMAIL
+    EMOTICON
+
+    
 # Flags
 cpdef enum FlagID:
     IS_ALPHA

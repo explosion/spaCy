@@ -5,14 +5,29 @@ from cymem.cymem cimport Pool
 from thinc.typedefs cimport atom_t
 
 from .lexeme cimport Lexeme
+
 from .typedefs cimport flags_t
 from .utf8string cimport StringStore
+from libc.stdint cimport uint8_t, uint16_t
+
+
+cdef struct Morphology:
+    uint8_t number
+    uint8_t tenspect # Tense/aspect/voice
+    uint8_t mood
+    uint8_t gender
+    uint8_t person
+    uint8_t case
+    uint8_t misc
+
 
 
 cdef struct TokenC:
     const Lexeme* lex
+    Morphology morph
     int idx
     int pos
+    int lemma
     int sense
 
 
@@ -37,7 +52,7 @@ cdef class Token:
     cdef public int i
     cdef public int idx
     cdef public int pos
-    cdef public int ner
+    cdef int lemma
 
     cdef public atom_t id
     cdef public atom_t cluster

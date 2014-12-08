@@ -2,20 +2,20 @@ from libcpp.vector cimport vector
 
 from cpython cimport Py_UNICODE_ISSPACE, Py_UNICODE_ISALPHA, Py_UNICODE_ISUPPER
 
-from preshed.maps cimport PreshMap
+from preshed.maps cimport PreshMap, PreshMapArray
 from cymem.cymem cimport Pool
 
 from .typedefs cimport hash_t
 from .tokens cimport Tokens, TokenC
 from .lexeme cimport Lexeme
 from .tagger cimport Tagger
+from .tagger cimport PosTag
 from .utf8string cimport StringStore, UniStr
 
 
 cdef class Lexicon:
     cpdef public get_lex_props
     cdef Pool mem
-    cpdef readonly size_t size
     cpdef readonly StringStore strings
     cdef vector[Lexeme*] lexemes
 
@@ -29,12 +29,16 @@ cdef class Language:
     cdef readonly unicode name
     cdef PreshMap _cache
     cdef PreshMap _specials
+    cdef PreshMapArray _lemmas
     cpdef readonly Lexicon lexicon
     cpdef readonly Tagger pos_tagger
+    cpdef readonly object lemmatizer
 
     cdef object _prefix_re
     cdef object _suffix_re
     cdef object _infix_re
+
+    cdef int lemmatize(self, const PosTag* pos, const Lexeme* lex) except -1
 
     cpdef Tokens tokens_from_list(self, list strings)
     cpdef Tokens tokenize(self, unicode text)

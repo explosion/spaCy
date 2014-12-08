@@ -35,6 +35,63 @@ from __future__ import unicode_literals
 cimport lang
 from .typedefs cimport flags_t
 import orth
+from .tagger cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT, VERB
+from .tagger cimport X, PUNCT, EOL
+
+
+POS_TAGS = {
+    'NULL': (NO_TAG, {}),
+    'EOL': (EOL, {}),
+    'CC': (CONJ, {}),
+    'CD': (NUM, {}),
+    'DT': (DET, {}),
+    'EX': (DET, {}),
+    'FW': (X, {}),
+    'IN': (ADP, {}),
+    'JJ': (ADJ, {}),
+    'JJR': (ADJ, {'misc': COMPARATIVE}),
+    'JJS': (ADJ, {'misc': SUPERLATIVE}),
+    'LS': (X, {}),
+    'MD': (VERB, {'tenspect': MODAL}),
+    'NN': (NOUN, {}),
+    'NNS': (NOUN, {'number': PLURAL}),
+    'NNP': (NOUN, {'misc': NAME}),
+    'NNPS': (NOUN, {'misc': NAME, 'number': PLURAL}),
+    'PDT': (DET, {}),
+    'POS': (PRT, {'case': GENITIVE}),
+    'PRP': (NOUN, {}),
+    'PRP$': (NOUN, {'case': GENITIVE}),
+    'RB': (ADV, {}),
+    'RBR': (ADV, {'misc': COMPARATIVE}),
+    'RBS': (ADV, {'misc': SUPERLATIVE}),
+    'RP': (PRT, {}),
+    'SYM': (X, {}),
+    'TO': (PRT, {}),
+    'UH': (X, {}),
+    'VB': (VERB, {}),
+    'VBD': (VERB, {'tenspect': PAST}),
+    'VBG': (VERB, {'tenspect': ING}),
+    'VBN': (VERB, {'tenspect': PASSIVE}),
+    'VBP': (VERB, {'tenspect': PRESENT}),
+    'VBZ': (VERB, {'tenspect': PRESENT, 'person': THIRD}),
+    'WDT': (DET, {'misc': RELATIVE}),
+    'WP': (PRON, {'misc': RELATIVE}),
+    'WP$': (PRON, {'misc': RELATIVE, 'case': GENITIVE}),
+    'WRB': (ADV, {'misc': RELATIVE}),
+    '!': (PUNCT, {}),
+    '#': (PUNCT, {}),
+    '$': (PUNCT, {}),
+    "''": (PUNCT, {}),
+    "(": (PUNCT, {}),
+    ")": (PUNCT, {}),
+    "-LRB-": (PUNCT, {}),
+    "-RRB-": (PUNCT, {}),
+    ".": (PUNCT, {}),
+    ",": (PUNCT, {}),
+    "``": (PUNCT, {}),
+    ":": (PUNCT, {}),
+    "?": (PUNCT, {}),
+}
 
 
 POS_TEMPLATES = (
@@ -91,19 +148,25 @@ cdef class English(Language):
     def set_pos(self, Tokens tokens):
         cdef int i
         cdef atom_t[N_CONTEXT_FIELDS] context
+        cdef TokenC* t = tokens.data
         for i in range(tokens.length):
-            fill_pos_context(context, i, tokens.data)
-            tokens.data[i].pos = self.pos_tagger.predict(context)
+            fill_pos_context(context, i, t)
+            t[i].pos = self.pos_tagger.predict(context)
+            #self.morphalyser.set_token(&t[i])
 
     def train_pos(self, Tokens tokens, golds):
         cdef int i
         cdef atom_t[N_CONTEXT_FIELDS] context
         c = 0
+        cdef TokenC* t = tokens.data
         for i in range(tokens.length):
-            fill_pos_context(context, i, tokens.data)
-            tokens.data[i].pos = self.pos_tagger.predict(context, [golds[i]])
-            c += tokens.data[i].pos == golds[i]
+            fill_pos_context(context, i, t)
+            t[i].pos = self.pos_tagger.predict(context, [golds[i]])
+            t[i].morph = self.pos_tagger.tags[t[i].pos].morph
+            #self.analyse_morph(&t[i].lemma, &t[i].morph, t[i].pos, t[i].lex)
+            c += t[i].pos == golds[i]
         return c
+
 
 
 EN = English('en')

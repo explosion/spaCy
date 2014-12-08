@@ -14,6 +14,7 @@ from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
 from preshed.maps cimport PreshMap
+from .lemmatizer import Lemmatizer
 
 from .lexeme cimport Lexeme
 from .lexeme cimport EMPTY_LEXEME
@@ -25,6 +26,8 @@ from .utf8string cimport slice_unicode
 from . import util
 from .util import read_lang_data
 from .tokens import Tokens
+
+from .tagger cimport NOUN, VERB, ADJ, N_UNIV_TAGS
 
 
 cdef class Language:
@@ -39,13 +42,39 @@ cdef class Language:
         self._infix_re = re.compile(infix)
         self.lexicon = Lexicon(self.get_props)
         self._load_special_tokenization(rules)
+        self._lemmas = PreshMapArray(N_UNIV_TAGS)
         self.pos_tagger = None
+        self.lemmatizer = None
 
     def load(self):
+        self.lemmatizer = Lemmatizer(path.join(util.DATA_DIR, 'wordnet'))
         self.lexicon.load(path.join(util.DATA_DIR, self.name, 'lexemes'))
         self.lexicon.strings.load(path.join(util.DATA_DIR, self.name, 'strings'))
         if path.exists(path.join(util.DATA_DIR, self.name, 'pos')):
             self.pos_tagger = Tagger(path.join(util.DATA_DIR, self.name, 'pos'))
+
+    cdef int lemmatize(self, const PosTag* pos, const Lexeme* lex) except -1:
+        if self.lemmatizer is None:
+            return lex.sic
+        if pos.pos != NOUN and pos.pos != VERB and pos.pos != ADJ:
+            return lex.sic
+        cdef int lemma = <int><size_t>self._lemmas.get(pos.pos, lex.sic)
+        if lemma != 0:
+            return lemma
+        cdef bytes py_string = self.lexicon.strings[lex.sic]
+        cdef set lemma_strings
+        cdef bytes lemma_string
+        if pos.pos == NOUN:
+            lemma_strings = self.lemmatizer.noun(py_string)
+        elif pos.pos == VERB:
+            lemma_strings = self.lemmatizer.verb(py_string)
+        else:
+            assert pos.pos == ADJ
+            lemma_strings = self.lemmatizer.adj(py_string)
+        lemma_string = sorted(lemma_strings)[0]
+        lemma = self.lexicon.strings.intern(lemma_string, len(lemma_string)).i
+        self._lemmas.set(pos.pos, lex.sic, <void*>lemma)
+        return lemma
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
@@ -254,8 +283,10 @@ cdef class Lexicon:
         self._map = PreshMap(2 ** 20)
         self.strings = StringStore()
         self.lexemes.push_back(&EMPTY_LEXEME)
-        self.size = 2
         self.get_lex_props = get_props
+
+    def __len__(self):
+        return self.lexemes.size()
 
     cdef const Lexeme* get(self, Pool mem, UniStr* string) except NULL:
         '''Get a pointer to a Lexeme from the lexicon, creating a new Lexeme
@@ -269,14 +300,13 @@ cdef class Lexicon:
             mem = self.mem
         cdef unicode py_string = string.chars[:string.n]
         lex = <Lexeme*>mem.alloc(sizeof(Lexeme), 1)
-        lex[0] = lexeme_init(self.size, py_string, string.key, self.strings,
+        lex[0] = lexeme_init(self.lexemes.size(), py_string, string.key, self.strings,
                              self.get_lex_props(py_string))
         if mem is self.mem:
             self._map.set(string.key, lex)
             while self.lexemes.size() < (lex.id + 1):
                 self.lexemes.push_back(&EMPTY_LEXEME)
             self.lexemes[lex.id] = lex
-            self.size += 1
         else:
             lex[0].id = 1
         return lex
@@ -302,6 +332,8 @@ cdef class Lexicon:
                 a dict if the operator is called from Python.
         '''
         if type(id_or_string) == int:
+            if id_or_string >= self.lexemes.size():
+                raise IndexError
             return self.lexemes.at(id_or_string)[0]
         cdef UniStr string
         slice_unicode(&string, id_or_string, 0, len(id_or_string))
@@ -359,5 +391,4 @@ cdef class Lexicon:
                 self.lexemes.push_back(&EMPTY_LEXEME)
             self.lexemes[lexeme.id] = lexeme
             i += 1
-            self.size += 1
         fclose(fp)

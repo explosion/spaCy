@@ -53,6 +53,7 @@ class Lemmatizer(object):
 
 
 def lemmatize(string, index, exceptions, rules):
+    string = string.lower()
     forms = []
     if string in index:
         forms.append(string)
@@ -62,6 +63,8 @@ def lemmatize(string, index, exceptions, rules):
             form = string[:len(string) - len(old)] + new
             if form in index:
                 forms.append(form)
+    if not forms:
+        forms.append(string)
     return set(forms)
 
 

@@ -51,7 +51,7 @@ cdef class Tokens:
     def __getitem__(self, i):
         bounds_check(i, self.length, PADDING)
         return Token(self._string_store, i, self.data[i].idx, self.data[i].pos,
-                     self.data[i].sense, self.data[i].lex[0])
+                     self.data[i].lemma, self.data[i].lex[0])
 
     def __iter__(self):
         for i in range(self.length):
@@ -128,14 +128,15 @@ cdef class Tokens:
 
 @cython.freelist(64)
 cdef class Token:
-    def __init__(self, StringStore string_store, int i, int idx, int pos, int ner,
+    def __init__(self, StringStore string_store, int i, int idx, int pos, int lemma,
                  dict lex):
         self._string_store = string_store
         self.idx = idx
         self.pos = pos
-        self.ner = ner
         self.i = i
         self.id = lex['id']
+
+        self.lemma = lemma
         
         self.cluster = lex['cluster']
         self.length = lex['length']
@@ -155,4 +156,11 @@ cdef class Token:
             if self.sic == 0:
                 return ''
             cdef bytes utf8string = self._string_store[self.sic]
+            return utf8string.decode('utf8')
+
+    property lemma:
+        def __get__(self):
+            if self.lemma == 0:
+                return self.string
+            cdef bytes utf8string = self._string_store[self.lemma]
             return utf8string.decode('utf8')
