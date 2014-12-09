@@ -21,7 +21,6 @@ cdef struct Morphology:
     uint8_t misc
 
 
-
 cdef struct TokenC:
     const Lexeme* lex
     Morphology morph

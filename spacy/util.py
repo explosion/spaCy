@@ -13,7 +13,8 @@ def utf8open(loc, mode='r'):
 
 def read_lang_data(name):
     data_dir = path.join(DATA_DIR, name)
-    tokenization = read_tokenization(name)
+    with open(path.join(data_dir, 'specials.json')) as file_:
+        tokenization = ujson.load(file_)
     prefix = read_prefix(data_dir)
     suffix = read_suffix(data_dir)
     infix = read_infix(data_dir)
@@ -26,11 +27,16 @@ def read_prefix(data_dir):
         expression = '|'.join(['^' + re.escape(piece) for piece in entries if piece.strip()])
     return expression
 
+
 def read_suffix(data_dir):
-    with  utf8open(path.join(data_dir, 'suffix')) as file_:
+    with utf8open(path.join(data_dir, 'suffix')) as file_:
         entries = file_.read().split('\n')
         expression = '|'.join([re.escape(piece) + '$' for piece in entries if piece.strip()])
+    # TODO: Fix this hack!
+    expression += r'|(?<=[a-z0-9])\.$'
+    expression += r'|(?<=[0-9])km$'
     return expression
+
 
 def read_infix(data_dir):
     with utf8open(path.join(data_dir, 'infix')) as file_:

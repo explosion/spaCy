@@ -38,6 +38,8 @@ import orth
 from .tagger cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT, VERB
 from .tagger cimport X, PUNCT, EOL
 
+from .tokens cimport Morphology
+
 
 POS_TAGS = {
     'NULL': (NO_TAG, {}),
@@ -152,7 +154,8 @@ cdef class English(Language):
         for i in range(tokens.length):
             fill_pos_context(context, i, t)
             t[i].pos = self.pos_tagger.predict(context)
-            #self.morphalyser.set_token(&t[i])
+            _merge_morph(&t[i].morph, &self.pos_tagger.tags[t[i].pos].morph)
+            t[i].lemma = self.lemmatize(self.pos_tagger.tags[t[i].pos].pos, t[i].lex)
 
     def train_pos(self, Tokens tokens, golds):
         cdef int i
@@ -162,11 +165,27 @@ cdef class English(Language):
         for i in range(tokens.length):
             fill_pos_context(context, i, t)
             t[i].pos = self.pos_tagger.predict(context, [golds[i]])
-            t[i].morph = self.pos_tagger.tags[t[i].pos].morph
-            #self.analyse_morph(&t[i].lemma, &t[i].morph, t[i].pos, t[i].lex)
+            _merge_morph(&t[i].morph, &self.pos_tagger.tags[t[i].pos].morph)
+            t[i].lemma = self.lemmatize(self.pos_tagger.tags[t[i].pos].pos, t[i].lex)
             c += t[i].pos == golds[i]
         return c
 
+
+cdef int _merge_morph(Morphology* tok_morph, const Morphology* pos_morph) except -1:
+    if tok_morph.number == 0:
+        tok_morph.number = pos_morph.number
+    if tok_morph.tenspect == 0:
+        tok_morph.tenspect = pos_morph.tenspect
+    if tok_morph.mood == 0:
+        tok_morph.mood = pos_morph.mood
+    if tok_morph.gender == 0:
+        tok_morph.gender = pos_morph.gender
+    if tok_morph.person == 0:
+        tok_morph.person = pos_morph.person
+    if tok_morph.case == 0:
+        tok_morph.case = pos_morph.case
+    if tok_morph.misc == 0:
+        tok_morph.misc = pos_morph.misc
 
 
 EN = English('en')

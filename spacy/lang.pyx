@@ -28,6 +28,7 @@ from .util import read_lang_data
 from .tokens import Tokens
 
 from .tagger cimport NOUN, VERB, ADJ, N_UNIV_TAGS
+from .tokens cimport Morphology
 
 
 cdef class Language:
@@ -53,27 +54,27 @@ cdef class Language:
         if path.exists(path.join(util.DATA_DIR, self.name, 'pos')):
             self.pos_tagger = Tagger(path.join(util.DATA_DIR, self.name, 'pos'))
 
-    cdef int lemmatize(self, const PosTag* pos, const Lexeme* lex) except -1:
+    cdef int lemmatize(self, const univ_tag_t pos, const Lexeme* lex) except -1:
         if self.lemmatizer is None:
             return lex.sic
-        if pos.pos != NOUN and pos.pos != VERB and pos.pos != ADJ:
+        if pos != NOUN and pos != VERB and pos != ADJ:
             return lex.sic
-        cdef int lemma = <int><size_t>self._lemmas.get(pos.pos, lex.sic)
+        cdef int lemma = <int><size_t>self._lemmas.get(pos, lex.sic)
         if lemma != 0:
             return lemma
         cdef bytes py_string = self.lexicon.strings[lex.sic]
         cdef set lemma_strings
         cdef bytes lemma_string
-        if pos.pos == NOUN:
+        if pos == NOUN:
             lemma_strings = self.lemmatizer.noun(py_string)
-        elif pos.pos == VERB:
+        elif pos == VERB:
             lemma_strings = self.lemmatizer.verb(py_string)
         else:
-            assert pos.pos == ADJ
+            assert pos == ADJ
             lemma_strings = self.lemmatizer.adj(py_string)
         lemma_string = sorted(lemma_strings)[0]
         lemma = self.lexicon.strings.intern(lemma_string, len(lemma_string)).i
-        self._lemmas.set(pos.pos, lex.sic, <void*>lemma)
+        self._lemmas.set(pos, lex.sic, <void*>lemma)
         return lemma
 
     cpdef Tokens tokens_from_list(self, list strings):
@@ -111,6 +112,7 @@ cdef class Language:
             return tokens
         cdef int i = 0
         cdef int start = 0
+        cdef bint cache_hit
         cdef Py_UNICODE* chars = string
         cdef bint in_ws = Py_UNICODE_ISSPACE(chars[0])
         cdef UniStr span
@@ -118,10 +120,8 @@ cdef class Language:
             if Py_UNICODE_ISSPACE(chars[i]) != in_ws:
                 if start < i:
                     slice_unicode(&span, chars, start, i)
-                    lexemes = <const Lexeme* const*>self._cache.get(span.key)
-                    if lexemes != NULL:
-                        tokens.extend(start, lexemes, 0)
-                    else: 
+                    cache_hit = self._try_cache(start, span.key, tokens)
+                    if not cache_hit:
                         self._tokenize(tokens, &span, start, i)
                 in_ws = not in_ws
                 start = i
@@ -130,12 +130,31 @@ cdef class Language:
         i += 1
         if start < i:
             slice_unicode(&span, chars, start, i)
-            lexemes = <const Lexeme* const*>self._cache.get(span.key)
-            if lexemes != NULL:
-                tokens.extend(start, lexemes, 0)
-            else: 
+            cache_hit = self._try_cache(start, span.key, tokens)
+            if not cache_hit:
                 self._tokenize(tokens, &span, start, i)
         return tokens
+
+    cdef int _try_cache(self, int idx, hash_t key, Tokens tokens) except -1:
+        cdef int i
+        specials = <TokenC*>self._specials.get(key)
+        if specials != NULL:
+            i = 0
+            while specials[i].lex != NULL:
+                tokens.push_back(idx, specials[i].lex)
+                tokens.data[tokens.length - 1].pos = specials[i].pos
+                tokens.data[tokens.length - 1].morph = specials[i].morph
+                tokens.data[tokens.length - 1].lemma = specials[i].lemma
+                tokens.data[tokens.length - 1].sense = specials[i].sense
+                i += 1
+            return True
+        else:
+            cached = <const Lexeme* const*>self._cache.get(key)
+            if cached != NULL:
+                tokens.extend(i, cached, 0)
+                return True
+            else:
+                return False
 
     cdef int _tokenize(self, Tokens tokens, UniStr* span, int start, int end) except -1:
         cdef vector[Lexeme*] prefixes
@@ -190,10 +209,10 @@ cdef class Language:
                 break
         return string
 
-    cdef int _attach_tokens(self, Tokens tokens,
-                            int idx, UniStr* string,
+    cdef int _attach_tokens(self, Tokens tokens, int idx, UniStr* string,
                             vector[const Lexeme*] *prefixes,
                             vector[const Lexeme*] *suffixes) except -1:
+        cdef bint cache_hit
         cdef int split
         cdef const Lexeme* const* lexemes
         cdef Lexeme* lexeme
@@ -201,10 +220,9 @@ cdef class Language:
         if prefixes.size():
             idx = tokens.extend(idx, prefixes.data(), prefixes.size())
         if string.n != 0:
-
-            lexemes = <const Lexeme* const*>self._cache.get(string.key)
-            if lexemes != NULL:
-                idx = tokens.extend(idx, lexemes, 0)
+            cache_hit = self._try_cache(idx, string.key, tokens)
+            if cache_hit:
+                idx = tokens.data[tokens.length - 1].idx + 1
             else:
                 split = self._find_infix(string.chars, string.n)
                 if split == 0 or split == -1:
@@ -247,30 +265,42 @@ cdef class Language:
         match = self._suffix_re.search(string)
         return (match.end() - match.start()) if match is not None else 0
 
-    def _load_special_tokenization(self, token_rules):
-        '''Load special-case tokenization rules.
-
-        Loads special-case tokenization rules into the Language._cache cache,
-        read from data/<lang>/tokenization . The special cases are loaded before
-        any language data is tokenized, giving these priority.  For instance,
-        the English tokenization rules map "ain't" to ["are", "not"].
-
-        Args:
-            token_rules (list): A list of (chunk, tokens) pairs, where chunk is
-                a string and tokens is a list of strings.
+    def _load_special_tokenization(self, object rules):
+        '''Add a special-case tokenization rule.
         '''
+        cdef int i
+        cdef unicode chunk
+        cdef list substrings
+        cdef unicode form
+        cdef unicode lemma
+        cdef dict props
         cdef Lexeme** lexemes
         cdef hash_t hashed
         cdef UniStr string
-        for uni_string, substrings in token_rules:
-            lexemes = <Lexeme**>self.mem.alloc(len(substrings) + 1, sizeof(Lexeme*))
-            for i, substring in enumerate(substrings):
-                slice_unicode(&string, substring, 0, len(substring))
-                lexemes[i] = <Lexeme*>self.lexicon.get(self.lexicon.mem, &string)
-            lexemes[i + 1] = NULL
-            slice_unicode(&string, uni_string, 0, len(uni_string))
-            self._specials.set(string.key, lexemes)
-            self._cache.set(string.key, lexemes)
+        for chunk, substrings in sorted(rules.items()):
+            tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
+            for i, props in enumerate(substrings):
+                form = props['F']
+                lemma = props.get("L", None)
+                slice_unicode(&string, form, 0, len(form))
+                tokens[i].lex = <Lexeme*>self.lexicon.get(self.lexicon.mem, &string)
+                if lemma:
+                    tokens[i].lemma = self.lexicon.strings[lemma]
+                set_morph_from_dict(&tokens[i].morph, props)
+            # Null-terminated array
+            tokens[i+1].lex = NULL
+            slice_unicode(&string, chunk, 0, len(chunk))
+            self._specials.set(string.key, tokens)
+
+
+cdef int set_morph_from_dict(Morphology* morph, dict props) except -1:
+    morph.number = props.get('number', 0)
+    morph.tenspect = props.get('tenspect', 0)
+    morph.mood = props.get('mood', 0)
+    morph.gender = props.get('gender', 0)
+    morph.person = props.get('person', 0)
+    morph.case = props.get('case', 0)
+    morph.misc = props.get('misc', 0)
 
 
 cdef class Lexicon:

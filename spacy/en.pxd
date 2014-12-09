@@ -10,6 +10,7 @@ cpdef enum en_person_t:
     FIRST
     SECOND
     THIRD
+    NON_THIRD
 
 
 cpdef enum en_number_t:
@@ -17,14 +18,22 @@ cpdef enum en_number_t:
     SINGULAR
     PLURAL
     MASS
-    CARDINAL
-    ORDINAL
 
 
 cpdef enum en_gender_t:
     NO_GENDER
     MASCULINE
     FEMININE
+    NEUTER
+
+
+cpdef enum en_case_t:
+    NO_CASE
+    NOMINATIVE
+    GENITIVE
+    ACCUSATIVE
+    REFLEXIVE
+    DEMONYM
 
 
 cpdef enum en_tenspect_t:
@@ -37,23 +46,12 @@ cpdef enum en_tenspect_t:
     MODAL
 
 
-cpdef enum en_case_t:
-    NO_CASE
-    NOMINATIVE
-    ACCUSATIVE
-    GENITIVE
-    DEMONYM
-
-
 cpdef enum misc_t:
     NO_MISC
     COMPARATIVE
     SUPERLATIVE
     RELATIVE
     NAME
-    URL
-    EMAIL
-    EMOTICON
 
     
 # Flags

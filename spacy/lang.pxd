@@ -9,7 +9,7 @@ from .typedefs cimport hash_t
 from .tokens cimport Tokens, TokenC
 from .lexeme cimport Lexeme
 from .tagger cimport Tagger
-from .tagger cimport PosTag
+from .tagger cimport univ_tag_t
 from .utf8string cimport StringStore, UniStr
 
 
@@ -38,11 +38,12 @@ cdef class Language:
     cdef object _suffix_re
     cdef object _infix_re
 
-    cdef int lemmatize(self, const PosTag* pos, const Lexeme* lex) except -1
+    cdef int lemmatize(self, const univ_tag_t pos, const Lexeme* lex) except -1
 
     cpdef Tokens tokens_from_list(self, list strings)
     cpdef Tokens tokenize(self, unicode text)
 
+    cdef int _try_cache(self, int idx, hash_t key, Tokens tokens) except -1
     cdef int _tokenize(self, Tokens tokens, UniStr* span, int start, int end) except -1
     cdef UniStr* _split_affixes(self, UniStr* string, vector[Lexeme*] *prefixes,
                              vector[Lexeme*] *suffixes) except NULL
