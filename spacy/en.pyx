@@ -98,10 +98,10 @@ POS_TAGS = {
 
 POS_TEMPLATES = (
     (W_sic,),
-    (P1_sic,),
+    (P1_lemma, P1_pos),
+    (P2_lemma, P2_pos),
     (N1_sic,),
     (N2_sic,),
-    (P2_sic,),
 
     (W_suffix,),
     (W_prefix,),
@@ -119,6 +119,11 @@ POS_TEMPLATES = (
     (N2_cluster,),
     (P1_cluster,),
     (P2_cluster,),
+
+    (W_pos_type,),
+    (N1_pos_type,),
+    (N1_pos_type,),
+    (P1_pos, W_pos_type, N1_pos_type),
 )
 
 
@@ -159,7 +164,7 @@ cdef class English(Language):
             else:
                 fill_pos_context(context, i, t)
                 t[i].pos = self.pos_tagger.predict(context)
-                self.morphologizer.set_morph(i, t)
+            self.morphologizer.set_morph(i, t)
 
     def train_pos(self, Tokens tokens, golds):
         cdef int i
@@ -189,7 +194,8 @@ cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
     context[3] = t.lex.prefix
     context[4] = t.lex.suffix
     context[5] = t.pos
-    context[6] = t.sense
+    context[6] = t.lemma
+    context[7] = t.lex.pos_type
 
 
 EN = English('en')
