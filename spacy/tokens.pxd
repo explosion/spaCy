@@ -7,18 +7,9 @@ from thinc.typedefs cimport atom_t
 from .lexeme cimport Lexeme
 
 from .typedefs cimport flags_t
-from .utf8string cimport StringStore
-from libc.stdint cimport uint8_t, uint16_t
+from .typedefs cimport Morphology
+from .lang cimport Language
 
-
-cdef struct Morphology:
-    uint8_t number
-    uint8_t tenspect # Tense/aspect/voice
-    uint8_t mood
-    uint8_t gender
-    uint8_t person
-    uint8_t case
-    uint8_t misc
 
 
 cdef struct TokenC:
@@ -40,7 +31,8 @@ ctypedef fused LexemeOrToken:
 
 cdef class Tokens:
     cdef Pool mem
-    cdef StringStore _string_store
+    cdef Language lang
+    cdef list tag_names
 
     cdef TokenC* data
 
@@ -48,16 +40,15 @@ cdef class Tokens:
     cdef int max_length
 
     cdef int push_back(self, int i, LexemeOrToken lex_or_tok) except -1
-    cpdef int set_tag(self, int i, int tag_type, int tag) except -1
 
     cpdef np.ndarray[long, ndim=2] get_array(self, list features)
 
 
 cdef class Token:
-    cdef StringStore _string_store
+    cdef public Language lang
     cdef public int i
     cdef public int idx
-    cdef public int pos
+    cdef int pos
     cdef int lemma
 
     cdef public atom_t id

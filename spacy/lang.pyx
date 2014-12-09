@@ -53,7 +53,7 @@ cdef class Language:
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
-        cdef Tokens tokens = Tokens(self.lexicon.strings, length)
+        cdef Tokens tokens = Tokens(self, length)
         if length == 0:
             return tokens
         cdef UniStr string_struct
@@ -81,7 +81,7 @@ cdef class Language:
             tokens (Tokens): A Tokens object, giving access to a sequence of Lexemes.
         """
         cdef int length = len(string)
-        cdef Tokens tokens = Tokens(self.lexicon.strings, length)
+        cdef Tokens tokens = Tokens(self, length)
         if length == 0:
             return tokens
         cdef int i = 0
@@ -110,11 +110,10 @@ cdef class Language:
         return tokens
 
     cdef int _try_cache(self, int idx, hash_t key, Tokens tokens) except -1:
-        cached = <Cached*>self._specials.get(key)
+        #cached = <Cached*>self._specials.get(key)
+        cached = <Cached*>self._cache.get(key)
         if cached == NULL:
-            cached = <Cached*>self._cache.get(key)
-            if cached == NULL:
-                return False
+            return False
         cdef int i
         if cached.is_lex:
             for i in range(cached.length):
@@ -266,6 +265,7 @@ cdef class Language:
             cached.data.tokens = tokens
             slice_unicode(&string, chunk, 0, len(chunk))
             self._specials.set(string.key, cached)
+            self._cache.set(string.key, cached)
 
 
 cdef int set_morph_from_dict(Morphology* morph, dict props) except -1:

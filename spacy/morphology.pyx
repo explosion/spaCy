@@ -52,9 +52,9 @@ cdef class Morphologizer:
             self.tags[i].morph.person = props.get('person', 0)
             self.tags[i].morph.case = props.get('case', 0)
             self.tags[i].morph.misc = props.get('misc', 0)
-        if path.exists(path.join(data_dir, 'morph.json')):
-            with open(path.join(data_dir, 'morph.json')) as file_:
-                self.load_exceptions(json.loads(file_))
+        if path.exists(path.join(data_dir, 'morphs.json')):
+            with open(path.join(data_dir, 'morphs.json')) as file_:
+                self.load_exceptions(json.load(file_))
 
     cdef int lemmatize(self, const univ_tag_t pos, const Lexeme* lex) except -1:
         if self.lemmatizer is None:

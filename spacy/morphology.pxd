@@ -1,9 +1,12 @@
-from .tokens cimport TokenC, Morphology
+
+from .tokens cimport TokenC
 from .lexeme cimport Lexeme
 from .utf8string cimport StringStore
+from .typedefs cimport id_t, Morphology
 
 from preshed.maps cimport PreshMapArray
 from cymem.cymem cimport Pool
+
 
 # Google universal tag set
 cpdef enum univ_tag_t:

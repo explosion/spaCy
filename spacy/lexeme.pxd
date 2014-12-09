@@ -80,6 +80,7 @@ cpdef enum attr_id_t:
     LENGTH
     CLUSTER
     POS_TYPE
+    LEMMA
 
 
 cdef struct Lexeme:

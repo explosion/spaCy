@@ -30,8 +30,8 @@ cdef class Tokens:
     >>> from spacy.en import EN
     >>> tokens = EN.tokenize('An example sentence.')
     """
-    def __init__(self, StringStore string_store, string_length=0):
-        self._string_store = string_store
+    def __init__(self, Language lang, string_length=0):
+        self.lang = lang
         if string_length >= 3:
             size = int(string_length / 3.0)
         else:
@@ -50,7 +50,7 @@ cdef class Tokens:
 
     def __getitem__(self, i):
         bounds_check(i, self.length, PADDING)
-        return Token(self._string_store, i, self.data[i].idx, self.data[i].pos,
+        return Token(self.lang, i, self.data[i].idx, self.data[i].pos,
                      self.data[i].lemma, self.data[i].lex[0])
 
     def __iter__(self):
@@ -71,9 +71,6 @@ cdef class Tokens:
         self.length += 1
         return idx + t.lex.length
 
-    cpdef int set_tag(self, int i, int tag_type, int tag) except -1:
-        self.data[i].pos = tag
-
     @cython.boundscheck(False)
     cpdef np.ndarray[long, ndim=2] get_array(self, list attr_ids):
         cdef int i, j
@@ -92,7 +89,10 @@ cdef class Tokens:
 
         cdef PreshCounter counts = PreshCounter(2 ** 8)
         for i in range(self.length):
-            attr = get_attr(self.data[i].lex, attr_id)
+            if attr_id == LEMMA:
+                attr = self.data[i].lemma
+            else:
+                attr = get_attr(self.data[i].lex, attr_id)
             counts.inc(attr, 1)
         return dict(counts)
 
@@ -114,9 +114,9 @@ cdef class Tokens:
 
 @cython.freelist(64)
 cdef class Token:
-    def __init__(self, StringStore string_store, int i, int idx, int pos, int lemma,
-                 dict lex):
-        self._string_store = string_store
+    def __init__(self, Language lang, int i, int idx,
+                 int pos, int lemma, dict lex):
+        self.lang = lang
         self.idx = idx
         self.pos = pos
         self.i = i
@@ -141,12 +141,16 @@ cdef class Token:
         def __get__(self):
             if self.sic == 0:
                 return ''
-            cdef bytes utf8string = self._string_store[self.sic]
+            cdef bytes utf8string = self.lang.lexicon.strings[self.sic]
             return utf8string.decode('utf8')
 
     property lemma:
         def __get__(self):
             if self.lemma == 0:
                 return self.string
-            cdef bytes utf8string = self._string_store[self.lemma]
+            cdef bytes utf8string = self.lang.lexicon.strings[self.lemma]
             return utf8string.decode('utf8')
+
+    property pos:
+        def __get__(self):
+            return self.lang.pos_tagger.tag_names[self.pos]
