@@ -72,10 +72,9 @@ cdef class Tagger:
         return tag_id
 
 
-
 def _make_tag_dict(counts):
-    freq_thresh = 50
-    ambiguity_thresh = 0.98
+    freq_thresh = 20
+    ambiguity_thresh = 0.97
     tagdict = {}
     cdef atom_t word
     cdef atom_t tag

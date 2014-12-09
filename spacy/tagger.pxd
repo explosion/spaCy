@@ -8,7 +8,7 @@ from thinc.typedefs cimport atom_t, feat_t, weight_t, class_t
 
 from preshed.maps cimport PreshMapArray
 
-from .typedefs cimport hash_t
+from .typedefs cimport hash_t, id_t
 from .tokens cimport Tokens, Morphology
 
 

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import unicodedata
 from unidecode import unidecode
+import re
 
 import math
 

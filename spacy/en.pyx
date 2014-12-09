@@ -151,10 +151,14 @@ cdef class English(Language):
         cdef int i
         cdef atom_t[N_CONTEXT_FIELDS] context
         cdef TokenC* t = tokens.data
+        assert self.morphologizer is not None
+        cdef dict tagdict = self.pos_tagger.tagdict
         for i in range(tokens.length):
-            fill_pos_context(context, i, t)
-            t[i].pos = self.pos_tagger.predict(context)
-            if self.morphologizer:
+            if t[i].lex.sic in tagdict:
+                t[i].pos = tagdict[t[i].lex.sic]
+            else:
+                fill_pos_context(context, i, t)
+                t[i].pos = self.pos_tagger.predict(context)
                 self.morphologizer.set_morph(i, t)
 
     def train_pos(self, Tokens tokens, golds):
@@ -165,27 +169,27 @@ cdef class English(Language):
         for i in range(tokens.length):
             fill_pos_context(context, i, t)
             t[i].pos = self.pos_tagger.predict(context, [golds[i]])
-            if self.morphologizer:
-                self.morphologizer.set_morph(i, t)
+            self.morphologizer.set_morph(i, t)
             c += t[i].pos == golds[i]
         return c
 
 
-cdef int _merge_morph(Morphology* tok_morph, const Morphology* pos_morph) except -1:
-    if tok_morph.number == 0:
-        tok_morph.number = pos_morph.number
-    if tok_morph.tenspect == 0:
-        tok_morph.tenspect = pos_morph.tenspect
-    if tok_morph.mood == 0:
-        tok_morph.mood = pos_morph.mood
-    if tok_morph.gender == 0:
-        tok_morph.gender = pos_morph.gender
-    if tok_morph.person == 0:
-        tok_morph.person = pos_morph.person
-    if tok_morph.case == 0:
-        tok_morph.case = pos_morph.case
-    if tok_morph.misc == 0:
-        tok_morph.misc = pos_morph.misc
+cdef int fill_pos_context(atom_t* context, const int i, const TokenC* tokens) except -1:
+    _fill_from_token(&context[P2_sic], &tokens[i-2])
+    _fill_from_token(&context[P1_sic], &tokens[i-1])
+    _fill_from_token(&context[W_sic], &tokens[i])
+    _fill_from_token(&context[N1_sic], &tokens[i+1])
+    _fill_from_token(&context[N2_sic], &tokens[i+2])
+
+
+cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
+    context[0] = t.lex.sic
+    context[1] = t.lex.cluster
+    context[2] = t.lex.shape
+    context[3] = t.lex.prefix
+    context[4] = t.lex.suffix
+    context[5] = t.pos
+    context[6] = t.sense
 
 
 EN = English('en')

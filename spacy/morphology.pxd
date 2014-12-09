@@ -35,8 +35,8 @@ cdef class Morphologizer:
     cdef StringStore strings
     cdef object lemmatizer
     cdef PosTag* tags
+    cdef readonly list tag_names
 
-    cdef PreshMapArray _morph
-    cdef PreshMapArray _lemmas
+    cdef PreshMapArray _cache
     cdef int lemmatize(self, const univ_tag_t pos, const Lexeme* lex) except -1
     cdef int set_morph(self, const int i, TokenC* tokens) except -1
