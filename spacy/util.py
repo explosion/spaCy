@@ -31,10 +31,7 @@ def read_prefix(data_dir):
 def read_suffix(data_dir):
     with utf8open(path.join(data_dir, 'suffix')) as file_:
         entries = file_.read().split('\n')
-        expression = '|'.join([re.escape(piece) + '$' for piece in entries if piece.strip()])
-    # TODO: Fix this hack!
-    expression += r'|(?<=[a-z0-9])\.$'
-    expression += r'|(?<=[0-9])km$'
+        expression = '|'.join([piece + '$' for piece in entries if piece.strip()])
     return expression
 
 
