@@ -10,14 +10,27 @@ spaCy NLP Tokenizer and Lexicon
 spaCy is a library for industrial-strength NLP in Python and Cython.  spaCy's
 take on NLP is that it's mostly about feature extraction --- that's the part
 that's specific to NLP, so that's what an NLP library should focus on.
-It should tell you what the current best-practice is, and help you do exactly
-that, quickly and efficiently.
 
-Best-practice is to **use lots of large lexicons**.  Let's say you hit the word
-*belieber* in production.  What will your system know about this word?  A bad
-system will only know things about the words in its training corpus, which
-probably consists of texts written before Justin Bieber was even born.
-It doesn't have to be like that.
+spaCy also believes that for NLP, **efficiency is critical**.  If you're
+running batch jobs, you probably have an enormous amount of data; if you're
+serving requests one-by-one, you want lower latency and fewer servers.  Even if
+you're doing exploratory research on relatively small samples, you should still
+value efficiency, because it means you can run more experiments.
+
+Depending on the task, spaCy is between 10 and 200 times faster than NLTK,
+often with much better accuracy.  See Benchmarks for details, and
+Why is spaCy so fast? for a discussion of the algorithms and implementation
+that makes this possible.
+
++---------+----------+-------------+----------+
+| System  | Tokenize | --> Counts  | --> Stem |
++---------+----------+-------------+----------+
+| spaCy   | 1m42s    | 1m59s       | 1m59s    |
++---------+----------+-------------+----------+
+| NLTK    | 20m2s    | 28m24s      | 52m28    |
++---------+----------+-------------+----------+
+
+Times for 100m words of text.
 
 
 Unique Lexicon-centric design
@@ -25,15 +38,14 @@ Unique Lexicon-centric design
 
 spaCy helps you build models that generalise better, by making it easy to use
 more robust features.  Instead of a list of strings, the tokenizer returns
-references to rich lexical types.  Its tokenizer returns sequence of references
-to rich lexical types.  Features which ask about the word's Brown cluster, its
-typical part-of-speech tag, how it's usually cased etc require no extra effort:
+references to rich lexical types.  Features which ask about the word's Brown cluster,
+its typical part-of-speech tag, how it's usually cased etc require no extra effort:
 
     >>> from spacy.en import EN
     >>> from spacy.feature_names import *
     >>> feats = (
             SIC, # ID of the original word form
-            NORM, # ID of the normalized word form
+            STEM, # ID of the stemmed word form
             CLUSTER, # ID of the word's Brown cluster
             IS_TITLE, # Was the word title-cased?
             POS_TYPE # A cluster ID describing what POS tags the word is usually assigned
@@ -112,14 +124,6 @@ process other punctuation.  This isn't a problem for spaCy: we just add them
 all to the special tokenization rules.
 
 spaCy's tokenizer is also incredibly efficient:
-
-+--------+---------------+--------------+
-| System | Tokens/second | Speed Factor |
-+--------+---------------+--------------+
-| NLTK   | 89 000        | 1.00         |
-+--------+---------------+--------------+
-| spaCy  | 3 093 000     | 38.30        |
-+--------+---------------+--------------+
 
 spaCy can create an inverted index of the 1.8 billion word Gigaword corpus,
 in under half an hour --- on a Macbook Air.  See the `inverted
