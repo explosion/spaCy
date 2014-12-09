@@ -71,20 +71,6 @@ cdef class Tokens:
         self.length += 1
         return idx + t.lex.length
 
-    cdef int extend(self, int idx, const Lexeme* const* lexemes, int n) except -1:
-        cdef int i
-        if lexemes == NULL:
-            return idx
-        elif n == 0:
-            i = 0
-            while lexemes[i] != NULL:
-                idx = self.push_back(idx, lexemes[i])
-                i += 1
-        else:
-            for i in range(n):
-                idx = self.push_back(idx, lexemes[i])
-        return idx
-
     cpdef int set_tag(self, int i, int tag_type, int tag) except -1:
         self.data[i].pos = tag
 

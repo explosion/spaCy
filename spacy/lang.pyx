@@ -87,7 +87,7 @@ cdef class Language:
         cdef int idx = 0
         for i, py_string in enumerate(strings):
             slice_unicode(&string_struct, py_string, 0, len(py_string))
-            tokens.push_back(idx, self.lexicon.get(tokens.mem, &string_struct))
+            tokens.push_back(idx, <const Lexeme*>self.lexicon.get(tokens.mem, &string_struct))
             idx += len(py_string) + 1
         return tokens
 
@@ -136,23 +136,19 @@ cdef class Language:
         return tokens
 
     cdef int _try_cache(self, int idx, hash_t key, Tokens tokens) except -1:
-        cdef int i
-        cdef TokenC* token
         cached = <Cached*>self._specials.get(key)
-        if cached != NULL:
-            assert not cached.is_lex
-            for i in range(cached.length):
-                token = &cached.data.tokens[i]
-                idx = tokens.push_back(idx, token)
-            return True
-        else:
+        if cached == NULL:
             cached = <Cached*>self._cache.get(key)
-            if cached != NULL:
-                assert cached.is_lex == True
-                tokens.extend(i, cached.data.lexemes, cached.length)
-                return True
-            else:
+            if cached == NULL:
                 return False
+        cdef int i
+        if cached.is_lex:
+            for i in range(cached.length):
+                idx = tokens.push_back(idx, cached.data.lexemes[i])
+        else:
+            for i in range(cached.length):
+                idx = tokens.push_back(idx, &cached.data.tokens[i])
+        return True
 
     cdef int _tokenize(self, Tokens tokens, UniStr* span, int start, int end) except -1:
         cdef vector[Lexeme*] prefixes
@@ -215,8 +211,10 @@ cdef class Language:
         cdef const Lexeme* const* lexemes
         cdef Lexeme* lexeme
         cdef UniStr span
+        cdef int i
         if prefixes.size():
-            idx = tokens.extend(idx, prefixes.data(), prefixes.size())
+            for i in range(prefixes.size()):
+                idx = tokens.push_back(idx, prefixes[0][i])
         if string.n != 0:
             cache_hit = self._try_cache(idx, string.key, tokens)
             if cache_hit:

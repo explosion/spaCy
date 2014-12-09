@@ -47,7 +47,6 @@ cdef class Tokens:
     cdef int length
     cdef int max_length
 
-    cdef int extend(self, int i, const Lexeme* const* lexemes, int n) except -1
     cdef int push_back(self, int i, LexemeOrToken lex_or_tok) except -1
     cpdef int set_tag(self, int i, int tag_type, int tag) except -1
 
