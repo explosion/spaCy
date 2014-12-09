@@ -55,6 +55,8 @@ exts = [
     Extension("spacy.utf8string", ["spacy/utf8string.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.index", ["spacy/index.pyx"], language="c++", include_dirs=includes),
     Extension("spacy.tagger", ["spacy/tagger.pyx"], language="c++", include_dirs=includes),
+    Extension("spacy.morphology", ["spacy/morphology.pyx"], language="c++",
+              include_dirs=includes),
     #Extension("spacy.pos_feats", ["spacy/pos_feats.pyx"], language="c++", include_dirs=includes),
     #Extension("spacy.ner._state", ["spacy/ner/_state.pyx"], language="c++", include_dirs=includes),
     #Extension("spacy.ner.bilou_moves", ["spacy/ner/bilou_moves.pyx"], language="c++", include_dirs=includes),
