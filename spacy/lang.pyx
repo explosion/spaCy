@@ -14,7 +14,6 @@ from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
 from preshed.maps cimport PreshMap
-from .lemmatizer import Lemmatizer
 
 from .lexeme cimport Lexeme
 from .lexeme cimport EMPTY_LEXEME
@@ -26,8 +25,6 @@ from .utf8string cimport slice_unicode
 from . import util
 from .util import read_lang_data
 from .tokens import Tokens
-
-from .tagger cimport NOUN, VERB, ADJ, N_UNIV_TAGS
 from .tokens cimport Morphology
 
 
@@ -43,39 +40,16 @@ cdef class Language:
         self._infix_re = re.compile(infix)
         self.lexicon = Lexicon(self.get_props)
         self._load_special_tokenization(rules)
-        self._lemmas = PreshMapArray(N_UNIV_TAGS)
         self.pos_tagger = None
-        self.lemmatizer = None
+        self.morphologizer = None
 
     def load(self):
-        self.lemmatizer = Lemmatizer(path.join(util.DATA_DIR, 'wordnet'))
         self.lexicon.load(path.join(util.DATA_DIR, self.name, 'lexemes'))
         self.lexicon.strings.load(path.join(util.DATA_DIR, self.name, 'strings'))
         if path.exists(path.join(util.DATA_DIR, self.name, 'pos')):
             self.pos_tagger = Tagger(path.join(util.DATA_DIR, self.name, 'pos'))
-
-    cdef int lemmatize(self, const univ_tag_t pos, const Lexeme* lex) except -1:
-        if self.lemmatizer is None:
-            return lex.sic
-        if pos != NOUN and pos != VERB and pos != ADJ:
-            return lex.sic
-        cdef int lemma = <int><size_t>self._lemmas.get(pos, lex.sic)
-        if lemma != 0:
-            return lemma
-        cdef bytes py_string = self.lexicon.strings[lex.sic]
-        cdef set lemma_strings
-        cdef bytes lemma_string
-        if pos == NOUN:
-            lemma_strings = self.lemmatizer.noun(py_string)
-        elif pos == VERB:
-            lemma_strings = self.lemmatizer.verb(py_string)
-        else:
-            assert pos == ADJ
-            lemma_strings = self.lemmatizer.adj(py_string)
-        lemma_string = sorted(lemma_strings)[0]
-        lemma = self.lexicon.strings.intern(lemma_string, len(lemma_string)).i
-        self._lemmas.set(pos, lex.sic, <void*>lemma)
-        return lemma
+            self.morphologizer = Morphologizer(self.lexicon.strings,
+                                    path.join(util.DATA_DIR, self.name))
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])

@@ -35,8 +35,8 @@ from __future__ import unicode_literals
 cimport lang
 from .typedefs cimport flags_t
 import orth
-from .tagger cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT, VERB
-from .tagger cimport X, PUNCT, EOL
+from .morphology cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT, VERB
+from .morphology cimport X, PUNCT, EOL
 
 from .tokens cimport Morphology
 
@@ -154,8 +154,8 @@ cdef class English(Language):
         for i in range(tokens.length):
             fill_pos_context(context, i, t)
             t[i].pos = self.pos_tagger.predict(context)
-            _merge_morph(&t[i].morph, &self.pos_tagger.tags[t[i].pos].morph)
-            t[i].lemma = self.lemmatize(self.pos_tagger.tags[t[i].pos].pos, t[i].lex)
+            if self.morphologizer:
+                self.morphologizer.set_morph(i, t)
 
     def train_pos(self, Tokens tokens, golds):
         cdef int i
@@ -165,8 +165,8 @@ cdef class English(Language):
         for i in range(tokens.length):
             fill_pos_context(context, i, t)
             t[i].pos = self.pos_tagger.predict(context, [golds[i]])
-            _merge_morph(&t[i].morph, &self.pos_tagger.tags[t[i].pos].morph)
-            t[i].lemma = self.lemmatize(self.pos_tagger.tags[t[i].pos].pos, t[i].lex)
+            if self.morphologizer:
+                self.morphologizer.set_morph(i, t)
             c += t[i].pos == golds[i]
         return c
 

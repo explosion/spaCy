@@ -34,23 +34,10 @@ cdef class Tagger:
         self.mem = Pool()
         cfg = json.load(open(path.join(model_dir, 'config.json')))
         templates = cfg['templates']
-        tag_map = cfg['tag_map']
         univ_counts = {}
         cdef unicode tag
         cdef unicode univ_tag
         self.tag_names = cfg['tag_names']
-        self.tags = <PosTag*>self.mem.alloc(len(self.tag_names), sizeof(PosTag))
-        for i, tag in enumerate(self.tag_names):
-            pos, props = tag_map[tag]
-            self.tags[i].id = i
-            self.tags[i].pos = pos
-            self.tags[i].morph.number = props.get('number', 0)
-            self.tags[i].morph.tenspect = props.get('tenspect', 0)
-            self.tags[i].morph.mood = props.get('mood', 0)
-            self.tags[i].morph.gender = props.get('gender', 0)
-            self.tags[i].morph.person = props.get('person', 0)
-            self.tags[i].morph.case = props.get('case', 0)
-            self.tags[i].morph.misc = props.get('misc', 0)
         self.tagdict = _make_tag_dict(cfg['tag_counts'])
         self.extractor = Extractor(templates)
         self.model = LinearModel(len(self.tag_names), self.extractor.n_templ+2)
@@ -84,23 +71,6 @@ cdef class Tagger:
             self.tag_names.append(tag_name)
         return tag_id
 
-
-UNIV_TAGS = {
-    'NULL': NO_TAG,
-    'ADJ': ADJ,
-    'ADV': ADV,
-    'ADP': ADP,
-    'CONJ': CONJ,
-    'DET': DET,
-    'NOUN': NOUN,
-    'NUM': NUM,
-    'PRON': PRON,
-    'PRT': PRT,
-    'VERB': VERB,
-    'X': X,
-    '.': PUNCT,
-    'EOL': EOL
-}
 
 
 def _make_tag_dict(counts):
