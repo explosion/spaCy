@@ -137,21 +137,19 @@ cdef class Language:
 
     cdef int _try_cache(self, int idx, hash_t key, Tokens tokens) except -1:
         cdef int i
-        specials = <TokenC*>self._specials.get(key)
-        if specials != NULL:
-            i = 0
-            while specials[i].lex != NULL:
-                tokens.push_back(idx, specials[i].lex)
-                tokens.data[tokens.length - 1].pos = specials[i].pos
-                tokens.data[tokens.length - 1].morph = specials[i].morph
-                tokens.data[tokens.length - 1].lemma = specials[i].lemma
-                tokens.data[tokens.length - 1].sense = specials[i].sense
-                i += 1
+        cdef TokenC* token
+        cached = <Cached*>self._specials.get(key)
+        if cached != NULL:
+            assert not cached.is_lex
+            for i in range(cached.length):
+                token = &cached.data.tokens[i]
+                idx = tokens.push_back(idx, token)
             return True
         else:
-            cached = <const Lexeme* const*>self._cache.get(key)
+            cached = <Cached*>self._cache.get(key)
             if cached != NULL:
-                tokens.extend(i, cached, 0)
+                assert cached.is_lex == True
+                tokens.extend(i, cached.data.lexemes, cached.length)
                 return True
             else:
                 return False
@@ -244,11 +242,14 @@ cdef class Language:
         for i in range(n):
             if tokens[i].lex.id == 1:
                 return 0
-        lexemes = <const Lexeme**>self.mem.alloc(n + 1, sizeof(Lexeme**))
+        cached = <Cached*>self.mem.alloc(1, sizeof(Cached))
+        cached.length = n
+        cached.is_lex = True
+        lexemes = <const Lexeme**>self.mem.alloc(n, sizeof(Lexeme**))
         for i in range(n):
             lexemes[i] = tokens[i].lex
-        lexemes[i + 1] = NULL
-        self._cache.set(key, lexemes)
+        cached.data.lexemes = <const Lexeme* const*>lexemes
+        self._cache.set(key, cached)
 
     cdef int _find_infix(self, Py_UNICODE* chars, size_t length) except -1:
         cdef unicode string = chars[:length]
@@ -287,10 +288,12 @@ cdef class Language:
                 if lemma:
                     tokens[i].lemma = self.lexicon.strings[lemma]
                 set_morph_from_dict(&tokens[i].morph, props)
-            # Null-terminated array
-            tokens[i+1].lex = NULL
+            cached = <Cached*>self.mem.alloc(1, sizeof(Cached))
+            cached.length = len(substrings)
+            cached.is_lex = False
+            cached.data.tokens = tokens
             slice_unicode(&string, chunk, 0, len(chunk))
-            self._specials.set(string.key, tokens)
+            self._specials.set(string.key, cached)
 
 
 cdef int set_morph_from_dict(Morphology* morph, dict props) except -1:

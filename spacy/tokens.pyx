@@ -60,16 +60,16 @@ cdef class Tokens:
     def __len__(self):
         return self.length
 
-    cdef int push_back(self, int idx, const Lexeme* lexeme) except -1:
+    cdef int push_back(self, int idx, LexemeOrToken lex_or_tok) except -1:
         if self.length == self.max_length:
             self._realloc(self.length * 2)
         cdef TokenC* t = &self.data[self.length]
-        t.lex = lexeme
-        t.idx = idx
-        t.pos = 0
-        t.sense = 0
+        if LexemeOrToken is TokenC_ptr:
+            t[0] = lex_or_tok[0]
+        else:
+            t.lex = lex_or_tok
         self.length += 1
-        return idx + lexeme.length
+        return idx + t.lex.length
 
     cdef int extend(self, int idx, const Lexeme* const* lexemes, int n) except -1:
         cdef int i

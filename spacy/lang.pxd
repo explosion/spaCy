@@ -13,6 +13,17 @@ from .tagger cimport univ_tag_t
 from .utf8string cimport StringStore, UniStr
 
 
+cdef union LexemesOrTokens:
+    const Lexeme* const* lexemes
+    TokenC* tokens
+
+
+cdef struct Cached:
+    LexemesOrTokens data
+    bint is_lex
+    int length
+
+
 cdef class Lexicon:
     cpdef public get_lex_props
     cdef Pool mem
