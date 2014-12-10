@@ -18,13 +18,14 @@ from preshed.maps cimport PreshMap
 from .lexeme cimport Lexeme
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport init as lexeme_init
+from .lexeme cimport check_flag
+
+from .utf8string cimport slice_unicode
 
 from . import util
 from .util import read_lang_data
 from .tokens import Tokens
-
-from .tagger cimport Tagger
-from .ner.greedy_parser cimport NERParser
+from .tokens cimport Morphology
 
 
 cdef class Language:
@@ -37,29 +38,30 @@ cdef class Language:
         self._prefix_re = re.compile(prefix)
         self._suffix_re = re.compile(suffix)
         self._infix_re = re.compile(infix)
-        self.lexicon = Lexicon()
-        if path.exists(path.join(util.DATA_DIR, name, 'lexemes')):
-            self.lexicon.load(path.join(util.DATA_DIR, name, 'lexemes'))
-            self.lexicon.strings.load(path.join(util.DATA_DIR, name, 'strings'))
+        self.lexicon = Lexicon(self.get_props)
         self._load_special_tokenization(rules)
-        if path.exists(path.join(util.DATA_DIR, name, 'pos')):
-            self.pos_tagger = Tagger(path.join(util.DATA_DIR, name, 'pos'))
-        else:
-            self.pos_tagger = None
-        if path.exists(path.join(util.DATA_DIR, name, 'ner')):
-            self.ner_tagger = NERParser(path.join(util.DATA_DIR, name, 'ner'))
+        self.pos_tagger = None
+        self.morphologizer = None
+
+    def load(self):
+        self.lexicon.load(path.join(util.DATA_DIR, self.name, 'lexemes'))
+        self.lexicon.strings.load(path.join(util.DATA_DIR, self.name, 'strings'))
+        if path.exists(path.join(util.DATA_DIR, self.name, 'pos')):
+            self.pos_tagger = Tagger(path.join(util.DATA_DIR, self.name, 'pos'))
+            self.morphologizer = Morphologizer(self.lexicon.strings,
+                                    path.join(util.DATA_DIR, self.name))
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
-        cdef Tokens tokens = Tokens(self.lexicon.strings, length)
+        cdef Tokens tokens = Tokens(self, length)
         if length == 0:
             return tokens
-        cdef String string_struct
+        cdef UniStr string_struct
         cdef unicode py_string
         cdef int idx = 0
         for i, py_string in enumerate(strings):
-            string_from_unicode(&string_struct, py_string)
-            tokens.push_back(idx, self.lexicon.get(&string_struct))
+            slice_unicode(&string_struct, py_string, 0, len(py_string))
+            tokens.push_back(idx, <const Lexeme*>self.lexicon.get(tokens.mem, &string_struct))
             idx += len(py_string) + 1
         return tokens
 
@@ -79,22 +81,21 @@ cdef class Language:
             tokens (Tokens): A Tokens object, giving access to a sequence of Lexemes.
         """
         cdef int length = len(string)
-        cdef Tokens tokens = Tokens(self.lexicon.strings, length)
+        cdef Tokens tokens = Tokens(self, length)
         if length == 0:
             return tokens
         cdef int i = 0
         cdef int start = 0
+        cdef bint cache_hit
         cdef Py_UNICODE* chars = string
         cdef bint in_ws = Py_UNICODE_ISSPACE(chars[0])
-        cdef String span
+        cdef UniStr span
         for i in range(1, length):
             if Py_UNICODE_ISSPACE(chars[i]) != in_ws:
                 if start < i:
-                    string_slice(&span, chars, start, i)
-                    lexemes = <Lexeme**>self._cache.get(span.key)
-                    if lexemes != NULL:
-                        tokens.extend(start, lexemes, 0)
-                    else: 
+                    slice_unicode(&span, chars, start, i)
+                    cache_hit = self._try_cache(start, span.key, tokens)
+                    if not cache_hit:
                         self._tokenize(tokens, &span, start, i)
                 in_ws = not in_ws
                 start = i
@@ -102,15 +103,27 @@ cdef class Language:
                     start += 1
         i += 1
         if start < i:
-            string_slice(&span, chars, start, i)
-            lexemes = <Lexeme**>self._cache.get(span.key)
-            if lexemes != NULL:
-                tokens.extend(start, lexemes, 0)
-            else: 
+            slice_unicode(&span, chars, start, i)
+            cache_hit = self._try_cache(start, span.key, tokens)
+            if not cache_hit:
                 self._tokenize(tokens, &span, start, i)
         return tokens
 
-    cdef int _tokenize(self, Tokens tokens, String* span, int start, int end) except -1:
+    cdef int _try_cache(self, int idx, hash_t key, Tokens tokens) except -1:
+        #cached = <Cached*>self._specials.get(key)
+        cached = <Cached*>self._cache.get(key)
+        if cached == NULL:
+            return False
+        cdef int i
+        if cached.is_lex:
+            for i in range(cached.length):
+                idx = tokens.push_back(idx, cached.data.lexemes[i])
+        else:
+            for i in range(cached.length):
+                idx = tokens.push_back(idx, &cached.data.tokens[i])
+        return True
+
+    cdef int _tokenize(self, Tokens tokens, UniStr* span, int start, int end) except -1:
         cdef vector[Lexeme*] prefixes
         cdef vector[Lexeme*] suffixes
         cdef hash_t orig_key
@@ -119,88 +132,95 @@ cdef class Language:
         orig_size = tokens.length
         self._split_affixes(span, &prefixes, &suffixes)
         self._attach_tokens(tokens, start, span, &prefixes, &suffixes)
-        self._save_cached(&tokens.lex[orig_size], orig_key, tokens.length - orig_size)
+        self._save_cached(&tokens.data[orig_size], orig_key, tokens.length - orig_size)
 
-    cdef String* _split_affixes(self, String* string, vector[Lexeme*] *prefixes,
-                                vector[Lexeme*] *suffixes) except NULL:
+    cdef UniStr* _split_affixes(self, UniStr* string, vector[const Lexeme*] *prefixes,
+                                vector[const Lexeme*] *suffixes) except NULL:
         cdef size_t i
-        cdef String prefix
-        cdef String suffix
-        cdef String minus_pre
-        cdef String minus_suf
+        cdef UniStr prefix
+        cdef UniStr suffix
+        cdef UniStr minus_pre
+        cdef UniStr minus_suf
         cdef size_t last_size = 0
         while string.n != 0 and string.n != last_size:
             last_size = string.n
             pre_len = self._find_prefix(string.chars, string.n)
             if pre_len != 0:
-                string_slice(&prefix, string.chars, 0, pre_len)
-                string_slice(&minus_pre, string.chars, pre_len, string.n)
+                slice_unicode(&prefix, string.chars, 0, pre_len)
+                slice_unicode(&minus_pre, string.chars, pre_len, string.n)
                 # Check whether we've hit a special-case
                 if minus_pre.n >= 1 and self._specials.get(minus_pre.key) != NULL:
                     string[0] = minus_pre
-                    prefixes.push_back(self.lexicon.get(&prefix))
+                    prefixes.push_back(self.lexicon.get(self.lexicon.mem, &prefix))
                     break
             suf_len = self._find_suffix(string.chars, string.n)
             if suf_len != 0:
-                string_slice(&suffix, string.chars, string.n - suf_len, string.n)
-                string_slice(&minus_suf, string.chars, 0, string.n - suf_len)
+                slice_unicode(&suffix, string.chars, string.n - suf_len, string.n)
+                slice_unicode(&minus_suf, string.chars, 0, string.n - suf_len)
                 # Check whether we've hit a special-case
                 if minus_suf.n >= 1 and self._specials.get(minus_suf.key) != NULL:
                     string[0] = minus_suf
-                    suffixes.push_back(self.lexicon.get(&suffix))
+                    suffixes.push_back(self.lexicon.get(self.lexicon.mem, &suffix))
                     break
             if pre_len and suf_len and (pre_len + suf_len) <= string.n:
-                string_slice(string, string.chars, pre_len, string.n - suf_len)
-                prefixes.push_back(self.lexicon.get(&prefix))
-                suffixes.push_back(self.lexicon.get(&suffix))
+                slice_unicode(string, string.chars, pre_len, string.n - suf_len)
+                prefixes.push_back(self.lexicon.get(self.lexicon.mem, &prefix))
+                suffixes.push_back(self.lexicon.get(self.lexicon.mem, &suffix))
             elif pre_len:
                 string[0] = minus_pre
-                prefixes.push_back(self.lexicon.get(&prefix))
+                prefixes.push_back(self.lexicon.get(self.lexicon.mem, &prefix))
             elif suf_len:
                 string[0] = minus_suf
-                suffixes.push_back(self.lexicon.get(&suffix))
+                suffixes.push_back(self.lexicon.get(self.lexicon.mem, &suffix))
             if self._specials.get(string.key):
                 break
         return string
 
-    cdef int _attach_tokens(self, Tokens tokens,
-                            int idx, String* string,
-                            vector[Lexeme*] *prefixes,
-                            vector[Lexeme*] *suffixes) except -1:
+    cdef int _attach_tokens(self, Tokens tokens, int idx, UniStr* string,
+                            vector[const Lexeme*] *prefixes,
+                            vector[const Lexeme*] *suffixes) except -1:
+        cdef bint cache_hit
         cdef int split
-        cdef Lexeme** lexemes
+        cdef const Lexeme* const* lexemes
         cdef Lexeme* lexeme
-        cdef String span
+        cdef UniStr span
+        cdef int i
         if prefixes.size():
-            idx = tokens.extend(idx, prefixes.data(), prefixes.size())
+            for i in range(prefixes.size()):
+                idx = tokens.push_back(idx, prefixes[0][i])
         if string.n != 0:
-
-            lexemes = <Lexeme**>self._cache.get(string.key)
-            if lexemes != NULL:
-                idx = tokens.extend(idx, lexemes, 0)
+            cache_hit = self._try_cache(idx, string.key, tokens)
+            if cache_hit:
+                idx = tokens.data[tokens.length - 1].idx + 1
             else:
                 split = self._find_infix(string.chars, string.n)
                 if split == 0 or split == -1:
-                    idx = tokens.push_back(idx, self.lexicon.get(string))
+                    idx = tokens.push_back(idx, self.lexicon.get(tokens.mem, string))
                 else:
-                    string_slice(&span, string.chars, 0, split)
-                    idx = tokens.push_back(idx, self.lexicon.get(&span))
-                    string_slice(&span, string.chars, split, split+1)
-                    idx = tokens.push_back(idx, self.lexicon.get(&span))
-                    string_slice(&span, string.chars, split + 1, string.n)
-                    idx = tokens.push_back(idx, self.lexicon.get(&span))
-        cdef vector[Lexeme*].reverse_iterator it = suffixes.rbegin()
+                    slice_unicode(&span, string.chars, 0, split)
+                    idx = tokens.push_back(idx, self.lexicon.get(tokens.mem, &span))
+                    slice_unicode(&span, string.chars, split, split+1)
+                    idx = tokens.push_back(idx, self.lexicon.get(tokens.mem, &span))
+                    slice_unicode(&span, string.chars, split + 1, string.n)
+                    idx = tokens.push_back(idx, self.lexicon.get(tokens.mem, &span))
+        cdef vector[const Lexeme*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
             idx = tokens.push_back(idx, deref(it))
             preinc(it)
 
-    cdef int _save_cached(self, Lexeme** tokens, hash_t key, int n) except -1:
-        lexemes = <Lexeme**>self.mem.alloc(n + 1, sizeof(Lexeme**))
+    cdef int _save_cached(self, const TokenC* tokens, hash_t key, int n) except -1:
         cdef int i
         for i in range(n):
-            lexemes[i] = tokens[i]
-        lexemes[i + 1] = NULL
-        self._cache.set(key, lexemes)
+            if tokens[i].lex.id == 1:
+                return 0
+        cached = <Cached*>self.mem.alloc(1, sizeof(Cached))
+        cached.length = n
+        cached.is_lex = True
+        lexemes = <const Lexeme**>self.mem.alloc(n, sizeof(Lexeme**))
+        for i in range(n):
+            lexemes[i] = tokens[i].lex
+        cached.data.lexemes = <const Lexeme* const*>lexemes
+        self._cache.set(key, cached)
 
     cdef int _find_infix(self, Py_UNICODE* chars, size_t length) except -1:
         cdef unicode string = chars[:length]
@@ -217,66 +237,120 @@ cdef class Language:
         match = self._suffix_re.search(string)
         return (match.end() - match.start()) if match is not None else 0
 
-    def _load_special_tokenization(self, token_rules):
-        '''Load special-case tokenization rules.
-
-        Loads special-case tokenization rules into the Language._cache cache,
-        read from data/<lang>/tokenization . The special cases are loaded before
-        any language data is tokenized, giving these priority.  For instance,
-        the English tokenization rules map "ain't" to ["are", "not"].
-
-        Args:
-            token_rules (list): A list of (chunk, tokens) pairs, where chunk is
-                a string and tokens is a list of strings.
+    def _load_special_tokenization(self, object rules):
+        '''Add a special-case tokenization rule.
         '''
+        cdef int i
+        cdef unicode chunk
+        cdef list substrings
+        cdef unicode form
+        cdef unicode lemma
+        cdef dict props
         cdef Lexeme** lexemes
         cdef hash_t hashed
-        cdef String string
-        for uni_string, substrings in token_rules:
-            lexemes = <Lexeme**>self.mem.alloc(len(substrings) + 1, sizeof(Lexeme*))
-            for i, substring in enumerate(substrings):
-                string_from_unicode(&string, substring)
-                lexemes[i] = <Lexeme*>self.lexicon.get(&string)
-            lexemes[i + 1] = NULL
-            string_from_unicode(&string, uni_string)
-            self._specials.set(string.key, lexemes)
-            self._cache.set(string.key, lexemes)
+        cdef UniStr string
+        for chunk, substrings in sorted(rules.items()):
+            tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
+            for i, props in enumerate(substrings):
+                form = props['F']
+                lemma = props.get("L", None)
+                slice_unicode(&string, form, 0, len(form))
+                tokens[i].lex = <Lexeme*>self.lexicon.get(self.lexicon.mem, &string)
+                if lemma:
+                    tokens[i].lemma = self.lexicon.strings[lemma]
+                set_morph_from_dict(&tokens[i].morph, props)
+            cached = <Cached*>self.mem.alloc(1, sizeof(Cached))
+            cached.length = len(substrings)
+            cached.is_lex = False
+            cached.data.tokens = tokens
+            slice_unicode(&string, chunk, 0, len(chunk))
+            self._specials.set(string.key, cached)
+            self._cache.set(string.key, cached)
+
+
+cdef int set_morph_from_dict(Morphology* morph, dict props) except -1:
+    morph.number = props.get('number', 0)
+    morph.tenspect = props.get('tenspect', 0)
+    morph.mood = props.get('mood', 0)
+    morph.gender = props.get('gender', 0)
+    morph.person = props.get('person', 0)
+    morph.case = props.get('case', 0)
+    morph.misc = props.get('misc', 0)
 
 
 cdef class Lexicon:
-    def __init__(self):
+    '''A map container for a language's Lexeme structs.
+    
+    Also interns UTF-8 strings, and maps them to consecutive integer IDs.
+    '''
+    def __init__(self, object get_props):
         self.mem = Pool()
-        self._dict = PreshMap(2 ** 20)
+        self._map = PreshMap(2 ** 20)
         self.strings = StringStore()
         self.lexemes.push_back(&EMPTY_LEXEME)
-        self.size = 1
+        self.get_lex_props = get_props
 
-    cdef Lexeme* get(self, String* string) except NULL:
+    def __len__(self):
+        return self.lexemes.size()
+
+    cdef const Lexeme* get(self, Pool mem, UniStr* string) except NULL:
+        '''Get a pointer to a Lexeme from the lexicon, creating a new Lexeme
+        if necessary, using memory acquired from the given pool.  If the pool
+        is the lexicon's own memory, the lexeme is saved in the lexicon.'''
         cdef Lexeme* lex
-        lex = <Lexeme*>self._dict.get(string.key)
+        lex = <Lexeme*>self._map.get(string.key)
         if lex != NULL:
             return lex
-        lex = <Lexeme*>self.mem.alloc(sizeof(Lexeme), 1)
-        lex[0] = lexeme_init(self.size, string.chars[:string.n], string.key, self.strings, {})
-        self._dict.set(string.key, lex)
-        while self.lexemes.size() < (lex.id + 1):
-            self.lexemes.push_back(&EMPTY_LEXEME)
-        self.lexemes[lex.id] = lex
-        self.size += 1
+        if string.n < 3:
+            mem = self.mem
+        cdef unicode py_string = string.chars[:string.n]
+        lex = <Lexeme*>mem.alloc(sizeof(Lexeme), 1)
+        lex[0] = lexeme_init(self.lexemes.size(), py_string, string.key, self.strings,
+                             self.get_lex_props(py_string))
+        if mem is self.mem:
+            self._map.set(string.key, lex)
+            while self.lexemes.size() < (lex.id + 1):
+                self.lexemes.push_back(&EMPTY_LEXEME)
+            self.lexemes[lex.id] = lex
+        else:
+            lex[0].id = 1
         return lex
 
     def __getitem__(self,  id_or_string):
+        '''Retrieve a lexeme, given an int ID or a unicode string.  If a previously
+        unseen unicode string is given, a new Lexeme is created and stored.
+
+        This function relies on Cython's struct-to-dict conversion.  Python clients
+        receive a dict keyed by strings (byte or unicode, depending on Python 2/3),
+        with int values.  Cython clients can instead receive a Lexeme struct value.
+        More efficient Cython access is provided by Lexicon.get, which returns
+        a Lexeme*.
+
+        Args:
+            id_or_string (int or unicode): The integer ID of a word, or its unicode
+                string.  If an int >= Lexicon.size, IndexError is raised.
+                If id_or_string is neither an int nor a unicode string, ValueError
+                is raised.
+
+        Returns:
+            lexeme (dict): A Lexeme struct instance, which Cython translates into
+                a dict if the operator is called from Python.
+        '''
         if type(id_or_string) == int:
+            if id_or_string >= self.lexemes.size():
+                raise IndexError
             return self.lexemes.at(id_or_string)[0]
-        cdef String string
-        string_from_unicode(&string, id_or_string)
-        cdef Lexeme* lexeme = self.get(&string)
+        cdef UniStr string
+        slice_unicode(&string, id_or_string, 0, len(id_or_string))
+        cdef const Lexeme* lexeme = self.get(self.mem, &string)
         return lexeme[0]
 
     def __setitem__(self, unicode uni_string, dict props):
-        cdef String s
-        string_from_unicode(&s, uni_string)
-        cdef Lexeme* lex = self.get(&s)
+        cdef UniStr s
+        slice_unicode(&s, uni_string, 0, len(uni_string))
+        # Cast through the const here, since we're allowed to change our own
+        # Lexemes.
+        lex = <Lexeme*><void*>self.get(self.mem, &s)
         lex[0] = lexeme_init(lex.id, s.chars[:s.n], s.key, self.strings, props)
 
     def dump(self, loc):
@@ -287,11 +361,11 @@ cdef class Lexicon:
         assert fp != NULL
         cdef size_t st
         cdef hash_t key
-        for i in range(self._dict.length):
-            key = self._dict.c_map.cells[i].key
+        for i in range(self._map.length):
+            key = self._map.c_map.cells[i].key
             if key == 0:
                 continue
-            lexeme = <Lexeme*>self._dict.c_map.cells[i].value
+            lexeme = <Lexeme*>self._map.c_map.cells[i].value
             st = fwrite(&key, sizeof(key), 1, fp)
             assert st == 1
             st = fwrite(lexeme, sizeof(Lexeme), 1, fp)
@@ -300,7 +374,8 @@ cdef class Lexicon:
         assert st == 0
 
     def load(self, loc):
-        assert path.exists(loc)
+        if not path.exists(loc):
+            raise IOError('Lexemes file not found at %s' % loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         cdef FILE* fp = fopen(<char*>bytes_loc, 'rb')
         assert fp != NULL
@@ -316,21 +391,9 @@ cdef class Lexicon:
             st = fread(lexeme, sizeof(Lexeme), 1, fp)
             if st != 1:
                 break
-            self._dict.set(key, lexeme)
+            self._map.set(key, lexeme)
             while self.lexemes.size() < (lexeme.id + 1):
                 self.lexemes.push_back(&EMPTY_LEXEME)
             self.lexemes[lexeme.id] = lexeme
             i += 1
-            self.size += 1
         fclose(fp)
-        
-
-cdef void string_from_unicode(String* s, unicode uni):
-    cdef Py_UNICODE* c_uni = <Py_UNICODE*>uni
-    string_slice(s, c_uni, 0, len(uni))
-
-
-cdef inline void string_slice(String* s, Py_UNICODE* chars, int start, int end) nogil:
-    s.chars = &chars[start]
-    s.n = end - start
-    s.key = hash64(s.chars, s.n * sizeof(Py_UNICODE), 0)

@@ -147,6 +147,7 @@ Y	PRT
 Z	NOUN
 ^	NOUN
 ~	X
-``	.""".strip().split('\n'))
+``	.
+EOL EOL""".strip().split('\n'))
     return mapping[tag]
 

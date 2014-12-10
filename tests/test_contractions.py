@@ -20,15 +20,18 @@ def test_apostrophe():
 def test_LL():
     tokens = EN.tokenize("we'll")
     assert len(tokens) == 2
-    assert tokens[1].string == "will"
+    assert tokens[1].string == "'ll"
+    assert tokens[1].lemma == "will"
     assert tokens[0].string == "we"
 
 
 def test_aint():
     tokens = EN.tokenize("ain't")
     assert len(tokens) == 2
-    assert tokens[0].string == "are"
-    assert tokens[1].string == "not"
+    assert tokens[0].string == "ai"
+    assert tokens[0].lemma == "be"
+    assert tokens[1].string == "n't"
+    assert tokens[1].lemma == "not"
 
 
 def test_capitalized():
@@ -38,4 +41,12 @@ def test_capitalized():
     assert len(tokens) == 2
     tokens = EN.tokenize("Ain't")
     assert len(tokens) == 2
-    assert tokens[0].string == "Are"
+    assert tokens[0].string == "Ai"
+    assert tokens[0].lemma == "be"
+
+
+def test_punct():
+    tokens = EN.tokenize("We've")
+    assert len(tokens) == 2
+    tokens = EN.tokenize("``We've")
+    assert len(tokens) == 3

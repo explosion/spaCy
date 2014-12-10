@@ -27,3 +27,9 @@ def test_tweebo_challenge():
     assert tokens[19].string == '")'
     assert tokens[20].string == ':>'
     assert tokens[21].string == '....'
+
+
+def test_false_positive():
+    text = "example:)"
+    tokens = EN.tokenize(text)
+    assert len(tokens) == 3

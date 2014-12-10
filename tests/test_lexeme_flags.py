@@ -7,6 +7,7 @@ from spacy.lexeme import *
 
 
 def test_is_alpha():
+    EN.load()
     the = EN.lexicon['the']
     assert the['flags'] & (1 << IS_ALPHA)
     year = EN.lexicon['1999']
@@ -16,6 +17,7 @@ def test_is_alpha():
 
 
 def test_is_digit():
+    EN.load()
     the = EN.lexicon['the']
     assert not the['flags'] & (1 << IS_DIGIT)
     year = EN.lexicon['1999']

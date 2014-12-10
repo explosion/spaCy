@@ -34,7 +34,7 @@ def test_digits():
 def test_contraction():
     tokens = EN.tokenize("don't giggle")
     assert len(tokens) == 3
-    assert tokens[1].sic == EN.lexicon["not"]['sic']
+    assert tokens[1].sic == EN.lexicon["n't"]['sic']
     tokens = EN.tokenize("i said don't!")
     assert len(tokens) == 5
     assert tokens[4].sic == EN.lexicon['!']['sic']
@@ -71,30 +71,39 @@ def test_cnts1():
     tokens = EN.tokenize(text)
     assert len(tokens) == 8
 
+
 def test_cnts2():
     text = u"""U.N. regulations are not a part of their concern."""
     tokens = EN.tokenize(text)
     assert len(tokens) == 10
 
+
 def test_cnts3():
     text = u"“Isn't it?”"
     tokens = EN.tokenize(text)
-    assert len(tokens) == 6
+    words = [t.string for t in tokens]
+    assert len(words) == 6
+
 
 def test_cnts4():
     text = u"""Yes! "I'd rather have a walk", Ms. Comble sighed. """
     tokens = EN.tokenize(text)
-    assert len(tokens) == 15
+    words = [t.string for t in tokens]
+    assert len(words) == 15
+
 
 def test_cnts5():
     text = """'Me too!', Mr. P. Delaware cried. """
     tokens = EN.tokenize(text)
     assert len(tokens) == 11
 
+
 def test_cnts6():
     text = u'They ran about 10km.'
     tokens = EN.tokenize(text)
-    assert len(tokens) == 6
+    words = [t.string for t in tokens]
+    assert len(words) == 6
+
 
 #def test_cnts7():
 #    text = 'But then the 6,000-year ice age came...'

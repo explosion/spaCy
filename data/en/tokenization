@@ -4,101 +4,9 @@
 #*---* ---
 #*'s  's
 
-'s  's
-'S  'S
-ain't   are not
-aren't  are not
-can't   can not
-cannot  can not
-could've    could have
-couldn't    could not
-couldn't've could not have
-didn't  did not
-doesn't does not
-don't   do not
-hadn't  had not
-hadn't've   had not have
-hasn't  has not
-haven't have not
-he'd    he would
-he'd've he would have
-he'll   he will
-he's    he 's
-how'd   he would
-how'll  he will
-how's   how 's
-I'd I would
-I'd've  I would have
-I'll    I will
-I'm I am
-I'ma    I will
-I've    I have
-isn't   is not
-it'd    it would
-it'd've it would have
-it'll   it will
-it's    it 's
-let's   let 's
-mightn't    might not
-mightn't've might not have
-might've    might have
-mustn't must not
-must've must have
-needn't need not
-not've  not have
-shan't  shall not
-she'd   she would
-she'd've    she would have
-she'll  she will
-she's   she 's
-should've   should have
-shouldn't   should not
-shouldn't've    should not have
-that's  that 's
-there'd there would
-there'd've  there would have
-there's there is
-they'd  there would
-they'd've   they would have
-they'll they will
-they're they are
-they've they have
-wasn't  was not
-we'd    we would
-we'd've we would have
-we'll   we will
-we're   we are
-we've   we have
-weren't were not
-what'll what will
-what're what are
-what's  what 's
-what've what have
-when's  when 's
-where'd where would
-where's where 's
-where've    where have
-who'd   who would
-who'll  who will
-who're  who are
-who's   who 's
-who've  who have
-why'll  who will
-why're  why are
-why's   why 's
-won't   will not
-would've    would have
-wouldn't    would not
-wouldn't've would not have
-you'd   you would
-you'd've    you would have
-you'll  you will
-you're  you are
-you've  you have
-'em them
-'ol old
 10km    10 km
 U.S.    U.S.
+U.K.    U.K.
 non-U.S.    non-U.S.
 U.N.    U.N.
 Co. Co.
@@ -115,7 +23,12 @@ A.G.    A.G.
 Rep.    Rep.
 Ms. Ms.
 Mr. Mr.
+Mrs.    Mrs.
 a.m.    a.m.
+Sen.    Sen.
+INC.    INC.
+CO. CO.
+COS.    COS.
 p.m.    p.m.
 Nos.    Nos.
 a.k.a.  a.k.a.
@@ -127,6 +40,7 @@ E.  E.
 F.  F.
 G.  G.
 H.  H.
+I.  I.
 J.  J.
 K.  K.
 L.  L.
@@ -205,6 +119,9 @@ Wash.   Wash.
 W.Va.   W.Va.
 Wis.    Wis.
 Wyo.    Wyo.
+L.A.    L.A.
+R.H.    R.H.
+Gov.    Gov.
 ''  ''
 :)  :)
 <3  <3
@@ -262,3 +179,19 @@ V_V V_V
 o.O o.O
 ")  ")
 ....    ....
+a-  a -
+Messrs. Messrs.
+No. No.
+vs. vs.
+Gen.    Gen.
+Cos.    Cos.
+L.J.    L.J.
+D.T.    D.T.
+Prof.   Prof.
+Bros.   Bros.
+J.C.    J.C.
+Neb.    Neb.
+Adm.    Adm.
+U.S.S.R.    U.S.S.R.
+Rev.    Rev.
+H.F.    H.F.

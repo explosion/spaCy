@@ -1,40 +1,55 @@
+import numpy as np
+cimport numpy as np
+
 from cymem.cymem cimport Pool
+from thinc.typedefs cimport atom_t
 
 from .lexeme cimport Lexeme
-from .typedefs cimport flag_t
-from .utf8string cimport StringStore
-from .tagger cimport TagType
 
-from thinc.typedefs cimport atom_t
+from .typedefs cimport flags_t
+from .typedefs cimport Morphology
+from .lang cimport Language
+
+
+
+cdef struct TokenC:
+    const Lexeme* lex
+    Morphology morph
+    int idx
+    int pos
+    int lemma
+    int sense
+
+
+ctypedef const Lexeme* const_Lexeme_ptr
+ctypedef TokenC* TokenC_ptr
+
+ctypedef fused LexemeOrToken:
+    const_Lexeme_ptr
+    TokenC_ptr
 
 
 cdef class Tokens:
     cdef Pool mem
-    cdef StringStore _string_store
+    cdef Language lang
+    cdef list tag_names
 
-    cdef Lexeme** _lex_ptr
-    cdef int* _idx_ptr
-    cdef int* _pos_ptr
-    cdef int* _ner_ptr
-    cdef Lexeme** lex
-    cdef int* idx
-    cdef int* pos
-    cdef int* ner
+    cdef TokenC* data
 
     cdef int length
     cdef int max_length
 
-    cdef int extend(self, int i, Lexeme** lexemes, int n) except -1
-    cdef int push_back(self, int i, Lexeme* lexeme) except -1
-    cpdef int set_tag(self, int i, TagType tag_type, int tag) except -1
+    cdef int push_back(self, int i, LexemeOrToken lex_or_tok) except -1
+
+    cpdef np.ndarray[long, ndim=2] get_array(self, list features)
 
 
 cdef class Token:
-    cdef StringStore _string_store
+    cdef public Language lang
     cdef public int i
     cdef public int idx
-    cdef public int pos
-    cdef public int ner
+    cdef int pos
+    cdef int lemma
 
     cdef public atom_t id
     cdef public atom_t cluster
@@ -51,4 +66,4 @@ cdef class Token:
 
     cdef public float prob
 
-    cdef public flag_t flags
+    cdef public flags_t flags

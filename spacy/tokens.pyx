@@ -1,7 +1,15 @@
 # cython: profile=True
+from preshed.maps cimport PreshMap
+from preshed.counter cimport PreshCounter
+
 from .lexeme cimport *
 cimport cython
-from .tagger cimport POS, ENTITY
+
+import numpy as np
+cimport numpy as np
+
+POS = 0
+ENTITY = 0
 
 DEF PADDING = 5
 
@@ -17,23 +25,13 @@ cdef class Tokens:
     """A sequence of references to Lexeme objects.
 
     The Tokens class provides fast and memory-efficient access to lexical features,
-    and can efficiently export the data to a numpy array.  Specific languages
-    create their own Tokens subclasses, to provide more convenient access to
-    language-specific features.
+    and can efficiently export the data to a numpy array.
 
     >>> from spacy.en import EN
     >>> tokens = EN.tokenize('An example sentence.')
-    >>> tokens.string(0)
-    'An'
-    >>> tokens.prob(0) > tokens.prob(1)
-    True
-    >>> tokens.can_noun(0)
-    False
-    >>> tokens.can_noun(1)
-    True
     """
-    def __init__(self, StringStore string_store, string_length=0):
-        self._string_store = string_store
+    def __init__(self, Language lang, string_length=0):
+        self.lang = lang
         if string_length >= 3:
             size = int(string_length / 3.0)
         else:
@@ -42,28 +40,18 @@ cdef class Tokens:
         # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
         # realloc.
-        self._lex_ptr = <Lexeme**>self.mem.alloc(size + (PADDING*2), sizeof(Lexeme*))
-        self._idx_ptr = <int*>self.mem.alloc(size + (PADDING*2), sizeof(int))
-        self._pos_ptr = <int*>self.mem.alloc(size + (PADDING*2), sizeof(int))
-        self._ner_ptr = <int*>self.mem.alloc(size + (PADDING*2), sizeof(int))
-        self.lex = self._lex_ptr
-        self.idx = self._idx_ptr
-        self.pos = self._pos_ptr
-        self.ner = self._ner_ptr
+        data_start = <TokenC*>self.mem.alloc(size + (PADDING*2), sizeof(TokenC))
         cdef int i
         for i in range(size + (PADDING*2)):
-            self.lex[i] = &EMPTY_LEXEME
-        self.lex += PADDING
-        self.idx += PADDING
-        self.pos += PADDING
-        self.ner += PADDING
+            data_start[i].lex = &EMPTY_LEXEME
+        self.data = data_start + PADDING
         self.max_length = size
         self.length = 0
 
     def __getitem__(self, i):
         bounds_check(i, self.length, PADDING)
-        return Token(self._string_store, i, self.idx[i], self.pos[i], self.ner[i],
-                     self.lex[i][0])
+        return Token(self.lang, i, self.data[i].idx, self.data[i].pos,
+                     self.data[i].lemma, self.data[i].lex[0])
 
     def __iter__(self):
         for i in range(self.length):
@@ -72,70 +60,78 @@ cdef class Tokens:
     def __len__(self):
         return self.length
 
-    cdef int push_back(self, int idx, Lexeme* lexeme) except -1:
+    cdef int push_back(self, int idx, LexemeOrToken lex_or_tok) except -1:
         if self.length == self.max_length:
             self._realloc(self.length * 2)
-        self.lex[self.length] = lexeme
-        self.idx[self.length] = idx
-        self.pos[self.length] = 0
-        self.ner[self.length] = 0
-        self.length += 1
-        return idx + lexeme.length
-
-    cdef int extend(self, int idx, Lexeme** lexemes, int n) except -1:
-        cdef int i
-        if lexemes == NULL:
-            return idx
-        elif n == 0:
-            i = 0
-            while lexemes[i] != NULL:
-                idx = self.push_back(idx, lexemes[i])
-                i += 1
+        cdef TokenC* t = &self.data[self.length]
+        if LexemeOrToken is TokenC_ptr:
+            t[0] = lex_or_tok[0]
         else:
-            for i in range(n):
-                idx = self.push_back(idx, lexemes[i])
-        return idx
+            t.lex = lex_or_tok
+        self.length += 1
+        return idx + t.lex.length
 
-    cpdef int set_tag(self, int i, TagType tag_type, int tag) except -1:
-        if tag_type == POS:
-            self.pos[i] = tag
-        elif tag_type == ENTITY:
-            self.ner[i] = tag
+    @cython.boundscheck(False)
+    cpdef np.ndarray[long, ndim=2] get_array(self, list attr_ids):
+        cdef int i, j
+        cdef attr_id_t feature
+        cdef np.ndarray[long, ndim=2] output
+        output = np.ndarray(shape=(self.length, len(attr_ids)), dtype=int)
+        for i in range(self.length):
+            for j, feature in enumerate(attr_ids):
+                output[i, j] = get_attr(self.data[i].lex, feature)
+        return output
+
+    def count_by(self, attr_id_t attr_id):
+        cdef int i
+        cdef attr_t attr
+        cdef size_t count
+
+        cdef PreshCounter counts = PreshCounter(2 ** 8)
+        for i in range(self.length):
+            if attr_id == LEMMA:
+                attr = self.data[i].lemma
+            else:
+                attr = get_attr(self.data[i].lex, attr_id)
+            counts.inc(attr, 1)
+        return dict(counts)
 
     def _realloc(self, new_size):
         self.max_length = new_size
         n = new_size + (PADDING * 2)
-        self._lex_ptr = <Lexeme**>self.mem.realloc(self._lex_ptr, n * sizeof(Lexeme*))
-        self._idx_ptr = <int*>self.mem.realloc(self._idx_ptr, n * sizeof(int))
-        self._pos_ptr = <int*>self.mem.realloc(self._pos_ptr, n * sizeof(int))
-        self._ner_ptr = <int*>self.mem.realloc(self._ner_ptr, n * sizeof(int))
-        self.lex = self._lex_ptr + PADDING
-        self.idx = self._idx_ptr + PADDING
-        self.pos = self._pos_ptr + PADDING
-        self.ner = self._ner_ptr + PADDING
+        # What we're storing is a "padded" array. We've jumped forward PADDING
+        # places, and are storing the pointer to that. This way, we can access
+        # words out-of-bounds, and get out-of-bounds markers.
+        # Now that we want to realloc, we need the address of the true start,
+        # so we jump the pointer back PADDING places.
+        cdef TokenC* data_start = self.data - PADDING
+        data_start = <TokenC*>self.mem.realloc(data_start, n * sizeof(TokenC))
+        self.data = data_start + PADDING
+        cdef int i
         for i in range(self.length, self.max_length + PADDING):
-            self.lex[i] = &EMPTY_LEXEME
+            self.data[i].lex = &EMPTY_LEXEME
 
 
 @cython.freelist(64)
 cdef class Token:
-    def __init__(self, StringStore string_store, int i, int idx, int pos, int ner,
-                 dict lex):
-        self._string_store = string_store
+    def __init__(self, Language lang, int i, int idx,
+                 int pos, int lemma, dict lex):
+        self.lang = lang
         self.idx = idx
         self.pos = pos
-        self.ner = ner
         self.i = i
         self.id = lex['id']
+
+        self.lemma = lemma
         
         self.cluster = lex['cluster']
         self.length = lex['length']
-        self.postype = lex['postype']
-        self.sensetype = lex['supersense']
+        self.postype = lex['pos_type']
+        self.sensetype = 0
         self.sic = lex['sic']
-        self.norm = lex['norm']
+        self.norm = lex['dense']
         self.shape = lex['shape']
-        self.suffix = lex['asciied']
+        self.suffix = lex['suffix']
         self.prefix = lex['prefix']
 
         self.prob = lex['prob']
@@ -145,5 +141,16 @@ cdef class Token:
         def __get__(self):
             if self.sic == 0:
                 return ''
-            cdef bytes utf8string = self._string_store[self.sic]
+            cdef bytes utf8string = self.lang.lexicon.strings[self.sic]
             return utf8string.decode('utf8')
+
+    property lemma:
+        def __get__(self):
+            if self.lemma == 0:
+                return self.string
+            cdef bytes utf8string = self.lang.lexicon.strings[self.lemma]
+            return utf8string.decode('utf8')
+
+    property pos:
+        def __get__(self):
+            return self.lang.pos_tagger.tag_names[self.pos]
