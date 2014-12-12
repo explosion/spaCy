@@ -44,6 +44,7 @@ cdef class Language:
     cpdef readonly Tagger pos_tagger
     cpdef readonly Morphologizer morphologizer
 
+    cdef PreshMap _pos_cache
     cdef object _prefix_re
     cdef object _suffix_re
     cdef object _infix_re

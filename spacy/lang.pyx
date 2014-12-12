@@ -34,6 +34,7 @@ cdef class Language:
         self.mem = Pool()
         self._cache = PreshMap(2 ** 25)
         self._specials = PreshMap(2 ** 16)
+        self._pos_cache = PreshMap(2 ** 16)
         rules, prefix, suffix, infix = util.read_lang_data(name)
         self._prefix_re = re.compile(prefix)
         self._suffix_re = re.compile(suffix)
@@ -50,6 +51,7 @@ cdef class Language:
             self.pos_tagger = Tagger(path.join(util.DATA_DIR, self.name, 'pos'))
             self.morphologizer = Morphologizer(self.lexicon.strings,
                                     path.join(util.DATA_DIR, self.name))
+            self.load_pos_cache(path.join(util.DATA_DIR, self.name, 'pos', 'bigram_cache_2m'))
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])

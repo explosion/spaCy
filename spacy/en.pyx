@@ -32,13 +32,18 @@ provides a fully Penn Treebank 3-compliant tokenizer.
 '''
 from __future__ import unicode_literals
 
+from murmurhash.mrmr cimport hash64
+
 cimport lang
-from .typedefs cimport flags_t
+from .typedefs cimport hash_t, id_t, flags_t
 import orth
 from .morphology cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT, VERB
 from .morphology cimport X, PUNCT, EOL
 
 from .tokens cimport Morphology
+
+
+DEF USE_POS_CACHE = True
 
 
 POS_TAGS = {
@@ -134,6 +139,20 @@ cdef class English(Language):
         name (unicode): The two letter code used by Wikipedia for the language.
         lexicon (Lexicon): The lexicon. Exposes the lookup method.
     """
+    def load_pos_cache(self, loc):
+        cdef int i = 0
+        cdef hash_t key
+        cdef int pos
+        with open(loc) as file_:
+            for line in file_:
+                pieces = line.split()
+                if i >= 500000:
+                    break
+                i += 1
+                key = int(pieces[1])
+                pos = int(pieces[2])
+                self._pos_cache.set(key, <void*>pos)
+
     def get_props(self, unicode string):
         return {'flags': self.set_flags(string), 'dense': orth.word_shape(string)}
 
@@ -156,11 +175,19 @@ cdef class English(Language):
         cdef int i
         cdef atom_t[N_CONTEXT_FIELDS] context
         cdef TokenC* t = tokens.data
+        cdef id_t[2] bigram
+        cdef hash_t cache_key
+        cdef void* cached = NULL
         assert self.morphologizer is not None
         cdef dict tagdict = self.pos_tagger.tagdict
         for i in range(tokens.length):
-            if t[i].lex.sic in tagdict:
-                t[i].pos = tagdict[t[i].lex.sic]
+            if USE_POS_CACHE:
+                bigram[0] = tokens.data[i].lex.sic
+                bigram[1] = tokens.data[i-1].lex.sic
+                cache_key = hash64(bigram, sizeof(id_t) * 2, 0)
+                cached = self._pos_cache.get(cache_key)
+            if cached != NULL:
+                t[i].pos = <int><size_t>cached
             else:
                 fill_pos_context(context, i, t)
                 t[i].pos = self.pos_tagger.predict(context)
