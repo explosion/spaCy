@@ -4,59 +4,49 @@
    contain the root `toctree` directive.
 
 ================================
-spaCy NLP Tokenizer and Lexicon
+spaCy: Industrial-strength NLP
 ================================
 
-spaCy is a library for industrial-strength NLP in Python and Cython.  spaCy's
-take on NLP is that it's mostly about feature extraction --- that's the part
-that's specific to NLP, so that's what an NLP library should focus on.
+spaCy is a library for industrial-strength text processing in Python and Cython.
+It features extremely efficient, up-to-date algorithms, and a rethink of how those
+algorithms should be accessed.
 
-spaCy also believes that for NLP, **efficiency is critical**.  If you're
-running batch jobs, you probably have an enormous amount of data; if you're
-serving requests one-by-one, you want lower latency and fewer servers.  Even if
-you're doing exploratory research on relatively small samples, you should still
-value efficiency, because it means you can run more experiments.
+Most text-processing libraries give you APIs that look like this:
 
-Depending on the task, spaCy is between 10 and 200 times faster than NLTK,
-often with much better accuracy.  See Benchmarks for details, and
-Why is spaCy so fast? for a discussion of the algorithms and implementation
-that makes this possible.
+    >>> import nltk
+    >>> nltk.pos_tag(nltk.word_tokenize('''Some string of language.'''))
+    [('Some', 'DT'), ('string', 'VBG'), ('of', 'IN'), ('language', 'NN'), ('.', '.')]
 
-+---------+----------+-------------+----------+
-| System  | Tokenize | --> Counts  | --> Stem |
-+---------+----------+-------------+----------+
-| spaCy   | 1m42s    | 1m59s       | 1m59s    |
-+---------+----------+-------------+----------+
-| NLTK    | 20m2s    | 28m24s      | 52m28    |
-+---------+----------+-------------+----------+
+A list of strings is good for poking around, or for printing the annotation to
+evaluate it.  But to actually *use* the output, you have to jump through some
+hoops.  If you're doing some machine learning, all the strings have to be
+mapped to integers, and you have to save and load the mapping at training and
+runtime.  If you want to display mark-up based on the annotation, you have to
+realign the tokens to your original string.
 
-Times for 100m words of text.
-
-
-Unique Lexicon-centric design
-=============================
-
-spaCy helps you build models that generalise better, by making it easy to use
-more robust features.  Instead of a list of strings, the tokenizer returns
-references to rich lexical types.  Features which ask about the word's Brown cluster,
-its typical part-of-speech tag, how it's usually cased etc require no extra effort:
+With spaCy, you should never have to do any string processing at all:
 
     >>> from spacy.en import EN
-    >>> from spacy.feature_names import *
-    >>> feats = (
-            SIC, # ID of the original word form
-            STEM, # ID of the stemmed word form
-            CLUSTER, # ID of the word's Brown cluster
-            IS_TITLE, # Was the word title-cased?
-            POS_TYPE # A cluster ID describing what POS tags the word is usually assigned
-        )
-    >>> tokens = EN.tokenize(u'Split words, punctuation, emoticons etc.! ^_^')
-    >>> tokens.to_array(feats)[:5]
-        array([[    1,  2,  3,  4],
-               [...],
-               [...],
-               [...]])
+    >>> from spacy.en import feature_names as fn
+    >>> tokens = EN.tokenize('''Some string of language.''')
+    >>> tokens.to_array((fn.WORD, fn.SUFFIX, fn.CLUSTER, fn.POS, fn.LEMMA))
 
+A range of excellent features are pre-computed for you, and by default the
+words are part-of-speech tagged and lemmatized.  We do this by default because
+even with these extra processes, spaCy is still several times faster than
+most tokenizers:
+
++----------+----------+---------------+----------+
+| System   | Tokenize | POS Tag       |          |
++----------+----------+---------------+----------+
+| spaCy    | 37s      | 98s           |          |
++----------+----------+---------------+----------+
+| NLTK     | 626s     | 44,310s (12h) |          |
++----------+----------+---------------+----------+
+| CoreNLP  | 420s     | 1,300s (22m)  |          |
++----------+----------+---------------+----------+
+| ZPar     |          | ~1,500s       |          |
++----------+----------+---------------+----------+
 
 spaCy is designed to **make the right thing easy**, where the right thing is to:
 
@@ -67,10 +57,6 @@ spaCy is designed to **make the right thing easy**, where the right thing is to:
   expect this to be exponentially more efficient.
 
 * **Minimize string processing**, and instead compute with arrays of ID ints.
-  
-For the current list of lexical features, see `Lexical Features`_.
-
-.. _lexical features: features.html
 
 Tokenization done right
 =======================
@@ -123,13 +109,6 @@ known emoticons correctly --- doing so would interfere with the way they
 process other punctuation.  This isn't a problem for spaCy: we just add them
 all to the special tokenization rules.
 
-spaCy's tokenizer is also incredibly efficient:
-
-spaCy can create an inverted index of the 1.8 billion word Gigaword corpus,
-in under half an hour --- on a Macbook Air.  See the `inverted
-index tutorial`_.
-
-.. _inverted index tutorial: index_tutorial.html
 
 Comparison with NLTK
 ====================
