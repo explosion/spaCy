@@ -88,7 +88,7 @@ def _make_tag_dict(counts):
     return tagdict
 
 
-cdef class_t _arg_max(weight_t* scores, int n_classes) except 9000:
+cdef int _arg_max(weight_t* scores, int n_classes) except -1:
     cdef int best = 0
     cdef weight_t score = scores[best]
     cdef int i
@@ -99,7 +99,7 @@ cdef class_t _arg_max(weight_t* scores, int n_classes) except 9000:
     return best
 
 
-cdef class_t _arg_max_among(weight_t* scores, list classes):
+cdef int _arg_max_among(weight_t* scores, list classes) except -1:
     cdef int best = classes[0]
     cdef weight_t score = scores[best]
     cdef class_t clas
