@@ -14,6 +14,7 @@ cdef struct Transition:
 cdef class TransitionSystem:
     cdef Pool mem
     cdef readonly int n_moves
+    cdef dict label_ids
 
     cdef const Transition* _moves
 

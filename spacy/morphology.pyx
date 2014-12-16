@@ -5,6 +5,8 @@ import json
 
 from .lemmatizer import Lemmatizer
 from .typedefs cimport id_t
+from . import util
+
 
 UNIV_TAGS = {
     'NULL': NO_TAG,
@@ -35,10 +37,10 @@ cdef class Morphologizer:
     def __init__(self, StringStore strings, data_dir):
         self.mem = Pool()
         self.strings = strings
-        cfg = json.load(open(path.join(data_dir, 'pos', 'config.json')))
+        cfg = json.load(open(path.join(data_dir, 'config.json')))
         tag_map = cfg['tag_map']
         self.tag_names = cfg['tag_names']
-        self.lemmatizer = Lemmatizer(path.join(data_dir, '..', 'wordnet'))
+        self.lemmatizer = Lemmatizer(path.join(util.DATA_DIR, 'wordnet'))
         self._cache = PreshMapArray(len(self.tag_names))
         self.tags = <PosTag*>self.mem.alloc(len(self.tag_names), sizeof(PosTag))
         for i, tag in enumerate(self.tag_names):

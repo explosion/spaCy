@@ -6,10 +6,10 @@ from .arc_eager cimport TransitionSystem
 from ..tokens cimport Tokens, TokenC
 
 
-cdef class Parser:
+cdef class GreedyParser:
     cdef object cfg
     cdef Extractor extractor
-    cdef LinearModel model
+    cdef readonly LinearModel model
     cdef TransitionSystem moves
 
     cpdef int parse(self, Tokens tokens) except -1

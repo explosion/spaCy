@@ -1,3 +1,5 @@
+from libc.stdint cimport uint32_t
+
 import numpy as np
 cimport numpy as np
 
@@ -19,6 +21,10 @@ cdef struct TokenC:
     int pos
     int lemma
     int sense
+    int head
+    int dep_tag
+    uint32_t l_kids
+    uint32_t r_kids
 
 
 ctypedef const Lexeme* const_Lexeme_ptr
