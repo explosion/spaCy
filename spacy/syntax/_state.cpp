@@ -1248,12 +1248,12 @@ struct __pyx_t_5spacy_6syntax_6_state_State;
  * 
  * 
  * cdef struct State:             # <<<<<<<<<<<<<<
- *     TokenC** stack
  *     TokenC* sent
+ *     int* stack
  */
 struct __pyx_t_5spacy_6syntax_6_state_State {
-  struct __pyx_t_5spacy_6tokens_TokenC **stack;
   struct __pyx_t_5spacy_6tokens_TokenC *sent;
+  int *stack;
   int i;
   int sent_len;
   int stack_len;
@@ -2245,7 +2245,6 @@ static PyTypeObject *__pyx_ptype_5spacy_6tokens_Tokens = 0;
 static PyTypeObject *__pyx_ptype_5spacy_6tokens_Token = 0;
 
 /* Module declarations from 'spacy.syntax._state' */
-static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_get_idx(struct __pyx_t_5spacy_6syntax_6_state_State const *, struct __pyx_t_5spacy_6tokens_TokenC const *); /*proto*/
 static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_at_eol(struct __pyx_t_5spacy_6syntax_6_state_State const *); /*proto*/
 static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bit(uint32_t, int); /*proto*/
 #define __Pyx_MODULE_NAME "spacy.syntax._state"
@@ -2310,42 +2309,43 @@ static PyObject *__pyx_tuple__6;
 /* "spacy/syntax/_state.pyx":8
  * 
  * 
- * cdef int add_dep(State *s, TokenC* head, TokenC* child, int label) except -1:             # <<<<<<<<<<<<<<
- *     child.head = head - child
- *     child.dep_tag = label
+ * cdef int add_dep(State *s, int head, int child, int label) except -1:             # <<<<<<<<<<<<<<
+ *     s.sent[child].head = head - child
+ *     s.sent[child].dep_tag = label
  */
 
-static int __pyx_f_5spacy_6syntax_6_state_add_dep(CYTHON_UNUSED struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_v_s, struct __pyx_t_5spacy_6tokens_TokenC *__pyx_v_head, struct __pyx_t_5spacy_6tokens_TokenC *__pyx_v_child, int __pyx_v_label) {
+static int __pyx_f_5spacy_6syntax_6_state_add_dep(struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_v_s, int __pyx_v_head, int __pyx_v_child, int __pyx_v_label) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
+  int __pyx_t_2;
   __Pyx_TraceDeclarations
   __Pyx_RefNannySetupContext("add_dep", 0);
   __Pyx_TraceCall("add_dep", __pyx_f[1], 8);
 
   /* "spacy/syntax/_state.pyx":9
  * 
- * cdef int add_dep(State *s, TokenC* head, TokenC* child, int label) except -1:
- *     child.head = head - child             # <<<<<<<<<<<<<<
- *     child.dep_tag = label
+ * cdef int add_dep(State *s, int head, int child, int label) except -1:
+ *     s.sent[child].head = head - child             # <<<<<<<<<<<<<<
+ *     s.sent[child].dep_tag = label
  *     # Keep a bit-vector tracking child dependencies.  If a word has a child at
  */
-  __pyx_v_child->head = (__pyx_v_head - __pyx_v_child);
+  (__pyx_v_s->sent[__pyx_v_child]).head = (__pyx_v_head - __pyx_v_child);
 
   /* "spacy/syntax/_state.pyx":10
- * cdef int add_dep(State *s, TokenC* head, TokenC* child, int label) except -1:
- *     child.head = head - child
- *     child.dep_tag = label             # <<<<<<<<<<<<<<
+ * cdef int add_dep(State *s, int head, int child, int label) except -1:
+ *     s.sent[child].head = head - child
+ *     s.sent[child].dep_tag = label             # <<<<<<<<<<<<<<
  *     # Keep a bit-vector tracking child dependencies.  If a word has a child at
  *     # offset i from it, set that bit (tracking left and right separately)
  */
-  __pyx_v_child->dep_tag = __pyx_v_label;
+  (__pyx_v_s->sent[__pyx_v_child]).dep_tag = __pyx_v_label;
 
   /* "spacy/syntax/_state.pyx":13
  *     # Keep a bit-vector tracking child dependencies.  If a word has a child at
  *     # offset i from it, set that bit (tracking left and right separately)
  *     if child > head:             # <<<<<<<<<<<<<<
- *         head.r_kids |= 1 << child.head
+ *         s.sent[head].r_kids |= 1 << (-s.sent[child].head)
  *     else:
  */
   __pyx_t_1 = ((__pyx_v_child > __pyx_v_head) != 0);
@@ -2354,32 +2354,34 @@ static int __pyx_f_5spacy_6syntax_6_state_add_dep(CYTHON_UNUSED struct __pyx_t_5
     /* "spacy/syntax/_state.pyx":14
  *     # offset i from it, set that bit (tracking left and right separately)
  *     if child > head:
- *         head.r_kids |= 1 << child.head             # <<<<<<<<<<<<<<
+ *         s.sent[head].r_kids |= 1 << (-s.sent[child].head)             # <<<<<<<<<<<<<<
  *     else:
- *         head.l_kids |= 1 << (-child.head)
+ *         s.sent[head].l_kids |= 1 << s.sent[child].head
  */
-    __pyx_v_head->r_kids = (__pyx_v_head->r_kids | (1 << __pyx_v_child->head));
+    __pyx_t_2 = __pyx_v_head;
+    (__pyx_v_s->sent[__pyx_t_2]).r_kids = ((__pyx_v_s->sent[__pyx_t_2]).r_kids | (1 << (-(__pyx_v_s->sent[__pyx_v_child]).head)));
     goto __pyx_L3;
   }
   /*else*/ {
 
     /* "spacy/syntax/_state.pyx":16
- *         head.r_kids |= 1 << child.head
+ *         s.sent[head].r_kids |= 1 << (-s.sent[child].head)
  *     else:
- *         head.l_kids |= 1 << (-child.head)             # <<<<<<<<<<<<<<
+ *         s.sent[head].l_kids |= 1 << s.sent[child].head             # <<<<<<<<<<<<<<
  * 
  * 
  */
-    __pyx_v_head->l_kids = (__pyx_v_head->l_kids | (1 << (-__pyx_v_child->head)));
+    __pyx_t_2 = __pyx_v_head;
+    (__pyx_v_s->sent[__pyx_t_2]).l_kids = ((__pyx_v_s->sent[__pyx_t_2]).l_kids | (1 << (__pyx_v_s->sent[__pyx_v_child]).head));
   }
   __pyx_L3:;
 
   /* "spacy/syntax/_state.pyx":8
  * 
  * 
- * cdef int add_dep(State *s, TokenC* head, TokenC* child, int label) except -1:             # <<<<<<<<<<<<<<
- *     child.head = head - child
- *     child.dep_tag = label
+ * cdef int add_dep(State *s, int head, int child, int label) except -1:             # <<<<<<<<<<<<<<
+ *     s.sent[child].head = head - child
+ *     s.sent[child].dep_tag = label
  */
 
   /* function exit code */
@@ -2392,14 +2394,13 @@ static int __pyx_f_5spacy_6syntax_6_state_add_dep(CYTHON_UNUSED struct __pyx_t_5
 /* "spacy/syntax/_state.pyx":19
  * 
  * 
- * cdef TokenC* pop_stack(State *s) except NULL:             # <<<<<<<<<<<<<<
+ * cdef int pop_stack(State *s) except -1:             # <<<<<<<<<<<<<<
  *     assert s.stack_len >= 1
- *     cdef TokenC* top = s.stack[0]
+ *     s.stack_len -= 1
  */
 
-static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_pop_stack(struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_v_s) {
-  struct __pyx_t_5spacy_6tokens_TokenC *__pyx_v_top;
-  struct __pyx_t_5spacy_6tokens_TokenC *__pyx_r;
+static int __pyx_f_5spacy_6syntax_6_state_pop_stack(struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_v_s) {
+  int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
@@ -2410,9 +2411,9 @@ static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_pop_
 
   /* "spacy/syntax/_state.pyx":20
  * 
- * cdef TokenC* pop_stack(State *s) except NULL:
+ * cdef int pop_stack(State *s) except -1:
  *     assert s.stack_len >= 1             # <<<<<<<<<<<<<<
- *     cdef TokenC* top = s.stack[0]
+ *     s.stack_len -= 1
  *     s.stack -= 1
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
@@ -2425,61 +2426,44 @@ static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_pop_
   #endif
 
   /* "spacy/syntax/_state.pyx":21
- * cdef TokenC* pop_stack(State *s) except NULL:
+ * cdef int pop_stack(State *s) except -1:
  *     assert s.stack_len >= 1
- *     cdef TokenC* top = s.stack[0]             # <<<<<<<<<<<<<<
- *     s.stack -= 1
- *     s.stack_len -= 1
- */
-  __pyx_v_top = (__pyx_v_s->stack[0]);
-
-  /* "spacy/syntax/_state.pyx":22
- *     assert s.stack_len >= 1
- *     cdef TokenC* top = s.stack[0]
- *     s.stack -= 1             # <<<<<<<<<<<<<<
- *     s.stack_len -= 1
- *     return top
- */
-  __pyx_v_s->stack = (__pyx_v_s->stack - 1);
-
-  /* "spacy/syntax/_state.pyx":23
- *     cdef TokenC* top = s.stack[0]
- *     s.stack -= 1
  *     s.stack_len -= 1             # <<<<<<<<<<<<<<
- *     return top
+ *     s.stack -= 1
  * 
  */
   __pyx_v_s->stack_len = (__pyx_v_s->stack_len - 1);
 
-  /* "spacy/syntax/_state.pyx":24
- *     s.stack -= 1
+  /* "spacy/syntax/_state.pyx":22
+ *     assert s.stack_len >= 1
  *     s.stack_len -= 1
- *     return top             # <<<<<<<<<<<<<<
+ *     s.stack -= 1             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_r = __pyx_v_top;
-  goto __pyx_L0;
+  __pyx_v_s->stack = (__pyx_v_s->stack - 1);
 
   /* "spacy/syntax/_state.pyx":19
  * 
  * 
- * cdef TokenC* pop_stack(State *s) except NULL:             # <<<<<<<<<<<<<<
+ * cdef int pop_stack(State *s) except -1:             # <<<<<<<<<<<<<<
  *     assert s.stack_len >= 1
- *     cdef TokenC* top = s.stack[0]
+ *     s.stack_len -= 1
  */
 
   /* function exit code */
+  __pyx_r = 0;
+  goto __pyx_L0;
   __pyx_L1_error:;
   __Pyx_AddTraceback("spacy.syntax._state.pop_stack", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = NULL;
+  __pyx_r = -1;
   __pyx_L0:;
   __Pyx_TraceReturn(Py_None);
   __Pyx_RefNannyFinishContext();
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pyx":27
+/* "spacy/syntax/_state.pyx":25
  * 
  * 
  * cdef int push_stack(State *s) except -1:             # <<<<<<<<<<<<<<
@@ -2490,58 +2474,60 @@ static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_pop_
 static int __pyx_f_5spacy_6syntax_6_state_push_stack(struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_v_s) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
+  int __pyx_t_1;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_TraceDeclarations
   __Pyx_RefNannySetupContext("push_stack", 0);
-  __Pyx_TraceCall("push_stack", __pyx_f[1], 27);
+  __Pyx_TraceCall("push_stack", __pyx_f[1], 25);
 
-  /* "spacy/syntax/_state.pyx":28
+  /* "spacy/syntax/_state.pyx":26
  * 
  * cdef int push_stack(State *s) except -1:
  *     assert s.i < s.sent_len             # <<<<<<<<<<<<<<
  *     s.stack += 1
- *     s.stack[0] = &s.sent[s.i]
+ *     s.stack[0] = s.i
  */
   #ifndef CYTHON_WITHOUT_ASSERTIONS
   if (unlikely(!Py_OptimizeFlag)) {
     if (unlikely(!((__pyx_v_s->i < __pyx_v_s->sent_len) != 0))) {
       PyErr_SetNone(PyExc_AssertionError);
-      {__pyx_filename = __pyx_f[1]; __pyx_lineno = 28; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+      {__pyx_filename = __pyx_f[1]; __pyx_lineno = 26; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     }
   }
   #endif
 
-  /* "spacy/syntax/_state.pyx":29
+  /* "spacy/syntax/_state.pyx":27
  * cdef int push_stack(State *s) except -1:
  *     assert s.i < s.sent_len
  *     s.stack += 1             # <<<<<<<<<<<<<<
- *     s.stack[0] = &s.sent[s.i]
+ *     s.stack[0] = s.i
  *     s.stack_len += 1
  */
   __pyx_v_s->stack = (__pyx_v_s->stack + 1);
 
-  /* "spacy/syntax/_state.pyx":30
+  /* "spacy/syntax/_state.pyx":28
  *     assert s.i < s.sent_len
  *     s.stack += 1
- *     s.stack[0] = &s.sent[s.i]             # <<<<<<<<<<<<<<
+ *     s.stack[0] = s.i             # <<<<<<<<<<<<<<
  *     s.stack_len += 1
  *     s.i += 1
  */
-  (__pyx_v_s->stack[0]) = (&(__pyx_v_s->sent[__pyx_v_s->i]));
+  __pyx_t_1 = __pyx_v_s->i;
+  (__pyx_v_s->stack[0]) = __pyx_t_1;
 
-  /* "spacy/syntax/_state.pyx":31
+  /* "spacy/syntax/_state.pyx":29
  *     s.stack += 1
- *     s.stack[0] = &s.sent[s.i]
+ *     s.stack[0] = s.i
  *     s.stack_len += 1             # <<<<<<<<<<<<<<
  *     s.i += 1
  * 
  */
   __pyx_v_s->stack_len = (__pyx_v_s->stack_len + 1);
 
-  /* "spacy/syntax/_state.pyx":32
- *     s.stack[0] = &s.sent[s.i]
+  /* "spacy/syntax/_state.pyx":30
+ *     s.stack[0] = s.i
  *     s.stack_len += 1
  *     s.i += 1             # <<<<<<<<<<<<<<
  * 
@@ -2549,7 +2535,7 @@ static int __pyx_f_5spacy_6syntax_6_state_push_stack(struct __pyx_t_5spacy_6synt
  */
   __pyx_v_s->i = (__pyx_v_s->i + 1);
 
-  /* "spacy/syntax/_state.pyx":27
+  /* "spacy/syntax/_state.pyx":25
  * 
  * 
  * cdef int push_stack(State *s) except -1:             # <<<<<<<<<<<<<<
@@ -2569,102 +2555,77 @@ static int __pyx_f_5spacy_6syntax_6_state_push_stack(struct __pyx_t_5spacy_6synt
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pyx":35
+/* "spacy/syntax/_state.pyx":33
  * 
  * 
- * cdef int children_in_buffer(const State *s, const TokenC* target, list gold) except -1:             # <<<<<<<<<<<<<<
+ * cdef int children_in_buffer(const State *s, int head, list gold) except -1:             # <<<<<<<<<<<<<<
  *     # Golds holds an array of head offsets --- the head of word i is i - golds[i]
  *     # Iterate over the tokens of the queue, and check whether their gold head is
  */
 
-static int __pyx_f_5spacy_6syntax_6_state_children_in_buffer(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_v_target, PyObject *__pyx_v_gold) {
+static int __pyx_f_5spacy_6syntax_6_state_children_in_buffer(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, int __pyx_v_head, PyObject *__pyx_v_gold) {
   int __pyx_v_i;
   int __pyx_v_n;
-  struct __pyx_t_5spacy_6tokens_TokenC *__pyx_v_buff_word;
-  struct __pyx_t_5spacy_6tokens_TokenC *__pyx_v_buff_head;
-  int __pyx_v_buff_word_head_offset;
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
   PyObject *__pyx_t_3 = NULL;
-  int __pyx_t_4;
-  int __pyx_t_5;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  int __pyx_t_6;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_TraceDeclarations
   __Pyx_RefNannySetupContext("children_in_buffer", 0);
-  __Pyx_TraceCall("children_in_buffer", __pyx_f[1], 35);
+  __Pyx_TraceCall("children_in_buffer", __pyx_f[1], 33);
 
-  /* "spacy/syntax/_state.pyx":40
+  /* "spacy/syntax/_state.pyx":38
  *     # our target
  *     cdef int i
  *     cdef int n = 0             # <<<<<<<<<<<<<<
- *     cdef TokenC* buff_word
- *     cdef TokenC* buff_head
+ *     for i in range(s.i, s.sent_len):
+ *         if gold[i] == head:
  */
   __pyx_v_n = 0;
 
-  /* "spacy/syntax/_state.pyx":44
- *     cdef TokenC* buff_head
- *     cdef int buff_word_head_offset
+  /* "spacy/syntax/_state.pyx":39
+ *     cdef int i
+ *     cdef int n = 0
  *     for i in range(s.i, s.sent_len):             # <<<<<<<<<<<<<<
- *         buff_word = &s.sent[i]
- *         buff_word_head_offset = gold[i]
+ *         if gold[i] == head:
+ *             n += 1
  */
   __pyx_t_1 = __pyx_v_s->sent_len;
   for (__pyx_t_2 = __pyx_v_s->i; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "spacy/syntax/_state.pyx":45
- *     cdef int buff_word_head_offset
+    /* "spacy/syntax/_state.pyx":40
+ *     cdef int n = 0
  *     for i in range(s.i, s.sent_len):
- *         buff_word = &s.sent[i]             # <<<<<<<<<<<<<<
- *         buff_word_head_offset = gold[i]
- *         buff_head = buff_word + buff_word_head_offset
- */
-    __pyx_v_buff_word = (&(__pyx_v_s->sent[__pyx_v_i]));
-
-    /* "spacy/syntax/_state.pyx":46
- *     for i in range(s.i, s.sent_len):
- *         buff_word = &s.sent[i]
- *         buff_word_head_offset = gold[i]             # <<<<<<<<<<<<<<
- *         buff_head = buff_word + buff_word_head_offset
- *         if buff_head == target:
- */
-    if (unlikely(__pyx_v_gold == Py_None)) {
-      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      {__pyx_filename = __pyx_f[1]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    }
-    __pyx_t_3 = __Pyx_GetItemInt_List(__pyx_v_gold, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(__pyx_t_3 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_t_3); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __pyx_v_buff_word_head_offset = __pyx_t_4;
-
-    /* "spacy/syntax/_state.pyx":47
- *         buff_word = &s.sent[i]
- *         buff_word_head_offset = gold[i]
- *         buff_head = buff_word + buff_word_head_offset             # <<<<<<<<<<<<<<
- *         if buff_head == target:
- *             n += 1
- */
-    __pyx_v_buff_head = (__pyx_v_buff_word + __pyx_v_buff_word_head_offset);
-
-    /* "spacy/syntax/_state.pyx":48
- *         buff_word_head_offset = gold[i]
- *         buff_head = buff_word + buff_word_head_offset
- *         if buff_head == target:             # <<<<<<<<<<<<<<
+ *         if gold[i] == head:             # <<<<<<<<<<<<<<
  *             n += 1
  *     return n
  */
-    __pyx_t_5 = ((__pyx_v_buff_head == __pyx_v_target) != 0);
-    if (__pyx_t_5) {
+    if (unlikely(__pyx_v_gold == Py_None)) {
+      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+      {__pyx_filename = __pyx_f[1]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    }
+    __pyx_t_3 = __Pyx_GetItemInt_List(__pyx_v_gold, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(__pyx_t_3 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_head); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    if (__pyx_t_6) {
 
-      /* "spacy/syntax/_state.pyx":49
- *         buff_head = buff_word + buff_word_head_offset
- *         if buff_head == target:
+      /* "spacy/syntax/_state.pyx":41
+ *     for i in range(s.i, s.sent_len):
+ *         if gold[i] == head:
  *             n += 1             # <<<<<<<<<<<<<<
  *     return n
  * 
@@ -2675,8 +2636,8 @@ static int __pyx_f_5spacy_6syntax_6_state_children_in_buffer(struct __pyx_t_5spa
     __pyx_L5:;
   }
 
-  /* "spacy/syntax/_state.pyx":50
- *         if buff_head == target:
+  /* "spacy/syntax/_state.pyx":42
+ *         if gold[i] == head:
  *             n += 1
  *     return n             # <<<<<<<<<<<<<<
  * 
@@ -2685,10 +2646,10 @@ static int __pyx_f_5spacy_6syntax_6_state_children_in_buffer(struct __pyx_t_5spa
   __pyx_r = __pyx_v_n;
   goto __pyx_L0;
 
-  /* "spacy/syntax/_state.pyx":35
+  /* "spacy/syntax/_state.pyx":33
  * 
  * 
- * cdef int children_in_buffer(const State *s, const TokenC* target, list gold) except -1:             # <<<<<<<<<<<<<<
+ * cdef int children_in_buffer(const State *s, int head, list gold) except -1:             # <<<<<<<<<<<<<<
  *     # Golds holds an array of head offsets --- the head of word i is i - golds[i]
  *     # Iterate over the tokens of the queue, and check whether their gold head is
  */
@@ -2696,6 +2657,8 @@ static int __pyx_f_5spacy_6syntax_6_state_children_in_buffer(struct __pyx_t_5spa
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
   __Pyx_AddTraceback("spacy.syntax._state.children_in_buffer", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
@@ -2704,17 +2667,15 @@ static int __pyx_f_5spacy_6syntax_6_state_children_in_buffer(struct __pyx_t_5spa
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pyx":53
+/* "spacy/syntax/_state.pyx":45
  * 
  * 
- * cdef int head_in_buffer(const State *s, const TokenC* target, list gold) except -1:             # <<<<<<<<<<<<<<
- *     cdef int target_idx = get_idx(s, target)
- *     cdef int target_head_idx = target_idx + gold[target_idx]
+ * cdef int head_in_buffer(const State *s, const int child, list gold) except -1:             # <<<<<<<<<<<<<<
+ *     return gold[child] >= s.i
+ * 
  */
 
-static int __pyx_f_5spacy_6syntax_6_state_head_in_buffer(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_v_target, PyObject *__pyx_v_gold) {
-  int __pyx_v_target_idx;
-  int __pyx_v_target_head_idx;
+static int __pyx_f_5spacy_6syntax_6_state_head_in_buffer(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, int const __pyx_v_child, PyObject *__pyx_v_gold) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
@@ -2726,56 +2687,37 @@ static int __pyx_f_5spacy_6syntax_6_state_head_in_buffer(struct __pyx_t_5spacy_6
   int __pyx_clineno = 0;
   __Pyx_TraceDeclarations
   __Pyx_RefNannySetupContext("head_in_buffer", 0);
-  __Pyx_TraceCall("head_in_buffer", __pyx_f[1], 53);
+  __Pyx_TraceCall("head_in_buffer", __pyx_f[1], 45);
 
-  /* "spacy/syntax/_state.pyx":54
+  /* "spacy/syntax/_state.pyx":46
  * 
- * cdef int head_in_buffer(const State *s, const TokenC* target, list gold) except -1:
- *     cdef int target_idx = get_idx(s, target)             # <<<<<<<<<<<<<<
- *     cdef int target_head_idx = target_idx + gold[target_idx]
- *     return target_head_idx >= s.i
- */
-  __pyx_v_target_idx = __pyx_f_5spacy_6syntax_6_state_get_idx(__pyx_v_s, __pyx_v_target);
-
-  /* "spacy/syntax/_state.pyx":55
- * cdef int head_in_buffer(const State *s, const TokenC* target, list gold) except -1:
- *     cdef int target_idx = get_idx(s, target)
- *     cdef int target_head_idx = target_idx + gold[target_idx]             # <<<<<<<<<<<<<<
- *     return target_head_idx >= s.i
+ * cdef int head_in_buffer(const State *s, const int child, list gold) except -1:
+ *     return gold[child] >= s.i             # <<<<<<<<<<<<<<
+ * 
  * 
  */
-  __pyx_t_1 = __Pyx_PyInt_From_int(__pyx_v_target_idx); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_1);
   if (unlikely(__pyx_v_gold == Py_None)) {
     PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-    {__pyx_filename = __pyx_f[1]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    {__pyx_filename = __pyx_f[1]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   }
-  __pyx_t_2 = __Pyx_GetItemInt_List(__pyx_v_gold, __pyx_v_target_idx, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(__pyx_t_2 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+  __pyx_t_1 = __Pyx_GetItemInt_List(__pyx_v_gold, __pyx_v_child, int const , 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(__pyx_t_1 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+  __Pyx_GOTREF(__pyx_t_1);
+  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_s->i); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyNumber_Add(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_3);
+  __pyx_t_3 = PyObject_RichCompare(__pyx_t_1, __pyx_t_2, Py_GE); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
   __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_t_3); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 55; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_t_3); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_v_target_head_idx = __pyx_t_4;
-
-  /* "spacy/syntax/_state.pyx":56
- *     cdef int target_idx = get_idx(s, target)
- *     cdef int target_head_idx = target_idx + gold[target_idx]
- *     return target_head_idx >= s.i             # <<<<<<<<<<<<<<
- * 
- * 
- */
-  __pyx_r = (__pyx_v_target_head_idx >= __pyx_v_s->i);
+  __pyx_r = __pyx_t_4;
   goto __pyx_L0;
 
-  /* "spacy/syntax/_state.pyx":53
+  /* "spacy/syntax/_state.pyx":45
  * 
  * 
- * cdef int head_in_buffer(const State *s, const TokenC* target, list gold) except -1:             # <<<<<<<<<<<<<<
- *     cdef int target_idx = get_idx(s, target)
- *     cdef int target_head_idx = target_idx + gold[target_idx]
+ * cdef int head_in_buffer(const State *s, const int child, list gold) except -1:             # <<<<<<<<<<<<<<
+ *     return gold[child] >= s.i
+ * 
  */
 
   /* function exit code */
@@ -2791,136 +2733,91 @@ static int __pyx_f_5spacy_6syntax_6_state_head_in_buffer(struct __pyx_t_5spacy_6
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pyx":59
+/* "spacy/syntax/_state.pyx":49
  * 
  * 
- * cdef int children_in_stack(const State *s, const TokenC* target, list gold) except -1:             # <<<<<<<<<<<<<<
- *     if s.stack_len == 0:
- *         return 0
+ * cdef int children_in_stack(const State *s, const int head, list gold) except -1:             # <<<<<<<<<<<<<<
+ *     cdef int i
+ *     cdef int n = 0
  */
 
-static int __pyx_f_5spacy_6syntax_6_state_children_in_stack(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_v_target, PyObject *__pyx_v_gold) {
+static int __pyx_f_5spacy_6syntax_6_state_children_in_stack(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, int const __pyx_v_head, PyObject *__pyx_v_gold) {
   int __pyx_v_i;
   int __pyx_v_n;
-  struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_v_stack_word;
-  struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_v_stack_word_head;
-  int __pyx_v_stack_word_head_offset;
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
   int __pyx_t_3;
-  int __pyx_t_4;
+  PyObject *__pyx_t_4 = NULL;
   PyObject *__pyx_t_5 = NULL;
+  PyObject *__pyx_t_6 = NULL;
+  int __pyx_t_7;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_TraceDeclarations
   __Pyx_RefNannySetupContext("children_in_stack", 0);
-  __Pyx_TraceCall("children_in_stack", __pyx_f[1], 59);
+  __Pyx_TraceCall("children_in_stack", __pyx_f[1], 49);
 
-  /* "spacy/syntax/_state.pyx":60
- * 
- * cdef int children_in_stack(const State *s, const TokenC* target, list gold) except -1:
- *     if s.stack_len == 0:             # <<<<<<<<<<<<<<
- *         return 0
- *     cdef int i
- */
-  __pyx_t_1 = ((__pyx_v_s->stack_len == 0) != 0);
-  if (__pyx_t_1) {
-
-    /* "spacy/syntax/_state.pyx":61
- * cdef int children_in_stack(const State *s, const TokenC* target, list gold) except -1:
- *     if s.stack_len == 0:
- *         return 0             # <<<<<<<<<<<<<<
- *     cdef int i
- *     cdef int n = 0
- */
-    __pyx_r = 0;
-    goto __pyx_L0;
-  }
-
-  /* "spacy/syntax/_state.pyx":63
- *         return 0
+  /* "spacy/syntax/_state.pyx":51
+ * cdef int children_in_stack(const State *s, const int head, list gold) except -1:
  *     cdef int i
  *     cdef int n = 0             # <<<<<<<<<<<<<<
- *     cdef const TokenC* stack_word
- *     cdef const TokenC* stack_word_head
+ *     for i in range(s.stack_len):
+ *         if gold[s.stack[-i]] == head:
  */
   __pyx_v_n = 0;
 
-  /* "spacy/syntax/_state.pyx":67
- *     cdef const TokenC* stack_word_head
- *     cdef int stack_word_head_offset
+  /* "spacy/syntax/_state.pyx":52
+ *     cdef int i
+ *     cdef int n = 0
  *     for i in range(s.stack_len):             # <<<<<<<<<<<<<<
- *         stack_word = (s.stack - i)[0]
- *         stack_word_head_offset = gold[get_idx(s, stack_word)]
- */
-  __pyx_t_2 = __pyx_v_s->stack_len;
-  for (__pyx_t_3 = 0; __pyx_t_3 < __pyx_t_2; __pyx_t_3+=1) {
-    __pyx_v_i = __pyx_t_3;
-
-    /* "spacy/syntax/_state.pyx":68
- *     cdef int stack_word_head_offset
- *     for i in range(s.stack_len):
- *         stack_word = (s.stack - i)[0]             # <<<<<<<<<<<<<<
- *         stack_word_head_offset = gold[get_idx(s, stack_word)]
- *         stack_word_head = (s.stack + stack_word_head_offset)[0]
- */
-    __pyx_v_stack_word = ((__pyx_v_s->stack - __pyx_v_i)[0]);
-
-    /* "spacy/syntax/_state.pyx":69
- *     for i in range(s.stack_len):
- *         stack_word = (s.stack - i)[0]
- *         stack_word_head_offset = gold[get_idx(s, stack_word)]             # <<<<<<<<<<<<<<
- *         stack_word_head = (s.stack + stack_word_head_offset)[0]
- *         if stack_word_head == target:
- */
-    if (unlikely(__pyx_v_gold == Py_None)) {
-      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      {__pyx_filename = __pyx_f[1]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    }
-    __pyx_t_4 = __pyx_f_5spacy_6syntax_6_state_get_idx(__pyx_v_s, __pyx_v_stack_word);
-    __pyx_t_5 = __Pyx_GetItemInt_List(__pyx_v_gold, __pyx_t_4, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(__pyx_t_5 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_t_5); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 69; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_v_stack_word_head_offset = __pyx_t_4;
-
-    /* "spacy/syntax/_state.pyx":70
- *         stack_word = (s.stack - i)[0]
- *         stack_word_head_offset = gold[get_idx(s, stack_word)]
- *         stack_word_head = (s.stack + stack_word_head_offset)[0]             # <<<<<<<<<<<<<<
- *         if stack_word_head == target:
+ *         if gold[s.stack[-i]] == head:
  *             n += 1
  */
-    __pyx_v_stack_word_head = ((__pyx_v_s->stack + __pyx_v_stack_word_head_offset)[0]);
+  __pyx_t_1 = __pyx_v_s->stack_len;
+  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
+    __pyx_v_i = __pyx_t_2;
 
-    /* "spacy/syntax/_state.pyx":71
- *         stack_word_head_offset = gold[get_idx(s, stack_word)]
- *         stack_word_head = (s.stack + stack_word_head_offset)[0]
- *         if stack_word_head == target:             # <<<<<<<<<<<<<<
+    /* "spacy/syntax/_state.pyx":53
+ *     cdef int n = 0
+ *     for i in range(s.stack_len):
+ *         if gold[s.stack[-i]] == head:             # <<<<<<<<<<<<<<
  *             n += 1
  *     return n
  */
-    __pyx_t_1 = ((__pyx_v_stack_word_head == __pyx_v_target) != 0);
-    if (__pyx_t_1) {
+    if (unlikely(__pyx_v_gold == Py_None)) {
+      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+      {__pyx_filename = __pyx_f[1]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    }
+    __pyx_t_3 = (__pyx_v_s->stack[(-__pyx_v_i)]);
+    __pyx_t_4 = __Pyx_GetItemInt_List(__pyx_v_gold, __pyx_t_3, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_head); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_5);
+    __pyx_t_6 = PyObject_RichCompare(__pyx_t_4, __pyx_t_5, Py_EQ); __Pyx_XGOTREF(__pyx_t_6); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_t_6); if (unlikely(__pyx_t_7 < 0)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
+    if (__pyx_t_7) {
 
-      /* "spacy/syntax/_state.pyx":72
- *         stack_word_head = (s.stack + stack_word_head_offset)[0]
- *         if stack_word_head == target:
+      /* "spacy/syntax/_state.pyx":54
+ *     for i in range(s.stack_len):
+ *         if gold[s.stack[-i]] == head:
  *             n += 1             # <<<<<<<<<<<<<<
  *     return n
  * 
  */
       __pyx_v_n = (__pyx_v_n + 1);
-      goto __pyx_L6;
+      goto __pyx_L5;
     }
-    __pyx_L6:;
+    __pyx_L5:;
   }
 
-  /* "spacy/syntax/_state.pyx":73
- *         if stack_word_head == target:
+  /* "spacy/syntax/_state.pyx":55
+ *         if gold[s.stack[-i]] == head:
  *             n += 1
  *     return n             # <<<<<<<<<<<<<<
  * 
@@ -2929,17 +2826,19 @@ static int __pyx_f_5spacy_6syntax_6_state_children_in_stack(struct __pyx_t_5spac
   __pyx_r = __pyx_v_n;
   goto __pyx_L0;
 
-  /* "spacy/syntax/_state.pyx":59
+  /* "spacy/syntax/_state.pyx":49
  * 
  * 
- * cdef int children_in_stack(const State *s, const TokenC* target, list gold) except -1:             # <<<<<<<<<<<<<<
- *     if s.stack_len == 0:
- *         return 0
+ * cdef int children_in_stack(const State *s, const int head, list gold) except -1:             # <<<<<<<<<<<<<<
+ *     cdef int i
+ *     cdef int n = 0
  */
 
   /* function exit code */
   __pyx_L1_error:;
+  __Pyx_XDECREF(__pyx_t_4);
   __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_6);
   __Pyx_AddTraceback("spacy.syntax._state.children_in_stack", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
@@ -2948,103 +2847,67 @@ static int __pyx_f_5spacy_6syntax_6_state_children_in_stack(struct __pyx_t_5spac
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pyx":76
+/* "spacy/syntax/_state.pyx":58
  * 
  * 
- * cdef int head_in_stack(const State *s, const TokenC* target, list gold) except -1:             # <<<<<<<<<<<<<<
- *     if s.stack_len == 0:
- *         return 0
+ * cdef int head_in_stack(const State *s, const int child, list gold) except -1:             # <<<<<<<<<<<<<<
+ *     cdef int i
+ *     for i in range(s.stack_len):
  */
 
-static int __pyx_f_5spacy_6syntax_6_state_head_in_stack(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_v_target, PyObject *__pyx_v_gold) {
-  int __pyx_v_head_offset;
-  struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_v_target_head;
+static int __pyx_f_5spacy_6syntax_6_state_head_in_stack(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, int const __pyx_v_child, PyObject *__pyx_v_gold) {
   int __pyx_v_i;
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
   PyObject *__pyx_t_3 = NULL;
-  int __pyx_t_4;
+  PyObject *__pyx_t_4 = NULL;
+  PyObject *__pyx_t_5 = NULL;
+  int __pyx_t_6;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
   __Pyx_TraceDeclarations
   __Pyx_RefNannySetupContext("head_in_stack", 0);
-  __Pyx_TraceCall("head_in_stack", __pyx_f[1], 76);
+  __Pyx_TraceCall("head_in_stack", __pyx_f[1], 58);
 
-  /* "spacy/syntax/_state.pyx":77
- * 
- * cdef int head_in_stack(const State *s, const TokenC* target, list gold) except -1:
- *     if s.stack_len == 0:             # <<<<<<<<<<<<<<
- *         return 0
- *     cdef int head_offset = gold[get_idx(s, target)]
- */
-  __pyx_t_1 = ((__pyx_v_s->stack_len == 0) != 0);
-  if (__pyx_t_1) {
-
-    /* "spacy/syntax/_state.pyx":78
- * cdef int head_in_stack(const State *s, const TokenC* target, list gold) except -1:
- *     if s.stack_len == 0:
- *         return 0             # <<<<<<<<<<<<<<
- *     cdef int head_offset = gold[get_idx(s, target)]
- *     cdef const TokenC* target_head = target + head_offset
- */
-    __pyx_r = 0;
-    goto __pyx_L0;
-  }
-
-  /* "spacy/syntax/_state.pyx":79
- *     if s.stack_len == 0:
- *         return 0
- *     cdef int head_offset = gold[get_idx(s, target)]             # <<<<<<<<<<<<<<
- *     cdef const TokenC* target_head = target + head_offset
- *     cdef int i
- */
-  if (unlikely(__pyx_v_gold == Py_None)) {
-    PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-    {__pyx_filename = __pyx_f[1]; __pyx_lineno = 79; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  }
-  __pyx_t_2 = __pyx_f_5spacy_6syntax_6_state_get_idx(__pyx_v_s, __pyx_v_target);
-  __pyx_t_3 = __Pyx_GetItemInt_List(__pyx_v_gold, __pyx_t_2, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(__pyx_t_3 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 79; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
-  __Pyx_GOTREF(__pyx_t_3);
-  __pyx_t_2 = __Pyx_PyInt_As_int(__pyx_t_3); if (unlikely((__pyx_t_2 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 79; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_v_head_offset = __pyx_t_2;
-
-  /* "spacy/syntax/_state.pyx":80
- *         return 0
- *     cdef int head_offset = gold[get_idx(s, target)]
- *     cdef const TokenC* target_head = target + head_offset             # <<<<<<<<<<<<<<
- *     cdef int i
- *     for i in range(s.stack_len):
- */
-  __pyx_v_target_head = (__pyx_v_target + __pyx_v_head_offset);
-
-  /* "spacy/syntax/_state.pyx":82
- *     cdef const TokenC* target_head = target + head_offset
+  /* "spacy/syntax/_state.pyx":60
+ * cdef int head_in_stack(const State *s, const int child, list gold) except -1:
  *     cdef int i
  *     for i in range(s.stack_len):             # <<<<<<<<<<<<<<
- *         if target_head == (s.stack - i)[0]:
+ *         if gold[child] == s.stack[-i]:
  *             return 1
  */
-  __pyx_t_2 = __pyx_v_s->stack_len;
-  for (__pyx_t_4 = 0; __pyx_t_4 < __pyx_t_2; __pyx_t_4+=1) {
-    __pyx_v_i = __pyx_t_4;
+  __pyx_t_1 = __pyx_v_s->stack_len;
+  for (__pyx_t_2 = 0; __pyx_t_2 < __pyx_t_1; __pyx_t_2+=1) {
+    __pyx_v_i = __pyx_t_2;
 
-    /* "spacy/syntax/_state.pyx":83
+    /* "spacy/syntax/_state.pyx":61
  *     cdef int i
  *     for i in range(s.stack_len):
- *         if target_head == (s.stack - i)[0]:             # <<<<<<<<<<<<<<
+ *         if gold[child] == s.stack[-i]:             # <<<<<<<<<<<<<<
  *             return 1
  *     return 0
  */
-    __pyx_t_1 = ((__pyx_v_target_head == ((__pyx_v_s->stack - __pyx_v_i)[0])) != 0);
-    if (__pyx_t_1) {
+    if (unlikely(__pyx_v_gold == Py_None)) {
+      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
+      {__pyx_filename = __pyx_f[1]; __pyx_lineno = 61; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    }
+    __pyx_t_3 = __Pyx_GetItemInt_List(__pyx_v_gold, __pyx_v_child, int const , 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(__pyx_t_3 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 61; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
+    __Pyx_GOTREF(__pyx_t_3);
+    __pyx_t_4 = __Pyx_PyInt_From_int((__pyx_v_s->stack[(-__pyx_v_i)])); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 61; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_4);
+    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 61; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
+    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
+    __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 61; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+    if (__pyx_t_6) {
 
-      /* "spacy/syntax/_state.pyx":84
+      /* "spacy/syntax/_state.pyx":62
  *     for i in range(s.stack_len):
- *         if target_head == (s.stack - i)[0]:
+ *         if gold[child] == s.stack[-i]:
  *             return 1             # <<<<<<<<<<<<<<
  *     return 0
  * 
@@ -3054,8 +2917,8 @@ static int __pyx_f_5spacy_6syntax_6_state_head_in_stack(struct __pyx_t_5spacy_6s
     }
   }
 
-  /* "spacy/syntax/_state.pyx":85
- *         if target_head == (s.stack - i)[0]:
+  /* "spacy/syntax/_state.pyx":63
+ *         if gold[child] == s.stack[-i]:
  *             return 1
  *     return 0             # <<<<<<<<<<<<<<
  * 
@@ -3064,17 +2927,19 @@ static int __pyx_f_5spacy_6syntax_6_state_head_in_stack(struct __pyx_t_5spacy_6s
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "spacy/syntax/_state.pyx":76
+  /* "spacy/syntax/_state.pyx":58
  * 
  * 
- * cdef int head_in_stack(const State *s, const TokenC* target, list gold) except -1:             # <<<<<<<<<<<<<<
- *     if s.stack_len == 0:
- *         return 0
+ * cdef int head_in_stack(const State *s, const int child, list gold) except -1:             # <<<<<<<<<<<<<<
+ *     cdef int i
+ *     for i in range(s.stack_len):
  */
 
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_3);
+  __Pyx_XDECREF(__pyx_t_4);
+  __Pyx_XDECREF(__pyx_t_5);
   __Pyx_AddTraceback("spacy.syntax._state.head_in_stack", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = -1;
   __pyx_L0:;
@@ -3083,74 +2948,74 @@ static int __pyx_f_5spacy_6syntax_6_state_head_in_stack(struct __pyx_t_5spacy_6s
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pyx":88
+/* "spacy/syntax/_state.pyx":66
  * 
  * 
- * cdef TokenC* get_left(State* s, TokenC* head, int idx) nogil:             # <<<<<<<<<<<<<<
+ * cdef const TokenC* get_left(const State* s, const TokenC* head, const int idx) nogil:             # <<<<<<<<<<<<<<
  *     cdef uint32_t kids = head.l_kids
  *     if kids == 0:
  */
 
-static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_left(struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_v_s, struct __pyx_t_5spacy_6tokens_TokenC *__pyx_v_head, int __pyx_v_idx) {
+static struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_f_5spacy_6syntax_6_state_get_left(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_v_head, int const __pyx_v_idx) {
   uint32_t __pyx_v_kids;
   int __pyx_v_offset;
-  struct __pyx_t_5spacy_6tokens_TokenC *__pyx_v_child;
-  struct __pyx_t_5spacy_6tokens_TokenC *__pyx_r;
+  struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_v_child;
+  struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_r;
   uint32_t __pyx_t_1;
   int __pyx_t_2;
 
-  /* "spacy/syntax/_state.pyx":89
+  /* "spacy/syntax/_state.pyx":67
  * 
- * cdef TokenC* get_left(State* s, TokenC* head, int idx) nogil:
+ * cdef const TokenC* get_left(const State* s, const TokenC* head, const int idx) nogil:
  *     cdef uint32_t kids = head.l_kids             # <<<<<<<<<<<<<<
  *     if kids == 0:
- *         return s.sent - 1
+ *         return NULL
  */
   __pyx_t_1 = __pyx_v_head->l_kids;
   __pyx_v_kids = __pyx_t_1;
 
-  /* "spacy/syntax/_state.pyx":90
- * cdef TokenC* get_left(State* s, TokenC* head, int idx) nogil:
+  /* "spacy/syntax/_state.pyx":68
+ * cdef const TokenC* get_left(const State* s, const TokenC* head, const int idx) nogil:
  *     cdef uint32_t kids = head.l_kids
  *     if kids == 0:             # <<<<<<<<<<<<<<
- *         return s.sent - 1
+ *         return NULL
  *     cdef int offset = _nth_significant_bit(kids, idx)
  */
   __pyx_t_2 = ((__pyx_v_kids == 0) != 0);
   if (__pyx_t_2) {
 
-    /* "spacy/syntax/_state.pyx":91
+    /* "spacy/syntax/_state.pyx":69
  *     cdef uint32_t kids = head.l_kids
  *     if kids == 0:
- *         return s.sent - 1             # <<<<<<<<<<<<<<
+ *         return NULL             # <<<<<<<<<<<<<<
  *     cdef int offset = _nth_significant_bit(kids, idx)
- *     cdef TokenC* child = head - offset
+ *     cdef const TokenC* child = head - offset
  */
-    __pyx_r = (__pyx_v_s->sent - 1);
+    __pyx_r = NULL;
     goto __pyx_L0;
   }
 
-  /* "spacy/syntax/_state.pyx":92
+  /* "spacy/syntax/_state.pyx":70
  *     if kids == 0:
- *         return s.sent - 1
+ *         return NULL
  *     cdef int offset = _nth_significant_bit(kids, idx)             # <<<<<<<<<<<<<<
- *     cdef TokenC* child = head - offset
+ *     cdef const TokenC* child = head - offset
  *     if child >= s.sent:
  */
   __pyx_v_offset = __pyx_f_5spacy_6syntax_6_state__nth_significant_bit(__pyx_v_kids, __pyx_v_idx);
 
-  /* "spacy/syntax/_state.pyx":93
- *         return s.sent - 1
+  /* "spacy/syntax/_state.pyx":71
+ *         return NULL
  *     cdef int offset = _nth_significant_bit(kids, idx)
- *     cdef TokenC* child = head - offset             # <<<<<<<<<<<<<<
+ *     cdef const TokenC* child = head - offset             # <<<<<<<<<<<<<<
  *     if child >= s.sent:
  *         return child
  */
   __pyx_v_child = (__pyx_v_head - __pyx_v_offset);
 
-  /* "spacy/syntax/_state.pyx":94
+  /* "spacy/syntax/_state.pyx":72
  *     cdef int offset = _nth_significant_bit(kids, idx)
- *     cdef TokenC* child = head - offset
+ *     cdef const TokenC* child = head - offset
  *     if child >= s.sent:             # <<<<<<<<<<<<<<
  *         return child
  *     else:
@@ -3158,8 +3023,8 @@ static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_
   __pyx_t_2 = ((__pyx_v_child >= __pyx_v_s->sent) != 0);
   if (__pyx_t_2) {
 
-    /* "spacy/syntax/_state.pyx":95
- *     cdef TokenC* child = head - offset
+    /* "spacy/syntax/_state.pyx":73
+ *     cdef const TokenC* child = head - offset
  *     if child >= s.sent:
  *         return child             # <<<<<<<<<<<<<<
  *     else:
@@ -3170,7 +3035,7 @@ static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_
   }
   /*else*/ {
 
-    /* "spacy/syntax/_state.pyx":97
+    /* "spacy/syntax/_state.pyx":75
  *         return child
  *     else:
  *         return s.sent - 1             # <<<<<<<<<<<<<<
@@ -3181,10 +3046,10 @@ static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_
     goto __pyx_L0;
   }
 
-  /* "spacy/syntax/_state.pyx":88
+  /* "spacy/syntax/_state.pyx":66
  * 
  * 
- * cdef TokenC* get_left(State* s, TokenC* head, int idx) nogil:             # <<<<<<<<<<<<<<
+ * cdef const TokenC* get_left(const State* s, const TokenC* head, const int idx) nogil:             # <<<<<<<<<<<<<<
  *     cdef uint32_t kids = head.l_kids
  *     if kids == 0:
  */
@@ -3194,74 +3059,74 @@ static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pyx":100
+/* "spacy/syntax/_state.pyx":78
  * 
  * 
- * cdef TokenC* get_right(State* s, TokenC* head, int idx) nogil:             # <<<<<<<<<<<<<<
+ * cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) nogil:             # <<<<<<<<<<<<<<
  *     cdef uint32_t kids = head.r_kids
  *     if kids == 0:
  */
 
-static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_right(struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_v_s, struct __pyx_t_5spacy_6tokens_TokenC *__pyx_v_head, int __pyx_v_idx) {
+static struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_f_5spacy_6syntax_6_state_get_right(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_v_head, int const __pyx_v_idx) {
   uint32_t __pyx_v_kids;
   int __pyx_v_offset;
-  struct __pyx_t_5spacy_6tokens_TokenC *__pyx_v_child;
-  struct __pyx_t_5spacy_6tokens_TokenC *__pyx_r;
+  struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_v_child;
+  struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_r;
   uint32_t __pyx_t_1;
   int __pyx_t_2;
 
-  /* "spacy/syntax/_state.pyx":101
+  /* "spacy/syntax/_state.pyx":79
  * 
- * cdef TokenC* get_right(State* s, TokenC* head, int idx) nogil:
+ * cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) nogil:
  *     cdef uint32_t kids = head.r_kids             # <<<<<<<<<<<<<<
  *     if kids == 0:
- *         return s.sent - 1
+ *         return NULL
  */
   __pyx_t_1 = __pyx_v_head->r_kids;
   __pyx_v_kids = __pyx_t_1;
 
-  /* "spacy/syntax/_state.pyx":102
- * cdef TokenC* get_right(State* s, TokenC* head, int idx) nogil:
+  /* "spacy/syntax/_state.pyx":80
+ * cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) nogil:
  *     cdef uint32_t kids = head.r_kids
  *     if kids == 0:             # <<<<<<<<<<<<<<
- *         return s.sent - 1
+ *         return NULL
  *     cdef int offset = _nth_significant_bit(kids, idx)
  */
   __pyx_t_2 = ((__pyx_v_kids == 0) != 0);
   if (__pyx_t_2) {
 
-    /* "spacy/syntax/_state.pyx":103
+    /* "spacy/syntax/_state.pyx":81
  *     cdef uint32_t kids = head.r_kids
  *     if kids == 0:
- *         return s.sent - 1             # <<<<<<<<<<<<<<
+ *         return NULL             # <<<<<<<<<<<<<<
  *     cdef int offset = _nth_significant_bit(kids, idx)
- *     cdef TokenC* child = head + offset
+ *     cdef const TokenC* child = head + offset
  */
-    __pyx_r = (__pyx_v_s->sent - 1);
+    __pyx_r = NULL;
     goto __pyx_L0;
   }
 
-  /* "spacy/syntax/_state.pyx":104
+  /* "spacy/syntax/_state.pyx":82
  *     if kids == 0:
- *         return s.sent - 1
+ *         return NULL
  *     cdef int offset = _nth_significant_bit(kids, idx)             # <<<<<<<<<<<<<<
- *     cdef TokenC* child = head + offset
+ *     cdef const TokenC* child = head + offset
  *     if child < (s.sent + s.sent_len):
  */
   __pyx_v_offset = __pyx_f_5spacy_6syntax_6_state__nth_significant_bit(__pyx_v_kids, __pyx_v_idx);
 
-  /* "spacy/syntax/_state.pyx":105
- *         return s.sent - 1
+  /* "spacy/syntax/_state.pyx":83
+ *         return NULL
  *     cdef int offset = _nth_significant_bit(kids, idx)
- *     cdef TokenC* child = head + offset             # <<<<<<<<<<<<<<
+ *     cdef const TokenC* child = head + offset             # <<<<<<<<<<<<<<
  *     if child < (s.sent + s.sent_len):
  *         return child
  */
   __pyx_v_child = (__pyx_v_head + __pyx_v_offset);
 
-  /* "spacy/syntax/_state.pyx":106
+  /* "spacy/syntax/_state.pyx":84
  *     cdef int offset = _nth_significant_bit(kids, idx)
- *     cdef TokenC* child = head + offset
+ *     cdef const TokenC* child = head + offset
  *     if child < (s.sent + s.sent_len):             # <<<<<<<<<<<<<<
  *         return child
  *     else:
@@ -3269,8 +3134,8 @@ static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_
   __pyx_t_2 = ((__pyx_v_child < (__pyx_v_s->sent + __pyx_v_s->sent_len)) != 0);
   if (__pyx_t_2) {
 
-    /* "spacy/syntax/_state.pyx":107
- *     cdef TokenC* child = head + offset
+    /* "spacy/syntax/_state.pyx":85
+ *     cdef const TokenC* child = head + offset
  *     if child < (s.sent + s.sent_len):
  *         return child             # <<<<<<<<<<<<<<
  *     else:
@@ -3281,7 +3146,7 @@ static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_
   }
   /*else*/ {
 
-    /* "spacy/syntax/_state.pyx":109
+    /* "spacy/syntax/_state.pyx":87
  *         return child
  *     else:
  *         return s.sent - 1             # <<<<<<<<<<<<<<
@@ -3292,10 +3157,10 @@ static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_
     goto __pyx_L0;
   }
 
-  /* "spacy/syntax/_state.pyx":100
+  /* "spacy/syntax/_state.pyx":78
  * 
  * 
- * cdef TokenC* get_right(State* s, TokenC* head, int idx) nogil:             # <<<<<<<<<<<<<<
+ * cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) nogil:             # <<<<<<<<<<<<<<
  *     cdef uint32_t kids = head.r_kids
  *     if kids == 0:
  */
@@ -3305,7 +3170,7 @@ static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pyx":115
+/* "spacy/syntax/_state.pyx":93
  * 
  * 
  * cdef State* init_state(Pool mem, TokenC* sent, const int sent_length) except NULL:             # <<<<<<<<<<<<<<
@@ -3316,8 +3181,7 @@ static struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_
 static struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_f_5spacy_6syntax_6_state_init_state(struct __pyx_obj_5cymem_5cymem_Pool *__pyx_v_mem, struct __pyx_t_5spacy_6tokens_TokenC *__pyx_v_sent, int const __pyx_v_sent_length) {
   int __pyx_v_padded_len;
   struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_v_s;
-  struct __pyx_t_5spacy_6tokens_TokenC *__pyx_v_eol_token;
-  CYTHON_UNUSED long __pyx_v_i;
+  long __pyx_v_i;
   struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_r;
   __Pyx_RefNannyDeclarations
   void *__pyx_t_1;
@@ -3327,95 +3191,93 @@ static struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_f_5spacy_6syntax_6_sta
   int __pyx_clineno = 0;
   __Pyx_TraceDeclarations
   __Pyx_RefNannySetupContext("init_state", 0);
-  __Pyx_TraceCall("init_state", __pyx_f[1], 115);
+  __Pyx_TraceCall("init_state", __pyx_f[1], 93);
 
-  /* "spacy/syntax/_state.pyx":116
+  /* "spacy/syntax/_state.pyx":94
  * 
  * cdef State* init_state(Pool mem, TokenC* sent, const int sent_length) except NULL:
  *     cdef int padded_len = sent_length + PADDING + PADDING             # <<<<<<<<<<<<<<
  *     cdef State* s = <State*>mem.alloc(1, sizeof(State))
- *     s.stack = <TokenC**>mem.alloc(padded_len, sizeof(TokenC*))
+ *     s.stack = <int*>mem.alloc(padded_len, sizeof(int))
  */
   __pyx_v_padded_len = ((__pyx_v_sent_length + 5) + 5);
 
-  /* "spacy/syntax/_state.pyx":117
+  /* "spacy/syntax/_state.pyx":95
  * cdef State* init_state(Pool mem, TokenC* sent, const int sent_length) except NULL:
  *     cdef int padded_len = sent_length + PADDING + PADDING
  *     cdef State* s = <State*>mem.alloc(1, sizeof(State))             # <<<<<<<<<<<<<<
- *     s.stack = <TokenC**>mem.alloc(padded_len, sizeof(TokenC*))
- *     cdef TokenC* eol_token = sent - 1
+ *     s.stack = <int*>mem.alloc(padded_len, sizeof(int))
+ *     for i in range(PADDING):
  */
-  __pyx_t_1 = ((struct __pyx_vtabstruct_5cymem_5cymem_Pool *)__pyx_v_mem->__pyx_vtab)->alloc(__pyx_v_mem, 1, (sizeof(struct __pyx_t_5spacy_6syntax_6_state_State))); if (unlikely(__pyx_t_1 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 117; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_1 = ((struct __pyx_vtabstruct_5cymem_5cymem_Pool *)__pyx_v_mem->__pyx_vtab)->alloc(__pyx_v_mem, 1, (sizeof(struct __pyx_t_5spacy_6syntax_6_state_State))); if (unlikely(__pyx_t_1 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 95; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_v_s = ((struct __pyx_t_5spacy_6syntax_6_state_State *)__pyx_t_1);
 
-  /* "spacy/syntax/_state.pyx":118
+  /* "spacy/syntax/_state.pyx":96
  *     cdef int padded_len = sent_length + PADDING + PADDING
  *     cdef State* s = <State*>mem.alloc(1, sizeof(State))
- *     s.stack = <TokenC**>mem.alloc(padded_len, sizeof(TokenC*))             # <<<<<<<<<<<<<<
- *     cdef TokenC* eol_token = sent - 1
+ *     s.stack = <int*>mem.alloc(padded_len, sizeof(int))             # <<<<<<<<<<<<<<
  *     for i in range(PADDING):
+ *         s.stack[i] = -1
  */
-  __pyx_t_1 = ((struct __pyx_vtabstruct_5cymem_5cymem_Pool *)__pyx_v_mem->__pyx_vtab)->alloc(__pyx_v_mem, __pyx_v_padded_len, (sizeof(struct __pyx_t_5spacy_6tokens_TokenC *))); if (unlikely(__pyx_t_1 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 118; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __pyx_v_s->stack = ((struct __pyx_t_5spacy_6tokens_TokenC **)__pyx_t_1);
+  __pyx_t_1 = ((struct __pyx_vtabstruct_5cymem_5cymem_Pool *)__pyx_v_mem->__pyx_vtab)->alloc(__pyx_v_mem, __pyx_v_padded_len, (sizeof(int))); if (unlikely(__pyx_t_1 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 96; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_v_s->stack = ((int *)__pyx_t_1);
 
-  /* "spacy/syntax/_state.pyx":119
+  /* "spacy/syntax/_state.pyx":97
  *     cdef State* s = <State*>mem.alloc(1, sizeof(State))
- *     s.stack = <TokenC**>mem.alloc(padded_len, sizeof(TokenC*))
- *     cdef TokenC* eol_token = sent - 1             # <<<<<<<<<<<<<<
- *     for i in range(PADDING):
- *         # sent should be padded, with a suitable sentinel token here
- */
-  __pyx_v_eol_token = (__pyx_v_sent - 1);
-
-  /* "spacy/syntax/_state.pyx":120
- *     s.stack = <TokenC**>mem.alloc(padded_len, sizeof(TokenC*))
- *     cdef TokenC* eol_token = sent - 1
+ *     s.stack = <int*>mem.alloc(padded_len, sizeof(int))
  *     for i in range(PADDING):             # <<<<<<<<<<<<<<
- *         # sent should be padded, with a suitable sentinel token here
- *         s.stack[0] = eol_token
+ *         s.stack[i] = -1
+ *     s.stack += (PADDING - 1)
  */
   for (__pyx_t_2 = 0; __pyx_t_2 < 5; __pyx_t_2+=1) {
     __pyx_v_i = __pyx_t_2;
 
-    /* "spacy/syntax/_state.pyx":122
+    /* "spacy/syntax/_state.pyx":98
+ *     s.stack = <int*>mem.alloc(padded_len, sizeof(int))
  *     for i in range(PADDING):
- *         # sent should be padded, with a suitable sentinel token here
- *         s.stack[0] = eol_token             # <<<<<<<<<<<<<<
- *         s.stack += 1
- *     s.stack[0] = eol_token
+ *         s.stack[i] = -1             # <<<<<<<<<<<<<<
+ *     s.stack += (PADDING - 1)
+ *     assert s.stack[0] == -1
  */
-    (__pyx_v_s->stack[0]) = __pyx_v_eol_token;
-
-    /* "spacy/syntax/_state.pyx":123
- *         # sent should be padded, with a suitable sentinel token here
- *         s.stack[0] = eol_token
- *         s.stack += 1             # <<<<<<<<<<<<<<
- *     s.stack[0] = eol_token
- *     s.sent = sent
- */
-    __pyx_v_s->stack = (__pyx_v_s->stack + 1);
+    (__pyx_v_s->stack[__pyx_v_i]) = -1;
   }
 
-  /* "spacy/syntax/_state.pyx":124
- *         s.stack[0] = eol_token
- *         s.stack += 1
- *     s.stack[0] = eol_token             # <<<<<<<<<<<<<<
+  /* "spacy/syntax/_state.pyx":99
+ *     for i in range(PADDING):
+ *         s.stack[i] = -1
+ *     s.stack += (PADDING - 1)             # <<<<<<<<<<<<<<
+ *     assert s.stack[0] == -1
+ *     s.sent = sent
+ */
+  __pyx_v_s->stack = (__pyx_v_s->stack + 4);
+
+  /* "spacy/syntax/_state.pyx":100
+ *         s.stack[i] = -1
+ *     s.stack += (PADDING - 1)
+ *     assert s.stack[0] == -1             # <<<<<<<<<<<<<<
  *     s.sent = sent
  *     s.stack_len = 0
  */
-  (__pyx_v_s->stack[0]) = __pyx_v_eol_token;
+  #ifndef CYTHON_WITHOUT_ASSERTIONS
+  if (unlikely(!Py_OptimizeFlag)) {
+    if (unlikely(!(((__pyx_v_s->stack[0]) == -1) != 0))) {
+      PyErr_SetNone(PyExc_AssertionError);
+      {__pyx_filename = __pyx_f[1]; __pyx_lineno = 100; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    }
+  }
+  #endif
 
-  /* "spacy/syntax/_state.pyx":125
- *         s.stack += 1
- *     s.stack[0] = eol_token
+  /* "spacy/syntax/_state.pyx":101
+ *     s.stack += (PADDING - 1)
+ *     assert s.stack[0] == -1
  *     s.sent = sent             # <<<<<<<<<<<<<<
  *     s.stack_len = 0
  *     s.i = 0
  */
   __pyx_v_s->sent = __pyx_v_sent;
 
-  /* "spacy/syntax/_state.pyx":126
- *     s.stack[0] = eol_token
+  /* "spacy/syntax/_state.pyx":102
+ *     assert s.stack[0] == -1
  *     s.sent = sent
  *     s.stack_len = 0             # <<<<<<<<<<<<<<
  *     s.i = 0
@@ -3423,7 +3285,7 @@ static struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_f_5spacy_6syntax_6_sta
  */
   __pyx_v_s->stack_len = 0;
 
-  /* "spacy/syntax/_state.pyx":127
+  /* "spacy/syntax/_state.pyx":103
  *     s.sent = sent
  *     s.stack_len = 0
  *     s.i = 0             # <<<<<<<<<<<<<<
@@ -3432,7 +3294,7 @@ static struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_f_5spacy_6syntax_6_sta
  */
   __pyx_v_s->i = 0;
 
-  /* "spacy/syntax/_state.pyx":128
+  /* "spacy/syntax/_state.pyx":104
  *     s.stack_len = 0
  *     s.i = 0
  *     s.sent_len = sent_length             # <<<<<<<<<<<<<<
@@ -3440,7 +3302,7 @@ static struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_f_5spacy_6syntax_6_sta
  */
   __pyx_v_s->sent_len = __pyx_v_sent_length;
 
-  /* "spacy/syntax/_state.pyx":129
+  /* "spacy/syntax/_state.pyx":105
  *     s.i = 0
  *     s.sent_len = sent_length
  *     return s             # <<<<<<<<<<<<<<
@@ -3448,7 +3310,7 @@ static struct __pyx_t_5spacy_6syntax_6_state_State *__pyx_f_5spacy_6syntax_6_sta
   __pyx_r = __pyx_v_s;
   goto __pyx_L0;
 
-  /* "spacy/syntax/_state.pyx":115
+  /* "spacy/syntax/_state.pyx":93
  * 
  * 
  * cdef State* init_state(Pool mem, TokenC* sent, const int sent_length) except NULL:             # <<<<<<<<<<<<<<
@@ -3572,8 +3434,8 @@ static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6synta
  * 
  * 
  * cdef inline TokenC* get_n1(const State* s) nogil:             # <<<<<<<<<<<<<<
- *     if s.i < (s.sent_len - 1):
- *         return &s.sent[s.i+1]
+ *     if (s.i+1) >= s.sent_len:
+ *         return NULL
  */
 
 static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_n1(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s) {
@@ -3583,33 +3445,33 @@ static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6synta
   /* "spacy/syntax/_state.pxd":36
  * 
  * cdef inline TokenC* get_n1(const State* s) nogil:
- *     if s.i < (s.sent_len - 1):             # <<<<<<<<<<<<<<
- *         return &s.sent[s.i+1]
+ *     if (s.i+1) >= s.sent_len:             # <<<<<<<<<<<<<<
+ *         return NULL
  *     else:
  */
-  __pyx_t_1 = ((__pyx_v_s->i < (__pyx_v_s->sent_len - 1)) != 0);
+  __pyx_t_1 = (((__pyx_v_s->i + 1) >= __pyx_v_s->sent_len) != 0);
   if (__pyx_t_1) {
 
     /* "spacy/syntax/_state.pxd":37
  * cdef inline TokenC* get_n1(const State* s) nogil:
- *     if s.i < (s.sent_len - 1):
- *         return &s.sent[s.i+1]             # <<<<<<<<<<<<<<
+ *     if (s.i+1) >= s.sent_len:
+ *         return NULL             # <<<<<<<<<<<<<<
  *     else:
- *         return s.sent - 1
+ *         return &s.sent[s.i+1]
  */
-    __pyx_r = (&(__pyx_v_s->sent[(__pyx_v_s->i + 1)]));
+    __pyx_r = NULL;
     goto __pyx_L0;
   }
   /*else*/ {
 
     /* "spacy/syntax/_state.pxd":39
- *         return &s.sent[s.i+1]
+ *         return NULL
  *     else:
- *         return s.sent - 1             # <<<<<<<<<<<<<<
+ *         return &s.sent[s.i+1]             # <<<<<<<<<<<<<<
  * 
  * 
  */
-    __pyx_r = (__pyx_v_s->sent - 1);
+    __pyx_r = (&(__pyx_v_s->sent[(__pyx_v_s->i + 1)]));
     goto __pyx_L0;
   }
 
@@ -3617,8 +3479,8 @@ static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6synta
  * 
  * 
  * cdef inline TokenC* get_n1(const State* s) nogil:             # <<<<<<<<<<<<<<
- *     if s.i < (s.sent_len - 1):
- *         return &s.sent[s.i+1]
+ *     if (s.i+1) >= s.sent_len:
+ *         return NULL
  */
 
   /* function exit code */
@@ -3630,29 +3492,53 @@ static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6synta
  * 
  * 
  * cdef inline TokenC* get_n2(const State* s) nogil:             # <<<<<<<<<<<<<<
- *     return &s.sent[s.i+2]
- * 
+ *     if (s.i + 2) >= s.sent_len:
+ *         return NULL
  */
 
 static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_n2(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s) {
   struct __pyx_t_5spacy_6tokens_TokenC *__pyx_r;
+  int __pyx_t_1;
 
   /* "spacy/syntax/_state.pxd":43
  * 
  * cdef inline TokenC* get_n2(const State* s) nogil:
- *     return &s.sent[s.i+2]             # <<<<<<<<<<<<<<
+ *     if (s.i + 2) >= s.sent_len:             # <<<<<<<<<<<<<<
+ *         return NULL
+ *     else:
+ */
+  __pyx_t_1 = (((__pyx_v_s->i + 2) >= __pyx_v_s->sent_len) != 0);
+  if (__pyx_t_1) {
+
+    /* "spacy/syntax/_state.pxd":44
+ * cdef inline TokenC* get_n2(const State* s) nogil:
+ *     if (s.i + 2) >= s.sent_len:
+ *         return NULL             # <<<<<<<<<<<<<<
+ *     else:
+ *         return &s.sent[s.i+2]
+ */
+    __pyx_r = NULL;
+    goto __pyx_L0;
+  }
+  /*else*/ {
+
+    /* "spacy/syntax/_state.pxd":46
+ *         return NULL
+ *     else:
+ *         return &s.sent[s.i+2]             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_r = (&(__pyx_v_s->sent[(__pyx_v_s->i + 2)]));
-  goto __pyx_L0;
+    __pyx_r = (&(__pyx_v_s->sent[(__pyx_v_s->i + 2)]));
+    goto __pyx_L0;
+  }
 
   /* "spacy/syntax/_state.pxd":42
  * 
  * 
  * cdef inline TokenC* get_n2(const State* s) nogil:             # <<<<<<<<<<<<<<
- *     return &s.sent[s.i+2]
- * 
+ *     if (s.i + 2) >= s.sent_len:
+ *         return NULL
  */
 
   /* function exit code */
@@ -3660,32 +3546,32 @@ static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6synta
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pxd":46
+/* "spacy/syntax/_state.pxd":49
  * 
  * 
  * cdef inline TokenC* get_s0(const State *s) nogil:             # <<<<<<<<<<<<<<
- *     return s.stack[0]
+ *     return &s.sent[s.stack[0]]
  * 
  */
 
 static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_s0(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s) {
   struct __pyx_t_5spacy_6tokens_TokenC *__pyx_r;
 
-  /* "spacy/syntax/_state.pxd":47
+  /* "spacy/syntax/_state.pxd":50
  * 
  * cdef inline TokenC* get_s0(const State *s) nogil:
- *     return s.stack[0]             # <<<<<<<<<<<<<<
+ *     return &s.sent[s.stack[0]]             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_r = (__pyx_v_s->stack[0]);
+  __pyx_r = (&(__pyx_v_s->sent[(__pyx_v_s->stack[0])]));
   goto __pyx_L0;
 
-  /* "spacy/syntax/_state.pxd":46
+  /* "spacy/syntax/_state.pxd":49
  * 
  * 
  * cdef inline TokenC* get_s0(const State *s) nogil:             # <<<<<<<<<<<<<<
- *     return s.stack[0]
+ *     return &s.sent[s.stack[0]]
  * 
  */
 
@@ -3694,43 +3580,33 @@ static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6synta
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pxd":50
+/* "spacy/syntax/_state.pxd":53
  * 
  * 
  * cdef inline TokenC* get_s1(const State *s) nogil:             # <<<<<<<<<<<<<<
  *     # Rely on our padding to ensure we don't go out of bounds here
- *     cdef TokenC** s1 = s.stack - 1
+ *     return &s.sent[s.stack[-1]]
  */
 
 static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_s1(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s) {
-  struct __pyx_t_5spacy_6tokens_TokenC **__pyx_v_s1;
   struct __pyx_t_5spacy_6tokens_TokenC *__pyx_r;
 
-  /* "spacy/syntax/_state.pxd":52
+  /* "spacy/syntax/_state.pxd":55
  * cdef inline TokenC* get_s1(const State *s) nogil:
  *     # Rely on our padding to ensure we don't go out of bounds here
- *     cdef TokenC** s1 = s.stack - 1             # <<<<<<<<<<<<<<
- *     return s1[0]
- * 
- */
-  __pyx_v_s1 = (__pyx_v_s->stack - 1);
-
-  /* "spacy/syntax/_state.pxd":53
- *     # Rely on our padding to ensure we don't go out of bounds here
- *     cdef TokenC** s1 = s.stack - 1
- *     return s1[0]             # <<<<<<<<<<<<<<
+ *     return &s.sent[s.stack[-1]]             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  __pyx_r = (__pyx_v_s1[0]);
+  __pyx_r = (&(__pyx_v_s->sent[(__pyx_v_s->stack[-1])]));
   goto __pyx_L0;
 
-  /* "spacy/syntax/_state.pxd":50
+  /* "spacy/syntax/_state.pxd":53
  * 
  * 
  * cdef inline TokenC* get_s1(const State *s) nogil:             # <<<<<<<<<<<<<<
  *     # Rely on our padding to ensure we don't go out of bounds here
- *     cdef TokenC** s1 = s.stack - 1
+ *     return &s.sent[s.stack[-1]]
  */
 
   /* function exit code */
@@ -3738,43 +3614,33 @@ static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6synta
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pxd":56
+/* "spacy/syntax/_state.pxd":58
  * 
  * 
  * cdef inline TokenC* get_s2(const State *s) nogil:             # <<<<<<<<<<<<<<
  *     # Rely on our padding to ensure we don't go out of bounds here
- *     cdef TokenC** s2 = s.stack - 2
+ *     return &s.sent[s.stack[-2]]
  */
 
 static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6syntax_6_state_get_s2(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s) {
-  struct __pyx_t_5spacy_6tokens_TokenC **__pyx_v_s2;
   struct __pyx_t_5spacy_6tokens_TokenC *__pyx_r;
 
-  /* "spacy/syntax/_state.pxd":58
+  /* "spacy/syntax/_state.pxd":60
  * cdef inline TokenC* get_s2(const State *s) nogil:
  *     # Rely on our padding to ensure we don't go out of bounds here
- *     cdef TokenC** s2 = s.stack - 2             # <<<<<<<<<<<<<<
- *     return s2[0]
+ *     return &s.sent[s.stack[-2]]             # <<<<<<<<<<<<<<
  * 
+ * cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) nogil
  */
-  __pyx_v_s2 = (__pyx_v_s->stack - 2);
-
-  /* "spacy/syntax/_state.pxd":59
- *     # Rely on our padding to ensure we don't go out of bounds here
- *     cdef TokenC** s2 = s.stack - 2
- *     return s2[0]             # <<<<<<<<<<<<<<
- * 
- * cdef TokenC* get_right(State* s, TokenC* head, int idx) nogil
- */
-  __pyx_r = (__pyx_v_s2[0]);
+  __pyx_r = (&(__pyx_v_s->sent[(__pyx_v_s->stack[-2])]));
   goto __pyx_L0;
 
-  /* "spacy/syntax/_state.pxd":56
+  /* "spacy/syntax/_state.pxd":58
  * 
  * 
  * cdef inline TokenC* get_s2(const State *s) nogil:             # <<<<<<<<<<<<<<
  *     # Rely on our padding to ensure we don't go out of bounds here
- *     cdef TokenC** s2 = s.stack - 2
+ *     return &s.sent[s.stack[-2]]
  */
 
   /* function exit code */
@@ -3782,8 +3648,8 @@ static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6synta
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pxd":64
- * cdef TokenC* get_left(State* s, TokenC* head, int idx) nogil
+/* "spacy/syntax/_state.pxd":66
+ * cdef const TokenC* get_left(const State* s, const TokenC* head, const int idx) nogil
  * 
  * cdef inline bint at_eol(const State *s) nogil:             # <<<<<<<<<<<<<<
  *     return s.i >= s.sent_len
@@ -3793,7 +3659,7 @@ static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6synta
 static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_at_eol(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s) {
   int __pyx_r;
 
-  /* "spacy/syntax/_state.pxd":65
+  /* "spacy/syntax/_state.pxd":67
  * 
  * cdef inline bint at_eol(const State *s) nogil:
  *     return s.i >= s.sent_len             # <<<<<<<<<<<<<<
@@ -3803,8 +3669,8 @@ static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_at_eol(struct __pyx_t_5s
   __pyx_r = (__pyx_v_s->i >= __pyx_v_s->sent_len);
   goto __pyx_L0;
 
-  /* "spacy/syntax/_state.pxd":64
- * cdef TokenC* get_left(State* s, TokenC* head, int idx) nogil
+  /* "spacy/syntax/_state.pxd":66
+ * cdef const TokenC* get_left(const State* s, const TokenC* head, const int idx) nogil
  * 
  * cdef inline bint at_eol(const State *s) nogil:             # <<<<<<<<<<<<<<
  *     return s.i >= s.sent_len
@@ -3816,7 +3682,7 @@ static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_at_eol(struct __pyx_t_5s
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pxd":68
+/* "spacy/syntax/_state.pxd":70
  * 
  * 
  * cdef inline bint is_final(const State *s) nogil:             # <<<<<<<<<<<<<<
@@ -3827,7 +3693,7 @@ static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_at_eol(struct __pyx_t_5s
 static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_is_final(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s) {
   int __pyx_r;
 
-  /* "spacy/syntax/_state.pxd":69
+  /* "spacy/syntax/_state.pxd":71
  * 
  * cdef inline bint is_final(const State *s) nogil:
  *     return at_eol(s) # The stack will be attached to root anyway             # <<<<<<<<<<<<<<
@@ -3837,7 +3703,7 @@ static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_is_final(struct __pyx_t_
   __pyx_r = __pyx_f_5spacy_6syntax_6_state_at_eol(__pyx_v_s);
   goto __pyx_L0;
 
-  /* "spacy/syntax/_state.pxd":68
+  /* "spacy/syntax/_state.pxd":70
  * 
  * 
  * cdef inline bint is_final(const State *s) nogil:             # <<<<<<<<<<<<<<
@@ -3850,7 +3716,7 @@ static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_is_final(struct __pyx_t_
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pxd":81
+/* "spacy/syntax/_state.pxd":83
  * 
  * 
  * cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:             # <<<<<<<<<<<<<<
@@ -3858,52 +3724,74 @@ static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_is_final(struct __pyx_t_
  *     for i in range(32):
  */
 
-static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bit(uint32_t __pyx_v_bits, CYTHON_UNUSED int __pyx_v_n) {
+static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bit(uint32_t __pyx_v_bits, int __pyx_v_n) {
   int __pyx_v_i;
   uint32_t __pyx_r;
   int __pyx_t_1;
   int __pyx_t_2;
 
-  /* "spacy/syntax/_state.pxd":83
+  /* "spacy/syntax/_state.pxd":85
  * cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:
  *     cdef int i
  *     for i in range(32):             # <<<<<<<<<<<<<<
  *         if bits & (1 << i):
- *             return i
+ *             n -= 1
  */
   for (__pyx_t_1 = 0; __pyx_t_1 < 32; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "spacy/syntax/_state.pxd":84
+    /* "spacy/syntax/_state.pxd":86
  *     cdef int i
  *     for i in range(32):
  *         if bits & (1 << i):             # <<<<<<<<<<<<<<
- *             return i
- *     return 0
+ *             n -= 1
+ *             if n < 1:
  */
     __pyx_t_2 = ((__pyx_v_bits & (1 << __pyx_v_i)) != 0);
     if (__pyx_t_2) {
 
-      /* "spacy/syntax/_state.pxd":85
+      /* "spacy/syntax/_state.pxd":87
  *     for i in range(32):
  *         if bits & (1 << i):
- *             return i             # <<<<<<<<<<<<<<
+ *             n -= 1             # <<<<<<<<<<<<<<
+ *             if n < 1:
+ *                 return i
+ */
+      __pyx_v_n = (__pyx_v_n - 1);
+
+      /* "spacy/syntax/_state.pxd":88
+ *         if bits & (1 << i):
+ *             n -= 1
+ *             if n < 1:             # <<<<<<<<<<<<<<
+ *                 return i
  *     return 0
  */
-      __pyx_r = __pyx_v_i;
-      goto __pyx_L0;
+      __pyx_t_2 = ((__pyx_v_n < 1) != 0);
+      if (__pyx_t_2) {
+
+        /* "spacy/syntax/_state.pxd":89
+ *             n -= 1
+ *             if n < 1:
+ *                 return i             # <<<<<<<<<<<<<<
+ *     return 0
+ */
+        __pyx_r = __pyx_v_i;
+        goto __pyx_L0;
+      }
+      goto __pyx_L5;
     }
+    __pyx_L5:;
   }
 
-  /* "spacy/syntax/_state.pxd":86
- *         if bits & (1 << i):
- *             return i
+  /* "spacy/syntax/_state.pxd":90
+ *             if n < 1:
+ *                 return i
  *     return 0             # <<<<<<<<<<<<<<
  */
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "spacy/syntax/_state.pxd":81
+  /* "spacy/syntax/_state.pxd":83
  * 
  * 
  * cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:             # <<<<<<<<<<<<<<
@@ -6310,7 +6198,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 83; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 85; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) {__pyx_filename = __pyx_f[2]; __pyx_lineno = 215; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) {__pyx_filename = __pyx_f[2]; __pyx_lineno = 799; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   return 0;
@@ -6482,15 +6370,15 @@ PyMODINIT_FUNC PyInit__state(void)
   /*--- Global init code ---*/
   /*--- Variable export code ---*/
   /*--- Function export code ---*/
-  if (__Pyx_ExportFunction("add_dep", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_add_dep, "int (struct __pyx_t_5spacy_6syntax_6_state_State *, struct __pyx_t_5spacy_6tokens_TokenC *, struct __pyx_t_5spacy_6tokens_TokenC *, int)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (__Pyx_ExportFunction("pop_stack", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_pop_stack, "struct __pyx_t_5spacy_6tokens_TokenC *(struct __pyx_t_5spacy_6syntax_6_state_State *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ExportFunction("add_dep", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_add_dep, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, int const , int const , int const )") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ExportFunction("pop_stack", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_pop_stack, "int (struct __pyx_t_5spacy_6syntax_6_state_State *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__Pyx_ExportFunction("push_stack", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_push_stack, "int (struct __pyx_t_5spacy_6syntax_6_state_State *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (__Pyx_ExportFunction("get_right", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_get_right, "struct __pyx_t_5spacy_6tokens_TokenC *(struct __pyx_t_5spacy_6syntax_6_state_State *, struct __pyx_t_5spacy_6tokens_TokenC *, int)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (__Pyx_ExportFunction("get_left", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_get_left, "struct __pyx_t_5spacy_6tokens_TokenC *(struct __pyx_t_5spacy_6syntax_6_state_State *, struct __pyx_t_5spacy_6tokens_TokenC *, int)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (__Pyx_ExportFunction("children_in_buffer", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_children_in_buffer, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, struct __pyx_t_5spacy_6tokens_TokenC const *, PyObject *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (__Pyx_ExportFunction("head_in_buffer", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_head_in_buffer, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, struct __pyx_t_5spacy_6tokens_TokenC const *, PyObject *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (__Pyx_ExportFunction("children_in_stack", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_children_in_stack, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, struct __pyx_t_5spacy_6tokens_TokenC const *, PyObject *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (__Pyx_ExportFunction("head_in_stack", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_head_in_stack, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, struct __pyx_t_5spacy_6tokens_TokenC const *, PyObject *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ExportFunction("get_right", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_get_right, "struct __pyx_t_5spacy_6tokens_TokenC const *(struct __pyx_t_5spacy_6syntax_6_state_State const *, struct __pyx_t_5spacy_6tokens_TokenC const *, int const )") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ExportFunction("get_left", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_get_left, "struct __pyx_t_5spacy_6tokens_TokenC const *(struct __pyx_t_5spacy_6syntax_6_state_State const *, struct __pyx_t_5spacy_6tokens_TokenC const *, int const )") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ExportFunction("children_in_buffer", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_children_in_buffer, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, int const , PyObject *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ExportFunction("head_in_buffer", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_head_in_buffer, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, int const , PyObject *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ExportFunction("children_in_stack", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_children_in_stack, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, int const , PyObject *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ExportFunction("head_in_stack", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_head_in_stack, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, int const , PyObject *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__Pyx_ExportFunction("init_state", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_init_state, "struct __pyx_t_5spacy_6syntax_6_state_State *(struct __pyx_obj_5cymem_5cymem_Pool *, struct __pyx_t_5spacy_6tokens_TokenC *, int const )") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   /*--- Type init code ---*/
   /*--- Type import code ---*/

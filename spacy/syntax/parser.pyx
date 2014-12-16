@@ -32,9 +32,6 @@ from . import _parse_features
 from ._parse_features cimport fill_context, CONTEXT_SIZE
 
 
-DEF CONTEXT_SIZE = 50
-
-
 DEBUG = False 
 def set_debug(val):
     global DEBUG
@@ -43,8 +40,8 @@ def set_debug(val):
 
 cdef unicode print_state(State* s, list words):
     words = list(words) + ['EOL']
-    top = words[get_idx(s, get_s0(s))]
-    second = words[get_idx(s, get_s1(s))]
+    top = words[s.stack[0]]
+    second = words[s.stack[-1]]
     n0 = words[s.i]
     n1 = words[s.i + 1]
     return ' '.join((second, top, '|', n0, n1))
@@ -61,7 +58,7 @@ cdef class GreedyParser:
         self.extractor = Extractor(get_templates(self.cfg.features))
         self.moves = TransitionSystem(self.cfg.left_labels, self.cfg.right_labels)
         
-        self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ)
+        self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ + 10000)
         if os.path.exists(pjoin(model_dir, 'model')):
             self.model.load(pjoin(model_dir, 'model'))
 
@@ -94,7 +91,12 @@ cdef class GreedyParser:
         cdef Pool mem = Pool()
         cdef State* state = init_state(mem, tokens.data, tokens.length)
         words = [t.string for t in tokens]
+        if DEBUG:
+            print words
+            print gold_heads
         while not is_final(state):
+            if DEBUG:
+                print print_state(state, words)
             fill_context(context, state) 
             feats = self.extractor.get_feats(context, &n_feats)
             scores = self.model.get_scores(feats, n_feats)
@@ -109,5 +111,5 @@ cdef class GreedyParser:
         cdef int i
         n_corr = 0
         for i in range(tokens.length):
-            n_corr += state.sent[i].head == gold_heads[i]
+            n_corr += (i + state.sent[i].head) == gold_heads[i]
         return n_corr

@@ -17,53 +17,60 @@ from ._state cimport get_left, get_right
 
 
 cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
-    context[0] = token.lex.sic
-    context[1] = token.pos
-    context[2] = token.lex.cluster
-    # We've read in the string little-endian, so now we can take & (2**n)-1
-    # to get the first n bits of the cluster.
-    # e.g. s = "1110010101"
-    # s = ''.join(reversed(s))
-    # first_4_bits = int(s, 2)
-    # print first_4_bits
-    # 5
-    # print "{0:b}".format(prefix).ljust(4, '0')
-    # 1110
-    # What we're doing here is picking a number where all bits are 1, e.g.
-    # 15 is 1111, 63 is 111111 and doing bitwise AND, so getting all bits in
-    # the source that are set to 1.
-    context[3] = token.lex.cluster & 63
-    context[4] = token.lex.cluster & 15
-    context[5] = token.dep_tag
+    if token is NULL:
+        context[0] = 0
+        context[1] = 0
+        context[2] = 0
+        context[3] = 0
+        context[4] = 0
+        context[5] = 0
+    else:
+        context[0] = token.lex.sic
+        context[1] = token.pos
+        context[2] = token.lex.cluster
+        # We've read in the string little-endian, so now we can take & (2**n)-1
+        # to get the first n bits of the cluster.
+        # e.g. s = "1110010101"
+        # s = ''.join(reversed(s))
+        # first_4_bits = int(s, 2)
+        # print first_4_bits
+        # 5
+        # print "{0:b}".format(prefix).ljust(4, '0')
+        # 1110
+        # What we're doing here is picking a number where all bits are 1, e.g.
+        # 15 is 1111, 63 is 111111 and doing bitwise AND, so getting all bits in
+        # the source that are set to 1.
+        context[3] = token.lex.cluster & 63
+        context[4] = token.lex.cluster & 15
+        context[5] = token.dep_tag
 
 
 cdef int fill_context(atom_t* context, State* state) except -1:
     # This fills in the basic properties of each of our "slot" tokens, e.g.
     # word on top of the stack, word at the front of the buffer, etc.
-    cdef TokenC* n1 = get_n1(state)
     fill_token(&context[S2w], get_s2(state))
     fill_token(&context[S1w], get_s1(state))
-    #fill_token(&context[S1rw], get_right(state, get_s1(state), 0))
-    fill_token(&context[S0lw], get_left(state, get_s0(state), 0))
-    fill_token(&context[S0l2w], get_left(state, get_s0(state), 1))
+    fill_token(&context[S1rw], get_right(state, get_s1(state), 1))
+    fill_token(&context[S0lw], get_left(state, get_s0(state), 1))
+    fill_token(&context[S0l2w], get_left(state, get_s0(state), 2))
     fill_token(&context[S0w], get_s0(state))
-    #fill_token(&context[S0r2w], get_right(state, get_s0(state), 1))
-    fill_token(&context[S0rw], get_right(state, get_s0(state), 0))
-    #fill_token(&context[N0lw], get_left(state, get_n0(state), 0))
-    #fill_token(&context[N0l2w], get_left(state, get_n0(state), 1))
+    fill_token(&context[S0r2w], get_right(state, get_s0(state), 2))
+    fill_token(&context[S0rw], get_right(state, get_s0(state), 1))
+    fill_token(&context[N0lw], get_left(state, get_n0(state), 0))
+    fill_token(&context[N0l2w], get_left(state, get_n0(state), 1))
     fill_token(&context[N0w], get_n0(state))
-    #fill_token(&context[N1w], get_n1(state))
-    #fill_token(&context[N2w], get_n2(state))
+    fill_token(&context[N1w], get_n1(state))
+    fill_token(&context[N2w], get_n2(state))
 
-    #if state.stack_len >= 1:
-    #    context[dist] = state.stack[0] - state.sent
-    #else:
-    #    context[dist] = 0
-    #context[N0lv] = 0 
-    #context[S0lv] = 0
-    #context[S0rv] = 0
-    #context[S1lv] = 0
-    #context[S1rv] = 0
+    if state.stack_len >= 1:
+        context[dist] = state.stack[0] - state.i
+    else:
+        context[dist] = 0
+    context[N0lv] = 0 
+    context[S0lv] = 0
+    context[S0rv] = 0
+    context[S1lv] = 0
+    context[S1rv] = 0
 
 
 arc_eager = (

@@ -35,43 +35,35 @@ cdef inline bint _can_reduce(const State* s) nogil:
 cdef int _shift_cost(const State* s, list gold) except -1:
     assert not at_eol(s)
     cost = 0
-    cost += head_in_stack(s, get_n0(s), gold)
-    cost += children_in_stack(s, get_n0(s), gold)
+    cost += head_in_stack(s, s.i, gold)
+    cost += children_in_stack(s, s.i, gold)
     return cost
 
 
 cdef int _right_cost(const State* s, list gold) except -1:
     assert s.stack_len >= 1
-    cdef int s0_idx = get_idx(s, get_s0(s))
     cost = 0
-    if _gold_dep(s, get_s0(s), get_n0(s), gold):
+    if gold[s.i] == s.stack[0]:
         return cost
-    cost += head_in_buffer(s, get_n0(s), gold)
-    cost += children_in_stack(s, get_n0(s), gold)
-    cost += head_in_stack(s, get_n0(s), gold)
+    cost += head_in_buffer(s, s.i, gold)
+    cost += children_in_stack(s, s.i, gold)
+    cost += head_in_stack(s, s.i, gold)
     return cost
 
 
 cdef int _left_cost(const State* s, list gold) except -1:
     assert s.stack_len >= 1
     cost = 0
-    if _gold_dep(s, get_n0(s), get_s0(s), gold):
+    if gold[s.stack[0]] == s.i:
         return cost
 
-    cost += head_in_buffer(s, get_s0(s), gold)
-    cost += children_in_buffer(s, get_s0(s), gold)
+    cost += head_in_buffer(s, s.stack[0], gold)
+    cost += children_in_buffer(s, s.stack[0], gold)
     return cost
 
 
 cdef int _reduce_cost(const State* s, list gold) except -1:
-    return children_in_buffer(s, get_s0(s), gold)
-
-
-cdef int _gold_dep(const State* s, const TokenC* head, const TokenC* child,
-                   list gold_offsets) except -1:
-    cdef int head_idx = get_idx(s, head)
-    cdef int child_idx = get_idx(s, child)
-    return child_idx + gold_offsets[child_idx] == head_idx
+    return children_in_buffer(s, s.stack[0], gold)
 
 
 cdef class TransitionSystem:
@@ -109,10 +101,10 @@ cdef class TransitionSystem:
         if t.move == SHIFT:
             push_stack(s)
         elif t.move == LEFT:
-            add_dep(s, get_n0(s), get_s0(s), t.label)
+            add_dep(s, s.i, s.stack[0], t.label)
             pop_stack(s)
         elif t.move == RIGHT:
-            add_dep(s, get_s0(s), get_n0(s), t.label)
+            add_dep(s, s.stack[0], s.i, t.label)
             push_stack(s)
         elif t.move == REDUCE:
             pop_stack(s)
@@ -157,12 +149,12 @@ cdef class TransitionSystem:
                 if move == SHIFT or move == REDUCE:
                     cost = 0
                 elif move == LEFT:
-                    if _gold_dep(s, get_n0(s), get_s0(s), gold_heads):
-                        cost = label != gold_labels[get_idx(s, get_s0(s))]
+                    if gold_heads[s.stack[0]] == s.i:
+                        cost = label != gold_labels[s.stack[0]]
                     else:
                         cost = 0
                 elif move == RIGHT:
-                    if _gold_dep(s, get_s0(s), get_n0(s), gold_heads):
+                    if gold_heads[s.i] == s.stack[0]:
                         cost = label != gold_labels[s.i]
                     else:
                         cost = 0
@@ -173,24 +165,14 @@ cdef class TransitionSystem:
                     score = scores[i]
  
         if best < 0:
-            for i in range(self.n_moves):
-                if self._moves[i].move == LEFT:
-                    print self._moves[i].label,
-            print
-            print _gold_dep(s, get_n0(s), get_s0(s), gold_heads)
-            print gold_labels[get_idx(s, get_s0(s))]
-            print unl_costs[LEFT]
-            print "S0:"
-            print "Head:", gold_heads[get_idx(s, get_s0(s))]
-            print "h. in b.", head_in_buffer(s, get_s0(s), gold_heads)
-            print "c. in b.", children_in_buffer(s, get_s0(s), gold_heads)
-            print "h. in s.", head_in_stack(s, get_s0(s), gold_heads)
-            print "c. in s.", children_in_stack(s, get_s0(s), gold_heads)
-            print "N0:"
-            print "Head:", gold_heads[get_idx(s, get_n0(s))]
-            print "h. in b.", head_in_buffer(s, get_n0(s), gold_heads)
-            print "c. in b.", children_in_buffer(s, get_n0(s), gold_heads)
-            print "h. in s.", head_in_stack(s, get_n0(s), gold_heads)
-            print "c. in s.", children_in_stack(s, get_n0(s), gold_heads)
+            print unl_costs[SHIFT], unl_costs[REDUCE], unl_costs[LEFT], unl_costs[RIGHT]
+            print s.stack_len
+            print has_head(get_s0(s))
+            print s.sent[s.stack[0]].head
+            print s.stack[0], s.i
+            print gold_heads[s.stack[0]], gold_heads[s.i]
+            print gold_labels[s.i]
+            print children_in_buffer(s, s.stack[0], gold_heads)
+            print head_in_buffer(s, s.stack[0], gold_heads)
             raise StandardError 
         return best
