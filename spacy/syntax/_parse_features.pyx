@@ -164,12 +164,12 @@ s0_n0 = (
 )
 
 s1_n0 = (
-    (S0_has_head, S1p, N0p),
-    (S0_has_head, S1c, N0c),
-    (S0_has_head, S1c, N0p),
-    (S0_has_head, S1p, N0c),
-    (S0_has_head, S1W, S1p, N0p),
-    (S0_has_head, S1p, N0W, N0p)
+    (S1p, N0p),
+    (S1c, N0c),
+    (S1c, N0p),
+    (S1p, N0c),
+    (S1W, S1p, N0p),
+    (S1p, N0W, N0p)
 )
 
 
