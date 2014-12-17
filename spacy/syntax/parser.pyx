@@ -48,7 +48,8 @@ cdef unicode print_state(State* s, list words):
 
 
 def get_templates(name):
-    return _parse_features.arc_eager
+    pf = _parse_features
+    return pf.arc_eager + pf.extra_labels + pf.label_sets
 
 
 cdef class GreedyParser:
@@ -66,20 +67,21 @@ cdef class GreedyParser:
         cdef:
             Feature* feats
             const weight_t* scores
+            int guess
 
         cdef atom_t[CONTEXT_SIZE] context
         cdef int n_feats
         cdef Pool mem = Pool()
         cdef State* state = init_state(mem, tokens.data, tokens.length)
         while not is_final(state):
-            fill_context(context, state) # TODO
+            fill_context(context, state)
             feats = self.extractor.get_feats(context, &n_feats)
             scores = self.model.get_scores(feats, n_feats)
 
             guess = self.moves.best_valid(scores, state)
             
             self.moves.transition(state, guess)
-        # TODO output
+        return 0
 
     def train_sent(self, Tokens tokens, list gold_heads, list gold_labels):
         cdef:
@@ -89,27 +91,43 @@ cdef class GreedyParser:
         cdef int n_feats
         cdef atom_t[CONTEXT_SIZE] context
         cdef Pool mem = Pool()
+        cdef int* heads_array = <int*>mem.alloc(tokens.length, sizeof(int))
+        cdef int* labels_array = <int*>mem.alloc(tokens.length, sizeof(int))
+        cdef int i
+        for i in range(tokens.length):
+            heads_array[i] = gold_heads[i]
+            labels_array[i] = self.moves.label_ids[gold_labels[i]]
+        
         cdef State* state = init_state(mem, tokens.data, tokens.length)
-        words = [t.string for t in tokens]
-        if DEBUG:
-            print words
-            print gold_heads
         while not is_final(state):
-            if DEBUG:
-                print print_state(state, words)
             fill_context(context, state) 
             feats = self.extractor.get_feats(context, &n_feats)
             scores = self.model.get_scores(feats, n_feats)
             guess = self.moves.best_valid(scores, state)
-            best = self.moves.best_gold(scores, state, gold_heads, gold_labels)
-            counts = {guess: {}, best: {}}
-            if guess != best:
-                count_feats(counts[guess], feats, n_feats, -1)
-                count_feats(counts[best], feats, n_feats, 1)
+            best = self.moves.best_gold(scores, state, heads_array, labels_array)
+            counts = _get_counts(guess, best, feats, n_feats)
             self.model.update(counts)
             self.moves.transition(state, guess)
-        cdef int i
-        n_corr = 0
+        cdef int n_corr = 0
         for i in range(tokens.length):
             n_corr += (i + state.sent[i].head) == gold_heads[i]
         return n_corr
+
+
+cdef dict _get_counts(int guess, int best, const Feature* feats, const int n_feats):
+    if guess == best:
+        return {}
+
+    gold_counts = {}
+    guess_counts = {}
+    cdef int i
+    for i in range(n_feats):
+        key = (feats[i].i, feats[i].key)
+        if key in gold_counts:
+            gold_counts[key] += feats[i].value
+            guess_counts[key] -= feats[i].value
+        else:
+            gold_counts[key] = feats[i].value
+            guess_counts[key] = -feats[i].value
+    return {guess: guess_counts, best: gold_counts}
+

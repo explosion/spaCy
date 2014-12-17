@@ -1524,6 +1524,8 @@ struct __pyx_obj_5spacy_6tokens_Token {
   int idx;
   int pos;
   int lemma;
+  int head;
+  int dep_tag;
   __pyx_t_5thinc_8typedefs_atom_t id;
   __pyx_t_5thinc_8typedefs_atom_t cluster;
   __pyx_t_5thinc_8typedefs_atom_t length;
@@ -1896,27 +1898,6 @@ static PyObject *__Pyx_GetBuiltinName(PyObject *name);
 #else
   #define __Pyx_TraceLine(lineno)
 #endif
-
-#define __Pyx_GetItemInt(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck) \
-    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ? \
-    __Pyx_GetItemInt_Fast(o, (Py_ssize_t)i, is_list, wraparound, boundscheck) : \
-    (is_list ? (PyErr_SetString(PyExc_IndexError, "list index out of range"), (PyObject*)NULL) : \
-               __Pyx_GetItemInt_Generic(o, to_py_func(i))))
-#define __Pyx_GetItemInt_List(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck) \
-    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ? \
-    __Pyx_GetItemInt_List_Fast(o, (Py_ssize_t)i, wraparound, boundscheck) : \
-    (PyErr_SetString(PyExc_IndexError, "list index out of range"), (PyObject*)NULL))
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_List_Fast(PyObject *o, Py_ssize_t i,
-                                                              int wraparound, int boundscheck);
-#define __Pyx_GetItemInt_Tuple(o, i, type, is_signed, to_py_func, is_list, wraparound, boundscheck) \
-    (__Pyx_fits_Py_ssize_t(i, type, is_signed) ? \
-    __Pyx_GetItemInt_Tuple_Fast(o, (Py_ssize_t)i, wraparound, boundscheck) : \
-    (PyErr_SetString(PyExc_IndexError, "tuple index out of range"), (PyObject*)NULL))
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Tuple_Fast(PyObject *o, Py_ssize_t i,
-                                                              int wraparound, int boundscheck);
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j);
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i,
-                                                     int is_list, int wraparound, int boundscheck);
 
 #if CYTHON_COMPILING_IN_CPYTHON
 static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw);
@@ -2558,25 +2539,19 @@ static int __pyx_f_5spacy_6syntax_6_state_push_stack(struct __pyx_t_5spacy_6synt
 /* "spacy/syntax/_state.pyx":33
  * 
  * 
- * cdef int children_in_buffer(const State *s, int head, list gold) except -1:             # <<<<<<<<<<<<<<
+ * cdef int children_in_buffer(const State *s, int head, int* gold) except -1:             # <<<<<<<<<<<<<<
  *     # Golds holds an array of head offsets --- the head of word i is i - golds[i]
  *     # Iterate over the tokens of the queue, and check whether their gold head is
  */
 
-static int __pyx_f_5spacy_6syntax_6_state_children_in_buffer(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, int __pyx_v_head, PyObject *__pyx_v_gold) {
+static int __pyx_f_5spacy_6syntax_6_state_children_in_buffer(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, int __pyx_v_head, int *__pyx_v_gold) {
   int __pyx_v_i;
   int __pyx_v_n;
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
-  PyObject *__pyx_t_3 = NULL;
-  PyObject *__pyx_t_4 = NULL;
-  PyObject *__pyx_t_5 = NULL;
-  int __pyx_t_6;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
+  int __pyx_t_3;
   __Pyx_TraceDeclarations
   __Pyx_RefNannySetupContext("children_in_buffer", 0);
   __Pyx_TraceCall("children_in_buffer", __pyx_f[1], 33);
@@ -2608,20 +2583,8 @@ static int __pyx_f_5spacy_6syntax_6_state_children_in_buffer(struct __pyx_t_5spa
  *             n += 1
  *     return n
  */
-    if (unlikely(__pyx_v_gold == Py_None)) {
-      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      {__pyx_filename = __pyx_f[1]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    }
-    __pyx_t_3 = __Pyx_GetItemInt_List(__pyx_v_gold, __pyx_v_i, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(__pyx_t_3 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_head); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 40; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (__pyx_t_6) {
+    __pyx_t_3 = (((__pyx_v_gold[__pyx_v_i]) == __pyx_v_head) != 0);
+    if (__pyx_t_3) {
 
       /* "spacy/syntax/_state.pyx":41
  *     for i in range(s.i, s.sent_len):
@@ -2649,18 +2612,12 @@ static int __pyx_f_5spacy_6syntax_6_state_children_in_buffer(struct __pyx_t_5spa
   /* "spacy/syntax/_state.pyx":33
  * 
  * 
- * cdef int children_in_buffer(const State *s, int head, list gold) except -1:             # <<<<<<<<<<<<<<
+ * cdef int children_in_buffer(const State *s, int head, int* gold) except -1:             # <<<<<<<<<<<<<<
  *     # Golds holds an array of head offsets --- the head of word i is i - golds[i]
  *     # Iterate over the tokens of the queue, and check whether their gold head is
  */
 
   /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("spacy.syntax._state.children_in_buffer", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = -1;
   __pyx_L0:;
   __Pyx_TraceReturn(Py_None);
   __Pyx_RefNannyFinishContext();
@@ -2670,63 +2627,37 @@ static int __pyx_f_5spacy_6syntax_6_state_children_in_buffer(struct __pyx_t_5spa
 /* "spacy/syntax/_state.pyx":45
  * 
  * 
- * cdef int head_in_buffer(const State *s, const int child, list gold) except -1:             # <<<<<<<<<<<<<<
+ * cdef int head_in_buffer(const State *s, const int child, int* gold) except -1:             # <<<<<<<<<<<<<<
  *     return gold[child] >= s.i
  * 
  */
 
-static int __pyx_f_5spacy_6syntax_6_state_head_in_buffer(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, int const __pyx_v_child, PyObject *__pyx_v_gold) {
+static int __pyx_f_5spacy_6syntax_6_state_head_in_buffer(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, int const __pyx_v_child, int *__pyx_v_gold) {
   int __pyx_r;
   __Pyx_RefNannyDeclarations
-  PyObject *__pyx_t_1 = NULL;
-  PyObject *__pyx_t_2 = NULL;
-  PyObject *__pyx_t_3 = NULL;
-  int __pyx_t_4;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
   __Pyx_TraceDeclarations
   __Pyx_RefNannySetupContext("head_in_buffer", 0);
   __Pyx_TraceCall("head_in_buffer", __pyx_f[1], 45);
 
   /* "spacy/syntax/_state.pyx":46
  * 
- * cdef int head_in_buffer(const State *s, const int child, list gold) except -1:
+ * cdef int head_in_buffer(const State *s, const int child, int* gold) except -1:
  *     return gold[child] >= s.i             # <<<<<<<<<<<<<<
  * 
  * 
  */
-  if (unlikely(__pyx_v_gold == Py_None)) {
-    PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-    {__pyx_filename = __pyx_f[1]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  }
-  __pyx_t_1 = __Pyx_GetItemInt_List(__pyx_v_gold, __pyx_v_child, int const , 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(__pyx_t_1 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
-  __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyInt_From_int(__pyx_v_s->i); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyObject_RichCompare(__pyx_t_1, __pyx_t_2, Py_GE); __Pyx_XGOTREF(__pyx_t_3); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_4 = __Pyx_PyInt_As_int(__pyx_t_3); if (unlikely((__pyx_t_4 == (int)-1) && PyErr_Occurred())) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 46; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __pyx_r = __pyx_t_4;
+  __pyx_r = ((__pyx_v_gold[__pyx_v_child]) >= __pyx_v_s->i);
   goto __pyx_L0;
 
   /* "spacy/syntax/_state.pyx":45
  * 
  * 
- * cdef int head_in_buffer(const State *s, const int child, list gold) except -1:             # <<<<<<<<<<<<<<
+ * cdef int head_in_buffer(const State *s, const int child, int* gold) except -1:             # <<<<<<<<<<<<<<
  *     return gold[child] >= s.i
  * 
  */
 
   /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_AddTraceback("spacy.syntax._state.head_in_buffer", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = -1;
   __pyx_L0:;
   __Pyx_TraceReturn(Py_None);
   __Pyx_RefNannyFinishContext();
@@ -2736,12 +2667,12 @@ static int __pyx_f_5spacy_6syntax_6_state_head_in_buffer(struct __pyx_t_5spacy_6
 /* "spacy/syntax/_state.pyx":49
  * 
  * 
- * cdef int children_in_stack(const State *s, const int head, list gold) except -1:             # <<<<<<<<<<<<<<
+ * cdef int children_in_stack(const State *s, const int head, int* gold) except -1:             # <<<<<<<<<<<<<<
  *     cdef int i
  *     cdef int n = 0
  */
 
-static int __pyx_f_5spacy_6syntax_6_state_children_in_stack(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, int const __pyx_v_head, PyObject *__pyx_v_gold) {
+static int __pyx_f_5spacy_6syntax_6_state_children_in_stack(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, int const __pyx_v_head, int *__pyx_v_gold) {
   int __pyx_v_i;
   int __pyx_v_n;
   int __pyx_r;
@@ -2749,19 +2680,12 @@ static int __pyx_f_5spacy_6syntax_6_state_children_in_stack(struct __pyx_t_5spac
   int __pyx_t_1;
   int __pyx_t_2;
   int __pyx_t_3;
-  PyObject *__pyx_t_4 = NULL;
-  PyObject *__pyx_t_5 = NULL;
-  PyObject *__pyx_t_6 = NULL;
-  int __pyx_t_7;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
   __Pyx_TraceDeclarations
   __Pyx_RefNannySetupContext("children_in_stack", 0);
   __Pyx_TraceCall("children_in_stack", __pyx_f[1], 49);
 
   /* "spacy/syntax/_state.pyx":51
- * cdef int children_in_stack(const State *s, const int head, list gold) except -1:
+ * cdef int children_in_stack(const State *s, const int head, int* gold) except -1:
  *     cdef int i
  *     cdef int n = 0             # <<<<<<<<<<<<<<
  *     for i in range(s.stack_len):
@@ -2787,21 +2711,8 @@ static int __pyx_f_5spacy_6syntax_6_state_children_in_stack(struct __pyx_t_5spac
  *             n += 1
  *     return n
  */
-    if (unlikely(__pyx_v_gold == Py_None)) {
-      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      {__pyx_filename = __pyx_f[1]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    }
-    __pyx_t_3 = (__pyx_v_s->stack[(-__pyx_v_i)]);
-    __pyx_t_4 = __Pyx_GetItemInt_List(__pyx_v_gold, __pyx_t_3, int, 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(__pyx_t_4 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = __Pyx_PyInt_From_int(__pyx_v_head); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_5);
-    __pyx_t_6 = PyObject_RichCompare(__pyx_t_4, __pyx_t_5, Py_EQ); __Pyx_XGOTREF(__pyx_t_6); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    __pyx_t_7 = __Pyx_PyObject_IsTrue(__pyx_t_6); if (unlikely(__pyx_t_7 < 0)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 53; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
-    if (__pyx_t_7) {
+    __pyx_t_3 = (((__pyx_v_gold[(__pyx_v_s->stack[(-__pyx_v_i)])]) == __pyx_v_head) != 0);
+    if (__pyx_t_3) {
 
       /* "spacy/syntax/_state.pyx":54
  *     for i in range(s.stack_len):
@@ -2829,18 +2740,12 @@ static int __pyx_f_5spacy_6syntax_6_state_children_in_stack(struct __pyx_t_5spac
   /* "spacy/syntax/_state.pyx":49
  * 
  * 
- * cdef int children_in_stack(const State *s, const int head, list gold) except -1:             # <<<<<<<<<<<<<<
+ * cdef int children_in_stack(const State *s, const int head, int* gold) except -1:             # <<<<<<<<<<<<<<
  *     cdef int i
  *     cdef int n = 0
  */
 
   /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_XDECREF(__pyx_t_6);
-  __Pyx_AddTraceback("spacy.syntax._state.children_in_stack", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = -1;
   __pyx_L0:;
   __Pyx_TraceReturn(Py_None);
   __Pyx_RefNannyFinishContext();
@@ -2850,30 +2755,24 @@ static int __pyx_f_5spacy_6syntax_6_state_children_in_stack(struct __pyx_t_5spac
 /* "spacy/syntax/_state.pyx":58
  * 
  * 
- * cdef int head_in_stack(const State *s, const int child, list gold) except -1:             # <<<<<<<<<<<<<<
+ * cdef int head_in_stack(const State *s, const int child, int* gold) except -1:             # <<<<<<<<<<<<<<
  *     cdef int i
  *     for i in range(s.stack_len):
  */
 
-static int __pyx_f_5spacy_6syntax_6_state_head_in_stack(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, int const __pyx_v_child, PyObject *__pyx_v_gold) {
+static int __pyx_f_5spacy_6syntax_6_state_head_in_stack(struct __pyx_t_5spacy_6syntax_6_state_State const *__pyx_v_s, int const __pyx_v_child, int *__pyx_v_gold) {
   int __pyx_v_i;
   int __pyx_r;
   __Pyx_RefNannyDeclarations
   int __pyx_t_1;
   int __pyx_t_2;
-  PyObject *__pyx_t_3 = NULL;
-  PyObject *__pyx_t_4 = NULL;
-  PyObject *__pyx_t_5 = NULL;
-  int __pyx_t_6;
-  int __pyx_lineno = 0;
-  const char *__pyx_filename = NULL;
-  int __pyx_clineno = 0;
+  int __pyx_t_3;
   __Pyx_TraceDeclarations
   __Pyx_RefNannySetupContext("head_in_stack", 0);
   __Pyx_TraceCall("head_in_stack", __pyx_f[1], 58);
 
   /* "spacy/syntax/_state.pyx":60
- * cdef int head_in_stack(const State *s, const int child, list gold) except -1:
+ * cdef int head_in_stack(const State *s, const int child, int* gold) except -1:
  *     cdef int i
  *     for i in range(s.stack_len):             # <<<<<<<<<<<<<<
  *         if gold[child] == s.stack[-i]:
@@ -2890,20 +2789,8 @@ static int __pyx_f_5spacy_6syntax_6_state_head_in_stack(struct __pyx_t_5spacy_6s
  *             return 1
  *     return 0
  */
-    if (unlikely(__pyx_v_gold == Py_None)) {
-      PyErr_SetString(PyExc_TypeError, "'NoneType' object is not subscriptable");
-      {__pyx_filename = __pyx_f[1]; __pyx_lineno = 61; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    }
-    __pyx_t_3 = __Pyx_GetItemInt_List(__pyx_v_gold, __pyx_v_child, int const , 1, __Pyx_PyInt_From_int, 1, 1, 1); if (unlikely(__pyx_t_3 == NULL)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 61; __pyx_clineno = __LINE__; goto __pyx_L1_error;};
-    __Pyx_GOTREF(__pyx_t_3);
-    __pyx_t_4 = __Pyx_PyInt_From_int((__pyx_v_s->stack[(-__pyx_v_i)])); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 61; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_4);
-    __pyx_t_5 = PyObject_RichCompare(__pyx_t_3, __pyx_t_4, Py_EQ); __Pyx_XGOTREF(__pyx_t_5); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 61; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-    __Pyx_DECREF(__pyx_t_4); __pyx_t_4 = 0;
-    __pyx_t_6 = __Pyx_PyObject_IsTrue(__pyx_t_5); if (unlikely(__pyx_t_6 < 0)) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 61; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
-    if (__pyx_t_6) {
+    __pyx_t_3 = (((__pyx_v_gold[__pyx_v_child]) == (__pyx_v_s->stack[(-__pyx_v_i)])) != 0);
+    if (__pyx_t_3) {
 
       /* "spacy/syntax/_state.pyx":62
  *     for i in range(s.stack_len):
@@ -2930,18 +2817,12 @@ static int __pyx_f_5spacy_6syntax_6_state_head_in_stack(struct __pyx_t_5spacy_6s
   /* "spacy/syntax/_state.pyx":58
  * 
  * 
- * cdef int head_in_stack(const State *s, const int child, list gold) except -1:             # <<<<<<<<<<<<<<
+ * cdef int head_in_stack(const State *s, const int child, int* gold) except -1:             # <<<<<<<<<<<<<<
  *     cdef int i
  *     for i in range(s.stack_len):
  */
 
   /* function exit code */
-  __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_3);
-  __Pyx_XDECREF(__pyx_t_4);
-  __Pyx_XDECREF(__pyx_t_5);
-  __Pyx_AddTraceback("spacy.syntax._state.head_in_stack", __pyx_clineno, __pyx_lineno, __pyx_filename);
-  __pyx_r = -1;
   __pyx_L0:;
   __Pyx_TraceReturn(Py_None);
   __Pyx_RefNannyFinishContext();
@@ -6375,10 +6256,10 @@ PyMODINIT_FUNC PyInit__state(void)
   if (__Pyx_ExportFunction("push_stack", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_push_stack, "int (struct __pyx_t_5spacy_6syntax_6_state_State *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__Pyx_ExportFunction("get_right", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_get_right, "struct __pyx_t_5spacy_6tokens_TokenC const *(struct __pyx_t_5spacy_6syntax_6_state_State const *, struct __pyx_t_5spacy_6tokens_TokenC const *, int const )") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__Pyx_ExportFunction("get_left", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_get_left, "struct __pyx_t_5spacy_6tokens_TokenC const *(struct __pyx_t_5spacy_6syntax_6_state_State const *, struct __pyx_t_5spacy_6tokens_TokenC const *, int const )") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (__Pyx_ExportFunction("children_in_buffer", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_children_in_buffer, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, int const , PyObject *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (__Pyx_ExportFunction("head_in_buffer", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_head_in_buffer, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, int const , PyObject *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (__Pyx_ExportFunction("children_in_stack", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_children_in_stack, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, int const , PyObject *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  if (__Pyx_ExportFunction("head_in_stack", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_head_in_stack, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, int const , PyObject *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ExportFunction("children_in_buffer", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_children_in_buffer, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, int const , int *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ExportFunction("head_in_buffer", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_head_in_buffer, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, int const , int *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ExportFunction("children_in_stack", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_children_in_stack, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, int const , int *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  if (__Pyx_ExportFunction("head_in_stack", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_head_in_stack, "int (struct __pyx_t_5spacy_6syntax_6_state_State const *, int const , int *)") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   if (__Pyx_ExportFunction("init_state", (void (*)(void))__pyx_f_5spacy_6syntax_6_state_init_state, "struct __pyx_t_5spacy_6syntax_6_state_State *(struct __pyx_obj_5cymem_5cymem_Pool *, struct __pyx_t_5spacy_6tokens_TokenC *, int const )") < 0) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 1; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   /*--- Type init code ---*/
   /*--- Type import code ---*/
@@ -6588,84 +6469,6 @@ bad:
     return py_code;
 }
 #endif
-
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Generic(PyObject *o, PyObject* j) {
-    PyObject *r;
-    if (!j) return NULL;
-    r = PyObject_GetItem(o, j);
-    Py_DECREF(j);
-    return r;
-}
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_List_Fast(PyObject *o, Py_ssize_t i,
-                                                              int wraparound, int boundscheck) {
-#if CYTHON_COMPILING_IN_CPYTHON
-    if (wraparound & unlikely(i < 0)) i += PyList_GET_SIZE(o);
-    if ((!boundscheck) || likely((0 <= i) & (i < PyList_GET_SIZE(o)))) {
-        PyObject *r = PyList_GET_ITEM(o, i);
-        Py_INCREF(r);
-        return r;
-    }
-    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
-#else
-    return PySequence_GetItem(o, i);
-#endif
-}
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Tuple_Fast(PyObject *o, Py_ssize_t i,
-                                                              int wraparound, int boundscheck) {
-#if CYTHON_COMPILING_IN_CPYTHON
-    if (wraparound & unlikely(i < 0)) i += PyTuple_GET_SIZE(o);
-    if ((!boundscheck) || likely((0 <= i) & (i < PyTuple_GET_SIZE(o)))) {
-        PyObject *r = PyTuple_GET_ITEM(o, i);
-        Py_INCREF(r);
-        return r;
-    }
-    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
-#else
-    return PySequence_GetItem(o, i);
-#endif
-}
-static CYTHON_INLINE PyObject *__Pyx_GetItemInt_Fast(PyObject *o, Py_ssize_t i,
-                                                     int is_list, int wraparound, int boundscheck) {
-#if CYTHON_COMPILING_IN_CPYTHON
-    if (is_list || PyList_CheckExact(o)) {
-        Py_ssize_t n = ((!wraparound) | likely(i >= 0)) ? i : i + PyList_GET_SIZE(o);
-        if ((!boundscheck) || (likely((n >= 0) & (n < PyList_GET_SIZE(o))))) {
-            PyObject *r = PyList_GET_ITEM(o, n);
-            Py_INCREF(r);
-            return r;
-        }
-    }
-    else if (PyTuple_CheckExact(o)) {
-        Py_ssize_t n = ((!wraparound) | likely(i >= 0)) ? i : i + PyTuple_GET_SIZE(o);
-        if ((!boundscheck) || likely((n >= 0) & (n < PyTuple_GET_SIZE(o)))) {
-            PyObject *r = PyTuple_GET_ITEM(o, n);
-            Py_INCREF(r);
-            return r;
-        }
-    } else {
-        PySequenceMethods *m = Py_TYPE(o)->tp_as_sequence;
-        if (likely(m && m->sq_item)) {
-            if (wraparound && unlikely(i < 0) && likely(m->sq_length)) {
-                Py_ssize_t l = m->sq_length(o);
-                if (likely(l >= 0)) {
-                    i += l;
-                } else {
-                    if (PyErr_ExceptionMatches(PyExc_OverflowError))
-                        PyErr_Clear();
-                    else
-                        return NULL;
-                }
-            }
-            return m->sq_item(o, i);
-        }
-    }
-#else
-    if (is_list || PySequence_Check(o)) {
-        return PySequence_GetItem(o, i);
-    }
-#endif
-    return __Pyx_GetItemInt_Generic(o, PyInt_FromSsize_t(i));
-}
 
 #if CYTHON_COMPILING_IN_CPYTHON
 static CYTHON_INLINE PyObject* __Pyx_PyObject_Call(PyObject *func, PyObject *arg, PyObject *kw) {

@@ -1620,6 +1620,8 @@ struct __pyx_obj_5spacy_6tokens_Token {
   int idx;
   int pos;
   int lemma;
+  int head;
+  int dep_tag;
   __pyx_t_5thinc_8typedefs_atom_t id;
   __pyx_t_5thinc_8typedefs_atom_t cluster;
   __pyx_t_5thinc_8typedefs_atom_t length;
@@ -2691,7 +2693,7 @@ static int __pyx_f_5spacy_6syntax_15_parse_features_fill_context(__pyx_t_5thinc_
  *     fill_token(&context[S0w], get_s0(state))
  *     fill_token(&context[S0r2w], get_right(state, get_s0(state), 2))             # <<<<<<<<<<<<<<
  *     fill_token(&context[S0rw], get_right(state, get_s0(state), 1))
- *     fill_token(&context[N0lw], get_left(state, get_n0(state), 0))
+ *     fill_token(&context[N0lw], get_left(state, get_n0(state), 1))
  */
   __pyx_f_5spacy_6syntax_15_parse_features_fill_token((&(__pyx_v_context[__pyx_e_5spacy_6syntax_15_parse_features_S0r2w])), __pyx_f_5spacy_6syntax_6_state_get_right(__pyx_v_state, __pyx_f_5spacy_6syntax_6_state_get_s0(__pyx_v_state), 2));
 
@@ -2699,32 +2701,32 @@ static int __pyx_f_5spacy_6syntax_15_parse_features_fill_context(__pyx_t_5thinc_
  *     fill_token(&context[S0w], get_s0(state))
  *     fill_token(&context[S0r2w], get_right(state, get_s0(state), 2))
  *     fill_token(&context[S0rw], get_right(state, get_s0(state), 1))             # <<<<<<<<<<<<<<
- *     fill_token(&context[N0lw], get_left(state, get_n0(state), 0))
- *     fill_token(&context[N0l2w], get_left(state, get_n0(state), 1))
+ *     fill_token(&context[N0lw], get_left(state, get_n0(state), 1))
+ *     fill_token(&context[N0l2w], get_left(state, get_n0(state), 2))
  */
   __pyx_f_5spacy_6syntax_15_parse_features_fill_token((&(__pyx_v_context[__pyx_e_5spacy_6syntax_15_parse_features_S0rw])), __pyx_f_5spacy_6syntax_6_state_get_right(__pyx_v_state, __pyx_f_5spacy_6syntax_6_state_get_s0(__pyx_v_state), 1));
 
   /* "spacy/syntax/_parse_features.pyx":59
  *     fill_token(&context[S0r2w], get_right(state, get_s0(state), 2))
  *     fill_token(&context[S0rw], get_right(state, get_s0(state), 1))
- *     fill_token(&context[N0lw], get_left(state, get_n0(state), 0))             # <<<<<<<<<<<<<<
- *     fill_token(&context[N0l2w], get_left(state, get_n0(state), 1))
+ *     fill_token(&context[N0lw], get_left(state, get_n0(state), 1))             # <<<<<<<<<<<<<<
+ *     fill_token(&context[N0l2w], get_left(state, get_n0(state), 2))
  *     fill_token(&context[N0w], get_n0(state))
  */
-  __pyx_f_5spacy_6syntax_15_parse_features_fill_token((&(__pyx_v_context[__pyx_e_5spacy_6syntax_15_parse_features_N0lw])), __pyx_f_5spacy_6syntax_6_state_get_left(__pyx_v_state, __pyx_f_5spacy_6syntax_6_state_get_n0(__pyx_v_state), 0));
+  __pyx_f_5spacy_6syntax_15_parse_features_fill_token((&(__pyx_v_context[__pyx_e_5spacy_6syntax_15_parse_features_N0lw])), __pyx_f_5spacy_6syntax_6_state_get_left(__pyx_v_state, __pyx_f_5spacy_6syntax_6_state_get_n0(__pyx_v_state), 1));
 
   /* "spacy/syntax/_parse_features.pyx":60
  *     fill_token(&context[S0rw], get_right(state, get_s0(state), 1))
- *     fill_token(&context[N0lw], get_left(state, get_n0(state), 0))
- *     fill_token(&context[N0l2w], get_left(state, get_n0(state), 1))             # <<<<<<<<<<<<<<
+ *     fill_token(&context[N0lw], get_left(state, get_n0(state), 1))
+ *     fill_token(&context[N0l2w], get_left(state, get_n0(state), 2))             # <<<<<<<<<<<<<<
  *     fill_token(&context[N0w], get_n0(state))
  *     fill_token(&context[N1w], get_n1(state))
  */
-  __pyx_f_5spacy_6syntax_15_parse_features_fill_token((&(__pyx_v_context[__pyx_e_5spacy_6syntax_15_parse_features_N0l2w])), __pyx_f_5spacy_6syntax_6_state_get_left(__pyx_v_state, __pyx_f_5spacy_6syntax_6_state_get_n0(__pyx_v_state), 1));
+  __pyx_f_5spacy_6syntax_15_parse_features_fill_token((&(__pyx_v_context[__pyx_e_5spacy_6syntax_15_parse_features_N0l2w])), __pyx_f_5spacy_6syntax_6_state_get_left(__pyx_v_state, __pyx_f_5spacy_6syntax_6_state_get_n0(__pyx_v_state), 2));
 
   /* "spacy/syntax/_parse_features.pyx":61
- *     fill_token(&context[N0lw], get_left(state, get_n0(state), 0))
- *     fill_token(&context[N0l2w], get_left(state, get_n0(state), 1))
+ *     fill_token(&context[N0lw], get_left(state, get_n0(state), 1))
+ *     fill_token(&context[N0l2w], get_left(state, get_n0(state), 2))
  *     fill_token(&context[N0w], get_n0(state))             # <<<<<<<<<<<<<<
  *     fill_token(&context[N1w], get_n1(state))
  *     fill_token(&context[N2w], get_n2(state))
@@ -2732,7 +2734,7 @@ static int __pyx_f_5spacy_6syntax_15_parse_features_fill_context(__pyx_t_5thinc_
   __pyx_f_5spacy_6syntax_15_parse_features_fill_token((&(__pyx_v_context[__pyx_e_5spacy_6syntax_15_parse_features_N0w])), __pyx_f_5spacy_6syntax_6_state_get_n0(__pyx_v_state));
 
   /* "spacy/syntax/_parse_features.pyx":62
- *     fill_token(&context[N0l2w], get_left(state, get_n0(state), 1))
+ *     fill_token(&context[N0l2w], get_left(state, get_n0(state), 2))
  *     fill_token(&context[N0w], get_n0(state))
  *     fill_token(&context[N1w], get_n1(state))             # <<<<<<<<<<<<<<
  *     fill_token(&context[N2w], get_n2(state))

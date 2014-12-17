@@ -32,7 +32,7 @@ cdef inline bint _can_reduce(const State* s) nogil:
     return s.stack_len >= 2 and has_head(get_s0(s))
 
 
-cdef int _shift_cost(const State* s, list gold) except -1:
+cdef int _shift_cost(const State* s, int* gold) except -1:
     assert not at_eol(s)
     cost = 0
     cost += head_in_stack(s, s.i, gold)
@@ -40,7 +40,7 @@ cdef int _shift_cost(const State* s, list gold) except -1:
     return cost
 
 
-cdef int _right_cost(const State* s, list gold) except -1:
+cdef int _right_cost(const State* s, int* gold) except -1:
     assert s.stack_len >= 1
     cost = 0
     if gold[s.i] == s.stack[0]:
@@ -51,7 +51,7 @@ cdef int _right_cost(const State* s, list gold) except -1:
     return cost
 
 
-cdef int _left_cost(const State* s, list gold) except -1:
+cdef int _left_cost(const State* s, int* gold) except -1:
     assert s.stack_len >= 1
     cost = 0
     if gold[s.stack[0]] == s.i:
@@ -62,13 +62,15 @@ cdef int _left_cost(const State* s, list gold) except -1:
     return cost
 
 
-cdef int _reduce_cost(const State* s, list gold) except -1:
+cdef int _reduce_cost(const State* s, int* gold) except -1:
     return children_in_buffer(s, s.stack[0], gold)
 
 
 cdef class TransitionSystem:
     def __init__(self, list left_labels, list right_labels):
         self.mem = Pool()
+        left_labels.sort()
+        right_labels.sort()
         if 'ROOT' in right_labels:
             right_labels.pop(right_labels.index('ROOT'))
         if 'ROOT' in left_labels:
@@ -119,17 +121,17 @@ cdef class TransitionSystem:
         valid[REDUCE] = _can_reduce(s)
 
         cdef int best = -1
-        cdef weight_t score = -90000
+        cdef weight_t score = 0
         cdef int i
         for i in range(self.n_moves):
-            if valid[self._moves[i].move] and scores[i] > score:
+            if valid[self._moves[i].move] and (best == -1 or scores[i] > score):
                 best = i
                 score = scores[i]
+        assert best >= 0
         return best
 
     cdef int best_gold(self, const weight_t* scores, const State* s,
-                       list gold_heads, list label_strings) except -1:
-        gold_labels = [self.label_ids[label_str] for label_str in label_strings]
+                       int* gold_heads, int* gold_labels) except -1:
         cdef int[N_MOVES] unl_costs
         unl_costs[SHIFT] = _shift_cost(s, gold_heads) if _can_shift(s) else -1
         unl_costs[LEFT] = _left_cost(s, gold_heads) if _can_left(s) else -1

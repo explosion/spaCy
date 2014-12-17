@@ -20,5 +20,5 @@ cdef class TransitionSystem:
 
     cdef int best_valid(self, const weight_t* scores, const State* s) except -1
     cdef int best_gold(self, const weight_t* scores, const State* s,
-                       list gold_heads, list gold_labels) except -1
+                       int* gold_heads, int* gold_labels) except -1
     cdef int transition(self, State *s, const int clas) except -1

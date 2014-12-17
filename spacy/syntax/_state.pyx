@@ -30,7 +30,7 @@ cdef int push_stack(State *s) except -1:
     s.i += 1
 
 
-cdef int children_in_buffer(const State *s, int head, list gold) except -1:
+cdef int children_in_buffer(const State *s, int head, int* gold) except -1:
     # Golds holds an array of head offsets --- the head of word i is i - golds[i]
     # Iterate over the tokens of the queue, and check whether their gold head is
     # our target
@@ -42,11 +42,11 @@ cdef int children_in_buffer(const State *s, int head, list gold) except -1:
     return n
 
 
-cdef int head_in_buffer(const State *s, const int child, list gold) except -1:
+cdef int head_in_buffer(const State *s, const int child, int* gold) except -1:
     return gold[child] >= s.i
 
 
-cdef int children_in_stack(const State *s, const int head, list gold) except -1:
+cdef int children_in_stack(const State *s, const int head, int* gold) except -1:
     cdef int i
     cdef int n = 0
     for i in range(s.stack_len):
@@ -55,7 +55,7 @@ cdef int children_in_stack(const State *s, const int head, list gold) except -1:
     return n
 
 
-cdef int head_in_stack(const State *s, const int child, list gold) except -1:
+cdef int head_in_stack(const State *s, const int child, int* gold) except -1:
     cdef int i
     for i in range(s.stack_len):
         if gold[child] == s.stack[-i]:
