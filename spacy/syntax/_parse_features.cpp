@@ -459,9 +459,9 @@ static const char *__pyx_f[] = {
   "spacy/utf8string.pxd",
   ".env/lib/python2.7/site-packages/Cython/Includes/cpython/bool.pxd",
   ".env/lib/python2.7/site-packages/Cython/Includes/cpython/complex.pxd",
-  "cache.pxd",
-  "features.pxd",
-  "learner.pxd",
+  ".env/lib/python2.7/site-packages/thinc/cache.pxd",
+  ".env/lib/python2.7/site-packages/thinc/features.pxd",
+  ".env/lib/python2.7/site-packages/thinc/learner.pxd",
   "spacy/tagger.pxd",
   "spacy/morphology.pxd",
   "spacy/lang.pxd",
@@ -2363,6 +2363,7 @@ static CYTHON_INLINE struct __pyx_t_5spacy_6tokens_TokenC *__pyx_f_5spacy_6synta
 static struct __pyx_t_5spacy_6tokens_TokenC const *(*__pyx_f_5spacy_6syntax_6_state_get_right)(struct __pyx_t_5spacy_6syntax_6_state_State const *, struct __pyx_t_5spacy_6tokens_TokenC const *, int const ); /*proto*/
 static struct __pyx_t_5spacy_6tokens_TokenC const *(*__pyx_f_5spacy_6syntax_6_state_get_left)(struct __pyx_t_5spacy_6syntax_6_state_State const *, struct __pyx_t_5spacy_6tokens_TokenC const *, int const ); /*proto*/
 static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_at_eol(struct __pyx_t_5spacy_6syntax_6_state_State const *); /*proto*/
+static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__popcount(uint32_t); /*proto*/
 
 /* Module declarations from 'spacy.syntax._parse_features' */
 static CYTHON_INLINE void __pyx_f_5spacy_6syntax_15_parse_features_fill_token(__pyx_t_5thinc_8typedefs_atom_t *, struct __pyx_t_5spacy_6tokens_TokenC const *); /*proto*/
@@ -3576,7 +3577,150 @@ static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_is_final(struct __pyx_t_
   return __pyx_r;
 }
 
-/* "spacy/syntax/_state.pxd":83
+/* "spacy/syntax/_state.pxd":82
+ * 
+ * 
+ * cdef inline int count_left_kids(const TokenC* head) nogil:             # <<<<<<<<<<<<<<
+ *     return _popcount(head.l_kids)
+ * 
+ */
+
+static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_count_left_kids(struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_v_head) {
+  int __pyx_r;
+
+  /* "spacy/syntax/_state.pxd":83
+ * 
+ * cdef inline int count_left_kids(const TokenC* head) nogil:
+ *     return _popcount(head.l_kids)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  __pyx_r = __pyx_f_5spacy_6syntax_6_state__popcount(__pyx_v_head->l_kids);
+  goto __pyx_L0;
+
+  /* "spacy/syntax/_state.pxd":82
+ * 
+ * 
+ * cdef inline int count_left_kids(const TokenC* head) nogil:             # <<<<<<<<<<<<<<
+ *     return _popcount(head.l_kids)
+ * 
+ */
+
+  /* function exit code */
+  __pyx_L0:;
+  return __pyx_r;
+}
+
+/* "spacy/syntax/_state.pxd":86
+ * 
+ * 
+ * cdef inline int count_right_kids(const TokenC* head) nogil:             # <<<<<<<<<<<<<<
+ *     return _popcount(head.r_kids)
+ * 
+ */
+
+static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_count_right_kids(struct __pyx_t_5spacy_6tokens_TokenC const *__pyx_v_head) {
+  int __pyx_r;
+
+  /* "spacy/syntax/_state.pxd":87
+ * 
+ * cdef inline int count_right_kids(const TokenC* head) nogil:
+ *     return _popcount(head.r_kids)             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  __pyx_r = __pyx_f_5spacy_6syntax_6_state__popcount(__pyx_v_head->r_kids);
+  goto __pyx_L0;
+
+  /* "spacy/syntax/_state.pxd":86
+ * 
+ * 
+ * cdef inline int count_right_kids(const TokenC* head) nogil:             # <<<<<<<<<<<<<<
+ *     return _popcount(head.r_kids)
+ * 
+ */
+
+  /* function exit code */
+  __pyx_L0:;
+  return __pyx_r;
+}
+
+/* "spacy/syntax/_state.pxd":91
+ * 
+ * # From https://en.wikipedia.org/wiki/Hamming_weight
+ * cdef inline uint32_t _popcount(uint32_t x) nogil:             # <<<<<<<<<<<<<<
+ *     """Find number of non-zero bits."""
+ *     cdef int count = 0
+ */
+
+static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__popcount(uint32_t __pyx_v_x) {
+  int __pyx_v_count;
+  uint32_t __pyx_r;
+  int __pyx_t_1;
+
+  /* "spacy/syntax/_state.pxd":93
+ * cdef inline uint32_t _popcount(uint32_t x) nogil:
+ *     """Find number of non-zero bits."""
+ *     cdef int count = 0             # <<<<<<<<<<<<<<
+ *     while x != 0:
+ *         x &= x - 1
+ */
+  __pyx_v_count = 0;
+
+  /* "spacy/syntax/_state.pxd":94
+ *     """Find number of non-zero bits."""
+ *     cdef int count = 0
+ *     while x != 0:             # <<<<<<<<<<<<<<
+ *         x &= x - 1
+ *         count += 1
+ */
+  while (1) {
+    __pyx_t_1 = ((__pyx_v_x != 0) != 0);
+    if (!__pyx_t_1) break;
+
+    /* "spacy/syntax/_state.pxd":95
+ *     cdef int count = 0
+ *     while x != 0:
+ *         x &= x - 1             # <<<<<<<<<<<<<<
+ *         count += 1
+ *     return count
+ */
+    __pyx_v_x = (__pyx_v_x & (__pyx_v_x - 1));
+
+    /* "spacy/syntax/_state.pxd":96
+ *     while x != 0:
+ *         x &= x - 1
+ *         count += 1             # <<<<<<<<<<<<<<
+ *     return count
+ * 
+ */
+    __pyx_v_count = (__pyx_v_count + 1);
+  }
+
+  /* "spacy/syntax/_state.pxd":97
+ *         x &= x - 1
+ *         count += 1
+ *     return count             # <<<<<<<<<<<<<<
+ * 
+ * 
+ */
+  __pyx_r = __pyx_v_count;
+  goto __pyx_L0;
+
+  /* "spacy/syntax/_state.pxd":91
+ * 
+ * # From https://en.wikipedia.org/wiki/Hamming_weight
+ * cdef inline uint32_t _popcount(uint32_t x) nogil:             # <<<<<<<<<<<<<<
+ *     """Find number of non-zero bits."""
+ *     cdef int count = 0
+ */
+
+  /* function exit code */
+  __pyx_L0:;
+  return __pyx_r;
+}
+
+/* "spacy/syntax/_state.pxd":100
  * 
  * 
  * cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:             # <<<<<<<<<<<<<<
@@ -3590,7 +3734,7 @@ static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bi
   int __pyx_t_1;
   int __pyx_t_2;
 
-  /* "spacy/syntax/_state.pxd":85
+  /* "spacy/syntax/_state.pxd":102
  * cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:
  *     cdef int i
  *     for i in range(32):             # <<<<<<<<<<<<<<
@@ -3600,7 +3744,7 @@ static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bi
   for (__pyx_t_1 = 0; __pyx_t_1 < 32; __pyx_t_1+=1) {
     __pyx_v_i = __pyx_t_1;
 
-    /* "spacy/syntax/_state.pxd":86
+    /* "spacy/syntax/_state.pxd":103
  *     cdef int i
  *     for i in range(32):
  *         if bits & (1 << i):             # <<<<<<<<<<<<<<
@@ -3610,7 +3754,7 @@ static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bi
     __pyx_t_2 = ((__pyx_v_bits & (1 << __pyx_v_i)) != 0);
     if (__pyx_t_2) {
 
-      /* "spacy/syntax/_state.pxd":87
+      /* "spacy/syntax/_state.pxd":104
  *     for i in range(32):
  *         if bits & (1 << i):
  *             n -= 1             # <<<<<<<<<<<<<<
@@ -3619,7 +3763,7 @@ static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bi
  */
       __pyx_v_n = (__pyx_v_n - 1);
 
-      /* "spacy/syntax/_state.pxd":88
+      /* "spacy/syntax/_state.pxd":105
  *         if bits & (1 << i):
  *             n -= 1
  *             if n < 1:             # <<<<<<<<<<<<<<
@@ -3629,7 +3773,7 @@ static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bi
       __pyx_t_2 = ((__pyx_v_n < 1) != 0);
       if (__pyx_t_2) {
 
-        /* "spacy/syntax/_state.pxd":89
+        /* "spacy/syntax/_state.pxd":106
  *             n -= 1
  *             if n < 1:
  *                 return i             # <<<<<<<<<<<<<<
@@ -3643,7 +3787,7 @@ static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bi
     __pyx_L5:;
   }
 
-  /* "spacy/syntax/_state.pxd":90
+  /* "spacy/syntax/_state.pxd":107
  *             if n < 1:
  *                 return i
  *     return 0             # <<<<<<<<<<<<<<
@@ -3651,7 +3795,7 @@ static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bi
   __pyx_r = 0;
   goto __pyx_L0;
 
-  /* "spacy/syntax/_state.pxd":83
+  /* "spacy/syntax/_state.pxd":100
  * 
  * 
  * cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:             # <<<<<<<<<<<<<<
@@ -6076,7 +6220,7 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {0, 0, 0, 0, 0, 0, 0}
 };
 static int __Pyx_InitCachedBuiltins(void) {
-  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 85; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_builtin_range = __Pyx_GetBuiltinName(__pyx_n_s_range); if (!__pyx_builtin_range) {__pyx_filename = __pyx_f[1]; __pyx_lineno = 102; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_ValueError = __Pyx_GetBuiltinName(__pyx_n_s_ValueError); if (!__pyx_builtin_ValueError) {__pyx_filename = __pyx_f[2]; __pyx_lineno = 215; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __pyx_builtin_RuntimeError = __Pyx_GetBuiltinName(__pyx_n_s_RuntimeError); if (!__pyx_builtin_RuntimeError) {__pyx_filename = __pyx_f[2]; __pyx_lineno = 799; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   return 0;

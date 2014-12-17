@@ -459,9 +459,9 @@ static const char *__pyx_f[] = {
   "spacy/utf8string.pxd",
   ".env/lib/python2.7/site-packages/Cython/Includes/cpython/bool.pxd",
   ".env/lib/python2.7/site-packages/Cython/Includes/cpython/complex.pxd",
-  "cache.pxd",
-  "features.pxd",
-  "learner.pxd",
+  ".env/lib/python2.7/site-packages/thinc/cache.pxd",
+  ".env/lib/python2.7/site-packages/thinc/features.pxd",
+  ".env/lib/python2.7/site-packages/thinc/learner.pxd",
   "spacy/tagger.pxd",
   "spacy/morphology.pxd",
   "spacy/lang.pxd",
@@ -3975,8 +3975,8 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
   int __pyx_t_2;
   int __pyx_t_3;
   int __pyx_t_4;
-  PyObject *__pyx_t_5 = NULL;
-  int __pyx_t_6;
+  int __pyx_t_5;
+  PyObject *__pyx_t_6 = NULL;
   PyObject *__pyx_t_7 = NULL;
   PyObject *__pyx_t_8 = NULL;
   PyObject *__pyx_t_9 = NULL;
@@ -4111,7 +4111,7 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
  *                     else:
  *                         cost = 0
  *                 elif move == RIGHT:             # <<<<<<<<<<<<<<
- *                     if gold_heads[s.i] == s.stack[0]:
+ *                     if gold_heads[s.i] == s.stack[0] and gold_labels[s.i] != -1:
  *                         cost = label != gold_labels[s.i]
  */
       switch (__pyx_v_move) {
@@ -4131,7 +4131,7 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
  *                 if move == SHIFT or move == REDUCE:
  *                     cost = 0             # <<<<<<<<<<<<<<
  *                 elif move == LEFT:
- *                     if gold_heads[s.stack[0]] == s.i:
+ *                     if gold_heads[s.stack[0]] == s.i and gold_labels[s.stack[0]] != -1:
  */
         __pyx_v_cost = 0;
         break;
@@ -4140,7 +4140,7 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
  *                 if move == SHIFT or move == REDUCE:
  *                     cost = 0
  *                 elif move == LEFT:             # <<<<<<<<<<<<<<
- *                     if gold_heads[s.stack[0]] == s.i:
+ *                     if gold_heads[s.stack[0]] == s.i and gold_labels[s.stack[0]] != -1:
  *                         cost = label != gold_labels[s.stack[0]]
  */
         case __pyx_e_5spacy_6syntax_9arc_eager_LEFT:
@@ -4148,16 +4148,24 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
         /* "spacy/syntax/arc_eager.pyx":154
  *                     cost = 0
  *                 elif move == LEFT:
- *                     if gold_heads[s.stack[0]] == s.i:             # <<<<<<<<<<<<<<
+ *                     if gold_heads[s.stack[0]] == s.i and gold_labels[s.stack[0]] != -1:             # <<<<<<<<<<<<<<
  *                         cost = label != gold_labels[s.stack[0]]
  *                     else:
  */
-        __pyx_t_4 = (((__pyx_v_gold_heads[(__pyx_v_s->stack[0])]) == __pyx_v_s->i) != 0);
+        __pyx_t_5 = (((__pyx_v_gold_heads[(__pyx_v_s->stack[0])]) == __pyx_v_s->i) != 0);
+        if (__pyx_t_5) {
+        } else {
+          __pyx_t_4 = __pyx_t_5;
+          goto __pyx_L7_bool_binop_done;
+        }
+        __pyx_t_5 = (((__pyx_v_gold_labels[(__pyx_v_s->stack[0])]) != -1) != 0);
+        __pyx_t_4 = __pyx_t_5;
+        __pyx_L7_bool_binop_done:;
         if (__pyx_t_4) {
 
           /* "spacy/syntax/arc_eager.pyx":155
  *                 elif move == LEFT:
- *                     if gold_heads[s.stack[0]] == s.i:
+ *                     if gold_heads[s.stack[0]] == s.i and gold_labels[s.stack[0]] != -1:
  *                         cost = label != gold_labels[s.stack[0]]             # <<<<<<<<<<<<<<
  *                     else:
  *                         cost = 0
@@ -4172,7 +4180,7 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
  *                     else:
  *                         cost = 0             # <<<<<<<<<<<<<<
  *                 elif move == RIGHT:
- *                     if gold_heads[s.i] == s.stack[0]:
+ *                     if gold_heads[s.i] == s.stack[0] and gold_labels[s.i] != -1:
  */
           __pyx_v_cost = 0;
         }
@@ -4183,7 +4191,7 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
  *                     else:
  *                         cost = 0
  *                 elif move == RIGHT:             # <<<<<<<<<<<<<<
- *                     if gold_heads[s.i] == s.stack[0]:
+ *                     if gold_heads[s.i] == s.stack[0] and gold_labels[s.i] != -1:
  *                         cost = label != gold_labels[s.i]
  */
         case __pyx_e_5spacy_6syntax_9arc_eager_RIGHT:
@@ -4191,22 +4199,30 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
         /* "spacy/syntax/arc_eager.pyx":159
  *                         cost = 0
  *                 elif move == RIGHT:
- *                     if gold_heads[s.i] == s.stack[0]:             # <<<<<<<<<<<<<<
+ *                     if gold_heads[s.i] == s.stack[0] and gold_labels[s.i] != -1:             # <<<<<<<<<<<<<<
  *                         cost = label != gold_labels[s.i]
  *                     else:
  */
-        __pyx_t_4 = (((__pyx_v_gold_heads[__pyx_v_s->i]) == (__pyx_v_s->stack[0])) != 0);
+        __pyx_t_5 = (((__pyx_v_gold_heads[__pyx_v_s->i]) == (__pyx_v_s->stack[0])) != 0);
+        if (__pyx_t_5) {
+        } else {
+          __pyx_t_4 = __pyx_t_5;
+          goto __pyx_L10_bool_binop_done;
+        }
+        __pyx_t_5 = (((__pyx_v_gold_labels[__pyx_v_s->i]) != -1) != 0);
+        __pyx_t_4 = __pyx_t_5;
+        __pyx_L10_bool_binop_done:;
         if (__pyx_t_4) {
 
           /* "spacy/syntax/arc_eager.pyx":160
  *                 elif move == RIGHT:
- *                     if gold_heads[s.i] == s.stack[0]:
+ *                     if gold_heads[s.i] == s.stack[0] and gold_labels[s.i] != -1:
  *                         cost = label != gold_labels[s.i]             # <<<<<<<<<<<<<<
  *                     else:
  *                         cost = 0
  */
           __pyx_v_cost = (__pyx_v_label != (__pyx_v_gold_labels[__pyx_v_s->i]));
-          goto __pyx_L7;
+          goto __pyx_L9;
         }
         /*else*/ {
 
@@ -4219,7 +4235,7 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
  */
           __pyx_v_cost = 0;
         }
-        __pyx_L7:;
+        __pyx_L9:;
         break;
         default:
 
@@ -4230,10 +4246,10 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
  *                 if cost == 0 and (best == -1 or scores[i] > score):
  *                     best = i
  */
-        __pyx_t_5 = __Pyx_PyObject_Call(__pyx_builtin_StandardError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 164; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-        __Pyx_GOTREF(__pyx_t_5);
-        __Pyx_Raise(__pyx_t_5, 0, 0, 0);
-        __Pyx_DECREF(__pyx_t_5); __pyx_t_5 = 0;
+        __pyx_t_6 = __Pyx_PyObject_Call(__pyx_builtin_StandardError, __pyx_tuple__3, NULL); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 164; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+        __Pyx_GOTREF(__pyx_t_6);
+        __Pyx_Raise(__pyx_t_6, 0, 0, 0);
+        __Pyx_DECREF(__pyx_t_6); __pyx_t_6 = 0;
         {__pyx_filename = __pyx_f[0]; __pyx_lineno = 164; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
         break;
       }
@@ -4245,21 +4261,21 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
  *                     best = i
  *                     score = scores[i]
  */
-      __pyx_t_6 = ((__pyx_v_cost == 0) != 0);
-      if (__pyx_t_6) {
+      __pyx_t_5 = ((__pyx_v_cost == 0) != 0);
+      if (__pyx_t_5) {
       } else {
-        __pyx_t_4 = __pyx_t_6;
-        goto __pyx_L9_bool_binop_done;
+        __pyx_t_4 = __pyx_t_5;
+        goto __pyx_L13_bool_binop_done;
       }
-      __pyx_t_6 = ((__pyx_v_best == -1) != 0);
-      if (!__pyx_t_6) {
+      __pyx_t_5 = ((__pyx_v_best == -1) != 0);
+      if (!__pyx_t_5) {
       } else {
-        __pyx_t_4 = __pyx_t_6;
-        goto __pyx_L9_bool_binop_done;
+        __pyx_t_4 = __pyx_t_5;
+        goto __pyx_L13_bool_binop_done;
       }
-      __pyx_t_6 = (((__pyx_v_scores[__pyx_v_i]) > __pyx_v_score) != 0);
-      __pyx_t_4 = __pyx_t_6;
-      __pyx_L9_bool_binop_done:;
+      __pyx_t_5 = (((__pyx_v_scores[__pyx_v_i]) > __pyx_v_score) != 0);
+      __pyx_t_4 = __pyx_t_5;
+      __pyx_L13_bool_binop_done:;
       if (__pyx_t_4) {
 
         /* "spacy/syntax/arc_eager.pyx":166
@@ -4279,9 +4295,9 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
  *         if best < 0:
  */
         __pyx_v_score = (__pyx_v_scores[__pyx_v_i]);
-        goto __pyx_L8;
+        goto __pyx_L12;
       }
-      __pyx_L8:;
+      __pyx_L12:;
       goto __pyx_L5;
     }
     __pyx_L5:;
@@ -4304,8 +4320,8 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
  *             print s.stack_len
  *             print has_head(get_s0(s))
  */
-    __pyx_t_5 = __Pyx_PyInt_From_int((__pyx_v_unl_costs[__pyx_e_5spacy_6syntax_9arc_eager_SHIFT])); if (unlikely(!__pyx_t_5)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 170; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-    __Pyx_GOTREF(__pyx_t_5);
+    __pyx_t_6 = __Pyx_PyInt_From_int((__pyx_v_unl_costs[__pyx_e_5spacy_6syntax_9arc_eager_SHIFT])); if (unlikely(!__pyx_t_6)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 170; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+    __Pyx_GOTREF(__pyx_t_6);
     __pyx_t_7 = __Pyx_PyInt_From_int((__pyx_v_unl_costs[__pyx_e_5spacy_6syntax_9arc_eager_REDUCE])); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 170; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_7);
     __pyx_t_8 = __Pyx_PyInt_From_int((__pyx_v_unl_costs[__pyx_e_5spacy_6syntax_9arc_eager_LEFT])); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 170; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -4314,15 +4330,15 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
     __Pyx_GOTREF(__pyx_t_9);
     __pyx_t_10 = PyTuple_New(4); if (unlikely(!__pyx_t_10)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 170; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
     __Pyx_GOTREF(__pyx_t_10);
-    PyTuple_SET_ITEM(__pyx_t_10, 0, __pyx_t_5);
-    __Pyx_GIVEREF(__pyx_t_5);
+    PyTuple_SET_ITEM(__pyx_t_10, 0, __pyx_t_6);
+    __Pyx_GIVEREF(__pyx_t_6);
     PyTuple_SET_ITEM(__pyx_t_10, 1, __pyx_t_7);
     __Pyx_GIVEREF(__pyx_t_7);
     PyTuple_SET_ITEM(__pyx_t_10, 2, __pyx_t_8);
     __Pyx_GIVEREF(__pyx_t_8);
     PyTuple_SET_ITEM(__pyx_t_10, 3, __pyx_t_9);
     __Pyx_GIVEREF(__pyx_t_9);
-    __pyx_t_5 = 0;
+    __pyx_t_6 = 0;
     __pyx_t_7 = 0;
     __pyx_t_8 = 0;
     __pyx_t_9 = 0;
@@ -4475,7 +4491,7 @@ static int __pyx_f_5spacy_6syntax_9arc_eager_16TransitionSystem_best_gold(struct
 
   /* function exit code */
   __pyx_L1_error:;
-  __Pyx_XDECREF(__pyx_t_5);
+  __Pyx_XDECREF(__pyx_t_6);
   __Pyx_XDECREF(__pyx_t_7);
   __Pyx_XDECREF(__pyx_t_8);
   __Pyx_XDECREF(__pyx_t_9);
@@ -4931,7 +4947,7 @@ static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_is_final(struct __pyx_t_
  * 
  * cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:             # <<<<<<<<<<<<<<
  *     cdef int i
- *     for i in range(32):
+ *     for i in range(33, -1, -1):
  */
 
 static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bit(uint32_t __pyx_v_bits, int __pyx_v_n) {
@@ -4943,16 +4959,16 @@ static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bi
   /* "spacy/syntax/_state.pxd":85
  * cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:
  *     cdef int i
- *     for i in range(32):             # <<<<<<<<<<<<<<
+ *     for i in range(33, -1, -1):             # <<<<<<<<<<<<<<
  *         if bits & (1 << i):
  *             n -= 1
  */
-  for (__pyx_t_1 = 0; __pyx_t_1 < 32; __pyx_t_1+=1) {
+  for (__pyx_t_1 = 33; __pyx_t_1 > -1; __pyx_t_1-=1) {
     __pyx_v_i = __pyx_t_1;
 
     /* "spacy/syntax/_state.pxd":86
  *     cdef int i
- *     for i in range(32):
+ *     for i in range(33, -1, -1):
  *         if bits & (1 << i):             # <<<<<<<<<<<<<<
  *             n -= 1
  *             if n < 1:
@@ -4961,7 +4977,7 @@ static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bi
     if (__pyx_t_2) {
 
       /* "spacy/syntax/_state.pxd":87
- *     for i in range(32):
+ *     for i in range(33, -1, -1):
  *         if bits & (1 << i):
  *             n -= 1             # <<<<<<<<<<<<<<
  *             if n < 1:
@@ -5006,7 +5022,7 @@ static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bi
  * 
  * cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:             # <<<<<<<<<<<<<<
  *     cdef int i
- *     for i in range(32):
+ *     for i in range(33, -1, -1):
  */
 
   /* function exit code */

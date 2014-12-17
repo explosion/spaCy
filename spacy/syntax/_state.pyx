@@ -6,14 +6,15 @@ from ..lexeme cimport EMPTY_LEXEME
 
 
 cdef int add_dep(State *s, int head, int child, int label) except -1:
-    s.sent[child].head = head - child
+    cdef int dist = head - child
+    s.sent[child].head = dist
     s.sent[child].dep_tag = label
     # Keep a bit-vector tracking child dependencies.  If a word has a child at
     # offset i from it, set that bit (tracking left and right separately)
     if child > head:
-        s.sent[head].r_kids |= 1 << (-s.sent[child].head)
+        s.sent[head].r_kids |= 1 << (-dist)
     else:
-        s.sent[head].l_kids |= 1 << s.sent[child].head
+        s.sent[head].l_kids |= 1 << dist
 
 
 cdef int pop_stack(State *s) except -1:
@@ -72,7 +73,7 @@ cdef const TokenC* get_left(const State* s, const TokenC* head, const int idx) n
     if child >= s.sent:
         return child
     else:
-        return s.sent - 1
+        return NULL
 
 
 cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) nogil:
@@ -84,7 +85,7 @@ cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) 
     if child < (s.sent + s.sent_len):
         return child
     else:
-        return s.sent - 1
+        return NULL
 
 
 DEF PADDING = 5

@@ -454,10 +454,10 @@ static const char *__pyx_f[] = {
   "spacy/syntax/parser.pxd",
   ".env/lib/python2.7/site-packages/Cython/Includes/numpy/__init__.pxd",
   ".env/lib/python2.7/site-packages/cymem/cymem.pxd",
-  "features.pxd",
+  ".env/lib/python2.7/site-packages/thinc/features.pxd",
   ".env/lib/python2.7/site-packages/preshed/maps.pxd",
-  "cache.pxd",
-  "learner.pxd",
+  ".env/lib/python2.7/site-packages/thinc/cache.pxd",
+  ".env/lib/python2.7/site-packages/thinc/learner.pxd",
   ".env/lib/python2.7/site-packages/Cython/Includes/cpython/type.pxd",
   "spacy/utf8string.pxd",
   ".env/lib/python2.7/site-packages/Cython/Includes/cpython/bool.pxd",
@@ -2574,12 +2574,10 @@ static char __pyx_k_model_dir[] = "model_dir";
 static char __pyx_k_set_debug[] = "set_debug";
 static char __pyx_k_ValueError[] = "ValueError";
 static char __pyx_k_gold_heads[] = "gold_heads";
-static char __pyx_k_label_sets[] = "label_sets";
 static char __pyx_k_pyx_vtable[] = "__pyx_vtable__";
 static char __pyx_k_gold_labels[] = "gold_labels";
 static char __pyx_k_left_labels[] = "left_labels";
 static char __pyx_k_RuntimeError[] = "RuntimeError";
-static char __pyx_k_extra_labels[] = "extra_labels";
 static char __pyx_k_right_labels[] = "right_labels";
 static char __pyx_k_get_templates[] = "get_templates";
 static char __pyx_k_parse_features[] = "_parse_features";
@@ -2607,7 +2605,6 @@ static PyObject *__pyx_n_s__9;
 static PyObject *__pyx_n_s_arc_eager;
 static PyObject *__pyx_n_u_config;
 static PyObject *__pyx_n_s_exists;
-static PyObject *__pyx_n_s_extra_labels;
 static PyObject *__pyx_n_s_features;
 static PyObject *__pyx_n_s_get_templates;
 static PyObject *__pyx_n_s_gold_heads;
@@ -2616,7 +2613,6 @@ static PyObject *__pyx_n_s_import;
 static PyObject *__pyx_n_s_isdir;
 static PyObject *__pyx_n_s_join;
 static PyObject *__pyx_n_s_json;
-static PyObject *__pyx_n_s_label_sets;
 static PyObject *__pyx_n_s_left_labels;
 static PyObject *__pyx_n_s_load;
 static PyObject *__pyx_n_s_main;
@@ -2885,7 +2881,7 @@ static PyObject *__pyx_f_5spacy_6syntax_6parser_print_state(struct __pyx_t_5spac
  * 
  * def get_templates(name):             # <<<<<<<<<<<<<<
  *     pf = _parse_features
- *     return pf.arc_eager + pf.extra_labels + pf.label_sets
+ *     return pf.arc_eager
  */
 
 /* Python wrapper */
@@ -2907,8 +2903,6 @@ static PyObject *__pyx_pf_5spacy_6syntax_6parser_2get_templates(CYTHON_UNUSED Py
   PyObject *__pyx_r = NULL;
   __Pyx_RefNannyDeclarations
   PyObject *__pyx_t_1 = NULL;
-  PyObject *__pyx_t_2 = NULL;
-  PyObject *__pyx_t_3 = NULL;
   int __pyx_lineno = 0;
   const char *__pyx_filename = NULL;
   int __pyx_clineno = 0;
@@ -2920,7 +2914,7 @@ static PyObject *__pyx_pf_5spacy_6syntax_6parser_2get_templates(CYTHON_UNUSED Py
  * 
  * def get_templates(name):
  *     pf = _parse_features             # <<<<<<<<<<<<<<
- *     return pf.arc_eager + pf.extra_labels + pf.label_sets
+ *     return pf.arc_eager
  * 
  */
   __pyx_t_1 = __Pyx_GetModuleGlobalName(__pyx_n_s_parse_features); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 51; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
@@ -2931,25 +2925,13 @@ static PyObject *__pyx_pf_5spacy_6syntax_6parser_2get_templates(CYTHON_UNUSED Py
   /* "spacy/syntax/parser.pyx":52
  * def get_templates(name):
  *     pf = _parse_features
- *     return pf.arc_eager + pf.extra_labels + pf.label_sets             # <<<<<<<<<<<<<<
+ *     return pf.arc_eager             # <<<<<<<<<<<<<<
  * 
  * 
  */
   __Pyx_XDECREF(__pyx_r);
   __pyx_t_1 = __Pyx_PyObject_GetAttrStr(__pyx_v_pf, __pyx_n_s_arc_eager); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 52; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_1);
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_pf, __pyx_n_s_extra_labels); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 52; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_3 = PyNumber_Add(__pyx_t_1, __pyx_t_2); if (unlikely(!__pyx_t_3)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 52; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_3);
-  __Pyx_DECREF(__pyx_t_1); __pyx_t_1 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
-  __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_pf, __pyx_n_s_label_sets); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 52; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_2);
-  __pyx_t_1 = PyNumber_Add(__pyx_t_3, __pyx_t_2); if (unlikely(!__pyx_t_1)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 52; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
-  __Pyx_GOTREF(__pyx_t_1);
-  __Pyx_DECREF(__pyx_t_3); __pyx_t_3 = 0;
-  __Pyx_DECREF(__pyx_t_2); __pyx_t_2 = 0;
   __pyx_r = __pyx_t_1;
   __pyx_t_1 = 0;
   goto __pyx_L0;
@@ -2959,14 +2941,12 @@ static PyObject *__pyx_pf_5spacy_6syntax_6parser_2get_templates(CYTHON_UNUSED Py
  * 
  * def get_templates(name):             # <<<<<<<<<<<<<<
  *     pf = _parse_features
- *     return pf.arc_eager + pf.extra_labels + pf.label_sets
+ *     return pf.arc_eager
  */
 
   /* function exit code */
   __pyx_L1_error:;
   __Pyx_XDECREF(__pyx_t_1);
-  __Pyx_XDECREF(__pyx_t_2);
-  __Pyx_XDECREF(__pyx_t_3);
   __Pyx_AddTraceback("spacy.syntax.parser.get_templates", __pyx_clineno, __pyx_lineno, __pyx_filename);
   __pyx_r = NULL;
   __pyx_L0:;
@@ -3250,7 +3230,7 @@ static int __pyx_pf_5spacy_6syntax_6parser_12GreedyParser___init__(struct __pyx_
  *         self.extractor = Extractor(get_templates(self.cfg.features))
  *         self.moves = TransitionSystem(self.cfg.left_labels, self.cfg.right_labels)             # <<<<<<<<<<<<<<
  * 
- *         self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ + 10000)
+ *         self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ)
  */
   __pyx_t_2 = __Pyx_PyObject_GetAttrStr(__pyx_v_self->cfg, __pyx_n_s_left_labels); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 60; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
@@ -3276,13 +3256,13 @@ static int __pyx_pf_5spacy_6syntax_6parser_12GreedyParser___init__(struct __pyx_
   /* "spacy/syntax/parser.pyx":62
  *         self.moves = TransitionSystem(self.cfg.left_labels, self.cfg.right_labels)
  * 
- *         self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ + 10000)             # <<<<<<<<<<<<<<
+ *         self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ)             # <<<<<<<<<<<<<<
  *         if os.path.exists(pjoin(model_dir, 'model')):
  *             self.model.load(pjoin(model_dir, 'model'))
  */
   __pyx_t_4 = __Pyx_PyInt_From_int(__pyx_v_self->moves->n_moves); if (unlikely(!__pyx_t_4)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 62; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_4);
-  __pyx_t_8 = __Pyx_PyInt_From_long((__pyx_v_self->extractor->n_templ + 10000)); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 62; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
+  __pyx_t_8 = __Pyx_PyInt_From_int(__pyx_v_self->extractor->n_templ); if (unlikely(!__pyx_t_8)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 62; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_8);
   __pyx_t_2 = PyTuple_New(2); if (unlikely(!__pyx_t_2)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 62; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_2);
@@ -3303,7 +3283,7 @@ static int __pyx_pf_5spacy_6syntax_6parser_12GreedyParser___init__(struct __pyx_
 
   /* "spacy/syntax/parser.pyx":63
  * 
- *         self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ + 10000)
+ *         self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ)
  *         if os.path.exists(pjoin(model_dir, 'model')):             # <<<<<<<<<<<<<<
  *             self.model.load(pjoin(model_dir, 'model'))
  * 
@@ -3376,7 +3356,7 @@ static int __pyx_pf_5spacy_6syntax_6parser_12GreedyParser___init__(struct __pyx_
   if (__pyx_t_1) {
 
     /* "spacy/syntax/parser.pyx":64
- *         self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ + 10000)
+ *         self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ)
  *         if os.path.exists(pjoin(model_dir, 'model')):
  *             self.model.load(pjoin(model_dir, 'model'))             # <<<<<<<<<<<<<<
  * 
@@ -4784,7 +4764,7 @@ static CYTHON_INLINE int __pyx_f_5spacy_6syntax_6_state_is_final(struct __pyx_t_
  * 
  * cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:             # <<<<<<<<<<<<<<
  *     cdef int i
- *     for i in range(32):
+ *     for i in range(33, -1, -1):
  */
 
 static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bit(uint32_t __pyx_v_bits, int __pyx_v_n) {
@@ -4796,16 +4776,16 @@ static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bi
   /* "spacy/syntax/_state.pxd":85
  * cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:
  *     cdef int i
- *     for i in range(32):             # <<<<<<<<<<<<<<
+ *     for i in range(33, -1, -1):             # <<<<<<<<<<<<<<
  *         if bits & (1 << i):
  *             n -= 1
  */
-  for (__pyx_t_1 = 0; __pyx_t_1 < 32; __pyx_t_1+=1) {
+  for (__pyx_t_1 = 33; __pyx_t_1 > -1; __pyx_t_1-=1) {
     __pyx_v_i = __pyx_t_1;
 
     /* "spacy/syntax/_state.pxd":86
  *     cdef int i
- *     for i in range(32):
+ *     for i in range(33, -1, -1):
  *         if bits & (1 << i):             # <<<<<<<<<<<<<<
  *             n -= 1
  *             if n < 1:
@@ -4814,7 +4794,7 @@ static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bi
     if (__pyx_t_2) {
 
       /* "spacy/syntax/_state.pxd":87
- *     for i in range(32):
+ *     for i in range(33, -1, -1):
  *         if bits & (1 << i):
  *             n -= 1             # <<<<<<<<<<<<<<
  *             if n < 1:
@@ -4859,7 +4839,7 @@ static CYTHON_INLINE uint32_t __pyx_f_5spacy_6syntax_6_state__nth_significant_bi
  * 
  * cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:             # <<<<<<<<<<<<<<
  *     cdef int i
- *     for i in range(32):
+ *     for i in range(33, -1, -1):
  */
 
   /* function exit code */
@@ -7402,7 +7382,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_arc_eager, __pyx_k_arc_eager, sizeof(__pyx_k_arc_eager), 0, 0, 1, 1},
   {&__pyx_n_u_config, __pyx_k_config, sizeof(__pyx_k_config), 0, 1, 0, 1},
   {&__pyx_n_s_exists, __pyx_k_exists, sizeof(__pyx_k_exists), 0, 0, 1, 1},
-  {&__pyx_n_s_extra_labels, __pyx_k_extra_labels, sizeof(__pyx_k_extra_labels), 0, 0, 1, 1},
   {&__pyx_n_s_features, __pyx_k_features, sizeof(__pyx_k_features), 0, 0, 1, 1},
   {&__pyx_n_s_get_templates, __pyx_k_get_templates, sizeof(__pyx_k_get_templates), 0, 0, 1, 1},
   {&__pyx_n_s_gold_heads, __pyx_k_gold_heads, sizeof(__pyx_k_gold_heads), 0, 0, 1, 1},
@@ -7411,7 +7390,6 @@ static __Pyx_StringTabEntry __pyx_string_tab[] = {
   {&__pyx_n_s_isdir, __pyx_k_isdir, sizeof(__pyx_k_isdir), 0, 0, 1, 1},
   {&__pyx_n_s_join, __pyx_k_join, sizeof(__pyx_k_join), 0, 0, 1, 1},
   {&__pyx_n_s_json, __pyx_k_json, sizeof(__pyx_k_json), 0, 0, 1, 1},
-  {&__pyx_n_s_label_sets, __pyx_k_label_sets, sizeof(__pyx_k_label_sets), 0, 0, 1, 1},
   {&__pyx_n_s_left_labels, __pyx_k_left_labels, sizeof(__pyx_k_left_labels), 0, 0, 1, 1},
   {&__pyx_n_s_load, __pyx_k_load, sizeof(__pyx_k_load), 0, 0, 1, 1},
   {&__pyx_n_s_main, __pyx_k_main, sizeof(__pyx_k_main), 0, 0, 1, 1},
@@ -7538,7 +7516,7 @@ static int __Pyx_InitCachedConstants(void) {
  * 
  * def get_templates(name):             # <<<<<<<<<<<<<<
  *     pf = _parse_features
- *     return pf.arc_eager + pf.extra_labels + pf.label_sets
+ *     return pf.arc_eager
  */
   __pyx_tuple__12 = PyTuple_Pack(2, __pyx_n_s_name, __pyx_n_s_pf); if (unlikely(!__pyx_tuple__12)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_tuple__12);
@@ -7854,7 +7832,7 @@ PyMODINIT_FUNC PyInit_parser(void)
  * 
  * def get_templates(name):             # <<<<<<<<<<<<<<
  *     pf = _parse_features
- *     return pf.arc_eager + pf.extra_labels + pf.label_sets
+ *     return pf.arc_eager
  */
   __pyx_t_7 = PyCFunction_NewEx(&__pyx_mdef_5spacy_6syntax_6parser_3get_templates, NULL, __pyx_n_s_spacy_syntax_parser); if (unlikely(!__pyx_t_7)) {__pyx_filename = __pyx_f[0]; __pyx_lineno = 50; __pyx_clineno = __LINE__; goto __pyx_L1_error;}
   __Pyx_GOTREF(__pyx_t_7);

@@ -49,7 +49,7 @@ cdef unicode print_state(State* s, list words):
 
 def get_templates(name):
     pf = _parse_features
-    return pf.arc_eager + pf.extra_labels + pf.label_sets
+    return pf.arc_eager
 
 
 cdef class GreedyParser:
@@ -59,7 +59,7 @@ cdef class GreedyParser:
         self.extractor = Extractor(get_templates(self.cfg.features))
         self.moves = TransitionSystem(self.cfg.left_labels, self.cfg.right_labels)
         
-        self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ + 10000)
+        self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ)
         if os.path.exists(pjoin(model_dir, 'model')):
             self.model.load(pjoin(model_dir, 'model'))
 
@@ -110,7 +110,7 @@ cdef class GreedyParser:
             self.moves.transition(state, guess)
         cdef int n_corr = 0
         for i in range(tokens.length):
-            n_corr += (i + state.sent[i].head) == gold_heads[i]
+            n_corr += (i + state.sent[i].head) == heads_array[i]
         return n_corr
 
 

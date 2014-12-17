@@ -147,16 +147,16 @@ cdef class TransitionSystem:
         for i in range(self.n_moves):
             move = self._moves[i].move
             label = self._moves[i].label
-            if unl_costs[move] == 0:
+            if unl_costs[move] == 0: 
                 if move == SHIFT or move == REDUCE:
                     cost = 0
                 elif move == LEFT:
-                    if gold_heads[s.stack[0]] == s.i:
+                    if gold_heads[s.stack[0]] == s.i and gold_labels[s.stack[0]] != -1:
                         cost = label != gold_labels[s.stack[0]]
                     else:
                         cost = 0
                 elif move == RIGHT:
-                    if gold_heads[s.i] == s.stack[0]:
+                    if gold_heads[s.i] == s.stack[0] and gold_labels[s.i] != -1:
                         cost = label != gold_labels[s.i]
                     else:
                         cost = 0
