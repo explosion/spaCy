@@ -22,7 +22,9 @@ cdef int pop_stack(State *s) except -1:
     assert s.stack_len >= 1
     s.stack_len -= 1
     s.stack -= 1
-
+    if s.stack_len == 0 and not at_eol(s):
+        push_stack(s)
+        
 
 cdef int push_stack(State *s) except -1:
     assert s.i < s.sent_len
@@ -117,4 +119,5 @@ cdef State* init_state(Pool mem, TokenC* sent, const int sent_length) except NUL
     s.stack_len = 0
     s.i = 0
     s.sent_len = sent_length
+    push_stack(s)
     return s
