@@ -56,6 +56,8 @@ cdef class Token:
     cdef public int idx
     cdef int pos
     cdef int lemma
+    cdef public int head
+    cdef public int dep_tag
 
     cdef public atom_t id
     cdef public atom_t cluster

@@ -51,7 +51,8 @@ cdef class Tokens:
     def __getitem__(self, i):
         bounds_check(i, self.length, PADDING)
         return Token(self.lang, i, self.data[i].idx, self.data[i].pos,
-                     self.data[i].lemma, self.data[i].lex[0])
+                     self.data[i].lemma, self.data[i].head, self.data[i].dep_tag,
+                     self.data[i].lex[0])
 
     def __iter__(self):
         for i in range(self.length):
@@ -115,11 +116,13 @@ cdef class Tokens:
 @cython.freelist(64)
 cdef class Token:
     def __init__(self, Language lang, int i, int idx,
-                 int pos, int lemma, dict lex):
+                 int pos, int lemma, int head, int dep_tag, dict lex):
         self.lang = lang
         self.idx = idx
         self.pos = pos
         self.i = i
+        self.head = head
+        self.dep_tag = dep_tag
         self.id = lex['id']
 
         self.lemma = lemma
