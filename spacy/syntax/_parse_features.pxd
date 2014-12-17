@@ -22,6 +22,7 @@ cdef int fill_context(atom_t* context, State* state) except -1
 # NB: The order of the enum is _NOT_ arbitrary!!
 cpdef enum:
     S2w
+    S2W
     S2p
     S2c
     S2c4
@@ -29,6 +30,7 @@ cpdef enum:
     S2L
 
     S1w
+    S1W
     S1p
     S1c
     S1c4
@@ -36,6 +38,7 @@ cpdef enum:
     S1L
 
     S1rw
+    S1rW
     S1rp
     S1rc
     S1rc4
@@ -43,6 +46,7 @@ cpdef enum:
     S1rL
 
     S0lw
+    S0lW
     S0lp
     S0lc
     S0lc4
@@ -50,6 +54,7 @@ cpdef enum:
     S0lL
 
     S0l2w
+    S0l2W
     S0l2p
     S0l2c
     S0l2c4
@@ -57,6 +62,7 @@ cpdef enum:
     S0l2L
 
     S0w
+    S0W
     S0p
     S0c
     S0c4
@@ -64,6 +70,7 @@ cpdef enum:
     S0L
     
     S0r2w
+    S0r2W
     S0r2p
     S0r2c
     S0r2c4
@@ -71,6 +78,7 @@ cpdef enum:
     S0r2L
 
     S0rw
+    S0rW
     S0rp
     S0rc
     S0rc4
@@ -78,6 +86,7 @@ cpdef enum:
     S0rL
 
     N0l2w
+    N0l2W
     N0l2p
     N0l2c
     N0l2c4
@@ -85,6 +94,7 @@ cpdef enum:
     N0l2L
 
     N0lw
+    N0lW
     N0lp
     N0lc
     N0lc4
@@ -92,6 +102,7 @@ cpdef enum:
     N0lL
 
     N0w
+    N0W
     N0p
     N0c
     N0c4
@@ -99,6 +110,7 @@ cpdef enum:
     N0L
  
     N1w
+    N1W
     N1p
     N1c
     N1c4
@@ -106,6 +118,7 @@ cpdef enum:
     N1L
     
     N2w
+    N2W
     N2p
     N2c
     N2c4
@@ -119,5 +132,9 @@ cpdef enum:
     S0rv
     S1lv
     S1rv
-    
+
+    S0_has_head
+    S1_has_head
+    S2_has_head
+
     CONTEXT_SIZE

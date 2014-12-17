@@ -138,6 +138,16 @@ cdef class TransitionSystem:
         unl_costs[RIGHT] = _right_cost(s, gold_heads) if _can_right(s) else -1
         unl_costs[REDUCE] = _reduce_cost(s, gold_heads) if _can_reduce(s) else -1
 
+        #s0_buff_head = head_in_buffer(s, get_s0(s), gold_heads)
+        #s0_stack_head = head_in_stack(s, get_s0(s), gold_heads)
+        #s0_buff_kids = children_in_buffer(s, get_s0(s), gold_heads)
+        #s0_stack_kids = children_in_stack(s, get_s0(s), gold_heads)
+
+        #n0_buff_head = head_in_buffer(s, get_n0(s), gold_heads)
+        #n0_stack_head = head_in_stack(s, get_n0(s), gold_heads)
+        #n0_buff_kids = children_in_buffer(s, get_n0(s), gold_heads)
+        #n0_stack_kids = children_in_buffer(s, get_n0(s), gold_heads)
+
         cdef int cost
         cdef int move
         cdef int label

@@ -44,15 +44,19 @@ cdef class Language:
         self.pos_tagger = None
         self.morphologizer = None
 
-    def load(self, pos_dir=None):
+    def load(self, pos_dir=None, parser_dir=None):
         self.lexicon.load(path.join(util.DATA_DIR, self.name, 'lexemes'))
         self.lexicon.strings.load(path.join(util.DATA_DIR, self.name, 'strings'))
         if pos_dir is None:
             pos_dir = path.join(util.DATA_DIR, self.name, 'pos')
+        if parser_dir is None:
+            parser_dir = path.join(util.DATA_DIR, self.name, 'deps')
         if path.exists(pos_dir):
             self.pos_tagger = Tagger(pos_dir)
             self.morphologizer = Morphologizer(self.lexicon.strings, pos_dir)
             #self.load_pos_cache(path.join(util.DATA_DIR, self.name, 'pos', 'bigram_cache_2m'))
+        if path.exists(parser_dir):
+            self.parser = GreedyParser(parser_dir)
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])

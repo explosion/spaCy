@@ -11,6 +11,7 @@ from .lexeme cimport Lexeme
 from .tagger cimport Tagger
 from .utf8string cimport StringStore, UniStr
 from .morphology cimport Morphologizer
+from .syntax.parser cimport GreedyParser
 
 
 cdef union LexemesOrTokens:
@@ -43,6 +44,7 @@ cdef class Language:
     cpdef readonly Lexicon lexicon
     cpdef readonly Tagger pos_tagger
     cpdef readonly Morphologizer morphologizer
+    cpdef readonly GreedyParser parser
 
     cdef PreshMap _pos_cache
     cdef object _prefix_re

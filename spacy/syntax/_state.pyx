@@ -3,6 +3,7 @@ from libc.string cimport memmove
 from cymem.cymem cimport Pool
 
 from ..lexeme cimport EMPTY_LEXEME
+from ..tokens cimport TokenC
 
 
 cdef int add_dep(State *s, int head, int child, int label) except -1:
@@ -86,6 +87,19 @@ cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) 
         return child
     else:
         return NULL
+
+
+cdef bint has_head(const TokenC* t) nogil:
+    return t.head != 0
+
+
+cdef int count_left_kids(const TokenC* head) nogil:
+    return _popcount(head.l_kids)
+
+
+cdef int count_right_kids(const TokenC* head) nogil:
+    return _popcount(head.r_kids)
+
 
 
 DEF PADDING = 5

@@ -49,7 +49,11 @@ cdef unicode print_state(State* s, list words):
 
 def get_templates(name):
     pf = _parse_features
-    return pf.arc_eager
+    if name == 'zhang':
+        return pf.arc_eager
+    else:
+        templs = pf.unigrams + pf.s0_n0 + pf.s1_n0 + pf.s0_n1 + pf.n0_n1 + pf.tree_shape + pf.trigrams
+        return templs
 
 
 cdef class GreedyParser:
@@ -58,7 +62,6 @@ cdef class GreedyParser:
         self.cfg = Config.read(model_dir, 'config')
         self.extractor = Extractor(get_templates(self.cfg.features))
         self.moves = TransitionSystem(self.cfg.left_labels, self.cfg.right_labels)
-        
         self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ)
         if os.path.exists(pjoin(model_dir, 'model')):
             self.model.load(pjoin(model_dir, 'model'))
@@ -77,9 +80,7 @@ cdef class GreedyParser:
             fill_context(context, state)
             feats = self.extractor.get_feats(context, &n_feats)
             scores = self.model.get_scores(feats, n_feats)
-
             guess = self.moves.best_valid(scores, state)
-            
             self.moves.transition(state, guess)
         return 0
 
@@ -110,7 +111,7 @@ cdef class GreedyParser:
             self.moves.transition(state, guess)
         cdef int n_corr = 0
         for i in range(tokens.length):
-            n_corr += (i + state.sent[i].head) == heads_array[i]
+            n_corr += (i + state.sent[i].head) == gold_heads[i]
         return n_corr
 
 

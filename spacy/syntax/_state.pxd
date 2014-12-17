@@ -20,8 +20,7 @@ cdef int pop_stack(State *s) except -1
 cdef int push_stack(State *s) except -1
 
 
-cdef inline bint has_head(const TokenC* t) nogil:
-    return t.head != 0
+cdef bint has_head(const TokenC* t) nogil
 
 
 cdef inline int get_idx(const State* s, const TokenC* t) nogil:
@@ -79,12 +78,10 @@ cdef int head_in_stack(const State *s, const int child, int* gold) except -1
 cdef State* init_state(Pool mem, TokenC* sent, const int sent_length) except NULL
 
 
-cdef inline int count_left_kids(const TokenC* head) nogil:
-    return _popcount(head.l_kids)
+cdef int count_left_kids(const TokenC* head) nogil
 
 
-cdef inline int count_right_kids(const TokenC* head) nogil:
-    return _popcount(head.r_kids)
+cdef int count_right_kids(const TokenC* head) nogil
 
 
 # From https://en.wikipedia.org/wiki/Hamming_weight
