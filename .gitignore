@@ -3,6 +3,8 @@
 *.sw*
 Profile.prof
 
+spacy/syntax/*.cpp
+spacy/syntax/*.html
 spacy/*.cpp
 spacy/ner/*.cpp
 spacy/orthography/*.cpp
