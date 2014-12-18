@@ -52,8 +52,8 @@ cdef class Tagger:
         >>> assert tag == EN.pos_tagger.tag_id('DT') == 5
         """
         cdef int n_feats
-        cdef Feature* feats = self.extractor.get_feats(context, &n_feats)
-        cdef weight_t* scores = self.model.get_scores(feats, n_feats)
+        cdef const Feature* feats = self.extractor.get_feats(context, &n_feats)
+        cdef const weight_t* scores = self.model.get_scores(feats, n_feats)
         guess = _arg_max(scores, self.model.nr_class)
         if golds is not None and guess not in golds:
             best = _arg_max_among(scores, golds)
@@ -88,7 +88,7 @@ def _make_tag_dict(counts):
     return tagdict
 
 
-cdef int _arg_max(weight_t* scores, int n_classes) except -1:
+cdef int _arg_max(const weight_t* scores, int n_classes) except -1:
     cdef int best = 0
     cdef weight_t score = scores[best]
     cdef int i
@@ -99,7 +99,7 @@ cdef int _arg_max(weight_t* scores, int n_classes) except -1:
     return best
 
 
-cdef int _arg_max_among(weight_t* scores, list classes) except -1:
+cdef int _arg_max_among(const weight_t* scores, list classes) except -1:
     cdef int best = classes[0]
     cdef weight_t score = scores[best]
     cdef class_t clas
