@@ -68,7 +68,7 @@ cdef class GreedyParser:
 
     cpdef int parse(self, Tokens tokens) except -1:
         cdef:
-            Feature* feats
+            const Feature* feats
             const weight_t* scores
             Transition guess
 
@@ -86,8 +86,8 @@ cdef class GreedyParser:
 
     def train_sent(self, Tokens tokens, list gold_heads, list gold_labels):
         cdef:
-            Feature* feats
-            weight_t* scores
+            const Feature* feats
+            const weight_t* scores
             Transition guess
             Transition gold
 
