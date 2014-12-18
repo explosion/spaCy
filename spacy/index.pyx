@@ -1,6 +1,6 @@
 """Create a term-document matrix"""
 cimport cython
-
+from libc.stdint cimport int64_t
 from libc.string cimport memmove
 
 from cymem.cymem cimport Address
@@ -42,6 +42,20 @@ cdef class DecisionMemory:
         self.mem = Pool()
         self._counts = PreshCounter()
         self._class_counts = PreshCounter()
+        self.memos = PreshMap()
+
+    def load(self, loc, thresh=0):
+        cdef:
+            count_t freq
+            hash_t key
+            int clas
+        for line in open(loc):
+            freq, key, clas = [int(p) for p in line.split()]
+            if thresh == 0 or freq >= thresh:
+                self.memos.set(key, <void*>(clas+1))
+
+    def get(self, hash_t context_key):
+        return <int64_t>self.memos.get(context_key) - 1
 
     def __getitem__(self, ids):
         cdef id_t[2] context

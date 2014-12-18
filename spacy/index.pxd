@@ -31,6 +31,7 @@ cdef class DecisionMemory:
     cdef Pool mem
     cdef PreshCounter _counts
     cdef PreshCounter _class_counts
+    cdef PreshMap memos
     cdef list class_names
     
     cdef int inc(self, hash_t context_key, hash_t clas, count_t inc) except -1

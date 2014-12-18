@@ -4,6 +4,7 @@ MALT-style dependency parser
 """
 from __future__ import unicode_literals
 cimport cython
+from libc.stdint cimport uint32_t, uint64_t
 import random
 import os.path
 from os.path import join as pjoin
@@ -11,6 +12,7 @@ import shutil
 import json
 
 from cymem.cymem cimport Pool, Address
+from murmurhash.mrmr cimport hash64
 from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t
 
 
@@ -26,7 +28,7 @@ from ..tokens cimport Tokens, TokenC
 
 from .arc_eager cimport TransitionSystem, Transition
 
-from ._state cimport init_state, State, is_final, get_idx, get_s0, get_s1
+from ._state cimport init_state, State, is_final, get_idx, get_s0, get_s1, get_n0, get_n1
 
 from . import _parse_features
 from ._parse_features cimport fill_context, CONTEXT_SIZE
@@ -63,24 +65,39 @@ cdef class GreedyParser:
         self.extractor = Extractor(get_templates(self.cfg.features))
         self.moves = TransitionSystem(self.cfg.left_labels, self.cfg.right_labels)
         self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ)
+        # Classes for decision memory
+        classes = ['S', 'D']
+        classes += ['L-%s' % label for label in self.cfg.left_labels]
+        classes += ['R-%s' % label for label in self.cfg.right_labels]
+        self.guess_cache = DecisionMemory(classes)
         if os.path.exists(pjoin(model_dir, 'model')):
             self.model.load(pjoin(model_dir, 'model'))
+        if os.path.exists(pjoin(model_dir, 'guess_cache')):
+            self.guess_cache.load(pjoin(model_dir, 'guess_cache'))
 
     cpdef int parse(self, Tokens tokens) except -1:
         cdef:
             const Feature* feats
             const weight_t* scores
             Transition guess
+            uint64_t state_key
 
         cdef atom_t[CONTEXT_SIZE] context
         cdef int n_feats
         cdef Pool mem = Pool()
         cdef State* state = init_state(mem, tokens.data, tokens.length)
+        cdef int guess_clas
         while not is_final(state):
-            fill_context(context, state)
-            feats = self.extractor.get_feats(context, &n_feats)
-            scores = self.model.get_scores(feats, n_feats)
-            guess = self.moves.best_valid(scores, state)
+            state_key = _approx_hash_state(state)
+            guess_clas = self.guess_cache.get(state_key)
+            if guess_clas == -1:
+                fill_context(context, state)
+                feats = self.extractor.get_feats(context, &n_feats)
+                scores = self.model.get_scores(feats, n_feats)
+                guess = self.moves.best_valid(scores, state)
+                self.guess_cache.inc(state_key, guess.clas, 1)
+            else:
+                guess = self.moves._moves[guess_clas]
             self.moves.transition(state, &guess)
         return 0
 
@@ -115,6 +132,17 @@ cdef class GreedyParser:
         for i in range(tokens.length):
             n_corr += (i + state.sent[i].head) == gold_heads[i]
         return n_corr
+
+
+cdef uint64_t _approx_hash_state(const State* state) except 0:
+    cdef int[3] context
+    context[0] = get_s0(state).lex.sic
+    context[1] = get_n0(state).lex.sic
+    if get_n1(state):
+        context[2] = get_n1(state).pos
+    else:
+        context[2] = 0
+    return hash64(context, sizeof(int) * 3, 0)
 
 
 cdef dict _get_counts(int guess, int best, const Feature* feats, const int n_feats,
