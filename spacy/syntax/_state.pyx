@@ -6,6 +6,10 @@ from ..lexeme cimport EMPTY_LEXEME
 from ..tokens cimport TokenC
 
 
+DEF PADDING = 5
+DEF NON_MONOTONIC = True
+
+
 cdef int add_dep(State *s, int head, int child, int label) except -1:
     cdef int dist = head - child
     s.sent[child].head = dist
@@ -32,9 +36,14 @@ cdef int push_stack(State *s) except -1:
     s.stack[0] = s.i
     s.stack_len += 1
     s.i += 1
+    if at_eol(s):
+        while s.stack_len != 0:
+            if not has_head(get_s0(s)):
+                get_s0(s).dep_tag = 0
+            pop_stack(s)
 
 
-cdef int children_in_buffer(const State *s, int head, int* gold) except -1:
+cdef int children_in_buffer(const State *s, int head, const int* gold) except -1:
     # Golds holds an array of head offsets --- the head of word i is i - golds[i]
     # Iterate over the tokens of the queue, and check whether their gold head is
     # our target
@@ -46,20 +55,21 @@ cdef int children_in_buffer(const State *s, int head, int* gold) except -1:
     return n
 
 
-cdef int head_in_buffer(const State *s, const int child, int* gold) except -1:
+cdef int head_in_buffer(const State *s, const int child, const int* gold) except -1:
     return gold[child] >= s.i
 
 
-cdef int children_in_stack(const State *s, const int head, int* gold) except -1:
+cdef int children_in_stack(const State *s, const int head, const int* gold) except -1:
     cdef int i
     cdef int n = 0
     for i in range(s.stack_len):
         if gold[s.stack[-i]] == head:
-            n += 1
+            if NON_MONOTONIC or not has_head(get_s0(s)):
+                n += 1
     return n
 
 
-cdef int head_in_stack(const State *s, const int child, int* gold) except -1:
+cdef int head_in_stack(const State *s, const int child, const int* gold) except -1:
     cdef int i
     for i in range(s.stack_len):
         if gold[child] == s.stack[-i]:
@@ -102,9 +112,6 @@ cdef int count_left_kids(const TokenC* head) nogil:
 cdef int count_right_kids(const TokenC* head) nogil:
     return _popcount(head.r_kids)
 
-
-
-DEF PADDING = 5
 
 
 cdef State* init_state(Pool mem, TokenC* sent, const int sent_length) except NULL:

@@ -24,7 +24,7 @@ from thinc.learner cimport LinearModel
 
 from ..tokens cimport Tokens, TokenC
 
-from .arc_eager cimport TransitionSystem
+from .arc_eager cimport TransitionSystem, Transition
 
 from ._state cimport init_state, State, is_final, get_idx, get_s0, get_s1
 
@@ -70,7 +70,7 @@ cdef class GreedyParser:
         cdef:
             Feature* feats
             const weight_t* scores
-            int guess
+            Transition guess
 
         cdef atom_t[CONTEXT_SIZE] context
         cdef int n_feats
@@ -81,13 +81,15 @@ cdef class GreedyParser:
             feats = self.extractor.get_feats(context, &n_feats)
             scores = self.model.get_scores(feats, n_feats)
             guess = self.moves.best_valid(scores, state)
-            self.moves.transition(state, guess)
+            self.moves.transition(state, &guess)
         return 0
 
     def train_sent(self, Tokens tokens, list gold_heads, list gold_labels):
         cdef:
             Feature* feats
             weight_t* scores
+            Transition guess
+            Transition gold
 
         cdef int n_feats
         cdef atom_t[CONTEXT_SIZE] context
@@ -105,17 +107,18 @@ cdef class GreedyParser:
             feats = self.extractor.get_feats(context, &n_feats)
             scores = self.model.get_scores(feats, n_feats)
             guess = self.moves.best_valid(scores, state)
-            best = self.moves.best_gold(scores, state, heads_array, labels_array)
-            counts = _get_counts(guess, best, feats, n_feats)
+            best = self.moves.best_gold(&guess, scores, state, heads_array, labels_array)
+            counts = _get_counts(guess.clas, best.clas, feats, n_feats, guess.cost)
             self.model.update(counts)
-            self.moves.transition(state, guess)
+            self.moves.transition(state, &guess)
         cdef int n_corr = 0
         for i in range(tokens.length):
             n_corr += (i + state.sent[i].head) == gold_heads[i]
         return n_corr
 
 
-cdef dict _get_counts(int guess, int best, const Feature* feats, const int n_feats):
+cdef dict _get_counts(int guess, int best, const Feature* feats, const int n_feats,
+                      int inc):
     if guess == best:
         return {}
 
@@ -125,10 +128,10 @@ cdef dict _get_counts(int guess, int best, const Feature* feats, const int n_fea
     for i in range(n_feats):
         key = (feats[i].i, feats[i].key)
         if key in gold_counts:
-            gold_counts[key] += feats[i].value
-            guess_counts[key] -= feats[i].value
+            gold_counts[key] += (feats[i].value * inc)
+            guess_counts[key] -= (feats[i].value * inc)
         else:
-            gold_counts[key] = feats[i].value
-            guess_counts[key] = -feats[i].value
+            gold_counts[key] = (feats[i].value * inc)
+            guess_counts[key] = -(feats[i].value * inc)
     return {guess: guess_counts, best: gold_counts}
 

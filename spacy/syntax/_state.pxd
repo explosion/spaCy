@@ -70,10 +70,10 @@ cdef inline bint is_final(const State *s) nogil:
     return at_eol(s) # The stack will be attached to root anyway
 
 
-cdef int children_in_buffer(const State *s, const int head, int* gold) except -1
-cdef int head_in_buffer(const State *s, const int child, int* gold) except -1
-cdef int children_in_stack(const State *s, const int head, int* gold) except -1
-cdef int head_in_stack(const State *s, const int child, int* gold) except -1
+cdef int children_in_buffer(const State *s, const int head, const int* gold) except -1
+cdef int head_in_buffer(const State *s, const int child, const int* gold) except -1
+cdef int children_in_stack(const State *s, const int head, const int* gold) except -1
+cdef int head_in_stack(const State *s, const int child, const int* gold) except -1
 
 cdef State* init_state(Pool mem, TokenC* sent, const int sent_length) except NULL
 

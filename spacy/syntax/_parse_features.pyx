@@ -45,7 +45,7 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         # the source that are set to 1.
         context[4] = token.lex.cluster & 63
         context[5] = token.lex.cluster & 15
-        context[6] = token.dep_tag
+        context[6] = token.dep_tag if has_head(token) else 0
 
 
 cdef int fill_context(atom_t* context, State* state) except -1:
