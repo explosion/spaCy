@@ -46,7 +46,6 @@ cdef class Language:
     cpdef readonly Morphologizer morphologizer
     cpdef readonly GreedyParser parser
 
-    cdef PreshMap _pos_cache
     cdef object _prefix_re
     cdef object _suffix_re
     cdef object _infix_re

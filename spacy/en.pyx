@@ -139,20 +139,6 @@ cdef class English(Language):
         name (unicode): The two letter code used by Wikipedia for the language.
         lexicon (Lexicon): The lexicon. Exposes the lookup method.
     """
-    def load_pos_cache(self, loc):
-        cdef int i = 0
-        cdef hash_t key
-        cdef int pos
-        with open(loc) as file_:
-            for line in file_:
-                pieces = line.split()
-                if i >= 500000:
-                    break
-                i += 1
-                key = int(pieces[1])
-                pos = int(pieces[2])
-                self._pos_cache.set(key, <void*>pos)
-
     def get_props(self, unicode string):
         return {'flags': self.set_flags(string), 'dense': orth.word_shape(string)}
 
@@ -181,16 +167,8 @@ cdef class English(Language):
         assert self.morphologizer is not None
         cdef dict tagdict = self.pos_tagger.tagdict
         for i in range(tokens.length):
-            if USE_POS_CACHE:
-                bigram[0] = tokens.data[i].lex.sic
-                bigram[1] = tokens.data[i-1].lex.sic
-                cache_key = hash64(bigram, sizeof(id_t) * 2, 0)
-                cached = self._pos_cache.get(cache_key)
-            if cached != NULL:
-                t[i].pos = <int><size_t>cached
-            else:
-                fill_pos_context(context, i, t)
-                t[i].pos = self.pos_tagger.predict(context)
+            fill_pos_context(context, i, t)
+            t[i].pos = self.pos_tagger.predict(context)
             self.morphologizer.set_morph(i, t)
 
     def train_pos(self, Tokens tokens, golds):

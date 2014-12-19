@@ -34,7 +34,6 @@ cdef class Language:
         self.mem = Pool()
         self._cache = PreshMap(2 ** 25)
         self._specials = PreshMap(2 ** 16)
-        self._pos_cache = PreshMap(2 ** 16)
         rules, prefix, suffix, infix = util.read_lang_data(name)
         self._prefix_re = re.compile(prefix)
         self._suffix_re = re.compile(suffix)
