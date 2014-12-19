@@ -90,59 +90,71 @@ unigrams = (
     (S2W, S2p),
     (S2p,),
     (S2c,),
+    (S2c6, S2p),
     (S2L,),
     
     (S1W, S1p),
     (S1p,),
     (S1c,),
+    (S1c6, S1p),
     (S1L,),
 
     (S0W, S0p),
     (S0p,),
     (S0c,),
+    (S0c6, S0p),
     (S0L,),
  
     (N0W, N0p),
     (N0p,),
     (N0c,),
+    (N0c6, N0p),
     (N0L,),
  
     (N1W, N1p),
     (N1p,),
     (N1c,),
+    (N1c6, N1p),
  
     (N2W, N2p),
     (N2p,),
     (N2c,),
+    (N2c6, N2p),
 
     (S0r2W, S0r2p),
     (S0r2p,),
     (S0r2c,),
+    (S0r2c6, S0r2p),
     (S0r2L,),
 
     (S0rW, S0rp),
     (S0rp,),
     (S0rc,),
+    (S0rc6, S0rp),
     (S0rL,),
 
     (S0l2W, S0l2p),
     (S0l2p,),
     (S0l2c,),
+    (S0l2c6, S0l2p),
     (S0l2L,),
 
     (S0lW, S0lp),
     (S0lp,),
     (S0lc,),
+    (S0lc6, S0lp),
     (S0lL,),
 
     (N0l2W, N0l2p),
     (N0l2p,),
     (N0l2c,),
+    (N0l2c6, N0l2p),
     (N0l2L,),
 
     (N0lW, N0lp),
     (N0lp,),
     (N0lc,),
+    (N0lc6, N0lp),
     (N0lL,),
 )
 
@@ -150,6 +162,8 @@ unigrams = (
 s0_n0 = (
     (S0W, S0p, N0W, N0p),
     (S0c, S0p, N0c, N0p),
+    (S0c6, S0p, N0c6, N0p),
+    (S0c4, S0p, N0c4, N0p),
     (S0p, N0p),
     (S0W, N0p),
     (S0p, N0W),
@@ -163,13 +177,15 @@ s0_n0 = (
     (S0p, N0lp, N0p),
 )
 
+
 s1_n0 = (
     (S1p, N0p),
     (S1c, N0c),
     (S1c, N0p),
     (S1p, N0c),
     (S1W, S1p, N0p),
-    (S1p, N0W, N0p)
+    (S1p, N0W, N0p),
+    (S1c6, S1p, N0c6, N0p),
 )
 
 
@@ -179,7 +195,8 @@ s0_n1 = (
     (S0c, N1p),
     (S0p, N1c),
     (S0W, S0p, N1p),
-    (S0p, N1W, N1p)
+    (S0p, N1W, N1p),
+    (S0c6, S0p, N1c6, N1p),
 )
 
 n0_n1 = (
@@ -187,6 +204,7 @@ n0_n1 = (
     (N0W, N0p, N1p),
     (N0p, N1W, N1p),
     (N0c, N0p, N1c, N1p),
+    (N0c6, N0p, N1c6, N1p),
     (N0c, N1c),
     (N0p, N1c),
 )
@@ -196,11 +214,6 @@ tree_shape = (
     (S0p, S0_has_head, S1_has_head, S2_has_head),
     (S0p, S0lv, S0rv),
     (N0p, N0lv),
-
-    #(S0p, S0_left_shape),
-    #(S0p, S0_right_shape),
-    #(N0p, N0_left_shape),
-    #(S0p, S0_left_shape, N0_left_shape)
 )
 
 trigrams = (
