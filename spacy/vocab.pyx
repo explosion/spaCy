@@ -4,6 +4,7 @@ from os import path
 
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport init as lexeme_init
+from .strings cimport slice_unicode
 
 
 cdef class Vocab:

@@ -20,12 +20,6 @@ cdef struct _Cached:
     int length
 
 
-cdef inline void slice_unicode(UniStr* s, Py_UNICODE* chars, int start, int end) nogil:
-    s.chars = &chars[start]
-    s.n = end - start
-    s.key = hash64(s.chars, s.n * sizeof(Py_UNICODE), 0)
-
-
 cdef class Vocab:
     cpdef public get_lex_props
     cdef Pool mem
