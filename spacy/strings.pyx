@@ -2,7 +2,6 @@ import codecs
 
 from libc.string cimport memcpy
 
-from murmurhash.mrmr cimport hash64
 
 from .typedefs cimport hash_t
 

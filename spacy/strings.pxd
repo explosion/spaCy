@@ -1,7 +1,14 @@
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
+from murmurhash.mrmr cimport hash64
 
-from .structs cimport Utf8Str
+from .structs cimport Utf8Str, UniStr
+
+
+cdef inline void slice_unicode(UniStr* s, Py_UNICODE* chars, int start, int end) nogil:
+    s.chars = &chars[start]
+    s.n = end - start
+    s.key = hash64(s.chars, s.n * sizeof(Py_UNICODE), 0)
 
 
 cdef class StringStore:
