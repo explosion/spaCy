@@ -4,7 +4,9 @@ from os import path
 import json
 
 from .lemmatizer import Lemmatizer
-from .typedefs cimport id_t
+from .typedefs cimport id_t, univ_tag_t
+from .typedefs cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT
+from .typedefs cimport VERB, X, PUNCT, EOL
 from . import util
 
 
@@ -34,13 +36,12 @@ cdef struct _Cached:
 cdef class Morphologizer:
     """Given a POS tag and a Lexeme, find its lemma and morphological analysis.
     """
-    def __init__(self, StringStore strings, data_dir):
+    def __init__(self, StringStore strings, object lemmatizer, **kwargs):
         self.mem = Pool()
         self.strings = strings
-        cfg = json.load(open(path.join(data_dir, 'config.json')))
-        tag_map = cfg['tag_map']
-        self.tag_names = cfg['tag_names']
-        self.lemmatizer = Lemmatizer(path.join(util.DATA_DIR, 'wordnet'))
+        tag_map = kwargs['tag_map']
+        self.tag_names = kwargs['tag_names']
+        self.lemmatizer = lemmatizer
         self._cache = PreshMapArray(len(self.tag_names))
         self.tags = <PosTag*>self.mem.alloc(len(self.tag_names), sizeof(PosTag))
         for i, tag in enumerate(self.tag_names):
@@ -54,9 +55,9 @@ cdef class Morphologizer:
             self.tags[i].morph.person = props.get('person', 0)
             self.tags[i].morph.case = props.get('case', 0)
             self.tags[i].morph.misc = props.get('misc', 0)
-        if path.exists(path.join(data_dir, 'morphs.json')):
-            with open(path.join(data_dir, 'morphs.json')) as file_:
-                self.load_exceptions(json.load(file_))
+        #if path.exists(path.join(data_dir, 'morphs.json')):
+        #    with open(path.join(data_dir, 'morphs.json')) as file_:
+        #        self.load_exceptions(json.load(file_))
 
     cdef int lemmatize(self, const univ_tag_t pos, const Lexeme* lex) except -1:
         if self.lemmatizer is None:
