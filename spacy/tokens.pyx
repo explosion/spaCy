@@ -2,7 +2,7 @@
 from preshed.maps cimport PreshMap
 from preshed.counter cimport PreshCounter
 
-from .lexeme cimport *
+from .lexeme cimport get_attr, EMPTY_LEXEME, LEMMA, attr_id_t
 cimport cython
 
 import numpy as np
@@ -30,8 +30,8 @@ cdef class Tokens:
     >>> from spacy.en import EN
     >>> tokens = EN.tokenize('An example sentence.')
     """
-    def __init__(self, Language lang, string_length=0):
-        self.lang = lang
+    def __init__(self, StringStore string_store, string_length=0):
+        self.string_store = string_store
         if string_length >= 3:
             size = int(string_length / 3.0)
         else:
@@ -50,7 +50,7 @@ cdef class Tokens:
 
     def __getitem__(self, i):
         bounds_check(i, self.length, PADDING)
-        return Token(self.lang, i, self.data[i].idx, self.data[i].pos,
+        return Token(self.string_store, i, self.data[i].idx, self.data[i].pos,
                      self.data[i].lemma, self.data[i].head, self.data[i].dep_tag,
                      self.data[i].lex[0])
 
@@ -97,20 +97,6 @@ cdef class Tokens:
             counts.inc(attr, 1)
         return dict(counts)
 
-    def base_nps(self):
-        # Iterate backwards, looking for nouns, and if we're collecting, for an
-        # outside-NP word. We want greedy matching, so it's easier to find the noun.
-        cdef TokenC* token 
-        cdef int end = -1
-        for i in range(self.length-1, -1, -1):
-            token = &self.data[i]
-            if end == -1:
-                if self.lang.is_base_np_end(token):
-                    end = i
-            elif self.lang.is_outside_base_np(token):
-                yield i-1, end
-                end = -1
-
     def _realloc(self, new_size):
         self.max_length = new_size
         n = new_size + (PADDING * 2)
@@ -129,9 +115,9 @@ cdef class Tokens:
 
 @cython.freelist(64)
 cdef class Token:
-    def __init__(self, Language lang, int i, int idx,
+    def __init__(self, StringStore string_store, int i, int idx,
                  int pos, int lemma, int head, int dep_tag, dict lex):
-        self.lang = lang
+        self.string_store = string_store
         self.idx = idx
         self.pos = pos
         self.i = i
@@ -158,14 +144,14 @@ cdef class Token:
         def __get__(self):
             if self.sic == 0:
                 return ''
-            cdef bytes utf8string = self.lang.lexicon.strings[self.sic]
+            cdef bytes utf8string = self.string_store[self.sic]
             return utf8string.decode('utf8')
 
     property lemma:
         def __get__(self):
             if self.lemma == 0:
                 return self.string
-            cdef bytes utf8string = self.lang.lexicon.strings[self.lemma]
+            cdef bytes utf8string = self.string_store[self.lemma]
             return utf8string.decode('utf8')
 
     property pos:
