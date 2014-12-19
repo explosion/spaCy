@@ -54,8 +54,8 @@ def get_templates(name):
     if name == 'zhang':
         return pf.arc_eager
     else:
-        templs = pf.unigrams + pf.s0_n0 + pf.s1_n0 + pf.s0_n1 + pf.n0_n1 + pf.tree_shape + pf.trigrams
-        return templs
+        return pf.unigrams + pf.s0_n0 + pf.s1_n0 + pf.s0_n1 + pf.n0_n1 + \
+               pf.tree_shape + pf.trigrams
 
 
 cdef class GreedyParser:
@@ -134,14 +134,11 @@ cdef class GreedyParser:
         return n_corr
 
 
-cdef uint64_t _approx_hash_state(const State* state) except 0:
+cdef inline uint64_t _approx_hash_state(const State* state) nogil:
     cdef int[3] context
     context[0] = get_s0(state).lex.sic
     context[1] = get_n0(state).lex.sic
-    if get_n1(state):
-        context[2] = get_n1(state).pos
-    else:
-        context[2] = 0
+    context[2] = get_n1(state).pos if state.i < (state.sent_len - 1) else 0
     return hash64(context, sizeof(int) * 3, 0)
 
 
