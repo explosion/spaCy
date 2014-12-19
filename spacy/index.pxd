@@ -1,5 +1,6 @@
 from libcpp.vector cimport vector
 from libcpp.pair cimport pair
+
 from preshed.counter cimport count_t
 from preshed.maps cimport PreshMap
 from preshed.counter cimport PreshCounter
@@ -36,3 +37,8 @@ cdef class DecisionMemory:
     
     cdef int inc(self, hash_t context_key, hash_t clas, count_t inc) except -1
     cdef int find_best_class(self, count_t* counts, hash_t context_key) except -1
+
+    cdef inline int get(self, hash_t context_key) nogil:
+        return <int><size_t>self.memos.get(context_key) - 1
+
+

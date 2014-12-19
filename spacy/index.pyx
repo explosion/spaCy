@@ -44,7 +44,7 @@ cdef class DecisionMemory:
         self._class_counts = PreshCounter()
         self.memos = PreshMap()
 
-    def load(self, loc, thresh=0):
+    def load(self, loc, thresh=50):
         cdef:
             count_t freq
             hash_t key
@@ -53,9 +53,6 @@ cdef class DecisionMemory:
             freq, key, clas = [int(p) for p in line.split()]
             if thresh == 0 or freq >= thresh:
                 self.memos.set(key, <void*>(clas+1))
-
-    def get(self, hash_t context_key):
-        return <int64_t>self.memos.get(context_key) - 1
 
     def __getitem__(self, ids):
         cdef id_t[2] context
