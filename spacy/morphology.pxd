@@ -16,3 +16,6 @@ cdef class Morphologizer:
     cdef PreshMapArray _cache
     cdef int lemmatize(self, const univ_tag_t pos, const Lexeme* lex) except -1
     cdef int set_morph(self, const int i, TokenC* tokens) except -1
+
+
+cdef int set_morph_from_dict(Morphology* morph, dict props) except -1
