@@ -1,6 +1,6 @@
 from .typedefs cimport hash_t, flags_t, id_t, len_t, tag_t, attr_t
-
-from .utf8string cimport StringStore
+from .structs cimport Lexeme
+from .strings cimport StringStore
 
 
 # Reserve 64 values for flag features
@@ -81,24 +81,6 @@ cpdef enum attr_id_t:
     CLUSTER
     POS_TYPE
     LEMMA
-
-
-cdef struct Lexeme:
-    flags_t flags
-   
-    attr_t id
-    attr_t sic
-    attr_t dense
-    attr_t shape
-    attr_t prefix
-    attr_t suffix
- 
-    attr_t length
-    attr_t cluster
-    attr_t pos_type
-
-    float prob
-    float sentiment
 
 
 cdef Lexeme EMPTY_LEXEME
