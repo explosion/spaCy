@@ -205,6 +205,13 @@ cdef class English(Language):
             c += t[i].pos == golds[i]
         return c
 
+    cdef int is_base_np_end(self, const TokenC* token) except -1:
+        pass
+
+    cdef int is_outside_base_np(self, const TokenC* token) except -1:
+        pass
+
+
 
 cdef int fill_pos_context(atom_t* context, const int i, const TokenC* tokens) except -1:
     _fill_from_token(&context[P2_sic], &tokens[i-2])

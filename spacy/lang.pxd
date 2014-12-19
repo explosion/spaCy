@@ -54,6 +54,7 @@ cdef class Language:
     cpdef Tokens tokens_from_list(self, list strings)
     cpdef Tokens tokenize(self, unicode text)
 
+
     cdef int _try_cache(self, int idx, hash_t key, Tokens tokens) except -1
     cdef int _tokenize(self, Tokens tokens, UniStr* span, int start, int end) except -1
     cdef UniStr* _split_affixes(self, UniStr* string, vector[Lexeme*] *prefixes,
@@ -64,4 +65,7 @@ cdef class Language:
     cdef int _find_suffix(self, Py_UNICODE* characters, size_t length) except -1
     cdef int _find_infix(self, Py_UNICODE* characters, size_t length) except -1
     cdef int _save_cached(self, const TokenC* tokens, hash_t key, int n) except -1
+
+    cdef int is_base_np_end(self, const TokenC* token) except -1
+    cdef int is_outside_base_np(self, const TokenC* token) except -1
  

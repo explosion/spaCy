@@ -131,4 +131,5 @@ cpdef enum:
 
 
 cdef class English(Language):
-    pass
+    cdef int is_base_np_end(self, const TokenC* token) except -1
+    cdef int is_outside_base_np(self, const TokenC* token) except -1

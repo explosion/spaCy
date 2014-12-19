@@ -81,6 +81,11 @@ cdef class Language:
         * The data/<lang>/prefix file, used to build a regex to split off prefixes;
         * The data/<lang>/suffix file, used to build a regex to split off suffixes.
 
+        The string is first split on whitespace.  To tokenize a whitespace-delimited
+        chunk, we first try to look it up in the special-cases. If it's not found,
+        we split off a prefix, and then try again. If it's still not found, we
+        split off a suffix, and repeat.
+
         Args:
             string (unicode): The string to be tokenized. 
 
@@ -273,6 +278,14 @@ cdef class Language:
             slice_unicode(&string, chunk, 0, len(chunk))
             self._specials.set(string.key, cached)
             self._cache.set(string.key, cached)
+
+    cdef int is_base_np_end(self, const TokenC* token) except -1:
+        raise NotImplementedError
+
+    cdef int is_outside_base_np(self, const TokenC* token) except -1:
+        raise NotImplementedError
+        
+ 
 
 
 cdef int set_morph_from_dict(Morphology* morph, dict props) except -1:
