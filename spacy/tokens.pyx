@@ -97,6 +97,20 @@ cdef class Tokens:
             counts.inc(attr, 1)
         return dict(counts)
 
+    def base_nps(self):
+        # Iterate backwards, looking for nouns, and if we're collecting, for an
+        # outside-NP word. We want greedy matching, so it's easier to find the noun.
+        cdef TokenC* token 
+        cdef int end = -1
+        for i in range(self.length-1, -1, -1):
+            token = &self.data[i]
+            if end == -1:
+                if self.lang.is_base_np_end(token):
+                    end = i
+            elif self.lang.is_outside_base_np(token):
+                yield i-1, end
+                end = -1
+
     def _realloc(self, new_size):
         self.max_length = new_size
         n = new_size + (PADDING * 2)
