@@ -36,11 +36,11 @@ cdef struct _Cached:
 cdef class Morphologizer:
     """Given a POS tag and a Lexeme, find its lemma and morphological analysis.
     """
-    def __init__(self, StringStore strings, object lemmatizer, **kwargs):
+    def __init__(self, StringStore strings, object lemmatizer,
+                 irregulars=None, tag_map=None, tag_names=None):
         self.mem = Pool()
         self.strings = strings
-        tag_map = kwargs['tag_map']
-        self.tag_names = kwargs['tag_names']
+        self.tag_names = tag_names
         self.lemmatizer = lemmatizer
         self._cache = PreshMapArray(len(self.tag_names))
         self.tags = <PosTag*>self.mem.alloc(len(self.tag_names), sizeof(PosTag))
@@ -55,9 +55,16 @@ cdef class Morphologizer:
             self.tags[i].morph.person = props.get('person', 0)
             self.tags[i].morph.case = props.get('case', 0)
             self.tags[i].morph.misc = props.get('misc', 0)
-        #if path.exists(path.join(data_dir, 'morphs.json')):
-        #    with open(path.join(data_dir, 'morphs.json')) as file_:
-        #        self.load_exceptions(json.load(file_))
+        if irregulars is not None:
+            self.load_exceptions(irregulars)
+
+    @classmethod
+    def from_dir(cls, StringStore strings, object lemmatizer, data_dir):
+        tag_map = None
+        irregulars = None
+        tag_names = None
+        return cls(strings, lemmatizer, tag_map=tag_map, irregulars=irregulars,
+                   tag_names=tag_names)
 
     cdef int lemmatize(self, const univ_tag_t pos, const Lexeme* lex) except -1:
         if self.lemmatizer is None:
@@ -86,7 +93,6 @@ cdef class Morphologizer:
             cached.lemma = self.lemmatize(tag.pos, tokens[i].lex)
             cached.morph = tag.morph
             self._cache.set(tag.id, tokens[i].lex.sic, <void*>cached)
-
         tokens[i].lemma = cached.lemma
         tokens[i].morph = cached.morph
 

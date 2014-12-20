@@ -3,32 +3,24 @@ from libc.string cimport memmove
 from cymem.cymem cimport Pool
 
 from ..lexeme cimport EMPTY_LEXEME
-from ..tokens cimport TokenC
-
-
-DEF PADDING = 5
-DEF NON_MONOTONIC = True
 
 
 cdef int add_dep(State *s, int head, int child, int label) except -1:
-    cdef int dist = head - child
-    s.sent[child].head = dist
+    s.sent[child].head = head - child
     s.sent[child].dep_tag = label
     # Keep a bit-vector tracking child dependencies.  If a word has a child at
     # offset i from it, set that bit (tracking left and right separately)
     if child > head:
-        s.sent[head].r_kids |= 1 << (-dist)
+        s.sent[head].r_kids |= 1 << (-s.sent[child].head)
     else:
-        s.sent[head].l_kids |= 1 << dist
+        s.sent[head].l_kids |= 1 << s.sent[child].head
 
 
 cdef int pop_stack(State *s) except -1:
     assert s.stack_len >= 1
     s.stack_len -= 1
     s.stack -= 1
-    if s.stack_len == 0 and not at_eol(s):
-        push_stack(s)
-        
+
 
 cdef int push_stack(State *s) except -1:
     assert s.i < s.sent_len
@@ -36,14 +28,9 @@ cdef int push_stack(State *s) except -1:
     s.stack[0] = s.i
     s.stack_len += 1
     s.i += 1
-    if at_eol(s):
-        while s.stack_len != 0:
-            if not has_head(get_s0(s)):
-                get_s0(s).dep_tag = 0
-            pop_stack(s)
 
 
-cdef int children_in_buffer(const State *s, int head, const int* gold) except -1:
+cdef int children_in_buffer(const State *s, int head, int* gold) except -1:
     # Golds holds an array of head offsets --- the head of word i is i - golds[i]
     # Iterate over the tokens of the queue, and check whether their gold head is
     # our target
@@ -55,21 +42,20 @@ cdef int children_in_buffer(const State *s, int head, const int* gold) except -1
     return n
 
 
-cdef int head_in_buffer(const State *s, const int child, const int* gold) except -1:
+cdef int head_in_buffer(const State *s, const int child, int* gold) except -1:
     return gold[child] >= s.i
 
 
-cdef int children_in_stack(const State *s, const int head, const int* gold) except -1:
+cdef int children_in_stack(const State *s, const int head, int* gold) except -1:
     cdef int i
     cdef int n = 0
     for i in range(s.stack_len):
         if gold[s.stack[-i]] == head:
-            if NON_MONOTONIC or not has_head(get_s0(s)):
-                n += 1
+            n += 1
     return n
 
 
-cdef int head_in_stack(const State *s, const int child, const int* gold) except -1:
+cdef int head_in_stack(const State *s, const int child, int* gold) except -1:
     cdef int i
     for i in range(s.stack_len):
         if gold[child] == s.stack[-i]:
@@ -86,7 +72,7 @@ cdef const TokenC* get_left(const State* s, const TokenC* head, const int idx) n
     if child >= s.sent:
         return child
     else:
-        return NULL
+        return s.sent - 1
 
 
 cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) nogil:
@@ -98,20 +84,10 @@ cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) 
     if child < (s.sent + s.sent_len):
         return child
     else:
-        return NULL
+        return s.sent - 1
 
 
-cdef bint has_head(const TokenC* t) nogil:
-    return t.head != 0
-
-
-cdef int count_left_kids(const TokenC* head) nogil:
-    return _popcount(head.l_kids)
-
-
-cdef int count_right_kids(const TokenC* head) nogil:
-    return _popcount(head.r_kids)
-
+DEF PADDING = 5
 
 
 cdef State* init_state(Pool mem, TokenC* sent, const int sent_length) except NULL:
@@ -126,5 +102,4 @@ cdef State* init_state(Pool mem, TokenC* sent, const int sent_length) except NUL
     s.stack_len = 0
     s.i = 0
     s.sent_len = sent_length
-    push_stack(s)
     return s

@@ -11,8 +11,7 @@ def utf8open(loc, mode='r'):
     return codecs.open(loc, mode, 'utf8')
 
 
-def read_lang_data(name):
-    data_dir = path.join(DATA_DIR, name)
+def read_lang_data(data_dir):
     with open(path.join(data_dir, 'specials.json')) as file_:
         tokenization = ujson.load(file_)
     prefix = read_prefix(data_dir)

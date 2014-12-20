@@ -2,6 +2,8 @@
 # cython: embedsignature=True
 from __future__ import unicode_literals
 
+from os import path
+
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 
@@ -27,6 +29,17 @@ cdef class Tokenizer:
         self._infix_re = infix_re
         self.vocab = Vocab(self.get_props)
         self._load_special_tokenization(rules)
+
+    @classmethod
+    def from_dir(cls, Vocab vocab, object data_dir):
+        if not path.exists(data_dir):
+            raise IOError("Directory %s not found -- cannot load Tokenizer." % data_dir)
+        if not path.isdir(data_dir):
+            raise IOError("Path %s is a file, not a dir -- cannot load Tokenizer." % data_dir)
+ 
+        assert path.exists(data_dir) and path.isdir(data_dir)
+        rules, prefix_re, suffix_re, infix_re = util.read_lang_data(data_dir)
+        return cls(vocab, rules, prefix_re, suffix_re, infix_re)
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])

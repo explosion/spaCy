@@ -1,6 +1,6 @@
 from libc.stdint cimport uint8_t, uint32_t
 
-from .typedefs cimport flags_t, attr_t, id_t, hash_t
+from .typedefs cimport flags_t, attr_t, id_t, hash_t, univ_tag_t
 
 
 cdef struct Lexeme:
@@ -34,7 +34,7 @@ cdef struct Morphology:
 cdef struct PosTag:
     Morphology morph
     int id
-    int pos
+    univ_tag_t pos
 
 
 cdef struct TokenC:

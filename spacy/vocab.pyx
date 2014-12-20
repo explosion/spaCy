@@ -19,6 +19,17 @@ cdef class Vocab:
         self.lexemes.push_back(&EMPTY_LEXEME)
         self.get_lex_props = get_props
 
+    @classmethod
+    def from_dir(cls, object data_dir, object get_lex_props=None):
+        if not path.exists(data_dir):
+            raise IOError("Directory %s not found -- cannot load Vocab." % data_dir)
+        if not path.isdir(data_dir):
+            raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
+        cdef Vocab self = cls(get_props)
+        self.strings.load(path.join(data_dir, 'strings'))
+        self.load(path.join(data_dir, 'lexemes'))
+        return self
+
     def __len__(self):
         return self.lexemes.size()
 
