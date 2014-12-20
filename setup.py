@@ -46,26 +46,29 @@ else:
     # If you're not using virtualenv, set your include dir here.
     pass
 
+ext_args = {'language': "c++", "include_dirs": includes}
 
 exts = [
-    Extension("spacy.lang", ["spacy/lang.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.lexeme", ["spacy/lexeme.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.en", ["spacy/en.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.tokens", ["spacy/tokens.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.utf8string", ["spacy/utf8string.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.index", ["spacy/index.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.tagger", ["spacy/tagger.pyx"], language="c++", include_dirs=includes),
-    Extension("spacy.morphology", ["spacy/morphology.pyx"], language="c++",
-              include_dirs=includes),
-    
-    Extension("spacy.syntax.parser", ["spacy/syntax/parser.pyx"], language="c++",
-              include_dirs=includes),
-    Extension("spacy.syntax.arc_eager", ["spacy/syntax/arc_eager.pyx"], language="c++",
-              include_dirs=includes),
-    Extension("spacy.syntax._state", ["spacy/syntax/_state.pyx"], language="c++",
-              include_dirs=includes),
-     Extension("spacy.syntax._parse_features", ["spacy/syntax/_parse_features.pyx"], language="c++",
-              include_dirs=includes),
+    Extension("spacy.strings", ["spacy/strings.pyx"], **ext_args),
+    Extension("spacy.lexeme", ["spacy/lexeme.pyx"], **ext_args),
+    Extension("spacy.vocab", ["spacy/vocab.pyx"], **ext_args),
+    Extension("spacy.tokens", ["spacy/tokens.pyx"], **ext_args),
+    Extension("spacy.morphology", ["spacy/morphology.pyx"], **ext_args),
+    Extension("spacy.tagger", ["spacy/tagger.pyx"], **ext_args),
+    Extension("spacy.tokenizer", ["spacy/tokenizer.pyx"], **ext_args),
+    Extension("spacy.en.lang", ["spacy/en/lang.pyx"], **ext_args),
+    Extension("spacy.en.pos", ["spacy/en/pos.pyx"], **ext_args),
+    Extension("spacy.syntax._state", ["spacy/syntax/_state.pyx"], **ext_args),
+    Extension("spacy.syntax.arc_eager", ["spacy/syntax/arc_eager.pyx"], **ext_args),
+    #Extension("spacy.syntax.parser", ["spacy/syntax/parser.pyx"], **ext_args),
+    #Extension("spacy.syntax.parser", ["spacy/syntax/parser.pyx"], language="c++",
+    #          include_dirs=includes),
+    #Extension("spacy.syntax.arc_eager", ["spacy/syntax/arc_eager.pyx"], language="c++",
+    #          include_dirs=includes),
+    #Extension("spacy.syntax._state", ["spacy/syntax/_state.pyx"], language="c++",
+    #          include_dirs=includes),
+    # Extension("spacy.syntax._parse_features", ["spacy/syntax/_parse_features.pyx"], language="c++",
+    #          include_dirs=includes),
     
     #Extension("spacy.pos_feats", ["spacy/pos_feats.pyx"], language="c++", include_dirs=includes),
     #Extension("spacy.ner._state", ["spacy/ner/_state.pyx"], language="c++", include_dirs=includes),

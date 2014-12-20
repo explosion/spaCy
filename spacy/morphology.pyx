@@ -3,7 +3,6 @@
 from os import path
 import json
 
-from .lemmatizer import Lemmatizer
 from .typedefs cimport id_t, univ_tag_t
 from .typedefs cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT
 from .typedefs cimport VERB, X, PUNCT, EOL
