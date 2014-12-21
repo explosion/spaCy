@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 from __future__ import unicode_literals
 
-from spacy.utf8string import StringStore
+from spacy.strings import StringStore
 
 import pytest
 
