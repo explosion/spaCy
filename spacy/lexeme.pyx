@@ -24,7 +24,6 @@ cpdef Lexeme init(id_t i, unicode string, hash_t hashed,
     lex.prefix = string_store[string[:1]]
     lex.suffix = string_store[string[-3:]]
     lex.shape = string_store[orth.word_shape(string)]
-    lex.dense = string_store[props['dense']]
    
     lex.flags = props.get('flags', 0)
     return lex

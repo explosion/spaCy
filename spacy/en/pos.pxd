@@ -3,4 +3,4 @@ from ..morphology cimport Morphologizer
 
 
 cdef class EnPosTagger(Tagger):
-    cdef Morphologizer morphologizer
+    cdef readonly Morphologizer morphologizer

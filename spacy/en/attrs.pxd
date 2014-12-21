@@ -1,13 +1,13 @@
-from ..lexeme cimport FLAG0, FLAG1, FLAG2, FLAG3, FLAG4, FLAG5, FLAG6, FLAG7
-from ..lexeme cimport FLAG8, FLAG9
-from ..lexeme cimport ID as _ID
-from ..lexeme cimport SIC as _SIC
-from ..lexeme cimport SHAPE as _SHAPE
-from ..lexeme cimport DENSE as _DENSE
-from ..lexeme cimport SHAPE as _SHAPE
-from ..lexeme cimport PREFIX as _PREFIX
-from ..lexeme cimport SUFFIX as _SUFFIX
-from ..lexeme cimport LEMMA as _LEMMA
+from ..typedefs cimport FLAG0, FLAG1, FLAG2, FLAG3, FLAG4, FLAG5, FLAG6, FLAG7
+from ..typedefs cimport FLAG8, FLAG9
+from ..typedefs cimport ID as _ID
+from ..typedefs cimport SIC as _SIC
+from ..typedefs cimport SHAPE as _SHAPE
+from ..typedefs cimport DENSE as _DENSE
+from ..typedefs cimport SHAPE as _SHAPE
+from ..typedefs cimport PREFIX as _PREFIX
+from ..typedefs cimport SUFFIX as _SUFFIX
+from ..typedefs cimport LEMMA as _LEMMA
 
 
 # Work around the lack of global cpdef variables

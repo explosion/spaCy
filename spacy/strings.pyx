@@ -9,13 +9,42 @@ from .typedefs cimport hash_t
 SEPARATOR = '\n|-SEP-|\n'
 
 
+cdef class _SymbolMap:
+    def __init__(self):
+        self._string_to_id = {'': 0}
+        self._id_to_string = ['']
+
+    def __iter__(self):
+        for id_, string in enumerate(self._id_to_string[1:]):
+            yield string, id_
+
+    def __getitem__(self, object string_or_id):
+        cdef bytes byte_string
+        if isinstance(string_or_id, int) or isinstance(string_or_id, long):
+            if string_or_id < 1 or string_or_id >= self.size:
+                raise IndexError(string_or_id)
+            return self._int_to_string[string_or_id]
+        else:
+            string = string_or_id
+            if isinstance(string, unicode):
+                string = string.encode('utf8')
+            if string in self._string_to_id:
+                id_ = self._string_to_id[string]
+            else:
+                id_ = len(self._string_to_id)
+                self._string_to_id[string] = id_
+                self._id_to_string.append(string)
+            return id_
+
+
 cdef class StringStore:
     def __init__(self):
         self.mem = Pool()
         self._map = PreshMap()
         self._resize_at = 10000
         self.strings = <Utf8Str*>self.mem.alloc(self._resize_at, sizeof(Utf8Str))
-        self.size = 1
+        self.pos_tags = _SymbolMap()
+        self.dep_tags = _SymbolMap()
 
     property size:
         def __get__(self):

@@ -2,7 +2,9 @@
 from preshed.maps cimport PreshMap
 from preshed.counter cimport PreshCounter
 
-from .lexeme cimport get_attr, EMPTY_LEXEME, LEMMA, attr_id_t
+from .lexeme cimport get_attr, EMPTY_LEXEME
+from .typedefs cimport attr_id_t, attr_t
+from .typedefs cimport LEMMA
 cimport cython
 
 import numpy as np
@@ -30,8 +32,8 @@ cdef class Tokens:
     >>> from spacy.en import EN
     >>> tokens = EN.tokenize('An example sentence.')
     """
-    def __init__(self, StringStore string_store, string_length=0):
-        self.string_store = string_store
+    def __init__(self, Vocab vocab, string_length=0):
+        self.vocab = vocab
         if string_length >= 3:
             size = int(string_length / 3.0)
         else:
@@ -50,7 +52,7 @@ cdef class Tokens:
 
     def __getitem__(self, i):
         bounds_check(i, self.length, PADDING)
-        return Token(self.string_store, i, self.data[i].idx, self.data[i].pos,
+        return Token(self.vocab.strings, i, self.data[i].idx, self.data[i].pos,
                      self.data[i].lemma, self.data[i].head, self.data[i].dep_tag,
                      self.data[i].lex[0])
 
@@ -119,10 +121,10 @@ cdef class Token:
                  int pos, int lemma, int head, int dep_tag, dict lex):
         self.string_store = string_store
         self.idx = idx
-        self.pos = pos
+        self.pos_id = pos
         self.i = i
         self.head = head
-        self.dep_tag = dep_tag
+        self.dep_id = dep_tag
         self.id = lex['id']
 
         self.lemma = lemma
@@ -154,6 +156,9 @@ cdef class Token:
             cdef bytes utf8string = self.string_store[self.lemma]
             return utf8string.decode('utf8')
 
+    property dep:
+        def __get__(self):
+            return self.string_store.dep_tags[self.dep]
     property pos:
         def __get__(self):
-            return self.lang.pos_tagger.tag_names[self.pos]
+            return self.string_store.pos_tags[self.pos]

@@ -4,11 +4,11 @@ import numpy as np
 cimport numpy as np
 
 from cymem.cymem cimport Pool
+from thinc.typedefs cimport atom_t
 
-from .structs cimport Lexeme, TokenC, Morphology
-
-from .typedefs cimport flags_t, attr_t, flags_t
-
+from .typedefs cimport flags_t
+from .structs cimport Morphology, TokenC, Lexeme
+from .vocab cimport Vocab
 from .strings cimport StringStore
 
 
@@ -22,7 +22,7 @@ ctypedef fused LexemeOrToken:
 
 cdef class Tokens:
     cdef Pool mem
-    cdef StringStore strings
+    cdef Vocab vocab
     cdef list tag_names
 
     cdef TokenC* data
@@ -36,7 +36,7 @@ cdef class Tokens:
 
 
 cdef class Token:
-    cdef public StringStore strings
+    cdef readonly StringStore string_store
     cdef public int i
     cdef public int idx
     cdef int pos
@@ -44,18 +44,18 @@ cdef class Token:
     cdef public int head
     cdef public int dep_tag
 
-    cdef public attr_t id
-    cdef public attr_t cluster
-    cdef public attr_t length
-    cdef public attr_t postype
-    cdef public attr_t sensetype
+    cdef public atom_t id
+    cdef public atom_t cluster
+    cdef public atom_t length
+    cdef public atom_t postype
+    cdef public atom_t sensetype
 
-    cdef public attr_t sic
-    cdef public attr_t norm
-    cdef public attr_t shape
-    cdef public attr_t asciied
-    cdef public attr_t prefix
-    cdef public attr_t suffix
+    cdef public atom_t sic
+    cdef public atom_t norm
+    cdef public atom_t shape
+    cdef public atom_t asciied
+    cdef public atom_t prefix
+    cdef public atom_t suffix
 
     cdef public float prob
 

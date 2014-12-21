@@ -59,9 +59,10 @@ cdef class Morphologizer:
 
     @classmethod
     def from_dir(cls, StringStore strings, object lemmatizer, data_dir):
-        tag_map = None
-        irregulars = None
-        tag_names = None
+        tagger_cfg = json.loads(open(path.join(data_dir, 'pos', 'config.json')).read())
+        tag_map = tagger_cfg['tag_map']
+        tag_names = tagger_cfg['tag_names']
+        irregulars = json.loads(open(path.join(data_dir, 'morphs.json')).read())
         return cls(strings, lemmatizer, tag_map=tag_map, irregulars=irregulars,
                    tag_names=tag_names)
 

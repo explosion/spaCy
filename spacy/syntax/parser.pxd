@@ -1,11 +1,10 @@
-from libc.stdint cimport uint32_t, uint64_t
 from thinc.features cimport Extractor
 from thinc.learner cimport LinearModel
 
 from .arc_eager cimport TransitionSystem
 
-from ..tokens cimport Tokens, TokenC
-from ._state cimport State
+from ..structs cimport TokenC
+from ..tokens cimport Tokens
 
 
 cdef class GreedyParser:

@@ -3,6 +3,7 @@
 from __future__ import unicode_literals
 
 from os import path
+import re
 
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
@@ -27,7 +28,7 @@ cdef class Tokenizer:
         self._prefix_re = prefix_re
         self._suffix_re = suffix_re
         self._infix_re = infix_re
-        self.vocab = Vocab(self.get_props)
+        self.vocab = vocab
         self._load_special_tokenization(rules)
 
     @classmethod
@@ -39,11 +40,12 @@ cdef class Tokenizer:
  
         assert path.exists(data_dir) and path.isdir(data_dir)
         rules, prefix_re, suffix_re, infix_re = util.read_lang_data(data_dir)
-        return cls(vocab, rules, prefix_re, suffix_re, infix_re)
+        return cls(vocab, rules, re.compile(prefix_re), re.compile(suffix_re),
+                   re.compile(infix_re))
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
-        cdef Tokens tokens = Tokens(self.vocab.strings, length)
+        cdef Tokens tokens = Tokens(self.vocab, length)
         if length == 0:
             return tokens
         cdef UniStr string_struct
@@ -76,7 +78,7 @@ cdef class Tokenizer:
             tokens (Tokens): A Tokens object, giving access to a sequence of Lexemes.
         """
         cdef int length = len(string)
-        cdef Tokens tokens = Tokens(self.vocab.strings, length)
+        cdef Tokens tokens = Tokens(self.vocab, length)
         if length == 0:
             return tokens
         cdef int i = 0

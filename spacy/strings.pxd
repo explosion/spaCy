@@ -11,6 +11,11 @@ cdef inline void slice_unicode(UniStr* s, Py_UNICODE* chars, int start, int end)
     s.key = hash64(s.chars, <int>(s.n * sizeof(Py_UNICODE)), 0)
 
 
+cdef class _SymbolMap:
+    cdef dict _string_to_id
+    cdef list _id_to_string
+
+
 cdef class StringStore:
     cdef Pool mem
     cdef Utf8Str* strings
