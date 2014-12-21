@@ -1,15 +1,17 @@
 import pytest
 
-from spacy.en import EN
+from spacy.en import English
 
-def test_range_iter():
-    EN.load()
-    for i in range(len(EN.lexicon)):
-        lex = EN.lexicon[i]
+@pytest.fixture
+def EN():
+    return English(pos_tag=True)
+
+def test_range_iter(EN):
+    for i in range(len(EN.vocab)):
+        lex = EN.vocab[i]
 
 
-def test_iter():
-    EN.load()
+def test_iter(EN):
     i = 0
-    for lex in EN.lexicon:
+    for lex in EN.vocab:
         i += 1
