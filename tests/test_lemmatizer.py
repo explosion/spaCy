@@ -1,4 +1,4 @@
-from spacy.lemmatizer import Lemmatizer, read_index, read_exc
+from spacy.en.lemmatizer import Lemmatizer, read_index, read_exc
 from spacy.util import DATA_DIR
 from os import path
 
