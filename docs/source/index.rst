@@ -8,60 +8,35 @@ spaCy: Industrial-strength NLP
 ================================
 
 spaCy is a library for industrial-strength text processing in Python and Cython.
-It features extremely efficient, up-to-date algorithms, and a rethink of how those
-algorithms should be accessed.
+Its core values are efficiency, accuracy and minimalism: you get a fast pipeline of
+state-of-the-art components, a nice API, and no clutter.
 
-A typical text-processing API looks something like this:
+spaCy is particularly good for feature extraction, because it pre-loads lexical
+resources, maps strings to integer IDs, and supports output of numpy arrays:
 
-    >>> import nltk
-    >>> nltk.pos_tag(nltk.word_tokenize('''Some string of language.'''))
-    [('Some', 'DT'), ('string', 'VBG'), ('of', 'IN'), ('language', 'NN'), ('.', '.')]
+    >>> from spacy.en import English
+    >>> from spacy.en import attrs
+    >>> nlp = English()
+    >>> tokens = nlp(u'An example sentence', pos_tag=True, parse=True)
+    >>> tokens.to_array((attrs.LEMMA, attrs.POS, attrs.SHAPE, attrs.CLUSTER))
 
-This API often leaves you with a lot of busy-work.  If you're doing some machine
-learning or information extraction, all the strings have to be mapped to integers,
-and you have to save and load the mapping at training and runtime.  If you want
-to display mark-up based on the annotation, you have to realign the tokens to your
-original string.
+spaCy also makes it easy to add in-line mark up. Let's say you want to mark all
+adverbs in red:
 
-I've been writing NLP systems for almost ten years now, so I've done these
-things dozens of times.  When designing spaCy, I thought carefully about how to
-make the right thing easy.  
+    >>> from spacy.defs import ADVERB
+    >>> color = lambda t: u'\033[91m' % t if t.pos == ADVERB else u'%s'
+    >>> print u''.join(color(t) + unicode(t) for t in tokens)
 
-We begin by initializing a global vocabulary store:
+Tokens.__iter__ produces a sequence of Token objects.  The Token.__unicode__
+method --- invoked by unicode(t) --- pads each token with any whitespace that
+followed it.  So, u''.join(unicode(t) for t in tokens) is guaranteed to restore
+the original string.
 
-    >>> from spacy.en import EN
-    >>> EN.load()
+spaCy is also very efficient --- much more efficient than any other language
+processing tools available.  The table below compares the time to tokenize, POS
+tag and parse 100m words of text; it also shows accuracy on the standard
+evaluation, from the Wall Street Journal:
 
-The vocabulary reads in a data file with all sorts of pre-computed lexical
-features.  You can load anything you like here, but by default I give you:
-
-* String IDs for the word's string, its prefix, suffix and "shape";
-* Length (in unicode code-points)
-* A cluster ID, representing distributional similarity;
-* A cluster ID, representing its typical POS tag distribution;
-* Good-turing smoothed unigram probability;
-* 64 boolean features, for assorted orthographic and distributional features.
-
-With so many features pre-computed, you usually don't have to do any string
-processing at all.  You give spaCy your string, and tell it to give you either
-a numpy array, or a counts dictionary:
-
-    >>> from spacy.en import feature_names as fn
-    >>> tokens = EN.tokenize(u'''Some string of language.''')
-    >>> tokens.to_array((fn.WORD, fn.SUFFIX, fn.CLUSTER))
-    ...
-    >>> tokens.count_by(fn.WORD)
-
-If you do need strings, you can simply iterate over the Tokens object:
-
-    >>> for token in tokens:
-    ...   
-
-I mostly use this for debugging and testing.
-
-spaCy returns these rich Tokens objects much faster than most other tokenizers
-can give you a list of strings --- in fact, spaCy's POS tagger is *4 times
-faster* than CoreNLP's tokenizer:
 
 +----------+----------+---------------+----------+
 | System   | Tokenize | POS Tag       |          |
@@ -75,8 +50,16 @@ faster* than CoreNLP's tokenizer:
 | ZPar     |          | ~1,500s       |          |
 +----------+----------+---------------+----------+
 
+spaCy completes its whole pipeline faster than some of the other libraries can
+tokenize the text.  Its POS tag accuracy is as good as any system available.
+For parsing, I chose an algorithm that sacrificed some accuracy, in favour of
+efficiency.
 
-
+I wrote spaCy so that startups and other small companies could take advantage
+of the enormous progress being made by NLP academics.  Academia is competitive,
+and what you're competing to do is write papers --- so it's very hard to write
+software useful to non-academics. Seeing this gap, I resigned from my post-doc,
+and wrote spaCy.
 
 .. toctree::
     :hidden:
