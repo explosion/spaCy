@@ -1,13 +1,14 @@
-from spacy.en import EN
+from spacy.en import English
 import pytest
 
+@pytest.fixture
+def EN():
+    return English(pos_tag=True, parse=False)
 
 @pytest.fixture
-def tagged():
-    EN.load()
+def tagged(EN):
     string = u'Bananas in pyjamas are geese.'
-    tokens = EN.tokenize(string)
-    EN.set_pos(tokens)
+    tokens = EN(string, pos_tag=True)
     return tokens
 
 
