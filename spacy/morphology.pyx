@@ -35,15 +35,15 @@ cdef struct _Cached:
 cdef class Morphologizer:
     """Given a POS tag and a Lexeme, find its lemma and morphological analysis.
     """
-    def __init__(self, StringStore strings, object lemmatizer,
-                 irregulars=None, tag_map=None, tag_names=None):
+    def __init__(self, StringStore strings, object tag_map, object lemmatizer,
+                 irregulars=None):
         self.mem = Pool()
         self.strings = strings
-        self.tag_names = tag_names
         self.lemmatizer = lemmatizer
-        self._cache = PreshMapArray(len(self.tag_names))
-        self.tags = <PosTag*>self.mem.alloc(len(self.tag_names), sizeof(PosTag))
-        for i, tag in enumerate(self.tag_names):
+        cdef int n_tags = len(self.strings.pos_tags) + 1
+        self._cache = PreshMapArray(n_tags)
+        self.tags = <PosTag*>self.mem.alloc(n_tags, sizeof(PosTag))
+        for tag, i in self.strings.pos_tags:
             pos, props = tag_map[tag]
             self.tags[i].id = i
             self.tags[i].pos = pos
@@ -56,15 +56,6 @@ cdef class Morphologizer:
             self.tags[i].morph.misc = props.get('misc', 0)
         if irregulars is not None:
             self.load_exceptions(irregulars)
-
-    @classmethod
-    def from_dir(cls, StringStore strings, object lemmatizer, data_dir):
-        tagger_cfg = json.loads(open(path.join(data_dir, 'pos', 'config.json')).read())
-        tag_map = tagger_cfg['tag_map']
-        tag_names = tagger_cfg['tag_names']
-        irregulars = json.loads(open(path.join(data_dir, 'morphs.json')).read())
-        return cls(strings, lemmatizer, tag_map=tag_map, irregulars=irregulars,
-                   tag_names=tag_names)
 
     cdef int lemmatize(self, const univ_tag_t pos, const Lexeme* lex) except -1:
         if self.lemmatizer is None:
@@ -104,9 +95,10 @@ cdef class Morphologizer:
         cdef dict props
         cdef int lemma
         cdef id_t sic
-        cdef univ_tag_t pos
+        cdef int pos
         for pos_str, entries in exc.items():
-            pos = self.tag_names.index(pos_str)
+            pos = self.strings.pos_tags[pos_str]
+            assert pos < len(self.strings.pos_tags)
             for form_str, props in entries.items():
                 lemma_str = props.get('L', form_str)
                 sic = self.strings[form_str]

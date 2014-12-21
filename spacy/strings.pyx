@@ -18,6 +18,9 @@ cdef class _SymbolMap:
         for id_, string in enumerate(self._id_to_string[1:]):
             yield string, id_
 
+    def __len__(self):
+        return len(self._id_to_string)
+
     def __getitem__(self, object string_or_id):
         cdef bytes byte_string
         if isinstance(string_or_id, int) or isinstance(string_or_id, long):
@@ -42,6 +45,7 @@ cdef class StringStore:
         self.mem = Pool()
         self._map = PreshMap()
         self._resize_at = 10000
+        self.size = 1
         self.strings = <Utf8Str*>self.mem.alloc(self._resize_at, sizeof(Utf8Str))
         self.pos_tags = _SymbolMap()
         self.dep_tags = _SymbolMap()

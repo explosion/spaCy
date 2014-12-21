@@ -9,6 +9,7 @@ from ..tokens import Tokens
 from ..morphology import Morphologizer
 from .lemmatizer import Lemmatizer
 from .pos import EnPosTagger
+from .pos import POS_TAGS
 from .attrs import get_flags
 
 
@@ -21,13 +22,13 @@ class English(object):
         if data_dir is None:
             data_dir = path.join(path.dirname(__file__), 'data')
         self.vocab = Vocab.from_dir(data_dir, get_lex_props=get_lex_props)
+        for pos_str in POS_TAGS:
+            _ = self.vocab.strings.pos_tags[pos_str]
         self.tokenizer = Tokenizer.from_dir(self.vocab, data_dir)
         if pos_tag:
-            self.pos_tagger = EnPosTagger(data_dir,
-                                          Morphologizer.from_dir(
-                                              self.vocab.strings,
-                                              Lemmatizer(path.join(data_dir, 'wordnet')),
-                                              data_dir))
+            morph = Morphologizer(self.vocab.strings, POS_TAGS,
+                                  Lemmatizer(path.join(data_dir, 'wordnet')))
+            self.pos_tagger = EnPosTagger(data_dir, morph)
         else:
             self.pos_tagger = None
         if parse:

@@ -39,10 +39,10 @@ cdef class Token:
     cdef readonly StringStore string_store
     cdef public int i
     cdef public int idx
-    cdef int pos
+    cdef readonly int pos_id
+    cdef readonly int dep_id
     cdef int lemma
     cdef public int head
-    cdef public int dep_tag
 
     cdef public atom_t id
     cdef public atom_t cluster

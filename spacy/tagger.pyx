@@ -12,15 +12,13 @@ import cython
 from thinc.features cimport Feature, count_feats
 
 
-def setup_model_dir(tag_names, tag_map, tag_counts, templates, model_dir):
+def setup_model_dir(tag_names, templates, model_dir):
     if path.exists(model_dir):
         shutil.rmtree(model_dir)
     os.mkdir(model_dir)
     config = {
         'templates': templates,
         'tag_names': tag_names,
-        'tag_map': tag_map,
-        'tag_counts': tag_counts,
     }
     with open(path.join(model_dir, 'config.json'), 'w') as file_:
         json.dump(config, file_)
@@ -37,10 +35,9 @@ cdef class Tagger:
         univ_counts = {}
         cdef unicode tag
         cdef unicode univ_tag
-        self.tag_names = cfg['tag_names']
-        self.tagdict = _make_tag_dict(cfg['tag_counts'])
+        tag_names = cfg['tag_names']
         self.extractor = Extractor(templates)
-        self.model = LinearModel(len(self.tag_names), self.extractor.n_templ+2)
+        self.model = LinearModel(len(tag_names) + 1, self.extractor.n_templ+2) # TODO
         if path.exists(path.join(model_dir, 'model')):
             self.model.load(path.join(model_dir, 'model'))
 
@@ -62,30 +59,6 @@ cdef class Tagger:
             count_feats(counts[best], feats, n_feats, 1)
             self.model.update(counts)
         return guess
-
-    def tag_id(self, object tag_name):
-        """Encode tag_name into a tag ID integer."""
-        tag_id = self.tag_names.index(tag_name)
-        if tag_id == -1:
-            tag_id = len(self.tag_names)
-            self.tag_names.append(tag_name)
-        return tag_id
-
-
-def _make_tag_dict(counts):
-    freq_thresh = 20
-    ambiguity_thresh = 0.97
-    tagdict = {}
-    cdef atom_t word
-    cdef atom_t tag
-    for word_str, tag_freqs in counts.items():
-        tag_str, mode = max(tag_freqs.items(), key=lambda item: item[1])
-        n = sum(tag_freqs.values())
-        word = int(word_str)
-        tag = int(tag_str)
-        if n >= freq_thresh and (float(mode) / n) >= ambiguity_thresh:
-            tagdict[word] = tag
-    return tagdict
 
 
 cdef int _arg_max(const weight_t* scores, int n_classes) except -1:

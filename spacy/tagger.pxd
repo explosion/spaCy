@@ -18,6 +18,3 @@ cdef class Tagger:
     cpdef readonly Pool mem
     cpdef readonly Extractor extractor
     cpdef readonly LinearModel model
-
-    cpdef readonly list tag_names
-    cdef dict tagdict

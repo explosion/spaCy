@@ -19,6 +19,8 @@ cdef class _SymbolMap:
 cdef class StringStore:
     cdef Pool mem
     cdef Utf8Str* strings
+    cdef readonly _SymbolMap pos_tags
+    cdef readonly _SymbolMap dep_tags
     cdef size_t size
 
     cdef PreshMap _map
