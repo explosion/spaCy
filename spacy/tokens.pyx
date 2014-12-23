@@ -75,7 +75,7 @@ cdef class Tokens:
         return idx + t.lex.length
 
     @cython.boundscheck(False)
-    cpdef np.ndarray[long, ndim=2] get_array(self, list attr_ids):
+    cpdef np.ndarray[long, ndim=2] to_array(self, object attr_ids):
         cdef int i, j
         cdef attr_id_t feature
         cdef np.ndarray[long, ndim=2] output

@@ -32,7 +32,7 @@ cdef class Tokens:
 
     cdef int push_back(self, int i, LexemeOrToken lex_or_tok) except -1
 
-    cpdef np.ndarray[long, ndim=2] get_array(self, list features)
+    cpdef np.ndarray[long, ndim=2] to_array(self, object features)
 
 
 cdef class Token:
