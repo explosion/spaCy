@@ -22,7 +22,7 @@ class English(object):
         self.vocab = Vocab(data_dir=data_dir, get_lex_props=get_lex_props)
         self.tokenizer = Tokenizer.from_dir(self.vocab, data_dir)
         self.tagger = EnPosTagger(self.vocab.strings, data_dir) if tag else None
-        self.parser = GreedyParser(data_dir) if parse else None
+        self.parser = GreedyParser(path.join(data_dir, 'deps')) if parse else None
 
     def __call__(self, text, tag=True, parse=True):
         tokens = self.tokenizer.tokenize(text)
