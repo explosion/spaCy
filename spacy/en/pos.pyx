@@ -3,10 +3,13 @@ import json
 
 from thinc.typedefs cimport atom_t
 
+from ..typedefs cimport univ_tag_t
 from ..typedefs cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT, VERB
 from ..typedefs cimport X, PUNCT, EOL
-from ..structs cimport TokenC, Morphology
+from ..typedefs cimport id_t
+from ..structs cimport TokenC, Morphology, Lexeme
 from ..tokens cimport Tokens
+from ..morphology cimport set_morph_from_dict
 from .lemmatizer import Lemmatizer
 
 
@@ -194,29 +197,39 @@ POS_TEMPLATES = (
 )
 
 
+cdef struct _CachedMorph:
+    Morphology morph
+    int lemma
+
+
 cdef class EnPosTagger(Tagger):
     def __init__(self, StringStore strings, data_dir):
         model_dir = path.join(data_dir, 'pos')
         Tagger.__init__(self, path.join(model_dir))
         self.strings = strings
         cfg = json.load(open(path.join(data_dir, 'pos', 'config.json')))
-        self.tags = StringStore()
-        for tag in sorted(cfg['tag_names']):
-            _ = self.tags[tag]
-        self.morphologizer = Morphologizer(self.strings, cfg['tag_names'],
-                                           cfg['tag_map'],
-                                 Lemmatizer(path.join(data_dir, 'wordnet'),
-                                            NOUN, VERB, ADJ))
+        self.tag_names = sorted(cfg['tag_names'])
+        self.tag_map = cfg['tag_map']
+        cdef int n_tags = len(self.tag_names) + 1
+        self._morph_cache = PreshMapArray(n_tags)
+        self.tags = <PosTag*>self.mem.alloc(n_tags, sizeof(PosTag))
+        for i, tag in enumerate(sorted(self.tag_names)):
+            pos, props = self.tag_map[tag]
+            self.tags[i].id = i
+            self.tags[i].pos = pos
+            set_morph_from_dict(&self.tags[i].morph, props)
+        if path.exists(path.join(data_dir, 'morphs.json')):
+            self.load_morph_exceptions(json.load(open(path.join(data_dir, 'morphs.json'))))
+        self.lemmatizer = Lemmatizer(path.join(data_dir, 'wordnet'), NOUN, VERB, ADJ)
 
     def __call__(self, Tokens tokens):
         cdef int i
         cdef atom_t[N_CONTEXT_FIELDS] context
         cdef TokenC* t = tokens.data
-        assert self.morphologizer is not None
         for i in range(tokens.length):
             fill_context(context, i, t)
             t[i].pos = self.predict(context)
-            self.morphologizer.set_morph(i, t)
+            self.set_morph(i, t)
 
     def train(self, Tokens tokens, golds):
         cdef int i
@@ -226,10 +239,53 @@ cdef class EnPosTagger(Tagger):
         for i in range(tokens.length):
             fill_context(context, i, t)
             t[i].pos = self.predict(context, [golds[i]])
-            self.morphologizer.set_morph(i, t)
+            self.set_morph(i, t)
             c += t[i].pos == golds[i]
         return c
 
+    cdef int set_morph(self, const int i, TokenC* tokens) except -1:
+        cdef const PosTag* tag = &self.tags[tokens[i].pos]
+        cached = <_CachedMorph*>self._morph_cache.get(tag.id, tokens[i].lex.sic)
+        if cached is NULL:
+            cached = <_CachedMorph*>self.mem.alloc(1, sizeof(_CachedMorph))
+            cached.lemma = self.lemmatize(tag.pos, tokens[i].lex)
+            cached.morph = tag.morph
+            self._morph_cache.set(tag.id, tokens[i].lex.sic, <void*>cached)
+        tokens[i].lemma = cached.lemma
+        tokens[i].morph = cached.morph
+
+    cdef int lemmatize(self, const univ_tag_t pos, const Lexeme* lex) except -1:
+        if self.lemmatizer is None:
+            return lex.sic
+        cdef bytes py_string = self.strings[lex.sic]
+        if pos != NOUN and pos != VERB and pos != ADJ:
+            return lex.sic
+        cdef set lemma_strings
+        cdef bytes lemma_string
+        lemma_strings = self.lemmatizer(py_string, pos)
+        lemma_string = sorted(lemma_strings)[0]
+        lemma = self.strings.intern(lemma_string, len(lemma_string)).i
+        return lemma
+
+    def load_morph_exceptions(self, dict exc):
+        cdef unicode pos_str
+        cdef unicode form_str
+        cdef unicode lemma_str
+        cdef dict entries
+        cdef dict props
+        cdef int lemma
+        cdef id_t sic
+        cdef int pos
+        for pos_str, entries in exc.items():
+            pos = self.tag_names.index(pos_str)
+            for form_str, props in entries.items():
+                lemma_str = props.get('L', form_str)
+                sic = self.strings[form_str]
+                cached = <_CachedMorph*>self.mem.alloc(1, sizeof(_CachedMorph))
+                cached.lemma = self.strings[lemma_str]
+                set_morph_from_dict(&cached.morph, props)
+                self._morph_cache.set(pos, sic, <void*>cached)
+ 
 
 cdef int fill_context(atom_t* context, const int i, const TokenC* tokens) except -1:
     _fill_from_token(&context[P2_sic], &tokens[i-2])

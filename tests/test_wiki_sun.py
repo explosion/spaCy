@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from spacy.en import EN
+from spacy.en import English
 from spacy.util import utf8open
 
 import pytest
@@ -18,6 +18,7 @@ def sun_txt():
 
 
 def test_tokenize(sun_txt):
+    nlp = English(tag=False, parse=False)
     assert len(sun_txt) != 0
-    tokens = EN.tokenize(sun_txt)
+    tokens = nlp(sun_txt)
     assert True

@@ -12,7 +12,7 @@ def open_puncts():
 
 @pytest.fixture
 def EN():
-    return English()
+    return English(tag=False, parse=False)
 
 
 def test_open(open_puncts, EN):

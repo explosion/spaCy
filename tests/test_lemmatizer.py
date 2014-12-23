@@ -21,7 +21,7 @@ def test_read_exc():
 
 @pytest.fixture
 def lemmatizer():
-    return Lemmatizer(path.join(DATA_DIR, 'wordnet'))
+    return Lemmatizer(path.join(DATA_DIR, 'wordnet'), 0, 0, 0)
 
 
 def test_noun_lemmas(lemmatizer):
