@@ -2,9 +2,11 @@
 *.swp
 *.sw*
 Profile.prof
+tmp/
 
 spacy/syntax/*.cpp
 spacy/syntax/*.html
+spacy/en/*.cpp
 spacy/*.cpp
 spacy/ner/*.cpp
 spacy/orthography/*.cpp
