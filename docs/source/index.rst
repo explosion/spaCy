@@ -3,9 +3,9 @@
    You can adapt this file completely to your liking, but it should at least
    contain the root `toctree` directive.
 
-================================
-spaCy: Industrial-strength NLP
-================================
+===================================
+spaCy: Text-processing for products
+===================================
 
 spaCy is a library for industrial-strength text processing in Python and Cython.
 Its core values are efficiency, accuracy and minimalism: you get a fast pipeline of
@@ -15,22 +15,23 @@ spaCy is particularly good for feature extraction, because it pre-loads lexical
 resources, maps strings to integer IDs, and supports output of numpy arrays:
 
     >>> from spacy.en import English
-    >>> from spacy.en import attrs
     >>> nlp = English()
-    >>> tokens = nlp(u'An example sentence', pos_tag=True, parse=True)
-    >>> tokens.to_array((attrs.LEMMA, attrs.POS, attrs.SHAPE, attrs.CLUSTER))
+    >>> tokens = nlp(u'An example sentence', tag=True, parse=True)
+    >>> from spacy.en import attrs
+    >>> feats = tokens.to_array((attrs.LEMMA, attrs.POS, attrs.SHAPE, attrs.CLUSTER))
+    >>> for lemma, pos, shape, cluster in feats:
+    ...   print nlp.strings[lemma], nlp.tagger.tags[pos], nlp.strings[shape], cluster
 
 spaCy also makes it easy to add in-line mark up. Let's say you want to mark all
 adverbs in red:
 
     >>> from spacy.defs import ADVERB
     >>> color = lambda t: u'\033[91m' % t if t.pos == ADVERB else u'%s'
-    >>> print u''.join(color(t) + unicode(t) for t in tokens)
+    >>> print u''.join(color(token) + unicode(token) for t in tokens)
 
-Tokens.__iter__ produces a sequence of Token objects.  The Token.__unicode__
-method --- invoked by unicode(t) --- pads each token with any whitespace that
-followed it.  So, u''.join(unicode(t) for t in tokens) is guaranteed to restore
-the original string.
+Easy.  The trick here is that the Token objects know to pad themselves with
+whitespace when you ask for their unicode representation, so you can always get
+back the original string. 
 
 spaCy is also very efficient --- much more efficient than any other language
 processing tools available.  The table below compares the time to tokenize, POS
@@ -60,6 +61,12 @@ of the enormous progress being made by NLP academics.  Academia is competitive,
 and what you're competing to do is write papers --- so it's very hard to write
 software useful to non-academics. Seeing this gap, I resigned from my post-doc,
 and wrote spaCy.
+
+spaCy is dual-licensed: you can either use it under the GPL, or pay a one-time
+fee of $5000 for a commercial license.  I think this is excellent value:
+you'll find NLTK etc much more expensive, because what you save on license
+cost, you'll lose many times over in lost productivity. $5000 does not buy you
+much developer time.
 
 .. toctree::
     :hidden:
