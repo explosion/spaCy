@@ -35,15 +35,15 @@ cdef struct _Cached:
 cdef class Morphologizer:
     """Given a POS tag and a Lexeme, find its lemma and morphological analysis.
     """
-    def __init__(self, StringStore strings, object tag_map, object lemmatizer,
-                 irregulars=None):
+    def __init__(self, StringStore strings, object tag_names, object tag_map,
+                 object lemmatizer, irregulars=None):
         self.mem = Pool()
         self.strings = strings
         self.lemmatizer = lemmatizer
-        cdef int n_tags = len(self.strings.pos_tags) + 1
+        cdef int n_tags = len(tag_names) + 1
         self._cache = PreshMapArray(n_tags)
         self.tags = <PosTag*>self.mem.alloc(n_tags, sizeof(PosTag))
-        for tag, i in self.strings.pos_tags:
+        for i, tag in enumerate(sorted(tag_names)):
             pos, props = tag_map[tag]
             self.tags[i].id = i
             self.tags[i].pos = pos
@@ -65,13 +65,7 @@ cdef class Morphologizer:
         cdef bytes py_string = self.strings[lex.sic]
         cdef set lemma_strings
         cdef bytes lemma_string
-        if pos == NOUN:
-            lemma_strings = self.lemmatizer.noun(py_string)
-        elif pos == VERB:
-            lemma_strings = self.lemmatizer.verb(py_string)
-        else:
-            assert pos == ADJ
-            lemma_strings = self.lemmatizer.adj(py_string)
+        lemma_strings = self.lemmatizer(py_string, pos)
         lemma_string = sorted(lemma_strings)[0]
         lemma = self.strings.intern(lemma_string, len(lemma_string)).i
         return lemma

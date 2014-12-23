@@ -8,7 +8,7 @@ from spacy.en import English
 
 @pytest.fixture
 def EN():
-    return English(pos_tag=True, parse=False)
+    return English(tag=True, parse=False)
 
 
 @pytest.fixture
@@ -18,8 +18,8 @@ def morph_exc():
            }
 
 def test_load_exc(EN, morph_exc):
-    EN.pos_tagger.morphologizer.load_exceptions(morph_exc)
-    tokens = EN('I like his style.', pos_tag=True)
+    EN.tagger.morphologizer.load_exceptions(morph_exc)
+    tokens = EN('I like his style.', tag=True)
     his = tokens[2]
     assert his.pos == 'PRP$'
     assert his.lemma == '-PRP-'

@@ -1,10 +1,13 @@
 from os import path
+import json
+
 from thinc.typedefs cimport atom_t
 
 from ..typedefs cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT, VERB
 from ..typedefs cimport X, PUNCT, EOL
 from ..structs cimport TokenC, Morphology
 from ..tokens cimport Tokens
+from .lemmatizer import Lemmatizer
 
 
 cpdef enum en_person_t:
@@ -192,10 +195,18 @@ POS_TEMPLATES = (
 
 
 cdef class EnPosTagger(Tagger):
-    def __init__(self, data_dir, morphologizer):
+    def __init__(self, StringStore strings, data_dir):
         model_dir = path.join(data_dir, 'pos')
         Tagger.__init__(self, path.join(model_dir))
-        self.morphologizer = morphologizer
+        self.strings = strings
+        cfg = json.load(open(path.join(data_dir, 'pos', 'config.json')))
+        self.tags = StringStore()
+        for tag in sorted(cfg['tag_names']):
+            _ = self.tags[tag]
+        self.morphologizer = Morphologizer(self.strings, cfg['tag_names'],
+                                           cfg['tag_map'],
+                                 Lemmatizer(path.join(data_dir, 'wordnet'),
+                                            NOUN, VERB, ADJ))
 
     def __call__(self, Tokens tokens):
         cdef int i

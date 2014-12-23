@@ -1,14 +1,20 @@
 from spacy.en import English
 import pytest
 
+
 @pytest.fixture
 def EN():
-    return English(pos_tag=True, parse=False)
+    return English(tag=True, parse=False)
 
 @pytest.fixture
 def tagged(EN):
     string = u'Bananas in pyjamas are geese.'
-    tokens = EN(string, pos_tag=True)
+    tokens = EN(string, tag=True)
+    assert EN.tagger.tags[tokens[0].pos] == 'NNP'
+    assert EN.tagger.tags[tokens[1].pos] == 'IN'
+    assert EN.tagger.tags[tokens[2].pos] == 'NNS'
+    assert EN.tagger.tags[tokens[3].pos] == 'VBP'
+    assert EN.tagger.tags[tokens[3].pos] == 'NNS'
     return tokens
 
 

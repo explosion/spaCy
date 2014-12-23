@@ -9,7 +9,8 @@ from .typedefs cimport hash_t
 SEPARATOR = '\n|-SEP-|\n'
 
 
-cdef class _SymbolMap:
+"""
+cdef class SymbolMap:
     def __init__(self):
         self._string_to_id = {'': 0}
         self._id_to_string = ['']
@@ -38,6 +39,7 @@ cdef class _SymbolMap:
                 self._string_to_id[string] = id_
                 self._id_to_string.append(string)
             return id_
+"""
 
 
 cdef class StringStore:
@@ -47,8 +49,6 @@ cdef class StringStore:
         self._resize_at = 10000
         self.size = 1
         self.strings = <Utf8Str*>self.mem.alloc(self._resize_at, sizeof(Utf8Str))
-        self.pos_tags = _SymbolMap()
-        self.dep_tags = _SymbolMap()
 
     property size:
         def __get__(self):

@@ -158,7 +158,8 @@ cdef class Token:
 
     property dep:
         def __get__(self):
-            return self.string_store.dep_tags[self.dep]
+            return self.string_store.dep_tags[self.dep_id]
+
     property pos:
         def __get__(self):
-            return self.string_store.pos_tags[self.pos]
+            return self.pos_id

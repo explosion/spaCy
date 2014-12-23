@@ -5,7 +5,7 @@ from spacy.en import English
 
 @pytest.fixture
 def EN():
-    return English(pos_tag=False)
+    return English(tag=False)
 
 
 def test_possess(EN):

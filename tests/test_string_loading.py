@@ -3,13 +3,18 @@ from __future__ import unicode_literals
 
 import pytest
 
-from spacy.en import EN
+from spacy.en import English
 
 
-def test_one():
-    tokens = EN.tokenize('Betty Botter bought a pound of butter.')
+@pytest.fixture
+def EN():
+    return English()
+
+
+def test_one(EN):
+    tokens = EN('Betty Botter bought a pound of butter.')
     assert tokens[0].string == 'Betty'
-    tokens2 = EN.tokenize('Betty also bought a pound of butter.')
+    tokens2 = EN('Betty also bought a pound of butter.')
     assert tokens2[0].string == 'Betty'
 
 

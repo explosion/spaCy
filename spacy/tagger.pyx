@@ -12,13 +12,14 @@ import cython
 from thinc.features cimport Feature, count_feats
 
 
-def setup_model_dir(tag_names, templates, model_dir):
+def setup_model_dir(tag_names, tag_map, templates, model_dir):
     if path.exists(model_dir):
         shutil.rmtree(model_dir)
     os.mkdir(model_dir)
     config = {
         'templates': templates,
         'tag_names': tag_names,
+        'tag_map': tag_map
     }
     with open(path.join(model_dir, 'config.json'), 'w') as file_:
         json.dump(config, file_)

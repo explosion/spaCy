@@ -3,12 +3,12 @@ from __future__ import unicode_literals
 import pytest
 
 from spacy.en import English
-from spacy.en.attrs import IS_ALPHA, IS_DIGIT
+from spacy.en.attrs import *
 
 
 @pytest.fixture
 def EN():
-    return English(pos_tag=False)
+    return English(tag=False)
 
 
 def test_is_alpha(EN):

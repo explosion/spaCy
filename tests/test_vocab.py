@@ -1,23 +1,29 @@
 from __future__ import unicode_literals
+import pytest
 
-from spacy.en import EN
-
-
-def test_neq():
-    addr = EN.lexicon['Hello']
-    assert EN.lexicon['bye']['sic'] != addr['sic']
+from spacy.en import English
 
 
-def test_eq():
-    addr = EN.lexicon['Hello']
-    assert EN.lexicon['Hello']['sic'] == addr['sic']
+@pytest.fixture
+def EN():
+    return English()
 
 
-def test_case_neq():
-    addr = EN.lexicon['Hello']
-    assert EN.lexicon['hello']['sic'] != addr['sic']
+def test_neq(EN):
+    addr = EN.vocab['Hello']
+    assert EN.vocab['bye']['sic'] != addr['sic']
 
 
-def test_punct_neq():
-    addr = EN.lexicon['Hello']
-    assert EN.lexicon['Hello,']['sic'] != addr['sic']
+def test_eq(EN):
+    addr = EN.vocab['Hello']
+    assert EN.vocab['Hello']['sic'] == addr['sic']
+
+
+def test_case_neq(EN):
+    addr = EN.vocab['Hello']
+    assert EN.vocab['hello']['sic'] != addr['sic']
+
+
+def test_punct_neq(EN):
+    addr = EN.vocab['Hello']
+    assert EN.vocab['Hello,']['sic'] != addr['sic']
