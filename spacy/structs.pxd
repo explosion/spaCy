@@ -40,8 +40,9 @@ cdef struct PosTag:
 cdef struct TokenC:
     const Lexeme* lex
     Morphology morph
+    univ_tag_t pos
+    int fine_pos
     int idx
-    int pos
     int lemma
     int sense
     int head

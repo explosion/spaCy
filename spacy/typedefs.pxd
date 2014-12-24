@@ -99,6 +99,7 @@ cpdef enum attr_id_t:
     CLUSTER
     POS_TYPE
     LEMMA
+    POS
 
 
 

@@ -23,6 +23,7 @@ class English(object):
         self.tokenizer = Tokenizer.from_dir(self.vocab, data_dir)
         self.tagger = EnPosTagger(self.vocab.strings, data_dir) if tag else None
         self.parser = GreedyParser(path.join(data_dir, 'deps')) if parse else None
+        self.strings = self.vocab.strings
 
     def __call__(self, text, tag=True, parse=True):
         tokens = self.tokenizer.tokenize(text)
@@ -31,3 +32,10 @@ class English(object):
         if self.parser and parse:
             self.parser.parse(tokens)
         return tokens
+
+    @property
+    def tags(self):
+        if self.tagger is None:
+            return []
+        else:
+            return self.tagger.tag_names

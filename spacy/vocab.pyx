@@ -1,10 +1,34 @@
 from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
+from libc.string cimport memset
 
 from os import path
 
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport init as lexeme_init
 from .strings cimport slice_unicode
+from . import orth
+
+
+memset(&EMPTY_LEXEME, 0, sizeof(Lexeme))
+
+
+cpdef Lexeme init_lexeme(id_t i, unicode string, hash_t hashed,
+                  StringStore string_store, dict props) except *:
+    cdef Lexeme lex
+    lex.id = i
+    lex.length = len(string)
+    lex.sic = string_store[string]
+    
+    lex.cluster = props.get('cluster', 0)
+    lex.pos_type = props.get('pos_type', 0)
+    lex.prob = props.get('prob', 0)
+
+    lex.prefix = string_store[string[:1]]
+    lex.suffix = string_store[string[-3:]]
+    lex.shape = string_store[orth.word_shape(string)]
+   
+    lex.flags = props.get('flags', 0)
+    return lex
 
 
 cdef class Vocab:
@@ -43,7 +67,7 @@ cdef class Vocab:
             mem = self.mem
         cdef unicode py_string = string.chars[:string.n]
         lex = <Lexeme*>mem.alloc(sizeof(Lexeme), 1)
-        lex[0] = lexeme_init(self.lexemes.size(), py_string, string.key, self.strings,
+        lex[0] = init_lexeme(self.lexemes.size(), py_string, string.key, self.strings,
                              self.get_lex_props(py_string))
         if mem is self.mem:
             self._map.set(string.key, lex)

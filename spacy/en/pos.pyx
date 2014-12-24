@@ -1,3 +1,4 @@
+# cython: profile=True
 from os import path
 import json
 
@@ -228,7 +229,7 @@ cdef class EnPosTagger(Tagger):
         cdef TokenC* t = tokens.data
         for i in range(tokens.length):
             fill_context(context, i, t)
-            t[i].pos = self.predict(context)
+            t[i].fine_pos = self.predict(context)
             self.set_morph(i, t)
 
     def train(self, Tokens tokens, golds):
@@ -238,13 +239,14 @@ cdef class EnPosTagger(Tagger):
         cdef TokenC* t = tokens.data
         for i in range(tokens.length):
             fill_context(context, i, t)
-            t[i].pos = self.predict(context, [golds[i]])
+            t[i].fine_pos = self.predict(context, [golds[i]])
             self.set_morph(i, t)
-            c += t[i].pos == golds[i]
+            c += t[i].fine_pos == golds[i]
         return c
 
     cdef int set_morph(self, const int i, TokenC* tokens) except -1:
-        cdef const PosTag* tag = &self.tags[tokens[i].pos]
+        cdef const PosTag* tag = &self.tags[tokens[i].fine_pos]
+        tokens[i].pos = tag.pos
         cached = <_CachedMorph*>self._morph_cache.get(tag.id, tokens[i].lex.sic)
         if cached is NULL:
             cached = <_CachedMorph*>self.mem.alloc(1, sizeof(_CachedMorph))

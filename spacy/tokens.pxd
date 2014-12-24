@@ -6,7 +6,7 @@ cimport numpy as np
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport atom_t
 
-from .typedefs cimport flags_t
+from .typedefs cimport flags_t, attr_id_t, attr_t
 from .structs cimport Morphology, TokenC, Lexeme
 from .vocab cimport Vocab
 from .strings cimport StringStore
@@ -18,6 +18,13 @@ ctypedef TokenC* TokenC_ptr
 ctypedef fused LexemeOrToken:
     const_Lexeme_ptr
     TokenC_ptr
+
+
+cdef attr_t get_lex_attr(const Lexeme* lex, attr_id_t feat_name) nogil
+cdef attr_t get_token_attr(const TokenC* lex, attr_id_t feat_name) nogil
+
+cdef inline bint check_flag(const Lexeme* lexeme, attr_id_t flag_id) nogil:
+    return lexeme.flags & (1 << flag_id)
 
 
 cdef class Tokens:
@@ -36,28 +43,5 @@ cdef class Tokens:
 
 
 cdef class Token:
-    cdef readonly StringStore string_store
-    cdef public int i
-    cdef public int idx
-    cdef readonly int pos_id
-    cdef readonly int dep_id
-    cdef int lemma
-    cdef public int head
-    cdef public int dep_tag
-
-    cdef public atom_t id
-    cdef public atom_t cluster
-    cdef public atom_t length
-    cdef public atom_t postype
-    cdef public atom_t sensetype
-
-    cdef public atom_t sic
-    cdef public atom_t norm
-    cdef public atom_t shape
-    cdef public atom_t asciied
-    cdef public atom_t prefix
-    cdef public atom_t suffix
-
-    cdef public float prob
-
-    cdef public flags_t flags
+    cdef Tokens _seq
+    cdef readonly int i

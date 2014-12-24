@@ -2,16 +2,17 @@
 from preshed.maps cimport PreshMap
 from preshed.counter cimport PreshCounter
 
-from .lexeme cimport get_attr, EMPTY_LEXEME
+from .vocab cimport EMPTY_LEXEME
 from .typedefs cimport attr_id_t, attr_t
 from .typedefs cimport LEMMA
+from .typedefs cimport ID, SIC, DENSE, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER, POS_TYPE
+from .typedefs cimport POS, LEMMA
+
 cimport cython
 
 import numpy as np
 cimport numpy as np
 
-POS = 0
-ENTITY = 0
 
 DEF PADDING = 5
 
@@ -21,6 +22,40 @@ cdef int bounds_check(int i, int length, int padding) except -1:
         raise IndexError
     if (i - padding) >= length:
         raise IndexError
+
+
+cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
+    if feat_name == LEMMA:
+        return token.lemma
+    elif feat_name == POS:
+        return token.pos
+    else:
+        return get_lex_attr(token.lex, feat_name)
+
+
+cdef attr_t get_lex_attr(const Lexeme* lex, attr_id_t feat_name) nogil:
+    if feat_name < (sizeof(flags_t) * 8):
+        return check_flag(lex, feat_name)
+    elif feat_name == ID:
+        return lex.id
+    elif feat_name == SIC:
+        return lex.sic
+    elif feat_name == DENSE:
+        return lex.dense
+    elif feat_name == SHAPE:
+        return lex.shape
+    elif feat_name == PREFIX:
+        return lex.prefix
+    elif feat_name == SUFFIX:
+        return lex.suffix
+    elif feat_name == LENGTH:
+        return lex.length
+    elif feat_name == CLUSTER:
+        return lex.cluster
+    elif feat_name == POS_TYPE:
+        return lex.pos_type
+    else:
+        return 0
 
 
 cdef class Tokens:
@@ -52,9 +87,7 @@ cdef class Tokens:
 
     def __getitem__(self, i):
         bounds_check(i, self.length, PADDING)
-        return Token(self.vocab.strings, i, self.data[i].idx, self.data[i].pos,
-                     self.data[i].lemma, self.data[i].head, self.data[i].dep_tag,
-                     self.data[i].lex[0])
+        return Token(self, i)
 
     def __iter__(self):
         for i in range(self.length):
@@ -71,6 +104,7 @@ cdef class Tokens:
             t[0] = lex_or_tok[0]
         else:
             t.lex = lex_or_tok
+        t.idx = idx
         self.length += 1
         return idx + t.lex.length
 
@@ -82,7 +116,7 @@ cdef class Tokens:
         output = np.ndarray(shape=(self.length, len(attr_ids)), dtype=int)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
-                output[i, j] = get_attr(self.data[i].lex, feature)
+                output[i, j] = get_token_attr(&self.data[i], feature)
         return output
 
     def count_by(self, attr_id_t attr_id):
@@ -92,10 +126,7 @@ cdef class Tokens:
 
         cdef PreshCounter counts = PreshCounter(2 ** 8)
         for i in range(self.length):
-            if attr_id == LEMMA:
-                attr = self.data[i].lemma
-            else:
-                attr = get_attr(self.data[i].lex, attr_id)
+            attr = get_token_attr(&self.data[i], attr_id)
             counts.inc(attr, 1)
         return dict(counts)
 
@@ -117,49 +148,68 @@ cdef class Tokens:
 
 @cython.freelist(64)
 cdef class Token:
-    def __init__(self, StringStore string_store, int i, int idx,
-                 int pos, int lemma, int head, int dep_tag, dict lex):
-        self.string_store = string_store
-        self.idx = idx
-        self.pos_id = pos
+    def __init__(self, Tokens tokens, int i):
+        self._seq = tokens
         self.i = i
-        self.head = head
-        self.dep_id = dep_tag
-        self.id = lex['id']
 
-        self.lemma = lemma
-        
-        self.cluster = lex['cluster']
-        self.length = lex['length']
-        self.postype = lex['pos_type']
-        self.sensetype = 0
-        self.sic = lex['sic']
-        self.norm = lex['dense']
-        self.shape = lex['shape']
-        self.suffix = lex['suffix']
-        self.prefix = lex['prefix']
+    def __unicode__(self):
+        cdef const TokenC* t = &self._seq.data[self.i]
+        cdef int end_idx = t.idx + t.lex.length
+        if self.i + 1 == self._seq.length:
+            return self.string
+        if end_idx == t[1].idx:
+            return self.string
+        else:
+            return self.string + ' '
 
-        self.prob = lex['prob']
-        self.flags = lex['flags']
+    def __len__(self):
+        return self._seq.data[self.i].lex.length
+
+    property idx:
+        def __get__(self):
+            return self._seq.data[self.i].idx
+
+    property length:
+        def __get__(self):
+            return self._seq.data[self.i].lex.length
+
+    property cluster:
+        def __get__(self):
+            return self._seq.data[self.i].lex.cluster
 
     property string:
         def __get__(self):
-            if self.sic == 0:
+            cdef const TokenC* t = &self._seq.data[self.i]
+            if t.lex.sic == 0:
                 return ''
-            cdef bytes utf8string = self.string_store[self.sic]
+            cdef bytes utf8string = self._seq.vocab.strings[t.lex.sic]
             return utf8string.decode('utf8')
 
     property lemma:
         def __get__(self):
-            if self.lemma == 0:
+            cdef const TokenC* t = &self._seq.data[self.i]
+            if t.lemma == 0:
                 return self.string
-            cdef bytes utf8string = self.string_store[self.lemma]
+            cdef bytes utf8string = self._seq.vocab.strings[t.lemma]
             return utf8string.decode('utf8')
 
     property dep:
         def __get__(self):
-            return self.string_store.dep_tags[self.dep_id]
+            return self._seq.data[self.i].dep_tag
 
     property pos:
         def __get__(self):
-            return self.pos_id
+            return self._seq.data[self.i].pos
+
+    property fine_pos:
+        def __get__(self):
+            return self._seq.data[self.i].fine_pos
+
+    property sic:
+        def __get__(self):
+            return self._seq.data[self.i].lex.sic
+
+    property head:
+        def __get__(self):
+            cdef const TokenC* t = &self._seq.data[self.i]
+            return Token(self._seq, self.i + t.head)

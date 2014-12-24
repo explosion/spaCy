@@ -4,10 +4,12 @@ from ..typedefs cimport ID as _ID
 from ..typedefs cimport SIC as _SIC
 from ..typedefs cimport SHAPE as _SHAPE
 from ..typedefs cimport DENSE as _DENSE
+from ..typedefs cimport CLUSTER as _CLUSTER
 from ..typedefs cimport SHAPE as _SHAPE
 from ..typedefs cimport PREFIX as _PREFIX
 from ..typedefs cimport SUFFIX as _SUFFIX
 from ..typedefs cimport LEMMA as _LEMMA
+from ..typedefs cimport POS as _POS
 
 
 # Work around the lack of global cpdef variables
@@ -25,8 +27,10 @@ cpdef enum:
 
     ID = _ID
     SIC = _SIC
-    SHAPE = _DENSE
-    DENSE = _SHAPE
+    SHAPE = _SHAPE
+    DENSE = _DENSE
     PREFIX = _PREFIX
     SUFFIX = _SUFFIX
+    CLUSTER = _CLUSTER
     LEMMA = _LEMMA
+    POS = _POS

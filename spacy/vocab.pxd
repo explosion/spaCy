@@ -9,6 +9,9 @@ from .typedefs cimport utf8_t, id_t, hash_t
 from .strings cimport StringStore
 
 
+cdef Lexeme EMPTY_LEXEME
+
+
 cdef union LexemesOrTokens:
     const Lexeme* const* lexemes
     TokenC* tokens
