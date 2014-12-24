@@ -9,52 +9,63 @@ spaCy: Text-processing for products
 
 spaCy is a library for industrial-strength text processing in Python and Cython.
 Its core values are efficiency, accuracy and minimalism: you get a fast pipeline of
-state-of-the-art components, a nice API, and no clutter.
-
-spaCy is particularly good for feature extraction, because it pre-loads lexical
-resources, maps strings to integer IDs, and supports output of numpy arrays:
+state-of-the-art components, a nice API, and no clutter:
 
     >>> from spacy.en import English
     >>> nlp = English()
     >>> tokens = nlp(u'An example sentence', tag=True, parse=True)
+    >>> for token in tokens:
+    ...   print token.lemma, token.pos, bin(token.cluster)
+    an DT Xx 0b111011110
+    example NN xxxx 0b111110001
+    sentence NN xxxx 0b1101111110010
+ 
+spaCy is particularly good for feature extraction, because it pre-loads lexical
+resources, maps strings to integer IDs, and supports output of numpy arrays:
+
     >>> from spacy.en import attrs
-    >>> feats = tokens.to_array((attrs.LEMMA, attrs.POS, attrs.SHAPE, attrs.CLUSTER))
-    >>> for lemma, pos, shape, cluster in feats:
-    ...   print nlp.strings[lemma], nlp.tagger.tags[pos], nlp.strings[shape], cluster
+    >>> tokens.to_array((attrs.LEMMA, attrs.POS, attrs.SHAPE, attrs.CLUSTER))
+    array([[ 1265,    14,    76,   478],
+       [ 1545,    24,   262,   497],
+       [ 3385,    24,   262, 14309]])
 
-spaCy also makes it easy to add in-line mark up. Let's say you want to mark all
-adverbs in red:
+spaCy also makes it easy to add in-line mark up. Let's say you're convinced by
+Stephen King's advice that `adverbs are not your friend <http://www.brainpickings.org/2013/03/13/stephen-king-on-adverbs/>`_, so you want to mark
+them in red. We'll use one of the examples he finds particularly egregious:
 
-    >>> from spacy.defs import ADVERB
-    >>> color = lambda t: u'\033[91m' % t if t.pos == ADVERB else u'%s'
-    >>> print u''.join(color(token) + unicode(token) for t in tokens)
+    >>> tokens = nlp(u"‘Give it back,’ he pleaded abjectly, ‘it’s mine.’")
+    >>> red = lambda string: u'\033[91m{0}\033[0m'.format(string)
+    >>> red = lambda string: unicode(string).upper() # TODO -- make red work on website...
+    >>> print u''.join(red(t) if t.is_adverb else unicode(t) for t in tokens)
+    ‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’
 
-Easy.  The trick here is that the Token objects know to pad themselves with
-whitespace when you ask for their unicode representation, so you can always get
-back the original string. 
+
+Easy --- except, "back" isn't the sort of word we're looking for, even though
+it's undeniably an adverb.  Let's search refine the logic a little, and only
+highlight adverbs that modify verbs:
+
+    >>> print u''.join(red(t) if t.is_adverb and t.head.is_verb else unicode(t) for t in tokens)
+    ‘Give it back,’ he pleaded ABJECTLY, ‘it’s mine.’
 
 spaCy is also very efficient --- much more efficient than any other language
 processing tools available.  The table below compares the time to tokenize, POS
-tag and parse 100m words of text; it also shows accuracy on the standard
-evaluation, from the Wall Street Journal:
+tag and parse a document (amortized over 100k samples).  It also shows accuracy
+on the standard evaluation, from the Wall Street Journal:
 
++----------+----------+---------+----------+----------+------------+
+| System   | Tokenize | POS Tag | Parse    | POS Acc. | Parse Acc. |
++----------+----------+---------+----------+----------+------------+
+| spaCy    | 0.37ms   | 0.98ms  | 10ms     | 97.3%    | 92.4%      |
++----------+----------+---------+----------+----------+------------+
+| NLTK     | 6.2ms    | 443ms   | n/a      | 94.0%    | n/a        |
++----------+----------+---------+----------+----------+------------+
+| CoreNLP  | 4.2ms    | 13ms    | todo     | 96.97%   | 92.2%      |
++----------+----------+---------+----------+----------+------------+
+| ZPar     | n/a      | 15ms    | 850ms    | 97.3%    | 92.9%      |
++----------+----------+---------+----------+----------+------------+
 
-+----------+----------+---------------+----------+
-| System   | Tokenize | POS Tag       |          |
-+----------+----------+---------------+----------+
-| spaCy    | 37s      | 98s           |          |
-+----------+----------+---------------+----------+
-| NLTK     | 626s     | 44,310s (12h) |          |
-+----------+----------+---------------+----------+
-| CoreNLP  | 420s     | 1,300s (22m)  |          |
-+----------+----------+---------------+----------+
-| ZPar     |          | ~1,500s       |          |
-+----------+----------+---------------+----------+
-
-spaCy completes its whole pipeline faster than some of the other libraries can
-tokenize the text.  Its POS tag accuracy is as good as any system available.
-For parsing, I chose an algorithm that sacrificed some accuracy, in favour of
-efficiency.
+(The CoreNLP results refer to their recently published shift-reduce neural
+network parser.)
 
 I wrote spaCy so that startups and other small companies could take advantage
 of the enormous progress being made by NLP academics.  Academia is competitive,
