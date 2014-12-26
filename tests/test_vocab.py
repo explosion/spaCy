@@ -27,3 +27,8 @@ def test_case_neq(EN):
 def test_punct_neq(EN):
     addr = EN.vocab['Hello']
     assert EN.vocab['Hello,']['sic'] != addr['sic']
+
+
+def test_shape_attr(EN):
+    example = EN.vocab['example']
+    assert example['sic'] != example['shape']
