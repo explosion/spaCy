@@ -115,6 +115,17 @@ cdef class Tokens:
 
     @cython.boundscheck(False)
     cpdef np.ndarray[long, ndim=2] to_array(self, object attr_ids):
+        """Given a list of M attribute IDs, export the tokens to a numpy ndarray
+        of shape N*M, where N is the length of the sentence.
+
+        Arguments:
+            attr_ids (list[int]): A list of attribute ID ints.
+
+        Returns:
+            feat_array (numpy.ndarray[long, ndim=2]): A feature matrix, with one
+                row per word, and one column per attribute indicated in the input
+                attr_ids.
+        """
         cdef int i, j
         cdef attr_id_t feature
         cdef np.ndarray[long, ndim=2] output
@@ -125,6 +136,20 @@ cdef class Tokens:
         return output
 
     def count_by(self, attr_id_t attr_id):
+        """Produce a dict of {attribute (int): count (ints)} frequencies, keyed
+        by the values of the given attribute ID.
+
+          >>> from spacy.en import English, attrs
+          >>> nlp = English()
+          >>> tokens = nlp(u'apple apple orange banana')
+          >>> tokens.count_by(attrs.SIC)
+          {12800L: 1, 11880L: 2, 7561L: 1}
+          >>> tokens.to_array([attrs.SIC])
+          array([[11880],
+                 [11880],
+                 [ 7561],
+                 [12800]])
+        """
         cdef int i
         cdef attr_t attr
         cdef size_t count
