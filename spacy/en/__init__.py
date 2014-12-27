@@ -16,16 +16,64 @@ def get_lex_props(string):
 
 
 class English(object):
-    def __init__(self, data_dir=None, tag=True, parse=False):
+    """The English NLP pipeline.
+
+    Provides a tokenizer, lexicon, part-of-speech tagger and parser.
+
+    Keyword args:
+        data_dir (unicode): A path to a directory, from which to load the pipeline.
+            If None, looks for a directory named "data/" in the same directory as
+            the present file, i.e. path.join(path.dirname(__file__, 'data')).
+            If path.join(data_dir, 'pos') exists, the tagger is loaded from it.
+            If path.join(data_dir, 'deps') exists, the parser is loaded from it.
+            See Pipeline Directory Structure for details.
+
+    Attributes:
+        vocab (spacy.vocab.Vocab): The lexicon.
+
+        strings (spacy.strings.StringStore): Encode/decode strings to/from integer IDs.
+
+        tokenizer (spacy.tokenizer.Tokenizer): The start of the pipeline.
+
+        tagger (spacy.en.pos.EnPosTagger):
+            The part-of-speech tagger, which also performs lemmatization and
+            morphological analysis.
+
+        parser (spacy.syntax.parser.GreedyParser):
+            A greedy shift-reduce dependency parser.
+
+
+    """
+    def __init__(self, data_dir=None):
         if data_dir is None:
             data_dir = path.join(path.dirname(__file__), 'data')
         self.vocab = Vocab(data_dir=data_dir, get_lex_props=get_lex_props)
         self.tokenizer = Tokenizer.from_dir(self.vocab, data_dir)
-        self.tagger = EnPosTagger(self.vocab.strings, data_dir) if tag else None
-        self.parser = GreedyParser(path.join(data_dir, 'deps')) if parse else None
+        if path.exists(path.join(data_dir, 'pos')):
+            self.tagger = EnPosTagger(self.vocab.strings, data_dir)
+        else:
+            self.tagger = None
+        if path.exists(path.join(data_dir, 'deps')):
+            self.parser = GreedyParser(path.join(data_dir, 'deps'))
+        else:
+            self.parser = None
         self.strings = self.vocab.strings
 
     def __call__(self, text, tag=True, parse=True):
+        """Apply the pipeline to some text.
+        
+        Args:
+            text (unicode): The text to be processed.
+
+        Keyword args:
+            tag (bool): Whether to add part-of-speech tags to the text.  This
+                will also set morphological analysis and lemmas.
+
+            parse (bool): Whether to add dependency-heads and labels to the text.
+
+        Returns:
+            tokens (spacy.tokens.Tokens):
+        """
         tokens = self.tokenizer.tokenize(text)
         if self.tagger and tag:
             self.tagger(tokens)
@@ -35,7 +83,10 @@ class English(object):
 
     @property
     def tags(self):
+        """List of part-of-speech tag names."""
         if self.tagger is None:
             return []
         else:
             return self.tagger.tag_names
+
+

@@ -204,6 +204,7 @@ cdef struct _CachedMorph:
 
 
 cdef class EnPosTagger(Tagger):
+    """A part-of-speech tagger for English"""
     def __init__(self, StringStore strings, data_dir):
         model_dir = path.join(data_dir, 'pos')
         Tagger.__init__(self, path.join(model_dir))
@@ -224,6 +225,11 @@ cdef class EnPosTagger(Tagger):
         self.lemmatizer = Lemmatizer(path.join(data_dir, 'wordnet'), NOUN, VERB, ADJ)
 
     def __call__(self, Tokens tokens):
+        """Apply the tagger, setting the POS tags onto the Tokens object.
+
+        Args:
+            tokens (Tokens): The tokens to be tagged.
+        """
         cdef int i
         cdef atom_t[N_CONTEXT_FIELDS] context
         cdef TokenC* t = tokens.data

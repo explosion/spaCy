@@ -33,8 +33,6 @@ cpdef Lexeme init_lexeme(id_t i, unicode string, hash_t hashed,
 
 cdef class Vocab:
     '''A map container for a language's Lexeme structs.
-    
-    Also interns UTF-8 strings, and maps them to consecutive integer IDs.
     '''
     def __init__(self, data_dir=None, get_lex_props=None):
         self.mem = Pool()
@@ -53,6 +51,7 @@ cdef class Vocab:
             self.load(path.join(data_dir, 'lexemes'))
 
     def __len__(self):
+        """The current number of lexemes stored."""
         return self.lexemes.size()
 
     cdef const Lexeme* get(self, Pool mem, UniStr* string) except NULL:
