@@ -23,6 +23,10 @@ under spacy.en.defs.
 .. autommodule:: spacy.en.pos
    :members:
 
+.. automodule:: spacy.en.attrs
+   :members:
+   :undoc-members:
+
 The Tokens Class
 ----------------
 

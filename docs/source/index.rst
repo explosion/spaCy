@@ -79,9 +79,11 @@ you'll find NLTK etc much more expensive, because what you save on license
 cost, you'll lose many times over in lost productivity. $5000 does not buy you
 much developer time.
 
+
 .. toctree::
     :hidden:
     :maxdepth: 3
 
     features.rst
     license_stories.rst 
+    api.rst
