@@ -3,8 +3,7 @@ from thinc.learner cimport LinearModel
 
 from .arc_eager cimport TransitionSystem
 
-from ..structs cimport TokenC
-from ..tokens cimport Tokens
+from ..tokens cimport Tokens, TokenC
 
 
 cdef class GreedyParser:
