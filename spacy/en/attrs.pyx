@@ -1,3 +1,4 @@
+# cython: embedsignature=True
 from .. import orth
 from ..typedefs cimport flags_t
 
