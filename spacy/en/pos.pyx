@@ -2,6 +2,9 @@
 from os import path
 import json
 
+from libc.string cimport memset
+
+from cymem.cymem cimport Address
 from thinc.typedefs cimport atom_t
 
 from ..typedefs cimport univ_tag_t
@@ -203,16 +206,20 @@ cdef struct _CachedMorph:
     int lemma
 
 
-cdef class EnPosTagger(Tagger):
+cdef class EnPosTagger:
     """A part-of-speech tagger for English"""
     def __init__(self, StringStore strings, data_dir):
+        self.mem = Pool()
         model_dir = path.join(data_dir, 'pos')
-        Tagger.__init__(self, path.join(model_dir))
         self.strings = strings
         cfg = json.load(open(path.join(data_dir, 'pos', 'config.json')))
         self.tag_names = sorted(cfg['tag_names'])
+        self.n_tags = len(self.tag_names)
         self.tag_map = cfg['tag_map']
         cdef int n_tags = len(self.tag_names) + 1
+
+        self.model = Model(n_tags, cfg['templates'], model_dir=model_dir)
+
         self._morph_cache = PreshMapArray(n_tags)
         self.tags = <PosTag*>self.mem.alloc(n_tags, sizeof(PosTag))
         for i, tag in enumerate(sorted(self.tag_names)):
@@ -235,20 +242,27 @@ cdef class EnPosTagger(Tagger):
         cdef TokenC* t = tokens.data
         for i in range(tokens.length):
             fill_context(context, i, t)
-            t[i].fine_pos = self.predict(context)
+            t[i].fine_pos = self.model.predict(context)
             self.set_morph(i, t)
 
-    def train(self, Tokens tokens, golds):
+    def train(self, Tokens tokens, py_golds):
         cdef int i
         cdef atom_t[N_CONTEXT_FIELDS] context
-        c = 0
+        cdef Address costs_mem = Address(self.n_tags, sizeof(int))
+        cdef Address valid_mem = Address(self.n_tags, sizeof(bint))
+        cdef int* costs = <int*>costs_mem.ptr
+        cdef bint* valid = <bint*>valid_mem.ptr
+        memset(valid, 1, sizeof(int) * self.n_tags)
+        correct = 0
         cdef TokenC* t = tokens.data
         for i in range(tokens.length):
             fill_context(context, i, t)
-            t[i].fine_pos = self.predict(context, [golds[i]])
+            memset(costs, 1, sizeof(int) * self.n_tags)
+            costs[py_golds[i]] = 0
+            t[i].fine_pos = self.model.predict_and_update(context, valid, costs)
             self.set_morph(i, t)
-            c += t[i].fine_pos == golds[i]
-        return c
+            correct += costs[t[i].fine_pos] == 0
+        return correct
 
     cdef int set_morph(self, const int i, TokenC* tokens) except -1:
         cdef const PosTag* tag = &self.tags[tokens[i].fine_pos]
