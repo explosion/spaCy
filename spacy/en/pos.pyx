@@ -241,9 +241,10 @@ cdef class EnPosTagger:
         cdef atom_t[N_CONTEXT_FIELDS] context
         cdef TokenC* t = tokens.data
         for i in range(tokens.length):
-            fill_context(context, i, t)
-            t[i].fine_pos = self.model.predict(context)
-            self.set_morph(i, t)
+            if t[i].fine_pos == 0:
+                fill_context(context, i, t)
+                t[i].fine_pos = self.model.predict(context)
+                self.set_morph(i, t)
 
     def train(self, Tokens tokens, py_golds):
         cdef int i
