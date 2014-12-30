@@ -15,8 +15,8 @@ def clean():
 
 
 def docs():
-    local('sphinx-build -b html docs/ .')
-
+    with lcd('docs'):
+        local('make html')
 
 def test():
     local('py.test -x')
