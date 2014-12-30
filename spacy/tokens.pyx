@@ -1,4 +1,5 @@
 # cython: profile=True
+# cython: embedsignature=True
 
 from preshed.maps cimport PreshMap
 from preshed.counter cimport PreshCounter
