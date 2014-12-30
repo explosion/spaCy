@@ -21,7 +21,8 @@ from .tokens import Tokens
 
 
 cdef class Tokenizer:
-    def __init__(self, Vocab vocab, rules, prefix_re, suffix_re, infix_re):
+    def __init__(self, Vocab vocab, rules, prefix_re, suffix_re, infix_re,
+                 pos_tags, tag_names):
         self.mem = Pool()
         self._cache = PreshMap()
         self._specials = PreshMap()
@@ -29,10 +30,10 @@ cdef class Tokenizer:
         self._suffix_re = suffix_re
         self._infix_re = infix_re
         self.vocab = vocab
-        self._load_special_tokenization(rules)
+        self._load_special_tokenization(rules, pos_tags, tag_names)
 
     @classmethod
-    def from_dir(cls, Vocab vocab, object data_dir):
+    def from_dir(cls, Vocab vocab, object data_dir, object pos_tags, object tag_names):
         if not path.exists(data_dir):
             raise IOError("Directory %s not found -- cannot load Tokenizer." % data_dir)
         if not path.isdir(data_dir):
@@ -41,7 +42,7 @@ cdef class Tokenizer:
         assert path.exists(data_dir) and path.isdir(data_dir)
         rules, prefix_re, suffix_re, infix_re = util.read_lang_data(data_dir)
         return cls(vocab, rules, re.compile(prefix_re), re.compile(suffix_re),
-                   re.compile(infix_re))
+                   re.compile(infix_re), pos_tags, tag_names)
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
@@ -234,7 +235,7 @@ cdef class Tokenizer:
         match = self._suffix_re.search(string)
         return (match.end() - match.start()) if match is not None else 0
 
-    def _load_special_tokenization(self, object rules):
+    def _load_special_tokenization(self, object rules, object tag_map, object tag_names):
         '''Add a special-case tokenization rule.
         '''
         cdef int i
@@ -255,6 +256,13 @@ cdef class Tokenizer:
                 tokens[i].lex = <Lexeme*>self.vocab.get(self.vocab.mem, &string)
                 if lemma:
                     tokens[i].lemma = self.vocab.strings[lemma]
+                if 'pos' in props:
+                    # TODO: Clean up this mess...
+                    tokens[i].fine_pos = tag_names.index(props['pos'])
+                    tokens[i].pos = tag_map[props['pos']][0]
+                    # These are defaults, which can be over-ridden by the
+                    # token-specific props.
+                    set_morph_from_dict(&tokens[i].morph, tag_map[props['pos']][1])
                 set_morph_from_dict(&tokens[i].morph, props)
             cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
             cached.length = len(substrings)
