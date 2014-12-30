@@ -13,6 +13,7 @@ from .tokens cimport Tokens
 
 
 cdef class Model:
+    cdef weight_t* score(self, atom_t* context) except NULL
     cdef class_t predict(self, atom_t* context) except *
     cdef class_t predict_among(self, atom_t* context, bint* valid) except *
     cdef class_t predict_and_update(self, atom_t* context, const bint* valid,
@@ -23,12 +24,13 @@ cdef class Model:
     cdef LinearModel _model
 
 
-"""
 cdef class HastyModel:
-    cdef class_t predict(self, const atom_t* context, object golds=*) except *
-
-    cdef Model _model1
-    cdef Model _model2
-
-    c
-"""
+    cdef class_t predict(self, atom_t* context) except *
+    cdef class_t predict_among(self, atom_t* context, bint* valid) except *
+    cdef class_t predict_and_update(self, atom_t* context, const bint* valid,
+                                    const int* costs) except *
+ 
+    cdef weight_t confidence
+    cdef int n_classes
+    cdef Model _hasty
+    cdef Model _full

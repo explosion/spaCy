@@ -27,25 +27,28 @@ def setup_model_dir(tag_names, tag_map, templates, model_dir):
 
 
 cdef class Model:
-    def __init__(self, n_classes, templates, model_dir=None):
+    def __init__(self, n_classes, templates, model_loc=None):
         self._extractor = Extractor(templates)
         self._model = LinearModel(n_classes, self._extractor.n_templ)
-        self.model_loc = path.join(model_dir, 'model') if model_dir else None
+        self.model_loc = model_loc
         if self.model_loc and path.exists(self.model_loc):
             self._model.load(self.model_loc, freq_thresh=0)
 
-    cdef class_t predict(self, atom_t* context) except *:
+    cdef const weight_t* score(self, atom_t* context) except NULL:
         cdef int n_feats
         cdef const Feature* feats = self._extractor.get_feats(context, &n_feats)
-        cdef const weight_t* scores = self._model.get_scores(feats, n_feats)
-        guess = _arg_max(scores, self._model.nr_class)
+        return self._model.get_scores(feats, n_feats)
+
+    cdef class_t predict(self, atom_t* context) except *:
+        cdef weight_t _
+        scores = self.score(context)
+        guess = _arg_max(scores, self._model.nr_class, &_)
         return guess
 
     cdef class_t predict_among(self, atom_t* context, const bint* valid) except *:
-        cdef int n_feats
-        cdef const Feature* feats = self._extractor.get_feats(context, &n_feats)
-        cdef const weight_t* scores = self._model.get_scores(feats, n_feats)
-        return _arg_max_among(scores, valid, self._model.nr_class)
+        cdef weight_t _
+        scores = self.score(context)
+        return _arg_max_among(scores, valid, self._model.nr_class, &_)
 
     cdef class_t predict_and_update(self, atom_t* context, const bint* valid,
                                     const int* costs) except *:
@@ -59,10 +62,11 @@ cdef class Model:
             int cost
             int i
             weight_t score
+            weight_t _
         
         feats = self._extractor.get_feats(context, &n_feats)
         scores = self._model.get_scores(feats, n_feats)
-        guess = _arg_max_among(scores, valid, self._model.nr_class)
+        guess = _arg_max_among(scores, valid, self._model.nr_class, &_)
         cost = costs[guess]
         if cost == 0:
             self._model.update({})
@@ -89,50 +93,74 @@ cdef class Model:
         self._model.dump(self.model_loc, freq_thresh=0)
 
 
-"""
 cdef class HastyModel:
-    def __init__(self, model_dir):
-        cfg = json.load(open(path.join(model_dir, 'config.json')))
-        templates = cfg['templates']
-        univ_counts = {}
-        cdef unicode tag
-        cdef unicode univ_tag
-        tag_names = cfg['tag_names']
-        self.extractor = Extractor(templates)
-        self.model = LinearModel(len(tag_names) + 1, self.extractor.n_templ+2) # TODO
-        if path.exists(path.join(model_dir, 'model')):
-            self.model.load(path.join(model_dir, 'model'))
+    def __init__(self, n_classes, hasty_templates, full_templates, model_dir,
+                 weight_t confidence=0.1):
+        self.n_classes = n_classes
+        self.confidence = confidence
+        self._hasty = Model(n_classes, hasty_templates, path.join(model_dir, 'hasty_model'))
+        self._full = Model(n_classes, full_templates, path.join(model_dir, 'full_model'))
 
     cdef class_t predict(self, atom_t* context) except *:
-        pass
+        cdef weight_t ratio
+        scores = self._hasty.score(context)
+        guess = _arg_max(scores, self.n_classes, &ratio)
+        if ratio < self.confidence:
+            return guess
+        else:
+            return self._full.predict(context)
 
     cdef class_t predict_among(self, atom_t* context, bint* valid) except *:
-        pass
+        cdef weight_t ratio
+        scores = self._hasty.score(context)
+        guess = _arg_max_among(scores, valid, self.n_classes, &ratio)
+        if ratio < self.confidence:
+            return guess
+        else:
+            return self._full.predict(context)
 
-    cdef class_t predict_and_update(self, atom_t* context, int* costs) except *:
-        pass
+    cdef class_t predict_and_update(self, atom_t* context, bint* valid, int* costs) except *:
+        cdef weight_t ratio
+        scores = self._hasty.score(context)
+        _arg_max_among(scores, valid, self.n_classes, &ratio)
+        hasty_guess = self._hasty.predict_and_update(context, valid, costs)
+        full_guess = self._full.predict_and_update(context, valid, costs)
+        if ratio < self.confidence:
+            return hasty_guess
+        else:
+            return full_guess
 
-    def dump(self, model_dir):
-        pass
-"""
+    def end_training(self):
+        self._hasty.end_training()
+        self._full.end_training()
 
-cdef int _arg_max(const weight_t* scores, int n_classes) except -1:
+
+@cython.cdivision(True)
+cdef int _arg_max(const weight_t* scores, int n_classes, weight_t* ratio) except -1:
     cdef int best = 0
     cdef weight_t score = scores[best]
     cdef int i
+    ratio[0] = 0.0
     for i in range(1, n_classes):
         if scores[i] >= score:
+            if score > 0:
+                ratio[0] = score / scores[i]
             score = scores[i]
             best = i
     return best
 
 
-cdef int _arg_max_among(const weight_t* scores, const bint* valid, int n_classes) except -1:
+@cython.cdivision(True)
+cdef int _arg_max_among(const weight_t* scores, const bint* valid, int n_classes,
+                        weight_t* ratio) except -1:
     cdef int clas
     cdef weight_t score = 0
     cdef int best = -1
+    ratio[0] = 0
     for clas in range(n_classes):
         if valid[clas] and (best == -1 or scores[clas] > score):
+            if score > 0:
+                ratio[0] = score / scores[clas]
             score = scores[clas]
             best = clas
     return best
