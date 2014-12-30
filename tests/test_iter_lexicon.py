@@ -4,7 +4,7 @@ from spacy.en import English
 
 @pytest.fixture
 def EN():
-    return English(tag=True)
+    return English()
 
 def test_range_iter(EN):
     for i in range(len(EN.vocab)):

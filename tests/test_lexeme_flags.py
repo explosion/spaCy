@@ -8,7 +8,7 @@ from spacy.en.attrs import *
 
 @pytest.fixture
 def EN():
-    return English(tag=False)
+    return English()
 
 
 def test_is_alpha(EN):

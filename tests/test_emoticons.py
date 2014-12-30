@@ -6,7 +6,7 @@ from spacy.en import English
 
 @pytest.fixture
 def EN():
-    return English(tag=False)
+    return English()
 
 def test_tweebo_challenge(EN):
     text = u""":o :/ :'( >:o (: :) >.< XD -__- o.O ;D :-) @_@ :P 8D :1 >:( :D =| ") :> ...."""

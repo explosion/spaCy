@@ -18,7 +18,7 @@ def sun_txt():
 
 
 def test_tokenize(sun_txt):
-    nlp = English(tag=False, parse=False)
+    nlp = English()
     assert len(sun_txt) != 0
     tokens = nlp(sun_txt)
     assert True

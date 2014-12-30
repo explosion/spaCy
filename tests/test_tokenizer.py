@@ -8,7 +8,7 @@ from spacy.en import English
 
 @pytest.fixture
 def EN():
-    return English(tag=False, parse=False)
+    return English()
 
 def test_single_word(EN):
     tokens = EN(u'hello')

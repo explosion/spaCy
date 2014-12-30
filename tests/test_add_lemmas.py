@@ -4,7 +4,7 @@ import pytest
 
 @pytest.fixture
 def EN():
-    return English(tag=True, parse=False)
+    return English()
 
 @pytest.fixture
 def tagged(EN):

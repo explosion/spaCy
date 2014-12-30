@@ -7,7 +7,7 @@ import pytest
 
 @pytest.fixture
 def EN():
-    return English(tag=False)
+    return English()
 
 
 def test_single_space(EN):
