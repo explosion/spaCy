@@ -41,25 +41,32 @@ class English(object):
 
         parser (spacy.syntax.parser.GreedyParser):
             A greedy shift-reduce dependency parser.
-
-
     """
     def __init__(self, data_dir=None):
         if data_dir is None:
             data_dir = path.join(path.dirname(__file__), 'data')
+        self._data_dir = data_dir
         self.vocab = Vocab(data_dir=data_dir, get_lex_props=get_lex_props)
-        self.tokenizer = Tokenizer.from_dir(self.vocab, data_dir)
-        if path.exists(path.join(data_dir, 'pos')):
-            self.tagger = EnPosTagger(self.vocab.strings, data_dir)
-        else:
-            self.tagger = None
-        if path.exists(path.join(data_dir, 'deps')):
-            self.parser = GreedyParser(path.join(data_dir, 'deps'))
-        else:
-            self.parser = None
+        tag_names = list(POS_TAGS.keys())
+        tag_names.sort()
+        self.tokenizer = Tokenizer.from_dir(self.vocab, data_dir, POS_TAGS, tag_names)
         self.strings = self.vocab.strings
+        self._tagger = None
+        self._parser = None
 
-    def __call__(self, text, tag=True, parse=True):
+    @property
+    def tagger(self):
+        if self._tagger is None:
+            self._tagger = EnPosTagger(self.vocab.strings, self._data_dir)
+        return self._tagger
+
+    @property
+    def parser(self):
+        if self._parser is None:
+            self._parser = GreedyParser(path.join(self._data_dir, 'deps'))
+        return self._parser
+
+    def __call__(self, text, tag=True, parse=False):
         """Apply the pipeline to some text.
         
         Args:
@@ -88,5 +95,3 @@ class English(object):
             return []
         else:
             return self.tagger.tag_names
-
-
