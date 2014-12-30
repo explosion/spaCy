@@ -49,14 +49,16 @@ else:
 ext_args = {'language': "c++", "include_dirs": includes}
 
 exts = [
+    Extension("spacy.typedefs", ["spacy/typedefs.pyx"], **ext_args),
     Extension("spacy.strings", ["spacy/strings.pyx"], **ext_args),
     Extension("spacy.lexeme", ["spacy/lexeme.pyx"], **ext_args),
     Extension("spacy.vocab", ["spacy/vocab.pyx"], **ext_args),
     Extension("spacy.tokens", ["spacy/tokens.pyx"], **ext_args),
     Extension("spacy.morphology", ["spacy/morphology.pyx"], **ext_args),
-    Extension("spacy.tagger", ["spacy/tagger.pyx"], **ext_args),
+
+    Extension("spacy._ml", ["spacy/_ml.pyx"], **ext_args),
+
     Extension("spacy.tokenizer", ["spacy/tokenizer.pyx"], **ext_args),
-    Extension("spacy.en.lang", ["spacy/en/lang.pyx"], **ext_args),
     Extension("spacy.en.attrs", ["spacy/en/attrs.pyx"], **ext_args),
     Extension("spacy.en.pos", ["spacy/en/pos.pyx"], **ext_args),
     Extension("spacy.syntax.parser", ["spacy/syntax/parser.pyx"], **ext_args),
