@@ -64,7 +64,6 @@ cdef class GreedyParser:
         self.cfg = Config.read(model_dir, 'config')
         self.moves = TransitionSystem(self.cfg.left_labels, self.cfg.right_labels)
         hasty_templ, full_templ = get_templates(self.cfg.features)
-        #self.model = HastyModel(self.moves.n_moves, hasty_templ, full_templ, model_dir)
         self.model = Model(self.moves.n_moves, full_templ, model_dir)
 
     cpdef int parse(self, Tokens tokens) except -1:

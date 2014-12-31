@@ -27,7 +27,6 @@ cdef class Model:
     def __init__(self, n_classes, templates, model_loc=None):
         if model_loc is not None and path.isdir(model_loc):
             model_loc = path.join(model_loc, 'model')
-        self.mem = Pool()
         self.n_classes = n_classes
         self._extractor = Extractor(templates)
         self._model = LinearModel(n_classes, self._extractor.n_templ)

@@ -235,7 +235,6 @@ cdef class EnPosTagger:
         self.tag_map = cfg['tag_map']
         cdef int n_tags = len(self.tag_names) + 1
 
-        hasty_templates = ((W_sic,), (P1_pos, P2_pos), (N1_sic,))
         self.model = Model(n_tags, cfg['templates'], model_dir)
         self._morph_cache = PreshMapArray(n_tags)
         self.tags = <PosTag*>self.mem.alloc(n_tags, sizeof(PosTag))

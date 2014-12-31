@@ -16,7 +16,6 @@ cdef int arg_max(const weight_t* scores, const int n_classes) nogil
 
 
 cdef class Model:
-    cdef Pool mem
     cdef int n_classes
 
     cdef int update(self, atom_t* context, class_t guess, class_t gold, int cost) except -1
@@ -25,7 +24,7 @@ cdef class Model:
     cdef Extractor _extractor
     cdef LinearModel _model
 
-    cdef inline const weight_t* score(self, atom_t* context):
+    cdef inline const weight_t* score(self, atom_t* context) except NULL:
         cdef int n_feats
         feats = self._extractor.get_feats(context, &n_feats)
         return self._model.get_scores(feats, n_feats)
