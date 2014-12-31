@@ -12,25 +12,34 @@ from .typedefs cimport hash_t, id_t
 from .tokens cimport Tokens
 
 
+cdef int arg_max(const weight_t* scores, const int n_classes) nogil
+
+
 cdef class Model:
-    cdef weight_t* score(self, atom_t* context) except NULL
-    cdef class_t predict(self, atom_t* context) except *
-    cdef class_t predict_among(self, atom_t* context, bint* valid) except *
-    cdef class_t predict_and_update(self, atom_t* context, const bint* valid,
-                                    const int* costs) except *
- 
+    cdef Pool mem
+    cdef int n_classes
+
+    cdef int update(self, atom_t* context, class_t guess, class_t gold, int cost) except -1
+
     cdef object model_loc
     cdef Extractor _extractor
     cdef LinearModel _model
 
+    cdef inline const weight_t* score(self, atom_t* context):
+        cdef int n_feats
+        feats = self._extractor.get_feats(context, &n_feats)
+        return self._model.get_scores(feats, n_feats)
+
 
 cdef class HastyModel:
-    cdef class_t predict(self, atom_t* context) except *
-    cdef class_t predict_among(self, atom_t* context, bint* valid) except *
-    cdef class_t predict_and_update(self, atom_t* context, const bint* valid,
-                                    const int* costs) except *
+    cdef Pool mem
+    cdef weight_t* _scores
  
-    cdef weight_t confidence
+    cdef const weight_t* score(self, atom_t* context) except NULL
+    cdef int update(self, atom_t* context, class_t guess, class_t gold, int cost) except -1
+
     cdef int n_classes
     cdef Model _hasty
     cdef Model _full
+    cdef readonly int hasty_cnt
+    cdef readonly int full_cnt

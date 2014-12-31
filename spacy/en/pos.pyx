@@ -1,11 +1,13 @@
 # cython: profile=True
 from os import path
 import json
+import os
+import shutil
 
 from libc.string cimport memset
 
 from cymem.cymem cimport Address
-from thinc.typedefs cimport atom_t
+from thinc.typedefs cimport atom_t, weight_t
 
 from ..typedefs cimport univ_tag_t
 from ..typedefs cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT, VERB
@@ -14,6 +16,8 @@ from ..typedefs cimport id_t
 from ..structs cimport TokenC, Morphology, Lexeme
 from ..tokens cimport Tokens
 from ..morphology cimport set_morph_from_dict
+from .._ml cimport arg_max
+
 from .lemmatizer import Lemmatizer
 
 
@@ -206,6 +210,19 @@ cdef struct _CachedMorph:
     int lemma
 
 
+def setup_model_dir(tag_names, tag_map, templates, model_dir):
+    if path.exists(model_dir):
+        shutil.rmtree(model_dir)
+    os.mkdir(model_dir)
+    config = {
+        'templates': templates,
+        'tag_names': tag_names,
+        'tag_map': tag_map
+    }
+    with open(path.join(model_dir, 'config.json'), 'w') as file_:
+        json.dump(config, file_)
+
+
 cdef class EnPosTagger:
     """A part-of-speech tagger for English"""
     def __init__(self, StringStore strings, data_dir):
@@ -218,8 +235,8 @@ cdef class EnPosTagger:
         self.tag_map = cfg['tag_map']
         cdef int n_tags = len(self.tag_names) + 1
 
-        self.model = Model(n_tags, cfg['templates'], model_dir=model_dir)
-
+        hasty_templates = ((W_sic,), (P1_pos, P2_pos), (N1_sic,))
+        self.model = Model(n_tags, cfg['templates'], model_dir)
         self._morph_cache = PreshMapArray(n_tags)
         self.tags = <PosTag*>self.mem.alloc(n_tags, sizeof(PosTag))
         for i, tag in enumerate(sorted(self.tag_names)):
@@ -239,30 +256,27 @@ cdef class EnPosTagger:
         """
         cdef int i
         cdef atom_t[N_CONTEXT_FIELDS] context
-        cdef TokenC* t = tokens.data
+        cdef const weight_t* scores
         for i in range(tokens.length):
-            if t[i].fine_pos == 0:
-                fill_context(context, i, t)
-                t[i].fine_pos = self.model.predict(context)
-                self.set_morph(i, t)
+            if tokens.data[i].fine_pos == 0:
+                fill_context(context, i, tokens.data)
+                scores = self.model.score(context)
+                tokens.data[i].fine_pos = arg_max(scores, self.model.n_classes)
+                self.set_morph(i, tokens.data)
 
-    def train(self, Tokens tokens, py_golds):
+    def train(self, Tokens tokens, object golds):
         cdef int i
         cdef atom_t[N_CONTEXT_FIELDS] context
-        cdef Address costs_mem = Address(self.n_tags, sizeof(int))
-        cdef Address valid_mem = Address(self.n_tags, sizeof(bint))
-        cdef int* costs = <int*>costs_mem.ptr
-        cdef bint* valid = <bint*>valid_mem.ptr
-        memset(valid, 1, sizeof(int) * self.n_tags)
+        cdef const weight_t* scores
         correct = 0
-        cdef TokenC* t = tokens.data
         for i in range(tokens.length):
-            fill_context(context, i, t)
-            memset(costs, 1, sizeof(int) * self.n_tags)
-            costs[py_golds[i]] = 0
-            t[i].fine_pos = self.model.predict_and_update(context, valid, costs)
-            self.set_morph(i, t)
-            correct += costs[t[i].fine_pos] == 0
+            fill_context(context, i, tokens.data)
+            scores = self.model.score(context)
+            guess = arg_max(scores, self.model.n_classes)
+            self.model.update(context, guess, golds[i], guess != golds[i])
+            tokens.data[i].fine_pos = guess
+            self.set_morph(i, tokens.data)
+            correct += guess == golds[i]
         return correct
 
     cdef int set_morph(self, const int i, TokenC* tokens) except -1:

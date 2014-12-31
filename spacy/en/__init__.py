@@ -82,16 +82,13 @@ class English(object):
             tokens (spacy.tokens.Tokens):
         """
         tokens = self.tokenizer.tokenize(text)
-        if self.tagger and tag:
+        if tag:
             self.tagger(tokens)
-        if self.parser and parse:
+        if parse:
             self.parser.parse(tokens)
         return tokens
 
     @property
     def tags(self):
         """List of part-of-speech tag names."""
-        if self.tagger is None:
-            return []
-        else:
-            return self.tagger.tag_names
+        return self.tagger.tag_names

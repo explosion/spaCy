@@ -85,7 +85,6 @@ cdef int fill_context(atom_t* context, State* state) except -1:
             if state.stack_len >= 3:
                 context[S2_has_head] = has_head(get_s2(state))
 
-
 unigrams = (
     (S2W, S2p),
     (S2c6, S2p),
@@ -345,6 +344,9 @@ clusters = (
     (S0lc4, S0p, N0c4),
     (S0lc4, S0c4, N0p)
 )
+
+
+hasty = s0_n0 + n0_n1 + trigrams
 
 
 def pos_bigrams():

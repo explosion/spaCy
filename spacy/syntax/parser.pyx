@@ -7,7 +7,7 @@ cimport cython
 from libc.stdint cimport uint32_t, uint64_t
 import random
 import os.path
-from os.path import join as pjoin
+from os import path
 import shutil
 import json
 
@@ -52,26 +52,23 @@ cdef unicode print_state(State* s, list words):
 def get_templates(name):
     pf = _parse_features
     if name == 'zhang':
-        return pf.arc_eager
+        return pf.unigrams, pf.arc_eager
     else:
-        return pf.unigrams + pf.s0_n0 + pf.s1_n0 + pf.s0_n1 + pf.n0_n1 + \
-               pf.tree_shape + pf.trigrams
+        return pf.hasty, (pf.unigrams + pf.s0_n0 + pf.s1_n0 + pf.s0_n1 + pf.n0_n1 + \
+                             pf.tree_shape + pf.trigrams)
 
 
 cdef class GreedyParser:
     def __init__(self, model_dir):
         assert os.path.exists(model_dir) and os.path.isdir(model_dir)
         self.cfg = Config.read(model_dir, 'config')
-        self.extractor = Extractor(get_templates(self.cfg.features))
         self.moves = TransitionSystem(self.cfg.left_labels, self.cfg.right_labels)
-        self.model = LinearModel(self.moves.n_moves, self.extractor.n_templ)
-        if os.path.exists(pjoin(model_dir, 'model')):
-            self.model.load(pjoin(model_dir, 'model'))
+        hasty_templ, full_templ = get_templates(self.cfg.features)
+        #self.model = HastyModel(self.moves.n_moves, hasty_templ, full_templ, model_dir)
+        self.model = Model(self.moves.n_moves, full_templ, model_dir)
 
     cpdef int parse(self, Tokens tokens) except -1:
         cdef:
-            const Feature* feats
-            const weight_t* scores
             Transition guess
             uint64_t state_key
 
@@ -81,8 +78,7 @@ cdef class GreedyParser:
         cdef State* state = init_state(mem, tokens.data, tokens.length)
         while not is_final(state):
             fill_context(context, state)
-            feats = self.extractor.get_feats(context, &n_feats)
-            scores = self.model.get_scores(feats, n_feats)
+            scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
             self.moves.transition(state, &guess)
         return 0
@@ -106,35 +102,13 @@ cdef class GreedyParser:
         
         cdef State* state = init_state(mem, tokens.data, tokens.length)
         while not is_final(state):
-            fill_context(context, state) 
-            feats = self.extractor.get_feats(context, &n_feats)
-            scores = self.model.get_scores(feats, n_feats)
+            fill_context(context, state)
+            scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
             best = self.moves.best_gold(&guess, scores, state, heads_array, labels_array)
-            counts = _get_counts(guess.clas, best.clas, feats, n_feats, guess.cost)
-            self.model.update(counts)
+            self.model.update(context, guess.clas, best.clas, guess.cost)
             self.moves.transition(state, &guess)
         cdef int n_corr = 0
         for i in range(tokens.length):
             n_corr += (i + state.sent[i].head) == gold_heads[i]
         return n_corr
-
-
-cdef dict _get_counts(int guess, int best, const Feature* feats, const int n_feats,
-                      int inc):
-    if guess == best:
-        return {}
-
-    gold_counts = {}
-    guess_counts = {}
-    cdef int i
-    for i in range(n_feats):
-        key = (feats[i].i, feats[i].key)
-        if key in gold_counts:
-            gold_counts[key] += (feats[i].value * inc)
-            guess_counts[key] -= (feats[i].value * inc)
-        else:
-            gold_counts[key] = (feats[i].value * inc)
-            guess_counts[key] = -(feats[i].value * inc)
-    return {guess: guess_counts, best: gold_counts}
-
