@@ -11,6 +11,9 @@ from .pos import POS_TAGS
 from .attrs import get_flags
 
 
+DATA_DIR = path.join(path.dirname(__file__), 'data')
+
+
 def get_lex_props(string):
     return {'flags': get_flags(string), 'dense': 1}
 
@@ -46,10 +49,12 @@ class English(object):
         if data_dir is None:
             data_dir = path.join(path.dirname(__file__), 'data')
         self._data_dir = data_dir
-        self.vocab = Vocab(data_dir=data_dir, get_lex_props=get_lex_props)
+        self.vocab = Vocab(data_dir=path.join(data_dir, 'vocab'),
+                           get_lex_props=get_lex_props)
         tag_names = list(POS_TAGS.keys())
         tag_names.sort()
-        self.tokenizer = Tokenizer.from_dir(self.vocab, data_dir, POS_TAGS, tag_names)
+        self.tokenizer = Tokenizer.from_dir(self.vocab, path.join(data_dir, 'tokenizer'),
+                                            POS_TAGS, tag_names)
         self.strings = self.vocab.strings
         self._tagger = None
         self._parser = None

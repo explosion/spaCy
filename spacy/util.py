@@ -21,21 +21,21 @@ def read_lang_data(data_dir):
 
 
 def read_prefix(data_dir):
-    with  utf8open(path.join(data_dir, 'prefix')) as file_:
+    with  utf8open(path.join(data_dir, 'prefix.txt')) as file_:
         entries = file_.read().split('\n')
         expression = '|'.join(['^' + re.escape(piece) for piece in entries if piece.strip()])
     return expression
 
 
 def read_suffix(data_dir):
-    with utf8open(path.join(data_dir, 'suffix')) as file_:
+    with utf8open(path.join(data_dir, 'suffix.txt')) as file_:
         entries = file_.read().split('\n')
         expression = '|'.join([piece + '$' for piece in entries if piece.strip()])
     return expression
 
 
 def read_infix(data_dir):
-    with utf8open(path.join(data_dir, 'infix')) as file_:
+    with utf8open(path.join(data_dir, 'infix.txt')) as file_:
         entries = file_.read().split('\n')
         expression = '|'.join([piece for piece in entries if piece.strip()])
     return expression

@@ -47,8 +47,8 @@ cdef class Vocab:
         if data_dir is not None:
             if not path.isdir(data_dir):
                 raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
-            self.strings.load(path.join(data_dir, 'strings'))
-            self.load(path.join(data_dir, 'lexemes'))
+            self.strings.load(path.join(data_dir, 'strings.txt'))
+            self.load(path.join(data_dir, 'lexemes.bin'))
 
     def __len__(self):
         """The current number of lexemes stored."""
