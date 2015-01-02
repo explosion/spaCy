@@ -30,6 +30,13 @@ def clean(ext):
                 os.unlink(html)
 
 
+def files_in(directory):
+    filenames = []
+    for fn in os.listdir(directory):
+        filenames.append(path.join(directory, fn))
+    return [f for f in filenames if not path.isdir(f)]
+
+
 HERE = os.path.dirname(__file__)
 virtual_env = os.environ.get('VIRTUAL_ENV', '')
 compile_args = []
@@ -89,11 +96,13 @@ distutils.core.setup(
     description="Industrial-strength NLP",
     author='Matthew Honnibal',
     author_email='honnibal@gmail.com',
-    version='1.0',
+    version='0.1',
     url="http://honnibal.github.io/spaCy/",
-    package_data={"spacy": ["*.pxd"], "spacy.en": ["*.pxd", "data/*", "data/*/*"],
+    package_data={"spacy": ["*.pxd"], "spacy.en": ["*.pxd", "data/pos/*",
+                            "data/wordnet/*", "data/tokenizer/*",
+                            "data/vocab/*"],
                   "spacy.syntax": ["*.pxd"]},
     cmdclass={'build_ext': Cython.Distutils.build_ext},
     ext_modules=exts,
-    license="Dual: Commercial or AGPL. Contributions subject to contributor agreement."
+    license="Dual: Commercial or AGPL"
 )
