@@ -1,0 +1,15 @@
+language: python
+python:
+  - "2.7"
+  - "3.4"
+# command to install dependencies
+install:
+  pip install cython &&
+  pip install cymem &&
+  pip install murmurhash &&
+  pip install preshed &&
+  pip install thinc &&
+  pip install -r requirements.txt &&
+  python setup.py build_ext --inplace
+# command to run tests
+script: "py.test tests/"
