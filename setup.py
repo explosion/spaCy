@@ -85,15 +85,15 @@ if sys.argv[1] == 'clean':
 
 distutils.core.setup(
     name='spacy',
-    packages=['spacy'],
+    packages=['spacy', 'spacy.en', 'spacy.syntax'],
+    description="Industrial-strength NLP",
     author='Matthew Honnibal',
     author_email='honnibal@gmail.com',
     version='1.0',
-    package_data={"spacy": ["*.pxd"]},
+    url="http://honnibal.github.io/spaCy/",
+    package_data={"spacy": ["*.pxd"], "spacy.en": ["*.pxd", "data/*", "data/*/*"],
+                  "spacy.syntax": ["*.pxd"]},
     cmdclass={'build_ext': Cython.Distutils.build_ext},
- 
     ext_modules=exts,
+    license="Dual: Commercial or AGPL. Contributions subject to contributor agreement."
 )
-
-
-
