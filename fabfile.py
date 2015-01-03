@@ -1,12 +1,28 @@
 from fabric.api import local, run, lcd, cd, env
 from os.path import exists as file_exists
-from fabtools.python import virtualenv
+from fabtools.python import install, is_installed, virtualenv, install_requirements
 from os import path
 import json
 
 
 PWD = path.dirname(__file__)
 VENV_DIR = path.join(PWD, '.env')
+DEV_ENV_DIR = path.join(PWD, '.denv')
+
+
+def require_dep(name):
+    local('pip install %s' % name)
+
+def dev():
+    # Allow this to persist, since we aren't as rigorous about keeping state clean
+    if not file_exists('.denv'):
+        local('virtualenv .denv')
+ 
+    with virtualenv(DEV_ENV_DIR):
+        require_dep('cython')
+        require_dep('murmurhash')
+        require_dep('numpy')
+        local('pip install -r requirements.txt')
 
 
 def sdist():
