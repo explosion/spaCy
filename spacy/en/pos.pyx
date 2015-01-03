@@ -243,8 +243,9 @@ cdef class EnPosTagger:
             self.tags[i].id = i
             self.tags[i].pos = pos
             set_morph_from_dict(&self.tags[i].morph, props)
-        if path.exists(path.join(data_dir, 'morphs.json')):
-            self.load_morph_exceptions(json.load(open(path.join(data_dir, 'morphs.json'))))
+        if path.exists(path.join(data_dir, 'tokenizer', 'morphs.json')):
+            self.load_morph_exceptions(json.load(open(path.join(data_dir, 'tokenizer',
+                                                 'morphs.json'))))
         self.lemmatizer = Lemmatizer(path.join(data_dir, 'wordnet'), NOUN, VERB, ADJ)
 
     def __call__(self, Tokens tokens):
