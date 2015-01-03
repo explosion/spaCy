@@ -1,40 +1,26 @@
 #!/usr/bin/env python
-import Cython.Distutils
-from Cython.Distutils import Extension
-import distutils.core
-
 import sys
 import os
-import os.path
-
 from os import path
 from glob import glob
-
+import subprocess
 import numpy
 
 
+from setuptools import setup
+from distutils.core import Extension
+import shutil
+
+
 def clean(ext):
-    for pyx in ext.sources:
-        if pyx.endswith('.pyx'):
-            c = pyx[:-4] + '.c'
-            cpp = pyx[:-4] + '.cpp'
-            so = pyx[:-4] + '.so'
-            html = pyx[:-4] + '.html'
+    for src in ext.sources:
+        if src.endswith('.c') or src.endswith('cpp'):
+            so = src.rsplit('.', 1)[0] + '.so'
+            html = src.rsplit('.', 1)[0] + '.html'
             if os.path.exists(so):
                 os.unlink(so)
-            if os.path.exists(c):
-                os.unlink(c)
-            elif os.path.exists(cpp):
-                os.unlink(cpp)
             if os.path.exists(html):
                 os.unlink(html)
-
-
-def files_in(directory):
-    filenames = []
-    for fn in os.listdir(directory):
-        filenames.append(path.join(directory, fn))
-    return [f for f in filenames if not path.isdir(f)]
 
 
 HERE = os.path.dirname(__file__)
@@ -56,22 +42,22 @@ else:
 ext_args = {'language': "c++", "include_dirs": includes}
 
 exts = [
-    Extension("spacy.typedefs", ["spacy/typedefs.pyx"], **ext_args),
-    Extension("spacy.strings", ["spacy/strings.pyx"], **ext_args),
-    Extension("spacy.lexeme", ["spacy/lexeme.pyx"], **ext_args),
-    Extension("spacy.vocab", ["spacy/vocab.pyx"], **ext_args),
-    Extension("spacy.tokens", ["spacy/tokens.pyx"], **ext_args),
-    Extension("spacy.morphology", ["spacy/morphology.pyx"], **ext_args),
+    Extension("spacy.typedefs", ["spacy/typedefs.cpp"], **ext_args),
+    Extension("spacy.strings", ["spacy/strings.cpp"], **ext_args),
+    Extension("spacy.lexeme", ["spacy/lexeme.cpp"], **ext_args),
+    Extension("spacy.vocab", ["spacy/vocab.cpp"], **ext_args),
+    Extension("spacy.tokens", ["spacy/tokens.cpp"], **ext_args),
+    Extension("spacy.morphology", ["spacy/morphology.cpp"], **ext_args),
 
-    Extension("spacy._ml", ["spacy/_ml.pyx"], **ext_args),
+    Extension("spacy._ml", ["spacy/_ml.cpp"], **ext_args),
 
-    Extension("spacy.tokenizer", ["spacy/tokenizer.pyx"], **ext_args),
-    Extension("spacy.en.attrs", ["spacy/en/attrs.pyx"], **ext_args),
-    Extension("spacy.en.pos", ["spacy/en/pos.pyx"], **ext_args),
-    Extension("spacy.syntax.parser", ["spacy/syntax/parser.pyx"], **ext_args),
-    Extension("spacy.syntax._state", ["spacy/syntax/_state.pyx"], **ext_args),
-    Extension("spacy.syntax.arc_eager", ["spacy/syntax/arc_eager.pyx"], **ext_args),
-    Extension("spacy.syntax._parse_features", ["spacy/syntax/_parse_features.pyx"],
+    Extension("spacy.tokenizer", ["spacy/tokenizer.cpp"], **ext_args),
+    Extension("spacy.en.attrs", ["spacy/en/attrs.cpp"], **ext_args),
+    Extension("spacy.en.pos", ["spacy/en/pos.cpp"], **ext_args),
+    Extension("spacy.syntax.parser", ["spacy/syntax/parser.cpp"], **ext_args),
+    Extension("spacy.syntax._state", ["spacy/syntax/_state.cpp"], **ext_args),
+    Extension("spacy.syntax.arc_eager", ["spacy/syntax/arc_eager.cpp"], **ext_args),
+    Extension("spacy.syntax._parse_features", ["spacy/syntax/_parse_features.cpp"],
               **ext_args)
     
     #Extension("spacy.pos_feats", ["spacy/pos_feats.pyx"], language="c++", include_dirs=includes),
@@ -90,7 +76,8 @@ if sys.argv[1] == 'clean':
     print >> sys.stderr, "cleaning .c, .c++ and .so files matching sources"
     map(clean, exts)
 
-distutils.core.setup(
+
+setup(
     name='spacy',
     packages=['spacy', 'spacy.en', 'spacy.syntax'],
     description="Industrial-strength NLP",
@@ -98,11 +85,13 @@ distutils.core.setup(
     author_email='honnibal@gmail.com',
     version='0.1',
     url="http://honnibal.github.io/spaCy/",
-    package_data={"spacy": ["*.pxd"], "spacy.en": ["*.pxd", "data/pos/*",
-                            "data/wordnet/*", "data/tokenizer/*",
-                            "data/vocab/*"],
+    package_data={"spacy": ["*.pxd"],
+                  "spacy.en": ["*.pxd", "data/pos/*",
+                               "data/wordnet/*", "data/tokenizer/*",
+                               "data/vocab/*"],
                   "spacy.syntax": ["*.pxd"]},
-    cmdclass={'build_ext': Cython.Distutils.build_ext},
     ext_modules=exts,
-    license="Dual: Commercial or AGPL"
+    license="Dual: Commercial or AGPL",
+    install_requires=['murmurhash', 'cymem', 'preshed', 'thinc', "unidecode",
+                      "ujson"]
 )
