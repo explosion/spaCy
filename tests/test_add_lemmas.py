@@ -18,9 +18,10 @@ def lemmas(tagged):
     return [t.lemma for t in tagged]
 
 
-def test_lemmas(lemmas):
+def test_lemmas(lemmas, tagged):
     assert lemmas[0] == 'banana'
     assert lemmas[1] == 'in'
     assert lemmas[2] == 'pyjama'
     assert lemmas[3] == 'be'
+    assert tagged[2].fine_pos == tagged[4].fine_pos
     assert lemmas[4] == 'goose'
