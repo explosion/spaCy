@@ -4,12 +4,8 @@ python:
   - "3.4"
 # command to install dependencies
 install:
-  pip install cython &&
-  pip install cymem &&
-  pip install murmurhash &&
-  pip install preshed &&
-  pip install thinc &&
-  pip install -r requirements.txt &&
-  python setup.py build_ext --inplace
+  - "pip install --upgrade setuptools"
+  - "pip install murmurhash numpy spacy"
+  - "rm -rf spacy/"
 # command to run tests
 script: "py.test tests/"
