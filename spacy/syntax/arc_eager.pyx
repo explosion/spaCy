@@ -136,7 +136,7 @@ cdef class TransitionSystem:
             add_dep(s, s.stack[-1], s.stack[0], get_s0(s).dep_tag)
             pop_stack(s)
         else:
-            raise StandardError(t.move)
+            raise Exception(t.move)
 
     cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
         cdef bint[N_MOVES] valid
