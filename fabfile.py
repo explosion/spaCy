@@ -1,13 +1,65 @@
+from fabric.api import local, run, lcd, cd, env
+from os.path import exists as file_exists
+from fabtools.python import virtualenv
+from os import path
 import json
 
-from fabric.api import local, run, lcd, cd, env
+
+PWD = path.dirname(__file__)
+VENV_DIR = path.join(PWD, '.env')
+
+
+def sdist():
+    if file_exists('dist/'):
+        local('rm -rf dist/')
+    local('mkdir dist')
+    with virtualenv(VENV_DIR):
+        local('pip install --upgrade setuptools')
+        local('pip install murmurhash')
+        local('pip install numpy')
+        local('python setup.py sdist')
+
+
+def publish():
+    with virtualenv(VENV_DIR):
+        local('python setup.py register')
+        local('twine upload dist/*.tar.gz')
+
+
+def setup():
+    if file_exists('.env'):
+        local('rm -rf .env')
+    local('virtualenv .env')
+
+
+def install():
+    with virtualenv(VENV_DIR):
+        local('pip install dist/*.tar.gz')
+        local('pip install pytest')
+
 
 def make():
-    local('python setup.py build_ext --inplace > /dev/null 2> /tmp/err')
+    with virtualenv(VENV_DIR):
+        with lcd(path.dirname(__file__)):
+            local('python dev_setup.py build_ext --inplace > /dev/null')
+
 
 def vmake():
-    local('python setup.py build_ext --inplace')
+    with virtualenv(VENV_DIR):
+        with lcd(path.dirname(__file__)):
+            local('python dev_setup.py build_ext --inplace')
 
+
+
+def clean():
+    with lcd(path.dirname(__file__)):
+        local('python dev_setup.py clean --all')
+
+
+def test():
+    with virtualenv(VENV_DIR):
+        with lcd(path.dirname(__file__)):
+            local('py.test -x')
 
 
 def clean():
@@ -18,11 +70,10 @@ def docs():
     with lcd('docs'):
         local('make html')
 
-def test():
-    local('py.test -x')
 
 def sbox():
     local('python sb_setup.py build_ext --inplace')
+
 
 def sbclean():
     local('python sb_setup.py clean --all')
