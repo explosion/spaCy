@@ -14,9 +14,6 @@ def sdist():
         local('rm -rf dist/')
     local('mkdir dist')
     with virtualenv(VENV_DIR):
-        local('pip install --upgrade setuptools')
-        local('pip install murmurhash')
-        local('pip install numpy')
         local('python setup.py sdist')
 
 
@@ -30,6 +27,10 @@ def setup():
     if file_exists('.env'):
         local('rm -rf .env')
     local('virtualenv .env')
+    with virtualenv(VENV_DIR):
+        local('pip install --upgrade setuptools')
+        local('pip install murmurhash')
+        local('pip install numpy')
 
 
 def install():
