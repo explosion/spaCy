@@ -3,8 +3,7 @@ import sys
 import os
 from os import path
 from glob import glob
-import subprocess
-import numpy
+import sys
 
 
 from setuptools import setup
@@ -23,21 +22,20 @@ def clean(ext):
                 os.unlink(html)
 
 
-HERE = os.path.dirname(__file__)
-virtual_env = os.environ.get('VIRTUAL_ENV', '')
 compile_args = []
 link_args = []
 libs = []
 
-includes = ['.', numpy.get_include()]
-cython_includes = ['.']
+includes = ['.'] 
+virtual_env = os.environ.get('VIRTUAL_ENV', '')
 
-
-if 'VIRTUAL_ENV' in os.environ:
-    includes += glob(path.join(os.environ['VIRTUAL_ENV'], 'include', 'site', '*'))
+includes = ['.']
+if virtual_env:
+    includes += glob(os.path.join(virtual_env, 'include', 'site'))
+    includes += glob(os.path.join(virtual_env, 'include', 'site', '*'))
 else:
-    # If you're not using virtualenv, set your include dir here.
     pass
+
 
 ext_args = {'language': "c++", "include_dirs": includes}
 
@@ -83,7 +81,7 @@ setup(
     description="Industrial-strength NLP",
     author='Matthew Honnibal',
     author_email='honnibal@gmail.com',
-    version='0.13',
+    version='0.14',
     url="http://honnibal.github.io/spaCy/",
     package_data={"spacy": ["*.pxd"],
                   "spacy.en": ["*.pxd", "data/pos/*",
@@ -92,7 +90,17 @@ setup(
                   "spacy.syntax": ["*.pxd"]},
     ext_modules=exts,
     license="Dual: Commercial or AGPL",
-    install_requires=['murmurhash', 'cymem', 'preshed', 'thinc', "unidecode",
+    install_requires=['murmurhash', 'numpy', 'cymem', 'preshed', 'thinc', "unidecode",
                       "ujson"],
-    setup_requires=["murmurhash", "numpy"],
+    setup_requires=["headers_workaround"],
 )
+
+
+import headers_workaround
+
+
+include_dir = path.join(sys.prefix, 'include', 'site')
+if not path.exists(include_dir):
+    os.mkdir(include_dir)
+headers_workaround.install_headers(include_dir, 'murmurhash')
+headers_workaround.install_headers(include_dir, 'numpy')

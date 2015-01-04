@@ -13,6 +13,7 @@ DEV_ENV_DIR = path.join(PWD, '.denv')
 def require_dep(name):
     local('pip install %s' % name)
 
+
 def dev():
     # Allow this to persist, since we aren't as rigorous about keeping state clean
     if not file_exists('.denv'):
@@ -45,8 +46,6 @@ def setup():
     local('virtualenv .env')
     with virtualenv(VENV_DIR):
         local('pip install --upgrade setuptools')
-        local('pip install murmurhash')
-        local('pip install numpy')
 
 
 def install():
@@ -56,7 +55,7 @@ def install():
 
 
 def make():
-    with virtualenv(VENV_DIR):
+    with virtualenv(DEV_ENV_DIR):
         with lcd(path.dirname(__file__)):
             local('python dev_setup.py build_ext --inplace > /dev/null')
 
@@ -86,14 +85,6 @@ def clean():
 def docs():
     with lcd('docs'):
         local('make html')
-
-
-def sbox():
-    local('python sb_setup.py build_ext --inplace')
-
-
-def sbclean():
-    local('python sb_setup.py clean --all')
 
 
 def pos():

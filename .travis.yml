@@ -6,7 +6,7 @@ python:
 # command to install dependencies
 install:
   - "pip install --upgrade setuptools"
-  - "pip install murmurhash numpy spacy"
+  - "pip install spacy"
   - "rm -rf spacy/"
 # command to run tests
 script: "py.test tests/"
