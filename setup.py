@@ -81,7 +81,7 @@ setup(
     description="Industrial-strength NLP",
     author='Matthew Honnibal',
     author_email='honnibal@gmail.com',
-    version='0.14',
+    version='0.15',
     url="http://honnibal.github.io/spaCy/",
     package_data={"spacy": ["*.pxd"],
                   "spacy.en": ["*.pxd", "data/pos/*",
