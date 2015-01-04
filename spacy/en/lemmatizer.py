@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from os import path
+import codecs
 
 
 NOUN_RULES = (
@@ -84,7 +85,7 @@ def lemmatize(string, index, exceptions, rules):
 
 def read_index(loc):
     index = set()
-    for line in open(loc):
+    for line in codecs.open(loc, 'r', 'utf8'):
         if line.startswith(' '):
             continue
         pieces = line.split()
@@ -96,7 +97,7 @@ def read_index(loc):
 
 def read_exc(loc):
     exceptions = {}
-    for line in open(loc):
+    for line in codecs.open(loc, 'r', 'utf8'):
         if line.startswith(' '):
             continue
         pieces = line.split()
