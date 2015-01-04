@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from os import path
 
 
@@ -53,7 +54,7 @@ class Lemmatizer(object):
         elif pos == self.adj_id:
             return self.adj(string)
         else:
-            raise StandardError("Cannot lemmatize with unknown pos: %s" % pos)
+            raise Exception("Cannot lemmatize with unknown pos: %s" % pos)
 
     def noun(self, string):
         return lemmatize(string, self.index['noun'], self.exc['noun'], NOUN_RULES)
