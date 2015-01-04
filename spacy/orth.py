@@ -155,5 +155,5 @@ def word_shape(string):
 def asciied(string):
     ascii_string = unidecode(string)
     if not ascii_string:
-        return '???'
-    return ascii_string.decode('ascii')
+        return b'???'
+    return ascii_string
