@@ -1,14 +1,15 @@
 #!/usr/bin/env python
+import subprocess
+from setuptools import setup
+from glob import glob
+
 import sys
 import os
 from os import path
-from glob import glob
-import sys
+from os.path import splitext
 
 
-from setuptools import setup
-from distutils.core import Extension
-import shutil
+from setuptools import Extension
 
 
 def clean(ext):
@@ -22,85 +23,72 @@ def clean(ext):
                 os.unlink(html)
 
 
-compile_args = []
-link_args = []
-libs = []
-
-includes = ['.'] 
-virtual_env = os.environ.get('VIRTUAL_ENV', '')
-
-includes = ['.']
-if virtual_env:
-    includes += glob(os.path.join(virtual_env, 'include', 'site'))
-    includes += glob(os.path.join(virtual_env, 'include', 'site', '*'))
-else:
-    pass
+def name_to_path(mod_name, ext):
+    return '%s.%s' % (mod_name.replace('.', '/'), ext)
 
 
-ext_args = {'language': "c++", "include_dirs": includes}
+def c_ext(mod_name, language, includes, compile_args):
+    mod_path = name_to_path(mod_name, language)
+    return Extension(mod_name, [mod_path], include_dirs=includes,
+                     extra_compile_args=compile_args, extra_link_args=compile_args)
 
-exts = [
-    Extension("spacy.typedefs", ["spacy/typedefs.cpp"], **ext_args),
-    Extension("spacy.strings", ["spacy/strings.cpp"], **ext_args),
-    Extension("spacy.lexeme", ["spacy/lexeme.cpp"], **ext_args),
-    Extension("spacy.vocab", ["spacy/vocab.cpp"], **ext_args),
-    Extension("spacy.tokens", ["spacy/tokens.cpp"], **ext_args),
-    Extension("spacy.morphology", ["spacy/morphology.cpp"], **ext_args),
 
-    Extension("spacy._ml", ["spacy/_ml.cpp"], **ext_args),
+def cython_ext(mod_name, language, includes, compile_args):
+    import Cython.Distutils
+    import Cython.Build
+    mod_path = mod_name.replace('.', '/') + '.pyx'
+    if language == 'cpp':
+        language = 'c++'
+    ext = Extension(mod_name, [mod_path], language=language, include_dirs=includes,
+                    extra_compile_args=compile_args)
+    return Cython.Build.cythonize([ext])[0]
 
-    Extension("spacy.tokenizer", ["spacy/tokenizer.cpp"], **ext_args),
-    Extension("spacy.en.attrs", ["spacy/en/attrs.cpp"], **ext_args),
-    Extension("spacy.en.pos", ["spacy/en/pos.cpp"], **ext_args),
-    Extension("spacy.syntax.parser", ["spacy/syntax/parser.cpp"], **ext_args),
-    Extension("spacy.syntax._state", ["spacy/syntax/_state.cpp"], **ext_args),
-    Extension("spacy.syntax.arc_eager", ["spacy/syntax/arc_eager.cpp"], **ext_args),
-    Extension("spacy.syntax._parse_features", ["spacy/syntax/_parse_features.cpp"],
-              **ext_args)
+
+def run_setup(exts):
     
-    #Extension("spacy.pos_feats", ["spacy/pos_feats.pyx"], language="c++", include_dirs=includes),
-    #Extension("spacy.ner._state", ["spacy/ner/_state.pyx"], language="c++", include_dirs=includes),
-    #Extension("spacy.ner.bilou_moves", ["spacy/ner/bilou_moves.pyx"], language="c++", include_dirs=includes),
-    #Extension("spacy.ner.io_moves", ["spacy/ner/io_moves.pyx"], language="c++", include_dirs=includes),
-    #Extension("spacy.ner.greedy_parser", ["spacy/ner/greedy_parser.pyx"], language="c++", include_dirs=includes),
-    #Extension("spacy.ner.pystate", ["spacy/ner/pystate.pyx"], language="c++", include_dirs=includes),
-    #Extension("spacy.ner.context", ["spacy/ner/context.pyx"], language="c++", include_dirs=includes),
-    #Extension("spacy.ner.feats", ["spacy/ner/feats.pyx"], language="c++", include_dirs=includes),
-    #Extension("spacy.ner.annot", ["spacy/ner/annot.pyx"], language="c++", include_dirs=includes),
-]
+    setup(
+        name='spacy',
+        packages=['spacy', 'spacy.en', 'spacy.syntax'],
+        description="Industrial-strength NLP",
+        author='Matthew Honnibal',
+        author_email='honnibal@gmail.com',
+        version='0.15',
+        url="http://honnibal.github.io/spaCy/",
+        package_data={"spacy": ["*.pxd"],
+                      "spacy.en": ["*.pxd", "data/pos/*",
+                                   "data/wordnet/*", "data/tokenizer/*",
+                                   "data/vocab/*"],
+                      "spacy.syntax": ["*.pxd"]},
+        ext_modules=exts,
+        license="Dual: Commercial or AGPL",
+        install_requires=['murmurhash', 'numpy', 'cymem', 'preshed', 'thinc',
+                          "unidecode", "ujson"],
+        setup_requires=["headers_workaround"],
+    )
+
+    import headers_workaround
+
+    headers_workaround.fix_venv_pypy_include()
+    headers_workaround.install_headers('murmurhash')
+    headers_workaround.install_headers('numpy')
 
 
-if sys.argv[1] == 'clean':
-    print >> sys.stderr, "cleaning .c, .c++ and .so files matching sources"
-    map(clean, exts)
+def main(modules, is_pypy):
+    language = "cpp"
+    ext_func = cython_ext if use_cython else c_ext
+    includes = ['.', path.join(sys.prefix, 'include')]
+    compile_args = ['-O3']
+    exts = [ext_func(mn, language, includes, compile_args) for mn in modules]
+    run_setup(exts)
 
 
-setup(
-    name='spacy',
-    packages=['spacy', 'spacy.en', 'spacy.syntax'],
-    description="Industrial-strength NLP",
-    author='Matthew Honnibal',
-    author_email='honnibal@gmail.com',
-    version='0.15',
-    url="http://honnibal.github.io/spaCy/",
-    package_data={"spacy": ["*.pxd"],
-                  "spacy.en": ["*.pxd", "data/pos/*",
-                               "data/wordnet/*", "data/tokenizer/*",
-                               "data/vocab/*"],
-                  "spacy.syntax": ["*.pxd"]},
-    ext_modules=exts,
-    license="Dual: Commercial or AGPL",
-    install_requires=['murmurhash', 'numpy', 'cymem', 'preshed', 'thinc', "unidecode",
-                      "ujson"],
-    setup_requires=["headers_workaround"],
-)
+MOD_NAMES = ['spacy.typedefs', 'spacy.strings', 'spacy.lexeme',
+             'spacy.vocab', 'spacy.tokens', 'spacy.morphology',
+             'spacy._ml', 'spacy.tokenizer', 'spacy.en.attrs',
+             'spacy.en.pos', 'spacy.syntax.parser', 'spacy.syntax._state',
+             'spacy.syntax.arc_eager', 'spacy.syntax._parse_features']
 
 
-import headers_workaround
-
-
-include_dir = path.join(sys.prefix, 'include', 'site')
-if not path.exists(include_dir):
-    os.mkdir(include_dir)
-headers_workaround.install_headers(include_dir, 'murmurhash')
-headers_workaround.install_headers(include_dir, 'numpy')
+if __name__ == '__main__':
+    use_cython = sys.argv[1] == 'build_ext'
+    main(MOD_NAMES, use_cython)
