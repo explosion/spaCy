@@ -2,11 +2,12 @@ language: python
 python:
   - "2.7"
   - "3.4"
+  - "pypy"
 
 # command to install dependencies
 install:
   - "pip install --upgrade setuptools"
-  - "pip install spacy"
+  - "pip install ."
   - "rm -rf spacy/"
 # command to run tests
 script: "py.test tests/"
