@@ -1,17 +1,12 @@
 from fabric.api import local, run, lcd, cd, env
 from os.path import exists as file_exists
-from fabtools.python import install, is_installed, virtualenv, install_requirements
+from fabtools.python import virtualenv
 from os import path
-import json
 
 
 PWD = path.dirname(__file__)
 VENV_DIR = path.join(PWD, '.env')
 DEV_ENV_DIR = path.join(PWD, '.denv')
-
-
-def require_dep(name):
-    local('pip install %s' % name)
 
 
 def dev():
@@ -20,10 +15,10 @@ def dev():
         local('virtualenv .denv')
  
     with virtualenv(DEV_ENV_DIR):
-        require_dep('cython')
-        require_dep('murmurhash')
-        require_dep('numpy')
-        local('pip install -r requirements.txt')
+        local('pip install cython')
+        local('pip install murmurhash')
+        local('pip install -r dev_requirements.txt')
+
 
 
 def sdist():
@@ -44,12 +39,11 @@ def setup():
     if file_exists('.env'):
         local('rm -rf .env')
     local('virtualenv .env')
-    with virtualenv(VENV_DIR):
-        local('pip install --upgrade setuptools')
 
 
 def install():
     with virtualenv(VENV_DIR):
+        local('pip install --upgrade setuptools')
         local('pip install dist/*.tar.gz')
         local('pip install pytest')
 
@@ -57,14 +51,7 @@ def install():
 def make():
     with virtualenv(DEV_ENV_DIR):
         with lcd(path.dirname(__file__)):
-            local('python dev_setup.py build_ext --inplace > /dev/null')
-
-
-def vmake():
-    with virtualenv(VENV_DIR):
-        with lcd(path.dirname(__file__)):
-            local('python dev_setup.py build_ext --inplace')
-
+            local('python setup.py build_ext --inplace')
 
 
 def clean():
@@ -78,13 +65,8 @@ def test():
             local('py.test -x')
 
 
-def clean():
-    local('python setup.py clean --all')
-
-
-def docs():
-    with lcd('docs'):
-        local('make html')
+def travis():
+    local('open https://travis-ci.org/honnibal/thinc')
 
 
 def pos():
