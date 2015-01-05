@@ -10,4 +10,6 @@ install:
   - "pip install spacy"
   - "rm -rf spacy/"
 # command to run tests
-script: "py.test tests/"
+script:
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy' ]]; then py.test tests/
+  - if [[ $TRAVIS_PYTHON_VERSION == 'pypy' ]]; then py.test-pypy tests/
