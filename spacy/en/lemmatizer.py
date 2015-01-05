@@ -68,6 +68,7 @@ class Lemmatizer(object):
 
 
 def lemmatize(string, index, exceptions, rules):
+    assert isinstance(string, unicode)
     string = string.lower()
     forms = []
     if string in index:
@@ -77,6 +78,7 @@ def lemmatize(string, index, exceptions, rules):
         if string.endswith(old):
             form = string[:len(string) - len(old)] + new
             if form in index:
+                assert isinstance(form, unicode)
                 forms.append(form)
     if not forms:
         forms.append(string)
