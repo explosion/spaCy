@@ -33,6 +33,7 @@ def publish():
     with virtualenv(VENV_DIR):
         local('python setup.py register')
         local('twine upload dist/*.tar.gz')
+        local('git push origin master')
 
 
 def setup():
