@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from spacy.en.lemmatizer import Lemmatizer, read_index, read_exc
 from spacy.en import DATA_DIR
 from os import path
