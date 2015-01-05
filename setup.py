@@ -70,7 +70,6 @@ def run_setup(exts):
 
     headers_workaround.fix_venv_pypy_include()
     headers_workaround.install_headers('murmurhash')
-    headers_workaround.install_headers('numpy')
 
 
 def main(modules, is_pypy):
@@ -86,7 +85,8 @@ MOD_NAMES = ['spacy.typedefs', 'spacy.strings', 'spacy.lexeme',
              'spacy.vocab', 'spacy.tokens', 'spacy.morphology',
              'spacy._ml', 'spacy.tokenizer', 'spacy.en.attrs',
              'spacy.en.pos', 'spacy.syntax.parser', 'spacy.syntax._state',
-             'spacy.syntax.arc_eager', 'spacy.syntax._parse_features']
+             'spacy.syntax.arc_eager', 'spacy.syntax._parse_features',
+             'spacy.orth']
 
 
 if __name__ == '__main__':
