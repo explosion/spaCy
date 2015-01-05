@@ -6,19 +6,6 @@ from os import path
 
 PWD = path.dirname(__file__)
 VENV_DIR = path.join(PWD, '.env')
-DEV_ENV_DIR = path.join(PWD, '.denv')
-
-
-def dev():
-    # Allow this to persist, since we aren't as rigorous about keeping state clean
-    if not file_exists('.denv'):
-        local('virtualenv .denv')
- 
-    with virtualenv(DEV_ENV_DIR):
-        local('pip install cython')
-        local('pip install murmurhash')
-        local('pip install -r dev_requirements.txt')
-
 
 
 def sdist():
@@ -36,10 +23,10 @@ def publish():
         local('git push origin master')
 
 
-def setup():
+def env(lang="python2.7"):
     if file_exists('.env'):
         local('rm -rf .env')
-    local('virtualenv .env')
+    local('virtualenv -p %s .env' % lang)
 
 
 def install():
@@ -50,8 +37,11 @@ def install():
 
 
 def make():
-    with virtualenv(DEV_ENV_DIR):
+    with virtualenv(VENV_DIR):
         with lcd(path.dirname(__file__)):
+            local('pip install cython')
+            local('pip install murmurhash')
+            local('pip install -r requirements.txt')
             local('python setup.py build_ext --inplace')
 
 
