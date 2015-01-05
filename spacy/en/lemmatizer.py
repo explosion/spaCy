@@ -68,7 +68,6 @@ class Lemmatizer(object):
 
 
 def lemmatize(string, index, exceptions, rules):
-    assert isinstance(string, unicode)
     string = string.lower()
     forms = []
     if string in index:
