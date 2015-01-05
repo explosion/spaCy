@@ -4,7 +4,7 @@ from murmurhash.mrmr cimport hash64
 
 from libc.string cimport memset
 
-import orth
+from .orth cimport word_shape
 
 
 memset(&EMPTY_LEXEME, 0, sizeof(Lexeme))
@@ -23,7 +23,7 @@ cpdef Lexeme init(id_t i, unicode string, hash_t hashed,
 
     lex.prefix = string_store[string[:1]]
     lex.suffix = string_store[string[-3:]]
-    lex.shape = string_store[orth.word_shape(string)]
+    lex.shape = string_store[word_shape(string)]
    
     lex.flags = props.get('flags', 0)
     return lex
