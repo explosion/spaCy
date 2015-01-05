@@ -298,10 +298,10 @@ cdef class EnPosTagger:
         if pos != NOUN and pos != VERB and pos != ADJ:
             return lex.sic
         cdef set lemma_strings
-        cdef bytes lemma_string
-        lemma_strings = self.lemmatizer(py_string, pos)
+        cdef unicode lemma_string
+        lemma_strings = self.lemmatizer(py_string.decode('utf8'), pos)
         lemma_string = sorted(lemma_strings)[0]
-        lemma = self.strings.intern(lemma_string, len(lemma_string)).i
+        lemma = self.strings.intern(lemma_string.encode('utf8'), len(lemma_string)).i
         return lemma
 
     def load_morph_exceptions(self, dict exc):
