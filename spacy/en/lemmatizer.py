@@ -77,7 +77,6 @@ def lemmatize(string, index, exceptions, rules):
         if string.endswith(old):
             form = string[:len(string) - len(old)] + new
             if form in index:
-                assert isinstance(form, unicode)
                 forms.append(form)
     if not forms:
         forms.append(string)
