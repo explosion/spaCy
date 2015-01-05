@@ -11,5 +11,5 @@ install:
   - "rm -rf spacy/"
 # command to run tests
 script:
-  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy' ]]; then py.test tests/
-  - if [[ $TRAVIS_PYTHON_VERSION == 'pypy' ]]; then py.test-pypy tests/
+  - if [[ $TRAVIS_PYTHON_VERSION != 'pypy' ]]; then py.test tests/; fi
+  - if [[ $TRAVIS_PYTHON_VERSION == 'pypy' ]]; then py.test-pypy tests/; fi
