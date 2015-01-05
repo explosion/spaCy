@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 from os import path
 
-from .. import orth
 from ..vocab import Vocab
 from ..tokenizer import Tokenizer
 from ..syntax.parser import GreedyParser
