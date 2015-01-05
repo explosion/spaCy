@@ -138,7 +138,7 @@ cpdef unicode word_shape(unicode string):
 
 
 cpdef bytes asciied(unicode string):
-    ascii_string = unidecode(string)
-    if not ascii_string:
+    cdef str stripped = unidecode(string)
+    if not stripped:
         return b'???'
-    return ascii_string
+    return stripped.encode('ascii')
