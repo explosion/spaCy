@@ -1,4 +1,3 @@
-# cython: profile=True
 from libc.string cimport memmove
 from cymem.cymem cimport Pool
 

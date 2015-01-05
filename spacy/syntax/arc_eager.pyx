@@ -1,4 +1,3 @@
-# cython: profile=True
 from ._state cimport State
 from ._state cimport has_head, get_idx, get_s0, get_n0
 from ._state cimport is_final, at_eol, pop_stack, push_stack, add_dep

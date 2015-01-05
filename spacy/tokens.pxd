@@ -1,7 +1,6 @@
 from libc.stdint cimport uint32_t
 
-import numpy as np
-cimport numpy as np
+from cython.view cimport array as cvarray
 
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport atom_t
@@ -39,7 +38,7 @@ cdef class Tokens:
 
     cdef int push_back(self, int i, LexemeOrToken lex_or_tok) except -1
 
-    cpdef np.ndarray[long, ndim=2] to_array(self, object features)
+    cpdef long[:,:] to_array(self, object features)
 
 
 cdef class Token:

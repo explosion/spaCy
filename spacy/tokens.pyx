@@ -1,5 +1,5 @@
-# cython: profile=True
 # cython: embedsignature=True
+from cython.view cimport array as cvarray
 
 from preshed.maps cimport PreshMap
 from preshed.counter cimport PreshCounter
@@ -11,9 +11,6 @@ from .typedefs cimport ID, SIC, DENSE, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER, P
 from .typedefs cimport POS, LEMMA
 
 cimport cython
-
-import numpy as np
-cimport numpy as np
 
 
 DEF PADDING = 5
@@ -115,7 +112,7 @@ cdef class Tokens:
         return idx + t.lex.length
 
     @cython.boundscheck(False)
-    cpdef np.ndarray[long, ndim=2] to_array(self, object attr_ids):
+    cpdef long[:,:] to_array(self, object attr_ids):
         """Given a list of M attribute IDs, export the tokens to a numpy ndarray
         of shape N*M, where N is the length of the sentence.
 
@@ -129,8 +126,8 @@ cdef class Tokens:
         """
         cdef int i, j
         cdef attr_id_t feature
-        cdef np.ndarray[long, ndim=2] output
-        output = np.ndarray(shape=(self.length, len(attr_ids)), dtype=int)
+        cdef long[:,:] output = cvarray(shape=(self.length, len(attr_ids)),
+                                        itemsize=sizeof(long), format="l")
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
                 output[i, j] = get_token_attr(&self.data[i], feature)

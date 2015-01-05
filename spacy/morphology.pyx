@@ -1,4 +1,3 @@
-# cython: profile=True
 # cython: embedsignature=True
 
 

@@ -11,15 +11,15 @@ TAGS = 'adj adp adv conj det noun num pdt pos pron prt punct verb'.upper().split
 
 
 # Binary string features
-def is_alpha(string):
+cpdef bint is_alpha(unicode string):
     return string.isalpha()
 
 
-def is_digit(string):
+cpdef bint is_digit(unicode string):
     return string.isdigit()
 
 
-def is_punct(string):
+cpdef bint is_punct(unicode string):
     for c in string:
         if not unicodedata.category(c).startswith('P'):
             return False
@@ -27,11 +27,11 @@ def is_punct(string):
         return True
 
 
-def is_space(string):
+cpdef bint is_space(unicode string):
     return string.isspace()
 
 
-def is_ascii(string):
+cpdef bint is_ascii(unicode string):
     for c in string:
         if ord(c) >= 128:
             return False
@@ -39,15 +39,15 @@ def is_ascii(string):
         return True
 
 
-def is_title(string):
+cpdef bint is_title(unicode string):
     return string.istitle()
 
 
-def is_lower(string):
+cpdef bint is_lower(unicode string):
     return string.islower()
 
 
-def is_upper(string):
+cpdef bint is_upper(unicode string):
     return string.isupper()
 
 
@@ -66,7 +66,7 @@ TLDs = set("com|org|edu|gov|net|mil|aero|asia|biz|cat|coop|info|int|jobs|mobi|mu
         "wf|ws|ye|yt|za|zm|zw".split('|'))
 
 
-def like_url(string):
+cpdef bint like_url(unicode string):
     # We're looking for things that function in text like URLs. So, valid URL
     # or not, anything they say http:// is going to be good.
     if string.startswith('http://'):
@@ -74,7 +74,14 @@ def like_url(string):
     elif string.startswith('www.') and len(string) >= 5:
         return True
     # No dots? Not URLish enough
-    if string[0] == '.' or string[-1] == '.' or '.' not in string:
+    if string[0] == '.' or string[-1] == '.':
+        return False
+    # This should be a call to "in", but PyPy lacks this function?
+    cdef int i
+    for i in range(len(string)):
+        if string[i] == '.':
+            break
+    else:
         return False
     tld = string.rsplit('.', 1)[1].split(':', 1)[0]
     if tld.endswith('/'):
@@ -90,7 +97,7 @@ NUM_WORDS = set('zero one two three four five six seven eight nine ten'
                 'eighteen nineteen twenty thirty forty fifty sixty seventy'
                 'eighty ninety hundred thousand million billion trillion'
                 'quadrillion gajillion bazillion'.split())
-def like_number(string):
+cpdef bint like_number(unicode string):
     string = string.replace(',', '')
     string = string.replace('.', '')
     if string.isdigit():
@@ -103,30 +110,8 @@ def like_number(string):
         return True
     return False
 
-# Statistics features
-def oft_case(name, thresh):
-    def wrapped(string, prob, case_stats, tag_stats):
-        return string
-    return wrapped
 
-
-def can_tag(name, thresh=0.5):
-    def wrapped(string, prob, case_stats, tag_stats):
-        return string
-    return wrapped
-
-
-# String features
-def canon_case(string, upper_pc=0.0, title_pc=0.0, lower_pc=0.0):
-    if upper_pc >= lower_pc and upper_pc >= title_pc:
-        return string.upper()
-    elif title_pc >= lower_pc:
-        return string.title()
-    else:
-        return string.lower()
-
-
-def word_shape(string):
+cpdef unicode word_shape(unicode string):
     length = len(string)
     shape = []
     last = ""
@@ -152,7 +137,7 @@ def word_shape(string):
     return ''.join(shape)
 
 
-def asciied(string):
+cpdef bytes asciied(unicode string):
     ascii_string = unidecode(string)
     if not ascii_string:
         return b'???'

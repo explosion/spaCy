@@ -1,7 +1,7 @@
 import os
 from os import path
 import codecs
-import ujson
+import json
 import re
 
 DATA_DIR = path.join(path.dirname(__file__), '..', 'data')
@@ -13,7 +13,7 @@ def utf8open(loc, mode='r'):
 
 def read_lang_data(data_dir):
     with open(path.join(data_dir, 'specials.json')) as file_:
-        tokenization = ujson.load(file_)
+        tokenization = json.load(file_)
     prefix = read_prefix(data_dir)
     suffix = read_suffix(data_dir)
     infix = read_infix(data_dir)
