@@ -14,5 +14,5 @@ def test_tilde():
 def test_smart_quote():
     string = u'“'
     assert asciied(string) == b'"'
-    string = b'”'
+    string = u'”'
     assert asciied(string) == b'"'
