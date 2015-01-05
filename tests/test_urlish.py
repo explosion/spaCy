@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from spacy.orth import like_url
 
 def test_basic_url():

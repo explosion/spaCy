@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import pytest
 
 from spacy.orth import is_alpha

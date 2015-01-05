@@ -18,25 +18,25 @@ def test_possess(EN):
 def test_apostrophe(EN):
     tokens = EN("schools'")
     assert len(tokens) == 2
-    assert tokens[1].string == "'"
-    assert tokens[0].string == "schools"
+    assert tokens[1].string == b"'"
+    assert tokens[0].string == b"schools"
 
 
 def test_LL(EN):
     tokens = EN("we'll")
     assert len(tokens) == 2
-    assert tokens[1].string == "'ll"
-    assert tokens[1].lemma == "will"
-    assert tokens[0].string == "we"
+    assert tokens[1].string == b"'ll"
+    assert tokens[1].lemma == b"will"
+    assert tokens[0].string == b"we"
 
 
 def test_aint(EN):
     tokens = EN("ain't")
     assert len(tokens) == 2
-    assert tokens[0].string == "ai"
-    assert tokens[0].lemma == "be"
-    assert tokens[1].string == "n't"
-    assert tokens[1].lemma == "not"
+    assert tokens[0].string == b"ai"
+    assert tokens[0].lemma == b"be"
+    assert tokens[1].string == b"n't"
+    assert tokens[1].lemma == b"not"
 
 
 def test_capitalized(EN):
@@ -46,8 +46,8 @@ def test_capitalized(EN):
     assert len(tokens) == 2
     tokens = EN("Ain't")
     assert len(tokens) == 2
-    assert tokens[0].string == "Ai"
-    assert tokens[0].lemma == "be"
+    assert tokens[0].string == b"Ai"
+    assert tokens[0].lemma == b"be"
 
 
 def test_punct(EN):
