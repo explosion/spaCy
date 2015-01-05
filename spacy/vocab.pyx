@@ -6,7 +6,8 @@ from os import path
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport init as lexeme_init
 from .strings cimport slice_unicode
-from . import orth
+from .typedefs cimport flags_t
+from .orth cimport word_shape
 
 
 memset(&EMPTY_LEXEME, 0, sizeof(Lexeme))
@@ -25,9 +26,10 @@ cpdef Lexeme init_lexeme(id_t i, unicode string, hash_t hashed,
 
     lex.prefix = string_store[string[:1]]
     lex.suffix = string_store[string[-3:]]
-    lex.shape = string_store[orth.word_shape(string)]
+    lex.shape = string_store[word_shape(string)]
    
-    lex.flags = props.get('flags', 0)
+    cdef object flags_val = props.get('flags', 0)
+    lex.flags = <flags_t>flags_val
     return lex
 
 
