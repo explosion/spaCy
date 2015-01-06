@@ -10,6 +10,20 @@ from os.path import splitext
 
 
 from setuptools import Extension
+from distutils import sysconfig
+import platform
+
+# We have to resort to monkey-patching to set the compiler, because pypy broke
+# ALL the EVERTHING.
+
+orig_customize_compiler = sysconfig.customize_compiler
+def my_customize_compiler(compiler):
+    orig_customize_compiler(compiler)
+    compiler.compiler_cxx = ['c++']
+
+
+if platform.python_implementation() == 'PyPy':
+    sysconfig.customize_compiler = my_customize_compiler
 
 
 def clean(ext):
@@ -45,7 +59,6 @@ def cython_ext(mod_name, language, includes, compile_args):
 
 
 def run_setup(exts):
-    
     setup(
         name='spacy',
         packages=['spacy', 'spacy.en', 'spacy.syntax'],
