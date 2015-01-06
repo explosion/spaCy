@@ -16,9 +16,9 @@ import platform
 # We have to resort to monkey-patching to set the compiler, because pypy broke
 # ALL the EVERTHING.
 
-orig_customize_compiler = sysconfig.customize_compiler
+pre_patch_customize_compiler = sysconfig.customize_compiler
 def my_customize_compiler(compiler):
-    orig_customize_compiler(compiler)
+    pre_patch_customize_compiler(compiler)
     compiler.compiler_cxx = ['c++']
 
 
