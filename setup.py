@@ -65,7 +65,7 @@ def run_setup(exts):
         description="Industrial-strength NLP",
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
-        version='0.24',
+        version='0.25',
         url="http://honnibal.github.io/spaCy/",
         package_data={"spacy": ["*.pxd"],
                       "spacy.en": ["*.pxd", "data/pos/*",
