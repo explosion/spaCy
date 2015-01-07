@@ -1,4 +1,4 @@
-from .._ml cimport Model, HastyModel
+from .._ml cimport Model
 
 from .arc_eager cimport TransitionSystem
 
