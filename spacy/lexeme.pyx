@@ -7,12 +7,12 @@ from libc.string cimport memset
 from .orth cimport word_shape
 
 
-memset(&EMPTY_LEXEME, 0, sizeof(Lexeme))
+memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
 
 
-cpdef Lexeme init(id_t i, unicode string, hash_t hashed,
+cdef LexemeC init(id_t i, unicode string, hash_t hashed,
                   StringStore string_store, dict props) except *:
-    cdef Lexeme lex
+    cdef LexemeC lex
     lex.id = i
     lex.length = len(string)
     lex.sic = string_store[string]
@@ -27,3 +27,6 @@ cpdef Lexeme init(id_t i, unicode string, hash_t hashed,
    
     lex.flags = props.get('flags', 0)
     return lex
+
+
+

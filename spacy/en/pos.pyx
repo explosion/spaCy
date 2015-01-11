@@ -12,7 +12,7 @@ from ..typedefs cimport univ_tag_t
 from ..typedefs cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT, VERB
 from ..typedefs cimport X, PUNCT, EOL
 from ..typedefs cimport id_t
-from ..structs cimport TokenC, Morphology, Lexeme
+from ..structs cimport TokenC, Morphology, LexemeC
 from ..tokens cimport Tokens
 from ..morphology cimport set_morph_from_dict
 from .._ml cimport arg_max
@@ -290,7 +290,7 @@ cdef class EnPosTagger:
         tokens[i].lemma = cached.lemma
         tokens[i].morph = cached.morph
 
-    cdef int lemmatize(self, const univ_tag_t pos, const Lexeme* lex) except -1:
+    cdef int lemmatize(self, const univ_tag_t pos, const LexemeC* lex) except -1:
         if self.lemmatizer is None:
             return lex.sic
         cdef bytes py_string = self.strings[lex.sic]

@@ -4,16 +4,16 @@ from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
 
-from .structs cimport Lexeme, TokenC, UniStr
+from .structs cimport LexemeC, TokenC, UniStr
 from .typedefs cimport utf8_t, id_t, hash_t
 from .strings cimport StringStore
 
 
-cdef Lexeme EMPTY_LEXEME
+cdef LexemeC EMPTY_LEXEME
 
 
 cdef union LexemesOrTokens:
-    const Lexeme* const* lexemes
+    const LexemeC* const* lexemes
     TokenC* tokens
 
 
@@ -27,9 +27,9 @@ cdef class Vocab:
     cpdef public get_lex_props
     cdef Pool mem
     cpdef readonly StringStore strings
-    cdef vector[Lexeme*] lexemes
+    cdef vector[LexemeC*] lexemes
 
-    cdef const Lexeme* get(self, Pool mem, UniStr* s) except NULL
+    cdef const LexemeC* get(self, Pool mem, UniStr* s) except NULL
     
     cdef PreshMap _map
   

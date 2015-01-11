@@ -3,7 +3,9 @@ from libc.stdint cimport uint8_t, uint32_t
 from .typedefs cimport flags_t, attr_t, id_t, hash_t, univ_tag_t
 
 
-cdef struct Lexeme:
+cdef struct LexemeC:
+    const float* vec
+
     flags_t flags
    
     attr_t id
@@ -38,7 +40,7 @@ cdef struct PosTag:
 
 
 cdef struct TokenC:
-    const Lexeme* lex
+    const LexemeC* lex
     Morphology morph
     univ_tag_t pos
     int fine_pos

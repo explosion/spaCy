@@ -1,12 +1,18 @@
 import codecs
 
 from libc.string cimport memcpy
+from murmurhash.mrmr cimport hash64
 
 
 from .typedefs cimport hash_t
 
 
 SEPARATOR = '\n|-SEP-|\n'
+
+
+cpdef hash_t hash_string(unicode string) except 0:
+    chars = <Py_UNICODE*>string
+    return hash64(chars, len(string) * sizeof(Py_UNICODE), 0)
 
 
 """

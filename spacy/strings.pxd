@@ -3,6 +3,9 @@ from preshed.maps cimport PreshMap
 from murmurhash.mrmr cimport hash64
 
 from .structs cimport Utf8Str, UniStr
+from .typedefs cimport hash_t
+
+cpdef hash_t hash_string(unicode string) except 0
 
 
 cdef inline void slice_unicode(UniStr* s, Py_UNICODE* chars, int start, int end) nogil:

@@ -4,7 +4,7 @@ import tarfile
 import shutil
 import requests
 
-URL = 'https://s3-us-west-1.amazonaws.com/media.spacynlp.com/en.tgz'
+PARSER_URL = 'https://s3-us-west-1.amazonaws.com/media.spacynlp.com/en.tgz'
 
 DEST_DIR = path.join(path.dirname(__file__), 'data', 'deps')
 

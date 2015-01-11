@@ -1,21 +1,21 @@
 from .typedefs cimport hash_t, flags_t, id_t, len_t, tag_t, attr_t, attr_id_t
 from .typedefs cimport ID, SIC, DENSE, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER, POS_TYPE
-from .structs cimport Lexeme
+from .structs cimport LexemeC
 from .strings cimport StringStore
 
 
-cdef Lexeme EMPTY_LEXEME
+cdef LexemeC EMPTY_LEXEME
 
 
-cpdef Lexeme init(id_t i, unicode string, hash_t hashed, StringStore store,
+cdef LexemeC init(id_t i, unicode string, hash_t hashed, StringStore store,
                   dict props) except *
  
 
-cdef inline bint check_flag(const Lexeme* lexeme, attr_id_t flag_id) nogil:
+cdef inline bint check_flag(const LexemeC* lexeme, attr_id_t flag_id) nogil:
     return lexeme.flags & (1 << flag_id)
 
 
-cdef inline attr_t get_attr(const Lexeme* lex, attr_id_t feat_name) nogil:
+cdef inline attr_t get_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
     if feat_name < (sizeof(flags_t) * 8):
         return check_flag(lex, feat_name)
     elif feat_name == ID:

@@ -32,7 +32,7 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return get_lex_attr(token.lex, feat_name)
 
 
-cdef attr_t get_lex_attr(const Lexeme* lex, attr_id_t feat_name) nogil:
+cdef attr_t get_lex_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
     if feat_name < (sizeof(flags_t) * 8):
         return check_flag(lex, feat_name)
     elif feat_name == ID:
@@ -85,7 +85,7 @@ cdef class Tokens:
             token (Token):
         """
         bounds_check(i, self.length, PADDING)
-        return Token(self, i)
+        return cinit_token(&self.data[i])
 
     def __iter__(self):
         """Iterate over the tokens.
@@ -174,26 +174,57 @@ cdef class Tokens:
             self.data[i].lex = &EMPTY_LEXEME
 
 
-@cython.freelist(64)
+cdef Token cinit_token(const TokenC* c_tok):
+    cdef const LexemeC* lex = c_tok.lex
+    cdef Token py_tok = Token.__new__(Token)
+
+    cyarr = cvarray(shape=(300,), itemsize=sizeof(float), format="i")
+    py_tok.vec = cyarr
+
+    py_tok.flags = lex.flags
+    py_tok.id = lex.id
+    py_tok.sic = lex.sic
+    py_tok.dense = lex.dense
+    py_tok.shape = lex.shape
+    py_tok.prefix = lex.prefix
+    py_tok.suffix = lex.suffix
+    py_tok.length = lex.length
+    py_tok.cluster = lex.cluster
+    py_tok.pos_type = lex.pos_type
+
+    py_tok.prob = lex.prob
+    py_tok.sentiment = lex.sentiment
+
+    py_tok.morph = c_tok.morph
+    py_tok.pos = c_tok.pos
+    py_tok.fine_pos = c_tok.fine_pos
+    py_tok.idx = c_tok.idx
+    py_tok.lemma = c_tok.lemma
+    py_tok.sense = c_tok.sense
+    py_tok.dep_tag = c_tok.dep_tag
+    py_tok.head_offset = c_tok.head
+    py_tok.l_kids = c_tok.l_kids
+    py_tok.r_kids = c_tok.r_kids
+    return py_tok
+
+
 cdef class Token:
     """An individual token.
-
-    Internally, the Token is a tuple (i, tokens) --- it delegates to the Tokens
-    object.
     """
-    def __init__(self, Tokens tokens, int i):
-        self._seq = tokens
-        self.i = i
+    def __init__(self):
+        pass
+        #self._seq = tokens
+        #self.i = i
 
-    def __unicode__(self):
-        cdef const TokenC* t = &self._seq.data[self.i]
-        cdef int end_idx = t.idx + t.lex.length
-        if self.i + 1 == self._seq.length:
-            return self.string
-        if end_idx == t[1].idx:
-            return self.string
-        else:
-            return self.string + ' '
+    #def __unicode__(self):
+    #    cdef const TokenC* t = &self._seq.data[self.i]
+    #    cdef int end_idx = t.idx + t.lex.length
+    #    if self.i + 1 == self._seq.length:
+    #        return self.string
+    #    if end_idx == t[1].idx:
+    #        return self.string
+    #    else:
+    #        return self.string + ' '
 
     def __len__(self):
         """The number of unicode code-points in the original string.
@@ -201,87 +232,87 @@ cdef class Token:
         Returns:
             length (int):
         """
-        return self._seq.data[self.i].lex.length
+        return self.length
 
-    property idx:
-        """The index into the original string at which the token starts.
+    #property idx:
+    #    """The index into the original string at which the token starts.
 
-        The following is supposed to always be true:
-        
-        >>> original_string[token.idx:token.idx len(token) == token.string
-        """
-        def __get__(self):
-            return self._seq.data[self.i].idx
+    #    The following is supposed to always be true:
+    #    
+    #    >>> original_string[token.idx:token.idx len(token) == token.string
+    #    """
+    #    def __get__(self):
+    #        return self._seq.data[self.i].idx
 
-    property cluster:
-        """The Brown cluster ID of the word: en.wikipedia.org/wiki/Brown_clustering
-    
-        Similar words have better-than-chance likelihood of having similar cluster
-        IDs, although the clustering is quite noisy.  Cluster IDs make good features,
-        and help to make models slightly more robust to domain variation.
+    #property cluster:
+    #    """The Brown cluster ID of the word: en.wikipedia.org/wiki/Brown_clustering
+    #
+    #    Similar words have better-than-chance likelihood of having similar cluster
+    #    IDs, although the clustering is quite noisy.  Cluster IDs make good features,
+    #    and help to make models slightly more robust to domain variation.
 
-        A common trick is to use only the first N bits of a cluster ID in a feature,
-        as the more general part of the hierarchical clustering is often more accurate
-        than the lower categories.
+    #    A common trick is to use only the first N bits of a cluster ID in a feature,
+    #    as the more general part of the hierarchical clustering is often more accurate
+    #    than the lower categories.
 
-        To assist in this, I encode the cluster IDs little-endian, to allow a simple
-        bit-mask:
+    #    To assist in this, I encode the cluster IDs little-endian, to allow a simple
+    #    bit-mask:
 
-        >>> six_bits = cluster & (2**6 - 1)
-        """
-        def __get__(self):
-            return self._seq.data[self.i].lex.cluster
+    #    >>> six_bits = cluster & (2**6 - 1)
+    #    """
+    #    def __get__(self):
+    #        return self._seq.data[self.i].lex.cluster
 
-    property string:
-        """The unicode string of the word, with no whitespace padding."""
-        def __get__(self):
-            cdef const TokenC* t = &self._seq.data[self.i]
-            if t.lex.sic == 0:
-                return ''
-            cdef bytes utf8string = self._seq.vocab.strings[t.lex.sic]
-            return utf8string.decode('utf8')
+    #property string:
+    #    """The unicode string of the word, with no whitespace padding."""
+    #    def __get__(self):
+    #        cdef const TokenC* t = &self._seq.data[self.i]
+    #        if t.lex.sic == 0:
+    #            return ''
+    #        cdef bytes utf8string = self._seq.vocab.strings[t.lex.sic]
+    #        return utf8string.decode('utf8')
 
-    property lemma:
-        """The unicode string of the word's lemma.  If no part-of-speech tag is
-        assigned, the most common part-of-speech tag of the word is used.
-        """
-        def __get__(self):
-            cdef const TokenC* t = &self._seq.data[self.i]
-            if t.lemma == 0:
-                return self.string
-            cdef bytes utf8string = self._seq.vocab.strings[t.lemma]
-            return utf8string.decode('utf8')
+    #property lemma:
+    #    """The unicode string of the word's lemma.  If no part-of-speech tag is
+    #    assigned, the most common part-of-speech tag of the word is used.
+    #    """
+    #    def __get__(self):
+    #        cdef const TokenC* t = &self._seq.data[self.i]
+    #        if t.lemma == 0:
+    #            return self.string
+    #        cdef bytes utf8string = self._seq.vocab.strings[t.lemma]
+    #        return utf8string.decode('utf8')
 
-    property dep_tag:
-        """The ID integer of the word's dependency label.  If no parse has been
-        assigned, defaults to 0.
-        """
-        def __get__(self):
-            return self._seq.data[self.i].dep_tag
+    #property dep_tag:
+    #    """The ID integer of the word's dependency label.  If no parse has been
+    #    assigned, defaults to 0.
+    #    """
+    #    def __get__(self):
+    #        return self._seq.data[self.i].dep_tag
 
-    property pos:
-        """The ID integer of the word's part-of-speech tag, from the 13-tag
-        Google Universal Tag Set.  Constants for this tag set are available in
-        spacy.typedefs.
-        """
-        def __get__(self):
-            return self._seq.data[self.i].pos
+    #property pos:
+    #    """The ID integer of the word's part-of-speech tag, from the 13-tag
+    #    Google Universal Tag Set.  Constants for this tag set are available in
+    #    spacy.typedefs.
+    #    """
+    #    def __get__(self):
+    #        return self._seq.data[self.i].pos
 
-    property fine_pos:
-        """The ID integer of the word's fine-grained part-of-speech tag, as assigned
-        by the tagger model.  Fine-grained tags include morphological information,
-        and other distinctions, and allow a more accurate tagger to be trained.
-        """
+    #property fine_pos:
+    #    """The ID integer of the word's fine-grained part-of-speech tag, as assigned
+    #    by the tagger model.  Fine-grained tags include morphological information,
+    #    and other distinctions, and allow a more accurate tagger to be trained.
+    #    """
  
-        def __get__(self):
-            return self._seq.data[self.i].fine_pos
+    #    def __get__(self):
+    #        return self._seq.data[self.i].fine_pos
 
-    property sic:
-        def __get__(self):
-            return self._seq.data[self.i].lex.sic
+    #property sic:
+    #    def __get__(self):
+    #        return self._seq.data[self.i].lex.sic
 
-    property head:
-        """The token predicted by the parser to be the head of the current token."""
-        def __get__(self):
-            cdef const TokenC* t = &self._seq.data[self.i]
-            return Token(self._seq, self.i + t.head)
+    #property head:
+    #    """The token predicted by the parser to be the head of the current token."""
+    #    def __get__(self):
+    #        cdef const TokenC* t = &self._seq.data[self.i]
+    #        return Token(self._seq, self.i + t.head)

@@ -53,7 +53,7 @@ cdef class Tokenizer:
         cdef int idx = 0
         for i, py_string in enumerate(strings):
             slice_unicode(&string_struct, py_string, 0, len(py_string))
-            tokens.push_back(idx, <const Lexeme*>self.vocab.get(tokens.mem, &string_struct))
+            tokens.push_back(idx, <const LexemeC*>self.vocab.get(tokens.mem, &string_struct))
             idx += len(py_string) + 1
         return tokens
 
@@ -75,7 +75,7 @@ cdef class Tokenizer:
             string (unicode): The string to be tokenized. 
 
         Returns:
-            tokens (Tokens): A Tokens object, giving access to a sequence of Lexemes.
+            tokens (Tokens): A Tokens object, giving access to a sequence of LexemeCs.
         """
         cdef int length = len(string)
         cdef Tokens tokens = Tokens(self.vocab, length)
@@ -121,8 +121,8 @@ cdef class Tokenizer:
         return True
 
     cdef int _tokenize(self, Tokens tokens, UniStr* span, int start, int end) except -1:
-        cdef vector[Lexeme*] prefixes
-        cdef vector[Lexeme*] suffixes
+        cdef vector[LexemeC*] prefixes
+        cdef vector[LexemeC*] suffixes
         cdef hash_t orig_key
         cdef int orig_size
         orig_key = span.key
@@ -131,8 +131,8 @@ cdef class Tokenizer:
         self._attach_tokens(tokens, start, span, &prefixes, &suffixes)
         self._save_cached(&tokens.data[orig_size], orig_key, tokens.length - orig_size)
 
-    cdef UniStr* _split_affixes(self, UniStr* string, vector[const Lexeme*] *prefixes,
-                                vector[const Lexeme*] *suffixes) except NULL:
+    cdef UniStr* _split_affixes(self, UniStr* string, vector[const LexemeC*] *prefixes,
+                                vector[const LexemeC*] *suffixes) except NULL:
         cdef size_t i
         cdef UniStr prefix
         cdef UniStr suffix
@@ -174,12 +174,12 @@ cdef class Tokenizer:
         return string
 
     cdef int _attach_tokens(self, Tokens tokens, int idx, UniStr* string,
-                            vector[const Lexeme*] *prefixes,
-                            vector[const Lexeme*] *suffixes) except -1:
+                            vector[const LexemeC*] *prefixes,
+                            vector[const LexemeC*] *suffixes) except -1:
         cdef bint cache_hit
         cdef int split
-        cdef const Lexeme* const* lexemes
-        cdef Lexeme* lexeme
+        cdef const LexemeC* const* lexemes
+        cdef LexemeC* lexeme
         cdef UniStr span
         cdef int i
         if prefixes.size():
@@ -200,7 +200,7 @@ cdef class Tokenizer:
                     idx = tokens.push_back(idx, self.vocab.get(tokens.mem, &span))
                     slice_unicode(&span, string.chars, split + 1, string.n)
                     idx = tokens.push_back(idx, self.vocab.get(tokens.mem, &span))
-        cdef vector[const Lexeme*].reverse_iterator it = suffixes.rbegin()
+        cdef vector[const LexemeC*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
             idx = tokens.push_back(idx, deref(it))
             preinc(it)
@@ -213,10 +213,10 @@ cdef class Tokenizer:
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
         cached.length = n
         cached.is_lex = True
-        lexemes = <const Lexeme**>self.mem.alloc(n, sizeof(Lexeme**))
+        lexemes = <const LexemeC**>self.mem.alloc(n, sizeof(LexemeC**))
         for i in range(n):
             lexemes[i] = tokens[i].lex
-        cached.data.lexemes = <const Lexeme* const*>lexemes
+        cached.data.lexemes = <const LexemeC* const*>lexemes
         self._cache.set(key, cached)
 
     cdef int _find_infix(self, Py_UNICODE* chars, size_t length) except -1:
@@ -243,7 +243,7 @@ cdef class Tokenizer:
         cdef unicode form
         cdef unicode lemma
         cdef dict props
-        cdef Lexeme** lexemes
+        cdef LexemeC** lexemes
         cdef hash_t hashed
         cdef UniStr string
         for chunk, substrings in sorted(rules.items()):
@@ -252,7 +252,7 @@ cdef class Tokenizer:
                 form = props['F']
                 lemma = props.get("L", None)
                 slice_unicode(&string, form, 0, len(form))
-                tokens[i].lex = <Lexeme*>self.vocab.get(self.vocab.mem, &string)
+                tokens[i].lex = <LexemeC*>self.vocab.get(self.vocab.mem, &string)
                 if lemma:
                     tokens[i].lemma = self.vocab.strings[lemma]
                 if 'pos' in props:

@@ -2,20 +2,27 @@ from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 from libc.string cimport memset
 
 from os import path
+import codecs
 
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport init as lexeme_init
 from .strings cimport slice_unicode
-from .typedefs cimport flags_t
+from .strings cimport hash_string
 from .orth cimport word_shape
 
 
-memset(&EMPTY_LEXEME, 0, sizeof(Lexeme))
+DEF MAX_VEC_SIZE = 100000
 
 
-cpdef Lexeme init_lexeme(id_t i, unicode string, hash_t hashed,
+cdef float[MAX_VEC_SIZE] EMPTY_VEC
+memset(EMPTY_VEC, 0, sizeof(EMPTY_VEC))
+memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
+EMPTY_LEXEME.vec = EMPTY_VEC
+
+
+cdef LexemeC init_lexeme(id_t i, unicode string, hash_t hashed,
                   StringStore string_store, dict props) except *:
-    cdef Lexeme lex
+    cdef LexemeC lex
     lex.id = i
     lex.length = len(string)
     lex.sic = string_store[string]
@@ -28,13 +35,12 @@ cpdef Lexeme init_lexeme(id_t i, unicode string, hash_t hashed,
     lex.suffix = string_store[string[-3:]]
     lex.shape = string_store[word_shape(string)]
    
-    cdef object flags_val = props.get('flags', 0)
-    lex.flags = <flags_t>flags_val
+    lex.flags = props.get('flags', 0)
     return lex
 
 
 cdef class Vocab:
-    '''A map container for a language's Lexeme structs.
+    '''A map container for a language's LexemeC structs.
     '''
     def __init__(self, data_dir=None, get_lex_props=None):
         self.mem = Pool()
@@ -50,24 +56,25 @@ cdef class Vocab:
             if not path.isdir(data_dir):
                 raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
             self.strings.load(path.join(data_dir, 'strings.txt'))
-            self.load(path.join(data_dir, 'lexemes.bin'))
+            self.load_lexemes(path.join(data_dir, 'lexemes.bin'))
+            #self.load_vectors(path.join(data_dir, 'deps.words'))
 
     def __len__(self):
         """The current number of lexemes stored."""
         return self.lexemes.size()
 
-    cdef const Lexeme* get(self, Pool mem, UniStr* string) except NULL:
-        '''Get a pointer to a Lexeme from the lexicon, creating a new Lexeme
+    cdef const LexemeC* get(self, Pool mem, UniStr* string) except NULL:
+        '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
         if necessary, using memory acquired from the given pool.  If the pool
         is the lexicon's own memory, the lexeme is saved in the lexicon.'''
-        cdef Lexeme* lex
-        lex = <Lexeme*>self._map.get(string.key)
+        cdef LexemeC* lex
+        lex = <LexemeC*>self._map.get(string.key)
         if lex != NULL:
             return lex
         if string.n < 3:
             mem = self.mem
         cdef unicode py_string = string.chars[:string.n]
-        lex = <Lexeme*>mem.alloc(sizeof(Lexeme), 1)
+        lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
         lex[0] = init_lexeme(self.lexemes.size(), py_string, string.key, self.strings,
                              self.get_lex_props(py_string))
         if mem is self.mem:
@@ -81,13 +88,13 @@ cdef class Vocab:
 
     def __getitem__(self,  id_or_string):
         '''Retrieve a lexeme, given an int ID or a unicode string.  If a previously
-        unseen unicode string is given, a new Lexeme is created and stored.
+        unseen unicode string is given, a new LexemeC is created and stored.
 
         This function relies on Cython's struct-to-dict conversion.  Python clients
         receive a dict keyed by strings (byte or unicode, depending on Python 2/3),
-        with int values.  Cython clients can instead receive a Lexeme struct value.
+        with int values.  Cython clients can instead receive a LexemeC struct value.
         More efficient Cython access is provided by Lexicon.get, which returns
-        a Lexeme*.
+        a LexemeC*.
 
         Args:
             id_or_string (int or unicode): The integer ID of a word, or its unicode
@@ -96,24 +103,26 @@ cdef class Vocab:
                 is raised.
 
         Returns:
-            lexeme (dict): A Lexeme struct instance, which Cython translates into
+            lexeme (dict): A LexemeC struct instance, which Cython translates into
                 a dict if the operator is called from Python.
         '''
         if type(id_or_string) == int:
             if id_or_string >= self.lexemes.size():
                 raise IndexError
-            return self.lexemes.at(id_or_string)[0]
+            return {}
+            #return self.lexemes.at(id_or_string)[0]
         cdef UniStr string
         slice_unicode(&string, id_or_string, 0, len(id_or_string))
-        cdef const Lexeme* lexeme = self.get(self.mem, &string)
-        return lexeme[0]
+        cdef const LexemeC* lexeme = self.get(self.mem, &string)
+        return {}
+        #return lexeme[0]
 
     def __setitem__(self, unicode uni_string, dict props):
         cdef UniStr s
         slice_unicode(&s, uni_string, 0, len(uni_string))
         # Cast through the const here, since we're allowed to change our own
-        # Lexemes.
-        lex = <Lexeme*><void*>self.get(self.mem, &s)
+        # LexemeCs.
+        lex = <LexemeC*><void*>self.get(self.mem, &s)
         lex[0] = lexeme_init(lex.id, s.chars[:s.n], s.key, self.strings, props)
 
     def dump(self, loc):
@@ -128,30 +137,30 @@ cdef class Vocab:
             key = self._map.c_map.cells[i].key
             if key == 0:
                 continue
-            lexeme = <Lexeme*>self._map.c_map.cells[i].value
+            lexeme = <LexemeC*>self._map.c_map.cells[i].value
             st = fwrite(&key, sizeof(key), 1, fp)
             assert st == 1
-            st = fwrite(lexeme, sizeof(Lexeme), 1, fp)
+            st = fwrite(lexeme, sizeof(LexemeC), 1, fp)
             assert st == 1
         st = fclose(fp)
         assert st == 0
 
-    def load(self, loc):
+    def load_lexemes(self, loc):
         if not path.exists(loc):
-            raise IOError('Lexemes file not found at %s' % loc)
+            raise IOError('LexemeCs file not found at %s' % loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         cdef FILE* fp = fopen(<char*>bytes_loc, 'rb')
         assert fp != NULL
         cdef size_t st
-        cdef Lexeme* lexeme
+        cdef LexemeC* lexeme
         cdef hash_t key
         i = 0
         while True:
             st = fread(&key, sizeof(key), 1, fp)
             if st != 1:
                 break
-            lexeme = <Lexeme*>self.mem.alloc(sizeof(Lexeme), 1)
-            st = fread(lexeme, sizeof(Lexeme), 1, fp)
+            lexeme = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
+            st = fread(lexeme, sizeof(LexemeC), 1, fp)
             if st != 1:
                 break
             self._map.set(key, lexeme)
@@ -160,3 +169,29 @@ cdef class Vocab:
             self.lexemes[lexeme.id] = lexeme
             i += 1
         fclose(fp)
+
+    def load_vectors(self, loc):
+        cdef int i
+        cdef unicode line
+        cdef unicode word
+        cdef unicode val_str
+        cdef hash_t key
+        cdef LexemeC* lex
+        cdef float* vec
+ 
+        with codecs.open(loc, 'r', 'utf8') as file_:
+            for line in file_:
+                pieces = line.split()
+                word = pieces.pop(0)
+                if len(pieces) >= MAX_VEC_SIZE:
+                    sizes = (len(pieces), MAX_VEC_SIZE)
+                    msg = ("Your vector is %d elements."
+                           "The compile-time limit is %d elements." % sizes)
+                    raise ValueError(msg)
+                key = hash_string(word)
+                lex = <LexemeC*>self._map.get(key)
+                if lex is not NULL:
+                    vec = <float*>self.mem.alloc(len(pieces), sizeof(float))
+                    for i, val_str in enumerate(pieces):
+                        vec[i] = float(val_str)
+                    lex.vec = vec
