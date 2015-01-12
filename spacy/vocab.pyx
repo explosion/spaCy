@@ -6,6 +6,7 @@ import codecs
 
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport init as lexeme_init
+from .lexeme cimport Lexeme_cinit
 from .strings cimport slice_unicode
 from .strings cimport hash_string
 from .orth cimport word_shape
@@ -28,7 +29,6 @@ cdef LexemeC init_lexeme(id_t i, unicode string, hash_t hashed,
     lex.sic = string_store[string]
     
     lex.cluster = props.get('cluster', 0)
-    lex.pos_type = props.get('pos_type', 0)
     lex.prob = props.get('prob', 0)
 
     lex.prefix = string_store[string[:1]]
@@ -90,12 +90,6 @@ cdef class Vocab:
         '''Retrieve a lexeme, given an int ID or a unicode string.  If a previously
         unseen unicode string is given, a new LexemeC is created and stored.
 
-        This function relies on Cython's struct-to-dict conversion.  Python clients
-        receive a dict keyed by strings (byte or unicode, depending on Python 2/3),
-        with int values.  Cython clients can instead receive a LexemeC struct value.
-        More efficient Cython access is provided by Lexicon.get, which returns
-        a LexemeC*.
-
         Args:
             id_or_string (int or unicode): The integer ID of a word, or its unicode
                 string.  If an int >= Lexicon.size, IndexError is raised.
@@ -103,19 +97,19 @@ cdef class Vocab:
                 is raised.
 
         Returns:
-            lexeme (dict): A LexemeC struct instance, which Cython translates into
-                a dict if the operator is called from Python.
+            lexeme (Lexeme): An instance of the Lexeme Python class, with data
+                copied on instantiation.
         '''
+        cdef UniStr string
+        cdef const LexemeC* lexeme
         if type(id_or_string) == int:
             if id_or_string >= self.lexemes.size():
                 raise IndexError
-            return {}
-            #return self.lexemes.at(id_or_string)[0]
-        cdef UniStr string
-        slice_unicode(&string, id_or_string, 0, len(id_or_string))
-        cdef const LexemeC* lexeme = self.get(self.mem, &string)
-        return {}
-        #return lexeme[0]
+            lexeme = self.lexemes.at(id_or_string)
+        else:
+            slice_unicode(&string, id_or_string, 0, len(id_or_string))
+            lexeme = self.get(self.mem, &string)
+        return Lexeme_cinit(lexeme, self.strings)
 
     def __setitem__(self, unicode uni_string, dict props):
         cdef UniStr s

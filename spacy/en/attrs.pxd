@@ -3,9 +3,9 @@ from ..typedefs cimport FLAG8, FLAG9
 from ..typedefs cimport ID as _ID
 from ..typedefs cimport SIC as _SIC
 from ..typedefs cimport SHAPE as _SHAPE
-from ..typedefs cimport DENSE as _DENSE
+from ..typedefs cimport NORM1 as _NORM1
+from ..typedefs cimport NORM2 as _NORM2
 from ..typedefs cimport CLUSTER as _CLUSTER
-from ..typedefs cimport SHAPE as _SHAPE
 from ..typedefs cimport PREFIX as _PREFIX
 from ..typedefs cimport SUFFIX as _SUFFIX
 from ..typedefs cimport LEMMA as _LEMMA
@@ -28,7 +28,8 @@ cpdef enum:
     ID = _ID
     SIC = _SIC
     SHAPE = _SHAPE
-    DENSE = _DENSE
+    NORM1 = _NORM1
+    NORM2 = _NORM2
     PREFIX = _PREFIX
     SUFFIX = _SUFFIX
     CLUSTER = _CLUSTER

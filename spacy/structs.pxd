@@ -9,15 +9,16 @@ cdef struct LexemeC:
     flags_t flags
    
     attr_t id
+    attr_t length
+
     attr_t sic
-    attr_t dense
+    attr_t norm1
+    attr_t norm2
     attr_t shape
     attr_t prefix
     attr_t suffix
  
-    attr_t length
     attr_t cluster
-    attr_t pos_type
 
     float prob
     float sentiment

@@ -90,14 +90,14 @@ cpdef enum attr_id_t:
 
     ID
     SIC
-    DENSE
+    NORM1
+    NORM2
     SHAPE
     PREFIX
     SUFFIX
 
     LENGTH
     CLUSTER
-    POS_TYPE
     LEMMA
     POS
 

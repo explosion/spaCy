@@ -7,7 +7,7 @@ from preshed.counter cimport PreshCounter
 from .vocab cimport EMPTY_LEXEME
 from .typedefs cimport attr_id_t, attr_t
 from .typedefs cimport LEMMA
-from .typedefs cimport ID, SIC, DENSE, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER, POS_TYPE
+from .typedefs cimport ID, SIC, NORM1, NORM2, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from .typedefs cimport POS, LEMMA
 
 cimport cython
@@ -39,8 +39,10 @@ cdef attr_t get_lex_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
         return lex.id
     elif feat_name == SIC:
         return lex.sic
-    elif feat_name == DENSE:
-        return lex.dense
+    elif feat_name == NORM1:
+        return lex.norm1
+    elif feat_name == NORM2:
+        return lex.norm2
     elif feat_name == SHAPE:
         return lex.shape
     elif feat_name == PREFIX:
@@ -51,8 +53,6 @@ cdef attr_t get_lex_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
         return lex.length
     elif feat_name == CLUSTER:
         return lex.cluster
-    elif feat_name == POS_TYPE:
-        return lex.pos_type
     else:
         return 0
 
@@ -175,26 +175,7 @@ cdef class Tokens:
 
 
 cdef Token cinit_token(const TokenC* c_tok):
-    cdef const LexemeC* lex = c_tok.lex
     cdef Token py_tok = Token.__new__(Token)
-
-    cyarr = cvarray(shape=(300,), itemsize=sizeof(float), format="i")
-    py_tok.vec = cyarr
-
-    py_tok.flags = lex.flags
-    py_tok.id = lex.id
-    py_tok.sic = lex.sic
-    py_tok.dense = lex.dense
-    py_tok.shape = lex.shape
-    py_tok.prefix = lex.prefix
-    py_tok.suffix = lex.suffix
-    py_tok.length = lex.length
-    py_tok.cluster = lex.cluster
-    py_tok.pos_type = lex.pos_type
-
-    py_tok.prob = lex.prob
-    py_tok.sentiment = lex.sentiment
-
     py_tok.morph = c_tok.morph
     py_tok.pos = c_tok.pos
     py_tok.fine_pos = c_tok.fine_pos

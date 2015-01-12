@@ -77,7 +77,6 @@ cpdef enum:
     P2_suffix
     P2_pos
     P2_lemma
-    P2_pos_type
 
     P1_sic
     P1_cluster
@@ -86,7 +85,6 @@ cpdef enum:
     P1_suffix
     P1_pos
     P1_lemma
-    P1_pos_type
 
     W_sic
     W_cluster
@@ -95,7 +93,6 @@ cpdef enum:
     W_suffix
     W_pos
     W_lemma
-    W_pos_type
 
     N1_sic
     N1_cluster
@@ -104,7 +101,6 @@ cpdef enum:
     N1_suffix
     N1_pos
     N1_lemma
-    N1_pos_type
 
     N2_sic
     N2_cluster
@@ -113,7 +109,6 @@ cpdef enum:
     N2_suffix
     N2_pos
     N2_lemma
-    N2_pos_type
 
     N_CONTEXT_FIELDS
 
@@ -196,11 +191,6 @@ POS_TEMPLATES = (
     (N2_cluster,),
     (P1_cluster,),
     (P2_cluster,),
-
-    (W_pos_type,),
-    (N1_pos_type,),
-    (N1_pos_type,),
-    (P1_pos, W_pos_type, N1_pos_type),
 )
 
 
@@ -339,4 +329,3 @@ cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
     context[4] = t.lex.suffix
     context[5] = t.pos
     context[6] = t.lemma
-    context[7] = t.lex.pos_type
