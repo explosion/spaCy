@@ -12,7 +12,10 @@ from .attrs import get_flags
 
 
 def get_lex_props(string):
-    return {'flags': get_flags(string), 'dense': 1}
+    return {'flags': get_flags(string), 'length': len(string),
+            'sic': string, 'norm1': string, 'norm2': string, 'shape': string,
+            'prefix': string[0], 'suffix': string[-3:], 'cluster': 0, 'prob': 0,
+            'sentiment': 0}
 
 LOCAL_DATA_DIR = path.join(path.dirname(__file__), 'data')
 
@@ -45,7 +48,7 @@ class English(object):
     """
     def __init__(self, data_dir=LOCAL_DATA_DIR):
         self._data_dir = data_dir
-        self.vocab = Vocab(data_dir=path.join(data_dir, 'vocab'),
+        self.vocab = Vocab(data_dir=path.join(data_dir, 'vocab') if data_dir else None,
                            get_lex_props=get_lex_props)
         tag_names = list(POS_TAGS.keys())
         tag_names.sort()

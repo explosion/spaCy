@@ -42,32 +42,5 @@ cdef class Tokens:
 
 
 cdef class Token:
-    cdef cvarray vec
-
-    cdef readonly flags_t flags
-   
-    cdef readonly attr_t id
-    cdef readonly attr_t sic
-    cdef readonly attr_t dense
-    cdef readonly attr_t shape
-    cdef readonly attr_t prefix
-    cdef readonly attr_t suffix
- 
-    cdef readonly attr_t length
-    cdef readonly attr_t cluster
-    cdef readonly attr_t pos_type
-
-    cdef readonly float prob
-    cdef readonly float sentiment
-
-    cdef readonly Morphology morph
-    cdef readonly univ_tag_t pos
-    cdef readonly int fine_pos
-    cdef readonly int idx
-    cdef readonly int lemma
-    cdef readonly int sense
-    cdef readonly int dep_tag
-    
-    cdef readonly int head_offset
-    cdef readonly uint32_t l_kids
-    cdef readonly uint32_t r_kids
+    cdef readonly Tokens _seq
+    cdef readonly int i

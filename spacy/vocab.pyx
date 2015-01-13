@@ -5,7 +5,7 @@ from os import path
 import codecs
 
 from .lexeme cimport EMPTY_LEXEME
-from .lexeme cimport init as lexeme_init
+from .lexeme cimport set_lex_struct_props
 from .lexeme cimport Lexeme_cinit
 from .strings cimport slice_unicode
 from .strings cimport hash_string
@@ -21,24 +21,6 @@ memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
 EMPTY_LEXEME.vec = EMPTY_VEC
 
 
-cdef LexemeC init_lexeme(id_t i, unicode string, hash_t hashed,
-                  StringStore string_store, dict props) except *:
-    cdef LexemeC lex
-    lex.id = i
-    lex.length = len(string)
-    lex.sic = string_store[string]
-    
-    lex.cluster = props.get('cluster', 0)
-    lex.prob = props.get('prob', 0)
-
-    lex.prefix = string_store[string[:1]]
-    lex.suffix = string_store[string[-3:]]
-    lex.shape = string_store[word_shape(string)]
-   
-    lex.flags = props.get('flags', 0)
-    return lex
-
-
 cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
@@ -47,7 +29,7 @@ cdef class Vocab:
         self._map = PreshMap(2 ** 20)
         self.strings = StringStore()
         self.lexemes.push_back(&EMPTY_LEXEME)
-        self.get_lex_props = get_lex_props
+        self.lexeme_props_getter = get_lex_props
 
         if data_dir is not None:
             if not path.exists(data_dir):
@@ -63,32 +45,36 @@ cdef class Vocab:
         """The current number of lexemes stored."""
         return self.lexemes.size()
 
-    cdef const LexemeC* get(self, Pool mem, UniStr* string) except NULL:
+    cdef const LexemeC* get(self, Pool mem, UniStr* c_str) except NULL:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
         if necessary, using memory acquired from the given pool.  If the pool
         is the lexicon's own memory, the lexeme is saved in the lexicon.'''
         cdef LexemeC* lex
-        lex = <LexemeC*>self._map.get(string.key)
+        lex = <LexemeC*>self._map.get(c_str.key)
         if lex != NULL:
             return lex
-        if string.n < 3:
+        if c_str.n < 3:
             mem = self.mem
-        cdef unicode py_string = string.chars[:string.n]
+        cdef unicode py_str = c_str.chars[:c_str.n]
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        lex[0] = init_lexeme(self.lexemes.size(), py_string, string.key, self.strings,
-                             self.get_lex_props(py_string))
+        props = self.lexeme_props_getter(py_str)
+        set_lex_struct_props(lex, props, self.strings)
         if mem is self.mem:
-            self._map.set(string.key, lex)
-            while self.lexemes.size() < (lex.id + 1):
-                self.lexemes.push_back(&EMPTY_LEXEME)
-            self.lexemes[lex.id] = lex
+            lex.id = self.lexemes.size()
+            self._add_lex_to_vocab(c_str.key, lex)
         else:
-            lex[0].id = 1
+            lex.id = 1
         return lex
+
+    cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1:
+        self._map.set(key, <void*>lex)
+        while self.lexemes.size() < (lex.id + 1):
+            self.lexemes.push_back(&EMPTY_LEXEME)
+        self.lexemes[lex.id] = lex
 
     def __getitem__(self,  id_or_string):
         '''Retrieve a lexeme, given an int ID or a unicode string.  If a previously
-        unseen unicode string is given, a new LexemeC is created and stored.
+        unseen unicode string is given, a new lexeme is created and stored.
 
         Args:
             id_or_string (int or unicode): The integer ID of a word, or its unicode
@@ -100,24 +86,28 @@ cdef class Vocab:
             lexeme (Lexeme): An instance of the Lexeme Python class, with data
                 copied on instantiation.
         '''
-        cdef UniStr string
+        cdef UniStr c_str
         cdef const LexemeC* lexeme
         if type(id_or_string) == int:
             if id_or_string >= self.lexemes.size():
                 raise IndexError
             lexeme = self.lexemes.at(id_or_string)
         else:
-            slice_unicode(&string, id_or_string, 0, len(id_or_string))
-            lexeme = self.get(self.mem, &string)
+            slice_unicode(&c_str, id_or_string, 0, len(id_or_string))
+            lexeme = self.get(self.mem, &c_str)
         return Lexeme_cinit(lexeme, self.strings)
 
-    def __setitem__(self, unicode uni_string, dict props):
-        cdef UniStr s
-        slice_unicode(&s, uni_string, 0, len(uni_string))
-        # Cast through the const here, since we're allowed to change our own
-        # LexemeCs.
-        lex = <LexemeC*><void*>self.get(self.mem, &s)
-        lex[0] = lexeme_init(lex.id, s.chars[:s.n], s.key, self.strings, props)
+    def __setitem__(self, unicode py_str, dict props):
+        cdef UniStr c_str
+        slice_unicode(&c_str, py_str, 0, len(py_str))
+        cdef LexemeC* lex
+        lex = <LexemeC*>self._map.get(c_str.key)
+        if lex == NULL:
+            lex = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
+            lex.id = self.lexemes.size()
+            self._add_lex_to_vocab(c_str.key, lex)
+        set_lex_struct_props(lex, props, self.strings)
+        assert lex.sic < 1000000
 
     def dump(self, loc):
         if path.exists(loc):
@@ -154,6 +144,7 @@ cdef class Vocab:
             if st != 1:
                 break
             lexeme = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
+            lexeme.vec = EMPTY_VEC
             st = fread(lexeme, sizeof(LexemeC), 1, fp)
             if st != 1:
                 break

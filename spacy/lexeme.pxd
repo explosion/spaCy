@@ -7,10 +7,8 @@ from .strings cimport StringStore
 cdef LexemeC EMPTY_LEXEME
 
 
-cdef LexemeC init(id_t i, unicode string, hash_t hashed, StringStore store,
-                  dict props) except *
+cdef int set_lex_struct_props(LexemeC* lex, dict props, StringStore strings) except -1
  
-
 cdef class Lexeme:
     cdef const float* vec
 

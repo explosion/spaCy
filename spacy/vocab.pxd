@@ -24,12 +24,13 @@ cdef struct _Cached:
 
 
 cdef class Vocab:
-    cpdef public get_lex_props
+    cpdef public lexeme_props_getter
     cdef Pool mem
     cpdef readonly StringStore strings
-    cdef vector[LexemeC*] lexemes
+    cdef vector[const LexemeC*] lexemes
 
     cdef const LexemeC* get(self, Pool mem, UniStr* s) except NULL
+    cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1
     
     cdef PreshMap _map
   

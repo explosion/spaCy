@@ -67,7 +67,7 @@ cdef class StringStore:
             if string_or_id < 1 or string_or_id >= self.size:
                 raise IndexError(string_or_id)
             utf8str = &self.strings[<int>string_or_id]
-            return utf8str.chars[:utf8str.length]
+            return utf8str.chars[:utf8str.length].decode('utf8')
         elif isinstance(string_or_id, bytes):
             utf8str = self.intern(<char*>string_or_id, len(string_or_id))
             return utf8str.i

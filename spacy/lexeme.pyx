@@ -5,27 +5,27 @@ from murmurhash.mrmr cimport hash64
 from libc.string cimport memset
 
 from .orth cimport word_shape
+from .typedefs cimport attr_t
 
 
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
 
 
-cdef LexemeC init(id_t i, unicode string, hash_t hashed,
-                  StringStore string_store, dict props) except *:
-    cdef LexemeC lex
-    lex.id = i
-    lex.length = len(string)
-    lex.sic = string_store[string]
-    
-    lex.cluster = props.get('cluster', 0)
-    lex.prob = props.get('prob', 0)
+cdef int set_lex_struct_props(LexemeC* lex, dict props, StringStore string_store) except -1:
 
-    lex.prefix = string_store[string[:1]]
-    lex.suffix = string_store[string[-3:]]
-    lex.shape = string_store[word_shape(string)]
-   
-    lex.flags = props.get('flags', 0)
-    return lex
+    lex.length = props['length']
+    lex.sic = string_store[props['sic']]
+    lex.norm1 = string_store[props['norm1']] 
+    lex.norm2 = string_store[props['norm2']] 
+    lex.shape = string_store[props['shape']] 
+    lex.prefix = string_store[props['prefix']]
+    lex.suffix = string_store[props['suffix']]
+    
+    lex.cluster = props['cluster']
+    lex.prob = props['prob']
+    lex.sentiment = props['sentiment']
+
+    lex.flags = props['flags']
 
 
 cdef class Lexeme:

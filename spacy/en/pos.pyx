@@ -283,12 +283,12 @@ cdef class EnPosTagger:
     cdef int lemmatize(self, const univ_tag_t pos, const LexemeC* lex) except -1:
         if self.lemmatizer is None:
             return lex.sic
-        cdef bytes py_string = self.strings[lex.sic]
+        cdef unicode py_string = self.strings[lex.sic]
         if pos != NOUN and pos != VERB and pos != ADJ:
             return lex.sic
         cdef set lemma_strings
         cdef unicode lemma_string
-        lemma_strings = self.lemmatizer(py_string.decode('utf8'), pos)
+        lemma_strings = self.lemmatizer(py_string, pos)
         lemma_string = sorted(lemma_strings)[0]
         lemma = self.strings.intern(lemma_string.encode('utf8'), len(lemma_string)).i
         return lemma
