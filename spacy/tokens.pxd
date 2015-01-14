@@ -44,3 +44,20 @@ cdef class Tokens:
 cdef class Token:
     cdef readonly Tokens _seq
     cdef readonly int i
+
+    cdef readonly attr_t idx
+    cdef readonly attr_t cluster
+    cdef readonly attr_t length
+    cdef readonly attr_t sic
+    cdef readonly attr_t norm1
+    cdef readonly attr_t norm2
+    cdef readonly attr_t shape
+    cdef readonly attr_t prefix
+    cdef readonly attr_t suffix
+    cdef readonly float prob
+    cdef readonly float sentiment
+    cdef readonly attr_t flags
+    cdef readonly attr_t lemma
+    cdef readonly univ_tag_t pos
+    cdef readonly attr_t fine_pos
+    cdef readonly attr_t dep_tag

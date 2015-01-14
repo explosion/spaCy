@@ -15,7 +15,7 @@ def tagged(EN):
 
 @pytest.fixture
 def lemmas(tagged):
-    return [t.lemma for t in tagged]
+    return [t.lemma_ for t in tagged]
 
 
 def test_lemmas(lemmas, tagged):

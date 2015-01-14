@@ -184,6 +184,23 @@ cdef class Token:
     def __init__(self, Tokens tokens, int i):
         self._seq = tokens
         self.i = i
+        cdef const TokenC* t = &tokens.data[i]
+        self.idx = t.idx
+        self.cluster = t.lex.cluster
+        self.length = t.lex.length
+        self.sic = t.lex.sic
+        self.norm1 = t.lex.norm1
+        self.norm2 = t.lex.norm2
+        self.shape = t.lex.shape
+        self.prefix = t.lex.prefix
+        self.suffix = t.lex.suffix
+        self.prob = t.lex.prob
+        self.sentiment = t.lex.sentiment
+        self.flags = t.lex.flags
+        self.lemma = t.lemma
+        self.pos = t.pos
+        self.fine_pos = t.fine_pos
+        self.dep_tag = t.dep_tag
 
     def __unicode__(self):
         cdef const TokenC* t = &self._seq.data[self.i]
@@ -203,34 +220,11 @@ cdef class Token:
         """
         return self._seq.data[self.i].lex.length
 
-    property idx:
-        """The index into the original string at which the token starts.
-
-        The following is supposed to always be true:
-        
-        >>> original_string[token.idx:token.idx len(token) == token.string
-        """
+    property head:
+        """The token predicted by the parser to be the head of the current token."""
         def __get__(self):
-            return self._seq.data[self.i].idx
-
-    property cluster:
-        """The Brown cluster ID of the word: en.wikipedia.org/wiki/Brown_clustering
-    
-        Similar words have better-than-chance likelihood of having similar cluster
-        IDs, although the clustering is quite noisy.  Cluster IDs make good features,
-        and help to make models slightly more robust to domain variation.
-
-        A common trick is to use only the first N bits of a cluster ID in a feature,
-        as the more general part of the hierarchical clustering is often more accurate
-        than the lower categories.
-
-        To assist in this, I encode the cluster IDs little-endian, to allow a simple
-        bit-mask:
-
-        >>> six_bits = cluster & (2**6 - 1)
-        """
-        def __get__(self):
-            return self._seq.data[self.i].lex.cluster
+            cdef const TokenC* t = &self._seq.data[self.i]
+            return Token(self._seq, self.i + t.head)
 
     property string:
         """The unicode string of the word, with no whitespace padding."""
@@ -241,10 +235,31 @@ cdef class Token:
             cdef unicode py_ustr = self._seq.vocab.strings[t.lex.sic]
             return py_ustr
 
-    property lemma:
-        """The unicode string of the word's lemma.  If no part-of-speech tag is
-        assigned, the most common part-of-speech tag of the word is used.
-        """
+    property sic_:
+        def __get__(self):
+            return self._seq.vocab.strings[self.sic]
+
+    property norm1_:
+        def __get__(self):
+            return self._seq.vocab.strings[self.norm1]
+
+    property norm2_:
+        def __get__(self):
+            return self._seq.vocab.strings[self.norm2]
+
+    property shape_:
+        def __get__(self):
+            return self._seq.vocab.strings[self.shape]
+
+    property prefix_:
+        def __get__(self):
+            return self._seq.vocab.strings[self.prefix]
+
+    property suffix_:
+        def __get__(self):
+            return self._seq.vocab.strings[self.suffix]
+
+    property lemma_:
         def __get__(self):
             cdef const TokenC* t = &self._seq.data[self.i]
             if t.lemma == 0:
@@ -252,36 +267,16 @@ cdef class Token:
             cdef unicode py_ustr = self._seq.vocab.strings[t.lemma]
             return py_ustr
 
-    property dep_tag:
-        """The ID integer of the word's dependency label.  If no parse has been
-        assigned, defaults to 0.
-        """
+    property pos_:
         def __get__(self):
-            return self._seq.data[self.i].dep_tag
+            return self._seq.vocab.strings[self.pos]
 
-    property pos:
-        """The ID integer of the word's part-of-speech tag, from the 13-tag
-        Google Universal Tag Set.  Constants for this tag set are available in
-        spacy.typedefs.
-        """
+    property fine_pos_:
         def __get__(self):
-            return self._seq.data[self.i].pos
+            return self._seq.vocab.strings[self.fine_pos]
 
-    property fine_pos:
-        """The ID integer of the word's fine-grained part-of-speech tag, as assigned
-        by the tagger model.  Fine-grained tags include morphological information,
-        and other distinctions, and allow a more accurate tagger to be trained.
-        """
- 
+    property dep_tag_:
         def __get__(self):
-            return self._seq.data[self.i].fine_pos
+            return self._seq.vocab.strings[self.dep_tag]
 
-    property sic:
-        def __get__(self):
-            return self._seq.data[self.i].lex.sic
 
-    property head:
-        """The token predicted by the parser to be the head of the current token."""
-        def __get__(self):
-            cdef const TokenC* t = &self._seq.data[self.i]
-            return Token(self._seq, self.i + t.head)
