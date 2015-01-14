@@ -120,9 +120,9 @@ cdef class Tokens:
             attr_ids (list[int]): A list of attribute ID ints.
 
         Returns:
-            feat_array (numpy.ndarray[long, ndim=2]): A feature matrix, with one
-                row per word, and one column per attribute indicated in the input
-                attr_ids.
+            feat_array (numpy.ndarray[long, ndim=2]):
+              A feature matrix, with one row per word, and one column per attribute
+              indicated in the input attr_ids.
         """
         cdef int i, j
         cdef attr_id_t feature
@@ -278,7 +278,7 @@ cdef class Token:
 
     property sic:
         def __get__(self):
-            return self._seq.vocab.strings[self._seq.data[self.i].lex.sic]
+            return self._seq.data[self.i].lex.sic
 
     property head:
         """The token predicted by the parser to be the head of the current token."""

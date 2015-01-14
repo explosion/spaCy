@@ -77,14 +77,15 @@ cdef class Vocab:
         unseen unicode string is given, a new lexeme is created and stored.
 
         Args:
-            id_or_string (int or unicode): The integer ID of a word, or its unicode
-                string.  If an int >= Lexicon.size, IndexError is raised.
-                If id_or_string is neither an int nor a unicode string, ValueError
-                is raised.
+            id_or_string (int or unicode):
+              The integer ID of a word, or its unicode string.  If an int >= Lexicon.size,
+              IndexError is raised. If id_or_string is neither an int nor a unicode string,
+              ValueError is raised.
 
         Returns:
-            lexeme (Lexeme): An instance of the Lexeme Python class, with data
-                copied on instantiation.
+            lexeme (Lexeme):
+              An instance of the Lexeme Python class, with data copied on
+              instantiation.
         '''
         cdef UniStr c_str
         cdef const LexemeC* lexeme
@@ -92,9 +93,11 @@ cdef class Vocab:
             if id_or_string >= self.lexemes.size():
                 raise IndexError
             lexeme = self.lexemes.at(id_or_string)
-        else:
+        elif type(id_or_string) == unicode:
             slice_unicode(&c_str, id_or_string, 0, len(id_or_string))
             lexeme = self.get(self.mem, &c_str)
+        else:
+            raise ValueError("Vocab unable to map type: %s. Maps unicode --> int or int --> unicode" % str(type(id_or_string)))
         return Lexeme_cinit(lexeme, self.strings)
 
     def __setitem__(self, unicode py_str, dict props):

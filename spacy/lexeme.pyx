@@ -1,3 +1,4 @@
+# cython: embedsignature=True
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
@@ -29,6 +30,7 @@ cdef int set_lex_struct_props(LexemeC* lex, dict props, StringStore string_store
 
 
 cdef class Lexeme:
+    """A dummy docstring"""
     def __init__(self):
         pass
         
@@ -42,7 +44,7 @@ cdef Lexeme Lexeme_cinit(const LexemeC* c, StringStore strings):
     py.id = c.id
     py.length = c.length
 
-    py.sic = strings[c.sic]
+    py.sic = c.sic
     py.norm1 = strings[c.norm1]
     py.norm2 = strings[c.norm2]
     py.shape = strings[c.shape]

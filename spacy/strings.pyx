@@ -53,8 +53,8 @@ cdef class StringStore:
         self.mem = Pool()
         self._map = PreshMap()
         self._resize_at = 10000
-        self.size = 1
         self.strings = <Utf8Str*>self.mem.alloc(self._resize_at, sizeof(Utf8Str))
+        self.size = 1
 
     property size:
         def __get__(self):
@@ -64,7 +64,9 @@ cdef class StringStore:
         cdef bytes byte_string
         cdef const Utf8Str* utf8str
         if isinstance(string_or_id, int) or isinstance(string_or_id, long):
-            if string_or_id < 1 or string_or_id >= self.size:
+            if string_or_id == 0:
+                return u''
+            elif string_or_id < 1 or string_or_id >= self.size:
                 raise IndexError(string_or_id)
             utf8str = &self.strings[<int>string_or_id]
             return utf8str.chars[:utf8str.length].decode('utf8')

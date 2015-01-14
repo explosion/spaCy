@@ -16,7 +16,7 @@ cdef class Lexeme:
     cdef readonly attr_t id
     cdef readonly attr_t length
 
-    cdef readonly unicode sic
+    cdef readonly attr_t sic
     cdef readonly unicode norm1
     cdef readonly unicode norm2
     cdef readonly unicode shape

@@ -33,17 +33,17 @@ def test_punct(EN):
 def test_digits(EN):
     tokens = EN('The year: 1984.')
     assert len(tokens) == 5
-    assert tokens[0].sic == EN.vocab['The']['sic']
-    assert tokens[3].sic == EN.vocab['1984']['sic']
+    assert tokens[0].sic == EN.vocab['The'].sic
+    assert tokens[3].sic == EN.vocab['1984'].sic
 
 
 def test_contraction(EN):
     tokens = EN("don't giggle")
     assert len(tokens) == 3
-    assert tokens[1].sic == EN.vocab["n't"]['sic']
+    assert tokens[1].sic == EN.vocab["n't"].sic
     tokens = EN("i said don't!")
     assert len(tokens) == 5
-    assert tokens[4].sic == EN.vocab['!']['sic']
+    assert tokens[4].sic == EN.vocab['!'].sic
 
 
 def test_contraction_punct(EN):

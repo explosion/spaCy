@@ -12,12 +12,23 @@ from .attrs import get_flags
 
 
 def get_lex_props(string):
-    return {'flags': get_flags(string), 'length': len(string),
-            'sic': string, 'norm1': string, 'norm2': string, 'shape': string,
-            'prefix': string[0], 'suffix': string[-3:], 'cluster': 0, 'prob': 0,
-            'sentiment': 0}
+    return {
+        'flags': get_flags(string),
+        'length': len(string),
+        'sic': string,
+        'norm1': string,
+        'norm2': string,
+        'shape': orth.word_shape(string),
+        'prefix': string[0],
+        'suffix': string[-3:],
+        'cluster': 0,
+        'prob': 0,
+        'sentiment': 0
+    }
+
 
 LOCAL_DATA_DIR = path.join(path.dirname(__file__), 'data')
+
 
 class English(object):
     """The English NLP pipeline.

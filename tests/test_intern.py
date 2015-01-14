@@ -27,10 +27,6 @@ def test_save_unicode(sstore):
     assert Hello_i == 1
 
 
-def test_zero_id(sstore):
-    with pytest.raises(IndexError):
-        sstore[0]
-
 def test_retrieve_id(sstore):
     A_i = sstore[b'A']
     assert sstore.size == 1
