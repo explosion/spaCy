@@ -1,18 +1,16 @@
-from ..typedefs cimport FLAG0, FLAG1, FLAG2, FLAG3, FLAG4, FLAG5, FLAG6, FLAG7
-from ..typedefs cimport FLAG8, FLAG9
-from ..typedefs cimport ID as _ID
-from ..typedefs cimport SIC as _SIC
-from ..typedefs cimport SHAPE as _SHAPE
-from ..typedefs cimport NORM1 as _NORM1
-from ..typedefs cimport NORM2 as _NORM2
-from ..typedefs cimport CLUSTER as _CLUSTER
-from ..typedefs cimport PREFIX as _PREFIX
-from ..typedefs cimport SUFFIX as _SUFFIX
-from ..typedefs cimport LEMMA as _LEMMA
-from ..typedefs cimport POS as _POS
+from ..attrs cimport FLAG0, FLAG1, FLAG2, FLAG3, FLAG4, FLAG5, FLAG6, FLAG7
+from ..attrs cimport FLAG8, FLAG9
+from ..attrs cimport SIC as _SIC
+from ..attrs cimport SHAPE as _SHAPE
+from ..attrs cimport NORM1 as _NORM1
+from ..attrs cimport NORM2 as _NORM2
+from ..attrs cimport CLUSTER as _CLUSTER
+from ..attrs cimport PREFIX as _PREFIX
+from ..attrs cimport SUFFIX as _SUFFIX
+from ..attrs cimport LEMMA as _LEMMA
+from ..attrs cimport POS as _POS
 
 
-# Work around the lack of global cpdef variables
 cpdef enum:
     IS_ALPHA = FLAG0
     IS_ASCII = FLAG1
@@ -25,7 +23,6 @@ cpdef enum:
     LIKE_URL = FLAG8
     LIKE_NUM = FLAG9
 
-    ID = _ID
     SIC = _SIC
     SHAPE = _SHAPE
     NORM1 = _NORM1

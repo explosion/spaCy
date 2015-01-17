@@ -28,8 +28,6 @@ cdef class Tokenizer:
     cdef object _infix_re
 
     cpdef Tokens tokens_from_list(self, list strings)
-    cpdef Tokens tokenize(self, unicode text)
-
 
     cdef int _try_cache(self, int idx, hash_t key, Tokens tokens) except -1
     cdef int _tokenize(self, Tokens tokens, UniStr* span, int start, int end) except -1

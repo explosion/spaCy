@@ -44,12 +44,12 @@ cdef struct TokenC:
     const LexemeC* lex
     Morphology morph
     univ_tag_t pos
-    int fine_pos
+    int tag
     int idx
     int lemma
     int sense
     int head
-    int dep_tag
+    int dep
     uint32_t l_kids
     uint32_t r_kids
 

@@ -198,9 +198,8 @@ cdef class Token:
         self.sentiment = t.lex.sentiment
         self.flags = t.lex.flags
         self.lemma = t.lemma
-        self.pos = t.pos
-        self.fine_pos = t.fine_pos
-        self.dep_tag = t.dep_tag
+        self.tag = t.tag
+        self.dep = t.dep
 
     def __unicode__(self):
         cdef const TokenC* t = &self._seq.data[self.i]
@@ -219,6 +218,12 @@ cdef class Token:
             length (int):
         """
         return self._seq.data[self.i].lex.length
+
+    def check_flag(self, attr_id_t flag):
+        return False
+
+    def is_pos(self, univ_tag_t pos):
+        return False
 
     property head:
         """The token predicted by the parser to be the head of the current token."""
@@ -267,16 +272,10 @@ cdef class Token:
             cdef unicode py_ustr = self._seq.vocab.strings[t.lemma]
             return py_ustr
 
-    property pos_:
+    property tag_:
         def __get__(self):
-            return self._seq.vocab.strings[self.pos]
+            return self._seq.tag_names[self.tag]
 
-    property fine_pos_:
+    property dep_:
         def __get__(self):
-            return self._seq.vocab.strings[self.fine_pos]
-
-    property dep_tag_:
-        def __get__(self):
-            return self._seq.vocab.strings[self.dep_tag]
-
-
+            return self._seq.dep_names[self.dep]

@@ -247,11 +247,12 @@ cdef class EnPosTagger:
         cdef atom_t[N_CONTEXT_FIELDS] context
         cdef const weight_t* scores
         for i in range(tokens.length):
-            if tokens.data[i].fine_pos == 0:
+            if tokens.data[i].pos == 0:
                 fill_context(context, i, tokens.data)
                 scores = self.model.score(context)
-                tokens.data[i].fine_pos = arg_max(scores, self.model.n_classes)
+                tokens.data[i].tag = arg_max(scores, self.model.n_classes)
                 self.set_morph(i, tokens.data)
+        tokens.pos_scheme = self.tag_map
 
     def train(self, Tokens tokens, object golds):
         cdef int i
@@ -263,13 +264,13 @@ cdef class EnPosTagger:
             scores = self.model.score(context)
             guess = arg_max(scores, self.model.n_classes)
             self.model.update(context, guess, golds[i], guess != golds[i])
-            tokens.data[i].fine_pos = guess
+            tokens.data[i].tag = guess
             self.set_morph(i, tokens.data)
             correct += guess == golds[i]
         return correct
 
     cdef int set_morph(self, const int i, TokenC* tokens) except -1:
-        cdef const PosTag* tag = &self.tags[tokens[i].fine_pos]
+        cdef const PosTag* tag = &self.tags[tokens[i].tag]
         tokens[i].pos = tag.pos
         cached = <_CachedMorph*>self._morph_cache.get(tag.id, tokens[i].lex.sic)
         if cached is NULL:

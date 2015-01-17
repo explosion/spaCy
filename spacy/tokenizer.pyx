@@ -31,18 +31,6 @@ cdef class Tokenizer:
         self.vocab = vocab
         self._load_special_tokenization(rules, pos_tags, tag_names)
 
-    @classmethod
-    def from_dir(cls, Vocab vocab, object data_dir, object pos_tags, object tag_names):
-        if not path.exists(data_dir):
-            raise IOError("Directory %s not found -- cannot load Tokenizer." % data_dir)
-        if not path.isdir(data_dir):
-            raise IOError("Path %s is a file, not a dir -- cannot load Tokenizer." % data_dir)
- 
-        assert path.exists(data_dir) and path.isdir(data_dir)
-        rules, prefix_re, suffix_re, infix_re = util.read_lang_data(data_dir)
-        return cls(vocab, rules, re.compile(prefix_re), re.compile(suffix_re),
-                   re.compile(infix_re), pos_tags, tag_names)
-
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
         cdef Tokens tokens = Tokens(self.vocab, length)
@@ -57,7 +45,7 @@ cdef class Tokenizer:
             idx += len(py_string) + 1
         return tokens
 
-    cpdef Tokens tokenize(self, unicode string):
+    def __call__(self, unicode string):
         """Tokenize a string.
 
         The tokenization rules are defined in three places:
@@ -257,7 +245,7 @@ cdef class Tokenizer:
                     tokens[i].lemma = self.vocab.strings[lemma]
                 if 'pos' in props:
                     # TODO: Clean up this mess...
-                    tokens[i].fine_pos = tag_names.index(props['pos'])
+                    tokens[i].tag = tag_names.index(props['pos'])
                     tokens[i].pos = tag_map[props['pos']][0]
                     # These are defaults, which can be over-ridden by the
                     # token-specific props.

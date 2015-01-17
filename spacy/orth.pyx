@@ -137,8 +137,42 @@ cpdef unicode word_shape(unicode string):
     return ''.join(shape)
 
 
+cpdef unicode norm1(unicode string, lower_pc=0.0, upper_pc=0.0, title_pc=0.0):
+    """Apply level 1 normalization:
+
+    * Case is canonicalized, using frequency statistics
+    * Unicode mapped to ascii, via unidecode
+    * Regional spelling variations are normalized
+    """
+    pass
+
+
 cpdef bytes asciied(unicode string):
     cdef str stripped = unidecode(string)
     if not stripped:
         return b'???'
     return stripped.encode('ascii')
+
+
+# Exceptions --- do not convert these
+_uk_us_except = set([
+    'our',
+    'ours',
+    'four',
+    'fours',
+    'your',
+    'yours',
+    'hour',
+    'hours',
+    'course',
+    'rise',
+])
+def uk_to_usa(unicode string):
+    if not string.islower():
+        return string
+    if string in _uk_us_except:
+        return string
+    our = re.compile(r'ours?$')
+    string = our.sub('or', string)
+
+    return string

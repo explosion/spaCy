@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 from os import path
+import re
 
 from .. import orth
 from ..vocab import Vocab
@@ -9,6 +10,9 @@ from ..tokens import Tokens
 from .pos import EnPosTagger
 from .pos import POS_TAGS
 from .attrs import get_flags
+
+
+from ..util import read_lang_data
 
 
 def get_lex_props(string):
@@ -64,11 +68,16 @@ class English(object):
         tag_names = list(POS_TAGS.keys())
         tag_names.sort()
         if data_dir is None:
-            self.tokenizer = Tokenizer(self.vocab, {}, None, None, None,
-                                       POS_TAGS, tag_names)
+            tok_rules = {}
+            prefix_re = None
+            suffix_re = None
+            infix_re = None
         else:
-            self.tokenizer = Tokenizer.from_dir(self.vocab, path.join(data_dir, 'tokenizer'),
-                                                POS_TAGS, tag_names)
+            tok_data_dir = path.join(data_dir, 'tokenizer')
+            tok_rules, prefix_re, suffix_re, infix_re = read_lang_data(tok_data_dir)
+        self.tokenizer = Tokenizer(self.vocab, tok_rules, re.compile(prefix_re),
+                                   re.compile(suffix_re), re.compile(infix_re),
+                                   POS_TAGS, tag_names)
         self.strings = self.vocab.strings
         self._tagger = None
         self._parser = None
@@ -100,11 +109,11 @@ class English(object):
         Returns:
             tokens (spacy.tokens.Tokens):
         """
-        tokens = self.tokenizer.tokenize(text)
+        tokens = self.tokenizer(text)
         if tag:
             self.tagger(tokens)
         if parse:
-            self.parser.parse(tokens)
+            self.parser(tokens)
         return tokens
 
     @property

@@ -28,7 +28,7 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
     else:
         context[0] = token.lex.sic
         context[1] = token.lemma
-        context[2] = token.fine_pos
+        context[2] = token.tag
         context[3] = token.lex.cluster
         # We've read in the string little-endian, so now we can take & (2**n)-1
         # to get the first n bits of the cluster.
@@ -44,7 +44,7 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         # the source that are set to 1.
         context[4] = token.lex.cluster & 63
         context[5] = token.lex.cluster & 15
-        context[6] = token.dep_tag if has_head(token) else 0
+        context[6] = token.dep if has_head(token) else 0
 
 
 cdef int fill_context(atom_t* context, State* state) except -1:

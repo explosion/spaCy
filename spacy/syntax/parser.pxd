@@ -9,5 +9,3 @@ cdef class GreedyParser:
     cdef object cfg
     cdef readonly Model model
     cdef TransitionSystem moves
-
-    cpdef int parse(self, Tokens tokens) except -1

@@ -65,7 +65,7 @@ cdef class GreedyParser:
         hasty_templ, full_templ = get_templates(self.cfg.features)
         self.model = Model(self.moves.n_moves, full_templ, model_dir)
 
-    cpdef int parse(self, Tokens tokens) except -1:
+    def __call__(self, Tokens tokens):
         cdef:
             Transition guess
             uint64_t state_key

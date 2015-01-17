@@ -12,7 +12,7 @@ DEF NON_MONOTONIC = True
 cdef int add_dep(State *s, int head, int child, int label) except -1:
     cdef int dist = head - child
     s.sent[child].head = dist
-    s.sent[child].dep_tag = label
+    s.sent[child].dep = label
     # Keep a bit-vector tracking child dependencies.  If a word has a child at
     # offset i from it, set that bit (tracking left and right separately)
     if child > head:
@@ -38,7 +38,7 @@ cdef int push_stack(State *s) except -1:
     if at_eol(s):
         while s.stack_len != 0:
             if not has_head(get_s0(s)):
-                get_s0(s).dep_tag = 0
+                get_s0(s).dep = 0
             pop_stack(s)
 
 
