@@ -13,6 +13,11 @@ from setuptools import Extension
 from distutils import sysconfig
 import platform
 
+
+print sys.argv
+
+# PyPy --- NB! PyPy doesn't really work, it segfaults all over the place. But,
+# this is necessary to get it compile.
 # We have to resort to monkey-patching to set the compiler, because pypy broke
 # ALL the EVERTHING.
 
@@ -24,6 +29,16 @@ def my_customize_compiler(compiler):
 
 if platform.python_implementation() == 'PyPy':
     sysconfig.customize_compiler = my_customize_compiler
+
+
+def install_headers():
+    dest_dir = path.join(sys.prefix, 'include', 'murmurhash')
+    if not path.exists(dest_dir):
+        shutil.copytree('murmurhash/headers/murmurhash', dest_dir)
+
+
+install_headers()
+includes = ['.', path.join(sys.prefix, 'include')]
 
 
 def clean(ext):
@@ -83,6 +98,7 @@ def run_setup(exts):
 
     headers_workaround.fix_venv_pypy_include()
     headers_workaround.install_headers('murmurhash')
+    headers_workaround.install_headers('numpy')
 
 
 def main(modules, is_pypy):
