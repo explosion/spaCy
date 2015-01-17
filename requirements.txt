@@ -1,8 +1,7 @@
 cython
-fabric
 cymem
-preshed == 0.20
+preshed
+thinc
 murmurhash
 pytest
-sphinx
-sphinxcontrib-napoleon
+unidecode
