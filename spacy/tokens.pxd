@@ -30,6 +30,7 @@ cdef class Tokens:
     cdef Pool mem
     cdef Vocab vocab
     cdef list tag_names
+    cdef dict pos_scheme
 
     cdef TokenC* data
 
@@ -59,5 +60,5 @@ cdef class Token:
     cdef readonly attr_t flags
     cdef readonly attr_t lemma
     cdef readonly univ_tag_t pos
-    cdef readonly attr_t fine_pos
-    cdef readonly attr_t dep_tag
+    cdef readonly attr_t tag
+    cdef readonly attr_t dep
