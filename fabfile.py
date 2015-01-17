@@ -61,10 +61,10 @@ def travis():
 
 
 def pos():
-    local('rm -rf data/en/pos')
-    local('python tools/train.py ~/work_data/docparse/wsj02-21.conll ~/work_data/docparse/wsj22.conll spacy/en/data')
-    local('python tools/tag.py ~/work_data/docparse/wsj22.raw /tmp/tmp')
-    local('python tools/eval_pos.py ~/work_data/docparse/wsj22.conll /tmp/tmp')
+    with virtualenv(VENV_DIR):
+        local('python tools/train.py ~/work_data/docparse/wsj02-21.conll ~/work_data/docparse/wsj22.conll spacy/en/data')
+        local('python tools/tag.py ~/work_data/docparse/wsj22.raw /tmp/tmp')
+        local('python tools/eval_pos.py ~/work_data/docparse/wsj22.conll /tmp/tmp')
 
 
 def ner():
