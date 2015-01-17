@@ -180,7 +180,8 @@ Accuracy
 .. toctree::
     :maxdepth: 3
 
-    license.rst 
+    index.rst
     quickstart.rst
-    features.rst
     api.rst
+    howworks.rst
+    license.rst 
