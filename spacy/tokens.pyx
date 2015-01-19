@@ -81,12 +81,29 @@ cdef class Tokens:
         self.max_length = size
         self.length = 0
 
+    def sentences(self):
+        cdef int i
+        sentences = []
+        sent = Tokens(self.vocab)
+        cdef attr_t period = self.vocab.strings['.']
+        cdef attr_t question = self.vocab.strings['?']
+        cdef attr_t exclamation = self.vocab.strings['!']
+        for i in range(self.length):
+            idx = sent.push_back(idx, &self.data[i])
+            if self.data[i].lex.sic == period or self.data[i].lex.sic == exclamation or \
+              self.data[i].lex.sic == question:
+                sentences.append(sent)
+                sent = Tokens(self.vocab)
+        return sentences
+
     def __getitem__(self, i):
         """Retrieve a token.
         
         Returns:
             token (Token):
         """
+        if i < 0:
+            i = self.length - i
         bounds_check(i, self.length, PADDING)
         return Token(self, i)
 
