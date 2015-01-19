@@ -10,6 +10,9 @@ from .typedefs cimport LEMMA
 from .typedefs cimport ID, SIC, NORM1, NORM2, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from .typedefs cimport POS, LEMMA
 
+cimport numpy
+import numpy
+
 cimport cython
 
 
@@ -200,6 +203,10 @@ cdef class Token:
         self.lemma = t.lemma
         self.tag = t.tag
         self.dep = t.dep
+
+        self.vec = numpy.ndarray(shape=(300,), dtype=numpy.float32)
+        for i in range(300):
+            self.vec[i] = t.lex.vec[i]
 
     def __unicode__(self):
         cdef const TokenC* t = &self._seq.data[self.i]

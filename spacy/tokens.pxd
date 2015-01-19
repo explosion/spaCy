@@ -1,6 +1,6 @@
 from libc.stdint cimport uint32_t
 
-from cython.view cimport array as cvarray
+from numpy cimport ndarray
 
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport atom_t
@@ -62,3 +62,5 @@ cdef class Token:
     cdef readonly univ_tag_t pos
     cdef readonly attr_t tag
     cdef readonly attr_t dep
+
+    cdef readonly ndarray vec
