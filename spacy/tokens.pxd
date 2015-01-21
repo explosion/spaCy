@@ -64,4 +64,4 @@ cdef class Token:
     cdef readonly attr_t tag
     cdef readonly attr_t dep
 
-    cdef readonly ndarray vec
+    cdef readonly ndarray repvec
