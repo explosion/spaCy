@@ -25,7 +25,7 @@ cpdef enum:
 
     SIC = _SIC
     SHAPE = _SHAPE
-    NORM1 = _NORM1
+    LOWER = _NORM1
     NORM2 = _NORM2
     PREFIX = _PREFIX
     SUFFIX = _SUFFIX
