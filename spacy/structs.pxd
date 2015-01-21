@@ -4,7 +4,7 @@ from .typedefs cimport flags_t, attr_t, id_t, hash_t, univ_tag_t
 
 
 cdef struct LexemeC:
-    const float* vec
+    const float* repvec
 
     flags_t flags
    
