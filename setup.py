@@ -9,12 +9,10 @@ from os import path
 from os.path import splitext
 
 
+import shutil
 from setuptools import Extension
 from distutils import sysconfig
 import platform
-
-
-print sys.argv
 
 # PyPy --- NB! PyPy doesn't really work, it segfaults all over the place. But,
 # this is necessary to get it compile.
