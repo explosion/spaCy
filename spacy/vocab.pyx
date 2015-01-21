@@ -22,7 +22,7 @@ DEF MAX_VEC_SIZE = 100000
 cdef float[MAX_VEC_SIZE] EMPTY_VEC
 memset(EMPTY_VEC, 0, sizeof(EMPTY_VEC))
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
-EMPTY_LEXEME.vec = EMPTY_VEC
+EMPTY_LEXEME.repvec = EMPTY_VEC
 
 
 cdef class Vocab:
@@ -38,15 +38,12 @@ cdef class Vocab:
         if data_dir is not None:
             if not path.exists(data_dir):
                 raise IOError("Directory %s not found -- cannot load Vocab." % data_dir)
-        assert EMPTY_LEXEME.vec != NULL
         if data_dir is not None:
             if not path.isdir(data_dir):
                 raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
             self.strings.load(path.join(data_dir, 'strings.txt'))
             self.load_lexemes(path.join(data_dir, 'lexemes.bin'))
-            self.load_vectors(path.join(data_dir, 'vec.bin'))
-        for i in range(self.lexemes.size()):
-            assert self.lexemes[i].vec != NULL, repr(self.strings[self.lexemes[i].sic])
+            self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
 
     def __len__(self):
         """The current number of lexemes stored."""
@@ -59,7 +56,6 @@ cdef class Vocab:
         cdef LexemeC* lex
         lex = <LexemeC*>self._map.get(c_str.key)
         if lex != NULL:
-            assert lex.vec != NULL
             return lex
         if c_str.n < 3:
             mem = self.mem
@@ -67,7 +63,6 @@ cdef class Vocab:
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
         props = self.lexeme_props_getter(py_str)
         set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
-        assert lex.vec != NULL
         if mem is self.mem:
             lex.id = self.lexemes.size()
             self._add_lex_to_vocab(c_str.key, lex)
@@ -119,8 +114,6 @@ cdef class Vocab:
             lex.id = self.lexemes.size()
             self._add_lex_to_vocab(c_str.key, lex)
         set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
-        assert lex.vec != NULL
-        assert lex.sic < 1000000
 
     def dump(self, loc):
         if path.exists(loc):
@@ -159,7 +152,7 @@ cdef class Vocab:
             lexeme = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
             # Copies data from the file into the lexeme
             st = fread(lexeme, sizeof(LexemeC), 1, fp)
-            lexeme.vec = EMPTY_VEC
+            lexeme.repvec = EMPTY_VEC
             if st != 1:
                 break
             self._map.set(key, lexeme)
@@ -169,7 +162,7 @@ cdef class Vocab:
             i += 1
         fclose(fp)
     
-    def load_vectors(self, loc):
+    def load_rep_vectors(self, loc):
         file_ = _CFile(loc, 'rb')
         cdef int32_t word_len
         cdef int32_t vec_len
@@ -202,11 +195,10 @@ cdef class Vocab:
         for i in range(self.lexemes.size()):
             # Cast away the const, cos we can modify our lexemes
             lex = <LexemeC*>self.lexemes[i]
-            if lex.sic < vectors.size():
-                lex.vec = vectors[lex.sic]
+            if lex.norm1 < vectors.size():
+                lex.repvec = vectors[lex.norm1]
             else:
-                lex.vec = EMPTY_VEC
-            assert lex.vec != NULL
+                lex.repvec = EMPTY_VEC
 
 
 def write_binary_vectors(in_loc, out_loc):
