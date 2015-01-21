@@ -33,6 +33,7 @@ cdef class Tokens:
     cdef dict pos_scheme
 
     cdef TokenC* data
+    cdef unicode _string
 
     cdef int length
     cdef int max_length
