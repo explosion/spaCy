@@ -20,7 +20,7 @@ def get_lex_props(string):
         'flags': get_flags(string),
         'length': len(string),
         'sic': string,
-        'norm1': string,
+        'norm1': string.lower(),
         'norm2': string,
         'shape': orth.word_shape(string),
         'prefix': string[0],
@@ -75,10 +75,12 @@ class English(object):
         else:
             tok_data_dir = path.join(data_dir, 'tokenizer')
             tok_rules, prefix_re, suffix_re, infix_re = read_lang_data(tok_data_dir)
-        self.tokenizer = Tokenizer(self.vocab, tok_rules, re.compile(prefix_re),
-                                   re.compile(suffix_re), re.compile(infix_re),
+            prefix_re = re.compile(prefix_re)
+            suffix_re = re.compile(suffix_re)
+            infix_re = re.compile(infix_re)
+        self.tokenizer = Tokenizer(self.vocab, tok_rules, prefix_re,
+                                   suffix_re, infix_re,
                                    POS_TAGS, tag_names)
-        self.strings = self.vocab.strings
         self._tagger = None
         self._parser = None
 
