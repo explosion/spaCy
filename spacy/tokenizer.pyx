@@ -33,7 +33,7 @@ cdef class Tokenizer:
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
-        cdef Tokens tokens = Tokens(self.vocab, length)
+        cdef Tokens tokens = Tokens(self.vocab, ' '.join(strings))
         if length == 0:
             return tokens
         cdef UniStr string_struct
@@ -66,7 +66,7 @@ cdef class Tokenizer:
             tokens (Tokens): A Tokens object, giving access to a sequence of LexemeCs.
         """
         cdef int length = len(string)
-        cdef Tokens tokens = Tokens(self.vocab, length)
+        cdef Tokens tokens = Tokens(self.vocab, string)
         if length == 0:
             return tokens
         cdef int i = 0
