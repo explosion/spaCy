@@ -10,6 +10,8 @@ from .typedefs cimport LEMMA
 from .typedefs cimport ID, SIC, NORM1, NORM2, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from .typedefs cimport POS, LEMMA
 
+from unidecode import unidecode
+
 cimport numpy
 import numpy
 
@@ -127,6 +129,9 @@ cdef class Tokens:
         cdef const TokenC* last = &self.data[self.length - 1]
         return self._string[:last.idx + last.lex.length]
 
+    def __str__(self):
+        return unidecode(unicode(self))
+
     cdef int push_back(self, int idx, LexemeOrToken lex_or_tok) except -1:
         if self.length == self.max_length:
             self._realloc(self.length * 2)
@@ -161,7 +166,7 @@ cdef class Tokens:
                 output[i, j] = get_token_attr(&self.data[i], feature)
         return output
 
-    def count_by(self, attr_id_t attr_id):
+    def count_by(self, attr_id_t attr_id, exclude=None):
         """Produce a dict of {attribute (int): count (ints)} frequencies, keyed
         by the values of the given attribute ID.
 
@@ -182,6 +187,8 @@ cdef class Tokens:
 
         cdef PreshCounter counts = PreshCounter(2 ** 8)
         for i in range(self.length):
+            if exclude is not None and exclude(self[i]):
+                continue
             attr = get_token_attr(&self.data[i], attr_id)
             counts.inc(attr, 1)
         return dict(counts)
@@ -204,11 +211,7 @@ cdef class Tokens:
 
 @cython.freelist(64)
 cdef class Token:
-    """An individual token.
-
-    Internally, the Token is a tuple (i, tokens) --- it delegates to the Tokens
-    object.
-    """
+    """An individual token."""
     def __init__(self, Tokens tokens, int i):
         self._seq = tokens
         self.i = i
@@ -228,11 +231,7 @@ cdef class Token:
         self.lemma = t.lemma
         self.tag = t.tag
         self.dep = t.dep
-
-        #self.vec = numpy.ndarray(shape=(300,), dtype=numpy.float32)
-        #for i in range(300):
-        #    self.vec[i] = t.lex.vec[i]
-        self.vec = numpy.asarray(<float[:300,]> t.lex.vec)
+        self.repvec = numpy.asarray(<float[:300,]> t.lex.repvec)
 
     def __unicode__(self):
         cdef const TokenC* t = &self._seq.data[self.i]
@@ -253,7 +252,7 @@ cdef class Token:
         return self._seq.data[self.i].lex.length
 
     def check_flag(self, attr_id_t flag):
-        return False
+        return self.flags & (1 << flag)
 
     def is_pos(self, univ_tag_t pos):
         return self.tag == pos
