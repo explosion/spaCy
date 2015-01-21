@@ -44,7 +44,7 @@ cdef class Lexeme:
     cdef inline Lexeme from_ptr(const LexemeC* ptr, StringStore strings):
         cdef Lexeme py = Lexeme.__new__(Lexeme, 300)
         for i in range(300):
-            py.vec[i] = ptr.vec[i]
+            py.repvec[i] = ptr.repvec[i]
         py.flags = ptr.flags
         py.id = ptr.id
         py.length = ptr.length

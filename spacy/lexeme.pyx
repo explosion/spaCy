@@ -28,7 +28,7 @@ cdef int set_lex_struct_props(LexemeC* lex, dict props, StringStore string_store
     lex.sentiment = props['sentiment']
 
     lex.flags = props['flags']
-    lex.vec = empty_vec
+    lex.repvec = empty_vec
 
 
 cdef class Lexeme:
