@@ -63,8 +63,10 @@ cdef attr_t get_lex_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
 cdef class Tokens:
     """Access and set annotations onto some text.
     """
-    def __init__(self, Vocab vocab, string_length=0):
+    def __init__(self, Vocab vocab, unicode string):
         self.vocab = vocab
+        self._string = string
+        string_length = len(string)
         if string_length >= 3:
             size = int(string_length / 3.0)
         else:
@@ -84,16 +86,18 @@ cdef class Tokens:
     def sentences(self):
         cdef int i
         sentences = []
-        sent = Tokens(self.vocab)
+        cdef Tokens sent = Tokens(self.vocab, self._string[self.data[0].idx:])
         cdef attr_t period = self.vocab.strings['.']
         cdef attr_t question = self.vocab.strings['?']
         cdef attr_t exclamation = self.vocab.strings['!']
         for i in range(self.length):
-            idx = sent.push_back(idx, &self.data[i])
+            sent.push_back(self.data[i].idx, &self.data[i])
             if self.data[i].lex.sic == period or self.data[i].lex.sic == exclamation or \
               self.data[i].lex.sic == question:
                 sentences.append(sent)
-                sent = Tokens(self.vocab)
+                sent = Tokens(self.vocab, self._string[self.data[i].idx:])
+        if sent.length:
+            sentences.append(sent)
         return sentences
 
     def __getitem__(self, i):
@@ -118,6 +122,10 @@ cdef class Tokens:
 
     def __len__(self):
         return self.length
+
+    def __unicode__(self):
+        cdef const TokenC* last = &self.data[self.length - 1]
+        return self._string[:last.idx + last.lex.length]
 
     cdef int push_back(self, int idx, LexemeOrToken lex_or_tok) except -1:
         if self.length == self.max_length:
@@ -221,9 +229,10 @@ cdef class Token:
         self.tag = t.tag
         self.dep = t.dep
 
-        self.vec = numpy.ndarray(shape=(300,), dtype=numpy.float32)
-        for i in range(300):
-            self.vec[i] = t.lex.vec[i]
+        #self.vec = numpy.ndarray(shape=(300,), dtype=numpy.float32)
+        #for i in range(300):
+        #    self.vec[i] = t.lex.vec[i]
+        self.vec = numpy.asarray(<float[:300,]> t.lex.vec)
 
     def __unicode__(self):
         cdef const TokenC* t = &self._seq.data[self.i]
@@ -247,7 +256,7 @@ cdef class Token:
         return False
 
     def is_pos(self, univ_tag_t pos):
-        return False
+        return self.tag == pos
 
     property head:
         """The token predicted by the parser to be the head of the current token."""
