@@ -110,6 +110,11 @@ def test_cnts6(EN):
     words = [t.string for t in tokens]
     assert len(words) == 6
 
+def test_bracket_period(EN):
+    text = u'(And a 6a.m. run through Washington Park).'
+    tokens = EN(text)
+    assert tokens[len(tokens) - 1].string == u'.'
+
 #def test_cnts7():
 #    text = 'But then the 6,000-year ice age came...'
 #    tokens = EN.tokenize(text)
