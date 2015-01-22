@@ -50,7 +50,7 @@ cdef class Token:
     cdef readonly attr_t idx
     cdef readonly attr_t cluster
     cdef readonly attr_t length
-    cdef readonly attr_t sic
+    cdef readonly attr_t orth
     cdef readonly attr_t norm1
     cdef readonly attr_t norm2
     cdef readonly attr_t shape

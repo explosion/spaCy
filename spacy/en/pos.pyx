@@ -70,7 +70,7 @@ cpdef enum misc_t:
 
 
 cpdef enum:
-    P2_sic
+    P2_orth
     P2_cluster
     P2_shape
     P2_prefix
@@ -78,7 +78,7 @@ cpdef enum:
     P2_pos
     P2_lemma
 
-    P1_sic
+    P1_orth
     P1_cluster
     P1_shape
     P1_prefix
@@ -86,7 +86,7 @@ cpdef enum:
     P1_pos
     P1_lemma
 
-    W_sic
+    W_orth
     W_cluster
     W_shape
     W_prefix
@@ -94,7 +94,7 @@ cpdef enum:
     W_pos
     W_lemma
 
-    N1_sic
+    N1_orth
     N1_cluster
     N1_shape
     N1_prefix
@@ -102,7 +102,7 @@ cpdef enum:
     N1_pos
     N1_lemma
 
-    N2_sic
+    N2_orth
     N2_cluster
     N2_shape
     N2_prefix
@@ -169,11 +169,11 @@ POS_TAGS = {
 
 
 POS_TEMPLATES = (
-    (W_sic,),
+    (W_orth,),
     (P1_lemma, P1_pos),
     (P2_lemma, P2_pos),
-    (N1_sic,),
-    (N2_sic,),
+    (N1_orth,),
+    (N2_orth,),
 
     (W_suffix,),
     (W_prefix,),
@@ -181,7 +181,7 @@ POS_TEMPLATES = (
     (P1_pos,),
     (P2_pos,),
     (P1_pos, P2_pos),
-    (P1_pos, W_sic),
+    (P1_pos, W_orth),
     (P1_suffix,),
     (N1_suffix,),
 
@@ -272,21 +272,21 @@ cdef class EnPosTagger:
     cdef int set_morph(self, const int i, TokenC* tokens) except -1:
         cdef const PosTag* tag = &self.tags[tokens[i].tag]
         tokens[i].pos = tag.pos
-        cached = <_CachedMorph*>self._morph_cache.get(tag.id, tokens[i].lex.sic)
+        cached = <_CachedMorph*>self._morph_cache.get(tag.id, tokens[i].lex.orth)
         if cached is NULL:
             cached = <_CachedMorph*>self.mem.alloc(1, sizeof(_CachedMorph))
             cached.lemma = self.lemmatize(tag.pos, tokens[i].lex)
             cached.morph = tag.morph
-            self._morph_cache.set(tag.id, tokens[i].lex.sic, <void*>cached)
+            self._morph_cache.set(tag.id, tokens[i].lex.orth, <void*>cached)
         tokens[i].lemma = cached.lemma
         tokens[i].morph = cached.morph
 
     cdef int lemmatize(self, const univ_tag_t pos, const LexemeC* lex) except -1:
         if self.lemmatizer is None:
-            return lex.sic
-        cdef unicode py_string = self.strings[lex.sic]
+            return lex.orth
+        cdef unicode py_string = self.strings[lex.orth]
         if pos != NOUN and pos != VERB and pos != ADJ:
-            return lex.sic
+            return lex.orth
         cdef set lemma_strings
         cdef unicode lemma_string
         lemma_strings = self.lemmatizer(py_string, pos)
@@ -301,29 +301,29 @@ cdef class EnPosTagger:
         cdef dict entries
         cdef dict props
         cdef int lemma
-        cdef id_t sic
+        cdef id_t orth
         cdef int pos
         for pos_str, entries in exc.items():
             pos = self.tag_names.index(pos_str)
             for form_str, props in entries.items():
                 lemma_str = props.get('L', form_str)
-                sic = self.strings[form_str]
+                orth = self.strings[form_str]
                 cached = <_CachedMorph*>self.mem.alloc(1, sizeof(_CachedMorph))
                 cached.lemma = self.strings[lemma_str]
                 set_morph_from_dict(&cached.morph, props)
-                self._morph_cache.set(pos, sic, <void*>cached)
+                self._morph_cache.set(pos, orth, <void*>cached)
  
 
 cdef int fill_context(atom_t* context, const int i, const TokenC* tokens) except -1:
-    _fill_from_token(&context[P2_sic], &tokens[i-2])
-    _fill_from_token(&context[P1_sic], &tokens[i-1])
-    _fill_from_token(&context[W_sic], &tokens[i])
-    _fill_from_token(&context[N1_sic], &tokens[i+1])
-    _fill_from_token(&context[N2_sic], &tokens[i+2])
+    _fill_from_token(&context[P2_orth], &tokens[i-2])
+    _fill_from_token(&context[P1_orth], &tokens[i-1])
+    _fill_from_token(&context[W_orth], &tokens[i])
+    _fill_from_token(&context[N1_orth], &tokens[i+1])
+    _fill_from_token(&context[N2_orth], &tokens[i+2])
 
 
 cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
-    context[0] = t.lex.sic
+    context[0] = t.lex.orth
     context[1] = t.lex.cluster
     context[2] = t.lex.shape
     context[3] = t.lex.prefix

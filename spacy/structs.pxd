@@ -11,7 +11,7 @@ cdef struct LexemeC:
     attr_t id
     attr_t length
 
-    attr_t sic
+    attr_t orth
     attr_t norm1
     attr_t norm2
     attr_t shape

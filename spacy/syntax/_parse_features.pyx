@@ -26,7 +26,7 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[5] = 0
         context[6] = 0
     else:
-        context[0] = token.lex.sic
+        context[0] = token.lex.orth
         context[1] = token.lemma
         context[2] = token.tag
         context[3] = token.lex.cluster

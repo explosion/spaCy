@@ -10,8 +10,8 @@ def EN():
 
 def test_possess(EN):
     tokens = EN("Mike's")
-    assert EN.vocab.strings[tokens[0].sic] == b"Mike"
-    assert EN.vocab.strings[tokens[1].sic] == b"'s"
+    assert EN.vocab.strings[tokens[0].orth] == "Mike"
+    assert EN.vocab.strings[tokens[1].orth] == "'s"
     assert len(tokens) == 2
 
 

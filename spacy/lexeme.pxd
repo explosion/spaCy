@@ -1,5 +1,5 @@
 from .typedefs cimport hash_t, flags_t, id_t, len_t, tag_t, attr_t, attr_id_t
-from .typedefs cimport ID, SIC, NORM1, NORM2, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
+from .typedefs cimport ID, ORTH, NORM1, NORM2, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from .structs cimport LexemeC
 from .strings cimport StringStore
 
@@ -14,20 +14,20 @@ cdef int set_lex_struct_props(LexemeC* lex, dict props, StringStore strings,
                               const float* empty_vec) except -1
  
 cdef class Lexeme:
-    cdef readonly ndarray vec
+    cdef readonly ndarray repvec
 
     cdef readonly flags_t flags
     cdef readonly attr_t id
     cdef readonly attr_t length
 
-    cdef readonly attr_t sic
+    cdef readonly attr_t orth
     cdef readonly attr_t norm1
     cdef readonly attr_t norm2
     cdef readonly attr_t shape
     cdef readonly attr_t prefix
     cdef readonly attr_t suffix
 
-    cdef readonly unicode sic_
+    cdef readonly unicode orth_
     cdef readonly unicode norm1_
     cdef readonly unicode norm2_
     cdef readonly unicode shape_
@@ -49,14 +49,14 @@ cdef class Lexeme:
         py.id = ptr.id
         py.length = ptr.length
 
-        py.sic = ptr.sic
+        py.orth = ptr.orth
         py.norm1 = ptr.norm1
         py.norm2 = ptr.norm2
         py.shape = ptr.shape
         py.prefix = ptr.prefix
         py.suffix = ptr.suffix
 
-        py.sic_ = strings[ptr.sic]
+        py.orth_ = strings[ptr.orth]
         py.norm1_ = strings[ptr.norm1]
         py.norm2_ = strings[ptr.norm2]
         py.shape_ = strings[ptr.shape]
@@ -78,8 +78,8 @@ cdef inline attr_t get_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
         return check_flag(lex, feat_name)
     elif feat_name == ID:
         return lex.id
-    elif feat_name == SIC:
-        return lex.sic
+    elif feat_name == ORTH:
+        return lex.orth
     elif feat_name == NORM1:
         return lex.norm1
     elif feat_name == NORM2:

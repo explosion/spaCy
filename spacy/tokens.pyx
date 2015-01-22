@@ -7,7 +7,7 @@ from preshed.counter cimport PreshCounter
 from .vocab cimport EMPTY_LEXEME
 from .typedefs cimport attr_id_t, attr_t
 from .typedefs cimport LEMMA
-from .typedefs cimport ID, SIC, NORM1, NORM2, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
+from .typedefs cimport ID, ORTH, NORM1, NORM2, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from .typedefs cimport POS, LEMMA
 
 from unidecode import unidecode
@@ -42,8 +42,8 @@ cdef attr_t get_lex_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
         return check_flag(lex, feat_name)
     elif feat_name == ID:
         return lex.id
-    elif feat_name == SIC:
-        return lex.sic
+    elif feat_name == ORTH:
+        return lex.orth
     elif feat_name == NORM1:
         return lex.norm1
     elif feat_name == NORM2:
@@ -97,8 +97,8 @@ cdef class Tokens:
         for i in range(self.length):
             if start is None:
                 start = i
-            if self.data[i].lex.sic == period or self.data[i].lex.sic == exclamation or \
-              self.data[i].lex.sic == question:
+            if self.data[i].lex.orth == period or self.data[i].lex.orth == exclamation or \
+              self.data[i].lex.orth == question:
                 spans.append((start, i+1))
                 start = None
         if start is not None:
@@ -176,9 +176,9 @@ cdef class Tokens:
           >>> from spacy.en import English, attrs
           >>> nlp = English()
           >>> tokens = nlp(u'apple apple orange banana')
-          >>> tokens.count_by(attrs.SIC)
+          >>> tokens.count_by(attrs.ORTH)
           {12800L: 1, 11880L: 2, 7561L: 1}
-          >>> tokens.to_array([attrs.SIC])
+          >>> tokens.to_array([attrs.ORTH])
           array([[11880],
                  [11880],
                  [ 7561],
@@ -222,7 +222,7 @@ cdef class Token:
         self.idx = t.idx
         self.cluster = t.lex.cluster
         self.length = t.lex.length
-        self.sic = t.lex.sic
+        self.orth = t.lex.orth
         self.norm1 = t.lex.norm1
         self.norm2 = t.lex.norm2
         self.shape = t.lex.shape
@@ -270,14 +270,14 @@ cdef class Token:
         """The unicode string of the word, with no whitespace padding."""
         def __get__(self):
             cdef const TokenC* t = &self._seq.data[self.i]
-            if t.lex.sic == 0:
+            if t.lex.orth == 0:
                 return ''
-            cdef unicode py_ustr = self._seq.vocab.strings[t.lex.sic]
+            cdef unicode py_ustr = self._seq.vocab.strings[t.lex.orth]
             return py_ustr
 
-    property sic_:
+    property orth_:
         def __get__(self):
-            return self._seq.vocab.strings[self.sic]
+            return self._seq.vocab.strings[self.orth]
 
     property norm1_:
         def __get__(self):

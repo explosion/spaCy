@@ -19,7 +19,7 @@ def get_lex_props(string):
     return {
         'flags': get_flags(string),
         'length': len(string),
-        'sic': string,
+        'orth': string,
         'norm1': string.lower(),
         'norm2': string,
         'shape': orth.word_shape(string),

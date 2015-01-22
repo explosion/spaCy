@@ -89,7 +89,7 @@ cpdef enum attr_id_t:
     FLAG63
 
     ID
-    SIC
+    ORTH
     NORM1
     NORM2
     SHAPE
