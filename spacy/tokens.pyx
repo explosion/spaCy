@@ -92,15 +92,18 @@ cdef class Tokens:
         cdef attr_t period = self.vocab.strings['.']
         cdef attr_t question = self.vocab.strings['?']
         cdef attr_t exclamation = self.vocab.strings['!']
+        spans = []
+        start = None
         for i in range(self.length):
-            sent.push_back(self.data[i].idx, &self.data[i])
+            if start is None:
+                start = i
             if self.data[i].lex.sic == period or self.data[i].lex.sic == exclamation or \
               self.data[i].lex.sic == question:
-                sentences.append(sent)
-                sent = Tokens(self.vocab, self._string[self.data[i].idx:])
-        if sent.length:
-            sentences.append(sent)
-        return sentences
+                spans.append((start, i+1))
+                start = None
+        if start is not None:
+            spans.append((start, self.length))
+        return spans
 
     def __getitem__(self, i):
         """Retrieve a token.
