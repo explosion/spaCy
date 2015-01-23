@@ -256,8 +256,7 @@ cdef class Token:
 
     property whitespace:
         def __get__(self):
-            cdef int end_idx = self.idx + self.length
-            
+            return self.string[self.length:]
 
     property orth_:
         def __get__(self):
