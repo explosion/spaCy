@@ -235,16 +235,10 @@ cdef class Token:
         self.tag = t.tag
         self.dep = t.dep
         self.repvec = numpy.asarray(<float[:300,]> t.lex.repvec)
-
-    def __unicode__(self):
-        cdef const TokenC* t = &self._seq.data[self.i]
-        cdef int end_idx = t.idx + t.lex.length
-        if self.i + 1 == self._seq.length:
-            return self.string
-        if end_idx == t[1].idx:
-            return self.string
-        else:
-            return self.string + ' '
+        cdef int next_idx = (t+1).idx
+        if next_idx <= self.idx:
+            next_idx = self.idx + self.length
+        self.string = tokens._string[self.idx:next_idx]
 
     def __len__(self):
         """The number of unicode code-points in the original string.
@@ -260,13 +254,10 @@ cdef class Token:
             cdef const TokenC* t = &self._seq.data[self.i]
             return Token(self._seq, self.i + t.head)
 
-    property string:
+    property whitespace:
         def __get__(self):
-            cdef const TokenC* t = &self._seq.data[self.i]
-            if t.lex.orth == 0:
-                return ''
-            cdef unicode py_ustr = self._seq.vocab.strings[t.lex.orth]
-            return py_ustr
+            cdef int end_idx = self.idx + self.length
+            
 
     property orth_:
         def __get__(self):

@@ -65,3 +65,4 @@ cdef class Token:
     cdef readonly attr_t dep
 
     cdef readonly ndarray repvec
+    cdef readonly unicode string
