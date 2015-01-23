@@ -21,9 +21,9 @@ def test_token(paired_puncts, EN):
         string = open_ + word_str + close_
         tokens = EN(string)
         assert len(tokens) == 3
-        assert tokens[0].string == open_
-        assert tokens[1].string == word_str
-        assert tokens[2].string == close_
+        assert tokens[0].orth_ == open_
+        assert tokens[1].orth_ == word_str
+        assert tokens[2].orth_ == close_
 
 
 def test_two_different(paired_puncts, EN):
@@ -32,9 +32,9 @@ def test_two_different(paired_puncts, EN):
         string = "`" + open_ + word_str + close_ + "'"
         tokens = EN(string)
         assert len(tokens) == 5
-        assert tokens[0].string == "`"
-        assert tokens[1].string == open_
-        assert tokens[2].string == word_str
-        assert tokens[2].string == word_str
-        assert tokens[3].string == close_
-        assert tokens[4].string == "'"
+        assert tokens[0].orth_ == "`"
+        assert tokens[1].orth_ == open_
+        assert tokens[2].orth_ == word_str
+        assert tokens[2].orth_ == word_str
+        assert tokens[3].orth_ == close_
+        assert tokens[4].orth_ == "'"

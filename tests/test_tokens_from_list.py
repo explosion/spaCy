@@ -13,4 +13,4 @@ def test1(EN):
     words = ['JAPAN', 'GET', 'LUCKY']
     tokens = EN.tokenizer.tokens_from_list(words)
     assert len(tokens) == 3
-    assert tokens[0].string == 'JAPAN'
+    assert tokens[0].orth_ == 'JAPAN'

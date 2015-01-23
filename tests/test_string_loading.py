@@ -13,9 +13,9 @@ def EN():
 
 def test_one(EN):
     tokens = EN('Betty Botter bought a pound of butter.')
-    assert tokens[0].string == 'Betty'
+    assert tokens[0].orth_ == 'Betty'
     tokens2 = EN('Betty also bought a pound of butter.')
-    assert tokens2[0].string == 'Betty'
+    assert tokens2[0].orth_ == 'Betty'
 
 
 

@@ -18,7 +18,7 @@ def test_single_space(EN):
 def test_double_space(EN):
     tokens = EN('hello  possums')
     assert len(tokens) == 3
-    assert tokens[1].string == ' '
+    assert tokens[1].orth_ == ' '
 
 
 def test_newline(EN):

@@ -12,22 +12,22 @@ def EN():
 
 def test_single_word(EN):
     tokens = EN(u'hello')
-    assert tokens[0].string == 'hello'
+    assert tokens[0].orth_ == 'hello'
 
 
 def test_two_words(EN):
     tokens = EN('hello possums')
     assert len(tokens) == 2
-    assert tokens[0].string != tokens[1].string
+    assert tokens[0].orth_ != tokens[1].orth_
 
 
 def test_punct(EN):
     tokens = EN('hello, possums.')
     assert len(tokens) == 4
-    assert tokens[0].string == 'hello'
-    assert tokens[1].string == ','
-    assert tokens[2].string == 'possums'
-    assert tokens[1].string != 'hello'
+    assert tokens[0].orth_ == 'hello'
+    assert tokens[1].orth_ == ','
+    assert tokens[2].orth_ == 'possums'
+    assert tokens[1].orth_ != 'hello'
 
 
 def test_digits(EN):
@@ -87,14 +87,14 @@ def test_cnts2(EN):
 def test_cnts3(EN):
     text = u"“Isn't it?”"
     tokens = EN(text)
-    words = [t.string for t in tokens]
+    words = [t.orth_ for t in tokens]
     assert len(words) == 6
 
 
 def test_cnts4(EN):
     text = u"""Yes! "I'd rather have a walk", Ms. Comble sighed. """
     tokens = EN(text)
-    words = [t.string for t in tokens]
+    words = [t.orth_ for t in tokens]
     assert len(words) == 15
 
 
@@ -107,13 +107,13 @@ def test_cnts5(EN):
 def test_cnts6(EN):
     text = u'They ran about 10km.'
     tokens = EN(text)
-    words = [t.string for t in tokens]
+    words = [t.orth_ for t in tokens]
     assert len(words) == 6
 
 def test_bracket_period(EN):
     text = u'(And a 6a.m. run through Washington Park).'
     tokens = EN(text)
-    assert tokens[len(tokens) - 1].string == u'.'
+    assert tokens[len(tokens) - 1].orth_ == u'.'
 
 #def test_cnts7():
 #    text = 'But then the 6,000-year ice age came...'
