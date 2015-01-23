@@ -2,13 +2,14 @@ from ..attrs cimport FLAG0, FLAG1, FLAG2, FLAG3, FLAG4, FLAG5, FLAG6, FLAG7
 from ..attrs cimport FLAG8, FLAG9, FLAG10
 from ..attrs cimport ORTH as _ORTH
 from ..attrs cimport SHAPE as _SHAPE
-from ..attrs cimport NORM1 as _NORM1
-from ..attrs cimport NORM2 as _NORM2
+from ..attrs cimport LOWER as _LOWER
+from ..attrs cimport NORM as _NORM
 from ..attrs cimport CLUSTER as _CLUSTER
 from ..attrs cimport PREFIX as _PREFIX
 from ..attrs cimport SUFFIX as _SUFFIX
 from ..attrs cimport LEMMA as _LEMMA
 from ..attrs cimport POS as _POS
+from ..attrs cimport TAG as _TAG
 
 
 cpdef enum:
@@ -26,10 +27,11 @@ cpdef enum:
 
     ORTH = _ORTH
     SHAPE = _SHAPE
-    LOWER = _NORM1
-    NORM2 = _NORM2
+    LOWER = _LOWER
+    NORM = _NORM
     PREFIX = _PREFIX
     SUFFIX = _SUFFIX
     CLUSTER = _CLUSTER
     LEMMA = _LEMMA
     POS = _POS
+    TAG = _TAG

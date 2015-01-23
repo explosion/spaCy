@@ -1,5 +1,5 @@
 from .typedefs cimport hash_t, flags_t, id_t, len_t, tag_t, attr_t, attr_id_t
-from .typedefs cimport ID, ORTH, NORM1, NORM2, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
+from .typedefs cimport ID, ORTH, LOWER, NORM, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from .structs cimport LexemeC
 from .strings cimport StringStore
 
@@ -21,15 +21,15 @@ cdef class Lexeme:
     cdef readonly attr_t length
 
     cdef readonly attr_t orth
-    cdef readonly attr_t norm1
-    cdef readonly attr_t norm2
+    cdef readonly attr_t lower
+    cdef readonly attr_t norm
     cdef readonly attr_t shape
     cdef readonly attr_t prefix
     cdef readonly attr_t suffix
 
     cdef readonly unicode orth_
-    cdef readonly unicode norm1_
-    cdef readonly unicode norm2_
+    cdef readonly unicode lower_
+    cdef readonly unicode norm_
     cdef readonly unicode shape_
     cdef readonly unicode prefix_
     cdef readonly unicode suffix_
@@ -50,15 +50,15 @@ cdef class Lexeme:
         py.length = ptr.length
 
         py.orth = ptr.orth
-        py.norm1 = ptr.norm1
-        py.norm2 = ptr.norm2
+        py.lower = ptr.lower
+        py.norm = ptr.norm
         py.shape = ptr.shape
         py.prefix = ptr.prefix
         py.suffix = ptr.suffix
 
         py.orth_ = strings[ptr.orth]
-        py.norm1_ = strings[ptr.norm1]
-        py.norm2_ = strings[ptr.norm2]
+        py.lower_ = strings[ptr.lower]
+        py.norm_ = strings[ptr.norm]
         py.shape_ = strings[ptr.shape]
         py.prefix_ = strings[ptr.prefix]
         py.suffix_ = strings[ptr.suffix]
@@ -80,10 +80,10 @@ cdef inline attr_t get_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
         return lex.id
     elif feat_name == ORTH:
         return lex.orth
-    elif feat_name == NORM1:
-        return lex.norm1
-    elif feat_name == NORM2:
-        return lex.norm2
+    elif feat_name == LOWER:
+        return lex.norm
+    elif feat_name == NORM:
+        return lex.norm
     elif feat_name == SHAPE:
         return lex.shape
     elif feat_name == PREFIX:

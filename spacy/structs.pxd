@@ -12,8 +12,8 @@ cdef struct LexemeC:
     attr_t length
 
     attr_t orth
-    attr_t norm1
-    attr_t norm2
+    attr_t lower
+    attr_t norm
     attr_t shape
     attr_t prefix
     attr_t suffix

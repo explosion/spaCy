@@ -90,8 +90,8 @@ cpdef enum attr_id_t:
 
     ID
     ORTH
-    NORM1
-    NORM2
+    LOWER
+    NORM
     SHAPE
     PREFIX
     SUFFIX

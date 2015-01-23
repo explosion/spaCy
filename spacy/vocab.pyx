@@ -195,8 +195,8 @@ cdef class Vocab:
         for i in range(self.lexemes.size()):
             # Cast away the const, cos we can modify our lexemes
             lex = <LexemeC*>self.lexemes[i]
-            if lex.norm1 < vectors.size():
-                lex.repvec = vectors[lex.norm1]
+            if lex.lower < vectors.size():
+                lex.repvec = vectors[lex.lower]
             else:
                 lex.repvec = EMPTY_VEC
 

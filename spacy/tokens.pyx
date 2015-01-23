@@ -7,7 +7,7 @@ from preshed.counter cimport PreshCounter
 from .vocab cimport EMPTY_LEXEME
 from .typedefs cimport attr_id_t, attr_t
 from .typedefs cimport LEMMA
-from .typedefs cimport ID, ORTH, NORM1, NORM2, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
+from .typedefs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from .typedefs cimport POS, LEMMA
 
 from unidecode import unidecode
@@ -44,10 +44,10 @@ cdef attr_t get_lex_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
         return lex.id
     elif feat_name == ORTH:
         return lex.orth
-    elif feat_name == NORM1:
-        return lex.norm1
-    elif feat_name == NORM2:
-        return lex.norm2
+    elif feat_name == LOWER:
+        return lex.lower
+    elif feat_name == NORM:
+        return lex.norm
     elif feat_name == SHAPE:
         return lex.shape
     elif feat_name == PREFIX:
@@ -223,8 +223,8 @@ cdef class Token:
         self.cluster = t.lex.cluster
         self.length = t.lex.length
         self.orth = t.lex.orth
-        self.norm1 = t.lex.norm1
-        self.norm2 = t.lex.norm2
+        self.lower = t.lex.lower
+        self.norm = t.lex.norm
         self.shape = t.lex.shape
         self.prefix = t.lex.prefix
         self.suffix = t.lex.suffix
@@ -254,12 +254,6 @@ cdef class Token:
         """
         return self._seq.data[self.i].lex.length
 
-    def check_flag(self, attr_id_t flag):
-        return self.flags & (1 << flag)
-
-    def is_pos(self, univ_tag_t pos):
-        return self.tag == pos
-
     property head:
         """The token predicted by the parser to be the head of the current token."""
         def __get__(self):
@@ -267,7 +261,6 @@ cdef class Token:
             return Token(self._seq, self.i + t.head)
 
     property string:
-        """The unicode string of the word, with no whitespace padding."""
         def __get__(self):
             cdef const TokenC* t = &self._seq.data[self.i]
             if t.lex.orth == 0:
@@ -279,13 +272,13 @@ cdef class Token:
         def __get__(self):
             return self._seq.vocab.strings[self.orth]
 
-    property norm1_:
+    property lower_:
         def __get__(self):
-            return self._seq.vocab.strings[self.norm1]
+            return self._seq.vocab.strings[self.lower]
 
-    property norm2_:
+    property norm_:
         def __get__(self):
-            return self._seq.vocab.strings[self.norm2]
+            return self._seq.vocab.strings[self.norm]
 
     property shape_:
         def __get__(self):
