@@ -7,15 +7,20 @@
 spaCy: Industrial-strength NLP
 ==============================
 
-spaCy is a new library for industrial-strength text processing in Python and Cython.
-It is commercial open source software, with a dual (AGPL or commercial)
-license.
+spaCy is a new library for text processing in Python and Cython.
 
-I've been working on this full-time for the last six months, and am excited to
-announce its beta release.
-If you're a small company doing NLP, spaCy should seem like a minor miracle.
+Most commercial NLP development is based on obsolete
+technology.  Over the last 3-5 years, the field has advanced dramatically, but
+only the tech giants have really been able to capitalize.  The research is all
+public, but it's been too hard for small companies to read and apply it.  
+Many end up relying on `NLTK`_, which is intended primarily as an educational
+resource.
+
+.. _NLTK: https://www.nltk.org/
+
+If you're a small company doing NLP, I think spaCy will seem like a minor miracle.
 It's by far the fastest NLP software available.  The full processing pipeline
-completes in 7ms, including state-of-the-art tagging and parsing.  All strings
+completes in 7ms per document, including accurate tagging and parsing.  All strings
 are mapped to integer IDs, tokens are linked to embedded word representations,
 and a range of useful features are pre-calculated and cached.
 
@@ -25,9 +30,11 @@ consists of.  We want to recommend people text based on other text they liked.
 We want to shorten text to display it on a mobile screen.  We want to aggregate
 it, link it, filter it, categorise it, generate it and correct it.
 
-spaCy provides a set of utility functions that help programmers build such
-products.  It's an NLP engine, analogous to the 3d engines commonly licensed
-for game development.
+spaCy provides a library of utility functions that help programmers build such
+products.  It's commercial open source software: you can either use it under
+the AGPL, or you can `buy a commercial license`_ for a one-time fee. 
+
+.. _buy a commercial license: license.rst
 
 Example functionality
 ---------------------
