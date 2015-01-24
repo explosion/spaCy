@@ -49,6 +49,7 @@ cdef class SymbolMap:
 
 
 cdef class StringStore:
+    '''Map strings to and from integer IDs.'''
     def __init__(self):
         self.mem = Pool()
         self._map = PreshMap()
