@@ -203,7 +203,7 @@ loop:
                 weights = model[feat]
                 for i, weight in enumerate(weights):
                     scores[i] += weight
-            class_ = max(enumerate(scores), key=lambda item: item[1])
+            class_, score = max(enumerate(scores), key=lambda item: item[1])
             transition(state, class_)
 
 The parser makes 2N transitions for a sentence of length N. In order to select
@@ -254,3 +254,11 @@ the classes.  In the case of the parser, this means the hash table is accessed
 also be careful to store the weights contiguously in memory --- you don't want
 a linked list here.  I use a block-sparse format, because my problems tend to
 have a few dozen classes. 
+
+I guess if I had to summarize my experience, I'd say that the efficiency of
+these models is really all about the data structures.  We want to stay small,
+and stay contiguous.  Minimize redundancy and minimize pointer chasing.
+That's why Cython is so well suited to this: we get to lay out our data
+structures, and manage the memory ourselves, with full C-level control.
+
+
