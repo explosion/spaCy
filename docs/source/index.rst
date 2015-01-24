@@ -216,10 +216,19 @@ spaCy gives you easy and efficient access to them, which lets you build all
 sorts of use products and features that were previously impossible.
 
 
-Efficiency
-----------
+Speed Comparison
+----------------
 
-.. table:: Efficiency comparison. See `Benchmarks`_ for details.
+**Set up**: 100,000 plain-text documents were streamed from an SQLite3
+database, and processed with an NLP library, to one of three levels of detail
+--- tokenization, tagging, or parsing.  The tasks are additive: to parse the
+text you have to tokenize and tag it.  The  pre-processing was not subtracted
+from the times --- I report the time required for the pipeline to complete.
+I report mean times per document, in milliseconds. 
+
+**Hardware**: Intel i7-3770 (2012)
+
+.. table:: Efficiency comparison. Lower is better. 
 
   +--------------+---------------------------+--------------------------------+
   |              | Absolute (ms per doc)     | Relative (to spaCy)            |
@@ -266,8 +275,8 @@ representations.
   It's evaluated against the current best published systems, following the standard
   methodologies.  These evaluations show that it performs extremely well.  
 
-Accuracy
---------
+Accuracy Comparison
+-------------------
 
 .. table:: Accuracy comparison, on the standard benchmark data from the Wall Street Journal.
 
