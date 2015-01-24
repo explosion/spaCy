@@ -112,7 +112,7 @@ class English(object):
             tokens (spacy.tokens.Tokens):
         """
         tokens = self.tokenizer(text)
-        if tag:
+        if tag or parse:
             self.tagger(tokens)
         if parse:
             self.parser(tokens)
