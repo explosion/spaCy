@@ -5,3 +5,5 @@ thinc
 murmurhash
 pytest
 unidecode
+numpy
+wget
