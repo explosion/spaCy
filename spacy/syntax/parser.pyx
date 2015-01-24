@@ -79,6 +79,10 @@ cdef class GreedyParser:
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
             self.moves.transition(state, &guess)
+        # Messily tell Tokens object the string names of the dependency labels
+        tokens._dep_strings = [None] * len(self.moves.label_ids)
+        for label, id_ in self.moves.label_ids.items():
+            tokens._dep_strings[id_] = label
         return 0
 
     def train_sent(self, Tokens tokens, list gold_heads, list gold_labels):

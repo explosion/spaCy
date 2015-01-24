@@ -1,5 +1,4 @@
 # cython: embedsignature=True
-from cython.view cimport array as cvarray
 
 from preshed.maps cimport PreshMap
 from preshed.counter cimport PreshCounter
@@ -9,6 +8,7 @@ from .typedefs cimport attr_id_t, attr_t
 from .typedefs cimport LEMMA
 from .typedefs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from .typedefs cimport POS, LEMMA
+from .typedefs import UNIV_TAG_NAMES
 
 from unidecode import unidecode
 
@@ -84,6 +84,8 @@ cdef class Tokens:
         self.data = data_start + PADDING
         self.max_length = size
         self.length = 0
+        self._tag_strings = [] # These will be set by the POS tagger and parser
+        self._dep_strings = [] # The strings are arbitrary and model-specific.
 
     def sentences(self):
         cdef int i
@@ -148,7 +150,7 @@ cdef class Tokens:
         return idx + t.lex.length
 
     @cython.boundscheck(False)
-    cpdef long[:,:] to_array(self, object attr_ids):
+    cpdef long[:,:] to_array(self, object py_attr_ids):
         """Given a list of M attribute IDs, export the tokens to a numpy ndarray
         of shape N*M, where N is the length of the sentence.
 
@@ -162,8 +164,11 @@ cdef class Tokens:
         """
         cdef int i, j
         cdef attr_id_t feature
-        cdef long[:,:] output = cvarray(shape=(self.length, len(attr_ids)),
-                                        itemsize=sizeof(long), format="l")
+        cdef numpy.ndarray[long, ndim=2] output
+        # Make an array from the attributes --- otherwise our inner loop is Python
+        # dict iteration.
+        cdef numpy.ndarray[long, ndim=1] attr_ids = numpy.asarray(py_attr_ids)
+        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.int)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
                 output[i, j] = get_token_attr(&self.data[i], feature)
@@ -232,6 +237,7 @@ cdef class Token:
         self.sentiment = t.lex.sentiment
         self.flags = t.lex.flags
         self.lemma = t.lemma
+        self.pos = t.pos
         self.tag = t.tag
         self.dep = t.dep
         self.repvec = numpy.asarray(<float[:300,]> t.lex.repvec)
@@ -248,6 +254,24 @@ cdef class Token:
         """
         return self._seq.data[self.i].lex.length
 
+    def nbor(self, int i=1):
+        return Token(self._seq, self.i + i)
+
+    def child(self, int i=1):
+        cdef const TokenC* t = &self._seq.data[self.i]
+        if i == 0:
+            return self
+        elif i >= 1:
+            if t.r_kids == 0:
+                return None
+            else:
+                return Token(self._seq, _nth_significant_bit(t.r_kids, i))
+        else:
+            if t.l_kids == 0:
+                return None
+            else:
+                return Token(self._seq, _nth_significant_bit(t.l_kids, i))
+        
     property head:
         """The token predicted by the parser to be the head of the current token."""
         def __get__(self):
@@ -290,10 +314,26 @@ cdef class Token:
             cdef unicode py_ustr = self._seq.vocab.strings[t.lemma]
             return py_ustr
 
+    property pos_:
+        def __get__(self):
+            id_to_string = {id_: string for string, id_ in UNIV_TAG_NAMES.items()}
+            return id_to_string[self.pos]
+
     property tag_:
         def __get__(self):
-            return self._seq.tag_names[self.tag]
+            return self._seq._tag_strings[self.tag]
 
     property dep_:
         def __get__(self):
-            return self._seq.dep_names[self.dep]
+            return self._seq._dep_strings[self.dep]
+
+
+
+cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:
+    cdef int i
+    for i in range(32):
+        if bits & (1 << i):
+            n -= 1
+            if n < 1:
+                return i
+    return 0

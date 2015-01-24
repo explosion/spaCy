@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+
+
 UNIV_TAG_NAMES = {
     "NO_TAG": NO_TAG,
     "ADJ": ADJ,

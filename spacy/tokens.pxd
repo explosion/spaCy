@@ -1,6 +1,7 @@
 from libc.stdint cimport uint32_t
 
 from numpy cimport ndarray
+cimport numpy
 
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport atom_t
@@ -29,11 +30,13 @@ cdef inline bint check_flag(const LexemeC* lexeme, attr_id_t flag_id) nogil:
 cdef class Tokens:
     cdef Pool mem
     cdef Vocab vocab
-    cdef list tag_names
-    cdef dict pos_scheme
-
+    
     cdef TokenC* data
+    
+
     cdef unicode _string
+    cdef list _tag_strings
+    cdef list _dep_strings
 
     cdef int length
     cdef int max_length

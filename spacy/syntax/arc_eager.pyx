@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from ._state cimport State
 from ._state cimport has_head, get_idx, get_s0, get_n0
 from ._state cimport is_final, at_eol, pop_stack, push_stack, add_dep
@@ -106,12 +108,14 @@ cdef class TransitionSystem:
         self.label_ids = {'ROOT': 0}
         cdef int label_id
         for label_str in left_labels:
+            label_str = unicode(label_str)
             label_id = self.label_ids.setdefault(label_str, len(self.label_ids))
             moves[i].move = LEFT
             moves[i].label = label_id
             moves[i].clas = i
             i += 1
         for label_str in right_labels:
+            label_str = unicode(label_str)
             label_id = self.label_ids.setdefault(label_str, len(self.label_ids))
             moves[i].move = RIGHT
             moves[i].label = label_id

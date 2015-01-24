@@ -252,7 +252,7 @@ cdef class EnPosTagger:
                 scores = self.model.score(context)
                 tokens.data[i].tag = arg_max(scores, self.model.n_classes)
                 self.set_morph(i, tokens.data)
-        tokens.pos_scheme = self.tag_map
+        tokens._tag_strings = self.tag_names
 
     def train(self, Tokens tokens, object golds):
         cdef int i
