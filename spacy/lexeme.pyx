@@ -32,6 +32,10 @@ cdef int set_lex_struct_props(LexemeC* lex, dict props, StringStore string_store
 
 
 cdef class Lexeme:
-    """A dummy docstring"""
+    """An entry in the vocabulary.  A Lexeme has no string context --- it's a
+    word-type, as opposed to a word token.  It therefore has no part-of-speech
+    tag, dependency parse, or lemma (lemmatization depends on the part-of-speech
+    tag).
+    """
     def __cinit__(self, int vec_size):
         self.repvec = numpy.ndarray(shape=(vec_size,), dtype=numpy.float32)
