@@ -96,7 +96,7 @@ class English(object):
             self._parser = GreedyParser(path.join(self._data_dir, 'deps'))
         return self._parser
 
-    def __call__(self, text, tag=True, parse=False):
+    def __call__(self, text, tag=True, parse=True):
         """Apply the pipeline to some text.
         
         Args:
