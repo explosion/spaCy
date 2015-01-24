@@ -12,9 +12,8 @@ Install
     $ pip install spacy
     $ python -m spacy.en.download
 
-The download command fetches and installs the parser model and word representations,
-which are too big to host on PyPi (about 100mb each).  The data is installed within
-the spacy.en package directory.
+The download command fetches and installs about 200mb of data, which it installs
+within the spacy.en package directory.
 
 Usage
 -----
@@ -37,18 +36,14 @@ e.g. `pizza.orth_` and `pizza.orth` provide the integer ID and the string of
 the original orthographic form of the word, with no string normalizations
 applied.
 
-  .. note::
-  
-  en.English.__call__ is stateful --- it has an important **side-effect**:
-  spaCy maps strings to sequential integers, so when it processes a new
-  word, the mapping table is updated.
+  .. note::  en.English.__call__ is stateful --- it has an important **side-effect**.
 
-  Future releases will feature a way to reconcile :py:class:`strings.StringStore`
-  mappings, but for now, you should only work with one instance of the pipeline
-  at a time.
-
-  This issue only affects rare words.  spaCy's pre-compiled lexicon has 260,000
-  words; the string IDs for these words will always be consistent.
+    When it processes a previously unseen word, it increments the ID counter,
+    assigns the ID to the string, and writes the mapping in
+    :py:data:`English.vocab.strings` (instance of
+    :py:class:`strings.StringStore`).
+    Future releases will feature a way to reconcile  mappings, but for now, you
+    should only work with one instance of the pipeline at a time.
 
 
 (Most of the) API at a glance
@@ -76,7 +71,7 @@ applied.
 
 **Get dict or numpy array:**
 
-    .. py:method:: tokens.Tokens.to_array(self, attr_ids: List[int]) --> numpy.ndarray[ndim=2, dtype=int32]
+    .. py:method:: tokens.Tokens.to_array(self, attr_ids: List[int]) --> ndarray[ndim=2, dtype=long]
 
     .. py:method:: tokens.Tokens.count_by(self, attr_id: int) --> Dict[int, int]
 
@@ -93,7 +88,7 @@ applied.
   .. py:attribute:: lexeme.Lexeme.repvec
 
 
-**Navigate dependency parse**
+**Navigate to tree- or string-neighbor tokens**
 
   .. py:method:: nbor(self, i=1) --> Token
 
@@ -115,8 +110,6 @@ applied.
 
     Length, in unicode code-points. Equal to len(self.orth_).
     
-    self.string[self.length:] gets whitespace.
-
   .. py:attribute:: idx: int
 
     Starting offset of word in the original string.
