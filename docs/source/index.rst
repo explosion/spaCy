@@ -8,21 +8,42 @@ spaCy: Industrial-strength NLP
 ==============================
 
 spaCy is a new library for text processing in Python and Cython.
+I wrote it because I think small companies are terrible at NLP.  Or rather:
+small companies are using terrible NLP technology.
 
-Most commercial NLP development is based on obsolete
-technology.  Over the last 3-5 years, the field has advanced dramatically, but
-only the tech giants have really been able to capitalize.  The research is all
-public, but it's been too hard for small companies to read and apply it.  
-Many end up relying on `NLTK`_, which is intended primarily as an educational
-resource.
+To do great NLP, you have to know a little about linguistics, a lot
+about machine learning, and almost everything about the latest research.
+The people who fit this description seldom join small companies, and almost
+never start them.  Most are broke --- they've just finished grad school.
+If they don't want to stay in academia, they join Google, IBM, etc.
 
-.. _NLTK: https://www.nltk.org/
+The net result is that outside of the tech giants, commercial NLP has changed
+little in the last ten years.  In academia, it's changed entirely.  Amazing
+improvements in quality. Orders of magnitude faster.  But the
+academic code is always GPL, undocumented, unuseable, or all three.  You could
+implement the ideas yourself, but the papers are hard to read, and training
+data is exorbitantly expensive.  So what are you left with? NLTK?
+
+I used to think that the NLP community just needed to do more to communicate
+its findings to software engineers.  So I wrote two blog posts, explaining
+`how to write a part-of-speech tagger`_ and `parser`_.  Both were very well received,
+and there's been a bit of interest in `my research software`_ --- even though
+it's entirely undocumented, and mostly unuseable to anyone but me.
+
+.. _`my research software`: https://github.com/syllog1sm/redshift/tree/develop
+
+.. _`how to write a part-of-speech tagger`: https://honnibal.wordpress.com/2013/09/11/a-good-part-of-speechpos-tagger-in-about-200-lines-of-python/
+
+.. _`parser`: https://honnibal.wordpress.com/2013/12/18/a-simple-fast-algorithm-for-natural-language-dependency-parsing/
+
+So six months ago I quit my post-doc, and I've been working day and night on
+spaCy since.  I'm now pleased to announce an alpha release.
 
 If you're a small company doing NLP, I think spaCy will seem like a minor miracle.
-It's by far the fastest NLP software available.  The full processing pipeline
-completes in 7ms per document, including accurate tagging and parsing.  All strings
-are mapped to integer IDs, tokens are linked to embedded word representations,
-and a range of useful features are pre-calculated and cached.
+The full processing pipeline completes in 7ms per document, including accurate
+tagging and parsing.  All strings are mapped to integer IDs, tokens are linked
+to embedded word representations, and a range of useful features are pre-calculated
+and cached.
 
 If none of that made any sense to you, here's the gist of it.  Computers don't
 understand text. This is unfortunate, because that's what the web almost entirely
