@@ -13,8 +13,8 @@ small companies are using terrible NLP technology.
 
 To do great NLP, you have to know a little about linguistics, a lot
 about machine learning, and almost everything about the latest research.
-The people who fit this description seldom join small companies, and almost
-never start them.  Most are broke --- they've just finished grad school.
+The people who fit this description seldom join small companies.
+Most are broke --- they've just finished grad school.
 If they don't want to stay in academia, they join Google, IBM, etc.
 
 The net result is that outside of the tech giants, commercial NLP has changed
@@ -40,6 +40,7 @@ So six months ago I quit my post-doc, and I've been working day and night on
 spaCy since.  I'm now pleased to announce an alpha release.
 
 If you're a small company doing NLP, I think spaCy will seem like a minor miracle.
+It's by far the fastest NLP software ever released.
 The full processing pipeline completes in 7ms per document, including accurate
 tagging and parsing.  All strings are mapped to integer IDs, tokens are linked
 to embedded word representations, and a range of useful features are pre-calculated
