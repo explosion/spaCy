@@ -5,6 +5,8 @@ Quick Start
 Install
 -------
 
+.. py:currentmodule:: spacy
+
 .. code:: bash
 
     $ pip install spacy
@@ -17,159 +19,180 @@ the spacy.en package directory.
 Usage
 -----
 
-The main entry-point is :py:meth:`spacy.en.English.__call__`, which accepts a unicode string as an argument, and returns a :py:class:`spacy.tokens.Tokens` object:
+The main entry-point is :meth:`en.English.__call__`, which accepts a unicode string
+as an argument, and returns a :py:class:`tokens.Tokens` object.  You can
+iterate over it to get :py:class:`tokens.Token` objects, which provide
+a convenient API:
 
     >>> from spacy.en import English
     >>> nlp = English()
-    >>> tokens = nlp(u'A fine, very fine, example sentence', tag=True,
-                     parse=True)
+    >>> tokens = nlp(u'I ate the pizza with anchovies.')
+    >>> pizza = tokens[3]
+    >>> (pizza.orth, pizza.orth_, pizza.head.lemma, pizza.head.lemma_)
+    ... (14702, u'pizza', 14702, u'ate')
 
-Calls to :py:meth:`English.__call__` has a side-effect: when a new
-word is seen, it is added to the string-to-ID mapping table in
-:py:class:`English.vocab.strings`.  Because of this, you will usually only want
-to create one instance of the pipeline.  If you create two instances, and use
-them to process different text, you'll probably get different string-to-ID
-mappings.  You might choose to wrap the English class as a singleton to ensure
-only one instance is created, but I've left that up to you.  I prefer to pass
-the instance around as an explicit argument.
+spaCy maps all strings to sequential integer IDs --- a common idiom in NLP.
+If an attribute `Token.foo` is an integer ID, then `Token.foo_` is the string,
+e.g. `pizza.orth_` and `pizza.orth` provide the integer ID and the string of
+the original orthographic form of the word, with no string normalizations
+applied.
 
-You shouldn't need to batch up your text or prepare it in any way.
-Processing times are linear in the length of the string, with minimal per-call
-overhead (apart from the first call, when the tagger and parser models are
-lazy-loaded. This takes a few seconds on my machine.).
+  .. note::
+  
+  en.English.__call__ is stateful --- it has an important **side-effect**:
+  spaCy maps strings to sequential integers, so when it processes a new
+  word, the mapping table is updated.
 
-:py:meth:`English.__class__` returns a :py:class:`Tokens` object, through which
-you'll access the processed text.  You can access the text in three ways:
+  Future releases will feature a way to reconcile :py:class:`strings.StringStore`
+  mappings, but for now, you should only work with one instance of the pipeline
+  at a time.
 
-Iteration
-  :py:meth:`Tokens.__iter__` and :py:meth:`Tokens.__getitem__`
-
-  - Most "Pythonic"
-
-  - `spacy.tokens.Token` object, attribute access
-
-  - Inefficient: New Token object created each time.
-
-Export
-  :py:meth:`Tokens.count_by` and :py:meth:`Tokens.to_array`
-
-  - `count_by`: Efficient dictionary of counts, for bag-of-words model.
-
-  - `to_array`: Export to numpy array. One row per word, one column per
-     attribute.
-
-  - Specify attributes with constants from `spacy.en.attrs`.
-
-Cython
-  :py:attr:`TokenC* Tokens.data`
-
-  - Raw data is stored in contiguous array of structs
-
-  - Good syntax, C speed
-
-  - Documentation coming soon. In the meantime, see spacy/syntax/_parser.features.pyx
-    or spacy/en/pos.pyx
+  This issue only affects rare words.  spaCy's pre-compiled lexicon has 260,000
+  words; the string IDs for these words will always be consistent.
 
 
 (Most of the) API at a glance
 -----------------------------
 
-.. py:class:: spacy.en.English(self, data_dir=join(dirname(__file__), 'data'))
+**Process the string:**
 
-  .. py:method:: __call__(self, text: unicode, tag=True, parse=False) --> Tokens 
+  .. py:class:: spacy.en.English(self, data_dir=join(dirname(__file__), 'data'))
 
-  .. py:method:: vocab.__getitem__(self, text: unicode) --> Lexeme
+    .. py:method:: __call__(self, text: unicode, tag=True, parse=False) --> Tokens 
+
+    +-----------------+--------------+--------------+
+    | Attribute       | Type         | Its API      |
+    +=================+==============+==============+
+    | vocab           | Vocab        | __getitem__  |
+    +-----------------+--------------+--------------+
+    | vocab.strings   | StingStore   | __getitem__  |
+    +-----------------+--------------+--------------+
+    | tokenizer       | Tokenizer    | __call__     |
+    +-----------------+--------------+--------------+
+    | tagger          | EnPosTagger  | __call__     |
+    +-----------------+--------------+--------------+
+    | parser          | GreedyParser | __call__     |
+    +-----------------+--------------+--------------+
+
+**Get dict or numpy array:**
+
+    .. py:method:: tokens.Tokens.to_array(self, attr_ids: List[int]) --> numpy.ndarray[ndim=2, dtype=int32]
+
+    .. py:method:: tokens.Tokens.count_by(self, attr_id: int) --> Dict[int, int]
+
+**Get Token objects**
+
+  .. py:method:: tokens.Tokens.__getitem__(self, i) --> Token
+
+  .. py:method:: tokens.Tokens.__iter__(self) --> Iterator[Token]
+
+**Embedded word representenations**
+
+  .. py:attribute:: tokens.Token.repvec
   
-  .. py:method:: vocab.__getitem__(self, text: unicode) --> Lexeme
+  .. py:attribute:: lexeme.Lexeme.repvec
 
-.. py:class:: spacy.tokens.Tokens via English.__call__
 
-  .. py:method:: __getitem__(self, i) --> Token
-
-  .. py:method:: __iter__(self) --> Iterator[Token]
-
-  .. py:method:: to_array(self, attr_ids: List[int]) --> numpy.ndarray[ndim=2, dtype=int32]
-
-  .. py:method:: count_by(self, attr_id: int) --> Dict[int, int]
-
-.. py:class:: spacy.tokens.Token via Tokens.__iter__, Tokens.__getitem__
-
-  .. py:method:: __unicode__(self) --> unicode
-
-  .. py:method:: __len__(self) --> int
+**Navigate dependency parse**
 
   .. py:method:: nbor(self, i=1) --> Token
-  
+
   .. py:method:: child(self, i=1) --> Token
-  
+
   .. py:method:: sibling(self, i=1) --> Token
 
-  .. py:method:: check_flag(self, attr_id: int) --> bool
-  
-  
-
-  .. py:attribute:: cluster: int
-
-  .. py:attribute:: string: unicode
-  
-  .. py:attribute:: string: unicode
-
-  .. py:attribute:: lemma: unicode
-  
-  .. py:attribute:: dep_tag: unicode
-  
-  .. py:attribute:: pos: unicode
-  
-  .. py:attribute:: fine_pos: unicode
-  
-  .. py:attribute:: sic: unicode
-  
   .. py:attribute:: head: Token
+
+  .. py:attribute:: dep: int
+
+**Align to original string**
+
+  .. py:attribute:: string: unicode
+    
+    Padded with original whitespace.
+
+  .. py:attribute:: length: int
+
+    Length, in unicode code-points. Equal to len(self.orth_).
+    
+    self.string[self.length:] gets whitespace.
+
+  .. py:attribute:: idx: int
+
+    Starting offset of word in the original string.
+
 
 
 Features
 --------
 
-+--------------------------------------------------------------------------+
-| Boolean Features                                                         |
-+----------+---------------------------------------------------------------+
-| IS_ALPHA | :py:meth:`str.isalpha`                                        |
-+----------+---------------------------------------------------------------+
-| IS_DIGIT | :py:meth:`str.isdigit`                                        |
-+----------+---------------------------------------------------------------+
-| IS_LOWER | :py:meth:`str.islower`                                        |
-+----------+---------------------------------------------------------------+
-| IS_SPACE | :py:meth:`str.isspace`                                        |
-+----------+---------------------------------------------------------------+
-| IS_TITLE | :py:meth:`str.istitle`                                        |
-+----------+---------------------------------------------------------------+
-| IS_UPPER | :py:meth:`str.isupper`                                        |
-+----------+---------------------------------------------------------------+
-| IS_ASCII | all(ord(c) < 128 for c in string)                             |
-+----------+---------------------------------------------------------------+
-| IS_PUNCT | all(unicodedata.category(c).startswith('P') for c in string)  |
-+----------+---------------------------------------------------------------+
-| LIKE_URL | Using various heuristics, does the string resemble a URL?     |
-+----------+---------------------------------------------------------------+
-| LIKE_NUM | "Two", "10", "1,000", "10.54", "1/2" etc all match            |
-+----------+---------------------------------------------------------------+
-| ID of string features                                                    |
-+----------+---------------------------------------------------------------+
-| SIC      | The original string, unmodified.                              |
-+----------+---------------------------------------------------------------+
-| NORM1    | The string after level 1 normalization: case, spelling        |
-+----------+---------------------------------------------------------------+
-| NORM2    | The string after level 2 normalization                        |
-+----------+---------------------------------------------------------------+
-| SHAPE    | Word shape, e.g. 10 --> dd, Garden --> Xxxx, Hi!5 --> Xx!d    |
-+----------+---------------------------------------------------------------+
-| PREFIX   | A short slice from the start of the string.                   |
-+----------+---------------------------------------------------------------+
-| SUFFIX   | A short slice from the end of the string.                     |
-+----------+---------------------------------------------------------------+
-| CLUSTER  | Brown cluster ID of the word                                  |
-+----------+---------------------------------------------------------------+
-| LEMMA    | The word's lemma, i.e. morphological suffixes removed         |
-+----------+---------------------------------------------------------------+
-| TAG      | The word's part-of-speech tag                                 |
-+----------+---------------------------------------------------------------+
+
+**Boolean features**
+
+    >>> lexeme = nlp.vocab[u'Apple']
+    >>> lexeme.is_alpha, is_upper
+    True, False
+    >>> tokens = nlp(u'Apple computers')
+    >>> tokens[0].is_alpha, tokens[0].is_upper
+    >>> True, False
+    >>> from spact.en.attrs import IS_ALPHA, IS_UPPER
+    >>> tokens.to_array((IS_ALPHA, IS_UPPER))[0]
+    array([1, 0])
+
+  +----------+---------------------------------------------------------------+
+  | is_alpha | :py:meth:`str.isalpha`                                        |
+  +----------+---------------------------------------------------------------+
+  | is_digit | :py:meth:`str.isdigit`                                        |
+  +----------+---------------------------------------------------------------+
+  | is_lower | :py:meth:`str.islower`                                        |
+  +----------+---------------------------------------------------------------+
+  | is_title | :py:meth:`str.istitle`                                        |
+  +----------+---------------------------------------------------------------+
+  | is_upper | :py:meth:`str.isupper`                                        |
+  +----------+---------------------------------------------------------------+
+  | is_ascii | all(ord(c) < 128 for c in string)                             |
+  +----------+---------------------------------------------------------------+
+  | is_punct | all(unicodedata.category(c).startswith('P') for c in string)  |
+  +----------+---------------------------------------------------------------+
+  | like_url | Using various heuristics, does the string resemble a URL?     |
+  +----------+---------------------------------------------------------------+
+  | like_num | "Two", "10", "1,000", "10.54", "1/2" etc all match            |
+  +----------+---------------------------------------------------------------+
+
+**String-transform Features**
+
+
+  +----------+---------------------------------------------------------------+
+  | orth     | The original string, unmodified.                              |
+  +----------+---------------------------------------------------------------+
+  | lower    | The original string, forced to lower-case                     |
+  +----------+---------------------------------------------------------------+
+  | norm     | The string after additional normalization                     |
+  +----------+---------------------------------------------------------------+
+  | shape    | Word shape, e.g. 10 --> dd, Garden --> Xxxx, Hi!5 --> Xx!d    |
+  +----------+---------------------------------------------------------------+
+  | prefix   | A short slice from the start of the string.                   |
+  +----------+---------------------------------------------------------------+
+  | suffix   | A short slice from the end of the string.                     |
+  +----------+---------------------------------------------------------------+
+  | lemma    | The word's lemma, i.e. morphological suffixes removed         |
+  +----------+---------------------------------------------------------------+
+
+**Syntactic labels**
+
+  +----------+---------------------------------------------------------------+
+  | pos      | The word's part-of-speech, from the Google Universal Tag Set  |
+  +----------+---------------------------------------------------------------+
+  | tag      | A fine-grained morphosyntactic tag, e.g. VBZ, NNS, etc        |
+  +----------+---------------------------------------------------------------+
+  | dep      | Dependency type label between word and its head, e.g. subj    |
+  +----------+---------------------------------------------------------------+
+
+**Distributional**
+
+  +---------+-----------------------------------------------------------+
+  | cluster | Brown cluster ID of the word                              |
+  +---------+-----------------------------------------------------------+
+  | prob    | Log probability of word, smoothed with Simple Good-Turing |
+  +---------+-----------------------------------------------------------+
+
