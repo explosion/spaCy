@@ -135,7 +135,7 @@ def evaluate(Language, dev_loc, model_dir):
     for words, heads, labels, tags in sents:
         tokens = nlp.tokenizer.tokens_from_list(words)
         nlp.tagger(tokens)
-        nlp.parser.parse(tokens)
+        nlp.parser(tokens)
         for i, token in enumerate(tokens):
             #print i, token.string, i + token.head, heads[i], labels[i]
             if labels[i] == 'P' or labels[i] == 'punct':
