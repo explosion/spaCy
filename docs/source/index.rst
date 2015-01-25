@@ -8,7 +8,8 @@ spaCy: Industrial-strength NLP
 ==============================
 
 `spaCy`_ is a new library for text processing in Python and Cython.
-I wrote it because I think small companies are terrible at NLP.  Or rather:
+I wrote it because I think small companies are terrible at
+natural language processing (NLP).  Or rather:
 small companies are using terrible NLP technology.
 
 .. _spaCy: https://github.com/honnibal/spaCy/
@@ -77,7 +78,7 @@ particularly egregious:
     >>> nlp = spacy.en.English()
     >>> tokens = nlp("‘Give it back,’ he pleaded abjectly, ‘it’s mine.’",
                      tag=True, parse=False)
-    >>> print(''.join(tok.string.upper() if tok.pos == ADV else tok.string) for t in tokens)
+    >>> print(''.join(tok.string.upper() if tok.pos == ADV else tok.string for tok in tokens))
     ‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’
 
 
@@ -143,7 +144,7 @@ cosine metric:
     >>> from numpy import dot
     >>> from numpy.linalg import norm
     >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1), norm(v2))
-    >>> words = [w for w in nlp.vocab if w.is_lower]
+    >>> words = [w for w in nlp.vocab if w.lower]
     >>> words.sort(key=lambda w: cosine(w, pleaded))
     >>> words.reverse()
     >>> print('1-20', ', '.join(w.orth_ for w in words[0:20]))
@@ -207,6 +208,7 @@ problematic, given our starting assumptions:
     >>> from numpy.linalg import norm
     >>> import spacy.en
     >>> from spacy.parts_of_speech import ADV, VERB
+    >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1), norm(v2))
     >>> def is_bad_adverb(token, target_verb, tol):
     ...   if token.pos != ADV
     ...     return False
@@ -309,6 +311,7 @@ The table above compares spaCy to some of the current state-of-the-art systems,
 on the standard evaluation from the Wall Street Journal, given gold-standard
 sentence boundaries and tokenization.  I'm in the process of completing a more
 realistic evaluation on web text.
+
 
 spaCy's parser offers a better speed/accuracy trade-off than any published
 system: its accuracy is within 1% of the current state-of-the-art, and it's
