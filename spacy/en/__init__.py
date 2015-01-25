@@ -84,6 +84,9 @@ class English(object):
         self._tagger = None
         self._parser = None
 
+        self.has_parser_model = path.exists(path.join(self._data_dir, 'deps'))
+        self.has_tagger_model = path.exists(path.join(self._data_dir, 'pos'))
+
     @property
     def tagger(self):
         if self._tagger is None:
@@ -112,9 +115,9 @@ class English(object):
             tokens (spacy.tokens.Tokens):
         """
         tokens = self.tokenizer(text)
-        if tag or parse:
+        if tag or parse and self.has_tagger_model:
             self.tagger(tokens)
-        if parse:
+        if parse and self.has_parser_model:
             self.parser(tokens)
         return tokens
 
