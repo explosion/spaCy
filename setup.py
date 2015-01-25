@@ -29,14 +29,22 @@ if platform.python_implementation() == 'PyPy':
     sysconfig.customize_compiler = my_customize_compiler
 
 
-def install_headers():
-    dest_dir = path.join(sys.prefix, 'include', 'murmurhash')
-    if not path.exists(dest_dir):
-        shutil.copytree('murmurhash/headers/murmurhash', dest_dir)
+#def install_headers():
+#    dest_dir = path.join(sys.prefix, 'include', 'murmurhash')
+#    if not path.exists(dest_dir):
+#        shutil.copytree('murmurhash/headers/murmurhash', dest_dir)
+#
+#    dest_dir = path.join(sys.prefix, 'include', 'numpy')
 
 
-install_headers()
 includes = ['.', path.join(sys.prefix, 'include')]
+
+
+try:
+    import numpy
+    includes.append(numpy.get_include())
+except ImportError:
+    pass
 
 
 def clean(ext):
@@ -87,7 +95,7 @@ def run_setup(exts):
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
         license="Dual: Commercial or AGPL",
-        install_requires=['murmurhash', 'cymem', 'preshed', 'thinc',
+        install_requires=['numpy', 'murmurhash', 'cymem', 'preshed', 'thinc',
                           "unidecode", ],
         setup_requires=["headers_workaround"],
     )
