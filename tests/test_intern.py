@@ -30,6 +30,6 @@ def test_save_unicode(sstore):
 def test_retrieve_id(sstore):
     A_i = sstore[b'A']
     assert sstore.size == 1
-    assert sstore[1] == b'A'
+    assert sstore[1] == 'A'
     with pytest.raises(IndexError):
         sstore[2]
