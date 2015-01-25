@@ -2,6 +2,13 @@
 License
 =======
 
+.. note:: spaCy is currently in Alpha --- I'm not yet ready to sell full
+  licenses.  If you're interested in trying it, you should either use it under
+  the AGPL, or contact me for a trial commercial license.
+
+  honnibal@gmail.com
+
+
 I've been writing spaCy for six months now, and I'm very excited to release it.
 I think it's the most valuable thing I could have built.  When I was in
 academia, I noticed that small companies couldn't really make use of our work.
@@ -116,9 +123,9 @@ copyright.
 Phuong and Jessie: Open Source developers
 #########################################
 
-Phuong and Jessie use the Calibre to manage their e-book libraries. They have an
-idea for a search feature, and they want to use spaCy to implement it. Calibre is
-released under the GPLv3. The AGPL has additional restrictions for projects
-used as a network resource, but they don't apply to this project, so Phuong and
-Jessie can use spaCy to improve Calibre.  They'll have to release their code, but
-that was always their intention anyway.
+Phuong and Jessie use the open-source software Calibre to manage their e-book
+libraries. They have an idea for a search feature, and they want to use spaCy
+to implement it. Calibre is released under the GPLv3. The AGPL has additional
+restrictions for projects used as a network resource, but they don't apply to
+this project, so Phuong and Jessie can use spaCy to improve Calibre.  They'll
+have to release their code, but that was always their intention anyway.
