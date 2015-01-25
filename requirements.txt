@@ -3,7 +3,6 @@ cymem
 preshed
 thinc
 murmurhash
-pytest
 unidecode
 numpy
 wget
