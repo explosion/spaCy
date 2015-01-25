@@ -291,8 +291,6 @@ Accuracy Comparison
 
 .. table:: Accuracy comparison, on the standard benchmark data from the Wall Street Journal.
 
-.. See `Benchmarks`_ for details.
-
   +--------------+----------+------------+
   | System       | POS acc. | Parse acc. |
   +--------------+----------+------------+
@@ -306,6 +304,8 @@ Accuracy Comparison
   +--------------+----------+------------+
   | NLTK         | 94.3     | n/a        |
   +--------------+----------+------------+
+
+.. See `Benchmarks`_ for details.
 
 The table above compares spaCy to some of the current state-of-the-art systems,
 on the standard evaluation from the Wall Street Journal, given gold-standard
