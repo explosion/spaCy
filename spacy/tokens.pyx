@@ -84,6 +84,8 @@ cdef class Tokens:
         self.data = data_start + PADDING
         self.max_length = size
         self.length = 0
+        self.is_tagged = False
+        self.is_parsed = False
         self._tag_strings = [] # These will be set by the POS tagger and parser
         self._dep_strings = [] # The strings are arbitrary and model-specific.
 
@@ -258,6 +260,10 @@ cdef class Token:
         return Token(self._seq, self.i + i)
 
     def child(self, int i=1):
+        if not self._seq.is_parsed:
+            msg = _parse_unset_error
+            raise AttributeError(msg)
+
         cdef const TokenC* t = &self._seq.data[self.i]
         if i == 0:
             return self
@@ -275,6 +281,9 @@ cdef class Token:
     property head:
         """The token predicted by the parser to be the head of the current token."""
         def __get__(self):
+            if not self._seq.is_parsed:
+                msg = _parse_unset_error
+                raise AttributeError(msg)
             cdef const TokenC* t = &self._seq.data[self.i]
             return Token(self._seq, self.i + t.head)
 
@@ -337,3 +346,11 @@ cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:
             if n < 1:
                 return i
     return 0
+
+
+_parse_unset_error = """Text has not been parsed, so cannot access head, child or sibling.
+
+Check that the parser data is installed.
+Check that the parse=True argument was set in the call to English.__call__
+"""
+

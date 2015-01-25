@@ -38,6 +38,9 @@ cdef class Tokens:
     cdef list _tag_strings
     cdef list _dep_strings
 
+    cdef public bint is_tagged
+    cdef public bint is_parsed
+
     cdef int length
     cdef int max_length
 
@@ -66,6 +69,5 @@ cdef class Token:
     cdef readonly univ_tag_t pos
     cdef readonly attr_t tag
     cdef readonly attr_t dep
-
     cdef readonly ndarray repvec
     cdef readonly unicode string

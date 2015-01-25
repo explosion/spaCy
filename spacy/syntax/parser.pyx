@@ -83,6 +83,7 @@ cdef class GreedyParser:
         tokens._dep_strings = [None] * len(self.moves.label_ids)
         for label, id_ in self.moves.label_ids.items():
             tokens._dep_strings[id_] = label
+        tokens.is_parsed = True
         return 0
 
     def train_sent(self, Tokens tokens, list gold_heads, list gold_labels):
