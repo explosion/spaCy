@@ -8,7 +8,8 @@ spaCy: Industrial-strength NLP
 ==============================
 
 `spaCy`_ is a new library for text processing in Python and Cython.
-I wrote it because I think small companies are terrible at NLP.  Or rather:
+I wrote it because I think small companies are terrible at
+natural language processing (NLP).  Or rather:
 small companies are using terrible NLP technology.
 
 .. _spaCy: https://github.com/honnibal/spaCy/
@@ -310,6 +311,7 @@ The table above compares spaCy to some of the current state-of-the-art systems,
 on the standard evaluation from the Wall Street Journal, given gold-standard
 sentence boundaries and tokenization.  I'm in the process of completing a more
 realistic evaluation on web text.
+
 
 spaCy's parser offers a better speed/accuracy trade-off than any published
 system: its accuracy is within 1% of the current state-of-the-art, and it's
