@@ -12,8 +12,14 @@ Install
     $ pip install spacy
     $ python -m spacy.en.download
 
-The download command fetches and installs about 200mb of data, which it installs
-within the spacy.en package directory.
+
+The download command fetches and installs about 300mb of data, for the `parser model_`
+and `word vectors`_, which it installs within the spacy.en package directory.
+
+.. _word vectors: http://s3-us-west-1.amazonaws.com/media.spacynlp.com/vec.bin
+
+.. _parser model: http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_deps-0.30.tgz
+
 
 Usage
 -----
