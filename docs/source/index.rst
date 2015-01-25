@@ -72,7 +72,7 @@ particularly egregious:
     >>> # Load the pipeline, and call it with some text.
     >>> nlp = spacy.en.English()
     >>> tokens = nlp("‘Give it back,’ he pleaded abjectly, ‘it’s mine.’",
-                     tag=True, parse=True)
+                     tag=True, parse=False)
     >>> output = ''
     >>> for tok in tokens:
     ...     output += tok.string.upper() if tok.pos == ADVERB else tok.string
@@ -86,12 +86,12 @@ we only wanted to highlight "abjectly". While "back" is undoubtedly an adverb,
 we probably don't want to highlight it.
 
 There are lots of ways we might refine our logic, depending on just what words
-we want to flag.  The simplest way to filter out adverbs like "back" and "not"
+we want to flag.  The simplest way to exclude adverbs like "back" and "not"
 is by word frequency: these words are much more common than the prototypical
 manner adverbs that the style guides are worried about.
 
-The prob attribute of a Lexeme or Token object gives a log probability estimate
-of the word, based on smoothed counts from a 3bn word corpus:
+The :py:attr:`Lexeme.prob` and :py:attr:`Token.prob` attribute gives a
+log probability estimate of the word:
 
    >>> nlp.vocab[u'back'].prob
    -7.403977394104004
@@ -99,6 +99,11 @@ of the word, based on smoothed counts from a 3bn word corpus:
    -5.407193660736084
    >>> nlp.vocab[u'quietly'].prob
    -11.07155704498291
+
+(The probability estimate is based on counts from a 3 billion word corpus,
+smoothed using the Gale (2002) `Simple Good-Turing`_ method.)
+
+.. _`Simple Good-Turing`: http://www.d.umn.edu/~tpederse/Courses/CS8761-FALL02/Code/sgt-gale.pdf
 
 So we can easily exclude the N most frequent words in English from our adverb
 marker.  Let's try N=1000 for now:
@@ -114,8 +119,8 @@ marker.  Let's try N=1000 for now:
     >>> print(''.join(tok.string.upper() if is_adverb(tok) else tok.string))
     ‘Give it back,’ he pleaded ABJECTLY, ‘it’s mine.’
 
-There are lots of ways we could refine the logic, depending on just what words we
-want to flag.  Let's say we wanted to only flag adverbs that modified words
+There are lots of other ways we could refine the logic, depending on just what
+words we want to flag.  Let's say we wanted to only flag adverbs that modified words
 similar to "pleaded".  This is easy to do, as spaCy loads a vector-space
 representation for every word (by default, the vectors produced by
 `Levy and Goldberg (2014)`_.  Naturally, the vector is provided as a numpy
