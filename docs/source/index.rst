@@ -207,6 +207,7 @@ problematic, given our starting assumptions:
     >>> from numpy.linalg import norm
     >>> import spacy.en
     >>> from spacy.postags import ADVERB, VERB
+    >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1), norm(v2))
     >>> def is_bad_adverb(token, target_verb, tol):
     ...   if token.pos != ADVERB 
     ...     return False
