@@ -12,6 +12,16 @@ Install
     $ pip install spacy
     $ python -m spacy.en.download
 
+To compile from source:
+
+.. code:: bash
+
+    $ git clone https://github.com/honnibal/spaCy.git
+    $ virtualenv .env && source .env/bin/activate
+    $ pip install -r requirements.txt
+    $ python -m spacy.en.download
+    $ fab make test
+
 
 The download command fetches and installs about 300mb of data, for the `parser model_`
 and `word vectors`_, which it installs within the spacy.en package directory.

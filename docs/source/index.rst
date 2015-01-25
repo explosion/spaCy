@@ -7,9 +7,11 @@
 spaCy: Industrial-strength NLP
 ==============================
 
-spaCy is a new library for text processing in Python and Cython.
+`spaCy`_ is a new library for text processing in Python and Cython.
 I wrote it because I think small companies are terrible at NLP.  Or rather:
 small companies are using terrible NLP technology.
+
+.. spaCy:: https://github.com/honnibal/spaCy/
 
 To do great NLP, you have to know a little about linguistics, a lot
 about machine learning, and almost everything about the latest research.
@@ -68,24 +70,22 @@ you want to **highlight all adverbs**.  We'll use one of the examples he finds
 particularly egregious:
 
     >>> import spacy.en
-    >>> from spacy.postags import ADVERB
+    >>> from spacy.parts_of_speech import ADV
     >>> # Load the pipeline, and call it with some text.
     >>> nlp = spacy.en.English()
     >>> tokens = nlp("‘Give it back,’ he pleaded abjectly, ‘it’s mine.’",
                      tag=True, parse=False)
-    >>> output = ''
-    >>> for tok in tokens:
-    ...     output += tok.string.upper() if tok.pos == ADVERB else tok.string
-    ...     output += tok.whitespace
-    >>> print(output)
+    >>> print(''.join(tok.string.upper() if tok.pos == ADV else tok.string) for t in tokens)
     ‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’
 
 
-Easy enough --- but the problem is that we've also highlighted "back", when probably
-we only wanted to highlight "abjectly". While "back" is undoubtedly an adverb,
-we probably don't want to highlight it.
+Easy enough --- but the problem is that we've also highlighted "back".
+While "back" is undoubtedly an adverb, we probably don't want to highlight it.
+If what we're trying to do is flag dubious stylistic choices, we'll need to
+refine our logic.  It turns out only a certain type of adverb is of interest to
+us.
 
-There are lots of ways we might refine our logic, depending on just what words
+There are lots of ways we might do this, depending on just what words
 we want to flag.  The simplest way to exclude adverbs like "back" and "not"
 is by word frequency: these words are much more common than the prototypical
 manner adverbs that the style guides are worried about.
@@ -93,15 +93,15 @@ manner adverbs that the style guides are worried about.
 The :py:attr:`Lexeme.prob` and :py:attr:`Token.prob` attribute gives a
 log probability estimate of the word:
 
-   >>> nlp.vocab[u'back'].prob
+   >>> nlp.vocab['back'].prob
    -7.403977394104004
-   >>> nlp.vocab[u'not'].prob
+   >>> nlp.vocab['not'].prob
    -5.407193660736084
-   >>> nlp.vocab[u'quietly'].prob
+   >>> nlp.vocab['quietly'].prob
    -11.07155704498291
 
 (The probability estimate is based on counts from a 3 billion word corpus,
-smoothed using the Gale (2002) `Simple Good-Turing`_ method.)
+smoothed using the `Simple Good-Turing`_ method.)
 
 .. _`Simple Good-Turing`: http://www.d.umn.edu/~tpederse/Courses/CS8761-FALL02/Code/sgt-gale.pdf
 
@@ -109,26 +109,28 @@ So we can easily exclude the N most frequent words in English from our adverb
 marker.  Let's try N=1000 for now:
 
     >>> import spacy.en
-    >>> from spacy.postags import ADVERB
+    >>> from spacy.parts_of_speech import ADV
     >>> nlp = spacy.en.English()
     >>> # Find log probability of Nth most frequent word
     >>> probs = [lex.prob for lex in nlp.vocab]
-    >>> is_adverb = lambda tok: tok.pos == ADVERB and tok.prob < probs[-1000]
-    >>> tokens = nlp("‘Give it back,’ he pleaded abjectly, ‘it’s mine.’",
-                     tag=True, parse=True)
-    >>> print(''.join(tok.string.upper() if is_adverb(tok) else tok.string))
+    >>> probs.sort()
+    >>> is_adverb = lambda tok: tok.pos == ADV and tok.prob < probs[-1000]
+    >>> tokens = nlp("‘Give it back,’ he pleaded abjectly, ‘it’s mine.’")
+    >>> print(''.join(tok.string.upper() if is_adverb(tok) else tok.string for tok in tokens))
     ‘Give it back,’ he pleaded ABJECTLY, ‘it’s mine.’
 
 There are lots of other ways we could refine the logic, depending on just what
 words we want to flag.  Let's say we wanted to only flag adverbs that modified words
 similar to "pleaded".  This is easy to do, as spaCy loads a vector-space
 representation for every word (by default, the vectors produced by
-`Levy and Goldberg (2014)`_.  Naturally, the vector is provided as a numpy
+`Levy and Goldberg (2014)`_).  Naturally, the vector is provided as a numpy
 array:
 
     >>> pleaded = tokens[8]
     >>> pleaded.repvec.shape
     (300,)
+    >>> pleaded.repvec[:5]
+    array([ 0.04229792,  0.07459262,  0.00820188, -0.02181299,  0.07519238], dtype=float32)
 
 .. _Levy and Goldberg (2014): https://levyomer.wordpress.com/2014/04/25/dependency-based-word-embeddings/
 
@@ -139,18 +141,18 @@ cosine metric:
     >>> from numpy import dot
     >>> from numpy.linalg import norm
     >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1), norm(v2))
-    >>> words = [w for w in nlp.vocab if w.is_lower and w.has_repvec]
+    >>> words = [w for w in nlp.vocab if w.is_lower]
     >>> words.sort(key=lambda w: cosine(w, pleaded))
     >>> words.reverse()
-    >>> print '1-20', ', '.join(w.orth_ for w in words[0:20])
+    >>> print('1-20', ', '.join(w.orth_ for w in words[0:20]))
     1-20 pleaded, pled, plead, confessed, interceded, pleads, testified, conspired, motioned, demurred, countersued, remonstrated, begged, apologised, consented, acquiesced, petitioned, quarreled, appealed, pleading
-    >>> print '50-60', ', '.join(w.orth_ for w in words[50:60])
+    >>> print('50-60', ', '.join(w.orth_ for w in words[50:60]))
     50-60 counselled, bragged, backtracked, caucused, refiled, dueled, mused, dissented, yearned, confesses
-    >>> print '100-110', ', '.join(w.orth_ for w in words[100:110])
+    >>> print('100-110', ', '.join(w.orth_ for w in words[100:110]))
     cabled, ducked, sentenced, perjured, absconded, bargained, overstayed, clerked, confided, sympathizes
-    >>> print '1000-1010', ', '.join(w.orth_ for w in words[1000:1010])
+    >>> print('1000-1010', ', '.join(w.orth_ for w in words[1000:1010]))
     scorned, baled, righted, requested, swindled, posited, firebombed, slimed, deferred, sagged
-    >>> print ', '.join(w.orth_ for w in words[50000:50010])
+    >>> print(', '.join(w.orth_ for w in words[50000:50010]))
     fb, ford, systems, puck, anglers, ik, tabloid, dirty, rims, artists
 
 As you can see, the similarity model that these vectors give us is excellent
@@ -169,10 +171,10 @@ as our target:
     ...   say_vector += nlp.vocab[verb].repvec
     >>> words.sort(key=lambda w: cosine(w.repvec, say_vector))
     >>> words.reverse()
-    >>> print '1-20', ', '.join(w.orth_ for w in words[0:20])
+    >>> print('1-20', ', '.join(w.orth_ for w in words[0:20]))
     1-20 bragged, remonstrated, enquired, demurred, sighed, mused, intimated, retorted, entreated, motioned, ranted, confided, countersued, gestured, implored, interceded, muttered, marvelled, bickered, despaired
     50-60 flaunted, quarrelled, ingratiated, vouched, agonized, apologised, lunched, joked, chafed, schemed
-    >>> print '1000-1010', ', '.join(w.orth_ for w in words[1000:1010])
+    >>> print('1000-1010', ', '.join(w.orth_ for w in words[1000:1010]))
     1000-1010 hoarded, waded, ensnared, clamoring, abided, deploring, shriveled, endeared, rethought, berate
 
 These definitely look like words that King might scold a writer for attaching
