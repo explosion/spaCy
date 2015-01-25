@@ -43,7 +43,8 @@ cdef class Vocab:
                 raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
             self.strings.load(path.join(data_dir, 'strings.txt'))
             self.load_lexemes(path.join(data_dir, 'lexemes.bin'))
-            self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
+            if path.exists(path.join(data_dir, 'vec.bin')):
+                self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
 
     def __len__(self):
         """The current number of lexemes stored."""
