@@ -8,7 +8,7 @@ from .typedefs cimport attr_id_t, attr_t
 from .typedefs cimport LEMMA
 from .typedefs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from .typedefs cimport POS, LEMMA
-from .typedefs import UNIV_TAG_NAMES
+from .parts_of_speech import UNIV_POS_NAMES
 
 from unidecode import unidecode
 
@@ -325,7 +325,7 @@ cdef class Token:
 
     property pos_:
         def __get__(self):
-            id_to_string = {id_: string for string, id_ in UNIV_TAG_NAMES.items()}
+            id_to_string = {id_: string for string, id_ in UNIV_POS_NAMES.items()}
             return id_to_string[self.pos]
 
     property tag_:

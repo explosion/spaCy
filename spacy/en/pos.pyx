@@ -8,9 +8,9 @@ from libc.string cimport memset
 from cymem.cymem cimport Address
 from thinc.typedefs cimport atom_t, weight_t
 
-from ..typedefs cimport univ_tag_t
-from ..typedefs cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT, VERB
-from ..typedefs cimport X, PUNCT, EOL
+from ..parts_of_speech cimport univ_pos_t
+from ..parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT, VERB
+from ..parts_of_speech cimport X, PUNCT, EOL
 from ..typedefs cimport id_t
 from ..structs cimport TokenC, Morphology, LexemeC
 from ..tokens cimport Tokens
@@ -282,7 +282,7 @@ cdef class EnPosTagger:
         tokens[i].lemma = cached.lemma
         tokens[i].morph = cached.morph
 
-    cdef int lemmatize(self, const univ_tag_t pos, const LexemeC* lex) except -1:
+    cdef int lemmatize(self, const univ_pos_t pos, const LexemeC* lex) except -1:
         if self.lemmatizer is None:
             return lex.orth
         cdef unicode py_string = self.strings[lex.orth]

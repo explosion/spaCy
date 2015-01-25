@@ -6,7 +6,8 @@ cimport numpy
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport atom_t
 
-from .typedefs cimport flags_t, attr_id_t, attr_t, univ_tag_t
+from .typedefs cimport flags_t, attr_id_t, attr_t
+from .parts_of_speech cimport univ_pos_t
 from .structs cimport Morphology, TokenC, LexemeC
 from .vocab cimport Vocab
 from .strings cimport StringStore
@@ -66,7 +67,7 @@ cdef class Token:
     cdef readonly float sentiment
     cdef readonly attr_t flags
     cdef readonly attr_t lemma
-    cdef readonly univ_tag_t pos
+    cdef readonly univ_pos_t pos
     cdef readonly attr_t tag
     cdef readonly attr_t dep
     cdef readonly ndarray repvec

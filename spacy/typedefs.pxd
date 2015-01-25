@@ -2,25 +2,6 @@ from libc.stdint cimport uint16_t, uint32_t, uint64_t, uintptr_t
 from libc.stdint cimport uint8_t
 
 
-# Google universal tag set
-cpdef enum univ_tag_t:
-    NO_TAG
-    ADJ
-    ADV
-    ADP
-    CONJ
-    DET
-    NOUN
-    NUM
-    PRON
-    PRT
-    VERB
-    X
-    PUNCT
-    EOL
-    N_UNIV_TAGS
-
-
 # Reserve 64 values for flag features
 cpdef enum attr_id_t:
     FLAG0

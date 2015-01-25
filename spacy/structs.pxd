@@ -1,6 +1,7 @@
 from libc.stdint cimport uint8_t, uint32_t
 
-from .typedefs cimport flags_t, attr_t, id_t, hash_t, univ_tag_t
+from .typedefs cimport flags_t, attr_t, id_t, hash_t
+from .parts_of_speech cimport univ_pos_t
 
 
 cdef struct LexemeC:
@@ -37,13 +38,13 @@ cdef struct Morphology:
 cdef struct PosTag:
     Morphology morph
     int id
-    univ_tag_t pos
+    univ_pos_t pos
 
 
 cdef struct TokenC:
     const LexemeC* lex
     Morphology morph
-    univ_tag_t pos
+    univ_pos_t pos
     int tag
     int idx
     int lemma

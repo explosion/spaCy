@@ -4,7 +4,7 @@ from cymem.cymem cimport Pool
 from .._ml cimport Model
 from ..strings cimport StringStore
 from ..structs cimport TokenC, LexemeC, Morphology, PosTag
-from ..typedefs cimport univ_tag_t
+from ..parts_of_speech cimport univ_pos_t
 from .lemmatizer import Lemmatizer
 
 
@@ -21,5 +21,5 @@ cdef class EnPosTagger:
     cdef readonly int n_tags
 
     cdef int set_morph(self, const int i, TokenC* tokens) except -1
-    cdef int lemmatize(self, const univ_tag_t pos, const LexemeC* lex) except -1
+    cdef int lemmatize(self, const univ_pos_t pos, const LexemeC* lex) except -1
 
