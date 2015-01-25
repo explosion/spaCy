@@ -7,7 +7,7 @@
 spaCy: Industrial-strength NLP
 ==============================
 
-`spaCy_` is a new library for text processing in Python and Cython.
+`spaCy`_ is a new library for text processing in Python and Cython.
 I wrote it because I think small companies are terrible at NLP.  Or rather:
 small companies are using terrible NLP technology.
 
