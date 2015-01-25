@@ -24,7 +24,9 @@ little in the last ten years.  In academia, it's changed entirely.  Amazing
 improvements in quality. Orders of magnitude faster.  But the
 academic code is always GPL, undocumented, unuseable, or all three.  You could
 implement the ideas yourself, but the papers are hard to read, and training
-data is exorbitantly expensive.  So what are you left with? NLTK?
+data is exorbitantly expensive.  So what are you left with?  A common answer is
+NLTK, which was written primarily as an educational resource.  Nothing past the
+tokenizer is suitable for production use.
 
 I used to think that the NLP community just needed to do more to communicate
 its findings to software engineers.  So I wrote two blog posts, explaining
