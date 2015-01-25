@@ -39,18 +39,18 @@ as an argument, and returns a :py:class:`tokens.Tokens` object.  You can
 iterate over it to get :py:class:`tokens.Token` objects, which provide
 a convenient API:
 
+    >>> from __future__ import unicode_literals # If Python 2
     >>> from spacy.en import English
     >>> nlp = English()
     >>> tokens = nlp(u'I ate the pizza with anchovies.')
     >>> pizza = tokens[3]
     >>> (pizza.orth, pizza.orth_, pizza.head.lemma, pizza.head.lemma_)
-    ... (14702, u'pizza', 14702, u'ate')
+    ... (14702, 'pizza', 14702, 'ate')
 
-spaCy maps all strings to sequential integer IDs --- a common idiom in NLP.
+spaCy maps all strings to sequential integer IDs --- a common trick in NLP.
 If an attribute `Token.foo` is an integer ID, then `Token.foo_` is the string,
 e.g. `pizza.orth_` and `pizza.orth` provide the integer ID and the string of
-the original orthographic form of the word, with no string normalizations
-applied.
+the original orthographic form of the word.
 
   .. note::  en.English.__call__ is stateful --- it has an important **side-effect**.
 
@@ -141,7 +141,7 @@ Features
     >>> lexeme = nlp.vocab[u'Apple']
     >>> lexeme.is_alpha, is_upper
     True, False
-    >>> tokens = nlp(u'Apple computers')
+    >>> tokens = nlp('Apple computers')
     >>> tokens[0].is_alpha, tokens[0].is_upper
     >>> True, False
     >>> from spact.en.attrs import IS_ALPHA, IS_UPPER
