@@ -78,7 +78,7 @@ particularly egregious:
     >>> nlp = spacy.en.English()
     >>> tokens = nlp("‘Give it back,’ he pleaded abjectly, ‘it’s mine.’",
                      tag=True, parse=False)
-    >>> print(''.join(tok.string.upper() if tok.pos == ADV else tok.string) for t in tokens)
+    >>> print(''.join(tok.string.upper() if tok.pos == ADV else tok.string for tok in tokens))
     ‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’
 
 
@@ -144,7 +144,7 @@ cosine metric:
     >>> from numpy import dot
     >>> from numpy.linalg import norm
     >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1), norm(v2))
-    >>> words = [w for w in nlp.vocab if w.is_lower]
+    >>> words = [w for w in nlp.vocab if w.lower]
     >>> words.sort(key=lambda w: cosine(w, pleaded))
     >>> words.reverse()
     >>> print('1-20', ', '.join(w.orth_ for w in words[0:20]))
