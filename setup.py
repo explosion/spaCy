@@ -116,8 +116,8 @@ def main(modules, is_pypy):
     run_setup(exts)
 
 
-MOD_NAMES = ['spacy.typedefs', 'spacy.strings', 'spacy.lexeme',
-             'spacy.vocab', 'spacy.tokens', 'spacy.morphology',
+MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
+             'spacy.lexeme', 'spacy.vocab', 'spacy.tokens', 'spacy.morphology',
              'spacy._ml', 'spacy.tokenizer', 'spacy.en.attrs',
              'spacy.en.pos', 'spacy.syntax.parser', 'spacy.syntax._state',
              'spacy.syntax.arc_eager', 'spacy.syntax._parse_features',
