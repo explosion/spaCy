@@ -86,7 +86,7 @@ def run_setup(exts):
         description="Industrial-strength NLP",
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
-        version='0.32',
+        version='0.33',
         url="http://honnibal.github.io/spaCy/",
         package_data={"spacy": ["*.pxd"],
                       "spacy.en": ["*.pxd", "data/pos/*",
@@ -97,7 +97,7 @@ def run_setup(exts):
         ext_modules=exts,
         license="Dual: Commercial or AGPL",
         install_requires=['numpy', 'murmurhash', 'cymem', 'preshed', 'thinc',
-                          "unidecode", ],
+                          "unidecode", 'wget'],
         setup_requires=["headers_workaround"],
     )
 
