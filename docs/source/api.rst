@@ -1,8 +1,12 @@
-===============
-Documentation
-===============
+===
+API
+===
 
+.. warning:: The documentation is currently being rewritten.  I started out
+  using Sphinx, but I've found it too limiting.
 
+  For now, the docs here are incomplete and may even tell you lies (please
+  report the lies).
 
 .. py:currentmodule:: spacy
 
