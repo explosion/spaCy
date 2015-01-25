@@ -11,7 +11,7 @@ spaCy: Industrial-strength NLP
 I wrote it because I think small companies are terrible at NLP.  Or rather:
 small companies are using terrible NLP technology.
 
-.. spaCy:: https://github.com/honnibal/spaCy/
+.. _spaCy: https://github.com/honnibal/spaCy/
 
 To do great NLP, you have to know a little about linguistics, a lot
 about machine learning, and almost everything about the latest research.
@@ -60,7 +60,7 @@ spaCy provides a library of utility functions that help programmers build such
 products.  It's commercial open source software: you can either use it under
 the AGPL, or you can `buy a commercial license`_ for a one-time fee. 
 
-.. _buy a commercial license: license.rst
+.. _buy a commercial license: license.html
 
 Example functionality
 ---------------------
