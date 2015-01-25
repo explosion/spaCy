@@ -27,8 +27,10 @@ into production.  I think spaCy can change that.
   +------------+-----------+----------+-------------------------------------+
 
 To make spaCy as valuable as possible, licenses to it are for life.  You get
-complete transparency, certainty and control.  There is much less risk this
-way.  And if you're ever in acquisition or IPO talks, the story is simple.
+complete transparency, certainty and control.
+If you need to use spaCy as an API, it's trivial to host it yourself --- and
+you don't need to worry about the service changing or disappearing.
+And if you're ever in acquisition or IPO talks, the story is simple.
 
 spaCy can also be used as free open-source software, under the Aferro GPL
 license.  If you use it this way, you must comply with the AGPL license terms.

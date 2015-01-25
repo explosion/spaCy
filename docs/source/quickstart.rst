@@ -23,7 +23,7 @@ To compile from source:
     $ fab make test
 
 
-The download command fetches and installs about 300mb of data, for the `parser model_`
+The download command fetches and installs about 300mb of data, for the `parser model`_
 and `word vectors`_, which it installs within the spacy.en package directory.
 
 .. _word vectors: http://s3-us-west-1.amazonaws.com/media.spacynlp.com/vec.bin
