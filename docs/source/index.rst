@@ -184,14 +184,14 @@ adverbs to.  Recall that our previous adverb highlighting function looked like
 this:
 
     >>> import spacy.en
-    >>> from spacy.parts_of_speech import ADVERB
+    >>> from spacy.parts_of_speech import ADV
     >>> # Load the pipeline, and call it with some text.
     >>> nlp = spacy.en.English()
     >>> tokens = nlp("‘Give it back,’ he pleaded abjectly, ‘it’s mine.’",
                      tag=True, parse=True)
     >>> output = ''
     >>> for tok in tokens:
-    ...     output += tok.string.upper() if tok.pos == ADVERB else tok.string
+    ...     output += tok.string.upper() if tok.pos == ADV else tok.string
     ...     output += tok.whitespace
     >>> print(output)
     ‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’
@@ -206,9 +206,9 @@ problematic, given our starting assumptions:
     >>> from numpy import dot
     >>> from numpy.linalg import norm
     >>> import spacy.en
-    >>> from spacy.parts_of_speech import ADVERB, VERB
+    >>> from spacy.parts_of_speech import ADV, VERB
     >>> def is_bad_adverb(token, target_verb, tol):
-    ...   if token.pos != ADVERB 
+    ...   if token.pos != ADV
     ...     return False
     ...   elif toke.head.pos != VERB:
     ...     return False
