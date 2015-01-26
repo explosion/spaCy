@@ -206,7 +206,7 @@ problematic, given our starting assumptions:
     >>> from spacy.parts_of_speech import ADV, VERB
     >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1), norm(v2))
     >>> def is_bad_adverb(token, target_verb, tol):
-    ...   if token.pos != ADVERB 
+    ...   if token.pos != ADV 
     ...     return False
     ...   elif toke.head.pos != VERB:
     ...     return False
