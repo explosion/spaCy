@@ -33,6 +33,8 @@ def get_lex_props(string):
 
 LOCAL_DATA_DIR = path.join(path.dirname(__file__), 'data')
 
+parse_if_model_present = -1
+
 
 class English(object):
     """The English NLP pipeline.
@@ -43,23 +45,10 @@ class English(object):
         data_dir (unicode): A path to a directory, from which to load the pipeline.
             If None, looks for a directory named "data/" in the same directory as
             the present file, i.e. path.join(path.dirname(__file__, 'data')).
-            If path.join(data_dir, 'pos') exists, the tagger is loaded from it.
-            If path.join(data_dir, 'deps') exists, the parser is loaded from it.
-            See Pipeline Directory Structure for details.
 
-    Attributes:
-        vocab (spacy.vocab.Vocab): The lexicon.
+            If path.join(data_dir, 'pos') exists, the tagger is loaded from there.
 
-        strings (spacy.strings.StringStore): Encode/decode strings to/from integer IDs.
-
-        tokenizer (spacy.tokenizer.Tokenizer): The start of the pipeline.
-
-        tagger (spacy.en.pos.EnPosTagger):
-            The part-of-speech tagger, which also performs lemmatization and
-            morphological analysis.
-
-        parser (spacy.syntax.parser.GreedyParser):
-            A greedy shift-reduce dependency parser.
+            If path.join(data_dir, 'deps') exists, the parser is loaded from there.
     """
     def __init__(self, data_dir=LOCAL_DATA_DIR):
         self._data_dir = data_dir
@@ -99,24 +88,51 @@ class English(object):
             self._parser = GreedyParser(path.join(self._data_dir, 'deps'))
         return self._parser
 
-    def __call__(self, text, tag=True, parse=True):
-        """Apply the pipeline to some text.
+    def __call__(self, text, tag=True, parse=parse_if_model_present):
+        """Apply the pipeline to some text.  The text can span multiple sentences,
+        and can contain arbtrary whitespace.  Alignment into the original string
+        
+        The tagger and parser are lazy-loaded the first time they are required.
+        Loading the parser model usually takes 5-10 seconds.
         
         Args:
             text (unicode): The text to be processed.
 
         Keyword args:
-            tag (bool): Whether to add part-of-speech tags to the text.  This
-                will also set morphological analysis and lemmas.
-
-            parse (bool): Whether to add dependency-heads and labels to the text.
+            tag (bool): Whether to add part-of-speech tags to the text.  Also
+                sets morphological analysis and lemmas.
+        
+            parse (True, False, -1): Whether to add labelled syntactic dependencies.
+            
+              -1 (default) is "guess": It will guess True if tag=True and the
+                model has been installed.
 
         Returns:
             tokens (spacy.tokens.Tokens):
+
+        >>> from spacy.en import English
+        >>> nlp = English()
+        >>> tokens = nlp('An example sentence. Another example sentence.')
+        >>> tokens[0].orth_, tokens[0].head.tag_
+        ('An', 'NN')
         """
+        if parse == True and tag == False:
+            msg = ("Incompatible arguments: tag=False, parse=True"
+                   "Part-of-speech tags are required for parsing.")
+            raise ValueError(msg)
         tokens = self.tokenizer(text)
-        if tag or parse and self.has_tagger_model:
+        if parse == -1 and tag == False:
+            parse = False
+        elif parse == -1 and not self.has_parser_model:
+            parse = False
+        if tag and self.has_tagger_model:
             self.tagger(tokens)
+        if parse == True and not self.has_parser_model:
+            msg = ("Receive parse=True, but parser model not found.\n\n"
+                  "Run:\n"
+                  "$ python -m spacy.en.download\n"
+                  "To install the model.")
+            raise IOError(msg)
         if parse and self.has_parser_model:
             self.parser(tokens)
         return tokens
