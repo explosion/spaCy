@@ -11,6 +11,12 @@ DEP_VECTORS_URL = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com/vec.bin'
 
 DEST_DIR = path.join(path.dirname(__file__), 'data')
 
+
+if os.path.exists(DEST_DIR):
+    shutil.rmtree(DEST_DIR)
+
+os.mkdir(DEST_DIR)
+
 def download_file(url, out):
     wget.download(url, out=out)
 
@@ -28,6 +34,7 @@ def install_dep_vectors(url, dest_dir):
 
 
 def main():
+    print DEST_DIR, PARSER_URL, DEP_VECTORS_URL
     install_parser_model(PARSER_URL, DEST_DIR)
     install_dep_vectors(DEP_VECTORS_URL, path.join(DEST_DIR, 'vocab'))
 
