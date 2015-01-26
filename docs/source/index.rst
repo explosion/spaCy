@@ -192,7 +192,7 @@ this:
                      tag=True, parse=True)
     >>> output = ''
     >>> for tok in tokens:
-    ...     output += tok.string.upper() if tok.pos == ADVERB else tok.string
+    ...     output += tok.string.upper() if tok.pos == ADV else tok.string
     ...     output += tok.whitespace
     >>> print(output)
     ‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’
@@ -210,7 +210,7 @@ problematic, given our starting assumptions:
     >>> from spacy.parts_of_speech import ADV, VERB
     >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1), norm(v2))
     >>> def is_bad_adverb(token, target_verb, tol):
-    ...   if token.pos != ADVERB 
+    ...   if token.pos != ADV
     ...     return False
     ...   elif toke.head.pos != VERB:
     ...     return False
