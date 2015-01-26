@@ -29,7 +29,7 @@ API
   | parser    | :py:class:`syntax.parser.GreedyParser` | __call__    | Set parse on Tokens      |
   +-----------+----------------------------------------+-------------+--------------------------+
 
-.. py:class:: spacy.tokens.Tokens(self, vocab: Vocab, string_length=0)
+.. py:class:: tokens.Tokens(self, vocab: Vocab, string_length=0)
 
   .. py:method:: __getitem__(self, i) --> Token
 
@@ -49,7 +49,7 @@ API
   | vocab.strings | StringStore | __getitem__ |
   +---------------+-------------+-------------+
 
-.. py:class:: spacy.tokens.Token(self, parent: Tokens, i: int)
+.. py:class:: tokens.Token(self, parent: Tokens, i: int)
 
   .. py:method:: __unicode__(self) --> unicode
 
@@ -89,7 +89,7 @@ API
   +-----------+------+-----------+---------+------------------------------------------------+
   
 
-.. py:class:: spacy.vocab.Vocab(self, data_dir=None, lex_props_getter=None)
+.. py:class:: vocab.Vocab(self, data_dir=None, lex_props_getter=None)
 
   .. py:method:: __len__(self) --> int
   
@@ -105,7 +105,7 @@ API
 
   .. py:method:: load_vectors(self, loc: unicode) --> None
 
-.. py:class:: spacy.strings.StringStore(self)
+.. py:class:: strings.StringStore(self)
 
   .. py:method:: __len__(self) --> int
 
@@ -119,7 +119,7 @@ API
 
   .. py:method:: load(self, loc: unicode) --> None
 
-.. py:class:: spacy.tokenizer.Tokenizer(self, Vocab vocab, rules, prefix_re, suffix_re, infix_re, pos_tags, tag_names)
+.. py:class:: tokenizer.Tokenizer(self, Vocab vocab, rules, prefix_re, suffix_re, infix_re, pos_tags, tag_names)
 
   .. py:method:: tokens_from_list(self, List[unicode]) --> spacy.tokens.Tokens
 
@@ -127,7 +127,7 @@ API
 
   .. py:attribute:: vocab: spacy.vocab.Vocab
 
-.. py:class:: spacy.en.pos.EnPosTagger(self, strings: spacy.strings.StringStore, data_dir: unicode)
+.. py:class:: en.pos.EnPosTagger(self, strings: spacy.strings.StringStore, data_dir: unicode)
 
   .. py:method:: __call__(self, tokens: spacy.tokens.Tokens)
 
@@ -135,7 +135,7 @@ API
 
   .. py:method:: load_morph_exceptions(self, exc: Dict[unicode, Dict])
 
-.. py:class:: GreedyParser(self, model_dir: unicode)
+.. py:class:: syntax.parser.GreedyParser(self, model_dir: unicode)
 
   .. py:method:: __call__(self, tokens: spacy.tokens.Tokens) --> None
 
