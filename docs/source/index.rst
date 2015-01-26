@@ -152,11 +152,11 @@ cosine metric:
     >>> print('50-60', ', '.join(w.orth_ for w in words[50:60]))
     50-60 counselled, bragged, backtracked, caucused, refiled, dueled, mused, dissented, yearned, confesses
     >>> print('100-110', ', '.join(w.orth_ for w in words[100:110]))
-    cabled, ducked, sentenced, perjured, absconded, bargained, overstayed, clerked, confided, sympathizes
+    100-110 cabled, ducked, sentenced, perjured, absconded, bargained, overstayed, clerked, confided, sympathizes
     >>> print('1000-1010', ', '.join(w.orth_ for w in words[1000:1010]))
-    scorned, baled, righted, requested, swindled, posited, firebombed, slimed, deferred, sagged
-    >>> print(', '.join(w.orth_ for w in words[50000:50010]))
-    fb, ford, systems, puck, anglers, ik, tabloid, dirty, rims, artists
+    1000-1010 scorned, baled, righted, requested, swindled, posited, firebombed, slimed, deferred, sagged
+    >>> print('50000-50010', ', '.join(w.orth_ for w in words[50000:50010]))
+    50000-50010, fb, ford, systems, puck, anglers, ik, tabloid, dirty, rims, artists
 
 As you can see, the similarity model that these vectors give us is excellent
 --- we're still getting meaningful results at 1000 words, off a single
@@ -164,14 +164,12 @@ prototype!  The only problem is that the list really contains two clusters of
 words: one associated with the legal meaning of "pleaded", and one for the more
 general sense.  Sorting out these clusters is an area of active research.
 
+
 A simple work-around is to average the vectors of several words, and use that
 as our target:
 
-    >>> say_verbs = [u'pleaded', u'confessed', u'remonstrated', u'begged',
-                     u'bragged', u'confided', u'requested']
-    >>> say_vector = numpy.zeros(shape=(300,))
-    >>> for verb in say_verbs:
-    ...   say_vector += nlp.vocab[verb].repvec
+    >>> say_verbs = ['pleaded', 'confessed', 'remonstrated', 'begged', 'bragged', 'confided', 'requested']
+    >>> say_vector = sum(nlp.vocab[verb].repvec for verb in say_verbs) / len(say_verbs)
     >>> words.sort(key=lambda w: cosine(w.repvec, say_vector))
     >>> words.reverse()
     >>> print('1-20', ', '.join(w.orth_ for w in words[0:20]))
@@ -181,7 +179,7 @@ as our target:
     1000-1010 hoarded, waded, ensnared, clamoring, abided, deploring, shriveled, endeared, rethought, berate
 
 These definitely look like words that King might scold a writer for attaching
-adverbs to.  Recall that our previous adverb highlighting function looked like
+adverbs to.  Recall that our original adverb highlighting function looked like
 this:
 
     >>> import spacy.en
@@ -189,13 +187,10 @@ this:
     >>> # Load the pipeline, and call it with some text.
     >>> nlp = spacy.en.English()
     >>> tokens = nlp("‘Give it back,’ he pleaded abjectly, ‘it’s mine.’",
-                     tag=True, parse=True)
-    >>> output = ''
-    >>> for tok in tokens:
-    ...     output += tok.string.upper() if tok.pos == ADVERB else tok.string
-    ...     output += tok.whitespace
-    >>> print(output)
+                     tag=True, parse=False)
+    >>> print(''.join(tok.string.upper() if tok.pos == ADV else tok.string for tok in tokens))
     ‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’
+
 
 We wanted to refine the logic so that only adverbs modifying evocative verbs 
 of communication, like "pleaded", were highlighted.  We've now built a vector that
