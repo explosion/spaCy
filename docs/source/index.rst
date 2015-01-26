@@ -174,6 +174,7 @@ as our target:
     >>> words.reverse()
     >>> print('1-20', ', '.join(w.orth_ for w in words[0:20]))
     1-20 bragged, remonstrated, enquired, demurred, sighed, mused, intimated, retorted, entreated, motioned, ranted, confided, countersued, gestured, implored, interceded, muttered, marvelled, bickered, despaired
+    >>> print('50-60', ', '.join(w.orth_ for w in words[50:60]))
     50-60 flaunted, quarrelled, ingratiated, vouched, agonized, apologised, lunched, joked, chafed, schemed
     >>> print('1000-1010', ', '.join(w.orth_ for w in words[1000:1010]))
     1000-1010 hoarded, waded, ensnared, clamoring, abided, deploring, shriveled, endeared, rethought, berate
