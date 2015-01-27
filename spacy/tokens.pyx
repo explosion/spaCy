@@ -63,9 +63,11 @@ cdef attr_t get_lex_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
 
 
 cdef class Tokens:
-    """Access and set annotations onto some text.
     """
-    def __init__(self, Vocab vocab, unicode string):
+    Container class for annotated text.  Constructed via English.__call__ or
+    Tokenizer.__call__.
+    """
+    def __cinit__(self, Vocab vocab, unicode string):
         self.vocab = vocab
         self._string = string
         string_length = len(string)
@@ -222,7 +224,7 @@ cdef class Tokens:
 @cython.freelist(64)
 cdef class Token:
     """An individual token."""
-    def __init__(self, Tokens tokens, int i):
+    def __cinit__(self, Tokens tokens, int i):
         self._seq = tokens
         self.i = i
         cdef const TokenC* t = &tokens.data[i]
@@ -249,11 +251,6 @@ cdef class Token:
         self.string = tokens._string[self.idx:next_idx]
 
     def __len__(self):
-        """The number of unicode code-points in the original string.
-
-        Returns:
-            length (int):
-        """
         return self._seq.data[self.i].lex.length
 
     def nbor(self, int i=1):
@@ -287,7 +284,7 @@ cdef class Token:
             cdef const TokenC* t = &self._seq.data[self.i]
             return Token(self._seq, self.i + t.head)
 
-    property whitespace:
+    property whitespace_:
         def __get__(self):
             return self.string[self.length:]
 
@@ -335,7 +332,6 @@ cdef class Token:
     property dep_:
         def __get__(self):
             return self._seq._dep_strings[self.dep]
-
 
 
 cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:
