@@ -193,6 +193,7 @@ this:
     ‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’
 
 
+
 We wanted to refine the logic so that only adverbs modifying evocative verbs 
 of communication, like "pleaded", were highlighted.  We've now built a vector that
 represents that type of word, so now we can highlight adverbs based on very
