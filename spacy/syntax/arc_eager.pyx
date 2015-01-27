@@ -22,6 +22,9 @@ cdef enum:
     BREAK_RIGHT
     N_MOVES
 
+# Break transition from here
+# http://www.aclweb.org/anthology/P13-1074
+
 
 cdef inline bint _can_shift(const State* s) nogil:
     return not at_eol(s)
