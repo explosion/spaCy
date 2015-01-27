@@ -208,7 +208,7 @@ problematic, given our starting assumptions:
     >>> def is_bad_adverb(token, target_verb, tol):
     ...   if token.pos != ADV 
     ...     return False
-    ...   elif toke.head.pos != VERB:
+    ...   elif token.head.pos != VERB:
     ...     return False
     ...   elif cosine(token.head.repvec, target_verb) < tol:
     ...     return False
