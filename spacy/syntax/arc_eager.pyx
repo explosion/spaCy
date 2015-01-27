@@ -206,5 +206,21 @@ cdef class TransitionSystem:
                 score = scores[i]
         t = self._moves[best]
         t.score = score
-        assert best >= 0
+        if best < 0:
+            msg = ("No gold move found for configuration.\n"
+                   "Is the gold-standard parse a projective tree?\n"
+                   "S unl cost: %d\n" 
+                   "D unl cost: %d\n"
+                   "L unl cost: %d\n"
+                   "R unl cost: %d\n"
+                   "S0, S0 gold: %d, %d\n"
+                   "N0, N0 gold: %d, %d\n"
+
+                  )
+            fields = [unl_costs[SHIFT], unl_costs[REDUCE], unl_costs[LEFT],
+                      unl_costs[RIGHT],
+                      s.stack[0], gold_heads[s.stack[0]],
+                      s.i, gold_heads[s.i]]
+
+            raise Exception(msg % tuple(fields))
         return t
