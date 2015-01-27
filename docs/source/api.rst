@@ -2,6 +2,10 @@
 API
 ===
 
+.. warning:: The documentation here is currently being rewritten.  If something
+  doesn't make sense, the docs might be simply wrong. If so, please report it.
+
+
 .. autoclass:: spacy.en.English
 
   +-----------+----------------------------------------+-------------+--------------------------+
