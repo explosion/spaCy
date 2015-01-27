@@ -50,7 +50,7 @@ Internals
 
 
 .. autoclass:: spacy.tokens.Token
-  .. automethod:: child
+  :members:
 
   +--------------------------------------------------------------------------------+
   | **Context-independent Attributes** (calculated once per orth-value in vocab)   |
