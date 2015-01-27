@@ -2,18 +2,7 @@
 API
 ===
 
-.. warning:: The documentation is currently being rewritten.  I started out
-  using Sphinx, but I've found it too limiting.
-
-  For now, the docs here are incomplete and may even tell you lies (please
-  report the lies).
-
-.. py:currentmodule:: spacy
-
-.. class:: en.English(self, data_dir=join(dirname(__file__, 'data')))
-  :noindex:
-
-  .. method:: __call__(self, unicode text, tag=True, parse=False) --> Tokens 
+.. autoclass:: spacy.en.English
 
   +-----------+----------------------------------------+-------------+--------------------------+
   | Attribute | Type                                   | Attr API    | NoteS                    |
@@ -29,18 +18,13 @@ API
   | parser    | :py:class:`syntax.parser.GreedyParser` | __call__    | Set parse on Tokens      |
   +-----------+----------------------------------------+-------------+--------------------------+
 
-.. py:class:: tokens.Tokens(self, vocab: Vocab, string_length=0)
 
-  .. py:method:: __getitem__(self, i) --> Token
+  .. automethod:: spacy.en.English.__call__
 
-  .. py:method:: __iter__(self) --> Iterator[Token]
+
+.. autoclass:: spacy.tokens.Tokens
+  :members: 
   
-  .. py:method:: __len__(self) --> int
-
-  .. py:method:: to_array(self, attr_ids: List[int]) --> numpy.ndarray[ndim=2, dtype=int32]
-
-  .. py:method:: count_by(self, attr_id: int) --> Dict[int, int]
-
   +---------------+-------------+-------------+
   | Attribute     | Type        | Useful      |
   +===============+=============+=============+
@@ -49,20 +33,25 @@ API
   | vocab.strings | StringStore | __getitem__ |
   +---------------+-------------+-------------+
 
-.. py:class:: tokens.Token(self, parent: Tokens, i: int)
 
-  .. py:method:: __unicode__(self) --> unicode
+Internals
+  A Tokens instance stores the annotations in a C-array of TokenC structs.
+  Each TokenC struct holds a const pointer to a LexemeC struct, which describes
+  a vocabulary item.
 
-  .. py:method:: __len__(self) --> int
+  The Token objects are built lazily, from this underlying C-data.
 
-  .. py:method:: nbor(self, i=1) --> Token
-  
-  .. py:method:: child(self, i=1) --> Token
-  
-  .. py:method:: sibling(self, i=1) --> Token
+  For faster access, the underlying C data can be accessed from Cython.  You
+  can also export the data to a numpy array, via Tokens.to_array, if pure Python
+  access is required, and you need slightly better performance.  However, this
+  is both slower and has a worse API than Cython access.  
 
-  .. py:attribute:: head: Token
-  
+.. Once a Token object has been created, it is persisted internally in Tokens._py_tokens.
+
+
+.. autoclass:: spacy.tokens.Token
+  :members:
+
   
   +-----------+------+-----------+---------+-----------+------------------------------------+
   | Attribute | Type | Attribute | Type    | Attribute | Type                               |
