@@ -102,7 +102,8 @@ cdef class GreedyParser:
         for i in range(tokens.length):
             heads_array[i] = gold_heads[i]
             labels_array[i] = self.moves.label_ids[gold_labels[i]]
-        
+       
+        py_words = [t.orth_ for t in tokens]
         cdef State* state = init_state(mem, tokens.data, tokens.length)
         while not is_final(state):
             fill_context(context, state)
