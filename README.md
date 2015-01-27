@@ -1,6 +1,9 @@
 spaCy
 =====
 
+
+http://honnibal.github.io/spaCy
+
 Fast, state-of-the-art natural language processing pipeline. Commercial licenses available, or use under AGPL.
 
 Tested (and working) with:
@@ -19,4 +22,3 @@ Fails with:
 * PyPy 2.7
 * PyPy 3.4
 
-http://honnibal.github.io/spaCy
