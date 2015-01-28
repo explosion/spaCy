@@ -243,7 +243,6 @@ cdef class TransitionSystem:
             add_dep(s, s.stack[0], s.i, t.label)
             push_stack(s)
             while s.stack_len != 0:
-                #add_dep(s, s.stack[-1], s.stack[0], get_s0(s).dep)
                 s.stack -= 1
                 s.stack_len -= 1
             if not at_eol(s):
