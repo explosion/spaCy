@@ -58,9 +58,12 @@ cdef inline bint _can_break_shift(const State* s) nogil:
         # P. 757
         # In UPP, if Shift(F) or RightArc(F) fail to result in a single parsing
         # tree, they cannot be performed as well.
+        seen_headless = False
         for i in range(s.stack_len):
-            if s.sent[s.stack[i]].head == 0:
+            if seen_headless:
                 return False
+            else:
+                seen_headless = True
         return True
 
 
@@ -76,7 +79,7 @@ cdef inline bint _can_break_right(const State* s) nogil:
         # tree, they cannot be performed as well.
         seen_headless = False
         for i in range(s.stack_len):
-            if s.sent[s.stack[i]].head == 0:
+            if s.sent[s.stack[-i]].head == 0:
                 if seen_headless:
                     return False
                 else:
@@ -123,6 +126,7 @@ cdef int _left_cost(const State* s, const int* gold) except -1:
     cost += children_in_buffer(s, s.stack[0], gold)
     if NON_MONOTONIC and s.stack_len >= 2:
         cost += gold[s.stack[0]] == s.stack[-1]
+    cost += gold[s.stack[0]] == s.stack[0]
     return cost
 
 
@@ -140,18 +144,8 @@ cdef int _break_shift_cost(const State* s, const int* gold) except -1:
     # 
     # n0_cost:
     cdef int cost = 0
-    # number of head/child deps between n0 and N1...Nn
-    cost += children_in_buffer(s, s.i, gold)
-    cost += head_in_buffer(s, s.i, gold) 
-    # Don't count self-deps
-    if gold[s.i] == s.i:
-        cost -= 2
-    # number of child deps from N0 into stack
-    cost += children_in_stack(s, s.i, gold)
-    # number of head deps to N0 from stack
-    cost += head_in_stack(s, s.i, gold)
-    # Number of deps between S0...Sn and N1...Nn
-    for i in range(s.i+1, s.sent_len):
+    # Number of deps between S0...Sn and N0...Nn
+    for i in range(s.i, s.sent_len):
         cost += children_in_stack(s, i, gold)
         cost += head_in_stack(s, i, gold)
     return cost
@@ -255,8 +249,6 @@ cdef class TransitionSystem:
             if not at_eol(s):
                 push_stack(s)
         elif t.move == BREAK_SHIFT:
-            push_stack(s)
-            get_s0(s).dep = 0
             while s.stack_len != 0:
                 s.stack -= 1
                 s.stack_len -= 1
