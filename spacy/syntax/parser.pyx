@@ -41,11 +41,12 @@ def set_debug(val):
 
 cdef unicode print_state(State* s, list words):
     words = list(words) + ['EOL']
-    top = words[s.stack[0]]
-    second = words[s.stack[-1]]
+    top = words[s.stack[0]] + '_%d' % s.sent[s.stack[0]].head
+    second = words[s.stack[-1]] + '_%d' % s.sent[s.stack[-1]].head
+    third = words[s.stack[-2]] + '_%d' % s.sent[s.stack[-2]].head
     n0 = words[s.i]
     n1 = words[s.i + 1]
-    return ' '.join((second, top, '|', n0, n1))
+    return ' '.join((str(s.stack_len), third, second, top, '|', n0, n1))
 
 
 def get_templates(name):
@@ -86,7 +87,8 @@ cdef class GreedyParser:
         tokens.is_parsed = True
         return 0
 
-    def train_sent(self, Tokens tokens, list gold_heads, list gold_labels):
+    def train_sent(self, Tokens tokens, list gold_heads, list gold_labels,
+                   force_gold=False):
         cdef:
             const Feature* feats
             const weight_t* scores
@@ -104,15 +106,30 @@ cdef class GreedyParser:
             labels_array[i] = self.moves.label_ids[gold_labels[i]]
        
         py_words = [t.orth_ for t in tokens]
+        py_moves = ['S', 'D', 'L', 'R', 'BS', 'BR']
+        history = []
+        #print py_words
         cdef State* state = init_state(mem, tokens.data, tokens.length)
         while not is_final(state):
             fill_context(context, state)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
             best = self.moves.best_gold(&guess, scores, state, heads_array, labels_array)
+            history.append((py_moves[best.move], print_state(state, py_words)))
             self.model.update(context, guess.clas, best.clas, guess.cost)
-            self.moves.transition(state, &guess)
+            if force_gold:
+                self.moves.transition(state, &best)
+            else:
+                self.moves.transition(state, &guess)
         cdef int n_corr = 0
         for i in range(tokens.length):
             n_corr += (i + state.sent[i].head) == gold_heads[i]
+        if force_gold and n_corr != tokens.length:
+            print py_words
+            print gold_heads
+            for move, state_str in history:
+                print move, state_str
+            for i in range(tokens.length):
+                print py_words[i], py_words[i + state.sent[i].head], py_words[gold_heads[i]]
+            raise Exception
         return n_corr
