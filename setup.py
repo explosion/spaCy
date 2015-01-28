@@ -68,15 +68,18 @@ def c_ext(mod_name, language, includes, compile_args):
                      extra_compile_args=compile_args, extra_link_args=compile_args)
 
 
-def cython_ext(mod_name, language, includes, compile_args):
+def cython_exts(mod_names, language, includes, compile_args):
     import Cython.Distutils
     import Cython.Build
-    mod_path = mod_name.replace('.', '/') + '.pyx'
     if language == 'cpp':
         language = 'c++'
-    ext = Extension(mod_name, [mod_path], language=language, include_dirs=includes,
-                    extra_compile_args=compile_args)
-    return Cython.Build.cythonize([ext])[0]
+    exts = []
+    for mod_name in mod_names:
+        mod_path = mod_name.replace('.', '/') + '.pyx'
+        e = Extension(mod_name, [mod_path], language=language, include_dirs=includes,
+                      extra_compile_args=compile_args)
+        exts.append(e)
+    return Cython.Build.cythonize(exts)
 
 
 def run_setup(exts):
@@ -110,10 +113,12 @@ def run_setup(exts):
 
 def main(modules, is_pypy):
     language = "cpp"
-    ext_func = cython_ext if use_cython else c_ext
     includes = ['.', path.join(sys.prefix, 'include')]
     compile_args = ['-O3']
-    exts = [ext_func(mn, language, includes, compile_args) for mn in modules]
+    if use_cython:
+        exts = cython_exts(modules, language, includes, compile_args)
+    else:
+        exts = [c_ext(mn, language, includes, compile_args) for mn in modules]
     run_setup(exts)
 
 
