@@ -12,17 +12,6 @@ Install
     $ pip install spacy
     $ python -m spacy.en.download
 
-To compile from source:
-
-.. code:: bash
-
-    $ git clone https://github.com/honnibal/spaCy.git
-    $ virtualenv .env && source .env/bin/activate
-    $ pip install -r requirements.txt
-    $ python -m spacy.en.download
-    $ fab make test
-
-
 The download command fetches and installs about 300mb of data, for the `parser model`_
 and `word vectors`_, which it installs within the spacy.en package directory.
 
@@ -30,6 +19,27 @@ and `word vectors`_, which it installs within the spacy.en package directory.
 
 .. _parser model: http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_deps-0.30.tgz
 
+Compilation from source is currently complicated, because there's binary data
+that's provided in the PyPi package, but is not in the repository.  As
+a temporary workaround, you can download the PyPi package and extract it from
+there. I'll have a better solution shortly, probably using Github Releases.
+
+.. code:: bash
+
+    $ git clone https://github.com/honnibal/spaCy.git
+    $ cd spaCy
+    $ virtualenv .env && source .env/bin/activate
+    $ export PYTHONPATH=`pwd`
+    $ pip install -r requirements.txt
+    $ wget https://devpi.net/root/pypi/+f/4e8/d81919a7876fe/spacy-0.33.tar.gz
+    $ tar -xzf spacy-0.33.tar.gz
+    $ cp -r spacy-0.33/spacy/en/data spacy/en/data
+    $ python -m spacy.en.download
+    $ fab make test
+
+Python packaging is awkward at the best of times, and it's particularly tricky
+with C extensions, built via Cython, requiring large data files. So, please
+bear with me :)
 
 Usage
 -----
