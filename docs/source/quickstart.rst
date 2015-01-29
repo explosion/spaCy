@@ -34,8 +34,9 @@ there. I'll have a better solution shortly, probably using Github Releases.
     $ wget https://devpi.net/root/pypi/+f/4e8/d81919a7876fe/spacy-0.33.tar.gz
     $ tar -xzf spacy-0.33.tar.gz
     $ cp -r spacy-0.33/spacy/en/data spacy/en/data
+    $ fab make 
     $ python -m spacy.en.download
-    $ fab make test
+    $ fab test
 
 Python packaging is awkward at the best of times, and it's particularly tricky
 with C extensions, built via Cython, requiring large data files. So, please
