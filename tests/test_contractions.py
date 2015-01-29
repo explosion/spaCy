@@ -9,7 +9,7 @@ def EN():
 
 
 def test_possess(EN):
-    tokens = EN("Mike's")
+    tokens = EN("Mike's", parse=False)
     assert EN.vocab.strings[tokens[0].orth] == "Mike"
     assert EN.vocab.strings[tokens[1].orth] == "'s"
     assert len(tokens) == 2
@@ -23,7 +23,7 @@ def test_apostrophe(EN):
 
 
 def test_LL(EN):
-    tokens = EN("we'll")
+    tokens = EN("we'll", parse=False)
     assert len(tokens) == 2
     assert tokens[1].orth_ == "'ll"
     assert tokens[1].lemma_ == "will"
@@ -31,7 +31,7 @@ def test_LL(EN):
 
 
 def test_aint(EN):
-    tokens = EN("ain't")
+    tokens = EN("ain't", parse=False)
     assert len(tokens) == 2
     assert tokens[0].orth_ == "ai"
     assert tokens[0].lemma_ == "be"
@@ -40,18 +40,18 @@ def test_aint(EN):
 
 
 def test_capitalized(EN):
-    tokens = EN("can't")
+    tokens = EN("can't", parse=False)
     assert len(tokens) == 2
-    tokens = EN("Can't")
+    tokens = EN("Can't", parse=False)
     assert len(tokens) == 2
-    tokens = EN("Ain't")
+    tokens = EN("Ain't", parse=False)
     assert len(tokens) == 2
     assert tokens[0].orth_ == "Ai"
     assert tokens[0].lemma_ == "be"
 
 
 def test_punct(EN):
-    tokens = EN("We've")
+    tokens = EN("We've", parse=False)
     assert len(tokens) == 2
-    tokens = EN("``We've")
+    tokens = EN("``We've", parse=False)
     assert len(tokens) == 3
