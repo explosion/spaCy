@@ -17,7 +17,7 @@ import platform
 # PyPy --- NB! PyPy doesn't really work, it segfaults all over the place. But,
 # this is necessary to get it compile.
 # We have to resort to monkey-patching to set the compiler, because pypy broke
-# ALL the EVERTHING.
+# all the everything.
 
 pre_patch_customize_compiler = sysconfig.customize_compiler
 def my_customize_compiler(compiler):
@@ -42,7 +42,8 @@ includes = ['.', path.join(sys.prefix, 'include')]
 
 try:
     import numpy
-    includes.append(numpy.get_include())
+    numpy_headers = path.join(numpy.get_include(), 'numpy')
+    shutil.copytree(numpy_headers, path.join(sys.prefix, 'include', 'numpy'))
 except ImportError:
     pass
 
