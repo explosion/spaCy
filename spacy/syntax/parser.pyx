@@ -128,7 +128,7 @@ cdef class GreedyParser:
         cdef int n_corr = 0
         for i in range(tokens.length):
             if gold_heads[i] != -1:
-            n_corr += (i + state.sent[i].head) == gold_heads[i]
+                n_corr += (i + state.sent[i].head) == gold_heads[i]
         if force_gold and n_corr != tokens.length:
             print py_words
             print gold_heads
