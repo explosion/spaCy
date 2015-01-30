@@ -46,6 +46,8 @@ try:
     shutil.copytree(numpy_headers, path.join(sys.prefix, 'include', 'numpy'))
 except ImportError:
     pass
+except OSError:
+    pass
 
 
 def clean(ext):
