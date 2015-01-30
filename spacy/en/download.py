@@ -11,7 +11,7 @@ PARSER_URL = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_deps-0.30.
 
 DEP_VECTORS_URL = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com/vec.bin'
 
-DEST_DIR = path.join(path.dirname(__file__), 'tmp_data')
+DEST_DIR = path.join(path.dirname(__file__), 'data')
 
 def download_file(url, out):
     wget.download(url, out=out)
