@@ -15,6 +15,7 @@ DEST_DIR = path.join(path.dirname(__file__), 'tmp_data')
 
 def download_file(url, out):
     wget.download(url, out=out)
+    return url.rsplit('/', 1)[1]
 
 
 def install_all_data(url, dest_dir):
