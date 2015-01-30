@@ -40,7 +40,7 @@ def install_dep_vectors(url, dest_dir):
 
 def main():
     if not path.exists(DEST_DIR):
-        install_sm_data(SM_DATA_DIR_URL, path.dirname(DEST_DIR))
+        install_data(SM_DATA_DIR_URL, path.dirname(DEST_DIR))
     else:
         install_parser_model(PARSER_URL, DEST_DIR)
         install_dep_vectors(DEP_VECTORS_URL, path.join(DEST_DIR, 'vocab'))
