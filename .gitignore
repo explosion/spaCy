@@ -3,6 +3,12 @@
 *.sw*
 Profile.prof
 tmp/
+.dev
+.denv
+.pypyenv
+.eggs
+
+MANIFEST
 
 spacy/syntax/*.cpp
 spacy/syntax/*.html
@@ -74,4 +80,4 @@ coverage.xml
 
 # Sphinx documentation
 docs/_build/
-
+docs/_themes/
