@@ -102,8 +102,12 @@ cdef class GreedyParser:
         cdef int* labels_array = <int*>mem.alloc(tokens.length, sizeof(int))
         cdef int i
         for i in range(tokens.length):
-            heads_array[i] = gold_heads[i]
-            labels_array[i] = self.moves.label_ids[gold_labels[i]]
+            if gold_heads[i] is None:
+                heads_array[i] = -1
+                labels_array[i] = -1
+            else:
+                heads_array[i] = gold_heads[i]
+                labels_array[i] = self.moves.label_ids[gold_labels[i]]
        
         py_words = [t.orth_ for t in tokens]
         py_moves = ['S', 'D', 'L', 'R', 'BS', 'BR']
@@ -123,6 +127,7 @@ cdef class GreedyParser:
                 self.moves.transition(state, &guess)
         cdef int n_corr = 0
         for i in range(tokens.length):
+            if gold_heads[i] != -1:
             n_corr += (i + state.sent[i].head) == gold_heads[i]
         if force_gold and n_corr != tokens.length:
             print py_words
