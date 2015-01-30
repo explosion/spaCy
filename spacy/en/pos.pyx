@@ -255,19 +255,23 @@ cdef class EnPosTagger:
         tokens._tag_strings = self.tag_names
         tokens.is_tagged = True
 
-    def train(self, Tokens tokens, object golds):
+    def train(self, Tokens tokens, object gold_tag_strs):
         cdef int i
+        cdef int loss
         cdef atom_t[N_CONTEXT_FIELDS] context
         cdef const weight_t* scores
+        golds = [self.tag_names.index(g) if g is not None else -1
+                 for g in gold_tag_strs]
         correct = 0
         for i in range(tokens.length):
             fill_context(context, i, tokens.data)
             scores = self.model.score(context)
             guess = arg_max(scores, self.model.n_classes)
-            self.model.update(context, guess, golds[i], guess != golds[i])
+            loss = guess != golds[i] if golds[i] != -1 else 0
+            self.model.update(context, guess, golds[i], loss)
             tokens.data[i].tag = guess
             self.set_morph(i, tokens.data)
-            correct += guess == golds[i]
+            correct += loss == 0
         return correct
 
     cdef int set_morph(self, const int i, TokenC* tokens) except -1:

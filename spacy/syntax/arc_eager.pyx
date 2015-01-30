@@ -8,7 +8,9 @@ from ._state cimport head_in_stack, children_in_stack
 
 from ..structs cimport TokenC
 
+
 DEF NON_MONOTONIC = True
+DEF USE_BREAK = True
 
 
 cdef enum:
@@ -16,7 +18,11 @@ cdef enum:
     REDUCE
     LEFT
     RIGHT
+    BREAK
     N_MOVES
+
+# Break transition from here
+# http://www.aclweb.org/anthology/P13-1074
 
 
 cdef inline bint _can_shift(const State* s) nogil:
@@ -41,6 +47,24 @@ cdef inline bint _can_reduce(const State* s) nogil:
         return s.stack_len >= 2 and has_head(get_s0(s))
 
 
+cdef inline bint _can_break(const State* s) nogil:
+    cdef int i
+    if not USE_BREAK:
+        return False
+    elif at_eol(s):
+        return False
+    else:
+        # If stack is disconnected, cannot break
+        seen_headless = False
+        for i in range(s.stack_len):
+            if s.sent[s.stack[-i]].head == 0:
+                if seen_headless:
+                    return False
+                else:
+                    seen_headless = True
+        return True
+
+
 cdef int _shift_cost(const State* s, const int* gold) except -1:
     assert not at_eol(s)
     cost = 0
@@ -48,6 +72,9 @@ cdef int _shift_cost(const State* s, const int* gold) except -1:
     cost += children_in_stack(s, s.i, gold)
     if NON_MONOTONIC:
         cost += gold[s.stack[0]] == s.i
+    # If we can break, and there's no cost to doing so, we should
+    if _can_break(s) and _break_cost(s, gold) == 0:
+        cost += 1
     return cost
 
 
@@ -74,6 +101,7 @@ cdef int _left_cost(const State* s, const int* gold) except -1:
     cost += children_in_buffer(s, s.stack[0], gold)
     if NON_MONOTONIC and s.stack_len >= 2:
         cost += gold[s.stack[0]] == s.stack[-1]
+    cost += gold[s.stack[0]] == s.stack[0]
     return cost
 
 
@@ -82,6 +110,16 @@ cdef int _reduce_cost(const State* s, const int* gold) except -1:
     cost += children_in_buffer(s, s.stack[0], gold)
     if NON_MONOTONIC:
         cost += head_in_buffer(s, s.stack[0], gold)
+    return cost
+
+
+cdef int _break_cost(const State* s, const int* gold) except -1:
+    # When we break, we Reduce all of the words on the stack.
+    cdef int cost = 0
+    # Number of deps between S0...Sn and N0...Nn
+    for i in range(s.i, s.sent_len):
+        cost += children_in_stack(s, i, gold)
+        cost += head_in_stack(s, i, gold)
     return cost
 
 
@@ -94,7 +132,7 @@ cdef class TransitionSystem:
             right_labels.pop(right_labels.index('ROOT'))
         if 'ROOT' in left_labels:
             left_labels.pop(left_labels.index('ROOT'))
-        self.n_moves = 2 + len(left_labels) + len(right_labels) 
+        self.n_moves = 3 + len(left_labels) + len(right_labels)
         moves = <Transition*>self.mem.alloc(self.n_moves, sizeof(Transition))
         cdef int i = 0
         moves[i].move = SHIFT
@@ -121,6 +159,10 @@ cdef class TransitionSystem:
             moves[i].label = label_id
             moves[i].clas = i
             i += 1
+        moves[i].move = BREAK
+        moves[i].label = 0
+        moves[i].clas = i
+        i += 1
         self._moves = moves
 
     cdef int transition(self, State *s, const Transition* t) except -1:
@@ -136,8 +178,17 @@ cdef class TransitionSystem:
             add_dep(s, s.stack[0], s.i, t.label)
             push_stack(s)
         elif t.move == REDUCE:
+            # TODO: Huh? Is this some weirdness from the non-monotonic?
             add_dep(s, s.stack[-1], s.stack[0], get_s0(s).dep)
             pop_stack(s)
+        elif t.move == BREAK:
+            while s.stack_len != 0:
+                if get_s0(s).head == 0:
+                    get_s0(s).dep = 0
+                s.stack -= 1
+                s.stack_len -= 1
+            if not at_eol(s):
+                push_stack(s)
         else:
             raise Exception(t.move)
 
@@ -147,6 +198,7 @@ cdef class TransitionSystem:
         valid[LEFT] = _can_left(s)
         valid[RIGHT] = _can_right(s)
         valid[REDUCE] = _can_reduce(s)
+        valid[BREAK] = _can_break(s)
 
         cdef int best = -1
         cdef weight_t score = 0
@@ -175,6 +227,7 @@ cdef class TransitionSystem:
         unl_costs[LEFT] = _left_cost(s, gold_heads) if _can_left(s) else -1
         unl_costs[RIGHT] = _right_cost(s, gold_heads) if _can_right(s) else -1
         unl_costs[REDUCE] = _reduce_cost(s, gold_heads) if _can_reduce(s) else -1
+        unl_costs[BREAK] = _break_cost(s, gold_heads) if _can_break(s) else -1
 
         guess.cost = unl_costs[guess.move]
         cdef Transition t
@@ -191,10 +244,11 @@ cdef class TransitionSystem:
         elif gold_heads[s.i] == s.stack[0]:
             target_label = gold_labels[s.i]
             if guess.move == RIGHT:
-                guess.cost += guess.label != target_label
+                if unl_costs[guess.move] != 0:
+                    guess.cost += guess.label != target_label
             for i in range(self.n_moves):
                 t = self._moves[i]
-                if t.move == RIGHT and t.label == target_label:
+                if t.label == target_label and unl_costs[t.move] == 0:
                     return t
 
         cdef int best = -1

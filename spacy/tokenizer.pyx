@@ -95,7 +95,6 @@ cdef class Tokenizer:
         return tokens
 
     cdef int _try_cache(self, int idx, hash_t key, Tokens tokens) except -1:
-        #cached = <Cached*>self._specials.get(key)
         cached = <_Cached*>self._cache.get(key)
         if cached == NULL:
             return False
@@ -176,7 +175,10 @@ cdef class Tokenizer:
         if string.n != 0:
             cache_hit = self._try_cache(idx, string.key, tokens)
             if cache_hit:
-                idx = tokens.data[tokens.length - 1].idx + 1
+                # Get last idx
+                idx = tokens.data[tokens.length - 1].idx
+                # Increment by last length
+                idx += tokens.data[tokens.length - 1].lex.length
             else:
                 split = self._find_infix(string.chars, string.n)
                 if split == 0 or split == -1:
