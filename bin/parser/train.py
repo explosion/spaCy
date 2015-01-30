@@ -105,7 +105,9 @@ def _align_annotations_to_non_gold_tokens(tokens, words, annot):
     print words
     for token in tokens:
         print token.orth_, words[0]
+        print token.idx, annot[0][0]
         while annot and token.idx > annot[0][0]:
+            print 'pop', token.idx, annot[0][0]
             annot.pop(0)
             words.pop(0)
             loss += 1
