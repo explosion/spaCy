@@ -20,7 +20,7 @@ def download_file(url, out):
     return url.rsplit('/', 1)[1]
 
 
-def install_all_data(url, dest_dir):
+def install_data(url, dest_dir):
     filename = download_file(url, dest_dir)
     t = tarfile.open(path.join(dest_dir, filename))
     t.extractall(dest_dir)
