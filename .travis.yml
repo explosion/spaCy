@@ -11,8 +11,9 @@ python:
 # command to install dependencies
 install:
   - "pip install --upgrade setuptools"
-  - "pip install spacy"
-  - "rm -rf spacy/"
+  - "pip install -r requirements.txt"
+  - "python setup.py build_ext --inplace"
+  - "python -m spacy.en.download"
 # command to run tests
 script:
   - py.test tests/
