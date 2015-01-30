@@ -179,8 +179,6 @@ cdef class Tokenizer:
                 idx = tokens.data[tokens.length - 1].idx
                 # Increment by last length
                 idx += tokens.data[tokens.length - 1].lex.length
-                # Add 1 for space
-                idx += 1
             else:
                 split = self._find_infix(string.chars, string.n)
                 if split == 0 or split == -1:
