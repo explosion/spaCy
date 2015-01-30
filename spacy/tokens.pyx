@@ -266,7 +266,7 @@ cdef class Token:
             msg = _parse_unset_error
             raise AttributeError(msg)
         cdef const TokenC* tokens = self._seq.data
-        cdef int n
+        cdef int n = 0
         for i in range(self.i):
             if i + tokens[i].head == self.i:
                 n += 1
@@ -278,7 +278,7 @@ cdef class Token:
             msg = _parse_unset_error
             raise AttributeError(msg)
         cdef const TokenC* tokens = self._seq.data
-        cdef int n
+        cdef int n = 0
         for i in range(self.i+1, self._seq.length):
             if (i + tokens[i].head) == self.i:
                 n += 1
