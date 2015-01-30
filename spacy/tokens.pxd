@@ -35,6 +35,7 @@ cdef class Tokens:
     cdef TokenC* data
     
 
+    cdef list _py_tokens
     cdef unicode _string
     cdef list _tag_strings
     cdef list _dep_strings

@@ -88,6 +88,7 @@ cdef class Tokens:
         self.length = 0
         self.is_tagged = False
         self.is_parsed = False
+        self._py_tokens = [None] * self.length
         self._tag_strings = [] # These will be set by the POS tagger and parser
         self._dep_strings = [] # The strings are arbitrary and model-specific.
 
@@ -114,13 +115,18 @@ cdef class Tokens:
     def __getitem__(self, i):
         """Retrieve a token.
         
+        The Python Token objects are created lazily from internal C data, and
+        cached in _py_tokens
+        
         Returns:
             token (Token):
         """
         if i < 0:
             i = self.length - i
         bounds_check(i, self.length, PADDING)
-        return Token(self, i)
+        if self._py_tokens[i] is None:
+            self._py_tokens[i] = Token(self, i)
+        return self._py_tokens[i]
 
     def __iter__(self):
         """Iterate over the tokens.
@@ -151,6 +157,7 @@ cdef class Tokens:
             t.lex = lex_or_tok
         t.idx = idx
         self.length += 1
+        self._py_tokens.append(None)
         return idx + t.lex.length
 
     @cython.boundscheck(False)
@@ -256,24 +263,59 @@ cdef class Token:
     def nbor(self, int i=1):
         return Token(self._seq, self.i + i)
 
-    def child(self, int i=1):
+    @property 
+    def n_lefts(self):
+        if not self._seq.is_parsed:
+            msg = _parse_unset_error
+            raise AttributeError(msg)
+        cdef const TokenC* tokens = self._seq.data
+        cdef int n
+        for i in range(self.i):
+            if i + tokens[i].head == self.i:
+                n += 1
+        return n
+
+    @property 
+    def n_rights(self):
+        if not self._seq.is_parsed:
+            msg = _parse_unset_error
+            raise AttributeError(msg)
+        cdef const TokenC* tokens = self._seq.data
+        cdef int n
+        for i in range(self.i+1, self._seq.length):
+            if (i + tokens[i].head) == self.i:
+                n += 1
+        return n
+
+    @property 
+    def lefts(self):
+        """The leftward immediate children of the word, in the syntactic
+        dependency parse.
+        """
         if not self._seq.is_parsed:
             msg = _parse_unset_error
             raise AttributeError(msg)
 
-        cdef const TokenC* t = &self._seq.data[self.i]
-        if i == 0:
-            return self
-        elif i >= 1:
-            if t.r_kids == 0:
-                return None
-            else:
-                return Token(self._seq, _nth_significant_bit(t.r_kids, i))
-        else:
-            if t.l_kids == 0:
-                return None
-            else:
-                return Token(self._seq, _nth_significant_bit(t.l_kids, i))
+        cdef const TokenC* tokens = self._seq.data
+        cdef int i
+        for i in range(self.i):
+            if i + tokens[i].head == self.i:
+                yield Token(self._seq, i)
+
+    @property
+    def rights(self):
+        """The rightward immediate children of the word, in the syntactic
+        dependency parse."""
+
+        if not self._seq.is_parsed:
+            msg = _parse_unset_error
+            raise AttributeError(msg)
+
+        cdef const TokenC* tokens = self._seq.data
+        cdef int i
+        for i in range(self.i, self._seq.length):
+            if i + tokens[i].head == self.i:
+                yield Token(self._seq, i)
         
     property head:
         """The token predicted by the parser to be the head of the current token."""
@@ -282,7 +324,7 @@ cdef class Token:
                 msg = _parse_unset_error
                 raise AttributeError(msg)
             cdef const TokenC* t = &self._seq.data[self.i]
-            return Token(self._seq, self.i + t.head)
+            return self._seq[self.i + t.head]
 
     property whitespace_:
         def __get__(self):
@@ -344,9 +386,9 @@ cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:
     return 0
 
 
-_parse_unset_error = """Text has not been parsed, so cannot access head, child or sibling.
+_parse_unset_error = """Text has not been parsed, so cannot be accessed.
 
-Check that the parser data is installed.
-Check that the parse=True argument was set in the call to English.__call__
+Check that the parser data is installed. Run "python -m spacy.en.download" if not.
+Check whether parse=False in the call to English.__call__
 """
 
