@@ -144,9 +144,6 @@ cdef class Tokens:
         cdef const TokenC* last = &self.data[self.length - 1]
         return self._string[:last.idx + last.lex.length]
 
-    def __str__(self):
-        return unidecode(unicode(self))
-
     cdef int push_back(self, int idx, LexemeOrToken lex_or_tok) except -1:
         if self.length == self.max_length:
             self._realloc(self.length * 2)
