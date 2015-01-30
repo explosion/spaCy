@@ -5,7 +5,9 @@ import shutil
 import wget
 
 
-DATA_DIR_URL = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_data_all-0.4.tgz'
+ALL_DATA_DIR_URL = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_data_all-0.4.tgz'
+
+SM_DATA_DIR_URL = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_data_sm-0.4.tgz'
 
 PARSER_URL = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_deps-0.30.tgz'
 
@@ -38,7 +40,7 @@ def install_dep_vectors(url, dest_dir):
 
 def main():
     if not path.exists(DEST_DIR):
-        install_all_data(DATA_DIR_URL, path.dirname(DEST_DIR))
+        install_sm_data(SM_DATA_DIR_URL, path.dirname(DEST_DIR))
     else:
         install_parser_model(PARSER_URL, DEST_DIR)
         install_dep_vectors(DEP_VECTORS_URL, path.join(DEST_DIR, 'vocab'))
