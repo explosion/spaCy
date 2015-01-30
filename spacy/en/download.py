@@ -20,13 +20,13 @@ def download_file(url, out):
 
 def install_all_data(url, dest_dir):
     filename = download_file(url, dest_dir)
-    t = tarfile.open(path.join(dest_dir, filename), mode=":gz")
+    t = tarfile.open(path.join(dest_dir, filename))
     t.extractall(dest_dir)
 
 def install_parser_model(url, dest_dir):
     filename = download_file(url, dest_dir)
     t = tarfile.open(path.join(dest_dir, filename), mode=":gz")
-    t.extractall(dest_dir)
+    t.extractall(path.dirname(__file__))
 
 
 def install_dep_vectors(url, dest_dir):
@@ -38,7 +38,7 @@ def install_dep_vectors(url, dest_dir):
 
 def main():
     if not path.exists(DEST_DIR):
-        install_all_data(DATA_DIR_URL, DEST_DIR)
+        install_all_data(DATA_DIR_URL, path.dirname(DEST_DIR))
     else:
         install_parser_model(PARSER_URL, DEST_DIR)
         install_dep_vectors(DEP_VECTORS_URL, path.join(DEST_DIR, 'vocab'))
