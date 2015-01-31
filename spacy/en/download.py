@@ -44,11 +44,8 @@ def main(data_size='all'):
         data_url = ALL_DATA_DIR_URL
     elif data_size == 'small':
         data_url = SM_DATA_DIR_URL
-    if not path.exists(DEST_DIR):
-        install_data(data_url, path.dirname(DEST_DIR))
-    else:
-        install_parser_model(PARSER_URL, DEST_DIR)
-        install_dep_vectors(DEP_VECTORS_URL, path.join(DEST_DIR, 'vocab'))
+    shutil.move(DEST_DIR, '/tmp')
+    install_data(data_url, path.dirname(DEST_DIR))
 
 
 if __name__ == '__main__':
