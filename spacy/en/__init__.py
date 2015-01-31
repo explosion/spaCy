@@ -43,14 +43,22 @@ class English(object):
 
     Keyword args:
         data_dir (unicode): A path to a directory, from which to load the pipeline.
-            If None, looks for a directory named "data/" in the same directory as
-            the present file, i.e. path.join(path.dirname(__file__, 'data')).
+            If empty string ('') --- the default --- it looks for a directory
+            named "data/" in the same directory as the present file, i.e.
+            
+                >>> data_dir = path.join(path.dirname(__file__, 'data'))
 
             If path.join(data_dir, 'pos') exists, the tagger is loaded from there.
 
             If path.join(data_dir, 'deps') exists, the parser is loaded from there.
+
+            To prevent any data files from being loaded, pass data_dir=None. This
+            is useful if you want to construct a lexicon, which you'll then save
+            for later loading.
     """
-    def __init__(self, data_dir=LOCAL_DATA_DIR):
+    def __init__(self, data_dir=''):
+        if data_dir == '':
+            data_dir = LOCAL_DATA_DIR
         self._data_dir = data_dir
         self.vocab = Vocab(data_dir=path.join(data_dir, 'vocab') if data_dir else None,
                            get_lex_props=get_lex_props)
@@ -61,20 +69,24 @@ class English(object):
             prefix_re = None
             suffix_re = None
             infix_re = None
+            self.has_parser_model = False
+            self.has_tagger_model = False
         else:
             tok_data_dir = path.join(data_dir, 'tokenizer')
             tok_rules, prefix_re, suffix_re, infix_re = read_lang_data(tok_data_dir)
             prefix_re = re.compile(prefix_re)
             suffix_re = re.compile(suffix_re)
             infix_re = re.compile(infix_re)
+            self.has_parser_model = path.exists(path.join(self._data_dir, 'deps'))
+            self.has_tagger_model = path.exists(path.join(self._data_dir, 'pos'))
+
         self.tokenizer = Tokenizer(self.vocab, tok_rules, prefix_re,
                                    suffix_re, infix_re,
                                    POS_TAGS, tag_names)
+        # These are lazy-loaded
         self._tagger = None
         self._parser = None
 
-        self.has_parser_model = path.exists(path.join(self._data_dir, 'deps'))
-        self.has_tagger_model = path.exists(path.join(self._data_dir, 'pos'))
 
     @property
     def tagger(self):
