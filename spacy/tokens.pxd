@@ -37,8 +37,8 @@ cdef class Tokens:
 
     cdef list _py_tokens
     cdef unicode _string
-    cdef list _tag_strings
-    cdef list _dep_strings
+    cdef tuple _tag_strings
+    cdef tuple _dep_strings
 
     cdef public bint is_tagged
     cdef public bint is_parsed
@@ -52,24 +52,35 @@ cdef class Tokens:
 
 
 cdef class Token:
-    cdef readonly Tokens _seq
-    cdef readonly int i
+    cdef Vocab vocab
+    cdef Pool mem
+    cdef unicode _string
 
-    cdef readonly attr_t idx
-    cdef readonly attr_t cluster
-    cdef readonly attr_t length
-    cdef readonly attr_t orth
-    cdef readonly attr_t lower
-    cdef readonly attr_t norm
-    cdef readonly attr_t shape
-    cdef readonly attr_t prefix
-    cdef readonly attr_t suffix
-    cdef readonly float prob
-    cdef readonly float sentiment
-    cdef readonly attr_t flags
-    cdef readonly attr_t lemma
-    cdef readonly univ_pos_t pos
-    cdef readonly attr_t tag
-    cdef readonly attr_t dep
-    cdef readonly ndarray repvec
-    cdef readonly unicode string
+    cdef const TokenC* c
+    cdef int i
+    cdef int array_len
+
+    
+    cdef list _py
+    cdef tuple _tag_strings
+    cdef tuple _dep_strings
+
+    @staticmethod
+    cdef inline Token cinit(Pool mem, Vocab vocab, unicode string,
+                            const TokenC* token, int offset, int array_len,
+                            list py_tokens, tuple tag_strings, tuple dep_strings):
+        assert offset >= 0 and offset < array_len
+        if py_tokens[offset] is not None:
+            return py_tokens[offset]
+
+        cdef Token self = Token.__new__(Token, mem, vocab, string)
+
+        self.c = token
+        self.i = offset
+        self.array_len = array_len
+
+        self._py = py_tokens
+        self._tag_strings = tag_strings
+        self._dep_strings = dep_strings
+        py_tokens[offset] = self
+        return self
