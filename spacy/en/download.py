@@ -3,6 +3,7 @@ import os
 import tarfile
 import shutil
 import wget
+import plac
 
 
 ALL_DATA_DIR_URL = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_data_all-0.4.tgz'
@@ -38,13 +39,17 @@ def install_dep_vectors(url, dest_dir):
     filename = download_file(url, dest_dir)
 
 
-def main():
+def main(data_size='all'):
+    if data_size == 'all':
+        data_url = ALL_DATA_DIR_URL
+    elif data_size == 'small':
+        data_url = SM_DATA_DIR_URL
     if not path.exists(DEST_DIR):
-        install_data(SM_DATA_DIR_URL, path.dirname(DEST_DIR))
+        install_data(data_url, path.dirname(DEST_DIR))
     else:
         install_parser_model(PARSER_URL, DEST_DIR)
         install_dep_vectors(DEP_VECTORS_URL, path.join(DEST_DIR, 'vocab'))
 
 
 if __name__ == '__main__':
-    main()
+    plac.call(main)
