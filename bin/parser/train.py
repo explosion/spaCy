@@ -246,7 +246,7 @@ def evaluate(Language, dev_loc, model_dir, gold_preproc=False):
 def main(train_loc, dev_loc, model_dir):
     with codecs.open(train_loc, 'r', 'utf8') as file_:
         train_sents  = read_docparse_gold(file_)
-    #train(English, train_sents, model_dir, gold_preproc=False)
+    train(English, train_sents, model_dir, gold_preproc=False)
     print evaluate(English, dev_loc, model_dir, gold_preproc=False)
     
 
