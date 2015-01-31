@@ -7,7 +7,7 @@
 spaCy: Industrial-strength NLP
 ==============================
 
-.. note:: `Version 0.4`_ released, with important bugfixes.
+.. note:: `Version 0.4`_ pushed to github, with important bugfixes.  Python3 support currently broken.
 
 .. _Version 0.4: updates.html
 
