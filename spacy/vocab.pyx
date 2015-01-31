@@ -12,6 +12,7 @@ from .lexeme cimport Lexeme
 from .strings cimport slice_unicode
 from .strings cimport hash_string
 from .orth cimport word_shape
+from .typedefs cimport attr_t
 
 from cymem.cymem cimport Address
 
@@ -41,8 +42,8 @@ cdef class Vocab:
         if data_dir is not None:
             if not path.isdir(data_dir):
                 raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
-            self.strings.load(path.join(data_dir, 'strings.txt'))
-            self.load_lexemes(path.join(data_dir, 'lexemes.bin'))
+            self.load_lexemes(path.join(data_dir, 'strings.txt'),
+                              path.join(data_dir, 'lexemes.bin'))
             if path.exists(path.join(data_dir, 'vec.bin')):
                 self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
 
@@ -129,14 +130,15 @@ cdef class Vocab:
             if key == 0:
                 continue
             lexeme = <LexemeC*>self._map.c_map.cells[i].value
-            st = fwrite(&key, sizeof(key), 1, fp)
+            st = fwrite(&lexeme.orth, sizeof(lexeme.orth), 1, fp)
             assert st == 1
             st = fwrite(lexeme, sizeof(LexemeC), 1, fp)
             assert st == 1
         st = fclose(fp)
         assert st == 0
 
-    def load_lexemes(self, loc):
+    def load_lexemes(self, strings_loc, loc):
+        self.strings.load(strings_loc)
         if not path.exists(loc):
             raise IOError('LexemeCs file not found at %s' % loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
@@ -144,10 +146,12 @@ cdef class Vocab:
         assert fp != NULL
         cdef size_t st
         cdef LexemeC* lexeme
+        cdef attr_t orth
         cdef hash_t key
+        cdef unicode py_str
         i = 0
         while True:
-            st = fread(&key, sizeof(key), 1, fp)
+            st = fread(&orth, sizeof(orth), 1, fp)
             if st != 1:
                 break
             lexeme = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
@@ -156,6 +160,9 @@ cdef class Vocab:
             lexeme.repvec = EMPTY_VEC
             if st != 1:
                 break
+            assert orth == lexeme.orth
+            py_str = self.strings[orth]
+            key = hash_string(py_str)
             self._map.set(key, lexeme)
             while self.lexemes.size() < (lexeme.id + 1):
                 self.lexemes.push_back(&EMPTY_LEXEME)
