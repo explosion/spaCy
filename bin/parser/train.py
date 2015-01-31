@@ -9,7 +9,6 @@ import codecs
 import random
 import time
 import gzip
-import nltk
 
 import plac
 import cProfile
@@ -219,10 +218,12 @@ def train(Language, paragraphs, model_dir, n_iter=15, feat_set=u'basic', seed=0,
 
 
 def evaluate(Language, dev_loc, model_dir, gold_preproc=False):
+    global loss
     nlp = Language()
     n_corr = 0
     total = 0
     skipped = 0
+    loss = 0
     with codecs.open(dev_loc, 'r', 'utf8') as file_:
         paragraphs = read_docparse_gold(file_)
     for tokens, tag_strs, heads, labels in iter_data(paragraphs, nlp.tokenizer,
