@@ -57,7 +57,7 @@ cdef class Token:
     cdef unicode _string
 
     cdef const TokenC* c
-    cdef int i
+    cdef readonly int i
     cdef int array_len
 
     

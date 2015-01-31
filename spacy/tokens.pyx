@@ -344,7 +344,7 @@ cdef class Token:
 
             elif ptr + ptr.head == self.c:
                 yield Token.cinit(self.mem, self.vocab, self._string,
-                                  ptr, self.i, self.array_len,
+                                  ptr, ptr - (self.c - self.i), self.array_len,
                                   self._py, self._tag_strings, self._dep_strings)
                 ptr += 1
             else:
@@ -363,7 +363,7 @@ cdef class Token:
                 ptr += ptr.head
             elif ptr + ptr.head == self.c:
                 yield Token.cinit(self.mem, self.vocab, self._string,
-                                  ptr, self.i, self.array_len,
+                                  ptr, ptr - (self.c - self.i), self.array_len,
                                   self._py, self._tag_strings, self._dep_strings)
                 ptr -= 1
             else:
@@ -373,7 +373,7 @@ cdef class Token:
     def head(self):
         """The token predicted by the parser to be the head of the current token."""
         return Token.cinit(self.mem, self.vocab, self._string,
-                           self.c + self.c.head, self.i, self.array_len,
+                           self.c + self.c.head, self.i + self.c.head, self.array_len,
                            self._py, self._tag_strings, self._dep_strings)
 
     @property
