@@ -7,6 +7,10 @@
 spaCy: Industrial-strength NLP
 ==============================
 
+.. note:: `Version 0.4`_ released, with important bugfixes.
+
+.. _Version 0.4: updates.html
+
 `spaCy`_ is a new library for text processing in Python and Cython.
 I wrote it because I think small companies are terrible at
 natural language processing (NLP).  Or rather:
@@ -324,3 +328,4 @@ previous fastest parser that I'm aware of.
     api.rst
     howworks.rst
     license.rst 
+    updates.rst
