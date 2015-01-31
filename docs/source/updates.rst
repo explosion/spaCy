@@ -41,6 +41,14 @@ Bug Fixes
     currently a memory leak.  Please get in touch no the tracker if you want to
     know more, especially if you think you can help.
 
+Known Issues
+------------
+
+Some systems are still experiencing memory errors, which I'm having trouble
+pinning down or reproducing.  Please send details of your system to the
+`Issue Tracker`_ if this is happening to you.
+
+.. _Issue Tracker: https://github.com/honnibal/spaCy/issues
 
 Enhancements: Train and evaluate on whole paragraphs
 ----------------------------------------------------
