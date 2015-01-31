@@ -182,11 +182,13 @@ cdef class TransitionSystem:
             add_dep(s, s.stack[-1], s.stack[0], get_s0(s).dep)
             pop_stack(s)
         elif t.move == BREAK:
+            s.sent[s.i-1].sent_end = True
             while s.stack_len != 0:
                 if get_s0(s).head == 0:
                     get_s0(s).dep = 0
                 s.stack -= 1
                 s.stack_len -= 1
+
             if not at_eol(s):
                 push_stack(s)
         else:
