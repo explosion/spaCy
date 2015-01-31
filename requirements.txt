@@ -6,3 +6,4 @@ murmurhash
 unidecode
 numpy
 wget
+plac
