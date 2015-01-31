@@ -53,7 +53,6 @@ cdef class Tokens:
 
 cdef class Token:
     cdef Vocab vocab
-    cdef Pool mem
     cdef unicode _string
 
     cdef const TokenC* c
@@ -66,14 +65,14 @@ cdef class Token:
     cdef tuple _dep_strings
 
     @staticmethod
-    cdef inline Token cinit(Pool mem, Vocab vocab, unicode string,
+    cdef inline Token cinit(Vocab vocab, unicode string,
                             const TokenC* token, int offset, int array_len,
                             list py_tokens, tuple tag_strings, tuple dep_strings):
         assert offset >= 0 and offset < array_len
         if py_tokens[offset] is not None:
             return py_tokens[offset]
 
-        cdef Token self = Token.__new__(Token, mem, vocab, string)
+        cdef Token self = Token.__new__(Token, vocab, string)
 
         self.c = token
         self.i = offset

@@ -104,7 +104,7 @@ cdef class Tokens:
         if i < 0:
             i = self.length - i
         bounds_check(i, self.length, PADDING)
-        return Token.cinit(self.mem, self.vocab, self._string,
+        return Token.cinit(self.vocab, self._string,
                            &self.data[i], i, self.length,
                            self._py_tokens, self._tag_strings, self._dep_strings)
 
@@ -115,7 +115,7 @@ cdef class Tokens:
             token (Token):
         """
         for i in range(self.length):
-            yield Token.cinit(self.mem, self.vocab, self._string,
+            yield Token.cinit(self.vocab, self._string,
                               &self.data[i], i, self.length,
                               self._py_tokens, self._tag_strings, self._dep_strings)
 
@@ -233,8 +233,7 @@ cdef class Tokens:
 
 cdef class Token:
     """An individual token."""
-    def __cinit__(self, Pool mem, Vocab vocab, unicode string):
-        self.mem = mem
+    def __cinit__(self, Vocab vocab, unicode string):
         self.vocab = vocab
         self._string = string
 
@@ -242,7 +241,7 @@ cdef class Token:
         return self.c.lex.length
 
     def nbor(self, int i=1):
-        return Token.cinit(self.mem, self.vocab, self._string,
+        return Token.cinit(self.vocab, self._string,
                            self.c, self.i, self.array_len,
                            self._py, self._tag_strings, self._dep_strings)
 
@@ -343,7 +342,7 @@ cdef class Token:
                 ptr += ptr.head
 
             elif ptr + ptr.head == self.c:
-                yield Token.cinit(self.mem, self.vocab, self._string,
+                yield Token.cinit(self.vocab, self._string,
                                   ptr, ptr - (self.c - self.i), self.array_len,
                                   self._py, self._tag_strings, self._dep_strings)
                 ptr += 1
@@ -362,7 +361,7 @@ cdef class Token:
             if (ptr.head < 0) and ((ptr + ptr.head) > self.c):
                 ptr += ptr.head
             elif ptr + ptr.head == self.c:
-                yield Token.cinit(self.mem, self.vocab, self._string,
+                yield Token.cinit(self.vocab, self._string,
                                   ptr, ptr - (self.c - self.i), self.array_len,
                                   self._py, self._tag_strings, self._dep_strings)
                 ptr -= 1
@@ -372,7 +371,7 @@ cdef class Token:
     @property
     def head(self):
         """The token predicted by the parser to be the head of the current token."""
-        return Token.cinit(self.mem, self.vocab, self._string,
+        return Token.cinit(self.vocab, self._string,
                            self.c + self.c.head, self.i + self.c.head, self.array_len,
                            self._py, self._tag_strings, self._dep_strings)
 
