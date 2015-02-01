@@ -1,3 +1,4 @@
+from __future__ import print_function
 from os import path
 import os
 import tarfile
@@ -44,7 +45,9 @@ def main(data_size='all'):
         data_url = ALL_DATA_DIR_URL
     elif data_size == 'small':
         data_url = SM_DATA_DIR_URL
-    shutil.move(DEST_DIR, '/tmp')
+    if path.exists(DEST_DIR):
+        print("Moving existing dir %s to /tmp" % DEST_DIR)
+        shutil.move(DEST_DIR, '/tmp')
     install_data(data_url, path.dirname(DEST_DIR))
 
 
