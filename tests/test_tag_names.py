@@ -1,11 +1,12 @@
 from spacy.en import English
+import six
 
 def test_tag_names():
     nlp = English()
     tokens = nlp(u'I ate pizzas with anchovies.', parse=True, tag=True)
     pizza = tokens[2]
     assert type(pizza.pos) == int
-    assert type(pizza.pos_) == str
+    assert isinstance(pizza.pos_, six.text_types)
     assert type(pizza.dep) == int
-    assert type(pizza.dep_) == str
+    assert isinstance(pizza.dep_, six.text_types)
     assert pizza.tag_ == u'NNS'
