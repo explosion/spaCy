@@ -7,15 +7,10 @@
 spaCy: Industrial-strength NLP
 ==============================
 
-.. note:: `Version 0.4`_ released, with better parsing, better parse-tree
+.. note:: `Version 0.4.0`_ released, with better parsing, better parse-tree
   navigation, and major bug fixes.
 
-  spaCy is currently unstable: in some environments, it's crashing with
-  memory errors.  I'm working on getting an environment that replicates the
-  problem.  If you're experiencing these errors, please post details of your
-  environment to the `Issue Tracker`_
-
-.. _Version 0.4: updates.html
+.. _Version 0.4.0: updates.html
 
 .. _Issue Tracker: https://github.com/honnibal/spaCy/issues
 
