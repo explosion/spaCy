@@ -7,3 +7,4 @@ unidecode
 numpy
 wget
 plac
+six
