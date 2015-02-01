@@ -103,7 +103,7 @@ def run_setup(exts):
         ext_modules=exts,
         license="Dual: Commercial or AGPL",
         install_requires=['numpy', 'murmurhash', 'cymem', 'preshed', 'thinc',
-                          "unidecode", 'wget', 'plac'],
+                          "unidecode", 'wget', 'plac', 'six'],
         setup_requires=["headers_workaround"],
     )
 
