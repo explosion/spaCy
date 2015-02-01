@@ -7,9 +7,17 @@
 spaCy: Industrial-strength NLP
 ==============================
 
-.. note:: `Version 0.4`_ pushed to github, with important bugfixes.  Python3 support currently broken.
+.. note:: `Version 0.4`_ released, with better parsing, better parse-tree
+  navigation, and major bug fixes.
+
+  spaCy is currently unstable: in some environments, it's crashing with
+  memory errors.  I'm working on getting an environment that replicates the
+  problem.  If you're experiencing these errors, please post details of your
+  environment to the `Issue Tracker`_
 
 .. _Version 0.4: updates.html
+
+.. _Issue Tracker: https://github.com/honnibal/spaCy/issues
 
 `spaCy`_ is a new library for text processing in Python and Cython.
 I wrote it because I think small companies are terrible at
