@@ -56,7 +56,7 @@ a convenient API:
     >>> tokens = nlp(u'I ate the pizza with anchovies.')
     >>> pizza = tokens[3]
     >>> (pizza.orth, pizza.orth_, pizza.head.lemma, pizza.head.lemma_)
-    ... (14702, 'pizza', 14702, 'ate')
+    ... (14702, u'pizza', 14702, u'eat')
 
 spaCy maps all strings to sequential integer IDs --- a common trick in NLP.
 If an attribute `Token.foo` is an integer ID, then `Token.foo_` is the string,
