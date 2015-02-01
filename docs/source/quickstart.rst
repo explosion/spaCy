@@ -12,17 +12,17 @@ Install
     $ pip install spacy
     $ python -m spacy.en.download
 
-The download command fetches and installs about 300mb of data, for the `parser model`_
-and `word vectors`_, which it installs within the spacy.en package directory.
+The download command fetches and installs about `300mb of data`_, for the 
+parser model and word vectors, which it installs within the spacy.en package directory.
 
-.. _word vectors: http://s3-us-west-1.amazonaws.com/media.spacynlp.com/vec.bin
+.. _300 mb of data: http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_data_all-0.4.tgz
 
-.. _parser model: http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_deps-0.30.tgz
+Compilation from source will install Cython to build the package.  If you're
+using Python 2, I also recommend installing fabric and fabtools --- this is how
+I build the project.
 
-Compilation from source is currently complicated, because there's binary data
-that's provided in the PyPi package, but is not in the repository.  As
-a temporary workaround, you can download the PyPi package and extract it from
-there. I'll have a better solution shortly, probably using Github Releases.
+I've included instructions for installing spaCy into a virtualenv for
+completeness, but you may have your own solution for this (e.g. using pyenv).
 
 .. code:: bash
 
@@ -31,16 +31,14 @@ there. I'll have a better solution shortly, probably using Github Releases.
     $ virtualenv .env && source .env/bin/activate
     $ export PYTHONPATH=`pwd`
     $ pip install -r requirements.txt
-    $ wget https://devpi.net/root/pypi/+f/4e8/d81919a7876fe/spacy-0.33.tar.gz
-    $ tar -xzf spacy-0.33.tar.gz
-    $ cp -r spacy-0.33/spacy/en/data spacy/en/data
-    $ fab make 
+    $ python setup.py build_ext --inplace
     $ python -m spacy.en.download
-    $ fab test
+    $ pip install pytest
+    $ py.test tests/
 
 Python packaging is awkward at the best of times, and it's particularly tricky
 with C extensions, built via Cython, requiring large data files. So, please
-bear with me :)
+report issues as you encounter them, and bear with me :)
 
 Usage
 -----
