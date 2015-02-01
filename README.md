@@ -1,6 +1,8 @@
 spaCy
 =====
 
+[![Build Status](https://travis-ci.org/honnibal/spaCy.svg?branch=master)](https://travis-ci.org/honnibal/spaCy)
+
 http://honnibal.github.io/spaCy
 
 Fast, state-of-the-art natural language processing pipeline. Commercial licenses available, or use under AGPL.
