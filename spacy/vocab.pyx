@@ -142,7 +142,7 @@ cdef class Vocab:
         if not path.exists(loc):
             raise IOError('LexemeCs file not found at %s' % loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
-        cdef FILE* fp = fopen(<char*>bytes_loc, 'rb')
+        cdef FILE* fp = fopen(<char*>bytes_loc, b'rb')
         assert fp != NULL
         cdef size_t st
         cdef LexemeC* lexeme
@@ -171,7 +171,7 @@ cdef class Vocab:
         fclose(fp)
     
     def load_rep_vectors(self, loc):
-        file_ = _CFile(loc, 'rb')
+        file_ = _CFile(loc, b'rb')
         cdef int32_t word_len
         cdef int32_t vec_len
         cdef float* vec
@@ -237,7 +237,7 @@ def write_binary_vectors(in_loc, out_loc):
 
 cdef class _CFile:
     cdef FILE* fp
-    def __init__(self, loc, mode):
+    def __init__(self, loc, bytes mode):
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self.fp = fopen(<char*>bytes_loc, mode)
         if self.fp == NULL:
