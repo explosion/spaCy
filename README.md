@@ -1,6 +1,7 @@
 spaCy
 =====
 
+Python 2.7 bugfixes now pushed to master. For last working Python 3 version, install from pip. Bug fix to Python3 coming soon.
 
 http://honnibal.github.io/spaCy
 
