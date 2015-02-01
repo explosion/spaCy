@@ -102,7 +102,7 @@ def run_setup(exts):
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
         license="Dual: Commercial or AGPL",
-        install_requires=['numpy', 'murmurhash', 'cymem', 'preshed', 'thinc',
+        install_requires=['numpy', 'murmurhash', 'cymem >= 1.11', 'preshed', 'thinc',
                           "unidecode", 'wget', 'plac', 'six'],
         setup_requires=["headers_workaround"],
     )
