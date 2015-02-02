@@ -278,5 +278,9 @@ cdef class TransitionSystem:
                       s.stack[0], gold_heads[s.stack[0]],
                       s.i, gold_heads[s.i]]
 
-            raise Exception(msg % tuple(fields))
+            raise OracleError(msg % tuple(fields))
         return t
+
+
+class OracleError(Exception):
+    pass
