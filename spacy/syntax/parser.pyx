@@ -26,6 +26,7 @@ from thinc.learner cimport LinearModel
 from ..tokens cimport Tokens, TokenC
 
 from .arc_eager cimport TransitionSystem, Transition
+from .arc_eager import OracleError
 
 from ._state cimport init_state, State, is_final, get_idx, get_s0, get_s1, get_n0, get_n1
 
@@ -131,11 +132,11 @@ cdef class GreedyParser:
             if gold_heads[i] != -1:
                 n_corr += (i + state.sent[i].head) == gold_heads[i]
         if force_gold and n_corr != tokens.length:
-            print py_words
-            print gold_heads
-            for move, state_str in history:
-                print move, state_str
-            for i in range(tokens.length):
-                print py_words[i], py_words[i + state.sent[i].head], py_words[gold_heads[i]]
-            raise Exception
+            #print py_words
+            #print gold_heads
+            #for move, state_str in history:
+            #    print move, state_str
+            #for i in range(tokens.length):
+            #    print py_words[i], py_words[i + state.sent[i].head], py_words[gold_heads[i]]
+            raise OracleError
         return n_corr
