@@ -255,6 +255,10 @@ cdef class Token:
         return self._string[self.c.idx:next_idx]
 
     @property
+    def prob(self):
+        return self.c.lex.prob
+
+    @property
     def idx(self):
         return self.c.idx
 
