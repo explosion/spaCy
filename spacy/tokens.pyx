@@ -212,20 +212,22 @@ cdef class Tokens:
     def sents(self):
         """This is really only a place-holder for a proper solution."""
         cdef int i
-        sentences = []
         cdef Tokens sent = Tokens(self.vocab, self._string[self.data[0].idx:])
-        cdef attr_t period = self.vocab.strings['.']
-        cdef attr_t question = self.vocab.strings['?']
-        cdef attr_t exclamation = self.vocab.strings['!']
+        #cdef attr_t period = self.vocab.strings['.']
+        #cdef attr_t question = self.vocab.strings['?']
+        #cdef attr_t exclamation = self.vocab.strings['!']
         spans = []
         start = None
         for i in range(self.length):
             if start is None:
                 start = i
-            if self.data[i].lex.orth == period or self.data[i].lex.orth == exclamation or \
-              self.data[i].lex.orth == question:
+            if self.data[i].sent_end:
                 spans.append((start, i+1))
                 start = None
+            #if self.data[i].lex.orth == period or self.data[i].lex.orth == exclamation or \
+            #  self.data[i].lex.orth == question:
+            #    spans.append((start, i+1))
+            #    start = None
         if start is not None:
             spans.append((start, self.length))
         return spans
