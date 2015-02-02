@@ -17,6 +17,8 @@ from ..tokens cimport Tokens
 from ..morphology cimport set_morph_from_dict
 from .._ml cimport arg_max
 
+from .attrs cimport IS_ALPHA, IS_PUNCT, LIKE_NUM, LIKE_URL
+
 from .lemmatizer import Lemmatizer
 
 
@@ -77,6 +79,7 @@ cpdef enum:
     P2_suffix
     P2_pos
     P2_lemma
+    P2_flags
 
     P1_orth
     P1_cluster
@@ -85,6 +88,7 @@ cpdef enum:
     P1_suffix
     P1_pos
     P1_lemma
+    P1_flags
 
     W_orth
     W_cluster
@@ -93,6 +97,7 @@ cpdef enum:
     W_suffix
     W_pos
     W_lemma
+    W_flags
 
     N1_orth
     N1_cluster
@@ -101,6 +106,7 @@ cpdef enum:
     N1_suffix
     N1_pos
     N1_lemma
+    N1_flags
 
     N2_orth
     N2_cluster
@@ -109,6 +115,7 @@ cpdef enum:
     N2_suffix
     N2_pos
     N2_lemma
+    N2_flags
 
     N_CONTEXT_FIELDS
 
@@ -165,6 +172,12 @@ POS_TAGS = {
     "``": (PUNCT, {}),
     ":": (PUNCT, {}),
     "?": (PUNCT, {}),
+    "ADD": (X, {}),
+    "NFP": (PUNCT, {}),
+    "GW": (X, {}),
+    "AFX": (X, {}),
+    "HYPH": (PUNCT, {}),
+    "XX": (X, {})
 }
 
 
@@ -191,6 +204,13 @@ POS_TEMPLATES = (
     (N2_cluster,),
     (P1_cluster,),
     (P2_cluster,),
+
+    (W_flags,),
+    (N1_flags,),
+    (N2_flags,),
+    (P1_flags,),
+    (P2_flags,),
+
 )
 
 
@@ -220,6 +240,7 @@ cdef class EnPosTagger:
         self.strings = strings
         cfg = json.load(open(path.join(data_dir, 'pos', 'config.json')))
         self.tag_names = sorted(cfg['tag_names'])
+        assert self.tag_names
         self.n_tags = len(self.tag_names)
         self.tag_map = cfg['tag_map']
         cdef int n_tags = len(self.tag_names) + 1
@@ -253,6 +274,7 @@ cdef class EnPosTagger:
                 tokens.data[i].tag = arg_max(scores, self.model.n_classes)
                 self.set_morph(i, tokens.data)
         tokens._tag_strings = tuple(self.tag_names)
+        assert tokens._tag_strings, self.tag_names
         tokens.is_tagged = True
 
     def train(self, Tokens tokens, object gold_tag_strs):
@@ -328,10 +350,21 @@ cdef int fill_context(atom_t* context, const int i, const TokenC* tokens) except
 
 
 cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
-    context[0] = t.lex.orth
+    context[0] = t.lex.lower
     context[1] = t.lex.cluster
     context[2] = t.lex.shape
     context[3] = t.lex.prefix
     context[4] = t.lex.suffix
-    context[5] = t.tag
+    context[5] = t.pos
     context[6] = t.lemma
+    if t.lex.flags & (1 << IS_ALPHA):
+        context[7] = 1
+    elif t.lex.flags & (1 << IS_PUNCT):
+        context[7] = 2
+    elif t.lex.flags & (1 << LIKE_URL):
+        context[7] = 3
+    elif t.lex.flags & (1 << LIKE_NUM):
+        context[7] = 4
+    else:
+        context[7] = 0
+
