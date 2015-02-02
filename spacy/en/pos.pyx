@@ -213,7 +213,6 @@ POS_TEMPLATES = (
     (N2_flags,),
     (P1_flags,),
     (P2_flags,),
-
 )
 
 
