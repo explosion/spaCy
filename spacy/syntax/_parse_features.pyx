@@ -84,6 +84,7 @@ cdef int fill_context(atom_t* context, State* state) except -1:
             if state.stack_len >= 3:
                 context[S2_has_head] = has_head(get_s2(state))
 
+
 unigrams = (
     (S2W, S2p),
     (S2c6, S2p),
