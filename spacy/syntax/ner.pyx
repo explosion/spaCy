@@ -190,7 +190,6 @@ cdef class TransitionSystem:
 
     cdef Transition best_gold(self, Transition* guess, const weight_t* scores,
                               const State* s, Move* golds) except *:
-
         cdef Move* g = &golds[s.i]
         cdef ActionType next_act = <ActionType>golds[s.i+1].action if s.i < s.length else OUT
         cdef bint is_sunk = entity_is_sunk(s, golds)
@@ -203,8 +202,8 @@ cdef class TransitionSystem:
                scores[i] > score:
                 best = i
                 score = scores[i]
-    assert best >= 0
-    return self._moves[best]
+        assert best >= 0
+        return self._moves[best]
 
 
 class OracleError(Exception):
