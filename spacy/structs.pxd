@@ -23,6 +23,7 @@ cdef struct LexemeC:
 
     float prob
     float sentiment
+    float l2_norm
 
 
 cdef struct Morphology:
