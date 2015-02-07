@@ -13,7 +13,7 @@ AWS_STORE = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com'
 
 ALL_DATA_DIR_URL = '%s/en_data_all-%s.tgz' % (AWS_STORE, VERSION)
 
-SM_DATA_DIR_URL = '%s/en_data_sm-%s.tgz' % % (AWS_STORE, VERSION)
+SM_DATA_DIR_URL = '%s/en_data_sm-%s.tgz' % (AWS_STORE, VERSION)
 
 
 DEST_DIR = path.join(path.dirname(__file__), 'data')
