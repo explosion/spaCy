@@ -83,10 +83,9 @@ particularly egregious:
     >>> from spacy.parts_of_speech import ADV
     >>> # Load the pipeline, and call it with some text.
     >>> nlp = spacy.en.English()
-    >>> tokens = nlp("‘Give it back,’ he pleaded abjectly, ‘it’s mine.’",
-                     tag=True, parse=False)
-    >>> print(''.join(tok.string.upper() if tok.pos == ADV else tok.string for tok in tokens))
-    ‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’
+    >>> tokens = nlp(u"‘Give it back,’ he pleaded abjectly, ‘it’s mine.’", tag=True, parse=False)
+    >>> print u''.join(tok.string.upper() if tok.pos == ADV else tok.string for tok in tokens)
+    u‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’
 
 
 Easy enough --- but the problem is that we've also highlighted "back".
@@ -103,11 +102,11 @@ manner adverbs that the style guides are worried about.
 The :py:attr:`Lexeme.prob` and :py:attr:`Token.prob` attribute gives a
 log probability estimate of the word:
 
-   >>> nlp.vocab['back'].prob
+   >>> nlp.vocab[u'back'].prob
    -7.403977394104004
-   >>> nlp.vocab['not'].prob
+   >>> nlp.vocab[u'not'].prob
    -5.407193660736084
-   >>> nlp.vocab['quietly'].prob
+   >>> nlp.vocab[u'quietly'].prob
    -11.07155704498291
 
 (The probability estimate is based on counts from a 3 billion word corpus,
@@ -125,8 +124,8 @@ marker.  Let's try N=1000 for now:
     >>> probs = [lex.prob for lex in nlp.vocab]
     >>> probs.sort()
     >>> is_adverb = lambda tok: tok.pos == ADV and tok.prob < probs[-1000]
-    >>> tokens = nlp("‘Give it back,’ he pleaded abjectly, ‘it’s mine.’")
-    >>> print(''.join(tok.string.upper() if is_adverb(tok) else tok.string for tok in tokens))
+    >>> tokens = nlp(u"‘Give it back,’ he pleaded abjectly, ‘it’s mine.’")
+    >>> print u''.join(tok.string.upper() if is_adverb(tok) else tok.string for tok in tokens)
     ‘Give it back,’ he pleaded ABJECTLY, ‘it’s mine.’
 
 There are lots of other ways we could refine the logic, depending on just what
@@ -136,7 +135,7 @@ representation for every word (by default, the vectors produced by
 `Levy and Goldberg (2014)`_).  Naturally, the vector is provided as a numpy
 array:
 
-    >>> pleaded = tokens[8]
+    >>> pleaded = tokens[7]
     >>> pleaded.repvec.shape
     (300,)
     >>> pleaded.repvec[:5]
@@ -150,9 +149,10 @@ cosine metric:
 
     >>> from numpy import dot
     >>> from numpy.linalg import norm
-    >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1), norm(v2))
+ 
+    >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1) * norm(v2))
     >>> words = [w for w in nlp.vocab if w.lower]
-    >>> words.sort(key=lambda w: cosine(w, pleaded))
+    >>> words.sort(key=lambda w: cosine(w.repvec, pleaded.repvec))
     >>> words.reverse()
     >>> print('1-20', ', '.join(w.orth_ for w in words[0:20]))
     1-20 pleaded, pled, plead, confessed, interceded, pleads, testified, conspired, motioned, demurred, countersued, remonstrated, begged, apologised, consented, acquiesced, petitioned, quarreled, appealed, pleading
@@ -177,7 +177,7 @@ as our target:
 
     >>> say_verbs = ['pleaded', 'confessed', 'remonstrated', 'begged', 'bragged', 'confided', 'requested']
     >>> say_vector = sum(nlp.vocab[verb].repvec for verb in say_verbs) / len(say_verbs)
-    >>> words.sort(key=lambda w: cosine(w.repvec, say_vector))
+    >>> words.sort(key=lambda w: cosine(w.repvec * say_vector))
     >>> words.reverse()
     >>> print('1-20', ', '.join(w.orth_ for w in words[0:20]))
     1-20 bragged, remonstrated, enquired, demurred, sighed, mused, intimated, retorted, entreated, motioned, ranted, confided, countersued, gestured, implored, interceded, muttered, marvelled, bickered, despaired
