@@ -37,6 +37,7 @@ cdef class Lexeme:
     cdef readonly attr_t cluster
     cdef readonly float prob
     cdef readonly float sentiment
+    cdef readonly float l2_norm
 
     # Workaround for an apparent bug in the way the decorator is handled ---
     # TODO: post bug report / patch to Cython.
@@ -45,6 +46,7 @@ cdef class Lexeme:
         cdef Lexeme py = Lexeme.__new__(Lexeme, 300)
         for i in range(300):
             py.repvec[i] = ptr.repvec[i]
+        py.l2_norm = ptr.l2_norm
         py.flags = ptr.flags
         py.id = ptr.id
         py.length = ptr.length
@@ -67,6 +69,8 @@ cdef class Lexeme:
         py.prob = ptr.prob
         py.sentiment = ptr.sentiment
         return py
+
+    cpdef bint check(self, attr_id_t flag_id) except -1
 
 
 cdef inline bint check_flag(const LexemeC* lexeme, attr_id_t flag_id) nogil:
