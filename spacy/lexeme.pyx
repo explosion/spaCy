@@ -39,3 +39,10 @@ cdef class Lexeme:
     """
     def __cinit__(self, int vec_size):
         self.repvec = numpy.ndarray(shape=(vec_size,), dtype=numpy.float32)
+
+    @property
+    def has_repvec(self):
+        return self.l2_norm != 0
+
+    cpdef bint check(self, attr_id_t flag_id) except -1:
+        return self.flags & (1 << flag_id)
