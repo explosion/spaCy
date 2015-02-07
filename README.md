@@ -1,10 +1,16 @@
 spaCy
 =====
 
+[![Build Status](https://travis-ci.org/honnibal/spaCy.svg?branch=master)](https://travis-ci.org/honnibal/spaCy)
+
 http://honnibal.github.io/spaCy
 
 Fast, state-of-the-art natural language processing pipeline. Commercial licenses available, or use under AGPL.
 
+Version 0.40 released 
+---------------------
+
+2014-02-01 
 
 * Several bug-fixes have now been pushed to master
 * Tests fail on some platforms, including Travis CI, due to memory errors.
