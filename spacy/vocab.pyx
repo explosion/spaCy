@@ -5,6 +5,7 @@ from libc.stdint cimport int32_t
 import bz2
 from os import path
 import codecs
+import math
 
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport set_lex_struct_props
@@ -205,6 +206,9 @@ cdef class Vocab:
             lex = <LexemeC*>self.lexemes[i]
             if lex.lower < vectors.size():
                 lex.repvec = vectors[lex.lower]
+                for i in range(vec_len):
+                    lex.l2_norm += (lex.repvec[i] * lex.repvec[i])
+                lex.l2_norm = math.sqrt(lex.l2_norm)
             else:
                 lex.repvec = EMPTY_VEC
 
