@@ -68,7 +68,10 @@ cdef class Token:
     cdef inline Token cinit(Vocab vocab, unicode string,
                             const TokenC* token, int offset, int array_len,
                             list py_tokens, tuple tag_strings, tuple dep_strings):
-        assert offset >= 0 and offset < array_len
+        if offset < 0 or offset >= array_len:
+
+            msg = "Attempt to access token at %d, max length %d"
+            raise IndexError(msg % (offset, array_len))
         if py_tokens[offset] is not None:
             return py_tokens[offset]
 
