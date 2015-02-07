@@ -6,14 +6,15 @@ import shutil
 import wget
 import plac
 
+# TODO: Read this from the same source as the setup
+VERSION = '0.5'
 
-ALL_DATA_DIR_URL = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_data_all-0.4.tgz'
+AWS_STORE = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com'
 
-SM_DATA_DIR_URL = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_data_sm-0.4.tgz'
+ALL_DATA_DIR_URL = '%s/en_data_all-%s.tgz' % (AWS_STORE, VERSION)
 
-PARSER_URL = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_deps-0.30.tgz'
+SM_DATA_DIR_URL = '%s/en_data_sm-%s.tgz' % % (AWS_STORE, VERSION)
 
-DEP_VECTORS_URL = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com/vec.bin'
 
 DEST_DIR = path.join(path.dirname(__file__), 'data')
 
