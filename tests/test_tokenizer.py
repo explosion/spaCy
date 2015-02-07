@@ -10,6 +10,10 @@ from spacy.en import English
 def EN():
     return English().tokenizer
 
+def test_no_word(EN):
+    tokens = EN(u'')
+    assert len(tokens) == 0
+
 def test_single_word(EN):
     tokens = EN(u'hello')
     assert tokens[0].orth_ == 'hello'
