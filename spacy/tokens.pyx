@@ -102,7 +102,7 @@ cdef class Tokens:
             token (Token):
         """
         if i < 0:
-            i = self.length - i
+            i = self.length + i
         bounds_check(i, self.length, PADDING)
         return Token.cinit(self.vocab, self._string,
                            &self.data[i], i, self.length,
