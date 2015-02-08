@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from spacy.en import English
 import pytest
 
@@ -25,3 +27,8 @@ def test_lemmas(lemmas, tagged):
     assert lemmas[3] == 'be'
     if tagged[2].tag == tagged[4].tag:
         assert lemmas[4] == 'goose'
+
+
+def test_didnt(EN):
+    tokens = EN(u"I didn't do it")
+    assert tokens[1].lemma_ != u""
