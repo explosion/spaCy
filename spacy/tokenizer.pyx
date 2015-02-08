@@ -245,6 +245,8 @@ cdef class Tokenizer:
                 tokens[i].lex = <LexemeC*>self.vocab.get(self.vocab.mem, &string)
                 if lemma:
                     tokens[i].lemma = self.vocab.strings[lemma]
+                else:
+                    tokens[i].lemma = 0
                 if 'pos' in props:
                     # TODO: Clean up this mess...
                     tokens[i].tag = tag_names.index(props['pos'])
@@ -252,6 +254,8 @@ cdef class Tokenizer:
                     # These are defaults, which can be over-ridden by the
                     # token-specific props.
                     set_morph_from_dict(&tokens[i].morph, tag_map[props['pos']][1])
+                    if tokens[i].lemma == 0:
+                        tokens[i].lemma = tokens[i].lex.orth
                 set_morph_from_dict(&tokens[i].morph, props)
             cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
             cached.length = len(substrings)
