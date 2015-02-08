@@ -9,8 +9,9 @@ from cymem.cymem cimport Address
 from thinc.typedefs cimport atom_t, weight_t
 
 from ..parts_of_speech cimport univ_pos_t
-from ..parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON, PRT, VERB
-from ..parts_of_speech cimport X, PUNCT, EOL
+from ..parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON
+
+from ..parts_of_speech cimport PRT, VERB, X, PUNCT, EOL
 from ..typedefs cimport id_t
 from ..structs cimport TokenC, Morphology, LexemeC
 from ..tokens cimport Tokens
@@ -140,8 +141,8 @@ POS_TAGS = {
     'NNPS': (NOUN, {'misc': NAME, 'number': PLURAL}),
     'PDT': (DET, {}),
     'POS': (PRT, {'case': GENITIVE}),
-    'PRP': (NOUN, {}),
-    'PRP$': (NOUN, {'case': GENITIVE}),
+    'PRP': (PRON, {}),
+    'PRP$': (PRON, {'case': GENITIVE}),
     'RB': (ADV, {}),
     'RBR': (ADV, {'misc': COMPARATIVE}),
     'RBS': (ADV, {'misc': SUPERLATIVE}),
