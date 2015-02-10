@@ -72,6 +72,9 @@ cdef class GreedyParser:
             Transition guess
             uint64_t state_key
 
+        if tokens.length == 0:
+            return 0
+
         cdef atom_t[CONTEXT_SIZE] context
         cdef int n_feats
         cdef Pool mem = Pool()

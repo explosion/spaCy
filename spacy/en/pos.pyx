@@ -265,6 +265,8 @@ cdef class EnPosTagger:
         Args:
             tokens (Tokens): The tokens to be tagged.
         """
+        if tokens.length == 0:
+            return 0
         cdef int i
         cdef atom_t[N_CONTEXT_FIELDS] context
         cdef const weight_t* scores
