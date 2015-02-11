@@ -178,7 +178,9 @@ POS_TAGS = {
     "GW": (X, {}),
     "AFX": (X, {}),
     "HYPH": (PUNCT, {}),
-    "XX": (X, {})
+    "XX": (X, {}),
+    "BES": (VERB, {'tenspect': PRESENT, 'person': THIRD}),
+    "HVS": (VERB, {'tenspect': PRESENT, 'person': THIRD})
 }
 
 
