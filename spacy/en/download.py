@@ -15,6 +15,8 @@ ALL_DATA_DIR_URL = '%s/en_data_all-%s.tgz' % (AWS_STORE, VERSION)
 
 SM_DATA_DIR_URL = '%s/en_data_sm-%s.tgz' % (AWS_STORE, VERSION)
 
+SPEECH_DATA_DIR_URL = '%s/en_data_speech-%s.tgz' % (AWS_STORE, VERSION)
+
 
 DEST_DIR = path.join(path.dirname(__file__), 'data')
 
@@ -44,6 +46,8 @@ def install_dep_vectors(url, dest_dir):
 def main(data_size='all'):
     if data_size == 'all':
         data_url = ALL_DATA_DIR_URL
+    elif data_size == 'speech':
+        data_url = SPEECH_DATA_DIR_URL
     elif data_size == 'small':
         data_url = SM_DATA_DIR_URL
     if path.exists(DEST_DIR):
