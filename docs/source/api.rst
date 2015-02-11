@@ -38,29 +38,35 @@ API
   +---------------+-------------+-------------+
 
 
-Internals
-  A Tokens instance stores the annotations in a C-array of TokenC structs.
-  Each TokenC struct holds a const pointer to a LexemeC struct, which describes
-  a vocabulary item.
+  Internals
+    A Tokens instance stores the annotations in a C-array of `TokenC` structs.
+    Each TokenC struct holds a const pointer to a LexemeC struct, which describes
+    a vocabulary item.
 
-  The Token objects are built lazily, from this underlying C-data.
+    The Token objects are built lazily, from this underlying C-data.
 
-  For faster access, the underlying C data can be accessed from Cython.  You
-  can also export the data to a numpy array, via Tokens.to_array, if pure Python
-  access is required, and you need slightly better performance.  However, this
-  is both slower and has a worse API than Cython access.  
+    For faster access, the underlying C data can be accessed from Cython.  You
+    can also export the data to a numpy array, via `Tokens.to_array`, if pure Python
+    access is required, and you need slightly better performance.  However, this
+    is both slower and has a worse API than Cython access.  
 
 .. Once a Token object has been created, it is persisted internally in Tokens._py_tokens.
 
 
 .. autoclass:: spacy.tokens.Token
-  :members:
+
+  Integer IDs are provided for all string features.  The (unicode) string is
+  provided by an attribute of the same name followed by an underscore, e.g.
+  token.orth is an integer ID, token.orth\_ is the unicode value.
+
+  The only exception is the Token.string attribute, which is (unicode)
+  string-typed.
 
   +--------------------------------------------------------------------------------+
-  | **Context-independent Attributes** (calculated once per orth-value in vocab)   |
+  | **Context-independent Attributes** (calculated once per entry in vocab)        |
   +-----------------+-------------+-----------+------------------------------------+
   | Attribute       | Type        | Attribute | Type                               |
-  +=================+=============+===========+====================================+
+  +-----------------+-------------+-----------+------------------------------------+
   | orth/orth\_     | int/unicode | __len__   | int                                |
   +-----------------+-------------+-----------+------------------------------------+
   | lower/lower\_   | int/unicode | cluster   | int                                |
@@ -85,7 +91,104 @@ Internals
   +-----------------+-------------+-----------+------------------------------------+
   | lemma/lemma\_   | int/unicode |           |                                    |
   +-----------------+-------------+-----------+------------------------------------+
-  
+
+  **String Features**
+
+  string
+    The form of the word as it appears in the string, include trailing
+    whitespace.  This is useful when you need to use linguistic features to
+    add inline mark-up to the string.
+
+  orth
+    The form of the word with no string normalization or processing, as it
+    appears in the string, without trailing whitespace.
+
+  lemma
+    The "base" of the word, with no inflectional suffixes, e.g. the lemma of
+    "developing" is "develop", the lemma of "geese" is "goose", etc.  Note that
+    *derivational* suffixes are not stripped, e.g. the lemma of "instutitions"
+    is "institution", not "institute".  Lemmatization is performed using the
+    WordNet data, but extended to also cover closed-class words such as
+    pronouns. By default, the WN lemmatizer returns "hi" as the lemma of "his".
+    We assign pronouns the lemma -PRON-.
+
+  lower
+    The form of the word, but forced to lower-case, i.e. lower = word.orth\_.lower()
+
+  norm
+    The form of the word, after language-specific normalizations have been
+    applied.
+
+  shape
+    A transform of the word's string, to show orthographic features.  The
+    characters a-z are mapped to x, A-Z is mapped to X, 0-9 is mapped to d. 
+    After these mappings, sequences of 4 or more of the same character are
+    truncated to length 4. Examples: C3Po --> XdXx, favorite --> xxxx,
+    :) --> :)
+
+  prefix
+    A length-N substring from the start of the word.  Length may vary by
+    language; currently for English n=1, i.e. prefix = word.orth\_[:1]
+
+  suffix
+    A length-N substring from the end of the word.  Length may vary by
+    language; currently for English n=3, i.e. suffix = word.orth\_[-3:]
+
+  **Distributional Features**
+
+  prob
+    The unigram log-probability of the word, estimated from counts from a
+    large corpus, smoothed using Simple Good Turing estimation.
+
+  cluster
+    The Brown cluster ID of the word.  These are often useful features for
+    linear models.  If you're using a non-linear model, particularly
+    a neural net or random forest, consider using the real-valued word
+    representation vector, in Token.repvec, instead.
+
+  repvec
+    A "word embedding" representation: a dense real-valued vector that supports
+    similarity queries between words.  By default, spaCy currently loads
+    vectors produced by the Levy and Goldberg (2014) dependency-based word2vec
+    model.
+
+  **Syntactic Features**
+
+  tag
+    A morphosyntactic tag, e.g. NN, VBZ, DT, etc.  These tags are
+    language/corpus specific, and typically describe part-of-speech and some
+    amount of morphological information.  For instance, in the Penn Treebank
+    tag set, VBZ is assigned to a present-tense singular verb.
+
+  pos
+    A part-of-speech tag, from the Google Universal Tag Set, e.g. NOUN, VERB,
+    ADV.  Constants for the 17 tag values are provided in spacy.parts\_of\_speech.
+ 
+  dep
+    The type of syntactic dependency relation between the word and its
+    syntactic head.
+
+  n_lefts
+    The number of immediate syntactic children preceding the word in the
+    string.
+
+  n_rights
+    The number of immediate syntactic children following the word in the
+    string.
+
+  **Navigating the Dependency Tree**
+
+  head
+    The Token that is the immediate syntactic head of the word.  If the word is
+    the root of the dependency tree, the same word is returned.
+
+  lefts
+    An iterator for the immediate leftward syntactic children of the word.
+
+  rights
+    An iterator for the immediate rightward syntactic children of the word.
+    
+
 
 .. py:class:: vocab.Vocab(self, data_dir=None, lex_props_getter=None)
 
