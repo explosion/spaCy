@@ -42,15 +42,15 @@ class English(object):
     Provides a tokenizer, lexicon, part-of-speech tagger and parser.
 
     Keyword args:
-        data_dir (unicode): A path to a directory, from which to load the pipeline.
-            If empty string ('') --- the default --- it looks for a directory
-            named "data/" in the same directory as the present file, i.e.
-            
-                >>> data_dir = path.join(path.dirname(__file__, 'data'))
+        data_dir (unicode):
+            A path to a directory, from which to load the pipeline.
 
-            If path.join(data_dir, 'pos') exists, the tagger is loaded from there.
+            By default, data is installed within the spaCy package directory. So
+            if no data_dir is specified, spaCy attempts to load from a
+            directory named "data" that is a sibling of the spacy/en/__init__.py
+            file.  You can find the location of this file by running:
 
-            If path.join(data_dir, 'deps') exists, the parser is loaded from there.
+                $ python -c "import spacy.en; print spacy.en.__file__"
 
             To prevent any data files from being loaded, pass data_dir=None. This
             is useful if you want to construct a lexicon, which you'll then save
