@@ -7,10 +7,6 @@
 spaCy: Industrial-strength NLP
 ==============================
 
-.. note:: `Version 0.40`_ released, with better parsing, better parse-tree
-  navigation, and major bug fixes.
-
-.. _Version 0.40: updates.html
 
 .. _Issue Tracker: https://github.com/honnibal/spaCy/issues
 
