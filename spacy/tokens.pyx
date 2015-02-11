@@ -17,6 +17,9 @@ import numpy
 
 cimport cython
 
+from cpython.mem cimport PyMem_Malloc, PyMem_Free
+from libc.string cimport memcpy
+import sys
 
 DEF PADDING = 5
 
@@ -92,6 +95,21 @@ cdef class Tokens:
         self._tag_strings = tuple() # These will be set by the POS tagger and parser
         self._dep_strings = tuple() # The strings are arbitrary and model-specific.
 
+    def __dealloc__(self):
+        # The Token object initially only gets a view of the underlying C
+        # data --- it doesn't own it. But, if we have Token objects that are
+        # going to outlive this instance, those objects need a copy of the C
+        # data.
+        cdef Token token
+        if self._py_tokens is not None:
+            for token in self._py_tokens:
+                if token is not None:
+                    # Why 3? 1 for the entry in the _py_tokens list,
+                    # and 1 for this reference. If we have _another_ ref, then
+                    # the token will live, and needs to own its data.
+                    if sys.getrefcount(token) >= 3:
+                        token.take_ownership_of_c_data()
+
     def __getitem__(self, object i):
         """Retrieve a token.
         
@@ -138,8 +156,6 @@ cdef class Tokens:
         self.length += 1
         self._py_tokens.append(None)
         return idx + t.lex.length
-
-
 
     @cython.boundscheck(False)
     cpdef long[:,:] to_array(self, object py_attr_ids):
@@ -234,196 +250,208 @@ cdef class Tokens:
 
 
 cdef class Token:
-    """An individual token."""
+    """An individual token --- i.e. a word, a punctuation symbol, etc.  Created
+    via Tokens.__getitem__ and Tokens.__iter__.
+    """
     def __cinit__(self, Vocab vocab, unicode string):
         self.vocab = vocab
         self._string = string
 
+    def __dealloc__(self):
+        if self._owns_c_data:
+            # Cast through const, if we own the data
+            PyMem_Free(<void*>self.c)
+
     def __len__(self):
         return self.c.lex.length
+
+    def __unicode__(self):
+        return self.string
+
+    cdef int take_ownership_of_c_data(self) except -1:
+        owned_data = <TokenC*>PyMem_Malloc(sizeof(TokenC) * self.array_len)
+        memcpy(owned_data, self.c, sizeof(TokenC) * self.array_len)
+        self.c = owned_data
+        self._owns_c_data = True
 
     def nbor(self, int i=1):
         return Token.cinit(self.vocab, self._string,
                            self.c, self.i, self.array_len,
                            self._py, self._tag_strings, self._dep_strings)
 
-    @property
-    def string(self):
-        cdef int next_idx = (self.c + 1).idx
-        if next_idx < self.c.idx:
-            next_idx = self.c.idx + self.c.lex.length
-        return self._string[self.c.idx:next_idx]
+    property string:
+        def __get__(self):
+            cdef int next_idx = (self.c + 1).idx
+            if next_idx < self.c.idx:
+                next_idx = self.c.idx + self.c.lex.length
+            return self._string[self.c.idx:next_idx]
 
-    @property
-    def prob(self):
-        return self.c.lex.prob
+    property prob:
+        def __get__(self):
+            return self.c.lex.prob
 
-    @property
-    def idx(self):
-        return self.c.idx
+    property idx:
+        def __get__(self):
+            return self.c.idx
 
-    @property
-    def cluster(self):
-        return self.c.lex.cluster
+    property cluster:
+        def __get__(self):
+            return self.c.lex.cluster
 
-    @property
-    def cluster(self):
-        return self.c.lex.cluster
+    property orth:
+        def __get__(self):
+            return self.c.lex.orth
 
-    @property
-    def orth(self):
-        return self.c.lex.orth
+    property lower:
+        def __get__(self):
+            return self.c.lex.lower
 
-    @property
-    def lower(self):
-        return self.c.lex.lower
+    property norm:
+        def __get__(self):
+            return self.c.lex.norm
 
-    @property
-    def norm(self):
-        return self.c.lex.norm
+    property shape:
+        def __get__(self):
+            return self.c.lex.shape
 
-    @property
-    def shape(self):
-        return self.c.lex.shape
+    property prefix:
+        def __get__(self):
+            return self.c.lex.prefix
 
-    @property
-    def prefix(self):
-        return self.c.lex.prefix
+    property suffix:
+        def __get__(self):
+            return self.c.lex.suffix
 
-    @property
-    def suffix(self):
-        return self.c.lex.suffix
+    property lemma:
+        def __get__(self):
+            return self.c.lemma
 
-    @property
-    def lemma(self):
-        return self.c.lemma
+    property pos:
+        def __get__(self):
+            return self.c.pos
 
-    @property
-    def pos(self):
-        return self.c.pos
+    property tag:
+        def __get__(self):
+            return self.c.tag
 
-    @property
-    def tag(self):
-        return self.c.tag
+    property dep:
+        def __get__(self):
+            return self.c.dep
 
-    @property
-    def dep(self):
-        return self.c.dep
+    property repvec:
+        def __get__(self):
+            return numpy.asarray(<float[:300,]> self.c.lex.repvec)
 
-    @property
-    def repvec(self):
-        return numpy.asarray(<float[:300,]> self.c.lex.repvec)
-
-    @property 
-    def n_lefts(self):
-        cdef int n = 0
-        cdef const TokenC* ptr = self.c - self.i
-        while ptr != self.c:
-            if ptr + ptr.head == self.c:
-                n += 1
-            ptr += 1
-        return n
-
-    @property 
-    def n_rights(self):
-        cdef int n = 0
-        cdef const TokenC* ptr = self.c + (self.array_len - self.i)
-        while ptr != self.c:
-            if ptr + ptr.head == self.c:
-                n += 1
-            ptr -= 1
-        return n
-
-    @property 
-    def lefts(self):
-        """The leftward immediate children of the word, in the syntactic
-        dependency parse.
-        """
-        cdef const TokenC* ptr = self.c - self.i
-        while ptr < self.c:
-            # If this head is still to the right of us, we can skip to it
-            # No token that's between this token and this head could be our
-            # child.
-            if (ptr.head >= 1) and (ptr + ptr.head) < self.c:
-                ptr += ptr.head
-
-            elif ptr + ptr.head == self.c:
-                yield Token.cinit(self.vocab, self._string,
-                                  ptr, ptr - (self.c - self.i), self.array_len,
-                                  self._py, self._tag_strings, self._dep_strings)
+    property n_lefts:
+        def __get__(self):
+            cdef int n = 0
+            cdef const TokenC* ptr = self.c - self.i
+            while ptr != self.c:
+                if ptr + ptr.head == self.c:
+                    n += 1
                 ptr += 1
-            else:
-                ptr += 1
+            return n
 
-    @property
-    def rights(self):
-        """The rightward immediate children of the word, in the syntactic
-        dependency parse."""
-        cdef const TokenC* ptr = (self.c - self.i) + (self.array_len - 1)
-        while ptr > self.c:
-            # If this head is still to the right of us, we can skip to it
-            # No token that's between this token and this head could be our
-            # child.
-            if (ptr.head < 0) and ((ptr + ptr.head) > self.c):
-                ptr += ptr.head
-            elif ptr + ptr.head == self.c:
-                yield Token.cinit(self.vocab, self._string,
-                                  ptr, ptr - (self.c - self.i), self.array_len,
-                                  self._py, self._tag_strings, self._dep_strings)
+    property n_rights:
+        def __get__(self):
+            cdef int n = 0
+            cdef const TokenC* ptr = self.c + (self.array_len - self.i)
+            while ptr != self.c:
+                if ptr + ptr.head == self.c:
+                    n += 1
                 ptr -= 1
-            else:
-                ptr -= 1
+            return n
 
-    @property
-    def head(self):
-        """The token predicted by the parser to be the head of the current token."""
-        return Token.cinit(self.vocab, self._string,
-                           self.c + self.c.head, self.i + self.c.head, self.array_len,
-                           self._py, self._tag_strings, self._dep_strings)
+    property lefts:
+        def __get__(self):
+            """The leftward immediate children of the word, in the syntactic
+            dependency parse.
+            """
+            cdef const TokenC* ptr = self.c - self.i
+            while ptr < self.c:
+                # If this head is still to the right of us, we can skip to it
+                # No token that's between this token and this head could be our
+                # child.
+                if (ptr.head >= 1) and (ptr + ptr.head) < self.c:
+                    ptr += ptr.head
 
-    @property
-    def whitespace_(self):
-        return self.string[self.c.lex.length:]
+                elif ptr + ptr.head == self.c:
+                    yield Token.cinit(self.vocab, self._string,
+                                      ptr, ptr - (self.c - self.i), self.array_len,
+                                      self._py, self._tag_strings, self._dep_strings)
+                    ptr += 1
+                else:
+                    ptr += 1
 
-    @property
-    def orth_(self):
-        return self.vocab.strings[self.c.lex.orth]
+    property rights:
+        def __get__(self):
+            """The rightward immediate children of the word, in the syntactic
+            dependency parse."""
+            cdef const TokenC* ptr = (self.c - self.i) + (self.array_len - 1)
+            while ptr > self.c:
+                # If this head is still to the right of us, we can skip to it
+                # No token that's between this token and this head could be our
+                # child.
+                if (ptr.head < 0) and ((ptr + ptr.head) > self.c):
+                    ptr += ptr.head
+                elif ptr + ptr.head == self.c:
+                    yield Token.cinit(self.vocab, self._string,
+                                      ptr, ptr - (self.c - self.i), self.array_len,
+                                      self._py, self._tag_strings, self._dep_strings)
+                    ptr -= 1
+                else:
+                    ptr -= 1
 
-    @property
-    def lower_(self):
-        return self.vocab.strings[self.c.lex.lower]
+    property head:
+        def __get__(self):
+            """The token predicted by the parser to be the head of the current token."""
+            return Token.cinit(self.vocab, self._string,
+                               self.c + self.c.head, self.i + self.c.head, self.array_len,
+                               self._py, self._tag_strings, self._dep_strings)
 
-    @property
-    def norm_(self):
-        return self.vocab.strings[self.c.lex.norm]
+    property whitespace_:
+        def __get__(self):
+            return self.string[self.c.lex.length:]
 
-    @property
-    def shape_(self):
-        return self.vocab.strings[self.c.lex.shape]
+    property orth_:
+        def __get__(self):
+            return self.vocab.strings[self.c.lex.orth]
 
-    @property
-    def prefix_(self):
-        return self.vocab.strings[self.c.lex.prefix]
+    property lower_:
+        def __get__(self):
+            return self.vocab.strings[self.c.lex.lower]
 
-    @property
-    def suffix_(self):
-        return self.vocab.strings[self.c.lex.suffix]
+    property norm_:
+        def __get__(self):
+            return self.vocab.strings[self.c.lex.norm]
 
-    @property
-    def lemma_(self):
-        return self.vocab.strings[self.c.lemma]
+    property shape_:
+        def __get__(self):
+            return self.vocab.strings[self.c.lex.shape]
 
-    @property
-    def pos_(self):
-        return _pos_id_to_string[self.c.pos]
+    property prefix_:
+        def __get__(self):
+            return self.vocab.strings[self.c.lex.prefix]
 
-    @property
-    def tag_(self):
-        return self._tag_strings[self.c.tag]
+    property suffix_:
+        def __get__(self):
+            return self.vocab.strings[self.c.lex.suffix]
 
-    @property
-    def dep_(self):
-        return self._dep_strings[self.c.dep]
+    property lemma_:
+        def __get__(self):
+            return self.vocab.strings[self.c.lemma]
+
+    property pos_:
+        def __get__(self):
+            return _pos_id_to_string[self.c.pos]
+
+    property tag_:
+        def __get__(self):
+            return self._tag_strings[self.c.tag]
+
+    property dep_:
+        def __get__(self):
+            return self._dep_strings[self.c.dep]
 
 
 _pos_id_to_string = {id_: string for string, id_ in UNIV_POS_NAMES.items()}

@@ -58,6 +58,7 @@ cdef class Token:
     cdef const TokenC* c
     cdef readonly int i
     cdef int array_len
+    cdef bint _owns_c_data
 
     
     cdef list _py
@@ -86,3 +87,5 @@ cdef class Token:
         self._dep_strings = dep_strings
         py_tokens[offset] = self
         return self
+
+    cdef int take_ownership_of_c_data(self) except -1
