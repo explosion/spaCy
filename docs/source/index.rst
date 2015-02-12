@@ -147,7 +147,7 @@ cosine metric:
     >>> from numpy.linalg import norm
  
     >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1) * norm(v2))
-    >>> words = [w for w in nlp.vocab if w.lower]
+    >>> words = [w for w in nlp.vocab if w.has_repvec]
     >>> words.sort(key=lambda w: cosine(w.repvec, pleaded.repvec))
     >>> words.reverse()
     >>> print('1-20', ', '.join(w.orth_ for w in words[0:20]))
