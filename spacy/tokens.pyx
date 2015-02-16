@@ -19,7 +19,6 @@ cimport cython
 
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from libc.string cimport memcpy
-import sys
 
 DEF PADDING = 5
 
@@ -95,21 +94,6 @@ cdef class Tokens:
         self._tag_strings = tuple() # These will be set by the POS tagger and parser
         self._dep_strings = tuple() # The strings are arbitrary and model-specific.
 
-    def __dealloc__(self):
-        # The Token object initially only gets a view of the underlying C
-        # data --- it doesn't own it. But, if we have Token objects that are
-        # going to outlive this instance, those objects need a copy of the C
-        # data.
-        cdef Token token
-        if self._py_tokens is not None:
-            for token in self._py_tokens:
-                if token is not None:
-                    # Why 3? 1 for the entry in the _py_tokens list,
-                    # and 1 for this reference. If we have _another_ ref, then
-                    # the token will live, and needs to own its data.
-                    if sys.getrefcount(token) >= 3:
-                        token.take_ownership_of_c_data()
-
     def __getitem__(self, object i):
         """Retrieve a token.
         
@@ -124,7 +108,7 @@ cdef class Tokens:
         bounds_check(i, self.length, PADDING)
         return Token.cinit(self.vocab, self._string,
                            &self.data[i], i, self.length,
-                           self._py_tokens, self._tag_strings, self._dep_strings)
+                           self, self._tag_strings, self._dep_strings)
 
     def __iter__(self):
         """Iterate over the tokens.
@@ -135,7 +119,7 @@ cdef class Tokens:
         for i in range(self.length):
             yield Token.cinit(self.vocab, self._string,
                               &self.data[i], i, self.length,
-                              self._py_tokens, self._tag_strings, self._dep_strings)
+                              self, self._tag_strings, self._dep_strings)
 
     def __len__(self):
         return self.length
@@ -277,7 +261,7 @@ cdef class Token:
     def nbor(self, int i=1):
         return Token.cinit(self.vocab, self._string,
                            self.c, self.i, self.array_len,
-                           self._py, self._tag_strings, self._dep_strings)
+                           self._seq, self._tag_strings, self._dep_strings)
 
     property string:
         def __get__(self):
@@ -378,7 +362,7 @@ cdef class Token:
                 elif ptr + ptr.head == self.c:
                     yield Token.cinit(self.vocab, self._string,
                                       ptr, ptr - (self.c - self.i), self.array_len,
-                                      self._py, self._tag_strings, self._dep_strings)
+                                      self._seq, self._tag_strings, self._dep_strings)
                     ptr += 1
                 else:
                     ptr += 1
@@ -397,7 +381,7 @@ cdef class Token:
                 elif ptr + ptr.head == self.c:
                     yield Token.cinit(self.vocab, self._string,
                                       ptr, ptr - (self.c - self.i), self.array_len,
-                                      self._py, self._tag_strings, self._dep_strings)
+                                      self._seq, self._tag_strings, self._dep_strings)
                     ptr -= 1
                 else:
                     ptr -= 1
@@ -407,7 +391,7 @@ cdef class Token:
             """The token predicted by the parser to be the head of the current token."""
             return Token.cinit(self.vocab, self._string,
                                self.c + self.c.head, self.i + self.c.head, self.array_len,
-                               self._py, self._tag_strings, self._dep_strings)
+                               self._seq, self._tag_strings, self._dep_strings)
 
     property whitespace_:
         def __get__(self):

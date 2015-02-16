@@ -61,20 +61,20 @@ cdef class Token:
     cdef bint _owns_c_data
 
     
-    cdef list _py
+    cdef Tokens _seq
     cdef tuple _tag_strings
     cdef tuple _dep_strings
 
     @staticmethod
     cdef inline Token cinit(Vocab vocab, unicode string,
                             const TokenC* token, int offset, int array_len,
-                            list py_tokens, tuple tag_strings, tuple dep_strings):
+                            Tokens parent_seq, tuple tag_strings, tuple dep_strings):
         if offset < 0 or offset >= array_len:
 
             msg = "Attempt to access token at %d, max length %d"
             raise IndexError(msg % (offset, array_len))
-        if py_tokens[offset] is not None:
-            return py_tokens[offset]
+        if parent_seq._py_tokens[offset] is not None:
+            return parent_seq._py_tokens[offset]
 
         cdef Token self = Token.__new__(Token, vocab, string)
 
@@ -82,10 +82,10 @@ cdef class Token:
         self.i = offset
         self.array_len = array_len
 
-        self._py = py_tokens
+        self._seq = parent_seq
         self._tag_strings = tag_strings
         self._dep_strings = dep_strings
-        py_tokens[offset] = self
+        self._seq._py_tokens[offset] = self
         return self
 
     cdef int take_ownership_of_c_data(self) except -1
