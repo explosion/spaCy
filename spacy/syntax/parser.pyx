@@ -83,7 +83,7 @@ cdef class GreedyParser:
             fill_context(context, state)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
-            self.moves.transition(state, &guess)
+            guess.do(&guess, state)
         # Messily tell Tokens object the string names of the dependency labels
         dep_strings = [None] * len(self.moves.label_ids)
         for label, id_ in self.moves.label_ids.items():
@@ -129,9 +129,9 @@ cdef class GreedyParser:
             history.append((py_moves[best.move], print_state(state, py_words)))
             self.model.update(context, guess.clas, best.clas, guess.cost)
             if force_gold:
-                self.moves.transition(state, &best)
+                best.do(&best, state)
             else:
-                self.moves.transition(state, &guess)
+                guess.do(&guess, state)
         cdef int n_corr = 0
         for i in range(tokens.length):
             if gold_heads[i] != -1:

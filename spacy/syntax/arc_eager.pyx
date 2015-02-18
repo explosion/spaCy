@@ -123,7 +123,7 @@ cdef int _break_cost(const State* s, const int* gold) except -1:
     return cost
 
 
-cdef class TransitionSystem:
+cdef class ArcEager(TransitionSystem):
     def __init__(self, list left_labels, list right_labels):
         self.mem = Pool()
         left_labels.sort()
@@ -163,7 +163,7 @@ cdef class TransitionSystem:
         moves[i].label = 0
         moves[i].clas = i
         i += 1
-        self._moves = moves
+        self.c = moves
 
     cdef int transition(self, State *s, const Transition* t) except -1:
         if t.move == SHIFT:
