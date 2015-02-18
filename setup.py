@@ -118,9 +118,10 @@ def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
     compile_args = ['-O3']
-    link_args = ['-lc++']
+    link_args = []
     if sys.prefix == 'darwin':
         compile_args.append(['-mmacosx-version-min=10.8', '-stdlib=libc++'])
+        link_args.append('-lc++')
     if use_cython:
         exts = cython_exts(modules, language, includes, compile_args, link_args)
     else:
