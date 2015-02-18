@@ -65,13 +65,13 @@ def name_to_path(mod_name, ext):
     return '%s.%s' % (mod_name.replace('.', '/'), ext)
 
 
-def c_ext(mod_name, language, includes, compile_args):
+def c_ext(mod_name, language, includes, compile_args, link_args):
     mod_path = name_to_path(mod_name, language)
     return Extension(mod_name, [mod_path], include_dirs=includes,
                      extra_compile_args=compile_args, extra_link_args=compile_args)
 
 
-def cython_exts(mod_names, language, includes, compile_args):
+def cython_exts(mod_names, language, includes, compile_args, link_args):
     import Cython.Distutils
     import Cython.Build
     if language == 'cpp':
@@ -80,7 +80,7 @@ def cython_exts(mod_names, language, includes, compile_args):
     for mod_name in mod_names:
         mod_path = mod_name.replace('.', '/') + '.pyx'
         e = Extension(mod_name, [mod_path], language=language, include_dirs=includes,
-                      extra_compile_args=compile_args)
+                      extra_compile_args=compile_args, extra_link_args=link_args)
         exts.append(e)
     return Cython.Build.cythonize(exts)
 
@@ -92,7 +92,7 @@ def run_setup(exts):
         description="Industrial-strength NLP",
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
-        version='0.65',
+        version='0.66',
         url="http://honnibal.github.io/spaCy/",
         package_data={"spacy": ["*.pxd"],
                       "spacy.en": ["*.pxd", "data/pos/*",
@@ -117,11 +117,14 @@ def run_setup(exts):
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
-    compile_args = ['-O3']
+    compile_args = ['-O3', '-std=c++11', '-stdlib=libc++',
+                    '-mmacosx-version-min=10.8']
+    link_args = ['-lc++']
     if use_cython:
-        exts = cython_exts(modules, language, includes, compile_args)
+        exts = cython_exts(modules, language, includes, compile_args, link_args)
     else:
-        exts = [c_ext(mn, language, includes, compile_args) for mn in modules]
+        exts = [c_ext(mn, language, includes, compile_args, link_args)
+                      for mn in modules]
     run_setup(exts)
 
 
