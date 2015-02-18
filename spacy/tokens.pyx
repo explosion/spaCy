@@ -338,6 +338,7 @@ cdef class Token:
             while ptr != self.c:
                 if ptr + ptr.head == self.c:
                     n += 1
+                ptr += 1
             return n
 
     property n_rights:
