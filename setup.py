@@ -117,10 +117,10 @@ def run_setup(exts):
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
-    compile_args = ['-O3', '-stdlib=libc++']
+    compile_args = ['-O3']
     link_args = ['-lc++']
     if sys.prefix == 'darwin':
-        compile_args.append(['-mmacosx-version-min=10.8'])
+        compile_args.append(['-mmacosx-version-min=10.8', '-stdlib=libc++'])
     if use_cython:
         exts = cython_exts(modules, language, includes, compile_args, link_args)
     else:
