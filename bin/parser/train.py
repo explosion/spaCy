@@ -61,8 +61,13 @@ def read_docparse_gold(file_):
         tags = []
         ids = []
         lines = sent_str.strip().split('\n')
+<<<<<<< HEAD
         raw_text = lines.pop(0).strip()
         tok_text = lines.pop(0).strip()
+=======
+        raw_text = lines.pop(0)
+        tok_text = lines.pop(0)
+>>>>>>> master
         for i, line in enumerate(lines):
             id_, word, pos_string, head_idx, label = _parse_line(line)
             if label == 'root':
