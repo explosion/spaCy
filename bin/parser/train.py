@@ -61,8 +61,8 @@ def read_docparse_gold(file_):
         tags = []
         ids = []
         lines = sent_str.strip().split('\n')
-        raw_text = lines.pop(0)
-        tok_text = lines.pop(0)
+        raw_text = lines.pop(0).strip()
+        tok_text = lines.pop(0).strip()
         for i, line in enumerate(lines):
             id_, word, pos_string, head_idx, label = _parse_line(line)
             if label == 'root':
@@ -234,6 +234,7 @@ def evaluate(Language, dev_loc, model_dir, gold_preproc=False):
     skipped = 0
     loss = 0
     with codecs.open(dev_loc, 'r', 'utf8') as file_:
+        #paragraphs = read_tokenized_gold(file_)
         paragraphs = read_docparse_gold(file_)
     for tokens, tag_strs, heads, labels in iter_data(paragraphs, nlp.tokenizer,
                                                      gold_preproc=gold_preproc):
@@ -241,11 +242,7 @@ def evaluate(Language, dev_loc, model_dir, gold_preproc=False):
         nlp.tagger(tokens)
         nlp.parser(tokens)
         for i, token in enumerate(tokens):
-            try:
-                pos_corr += token.tag_ == tag_strs[i]
-            except:
-                print i, token.orth_, token.tag
-                raise
+            pos_corr += token.tag_ == tag_strs[i]
             n_tokens += 1
             if heads[i] is None:
                 skipped += 1
