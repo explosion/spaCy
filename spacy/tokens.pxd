@@ -50,6 +50,8 @@ cdef class Tokens:
 
     cpdef long[:,:] to_array(self, object features)
 
+    cdef int set_parse(self, const TokenC* parsed, dict label_ids) except -1
+
 
 cdef class Token:
     cdef Vocab vocab

@@ -233,6 +233,16 @@ cdef class Tokens:
             spans.append((start, self.length))
         return spans
 
+    cdef int set_parse(self, const TokenC* parsed, dict label_ids) except -1:
+        self._py_tokens = [None] * self.length
+        self.is_parsed = True
+        for i in range(self.length):
+            self.data[i] = parsed[i]
+        dep_strings = [None] * len(label_ids)
+        for id_, dep_string in label_ids.items():
+            dep_strings[id_] = dep_string
+        self._dep_strings = tuple(dep_strings)
+
 
 cdef class Token:
     """An individual token --- i.e. a word, a punctuation symbol, etc.  Created
