@@ -25,22 +25,7 @@ cdef class TransitionSystem:
         raise NotImplementedError
 
     cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
-        cdef Transition best
-        cdef weight_t score = MIN_SCORE
-        cdef int i
-        for i in range(self.n_moves):
-            if scores[i] > score and self.c[i].is_valid(&self.c[i], s):
-                best = self.c[i]
-                score = scores[i]
-        # Label Shift moves with the best Right-Arc label, for non-monotonic
-        # actions
-        #if best.move == SHIFT:
-        #    score = MIN_SCORE
-        #    for i in range(self.n_moves):
-        #        if self.c[i].move == RIGHT and scores[i] > score:
-        #            best.label = self.c[i].label
-        #            score = scores[i]
-        return best
+        raise NotImplementedError
 
     cdef Transition best_gold(self, const weight_t* scores, const State* s,
                               const TokenC* gold) except *:
