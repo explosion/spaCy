@@ -6,6 +6,7 @@ from .. import orth
 from ..vocab import Vocab
 from ..tokenizer import Tokenizer
 from ..syntax.parser import GreedyParser
+from ..syntax.arc_eager import ArcEager
 from ..tokens import Tokens
 from .pos import EnPosTagger
 from .pos import POS_TAGS
@@ -56,6 +57,8 @@ class English(object):
             is useful if you want to construct a lexicon, which you'll then save
             for later loading.
     """
+    ParserTransitionSystem = ArcEager
+
     def __init__(self, data_dir=''):
         if data_dir == '':
             data_dir = LOCAL_DATA_DIR
@@ -87,7 +90,6 @@ class English(object):
         self._tagger = None
         self._parser = None
 
-
     @property
     def tagger(self):
         if self._tagger is None:
@@ -97,7 +99,8 @@ class English(object):
     @property
     def parser(self):
         if self._parser is None:
-            self._parser = GreedyParser(path.join(self._data_dir, 'deps'))
+            self._parser = GreedyParser(path.join(self._data_dir, 'deps'),
+                                        self.ParserTransitionSystem)
         return self._parser
 
     def __call__(self, text, tag=True, parse=parse_if_model_present):
