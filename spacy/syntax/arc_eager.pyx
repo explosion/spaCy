@@ -139,6 +139,7 @@ cdef int _right_cost(const Transition* self, const State* s, GoldParse gold) exc
     assert s.stack_len >= 1
     cost = 0
     if gold[s.i] == s.stack[0]:
+        cost += self.label != gold.c_labels[s.i]
         return cost
     cost += head_in_buffer(s, s.i, gold.c_heads)
     cost += children_in_stack(s, s.i, gold.c_heads)
@@ -152,6 +153,7 @@ cdef int _left_cost(const Transition* self, const State* s, GoldParse gold) exce
     assert s.stack_len >= 1
     cost = 0
     if gold[s.stack[0]] == s.i:
+        cost += self.label != gold.c_labels[s.top]
         return cost
 
     cost += head_in_buffer(s, s.stack[0], gold.c_heads)
