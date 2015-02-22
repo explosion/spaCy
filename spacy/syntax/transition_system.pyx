@@ -7,6 +7,10 @@ from thinc.typedefs cimport weight_t
 cdef weight_t MIN_SCORE = -90000
 
 
+class OracleError(Exception):
+    pass
+
+
 cdef class TransitionSystem:
     def __init__(self, dict labels_by_action):
         self.mem = Pool()
@@ -28,7 +32,7 @@ cdef class TransitionSystem:
         raise NotImplementedError
 
     cdef Transition best_gold(self, const weight_t* scores, const State* s,
-                              const TokenC* gold) except *:
+                              GoldParse gold) except *:
         cdef Transition best
         cdef weight_t score = MIN_SCORE
         cdef int i

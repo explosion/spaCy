@@ -33,14 +33,28 @@ cdef get_cost_func_t[N_MOVES] get_cost_funcs
 
 
 cdef class ArcEager(TransitionSystem):
+    @classmethod
+    def get_labels(cls, gold_parses):
+        labels = {RIGHT: {}, LEFT: {}}
+        for parse in gold_parses:
+            for i, (head, label) in enumerate(zip(parse.heads, parse.labels)):
+                if head > i:
+                    labels[RIGHT][label] = True
+                else:
+                    labels[LEFT][label] = True
+        return labels
+
     cdef Transition init_transition(self, int clas, int move, int label) except *:
-        return Transition(
-            score=0,
-            clas=i,
-            move=move,
-            label=label,
-            do=do_funcs[move],
-            get_cost=get_cost_funcs[move])
+        # TODO: Apparent Cython bug here when we try to use the Transition()
+        # constructor with the function pointers
+        cdef Transition t
+        t.score = 0
+        t.clas = clas
+        t.move = move
+        t.label = label
+        t.do = do_funcs[move]
+        t.get_cost = get_cost_funcs[move]
+        return t
 
     cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
         cdef bint[N_MOVES] is_valid
@@ -111,8 +125,8 @@ do_funcs[BREAK] = _do_break
 cdef int _shift_cost(const Transition* self, const State* s, GoldParse gold) except -1:
     assert not at_eol(s)
     cost = 0
-    cost += head_in_stack(s, s.i, gold.heads)
-    cost += children_in_stack(s, s.i, gold.heads)
+    cost += head_in_stack(s, s.i, gold.c_heads)
+    cost += children_in_stack(s, s.i, gold.c_heads)
     if NON_MONOTONIC:
         cost += gold[s.stack[0]] == s.i
     # If we can break, and there's no cost to doing so, we should
@@ -126,9 +140,9 @@ cdef int _right_cost(const Transition* self, const State* s, GoldParse gold) exc
     cost = 0
     if gold[s.i] == s.stack[0]:
         return cost
-    cost += head_in_buffer(s, s.i, gold.heads)
-    cost += children_in_stack(s, s.i, gold.heads)
-    cost += head_in_stack(s, s.i, gold.heads)
+    cost += head_in_buffer(s, s.i, gold.c_heads)
+    cost += children_in_stack(s, s.i, gold.c_heads)
+    cost += head_in_stack(s, s.i, gold.c_heads)
     if NON_MONOTONIC:
         cost += gold[s.stack[0]] == s.i
     return cost
@@ -140,8 +154,8 @@ cdef int _left_cost(const Transition* self, const State* s, GoldParse gold) exce
     if gold[s.stack[0]] == s.i:
         return cost
 
-    cost += head_in_buffer(s, s.stack[0], gold.heads)
-    cost += children_in_buffer(s, s.stack[0], gold.heads)
+    cost += head_in_buffer(s, s.stack[0], gold.c_heads)
+    cost += children_in_buffer(s, s.stack[0], gold.c_heads)
     if NON_MONOTONIC and s.stack_len >= 2:
         cost += gold[s.stack[0]] == s.stack[-1]
     cost += gold[s.stack[0]] == s.stack[0]
@@ -150,9 +164,9 @@ cdef int _left_cost(const Transition* self, const State* s, GoldParse gold) exce
 
 cdef int _reduce_cost(const Transition* self, const State* s, GoldParse gold) except -1:
     cdef int cost = 0
-    cost += children_in_buffer(s, s.stack[0], gold.heads)
+    cost += children_in_buffer(s, s.stack[0], gold.c_heads)
     if NON_MONOTONIC:
-        cost += head_in_buffer(s, s.stack[0], gold.heads)
+        cost += head_in_buffer(s, s.stack[0], gold.c_heads)
     return cost
 
 
@@ -161,8 +175,8 @@ cdef int _break_cost(const Transition* self, const State* s, GoldParse gold) exc
     cdef int cost = 0
     # Number of deps between S0...Sn and N0...Nn
     for i in range(s.i, s.sent_len):
-        cost += children_in_stack(s, i, gold.heads)
-        cost += head_in_stack(s, i, gold.heads)
+        cost += children_in_stack(s, i, gold.c_heads)
+        cost += head_in_stack(s, i, gold.c_heads)
     return cost
 
 

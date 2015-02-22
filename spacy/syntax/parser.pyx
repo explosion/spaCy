@@ -26,9 +26,10 @@ from thinc.learner cimport LinearModel
 from ..tokens cimport Tokens, TokenC
 
 from .arc_eager cimport TransitionSystem, Transition
-from .arc_eager import OracleError
+from .transition_system import OracleError
 
 from ._state cimport init_state, State, is_final, get_idx, get_s0, get_s1, get_n0, get_n1
+from .conll cimport GoldParse
 
 from . import _parse_features
 from ._parse_features cimport fill_context, CONTEXT_SIZE
@@ -60,10 +61,10 @@ def get_templates(name):
 
 
 cdef class GreedyParser:
-    def __init__(self, model_dir):
+    def __init__(self, model_dir, transition_system):
         assert os.path.exists(model_dir) and os.path.isdir(model_dir)
         self.cfg = Config.read(model_dir, 'config')
-        self.moves = TransitionSystem(self.cfg.left_labels, self.cfg.right_labels)
+        self.moves = transition_system(self.cfg.labels)
         templates = get_templates(self.cfg.features)
         self.model = Model(self.moves.n_moves, templates, model_dir)
 
@@ -74,23 +75,24 @@ cdef class GreedyParser:
         cdef atom_t[CONTEXT_SIZE] context
         cdef int n_feats
         cdef Pool mem = Pool()
-        cdef State* state = init_state(mem, tokens.data, tokens.length) # TODO
+        cdef State* state = init_state(mem, tokens.data, tokens.length)
         cdef Transition guess
         while not is_final(state):
             fill_context(context, state)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
             guess.do(&guess, state)
-        tokens.set_parse(state.sent, self.moves.label_ids) # TODO
+        tokens.set_parse(state.sent, self.moves.label_ids)
         return 0
 
-    def train_sent(self, Tokens tokens, GoldParse gold, force_gold=False):
+    def train(self, Tokens tokens, GoldParse gold, force_gold=False):
         cdef:
             int n_feats
+            int cost
             const Feature* feats
             const weight_t* scores
             Transition guess
-            Transition gold
+            Transition best
             
             atom_t[CONTEXT_SIZE] context
 
@@ -101,7 +103,7 @@ cdef class GreedyParser:
             fill_context(context, state)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
-            gold = self.moves.best_gold(scores, state, gold)
+            best = self.moves.best_gold(scores, state, gold)
             cost = guess.get_cost(&guess, state, gold)
             self.model.update(context, guess.clas, best.clas, cost)
             if force_gold:

@@ -1,11 +1,20 @@
 cdef class GoldParse:
-    def __init__(self):
-        pass
+    def __init__(self, raw_text, words, ids, tags, heads, labels):
+        self.mem = Pool()
+        self.loss = 0
+        self.length = len(words)
+        self.raw_text = raw_text
+        self.words = words
+        self.ids = ids
+        self.tags = tags
+        self.heads = heads
+        self.labels = labels
+        self.c_heads = <int*>self.mem.alloc(self.length, sizeof(int))
+        self.c_labels = <int*>self.mem.alloc(self.length, sizeof(int))
 
     cdef int heads_correct(self, TokenC* tokens, bint score_punct=False) except -1:
         pass
 
-"""
     @classmethod
     def from_conll(cls, unicode sent_str):
         ids = []
@@ -50,42 +59,44 @@ cdef class GoldParse:
                      for sent_str in tok_text.split('<SENT>')]
         return cls(raw_text, tokenized, ids, words, tags, heads, labels)
 
-    cdef int heads_correct(self, TokenC* tokens, bint score_punct=False) except -1:
-        pass
-
-    def align_to_non_gold_tokens(self, tokens):
-        # TODO
-        tags = []
-        heads = []
-        labels = []
-        orig_words = list(words)
+    def align_to_tokens(self, tokens, label_ids):
+        orig_words = list(self.words)
+        annot = zip(self.ids, self.tags, self.heads, self.labels)
+        self.ids = []
+        self.tags = []
+        self.heads = []
+        self.labels = []
         missed = []
         for token in tokens:
             while annot and token.idx > annot[0][0]:
                 miss_id, miss_tag, miss_head, miss_label = annot.pop(0)
-                miss_w = words.pop(0)
+                miss_w = self.words.pop(0)
                 if not is_punct_label(miss_label):
                     missed.append(miss_w)
-                    loss += 1
+                    self.loss += 1
             if not annot:
-                tags.append(None)
-                heads.append(None)
-                labels.append(None)
+                self.tags.append(None)
+                self.heads.append(None)
+                self.labels.append(None)
                 continue
             id_, tag, head, label = annot[0]
             if token.idx == id_:
-                tags.append(tag)
-                heads.append(head)
-                labels.append(label)
+                self.tags.append(tag)
+                self.heads.append(head)
+                self.labels.append(label)
                 annot.pop(0)
-                words.pop(0)
+                self.words.pop(0)
             elif token.idx < id_:
-                tags.append(None)
-                heads.append(None)
-                labels.append(None)
+                self.tags.append(None)
+                self.heads.append(None)
+                self.labels.append(None)
             else:
                 raise StandardError
-        return loss, tags, heads, labels
+        mapped_heads = _map_indices_to_tokens(self.ids, self.heads)
+        for i in range(self.length):
+            self.c_heads[i] = mapped_heads[i]
+            self.c_labels[i] = label_ids[self.labels[i]]
+        return self.loss
 
 
 def is_punct_label(label):
@@ -116,6 +127,7 @@ def _parse_line(line):
         return id_, word, pos, head_idx, label
 
 
+"""
 # TODO
 def evaluate(Language, dev_loc, model_dir, gold_preproc=False):
     global loss
