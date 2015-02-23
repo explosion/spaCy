@@ -11,12 +11,12 @@ cdef class GoldParse:
     cdef int length
     cdef int loss
 
-    cdef unicode raw_text
-    cdef list words
-    cdef list ids
-    cdef list tags
-    cdef list heads
-    cdef list labels
+    cdef readonly unicode raw_text
+    cdef readonly list words
+    cdef readonly list ids
+    cdef readonly list tags
+    cdef readonly list heads
+    cdef readonly list labels
 
 
     cdef int heads_correct(self, TokenC* tokens, bint score_punct=?) except -1

@@ -14,15 +14,17 @@ class OracleError(Exception):
 cdef class TransitionSystem:
     def __init__(self, dict labels_by_action):
         self.mem = Pool()
-        self.n_moves = sum(len(labels) for labels in labels_by_action.items())
+        self.n_moves = sum(len(labels) for labels in labels_by_action.values())
         moves = <Transition*>self.mem.alloc(self.n_moves, sizeof(Transition))
         cdef int i = 0
-        self.label_ids = {}
+        cdef int label_id
+        self.label_ids = {'ROOT': 0, 'MISSING': -1}
         for action, label_strs in sorted(labels_by_action.items()):
-            label_str = unicode(label_str)
-            label_id = self.label_ids.setdefault(label_str, len(self.label_ids))
-            moves[i] = self.init_transition(i, action, label_id)
-            i += 1
+            for label_str in sorted(label_strs):
+                label_str = unicode(label_str)
+                label_id = self.label_ids.setdefault(label_str, len(self.label_ids))
+                moves[i] = self.init_transition(i, int(action), label_id)
+                i += 1
         self.c = moves
 
     cdef Transition init_transition(self, int clas, int move, int label) except *:

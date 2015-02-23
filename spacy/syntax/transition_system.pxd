@@ -27,6 +27,7 @@ cdef class TransitionSystem:
     cdef readonly dict label_ids
     cdef Pool mem
     cdef const Transition* c
+    cdef readonly int n_moves
 
     cdef Transition init_transition(self, int clas, int move, int label) except *
 

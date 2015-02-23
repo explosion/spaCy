@@ -95,10 +95,9 @@ cdef class GreedyParser:
             Transition best
             
             atom_t[CONTEXT_SIZE] context
-
+        
         cdef Pool mem = Pool()
         cdef State* state = init_state(mem, tokens.data, tokens.length)
-
         while not is_final(state):
             fill_context(context, state)
             scores = self.model.score(context)

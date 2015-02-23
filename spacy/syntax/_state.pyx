@@ -1,4 +1,4 @@
-from libc.string cimport memmove
+from libc.string cimport memmove, memcpy
 from cymem.cymem cimport Pool
 
 from ..lexeme cimport EMPTY_LEXEME
@@ -120,7 +120,9 @@ cdef State* init_state(Pool mem, const TokenC* sent, const int sent_len) except 
         s.stack[i] = -1
     s.stack += (PADDING - 1)
     assert s.stack[0] == -1
-    s.sent = <TokenC*>mem.alloc(sent_len, sizeof(TokenC))
+    state_sent = <TokenC*>mem.alloc(padded_len, sizeof(TokenC))
+    memcpy(state_sent, sent - PADDING, padded_len * sizeof(TokenC))
+    s.sent = state_sent + PADDING
     s.stack_len = 0
     s.i = 0
     s.sent_len = sent_len

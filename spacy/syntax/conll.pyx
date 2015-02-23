@@ -13,7 +13,10 @@ cdef class GoldParse:
         self.c_labels = <int*>self.mem.alloc(self.length, sizeof(int))
 
     cdef int heads_correct(self, TokenC* tokens, bint score_punct=False) except -1:
-        pass
+        n = 0
+        for i in range(self.length):
+            n += (i + tokens[i].head) == self.c_heads[i]
+        return n
 
     @classmethod
     def from_conll(cls, unicode sent_str):
@@ -57,7 +60,7 @@ cdef class GoldParse:
             tags.append(pos_string)
         tokenized = [sent_str.replace('<SEP>', ' ').split(' ')
                      for sent_str in tok_text.split('<SENT>')]
-        return cls(raw_text, tokenized, ids, words, tags, heads, labels)
+        return cls(raw_text, words, ids, tags, heads, labels)
 
     def align_to_tokens(self, tokens, label_ids):
         orig_words = list(self.words)
@@ -70,9 +73,7 @@ cdef class GoldParse:
         for token in tokens:
             while annot and token.idx > annot[0][0]:
                 miss_id, miss_tag, miss_head, miss_label = annot.pop(0)
-                miss_w = self.words.pop(0)
                 if not is_punct_label(miss_label):
-                    missed.append(miss_w)
                     self.loss += 1
             if not annot:
                 self.tags.append(None)
@@ -85,17 +86,24 @@ cdef class GoldParse:
                 self.heads.append(head)
                 self.labels.append(label)
                 annot.pop(0)
-                self.words.pop(0)
             elif token.idx < id_:
                 self.tags.append(None)
                 self.heads.append(None)
                 self.labels.append(None)
             else:
                 raise StandardError
+        self.length = len(tokens)
+        self.c_heads = <int*>self.mem.alloc(self.length, sizeof(int))
+        self.c_labels = <int*>self.mem.alloc(self.length, sizeof(int))
+        self.ids = [token.idx for token in tokens]
         mapped_heads = _map_indices_to_tokens(self.ids, self.heads)
         for i in range(self.length):
-            self.c_heads[i] = mapped_heads[i]
-            self.c_labels[i] = label_ids[self.labels[i]]
+            if mapped_heads[i] is None:
+                self.c_heads[i] = -1
+                self.c_labels[i] = -1
+            else:
+                self.c_heads[i] = mapped_heads[i]
+                self.c_labels[i] = label_ids[self.labels[i]]
         return self.loss
 
 
@@ -125,38 +133,3 @@ def _parse_line(line):
         head_idx = int(pieces[6])
         label = pieces[7]
         return id_, word, pos, head_idx, label
-
-
-"""
-# TODO
-def evaluate(Language, dev_loc, model_dir, gold_preproc=False):
-    global loss
-    nlp = Language()
-    n_corr = 0
-    pos_corr = 0
-    n_tokens = 0
-    total = 0
-    skipped = 0
-    loss = 0
-    with codecs.open(dev_loc, 'r', 'utf8') as file_:
-        #paragraphs = read_tokenized_gold(file_)
-        paragraphs = read_docparse_gold(file_)
-    for tokens, tag_strs, heads, labels in iter_data(paragraphs, nlp.tokenizer,
-                                                     gold_preproc=gold_preproc):
-        assert len(tokens) == len(labels)
-        nlp.tagger(tokens)
-        nlp.parser(tokens)
-        for i, token in enumerate(tokens):
-            pos_corr += token.tag_ == tag_strs[i]
-            n_tokens += 1
-            if heads[i] is None:
-                skipped += 1
-                continue
-            if is_punct_label(labels[i]):
-                continue
-            n_corr += token.head.i == heads[i]
-            total += 1
-    print loss, skipped, (loss+skipped + total)
-    print pos_corr / n_tokens
-    return float(n_corr) / (total + loss)
-"""

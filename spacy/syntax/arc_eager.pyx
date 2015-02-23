@@ -35,7 +35,8 @@ cdef get_cost_func_t[N_MOVES] get_cost_funcs
 cdef class ArcEager(TransitionSystem):
     @classmethod
     def get_labels(cls, gold_parses):
-        labels = {RIGHT: {}, LEFT: {}}
+        labels = {SHIFT: {0: True}, REDUCE: {0: True}, RIGHT: {0: True},
+                  LEFT: {0: True}, BREAK: {0: True}}
         for parse in gold_parses:
             for i, (head, label) in enumerate(zip(parse.heads, parse.labels)):
                 if head > i:
@@ -128,7 +129,7 @@ cdef int _shift_cost(const Transition* self, const State* s, GoldParse gold) exc
     cost += head_in_stack(s, s.i, gold.c_heads)
     cost += children_in_stack(s, s.i, gold.c_heads)
     if NON_MONOTONIC:
-        cost += gold[s.stack[0]] == s.i
+        cost += gold.c_heads[s.stack[0]] == s.i
     # If we can break, and there's no cost to doing so, we should
     if _can_break(s) and _break_cost(self, s, gold) == 0:
         cost += 1
@@ -138,29 +139,29 @@ cdef int _shift_cost(const Transition* self, const State* s, GoldParse gold) exc
 cdef int _right_cost(const Transition* self, const State* s, GoldParse gold) except -1:
     assert s.stack_len >= 1
     cost = 0
-    if gold[s.i] == s.stack[0]:
+    if gold.c_heads[s.i] == s.stack[0]:
         cost += self.label != gold.c_labels[s.i]
         return cost
     cost += head_in_buffer(s, s.i, gold.c_heads)
     cost += children_in_stack(s, s.i, gold.c_heads)
     cost += head_in_stack(s, s.i, gold.c_heads)
     if NON_MONOTONIC:
-        cost += gold[s.stack[0]] == s.i
+        cost += gold.c_heads[s.stack[0]] == s.i
     return cost
 
 
 cdef int _left_cost(const Transition* self, const State* s, GoldParse gold) except -1:
     assert s.stack_len >= 1
     cost = 0
-    if gold[s.stack[0]] == s.i:
-        cost += self.label != gold.c_labels[s.top]
+    if gold.c_heads[s.stack[0]] == s.i:
+        cost += self.label != gold.c_labels[s.stack[0]]
         return cost
 
     cost += head_in_buffer(s, s.stack[0], gold.c_heads)
     cost += children_in_buffer(s, s.stack[0], gold.c_heads)
     if NON_MONOTONIC and s.stack_len >= 2:
-        cost += gold[s.stack[0]] == s.stack[-1]
-    cost += gold[s.stack[0]] == s.stack[0]
+        cost += gold.c_heads[s.stack[0]] == s.stack[-1]
+    cost += gold.c_heads[s.stack[0]] == s.stack[0]
     return cost
 
 
