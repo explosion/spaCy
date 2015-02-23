@@ -284,6 +284,16 @@ cdef class EnPosTagger:
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
+    def tag_from_strings(self, Tokens tokens, object tag_strs):
+        cdef int i
+        for i in range(tokens.length):
+            tokens.data[i].tag = self.tag_names.index(tag_strs[i])
+            self.set_morph(i, tokens.data)
+        # TODO: Clean this up.
+        tokens._tag_strings = tuple(self.tag_names)
+        tokens.is_tagged = True
+        tokens._py_tokens = [None] * tokens.length
+
     def train(self, Tokens tokens, object gold_tag_strs):
         cdef int i
         cdef int loss
