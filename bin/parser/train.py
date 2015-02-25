@@ -103,7 +103,6 @@ def _parse_line(line):
         return id_, word, pos, head_idx, label
 
 
-
 loss = 0
 def _align_annotations_to_non_gold_tokens(tokens, words, annot):
     global loss
