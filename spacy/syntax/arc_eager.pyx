@@ -169,7 +169,7 @@ cdef class TransitionSystem:
         if t.move == SHIFT:
             # Set the dep label, in case we need it after we reduce
             if NON_MONOTONIC:
-                get_s0(s).dep = t.label
+                s.sent[s.i].dep = t.label
             push_stack(s)
         elif t.move == LEFT:
             add_dep(s, s.i, s.stack[0], t.label)
