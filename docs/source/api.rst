@@ -2,9 +2,6 @@
 API
 ===
 
-.. warning:: The documentation here is currently being rewritten.  If something
-  doesn't make sense, the docs might be simply wrong. If so, please report it.
-
 
 .. autoclass:: spacy.en.English
 
@@ -188,7 +185,12 @@ API
   rights
     An iterator for the immediate rightward syntactic children of the word.
     
-
+  children
+    An iterator that yields from lefts, and then yields from rights.
+ 
+  subtree
+    An iterator for the part of the sentence syntactically governed by the
+    word, including the word itself.
 
 .. py:class:: vocab.Vocab(self, data_dir=None, lex_props_getter=None)
 

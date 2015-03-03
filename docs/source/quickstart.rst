@@ -117,9 +117,17 @@ the original orthographic form of the word.
 
   .. py:method:: nbor(self, i=1) --> Token
 
-  .. py:method:: child(self, i=1) --> Token
+  .. py:attribute:: n_lefts --> int
+  
+  .. py:attribute:: n_rights --> int
 
-  .. py:method:: sibling(self, i=1) --> Token
+  .. py:attribute:: lefts --> Iterator[Token]
+  
+  .. py:attribute:: rights --> Iterator[Token]
+
+  .. py:attribute:: children --> Iterator[Token]
+  
+  .. py:attribute:: subtree --> Iterator[Token]
 
   .. py:attribute:: head: Token
 
