@@ -386,6 +386,19 @@ cdef class Token:
                 else:
                     ptr -= 1
 
+    property children:
+        def __get__(self):
+            yield from self.lefts
+            yield from self.rights
+
+    property subtree:
+        def __get__(self):
+            for word in self.lefts:
+                yield from word.subtree
+            yield self
+            for word in self.rights:
+                yield from word.subtree
+
     property head:
         def __get__(self):
             """The token predicted by the parser to be the head of the current token."""
