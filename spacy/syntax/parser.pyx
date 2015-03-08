@@ -109,7 +109,7 @@ cdef class GreedyParser:
                 best.do(&best, state)
             else:
                 guess.do(&guess, state)
-        n_corr = gold.heads_correct(state.sent, score_punct=True) # TODO
+        n_corr = gold.heads_correct(state.sent, score_punct=True)
         if force_gold and n_corr != tokens.length:
             raise OracleError
         return n_corr
