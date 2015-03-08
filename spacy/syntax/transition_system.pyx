@@ -18,13 +18,14 @@ cdef class TransitionSystem:
         moves = <Transition*>self.mem.alloc(self.n_moves, sizeof(Transition))
         cdef int i = 0
         cdef int label_id
-        self.label_ids = {'ROOT': 0, 'MISSING': -1}
+        self.label_ids = {'ROOT': 0}
         for action, label_strs in sorted(labels_by_action.items()):
             for label_str in sorted(label_strs):
                 label_str = unicode(label_str)
                 label_id = self.label_ids.setdefault(label_str, len(self.label_ids))
                 moves[i] = self.init_transition(i, int(action), label_id)
                 i += 1
+        self.label_ids['MISSING'] = -1
         self.c = moves
 
     cdef Transition init_transition(self, int clas, int move, int label) except *:
@@ -42,4 +43,5 @@ cdef class TransitionSystem:
             if scores[i] > score and self.c[i].get_cost(&self.c[i], s, gold) == 0:
                 best = self.c[i]
                 score = scores[i]
+        assert score > MIN_SCORE
         return best
