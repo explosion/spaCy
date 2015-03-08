@@ -70,9 +70,11 @@ def c_ext(mod_name, language, includes, compile_args, link_args):
                      extra_compile_args=compile_args, extra_link_args=compile_args)
 
 
-def cython_exts(mod_names, language, includes, compile_args, link_args):
+def cython_setup(mod_names, language, includes, compile_args, link_args):
     import Cython.Distutils
     import Cython.Build
+    import distutils.core
+
     if language == 'cpp':
         language = 'c++'
     exts = []
@@ -81,7 +83,26 @@ def cython_exts(mod_names, language, includes, compile_args, link_args):
         e = Extension(mod_name, [mod_path], language=language, include_dirs=includes,
                       extra_compile_args=compile_args, extra_link_args=link_args)
         exts.append(e)
-    return Cython.Build.cythonize(exts)
+    distutils.core.setup(
+        name='spacy',
+        packages=['spacy', 'spacy.en', 'spacy.syntax'],
+        description="Industrial-strength NLP",
+        author='Matthew Honnibal',
+        author_email='honnibal@gmail.com',
+        version='0.66',
+        url="http://honnibal.github.io/spaCy/",
+        package_data={"spacy": ["*.pxd"],
+                      "spacy.en": ["*.pxd", "data/pos/*",
+                                   "data/wordnet/*", "data/tokenizer/*",
+                                   "data/vocab/lexemes.bin",
+                                   "data/vocab/strings.txt"],
+                      "spacy.syntax": ["*.pxd"]},
+        ext_modules=exts,
+        cmdclass={'build_ext': Cython.Distutils.build_ext},
+        license="Dual: Commercial or AGPL",
+    )
+
+
 
 
 def run_setup(exts):
@@ -122,11 +143,11 @@ def main(modules, is_pypy):
         compile_args.append(['-mmacosx-version-min=10.8', '-stdlib=libc++'])
         link_args.append('-lc++')
     if use_cython:
-        exts = cython_exts(modules, language, includes, compile_args, link_args)
+        cython_setup(modules, language, includes, compile_args, link_args)
     else:
         exts = [c_ext(mn, language, includes, compile_args, link_args)
                       for mn in modules]
-    run_setup(exts)
+        run_setup(exts)
 
 
 MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
