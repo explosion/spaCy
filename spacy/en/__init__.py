@@ -7,6 +7,7 @@ from ..vocab import Vocab
 from ..tokenizer import Tokenizer
 from ..syntax.parser import GreedyParser
 from ..syntax.arc_eager import ArcEager
+from ..syntax.ner import BiluoPushDown
 from ..tokens import Tokens
 from .pos import EnPosTagger
 from .pos import POS_TAGS
@@ -58,6 +59,7 @@ class English(object):
             for later loading.
     """
     ParserTransitionSystem = ArcEager
+    EntityTransitionSystem = BiluoPushDown
 
     def __init__(self, data_dir=''):
         if data_dir == '':
@@ -74,6 +76,7 @@ class English(object):
             infix_re = None
             self.has_parser_model = False
             self.has_tagger_model = False
+            self.has_entity_model = False
         else:
             tok_data_dir = path.join(data_dir, 'tokenizer')
             tok_rules, prefix_re, suffix_re, infix_re = read_lang_data(tok_data_dir)
@@ -82,6 +85,7 @@ class English(object):
             infix_re = re.compile(infix_re)
             self.has_parser_model = path.exists(path.join(self._data_dir, 'deps'))
             self.has_tagger_model = path.exists(path.join(self._data_dir, 'pos'))
+            self.has_entity_model = path.exists(path.join(self._data_dir, 'ner'))
 
         self.tokenizer = Tokenizer(self.vocab, tok_rules, prefix_re,
                                    suffix_re, infix_re,
@@ -89,6 +93,7 @@ class English(object):
         # These are lazy-loaded
         self._tagger = None
         self._parser = None
+        self._entity = None
 
     @property
     def tagger(self):
@@ -103,7 +108,15 @@ class English(object):
                                         self.ParserTransitionSystem)
         return self._parser
 
-    def __call__(self, text, tag=True, parse=parse_if_model_present):
+    @property
+    def entity(self):
+        if self._entity is None:
+            self._entity = GreedyParser(path.join(self._data_dir, 'ner'),
+                                        self.EntityTransitionSystem)
+        return self._entity
+
+    def __call__(self, text, tag=True, parse=parse_if_model_present,
+                 entity=parse_if_model_present):
         """Apply the pipeline to some text.  The text can span multiple sentences,
         and can contain arbtrary whitespace.  Alignment into the original string
         
@@ -135,21 +148,39 @@ class English(object):
             msg = ("Incompatible arguments: tag=False, parse=True"
                    "Part-of-speech tags are required for parsing.")
             raise ValueError(msg)
+        if entity == True and tag == False:
+            msg = ("Incompatible arguments: tag=False, entity=True"
+                   "Part-of-speech tags are required for entity recognition.")
+            raise ValueError(msg)
+
         tokens = self.tokenizer(text)
         if parse == -1 and tag == False:
             parse = False
         elif parse == -1 and not self.has_parser_model:
             parse = False
+        if entity == -1 and tag == False:
+            entity = False
+        elif entity == -1 and not self.has_entity_model:
+            entity = False
         if tag and self.has_tagger_model:
             self.tagger(tokens)
         if parse == True and not self.has_parser_model:
-            msg = ("Receive parse=True, but parser model not found.\n\n"
+            msg = ("Received parse=True, but parser model not found.\n\n"
                   "Run:\n"
                   "$ python -m spacy.en.download\n"
                   "To install the model.")
             raise IOError(msg)
+        if entity == True and not self.has_entity_model:
+            msg = ("Received entity=True, but entity model not found.\n\n"
+                  "Run:\n"
+                  "$ python -m spacy.en.download\n"
+                  "To install the model.")
+            raise IOError(msg)
+
         if parse and self.has_parser_model:
             self.parser(tokens)
+        if entity and self.has_entity_model:
+            self.entity(tokens)
         return tokens
 
     @property
