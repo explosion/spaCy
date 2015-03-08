@@ -239,7 +239,7 @@ cdef class Tokens:
         for i in range(self.length):
             self.data[i] = parsed[i]
         dep_strings = [None] * len(label_ids)
-        for id_, dep_string in label_ids.items():
+        for dep_string, id_ in label_ids.items():
             dep_strings[id_] = dep_string
         self._dep_strings = tuple(dep_strings)
 
