@@ -12,11 +12,24 @@ cdef class GoldParse:
         self.c_heads = <int*>self.mem.alloc(self.length, sizeof(int))
         self.c_labels = <int*>self.mem.alloc(self.length, sizeof(int))
 
+    @property
+    def n_non_punct(self):
+        return len([l for l in self.labels if l != 'P'])
+
+    @property
+    def py_heads(self):
+        return [self.c_heads[i] for i in range(self.length)]
+
     cdef int heads_correct(self, TokenC* tokens, bint score_punct=False) except -1:
         n = 0
         for i in range(self.length):
+            if not score_punct and self.labels[i] == 'P':
+                continue
             n += (i + tokens[i].head) == self.c_heads[i]
         return n
+
+    def is_correct(self, i, head):
+        return head == self.c_heads[i]
 
     @classmethod
     def from_conll(cls, unicode sent_str):
@@ -96,6 +109,10 @@ cdef class GoldParse:
         self.c_heads = <int*>self.mem.alloc(self.length, sizeof(int))
         self.c_labels = <int*>self.mem.alloc(self.length, sizeof(int))
         self.ids = [token.idx for token in tokens]
+        self.map_heads(label_ids)
+        return self.loss
+
+    def map_heads(self, label_ids):
         mapped_heads = _map_indices_to_tokens(self.ids, self.heads)
         for i in range(self.length):
             if mapped_heads[i] is None:
@@ -119,7 +136,6 @@ def _map_indices_to_tokens(ids, heads):
         else:
             mapped.append(ids.index(head))
     return mapped
-
 
 
 def _parse_line(line):
