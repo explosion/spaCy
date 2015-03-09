@@ -35,16 +35,16 @@ cdef get_cost_func_t[N_MOVES] get_cost_funcs
 cdef class ArcEager(TransitionSystem):
     @classmethod
     def get_labels(cls, gold_parses):
-        labels = {SHIFT: {'ROOT': True}, REDUCE: {'ROOT': True}, RIGHT: {},
-                  LEFT: {}, BREAK: {'ROOT': True}}
-        for parse in gold_parses:
-            for i, (head, label) in enumerate(zip(parse.heads, parse.labels)):
+        move_labels = {SHIFT: {'ROOT': True}, REDUCE: {'ROOT': True}, RIGHT: {},
+                       LEFT: {}, BREAK: {'ROOT': True}}
+        for raw_text, segmented, (ids, tags, heads, labels, iob) in gold_parses:
+            for i, (head, label) in enumerate(zip(heads, labels)):
                 if label != 'ROOT':
                     if head > i:
-                        labels[RIGHT][label] = True
+                        move_labels[RIGHT][label] = True
                     elif head < i:
-                        labels[LEFT][label] = True
-        return labels
+                        move_labels[LEFT][label] = True
+        return move_labels
 
     cdef Transition init_transition(self, int clas, int move, int label) except *:
         # TODO: Apparent Cython bug here when we try to use the Transition()

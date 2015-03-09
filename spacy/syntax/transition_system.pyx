@@ -45,3 +45,39 @@ cdef class TransitionSystem:
                 score = scores[i]
         assert score > MIN_SCORE
         return best
+
+
+#cdef class PyState:
+#    """Provide a Python class for testing purposes."""
+#    def __init__(self, GoldParse gold):
+#        self.mem = Pool()
+#        self.system = EntityRecognition(labels)
+#        self._state = init_state(self.mem, tokens, gold.length)
+#
+#    def transition(self, name):
+#        cdef const Transition* trans = self._transition_by_name(name)
+#        trans.do(trans, self._state)
+#
+#    def is_valid(self, name):
+#        cdef const Transition* trans = self._transition_by_name(name)
+#        return _is_valid(trans.move, trans.label, self._state)
+#
+#    def is_gold(self, name):
+#        cdef const Transition* trans = self._transition_by_name(name)
+#        return _get_const(trans, self._state, self._gold)
+#
+#    property ent:
+#        def __get__(self):
+#            pass
+#
+#    property n_ents:
+#        def __get__(self):
+#            pass
+#
+#    property i:
+#        def __get__(self):
+#            pass
+#
+#    property open_entity:
+#        def __get__(self):
+#            return entity_is_open(self._s)

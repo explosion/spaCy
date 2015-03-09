@@ -42,9 +42,17 @@ cdef struct PosTag:
     univ_pos_t pos
 
 
+cdef struct Entity:
+    int start
+    int end
+    int tag
+    int label
+    
+
 cdef struct TokenC:
     const LexemeC* lex
     Morphology morph
+    Entity ent
     univ_pos_t pos
     int tag
     int idx

@@ -35,3 +35,10 @@ cdef class TransitionSystem:
 
     cdef Transition best_gold(self, const weight_t* scores, const State* state,
                               GoldParse gold) except *
+    
+
+#cdef class PyState:
+#    """Provide a Python class for testing purposes."""
+#    cdef Pool mem
+#    cdef TransitionSystem system
+#    cdef State* _state

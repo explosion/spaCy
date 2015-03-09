@@ -2,15 +2,17 @@ from libc.stdint cimport uint32_t
 
 from cymem.cymem cimport Pool
 
-from ..structs cimport TokenC
+from ..structs cimport TokenC, Entity
 
 
 cdef struct State:
     TokenC* sent
     int* stack
+    Entity* ent
     int i
     int sent_len
     int stack_len
+    int ents_len
 
 
 cdef int add_dep(const State *s, const int head, const int child, const int label) except -1
