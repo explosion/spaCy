@@ -59,7 +59,7 @@ def clean(mod_names):
         c = name + '.c'
         for file_path in [so, html, cpp, c]:
             if os.path.exists(file_path):
-                shutil.move(file_path, '/tmp')
+                os.unlink(file_path)
 
 
 def name_to_path(mod_name, ext):
