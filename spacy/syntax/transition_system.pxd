@@ -29,6 +29,10 @@ cdef class TransitionSystem:
     cdef const Transition* c
     cdef readonly int n_moves
 
+    cdef int preprocess_gold(self, GoldParse gold) except -1
+    
+    cdef Transition lookup_transition(self, object name) except *
+    
     cdef Transition init_transition(self, int clas, int move, int label) except *
 
     cdef Transition best_valid(self, const weight_t* scores, const State* state) except *

@@ -34,6 +34,8 @@ from .conll cimport GoldParse
 from . import _parse_features
 from ._parse_features cimport fill_context, CONTEXT_SIZE
 
+from ._ner_features cimport _ner_features
+
 
 DEBUG = False 
 def set_debug(val):
@@ -55,6 +57,8 @@ def get_templates(name):
     pf = _parse_features
     if name == 'zhang':
         return pf.arc_eager
+    elif name == 'ner':
+        return _ner_features.basic
     else:
         return (pf.unigrams + pf.s0_n0 + pf.s1_n0 + pf.s0_n1 + pf.n0_n1 + \
                 pf.tree_shape + pf.trigrams)
@@ -95,7 +99,8 @@ cdef class GreedyParser:
             Transition best
             
             atom_t[CONTEXT_SIZE] context
-        
+       
+        self.moves.preprocess_gold(gold)
         cdef Pool mem = Pool()
         cdef State* state = init_state(mem, tokens.data, tokens.length)
         while not is_final(state):

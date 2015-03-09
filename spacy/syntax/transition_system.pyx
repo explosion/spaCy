@@ -28,6 +28,12 @@ cdef class TransitionSystem:
         self.label_ids['MISSING'] = -1
         self.c = moves
 
+    cdef int preprocess_gold(self, GoldParse gold) except -1:
+        raise NotImplementedError
+
+    cdef Transition lookup_transition(self, object name) except *:
+        raise NotImplementedError
+
     cdef Transition init_transition(self, int clas, int move, int label) except *:
         raise NotImplementedError
 

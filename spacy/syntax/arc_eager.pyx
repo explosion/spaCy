@@ -27,6 +27,13 @@ cdef enum:
     BREAK
     N_MOVES
 
+MOVE_NAMES = [None] * N_MOVES
+MOVE_NAMES[SHIFT] = 'S'
+MOVE_NAMES[REDUCE] = 'D'
+MOVE_NAMES[LEFT] = 'L'
+MOVE_NAMES[RIGHT] = 'R'
+MOVE_NAMES[BREAK] = 'B'
+
 
 cdef do_func_t[N_MOVES] do_funcs
 cdef get_cost_func_t[N_MOVES] get_cost_funcs
@@ -45,6 +52,23 @@ cdef class ArcEager(TransitionSystem):
                     elif head < i:
                         move_labels[LEFT][label] = True
         return move_labels
+
+    cdef int preprocess_gold(self, GoldParse gold) except -1:
+        for i in range(gold.length):
+            gold.c_heads[i] = gold.heads[i]
+            gold.c_labels[i] = self.label_ids[gold.labels[i]]
+
+
+    cdef Transition lookup_transition(self, object name) except *:
+        if '-' in name:
+            move_str, label_str = name.split('-', 1)
+            label = self.label_ids[label_str]
+        else:
+            label = 0
+        move = MOVE_NAMES.index(move_str)
+        for i in range(self.n_moves):
+            if self.c[i].move == move and self.c[i].label == label:
+                return self.c[i]
 
     cdef Transition init_transition(self, int clas, int move, int label) except *:
         # TODO: Apparent Cython bug here when we try to use the Transition()

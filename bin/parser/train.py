@@ -206,7 +206,7 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
 
     Config.write(dep_model_dir, 'config', features=feat_set, seed=seed,
                  labels=Language.ParserTransitionSystem.get_labels(gold_tuples))
-    Config.write(ner_model_dir, 'config', features=feat_set, seed=seed,
+    Config.write(ner_model_dir, 'config', features='ner', seed=seed,
                  labels=Language.EntityTransitionSystem.get_labels(gold_tuples))
 
     nlp = Language()
@@ -214,6 +214,7 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
     for itn in range(n_iter):
         dep_corr = 0
         pos_corr = 0
+        ent_corr = 0
         n_tokens = 0
         for raw_text, segmented_text, annot_tuples in gold_tuples:
             if gold_preproc:
@@ -221,14 +222,11 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
             else:
                 sents = [nlp.tokenizer(raw_text)]
             for tokens in sents:
-
-                gold = GoldParse(tokens, annot_tuples, nlp.tags,
-                                 nlp.parser.moves.label_ids,
-                                 nlp.entity.moves.label_ids)
-
+                gold = GoldParse(tokens, annot_tuples)
                 nlp.tagger(tokens)
+                #ent_corr += nlp.entity.train(tokens, gold, force_gold=force_gold)
                 dep_corr += nlp.parser.train(tokens, gold, force_gold=force_gold)
-                pos_corr += nlp.tagger.train(tokens, gold.tags_)
+                pos_corr += nlp.tagger.train(tokens, gold.tags)
                 n_tokens += len(tokens)
         acc = float(dep_corr) / n_tokens
         pos_acc = float(pos_corr) / n_tokens

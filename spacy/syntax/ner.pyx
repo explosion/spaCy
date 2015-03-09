@@ -21,6 +21,14 @@ cdef enum:
     OUT
     N_MOVES
 
+MOVE_NAMES = [None] * N_MOVES
+MOVE_NAMES[MISSING] = 'M'
+MOVE_NAMES[BEGIN] = 'B'
+MOVE_NAMES[IN] = 'I'
+MOVE_NAMES[LAST] = 'L'
+MOVE_NAMES[UNIT] = 'U'
+MOVE_NAMES[OUT] = 'O'
+
 
 cdef do_func_t[N_MOVES] do_funcs
 
@@ -70,6 +78,23 @@ cdef class BiluoPushDown(TransitionSystem):
                     move_labels[moves.index(move_str)][label] = True
         return move_labels
 
+    cdef int preprocess_gold(self, GoldParse gold) except -1:
+        biluo_strings = iob_to_biluo(gold.ner)
+        for i in range(gold.length):
+            gold.c_ner[i] = self.lookup_transition(biluo_strings[i])
+
+    cdef Transition lookup_transition(self, object name) except *:
+        if '-' in name:
+            move_str, label_str = name.split('-', 1)
+            label = self.label_ids[label_str]
+        else:
+            move_str = name
+            label = 0
+        move = MOVE_NAMES.index(move_str)
+        for i in range(self.n_moves):
+            if self.c[i].move == move and self.c[i].label == label:
+                return self.c[i]
+
     cdef Transition init_transition(self, int clas, int move, int label) except *:
         # TODO: Apparent Cython bug here when we try to use the Transition()
         # constructor with the function pointers
@@ -101,9 +126,9 @@ cdef class BiluoPushDown(TransitionSystem):
 cdef int _get_cost(const Transition* self, const State* s, GoldParse gold) except -1:
     if not _is_valid(self.move, self.label, s):
         return 9000
-    cdef bint is_sunk = _entity_is_sunk(s, gold.ner)
-    cdef int next_act = gold.ner[s.i+1].move if s.i < s.sent_len else OUT
-    return not _is_gold(self.move, self.label, gold.ner[s.i].move, gold.ner[s.i].label,
+    cdef bint is_sunk = _entity_is_sunk(s, gold.c_ner)
+    cdef int next_act = gold.c_ner[s.i+1].move if s.i < s.sent_len else OUT
+    return not _is_gold(self.move, self.label, gold.c_ner[s.i].move, gold.c_ner[s.i].label,
                         next_act, is_sunk)
 
 cdef bint _is_gold(int act, int tag, int g_act, int g_tag,
