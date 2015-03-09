@@ -2,6 +2,7 @@
 import subprocess
 from setuptools import setup
 from glob import glob
+import shutil
 
 import sys
 import os
@@ -49,15 +50,16 @@ except OSError:
     pass
 
 
-def clean(ext):
-    for src in ext.sources:
-        if src.endswith('.c') or src.endswith('cpp'):
-            so = src.rsplit('.', 1)[0] + '.so'
-            html = src.rsplit('.', 1)[0] + '.html'
-            if os.path.exists(so):
-                os.unlink(so)
-            if os.path.exists(html):
-                os.unlink(html)
+def clean(mod_names):
+    for name in mod_names:
+        name = name.replace('.', '/')
+        so = name + '.so'
+        html = name + '.html'
+        cpp = name + '.cpp'
+        c = name + '.c'
+        for file_path in [so, html, cpp, c]:
+            if os.path.exists(file_path):
+                shutil.move(file_path, '/tmp')
 
 
 def name_to_path(mod_name, ext):
@@ -156,9 +158,13 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.en.pos', 'spacy.syntax.parser', 'spacy.syntax._state',
              'spacy.syntax.transition_system', 
              'spacy.syntax.arc_eager', 'spacy.syntax._parse_features',
-             'spacy.syntax.conll', 'spacy.orth']
+             'spacy.syntax.conll', 'spacy.orth',
+             'spacy.syntax.ner']
 
 
 if __name__ == '__main__':
-    use_cython = sys.argv[1] == 'build_ext'
-    main(MOD_NAMES, use_cython)
+    if sys.argv[1] == 'clean':
+        clean(MOD_NAMES)
+    else:
+        use_cython = sys.argv[1] == 'build_ext'
+        main(MOD_NAMES, use_cython)
