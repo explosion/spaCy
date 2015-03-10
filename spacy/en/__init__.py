@@ -180,7 +180,12 @@ class English(object):
         if parse and self.has_parser_model:
             self.parser(tokens)
         if entity and self.has_entity_model:
+            # TODO: Clean this up
             self.entity(tokens)
+            ent_strings = [None] * (max(self.entity.moves.label_ids.values()) + 1)
+            for label, i in self.entity.moves.label_ids.items():
+                ent_strings[i] = label
+            tokens._ent_strings = tuple(ent_strings)
         return tokens
 
     @property

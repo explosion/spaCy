@@ -28,13 +28,11 @@ from ..tokens cimport Tokens, TokenC
 from .arc_eager cimport TransitionSystem, Transition
 from .transition_system import OracleError
 
-from ._state cimport init_state, State, is_final, get_idx, get_s0, get_s1, get_n0, get_n1
+from ._state cimport new_state, State, is_final, get_idx, get_s0, get_s1, get_n0, get_n1
 from .conll cimport GoldParse
 
 from . import _parse_features
 from ._parse_features cimport fill_context, CONTEXT_SIZE
-
-from ._ner_features cimport _ner_features
 
 
 DEBUG = False 
@@ -50,7 +48,11 @@ cdef unicode print_state(State* s, list words):
     third = words[s.stack[-2]] + '_%d' % s.sent[s.stack[-2]].head
     n0 = words[s.i]
     n1 = words[s.i + 1]
-    return ' '.join((str(s.stack_len), third, second, top, '|', n0, n1))
+    if s.ents_len:
+        ent = '%s %d-%d' % (s.ent.label, s.ent.start, s.ent.end)
+    else:
+        ent = '-'
+    return ' '.join((ent, str(s.stack_len), third, second, top, '|', n0, n1))
 
 
 def get_templates(name):
@@ -58,7 +60,7 @@ def get_templates(name):
     if name == 'zhang':
         return pf.arc_eager
     elif name == 'ner':
-        return _ner_features.basic
+        return pf.ner
     else:
         return (pf.unigrams + pf.s0_n0 + pf.s1_n0 + pf.s0_n1 + pf.n0_n1 + \
                 pf.tree_shape + pf.trigrams)
@@ -79,7 +81,8 @@ cdef class GreedyParser:
         cdef atom_t[CONTEXT_SIZE] context
         cdef int n_feats
         cdef Pool mem = Pool()
-        cdef State* state = init_state(mem, tokens.data, tokens.length)
+        cdef State* state = new_state(mem, tokens.data, tokens.length)
+        self.moves.first_state(state)
         cdef Transition guess
         while not is_final(state):
             fill_context(context, state)
@@ -99,10 +102,12 @@ cdef class GreedyParser:
             Transition best
             
             atom_t[CONTEXT_SIZE] context
-       
+
         self.moves.preprocess_gold(gold)
         cdef Pool mem = Pool()
-        cdef State* state = init_state(mem, tokens.data, tokens.length)
+        cdef State* state = new_state(mem, tokens.data, tokens.length)
+        self.moves.first_state(state)
+        py_words = [t.orth_ for t in tokens]
         while not is_final(state):
             fill_context(context, state)
             scores = self.model.score(context)
@@ -114,7 +119,3 @@ cdef class GreedyParser:
                 best.do(&best, state)
             else:
                 guess.do(&guess, state)
-        n_corr = gold.heads_correct(state.sent, score_punct=True)
-        if force_gold and n_corr != tokens.length:
-            raise OracleError
-        return n_corr

@@ -14,6 +14,7 @@ cdef class GoldParse:
     cdef readonly list heads
     cdef readonly list labels
     cdef readonly list ner
+    cdef readonly list ents
 
     cdef int* c_tags
     cdef int* c_heads

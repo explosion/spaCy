@@ -34,15 +34,14 @@ cdef do_func_t[N_MOVES] do_funcs
 
 
 cdef bint entity_is_open(const State *s) except -1:
-    return s.sent[s.i - 1].ent.tag >= 1
+    return s.ents_len >= 1 and s.ent.end == 0
 
 
 cdef bint _entity_is_sunk(const State *s, Transition* golds) except -1:
     if not entity_is_open(s):
         return False
 
-    cdef const Entity* curr = &s.sent[s.i - 1].ent
-    cdef const Transition* gold = &golds[(s.i - 1) + curr.start]
+    cdef const Transition* gold = &golds[(s.i - 1) + s.ent.start]
     if gold.move != BEGIN and gold.move != UNIT:
         return True
     elif gold.label != s.ent.label:
@@ -52,14 +51,16 @@ cdef bint _entity_is_sunk(const State *s, Transition* golds) except -1:
 
 
 cdef int _is_valid(int act, int label, const State* s) except -1:
-    if act == BEGIN:
-        return not entity_is_open(s)
+    if act == MISSING:
+        return False
+    elif act == BEGIN:
+        return label != 0 and not entity_is_open(s)
     elif act == IN:
-        return entity_is_open(s) and s.ent.label == label
+        return entity_is_open(s) and label != 0 and s.ent.label == label
     elif act == LAST:
-        return entity_is_open(s) and s.ent.label == label
+        return entity_is_open(s) and label != 0 and s.ent.label == label
     elif act == UNIT:
-        return not entity_is_open(s)
+        return label != 0 and not entity_is_open(s)
     elif act == OUT:
         return not entity_is_open(s)
     else:
@@ -69,22 +70,34 @@ cdef int _is_valid(int act, int label, const State* s) except -1:
 cdef class BiluoPushDown(TransitionSystem):
     @classmethod
     def get_labels(cls, gold_tuples):
-        move_labels = {BEGIN: {}, IN: {}, LAST: {}, UNIT: {}, OUT: {'ROOT': True}}
-        moves = ('-', 'B', 'I', 'L', 'U')
-        for (raw_text, toks, (ids, tags, heads, labels, iob)) in gold_tuples:
-            for i, ner_tag in enumerate(iob_to_biluo(iob)):
+        move_labels = {MISSING: {'ROOT': True}, BEGIN: {}, IN: {}, LAST: {}, UNIT: {},
+                       OUT: {'ROOT': True}}
+        moves = ('M', 'B', 'I', 'L', 'U')
+        for (raw_text, toks, (ids, tags, heads, labels, biluo)) in gold_tuples:
+            for i, ner_tag in enumerate(biluo):
                 if ner_tag != 'O' and ner_tag != '-':
                     move_str, label = ner_tag.split('-')
                     move_labels[moves.index(move_str)][label] = True
         return move_labels
 
+    def move_name(self, int move, int label):
+        if move == OUT:
+            return 'O'
+        elif move == 'MISSING':
+            return 'M'
+        else:
+            labels = {id_: name for name, id_ in self.label_ids.items()}
+            return MOVE_NAMES[move] + '-' + labels[label]
+
     cdef int preprocess_gold(self, GoldParse gold) except -1:
-        biluo_strings = iob_to_biluo(gold.ner)
         for i in range(gold.length):
-            gold.c_ner[i] = self.lookup_transition(biluo_strings[i])
+            gold.c_ner[i] = self.lookup_transition(gold.ner[i])
 
     cdef Transition lookup_transition(self, object name) except *:
-        if '-' in name:
+        if name == '-':
+            move_str = 'M'
+            label = 0
+        elif '-' in name:
             move_str, label_str = name.split('-', 1)
             label = self.label_ids[label_str]
         else:
@@ -107,6 +120,9 @@ cdef class BiluoPushDown(TransitionSystem):
         t.get_cost = _get_cost
         return t
 
+    cdef int first_state(self, State* state) except -1:
+        pass
+
     cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
         cdef int best = -1
         cdef weight_t score = -90000
@@ -128,8 +144,9 @@ cdef int _get_cost(const Transition* self, const State* s, GoldParse gold) excep
         return 9000
     cdef bint is_sunk = _entity_is_sunk(s, gold.c_ner)
     cdef int next_act = gold.c_ner[s.i+1].move if s.i < s.sent_len else OUT
-    return not _is_gold(self.move, self.label, gold.c_ner[s.i].move, gold.c_ner[s.i].label,
-                        next_act, is_sunk)
+    cdef bint is_gold = _is_gold(self.move, self.label, gold.c_ner[s.i].move,
+                                 gold.c_ner[s.i].label, next_act, is_sunk)
+    return not is_gold
 
 cdef bint _is_gold(int act, int tag, int g_act, int g_tag,
                    int next_act, bint is_sunk):
@@ -210,18 +227,21 @@ cdef int _do_begin(const Transition* self, State* s) except -1:
     s.ents_len += 1
     s.ent.start = s.i
     s.ent.label = self.label
-    s.sent[s.i].ent.tag = self.clas 
+    s.sent[s.i].ent_iob = 3
+    s.sent[s.i].ent_type = self.label
     s.i += 1
 
 
 cdef int _do_in(const Transition* self, State* s) except -1:
-    s.sent[s.i].ent.tag = self.clas 
+    s.sent[s.i].ent_iob = 1
+    s.sent[s.i].ent_type = self.label
     s.i += 1
 
 
 cdef int _do_last(const Transition* self, State* s) except -1:
     s.ent.end = s.i+1
-    s.sent[s.i].ent.tag = self.clas 
+    s.sent[s.i].ent_iob = 1
+    s.sent[s.i].ent_type = self.label
     s.i += 1
 
 
@@ -231,12 +251,13 @@ cdef int _do_unit(const Transition* self, State* s) except -1:
     s.ent.start = s.i
     s.ent.label = self.label
     s.ent.end = s.i+1
-    s.sent[s.i].ent.tag = self.clas 
+    s.sent[s.i].ent_iob = 3
+    s.sent[s.i].ent_type = self.label
     s.i += 1
 
 
 cdef int _do_out(const Transition* self, State* s) except -1:
-    s.sent[s.i].ent.tag = self.clas 
+    s.sent[s.i].ent_iob = 2
     s.i += 1
 
 

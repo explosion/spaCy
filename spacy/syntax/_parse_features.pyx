@@ -12,6 +12,7 @@ from itertools import combinations
 from ..tokens cimport TokenC
 from ._state cimport State
 from ._state cimport get_s2, get_s1, get_s0, get_n0, get_n1, get_n2
+from ._state cimport get_p2, get_p1
 from ._state cimport has_head, get_left, get_right
 from ._state cimport count_left_kids, count_right_kids
 
@@ -45,6 +46,9 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[4] = token.lex.cluster & 63
         context[5] = token.lex.cluster & 15
         context[6] = token.dep if has_head(token) else 0
+        context[7] = token.lex.prefix
+        context[8] = token.lex.suffix
+        context[9] = token.lex.shape
 
 
 cdef int fill_context(atom_t* context, State* state) except -1:
@@ -62,7 +66,8 @@ cdef int fill_context(atom_t* context, State* state) except -1:
     fill_token(&context[N0l2w], get_left(state, get_n0(state), 2))
     fill_token(&context[N0w], get_n0(state))
     fill_token(&context[N1w], get_n1(state))
-    fill_token(&context[N2w], get_n2(state))
+    fill_token(&context[P1w], get_p1(state))
+    fill_token(&context[P2w], get_p2(state))
 
     if state.stack_len >= 1:
         context[dist] = state.stack[0] - state.i
@@ -83,6 +88,54 @@ cdef int fill_context(atom_t* context, State* state) except -1:
             context[S1_has_head] = has_head(get_s1(state)) + 1
             if state.stack_len >= 3:
                 context[S2_has_head] = has_head(get_s2(state))
+
+ner = (
+    (N0w,),
+    (P1w,),
+    (N1w,),
+    (P2w,),
+    (N2w,),
+    
+    (P1w, N0w,),
+    (N0w, N1w),
+    
+    (N0_prefix,),
+    (N0_suffix,),
+
+    (P1_shape,),
+    (N0_shape,),
+    (N1_shape,),
+    (P1_shape, N0_shape,),
+    (N0_shape, P1_shape,),
+    (P1_shape, N0_shape, N1_shape),
+    (N2_shape,),
+    (P2_shape,),
+
+    #(P2_norm, P1_norm, W_norm),
+    #(P1_norm, W_norm, N1_norm),
+    #(W_norm, N1_norm, N2_norm)
+
+    (P2p,),
+    (P1p,),
+    (N0p,),
+    (N1p,),
+    (N2p,),
+
+    (P1p, N0p),
+    (N0p, N1p),
+    (P2p, P1p, N0p),
+    (P1p, N0p, N1p),
+    (N0p, N1p, N2p),
+
+    (P2c,),
+    (P1c,),
+    (N0c,),
+    (N1c,),
+    (N2c,),
+
+    (P1c, N0c),
+    (N0c, N1c),
+)
 
 
 unigrams = (

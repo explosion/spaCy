@@ -58,7 +58,6 @@ cdef class ArcEager(TransitionSystem):
             gold.c_heads[i] = gold.heads[i]
             gold.c_labels[i] = self.label_ids[gold.labels[i]]
 
-
     cdef Transition lookup_transition(self, object name) except *:
         if '-' in name:
             move_str, label_str = name.split('-', 1)
@@ -81,6 +80,9 @@ cdef class ArcEager(TransitionSystem):
         t.do = do_funcs[move]
         t.get_cost = get_cost_funcs[move]
         return t
+
+    cdef int first_state(self, State* state) except -1:
+        push_stack(state)
 
     cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
         cdef bint[N_MOVES] is_valid

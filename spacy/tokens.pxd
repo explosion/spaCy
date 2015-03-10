@@ -39,6 +39,7 @@ cdef class Tokens:
     cdef unicode _string
     cdef tuple _tag_strings
     cdef tuple _dep_strings
+    cdef public tuple _ent_strings
 
     cdef public bint is_tagged
     cdef public bint is_parsed

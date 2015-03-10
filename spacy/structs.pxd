@@ -45,14 +45,12 @@ cdef struct PosTag:
 cdef struct Entity:
     int start
     int end
-    int tag
     int label
-    
+
 
 cdef struct TokenC:
     const LexemeC* lex
     Morphology morph
-    Entity ent
     univ_pos_t pos
     int tag
     int idx
@@ -63,6 +61,9 @@ cdef struct TokenC:
     bint sent_end
     uint32_t l_kids
     uint32_t r_kids
+
+    int ent_iob
+    int ent_type
 
 
 cdef struct Utf8Str:

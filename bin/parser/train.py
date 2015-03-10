@@ -24,6 +24,8 @@ from spacy.syntax.util import Config
 from spacy.syntax.conll import read_docparse_file
 from spacy.syntax.conll import GoldParse
 
+from spacy.scorer import Scorer
+
 
 def is_punct_label(label):
     return label == 'P' or label.lower() == 'punct'
@@ -186,7 +188,6 @@ def get_labels(sents):
 
 def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
           gold_preproc=False, force_gold=False, n_sents=0):
-    print "Setup model dir"
     dep_model_dir = path.join(model_dir, 'deps')
     pos_model_dir = path.join(model_dir, 'pos')
     ner_model_dir = path.join(model_dir, 'ner')
@@ -209,13 +210,16 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
     Config.write(ner_model_dir, 'config', features='ner', seed=seed,
                  labels=Language.EntityTransitionSystem.get_labels(gold_tuples))
 
+    if n_sents > 0:
+        gold_tuples = gold_tuples[:n_sents]
     nlp = Language()
-    
+    ent_strings = [None] * (max(nlp.entity.moves.label_ids.values()) + 1)
+    for label, i in nlp.entity.moves.label_ids.items():
+        ent_strings[i] = label
+
+    print "Itn.\tUAS\tNER F.\tTag %"
     for itn in range(n_iter):
-        dep_corr = 0
-        pos_corr = 0
-        ent_corr = 0
-        n_tokens = 0
+        scorer = Scorer()
         for raw_text, segmented_text, annot_tuples in gold_tuples:
             if gold_preproc:
                 sents = [nlp.tokenizer.tokens_from_list(s) for s in segmented_text]
@@ -224,51 +228,32 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
             for tokens in sents:
                 gold = GoldParse(tokens, annot_tuples)
                 nlp.tagger(tokens)
-                #ent_corr += nlp.entity.train(tokens, gold, force_gold=force_gold)
-                dep_corr += nlp.parser.train(tokens, gold, force_gold=force_gold)
-                pos_corr += nlp.tagger.train(tokens, gold.tags)
-                n_tokens += len(tokens)
-        acc = float(dep_corr) / n_tokens
-        pos_acc = float(pos_corr) / n_tokens
-        print '%d: ' % itn, '%.3f' % acc, '%.3f' % pos_acc
+                nlp.entity.train(tokens, gold, force_gold=force_gold)
+                #nlp.parser.train(tokens, gold, force_gold=force_gold)
+                nlp.tagger.train(tokens, gold.tags)
+                
+                nlp.entity(tokens)
+                tokens._ent_strings = tuple(ent_strings)
+                nlp.parser(tokens)
+                scorer.score(tokens, gold, verbose=False)
+        print '%d:\t%.3f\t%.3f\t%.3f' % (itn, scorer.uas, scorer.ents_f, scorer.tags_acc)
         random.shuffle(gold_tuples)
     nlp.parser.model.end_training()
+    nlp.entity.model.end_training()
     nlp.tagger.model.end_training()
-    return acc
 
 
 def evaluate(Language, dev_loc, model_dir, gold_preproc=False):
     global loss
+    assert not gold_preproc
     nlp = Language()
-    uas_corr = 0
-    las_corr = 0
-    pos_corr = 0
-    n_tokens = 0
-    total = 0
-    skipped = 0
-    loss = 0
-    gold_tuples = read_docparse_file(train_loc)
+    gold_tuples = read_docparse_file(dev_loc)
+    scorer = Scorer()
     for raw_text, segmented_text, annot_tuples in gold_tuples:
-        if gold_preproc:
-            tokens = nlp.tokenizer.tokens_from_list(gold_sent.words)
-            nlp.tagger(tokens)
-            nlp.parser(tokens)
-            gold_sent.map_heads(nlp.parser.moves.label_ids)
-        else:
-            tokens = nlp(gold_sent.raw_text)
-            loss += gold_sent.align_to_tokens(tokens, nlp.parser.moves.label_ids)
-        for i, token in enumerate(tokens):
-            pos_corr += token.tag_ == gold_sent.tags[i]
-            n_tokens += 1
-            if gold_sent.heads[i] is None:
-                skipped += 1
-                continue
-            if gold_sent.labels[i] != 'P':
-                n_corr += gold_sent.is_correct(i, token.head.i)
-                total += 1
-    print loss, skipped, (loss+skipped + total)
-    print pos_corr / n_tokens
-    return float(n_corr) / (total + loss)
+        tokens = nlp(raw_text)
+        gold = GoldParse(tokens, annot_tuples)
+        scorer.score(tokens, gold, verbose=False)
+    return scorer
 
 
 
@@ -281,7 +266,14 @@ def evaluate(Language, dev_loc, model_dir, gold_preproc=False):
 def main(train_loc, dev_loc, model_dir, n_sents=0):
     train(English, train_loc, model_dir,
           gold_preproc=False, force_gold=False, n_sents=n_sents)
-    print evaluate(English, dev_loc, model_dir, gold_preproc=False)
+    scorer = evaluate(English, dev_loc, model_dir, gold_preproc=False)
+    print 'POS', scorer.tags_acc
+    print 'UAS', scorer.uas
+    print 'LAS', scorer.las
+
+    print 'NER P', scorer.ents_p
+    print 'NER R', scorer.ents_r
+    print 'NER F', scorer.ents_f
     
 
 if __name__ == '__main__':

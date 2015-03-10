@@ -2,7 +2,7 @@ from libc.string cimport memmove, memcpy
 from cymem.cymem cimport Pool
 
 from ..lexeme cimport EMPTY_LEXEME
-from ..structs cimport TokenC
+from ..structs cimport TokenC, Entity
 
 
 DEF PADDING = 5
@@ -112,13 +112,15 @@ cdef int count_right_kids(const TokenC* head) nogil:
     return _popcount(head.r_kids)
 
 
-cdef State* init_state(Pool mem, const TokenC* sent, const int sent_len) except NULL:
+cdef State* new_state(Pool mem, const TokenC* sent, const int sent_len) except NULL:
     cdef int padded_len = sent_len + PADDING + PADDING
     cdef State* s = <State*>mem.alloc(1, sizeof(State))
+    s.ent = <Entity*>mem.alloc(padded_len, sizeof(Entity))
     s.stack = <int*>mem.alloc(padded_len, sizeof(int))
     for i in range(PADDING):
         s.stack[i] = -1
     s.stack += (PADDING - 1)
+    s.ent += (PADDING - 1)
     assert s.stack[0] == -1
     state_sent = <TokenC*>mem.alloc(padded_len, sizeof(TokenC))
     memcpy(state_sent, sent - PADDING, padded_len * sizeof(TokenC))
@@ -126,5 +128,4 @@ cdef State* init_state(Pool mem, const TokenC* sent, const int sent_len) except 
     s.stack_len = 0
     s.i = 0
     s.sent_len = sent_len
-    push_stack(s)
     return s

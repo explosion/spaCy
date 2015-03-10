@@ -94,6 +94,7 @@ cdef class Tokens:
         self._py_tokens = []
         self._tag_strings = tuple() # These will be set by the POS tagger and parser
         self._dep_strings = tuple() # The strings are arbitrary and model-specific.
+        self._ent_strings = tuple() # TODO: Clean this up
 
     def __getitem__(self, object i):
         """Retrieve a token.
@@ -129,6 +130,28 @@ cdef class Tokens:
         cdef const TokenC* last = &self.data[self.length - 1]
         return self._string[:last.idx + last.lex.length]
 
+    property ents:
+        def __get__(self):
+            cdef int i
+            cdef const TokenC* token
+            cdef int start = -1
+            cdef object label = None
+            for i in range(self.length):
+                token = &self.data[i]
+                if token.ent_iob == 1:
+                    assert start != -1
+                    pass
+                elif token.ent_iob == 2:
+                    if start != -1:
+                        yield (start, i, label)
+                    start = -1
+                    label = None
+                elif token.ent_iob == 3:
+                    start = i
+                    label = self._ent_strings[token.ent_type]
+            if start != -1:
+                yield (start, self.length, label)
+                
     cdef int push_back(self, int idx, LexemeOrToken lex_or_tok) except -1:
         if self.length == self.max_length:
             self._realloc(self.length * 2)

@@ -40,6 +40,21 @@ cdef inline TokenC* get_n1(const State* s) nogil:
         return &s.sent[s.i+1]
 
 
+cdef inline TokenC* get_p1(const State* s) nogil:
+    if s.i < 1:
+        return NULL
+    else:
+        return &s.sent[s.i-1]
+
+
+cdef inline TokenC* get_p2(const State* s) nogil:
+    if s.i < 2:
+        return NULL
+    else:
+        return &s.sent[s.i-2]
+
+
+
 cdef inline TokenC* get_n2(const State* s) nogil:
     if (s.i + 2) >= s.sent_len:
         return NULL
@@ -77,7 +92,7 @@ cdef int head_in_buffer(const State *s, const int child, const int* gold) except
 cdef int children_in_stack(const State *s, const int head, const int* gold) except -1
 cdef int head_in_stack(const State *s, const int child, const int* gold) except -1
 
-cdef State* init_state(Pool mem, TokenC* sent, const int sent_length) except NULL
+cdef State* new_state(Pool mem, TokenC* sent, const int sent_length) except NULL
 
 
 cdef int count_left_kids(const TokenC* head) nogil

@@ -1,6 +1,5 @@
 import numpy
 import codecs
-from .ner_util import iob_to_biluo
 
 from libc.string cimport memset
 
@@ -47,6 +46,7 @@ def _parse_line(line):
         label = pieces[7]
         return id_, word, pos, head_idx, label, iob_ent
 
+
 cdef class GoldParse:
     def __init__(self, tokens, annot_tuples):
         self.mem = Pool()
@@ -62,9 +62,12 @@ cdef class GoldParse:
         self.tags = [None] * len(tokens)
         self.heads = [-1] * len(tokens)
         self.labels = ['MISSING'] * len(tokens)
-        self.ner = [None] * len(tokens)
+        self.ner = ['O'] * len(tokens)
 
         idx_map = {token.idx: token.i for token in tokens}
+        self.ents = []
+        ent_start = None
+        ent_label = None
         for idx, tag, head, label, ner in zip(*annot_tuples):
             if idx < tokens[0].idx:
                 pass
@@ -76,8 +79,29 @@ cdef class GoldParse:
                 self.heads[i] = idx_map.get(head, -1)
                 self.labels[i] = label
                 self.tags[i] = tag
-                self.labels[i] = label
-                self.ner[i] = ner
+                if ner == '-':
+                    self.ner[i] = '-'
+                # Deal with inconsistencies in BILUO arising from tokenization
+                if ner[0] in ('B', 'U', 'O') and ent_start is not None:
+                    self.ents.append((ent_start, i, ent_label))
+                    ent_start = None
+                    ent_label = None
+                if ner[0] in ('B', 'U'):
+                    ent_start = i
+                    ent_label = ner[2:]
+        if ent_start is not None:
+            self.ents.append((ent_start, self.length, ent_label))
+        for start, end, label in self.ents:
+            if start == (end - 1):
+                self.ner[start] = 'U-%s' % label
+            else:
+                self.ner[start] = 'B-%s' % label
+                for i in range(start+1, end-1):
+                    self.ner[i] = 'I-%s' % label
+                self.ner[end-1] = 'L-%s' % label
+
+    def __len__(self):
+        return self.length
 
     @property
     def n_non_punct(self):

@@ -28,6 +28,9 @@ cdef class TransitionSystem:
         self.label_ids['MISSING'] = -1
         self.c = moves
 
+    cdef int first_state(self, State* state) except -1:
+        raise NotImplementedError
+
     cdef int preprocess_gold(self, GoldParse gold) except -1:
         raise NotImplementedError
 
