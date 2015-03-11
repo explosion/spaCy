@@ -184,7 +184,8 @@ class English(object):
             self.entity(tokens)
             ent_strings = [None] * (max(self.entity.moves.label_ids.values()) + 1)
             for label, i in self.entity.moves.label_ids.items():
-                ent_strings[i] = label
+                if i >= 0:
+                    ent_strings[i] = label
             tokens._ent_strings = tuple(ent_strings)
         return tokens
 
