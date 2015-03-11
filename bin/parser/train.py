@@ -215,7 +215,8 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
     nlp = Language()
     ent_strings = [None] * (max(nlp.entity.moves.label_ids.values()) + 1)
     for label, i in nlp.entity.moves.label_ids.items():
-        ent_strings[i] = label
+        if i >= 0:
+            ent_strings[i] = label
 
     print "Itn.\tUAS\tNER F.\tTag %"
     for itn in range(n_iter):
@@ -243,8 +244,7 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
     nlp.tagger.model.end_training()
 
 
-def evaluate(Language, dev_loc, model_dir, gold_preproc=False):
-    global loss
+def evaluate(Language, dev_loc, model_dir, gold_preproc=False, verbose=False):
     assert not gold_preproc
     nlp = Language()
     gold_tuples = read_docparse_file(dev_loc)
@@ -252,9 +252,8 @@ def evaluate(Language, dev_loc, model_dir, gold_preproc=False):
     for raw_text, segmented_text, annot_tuples in gold_tuples:
         tokens = nlp(raw_text)
         gold = GoldParse(tokens, annot_tuples)
-        scorer.score(tokens, gold, verbose=False)
+        scorer.score(tokens, gold, verbose=verbose)
     return scorer
-
 
 
 @plac.annotations(
@@ -266,7 +265,7 @@ def evaluate(Language, dev_loc, model_dir, gold_preproc=False):
 def main(train_loc, dev_loc, model_dir, n_sents=0):
     train(English, train_loc, model_dir,
           gold_preproc=False, force_gold=False, n_sents=n_sents)
-    scorer = evaluate(English, dev_loc, model_dir, gold_preproc=False)
+    scorer = evaluate(English, dev_loc, model_dir, gold_preproc=False, verbose=False)
     print 'POS', scorer.tags_acc
     print 'UAS', scorer.uas
     print 'LAS', scorer.las
