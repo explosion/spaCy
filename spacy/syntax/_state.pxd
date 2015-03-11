@@ -54,6 +54,19 @@ cdef inline TokenC* get_p2(const State* s) nogil:
         return &s.sent[s.i-2]
 
 
+cdef inline TokenC* get_e0(const State* s) nogil:
+    if s.ent.end != 0:
+        return NULL
+    else:
+        return &s.sent[s.ent.start]
+
+
+cdef inline TokenC* get_e1(const State* s) nogil:
+    if s.ent.end != 0 or s.ent.start >= (s.i + 1):
+        return NULL
+    else:
+        return &s.sent[s.ent.start + 1]
+
 
 cdef inline TokenC* get_n2(const State* s) nogil:
     if (s.i + 2) >= s.sent_len:

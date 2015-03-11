@@ -187,6 +187,28 @@ cpdef enum:
     P2_suffix
     P2_shape
    
+    E0w
+    E0W
+    E0p
+    E0c
+    E0c4
+    E0c6
+    E0L
+    E0_prefix
+    E0_suffix
+    E0_shape
+   
+    E1w
+    E1W
+    E1p
+    E1c
+    E1c4
+    E1c6
+    E1L
+    E1_prefix
+    E1_suffix
+    E1_shape
+   
     # Misc features at the end
     dist
     N0lv

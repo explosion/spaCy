@@ -13,6 +13,7 @@ from ..tokens cimport TokenC
 from ._state cimport State
 from ._state cimport get_s2, get_s1, get_s0, get_n0, get_n1, get_n2
 from ._state cimport get_p2, get_p1
+from ._state cimport get_e0, get_e1
 from ._state cimport has_head, get_left, get_right
 from ._state cimport count_left_kids, count_right_kids
 
@@ -69,6 +70,8 @@ cdef int fill_context(atom_t* context, State* state) except -1:
     fill_token(&context[P1w], get_p1(state))
     fill_token(&context[P2w], get_p2(state))
 
+    fill_token(&context[E0w], get_e0(state))
+    fill_token(&context[E1w], get_e1(state))
     if state.stack_len >= 1:
         context[dist] = state.stack[0] - state.i
     else:
@@ -135,6 +138,32 @@ ner = (
 
     (P1c, N0c),
     (N0c, N1c),
+
+    (E0w,),
+    (E0c,),
+    (E0p,),
+
+    (E0w, N0w),
+    (E0c, N0w),
+    (E0p, N0w),
+
+    (E0p, P1p, N0p),
+    (E0c, P1c, N0c),
+
+    (E0w, P1c),
+    (E0p, P1p),
+    (E0c, P1c),
+    (E0p, E1p),
+    (E0c, P1p),
+
+    (E1w,),
+    (E1c,),
+    (E1p,),
+
+    (E0w, E1w),
+    (E0w, E1p,),
+    (E0p, E1w,),
+    (E0p, E1w),
 )
 
 
