@@ -41,7 +41,7 @@ cdef bint _entity_is_sunk(const State *s, Transition* golds) except -1:
     if not entity_is_open(s):
         return False
 
-    cdef const Transition* gold = &golds[(s.i - 1) + s.ent.start]
+    cdef const Transition* gold = &golds[s.ent.start]
     if gold.move != BEGIN and gold.move != UNIT:
         return True
     elif gold.label != s.ent.label:
@@ -107,6 +107,8 @@ cdef class BiluoPushDown(TransitionSystem):
         for i in range(self.n_moves):
             if self.c[i].move == move and self.c[i].label == label:
                 return self.c[i]
+        else:
+            raise StandardError(name)
 
     cdef Transition init_transition(self, int clas, int move, int label) except *:
         # TODO: Apparent Cython bug here when we try to use the Transition()
@@ -147,6 +149,7 @@ cdef int _get_cost(const Transition* self, const State* s, GoldParse gold) excep
     cdef bint is_gold = _is_gold(self.move, self.label, gold.c_ner[s.i].move,
                                  gold.c_ner[s.i].label, next_act, is_sunk)
     return not is_gold
+
 
 cdef bint _is_gold(int act, int tag, int g_act, int g_tag,
                    int next_act, bint is_sunk):
@@ -227,6 +230,7 @@ cdef int _do_begin(const Transition* self, State* s) except -1:
     s.ents_len += 1
     s.ent.start = s.i
     s.ent.label = self.label
+    s.ent.end = 0
     s.sent[s.i].ent_iob = 3
     s.sent[s.i].ent_type = self.label
     s.i += 1
