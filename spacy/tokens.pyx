@@ -237,24 +237,15 @@ cdef class Tokens:
         """This is really only a place-holder for a proper solution."""
         cdef int i
         cdef Tokens sent = Tokens(self.vocab, self._string[self.data[0].idx:])
-        #cdef attr_t period = self.vocab.strings['.']
-        #cdef attr_t question = self.vocab.strings['?']
-        #cdef attr_t exclamation = self.vocab.strings['!']
-        spans = []
         start = None
         for i in range(self.length):
             if start is None:
                 start = i
             if self.data[i].sent_end:
-                spans.append((start, i+1))
+                yield Span(self, start, i+1)
                 start = None
-            #if self.data[i].lex.orth == period or self.data[i].lex.orth == exclamation or \
-            #  self.data[i].lex.orth == question:
-            #    spans.append((start, i+1))
-            #    start = None
         if start is not None:
-            spans.append((start, self.length))
-        return spans
+            yield Span(self, start, self.length) 
 
     cdef int set_parse(self, const TokenC* parsed, dict label_ids) except -1:
         self._py_tokens = [None] * self.length
@@ -265,6 +256,26 @@ cdef class Tokens:
         for dep_string, id_ in label_ids.items():
             dep_strings[id_] = dep_string
         self._dep_strings = tuple(dep_strings)
+
+
+cdef class Span:
+    """A slice from a Tokens object."""
+    def __cinit__(self, Tokens tokens, int start, int end):
+        self._seq = tokens
+        self.start = start
+        self.end = end
+
+    def __len__(self):
+        if self.end < self.start:
+            return 0
+        return self.end - self.start
+
+    def __getitem__(self, int i):
+        return self._seq[self.start + i]
+
+    def __iter__(self):
+        for i in range(self.start, self.end):
+            yield self._seq[i]
 
 
 cdef class Token:
