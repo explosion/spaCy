@@ -107,13 +107,13 @@ cdef class GreedyParser:
         cdef Pool mem = Pool()
         cdef State* state = new_state(mem, tokens.data, tokens.length)
         self.moves.first_state(state)
-        py_words = [t.orth_ for t in tokens]
         while not is_final(state):
             fill_context(context, state)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
             best = self.moves.best_gold(scores, state, gold)
             cost = guess.get_cost(&guess, state, gold)
+
             self.model.update(context, guess.clas, best.clas, cost)
             if force_gold:
                 best.do(&best, state)
