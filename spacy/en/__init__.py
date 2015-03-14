@@ -104,14 +104,16 @@ class English(object):
     @property
     def parser(self):
         if self._parser is None:
-            self._parser = GreedyParser(path.join(self._data_dir, 'deps'),
+            self._parser = GreedyParser(self.vocab.strings,
+                                        path.join(self._data_dir, 'deps'),
                                         self.ParserTransitionSystem)
         return self._parser
 
     @property
     def entity(self):
         if self._entity is None:
-            self._entity = GreedyParser(path.join(self._data_dir, 'ner'),
+            self._entity = GreedyParser(self.vocab.strings,
+                                        path.join(self._data_dir, 'ner'),
                                         self.EntityTransitionSystem)
         return self._entity
 
@@ -180,13 +182,7 @@ class English(object):
         if parse and self.has_parser_model:
             self.parser(tokens)
         if entity and self.has_entity_model:
-            # TODO: Clean this up
             self.entity(tokens)
-            ent_strings = [None] * (max(self.entity.moves.label_ids.values()) + 1)
-            for label, i in self.entity.moves.label_ids.items():
-                if i >= 0:
-                    ent_strings[i] = label
-            tokens._ent_strings = tuple(ent_strings)
         return tokens
 
     @property
