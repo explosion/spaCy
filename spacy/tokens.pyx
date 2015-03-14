@@ -93,8 +93,6 @@ cdef class Tokens:
         self.is_parsed = False
         self._py_tokens = []
         self._tag_strings = tuple() # These will be set by the POS tagger and parser
-        self._dep_strings = tuple() # The strings are arbitrary and model-specific.
-        self._ent_strings = tuple() # TODO: Clean this up
 
     def __getitem__(self, object i):
         """Retrieve a token.
@@ -110,7 +108,7 @@ cdef class Tokens:
         bounds_check(i, self.length, PADDING)
         return Token.cinit(self.vocab, self._string,
                            &self.data[i], i, self.length,
-                           self, self._tag_strings, self._dep_strings)
+                           self, self._tag_strings)
 
     def __iter__(self):
         """Iterate over the tokens.
@@ -121,7 +119,7 @@ cdef class Tokens:
         for i in range(self.length):
             yield Token.cinit(self.vocab, self._string,
                               &self.data[i], i, self.length,
-                              self, self._tag_strings, self._dep_strings)
+                              self, self._tag_strings)
 
     def __len__(self):
         return self.length
@@ -148,7 +146,7 @@ cdef class Tokens:
                     label = None
                 elif token.ent_iob == 3:
                     start = i
-                    label = self._ent_strings[token.ent_type]
+                    label = self.vocab.strings[token.ent_type]
             if start != -1:
                 yield (start, self.length, label)
                 
@@ -252,10 +250,6 @@ cdef class Tokens:
         self.is_parsed = True
         for i in range(self.length):
             self.data[i] = parsed[i]
-        dep_strings = [None] * len(label_ids)
-        for dep_string, id_ in label_ids.items():
-            dep_strings[id_] = dep_string
-        self._dep_strings = tuple(dep_strings)
 
 
 cdef class Span:
@@ -264,6 +258,15 @@ cdef class Span:
         self._seq = tokens
         self.start = start
         self.end = end
+
+    def __richcmp__(self, Span other, int op):
+        # Eq
+        if op in (1, 2, 5):
+            if self._seq is other._seq and \
+               self.start == other.start and \
+               self.end == other.end:
+                return True
+        return False
 
     def __len__(self):
         if self.end < self.start:
@@ -310,7 +313,7 @@ cdef class Token:
     def nbor(self, int i=1):
         return Token.cinit(self.vocab, self._string,
                            self.c, self.i, self.array_len,
-                           self._seq, self._tag_strings, self._dep_strings)
+                           self._seq, self._tag_strings)
 
     property string:
         def __get__(self):
@@ -411,7 +414,7 @@ cdef class Token:
                 elif ptr + ptr.head == self.c:
                     yield Token.cinit(self.vocab, self._string,
                                       ptr, ptr - (self.c - self.i), self.array_len,
-                                      self._seq, self._tag_strings, self._dep_strings)
+                                      self._seq, self._tag_strings)
                     ptr += 1
                 else:
                     ptr += 1
@@ -430,7 +433,7 @@ cdef class Token:
                 elif ptr + ptr.head == self.c:
                     yield Token.cinit(self.vocab, self._string,
                                       ptr, ptr - (self.c - self.i), self.array_len,
-                                      self._seq, self._tag_strings, self._dep_strings)
+                                      self._seq, self._tag_strings)
                     ptr -= 1
                 else:
                     ptr -= 1
@@ -453,7 +456,7 @@ cdef class Token:
             """The token predicted by the parser to be the head of the current token."""
             return Token.cinit(self.vocab, self._string,
                                self.c + self.c.head, self.i + self.c.head, self.array_len,
-                               self._seq, self._tag_strings, self._dep_strings)
+                               self._seq, self._tag_strings)
 
     property whitespace_:
         def __get__(self):
@@ -497,7 +500,7 @@ cdef class Token:
 
     property dep_:
         def __get__(self):
-            return self._dep_strings[self.c.dep]
+            return self.vocab.strings[self.c.dep]
 
 
 _pos_id_to_string = {id_: string for string, id_ in UNIV_POS_NAMES.items()}

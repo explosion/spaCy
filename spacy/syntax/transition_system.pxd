@@ -4,6 +4,7 @@ from thinc.typedefs cimport weight_t
 from ..structs cimport TokenC
 from ._state cimport State
 from .conll cimport GoldParse
+from ..strings cimport StringStore
 
 
 cdef struct Transition:
@@ -24,8 +25,8 @@ ctypedef int (*do_func_t)(const Transition* self, State* state) except -1
 
 
 cdef class TransitionSystem:
-    cdef readonly dict label_ids
     cdef Pool mem
+    cdef StringStore strings
     cdef const Transition* c
     cdef readonly int n_moves
 

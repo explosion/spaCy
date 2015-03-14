@@ -24,6 +24,7 @@ from thinc.features cimport count_feats
 from thinc.learner cimport LinearModel
 
 from ..tokens cimport Tokens, TokenC
+from ..strings cimport StringStore
 
 from .arc_eager cimport TransitionSystem, Transition
 from .transition_system import OracleError
@@ -67,10 +68,10 @@ def get_templates(name):
 
 
 cdef class GreedyParser:
-    def __init__(self, model_dir, transition_system):
+    def __init__(self, StringStore strings, model_dir, transition_system):
         assert os.path.exists(model_dir) and os.path.isdir(model_dir)
         self.cfg = Config.read(model_dir, 'config')
-        self.moves = transition_system(self.cfg.labels)
+        self.moves = transition_system(strings, self.cfg.labels)
         templates = get_templates(self.cfg.features)
         self.model = Model(self.moves.n_moves, templates, model_dir)
 
@@ -89,7 +90,7 @@ cdef class GreedyParser:
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
             guess.do(&guess, state)
-        tokens.set_parse(state.sent, self.moves.label_ids)
+        tokens.set_parse(state.sent)
         return 0
 
     def train(self, Tokens tokens, GoldParse gold, force_gold=False):

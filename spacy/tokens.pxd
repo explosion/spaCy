@@ -38,8 +38,6 @@ cdef class Tokens:
     cdef list _py_tokens
     cdef unicode _string
     cdef tuple _tag_strings
-    cdef tuple _dep_strings
-    cdef public tuple _ent_strings
 
     cdef public bint is_tagged
     cdef public bint is_parsed
@@ -71,13 +69,11 @@ cdef class Token:
 
     
     cdef Tokens _seq
-    cdef tuple _tag_strings
-    cdef tuple _dep_strings
 
     @staticmethod
     cdef inline Token cinit(Vocab vocab, unicode string,
                             const TokenC* token, int offset, int array_len,
-                            Tokens parent_seq, tuple tag_strings, tuple dep_strings):
+                            Tokens parent_seq, self._tag_strings):
         if offset < 0 or offset >= array_len:
 
             msg = "Attempt to access token at %d, max length %d"
@@ -92,8 +88,6 @@ cdef class Token:
         self.array_len = array_len
 
         self._seq = parent_seq
-        self._tag_strings = tag_strings
-        self._dep_strings = dep_strings
         self._seq._py_tokens[offset] = self
         return self
 

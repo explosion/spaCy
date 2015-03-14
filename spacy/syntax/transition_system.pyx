@@ -12,20 +12,18 @@ class OracleError(Exception):
 
 
 cdef class TransitionSystem:
-    def __init__(self, dict labels_by_action):
+    def __init__(self, StringStore string_table, dict labels_by_action):
         self.mem = Pool()
         self.n_moves = sum(len(labels) for labels in labels_by_action.values())
         moves = <Transition*>self.mem.alloc(self.n_moves, sizeof(Transition))
         cdef int i = 0
         cdef int label_id
-        self.label_ids = {'ROOT': 0}
+        self.strings = string_table
         for action, label_strs in sorted(labels_by_action.items()):
             for label_str in sorted(label_strs):
-                label_str = unicode(label_str)
-                label_id = self.label_ids.setdefault(label_str, len(self.label_ids))
+                label_id = self.strings[unicode(label_str)]
                 moves[i] = self.init_transition(i, int(action), label_id)
                 i += 1
-        self.label_ids['MISSING'] = -1
         self.c = moves
 
     cdef int first_state(self, State* state) except -1:

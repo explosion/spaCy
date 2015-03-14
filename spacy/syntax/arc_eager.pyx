@@ -56,7 +56,7 @@ cdef class ArcEager(TransitionSystem):
     cdef int preprocess_gold(self, GoldParse gold) except -1:
         for i in range(gold.length):
             gold.c_heads[i] = gold.heads[i]
-            gold.c_labels[i] = self.label_ids[gold.labels[i]]
+            gold.c_labels[i] = self.strings[gold.labels[i]]
 
     cdef Transition lookup_transition(self, object name) except *:
         if '-' in name:
