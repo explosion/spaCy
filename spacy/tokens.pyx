@@ -92,7 +92,6 @@ cdef class Tokens:
         self.is_tagged = False
         self.is_parsed = False
         self._py_tokens = []
-        self._tag_strings = tuple() # These will be set by the POS tagger and parser
 
     def __getitem__(self, object i):
         """Retrieve a token.
@@ -108,7 +107,7 @@ cdef class Tokens:
         bounds_check(i, self.length, PADDING)
         return Token.cinit(self.vocab, self._string,
                            &self.data[i], i, self.length,
-                           self, self._tag_strings)
+                           self)
 
     def __iter__(self):
         """Iterate over the tokens.
@@ -119,7 +118,7 @@ cdef class Tokens:
         for i in range(self.length):
             yield Token.cinit(self.vocab, self._string,
                               &self.data[i], i, self.length,
-                              self, self._tag_strings)
+                              self)
 
     def __len__(self):
         return self.length
@@ -245,7 +244,7 @@ cdef class Tokens:
         if start is not None:
             yield Span(self, start, self.length) 
 
-    cdef int set_parse(self, const TokenC* parsed, dict label_ids) except -1:
+    cdef int set_parse(self, const TokenC* parsed) except -1:
         self._py_tokens = [None] * self.length
         self.is_parsed = True
         for i in range(self.length):
@@ -313,7 +312,7 @@ cdef class Token:
     def nbor(self, int i=1):
         return Token.cinit(self.vocab, self._string,
                            self.c, self.i, self.array_len,
-                           self._seq, self._tag_strings)
+                           self._seq)
 
     property string:
         def __get__(self):
@@ -414,7 +413,7 @@ cdef class Token:
                 elif ptr + ptr.head == self.c:
                     yield Token.cinit(self.vocab, self._string,
                                       ptr, ptr - (self.c - self.i), self.array_len,
-                                      self._seq, self._tag_strings)
+                                      self._seq)
                     ptr += 1
                 else:
                     ptr += 1
@@ -433,7 +432,7 @@ cdef class Token:
                 elif ptr + ptr.head == self.c:
                     yield Token.cinit(self.vocab, self._string,
                                       ptr, ptr - (self.c - self.i), self.array_len,
-                                      self._seq, self._tag_strings)
+                                      self._seq)
                     ptr -= 1
                 else:
                     ptr -= 1
@@ -456,7 +455,7 @@ cdef class Token:
             """The token predicted by the parser to be the head of the current token."""
             return Token.cinit(self.vocab, self._string,
                                self.c + self.c.head, self.i + self.c.head, self.array_len,
-                               self._seq, self._tag_strings)
+                               self._seq)
 
     property whitespace_:
         def __get__(self):
@@ -496,7 +495,7 @@ cdef class Token:
 
     property tag_:
         def __get__(self):
-            return self._tag_strings[self.c.tag]
+            return self.vocab.strings[self.c.tag]
 
     property dep_:
         def __get__(self):

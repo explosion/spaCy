@@ -49,7 +49,7 @@ cdef class Tokens:
 
     cpdef long[:,:] to_array(self, object features)
 
-    cdef int set_parse(self, const TokenC* parsed, dict label_ids) except -1
+    cdef int set_parse(self, const TokenC* parsed) except -1
 
 
 cdef class Span:
@@ -73,7 +73,7 @@ cdef class Token:
     @staticmethod
     cdef inline Token cinit(Vocab vocab, unicode string,
                             const TokenC* token, int offset, int array_len,
-                            Tokens parent_seq, self._tag_strings):
+                            Tokens parent_seq):
         if offset < 0 or offset >= array_len:
 
             msg = "Attempt to access token at %d, max length %d"
