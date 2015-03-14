@@ -213,10 +213,6 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
     if n_sents > 0:
         gold_tuples = gold_tuples[:n_sents]
     nlp = Language()
-    ent_strings = [None] * (max(nlp.entity.moves.label_ids.values()) + 1)
-    for label, i in nlp.entity.moves.label_ids.items():
-        if i >= 0:
-            ent_strings[i] = label
 
     print "Itn.\tUAS\tNER F.\tTag %"
     for itn in range(n_iter):
@@ -229,12 +225,11 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
             for tokens in sents:
                 gold = GoldParse(tokens, annot_tuples)
                 nlp.tagger(tokens)
-                nlp.entity.train(tokens, gold, force_gold=force_gold)
-                #nlp.parser.train(tokens, gold, force_gold=force_gold)
+                nlp.parser.train(tokens, gold, force_gold=force_gold)
+                #nlp.entity.train(tokens, gold, force_gold=force_gold)
                 nlp.tagger.train(tokens, gold.tags)
                 
-                nlp.entity(tokens)
-                tokens._ent_strings = tuple(ent_strings)
+                #nlp.entity(tokens)
                 nlp.parser(tokens)
                 scorer.score(tokens, gold, verbose=False)
         print '%d:\t%.3f\t%.3f\t%.3f' % (itn, scorer.uas, scorer.ents_f, scorer.tags_acc)
@@ -244,7 +239,7 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
     nlp.tagger.model.end_training()
 
 
-def evaluate(Language, dev_loc, model_dir, gold_preproc=False, verbose=False):
+def evaluate(Language, dev_loc, model_dir, gold_preproc=False, verbose=True):
     assert not gold_preproc
     nlp = Language()
     gold_tuples = read_docparse_file(dev_loc)
@@ -260,12 +255,13 @@ def evaluate(Language, dev_loc, model_dir, gold_preproc=False, verbose=False):
     train_loc=("Training file location",),
     dev_loc=("Dev. file location",),
     model_dir=("Location of output model directory",),
-    n_sents=("Number of training sentences", "option", "n", int)
+    n_sents=("Number of training sentences", "option", "n", int),
+    verbose=("Verbose error reporting", "flag", "v", bool),
 )
-def main(train_loc, dev_loc, model_dir, n_sents=0):
+def main(train_loc, dev_loc, model_dir, n_sents=0, verbose=False):
     train(English, train_loc, model_dir,
           gold_preproc=False, force_gold=False, n_sents=n_sents)
-    scorer = evaluate(English, dev_loc, model_dir, gold_preproc=False, verbose=False)
+    scorer = evaluate(English, dev_loc, model_dir, gold_preproc=False, verbose=verbose)
     print 'POS', scorer.tags_acc
     print 'UAS', scorer.uas
     print 'LAS', scorer.las
