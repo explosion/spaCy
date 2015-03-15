@@ -249,7 +249,7 @@ cdef class Tokenizer:
                     tokens[i].lemma = 0
                 if 'pos' in props:
                     # TODO: Clean up this mess...
-                    tokens[i].tag = tag_names.index(props['pos'])
+                    tokens[i].tag = self.vocab.strings[props['pos']]
                     tokens[i].pos = tag_map[props['pos']][0]
                     # These are defaults, which can be over-ridden by the
                     # token-specific props.
