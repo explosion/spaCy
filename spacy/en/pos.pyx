@@ -275,21 +275,19 @@ cdef class EnPosTagger:
             if tokens.data[i].pos == 0:
                 fill_context(context, i, tokens.data)
                 scores = self.model.score(context)
-                tokens.data[i].tag = arg_max(scores, self.model.n_classes)
-                self.set_morph(i, tokens.data)
+                guess = arg_max(scores, self.model.n_classes)
+                tokens.data[i].tag = self.strings[self.tag_names[guess]]
+                self.set_morph(i, &self.tags[guess], tokens.data)
 
-        # TODO: Clean this up.
-        tokens._tag_strings = tuple(self.tag_names)
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
     def tag_from_strings(self, Tokens tokens, object tag_strs):
         cdef int i
         for i in range(tokens.length):
-            tokens.data[i].tag = self.tag_names.index(tag_strs[i])
-            self.set_morph(i, tokens.data)
-        # TODO: Clean this up.
-        tokens._tag_strings = tuple(self.tag_names)
+            tokens.data[i].tag = self.strings[tag_strs[i]]
+            self.set_morph(i, &self.tags[self.tag_names.index(tag_strs[i])],
+                           tokens.data)
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
@@ -307,13 +305,12 @@ cdef class EnPosTagger:
             guess = arg_max(scores, self.model.n_classes)
             loss = guess != golds[i] if golds[i] != -1 else 0
             self.model.update(context, guess, golds[i], loss)
-            tokens.data[i].tag = guess
-            self.set_morph(i, tokens.data)
+            tokens.data[i].tag = self.strings[self.tag_names[guess]]
+            self.set_morph(i, &self.tags[guess], tokens.data)
             correct += loss == 0
         return correct
 
-    cdef int set_morph(self, const int i, TokenC* tokens) except -1:
-        cdef const PosTag* tag = &self.tags[tokens[i].tag]
+    cdef int set_morph(self, const int i, const PosTag* tag, TokenC* tokens) except -1:
         tokens[i].pos = tag.pos
         cached = <_CachedMorph*>self._morph_cache.get(tag.id, tokens[i].lex.orth)
         if cached is NULL:
