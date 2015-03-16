@@ -42,8 +42,8 @@ cdef get_cost_func_t[N_MOVES] get_cost_funcs
 cdef class ArcEager(TransitionSystem):
     @classmethod
     def get_labels(cls, gold_parses):
-        move_labels = {SHIFT: {'ROOT': True}, REDUCE: {'ROOT': True}, RIGHT: {},
-                       LEFT: {}, BREAK: {'ROOT': True}}
+        move_labels = {SHIFT: {'': True}, REDUCE: {'': True}, RIGHT: {},
+                       LEFT: {}, BREAK: {'': True}}
         for raw_text, segmented, (ids, tags, heads, labels, iob) in gold_parses:
             for i, (head, label) in enumerate(zip(heads, labels)):
                 if label != 'ROOT':

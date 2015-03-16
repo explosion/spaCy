@@ -21,7 +21,7 @@ cdef class TransitionSystem:
         self.strings = string_table
         for action, label_strs in sorted(labels_by_action.items()):
             for label_str in sorted(label_strs):
-                label_id = self.strings[unicode(label_str)]
+                label_id = self.strings[unicode(label_str)] if label_str else 0
                 moves[i] = self.init_transition(i, int(action), label_id)
                 i += 1
         self.c = moves

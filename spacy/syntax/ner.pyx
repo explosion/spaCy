@@ -70,8 +70,8 @@ cdef int _is_valid(int act, int label, const State* s) except -1:
 cdef class BiluoPushDown(TransitionSystem):
     @classmethod
     def get_labels(cls, gold_tuples):
-        move_labels = {MISSING: {'ROOT': True}, BEGIN: {}, IN: {}, LAST: {}, UNIT: {},
-                       OUT: {'ROOT': True}}
+        move_labels = {MISSING: {'': True}, BEGIN: {}, IN: {}, LAST: {}, UNIT: {},
+                       OUT: {'': True}}
         moves = ('M', 'B', 'I', 'L', 'U')
         for (raw_text, toks, (ids, tags, heads, labels, biluo)) in gold_tuples:
             for i, ner_tag in enumerate(biluo):
@@ -99,7 +99,7 @@ cdef class BiluoPushDown(TransitionSystem):
             label = 0
         elif '-' in name:
             move_str, label_str = name.split('-', 1)
-            label = self.label_ids[label_str]
+            label = self.strings[label_str]
         else:
             move_str = name
             label = 0
