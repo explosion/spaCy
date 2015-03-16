@@ -9,20 +9,27 @@ Install
 
 .. code:: bash
 
+With Python 2.7 or Python 3, using Linux or OSX, run:
+
     $ pip install spacy
     $ python -m spacy.en.download
 
-The download command fetches and installs about `300mb of data`_, for the 
-parser model and word vectors, which it installs within the spacy.en package directory.
-
 .. _300 mb of data: http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_data_all-0.4.tgz
 
-Compilation from source will install Cython to build the package.  If you're
-using Python 2, I also recommend installing fabric and fabtools --- this is how
-I build the project.
 
-I've included instructions for installing spaCy into a virtualenv for
-completeness, but you may have your own solution for this (e.g. using pyenv).
+The download command fetches and installs about 300mb of data, for the 
+parser model and word vectors, which it installs within the spacy.en package directory.
+
+If you're stuck using a server with an old version of Python, and you don't
+have root access, I've prepared a bootstrap script to help you compile a local
+Python install. Run:
+
+    $ curl https://raw.githubusercontent.com/honnibal/spaCy/master/bootstrap_python_env.sh | bash && source .env/bin/activate
+
+The other way to install the package is to clone the github repository, and
+build it from source.  This installs an additional dependency, Cython.
+If you're using Python 2, I also recommend installing fabric and fabtools ---
+this is how I build the project.
 
 .. code:: bash
 
@@ -117,17 +124,9 @@ the original orthographic form of the word.
 
   .. py:method:: nbor(self, i=1) --> Token
 
-  .. py:attribute:: n_lefts --> int
-  
-  .. py:attribute:: n_rights --> int
+  .. py:method:: child(self, i=1) --> Token
 
-  .. py:attribute:: lefts --> Iterator[Token]
-  
-  .. py:attribute:: rights --> Iterator[Token]
-
-  .. py:attribute:: children --> Iterator[Token]
-  
-  .. py:attribute:: subtree --> Iterator[Token]
+  .. py:method:: sibling(self, i=1) --> Token
 
   .. py:attribute:: head: Token
 
