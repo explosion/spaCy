@@ -226,10 +226,10 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
                 gold = GoldParse(tokens, annot_tuples)
                 nlp.tagger(tokens)
                 nlp.parser.train(tokens, gold, force_gold=force_gold)
-                #nlp.entity.train(tokens, gold, force_gold=force_gold)
+                nlp.entity.train(tokens, gold, force_gold=force_gold)
                 nlp.tagger.train(tokens, gold.tags)
                 
-                #nlp.entity(tokens)
+                nlp.entity(tokens)
                 nlp.parser(tokens)
                 scorer.score(tokens, gold, verbose=False)
         print '%d:\t%.3f\t%.3f\t%.3f' % (itn, scorer.uas, scorer.ents_f, scorer.tags_acc)
