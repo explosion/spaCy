@@ -7,9 +7,10 @@ Install
 
 .. py:currentmodule:: spacy
 
-.. code:: bash
 
 With Python 2.7 or Python 3, using Linux or OSX, run:
+
+.. code:: bash
 
     $ pip install spacy
     $ python -m spacy.en.download
@@ -23,6 +24,8 @@ parser model and word vectors, which it installs within the spacy.en package dir
 If you're stuck using a server with an old version of Python, and you don't
 have root access, I've prepared a bootstrap script to help you compile a local
 Python install. Run:
+
+.. code:: bash
 
     $ curl https://raw.githubusercontent.com/honnibal/spaCy/master/bootstrap_python_env.sh | bash && source .env/bin/activate
 
