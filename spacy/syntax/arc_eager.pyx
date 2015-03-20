@@ -43,7 +43,7 @@ cdef class ArcEager(TransitionSystem):
     @classmethod
     def get_labels(cls, gold_parses):
         move_labels = {SHIFT: {'': True}, REDUCE: {'': True}, RIGHT: {},
-                       LEFT: {}, BREAK: {'': True}}
+                       LEFT: {}, BREAK: {'ROOT': True}}
         for raw_text, segmented, (ids, tags, heads, labels, iob) in gold_parses:
             for i, (head, label) in enumerate(zip(heads, labels)):
                 if label != 'ROOT':
@@ -138,7 +138,7 @@ cdef int _do_break(const Transition* self, State* state) except -1:
     state.sent[state.i-1].sent_end = True
     while state.stack_len != 0:
         if get_s0(state).head == 0:
-            get_s0(state).dep = 0
+            get_s0(state).dep = self.label
         state.stack -= 1
         state.stack_len -= 1
     if not at_eol(state):
