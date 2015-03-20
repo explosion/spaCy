@@ -249,6 +249,8 @@ cdef class Tokens:
         self.is_parsed = True
         for i in range(self.length):
             self.data[i] = parsed[i]
+            if self.data[i].dep == 0:
+                self.data[i].dep = self.vocab.strings['ROOT']
 
 
 cdef class Span:
