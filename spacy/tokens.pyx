@@ -425,6 +425,7 @@ cdef class Token:
             """The rightward immediate children of the word, in the syntactic
             dependency parse."""
             cdef const TokenC* ptr = (self.c - self.i) + (self.array_len - 1)
+            tokens = []
             while ptr > self.c:
                 # If this head is still to the right of us, we can skip to it
                 # No token that's between this token and this head could be our
@@ -432,12 +433,15 @@ cdef class Token:
                 if (ptr.head < 0) and ((ptr + ptr.head) > self.c):
                     ptr += ptr.head
                 elif ptr + ptr.head == self.c:
-                    yield Token.cinit(self.vocab, self._string,
+                    tokens.append(Token.cinit(self.vocab, self._string,
                                       ptr, ptr - (self.c - self.i), self.array_len,
-                                      self._seq)
+                                      self._seq))
                     ptr -= 1
                 else:
                     ptr -= 1
+            tokens.reverse()
+            for t in tokens:
+                yield t
 
     property children:
         def __get__(self):
