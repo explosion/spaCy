@@ -21,6 +21,7 @@ cdef enum:
     OUT
     N_MOVES
 
+
 MOVE_NAMES = [None] * N_MOVES
 MOVE_NAMES[MISSING] = 'M'
 MOVE_NAMES[BEGIN] = 'B'
