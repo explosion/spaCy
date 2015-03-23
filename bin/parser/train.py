@@ -228,10 +228,10 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
                 nlp.parser.train(tokens, gold, force_gold=force_gold)
                 nlp.entity.train(tokens, gold, force_gold=force_gold)
                 nlp.tagger.train(tokens, gold.tags)
-                
-                nlp.entity(tokens)
-                nlp.parser(tokens)
-                scorer.score(tokens, gold, verbose=False)
+
+            tokens = nlp(raw_text)
+            gold = GoldParse(tokens, annot_tuples)
+            scorer.score(tokens, gold, verbose=False)
         print '%d:\t%.3f\t%.3f\t%.3f' % (itn, scorer.uas, scorer.ents_f, scorer.tags_acc)
         random.shuffle(gold_tuples)
     nlp.parser.model.end_training()
@@ -276,8 +276,8 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
     verbose=("Verbose error reporting", "flag", "v", bool),
 )
 def main(train_loc, dev_loc, model_dir, n_sents=0, out_loc="", verbose=False):
-    #train(English, train_loc, model_dir,
-    #      gold_preproc=False, force_gold=False, n_sents=n_sents)
+    train(English, train_loc, model_dir,
+          gold_preproc=False, force_gold=False, n_sents=n_sents)
     if out_loc:
         write_parses(English, dev_loc, model_dir, out_loc)
     scorer = evaluate(English, dev_loc, model_dir, gold_preproc=False, verbose=verbose)
