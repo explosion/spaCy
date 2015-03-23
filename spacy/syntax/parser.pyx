@@ -114,6 +114,7 @@ cdef class GreedyParser:
             guess = self.moves.best_valid(scores, state)
             best = self.moves.best_gold(scores, state, gold)
             cost = guess.get_cost(&guess, state, gold)
+            assert cost < 9000
 
             self.model.update(context, guess.clas, best.clas, cost)
             if force_gold:
