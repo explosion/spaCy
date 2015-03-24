@@ -7,6 +7,8 @@ out of "context") is in features/extractor.pyx
 The atomic feature names are listed in a big enum, so that the feature tuples
 can refer to them.
 """
+from libc.string cimport memset
+
 from itertools import combinations
 
 from ..tokens cimport TokenC
@@ -53,8 +55,10 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
 
 
 cdef int fill_context(atom_t* context, State* state) except -1:
-    # This fills in the basic properties of each of our "slot" tokens, e.g.
-    # word on top of the stack, word at the front of the buffer, etc.
+    # Take care to fill every element of context!
+    # We could memset, but this makes it very easy to have broken features that
+    # make almost no impact on accuracy. If instead they're unset, the impact
+    # tends to be dramatic, so we get an obvious regression to fix...
     fill_token(&context[S2w], get_s2(state))
     fill_token(&context[S1w], get_s1(state))
     fill_token(&context[S1rw], get_right(state, get_s1(state), 1))
