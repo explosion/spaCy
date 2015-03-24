@@ -67,6 +67,7 @@ cdef int fill_context(atom_t* context, State* state) except -1:
     fill_token(&context[N0l2w], get_left(state, get_n0(state), 2))
     fill_token(&context[N0w], get_n0(state))
     fill_token(&context[N1w], get_n1(state))
+    fill_token(&context[N2w], get_n2(state))
     fill_token(&context[P1w], get_p1(state))
     fill_token(&context[P2w], get_p2(state))
 
