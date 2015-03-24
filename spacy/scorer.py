@@ -9,11 +9,13 @@ class Scorer(object):
         self.ents_fp = 0
         self.ents_fn = 0
         self.total = 1e-100
+        self.mistokened = 0
+        self.n_tokens = 0
         self.eval_punct = eval_punct
 
     @property
     def tags_acc(self):
-        return (self.tags_corr / self.total) * 100
+        return ((self.tags_corr - self.mistokened) / (self.n_tokens - self.mistokened)) * 100
 
     @property
     def uas(self):
@@ -39,12 +41,15 @@ class Scorer(object):
         assert len(tokens) == len(gold)
 
         for i, token in enumerate(tokens):
+            if gold.orths.get(token.idx) != token.orth_:
+                self.mistokened += 1
             if not self.skip_token(i, token, gold):
                 self.total += 1
                 if token.head.i == gold.heads[i]:
                     self.heads_corr += 1
                     self.labels_corr += token.dep_ == gold.labels[i]
-                self.tags_corr += token.tag_ == gold.tags[i]
+            self.tags_corr += token.tag_ == gold.tags[i]
+            self.n_tokens += 1
         gold_ents = set((start, end, label) for (start, end, label) in gold.ents)
         guess_ents = set(tokens.ents)
         if verbose and gold_ents:
