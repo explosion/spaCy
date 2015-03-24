@@ -94,27 +94,24 @@ cdef class GreedyParser:
         return 0
 
     def train(self, Tokens tokens, GoldParse gold, force_gold=False):
-        cdef:
-            int n_feats
-            int cost
-            const Feature* feats
-            const weight_t* scores
-            Transition guess
-            Transition best
-            
-            atom_t[CONTEXT_SIZE] context
-
         self.moves.preprocess_gold(gold)
         cdef Pool mem = Pool()
         cdef State* state = new_state(mem, tokens.data, tokens.length)
         self.moves.first_state(state)
+
+        cdef int cost
+        cdef const Feature* feats
+        cdef const weight_t* scores
+        cdef Transition guess
+        cdef Transition best
+        cdef atom_t[CONTEXT_SIZE] context
+
         while not is_final(state):
             fill_context(context, state)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
             best = self.moves.best_gold(scores, state, gold)
             cost = guess.get_cost(&guess, state, gold)
-            assert cost < 9000
 
             self.model.update(context, guess.clas, best.clas, cost)
             if force_gold:
