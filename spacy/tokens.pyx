@@ -245,6 +245,8 @@ cdef class Tokens:
             yield Span(self, start, self.length) 
 
     cdef int set_parse(self, const TokenC* parsed) except -1:
+        # TODO: This method is fairly misleading atm. It's used by GreedyParser
+        # to actually apply the parse calculated. Need to rethink this.
         self._py_tokens = [None] * self.length
         self.is_parsed = True
         for i in range(self.length):
