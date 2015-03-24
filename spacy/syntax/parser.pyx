@@ -58,9 +58,7 @@ cdef unicode print_state(State* s, list words):
 
 def get_templates(name):
     pf = _parse_features
-    if name == 'zhang':
-        return pf.arc_eager
-    elif name == 'ner':
+    if name == 'ner':
         return pf.ner
     elif name == 'debug':
         return pf.unigrams
