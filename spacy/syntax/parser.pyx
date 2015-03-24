@@ -62,6 +62,8 @@ def get_templates(name):
         return pf.arc_eager
     elif name == 'ner':
         return pf.ner
+    elif name == 'debug':
+        return pf.unigrams
     else:
         return (pf.unigrams + pf.s0_n0 + pf.s1_n0 + pf.s0_n1 + pf.n0_n1 + \
                 pf.tree_shape + pf.trigrams)
