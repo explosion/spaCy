@@ -93,7 +93,7 @@ cdef class GreedyParser:
         tokens.set_parse(state.sent)
         return 0
 
-    def train(self, Tokens tokens, GoldParse gold, force_gold=False):
+    def train(self, Tokens tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
         cdef Pool mem = Pool()
         cdef State* state = new_state(mem, tokens.data, tokens.length)
@@ -109,12 +109,11 @@ cdef class GreedyParser:
         while not is_final(state):
             fill_context(context, state)
             scores = self.model.score(context)
+
             guess = self.moves.best_valid(scores, state)
             best = self.moves.best_gold(scores, state, gold)
+            
             cost = guess.get_cost(&guess, state, gold)
-
             self.model.update(context, guess.clas, best.clas, cost)
-            if force_gold:
-                best.do(&best, state)
-            else:
-                guess.do(&guess, state)
+
+            guess.do(&guess, state)
