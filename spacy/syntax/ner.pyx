@@ -9,7 +9,6 @@ from ..structs cimport TokenC, Entity
 
 from thinc.typedefs cimport weight_t
 from .conll cimport GoldParse
-from .ner_util import iob_to_biluo
 
 
 cdef enum:
