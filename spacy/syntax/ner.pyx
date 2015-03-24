@@ -74,7 +74,7 @@ cdef class BiluoPushDown(TransitionSystem):
         move_labels = {MISSING: {'': True}, BEGIN: {}, IN: {}, LAST: {}, UNIT: {},
                        OUT: {'': True}}
         moves = ('M', 'B', 'I', 'L', 'U')
-        for (raw_text, toks, (ids, tags, heads, labels, biluo)) in gold_tuples:
+        for (raw_text, toks, (ids, words, tags, heads, labels, biluo)) in gold_tuples:
             for i, ner_tag in enumerate(biluo):
                 if ner_tag != 'O' and ner_tag != '-':
                     move_str, label = ner_tag.split('-')
@@ -87,8 +87,7 @@ cdef class BiluoPushDown(TransitionSystem):
         elif move == 'MISSING':
             return 'M'
         else:
-            labels = {id_: name for name, id_ in self.label_ids.items()}
-            return MOVE_NAMES[move] + '-' + labels[label]
+            return MOVE_NAMES[move] + '-' + self.strings[label]
 
     cdef int preprocess_gold(self, GoldParse gold) except -1:
         for i in range(gold.length):

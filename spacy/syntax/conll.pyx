@@ -30,7 +30,7 @@ def read_docparse_file(loc):
             iob_ents.append(iob_ent)
         tokenized = [s.replace('<SEP>', ' ').split(' ')
                      for s in tok_text.split('<SENT>')]
-        sents.append((raw_text, tokenized, (ids, tags, heads, labels, iob_ents)))
+        sents.append((raw_text, tokenized, (ids, words, tags, heads, labels, iob_ents)))
     return sents
 
 def _parse_line(line):
@@ -63,12 +63,14 @@ cdef class GoldParse:
         self.heads = [-1] * len(tokens)
         self.labels = ['MISSING'] * len(tokens)
         self.ner = ['O'] * len(tokens)
+        self.orths = {}
 
         idx_map = {token.idx: token.i for token in tokens}
         self.ents = []
         ent_start = None
         ent_label = None
-        for idx, tag, head, label, ner in zip(*annot_tuples):
+        for idx, orth, tag, head, label, ner in zip(*annot_tuples):
+            self.orths[idx] = orth
             if idx < tokens[0].idx:
                 pass
             elif idx > tokens[-1].idx:
@@ -133,5 +135,3 @@ def _map_indices_to_tokens(ids, heads):
         else:
             mapped.append(ids.index(head))
     return mapped
-
-

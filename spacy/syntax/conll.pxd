@@ -13,6 +13,7 @@ cdef class GoldParse:
     cdef readonly list tags
     cdef readonly list heads
     cdef readonly list labels
+    cdef readonly dict orths
     cdef readonly list ner
     cdef readonly list ents
 

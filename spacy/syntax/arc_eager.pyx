@@ -44,7 +44,7 @@ cdef class ArcEager(TransitionSystem):
     def get_labels(cls, gold_parses):
         move_labels = {SHIFT: {'': True}, REDUCE: {'': True}, RIGHT: {},
                        LEFT: {}, BREAK: {'ROOT': True}}
-        for raw_text, segmented, (ids, tags, heads, labels, iob) in gold_parses:
+        for raw_text, segmented, (ids, words, tags, heads, labels, iob) in gold_parses:
             for i, (head, label) in enumerate(zip(heads, labels)):
                 if label != 'ROOT':
                     if head > i:
@@ -68,6 +68,13 @@ cdef class ArcEager(TransitionSystem):
         for i in range(self.n_moves):
             if self.c[i].move == move and self.c[i].label == label:
                 return self.c[i]
+
+    def move_name(self, int move, int label):
+        label_str = self.strings[label]
+        if label_str:
+            return MOVE_NAMES[move] + '-' + label_str
+        else:
+            return MOVE_NAMES[move]
 
     cdef Transition init_transition(self, int clas, int move, int label) except *:
         # TODO: Apparent Cython bug here when we try to use the Transition()
@@ -129,8 +136,8 @@ cdef int _do_right(const Transition* self, State* state) except -1:
 
 
 cdef int _do_reduce(const Transition* self, State* state) except -1:
-    # TODO: Huh? Is this some weirdness from the non-monotonic?
-    add_dep(state, state.stack[-1], state.stack[0], get_s0(state).dep)
+    if NON_MONOTONIC and not has_head(get_s0(state)):
+        add_dep(state, state.stack[-1], state.stack[0], get_s0(state).dep)
     pop_stack(state)
 
 
