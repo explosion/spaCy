@@ -21,7 +21,6 @@ or any other material posted or submitted by you to the project.
 
 2. With respect to any worldwide copyrights, or copyright applications and registrations,
 in your contribution:
-
 * you hereby assign to us joint ownership, and to the extent that such assignment
 is or becomes invalid, ineffective or unenforceable, you hereby grant to us a perpetual,
 irrevocable, non-exclusive, worldwide, no-charge, royalty-free, unrestricted license
@@ -73,7 +72,7 @@ ____ I am signing on behalf of myself as an individual and no other person or en
 
 ____ I am signing on behalf of my employer or a legal entity and I have the actual authority to contractually bind that entity.
 
-|--------------------------------| -------------------- |
+|------------------------------- | -------------------- |
 | Name                           |                      |
 | Company's name (if applicable) |                      |
 | Title or Role (if applicable)  |                      |
