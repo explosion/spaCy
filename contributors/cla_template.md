@@ -80,5 +80,4 @@ ____ I am signing on behalf of my employer or a legal entity and I have the actu
 | Date                           |                      |
 | GitHub username                |                      |
 | Website (optional)             |                      |
-| ------------------------------ | -------------------- |
 
