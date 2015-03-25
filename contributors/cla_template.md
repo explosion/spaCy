@@ -72,6 +72,7 @@ ____ I am signing on behalf of myself as an individual and no other person or en
 
 ____ I am signing on behalf of my employer or a legal entity and I have the actual authority to contractually bind that entity.
 
+| Field                          | Entry                |
 |------------------------------- | -------------------- |
 | Name                           |                      |
 | Company's name (if applicable) |                      |
