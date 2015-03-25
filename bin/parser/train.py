@@ -239,6 +239,7 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
     nlp.parser.model.end_training()
     nlp.entity.model.end_training()
     nlp.tagger.model.end_training()
+    nlp.vocab.strings.dump(path.join(model_dir, 'vocab', 'strings.txt'))
 
 
 def evaluate(Language, dev_loc, model_dir, gold_preproc=False, verbose=True):
