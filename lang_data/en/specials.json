@@ -95,33 +95,33 @@
             {"F": "n't", "L": "not", "pos": "RB"}],
 
 
-"he'd": [{"F": "he"},
+"he'd": [{"F": "he", "L": "-PRON-"},
             {"F": "'d", "L": "would", "pos": "MD"}],
-"hed": [{"F": "he"},
+"hed": [{"F": "he", "L": "-PRON-"},
             {"F": "'d", "L": "would", "pos": "MD"}],
 
 
-"he'd've": [{"F": "he"},
+"he'd've": [{"F": "he", "L": "-PRON-"},
             {"F": "'d", "L": "would", "pos": "MD"},
             {"F": "'ve", "pos": "VB"}],
-"hedve": [{"F": "he"},
+"hedve": [{"F": "he", "L": "-PRON-"},
             {"F": "'d", "L": "would", "pos": "MD"},
             {"F": "'ve", "pos": "VB"}],
 
 
-"he'll": [{"F": "he"},
+"he'll": [{"F": "he", "L": "-PRON-"},
             {"F": "'ll", "L": "will", "pos": "MD"}],
 
-"he's": [{"F": "he"},
+"he's": [{"F": "he", "L": "-PRON-"},
             {"F": "'s"}],
 
-"hes": [{"F": "he"},
+"hes": [{"F": "he", "L": "-PRON-"},
             {"F": "'s"}],
 
 
-"how'd": [{"F": "he"},
+"how'd": [{"F": "how"},
             {"F": "'d", "L": "would", "pos": "MD"}],
-"howd": [{"F": "he"},
+"howd": [{"F": "how"},
             {"F": "'d", "L": "would", "pos": "MD"}],
 
 
@@ -137,27 +137,27 @@
             {"F": "'s"}],
 
 
-"I'd": [{"F": "I"},
+"I'd": [{"F": "I", "L": "-PRON-"},
         {"F": "'d", "L": "would", "pos": "MD"}],
 
-"I'd've": [{"F": "I"},
+"I'd've": [{"F": "I", "L": "-PRON-"},
             {"F": "'d", "L": "would", "pos": "MD"},
             {"F": "'ve", "pos": "VB"}],
 
-"I'll": [{"F": "I"},
+"I'll": [{"F": "I", "L": "-PRON-"},
             {"F": "'ll", "L": "will", "pos": "MD"}],
 
-"I'm": [{"F": "I"},
+"I'm": [{"F": "I", "L": "-PRON-"},
         {"F": "'m", "L": "be", "pos": "VBP", "number": 1, "tenspect": 1}],
-"Im": [{"F": "I"},
+"Im": [{"F": "I", "L": "-PRON-"},
         {"F": "'m", "L": "be", "pos": "VBP", "number": 1, "tenspect": 1}],
-"im": [{"F": "m"},
+"im": [{"F": "m", "L": "-PRON-"},
         {"F": "'m", "L": "be", "pos": "VBP", "number": 1, "tenspect": 1}],
 
-"I'ma": [{"F": "I"},
+"I'ma": [{"F": "I", "L": "-PRON-"},
             {"F": "'ma"}],
 
-"I've": [{"F": "I"},
+"I've": [{"F": "I", "L": "-PRON-"},
             {"F": "'ve", "pos": "VB", "L": "have", "pos": "MD"}],
 
 "isn't": [{"F": "is", "L": "be", "pos": "VBZ"},
@@ -169,20 +169,20 @@
             {"F": "n't", "L": "not", "pos": "RB"}],
 
 
-"it'd": [{"F": "it"},
+"it'd": [{"F": "it", "L": "-PRON-"},
             {"F": "'d", "L": "would", "pos": "MD"}],
 
-"it'd've": [{"F": "it"},
+"it'd've": [{"F": "it", "L": "-PRON-"},
             {"F": "'d", "L": "would", "pos": "MD"},
             {"F": "'ve"}],
 
-"it'll": [{"F": "it"},
+"it'll": [{"F": "it", "L": "-PRON-"},
             {"F": "'ll", "L": "will", "pos": "MD"}],
-"itll": [{"F": "it"},
+"itll": [{"F": "it", "L": "-PRON-"},
             {"F": "'ll", "L": "will", "pos": "MD"}],
 
 
-"it's": [{"F": "it"},
+"it's": [{"F": "it", "L": "-PRON-"},
             {"F": "'s"}],
 
 "let's": [{"F": "let"},
@@ -216,17 +216,17 @@
 "shan't":  [{"F": "sha"},
             {"F": "n't", "L": "not", "pos": "RB"}],
 
-"she'd": [{"F": "she"},
+"she'd": [{"F": "she", "L": "-PRON-"},
             {"F": "'d", "L": "would", "pos": "MD"}],
 
-"she'd've": [{"F": "she"},
+"she'd've": [{"F": "she", "L": "-PRON-"},
                 {"F": "'d", "L": "would", "pos": "MD"},
                 {"F": "'ve", "pos": "VB"}],
 
-"she'll": [{"F": "she"},
+"she'll": [{"F": "she", "L": "-PRON-"},
             {"F": "will"}],
 
-"she's": [{"F": "she"},
+"she's": [{"F": "she", "L": "-PRON-"},
             {"F": "'s"}],
 
 "should've": [{"F": "should"},
@@ -256,33 +256,33 @@
 "there's": [{"F": "there"},
             {"F": "'s"}],
 
-"they'd":  [{"F": "they"},
+"they'd":  [{"F": "they", "L": "-PRON-"},
             {"F": "'d", "L": "would", "pos": "MD", "pos": "VB"}],
-"They'd":  [{"F": "They"},
+"They'd":  [{"F": "They", "L": "-PRON-"},
             {"F": "'d", "L": "would", "pos": "MD", "pos": "VB"}],
 
 
-"they'd've":   [{"F": "they"},
+"they'd've":   [{"F": "they", "L": "-PRON-"},
                 {"F": "'d", "L": "would", "pos": "MD"},
                 {"F": "'ve", "pos": "VB"}],
-"They'd've":   [{"F": "They"},
+"They'd've":   [{"F": "They", "L": "-PRON-"},
                 {"F": "'d", "L": "would", "pos": "MD"},
                 {"F": "'ve", "pos": "VB"}],
 
-"they'll": [{"F": "they"},
+"they'll": [{"F": "they", "L": "-PRON-"},
             {"F": "'ll", "L": "will", "pos": "MD"}],
-"They'll": [{"F": "They"},
+"They'll": [{"F": "They", "L": "-PRON-"},
             {"F": "'ll", "L": "will", "pos": "MD"}],
 
 
-"they're": [{"F": "they"},
+"they're": [{"F": "they", "L": "-PRON-"},
             {"F": "'re"}],
-"They're": [{"F": "They"},
+"They're": [{"F": "They", "L": "-PRON-"},
             {"F": "'re"}],
 
-"they've": [{"F": "they"},
+"they've": [{"F": "they", "L": "-PRON-"},
             {"F": "'ve", "pos": "VB"}],
-"They've": [{"F": "They"},
+"They've": [{"F": "They", "L": "-PRON-"},
             {"F": "'ve", "pos": "VB"}],
 
 "wasn't":  [{"F": "was"},
@@ -382,23 +382,23 @@
                 {"F": "n't", "L": "not", "pos": "RB"},
                 {"F": "'ve", "L": "have", "pos": "VB"}],
 
-"you'd":   [{"F": "you"},
+"you'd":   [{"F": "you", "L": "-PRON-"},
             {"F": "'d", "L": "would", "pos": "MD"}],
 
-"you'd've":    [{"F": "you"},
+"you'd've":    [{"F": "you", "L": "-PRON-"},
                 {"F": "'d", "L": "would", "pos": "MD"},
                 {"F": "'ve", "L": "have", "pos": "VB"}],
 
-"you'll":  [{"F": "you"},
+"you'll":  [{"F": "you", "L": "-PRON-"},
             {"F": "'ll", "L": "will", "pos": "MD"}],
 
-"you're":  [{"F": "you"},
+"you're":  [{"F": "you", "L": "-PRON-"},
             {"F": "'re"}],
-"You're":  [{"F": "You"},
+"You're":  [{"F": "You", "L": "-PRON-"},
             {"F": "'re"}],
 
 
-"you've":  [{"F": "you"},
+"you've":  [{"F": "you", "L": "-PRON-"},
             {"F": "'ve", "L": "have", "pos": "VB"}],
 
 "'em": [{"F": "'em"}],
@@ -433,6 +433,58 @@
 
 "a.m.": [{"F": "a.m."}],
 "p.m.": [{"F": "p.m."}],
+
+"1a.m.": [{"F": "1"}, {"F": "a.m."}],
+"2a.m.": [{"F": "2"}, {"F": "a.m."}],
+"3a.m.": [{"F": "3"}, {"F": "a.m."}],
+"4a.m.": [{"F": "4"}, {"F": "a.m."}],
+"5a.m.": [{"F": "5"}, {"F": "a.m."}],
+"6a.m.": [{"F": "6"}, {"F": "a.m."}],
+"7a.m.": [{"F": "7"}, {"F": "a.m."}],
+"8a.m.": [{"F": "8"}, {"F": "a.m."}],
+"9a.m.": [{"F": "9"}, {"F": "a.m."}],
+"10a.m.": [{"F": "10"}, {"F": "a.m."}],
+"11a.m.": [{"F": "11"}, {"F": "a.m."}],
+"12a.m.": [{"F": "12"}, {"F": "a.m."}],
+"1am": [{"F": "1"}, {"F": "am", "L": "a.m."}],
+"2am": [{"F": "2"}, {"F": "am", "L": "a.m."}],
+"3am": [{"F": "3"}, {"F": "am", "L": "a.m."}],
+"4am": [{"F": "4"}, {"F": "am", "L": "a.m."}],
+"5am": [{"F": "5"}, {"F": "am", "L": "a.m."}],
+"6am": [{"F": "6"}, {"F": "am", "L": "a.m."}],
+"7am": [{"F": "7"}, {"F": "am", "L": "a.m."}],
+"8am": [{"F": "8"}, {"F": "am", "L": "a.m."}],
+"9am": [{"F": "9"}, {"F": "am", "L": "a.m."}],
+"10am": [{"F": "10"}, {"F": "am", "L": "a.m."}],
+"11am": [{"F": "11"}, {"F": "am", "L": "a.m."}],
+"12am": [{"F": "12"}, {"F": "am", "L": "a.m."}],
+
+
+"p.m.": [{"F": "p.m."}],
+"1p.m.": [{"F": "1"}, {"F": "p.m."}],
+"2p.m.": [{"F": "2"}, {"F": "p.m."}],
+"3p.m.": [{"F": "3"}, {"F": "p.m."}],
+"4p.m.": [{"F": "4"}, {"F": "p.m."}],
+"5p.m.": [{"F": "5"}, {"F": "p.m."}],
+"6p.m.": [{"F": "6"}, {"F": "p.m."}],
+"7p.m.": [{"F": "7"}, {"F": "p.m."}],
+"8p.m.": [{"F": "8"}, {"F": "p.m."}],
+"9p.m.": [{"F": "9"}, {"F": "p.m."}],
+"10p.m.": [{"F": "10"}, {"F": "p.m."}],
+"11p.m.": [{"F": "11"}, {"F": "p.m."}],
+"12p.m.": [{"F": "12"}, {"F": "p.m."}],
+"1pm": [{"F": "1"}, {"F": "pm", "L": "p.m."}],
+"2pm": [{"F": "2"}, {"F": "pm", "L": "p.m."}],
+"3pm": [{"F": "3"}, {"F": "pm", "L": "p.m."}],
+"4pm": [{"F": "4"}, {"F": "pm", "L": "p.m."}],
+"5pm": [{"F": "5"}, {"F": "pm", "L": "p.m."}],
+"6pm": [{"F": "6"}, {"F": "pm", "L": "p.m."}],
+"7pm": [{"F": "7"}, {"F": "pm", "L": "p.m."}],
+"8pm": [{"F": "8"}, {"F": "pm", "L": "p.m."}],
+"9pm": [{"F": "9"}, {"F": "pm", "L": "p.m."}],
+"10pm": [{"F": "10"}, {"F": "pm", "L": "p.m."}],
+"11pm": [{"F": "11"}, {"F": "pm", "L": "p.m."}],
+"12pm": [{"F": "12"}, {"F": "pm", "L": "p.m."}],
 
 "Jan.": [{"F": "Jan."}],
 "Feb.": [{"F": "Feb."}],
