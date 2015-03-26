@@ -52,12 +52,6 @@ cdef class Tokens:
     cdef int set_parse(self, const TokenC* parsed) except -1
 
 
-cdef class Span:
-    cdef Tokens _seq
-    cdef public int start
-    cdef public int end
-
-
 cdef class Token:
     cdef Vocab vocab
     cdef unicode _string

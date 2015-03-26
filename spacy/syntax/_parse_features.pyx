@@ -98,14 +98,14 @@ cdef int fill_context(atom_t* context, State* state) except -1:
                 context[S2_has_head] = has_head(get_s2(state))
 
 ner = (
-    (N0w,),
-    (P1w,),
-    (N1w,),
-    (P2w,),
-    (N2w,),
+    (N0W,),
+    (P1W,),
+    (N1W,),
+    (P2W,),
+    (N2W,),
     
-    (P1w, N0w,),
-    (N0w, N1w),
+    (P1W, N0W,),
+    (N0W, N1W),
     
     (N0_prefix,),
     (N0_suffix,),
@@ -144,13 +144,13 @@ ner = (
     (P1c, N0c),
     (N0c, N1c),
 
-    (E0w,),
+    (E0W,),
     (E0c,),
     (E0p,),
 
-    (E0w, N0w),
-    (E0c, N0w),
-    (E0p, N0w),
+    (E0W, N0W),
+    (E0c, N0W),
+    (E0p, N0W),
 
     (E0p, P1p, N0p),
     (E0c, P1c, N0c),
@@ -161,14 +161,14 @@ ner = (
     (E0p, E1p),
     (E0c, P1p),
 
-    (E1w,),
+    (E1W,),
     (E1c,),
     (E1p,),
 
-    (E0w, E1w),
-    (E0w, E1p,),
-    (E0p, E1w,),
-    (E0p, E1w),
+    (E0W, E1W),
+    (E0W, E1p,),
+    (E0p, E1W,),
+    (E0p, E1W),
 )
 
 
