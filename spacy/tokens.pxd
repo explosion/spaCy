@@ -89,3 +89,5 @@ cdef class Token:
         return self
 
     cdef int take_ownership_of_c_data(self) except -1
+
+    cpdef bint check_flag(self, attr_id_t flag_id) except -1
