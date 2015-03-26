@@ -132,7 +132,7 @@ cdef class Span:
 
     property lemma_:
         def __get__(self):
-            return self.orth_
+            return ' '.join([t.lemma_ for t in self]).strip()
 
     property label_:
         def __get__(self):
