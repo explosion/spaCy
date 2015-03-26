@@ -10,6 +10,7 @@ from .typedefs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLU
 from .typedefs cimport POS, LEMMA
 from .parts_of_speech import UNIV_POS_NAMES
 from .lexeme cimport check_flag
+from .spans import Span
 
 from unidecode import unidecode
 
@@ -132,7 +133,7 @@ cdef class Tokens:
             cdef int i
             cdef const TokenC* token
             cdef int start = -1
-            cdef object label = None
+            cdef int label = 0
             for i in range(self.length):
                 token = &self.data[i]
                 if token.ent_iob == 1:
@@ -140,15 +141,15 @@ cdef class Tokens:
                     pass
                 elif token.ent_iob == 2:
                     if start != -1:
-                        yield (start, i, label)
+                         yield Span(self, start, i, label=label)
                     start = -1
-                    label = None
+                    label = 0
                 elif token.ent_iob == 3:
                     start = i
-                    label = self.vocab.strings[token.ent_type]
+                    label = token.ent_type
             if start != -1:
-                yield (start, self.length, label)
-                
+                yield Span(self, start, self.length, label=label)
+
     cdef int push_back(self, int idx, LexemeOrToken lex_or_tok) except -1:
         if self.length == self.max_length:
             self._realloc(self.length * 2)
@@ -251,35 +252,6 @@ cdef class Tokens:
         self.is_parsed = True
         for i in range(self.length):
             self.data[i] = parsed[i]
-
-
-cdef class Span:
-    """A slice from a Tokens object."""
-    def __cinit__(self, Tokens tokens, int start, int end):
-        self._seq = tokens
-        self.start = start
-        self.end = end
-
-    def __richcmp__(self, Span other, int op):
-        # Eq
-        if op in (1, 2, 5):
-            if self._seq is other._seq and \
-               self.start == other.start and \
-               self.end == other.end:
-                return True
-        return False
-
-    def __len__(self):
-        if self.end < self.start:
-            return 0
-        return self.end - self.start
-
-    def __getitem__(self, int i):
-        return self._seq[self.start + i]
-
-    def __iter__(self):
-        for i in range(self.start, self.end):
-            yield self._seq[i]
 
 
 cdef class Token:
