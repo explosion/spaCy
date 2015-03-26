@@ -243,7 +243,7 @@ cdef class Tokenizer:
                 lemma = props.get("L", None)
                 slice_unicode(&string, form, 0, len(form))
                 tokens[i].lex = <LexemeC*>self.vocab.get(self.vocab.mem, &string)
-                if lemma:
+                if lemma is not None:
                     tokens[i].lemma = self.vocab.strings[lemma]
                 else:
                     tokens[i].lemma = 0
