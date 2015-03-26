@@ -51,7 +51,7 @@ class Scorer(object):
             self.tags_corr += token.tag_ == gold.tags[i]
             self.n_tokens += 1
         gold_ents = set((start, end, label) for (start, end, label) in gold.ents)
-        guess_ents = set(tokens.ents)
+        guess_ents = set((e.start, e.end, e.label_) for e in tokens.ents)
         if verbose and gold_ents:
             for start, end, label in guess_ents:
                 mark = 'T' if (start, end, label) in gold_ents else 'F'
