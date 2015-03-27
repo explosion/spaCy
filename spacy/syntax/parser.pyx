@@ -47,8 +47,8 @@ cdef unicode print_state(State* s, list words):
     top = words[s.stack[0]] + '_%d' % s.sent[s.stack[0]].head
     second = words[s.stack[-1]] + '_%d' % s.sent[s.stack[-1]].head
     third = words[s.stack[-2]] + '_%d' % s.sent[s.stack[-2]].head
-    n0 = words[s.i]
-    n1 = words[s.i + 1]
+    n0 = words[s.i] if s.i < len(words) else 'EOL'
+    n1 = words[s.i + 1] if s.i+1 < len(words) else 'EOL'
     if s.ents_len:
         ent = '%s %d-%d' % (s.ent.label, s.ent.start, s.ent.end)
     else:
@@ -89,6 +89,8 @@ cdef class GreedyParser:
             fill_context(context, state)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
+            #print self.moves.move_name(guess.move, guess.label),
+            #print print_state(state, [w.orth_ for w in tokens])
             guess.do(&guess, state)
         tokens.set_parse(state.sent)
         return 0
