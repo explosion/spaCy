@@ -105,11 +105,9 @@ cdef class GreedyParser:
         cdef Transition guess
         cdef Transition best
         cdef atom_t[CONTEXT_SIZE] context
-
         while not is_final(state):
             fill_context(context, state)
             scores = self.model.score(context)
-
             guess = self.moves.best_valid(scores, state)
             best = self.moves.best_gold(scores, state, gold)
             
