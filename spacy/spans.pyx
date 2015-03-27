@@ -12,10 +12,11 @@ cdef class Spans:
             token_starts = {t.idx: t.i for t in self.tokens}
             token_ends = {t.idx + len(t): t.i+1 for t in self.tokens}
             tokens_str = unicode(self.tokens)
-            for match in mwe_re.finditer(tokens_str):
-                start = token_starts.get(match.start())
-                end = token_ends.get(match.end())
-                self.merge(start, end)
+            for label, regex in mwe_re:
+                for match in regex.finditer(tokens_str):
+                    start = token_starts.get(match.start())
+                    end = token_ends.get(match.end())
+                    self.merge(start, end, label=label)
         if merge_ents:
             # Merge named entities and units
             for ent in self.tokens.ents:
@@ -128,11 +129,15 @@ cdef class Span:
 
     property orth_:
         def __get__(self):
-            return ''.join([t.string for t in self]).strip()
+            return ' '.join([t.string for t in self]).strip()
 
     property lemma_:
         def __get__(self):
             return ' '.join([t.lemma_ for t in self]).strip()
+
+    property string:
+        def __get__(self):
+            return ''.join([t.string for t in self])
 
     property label_:
         def __get__(self):
