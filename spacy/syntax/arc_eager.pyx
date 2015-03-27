@@ -43,7 +43,7 @@ cdef class ArcEager(TransitionSystem):
     @classmethod
     def get_labels(cls, gold_parses):
         move_labels = {SHIFT: {'': True}, REDUCE: {'': True}, RIGHT: {},
-                       LEFT: {}, BREAK: {'ROOT': True}}
+                LEFT: {'ROOT': True}, BREAK: {'ROOT': True}}
         for raw_text, segmented, (ids, words, tags, heads, labels, iob) in gold_parses:
             for child, head, label in zip(ids, heads, labels):
                 if label != 'ROOT':
@@ -126,7 +126,11 @@ cdef int _do_shift(const Transition* self, State* state) except -1:
 
 
 cdef int _do_left(const Transition* self, State* state) except -1:
-    add_dep(state, state.i, state.stack[0], self.label)
+    # Interpret left-arcs from EOL as attachment to root
+    if at_eol(state):
+        add_dep(state, state.stack[0], state.stack[0], self.label)
+    else:
+        add_dep(state, state.i, state.stack[0], self.label)
     pop_stack(state)
 
 
@@ -193,6 +197,13 @@ cdef int _left_cost(const Transition* self, const State* s, GoldParse gold) exce
         return 9000
     cost = 0
     if gold.c_heads[s.stack[0]] == s.i:
+        cost += self.label != gold.c_labels[s.stack[0]]
+        return cost
+    # If we're at EOL, then the left arc will add an arc to ROOT.
+    elif at_eol(s):
+        # Are we root?
+        cost += gold.c_heads[s.stack[0]] != s.stack[0]
+        # Are we labelling correctly?
         cost += self.label != gold.c_labels[s.stack[0]]
         return cost
 

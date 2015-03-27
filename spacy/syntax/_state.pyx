@@ -35,11 +35,6 @@ cdef int push_stack(State *s) except -1:
     s.stack[0] = s.i
     s.stack_len += 1
     s.i += 1
-    if at_eol(s):
-        while s.stack_len != 0:
-            if not has_head(get_s0(s)):
-                get_s0(s).dep = 0
-            pop_stack(s)
 
 
 cdef int children_in_buffer(const State *s, int head, const int* gold) except -1:

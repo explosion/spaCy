@@ -97,7 +97,7 @@ cdef inline bint at_eol(const State *s) nogil:
 
 
 cdef inline bint is_final(const State *s) nogil:
-    return at_eol(s) # The stack will be attached to root anyway
+    return at_eol(s) and s.stack_len < 2
 
 
 cdef int children_in_buffer(const State *s, const int head, const int* gold) except -1
