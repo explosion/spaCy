@@ -265,7 +265,6 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
             out_file.write(
                 '%s\t%s\t%s\t%s\n' % (t.orth_, t.tag_, t.head.orth_, t.dep_)
             )
-    print nlp.vocab.strings['NMOD']
     return scorer
 
 
