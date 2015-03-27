@@ -45,11 +45,11 @@ cdef class ArcEager(TransitionSystem):
         move_labels = {SHIFT: {'': True}, REDUCE: {'': True}, RIGHT: {},
                        LEFT: {}, BREAK: {'ROOT': True}}
         for raw_text, segmented, (ids, words, tags, heads, labels, iob) in gold_parses:
-            for i, (head, label) in enumerate(zip(heads, labels)):
+            for child, head, label in zip(ids, heads, labels):
                 if label != 'ROOT':
-                    if head > i:
+                    if head < child:
                         move_labels[RIGHT][label] = True
-                    elif head < i:
+                    elif head > child:
                         move_labels[LEFT][label] = True
         return move_labels
 
