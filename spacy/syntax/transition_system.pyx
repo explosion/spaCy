@@ -47,7 +47,8 @@ cdef class TransitionSystem:
         cdef weight_t score = MIN_SCORE
         cdef int i
         for i in range(self.n_moves):
-            if scores[i] > score and self.c[i].get_cost(&self.c[i], s, gold) == 0:
+            cost = self.c[i].get_cost(&self.c[i], s, gold)
+            if scores[i] > score and cost == 0:
                 best = self.c[i]
                 score = scores[i]
         assert score > MIN_SCORE
