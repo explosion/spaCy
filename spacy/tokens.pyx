@@ -1,8 +1,10 @@
 # cython: embedsignature=True
+from libc.string cimport memset
 
 from preshed.maps cimport PreshMap
 from preshed.counter cimport PreshCounter
 
+from .strings cimport slice_unicode
 from .vocab cimport EMPTY_LEXEME
 from .typedefs cimport attr_id_t, attr_t
 from .typedefs cimport LEMMA
@@ -11,6 +13,7 @@ from .typedefs cimport POS, LEMMA
 from .parts_of_speech import UNIV_POS_NAMES
 from .lexeme cimport check_flag
 from .spans import Span
+from .structs cimport UniStr
 
 from unidecode import unidecode
 
@@ -253,6 +256,88 @@ cdef class Tokens:
         for i in range(self.length):
             self.data[i] = parsed[i]
 
+    def merge(self, int start_idx, int end_idx, unicode tag, unicode lemma,
+              unicode ent_type):
+        cdef int i
+        cdef int start = -1
+        cdef int end = -1
+        for i in range(self.length):
+            if self.data[i].idx == start_idx:
+                start = i
+            if (self.data[i].idx + self.data[i].lex.length) == end_idx:
+                end = i + 1
+                break
+        else:
+            return None
+        # Get LexemeC for newly merged token
+        cdef UniStr new_orth_c
+        slice_unicode(&new_orth_c, self._string, start_idx, end_idx)
+        cdef const LexemeC* lex = self.vocab.get(self.mem, &new_orth_c)
+        # House the new merged token where it starts
+        cdef TokenC* token = &self.data[start]
+        # Update fields
+        token.lex = lex
+        # What to do about morphology??
+        # TODO: token.morph = ???
+        token.tag = self.vocab.strings[tag]
+        token.lemma = self.vocab.strings[lemma] 
+        if ent_type == 'O':
+            token.ent_iob = 2
+            token.ent_type = 0
+        else:
+            token.ent_iob = 3
+            token.ent_type = self.vocab.strings[ent_type]
+        # Fix dependencies
+        # Begin by setting all the head indices to absolute token positions
+        # This is easier to work with for now than the offsets
+        for i in range(self.length):
+            self.data[i].head += i
+        # Find the head of the merged token, and its dep relation
+        outer_heads = {}
+        for i in range(start, end):
+            head_idx = self.data[i].head
+            if head_idx == i or head_idx < start or head_idx >= end:
+                # Don't consider "heads" which are actually dominated by a word
+                # in the region we're merging
+                gp = head_idx
+                while self.data[gp].head != gp:
+                    if start <= gp < end:
+                        break
+                    gp = self.data[gp].head
+                else:
+                    # If we have multiple words attaching to the same head,
+                    # but with different dep labels, we're preferring the last
+                    # occurring dep label. Shrug. What else could we do, I guess?
+                    outer_heads[head_idx] = self.data[i].dep
+
+        token.head, token.dep = max(outer_heads.items())
+        # Adjust deps before shrinking tokens
+        # Tokens which point into the merged token should now point to it
+        # Subtract the offset from all tokens which point to >= end
+        offset = (end - start) - 1
+        for i in range(self.length):
+            head_idx = self.data[i].head
+            if start <= head_idx < end:
+                self.data[i].head = start
+            elif head_idx >= end:
+                self.data[i].head -= offset
+        # TODO: Fix left and right deps
+        # Now compress the token array
+        for i in range(end, self.length):
+            self.data[i - offset] = self.data[i]
+        for i in range(self.length - offset, self.length):
+            memset(&self.data[i], 0, sizeof(TokenC))
+            self.data[i].lex = &EMPTY_LEXEME
+        self.length -= offset
+        for i in range(self.length):
+            # ...And, set heads back to a relative position
+            self.data[i].head -= i
+
+        # Clear cached Python objects
+        self._py_tokens = [None] * self.length
+        # Return the merged Python object
+        return self[start]
+ 
 
 cdef class Token:
     """An individual token --- i.e. a word, a punctuation symbol, etc.  Created
