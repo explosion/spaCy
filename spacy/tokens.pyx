@@ -520,6 +520,10 @@ cdef class Token:
                                self.c + self.c.head, self.i + self.c.head, self.array_len,
                                self._seq)
 
+    property ent_type_:
+        def __get__(self):
+            return self.vocab.strings[self.c.ent_type]
+
     property whitespace_:
         def __get__(self):
             return self.string[self.c.lex.length:]
