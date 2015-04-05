@@ -1,5 +1,6 @@
 from __future__ import division
 
+
 class Scorer(object):
     def __init__(self, eval_punct=False):
         self.heads_corr = 0
@@ -45,6 +46,8 @@ class Scorer(object):
                 self.mistokened += 1
             if not self.skip_token(i, token, gold):
                 self.total += 1
+                if verbose:
+                    print token.orth_, token.dep_, token.head.orth_
                 if token.head.i == gold.heads[i]:
                     self.heads_corr += 1
                     self.labels_corr += token.dep_ == gold.labels[i]
@@ -68,4 +71,4 @@ class Scorer(object):
             self.ents_fp += len(guess_ents - gold_ents)
 
     def skip_token(self, i, token, gold):
-        return gold.labels[i] == 'P'
+        return gold.labels[i] in ('P', 'punct')
