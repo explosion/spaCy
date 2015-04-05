@@ -107,12 +107,12 @@ cdef class GoldParse:
 
     @property
     def n_non_punct(self):
-        return len([l for l in self.labels if l != 'P'])
+        return len([l for l in self.labels if l not in ('P', 'punct')])
 
     cdef int heads_correct(self, TokenC* tokens, bint score_punct=False) except -1:
         n = 0
         for i in range(self.length):
-            if not score_punct and self.labels_[i] == 'P':
+            if not score_punct and self.labels_[i] not in ('P', 'punct'):
                 continue
             if self.heads[i] == -1:
                 continue
