@@ -76,8 +76,9 @@ cdef class BiluoPushDown(TransitionSystem):
         for (raw_text, toks, (ids, words, tags, heads, labels, biluo)) in gold_tuples:
             for i, ner_tag in enumerate(biluo):
                 if ner_tag != 'O' and ner_tag != '-':
-                    move_str, label = ner_tag.split('-')
-                    move_labels[moves.index(move_str)][label] = True
+                    _, label = ner_tag.split('-')
+                    for move_str in ('B', 'I', 'L', 'U'):
+                        move_labels[moves.index(move_str)][label] = True
         return move_labels
 
     def move_name(self, int move, int label):
