@@ -8,13 +8,13 @@ NLU = English()
 
 
 def test_merge_tokens():
-    tokens = NLU(u'7 a.m. start.')
+    tokens = NLU(u'Los Angeles start.')
     assert len(tokens) == 4
-    assert tokens[0].head.orth_ == 'a.m.'
+    assert tokens[0].head.orth_ == 'Angeles'
     assert tokens[1].head.orth_ == 'start'
-    tokens.merge(0, len('7 a.m.'), 'CD', '7 a.m.', 'TIME')
+    tokens.merge(0, len('Los Angeles'), 'NNP', 'Los Angeles', 'GPE')
     assert len(tokens) == 3
-    assert tokens[0].orth_ == '7 a.m.'
+    assert tokens[0].orth_ == 'Los Angeles'
     assert tokens[0].head.orth_ == 'start'
 
 
