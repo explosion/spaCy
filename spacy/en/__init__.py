@@ -9,9 +9,12 @@ from ..syntax.parser import GreedyParser
 from ..syntax.arc_eager import ArcEager
 from ..syntax.ner import BiluoPushDown
 from ..tokens import Tokens
+from ..multi_words import RegexMerger
+
 from .pos import EnPosTagger
 from .pos import POS_TAGS
 from .attrs import get_flags
+from . import regexes
 
 
 from ..util import read_lang_data
@@ -90,6 +93,11 @@ class English(object):
         self.tokenizer = Tokenizer(self.vocab, tok_rules, prefix_re,
                                    suffix_re, infix_re,
                                    POS_TAGS, tag_names)
+        self.mwe_merger = RegexMerger([
+            ('IN', 'O', regexes.MW_PREPOSITIONS_RE),
+            ('CD', 'TIME', regexes.TIME_RE),
+            ('NNP', 'DATE', regexes.DAYS_RE),
+            ('CD', 'MONEY', regexes.MONEY_RE)])
         # These are lazy-loaded
         self._tagger = None
         self._parser = None
@@ -118,7 +126,7 @@ class English(object):
         return self._entity
 
     def __call__(self, text, tag=True, parse=parse_if_model_present,
-                 entity=parse_if_model_present):
+                 entity=parse_if_model_present, merge_mwes=True):
         """Apply the pipeline to some text.  The text can span multiple sentences,
         and can contain arbtrary whitespace.  Alignment into the original string
         
@@ -183,6 +191,8 @@ class English(object):
             self.parser(tokens)
         if entity and self.has_entity_model:
             self.entity(tokens)
+        if merge_mwes and self.mwe_merger is not None:
+            self.mwe_merger(tokens)
         return tokens
 
     @property
