@@ -6,9 +6,9 @@ from spacy.en.attrs import IS_STOP
 
 import pytest
 
+nlp = English()
 @pytest.fixture
 def token():
-    nlp = English()
     tokens = nlp(u'Give it back! He pleaded.')
     return tokens[0]
 
@@ -29,3 +29,11 @@ def test_flags(token):
     assert token.check_flag(IS_ALPHA)
     assert not token.check_flag(IS_DIGIT)
     # TODO: Test more of these, esp. if a bug is found
+
+
+def test_single_token_string():
+    nlp = English()
+    tokens = nlp(u'foobar')
+    assert tokens[0].string == 'foobar'
+
+
