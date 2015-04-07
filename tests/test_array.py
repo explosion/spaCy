@@ -29,3 +29,13 @@ def test_tag():
     assert feats_array[3][1] == tokens[3].tag
 
 
+def test_dep():
+    text = u'A nice sentence.'
+    tokens = EN(text)
+    feats_array = tokens.to_array((attrs.ORTH, attrs.DEP))
+    assert feats_array[0][1] == tokens[0].dep
+    assert feats_array[1][1] == tokens[1].dep
+    assert feats_array[2][1] == tokens[2].dep
+    assert feats_array[3][1] == tokens[3].dep
+
+

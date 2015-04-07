@@ -78,5 +78,6 @@ cpdef enum attr_id_t:
     LEMMA
     POS
     TAG
+    DEP
 
 
