@@ -219,7 +219,7 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
         scorer = Scorer()
         for raw_text, segmented_text, annot_tuples in gold_tuples:
             # Eval before train
-            tokens = nlp(raw_text)
+            tokens = nlp(raw_text, merge_mwes=False)
             gold = GoldParse(tokens, annot_tuples)
             scorer.score(tokens, gold, verbose=False)
 
@@ -248,7 +248,7 @@ def evaluate(Language, dev_loc, model_dir, gold_preproc=False, verbose=True):
     gold_tuples = read_docparse_file(dev_loc)
     scorer = Scorer()
     for raw_text, segmented_text, annot_tuples in gold_tuples:
-        tokens = nlp(raw_text)
+        tokens = nlp(raw_text, merge_mwes=False)
         gold = GoldParse(tokens, annot_tuples)
         scorer.score(tokens, gold, verbose=verbose)
     return scorer
