@@ -10,6 +10,7 @@ from ..attrs cimport SUFFIX as _SUFFIX
 from ..attrs cimport LEMMA as _LEMMA
 from ..attrs cimport POS as _POS
 from ..attrs cimport TAG as _TAG
+from ..attrs cimport DEP as _DEP
 
 
 cpdef enum:
@@ -35,3 +36,4 @@ cpdef enum:
     LEMMA = _LEMMA
     POS = _POS
     TAG = _TAG
+    DEP = _DEP

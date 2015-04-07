@@ -81,6 +81,9 @@ cpdef enum attr_id_t:
     CLUSTER
     LEMMA
     POS
+    TAG
+    DEP
+    ENT
 
 
 

@@ -9,7 +9,7 @@ from .vocab cimport EMPTY_LEXEME
 from .typedefs cimport attr_id_t, attr_t
 from .typedefs cimport LEMMA
 from .typedefs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
-from .typedefs cimport POS, LEMMA
+from .typedefs cimport POS, LEMMA, TAG, DEP
 from .parts_of_speech import UNIV_POS_NAMES
 from .lexeme cimport check_flag
 from .spans import Span
@@ -24,6 +24,7 @@ cimport cython
 
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from libc.string cimport memcpy
+
 
 DEF PADDING = 5
 
@@ -40,6 +41,10 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.lemma
     elif feat_name == POS:
         return token.pos
+    elif feat_name == TAG:
+        return token.tag
+    elif feat_name == DEP:
+        return token.dep
     else:
         return get_lex_attr(token.lex, feat_name)
 
