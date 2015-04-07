@@ -379,6 +379,8 @@ cdef class Token:
 
     property string:
         def __get__(self):
+            if (self.i+1) == self._seq.length:
+                return self._string[self.c.idx:]
             cdef int next_idx = (self.c + 1).idx
             if next_idx < self.c.idx:
                 next_idx = self.c.idx + self.c.lex.length
