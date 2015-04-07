@@ -361,7 +361,6 @@ cdef class Token:
     cpdef bint check_flag(self, attr_id_t flag_id) except -1:
         return check_flag(self.c.lex, flag_id)
 
-
     cdef int take_ownership_of_c_data(self) except -1:
         owned_data = <TokenC*>PyMem_Malloc(sizeof(TokenC) * self.array_len)
         memcpy(owned_data, self.c, sizeof(TokenC) * self.array_len)
