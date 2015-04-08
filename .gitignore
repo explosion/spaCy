@@ -11,6 +11,9 @@ tmp/
 
 MANIFEST
 
+corpora/
+models/
+
 spacy/syntax/*.cpp
 spacy/syntax/*.html
 spacy/en/*.cpp
