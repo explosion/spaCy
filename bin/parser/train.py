@@ -212,7 +212,7 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
 
     if n_sents > 0:
         gold_tuples = gold_tuples[:n_sents]
-    nlp = Language()
+    nlp = Language(data_dir=model_dir)
 
     print "Itn.\tUAS\tNER F.\tTag %"
     for itn in range(n_iter):
@@ -244,7 +244,7 @@ def train(Language, train_loc, model_dir, n_iter=15, feat_set=u'basic', seed=0,
 
 def evaluate(Language, dev_loc, model_dir, gold_preproc=False, verbose=True):
     assert not gold_preproc
-    nlp = Language()
+    nlp = Language(data_dir=model_dir)
     gold_tuples = read_docparse_file(dev_loc)
     scorer = Scorer()
     for raw_text, segmented_text, annot_tuples in gold_tuples:
