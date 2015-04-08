@@ -1,4 +1,20 @@
-"""Set up a model dir, given the (committed) lang_data."""
+"""Set up a model directory.
+
+Requires:
+
+    lang_data --- Rules for the tokenizer
+        * prefix.txt
+        * suffix.txt
+        * infix.txt
+        * morphs.json
+        * specials.json
+
+    corpora --- Data files
+        * WordNet
+        * words.sgt.prob --- Smoothed unigram probabilities
+        * clusters.txt --- Output of hierarchical clustering, e.g. Brown clusters
+        * vectors.tgz --- output of something like word2vec
+"""
 import plac
 from pathlib import Path
 
@@ -7,6 +23,7 @@ import codecs
 
 from spacy.en import get_lex_props
 from spacy.vocab import Vocab
+from spacy.vocab import write_binary_vectors
 
 
 def setup_tokenizer(lang_data_dir, tok_dir):
@@ -41,10 +58,13 @@ def _read_probs(loc):
     return probs
 
 
-
 def setup_vocab(src_dir, dst_dir):
     if not dst_dir.exists():
         dst_dir.mkdir()
+
+    vectors_src = src_dir / 'vectors.tgz'
+    if vectors_src.exists():
+        write_binary_vectors(str(vectors_src), str(dst_dir / 'vec.bin'))
     vocab = Vocab(data_dir=None, get_lex_props=get_lex_props)
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs = _read_probs(src_dir / 'words.sgt.prob')
@@ -62,15 +82,21 @@ def setup_vocab(src_dir, dst_dir):
     vocab.strings.dump(str(dst_dir / 'strings.txt'))
 
 
-def main(lang_data_dir, model_dir):
+def main(lang_data_dir, corpora_dir, model_dir):
     model_dir = Path(model_dir)
     lang_data_dir = Path(lang_data_dir)
+    corpora_dir = Path(corpora_dir)
+
+    assert corpora_dir.exists()
+    assert lang_data_dir.exists()
 
     if not model_dir.exists():
         model_dir.mkdir()
 
     setup_tokenizer(lang_data_dir, model_dir / 'tokenizer')
-    setup_vocab(lang_data_dir, model_dir / 'vocab')
+    setup_vocab(corpora_dir, model_dir / 'vocab')
+    if not (model_dir / 'wordnet').exists():
+        copytree(str(corpora_dir / 'wordnet'), str(model_dir / 'wordnet'))
 
 
 if __name__ == '__main__':
