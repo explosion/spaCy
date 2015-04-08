@@ -56,6 +56,19 @@ def test():
             local('py.test -x')
 
 
+def train(train_loc=None, dev_loc=None, model_dir=None):
+    if train_loc is None:
+        train_loc = 'corpora/en/ym.wsj02-21.conll'
+    if dev_loc is None:
+        dev_loc = 'corpora/en/ym.wsj24.conll'
+    if model_dir is None:
+        model_dir = 'models/en/'
+    with virtualenv(VENV_DIR):
+        with lcd(path.dirname(__file__)):
+            local('python bin/init_model.py lang_data/en/ corpora/en/ ' + model_dir)
+            local('python bin/parser/train.py %s %s %s' % (train_loc, dev_loc, model_dir))
+
+
 def travis():
     local('open https://travis-ci.org/honnibal/thinc')
 
