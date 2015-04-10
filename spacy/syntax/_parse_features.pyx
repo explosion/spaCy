@@ -32,6 +32,8 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[7] = 0
         context[8] = 0
         context[9] = 0
+        context[10] = 0
+        context[11] = 0
     else:
         context[0] = token.lex.orth
         context[1] = token.lemma
@@ -55,6 +57,8 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[7] = token.lex.prefix
         context[8] = token.lex.suffix
         context[9] = token.lex.shape
+        context[10] = token.ent_iob
+        context[11] = token.ent_type
 
 
 cdef int fill_context(atom_t* context, State* state) except -1:
