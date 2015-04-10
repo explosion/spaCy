@@ -255,6 +255,4 @@ cpdef enum:
     S1_has_head
     S2_has_head
 
-    ent_type
-
     CONTEXT_SIZE

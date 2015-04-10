@@ -104,6 +104,7 @@ cdef int fill_context(atom_t* context, State* state) except -1:
             if state.stack_len >= 3:
                 context[S2_has_head] = has_head(get_s2(state))
 
+
 ner = (
     (N0W,),
     (P1W,),
@@ -176,6 +177,26 @@ ner = (
     (E0W, E1p,),
     (E0p, E1W,),
     (E0p, E1W),
+
+    (P1_ne_iob,),
+    (P1_ne_iob, P1_ne_type),
+    (N0w, P1_ne_iob, P1_ne_type),
+
+    (N0_shape,),
+    (N1_shape,),
+    (N2_shape,),
+    (P1_shape,),
+    (P2_shape,),
+
+    (N0_prefix,),
+    (N0_suffix,),
+
+    (P1_ne_iob,),
+    (P2_ne_iob,),
+    (P1_ne_iob, P2_ne_iob),
+    (P1_ne_iob, P1_ne_type),
+    (P2_ne_iob, P2_ne_type),
+    (N0w, P1_ne_iob, P1_ne_type),
 )
 
 
