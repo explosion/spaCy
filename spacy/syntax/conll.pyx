@@ -4,6 +4,38 @@ import codecs
 from libc.string cimport memset
 
 
+def read_conll03_file(loc):
+    sents = []
+    text = codecs.open(loc, 'r', 'utf8').read().strip()
+    for doc in text.split('-DOCSTART- -X- O O'):
+        doc = doc.strip()
+        if not doc:
+            continue
+        for sent_str in doc.split('\n\n'):
+            words = []
+            tags = []
+            iob_ents = []
+            ids = []
+            lines = sent_str.strip().split('\n')
+            idx = 0
+            for line in lines:
+                word, tag, chunk, iob = line.split()
+                if tag == '"':
+                    tag = '``'
+                if '|' in tag:
+                    tag = tag.split('|')[0]
+                words.append(word)
+                tags.append(tag)
+                iob_ents.append(iob)
+                ids.append(idx)
+                idx += len(word) + 1
+            heads = [-1] * len(words)
+            labels = ['ROOT'] * len(words)
+            sents.append((' '.join(words), [words],
+                         (ids, words, tags, heads, labels, _iob_to_biluo(iob_ents))))
+    return sents
+
+
 def read_docparse_file(loc):
     sents = []
     for sent_str in codecs.open(loc, 'r', 'utf8').read().strip().split('\n\n'):
@@ -32,6 +64,40 @@ def read_docparse_file(loc):
                      for s in tok_text.split('<SENT>')]
         sents.append((raw_text, tokenized, (ids, words, tags, heads, labels, iob_ents)))
     return sents
+
+
+def _iob_to_biluo(tags):
+    out = []
+    curr_label = None
+    tags = list(tags)
+    while tags:
+        out.extend(_consume_os(tags))
+        out.extend(_consume_ent(tags))
+    return out
+
+
+def _consume_os(tags):
+    while tags and tags[0] == 'O':
+        yield tags.pop(0)
+
+
+def _consume_ent(tags):
+    if not tags:
+        return []
+    target = tags.pop(0).replace('B', 'I')
+    length = 1
+    while tags and tags[0] == target:
+        length += 1
+        tags.pop(0)
+    label = target[2:]
+    if length == 1:
+        return ['U-' + label]
+    else:
+        start = 'B-' + label
+        end = 'L-' + label
+        middle = ['I-%s' % label for _ in range(1, length - 1)]
+        return [start] + middle + [end]
+
 
 def _parse_line(line):
     pieces = line.split()
