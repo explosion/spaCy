@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 
 from spacy.en import English
-from spacy.spans import Spans
 
 import pytest
 import re
