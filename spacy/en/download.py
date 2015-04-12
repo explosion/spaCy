@@ -7,7 +7,7 @@ import wget
 import plac
 
 # TODO: Read this from the same source as the setup
-VERSION = '0.7'
+VERSION = '0.8'
 
 AWS_STORE = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com'
 
@@ -46,13 +46,10 @@ def install_dep_vectors(url, dest_dir):
 def main(data_size='all'):
     if data_size == 'all':
         data_url = ALL_DATA_DIR_URL
-    elif data_size == 'speech':
-        data_url = SPEECH_DATA_DIR_URL
     elif data_size == 'small':
         data_url = SM_DATA_DIR_URL
     if path.exists(DEST_DIR):
-        print("Moving existing dir %s to /tmp" % DEST_DIR)
-        shutil.move(DEST_DIR, '/tmp')
+        shutil.rmtree(DEST_DIR)
     install_data(data_url, path.dirname(DEST_DIR))
 
 
