@@ -19,6 +19,7 @@ import plac
 from pathlib import Path
 
 from shutil import copyfile
+from shutil import copytree
 import codecs
 
 from spacy.en import get_lex_props
@@ -35,7 +36,7 @@ def setup_tokenizer(lang_data_dir, tok_dir):
         src = lang_data_dir / filename
         dst = tok_dir / filename
         if not dst.exists():
-            copyfile(src, dst)
+            copyfile(str(src), str(dst))
 
 
 def _read_clusters(loc):
