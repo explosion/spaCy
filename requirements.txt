@@ -1,5 +1,6 @@
 cython
 cymem >= 1.11
+pathlib
 preshed
 thinc
 murmurhash
