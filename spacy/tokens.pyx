@@ -158,6 +158,8 @@ cdef class Tokens:
                 start = -1
                 label = 0
             elif token.ent_iob == 3:
+                if start != -1:
+                    yield Span(self, start, i, label=label)
                 start = i
                 label = token.ent_type
         if start != -1:
