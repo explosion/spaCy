@@ -14,7 +14,6 @@ install:
   - "pip install -r requirements.txt"
   - "export PYTHONPATH=`pwd`"
   - "python setup.py build_ext --inplace"
-  - "python -m spacy.en.download all"
 # command to run tests
 script:
   - py.test tests/
