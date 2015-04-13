@@ -331,7 +331,8 @@ cdef class EnPosTagger:
         cdef unicode lemma_string
         lemma_strings = self.lemmatizer(py_string, pos)
         lemma_string = sorted(lemma_strings)[0]
-        lemma = self.strings.intern(lemma_string.encode('utf8'), len(lemma_string)).i
+        bytes_string = lemma_string.encode('utf8')
+        lemma = self.strings.intern(bytes_string, len(bytes_string)).i
         return lemma
 
     def load_morph_exceptions(self, dict exc):
