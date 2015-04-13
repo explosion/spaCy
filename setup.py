@@ -105,8 +105,6 @@ def cython_setup(mod_names, language, includes, compile_args, link_args):
     )
 
 
-
-
 def run_setup(exts):
     setup(
         name='spacy',
@@ -114,7 +112,7 @@ def run_setup(exts):
         description="Industrial-strength NLP",
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
-        version='0.81',
+        version='0.82',
         url="http://honnibal.github.io/spaCy/",
         package_data={"spacy": ["*.pxd"],
                       "spacy.en": ["*.pxd", "data/pos/*",
