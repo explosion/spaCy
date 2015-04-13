@@ -137,6 +137,10 @@ cdef class Tokens:
         return self._string[:last.idx + last.lex.length]
 
     @property
+    def string(self):
+        return unicode(self)
+
+    @property
     def ents(self):
         """Yields named-entity Span objects."""
         cdef int i
