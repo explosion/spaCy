@@ -136,27 +136,45 @@ cdef class Tokens:
         cdef const TokenC* last = &self.data[self.length - 1]
         return self._string[:last.idx + last.lex.length]
 
-    property ents:
-        def __get__(self):
-            cdef int i
-            cdef const TokenC* token
-            cdef int start = -1
-            cdef int label = 0
-            for i in range(self.length):
-                token = &self.data[i]
-                if token.ent_iob == 1:
-                    assert start != -1
-                    pass
-                elif token.ent_iob == 2:
-                    if start != -1:
-                         yield Span(self, start, i, label=label)
-                    start = -1
-                    label = 0
-                elif token.ent_iob == 3:
-                    start = i
-                    label = token.ent_type
-            if start != -1:
-                yield Span(self, start, self.length, label=label)
+    @property
+    def ents(self):
+        """Yields named-entity Span objects."""
+        cdef int i
+        cdef const TokenC* token
+        cdef int start = -1
+        cdef int label = 0
+        for i in range(self.length):
+            token = &self.data[i]
+            if token.ent_iob == 1:
+                assert start != -1
+                pass
+            elif token.ent_iob == 2:
+                if start != -1:
+                    yield Span(self, start, i, label=label)
+                start = -1
+                label = 0
+            elif token.ent_iob == 3:
+                start = i
+                label = token.ent_type
+        if start != -1:
+            yield Span(self, start, self.length, label=label)
+
+    @property
+    def sents(self):
+        """Yield a list of sentence Span objects, calculated from the dependency
+        parse.
+        """
+        cdef int i
+        cdef Tokens sent = Tokens(self.vocab, self._string[self.data[0].idx:])
+        start = None
+        for i in range(self.length):
+            if start is None:
+                start = i
+            if self.data[i].sent_end:
+                yield Span(self, start, i+1)
+                start = None
+        if start is not None:
+            yield Span(self, start, self.length) 
 
     cdef int push_back(self, int idx, LexemeOrToken lex_or_tok) except -1:
         if self.length == self.max_length:
@@ -238,21 +256,6 @@ cdef class Tokens:
         for i in range(self.length, self.max_length + PADDING):
             self.data[i].lex = &EMPTY_LEXEME
 
-    @property
-    def sents(self):
-        """This is really only a place-holder for a proper solution."""
-        cdef int i
-        cdef Tokens sent = Tokens(self.vocab, self._string[self.data[0].idx:])
-        start = None
-        for i in range(self.length):
-            if start is None:
-                start = i
-            if self.data[i].sent_end:
-                yield Span(self, start, i+1)
-                start = None
-        if start is not None:
-            yield Span(self, start, self.length) 
-
     cdef int set_parse(self, const TokenC* parsed) except -1:
         # TODO: This method is fairly misleading atm. It's used by GreedyParser
         # to actually apply the parse calculated. Need to rethink this.
@@ -263,6 +266,8 @@ cdef class Tokens:
 
     def merge(self, int start_idx, int end_idx, unicode tag, unicode lemma,
               unicode ent_type):
+        """Merge a multi-word expression into a single token.  Currently
+        experimental; API is likely to change."""
         cdef int i
         cdef int start = -1
         cdef int end = -1
@@ -526,9 +531,22 @@ cdef class Token:
                                self.c + self.c.head, self.i + self.c.head, self.array_len,
                                self._seq)
 
+    property ent_type:
+        def __get__(self):
+            return self.c.ent_type
+
+    property ent_iob:
+        def __get__(self):
+            return self.c.ent_iob
+
     property ent_type_:
         def __get__(self):
             return self.vocab.strings[self.c.ent_type]
+
+    property ent_iob_:
+        def __get__(self):
+            iob_strings = ('', 'I', 'O', 'B')
+            return iob_strings[self.c.ent_iob]
 
     property whitespace_:
         def __get__(self):
