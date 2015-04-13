@@ -1,26 +1,22 @@
 spaCy
 =====
 
-[![Build Status](https://travis-ci.org/honnibal/spaCy.svg?branch=master)](https://travis-ci.org/honnibal/spaCy)
-
 http://honnibal.github.io/spaCy
 
 Fast, state-of-the-art natural language processing pipeline. Commercial licenses available, or use under AGPL.
 
-Version 0.40 released 
+Version 0.80 released
 ---------------------
 
-2014-02-01 
+2015-04-13
 
-* Several bug-fixes have now been pushed to master
-* Tests fail on some platforms, including Travis CI, due to memory errors.
-* Tests pass on my local machines OSX and Ubuntu machines (for Python2.7 and Python 3.4)
+* Preliminary named entity recognition support. Accuracy is currently
+  substantially behind the current state-of-the-art. I'm working on
+  improvements. 
 
-The problem is likely due to non-portable usage of the Py_UNICODE data type in my Cython code, or possibly in the binary file formats of lexemes.bin, vec.bin, or the model file read by thinc.learner.LinearModel.
+* Better sentence boundary detection, drawn from the syntactic structure.
 
-I'm trying to reproduce the problem. Once this is fixed and docs are updated I will push version 0.4 to PyPi.
-
-I have a flight from Sydney to New York in 24 hours, so this problem may remain unfixed for a few days.
+* Lots of bug fixes
 
 
 Supports:
@@ -29,10 +25,11 @@ Supports:
 * CPython 3.4
 * OSX
 * Linux 
+* Cygwin
 
 Want to support:
 
-* Windows
+* Visual Studio
 
 Difficult to support:
 
