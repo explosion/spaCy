@@ -5,29 +5,32 @@ API
 
 .. autoclass:: spacy.en.English
 
-  +-----------+----------------------------------------+-------------+--------------------------+
-  | Attribute | Type                                   | Attr API    | NoteS                    |
-  +===========+========================================+=============+==========================+
-  | strings   | :py:class:`strings.StringStore`        | __getitem__ | string <-> int  mapping  |
-  +-----------+----------------------------------------+-------------+--------------------------+
-  | vocab     | :py:class:`vocab.Vocab`                | __getitem__ | Look up Lexeme object    |
-  +-----------+----------------------------------------+-------------+--------------------------+
-  | tokenizer | :py:class:`tokenizer.Tokenizer`        | __call__    | Get Tokens given unicode |
-  +-----------+----------------------------------------+-------------+--------------------------+
-  | tagger    | :py:class:`en.pos.EnPosTagger`         | __call__    | Set POS tags on Tokens   |
-  +-----------+----------------------------------------+-------------+--------------------------+
-  | parser    | :py:class:`syntax.parser.GreedyParser` | __call__    | Set parse on Tokens      |
-  +-----------+----------------------------------------+-------------+--------------------------+
+  +------------+----------------------------------------+-------------+--------------------------+
+  | Attribute  | Type                                   | Attr API    | Notes                    |
+  +============+========================================+=============+==========================+
+  | strings    | :py:class:`strings.StringStore`        | __getitem__ | string <-> int  mapping  |
+  +------------+----------------------------------------+-------------+--------------------------+
+  | vocab      | :py:class:`vocab.Vocab`                | __getitem__ | Look up Lexeme object    |
+  +------------+----------------------------------------+-------------+--------------------------+
+  | tokenizer  | :py:class:`tokenizer.Tokenizer`        | __call__    | Get Tokens given unicode |
+  +------------+----------------------------------------+-------------+--------------------------+
+  | tagger     | :py:class:`en.pos.EnPosTagger`         | __call__    | Set POS tags on Tokens   |
+  +------------+----------------------------------------+-------------+--------------------------+
+  | parser     | :py:class:`syntax.parser.GreedyParser` | __call__    | Set parse on Tokens      |
+  +------------+----------------------------------------+-------------+--------------------------+
+  | entity     | :py:class:`syntax.parser.GreedyParser` | __call__    | Set entities on Tokens   |
+  +------------+----------------------------------------+-------------+--------------------------+
+  | mwe_merger | :py:class:`multi_words.RegexMerger`    | __call__    | Apply regex for units    |
+  +------------+----------------------------------------+-------------+--------------------------+
 
 
   .. automethod:: spacy.en.English.__call__
 
 
 .. autoclass:: spacy.tokens.Tokens
-  :members: 
   
   +---------------+-------------+-------------+
-  | Attribute     | Type        | Useful      |
+  | Attribute     | Type        | Attr API    |
   +===============+=============+=============+
   | vocab         | Vocab       | __getitem__ |
   +---------------+-------------+-------------+
@@ -46,8 +49,6 @@ API
     can also export the data to a numpy array, via `Tokens.to_array`, if pure Python
     access is required, and you need slightly better performance.  However, this
     is both slower and has a worse API than Cython access.  
-
-.. Once a Token object has been created, it is persisted internally in Tokens._py_tokens.
 
 
 .. autoclass:: spacy.tokens.Token
@@ -191,6 +192,15 @@ API
   subtree
     An iterator for the part of the sentence syntactically governed by the
     word, including the word itself.
+
+
+  **Named Entities**
+
+  ent_type
+    If the token is part of an entity, its entity type
+
+  ent_iob
+    The IOB (inside, outside, begin) entity recognition tag for the token
 
 .. py:class:: vocab.Vocab(self, data_dir=None, lex_props_getter=None)
 

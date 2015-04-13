@@ -68,7 +68,7 @@ a convenient API:
 
 spaCy maps all strings to sequential integer IDs --- a common trick in NLP.
 If an attribute `Token.foo` is an integer ID, then `Token.foo_` is the string,
-e.g. `pizza.orth_` and `pizza.orth` provide the integer ID and the string of
+e.g. `pizza.orth` and `pizza.orth_` provide the integer ID and the string of
 the original orthographic form of the word.
 
   .. note::  en.English.__call__ is stateful --- it has an important **side-effect**.
@@ -88,7 +88,7 @@ the original orthographic form of the word.
 
   .. py:class:: spacy.en.English(self, data_dir=join(dirname(__file__), 'data'))
 
-    .. py:method:: __call__(self, text: unicode, tag=True, parse=False) --> Tokens 
+    .. py:method:: __call__(self, text: unicode, tag=True, parse=True, entity=True, merge_mwes=False) --> Tokens 
 
     +-----------------+--------------+--------------+
     | Attribute       | Type         | Its API      |
@@ -103,6 +103,8 @@ the original orthographic form of the word.
     +-----------------+--------------+--------------+
     | parser          | GreedyParser | __call__     |
     +-----------------+--------------+--------------+
+    | entity          | GreedyParser | __call__     |
+    +-----------------+--------------+--------------+
 
 **Get dict or numpy array:**
 
@@ -115,6 +117,16 @@ the original orthographic form of the word.
   .. py:method:: tokens.Tokens.__getitem__(self, i) --> Token
 
   .. py:method:: tokens.Tokens.__iter__(self) --> Iterator[Token]
+
+**Get sentence or named entity spans**
+
+  .. py:attribute:: tokens.Tokens.sents --> Iterator[Span]
+  
+  .. py:attribute:: tokens.Tokens.ents --> Iterator[Span]
+
+    You can iterate over a Span to access individual Tokens, or access its
+    start, end or label.
+
 
 **Embedded word representenations**
 
@@ -148,7 +160,6 @@ the original orthographic form of the word.
   .. py:attribute:: idx: int
 
     Starting offset of word in the original string.
-
 
 
 Features
