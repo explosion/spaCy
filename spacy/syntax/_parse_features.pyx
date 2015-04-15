@@ -197,6 +197,8 @@ ner = (
     (P1_ne_iob, P1_ne_type),
     (P2_ne_iob, P2_ne_type),
     (N0w, P1_ne_iob, P1_ne_type),
+
+    (N0w, N1w),
 )
 
 
