@@ -5,14 +5,19 @@ _mw_prepositions = [
     'close to',
     'down by',
     'on the way to',
+    'on my way to',
     'on my way',
+    'on his way to',
     'on his way',
+    'on her way to',
     'on her way',
+    'on your way to',
     'on your way',
+    'on our way to',
     'on our way',
+    'on their way to',
     'on their way',
 ]
-
 
 
 MW_PREPOSITIONS_RE = re.compile('|'.join(_mw_prepositions), flags=re.IGNORECASE)
