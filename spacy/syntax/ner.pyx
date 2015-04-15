@@ -110,7 +110,7 @@ cdef class BiluoPushDown(TransitionSystem):
             if self.c[i].move == move and self.c[i].label == label:
                 return self.c[i]
         else:
-            raise Exception(name)
+            raise KeyError(name)
 
     cdef Transition init_transition(self, int clas, int move, int label) except *:
         # TODO: Apparent Cython bug here when we try to use the Transition()
