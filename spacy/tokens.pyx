@@ -11,6 +11,7 @@ from .typedefs cimport LEMMA
 from .typedefs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from .typedefs cimport POS, LEMMA, TAG, DEP
 from .parts_of_speech import UNIV_POS_NAMES
+from .parts_of_speech cimport CONJ, PUNCT
 from .lexeme cimport check_flag
 from .spans import Span
 from .structs cimport UniStr
@@ -538,6 +539,27 @@ cdef class Token:
             return Token.cinit(self.vocab, self._string,
                                self.c + self.c.head, self.i + self.c.head, self.array_len,
                                self._seq)
+        
+    property conjuncts:
+        def __get__(self):
+            """Get a list of conjoined words"""
+            cdef Token word
+            conjs = []
+            if self.c.pos != CONJ and self.c.pos != PUNCT:
+                seen_conj = False
+                for word in reversed(list(self.lefts)):
+                    if word.c.pos == CONJ:
+                        seen_conj = True
+                    elif seen_conj and word.c.pos == self.c.pos:
+                        conjs.append(word)
+            conjs.reverse()
+            conjs.append(self)
+            if seen_conj:
+                return conjs
+            elif self is not self.head and self in self.head.conjuncts:
+                return self.head.conjuncts
+            else:
+                return []
 
     property ent_type:
         def __get__(self):
