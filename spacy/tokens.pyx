@@ -281,6 +281,8 @@ cdef class Tokens:
             if self.data[i].idx == start_idx:
                 start = i
             if (self.data[i].idx + self.data[i].lex.length) == end_idx:
+                if start == -1:
+                    return None
                 end = i + 1
                 break
         else:

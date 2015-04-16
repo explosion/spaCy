@@ -30,3 +30,9 @@ def test_merge_heads():
     assert tokens[3].head.i == 1
     assert tokens[4].head.i in [1, 3]
     assert tokens[5].head.i == 4
+
+
+def test_issue_54():
+    text = u'Talks given by women had a slightly higher number of questions asked (3.2$\pm$0.2) than talks given by men (2.6$\pm$0.1).'
+    tokens = NLU(text, merge_mwes=True)
+
