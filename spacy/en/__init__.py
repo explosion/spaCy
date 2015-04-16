@@ -126,7 +126,7 @@ class English(object):
         return self._entity
 
     def __call__(self, text, tag=True, parse=parse_if_model_present,
-                 entity=parse_if_model_present, merge_mwes=True):
+                 entity=parse_if_model_present, merge_mwes=False):
         """Apply the pipeline to some text.  The text can span multiple sentences,
         and can contain arbtrary whitespace.  Alignment into the original string
         
