@@ -14,7 +14,7 @@ def test_am_pm():
         for var in variants:
             for space in spaces:
                 string = u"The meeting was at %s%s%s wasn't it?" % (num, space, var)
-                tokens = NLU(string)
+                tokens = NLU(string, merge_mwes=True)
                 assert tokens[4].orth_ == '%s%s%s' % (num, space, var)
                 ents = list(tokens.ents)
                 assert len(ents) == 1
