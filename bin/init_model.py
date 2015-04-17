@@ -46,7 +46,10 @@ def _read_clusters(loc):
             cluster, word, freq = line.split()
         except ValueError:
             continue
-        clusters[word] = cluster
+        # If the clusterer has only seen the word a few times, its cluster is
+        # unreliable.
+        if int(freq) >= 3:
+            clusters[word] = cluster
     return clusters
 
 
