@@ -17,6 +17,7 @@ _mw_prepositions = [
     'on our way',
     'on their way to',
     'on their way',
+    'along the route from'
 ]
 
 
@@ -29,6 +30,11 @@ TIME_RE = re.compile(
         one_two_digits=r'[0-2]?[0-9]',
         am_pm=r'[ap]\.?m\.?'))
 
+DATE_RE = re.compile(
+    '(?:this|last|next|the) (?:week|weekend|{days})'.format(
+        days='Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday'
+    ))
+
 
 MONEY_RE = re.compile('\$\d+(?:\.\d+)?|\d+ dollars(?: \d+ cents)?')
 
@@ -37,4 +43,5 @@ DAYS_RE = re.compile('Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday')
 
 
 REGEXES = [('IN', 'O', MW_PREPOSITIONS_RE), ('CD', 'TIME', TIME_RE),
+           ('NNP', 'DATE', DATE_RE),
            ('NNP', 'DATE', DAYS_RE), ('CD', 'MONEY', MONEY_RE)]
