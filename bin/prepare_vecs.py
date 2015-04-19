@@ -1,8 +1,6 @@
 """Read a vector file, and prepare it as binary data, for easy consumption"""
 
-import bz2
 import plac
-import struct
 
 from spacy.vocab import write_binary_vectors
 

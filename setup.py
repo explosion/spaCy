@@ -1,16 +1,11 @@
 #!/usr/bin/env python
-import subprocess
 from setuptools import setup
-from glob import glob
 import shutil
 
 import sys
 import os
 from os import path
-from os.path import splitext
 
-
-import shutil
 from setuptools import Extension
 from distutils import sysconfig
 import platform

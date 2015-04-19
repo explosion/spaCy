@@ -1,4 +1,4 @@
-from fabric.api import local, run, lcd, cd, env
+from fabric.api import local, lcd, env
 from os.path import exists as file_exists
 from fabtools.python import virtualenv
 from os import path

@@ -7,8 +7,6 @@ from os import path
 import shutil
 import codecs
 import random
-import time
-import gzip
 
 import plac
 import cProfile
