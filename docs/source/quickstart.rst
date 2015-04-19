@@ -18,7 +18,7 @@ With Python 2.7 or Python 3, using Linux or OSX, run:
 .. _300 mb of data: http://s3-us-west-1.amazonaws.com/media.spacynlp.com/en_data_all-0.4.tgz
 
 
-The download command fetches and installs about 300mb of data, for the 
+The download command fetches and installs about 300mb of data, for the
 parser model and word vectors, which it installs within the spacy.en package directory.
 
 If you're stuck using a server with an old version of Python, and you don't
@@ -88,7 +88,7 @@ the original orthographic form of the word.
 
   .. py:class:: spacy.en.English(self, data_dir=join(dirname(__file__), 'data'))
 
-    .. py:method:: __call__(self, text: unicode, tag=True, parse=True, entity=True, merge_mwes=False) --> Tokens 
+    .. py:method:: __call__(self, text: unicode, tag=True, parse=True, entity=True, merge_mwes=False) --> Tokens
 
     +-----------------+--------------+--------------+
     | Attribute       | Type         | Its API      |
@@ -121,7 +121,7 @@ the original orthographic form of the word.
 **Get sentence or named entity spans**
 
   .. py:attribute:: tokens.Tokens.sents --> Iterator[Span]
-  
+
   .. py:attribute:: tokens.Tokens.ents --> Iterator[Span]
 
     You can iterate over a Span to access individual Tokens, or access its
@@ -131,7 +131,7 @@ the original orthographic form of the word.
 **Embedded word representenations**
 
   .. py:attribute:: tokens.Token.repvec
-  
+
   .. py:attribute:: lexeme.Lexeme.repvec
 
 
@@ -150,13 +150,13 @@ the original orthographic form of the word.
 **Align to original string**
 
   .. py:attribute:: string: unicode
-    
+
     Padded with original whitespace.
 
   .. py:attribute:: length: int
 
     Length, in unicode code-points. Equal to len(self.orth_).
-    
+
   .. py:attribute:: idx: int
 
     Starting offset of word in the original string.
@@ -234,4 +234,3 @@ Features
   +---------+-----------------------------------------------------------+
   | prob    | Log probability of word, smoothed with Simple Good-Turing |
   +---------+-----------------------------------------------------------+
-

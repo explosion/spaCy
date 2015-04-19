@@ -149,5 +149,3 @@ cpdef enum:
 
 
 cdef int fill_context(atom_t* context, State* s, Tokens tokens) except -1
-
-

@@ -71,7 +71,7 @@ def read_detoken_rules(lang):
         for line in file_:
             entries.append(line.strip())
     return entries
- 
+
 
 def align_tokens(ref, indices):
     start = 0
@@ -87,7 +87,7 @@ def align_tokens(ref, indices):
 
 
 def detokenize(token_rules, words):
-    """To align with treebanks, return a list of "chunks", where a chunk is a 
+    """To align with treebanks, return a list of "chunks", where a chunk is a
     sequence of tokens that are separated by whitespace in actual strings. Each
     chunk should be a tuple of token indices, e.g.
 

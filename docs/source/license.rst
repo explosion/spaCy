@@ -13,7 +13,7 @@ I've been writing spaCy for six months now, and I'm very excited to release it.
 I think it's the most valuable thing I could have built.  When I was in
 academia, I noticed that small companies couldn't really make use of our work.
 Meanwhile the tech giants have been hiring *everyone*, and putting this stuff
-into production.  I think spaCy can change that.  
+into production.  I think spaCy can change that.
 
 
   +------------+-----------+----------+-------------------------------------+
@@ -52,14 +52,14 @@ Examples
 --------
 
 In order to clarify how spaCy's license structure might apply to you, I've
-written a few examples, in the form of user-stories.  
+written a few examples, in the form of user-stories.
 
 Ashley and Casey: Seed stage start-up
 #####################################
 
 Ashley and Casey have an idea for a start-up.  To explore their idea, they want
 to build a minimum viable product they can put in front of potential users and
-investors. 
+investors.
 
 They have two options.
 
@@ -75,7 +75,7 @@ They have two options.
      import a module that imports it, etc).  They also cannot use spaCy as
      a network resource, by running it as a service --- this is the
      loophole that the "A" part of the AGPL is designed to close.
-     
+
 Ashley and Casey find the AGPL license unattractive for commercial use.
 They decide to take up the trial commercial license.
 However,  over the next 90 days, Ashley has to move house twice, and Casey gets

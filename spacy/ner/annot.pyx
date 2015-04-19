@@ -11,7 +11,7 @@ cdef class NERAnnotation:
         memset(self.starts, -1, sizeof(int) * length)
         memset(self.ends, -1, sizeof(int) * length)
         memset(self.labels, -1, sizeof(int) * length)
-        
+
         cdef int start, end, label
         for start, end, label in entities:
             for i in range(start, end):

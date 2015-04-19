@@ -132,7 +132,7 @@ def main(train_loc, dev_loc, model_dir, n_sents=0, out_loc="", verbose=False,
     print 'NER P', scorer.ents_p
     print 'NER R', scorer.ents_r
     print 'NER F', scorer.ents_f
-    
+
 
 if __name__ == '__main__':
     plac.call(main)

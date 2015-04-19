@@ -63,15 +63,15 @@ def test_contraction_punct(EN):
 def test_sample(EN):
     text = """Tributes pour in for late British Labour Party leader
 
-Tributes poured in from around the world Thursday 
-to the late Labour Party leader John Smith, who died earlier from a massive 
+Tributes poured in from around the world Thursday
+to the late Labour Party leader John Smith, who died earlier from a massive
 heart attack aged 55.
 
-In Washington, the US State Department issued a statement regretting "the 
+In Washington, the US State Department issued a statement regretting "the
 untimely death" of the rapier-tongued Scottish barrister and parliamentarian.
 
 "Mr. Smith, throughout his distinguished"""
-    
+
     tokens = EN(text)
     assert len(tokens) > 5
 

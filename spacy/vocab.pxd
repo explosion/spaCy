@@ -31,6 +31,5 @@ cdef class Vocab:
 
     cdef const LexemeC* get(self, Pool mem, UniStr* s) except NULL
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1
-    
+
     cdef PreshMap _map
-  

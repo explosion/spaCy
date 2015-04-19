@@ -102,7 +102,7 @@ exts = [
     Extension("spacy.syntax.arc_eager", ["spacy/syntax/arc_eager.pyx"], **ext_args),
     Extension("spacy.syntax._parse_features", ["spacy/syntax/_parse_features.pyx"],
               **ext_args)
-    
+
     #Extension("spacy.pos_feats", ["spacy/pos_feats.pyx"], language="c++", include_dirs=includes),
     #Extension("spacy.ner._state", ["spacy/ner/_state.pyx"], language="c++", include_dirs=includes),
     #Extension("spacy.ner.bilou_moves", ["spacy/ner/bilou_moves.pyx"], language="c++", include_dirs=includes),

@@ -58,10 +58,10 @@ LOCAL = (
     (N3.sic,),
     (P4.sic,),
     (N4.sic,),
-    
+
     (P1.sic, N0.sic,),
     (N0.sic, N1.sic),
-    
+
     (N0.prefix,),
     (N0.suffix,),
 

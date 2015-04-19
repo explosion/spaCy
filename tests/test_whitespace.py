@@ -39,5 +39,3 @@ def test_newline_double_space(EN):
 def test_newline_space_wrap(EN):
     tokens = EN('hello \n possums')
     assert len(tokens) == 3
-
-

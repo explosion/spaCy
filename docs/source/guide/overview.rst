@@ -68,4 +68,3 @@ Cons:
 - Higher memory usage (up to 1gb)
 - More conceptually complicated
 - Tokenization rules expressed in code, not as data
-

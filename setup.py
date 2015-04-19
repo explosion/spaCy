@@ -150,7 +150,7 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.morphology',
              'spacy._ml', 'spacy.tokenizer', 'spacy.en.attrs',
              'spacy.en.pos', 'spacy.syntax.parser', 'spacy.syntax._state',
-             'spacy.syntax.transition_system', 
+             'spacy.syntax.transition_system',
              'spacy.syntax.arc_eager', 'spacy.syntax._parse_features',
              'spacy.syntax.conll', 'spacy.orth',
              'spacy.syntax.ner']

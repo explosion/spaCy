@@ -7,10 +7,10 @@ LOCAL = (
     (N1_sic,),
     (P2_sic,),
     (N2_sic,),
-    
+
     (P1_sic, W_sic,),
     (W_sic, N1_sic),
-    
+
     (W_prefix,),
     (W_suffix,),
 

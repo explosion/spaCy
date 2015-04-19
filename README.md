@@ -35,4 +35,3 @@ Difficult to support:
 
 * PyPy 2.7
 * PyPy 3.4
-

@@ -16,4 +16,3 @@ def test_subtrees():
     assert len(list(bus.children)) == 1
 
     assert len(list(wheels.subtree)) == 6
-

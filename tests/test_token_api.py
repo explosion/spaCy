@@ -35,5 +35,3 @@ def test_single_token_string():
     nlp = English()
     tokens = nlp(u'foobar')
     assert tokens[0].string == 'foobar'
-
-

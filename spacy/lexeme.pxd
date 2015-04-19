@@ -12,7 +12,7 @@ cdef LexemeC EMPTY_LEXEME
 
 cdef int set_lex_struct_props(LexemeC* lex, dict props, StringStore strings,
                               const float* empty_vec) except -1
- 
+
 cdef class Lexeme:
     cdef readonly ndarray repvec
 

@@ -33,4 +33,3 @@ def test_word():
 def test_not_number():
     assert not like_number('dog')
     assert not like_number(',')
-

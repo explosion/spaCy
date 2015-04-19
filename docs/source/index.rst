@@ -65,7 +65,7 @@ it, link it, filter it, categorise it, generate it and correct it.
 
 spaCy provides a library of utility functions that help programmers build such
 products.  It's commercial open source software: you can either use it under
-the AGPL, or you can `buy a commercial license`_ for a one-time fee. 
+the AGPL, or you can `buy a commercial license`_ for a one-time fee.
 
 .. _buy a commercial license: license.html
 
@@ -148,7 +148,7 @@ cosine metric:
 
     >>> from numpy import dot
     >>> from numpy.linalg import norm
- 
+
     >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1) * norm(v2))
     >>> words = [w for w in nlp.vocab if w.has_repvec]
     >>> words.sort(key=lambda w: cosine(w.repvec, pleaded.repvec))
@@ -200,7 +200,7 @@ this:
 
 
 
-We wanted to refine the logic so that only adverbs modifying evocative verbs 
+We wanted to refine the logic so that only adverbs modifying evocative verbs
 of communication, like "pleaded", were highlighted.  We've now built a vector that
 represents that type of word, so now we can highlight adverbs based on very
 subtle logic, honing in on adverbs that seem the most stylistically
@@ -213,7 +213,7 @@ problematic, given our starting assumptions:
     >>> from spacy.parts_of_speech import ADV, VERB
     >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1) * norm(v2))
     >>> def is_bad_adverb(token, target_verb, tol):
-    ...   if token.pos != ADV 
+    ...   if token.pos != ADV
     ...     return False
     ...   elif token.head.pos != VERB:
     ...     return False
@@ -238,11 +238,11 @@ database, and processed with an NLP library, to one of three levels of detail
 --- tokenization, tagging, or parsing.  The tasks are additive: to parse the
 text you have to tokenize and tag it.  The  pre-processing was not subtracted
 from the times --- I report the time required for the pipeline to complete.
-I report mean times per document, in milliseconds. 
+I report mean times per document, in milliseconds.
 
 **Hardware**: Intel i7-3770 (2012)
 
-.. table:: Efficiency comparison. Lower is better. 
+.. table:: Efficiency comparison. Lower is better.
 
   +--------------+---------------------------+--------------------------------+
   |              | Absolute (ms per doc)     | Relative (to spaCy)            |
@@ -287,7 +287,7 @@ representations.
 .. spaCy is based on science, not alchemy.  It's open source, and I am happy to
   clarify any detail of the algorithms I've implemented.
   It's evaluated against the current best published systems, following the standard
-  methodologies.  These evaluations show that it performs extremely well.  
+  methodologies.  These evaluations show that it performs extremely well.
 
 Accuracy Comparison
 -------------------
@@ -299,7 +299,7 @@ Accuracy Comparison
   +--------------+----------+------------+
   | spaCy        | 97.2     | 92.4       |
   +--------------+----------+------------+
-  | CoreNLP      | 96.9     | 92.2       | 
+  | CoreNLP      | 96.9     | 92.2       |
   +--------------+----------+------------+
   | ZPar         | 97.3     | 92.9       |
   +--------------+----------+------------+
@@ -329,5 +329,5 @@ previous fastest parser that I'm aware of.
     quickstart.rst
     api.rst
     howworks.rst
-    license.rst 
+    license.rst
     updates.rst

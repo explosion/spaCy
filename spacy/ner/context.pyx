@@ -18,7 +18,7 @@ cdef int _fill_token(atom_t* c, Lexeme* lex, atom_t pos):
     c[T_postype] = lex.postype
     c[T_nertype] = 0
     c[T_sensetype] = 0
-    
+
     c[T_is_alpha] = lex.flags & (1 << IS_ALPHA)
     c[T_is_digit] = lex.flags & (1 << IS_DIGIT)
     c[T_is_lower] = lex.flags & (1 << IS_LOWER)

@@ -28,7 +28,7 @@ API
 
 
 .. autoclass:: spacy.tokens.Tokens
-  
+
   +---------------+-------------+-------------+
   | Attribute     | Type        | Attr API    |
   +===============+=============+=============+
@@ -48,7 +48,7 @@ API
     For faster access, the underlying C data can be accessed from Cython.  You
     can also export the data to a numpy array, via `Tokens.to_array`, if pure Python
     access is required, and you need slightly better performance.  However, this
-    is both slower and has a worse API than Cython access.  
+    is both slower and has a worse API than Cython access.
 
 
 .. autoclass:: spacy.tokens.Token
@@ -119,7 +119,7 @@ API
 
   shape
     A transform of the word's string, to show orthographic features.  The
-    characters a-z are mapped to x, A-Z is mapped to X, 0-9 is mapped to d. 
+    characters a-z are mapped to x, A-Z is mapped to X, 0-9 is mapped to d.
     After these mappings, sequences of 4 or more of the same character are
     truncated to length 4. Examples: C3Po --> XdXx, favorite --> xxxx,
     :) --> :)
@@ -161,7 +161,7 @@ API
   pos
     A part-of-speech tag, from the Google Universal Tag Set, e.g. NOUN, VERB,
     ADV.  Constants for the 17 tag values are provided in spacy.parts\_of\_speech.
- 
+
   dep
     The type of syntactic dependency relation between the word and its
     syntactic head.
@@ -185,10 +185,10 @@ API
 
   rights
     An iterator for the immediate rightward syntactic children of the word.
-    
+
   children
     An iterator that yields from lefts, and then yields from rights.
- 
+
   subtree
     An iterator for the part of the sentence syntactically governed by the
     word, including the word itself.
@@ -205,15 +205,15 @@ API
 .. py:class:: vocab.Vocab(self, data_dir=None, lex_props_getter=None)
 
   .. py:method:: __len__(self) --> int
-  
+
   .. py:method:: __getitem__(self, id: int) --> unicode
-  
+
   .. py:method:: __getitem__(self, string: unicode) --> int
-  
+
   .. py:method:: __setitem__(self, py_str: unicode, props: Dict[str, int[float]) --> None
 
   .. py:method:: dump(self, loc: unicode) --> None
-  
+
   .. py:method:: load_lexemes(self, loc: unicode) --> None
 
   .. py:method:: load_vectors(self, loc: unicode) --> None
@@ -223,9 +223,9 @@ API
   .. py:method:: __len__(self) --> int
 
   .. py:method:: __getitem__(self, id: int) --> unicode
-  
+
   .. py:method:: __getitem__(self, string: bytes) --> id
-  
+
   .. py:method:: __getitem__(self, string: unicode) --> id
 
   .. py:method:: dump(self, loc: unicode) --> None

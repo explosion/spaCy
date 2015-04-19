@@ -97,7 +97,7 @@ like lead-text take a while to float up the priority list.  This strategy also h
 the advantage of transparency: it's obvious to users how the decision is being
 made, so nobody is likely to complain about the feature if it works this way.
 
-Instead of cutting off the text mid-word, we can tokenize the text, and 
+Instead of cutting off the text mid-word, we can tokenize the text, and
 
 +----------------+-----------+
 | System         | Rouge-1 R |
@@ -116,7 +116,7 @@ A simple bag-of-words model can be created using the `count_by` method, which
 produces a dictionary of frequencies, keyed by string IDs:
 
 .. code:: python
-    
+
     >>> from spacy.en import English
     >>> from spacy.en.attrs import SIC
     >>> nlp = English()
@@ -148,7 +148,7 @@ from any token:
 
 
 
-    
+
 
 .. _word embeddings: https://colah.github.io/posts/2014-07-NLP-RNNs-Representations/
 
@@ -196,8 +196,8 @@ undirected --- so, it's natural to represent this as a matrix:
 
     from scipy.spatial.distance import cosine
     import numpy
-    
-    
+
+
     def lexrank(sent_vectors):
         n = len(sent_vectors)
         # Build the cosine similarity matrix
@@ -205,7 +205,7 @@ undirected --- so, it's natural to represent this as a matrix:
         for i in range(n):
             for j in range(n):
                 matrix[i, j] = cosine(sent_vectors[i], sent_vectors[j])
-        # Normalize 
+        # Normalize
         for i in range(n):
             matrix[i] /= sum(matrix[i])
         return _pagerank(matrix)
@@ -278,6 +278,3 @@ sentence represents the document as a whole.
 
 Document Model
 --------------
-
-
-

@@ -5,7 +5,7 @@ from .structs cimport Morphology, TokenC, LexemeC
 from .vocab cimport Vocab
 from .strings cimport StringStore
 
-    
+
 cdef class Span:
     cdef readonly Tokens _seq
     cdef public int i
@@ -15,4 +15,3 @@ cdef class Span:
     cdef public Span head
     cdef public list rights
     cdef public list lefts
-

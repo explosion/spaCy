@@ -11,5 +11,3 @@ The CLA must be signed on your first pull request. To do this, simply fill in th
     $ git add -A spaCy/contributors/<your GitHub username>.md
     
 Now finish your pull request, and you're done.
-
-

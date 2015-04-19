@@ -21,7 +21,7 @@ Bug Fixes
     all look-ups into the vocabulary failed on wide unicode builds, which
     further meant that the part-of-speech tagger and parser features were not
     computed correctly.
-    
+
     The fix is simple: we already have to read in a list of all the strings, so
     just store an index into that list, instead of a hash.
 
@@ -36,7 +36,7 @@ Bug Fixes
     and we want to freely navigate up and down it without creating reference
     cycles that inhibit garbage collection, and without doing a lot of copying,
     creating and deleting.
-    
+
     I think I've got a promising solution to this, but I suspect there's
     currently a memory leak.  Please get in touch no the tracker if you want to
     know more, especially if you think you can help.
@@ -60,7 +60,7 @@ Most English parsing research is performed on text with perfect pre-processing:
 one newline between every sentence, one space between every token.
 It's always been done this way, and it's good.  It's a useful idealisation,
 because the pre-processing has few algorithmic implications.
-    
+
 But, for practical performance, this stuff can matter a lot.
 Dridan and Oepen (2013) did a simple but rare thing: they actually ran a few
 parsers on raw text.  Even on the standard Wall Street Journal corpus,
