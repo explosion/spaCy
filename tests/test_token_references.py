@@ -31,6 +31,7 @@ def _orphan_from_list(toks):
         lst.append(tok)
     return lst
 
+
 def test_list_orphans():
     # Test case from NSchrading
     nlp = English()

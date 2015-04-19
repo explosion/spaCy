@@ -2,9 +2,11 @@ import pytest
 
 from spacy.en import English
 
+
 @pytest.fixture
 def EN():
     return English()
+
 
 def test_range_iter(EN):
     for i in range(len(EN.vocab)):

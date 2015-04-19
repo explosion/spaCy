@@ -7,6 +7,8 @@ from spacy.en.attrs import IS_STOP
 import pytest
 
 nlp = English()
+
+
 @pytest.fixture
 def token():
     tokens = nlp(u'Give it back! He pleaded.')

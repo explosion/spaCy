@@ -3,6 +3,7 @@ from spacy.en import English
 
 import pytest
 
+
 @pytest.fixture
 def EN():
     return English()

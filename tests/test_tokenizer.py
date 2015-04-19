@@ -10,9 +10,11 @@ from spacy.en import English
 def EN():
     return English().tokenizer
 
+
 def test_no_word(EN):
     tokens = EN(u'')
     assert len(tokens) == 0
+
 
 def test_single_word(EN):
     tokens = EN(u'hello')
@@ -59,6 +61,7 @@ def test_contraction_punct(EN):
     assert len(tokens) == 3
     tokens = EN("can't!")
     assert len(tokens) == 3
+
 
 def test_sample(EN):
     text = """Tributes pour in for late British Labour Party leader

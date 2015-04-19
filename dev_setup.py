@@ -64,8 +64,6 @@ def clean(ext):
             if os.path.exists(html):
                 os.unlink(html)
 
-
-
 HERE = os.path.dirname(__file__)
 virtual_env = os.environ.get('VIRTUAL_ENV', '')
 compile_args = []

@@ -7,6 +7,7 @@ from spacy.lexeme import lex_of
 
 from spacy import LEX, NORM, SHAPE, LAST3
 
+
 def test_group_by_lex():
     tokens = en.tokenize("I like the red one and I like the blue one")
     names, hashes, groups = tokens.group_by(LEX)

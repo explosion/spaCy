@@ -2,6 +2,7 @@
 """Sphinx doctest is just too hard. Manually paste doctest examples here"""
 from spacy.en.attrs import IS_LOWER
 
+
 def test_1():
     import spacy.en
     from spacy.parts_of_speech import ADV
@@ -38,6 +39,7 @@ def test2():
     -5.407193660736084
     nlp.vocab[u'quietly'].prob
     -11.07155704498291
+
 
 def test3():
     import spacy.en

@@ -4,6 +4,7 @@ import pytest
 from spacy.en import English
 from spacy.parts_of_speech import ADV
 
+
 @pytest.fixture
 def nlp():
     return English()
