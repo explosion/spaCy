@@ -28,14 +28,14 @@ can access an excellent set of pre-computed orthographic and distributional feat
     >>> are.check_flag(en.CAN_NOUN)
     False
 
-spaCy makes it easy to write very efficient NLP applications, because your feature
+spaCy makes it easy to write efficient NLP applications, because your feature
 functions have to do almost no work: almost every lexical property you'll want
 is pre-computed for you.  See the tutorial for an example POS tagger.
 
 Benchmark
 ---------
 
-The tokenizer itself is also very efficient:
+The tokenizer itself is also efficient:
 
 +--------+-------+--------------+--------------+
 | System | Time	 | Words/second | Speed Factor |
@@ -56,7 +56,7 @@ Pros:
 
 - All tokens come with indices into the original string
 - Full unicode support
-- Extensible to other languages
+- Extendable to other languages
 - Batch operations computed efficiently in Cython
 - Cython API
 - numpy interoperability

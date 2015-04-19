@@ -37,7 +37,7 @@ tokenizer is suitable for production use.
 
 I used to think that the NLP community just needed to do more to communicate
 its findings to software engineers.  So I wrote two blog posts, explaining
-`how to write a part-of-speech tagger`_ and `parser`_.  Both were very well received,
+`how to write a part-of-speech tagger`_ and `parser`_.  Both were well received,
 and there's been a bit of interest in `my research software`_ --- even though
 it's entirely undocumented, and mostly unuseable to anyone but me.
 
@@ -202,7 +202,7 @@ this:
 
 We wanted to refine the logic so that only adverbs modifying evocative verbs
 of communication, like "pleaded", were highlighted.  We've now built a vector that
-represents that type of word, so now we can highlight adverbs based on very
+represents that type of word, so now we can highlight adverbs based on
 subtle logic, honing in on adverbs that seem the most stylistically
 problematic, given our starting assumptions:
 

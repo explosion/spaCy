@@ -7,8 +7,8 @@ Updates
 Five days ago I presented the alpha release of spaCy, a natural language
 processing library that brings state-of-the-art technology to small companies.
 
-spaCy has been very well received, and there are now a lot of eyes on the project.
-Naturally, lots of issues have surfaced.  I'm very grateful to those who've reported
+spaCy has been well received, and there are now a lot of eyes on the project.
+Naturally, lots of issues have surfaced.  I'm grateful to those who've reported
 them.  I've worked hard to address them as quickly as I could.
 
 Bug Fixes
@@ -26,7 +26,7 @@ Bug Fixes
     just store an index into that list, instead of a hash.
 
 * Parse tree navigation API was rough, and buggy.
-    The parse-tree navigation API was the last thing I added before v0.3. I've
+    The parse-tree navigation API was the last thing I added before v0.3.  I've
     now replaced it with something better.  The previous API design was flawed,
     and the implementation was buggy --- Token.child() and Token.head were
     sometimes inconsistent.
@@ -108,9 +108,9 @@ input to be segmented into sentences, but with no sentence segmenter.  This
 caused a drop in parse accuracy of 4%!
 
 Over the last five days, I've worked hard to correct this.  I implemented the
-modifications to the parsing algorithm I had planned, from Dongdong Zhang et al
+modifications to the parsing algorithm I had planned, from Dongdong Zhang et al.
 (2013), and trained and evaluated the parser on raw text, using the version of
-the WSJ distributed by Read et al (2012), and used in Dridan and Oepen's
+the WSJ distributed by Read et al. (2012), and used in Dridan and Oepen's
 experiments.
 
 I'm pleased to say that on the WSJ at least, spaCy 0.4 performs almost exactly

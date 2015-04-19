@@ -135,7 +135,7 @@ lexical types.
 
 In a sample of text, vocabulary size grows exponentially slower than word
 count.  So any computations we can perform over the vocabulary and apply to the
-word count are very efficient.
+word count are efficient.
 
 
 Part-of-speech Tagger

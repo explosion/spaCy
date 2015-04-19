@@ -35,7 +35,7 @@ And if you're ever in acquisition or IPO talks, the story is simple.
 spaCy can also be used as free open-source software, under the Aferro GPL
 license.  If you use it this way, you must comply with the AGPL license terms.
 When you distribute your project, or offer it as a network service, you must
-distribute the source-code, and grant users an AGPL license to it.
+distribute the source-code and grant users an AGPL license to it.
 
 
 .. I left academia in June 2014, just when I should have been submitting my first
