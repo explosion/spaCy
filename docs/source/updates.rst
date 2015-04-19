@@ -32,7 +32,7 @@ Bug Fixes
     sometimes inconsistent.
 
     I've addressed the most immediate problems, but this part of the design is
-    still a work in progress. It's a difficult problem. The parse is a tree,
+    still a work in progress.  It's a difficult problem.  The parse is a tree,
     and we want to freely navigate up and down it without creating reference
     cycles that inhibit garbage collection, and without doing a lot of copying,
     creating and deleting.
@@ -53,7 +53,7 @@ pinning down or reproducing.  Please send details of your system to the
 Enhancements: Train and evaluate on whole paragraphs
 ----------------------------------------------------
 
-.. note:: tl;dr: I shipped the wrong parsing model with 0.3. That model expected input to be segmented into sentences.  0.4 ships the correct model, which uses some algorithmic tricks to minimize the impact of tokenization and sentence segmentation errors on the parser.
+.. note:: tl;dr: I shipped the wrong parsing model with 0.3.  That model expected input to be segmented into sentences.  0.4 ships the correct model, which uses some algorithmic tricks to minimize the impact of tokenization and sentence segmentation errors on the parser.
 
 
 Most English parsing research is performed on text with perfect pre-processing:
@@ -77,7 +77,7 @@ made a big difference:
     | Corrected   | 89.9  | 88.8     |
     +-------------+-------+----------+
 
-.. note:: spaCy is evaluated on unlabelled dependencies, where the above accuracy figures refer to phrase-structure trees. Accuracies are non-comparable.
+.. note:: spaCy is evaluated on unlabelled dependencies, where the above accuracy figures refer to phrase-structure trees.  Accuracies are non-comparable.
 
 
 

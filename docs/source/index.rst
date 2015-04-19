@@ -10,7 +10,7 @@ spaCy: Industrial-strength NLP
 
 .. _Issue Tracker: https://github.com/honnibal/spaCy/issues
 
-**13/04**: *Version 0.80 released. Includes named entity recognition, better sentence
+**13/04**: *Version 0.80 released.  Includes named entity recognition, better sentence
 boundary detection, and many bug fixes.*
 
 `spaCy`_ is a new library for text processing in Python and Cython.
@@ -28,7 +28,7 @@ If they don't want to stay in academia, they join Google, IBM, etc.
 
 The net result is that outside of the tech giants, commercial NLP has changed
 little in the last ten years.  In academia, it's changed entirely.  Amazing
-improvements in quality. Orders of magnitude faster.  But the
+improvements in quality.  Orders of magnitude faster.  But the
 academic code is always GPL, undocumented, unuseable, or all three.  You could
 implement the ideas yourself, but the papers are hard to read, and training
 data is exorbitantly expensive.  So what are you left with?  A common answer is
@@ -58,7 +58,7 @@ to embedded word representations, and a range of useful features are pre-calcula
 and cached.
 
 If none of that made any sense to you, here's the gist of it.  Computers don't
-understand text. This is unfortunate, because that's what the web almost entirely
+understand text.  This is unfortunate, because that's what the web almost entirely
 consists of.  We want to recommend people text based on other text they liked.
 We want to shorten text to display it on a mobile screen.  We want to aggregate
 it, link it, filter it, categorise it, generate it and correct it.
@@ -242,7 +242,7 @@ I report mean times per document, in milliseconds.
 
 **Hardware**: Intel i7-3770 (2012)
 
-.. table:: Efficiency comparison. Lower is better.
+.. table:: Efficiency comparison.  Lower is better.
 
   +--------------+---------------------------+--------------------------------+
   |              | Absolute (ms per doc)     | Relative (to spaCy)            |
@@ -278,7 +278,7 @@ representations.
   publish or perform any benchmark or performance tests or analysis relating to
   the Service or the use thereof without express authorization from AlchemyAPI;
 
-.. Did you get that? You're not allowed to evaluate how well their system works,
+.. Did you get that?  You're not allowed to evaluate how well their system works,
   unless you're granted a special exception.  Their system must be pretty
   terrible to motivate such an embarrassing restriction.
   They must know this makes them look bad, but they apparently believe allowing

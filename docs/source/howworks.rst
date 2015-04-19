@@ -116,7 +116,7 @@ this was written quickly and has not been executed):
 
 
 This procedure splits off tokens from the start and end of the string, at each
-point checking whether the remaining string is in our special-cases table. If
+point checking whether the remaining string is in our special-cases table.  If
 it is, we stop splitting, and return the tokenization at that point.
 
 The advantage of this design is that the prefixes, suffixes and special-cases
@@ -206,8 +206,8 @@ loop:
             class_, score = max(enumerate(scores), key=lambda item: item[1])
             transition(state, class_)
 
-The parser makes 2N transitions for a sentence of length N. In order to select
-the transition, it extracts a vector of K features from the state. Each feature
+The parser makes 2N transitions for a sentence of length N.  In order to select
+the transition, it extracts a vector of K features from the state.  Each feature
 is used as a key into a hash table managed by the model.  The features map to
 a vector of weights, of length C.  We then dot product the feature weights to the
 scores vector we are building for that instance.

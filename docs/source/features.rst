@@ -66,7 +66,7 @@ Boolean features
 +-------------+--------------------------------------------------------------+
 | IS_UPPER    | The result of sic.isupper()                                  |
 +-------------+--------------------------------------------------------------+
-| LIKE_URL    | Check whether the string looks like it could be a URL. Aims  |
+| LIKE_URL    | Check whether the string looks like it could be a URL.  Aims |
 |             | for low false negative rate.                                 |
 +-------------+--------------------------------------------------------------+
 | LIKE_NUMBER | Check whether the string looks like it could be a numeric    |

@@ -92,7 +92,7 @@ developing.  They own the copyright to any modifications they make to spaCy,
 but not to the original spaCy code.
 
 No additional fees will be due when they hire new developers, run spaCy on
-additional internal servers, etc. If their company is acquired, the license will
+additional internal servers, etc.  If their company is acquired, the license will
 be transferred to the company acquiring them.  However, to use spaCy in another
 product, they will have to buy a second license.
 
@@ -115,9 +115,9 @@ In order to do this, they must sign a contributor agreement, ceding their
 copyright.  When commercial licenses to spaCy are sold, Alex and Sasha will
 not be able to claim any royalties from their contributions.
 
-Later, Alex and Sasha implement new features into spaCy, for another paper. The
+Later, Alex and Sasha implement new features into spaCy, for another paper.  The
 code was quite rushed, and they don't want to take the time to put together a
-proper pull request. They must release their modifications under the AGPL, but
+proper pull request.  They must release their modifications under the AGPL, but
 they are not obliged to contribute it to the spaCy repository, or concede their
 copyright.
 
@@ -126,8 +126,8 @@ Phuong and Jessie: Open Source developers
 #########################################
 
 Phuong and Jessie use the open-source software Calibre to manage their e-book
-libraries. They have an idea for a search feature, and they want to use spaCy
-to implement it. Calibre is released under the GPLv3. The AGPL has additional
+libraries.  They have an idea for a search feature, and they want to use spaCy
+to implement it.  Calibre is released under the GPLv3.  The AGPL has additional
 restrictions for projects used as a network resource, but they don't apply to
 this project, so Phuong and Jessie can use spaCy to improve Calibre.  They'll
 have to release their code, but that was always their intention anyway.

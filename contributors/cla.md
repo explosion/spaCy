@@ -1,7 +1,7 @@
 Signing the Contributors License Agreement
 ==========================================
 
-SpaCy is a commercial open-source project, owned by Syllogism Co.  We require that contributors to SpaCy sign our Contributors License Agreement, which is based on the Oracle Contributor Agreement.
+SpaCy is a commercial open-source project, owned by Syllogism Co. We require that contributors to SpaCy sign our Contributors License Agreement, which is based on the Oracle Contributor Agreement.
 
 The CLA must be signed on your first pull request. To do this, simply fill in the file cla_template.md, and include the filed in form in your first pull request.
 

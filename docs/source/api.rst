@@ -107,7 +107,7 @@ API
     *derivational* suffixes are not stripped, e.g. the lemma of "instutitions"
     is "institution", not "institute".  Lemmatization is performed using the
     WordNet data, but extended to also cover closed-class words such as
-    pronouns. By default, the WN lemmatizer returns "hi" as the lemma of "his".
+    pronouns.  By default, the WN lemmatizer returns "hi" as the lemma of "his".
     We assign pronouns the lemma -PRON-.
 
   lower
@@ -121,7 +121,7 @@ API
     A transform of the word's string, to show orthographic features.  The
     characters a-z are mapped to x, A-Z is mapped to X, 0-9 is mapped to d.
     After these mappings, sequences of 4 or more of the same character are
-    truncated to length 4. Examples: C3Po --> XdXx, favorite --> xxxx,
+    truncated to length 4.  Examples: C3Po --> XdXx, favorite --> xxxx,
     :) --> :)
 
   prefix

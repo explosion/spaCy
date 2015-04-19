@@ -6,7 +6,7 @@ What and Why
 
 spaCy is a lightning-fast, full-cream NLP tokenizer and lexicon.
 
-Most tokenizers give you a sequence of strings. That's barbaric.
+Most tokenizers give you a sequence of strings.  That's barbaric.
 Giving you strings invites you to compute on every *token*, when what
 you should be doing is computing on every *type*.  Remember
 `Zipf's law <http://en.wikipedia.org/wiki/Zipf's_law>`_: you'll

@@ -23,7 +23,7 @@ parser model and word vectors, which it installs within the spacy.en package dir
 
 If you're stuck using a server with an old version of Python, and you don't
 have root access, I've prepared a bootstrap script to help you compile a local
-Python install. Run:
+Python install.  Run:
 
 .. code:: bash
 
@@ -47,7 +47,7 @@ this is how I build the project.
     $ py.test tests/
 
 Python packaging is awkward at the best of times, and it's particularly tricky
-with C extensions, built via Cython, requiring large data files. So, please
+with C extensions, built via Cython, requiring large data files.  So, please
 report issues as you encounter them, and bear with me :)
 
 Usage
