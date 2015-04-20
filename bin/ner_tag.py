@@ -30,5 +30,3 @@ def main(text_loc):
 
 if __name__ == '__main__':
     plac.call(main)
-
-        

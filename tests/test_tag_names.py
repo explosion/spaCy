@@ -1,6 +1,7 @@
 from spacy.en import English
 import six
 
+
 def test_tag_names():
     nlp = English()
     tokens = nlp(u'I ate pizzas with anchovies.', parse=True, tag=True)

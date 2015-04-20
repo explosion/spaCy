@@ -1,7 +1,7 @@
 {
     "PRP": {
         "I":          {"L": "-PRON-", "person": 1, "number": 1, "gender": 0, "case": 1},
-        "me":         {"L": "-PRON-", "person": 1, "number": 1, "gender": 0, "case": 3},   
+        "me":         {"L": "-PRON-", "person": 1, "number": 1, "gender": 0, "case": 3},
         "mine":       {"L": "-PRON-", "person": 1, "number": 1, "gender": 0, "case": 2},
         "myself":     {"L": "-PRON-", "person": 1, "number": 1, "gender": 0, "case": 4},
         "you":        {"L": "-PRON-", "person": 2, "number": 0, "gender": 0, "case": 0},

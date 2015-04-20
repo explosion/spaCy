@@ -1,7 +1,7 @@
 spaCy is commercial open-source software: you can buy a commercial
 license, or you can use it under the AGPL, as described below.
 
-spaCy Natural Language Processing Tools    
+spaCy Natural Language Processing Tools
 Copyright (C) 2015 Matthew Honnibal
 
 This program is free software: you can redistribute it and/or modify

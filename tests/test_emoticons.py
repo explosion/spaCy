@@ -8,6 +8,7 @@ from spacy.en import English
 def EN():
     return English()
 
+
 def test_tweebo_challenge(EN):
     text = u""":o :/ :'( >:o (: :) >.< XD -__- o.O ;D :-) @_@ :P 8D :1 >:( :D =| ") :> ...."""
     tokens = EN(text)

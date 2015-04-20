@@ -33,7 +33,7 @@ class Scorer(object):
     @property
     def ents_r(self):
         return (self.ents_tp / (self.ents_tp + self.ents_fn + 1e-100)) * 100
-    
+
     @property
     def ents_f(self):
         return (2 * self.ents_p * self.ents_r) / (self.ents_p + self.ents_r + 1e-100)

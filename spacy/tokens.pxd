@@ -31,9 +31,9 @@ cdef inline bint check_flag(const LexemeC* lexeme, attr_id_t flag_id) nogil:
 cdef class Tokens:
     cdef Pool mem
     cdef Vocab vocab
-    
+
     cdef TokenC* data
-    
+
 
     cdef list _py_tokens
     cdef unicode _string
@@ -61,7 +61,7 @@ cdef class Token:
     cdef int array_len
     cdef bint _owns_c_data
 
-    
+
     cdef Tokens _seq
 
     @staticmethod

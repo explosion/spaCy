@@ -10,9 +10,11 @@ from spacy.en import English
 def EN():
     return English().tokenizer
 
+
 def test_no_word(EN):
     tokens = EN(u'')
     assert len(tokens) == 0
+
 
 def test_single_word(EN):
     tokens = EN(u'hello')
@@ -60,18 +62,19 @@ def test_contraction_punct(EN):
     tokens = EN("can't!")
     assert len(tokens) == 3
 
+
 def test_sample(EN):
     text = """Tributes pour in for late British Labour Party leader
 
-Tributes poured in from around the world Thursday 
-to the late Labour Party leader John Smith, who died earlier from a massive 
+Tributes poured in from around the world Thursday
+to the late Labour Party leader John Smith, who died earlier from a massive
 heart attack aged 55.
 
-In Washington, the US State Department issued a statement regretting "the 
+In Washington, the US State Department issued a statement regretting "the
 untimely death" of the rapier-tongued Scottish barrister and parliamentarian.
 
 "Mr. Smith, throughout his distinguished"""
-    
+
     tokens = EN(text)
     assert len(tokens) > 5
 

@@ -17,6 +17,7 @@ def morph_exc():
             'PRP$': {'his': {'L': '-PRP-', 'person': 3, 'case': 2}},
            }
 
+
 def test_load_exc(EN, morph_exc):
     EN.tagger.load_morph_exceptions(morph_exc)
     tokens = EN('I like his style.', tag=True)

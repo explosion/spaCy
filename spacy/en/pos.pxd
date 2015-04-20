@@ -22,4 +22,3 @@ cdef class EnPosTagger:
 
     cdef int set_morph(self, const int i, const PosTag* tag, TokenC* tokens) except -1
     cdef int lemmatize(self, const univ_pos_t pos, const LexemeC* lex) except -1
-

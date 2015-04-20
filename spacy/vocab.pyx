@@ -170,7 +170,7 @@ cdef class Vocab:
             self.lexemes[lexeme.id] = lexeme
             i += 1
         fclose(fp)
-    
+
     def load_rep_vectors(self, loc):
         file_ = _CFile(loc, b'rb')
         cdef int32_t word_len
@@ -187,7 +187,7 @@ cdef class Vocab:
             except IOError:
                 break
             file_.read(&vec_len, sizeof(vec_len), 1)
-            
+
             mem = Address(word_len, sizeof(char))
             chars = <char*>mem.ptr
             vec = <float*>self.mem.alloc(vec_len, sizeof(float))

@@ -30,6 +30,3 @@ def test_align_continue():
     assert aligned[2] == ('re-align', [(5, 7), (7, 8), (8, 13)])
     assert aligned[3] == ('and', [(13, 16)])
     assert aligned[4] == ('continue', [(16, 24)])
-
-
-

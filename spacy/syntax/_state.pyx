@@ -27,7 +27,7 @@ cdef int pop_stack(State *s) except -1:
     s.stack -= 1
     if s.stack_len == 0 and not at_eol(s):
         push_stack(s)
-        
+
 
 cdef int push_stack(State *s) except -1:
     assert s.i < s.sent_len

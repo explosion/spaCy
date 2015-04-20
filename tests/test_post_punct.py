@@ -49,4 +49,3 @@ def test_three_same_close(close_puncts, EN):
 def test_double_end_quote(EN):
     assert len(EN("Hello''")) == 2
     assert len(EN("''")) == 1
-

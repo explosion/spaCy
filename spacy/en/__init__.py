@@ -129,19 +129,19 @@ class English(object):
                  entity=parse_if_model_present, merge_mwes=False):
         """Apply the pipeline to some text.  The text can span multiple sentences,
         and can contain arbtrary whitespace.  Alignment into the original string
-        
+
         The tagger and parser are lazy-loaded the first time they are required.
         Loading the parser model usually takes 5-10 seconds.
-        
+
         Args:
             text (unicode): The text to be processed.
 
         Keyword args:
             tag (bool): Whether to add part-of-speech tags to the text.  Also
                 sets morphological analysis and lemmas.
-        
+
             parse (True, False, -1): Whether to add labelled syntactic dependencies.
-            
+
               -1 (default) is "guess": It will guess True if tag=True and the
                 model has been installed.
 

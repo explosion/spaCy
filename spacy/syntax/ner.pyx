@@ -280,5 +280,3 @@ class OracleError(Exception):
 
 class UnknownMove(Exception):
     pass
-
-

@@ -16,7 +16,7 @@ cpdef enum ActionType:
 
 cdef int set_accept_if_oracle(Move* moves, int n, State* s,
                               int* g_starts, int* g_ends, int* g_labels) except 0
- 
+
 cdef int set_accept_if_valid(Move* moves, int n, State* s) except 0
 
 cdef Move* best_accepted(Move* moves, weight_t* scores, int n) except NULL

@@ -80,16 +80,16 @@ place before the date you sign these terms.
 7. Please place an “x” on one of the applicable statement below. Please do NOT
 mark both statements:
 
-____ I am signing on behalf of myself as an individual and no other person or entity, including my employer, has or will have rights with respect my contributions.
+x___ I am signing on behalf of myself as an individual and no other person or entity, including my employer, has or will have rights with respect my contributions.
 
 ____ I am signing on behalf of my employer or a legal entity and I have the actual authority to contractually bind that entity.
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           |                      |
+| Name                           | Jordan Suchow        |
 | Company's name (if applicable) |                      |
 | Title or Role (if applicable)  |                      |
-| Date                           |                      |
-| GitHub username                |                      |
-| Website (optional)             |                      |
+| Date                           | 2015-04-19           |
+| GitHub username                | suchow               |
+| Website (optional)             | http://suchow.io     |
 

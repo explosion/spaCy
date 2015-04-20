@@ -4,7 +4,6 @@ from spacy.en import English
 from spacy.util import utf8open
 
 import pytest
-import os
 from os import path
 
 

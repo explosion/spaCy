@@ -97,7 +97,7 @@ cdef Move* best_accepted(Move* moves, weight_t* scores, int n) except NULL:
     cdef int best = first_accept
     cdef weight_t score = scores[first_accept-1]
     cdef int i
-    for i in range(first_accept+1, n): 
+    for i in range(first_accept+1, n):
         if moves[i].accept and scores[i-1] > score:
             best = i
             score = scores[i-1]
@@ -105,7 +105,7 @@ cdef Move* best_accepted(Move* moves, weight_t* scores, int n) except NULL:
 
 
 cdef int transition(State *s, Move* move) except -1:
-    s.tags[s.i] = move.clas 
+    s.tags[s.i] = move.clas
     if move.action == OUT:
         s.i += 1
     elif move.action == SHIFT:

@@ -104,10 +104,10 @@ cdef class Tokens:
 
     def __getitem__(self, object i):
         """Retrieve a token.
-        
+
         The Python Token objects are created lazily from internal C data, and
         cached in _py_tokens
-        
+
         Returns:
             token (Token):
         """
@@ -180,7 +180,7 @@ cdef class Tokens:
                 yield Span(self, start, i+1)
                 start = None
         if start is not None:
-            yield Span(self, start, self.length) 
+            yield Span(self, start, self.length)
 
     cdef int push_back(self, int idx, LexemeOrToken lex_or_tok) except -1:
         if self.length == self.max_length:
@@ -298,7 +298,7 @@ cdef class Tokens:
         # What to do about morphology??
         # TODO: token.morph = ???
         token.tag = self.vocab.strings[tag]
-        token.lemma = self.vocab.strings[lemma] 
+        token.lemma = self.vocab.strings[lemma]
         if ent_type == 'O':
             token.ent_iob = 2
             token.ent_type = 0
@@ -355,7 +355,7 @@ cdef class Tokens:
         self._py_tokens = [None] * self.length
         # Return the merged Python object
         return self[start]
- 
+
 
 cdef class Token:
     """An individual token --- i.e. a word, a punctuation symbol, etc.  Created
@@ -608,4 +608,3 @@ _parse_unset_error = """Text has not been parsed, so cannot be accessed.
 Check that the parser data is installed. Run "python -m spacy.en.download" if not.
 Check whether parse=False in the call to English.__call__
 """
-

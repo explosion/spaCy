@@ -58,4 +58,3 @@ def test_child_consistency(nlp, sun_text):
         assert not children
     for head_index, children in rights.items():
         assert not children
-

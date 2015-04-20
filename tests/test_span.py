@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 from spacy.en import English
 
 import pytest
-import re
 
 
 EN = English()

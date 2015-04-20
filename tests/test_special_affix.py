@@ -13,8 +13,10 @@ def EN():
 def test_no_special(EN):
     assert len(EN("(can)")) == 3
 
+
 def test_no_punct(EN):
     assert len(EN("can't")) == 2
+
 
 def test_prefix(EN):
     assert len(EN("(can't")) == 3

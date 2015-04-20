@@ -116,13 +116,13 @@ this was written quickly and has not been executed):
 
 
 This procedure splits off tokens from the start and end of the string, at each
-point checking whether the remaining string is in our special-cases table. If
+point checking whether the remaining string is in our special-cases table.  If
 it is, we stop splitting, and return the tokenization at that point.
 
 The advantage of this design is that the prefixes, suffixes and special-cases
 can be declared separately, in easy-to-understand files.  If a new entry is
 added to the special-cases, you can be sure that it won't have some unforeseen
-consequence to a complicated regular-expression grammar. 
+consequence to a complicated regular-expression grammar.
 
 Coupling the Tokenizer and Lexicon
 ##################################
@@ -135,7 +135,7 @@ lexical types.
 
 In a sample of text, vocabulary size grows exponentially slower than word
 count.  So any computations we can perform over the vocabulary and apply to the
-word count are very efficient.
+word count are efficient.
 
 
 Part-of-speech Tagger
@@ -159,7 +159,7 @@ Dependency Parser
 
 The parser uses the algorithm described in my `2014 blog post`_.
 This algorithm, shift-reduce dependency parsing, is becoming widely adopted due
-to its compelling speed/accuracy trade-off.  
+to its compelling speed/accuracy trade-off.
 
 Some quick details about spaCy's take on this, for those who happen to know
 these models well.  I'll write up a better description shortly.
@@ -176,7 +176,7 @@ scored 91.0. So how have I gotten it to 92.4?  The following tweaks:
 1. I use Brown cluster features --- these help a lot;
 2. I redesigned the feature set. I've long known that the Zhang and Nivre
    (2011) feature set was suboptimal, but a few features don't make a very
-   compelling publication.  Still, they're important.  
+   compelling publication.  Still, they're important.
 3. When I do the dynamic oracle training, I also make
    the upate cost-sensitive: if the oracle determines that the move the parser
    took has a cost of N, then the weights for the gold class are incremented by
@@ -206,8 +206,8 @@ loop:
             class_, score = max(enumerate(scores), key=lambda item: item[1])
             transition(state, class_)
 
-The parser makes 2N transitions for a sentence of length N. In order to select
-the transition, it extracts a vector of K features from the state. Each feature
+The parser makes 2N transitions for a sentence of length N.  In order to select
+the transition, it extracts a vector of K features from the state.  Each feature
 is used as a key into a hash table managed by the model.  The features map to
 a vector of weights, of length C.  We then dot product the feature weights to the
 scores vector we are building for that instance.
@@ -253,12 +253,10 @@ the classes.  In the case of the parser, this means the hash table is accessed
 2NKC times, instead of the 2NK times if you have a weights vector.  You should
 also be careful to store the weights contiguously in memory --- you don't want
 a linked list here.  I use a block-sparse format, because my problems tend to
-have a few dozen classes. 
+have a few dozen classes.
 
 I guess if I had to summarize my experience, I'd say that the efficiency of
 these models is really all about the data structures.  We want to stay small,
 and stay contiguous.  Minimize redundancy and minimize pointer chasing.
 That's why Cython is so well suited to this: we get to lay out our data
 structures, and manage the memory ourselves, with full C-level control.
-
-

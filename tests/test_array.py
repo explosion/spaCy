@@ -37,5 +37,3 @@ def test_dep():
     assert feats_array[1][1] == tokens[1].dep
     assert feats_array[2][1] == tokens[2].dep
     assert feats_array[3][1] == tokens[3].dep
-
-

@@ -8,7 +8,7 @@ cdef class PyState:
     cdef readonly list tag_names
     cdef readonly int n_classes
     cdef readonly dict moves_by_name
-    
+
     cdef Move* _moves
     cdef Move* _golds
     cdef State* _s

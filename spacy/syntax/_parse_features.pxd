@@ -99,7 +99,7 @@ cpdef enum:
     S0_shape
     S0_ne_iob
     S0_ne_type
-    
+
     S0r2w
     S0r2W
     S0r2p
@@ -164,7 +164,7 @@ cpdef enum:
     N0_shape
     N0_ne_iob
     N0_ne_type
- 
+
     N1w
     N1W
     N1p
@@ -190,7 +190,7 @@ cpdef enum:
     N2_shape
     N2_ne_iob
     N2_ne_type
-  
+
     P1w
     P1W
     P1p
@@ -203,7 +203,7 @@ cpdef enum:
     P1_shape
     P1_ne_iob
     P1_ne_type
-    
+
     P2w
     P2W
     P2p
@@ -216,7 +216,7 @@ cpdef enum:
     P2_shape
     P2_ne_iob
     P2_ne_type
-   
+
     E0w
     E0W
     E0p
@@ -229,7 +229,7 @@ cpdef enum:
     E0_shape
     E0_ne_iob
     E0_ne_type
-   
+
     E1w
     E1W
     E1p
@@ -242,7 +242,7 @@ cpdef enum:
     E1_shape
     E1_ne_iob
     E1_ne_type
-   
+
     # Misc features at the end
     dist
     N0lv

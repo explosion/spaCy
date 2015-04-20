@@ -79,5 +79,3 @@ cpdef enum attr_id_t:
     POS
     TAG
     DEP
-
-

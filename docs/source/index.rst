@@ -10,7 +10,7 @@ spaCy: Industrial-strength NLP
 
 .. _Issue Tracker: https://github.com/honnibal/spaCy/issues
 
-**13/04**: *Version 0.80 released. Includes named entity recognition, better sentence
+**13/04**: *Version 0.80 released.  Includes named entity recognition, better sentence
 boundary detection, and many bug fixes.*
 
 `spaCy`_ is a new library for text processing in Python and Cython.
@@ -28,7 +28,7 @@ If they don't want to stay in academia, they join Google, IBM, etc.
 
 The net result is that outside of the tech giants, commercial NLP has changed
 little in the last ten years.  In academia, it's changed entirely.  Amazing
-improvements in quality. Orders of magnitude faster.  But the
+improvements in quality.  Orders of magnitude faster.  But the
 academic code is always GPL, undocumented, unuseable, or all three.  You could
 implement the ideas yourself, but the papers are hard to read, and training
 data is exorbitantly expensive.  So what are you left with?  A common answer is
@@ -37,7 +37,7 @@ tokenizer is suitable for production use.
 
 I used to think that the NLP community just needed to do more to communicate
 its findings to software engineers.  So I wrote two blog posts, explaining
-`how to write a part-of-speech tagger`_ and `parser`_.  Both were very well received,
+`how to write a part-of-speech tagger`_ and `parser`_.  Both were well received,
 and there's been a bit of interest in `my research software`_ --- even though
 it's entirely undocumented, and mostly unuseable to anyone but me.
 
@@ -58,14 +58,14 @@ to embedded word representations, and a range of useful features are pre-calcula
 and cached.
 
 If none of that made any sense to you, here's the gist of it.  Computers don't
-understand text. This is unfortunate, because that's what the web almost entirely
+understand text.  This is unfortunate, because that's what the web almost entirely
 consists of.  We want to recommend people text based on other text they liked.
 We want to shorten text to display it on a mobile screen.  We want to aggregate
 it, link it, filter it, categorise it, generate it and correct it.
 
 spaCy provides a library of utility functions that help programmers build such
 products.  It's commercial open source software: you can either use it under
-the AGPL, or you can `buy a commercial license`_ for a one-time fee. 
+the AGPL, or you can `buy a commercial license`_ for a one-time fee.
 
 .. _buy a commercial license: license.html
 
@@ -148,7 +148,7 @@ cosine metric:
 
     >>> from numpy import dot
     >>> from numpy.linalg import norm
- 
+
     >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1) * norm(v2))
     >>> words = [w for w in nlp.vocab if w.has_repvec]
     >>> words.sort(key=lambda w: cosine(w.repvec, pleaded.repvec))
@@ -200,9 +200,9 @@ this:
 
 
 
-We wanted to refine the logic so that only adverbs modifying evocative verbs 
+We wanted to refine the logic so that only adverbs modifying evocative verbs
 of communication, like "pleaded", were highlighted.  We've now built a vector that
-represents that type of word, so now we can highlight adverbs based on very
+represents that type of word, so now we can highlight adverbs based on
 subtle logic, honing in on adverbs that seem the most stylistically
 problematic, given our starting assumptions:
 
@@ -213,7 +213,7 @@ problematic, given our starting assumptions:
     >>> from spacy.parts_of_speech import ADV, VERB
     >>> cosine = lambda v1, v2: dot(v1, v2) / (norm(v1) * norm(v2))
     >>> def is_bad_adverb(token, target_verb, tol):
-    ...   if token.pos != ADV 
+    ...   if token.pos != ADV
     ...     return False
     ...   elif token.head.pos != VERB:
     ...     return False
@@ -238,11 +238,11 @@ database, and processed with an NLP library, to one of three levels of detail
 --- tokenization, tagging, or parsing.  The tasks are additive: to parse the
 text you have to tokenize and tag it.  The  pre-processing was not subtracted
 from the times --- I report the time required for the pipeline to complete.
-I report mean times per document, in milliseconds. 
+I report mean times per document, in milliseconds.
 
 **Hardware**: Intel i7-3770 (2012)
 
-.. table:: Efficiency comparison. Lower is better. 
+.. table:: Efficiency comparison.  Lower is better.
 
   +--------------+---------------------------+--------------------------------+
   |              | Absolute (ms per doc)     | Relative (to spaCy)            |
@@ -278,7 +278,7 @@ representations.
   publish or perform any benchmark or performance tests or analysis relating to
   the Service or the use thereof without express authorization from AlchemyAPI;
 
-.. Did you get that? You're not allowed to evaluate how well their system works,
+.. Did you get that?  You're not allowed to evaluate how well their system works,
   unless you're granted a special exception.  Their system must be pretty
   terrible to motivate such an embarrassing restriction.
   They must know this makes them look bad, but they apparently believe allowing
@@ -287,7 +287,7 @@ representations.
 .. spaCy is based on science, not alchemy.  It's open source, and I am happy to
   clarify any detail of the algorithms I've implemented.
   It's evaluated against the current best published systems, following the standard
-  methodologies.  These evaluations show that it performs extremely well.  
+  methodologies.  These evaluations show that it performs extremely well.
 
 Accuracy Comparison
 -------------------
@@ -299,7 +299,7 @@ Accuracy Comparison
   +--------------+----------+------------+
   | spaCy        | 97.2     | 92.4       |
   +--------------+----------+------------+
-  | CoreNLP      | 96.9     | 92.2       | 
+  | CoreNLP      | 96.9     | 92.2       |
   +--------------+----------+------------+
   | ZPar         | 97.3     | 92.9       |
   +--------------+----------+------------+
@@ -329,5 +329,5 @@ previous fastest parser that I'm aware of.
     quickstart.rst
     api.rst
     howworks.rst
-    license.rst 
+    license.rst
     updates.rst

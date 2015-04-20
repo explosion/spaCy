@@ -5,9 +5,11 @@ from spacy.strings import StringStore
 
 import pytest
 
+
 @pytest.fixture
 def sstore():
     return StringStore()
+
 
 def test_save_bytes(sstore):
     Hello_i = sstore[b'Hello']

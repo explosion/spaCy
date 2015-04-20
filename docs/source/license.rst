@@ -13,7 +13,7 @@ I've been writing spaCy for six months now, and I'm very excited to release it.
 I think it's the most valuable thing I could have built.  When I was in
 academia, I noticed that small companies couldn't really make use of our work.
 Meanwhile the tech giants have been hiring *everyone*, and putting this stuff
-into production.  I think spaCy can change that.  
+into production.  I think spaCy can change that.
 
 
   +------------+-----------+----------+-------------------------------------+
@@ -35,7 +35,7 @@ And if you're ever in acquisition or IPO talks, the story is simple.
 spaCy can also be used as free open-source software, under the Aferro GPL
 license.  If you use it this way, you must comply with the AGPL license terms.
 When you distribute your project, or offer it as a network service, you must
-distribute the source-code, and grant users an AGPL license to it.
+distribute the source-code and grant users an AGPL license to it.
 
 
 .. I left academia in June 2014, just when I should have been submitting my first
@@ -52,14 +52,14 @@ Examples
 --------
 
 In order to clarify how spaCy's license structure might apply to you, I've
-written a few examples, in the form of user-stories.  
+written a few examples, in the form of user-stories.
 
 Ashley and Casey: Seed stage start-up
 #####################################
 
 Ashley and Casey have an idea for a start-up.  To explore their idea, they want
 to build a minimum viable product they can put in front of potential users and
-investors. 
+investors.
 
 They have two options.
 
@@ -75,7 +75,7 @@ They have two options.
      import a module that imports it, etc).  They also cannot use spaCy as
      a network resource, by running it as a service --- this is the
      loophole that the "A" part of the AGPL is designed to close.
-     
+
 Ashley and Casey find the AGPL license unattractive for commercial use.
 They decide to take up the trial commercial license.
 However,  over the next 90 days, Ashley has to move house twice, and Casey gets
@@ -92,7 +92,7 @@ developing.  They own the copyright to any modifications they make to spaCy,
 but not to the original spaCy code.
 
 No additional fees will be due when they hire new developers, run spaCy on
-additional internal servers, etc. If their company is acquired, the license will
+additional internal servers, etc.  If their company is acquired, the license will
 be transferred to the company acquiring them.  However, to use spaCy in another
 product, they will have to buy a second license.
 
@@ -115,9 +115,9 @@ In order to do this, they must sign a contributor agreement, ceding their
 copyright.  When commercial licenses to spaCy are sold, Alex and Sasha will
 not be able to claim any royalties from their contributions.
 
-Later, Alex and Sasha implement new features into spaCy, for another paper. The
+Later, Alex and Sasha implement new features into spaCy, for another paper.  The
 code was quite rushed, and they don't want to take the time to put together a
-proper pull request. They must release their modifications under the AGPL, but
+proper pull request.  They must release their modifications under the AGPL, but
 they are not obliged to contribute it to the spaCy repository, or concede their
 copyright.
 
@@ -126,8 +126,8 @@ Phuong and Jessie: Open Source developers
 #########################################
 
 Phuong and Jessie use the open-source software Calibre to manage their e-book
-libraries. They have an idea for a search feature, and they want to use spaCy
-to implement it. Calibre is released under the GPLv3. The AGPL has additional
+libraries.  They have an idea for a search feature, and they want to use spaCy
+to implement it.  Calibre is released under the GPLv3.  The AGPL has additional
 restrictions for projects used as a network resource, but they don't apply to
 this project, so Phuong and Jessie can use spaCy to improve Calibre.  They'll
 have to release their code, but that was always their intention anyway.

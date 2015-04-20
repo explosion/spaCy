@@ -60,7 +60,7 @@ cdef class Tokenizer:
         split off a suffix, and repeat.
 
         Args:
-            string (unicode): The string to be tokenized. 
+            string (unicode): The string to be tokenized.
 
         Returns:
             tokens (Tokens): A Tokens object, giving access to a sequence of LexemeCs.
@@ -213,7 +213,7 @@ cdef class Tokenizer:
         cdef unicode string = chars[:length]
         match = self._infix_re.search(string)
         return match.start() if match is not None else 0
-    
+
     cdef int _find_prefix(self, Py_UNICODE* chars, size_t length) except -1:
         cdef unicode string = chars[:length]
         match = self._prefix_re.search(string)
