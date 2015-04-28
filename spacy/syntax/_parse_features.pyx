@@ -51,8 +51,8 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         # What we're doing here is picking a number where all bits are 1, e.g.
         # 15 is 1111, 63 is 111111 and doing bitwise AND, so getting all bits in
         # the source that are set to 1.
-        context[4] = token.lex.cluster & 63
-        context[5] = token.lex.cluster & 15
+        context[4] = token.lex.cluster & 15
+        context[5] = token.lex.cluster & 63
         context[6] = token.dep if has_head(token) else 0
         context[7] = token.lex.prefix
         context[8] = token.lex.suffix
@@ -102,7 +102,7 @@ cdef int fill_context(atom_t* context, State* state) except -1:
         if state.stack_len >= 2:
             context[S1_has_head] = has_head(get_s1(state)) + 1
             if state.stack_len >= 3:
-                context[S2_has_head] = has_head(get_s2(state))
+                context[S2_has_head] = has_head(get_s2(state)) + 1
 
 
 ner = (
@@ -289,6 +289,7 @@ s0_n1 = (
     (S0p, N1W, N1p),
     (S0c6, S0p, N1c6, N1p),
 )
+
 
 n0_n1 = (
     (N0W, N0p, N1W, N1p),
