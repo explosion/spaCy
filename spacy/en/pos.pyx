@@ -369,7 +369,7 @@ cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
     context[2] = t.lex.shape
     context[3] = t.lex.prefix
     context[4] = t.lex.suffix
-    context[5] = t.pos
+    context[5] = t.tag
     context[6] = t.lemma
     if t.lex.flags & (1 << IS_ALPHA):
         context[7] = 1
