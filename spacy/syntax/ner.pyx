@@ -124,9 +124,6 @@ cdef class BiluoPushDown(TransitionSystem):
         t.get_cost = _get_cost
         return t
 
-    cdef int first_state(self, State* state) except -1:
-        pass
-
     cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
         cdef int best = -1
         cdef weight_t score = -90000

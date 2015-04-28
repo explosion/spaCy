@@ -26,8 +26,11 @@ cdef class TransitionSystem:
                 i += 1
         self.c = moves
 
-    cdef int first_state(self, State* state) except -1:
-        raise NotImplementedError
+    cdef int initialize_state(self, State* state) except -1:
+        pass
+
+    cdef int finalize_state(self, State* state) except -1:
+        pass
 
     cdef int preprocess_gold(self, GoldParse gold) except -1:
         raise NotImplementedError

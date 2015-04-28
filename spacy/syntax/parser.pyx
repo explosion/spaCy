@@ -83,15 +83,14 @@ cdef class GreedyParser:
         cdef int n_feats
         cdef Pool mem = Pool()
         cdef State* state = new_state(mem, tokens.data, tokens.length)
-        self.moves.first_state(state)
+        self.moves.initialize_state(state)
         cdef Transition guess
         while not is_final(state):
             fill_context(context, state)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
-            #print self.moves.move_name(guess.move, guess.label),
-            #print print_state(state, [w.orth_ for w in tokens])
             guess.do(&guess, state)
+        self.moves.finalize_state(state)
         tokens.set_parse(state.sent)
         return 0
 
@@ -99,7 +98,7 @@ cdef class GreedyParser:
         self.moves.preprocess_gold(gold)
         cdef Pool mem = Pool()
         cdef State* state = new_state(mem, tokens.data, tokens.length)
-        self.moves.first_state(state)
+        self.moves.initialize_state(state)
 
         cdef int cost
         cdef const Feature* feats
@@ -117,3 +116,4 @@ cdef class GreedyParser:
             self.model.update(context, guess.clas, best.clas, cost)
 
             guess.do(&guess, state)
+        self.moves.finalize_state(state)

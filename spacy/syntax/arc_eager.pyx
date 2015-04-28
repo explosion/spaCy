@@ -88,8 +88,14 @@ cdef class ArcEager(TransitionSystem):
         t.get_cost = get_cost_funcs[move]
         return t
 
-    cdef int first_state(self, State* state) except -1:
+    cdef int initialize_state(self, State* state) except -1:
         push_stack(state)
+
+    cdef int finalize_state(self, State* state) except -1:
+        cdef int root_label = self.strings['ROOT']
+        for i in range(state.sent_len):
+            if state.sent[i].head == 0 and state.sent[i].dep == 0:
+                state.sent[i].dep = root_label
 
     cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
         cdef bint[N_MOVES] is_valid

@@ -30,7 +30,8 @@ cdef class TransitionSystem:
     cdef const Transition* c
     cdef readonly int n_moves
 
-    cdef int first_state(self, State* state) except -1
+    cdef int initialize_state(self, State* state) except -1
+    cdef int finalize_state(self, State* state) except -1
 
     cdef int preprocess_gold(self, GoldParse gold) except -1
     
