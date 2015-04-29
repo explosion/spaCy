@@ -317,7 +317,7 @@ trigrams = (
     (S0p, S0lp, N0p),
     (S0p, N0p, N0lp),
     (N0p, N0lp, N0l2p),
-    
+
     (S0W, S0p, S0rL, S0r2L),
     (S0p, S0rL, S0r2L),
 
