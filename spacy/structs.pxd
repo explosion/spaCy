@@ -59,8 +59,11 @@ cdef struct TokenC:
     int head
     int dep
     bint sent_end
+
     uint32_t l_kids
     uint32_t r_kids
+    uint32_t l_edge
+    uint32_t r_edge
 
     int ent_iob
     int ent_type
