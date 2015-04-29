@@ -533,6 +533,18 @@ cdef class Token:
             for word in self.rights:
                 yield from word.subtree
 
+    property left_edge:
+        def __get__(self):
+            return Token.cinit(self.vocab, self._string,
+                               self.c + self.c.l_edge, self.i + self.c.l_edge,
+                               self.array_len, self._seq)
+ 
+    property right_edge:
+        def __get__(self):
+            return Token.cinit(self.vocab, self._string,
+                               self.c + self.c.r_edge, self.i + self.c.r_edge,
+                               self.array_len, self._seq)
+
     property head:
         def __get__(self):
             """The token predicted by the parser to be the head of the current token."""
