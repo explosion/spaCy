@@ -50,6 +50,8 @@ def _read_clusters(loc):
         # unreliable.
         if int(freq) >= 3:
             clusters[word] = cluster
+        else:
+            clusters[word] = '0'
     return clusters
 
 
