@@ -107,28 +107,6 @@ cdef int head_in_stack(const State *s, const int child, const int* gold) except 
 
 cdef State* new_state(Pool mem, TokenC* sent, const int sent_length) except NULL
 
-
 cdef int count_left_kids(const TokenC* head) nogil
 
-
 cdef int count_right_kids(const TokenC* head) nogil
-
-
-# From https://en.wikipedia.org/wiki/Hamming_weight
-cdef inline uint32_t _popcount(uint32_t x) nogil:
-    """Find number of non-zero bits."""
-    cdef int count = 0
-    while x != 0:
-        x &= x - 1
-        count += 1
-    return count
-
-
-cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:
-    cdef int i
-    for i in range(32):
-        if bits & (1 << i):
-            n -= 1
-            if n < 1:
-                return i
-    return 0

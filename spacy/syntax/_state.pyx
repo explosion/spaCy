@@ -17,8 +17,14 @@ cdef int add_dep(State *s, int head, int child, int label) except -1:
     # offset i from it, set that bit (tracking left and right separately)
     if child > head:
         s.sent[head].r_kids |= 1 << (-dist)
+        s.sent[head].r_edge = s.sent[child].r_edge
+        # Walk up the tree, setting right edge
+        while s.sent[head].head < 0:
+            head += s.sent[head].head
+            s.sent[head].r_edge = s.sent[child].r_edge
     else:
         s.sent[head].l_kids |= 1 << dist
+        s.sent[head].l_edge = s.sent[child].l_edge
 
 
 cdef int pop_stack(State *s) except -1:
@@ -71,6 +77,10 @@ cdef int head_in_stack(const State *s, const int child, const int* gold) except 
     return 0
 
 
+cdef bint has_head(const TokenC* t) nogil:
+    return t.head != 0
+
+
 cdef const TokenC* get_left(const State* s, const TokenC* head, const int idx) nogil:
     cdef uint32_t kids = head.l_kids
     if kids == 0:
@@ -93,10 +103,6 @@ cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) 
         return child
     else:
         return NULL
-
-
-cdef bint has_head(const TokenC* t) nogil:
-    return t.head != 0
 
 
 cdef int count_left_kids(const TokenC* head) nogil:
@@ -124,3 +130,23 @@ cdef State* new_state(Pool mem, const TokenC* sent, const int sent_len) except N
     s.i = 0
     s.sent_len = sent_len
     return s
+
+
+# From https://en.wikipedia.org/wiki/Hamming_weight
+cdef inline uint32_t _popcount(uint32_t x) nogil:
+    """Find number of non-zero bits."""
+    cdef int count = 0
+    while x != 0:
+        x &= x - 1
+        count += 1
+    return count
+
+
+cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:
+    cdef int i
+    for i in range(32):
+        if bits & (1 << i):
+            n -= 1
+            if n < 1:
+                return i
+    return 0
