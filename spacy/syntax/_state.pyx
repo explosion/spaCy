@@ -10,6 +10,8 @@ DEF NON_MONOTONIC = True
 
 
 cdef int add_dep(State *s, int head, int child, int label) except -1:
+    if has_head(&s.sent[child]):
+        del_dep(s, child + s.sent[child].head, child)
     cdef int dist = head - child
     s.sent[child].head = dist
     s.sent[child].dep = label
@@ -17,14 +19,33 @@ cdef int add_dep(State *s, int head, int child, int label) except -1:
     # offset i from it, set that bit (tracking left and right separately)
     if child > head:
         s.sent[head].r_kids |= 1 << (-dist)
-        s.sent[head].r_edge = s.sent[child].r_edge
+        s.sent[head].r_edge = child - head
         # Walk up the tree, setting right edge
-        while s.sent[head].head < 0:
+        while s.sent[head].head != 0:
             head += s.sent[head].head
-            s.sent[head].r_edge = s.sent[child].r_edge
+            s.sent[head].r_edge = child - head
     else:
         s.sent[head].l_kids |= 1 << dist
-        s.sent[head].l_edge = s.sent[child].l_edge
+        s.sent[head].l_edge = (child + s.sent[child].l_edge) - head
+
+
+cdef int del_dep(State *s, int head, int child) except -1:
+    cdef const TokenC* next_child
+    cdef int dist = head - child
+    if child > head:
+        s.sent[head].r_kids &= ~(1 << (-dist))
+        next_child = get_right(s, &s.sent[head], 1)
+        if next_child == NULL:
+            s.sent[head].r_edge = 0
+        else:
+            s.sent[head].r_edge = next_child.r_edge
+    else:
+        s.sent[head].l_kids &= ~(1 << dist)
+        next_child = get_left(s, &s.sent[head], 1)
+        if next_child == NULL:
+            s.sent[head].l_edge = 0
+        else:
+            s.sent[head].l_edge = next_child.l_edge
 
 
 cdef int pop_stack(State *s) except -1:
