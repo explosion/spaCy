@@ -107,7 +107,7 @@ cdef bint is_oracle(ActionType act, int tag, ActionType g_act, int g_tag,
             # U, Gold L --> False
             # U, Gold O --> False
             return False
-    
+
 
 cdef int set_accept_if_valid(Move* moves, int n_classes, State* s) except 0:
     cdef int n_accept = 0
@@ -160,7 +160,7 @@ cdef Move* best_accepted(Move* moves, weight_t* scores, int n) except NULL:
     cdef int best = first_accept
     cdef weight_t score = scores[first_accept-1]
     cdef int i
-    for i in range(first_accept+1, n): 
+    for i in range(first_accept+1, n):
         if moves[i].accept and scores[i-1] > score:
             best = i
             score = scores[i-1]
@@ -179,7 +179,7 @@ cdef int transition(State *s, Move* move) except -1:
         end_entity(s)
     elif move.action == OUT:
         pass
-    s.tags[s.i] = move.clas 
+    s.tags[s.i] = move.clas
     s.i += 1
 
 

@@ -3,6 +3,7 @@ import pytest
 
 from spacy.en import English
 
+
 def test_only_pre1():
     EN = English()
     assert len(EN("(")) == 1

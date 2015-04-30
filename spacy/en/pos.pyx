@@ -353,7 +353,7 @@ cdef class EnPosTagger:
                 cached.lemma = self.strings[lemma_str]
                 set_morph_from_dict(&cached.morph, props)
                 self._morph_cache.set(pos, orth, <void*>cached)
- 
+
 
 cdef int fill_context(atom_t* context, const int i, const TokenC* tokens) except -1:
     _fill_from_token(&context[P2_orth], &tokens[i-2])
@@ -381,4 +381,3 @@ cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
         context[7] = 4
     else:
         context[7] = 0
-

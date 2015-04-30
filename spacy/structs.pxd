@@ -8,7 +8,7 @@ cdef struct LexemeC:
     const float* repvec
 
     flags_t flags
-   
+
     attr_t id
     attr_t length
 
@@ -18,7 +18,7 @@ cdef struct LexemeC:
     attr_t shape
     attr_t prefix
     attr_t suffix
- 
+
     attr_t cluster
 
     float prob

@@ -39,7 +39,7 @@ def install_parser_model(url, dest_dir):
 def install_dep_vectors(url, dest_dir):
     if not os.path.exists(dest_dir):
         os.mkdir(dest_dir)
-    
+
     filename = download_file(url, dest_dir)
 
 

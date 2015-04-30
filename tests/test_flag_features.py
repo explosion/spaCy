@@ -16,6 +16,7 @@ def words():
     return ["1997", "19.97", "hello9", "Hello", "HELLO", "Hello9", "\n", "!",
             "!d", "\nd"]
 
+
 def test_is_alpha(words):
     assert not is_alpha(words[0])
     assert not is_alpha(words[1])

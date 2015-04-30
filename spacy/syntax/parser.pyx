@@ -36,7 +36,7 @@ from . import _parse_features
 from ._parse_features cimport fill_context, CONTEXT_SIZE
 
 
-DEBUG = False 
+DEBUG = False
 def set_debug(val):
     global DEBUG
     DEBUG = val
@@ -111,7 +111,7 @@ cdef class GreedyParser:
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
             best = self.moves.best_gold(scores, state, gold)
-            
+
             cost = guess.get_cost(&guess, state, gold)
             self.model.update(context, guess.clas, best.clas, cost)
 

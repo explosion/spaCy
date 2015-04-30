@@ -3,20 +3,18 @@ spaCy
 
 http://honnibal.github.io/spaCy
 
-Fast, state-of-the-art natural language processing pipeline. Commercial licenses available, or use under AGPL.
+A pipeline for fast, state-of-the-art natural language processing. Commercial licenses available, otherwise under AGPL.
 
 Version 0.80 released
 ---------------------
 
 2015-04-13
 
-* Preliminary named entity recognition support. Accuracy is currently
-  substantially behind the current state-of-the-art. I'm working on
-  improvements. 
+* Preliminary support for named-entity recognition. Its accuracy is substantially behind the state-of-the-art. I'm working on improvements. 
 
 * Better sentence boundary detection, drawn from the syntactic structure.
 
-* Lots of bug fixes
+* Lots of bug fixes.
 
 
 Supports:
@@ -35,4 +33,3 @@ Difficult to support:
 
 * PyPy 2.7
 * PyPy 3.4
-

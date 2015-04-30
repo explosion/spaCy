@@ -13,5 +13,3 @@ class Config(object):
     @classmethod
     def read(cls, model_dir, name):
         return cls(**json.load(open(path.join(model_dir, '%s.json' % name))))
-
-

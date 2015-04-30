@@ -20,7 +20,7 @@ s=\.\.\.= ... =g
 s=[,;:@#$%&]= & =g
 
 # Assume sentence tokenization has been done first, so split FINAL periods
-# only. 
+# only.
 s=\([^.]\)\([.]\)\([])}>"']*\)[ 	]*$=\1 \2\3 =g
 # however, we may as well split ALL question marks and exclamation points,
 # since they shouldn't have the abbrev.-marker ambiguity problem

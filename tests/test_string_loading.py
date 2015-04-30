@@ -16,6 +16,3 @@ def test_one(EN):
     assert tokens[0].orth_ == 'Betty'
     tokens2 = EN('Betty also bought a pound of butter.')
     assert tokens2[0].orth_ == 'Betty'
-
-
-

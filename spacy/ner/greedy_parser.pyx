@@ -92,7 +92,7 @@ cdef class NERParser:
             fill_context(self._context, s, tokens)
             self.extractor.extract(self._feats, self._values, self._context, NULL)
             self.model.score(self._scores, self._feats, self._values)
-            
+
             set_accept_if_valid(self._moves, self.n_classes, s)
             guess = best_accepted(self._moves, self._scores, self.n_classes)
             assert guess.clas != 0

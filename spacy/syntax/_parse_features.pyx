@@ -111,10 +111,10 @@ ner = (
     (N1W,),
     (P2W,),
     (N2W,),
-    
+
     (P1W, N0W,),
     (N0W, N1W),
-    
+
     (N0_prefix,),
     (N0_suffix,),
 
@@ -205,22 +205,22 @@ ner = (
 unigrams = (
     (S2W, S2p),
     (S2c6, S2p),
-    
+
     (S1W, S1p),
     (S1c6, S1p),
 
     (S0W, S0p),
     (S0c6, S0p),
- 
+
     (N0W, N0p),
     (N0p,),
     (N0c,),
     (N0c6, N0p),
     (N0L,),
- 
+
     (N1W, N1p),
     (N1c6, N1p),
- 
+
     (N2W, N2p),
     (N2c6, N2p),
 

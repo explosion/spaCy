@@ -7,6 +7,8 @@ from spacy.en.attrs import IS_STOP
 import pytest
 
 nlp = English()
+
+
 @pytest.fixture
 def token():
     tokens = nlp(u'Give it back! He pleaded.')
@@ -35,5 +37,3 @@ def test_single_token_string():
     nlp = English()
     tokens = nlp(u'foobar')
     assert tokens[0].string == 'foobar'
-
-

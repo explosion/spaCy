@@ -33,7 +33,7 @@ cdef class Model:
 cdef class HastyModel:
     cdef Pool mem
     cdef weight_t* _scores
- 
+
     cdef const weight_t* score(self, atom_t* context) except NULL
     cdef int update(self, atom_t* context, class_t guess, class_t gold, int cost) except -1
 

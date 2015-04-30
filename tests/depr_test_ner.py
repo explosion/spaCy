@@ -40,6 +40,7 @@ def test_begin(state, sentence):
     assert not state.is_valid('O')
     assert not state.is_valid('U-PER')
 
+
 def test_in(state, sentence):
     state.transition('B-PER')
     assert state.n_ents == 0
