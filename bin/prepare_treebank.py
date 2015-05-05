@@ -60,15 +60,12 @@ def format_doc(section, filename, raw_paras, ptb_loc, dep_loc):
                     'brackets': []}
         for raw_sent in raw_sents:
             para['sents'].append(offset) 
-            _, brackets = read_ptb.parse(ptb_sents[i])
-            _, annot = read_conll.parse(dep_sents[i])
+            _, brackets = read_ptb.parse(ptb_sents[i], strip_bad_periods=True)
+            _, annot = read_conll.parse(dep_sents[i], strip_bad_periods=True)
             indices, word_idx, offset = _get_word_indices(raw_sent, 0, offset)
 
             for token in annot:
-                if token['head'] == -1:
-                    head = indices[token['id']]
-                else:
-                    head = indices[token['head']]
+                head = indices[token['head']]
                 try:
                     para['tokens'].append({'start': indices[token['id']],
                         'tag': token['tag'],
@@ -80,32 +77,34 @@ def format_doc(section, filename, raw_paras, ptb_loc, dep_loc):
                     print raw_sent
                     raise
             for label, start, end in brackets:
-                para['brackets'].append({'label': label,
-                    'start': indices[start],
-                    'end': indices[end-1]})
+                if start != end:
+                    para['brackets'].append({'label': label,
+                        'start': indices[start],
+                        'end': indices[end-1]})
             i += 1
         doc['paragraphs'].append(para)
     return doc
 
 
-def main(onto_dir, raw_dir, out_loc):
-    docs = []
+def main(onto_dir, raw_dir, out_dir):
     for i in range(25):
         section = str(i) if i >= 10 else ('0' + str(i))
         raw_loc = path.join(raw_dir, 'wsj%s.json' % section)
+        docs = []
         for j, raw_paras in enumerate(_iter_raw_files(raw_loc)):
             if section == '00':
                 j += 1
             filename = str(j) if j >= 9 else ('0' + str(j))
             if section == '04' and filename == '55':
                 continue
-            ptb_loc = path.join(onto_dir, section, 'wsj_%s%s.parse' % (section, filename))
-            dep_loc = ptb_loc + '.dep'
+            ptb_loc = path.join(onto_dir, section, 'wsj_%s%s.mrg' % (section, filename))
+            dep_loc = ptb_loc + '.3.pa.gs.tab'
             if path.exists(ptb_loc) and path.exists(dep_loc):
                 print ptb_loc
                 doc = format_doc(section, filename, raw_paras, ptb_loc, dep_loc)
                 docs.append(doc)
-    json.dump(docs, open(out_loc, 'w'))
+        with open(path.join(out_dir, '%s.json' % section), 'w') as file_:
+            json.dump(docs, file_)
 
 
 if __name__ == '__main__':
