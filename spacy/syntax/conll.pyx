@@ -1,7 +1,36 @@
 import numpy
 import codecs
+import json
 
 from libc.string cimport memset
+
+
+def read_json_file(loc):
+    paragraphs = []
+    for doc in json.load(open(loc)):
+        for paragraph in doc['paragraphs']:
+            words = []
+            ids = []
+            tags = []
+            heads = []
+            labels = []
+            iob_ents = []
+            for token in paragraph['tokens']:
+                words.append(token['orth'])
+                ids.append(token['start'])
+                tags.append(token['tag'])
+                heads.append(token['head'] if token['head'] >= 1 else token['start'])
+                labels.append(token['dep'])
+                iob_ents.append(token.get('iob_ent', 'O'))
+
+            brackets = []
+            tokenized = [s.replace('<SEP>', ' ').split(' ')
+                         for s in paragraph['segmented'].split('<SENT>')]
+            paragraphs.append((paragraph['raw'],
+                tokenized,
+                (ids, words, tags, heads, labels, _iob_to_biluo(iob_ents)),
+                brackets))
+    return paragraphs
 
 
 def read_conll03_file(loc):
@@ -62,7 +91,8 @@ def read_docparse_file(loc):
             iob_ents.append(iob_ent)
         tokenized = [s.replace('<SEP>', ' ').split(' ')
                      for s in tok_text.split('<SENT>')]
-        sents.append((raw_text, tokenized, (ids, words, tags, heads, labels, iob_ents)))
+        tuples = (ids, words, tags, heads, labels, iob_ents)
+        sents.append((raw_text, tokenized, tuples, []))
     return sents
 
 
