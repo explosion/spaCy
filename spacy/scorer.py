@@ -47,7 +47,7 @@ class Scorer(object):
             if not self.skip_token(i, token, gold):
                 self.total += 1
                 if verbose:
-                    print token.orth_, token.dep_, token.head.orth_
+                    print token.orth_, token.dep_, token.head.orth_, token.head.i == gold.heads[i]
                 if token.head.i == gold.heads[i]:
                     self.heads_corr += 1
                     self.labels_corr += token.dep_ == gold.labels[i]
