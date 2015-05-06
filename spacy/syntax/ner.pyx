@@ -73,7 +73,8 @@ cdef class BiluoPushDown(TransitionSystem):
         move_labels = {MISSING: {'': True}, BEGIN: {}, IN: {}, LAST: {}, UNIT: {},
                        OUT: {'': True}}
         moves = ('M', 'B', 'I', 'L', 'U')
-        for (raw_text, toks, (ids, words, tags, heads, labels, biluo)) in gold_tuples:
+        for (raw_text, toks, tuples, ctnt) in gold_tuples:
+            ids, words, tags, heads, labels, biluo = tuples
             for i, ner_tag in enumerate(biluo):
                 if ner_tag != 'O' and ner_tag != '-':
                     if ner_tag.count('-') != 1:
