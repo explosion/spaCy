@@ -16,6 +16,8 @@ doc: {
             end: int,
             label: string,
             flabel: int}]}]}
+
+Consumes output of spacy/munge/align_raw.py
 """
 import plac
 import json
@@ -39,7 +41,7 @@ def _get_word_indices(raw_sent, word_idx, offset):
             indices[word_idx] = offset + match.start()
             word_idx += 1
         offset += len(piece)
-    return indices, word_idx, offset
+    return indices, word_idx, offset + 1
             
 
 def format_doc(section, filename, raw_paras, ptb_loc, dep_loc):
@@ -49,25 +51,27 @@ def format_doc(section, filename, raw_paras, ptb_loc, dep_loc):
     assert len(ptb_sents) == len(dep_sents)
 
     word_idx = 0
-    offset = 0
     i = 0
     doc = {'id': 'wsj_%s%s' % (section, filename), 'paragraphs': []}
     for raw_sents in raw_paras:
         para = {'raw': ' '.join(sent.replace('<SEP>', '') for sent in raw_sents),
-                    'segmented': '<PARA>'.join(raw_sents),
+                    'segmented': '<SENT>'.join(raw_sents),
                     'sents': [],
                     'tokens': [],
                     'brackets': []}
+        offset = 0
         for raw_sent in raw_sents:
+            words = raw_sent.replace('<SEP>', ' ').split()
             para['sents'].append(offset) 
             _, brackets = read_ptb.parse(ptb_sents[i], strip_bad_periods=True)
             _, annot = read_conll.parse(dep_sents[i], strip_bad_periods=True)
             indices, word_idx, offset = _get_word_indices(raw_sent, 0, offset)
-
-            for token in annot:
-                head = indices[token['head']]
+            for j, token in enumerate(annot):
+                head = indices[token['head']] if token['head'] != -1 else -1
                 try:
-                    para['tokens'].append({'start': indices[token['id']],
+                    para['tokens'].append({
+                        'start': indices[token['id']],
+                        'orth': words[j],
                         'tag': token['tag'],
                         'head': head,
                         'dep': token['dep']})
