@@ -57,9 +57,6 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
         for raw_text, segmented_text, annot_tuples, ctnt in gold_tuples:
             # Eval before train
             tokens = nlp(raw_text, merge_mwes=False)
-            #print segmented_text
-            #for annot in zip(*annot_tuples):
-            #    print annot
             gold = GoldParse(tokens, annot_tuples)
             scorer.score(tokens, gold, verbose=False)
 
@@ -76,7 +73,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
                 nlp.tagger.train(tokens, gold.tags)
 
         print '%d:\t%.3f\t%.3f\t%.3f' % (itn, scorer.uas, scorer.ents_f, scorer.tags_acc)
-        #random.shuffle(gold_tuples)
+        random.shuffle(gold_tuples)
     nlp.parser.model.end_training()
     nlp.entity.model.end_training()
     nlp.tagger.model.end_training()
