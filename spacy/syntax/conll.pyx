@@ -16,10 +16,11 @@ def read_json_file(loc):
             labels = []
             iob_ents = []
             for token in paragraph['tokens']:
+                #print token['start'], token['orth'], token['head'], token['dep']
                 words.append(token['orth'])
                 ids.append(token['start'])
                 tags.append(token['tag'])
-                heads.append(token['head'] if token['head'] >= 1 else token['start'])
+                heads.append(token['head'] if token['head'] >= 0 else token['start'])
                 labels.append(token['dep'])
                 iob_ents.append(token.get('iob_ent', 'O'))
 
