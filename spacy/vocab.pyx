@@ -144,7 +144,8 @@ cdef class Vocab:
             raise IOError('LexemeCs file not found at %s' % loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         cdef FILE* fp = fopen(<char*>bytes_loc, b'rb')
-        assert fp != NULL
+        if fp == NULL:
+            raise IOError('lexemes data file present, but cannot open from ' % loc)
         cdef size_t st
         cdef LexemeC* lexeme
         cdef attr_t orth
@@ -161,7 +162,9 @@ cdef class Vocab:
             lexeme.repvec = EMPTY_VEC
             if st != 1:
                 break
-            assert orth == lexeme.orth
+            if orth != lexeme.orth:
+                # TODO: Improve this error message, pending resolution to Issue #64
+                raise IOError('Error reading from lexemes.bin. Integrity check fails.')
             py_str = self.strings[orth]
             key = hash_string(py_str)
             self._map.set(key, lexeme)
