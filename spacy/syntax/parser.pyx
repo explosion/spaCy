@@ -95,6 +95,7 @@ cdef class GreedyParser:
         return 0
 
     def train(self, Tokens tokens, GoldParse gold):
+        py_words = [w.orth_ for w in tokens]
         self.moves.preprocess_gold(gold)
         cdef Pool mem = Pool()
         cdef State* state = new_state(mem, tokens.data, tokens.length)

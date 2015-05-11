@@ -14,6 +14,7 @@ cdef struct State:
     int sent_len
     int stack_len
     int ents_len
+    int ctnt_len
 
 
 cdef int add_dep(const State *s, const int head, const int child, const int label) except -1

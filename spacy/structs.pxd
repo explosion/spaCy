@@ -53,6 +53,7 @@ cdef struct Constituent:
     int start
     int end
     int label
+    bint on_stack
 
 
 cdef struct TokenC:

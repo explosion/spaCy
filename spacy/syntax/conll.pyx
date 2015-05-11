@@ -30,7 +30,7 @@ def read_json_file(loc):
             paragraphs.append((paragraph['raw'],
                 tokenized,
                 (ids, words, tags, heads, labels, _iob_to_biluo(iob_ents)),
-                brackets))
+                paragraph.get('brackets', [])))
     return paragraphs
 
 
@@ -145,7 +145,7 @@ def _parse_line(line):
 
 
 cdef class GoldParse:
-    def __init__(self, tokens, annot_tuples):
+    def __init__(self, tokens, annot_tuples, brackets=(,)):
         self.mem = Pool()
         self.loss = 0
         self.length = len(tokens)
@@ -155,6 +155,9 @@ cdef class GoldParse:
         self.c_heads = <int*>self.mem.alloc(len(tokens), sizeof(int))
         self.c_labels = <int*>self.mem.alloc(len(tokens), sizeof(int))
         self.c_ner = <Transition*>self.mem.alloc(len(tokens), sizeof(Transition))
+        self.c_brackets = <int**>self.mem.alloc(len(tokens), sizeof(int*))
+        for i in range(len(tokens)):
+            self.c_brackets[i] = <int*>self.mem.alloc(len(tokens), sizeof(int))
 
         self.tags = [None] * len(tokens)
         self.heads = [-1] * len(tokens)
@@ -198,6 +201,14 @@ cdef class GoldParse:
                 for i in range(start+1, end-1):
                     self.ner[i] = 'I-%s' % label
                 self.ner[end-1] = 'L-%s' % label
+
+        self.brackets = {}
+        for (start_idx, end_idx, label_str) in brackets:
+            if start_idx in idx_map and end_idx in idx_map:
+                start = idx_map[start_idx]
+                end = idx_map[end_idx]
+                self.brackets.setdefault(end, {}).setdefault(start, set())
+                self.brackets[end][start].add(label)
 
     def __len__(self):
         return self.length
