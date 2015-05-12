@@ -12,8 +12,8 @@ A pipeline for fast, state-of-the-art natural language processing. Commercial li
 * Bug fixes for named entity recognition
 
 
-
-Supports:
+Supports
+--------
 
 * CPython 2.7
 * CPython 3.4
