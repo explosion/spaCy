@@ -10,7 +10,8 @@ spaCy: Industrial-strength NLP
 
 .. _Issue Tracker: https://github.com/honnibal/spaCy/issues
 
-**12/05**: *Version 0.84 released.  Includes bug fixes to parsing and NER.*
+**12/05**: *Version 0.84 released.  Includes bug fixes to parsing and NER.  Be
+sure to download the most recent data, with "python -m spacy.en.download all".*
 
 `spaCy`_ is a new library for text processing in Python and Cython.
 I wrote it because I think small companies are terrible at
