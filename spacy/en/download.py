@@ -7,7 +7,7 @@ import wget
 import plac
 
 # TODO: Read this from the same source as the setup
-VERSION = '0.8.1'
+VERSION = '0.8.4'
 
 AWS_STORE = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com'
 
