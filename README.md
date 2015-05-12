@@ -5,16 +5,12 @@ http://honnibal.github.io/spaCy
 
 A pipeline for fast, state-of-the-art natural language processing. Commercial licenses available, otherwise under AGPL.
 
-Version 0.80 released
----------------------
+2015-05-12 v0.84
+----------------
 
-2015-04-13
+* Bug fixes for parsing
+* Bug fixes for named entity recognition
 
-* Preliminary support for named-entity recognition. Its accuracy is substantially behind the state-of-the-art. I'm working on improvements. 
-
-* Better sentence boundary detection, drawn from the syntactic structure.
-
-* Lots of bug fixes.
 
 
 Supports:

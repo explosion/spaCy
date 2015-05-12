@@ -1,8 +1,14 @@
 Updates
 =======
 
-2015-04-13 v0.80 released
--------------------------
+2015-05-12 v0.84
+----------------
+
+* Bug fixes for parsing
+* Bug fixes for named entity recognition
+
+2015-04-13 v0.80
+----------------
 
 * Preliminary support for named-entity recognition. Its accuracy is substantially behind the state-of-the-art. I'm working on improvements. 
 
@@ -10,8 +16,8 @@ Updates
 
 * Lots of bug fixes.
 
-2015-03-05 v0.70 released
--------------------------
+2015-03-05 v0.70
+----------------
 
 * Improved parse navigation API
 * Bug fixes to labelled parsing
