@@ -297,60 +297,62 @@ cdef int _break_cost(const Transition* self, const State* s, GoldParse gold) exc
 cdef int _constituent_cost(const Transition* self, const State* s, GoldParse gold) except -1:
     if not _can_constituent(s):
         return 9000
+    raise Exception("Constituent move should be disabled currently")
     # The gold standard is indexed by end, then by start, then a set of labels
-    brackets = gold.brackets(get_s0(s).r_edge, {})
-    if not brackets:
-        return 2 # 2 loss for bad bracket, only 1 for good bracket bad label
+    #brackets = gold.brackets(get_s0(s).r_edge, {})
+    #if not brackets:
+    #    return 2 # 2 loss for bad bracket, only 1 for good bracket bad label
     # Index the current brackets in the state
-    existing = set()
-    for i in range(s.ctnt_len):
-        if ctnt.end == s.r_edge and ctnt.label == self.label:
-            existing.add(ctnt.start)
-    cdef int loss = 2
-    cdef const TokenC* child
-    cdef const TokenC* s0 = get_s0(s)
-    cdef int n_left = count_left_kids(s0)
+    #existing = set()
+    #for i in range(s.ctnt_len):
+    #    if ctnt.end == s.r_edge and ctnt.label == self.label:
+    #        existing.add(ctnt.start)
+    #cdef int loss = 2
+    #cdef const TokenC* child
+    #cdef const TokenC* s0 = get_s0(s)
+    #cdef int n_left = count_left_kids(s0)
     # Iterate over the possible start positions, and check whether we have a
     # (start, end, label) match to the gold tree
-    for i in range(1, n_left):
-        child = get_left(s, s0, i)
-        if child.l_edge in brackets and child.l_edge not in existing:
-            if self.label in brackets[child.l_edge]
-                return 0
-            else:
-                loss = 1 # If we see the start position, set loss to 1
-    return loss
+    #for i in range(1, n_left):
+    #    child = get_left(s, s0, i)
+    #    if child.l_edge in brackets and child.l_edge not in existing:
+    #        if self.label in brackets[child.l_edge]
+    #            return 0
+    #        else:
+    #            loss = 1 # If we see the start position, set loss to 1
+    #return loss
  
 
 cdef int _adjust_cost(const Transition* self, const State* s, GoldParse gold) except -1:
     if not _can_adjust(s):
         return 9000
+    raise Exception("Adjust move should be disabled currently")
     # The gold standard is indexed by end, then by start, then a set of labels
-    gold_starts = gold.brackets(get_s0(s).r_edge, {})
+    #gold_starts = gold.brackets(get_s0(s).r_edge, {})
     # Case 1: There are 0 brackets ending at this word.
     # --> Cost is sunk, but must allow brackets to begin
-    if not gold_starts:
-        return 0
+    #if not gold_starts:
+    #    return 0
     # Is the top bracket correct?
-    gold_labels = gold_starts.get(s.ctnt.start, set())
+    #gold_labels = gold_starts.get(s.ctnt.start, set())
     # TODO: Case where we have a unary rule
     # TODO: Case where two brackets end on this word, with top bracket starting
     # before
 
-    cdef const TokenC* child
-    cdef const TokenC* s0 = get_s0(s)
-    cdef int n_left = count_left_kids(s0)
-    cdef int i
+    #cdef const TokenC* child
+    #cdef const TokenC* s0 = get_s0(s)
+    #cdef int n_left = count_left_kids(s0)
+    #cdef int i
     # Iterate over the possible start positions, and check whether we have a
     # (start, end, label) match to the gold tree
-    for i in range(1, n_left):
-        child = get_left(s, s0, i)
-        if child.l_edge in brackets:
-            if self.label in brackets[child.l_edge]:
-                return 0
-            else:
-                loss = 1 # If we see the start position, set loss to 1
-    return loss
+    #for i in range(1, n_left):
+    #    child = get_left(s, s0, i)
+    #    if child.l_edge in brackets:
+    #        if self.label in brackets[child.l_edge]:
+    #            return 0
+    #        else:
+    #            loss = 1 # If we see the start position, set loss to 1
+    #return loss
 
 
 get_cost_funcs[SHIFT] = _shift_cost
@@ -403,18 +405,20 @@ cdef inline bint _can_break(const State* s) nogil:
 
 
 cdef inline bint _can_constituent(const State* s) nogil:
-    return s.stack_len >= 1
+    return False
+    #return s.stack_len >= 1
 
 
 cdef inline bint _can_adjust(const State* s) nogil:
+    return False
     # Need a left child to move the bracket to
-    cdef const TokenC* child
-    cdef const TokenC* s0 = get_s0(s)
-    cdef int n_left = count_left_kids(s0)
-    cdef int i
-    for i in range(1, n_left):
-        child = get_left(s, s0, i)
-        if child.l_edge < s.ctnt.start:
-            return True
-    else:
-        return False
+    #cdef const TokenC* child
+    #cdef const TokenC* s0 = get_s0(s)
+    #cdef int n_left = count_left_kids(s0)
+    #cdef int i
+    #for i in range(1, n_left):
+    #    child = get_left(s, s0, i)
+    #    if child.l_edge < s.ctnt.start:
+    #        return True
+    #else:
+    #    return False
