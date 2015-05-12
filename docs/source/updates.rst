@@ -1,6 +1,22 @@
 Updates
 =======
 
+2015-04-13 v0.80 released
+-------------------------
+
+* Preliminary support for named-entity recognition. Its accuracy is substantially behind the state-of-the-art. I'm working on improvements. 
+
+* Better sentence boundary detection, drawn from the syntactic structure.
+
+* Lots of bug fixes.
+
+2015-03-05 v0.70 released
+-------------------------
+
+* Improved parse navigation API
+* Bug fixes to labelled parsing
+
+
 2015-01-30 spaCy v0.4: Still alpha, improving quickly
 -----------------------------------------------------
 
