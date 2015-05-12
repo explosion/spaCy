@@ -145,7 +145,7 @@ def _parse_line(line):
 
 
 cdef class GoldParse:
-    def __init__(self, tokens, annot_tuples, brackets=(,)):
+    def __init__(self, tokens, annot_tuples, brackets=tuple()):
         self.mem = Pool()
         self.loss = 0
         self.length = len(tokens)
