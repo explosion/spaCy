@@ -12,6 +12,3 @@ cdef class Span:
     cdef public int start
     cdef public int end
     cdef readonly int label
-    cdef public Span head
-    cdef public list rights
-    cdef public list lefts
