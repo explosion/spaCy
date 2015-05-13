@@ -88,6 +88,6 @@ cdef class Span:
         def __get__(self):
             for word in self.lefts:
                 yield from word.subtree
-            yield self
+            yield from self
             for word in self.rights:
                 yield from word.subtree
