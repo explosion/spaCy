@@ -28,6 +28,7 @@ API
 
 
 .. autoclass:: spacy.tokens.Tokens
+  :members:
 
   +---------------+-------------+-------------+
   | Attribute     | Type        | Attr API    |
