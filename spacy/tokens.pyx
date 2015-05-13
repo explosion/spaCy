@@ -143,7 +143,17 @@ cdef class Tokens:
 
     @property
     def ents(self):
-        """Yields named-entity Span objects."""
+        """Yields named-entity Span objects.
+        
+        Iterate over the span to get individual Token objects, or access the label:
+
+        >>> from spacy.en import English
+        >>> nlp = English()
+        >>> tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
+        >>> ents = list(tokens.ents)
+        >>> ents[0].label, ents[0].label_, ''.join(t.orth_ for t in ents[0])
+        (112504, u'PERSON', u'Best ') 
+        """
         cdef int i
         cdef const TokenC* token
         cdef int start = -1
