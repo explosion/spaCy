@@ -183,32 +183,37 @@ cdef int _do_break(const Transition* self, State* state) except -1:
 
 
 cdef int _do_constituent(const Transition* self, State* state) except -1:
-    cdef const TokenC* s0 = get_s0(state)
-    if state.ctnt.head == get_idx(state, s0):
-        start = state.ctnt.start
-    else:
-        start = get_idx(state, s0)
-    state.ctnt += 1
-    state.ctnt.start = start
-    state.ctnt.end = s0.r_edge
-    state.ctnt.head = get_idx(state, s0)
-    state.ctnt.label = self.label
+    cdef Constituent* bracket = new_bracket(state.ctnts)
+
+    bracket.parent = NULL
+    bracket.label = self.label
+    bracket.head = get_s0(state)
+    bracket.length = 0
+
+    attach(bracket, state.ctnts.stack)
+    # Attach rightward children. They're in the brackets array somewhere
+    # between here and B0.
+    cdef Constituent* node
+    cdef const TokenC* node_gov
+    for i in range(1, bracket - state.ctnts.stack):
+        node = bracket - i
+        node_gov = node.head + node.head.head
+        if node_gov == bracket.head:
+            attach(bracket, node)
 
 
 cdef int _do_adjust(const Transition* self, State* state) except -1:
-    cdef const TokenC* child
-    cdef const TokenC* s0 = get_s0(state)
-    cdef int n_left = count_left_kids(s0)
-    for i in range(1, n_left):
-        child = get_left(state, s0, i)
-        assert child is not NULL
-        if child.l_edge < state.ctnt.start:
-            state.ctnt.start = child.l_edge
-            break
-    else:
-        msg = ("Error moving bracket --- Move should be invalid if "
-               "no left edge to move to.")
-        raise Exception(msg)
+    cdef Constituent* b0 = state.ctnts.stack[0]
+    cdef Constituent* b1 = state.ctnts.stack[1]
+
+    assert (b1.head + b1.head.head) == b0.head
+    assert b0.head < b1.head
+    assert b0 < b1
+
+    attach(b0, b1)
+    # Pop B1 from stack, but keep B0 on top
+    state.ctnts.stack -= 1
+    state.ctnts.stack[0] = b0
 
 
 do_funcs[SHIFT] = _do_shift
@@ -374,14 +379,14 @@ cdef inline bint _can_right(const State* s) nogil:
 
 cdef inline bint _can_left(const State* s) nogil:
     if NON_MONOTONIC:
-        return s.stack_len >= 1
+        return s.stack_len >= 1 and not missing_brackets(s)
     else:
         return s.stack_len >= 1 and not has_head(get_s0(s))
 
 
 cdef inline bint _can_reduce(const State* s) nogil:
     if NON_MONOTONIC:
-        return s.stack_len >= 2
+        return s.stack_len >= 2 and not missing_brackets(s)
     else:
         return s.stack_len >= 2 and has_head(get_s0(s))
 
@@ -401,24 +406,33 @@ cdef inline bint _can_break(const State* s) nogil:
                     return False
                 else:
                     seen_headless = True
+        # TODO: Constituency constraints
         return True
 
 
 cdef inline bint _can_constituent(const State* s) nogil:
-    return False
-    #return s.stack_len >= 1
+    if s.stack_len < 1:
+        return False
+    else:
+        # If all stack elements are popped, can't constituent
+        for i in range(s.ctnts.stack_len):
+            if not s.ctnts.is_popped[-i]:
+                return True
+        else:
+            return False
 
 
 cdef inline bint _can_adjust(const State* s) nogil:
-    return False
-    # Need a left child to move the bracket to
-    #cdef const TokenC* child
-    #cdef const TokenC* s0 = get_s0(s)
-    #cdef int n_left = count_left_kids(s0)
-    #cdef int i
-    #for i in range(1, n_left):
-    #    child = get_left(s, s0, i)
-    #    if child.l_edge < s.ctnt.start:
-    #        return True
-    #else:
-    #    return False
+    if s.ctnts.stack_len < 2:
+        return False
+
+    cdef const Constituent* b1 = s.ctnts.stack[-1]
+    cdef const Constituent* b0 = s.ctnts.stack[0]
+
+    if (b1.head + b1.head.head) != b0.head:
+        return False
+    elif b0.head >= b1.head:
+        return False
+    elif b0 >= b1:
+        return False
+    return True
