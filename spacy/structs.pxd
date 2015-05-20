@@ -49,16 +49,18 @@ cdef struct Entity:
 
 
 cdef struct Constituent:
-    int head
-    int start
-    int end
+    const TokenC* head
+    const Constituent* parent
+    const Constituent* first
+    const Constituent* last
     int label
-    bint on_stack
+    int length
 
 
 cdef struct TokenC:
     const LexemeC* lex
     Morphology morph
+    const Constituent* ctnt
     univ_pos_t pos
     int tag
     int idx
@@ -72,9 +74,6 @@ cdef struct TokenC:
     uint32_t r_kids
     uint32_t l_edge
     uint32_t r_edge
-
-    int attach_order
-    int ctnt_label
 
     int ent_iob
     int ent_type
