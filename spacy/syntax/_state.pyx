@@ -137,12 +137,12 @@ cdef int count_right_kids(const TokenC* head) nogil:
 cdef State* new_state(Pool mem, const TokenC* sent, const int sent_len) except NULL:
     cdef int padded_len = sent_len + PADDING + PADDING
     cdef State* s = <State*>mem.alloc(1, sizeof(State))
-    s.ctnt = <Constituent*>mem.alloc(padded_len, sizeof(Constituent))
+    #s.ctnt = <Constituent*>mem.alloc(padded_len, sizeof(Constituent))
     s.ent = <Entity*>mem.alloc(padded_len, sizeof(Entity))
     s.stack = <int*>mem.alloc(padded_len, sizeof(int))
     for i in range(PADDING):
         s.stack[i] = -1
-    s.ctnt += (PADDING -1)
+    #s.ctnt += (PADDING -1)
     s.stack += (PADDING - 1)
     s.ent += (PADDING - 1)
     assert s.stack[0] == -1
