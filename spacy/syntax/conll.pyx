@@ -32,69 +32,6 @@ def read_json_file(loc):
     return paragraphs
 
 
-def read_conll03_file(loc):
-    sents = []
-    text = codecs.open(loc, 'r', 'utf8').read().strip()
-    for doc in text.split('-DOCSTART- -X- O O'):
-        doc = doc.strip()
-        if not doc:
-            continue
-        for sent_str in doc.split('\n\n'):
-            words = []
-            tags = []
-            iob_ents = []
-            ids = []
-            lines = sent_str.strip().split('\n')
-            idx = 0
-            for line in lines:
-                word, tag, chunk, iob = line.split()
-                if tag == '"':
-                    tag = '``'
-                if '|' in tag:
-                    tag = tag.split('|')[0]
-                words.append(word)
-                tags.append(tag)
-                iob_ents.append(iob)
-                ids.append(idx)
-                idx += len(word) + 1
-            heads = [-1] * len(words)
-            labels = ['ROOT'] * len(words)
-            sents.append((' '.join(words), [words],
-                         (ids, words, tags, heads, labels, _iob_to_biluo(iob_ents))))
-    return sents
-
-
-def read_docparse_file(loc):
-    sents = []
-    for sent_str in codecs.open(loc, 'r', 'utf8').read().strip().split('\n\n'):
-        words = []
-        heads = []
-        labels = []
-        tags = []
-        ids = []
-        iob_ents = []
-        lines = sent_str.strip().split('\n')
-        raw_text = lines.pop(0).strip()
-        tok_text = lines.pop(0).strip()
-        for i, line in enumerate(lines):
-            id_, word, pos_string, head_idx, label, iob_ent = _parse_line(line)
-            if label == 'root':
-                label = 'ROOT'
-            words.append(word)
-            if head_idx < 0:
-                head_idx = id_
-            ids.append(id_)
-            heads.append(head_idx)
-            labels.append(label)
-            tags.append(pos_string)
-            iob_ents.append(iob_ent)
-        tokenized = [s.replace('<SEP>', ' ').split(' ')
-                     for s in tok_text.split('<SENT>')]
-        tuples = (ids, words, tags, heads, labels, iob_ents)
-        sents.append((raw_text, tokenized, tuples, []))
-    return sents
-
-
 def _iob_to_biluo(tags):
     out = []
     curr_label = None
@@ -126,20 +63,6 @@ def _consume_ent(tags):
         end = 'L-' + label
         middle = ['I-%s' % label for _ in range(1, length - 1)]
         return [start] + middle + [end]
-
-
-def _parse_line(line):
-    pieces = line.split()
-    if len(pieces) == 4:
-        return 0, pieces[0], pieces[1], int(pieces[2]) - 1, pieces[3]
-    else:
-        id_ = int(pieces[0])
-        word = pieces[1]
-        pos = pieces[3]
-        iob_ent = pieces[5]
-        head_idx = int(pieces[6])
-        label = pieces[7]
-        return id_, word, pos, head_idx, label, iob_ent
 
 
 cdef class GoldParse:
