@@ -1,29 +1,28 @@
 """Align the raw sentences from Read et al (2012) to the PTB tokenization,
-outputing the format:
-
-[{
-    section: int,
-    file: string,
-    paragraphs: [{
-        raw: string,
-        segmented: string,
-        tokens: [int]}]}]
+outputting as a .json file. Used in bin/prepare_treebank.py
 """
 import plac
 from pathlib import Path
 import json
 from os import path
+import os
 
 from spacy.munge import read_ptb
+from spacy.munge.read_ontonotes import sgml_extract
 
 
-def read_unsegmented(section_loc):
+def read_odc(section_loc):
     # Arbitrary patches applied to the _raw_ text to promote alignment.
     patches = (
         ('. . . .', '...'),
         ('....', '...'),
         ('Co..', 'Co.'),
         ("`", "'"),
+        # OntoNotes specific
+        (" S$", " US$"),
+        ("Showtime or a sister service", "Showtime or a service"),
+        ("The hotel and gaming company", "The hotel and Gaming company"),
+        ("I'm-coming-down-your-throat", "I-'m coming-down-your-throat"),
     )
     
     paragraphs = []
@@ -48,6 +47,7 @@ def read_ptb_sec(ptb_sec_dir):
     for loc in ptb_sec_dir.iterdir():
         if not str(loc).endswith('parse') and not str(loc).endswith('mrg'):
             continue
+        filename = loc.parts[-1].split('.')[0]
         with loc.open() as file_:
             text = file_.read()
         sents = []
@@ -55,7 +55,7 @@ def read_ptb_sec(ptb_sec_dir):
             words, brackets = read_ptb.parse(parse_str, strip_bad_periods=True)
             words = [_reform_ptb_word(word) for word in words]
             string = ' '.join(words)
-            sents.append(string)
+            sents.append((filename, string))
         files.append(sents)
     return files
 
@@ -77,20 +77,36 @@ def get_alignment(raw_by_para, ptb_by_file):
     # These are list-of-lists, by paragraph and file respectively.
     # Flatten them into a list of (outer_id, inner_id, item) triples
     raw_sents = _flatten(raw_by_para)
-    ptb_sents = _flatten(ptb_by_file)
-
-    assert len(raw_sents) == len(ptb_sents)
+    ptb_sents = list(_flatten(ptb_by_file))
 
     output = []
-    for (p_id, p_sent_id, raw), (f_id, f_sent_id, ptb) in zip(raw_sents, ptb_sents):
+    ptb_idx = 0
+    n_skipped = 0
+    skips = []
+    for (p_id, p_sent_id, raw) in raw_sents:
+        #print raw
+        if ptb_idx >= len(ptb_sents):
+            n_skipped += 1
+            continue
+        f_id, f_sent_id, (ptb_id, ptb) = ptb_sents[ptb_idx]
         alignment = align_chars(raw, ptb)
+        if not alignment:
+            skips.append((ptb, raw))
+            n_skipped += 1
+            continue
+        ptb_idx += 1
         sepped = []
         for i, c in enumerate(ptb):
             if alignment[i] is False:
                 sepped.append('<SEP>')
             else:
                 sepped.append(c)
-        output.append((f_id, p_id, f_sent_id, ''.join(sepped)))
+        output.append((f_id, p_id, f_sent_id, (ptb_id, ''.join(sepped))))
+    if n_skipped + len(ptb_sents) != len(raw_sents):
+        for ptb, raw in skips:
+            print ptb
+            print raw
+        raise Exception
     return output
 
 
@@ -102,6 +118,8 @@ def _flatten(nested):
 
 
 def align_chars(raw, ptb):
+    if raw.replace(' ', '') != ptb.replace(' ', ''):
+        return None
     i = 0
     j = 0
 
@@ -124,16 +142,20 @@ def align_chars(raw, ptb):
 
 def group_into_files(sents):
     last_id = 0
+    last_fn = None
     this = []
     output = []
-    for f_id, p_id, s_id, sent in sents:
+    for f_id, p_id, s_id, (filename, sent) in sents:
         if f_id != last_id:
-            output.append(this)
+            assert last_fn is not None
+            output.append((last_fn, this))
             this = []
+        last_fn = filename
         this.append((f_id, p_id, s_id, sent))
         last_id = f_id
     if this:
-        output.append(this)
+        assert last_fn is not None
+        output.append((last_fn, this))
     return output
 
 
@@ -145,7 +167,7 @@ def group_into_paras(sents):
         if p_id != last_id and this:
             output.append(this)
             this = []
-        this.append((sent))
+        this.append(sent)
         last_id = p_id
     if this:
         output.append(this)
@@ -161,14 +183,56 @@ def get_sections(odc_dir, ptb_dir, out_dir):
         yield odc_loc, ptb_sec, out_loc
 
 
-def main(odc_dir, ptb_dir, out_dir):
+def do_wsj(odc_dir, ptb_dir, out_dir):
     for odc_loc, ptb_sec_dir, out_loc in get_sections(odc_dir, ptb_dir, out_dir):
-        raw_paragraphs = read_unsegmented(odc_loc)
+        raw_paragraphs = read_odc(odc_loc)
         ptb_files = read_ptb_sec(ptb_sec_dir)
         aligned = get_alignment(raw_paragraphs, ptb_files)
-        files = [group_into_paras(f) for f in group_into_files(aligned)]
+        files = [(fn, group_into_paras(sents))
+                 for fn, sents in group_into_files(aligned)]
         with open(out_loc, 'w') as file_:
             json.dump(files, file_)
+
+
+def do_web(src_dir, onto_dir, out_dir):
+    mapping = dict(line.split() for line in open(path.join(onto_dir, 'map.txt'))
+                   if len(line.split()) == 2)
+    for annot_fn, src_fn in mapping.items():
+        if not annot_fn.startswith('eng'):
+            continue
+
+        ptb_loc = path.join(onto_dir, annot_fn + '.parse') 
+        src_loc = path.join(src_dir, src_fn + '.sgm')
+
+        if path.exists(ptb_loc) and path.exists(src_loc):
+            src_doc = sgml_extract(open(src_loc).read())
+            ptb_doc = [read_ptb.parse(parse_str, strip_bad_periods=True)[0]
+                       for parse_str in read_ptb.split(open(ptb_loc).read())]
+            print 'Found'
+        else:
+            print 'Miss'
+
+
+def may_mkdir(parent, *subdirs):
+    if not path.exists(parent):
+        os.mkdir(parent)
+    for i in range(1, len(subdirs)):
+        directories = (parent,) + subdirs[:i]
+        subdir = path.join(*directories)
+        if not path.exists(subdir):
+            os.mkdir(subdir)
+
+
+def main(odc_dir, onto_dir, out_dir):
+    may_mkdir(out_dir, 'wsj', 'align')
+    may_mkdir(out_dir, 'web', 'align')
+    #do_wsj(odc_dir, path.join(ontonotes_dir, 'wsj', 'orig'),
+    #       path.join(out_dir, 'wsj', 'align'))
+    do_web(
+        path.join(onto_dir, 'data', 'english', 'metadata', 'context', 'wb', 'sel'),
+        path.join(onto_dir, 'data', 'english', 'annotations', 'wb'),
+        path.join(out_dir, 'web', 'align'))
+
 
 
 if __name__ == '__main__':

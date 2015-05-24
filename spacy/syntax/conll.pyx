@@ -1,6 +1,8 @@
 import numpy
 import codecs
 import json
+import random
+from spacy.munge.alignment import align
 
 from libc.string cimport memset
 
@@ -16,19 +18,15 @@ def read_json_file(loc):
             labels = []
             iob_ents = []
             for token in paragraph['tokens']:
-                #print token['start'], token['orth'], token['head'], token['dep']
                 words.append(token['orth'])
-                ids.append(token['start'])
+                ids.append(token['id'])
                 tags.append(token['tag'])
-                heads.append(token['head'] if token['head'] >= 0 else token['start'])
+                heads.append(token['head'] if token['head'] >= 0 else token['id'])
                 labels.append(token['dep'])
-                iob_ents.append(token.get('iob_ent', 'O'))
+                iob_ents.append(token.get('iob_ent', '-'))
 
             brackets = []
-            tokenized = [s.replace('<SEP>', ' ').split(' ')
-                         for s in paragraph['segmented'].split('<SENT>')]
             paragraphs.append((paragraph['raw'],
-                tokenized,
                 (ids, words, tags, heads, labels, _iob_to_biluo(iob_ents)),
                 paragraph.get('brackets', [])))
     return paragraphs
@@ -160,39 +158,24 @@ cdef class GoldParse:
             self.c_brackets[i] = <int*>self.mem.alloc(len(tokens), sizeof(int))
 
         self.tags = [None] * len(tokens)
-        self.heads = [-1] * len(tokens)
-        self.labels = ['MISSING'] * len(tokens)
-        self.ner = ['O'] * len(tokens)
-        self.orths = {}
+        self.heads = [None] * len(tokens)
+        self.labels = [''] * len(tokens)
+        self.ner = ['-'] * len(tokens)
 
-        idx_map = {token.idx: token.i for token in tokens}
+        cand_to_gold = align([t.orth_ for t in tokens], annot_tuples[1])
+        gold_to_cand = align(annot_tuples[1], [t.orth_ for t in tokens])
+
         self.ents = []
-        ent_start = None
-        ent_label = None
-        for idx, orth, tag, head, label, ner in zip(*annot_tuples):
-            self.orths[idx] = orth
-            if idx < tokens[0].idx:
+
+        for i, gold_i in enumerate(cand_to_gold):
+            if gold_i is None:
+                # TODO: What do we do for missing values again?
                 pass
-            elif idx > tokens[-1].idx:
-                break
-            elif idx in idx_map:
-                i = idx_map[idx]
-                self.tags[i] = tag
-                self.heads[i] = idx_map.get(head, -1)
-                self.labels[i] = label
-                self.tags[i] = tag
-                if ner == '-':
-                    self.ner[i] = '-'
-                # Deal with inconsistencies in BILUO arising from tokenization
-                if ner[0] in ('B', 'U', 'O') and ent_start is not None:
-                    self.ents.append((ent_start, i, ent_label))
-                    ent_start = None
-                    ent_label = None
-                if ner[0] in ('B', 'U'):
-                    ent_start = i
-                    ent_label = ner[2:]
-        if ent_start is not None:
-            self.ents.append((ent_start, self.length, ent_label))
+            else:
+                self.tags[i] = annot_tuples[2][gold_i]
+                self.heads[i] = gold_to_cand[annot_tuples[3][gold_i]]
+                self.labels[i] = annot_tuples[4][gold_i]
+        # TODO: Declare NER information MISSING if tokenization incorrect
         for start, end, label in self.ents:
             if start == (end - 1):
                 self.ner[start] = 'U-%s' % label
@@ -203,11 +186,11 @@ cdef class GoldParse:
                 self.ner[end-1] = 'L-%s' % label
 
         self.brackets = {}
-        for (start_idx, end_idx, label_str) in brackets:
-            if start_idx in idx_map and end_idx in idx_map:
-                start = idx_map[start_idx]
-                end = idx_map[end_idx]
-                self.brackets.setdefault(end, {}).setdefault(start, set())
+        for (gold_start, gold_end, label_str) in brackets:
+            start = gold_to_cand[gold_start]
+            end = gold_to_cand[gold_end]
+            if start is not None and end is not None:
+                self.brackets.setdefault(start, {}).setdefault(end, set())
                 self.brackets[end][start].add(label)
 
     def __len__(self):

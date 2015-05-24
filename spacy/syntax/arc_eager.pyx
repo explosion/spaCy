@@ -54,7 +54,7 @@ cdef class ArcEager(TransitionSystem):
         move_labels = {SHIFT: {'': True}, REDUCE: {'': True}, RIGHT: {},
                        LEFT: {'ROOT': True}, BREAK: {'ROOT': True},
                        CONSTITUENT: {}, ADJUST: {'': True}}
-        for raw_text, segmented, (ids, words, tags, heads, labels, iob), ctnts in gold_parses:
+        for raw_text, (ids, words, tags, heads, labels, iob), ctnts in gold_parses:
             for child, head, label in zip(ids, heads, labels):
                 if label != 'ROOT':
                     if head < child:
@@ -67,8 +67,12 @@ cdef class ArcEager(TransitionSystem):
 
     cdef int preprocess_gold(self, GoldParse gold) except -1:
         for i in range(gold.length):
-            gold.c_heads[i] = gold.heads[i]
-            gold.c_labels[i] = self.strings[gold.labels[i]]
+            if gold.heads[i] is None: # Missing values
+                gold.c_heads[i] = i
+                gold.c_labels[i] = self.strings['']
+            else:
+                gold.c_heads[i] = gold.heads[i]
+                gold.c_labels[i] = self.strings[gold.labels[i]]
         for end, brackets in gold.brackets.items():
             for start, label_strs in brackets.items():
                 gold.c_brackets[start][end] = 1
