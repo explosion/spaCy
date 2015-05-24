@@ -47,8 +47,6 @@ class Scorer(object):
         assert len(tokens) == len(gold)
 
         for i, token in enumerate(tokens):
-            if token.orth_.isspace():
-                continue
             if not self.skip_token(i, token, gold):
                 self.total += 1
                 if verbose:
@@ -77,4 +75,4 @@ class Scorer(object):
             self.ents_fp += len(guess_ents - gold_ents)
 
     def skip_token(self, i, token, gold):
-        return gold.labels[i] in ('P', 'punct') and gold.heads[i] != None
+        return gold.labels[i] in ('P', 'punct') or gold.heads[i] == None
