@@ -11,7 +11,7 @@ def orths(tokens):
 
 
 def test_simple_two():
-    tokens = NLU('I lost money and pride.')
+    tokens = NLU('I lost money and pride.', tag=True, parse=False)
     pride = tokens[4]
     assert orths(pride.conjuncts) == ['money', 'pride']
     money = tokens[2]

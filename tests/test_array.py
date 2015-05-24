@@ -11,7 +11,7 @@ EN = English()
 
 def test_attr_of_token():
     text = u'An example sentence.'
-    tokens = EN(text)
+    tokens = EN(text, tag=True, parse=False)
     example = EN.vocab[u'example']
     assert example.orth != example.shape
     feats_array = tokens.to_array((attrs.ORTH, attrs.SHAPE))

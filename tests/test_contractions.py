@@ -3,26 +3,23 @@ import pytest
 
 from spacy.en import English
 
-@pytest.fixture
-def EN():
-    return English()
+EN = English()
 
-
-def test_possess(EN):
-    tokens = EN("Mike's", parse=False)
+def test_possess():
+    tokens = EN("Mike's", parse=False, tag=False)
     assert EN.vocab.strings[tokens[0].orth] == "Mike"
     assert EN.vocab.strings[tokens[1].orth] == "'s"
     assert len(tokens) == 2
 
 
-def test_apostrophe(EN):
-    tokens = EN("schools'")
+def test_apostrophe():
+    tokens = EN("schools'", parse=False, tag=False)
     assert len(tokens) == 2
     assert tokens[1].orth_ == "'"
     assert tokens[0].orth_ == "schools"
 
 
-def test_LL(EN):
+def test_LL():
     tokens = EN("we'll", parse=False)
     assert len(tokens) == 2
     assert tokens[1].orth_ == "'ll"
@@ -30,7 +27,7 @@ def test_LL(EN):
     assert tokens[0].orth_ == "we"
 
 
-def test_aint(EN):
+def test_aint():
     tokens = EN("ain't", parse=False)
     assert len(tokens) == 2
     assert tokens[0].orth_ == "ai"
@@ -39,7 +36,7 @@ def test_aint(EN):
     assert tokens[1].lemma_ == "not"
 
 
-def test_capitalized(EN):
+def test_capitalized():
     tokens = EN("can't", parse=False)
     assert len(tokens) == 2
     tokens = EN("Can't", parse=False)
@@ -50,7 +47,7 @@ def test_capitalized(EN):
     assert tokens[0].lemma_ == "be"
 
 
-def test_punct(EN):
+def test_punct():
     tokens = EN("We've", parse=False)
     assert len(tokens) == 2
     tokens = EN("``We've", parse=False)
