@@ -18,10 +18,12 @@ cdef class GoldParse:
     cdef readonly list ents
     cdef readonly dict brackets
 
+    cdef readonly list cand_to_gold
+    cdef readonly list gold_to_cand
+    cdef readonly list orig_annot
+
     cdef int* c_tags
     cdef int* c_heads
     cdef int* c_labels
     cdef int** c_brackets
     cdef Transition* c_ner
-
-    cdef int heads_correct(self, TokenC* tokens, bint score_punct=?) except -1
