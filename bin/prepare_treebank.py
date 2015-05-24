@@ -34,44 +34,30 @@ def _iter_raw_files(raw_loc):
         yield f
 
 
-def _get_word_indices(raw_sent, word_idx, offset):
-    indices = {}
-    for piece in raw_sent.split('<SEP>'):
-        for match in re.finditer(r'\S+', piece):
-            indices[word_idx] = offset + match.start()
-            word_idx += 1
-        offset += len(piece)
-    return indices, word_idx, offset + 1
-            
-
 def format_doc(section, filename, raw_paras, ptb_loc, dep_loc):
     ptb_sents = read_ptb.split(open(ptb_loc).read())
     dep_sents = read_conll.split(open(dep_loc).read())
 
     assert len(ptb_sents) == len(dep_sents)
 
-    word_idx = 0
     i = 0
     doc = {'id': filename, 'paragraphs': []}
     for raw_sents in raw_paras:
-        para = {'raw': ' '.join(sent.replace('<SEP>', '') for sent in raw_sents),
-                    'segmented': '<SENT>'.join(raw_sents),
-                    'sents': [],
-                    'tokens': [],
-                    'brackets': []}
+        para = {
+            'raw': ' '.join(sent.replace('<SEP>', '') for sent in raw_sents),
+            'sents': [],
+            'tokens': [],
+            'brackets': []}
         offset = 0
         for raw_sent in raw_sents:
-            words = raw_sent.replace('<SEP>', ' ').split()
-            para['sents'].append(offset) 
             _, brackets = read_ptb.parse(ptb_sents[i], strip_bad_periods=True)
             _, annot = read_conll.parse(dep_sents[i], strip_bad_periods=True)
-            indices, word_idx, offset = _get_word_indices(raw_sent, 0, offset)
-            for j, token in enumerate(annot):
+            for token_id, token in enumerate(annot):
                 try:
-                    head = indices[token['head']] if token['head'] != -1 else -1
+                    head = (token['head'] + offset) if token['head'] != -1 else -1
                     para['tokens'].append({
-                        'start': indices[token['id']],
-                        'orth': words[j],
+                        'id': offset + token_id,
+                        'orth': token['word'],
                         'tag': token['tag'],
                         'head': head,
                         'dep': token['dep']})
@@ -80,9 +66,11 @@ def format_doc(section, filename, raw_paras, ptb_loc, dep_loc):
             for label, start, end in brackets:
                 if start != end:
                     para['brackets'].append({'label': label,
-                        'start': indices[start],
-                        'end': indices[end-1]})
+                        'start': start + offset,
+                        'end': (end-1) + offset})
             i += 1
+            offset += len(annot)
+            para['sents'].append(offset)
         doc['paragraphs'].append(para)
     return doc
 
