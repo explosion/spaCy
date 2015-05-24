@@ -20,7 +20,7 @@ from spacy.en.pos import POS_TEMPLATES, POS_TAGS, setup_model_dir
 from spacy.syntax.parser import GreedyParser
 from spacy.syntax.parser import OracleError
 from spacy.syntax.util import Config
-from spacy.syntax.conll import read_docparse_file, read_json_file
+from spacy.syntax.conll import read_json_file
 from spacy.syntax.conll import GoldParse
 
 from spacy.scorer import Scorer
