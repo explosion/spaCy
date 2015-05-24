@@ -30,7 +30,7 @@ EMPTY_LEXEME.repvec = EMPTY_VEC
 cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
-    def __init__(self, data_dir=None, get_lex_props=None):
+    def __init__(self, data_dir=None, get_lex_props=None, load_vectors=True):
         self.mem = Pool()
         self._map = PreshMap(2 ** 20)
         self.strings = StringStore()
@@ -45,7 +45,7 @@ cdef class Vocab:
                 raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
             self.load_lexemes(path.join(data_dir, 'strings.txt'),
                               path.join(data_dir, 'lexemes.bin'))
-            if path.exists(path.join(data_dir, 'vec.bin')):
+            if load_vectors and path.exists(path.join(data_dir, 'vec.bin')):
                 self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
 
     def __len__(self):

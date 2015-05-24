@@ -64,12 +64,12 @@ class English(object):
     ParserTransitionSystem = ArcEager
     EntityTransitionSystem = BiluoPushDown
 
-    def __init__(self, data_dir=''):
+    def __init__(self, data_dir='', load_vectors=True):
         if data_dir == '':
             data_dir = LOCAL_DATA_DIR
         self._data_dir = data_dir
         self.vocab = Vocab(data_dir=path.join(data_dir, 'vocab') if data_dir else None,
-                           get_lex_props=get_lex_props)
+                           get_lex_props=get_lex_props, load_vectors=load_vectors)
         tag_names = list(POS_TAGS.keys())
         tag_names.sort()
         if data_dir is None:
