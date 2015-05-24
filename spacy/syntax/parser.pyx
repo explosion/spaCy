@@ -30,7 +30,7 @@ from .arc_eager cimport TransitionSystem, Transition
 from .transition_system import OracleError
 
 from ._state cimport new_state, State, is_final, get_idx, get_s0, get_s1, get_n0, get_n1
-from .conll cimport GoldParse
+from ..gold cimport GoldParse
 
 from . import _parse_features
 from ._parse_features cimport fill_context, CONTEXT_SIZE
@@ -107,14 +107,21 @@ cdef class GreedyParser:
         cdef Transition guess
         cdef Transition best
         cdef atom_t[CONTEXT_SIZE] context
+        loss = 0
         while not is_final(state):
+            
             fill_context(context, state)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
             best = self.moves.best_gold(scores, state, gold)
+            #print self.moves.move_name(guess.move, guess.label),
+            #print self.moves.move_name(best.move, best.label),
+            #print print_state(state, py_words)
 
             cost = guess.get_cost(&guess, state, gold)
             self.model.update(context, guess.clas, best.clas, cost)
 
             guess.do(&guess, state)
+            loss += cost
         self.moves.finalize_state(state)
+        return loss

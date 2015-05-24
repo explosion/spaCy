@@ -20,8 +20,8 @@ from spacy.en.pos import POS_TEMPLATES, POS_TAGS, setup_model_dir
 from spacy.syntax.parser import GreedyParser
 from spacy.syntax.parser import OracleError
 from spacy.syntax.util import Config
-from spacy.syntax.conll import read_json_file
-from spacy.syntax.conll import GoldParse
+from spacy.gold import read_json_file
+from spacy.gold import GoldParse
 
 from spacy.scorer import Scorer
 
@@ -65,11 +65,13 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
         gold_tuples = gold_tuples[:n_sents]
     nlp = Language(data_dir=model_dir)
 
-    print "Itn.\tUAS\tNER F.\tTag %\tToken %"
+    print "Itn.\tP.Loss\tUAS\tNER F.\tTag %\tToken %"
     for itn in range(n_iter):
         scorer = Scorer()
+        loss = 0
         for raw_text, annot_tuples, ctnt in gold_tuples:
-            raw_text = ''.join(add_noise(c, corruption_level) for c in raw_text)
+            if corruption_level != 0:
+                raw_text = ''.join(add_noise(c, corruption_level) for c in raw_text)
             tokens = nlp(raw_text, merge_mwes=False)
             gold = GoldParse(tokens, annot_tuples)
             scorer.score(tokens, gold, verbose=False)
@@ -79,7 +81,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
                 gold = GoldParse(tokens, annot_tuples)
                 nlp.tagger(tokens)
                 try:
-                    nlp.parser.train(tokens, gold)
+                    loss += nlp.parser.train(tokens, gold)
                 except AssertionError:
                     # TODO: Do something about non-projective sentences
                     continue
@@ -87,7 +89,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
                     nlp.entity.train(tokens, gold)
                 nlp.tagger.train(tokens, gold.tags)
 
-        print '%d:\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, scorer.uas, scorer.ents_f,
+        print '%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
                                                scorer.tags_acc,
                                                scorer.token_acc)
         random.shuffle(gold_tuples)
@@ -148,15 +150,16 @@ def get_sents(json_loc):
     model_dir=("Location of output model directory",),
     out_loc=("Out location", "option", "o", str),
     n_sents=("Number of training sentences", "option", "n", int),
+    n_iter=("Number of training iterations", "option", "i", int),
     verbose=("Verbose error reporting", "flag", "v", bool),
     debug=("Debug mode", "flag", "d", bool)
 )
-def main(train_loc, dev_loc, model_dir, n_sents=0, out_loc="", verbose=False,
+def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
          debug=False, corruption_level=0.0):
     train(English, read_json_file(train_loc), model_dir,
           feat_set='basic' if not debug else 'debug',
           gold_preproc=False, n_sents=n_sents,
-          corruption_level=corruption_level)
+          corruption_level=corruption_level, n_iter=n_iter)
     if out_loc:
         write_parses(English, dev_loc, model_dir, out_loc)
     scorer = evaluate(English, read_json_file(dev_loc),

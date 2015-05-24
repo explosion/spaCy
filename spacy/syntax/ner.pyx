@@ -8,7 +8,7 @@ from .transition_system cimport do_func_t
 from ..structs cimport TokenC, Entity
 
 from thinc.typedefs cimport weight_t
-from .conll cimport GoldParse
+from ..gold cimport GoldParse
 
 
 cdef enum:

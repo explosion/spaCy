@@ -2,7 +2,7 @@ import numpy
 import codecs
 import json
 import random
-from spacy.munge.alignment import align
+from .munge.alignment import align
 
 from libc.string cimport memset
 

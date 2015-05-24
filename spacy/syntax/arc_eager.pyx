@@ -10,7 +10,7 @@ from ._state cimport count_left_kids
 from ..structs cimport TokenC
 
 from .transition_system cimport do_func_t, get_cost_func_t
-from .conll cimport GoldParse
+from ..gold cimport GoldParse
 
 
 DEF NON_MONOTONIC = True

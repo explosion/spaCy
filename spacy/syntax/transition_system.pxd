@@ -3,7 +3,7 @@ from thinc.typedefs cimport weight_t
 
 from ..structs cimport TokenC
 from ._state cimport State
-from .conll cimport GoldParse
+from ..gold cimport GoldParse
 from ..strings cimport StringStore
 
 
