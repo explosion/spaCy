@@ -124,25 +124,6 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
     return scorer
 
 
-def get_sents(json_loc):
-    if path.exists(path.join(json_dir, section + '.json')):
-        for sent in read_json_file(path.join(json_dir, section + '.json')):
-            yield sent
-    else:
-        if section == 'train':
-            file_range = range(2, 22)
-        elif section == 'dev':
-            file_range = range(22, 23)
-
-        for i in file_range:
-            sec = str(i)
-            if len(sec) == 1:
-                sec = '0' + sec
-            loc = path.join(json_dir, sec + '.json')
-            for sent in read_json_file(loc):
-                yield sent
-
-
 @plac.annotations(
     train_loc=("Location of training json file"),
     dev_loc=("Location of development json file"),
