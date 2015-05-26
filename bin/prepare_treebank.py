@@ -59,8 +59,9 @@ def format_doc(file_id, raw_paras, ptb_text, dep_text, ner_text):
             _, annot = read_conll.parse(dep_sents[i], strip_bad_periods=True)
             if ner_sents is not None:
                 _, ner = read_ner.parse(ner_sents[i], strip_bad_periods=True)
+                assert len(ner) == len(annot)
             else:
-                ner = None
+                ner = ['-' for _ in annot]
             for token_id, token in enumerate(annot):
                 try:
                     head = (token['head'] + offset) if token['head'] != -1 else -1
@@ -69,16 +70,10 @@ def format_doc(file_id, raw_paras, ptb_text, dep_text, ner_text):
                         'orth': token['word'],
                         'tag': token['tag'],
                         'head': head,
-                        'dep': token['dep']})
+                        'dep': token['dep'],
+                        'ner': ner[token_id]})
                 except:
                     raise
-            if ner is not None:
-                for label, start, end in ner:
-                    if start != end:
-                        para['entities'].append({
-                            'label': label,
-                            'first': start + offset,
-                            'last': (end-1) + offset})
             for label, start, end in brackets:
                 if start != end:
                     para['brackets'].append({
