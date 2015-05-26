@@ -44,10 +44,13 @@ cdef class Model:
             count_feats(counts[guess], feats, n_feats, -cost)
             self._model.update(counts)
 
+    @cython.cdivision
+    @cython.boundscheck(False)
     cdef int regularize(self, Feature* feats, int n, int a=3) except -1:
-        zipfs = numpy.random.zipf(a, n)
+        cdef int i
+        cdef long[:] zipfs = numpy.random.zipf(a, n)
         for i in range(n):
-            feats[i].value *= 1.0 / zipfs[i]
+            feats[i].value *= 1 / zipfs[i]
 
     def end_training(self):
         self._model.end_training()
