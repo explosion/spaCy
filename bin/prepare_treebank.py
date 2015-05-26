@@ -4,18 +4,20 @@ doc: {
     id: string,
     paragraphs: [{
         raw: string,
-        segmented: string,
         sents: [int],
         tokens: [{
             start: int,
             tag: string,
             head: int,
             dep: string}],
+        ner: [{
+            start: int,
+            end: int,
+            label: string}],
         brackets: [{
             start: int,
             end: int,
-            label: string,
-            flabel: int}]}]}
+            label: string}]}]}
 
 Consumes output of spacy/munge/align_raw.py
 """
@@ -26,6 +28,7 @@ import re
 
 from spacy.munge import read_ptb
 from spacy.munge import read_conll
+from spacy.munge import read_ner
 
 
 def _iter_raw_files(raw_loc):
@@ -34,24 +37,30 @@ def _iter_raw_files(raw_loc):
         yield f
 
 
-def format_doc(section, filename, raw_paras, ptb_loc, dep_loc):
-    ptb_sents = read_ptb.split(open(ptb_loc).read())
-    dep_sents = read_conll.split(open(dep_loc).read())
+def format_doc(file_id, raw_paras, ptb_text, dep_text, ner_text):
+    ptb_sents = read_ptb.split(ptb_text)
+    dep_sents = read_conll.split(dep_text)
+    ner_sents = read_ner.split(ner_text) if ner_text is not None else None
 
     assert len(ptb_sents) == len(dep_sents)
 
     i = 0
-    doc = {'id': filename, 'paragraphs': []}
+    doc = {'id': file_id, 'paragraphs': []}
     for raw_sents in raw_paras:
         para = {
             'raw': ' '.join(sent.replace('<SEP>', '') for sent in raw_sents),
             'sents': [],
             'tokens': [],
-            'brackets': []}
+            'brackets': [],
+            'entities': []}
         offset = 0
         for raw_sent in raw_sents:
             _, brackets = read_ptb.parse(ptb_sents[i], strip_bad_periods=True)
             _, annot = read_conll.parse(dep_sents[i], strip_bad_periods=True)
+            if ner_sents is not None:
+                _, ner = read_ner.parse(ner_sents[i], strip_bad_periods=True)
+            else:
+                ner = None
             for token_id, token in enumerate(annot):
                 try:
                     head = (token['head'] + offset) if token['head'] != -1 else -1
@@ -63,11 +72,19 @@ def format_doc(section, filename, raw_paras, ptb_loc, dep_loc):
                         'dep': token['dep']})
                 except:
                     raise
+            if ner is not None:
+                for label, start, end in ner:
+                    if start != end:
+                        para['entities'].append({
+                            'label': label,
+                            'first': start + offset,
+                            'last': (end-1) + offset})
             for label, start, end in brackets:
                 if start != end:
-                    para['brackets'].append({'label': label,
-                        'start': start + offset,
-                        'end': (end-1) + offset})
+                    para['brackets'].append({
+                        'label': label,
+                        'first': start + offset,
+                        'last': (end-1) + offset})
             i += 1
             offset += len(annot)
             para['sents'].append(offset)
@@ -87,9 +104,15 @@ def main(onto_dir, raw_dir, out_dir):
                 continue
             ptb_loc = path.join(onto_dir, section, '%s.parse' % filename)
             dep_loc = ptb_loc + '.dep'
-            if path.exists(ptb_loc) and path.exists(dep_loc):
-                doc = format_doc(section, filename, raw_paras, ptb_loc, dep_loc)
-                docs.append(doc)
+            ner_loc = path.join(onto_dir, section, '%s.name' % filename)
+            if path.exists(ptb_loc) and path.exists(dep_loc) and path.exists(ner_loc):
+                docs.append(
+                    format_doc(
+                        filename,
+                        raw_paras,
+                        open(ptb_loc).read().strip(),
+                        open(dep_loc).read().strip(),
+                        open(ner_loc).read().strip() if path.exists(ner_loc) else None))
         with open(path.join(out_dir, '%s.json' % section), 'w') as file_:
             json.dump(docs, file_, indent=4)
 
