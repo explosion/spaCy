@@ -84,15 +84,13 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
                     loss += nlp.parser.train(tokens, gold)
                 except AssertionError:
                     # TODO: Do something about non-projective sentences
-                    continue
-                if gold.ents:
-                    nlp.entity.train(tokens, gold)
+                    pass
+                nlp.entity.train(tokens, gold)
                 nlp.tagger.train(tokens, gold.tags)
-
+        random.shuffle(gold_tuples)
         print '%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
                                                scorer.tags_acc,
                                                scorer.token_acc)
-        random.shuffle(gold_tuples)
     nlp.parser.model.end_training()
     nlp.entity.model.end_training()
     nlp.tagger.model.end_training()
