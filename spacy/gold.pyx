@@ -1,6 +1,7 @@
 import numpy
 import codecs
 import json
+import ijson
 import random
 import re
 
@@ -38,11 +39,13 @@ def _min_edit_path(cand_words, gold_words):
 
     # TODO: Fix this --- just do it properly, make the full edit matrix and
     # then walk back over it...
-    mem = Pool()
     # Preprocess inputs
     cand_words = [punct_re.sub('', w) for w in cand_words] 
     gold_words = [punct_re.sub('', w) for w in gold_words] 
-
+    
+    if cand_words == gold_words:
+        return 0, ['M' for _ in gold_words]
+    mem = Pool()
     n_cand = len(cand_words)
     n_gold = len(gold_words)
     # Levenshtein distance, except we need the history, and we may want different
@@ -89,30 +92,30 @@ def _min_edit_path(cand_words, gold_words):
 
     return prev_costs[n_gold], previous_row[-1]
 
-def read_json_file(loc):
-    paragraphs = []
-    for doc in json.load(open(loc)):
-        for paragraph in doc['paragraphs']:
-            words = []
-            ids = []
-            tags = []
-            heads = []
-            labels = []
-            ner = []
-            for token in paragraph['tokens']:
-                words.append(token['orth'])
-                ids.append(token['id'])
-                tags.append(token['tag'])
-                heads.append(token['head'] if token['head'] >= 0 else token['id'])
-                labels.append(token['dep'])
-                ner.append(token.get('ner', '-'))
 
-            brackets = []
-            paragraphs.append((
-                paragraph['raw'],
-                (ids, words, tags, heads, labels, ner),
-                paragraph.get('brackets', [])))
-    return paragraphs
+def read_json_file(loc):
+    with open(loc) as file_:
+        for doc in ijson.items(file_, 'item'):
+            paragraphs = []
+            for paragraph in doc['paragraphs']:
+                words = []
+                ids = []
+                tags = []
+                heads = []
+                labels = []
+                ner = []
+                for token in paragraph['tokens']:
+                    words.append(token['orth'])
+                    ids.append(token['id'])
+                    tags.append(token['tag'])
+                    heads.append(token['head'] if token['head'] >= 0 else token['id'])
+                    labels.append(token['dep'])
+                    ner.append(token.get('ner', '-'))
+
+                yield (
+                    paragraph.get('raw', None),
+                    (ids, words, tags, heads, labels, ner),
+                    paragraph.get('brackets', []))
 
 
 def _iob_to_biluo(tags):
