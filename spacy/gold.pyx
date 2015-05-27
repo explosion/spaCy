@@ -4,6 +4,7 @@ import json
 import random
 import re
 
+from spacy.munge.read_ner import tags_to_entities
 from libc.string cimport memset
 
 
@@ -97,18 +98,19 @@ def read_json_file(loc):
             tags = []
             heads = []
             labels = []
-            iob_ents = []
+            ner = []
             for token in paragraph['tokens']:
                 words.append(token['orth'])
                 ids.append(token['id'])
                 tags.append(token['tag'])
                 heads.append(token['head'] if token['head'] >= 0 else token['id'])
                 labels.append(token['dep'])
-                iob_ents.append(token.get('iob_ent', '-'))
+                ner.append(token.get('ner', '-'))
 
             brackets = []
-            paragraphs.append((paragraph['raw'],
-                (ids, words, tags, heads, labels, _iob_to_biluo(iob_ents)),
+            paragraphs.append((
+                paragraph['raw'],
+                (ids, words, tags, heads, labels, ner),
                 paragraph.get('brackets', [])))
     return paragraphs
 
@@ -171,8 +173,6 @@ cdef class GoldParse:
 
         self.orig_annot = zip(*annot_tuples)
 
-        self.ents = []
-
         for i, gold_i in enumerate(self.cand_to_gold):
             if gold_i is None:
                 # TODO: What do we do for missing values again?
@@ -181,15 +181,7 @@ cdef class GoldParse:
                 self.tags[i] = annot_tuples[2][gold_i]
                 self.heads[i] = self.gold_to_cand[annot_tuples[3][gold_i]]
                 self.labels[i] = annot_tuples[4][gold_i]
-        # TODO: Declare NER information MISSING if tokenization incorrect
-        for start, end, label in self.ents:
-            if start == (end - 1):
-                self.ner[start] = 'U-%s' % label
-            else:
-                self.ner[start] = 'B-%s' % label
-                for i in range(start+1, end-1):
-                    self.ner[i] = 'I-%s' % label
-                self.ner[end-1] = 'L-%s' % label
+                self.ner[i] = annot_tuples[5][gold_i]
 
         self.brackets = {}
         for (gold_start, gold_end, label_str) in brackets:
@@ -197,7 +189,7 @@ cdef class GoldParse:
             end = self.gold_to_cand[gold_end]
             if start is not None and end is not None:
                 self.brackets.setdefault(start, {}).setdefault(end, set())
-                self.brackets[end][start].add(label)
+                self.brackets[end][start].add(label_str)
 
     def __len__(self):
         return self.length
