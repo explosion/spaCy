@@ -39,6 +39,18 @@ def add_noise(c, noise_level):
         return c.lower()
 
 
+def score_model(scorer, nlp, raw_text, annot_tuples):
+    if raw_text is None:
+        tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
+        nlp.tagger(tokens)
+        nlp.entity(tokens)
+        nlp.parser(tokens)
+    else:
+        tokens = nlp(raw_text, merge_mwes=False)
+    gold = GoldParse(tokens, annot_tuples)
+    scorer.score(tokens, gold, verbose=False)
+
+
 def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0,
           gold_preproc=False, n_sents=0, corruption_level=0):
     dep_model_dir = path.join(model_dir, 'deps')
@@ -70,23 +82,20 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
         scorer = Scorer()
         loss = 0
         for raw_text, annot_tuples, ctnt in gold_tuples:
-            if corruption_level != 0:
-                raw_text = ''.join(add_noise(c, corruption_level) for c in raw_text)
-            tokens = nlp(raw_text, merge_mwes=False)
+            score_model(scorer, nlp, raw_text, annot_tuples)
+            if raw_text is None:
+                tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
+            else:
+                tokens = nlp.tokenizer(raw_text)
             gold = GoldParse(tokens, annot_tuples)
-            scorer.score(tokens, gold, verbose=False)
-            assert not gold_preproc
-            sents = [nlp.tokenizer(raw_text)]
-            for tokens in sents:
-                gold = GoldParse(tokens, annot_tuples)
-                nlp.tagger(tokens)
-                try:
-                    loss += nlp.parser.train(tokens, gold)
-                except AssertionError:
-                    # TODO: Do something about non-projective sentences
-                    pass
-                nlp.entity.train(tokens, gold)
-                nlp.tagger.train(tokens, gold.tags)
+            nlp.tagger(tokens)
+            try:
+                loss += nlp.parser.train(tokens, gold)
+            except AssertionError:
+                # TODO: Do something about non-projective sentences
+                pass
+            nlp.entity.train(tokens, gold)
+            nlp.tagger.train(tokens, gold.tags)
         random.shuffle(gold_tuples)
         print '%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
                                                scorer.tags_acc,
@@ -135,13 +144,16 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
 )
 def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
          debug=False, corruption_level=0.0):
-    train(English, read_json_file(train_loc), model_dir,
+    print 'reading gold'
+    gold_train = list(read_json_file(train_loc))
+    print 'done'
+    train(English, gold_train, model_dir,
           feat_set='basic' if not debug else 'debug',
           gold_preproc=False, n_sents=n_sents,
           corruption_level=corruption_level, n_iter=n_iter)
     if out_loc:
         write_parses(English, dev_loc, model_dir, out_loc)
-    scorer = evaluate(English, read_json_file(dev_loc),
+    scorer = evaluate(English, list(read_json_file(dev_loc)),
                       model_dir, gold_preproc=False, verbose=verbose)
     print 'TOK', 100-scorer.token_acc
     print 'POS', scorer.tags_acc
