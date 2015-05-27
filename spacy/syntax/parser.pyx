@@ -87,7 +87,7 @@ cdef class GreedyParser:
         cdef Transition guess
         while not is_final(state):
             fill_context(context, state)
-            scores = self.model.score(context)
+            scores = self.model.score(context, False)
             guess = self.moves.best_valid(scores, state)
             guess.do(&guess, state)
         self.moves.finalize_state(state)
@@ -111,12 +111,9 @@ cdef class GreedyParser:
         while not is_final(state):
             
             fill_context(context, state)
-            scores = self.model.score(context)
+            scores = self.model.score(context, True)
             guess = self.moves.best_valid(scores, state)
             best = self.moves.best_gold(scores, state, gold)
-            #print self.moves.move_name(guess.move, guess.label),
-            #print self.moves.move_name(best.move, best.label),
-            #print print_state(state, py_words)
 
             cost = guess.get_cost(&guess, state, gold)
             self.model.update(context, guess.clas, best.clas, cost)
