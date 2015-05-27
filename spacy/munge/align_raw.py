@@ -183,13 +183,15 @@ def get_sections(odc_dir, ptb_dir, out_dir):
         yield odc_loc, ptb_sec, out_loc
 
 
+def align_section(raw_paragraphs, ptb_files):
+    aligned = get_alignment(raw_paragraphs, ptb_files)
+    return [(fn, group_into_paras(sents))
+            for fn, sents in group_into_files(aligned)]
+
+
 def do_wsj(odc_dir, ptb_dir, out_dir):
     for odc_loc, ptb_sec_dir, out_loc in get_sections(odc_dir, ptb_dir, out_dir):
-        raw_paragraphs = read_odc(odc_loc)
-        ptb_files = read_ptb_sec(ptb_sec_dir)
-        aligned = get_alignment(raw_paragraphs, ptb_files)
-        files = [(fn, group_into_paras(sents))
-                 for fn, sents in group_into_files(aligned)]
+        files = align_section(read_odc(odc_loc), read_ptb_sec(ptb_sec_dir))
         with open(out_loc, 'w') as file_:
             json.dump(files, file_)
 
