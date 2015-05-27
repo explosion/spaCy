@@ -1,5 +1,7 @@
 from __future__ import division
 
+from spacy.munge.read_ner import tags_to_entities
+
 
 class PRFScore(object):
     """A precision / recall / F score"""
@@ -56,25 +58,25 @@ class Scorer(object):
 
     @property
     def ents_p(self):
-        return self.ner.precision
+        return self.ner.precision * 100
 
     @property
     def ents_r(self):
-        return self.ner.recall
+        return self.ner.recall * 100
 
     @property
     def ents_f(self):
-        return self.ner.fscore
+        return self.ner.fscore * 100
 
     def score(self, tokens, gold, verbose=False):
         assert len(tokens) == len(gold)
 
         gold_deps = set()
         gold_tags = set()
-        gold_tags = set()
+        gold_ents = set(tags_to_entities([annot[-1] for annot in gold.orig_annot]))
         for id_, word, tag, head, dep, ner in gold.orig_annot:
             if dep.lower() not in ('p', 'punct'):
-                gold_deps.add((id_, head, dep))
+                gold_deps.add((id_, head, dep.lower()))
                 gold_tags.add((id_, tag))
         cand_deps = set()
         cand_tags = set()
@@ -88,13 +90,22 @@ class Scorer(object):
                     self.unlabelled.fp += 1
                     self.labelled.fp += 1
                 else:
-                    cand_deps.add((gold_i, gold_head, token.dep_))
+                    cand_deps.add((gold_i, gold_head, token.dep_.lower()))
                 if gold_i is None:
                     self.tags.fp += 1
                 else:
                     cand_tags.add((gold_i, token.tag_))
+        cand_ents = set()
+        for ent in tokens.ents:
+            first = gold.cand_to_gold[ent.start]
+            last = gold.cand_to_gold[ent.end-1]
+            if first is None or last is None:
+                self.ner.fp += 1
+            else:
+                cand_ents.add((ent.label_, first, last))
 
-        self.tags.score_set(cand_tags, cand_deps)
+        self.ner.score_set(cand_ents, gold_ents)
+        self.tags.score_set(cand_tags, gold_tags)
         self.labelled.score_set(cand_deps, gold_deps)
         self.unlabelled.score_set(
             set(item[:2] for item in cand_deps),
