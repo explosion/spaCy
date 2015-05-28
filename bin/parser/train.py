@@ -111,7 +111,13 @@ def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=True)
     nlp = Language(data_dir=model_dir)
     scorer = Scorer()
     for raw_text, annot_tuples, brackets in gold_tuples:
-        tokens = nlp(raw_text, merge_mwes=False)
+        if raw_text is not None:
+            tokens = nlp(raw_text, merge_mwes=False)
+        else:
+            tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
+            nlp.tagger(tokens)
+            nlp.entity(tokens)
+            nlp.parser(tokens)
         gold = GoldParse(tokens, annot_tuples)
         scorer.score(tokens, gold, verbose=verbose)
     return scorer
@@ -144,13 +150,13 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
 )
 def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
          debug=False, corruption_level=0.0):
-    print 'reading gold'
-    gold_train = list(read_json_file(train_loc))
-    print 'done'
-    train(English, gold_train, model_dir,
-          feat_set='basic' if not debug else 'debug',
-          gold_preproc=False, n_sents=n_sents,
-          corruption_level=corruption_level, n_iter=n_iter)
+    #print 'reading gold'
+    #gold_train = list(read_json_file(train_loc))
+    #print 'done'
+    #train(English, gold_train, model_dir,
+    #      feat_set='basic' if not debug else 'debug',
+    #      gold_preproc=False, n_sents=n_sents,
+    #      corruption_level=corruption_level, n_iter=n_iter)
     if out_loc:
         write_parses(English, dev_loc, model_dir, out_loc)
     scorer = evaluate(English, list(read_json_file(dev_loc)),
