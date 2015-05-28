@@ -407,8 +407,13 @@ cdef inline bint _can_break(const State* s) nogil:
         return False
     elif at_eol(s):
         return False
+    elif NON_MONOTONIC:
+        return True
     else:
-        # If stack is disconnected, cannot break
+        # In the Break transition paper, they have this constraint that prevents
+        # Break if stack is disconnected. But, if we're doing non-monotonic parsing,
+        # we prefer to relax this constraint. This is helpful in parsing whole
+        # documents, because then we don't get stuck with words on the stack.
         seen_headless = False
         for i in range(s.stack_len):
             if s.sent[s.stack[-i]].head == 0:
