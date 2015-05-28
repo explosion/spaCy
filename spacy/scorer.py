@@ -95,16 +95,16 @@ class Scorer(object):
                     self.tags.fp += 1
                 else:
                     cand_tags.add((gold_i, token.tag_))
-        cand_ents = set()
-        for ent in tokens.ents:
-            first = gold.cand_to_gold[ent.start]
-            last = gold.cand_to_gold[ent.end-1]
-            if first is None or last is None:
-                self.ner.fp += 1
-            else:
-                cand_ents.add((ent.label_, first, last))
-
-        self.ner.score_set(cand_ents, gold_ents)
+        if '-' not in [token[-1] for token in gold.orig_annot]:
+            cand_ents = set()
+            for ent in tokens.ents:
+                first = gold.cand_to_gold[ent.start]
+                last = gold.cand_to_gold[ent.end-1]
+                if first is None or last is None:
+                    self.ner.fp += 1
+                else:
+                    cand_ents.add((ent.label_, first, last))
+            self.ner.score_set(cand_ents, gold_ents)
         self.tags.score_set(cand_tags, gold_tags)
         self.labelled.score_set(cand_deps, gold_deps)
         self.unlabelled.score_set(
