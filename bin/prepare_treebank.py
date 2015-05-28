@@ -28,6 +28,7 @@ from os import path
 import os
 import re
 import codecs
+from collections import defaultdict
 
 from spacy.munge import read_ptb
 from spacy.munge import read_conll
@@ -54,6 +55,8 @@ def format_doc(file_id, raw_paras, ptb_text, dep_text, ner_text):
     doc = {'id': file_id}
     if raw_paras is None:
         doc['paragraphs'] = [format_para(None, ptb_sents, dep_sents, ner_sents)]
+        #for ptb_sent, dep_sent, ner_sent in zip(ptb_sents, dep_sents, ner_sents):
+        #    doc['paragraphs'].append(format_para(None, [ptb_sent], [dep_sent], [ner_sent]))
     else:
         doc['paragraphs'] = []
         for raw_sents in raw_paras:
@@ -77,6 +80,8 @@ def format_para(raw_text, ptb_sents, dep_sents, ner_sents):
     assert len(ptb_sents) == len(dep_sents) == len(ner_sents)
     for ptb_text, dep_text, ner_text in zip(ptb_sents, dep_sents, ner_sents):
         _, annot = read_conll.parse(dep_text, strip_bad_periods=True)
+        if annot and 'VERB' in [t['tag'] for t in annot]:
+            continue
         if ner_text is not None:
             _, ner = read_ner.parse(ner_text, strip_bad_periods=True)
         else:
@@ -155,22 +160,29 @@ def get_doc(onto_dir, file_path, wsj_docs):
         else:
             return None
 
+
 def read_ids(loc):
     return open(loc).read().strip().split('\n')
+
 
 def main(onto_dir, raw_dir, out_dir):
     wsj_docs = read_wsj_with_source(onto_dir, raw_dir)
 
     for partition in ('train', 'test', 'development'):
         ids = read_ids(path.join(onto_dir, '%s.id' % partition))
-        out_loc = path.join(out_dir, '%s.json' % partition)
-        docs = []
+        docs_by_genre = defaultdict(list)
         for file_path in ids:
             doc = get_doc(onto_dir, file_path, wsj_docs)
             if doc is not None:
-                docs.append(doc)
-        with open(out_loc, 'w') as file_:
-            json.dump(docs, file_, indent=4)
+                genre = file_path.split('/')[3]
+                docs_by_genre[genre].append(doc)
+        part_dir = path.join(out_dir, partition)
+        if not path.exists(part_dir):
+            os.mkdir(part_dir)
+        for genre, docs in sorted(docs_by_genre.items()):
+            out_loc = path.join(part_dir, genre + '.json')
+            with open(out_loc, 'w') as file_:
+                json.dump(docs, file_, indent=4)
 
 
 if __name__ == '__main__':
