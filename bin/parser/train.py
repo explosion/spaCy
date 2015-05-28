@@ -150,13 +150,11 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
 )
 def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
          debug=False, corruption_level=0.0):
-    #print 'reading gold'
-    #gold_train = list(read_json_file(train_loc))
-    #print 'done'
-    #train(English, gold_train, model_dir,
-    #      feat_set='basic' if not debug else 'debug',
-    #      gold_preproc=False, n_sents=n_sents,
-    #      corruption_level=corruption_level, n_iter=n_iter)
+    gold_train = list(read_json_file(train_loc))
+    train(English, gold_train, model_dir,
+          feat_set='basic' if not debug else 'debug',
+          gold_preproc=False, n_sents=n_sents,
+          corruption_level=corruption_level, n_iter=n_iter)
     if out_loc:
         write_parses(English, dev_loc, model_dir, out_loc)
     scorer = evaluate(English, list(read_json_file(dev_loc)),
