@@ -71,44 +71,44 @@ def format_doc(file_id, raw_paras, ptb_text, dep_text, ner_text):
 
 
 def format_para(raw_text, ptb_sents, dep_sents, ner_sents):
-    para = {
-        'raw': raw_text,
-        'sents': [],
-        'tokens': [],
-        'brackets': []}
+    para = {'raw': raw_text, 'sentences': []}
     offset = 0
     assert len(ptb_sents) == len(dep_sents) == len(ner_sents)
     for ptb_text, dep_text, ner_text in zip(ptb_sents, dep_sents, ner_sents):
-        _, annot = read_conll.parse(dep_text, strip_bad_periods=True)
-        if annot and 'VERB' in [t['tag'] for t in annot]:
+        _, deps = read_conll.parse(dep_text, strip_bad_periods=True)
+        if deps and 'VERB' in [t['tag'] for t in deps]:
             continue
         if ner_text is not None:
             _, ner = read_ner.parse(ner_text, strip_bad_periods=True)
         else:
-            ner = ['-' for _ in annot]
-        # Necessary because the ClearNLP converter deletes EDITED words.
-        if len(ner) != len(annot):
-            ner = ['-' for _ in annot]
-        for token_id, (token, token_ent) in enumerate(zip(annot, ner)):
-            para['tokens'].append(format_token(offset, token_id, token, token_ent))
-
+            ner = ['-' for _ in deps]
         _, brackets = read_ptb.parse(ptb_text, strip_bad_periods=True)
-        for label, start, end in brackets:
-            if start != end:
-                para['brackets'].append({
-                    'label': label,
-                    'first': start + offset,
-                    'last': (end-1) + offset})
-        offset += len(annot)
-        para['sents'].append(offset)
+        # Necessary because the ClearNLP converter deletes EDITED words.
+        if len(ner) != len(deps):
+            ner = ['-' for _ in deps]
+        para['sentences'].append(format_sentence(deps, ner, brackets))
     return para
 
 
-def format_token(offset, token_id, token, ner):
+def format_sentence(deps, ner, brackets):
+    sent = {'tokens': [], 'brackets': []}
+    for token_id, (token, token_ent) in enumerate(zip(deps, ner)):
+        sent['tokens'].append(format_token(token_id, token, token_ent))
+
+    for label, start, end in brackets:
+        if start != end:
+            sent['brackets'].append({
+                'label': label,
+                'first': start,
+                'last': (end-1)})
+    return sent
+
+
+def format_token(token_id, token, ner):
     assert token_id == token['id']
-    head = (token['head'] + offset) if token['head'] != -1 else -1
+    head = (token['head'] - token_id) if token['head'] != -1 else 0
     return {
-        'id': offset + token_id,
+        'id': token_id,
         'orth': token['word'],
         'tag': token['tag'],
         'head': head,
