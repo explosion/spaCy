@@ -73,15 +73,15 @@ cdef class BiluoPushDown(TransitionSystem):
         move_labels = {MISSING: {'': True}, BEGIN: {}, IN: {}, LAST: {}, UNIT: {},
                        OUT: {'': True}}
         moves = ('M', 'B', 'I', 'L', 'U')
-        for (raw_text, tuples, ctnt) in gold_tuples:
-            ids, words, tags, heads, labels, biluo = tuples
-            for i, ner_tag in enumerate(biluo):
-                if ner_tag != 'O' and ner_tag != '-':
-                    if ner_tag.count('-') != 1:
-                        raise ValueError(ner_tag)
-                    _, label = ner_tag.split('-')
-                    for move_str in ('B', 'I', 'L', 'U'):
-                        move_labels[moves.index(move_str)][label] = True
+        for raw_text, sents in gold_tuples:
+            for (ids, words, tags, heads, labels, biluo), _ in sents:
+                for i, ner_tag in enumerate(biluo):
+                    if ner_tag != 'O' and ner_tag != '-':
+                        if ner_tag.count('-') != 1:
+                            raise ValueError(ner_tag)
+                        _, label = ner_tag.split('-')
+                        for move_str in ('B', 'I', 'L', 'U'):
+                            move_labels[moves.index(move_str)][label] = True
         return move_labels
 
     def move_name(self, int move, int label):

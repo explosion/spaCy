@@ -54,15 +54,16 @@ cdef class ArcEager(TransitionSystem):
         move_labels = {SHIFT: {'': True}, REDUCE: {'': True}, RIGHT: {},
                        LEFT: {'ROOT': True}, BREAK: {'ROOT': True},
                        CONSTITUENT: {}, ADJUST: {'': True}}
-        for raw_text, (ids, words, tags, heads, labels, iob), ctnts in gold_parses:
-            for child, head, label in zip(ids, heads, labels):
-                if label != 'ROOT':
-                    if head < child:
-                        move_labels[RIGHT][label] = True
-                    elif head > child:
-                        move_labels[LEFT][label] = True
-            for start, end, label in ctnts:
-                move_labels[CONSTITUENT][label] = True
+        for raw_text, sents in gold_parses:
+            for (ids, words, tags, heads, labels, iob), ctnts in sents:
+                for child, head, label in zip(ids, heads, labels):
+                    if label != 'ROOT':
+                        if head < child:
+                            move_labels[RIGHT][label] = True
+                        elif head > child:
+                            move_labels[LEFT][label] = True
+                for start, end, label in ctnts:
+                    move_labels[CONSTITUENT][label] = True
         return move_labels
 
     cdef int preprocess_gold(self, GoldParse gold) except -1:

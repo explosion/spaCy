@@ -104,24 +104,25 @@ def read_json_file(loc):
             for doc in ijson.items(file_, 'item'):
                 paragraphs = []
                 for paragraph in doc['paragraphs']:
-                    words = []
-                    ids = []
-                    tags = []
-                    heads = []
-                    labels = []
-                    ner = []
-                    for token in paragraph['tokens']:
-                        words.append(token['orth'])
-                        ids.append(token['id'])
-                        tags.append(token['tag'])
-                        heads.append(token['head'] if token['head'] >= 0 else token['id'])
-                        labels.append(token['dep'])
-                        ner.append(token.get('ner', '-'))
-
-                    yield (
-                        paragraph.get('raw', None),
-                        (ids, words, tags, heads, labels, ner),
-                        paragraph.get('brackets', []))
+                    sents = []
+                    for sent in paragraph['sentences']:
+                        words = []
+                        ids = []
+                        tags = []
+                        heads = []
+                        labels = []
+                        ner = []
+                        for i, token in enumerate(sent['tokens']):
+                            words.append(token['orth'])
+                            ids.append(i)
+                            tags.append(token['tag'])
+                            heads.append(token['head'] + i)
+                            labels.append(token['dep'])
+                            ner.append(token.get('ner', '-'))
+                        sents.append((
+                            (ids, words, tags, heads, labels, ner),
+                            sent.get('brackets', [])))
+                    yield (paragraph.get('raw', None), sents)
 
 
 def _iob_to_biluo(tags):
@@ -202,6 +203,19 @@ cdef class GoldParse:
 
     def __len__(self):
         return self.length
+
+    @property
+    def is_projective(self):
+        heads = [head for (id_, word, tag, head, dep, ner) in self.orig_annot]
+        deps = sorted([sorted(arc) for arc in enumerate(heads)])
+        for w1, h1 in deps:
+            for w2, h2 in deps:
+                if w1 < w2 < h1 < h2:
+                    return False
+                elif w1 < w2 == h2 < h1:
+                    return False
+        else:
+            return True
 
 
 def is_punct_label(label):

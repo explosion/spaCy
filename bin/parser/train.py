@@ -81,21 +81,21 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
     for itn in range(n_iter):
         scorer = Scorer()
         loss = 0
-        for raw_text, annot_tuples, ctnt in gold_tuples:
-            score_model(scorer, nlp, raw_text, annot_tuples)
-            if raw_text is None:
-                tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
-            else:
-                tokens = nlp.tokenizer(raw_text)
-            gold = GoldParse(tokens, annot_tuples)
-            nlp.tagger(tokens)
-            try:
-                loss += nlp.parser.train(tokens, gold)
-            except AssertionError:
-                # TODO: Do something about non-projective sentences
-                pass
-            nlp.entity.train(tokens, gold)
-            nlp.tagger.train(tokens, gold.tags)
+        for raw_text, sents in gold_tuples:
+            if not gold_preproc:
+                sents = _merge_sents(sents)
+            for annot_tuples, ctnt in sents:
+                score_model(scorer, nlp, raw_text, annot_tuples)
+                if raw_text is None or gold_preproc:
+                    tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
+                else:
+                    tokens = nlp.tokenizer(raw_text)
+                gold = GoldParse(tokens, annot_tuples)
+                nlp.tagger(tokens)
+                if gold.is_projective:
+                    loss += nlp.parser.train(tokens, gold)
+                nlp.entity.train(tokens, gold)
+                nlp.tagger.train(tokens, gold.tags)
         random.shuffle(gold_tuples)
         print '%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
                                                scorer.tags_acc,
@@ -107,19 +107,21 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
 
 
 def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=True):
-    assert not gold_preproc
     nlp = Language(data_dir=model_dir)
     scorer = Scorer()
-    for raw_text, annot_tuples, brackets in gold_tuples:
-        if raw_text is not None:
-            tokens = nlp(raw_text, merge_mwes=False)
-        else:
-            tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
-            nlp.tagger(tokens)
-            nlp.entity(tokens)
-            nlp.parser(tokens)
-        gold = GoldParse(tokens, annot_tuples)
-        scorer.score(tokens, gold, verbose=verbose)
+    for raw_text, sents in gold_tuples:
+        for annot_tuples, brackets in sents:
+            if raw_text is None or gold_preproc:
+                tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
+                nlp.tagger(tokens)
+                nlp.entity(tokens)
+                nlp.parser(tokens)
+            else:
+                tokens = nlp(raw_text, merge_mwes=False)
+            gold = GoldParse(tokens, annot_tuples)
+            scorer.score(tokens, gold, verbose=verbose)
+            for t in tokens:
+                print t.orth_, t.dep_, t.head.orth_, t.ent_type_
     return scorer
 
 
@@ -141,6 +143,7 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
     train_loc=("Location of training file or directory"),
     dev_loc=("Location of development file or directory"),
     corruption_level=("Amount of noise to add to training data", "option", "c", float),
+    gold_preproc=("Use gold-standard sentence boundaries in training?", "flag", "g", bool),
     model_dir=("Location of output model directory",),
     out_loc=("Out location", "option", "o", str),
     n_sents=("Number of training sentences", "option", "n", int),
@@ -149,16 +152,16 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
     debug=("Debug mode", "flag", "d", bool)
 )
 def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
-         debug=False, corruption_level=0.0):
+         debug=False, corruption_level=0.0, gold_preproc=False):
     gold_train = list(read_json_file(train_loc))
     train(English, gold_train, model_dir,
           feat_set='basic' if not debug else 'debug',
-          gold_preproc=False, n_sents=n_sents,
+          gold_preproc=gold_preproc, n_sents=n_sents,
           corruption_level=corruption_level, n_iter=n_iter)
-    if out_loc:
-        write_parses(English, dev_loc, model_dir, out_loc)
+    #if out_loc:
+    #    write_parses(English, dev_loc, model_dir, out_loc)
     scorer = evaluate(English, list(read_json_file(dev_loc)),
-                      model_dir, gold_preproc=False, verbose=verbose)
+                      model_dir, gold_preproc=gold_preproc, verbose=verbose)
     print 'TOK', 100-scorer.token_acc
     print 'POS', scorer.tags_acc
     print 'UAS', scorer.uas
