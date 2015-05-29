@@ -138,8 +138,8 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
 
 
 @plac.annotations(
-    train_loc=("Location of training json file"),
-    dev_loc=("Location of development json file"),
+    train_loc=("Location of training file or directory"),
+    dev_loc=("Location of development file or directory"),
     corruption_level=("Amount of noise to add to training data", "option", "c", float),
     model_dir=("Location of output model directory",),
     out_loc=("Out location", "option", "o", str),
