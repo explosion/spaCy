@@ -86,6 +86,9 @@ def format_para(raw_text, ptb_sents, dep_sents, ner_sents):
             _, ner = read_ner.parse(ner_text, strip_bad_periods=True)
         else:
             ner = ['-' for _ in annot]
+        # Necessary because the ClearNLP converter deletes EDITED words.
+        if len(ner) != len(annot):
+            ner = ['-' for _ in annot]
         for token_id, (token, token_ent) in enumerate(zip(annot, ner)):
             para['tokens'].append(format_token(offset, token_id, token, token_ent))
 
@@ -102,6 +105,7 @@ def format_para(raw_text, ptb_sents, dep_sents, ner_sents):
 
 
 def format_token(offset, token_id, token, ner):
+    assert token_id == token['id']
     head = (token['head'] + offset) if token['head'] != -1 else -1
     return {
         'id': offset + token_id,
