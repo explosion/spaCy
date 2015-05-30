@@ -60,12 +60,13 @@ def format_doc(file_id, raw_paras, ptb_text, dep_text, ner_text):
     else:
         doc['paragraphs'] = []
         for raw_sents in raw_paras:
-            doc['paragraphs'].append(
-                format_para(
-                    ' '.join(raw_sents).replace('<SEP>', ''),
-                    ptb_sents[i:i+len(raw_sents)],
-                    dep_sents[i:i+len(raw_sents)],
-                    ner_sents[i:i+len(raw_sents)]))
+            para = format_para(
+                        ' '.join(raw_sents).replace('<SEP>', ''),
+                        ptb_sents[i:i+len(raw_sents)],
+                        dep_sents[i:i+len(raw_sents)],
+                        ner_sents[i:i+len(raw_sents)])
+            if para['sentences']:
+                doc['paragraphs'].append(para)
             i += len(raw_sents)
     return doc
 
