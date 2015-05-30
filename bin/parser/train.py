@@ -39,14 +39,19 @@ def add_noise(c, noise_level):
         return c.lower()
 
 
-def score_model(scorer, nlp, raw_text, annot_tuples):
+def score_model(scorer, nlp, raw_text, annot_tuples, train_tags=None):
     if raw_text is None:
         tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
-        nlp.tagger(tokens)
-        nlp.entity(tokens)
-        nlp.parser(tokens)
     else:
-        tokens = nlp(raw_text, merge_mwes=False)
+        tokens = nlp.tokenizer(raw_text, merge_mwes=False)
+    if train_tags is not None:
+        key = hash(tokens.string)
+        nlp.tagger.tag_from_strings(tokens, train_tags[key])
+    else:
+        nlp.tagger(tokens)
+
+    nlp.entity(tokens)
+    nlp.parser(tokens)
     gold = GoldParse(tokens, annot_tuples)
     scorer.score(tokens, gold, verbose=False)
 
@@ -65,10 +70,78 @@ def _merge_sents(sents):
         m_brackets.extend((b['first'] + i, b['last'] + i, b['label']) for b in brackets)
         i += len(ids)
     return [(m_deps, m_brackets)]
-        
 
-def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0,
-          gold_preproc=False, n_sents=0, corruption_level=0):
+
+def get_train_tags(Language, model_dir, docs, gold_preproc):
+    taggings = {}
+    for train_part, test_part in get_partitions(docs, 5):
+        nlp = _train_tagger(Language, model_dir, train_part, gold_preproc)
+        for tokens in _tag_partition(nlp, test_part):
+            taggings[hash(tokens.string)] = [w.tag_ for w in tokens]
+    return taggings
+
+def get_partitions(docs, n_parts):
+    n_test = len(docs) / n_parts
+    n_train = len(docs) - n_test
+    for part in range(n_parts):
+        start = int(part * n_test)
+        end = int(start + n_test)
+        yield docs[:start] + docs[end:], docs[start:end]
+
+
+def _train_tagger(Language, model_dir, docs, gold_preproc=False, n_iter=5):
+    pos_model_dir = path.join(model_dir, 'pos')
+    if path.exists(pos_model_dir):
+        shutil.rmtree(pos_model_dir)
+    os.mkdir(pos_model_dir)
+    setup_model_dir(sorted(POS_TAGS.keys()), POS_TAGS, POS_TEMPLATES, pos_model_dir)
+
+    nlp = Language(data_dir=model_dir)
+
+    print "Itn.\tTag %"
+    for itn in range(n_iter):
+        scorer = Scorer()
+        correct = 0
+        total = 0
+        for raw_text, sents in docs:
+            if gold_preproc:
+                raw_text = None
+            else:
+                sents = _merge_sents(sents)
+            for annot_tuples, ctnt in sents:
+                if raw_text is None:
+                    tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
+                else:
+                    tokens = nlp.tokenizer(raw_text)
+                gold = GoldParse(tokens, annot_tuples)
+                correct += nlp.tagger.train(tokens, gold.tags)
+                total += len(tokens)
+        random.shuffle(docs)
+        print itn, '%.3f' % (correct / total)
+    nlp.tagger.model.end_training()
+    nlp.vocab.strings.dump(path.join(model_dir, 'vocab', 'strings.txt'))
+    return nlp
+
+
+def _tag_partition(nlp, docs, gold_preproc=False):
+    for raw_text, sents in docs:
+        if gold_preproc:
+            raw_text = None
+        else:
+            sents = _merge_sents(sents)
+        for annot_tuples, _ in sents:
+            if raw_text is None:
+                tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
+            else:
+                tokens = nlp.tokenizer(raw_text)
+
+            nlp.tagger(tokens)
+            yield tokens
+
+
+def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
+          seed=0, gold_preproc=False, n_sents=0, corruption_level=0,
+          train_tags=None):
     dep_model_dir = path.join(model_dir, 'deps')
     pos_model_dir = path.join(model_dir, 'pos')
     ner_model_dir = path.join(model_dir, 'ner')
@@ -91,6 +164,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
 
     if n_sents > 0:
         gold_tuples = gold_tuples[:n_sents]
+
     nlp = Language(data_dir=model_dir)
 
     print "Itn.\tP.Loss\tUAS\tNER F.\tTag %\tToken %"
@@ -103,15 +177,25 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
             else:
                 sents = _merge_sents(sents)
             for annot_tuples, ctnt in sents:
-                score_model(scorer, nlp, raw_text, annot_tuples)
+                score_model(scorer, nlp, raw_text, annot_tuples, train_tags)
                 if raw_text is None:
                     tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
                 else:
                     tokens = nlp.tokenizer(raw_text)
-                gold = GoldParse(tokens, annot_tuples)
-                nlp.tagger(tokens)
+                if train_tags is not None:
+                    sent_id = hash(tokens.string)
+                    nlp.tagger.tag_from_strings(tokens, train_tags[sent_id])
+                else:
+                    nlp.tagger(tokens)
+                gold = GoldParse(tokens, annot_tuples, make_projective=True)
                 if gold.is_projective:
-                    loss += nlp.parser.train(tokens, gold)
+                    try:
+                        loss += nlp.parser.train(tokens, gold)
+                    except:
+                        for i in range(len(tokens)):
+                            print tokens[i].orth_, gold.heads[i]
+                        raise
+                            
                 nlp.entity.train(tokens, gold)
                 nlp.tagger.train(tokens, gold.tags)
         random.shuffle(gold_tuples)
@@ -174,10 +258,12 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
 def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
          debug=False, corruption_level=0.0, gold_preproc=False):
     gold_train = list(read_json_file(train_loc))
+    taggings = get_train_tags(English, model_dir, gold_train, gold_preproc)
     train(English, gold_train, model_dir,
           feat_set='basic' if not debug else 'debug',
           gold_preproc=gold_preproc, n_sents=n_sents,
-          corruption_level=corruption_level, n_iter=n_iter)
+          corruption_level=corruption_level, n_iter=n_iter,
+          train_tags=taggings)
     if out_loc:
         write_parses(English, dev_loc, model_dir, out_loc)
     scorer = evaluate(English, list(read_json_file(dev_loc)),
