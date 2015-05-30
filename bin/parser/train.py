@@ -51,6 +51,22 @@ def score_model(scorer, nlp, raw_text, annot_tuples):
     scorer.score(tokens, gold, verbose=False)
 
 
+def _merge_sents(sents):
+    m_deps = [[], [], [], [], [], []]
+    m_brackets = []
+    i = 0
+    for (ids, words, tags, heads, labels, ner), brackets in sents:
+        m_deps[0].extend(id_ + i for id_ in ids)
+        m_deps[1].extend(words)
+        m_deps[2].extend(tags)
+        m_deps[3].extend(head + i for head in heads)
+        m_deps[4].extend(labels)
+        m_deps[5].extend(ner)
+        m_brackets.extend((b['first'] + i, b['last'] + i, b['label']) for b in brackets)
+        i += len(ids)
+    return [(m_deps, m_brackets)]
+        
+
 def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0,
           gold_preproc=False, n_sents=0, corruption_level=0):
     dep_model_dir = path.join(model_dir, 'deps')
@@ -82,11 +98,13 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
         scorer = Scorer()
         loss = 0
         for raw_text, sents in gold_tuples:
-            if not gold_preproc:
+            if gold_preproc:
+                raw_text = None
+            else:
                 sents = _merge_sents(sents)
             for annot_tuples, ctnt in sents:
                 score_model(scorer, nlp, raw_text, annot_tuples)
-                if raw_text is None or gold_preproc:
+                if raw_text is None:
                     tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
                 else:
                     tokens = nlp.tokenizer(raw_text)
@@ -106,12 +124,16 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
     nlp.vocab.strings.dump(path.join(model_dir, 'vocab', 'strings.txt'))
 
 
-def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=True):
+def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False):
     nlp = Language(data_dir=model_dir)
     scorer = Scorer()
     for raw_text, sents in gold_tuples:
+        if gold_preproc:
+            raw_text = None
+        else:
+            sents = _merge_sents(sents)
         for annot_tuples, brackets in sents:
-            if raw_text is None or gold_preproc:
+            if raw_text is None:
                 tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
                 nlp.tagger(tokens)
                 nlp.entity(tokens)
@@ -120,8 +142,6 @@ def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=True)
                 tokens = nlp(raw_text, merge_mwes=False)
             gold = GoldParse(tokens, annot_tuples)
             scorer.score(tokens, gold, verbose=verbose)
-            for t in tokens:
-                print t.orth_, t.dep_, t.head.orth_, t.ent_type_
     return scorer
 
 
@@ -158,8 +178,8 @@ def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbos
           feat_set='basic' if not debug else 'debug',
           gold_preproc=gold_preproc, n_sents=n_sents,
           corruption_level=corruption_level, n_iter=n_iter)
-    #if out_loc:
-    #    write_parses(English, dev_loc, model_dir, out_loc)
+    if out_loc:
+        write_parses(English, dev_loc, model_dir, out_loc)
     scorer = evaluate(English, list(read_json_file(dev_loc)),
                       model_dir, gold_preproc=gold_preproc, verbose=verbose)
     print 'TOK', 100-scorer.token_acc
