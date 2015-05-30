@@ -75,14 +75,18 @@ class Scorer(object):
         gold_tags = set()
         gold_ents = set(tags_to_entities([annot[-1] for annot in gold.orig_annot]))
         for id_, word, tag, head, dep, ner in gold.orig_annot:
+            gold_tags.add((id_, tag))
             if dep.lower() not in ('p', 'punct'):
                 gold_deps.add((id_, head, dep.lower()))
-                gold_tags.add((id_, tag))
         cand_deps = set()
         cand_tags = set()
         for token in tokens:
+            gold_i = gold.cand_to_gold[token.i]
+            if gold_i is None:
+                self.tags.fp += 1
+            else:
+                cand_tags.add((gold_i, token.tag_))
             if token.dep_ not in ('p', 'punct') and token.orth_.strip():
-                gold_i = gold.cand_to_gold[token.i]
                 gold_head = gold.cand_to_gold[token.head.i]
                 # None is indistinct, so we can't just add it to the set
                 # Multiple (None, None) deps are possible
@@ -91,10 +95,6 @@ class Scorer(object):
                     self.labelled.fp += 1
                 else:
                     cand_deps.add((gold_i, gold_head, token.dep_.lower()))
-                if gold_i is None:
-                    self.tags.fp += 1
-                else:
-                    cand_tags.add((gold_i, token.tag_))
         if '-' not in [token[-1] for token in gold.orig_annot]:
             cand_ents = set()
             for ent in tokens.ents:
