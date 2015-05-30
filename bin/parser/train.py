@@ -81,6 +81,7 @@ def get_train_tags(Language, model_dir, docs, gold_preproc):
     return taggings
 
 def get_partitions(docs, n_parts):
+    random.shuffle(docs)
     n_test = len(docs) / n_parts
     n_train = len(docs) - n_test
     for part in range(n_parts):
