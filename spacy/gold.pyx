@@ -2,6 +2,7 @@ import numpy
 import codecs
 import json
 import ijson
+import ujson
 import random
 import re
 import os
@@ -96,32 +97,35 @@ def _min_edit_path(cand_words, gold_words):
 
 
 def read_json_file(loc):
+    print loc
     if path.isdir(loc):
         for filename in os.listdir(loc):
             yield from read_json_file(path.join(loc, filename))
     else:
         with open(loc) as file_:
-            for doc in ijson.items(file_, 'item'):
-                paragraphs = []
-                for paragraph in doc['paragraphs']:
-                    sents = []
-                    for sent in paragraph['sentences']:
-                        words = []
-                        ids = []
-                        tags = []
-                        heads = []
-                        labels = []
-                        ner = []
-                        for i, token in enumerate(sent['tokens']):
-                            words.append(token['orth'])
-                            ids.append(i)
-                            tags.append(token['tag'])
-                            heads.append(token['head'] + i)
-                            labels.append(token['dep'])
-                            ner.append(token.get('ner', '-'))
-                        sents.append((
-                            (ids, words, tags, heads, labels, ner),
-                            sent.get('brackets', [])))
+            docs = ujson.load(file_)
+        for doc in docs:
+            paragraphs = []
+            for paragraph in doc['paragraphs']:
+                sents = []
+                for sent in paragraph['sentences']:
+                    words = []
+                    ids = []
+                    tags = []
+                    heads = []
+                    labels = []
+                    ner = []
+                    for i, token in enumerate(sent['tokens']):
+                        words.append(token['orth'])
+                        ids.append(i)
+                        tags.append(token['tag'])
+                        heads.append(token['head'] + i)
+                        labels.append(token['dep'])
+                        ner.append(token.get('ner', '-'))
+                    sents.append((
+                        (ids, words, tags, heads, labels, ner),
+                        sent.get('brackets', [])))
+                if sents:
                     yield (paragraph.get('raw', None), sents)
 
 
