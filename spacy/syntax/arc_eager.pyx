@@ -238,8 +238,6 @@ cdef int _shift_cost(const Transition* self, const State* s, GoldParse gold) exc
     cost = 0
     cost += head_in_stack(s, s.i, gold.c_heads)
     cost += children_in_stack(s, s.i, gold.c_heads)
-    if NON_MONOTONIC:
-        cost += gold.c_heads[s.stack[0]] == s.i
     # If we can break, and there's no cost to doing so, we should
     if _can_break(s) and _break_cost(self, s, gold) == 0:
         cost += 1
@@ -258,8 +256,6 @@ cdef int _right_cost(const Transition* self, const State* s, GoldParse gold) exc
         cost += head_in_buffer(s, s.i, gold.c_heads)
     cost += children_in_stack(s, s.i, gold.c_heads)
     cost += head_in_stack(s, s.i, gold.c_heads)
-    if NON_MONOTONIC:
-        cost += gold.c_heads[s.stack[0]] == s.i
     return cost
 
 
@@ -274,9 +270,11 @@ cdef int _left_cost(const Transition* self, const State* s, GoldParse gold) exce
     elif at_eol(s):
         # Are we root?
         if gold.c_labels[s.stack[0]] != -1:
-            cost += gold.c_heads[s.stack[0]] != s.stack[0]
-            # Are we labelling correctly?
-            cost += self.label != gold.c_labels[s.stack[0]]
+            # If we're at EOL, prefer to reduce or break over left-arc
+            if _can_reduce(s) or _can_break(s): 
+                cost += gold.c_heads[s.stack[0]] != s.stack[0]
+                # Are we labelling correctly?
+                cost += self.label != gold.c_labels[s.stack[0]]
         return cost
 
     cost += head_in_buffer(s, s.stack[0], gold.c_heads)
