@@ -408,8 +408,8 @@ cdef inline bint _can_break(const State* s) nogil:
         return False
     elif at_eol(s):
         return False
-    elif NON_MONOTONIC:
-        return True
+    #elif NON_MONOTONIC:
+    #    return True
     else:
         # In the Break transition paper, they have this constraint that prevents
         # Break if stack is disconnected. But, if we're doing non-monotonic parsing,
