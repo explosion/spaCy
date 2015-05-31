@@ -43,7 +43,7 @@ def score_model(scorer, nlp, raw_text, annot_tuples, train_tags=None):
     if raw_text is None:
         tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
     else:
-        tokens = nlp.tokenizer(raw_text, merge_mwes=False)
+        tokens = nlp.tokenizer(raw_text)
     if train_tags is not None:
         key = hash(tokens.string)
         nlp.tagger.tag_from_strings(tokens, train_tags[key])
