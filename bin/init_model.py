@@ -74,6 +74,9 @@ def setup_vocab(src_dir, dst_dir):
     vocab = Vocab(data_dir=None, get_lex_props=get_lex_props)
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs = _read_probs(src_dir / 'words.sgt.prob')
+    for word in clusters:
+        if word not in probs:
+            probs[word] = -17.0
     lexicon = []
     for word, prob in reversed(sorted(probs.items(), key=lambda item: item[1])):
         entry = get_lex_props(word)
