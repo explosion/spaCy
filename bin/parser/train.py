@@ -190,12 +190,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                     nlp.tagger(tokens)
                 gold = GoldParse(tokens, annot_tuples, make_projective=True)
                 if gold.is_projective:
-                    try:
-                        loss += nlp.parser.train(tokens, gold)
-                    except:
-                        for i in range(len(tokens)):
-                            print tokens[i].orth_, gold.heads[i]
-                        raise
+                    loss += nlp.parser.train(tokens, gold)
                             
                 nlp.entity.train(tokens, gold)
                 nlp.tagger.train(tokens, gold.tags)
@@ -259,7 +254,8 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
 def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
          debug=False, corruption_level=0.0, gold_preproc=False):
     gold_train = list(read_json_file(train_loc))
-    taggings = get_train_tags(English, model_dir, gold_train, gold_preproc)
+    #taggings = get_train_tags(English, model_dir, gold_train, gold_preproc)
+    taggings = None
     train(English, gold_train, model_dir,
           feat_set='basic' if not debug else 'debug',
           gold_preproc=gold_preproc, n_sents=n_sents,
