@@ -47,13 +47,15 @@ cdef class Model:
     @cython.cdivision
     @cython.boundscheck(False)
     cdef int regularize(self, Feature* feats, int n, int a=3) except -1:
+        pass
+        # Disable this for now, while we investigate effect.
         # Use the Zipfian corruptions technique from here:
         # http://www.aclweb.org/anthology/N13-1077
         # This seems good for 0.1 - 0.3 % on OOD data.
-        cdef int i
-        cdef long[:] zipfs = numpy.random.zipf(a, n)
-        for i in range(n):
-            feats[i].value *= 1 / zipfs[i]
+        #cdef int i
+        #cdef long[:] zipfs = numpy.random.zipf(a, n)
+        #for i in range(n):
+        #    feats[i].value *= 1 / zipfs[i]
 
     def end_training(self):
         self._model.end_training()
