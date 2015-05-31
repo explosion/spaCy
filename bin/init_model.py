@@ -52,6 +52,14 @@ def _read_clusters(loc):
             clusters[word] = cluster
         else:
             clusters[word] = '0'
+    # Expand clusters with re-casing
+    for word, cluster in clusters.items():
+        if word.lower() not in clusters:
+            clusters[word.lower()] = cluster
+        if word.title() not in clusters:
+            clusters[word.title()] = cluster
+        if word.upper() not in clusters
+            clusters[word.upper()] = cluster
     return clusters
 
 
