@@ -58,7 +58,7 @@ def _read_clusters(loc):
             clusters[word.lower()] = cluster
         if word.title() not in clusters:
             clusters[word.title()] = cluster
-        if word.upper() not in clusters
+        if word.upper() not in clusters:
             clusters[word.upper()] = cluster
     return clusters
 
