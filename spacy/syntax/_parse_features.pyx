@@ -88,11 +88,11 @@ cdef int fill_context(atom_t* context, State* state) except -1:
         context[dist] = state.stack[0] - state.i
     else:
         context[dist] = 0
-    context[N0lv] = max(count_left_kids(get_n0(state)), 5)
-    context[S0lv] = max(count_left_kids(get_s0(state)), 5)
-    context[S0rv] = max(count_right_kids(get_s0(state)), 5)
-    context[S1lv] = max(count_left_kids(get_s1(state)), 5)
-    context[S1rv] = max(count_right_kids(get_s1(state)), 5)
+    context[N0lv] = min(count_left_kids(get_n0(state)), 5)
+    context[S0lv] = min(count_left_kids(get_s0(state)), 5)
+    context[S0rv] = min(count_right_kids(get_s0(state)), 5)
+    context[S1lv] = min(count_left_kids(get_s1(state)), 5)
+    context[S1rv] = min(count_right_kids(get_s1(state)), 5)
 
     context[S0_has_head] = 0
     context[S1_has_head] = 0
