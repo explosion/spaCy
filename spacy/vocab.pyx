@@ -104,7 +104,9 @@ cdef class Vocab:
             slice_unicode(&c_str, id_or_string, 0, len(id_or_string))
             lexeme = self.get(self.mem, &c_str)
         else:
-            raise ValueError("Vocab unable to map type: %s. Maps unicode --> Lexeme or int --> Lexeme" % str(type(id_or_string)))
+            raise ValueError("Vocab unable to map type: "
+                "%s. Maps unicode --> Lexeme or "
+                "int --> Lexeme" % str(type(id_or_string)))
         return Lexeme.from_ptr(lexeme, self.strings)
 
     def __setitem__(self, unicode py_str, dict props):
