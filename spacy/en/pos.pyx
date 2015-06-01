@@ -274,7 +274,7 @@ cdef class EnPosTagger:
         for i in range(tokens.length):
             if tokens.data[i].pos == 0:
                 fill_context(context, i, tokens.data)
-                scores = self.model.score(context, False)
+                scores = self.model.score(context)
                 guess = arg_max(scores, self.model.n_classes)
                 tokens.data[i].tag = self.strings[self.tag_names[guess]]
                 self.set_morph(i, &self.tags[guess], tokens.data)
@@ -301,7 +301,7 @@ cdef class EnPosTagger:
         correct = 0
         for i in range(tokens.length):
             fill_context(context, i, tokens.data)
-            scores = self.model.score(context, True)
+            scores = self.model.score(context)
             guess = arg_max(scores, self.model.n_classes)
             loss = guess != golds[i] if golds[i] != -1 else 0
             self.model.update(context, guess, golds[i], loss)

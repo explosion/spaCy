@@ -18,7 +18,7 @@ cdef int arg_max(const weight_t* scores, const int n_classes) nogil
 cdef class Model:
     cdef int n_classes
     
-    cdef const weight_t* score(self, atom_t* context, bint regularize) except NULL
+    cdef const weight_t* score(self, atom_t* context) except NULL
 
     cdef int update(self, atom_t* context, class_t guess, class_t gold, int cost) except -1
     

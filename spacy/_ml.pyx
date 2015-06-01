@@ -33,7 +33,7 @@ cdef class Model:
         if self.model_loc and path.exists(self.model_loc):
             self._model.load(self.model_loc, freq_thresh=0)
 
-    cdef const weight_t* score(self, atom_t* context, bint regularize) except NULL:
+    cdef const weight_t* score(self, atom_t* context) except NULL:
         cdef int n_feats
         feats = self._extractor.get_feats(context, &n_feats)
         return self._model.get_scores(feats, n_feats)
