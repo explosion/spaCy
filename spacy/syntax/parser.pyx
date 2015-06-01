@@ -152,11 +152,11 @@ cdef class Parser:
             self._advance_beam(gold, gold_parse, True)
             violn.check(pred, gold)
         counts = {}
-        if pred.loss >= 1:
+        if pred._states[0].loss >= 1:
             self._count_feats(counts, tokens, violn.g_hist, 1)
             self._count_feats(counts, tokens, violn.p_hist, -1)
         self.model._model.update(counts)
-        return pred.loss
+        return pred._states[0].loss
 
     def _advance_beam(self, Beam beam, GoldParse gold, bint follow_gold):
         cdef atom_t[CONTEXT_SIZE] context
