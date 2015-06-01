@@ -28,6 +28,7 @@ cdef class TransitionSystem:
     cdef Pool mem
     cdef StringStore strings
     cdef const Transition* c
+    cdef bint* _is_valid
     cdef readonly int n_moves
 
     cdef int initialize_state(self, State* state) except -1
@@ -38,6 +39,8 @@ cdef class TransitionSystem:
     cdef Transition lookup_transition(self, object name) except *
 
     cdef Transition init_transition(self, int clas, int move, int label) except *
+
+    cdef bint* get_valid(self, const State* state) except NULL
 
     cdef Transition best_valid(self, const weight_t* scores, const State* state) except *
 

@@ -120,6 +120,20 @@ cdef class ArcEager(TransitionSystem):
             if state.sent[i].head == 0 and state.sent[i].dep == 0:
                 state.sent[i].dep = root_label
 
+    cdef bint* get_valid(self, const State* s) except NULL:
+        cdef bint[N_MOVES] is_valid
+        is_valid[SHIFT] = _can_shift(s)
+        is_valid[REDUCE] = _can_reduce(s)
+        is_valid[LEFT] = _can_left(s)
+        is_valid[RIGHT] = _can_right(s)
+        is_valid[BREAK] = _can_break(s)
+        is_valid[CONSTITUENT] = _can_constituent(s)
+        is_valid[ADJUST] = _can_adjust(s)
+        cdef int i
+        for i in range(self.n_moves):
+            self._is_valid[i] = is_valid[self.c[i].move]
+        return self._is_valid
+
     cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
         cdef bint[N_MOVES] is_valid
         is_valid[SHIFT] = _can_shift(s)
@@ -451,4 +465,3 @@ cdef inline bint _can_adjust(const State* s) nogil:
     #    return False
     #elif b0 >= b1:
     #    return False
-    return True

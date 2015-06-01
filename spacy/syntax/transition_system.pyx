@@ -15,6 +15,7 @@ cdef class TransitionSystem:
     def __init__(self, StringStore string_table, dict labels_by_action):
         self.mem = Pool()
         self.n_moves = sum(len(labels) for labels in labels_by_action.values())
+        self._is_valid = <bint*>self.mem.alloc(self.n_moves, sizeof(bint))
         moves = <Transition*>self.mem.alloc(self.n_moves, sizeof(Transition))
         cdef int i = 0
         cdef int label_id
@@ -42,6 +43,9 @@ cdef class TransitionSystem:
         raise NotImplementedError
 
     cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
+        raise NotImplementedError
+    
+    cdef bint* get_valid(self, const State* state) except NULL:
         raise NotImplementedError
 
     cdef Transition best_gold(self, const weight_t* scores, const State* s,
