@@ -106,7 +106,8 @@ cdef int head_in_buffer(const State *s, const int child, const int* gold) except
 cdef int children_in_stack(const State *s, const int head, const int* gold) except -1
 cdef int head_in_stack(const State *s, const int child, const int* gold) except -1
 
-cdef State* new_state(Pool mem, TokenC* sent, const int sent_length) except NULL
+cdef State* new_state(Pool mem, const TokenC* sent, const int sent_length) except NULL
+cdef int copy_state(State* dest, const State* src) except -1
 
 cdef int count_left_kids(const TokenC* head) nogil
 
