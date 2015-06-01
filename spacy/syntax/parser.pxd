@@ -14,6 +14,5 @@ cdef class Parser:
     cdef readonly Model model
     cdef readonly TransitionSystem moves
 
-
-    cdef State* _greedy_parse(self, Tokens tokens) except NULL
-    cdef State* _beam_parse(self, Tokens tokens) except NULL
+    cdef int _greedy_parse(self, Tokens tokens) except -1
+    cdef int _beam_parse(self, Tokens tokens) except -1
