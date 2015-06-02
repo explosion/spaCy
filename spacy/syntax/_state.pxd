@@ -16,7 +16,7 @@ cdef struct State:
     int ents_len
 
 
-cdef int add_dep(const State *s, const int head, const int child, const int label) except -1
+cdef int add_dep(State *s, const int head, const int child, const int label) except -1
 
 
 cdef int pop_stack(State *s) except -1
