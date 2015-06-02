@@ -140,12 +140,11 @@ cdef class BiluoPushDown(TransitionSystem):
         t.score = score
         return t
 
-    cdef bint* get_valid(self, const State* s) except NULL:
+    cdef int set_valid(self, bint* output, const State* s) except -1:
         cdef int i
         for i in range(self.n_moves):
             m = &self.c[i]
-            self._is_valid[i] = _is_valid(m.move, m.label, s)
-        return self._is_valid
+            output[i] = _is_valid(m.move, m.label, s)
 
 
 cdef int _get_cost(const Transition* self, const State* s, GoldParse gold) except -1:

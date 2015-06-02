@@ -45,7 +45,7 @@ cdef class TransitionSystem:
     cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
         raise NotImplementedError
     
-    cdef bint* get_valid(self, const State* state) except NULL:
+    cdef int set_valid(self, bint* output, const State* state) except -1:
         raise NotImplementedError
 
     cdef Transition best_gold(self, const weight_t* scores, const State* s,

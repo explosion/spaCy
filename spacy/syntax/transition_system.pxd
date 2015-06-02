@@ -40,7 +40,7 @@ cdef class TransitionSystem:
 
     cdef Transition init_transition(self, int clas, int move, int label) except *
 
-    cdef bint* get_valid(self, const State* state) except NULL
+    cdef int set_valid(self, bint* output, const State* state) except -1
 
     cdef Transition best_valid(self, const weight_t* scores, const State* state) except *
 
