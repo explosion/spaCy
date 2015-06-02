@@ -1,3 +1,4 @@
+# cython: profile=True
 from __future__ import unicode_literals
 from __future__ import division
 
@@ -37,6 +38,11 @@ cdef class Model:
         cdef int n_feats
         feats = self._extractor.get_feats(context, &n_feats)
         return self._model.get_scores(feats, n_feats)
+
+    cdef int set_scores(self, weight_t* scores, atom_t* context) except -1:
+        cdef int n_feats
+        feats = self._extractor.get_feats(context, &n_feats)
+        self._model.set_scores(scores, feats, n_feats)
 
     cdef int update(self, atom_t* context, class_t guess, class_t gold, int cost) except -1:
         cdef int n_feats
