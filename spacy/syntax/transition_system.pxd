@@ -4,6 +4,7 @@ from thinc.typedefs cimport weight_t
 from ..structs cimport TokenC
 from ._state cimport State
 from ..gold cimport GoldParse
+from ..gold cimport GoldParseC
 from ..strings cimport StringStore
 
 
@@ -14,12 +15,12 @@ cdef struct Transition:
 
     weight_t score
 
-    int (*get_cost)(const Transition* self, const State* state, GoldParse gold) except -1
+    int (*get_cost)(const Transition* self, const State* state, GoldParseC* gold) except -1
     int (*do)(const Transition* self, State* state) except -1
 
 
 ctypedef int (*get_cost_func_t)(const Transition* self, const State* state,
-              GoldParse gold) except -1
+              GoldParseC* gold) except -1
 
 ctypedef int (*do_func_t)(const Transition* self, State* state) except -1
 

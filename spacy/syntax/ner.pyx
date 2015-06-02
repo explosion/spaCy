@@ -8,6 +8,7 @@ from .transition_system cimport do_func_t
 from ..structs cimport TokenC, Entity
 
 from thinc.typedefs cimport weight_t
+from ..gold cimport GoldParseC
 from ..gold cimport GoldParse
 
 
@@ -94,7 +95,7 @@ cdef class BiluoPushDown(TransitionSystem):
 
     cdef int preprocess_gold(self, GoldParse gold) except -1:
         for i in range(gold.length):
-            gold.c_ner[i] = self.lookup_transition(gold.ner[i])
+            gold.c.ner[i] = self.lookup_transition(gold.ner[i])
 
     cdef Transition lookup_transition(self, object name) except *:
         if name == '-':
@@ -147,13 +148,13 @@ cdef class BiluoPushDown(TransitionSystem):
             output[i] = _is_valid(m.move, m.label, s)
 
 
-cdef int _get_cost(const Transition* self, const State* s, GoldParse gold) except -1:
+cdef int _get_cost(const Transition* self, const State* s, GoldParseC* gold) except -1:
     if not _is_valid(self.move, self.label, s):
         return 9000
-    cdef bint is_sunk = _entity_is_sunk(s, gold.c_ner)
-    cdef int next_act = gold.c_ner[s.i+1].move if s.i < s.sent_len else OUT
-    cdef bint is_gold = _is_gold(self.move, self.label, gold.c_ner[s.i].move,
-                                 gold.c_ner[s.i].label, next_act, is_sunk)
+    cdef bint is_sunk = _entity_is_sunk(s, gold.ner)
+    cdef int next_act = gold.ner[s.i+1].move if s.i < s.sent_len else OUT
+    cdef bint is_gold = _is_gold(self.move, self.label, gold.ner[s.i].move,
+                                 gold.ner[s.i].label, next_act, is_sunk)
     return not is_gold
 
 

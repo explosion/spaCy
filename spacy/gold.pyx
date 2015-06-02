@@ -169,13 +169,13 @@ cdef class GoldParse:
         self.length = len(tokens)
 
         # These are filled by the tagger/parser/entity recogniser
-        self.c_tags = <int*>self.mem.alloc(len(tokens), sizeof(int))
-        self.c_heads = <int*>self.mem.alloc(len(tokens), sizeof(int))
-        self.c_labels = <int*>self.mem.alloc(len(tokens), sizeof(int))
-        self.c_ner = <Transition*>self.mem.alloc(len(tokens), sizeof(Transition))
-        self.c_brackets = <int**>self.mem.alloc(len(tokens), sizeof(int*))
+        self.c.tags = <int*>self.mem.alloc(len(tokens), sizeof(int))
+        self.c.heads = <int*>self.mem.alloc(len(tokens), sizeof(int))
+        self.c.labels = <int*>self.mem.alloc(len(tokens), sizeof(int))
+        self.c.ner = <Transition*>self.mem.alloc(len(tokens), sizeof(Transition))
+        self.c.brackets = <int**>self.mem.alloc(len(tokens), sizeof(int*))
         for i in range(len(tokens)):
-            self.c_brackets[i] = <int*>self.mem.alloc(len(tokens), sizeof(int))
+            self.c.brackets[i] = <int*>self.mem.alloc(len(tokens), sizeof(int))
 
         self.tags = [None] * len(tokens)
         self.heads = [None] * len(tokens)

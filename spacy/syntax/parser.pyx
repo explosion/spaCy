@@ -136,7 +136,7 @@ cdef class Parser:
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
             best = self.moves.best_gold(scores, state, gold)
-            cost = guess.get_cost(&guess, state, gold)
+            cost = guess.get_cost(&guess, state, &gold.c)
             self.model.update(context, guess.clas, best.clas, cost)
             guess.do(&guess, state)
             loss += cost
@@ -177,14 +177,14 @@ cdef class Parser:
                 state = <State*>beam.at(i)
                 for j in range(self.moves.n_moves):
                     move = &self.moves.c[j]
-                    beam.costs[i][j] = move.get_cost(move, state, gold)
+                    beam.costs[i][j] = move.get_cost(move, state, &gold.c)
                     beam.is_valid[i][j] = beam.costs[i][j] == 0
         elif gold is not None:
             for i in range(beam.size):
                 state = <State*>beam.at(i)
                 for j in range(self.moves.n_moves):
                     move = &self.moves.c[j]
-                    beam.costs[i][j] = move.get_cost(move, state, gold)
+                    beam.costs[i][j] = move.get_cost(move, state, &gold.c)
         beam.advance(_transition_state, <void*>self.moves.c)
         state = <State*>beam.at(0)
         if state.sent[state.i].sent_end:

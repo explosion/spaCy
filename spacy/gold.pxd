@@ -5,8 +5,19 @@ from .syntax.transition_system cimport Transition
 
 cimport numpy
 
+
+cdef struct GoldParseC:
+    int* tags
+    int* heads
+    int* labels
+    int** brackets
+    Transition* ner
+
+
 cdef class GoldParse:
     cdef Pool mem
+
+    cdef GoldParseC c
 
     cdef int length
     cdef readonly int loss
@@ -22,8 +33,4 @@ cdef class GoldParse:
     cdef readonly list gold_to_cand
     cdef readonly list orig_annot
 
-    cdef int* c_tags
-    cdef int* c_heads
-    cdef int* c_labels
-    cdef int** c_brackets
-    cdef Transition* c_ner
+

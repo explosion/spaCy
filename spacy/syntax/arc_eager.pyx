@@ -1,3 +1,4 @@
+# cython: profile=True
 from __future__ import unicode_literals
 
 from ._state cimport State
@@ -11,6 +12,7 @@ from ..structs cimport TokenC
 
 from .transition_system cimport do_func_t, get_cost_func_t
 from ..gold cimport GoldParse
+from ..gold cimport GoldParseC
 
 
 DEF NON_MONOTONIC = True
@@ -65,14 +67,14 @@ cdef class ArcEager(TransitionSystem):
     cdef int preprocess_gold(self, GoldParse gold) except -1:
         for i in range(gold.length):
             if gold.heads[i] is None: # Missing values
-                gold.c_heads[i] = i
-                gold.c_labels[i] = -1
+                gold.c.heads[i] = i
+                gold.c.labels[i] = -1
             else:
-                gold.c_heads[i] = gold.heads[i]
-                gold.c_labels[i] = self.strings[gold.labels[i]]
+                gold.c.heads[i] = gold.heads[i]
+                gold.c.labels[i] = self.strings[gold.labels[i]]
         for end, brackets in gold.brackets.items():
             for start, label_strs in brackets.items():
-                gold.c_brackets[start][end] = 1
+                gold.c.brackets[start][end] = 1
                 for label_str in label_strs:
                     # Add the encoded label to the set
                     gold.brackets[end][start].add(self.strings[label_str])
@@ -214,78 +216,78 @@ cdef int _do_break(const Transition* self, State* state) except -1:
     if not at_eol(state):
         push_stack(state)
 
-cdef int _shift_cost(const Transition* self, const State* s, GoldParse gold) except -1:
+cdef int _shift_cost(const Transition* self, const State* s, GoldParseC* gold) except -1:
     if not _can_shift(s):
         return 9000
     cost = 0
-    cost += head_in_stack(s, s.i, gold.c_heads)
-    cost += children_in_stack(s, s.i, gold.c_heads)
+    cost += head_in_stack(s, s.i, gold.heads)
+    cost += children_in_stack(s, s.i, gold.heads)
     # If we can break, and there's no cost to doing so, we should
     if _can_break(s) and _break_cost(self, s, gold) == 0:
         cost += 1
     return cost
 
-cdef int _right_cost(const Transition* self, const State* s, GoldParse gold) except -1:
+cdef int _right_cost(const Transition* self, const State* s, GoldParseC* gold) except -1:
     if not _can_right(s):
         return 9000
     cost = 0
-    if gold.c_heads[s.i] == s.stack[0]:
-        cost += self.label != gold.c_labels[s.i]
+    if gold.heads[s.i] == s.stack[0]:
+        cost += self.label != gold.labels[s.i]
         return cost
     # This indicates missing head
-    if gold.c_labels[s.i] != -1:
-        cost += head_in_buffer(s, s.i, gold.c_heads)
-    cost += children_in_stack(s, s.i, gold.c_heads)
-    cost += head_in_stack(s, s.i, gold.c_heads)
+    if gold.labels[s.i] != -1:
+        cost += head_in_buffer(s, s.i, gold.heads)
+    cost += children_in_stack(s, s.i, gold.heads)
+    cost += head_in_stack(s, s.i, gold.heads)
     return cost
 
 
-cdef int _left_cost(const Transition* self, const State* s, GoldParse gold) except -1:
+cdef int _left_cost(const Transition* self, const State* s, GoldParseC* gold) except -1:
     if not _can_left(s):
         return 9000
     cost = 0
-    if gold.c_heads[s.stack[0]] == s.i:
-        cost += self.label != gold.c_labels[s.stack[0]]
+    if gold.heads[s.stack[0]] == s.i:
+        cost += self.label != gold.labels[s.stack[0]]
         return cost
     # If we're at EOL, then the left arc will add an arc to ROOT.
     elif at_eol(s):
         # Are we root?
-        if gold.c_labels[s.stack[0]] != -1:
+        if gold.labels[s.stack[0]] != -1:
             # If we're at EOL, prefer to reduce or break over left-arc
             if _can_reduce(s) or _can_break(s): 
-                cost += gold.c_heads[s.stack[0]] != s.stack[0]
+                cost += gold.heads[s.stack[0]] != s.stack[0]
                 # Are we labelling correctly?
-                cost += self.label != gold.c_labels[s.stack[0]]
+                cost += self.label != gold.labels[s.stack[0]]
         return cost
 
-    cost += head_in_buffer(s, s.stack[0], gold.c_heads)
-    cost += children_in_buffer(s, s.stack[0], gold.c_heads)
+    cost += head_in_buffer(s, s.stack[0], gold.heads)
+    cost += children_in_buffer(s, s.stack[0], gold.heads)
     if NON_MONOTONIC and s.stack_len >= 2:
-        cost += gold.c_heads[s.stack[0]] == s.stack[-1]
-    if gold.c_labels[s.stack[0]] != -1:
-        cost += gold.c_heads[s.stack[0]] == s.stack[0]
+        cost += gold.heads[s.stack[0]] == s.stack[-1]
+    if gold.labels[s.stack[0]] != -1:
+        cost += gold.heads[s.stack[0]] == s.stack[0]
     return cost
 
 
-cdef int _reduce_cost(const Transition* self, const State* s, GoldParse gold) except -1:
+cdef int _reduce_cost(const Transition* self, const State* s, GoldParseC* gold) except -1:
     if not _can_reduce(s):
         return 9000
     cdef int cost = 0
-    cost += children_in_buffer(s, s.stack[0], gold.c_heads)
+    cost += children_in_buffer(s, s.stack[0], gold.heads)
     if NON_MONOTONIC:
-        cost += head_in_buffer(s, s.stack[0], gold.c_heads)
+        cost += head_in_buffer(s, s.stack[0], gold.heads)
     return cost
 
 
-cdef int _break_cost(const Transition* self, const State* s, GoldParse gold) except -1:
+cdef int _break_cost(const Transition* self, const State* s, GoldParseC* gold) except -1:
     if not _can_break(s):
         return 9000
     # When we break, we Reduce all of the words on the stack.
     cdef int cost = 0
     # Number of deps between S0...Sn and N0...Nn
     for i in range(s.i, s.sent_len):
-        cost += children_in_stack(s, i, gold.c_heads)
-        cost += head_in_stack(s, i, gold.c_heads)
+        cost += children_in_stack(s, i, gold.heads)
+        cost += head_in_stack(s, i, gold.heads)
     return cost
 
 
@@ -360,7 +362,7 @@ cdef inline bint _can_adjust(const State* s) nogil:
     #elif b0 >= b1:
     #    return False
 
-cdef int _constituent_cost(const Transition* self, const State* s, GoldParse gold) except -1:
+cdef int _constituent_cost(const Transition* self, const State* s, GoldParseC* gold) except -1:
     if not _can_constituent(s):
         return 9000
     raise Exception("Constituent move should be disabled currently")
@@ -388,7 +390,7 @@ cdef int _constituent_cost(const Transition* self, const State* s, GoldParse gol
     #            loss = 1 # If we see the start position, set loss to 1
     #return loss
 
-cdef int _adjust_cost(const Transition* self, const State* s, GoldParse gold) except -1:
+cdef int _adjust_cost(const Transition* self, const State* s, GoldParseC* gold) except -1:
     if not _can_adjust(s):
         return 9000
     raise Exception("Adjust move should be disabled currently")
