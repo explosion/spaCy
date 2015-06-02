@@ -1,3 +1,4 @@
+# cython: profile=True
 from libc.string cimport memmove, memcpy
 from cymem.cymem cimport Pool
 
@@ -164,7 +165,7 @@ cdef State* new_state(Pool mem, const TokenC* sent, const int sent_len) except N
 
 
 cdef int copy_state(State* dest, const State* src) except -1:
-    assert dest.sent_len == src.sent_len
+    cdef int i
     # Copy stack --- remember stack uses pointer arithmetic, so stack[-stack_len]
     # is the last word of the stack.
     dest.stack += (src.stack_len - dest.stack_len)
@@ -172,16 +173,16 @@ cdef int copy_state(State* dest, const State* src) except -1:
         dest.stack[-i] = src.stack[-i]
     dest.stack_len = src.stack_len 
     # Copy sentence (i.e. the parse), up to and including word i.
-    memcpy(dest.sent, src.sent, sizeof(TokenC) * src.sent_len)
+    if src.i > dest.i:
+        memcpy(dest.sent, src.sent, sizeof(TokenC) * (src.i+1))
+    else:
+        memcpy(dest.sent, src.sent, sizeof(TokenC) * (dest.i+1))
     dest.i = src.i
     # Copy assigned entities --- also pointer arithmetic
     dest.ent += (src.ents_len - dest.ents_len)
     for i in range(src.ents_len):
         dest.ent[-i] = src.ent[-i]
     dest.ents_len = src.ents_len
-    assert dest.sent[dest.i].head == src.sent[src.i].head
-    if dest.stack_len > 0:
-        assert dest.stack[0] < dest.i
 
 
 # From https://en.wikipedia.org/wiki/Hamming_weight
