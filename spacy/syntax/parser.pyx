@@ -109,7 +109,7 @@ cdef class Parser:
         tokens.set_parse(state.sent)
 
     cdef int _beam_parse(self, Tokens tokens) except -1:
-        cdef Beam beam = Beam(self.model.n_classes, self.cfg.beam_width)
+        cdef Beam beam = Beam(self.moves.n_moves, self.cfg.beam_width)
         beam.initialize(_init_state, tokens.length, tokens.data)
         while not beam.is_done:
             self._advance_beam(beam, None, False)
@@ -141,9 +141,9 @@ cdef class Parser:
         return loss
 
     def _beam_train(self, Tokens tokens, GoldParse gold_parse):
-        cdef Beam pred = Beam(self.model.n_classes, self.cfg.beam_width)
+        cdef Beam pred = Beam(self.moves.n_moves, self.cfg.beam_width)
         pred.initialize(_init_state, tokens.length, tokens.data)
-        cdef Beam gold = Beam(self.model.n_classes, self.cfg.beam_width)
+        cdef Beam gold = Beam(self.moves.n_moves, self.cfg.beam_width)
         gold.initialize(_init_state, tokens.length, tokens.data)
 
         violn = MaxViolation()
@@ -170,18 +170,18 @@ cdef class Parser:
             scores = self.model.score(context)
             validities = self.moves.get_valid(state)
             if gold is None:
-                for j in range(self.model.n_clases):
-                    beam.set_cell(i, j, scores[j], 0, validities[j])
+                for j in range(self.moves.n_moves):
+                    beam.set_cell(i, j, scores[j], validities[j], 0)
             elif not follow_gold:
-                for j in range(self.model.n_classes):
+                for j in range(self.moves.n_moves):
                     move = &self.moves.c[j]
                     cost = move.get_cost(move, state, gold)
-                    beam.set_cell(i, j, scores[j], cost, validities[j])
+                    beam.set_cell(i, j, scores[j], validities[j], cost)
             else:
-                for j in range(self.model.n_classes):
+                for j in range(self.moves.n_moves):
                     move = &self.moves.c[j]
                     cost = move.get_cost(move, state, gold)
-                    beam.set_cell(i, j, scores[j], cost, cost == 0)
+                    beam.set_cell(i, j, scores[j], cost == 0, cost)
         beam.advance(_transition_state, <void*>self.moves.c)
         beam.check_done(_check_final_state, NULL)
 

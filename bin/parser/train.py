@@ -140,7 +140,7 @@ def _tag_partition(nlp, docs, gold_preproc=False):
 
 def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
           seed=0, gold_preproc=False, n_sents=0, corruption_level=0,
-          train_tags=None):
+          train_tags=None, beam_width=1):
     dep_model_dir = path.join(model_dir, 'deps')
     pos_model_dir = path.join(model_dir, 'pos')
     ner_model_dir = path.join(model_dir, 'ner')
@@ -158,9 +158,10 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
 
     Config.write(dep_model_dir, 'config', features=feat_set, seed=seed,
                  labels=Language.ParserTransitionSystem.get_labels(gold_tuples),
-                 beam_width=16)
+                 beam_width=beam_width)
     Config.write(ner_model_dir, 'config', features='ner', seed=seed,
-                 labels=Language.EntityTransitionSystem.get_labels(gold_tuples))
+                 labels=Language.EntityTransitionSystem.get_labels(gold_tuples),
+                 beam_width=1)
 
     if n_sents > 0:
         gold_tuples = gold_tuples[:n_sents]
@@ -188,8 +189,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                 else:
                     nlp.tagger(tokens)
                 gold = GoldParse(tokens, annot_tuples, make_projective=True)
-                if gold.is_projective:
-                    loss += nlp.parser.train(tokens, gold)
+                loss += nlp.parser.train(tokens, gold)
                             
                 nlp.entity.train(tokens, gold)
                 nlp.tagger.train(tokens, gold.tags)
