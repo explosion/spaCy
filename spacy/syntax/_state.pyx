@@ -82,6 +82,8 @@ cdef int children_in_buffer(const State *s, int head, const int* gold) except -1
     for i in range(s.i, s.sent_len):
         if gold[i] == head:
             n += 1
+        elif gold[i] == i or gold[i] < head:
+            break
     return n
 
 
