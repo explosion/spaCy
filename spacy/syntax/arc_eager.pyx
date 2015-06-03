@@ -118,8 +118,10 @@ cdef class ArcEager(TransitionSystem):
             t.do = _do_right
             t.get_cost = _right_cost
         elif move == BREAK:
+            t.do = _do_break
             t.get_cost = _break_cost
         elif move == CONSTITUENT:
+            t.do = _do_constituent
             t.get_cost = _constituent_cost
         elif move == ADJUST:
             t.do = _do_adjust
