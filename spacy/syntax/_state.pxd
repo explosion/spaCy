@@ -2,7 +2,8 @@ from libc.stdint cimport uint32_t
 
 from cymem.cymem cimport Pool
 
-from ..structs cimport TokenC, Entity
+from ..structs cimport TokenC, Entity, Constituent
+
 
 
 cdef struct State:
@@ -15,7 +16,7 @@ cdef struct State:
     int ents_len
 
 
-cdef int add_dep(const State *s, const int head, const int child, const int label) except -1
+cdef int add_dep(State *s, const int head, const int child, const int label) except -1
 
 
 cdef int pop_stack(State *s) except -1
@@ -105,30 +106,9 @@ cdef int head_in_buffer(const State *s, const int child, const int* gold) except
 cdef int children_in_stack(const State *s, const int head, const int* gold) except -1
 cdef int head_in_stack(const State *s, const int child, const int* gold) except -1
 
-cdef State* new_state(Pool mem, TokenC* sent, const int sent_length) except NULL
-
+cdef State* new_state(Pool mem, const TokenC* sent, const int sent_length) except NULL
+cdef int copy_state(State* dest, const State* src) except -1
 
 cdef int count_left_kids(const TokenC* head) nogil
 
-
 cdef int count_right_kids(const TokenC* head) nogil
-
-
-# From https://en.wikipedia.org/wiki/Hamming_weight
-cdef inline uint32_t _popcount(uint32_t x) nogil:
-    """Find number of non-zero bits."""
-    cdef int count = 0
-    while x != 0:
-        x &= x - 1
-        count += 1
-    return count
-
-
-cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:
-    cdef int i
-    for i in range(32):
-        if bits & (1 << i):
-            n -= 1
-            if n < 1:
-                return i
-    return 0

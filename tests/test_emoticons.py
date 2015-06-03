@@ -11,7 +11,7 @@ def EN():
 
 def test_tweebo_challenge(EN):
     text = u""":o :/ :'( >:o (: :) >.< XD -__- o.O ;D :-) @_@ :P 8D :1 >:( :D =| ") :> ...."""
-    tokens = EN(text)
+    tokens = EN(text, parse=False, tag=False)
     assert tokens[0].orth_ == ":o"
     assert tokens[1].orth_ == ":/"
     assert tokens[2].orth_ == ":'("

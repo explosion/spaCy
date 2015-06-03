@@ -3,7 +3,8 @@ from thinc.typedefs cimport weight_t
 
 from ..structs cimport TokenC
 from ._state cimport State
-from .conll cimport GoldParse
+from ..gold cimport GoldParse
+from ..gold cimport GoldParseC
 from ..strings cimport StringStore
 
 
@@ -14,12 +15,12 @@ cdef struct Transition:
 
     weight_t score
 
-    int (*get_cost)(const Transition* self, const State* state, GoldParse gold) except -1
+    int (*get_cost)(const Transition* self, const State* state, GoldParseC* gold) except -1
     int (*do)(const Transition* self, State* state) except -1
 
 
 ctypedef int (*get_cost_func_t)(const Transition* self, const State* state,
-              GoldParse gold) except -1
+              GoldParseC* gold) except -1
 
 ctypedef int (*do_func_t)(const Transition* self, State* state) except -1
 
@@ -28,6 +29,7 @@ cdef class TransitionSystem:
     cdef Pool mem
     cdef StringStore strings
     cdef const Transition* c
+    cdef bint* _is_valid
     cdef readonly int n_moves
 
     cdef int initialize_state(self, State* state) except -1
@@ -38,6 +40,8 @@ cdef class TransitionSystem:
     cdef Transition lookup_transition(self, object name) except *
 
     cdef Transition init_transition(self, int clas, int move, int label) except *
+
+    cdef int set_valid(self, bint* output, const State* state) except -1
 
     cdef Transition best_valid(self, const weight_t* scores, const State* state) except *
 

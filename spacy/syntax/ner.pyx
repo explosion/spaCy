@@ -8,7 +8,8 @@ from .transition_system cimport do_func_t
 from ..structs cimport TokenC, Entity
 
 from thinc.typedefs cimport weight_t
-from .conll cimport GoldParse
+from ..gold cimport GoldParseC
+from ..gold cimport GoldParse
 
 
 cdef enum:
@@ -73,14 +74,15 @@ cdef class BiluoPushDown(TransitionSystem):
         move_labels = {MISSING: {'': True}, BEGIN: {}, IN: {}, LAST: {}, UNIT: {},
                        OUT: {'': True}}
         moves = ('M', 'B', 'I', 'L', 'U')
-        for (raw_text, toks, (ids, words, tags, heads, labels, biluo)) in gold_tuples:
-            for i, ner_tag in enumerate(biluo):
-                if ner_tag != 'O' and ner_tag != '-':
-                    if ner_tag.count('-') != 1:
-                        raise ValueError(ner_tag)
-                    _, label = ner_tag.split('-')
-                    for move_str in ('B', 'I', 'L', 'U'):
-                        move_labels[moves.index(move_str)][label] = True
+        for raw_text, sents in gold_tuples:
+            for (ids, words, tags, heads, labels, biluo), _ in sents:
+                for i, ner_tag in enumerate(biluo):
+                    if ner_tag != 'O' and ner_tag != '-':
+                        if ner_tag.count('-') != 1:
+                            raise ValueError(ner_tag)
+                        _, label = ner_tag.split('-')
+                        for move_str in ('B', 'I', 'L', 'U'):
+                            move_labels[moves.index(move_str)][label] = True
         return move_labels
 
     def move_name(self, int move, int label):
@@ -93,7 +95,7 @@ cdef class BiluoPushDown(TransitionSystem):
 
     cdef int preprocess_gold(self, GoldParse gold) except -1:
         for i in range(gold.length):
-            gold.c_ner[i] = self.lookup_transition(gold.ner[i])
+            gold.c.ner[i] = self.lookup_transition(gold.ner[i])
 
     cdef Transition lookup_transition(self, object name) except *:
         if name == '-':
@@ -139,14 +141,20 @@ cdef class BiluoPushDown(TransitionSystem):
         t.score = score
         return t
 
+    cdef int set_valid(self, bint* output, const State* s) except -1:
+        cdef int i
+        for i in range(self.n_moves):
+            m = &self.c[i]
+            output[i] = _is_valid(m.move, m.label, s)
 
-cdef int _get_cost(const Transition* self, const State* s, GoldParse gold) except -1:
+
+cdef int _get_cost(const Transition* self, const State* s, GoldParseC* gold) except -1:
     if not _is_valid(self.move, self.label, s):
         return 9000
-    cdef bint is_sunk = _entity_is_sunk(s, gold.c_ner)
-    cdef int next_act = gold.c_ner[s.i+1].move if s.i < s.sent_len else OUT
-    cdef bint is_gold = _is_gold(self.move, self.label, gold.c_ner[s.i].move,
-                                 gold.c_ner[s.i].label, next_act, is_sunk)
+    cdef bint is_sunk = _entity_is_sunk(s, gold.ner)
+    cdef int next_act = gold.ner[s.i+1].move if s.i < s.sent_len else OUT
+    cdef bint is_gold = _is_gold(self.move, self.label, gold.ner[s.i].move,
+                                 gold.ner[s.i].label, next_act, is_sunk)
     return not is_gold
 
 

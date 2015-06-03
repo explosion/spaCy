@@ -19,7 +19,7 @@ def test_close(close_puncts, EN):
     word_str = 'Hello'
     for p in close_puncts:
         string = word_str + p
-        tokens = EN(string)
+        tokens = EN(string, parse=False, tag=False)
         assert len(tokens) == 2
         assert tokens[1].string == p
         assert tokens[0].string == word_str
@@ -29,7 +29,7 @@ def test_two_different_close(close_puncts, EN):
     word_str = 'Hello'
     for p in close_puncts:
         string = word_str + p + "'"
-        tokens = EN(string)
+        tokens = EN(string, parse=False, tag=False)
         assert len(tokens) == 3
         assert tokens[0].string == word_str
         assert tokens[1].string == p
@@ -40,12 +40,12 @@ def test_three_same_close(close_puncts, EN):
     word_str = 'Hello'
     for p in close_puncts:
         string = word_str + p + p + p
-        tokens = EN(string)
+        tokens = EN(string, tag=False, parse=False)
         assert len(tokens) == 4
         assert tokens[0].string == word_str
         assert tokens[1].string == p
 
 
 def test_double_end_quote(EN):
-    assert len(EN("Hello''")) == 2
-    assert len(EN("''")) == 1
+    assert len(EN("Hello''", tag=False, parse=False)) == 2
+    assert len(EN("''", tag=False, parse=False)) == 1

@@ -11,7 +11,7 @@ def EN():
 @pytest.fixture
 def tagged(EN):
     string = u'Bananas in pyjamas are geese.'
-    tokens = EN(string, tag=True)
+    tokens = EN(string, tag=True, parse=False)
     return tokens
 
 

@@ -12,7 +12,7 @@ def paired_puncts():
 
 @pytest.fixture
 def EN():
-    return English()
+    return English().tokenizer
 
 
 def test_token(paired_puncts, EN):

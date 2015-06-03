@@ -85,14 +85,14 @@ cdef int fill_context(atom_t* context, State* state) except -1:
     fill_token(&context[E0w], get_e0(state))
     fill_token(&context[E1w], get_e1(state))
     if state.stack_len >= 1:
-        context[dist] = state.stack[0] - state.i
+        context[dist] = min(state.stack[0] - state.i, 5)
     else:
         context[dist] = 0
-    context[N0lv] = max(count_left_kids(get_n0(state)), 5)
-    context[S0lv] = max(count_left_kids(get_s0(state)), 5)
-    context[S0rv] = max(count_right_kids(get_s0(state)), 5)
-    context[S1lv] = max(count_left_kids(get_s1(state)), 5)
-    context[S1rv] = max(count_right_kids(get_s1(state)), 5)
+    context[N0lv] = min(count_left_kids(get_n0(state)), 5)
+    context[S0lv] = min(count_left_kids(get_s0(state)), 5)
+    context[S0rv] = min(count_right_kids(get_s0(state)), 5)
+    context[S1lv] = min(count_left_kids(get_s1(state)), 5)
+    context[S1rv] = min(count_right_kids(get_s1(state)), 5)
 
     context[S0_has_head] = 0
     context[S1_has_head] = 0

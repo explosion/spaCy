@@ -52,6 +52,14 @@ def _read_clusters(loc):
             clusters[word] = cluster
         else:
             clusters[word] = '0'
+    # Expand clusters with re-casing
+    for word, cluster in clusters.items():
+        if word.lower() not in clusters:
+            clusters[word.lower()] = cluster
+        if word.title() not in clusters:
+            clusters[word.title()] = cluster
+        if word.upper() not in clusters:
+            clusters[word.upper()] = cluster
     return clusters
 
 
@@ -74,6 +82,9 @@ def setup_vocab(src_dir, dst_dir):
     vocab = Vocab(data_dir=None, get_lex_props=get_lex_props)
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs = _read_probs(src_dir / 'words.sgt.prob')
+    for word in clusters:
+        if word not in probs:
+            probs[word] = -17.0
     lexicon = []
     for word, prob in reversed(sorted(probs.items(), key=lambda item: item[1])):
         entry = get_lex_props(word)

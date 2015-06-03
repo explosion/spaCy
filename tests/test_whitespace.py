@@ -7,7 +7,7 @@ import pytest
 
 @pytest.fixture
 def EN():
-    return English()
+    return English().tokenizer
 
 
 def test_single_space(EN):

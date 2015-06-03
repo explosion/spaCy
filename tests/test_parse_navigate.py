@@ -58,3 +58,14 @@ def test_child_consistency(nlp, sun_text):
         assert not children
     for head_index, children in rights.items():
         assert not children
+
+
+def test_edges(nlp):
+    sun_text = u"Chemically, about three quarters of the Sun's mass consists of hydrogen, while the rest is mostly helium."
+    tokens = nlp(sun_text)
+    for token in tokens:
+        subtree = list(token.subtree)
+        debug = '\t'.join((token.orth_, token.left_edge.orth_, subtree[0].orth_))
+        assert token.left_edge == subtree[0], debug
+        debug = '\t'.join((token.orth_, token.right_edge.orth_, subtree[-1].orth_, token.right_edge.head.orth_))
+        assert token.right_edge == subtree[-1], debug

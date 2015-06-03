@@ -12,7 +12,7 @@ from spacy.en import English
 
 def test_period():
     EN = English()
-    tokens = EN('best.Known')
+    tokens = EN.tokenizer('best.Known')
     assert len(tokens) == 3
     tokens = EN('zombo.com')
     assert len(tokens) == 1

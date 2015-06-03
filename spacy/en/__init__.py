@@ -5,7 +5,7 @@ import re
 from .. import orth
 from ..vocab import Vocab
 from ..tokenizer import Tokenizer
-from ..syntax.parser import GreedyParser
+from ..syntax.parser import Parser
 from ..syntax.arc_eager import ArcEager
 from ..syntax.ner import BiluoPushDown
 from ..tokens import Tokens
@@ -64,12 +64,12 @@ class English(object):
     ParserTransitionSystem = ArcEager
     EntityTransitionSystem = BiluoPushDown
 
-    def __init__(self, data_dir=''):
+    def __init__(self, data_dir='', load_vectors=True):
         if data_dir == '':
             data_dir = LOCAL_DATA_DIR
         self._data_dir = data_dir
         self.vocab = Vocab(data_dir=path.join(data_dir, 'vocab') if data_dir else None,
-                           get_lex_props=get_lex_props)
+                           get_lex_props=get_lex_props, load_vectors=load_vectors)
         tag_names = list(POS_TAGS.keys())
         tag_names.sort()
         if data_dir is None:
@@ -112,17 +112,17 @@ class English(object):
     @property
     def parser(self):
         if self._parser is None:
-            self._parser = GreedyParser(self.vocab.strings,
-                                        path.join(self._data_dir, 'deps'),
-                                        self.ParserTransitionSystem)
+            self._parser = Parser(self.vocab.strings,
+                                  path.join(self._data_dir, 'deps'),
+                                  self.ParserTransitionSystem)
         return self._parser
 
     @property
     def entity(self):
         if self._entity is None:
-            self._entity = GreedyParser(self.vocab.strings,
-                                        path.join(self._data_dir, 'ner'),
-                                        self.EntityTransitionSystem)
+            self._entity = Parser(self.vocab.strings,
+                                  path.join(self._data_dir, 'ner'),
+                                  self.EntityTransitionSystem)
         return self._entity
 
     def __call__(self, text, tag=True, parse=parse_if_model_present,

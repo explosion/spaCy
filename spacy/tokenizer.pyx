@@ -76,7 +76,9 @@ cdef class Tokenizer:
         cdef bint in_ws = Py_UNICODE_ISSPACE(chars[0])
         cdef UniStr span
         for i in range(1, length):
-            if Py_UNICODE_ISSPACE(chars[i]) != in_ws:
+            # TODO: Allow control of hyphenation
+            if (Py_UNICODE_ISSPACE(chars[i]) or chars[i] == '-') != in_ws:
+            #if Py_UNICODE_ISSPACE(chars[i]) != in_ws:
                 if start < i:
                     slice_unicode(&span, chars, start, i)
                     cache_hit = self._try_cache(start, span.key, tokens)
