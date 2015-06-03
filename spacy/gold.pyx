@@ -1,7 +1,6 @@
 import numpy
 import codecs
 import json
-import ijson
 import ujson
 import random
 import re
