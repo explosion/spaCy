@@ -42,6 +42,8 @@ cdef class TransitionSystem:
     cdef Transition init_transition(self, int clas, int move, int label) except *
 
     cdef int set_valid(self, bint* output, const State* state) except -1
+    
+    cdef int set_costs(self, int* output, const State* state, GoldParse gold) except -1
 
     cdef Transition best_valid(self, const weight_t* scores, const State* state) except *
 
