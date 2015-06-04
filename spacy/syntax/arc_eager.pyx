@@ -152,6 +152,35 @@ cdef class ArcEager(TransitionSystem):
         for i in range(self.n_moves):
             output[i] = is_valid[self.c[i].move]
 
+    cdef int set_costs(self, int* output, const State* s, GoldParse gold) except -1:
+        cdef Transition move
+        move.label = -1
+        cdef int[N_MOVES] move_costs
+        move_costs[SHIFT] = _shift_cost(&move, s, &gold.c)
+        move_costs[REDUCE] = _reduce_cost(&move, s, &gold.c)
+        move_costs[LEFT] = _left_cost(&move, s, &gold.c)
+        move_costs[RIGHT] = _right_cost(&move, s, &gold.c)
+        move_costs[BREAK] = _break_cost(&move, s, &gold.c)
+        move_costs[CONSTITUENT] = _constituent_cost(&move, s, &gold.c)
+        move_costs[ADJUST] = _adjust_cost(&move, s, &gold.c)
+ 
+        cdef int i, label
+        cdef int* labels = gold.c.labels
+        cdef int* heads = gold.c.heads
+        for i in range(self.n_moves):
+            move = self.c[i]
+            output[i] = move_costs[move.move]
+            if output[i] == 0:
+                label = -1
+                if move.move == RIGHT and heads[s.i] == s.stack[0]:
+                    label = labels[s.i]
+                if move.move == LEFT and heads[s.stack[0]] == s.i:
+                    label = labels[s.stack[0]]
+                elif move.move == LEFT and at_eol(s) and (_can_reduce(s) or _can_break(s)):
+                    label = labels[s.stack[0]]
+                output[i] += move.label != label and label != -1
+
+
     cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
         cdef bint[N_MOVES] is_valid
         is_valid[SHIFT] = _can_shift(s)
@@ -234,7 +263,7 @@ cdef int _right_cost(const Transition* self, const State* s, GoldParseC* gold) e
         return 9000
     cost = 0
     if gold.heads[s.i] == s.stack[0]:
-        cost += self.label != gold.labels[s.i]
+        cost += self.label != -1 and self.label != gold.labels[s.i]
         return cost
     # This indicates missing head
     if gold.labels[s.i] != -1:
@@ -249,7 +278,7 @@ cdef int _left_cost(const Transition* self, const State* s, GoldParseC* gold) ex
         return 9000
     cost = 0
     if gold.heads[s.stack[0]] == s.i:
-        cost += self.label != gold.labels[s.stack[0]]
+        cost += self.label != -1 and self.label != gold.labels[s.stack[0]]
         return cost
     # If we're at EOL, then the left arc will add an arc to ROOT.
     elif at_eol(s):
@@ -259,7 +288,7 @@ cdef int _left_cost(const Transition* self, const State* s, GoldParseC* gold) ex
             if _can_reduce(s) or _can_break(s): 
                 cost += gold.heads[s.stack[0]] != s.stack[0]
                 # Are we labelling correctly?
-                cost += self.label != gold.labels[s.stack[0]]
+                cost += self.label != -1 and self.label != gold.labels[s.stack[0]]
         return cost
 
     cost += head_in_buffer(s, s.stack[0], gold.heads)

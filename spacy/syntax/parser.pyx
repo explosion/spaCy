@@ -153,10 +153,12 @@ cdef class Parser:
             self._advance_beam(pred, gold_parse, False)
             self._advance_beam(gold, gold_parse, True)
             violn.check(pred, gold)
-        counts = {}
         if pred.loss >= 1:
+            counts = {clas: {} for clas in range(self.model.n_classes)}
             self._count_feats(counts, tokens, violn.g_hist, 1)
             self._count_feats(counts, tokens, violn.p_hist, -1)
+        else:
+            counts = {}
         self.model._model.update(counts)
         return pred.loss
 
@@ -171,20 +173,14 @@ cdef class Parser:
             fill_context(context, state)
             self.model.set_scores(beam.scores[i], context)
             self.moves.set_valid(beam.is_valid[i], state)
-        
-        if follow_gold:
+       
+        if gold is not None:
             for i in range(beam.size):
                 state = <State*>beam.at(i)
-                for j in range(self.moves.n_moves):
-                    move = &self.moves.c[j]
-                    beam.costs[i][j] = move.get_cost(move, state, &gold.c)
-                    beam.is_valid[i][j] = beam.costs[i][j] == 0
-        elif gold is not None:
-            for i in range(beam.size):
-                state = <State*>beam.at(i)
-                for j in range(self.moves.n_moves):
-                    move = &self.moves.c[j]
-                    beam.costs[i][j] = move.get_cost(move, state, &gold.c)
+                self.moves.set_costs(beam.costs[i], state, gold)
+                if follow_gold:
+                    for j in range(self.moves.n_moves):
+                        beam.is_valid[i][j] = beam.costs[i][j] == 0
         beam.advance(_transition_state, <void*>self.moves.c)
         state = <State*>beam.at(0)
         if state.sent[state.i].sent_end:
@@ -204,7 +200,7 @@ cdef class Parser:
                 break
             fill_context(context, state)
             feats = self.model._extractor.get_feats(context, &n_feats)
-            count_feats(counts.setdefault(clas, {}), feats, n_feats, inc)
+            count_feats(counts[clas], feats, n_feats, inc)
             self.moves.c[clas].do(&self.moves.c[clas], state)
 
 
