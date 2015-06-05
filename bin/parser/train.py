@@ -141,8 +141,11 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
     nlp.vocab.strings.dump(path.join(model_dir, 'vocab', 'strings.txt'))
 
 
-def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False):
+def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False,
+             beam_width=None):
     nlp = Language(data_dir=model_dir)
+    if beam_width is not None:
+        nlp.parser.cfg.beam_width = beam_width
     scorer = Scorer()
     for raw_text, sents in gold_tuples:
         if gold_preproc:
@@ -179,9 +182,10 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
 @plac.annotations(
     train_loc=("Location of training file or directory"),
     dev_loc=("Location of development file or directory"),
+    model_dir=("Location of output model directory",),
+    eval_only=("Skip training, and only evaluate", "flag", "e", bool),
     corruption_level=("Amount of noise to add to training data", "option", "c", float),
     gold_preproc=("Use gold-standard sentence boundaries in training?", "flag", "g", bool),
-    model_dir=("Location of output model directory",),
     out_loc=("Out location", "option", "o", str),
     n_sents=("Number of training sentences", "option", "n", int),
     n_iter=("Number of training iterations", "option", "i", int),
@@ -190,17 +194,20 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
     debug=("Debug mode", "flag", "d", bool)
 )
 def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
-         debug=False, corruption_level=0.0, gold_preproc=False, beam_width=1):
-    gold_train = list(read_json_file(train_loc))
-    train(English, gold_train, model_dir,
-          feat_set='basic' if not debug else 'debug',
-          gold_preproc=gold_preproc, n_sents=n_sents,
-          corruption_level=corruption_level, n_iter=n_iter,
-          beam_width=beam_width)
+         debug=False, corruption_level=0.0, gold_preproc=False, beam_width=1,
+         eval_only=False):
+    if not eval_only:
+        gold_train = list(read_json_file(train_loc))
+        train(English, gold_train, model_dir,
+              feat_set='basic' if not debug else 'debug',
+              gold_preproc=gold_preproc, n_sents=n_sents,
+              corruption_level=corruption_level, n_iter=n_iter,
+              beam_width=beam_width)
     if out_loc:
         write_parses(English, dev_loc, model_dir, out_loc)
     scorer = evaluate(English, list(read_json_file(dev_loc)),
-                      model_dir, gold_preproc=gold_preproc, verbose=verbose)
+                      model_dir, gold_preproc=gold_preproc, verbose=verbose,
+                      beam_width=beam_width)
     print 'TOK', 100-scorer.token_acc
     print 'POS', scorer.tags_acc
     print 'UAS', scorer.uas
