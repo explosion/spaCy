@@ -193,7 +193,7 @@ cdef class Begin:
 
         if g_act == MISSING:
             return 0
-        if g_act == BEGIN:
+        elif g_act == BEGIN:
             # B, Gold B --> Label match
             return label != g_tag
         else:
