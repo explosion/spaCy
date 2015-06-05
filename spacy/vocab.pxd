@@ -33,3 +33,4 @@ cdef class Vocab:
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1
 
     cdef PreshMap _map
+    cdef readonly int repvec_length

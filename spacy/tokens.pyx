@@ -464,7 +464,7 @@ cdef class Token:
 
     property repvec:
         def __get__(self):
-            return numpy.asarray(<float[:300,]> self.c.lex.repvec)
+            return numpy.asarray(<float[:self.vocab.repvec_length,]> self.c.lex.repvec)
 
     property n_lefts:
         def __get__(self):

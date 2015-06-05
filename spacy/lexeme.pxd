@@ -42,9 +42,9 @@ cdef class Lexeme:
     # Workaround for an apparent bug in the way the decorator is handled ---
     # TODO: post bug report / patch to Cython.
     @staticmethod
-    cdef inline Lexeme from_ptr(const LexemeC* ptr, StringStore strings):
-        cdef Lexeme py = Lexeme.__new__(Lexeme, 300)
-        for i in range(300):
+    cdef inline Lexeme from_ptr(const LexemeC* ptr, StringStore strings, int repvec_length):
+        cdef Lexeme py = Lexeme.__new__(Lexeme, repvec_length)
+        for i in range(repvec_length):
             py.repvec[i] = ptr.repvec[i]
         py.l2_norm = ptr.l2_norm
         py.flags = ptr.flags
