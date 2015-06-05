@@ -83,14 +83,14 @@ cdef class Parser:
     def __call__(self, Tokens tokens):
         if tokens.length == 0:
             return 0
-        if self.cfg.beam_width == 1:
+        if self.cfg.beam_width <= 1:
             self._greedy_parse(tokens)
         else:
             self._beam_parse(tokens)
 
     def train(self, Tokens tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
-        if self.cfg.beam_width == 1:
+        if self.cfg.beam_width <= 1:
             return self._greedy_train(tokens, gold)
         else:
             return self._beam_train(tokens, gold)
