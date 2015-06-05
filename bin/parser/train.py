@@ -70,77 +70,9 @@ def _merge_sents(sents):
     return [(m_deps, m_brackets)]
 
 
-def get_train_tags(Language, model_dir, docs, gold_preproc):
-    taggings = {}
-    for train_part, test_part in get_partitions(docs, 5):
-        nlp = _train_tagger(Language, model_dir, train_part, gold_preproc)
-        for tokens in _tag_partition(nlp, test_part):
-            taggings[hash(tokens.string)] = [w.tag_ for w in tokens]
-    return taggings
-
-def get_partitions(docs, n_parts):
-    random.shuffle(docs)
-    n_test = len(docs) / n_parts
-    n_train = len(docs) - n_test
-    for part in range(n_parts):
-        start = int(part * n_test)
-        end = int(start + n_test)
-        yield docs[:start] + docs[end:], docs[start:end]
-
-
-def _train_tagger(Language, model_dir, docs, gold_preproc=False, n_iter=5):
-    pos_model_dir = path.join(model_dir, 'pos')
-    if path.exists(pos_model_dir):
-        shutil.rmtree(pos_model_dir)
-    os.mkdir(pos_model_dir)
-    setup_model_dir(sorted(POS_TAGS.keys()), POS_TAGS, POS_TEMPLATES, pos_model_dir)
-
-    nlp = Language(data_dir=model_dir)
-
-    print "Itn.\tTag %"
-    for itn in range(n_iter):
-        scorer = Scorer()
-        correct = 0
-        total = 0
-        for raw_text, sents in docs:
-            if gold_preproc:
-                raw_text = None
-            else:
-                sents = _merge_sents(sents)
-            for annot_tuples, ctnt in sents:
-                if raw_text is None:
-                    tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
-                else:
-                    tokens = nlp.tokenizer(raw_text)
-                gold = GoldParse(tokens, annot_tuples)
-                correct += nlp.tagger.train(tokens, gold.tags)
-                total += len(tokens)
-        random.shuffle(docs)
-        print itn, '%.3f' % (correct / total)
-    nlp.tagger.model.end_training()
-    nlp.vocab.strings.dump(path.join(model_dir, 'vocab', 'strings.txt'))
-    return nlp
-
-
-def _tag_partition(nlp, docs, gold_preproc=False):
-    for raw_text, sents in docs:
-        if gold_preproc:
-            raw_text = None
-        else:
-            sents = _merge_sents(sents)
-        for annot_tuples, _ in sents:
-            if raw_text is None:
-                tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
-            else:
-                tokens = nlp.tokenizer(raw_text)
-
-            nlp.tagger(tokens)
-            yield tokens
-
-
 def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
           seed=0, gold_preproc=False, n_sents=0, corruption_level=0,
-          train_tags=None, beam_width=1):
+          beam_width=1):
     dep_model_dir = path.join(model_dir, 'deps')
     pos_model_dir = path.join(model_dir, 'pos')
     ner_model_dir = path.join(model_dir, 'ner')
@@ -185,11 +117,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                     tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
                 else:
                     tokens = nlp.tokenizer(raw_text)
-                if train_tags is not None:
-                    sent_id = hash(tokens.string)
-                    nlp.tagger.tag_from_strings(tokens, train_tags[sent_id])
-                else:
-                    nlp.tagger(tokens)
+                nlp.tagger(tokens)
                 gold = GoldParse(tokens, annot_tuples, make_projective=True)
                 loss += nlp.parser.train(tokens, gold)
                             
@@ -256,8 +184,6 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
 def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
          debug=False, corruption_level=0.0, gold_preproc=False, beam_width=1):
     gold_train = list(read_json_file(train_loc))
-    #taggings = get_train_tags(English, model_dir, gold_train, gold_preproc)
-    taggings = None
     train(English, gold_train, model_dir,
           feat_set='basic' if not debug else 'debug',
           gold_preproc=gold_preproc, n_sents=n_sents,
