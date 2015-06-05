@@ -24,7 +24,7 @@ from spacy.gold import GoldParse
 from spacy.scorer import Scorer
 
 
-def add_noise(c, noise_level):
+def _corrupt(c, noise_level):
     if random.random() >= noise_level:
         return c
     elif c == ' ':
@@ -35,6 +35,17 @@ def add_noise(c, noise_level):
         return ''
     else:
         return c.lower()
+
+
+def add_noise(orig, noise_level):
+    if random.random() >= noise_level:
+        return orig
+    elif type(orig) == list:
+        corrupted = [_corrupt(word, noise_level) for word in orig]
+        corrupted = [w for w in corrupted if w]
+        return corrupted
+    else:
+        return ''.join(_corrupt(c, noise_level) for c in orig)
 
 
 def score_model(scorer, nlp, raw_text, annot_tuples):
@@ -109,8 +120,10 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                     continue
                 score_model(scorer, nlp, raw_text, annot_tuples)
                 if raw_text is None:
-                    tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
+                    words = add_noise(annot_tuples[1], corruption_level)
+                    tokens = nlp.tokenizer.tokens_from_list(words)
                 else:
+                    raw_text = add_noise(raw_text, corruption_level)
                     tokens = nlp.tokenizer(raw_text)
                 nlp.tagger(tokens)
                 gold = GoldParse(tokens, annot_tuples, make_projective=True)
