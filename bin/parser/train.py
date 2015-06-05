@@ -37,17 +37,12 @@ def add_noise(c, noise_level):
         return c.lower()
 
 
-def score_model(scorer, nlp, raw_text, annot_tuples, train_tags=None):
+def score_model(scorer, nlp, raw_text, annot_tuples):
     if raw_text is None:
         tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
     else:
         tokens = nlp.tokenizer(raw_text)
-    if train_tags is not None:
-        key = hash(tokens.string)
-        nlp.tagger.tag_from_strings(tokens, train_tags[key])
-    else:
-        nlp.tagger(tokens)
-
+    nlp.tagger(tokens)
     nlp.entity(tokens)
     nlp.parser(tokens)
     gold = GoldParse(tokens, annot_tuples)
@@ -93,7 +88,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                  beam_width=beam_width)
     Config.write(ner_model_dir, 'config', features='ner', seed=seed,
                  labels=Language.EntityTransitionSystem.get_labels(gold_tuples),
-                 beam_width=1)
+                 beam_width=0)
 
     if n_sents > 0:
         gold_tuples = gold_tuples[:n_sents]
@@ -112,7 +107,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
             for annot_tuples, ctnt in sents:
                 if len(annot_tuples[1]) == 1:
                     continue
-                score_model(scorer, nlp, raw_text, annot_tuples, train_tags)
+                score_model(scorer, nlp, raw_text, annot_tuples)
                 if raw_text is None:
                     tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
                 else:
@@ -188,7 +183,7 @@ def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbos
           feat_set='basic' if not debug else 'debug',
           gold_preproc=gold_preproc, n_sents=n_sents,
           corruption_level=corruption_level, n_iter=n_iter,
-          train_tags=taggings, beam_width=beam_width)
+          beam_width=beam_width)
     if out_loc:
         write_parses(English, dev_loc, model_dir, out_loc)
     scorer = evaluate(English, list(read_json_file(dev_loc)),
