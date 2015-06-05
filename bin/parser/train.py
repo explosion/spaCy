@@ -178,6 +178,8 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
             else:
                 sents = _merge_sents(sents)
             for annot_tuples, ctnt in sents:
+                if len(annot_tuples[1]) == 1:
+                    continue
                 score_model(scorer, nlp, raw_text, annot_tuples, train_tags)
                 if raw_text is None:
                     tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
