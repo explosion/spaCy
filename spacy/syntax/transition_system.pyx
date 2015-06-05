@@ -51,7 +51,7 @@ cdef class TransitionSystem:
     cdef int set_costs(self, int* output, const State* s, GoldParse gold) except -1:
         cdef int i
         for i in range(self.n_moves):
-            output[i] = self.c[i].get_cost(&self.c[i], s, &gold.c)
+            output[i] = self.c[i].get_cost(s, &gold.c, self.c[i].label)
 
     cdef Transition best_gold(self, const weight_t* scores, const State* s,
                               GoldParse gold) except *:
@@ -59,7 +59,7 @@ cdef class TransitionSystem:
         cdef weight_t score = MIN_SCORE
         cdef int i
         for i in range(self.n_moves):
-            cost = self.c[i].get_cost(&self.c[i], s, &gold.c)
+            cost = self.c[i].get_cost(s, &gold.c, self.c[i].label)
             if scores[i] > score and cost == 0:
                 best = self.c[i]
                 score = scores[i]

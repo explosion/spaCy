@@ -106,7 +106,7 @@ cdef class Parser:
             fill_context(context, state)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
-            guess.do(&guess, state)
+            guess.do(state, guess.label)
         self.moves.finalize_state(state)
         tokens.set_parse(state.sent)
 
@@ -136,9 +136,9 @@ cdef class Parser:
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, state)
             best = self.moves.best_gold(scores, state, gold)
-            cost = guess.get_cost(&guess, state, &gold.c)
+            cost = guess.get_cost(state, &gold.c, guess.label)
             self.model.update(context, guess.clas, best.clas, cost)
-            guess.do(&guess, state)
+            guess.do(state, guess.label)
             loss += cost
         return loss
 
@@ -180,11 +180,9 @@ cdef class Parser:
                 self.moves.set_costs(beam.costs[i], state, gold)
                 if follow_gold:
                     for j in range(self.moves.n_moves):
-                        beam.is_valid[i][j] = beam.costs[i][j] == 0
+                        beam.is_valid[i][j] *= beam.costs[i][j] == 0
         beam.advance(_transition_state, <void*>self.moves.c)
         state = <State*>beam.at(0)
-        if state.sent[state.i].sent_end:
-            beam.size = int(beam.size / 2)
         beam.check_done(_check_final_state, NULL)
 
     def _count_feats(self, dict counts, Tokens tokens, list hist, int inc):
@@ -201,7 +199,7 @@ cdef class Parser:
             fill_context(context, state)
             feats = self.model._extractor.get_feats(context, &n_feats)
             count_feats(counts[clas], feats, n_feats, inc)
-            self.moves.c[clas].do(&self.moves.c[clas], state)
+            self.moves.c[clas].do(state, self.moves.c[clas].label)
 
 
 # These are passed as callbacks to thinc.search.Beam
@@ -211,7 +209,7 @@ cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) 
     src = <const State*>_src
     moves = <const Transition*>_moves
     copy_state(dest, src)
-    moves[clas].do(&moves[clas], dest)
+    moves[clas].do(dest, moves[clas].label)
 
 
 cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:

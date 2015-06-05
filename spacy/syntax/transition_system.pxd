@@ -15,14 +15,14 @@ cdef struct Transition:
 
     weight_t score
 
-    int (*get_cost)(const Transition* self, const State* state, GoldParseC* gold) except -1
-    int (*do)(const Transition* self, State* state) except -1
+    bint (*is_valid)(const State* state, int label) except -1
+    int (*get_cost)(const State* state, const GoldParseC* gold, int label) except -1
+    int (*do)(State* state, int label) except -1
 
 
-ctypedef int (*get_cost_func_t)(const Transition* self, const State* state,
-              GoldParseC* gold) except -1
+ctypedef int (*get_cost_func_t)(const State* state, const GoldParseC* gold, int label) except -1
 
-ctypedef int (*do_func_t)(const Transition* self, State* state) except -1
+ctypedef int (*do_func_t)(State* state, int label) except -1
 
 
 cdef class TransitionSystem:
