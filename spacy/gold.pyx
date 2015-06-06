@@ -46,7 +46,7 @@ def _min_edit_path(cand_words, gold_words):
     gold_words = [punct_re.sub('', w) for w in gold_words] 
     
     if cand_words == gold_words:
-        return 0, ['M' for _ in gold_words]
+        return 0, ''.join(['M' for _ in gold_words])
     mem = Pool()
     n_cand = len(cand_words)
     n_gold = len(gold_words)
