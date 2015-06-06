@@ -43,14 +43,20 @@ def _fmt_doc(filename, paras):
 
 
 def _fmt_para(raw, sents):
-    # Get sentence starts
-    starts = [int(sent.split()[0]) for sent in sents]
-    return {'raw': raw, 'sents': starts,
-            'tokens': [_fmt_token(*t.split()) for t in '\n'.join(sents).split('\n')]}
+    return {'raw': raw, 'sentences': [_fmt_sent(sent) for sent in sents]}
+
+
+def _fmt_sent(sent):
+    return {
+        'tokens': [_fmt_token(*t.split()) for t in sent.strip().split('\n')],
+        'brackets': []}
 
 
 def _fmt_token(id_, word, hyph, pos, ner, head, dep, blank1, blank2, blank3):
-    return {'id': int(id_)-1, 'orth': word, 'tag': pos, 'dep': dep, 'head': int(head)-1}
+    head = int(head) - 1
+    id_ = int(id_) - 1
+    head = (head - id_) if head != -1 else 0
+    return {'id': id_, 'orth': word, 'tag': pos, 'dep': dep, 'head': head}
 
 
 tags_re = re.compile(r'<[\w\?/][^>]+>')
