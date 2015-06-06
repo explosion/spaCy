@@ -4,15 +4,15 @@ import pytest
 
 from spacy.en import English
 
+EN = English()
 
-#def test_hyphen():
-#    tokens = EN.tokenize('best-known')
-#    assert len(tokens) == 3
+def test_hyphen():
+    tokens = EN.tokenizer('best-known')
+    assert len(tokens) == 3
 
 
 def test_period():
-    EN = English()
     tokens = EN.tokenizer('best.Known')
     assert len(tokens) == 3
-    tokens = EN('zombo.com')
+    tokens = EN.tokenizer('zombo.com')
     assert len(tokens) == 1
