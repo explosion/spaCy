@@ -38,5 +38,5 @@ def test_tweebo_challenge(EN):
 
 def test_false_positive(EN):
     text = "example:)"
-    tokens = EN(text)
+    tokens = EN(text, parse=False, tag=False)
     assert len(tokens) == 3
