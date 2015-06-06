@@ -52,8 +52,12 @@ def clean():
 
 def test():
     with virtualenv(VENV_DIR):
+        # Run each test file separately. pytest is performing poorly, not sure why
         with lcd(path.dirname(__file__)):
-            local('py.test -x')
+            files = local('ls tests/test_*.py', capture=True)
+            for fn in files:
+                with settings(warn_only=True):
+                    local('py.test -x %s' % fn)
 
 
 def train(json_dir=None, dev_loc=None, model_dir=None):
