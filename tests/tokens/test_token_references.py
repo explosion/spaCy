@@ -36,7 +36,7 @@ def _orphan_from_list(toks):
 
 def test_list_orphans():
     # Test case from NSchrading
-    nlp = English()
+    nlp = English(load_vectors=False)
     samples = ["a", "test blah wat okay"]
     lst = []
     for sample in samples:
