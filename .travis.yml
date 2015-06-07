@@ -11,9 +11,16 @@ python:
 # install dependencies
 install:
   - "pip install --upgrade setuptools"
-  - "rm -rf spacy/"
-  - "pip install spacy"
+  - "pip install -r requirements.txt"
+  - "pip install fabric fabtools"
+  - "export PYTHONPATH=`pwd`"
+  - "fab make"
   - "python -m spacy.en.download all"
+  - "py.test tests/"
+
+#- "rm -rf spacy/"
+#- "pip install spacy"
+#- "python -m spacy.en.download all"
 # run tests
 script:
   - py.test tests/
