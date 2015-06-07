@@ -5,11 +5,11 @@ from spacy.en import English
 import pytest
 
 
-EN = English()
 
 
 @pytest.fixture
 def doc():
+    EN = English()
     return EN('This is a sentence. This is another sentence. And a third.')
 
 
