@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import os
 from os import path
 import re
@@ -35,7 +36,6 @@ def parse(string, strip_bad_periods=False):
         try:
             tag, open_tag = _get_tag(substr, open_tag)
         except:
-            print string
             raise
         tags.append(tag)
     return tokens, tags
@@ -98,8 +98,7 @@ def tags_to_entities(tags):
             entities.append((tag[2:], start, i))
             start = None
         else:
-            print tags
-            raise StandardError(tag)
+            raise Exception(tag)
     return entities
 
 
