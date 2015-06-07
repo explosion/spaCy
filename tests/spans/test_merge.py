@@ -26,6 +26,6 @@ def test_merge_heads(EN):
     assert tokens[5].head.i == 4
 
 
-def test_issue_54():
+def test_issue_54(EN):
     text = u'Talks given by women had a slightly higher number of questions asked (3.2$\pm$0.2) than talks given by men (2.6$\pm$0.1).'
-    tokens = en_nlp(text, merge_mwes=True)
+    tokens = EN(text, merge_mwes=True)
