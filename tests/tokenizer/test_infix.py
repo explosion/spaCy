@@ -2,17 +2,13 @@ from __future__ import unicode_literals
 
 import pytest
 
-from spacy.en import English
-
-EN = English()
-
-def test_hyphen():
-    tokens = EN.tokenizer('best-known')
+def test_hyphen(en_tokenizer):
+    tokens = en_tokenizer('best-known')
     assert len(tokens) == 3
 
 
-def test_period():
-    tokens = EN.tokenizer('best.Known')
+def test_period(en_tokenizer):
+    tokens = en_tokenizer('best.Known')
     assert len(tokens) == 3
-    tokens = EN.tokenizer('zombo.com')
+    tokens = en_tokenizer('zombo.com')
     assert len(tokens) == 1

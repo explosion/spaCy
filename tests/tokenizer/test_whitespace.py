@@ -1,41 +1,35 @@
 """Test that tokens are created correctly for whitespace."""
 from __future__ import unicode_literals
 
-from spacy.en import English
 import pytest
 
 
-@pytest.fixture
-def EN():
-    return English().tokenizer
-
-
-def test_single_space(EN):
-    tokens = EN('hello possums')
+def test_single_space(en_tokenizer):
+    tokens = en_tokenizer('hello possums')
     assert len(tokens) == 2
 
 
-def test_double_space(EN):
-    tokens = EN('hello  possums')
+def test_double_space(en_tokenizer):
+    tokens = en_tokenizer('hello  possums')
     assert len(tokens) == 3
     assert tokens[1].orth_ == ' '
 
 
-def test_newline(EN):
-    tokens = EN('hello\npossums')
+def test_newline(en_tokenizer):
+    tokens = en_tokenizer('hello\npossums')
     assert len(tokens) == 3
 
 
-def test_newline_space(EN):
-    tokens = EN('hello \npossums')
+def test_newline_space(en_tokenizer):
+    tokens = en_tokenizer('hello \npossums')
     assert len(tokens) == 3
 
 
-def test_newline_double_space(EN):
-    tokens = EN('hello  \npossums')
+def test_newline_double_space(en_tokenizer):
+    tokens = en_tokenizer('hello  \npossums')
     assert len(tokens) == 3
 
 
-def test_newline_space_wrap(EN):
-    tokens = EN('hello \n possums')
+def test_newline_space_wrap(en_tokenizer):
+    tokens = en_tokenizer('hello \n possums')
     assert len(tokens) == 3

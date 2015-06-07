@@ -1,34 +1,31 @@
 from __future__ import unicode_literals
 import pytest
 
-from spacy.en import English
 
-EN = English()
-
-def test_possess():
-    tokens = EN("Mike's", parse=False, tag=False)
-    assert EN.vocab.strings[tokens[0].orth] == "Mike"
-    assert EN.vocab.strings[tokens[1].orth] == "'s"
+def test_possess(en_tokenizer):
+    tokens = en_tokenizer("Mike's")
+    assert en_tokenizer.vocab.strings[tokens[0].orth] == "Mike"
+    assert en_tokenizer.vocab.strings[tokens[1].orth] == "'s"
     assert len(tokens) == 2
 
 
-def test_apostrophe():
-    tokens = EN("schools'", parse=False, tag=False)
+def test_apostrophe(en_tokenizer):
+    tokens = en_tokenizer("schools'")
     assert len(tokens) == 2
     assert tokens[1].orth_ == "'"
     assert tokens[0].orth_ == "schools"
 
 
-def test_LL():
-    tokens = EN("we'll", parse=False)
+def test_LL(en_tokenizer):
+    tokens = en_tokenizer("we'll")
     assert len(tokens) == 2
     assert tokens[1].orth_ == "'ll"
     assert tokens[1].lemma_ == "will"
     assert tokens[0].orth_ == "we"
 
 
-def test_aint():
-    tokens = EN("ain't", parse=False)
+def test_aint(en_tokenizer):
+    tokens = en_tokenizer("ain't")
     assert len(tokens) == 2
     assert tokens[0].orth_ == "ai"
     assert tokens[0].lemma_ == "be"
@@ -36,19 +33,19 @@ def test_aint():
     assert tokens[1].lemma_ == "not"
 
 
-def test_capitalized():
-    tokens = EN("can't", parse=False)
+def test_capitalized(en_tokenizer):
+    tokens = en_tokenizer("can't")
     assert len(tokens) == 2
-    tokens = EN("Can't", parse=False)
+    tokens = en_tokenizer("Can't")
     assert len(tokens) == 2
-    tokens = EN("Ain't", parse=False)
+    tokens = en_tokenizer("Ain't")
     assert len(tokens) == 2
     assert tokens[0].orth_ == "Ai"
     assert tokens[0].lemma_ == "be"
 
 
-def test_punct():
-    tokens = EN("We've", parse=False)
+def test_punct(en_tokenizer):
+    tokens = en_tokenizer("We've")
     assert len(tokens) == 2
-    tokens = EN("``We've", parse=False)
+    tokens = en_tokenizer("``We've")
     assert len(tokens) == 3

@@ -3,32 +3,25 @@ from __future__ import unicode_literals
 
 import pytest
 
-from spacy.en import English
 
-
-@pytest.fixture
-def EN():
-    return English().tokenizer
-
-
-def test_no_word(EN):
-    tokens = EN(u'')
+def test_no_word(en_tokenizer):
+    tokens = en_tokenizer(u'')
     assert len(tokens) == 0
 
 
-def test_single_word(EN):
-    tokens = EN(u'hello')
+def test_single_word(en_tokenizer):
+    tokens = en_tokenizer(u'hello')
     assert tokens[0].orth_ == 'hello'
 
 
-def test_two_words(EN):
-    tokens = EN('hello possums')
+def test_two_words(en_tokenizer):
+    tokens = en_tokenizer('hello possums')
     assert len(tokens) == 2
     assert tokens[0].orth_ != tokens[1].orth_
 
 
-def test_punct(EN):
-    tokens = EN('hello, possums.')
+def test_punct(en_tokenizer):
+    tokens = en_tokenizer('hello, possums.')
     assert len(tokens) == 4
     assert tokens[0].orth_ == 'hello'
     assert tokens[1].orth_ == ','
@@ -36,34 +29,34 @@ def test_punct(EN):
     assert tokens[1].orth_ != 'hello'
 
 
-def test_digits(EN):
-    tokens = EN('The year: 1984.')
+def test_digits(en_tokenizer):
+    tokens = en_tokenizer('The year: 1984.')
     assert len(tokens) == 5
-    assert tokens[0].orth == EN.vocab['The'].orth
-    assert tokens[3].orth == EN.vocab['1984'].orth
+    assert tokens[0].orth == en_tokenizer.vocab['The'].orth
+    assert tokens[3].orth == en_tokenizer.vocab['1984'].orth
 
 
-def test_contraction(EN):
-    tokens = EN("don't giggle")
+def test_contraction(en_tokenizer):
+    tokens = en_tokenizer("don't giggle")
     assert len(tokens) == 3
-    assert tokens[1].orth == EN.vocab["n't"].orth
-    tokens = EN("i said don't!")
+    assert tokens[1].orth == en_tokenizer.vocab["n't"].orth
+    tokens = en_tokenizer("i said don't!")
     assert len(tokens) == 5
-    assert tokens[4].orth == EN.vocab['!'].orth
+    assert tokens[4].orth == en_tokenizer.vocab['!'].orth
 
 
-def test_contraction_punct(EN):
-    tokens = EN("(can't")
+def test_contraction_punct(en_tokenizer):
+    tokens = en_tokenizer("(can't")
     assert len(tokens) == 3
-    tokens = EN("`ain't")
+    tokens = en_tokenizer("`ain't")
     assert len(tokens) == 3
-    tokens = EN('''"isn't''')
+    tokens = en_tokenizer('''"isn't''')
     assert len(tokens) == 3
-    tokens = EN("can't!")
+    tokens = en_tokenizer("can't!")
     assert len(tokens) == 3
 
 
-def test_sample(EN):
+def test_sample(en_tokenizer):
     text = """Tributes pour in for late British Labour Party leader
 
 Tributes poured in from around the world Thursday
@@ -75,7 +68,7 @@ untimely death" of the rapier-tongued Scottish barrister and parliamentarian.
 
 "Mr. Smith, throughout his distinguished"""
 
-    tokens = EN(text)
+    tokens = en_tokenizer(text)
     assert len(tokens) > 5
 
 

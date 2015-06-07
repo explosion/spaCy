@@ -1,17 +1,10 @@
 from __future__ import unicode_literals
 import pytest
 
-from spacy.en import English
 
-
-@pytest.fixture
-def EN():
-    return English()
-
-
-def test_tweebo_challenge(EN):
+def test_tweebo_challenge(en_tokenizer):
     text = u""":o :/ :'( >:o (: :) >.< XD -__- o.O ;D :-) @_@ :P 8D :1 >:( :D =| ") :> ...."""
-    tokens = EN(text, parse=False, tag=False)
+    tokens = en_tokenizer(text)
     assert tokens[0].orth_ == ":o"
     assert tokens[1].orth_ == ":/"
     assert tokens[2].orth_ == ":'("
@@ -36,7 +29,7 @@ def test_tweebo_challenge(EN):
     assert tokens[21].orth_ == '....'
 
 
-def test_false_positive(EN):
+def test_false_positive(en_tokenizer):
     text = "example:)"
-    tokens = EN(text, parse=False, tag=False)
+    tokens = en_tokenizer(text)
     assert len(tokens) == 3
