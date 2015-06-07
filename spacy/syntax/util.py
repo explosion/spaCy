@@ -6,6 +6,9 @@ class Config(object):
         for key, value in kwargs.items():
             setattr(self, key, value)
 
+    def get(self, attr, default=None):
+        return self.__dict__.get(attr, default)
+
     @classmethod
     def write(cls, model_dir, name, **kwargs):
         open(path.join(model_dir, '%s.json' % name), 'w').write(json.dumps(kwargs))
