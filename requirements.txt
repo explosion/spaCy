@@ -9,3 +9,4 @@ numpy
 wget
 plac
 six
+ujson
