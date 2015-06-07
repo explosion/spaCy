@@ -81,6 +81,8 @@ class Scorer(object):
         cand_deps = set()
         cand_tags = set()
         for token in tokens:
+            if token.orth_.isspace():
+                continue
             gold_i = gold.cand_to_gold[token.i]
             if gold_i is None:
                 self.tags.fp += 1
