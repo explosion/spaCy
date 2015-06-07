@@ -22,7 +22,7 @@ def test_orphan():
     dummy = get_orphan_token('Load and flush the memory', 0)
     dummy = get_orphan_token('Load again...', 0)
     assert orphan.orth_ == 'orphan'
-    assert orphan.pos_ == 'ADJ'
+    assert orphan.pos_ == 'NOUN'
     assert orphan.head.orth_ == 'token'
 
 
