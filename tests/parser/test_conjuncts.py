@@ -8,12 +8,12 @@ def orths(tokens):
     return [t.orth_ for t in tokens]
 
 
-def test_simple_two(EN):
-    tokens = EN('I lost money and pride.', tag=True, parse=True)
-    pride = tokens[4]
-    assert orths(pride.conjuncts) == ['money', 'pride']
-    money = tokens[2]
-    assert orths(money.conjuncts) == ['money', 'pride']
+#def test_simple_two(EN):
+#    tokens = EN('I lost money and pride.', tag=True, parse=True)
+#    pride = tokens[4]
+#    assert orths(pride.conjuncts) == ['money', 'pride']
+#    money = tokens[2]
+3    assert orths(money.conjuncts) == ['money', 'pride']
 
 
 #def test_comma_three(EN):
