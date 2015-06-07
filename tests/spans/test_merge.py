@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 
 def test_merge_tokens(EN):
-    tokens = en_nlp(u'Los Angeles start.')
+    tokens = EN(u'Los Angeles start.')
     assert len(tokens) == 4
     assert tokens[0].head.orth_ == 'Angeles'
     assert tokens[1].head.orth_ == 'start'
@@ -13,7 +13,7 @@ def test_merge_tokens(EN):
 
 
 def test_merge_heads(EN):
-    tokens = en_nlp(u'I found a pilates class near work.')
+    tokens = EN(u'I found a pilates class near work.')
     assert len(tokens) == 8
     tokens.merge(tokens[3].idx, tokens[4].idx + len(tokens[4]), tokens[4].tag_,
                  'pilates class', 'O')
