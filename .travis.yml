@@ -12,9 +12,8 @@ python:
 install:
   - "pip install --upgrade setuptools"
   - "pip install -r requirements.txt"
-  - "pip install fabric fabtools"
   - "export PYTHONPATH=`pwd`"
-  - "fab make"
+  - "python setup.py build_ext --inplace"
   - "python -m spacy.en.download all"
   - "py.test tests/"
 
