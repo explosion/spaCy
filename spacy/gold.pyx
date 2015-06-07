@@ -7,8 +7,34 @@ import re
 import os
 from os import path
 
-from spacy.munge.read_ner import tags_to_entities
 from libc.string cimport memset
+
+
+def tags_to_entities(tags):
+    entities = []
+    start = None
+    for i, tag in enumerate(tags):
+        if tag.startswith('O'):
+            # TODO: We shouldn't be getting these malformed inputs. Fix this.
+            if start is not None:
+                start = None
+            continue
+        elif tag == '-':
+            continue
+        elif tag.startswith('I'):
+            assert start is not None, tags[:i]
+            continue
+        if tag.startswith('U'):
+            entities.append((tag[2:], i, i))
+        elif tag.startswith('B'):
+            start = i
+        elif tag.startswith('L'):
+            entities.append((tag[2:], start, i))
+            start = None
+        else:
+            raise Exception(tag)
+    return entities
+
 
 
 def align(cand_words, gold_words):

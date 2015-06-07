@@ -1,6 +1,6 @@
 from __future__ import division
 
-from spacy.munge.read_ner import tags_to_entities
+from .gold import tags_to_entities
 
 
 class PRFScore(object):
