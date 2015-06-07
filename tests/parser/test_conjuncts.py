@@ -4,22 +4,25 @@ from __future__ import unicode_literals
 from spacy.en import English
 import pytest
 
-NLU = English()
 
 def orths(tokens):
     return [t.orth_ for t in tokens]
 
 
 def test_simple_two():
-    tokens = NLU('I lost money and pride.', tag=True, parse=False)
+    nlp = English()
+    tokens = nlp('I lost money and pride.', tag=True, parse=True)
     pride = tokens[4]
+    for t in tokens:
+        print t.orth_, t.tag_, t.head.orth_
     assert orths(pride.conjuncts) == ['money', 'pride']
     money = tokens[2]
     assert orths(money.conjuncts) == ['money', 'pride']
 
 
 def test_comma_three():
-    tokens = NLU('I found my wallet, phone and keys.')
+    nlp = English()
+    tokens = nlp('I found my wallet, phone and keys.')
     keys = tokens[-2]
     assert orths(keys.conjuncts) == ['wallet', 'phone', 'keys']
     wallet = tokens[3]
