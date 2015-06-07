@@ -21,8 +21,7 @@ SPEECH_DATA_DIR_URL = '%s/en_data_speech-%s.tgz' % (AWS_STORE, VERSION)
 DEST_DIR = path.join(path.dirname(__file__), 'data')
 
 def download_file(url, out):
-    urllib.urlretrieve(url, filename=out)
-    wget.download(url, out=out)
+    urllib.urlretrieve(url, filename=path.join(out, url.rsplit('/', 1)[1]))
     return url.rsplit('/', 1)[1]
 
 
