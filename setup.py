@@ -86,7 +86,7 @@ def cython_setup(mod_names, language, includes, compile_args, link_args):
         description="Industrial-strength NLP",
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
-        version='0.66',
+        version=VERSION,
         url="http://honnibal.github.io/spaCy/",
         package_data={"spacy": ["*.pxd"],
                       "spacy.en": ["*.pxd", "data/pos/*",
@@ -107,7 +107,7 @@ def run_setup(exts):
         description="Industrial-strength NLP",
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
-        version='0.84',
+        version=VERSION,
         url="http://honnibal.github.io/spaCy/",
         package_data={"spacy": ["*.pxd"],
                       "spacy.en": ["*.pxd", "data/pos/*",
@@ -129,6 +129,7 @@ def run_setup(exts):
     headers_workaround.install_headers('numpy')
 
 
+VERSION = '0.85'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
