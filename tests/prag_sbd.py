@@ -220,10 +220,10 @@ def test_gr45():
 
 def test_gr46():
     sents = get_sent_strings("Thoreau argues that by simplifying one’s life, “the laws of the universe will appear less complex. . . .”")
-    assert sents ==     end
+    assert sents == ("Thoreau argues that by simplifying one’s life, “the laws of the universe will appear less complex. . . .”")
 
 def test_gr47():
-    sents = get_string("""Bohr [...] used the analogy of parallel stairways [...]" (Smith 55).""")
+    sents = get_sent_strings("""Bohr [...] used the analogy of parallel stairways [...]" (Smith 55).""")
     assert sents == ['"Bohr [...] used the analogy of parallel stairways [...]" (Smith 55).']
 
 def test_gr48():
