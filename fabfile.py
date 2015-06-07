@@ -1,4 +1,4 @@
-from fabric.api import local, lcd, env
+from fabric.api import local, lcd, env, settings
 from os.path import exists as file_exists
 from fabtools.python import virtualenv
 from os import path
@@ -54,10 +54,7 @@ def test():
     with virtualenv(VENV_DIR):
         # Run each test file separately. pytest is performing poorly, not sure why
         with lcd(path.dirname(__file__)):
-            files = local('ls tests/test_*.py', capture=True)
-            for fn in files:
-                with settings(warn_only=True):
-                    local('py.test -x %s' % fn)
+            local('py.test -x tests/')
 
 
 def train(json_dir=None, dev_loc=None, model_dir=None):
