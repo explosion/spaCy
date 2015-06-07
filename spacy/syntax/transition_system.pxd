@@ -21,6 +21,8 @@ cdef struct Transition:
 
 
 ctypedef int (*get_cost_func_t)(const State* state, const GoldParseC* gold, int label) except -1
+ctypedef int (*move_cost_func_t)(const State* state, const GoldParseC* gold) except -1
+ctypedef int (*label_cost_func_t)(const State* state, const GoldParseC* gold, int label) except -1
 
 ctypedef int (*do_func_t)(State* state, int label) except -1
 
