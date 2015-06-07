@@ -72,53 +72,58 @@ untimely death" of the rapier-tongued Scottish barrister and parliamentarian.
     assert len(tokens) > 5
 
 
-def test_cnts1(EN):
+def test_cnts1(en_tokenizer):
     text = u"""The U.S. Army likes Shock and Awe."""
-    tokens = EN(text)
+    tokens = en_tokenizer(text)
     assert len(tokens) == 8
 
 
-def test_cnts2(EN):
+def test_cnts2(en_tokenizer):
     text = u"""U.N. regulations are not a part of their concern."""
-    tokens = EN(text)
+    tokens = en_tokenizer(text)
     assert len(tokens) == 10
 
 
-def test_cnts3(EN):
+def test_cnts3(en_tokenizer):
     text = u"“Isn't it?”"
-    tokens = EN(text)
+    tokens = en_tokenizer(text)
     words = [t.orth_ for t in tokens]
     assert len(words) == 6
 
 
-def test_cnts4(EN):
+def test_cnts4(en_tokenizer):
     text = u"""Yes! "I'd rather have a walk", Ms. Comble sighed. """
-    tokens = EN(text)
+    tokens = en_tokenizer(text)
     words = [t.orth_ for t in tokens]
     assert len(words) == 15
 
 
-def test_cnts5(EN):
+def test_cnts5(en_tokenizer):
     text = """'Me too!', Mr. P. Delaware cried. """
-    tokens = EN(text)
+    tokens = en_tokenizer(text)
     assert len(tokens) == 11
 
+def test_mr(en_tokenizer):
+    text = """Mr. Smith"""
+    tokens = en_tokenizer(text)
+    assert len(tokens) == 2
 
-def test_cnts6(EN):
+
+def test_cnts6(en_tokenizer):
     text = u'They ran about 10km.'
-    tokens = EN(text)
+    tokens = en_tokenizer(text)
     words = [t.orth_ for t in tokens]
     assert len(words) == 6
 
-def test_bracket_period(EN):
+def test_bracket_period(en_tokenizer):
     text = u'(And a 6a.m. run through Washington Park).'
-    tokens = EN(text)
+    tokens = en_tokenizer(text)
     assert tokens[len(tokens) - 1].orth_ == u'.'
 
 
-def test_ie(EN):
+def test_ie(en_tokenizer):
     text = u"It's mediocre i.e. bad."
-    tokens = EN(text)
+    tokens = en_tokenizer(text)
     assert len(tokens) == 6
     assert tokens[3].orth_ == "i.e."
 
