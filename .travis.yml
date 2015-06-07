@@ -11,9 +11,9 @@ python:
 # install dependencies
 install:
   - "pip install --upgrade setuptools"
-  - "pip install -r requirements.txt"
-  - "export PYTHONPATH=`pwd`"
-  - "python setup.py build_ext --inplace"
+  - "rm -rf spacy/"
+  - "pip install spacy"
+  - "python -m spacy.en.download all"
 # run tests
 script:
   - py.test tests/
