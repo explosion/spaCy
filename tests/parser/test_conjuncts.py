@@ -13,7 +13,7 @@ def orths(tokens):
 #    pride = tokens[4]
 #    assert orths(pride.conjuncts) == ['money', 'pride']
 #    money = tokens[2]
-3    assert orths(money.conjuncts) == ['money', 'pride']
+#    assert orths(money.conjuncts) == ['money', 'pride']
 
 
 #def test_comma_three(EN):
