@@ -8,9 +8,3 @@ def test_simple_types(EN):
     assert ents[1].start == 4
     assert ents[1].end == 6
     assert ents[1].label_ == 'GPE'
-    assert ents[2].start == 7
-    assert ents[2].end == 8
-    assert ents[2].label_ == 'DATE'
-    assert ents[3].start == 8
-    assert ents[3].end == 9
-    assert ents[3].label_ == 'TIME'
