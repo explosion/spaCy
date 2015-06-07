@@ -1,11 +1,6 @@
-from spacy.en import English
 
-
-nlp = English()
-
-
-def test_simple_types():
-    tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
+def test_simple_types(EN):
+    tokens = EN(u'Mr. Best flew to New York on Saturday morning.')
     ents = list(tokens.ents)
     assert ents[0].start == 1
     assert ents[0].end == 2

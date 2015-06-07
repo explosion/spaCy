@@ -4,9 +4,11 @@ import gc
 
 from spacy.en import English
 
+# Let this have its own instances, as we have to be careful about memory here
+# that's the point, after all
 
 def get_orphan_token(text, i):
-    nlp = English()
+    nlp = English(load_vectors=False)
     tokens = nlp(text)
     gc.collect()
     token = tokens[i]

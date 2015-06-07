@@ -1,10 +1,7 @@
 from __future__ import unicode_literals
-from spacy.en import English
-
-EN = English()
 
 
-def test_subtrees():
+def test_subtrees(EN):
     sent = EN('The four wheels on the bus turned quickly')
     wheels = sent[2]
     bus = sent[5]

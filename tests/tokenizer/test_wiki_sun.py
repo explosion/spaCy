@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-from spacy.en import English
 from spacy.util import utf8open
 
 import pytest
@@ -16,8 +15,7 @@ def sun_txt():
     return utf8open(loc).read()
 
 
-def test_tokenize(sun_txt):
-    nlp = English()
+def test_tokenize(sun_txt, EN):
     assert len(sun_txt) != 0
     tokens = nlp(sun_txt)
-    assert True
+    assert len(tokens) > 100

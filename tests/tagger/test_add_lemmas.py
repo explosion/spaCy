@@ -4,9 +4,6 @@ from spacy.en import English
 import pytest
 
 
-@pytest.fixture
-def EN():
-    return English()
 
 @pytest.fixture
 def tagged(EN):

@@ -5,11 +5,6 @@ from spacy.en import English
 import pytest
 
 
-@pytest.fixture
-def EN():
-    return English()
-
-
 def test_vec(EN):
     hype = EN.vocab['hype']
     assert hype.orth_ == 'hype'

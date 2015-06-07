@@ -6,16 +6,10 @@ from spacy.en.attrs import IS_STOP
 
 import pytest
 
-nlp = English()
 
-
-@pytest.fixture
-def token():
-    tokens = nlp(u'Give it back! He pleaded.')
-    return tokens[0]
-
-
-def test_strings(token):
+def test_strings(EN):
+    tokens = EN(u'Give it back! He pleaded.')
+    token = tokens[0]
     assert token.orth_ == 'Give'
     assert token.lower_ == 'give'
     assert token.shape_ == 'Xxxx'
@@ -27,13 +21,16 @@ def test_strings(token):
     assert token.dep_ == 'ROOT'
 
 
-def test_flags(token):
+def test_flags(EN):
+    tokens = EN(u'Give it back! He pleaded.')
+    token = tokens[0]
+ 
     assert token.check_flag(IS_ALPHA)
     assert not token.check_flag(IS_DIGIT)
     # TODO: Test more of these, esp. if a bug is found
 
 
-def test_single_token_string():
-    nlp = English()
-    tokens = nlp(u'foobar')
+def test_single_token_string(EN):
+
+    tokens = EN(u'foobar')
     assert tokens[0].string == 'foobar'

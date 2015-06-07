@@ -1,12 +1,6 @@
 from __future__ import unicode_literals
-from spacy.en import English
 
 import pytest
-
-
-@pytest.fixture
-def EN():
-    return English()
 
 
 def test_single_period(EN):

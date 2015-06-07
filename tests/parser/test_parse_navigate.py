@@ -2,8 +2,6 @@ from __future__ import unicode_literals
 from os import path
 import codecs
 
-from spacy.en import English
-
 import pytest
 
 
@@ -14,13 +12,8 @@ def sun_text():
     return text
 
 
-@pytest.fixture
-def nlp():
-    return English()
-
-
-def test_consistency(nlp, sun_text):
-    tokens = nlp(sun_text)
+def test_consistency(EN, sun_text):
+    tokens = EN(sun_text)
     for head in tokens:
         for child in head.lefts:
             assert child.head is head
@@ -28,8 +21,8 @@ def test_consistency(nlp, sun_text):
             assert child.head is head
 
 
-def test_child_consistency(nlp, sun_text):
-    tokens = nlp(sun_text)
+def test_child_consistency(EN, sun_text):
+    tokens = EN(sun_text)
 
     lefts = {}
     rights = {}
@@ -60,9 +53,9 @@ def test_child_consistency(nlp, sun_text):
         assert not children
 
 
-def test_edges(nlp):
+def test_edges(EN):
     sun_text = u"Chemically, about three quarters of the Sun's mass consists of hydrogen, while the rest is mostly helium."
-    tokens = nlp(sun_text)
+    tokens = EN(sun_text)
     for token in tokens:
         subtree = list(token.subtree)
         debug = '\t'.join((token.orth_, token.left_edge.orth_, subtree[0].orth_))

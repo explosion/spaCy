@@ -3,13 +3,10 @@ from __future__ import unicode_literals
 
 import pytest
 
-from spacy.en import English
 from spacy.en import attrs
 
 
-EN = English()
-
-def test_attr_of_token():
+def test_attr_of_token(EN):
     text = u'An example sentence.'
     tokens = EN(text, tag=True, parse=False)
     example = EN.vocab[u'example']
@@ -18,7 +15,7 @@ def test_attr_of_token():
     assert feats_array[0][0] != feats_array[0][1]
 
 
-def test_tag():
+def test_tag(EN):
     text = u'A nice sentence.'
     tokens = EN(text)
     assert tokens[0].tag != tokens[1].tag != tokens[2].tag != tokens[3].tag
@@ -29,7 +26,7 @@ def test_tag():
     assert feats_array[3][1] == tokens[3].tag
 
 
-def test_dep():
+def test_dep(EN):
     text = u'A nice sentence.'
     tokens = EN(text)
     feats_array = tokens.to_array((attrs.ORTH, attrs.DEP))

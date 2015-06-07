@@ -5,12 +5,6 @@ import pytest
 
 from spacy.en import English
 
-
-@pytest.fixture
-def EN():
-    return English()
-
-
 @pytest.fixture
 def morph_exc():
     return {
@@ -18,9 +12,11 @@ def morph_exc():
            }
 
 
-def test_load_exc(EN, morph_exc):
-    EN.tagger.load_morph_exceptions(morph_exc)
-    tokens = EN('I like his style.', tag=True, parse=False)
+def test_load_exc(morph_exc):
+    # Do this local as we want to modify it
+    nlp =  English()
+    nlp.tagger.load_morph_exceptions(morph_exc)
+    tokens = nlp('I like his style.', tag=True, parse=False)
     his = tokens[2]
     assert his.tag_ == 'PRP$'
     assert his.lemma_ == '-PRP-'
