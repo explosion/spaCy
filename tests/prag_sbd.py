@@ -130,90 +130,118 @@ def test_gr23():
     sents = get_sent_strings("The site is: https://www.example.50.com/new-site/awesome_content.html. Please check it out.")
     assert sents == ["The site is: https://www.example.50.com/new-site/awesome_content.html.", "Please check it out."]
 
-"""
-"She turned to him, 'This is great.' she said."
-["She turned to him, 'This is great.' she said."]
+def test_gr24():
+    sents = get_sent_strings("She turned to him, 'This is great.' she said.")
+    assert sents == ["She turned to him, 'This is great.' she said."]
 
-'She turned to him, "This is great." she said.'
-['She turned to him, "This is great." she said.']
+def test_gr25():
+    sents = get_sent_strings('She turned to him, "This is great." she said.')
+    assert sents == ['She turned to him, "This is great." she said.']
 
-'She turned to him, "This is great." She held the book out to show him.'
-['She turned to him, "This is great."', "She held the book out to show him."]
+def test_gr26():
+    sents = get_sent_strings('She turned to him, "This is great." She held the book out to show him.')
+    assert sents == ['She turned to him, "This is great."', "She held the book out to show him."]
 
-"Hello!! Long time no see."
-["Hello!!", "Long time no see."]
+def test_gr27():
+    sents = get_sent_strings("Hello!! Long time no see.")
+    assert sents == ["Hello!!", "Long time no see."]
 
-"Hello?? Who is there?"
-["Hello??", "Who is there?"]
+def test_gr28():
+    sents = get_sent_strings("Hello?? Who is there?")
+    assert sents == ["Hello??", "Who is there?"]
 
-"Hello!? Is that you?"
-["Hello!?", "Is that you?"]
+def test_gr29():
+    sents = get_sent_strings("Hello!? Is that you?")
+    assert sents == ["Hello!?", "Is that you?"]
 
-"Hello?! Is that you?"
-["Hello?!", "Is that you?"]
+def test_gr30():
+    sents = get_sent_strings("Hello?! Is that you?")
+    assert sents == ["Hello?!", "Is that you?"]
 
-"1.) The first item 2.) The second item"
-["1.) The first item", "2.) The second item"]
+def test_gr31():
+    sents = get_sent_strings("1.) The first item 2.) The second item")
+    assert sents == ["1.) The first item", "2.) The second item"]
 
-"1.) The first item. 2.) The second item."
-["1.) The first item.", "2.) The second item."]
+def test_gr32():
+    sents = get_sent_strings("1.) The first item. 2.) The second item.")
+    assert sents == ["1.) The first item.", "2.) The second item."]
 
-"1) The first item 2) The second item"
-["1) The first item", "2) The second item"]
+def test_gr33():
+    sents = get_sent_strings("1) The first item 2) The second item")
+    assert sents == ["1) The first item", "2) The second item"]
 
-"1) The first item. 2) The second item."
-["1) The first item.", "2) The second item."]
+def test_gr34():
+    sents = get_sent_strings("1) The first item. 2) The second item.")
+    assert sents == ["1) The first item.", "2) The second item."]
 
-"1. The first item 2. The second item"
-["1. The first item", "2. The second item"]
+def test_gr35():
+    sents = get_sent_strings("1. The first item 2. The second item")
+    assert sents == ["1. The first item", "2. The second item"]
 
-"1. The first item. 2. The second item."
-["1. The first item.", "2. The second item."]
+def test_gr36():
+    sents = get_sent_strings("1. The first item. 2. The second item.")
+    assert sents == ["1. The first item.", "2. The second item."]
 
-"• 9. The first item • 10. The second item"
-["• 9. The first item", "• 10. The second item"]
+def test_gr37():
+    sents = get_sent_strings("• 9. The first item • 10. The second item")
+    assert sents == ["• 9. The first item", "• 10. The second item"]
 
-"⁃9. The first item ⁃10. The second item"
-["⁃9. The first item", "⁃10. The second item"]
+def test_gr38():
+    sents = get_sent_strings("⁃9. The first item ⁃10. The second item")
+    assert sents == ["⁃9. The first item", "⁃10. The second item"]
 
-"a. The first item b. The second item c. The third list item"
-["a. The first item", "b. The second item", "c. The third list item"]
+def test_gr39():
+    sents = get_sent_strings("a. The first item b. The second item c. The third list item")
+    assert sents == ["a. The first item", "b. The second item", "c. The third list item"]
 
-"This is a sentence\ncut off in the middle because pdf."
-["This is a sentence cut off in the middle because pdf."]
+def test_gr40():
+    sents = get_sent_strings("This is a sentence\ncut off in the middle because pdf.")
+    assert sents == ["This is a sentence cut off in the middle because pdf."]
 
-"It was a cold \nnight in the city."
-["It was a cold night in the city."]
+def test_gr41():
+    sents = get_sent_strings("It was a cold \nnight in the city.")
+    assert sents == ["It was a cold night in the city."]
 
-"features\ncontact manager\nevents, activities\n"
-["features", "contact manager", "events, activities"]
+def test_gr42():
+    sents = get_sent_strings("features\ncontact manager\nevents, activities\n")
+    assert sents == ["features", "contact manager", "events, activities"]
 
-"You can find it at N°. 1026.253.553. That is where the treasure is."
-["You can find it at N°. 1026.253.553.", "That is where the treasure is."]
+def test_gr43():
+    sents = get_sent_strings("You can find it at N°. 1026.253.553. That is where the treasure is.")
+    assert sents == ["You can find it at N°. 1026.253.553.", "That is where the treasure is."]
 
-"She works at Yahoo! in the accounting department."
-["She works at Yahoo! in the accounting department."]
+def test_gr44():
+    sents = get_sent_strings("She works at Yahoo! in the accounting department.")
+    assert sents == ["She works at Yahoo! in the accounting department."]
 
-"We make a good team, you and I. Did you see Albert I. Jones yesterday?"
-["We make a good team, you and I.", "Did you see Albert I. Jones yesterday?"]
+def test_gr45():
+    sents = get_sent_strings("We make a good team, you and I. Did you see Albert I. Jones yesterday?")
+    assert sents == ["We make a good team, you and I.", "Did you see Albert I. Jones yesterday?"]
 
-"Thoreau argues that by simplifying one’s life, “the laws of the universe will appear less complex. . . .”"
-    end
-"Ellipsis with square brackets #047"
-['"Bohr [...] used the analogy of parallel stairways [...]" (Smith 55).'
+def test_gr46():
+    sents = get_sent_strings("Thoreau argues that by simplifying one’s life, “the laws of the universe will appear less complex. . . .”")
+    assert sents ==     end
 
-"If words are left off at the end of a sentence, and that is all that is omitted, indicate the omission with ellipsis marks (preceded and followed by a space) and then indicate the end of the sentence with a period . . . . Next sentence."
-["If words are left off at the end of a sentence, and that is all that is omitted, indicate the omission with ellipsis marks (preceded and followed by a space) and then indicate the end of the sentence with a period . . . .", "Next sentence."]
+def test_gr47():
+    sents = get_string("""Bohr [...] used the analogy of parallel stairways [...]" (Smith 55).""")
+    assert sents == ['"Bohr [...] used the analogy of parallel stairways [...]" (Smith 55).']
 
-"I never meant that.... She left the store."
-["I never meant that....", "She left the store."]
+def test_gr48():
+    sents = get_sent_strings("If words are left off at the end of a sentence, and that is all that is omitted, indicate the omission with ellipsis marks (preceded and followed by a space) and then indicate the end of the sentence with a period . . . . Next sentence.")
+    assert sents == ["If words are left off at the end of a sentence, and that is all that is omitted, indicate the omission with ellipsis marks (preceded and followed by a space) and then indicate the end of the sentence with a period . . . .", "Next sentence."]
 
-"I wasn’t really ... well, what I mean...see . . . what I'm saying, the thing is . . . I didn’t mean it."
-["I wasn’t really ... well, what I mean...see . . . what I'm saying, the thing is . . . I didn’t mean it."]
+def test_gr49():
+    sents = get_sent_strings("I never meant that.... She left the store.")
+    assert sents == ["I never meant that....", "She left the store."]
 
-"One further habit which was somewhat weakened . . . was that of combining words into self-interpreting compounds. . . . The practice was not abandoned. . . ."
-["One further habit which was somewhat weakened . . . was that of combining words into self-interpreting compounds.", ". . . The practice was not abandoned. . . ."]
+def test_gr50():
+    sents = get_sent_strings("I wasn’t really ... well, what I mean...see . . . what I'm saying, the thing is . . . I didn’t mean it.")
+    assert sents == ["I wasn’t really ... well, what I mean...see . . . what I'm saying, the thing is . . . I didn’t mean it."]
 
-"Hello world.Today is Tuesday.Mr. Smith went to the store and bought 1,000.That is a lot.",
-["Hello world.", "Today is Tuesday.", "Mr. Smith went to the store and bought 1,000.", "That is a lot."]
-"""
+def test_gr51():
+    sents = get_sent_strings("One further habit which was somewhat weakened . . . was that of combining words into self-interpreting compounds. . . . The practice was not abandoned. . . .")
+    assert sents == ["One further habit which was somewhat weakened . . . was that of combining words into self-interpreting compounds.", ". . . The practice was not abandoned. . . ."]
+
+def test_gr52():
+    sents = get_sent_strings("Hello world.Today is Tuesday.Mr. Smith went to the store and bought 1,000.That is a lot.",)
+    assert sents == ["Hello world.", "Today is Tuesday.", "Mr. Smith went to the store and bought 1,000.", "That is a lot."]
