@@ -11,8 +11,6 @@ def orths(tokens):
 def test_simple_two(EN):
     tokens = EN('I lost money and pride.', tag=True, parse=True)
     pride = tokens[4]
-    for t in tokens:
-        print t.orth_, t.tag_, t.head.orth_
     assert orths(pride.conjuncts) == ['money', 'pride']
     money = tokens[2]
     assert orths(money.conjuncts) == ['money', 'pride']

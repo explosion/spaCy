@@ -11,11 +11,11 @@ HERE = path.dirname(__file__)
 
 @pytest.fixture
 def sun_txt():
-    loc = path.join(HERE, 'sun.txt')
+    loc = path.join(HERE, '..', 'sun.txt')
     return utf8open(loc).read()
 
 
-def test_tokenize(sun_txt, EN):
+def test_tokenize(sun_txt, en_tokenizer):
     assert len(sun_txt) != 0
-    tokens = nlp(sun_txt)
+    tokens = en_tokenizer(sun_txt)
     assert len(tokens) > 100

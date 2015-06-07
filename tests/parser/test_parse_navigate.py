@@ -7,7 +7,7 @@ import pytest
 
 @pytest.fixture
 def sun_text():
-    with codecs.open(path.join(path.dirname(__file__), 'sun.txt'), 'r', 'utf8') as file_:
+    with codecs.open(path.join(path.dirname(__file__), '..', 'sun.txt'), 'r', 'utf8') as file_:
         text = file_.read()
     return text
 
