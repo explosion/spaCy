@@ -16,9 +16,6 @@ install:
   - "python setup.py build_ext --inplace"
   - "python -m spacy.en.download all"
 
-#- "rm -rf spacy/"
-#- "pip install spacy"
-#- "python -m spacy.en.download all"
 # run tests
 script:
   - py.test tests/
