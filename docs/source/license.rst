@@ -6,7 +6,7 @@ License
   licenses.  If you're interested in trying it, you should either use it under
   the AGPL, or contact me for a trial commercial license.
 
-  honnibal@gmail.com
+  matt@spacy.io
 
 
 I've been writing spaCy for six months now, and I'm very excited to release it.
