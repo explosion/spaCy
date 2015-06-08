@@ -5,11 +5,13 @@ Updates
 ----------------
 
 * Parser produces richer dependency labels following the `ClearNLP scheme`_
-* Training data now includes text from a variety of genres. Most users should
-  see a substantial improvement in accuracy.
+* Training data now includes text from a variety of genres.
 * Parser now uses more memory and is slightly slower, due to the additional
   labels.
-* Be sure to redownload data, with **python -m spacy.en.download all**
+
+Most users should see a substantial increase in accuracy from the new model.
+Be sure to redownload data, with **python -m spacy.en.download all**
+Long post on accuracy evaluation and model details coming soon.
 
 .. _ClearNLP scheme: https://github.com/clir/clearnlp-guidelines/blob/master/md/dependency/dependency_guidelines.md
 
