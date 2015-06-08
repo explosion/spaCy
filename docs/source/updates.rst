@@ -1,16 +1,25 @@
 Updates
 =======
 
+To update your installation:
+
+.. code:: bash
+
+    $ pip install --upgrade spacy
+    $ python -m spacy.en.download all
+
+Most updates ship a new model, so you will usually have to redownload the data.
+
 2015-05-12 v0.85
 ----------------
 
 * Parser produces richer dependency labels following the `ClearNLP scheme`_
 * Training data now includes text from a variety of genres.
-* Parser now uses more memory and is slightly slower, due to the additional
-  labels.
+* Parser now uses more memory and the data is slightly larger, due to the additional
+  labels. Impact on efficiency is minimal: entire process still takes
+  <10ms per document.
 
 Most users should see a substantial increase in accuracy from the new model.
-Be sure to redownload data, with **python -m spacy.en.download all**
 Long post on accuracy evaluation and model details coming soon.
 
 .. _ClearNLP scheme: https://github.com/clir/clearnlp-guidelines/blob/master/md/dependency/dependency_guidelines.md
