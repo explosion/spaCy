@@ -55,6 +55,8 @@ cdef int push_cost(const State* st, const GoldParseC* gold, int target) except -
     cdef int cost = 0
     cost += head_in_stack(st, target, gold.heads)
     cost += children_in_stack(st, target, gold.heads)
+    # If we can Break, we shouldn't push
+    cost += Break.is_valid(st, -1) and Break.move_cost(st, gold) == 0
     return cost
 
 
@@ -65,15 +67,42 @@ cdef int pop_cost(const State* st, const GoldParseC* gold, int target) except -1
     return cost
 
 
-cdef int arc_cost(const GoldParseC* gold, int head, int child, int label) except -1:
-    if gold.heads[child] != head:
+cdef int arc_cost(const State* st, const GoldParseC* gold, int head, int child) except -1:
+    if arc_is_gold(gold, head, child):
         return 0
-    elif gold.labels[child] == -1:
-        return 0
-    elif gold.labels[child] == label:
-        return 0
-    else:
+    elif (child + st.sent[child].head) == gold.heads[child]:
         return 1
+    elif gold.heads[child] >= st.i:
+        return 1
+    else:
+        return 0
+
+
+
+cdef bint arc_is_gold(const GoldParseC* gold, int head, int child) except -1:
+    if gold.labels[child] == -1:
+        return True
+    elif _is_gold_root(gold, head) and _is_gold_root(gold, child):
+        return True
+    elif gold.heads[child] == head:
+        return True
+    else:
+        return False
+
+
+cdef bint label_is_gold(const GoldParseC* gold, int head, int child, int label) except -1:
+    if gold.labels[child] == -1:
+        return True
+    elif label == -1:
+        return True
+    elif gold.labels[child] == label:
+        return True
+    else:
+        return False
+
+
+cdef bint _is_gold_root(const GoldParseC* gold, int word) except -1:
+    return gold.labels[word] == -1 or gold.heads[word] == word
  
 
 cdef class Shift:
@@ -96,11 +125,7 @@ cdef class Shift:
 
     @staticmethod
     cdef int move_cost(const State* s, const GoldParseC* gold) except -1:
-        cdef int cost = push_cost(s, gold, s.i)
-        # If we can break, and there's no cost to doing so, we should
-        if Break.is_valid(s, -1) and Break.cost(s, gold, -1) == 0:
-            cost += 1
-        return cost
+        return push_cost(s, gold, s.i)
 
     @staticmethod
     cdef int label_cost(const State* s, const GoldParseC* gold, int label) except -1:
@@ -117,7 +142,7 @@ cdef class Reduce:
 
     @staticmethod
     cdef int transition(State* state, int label) except -1:
-        if NON_MONOTONIC and not has_head(get_s0(state)):
+        if NON_MONOTONIC and not has_head(get_s0(state)) and state.stack_len >= 2:
             add_dep(state, state.stack[-1], state.stack[0], get_s0(state).dep)
         pop_stack(state)
 
@@ -137,7 +162,6 @@ cdef class Reduce:
     @staticmethod
     cdef int label_cost(const State* s, const GoldParseC* gold, int label) except -1:
         return 0
-
 
 
 cdef class LeftArc:
@@ -167,31 +191,14 @@ cdef class LeftArc:
     cdef int move_cost(const State* s, const GoldParseC* gold) except -1:
         if not LeftArc.is_valid(s, -1):
             return 9000
-        cdef int cost = 0
-        if gold.heads[s.stack[0]] == s.i:
-            return cost
-        elif at_eol(s):
-            # Are we root?
-            if gold.labels[s.stack[0]] != -1:
-                # If we're at EOL, prefer to reduce or break over left-arc
-                if Reduce.is_valid(s, -1) or Break.is_valid(s, -1): 
-                    cost += gold.heads[s.stack[0]] != s.stack[0]
-                    return cost
-        cost += head_in_buffer(s, s.stack[0], gold.heads)
-        cost += children_in_buffer(s, s.stack[0], gold.heads)
-        if NON_MONOTONIC and s.stack_len >= 2:
-            cost += gold.heads[s.stack[0]] == s.stack[-1]
-        if gold.labels[s.stack[0]] != -1:
-            cost += gold.heads[s.stack[0]] == s.stack[0]
-        return cost
+        elif arc_is_gold(gold, s.i, s.stack[0]):
+            return 0
+        else:
+            return pop_cost(s, gold, s.stack[0]) + arc_cost(s, gold, s.i, s.stack[0])
 
     @staticmethod
     cdef int label_cost(const State* s, const GoldParseC* gold, int label) except -1:
-        if label == -1 or gold.labels[s.stack[0]] == -1:
-            return 0
-        if gold.heads[s.stack[0]] == s.i and label != gold.labels[s.stack[0]]:
-            return 1
-        return 0
+        return arc_is_gold(gold, s.i, s.stack[0]) and not label_is_gold(gold, s.i, s.stack[0], label)
 
 
 cdef class RightArc:
@@ -212,21 +219,14 @@ cdef class RightArc:
 
     @staticmethod
     cdef int move_cost(const State* s, const GoldParseC* gold) except -1:
-        return push_cost(s, gold, s.i) - (gold.heads[s.i] == s.stack[0])
+        if arc_is_gold(gold, s.stack[0], s.i):
+            return 0
+        else:
+            return push_cost(s, gold, s.i) + arc_cost(s, gold, s.stack[0], s.i)
 
     @staticmethod
     cdef int label_cost(const State* s, const GoldParseC* gold, int label) except -1:
-        return arc_cost(gold, s.stack[0], s.i, label)
-        #cdef int cost = 0
-        #if gold.heads[s.i] == s.stack[0]:
-        #    cost += label != -1 and label != gold.labels[s.i]
-        #    return cost
-        # This indicates missing head
-        #if gold.labels[s.i] != -1:
-        #    cost += head_in_buffer(s, s.i, gold.heads)
-        #cost += children_in_stack(s, s.i, gold.heads)
-        #cost += head_in_stack(s, s.i, gold.heads)
-        #return cost
+        return arc_is_gold(gold, s.stack[0], s.i) and not label_is_gold(gold, s.stack[0], s.i, label)
 
 
 cdef class Break:
@@ -237,8 +237,10 @@ cdef class Break:
             return False
         elif at_eol(s):
             return False
-        #elif NON_MONOTONIC:
-        #    return True
+        elif s.stack_len < 1:
+            return False
+        elif NON_MONOTONIC:
+            return True
         else:
             # In the Break transition paper, they have this constraint that prevents
             # Break if stack is disconnected. But, if we're doing non-monotonic parsing,
@@ -262,8 +264,6 @@ cdef class Break:
                 get_s0(state).dep = label
             state.stack -= 1
             state.stack_len -= 1
-        if not at_eol(state):
-            push_stack(state)
 
     @staticmethod
     cdef int cost(const State* s, const GoldParseC* gold, int label) except -1:

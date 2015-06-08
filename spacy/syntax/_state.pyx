@@ -61,8 +61,8 @@ cdef int pop_stack(State *s) except -1:
     assert s.stack_len >= 1
     s.stack_len -= 1
     s.stack -= 1
-    if s.stack_len == 0 and not at_eol(s):
-        push_stack(s)
+    #if s.stack_len == 0 and not at_eol(s):
+    #    push_stack(s)
 
 
 cdef int push_stack(State *s) except -1:
@@ -114,27 +114,29 @@ cdef bint has_head(const TokenC* t) nogil:
 
 
 cdef const TokenC* get_left(const State* s, const TokenC* head, const int idx) nogil:
-    cdef uint32_t kids = head.l_kids
-    if kids == 0:
-        return NULL
-    cdef int offset = _nth_significant_bit(kids, idx)
-    cdef const TokenC* child = head - offset
-    if child >= s.sent:
-        return child
-    else:
-        return NULL
+    return _new_get_left(s, head, idx)
+    #cdef uint32_t kids = head.l_kids
+    #if kids == 0:
+    #    return NULL
+    #cdef int offset = _nth_significant_bit(kids, idx)
+    #cdef const TokenC* child = head - offset
+    #if child >= s.sent:
+    #    return child
+    ##else:
+    #    return NULL
 
 
 cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) nogil:
-    cdef uint32_t kids = head.r_kids
-    if kids == 0:
-        return NULL
-    cdef int offset = _nth_significant_bit(kids, idx)
-    cdef const TokenC* child = head + offset
-    if child < (s.sent + s.sent_len):
-        return child
-    else:
-        return NULL
+    return _new_get_right(s, head, idx)
+    #cdef uint32_t kids = head.r_kids
+    #if kids == 0:
+    #    return NULL
+    #cdef int offset = _nth_significant_bit(kids, idx)
+    #cdef const TokenC* child = head + offset
+    #if child < (s.sent + s.sent_len):
+    #    return child
+    #else:
+    #    return NULL
 
 
 cdef int count_left_kids(const TokenC* head) nogil:
@@ -190,7 +192,7 @@ cdef int copy_state(State* dest, const State* src) except -1:
 # From https://en.wikipedia.org/wiki/Hamming_weight
 cdef inline uint32_t _popcount(uint32_t x) nogil:
     """Find number of non-zero bits."""
-    cdef int count = 0
+    cdef uint32_t count = 0
     while x != 0:
         x &= x - 1
         count += 1
@@ -198,10 +200,51 @@ cdef inline uint32_t _popcount(uint32_t x) nogil:
 
 
 cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:
-    cdef int i
+    cdef uint32_t i
     for i in range(32):
         if bits & (1 << i):
             n -= 1
             if n < 1:
                 return i
     return 0
+
+
+cdef const TokenC* _new_get_left(const State* s, const TokenC* target, int idx) nogil:
+    if idx < 1:
+        return NULL
+    cdef const TokenC* ptr = s.sent
+    while ptr < target:
+        # If this head is still to the right of us, we can skip to it
+        # No token that's between this token and this head could be our
+        # child.
+        if (ptr.head >= 1) and (ptr + ptr.head) < target:
+            ptr += ptr.head
+
+        elif ptr + ptr.head == target:
+            idx -= 1
+            if idx == 0:
+                return ptr
+            ptr += 1
+        else:
+            ptr += 1
+    return NULL
+
+
+cdef const TokenC* _new_get_right(const State* s, const TokenC* target, int idx) nogil:
+    if idx < 1:
+        return NULL
+    cdef const TokenC* ptr = s.sent + (s.sent_len - 1)
+    while ptr > target:
+        # If this head is still to the right of us, we can skip to it
+        # No token that's between this token and this head could be our
+        # child.
+        if (ptr.head < 0) and ((ptr + ptr.head) > target):
+            ptr += ptr.head
+        elif ptr + ptr.head == target:
+            idx -= 1
+            if idx == 0:
+                return ptr
+            ptr -= 1
+        else:
+            ptr -= 1
+    return NULL

@@ -14,7 +14,7 @@ import json
 
 from cymem.cymem cimport Pool, Address
 from murmurhash.mrmr cimport hash64
-from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t
+from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
 
 
 from util import Config
@@ -34,7 +34,7 @@ from ..strings cimport StringStore
 from .arc_eager cimport TransitionSystem, Transition
 from .transition_system import OracleError
 
-from ._state cimport State, new_state, copy_state, is_final, push_stack
+from ._state cimport State, new_state, copy_state, is_final, push_stack, get_left, get_n0
 from ..gold cimport GoldParse
 
 from . import _parse_features
@@ -83,14 +83,14 @@ cdef class Parser:
     def __call__(self, Tokens tokens):
         if tokens.length == 0:
             return 0
-        if self.cfg.get('beam_width', 1) <= 1:
+        if self.cfg.get('beam_width', 1) < 1:
             self._greedy_parse(tokens)
         else:
             self._beam_parse(tokens)
 
     def train(self, Tokens tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
-        if self.cfg.beam_width <= 1:
+        if self.cfg.beam_width < 1:
             return self._greedy_train(tokens, gold)
         else:
             return self._beam_train(tokens, gold)
@@ -185,8 +185,7 @@ cdef class Parser:
                 if follow_gold:
                     for j in range(self.moves.n_moves):
                         beam.is_valid[i][j] *= beam.costs[i][j] == 0
-        beam.advance(_transition_state, <void*>self.moves.c)
-        state = <State*>beam.at(0)
+        beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
         beam.check_done(_check_final_state, NULL)
 
     def _count_feats(self, dict counts, Tokens tokens, list hist, int inc):
@@ -222,3 +221,23 @@ cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
 
 cdef int _check_final_state(void* state, void* extra_args) except -1:
     return is_final(<State*>state)
+
+
+cdef hash_t _hash_state(void* _state, void* _) except 0:
+    state = <const State*>_state
+    cdef atom_t[10] rep
+
+    rep[0] = state.stack[0] if state.stack_len >= 1 else 0
+    rep[1] = state.stack[-1] if state.stack_len >= 2 else 0
+    rep[2] = state.stack[-2] if state.stack_len >= 3 else 0
+    rep[3] = state.i
+    rep[4] = state.sent[state.stack[0]].l_kids if state.stack_len >= 1 else 0
+    rep[5] = state.sent[state.stack[0]].r_kids if state.stack_len >= 1 else 0
+    rep[6] = state.sent[state.stack[0]].dep if state.stack_len >= 1 else 0
+    rep[7] = state.sent[state.stack[-1]].dep if state.stack_len >= 2 else 0
+    if get_left(state, get_n0(state), 1) != NULL:
+        rep[8] = get_left(state, get_n0(state), 1).dep 
+    else:
+        rep[8] = 0
+    rep[9] = state.sent[state.i].l_kids
+    return hash64(rep, sizeof(atom_t) * 10, 0)
