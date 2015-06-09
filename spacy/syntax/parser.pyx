@@ -40,8 +40,9 @@ from ..gold cimport GoldParse
 
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
-from ._parse_features cimport _new_fill_context as fill_context
-#from ._parse_features cimport fill_context
+from ._parse_features cimport _new_fill_context
+from ._parse_features cimport fill_context
+from .stateclass cimport StateClass
 
 
 DEBUG = False
@@ -104,11 +105,13 @@ cdef class Parser:
         cdef Pool mem = Pool()
         cdef State* state = new_state(mem, tokens.data, tokens.length)
         self.moves.initialize_state(state)
+        cdef StateClass stcls = StateClass(state.sent_len)
         cdef Transition guess
         while not is_final(state):
-            fill_context(context, state)
+            stcls.from_struct(state)
+            _new_fill_context(context, stcls)
             scores = self.model.score(context)
-            guess = self.moves.best_valid(scores, state)
+            guess = self.moves.best_valid(scores, stcls)
             guess.do(state, guess.label)
         self.moves.finalize_state(state)
         tokens.set_parse(state.sent)
@@ -133,12 +136,14 @@ cdef class Parser:
         cdef const weight_t* scores
         cdef Transition guess
         cdef Transition best
+        cdef StateClass stcls = StateClass(state.sent_len)
         cdef atom_t[CONTEXT_SIZE] context
         loss = 0
         while not is_final(state):
-            fill_context(context, state)
+            stcls.from_struct(state)
+            _new_fill_context(context, stcls)
             scores = self.model.score(context)
-            guess = self.moves.best_valid(scores, state)
+            guess = self.moves.best_valid(scores, stcls)
             best = self.moves.best_gold(scores, state, gold)
             cost = guess.get_cost(state, &gold.c, guess.label)
             self.model.update(context, guess.clas, best.clas, cost)
@@ -174,12 +179,14 @@ cdef class Parser:
         cdef int i, j, cost
         cdef bint is_valid
         cdef const Transition* move
+        cdef StateClass stcls = StateClass(gold.length)
         for i in range(beam.size):
             state = <State*>beam.at(i)
+            stcls.from_struct(state)
             if not is_final(state):
                 fill_context(context, state)
                 self.model.set_scores(beam.scores[i], context)
-                self.moves.set_valid(beam.is_valid[i], state)
+                self.moves.set_valid(beam.is_valid[i], stcls)
        
         if gold is not None:
             for i in range(beam.size):

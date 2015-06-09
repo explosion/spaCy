@@ -44,10 +44,10 @@ cdef class TransitionSystem:
     cdef Transition init_transition(self, int clas, int move, int label) except *:
         raise NotImplementedError
 
-    cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
+    cdef Transition best_valid(self, const weight_t* scores, StateClass s) except *:
         raise NotImplementedError
     
-    cdef int set_valid(self, bint* output, const State* state) except -1:
+    cdef int set_valid(self, bint* output, StateClass state) except -1:
         raise NotImplementedError
 
     cdef int set_costs(self, int* output, const State* s, GoldParse gold) except -1:
@@ -63,9 +63,10 @@ cdef class TransitionSystem:
         cdef weight_t score = MIN_SCORE
         cdef int i
         for i in range(self.n_moves):
-            cost = self.c[i].get_cost(s, &gold.c, self.c[i].label)
-            if scores[i] > score and cost == 0:
-                best = self.c[i]
-                score = scores[i]
+            if self.c[i].is_valid(stcls, self.c[i].label):
+                cost = self.c[i].get_cost(s, &gold.c, self.c[i].label)
+                if scores[i] > score and cost == 0:
+                    best = self.c[i]
+                    score = scores[i]
         assert score > MIN_SCORE
         return best

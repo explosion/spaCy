@@ -65,13 +65,11 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[10] = token.ent_iob
         context[11] = token.ent_type
 
-cdef int _new_fill_context(atom_t* ctxt, State* state) except -1:
+cdef int _new_fill_context(atom_t* ctxt, StateClass st) except -1:
     # Take care to fill every element of context!
     # We could memset, but this makes it very easy to have broken features that
     # make almost no impact on accuracy. If instead they're unset, the impact
     # tends to be dramatic, so we get an obvious regression to fix...
-    cdef StateClass st = StateClass(state.sent_len)
-    st.from_struct(state)
     fill_token(&ctxt[S2w], st.S_(2))
     fill_token(&ctxt[S1w], st.S_(1))
     fill_token(&ctxt[S1rw], st.R_(st.S(1), 1))
@@ -89,8 +87,8 @@ cdef int _new_fill_context(atom_t* ctxt, State* state) except -1:
     fill_token(&ctxt[P2w], st.safe_get(st.B(0)-2))
 
     # TODO
-    fill_token(&ctxt[E0w], get_e0(state))
-    fill_token(&ctxt[E1w], get_e1(state))
+    fill_token(&ctxt[E0w], st.E_(0))
+    fill_token(&ctxt[E1w], st.E_(1))
 
     if st.stack_depth() >= 1 and not st.eol():
         ctxt[dist] = min(st.S(0) - st.B(0), 5) # TODO: This is backwards!!

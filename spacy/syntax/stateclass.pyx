@@ -9,10 +9,12 @@ cdef class StateClass:
         self._buffer = <int*>mem.alloc(length, sizeof(int))
         self._stack = <int*>mem.alloc(length, sizeof(int))
         self._sent = <TokenC*>mem.alloc(length, sizeof(TokenC))
+        self._ents = <Entity*>mem.alloc(length, sizeof(Entity))
         self.mem = mem
         self.length = length
         self._s_i = 0
         self._b_i = 0
+        self._e_i = 0
         cdef int i
         for i in range(length):
             self._buffer[i] = i
@@ -21,10 +23,13 @@ cdef class StateClass:
     cdef int from_struct(self, const State* state) except -1:
         self._s_i = state.stack_len
         self._b_i = state.i
+        self._e_i = state.ents_len
         memcpy(self._sent, state.sent, sizeof(TokenC) * self.length)
         cdef int i
         for i in range(state.stack_len):
             self._stack[self._s_i - (i+1)] = state.stack[-i]
+        for i in range(state.ents_len):
+            self._ents[i] = state.ent[-i]
 
     cdef int S(self, int i) nogil:
         if i >= self._s_i:
@@ -40,6 +45,9 @@ cdef class StateClass:
         if i < 0 or i >= self.length:
             return -1
         return self._sent[i].head + i
+
+    cdef int E(self, int i) nogil:
+        return -1
 
     cdef int L(self, int i, int idx) nogil:
         if idx < 1:
@@ -94,7 +102,10 @@ cdef class StateClass:
         return self.safe_get(self.B(i))
 
     cdef const TokenC* H_(self, int i) nogil:
-        return self.safe_get(self.B(i))
+        return self.safe_get(self.H(i))
+
+    cdef const TokenC* E_(self, int i) nogil:
+        return self.safe_get(self.E(i))
 
     cdef const TokenC* L_(self, int i, int idx) nogil:
         return self.safe_get(self.L(i, idx))
@@ -128,6 +139,11 @@ cdef class StateClass:
 
     cdef bint stack_is_connected(self) nogil:
         return False
+
+    cdef bint entity_is_open(self) nogil:
+        if self._e_i < 1:
+            return False
+        return self._ents[self._e_i-1].end != 0
 
     cdef int stack_depth(self) nogil:
         return self._s_i
@@ -164,6 +180,21 @@ cdef class StateClass:
         else:
             self._sent[head].l_kids &= ~(1 << dist)
 
+    cdef void open_ent(self, int label) nogil:
+        self._ents[self._e_i].start = self.B(0)
+        self._ents[self._e_i].label = label
+        self._ents[self._e_i].end = 0
+        self._e_i += 1
+
+    cdef void close_ent(self) nogil:
+        self._ents[self._e_i].end = self.B(0)+1
+        self._sent[self.B(0)].ent_iob = 1
+
+    cdef void set_ent_tag(self, int i, int ent_iob, int ent_type) nogil:
+        if 0 <= i < self.length:
+            self._sent[i].ent_iob = ent_iob
+            self._sent[i].ent_type = ent_type
+
     cdef void set_sent_end(self, int i) nogil:
         if 0 < i < self.length:
             self._sent[i].sent_end = True
@@ -172,8 +203,10 @@ cdef class StateClass:
         memcpy(self._sent, src._sent, self.length * sizeof(TokenC))
         memcpy(self._stack, src._stack, self.length * sizeof(int))
         memcpy(self._buffer, src._buffer, self.length * sizeof(int))
+        memcpy(self._ents, src._ents, self.length * sizeof(int))
         self._b_i = src._b_i
         self._s_i = src._s_i
+        self._e_i = src._e_i
  
 
 # From https://en.wikipedia.org/wiki/Hamming_weight

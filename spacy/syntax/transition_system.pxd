@@ -7,6 +7,8 @@ from ..gold cimport GoldParse
 from ..gold cimport GoldParseC
 from ..strings cimport StringStore
 
+from .stateclass cimport StateClass
+
 
 cdef struct Transition:
     int clas
@@ -15,7 +17,7 @@ cdef struct Transition:
 
     weight_t score
 
-    bint (*is_valid)(const State* state, int label) except -1
+    bint (*is_valid)(StateClass state, int label) except -1
     int (*get_cost)(const State* state, const GoldParseC* gold, int label) except -1
     int (*do)(State* state, int label) except -1
 
@@ -43,11 +45,11 @@ cdef class TransitionSystem:
 
     cdef Transition init_transition(self, int clas, int move, int label) except *
 
-    cdef int set_valid(self, bint* output, const State* state) except -1
+    cdef int set_valid(self, bint* output, StateClass state) except -1
     
     cdef int set_costs(self, int* output, const State* state, GoldParse gold) except -1
 
-    cdef Transition best_valid(self, const weight_t* scores, const State* state) except *
+    cdef Transition best_valid(self, const weight_t* scores, StateClass stcls) except *
 
-    cdef Transition best_gold(self, const weight_t* scores, const State* state,
+    cdef Transition best_gold(self, const weight_t* scores, State* state,
                               GoldParse gold) except *

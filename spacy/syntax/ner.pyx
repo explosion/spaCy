@@ -11,6 +11,8 @@ from thinc.typedefs cimport weight_t
 from ..gold cimport GoldParseC
 from ..gold cimport GoldParse
 
+from .stateclass cimport StateClass
+
 
 cdef enum:
     MISSING
@@ -132,14 +134,14 @@ cdef class BiluoPushDown(TransitionSystem):
             raise Exception(move)
         return t
 
-    cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
+    cdef Transition best_valid(self, const weight_t* scores, StateClass stcls) except *:
         cdef int best = -1
         cdef weight_t score = -90000
         cdef const Transition* m
         cdef int i
         for i in range(self.n_moves):
             m = &self.c[i]
-            if m.is_valid(s, m.label) and scores[i] > score:
+            if m.is_valid(stcls, m.label) and scores[i] > score:
                 best = i
                 score = scores[i]
         assert best >= 0
@@ -147,16 +149,16 @@ cdef class BiluoPushDown(TransitionSystem):
         t.score = score
         return t
 
-    cdef int set_valid(self, bint* output, const State* s) except -1:
+    cdef int set_valid(self, bint* output, StateClass stcls) except -1:
         cdef int i
         for i in range(self.n_moves):
             m = &self.c[i]
-            output[i] = m.is_valid(s, m.label)
+            output[i] = m.is_valid(stcls, m.label)
 
 
 cdef class Missing:
     @staticmethod
-    cdef bint is_valid(const State* s, int label) except -1:
+    cdef bint is_valid(StateClass st, int label) except -1:
         return False
 
     @staticmethod
@@ -170,8 +172,8 @@ cdef class Missing:
 
 cdef class Begin:
     @staticmethod
-    cdef bint is_valid(const State* s, int label) except -1:
-        return label != 0 and not entity_is_open(s)
+    cdef bint is_valid(StateClass st, int label) except -1:
+        return label != 0 and not st.entity_is_open()
 
     @staticmethod
     cdef int transition(State* s, int label) except -1:
@@ -186,8 +188,6 @@ cdef class Begin:
 
     @staticmethod
     cdef int cost(const State* s, const GoldParseC* gold, int label) except -1:
-        if not Begin.is_valid(s, label):
-            return 9000
         cdef int g_act = gold.ner[s.i].move
         cdef int g_tag = gold.ner[s.i].label
 
@@ -203,10 +203,11 @@ cdef class Begin:
             # B, Gold U --> False (P)
             return 1
 
+
 cdef class In:
     @staticmethod
-    cdef bint is_valid(const State* s, int label) except -1:
-        return entity_is_open(s) and label != 0 and s.ent.label == label
+    cdef bint is_valid(StateClass st, int label) except -1:
+        return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
     
     @staticmethod
     cdef int transition(State* s, int label) except -1:
@@ -216,8 +217,6 @@ cdef class In:
 
     @staticmethod
     cdef int cost(const State* s, const GoldParseC* gold, int label) except -1:
-        if not In.is_valid(s, label):
-            return 9000
         move = IN
         cdef int next_act = gold.ner[s.i+1].move if s.i < s.sent_len else OUT
         cdef int g_act = gold.ner[s.i].move
@@ -245,11 +244,10 @@ cdef class In:
             return 1
 
 
-
 cdef class Last:
     @staticmethod
-    cdef bint is_valid(const State* s, int label) except -1:
-        return entity_is_open(s) and label != 0 and s.ent.label == label
+    cdef bint is_valid(StateClass st, int label) except -1:
+        return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
 
     @staticmethod
     cdef int transition(State* s, int label) except -1:
@@ -260,8 +258,6 @@ cdef class Last:
 
     @staticmethod
     cdef int cost(const State* s, const GoldParseC* gold, int label) except -1:
-        if not Last.is_valid(s, label):
-            return 9000
         move = LAST
 
         cdef int g_act = gold.ner[s.i].move
@@ -290,8 +286,8 @@ cdef class Last:
 
 cdef class Unit:
     @staticmethod
-    cdef bint is_valid(const State* s, int label) except -1:
-        return label != 0 and not entity_is_open(s)
+    cdef bint is_valid(StateClass st, int label) except -1:
+        return label != 0 and not st.entity_is_open()
 
     @staticmethod
     cdef int transition(State* s, int label) except -1:
@@ -306,8 +302,6 @@ cdef class Unit:
 
     @staticmethod
     cdef int cost(const State* s, const GoldParseC* gold, int label) except -1:
-        if not Unit.is_valid(s, label):
-            return 9000
         cdef int g_act = gold.ner[s.i].move
         cdef int g_tag = gold.ner[s.i].label
 
@@ -326,8 +320,8 @@ cdef class Unit:
 
 cdef class Out:
     @staticmethod
-    cdef bint is_valid(const State* s, int label) except -1:
-        return not entity_is_open(s)
+    cdef bint is_valid(StateClass st, int label) except -1:
+        return not st.entity_is_open()
 
     @staticmethod
     cdef int transition(State* s, int label) except -1:
@@ -336,9 +330,6 @@ cdef class Out:
     
     @staticmethod
     cdef int cost(const State* s, const GoldParseC* gold, int label) except -1:
-        if not Out.is_valid(s, label):
-            return 9000
-
         cdef int g_act = gold.ner[s.i].move
         cdef int g_tag = gold.ner[s.i].label
 
