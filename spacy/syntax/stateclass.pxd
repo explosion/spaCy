@@ -2,14 +2,11 @@ from libc.string cimport memcpy, memset
 
 from cymem.cymem cimport Pool
 
-from structs cimport TokenC
+from ..structs cimport TokenC
 
-from .syntax._state cimport State
+from ._state cimport State
 
-from .vocab cimport EMPTY_LEXEME
-
-
-cdef TokenC EMPTY_TOKEN
+from ..vocab cimport EMPTY_LEXEME
 
 
 cdef class StateClass:
@@ -17,45 +14,13 @@ cdef class StateClass:
     cdef int* _stack
     cdef int* _buffer
     cdef TokenC* _sent
+    cdef TokenC _empty_token
     cdef int length
     cdef int _s_i
     cdef int _b_i
 
-    @staticmethod
-    cdef inline StateClass init(const TokenC* sent, int length):
-        cdef StateClass self = StateClass(length)
-        memcpy(self._sent, sent, sizeof(TokenC*) * length)
-        return self
+    cdef int from_struct(self, const State* state) except -1
 
-    @staticmethod
-    cdef inline StateClass from_struct(Pool mem, const State* state):
-        cdef StateClass self = StateClass.init(state.sent, state.sent_len)
-        memcpy(self._stack, state.stack - state.stack_len, sizeof(int) * state.stack_len)
-        self._s_i = state.stack_len - 1
-        self._b_i = state.i
-        return self
-
-    cdef inline const TokenC* S_(self, int i) nogil:
-        return self.safe_get(self.S(i))
-
-    cdef inline const TokenC* B_(self, int i) nogil:
-        return self.safe_get(self.B(i))
-
-    cdef inline const TokenC* H_(self, int i) nogil:
-        return self.safe_get(self.B(i))
-
-    cdef inline const TokenC* L_(self, int i, int idx) nogil:
-        return self.safe_get(self.L(i, idx))
-
-    cdef inline const TokenC* R_(self, int i, int idx) nogil:
-        return self.safe_get(self.R(i, idx))
-
-    cdef inline const TokenC* safe_get(self, int i) nogil:
-        if 0 >= i >= self.length:
-            return &EMPTY_TOKEN
-        else:
-            return self._sent
-    
     cdef int S(self, int i) nogil
     cdef int B(self, int i) nogil
     
@@ -64,6 +29,16 @@ cdef class StateClass:
     cdef int L(self, int i, int idx) nogil
     cdef int R(self, int i, int idx) nogil
 
+    cdef const TokenC* S_(self, int i) nogil
+    cdef const TokenC* B_(self, int i) nogil
+
+    cdef const TokenC* H_(self, int i) nogil
+
+    cdef const TokenC* L_(self, int i, int idx) nogil
+    cdef const TokenC* R_(self, int i, int idx) nogil
+
+    cdef const TokenC* safe_get(self, int i) nogil
+
     cdef bint empty(self) nogil
 
     cdef bint eol(self) nogil
@@ -71,6 +46,10 @@ cdef class StateClass:
     cdef bint is_final(self) nogil
 
     cdef bint has_head(self, int i) nogil
+
+    cdef int n_L(self, int i) nogil
+
+    cdef int n_R(self, int i) nogil
 
     cdef bint stack_is_connected(self) nogil
 

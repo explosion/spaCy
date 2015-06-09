@@ -22,7 +22,7 @@ from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
 
 from cymem.cymem cimport Pool
-from ..stateclass cimport StateClass
+from .stateclass cimport StateClass
 
 
 DEF NON_MONOTONIC = True
@@ -59,32 +59,63 @@ MOVE_NAMES[ADJUST] = 'A'
 # Helper functions for the arc-eager oracle
 
 cdef int push_cost(const State* st, const GoldParseC* gold, int target) except -1:
-    # When we push a word, we can't make arcs to or from the stack. So, we lose
-    # any of those arcs.
+    cdef StateClass stcls = StateClass(st.sent_len)
+    stcls.from_struct(st)
     cdef int cost = 0
-    cost += head_in_stack(st, target, gold.heads)
-    cost += children_in_stack(st, target, gold.heads)
-    # If we can Break, we shouldn't push
+    cdef int i, S_i
+    for i in range(stcls.stack_depth()):
+        S_i = stcls.S(i)
+        if gold.heads[target] == S_i:
+            cost += 1
+        if gold.heads[S_i] == target and (NON_MONOTONIC or not stcls.has_head(S_i)):
+            cost += 1
     cost += Break.is_valid(st, -1) and Break.move_cost(st, gold) == 0
     return cost
+    # When we push a word, we can't make arcs to or from the stack. So, we lose
+    # any of those arcs.
+    #cost += head_in_stack(st, target, gold.heads)
+    #cost += children_in_stack(st, target, gold.heads)
+    # If we can Break, we shouldn't push
+    #cost += Break.is_valid(st, -1) and Break.move_cost(st, gold) == 0
+    #return cost
 
 
 cdef int pop_cost(const State* st, const GoldParseC* gold, int target) except -1:
+    cdef StateClass stcls = StateClass(st.sent_len)
+    stcls.from_struct(st)
     cdef int cost = 0
-    cost += children_in_buffer(st, target, gold.heads)
-    cost += head_in_buffer(st, target, gold.heads)
+    cdef int i, B_i
+    for i in range(stcls.buffer_length()):
+        B_i = stcls.B(i)
+        cost += gold.heads[B_i] == target
+        cost += gold.heads[target] == B_i
+        if gold.heads[B_i] == B_i or gold.heads[B_i] < target:
+            break
     return cost
+    #cost += children_in_buffer(st, target, gold.heads)
+    #cost += head_in_buffer(st, target, gold.heads)
+    #return cost
 
 
 cdef int arc_cost(const State* st, const GoldParseC* gold, int head, int child) except -1:
+    cdef StateClass stcls = StateClass(st.sent_len)
+    stcls.from_struct(st)
     if arc_is_gold(gold, head, child):
         return 0
-    elif (child + st.sent[child].head) == gold.heads[child]:
+    elif stcls.H(child) == gold.heads[child]:
         return 1
-    elif gold.heads[child] >= st.i:
+    elif gold.heads[child] >= stcls.B(0):
         return 1
     else:
         return 0
+    #if arc_is_gold(gold, head, child):
+    #    return 0
+    #elif (child + st.sent[child].head) == gold.heads[child]:
+    #    return 1
+    #elif gold.heads[child] >= st.i:
+    #    return 1
+    #else:
+    #    return 0
 
 
 cdef bint arc_is_gold(const GoldParseC* gold, int head, int child) except -1:
@@ -121,7 +152,6 @@ cdef class Shift:
     @staticmethod
     cdef bint _new_is_valid(StateClass st, int label) except -1:
         return not st.eol()
-
 
     @staticmethod
     cdef int transition(State* state, int label) except -1:
@@ -596,14 +626,17 @@ cdef class ArcEager(TransitionSystem):
                 state.sent[i].dep = root_label
 
     cdef int set_valid(self, bint* output, const State* state) except -1:
+        raise Exception
+        cdef StateClass stcls = StateClass(state.sent_len)
+        stcls.from_struct(state)
         cdef bint[N_MOVES] is_valid
-        is_valid[SHIFT] = Shift.is_valid(state, -1)
-        is_valid[REDUCE] = Reduce.is_valid(state, -1)
-        is_valid[LEFT] = LeftArc.is_valid(state, -1)
-        is_valid[RIGHT] = RightArc.is_valid(state, -1)
-        is_valid[BREAK] = Break.is_valid(state, -1)
-        is_valid[CONSTITUENT] = Constituent.is_valid(state, -1)
-        is_valid[ADJUST] = Adjust.is_valid(state, -1)
+        is_valid[SHIFT] = Shift._new_is_valid(stcls, -1)
+        is_valid[REDUCE] = Reduce._new_is_valid(stcls, -1)
+        is_valid[LEFT] = LeftArc._new_is_valid(stcls, -1)
+        is_valid[RIGHT] = RightArc._new_is_valid(stcls, -1)
+        is_valid[BREAK] = Break._new_is_valid(stcls, -1)
+        is_valid[CONSTITUENT] = False # Constituent.is_valid(state, -1)
+        is_valid[ADJUST] = False # Adjust.is_valid(state, -1)
         cdef int i
         for i in range(self.n_moves):
             output[i] = is_valid[self.c[i].move]
@@ -641,10 +674,10 @@ cdef class ArcEager(TransitionSystem):
             output[i] = move_costs[move] + label_cost_funcs[move](s, &gold.c, label)
 
     cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
-        cdef Pool mem = Pool()
-        cdef StateClass stcls = StateClass.from_struct(mem, s)
+        assert s is not NULL
+        cdef StateClass stcls = StateClass(s.sent_len)
+        stcls.from_struct(s)
         cdef bint[N_MOVES] is_valid
-        #is_valid[SHIFT] = Shift.is_valid(s, -1)
         is_valid[SHIFT] = Shift._new_is_valid(stcls, -1)
         is_valid[REDUCE] = Reduce._new_is_valid(stcls, -1)
         is_valid[LEFT] = LeftArc._new_is_valid(stcls, -1)

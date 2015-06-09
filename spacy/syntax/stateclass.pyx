@@ -1,24 +1,33 @@
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint32_t
-from .vocab cimport EMPTY_LEXEME
-
-
-memset(&EMPTY_TOKEN, 0, sizeof(TokenC))
-EMPTY_TOKEN.lex = &EMPTY_LEXEME
+from ..vocab cimport EMPTY_LEXEME
 
 
 cdef class StateClass:
-    def __cinit__(self, int length):
-        self.mem = Pool()
-        self._stack = <int*>self.mem.alloc(sizeof(int), length)
-        self._buffer = <int*>self.mem.alloc(sizeof(int), length)
-        self._sent = <TokenC*>self.mem.alloc(sizeof(TokenC*), length)
-        self.length = 0
-        for i in range(self.length):
+    def __init__(self, int length):
+        cdef Pool mem = Pool()
+        self._buffer = <int*>mem.alloc(length, sizeof(int))
+        self._stack = <int*>mem.alloc(length, sizeof(int))
+        self._sent = <TokenC*>mem.alloc(length, sizeof(TokenC))
+        self.mem = mem
+        self.length = length
+        self._s_i = 0
+        self._b_i = 0
+        cdef int i
+        for i in range(length):
             self._buffer[i] = i
+        self._empty_token.lex = &EMPTY_LEXEME
+
+    cdef int from_struct(self, const State* state) except -1:
+        self._s_i = state.stack_len
+        self._b_i = state.i
+        memcpy(self._sent, state.sent, sizeof(TokenC) * self.length)
+        cdef int i
+        for i in range(state.stack_len):
+            self._stack[self._s_i - (i+1)] = state.stack[-i]
 
     cdef int S(self, int i) nogil:
-        if self._s_i - (i+1) < 0:
+        if i >= self._s_i:
             return -1
         return self._stack[self._s_i - (i+1)]
 
@@ -33,14 +42,71 @@ cdef class StateClass:
         return self._sent[i].head + i
 
     cdef int L(self, int i, int idx) nogil:
-        if 0 <= _popcount(self.safe_get(i).l_kids) <= idx:
+        if idx < 1:
             return -1
-        return _nth_significant_bit(self.safe_get(i).l_kids, idx)
+        if i < 0 or i >= self.length:
+            return -1
+        cdef const TokenC* target = &self._sent[i]
+        cdef const TokenC* ptr = self._sent
+
+        while ptr < target:
+            # If this head is still to the right of us, we can skip to it
+            # No token that's between this token and this head could be our
+            # child.
+            if (ptr.head >= 1) and (ptr + ptr.head) < target:
+                ptr += ptr.head
+
+            elif ptr + ptr.head == target:
+                idx -= 1
+                if idx == 0:
+                    return ptr - self._sent
+                ptr += 1
+            else:
+                ptr += 1
+        return -1
 
     cdef int R(self, int i, int idx) nogil:
-        if 0 <= _popcount(self.safe_get(i).r_kids) <= idx:
+        if idx < 1:
             return -1
-        return _nth_significant_bit(self.safe_get(i).r_kids, idx)
+        if i < 0 or i >= self.length:
+            return -1
+        cdef const TokenC* ptr = self._sent + (self.length - 1)
+        cdef const TokenC* target = &self._sent[i]
+        while ptr > target:
+            # If this head is still to the right of us, we can skip to it
+            # No token that's between this token and this head could be our
+            # child.
+            if (ptr.head < 0) and ((ptr + ptr.head) > target):
+                ptr += ptr.head
+            elif ptr + ptr.head == target:
+                idx -= 1
+                if idx == 0:
+                    return ptr - self._sent
+                ptr -= 1
+            else:
+                ptr -= 1
+        return -1
+
+    cdef const TokenC* S_(self, int i) nogil:
+        return self.safe_get(self.S(i))
+
+    cdef const TokenC* B_(self, int i) nogil:
+        return self.safe_get(self.B(i))
+
+    cdef const TokenC* H_(self, int i) nogil:
+        return self.safe_get(self.B(i))
+
+    cdef const TokenC* L_(self, int i, int idx) nogil:
+        return self.safe_get(self.L(i, idx))
+
+    cdef const TokenC* R_(self, int i, int idx) nogil:
+        return self.safe_get(self.R(i, idx))
+
+    cdef const TokenC* safe_get(self, int i) nogil:
+        if i < 0 or i >= self.length:
+            return &self._empty_token
+        else:
+            return &self._sent[i]
 
     cdef bint empty(self) nogil:
         return self._s_i <= 0
@@ -53,6 +119,12 @@ cdef class StateClass:
 
     cdef bint has_head(self, int i) nogil:
         return self.safe_get(i).head != 0
+
+    cdef int n_L(self, int i) nogil:
+        return _popcount(self.safe_get(i).l_kids)
+
+    cdef int n_R(self, int i) nogil:
+        return _popcount(self.safe_get(i).r_kids)
 
     cdef bint stack_is_connected(self) nogil:
         return False

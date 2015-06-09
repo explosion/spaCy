@@ -115,29 +115,33 @@ cdef bint has_head(const TokenC* t) nogil:
 
 cdef const TokenC* get_left(const State* s, const TokenC* head, const int idx) nogil:
     return _new_get_left(s, head, idx)
-    #cdef uint32_t kids = head.l_kids
-    #if kids == 0:
-    #    return NULL
-    #cdef int offset = _nth_significant_bit(kids, idx)
-    #cdef const TokenC* child = head - offset
-    #if child >= s.sent:
-    #    return child
-    ##else:
-    #    return NULL
 
+"""
+    cdef uint32_t kids = head.l_kids
+    if kids == 0:
+        return NULL
+    cdef int offset = _nth_significant_bit(kids, idx)
+    cdef const TokenC* child = head - offset
+    if child >= s.sent:
+        return child
+    else:
+        return NULL
+"""
 
 cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) nogil:
     return _new_get_right(s, head, idx)
-    #cdef uint32_t kids = head.r_kids
-    #if kids == 0:
-    #    return NULL
-    #cdef int offset = _nth_significant_bit(kids, idx)
-    #cdef const TokenC* child = head + offset
-    #if child < (s.sent + s.sent_len):
-    #    return child
-    #else:
-    #    return NULL
 
+"""
+    cdef uint32_t kids = head.r_kids
+    if kids == 0:
+        return NULL
+    cdef int offset = _nth_significant_bit(kids, idx)
+    cdef const TokenC* child = head + offset
+    if child < (s.sent + s.sent_len):
+        return child
+    else:
+        return NULL
+"""
 
 cdef int count_left_kids(const TokenC* head) nogil:
     return _popcount(head.l_kids)

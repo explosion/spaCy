@@ -20,6 +20,11 @@ from ._state cimport has_head, get_left, get_right
 from ._state cimport count_left_kids, count_right_kids
 
 
+from .stateclass cimport StateClass
+
+from cymem.cymem cimport Pool
+
+
 cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
     if token is NULL:
         context[0] = 0
@@ -59,6 +64,53 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[9] = token.lex.shape
         context[10] = token.ent_iob
         context[11] = token.ent_type
+
+cdef int _new_fill_context(atom_t* ctxt, State* state) except -1:
+    # Take care to fill every element of context!
+    # We could memset, but this makes it very easy to have broken features that
+    # make almost no impact on accuracy. If instead they're unset, the impact
+    # tends to be dramatic, so we get an obvious regression to fix...
+    cdef StateClass st = StateClass(state.sent_len)
+    st.from_struct(state)
+    fill_token(&ctxt[S2w], st.S_(2))
+    fill_token(&ctxt[S1w], st.S_(1))
+    fill_token(&ctxt[S1rw], st.R_(st.S(1), 1))
+    fill_token(&ctxt[S0lw], st.L_(st.S(0), 1))
+    fill_token(&ctxt[S0l2w], st.L_(st.S(0), 2))
+    fill_token(&ctxt[S0w], st.S_(0))
+    fill_token(&ctxt[S0r2w], st.R_(st.S(0), 2))
+    fill_token(&ctxt[S0rw], st.R_(st.S(0), 1))
+    fill_token(&ctxt[N0lw], st.L_(st.B(0), 1))
+    fill_token(&ctxt[N0l2w], st.L_(st.B(0), 2))
+    fill_token(&ctxt[N0w], st.B_(0))
+    fill_token(&ctxt[N1w], st.B_(1))
+    fill_token(&ctxt[N2w], st.B_(2))
+    fill_token(&ctxt[P1w], st.safe_get(st.B(0)-1))
+    fill_token(&ctxt[P2w], st.safe_get(st.B(0)-2))
+
+    # TODO
+    fill_token(&ctxt[E0w], get_e0(state))
+    fill_token(&ctxt[E1w], get_e1(state))
+
+    if st.stack_depth() >= 1 and not st.eol():
+        ctxt[dist] = min(st.S(0) - st.B(0), 5) # TODO: This is backwards!!
+    else:
+        ctxt[dist] = 0
+    ctxt[N0lv] = min(st.n_L(st.B(0)), 5)
+    ctxt[S0lv] = min(st.n_L(st.S(0)), 5)
+    ctxt[S0rv] = min(st.n_R(st.S(0)), 5)
+    ctxt[S1lv] = min(st.n_L(st.S(1)), 5)
+    ctxt[S1rv] = min(st.n_R(st.S(1)), 5)
+
+    ctxt[S0_has_head] = 0
+    ctxt[S1_has_head] = 0
+    ctxt[S2_has_head] = 0
+    if st.stack_depth() >= 1:
+        ctxt[S0_has_head] = st.has_head(st.S(0)) + 1
+        if st.stack_depth() >= 2:
+            ctxt[S1_has_head] = st.has_head(st.S(1)) + 1
+            if st.stack_depth() >= 3:
+                ctxt[S2_has_head] = st.has_head(st.S(2)) + 1
 
 
 cdef int fill_context(atom_t* context, State* state) except -1:

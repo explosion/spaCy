@@ -1,4 +1,5 @@
 # cython: profile=True
+# cython: experimental_cpp_class_def=True
 """
 MALT-style dependency parser
 """
@@ -38,7 +39,9 @@ from ._state cimport State, new_state, copy_state, is_final, push_stack, get_lef
 from ..gold cimport GoldParse
 
 from . import _parse_features
-from ._parse_features cimport fill_context, CONTEXT_SIZE
+from ._parse_features cimport CONTEXT_SIZE
+from ._parse_features cimport _new_fill_context as fill_context
+#from ._parse_features cimport fill_context
 
 
 DEBUG = False
