@@ -18,13 +18,13 @@ cdef struct Transition:
     weight_t score
 
     bint (*is_valid)(StateClass state, int label) except -1
-    int (*get_cost)(const State* state, const GoldParseC* gold, int label) except -1
+    int (*get_cost)(StateClass state, const GoldParseC* gold, int label) except -1
     int (*do)(State* state, int label) except -1
 
 
-ctypedef int (*get_cost_func_t)(const State* state, const GoldParseC* gold, int label) except -1
-ctypedef int (*move_cost_func_t)(const State* state, const GoldParseC* gold) except -1
-ctypedef int (*label_cost_func_t)(const State* state, const GoldParseC* gold, int label) except -1
+ctypedef int (*get_cost_func_t)(StateClass state, const GoldParseC* gold, int label) except -1
+ctypedef int (*move_cost_func_t)(StateClass state, const GoldParseC* gold) except -1
+ctypedef int (*label_cost_func_t)(StateClass state, const GoldParseC* gold, int label) except -1
 
 ctypedef int (*do_func_t)(State* state, int label) except -1
 
@@ -47,9 +47,9 @@ cdef class TransitionSystem:
 
     cdef int set_valid(self, bint* output, StateClass state) except -1
     
-    cdef int set_costs(self, int* output, const State* state, GoldParse gold) except -1
+    cdef int set_costs(self, int* output, StateClass state, GoldParse gold) except -1
 
     cdef Transition best_valid(self, const weight_t* scores, StateClass stcls) except *
 
-    cdef Transition best_gold(self, const weight_t* scores, State* state,
+    cdef Transition best_gold(self, const weight_t* scores, StateClass state,
                               GoldParse gold) except *

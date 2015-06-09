@@ -144,8 +144,8 @@ cdef class Parser:
             _new_fill_context(context, stcls)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, stcls)
-            best = self.moves.best_gold(scores, state, gold)
-            cost = guess.get_cost(state, &gold.c, guess.label)
+            best = self.moves.best_gold(scores, stcls, gold)
+            cost = guess.get_cost(stcls, &gold.c, guess.label)
             self.model.update(context, guess.clas, best.clas, cost)
             guess.do(state, guess.label)
             loss += cost
@@ -191,7 +191,7 @@ cdef class Parser:
         if gold is not None:
             for i in range(beam.size):
                 state = <State*>beam.at(i)
-                self.moves.set_costs(beam.costs[i], state, gold)
+                self.moves.set_costs(beam.costs[i], stcls, gold)
                 if follow_gold:
                     for j in range(self.moves.n_moves):
                         beam.is_valid[i][j] *= beam.costs[i][j] == 0

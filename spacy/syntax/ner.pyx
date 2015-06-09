@@ -36,18 +36,14 @@ MOVE_NAMES[OUT] = 'O'
 cdef do_func_t[N_MOVES] do_funcs
 
 
-cdef bint entity_is_open(const State *s) except -1:
-    return s.ents_len >= 1 and s.ent.end == 0
-
-
-cdef bint _entity_is_sunk(const State *s, Transition* golds) except -1:
-    if not entity_is_open(s):
+cdef bint _entity_is_sunk(StateClass st, Transition* golds) except -1:
+    if not st.entity_is_open():
         return False
 
-    cdef const Transition* gold = &golds[s.ent.start]
+    cdef const Transition* gold = &golds[st.E(0)]
     if gold.move != BEGIN and gold.move != UNIT:
         return True
-    elif gold.label != s.ent.label:
+    elif gold.label != st.E_(0).ent_type:
         return True
     else:
         return False
@@ -166,7 +162,7 @@ cdef class Missing:
         raise NotImplementedError
 
     @staticmethod
-    cdef int cost(const State* s, const GoldParseC* gold, int label) except -1:
+    cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
         return 9000
 
 
@@ -187,7 +183,7 @@ cdef class Begin:
         s.i += 1
 
     @staticmethod
-    cdef int cost(const State* s, const GoldParseC* gold, int label) except -1:
+    cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
         cdef int g_act = gold.ner[s.i].move
         cdef int g_tag = gold.ner[s.i].label
 
@@ -216,7 +212,7 @@ cdef class In:
         s.i += 1
 
     @staticmethod
-    cdef int cost(const State* s, const GoldParseC* gold, int label) except -1:
+    cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
         move = IN
         cdef int next_act = gold.ner[s.i+1].move if s.i < s.sent_len else OUT
         cdef int g_act = gold.ner[s.i].move
@@ -257,7 +253,7 @@ cdef class Last:
         s.i += 1
 
     @staticmethod
-    cdef int cost(const State* s, const GoldParseC* gold, int label) except -1:
+    cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
         move = LAST
 
         cdef int g_act = gold.ner[s.i].move
@@ -301,7 +297,7 @@ cdef class Unit:
         s.i += 1
 
     @staticmethod
-    cdef int cost(const State* s, const GoldParseC* gold, int label) except -1:
+    cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
         cdef int g_act = gold.ner[s.i].move
         cdef int g_tag = gold.ner[s.i].label
 
@@ -329,7 +325,7 @@ cdef class Out:
         s.i += 1
     
     @staticmethod
-    cdef int cost(const State* s, const GoldParseC* gold, int label) except -1:
+    cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
         cdef int g_act = gold.ner[s.i].move
         cdef int g_tag = gold.ner[s.i].label
 
