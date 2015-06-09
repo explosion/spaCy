@@ -4,8 +4,7 @@ from ._state cimport State
 from .stateclass cimport StateClass
 
 
-cdef int fill_context(atom_t* context, State* state) except -1
-cdef int _new_fill_context(atom_t* context, StateClass state) except -1
+cdef int fill_context(atom_t* context, StateClass state) except -1
 # Context elements
 
 # Ensure each token's attributes are listed: w, p, c, c6, c4. The order

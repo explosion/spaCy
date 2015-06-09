@@ -40,7 +40,6 @@ from ..gold cimport GoldParse
 
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
-from ._parse_features cimport _new_fill_context
 from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 
@@ -111,7 +110,7 @@ cdef class Parser:
         words = [w.orth_ for w in tokens]
         while not stcls.is_final():
             #print stcls.print_state(words)
-            _new_fill_context(context, stcls)
+            fill_context(context, stcls)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, stcls)
             guess.do(stcls, guess.label)
@@ -145,7 +144,7 @@ cdef class Parser:
         loss = 0
         words = [w.orth_ for w in tokens]
         while not stcls.is_final():
-            _new_fill_context(context, stcls)
+            fill_context(context, stcls)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, stcls)
             best = self.moves.best_gold(scores, stcls, gold)
@@ -188,7 +187,7 @@ cdef class Parser:
             state = <State*>beam.at(i)
             stcls.from_struct(state)
             if not is_final(state):
-                fill_context(context, state)
+                fill_context(context, stcls)
                 self.model.set_scores(beam.scores[i], context)
                 self.moves.set_valid(beam.is_valid[i], stcls)
        
@@ -213,7 +212,7 @@ cdef class Parser:
         cdef class_t clas
         cdef int n_feats
         for clas in hist:
-            _new_fill_context(context, stcls)
+            fill_context(context, stcls)
             feats = self.model._extractor.get_feats(context, &n_feats)
             count_feats(counts[clas], feats, n_feats, inc)
             self.moves.c[clas].do(stcls, self.moves.c[clas].label)

@@ -65,7 +65,7 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[10] = token.ent_iob
         context[11] = token.ent_type
 
-cdef int _new_fill_context(atom_t* ctxt, StateClass st) except -1:
+cdef int fill_context(atom_t* ctxt, StateClass st) except -1:
     # Take care to fill every element of context!
     # We could memset, but this makes it very easy to have broken features that
     # make almost no impact on accuracy. If instead they're unset, the impact
@@ -109,50 +109,6 @@ cdef int _new_fill_context(atom_t* ctxt, StateClass st) except -1:
             ctxt[S1_has_head] = st.has_head(st.S(1)) + 1
             if st.stack_depth() >= 3:
                 ctxt[S2_has_head] = st.has_head(st.S(2)) + 1
-
-
-cdef int fill_context(atom_t* context, State* state) except -1:
-    # Take care to fill every element of context!
-    # We could memset, but this makes it very easy to have broken features that
-    # make almost no impact on accuracy. If instead they're unset, the impact
-    # tends to be dramatic, so we get an obvious regression to fix...
-    fill_token(&context[S2w], get_s2(state))
-    fill_token(&context[S1w], get_s1(state))
-    fill_token(&context[S1rw], get_right(state, get_s1(state), 1))
-    fill_token(&context[S0lw], get_left(state, get_s0(state), 1))
-    fill_token(&context[S0l2w], get_left(state, get_s0(state), 2))
-    fill_token(&context[S0w], get_s0(state))
-    fill_token(&context[S0r2w], get_right(state, get_s0(state), 2))
-    fill_token(&context[S0rw], get_right(state, get_s0(state), 1))
-    fill_token(&context[N0lw], get_left(state, get_n0(state), 1))
-    fill_token(&context[N0l2w], get_left(state, get_n0(state), 2))
-    fill_token(&context[N0w], get_n0(state))
-    fill_token(&context[N1w], get_n1(state))
-    fill_token(&context[N2w], get_n2(state))
-    fill_token(&context[P1w], get_p1(state))
-    fill_token(&context[P2w], get_p2(state))
-
-    fill_token(&context[E0w], get_e0(state))
-    fill_token(&context[E1w], get_e1(state))
-    if state.stack_len >= 1:
-        context[dist] = min(state.stack[0] - state.i, 5)
-    else:
-        context[dist] = 0
-    context[N0lv] = min(count_left_kids(get_n0(state)), 5)
-    context[S0lv] = min(count_left_kids(get_s0(state)), 5)
-    context[S0rv] = min(count_right_kids(get_s0(state)), 5)
-    context[S1lv] = min(count_left_kids(get_s1(state)), 5)
-    context[S1rv] = min(count_right_kids(get_s1(state)), 5)
-
-    context[S0_has_head] = 0
-    context[S1_has_head] = 0
-    context[S2_has_head] = 0
-    if state.stack_len >= 1:
-        context[S0_has_head] = has_head(get_s0(state)) + 1
-        if state.stack_len >= 2:
-            context[S1_has_head] = has_head(get_s1(state)) + 1
-            if state.stack_len >= 3:
-                context[S2_has_head] = has_head(get_s2(state)) + 1
 
 
 ner = (
