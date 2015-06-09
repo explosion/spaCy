@@ -150,11 +150,12 @@ def main(modules, is_pypy):
 MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.lexeme', 'spacy.vocab', 'spacy.tokens', 'spacy.spans',
              'spacy.morphology', 
+             'spacy.syntax.stateclass', 
              'spacy._ml', 'spacy.tokenizer', 'spacy.en.attrs',
              'spacy.en.pos', 'spacy.syntax.parser', 'spacy.syntax._state',
              'spacy.syntax.transition_system',
              'spacy.syntax.arc_eager', 'spacy.syntax._parse_features',
-             'spacy.gold', 'spacy.orth',
+             'spacy.gold', 'spacy.orth', 
              'spacy.syntax.ner']
 
 
