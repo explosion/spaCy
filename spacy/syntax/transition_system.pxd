@@ -19,14 +19,14 @@ cdef struct Transition:
 
     bint (*is_valid)(StateClass state, int label) except -1
     int (*get_cost)(StateClass state, const GoldParseC* gold, int label) except -1
-    int (*do)(State* state, int label) except -1
+    int (*do)(StateClass state, int label) except -1
 
 
 ctypedef int (*get_cost_func_t)(StateClass state, const GoldParseC* gold, int label) except -1
 ctypedef int (*move_cost_func_t)(StateClass state, const GoldParseC* gold) except -1
 ctypedef int (*label_cost_func_t)(StateClass state, const GoldParseC* gold, int label) except -1
 
-ctypedef int (*do_func_t)(State* state, int label) except -1
+ctypedef int (*do_func_t)(StateClass state, int label) except -1
 
 
 cdef class TransitionSystem:
@@ -37,7 +37,7 @@ cdef class TransitionSystem:
     cdef readonly int n_moves
 
     cdef int initialize_state(self, State* state) except -1
-    cdef int finalize_state(self, State* state) except -1
+    cdef int finalize_state(self, StateClass state) except -1
 
     cdef int preprocess_gold(self, GoldParse gold) except -1
 

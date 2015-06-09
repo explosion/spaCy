@@ -158,7 +158,7 @@ cdef class Missing:
         return False
 
     @staticmethod
-    cdef int transition(State* s, int label) except -1:
+    cdef int transition(StateClass s, int label) except -1:
         raise NotImplementedError
 
     @staticmethod
@@ -172,15 +172,11 @@ cdef class Begin:
         return label != 0 and not st.entity_is_open()
 
     @staticmethod
-    cdef int transition(State* s, int label) except -1:
-        s.ent += 1
-        s.ents_len += 1
-        s.ent.start = s.i
-        s.ent.label = label
-        s.ent.end = 0
-        s.sent[s.i].ent_iob = 3
-        s.sent[s.i].ent_type = label
-        s.i += 1
+    cdef int transition(StateClass st, int label) except -1:
+        st.open_ent(label)
+        st.set_ent_tag(st.B(0), 3, label)
+        st.push()
+        st.pop()
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
@@ -206,10 +202,10 @@ cdef class In:
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
     
     @staticmethod
-    cdef int transition(State* s, int label) except -1:
-        s.sent[s.i].ent_iob = 1
-        s.sent[s.i].ent_type = label
-        s.i += 1
+    cdef int transition(StateClass st, int label) except -1:
+        st.set_ent_tag(st.B(0), 1, label)
+        st.push()
+        st.pop()
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
@@ -246,11 +242,10 @@ cdef class Last:
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
 
     @staticmethod
-    cdef int transition(State* s, int label) except -1:
-        s.ent.end = s.i+1
-        s.sent[s.i].ent_iob = 1
-        s.sent[s.i].ent_type = label
-        s.i += 1
+    cdef int transition(StateClass st, int label) except -1:
+        st.close_ent()
+        st.push()
+        st.pop()
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
@@ -286,15 +281,12 @@ cdef class Unit:
         return label != 0 and not st.entity_is_open()
 
     @staticmethod
-    cdef int transition(State* s, int label) except -1:
-        s.ent += 1
-        s.ents_len += 1
-        s.ent.start = s.i
-        s.ent.label = label
-        s.ent.end = s.i+1
-        s.sent[s.i].ent_iob = 3
-        s.sent[s.i].ent_type = label
-        s.i += 1
+    cdef int transition(StateClass st, int label) except -1:
+        st.open_ent(label)
+        st.close_ent()
+        st.set_ent_tag(st.B(0), 3, label)
+        st.push()
+        st.pop()
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
@@ -320,9 +312,10 @@ cdef class Out:
         return not st.entity_is_open()
 
     @staticmethod
-    cdef int transition(State* s, int label) except -1:
-        s.sent[s.i].ent_iob = 2
-        s.i += 1
+    cdef int transition(StateClass st, int label) except -1:
+        st.set_ent_tag(st.B(0), 2, 0)
+        st.push()
+        st.pop()
     
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:

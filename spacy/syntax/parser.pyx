@@ -106,15 +106,17 @@ cdef class Parser:
         cdef State* state = new_state(mem, tokens.data, tokens.length)
         self.moves.initialize_state(state)
         cdef StateClass stcls = StateClass(state.sent_len)
+        stcls.from_struct(state)
         cdef Transition guess
-        while not is_final(state):
-            stcls.from_struct(state)
+        words = [w.orth_ for w in tokens]
+        while not stcls.is_final():
+            #print stcls.print_state(words)
             _new_fill_context(context, stcls)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, stcls)
-            guess.do(state, guess.label)
-        self.moves.finalize_state(state)
-        tokens.set_parse(state.sent)
+            guess.do(stcls, guess.label)
+        self.moves.finalize_state(stcls)
+        tokens.set_parse(stcls._sent)
 
     cdef int _beam_parse(self, Tokens tokens) except -1:
         cdef Beam beam = Beam(self.moves.n_moves, self.cfg.beam_width)
@@ -123,8 +125,9 @@ cdef class Parser:
         while not beam.is_done:
             self._advance_beam(beam, None, False)
         state = <State*>beam.at(0)
-        self.moves.finalize_state(state)
-        tokens.set_parse(state.sent)
+        #self.moves.finalize_state(state)
+        #tokens.set_parse(state.sent)
+        raise Exception
 
     def _greedy_train(self, Tokens tokens, GoldParse gold):
         cdef Pool mem = Pool()
@@ -137,17 +140,18 @@ cdef class Parser:
         cdef Transition guess
         cdef Transition best
         cdef StateClass stcls = StateClass(state.sent_len)
+        stcls.from_struct(state)
         cdef atom_t[CONTEXT_SIZE] context
         loss = 0
-        while not is_final(state):
-            stcls.from_struct(state)
+        words = [w.orth_ for w in tokens]
+        while not stcls.is_final():
             _new_fill_context(context, stcls)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, stcls)
             best = self.moves.best_gold(scores, stcls, gold)
             cost = guess.get_cost(stcls, &gold.c, guess.label)
             self.model.update(context, guess.clas, best.clas, cost)
-            guess.do(state, guess.label)
+            guess.do(stcls, guess.label)
             loss += cost
         return loss
 
@@ -203,14 +207,16 @@ cdef class Parser:
         cdef Pool mem = Pool()
         cdef State* state = new_state(mem, tokens.data, tokens.length)
         self.moves.initialize_state(state)
+        cdef StateClass stcls = StateClass(state.sent_len)
+        stcls.from_struct(state)
 
         cdef class_t clas
         cdef int n_feats
         for clas in hist:
-            fill_context(context, state)
+            _new_fill_context(context, stcls)
             feats = self.model._extractor.get_feats(context, &n_feats)
             count_feats(counts[clas], feats, n_feats, inc)
-            self.moves.c[clas].do(state, self.moves.c[clas].label)
+            self.moves.c[clas].do(stcls, self.moves.c[clas].label)
 
 
 # These are passed as callbacks to thinc.search.Beam
@@ -220,7 +226,8 @@ cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) 
     src = <const State*>_src
     moves = <const Transition*>_moves
     copy_state(dest, src)
-    moves[clas].do(dest, moves[clas].label)
+    raise Exception
+    #moves[clas].do(dest, moves[clas].label)
 
 
 cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:

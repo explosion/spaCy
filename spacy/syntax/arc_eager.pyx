@@ -120,11 +120,11 @@ cdef class Shift:
         return not st.eol()
 
     @staticmethod
-    cdef int transition(State* state, int label) except -1:
+    cdef int transition(StateClass state, int label) except -1:
         # Set the dep label, in case we need it after we reduce
         if NON_MONOTONIC:
-            state.sent[state.i].dep = label
-        push_stack(state)
+            state._sent[state.B(0)].dep = label
+        state.push()
 
     @staticmethod
     cdef int cost(StateClass st, const GoldParseC* gold, int label) except -1:
@@ -148,10 +148,10 @@ cdef class Reduce:
             return st.stack_depth() >= 2 and st.has_head(st.S(0))
 
     @staticmethod
-    cdef int transition(State* state, int label) except -1:
-        if NON_MONOTONIC and not has_head(get_s0(state)) and state.stack_len >= 2:
-            add_dep(state, state.stack[-1], state.stack[0], get_s0(state).dep)
-        pop_stack(state)
+    cdef int transition(StateClass st, int label) except -1:
+        if NON_MONOTONIC and not st.has_head(st.S(0)) and st.stack_depth() >= 2:
+            st.add_arc(st.S(1), st.S(0), st.S_(0).dep)
+        st.pop()
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
@@ -178,13 +178,13 @@ cdef class LeftArc:
             return st.stack_depth() >= 1 and not st.has_head(st.S(0))
 
     @staticmethod
-    cdef int transition(State* state, int label) except -1:
+    cdef int transition(StateClass st, int label) except -1:
         # Interpret left-arcs from EOL as attachment to root
-        if at_eol(state):
-            add_dep(state, state.stack[0], state.stack[0], label)
+        if st.eol():
+            st.add_arc(st.S(0), st.S(0), label)
         else:
-            add_dep(state, state.i, state.stack[0], label)
-        pop_stack(state)
+            st.add_arc(st.B(0), st.S(0), label)
+        st.pop()
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
@@ -208,9 +208,9 @@ cdef class RightArc:
         return st.stack_depth() >= 1 and not st.eol()
 
     @staticmethod
-    cdef int transition(State* state, int label) except -1:
-        add_dep(state, state.stack[0], state.i, label)
-        push_stack(state)
+    cdef int transition(StateClass st, int label) except -1:
+        st.add_arc(st.S(0), st.B(0), label)
+        st.push()
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
@@ -256,13 +256,12 @@ cdef class Break:
             return True
 
     @staticmethod
-    cdef int transition(State* state, int label) except -1:
-        state.sent[state.i-1].sent_end = True
-        while state.stack_len != 0:
-            if get_s0(state).head == 0:
-                get_s0(state).dep = label
-            state.stack -= 1
-            state.stack_len -= 1
+    cdef int transition(StateClass st, int label) except -1:
+        st.set_sent_end(st.B(0)-1)
+        while not st.empty():
+            if not st.has_head(st.S(0)):
+                st._sent[st.S(0)].dep = label
+            st.pop()
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
@@ -370,11 +369,11 @@ cdef class ArcEager(TransitionSystem):
     cdef int initialize_state(self, State* state) except -1:
         push_stack(state)
 
-    cdef int finalize_state(self, State* state) except -1:
+    cdef int finalize_state(self, StateClass st) except -1:
         cdef int root_label = self.strings['ROOT']
-        for i in range(state.sent_len):
-            if state.sent[i].head == 0 and state.sent[i].dep == 0:
-                state.sent[i].dep = root_label
+        for i in range(st.length):
+            if st._sent[i].head == 0 and st._sent[i].dep == 0:
+                st._sent[i].dep = root_label
 
     cdef int set_valid(self, bint* output, StateClass stcls) except -1:
         cdef bint[N_MOVES] is_valid

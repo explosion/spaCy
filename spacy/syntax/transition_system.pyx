@@ -32,7 +32,7 @@ cdef class TransitionSystem:
     cdef int initialize_state(self, State* state) except -1:
         pass
 
-    cdef int finalize_state(self, State* state) except -1:
+    cdef int finalize_state(self, StateClass state) except -1:
         pass
 
     cdef int preprocess_gold(self, GoldParse gold) except -1:

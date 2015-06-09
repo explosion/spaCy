@@ -126,7 +126,7 @@ cdef class StateClass:
         return self._b_i >= self.length
 
     cdef bint is_final(self) nogil:
-        return self.eol() and self.empty()
+        return self.eol() and self.stack_depth() <= 1
 
     cdef bint has_head(self, int i) nogil:
         return self.safe_get(i).head != 0
@@ -196,7 +196,7 @@ cdef class StateClass:
             self._sent[i].ent_type = ent_type
 
     cdef void set_sent_end(self, int i) nogil:
-        if 0 < i < self.length:
+        if 0 <= i < self.length:
             self._sent[i].sent_end = True
 
     cdef void clone(self, StateClass src) nogil:
@@ -207,6 +207,17 @@ cdef class StateClass:
         self._b_i = src._b_i
         self._s_i = src._s_i
         self._e_i = src._e_i
+
+    def print_state(self, words):
+        words = list(words) + ['_']
+        top = words[self.S(0)] + '_%d' % self.H(self.S(0))
+        second = words[self.S(1)] + '_%d' % self.H(self.S(1))
+        third = words[self.S(2)] + '_%d' % self.H(self.S(2))
+        n0 = words[self.B(0)] 
+        n1 = words[self.B(1)] 
+        return ' '.join((str(self.stack_depth()), third, second, top, '|', n0, n1))
+
+
  
 
 # From https://en.wikipedia.org/wiki/Hamming_weight
