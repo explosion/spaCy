@@ -9,6 +9,7 @@ cdef class StateClass:
         cdef Pool mem = Pool()
         self._buffer = <int*>mem.alloc(length, sizeof(int))
         self._stack = <int*>mem.alloc(length, sizeof(int))
+        self.shifted = <bint*>mem.alloc(length, sizeof(bint))
         self._sent = <TokenC*>mem.alloc(length, sizeof(TokenC))
         self._ents = <Entity*>mem.alloc(length, sizeof(Entity))
         self.mem = mem
@@ -103,10 +104,10 @@ cdef class StateClass:
         return self._s_i <= 0
 
     cdef bint eol(self) nogil:
-        return self._b_i >= self.length
+        return self._b_i >= self.length or self.at_sent_end
 
     cdef bint is_final(self) nogil:
-        return self.eol() and self.stack_depth() <= 1
+        return self.stack_depth() <= 1 and self.buffer_length() == 0
 
     cdef bint has_head(self, int i) nogil:
         return self.safe_get(i).head != 0
@@ -133,10 +134,16 @@ cdef class StateClass:
 
     cdef void push(self) nogil:
         self._stack[self._s_i] = self.B(0)
+        self.shifted[self.B(0)] = True
         self._s_i += 1
         self._b_i += 1
 
     cdef void pop(self) nogil:
+        self._s_i -= 1
+
+    cdef void unshift(self) nogil:
+        self._b_i -= 1
+        self._buffer[self._b_i] = self.S(0)
         self._s_i -= 1
 
     cdef void add_arc(self, int head, int child, int label) nogil:
@@ -190,12 +197,12 @@ cdef class StateClass:
 
     def print_state(self, words):
         words = list(words) + ['_']
-        top = words[self.S(0)] + '_%d' % self.H(self.S(0))
-        second = words[self.S(1)] + '_%d' % self.H(self.S(1))
-        third = words[self.S(2)] + '_%d' % self.H(self.S(2))
+        top = words[self.S(0)] + '_%d' % self.S_(0).head
+        second = words[self.S(1)] + '_%d' % self.S_(1).head
+        third = words[self.S(2)] + '_%d' % self.S_(2).head
         n0 = words[self.B(0)] 
         n1 = words[self.B(1)] 
-        return ' '.join((str(self.stack_depth()), third, second, top, '|', n0, n1))
+        return ' '.join((str(self.buffer_length()), str(self.stack_depth()), third, second, top, '|', n0, n1))
  
 
 # From https://en.wikipedia.org/wiki/Hamming_weight

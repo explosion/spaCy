@@ -11,10 +11,12 @@ cdef class StateClass:
     cdef Pool mem
     cdef int* _stack
     cdef int* _buffer
+    cdef bint* shifted
     cdef TokenC* _sent
     cdef Entity* _ents
     cdef TokenC _empty_token
     cdef int length
+    cdef bint at_sent_end
     cdef int _s_i
     cdef int _b_i
     cdef int _e_i
@@ -64,7 +66,6 @@ cdef class StateClass:
     cdef bint is_final(self) nogil
 
     cdef bint has_head(self, int i) nogil
-    
 
     cdef int n_L(self, int i) nogil
 
@@ -79,6 +80,8 @@ cdef class StateClass:
     cdef void push(self) nogil
 
     cdef void pop(self) nogil
+    
+    cdef void unshift(self) nogil
 
     cdef void add_arc(self, int head, int child, int label) nogil
     
