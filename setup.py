@@ -118,7 +118,7 @@ def run_setup(exts):
         ext_modules=exts,
         license="Dual: Commercial or AGPL",
         install_requires=['numpy', 'murmurhash', 'cymem >= 1.11', 'preshed == 0.37',
-                          'thinc == 1.76', "unidecode", 'wget', 'plac', 'six',
+                          'thinc == 2.0', "unidecode", 'wget', 'plac', 'six',
                           'ujson'],
         setup_requires=["headers_workaround"],
     )
