@@ -16,16 +16,16 @@ cdef struct Transition:
 
     weight_t score
 
-    bint (*is_valid)(StateClass state, int label) except -1
-    int (*get_cost)(StateClass state, const GoldParseC* gold, int label) except -1
-    int (*do)(StateClass state, int label) except -1
+    bint (*is_valid)(StateClass state, int label) nogil
+    int (*get_cost)(StateClass state, const GoldParseC* gold, int label) nogil
+    int (*do)(StateClass state, int label) nogil
 
 
-ctypedef int (*get_cost_func_t)(StateClass state, const GoldParseC* gold, int label) except -1
-ctypedef int (*move_cost_func_t)(StateClass state, const GoldParseC* gold) except -1
-ctypedef int (*label_cost_func_t)(StateClass state, const GoldParseC* gold, int label) except -1
+ctypedef int (*get_cost_func_t)(StateClass state, const GoldParseC* gold, int label) nogil
+ctypedef int (*move_cost_func_t)(StateClass state, const GoldParseC* gold) nogil
+ctypedef int (*label_cost_func_t)(StateClass state, const GoldParseC* gold, int label) nogil
 
-ctypedef int (*do_func_t)(StateClass state, int label) except -1
+ctypedef int (*do_func_t)(StateClass state, int label) nogil
 
 
 cdef class TransitionSystem:
