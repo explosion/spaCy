@@ -21,16 +21,6 @@ cdef class StateClass:
             self._buffer[i] = i
         self._empty_token.lex = &EMPTY_LEXEME
 
-    cdef int S(self, int i) nogil:
-        if i >= self._s_i:
-            return -1
-        return self._stack[self._s_i - (i+1)]
-
-    cdef int B(self, int i) nogil:
-        if (i + self._b_i) >= self.length:
-            return -1
-        return self._buffer[self._b_i + i]
-
     cdef int H(self, int i) nogil:
         if i < 0 or i >= self.length:
             return -1

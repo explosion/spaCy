@@ -28,8 +28,15 @@ cdef class StateClass:
             self._buffer[i] = i
         return self
 
-    cdef int S(self, int i) nogil
-    cdef int B(self, int i) nogil
+    cdef inline int S(self, int i) nogil:
+        if i >= self._s_i:
+            return -1
+        return self._stack[self._s_i - (i+1)]
+
+    cdef inline int B(self, int i) nogil:
+        if (i + self._b_i) >= self.length:
+            return -1
+        return self._buffer[self._b_i + i]
     
     cdef int H(self, int i) nogil
     cdef int E(self, int i) nogil
