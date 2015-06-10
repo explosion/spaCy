@@ -134,7 +134,6 @@ cdef class StateClass:
 
     cdef void push(self) nogil:
         self._stack[self._s_i] = self.B(0)
-        self.shifted[self.B(0)] = True
         self._s_i += 1
         self._b_i += 1
 
@@ -145,6 +144,7 @@ cdef class StateClass:
         self._b_i -= 1
         self._buffer[self._b_i] = self.S(0)
         self._s_i -= 1
+        self.shifted[self.B(0)] = True
 
     cdef void add_arc(self, int head, int child, int label) nogil:
         if self.has_head(child):
