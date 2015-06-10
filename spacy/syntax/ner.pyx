@@ -180,8 +180,8 @@ cdef class Begin:
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
-        cdef int g_act = gold.ner[s.i].move
-        cdef int g_tag = gold.ner[s.i].label
+        cdef int g_act = gold.ner[s.B(0)].move
+        cdef int g_tag = gold.ner[s.B(0)].label
 
         if g_act == MISSING:
             return 0
@@ -210,9 +210,9 @@ cdef class In:
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
         move = IN
-        cdef int next_act = gold.ner[s.i+1].move if s.i < s.sent_len else OUT
-        cdef int g_act = gold.ner[s.i].move
-        cdef int g_tag = gold.ner[s.i].label
+        cdef int next_act = gold.ner[s.B(1)].move if s.B(0) < s.length else OUT
+        cdef int g_act = gold.ner[s.B(0)].move
+        cdef int g_tag = gold.ner[s.B(0)].label
         cdef bint is_sunk = _entity_is_sunk(s, gold.ner)
         
         if g_act == MISSING:
@@ -251,8 +251,8 @@ cdef class Last:
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
         move = LAST
 
-        cdef int g_act = gold.ner[s.i].move
-        cdef int g_tag = gold.ner[s.i].label
+        cdef int g_act = gold.ner[s.B(0)].move
+        cdef int g_tag = gold.ner[s.B(0)].label
         
         if g_act == MISSING:
             return 0
@@ -290,8 +290,8 @@ cdef class Unit:
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
-        cdef int g_act = gold.ner[s.i].move
-        cdef int g_tag = gold.ner[s.i].label
+        cdef int g_act = gold.ner[s.B(0)].move
+        cdef int g_tag = gold.ner[s.B(0)].label
 
         if g_act == MISSING:
             return 0
@@ -319,8 +319,8 @@ cdef class Out:
     
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
-        cdef int g_act = gold.ner[s.i].move
-        cdef int g_tag = gold.ner[s.i].label
+        cdef int g_act = gold.ner[s.B(0)].move
+        cdef int g_tag = gold.ner[s.B(0)].label
 
 
         if g_act == MISSING:
