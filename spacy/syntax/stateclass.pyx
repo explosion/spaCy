@@ -1,6 +1,7 @@
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint32_t
 from ..vocab cimport EMPTY_LEXEME
+from ..structs cimport Entity
 
 
 cdef class StateClass:
@@ -203,7 +204,7 @@ cdef class StateClass:
         memcpy(self._sent, src._sent, self.length * sizeof(TokenC))
         memcpy(self._stack, src._stack, self.length * sizeof(int))
         memcpy(self._buffer, src._buffer, self.length * sizeof(int))
-        memcpy(self._ents, src._ents, self.length * sizeof(int))
+        memcpy(self._ents, src._ents, self.length * sizeof(Entity))
         self._b_i = src._b_i
         self._s_i = src._s_i
         self._e_i = src._e_i
@@ -216,8 +217,6 @@ cdef class StateClass:
         n0 = words[self.B(0)] 
         n1 = words[self.B(1)] 
         return ' '.join((str(self.stack_depth()), third, second, top, '|', n0, n1))
-
-
  
 
 # From https://en.wikipedia.org/wiki/Hamming_weight

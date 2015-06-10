@@ -21,6 +21,15 @@ cdef class StateClass:
     cdef int _b_i
     cdef int _e_i
 
+    @staticmethod
+    cdef inline StateClass init(const TokenC* sent, int length):
+        cdef StateClass self = StateClass(length)
+        cdef int i
+        for i in range(length):
+            self._sent[i] = sent[i]
+            self._buffer[i] = i
+        return self
+
     cdef int from_struct(self, const State* state) except -1
 
     cdef int S(self, int i) nogil

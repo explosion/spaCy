@@ -2,7 +2,6 @@ from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t
 
 from ..structs cimport TokenC
-from ._state cimport State
 from ..gold cimport GoldParse
 from ..gold cimport GoldParseC
 from ..strings cimport StringStore
@@ -36,7 +35,7 @@ cdef class TransitionSystem:
     cdef bint* _is_valid
     cdef readonly int n_moves
 
-    cdef int initialize_state(self, State* state) except -1
+    cdef int initialize_state(self, StateClass state) except -1
     cdef int finalize_state(self, StateClass state) except -1
 
     cdef int preprocess_gold(self, GoldParse gold) except -1

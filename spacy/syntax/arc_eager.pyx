@@ -366,8 +366,8 @@ cdef class ArcEager(TransitionSystem):
             raise Exception(move)
         return t
 
-    cdef int initialize_state(self, State* state) except -1:
-        push_stack(state)
+    cdef int initialize_state(self, StateClass st) except -1:
+        st.push()
 
     cdef int finalize_state(self, StateClass st) except -1:
         cdef int root_label = self.strings['ROOT']
@@ -383,8 +383,11 @@ cdef class ArcEager(TransitionSystem):
         is_valid[RIGHT] = RightArc.is_valid(stcls, -1)
         is_valid[BREAK] = Break.is_valid(stcls, -1)
         cdef int i
+        n_valid = 0
         for i in range(self.n_moves):
             output[i] = is_valid[self.c[i].move]
+            n_valid += output[i]
+        assert n_valid >= 1
 
     cdef int set_costs(self, int* output, StateClass stcls, GoldParse gold) except -1:
         cdef int i, move, label
@@ -409,6 +412,7 @@ cdef class ArcEager(TransitionSystem):
         cdef int* heads = gold.c.heads
 
         self.set_valid(self._is_valid, stcls)
+        n_gold = 0
         for i in range(self.n_moves):
             if not self._is_valid[i]:
                 output[i] = 9000
@@ -418,6 +422,8 @@ cdef class ArcEager(TransitionSystem):
                 if move_costs[move] == -1:
                     move_costs[move] = move_cost_funcs[move](stcls, &gold.c)
                 output[i] = move_costs[move] + label_cost_funcs[move](stcls, &gold.c, label)
+                n_gold += output[i] == 0
+        assert n_gold >= 1
 
     cdef Transition best_valid(self, const weight_t* scores, StateClass stcls) except *:
         cdef bint[N_MOVES] is_valid

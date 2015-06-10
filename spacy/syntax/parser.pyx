@@ -5,6 +5,9 @@ MALT-style dependency parser
 """
 from __future__ import unicode_literals
 cimport cython
+
+from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
+
 from libc.stdint cimport uint32_t, uint64_t
 from libc.string cimport memset, memcpy
 import random
@@ -42,7 +45,6 @@ from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 
-from cpython.ref cimport PyObject
 
 DEBUG = False
 def set_debug(val):
@@ -108,9 +110,9 @@ cdef class Parser:
         while not beam.is_done:
             self._advance_beam(beam, None, False)
         state = <StateClass>beam.at(0)
-        #self.moves.finalize_state(state)
-        #tokens.set_parse(state.sent)
-        raise Exception
+        self.moves.finalize_state(state)
+        tokens.set_parse(state._sent)
+        _cleanup(beam)
 
     def _greedy_train(self, Tokens tokens, GoldParse gold):
         cdef Pool mem = Pool()
@@ -156,6 +158,8 @@ cdef class Parser:
         else:
             counts = {}
         self.model._model.update(counts)
+        _cleanup(pred)
+        _cleanup(gold)
         return pred.loss
 
     def _advance_beam(self, Beam beam, GoldParse gold, bint follow_gold):
@@ -163,22 +167,23 @@ cdef class Parser:
         cdef int i, j, cost
         cdef bint is_valid
         cdef const Transition* move
-        cdef StateClass stcls = StateClass(gold.length)
         for i in range(beam.size):
             stcls = <StateClass>beam.at(i)
             if not stcls.is_final():
                 fill_context(context, stcls)
                 self.model.set_scores(beam.scores[i], context)
                 self.moves.set_valid(beam.is_valid[i], stcls)
-       
         if gold is not None:
             for i in range(beam.size):
                 stcls = <StateClass>beam.at(i)
                 self.moves.set_costs(beam.costs[i], stcls, gold)
                 if follow_gold:
+                    n_true = 0
                     for j in range(self.moves.n_moves):
                         beam.is_valid[i][j] *= beam.costs[i][j] == 0
-        beam.advance(_transition_state, NULL, <void*>self.moves.c)
+                        n_true += beam.is_valid[i][j]
+                    assert n_true >= 1
+        beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
         beam.check_done(_check_final_state, NULL)
 
     def _count_feats(self, dict counts, Tokens tokens, list hist, int inc):
@@ -208,6 +213,7 @@ cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) 
 
 cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
     cdef StateClass st = StateClass.init(<const TokenC*>tokens, length)
+    Py_INCREF(st)
     return <void*>st
 
 
@@ -215,23 +221,28 @@ cdef int _check_final_state(void* _state, void* extra_args) except -1:
     return (<StateClass>_state).is_final()
 
 
-"""
-cdef hash_t _hash_state(void* _state, void* _) except 0:
-    state = <const State*>_state
-    cdef atom_t[10] rep
+def _cleanup(Beam beam):
+    for i in range(beam.width):
+        Py_XDECREF(<PyObject*>beam._states[i].content)
+        Py_XDECREF(<PyObject*>beam._parents[i].content)
 
-    rep[0] = state.stack[0] if state.stack_len >= 1 else 0
-    rep[1] = state.stack[-1] if state.stack_len >= 2 else 0
-    rep[2] = state.stack[-2] if state.stack_len >= 3 else 0
-    rep[3] = state.i
-    rep[4] = state.sent[state.stack[0]].l_kids if state.stack_len >= 1 else 0
-    rep[5] = state.sent[state.stack[0]].r_kids if state.stack_len >= 1 else 0
-    rep[6] = state.sent[state.stack[0]].dep if state.stack_len >= 1 else 0
-    rep[7] = state.sent[state.stack[-1]].dep if state.stack_len >= 2 else 0
-    if get_left(state, get_n0(state), 1) != NULL:
-        rep[8] = get_left(state, get_n0(state), 1).dep 
-    else:
-        rep[8] = 0
-    rep[9] = state.sent[state.i].l_kids
-    return hash64(rep, sizeof(atom_t) * 10, 0)
-"""
+cdef hash_t _hash_state(void* _state, void* _) except 0:
+    return <hash_t>_state
+    
+    #state = <const State*>_state
+    #cdef atom_t[10] rep
+
+    #rep[0] = state.stack[0] if state.stack_len >= 1 else 0
+    #rep[1] = state.stack[-1] if state.stack_len >= 2 else 0
+    #rep[2] = state.stack[-2] if state.stack_len >= 3 else 0
+    #rep[3] = state.i
+    #rep[4] = state.sent[state.stack[0]].l_kids if state.stack_len >= 1 else 0
+    #rep[5] = state.sent[state.stack[0]].r_kids if state.stack_len >= 1 else 0
+    #rep[6] = state.sent[state.stack[0]].dep if state.stack_len >= 1 else 0
+    #rep[7] = state.sent[state.stack[-1]].dep if state.stack_len >= 2 else 0
+    #if get_left(state, get_n0(state), 1) != NULL:
+    #    rep[8] = get_left(state, get_n0(state), 1).dep 
+    #else:
+    #    rep[8] = 0
+    #rep[9] = state.sent[state.i].l_kids
+    #return hash64(rep, sizeof(atom_t) * 10, 0)

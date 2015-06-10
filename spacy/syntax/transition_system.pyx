@@ -1,5 +1,4 @@
 from cymem.cymem cimport Pool
-from ._state cimport State
 from ..structs cimport TokenC
 from thinc.typedefs cimport weight_t
 
@@ -29,7 +28,7 @@ cdef class TransitionSystem:
                 i += 1
         self.c = moves
 
-    cdef int initialize_state(self, State* state) except -1:
+    cdef int initialize_state(self, StateClass state) except -1:
         pass
 
     cdef int finalize_state(self, StateClass state) except -1:
