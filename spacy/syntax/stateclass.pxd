@@ -62,6 +62,8 @@ cdef class StateClass:
     cdef bint entity_is_open(self) nogil
 
     cdef bint eol(self) nogil
+    
+    cdef bint at_break(self) nogil
 
     cdef bint is_final(self) nogil
 
@@ -96,3 +98,5 @@ cdef class StateClass:
     cdef void set_break(self, int i) nogil
 
     cdef void clone(self, StateClass src) nogil
+
+    cdef void fast_forward(self) nogil

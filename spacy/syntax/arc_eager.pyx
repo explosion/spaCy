@@ -112,11 +112,12 @@ cdef bint _is_gold_root(const GoldParseC* gold, int word) nogil:
 cdef class Shift:
     @staticmethod
     cdef bint is_valid(StateClass st, int label) nogil:
-        return st.buffer_length() >= 2 and not st.shifted[st.B(0)]
+        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and not st.B_(0).sent_end
 
     @staticmethod
-    cdef int transition(StateClass state, int label) nogil:
-        state.push()
+    cdef int transition(StateClass st, int label) nogil:
+        st.push()
+        st.fast_forward()
 
     @staticmethod
     cdef int cost(StateClass st, const GoldParseC* gold, int label) nogil:
@@ -142,6 +143,7 @@ cdef class Reduce:
             st.pop()
         else:
             st.unshift()
+        st.fast_forward()
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
@@ -159,17 +161,13 @@ cdef class Reduce:
 cdef class LeftArc:
     @staticmethod
     cdef bint is_valid(StateClass st, int label) nogil:
-        if NON_MONOTONIC:
-            return st.stack_depth() >= 1 and st.buffer_length() >= 1 #and not missing_brackets(s)
-        else:
-            return st.stack_depth() >= 1 and st.buffer_length() >= 1 and not st.has_head(st.S(0))
+        return not st.B_(0).sent_end
 
     @staticmethod
     cdef int transition(StateClass st, int label) nogil:
         st.add_arc(st.B(0), st.S(0), label)
         st.pop()
-        if st.empty():
-            st.push()
+        st.fast_forward()
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
@@ -190,12 +188,13 @@ cdef class LeftArc:
 cdef class RightArc:
     @staticmethod
     cdef bint is_valid(StateClass st, int label) nogil:
-        return st.stack_depth() >= 1 and st.buffer_length() >= 1
+        return not st.B_(0).sent_end
 
     @staticmethod
     cdef int transition(StateClass st, int label) nogil:
         st.add_arc(st.S(0), st.B(0), label)
         st.push()
+        st.fast_forward()
 
     @staticmethod
     cdef inline int cost(StateClass s, const GoldParseC* gold, int label) nogil:
@@ -221,7 +220,7 @@ cdef class Break:
         cdef int i
         if not USE_BREAK:
             return False
-        elif st.eol():
+        elif st.at_break():
             return False
         elif st.stack_depth() < 1:
             return False
@@ -230,9 +229,13 @@ cdef class Break:
 
     @staticmethod
     cdef int transition(StateClass st, int label) nogil:
-        #st.set_sent_start()
-        while st.stack_depth() >= 2 and st.buffer_length() == 0:
-            Reduce.transition(st, -1)
+        st.set_break(st.B(0))
+        while st.stack_depth() >= 2 and st.has_head(st.S(0)):
+            st.pop()
+        if st.stack_depth() == 1:
+            st.pop()
+        else:
+            st.unshift()
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
@@ -338,7 +341,7 @@ cdef class ArcEager(TransitionSystem):
         return t
 
     cdef int initialize_state(self, StateClass st) except -1:
-        st.push()
+        st.fast_forward()
 
     cdef int finalize_state(self, StateClass st) except -1:
         cdef int root_label = self.strings['ROOT']
@@ -410,7 +413,7 @@ cdef class ArcEager(TransitionSystem):
                 best = self.c[i]
                 score = scores[i]
         assert best.clas < self.n_moves
-        assert score > MIN_SCORE, (stcls.stack_depth(), stcls.buffer_length())
+        assert score > MIN_SCORE, (stcls.stack_depth(), stcls.buffer_length(), stcls.is_final(), stcls._b_i, stcls.length)
         # Label Shift moves with the best Right-Arc label, for non-monotonic
         # actions
         if best.move == SHIFT:

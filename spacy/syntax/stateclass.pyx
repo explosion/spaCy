@@ -14,7 +14,7 @@ cdef class StateClass:
         self._ents = <Entity*>mem.alloc(length, sizeof(Entity))
         self.mem = mem
         self.length = length
-        self._break = length
+        self._break = -1
         self._s_i = 0
         self._b_i = 0
         self._e_i = 0
@@ -105,10 +105,13 @@ cdef class StateClass:
         return self._s_i <= 0
 
     cdef bint eol(self) nogil:
-        return self._b_i >= self._break
+        return self.buffer_length() == 0
+
+    cdef bint at_break(self) nogil:
+        return self._break != -1
 
     cdef bint is_final(self) nogil:
-        return self.stack_depth() <= 1 and self._b_i >= self.length
+        return self.stack_depth() <= 0 and self._b_i >= self.length
 
     cdef bint has_head(self, int i) nogil:
         return self.safe_get(i).head != 0
@@ -131,14 +134,17 @@ cdef class StateClass:
         return self._s_i
 
     cdef int buffer_length(self) nogil:
-        return self._break - self._b_i
+        if self._break != -1:
+            return self._break - self._b_i
+        else:
+            return self.length - self._b_i
 
     cdef void push(self) nogil:
         self._stack[self._s_i] = self.B(0)
         self._s_i += 1
         self._b_i += 1
         if self._b_i >= self._break:
-            self._break = self.length
+            self._break = -1
 
     cdef void pop(self) nogil:
         self._s_i -= 1
@@ -148,6 +154,23 @@ cdef class StateClass:
         self._buffer[self._b_i] = self.S(0)
         self._s_i -= 1
         self.shifted[self.B(0)] = True
+
+    cdef void fast_forward(self) nogil:
+        while self.buffer_length() == 0 or self.stack_depth() == 0:
+            if self.buffer_length() == 1 and self.stack_depth() == 0:
+                self.push()
+                self.pop()
+            elif self.buffer_length() == 0 and self.stack_depth() == 1:
+                self.pop()
+            elif self.buffer_length() == 0 and self.stack_depth() >= 2:
+                if self.has_head(self.S(0)):
+                    self.pop()
+                else:
+                    self.unshift()
+            elif self.buffer_length() >= 2 and self.stack_depth() == 0:
+                self.push()
+            else:
+                break
 
     cdef void add_arc(self, int head, int child, int label) nogil:
         if self.has_head(child):
