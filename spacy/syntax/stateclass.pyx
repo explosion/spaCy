@@ -21,17 +21,6 @@ cdef class StateClass:
             self._buffer[i] = i
         self._empty_token.lex = &EMPTY_LEXEME
 
-    cdef int from_struct(self, const State* state) except -1:
-        self._s_i = state.stack_len
-        self._b_i = state.i
-        self._e_i = state.ents_len
-        memcpy(self._sent, state.sent, sizeof(TokenC) * self.length)
-        cdef int i
-        for i in range(state.stack_len):
-            self._stack[self._s_i - (i+1)] = state.stack[-i]
-        for i in range(state.ents_len):
-            self._ents[i] = state.ent[-i]
-
     cdef int S(self, int i) nogil:
         if i >= self._s_i:
             return -1

@@ -4,8 +4,6 @@ from cymem.cymem cimport Pool
 
 from ..structs cimport TokenC, Entity
 
-from ._state cimport State
-
 from ..vocab cimport EMPTY_LEXEME
 
 
@@ -29,8 +27,6 @@ cdef class StateClass:
             self._sent[i] = sent[i]
             self._buffer[i] = i
         return self
-
-    cdef int from_struct(self, const State* state) except -1
 
     cdef int S(self, int i) nogil
     cdef int B(self, int i) nogil
@@ -90,5 +86,3 @@ cdef class StateClass:
     cdef void set_sent_end(self, int i) nogil
 
     cdef void clone(self, StateClass src) nogil
-
-
