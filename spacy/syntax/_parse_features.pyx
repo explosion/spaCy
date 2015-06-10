@@ -79,12 +79,11 @@ cdef int fill_context(atom_t* ctxt, StateClass st) except -1:
     fill_token(&ctxt[P1w], st.safe_get(st.B(0)-1))
     fill_token(&ctxt[P2w], st.safe_get(st.B(0)-2))
 
-    # TODO
     fill_token(&ctxt[E0w], st.E_(0))
     fill_token(&ctxt[E1w], st.E_(1))
 
     if st.stack_depth() >= 1 and not st.eol():
-        ctxt[dist] = min(st.S(0) - st.B(0), 5) # TODO: This is backwards!!
+        ctxt[dist] = min(st.B(0) - st.E(0), 5)
     else:
         ctxt[dist] = 0
     ctxt[N0lv] = min(st.n_L(st.B(0)), 5)
