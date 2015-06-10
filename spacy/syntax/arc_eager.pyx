@@ -149,10 +149,7 @@ cdef class Reduce:
 
     @staticmethod
     cdef inline int move_cost(StateClass st, const GoldParseC* gold) nogil:
-        if st.shifted[st.S(0)]:
-            return pop_cost(st, gold, st.S(0))
-        else:
-            return 0
+        return pop_cost(st, gold, st.S(0))
 
     @staticmethod
     cdef inline int label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
@@ -233,8 +230,9 @@ cdef class Break:
 
     @staticmethod
     cdef int transition(StateClass st, int label) nogil:
-        #st.set_sent_end()
-        pass
+        #st.set_sent_start()
+        while st.stack_depth() >= 2 and st.buffer_length() == 0:
+            Reduce.transition(st, -1)
 
     @staticmethod
     cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
