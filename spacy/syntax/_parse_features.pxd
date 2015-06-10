@@ -1,6 +1,5 @@
 from thinc.typedefs cimport atom_t
 
-from ._state cimport State
 from .stateclass cimport StateClass
 
 

@@ -12,13 +12,6 @@ from libc.string cimport memset
 from itertools import combinations
 
 from ..tokens cimport TokenC
-from ._state cimport State
-from ._state cimport get_s2, get_s1, get_s0, get_n0, get_n1, get_n2
-from ._state cimport get_p2, get_p1
-from ._state cimport get_e0, get_e1
-from ._state cimport has_head, get_left, get_right
-from ._state cimport count_left_kids, count_right_kids
-
 
 from .stateclass cimport StateClass
 
@@ -58,7 +51,7 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         # the source that are set to 1.
         context[4] = token.lex.cluster & 15
         context[5] = token.lex.cluster & 63
-        context[6] = token.dep if has_head(token) else 0
+        context[6] = token.dep if token.head != 0 else 0
         context[7] = token.lex.prefix
         context[8] = token.lex.suffix
         context[9] = token.lex.shape

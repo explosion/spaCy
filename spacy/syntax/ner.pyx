@@ -36,7 +36,7 @@ MOVE_NAMES[OUT] = 'O'
 cdef do_func_t[N_MOVES] do_funcs
 
 
-cdef bint _entity_is_sunk(StateClass st, Transition* golds) except -1:
+cdef bint _entity_is_sunk(StateClass st, Transition* golds) nogil:
     if not st.entity_is_open():
         return False
 
@@ -154,32 +154,32 @@ cdef class BiluoPushDown(TransitionSystem):
 
 cdef class Missing:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) except -1:
+    cdef bint is_valid(StateClass st, int label) nogil:
         return False
 
     @staticmethod
-    cdef int transition(StateClass s, int label) except -1:
-        raise NotImplementedError
+    cdef int transition(StateClass s, int label) nogil:
+        pass
 
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
+    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
         return 9000
 
 
 cdef class Begin:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) except -1:
+    cdef bint is_valid(StateClass st, int label) nogil:
         return label != 0 and not st.entity_is_open()
 
     @staticmethod
-    cdef int transition(StateClass st, int label) except -1:
+    cdef int transition(StateClass st, int label) nogil:
         st.open_ent(label)
         st.set_ent_tag(st.B(0), 3, label)
         st.push()
         st.pop()
 
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
+    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
         cdef int g_act = gold.ner[s.B(0)].move
         cdef int g_tag = gold.ner[s.B(0)].label
 
@@ -198,17 +198,17 @@ cdef class Begin:
 
 cdef class In:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) except -1:
+    cdef bint is_valid(StateClass st, int label) nogil:
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
     
     @staticmethod
-    cdef int transition(StateClass st, int label) except -1:
+    cdef int transition(StateClass st, int label) nogil:
         st.set_ent_tag(st.B(0), 1, label)
         st.push()
         st.pop()
 
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
+    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
         move = IN
         cdef int next_act = gold.ner[s.B(1)].move if s.B(0) < s.length else OUT
         cdef int g_act = gold.ner[s.B(0)].move
@@ -238,17 +238,17 @@ cdef class In:
 
 cdef class Last:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) except -1:
+    cdef bint is_valid(StateClass st, int label) nogil:
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
 
     @staticmethod
-    cdef int transition(StateClass st, int label) except -1:
+    cdef int transition(StateClass st, int label) nogil:
         st.close_ent()
         st.push()
         st.pop()
 
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
+    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
         move = LAST
 
         cdef int g_act = gold.ner[s.B(0)].move
@@ -277,11 +277,11 @@ cdef class Last:
 
 cdef class Unit:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) except -1:
+    cdef bint is_valid(StateClass st, int label) nogil:
         return label != 0 and not st.entity_is_open()
 
     @staticmethod
-    cdef int transition(StateClass st, int label) except -1:
+    cdef int transition(StateClass st, int label) nogil:
         st.open_ent(label)
         st.close_ent()
         st.set_ent_tag(st.B(0), 3, label)
@@ -289,7 +289,7 @@ cdef class Unit:
         st.pop()
 
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
+    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
         cdef int g_act = gold.ner[s.B(0)].move
         cdef int g_tag = gold.ner[s.B(0)].label
 
@@ -308,17 +308,17 @@ cdef class Unit:
 
 cdef class Out:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) except -1:
+    cdef bint is_valid(StateClass st, int label) nogil:
         return not st.entity_is_open()
 
     @staticmethod
-    cdef int transition(StateClass st, int label) except -1:
+    cdef int transition(StateClass st, int label) nogil:
         st.set_ent_tag(st.B(0), 2, 0)
         st.push()
         st.pop()
     
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) except -1:
+    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
         cdef int g_act = gold.ner[s.B(0)].move
         cdef int g_tag = gold.ner[s.B(0)].label
 

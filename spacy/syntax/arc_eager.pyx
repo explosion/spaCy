@@ -4,13 +4,6 @@ from __future__ import unicode_literals
 import ctypes
 import os
 
-from ._state cimport State
-from ._state cimport has_head, get_idx, get_s0, get_n0, get_left, get_right
-from ._state cimport is_final, at_eol, pop_stack, push_stack, add_dep
-from ._state cimport head_in_buffer, children_in_buffer
-from ._state cimport head_in_stack, children_in_stack
-from ._state cimport count_left_kids
-
 from ..structs cimport TokenC
 
 from .transition_system cimport do_func_t, get_cost_func_t
