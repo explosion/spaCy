@@ -16,10 +16,10 @@ cdef class StateClass:
     cdef Entity* _ents
     cdef TokenC _empty_token
     cdef int length
-    cdef bint at_sent_end
     cdef int _s_i
     cdef int _b_i
     cdef int _e_i
+    cdef int _break
 
     @staticmethod
     cdef inline StateClass init(const TokenC* sent, int length):
@@ -93,6 +93,6 @@ cdef class StateClass:
     
     cdef void set_ent_tag(self, int i, int ent_iob, int ent_type) nogil
 
-    cdef void set_sent_end(self, int i) nogil
+    cdef void set_break(self, int i) nogil
 
     cdef void clone(self, StateClass src) nogil

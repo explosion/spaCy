@@ -14,6 +14,7 @@ cdef class StateClass:
         self._ents = <Entity*>mem.alloc(length, sizeof(Entity))
         self.mem = mem
         self.length = length
+        self._break = length
         self._s_i = 0
         self._b_i = 0
         self._e_i = 0
@@ -104,10 +105,10 @@ cdef class StateClass:
         return self._s_i <= 0
 
     cdef bint eol(self) nogil:
-        return self._b_i >= self.length or self.at_sent_end
+        return self._b_i >= self._break
 
     cdef bint is_final(self) nogil:
-        return self.stack_depth() <= 1 and self.buffer_length() == 0
+        return self.stack_depth() <= 1 and self._b_i >= self.length
 
     cdef bint has_head(self, int i) nogil:
         return self.safe_get(i).head != 0
@@ -130,12 +131,14 @@ cdef class StateClass:
         return self._s_i
 
     cdef int buffer_length(self) nogil:
-        return self.length - self._b_i
+        return self._break - self._b_i
 
     cdef void push(self) nogil:
         self._stack[self._s_i] = self.B(0)
         self._s_i += 1
         self._b_i += 1
+        if self._b_i >= self._break:
+            self._break = self.length
 
     cdef void pop(self) nogil:
         self._s_i -= 1
@@ -182,9 +185,10 @@ cdef class StateClass:
             self._sent[i].ent_iob = ent_iob
             self._sent[i].ent_type = ent_type
 
-    cdef void set_sent_end(self, int i) nogil:
+    cdef void set_break(self, int i) nogil:
         if 0 <= i < self.length:
             self._sent[i].sent_end = True
+            self._break = i
 
     cdef void clone(self, StateClass src) nogil:
         memcpy(self._sent, src._sent, self.length * sizeof(TokenC))
