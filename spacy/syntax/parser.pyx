@@ -36,6 +36,8 @@ from ..tokens cimport Tokens, TokenC
 from ..strings cimport StringStore
 
 from .arc_eager cimport TransitionSystem, Transition
+from .arc_eager cimport push_cost, arc_cost
+
 from .transition_system import OracleError
 
 from ..gold cimport GoldParse
@@ -95,11 +97,12 @@ cdef class Parser:
         cdef Transition guess
         words = [w.orth_ for w in tokens]
         while not stcls.is_final():
-            #print stcls.print_state(words)
             fill_context(context, stcls)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, stcls)
+            #print self.moves.move_name(guess.move, guess.label), stcls.print_state(words)
             guess.do(stcls, guess.label)
+            assert stcls._s_i >= 0
         self.moves.finalize_state(stcls)
         tokens.set_parse(stcls._sent)
 
@@ -128,12 +131,27 @@ cdef class Parser:
         cdef atom_t[CONTEXT_SIZE] context
         loss = 0
         words = [w.orth_ for w in tokens]
+        history = []
         while not stcls.is_final():
+            assert stcls._s_i >= 0
             fill_context(context, stcls)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, stcls)
-            best = self.moves.best_gold(scores, stcls, gold)
+            try:
+                best = self.moves.best_gold(scores, stcls, gold)
+            except:
+                history.append((self.moves.move_name(guess.move, guess.label), '!', stcls.print_state(words)))
+                for i, word in enumerate(words):
+                    print gold.orig_annot[i]
+                print '\n'.join('\t'.join(s) for s in history)
+                print words[gold.c.heads[stcls.S(0)]]
+                print words[gold.c.heads[stcls.B(0)]]
+                print push_cost(stcls, &gold.c, stcls.B(0))
+                print arc_cost(stcls, &gold.c, stcls.S(0), stcls.B(0))
+                self.moves.set_valid(self.moves._is_valid, stcls)
+                raise
             cost = guess.get_cost(stcls, &gold.c, guess.label)
+            history.append((self.moves.move_name(guess.move, guess.label), str(cost), stcls.print_state(words)))
             self.model.update(context, guess.clas, best.clas, cost)
             guess.do(stcls, guess.label)
             loss += cost

@@ -322,7 +322,6 @@ cdef class Out:
         cdef int g_act = gold.ner[s.B(0)].move
         cdef int g_tag = gold.ner[s.B(0)].label
 
-
         if g_act == MISSING:
             return 0
         elif g_act == BEGIN:

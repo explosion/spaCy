@@ -143,7 +143,7 @@ cdef class StateClass:
         self._stack[self._s_i] = self.B(0)
         self._s_i += 1
         self._b_i += 1
-        if self._b_i >= self._break:
+        if self._b_i > self._break:
             self._break = -1
 
     cdef void pop(self) nogil:
@@ -167,7 +167,7 @@ cdef class StateClass:
                     self.pop()
                 else:
                     self.unshift()
-            elif self.buffer_length() >= 2 and self.stack_depth() == 0:
+            elif (self.length - self._b_i) >= 1 and self.stack_depth() == 0:
                 self.push()
             else:
                 break
@@ -208,10 +208,9 @@ cdef class StateClass:
             self._sent[i].ent_iob = ent_iob
             self._sent[i].ent_type = ent_type
 
-    cdef void set_break(self, int i) nogil:
-        if 0 <= i < self.length:
-            self._sent[i].sent_end = True
-            self._break = i
+    cdef void set_break(self, int _) nogil:
+        self._sent[self.B(0)].sent_end = True
+        self._break = self._b_i
 
     cdef void clone(self, StateClass src) nogil:
         memcpy(self._sent, src._sent, self.length * sizeof(TokenC))
@@ -229,7 +228,7 @@ cdef class StateClass:
         third = words[self.S(2)] + '_%d' % self.S_(2).head
         n0 = words[self.B(0)] 
         n1 = words[self.B(1)] 
-        return ' '.join((str(self.buffer_length()), str(self.stack_depth()), third, second, top, '|', n0, n1))
+        return ' '.join((str(self.buffer_length()), str(self.B_(0).sent_end), str(self._b_i), str(self._break), str(self.length), str(self.stack_depth()), third, second, top, '|', n0, n1))
  
 
 # From https://en.wikipedia.org/wiki/Hamming_weight
