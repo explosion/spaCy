@@ -89,9 +89,9 @@ cdef inline TokenC* get_s2(const State *s) nogil:
     # Rely on our padding to ensure we don't go out of bounds here
     return &s.sent[s.stack[-2]]
 
-cdef const TokenC* get_right(const State* s, const TokenC* head, const int idx) nogil
+cdef const TokenC* get_right(const State* s, const TokenC* head, int idx) nogil
 
-cdef const TokenC* get_left(const State* s, const TokenC* head, const int idx) nogil
+cdef const TokenC* get_left(const State* s, const TokenC* head, int idx) nogil
 
 cdef inline bint at_eol(const State *s) nogil:
     return s.i >= s.sent_len
