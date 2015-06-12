@@ -121,7 +121,7 @@ def _min_edit_path(cand_words, gold_words):
     return prev_costs[n_gold], previous_row[-1]
 
 
-def read_json_file(loc):
+def read_json_file(loc, docs_filter=None):
     print loc
     if path.isdir(loc):
         for filename in os.listdir(loc):
@@ -130,6 +130,8 @@ def read_json_file(loc):
         with open(loc) as file_:
             docs = ujson.load(file_)
         for doc in docs:
+            if docs_filter is not None and not docs_filter(doc):
+                continue
             paragraphs = []
             for paragraph in doc['paragraphs']:
                 sents = []
