@@ -74,8 +74,6 @@ cdef class Parser:
         self.model = Model(self.moves.n_moves, templates, model_dir)
 
     def __call__(self, Tokens tokens):
-        if tokens.length == 0:
-            return 0
         if self.cfg.get('beam_width', 1) < 1:
             self._greedy_parse(tokens)
         else:
@@ -108,9 +106,9 @@ cdef class Parser:
 
     cdef int _beam_parse(self, Tokens tokens) except -1:
         cdef Beam beam = Beam(self.moves.n_moves, self.cfg.beam_width)
+        words = [w.orth_ for w in tokens]
         beam.initialize(_init_state, tokens.length, tokens.data)
         beam.check_done(_check_final_state, NULL)
-        words = [w.orth_ for w in tokens]
         while not beam.is_done:
             self._advance_beam(beam, None, False, words)
         state = <StateClass>beam.at(0)
@@ -231,7 +229,7 @@ cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) 
 
 cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
     cdef StateClass st = StateClass.init(<const TokenC*>tokens, length)
-    st.push()
+    st.fast_forward()
     Py_INCREF(st)
     return <void*>st
 
