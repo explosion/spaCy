@@ -264,6 +264,29 @@ s0_n0 = (
     (S0p, S0rp, N0p),
     (S0p, N0lp, N0W),
     (S0p, N0lp, N0p),
+    (S0L, N0p),
+    (S0p, S0rL, N0p),
+    (S0p, N0lL, N0p),
+    (S0p, S0rv, N0p),
+    (S0p, N0lv, N0p),
+    (S0c6, S0rL, S0r2L, N0p),
+    (S0p, N0lL, N0l2L, N0p),
+)
+
+
+s1_s0 = (
+    (S1p, S0p),
+    (S1p, S0p, S0_has_head),
+    (S1W, S0p),
+    (S1W, S0p, S0_has_head),
+    (S1c, S0p),
+    (S1c, S0p, S0_has_head),
+    (S1p, S1rL, S0p),
+    (S1p, S1rL, S0p, S0_has_head),
+    (S1p, S0lL, S0p),
+    (S1p, S0lL, S0p, S0_has_head),
+    (S1p, S0lL, S0l2L, S0p),
+    (S1p, S0lL, S0l2L, S0p, S0_has_head),
 )
 
 
@@ -275,6 +298,8 @@ s1_n0 = (
     (S1W, S1p, N0p),
     (S1p, N0W, N0p),
     (S1c6, S1p, N0c6, N0p),
+    (S1L, N0p),
+    (S1p, S1rL, N0p),
 )
 
 
@@ -286,6 +311,8 @@ s0_n1 = (
     (S0W, S0p, N1p),
     (S0p, N1W, N1p),
     (S0c6, S0p, N1c6, N1p),
+    (S0L, N1p),
+    (S0p, S0rL, N1p),
 )
 
 
