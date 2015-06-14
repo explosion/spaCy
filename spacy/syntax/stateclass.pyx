@@ -117,10 +117,10 @@ cdef class StateClass:
         return self.safe_get(i).head != 0
 
     cdef int n_L(self, int i) nogil:
-        return _popcount(self.safe_get(i).l_kids)
+        return self.safe_get(i).l_kids
 
     cdef int n_R(self, int i) nogil:
-        return _popcount(self.safe_get(i).r_kids)
+        return self.safe_get(i).r_kids
 
     cdef bint stack_is_connected(self) nogil:
         return False
@@ -182,16 +182,16 @@ cdef class StateClass:
         # Keep a bit-vector tracking child dependencies.  If a word has a child at
         # offset i from it, set that bit (tracking left and right separately)
         if child > head:
-            self._sent[head].r_kids |= 1 << (-dist)
+            self._sent[head].r_kids += 1
         else:
-            self._sent[head].l_kids |= 1 << dist
+            self._sent[head].l_kids += 1
 
     cdef void del_arc(self, int head, int child) nogil:
         cdef int dist = head - child
         if child > head:
-            self._sent[head].r_kids &= ~(1 << (-dist))
+            self._sent[head].r_kids -= 1
         else:
-            self._sent[head].l_kids &= ~(1 << dist)
+            self._sent[head].l_kids -= 1
 
     cdef void open_ent(self, int label) nogil:
         self._ents[self._e_i].start = self.B(0)
@@ -229,25 +229,3 @@ cdef class StateClass:
         n0 = words[self.B(0)] 
         n1 = words[self.B(1)] 
         return ' '.join((third, second, top, '|', n0, n1))
- 
-
-# From https://en.wikipedia.org/wiki/Hamming_weight
-cdef inline uint32_t _popcount(uint32_t x) nogil:
-    """Find number of non-zero bits."""
-    cdef int count = 0
-    while x != 0:
-        x &= x - 1
-        count += 1
-    return count
-
-
-cdef inline uint32_t _nth_significant_bit(uint32_t bits, int n) nogil:
-    cdef int i
-    for i in range(32):
-        if bits & (1 << i):
-            if n < 1:
-                return i
-            n -= 1
-    return 0
-
-
