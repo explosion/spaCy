@@ -113,3 +113,12 @@ class Scorer(object):
             set(item[:2] for item in cand_deps),
             set(item[:2] for item in gold_deps),
         )
+        if verbose:
+            gold_words = [item[1] for item in gold.orig_annot]
+            for w_id, h_id, dep in (cand_deps - gold_deps):
+                print 'F', gold_words[w_id], dep, gold_words[h_id]
+            for w_id, h_id, dep in (gold_deps - cand_deps):
+                print 'M', gold_words[w_id], dep, gold_words[h_id]
+
+
+ 
