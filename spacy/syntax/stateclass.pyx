@@ -228,7 +228,7 @@ cdef class StateClass:
         third = words[self.S(2)] + '_%d' % self.S_(2).head
         n0 = words[self.B(0)] 
         n1 = words[self.B(1)] 
-        return ' '.join((str(self.buffer_length()), str(self.B_(0).sent_end), str(self._b_i), str(self._break), str(self.length), str(self.stack_depth()), third, second, top, '|', n0, n1))
+        return ' '.join((third, second, top, '|', n0, n1))
  
 
 # From https://en.wikipedia.org/wiki/Hamming_weight
