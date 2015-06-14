@@ -35,10 +35,9 @@ from thinc.search cimport MaxViolation
 from ..tokens cimport Tokens, TokenC
 from ..strings cimport StringStore
 
-from .arc_eager cimport TransitionSystem, Transition
-from .arc_eager cimport push_cost, arc_cost
 
 from .transition_system import OracleError
+from .transition_system cimport TransitionSystem, Transition
 
 from ..gold cimport GoldParse
 
@@ -144,8 +143,6 @@ cdef class Parser:
                 print '\n'.join('\t'.join(s) for s in history)
                 print words[gold.c.heads[stcls.S(0)]]
                 print words[gold.c.heads[stcls.B(0)]]
-                print push_cost(stcls, &gold.c, stcls.B(0))
-                print arc_cost(stcls, &gold.c, stcls.S(0), stcls.B(0))
                 self.moves.set_valid(self.moves._is_valid, stcls)
                 raise
             cost = guess.get_cost(stcls, &gold.c, guess.label)
