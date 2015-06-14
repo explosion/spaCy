@@ -48,7 +48,7 @@ def add_noise(orig, noise_level):
         return ''.join(_corrupt(c, noise_level) for c in orig)
 
 
-def score_model(scorer, nlp, raw_text, annot_tuples):
+def score_model(scorer, nlp, raw_text, annot_tuples, verbose=False):
     if raw_text is None:
         tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
     else:
@@ -57,7 +57,7 @@ def score_model(scorer, nlp, raw_text, annot_tuples):
     nlp.entity(tokens)
     nlp.parser(tokens)
     gold = GoldParse(tokens, annot_tuples)
-    scorer.score(tokens, gold, verbose=False)
+    scorer.score(tokens, gold, verbose=verbose)
 
 
 def _merge_sents(sents):
@@ -78,7 +78,7 @@ def _merge_sents(sents):
 
 def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
           seed=0, gold_preproc=False, n_sents=0, corruption_level=0,
-          beam_width=1):
+          beam_width=1, verbose=False):
     dep_model_dir = path.join(model_dir, 'deps')
     pos_model_dir = path.join(model_dir, 'pos')
     ner_model_dir = path.join(model_dir, 'ner')
@@ -118,7 +118,8 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
             for annot_tuples, ctnt in sents:
                 if len(annot_tuples[1]) == 1:
                     continue
-                score_model(scorer, nlp, raw_text, annot_tuples)
+                score_model(scorer, nlp, raw_text, annot_tuples,
+                            verbose=verbose if itn >= 2 else False)
                 if raw_text is None:
                     words = add_noise(annot_tuples[1], corruption_level)
                     tokens = nlp.tokenizer.tokens_from_list(words)
@@ -129,7 +130,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                 gold = GoldParse(tokens, annot_tuples, make_projective=True)
                 loss += nlp.parser.train(tokens, gold)
                             
-                nlp.entity.train(tokens, gold)
+                #nlp.entity.train(tokens, gold)
                 nlp.tagger.train(tokens, gold.tags)
         random.shuffle(gold_tuples)
         print '%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
@@ -156,7 +157,7 @@ def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False
             if raw_text is None:
                 tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
                 nlp.tagger(tokens)
-                nlp.entity(tokens)
+                #nlp.entity(tokens)
                 nlp.parser(tokens)
             else:
                 tokens = nlp(raw_text, merge_mwes=False)
@@ -178,7 +179,7 @@ def write_parses(Language, dev_loc, model_dir, out_loc, beam_width=None):
             if raw_text is None:
                 tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
                 nlp.tagger(tokens)
-                nlp.entity(tokens)
+                #nlp.entity(tokens)
                 nlp.parser(tokens)
             else:
                 tokens = nlp(raw_text, merge_mwes=False)
@@ -214,9 +215,9 @@ def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbos
               feat_set='basic' if not debug else 'debug',
               gold_preproc=gold_preproc, n_sents=n_sents,
               corruption_level=corruption_level, n_iter=n_iter,
-              beam_width=beam_width)
-    if out_loc:
-        write_parses(English, dev_loc, model_dir, out_loc, beam_width=beam_width)
+              beam_width=beam_width, verbose=verbose)
+    #if out_loc:
+    #    write_parses(English, dev_loc, model_dir, out_loc, beam_width=beam_width)
     scorer = evaluate(English, list(read_json_file(dev_loc)),
                       model_dir, gold_preproc=gold_preproc, verbose=verbose,
                       beam_width=beam_width)
