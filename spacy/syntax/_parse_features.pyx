@@ -287,6 +287,9 @@ s1_s0 = (
     (S1p, S0lL, S0p, S0_has_head),
     (S1p, S0lL, S0l2L, S0p),
     (S1p, S0lL, S0l2L, S0p, S0_has_head),
+    (S1L, S0L, S0W),
+    (S1L, S0L, S0p),
+    (S1p, S1L, S0L, S0p),
 )
 
 
