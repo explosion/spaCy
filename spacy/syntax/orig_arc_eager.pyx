@@ -291,7 +291,7 @@ cdef class OrigArcEager(TransitionSystem):
     cdef int finalize_state(self, StateClass st) except -1:
         cdef int root_label = self.strings['root']
         for i in range(st.length):
-            if st._sent[i].head == 0 and st._sent[i].dep == 0:
+            if st._sent[i].head == 0:
                 st._sent[i].dep = root_label
 
     cdef int set_valid(self, bint* output, StateClass stcls) except -1:
