@@ -177,9 +177,15 @@ cdef class LeftArc:
 
     @staticmethod
     cdef inline int move_cost(StateClass s, const GoldParseC* gold) nogil:
+        cdef int cost = 0
         if arc_is_gold(gold, s.B(0), s.S(0)):
             return 0
         else:
+            # Account for deps we might lose between S0 and stack
+            if not s.has_head(s.S(0)):
+                for i in range(1, s.stack_depth()):
+                    cost += gold.heads[s.S(i)] == s.S(0)
+                    cost += gold.heads[s.S(0)] == s.S(i)
             return pop_cost(s, gold, s.S(0)) + arc_cost(s, gold, s.B(0), s.S(0))
 
     @staticmethod
