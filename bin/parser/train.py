@@ -18,6 +18,7 @@ from spacy.en import English
 from spacy.en.pos import POS_TEMPLATES, POS_TAGS, setup_model_dir
 
 from spacy.syntax.orig_arc_eager import OrigArcEager
+from spacy.syntax.tree_arc_eager import TreeArcEager
 from spacy.syntax.util import Config
 from spacy.gold import read_json_file
 from spacy.gold import GoldParse
@@ -105,8 +106,6 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
 
     if n_sents > 0:
         gold_tuples = gold_tuples[:n_sents]
-    if use_orig_arc_eager:
-        Language.ParserTransitionSystem = OrigArcEager
 
     nlp = Language(data_dir=model_dir)
 
@@ -214,6 +213,8 @@ def write_parses(Language, dev_loc, model_dir, out_loc, beam_width=None):
 def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
          debug=False, corruption_level=0.0, gold_preproc=False, beam_width=1,
          eval_only=False, use_orig_arc_eager=False):
+    if use_orig_arc_eager:
+        English.ParserTransitionSystem = TreeArcEager
     if not eval_only:
         gold_train = list(read_json_file(train_loc))
         train(English, gold_train, model_dir,
