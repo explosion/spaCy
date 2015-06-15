@@ -20,7 +20,7 @@ from .stateclass cimport StateClass
 
 DEF NON_MONOTONIC = True
 DEF USE_BREAK = False
-DEF USE_ROOT_ARC_SEGMENT = False
+DEF USE_ROOT_ARC_SEGMENT = True
 
 cdef weight_t MIN_SCORE = -90000
 
