@@ -94,9 +94,6 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
     os.mkdir(pos_model_dir)
     os.mkdir(ner_model_dir)
 
-    if use_orig_arc_eager:
-        Language.ParserTransitionSystem = OrigArcEager
-
     setup_model_dir(sorted(POS_TAGS.keys()), POS_TAGS, POS_TEMPLATES, pos_model_dir)
 
     Config.write(dep_model_dir, 'config', features=feat_set, seed=seed,
@@ -108,6 +105,8 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
 
     if n_sents > 0:
         gold_tuples = gold_tuples[:n_sents]
+    if use_orig_arc_eager:
+        Language.ParserTransitionSystem = OrigArcEager
 
     nlp = Language(data_dir=model_dir)
 
