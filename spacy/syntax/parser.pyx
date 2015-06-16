@@ -130,23 +130,11 @@ cdef class Parser:
         words = [w.orth_ for w in tokens]
         history = []
         while not stcls.is_final():
-            assert stcls._s_i >= 0
             fill_context(context, stcls)
             scores = self.model.score(context)
             guess = self.moves.best_valid(scores, stcls)
-            try:
-                best = self.moves.best_gold(scores, stcls, gold)
-            except:
-                history.append((self.moves.move_name(guess.move, guess.label), '!', stcls.print_state(words)))
-                for i, word in enumerate(words):
-                    print gold.orig_annot[i]
-                print '\n'.join('\t'.join(s) for s in history)
-                print words[gold.c.heads[stcls.S(0)]]
-                print words[gold.c.heads[stcls.B(0)]]
-                self.moves.set_valid(self.moves._is_valid, stcls)
-                raise
+            best = self.moves.best_gold(scores, stcls, gold)
             cost = guess.get_cost(stcls, &gold.c, guess.label)
-            history.append((self.moves.move_name(guess.move, guess.label), str(cost), stcls.print_state(words)))
             self.model.update(context, guess.clas, best.clas, cost)
             guess.do(stcls, guess.label)
             loss += cost
