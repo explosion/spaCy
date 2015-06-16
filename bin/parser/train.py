@@ -133,7 +133,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                 gold = GoldParse(tokens, annot_tuples, make_projective=True)
                 loss += nlp.parser.train(tokens, gold)
                             
-                #nlp.entity.train(tokens, gold)
+                nlp.entity.train(tokens, gold)
                 nlp.tagger.train(tokens, gold.tags)
         random.shuffle(gold_tuples)
         print '%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
@@ -160,7 +160,7 @@ def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False
             if raw_text is None:
                 tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
                 nlp.tagger(tokens)
-                #nlp.entity(tokens)
+                nlp.entity(tokens)
                 nlp.parser(tokens)
             else:
                 tokens = nlp(raw_text, merge_mwes=False)
@@ -182,7 +182,7 @@ def write_parses(Language, dev_loc, model_dir, out_loc, beam_width=None):
             if raw_text is None:
                 tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
                 nlp.tagger(tokens)
-                #nlp.entity(tokens)
+                nlp.entity(tokens)
                 nlp.parser(tokens)
             else:
                 tokens = nlp(raw_text, merge_mwes=False)
