@@ -12,13 +12,15 @@ cdef class StateClass:
         self.shifted = <bint*>mem.alloc(length, sizeof(bint))
         self._sent = <TokenC*>mem.alloc(length, sizeof(TokenC))
         self._ents = <Entity*>mem.alloc(length, sizeof(Entity))
+        cdef int i
+        for i in range(length):
+            self._ents[i].end = -1
         self.mem = mem
         self.length = length
         self._break = -1
         self._s_i = 0
         self._b_i = 0
         self._e_i = 0
-        cdef int i
         for i in range(length):
             self._buffer[i] = i
         self._empty_token.lex = &EMPTY_LEXEME
@@ -29,7 +31,7 @@ cdef class StateClass:
         return self._sent[i].head + i
 
     cdef int E(self, int i) nogil:
-        return -1
+        return self._ents[self._e_i-1].start
 
     cdef int L(self, int i, int idx) nogil:
         if idx < 1:
@@ -128,7 +130,7 @@ cdef class StateClass:
     cdef bint entity_is_open(self) nogil:
         if self._e_i < 1:
             return False
-        return self._ents[self._e_i-1].end != 0
+        return self._ents[self._e_i-1].end == -1
 
     cdef int stack_depth(self) nogil:
         return self._s_i
@@ -196,11 +198,11 @@ cdef class StateClass:
     cdef void open_ent(self, int label) nogil:
         self._ents[self._e_i].start = self.B(0)
         self._ents[self._e_i].label = label
-        self._ents[self._e_i].end = 0
+        self._ents[self._e_i].end = -1
         self._e_i += 1
 
     cdef void close_ent(self) nogil:
-        self._ents[self._e_i].end = self.B(0)+1
+        self._ents[self._e_i-1].end = self.B(0)+1
         self._sent[self.B(0)].ent_iob = 1
 
     cdef void set_ent_tag(self, int i, int ent_iob, int ent_type) nogil:
