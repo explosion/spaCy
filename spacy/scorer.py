@@ -119,6 +119,3 @@ class Scorer(object):
                 print 'F', gold_words[w_id], dep, gold_words[h_id]
             for w_id, h_id, dep in (gold_deps - cand_deps):
                 print 'M', gold_words[w_id], dep, gold_words[h_id]
-
-
- 
