@@ -1,7 +1,7 @@
 from libc.stdint cimport uint32_t
 
 from numpy cimport ndarray
-cimport numpy
+cimport numpy as np
 
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport atom_t
@@ -47,7 +47,7 @@ cdef class Tokens:
 
     cdef int push_back(self, int i, LexemeOrToken lex_or_tok) except -1
 
-    cpdef long[:,:] to_array(self, object features)
+    cpdef np.ndarray to_array(self, object features)
 
     cdef int set_parse(self, const TokenC* parsed) except -1
 

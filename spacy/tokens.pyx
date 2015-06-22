@@ -18,7 +18,9 @@ from .structs cimport UniStr
 
 from unidecode import unidecode
 
-cimport numpy
+cimport numpy as np
+np.import_array()
+
 import numpy
 
 cimport cython
@@ -207,7 +209,7 @@ cdef class Tokens:
         return idx + t.lex.length
 
     @cython.boundscheck(False)
-    cpdef long[:,:] to_array(self, object py_attr_ids):
+    cpdef np.ndarray to_array(self, object py_attr_ids):
         """Given a list of M attribute IDs, export the tokens to a numpy ndarray
         of shape N*M, where N is the length of the sentence.
 
@@ -221,10 +223,10 @@ cdef class Tokens:
         """
         cdef int i, j
         cdef attr_id_t feature
-        cdef numpy.ndarray[long, ndim=2] output
+        cdef np.ndarray[long, ndim=2] output
         # Make an array from the attributes --- otherwise our inner loop is Python
         # dict iteration.
-        cdef numpy.ndarray[long, ndim=1] attr_ids = numpy.asarray(py_attr_ids)
+        cdef np.ndarray[long, ndim=1] attr_ids = numpy.asarray(py_attr_ids)
         output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.int)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
@@ -464,7 +466,9 @@ cdef class Token:
 
     property repvec:
         def __get__(self):
-            return numpy.asarray(<float[:self.vocab.repvec_length,]> self.c.lex.repvec)
+            cdef int length = self.vocab.repvec_length
+            repvec_view = <float[:length,]>self.c.lex.repvec
+            return numpy.asarray(repvec_view)
 
     property n_lefts:
         def __get__(self):
