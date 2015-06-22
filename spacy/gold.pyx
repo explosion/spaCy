@@ -242,6 +242,16 @@ cdef class GoldParse:
                                 self.heads[w2] = None
                                 self.labels[w2] = ''
 
+        # Check there are no cycles in the dependencies, i.e. we are a tree
+        for w in range(self.length):
+            seen = set([w])
+            head = w
+            while self.heads[head] != head and self.heads[head] != None:
+                head = self.heads[head]
+                if head in seen:
+                    raise Exception("Cycle found: %s" % seen)
+                seen.add(head)
+
         self.brackets = {}
         for (gold_start, gold_end, label_str) in brackets:
             start = self.gold_to_cand[gold_start]
