@@ -19,7 +19,7 @@ from .stateclass cimport StateClass
 
 
 DEF NON_MONOTONIC = True
-DEF USE_BREAK = False
+DEF USE_BREAK = True
 DEF USE_ROOT_ARC_SEGMENT = True
 
 cdef weight_t MIN_SCORE = -90000
@@ -252,7 +252,7 @@ cdef class Break:
     @staticmethod
     cdef inline int move_cost(StateClass s, const GoldParseC* gold) nogil:
         cdef int cost = 0
-        cdef int S_i, B_i
+        cdef int i, j, S_i, B_i
         for i in range(s.stack_depth()):
             S_i = s.S(i)
             for j in range(s.buffer_length()):
