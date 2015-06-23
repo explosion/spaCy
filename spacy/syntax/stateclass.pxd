@@ -28,6 +28,8 @@ cdef class StateClass:
         for i in range(length):
             self._sent[i] = sent[i]
             self._buffer[i] = i
+        for i in range(length, length + 5):
+            self._sent[i].lex = &EMPTY_LEXEME
         return self
 
     cdef inline int S(self, int i) nogil:

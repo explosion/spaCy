@@ -34,6 +34,10 @@ cdef class StateClass:
         return self._sent[i].head + i
 
     cdef int E(self, int i) nogil:
+        if self._e_i <= 0 or self._e_i >= self.length:
+            return -1
+        if i <= 0 or i >= self.length:
+            return -1
         return self._ents[self._e_i-1].start
 
     cdef int L(self, int i, int idx) nogil:
@@ -145,14 +149,16 @@ cdef class StateClass:
             return self.length - self._b_i
 
     cdef void push(self) nogil:
-        self._stack[self._s_i] = self.B(0)
+        if self.B(0) != -1:
+            self._stack[self._s_i] = self.B(0)
         self._s_i += 1
         self._b_i += 1
         if self._b_i > self._break:
             self._break = -1
 
     cdef void pop(self) nogil:
-        self._s_i -= 1
+        if self._s_i >= 1:
+            self._s_i -= 1
 
     cdef void unshift(self) nogil:
         self._b_i -= 1
@@ -197,10 +203,11 @@ cdef class StateClass:
             self._sent[head].l_kids -= 1
 
     cdef void open_ent(self, int label) nogil:
-        self._ents[self._e_i].start = self.B(0)
-        self._ents[self._e_i].label = label
-        self._ents[self._e_i].end = -1
-        self._e_i += 1
+        if 0 <= self._e_i < self.length:
+            self._ents[self._e_i].start = self.B(0)
+            self._ents[self._e_i].label = label
+            self._ents[self._e_i].end = -1
+            self._e_i += 1
 
     cdef void close_ent(self) nogil:
         self._ents[self._e_i-1].end = self.B(0)+1
@@ -212,8 +219,9 @@ cdef class StateClass:
             self._sent[i].ent_type = ent_type
 
     cdef void set_break(self, int _) nogil:
-        self._sent[self.B(0)].sent_end = True
-        self._break = self._b_i
+        if 0 <= self.B(0) < self.length: 
+            self._sent[self.B(0)].sent_end = True
+            self._break = self._b_i
 
     cdef void clone(self, StateClass src) nogil:
         memcpy(self._sent, src._sent, self.length * sizeof(TokenC))
@@ -223,6 +231,7 @@ cdef class StateClass:
         self._b_i = src._b_i
         self._s_i = src._s_i
         self._e_i = src._e_i
+        self._break = src._break
 
     def print_state(self, words):
         words = list(words) + ['_']
