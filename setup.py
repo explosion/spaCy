@@ -155,8 +155,6 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.en.pos', 'spacy.syntax.parser', 
              'spacy.syntax.transition_system',
              'spacy.syntax.arc_eager',
-             'spacy.syntax.orig_arc_eager', 
-             'spacy.syntax.tree_arc_eager', 
              'spacy.syntax._parse_features',
              'spacy.gold', 'spacy.orth', 
              'spacy.syntax.ner']

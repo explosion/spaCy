@@ -17,8 +17,6 @@ import spacy.util
 from spacy.en import English
 from spacy.en.pos import POS_TEMPLATES, POS_TAGS, setup_model_dir
 
-from spacy.syntax.orig_arc_eager import OrigArcEager
-from spacy.syntax.tree_arc_eager import TreeArcEager
 from spacy.syntax.util import Config
 from spacy.gold import read_json_file
 from spacy.gold import GoldParse
