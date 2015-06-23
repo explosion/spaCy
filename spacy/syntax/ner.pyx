@@ -1,7 +1,5 @@
 from __future__ import unicode_literals
 
-from ._state cimport State
-
 from .transition_system cimport Transition
 from .transition_system cimport do_func_t
 
