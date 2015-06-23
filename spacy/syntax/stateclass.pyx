@@ -193,6 +193,7 @@ cdef class StateClass:
         cdef int i
         if child > head:
             self._sent[head].r_kids += 1
+            self._sent[head].r_edge = child
             i = 0
             while self.has_head(head) and i < self.length:
                 self._sent[head].r_edge = child
