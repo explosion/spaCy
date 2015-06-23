@@ -370,6 +370,8 @@ cdef class ArcEager(TransitionSystem):
         # Ensure sent_start is set to 0 throughout
         for i in range(st.length):
             st._sent[i].sent_start = False
+            st._sent[i].l_edge = i
+            st._sent[i].r_edge = i
         st.fast_forward()
 
     cdef int finalize_state(self, StateClass st) except -1:
