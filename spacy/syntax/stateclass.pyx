@@ -190,17 +190,27 @@ cdef class StateClass:
         cdef int dist = head - child
         self._sent[child].head = dist
         self._sent[child].dep = label
+        cdef int i
         if child > head:
             self._sent[head].r_kids += 1
+            i = 0
+            while self.has_head(head) and i < self.length:
+                self._sent[head].r_edge = child
+                head = self.H(head)
+                i += 1 # Guard against infinite loops
         else:
             self._sent[head].l_kids += 1
+            self._sent[head].l_edge = self._sent[child].l_edge
 
-    cdef void del_arc(self, int head, int child) nogil:
-        cdef int dist = head - child
-        if child > head:
-            self._sent[head].r_kids -= 1
+    cdef void del_arc(self, int h_i, int c_i) nogil:
+        cdef int dist = h_i - c_i
+        cdef TokenC* h = &self._sent[h_i]
+        if c_i > h_i:
+            h.r_kids -= 1
+            h.r_edge = self.R_(h_i, h.r_kids-1).r_edge if h.r_kids >= 1 else h_i
         else:
-            self._sent[head].l_kids -= 1
+            h.l_kids -= 1
+            h.l_edge = self.L_(h_i, h.l_kids-1).l_edge if h.l_kids >= 1 else h_i
 
     cdef void open_ent(self, int label) nogil:
         self._ents[self._e_i].start = self.B(0)
