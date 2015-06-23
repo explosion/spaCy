@@ -7,14 +7,17 @@ from ..structs cimport Entity
 cdef class StateClass:
     def __init__(self, int length):
         cdef Pool mem = Pool()
-        self._buffer = <int*>mem.alloc(length, sizeof(int))
-        self._stack = <int*>mem.alloc(length, sizeof(int))
-        self.shifted = <bint*>mem.alloc(length, sizeof(bint))
-        self._sent = <TokenC*>mem.alloc(length, sizeof(TokenC))
-        self._ents = <Entity*>mem.alloc(length, sizeof(Entity))
+        PADDING = 5
+        self._buffer = <int*>mem.alloc(length + PADDING, sizeof(int))
+        self._stack = <int*>mem.alloc(length + PADDING, sizeof(int))
+        self.shifted = <bint*>mem.alloc(length + PADDING, sizeof(bint))
+        self._sent = <TokenC*>mem.alloc(length + PADDING, sizeof(TokenC))
+        self._ents = <Entity*>mem.alloc(length + PADDING, sizeof(Entity))
         cdef int i
         for i in range(length):
             self._ents[i].end = -1
+        for i in range(length, length + PADDING):
+            self._sent[i].lex = &EMPTY_LEXEME
         self.mem = mem
         self.length = length
         self._break = -1
@@ -181,8 +184,6 @@ cdef class StateClass:
         cdef int dist = head - child
         self._sent[child].head = dist
         self._sent[child].dep = label
-        # Keep a bit-vector tracking child dependencies.  If a word has a child at
-        # offset i from it, set that bit (tracking left and right separately)
         if child > head:
             self._sent[head].r_kids += 1
         else:
