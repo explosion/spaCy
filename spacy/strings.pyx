@@ -61,6 +61,9 @@ cdef class StringStore:
         def __get__(self):
             return self.size-1
 
+    def __len__(self):
+        return self.size
+
     def __getitem__(self, object string_or_id):
         cdef bytes byte_string
         cdef const Utf8Str* utf8str

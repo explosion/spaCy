@@ -121,7 +121,7 @@ def _min_edit_path(cand_words, gold_words):
     return prev_costs[n_gold], previous_row[-1]
 
 
-def read_json_file(loc):
+def read_json_file(loc, docs_filter=None):
     print loc
     if path.isdir(loc):
         for filename in os.listdir(loc):
@@ -130,6 +130,8 @@ def read_json_file(loc):
         with open(loc) as file_:
             docs = ujson.load(file_)
         for doc in docs:
+            if docs_filter is not None and not docs_filter(doc):
+                continue
             paragraphs = []
             for paragraph in doc['paragraphs']:
                 sents = []
@@ -146,6 +148,9 @@ def read_json_file(loc):
                         tags.append(token['tag'])
                         heads.append(token['head'] + i)
                         labels.append(token['dep'])
+                        # Ensure ROOT label is case-insensitive
+                        if labels[-1].lower() == 'root':
+                            labels[-1] = 'ROOT'
                         ner.append(token.get('ner', '-'))
                     sents.append((
                         (ids, words, tags, heads, labels, ner),
@@ -239,6 +244,16 @@ cdef class GoldParse:
                                 self.labels[w1] = ''
                                 self.heads[w2] = None
                                 self.labels[w2] = ''
+
+        # Check there are no cycles in the dependencies, i.e. we are a tree
+        for w in range(self.length):
+            seen = set([w])
+            head = w
+            while self.heads[head] != head and self.heads[head] != None:
+                head = self.heads[head]
+                if head in seen:
+                    raise Exception("Cycle found: %s" % seen)
+                seen.add(head)
 
         self.brackets = {}
         for (gold_start, gold_end, label_str) in brackets:

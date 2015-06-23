@@ -17,8 +17,11 @@ from .spans import Span
 from .structs cimport UniStr
 
 from unidecode import unidecode
+# Compiler crashes on memory view coercion without this. Should report bug.
+from cython.view cimport array as cvarray
+cimport numpy as np
+np.import_array()
 
-cimport numpy
 import numpy
 
 cimport cython
@@ -183,15 +186,12 @@ cdef class Tokens:
         """
         cdef int i
         cdef Tokens sent = Tokens(self.vocab, self._string[self.data[0].idx:])
-        start = None
-        for i in range(self.length):
-            if start is None:
+        start = 0
+        for i in range(1, self.length):
+            if self.data[i].sent_start:
+                yield Span(self, start, i)
                 start = i
-            if self.data[i].sent_end:
-                yield Span(self, start, i+1)
-                start = None
-        if start is not None:
-            yield Span(self, start, self.length)
+        yield Span(self, start, self.length)
 
     cdef int push_back(self, int idx, LexemeOrToken lex_or_tok) except -1:
         if self.length == self.max_length:
@@ -207,7 +207,7 @@ cdef class Tokens:
         return idx + t.lex.length
 
     @cython.boundscheck(False)
-    cpdef long[:,:] to_array(self, object py_attr_ids):
+    cpdef np.ndarray to_array(self, object py_attr_ids):
         """Given a list of M attribute IDs, export the tokens to a numpy ndarray
         of shape N*M, where N is the length of the sentence.
 
@@ -221,10 +221,10 @@ cdef class Tokens:
         """
         cdef int i, j
         cdef attr_id_t feature
-        cdef numpy.ndarray[long, ndim=2] output
+        cdef np.ndarray[long, ndim=2] output
         # Make an array from the attributes --- otherwise our inner loop is Python
         # dict iteration.
-        cdef numpy.ndarray[long, ndim=1] attr_ids = numpy.asarray(py_attr_ids)
+        cdef np.ndarray[long, ndim=1] attr_ids = numpy.asarray(py_attr_ids)
         output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.int)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
@@ -464,7 +464,9 @@ cdef class Token:
 
     property repvec:
         def __get__(self):
-            return numpy.asarray(<float[:self.vocab.repvec_length,]> self.c.lex.repvec)
+            cdef int length = self.vocab.repvec_length
+            repvec_view = <float[:length,]>self.c.lex.repvec
+            return numpy.asarray(repvec_view)
 
     property n_lefts:
         def __get__(self):
@@ -546,13 +548,13 @@ cdef class Token:
     property left_edge:
         def __get__(self):
             return Token.cinit(self.vocab, self._string,
-                               self.c + self.c.l_edge, self.i + self.c.l_edge,
+                               (self.c - self.i) + self.c.l_edge, self.c.l_edge,
                                self.array_len, self._seq)
  
     property right_edge:
         def __get__(self):
             return Token.cinit(self.vocab, self._string,
-                               self.c + self.c.r_edge, self.i + self.c.r_edge,
+                               (self.c - self.i) + self.c.r_edge, self.c.r_edge,
                                self.array_len, self._seq)
 
     property head:

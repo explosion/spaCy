@@ -12,12 +12,10 @@ from libc.string cimport memset
 from itertools import combinations
 
 from ..tokens cimport TokenC
-from ._state cimport State
-from ._state cimport get_s2, get_s1, get_s0, get_n0, get_n1, get_n2
-from ._state cimport get_p2, get_p1
-from ._state cimport get_e0, get_e1
-from ._state cimport has_head, get_left, get_right
-from ._state cimport count_left_kids, count_right_kids
+
+from .stateclass cimport StateClass
+
+from cymem.cymem cimport Pool
 
 
 cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
@@ -53,56 +51,56 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         # the source that are set to 1.
         context[4] = token.lex.cluster & 15
         context[5] = token.lex.cluster & 63
-        context[6] = token.dep if has_head(token) else 0
+        context[6] = token.dep if token.head != 0 else 0
         context[7] = token.lex.prefix
         context[8] = token.lex.suffix
         context[9] = token.lex.shape
         context[10] = token.ent_iob
         context[11] = token.ent_type
 
-
-cdef int fill_context(atom_t* context, State* state) except -1:
+cdef int fill_context(atom_t* ctxt, StateClass st) except -1:
     # Take care to fill every element of context!
     # We could memset, but this makes it very easy to have broken features that
     # make almost no impact on accuracy. If instead they're unset, the impact
     # tends to be dramatic, so we get an obvious regression to fix...
-    fill_token(&context[S2w], get_s2(state))
-    fill_token(&context[S1w], get_s1(state))
-    fill_token(&context[S1rw], get_right(state, get_s1(state), 1))
-    fill_token(&context[S0lw], get_left(state, get_s0(state), 1))
-    fill_token(&context[S0l2w], get_left(state, get_s0(state), 2))
-    fill_token(&context[S0w], get_s0(state))
-    fill_token(&context[S0r2w], get_right(state, get_s0(state), 2))
-    fill_token(&context[S0rw], get_right(state, get_s0(state), 1))
-    fill_token(&context[N0lw], get_left(state, get_n0(state), 1))
-    fill_token(&context[N0l2w], get_left(state, get_n0(state), 2))
-    fill_token(&context[N0w], get_n0(state))
-    fill_token(&context[N1w], get_n1(state))
-    fill_token(&context[N2w], get_n2(state))
-    fill_token(&context[P1w], get_p1(state))
-    fill_token(&context[P2w], get_p2(state))
+    fill_token(&ctxt[S2w], st.S_(2))
+    fill_token(&ctxt[S1w], st.S_(1))
+    fill_token(&ctxt[S1rw], st.R_(st.S(1), 1))
+    fill_token(&ctxt[S0lw], st.L_(st.S(0), 1))
+    fill_token(&ctxt[S0l2w], st.L_(st.S(0), 2))
+    fill_token(&ctxt[S0w], st.S_(0))
+    fill_token(&ctxt[S0r2w], st.R_(st.S(0), 2))
+    fill_token(&ctxt[S0rw], st.R_(st.S(0), 1))
+    fill_token(&ctxt[N0lw], st.L_(st.B(0), 1))
+    fill_token(&ctxt[N0l2w], st.L_(st.B(0), 2))
+    fill_token(&ctxt[N0w], st.B_(0))
+    fill_token(&ctxt[N1w], st.B_(1))
+    fill_token(&ctxt[N2w], st.B_(2))
+    fill_token(&ctxt[P1w], st.safe_get(st.B(0)-1))
+    fill_token(&ctxt[P2w], st.safe_get(st.B(0)-2))
 
-    fill_token(&context[E0w], get_e0(state))
-    fill_token(&context[E1w], get_e1(state))
-    if state.stack_len >= 1:
-        context[dist] = min(state.i - state.stack[0], 5)
+    fill_token(&ctxt[E0w], st.E_(0))
+    fill_token(&ctxt[E1w], st.E_(1))
+
+    if st.stack_depth() >= 1 and not st.eol():
+        ctxt[dist] = min(st.B(0) - st.E(0), 5)
     else:
-        context[dist] = 0
-    context[N0lv] = min(count_left_kids(get_n0(state)), 5)
-    context[S0lv] = min(count_left_kids(get_s0(state)), 5)
-    context[S0rv] = min(count_right_kids(get_s0(state)), 5)
-    context[S1lv] = min(count_left_kids(get_s1(state)), 5)
-    context[S1rv] = min(count_right_kids(get_s1(state)), 5)
+        ctxt[dist] = 0
+    ctxt[N0lv] = min(st.n_L(st.B(0)), 5)
+    ctxt[S0lv] = min(st.n_L(st.S(0)), 5)
+    ctxt[S0rv] = min(st.n_R(st.S(0)), 5)
+    ctxt[S1lv] = min(st.n_L(st.S(1)), 5)
+    ctxt[S1rv] = min(st.n_R(st.S(1)), 5)
 
-    context[S0_has_head] = 0
-    context[S1_has_head] = 0
-    context[S2_has_head] = 0
-    if state.stack_len >= 1:
-        context[S0_has_head] = has_head(get_s0(state)) + 1
-        if state.stack_len >= 2:
-            context[S1_has_head] = has_head(get_s1(state)) + 1
-            if state.stack_len >= 3:
-                context[S2_has_head] = has_head(get_s2(state)) + 1
+    ctxt[S0_has_head] = 0
+    ctxt[S1_has_head] = 0
+    ctxt[S2_has_head] = 0
+    if st.stack_depth() >= 1:
+        ctxt[S0_has_head] = st.has_head(st.S(0)) + 1
+        if st.stack_depth() >= 2:
+            ctxt[S1_has_head] = st.has_head(st.S(1)) + 1
+            if st.stack_depth() >= 3:
+                ctxt[S2_has_head] = st.has_head(st.S(2)) + 1
 
 
 ner = (
@@ -266,6 +264,32 @@ s0_n0 = (
     (S0p, S0rp, N0p),
     (S0p, N0lp, N0W),
     (S0p, N0lp, N0p),
+    (S0L, N0p),
+    (S0p, S0rL, N0p),
+    (S0p, N0lL, N0p),
+    (S0p, S0rv, N0p),
+    (S0p, N0lv, N0p),
+    (S0c6, S0rL, S0r2L, N0p),
+    (S0p, N0lL, N0l2L, N0p),
+)
+
+
+s1_s0 = (
+    (S1p, S0p),
+    (S1p, S0p, S0_has_head),
+    (S1W, S0p),
+    (S1W, S0p, S0_has_head),
+    (S1c, S0p),
+    (S1c, S0p, S0_has_head),
+    (S1p, S1rL, S0p),
+    (S1p, S1rL, S0p, S0_has_head),
+    (S1p, S0lL, S0p),
+    (S1p, S0lL, S0p, S0_has_head),
+    (S1p, S0lL, S0l2L, S0p),
+    (S1p, S0lL, S0l2L, S0p, S0_has_head),
+    (S1L, S0L, S0W),
+    (S1L, S0L, S0p),
+    (S1p, S1L, S0L, S0p),
 )
 
 
@@ -277,6 +301,8 @@ s1_n0 = (
     (S1W, S1p, N0p),
     (S1p, N0W, N0p),
     (S1c6, S1p, N0c6, N0p),
+    (S1L, N0p),
+    (S1p, S1rL, N0p),
 )
 
 
@@ -288,6 +314,8 @@ s0_n1 = (
     (S0W, S0p, N1p),
     (S0p, N1W, N1p),
     (S0c6, S0p, N1c6, N1p),
+    (S0L, N1p),
+    (S0p, S0rL, N1p),
 )
 
 

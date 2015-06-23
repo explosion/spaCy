@@ -5,8 +5,6 @@ from .._ml cimport Model
 from .arc_eager cimport TransitionSystem
 
 from ..tokens cimport Tokens, TokenC
-from ._state cimport State
-
 
 
 cdef class Parser:

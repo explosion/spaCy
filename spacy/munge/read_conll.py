@@ -10,11 +10,12 @@ def parse(sent_text, strip_bad_periods=False):
     assert sent_text
     annot = []
     words = []
-    id_map = {}
+    id_map = {-1: -1}
     for i, line in enumerate(sent_text.split('\n')):
         word, tag, head, dep = _parse_line(line)
         if strip_bad_periods and words and _is_bad_period(words[-1], word):
             continue
+        id_map[i] = len(words)
   
         annot.append({
             'id': len(words),
@@ -23,6 +24,8 @@ def parse(sent_text, strip_bad_periods=False):
             'head': int(head) - 1,
             'dep': dep})
         words.append(word)
+    for entry in annot:
+        entry['head'] = id_map[entry['head']]
     return words, annot
 
 

@@ -68,7 +68,7 @@ cdef struct TokenC:
     int sense
     int head
     int dep
-    bint sent_end
+    bint sent_start
 
     uint32_t l_kids
     uint32_t r_kids

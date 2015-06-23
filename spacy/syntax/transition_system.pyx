@@ -1,7 +1,8 @@
 from cymem.cymem cimport Pool
-from ._state cimport State
 from ..structs cimport TokenC
 from thinc.typedefs cimport weight_t
+
+from .stateclass cimport StateClass
 
 
 cdef weight_t MIN_SCORE = -90000
@@ -27,10 +28,10 @@ cdef class TransitionSystem:
                 i += 1
         self.c = moves
 
-    cdef int initialize_state(self, State* state) except -1:
+    cdef int initialize_state(self, StateClass state) except -1:
         pass
 
-    cdef int finalize_state(self, State* state) except -1:
+    cdef int finalize_state(self, StateClass state) except -1:
         pass
 
     cdef int preprocess_gold(self, GoldParse gold) except -1:
@@ -42,62 +43,30 @@ cdef class TransitionSystem:
     cdef Transition init_transition(self, int clas, int move, int label) except *:
         raise NotImplementedError
 
-    cdef Transition best_valid(self, const weight_t* scores, const State* s) except *:
+    cdef Transition best_valid(self, const weight_t* scores, StateClass s) except *:
         raise NotImplementedError
     
-    cdef int set_valid(self, bint* output, const State* state) except -1:
+    cdef int set_valid(self, bint* output, StateClass state) except -1:
         raise NotImplementedError
 
-    cdef int set_costs(self, int* output, const State* s, GoldParse gold) except -1:
+    cdef int set_costs(self, int* output, StateClass stcls, GoldParse gold) except -1:
         cdef int i
         for i in range(self.n_moves):
-            output[i] = self.c[i].get_cost(s, &gold.c, self.c[i].label)
+            if self.c[i].is_valid(stcls, self.c[i].label):
+                output[i] = self.c[i].get_cost(stcls, &gold.c, self.c[i].label)
+            else:
+                output[i] = 9000
 
-    cdef Transition best_gold(self, const weight_t* scores, const State* s,
+    cdef Transition best_gold(self, const weight_t* scores, StateClass stcls,
                               GoldParse gold) except *:
         cdef Transition best
         cdef weight_t score = MIN_SCORE
         cdef int i
         for i in range(self.n_moves):
-            cost = self.c[i].get_cost(s, &gold.c, self.c[i].label)
-            if scores[i] > score and cost == 0:
-                best = self.c[i]
-                score = scores[i]
+            if self.c[i].is_valid(stcls, self.c[i].label):
+                cost = self.c[i].get_cost(stcls, &gold.c, self.c[i].label)
+                if scores[i] > score and cost == 0:
+                    best = self.c[i]
+                    score = scores[i]
         assert score > MIN_SCORE
         return best
-
-
-#cdef class PyState:
-#    """Provide a Python class for testing purposes."""
-#    def __init__(self, GoldParse gold):
-#        self.mem = Pool()
-#        self.system = EntityRecognition(labels)
-#        self._state = init_state(self.mem, tokens, gold.length)
-#
-#    def transition(self, name):
-#        cdef const Transition* trans = self._transition_by_name(name)
-#        trans.do(trans, self._state)
-#
-#    def is_valid(self, name):
-#        cdef const Transition* trans = self._transition_by_name(name)
-#        return _is_valid(trans.move, trans.label, self._state)
-#
-#    def is_gold(self, name):
-#        cdef const Transition* trans = self._transition_by_name(name)
-#        return _get_const(trans, self._state, self._gold)
-#
-#    property ent:
-#        def __get__(self):
-#            pass
-#
-#    property n_ents:
-#        def __get__(self):
-#            pass
-#
-#    property i:
-#        def __get__(self):
-#            pass
-#
-#    property open_entity:
-#        def __get__(self):
-#            return entity_is_open(self._s)
