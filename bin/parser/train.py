@@ -130,14 +130,13 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                     raw_text = add_noise(raw_text, corruption_level)
                     tokens = nlp.tokenizer(raw_text)
                 nlp.tagger(tokens)
-                gold = GoldParse(tokens, annot_tuples, make_projective=False)
+                gold = GoldParse(tokens, annot_tuples, make_projective=True)
                 if not gold.is_projective:
                     raise Exception(
                         "Non-projective sentence in training, after we should "
                         "have enforced projectivity: %s" % annot_tuples
                     )
-                    loss += nlp.parser.train(tokens, gold)
-                            
+                loss += nlp.parser.train(tokens, gold)
                 nlp.entity.train(tokens, gold)
                 nlp.tagger.train(tokens, gold.tags)
         random.shuffle(gold_tuples)
