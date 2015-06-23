@@ -17,7 +17,8 @@ from .spans import Span
 from .structs cimport UniStr
 
 from unidecode import unidecode
-
+# Compiler crashes on memory view coercion without this. Should report bug.
+from cython.view cimport array as cvarray
 cimport numpy as np
 np.import_array()
 
