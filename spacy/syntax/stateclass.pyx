@@ -35,9 +35,9 @@ cdef class StateClass:
 
     cdef int E(self, int i) nogil:
         if self._e_i <= 0 or self._e_i >= self.length:
-            return -1
-        if i <= 0 or i >= self.length:
-            return -1
+            return 0
+        if i < 0 or i >= self.length:
+            return 0
         return self._ents[self._e_i-1].start
 
     cdef int L(self, int i, int idx) nogil:
@@ -203,11 +203,10 @@ cdef class StateClass:
             self._sent[head].l_kids -= 1
 
     cdef void open_ent(self, int label) nogil:
-        if 0 <= self._e_i < self.length:
-            self._ents[self._e_i].start = self.B(0)
-            self._ents[self._e_i].label = label
-            self._ents[self._e_i].end = -1
-            self._e_i += 1
+        self._ents[self._e_i].start = self.B(0)
+        self._ents[self._e_i].label = label
+        self._ents[self._e_i].end = -1
+        self._e_i += 1
 
     cdef void close_ent(self) nogil:
         self._ents[self._e_i-1].end = self.B(0)+1
