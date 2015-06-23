@@ -114,7 +114,7 @@ cdef bint _is_gold_root(const GoldParseC* gold, int word) nogil:
 cdef class Shift:
     @staticmethod
     cdef bint is_valid(StateClass st, int label) nogil:
-        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and not st.B_(0).sent_end
+        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and not st.B_(0).sent_start
 
     @staticmethod
     cdef int transition(StateClass st, int label) nogil:
@@ -163,7 +163,7 @@ cdef class Reduce:
 cdef class LeftArc:
     @staticmethod
     cdef bint is_valid(StateClass st, int label) nogil:
-        return not st.B_(0).sent_end
+        return not st.B_(0).sent_start
 
     @staticmethod
     cdef int transition(StateClass st, int label) nogil:
@@ -196,7 +196,7 @@ cdef class LeftArc:
 cdef class RightArc:
     @staticmethod
     cdef bint is_valid(StateClass st, int label) nogil:
-        return not st.B_(0).sent_end
+        return not st.B_(0).sent_start
 
     @staticmethod
     cdef int transition(StateClass st, int label) nogil:
@@ -367,9 +367,9 @@ cdef class ArcEager(TransitionSystem):
         return t
 
     cdef int initialize_state(self, StateClass st) except -1:
-        # Ensure sent_end is set to 0 throughout
+        # Ensure sent_start is set to 0 throughout
         for i in range(st.length):
-            st._sent[i].sent_end = False
+            st._sent[i].sent_start = False
         st.fast_forward()
 
     cdef int finalize_state(self, StateClass st) except -1:

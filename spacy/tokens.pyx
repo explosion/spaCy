@@ -186,15 +186,12 @@ cdef class Tokens:
         """
         cdef int i
         cdef Tokens sent = Tokens(self.vocab, self._string[self.data[0].idx:])
-        start = None
-        for i in range(self.length):
-            if start is None:
+        start = 0
+        for i in range(1, self.length):
+            if self.data[i].sent_start:
+                yield Span(self, start, i)
                 start = i
-            if self.data[i].sent_end:
-                yield Span(self, start, i+1)
-                start = None
-        if start is not None:
-            yield Span(self, start, self.length)
+        yield Span(self, start, self.length)
 
     cdef int push_back(self, int idx, LexemeOrToken lex_or_tok) except -1:
         if self.length == self.max_length:

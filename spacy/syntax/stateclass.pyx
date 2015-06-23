@@ -219,7 +219,7 @@ cdef class StateClass:
 
     cdef void set_break(self, int _) nogil:
         if 0 <= self.B(0) < self.length: 
-            self._sent[self.B(0)].sent_end = True
+            self._sent[self.B(0)].sent_start = True
             self._break = self._b_i
 
     cdef void clone(self, StateClass src) nogil:
