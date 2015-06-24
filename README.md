@@ -1,9 +1,22 @@
 spaCy
 =====
 
-http://honnibal.github.io/spaCy
+http://spacy.io
 
-A pipeline for fast, state-of-the-art natural language processing. Commercial licenses available, otherwise under AGPL.
+The fastest natural language understanding pipeline available.  Focus on good API, easy installation, and documentation.
+
+Commercial licenses available, otherwise under AGPL.
+
+
+2015-06-24 v0.86
+----------------
+
+* Improvements in parser accuracy
+
+2015-06-08 v0.85
+----------------
+
+* Improvements in parser accuracy
 
 2015-05-12 v0.84
 ----------------

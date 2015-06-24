@@ -10,7 +10,7 @@ spaCy: Industrial-strength NLP
 
 .. _Issue Tracker: https://github.com/honnibal/spaCy/issues
 
-**2015-08-06**: `Version 0.85 released`_
+**2015-06-24**: `Version 0.86 released`_
 
 .. _Version 0.85 released: updates.html
 

@@ -10,6 +10,13 @@ To update your installation:
 
 Most updates ship a new model, so you will usually have to redownload the data.
 
+2015-06-24 v0.86
+----------------
+
+* Parser now more accurate, using novel non-monotonic transition system that's
+  currently under review.
+
+
 2015-05-12 v0.85
 ----------------
 
