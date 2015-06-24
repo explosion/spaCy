@@ -193,11 +193,13 @@ cdef class StateClass:
         cdef int i
         if child > head:
             self._sent[head].r_kids += 1
-            self._sent[head].r_edge = child
+            # Some transition systems can have a word in the buffer have a
+            # rightward child, e.g. from Unshift.
+            self._sent[head].r_edge = self._sent[child].r_edge
             i = 0
             while self.has_head(head) and i < self.length:
-                self._sent[head].r_edge = child
                 head = self.H(head)
+                self._sent[head].r_edge = self._sent[child].r_edge
                 i += 1 # Guard against infinite loops
         else:
             self._sent[head].l_kids += 1
