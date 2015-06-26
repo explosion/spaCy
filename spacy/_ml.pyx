@@ -24,7 +24,7 @@ cdef int arg_max(const weight_t* scores, const int n_classes) nogil:
     return best
 
 
-cdef int arg_max_if_true(const weight_t* scores, const bint* is_valid,
+cdef int arg_max_if_true(const weight_t* scores, const int* is_valid,
                          const int n_classes) nogil:
     cdef int i
     cdef int best = 0
@@ -54,21 +54,25 @@ cdef class Model:
             model_loc = path.join(model_loc, 'model')
         self.n_classes = n_classes
         self._extractor = Extractor(templates)
+        self.n_feats = self._extractor.n_templ
         self._model = LinearModel(n_classes, self._extractor.n_templ)
         self.model_loc = model_loc
         if self.model_loc and path.exists(self.model_loc):
             self._model.load(self.model_loc, freq_thresh=0)
 
     def predict(self, Example eg):
-        self.set_scores(eg.scores, eg.atoms)
-        eg.guess = arg_max_if_true(eg.scores, eg.is_valid, self.n_classes)
+        self.set_scores(<weight_t*>eg.scores.data, <atom_t*>eg.atoms.data)
+        eg.guess = arg_max_if_true(<weight_t*>eg.scores.data, <int*>eg.is_valid.data,
+                                   self.n_classes)
 
     def train(self, Example eg):
-        self.set_scores(eg.scores, eg.atoms)
-        eg.guess = arg_max_if_true(eg.scores, eg.is_valid, self.n_classes)
-        eg.best = arg_max_if_zero(eg.scores, eg.costs, self.n_classes)
+        self.set_scores(<weight_t*>eg.scores.data, <atom_t*>eg.atoms.data)
+        eg.guess = arg_max_if_true(<weight_t*>eg.scores.data,
+                                   <int*>eg.is_valid.data, self.n_classes)
+        eg.best = arg_max_if_zero(<weight_t*>eg.scores.data, <int*>eg.costs.data,
+                                  self.n_classes)
         eg.cost = eg.costs[eg.guess]
-        self.update(eg.atoms, eg.guess, eg.best, eg.cost)
+        self.update(<atom_t*>eg.atoms.data, eg.guess, eg.best, eg.cost)
 
     cdef const weight_t* score(self, atom_t* context) except NULL:
         cdef int n_feats

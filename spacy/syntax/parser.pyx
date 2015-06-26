@@ -68,11 +68,11 @@ cdef class Parser:
         cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
         self.moves.initialize_state(stcls)
 
-        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE)
+        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE, self.model.n_feats)
         while not stcls.is_final():
             eg.wipe()
-            fill_context(eg.atoms, stcls)
-            self.moves.set_valid(eg.is_valid, stcls)
+            fill_context(<atom_t*>eg.atoms.data, stcls)
+            self.moves.set_valid(<bint*>eg.is_valid.data, stcls)
 
             self.model.predict(eg)
 
@@ -84,12 +84,12 @@ cdef class Parser:
         self.moves.preprocess_gold(gold)
         cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
         self.moves.initialize_state(stcls)
-        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE)
+        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE, self.model.n_feats)
         cdef int cost = 0
         while not stcls.is_final():
             eg.wipe()
-            fill_context(eg.atoms, stcls)
-            self.moves.set_costs(eg.is_valid, eg.costs, stcls, gold)
+            fill_context(<atom_t*>eg.atoms.data, stcls)
+            self.moves.set_costs(<bint*>eg.is_valid.data, <int*>eg.costs.data, stcls, gold)
 
             self.model.train(eg)
 

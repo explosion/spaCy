@@ -14,9 +14,14 @@ from .tokens cimport Tokens
 
 cdef int arg_max(const weight_t* scores, const int n_classes) nogil
 
+cdef int arg_max_if_true(const weight_t* scores, const int* is_valid,  int n_classes) nogil
+
+cdef int arg_max_if_zero(const weight_t* scores, const int* costs, int n_classes) nogil
+
 
 cdef class Model:
     cdef int n_classes
+    cdef int n_feats
     
     cdef const weight_t* score(self, atom_t* context) except NULL
     cdef int set_scores(self, weight_t* scores, atom_t* context) except -1
