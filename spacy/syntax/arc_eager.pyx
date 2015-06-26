@@ -398,7 +398,8 @@ cdef class ArcEager(TransitionSystem):
             n_valid += output[i]
         assert n_valid >= 1
 
-    cdef int set_costs(self, int* output, StateClass stcls, GoldParse gold) except -1:
+    cdef int set_costs(self, bint* is_valid, int* costs, 
+                       StateClass stcls, GoldParse gold) except -1:
         cdef int i, move, label
         cdef label_cost_func_t[N_MOVES] label_cost_funcs
         cdef move_cost_func_t[N_MOVES] move_cost_funcs
@@ -423,30 +424,14 @@ cdef class ArcEager(TransitionSystem):
         n_gold = 0
         for i in range(self.n_moves):
             if self.c[i].is_valid(stcls, self.c[i].label):
+                is_valid[i] = True
                 move = self.c[i].move
                 label = self.c[i].label
                 if move_costs[move] == -1:
                     move_costs[move] = move_cost_funcs[move](stcls, &gold.c)
-                output[i] = move_costs[move] + label_cost_funcs[move](stcls, &gold.c, label)
-                n_gold += output[i] == 0
+                costs[i] = move_costs[move] + label_cost_funcs[move](stcls, &gold.c, label)
+                n_gold += costs[i] == 0
             else:
-                output[i] = 9000
+                is_valid[i] = False
+                costs[i] = 9000
         assert n_gold >= 1
-
-    cdef Transition best_valid(self, const weight_t* scores, StateClass stcls) except *:
-        cdef bint[N_MOVES] is_valid
-        is_valid[SHIFT] = Shift.is_valid(stcls, -1)
-        is_valid[REDUCE] = Reduce.is_valid(stcls, -1)
-        is_valid[LEFT] = LeftArc.is_valid(stcls, -1)
-        is_valid[RIGHT] = RightArc.is_valid(stcls, -1)
-        is_valid[BREAK] = Break.is_valid(stcls, -1)
-        cdef Transition best
-        cdef weight_t score = MIN_SCORE
-        cdef int i
-        for i in range(self.n_moves):
-            if scores[i] > score and is_valid[self.c[i].move]:
-                best = self.c[i]
-                score = scores[i]
-        assert best.clas < self.n_moves
-        assert score > MIN_SCORE, (stcls.stack_depth(), stcls.buffer_length(), stcls.is_final(), stcls._b_i, stcls.length)
-        return best
