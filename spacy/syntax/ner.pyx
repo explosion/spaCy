@@ -128,27 +128,6 @@ cdef class BiluoPushDown(TransitionSystem):
             raise Exception(move)
         return t
 
-    cdef Transition best_valid(self, const weight_t* scores, StateClass stcls) except *:
-        cdef int best = -1
-        cdef weight_t score = -90000
-        cdef const Transition* m
-        cdef int i
-        for i in range(self.n_moves):
-            m = &self.c[i]
-            if m.is_valid(stcls, m.label) and scores[i] > score:
-                best = i
-                score = scores[i]
-        assert best >= 0
-        cdef Transition t = self.c[best]
-        t.score = score
-        return t
-
-    cdef int set_valid(self, bint* output, StateClass stcls) except -1:
-        cdef int i
-        for i in range(self.n_moves):
-            m = &self.c[i]
-            output[i] = m.is_valid(stcls, m.label)
-
 
 cdef class Missing:
     @staticmethod

@@ -19,17 +19,10 @@ from cymem.cymem cimport Pool, Address
 from murmurhash.mrmr cimport hash64
 from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
 
-
 from util import Config
 
-from thinc.features cimport Extractor
-from thinc.features cimport Feature
-from thinc.features cimport count_feats
+from thinc.api cimport Example
 
-from thinc.learner cimport LinearModel
-
-from thinc.search cimport Beam
-from thinc.search cimport MaxViolation
 
 from ..tokens cimport Tokens, TokenC
 from ..strings cimport StringStore
@@ -72,35 +65,86 @@ cdef class Parser:
         self.model = Model(self.moves.n_moves, templates, model_dir)
 
     def __call__(self, Tokens tokens):
-        if self.cfg.get('beam_width', 1) < 1:
-            self._greedy_parse(tokens)
-        else:
-            self._beam_parse(tokens)
+        cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
+        self.moves.initialize_state(stcls)
+
+        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE)
+        while not stcls.is_final():
+            eg.wipe()
+            fill_context(eg.atoms, stcls)
+            self.moves.set_valid(eg.is_valid, stcls)
+
+            self.model.predict(eg)
+
+            self.moves.c[eg.guess].do(stcls, self.moves.c[eg.guess].label)
+        self.moves.finalize_state(stcls)
+        tokens.set_parse(stcls._sent)
 
     def train(self, Tokens tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
-        if self.cfg.beam_width < 1:
-            return self._greedy_train(tokens, gold)
-        else:
-            return self._beam_train(tokens, gold)
-
-    cdef int _greedy_parse(self, Tokens tokens) except -1:
-        cdef atom_t[CONTEXT_SIZE] context
-        cdef int n_feats
-        cdef Pool mem = Pool()
         cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
         self.moves.initialize_state(stcls)
-        cdef Transition guess
-        words = [w.orth_ for w in tokens]
+        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE)
+        cdef int cost = 0
         while not stcls.is_final():
-            fill_context(context, stcls)
-            scores = self.model.score(context)
-            guess = self.moves.best_valid(scores, stcls)
-            #print self.moves.move_name(guess.move, guess.label), stcls.print_state(words)
-            guess.do(stcls, guess.label)
-            assert stcls._s_i >= 0
-        self.moves.finalize_state(stcls)
-        tokens.set_parse(stcls._sent)
+            eg.wipe()
+            fill_context(eg.atoms, stcls)
+            self.moves.set_costs(eg.is_valid, eg.costs, stcls, gold)
+
+            self.model.train(eg)
+
+            self.moves.c[eg.guess].do(stcls, self.moves.c[eg.guess].label)
+            cost += eg.cost
+        return cost
+
+
+# These are passed as callbacks to thinc.search.Beam
+"""
+cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) except -1:
+    dest = <StateClass>_dest
+    src = <StateClass>_src
+    moves = <const Transition*>_moves
+    dest.clone(src)
+    moves[clas].do(dest, moves[clas].label)
+
+
+cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
+    cdef StateClass st = StateClass.init(<const TokenC*>tokens, length)
+    st.fast_forward()
+    Py_INCREF(st)
+    return <void*>st
+
+
+cdef int _check_final_state(void* _state, void* extra_args) except -1:
+    return (<StateClass>_state).is_final()
+
+
+def _cleanup(Beam beam):
+    for i in range(beam.width):
+        Py_XDECREF(<PyObject*>beam._states[i].content)
+        Py_XDECREF(<PyObject*>beam._parents[i].content)
+
+cdef hash_t _hash_state(void* _state, void* _) except 0:
+    return <hash_t>_state
+    
+    #state = <const State*>_state
+    #cdef atom_t[10] rep
+
+    #rep[0] = state.stack[0] if state.stack_len >= 1 else 0
+    #rep[1] = state.stack[-1] if state.stack_len >= 2 else 0
+    #rep[2] = state.stack[-2] if state.stack_len >= 3 else 0
+    #rep[3] = state.i
+    #rep[4] = state.sent[state.stack[0]].l_kids if state.stack_len >= 1 else 0
+    #rep[5] = state.sent[state.stack[0]].r_kids if state.stack_len >= 1 else 0
+    #rep[6] = state.sent[state.stack[0]].dep if state.stack_len >= 1 else 0
+    #rep[7] = state.sent[state.stack[-1]].dep if state.stack_len >= 2 else 0
+    #if get_left(state, get_n0(state), 1) != NULL:
+    #    rep[8] = get_left(state, get_n0(state), 1).dep 
+    #else:
+    #    rep[8] = 0
+    #rep[9] = state.sent[state.i].l_kids
+    #return hash64(rep, sizeof(atom_t) * 10, 0)
+
 
     cdef int _beam_parse(self, Tokens tokens) except -1:
         cdef Beam beam = Beam(self.moves.n_moves, self.cfg.beam_width)
@@ -114,30 +158,6 @@ cdef class Parser:
         tokens.set_parse(state._sent)
         _cleanup(beam)
 
-    def _greedy_train(self, Tokens tokens, GoldParse gold):
-        cdef Pool mem = Pool()
-        cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
-        self.moves.initialize_state(stcls)
-
-        cdef int cost
-        cdef const Feature* feats
-        cdef const weight_t* scores
-        cdef Transition guess
-        cdef Transition best
-        cdef atom_t[CONTEXT_SIZE] context
-        loss = 0
-        words = [w.orth_ for w in tokens]
-        history = []
-        while not stcls.is_final():
-            fill_context(context, stcls)
-            scores = self.model.score(context)
-            guess = self.moves.best_valid(scores, stcls)
-            best = self.moves.best_gold(scores, stcls, gold)
-            cost = guess.get_cost(stcls, &gold.c, guess.label)
-            self.model.update(context, guess.clas, best.clas, cost)
-            guess.do(stcls, guess.label)
-            loss += cost
-        return loss
 
     def _beam_train(self, Tokens tokens, GoldParse gold_parse):
         cdef Beam pred = Beam(self.moves.n_moves, self.cfg.beam_width)
@@ -200,50 +220,4 @@ cdef class Parser:
             count_feats(counts[clas], feats, n_feats, inc)
             self.moves.c[clas].do(stcls, self.moves.c[clas].label)
 
-
-# These are passed as callbacks to thinc.search.Beam
-
-cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) except -1:
-    dest = <StateClass>_dest
-    src = <StateClass>_src
-    moves = <const Transition*>_moves
-    dest.clone(src)
-    moves[clas].do(dest, moves[clas].label)
-
-
-cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
-    cdef StateClass st = StateClass.init(<const TokenC*>tokens, length)
-    st.fast_forward()
-    Py_INCREF(st)
-    return <void*>st
-
-
-cdef int _check_final_state(void* _state, void* extra_args) except -1:
-    return (<StateClass>_state).is_final()
-
-
-def _cleanup(Beam beam):
-    for i in range(beam.width):
-        Py_XDECREF(<PyObject*>beam._states[i].content)
-        Py_XDECREF(<PyObject*>beam._parents[i].content)
-
-cdef hash_t _hash_state(void* _state, void* _) except 0:
-    return <hash_t>_state
-    
-    #state = <const State*>_state
-    #cdef atom_t[10] rep
-
-    #rep[0] = state.stack[0] if state.stack_len >= 1 else 0
-    #rep[1] = state.stack[-1] if state.stack_len >= 2 else 0
-    #rep[2] = state.stack[-2] if state.stack_len >= 3 else 0
-    #rep[3] = state.i
-    #rep[4] = state.sent[state.stack[0]].l_kids if state.stack_len >= 1 else 0
-    #rep[5] = state.sent[state.stack[0]].r_kids if state.stack_len >= 1 else 0
-    #rep[6] = state.sent[state.stack[0]].dep if state.stack_len >= 1 else 0
-    #rep[7] = state.sent[state.stack[-1]].dep if state.stack_len >= 2 else 0
-    #if get_left(state, get_n0(state), 1) != NULL:
-    #    rep[8] = get_left(state, get_n0(state), 1).dep 
-    #else:
-    #    rep[8] = 0
-    #rep[9] = state.sent[state.i].l_kids
-    #return hash64(rep, sizeof(atom_t) * 10, 0)
+"""
