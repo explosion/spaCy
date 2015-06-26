@@ -14,6 +14,8 @@ spaCy: Industrial-strength NLP
 
 .. _Version 0.86 released: updates.html
 
+`spaCy`_ 
+
 `spaCy`_ is a new library for text processing in Python and Cython.
 I wrote it because I think small companies are terrible at
 natural language processing (NLP).  Or rather:
@@ -53,7 +55,7 @@ spaCy since.  I'm now pleased to announce an alpha release.
 
 If you're a small company doing NLP, I think spaCy will seem like a minor miracle.
 It's by far the fastest NLP software ever released.
-The full processing pipeline completes in 7ms per document, including accurate
+The full processing pipeline completes in 20ms per document, including accurate
 tagging and parsing.  All strings are mapped to integer IDs, tokens are linked
 to embedded word representations, and a range of useful features are pre-calculated
 and cached.
