@@ -12,7 +12,7 @@ spaCy: Industrial-strength NLP
 
 **2015-06-24**: `Version 0.86 released`_
 
-.. _Version 0.85 released: updates.html
+.. _Version 0.86 released: updates.html
 
 `spaCy`_ is a new library for text processing in Python and Cython.
 I wrote it because I think small companies are terrible at
@@ -231,8 +231,45 @@ spaCy gives you easy and efficient access to them, which lets you build all
 sorts of use products and features that were previously impossible.
 
 
-Speed Comparison
-----------------
+Independent Evaluation
+----------------------
+
+.. table:: Independent evaluation by Yahoo! Labs and Emory
+  University, to appear at ACL 2015. Higher is better.
+  
+  +----------------+------------+------------+------------+
+  | System         | Language   | Accuracy   | Speed      |        
+  +----------------+------------+------------+------------+
+  | spaCy v0.86    | Cython     | 91.9       | **13,963** |
+  +----------------+------------+------------+------------+
+  | ClearNLP       | Java       | 91.7       | 10,271     |
+  +----------------+------------+------------+------------+
+  | spaCy v0.84    | Cython     | 90.9       | 13,963     |
+  +----------------+------------+------------+------------+
+  | CoreNLP        | Java       | 89.6       | 8,602      |
+  +----------------+------------+------------+------------+
+  | MATE           | Java       | **92.5**   | 550        |
+  +----------------+------------+------------+------------+
+  | Turbo          | C++        | 92.4       | 349        |
+  +----------------+------------+------------+------------+
+  | Yara           | Java       | 92.3       | 340        |
+  +----------------+------------+------------+------------+
+
+ 
+Accuracy is % unlabelled arcs correct, speed is tokens per second.
+
+Joel Tetreault and Amanda Stent (Yahoo! Labs) and Jin-ho Choi (Emory) performed
+a detailed comparison of the best parsers available.  All numbers above
+are taken from the pre-print they kindly made available to me,
+except for spaCy v0.86. 
+
+I'm particularly grateful to the authors for discussion of their results, which
+led to the improvement in accuracy between v0.84 and v0.86.  A tip from Jin-ho
+(developer of ClearNLP) was particularly useful.
+
+
+Detailed Speed Comparison
+-------------------------
 
 **Set up**: 100,000 plain-text documents were streamed from an SQLite3
 database, and processed with an NLP library, to one of three levels of detail
@@ -243,18 +280,18 @@ I report mean times per document, in milliseconds.
 
 **Hardware**: Intel i7-3770 (2012)
 
-.. table:: Efficiency comparison.  Lower is better.
+.. table:: Per-document processing times.  Lower is better.
 
   +--------------+---------------------------+--------------------------------+
   |              | Absolute (ms per doc)     | Relative (to spaCy)            |
   +--------------+----------+--------+-------+----------+---------+-----------+
   | System       | Tokenize | Tag    | Parse | Tokenize | Tag     | Parse     |
   +--------------+----------+--------+-------+----------+---------+-----------+
-  | spaCy        | 0.2ms    | 1ms    | 7ms   | 1x       | 1x      | 1x        |
+  | spaCy        | 0.2ms    | 1ms    | 19ms  | 1x       | 1x      | 1x        |
   +--------------+----------+--------+-------+----------+---------+-----------+
-  | CoreNLP      | 2ms      | 10ms   | 49ms  | 10x      | 10x     | 7x        |
+  | CoreNLP      | 2ms      | 10ms   | 49ms  | 10x      | 10x     | 2.6x      |
   +--------------+----------+--------+-------+----------+---------+-----------+
-  | ZPar         | 1ms      | 8ms    | 850ms | 5x       | 8x      | 121x      |
+  | ZPar         | 1ms      | 8ms    | 850ms | 5x       | 8x      | 44.7x     |
   +--------------+----------+--------+-------+----------+---------+-----------+
   | NLTK         | 4ms      | 443ms  | n/a   | 20x      | 443x    |  n/a      |
   +--------------+----------+--------+-------+----------+---------+-----------+
@@ -289,38 +326,7 @@ representations.
   clarify any detail of the algorithms I've implemented.
   It's evaluated against the current best published systems, following the standard
   methodologies.  These evaluations show that it performs extremely well.
-
-Accuracy Comparison
--------------------
-
-.. table:: Accuracy comparison, on the standard benchmark data from the Wall Street Journal.
-
-  +--------------+----------+------------+
-  | System       | POS acc. | Parse acc. |
-  +--------------+----------+------------+
-  | spaCy        | 97.2     | 92.4       |
-  +--------------+----------+------------+
-  | CoreNLP      | 96.9     | 92.2       |
-  +--------------+----------+------------+
-  | ZPar         | 97.3     | 92.9       |
-  +--------------+----------+------------+
-  | Redshift     | 97.3     | 93.5       |
-  +--------------+----------+------------+
-  | NLTK         | 94.3     | n/a        |
-  +--------------+----------+------------+
-
 .. See `Benchmarks`_ for details.
-
-The table above compares spaCy to some of the current state-of-the-art systems,
-on the standard evaluation from the Wall Street Journal, given gold-standard
-sentence boundaries and tokenization.  I'm in the process of completing a more
-realistic evaluation on web text.
-
-
-spaCy's parser offers a better speed/accuracy trade-off than any published
-system: its accuracy is within 1% of the current state-of-the-art, and it's
-seven times faster than the 2014 CoreNLP neural network parser, which is the
-previous fastest parser that I'm aware of.
 
 
 .. toctree::
