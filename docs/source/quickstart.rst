@@ -174,7 +174,7 @@ Features
     >>> tokens = nlp('Apple computers')
     >>> tokens[0].is_alpha, tokens[0].is_upper
     >>> True, False
-    >>> from spact.en.attrs import IS_ALPHA, IS_UPPER
+    >>> from spacy.en.attrs import IS_ALPHA, IS_UPPER
     >>> tokens.to_array((IS_ALPHA, IS_UPPER))[0]
     array([1, 0])
 
