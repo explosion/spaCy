@@ -84,7 +84,7 @@ def _merge_sents(sents):
 def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
           seed=0, gold_preproc=False, n_sents=0, corruption_level=0,
           verbose=False,
-          eta=0.01, mu=0.9, n_hidden=100,
+          eta=0.01, mu=0.9, nv_hidden=100,
           nv_word=10, nv_tag=10, nv_label=10):
     dep_model_dir = path.join(model_dir, 'deps')
     pos_model_dir = path.join(model_dir, 'pos')
@@ -105,7 +105,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
         features=feat_set,
         labels=Language.ParserTransitionSystem.get_labels(gold_tuples),
         vector_lengths=(nv_word, nv_tag, nv_label),
-        hidden_nodes=n_hidden,
+        hidden_nodes=nv_hidden,
         eta=eta,
         mu=mu
     )
@@ -123,7 +123,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                (nv_tag   * len(tags)) + \
                (nv_label * len(labels))
         print 'Compiling'
-        debug, train_func, predict_func = compile_theano_model(n_classes, n_hidden,
+        debug, train_func, predict_func = compile_theano_model(n_classes, nv_hidden,
                                                         n_in, 0.0, 0.0)
         print 'Done'
         return TheanoModel(
@@ -251,7 +251,7 @@ def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbos
     gold_train = list(read_json_file(train_loc))
     nlp = train(English, gold_train, model_dir,
                feat_set='embed',
-               nv_word=nv_word, nv_tag=nv_tag, nv_label=nv_label,
+               nv_word=nv_word, nv_tag=nv_tag, nv_label=nv_label, nv_hidden=nv_hidden,
                gold_preproc=gold_preproc, n_sents=n_sents,
                corruption_level=corruption_level, n_iter=n_iter,
                verbose=verbose)
