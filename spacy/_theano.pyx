@@ -28,7 +28,7 @@ cdef class TheanoModel(Model):
         self.model_loc = model_loc
         
     def predict(self, Example eg):
-        self.input_layer.fill(eg.embeddings, eg.atoms)
+        self.input_layer.fill(eg.embeddings, eg.atoms, use_avg=True)
         theano_scores = self.predict_func(eg.embeddings)[0]
         cdef int i
         for i in range(self.n_classes):
@@ -37,7 +37,7 @@ cdef class TheanoModel(Model):
                                    self.n_classes)
 
     def train(self, Example eg):
-        self.input_layer.fill(eg.embeddings, eg.atoms)
+        self.input_layer.fill(eg.embeddings, eg.atoms, use_avg=False)
         theano_scores, update, y = self.train_func(eg.embeddings, eg.costs, self.eta)
         self.input_layer.update(update, eg.atoms, self.t, self.eta, self.mu)
         for i in range(self.n_classes):
