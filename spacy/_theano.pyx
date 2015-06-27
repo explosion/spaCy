@@ -9,7 +9,8 @@ from os import path
 
 
 cdef class TheanoModel(Model):
-    def __init__(self, n_classes, input_spec, train_func, predict_func, model_loc=None):
+    def __init__(self, n_classes, input_spec, train_func, predict_func, model_loc=None,
+                 debug=None):
         if model_loc is not None and path.isdir(model_loc):
             model_loc = path.join(model_loc, 'model')
 
@@ -20,6 +21,7 @@ cdef class TheanoModel(Model):
         self.input_layer = InputLayer(input_spec, initializer)
         self.train_func = train_func
         self.predict_func = predict_func
+        self.debug = debug
 
         self.n_classes = n_classes
         self.n_feats = len(self.input_layer)
@@ -27,7 +29,7 @@ cdef class TheanoModel(Model):
         
     def predict(self, Example eg):
         self.input_layer.fill(eg.embeddings, eg.atoms)
-        theano_scores = self.predict_func(eg.embeddings)
+        theano_scores = self.predict_func(eg.embeddings)[0]
         cdef int i
         for i in range(self.n_classes):
             eg.scores[i] = theano_scores[i]
@@ -35,10 +37,17 @@ cdef class TheanoModel(Model):
                                    self.n_classes)
 
     def train(self, Example eg):
-        self.predict(eg)
-        update, t, eta, mu = self.train_func(eg.embeddings, eg.scores, eg.costs)
-        self.input_layer.update(eg.atoms, update, self.t, self.eta, self.mu)
+        self.input_layer.fill(eg.embeddings, eg.atoms)
+        theano_scores, update, y = self.train_func(eg.embeddings, eg.costs, self.eta)
+        self.input_layer.update(update, eg.atoms, self.t, self.eta, self.mu)
+        for i in range(self.n_classes):
+            eg.scores[i] = theano_scores[i]
+        eg.guess = arg_max_if_true(<weight_t*>eg.scores.data, <int*>eg.is_valid.data,
+                                   self.n_classes)
         eg.best = arg_max_if_zero(<weight_t*>eg.scores.data, <int*>eg.costs.data,
                                   self.n_classes)
         eg.cost = eg.costs[eg.guess]
         self.t += 1
+
+    def end_training(self):
+        pass

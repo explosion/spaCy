@@ -355,3 +355,7 @@ trigrams = (
     (N0W, N0p, N0lL, N0l2L),
     (N0p, N0lL, N0l2L),
 )
+
+words = (S0w, N0w, S1w, N1w)
+tags = (S0p, N0p, S1p, N1p)
+labels = (S0L, N0L, S1L, S2L)
