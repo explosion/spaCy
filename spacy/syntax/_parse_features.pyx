@@ -356,6 +356,57 @@ trigrams = (
     (N0p, N0lL, N0l2L),
 )
 
-words = (S0w, N0w, S1w, N1w)
-tags = (S0p, N0p, S1p, N1p)
-labels = (S0L, N0L, S1L, S2L)
+
+words = (
+    S2w,
+    S1w,
+    S1rw,
+    S0lw,
+    S0l2w,
+    S0w,
+    S0r2w,
+    S0rw,
+    N0lw,
+    N0l2w,
+    N0w,
+    N1w,
+    N2w,
+    P1w,
+    P2w
+)
+
+tags = (
+    S2p,
+    S1p,
+    S1rp,
+    S0lp,
+    S0l2p,
+    S0p,
+    S0r2p,
+    S0rp,
+    N0lp,
+    N0l2p,
+    N0p,
+    N1p,
+    N2p,
+    P1p,
+    P2p
+)
+
+labels = (
+    S2L,
+    S1L,
+    S1rL,
+    S0lL,
+    S0l2L,
+    S0L,
+    S0r2L,
+    S0rL,
+    N0lL,
+    N0l2L,
+    N0L,
+    N1L,
+    N2L,
+    P1L,
+    P2L
+)
