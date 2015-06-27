@@ -88,7 +88,7 @@ class Scorer(object):
                 self.tags.fp += 1
             else:
                 cand_tags.add((gold_i, token.tag_))
-            if token.dep_ not in ('p', 'punct') and token.orth_.strip():
+            if token.dep_.lower() not in ('p', 'punct') and token.orth_.strip():
                 gold_head = gold.cand_to_gold[token.head.i]
                 # None is indistinct, so we can't just add it to the set
                 # Multiple (None, None) deps are possible
