@@ -53,7 +53,7 @@ def get_templates(name):
     elif name == 'debug':
         return pf.unigrams
     elif name.startswith('embed'):
-        return ((10, pf.words), (10, pf.tags), (10, pf.labels))
+        return (pf.words, pf.tags, pf.labels)
     else:
         return (pf.unigrams + pf.s0_n0 + pf.s1_n0 + pf.s1_s0 + pf.s0_n1 + pf.n0_n1 + \
                 pf.tree_shape + pf.trigrams)
