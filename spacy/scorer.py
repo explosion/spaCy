@@ -46,7 +46,7 @@ class Scorer(object):
 
     @property
     def token_acc(self):
-        return self.tokens.fscore * 100
+        return self.tokens.precision * 100
 
     @property
     def uas(self):
@@ -85,8 +85,10 @@ class Scorer(object):
                 continue
             gold_i = gold.cand_to_gold[token.i]
             if gold_i is None:
-                self.tags.fp += 1
+                if token.dep_.lower() not in ('p', 'punct'):
+                    self.tokens.fp += 1
             else:
+                self.tokens.tp += 1
                 cand_tags.add((gold_i, token.tag_))
             if token.dep_.lower() not in ('p', 'punct') and token.orth_.strip():
                 gold_head = gold.cand_to_gold[token.head.i]
