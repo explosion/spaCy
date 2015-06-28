@@ -52,6 +52,8 @@ cdef class StateClass:
         if i < 0 or i >= self.length:
             return -1
         cdef const TokenC* target = &self._sent[i]
+        if target.l_kids < idx:
+            return -1
         cdef const TokenC* ptr = self._sent
 
         while ptr < target:
@@ -75,8 +77,10 @@ cdef class StateClass:
             return -1
         if i < 0 or i >= self.length:
             return -1
-        cdef const TokenC* ptr = self._sent + (self.length - 1)
         cdef const TokenC* target = &self._sent[i]
+        if target.r_kids < idx:
+            return -1
+        cdef const TokenC* ptr = self._sent + (self.length - 1)
         while ptr > target:
             # If this head is still to the right of us, we can skip to it
             # No token that's between this token and this head could be our
