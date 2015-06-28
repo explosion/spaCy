@@ -76,7 +76,6 @@ cdef class Parser:
             eg.wipe()
             fill_context(&eg.atoms[0], stcls)
             self.moves.set_valid(<bint*>&eg.is_valid[0], stcls)
-
             self.model.predict(eg)
 
             self.moves.c[eg.guess].do(stcls, self.moves.c[eg.guess].label)
