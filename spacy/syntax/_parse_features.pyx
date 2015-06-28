@@ -1,3 +1,4 @@
+# cython: profile=True
 """
 Fill an array, context, with every _atomic_ value our features reference.
 We then write the _actual features_ as tuples of the atoms. The machinery
@@ -245,6 +246,11 @@ unigrams = (
     (N0lW, N0lp),
     (N0lc6, N0lp),
     (N0lL,),
+
+    (S1lW, S1lp),
+    (S1lc6, S1lp),
+    (S1lL,),
+    (S1lp,),
 )
 
 
@@ -290,6 +296,7 @@ s1_s0 = (
     (S1L, S0L, S0W),
     (S1L, S0L, S0p),
     (S1p, S1L, S0L, S0p),
+    (S1p, S1lp, S0p),
 )
 
 
@@ -303,6 +310,7 @@ s1_n0 = (
     (S1c6, S1p, N0c6, N0p),
     (S1L, N0p),
     (S1p, S1rL, N0p),
+    (S1p, S1lp, S1rp, N0p)
 )
 
 
