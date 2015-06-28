@@ -1,3 +1,4 @@
+# cython: profile=True
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint32_t
 from ..vocab cimport EMPTY_LEXEME
