@@ -51,18 +51,21 @@ def get_templates(name):
         return pf.ner
     elif name == 'debug':
         return pf.unigrams
+    elif name.startswith('embed'):
+        return ((10, pf.words), (10, pf.tags), (10, pf.labels))
     else:
         return (pf.unigrams + pf.s0_n0 + pf.s1_n0 + pf.s1_s0 + pf.s0_n1 + pf.n0_n1 + \
                 pf.tree_shape + pf.trigrams)
 
 
 cdef class Parser:
-    def __init__(self, StringStore strings, model_dir, transition_system):
+    def __init__(self, StringStore strings, model_dir, transition_system,
+                 get_model=Model):
         assert os.path.exists(model_dir) and os.path.isdir(model_dir)
         self.cfg = Config.read(model_dir, 'config')
         self.moves = transition_system(strings, self.cfg.labels)
         templates = get_templates(self.cfg.features)
-        self.model = Model(self.moves.n_moves, templates, model_dir)
+        self.model = get_model(self.moves.n_moves, templates, model_dir)
 
     def __call__(self, Tokens tokens):
         cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
@@ -71,8 +74,8 @@ cdef class Parser:
         cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE, self.model.n_feats)
         while not stcls.is_final():
             eg.wipe()
-            fill_context(<atom_t*>eg.atoms.data, stcls)
-            self.moves.set_valid(<bint*>eg.is_valid.data, stcls)
+            fill_context(&eg.atoms[0], stcls)
+            self.moves.set_valid(<bint*>&eg.is_valid[0], stcls)
 
             self.model.predict(eg)
 
@@ -88,8 +91,8 @@ cdef class Parser:
         cdef int cost = 0
         while not stcls.is_final():
             eg.wipe()
-            fill_context(<atom_t*>eg.atoms.data, stcls)
-            self.moves.set_costs(<bint*>eg.is_valid.data, <int*>eg.costs.data, stcls, gold)
+            fill_context(&eg.atoms[0], stcls)
+            self.moves.set_costs(<bint*>&eg.is_valid[0], &eg.costs[0], stcls, gold)
 
             self.model.train(eg)
 

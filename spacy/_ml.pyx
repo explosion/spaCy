@@ -61,18 +61,18 @@ cdef class Model:
             self._model.load(self.model_loc, freq_thresh=0)
 
     def predict(self, Example eg):
-        self.set_scores(<weight_t*>eg.scores.data, <atom_t*>eg.atoms.data)
-        eg.guess = arg_max_if_true(<weight_t*>eg.scores.data, <int*>eg.is_valid.data,
+        self.set_scores(&eg.scores[0], &eg.atoms[0])
+        eg.guess = arg_max_if_true(&eg.scores[0], &eg.is_valid[0],
                                    self.n_classes)
 
     def train(self, Example eg):
-        self.set_scores(<weight_t*>eg.scores.data, <atom_t*>eg.atoms.data)
-        eg.guess = arg_max_if_true(<weight_t*>eg.scores.data,
-                                   <int*>eg.is_valid.data, self.n_classes)
-        eg.best = arg_max_if_zero(<weight_t*>eg.scores.data, <int*>eg.costs.data,
+        self.set_scores(&eg.scores[0], &eg.atoms[0])
+        eg.guess = arg_max_if_true(&eg.scores[0],
+                                   &eg.is_valid[0], self.n_classes)
+        eg.best = arg_max_if_zero(&eg.scores[0], &eg.costs[0],
                                   self.n_classes)
         eg.cost = eg.costs[eg.guess]
-        self.update(<atom_t*>eg.atoms.data, eg.guess, eg.best, eg.cost)
+        self.update(&eg.atoms[0], eg.guess, eg.best, eg.cost)
 
     cdef const weight_t* score(self, atom_t* context) except NULL:
         cdef int n_feats
