@@ -71,14 +71,17 @@ cdef class Parser:
         cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
         self.moves.initialize_state(stcls)
 
-        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE, self.model.n_feats)
+        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
+                                  self.model.n_feats, self.model.n_feats)
         while not stcls.is_final():
-            eg.wipe()
-            fill_context(&eg.atoms[0], stcls)
-            self.moves.set_valid(<bint*>&eg.is_valid[0], stcls)
+            memset(eg.c.scores, 0, eg.c.nr_class * sizeof(weight_t))
+        
+            self.moves.set_valid(<bint*>eg.c.is_valid, stcls)
+            fill_context(eg.c.atoms, stcls)
+            
             self.model.predict(eg)
 
-            self.moves.c[eg.guess].do(stcls, self.moves.c[eg.guess].label)
+            self.moves.c[eg.c.guess].do(stcls, self.moves.c[eg.c.guess].label)
         self.moves.finalize_state(stcls)
         tokens.set_parse(stcls._sent)
 
@@ -86,18 +89,22 @@ cdef class Parser:
         self.moves.preprocess_gold(gold)
         cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
         self.moves.initialize_state(stcls)
-        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE, self.model.n_feats)
+        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
+                                  self.model.n_feats, self.model.n_feats)
         cdef int cost = 0
         while not stcls.is_final():
-            eg.wipe()
-            fill_context(&eg.atoms[0], stcls)
-            self.moves.set_costs(<bint*>&eg.is_valid[0], &eg.costs[0], stcls, gold)
+            memset(eg.c.scores, 0, eg.c.nr_class * sizeof(weight_t))
+        
+            self.moves.set_costs(<bint*>eg.c.is_valid, eg.c.costs, stcls, gold)
+            
+            fill_context(eg.c.atoms, stcls)
 
             self.model.train(eg)
 
-            self.moves.c[eg.guess].do(stcls, self.moves.c[eg.guess].label)
-            cost += eg.cost
+            self.moves.c[eg.c.guess].do(stcls, self.moves.c[eg.c.guess].label)
+            cost += eg.c.cost
         return cost
+
 
 
 # These are passed as callbacks to thinc.search.Beam

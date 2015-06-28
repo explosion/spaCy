@@ -5,6 +5,7 @@ from cymem.cymem cimport Pool
 from thinc.learner cimport LinearModel
 from thinc.features cimport Extractor, Feature
 from thinc.typedefs cimport atom_t, feat_t, weight_t, class_t
+from thinc.api cimport ExampleC
 
 from preshed.maps cimport PreshMapArray
 

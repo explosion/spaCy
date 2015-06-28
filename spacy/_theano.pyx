@@ -1,4 +1,4 @@
-from thinc.api cimport Example
+from thinc.api cimport Example, ExampleC
 from thinc.typedefs cimport weight_t
 
 from ._ml cimport arg_max_if_true
@@ -33,20 +33,17 @@ cdef class TheanoModel(Model):
         cdef int i
         for i in range(self.n_classes):
             eg.scores[i] = theano_scores[i]
-        eg.guess = arg_max_if_true(&eg.scores[0], <int*>eg.is_valid[0],
-                                   self.n_classes)
+        eg.guess = arg_max_if_true(eg.c.scores, eg.c.is_valid, self.n_classes)
 
     def train(self, Example eg):
         self.input_layer.fill(eg.embeddings, eg.atoms, use_avg=False)
         theano_scores, update, y = self.train_func(eg.embeddings, eg.costs, self.eta)
         self.input_layer.update(update, eg.atoms, self.t, self.eta, self.mu)
         for i in range(self.n_classes):
-            eg.scores[i] = theano_scores[i]
-        eg.guess = arg_max_if_true(&eg.scores[0], <int*>eg.is_valid[0],
-                                   self.n_classes)
-        eg.best = arg_max_if_zero(&eg.scores[0], <int*>eg.costs[0],
-                                  self.n_classes)
-        eg.cost = eg.costs[eg.guess]
+            eg.c.scores[i] = theano_scores[i]
+        eg.guess = arg_max_if_true(eg.c.scores, eg.c.is_valid, self.n_classes)
+        eg.best = arg_max_if_zero(eg.c.scores, eg.c.costs, self.n_classes)
+        eg.cost = eg.c.costs[eg.guess]
         self.t += 1
 
     def end_training(self):
