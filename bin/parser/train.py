@@ -230,7 +230,7 @@ def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbos
     scorer = evaluate(English, list(read_json_file(dev_loc)),
                       model_dir, gold_preproc=gold_preproc, verbose=verbose,
                       beam_width=beam_width)
-    print 'TOK', 100-scorer.token_acc
+    print 'TOK', scorer.token_acc
     print 'POS', scorer.tags_acc
     print 'UAS', scorer.uas
     print 'LAS', scorer.las
