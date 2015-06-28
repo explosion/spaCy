@@ -38,5 +38,18 @@
         "its":   {"L": "-PRON-", "person": 3, "number": 1, "gender": 3, "case": 2},
         "our":   {"L": "-PRON-", "person": 1, "number": 1, "gender": 0, "case": 2},
         "their": {"L": "-PRON-", "person": 3, "number": 2, "gender": 0, "case": 2}
+    },
+    "JJR": {
+        "better": {"L": "good", "misc": 1}
+    },
+    "JJS": {
+        "best": {"L": "good", "misc": 2}
+    },
+    
+    "RBR": {
+        "better": {"L": "good", "misc": 1}
+    },
+    "RBS": {
+        "best": {"L": "good", "misc": 2}
     }
 }
