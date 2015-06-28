@@ -8,17 +8,22 @@ from ..structs cimport Entity
 cdef class StateClass:
     def __init__(self, int length):
         cdef Pool mem = Pool()
-        PADDING = 5
-        self._buffer = <int*>mem.alloc(length + PADDING, sizeof(int))
-        self._stack = <int*>mem.alloc(length + PADDING, sizeof(int))
-        self.shifted = <bint*>mem.alloc(length + PADDING, sizeof(bint))
-        self._sent = <TokenC*>mem.alloc(length + PADDING, sizeof(TokenC))
-        self._ents = <Entity*>mem.alloc(length + PADDING, sizeof(Entity))
+        cdef int PADDING = 5
+        self._buffer = <int*>mem.alloc(length + (PADDING * 2), sizeof(int))
+        self._stack = <int*>mem.alloc(length + (PADDING * 2), sizeof(int))
+        self.shifted = <bint*>mem.alloc(length + (PADDING * 2), sizeof(bint))
+        self._sent = <TokenC*>mem.alloc(length + (PADDING * 2), sizeof(TokenC))
+        self._ents = <Entity*>mem.alloc(length + (PADDING * 2), sizeof(Entity))
         cdef int i
-        for i in range(length):
+        for i in range(length + (PADDING * 2)):
             self._ents[i].end = -1
-        for i in range(length, length + PADDING):
+        for i in range(length, length + (PADDING * 2)):
             self._sent[i].lex = &EMPTY_LEXEME
+        self._sent += PADDING
+        self._ents += PADDING
+        self._buffer += PADDING
+        self._stack += PADDING
+        self.shifted += PADDING
         self.mem = mem
         self.length = length
         self._break = -1
