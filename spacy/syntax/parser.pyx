@@ -1,5 +1,4 @@
 # cython: profile=True
-# cython: experimental_cpp_class_def=True
 """
 MALT-style dependency parser
 """
