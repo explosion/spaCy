@@ -64,29 +64,21 @@ cdef int fill_context(atom_t* ctxt, StateClass st) except -1:
     # We could memset, but this makes it very easy to have broken features that
     # make almost no impact on accuracy. If instead they're unset, the impact
     # tends to be dramatic, so we get an obvious regression to fix...
-    cdef int s0 = st._stack[st._s_i-1]
-    cdef int s1 = st._stack[st._s_i-2]
-    cdef int s2 = st._stack[st._s_i-3]
-    cdef int n0 = st._buffer[st._b_i]
-    cdef int n1 = st._buffer[st._b_i+1]
-    cdef int n2 = st._buffer[st._b_i+2]
-    cdef int p1 = st._buffer[st._b_i-1]
-    cdef int p2 = st._buffer[st._b_i-2]
-    fill_token(&ctxt[S2w], &st._sent[s0])
-    fill_token(&ctxt[S1w], &st._sent[s1])
-    fill_token(&ctxt[S1rw], st.R_(s1, 1))
-    fill_token(&ctxt[S0lw], st.L_(s0, 1))
-    fill_token(&ctxt[S0l2w], st.L_(s0, 2))
-    fill_token(&ctxt[S0w], &st._sent[s0])
-    fill_token(&ctxt[S0r2w], st.R_(s0, 2))
-    fill_token(&ctxt[S0rw], st.R_(s0, 1))
-    fill_token(&ctxt[N0lw], st.L_(n0, 1))
-    fill_token(&ctxt[N0l2w], st.L_(n0, 2))
-    fill_token(&ctxt[N0w], &st._sent[n0])
-    fill_token(&ctxt[N1w], &st._sent[n1])
-    fill_token(&ctxt[N2w], &st._sent[n2])
-    fill_token(&ctxt[P1w], &st._sent[p1])
-    fill_token(&ctxt[P2w], &st._sent[p2])
+    fill_token(&ctxt[S2w], st.S_(2))
+    fill_token(&ctxt[S1w], st.S_(1))
+    fill_token(&ctxt[S1rw], st.R_(st.S(1), 1))
+    fill_token(&ctxt[S0lw], st.L_(st.S(0), 1))
+    fill_token(&ctxt[S0l2w], st.L_(st.S(0), 2))
+    fill_token(&ctxt[S0w], st.S_(0))
+    fill_token(&ctxt[S0r2w], st.R_(st.S(0), 2))
+    fill_token(&ctxt[S0rw], st.R_(st.S(0), 1))
+    fill_token(&ctxt[N0lw], st.L_(st.B(0), 1))
+    fill_token(&ctxt[N0l2w], st.L_(st.B(0), 2))
+    fill_token(&ctxt[N0w], st.B_(0))
+    fill_token(&ctxt[N1w], st.B_(1))
+    fill_token(&ctxt[N2w], st.B_(2))
+    fill_token(&ctxt[P1w], st.safe_get(st.B(0)-1))
+    fill_token(&ctxt[P2w], st.safe_get(st.B(0)-2))
 
     fill_token(&ctxt[E0w], st.E_(0))
     fill_token(&ctxt[E1w], st.E_(1))
