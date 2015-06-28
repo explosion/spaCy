@@ -59,7 +59,7 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[10] = token.ent_iob
         context[11] = token.ent_type
 
-cdef int fill_context(atom_t* ctxt, StateClass st) except -1:
+cdef int fill_context(atom_t* ctxt, StateClass st) nogil:
     # Take care to fill every element of context!
     # We could memset, but this makes it very easy to have broken features that
     # make almost no impact on accuracy. If instead they're unset, the impact
@@ -84,14 +84,14 @@ cdef int fill_context(atom_t* ctxt, StateClass st) except -1:
     fill_token(&ctxt[E1w], st.E_(1))
 
     if st.stack_depth() >= 1 and not st.eol():
-        ctxt[dist] = min(st.B(0) - st.E(0), 5)
+        ctxt[dist] = min_(st.B(0) - st.E(0), 5)
     else:
         ctxt[dist] = 0
-    ctxt[N0lv] = min(st.n_L(st.B(0)), 5)
-    ctxt[S0lv] = min(st.n_L(st.S(0)), 5)
-    ctxt[S0rv] = min(st.n_R(st.S(0)), 5)
-    ctxt[S1lv] = min(st.n_L(st.S(1)), 5)
-    ctxt[S1rv] = min(st.n_R(st.S(1)), 5)
+    ctxt[N0lv] = min_(st.n_L(st.B(0)), 5)
+    ctxt[S0lv] = min_(st.n_L(st.S(0)), 5)
+    ctxt[S0rv] = min_(st.n_R(st.S(0)), 5)
+    ctxt[S1lv] = min_(st.n_L(st.S(1)), 5)
+    ctxt[S1rv] = min_(st.n_R(st.S(1)), 5)
 
     ctxt[S0_has_head] = 0
     ctxt[S1_has_head] = 0
@@ -102,6 +102,10 @@ cdef int fill_context(atom_t* ctxt, StateClass st) except -1:
             ctxt[S1_has_head] = st.has_head(st.S(1)) + 1
             if st.stack_depth() >= 3:
                 ctxt[S2_has_head] = st.has_head(st.S(2)) + 1
+
+
+cdef inline int min_(int a, int b) nogil:
+    return a if a > b else b
 
 
 ner = (
