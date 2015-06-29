@@ -85,7 +85,7 @@ class AvgParam(object):
         self.step = wrapper(numpy.zeros(numpy_data.shape, numpy_data.dtype),
                             name=name+'_step')
 
-    def updates(self, cost, timestep, eta=0.001, mu=0.9):
+    def updates(self, cost, timestep, eta, mu):
         step = (mu * self.step) - T.grad(cost, self.curr)
         curr = self.curr + (eta * step)
         alpha = (1 / timestep).clip(0.001, 0.9).astype(floatX)
@@ -110,7 +110,7 @@ def relu(x):
 
 
 def _init_weights(n_in, n_out):
-    rng = numpy.random.RandomState(1234)
+    rng = numpy.random.RandomState(1235)
     
     weights = numpy.asarray(
         rng.standard_normal(size=(n_in, n_out)) * numpy.sqrt(2.0 / n_in),
@@ -125,6 +125,8 @@ def compile_theano_model(n_classes, n_hidden, n_in, L1_reg, L2_reg):
     is_gold = T.ivector('is_gold')
     x = T.vector('x') 
     y = T.scalar('y')
+    y_cost = T.scalar('y_cost')
+    loss = T.scalar('cost')
     timestep = theano.shared(1)
     eta = T.scalar('eta').astype(floatX)
     mu = T.scalar('mu').astype(floatX)
@@ -144,10 +146,9 @@ def compile_theano_model(n_classes, n_hidden, n_in, L1_reg, L2_reg):
                         x))
     stabilizer = 1e-8
 
-    cost = (
-        -T.log(T.sum((p_y_given_x[0] + stabilizer) * T.eq(costs, 0)))
-        + L2(L2_reg, maxent_W.curr, hidden_W.curr)
-    )
+    y_cost = costs[T.argmax(p_y_given_x[0])]
+
+    loss = -T.log(T.sum(p_y_given_x[0] * T.eq(costs, 0)) + stabilizer)
 
     debug = theano.function(
         name='debug',
@@ -158,14 +159,14 @@ def compile_theano_model(n_classes, n_hidden, n_in, L1_reg, L2_reg):
     train_model = theano.function(
         name='train_model',
         inputs=[x, costs, eta, mu],
-        outputs=[p_y_given_x[0], T.grad(cost, x), T.argmax(p_y_given_x, axis=1),
-                 cost],
+        outputs=[p_y_given_x[0], T.grad(loss, x), T.argmax(p_y_given_x, axis=1),
+                 loss],
         updates=(
             [(timestep, timestep + 1)] + 
-             maxent_W.updates(cost, timestep, eta=eta, mu=mu) + 
-             maxent_b.updates(cost, timestep, eta=eta, mu=mu) +
-             hidden_W.updates(cost, timestep, eta=eta, mu=mu) +
-             hidden_b.updates(cost, timestep, eta=eta, mu=mu)
+             maxent_W.updates(loss, timestep, eta, mu) + 
+             maxent_b.updates(loss, timestep, eta, mu) +
+             hidden_W.updates(loss, timestep, eta, mu) +
+             hidden_b.updates(loss, timestep, eta, mu)
         ),
         on_unused_input='warn'
     )
@@ -199,10 +200,24 @@ def score_model(scorer, nlp, annot_tuples, verbose=False):
 
 
 def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
-          seed=0, n_sents=0, 
-          verbose=False,
-          eta=0.01, mu=0.9, nv_hidden=100,
-          nv_word=10, nv_tag=10, nv_label=10):
+          eta=0.01, mu=0.9, nv_hidden=100, nv_word=10, nv_tag=10, nv_label=10,
+          seed=0, n_sents=0,  verbose=False):
+    def make_model(n_classes, (words, tags, labels), model_dir):
+        n_in = (nv_word  * len(words)) + \
+               (nv_tag   * len(tags)) + \
+               (nv_label * len(labels))
+        debug, train_func, predict_func = compile_theano_model(n_classes, nv_hidden,
+                                                               n_in, 0.0, 0.0)
+        return TheanoModel(
+            n_classes,
+            ((nv_word, words), (nv_tag, tags), (nv_label, labels)),
+            train_func,
+            predict_func,
+            model_loc=model_dir, 
+            eta=eta, mu=mu,
+            debug=debug)
+
+
     dep_model_dir = path.join(model_dir, 'deps')
     pos_model_dir = path.join(model_dir, 'pos')
     if path.exists(dep_model_dir):
@@ -227,22 +242,6 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
         gold_tuples = gold_tuples[:n_sents]
     
     nlp = Language(data_dir=model_dir)
-
-    def make_model(n_classes, (words, tags, labels), model_dir):
-        n_in = (nv_word  * len(words)) + \
-               (nv_tag   * len(tags)) + \
-               (nv_label * len(labels))
-        debug, train_func, predict_func = compile_theano_model(n_classes, nv_hidden,
-                                                        n_in, 0.0, 0.00)
-        return TheanoModel(
-            n_classes,
-            ((nv_word, words), (nv_tag, tags), (nv_label, labels)),
-            train_func,
-            predict_func,
-            model_loc=model_dir, 
-            eta=eta, mu=mu,
-            debug=debug)
-
     nlp._parser = Parser(nlp.vocab.strings, dep_model_dir, nlp.ParserTransitionSystem,
                          make_model)
 
