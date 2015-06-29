@@ -29,7 +29,7 @@ cdef class TheanoModel(Model):
         self.model_loc = model_loc
         
     def predict(self, Example eg):
-        self.input_layer.fill(eg.embeddings, eg.atoms, use_avg=False)
+        self.input_layer.fill(eg.embeddings, eg.atoms, use_avg=True)
         theano_scores = self.predict_func(eg.embeddings)[0]
         cdef int i
         for i in range(self.n_classes):
