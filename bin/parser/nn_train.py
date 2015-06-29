@@ -23,81 +23,163 @@ from spacy.gold import GoldParse
 
 from spacy.scorer import Scorer
 
-from thinc.theano_nn import compile_theano_model
-
 from spacy.syntax.parser import Parser
 from spacy._theano import TheanoModel
 
+import theano
+import theano.tensor as T
 
-def _corrupt(c, noise_level):
-    if random.random() >= noise_level:
-        return c
-    elif c == ' ':
-        return '\n'
-    elif c == '\n':
-        return ' '
-    elif c in ['.', "'", "!", "?"]:
-        return ''
-    else:
-        return c.lower()
+from theano.printing import Print
+
+import numpy
+from collections import OrderedDict, defaultdict
 
 
-def add_noise(orig, noise_level):
-    if random.random() >= noise_level:
-        return orig
-    elif type(orig) == list:
-        corrupted = [_corrupt(word, noise_level) for word in orig]
-        corrupted = [w for w in corrupted if w]
-        return corrupted
-    else:
-        return ''.join(_corrupt(c, noise_level) for c in orig)
+theano.config.floatX = 'float32'
+floatX = theano.config.floatX
 
 
-def score_model(scorer, nlp, raw_text, annot_tuples, verbose=False):
-    if raw_text is None:
-        tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
-    else:
-        tokens = nlp.tokenizer(raw_text)
+def th_share(w, name=''):
+    return theano.shared(value=w, borrow=True, name=name)
+
+
+class AvgParam(object):
+    def __init__(self, numpy_data, name='?', wrapper=th_share):
+        self.curr = wrapper(numpy_data, name=name+'_curr')
+        self.avg = self.curr
+        self.avg = wrapper(numpy_data.copy(), name=name+'_avg')
+        self.step = wrapper(numpy.zeros(numpy_data.shape, numpy_data.dtype),
+                            name=name+'_step')
+
+    def updates(self, cost, timestep, eta=0.001, mu=0.9):
+        step = (mu * self.step) - T.grad(cost, self.curr)
+        curr = self.curr + (eta * step)
+        alpha = (1 / timestep).clip(0.001, 0.9).astype(floatX)
+        avg = ((1 - alpha) * self.avg) + (alpha * curr)
+        return [(self.curr, curr), (self.step, step), (self.avg, avg)]
+
+
+def feed_layer(activation, weights, bias, input_):
+    return activation(T.dot(input_, weights) + bias)
+
+
+def L2(L2_reg, *weights):
+    return L2_reg * sum((w ** 2).sum() for w in weights)
+
+
+def L1(L1_reg, *weights):
+    return L1_reg * sum(abs(w).sum() for w in weights)
+
+
+def relu(x):
+    return x * (x > 0)
+
+
+def _init_weights(n_in, n_out):
+    rng = numpy.random.RandomState(1234)
+    weights = numpy.asarray(
+        numpy.random.normal(
+            loc=0.0,
+            scale=0.0001,
+            size=(n_in, n_out)),
+        dtype=theano.config.floatX
+    )
+    bias = 0.2 * numpy.ones((n_out,), dtype=theano.config.floatX)
+    return [AvgParam(weights, name='W'), AvgParam(bias, name='b')]
+
+
+def compile_theano_model(n_classes, n_hidden, n_in, L1_reg, L2_reg):
+    costs = T.ivector('costs')
+    is_gold = T.ivector('is_gold')
+    x = T.vector('x') 
+    y = T.scalar('y')
+    timestep = theano.shared(1)
+    eta = T.scalar('eta').astype(floatX)
+    mu = T.scalar('mu').astype(floatX)
+
+    maxent_W, maxent_b = _init_weights(n_hidden, n_classes)
+    hidden_W, hidden_b = _init_weights(n_in, n_hidden)
+
+    # Feed the inputs forward through the network
+    p_y_given_x = feed_layer(
+                    T.nnet.softmax,
+                    maxent_W.curr,
+                    maxent_b.curr,
+                      feed_layer(
+                        relu,
+                        hidden_W.curr,
+                        hidden_b.curr,
+                        x))
+    stabilizer = 1e-8
+
+    cost = (
+        -T.log(T.sum((p_y_given_x[0] + stabilizer) * T.eq(costs, 0)))
+        + L1(L1_reg, hidden_W.curr, hidden_b.curr)
+        + L2(L2_reg, hidden_W.curr, hidden_b.curr)
+    )
+
+    debug = theano.function(
+        name='debug',
+        inputs=[x, costs],
+        outputs=[p_y_given_x, T.eq(costs, 0), p_y_given_x[0] * T.eq(costs, 0)],
+    )
+
+    train_model = theano.function(
+        name='train_model',
+        inputs=[x, costs, eta, mu],
+        outputs=[p_y_given_x[0], T.grad(cost, x), T.argmax(p_y_given_x, axis=1),
+                 cost],
+        updates=(
+            [(timestep, timestep + 1)] + 
+             maxent_W.updates(cost, timestep, eta=eta, mu=mu) + 
+             maxent_b.updates(cost, timestep, eta=eta, mu=mu) +
+             hidden_W.updates(cost, timestep, eta=eta, mu=mu) +
+             hidden_b.updates(cost, timestep, eta=eta, mu=mu)
+        ),
+        on_unused_input='warn'
+    )
+
+    evaluate_model = theano.function(
+        name='evaluate_model',
+        inputs=[x],
+        outputs=[
+            feed_layer(
+              T.nnet.softmax,
+              maxent_W.curr,
+              maxent_b.curr,
+              feed_layer(
+                relu,
+                hidden_W.curr,
+                hidden_b.curr,
+                x
+              )
+            )[0]
+        ]
+    )
+    return debug, train_model, evaluate_model
+
+
+def score_model(scorer, nlp, annot_tuples, verbose=False):
+    tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
     nlp.tagger(tokens)
-    nlp.entity(tokens)
     nlp.parser(tokens)
     gold = GoldParse(tokens, annot_tuples)
     scorer.score(tokens, gold, verbose=verbose)
 
 
-def _merge_sents(sents):
-    m_deps = [[], [], [], [], [], []]
-    m_brackets = []
-    i = 0
-    for (ids, words, tags, heads, labels, ner), brackets in sents:
-        m_deps[0].extend(id_ + i for id_ in ids)
-        m_deps[1].extend(words)
-        m_deps[2].extend(tags)
-        m_deps[3].extend(head + i for head in heads)
-        m_deps[4].extend(labels)
-        m_deps[5].extend(ner)
-        m_brackets.extend((b['first'] + i, b['last'] + i, b['label']) for b in brackets)
-        i += len(ids)
-    return [(m_deps, m_brackets)]
-
-
 def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
-          seed=0, gold_preproc=False, n_sents=0, corruption_level=0,
+          seed=0, n_sents=0, 
           verbose=False,
           eta=0.01, mu=0.9, nv_hidden=100,
           nv_word=10, nv_tag=10, nv_label=10):
     dep_model_dir = path.join(model_dir, 'deps')
     pos_model_dir = path.join(model_dir, 'pos')
-    ner_model_dir = path.join(model_dir, 'ner')
     if path.exists(dep_model_dir):
         shutil.rmtree(dep_model_dir)
     if path.exists(pos_model_dir):
         shutil.rmtree(pos_model_dir)
-    if path.exists(ner_model_dir):
-        shutil.rmtree(ner_model_dir)
     os.mkdir(dep_model_dir)
     os.mkdir(pos_model_dir)
-    os.mkdir(ner_model_dir)
     setup_model_dir(sorted(POS_TAGS.keys()), POS_TAGS, POS_TEMPLATES, pos_model_dir)
 
     Config.write(dep_model_dir, 'config',
@@ -109,9 +191,6 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
         eta=eta,
         mu=mu
     )
-    Config.write(ner_model_dir, 'config', features='ner', seed=seed,
-                 labels=Language.EntityTransitionSystem.get_labels(gold_tuples),
-                 beam_width=0)
     
     if n_sents > 0:
         gold_tuples = gold_tuples[:n_sents]
@@ -122,57 +201,44 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
         n_in = (nv_word  * len(words)) + \
                (nv_tag   * len(tags)) + \
                (nv_label * len(labels))
-        print 'Compiling'
         debug, train_func, predict_func = compile_theano_model(n_classes, nv_hidden,
-                                                        n_in, 0.0, 0.0)
-        print 'Done'
+                                                        n_in, 0.0, 0.0001)
         return TheanoModel(
             n_classes,
             ((nv_word, words), (nv_tag, tags), (nv_label, labels)),
             train_func,
             predict_func,
             model_loc=model_dir, 
+            eta=eta, mu=mu,
             debug=debug)
 
     nlp._parser = Parser(nlp.vocab.strings, dep_model_dir, nlp.ParserTransitionSystem,
                          make_model)
 
     print "Itn.\tP.Loss\tUAS\tNER F.\tTag %\tToken %"
+    log_loc = path.join(model_dir, 'job.log')
     for itn in range(n_iter):
         scorer = Scorer()
         loss = 0
-        for raw_text, sents in gold_tuples:
-            if gold_preproc:
-                raw_text = None
-            else:
-                sents = _merge_sents(sents)
+        for _, sents in gold_tuples:
             for annot_tuples, ctnt in sents:
                 if len(annot_tuples[1]) == 1:
                     continue
-                score_model(scorer, nlp, raw_text, annot_tuples,
-                            verbose=verbose if itn >= 2 else False)
-                if raw_text is None:
-                    words = add_noise(annot_tuples[1], corruption_level)
-                    tokens = nlp.tokenizer.tokens_from_list(words)
-                else:
-                    raw_text = add_noise(raw_text, corruption_level)
-                    tokens = nlp.tokenizer(raw_text)
+                score_model(scorer, nlp, annot_tuples)
+                tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
                 nlp.tagger(tokens)
                 gold = GoldParse(tokens, annot_tuples, make_projective=True)
-                if not gold.is_projective:
-                    raise Exception(
-                        "Non-projective sentence in training, after we should "
-                        "have enforced projectivity: %s" % annot_tuples
-                    )
+                assert gold.is_projective
                 loss += nlp.parser.train(tokens, gold)
-                nlp.entity.train(tokens, gold)
                 nlp.tagger.train(tokens, gold.tags)
         random.shuffle(gold_tuples)
-        print '%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
-                                               scorer.tags_acc,
-                                               scorer.token_acc)
+        logline = '%d:\t%d\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas,
+                                                 scorer.tags_acc,
+                                                 scorer.token_acc)
+        print logline
+        with open(log_loc, 'aw') as file_:
+            file_.write(logline + '\n')
     nlp.parser.model.end_training()
-    nlp.entity.model.end_training()
     nlp.tagger.model.end_training()
     nlp.vocab.strings.dump(path.join(model_dir, 'vocab', 'strings.txt'))
     return nlp
@@ -181,46 +247,12 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
 def evaluate(nlp, gold_tuples, gold_preproc=True):
     scorer = Scorer()
     for raw_text, sents in gold_tuples:
-        if gold_preproc:
-            raw_text = None
-        else:
-            sents = _merge_sents(sents)
         for annot_tuples, brackets in sents:
-            if raw_text is None:
-                tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
-                nlp.tagger(tokens)
-                nlp.entity(tokens)
-                nlp.parser(tokens)
-            else:
-                tokens = nlp(raw_text, merge_mwes=False)
+            tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
+            nlp.tagger(tokens)
+            nlp.parser(tokens)
             gold = GoldParse(tokens, annot_tuples)
             scorer.score(tokens, gold)
-    return scorer
-
-
-def write_parses(Language, dev_loc, model_dir, out_loc, beam_width=None):
-    nlp = Language(data_dir=model_dir)
-    if beam_width is not None:
-        nlp.parser.cfg.beam_width = beam_width
-    gold_tuples = read_json_file(dev_loc)
-    scorer = Scorer()
-    out_file = codecs.open(out_loc, 'w', 'utf8')
-    for raw_text, sents in gold_tuples:
-        sents = _merge_sents(sents)
-        for annot_tuples, brackets in sents:
-            if raw_text is None:
-                tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
-                nlp.tagger(tokens)
-                nlp.entity(tokens)
-                nlp.parser(tokens)
-            else:
-                tokens = nlp(raw_text, merge_mwes=False)
-            gold = GoldParse(tokens, annot_tuples)
-            scorer.score(tokens, gold, verbose=False)
-            for t in tokens:
-                out_file.write(
-                    '%s\t%s\t%s\t%s\n' % (t.orth_, t.tag_, t.head.orth_, t.dep_)
-                )
     return scorer
 
 
@@ -229,9 +261,6 @@ def write_parses(Language, dev_loc, model_dir, out_loc, beam_width=None):
     dev_loc=("Location of development file or directory"),
     model_dir=("Location of output model directory",),
     eval_only=("Skip training, and only evaluate", "flag", "e", bool),
-    corruption_level=("Amount of noise to add to training data", "option", "c", float),
-    gold_preproc=("Use gold-standard sentence boundaries in training?", "flag", "g", bool),
-    out_loc=("Out location", "option", "o", str),
     n_sents=("Number of training sentences", "option", "n", int),
     n_iter=("Number of training iterations", "option", "i", int),
     verbose=("Verbose error reporting", "flag", "v", bool),
@@ -243,21 +272,20 @@ def write_parses(Language, dev_loc, model_dir, out_loc, beam_width=None):
     eta=("Learning rate", "option", "E", float),
     mu=("Momentum", "option", "M", float),
 )
-def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
-         corruption_level=0.0, gold_preproc=False,
+def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, verbose=False,
          nv_word=10, nv_tag=10, nv_label=10, nv_hidden=10,
-         eta=0.1, mu=0.9,
-         eval_only=False):
-    gold_train = list(read_json_file(train_loc))
+         eta=0.1, mu=0.9, eval_only=False):
+
+    gold_train = list(read_json_file(train_loc, lambda doc: 'wsj' in doc['id']))
+
     nlp = train(English, gold_train, model_dir,
                feat_set='embed',
+               eta=eta, mu=mu,
                nv_word=nv_word, nv_tag=nv_tag, nv_label=nv_label, nv_hidden=nv_hidden,
-               gold_preproc=gold_preproc, n_sents=n_sents,
-               corruption_level=corruption_level, n_iter=n_iter,
+               n_sents=n_sents, n_iter=n_iter,
                verbose=verbose)
-    #if out_loc:
-    #    write_parses(English, dev_loc, model_dir, out_loc, beam_width=beam_width)
-    scorer = evaluate(nlp, list(read_json_file(dev_loc)), gold_preproc=gold_preproc)
+
+    scorer = evaluate(nlp, list(read_json_file(dev_loc)))
     
     print 'TOK', 100-scorer.token_acc
     print 'POS', scorer.tags_acc
