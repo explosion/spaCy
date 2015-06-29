@@ -77,14 +77,12 @@ def relu(x):
 
 def _init_weights(n_in, n_out):
     rng = numpy.random.RandomState(1234)
+    
     weights = numpy.asarray(
-        numpy.random.normal(
-            loc=0.0,
-            scale=0.0001,
-            size=(n_in, n_out)),
+        rng.standard_normal(size=(n_in, n_out)) * numpy.sqrt(2.0 / n_in),
         dtype=theano.config.floatX
     )
-    bias = 0.2 * numpy.ones((n_out,), dtype=theano.config.floatX)
+    bias = numpy.zeros((n_out,), dtype=theano.config.floatX)
     return [AvgParam(weights, name='W'), AvgParam(bias, name='b')]
 
 
