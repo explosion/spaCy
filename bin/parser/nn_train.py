@@ -35,6 +35,7 @@ import numpy
 from collections import OrderedDict, defaultdict
 
 
+theano.config.profile = False
 theano.config.floatX = 'float32'
 floatX = theano.config.floatX
 
@@ -112,8 +113,7 @@ def compile_theano_model(n_classes, n_hidden, n_in, L1_reg, L2_reg):
 
     cost = (
         -T.log(T.sum((p_y_given_x[0] + stabilizer) * T.eq(costs, 0)))
-        + L1(L1_reg, hidden_W.curr, hidden_b.curr)
-        + L2(L2_reg, hidden_W.curr, hidden_b.curr)
+        + L2(L2_reg, maxent_W.curr, hidden_W.curr)
     )
 
     debug = theano.function(
@@ -143,12 +143,12 @@ def compile_theano_model(n_classes, n_hidden, n_in, L1_reg, L2_reg):
         outputs=[
             feed_layer(
               T.nnet.softmax,
-              maxent_W.curr,
-              maxent_b.curr,
+              maxent_W.avg,
+              maxent_b.avg,
               feed_layer(
                 relu,
-                hidden_W.curr,
-                hidden_b.curr,
+                hidden_W.avg,
+                hidden_b.avg,
                 x
               )
             )[0]
@@ -200,7 +200,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                (nv_tag   * len(tags)) + \
                (nv_label * len(labels))
         debug, train_func, predict_func = compile_theano_model(n_classes, nv_hidden,
-                                                        n_in, 0.0, 0.0001)
+                                                        n_in, 0.0, 0.00)
         return TheanoModel(
             n_classes,
             ((nv_word, words), (nv_tag, tags), (nv_label, labels)),
@@ -213,7 +213,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
     nlp._parser = Parser(nlp.vocab.strings, dep_model_dir, nlp.ParserTransitionSystem,
                          make_model)
 
-    print "Itn.\tP.Loss\tUAS\tNER F.\tTag %\tToken %"
+    print "Itn.\tP.Loss\tUAS\tTag %\tToken %"
     log_loc = path.join(model_dir, 'job.log')
     for itn in range(n_iter):
         scorer = Scorer()
@@ -273,6 +273,9 @@ def evaluate(nlp, gold_tuples, gold_preproc=True):
 def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, verbose=False,
          nv_word=10, nv_tag=10, nv_label=10, nv_hidden=10,
          eta=0.1, mu=0.9, eval_only=False):
+
+
+
 
     gold_train = list(read_json_file(train_loc, lambda doc: 'wsj' in doc['id']))
 
