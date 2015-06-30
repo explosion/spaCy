@@ -2,6 +2,7 @@ from ..attrs cimport FLAG0, FLAG1, FLAG2, FLAG3, FLAG4, FLAG5, FLAG6, FLAG7
 from ..attrs cimport FLAG8, FLAG9, FLAG10, FLAG11, FLAG12, FLAG13, FLAG14
 from ..attrs cimport FLAG15, FLAG16, FLAG17, FLAG18, FLAG19, FLAG20, FLAG21
 from ..attrs cimport FLAG22, FLAG23, FLAG24, FLAG25, FLAG26, FLAG27, FLAG28
+from ..attrs cimport FLAG29,  FLAG30, FLAG31, FLAG32
 from ..attrs cimport ORTH as _ORTH
 from ..attrs cimport SHAPE as _SHAPE
 from ..attrs cimport LOWER as _LOWER
