@@ -7,16 +7,11 @@ import wget
 import plac
 
 # TODO: Read this from the same source as the setup
-VERSION = '0.8.6'
+VERSION = '0.8.7'
 
 AWS_STORE = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com'
 
 ALL_DATA_DIR_URL = '%s/en_data_all-%s.tgz' % (AWS_STORE, VERSION)
-
-SM_DATA_DIR_URL = '%s/en_data_sm-%s.tgz' % (AWS_STORE, VERSION)
-
-SPEECH_DATA_DIR_URL = '%s/en_data_speech-%s.tgz' % (AWS_STORE, VERSION)
-
 
 DEST_DIR = path.join(path.dirname(__file__), 'data')
 

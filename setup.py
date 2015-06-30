@@ -118,7 +118,7 @@ def run_setup(exts):
         ext_modules=exts,
         license="Dual: Commercial or AGPL",
         install_requires=['numpy', 'murmurhash', 'cymem >= 1.11', 'preshed == 0.37',
-                          'thinc == 3.0', "unidecode", 'wget', 'plac', 'six',
+                          'thinc == 3.2', "unidecode", 'wget', 'plac', 'six',
                           'ujson'],
         setup_requires=["headers_workaround"],
     )
@@ -130,7 +130,7 @@ def run_setup(exts):
     headers_workaround.install_headers('numpy')
 
 
-VERSION = '0.86'
+VERSION = '0.87'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
