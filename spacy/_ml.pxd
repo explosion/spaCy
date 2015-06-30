@@ -21,8 +21,8 @@ cdef int arg_max_if_zero(const weight_t* scores, const int* costs, int n_classes
 
 
 cdef class Model:
-    cdef int n_classes
-    cdef int n_feats
+    cdef readonly int n_classes
+    cdef readonly int n_feats
     
     cdef const weight_t* score(self, atom_t* context) except NULL
     cdef int set_scores(self, weight_t* scores, atom_t* context) except -1

@@ -10,8 +10,7 @@ from os import path
 
 cdef class TheanoModel(Model):
     def __init__(self, n_classes, input_spec, train_func, predict_func, model_loc=None,
-                 eta=0.001, mu=0.9,
-                 debug=None):
+                 eta=0.001, mu=0.9, debug=None):
         if model_loc is not None and path.isdir(model_loc):
             model_loc = path.join(model_loc, 'model')
 

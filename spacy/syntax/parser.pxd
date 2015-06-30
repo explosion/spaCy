@@ -8,6 +8,6 @@ from ..tokens cimport Tokens, TokenC
 
 
 cdef class Parser:
-    cdef readonly object cfg
-    cdef readonly Model model
-    cdef readonly TransitionSystem moves
+    cdef public object cfg
+    cdef public Model model
+    cdef public TransitionSystem moves

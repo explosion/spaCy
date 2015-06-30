@@ -59,13 +59,11 @@ def get_templates(name):
 
 
 cdef class Parser:
-    def __init__(self, StringStore strings, model_dir, transition_system,
-                 get_model=Model):
+    def __init__(self, StringStore strings, model_dir, transition_system):
         assert os.path.exists(model_dir) and os.path.isdir(model_dir)
         self.cfg = Config.read(model_dir, 'config')
         self.moves = transition_system(strings, self.cfg.labels)
-        templates = get_templates(self.cfg.features)
-        self.model = get_model(self.moves.n_moves, templates, model_dir)
+        self.model = Model(self.moves.n_moves, self.cfg.templates, model_dir)
 
     def __call__(self, Tokens tokens):
         cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
@@ -73,6 +71,8 @@ cdef class Parser:
 
         cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
                                   self.model.n_feats, self.model.n_feats)
+        eg.scores[0] = 10
+        assert eg.c.scores[0] == 10
         while not stcls.is_final():
             memset(eg.c.scores, 0, eg.c.nr_class * sizeof(weight_t))
         
@@ -91,7 +91,9 @@ cdef class Parser:
         self.moves.initialize_state(stcls)
         cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
                                   self.model.n_feats, self.model.n_feats)
-        cdef int cost = 0
+        cdef weight_t loss = 0
+        words = [w.orth_ for w in tokens]
+        cdef Transition G
         while not stcls.is_final():
             memset(eg.c.scores, 0, eg.c.nr_class * sizeof(weight_t))
         
@@ -101,9 +103,13 @@ cdef class Parser:
 
             self.model.train(eg)
 
+            G = self.moves.c[eg.c.guess]
+
+            #if eg.c.cost != 0:
+            #    print self.moves.move_name(G.move, G.label), stcls.print_state(words)
             self.moves.c[eg.c.guess].do(stcls, self.moves.c[eg.c.guess].label)
-            cost += eg.c.cost
-        return cost
+            loss += eg.c.loss
+        return loss
 
 
 
