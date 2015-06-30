@@ -23,7 +23,7 @@ from spacy.gold import GoldParse
 
 from spacy.scorer import Scorer
 
-from spacy.syntax.parser import Parser
+from spacy.syntax.parser import Parser, get_templates
 from spacy._theano import TheanoModel
 
 import theano
@@ -40,76 +40,37 @@ theano.config.floatX = 'float32'
 floatX = theano.config.floatX
 
 
-def th_share(w, name=''):
-    return theano.shared(value=w, borrow=True, name=name)
-
-class Param(object):
-    def __init__(self, numpy_data, name='?', wrapper=th_share):
-        self.curr = wrapper(numpy_data, name=name+'_curr')
-        self.step = wrapper(numpy.zeros(numpy_data.shape, numpy_data.dtype),
-                            name=name+'_step')
-
-    def updates(self, cost, timestep, eta, mu):
-        step = (mu * self.step) - T.grad(cost, self.curr)
-        curr = self.curr + (eta * step)
-        return [(self.curr, curr), (self.step, step)]
-
-
-class AdadeltaParam(object):
-    def __init__(self, numpy_data, name='?', wrapper=th_share):
-        self.curr = wrapper(numpy_data, name=name+'_curr')
-        # accu: accumulate gradient magnitudes
-        self.accu = wrapper(numpy.zeros(numpy_data.shape, dtype=numpy_data.dtype))
-        # delta_accu: accumulate update magnitudes (recursively!)
-        self.delta_accu = wrapper(numpy.zeros(numpy_data.shape, dtype=numpy_data.dtype))
-
-    def updates(self, cost, timestep, eps, rho):
-        # update accu (as in rmsprop)
-        grad = T.grad(cost, self.curr)
-        accu_new = rho * self.accu + (1 - rho) * grad ** 2
-
-        # compute parameter update, using the 'old' delta_accu
-        update = (grad * T.sqrt(self.delta_accu + eps) /
-                  T.sqrt(accu_new + eps))
-        # update delta_accu (as accu, but accumulating updates)
-        delta_accu_new = rho * self.delta_accu + (1 - rho) * update ** 2
-        return [(self.curr, self.curr - update), (self.accu, accu_new),
-                (self.delta_accu, delta_accu_new)]
-
-
-class AvgParam(object):
-    def __init__(self, numpy_data, name='?', wrapper=th_share):
-        self.curr = wrapper(numpy_data, name=name+'_curr')
-        self.avg = self.curr
-        self.avg = wrapper(numpy_data.copy(), name=name+'_avg')
-        self.step = wrapper(numpy.zeros(numpy_data.shape, numpy_data.dtype),
-                            name=name+'_step')
-
-    def updates(self, cost, timestep, eta, mu):
-        step = (mu * self.step) - T.grad(cost, self.curr)
-        curr = self.curr + (eta * step)
-        alpha = (1 / timestep).clip(0.001, 0.9).astype(floatX)
-        avg = ((1 - alpha) * self.avg) + (alpha * curr)
-        return [(self.curr, curr), (self.step, step), (self.avg, avg)]
-
-
-def feed_layer(activation, weights, bias, input_):
-    return activation(T.dot(input_, weights) + bias)
+def L1(L1_reg, *weights):
+    return L1_reg * sum(abs(w).sum() for w in weights)
 
 
 def L2(L2_reg, *weights):
     return L2_reg * sum((w ** 2).sum() for w in weights)
 
 
-def L1(L1_reg, *weights):
-    return L1_reg * sum(abs(w).sum() for w in weights)
+def rms_prop(loss, params, eta=1.0, rho=0.9, eps=1e-6):
+    updates = OrderedDict()
+    for param in params:
+        value = param.get_value(borrow=True)
+        accu = theano.shared(np.zeros(value.shape, dtype=value.dtype),
+                             broadcastable=param.broadcastable)
+
+        grad = T.grad(loss, param)
+        accu_new = rho * accu + (1 - rho) * grad ** 2
+        updates[accu] = accu_new
+        updates[param] = param - (eta * grad / T.sqrt(accu_new + eps))
+    return updates
 
 
 def relu(x):
     return x * (x > 0)
 
 
-def _init_weights(n_in, n_out):
+def feed_layer(activation, weights, bias, input_):
+    return activation(T.dot(input_, weights) + bias)
+
+
+def init_weights(n_in, n_out):
     rng = numpy.random.RandomState(1235)
     
     weights = numpy.asarray(
@@ -117,57 +78,35 @@ def _init_weights(n_in, n_out):
         dtype=theano.config.floatX
     )
     bias = numpy.zeros((n_out,), dtype=theano.config.floatX)
-    return [AvgParam(weights, name='W'), AvgParam(bias, name='b')]
+    return [wrapper(weights, name='W'), wrapper(bias, name='b')]
 
 
-def compile_theano_model(n_classes, n_hidden, n_in, L1_reg, L2_reg):
-    costs = T.ivector('costs')
-    is_gold = T.ivector('is_gold')
+def compile_model(n_classes, n_hidden, n_in, optimizer):
     x = T.vector('x') 
-    y = T.scalar('y')
-    y_cost = T.scalar('y_cost')
-    loss = T.scalar('cost')
-    timestep = theano.shared(1)
-    eta = T.scalar('eta').astype(floatX)
-    mu = T.scalar('mu').astype(floatX)
+    costs = T.ivector('costs')
+    loss = T.scalar('loss')
 
-    maxent_W, maxent_b = _init_weights(n_hidden, n_classes)
-    hidden_W, hidden_b = _init_weights(n_in, n_hidden)
+    maxent_W, maxent_b = init_weights(n_hidden, n_classes)
+    hidden_W, hidden_b = init_weights(n_in, n_hidden)
 
     # Feed the inputs forward through the network
     p_y_given_x = feed_layer(
                     T.nnet.softmax,
-                    maxent_W.curr,
-                    maxent_b.curr,
+                    maxent_W,
+                    maxent_b,
                       feed_layer(
                         relu,
-                        hidden_W.curr,
-                        hidden_b.curr,
+                        hidden_W,
+                        hidden_b,
                         x))
-    stabilizer = 1e-8
 
-    y_cost = costs[T.argmax(p_y_given_x[0])]
-
-    loss = -T.log(T.sum(p_y_given_x[0] * T.eq(costs, 0)) + stabilizer)
-
-    debug = theano.function(
-        name='debug',
-        inputs=[x, costs],
-        outputs=[p_y_given_x, T.eq(costs, 0), p_y_given_x[0] * T.eq(costs, 0)],
-    )
+    loss = -T.log(T.sum(p_y_given_x[0] * T.eq(costs, 0)) + 1e-8)
 
     train_model = theano.function(
         name='train_model',
-        inputs=[x, costs, eta, mu],
-        outputs=[p_y_given_x[0], T.grad(loss, x), T.argmax(p_y_given_x, axis=1),
-                 loss],
-        updates=(
-            [(timestep, timestep + 1)] + 
-             maxent_W.updates(loss, timestep, eta, mu) + 
-             maxent_b.updates(loss, timestep, eta, mu) +
-             hidden_W.updates(loss, timestep, eta, mu) +
-             hidden_b.updates(loss, timestep, eta, mu)
-        ),
+        inputs=[x, costs],
+        outputs=[p_y_given_x[0], T.grad(loss, x), loss],
+        updates=optimizer(loss, [maxent_W, maxent_b, hidden_W, hidden_b]),
         on_unused_input='warn'
     )
 
@@ -177,18 +116,18 @@ def compile_theano_model(n_classes, n_hidden, n_in, L1_reg, L2_reg):
         outputs=[
             feed_layer(
               T.nnet.softmax,
-              maxent_W.avg,
-              maxent_b.avg,
+              maxent_W,
+              maxent_b,
               feed_layer(
                 relu,
-                hidden_W.avg,
-                hidden_b.avg,
+                hidden_W,
+                hidden_b,
                 x
               )
             )[0]
         ]
     )
-    return debug, train_model, evaluate_model
+    return train_model, evaluate_model
 
 
 def score_model(scorer, nlp, annot_tuples, verbose=False):
@@ -202,21 +141,6 @@ def score_model(scorer, nlp, annot_tuples, verbose=False):
 def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
           eta=0.01, mu=0.9, nv_hidden=100, nv_word=10, nv_tag=10, nv_label=10,
           seed=0, n_sents=0,  verbose=False):
-    def make_model(n_classes, (words, tags, labels), model_dir):
-        n_in = (nv_word  * len(words)) + \
-               (nv_tag   * len(tags)) + \
-               (nv_label * len(labels))
-        debug, train_func, predict_func = compile_theano_model(n_classes, nv_hidden,
-                                                               n_in, 0.0, 0.0)
-        return TheanoModel(
-            n_classes,
-            ((nv_word, words), (nv_tag, tags), (nv_label, labels)),
-            train_func,
-            predict_func,
-            model_loc=model_dir, 
-            eta=eta, mu=mu,
-            debug=debug)
-
 
     dep_model_dir = path.join(model_dir, 'deps')
     pos_model_dir = path.join(model_dir, 'pos')
@@ -230,21 +154,24 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
 
     Config.write(dep_model_dir, 'config',
         seed=seed,
-        features=feat_set,
+        templates=tuple(),
         labels=Language.ParserTransitionSystem.get_labels(gold_tuples),
         vector_lengths=(nv_word, nv_tag, nv_label),
         hidden_nodes=nv_hidden,
         eta=eta,
         mu=mu
     )
-    
+  
+    # Bake-in hyper-parameters
+    optimizer = lambda loss, params: rms_prop(loss, params, eta=eta, rho=rho, eps=eps)
+    nlp = Language(data_dir=model_dir)
+    n_classes = nlp.parser.model.n_classes
+    train, predict = compile_model(n_classes, nv_hidden, n_in, optimizer)
+    nlp.parser.model = TheanoModel(n_classes, input_spec, train,
+                                   predict, model_loc)
+ 
     if n_sents > 0:
         gold_tuples = gold_tuples[:n_sents]
-    
-    nlp = Language(data_dir=model_dir)
-    nlp._parser = Parser(nlp.vocab.strings, dep_model_dir, nlp.ParserTransitionSystem,
-                         make_model)
-
     print "Itn.\tP.Loss\tUAS\tTag %\tToken %"
     log_loc = path.join(model_dir, 'job.log')
     for itn in range(n_iter):
