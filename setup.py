@@ -103,7 +103,7 @@ def cython_setup(mod_names, language, includes, compile_args, link_args):
 def run_setup(exts):
     setup(
         name='spacy',
-        packages=['spacy', 'spacy.en', 'spacy.syntax'],
+        packages=['spacy', 'spacy.en', 'spacy.syntax', 'spacy.munge'],
         description="Industrial-strength NLP",
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
