@@ -2,18 +2,10 @@
 License
 =======
 
-.. note:: spaCy is currently in Alpha --- I'm not yet ready to sell full
-  licenses.  If you're interested in trying it, you should either use it under
-  the AGPL, or contact me for a trial commercial license.
+* Download the `license agreement`_
+* Get in touch: matt@spacy.io
 
-  matt@spacy.io
-
-
-I've been writing spaCy for six months now, and I'm very excited to release it.
-I think it's the most valuable thing I could have built.  When I was in
-academia, I noticed that small companies couldn't really make use of our work.
-Meanwhile the tech giants have been hiring *everyone*, and putting this stuff
-into production.  I think spaCy can change that.
+.. _license agreement: spacy_trial_free.docx
 
 
   +------------+-----------+----------+-------------------------------------+
@@ -21,10 +13,11 @@ into production.  I think spaCy can change that.
   +============+===========+==========+=====================================+
   | Commercial | $5,000    | Life     | Production use                      |
   +------------+-----------+----------+-------------------------------------+
-  | Trial      | $1        | 90 days  | Evaluation, seed startup            |
+  | Trial      | $0        | 90 days  | Evaluation, seed startup            |
   +------------+-----------+----------+-------------------------------------+
   | AGPLv3     | Free      | Life     | Research, teaching, hobbyists, FOSS |
   +------------+-----------+----------+-------------------------------------+
+
 
 To make spaCy as valuable as possible, licenses to it are for life.  You get
 complete transparency, certainty and control.
