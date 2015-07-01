@@ -18,6 +18,8 @@ from .stateclass cimport StateClass
 
 from cymem.cymem cimport Pool
 
+from ..cimport senses
+
 
 cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
     if token is NULL:
@@ -33,6 +35,7 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[9] = 0
         context[10] = 0
         context[11] = 0
+        context[12] = 0
     else:
         context[0] = token.lex.orth
         context[1] = token.lemma
@@ -58,6 +61,7 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[9] = token.lex.shape
         context[10] = token.ent_iob
         context[11] = token.ent_type
+        context[12] = token.lex.senses & senses.POS_SENSES[<int>token.pos]
 
 cdef int fill_context(atom_t* ctxt, StateClass st) nogil:
     # Take care to fill every element of context!
@@ -250,6 +254,22 @@ unigrams = (
     (N0lW, N0lp),
     (N0lc6, N0lp),
     (N0lL,),
+
+    (S2ss,),
+    (S1ss,),
+    (S1rss,),
+    (S0lss,),
+    (S0l2ss,),
+    (S0ss,),
+    (S0r2ss,),
+    (S0rss,),
+    (N0lss,),
+    (N0l2ss,),
+    (N0ss,),
+    (N1ss,),
+    (N2ss,),
+    (P1ss,),
+    (P2ss,),
 )
 
 
@@ -276,6 +296,7 @@ s0_n0 = (
     (S0p, N0lv, N0p),
     (S0c6, S0rL, S0r2L, N0p),
     (S0p, N0lL, N0l2L, N0p),
+    (S0ss, N0ss),
 )
 
 
@@ -296,6 +317,7 @@ s1_s0 = (
     (S1L, S0L, S0p),
     (S1p, S1L, S0L, S0p),
     (S1p, S0p),
+    (S1ss, S0ss),
 )
 
 
@@ -309,7 +331,8 @@ s1_n0 = (
     (S1c6, S1p, N0c6, N0p),
     (S1L, N0p),
     (S1p, S1rL, N0p),
-    (S1p, S1rp, N0p)
+    (S1p, S1rp, N0p),
+    (S1ss, N0ss),
 )
 
 
@@ -323,6 +346,7 @@ s0_n1 = (
     (S0c6, S0p, N1c6, N1p),
     (S0L, N1p),
     (S0p, S0rL, N1p),
+    (S0ss, N1ss),
 )
 
 
@@ -334,6 +358,7 @@ n0_n1 = (
     (N0c6, N0p, N1c6, N1p),
     (N0c, N1c),
     (N0p, N1c),
+    (N0ss, N1ss),
 )
 
 tree_shape = (
@@ -361,6 +386,7 @@ trigrams = (
 
     (N0W, N0p, N0lL, N0l2L),
     (N0p, N0lL, N0l2L),
+    (S1ss, S0ss, N0ss,), 
 )
 
 
