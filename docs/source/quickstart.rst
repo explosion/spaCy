@@ -62,13 +62,13 @@ a convenient API:
     >>> from spacy.en import English
     >>> nlp = English()
     >>> tokens = nlp(u'I ate the pizza with anchovies.')
-    >>> pizza = tokens[3]
-    >>> (pizza.orth, pizza.orth_, pizza.head.lemma, pizza.head.lemma_)
-    ... (14702, u'pizza', 14702, u'eat')
+    >>> ate = tokens[1]
+    >>> (ate.orth, ate.orth_, ate.head.lemma, ate.head.lemma_)
+    ... (216, u'ate', 669, u'eat')
 
 spaCy maps all strings to sequential integer IDs --- a common trick in NLP.
 If an attribute `Token.foo` is an integer ID, then `Token.foo_` is the string,
-e.g. `pizza.orth` and `pizza.orth_` provide the integer ID and the string of
+e.g. `ate.orth` and `ate.orth_` provide the integer ID and the string of
 the original orthographic form of the word.
 
   .. note::  en.English.__call__ is stateful --- it has an important **side-effect**.
