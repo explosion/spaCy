@@ -56,6 +56,7 @@ cpdef enum:
     V_social
     V_stative
     V_weather
+    N_SENSES
 
 
 cdef flags_t[<int>parts_of_speech.N_UNIV_TAGS] POS_SENSES
