@@ -34,11 +34,6 @@ cdef class StateClass:
             self._buffer[i] = i
         self._empty_token.lex = &EMPTY_LEXEME
 
-    cdef int H(self, int i) nogil:
-        if i < 0 or i >= self.length:
-            return -1
-        return self._sent[i].head + i
-
     cdef int E(self, int i) nogil:
         if self._e_i <= 0 or self._e_i >= self.length:
             return 0
@@ -52,6 +47,8 @@ cdef class StateClass:
         if i < 0 or i >= self.length:
             return -1
         cdef const TokenC* target = &self._sent[i]
+        if target.l_kids < idx:
+            return -1
         cdef const TokenC* ptr = self._sent
 
         while ptr < target:
@@ -75,8 +72,10 @@ cdef class StateClass:
             return -1
         if i < 0 or i >= self.length:
             return -1
-        cdef const TokenC* ptr = self._sent + (self.length - 1)
         cdef const TokenC* target = &self._sent[i]
+        if target.r_kids < idx:
+            return -1
+        cdef const TokenC* ptr = self._sent + (self.length - 1)
         while ptr > target:
             # If this head is still to the right of us, we can skip to it
             # No token that's between this token and this head could be our
@@ -91,68 +90,6 @@ cdef class StateClass:
             else:
                 ptr -= 1
         return -1
-
-    cdef const TokenC* S_(self, int i) nogil:
-        return self.safe_get(self.S(i))
-
-    cdef const TokenC* B_(self, int i) nogil:
-        return self.safe_get(self.B(i))
-
-    cdef const TokenC* H_(self, int i) nogil:
-        return self.safe_get(self.H(i))
-
-    cdef const TokenC* E_(self, int i) nogil:
-        return self.safe_get(self.E(i))
-
-    cdef const TokenC* L_(self, int i, int idx) nogil:
-        return self.safe_get(self.L(i, idx))
-
-    cdef const TokenC* R_(self, int i, int idx) nogil:
-        return self.safe_get(self.R(i, idx))
-
-    cdef const TokenC* safe_get(self, int i) nogil:
-        if i < 0 or i >= self.length:
-            return &self._empty_token
-        else:
-            return &self._sent[i]
-
-    cdef bint empty(self) nogil:
-        return self._s_i <= 0
-
-    cdef bint eol(self) nogil:
-        return self.buffer_length() == 0
-
-    cdef bint at_break(self) nogil:
-        return self._break != -1
-
-    cdef bint is_final(self) nogil:
-        return self.stack_depth() <= 0 and self._b_i >= self.length
-
-    cdef bint has_head(self, int i) nogil:
-        return self.safe_get(i).head != 0
-
-    cdef int n_L(self, int i) nogil:
-        return self.safe_get(i).l_kids
-
-    cdef int n_R(self, int i) nogil:
-        return self.safe_get(i).r_kids
-
-    cdef bint stack_is_connected(self) nogil:
-        return False
-
-    cdef bint entity_is_open(self) nogil:
-        if self._e_i < 1:
-            return False
-        return self._ents[self._e_i-1].end == -1
-
-    cdef int stack_depth(self) nogil:
-        return self._s_i
-
-    cdef int buffer_length(self) nogil:
-        if self._break != -1:
-            return self._break - self._b_i
-        else:
-            return self.length - self._b_i
 
     cdef void push(self) nogil:
         if self.B(0) != -1:

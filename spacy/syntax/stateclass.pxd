@@ -41,45 +41,80 @@ cdef class StateClass:
         if (i + self._b_i) >= self.length:
             return -1
         return self._buffer[self._b_i + i]
-    
-    cdef int H(self, int i) nogil
+
+    cdef inline const TokenC* S_(self, int i) nogil:
+        return self.safe_get(self.S(i))
+
+    cdef inline const TokenC* B_(self, int i) nogil:
+        return self.safe_get(self.B(i))
+
+    cdef inline const TokenC* H_(self, int i) nogil:
+        return self.safe_get(self.H(i))
+
+    cdef inline const TokenC* E_(self, int i) nogil:
+        return self.safe_get(self.E(i))
+
+    cdef inline const TokenC* L_(self, int i, int idx) nogil:
+        return self.safe_get(self.L(i, idx))
+
+    cdef inline const TokenC* R_(self, int i, int idx) nogil:
+        return self.safe_get(self.R(i, idx))
+
+    cdef inline const TokenC* safe_get(self, int i) nogil:
+        if i < 0 or i >= self.length:
+            return &self._empty_token
+        else:
+            return &self._sent[i]
+
+    cdef inline int H(self, int i) nogil:
+        if i < 0 or i >= self.length:
+            return -1
+        return self._sent[i].head + i
+
+
     cdef int E(self, int i) nogil
+
+    cdef int R(self, int i, int idx) nogil
     
     cdef int L(self, int i, int idx) nogil
-    cdef int R(self, int i, int idx) nogil
 
-    cdef const TokenC* S_(self, int i) nogil
-    cdef const TokenC* B_(self, int i) nogil
+    cdef inline bint empty(self) nogil:
+        return self._s_i <= 0
 
-    cdef const TokenC* H_(self, int i) nogil
-    cdef const TokenC* E_(self, int i) nogil
+    cdef inline bint eol(self) nogil:
+        return self.buffer_length() == 0
 
-    cdef const TokenC* L_(self, int i, int idx) nogil
-    cdef const TokenC* R_(self, int i, int idx) nogil
+    cdef inline bint at_break(self) nogil:
+        return self._break != -1
 
-    cdef const TokenC* safe_get(self, int i) nogil
+    cdef inline bint is_final(self) nogil:
+        return self.stack_depth() <= 0 and self._b_i >= self.length
 
-    cdef bint empty(self) nogil
-    
-    cdef bint entity_is_open(self) nogil
+    cdef inline bint has_head(self, int i) nogil:
+        return self.safe_get(i).head != 0
 
-    cdef bint eol(self) nogil
-    
-    cdef bint at_break(self) nogil
+    cdef inline int n_L(self, int i) nogil:
+        return self.safe_get(i).l_kids
 
-    cdef bint is_final(self) nogil
+    cdef inline int n_R(self, int i) nogil:
+        return self.safe_get(i).r_kids
 
-    cdef bint has_head(self, int i) nogil
+    cdef inline bint stack_is_connected(self) nogil:
+        return False
 
-    cdef int n_L(self, int i) nogil
+    cdef inline bint entity_is_open(self) nogil:
+        if self._e_i < 1:
+            return False
+        return self._ents[self._e_i-1].end == -1
 
-    cdef int n_R(self, int i) nogil
+    cdef inline int stack_depth(self) nogil:
+        return self._s_i
 
-    cdef bint stack_is_connected(self) nogil
-
-    cdef int stack_depth(self) nogil
-    
-    cdef int buffer_length(self) nogil
+    cdef inline int buffer_length(self) nogil:
+        if self._break != -1:
+            return self._break - self._b_i
+        else:
+            return self.length - self._b_i
 
     cdef void push(self) nogil
 
