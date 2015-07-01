@@ -10,11 +10,9 @@ spaCy: Industrial-strength NLP
 
 .. _Issue Tracker: https://github.com/honnibal/spaCy/issues
 
-**2015-06-24**: `Version 0.86 released`_
+**2015-07-01**: `Version 0.87 released`_
 
-.. _Version 0.86 released: updates.html
-
-`spaCy`_ 
+.. _Version 0.87 released: updates.html
 
 `spaCy`_ is a new library for text processing in Python and Cython.
 I wrote it because I think small companies are terrible at

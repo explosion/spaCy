@@ -10,6 +10,19 @@ To update your installation:
 
 Most updates ship a new model, so you will usually have to redownload the data.
 
+2015-07-01 v0.87
+----------------
+
+* Changed weights data structure. Memory use should be reduced 30-40%.
+* Fixed speed regressions introduced in the last few versions.
+* Models should now be slightly more robust to noise in the input text, as I'm
+  now training on data with a small amount of noise added, e.g. I randomly corrupt
+  capitalization, swap spaces for newlines, etc. This is bringing a small
+  benefit on out-of-domain data. I think this strategy could yield better
+  results with a better noise-generation function. If you think you have a good
+  way to make clean text resemble the kind of noisy input you're seeing in your
+  domain, get in touch.
+
 2015-06-24 v0.86
 ----------------
 
