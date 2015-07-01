@@ -6,7 +6,7 @@ from murmurhash.mrmr cimport hash64
 from libc.string cimport memset
 
 from .orth cimport word_shape
-from .typedefs cimport attr_t
+from .typedefs cimport attr_t, flags_t
 import numpy
 
 
@@ -28,6 +28,9 @@ cdef int set_lex_struct_props(LexemeC* lex, dict props, StringStore string_store
     lex.sentiment = props['sentiment']
 
     lex.flags = props['flags']
+    cdef flags_t sense_id
+    for sense_id in props.get('senses', []):
+        lex.senses |= 1 << sense_id
     lex.repvec = empty_vec
 
 
@@ -46,3 +49,6 @@ cdef class Lexeme:
 
     cpdef bint check(self, attr_id_t flag_id) except -1:
         return self.flags & (1 << flag_id)
+
+    cpdef bint has_sense(self, flags_t flag_id) except -1:
+        return self.senses & (1 << flag_id)
