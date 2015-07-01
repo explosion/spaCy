@@ -10,6 +10,7 @@ import cython
 import numpy.random
 
 from thinc.features cimport Feature, count_feats
+from thinc.api cimport Example
 
 
 cdef int arg_max(const weight_t* scores, const int n_classes) nogil:
@@ -23,16 +24,51 @@ cdef int arg_max(const weight_t* scores, const int n_classes) nogil:
     return best
 
 
+cdef int arg_max_if_true(const weight_t* scores, const int* is_valid,
+                         const int n_classes) nogil:
+    cdef int i
+    cdef int best = 0
+    cdef weight_t mode = -900000
+    for i in range(n_classes):
+        if is_valid[i] and scores[i] > mode:
+            mode = scores[i]
+            best = i
+    return best
+
+
+cdef int arg_max_if_zero(const weight_t* scores, const int* costs,
+                         const int n_classes) nogil:
+    cdef int i
+    cdef int best = 0
+    cdef weight_t mode = -900000
+    for i in range(n_classes):
+        if costs[i] == 0 and scores[i] > mode:
+            mode = scores[i]
+            best = i
+    return best
+
+
 cdef class Model:
     def __init__(self, n_classes, templates, model_loc=None):
         if model_loc is not None and path.isdir(model_loc):
             model_loc = path.join(model_loc, 'model')
         self.n_classes = n_classes
         self._extractor = Extractor(templates)
+        self.n_feats = self._extractor.n_templ
         self._model = LinearModel(n_classes, self._extractor.n_templ)
         self.model_loc = model_loc
         if self.model_loc and path.exists(self.model_loc):
             self._model.load(self.model_loc, freq_thresh=0)
+
+    def predict(self, Example eg):
+        self.set_scores(eg.c.scores, eg.c.atoms)
+        eg.c.guess = arg_max_if_true(eg.c.scores, eg.c.is_valid, self.n_classes)
+
+    def train(self, Example eg):
+        self.predict(eg)
+        eg.c.best = arg_max_if_zero(eg.c.scores, eg.c.costs, self.n_classes)
+        eg.c.cost = eg.c.costs[eg.c.guess]
+        self.update(eg.c.atoms, eg.c.guess, eg.c.best, eg.c.cost)
 
     cdef const weight_t* score(self, atom_t* context) except NULL:
         cdef int n_feats
