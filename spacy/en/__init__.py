@@ -13,6 +13,9 @@ from ..multi_words import RegexMerger
 
 from .pos import EnPosTagger
 from .pos import POS_TAGS
+
+from ..sense_tagger import SenseTagger
+
 from .attrs import get_flags
 from . import regexes
 
@@ -80,6 +83,7 @@ class English(object):
             self.has_parser_model = False
             self.has_tagger_model = False
             self.has_entity_model = False
+            self.has_senser_model = False
         else:
             tok_data_dir = path.join(data_dir, 'tokenizer')
             tok_rules, prefix_re, suffix_re, infix_re = read_lang_data(tok_data_dir)
@@ -89,6 +93,7 @@ class English(object):
             self.has_parser_model = path.exists(path.join(self._data_dir, 'deps'))
             self.has_tagger_model = path.exists(path.join(self._data_dir, 'pos'))
             self.has_entity_model = path.exists(path.join(self._data_dir, 'ner'))
+            self.has_senser_model = path.exists(path.join(self._data_dir, 'wsd'))
 
         self.tokenizer = Tokenizer(self.vocab, tok_rules, prefix_re,
                                    suffix_re, infix_re,
@@ -102,12 +107,19 @@ class English(object):
         self._tagger = None
         self._parser = None
         self._entity = None
+        self._senser = None
 
     @property
     def tagger(self):
         if self._tagger is None:
             self._tagger = EnPosTagger(self.vocab.strings, self._data_dir)
         return self._tagger
+
+    @property
+    def senser(self):
+        if self._senser is None:
+            self._senser = SenseTagger(self.vocab.strings, self._data_dir)
+        return self._senser
 
     @property
     def parser(self):
