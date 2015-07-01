@@ -21,10 +21,16 @@ from pathlib import Path
 from shutil import copyfile
 from shutil import copytree
 import codecs
+from collections import defaultdict
 
 from spacy.en import get_lex_props
+from spacy.en.lemmatizer import Lemmatizer
 from spacy.vocab import Vocab
 from spacy.vocab import write_binary_vectors
+
+from spacy.parts_of_speech import NOUN, VERB, ADJ
+
+import spacy.senses
 
 
 def setup_tokenizer(lang_data_dir, tok_dir):
@@ -72,6 +78,22 @@ def _read_probs(loc):
     return probs
 
 
+def _read_senses(loc):
+    lexicon = defaultdict(lambda: defaultdict(list))
+    sense_names = dict((s, i) for i, s in enumerate(spacy.senses.STRINGS))
+    pos_ids = {'noun': NOUN, 'verb': VERB, 'adjective': ADJ}
+    for line in codecs.open(str(loc), 'r', 'utf8'):
+        sense_strings = line.split()
+        word = sense_strings.pop(0)
+        for sense in sense_strings:
+            pos, sense = sense[3:].split('.')
+            sense_name = '%s_%s' % (pos[0].upper(), sense.lower())
+            if sense_name != 'N_tops':
+                sense_id = sense_names[sense_name]
+                lexicon[word][pos_ids[pos]].append(sense_id)
+    return lexicon
+
+
 def setup_vocab(src_dir, dst_dir):
     if not dst_dir.exists():
         dst_dir.mkdir()
@@ -81,10 +103,12 @@ def setup_vocab(src_dir, dst_dir):
         write_binary_vectors(str(vectors_src), str(dst_dir / 'vec.bin'))
     vocab = Vocab(data_dir=None, get_lex_props=get_lex_props)
     clusters = _read_clusters(src_dir / 'clusters.txt')
+    senses = _read_senses(src_dir / 'supersenses.txt')
     probs = _read_probs(src_dir / 'words.sgt.prob')
-    for word in clusters:
+    for word in set(clusters).union(set(senses)):
         if word not in probs:
             probs[word] = -17.0
+    lemmatizer = Lemmatizer(str(src_dir / 'wordnet'), NOUN, VERB, ADJ)
     lexicon = []
     for word, prob in reversed(sorted(probs.items(), key=lambda item: item[1])):
         entry = get_lex_props(word)
@@ -94,6 +118,17 @@ def setup_vocab(src_dir, dst_dir):
             # Decode as a little-endian string, so that we can do & 15 to get
             # the first 4 bits. See _parse_features.pyx
             entry['cluster'] = int(cluster[::-1], 2)
+            orth_senses = set()
+            lemmas = []
+            for pos in [NOUN, VERB, ADJ]:
+                for lemma in lemmatizer(word.lower(), pos):
+                    lemmas.append(lemma)
+                    orth_senses.update(senses[lemma][pos])
+            if word.lower() == 'dogging':
+                print word
+                print lemmas
+                print [spacy.senses.STRINGS[si] for si in orth_senses]
+            entry['senses'] = list(sorted(orth_senses))
             vocab[word] = entry
     vocab.dump(str(dst_dir / 'lexemes.bin'))
     vocab.strings.dump(str(dst_dir / 'strings.txt'))
