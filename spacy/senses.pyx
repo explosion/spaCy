@@ -1,4 +1,35 @@
 from __future__ import unicode_literals
+cimport parts_of_speech
+
+
+POS_SENSES[<int>parts_of_speech.NO_TAG] = 0
+POS_SENSES[<int>parts_of_speech.ADJ] = 0
+POS_SENSES[<int>parts_of_speech.ADV] = 0
+POS_SENSES[<int>parts_of_speech.ADP] = 0
+POS_SENSES[<int>parts_of_speech.CONJ] = 0
+POS_SENSES[<int>parts_of_speech.DET] = 0
+POS_SENSES[<int>parts_of_speech.NOUN] = 0
+POS_SENSES[<int>parts_of_speech.NUM] = 0
+POS_SENSES[<int>parts_of_speech.PRON] = 0
+POS_SENSES[<int>parts_of_speech.PRT] = 0
+POS_SENSES[<int>parts_of_speech.VERB] = 0
+POS_SENSES[<int>parts_of_speech.X] = 0
+POS_SENSES[<int>parts_of_speech.PUNCT] = 0
+POS_SENSES[<int>parts_of_speech.EOL] = 0
+
+
+cdef int _sense = 0
+
+for _sense in range(A_behavior, N_act):
+    POS_SENSES[<int>parts_of_speech.ADJ] |= 1 << _sense
+
+for _sense in range(N_act, V_body):
+    POS_SENSES[<int>parts_of_speech.NOUN] |= 1 << _sense
+
+for _sense in range(V_body, V_weather+1):
+    POS_SENSES[<int>parts_of_speech.VERB] |= 1 << _sense
+
+
 
 STRINGS = (
     'A_behavior',

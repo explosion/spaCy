@@ -1,4 +1,6 @@
 # Enum of Wordnet supersenses
+cimport parts_of_speech
+from .typedefs cimport flags_t
 
 cpdef enum:
     A_behavior
@@ -54,3 +56,7 @@ cpdef enum:
     V_social
     V_stative
     V_weather
+
+
+cdef flags_t[<int>parts_of_speech.N_UNIV_TAGS] POS_SENSES
+
