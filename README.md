@@ -1,7 +1,7 @@
-spaCy
-=====
+spaCy: Industrial-strength NLP
+==============================
 
-spaCy is a library for industrial-strength NLP in Python and Cython.
+spaCy is a library for advanced natural language processing in Python and Cython.
 
 Documentation and details: http://spacy.io/
 
