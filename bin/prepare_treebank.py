@@ -9,7 +9,8 @@ doc: {
             start: int,
             tag: string,
             head: int,
-            dep: string}],
+            dep: string,
+            ssenses: [int]}],
         ner: [{
             start: int,
             end: int,
@@ -33,6 +34,7 @@ from collections import defaultdict
 from spacy.munge import read_ptb
 from spacy.munge import read_conll
 from spacy.munge import read_ner
+from spacy.munge import read_wordnet
 
 
 def _iter_raw_files(raw_loc):
@@ -41,7 +43,7 @@ def _iter_raw_files(raw_loc):
         yield f
 
 
-def format_doc(file_id, raw_paras, ptb_text, dep_text, ner_text):
+def format_doc(file_id, raw_paras, ptb_text, dep_text, ner_text, senses):
     ptb_sents = read_ptb.split(ptb_text)
     dep_sents = read_conll.split(dep_text)
     if len(ptb_sents) != len(dep_sents):
@@ -54,7 +56,8 @@ def format_doc(file_id, raw_paras, ptb_text, dep_text, ner_text):
     i = 0
     doc = {'id': file_id}
     if raw_paras is None:
-        doc['paragraphs'] = [format_para(None, ptb_sents, dep_sents, ner_sents)]
+        doc['paragraphs'] = [format_para(None, ptb_sents, dep_sents, ner_sents,
+                                         [senses[j] for j in range(len(ptb_sents))])]
         #for ptb_sent, dep_sent, ner_sent in zip(ptb_sents, dep_sents, ner_sents):
         #    doc['paragraphs'].append(format_para(None, [ptb_sent], [dep_sent], [ner_sent]))
     else:
@@ -64,18 +67,21 @@ def format_doc(file_id, raw_paras, ptb_text, dep_text, ner_text):
                         ' '.join(raw_sents).replace('<SEP>', ''),
                         ptb_sents[i:i+len(raw_sents)],
                         dep_sents[i:i+len(raw_sents)],
-                        ner_sents[i:i+len(raw_sents)])
+                        ner_sents[i:i+len(raw_sents)],
+                        [senses[j] for j in range(i, i+len(raw_sents))]
+                    )
             if para['sentences']:
                 doc['paragraphs'].append(para)
             i += len(raw_sents)
     return doc
 
 
-def format_para(raw_text, ptb_sents, dep_sents, ner_sents):
+def format_para(raw_text, ptb_sents, dep_sents, ner_sents, ssenses):
     para = {'raw': raw_text, 'sentences': []}
     offset = 0
-    assert len(ptb_sents) == len(dep_sents) == len(ner_sents)
-    for ptb_text, dep_text, ner_text in zip(ptb_sents, dep_sents, ner_sents):
+
+    assert len(ptb_sents) == len(dep_sents) == len(ner_sents) == len(ssenses)
+    for ptb_text, dep_text, ner_text, sense_sent in zip(ptb_sents, dep_sents, ner_sents, ssenses):
         _, deps = read_conll.parse(dep_text, strip_bad_periods=True)
         if deps and 'VERB' in [t['tag'] for t in deps]:
             continue
@@ -87,14 +93,14 @@ def format_para(raw_text, ptb_sents, dep_sents, ner_sents):
         # Necessary because the ClearNLP converter deletes EDITED words.
         if len(ner) != len(deps):
             ner = ['-' for _ in deps]
-        para['sentences'].append(format_sentence(deps, ner, brackets))
+        para['sentences'].append(format_sentence(deps, ner, brackets, sense_sent))
     return para
 
 
-def format_sentence(deps, ner, brackets):
+def format_sentence(deps, ner, brackets, senses):
     sent = {'tokens': [], 'brackets': []}
     for token_id, (token, token_ent) in enumerate(zip(deps, ner)):
-        sent['tokens'].append(format_token(token_id, token, token_ent))
+        sent['tokens'].append(format_token(token_id, token, token_ent, senses))
 
     for label, start, end in brackets:
         if start != end:
@@ -105,7 +111,7 @@ def format_sentence(deps, ner, brackets):
     return sent
 
 
-def format_token(token_id, token, ner):
+def format_token(token_id, token, ner, senses):
     assert token_id == token['id']
     head = (token['head'] - token_id) if token['head'] != -1 else 0
     return {
@@ -114,7 +120,9 @@ def format_token(token_id, token, ner):
         'tag': token['tag'],
         'head': head,
         'dep': token['dep'],
-        'ner': ner}
+        'ner': ner,
+        'ssenses': senses[token_id]
+    }
 
 
 def read_file(*pieces):
@@ -132,7 +140,7 @@ def get_file_names(section_dir, subsection):
     return list(sorted(set(filenames)))
 
 
-def read_wsj_with_source(onto_dir, raw_dir):
+def read_wsj_with_source(onto_dir, raw_dir, wn_ssenses):
     # Now do WSJ, with source alignment
     onto_dir = path.join(onto_dir, 'data', 'english', 'annotations', 'nw', 'wsj')
     docs = {}
@@ -147,12 +155,14 @@ def read_wsj_with_source(onto_dir, raw_dir):
             ptb = read_file(onto_dir, section, '%s.parse' % filename)
             dep = read_file(onto_dir, section, '%s.parse.dep' % filename)
             ner = read_file(onto_dir, section, '%s.name' % filename)
-            if ptb is not None and dep is not None:
-                docs[filename] = format_doc(filename, raw_paras, ptb, dep, ner)
+            wsd = read_senses(path.join(onto_dir, section, '%s.sense' % filename), wn_ssenses)
+            if ptb is not None and dep is not None: # TODO: This is bad right?
+                wsd = [wsd[sent_id] for sent_id in range(len(ner))]
+                docs[filename] = format_doc(filename, raw_paras, ptb, dep, ner, wsd)
     return docs
 
 
-def get_doc(onto_dir, file_path, wsj_docs):
+def get_doc(onto_dir, file_path, wsj_docs, wn_ssenses):
     filename = file_path.rsplit('/', 1)[1]
     if filename in wsj_docs:
         return wsj_docs[filename]
@@ -160,8 +170,9 @@ def get_doc(onto_dir, file_path, wsj_docs):
         ptb = read_file(onto_dir, file_path + '.parse')
         dep = read_file(onto_dir, file_path + '.parse.dep')
         ner = read_file(onto_dir, file_path + '.name')
+        wsd = read_senses(file_path + '.sense', wn_ssenses)
         if ptb is not None and dep is not None:
-            return format_doc(filename, None, ptb, dep, ner)
+            return format_doc(filename, None, ptb, dep, ner, wsd)
         else:
             return None
 
@@ -170,14 +181,29 @@ def read_ids(loc):
     return open(loc).read().strip().split('\n')
 
 
-def main(onto_dir, raw_dir, out_dir):
-    wsj_docs = read_wsj_with_source(onto_dir, raw_dir)
+def read_senses(loc, og_to_ssense):
+    senses = defaultdict(lambda: defaultdict(list))
+    if not path.exists(loc):
+        return senses
+    for line in open(loc):
+        pieces = line.split()
+        sent_id = int(pieces[1])
+        tok_id = int(pieces[2])
+        lemma, pos = pieces[3].split('-')
+        group_num = int(float(pieces[-1]))
+        senses[sent_id][tok_id] = list(sorted(og_to_ssense[(lemma, pos, group_num)]))
+    return senses
+
+
+def main(wordnet_dir, onto_dir, raw_dir, out_dir):
+    wn_ssenses = read_wordnet.get_og_to_ssenses(wordnet_dir, onto_dir)
+    wsj_docs = read_wsj_with_source(onto_dir, raw_dir, wn_ssenses)
 
     for partition in ('train', 'test', 'development'):
         ids = read_ids(path.join(onto_dir, '%s.id' % partition))
         docs_by_genre = defaultdict(list)
         for file_path in ids:
-            doc = get_doc(onto_dir, file_path, wsj_docs)
+            doc = get_doc(onto_dir, file_path, wsj_docs, wn_ssenses)
             if doc is not None:
                 genre = file_path.split('/')[3]
                 docs_by_genre[genre].append(doc)
