@@ -40,6 +40,7 @@ class Scorer(object):
         self.labelled = PRFScore()
         self.tags = PRFScore()
         self.ner = PRFScore()
+        self.wsd = PRFScore()
         self.eval_punct = eval_punct
 
     @property
@@ -73,7 +74,7 @@ class Scorer(object):
     def score(self, tokens, gold, verbose=False):
         assert len(tokens) == len(gold)
 
-        #self._score_senses(tokens, gold)
+        self._score_senses(tokens, gold)
 
         gold_deps = set()
         gold_tags = set()
@@ -129,7 +130,9 @@ class Scorer(object):
     def _score_senses(self, tokens, gold):
         for i, g_annot in enumerate(gold.orig_annot):
             gold_senses = g_annot[-1]
-            if gold_senses:
+            if gold_senses and gold.gold_to_cand[i] is not None:
                 cand_i = gold.gold_to_cand[i]
                 sense_str = tokens[cand_i].sense_
-                print sense_str, gold_senses
+                sense_str = sense_str.replace('N_', 'noun.').replace('V_', 'verb.')
+                self.wsd.tp += sense_str in gold_senses
+                self.wsd.fn += sense_str not in gold_senses
