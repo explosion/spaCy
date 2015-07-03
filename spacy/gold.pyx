@@ -142,6 +142,7 @@ def read_json_file(loc, docs_filter=None):
                     heads = []
                     labels = []
                     ner = []
+                    wsd = []
                     for i, token in enumerate(sent['tokens']):
                         words.append(token['orth'])
                         ids.append(i)
@@ -152,8 +153,9 @@ def read_json_file(loc, docs_filter=None):
                         if labels[-1].lower() == 'root':
                             labels[-1] = 'ROOT'
                         ner.append(token.get('ner', '-'))
+                        wsd.append(token.get('senses', []))
                     sents.append((
-                        (ids, words, tags, heads, labels, ner),
+                        (ids, words, tags, heads, labels, ner, wsd),
                         sent.get('brackets', [])))
                 if sents:
                     yield (paragraph.get('raw', None), sents)
