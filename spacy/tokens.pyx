@@ -15,6 +15,7 @@ from .parts_of_speech cimport CONJ, PUNCT
 from .lexeme cimport check_flag
 from .spans import Span
 from .structs cimport UniStr
+from .senses import STRINGS as SENSE_STRINGS
 
 from unidecode import unidecode
 # Compiler crashes on memory view coercion without this. Should report bug.
@@ -462,6 +463,10 @@ cdef class Token:
         def __get__(self):
             return self.c.dep
 
+    property sense:
+        def __get__(self):
+            return self.c.sense
+
     property repvec:
         def __get__(self):
             cdef int length = self.vocab.repvec_length
@@ -645,6 +650,11 @@ cdef class Token:
     property dep_:
         def __get__(self):
             return self.vocab.strings[self.c.dep]
+
+    property sense_:
+        def __get__(self):
+            return SENSE_STRINGS[self.c.sense]
+
 
 
 _pos_id_to_string = {id_: string for string, id_ in UNIV_POS_NAMES.items()}
