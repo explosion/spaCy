@@ -207,11 +207,16 @@ cdef class SenseTagger:
         eg = Example(self.model.n_classes, CONTEXT_SIZE, self.model.n_feats+1,
                      self.model.n_feats+1)
         cdef int i
+        for i, ssenses in enumerate(gold.ssenses):
+            if ssenses:
+                gold.c.ssenses[i] = encode_sense_strs(ssenses)
+            else:
+                gold.c.ssenses[i] = pos_senses(&tokens.data[i])
         cdef int cost = 0
         for i in range(tokens.length):
-            if tokens.data[i].lex.senses == 0:
+            if tokens.data[i].lex.senses == 0 or tokens.data[i].lex.senses == 1:
                 continue
-            self._set_costs(<bint*>eg.c.is_valid, eg.c.costs, pos_senses(&tokens.data[i]))
+            self._set_costs(<bint*>eg.c.is_valid, eg.c.costs, gold.c.ssenses[i])
             fill_context(eg.c.atoms, &tokens.data[i])
 
             self.model.train(eg)
