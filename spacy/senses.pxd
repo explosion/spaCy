@@ -59,5 +59,11 @@ cpdef enum:
     N_SENSES
 
 
+
+
 cdef flags_t[<int>parts_of_speech.N_UNIV_TAGS] POS_SENSES
 
+
+# Can we not define this compile time? Have to hard code? :(
+# DEF INVALID_SENSE = 1 << 54
+cdef flags_t encode_sense_strs(sense_names) except 18014398509481984

@@ -86,3 +86,17 @@ STRINGS = (
     'V_stative',
     'V_weather'
 )
+
+IDS = dict((sense_str, i) for i, sense_str in enumerate(STRINGS))
+
+
+cdef flags_t encode_sense_strs(sense_names) except 18014398509481984:
+    cdef flags_t sense_bits = 0
+    cdef flags_t sense_id = 0
+    for sense_str in sense_names:
+        if '.' in sense_str:
+            sense_str = sense_str[0].upper() + '_' + sense_str.split('.')[1]
+        if sense_str != 'N_Tops':
+            sense_id = IDS[sense_str]
+            sense_bits |= (1 << sense_id)
+    return sense_bits
