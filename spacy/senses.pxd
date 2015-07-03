@@ -3,19 +3,7 @@ cimport parts_of_speech
 from .typedefs cimport flags_t
 
 cpdef enum:
-    A_behavior
-    A_body
-    A_feeling
-    A_mind
-    A_motion
-    A_perception
-    A_quantity
-    A_relation
-    A_social
-    A_spatial
-    A_substance
-    A_time
-    A_weather
+    NO_SENSE
     N_act
     N_animal
     N_artifact
@@ -59,11 +47,7 @@ cpdef enum:
     N_SENSES
 
 
-
-
 cdef flags_t[<int>parts_of_speech.N_UNIV_TAGS] POS_SENSES
 
 
-# Can we not define this compile time? Have to hard code? :(
-# DEF INVALID_SENSE = 1 << 54
-cdef flags_t encode_sense_strs(sense_names) except 18014398509481984
+cdef flags_t encode_sense_strs(sense_names) except 0
