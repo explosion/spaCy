@@ -1,6 +1,8 @@
 from cymem.cymem cimport Pool
 
 from .structs cimport TokenC
+from .typedefs cimport flags_t
+
 from .syntax.transition_system cimport Transition
 
 cimport numpy
@@ -10,6 +12,7 @@ cdef struct GoldParseC:
     int* tags
     int* heads
     int* labels
+    flags_t* ssenses
     int** brackets
     Transition* ner
 
@@ -25,6 +28,7 @@ cdef class GoldParse:
     cdef readonly list heads
     cdef readonly list labels
     cdef readonly dict orths
+    cdef readonly list ssenses
     cdef readonly list ner
     cdef readonly list ents
     cdef readonly dict brackets

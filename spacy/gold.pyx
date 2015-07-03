@@ -9,6 +9,8 @@ from os import path
 
 from libc.string cimport memset
 
+from .typedefs cimport flags_t
+
 
 def tags_to_entities(tags):
     entities = []
@@ -153,7 +155,7 @@ def read_json_file(loc, docs_filter=None):
                         if labels[-1].lower() == 'root':
                             labels[-1] = 'ROOT'
                         ner.append(token.get('ner', '-'))
-                        wsd.append(token.get('senses', []))
+                        wsd.append(token.get('ssenses', []))
                     sents.append((
                         (ids, words, tags, heads, labels, ner, wsd),
                         sent.get('brackets', [])))
@@ -204,6 +206,7 @@ cdef class GoldParse:
         self.c.tags = <int*>self.mem.alloc(len(tokens), sizeof(int))
         self.c.heads = <int*>self.mem.alloc(len(tokens), sizeof(int))
         self.c.labels = <int*>self.mem.alloc(len(tokens), sizeof(int))
+        self.c.ssenses = <flags_t*>self.mem.alloc(len(tokens), sizeof(flags_t))
         self.c.ner = <Transition*>self.mem.alloc(len(tokens), sizeof(Transition))
         self.c.brackets = <int**>self.mem.alloc(len(tokens), sizeof(int*))
         for i in range(len(tokens)):
@@ -213,21 +216,27 @@ cdef class GoldParse:
         self.heads = [None] * len(tokens)
         self.labels = [''] * len(tokens)
         self.ner = ['-'] * len(tokens)
+        self.ssenses = [[] for _ in range(len(tokens))]
 
         self.cand_to_gold = align([t.orth_ for t in tokens], annot_tuples[1])
         self.gold_to_cand = align(annot_tuples[1], [t.orth_ for t in tokens])
 
         self.orig_annot = zip(*annot_tuples)
 
+        # This iterates 0...n for n words in the candidate, with an index
+        # gold_i aligned into the gold. Assign tag, label, ner and word sense.
+        # For the head, the value is an index into the gold sentence, so we
+        # have to translate it across into the candidate.
         for i, gold_i in enumerate(self.cand_to_gold):
             if gold_i is None:
-                # TODO: What do we do for missing values again?
+                # Missing values handled in the various oracle functions
                 pass
             else:
                 self.tags[i] = annot_tuples[2][gold_i]
                 self.heads[i] = self.gold_to_cand[annot_tuples[3][gold_i]]
                 self.labels[i] = annot_tuples[4][gold_i]
                 self.ner[i] = annot_tuples[5][gold_i]
+                self.ssenses[i] = annot_tuples[6][gold_i]
        
         # If we have any non-projective arcs, i.e. crossing brackets, consider
         # the heads for those words missing in the gold-standard.
@@ -246,6 +255,7 @@ cdef class GoldParse:
                                 self.labels[w1] = ''
                                 self.heads[w2] = None
                                 self.labels[w2] = ''
+                                self.ssenses[w2] = []
 
         # Check there are no cycles in the dependencies, i.e. we are a tree
         for w in range(self.length):
