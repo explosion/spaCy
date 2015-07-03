@@ -87,6 +87,8 @@ def _read_senses(loc):
         word = sense_strings.pop(0)
         for sense in sense_strings:
             pos, sense = sense[3:].split('.')
+            if pos[0].upper() == 'A':
+                continue
             sense_name = '%s_%s' % (pos[0].upper(), sense.lower())
             if sense_name != 'N_tops':
                 sense_id = sense_names[sense_name]
@@ -124,10 +126,6 @@ def setup_vocab(src_dir, dst_dir):
                 for lemma in lemmatizer(word.lower(), pos):
                     lemmas.append(lemma)
                     orth_senses.update(senses[lemma][pos])
-            if word.lower() == 'dogging':
-                print word
-                print lemmas
-                print [spacy.senses.STRINGS[si] for si in orth_senses]
             entry['senses'] = list(sorted(orth_senses))
             vocab[word] = entry
     vocab.dump(str(dst_dir / 'lexemes.bin'))
