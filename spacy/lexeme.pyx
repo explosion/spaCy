@@ -29,6 +29,7 @@ cdef int set_lex_struct_props(LexemeC* lex, dict props, StringStore string_store
 
     lex.flags = props['flags']
     cdef flags_t sense_id
+    lex.senses = 0
     for sense_id in props.get('senses', []):
         lex.senses |= 1 << sense_id
     lex.repvec = empty_vec
