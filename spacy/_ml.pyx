@@ -2,6 +2,8 @@
 from __future__ import unicode_literals
 from __future__ import division
 
+from libc.string cimport memset
+
 from os import path
 import os
 import shutil
@@ -61,6 +63,7 @@ cdef class Model:
             self._model.load(self.model_loc, freq_thresh=0)
 
     def predict(self, Example eg):
+        memset(eg.c.scores, 0, sizeof(weight_t) * eg.c.nr_class)
         self.set_scores(eg.c.scores, eg.c.atoms)
         eg.c.guess = arg_max_if_true(eg.c.scores, eg.c.is_valid, self.n_classes)
 
