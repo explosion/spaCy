@@ -133,6 +133,5 @@ class Scorer(object):
             if gold_senses and gold.gold_to_cand[i] is not None:
                 cand_i = gold.gold_to_cand[i]
                 sense_str = tokens[cand_i].sense_
-                sense_str = sense_str.replace('N_', 'noun.').replace('V_', 'verb.')
                 self.wsd.tp += sense_str in gold_senses
                 self.wsd.fn += sense_str not in gold_senses

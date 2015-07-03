@@ -4,13 +4,17 @@ from .typedefs cimport flags_t
 
 cpdef enum:
     NO_SENSE
+    J_all
+    J_pert
+    A_all
+    N_Tops
     N_act
     N_animal
     N_artifact
     N_attribute
     N_body
     N_cognition
-    N_communication
+    N_communication  
     N_event
     N_feeling
     N_food
@@ -44,10 +48,8 @@ cpdef enum:
     V_social
     V_stative
     V_weather
+    J_ppl
     N_SENSES
-
-
-cdef flags_t[<int>parts_of_speech.N_UNIV_TAGS] POS_SENSES
 
 
 cdef flags_t encode_sense_strs(sense_names) except 0

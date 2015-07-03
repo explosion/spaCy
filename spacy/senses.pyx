@@ -2,74 +2,56 @@ from __future__ import unicode_literals
 cimport parts_of_speech
 
 
-POS_SENSES[<int>parts_of_speech.NO_TAG] = 0
-POS_SENSES[<int>parts_of_speech.ADJ] = 0
-POS_SENSES[<int>parts_of_speech.ADV] = 0
-POS_SENSES[<int>parts_of_speech.ADP] = 0
-POS_SENSES[<int>parts_of_speech.CONJ] = 0
-POS_SENSES[<int>parts_of_speech.DET] = 0
-POS_SENSES[<int>parts_of_speech.NOUN] = 0
-POS_SENSES[<int>parts_of_speech.NUM] = 0
-POS_SENSES[<int>parts_of_speech.PRON] = 0
-POS_SENSES[<int>parts_of_speech.PRT] = 0
-POS_SENSES[<int>parts_of_speech.VERB] = 0
-POS_SENSES[<int>parts_of_speech.X] = 0
-POS_SENSES[<int>parts_of_speech.PUNCT] = 0
-POS_SENSES[<int>parts_of_speech.EOL] = 0
+lexnames_str = """
+-1      NO_SENSE       -1
+00      J_all 3
+01      A_pert        3 
+02      A_all 4
+03      N_Tops       1  
+04      N_act        1
+05      N_animal     1
+06      N_artifact   1
+07      N_attribute  1
+08      N_body       1
+09      N_cognition  1
+10      N_communication      1
+11      N_event      1
+12      N_feeling    1
+13      N_food       1
+14      N_group      1
+15      N_location   1
+16      N_motive     1
+17      N_object     1
+18      N_person     1
+19      N_phenomenon 1
+20      N_plant      1
+21      N_possession 1
+22      N_process    1
+23      N_quantity   1
+24      N_relation   1
+25      N_shape      1
+26      N_state      1
+27      N_substance  1
+28      N_time       1
+29      V_body       2
+30      V_change     2
+31      V_cognition  2
+32      V_communication      2
+33      V_competition        2
+34      V_consumption        2
+35      V_contact    2
+36      V_creation   2
+37      V_emotion    2
+38      V_motion     2
+39      V_perception 2
+40      V_possession 2
+41      V_social     2
+42      V_stative    2
+43      V_weather    2
+44      A_ppl 3
+""".strip()
 
-
-cdef int _sense = 0
-
-for _sense in range(N_act, V_body):
-    POS_SENSES[<int>parts_of_speech.NOUN] |= 1 << _sense
-
-for _sense in range(V_body, V_weather+1):
-    POS_SENSES[<int>parts_of_speech.VERB] |= 1 << _sense
-
-
-STRINGS = (
-    '-NO_SENSE-',
-    'N_act',
-    'N_animal',
-    'N_artifact',
-    'N_attribute',
-    'N_body',
-    'N_cognition',
-    'N_communication',
-    'N_event',
-    'N_feeling',
-    'N_food',
-    'N_group',
-    'N_location',
-    'N_motive',
-    'N_object',
-    'N_person',
-    'N_phenomenon',
-    'N_plant',
-    'N_possession',
-    'N_process',
-    'N_quantity',
-    'N_relation',
-    'N_shape',
-    'N_state',
-    'N_substance',
-    'N_time',
-    'V_body',
-    'V_change',
-    'V_cognition',
-    'V_communication',
-    'V_competition',
-    'V_consumption',
-    'V_contact',
-    'V_creation',
-    'V_emotion',
-    'V_motion',
-    'V_perception',
-    'V_possession',
-    'V_social',
-    'V_stative',
-    'V_weather'
-)
+STRINGS = tuple(line.split()[1] for line in lexnames_str.split('\n'))
 
 IDS = dict((sense_str, i) for i, sense_str in enumerate(STRINGS))
 
@@ -80,8 +62,8 @@ cdef flags_t encode_sense_strs(sense_names) except 0:
         return sense_bits | (1 << NO_SENSE)
     cdef flags_t sense_id = 0
     for sense_str in sense_names:
-        if '.' in sense_str:
-            sense_str = sense_str[0].upper() + '_' + sense_str.split('.')[1]
+        sense_str = sense_str.replace('noun', 'N').replace('verb', 'V')
+        sense_str = sense_str.replace('adj', 'J').replace('adv', 'A')
         sense_id = IDS[sense_str]
         sense_bits |= (1 << sense_id)
     return sense_bits

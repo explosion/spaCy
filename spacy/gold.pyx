@@ -155,7 +155,8 @@ def read_json_file(loc, docs_filter=None):
                         if labels[-1].lower() == 'root':
                             labels[-1] = 'ROOT'
                         ner.append(token.get('ner', '-'))
-                        t_wsd = [s.replace('.', '_') for s in token.get('ssenses', [])]
+                        t_wsd = [s.replace('noun.', 'N_').replace('verb.', 'V_')
+                                 for s in token.get('ssenses', [])]
                         wsd.append(t_wsd)
                     sents.append((
                         (ids, words, tags, heads, labels, ner, wsd),

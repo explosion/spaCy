@@ -93,7 +93,7 @@ cdef class Tokens:
         else:
             size = 5
         self.mem = Pool()
-        # Guarantee self.lex[i-x], for any i >= 0 and x < padding is in bounds
+        # Guarantee self.data[i-x], for any i >= 0 and x < padding is in bounds
         # However, we need to remember the true starting places, so that we can
         # realloc.
         data_start = <TokenC*>self.mem.alloc(size + (PADDING*2), sizeof(TokenC))

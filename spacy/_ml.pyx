@@ -69,6 +69,7 @@ cdef class Model:
         assert self.n_classes == eg.c.nr_class
         memset(eg.c.scores, 0, sizeof(weight_t) * eg.c.nr_class)
         self.set_scores(eg.c.scores, eg.c.atoms)
+
         eg.c.guess = arg_max_if_true(eg.c.scores, eg.c.is_valid, self.n_classes)
         if eg.c.guess == -1:
             raise ValidationError("No valid classes during prediction")

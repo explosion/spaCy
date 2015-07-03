@@ -2,9 +2,12 @@ from .typedefs cimport flags_t
 from .structs cimport TokenC
 from .strings cimport StringStore
 from .tokens cimport Tokens
-from .senses cimport POS_SENSES, N_SENSES, encode_sense_strs
+from .senses cimport N_SENSES, encode_sense_strs
+from .senses cimport N_Tops, J_ppl, V_body
 from .gold cimport GoldParse
-from .parts_of_speech cimport NOUN, VERB
+from .parts_of_speech cimport NOUN, VERB, N_UNIV_TAGS
+
+from . cimport parts_of_speech
 
 from thinc.learner cimport LinearModel
 from thinc.features cimport Extractor
@@ -21,40 +24,30 @@ cdef enum:
     P2c
     P2c6
     P2c4
-    P2ss
-    P2s
 
     P1W
     P1p
     P1c
     P1c6
     P1c4
-    P1ss
-    P1s
 
     N0W
     N0p
     N0c
     N0c6
     N0c4
-    N0ss
-    N0s
     
     N1W
     N1p
     N1c
     N1c6
     N1c4
-    N1ss
-    N1s
     
     N2W
     N2p
     N2c
     N2c6
     N2c4
-    N2ss
-    N2s
     
     CONTEXT_SIZE
 
@@ -67,8 +60,6 @@ unigrams = (
     (P2c6, P2p),
     (P2c4, P2p),
     (P2c,),
-    (P2ss,),
-    (P1s,),
 
     (P1W,),
     (P1p,),
@@ -84,8 +75,6 @@ unigrams = (
     (P1c6, P1p),
     (P1c4, P1p),
     (P1c,),
-    (P1ss,),
-    (P1s,),
     
     (N0p,),
     (N0W, N0p),
@@ -100,7 +89,6 @@ unigrams = (
     (N0c6, N0p),
     (N0c4, N0p),
     (N0c,),
-    (N0ss,),
 
     (N1p,),
     (N1W, N1p),
@@ -115,7 +103,6 @@ unigrams = (
     (N1c6, N1p),
     (N1c4, N1p),
     (N1c,),
-    (N1ss,),
 
     (N2p,),
     (N2W, N2p),
@@ -130,7 +117,6 @@ unigrams = (
     (N2c6, N2p),
     (N2c4, N2p),
     (N2c,),
-    (N2ss,),
 )
 
 
@@ -141,27 +127,21 @@ bigrams = (
     (P1c, N0p),
     (P1c6, N0p),
 
-    (P2s, P1s),
-    (P2ss, P1s,),
-    (P2ss, P1ss,),
-
-    (P1ss, N0ss),
-
     (N0p, N1p,),
 )
 
 
 trigrams = (
     (P1p, N0p, N1p),
-    (P2p, P1p, N0ss),
+    (P2p, P1p,),
     (P2c4, P1c4, N0c4),
     
     (P1p, N0p, N1p),
-    (P1p, N0p, N1ss),
+    (P1p, N0p,),
     (P1c4, N0c4, N1c4),
 
     (N0p, N1p, N2p),
-    (N0p, N1p, N2ss),
+    (N0p, N1p,),
     (N0c4, N1c4, N2c4),
 )
 
@@ -172,8 +152,6 @@ cdef int fill_token(atom_t* ctxt, const TokenC* token) except -1:
     ctxt[2] = token.lex.cluster
     ctxt[3] = token.lex.cluster & 15
     ctxt[4] = token.lex.cluster & 63
-    ctxt[5] = token.lex.senses & POS_SENSES[<int>token.pos]
-    ctxt[6] = token.sense
 
 
 cdef int fill_context(atom_t* ctxt, const TokenC* token) except -1:
@@ -194,6 +172,7 @@ cdef class SenseTagger:
     cdef readonly LinearModel model
     cdef readonly Extractor extractor
     cdef readonly model_dir
+    cdef readonly flags_t[<int>N_UNIV_TAGS] pos_senses
 
     def __init__(self, StringStore strings, model_dir):
         if model_dir is not None and path.isdir(model_dir):
@@ -207,25 +186,50 @@ cdef class SenseTagger:
             self.model.load(self.model_dir, freq_thresh=0)
         self.strings = strings
 
+        self.pos_senses[<int>parts_of_speech.NO_TAG] = 0
+        self.pos_senses[<int>parts_of_speech.ADJ] = 0
+        self.pos_senses[<int>parts_of_speech.ADV] = 0
+        self.pos_senses[<int>parts_of_speech.ADP] = 0
+        self.pos_senses[<int>parts_of_speech.CONJ] = 0
+        self.pos_senses[<int>parts_of_speech.DET] = 0
+        self.pos_senses[<int>parts_of_speech.NOUN] = 0
+        self.pos_senses[<int>parts_of_speech.NUM] = 0
+        self.pos_senses[<int>parts_of_speech.PRON] = 0
+        self.pos_senses[<int>parts_of_speech.PRT] = 0
+        self.pos_senses[<int>parts_of_speech.VERB] = 0
+        self.pos_senses[<int>parts_of_speech.X] = 0
+        self.pos_senses[<int>parts_of_speech.PUNCT] = 0
+        self.pos_senses[<int>parts_of_speech.EOL] = 0
+
+
+        cdef flags_t sense = 0
+        for _sense in range(N_Tops, V_body):
+            self.pos_senses[<int>parts_of_speech.NOUN] |= 1 << sense
+
+        for _sense in range(V_body, J_ppl):
+            self.pos_senses[<int>parts_of_speech.VERB] |= 1 << sense
+
     def __call__(self, Tokens tokens):
         cdef atom_t[CONTEXT_SIZE] context
         cdef int i, guess, n_feats
-        cdef const TokenC* token
+        cdef TokenC* token
         for i in range(tokens.length):
             token = &tokens.data[i]
             if token.pos in (NOUN, VERB):
                 fill_context(context, token)
                 feats = self.extractor.get_feats(context, &n_feats)
                 scores = self.model.get_scores(feats, n_feats)
-                tokens.data[i].sense = self.best_in_set(scores, POS_SENSES[<int>token.pos])
+                tokens.data[i].sense = self.best_in_set(scores, self.pos_senses[<int>token.pos])
 
     def train(self, Tokens tokens, GoldParse gold):
         cdef int i, j
+        cdef TokenC* token
         for i, ssenses in enumerate(gold.ssenses):
+            token = &tokens.data[i]
             if ssenses:
                 gold.c.ssenses[i] = encode_sense_strs(ssenses)
             else:
-                gold.c.ssenses[i] = pos_senses(&tokens.data[i])
+                gold.c.ssenses[i] = token.lex.senses & self.pos_senses[<int>token.pos]
         
         cdef atom_t[CONTEXT_SIZE] context
         cdef int n_feats
@@ -240,7 +244,7 @@ cdef class SenseTagger:
                 fill_context(context, token)
                 feats = self.extractor.get_feats(context, &n_feats)
                 scores = self.model.get_scores(feats, n_feats)
-                token.sense = self.best_in_set(scores, POS_SENSES[<int>token.pos])
+                token.sense = self.best_in_set(scores, token.lex.senses)
                 best = self.best_in_set(scores, gold.c.ssenses[i])
                 guess_counts = {}
                 gold_counts = {}
@@ -251,7 +255,7 @@ cdef class SenseTagger:
                         feat = (f_i, f_key)
                         gold_counts[feat]  = gold_counts.get(feat, 0) + 1.0
                         guess_counts[feat] = guess_counts.get(feat, 0) - 1.0
-                #self.model.update({token.sense: guess_counts, best: gold_counts})
+                self.model.update({token.sense: guess_counts, best: gold_counts})
         return cost
 
     cdef int best_in_set(self, const weight_t* scores, flags_t senses) except -1:
@@ -264,10 +268,6 @@ cdef class SenseTagger:
                 argmax = i
         assert argmax >= 0
         return argmax
-
-
-cdef flags_t pos_senses(const TokenC* token) nogil:
-    return token.lex.senses & POS_SENSES[<int>token.pos]
 
 
 cdef list _set_bits(flags_t flags):

@@ -61,7 +61,7 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[9] = token.lex.shape
         context[10] = token.ent_iob
         context[11] = token.ent_type
-        context[12] = token.lex.senses & senses.POS_SENSES[<int>token.pos]
+        context[12] = 0 # token.lex.senses & senses.POS_SENSES[<int>token.pos]
 
 cdef int fill_context(atom_t* ctxt, StateClass st) nogil:
     # Take care to fill every element of context!
