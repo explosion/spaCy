@@ -14,7 +14,21 @@ spaCy: Industrial-strength NLP
 
 .. _Version 0.87 released: updates.html
 
-`spaCy`_ is a new library for text processing in Python and Cython.
+`spaCy`_ is a new library for text processing in Python and Cython.  It is designed
+to be production quality, general purpose, and up-to-the-minute with the latest
+research.  It offers similar functionality to Stanford's CoreNLP, but is
+faster, more accurate, and offers commercial licensing options (you can also
+use it under the AGPL).  
+
+If you're trying to do something that's never been done before, spaCy can
+instantly fast-forward you to all the best of what *has* been done --- even if
+it's only been done in a paper that was published two months ago.
+
+
+It is a production-quality implementation of underlying, general-purpose
+natural language understandi
+Its mission is to make a prod the latest natural language understanding
+research into practice, by making a production-quality implementation 
 I wrote it because I think small companies are terrible at
 natural language processing (NLP).  Or rather:
 small companies are using terrible NLP technology.
