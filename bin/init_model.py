@@ -22,6 +22,7 @@ from shutil import copyfile
 from shutil import copytree
 import codecs
 from collections import defaultdict
+import json
 
 from spacy.en import get_lex_props
 from spacy.en.lemmatizer import Lemmatizer
@@ -31,6 +32,7 @@ from spacy.vocab import write_binary_vectors
 from spacy.parts_of_speech import NOUN, VERB, ADJ, ADV
 
 import spacy.senses
+from spacy.munge import read_wordnet
 
 
 def setup_tokenizer(lang_data_dir, tok_dir):
@@ -127,6 +129,7 @@ def setup_vocab(src_dir, dst_dir):
     vocab.strings.dump(str(dst_dir / 'strings.txt'))
 
 
+
 def main(lang_data_dir, corpora_dir, model_dir):
     model_dir = Path(model_dir)
     lang_data_dir = Path(lang_data_dir)
@@ -142,6 +145,13 @@ def main(lang_data_dir, corpora_dir, model_dir):
     setup_vocab(corpora_dir, model_dir / 'vocab')
     if not (model_dir / 'wordnet').exists():
         copytree(str(corpora_dir / 'wordnet'), str(model_dir / 'wordnet'))
+    ss_probs = read_wordnet.make_supersense_dict(str(corpora_dir / 'wordnet'))
+
+    wsd_dir = Path(model_dir, 'wsd')
+    if not wsd_dir.exists():
+        wsd_dir.mkdir()
+    with codecs.open(str(wsd_dir / 'supersenses.json'), 'w', 'utf8') as file_:
+        json.dump(ss_probs, file_)
 
 
 if __name__ == '__main__':
