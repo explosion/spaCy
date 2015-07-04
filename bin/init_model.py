@@ -87,7 +87,7 @@ def _read_senses(loc):
         ss_type, lex_filenum, lex_id, head_word, head_id = lex_sense.split(':')
         pos = pos_tags[int(ss_type)]
         if pos is not None:
-            lexicon[lemma][pos].append(int(lex_filenum))
+            lexicon[lemma][pos].append(int(lex_filenum) + 1)
     return lexicon
 
 
