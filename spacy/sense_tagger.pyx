@@ -1,18 +1,24 @@
+from libc.string cimport memcpy
+from cymem.cymem cimport Pool
+
+from thinc.learner cimport LinearModel
+from thinc.features cimport Extractor, Feature
+
+from thinc.typedefs cimport atom_t, weight_t, feat_t
+
+
+
+
 from .typedefs cimport flags_t
 from .structs cimport TokenC
 from .strings cimport StringStore
 from .tokens cimport Tokens
 from .senses cimport N_SENSES, encode_sense_strs
-from .senses cimport N_Tops, J_ppl, V_body
+from .senses cimport NO_SENSE, N_Tops, J_ppl, V_body
 from .gold cimport GoldParse
 from .parts_of_speech cimport NOUN, VERB, N_UNIV_TAGS
 
 from . cimport parts_of_speech
-
-from thinc.learner cimport LinearModel
-from thinc.features cimport Extractor
-
-from thinc.typedefs cimport atom_t, weight_t, feat_t
 
 from os import path
 
@@ -48,6 +54,9 @@ cdef enum:
     N2c
     N2c6
     N2c4
+
+    P1s
+    P2s
     
     CONTEXT_SIZE
 
@@ -77,14 +86,11 @@ unigrams = (
     (P1c,),
     
     (N0p,),
-    (N0W, N0p),
     (N0c, N0p),
     (N0c6, N0p),
     (N0c4, N0p),
     (N0c,),
-    (N0W,),
     (N0p,),
-    (N0W, N0p),
     (N0c, N0p),
     (N0c6, N0p),
     (N0c4, N0p),
@@ -117,6 +123,12 @@ unigrams = (
     (N2c6, N2p),
     (N2c4, N2p),
     (N2c,),
+
+    (P1s,),
+    (P2s,),
+    (P1s, P2s,),
+    (P1s, N0p),
+    (P1s, P2s, N0c),
 )
 
 
@@ -165,6 +177,44 @@ cdef int fill_context(atom_t* ctxt, const TokenC* token) except -1:
 
     fill_token(&ctxt[N1W], token + 1)
     fill_token(&ctxt[N2W], token + 2)
+    ctxt[P1s] = (token - 1).sense
+    ctxt[P2s] = (token - 2).sense
+
+
+cdef class FeatureVector:
+    cdef Pool mem
+    cdef Feature* c
+    cdef list extractors
+    cdef int length
+    cdef int _max_length
+
+    def __init__(self, length=100):
+        self.mem = Pool()
+        self.c = <Feature*>self.mem.alloc(length, sizeof(Feature))
+        self.length = 0
+        self._max_length = length
+
+    def __len__(self):
+        return self.length
+
+    cpdef int add(self, feat_t key, weight_t value) except -1:
+        if self.length == self._max_length:
+            self._max_length *= 2
+            self.c = <Feature*>self.mem.realloc(self.c, self._max_length * sizeof(Feature))
+
+        self.c[self.length] = Feature(i=0, key=key, value=value)
+        self.length += 1
+
+    cdef int extend(self, const Feature* new_feats, int n_feats) except -1:
+        new_length = self.length + n_feats
+        if new_length >= self._max_length:
+            self._max_length = 2 * new_length
+            self.c = <Feature*>self.mem.realloc(self.c, new_length * sizeof(Feature))
+        memcpy(&self.c[self.length], new_feats, n_feats * sizeof(Feature))
+        self.length += n_feats
+
+    def clear(self):
+        self.length = 0
 
 
 cdef class SenseTagger:
@@ -201,25 +251,34 @@ cdef class SenseTagger:
         self.pos_senses[<int>parts_of_speech.PUNCT] = 0
         self.pos_senses[<int>parts_of_speech.EOL] = 0
 
-
         cdef flags_t sense = 0
-        for _sense in range(N_Tops, V_body):
+        for sense in range(N_Tops, V_body):
             self.pos_senses[<int>parts_of_speech.NOUN] |= 1 << sense
 
-        for _sense in range(V_body, J_ppl):
+        for sense in range(V_body, J_ppl):
             self.pos_senses[<int>parts_of_speech.VERB] |= 1 << sense
 
     def __call__(self, Tokens tokens):
-        cdef atom_t[CONTEXT_SIZE] context
+        cdef atom_t[CONTEXT_SIZE] local_context
         cdef int i, guess, n_feats
+        cdef flags_t valid_senses = 0
         cdef TokenC* token
+        cdef FeatureVector features = FeatureVector(100)
         for i in range(tokens.length):
             token = &tokens.data[i]
-            if token.pos in (NOUN, VERB):
-                fill_context(context, token)
-                feats = self.extractor.get_feats(context, &n_feats)
-                scores = self.model.get_scores(feats, n_feats)
-                tokens.data[i].sense = self.best_in_set(scores, self.pos_senses[<int>token.pos])
+            if token.lex.senses == 1:
+                continue
+            assert not (token.lex.senses & (1 << NO_SENSE)), (tokens[i].orth_, token.lex.senses)
+            assert not (self.pos_senses[<int>token.pos] & (1 << NO_SENSE))
+            valid_senses = token.lex.senses & self.pos_senses[<int>token.pos]
+            assert not (valid_senses & (1 << NO_SENSE))
+            if valid_senses:
+                fill_context(local_context, token)
+                local_feats = self.extractor.get_feats(local_context, &n_feats)
+                features.extend(local_feats, n_feats)
+                scores = self.model.get_scores(features.c, features.length)
+                tokens.data[i].sense = self.best_in_set(scores, valid_senses)
+                features.clear()
 
     def train(self, Tokens tokens, GoldParse gold):
         cdef int i, j
@@ -228,8 +287,10 @@ cdef class SenseTagger:
             token = &tokens.data[i]
             if ssenses:
                 gold.c.ssenses[i] = encode_sense_strs(ssenses)
-            else:
+            elif token.lex.senses >= 2 and token.pos in (NOUN, VERB):
                 gold.c.ssenses[i] = token.lex.senses & self.pos_senses[<int>token.pos]
+            else:
+                gold.c.ssenses[i] = 0
         
         cdef atom_t[CONTEXT_SIZE] context
         cdef int n_feats
@@ -244,7 +305,7 @@ cdef class SenseTagger:
                 fill_context(context, token)
                 feats = self.extractor.get_feats(context, &n_feats)
                 scores = self.model.get_scores(feats, n_feats)
-                token.sense = self.best_in_set(scores, token.lex.senses)
+                token.sense = self.best_in_set(scores, self.pos_senses[<int>token.pos])
                 best = self.best_in_set(scores, gold.c.ssenses[i])
                 guess_counts = {}
                 gold_counts = {}
