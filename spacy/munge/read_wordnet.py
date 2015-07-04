@@ -82,12 +82,32 @@ def get_og_to_ssenses(wordnet_dir, onto_dir):
     return mapping
 
 
+def make_supersense_dict(wordnet_dir):
+    sense_to_ssense = get_sense_to_ssense(path.join(wordnet_dir, 'index.sense'))
+    gather = {}
+    for (word, pos, sense), supersense in sense_to_ssense.items():
+        key = (word, pos)
+        gather.setdefault((word, pos), []).append((sense, supersense))
+    mapping = {}
+    for (word, pos), senses in gather.items():
+        n_senses = len(senses)
+        probs = {}
+        remaining = 1.0
+        for sense, supersense in sorted(senses):
+            remaining /= 2
+            probs[supersense] = probs.get(supersense, 0.0) + remaining
+        for sense, supersense in sorted(senses):
+            probs[supersense] += remaining / len(senses)
+        mapping[(word, pos)] = probs
+    return mapping
+
+
 def main(wordnet_dir, onto_dir):
-    mapping = get_og_to_ssenses(wordnet_dir, onto_dir)
-    print mapping[('dog', 'v', 1)]
-    print mapping[('dog', 'n', 1)]
-    print mapping[('abandon', 'v', 1)]
-    print mapping[('abandon', 'n', 1)]
+    mapping = make_supersense_dict(wordnet_dir)
+    print mapping[('dog', 'v')]
+    print mapping[('dog', 'n')]
+    print mapping[('abandon', 'v')]
+    print mapping[('abandon', 'n')]
 
 
 if __name__ == '__main__':
