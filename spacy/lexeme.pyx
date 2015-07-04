@@ -28,10 +28,14 @@ cdef int set_lex_struct_props(LexemeC* lex, dict props, StringStore string_store
     lex.sentiment = props['sentiment']
 
     lex.flags = props['flags']
-    cdef flags_t sense_id
+    cdef flags_t sense_id = 0
+    cdef flags_t one = 1
     lex.senses = 0
-    for sense_id in props.get('senses', []):
-        lex.senses |= 1 << sense_id
+    for _sense_id in props.get('senses', []):
+        sense_id = _sense_id
+        lex.senses |= one << sense_id
+    if lex.senses != one:
+        assert not (lex.senses & (1 << 0)), (lex.senses, props)
     lex.repvec = empty_vec
 
 
