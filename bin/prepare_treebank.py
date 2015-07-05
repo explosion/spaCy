@@ -114,6 +114,9 @@ def format_sentence(deps, ner, brackets, senses):
 def format_token(token_id, token, ner, senses):
     assert token_id == token['id']
     head = (token['head'] - token_id) if token['head'] != -1 else 0
+    # TODO: Sense data currently broken, due to alignment problems. Also should
+    # output OntoNotes groups, not WordNet supersenses. Don't print the information
+    # until this is fixed.
     return {
         'id': token_id,
         'orth': token['word'],
@@ -121,7 +124,6 @@ def format_token(token_id, token, ner, senses):
         'head': head,
         'dep': token['dep'],
         'ner': ner,
-        'ssenses': senses[token_id]
     }
 
 
