@@ -110,7 +110,7 @@ def setup_vocab(src_dir, dst_dir):
     lexicon = []
     for word, prob in reversed(sorted(probs.items(), key=lambda item: item[1])):
         entry = get_lex_props(word)
-        if word in clusters or float(prob) >= -17:
+        if word in clusters or word in senses or float(prob) >= -17:
             entry['prob'] = float(prob)
             cluster = clusters.get(word, '0')
             # Decode as a little-endian string, so that we can do & 15 to get
