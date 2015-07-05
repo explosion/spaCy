@@ -87,7 +87,7 @@ def make_supersense_dict(wordnet_dir):
     gather = {}
     for (word, pos, sense), supersense in sense_to_ssense.items():
         key = (word, pos)
-        gather.setdefault((word, pos), []).append((sense, supersense))
+        gather.setdefault((word, pos), []).append((int(sense), supersense))
     mapping = {}
     for (word, pos), senses in gather.items():
         n_senses = len(senses)
@@ -98,7 +98,7 @@ def make_supersense_dict(wordnet_dir):
             probs[supersense] = probs.get(supersense, 0.0) + remaining
         for sense, supersense in sorted(senses):
             probs[supersense] += remaining / len(senses)
-        mapping[(word, pos)] = probs
+        mapping.setdefault(word, {}).update(probs)
     return mapping
 
 

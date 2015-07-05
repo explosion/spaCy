@@ -245,34 +245,31 @@ cdef class SenseTagger:
         if model_loc and path.exists(model_loc):
             self.model.load(model_loc, freq_thresh=0)
         self.strings = strings
+        cdef flags_t all_senses = 0
+        cdef flags_t sense = 0
+        cdef flags_t one = 1
+        for sense in range(1, N_SENSES):
+            all_senses |= (one << sense)
 
-        self.pos_senses[<int>parts_of_speech.NO_TAG] = 0
-        self.pos_senses[<int>parts_of_speech.ADJ] = 0
-        self.pos_senses[<int>parts_of_speech.ADV] = 0
-        self.pos_senses[<int>parts_of_speech.ADP] = 0
-        self.pos_senses[<int>parts_of_speech.CONJ] = 0
-        self.pos_senses[<int>parts_of_speech.DET] = 0
-        self.pos_senses[<int>parts_of_speech.NOUN] = 0
-        self.pos_senses[<int>parts_of_speech.NUM] = 0
-        self.pos_senses[<int>parts_of_speech.PRON] = 0
-        self.pos_senses[<int>parts_of_speech.PRT] = 0
-        self.pos_senses[<int>parts_of_speech.VERB] = 0
-        self.pos_senses[<int>parts_of_speech.X] = 0
+        self.pos_senses[<int>parts_of_speech.NO_TAG] = all_senses
+        self.pos_senses[<int>parts_of_speech.ADJ] = all_senses
+        self.pos_senses[<int>parts_of_speech.ADV] = all_senses
+        self.pos_senses[<int>parts_of_speech.ADP] = all_senses
+        self.pos_senses[<int>parts_of_speech.CONJ] = all_senses
+        self.pos_senses[<int>parts_of_speech.DET] = all_senses
+        self.pos_senses[<int>parts_of_speech.NUM] = all_senses
+        self.pos_senses[<int>parts_of_speech.PRON] = all_senses
+        self.pos_senses[<int>parts_of_speech.PRT] = all_senses
+        self.pos_senses[<int>parts_of_speech.X] = all_senses
         self.pos_senses[<int>parts_of_speech.PUNCT] = 0
         self.pos_senses[<int>parts_of_speech.EOL] = 0
 
-        cdef flags_t sense = 0
-        cdef flags_t one = 1
         for sense in range(N_Tops, V_body):
             self.pos_senses[<int>parts_of_speech.NOUN] |= one << sense
 
+        self.pos_senses[<int>parts_of_speech.VERB] = 0
         for sense in range(V_body, J_ppl):
             self.pos_senses[<int>parts_of_speech.VERB] |= one << sense
-
-        self.pos_senses[<int>parts_of_speech.ADV] |= one << A_all
-        self.pos_senses[<int>parts_of_speech.ADJ] |= one << J_all
-        self.pos_senses[<int>parts_of_speech.ADJ] |= one << J_pert
-        self.pos_senses[<int>parts_of_speech.ADJ] |= one << J_ppl
 
     def __call__(self, Tokens tokens):
         cdef atom_t[CONTEXT_SIZE] local_context
@@ -289,7 +286,7 @@ cdef class SenseTagger:
                 local_feats = self.extractor.get_feats(local_context, &n_feats)
                 features.extend(local_feats, n_feats)
                 scores = self.model.get_scores(features.c, features.length)
-                self.weight_scores_by_tagdict(<weight_t*><void*>scores, token, 1.0)
+                self.weight_scores_by_tagdict(<weight_t*><void*>scores, token, 0.95)
                 tokens.data[i].sense = self.best_in_set(scores, valid_senses)
                 features.clear()
 
@@ -342,16 +339,6 @@ cdef class SenseTagger:
     cdef int weight_scores_by_tagdict(self, weight_t* scores, const TokenC* token,
                                       weight_t a) except -1:
         lemma = self.strings[token.lemma]
-        if token.pos == NOUN:
-            key = lemma + '/n'
-        elif token.pos == VERB:
-            key = lemma + '/v'
-        elif token.pos == ADJ:
-            key = lemma + '/j'
-        elif token.pos == ADV:
-            key = lemma + '/a'
-        else:
-            return 0
 
         # First softmax the scores
         cdef int i
@@ -361,9 +348,9 @@ cdef class SenseTagger:
         for i in range(N_SENSES):
             scores[i] = <weight_t>(exp(scores[i]) / total)
 
-        probs = self.tagdict.get(key, {})
+        probs = self.tagdict.get(lemma, {})
         for i in range(1, N_SENSES):
-            prob = probs.get(str(i-1), 0)
+            prob = probs.get(unicode(i-1), 0)
             scores[i] = (a * prob) + ((1 - a) * scores[i])
 
     def end_training(self):

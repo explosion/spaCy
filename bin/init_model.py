@@ -82,14 +82,13 @@ def _read_probs(loc):
 
 def _read_senses(loc):
     lexicon = defaultdict(lambda: defaultdict(list))
-    pos_tags = [None, NOUN, VERB, ADJ, ADV, ADJ]
+    pos_tags = [None, NOUN, VERB, ADJ, None, None]
     for line in codecs.open(str(loc), 'r', 'utf8'):
         sense_key, synset_offset, sense_number, tag_cnt = line.split()
         lemma, lex_sense = sense_key.split('%')
         ss_type, lex_filenum, lex_id, head_word, head_id = lex_sense.split(':')
         pos = pos_tags[int(ss_type)]
-        if pos is not None:
-            lexicon[lemma][pos].append(int(lex_filenum) + 1)
+        lexicon[lemma][pos].append(int(lex_filenum) + 1)
     return lexicon
 
 
@@ -118,16 +117,15 @@ def setup_vocab(src_dir, dst_dir):
             # the first 4 bits. See _parse_features.pyx
             entry['cluster'] = int(cluster[::-1], 2)
             orth_senses = set()
-            lemmas = []
+            orth_senses.update(senses[word.lower()][None])
             for pos in [NOUN, VERB, ADJ]:
                 for lemma in lemmatizer(word.lower(), pos):
-                    lemmas.append(lemma)
                     orth_senses.update(senses[lemma][pos])
-            orth_senses.update(senses[word.lower()][ADV])
             entry['senses'] = list(sorted(orth_senses))
             vocab[word] = entry
     vocab.dump(str(dst_dir / 'lexemes.bin'))
     vocab.strings.dump(str(dst_dir / 'strings.txt'))
+
 
 
 def main(lang_data_dir, corpora_dir, model_dir):
