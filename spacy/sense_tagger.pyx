@@ -255,10 +255,10 @@ cdef class SenseTagger:
         self.pos_senses[<int>parts_of_speech.ADJ] = all_senses
         self.pos_senses[<int>parts_of_speech.ADV] = all_senses
         self.pos_senses[<int>parts_of_speech.ADP] = all_senses
-        self.pos_senses[<int>parts_of_speech.CONJ] = all_senses
-        self.pos_senses[<int>parts_of_speech.DET] = all_senses
-        self.pos_senses[<int>parts_of_speech.NUM] = all_senses
-        self.pos_senses[<int>parts_of_speech.PRON] = all_senses
+        self.pos_senses[<int>parts_of_speech.CONJ] = 0
+        self.pos_senses[<int>parts_of_speech.DET] = 0
+        self.pos_senses[<int>parts_of_speech.NUM] = 0
+        self.pos_senses[<int>parts_of_speech.PRON] = 0
         self.pos_senses[<int>parts_of_speech.PRT] = all_senses
         self.pos_senses[<int>parts_of_speech.X] = all_senses
         self.pos_senses[<int>parts_of_speech.PUNCT] = 0
@@ -286,9 +286,11 @@ cdef class SenseTagger:
                 local_feats = self.extractor.get_feats(local_context, &n_feats)
                 features.extend(local_feats, n_feats)
                 scores = self.model.get_scores(features.c, features.length)
-                self.weight_scores_by_tagdict(<weight_t*><void*>scores, token, 0.95)
+                self.weight_scores_by_tagdict(<weight_t*><void*>scores, token, 0.9)
                 tokens.data[i].sense = self.best_in_set(scores, valid_senses)
                 features.clear()
+            else:
+                token.sense = NO_SENSE
 
     def train(self, Tokens tokens):
         cdef int i, j
@@ -303,25 +305,31 @@ cdef class SenseTagger:
             token = &tokens.data[i]
             pos_senses = self.pos_senses[<int>token.pos]
             lex_senses = token.lex.senses & pos_senses
-            if pos_senses >= 2 and lex_senses >= 2:
+            if lex_senses >= 2:
                 fill_context(context, token)
                 feats = self.extractor.get_feats(context, &n_feats)
                 scores = self.model.get_scores(feats, n_feats)
-                #self.weight_scores_by_tagdict(<weight_t*><void*>scores, token, 0.1)
                 guess = self.best_in_set(scores, pos_senses)
                 best  = self.best_in_set(scores, lex_senses)
-                guess_counts = {}
-                gold_counts = {}
-                if guess != best:
-                    cost += 1
-                    for j in range(n_feats):
-                        f_key = feats[j].key
-                        f_i = feats[j].i
-                        feat = (f_i, f_key)
-                        gold_counts[feat]  = gold_counts.get(feat, 0) + 1.0
-                        guess_counts[feat] = guess_counts.get(feat, 0) - 1.0
-                self.model.update({guess: guess_counts, best: gold_counts})
+                update = self._make_update(feats, n_feats, guess, best)
+                self.model.update(update)
+                token.sense = best
+                cost += guess != best
+            else:
+                token.sense = 1
         return cost
+
+    cdef dict _make_update(self, const Feature* feats, int n_feats, int guess, int best):
+        guess_counts = {}
+        gold_counts = {}
+        if guess != best:
+            for j in range(n_feats):
+                f_key = feats[j].key
+                f_i = feats[j].i
+                feat = (f_i, f_key)
+                gold_counts[feat]  = gold_counts.get(feat, 0) + 1.0
+                guess_counts[feat] = guess_counts.get(feat, 0) - 1.0
+        return {guess: guess_counts, best: gold_counts}
 
     cdef int best_in_set(self, const weight_t* scores, flags_t senses) except -1:
         cdef weight_t max_ = 0
