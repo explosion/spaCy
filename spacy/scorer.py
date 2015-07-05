@@ -74,8 +74,6 @@ class Scorer(object):
     def score(self, tokens, gold, verbose=False):
         assert len(tokens) == len(gold)
 
-        self._score_senses(tokens, gold)
-
         gold_deps = set()
         gold_tags = set()
         gold_ents = set(tags_to_entities([annot[5] for annot in gold.orig_annot]))
@@ -126,12 +124,3 @@ class Scorer(object):
                 print 'F', gold_words[w_id], dep, gold_words[h_id]
             for w_id, h_id, dep in (gold_deps - cand_deps):
                 print 'M', gold_words[w_id], dep, gold_words[h_id]
-
-    def _score_senses(self, tokens, gold):
-        for i, g_annot in enumerate(gold.orig_annot):
-            gold_senses = g_annot[-1]
-            if gold_senses and gold.gold_to_cand[i] is not None:
-                cand_i = gold.gold_to_cand[i]
-                sense_str = tokens[cand_i].sense_
-                self.wsd.tp += sense_str in gold_senses
-                self.wsd.fn += sense_str not in gold_senses
