@@ -141,14 +141,11 @@ def main(lang_data_dir, corpora_dir, model_dir):
 
     setup_tokenizer(lang_data_dir, model_dir / 'tokenizer')
     setup_vocab(corpora_dir, model_dir / 'vocab')
+
     if not (model_dir / 'wordnet').exists():
         copytree(str(corpora_dir / 'wordnet'), str(model_dir / 'wordnet'))
     ss_probs = read_wordnet.make_supersense_dict(str(corpora_dir / 'wordnet'))
-
-    wsd_dir = Path(model_dir, 'wsd')
-    if not wsd_dir.exists():
-        wsd_dir.mkdir()
-    with codecs.open(str(wsd_dir / 'supersenses.json'), 'w', 'utf8') as file_:
+    with codecs.open(str(model_dir / 'wordnet' / 'supersenses.json'), 'w', 'utf8') as file_:
         json.dump(ss_probs, file_)
 
 
