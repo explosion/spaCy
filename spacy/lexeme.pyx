@@ -34,8 +34,6 @@ cdef int set_lex_struct_props(LexemeC* lex, dict props, StringStore string_store
     for _sense_id in props.get('senses', []):
         sense_id = _sense_id
         lex.senses |= one << sense_id
-    if lex.senses != one:
-        assert not (lex.senses & (1 << 0)), (lex.senses, props)
     lex.repvec = empty_vec
 
 
@@ -53,7 +51,9 @@ cdef class Lexeme:
         return self.l2_norm != 0
 
     cpdef bint check(self, attr_id_t flag_id) except -1:
-        return self.flags & (1 << flag_id)
+        cdef flags_t one = 1
+        return self.flags & (one << flag_id)
 
     cpdef bint has_sense(self, flags_t flag_id) except -1:
-        return self.senses & (1 << flag_id)
+        cdef flags_t one = 1
+        return self.senses & (one << flag_id)
