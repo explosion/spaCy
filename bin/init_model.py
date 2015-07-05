@@ -82,7 +82,7 @@ def _read_probs(loc):
 
 def _read_senses(loc):
     lexicon = defaultdict(lambda: defaultdict(list))
-    pos_tags = [None, NOUN, VERB, ADJ, ADV, None]
+    pos_tags = [None, NOUN, VERB, ADJ, ADV, ADJ]
     for line in codecs.open(str(loc), 'r', 'utf8'):
         sense_key, synset_offset, sense_number, tag_cnt = line.split()
         lemma, lex_sense = sense_key.split('%')
@@ -123,11 +123,11 @@ def setup_vocab(src_dir, dst_dir):
                 for lemma in lemmatizer(word.lower(), pos):
                     lemmas.append(lemma)
                     orth_senses.update(senses[lemma][pos])
+            orth_senses.update(senses[word.lower()][ADV])
             entry['senses'] = list(sorted(orth_senses))
             vocab[word] = entry
     vocab.dump(str(dst_dir / 'lexemes.bin'))
     vocab.strings.dump(str(dst_dir / 'strings.txt'))
-
 
 
 def main(lang_data_dir, corpora_dir, model_dir):
