@@ -1,12 +1,13 @@
 from libc.string cimport memcpy
+from libc.math cimport exp
+
 from cymem.cymem cimport Pool
 
 from thinc.learner cimport LinearModel
 from thinc.features cimport Extractor, Feature
 
 from thinc.typedefs cimport atom_t, weight_t, feat_t
-
-
+cimport cython
 
 
 from .typedefs cimport flags_t
@@ -14,13 +15,14 @@ from .structs cimport TokenC
 from .strings cimport StringStore
 from .tokens cimport Tokens
 from .senses cimport N_SENSES, encode_sense_strs
-from .senses cimport NO_SENSE, N_Tops, J_ppl, V_body
+from .senses cimport NO_SENSE, N_Tops, J_all, J_pert, A_all, J_ppl, V_body
 from .gold cimport GoldParse
-from .parts_of_speech cimport NOUN, VERB, N_UNIV_TAGS
+from .parts_of_speech cimport NOUN, VERB, ADV, ADJ, N_UNIV_TAGS
 
 from . cimport parts_of_speech
 
 from os import path
+import json
 
 
 
@@ -223,17 +225,25 @@ cdef class SenseTagger:
     cdef readonly Extractor extractor
     cdef readonly model_dir
     cdef readonly flags_t[<int>N_UNIV_TAGS] pos_senses
+    cdef dict tagdict
 
     def __init__(self, StringStore strings, model_dir):
         if model_dir is not None and path.isdir(model_dir):
-            model_dir = path.join(model_dir, 'model')
+            model_dir = path.join(model_dir, 'wsd')
+            
+        self.model_dir = model_dir
+        if path.exists(path.join(model_dir, 'supersenses.json')):
+            self.tagdict = json.load(open(path.join(model_dir, 'supersenses.json')))
+        else:
+            self.tagdict = {}
 
         templates = unigrams + bigrams + trigrams
         self.extractor = Extractor(templates)
         self.model = LinearModel(N_SENSES, self.extractor.n_templ)
-        self.model_dir = model_dir
-        if self.model_dir and path.exists(self.model_dir):
-            self.model.load(self.model_dir, freq_thresh=0)
+
+        model_loc = path.join(self.model_dir, 'model')
+        if model_loc and path.exists(model_loc):
+            self.model.load(model_loc, freq_thresh=0)
         self.strings = strings
 
         self.pos_senses[<int>parts_of_speech.NO_TAG] = 0
@@ -252,89 +262,119 @@ cdef class SenseTagger:
         self.pos_senses[<int>parts_of_speech.EOL] = 0
 
         cdef flags_t sense = 0
+        cdef flags_t one = 1
         for sense in range(N_Tops, V_body):
-            self.pos_senses[<int>parts_of_speech.NOUN] |= 1 << sense
+            self.pos_senses[<int>parts_of_speech.NOUN] |= one << sense
 
         for sense in range(V_body, J_ppl):
-            self.pos_senses[<int>parts_of_speech.VERB] |= 1 << sense
+            self.pos_senses[<int>parts_of_speech.VERB] |= one << sense
+
+        self.pos_senses[<int>parts_of_speech.ADV] |= one << A_all
+        self.pos_senses[<int>parts_of_speech.ADJ] |= one << J_all
+        self.pos_senses[<int>parts_of_speech.ADJ] |= one << J_pert
+        self.pos_senses[<int>parts_of_speech.ADJ] |= one << J_ppl
 
     def __call__(self, Tokens tokens):
         cdef atom_t[CONTEXT_SIZE] local_context
         cdef int i, guess, n_feats
         cdef flags_t valid_senses = 0
         cdef TokenC* token
+        cdef flags_t one = 1
         cdef FeatureVector features = FeatureVector(100)
         for i in range(tokens.length):
             token = &tokens.data[i]
-            if token.lex.senses == 1:
-                continue
-            assert not (token.lex.senses & (1 << NO_SENSE)), (tokens[i].orth_, token.lex.senses)
-            assert not (self.pos_senses[<int>token.pos] & (1 << NO_SENSE))
             valid_senses = token.lex.senses & self.pos_senses[<int>token.pos]
-            assert not (valid_senses & (1 << NO_SENSE))
-            if valid_senses:
+            if valid_senses >= 2:
                 fill_context(local_context, token)
                 local_feats = self.extractor.get_feats(local_context, &n_feats)
                 features.extend(local_feats, n_feats)
                 scores = self.model.get_scores(features.c, features.length)
+                self.weight_scores_by_tagdict(<weight_t*><void*>scores, token, 1.0)
                 tokens.data[i].sense = self.best_in_set(scores, valid_senses)
                 features.clear()
 
-    def train(self, Tokens tokens, GoldParse gold):
+    def train(self, Tokens tokens):
         cdef int i, j
         cdef TokenC* token
-        for i, ssenses in enumerate(gold.ssenses):
-            token = &tokens.data[i]
-            if ssenses:
-                gold.c.ssenses[i] = encode_sense_strs(ssenses)
-            elif token.lex.senses >= 2 and token.pos in (NOUN, VERB):
-                gold.c.ssenses[i] = token.lex.senses & self.pos_senses[<int>token.pos]
-            else:
-                gold.c.ssenses[i] = 0
-        
         cdef atom_t[CONTEXT_SIZE] context
         cdef int n_feats
         cdef feat_t f_key
+        cdef flags_t best_senses = 0
         cdef int f_i
         cdef int cost = 0
         for i in range(tokens.length):
             token = &tokens.data[i]
-            if token.pos in (NOUN, VERB) \
-            and token.lex.senses >= 2 \
-            and gold.c.ssenses[i] >= 2:
+            pos_senses = self.pos_senses[<int>token.pos]
+            lex_senses = token.lex.senses & pos_senses
+            if pos_senses >= 2 and lex_senses >= 2:
                 fill_context(context, token)
                 feats = self.extractor.get_feats(context, &n_feats)
                 scores = self.model.get_scores(feats, n_feats)
-                token.sense = self.best_in_set(scores, self.pos_senses[<int>token.pos])
-                best = self.best_in_set(scores, gold.c.ssenses[i])
+                #self.weight_scores_by_tagdict(<weight_t*><void*>scores, token, 0.1)
+                guess = self.best_in_set(scores, pos_senses)
+                best  = self.best_in_set(scores, lex_senses)
                 guess_counts = {}
                 gold_counts = {}
-                if token.sense != best:
+                if guess != best:
+                    cost += 1
                     for j in range(n_feats):
                         f_key = feats[j].key
                         f_i = feats[j].i
                         feat = (f_i, f_key)
                         gold_counts[feat]  = gold_counts.get(feat, 0) + 1.0
                         guess_counts[feat] = guess_counts.get(feat, 0) - 1.0
-                self.model.update({token.sense: guess_counts, best: gold_counts})
+                self.model.update({guess: guess_counts, best: gold_counts})
         return cost
 
     cdef int best_in_set(self, const weight_t* scores, flags_t senses) except -1:
         cdef weight_t max_ = 0
         cdef int argmax = -1
         cdef flags_t i
+        cdef flags_t one = 1
         for i in range(N_SENSES):
-            if (senses & (1 << i)) and (argmax == -1 or scores[i] > max_):
+            if (senses & (one << i)) and (argmax == -1 or scores[i] > max_):
                 max_ = scores[i]
                 argmax = i
         assert argmax >= 0
         return argmax
 
+    @cython.cdivision(True)
+    cdef int weight_scores_by_tagdict(self, weight_t* scores, const TokenC* token,
+                                      weight_t a) except -1:
+        lemma = self.strings[token.lemma]
+        if token.pos == NOUN:
+            key = lemma + '/n'
+        elif token.pos == VERB:
+            key = lemma + '/v'
+        elif token.pos == ADJ:
+            key = lemma + '/j'
+        elif token.pos == ADV:
+            key = lemma + '/a'
+        else:
+            return 0
+
+        # First softmax the scores
+        cdef int i
+        cdef double total = 0
+        for i in range(N_SENSES):
+            total += exp(scores[i])
+        for i in range(N_SENSES):
+            scores[i] = <weight_t>(exp(scores[i]) / total)
+
+        probs = self.tagdict.get(key, {})
+        for i in range(1, N_SENSES):
+            prob = probs.get(str(i-1), 0)
+            scores[i] = (a * prob) + ((1 - a) * scores[i])
+
+    def end_training(self):
+        self.model.end_training()
+        self.model.dump(path.join(self.model_dir, 'model'), freq_thresh=0)
 
 cdef list _set_bits(flags_t flags):
     bits = []
     cdef flags_t bit
+    cdef flags_t one = 1
     for bit in range(N_SENSES):
-        if flags & (1 << bit):
+        if flags & (one << bit):
             bits.append(bit)
     return bits
