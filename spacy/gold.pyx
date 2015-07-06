@@ -144,7 +144,6 @@ def read_json_file(loc, docs_filter=None):
                     heads = []
                     labels = []
                     ner = []
-                    wsd = []
                     for i, token in enumerate(sent['tokens']):
                         words.append(token['orth'])
                         ids.append(i)
@@ -155,11 +154,8 @@ def read_json_file(loc, docs_filter=None):
                         if labels[-1].lower() == 'root':
                             labels[-1] = 'ROOT'
                         ner.append(token.get('ner', '-'))
-                        t_wsd = [s.replace('noun.', 'N_').replace('verb.', 'V_')
-                                 for s in token.get('ssenses', [])]
-                        wsd.append(t_wsd)
                     sents.append((
-                        (ids, words, tags, heads, labels, ner, wsd),
+                        (ids, words, tags, heads, labels, ner),
                         sent.get('brackets', [])))
                 if sents:
                     yield (paragraph.get('raw', None), sents)
@@ -238,7 +234,6 @@ cdef class GoldParse:
                 self.heads[i] = self.gold_to_cand[annot_tuples[3][gold_i]]
                 self.labels[i] = annot_tuples[4][gold_i]
                 self.ner[i] = annot_tuples[5][gold_i]
-                self.ssenses[i] = annot_tuples[6][gold_i]
        
         # If we have any non-projective arcs, i.e. crossing brackets, consider
         # the heads for those words missing in the gold-standard.
