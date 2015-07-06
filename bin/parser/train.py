@@ -18,6 +18,7 @@ from spacy.en import English
 from spacy.en.pos import POS_TEMPLATES, POS_TAGS, setup_model_dir
 
 from spacy.syntax.util import Config
+from spacy.syntax.parser import get_templates
 from spacy.gold import read_json_file
 from spacy.gold import GoldParse
 
@@ -95,10 +96,10 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
 
     setup_model_dir(sorted(POS_TAGS.keys()), POS_TAGS, POS_TEMPLATES, pos_model_dir)
 
-    Config.write(dep_model_dir, 'config', features=feat_set, seed=seed,
-                 labels=Language.ParserTransitionSystem.get_labels(gold_tuples),
+    Config.write(dep_model_dir, 'config', templates=get_templates(feat_set),
+                 seed=seed, labels=Language.ParserTransitionSystem.get_labels(gold_tuples),
                  beam_width=beam_width)
-    Config.write(ner_model_dir, 'config', features='ner', seed=seed,
+    Config.write(ner_model_dir, 'config', templates=get_templates('ner'), seed=seed,
                  labels=Language.EntityTransitionSystem.get_labels(gold_tuples),
                  beam_width=0)
 
