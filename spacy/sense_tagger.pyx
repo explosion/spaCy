@@ -56,17 +56,32 @@ cdef enum:
     N2c
     N2c6
     N2c4
-
+ 
+    Hw
+    Hp
+    Hc
+    Hc6
+    Hc4
+    
     N3W
     P3W
 
     P1s
     P2s
-    
+
+   
     CONTEXT_SIZE
 
 
 unigrams = (
+    (Hw,),
+    (Hp,),
+    (Hw, Hp),
+    (Hc, Hp),
+    (Hc6, Hp),
+    (Hc4, Hp),
+    (Hc,),
+
     (P2W,),
     (P2p,),
     (P2W, P2p),
@@ -189,6 +204,7 @@ cdef int fill_context(atom_t* ctxt, const TokenC* token) except -1:
 
     fill_token(&ctxt[N1W], token + 1)
     fill_token(&ctxt[N2W], token + 2)
+    fill_token(&ctxt[Hw], token + token.head)
     ctxt[P1s] = (token - 1).sense
     ctxt[P2s] = (token - 2).sense
     ctxt[N3W] = (token + 3).lemma
@@ -334,7 +350,7 @@ cdef class SenseTagger:
                 token.sense = 1
         return cost
 
-    cdef dict _perceptron_update(self, const Feature* feats, int n_feats, int guess, int best):
+    cdef dict _make_update(self, const Feature* feats, int n_feats, int guess, int best):
         guess_counts = {}
         gold_counts = {}
         if guess != best:
