@@ -1,6 +1,6 @@
 # Enum of Wordnet supersenses
-cimport parts_of_speech
-from .typedefs cimport flags_t
+from ..typedefs cimport flags_t
+from .. cimport parts_of_speech
 
 cpdef enum:
     NO_SENSE
@@ -52,4 +52,4 @@ cpdef enum:
     N_SENSES
 
 
-cdef flags_t encode_sense_strs(sense_names) except 0
+cdef flags_t encode_supersense_strs(sense_names) except 0

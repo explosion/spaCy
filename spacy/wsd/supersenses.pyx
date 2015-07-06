@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-cimport parts_of_speech
+from .. cimport parts_of_speech
 
 
 lexnames_str = """
@@ -56,7 +56,7 @@ STRINGS = tuple(line.split()[1] for line in lexnames_str.split('\n'))
 IDS = dict((sense_str, i) for i, sense_str in enumerate(STRINGS))
 
 
-cdef flags_t encode_sense_strs(sense_names) except 0:
+cdef flags_t encode_supersense_strs(sense_names) except 0:
     cdef flags_t sense_bits = 0
     if len(sense_names) == 0:
         return sense_bits | (1 << NO_SENSE)

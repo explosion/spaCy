@@ -10,20 +10,19 @@ from thinc.typedefs cimport atom_t, weight_t, feat_t
 cimport cython
 
 
-from .typedefs cimport flags_t
-from .structs cimport TokenC
-from .strings cimport StringStore
-from .tokens cimport Tokens
-from .senses cimport N_SENSES, encode_sense_strs
-from .senses cimport NO_SENSE, N_Tops, J_all, J_pert, A_all, J_ppl, V_body
-from .gold cimport GoldParse
-from .parts_of_speech cimport NOUN, VERB, ADV, ADJ, N_UNIV_TAGS
+from ..typedefs cimport flags_t
+from ..structs cimport TokenC
+from ..strings cimport StringStore
+from ..tokens cimport Tokens
+from .supersenses cimport N_SENSES, encode_supersense_strs
+from .supersenses cimport NO_SENSE, N_Tops, J_all, J_pert, A_all, J_ppl, V_body
+from ..gold cimport GoldParse
+from ..parts_of_speech cimport NOUN, VERB, ADV, ADJ, N_UNIV_TAGS
 
-from . cimport parts_of_speech
+from .. cimport parts_of_speech
 
 from os import path
 import json
-
 
 
 cdef enum:
