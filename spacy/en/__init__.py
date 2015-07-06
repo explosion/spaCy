@@ -14,7 +14,7 @@ from ..multi_words import RegexMerger
 from .pos import EnPosTagger
 from .pos import POS_TAGS
 
-from ..sense_tagger import SenseTagger
+from ..wsd.supersense_tagger import SenseTagger
 
 from .attrs import get_flags
 from . import regexes
