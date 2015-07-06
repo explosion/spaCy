@@ -77,7 +77,7 @@ class Scorer(object):
         gold_deps = set()
         gold_tags = set()
         gold_ents = set(tags_to_entities([annot[5] for annot in gold.orig_annot]))
-        for id_, word, tag, head, dep, ner, wsd in gold.orig_annot:
+        for id_, word, tag, head, dep, ner in gold.orig_annot:
             gold_tags.add((id_, tag))
             if dep.lower() not in ('p', 'punct'):
                 gold_deps.add((id_, head, dep.lower()))
