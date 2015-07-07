@@ -31,35 +31,37 @@ e.g. `spacy.en.English`. The pipeline class reads the data from disk, from a
 specified directory.  By default, spaCy installs data into each language's
 package directory, and loads it from there.
 
-.. autoclass:: spacy.en.English
-  :members:
 
+.. code::
 
-The class `spacy.en.English` is the main entry-point for the English pipeline
-(other languages to come).
+  class English(object):    
+      ...
+      def __init__(self,
+        data_dir=path.join(path.dirname(__file__), 'data'),
+        Tokenizer=Tokenizer.from_dir,
+        Tagger=EnPosTagger,
+        Parser=Createarser(ArcEager),
+        Entity=CreateParser(BiluoNER),
+        load_vectors=True
+      ):
 
-  +------------+----------------------------------------+-------------+--------------------------+
-  | Attribute  | Type                                   | Attr API    | Notes                    |
-  +============+========================================+=============+==========================+
-  | strings    | :py:class:`strings.StringStore`        | __getitem__ | string <-> int  mapping  |
-  +------------+----------------------------------------+-------------+--------------------------+
-  | vocab      | :py:class:`vocab.Vocab`                | __getitem__ | Look up Lexeme object    |
-  +------------+----------------------------------------+-------------+--------------------------+
-  | tokenizer  | :py:class:`tokenizer.Tokenizer`        | __call__    | Get Tokens given unicode |
-  +------------+----------------------------------------+-------------+--------------------------+
-  | tagger     | :py:class:`en.pos.EnPosTagger`         | __call__    | Set POS tags on Tokens   |
-  +------------+----------------------------------------+-------------+--------------------------+
-  | parser     | :py:class:`syntax.parser.GreedyParser` | __call__    | Set parse on Tokens      |
-  +------------+----------------------------------------+-------------+--------------------------+
-  | entity     | :py:class:`syntax.parser.GreedyParser` | __call__    | Set entities on Tokens   |
-  +------------+----------------------------------------+-------------+--------------------------+
-  | mwe_merger | :py:class:`multi_words.RegexMerger`    | __call__    | Apply regex for units    |
-  +------------+----------------------------------------+-------------+--------------------------+
+data\_dir
+  Usually left default. The data directory.  May be None, to disable any data loading (including
+  the vocabulary).
 
+Tokenizer
+  Usually left default. A class/function that creates the tokenizer.
+  Its signature should be:
+    :code:`(Vocab vocab, unicode data_dir)(unicode) --> Tokens`
 
-.. autoclass:: spacy.en.English
-  :members:
+Tagger / Parser / Entity
+  Usually left default. A class/function that creates the part-of-speech tagger /
+  syntactic dependency parser / named entity recogniser.
+  May be None or False, to disable tagging. Otherwise, its signature should be:
+    :code:`(Vocab vocab, unicode data_dir)(Tokens) --> None`
 
+load_vectors
+  A boolean value to control whether the word vectors are loaded.
 
 .. autoclass:: spacy.tokens.Tokens
   :members:
