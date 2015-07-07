@@ -5,7 +5,7 @@ import re
 from .. import orth
 from ..vocab import Vocab
 from ..tokenizer import Tokenizer
-from ..syntax.parser import Parser
+from ..syntax import parser
 from ..syntax.arc_eager import ArcEager
 from ..syntax.ner import BiluoPushDown
 from ..tokens import Tokens
@@ -16,6 +16,7 @@ from .pos import POS_TAGS
 from .attrs import get_flags
 from . import regexes
 
+from ..exceptions import ModelNotLoaded
 
 from ..util import read_lang_data
 
@@ -89,54 +90,44 @@ class English(object):
     ParserTransitionSystem = ArcEager
     EntityTransitionSystem = BiluoPushDown
 
-    def __init__(self, data_dir='', Tokenizer=True, Vectors=True, Parser=True,
-                 Tagger=True, Entity=True, Senser=True, load_vectors=True):
+    def __init__(self, data_dir='', Tokenizer=Tokenizer.from_dir, Vectors=True,
+                 Parser=True, Tagger=EnPosTagger, Entity=True, load_vectors=True):
         if data_dir == '':
             data_dir = LOCAL_DATA_DIR
+        self._data_dir = data_dir
+        
         # TODO: Deprecation warning
         if load_vectors is False:
             vectors = False
 
         self.vocab = Vocab(data_dir=path.join(data_dir, 'vocab') if data_dir else None,
-                           get_lex_props=get_lex_props, vectors=Vectors)
-
-        if Tokenizer is True:
-            Tokenizer = tokenizer.Tokenizer
+                           get_lex_props=get_lex_props, load_vectors=Vectors,
+                           pos_tags=POS_TAGS)
         if Tagger is True:
-            Tagger = pos.EnPosTagger
+            Tagger = EnPosTagger
         if Parser is True:
             transition_system = self.ParserTransitionSystem
-            Parser = lambda s, d: parser.Parser(s, d, transition_system
+            Parser = lambda s, d: parser.Parser(s, d, transition_system)
         if Entity is True:
             transition_system = self.EntityTransitionSystem
             Entity = lambda s, d: parser.Parser(s, d, transition_system)
-        if Senser is True:
-            Senser = wsd.SuperSenseTagger
 
-        self.tokenizer = Tokenizer(self.vocab, data_dir) if Tokenizer else None
-        self.tagger = Tagger(self.vocab.strings, data_dir) if Tagger else None
-        self.parser = Parser(self.vocab.strings, data_dir) if Parser else None
-        self.entity = Entity(self.vocab.strings, data_dir) if Entity else None
-        self.senser = Senser(self.vocab.strings, data_dir) if Senser else None
-
-        self._data_dir = data_dir
-        tag_names = list(POS_TAGS.keys())
-        tag_names.sort()
-        if data_dir is None:
-            tok_rules = {}
-            prefix_re = None
-            suffix_re = None
-            infix_re = None
+        if Tokenizer: 
+            self.tokenizer = Tokenizer(self.vocab, path.join(data_dir, 'tokenizer'))
         else:
-            tok_data_dir = path.join(data_dir, 'tokenizer')
-            tok_rules, prefix_re, suffix_re, infix_re = read_lang_data(tok_data_dir)
-            prefix_re = re.compile(prefix_re)
-            suffix_re = re.compile(suffix_re)
-            infix_re = re.compile(infix_re)
-
-        self.tokenizer = Tokenizer(self.vocab, tok_rules, prefix_re,
-                                   suffix_re, infix_re,
-                                   POS_TAGS, tag_names)
+            self.tokenizer = None
+        if Tagger:
+            self.tagger = Tagger(self.vocab.strings, data_dir)
+        else:
+            self.tagger = None
+        if Parser:
+            self.parser = Parser(self.vocab.strings, path.join(data_dir, 'deps'))
+        else:
+            self.parser = None
+        if Entity:
+            self.entity = Entity(self.vocab.strings, path.join(data_dir, 'ner'))
+        else:
+            self.entity = None
 
         self.mwe_merger = RegexMerger([
             ('IN', 'O', regexes.MW_PREPOSITIONS_RE),
@@ -185,31 +176,22 @@ class English(object):
         tokens = self.tokenizer(text)
         if parse == -1 and tag == False:
             parse = False
-        elif parse == -1 and not self.has_parser_model:
+        elif parse == -1 and self.parser is None:
             parse = False
         if entity == -1 and tag == False:
             entity = False
-        elif entity == -1 and not self.has_entity_model:
+        elif entity == -1 and self.entity is None:
             entity = False
-        if tag and self.has_tagger_model:
+        if tag:
+            ModelNotLoaded.check(self.tagger, 'tagger')
             self.tagger(tokens)
-        if parse == True and not self.has_parser_model:
-            msg = ("Received parse=True, but parser model not found.\n\n"
-                  "Run:\n"
-                  "$ python -m spacy.en.download\n"
-                  "To install the model.")
-            raise IOError(msg)
-        if entity == True and not self.has_entity_model:
-            msg = ("Received entity=True, but entity model not found.\n\n"
-                  "Run:\n"
-                  "$ python -m spacy.en.download\n"
-                  "To install the model.")
-            raise IOError(msg)
-
-        if parse and self.has_parser_model:
+        if parse:
+            ModelNotLoaded.check(self.parser, 'parser')
             self.parser(tokens)
-        if entity and self.has_entity_model:
+        if entity:
+            ModelNotLoaded.check(self.entity, 'entity')
             self.entity(tokens)
+
         if merge_mwes and self.mwe_merger is not None:
             self.mwe_merger(tokens)
         return tokens
