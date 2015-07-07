@@ -31,14 +31,12 @@ cdef class Tokenizer:
         self._load_special_tokenization(rules, pos_tags)
 
     @classmethod
-    def from_dir(cls, Vocab vocab, directory):
-        data_dir = path.join(data_dir, 'tokenizer')
-        rules, prefix_re, suffix_re, infix_re = read_lang_data(tok_data_dir)
+    def from_dir(cls, Vocab vocab, data_dir, pos_tags):
+        rules, prefix_re, suffix_re, infix_re = read_lang_data(data_dir)
         prefix_re = re.compile(prefix_re)
         suffix_re = re.compile(suffix_re)
         infix_re = re.compile(infix_re)
-        return cls(vocab, tok_rules, prefix_re, suffix_re, infix_re,
-                   pos_tags)
+        return cls(vocab, rules, prefix_re, suffix_re, infix_re, pos_tags)
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
@@ -257,7 +255,6 @@ cdef class Tokenizer:
                 else:
                     tokens[i].lemma = 0
                 if 'pos' in props:
-                    # TODO: Clean up this mess...
                     tokens[i].tag = self.vocab.strings[props['pos']]
                     tokens[i].pos = tag_map[props['pos']][0]
                     # These are defaults, which can be over-ridden by the
