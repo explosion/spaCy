@@ -1,9 +1,42 @@
-===
-API
-===
+=====
+Usage
+=====
 
+Overview
+--------
+
+spaCy is a suite of natural language processing tools, arranged into
+a pipeline.  It is substantially more opinionated than most similar libraries,
+which often give users the choice of multiple models that compute the same annotation.
+spaCy's philosophy is to just have one --- the best one.  Our perspective is that
+the redundant options are really only useful to researchers, who need to replicate
+some prior work exactly.
+
+Being opinionated allows us to keep the library small, fast, and up-to-date.  It
+also makes the API much simpler.  Normal usage proceeds in three steps:
+
+1. Loading resources;
+2. Processing text;
+3. Accessing annotations.
+
+This document is divided into three parts, to match these stages.  We focus here
+on the library's API. See also: Installation, Annotation Standards, Algorithmic Details,
+and Benchmarks.
+
+Loading Resources
+-----------------
+
+99\% of the time, you will load spaCy's resources using a language pipeline class,
+e.g. `spacy.en.English`. The pipeline class reads the data from disk, from a
+specified directory.  By default, spaCy installs data into each language's
+package directory, and loads it from there.
 
 .. autoclass:: spacy.en.English
+  :members:
+
+
+The class `spacy.en.English` is the main entry-point for the English pipeline
+(other languages to come).
 
   +------------+----------------------------------------+-------------+--------------------------+
   | Attribute  | Type                                   | Attr API    | Notes                    |
@@ -24,7 +57,8 @@ API
   +------------+----------------------------------------+-------------+--------------------------+
 
 
-  .. automethod:: spacy.en.English.__call__
+.. autoclass:: spacy.en.English
+  :members:
 
 
 .. autoclass:: spacy.tokens.Tokens
@@ -249,7 +283,7 @@ API
 
   .. py:method:: load_morph_exceptions(self, exc: Dict[unicode, Dict])
 
-.. py:class:: syntax.parser.GreedyParser(self, model_dir: unicode)
+.. py:class:: syntax.parser.Parser(self, model_dir: unicode)
 
   .. py:method:: __call__(self, tokens: spacy.tokens.Tokens) --> None
 

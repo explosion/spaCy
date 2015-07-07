@@ -20,8 +20,7 @@ from .tokens import Tokens
 
 
 cdef class Tokenizer:
-    def __init__(self, Vocab vocab, rules, prefix_re, suffix_re, infix_re,
-                 pos_tags, tag_names):
+    def __init__(self, Vocab vocab, rules, prefix_re, suffix_re, infix_re, pos_tags):
         self.mem = Pool()
         self._cache = PreshMap()
         self._specials = PreshMap()
@@ -29,7 +28,17 @@ cdef class Tokenizer:
         self._suffix_re = suffix_re
         self._infix_re = infix_re
         self.vocab = vocab
-        self._load_special_tokenization(rules, pos_tags, tag_names)
+        self._load_special_tokenization(rules, pos_tags)
+
+    @classmethod
+    def from_dir(cls, Vocab vocab, directory):
+        data_dir = path.join(data_dir, 'tokenizer')
+        rules, prefix_re, suffix_re, infix_re = read_lang_data(tok_data_dir)
+        prefix_re = re.compile(prefix_re)
+        suffix_re = re.compile(suffix_re)
+        infix_re = re.compile(infix_re)
+        return cls(vocab, tok_rules, prefix_re, suffix_re, infix_re,
+                   pos_tags)
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
@@ -224,7 +233,7 @@ cdef class Tokenizer:
         match = self._suffix_re.search(string)
         return (match.end() - match.start()) if match is not None else 0
 
-    def _load_special_tokenization(self, object rules, object tag_map, object tag_names):
+    def _load_special_tokenization(self, object rules, object tag_map):
         '''Add a special-case tokenization rule.
         '''
         cdef int i

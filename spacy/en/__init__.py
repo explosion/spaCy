@@ -44,32 +44,82 @@ parse_if_model_present = -1
 class English(object):
     """The English NLP pipeline.
 
-    Provides a tokenizer, lexicon, part-of-speech tagger and parser.
+    Example:
+
+        Load data from default directory:
+
+            >>> nlp = English()
+            >>> nlp = English(data_dir=u'')
+
+        Load data from specified directory:
+    
+            >>> nlp = English(data_dir=u'path/to/data_directory')
+
+        Disable (and avoid loading) parts of the processing pipeline:
+
+            >>> nlp = English(vectors=False, parser=False, tagger=False, entity=False)
+        
+        Start with nothing loaded:
+
+            >>> nlp = English(data_dir=None)
 
     Keyword args:
         data_dir (unicode):
-            A path to a directory, from which to load the pipeline.
+            A path to a directory from which to load the pipeline;
+            or '', to load default; or None, to load nothing.
 
-            By default, data is installed within the spaCy package directory. So
-            if no data_dir is specified, spaCy attempts to load from a
-            directory named "data" that is a sibling of the spacy/en/__init__.py
-            file.  You can find the location of this file by running:
+        Tokenizer (bool or callable):
+            desc
 
-                $ python -c "import spacy.en; print spacy.en.__file__"
+        Vectors (bool or callable):
+            desc
 
-            To prevent any data files from being loaded, pass data_dir=None. This
-            is useful if you want to construct a lexicon, which you'll then save
-            for later loading.
+        Parser (bool or callable):
+            desc
+
+        Tagger (bool or callable):
+            desc
+
+        Entity (bool or callable):
+            desc
+
+        Senser (bool or callable):
+            desc
     """
     ParserTransitionSystem = ArcEager
     EntityTransitionSystem = BiluoPushDown
 
-    def __init__(self, data_dir='', load_vectors=True):
+    def __init__(self, data_dir='', Tokenizer=True, Vectors=True, Parser=True,
+                 Tagger=True, Entity=True, Senser=True, load_vectors=True):
         if data_dir == '':
             data_dir = LOCAL_DATA_DIR
-        self._data_dir = data_dir
+        # TODO: Deprecation warning
+        if load_vectors is False:
+            vectors = False
+
         self.vocab = Vocab(data_dir=path.join(data_dir, 'vocab') if data_dir else None,
-                           get_lex_props=get_lex_props, load_vectors=load_vectors)
+                           get_lex_props=get_lex_props, vectors=Vectors)
+
+        if Tokenizer is True:
+            Tokenizer = tokenizer.Tokenizer
+        if Tagger is True:
+            Tagger = pos.EnPosTagger
+        if Parser is True:
+            transition_system = self.ParserTransitionSystem
+            Parser = lambda s, d: parser.Parser(s, d, transition_system
+        if Entity is True:
+            transition_system = self.EntityTransitionSystem
+            Entity = lambda s, d: parser.Parser(s, d, transition_system)
+        if Senser is True:
+            Senser = wsd.SuperSenseTagger
+
+        self.tokenizer = Tokenizer(self.vocab, data_dir) if Tokenizer else None
+        self.tagger = Tagger(self.vocab.strings, data_dir) if Tagger else None
+        self.parser = Parser(self.vocab.strings, data_dir) if Parser else None
+        self.entity = Entity(self.vocab.strings, data_dir) if Entity else None
+        self.senser = Senser(self.vocab.strings, data_dir) if Senser else None
+
+        self._data_dir = data_dir
         tag_names = list(POS_TAGS.keys())
         tag_names.sort()
         if data_dir is None:
@@ -77,53 +127,22 @@ class English(object):
             prefix_re = None
             suffix_re = None
             infix_re = None
-            self.has_parser_model = False
-            self.has_tagger_model = False
-            self.has_entity_model = False
         else:
             tok_data_dir = path.join(data_dir, 'tokenizer')
             tok_rules, prefix_re, suffix_re, infix_re = read_lang_data(tok_data_dir)
             prefix_re = re.compile(prefix_re)
             suffix_re = re.compile(suffix_re)
             infix_re = re.compile(infix_re)
-            self.has_parser_model = path.exists(path.join(self._data_dir, 'deps'))
-            self.has_tagger_model = path.exists(path.join(self._data_dir, 'pos'))
-            self.has_entity_model = path.exists(path.join(self._data_dir, 'ner'))
 
         self.tokenizer = Tokenizer(self.vocab, tok_rules, prefix_re,
                                    suffix_re, infix_re,
                                    POS_TAGS, tag_names)
+
         self.mwe_merger = RegexMerger([
             ('IN', 'O', regexes.MW_PREPOSITIONS_RE),
             ('CD', 'TIME', regexes.TIME_RE),
             ('NNP', 'DATE', regexes.DAYS_RE),
             ('CD', 'MONEY', regexes.MONEY_RE)])
-        # These are lazy-loaded
-        self._tagger = None
-        self._parser = None
-        self._entity = None
-
-    @property
-    def tagger(self):
-        if self._tagger is None:
-            self._tagger = EnPosTagger(self.vocab.strings, self._data_dir)
-        return self._tagger
-
-    @property
-    def parser(self):
-        if self._parser is None:
-            self._parser = Parser(self.vocab.strings,
-                                  path.join(self._data_dir, 'deps'),
-                                  self.ParserTransitionSystem)
-        return self._parser
-
-    @property
-    def entity(self):
-        if self._entity is None:
-            self._entity = Parser(self.vocab.strings,
-                                  path.join(self._data_dir, 'ner'),
-                                  self.EntityTransitionSystem)
-        return self._entity
 
     def __call__(self, text, tag=True, parse=parse_if_model_present,
                  entity=parse_if_model_present, merge_mwes=False):
