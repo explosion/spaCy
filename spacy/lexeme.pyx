@@ -46,6 +46,3 @@ cdef class Lexeme:
 
     cpdef bint check(self, attr_id_t flag_id) except -1:
         return self.flags & (1 << flag_id)
-
-    cpdef bint has_sense(self, flags_t flag_id) except -1:
-        return self.senses & (1 << flag_id)
