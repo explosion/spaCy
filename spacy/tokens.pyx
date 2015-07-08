@@ -181,8 +181,8 @@ cdef class Tokens:
 
     @property
     def sents(self):
-        """Yield a list of sentence Span objects, calculated from the dependency
-        parse.
+        """
+        Yield a list of sentence Span objects, calculated from the dependency parse.
         """
         cdef int i
         cdef Tokens sent = Tokens(self.vocab, self._string[self.data[0].idx:])
