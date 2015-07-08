@@ -72,8 +72,6 @@ cdef class Lexeme:
 
     cpdef bint check(self, attr_id_t flag_id) except -1
     
-    cpdef bint has_sense(self, flags_t flag_id) except -1
-
 
 cdef inline bint check_flag(const LexemeC* lexeme, attr_id_t flag_id) nogil:
     return lexeme.flags & (1 << flag_id)
