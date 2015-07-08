@@ -368,6 +368,11 @@ cdef class Doc:
         return self[start]
 
 
+# Enhance backwards compatibility by aliasing Doc to Tokens, for now
+Tokens = Doc
+
+
+
 cdef class Token:
     """An individual token --- i.e. a word, a punctuation symbol, etc.  Created
     via Doc.__getitem__ and Doc.__iter__.
