@@ -14,6 +14,7 @@ import os.path
 from os import path
 import shutil
 import json
+import sys
 
 from cymem.cymem cimport Pool, Address
 from murmurhash.mrmr cimport hash64
@@ -69,7 +70,13 @@ def ParserFactory(transition_system):
 
 cdef class Parser:
     def __init__(self, StringStore strings, model_dir, transition_system):
-        assert os.path.exists(model_dir) and os.path.isdir(model_dir)
+        if not os.path.exists(model_dir):
+            print >> sys.stderr, "Warning: No model found at", model_dir
+            self.cfg = Config(labels=[], features=[])
+        elif not os.path.isdir(model_dir):
+            self.cfg = Config(labels=[], features=[])
+            print >> sys.stderr, "Warning: model path:", model_dir, "is not a directory"
+
         self.cfg = Config.read(model_dir, 'config')
         self.moves = transition_system(strings, self.cfg.labels)
         templates = get_templates(self.cfg.features)
