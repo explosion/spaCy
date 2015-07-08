@@ -17,7 +17,6 @@ cdef class Lexeme:
     cdef readonly ndarray repvec
 
     cdef readonly flags_t flags
-    cdef readonly flags_t senses
     cdef readonly attr_t id
     cdef readonly attr_t length
 
@@ -49,7 +48,6 @@ cdef class Lexeme:
             py.repvec[i] = ptr.repvec[i]
         py.l2_norm = ptr.l2_norm
         py.flags = ptr.flags
-        py.senses = ptr.senses
         py.id = ptr.id
         py.length = ptr.length
 
