@@ -9,7 +9,7 @@ from ..syntax.arc_eager import ArcEager
 from ..syntax.ner import BiluoPushDown
 from ..syntax.parser import ParserFactory
 
-from ..tokens import Tokens
+from ..tokens import Doc
 from ..multi_words import RegexMerger
 
 from .pos import EnPosTagger

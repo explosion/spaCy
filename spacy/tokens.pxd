@@ -28,12 +28,11 @@ cdef inline bint check_flag(const LexemeC* lexeme, attr_id_t flag_id) nogil:
     return lexeme.flags & (1 << flag_id)
 
 
-cdef class Tokens:
+cdef class Doc:
     cdef Pool mem
     cdef Vocab vocab
 
     cdef TokenC* data
-
 
     cdef list _py_tokens
     cdef unicode _string
@@ -62,12 +61,12 @@ cdef class Token:
     cdef bint _owns_c_data
 
 
-    cdef Tokens _seq
+    cdef Doc _seq
 
     @staticmethod
     cdef inline Token cinit(Vocab vocab, unicode string,
                             const TokenC* token, int offset, int array_len,
-                            Tokens parent_seq):
+                            Doc parent_seq):
         if offset < 0 or offset >= array_len:
 
             msg = "Attempt to access token at %d, max length %d"

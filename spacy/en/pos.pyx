@@ -14,7 +14,7 @@ from ..parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON
 from ..parts_of_speech cimport PRT, VERB, X, PUNCT, EOL
 from ..typedefs cimport id_t
 from ..structs cimport TokenC, Morphology, LexemeC
-from ..tokens cimport Tokens
+from ..tokens cimport Doc
 from ..morphology cimport set_morph_from_dict
 from .._ml cimport arg_max
 
@@ -260,11 +260,11 @@ cdef class EnPosTagger:
                                                  'morphs.json'))))
         self.lemmatizer = Lemmatizer(path.join(data_dir, 'wordnet'), NOUN, VERB, ADJ)
 
-    def __call__(self, Tokens tokens):
-        """Apply the tagger, setting the POS tags onto the Tokens object.
+    def __call__(self, Doc tokens):
+        """Apply the tagger, setting the POS tags onto the Doc object.
 
         Args:
-            tokens (Tokens): The tokens to be tagged.
+            tokens (Doc): The tokens to be tagged.
         """
         if tokens.length == 0:
             return 0
@@ -282,7 +282,7 @@ cdef class EnPosTagger:
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
-    def tag_from_strings(self, Tokens tokens, object tag_strs):
+    def tag_from_strings(self, Doc tokens, object tag_strs):
         cdef int i
         for i in range(tokens.length):
             tokens.data[i].tag = self.strings[tag_strs[i]]
@@ -291,7 +291,7 @@ cdef class EnPosTagger:
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
-    def train(self, Tokens tokens, object gold_tag_strs):
+    def train(self, Doc tokens, object gold_tag_strs):
         cdef int i
         cdef int loss
         cdef atom_t[N_CONTEXT_FIELDS] context

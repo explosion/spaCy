@@ -31,7 +31,7 @@ from thinc.learner cimport LinearModel
 from thinc.search cimport Beam
 from thinc.search cimport MaxViolation
 
-from ..tokens cimport Tokens, TokenC
+from ..tokens cimport Doc, TokenC
 from ..strings cimport StringStore
 
 
@@ -75,20 +75,20 @@ cdef class Parser:
         templates = get_templates(self.cfg.features)
         self.model = Model(self.moves.n_moves, templates, model_dir)
 
-    def __call__(self, Tokens tokens):
+    def __call__(self, Doc tokens):
         if self.cfg.get('beam_width', 1) < 1:
             self._greedy_parse(tokens)
         else:
             self._beam_parse(tokens)
 
-    def train(self, Tokens tokens, GoldParse gold):
+    def train(self, Doc tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
         if self.cfg.beam_width < 1:
             return self._greedy_train(tokens, gold)
         else:
             return self._beam_train(tokens, gold)
 
-    cdef int _greedy_parse(self, Tokens tokens) except -1:
+    cdef int _greedy_parse(self, Doc tokens) except -1:
         cdef atom_t[CONTEXT_SIZE] context
         cdef int n_feats
         cdef Pool mem = Pool()
@@ -106,7 +106,7 @@ cdef class Parser:
         self.moves.finalize_state(stcls)
         tokens.set_parse(stcls._sent)
 
-    cdef int _beam_parse(self, Tokens tokens) except -1:
+    cdef int _beam_parse(self, Doc tokens) except -1:
         cdef Beam beam = Beam(self.moves.n_moves, self.cfg.beam_width)
         words = [w.orth_ for w in tokens]
         beam.initialize(_init_state, tokens.length, tokens.data)
@@ -118,7 +118,7 @@ cdef class Parser:
         tokens.set_parse(state._sent)
         _cleanup(beam)
 
-    def _greedy_train(self, Tokens tokens, GoldParse gold):
+    def _greedy_train(self, Doc tokens, GoldParse gold):
         cdef Pool mem = Pool()
         cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
         self.moves.initialize_state(stcls)
@@ -143,7 +143,7 @@ cdef class Parser:
             loss += cost
         return loss
 
-    def _beam_train(self, Tokens tokens, GoldParse gold_parse):
+    def _beam_train(self, Doc tokens, GoldParse gold_parse):
         cdef Beam pred = Beam(self.moves.n_moves, self.cfg.beam_width)
         pred.initialize(_init_state, tokens.length, tokens.data)
         pred.check_done(_check_final_state, NULL)
@@ -190,7 +190,7 @@ cdef class Parser:
         beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
         beam.check_done(_check_final_state, NULL)
 
-    def _count_feats(self, dict counts, Tokens tokens, list hist, int inc):
+    def _count_feats(self, dict counts, Doc tokens, list hist, int inc):
         cdef atom_t[CONTEXT_SIZE] context
         cdef Pool mem = Pool()
         cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)

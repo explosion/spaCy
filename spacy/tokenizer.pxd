@@ -8,7 +8,7 @@ from cymem.cymem cimport Pool
 from .typedefs cimport hash_t
 from .structs cimport LexemeC, TokenC, Morphology, UniStr
 from .strings cimport StringStore
-from .tokens cimport Tokens
+from .tokens cimport Doc
 from .vocab cimport Vocab, _Cached
 
 
@@ -27,13 +27,13 @@ cdef class Tokenizer:
     cdef object _suffix_re
     cdef object _infix_re
 
-    cpdef Tokens tokens_from_list(self, list strings)
+    cpdef Doc tokens_from_list(self, list strings)
 
-    cdef int _try_cache(self, int idx, hash_t key, Tokens tokens) except -1
-    cdef int _tokenize(self, Tokens tokens, UniStr* span, int start, int end) except -1
+    cdef int _try_cache(self, int idx, hash_t key, Doc tokens) except -1
+    cdef int _tokenize(self, Doc tokens, UniStr* span, int start, int end) except -1
     cdef UniStr* _split_affixes(self, UniStr* string, vector[LexemeC*] *prefixes,
                              vector[LexemeC*] *suffixes) except NULL
-    cdef int _attach_tokens(self, Tokens tokens, int idx, UniStr* string,
+    cdef int _attach_tokens(self, Doc tokens, int idx, UniStr* string,
                             vector[LexemeC*] *prefixes, vector[LexemeC*] *suffixes) except -1
     cdef int _find_prefix(self, Py_UNICODE* characters, size_t length) except -1
     cdef int _find_suffix(self, Py_UNICODE* characters, size_t length) except -1

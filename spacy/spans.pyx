@@ -3,8 +3,8 @@ from collections import defaultdict
 
 
 cdef class Span:
-    """A slice from a Tokens object."""
-    def __cinit__(self, Tokens tokens, int start, int end, int label=0):
+    """A slice from a Doc object."""
+    def __cinit__(self, Doc tokens, int start, int end, int label=0):
         self._seq = tokens
         self.start = start
         self.end = end

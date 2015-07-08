@@ -78,7 +78,7 @@ cdef attr_t get_lex_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
         return 0
 
 
-cdef class Tokens:
+cdef class Doc:
     """
     Container class for annotated text.  Constructed via English.__call__ or
     Tokenizer.__call__.
@@ -185,7 +185,7 @@ cdef class Tokens:
         Yield a list of sentence Span objects, calculated from the dependency parse.
         """
         cdef int i
-        cdef Tokens sent = Tokens(self.vocab, self._string[self.data[0].idx:])
+        cdef Doc sent = Doc(self.vocab, self._string[self.data[0].idx:])
         start = 0
         for i in range(1, self.length):
             if self.data[i].sent_start:
@@ -370,7 +370,7 @@ cdef class Tokens:
 
 cdef class Token:
     """An individual token --- i.e. a word, a punctuation symbol, etc.  Created
-    via Tokens.__getitem__ and Tokens.__iter__.
+    via Doc.__getitem__ and Doc.__iter__.
     """
     def __cinit__(self, Vocab vocab, unicode string):
         self.vocab = vocab

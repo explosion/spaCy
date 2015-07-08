@@ -16,7 +16,7 @@ from .morphology cimport set_morph_from_dict
 
 from . import util
 from .util import read_lang_data
-from .tokens import Tokens
+from .tokens import Doc
 
 
 cdef class Tokenizer:
@@ -38,9 +38,9 @@ cdef class Tokenizer:
         infix_re = re.compile(infix_re)
         return cls(vocab, rules, prefix_re, suffix_re, infix_re)
 
-    cpdef Tokens tokens_from_list(self, list strings):
+    cpdef Doc tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
-        cdef Tokens tokens = Tokens(self.vocab, ' '.join(strings))
+        cdef Doc tokens = Doc(self.vocab, ' '.join(strings))
         if length == 0:
             return tokens
         cdef UniStr string_struct
@@ -70,10 +70,10 @@ cdef class Tokenizer:
             string (unicode): The string to be tokenized.
 
         Returns:
-            tokens (Tokens): A Tokens object, giving access to a sequence of LexemeCs.
+            tokens (Doc): A Doc object, giving access to a sequence of LexemeCs.
         """
         cdef int length = len(string)
-        cdef Tokens tokens = Tokens(self.vocab, string)
+        cdef Doc tokens = Doc(self.vocab, string)
         if length == 0:
             return tokens
         cdef int i = 0
@@ -101,7 +101,7 @@ cdef class Tokenizer:
                 self._tokenize(tokens, &span, start, i)
         return tokens
 
-    cdef int _try_cache(self, int idx, hash_t key, Tokens tokens) except -1:
+    cdef int _try_cache(self, int idx, hash_t key, Doc tokens) except -1:
         cached = <_Cached*>self._cache.get(key)
         if cached == NULL:
             return False
@@ -114,7 +114,7 @@ cdef class Tokenizer:
                 idx = tokens.push_back(idx, &cached.data.tokens[i])
         return True
 
-    cdef int _tokenize(self, Tokens tokens, UniStr* span, int start, int end) except -1:
+    cdef int _tokenize(self, Doc tokens, UniStr* span, int start, int end) except -1:
         cdef vector[LexemeC*] prefixes
         cdef vector[LexemeC*] suffixes
         cdef hash_t orig_key
@@ -167,7 +167,7 @@ cdef class Tokenizer:
                 break
         return string
 
-    cdef int _attach_tokens(self, Tokens tokens, int idx, UniStr* string,
+    cdef int _attach_tokens(self, Doc tokens, int idx, UniStr* string,
                             vector[const LexemeC*] *prefixes,
                             vector[const LexemeC*] *suffixes) except -1:
         cdef bint cache_hit
