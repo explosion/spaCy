@@ -20,7 +20,7 @@ from .tokens import Tokens
 
 
 cdef class Tokenizer:
-    def __init__(self, Vocab vocab, rules, prefix_re, suffix_re, infix_re, pos_tags):
+    def __init__(self, Vocab vocab, rules, prefix_re, suffix_re, infix_re):
         self.mem = Pool()
         self._cache = PreshMap()
         self._specials = PreshMap()
@@ -28,15 +28,15 @@ cdef class Tokenizer:
         self._suffix_re = suffix_re
         self._infix_re = infix_re
         self.vocab = vocab
-        self._load_special_tokenization(rules, pos_tags)
+        self._load_special_tokenization(rules, self.vocab.pos_tags)
 
     @classmethod
-    def from_dir(cls, Vocab vocab, data_dir, pos_tags):
+    def from_dir(cls, Vocab vocab, data_dir):
         rules, prefix_re, suffix_re, infix_re = read_lang_data(data_dir)
         prefix_re = re.compile(prefix_re)
         suffix_re = re.compile(suffix_re)
         infix_re = re.compile(infix_re)
-        return cls(vocab, rules, prefix_re, suffix_re, infix_re, pos_tags)
+        return cls(vocab, rules, prefix_re, suffix_re, infix_re)
 
     cpdef Tokens tokens_from_list(self, list strings):
         cdef int length = sum([len(s) for s in strings])
