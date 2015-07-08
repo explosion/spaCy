@@ -1,6 +1,6 @@
-=========
-Reference
-=========
+=============
+Documentation
+=============
 
 The table below shows every class in spaCy: a link to its documentation, implementation,
 and a small usage snippet.
@@ -51,7 +51,15 @@ and a small usage snippet.
  +----------------+--------------------------+--------------------------------+
 
 
- .. _English: processing.html
+.. toctree::
+    :maxdepth: 4
+
+    loading.rst
+    processing.rst
+    using/index.rst
+
+
+.. _English: processing.html
 
 .. _Doc: using/doc.html
 
@@ -99,4 +107,3 @@ and a small usage snippet.
 .. _spacy/gold.pyx: https://github.com/honnibal/spaCy/tree/master/spacy/gold.pyx
 
 .. _spacy/scorer.py: https://github.com/honnibal/spaCy/tree/master/spacy/scorer.py
-

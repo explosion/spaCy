@@ -330,11 +330,10 @@ representations.
 
 
 .. toctree::
-    :maxdepth: 3
+    :maxdepth: 4
+    :hidden:
 
-    index.rst
     quickstart.rst
-    api.rst
-    howworks.rst
+    reference/index.rst
     license.rst
     updates.rst
