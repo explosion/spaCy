@@ -83,14 +83,14 @@ cdef class Parser:
         self.model = Model(self.moves.n_moves, templates, model_dir)
 
     def __call__(self, Doc tokens):
-        if self.cfg.get('beam_width', 1) < 1:
+        if self.cfg.get('beam_width', 0) < 1:
             self._greedy_parse(tokens)
         else:
             self._beam_parse(tokens)
 
     def train(self, Doc tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
-        if self.cfg.beam_width < 1:
+        if self.cfg.get('beam_width', 0) < 1:
             return self._greedy_train(tokens, gold)
         else:
             return self._beam_train(tokens, gold)
