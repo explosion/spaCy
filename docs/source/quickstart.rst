@@ -54,7 +54,7 @@ Usage
 -----
 
 The main entry-point is :meth:`en.English.__call__`, which accepts a unicode string
-as an argument, and returns a :py:class:`tokens.Tokens` object.  You can
+as an argument, and returns a :py:class:`tokens.Doc` object.  You can
 iterate over it to get :py:class:`tokens.Token` objects, which provide
 a convenient API:
 
@@ -88,7 +88,7 @@ the original orthographic form of the word.
 
   .. py:class:: spacy.en.English(self, data_dir=join(dirname(__file__), 'data'))
 
-    .. py:method:: __call__(self, text: unicode, tag=True, parse=True, entity=True, merge_mwes=False) --> Tokens
+    .. py:method:: __call__(self, text: unicode, tag=True, parse=True, entity=True, merge_mwes=False) --> Doc
 
     +-----------------+--------------+--------------+
     | Attribute       | Type         | Its API      |
@@ -108,23 +108,23 @@ the original orthographic form of the word.
 
 **Get dict or numpy array:**
 
-    .. py:method:: tokens.Tokens.to_array(self, attr_ids: List[int]) --> ndarray[ndim=2, dtype=long]
+    .. py:method:: tokens.Doc.to_array(self, attr_ids: List[int]) --> ndarray[ndim=2, dtype=long]
 
-    .. py:method:: tokens.Tokens.count_by(self, attr_id: int) --> Dict[int, int]
+    .. py:method:: tokens.Doc.count_by(self, attr_id: int) --> Dict[int, int]
 
 **Get Token objects**
 
-  .. py:method:: tokens.Tokens.__getitem__(self, i) --> Token
+  .. py:method:: tokens.Doc.__getitem__(self, i) --> Token
 
-  .. py:method:: tokens.Tokens.__iter__(self) --> Iterator[Token]
+  .. py:method:: tokens.Doc.__iter__(self) --> Iterator[Token]
 
 **Get sentence or named entity spans**
 
-  .. py:attribute:: tokens.Tokens.sents --> Iterator[Span]
+  .. py:attribute:: tokens.Doc.sents --> Iterator[Span]
 
-  .. py:attribute:: tokens.Tokens.ents --> Iterator[Span]
+  .. py:attribute:: tokens.Doc.ents --> Iterator[Span]
 
-    You can iterate over a Span to access individual Tokens, or access its
+    You can iterate over a Span to access individual Doc, or access its
     start, end or label.
 
 
