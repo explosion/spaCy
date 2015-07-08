@@ -9,7 +9,7 @@ Applying a pipeline
 -------------------
 
 
-.. py:method:: English.__call__(text, tag=True, parse=True, entity=True) --> Tokens
+.. py:method:: English.__call__(text, tag=True, parse=True, entity=True) --> Doc
 
 
 text (unicode)

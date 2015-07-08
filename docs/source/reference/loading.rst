@@ -43,12 +43,12 @@ In more detail:
   the vocabulary).
 
 :code:`Tokenizer`
-  :code:`(Vocab vocab, unicode data_dir)(unicode) --> Tokens`
+  :code:`(Vocab vocab, unicode data_dir)(unicode) --> Doc`
   
   A class/function that creates the tokenizer.
 
 :code:`Tagger` / :code:`Parser` / :code:`Entity`
-  :code:`(Vocab vocab, unicode data_dir)(Tokens) --> None`
+  :code:`(Vocab vocab, unicode data_dir)(Doc) --> None`
   
   A class/function that creates the part-of-speech tagger /
   syntactic dependency parser / named entity recogniser.
