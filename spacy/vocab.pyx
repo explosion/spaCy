@@ -30,10 +30,12 @@ EMPTY_LEXEME.repvec = EMPTY_VEC
 cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
-    def __init__(self, data_dir=None, get_lex_props=None, load_vectors=True):
+    def __init__(self, data_dir=None, get_lex_props=None, load_vectors=True,
+                 pos_tags=None):
         self.mem = Pool()
         self._map = PreshMap(2 ** 20)
         self.strings = StringStore()
+        self.pos_tags = pos_tags if pos_tags is not None else {}
         self.lexemes.push_back(&EMPTY_LEXEME)
         self.lexeme_props_getter = get_lex_props
         self.repvec_length = 0
