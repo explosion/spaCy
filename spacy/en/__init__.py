@@ -65,7 +65,7 @@ class English(object):
     EntityTransitionSystem = BiluoPushDown
 
     def __init__(self,
-      data_dir=LOCAL_DATA_DIR
+      data_dir=LOCAL_DATA_DIR,
       Tokenizer=Tokenizer.from_dir,
       Tagger=EnPosTagger,
       Parser=ParserFactory(ParserTransitionSystem),
