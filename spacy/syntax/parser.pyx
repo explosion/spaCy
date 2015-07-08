@@ -76,8 +76,8 @@ cdef class Parser:
         elif not os.path.isdir(model_dir):
             self.cfg = Config(labels=[], features=[])
             print >> sys.stderr, "Warning: model path:", model_dir, "is not a directory"
-
-        self.cfg = Config.read(model_dir, 'config')
+        else:
+            self.cfg = Config.read(model_dir, 'config')
         self.moves = transition_system(strings, self.cfg.labels)
         templates = get_templates(self.cfg.features)
         self.model = Model(self.moves.n_moves, templates, model_dir)
