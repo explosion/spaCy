@@ -17,8 +17,6 @@ from .pos import POS_TAGS
 from .attrs import get_flags
 from . import regexes
 
-from ..exceptions import ModelNotLoaded
-
 from ..util import read_lang_data
 
 
@@ -117,7 +115,7 @@ class English(object):
             text (unicode): The text to be processed.
 
         Returns:
-            tokens (spacy.tokens.Tokens):
+            tokens (spacy.tokens.Doc):
 
         >>> from spacy.en import English
         >>> nlp = English()
