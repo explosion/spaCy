@@ -1,6 +1,6 @@
-===============
-Doc Annotations
-===============
+==============
+The Doc Object
+==============
 
 .. autoclass:: spacy.tokens.Tokens
 

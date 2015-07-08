@@ -1,6 +1,6 @@
-================
-Span Annotations
-================
+===============
+The Span Object
+===============
 
 .. autoclass:: spacy.spans.Span
 
