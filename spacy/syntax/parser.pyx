@@ -63,6 +63,10 @@ def get_templates(name):
                 pf.tree_shape + pf.trigrams)
 
 
+def ParserFactory(transition_system):
+    return lambda strings, dir_: Parser(strings, dir_, transition_system)
+
+
 cdef class Parser:
     def __init__(self, StringStore strings, model_dir, transition_system):
         assert os.path.exists(model_dir) and os.path.isdir(model_dir)
