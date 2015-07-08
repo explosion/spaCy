@@ -72,21 +72,20 @@ cdef class Parser:
     def __init__(self, StringStore strings, model_dir, transition_system):
         if not os.path.exists(model_dir):
             print >> sys.stderr, "Warning: No model found at", model_dir
-            self.cfg = Config(labels={}, features=[])
         elif not os.path.isdir(model_dir):
-            self.cfg = Config(labels={}, features=[])
             print >> sys.stderr, "Warning: model path:", model_dir, "is not a directory"
         else:
             self.cfg = Config.read(model_dir, 'config')
-        self.moves = transition_system(strings, self.cfg.labels)
-        templates = get_templates(self.cfg.features)
-        self.model = Model(self.moves.n_moves, templates, model_dir)
+            self.moves = transition_system(strings, self.cfg.labels)
+            templates = get_templates(self.cfg.features)
+            self.model = Model(self.moves.n_moves, templates, model_dir)
 
     def __call__(self, Doc tokens):
-        if self.cfg.get('beam_width', 0) < 1:
-            self._greedy_parse(tokens)
-        else:
-            self._beam_parse(tokens)
+        if self.model is not None:
+            if self.cfg.get('beam_width', 0) < 1:
+                self._greedy_parse(tokens)
+            else:
+                self._beam_parse(tokens)
 
     def train(self, Doc tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
