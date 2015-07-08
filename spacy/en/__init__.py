@@ -36,6 +36,7 @@ def get_lex_props(string):
     }
 
 if_model_present = -1
+LOCAL_DATA_DIR = path.join(path.dirname(__file__), 'data')
 
 
 class English(object):
@@ -64,7 +65,7 @@ class English(object):
     EntityTransitionSystem = BiluoPushDown
 
     def __init__(self,
-      data_dir=path.join(path.dirname(__file__), 'data'),
+      data_dir=LOCAL_DATA_DIR
       Tokenizer=Tokenizer.from_dir,
       Tagger=EnPosTagger,
       Parser=ParserFactory(ParserTransitionSystem),
@@ -106,7 +107,7 @@ class English(object):
             ('NNP', 'DATE', regexes.DAYS_RE),
             ('CD', 'MONEY', regexes.MONEY_RE)])
 
-    def __call__(self, text, tag=True, parse=True, entity=True):
+    def __call__(self, text, tag=True, parse=True, entity=True, merge_mwes=False):
         """Apply the pipeline to some text.  The text can span multiple sentences,
         and can contain arbtrary whitespace.  Alignment into the original string
         is preserved.
@@ -130,6 +131,8 @@ class English(object):
             self.parser(tokens)
         if self.entity and entity:
             self.entity(tokens)
+        if merge_mwes and self.mwe_merger is not None:
+            self.mwe_merger(tokens)
         return tokens
 
     @property
