@@ -130,7 +130,7 @@ def run_setup(exts):
     headers_workaround.install_headers('numpy')
 
 
-VERSION = '0.87'
+VERSION = '0.88'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
@@ -157,7 +157,6 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.syntax.arc_eager',
              'spacy.syntax._parse_features',
              'spacy.gold', 'spacy.orth', 
-             'spacy.senses',
              'spacy.syntax.ner']
 
 
