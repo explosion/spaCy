@@ -34,7 +34,6 @@ cpdef enum:
     S2_shape
     S2_ne_iob
     S2_ne_type
-    S2ss
 
     S1w
     S1W
@@ -48,7 +47,6 @@ cpdef enum:
     S1_shape
     S1_ne_iob
     S1_ne_type
-    S1ss
 
     S1rw
     S1rW
@@ -62,7 +60,6 @@ cpdef enum:
     S1r_shape
     S1r_ne_iob
     S1r_ne_type
-    S1rss
 
     S0lw
     S0lW
@@ -76,7 +73,6 @@ cpdef enum:
     S0l_shape
     S0l_ne_iob
     S0l_ne_type
-    S0lss
 
     S0l2w
     S0l2W
@@ -90,7 +86,6 @@ cpdef enum:
     S0l2_shape
     S0l2_ne_iob
     S0l2_ne_type
-    S0l2ss
 
     S0w
     S0W
@@ -104,7 +99,6 @@ cpdef enum:
     S0_shape
     S0_ne_iob
     S0_ne_type
-    S0ss
 
     S0r2w
     S0r2W
@@ -118,7 +112,6 @@ cpdef enum:
     S0r2_shape
     S0r2_ne_iob
     S0r2_ne_type
-    S0r2ss
 
     S0rw
     S0rW
@@ -132,7 +125,6 @@ cpdef enum:
     S0r_shape
     S0r_ne_iob
     S0r_ne_type
-    S0rss
 
     N0l2w
     N0l2W
@@ -146,7 +138,6 @@ cpdef enum:
     N0l2_shape
     N0l2_ne_iob
     N0l2_ne_type
-    N0l2ss
 
     N0lw
     N0lW
@@ -160,7 +151,6 @@ cpdef enum:
     N0l_shape
     N0l_ne_iob
     N0l_ne_type
-    N0lss
 
     N0w
     N0W
@@ -174,7 +164,6 @@ cpdef enum:
     N0_shape
     N0_ne_iob
     N0_ne_type
-    N0ss
 
     N1w
     N1W
@@ -188,7 +177,6 @@ cpdef enum:
     N1_shape
     N1_ne_iob
     N1_ne_type
-    N1ss
 
     N2w
     N2W
@@ -202,7 +190,6 @@ cpdef enum:
     N2_shape
     N2_ne_iob
     N2_ne_type
-    N2ss
 
     P1w
     P1W
@@ -216,7 +203,6 @@ cpdef enum:
     P1_shape
     P1_ne_iob
     P1_ne_type
-    P1ss
 
     P2w
     P2W
@@ -230,7 +216,6 @@ cpdef enum:
     P2_shape
     P2_ne_iob
     P2_ne_type
-    P2ss
 
     E0w
     E0W
@@ -244,7 +229,6 @@ cpdef enum:
     E0_shape
     E0_ne_iob
     E0_ne_type
-    E0ss
 
     E1w
     E1W
@@ -258,7 +242,6 @@ cpdef enum:
     E1_shape
     E1_ne_iob
     E1_ne_type
-    E1ss
 
     # Misc features at the end
     dist
