@@ -1,6 +1,6 @@
-=====
-Usage
-=====
+=========
+Reference
+=========
 
 Overview
 --------
@@ -31,11 +31,26 @@ e.g. `spacy.en.English`. The pipeline class reads the data from disk, from a
 specified directory.  By default, spaCy installs data into each language's
 package directory, and loads it from there.
 
+Usually, this is all you will need:
+
+    >>> from spacy.en import English
+    >>> nlp = English()
+
+If you need to replace some of the components, you may want to just make your
+own pipeline class --- the English class itself does almost no work; it just
+applies the modules in order. You can also provide a function or class that
+produces a tokenizer, tagger, parser or entity recognizer to :code:`English.__init__`,
+to customize the pipeline:
+
+    >>> from spacy.en import English
+    >>> from my_module import MyTagger
+    >>> nlp = English(Tagger=MyTagger)
+
+In more detail:
 
 .. code::
 
-  class English(object):    
-      ...
+  class English(object):
       def __init__(self,
         data_dir=path.join(path.dirname(__file__), 'data'),
         Tokenizer=Tokenizer.from_dir,
@@ -45,48 +60,159 @@ package directory, and loads it from there.
         load_vectors=True
       ):
 
-data\_dir
-  Usually left default. The data directory.  May be None, to disable any data loading (including
+:code:`data_dir`
+  :code:`unicode path`
+
+  The data directory.  May be None, to disable any data loading (including
   the vocabulary).
 
-Tokenizer
-  Usually left default. A class/function that creates the tokenizer.
-  Its signature should be:
-    :code:`(Vocab vocab, unicode data_dir)(unicode) --> Tokens`
+:code:`Tokenizer`
+  :code:`(Vocab vocab, unicode data_dir)(unicode) --> Tokens`
+  
+  A class/function that creates the tokenizer.
 
-Tagger / Parser / Entity
-  Usually left default. A class/function that creates the part-of-speech tagger /
+:code:`Tagger` / :code:`Parser` / :code:`Entity`
+  :code:`(Vocab vocab, unicode data_dir)(Tokens) --> None`
+  
+  A class/function that creates the part-of-speech tagger /
   syntactic dependency parser / named entity recogniser.
-  May be None or False, to disable tagging. Otherwise, its signature should be:
-    :code:`(Vocab vocab, unicode data_dir)(Tokens) --> None`
+  May be None or False, to disable tagging.
 
-load_vectors
+:code:`load_vectors` (bool)
   A boolean value to control whether the word vectors are loaded.
 
+
+Processing Text
+---------------
+
+The text processing API is very small and simple. Everything is a callable object,
+and you will almost always apply the pipeline all at once.
+
+
+.. py:method:: English.__call__(text, tag=True, parse=True, entity=True) --> Tokens
+
+
+text (unicode)
+  The text to be processed.  No pre-processing needs to be applied, and any
+  length of text can be submitted.  Usually you will submit a whole document.
+  Text may be zero-length. An exception is raised if byte strings are supplied.
+
+tag (bool)
+  Whether to apply the part-of-speech tagger.
+
+parse (bool)
+  Whether to apply the syntactic dependency parser.
+
+entity (bool)
+  Whether to apply the named entity recognizer.
+
+
+Accessing Annotation
+--------------------
+
+spaCy provides a rich API for using the annotations it calculates.  It is arranged
+into three data classes:
+
+1. :code:`Tokens`: A container, which provides document-level access;
+2. :code:`Span`: A (contiguous) sequence of tokens, e.g. a sentence, entity, etc
+3. :code:`Token`: An individual token, and a node in a parse tree;
+
+
 .. autoclass:: spacy.tokens.Tokens
-  :members:
 
-  +---------------+-------------+-------------+
-  | Attribute     | Type        | Attr API    |
-  +===============+=============+=============+
-  | vocab         | Vocab       | __getitem__ |
-  +---------------+-------------+-------------+
-  | vocab.strings | StringStore | __getitem__ |
-  +---------------+-------------+-------------+
+:code:`__getitem__`, :code:`__iter__`, :code:`__len__`
+  The Tokens class behaves as a Python sequence, supporting the usual operators,
+  len(), etc.  Negative indexing is supported. Slices are not yet.
+
+  .. code::
+
+    >>> tokens = nlp(u'Zero one two three four five six')
+    >>> tokens[0].orth_
+    u'Zero'
+    >>> tokens[-1].orth_
+    u'six'
+    >>> tokens[0:4]
+    Error
+
+:code:`sents`
+  Iterate over sentences in the document.
+
+:code:`ents`
+  Iterate over entities in the document.
+
+:code:`to_array`
+  Given a list of M attribute IDs, export the tokens to a numpy ndarray
+  of shape N*M, where N is the length of the sentence.
+
+    Arguments:
+        attr_ids (list[int]): A list of attribute ID ints.
+
+    Returns:
+        feat_array (numpy.ndarray[long, ndim=2]):
+        A feature matrix, with one row per word, and one column per attribute
+        indicated in the input attr_ids.
+ 
+:code:`count_by`
+  Produce a dict of {attribute (int): count (ints)} frequencies, keyed
+  by the values of the given attribute ID.
+
+    >>> from spacy.en import English, attrs
+    >>> nlp = English()
+    >>> tokens = nlp(u'apple apple orange banana')
+    >>> tokens.count_by(attrs.ORTH)
+    {12800L: 1, 11880L: 2, 7561L: 1}
+    >>> tokens.to_array([attrs.ORTH])
+    array([[11880],
+          [11880],
+          [ 7561],
+          [12800]])
+
+:code:`merge`
+  Merge a multi-word expression into a single token.  Currently
+  experimental; API is likely to change.
 
 
-  Internals
-    A Tokens instance stores the annotations in a C-array of `TokenC` structs.
-    Each TokenC struct holds a const pointer to a LexemeC struct, which describes
-    a vocabulary item.
 
-    The Token objects are built lazily, from this underlying C-data.
+Internals
+  A Tokens instance stores the annotations in a C-array of `TokenC` structs.
+  Each TokenC struct holds a const pointer to a LexemeC struct, which describes
+  a vocabulary item.
 
-    For faster access, the underlying C data can be accessed from Cython.  You
-    can also export the data to a numpy array, via `Tokens.to_array`, if pure Python
-    access is required, and you need slightly better performance.  However, this
-    is both slower and has a worse API than Cython access.
+  The Token objects are built lazily, from this underlying C-data.
 
+  For faster access, the underlying C data can be accessed from Cython.  You
+  can also export the data to a numpy array, via `Tokens.to_array`, if pure Python
+  access is required, and you need slightly better performance.  However, this
+  is both slower and has a worse API than Cython access.
+
+.. autoclass:: spacy.spans.Span
+
+:code:`__getitem__`, :code:`__iter__`, :code:`__len__`
+  Sequence API
+
+:code:`head`
+  Syntactic head, or None
+
+:code:`left`
+  Tokens to the left of the span
+
+:code:`rights`
+  Tokens to the left of the span
+
+:code:`orth` / :code:`orth_`
+  Orth string
+
+:code:`lemma` / :code:`lemma_`
+  Lemma string
+
+:code:`string`
+  String
+
+:code:`label` / :code:`label_`
+  Label
+
+:code:`subtree`
+  Lefts + [self] + Rights
 
 .. autoclass:: spacy.tokens.Token
 
@@ -239,6 +365,24 @@ load_vectors
   ent_iob
     The IOB (inside, outside, begin) entity recognition tag for the token
 
+
+Lexical Lookup
+--------------
+
+Where possible, spaCy computes information over lexical *types*, rather than
+*tokens*.  If you process a large batch of text, the number of unique types
+you will see will grow exponentially slower than the number of tokens --- so
+it's much more efficient to compute over types.  And, in small samples, we generally
+want to know about the distribution of a word in the language at large ---
+which again, is type-based information.
+
+You can access the lexical features via the Token object, but you can also look them
+up in the vocabulary directly:
+
+    >>> from spacy.en import English
+    >>> nlp = English()
+    >>> lexeme = nlp.vocab[u'Amazon']
+
 .. py:class:: vocab.Vocab(self, data_dir=None, lex_props_getter=None)
 
   .. py:method:: __len__(self) --> int
@@ -255,6 +399,7 @@ load_vectors
 
   .. py:method:: load_vectors(self, loc: unicode) --> None
 
+
 .. py:class:: strings.StringStore(self)
 
   .. py:method:: __len__(self) --> int
@@ -269,24 +414,4 @@ load_vectors
 
   .. py:method:: load(self, loc: unicode) --> None
 
-.. py:class:: tokenizer.Tokenizer(self, Vocab vocab, rules, prefix_re, suffix_re, infix_re, pos_tags, tag_names)
 
-  .. py:method:: tokens_from_list(self, List[unicode]) --> spacy.tokens.Tokens
-
-  .. py:method:: __call__(self, string: unicode) --> spacy.tokens.Tokens)
-
-  .. py:attribute:: vocab: spacy.vocab.Vocab
-
-.. py:class:: en.pos.EnPosTagger(self, strings: spacy.strings.StringStore, data_dir: unicode)
-
-  .. py:method:: __call__(self, tokens: spacy.tokens.Tokens)
-
-  .. py:method:: train(self, tokens: spacy.tokens.Tokens, List[int] golds) --> int
-
-  .. py:method:: load_morph_exceptions(self, exc: Dict[unicode, Dict])
-
-.. py:class:: syntax.parser.Parser(self, model_dir: unicode)
-
-  .. py:method:: __call__(self, tokens: spacy.tokens.Tokens) --> None
-
-  .. py:method:: train(self, spacy.tokens.Tokens) --> None
