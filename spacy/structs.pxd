@@ -8,7 +8,6 @@ cdef struct LexemeC:
     const float* repvec
 
     flags_t flags
-    flags_t senses
 
     attr_t id
     attr_t length
