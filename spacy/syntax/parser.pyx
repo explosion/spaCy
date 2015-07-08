@@ -72,9 +72,9 @@ cdef class Parser:
     def __init__(self, StringStore strings, model_dir, transition_system):
         if not os.path.exists(model_dir):
             print >> sys.stderr, "Warning: No model found at", model_dir
-            self.cfg = Config(labels=[], features=[])
+            self.cfg = Config(labels={}, features=[])
         elif not os.path.isdir(model_dir):
-            self.cfg = Config(labels=[], features=[])
+            self.cfg = Config(labels={}, features=[])
             print >> sys.stderr, "Warning: model path:", model_dir, "is not a directory"
         else:
             self.cfg = Config.read(model_dir, 'config')
