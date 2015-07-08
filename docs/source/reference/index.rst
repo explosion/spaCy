@@ -2,8 +2,8 @@
 Reference
 =========
 
-The table below shows every class in spaCy: where it is implemented,
-a usage snippet, and a link to its documentation.
+The table below shows every class in spaCy: a link to its documentation, implementation,
+and a small usage snippet.
 
 
  +----------------+--------------------------+--------------------------------+
