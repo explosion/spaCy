@@ -15,6 +15,10 @@ def sdist():
     with virtualenv(VENV_DIR):
         local('python setup.py sdist')
 
+def docs():
+    with virtualenv(VENV_DIR):
+        with lcd(path.join(path.dirname(__file__), 'docs')):
+            local('make html')
 
 def publish():
     with virtualenv(VENV_DIR):
