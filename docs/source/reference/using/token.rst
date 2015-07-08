@@ -1,6 +1,6 @@
-====================
-spacy.tokens.Tokens
-====================
+=================
+Token Annotations
+=================
 
 A Token represents a single word, punctuation or significant whitespace symbol.
 

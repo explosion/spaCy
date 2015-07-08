@@ -56,7 +56,9 @@ and a small usage snippet.
 
     loading.rst
     processing.rst
-    using/index.rst
+    using/document.rst
+    using/span.rst
+    using/token.rst
 
 
 .. _English: processing.html
