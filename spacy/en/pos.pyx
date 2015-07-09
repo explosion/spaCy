@@ -11,7 +11,7 @@ from thinc.typedefs cimport atom_t, weight_t
 from ..parts_of_speech cimport univ_pos_t
 from ..parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON
 
-from ..parts_of_speech cimport PRT, VERB, X, PUNCT, EOL
+from ..parts_of_speech cimport PRT, VERB, X, PUNCT, EOL, SPACE
 from ..typedefs cimport id_t
 from ..structs cimport TokenC, Morphology, LexemeC
 from ..tokens cimport Doc
@@ -180,7 +180,8 @@ POS_TAGS = {
     "HYPH": (PUNCT, {}),
     "XX": (X, {}),
     "BES": (VERB, {'tenspect': PRESENT, 'person': THIRD}),
-    "HVS": (VERB, {'tenspect': PRESENT, 'person': THIRD})
+    "HVS": (VERB, {'tenspect': PRESENT, 'person': THIRD}),
+    "SP": (SPACE, {})
 }
 
 

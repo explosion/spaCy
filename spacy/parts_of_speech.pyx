@@ -15,5 +15,6 @@ UNIV_POS_NAMES = {
     "VERB": VERB,
     "X": X,
     "PUNCT": PUNCT,
+    "SPACE": SPACE,
     "EOL": EOL
 }

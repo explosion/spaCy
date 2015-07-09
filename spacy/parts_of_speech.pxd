@@ -14,4 +14,5 @@ cpdef enum univ_pos_t:
     X
     PUNCT
     EOL
+    SPACE
     N_UNIV_TAGS

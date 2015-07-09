@@ -218,8 +218,12 @@ cdef class GoldParse:
         self.orig_annot = zip(*annot_tuples)
 
         for i, gold_i in enumerate(self.cand_to_gold):
+            if self.words[i].isspace():
+                self.tags[i] = 'SP'
+                self.heads[i] = None
+                self.labels[i] = None
+                self.ner[i] = 'O'
             if gold_i is None:
-                # TODO: What do we do for missing values again?
                 pass
             else:
                 self.tags[i] = annot_tuples[2][gold_i]
