@@ -115,6 +115,12 @@ cdef class Doc:
         Returns:
             token (Token):
         """
+        if isinstance(i, slice):
+            if i.step is not None:
+                raise ValueError("Stepped slices not supported in Span objects."
+                                 "Try: list(doc)[start:stop:step] instead.")
+            return Span(self, i.start, i.stop, label=0)
+
         if i < 0:
             i = self.length + i
         bounds_check(i, self.length, PADDING)
