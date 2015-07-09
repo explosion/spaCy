@@ -20,6 +20,9 @@ cdef class StateClass:
         for i in range(length, length + (PADDING * 2)):
             self._sent[i].lex = &EMPTY_LEXEME
         self._sent += PADDING
+        for i in range(length):
+            self._sent[i].l_edge = i
+            self._sent[i].r_edge = i
         self._ents += PADDING
         self._buffer += PADDING
         self._stack += PADDING
@@ -153,10 +156,10 @@ cdef class StateClass:
         cdef TokenC* h = &self._sent[h_i]
         if c_i > h_i:
             h.r_kids -= 1
-            h.r_edge = self.R_(h_i, h.r_kids-1).r_edge if h.r_kids >= 1 else h_i
+            h.r_edge = self.R_(h_i, 2).r_edge if h.r_kids >= 1 else h_i
         else:
             h.l_kids -= 1
-            h.l_edge = self.L_(h_i, h.l_kids-1).l_edge if h.l_kids >= 1 else h_i
+            h.l_edge = self.L_(h_i, 2).l_edge if h.l_kids >= 1 else h_i
 
     cdef void open_ent(self, int label) nogil:
         self._ents[self._e_i].start = self.B(0)
