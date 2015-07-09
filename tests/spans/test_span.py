@@ -5,8 +5,8 @@ import pytest
 
 
 @pytest.fixture
-def doc(en_nlp):
-    return en_nlp('This is a sentence. This is another sentence. And a third.')
+def doc(EN):
+    return EN('This is a sentence. This is another sentence. And a third.')
 
 
 def test_sent_spans(doc):
@@ -15,3 +15,11 @@ def test_sent_spans(doc):
     assert sents[0].end == 5
     assert len(sents) == 3
     assert sum(len(sent) for sent in sents) == len(doc)
+
+
+def test_root(doc):
+    np = doc[2:4]
+    assert len(np) == 2
+    assert np.orth_ == 'a sentence'
+    assert np.root.orth_ == 'sentence'
+    assert nlp.root.head.orth_ == 'is'

@@ -5,6 +5,10 @@ from collections import defaultdict
 cdef class Span:
     """A slice from a Doc object."""
     def __cinit__(self, Doc tokens, int start, int end, int label=0):
+        if start < 0:
+            start = tokens.length - start
+        if end < 0:
+            end = tokens.length - end
         self._seq = tokens
         self.start = start
         self.end = end
@@ -37,20 +41,48 @@ cdef class Span:
         for i in range(self.start, self.end):
             yield self._seq[i]
 
-    property head:
-        """The highest Token in the dependency tree in the Span, or None if
-        the Span is not internally connected (i.e. there are multiple heads).
+    property root:
+        """The first ancestor of the first word of the span that has its head
+        outside the span.
+        
+        For example:
+        
+        >>> toks = nlp(u'I like New York in Autumn.')
+
+        Let's name the indices --- easier than writing "toks[4]" etc.
+
+        >>> i, like, new, york, in_, autumn, dot = range(len(toks)) 
+
+        The head of 'new' is 'York', and the head of 'York' is 'like'
+
+        >>> toks[new].head.orth_
+        'York'
+        >>> toks[york].head.orth_
+        'like'
+
+        Create a span for "New York". Its root is "York".
+
+        >>> new_york = toks[new:york+1]
+        >>> new_york.root.orth_
+        'York'
+
+        When there are multiple words with external dependencies, we take the first:
+
+        >>> toks[autumn].head.orth_, toks[dot].head.orth_
+        ('in', like')
+        >>> autumn_dot = toks[autumn:]
+        >>> autumn_dot.root.orth_
+        'Autumn'
         """
         def __get__(self):
-            heads = []
-            for token in self:
-                head_i = token.head.i
-                if token.head is token or head_i >= self.end or head_i < self.start:
-                    heads.append(token)
-            if len(heads) != 1:
-                return None
-            else:
-                return heads[0]
+            # This should probably be called 'head', and the other one called
+            # 'gov'. But we went with 'head' elsehwhere, and now we're stuck =/
+            cdef const TokenC* start = &self._seq.data[self.start]
+            cdef const TokenC* end = &self._seq.data[self.end]
+            head = start
+            while start <= (head + head.head) < end and head.head != 0:
+                head += head.head
+            return self[head - self._seq.data]
 
     property lefts:
         """Tokens that are to the left of the Span, whose head is within the Span."""
@@ -68,6 +100,14 @@ cdef class Span:
                     if right.i >= self.end:
                         yield right
 
+    property subtree:
+        def __get__(self):
+            for word in self.lefts:
+                yield from word.subtree
+            yield from self
+            for word in self.rights:
+                yield from word.subtree
+
     property orth_:
         def __get__(self):
             return ''.join([t.string for t in self]).strip()
@@ -84,10 +124,3 @@ cdef class Span:
         def __get__(self):
             return self._seq.vocab.strings[self.label]
 
-    property subtree:
-        def __get__(self):
-            for word in self.lefts:
-                yield from word.subtree
-            yield from self
-            for word in self.rights:
-                yield from word.subtree
