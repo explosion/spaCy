@@ -10,6 +10,24 @@ To update your installation:
 
 Most updates ship a new model, so you will usually have to redownload the data.
 
+2015-07-08 v0.88
+----------------
+
+Refactoring release.
+
+If you have the data for v0.87, you don't need to redownload the data for this
+release.
+
+* You can now set tag=False, parse=False or entity=False when creating the pipleine,
+  to disable some of the models. See the documentation for details.
+* Models no longer lazy-loaded.
+* Warning emitted when parse=True or entity=True but model not loaded.
+* Rename the tokens.Tokens class to tokens.Doc. An alias has been made to assist
+  backwards compatibility, but you should update your code to refer to the new
+  class name.
+* Various bits of internal refactoring
+
+
 2015-07-01 v0.87
 ----------------
 
