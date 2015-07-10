@@ -10,6 +10,19 @@ To update your installation:
 
 Most updates ship a new model, so you will usually have to redownload the data.
 
+v0.89
+-----
+
+* Fix regression in parse times on very long texts. Recent versions were
+  calculating parse features in a way that was polynomial in input length. 
+* Add tag SP (coarse tag SPACE) for whitespace tokens. Ensure entity recogniser
+  does not assign entities to whitespace.
+* Rename :code:`Span.head` to :code:`Span.root`, fix its documentation, and make
+  it more efficient.  I considered adding Span.head, Span.dep and Span.dep\_ as
+  well, but for now I leave these as accessible via :code:`Span.root.head`,
+  :code:`Span.head.dep`, and :code:`Span.head.dep\_`, to keep the API smaller.  
+
+
 2015-07-08 v0.88
 ----------------
 
