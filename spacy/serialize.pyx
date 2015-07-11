@@ -22,26 +22,21 @@ cpdef list huffman_encode(float[:] probs):
     cdef int i = size - 1
     cdef int j = 0
     
-    append_two(nodes, i, i-1, probs[i] + probs[i-1])
-    i -= 2
-    append_one(nodes, 0, i, probs[i])
-    j += 1
-    i -= 1
     while i >= 0 or (j+1) < len(nodes):
         if i < 0:
-            append_zero(nodes, j)
+            cover_two_nodes(nodes, j)
             j += 2
         elif j >= len(nodes):
-            append_two(nodes, i, i-1, probs[i]+probs[i-1])
+            cover_two_words(nodes, i, i-1, probs[i]+probs[i-1])
             i -= 2
         elif i >= 1 and (j == len(nodes) or probs[i-1] < nodes[j].prob):
-            append_two(nodes, i, i-1, probs[i] + probs[i-1])
+            cover_two_words(nodes, i, i-1, probs[i] + probs[i-1])
             i -= 2
         elif (j+1) < len(nodes) and nodes[j+1].prob < probs[i]:
-            append_zero(nodes, j)
+            cover_two_nodes(nodes, j)
             j += 2
         else:
-            append_one(nodes, j, i, probs[i])
+            cover_one_word_one_node(nodes, j, i, probs[i])
             i -= 1
             j += 1
     output = ['' for _ in range(len(probs))]
@@ -66,7 +61,7 @@ cdef int assign_codes(vector[Node]& nodes, list codes, int i, bytes path) except
         codes[-(nodes[i].right + 1)] = right_path
 
 
-cdef int append_zero(vector[Node]& nodes, int j) nogil:
+cdef int cover_two_nodes(vector[Node]& nodes, int j) nogil:
     cdef Node node
     node.left = j
     node.right = j+1
@@ -74,27 +69,19 @@ cdef int append_zero(vector[Node]& nodes, int j) nogil:
     nodes.push_back(node)
 
 
-cdef int append_one(vector[Node]& nodes, int j, int id_, float prob) except -1:
+cdef int cover_one_word_one_node(vector[Node]& nodes, int j, int id_, float prob) except -1:
     cdef Node node
     # Encode leaves as negative integers, where the integer is the index of the
     # word in the vocabulary.
     leaf_id = - <int64_t>(id_ + 1)
     new_prob = prob + nodes[j].prob
     if prob < nodes[j].prob:
-        node.left = leaf_id
-        node.right = j
-        node.prob = new_prob
-        nodes.push_back(node)
+        node = Node(left=leaf_id, right=j, prob=new_prob)
     else:
-        node.left = j
-        node.right = leaf_id
-        node.prob = new_prob
-        nodes.push_back(node)
+        node = Node(left=j, right=leaf_id, prob=new_prob)
+    nodes.push_back(node)
 
 
-cdef int append_two(vector[Node]& nodes, int id1, int id2, float prob) except -1:
-    cdef Node node
-    node.left = -<int64_t>(id1 + 1)
-    node.right = -<int64_t>(id2 + 1)
-    node.prob = prob
+cdef int cover_two_words(vector[Node]& nodes, int id1, int id2, float prob) except -1:
+    cdef Node node = Node(left=-(id1 + 1), right=-(id2 + 1), prob=prob)
     nodes.push_back(node)
