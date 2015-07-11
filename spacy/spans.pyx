@@ -82,7 +82,7 @@ cdef class Span:
             head = start
             while start <= (head + head.head) < end and head.head != 0:
                 head += head.head
-            return self[head - self._seq.data]
+            return self._seq[head - self._seq.data]
 
     property lefts:
         """Tokens that are to the left of the Span, whose head is within the Span."""
