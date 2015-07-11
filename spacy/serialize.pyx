@@ -12,23 +12,7 @@ cdef struct Node:
     int right
 
 
-cdef struct BitArray:
-    uint64_t data
-
-
-cdef BitArray set_bit(BitArray barray, unsigned char id_) nogil:
-    cdef uint64_t one = 1
-    barray.data |= one << id_
-    return barray
-
-
-cdef BitArray clear_bit(BitArray barray, unsigned char id_) nogil:
-    cdef uint64_t one = 1
-    barray.data ^= one << id_
-    return barray
-
-
-cpdef uint64_t[:] huffman_encode(float[:] probs):
+cpdef list huffman_encode(float[:] probs):
     assert len(probs) >= 3
 
     output = numpy.zeros(shape=(len(probs),), dtype=numpy.uint64)
@@ -43,12 +27,13 @@ cpdef uint64_t[:] huffman_encode(float[:] probs):
     append_one(nodes, 0, i, probs[i])
     j += 1
     i -= 1
-    while i >= 0 or j < len(nodes):
+    while i >= 0 or (j+1) < len(nodes):
         if i < 0:
             append_zero(nodes, j)
             j += 2
         elif j >= len(nodes):
             append_two(nodes, i, i-1, probs[i]+probs[i-1])
+            i -= 2
         elif i >= 1 and (j == len(nodes) or probs[i-1] < nodes[j].prob):
             append_two(nodes, i, i-1, probs[i] + probs[i-1])
             i -= 2
@@ -59,33 +44,26 @@ cpdef uint64_t[:] huffman_encode(float[:] probs):
             append_one(nodes, j, i, probs[i])
             i -= 1
             j += 1
-    cdef vector[BitArray] codes
-    codes.resize(len(probs))
-    for i in range(len(probs)):
-        codes[i].data = 0
-    assign_codes(nodes, codes, len(nodes) - 2, BitArray(data=0), 0)
-    output = numpy.zeros(shape=(len(codes),), dtype=numpy.uint64)
-    for i in range(len(codes)):
-        output[i] = codes[i].data
+    output = ['' for _ in range(len(probs))]
+    assign_codes(nodes, output, len(nodes) - 1, b'')
     return output
 
 
-cdef int assign_codes(vector[Node]& nodes, vector[BitArray]& codes, int i,
-                      BitArray code, int bit) except -1:
-    cdef BitArray left_code = clear_bit(code, bit)
+cdef int assign_codes(vector[Node]& nodes, list codes, int i, bytes path) except -1:
+    left_path = path + b'0'
+    right_path = path + b'1'
+    # Assign down left branch
     if nodes[i].left >= 0:
-        if nodes[i].left != i:
-            assign_codes(nodes, codes, nodes[i].left, left_code, bit+1)
+        assign_codes(nodes, codes, nodes[i].left, left_path)
     else:
-        id_ = -(nodes[i].left + 1)
-        codes[id_] = left_code
-    cdef BitArray right_code = set_bit(code, bit)
+        # Leaf on left
+        codes[-(nodes[i].left + 1)] = left_path
+    # Assign down right branch
     if nodes[i].right >= 0:
-        if nodes[i].right != i:
-            assign_codes(nodes, codes, nodes[i].right, right_code, bit+1)
+        assign_codes(nodes, codes, nodes[i].right, right_path)
     else:
-        id_ = -(nodes[i].right + 1)
-        codes[id_] = right_code
+        # Leaf on right
+        codes[-(nodes[i].right + 1)] = right_path
 
 
 cdef int append_zero(vector[Node]& nodes, int j) nogil:
