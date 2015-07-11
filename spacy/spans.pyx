@@ -92,7 +92,7 @@ cdef class Span:
                     if left.i < self.start:
                         yield left
 
-    property right:
+    property rights:
         """Tokens that are to the right of the Span, whose head is within the Span."""
         def __get__(self):
             for token in self:
