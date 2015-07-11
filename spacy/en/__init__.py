@@ -31,7 +31,7 @@ def get_lex_props(string):
         'prefix': string[0],
         'suffix': string[-3:],
         'cluster': 0,
-        'prob': 0,
+        'prob': -22,
         'sentiment': 0
     }
 
