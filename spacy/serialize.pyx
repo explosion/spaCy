@@ -1,7 +1,11 @@
 from libcpp.vector cimport vector
 from libc.stdint cimport uint32_t
 from libc.stdint cimport int64_t
+from libc.stdint cimport int32_t
 from libc.stdint cimport uint64_t
+
+from preshed.maps cimport PreshMap
+from murmurhash.mrmr cimport hash64
 
 import numpy
 
@@ -24,33 +28,61 @@ cimport cython
 
 cdef struct Node:
     float prob
-    int left
-    int right
+    int32_t left
+    int32_t right
 
+
+cdef struct Code:
+    uint64_t bits
+    char length
+
+
+# Note that we're setting the most significant bits here first, when in practice
+# we're actually wanting the last bit to be most significant (for Huffman coding,
+# anyway).
+cdef Code bit_append(Code code, bint bit) nogil:
+    cdef uint64_t one = 1
+    if bit:
+        code.bits |= one << code.length
+    else:
+        code.bits &= ~(one << code.length)
+    code.length += 1
+    return code
+    
 
 cdef class HuffmanCodec:
     cdef vector[Node] nodes
-    cdef vector[vector[bint]] codes
-    cdef vector[bint] oov_code
-    cdef uint64_t oov_symbol
+    cdef vector[Code] codes
     cdef float[:] probs
-    cdef dict table
+    cdef PreshMap table
     def __init__(self, symbols, probs):
-        self.table = {}
+        self.table = PreshMap()
+        cdef bytes symb_str
+        cdef uint64_t key
+        cdef uint64_t i
         for i, symbol in enumerate(symbols):
-            self.table[symbol] = i
+            if type(symbol) == unicode or type(symbol) == bytes:
+                symb_str = symbol.encode('utf8')
+                key = hash64(<unsigned char*>symb_str, len(symb_str), 0)
+            else:
+                key = int(symbol)
+            self.table[key] = i
         self.probs = probs
         self.codes.resize(len(probs))
-
+        for i in range(len(self.codes)):
+            self.codes[i].bits = 0
+            self.codes[i].length = 0
         populate_nodes(self.nodes, probs)
-        cdef vector[bint] path
+        cdef Code path
+        path.bits = 0
+        path.length = 0
         assign_codes(self.nodes, self.codes, len(self.nodes) - 1, path)
 
     def encode(self, uint64_t[:] sequence):
-        bits = []
+        cdef vector[bint] bits
         cdef uint64_t symbol
         for symbol in sequence:
-            i = <int>self.table.get(symbol)
+            i = <size_t>self.table.get(symbol)
             if i == 0:
                 raise Exception("Unseen symbol: %s" % symbol)
             else:
@@ -77,14 +109,13 @@ cdef class HuffmanCodec:
         def __get__(self):
             output = []
             cdef int i, j
+            cdef bytes string
+            cdef Code code
             for i in range(self.codes.size()):
-                code = []
-                for j in range(self.codes[i].size()):
-                    if self.codes[i][j]:
-                        code += '1'
-                    else:
-                        code += '0'
-                output.append(code)
+                code = self.codes[i]
+                string = b'{0:b}'.format(code.bits).rjust(code.length, '0')
+                string = string[::-1]
+                output.append(string)
             return output
 
 
@@ -149,12 +180,10 @@ cdef int _cover_two_words(vector[Node]& nodes, int id1, int id2, float prob) nog
     nodes.push_back(node)
 
 
-cdef int assign_codes(vector[Node]& nodes, vector[vector[bint]]& codes, int i,
-                      vector[bint] path) except -1:
-    cdef vector[bint] left_path = path
-    cdef vector[bint] right_path = path
-    left_path.push_back(0)
-    right_path.push_back(1)
+cdef int assign_codes(vector[Node]& nodes, vector[Code]& codes, int i, Code path) except -1:
+    cdef Code left_path = bit_append(path, 0)
+    cdef Code right_path = bit_append(path, 1)
+    
     # Assign down left branch
     if nodes[i].left >= 0:
         assign_codes(nodes, codes, nodes[i].left, left_path)
