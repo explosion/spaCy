@@ -28,14 +28,9 @@ cdef struct Node:
     int right
 
 
-cdef struct Code:
-    uint64_t bits
-    int length
-
-
 cdef class HuffmanCodec:
     cdef vector[Node] nodes
-    cdef vector[Code] codes
+    cdef vector[vector[bint]] codes
     cdef float[:] probs
     cdef dict table
     def __init__(self, symbols, probs):
@@ -46,7 +41,8 @@ cdef class HuffmanCodec:
         self.codes.resize(len(probs))
 
         populate_nodes(self.nodes, probs)
-        assign_codes(self.nodes, self.codes, len(self.nodes) - 1, b'')
+        cdef vector[bint] path
+        assign_codes(self.nodes, self.codes, len(self.nodes) - 1, path)
 
     def encode(self, sequence):
         bits = []
@@ -69,11 +65,20 @@ cdef class HuffmanCodec:
         return symbols
 
     property strings:
+        @cython.boundscheck(False)
+        @cython.wraparound(False)
+        @cython.nonecheck(False)
         def __get__(self):
             output = []
-            for i in range(len(self.codes)):
-                string = '{0:b}'.format(self.codes[i].bits).rjust(self.codes[i].length, '0')
-                output.append(string)
+            cdef int i, j
+            for i in range(self.codes.size()):
+                code = []
+                for j in range(self.codes[i].size()):
+                    if self.codes[i][j]:
+                        code += '1'
+                    else:
+                        code += '0'
+                output.append(code)
             return output
 
 
@@ -138,22 +143,23 @@ cdef int _cover_two_words(vector[Node]& nodes, int id1, int id2, float prob) nog
     nodes.push_back(node)
 
 
-cdef int assign_codes(vector[Node]& nodes, vector[Code]& codes, int i, bytes path) except -1:
-    left_path = path + b'0'
-    right_path = path + b'1'
+cdef int assign_codes(vector[Node]& nodes, vector[vector[bint]]& codes, int i,
+                      vector[bint] path) except -1:
+    cdef vector[bint] left_path = path
+    cdef vector[bint] right_path = path
+    left_path.push_back(0)
+    right_path.push_back(1)
     # Assign down left branch
     if nodes[i].left >= 0:
         assign_codes(nodes, codes, nodes[i].left, left_path)
     else:
         # Leaf on left
         id_ = -(nodes[i].left + 1)
-        codes[id_].length = len(left_path)
-        codes[id_].bits = <uint64_t>int(left_path, 2)
+        codes[id_] = left_path
     # Assign down right branch
     if nodes[i].right >= 0:
         assign_codes(nodes, codes, nodes[i].right, right_path)
     else:
         # Leaf on right
         id_ = -(nodes[i].right + 1)
-        codes[id_].length = len(right_path)
-        codes[id_].bits = <uint64_t>int(right_path, 2)
+        codes[id_] = right_path
