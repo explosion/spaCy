@@ -8,6 +8,20 @@ import numpy
 cimport cython
 
 
+#cdef class Serializer:
+#    def __init__(self, Vocab vocab):
+#        pass
+#
+#    def dump(self, Doc tokens, file_):
+#        pass
+#        # Format
+#        # - Total number of bytes in message (32 bit int)
+#        # - Words, terminating in an EOL symbol, huffman coded ~12 bits per word
+#        # - Spaces ~1 bit per word
+#        # - Parse: Huffman coded head offset / dep label / POS tag / entity IOB tag
+#        #          combo. ? bits per word. 40 * 80 * 40 * 12 = 1.5m symbol vocab
+
+
 cdef struct Node:
     float prob
     int left
@@ -19,44 +33,109 @@ cdef struct Code:
     int length
 
 
+cdef class HuffmanCodec:
+    cdef vector[Node] nodes
+    cdef vector[Code] codes
+    cdef float[:] probs
+    cdef dict table
+    def __init__(self, symbols, probs):
+        self.table = {}
+        for i, symbol in enumerate(symbols):
+            self.table[symbol] = i
+        self.probs = probs
+        self.codes.resize(len(probs))
+
+        populate_nodes(self.nodes, probs)
+        assign_codes(self.nodes, self.codes, len(self.nodes) - 1, b'')
+
+    def encode(self, sequence):
+        bits = []
+        for symbol in sequence:
+            i = self.table[symbol]
+            code = self.codes[i]
+            bits.extend(code)
+        return bits
+
+    def decode(self, bits):
+        symbols = []
+        node = self.nodes.back()
+        for bit in bits:
+            branch = node.right if bit else node.left
+            if branch >= 0:
+                node = self.nodes.at(branch)
+            else:
+                symbols.append(-(branch + 1))
+                node = self.nodes.back()
+        return symbols
+
+    property strings:
+        def __get__(self):
+            output = []
+            for i in range(len(self.codes)):
+                string = '{0:b}'.format(self.codes[i].bits).rjust(self.codes[i].length, '0')
+                output.append(string)
+            return output
+
+
 @cython.boundscheck(False)
 @cython.wraparound(False)
 @cython.nonecheck(False)
-cpdef list huffman_encode(float[:] probs):
+cdef int populate_nodes(vector[Node]& nodes, float[:] probs) except -1:
     assert len(probs) >= 3
-
-    output = numpy.zeros(shape=(len(probs),), dtype=numpy.uint64)
- 
     cdef int size = len(probs)
-    cdef vector[Node] nodes
     cdef int i = size - 1
     cdef int j = 0
     
     while i >= 0 or (j+1) < nodes.size():
         if i < 0:
-            cover_two_nodes(nodes, j)
+            _cover_two_nodes(nodes, j)
             j += 2
         elif j >= nodes.size():
-            cover_two_words(nodes, i, i-1, probs[i]+probs[i-1])
+            _cover_two_words(nodes, i, i-1, probs[i] + probs[i-1])
             i -= 2
         elif i >= 1 and (j == nodes.size() or probs[i-1] < nodes[j].prob):
-            cover_two_words(nodes, i, i-1, probs[i] + probs[i-1])
+            _cover_two_words(nodes, i, i-1, probs[i] + probs[i-1])
             i -= 2
         elif (j+1) < nodes.size() and nodes[j+1].prob < probs[i]:
-            cover_two_nodes(nodes, j)
+            _cover_two_nodes(nodes, j)
             j += 2
         else:
-            cover_one_word_one_node(nodes, j, i, probs[i])
+            _cover_one_word_one_node(nodes, j, i, probs[i])
             i -= 1
             j += 1
-    cdef vector[Code] codes
-    codes.resize(len(probs))
-    assign_codes(nodes, codes, len(nodes) - 1, b'')
-    output = []
-    for i in range(len(codes)):
-        out_str = '{0:b}'.format(codes[i].bits).rjust(codes[i].length, '0')
-        output.append(out_str)
-    return output
+    return 0
+
+cdef int _cover_two_nodes(vector[Node]& nodes, int j) nogil:
+    cdef Node node
+    node.left = j
+    node.right = j+1
+    node.prob = nodes[j].prob + nodes[j+1].prob
+    nodes.push_back(node)
+
+
+cdef int _cover_one_word_one_node(vector[Node]& nodes, int j, int id_, float prob) nogil:
+    cdef Node node
+    # Encode leaves as negative integers, where the integer is the index of the
+    # word in the vocabulary.
+    cdef int64_t leaf_id = - <int64_t>(id_ + 1)
+    cdef float new_prob = prob + nodes[j].prob
+    if prob < nodes[j].prob:
+        node.left = leaf_id
+        node.right = j
+        node.prob = new_prob
+    else:
+        node.left = j
+        node.right = leaf_id
+        node.prob = new_prob
+    nodes.push_back(node)
+
+
+cdef int _cover_two_words(vector[Node]& nodes, int id1, int id2, float prob) nogil:
+    cdef Node node
+    node.left = -(id1+1)
+    node.right = -(id2+1)
+    node.prob = prob
+    nodes.push_back(node)
 
 
 cdef int assign_codes(vector[Node]& nodes, vector[Code]& codes, int i, bytes path) except -1:
@@ -78,36 +157,3 @@ cdef int assign_codes(vector[Node]& nodes, vector[Code]& codes, int i, bytes pat
         id_ = -(nodes[i].right + 1)
         codes[id_].length = len(right_path)
         codes[id_].bits = <uint64_t>int(right_path, 2)
-
-
-cdef int cover_two_nodes(vector[Node]& nodes, int j) nogil:
-    cdef Node node
-    node.left = j
-    node.right = j+1
-    node.prob = nodes[j].prob + nodes[j+1].prob
-    nodes.push_back(node)
-
-
-cdef int cover_one_word_one_node(vector[Node]& nodes, int j, int id_, float prob) nogil:
-    cdef Node node
-    # Encode leaves as negative integers, where the integer is the index of the
-    # word in the vocabulary.
-    cdef int64_t leaf_id = - <int64_t>(id_ + 1)
-    cdef float new_prob = prob + nodes[j].prob
-    if prob < nodes[j].prob:
-        node.left = leaf_id
-        node.right = j
-        node.prob = new_prob
-    else:
-        node.left = j
-        node.right = leaf_id
-        node.prob = new_prob
-    nodes.push_back(node)
-
-
-cdef int cover_two_words(vector[Node]& nodes, int id1, int id2, float prob) nogil:
-    cdef Node node
-    node.left = -(id1+1)
-    node.right = -(id2+1)
-    node.prob = prob
-    nodes.push_back(node)
