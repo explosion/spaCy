@@ -26,7 +26,8 @@ class Vocab(object):
         return self.codec.encode(numpy.array(seq, dtype=numpy.uint32))
 
     def unpack(self, packed):
-        return [self.symbols[i] for i in self.codec.decode(packed)]
+        ids = self.codec.decode(packed)
+        return [self.symbols[i] for i in ids]
 
  
 def py_encode(symb2freq):
@@ -75,12 +76,9 @@ def test_round_trip():
     message = ['the', 'quick', 'brown', 'fox', 'jumped', 'over', 'the',
                 'the', 'lazy', 'dog', '.']
     strings = list(vocab.codec.strings)
-    for i in range(len(vocab.symbols)):
-        print vocab.symbols[i], strings[i]
     codes = {vocab.symbols[i]: strings[i] for i in range(len(vocab.symbols))}
     packed = vocab.pack(message)
-    string = b''.join(b'{0:b}'.format(ord(c)).rjust(8, b'0')[::-1] for c in packed)
-    print string
+    string = b''.join(b'{0:b}'.format(ord(c)).rjust(8, b'0')[::-1] for c in packed.as_bytes())
     for word in message:
         code = codes[word]
         assert string[:len(code)] == code
@@ -115,16 +113,10 @@ def test_rosetta():
 
 
 def test_vocab(EN):
-    probs = numpy.ndarray(shape=(len(EN.vocab), 2), dtype=numpy.float32)
-    for word in EN.vocab:
-        probs[word.id, 0] = numpy.exp(word.prob)
-        probs[word.id, 1] = word.id
-    probs.sort()
-    probs[:,::-1]
-    codec = HuffmanCodec(probs[:, 0], 0)
+    codec = EN.vocab.codec
     expected_length = 0
     for i, code in enumerate(codec.strings):
-        expected_length += len(code) * probs[i, 0]
+        expected_length += len(code) * numpy.exp(EN.vocab[i].prob)
     assert 8 < expected_length < 15
 
 

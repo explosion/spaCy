@@ -16,6 +16,8 @@ from .lexeme cimport check_flag
 from .spans import Span
 from .structs cimport UniStr
 
+from .serialize import BitArray
+
 from unidecode import unidecode
 # Compiler crashes on memory view coercion without this. Should report bug.
 from cython.view cimport array as cvarray
@@ -373,10 +375,53 @@ cdef class Doc:
         # Return the merged Python object
         return self[start]
 
+    def _has_trailing_space(self, int i):
+        cdef int end_idx = self.data[i].idx + self.data[i].lex.length
+        if end_idx >= len(self._string):
+            return False
+        else:
+            return self._string[end_idx] == u' '
+
+    def serialize(self, bits=None):
+        if bits is None:
+            bits = BitArray()
+        codec = self.vocab.codec
+        ids = numpy.zeros(shape=(len(self),), dtype=numpy.uint32)
+        cdef int i
+        for i in range(self.length):
+            ids[i] = self.data[i].lex.id
+        bits = codec.encode(ids, bits=bits)
+        for i in range(self.length):
+            bits.append(self._has_trailing_space(i))
+        return bits
+
+    @staticmethod
+    def deserialize(Vocab vocab, bits):
+        biterator = iter(bits)
+        ids = vocab.codec.decode(biterator)
+        spaces = []
+        for bit in biterator:
+            spaces.append(bit)
+            if len(spaces) == len(ids):
+                break
+        string = u''
+        cdef const LexemeC* lex
+        for id_, space in zip(ids, spaces):
+            lex = vocab.lexemes[id_]
+            string += vocab.strings[lex.orth]
+            if space:
+                string += u' '
+        cdef Doc doc = Doc(vocab, string)
+        cdef int idx = 0
+        for i, id_ in enumerate(ids):
+            doc.push_back(idx, vocab.lexemes[id_])
+            idx += vocab.lexemes[id_].length
+            if spaces[i]:
+                idx += 1
+        return doc
 
 # Enhance backwards compatibility by aliasing Doc to Tokens, for now
 Tokens = Doc
-
 
 
 cdef class Token:
@@ -411,6 +456,10 @@ cdef class Token:
         return Token.cinit(self.vocab, self._string,
                            self.c, self.i, self.array_len,
                            self._seq)
+
+    property lex_id:
+        def __get__(self):
+            return self.c.lex.id
 
     property string:
         def __get__(self):

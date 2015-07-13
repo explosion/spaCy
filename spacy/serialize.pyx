@@ -51,13 +51,13 @@ cdef class BitArray:
         start_byte = self.i // 8
         if (self.i % 8) != 0:
             for i in range(self.i % 8):
-                yield (self.data[start_byte] & (one << i))
+                yield 1 if (self.data[start_byte] & (one << i)) else 0
             start_byte += 1
         for byte in self.data[start_byte:]:
             for i in range(8):
-                yield byte & (one << i)
+                yield 1 if byte & (one << i) else 0
         for i in range(self.bit_of_byte):
-            yield self.byte & (one << i)
+            yield 1 if self.byte & (one << i) else 0
 
     def as_bytes(self):
         if self.bit_of_byte != 0:
@@ -67,6 +67,7 @@ cdef class BitArray:
 
     def append(self, bint bit):
         cdef uint64_t one = 1
+        print 'append', bit
         if bit:
             self.byte |= one << self.bit_of_byte
         else:
@@ -128,9 +129,9 @@ cdef class HuffmanCodec:
         bits.extend(self.codes[self.eol].bits, self.codes[self.eol].length)
         return bits
 
-    def decode(self, BitArray bits):
+    def decode(self, bits):
         node = self.nodes.back()
-        symbols = [] 
+        symbols = []
         for bit in bits:
             branch = node.right if bit else node.left
             if branch >= 0:
