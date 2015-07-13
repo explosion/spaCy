@@ -93,6 +93,7 @@ def cython_setup(mod_names, language, includes, compile_args, link_args):
                                    "data/wordnet/*", "data/tokenizer/*",
                                    "data/vocab/lexemes.bin",
                                    "data/vocab/strings.txt"],
+                      "spacy.tokens": ["*.pxd"],
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
         cmdclass={'build_ext': Cython.Distutils.build_ext},
@@ -103,7 +104,7 @@ def cython_setup(mod_names, language, includes, compile_args, link_args):
 def run_setup(exts):
     setup(
         name='spacy',
-        packages=['spacy', 'spacy.en', 'spacy.syntax', 'spacy.munge'],
+        packages=['spacy', 'spacy.tokens', 'spacy.en', 'spacy.syntax', 'spacy.munge'],
         description="Industrial-strength NLP",
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
@@ -148,7 +149,7 @@ def main(modules, is_pypy):
 
 
 MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
-             'spacy.lexeme', 'spacy.vocab', 'spacy.tokens', 'spacy.spans',
+             'spacy.lexeme', 'spacy.vocab',
              'spacy.morphology', 
              'spacy.syntax.stateclass', 
              'spacy._ml', 'spacy.tokenizer', 'spacy.en.attrs',
@@ -156,7 +157,8 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.syntax.transition_system',
              'spacy.syntax.arc_eager',
              'spacy.syntax._parse_features',
-             'spacy.gold', 'spacy.orth', 
+             'spacy.gold', 'spacy.orth', 'spacy.serialize',
+             'spacy.tokens.doc', 'spacy.tokens.spans', 'spacy.tokens.token',
              'spacy.syntax.ner']
 
 
