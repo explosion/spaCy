@@ -19,17 +19,6 @@ cimport cython
 #          combo. ? bits per word. 40 * 80 * 40 * 12 = 1.5m symbol vocab
 
 
-cdef struct Node:
-    float prob
-    int32_t left
-    int32_t right
-
-
-cdef struct Code:
-    uint64_t bits
-    char length
-
-
 # Note that we're setting the most significant bits here first, when in practice
 # we're actually wanting the last bit to be most significant (for Huffman coding,
 # anyway).
@@ -90,9 +79,6 @@ cdef class HuffmanCodec:
 
         eol (uint32_t): The index of the weight of the EOL symbol.
     """
-    cdef vector[Node] nodes
-    cdef vector[Code] codes
-    cdef uint32_t eol
     def __init__(self, float[:] probs, uint32_t eol):
         self.eol = eol
         self.codes.resize(len(probs))
