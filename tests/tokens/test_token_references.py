@@ -2,13 +2,15 @@ from __future__ import unicode_literals
 import pytest
 import gc
 
-from spacy.en import English
+from spacy.en import English, LOCAL_DATA_DIR
+import os
 
+data_dir = os.environ.get('SPACY_DATA', LOCAL_DATA_DIR)
 # Let this have its own instances, as we have to be careful about memory here
 # that's the point, after all
 
 def get_orphan_token(text, i):
-    nlp = English(load_vectors=False)
+    nlp = English(load_vectors=False, data_dir=data_dir)
     tokens = nlp(text)
     gc.collect()
     token = tokens[i]
@@ -22,7 +24,7 @@ def test_orphan():
     dummy = get_orphan_token('Load and flush the memory', 0)
     dummy = get_orphan_token('Load again...', 0)
     assert orphan.orth_ == 'orphan'
-    assert orphan.pos_ == 'NOUN'
+    assert orphan.pos_ in ('ADJ', 'NOUN')
     assert orphan.head.orth_ == 'token'
 
 
@@ -36,7 +38,7 @@ def _orphan_from_list(toks):
 
 def test_list_orphans():
     # Test case from NSchrading
-    nlp = English(load_vectors=False)
+    nlp = English(load_vectors=False, data_dir=data_dir)
     samples = ["a", "test blah wat okay"]
     lst = []
     for sample in samples:
