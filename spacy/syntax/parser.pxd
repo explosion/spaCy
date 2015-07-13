@@ -4,7 +4,8 @@ from .._ml cimport Model
 
 from .arc_eager cimport TransitionSystem
 
-from ..tokens cimport Doc, TokenC
+from ..tokens.doc cimport Doc
+from ..structs cimport TokenC
 
 
 cdef class Parser:

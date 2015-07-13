@@ -31,5 +31,3 @@ cdef class Doc:
     cpdef np.ndarray to_array(self, object features)
 
     cdef int set_parse(self, const TokenC* parsed) except -1
-
-

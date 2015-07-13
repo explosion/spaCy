@@ -1,5 +1,5 @@
 from .doc import Doc
 from .token import Token
-from .spans import Spans
+from .spans import Span
 
-__all__ = [Doc, Token, Spans]
+__all__ = [Doc, Token, Span]

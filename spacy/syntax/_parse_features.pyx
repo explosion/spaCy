@@ -12,7 +12,7 @@ from libc.string cimport memset
 
 from itertools import combinations
 
-from ..tokens cimport TokenC
+from ..structs cimport TokenC
 
 from .stateclass cimport StateClass
 

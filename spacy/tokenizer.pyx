@@ -16,7 +16,7 @@ from .morphology cimport set_morph_from_dict
 
 from . import util
 from .util import read_lang_data
-from .tokens import Doc
+from .tokens.doc cimport Doc
 
 
 cdef class Tokenizer:

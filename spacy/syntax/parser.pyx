@@ -32,7 +32,9 @@ from thinc.learner cimport LinearModel
 from thinc.search cimport Beam
 from thinc.search cimport MaxViolation
 
-from ..tokens cimport Doc, TokenC
+from ..structs cimport TokenC
+
+from ..tokens.doc cimport Doc
 from ..strings cimport StringStore
 
 

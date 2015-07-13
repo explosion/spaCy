@@ -8,7 +8,7 @@ from cymem.cymem cimport Pool
 from .typedefs cimport hash_t
 from .structs cimport LexemeC, TokenC, Morphology, UniStr
 from .strings cimport StringStore
-from .tokens cimport Doc
+from .tokens.doc cimport Doc
 from .vocab cimport Vocab, _Cached
 
 

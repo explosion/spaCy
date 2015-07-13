@@ -14,7 +14,7 @@ from ..parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON
 from ..parts_of_speech cimport PRT, VERB, X, PUNCT, EOL, SPACE
 from ..typedefs cimport id_t
 from ..structs cimport TokenC, Morphology, LexemeC
-from ..tokens cimport Doc
+from ..tokens.doc cimport Doc
 from ..morphology cimport set_morph_from_dict
 from .._ml cimport arg_max
 

@@ -3,6 +3,18 @@ from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from ..lexeme cimport check_flag
 # Compiler crashes on memory view coercion without this. Should report bug.
 from cython.view cimport array as cvarray
+cimport numpy as np
+np.import_array()
+
+import numpy
+
+
+from ..parts_of_speech import UNIV_POS_NAMES
+
+from ..typedefs cimport LEMMA
+from ..typedefs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
+from ..typedefs cimport POS, LEMMA, TAG, DEP
+from ..parts_of_speech cimport CONJ, PUNCT
 
 
 cdef class Token:
@@ -279,3 +291,6 @@ cdef class Token:
     property dep_:
         def __get__(self):
             return self.vocab.strings[self.c.dep]
+
+
+_pos_id_to_string = {id_: string for string, id_ in UNIV_POS_NAMES.items()}
