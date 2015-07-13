@@ -44,14 +44,26 @@ cdef Code bit_append(Code code, bint bit) nogil:
     
 
 cdef class HuffmanCodec:
+    """Create a Huffman code table, and use it to pack and unpack sequences into
+    byte strings. Emphasis is on efficiency, so API is quite strict:
+
+    Messages will be encoded/decoded as indices that refer to the probability sequence.
+    For instance, the sequence [5, 10, 8] indicates the 5th most frequent item,
+    the 10th most frequent item, the 8th most frequent item.  The codec will add
+    the EOL symbol to your message. An exception will be raised if you include
+    the EOL symbol in your message.
+
+    Arguments:
+        probs (float[:]): A descending-sorted sequence of probabilities/weights.
+          Must include a weight for an EOL symbol.
+
+        eol (uint32_t): The index of the weight of the EOL symbol.
+    """
     cdef vector[Node] nodes
     cdef vector[Code] codes
-    cdef readonly float[:] probs
-    cdef PreshMap table
     cdef uint32_t eol
-    def __init__(self, probs, eol):
+    def __init__(self, float[:] probs, uint32_t eol):
         self.eol = eol
-        self.probs = probs
         self.codes.resize(len(probs))
         for i in range(len(self.codes)):
             self.codes[i].bits = 0
@@ -69,7 +81,7 @@ cdef class HuffmanCodec:
         cdef uint64_t one = 1
         cdef unsigned char i_of_byte = 0
         cdef unsigned char i_of_code = 0
-        for index in sequence:
+        for index in list(sequence) + [self.eol]:
             code = self.codes[index]
             for i_of_code in range(code.length):
                 if code.bits & (one << i_of_code):
