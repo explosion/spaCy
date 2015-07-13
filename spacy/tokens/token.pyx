@@ -23,6 +23,7 @@ cdef class Token:
     """
     def __cinit__(self, Vocab vocab):
         self.vocab = vocab
+        self._py_tokens = []
 
     def __dealloc__(self):
         if self._owns_c_data:
@@ -45,7 +46,7 @@ cdef class Token:
         self._owns_c_data = True
 
     def nbor(self, int i=1):
-        return Token.cinit(self.vocab, self.c, self.i, self.array_len)
+        return Token.cinit(self.vocab, self.c, self.i, self.array_len, self._py_tokens)
 
     property lex_id:
         def __get__(self):
@@ -152,7 +153,7 @@ cdef class Token:
 
                 elif ptr + ptr.head == self.c:
                     yield Token.cinit(self.vocab, ptr, ptr - (self.c - self.i),
-                                      self.array_len)
+                                      self.array_len, self._py_tokens)
                     ptr += 1
                 else:
                     ptr += 1
@@ -171,7 +172,7 @@ cdef class Token:
                     ptr += ptr.head
                 elif ptr + ptr.head == self.c:
                     tokens.append(Token.cinit(self.vocab, ptr, ptr - (self.c - self.i),
-                                  self.array_len))
+                                  self.array_len, self._py_tokens))
                     ptr -= 1
                 else:
                     ptr -= 1
@@ -196,19 +197,19 @@ cdef class Token:
         def __get__(self):
             return Token.cinit(self.vocab,
                                (self.c - self.i) + self.c.l_edge, self.c.l_edge,
-                               self.array_len)
+                               self.array_len, self._py_tokens)
  
     property right_edge:
         def __get__(self):
             return Token.cinit(self.vocab,
                                (self.c - self.i) + self.c.r_edge, self.c.r_edge,
-                               self.array_len)
+                               self.array_len, self._py_tokens)
 
     property head:
         def __get__(self):
             """The token predicted by the parser to be the head of the current token."""
             return Token.cinit(self.vocab, self.c + self.c.head, self.i + self.c.head,
-                               self.array_len)
+                               self.array_len, self._py_tokens)
         
     property conjuncts:
         def __get__(self):

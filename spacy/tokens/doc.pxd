@@ -23,6 +23,8 @@ cdef class Doc:
     cdef public bint is_tagged
     cdef public bint is_parsed
 
+    cdef public list _py_tokens
+
     cdef int length
     cdef int max_length
 

@@ -71,7 +71,7 @@ cdef class Doc:
     Container class for annotated text.  Constructed via English.__call__ or
     Tokenizer.__call__.
     """
-    def __cinit__(self, Vocab vocab):
+    def __init__(self, Vocab vocab):
         self.vocab = vocab
         size = 20
         self.mem = Pool()
@@ -87,6 +87,13 @@ cdef class Doc:
         self.length = 0
         self.is_tagged = False
         self.is_parsed = False
+        self._py_tokens = []
+
+    def __dealloc__(self):
+        cdef Token token
+        if self._py_tokens is not None:
+            for token in self._py_tokens:
+                token.take_ownership_of_c_data()
 
     def __getitem__(self, object i):
         """Get a token.
@@ -103,7 +110,7 @@ cdef class Doc:
         if i < 0:
             i = self.length + i
         bounds_check(i, self.length, PADDING)
-        return Token.cinit(self.vocab, &self.data[i], i, self.length)
+        return Token.cinit(self.vocab, &self.data[i], i, self.length, self._py_tokens)
 
     def __iter__(self):
         """Iterate over the tokens.
@@ -112,7 +119,7 @@ cdef class Doc:
             token (Token):
         """
         for i in range(self.length):
-            yield Token.cinit(self.vocab, &self.data[i], i, self.length)
+            yield Token.cinit(self.vocab, &self.data[i], i, self.length, self._py_tokens)
 
     def __len__(self):
         return self.length
@@ -187,6 +194,7 @@ cdef class Doc:
             t.idx = (t-1).idx + (t-1).lex.length + (t-1).spacy
         t.spacy = has_space
         self.length += 1
+        self._py_tokens.append(None)
         return t.idx + t.lex.length + t.spacy
 
     @cython.boundscheck(False)
@@ -259,7 +267,6 @@ cdef class Doc:
     cdef int set_parse(self, const TokenC* parsed) except -1:
         # TODO: This method is fairly misleading atm. It's used by GreedyParser
         # to actually apply the parse calculated. Need to rethink this.
-        self._py_tokens = [None] * self.length
         self.is_parsed = True
         for i in range(self.length):
             self.data[i] = parsed[i]
@@ -345,8 +352,6 @@ cdef class Doc:
             # ...And, set heads back to a relative position
             self.data[i].head -= i
 
-        # Clear cached Python objects
-        self._py_tokens = [None] * self.length
         # Return the merged Python object
         return self[start]
 
