@@ -62,6 +62,7 @@ cdef struct TokenC:
     Morphology morph
     const Constituent* ctnt
     univ_pos_t pos
+    bint spacy
     int tag
     int idx
     int lemma
