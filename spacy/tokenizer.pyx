@@ -185,9 +185,6 @@ cdef class Tokenizer:
         cdef const LexemeC* lexeme
         cdef UniStr span
         cdef int i
-        # Have to calculate is_spacy here, i.e. does the token have a trailing
-        # space. There are no spaces *between* the tokens we attach
-        # here, and there *is* a space after the last token.
         if prefixes.size():
             for i in range(prefixes.size()):
                 tokens.push_back(prefixes[0][i], False)
