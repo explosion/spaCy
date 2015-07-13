@@ -110,16 +110,12 @@ cdef class Tokenizer:
         if cached == NULL:
             return False
         cdef int i
-        cdef int less_one = cached.length-1
         if cached.is_lex:
-            for i in range(less_one):
-                # There's a space at the end of the chunk.
+            for i in range(cached.length):
                 tokens.push_back(cached.data.lexemes[i], False)
-            tokens.push_back(cached.data.lexemes[less_one], False)
         else:
-            for i in range(less_one):
+            for i in range(cached.length):
                 tokens.push_back(&cached.data.tokens[i], False)
-            tokens.push_back(&cached.data.tokens[less_one], False)
         return True
 
     cdef int _tokenize(self, Doc tokens, UniStr* span, int start, int end) except -1:
