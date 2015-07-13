@@ -217,8 +217,9 @@ cdef class GoldParse:
 
         self.orig_annot = zip(*annot_tuples)
 
+        words = [w.orth_ for w in tokens]
         for i, gold_i in enumerate(self.cand_to_gold):
-            if self.words[i].isspace():
+            if words[i].isspace():
                 self.tags[i] = 'SP'
                 self.heads[i] = None
                 self.labels[i] = None
