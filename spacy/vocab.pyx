@@ -1,6 +1,7 @@
 from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 from libc.string cimport memset
 from libc.stdint cimport int32_t
+from libc.math cimport exp as c_exp
 
 import bz2
 from os import path
@@ -14,6 +15,7 @@ from .strings cimport slice_unicode
 from .strings cimport hash_string
 from .orth cimport word_shape
 from .typedefs cimport attr_t
+from .serialize cimport HuffmanCodec
 
 from cymem.cymem cimport Address
 
@@ -49,6 +51,7 @@ cdef class Vocab:
                               path.join(data_dir, 'lexemes.bin'))
             if load_vectors and path.exists(path.join(data_dir, 'vec.bin')):
                 self.repvec_length = self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
+        self._codec = None
 
     def __len__(self):
         """The current number of lexemes stored."""
@@ -223,6 +226,22 @@ cdef class Vocab:
             else:
                 lex.repvec = EMPTY_VEC
         return vec_len
+
+    property codec:
+        def __get__(self):
+            cdef Address mem
+            cdef int i
+            cdef float[:] cv_probs
+            if self._codec is not None:
+                return self._codec
+            else:
+                mem = Address(len(self), sizeof(float))
+                probs = <float*>mem.ptr
+                for i in range(len(self)):
+                    probs[i] = <float>c_exp(self.lexemes[i].prob)
+                cv_probs = <float[:len(self)]>probs
+                self._codec = HuffmanCodec(cv_probs, 0)
+                return self._codec
 
 
 def write_binary_vectors(in_loc, out_loc):
