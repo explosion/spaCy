@@ -173,7 +173,7 @@ cdef class Doc:
                 start = i
         yield Span(self, start, self.length)
 
-    cdef int push_back(self, int idx, LexemeOrToken lex_or_tok) except -1:
+    cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
         if self.length == self.max_length:
             self._realloc(self.length * 2)
         cdef TokenC* t = &self.data[self.length]
@@ -181,9 +181,13 @@ cdef class Doc:
             t[0] = lex_or_tok[0]
         else:
             t.lex = lex_or_tok
-        t.idx = idx
+        if self.length == 0:
+            t.idx = 0
+        else:
+            t.idx = (t-1).idx + (t-1).lex.length + (t-1).spacy
+        t.spacy = has_space
         self.length += 1
-        return idx + t.lex.length
+        return t.idx + t.lex.length + t.spacy
 
     @cython.boundscheck(False)
     cpdef np.ndarray to_array(self, object py_attr_ids):
@@ -375,11 +379,11 @@ cdef class Doc:
             string += vocab.strings[lex.orth]
             if space:
                 string += u' '
-        cdef Doc doc = Doc(vocab, string)
+        cdef Doc doc = Doc(vocab)
+        cdef bint has_space = False
         cdef int idx = 0
         for i, id_ in enumerate(ids):
-            doc.push_back(idx, vocab.lexemes[id_])
-            idx += vocab.lexemes[id_].length
-            if spaces[i]:
-                idx += 1
+            lex = vocab.lexemes[id_]
+            has_space = spaces[i]
+            doc.push_back(lex, has_space)
         return doc

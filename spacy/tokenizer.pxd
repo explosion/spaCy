@@ -29,7 +29,7 @@ cdef class Tokenizer:
 
     cpdef Doc tokens_from_list(self, list strings)
 
-    cdef int _try_cache(self, int idx, hash_t key, Doc tokens) except -1
+    cdef int _try_cache(self, hash_t key, Doc tokens) except -1
     cdef int _tokenize(self, Doc tokens, UniStr* span, int start, int end) except -1
     cdef UniStr* _split_affixes(self, UniStr* string, vector[LexemeC*] *prefixes,
                              vector[LexemeC*] *suffixes) except NULL

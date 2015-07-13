@@ -39,16 +39,17 @@ cdef class Tokenizer:
         return cls(vocab, rules, prefix_re, suffix_re, infix_re)
 
     cpdef Doc tokens_from_list(self, list strings):
-        cdef int length = sum([len(s) for s in strings])
-        cdef Doc tokens = Doc(self.vocab, ' '.join(strings))
-        if length == 0:
+        cdef Doc tokens = Doc(self.vocab)
+        if sum([len(s) for s in strings]) == 0:
             return tokens
         cdef UniStr string_struct
         cdef unicode py_string
         cdef int idx = 0
         for i, py_string in enumerate(strings):
             slice_unicode(&string_struct, py_string, 0, len(py_string))
-            tokens.push_back(idx, <const LexemeC*>self.vocab.get(tokens.mem, &string_struct))
+            # Note that we pass tokens.mem here --- the Doc object has ownership
+            tokens.push_back(
+                <const LexemeC*>self.vocab.get(tokens.mem, &string_struct), True)
             idx += len(py_string) + 1
         return tokens
 
@@ -73,7 +74,7 @@ cdef class Tokenizer:
             tokens (Doc): A Doc object, giving access to a sequence of LexemeCs.
         """
         cdef int length = len(string)
-        cdef Doc tokens = Doc(self.vocab, string)
+        cdef Doc tokens = Doc(self.vocab)
         if length == 0:
             return tokens
         cdef int i = 0
@@ -86,32 +87,39 @@ cdef class Tokenizer:
             if Py_UNICODE_ISSPACE(chars[i]) != in_ws:
                 if start < i:
                     slice_unicode(&span, chars, start, i)
-                    cache_hit = self._try_cache(start, span.key, tokens)
+                    cache_hit = self._try_cache(span.key, tokens)
                     if not cache_hit:
                         self._tokenize(tokens, &span, start, i)
                 in_ws = not in_ws
                 start = i
                 if chars[i] == ' ':
+                    tokens.data[tokens.length - 1].spacy = True
                     start += 1
         i += 1
         if start < i:
             slice_unicode(&span, chars, start, i)
-            cache_hit = self._try_cache(start, span.key, tokens)
+            cache_hit = self._try_cache(span.key, tokens)
             if not cache_hit:
                 self._tokenize(tokens, &span, start, i)
+
+            tokens.data[tokens.length - 1].spacy = string[-1] == ' '
         return tokens
 
-    cdef int _try_cache(self, int idx, hash_t key, Doc tokens) except -1:
+    cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
         cached = <_Cached*>self._cache.get(key)
         if cached == NULL:
             return False
         cdef int i
+        cdef int less_one = cached.length-1
         if cached.is_lex:
-            for i in range(cached.length):
-                idx = tokens.push_back(idx, cached.data.lexemes[i])
+            for i in range(less_one):
+                # There's a space at the end of the chunk.
+                tokens.push_back(cached.data.lexemes[i], False)
+            tokens.push_back(cached.data.lexemes[less_one], False)
         else:
-            for i in range(cached.length):
-                idx = tokens.push_back(idx, &cached.data.tokens[i])
+            for i in range(less_one):
+                tokens.push_back(&cached.data.tokens[i], False)
+            tokens.push_back(&cached.data.tokens[less_one], False)
         return True
 
     cdef int _tokenize(self, Doc tokens, UniStr* span, int start, int end) except -1:
@@ -171,36 +179,39 @@ cdef class Tokenizer:
                             vector[const LexemeC*] *prefixes,
                             vector[const LexemeC*] *suffixes) except -1:
         cdef bint cache_hit
+        cdef bint is_spacy
         cdef int split
         cdef const LexemeC* const* lexemes
-        cdef LexemeC* lexeme
+        cdef const LexemeC* lexeme
         cdef UniStr span
         cdef int i
+        # Have to calculate is_spacy here, i.e. does the token have a trailing
+        # space. There are no spaces *between* the tokens we attach
+        # here, and there *is* a space after the last token.
         if prefixes.size():
             for i in range(prefixes.size()):
-                idx = tokens.push_back(idx, prefixes[0][i])
+                tokens.push_back(prefixes[0][i], False)
         if string.n != 0:
-            cache_hit = self._try_cache(idx, string.key, tokens)
+            cache_hit = self._try_cache(string.key, tokens)
             if cache_hit:
-                # Get last idx
-                idx = tokens.data[tokens.length - 1].idx
-                # Increment by last length
-                idx += tokens.data[tokens.length - 1].lex.length
+                pass
             else:
                 split = self._find_infix(string.chars, string.n)
                 if split == 0 or split == -1:
-                    idx = tokens.push_back(idx, self.vocab.get(tokens.mem, string))
+                    tokens.push_back(self.vocab.get(tokens.mem, string), False)
                 else:
+                    # Append the beginning, afix, end of the infix token
                     slice_unicode(&span, string.chars, 0, split)
-                    idx = tokens.push_back(idx, self.vocab.get(tokens.mem, &span))
+                    tokens.push_back(self.vocab.get(tokens.mem, &span), False)
                     slice_unicode(&span, string.chars, split, split+1)
-                    idx = tokens.push_back(idx, self.vocab.get(tokens.mem, &span))
+                    tokens.push_back(self.vocab.get(tokens.mem, &span), False)
                     slice_unicode(&span, string.chars, split + 1, string.n)
-                    idx = tokens.push_back(idx, self.vocab.get(tokens.mem, &span))
+                    tokens.push_back(self.vocab.get(tokens.mem, &span), False)
         cdef vector[const LexemeC*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
-            idx = tokens.push_back(idx, deref(it))
+            lexeme = deref(it)
             preinc(it)
+            tokens.push_back(lexeme, False)
 
     cdef int _save_cached(self, const TokenC* tokens, hash_t key, int n) except -1:
         cdef int i

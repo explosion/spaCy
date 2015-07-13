@@ -26,7 +26,7 @@ cdef class Doc:
     cdef int length
     cdef int max_length
 
-    cdef int push_back(self, int i, LexemeOrToken lex_or_tok) except -1
+    cdef int push_back(self, LexemeOrToken lex_or_tok, bint trailing_space) except -1
 
     cpdef np.ndarray to_array(self, object features)
 
