@@ -89,12 +89,6 @@ cdef class Doc:
         self.is_parsed = False
         self._py_tokens = []
 
-    def __dealloc__(self):
-        cdef Token token
-        if self._py_tokens is not None:
-            for token in self._py_tokens:
-                token.take_ownership_of_c_data()
-
     def __getitem__(self, object i):
         """Get a token.
 
@@ -110,7 +104,10 @@ cdef class Doc:
         if i < 0:
             i = self.length + i
         bounds_check(i, self.length, PADDING)
-        return Token.cinit(self.vocab, &self.data[i], i, self.length, self._py_tokens)
+        if self._py_tokens[i] is not None:
+            return self._py_tokens[i]
+        else:
+            return Token.cinit(self.vocab, &self.data[i], i, self)
 
     def __iter__(self):
         """Iterate over the tokens.
@@ -119,7 +116,7 @@ cdef class Doc:
             token (Token):
         """
         for i in range(self.length):
-            yield Token.cinit(self.vocab, &self.data[i], i, self.length, self._py_tokens)
+            yield Token.cinit(self.vocab, &self.data[i], i, self)
 
     def __len__(self):
         return self.length
@@ -172,7 +169,6 @@ cdef class Doc:
         Yield a list of sentence Span objects, calculated from the dependency parse.
         """
         cdef int i
-        cdef Doc sent = Doc(self.vocab, self._string[self.data[0].idx:])
         start = 0
         for i in range(1, self.length):
             if self.data[i].sent_start:
@@ -288,9 +284,10 @@ cdef class Doc:
                 break
         else:
             return None
+        cdef unicode string = self.string
         # Get LexemeC for newly merged token
         cdef UniStr new_orth_c
-        slice_unicode(&new_orth_c, self._string, start_idx, end_idx)
+        slice_unicode(&new_orth_c, string, start_idx, end_idx)
         cdef const LexemeC* lex = self.vocab.get(self.mem, &new_orth_c)
         # House the new merged token where it starts
         cdef TokenC* token = &self.data[start]

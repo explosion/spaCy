@@ -21,14 +21,12 @@ cdef class Token:
     """An individual token --- i.e. a word, a punctuation symbol, etc.  Created
     via Doc.__getitem__ and Doc.__iter__.
     """
-    def __cinit__(self, Vocab vocab):
+    def __cinit__(self, Vocab vocab, Doc doc, int offset):
         self.vocab = vocab
-        self._py_tokens = []
-
-    def __dealloc__(self):
-        if self._owns_c_data:
-            # Cast through const, if we own the data
-            PyMem_Free(<void*>self.c)
+        self.doc = doc
+        self.c = &self.doc.data[offset]
+        self.i = offset
+        self.array_len = doc.length
 
     def __len__(self):
         return self.c.lex.length
@@ -39,14 +37,8 @@ cdef class Token:
     cpdef bint check_flag(self, attr_id_t flag_id) except -1:
         return check_flag(self.c.lex, flag_id)
 
-    cdef int take_ownership_of_c_data(self) except -1:
-        owned_data = <TokenC*>PyMem_Malloc(sizeof(TokenC) * self.array_len)
-        memcpy(owned_data, self.c, sizeof(TokenC) * self.array_len)
-        self.c = owned_data
-        self._owns_c_data = True
-
     def nbor(self, int i=1):
-        return Token.cinit(self.vocab, self.c, self.i, self.array_len, self._py_tokens)
+        return self.doc[self.i+i]
 
     property lex_id:
         def __get__(self):
@@ -152,8 +144,7 @@ cdef class Token:
                     ptr += ptr.head
 
                 elif ptr + ptr.head == self.c:
-                    yield Token.cinit(self.vocab, ptr, ptr - (self.c - self.i),
-                                      self.array_len, self._py_tokens)
+                    yield self.doc[ptr - (self.c - self.i)]
                     ptr += 1
                 else:
                     ptr += 1
@@ -171,8 +162,7 @@ cdef class Token:
                 if (ptr.head < 0) and ((ptr + ptr.head) > self.c):
                     ptr += ptr.head
                 elif ptr + ptr.head == self.c:
-                    tokens.append(Token.cinit(self.vocab, ptr, ptr - (self.c - self.i),
-                                  self.array_len, self._py_tokens))
+                    tokens.append(self.doc[ptr - (self.c - self.i)])
                     ptr -= 1
                 else:
                     ptr -= 1
@@ -195,21 +185,16 @@ cdef class Token:
 
     property left_edge:
         def __get__(self):
-            return Token.cinit(self.vocab,
-                               (self.c - self.i) + self.c.l_edge, self.c.l_edge,
-                               self.array_len, self._py_tokens)
+            return self.doc[self.c.l_edge]
  
     property right_edge:
         def __get__(self):
-            return Token.cinit(self.vocab,
-                               (self.c - self.i) + self.c.r_edge, self.c.r_edge,
-                               self.array_len, self._py_tokens)
+            return self.doc[self.c.r_edge]
 
     property head:
         def __get__(self):
             """The token predicted by the parser to be the head of the current token."""
-            return Token.cinit(self.vocab, self.c + self.c.head, self.i + self.c.head,
-                               self.array_len, self._py_tokens)
+            return self.doc[self.i + self.c.head]
         
     property conjuncts:
         def __get__(self):
