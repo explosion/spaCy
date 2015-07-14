@@ -27,11 +27,12 @@ cdef class TransitionSystem:
                 moves[i] = self.init_transition(i, int(action), label_id)
                 i += 1
         self.c = moves
+        self.root_label = self.strings['ROOT']
 
     cdef int initialize_state(self, StateClass state) except -1:
         pass
 
-    cdef int finalize_state(self, StateClass state) except -1:
+    cdef int finalize_state(self, StateClass state) nogil:
         pass
 
     cdef int preprocess_gold(self, GoldParse gold) except -1:
@@ -43,7 +44,7 @@ cdef class TransitionSystem:
     cdef Transition init_transition(self, int clas, int move, int label) except *:
         raise NotImplementedError
 
-    cdef int set_valid(self, bint* is_valid, StateClass stcls) except -1:
+    cdef int set_valid(self, bint* is_valid, StateClass stcls) nogil:
         cdef int i
         for i in range(self.n_moves):
             is_valid[i] = self.c[i].is_valid(stcls, self.c[i].label)

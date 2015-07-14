@@ -75,7 +75,7 @@ cdef class Model:
         feats = self._extractor.get_feats(context, &n_feats)
         return self._model.get_scores(feats, n_feats)
 
-    cdef int set_scores(self, weight_t* scores, atom_t* context) except -1:
+    cdef int set_scores(self, weight_t* scores, atom_t* context) nogil:
         cdef int n_feats
         feats = self._extractor.get_feats(context, &n_feats)
         self._model.set_scores(scores, feats, n_feats)

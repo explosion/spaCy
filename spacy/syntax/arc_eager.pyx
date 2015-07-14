@@ -374,17 +374,16 @@ cdef class ArcEager(TransitionSystem):
             st._sent[i].r_edge = i
         st.fast_forward()
 
-    cdef int finalize_state(self, StateClass st) except -1:
-        cdef int root_label = self.strings['ROOT']
+    cdef int finalize_state(self, StateClass st) nogil:
         for i in range(st.length):
             if st._sent[i].head == 0 and st._sent[i].dep == 0:
-                st._sent[i].dep = root_label
+                st._sent[i].dep = self.root_label
             # If we're not using the Break transition, we segment via root-labelled
             # arcs between the root words.
-            elif USE_ROOT_ARC_SEGMENT and st._sent[i].dep == root_label:
+            elif USE_ROOT_ARC_SEGMENT and st._sent[i].dep == self.root_label:
                 st._sent[i].head = 0
 
-    cdef int set_valid(self, bint* output, StateClass stcls) except -1:
+    cdef int set_valid(self, bint* output, StateClass stcls) nogil:
         cdef bint[N_MOVES] is_valid
         is_valid[SHIFT] = Shift.is_valid(stcls, -1)
         is_valid[REDUCE] = Reduce.is_valid(stcls, -1)
@@ -392,11 +391,8 @@ cdef class ArcEager(TransitionSystem):
         is_valid[RIGHT] = RightArc.is_valid(stcls, -1)
         is_valid[BREAK] = Break.is_valid(stcls, -1)
         cdef int i
-        n_valid = 0
         for i in range(self.n_moves):
             output[i] = is_valid[self.c[i].move]
-            n_valid += output[i]
-        assert n_valid >= 1
 
     cdef int set_costs(self, bint* is_valid, int* costs, 
                        StateClass stcls, GoldParse gold) except -1:

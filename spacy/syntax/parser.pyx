@@ -22,7 +22,7 @@ from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
 
 from util import Config
 
-from thinc.api cimport Example
+from thinc.api cimport Example, ExampleC
 
 
 from ..structs cimport TokenC
@@ -40,6 +40,8 @@ from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
+
+from .._ml cimport arg_max_if_true
 
 
 DEBUG = False
@@ -65,6 +67,9 @@ def ParserFactory(transition_system):
     return lambda strings, dir_: Parser(strings, dir_, transition_system)
 
 
+DEF stack_class_alloc_limit = 256
+
+
 cdef class Parser:
     def __init__(self, StringStore strings, model_dir, transition_system):
         if not os.path.exists(model_dir):
@@ -83,17 +88,21 @@ cdef class Parser:
 
         cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
                                   self.model.n_feats, self.model.n_feats)
-        while not stcls.is_final():
-            memset(eg.c.scores, 0, eg.c.nr_class * sizeof(weight_t))
-        
-            self.moves.set_valid(<bint*>eg.c.is_valid, stcls)
-            fill_context(eg.c.atoms, stcls)
-            
-            self.model.predict(eg)
-
-            self.moves.c[eg.c.guess].do(stcls, self.moves.c[eg.c.guess].label)
-        self.moves.finalize_state(stcls)
+        with nogil:
+            self.parse(stcls, eg.c)
         tokens.set_parse(stcls._sent)
+
+    cdef void parse(self, StateClass stcls, ExampleC eg) nogil:
+        while not stcls.is_final():
+            memset(eg.scores, 0, eg.nr_class * sizeof(weight_t))
+
+            self.moves.set_valid(<bint*>eg.is_valid, stcls)
+            fill_context(eg.atoms, stcls)
+            self.model.set_scores(eg.scores, eg.atoms)
+            eg.guess = arg_max_if_true(eg.scores, eg.is_valid, self.model.n_classes)
+
+            self.moves.c[eg.guess].do(stcls, self.moves.c[eg.guess].label)
+        self.moves.finalize_state(stcls)
 
     def train(self, Doc tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
