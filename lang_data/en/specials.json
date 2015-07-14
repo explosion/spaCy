@@ -391,9 +391,15 @@
 
 "you'll":  [{"F": "you", "L": "-PRON-"},
             {"F": "'ll", "L": "will", "pos": "MD"}],
+"You'll":  [{"F": "You", "L": "-PRON-"},
+            {"F": "'ll", "L": "will", "pos": "MD"}],
+
 
 "you're":  [{"F": "you", "L": "-PRON-"},
             {"F": "'re"}],
+"You're":  [{"F": "You", "L": "-PRON-"},
+            {"F": "'re"}],
+
 "You're":  [{"F": "You", "L": "-PRON-"},
             {"F": "'re"}],
 
