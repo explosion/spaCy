@@ -52,7 +52,11 @@ cdef class StateClass:
         cdef const TokenC* target = &self._sent[i]
         if target.l_kids < idx:
             return -1
+<<<<<<< HEAD
         cdef const TokenC* ptr = &self._sent[target.l_edge]
+=======
+        cdef const TokenC* ptr = self._sent
+>>>>>>> neuralnet
 
         while ptr < target:
             # If this head is still to the right of us, we can skip to it
@@ -78,7 +82,11 @@ cdef class StateClass:
         cdef const TokenC* target = &self._sent[i]
         if target.r_kids < idx:
             return -1
+<<<<<<< HEAD
         cdef const TokenC* ptr = &self._sent[target.r_edge]
+=======
+        cdef const TokenC* ptr = self._sent + (self.length - 1)
+>>>>>>> neuralnet
         while ptr > target:
             # If this head is still to the right of us, we can skip to it
             # No token that's between this token and this head could be our
