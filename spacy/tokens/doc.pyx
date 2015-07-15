@@ -6,10 +6,9 @@ import numpy
 from ..lexeme cimport EMPTY_LEXEME
 from ..serialize import BitArray
 from ..strings cimport slice_unicode
-from ..typedefs cimport attr_id_t, attr_t, flags_t
-from ..typedefs cimport LEMMA
-from ..typedefs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
-from ..typedefs cimport POS, LEMMA, TAG, DEP
+from ..attrs cimport attr_id_t, attr_t, flags_t
+from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
+from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..parts_of_speech import UNIV_POS_NAMES
 from ..parts_of_speech cimport CONJ, PUNCT
 from ..lexeme cimport check_flag
@@ -37,6 +36,14 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.tag
     elif feat_name == DEP:
         return token.dep
+    elif feat_name == HEAD:
+        return token.head
+    elif feat_name == SPACY:
+        return token.spacy
+    elif feat_name == ENT_IOB:
+        return token.ent_iob
+    elif feat_name == ENT_TYPE:
+        return token.ent_type
     else:
         return get_lex_attr(token.lex, feat_name)
 
