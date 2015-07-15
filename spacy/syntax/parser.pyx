@@ -67,9 +67,6 @@ def ParserFactory(transition_system):
     return lambda strings, dir_: Parser(strings, dir_, transition_system)
 
 
-DEF stack_class_alloc_limit = 256
-
-
 cdef class Parser:
     def __init__(self, StringStore strings, model_dir, transition_system):
         if not os.path.exists(model_dir):
