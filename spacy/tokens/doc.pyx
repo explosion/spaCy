@@ -380,7 +380,7 @@ cdef class Doc:
     @staticmethod
     def deserialize(Vocab vocab, bits):
         biterator = iter(bits)
-        ids = vocab.lex_codec.decode(bits)
+        ids = vocab.codecs[0].decode(bits)
         cdef Doc doc = Doc(vocab)
         cdef int id_
         for id_ in ids:
@@ -388,21 +388,22 @@ cdef class Doc:
             doc.push_back(vocab.lexemes.at(id_), is_spacy)
        
         cdef int i
-        for codec in vocab.annotation_codecs:
+        cdef attr_t value
+        for codec in vocab.codecs[1:]:
             values = codec.decode(biterator)
-            if codec.attr_id == HEAD:
-                for i, head in enumerate(values):
-                    doc.data[i].head = head
-            elif codec.attr_id == TAG:
-                for i, tag in enumerate(values):
-                    doc.data[i].tag = tag
-            elif codec.attr_id == DEP: 
-                for i, dep in enumerate(values):
-                    doc.data[i].dep = dep
-            elif codec.attr_id == ENT_IOB:
-                for i, ent_iob in enumerate(values):
-                    doc.data[i].ent_iob = ent_iob
-            elif codec.attr_id == ENT_TYPE:
-                for i, ent_type in enumerate(values):
-                    doc.data[i].ent_type = ent_type
+            if codec.id == HEAD:
+                for i, value in enumerate(values):
+                    doc.data[i].head = value
+            elif codec.id == TAG:
+                for i, value in enumerate(values):
+                    doc.data[i].tag = value
+            elif codec.id == DEP:
+                for i, value in enumerate(values):
+                    doc.data[i].dep = value
+            elif codec.id == ENT_IOB:
+                for i, value in enumerate(values):
+                    doc.data[i].ent_iob = value
+            elif codec.id == ENT_TYPE:
+                for i, value in enumerate(values):
+                    doc.data[i].ent_type = value
         return doc
