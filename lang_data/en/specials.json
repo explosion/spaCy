@@ -394,16 +394,13 @@
 "You'll":  [{"F": "You", "L": "-PRON-"},
             {"F": "'ll", "L": "will", "pos": "MD"}],
 
-
 "you're":  [{"F": "you", "L": "-PRON-"},
             {"F": "'re"}],
 "You're":  [{"F": "You", "L": "-PRON-"},
             {"F": "'re"}],
 
-"You're":  [{"F": "You", "L": "-PRON-"},
-            {"F": "'re"}],
-
-
+"You've":  [{"F": "You", "L": "-PRON-"},
+            {"F": "'ve"}],
 "you've":  [{"F": "you", "L": "-PRON-"},
             {"F": "'ve", "L": "have", "pos": "VB"}],
 
