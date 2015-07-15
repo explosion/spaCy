@@ -278,7 +278,7 @@ cdef class Doc:
             self.data[i].lex = &EMPTY_LEXEME
 
     cdef int set_parse(self, const TokenC* parsed) except -1:
-        # TODO: This method is fairly misleading atm. It's used by GreedyParser
+        # TODO: This method is fairly misleading atm. It's used by Parser
         # to actually apply the parse calculated. Need to rethink this.
         self.is_parsed = True
         for i in range(self.length):
@@ -369,40 +369,40 @@ cdef class Doc:
         # Return the merged Python object
         return self[start]
 
-    def serialize(self, bits=None):
+    def serialize(self, codecs, bits=None):
         if bits is None:
             bits = BitArray()
-        codec = self.vocab.codec
-        ids = numpy.zeros(shape=(len(self),), dtype=numpy.uint32)
-        cdef int i
-        for i in range(self.length):
-            ids[i] = self.data[i].lex.id
-        bits = codec.encode(ids, bits=bits)
-        for i in range(self.length):
-            bits.append(self.data[i].spacy)
+        array = self.to_array([codec.attr_id for codec in codecs])
+        for i, codec in enumerate(codecs):
+            codec.encode(array[i,], bits)
         return bits
 
     @staticmethod
     def deserialize(Vocab vocab, bits):
         biterator = iter(bits)
-        ids = vocab.codec.decode(biterator)
-        spaces = []
-        for bit in biterator:
-            spaces.append(bit)
-            if len(spaces) == len(ids):
-                break
-        string = u''
-        cdef const LexemeC* lex
-        for id_, space in zip(ids, spaces):
-            lex = vocab.lexemes[id_]
-            string += vocab.strings[lex.orth]
-            if space:
-                string += u' '
+        ids = vocab.lex_codec.decode(bits)
         cdef Doc doc = Doc(vocab)
-        cdef bint has_space = False
-        cdef int idx = 0
-        for i, id_ in enumerate(ids):
-            lex = vocab.lexemes[id_]
-            has_space = spaces[i]
-            doc.push_back(lex, has_space)
+        cdef int id_
+        for id_ in ids:
+            is_spacy = biterator.next()
+            doc.push_back(vocab.lexemes.at(id_), is_spacy)
+       
+        cdef int i
+        for codec in vocab.annotation_codecs:
+            values = codec.decode(biterator)
+            if codec.attr_id == HEAD:
+                for i, head in enumerate(values):
+                    doc.data[i].head = head
+            elif codec.attr_id == TAG:
+                for i, tag in enumerate(values):
+                    doc.data[i].tag = tag
+            elif codec.attr_id == DEP: 
+                for i, dep in enumerate(values):
+                    doc.data[i].dep = dep
+            elif codec.attr_id == ENT_IOB:
+                for i, ent_iob in enumerate(values):
+                    doc.data[i].ent_iob = ent_iob
+            elif codec.attr_id == ENT_TYPE:
+                for i, ent_type in enumerate(values):
+                    doc.data[i].ent_type = ent_type
         return doc
