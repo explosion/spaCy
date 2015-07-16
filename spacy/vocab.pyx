@@ -227,22 +227,6 @@ cdef class Vocab:
                 lex.repvec = EMPTY_VEC
         return vec_len
 
-    property codec:
-        def __get__(self):
-            cdef Address mem
-            cdef int i
-            cdef float[:] cv_probs
-            if self._codec is not None:
-                return self._codec
-            else:
-                mem = Address(len(self), sizeof(float))
-                probs = <float*>mem.ptr
-                for i in range(len(self)):
-                    probs[i] = <float>c_exp(self.lexemes[i].prob)
-                cv_probs = <float[:len(self)]>probs
-                self._codec = HuffmanCodec(cv_probs, 0)
-                return self._codec
-
 
 def write_binary_vectors(in_loc, out_loc):
     cdef _CFile out_file = _CFile(out_loc, 'wb')
