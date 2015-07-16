@@ -70,6 +70,7 @@ class English(object):
       Tagger=EnPosTagger,
       Parser=ParserFactory(ParserTransitionSystem),
       Entity=ParserFactory(EntityTransitionSystem),
+      Packer=None,
       load_vectors=True
     ):
         
@@ -101,10 +102,10 @@ class English(object):
             self.entity = Entity(self.vocab.strings, path.join(data_dir, 'ner'))
         else:
             self.entity = None
-        if Serializer:
-            self.bitter = Serializer(self.vocab, data_dir)
+        if Packer:
+            self.packer = Packer(self.vocab, data_dir)
         else:
-            self.bitter = None
+            self.packer = None
         self.mwe_merger = RegexMerger([
             ('IN', 'O', regexes.MW_PREPOSITIONS_RE),
             ('CD', 'TIME', regexes.TIME_RE),

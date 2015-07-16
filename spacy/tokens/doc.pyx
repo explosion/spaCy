@@ -4,7 +4,6 @@ from libc.string cimport memcpy, memset
 import numpy
 
 from ..lexeme cimport EMPTY_LEXEME
-from ..serialize import BitArray
 from ..strings cimport slice_unicode
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport attr_id_t
@@ -371,10 +370,12 @@ cdef class Doc:
         return self[start]
 
     def from_array(self, attrs, array):
-        cdef int i
+        cdef int i, col
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.data
-        for attr_id in attrs:
+        cdef int length = len(array)
+        for col, attr_id in enumerate(attrs): 
+            values = array[:, col]
             if attr_id == HEAD:
                 for i in range(length):
                     tokens[i].head = values[i]

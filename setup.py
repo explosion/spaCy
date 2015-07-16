@@ -94,6 +94,7 @@ def cython_setup(mod_names, language, includes, compile_args, link_args):
                                    "data/vocab/lexemes.bin",
                                    "data/vocab/strings.txt"],
                       "spacy.tokens": ["*.pxd"],
+                      "spacy.serialize": ["*.pxd"],
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
         cmdclass={'build_ext': Cython.Distutils.build_ext},
@@ -158,8 +159,9 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.syntax.transition_system',
              'spacy.syntax.arc_eager',
              'spacy.syntax._parse_features',
-             'spacy.gold', 'spacy.orth', 'spacy.serialize',
+             'spacy.gold', 'spacy.orth',
              'spacy.tokens.doc', 'spacy.tokens.spans', 'spacy.tokens.token',
+             'spacy.serialize.packer', 'spacy.serialize.huffman', 'spacy.serialize.bits',
              'spacy.syntax.ner']
 
 

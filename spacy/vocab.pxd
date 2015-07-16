@@ -35,5 +35,3 @@ cdef class Vocab:
 
     cdef PreshMap _map
     cdef readonly int repvec_length
-
-    cdef public object _codec
