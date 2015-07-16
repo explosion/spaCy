@@ -15,39 +15,6 @@ cpdef hash_t hash_string(unicode string) except 0:
     return hash64(chars, len(string) * sizeof(Py_UNICODE), 0)
 
 
-"""
-cdef class SymbolMap:
-    def __init__(self):
-        self._string_to_id = {'': 0}
-        self._id_to_string = ['']
-
-    def __iter__(self):
-        for id_, string in enumerate(self._id_to_string[1:]):
-            yield string, id_
-
-    def __len__(self):
-        return len(self._id_to_string)
-
-    def __getitem__(self, object string_or_id):
-        cdef bytes byte_string
-        if isinstance(string_or_id, int) or isinstance(string_or_id, long):
-            if string_or_id < 1 or string_or_id >= self.size:
-                raise IndexError(string_or_id)
-            return self._int_to_string[string_or_id]
-        else:
-            string = string_or_id
-            if isinstance(string, unicode):
-                string = string.encode('utf8')
-            if string in self._string_to_id:
-                id_ = self._string_to_id[string]
-            else:
-                id_ = len(self._string_to_id)
-                self._string_to_id[string] = id_
-                self._id_to_string.append(string)
-            return id_
-"""
-
-
 cdef class StringStore:
     '''Map strings to and from integer IDs.'''
     def __init__(self):
