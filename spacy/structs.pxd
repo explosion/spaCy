@@ -80,8 +80,6 @@ cdef struct TokenC:
 
 
 cdef struct Utf8Str:
-    id_t i
-    hash_t key
     unsigned char* chars
     int length
 

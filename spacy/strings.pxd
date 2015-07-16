@@ -22,4 +22,4 @@ cdef class StringStore:
     cdef PreshMap _map
     cdef size_t _resize_at
 
-    cdef const Utf8Str* intern(self, char* chars, int length) except NULL
+    cdef const Utf8Str* intern(self, char* chars, int length, int* id_) except NULL
