@@ -4,6 +4,8 @@ from libc.stdint cimport int64_t
 from libc.stdint cimport int32_t
 from libc.stdint cimport uint64_t
 
+from .vocab cimport Vocab
+
 
 cdef struct Node:
     float prob
@@ -18,6 +20,7 @@ cdef struct Code:
 
 cdef class Serializer:
     cdef list codecs
+    cdef Vocab vocab
 
 
 cdef class HuffmanCodec:
