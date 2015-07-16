@@ -34,6 +34,7 @@ cdef class StringStore:
     def __getitem__(self, object string_or_id):
         cdef bytes byte_string
         cdef const Utf8Str* utf8str
+        cdef int id_
         if isinstance(string_or_id, int) or isinstance(string_or_id, long):
             if string_or_id == 0:
                 return u''
@@ -42,16 +43,16 @@ cdef class StringStore:
             utf8str = &self.strings[<int>string_or_id]
             return utf8str.chars[:utf8str.length].decode('utf8')
         elif isinstance(string_or_id, bytes):
-            utf8str = self.intern(<char*>string_or_id, len(string_or_id))
-            return utf8str.i
+            utf8str = self.intern(<char*>string_or_id, len(string_or_id), &id_)
+            return id_
         elif isinstance(string_or_id, unicode):
             byte_string = string_or_id.encode('utf8')
-            utf8str = self.intern(<char*>byte_string, len(byte_string))
-            return utf8str.i
+            utf8str = self.intern(<char*>byte_string, len(byte_string), &id_)
+            return id_
         else:
             raise TypeError(type(string_or_id))
 
-    cdef const Utf8Str* intern(self, char* chars, int length) except NULL:
+    cdef const Utf8Str* intern(self, char* chars, int length, int* id_) except NULL:
         # 0 means missing, but we don't bother offsetting the index. We waste
         # slot 0 to simplify the code, because it doesn't matter.
         assert length != 0
@@ -64,7 +65,6 @@ cdef class StringStore:
                 self.strings = <Utf8Str*>self.mem.realloc(self.strings, self._resize_at * sizeof(Utf8Str))
             i = self.size
             self.strings[i].i = self.size
-            self.strings[i].key = key
             self.strings[i].chars = <unsigned char*>self.mem.alloc(length, sizeof(char))
             memcpy(self.strings[i].chars, chars, length)
             self.strings[i].length = length
@@ -90,6 +90,7 @@ cdef class StringStore:
             strings = file_.read().split(SEPARATOR)
         cdef unicode string
         cdef bytes byte_string
+        cdef int id_
         for string in strings[1:]:
             byte_string = string.encode('utf8')
-            self.intern(byte_string, len(byte_string))
+            self.intern(byte_string, len(byte_string), &id_)
