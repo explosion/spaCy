@@ -1,7 +1,6 @@
-from .typedefs cimport hash_t, flags_t, id_t, len_t, tag_t, attr_t
-from .typedefs cimport ID, ORTH, LOWER, NORM, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
-
+from .typedefs cimport attr_t, hash_t, flags_t, id_t, len_t, tag_t
 from .attrs cimport attr_id_t
+from .attrs cimport ID, ORTH, LOWER, NORM, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 
 from .structs cimport LexemeC
 from .strings cimport StringStore
