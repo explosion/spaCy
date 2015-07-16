@@ -16,8 +16,13 @@ cdef struct Code:
     char length
 
 
+cdef class Serializer:
+    cdef list codecs
+
+
 cdef class HuffmanCodec:
     cdef vector[Node] nodes
     cdef vector[Code] codes
     cdef uint32_t eol
+    cdef int id
 
