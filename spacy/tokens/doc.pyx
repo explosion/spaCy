@@ -6,7 +6,8 @@ import numpy
 from ..lexeme cimport EMPTY_LEXEME
 from ..serialize import BitArray
 from ..strings cimport slice_unicode
-from ..attrs cimport attr_id_t, attr_t, flags_t
+from ..typedefs cimport attr_t, flags_t
+from ..attrs cimport attr_id_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..parts_of_speech import UNIV_POS_NAMES
@@ -369,41 +370,3 @@ cdef class Doc:
         # Return the merged Python object
         return self[start]
 
-    def serialize(self, codecs, bits=None):
-        if bits is None:
-            bits = BitArray()
-        array = self.to_array([codec.attr_id for codec in codecs])
-        for i, codec in enumerate(codecs):
-            codec.encode(array[i,], bits)
-        return bits
-
-    @staticmethod
-    def deserialize(Vocab vocab, bits):
-        biterator = iter(bits)
-        ids = vocab.codecs[0].decode(bits)
-        cdef Doc doc = Doc(vocab)
-        cdef int id_
-        for id_ in ids:
-            is_spacy = biterator.next()
-            doc.push_back(vocab.lexemes.at(id_), is_spacy)
-       
-        cdef int i
-        cdef attr_t value
-        for codec in vocab.codecs[1:]:
-            values = codec.decode(biterator)
-            if codec.id == HEAD:
-                for i, value in enumerate(values):
-                    doc.data[i].head = value
-            elif codec.id == TAG:
-                for i, value in enumerate(values):
-                    doc.data[i].tag = value
-            elif codec.id == DEP:
-                for i, value in enumerate(values):
-                    doc.data[i].dep = value
-            elif codec.id == ENT_IOB:
-                for i, value in enumerate(values):
-                    doc.data[i].ent_iob = value
-            elif codec.id == ENT_TYPE:
-                for i, value in enumerate(values):
-                    doc.data[i].ent_type = value
-        return doc
