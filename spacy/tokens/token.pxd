@@ -1,6 +1,6 @@
 from ..vocab cimport Vocab
 from ..structs cimport TokenC
-from ..typedefs cimport attr_id_t
+from ..attrs cimport attr_id_t
 from .doc cimport Doc
 
 

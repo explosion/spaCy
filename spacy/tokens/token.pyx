@@ -11,9 +11,9 @@ import numpy
 
 from ..parts_of_speech import UNIV_POS_NAMES
 
-from ..typedefs cimport LEMMA
-from ..typedefs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
-from ..typedefs cimport POS, LEMMA, TAG, DEP
+from ..attrs cimport LEMMA
+from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
+from ..attrs cimport POS, LEMMA, TAG, DEP
 from ..parts_of_speech cimport CONJ, PUNCT
 
 
