@@ -108,15 +108,15 @@ cdef class StringStore:
         return &self.strings[i]
 
     def dump(self, loc):
-        strings = []
         cdef Utf8Str* string
         cdef bytes py_string
-        for i in range(self.size):
-            string = &self.strings[i]
-            py_string = string.chars[:string.length]
-            strings.append(py_string.decode('utf8'))
+        cdef int i
         with codecs.open(loc, 'w', 'utf8') as file_:
-            file_.write(SEPARATOR.join(strings))
+            for i in range(self.size):
+                string = &self.strings[i]
+                py_string = string.chars[:string.length]
+                file_.write(py_string.decode('utf8'))
+                file_.write(SEPARATOR)
 
     def load(self, loc):
         with codecs.open(loc, 'r', 'utf8') as file_:
