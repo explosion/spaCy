@@ -370,3 +370,23 @@ cdef class Doc:
         # Return the merged Python object
         return self[start]
 
+    def from_array(self, attrs, array):
+        cdef int i
+        cdef attr_id_t attr_id
+        cdef TokenC* tokens = self.data
+        for attr_id in attrs:
+            if attr_id == HEAD:
+                for i in range(length):
+                    tokens[i].head = values[i]
+            elif attr_id == TAG:
+                for i in range(length):
+                    tokens[i].tag = values[i]
+            elif attr_id == DEP:
+                for i in range(length):
+                    tokens[i].dep = values[i]
+            elif attr_id == ENT_IOB:
+                for i in range(length):
+                    tokens[i].ent_iob = values[i]
+            elif attr_id == ENT_TYPE:
+                for i in range(length):
+                    tokens[i].ent_type = values[i]
