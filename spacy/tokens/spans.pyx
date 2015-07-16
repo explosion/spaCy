@@ -2,7 +2,8 @@ from __future__ import unicode_literals
 from collections import defaultdict
 
 from ..structs cimport Morphology, TokenC, LexemeC
-from ..typedefs cimport flags_t, attr_id_t, attr_t
+from ..typedefs cimport flags_t, attr_t
+from ..attrs cimport attr_id_t
 from ..parts_of_speech cimport univ_pos_t
 
 
