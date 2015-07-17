@@ -383,7 +383,7 @@ cdef class ArcEager(TransitionSystem):
             elif USE_ROOT_ARC_SEGMENT and st._sent[i].dep == self.root_label:
                 st._sent[i].head = 0
 
-    cdef int set_valid(self, bint* output, StateClass stcls) nogil:
+    cdef int set_valid(self, int* output, StateClass stcls) nogil:
         cdef bint[N_MOVES] is_valid
         is_valid[SHIFT] = Shift.is_valid(stcls, -1)
         is_valid[REDUCE] = Reduce.is_valid(stcls, -1)
@@ -394,7 +394,7 @@ cdef class ArcEager(TransitionSystem):
         for i in range(self.n_moves):
             output[i] = is_valid[self.c[i].move]
 
-    cdef int set_costs(self, bint* is_valid, int* costs, 
+    cdef int set_costs(self, int* is_valid, int* costs, 
                        StateClass stcls, GoldParse gold) except -1:
         cdef int i, move, label
         cdef label_cost_func_t[N_MOVES] label_cost_funcs

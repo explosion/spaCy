@@ -44,12 +44,12 @@ cdef class TransitionSystem:
     cdef Transition init_transition(self, int clas, int move, int label) except *:
         raise NotImplementedError
 
-    cdef int set_valid(self, bint* is_valid, StateClass stcls) nogil:
+    cdef int set_valid(self, int* is_valid, StateClass stcls) nogil:
         cdef int i
         for i in range(self.n_moves):
             is_valid[i] = self.c[i].is_valid(stcls, self.c[i].label)
 
-    cdef int set_costs(self, bint* is_valid, int* costs,
+    cdef int set_costs(self, int* is_valid, int* costs,
                        StateClass stcls, GoldParse gold) except -1:
         cdef int i
         self.set_valid(is_valid, stcls)

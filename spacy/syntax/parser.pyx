@@ -93,7 +93,7 @@ cdef class Parser:
         while not stcls.is_final():
             memset(eg.scores, 0, eg.nr_class * sizeof(weight_t))
 
-            self.moves.set_valid(<bint*>eg.is_valid, stcls)
+            self.moves.set_valid(eg.is_valid, stcls)
             fill_context(eg.atoms, stcls)
             self.model.set_scores(eg.scores, eg.atoms)
             eg.guess = arg_max_if_true(eg.scores, eg.is_valid, self.model.n_classes)
@@ -113,7 +113,7 @@ cdef class Parser:
         while not stcls.is_final():
             memset(eg.c.scores, 0, eg.c.nr_class * sizeof(weight_t))
         
-            self.moves.set_costs(<bint*>eg.c.is_valid, eg.c.costs, stcls, gold)
+            self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
             
             fill_context(eg.c.atoms, stcls)
 
