@@ -19,3 +19,5 @@ cdef class BitArray:
     cdef uint32_t i
     
     cdef int extend(self, uint64_t code, char n_bits) except -1
+
+    cdef uint32_t read32(self) except 0

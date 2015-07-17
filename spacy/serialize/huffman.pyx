@@ -1,5 +1,7 @@
 cimport cython
 
+from ..typedefs cimport attr_t
+
 from .bits cimport bit_append
 from .bits cimport BitArray
 
@@ -16,7 +18,6 @@ cdef class HuffmanCodec:
         weights (float[:]): A descending-sorted sequence of probabilities/weights.
           Must include a weight for an EOL symbol.
 
-        eol (uint32_t): The index of the weight of the EOL symbol.
     """
     def __init__(self, float[:] weights):
         self.codes.resize(len(weights))
@@ -29,12 +30,12 @@ cdef class HuffmanCodec:
         path.length = 0
         assign_codes(self.nodes, self.codes, len(self.nodes) - 1, path)
 
-    def encode(self, uint32_t[:] msg, BitArray into_bits):
-        cdef uint32_t i
+    def encode(self, attr_t[:] msg, BitArray into_bits):
+        cdef int i
         for i in range(len(msg)):
             into_bits.extend(self.codes[msg[i]].bits, self.codes[msg[i]].length)
 
-    def decode(self, bits, uint32_t[:] into_msg):
+    def decode(self, bits, attr_t[:] into_msg):
         node = self.nodes.back()
         cdef int i = 0
         cdef int n = len(into_msg)
@@ -49,7 +50,8 @@ cdef class HuffmanCodec:
                 if i == n:
                     break
         else:
-            raise Exception
+            raise Exception(
+                "Buffer exhausted at %d/%d symbols read." % (i, len(into_msg)))
 
     property strings:
         @cython.boundscheck(False)

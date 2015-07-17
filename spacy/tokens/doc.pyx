@@ -97,17 +97,15 @@ cdef class Doc:
         self._py_tokens = []
 
     @classmethod
-    def from_orth(cls, Vocab vocab, attr_t[:] orths, attr_t[:] spaces):
+    def from_ids(cls, Vocab vocab, ids, spaces):
         cdef int i
         cdef const LexemeC* lex
         cdef Doc self = cls(vocab)
-        cdef unicode string
-        cdef UniStr new_orth_c
-        for i in range(len(orths)):
-            string = vocab.strings[orths[i]]
-            slice_unicode(&new_orth_c, string, 0, len(string))
-            lex = self.vocab.get(self.mem, &new_orth_c)
-            self.push_back(lex, spaces[i])
+        cdef bint space = 0
+        for i in range(len(ids)):
+            lex = self.vocab.lexemes.at(ids[i])
+            space = spaces[i]
+            self.push_back(lex, space)
         return self
 
     def __getitem__(self, object i):
@@ -229,11 +227,11 @@ cdef class Doc:
         """
         cdef int i, j
         cdef attr_id_t feature
-        cdef np.ndarray[long, ndim=2] output
+        cdef np.ndarray[attr_t, ndim=2] output
         # Make an array from the attributes --- otherwise our inner loop is Python
         # dict iteration.
-        cdef np.ndarray[long, ndim=1] attr_ids = numpy.asarray(py_attr_ids)
-        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.int)
+        cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.int32)
+        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.int32)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
                 output[i, j] = get_token_attr(&self.data[i], feature)

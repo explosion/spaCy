@@ -2,5 +2,6 @@ from ..vocab cimport Vocab
 
 
 cdef class Packer:
-    cdef tuple _codecs
-    cdef Vocab vocab
+    cdef readonly tuple attrs
+    cdef readonly tuple _codecs
+    cdef readonly Vocab vocab

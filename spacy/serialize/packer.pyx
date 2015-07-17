@@ -7,7 +7,7 @@ from libcpp.pair cimport pair
 from cymem.cymem cimport Address, Pool
 from preshed.maps cimport PreshMap
 
-from ..attrs cimport ID, ORTH, SPACY, TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
+from ..attrs cimport ID, SPACY, TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..typedefs cimport attr_t
@@ -50,24 +50,28 @@ cdef class _BinaryCodec:
         for i in range(len(msg)):
             bits.append(msg[i])
 
-    def decode(self, bits, attr_t[:] msg):
-        for i in range(len(msg)):
-            msg[i] = bits.next()
+    def decode(self, BitArray bits, attr_t[:] msg):
+        cdef int i = 0 
+        for bit in bits:
+            msg[i] = bit
+            i += 1
+            if i == len(msg):
+                break
 
 
 cdef class _AttributeCodec:
     cdef Pool mem
     cdef attr_t* _keys
-    cdef PreshMap _map
+    cdef dict _map
     cdef HuffmanCodec _codec
 
     def __init__(self, freqs):
         self.mem = Pool()
-        cdef uint64_t key
-        cdef uint64_t count
-        cdef pair[uint64_t, uint64_t] item
+        cdef attr_t key
+        cdef float count
+        cdef pair[float, attr_t] item
 
-        cdef priority_queue[pair[uint64_t, uint64_t]] items
+        cdef priority_queue[pair[float, attr_t]] items
 
         for key, count in freqs:
             item.first = count
@@ -75,7 +79,7 @@ cdef class _AttributeCodec:
             items.push(item)
         weights = numpy.ndarray(shape=(len(freqs),), dtype=numpy.float32)
         self._keys = <attr_t*>self.mem.alloc(len(freqs), sizeof(attr_t))
-        self._map = PreshMap()
+        self._map = {}
         cdef int i = 0
         while not items.empty():
             item = items.top()
@@ -88,8 +92,9 @@ cdef class _AttributeCodec:
         self._codec = HuffmanCodec(weights)
 
     def encode(self, attr_t[:] msg, BitArray dest):
+        cdef int i
         for i in range(len(msg)):
-            msg[i] = <attr_t>self._map[msg[i]]
+            msg[i] = self._map[msg[i]]
         self._codec.encode(msg, dest)
 
     def decode(self, BitArray bits, attr_t[:] dest):
@@ -103,30 +108,36 @@ cdef class Packer:
     def __init__(self, Vocab vocab, list_of_attr_freqs):
         self.vocab = vocab
         codecs = []
-        self.attrs = []
+        attrs = []
 
         for attr, freqs in list_of_attr_freqs:
-            if attr == ORTH:
+            if attr == ID:
                 codecs.append(make_vocab_codec(vocab))
             elif attr == SPACY:
                 codecs.append(_BinaryCodec())
             else:
                 codecs.append(_AttributeCodec(freqs))
-            self.attrs.append(attr)
+            attrs.append(attr)
         self._codecs = tuple(codecs)
+        self.attrs = tuple(attrs)
 
     def pack(self, Doc doc):
         array = doc.to_array(self.attrs)
         cdef BitArray bits = BitArray()
-        cdef uint32_t length = len(array)
-        bits.extend(length, 32)
+        cdef uint32_t length = 3
+        #cdef uint32_t length = len(doc)
+        #bits.extend(length, 32)
         for i, codec in enumerate(self._codecs):
-            codec.encode(array[i], bits)
+            codec.encode(array[:, i], bits)
         return bits
 
-    def unpack(self, bits):
-        cdef uint32_t length = bits.read(32)
-        array = numpy.ndarray(shape=(len(self.codecs), length), dtype=numpy.int)
-        for i, codec in enumerate(self.codecs):
-            array[i] = codec.decode(bits)
-        return Doc.from_array(self.vocab, self.attrs, array)
+    def unpack(self, BitArray bits):
+        bits.seek(0)
+        #cdef uint32_t length = bits.read32()
+        cdef uint32_t length = 3
+        array = numpy.zeros(shape=(length, len(self._codecs)), dtype=numpy.int32)
+        for i, codec in enumerate(self._codecs):
+            codec.decode(bits, array[:, i])
+        doc = Doc.from_ids(self.vocab, array[:, 0], array[:, 1])
+        doc.from_array(self.attrs, array)
+        return doc
