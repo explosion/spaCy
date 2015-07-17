@@ -85,8 +85,7 @@ cdef class Parser:
 
         cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
                                   self.model.n_feats, self.model.n_feats)
-        with nogil:
-            self.parse(stcls, eg.c)
+        self.parse(stcls, eg.c)
         tokens.set_parse(stcls._sent)
 
     cdef void parse(self, StateClass stcls, ExampleC eg) nogil:
