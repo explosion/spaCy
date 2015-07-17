@@ -49,7 +49,6 @@ cdef class Vocab:
                               path.join(data_dir, 'lexemes.bin'))
             if load_vectors and path.exists(path.join(data_dir, 'vec.bin')):
                 self.repvec_length = self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
-        self._codec = None
 
     def __len__(self):
         """The current number of lexemes stored."""
