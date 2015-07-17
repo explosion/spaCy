@@ -16,7 +16,8 @@ def test_binary():
     msg = numpy.array([0, 1, 0, 1, 1], numpy.int32)
     codec.encode(msg, bits)
     result = numpy.array([0, 0, 0, 0, 0], numpy.int32)
-    codec.decode(iter(bits), result)
+    bits.seek(0)
+    codec.decode(bits, result)
     assert list(msg) == list(result)
 
 
@@ -35,6 +36,7 @@ def test_attribute():
     msg_list = list(msg)
     codec.encode(msg, bits)
     result = numpy.array([0, 0], dtype=numpy.int32)
+    bits.seek(0)
     codec.decode(bits, result)
     assert msg_list == list(result)
 
@@ -69,5 +71,6 @@ def test_vocab_codec():
     msg_list = list(msg)
     codec.encode(msg, bits)
     result = numpy.array(range(len(msg)), dtype=numpy.int32)
+    bits.seek(0)
     codec.decode(bits, result)
     assert msg_list == list(result)

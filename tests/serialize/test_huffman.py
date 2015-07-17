@@ -13,7 +13,6 @@ from collections import defaultdict
 
 class MockPacker(object):
     def __init__(self, freqs):
-        freqs['-eol-'] = 5
         total = sum(freqs.values())
         by_freq = freqs.items()
         by_freq.sort(key=lambda item: item[1], reverse=True)
@@ -24,13 +23,14 @@ class MockPacker(object):
 
     def pack(self, message):
         seq = [self.table[sym] for sym in message]
-        msg = numpy.array(seq, dtype=numpy.uint32)
+        msg = numpy.array(seq, dtype=numpy.int32)
         bits = BitArray()
         self.codec.encode(msg, bits)
         return bits
 
     def unpack(self, bits, n):
-        msg = numpy.array(range(n), dtype=numpy.uint32)
+        msg = numpy.array(range(n), dtype=numpy.int32)
+        bits.seek(0)
         self.codec.decode(bits, msg)
         return [self.symbols[i] for i in msg]
 
