@@ -96,6 +96,20 @@ cdef class Doc:
         self.is_parsed = False
         self._py_tokens = []
 
+    @classmethod
+    def from_orth(cls, Vocab vocab, attr_t[:] orths, attr_t[:] spaces):
+        cdef int i
+        cdef const LexemeC* lex
+        cdef Doc self = cls(vocab)
+        cdef unicode string
+        cdef UniStr new_orth_c
+        for i in range(len(orths)):
+            string = vocab.strings[orths[i]]
+            slice_unicode(&new_orth_c, string, 0, len(string))
+            lex = self.vocab.get(self.mem, &new_orth_c)
+            self.push_back(lex, spaces[i])
+        return self
+
     def __getitem__(self, object i):
         """Get a token.
 
