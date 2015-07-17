@@ -40,8 +40,7 @@ def null_props(string):
 
 
 def count_freqs(input_loc, output_loc):
-    nlp = spacy.en.English(data_dir=os.environ['SPACY_DATA'], Parser=None,
-                           Tagger=None, Entity=None, load_vectors=False)
+    nlp = spacy.en.English(Parser=None, Tagger=None, Entity=None, load_vectors=False)
     nlp.vocab.lexeme_props_getter = null_props
 
     counts = PreshCounter()
@@ -76,15 +75,17 @@ def merge_counts(locs, out_loc):
 
 
 @plac.annotations(
-    input_dir=("Directory of input files"),
+    input_loc=("Location of input file list"),
     freqs_dir=("Directory for frequency files"),
     output_loc=("Location for output file"),
     n_jobs=("Number of workers", "option", "n", int),
 )
-def main(input_dir, freqs_dir, output_loc, n_jobs=2):
+def main(input_loc, freqs_dir, output_loc, n_jobs=2):
     tasks = []
-    for filename in os.listdir(input_dir):
-        input_path = path.join(input_dir, filename)
+    for input_path in open(input_loc):
+        input_path = input_path.strip()
+        if not input_path: continue
+        filename = input_path.split('/')[-1]
         output_path = path.join(freqs_dir, filename.replace('bz2', 'freq'))
         tasks.append((input_path, output_path))
 
