@@ -62,9 +62,9 @@ cdef class StringStore:
         if value == NULL:
             if self.size == self._resize_at:
                 self._resize_at *= 2
-                self.strings = <Utf8Str*>self.mem.realloc(self.strings, self._resize_at * sizeof(Utf8Str))
+                self.strings = <Utf8Str*>self.mem.realloc(
+                    self.strings, self._resize_at * sizeof(Utf8Str))
             i = self.size
-            self.strings[i].i = self.size
             self.strings[i].chars = <unsigned char*>self.mem.alloc(length, sizeof(char))
             memcpy(self.strings[i].chars, chars, length)
             self.strings[i].length = length
@@ -72,6 +72,7 @@ cdef class StringStore:
             self.size += 1
         else:
             i = <size_t>value
+        id_[0] = i
         return &self.strings[i]
 
     def dump(self, loc):
@@ -83,7 +84,8 @@ cdef class StringStore:
                 string = &self.strings[i]
                 py_string = string.chars[:string.length]
                 file_.write(py_string.decode('utf8'))
-                file_.write(SEPARATOR)
+                if (i+1) != self.size:
+                    file_.write(SEPARATOR)
 
     def load(self, loc):
         with codecs.open(loc, 'r', 'utf8') as file_:
