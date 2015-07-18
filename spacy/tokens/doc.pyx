@@ -12,6 +12,7 @@ from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..parts_of_speech import UNIV_POS_NAMES
 from ..parts_of_speech cimport CONJ, PUNCT
 from ..lexeme cimport check_flag
+from ..lexeme cimport get_attr as get_lex_attr
 from .spans import Span
 from ..structs cimport UniStr
 from .token cimport Token
@@ -48,31 +49,6 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return get_lex_attr(token.lex, feat_name)
 
 
-cdef attr_t get_lex_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
-    if feat_name < (sizeof(flags_t) * 8):
-        return check_flag(lex, feat_name)
-    elif feat_name == ID:
-        return lex.id
-    elif feat_name == ORTH:
-        return lex.orth
-    elif feat_name == LOWER:
-        return lex.lower
-    elif feat_name == NORM:
-        return lex.norm
-    elif feat_name == SHAPE:
-        return lex.shape
-    elif feat_name == PREFIX:
-        return lex.prefix
-    elif feat_name == SUFFIX:
-        return lex.suffix
-    elif feat_name == LENGTH:
-        return lex.length
-    elif feat_name == CLUSTER:
-        return lex.cluster
-    else:
-        return 0
-
-
 cdef class Doc:
     """
     Container class for annotated text.  Constructed via English.__call__ or
@@ -97,15 +73,21 @@ cdef class Doc:
         self._py_tokens = []
 
     @classmethod
-    def from_ids(cls, Vocab vocab, ids, spaces):
+    def from_ids(cls, Vocab vocab, orths, spaces):
         cdef int i
         cdef const LexemeC* lex
         cdef Doc self = cls(vocab)
         cdef bint space = 0
-        for i in range(len(ids)):
-            lex = self.vocab.lexemes.at(ids[i])
-            space = spaces[i]
-            self.push_back(lex, space)
+        cdef attr_t orth
+        for i in range(len(orths)):
+            orth = orths[i]
+            lex = <LexemeC*>self.vocab._by_orth.get(orth)
+            if lex != NULL:
+                assert lex.orth == orth
+                space = spaces[i]
+                self.push_back(lex, space)
+            else:
+                raise Exception('Lexeme not found: %d' % orth)
         return self
 
     def __getitem__(self, object i):
