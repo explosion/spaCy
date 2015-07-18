@@ -1,6 +1,6 @@
 from libc.stdint cimport uint8_t, uint32_t, int32_t
 
-from .typedefs cimport flags_t, attr_t, id_t, hash_t
+from .typedefs cimport flags_t, attr_t, hash_t
 from .parts_of_speech cimport univ_pos_t
 
 

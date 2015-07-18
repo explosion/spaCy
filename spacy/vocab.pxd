@@ -5,7 +5,7 @@ from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
 
 from .structs cimport LexemeC, TokenC, UniStr
-from .typedefs cimport utf8_t, id_t, hash_t
+from .typedefs cimport utf8_t, hash_t
 from .strings cimport StringStore
 
 

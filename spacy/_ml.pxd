@@ -9,7 +9,7 @@ from thinc.api cimport ExampleC
 
 from preshed.maps cimport PreshMapArray
 
-from .typedefs cimport hash_t, id_t
+from .typedefs cimport hash_t
 
 
 cdef int arg_max(const weight_t* scores, const int n_classes) nogil

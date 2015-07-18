@@ -12,13 +12,13 @@ from ..parts_of_speech cimport univ_pos_t
 from ..parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON
 
 from ..parts_of_speech cimport PRT, VERB, X, PUNCT, EOL, SPACE
-from ..typedefs cimport id_t
 from ..structs cimport TokenC, Morphology, LexemeC
 from ..tokens.doc cimport Doc
 from ..morphology cimport set_morph_from_dict
 from .._ml cimport arg_max
 
 from .attrs cimport IS_ALPHA, IS_PUNCT, LIKE_NUM, LIKE_URL
+from ..typedefs cimport attr_t
 
 from .lemmatizer import Lemmatizer
 
@@ -342,7 +342,7 @@ cdef class EnPosTagger:
         cdef dict entries
         cdef dict props
         cdef int lemma
-        cdef id_t orth
+        cdef attr_t orth
         cdef int pos
         for pos_str, entries in exc.items():
             pos = self.tag_names.index(pos_str)

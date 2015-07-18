@@ -3,8 +3,10 @@ import codecs
 from libc.string cimport memcpy
 from murmurhash.mrmr cimport hash64
 
+from libc.stdint cimport int64_t
 
-from .typedefs cimport hash_t
+
+from .typedefs cimport hash_t, attr_t
 
 
 SEPARATOR = '\n|-SEP-|\n'
@@ -34,7 +36,7 @@ cdef class StringStore:
     def __getitem__(self, object string_or_id):
         cdef bytes byte_string
         cdef const Utf8Str* utf8str
-        cdef int id_
+        cdef attr_t id_
         if isinstance(string_or_id, int) or isinstance(string_or_id, long):
             if string_or_id == 0:
                 return u''
@@ -52,26 +54,26 @@ cdef class StringStore:
         else:
             raise TypeError(type(string_or_id))
 
-    cdef const Utf8Str* intern(self, char* chars, int length, int* id_) except NULL:
+    cdef const Utf8Str* intern(self, char* chars, int length, attr_t* id_) except NULL:
         # 0 means missing, but we don't bother offsetting the index. We waste
         # slot 0 to simplify the code, because it doesn't matter.
         assert length != 0
         cdef hash_t key = hash64(chars, length * sizeof(char), 0)
         cdef void* value = self._map.get(key)
-        cdef size_t i
+        cdef int64_t i
         if value == NULL:
             if self.size == self._resize_at:
                 self._resize_at *= 2
                 self.strings = <Utf8Str*>self.mem.realloc(
                     self.strings, self._resize_at * sizeof(Utf8Str))
-            i = self.size
+            i = <int64_t>self.size
             self.strings[i].chars = <unsigned char*>self.mem.alloc(length, sizeof(char))
             memcpy(self.strings[i].chars, chars, length)
             self.strings[i].length = length
             self._map.set(key, <void*>self.size)
             self.size += 1
         else:
-            i = <size_t>value
+            i = <int64_t>value
         id_[0] = i
         return &self.strings[i]
 
@@ -92,7 +94,7 @@ cdef class StringStore:
             strings = file_.read().split(SEPARATOR)
         cdef unicode string
         cdef bytes byte_string
-        cdef int id_
+        cdef attr_t id_
         for string in strings[1:]:
             byte_string = string.encode('utf8')
             self.intern(byte_string, len(byte_string), &id_)

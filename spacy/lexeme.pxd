@@ -1,4 +1,4 @@
-from .typedefs cimport attr_t, hash_t, flags_t, id_t, len_t, tag_t
+from .typedefs cimport attr_t, hash_t, flags_t, len_t, tag_t
 from .attrs cimport attr_id_t
 from .attrs cimport ID, ORTH, LOWER, NORM, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 
