@@ -33,12 +33,15 @@ cdef class Vocab:
     def __init__(self, data_dir=None, get_lex_props=None, load_vectors=True,
                  pos_tags=None):
         self.mem = Pool()
-        self._map = PreshMap(2 ** 20)
+        self._by_hash = PreshMap()
+        self._by_orth = PreshMap()
         self.strings = StringStore()
         self.pos_tags = pos_tags if pos_tags is not None else {}
-        self.lexemes.push_back(&EMPTY_LEXEME)
+
         self.lexeme_props_getter = get_lex_props
         self.repvec_length = 0
+        self.length = 0
+        self._add_lex_to_vocab(0, &EMPTY_LEXEME)
         if data_dir is not None:
             if not path.exists(data_dir):
                 raise IOError("Directory %s not found -- cannot load Vocab." % data_dir)
@@ -52,34 +55,40 @@ cdef class Vocab:
 
     def __len__(self):
         """The current number of lexemes stored."""
-        return self.lexemes.size()
+        return self.length
 
     cdef const LexemeC* get(self, Pool mem, UniStr* c_str) except NULL:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
         if necessary, using memory acquired from the given pool.  If the pool
         is the lexicon's own memory, the lexeme is saved in the lexicon.'''
         cdef LexemeC* lex
-        lex = <LexemeC*>self._map.get(c_str.key)
+        lex = <LexemeC*>self._by_hash.get(c_str.key)
         if lex != NULL:
             return lex
-        if c_str.n < 3:
-            mem = self.mem
+        #if c_str.n < 3:
+        oov = mem is not self.mem
+        mem = self.mem
         cdef unicode py_str = c_str.chars[:c_str.n]
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
         props = self.lexeme_props_getter(py_str)
         set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
-        if mem is self.mem:
-            lex.id = self.lexemes.size()
-            self._add_lex_to_vocab(c_str.key, lex)
-        else:
-            lex.id = 1
+        #if mem is self.mem:
+        #else:
+        if oov:
+            lex.id = 0
+        self._add_lex_to_vocab(c_str.key, lex)
         return lex
 
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1:
-        self._map.set(key, <void*>lex)
-        while self.lexemes.size() < (lex.id + 1):
-            self.lexemes.push_back(&EMPTY_LEXEME)
-        self.lexemes[lex.id] = lex
+        self._by_hash.set(key, <void*>lex)
+        self._by_orth.set(lex.orth, <void*>lex)
+        self.length += 1
+
+    def __iter__(self):
+        cdef attr_t orth
+        cdef size_t addr
+        for orth, addr in self._by_orth.items():
+            yield Lexeme.from_ptr(<LexemeC*>addr, self.strings, self.repvec_length)
 
     def __getitem__(self,  id_or_string):
         '''Retrieve a lexeme, given an int ID or a unicode string.  If a previously
@@ -98,13 +107,17 @@ cdef class Vocab:
         '''
         cdef UniStr c_str
         cdef const LexemeC* lexeme
+        cdef attr_t orth
         if type(id_or_string) == int:
-            if id_or_string >= self.lexemes.size():
-                raise IndexError
-            lexeme = self.lexemes.at(id_or_string)
+            orth = id_or_string
+            lexeme = <LexemeC*>self._by_orth.get(orth)
+            if lexeme == NULL:
+                raise KeyError(id_or_string)
+            assert lexeme.orth == orth, ('%d vs %d' % (lexeme.orth, orth))
         elif type(id_or_string) == unicode:
             slice_unicode(&c_str, id_or_string, 0, len(id_or_string))
             lexeme = self.get(self.mem, &c_str)
+            assert lexeme.orth == self.strings[id_or_string]
         else:
             raise ValueError("Vocab unable to map type: "
                 "%s. Maps unicode --> Lexeme or "
@@ -115,12 +128,11 @@ cdef class Vocab:
         cdef UniStr c_str
         slice_unicode(&c_str, py_str, 0, len(py_str))
         cdef LexemeC* lex
-        lex = <LexemeC*>self._map.get(c_str.key)
+        lex = <LexemeC*>self._by_hash.get(c_str.key)
         if lex == NULL:
             lex = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
-            lex.id = self.lexemes.size()
-            self._add_lex_to_vocab(c_str.key, lex)
         set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
+        self._add_lex_to_vocab(c_str.key, lex)
 
     def dump(self, loc):
         if path.exists(loc):
@@ -129,12 +141,10 @@ cdef class Vocab:
         cdef FILE* fp = fopen(<char*>bytes_loc, 'wb')
         assert fp != NULL
         cdef size_t st
+        cdef size_t addr
         cdef hash_t key
-        for i in range(self._map.length):
-            key = self._map.c_map.cells[i].key
-            if key == 0:
-                continue
-            lexeme = <LexemeC*>self._map.c_map.cells[i].value
+        for key, addr in self._by_hash.items():
+            lexeme = <LexemeC*>addr
             st = fwrite(&lexeme.orth, sizeof(lexeme.orth), 1, fp)
             assert st == 1
             st = fwrite(lexeme, sizeof(LexemeC), 1, fp)
@@ -171,10 +181,9 @@ cdef class Vocab:
                 raise IOError('Error reading from lexemes.bin. Integrity check fails.')
             py_str = self.strings[orth]
             key = hash_string(py_str)
-            self._map.set(key, lexeme)
-            while self.lexemes.size() < (lexeme.id + 1):
-                self.lexemes.push_back(&EMPTY_LEXEME)
-            self.lexemes[lexeme.id] = lexeme
+            self._by_hash.set(key, lexeme)
+            self._by_orth.set(lexeme.orth, lexeme)
+            self.length += 1
             i += 1
         fclose(fp)
 
@@ -185,7 +194,7 @@ cdef class Vocab:
         cdef int32_t prev_vec_len = 0
         cdef float* vec
         cdef Address mem
-        cdef id_t string_id
+        cdef attr_t string_id
         cdef bytes py_word
         cdef vector[float*] vectors
         cdef int i
@@ -212,9 +221,9 @@ cdef class Vocab:
             assert vec != NULL
             vectors[string_id] = vec
         cdef LexemeC* lex
-        for i in range(self.lexemes.size()):
-            # Cast away the const, cos we can modify our lexemes
-            lex = <LexemeC*>self.lexemes[i]
+        cdef size_t lex_addr
+        for orth, lex_addr in self._by_orth.items():
+            lex = <LexemeC*>lex_addr
             if lex.lower < vectors.size():
                 lex.repvec = vectors[lex.lower]
                 for i in range(vec_len):

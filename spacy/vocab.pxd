@@ -27,11 +27,12 @@ cdef class Vocab:
     cpdef public lexeme_props_getter
     cdef Pool mem
     cpdef readonly StringStore strings
-    cdef vector[const LexemeC*] lexemes
     cdef readonly object pos_tags
+    cdef readonly int length
 
     cdef const LexemeC* get(self, Pool mem, UniStr* s) except NULL
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1
 
-    cdef PreshMap _map
+    cdef PreshMap _by_hash
+    cdef PreshMap _by_orth
     cdef readonly int repvec_length
