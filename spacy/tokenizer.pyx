@@ -175,8 +175,7 @@ cdef class Tokenizer:
                             vector[const LexemeC*] *prefixes,
                             vector[const LexemeC*] *suffixes) except -1:
         cdef bint cache_hit
-        cdef bint is_spacy
-        cdef int split
+        cdef int split, end
         cdef const LexemeC* const* lexemes
         cdef const LexemeC* lexeme
         cdef UniStr span
@@ -189,16 +188,20 @@ cdef class Tokenizer:
             if cache_hit:
                 pass
             else:
-                split = self._find_infix(string.chars, string.n)
-                if split == 0 or split == -1:
+                match = self._find_infix(string.chars, string.n)
+                if match is None:
                     tokens.push_back(self.vocab.get(tokens.mem, string), False)
                 else:
-                    # Append the beginning, afix, end of the infix token
+                    split = match.start()
+                    end = match.end()
+                    # Append the beginning, afix, end of the infix span
                     slice_unicode(&span, string.chars, 0, split)
                     tokens.push_back(self.vocab.get(tokens.mem, &span), False)
-                    slice_unicode(&span, string.chars, split, split+1)
+                    
+                    slice_unicode(&span, string.chars, split, end)
                     tokens.push_back(self.vocab.get(tokens.mem, &span), False)
-                    slice_unicode(&span, string.chars, split + 1, string.n)
+                    
+                    slice_unicode(&span, string.chars, end, string.n)
                     tokens.push_back(self.vocab.get(tokens.mem, &span), False)
         cdef vector[const LexemeC*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
@@ -220,10 +223,9 @@ cdef class Tokenizer:
         cached.data.lexemes = <const LexemeC* const*>lexemes
         self._cache.set(key, cached)
 
-    cdef int _find_infix(self, Py_UNICODE* chars, size_t length) except -1:
+    cdef object _find_infix(self, Py_UNICODE* chars, size_t length):
         cdef unicode string = chars[:length]
-        match = self._infix_re.search(string)
-        return match.start() if match is not None else 0
+        return self._infix_re.search(string)
 
     cdef int _find_prefix(self, Py_UNICODE* chars, size_t length) except -1:
         cdef unicode string = chars[:length]

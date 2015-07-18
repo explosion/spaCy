@@ -37,5 +37,5 @@ cdef class Tokenizer:
                             vector[LexemeC*] *prefixes, vector[LexemeC*] *suffixes) except -1
     cdef int _find_prefix(self, Py_UNICODE* characters, size_t length) except -1
     cdef int _find_suffix(self, Py_UNICODE* characters, size_t length) except -1
-    cdef int _find_infix(self, Py_UNICODE* characters, size_t length) except -1
+    cdef object _find_infix(self, Py_UNICODE* characters, size_t length)
     cdef int _save_cached(self, const TokenC* tokens, hash_t key, int n) except -1
