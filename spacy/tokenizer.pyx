@@ -212,7 +212,7 @@ cdef class Tokenizer:
     cdef int _save_cached(self, const TokenC* tokens, hash_t key, int n) except -1:
         cdef int i
         for i in range(n):
-            if tokens[i].lex.id == 1:
+            if tokens[i].lex.id == 0:
                 return 0
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
         cached.length = n
