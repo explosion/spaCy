@@ -134,8 +134,12 @@ cdef class Doc:
         Yields:
             token (Token):
         """
+        cdef int i
         for i in range(self.length):
-            yield Token.cinit(self.vocab, &self.data[i], i, self)
+            if self._py_tokens[i] is not None:
+                yield self._py_tokens[i]
+            else:
+                yield Token.cinit(self.vocab, &self.data[i], i, self)
 
     def __len__(self):
         return self.length
