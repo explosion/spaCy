@@ -5,7 +5,7 @@ import numpy
 
 from spacy.vocab import Vocab
 from spacy.tokens.doc import Doc
-from spacy.attrs import ID, SPACY, TAG, DEP, HEAD
+from spacy.attrs import ORTH, SPACY, TAG, DEP, HEAD
 from spacy.serialize.packer import Packer
 
 from spacy.serialize.bits import BitArray
@@ -30,6 +30,7 @@ def get_lex_props(string, prob=-22):
 def vocab():
     vocab = Vocab(get_lex_props=get_lex_props)
     vocab['dog'] = get_lex_props('dog', 0.001)
+    assert vocab[vocab.strings['dog']].orth_ == 'dog'
     vocab['the'] = get_lex_props('the', 0.01)
     vocab['quick'] = get_lex_props('quick', 0.005)
     vocab['jumped'] = get_lex_props('jumped', 0.007)
@@ -37,9 +38,10 @@ def vocab():
 
 
 def test_packer_unannotated(vocab):
-    packer = Packer(vocab, [(ID, {}), (SPACY, {})])
+    packer = Packer(vocab, [(ORTH, [(lex.orth, lex.prob) for lex in vocab]),
+                            (SPACY, [])])
 
-    ids = [vocab[w].id for w in 'the dog jumped'.split()]
+    ids = [vocab[w].orth for w in 'the dog jumped'.split()]
     msg = Doc.from_ids(vocab, ids, [1, 1, 0])
 
     assert msg.string == 'the dog jumped'
@@ -62,7 +64,7 @@ def test_packer_annotated(vocab):
     root = vocab.strings['ROOT']
 
     attr_freqs = [
-        (ID, []),
+        (ORTH, [(lex.orth, lex.prob) for lex in vocab]),
         (SPACY, []),
         (TAG, [(nn, 0.1), (dt, 0.2), (jj, 0.01), (vbd, 0.05)]),
         (DEP, {det: 0.2, nsubj: 0.1, adj: 0.05, root: 0.1}.items()),
@@ -71,7 +73,7 @@ def test_packer_annotated(vocab):
 
     packer = Packer(vocab, attr_freqs)
 
-    ids = [vocab[w].id for w in 'the dog jumped'.split()]
+    ids = [vocab[w].orth for w in 'the dog jumped'.split()]
     msg = Doc.from_ids(vocab, ids, [1, 1, 0])
     msg.from_array(
         [TAG, DEP, HEAD],

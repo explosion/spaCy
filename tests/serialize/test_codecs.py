@@ -62,11 +62,11 @@ def test_vocab_codec():
     vocab['the'] = get_lex_props('the', 0.05)
     vocab['jumped'] = get_lex_props('jumped', 0.005)
 
-    codec = make_vocab_codec(vocab)
+    codec = _AttributeCodec([(lex.orth, lex.prob) for lex in vocab])
 
     bits = BitArray()
     
-    ids = [vocab[s].id for s in ('the', 'dog', 'jumped')]
+    ids = [vocab[s].orth for s in ('the', 'dog', 'jumped')]
     msg = numpy.array(ids, dtype=numpy.int32)
     msg_list = list(msg)
     codec.encode(msg, bits)
