@@ -1,3 +1,4 @@
+# cython: profile=True
 from libc.stdint cimport uint32_t
 from libc.stdint cimport uint64_t
 from libc.math cimport exp as c_exp
@@ -124,17 +125,15 @@ cdef class Packer:
     def pack(self, Doc doc):
         array = doc.to_array(self.attrs)
         cdef BitArray bits = BitArray()
-        cdef uint32_t length = 3
-        #cdef uint32_t length = len(doc)
-        #bits.extend(length, 32)
+        cdef uint32_t length = len(doc)
+        bits.extend(length, 32)
         for i, codec in enumerate(self._codecs):
             codec.encode(array[:, i], bits)
         return bits
 
     def unpack(self, BitArray bits):
         bits.seek(0)
-        #cdef uint32_t length = bits.read32()
-        cdef uint32_t length = 3
+        cdef uint32_t length = bits.read32()
         array = numpy.zeros(shape=(length, len(self._codecs)), dtype=numpy.int32)
         for i, codec in enumerate(self._codecs):
             codec.decode(bits, array[:, i])
