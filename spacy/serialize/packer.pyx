@@ -8,7 +8,7 @@ from libcpp.pair cimport pair
 from cymem.cymem cimport Address, Pool
 from preshed.maps cimport PreshMap
 
-from ..attrs cimport ID, SPACY, TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
+from ..attrs cimport ORTH, SPACY, TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
 from ..typedefs cimport attr_t
@@ -32,17 +32,6 @@ cimport cython
 #       Dep label
 #       Entity IOB
 #       Entity tag
-
-
-def make_vocab_codec(Vocab vocab):
-    cdef int length = len(vocab)
-    cdef Address mem = Address(length, sizeof(float))
-    probs = <float*>mem.ptr
-    cdef int i
-    for i in range(length):
-        probs[i] = <float>c_exp(vocab.lexemes[i].prob)
-    cdef float[:] cv_probs = <float[:len(vocab)]>probs
-    return HuffmanCodec(cv_probs)
 
 
 cdef class _BinaryCodec:
@@ -112,9 +101,7 @@ cdef class Packer:
         attrs = []
 
         for attr, freqs in list_of_attr_freqs:
-            if attr == ID:
-                codecs.append(make_vocab_codec(vocab))
-            elif attr == SPACY:
+            if attr == SPACY:
                 codecs.append(_BinaryCodec())
             else:
                 codecs.append(_AttributeCodec(freqs))
