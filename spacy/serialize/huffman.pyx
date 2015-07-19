@@ -9,18 +9,6 @@ from .bits cimport BitArray
 
 
 cdef class HuffmanCodec:
-    """Create a Huffman code table, and use it to pack and unpack sequences into
-    byte strings. Emphasis is on efficiency, so API is quite strict:
-
-    Messages will be encoded/decoded as indices that refer to the probability sequence.
-    For instance, the sequence [5, 10, 8] indicates the 5th most frequent item,
-    the 10th most frequent item, the 8th most frequent item.
-
-    Arguments:
-        weights (float[:]): A descending-sorted sequence of probabilities/weights.
-          Must include a weight for an EOL symbol.
-
-    """
     def __init__(self, freqs):
         cdef float count
         cdef Code code
