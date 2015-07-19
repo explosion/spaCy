@@ -5,7 +5,7 @@ import numpy
 
 from spacy.vocab import Vocab
 from spacy.serialize.packer import _BinaryCodec
-from spacy.serialize.packer import _AttributeCodec
+from spacy.serialize.huffman import HuffmanCodec
 from spacy.serialize.bits import BitArray
 
 
@@ -27,7 +27,7 @@ def test_attribute():
     int_map = {'the': 0, 'quick': 1, 'brown': 2, 'fox': 3, 'jumped': 4, 'over': 5,
                'lazy': 6, 'dog': 7, '.': 8}
 
-    codec = _AttributeCodec([(int_map[string], freq) for string, freq in freqs.items()])
+    codec = HuffmanCodec([(int_map[string], freq) for string, freq in freqs.items()])
 
     bits = BitArray()
     
@@ -61,7 +61,7 @@ def test_vocab_codec():
     vocab['the'] = get_lex_props('the', 0.05)
     vocab['jumped'] = get_lex_props('jumped', 0.005)
 
-    codec = _AttributeCodec([(lex.orth, lex.prob) for lex in vocab])
+    codec = HuffmanCodec([(lex.orth, lex.prob) for lex in vocab])
 
     bits = BitArray()
     
