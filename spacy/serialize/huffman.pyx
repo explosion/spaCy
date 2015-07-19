@@ -1,4 +1,6 @@
 cimport cython
+from libcpp.queue cimport priority_queue
+from libcpp.pair cimport pair
 
 from ..typedefs cimport attr_t
 
@@ -19,39 +21,73 @@ cdef class HuffmanCodec:
           Must include a weight for an EOL symbol.
 
     """
-    def __init__(self, float[:] weights):
-        self.codes.resize(len(weights))
-        for i in range(len(self.codes)):
-            self.codes[i].bits = 0
-            self.codes[i].length = 0
-        populate_nodes(self.nodes, weights)
+    def __init__(self, freqs):
+        cdef float count
+        cdef Code code
+
+        cdef pair[float, int] item
+        cdef pair[float, int] item1
+        cdef pair[float, int] item2
+        cdef priority_queue[pair[float, int]] queue
+        cdef int i = 0
+        self._map = {}
+        self.leaves = []
+        for word, weight in freqs:
+            item.first = -weight
+            item.second = -(i+1)
+            queue.push(item)
+            
+            self.leaves.append(word)
+            code.bits = 0
+            code.length = 0
+            self.codes.push_back(code)
+            self._map[word] = i
+            i += 1
+
+        cdef Node node
+        while queue.size() >= 2:
+            item1 = queue.top(); queue.pop()
+            item2 = queue.top(); queue.pop()
+            
+            node = Node(left=item1.second, right=item2.second)
+            self.nodes.push_back(node)
+
+            item.first = item1.first + item2.first
+            item.second = self.nodes.size()-1
+            queue.push(item)
+        item = queue.top()
+        self.root = self.nodes[item.second]
         cdef Code path
         path.bits = 0
         path.length = 0
-        assign_codes(self.nodes, self.codes, len(self.nodes) - 1, path)
+        assign_codes(self.nodes, self.codes, item.second, path)
 
-    def encode(self, attr_t[:] msg, BitArray into_bits):
+    def encode(self, msg, BitArray bits=None):
+        if bits is None:
+            bits = BitArray()
         cdef int i
-        for i in range(len(msg)):
-            into_bits.extend(self.codes[msg[i]].bits, self.codes[msg[i]].length)
+        for word in msg:
+            i = self._map[word]
+            bits.extend(self.codes[i].bits, self.codes[i].length)
+        return bits
 
-    def decode(self, bits, attr_t[:] into_msg):
-        node = self.nodes.back()
+    def decode(self, bits, msg):
+        node = self.root
         cdef int i = 0
-        cdef int n = len(into_msg)
+        cdef int n = len(msg)
         for bit in bits:
             branch = node.right if bit else node.left
             if branch >= 0:
                 node = self.nodes.at(branch)
             else:
-                into_msg[i] = -(branch + 1)
+                msg[i] = self.leaves[-(branch + 1)]
                 node = self.nodes.back()
                 i += 1
                 if i == n:
                     break
         else:
             raise Exception(
-                "Buffer exhausted at %d/%d symbols read." % (i, len(into_msg)))
+                "Buffer exhausted at %d/%d symbols read." % (i, len(msg)))
 
     property strings:
         @cython.boundscheck(False)
@@ -68,70 +104,6 @@ cdef class HuffmanCodec:
                 string = string[::-1]
                 output.append(string)
             return output
-
-
-@cython.boundscheck(False)
-@cython.wraparound(False)
-@cython.nonecheck(False)
-cdef int populate_nodes(vector[Node]& nodes, float[:] probs) except -1:
-    assert len(probs) >= 3
-    cdef int size = len(probs)
-    cdef int i = size - 1
-    cdef int j = 0
-    
-    while i >= 0 or (j+1) < nodes.size():
-        if i < 0:
-            _cover_two_nodes(nodes, j)
-            j += 2
-        elif j >= nodes.size():
-            _cover_two_words(nodes, i, i-1, probs[i] + probs[i-1])
-            i -= 2
-        elif i >= 1 and (j == nodes.size() or probs[i-1] < nodes[j].prob):
-            _cover_two_words(nodes, i, i-1, probs[i] + probs[i-1])
-            i -= 2
-        elif (j+1) < nodes.size() and nodes[j+1].prob < probs[i]:
-            _cover_two_nodes(nodes, j)
-            j += 2
-        else:
-            _cover_one_word_one_node(nodes, j, i, probs[i])
-            i -= 1
-            j += 1
-    return 0
-
-cdef int _cover_two_nodes(vector[Node]& nodes, int j) nogil:
-    """Introduce a new non-terminal, over two non-terminals)"""
-    cdef Node node
-    node.left = j
-    node.right = j+1
-    node.prob = nodes[j].prob + nodes[j+1].prob
-    nodes.push_back(node)
-
-
-cdef int _cover_one_word_one_node(vector[Node]& nodes, int j, int id_, float prob) nogil:
-    """Introduce a new non-terminal, over one terminal and one non-terminal."""
-    cdef Node node
-    # Encode leaves as negative integers, where the integer is the index of the
-    # word in the vocabulary.
-    cdef int64_t leaf_id = - <int64_t>(id_ + 1)
-    cdef float new_prob = prob + nodes[j].prob
-    if prob < nodes[j].prob:
-        node.left = leaf_id
-        node.right = j
-        node.prob = new_prob
-    else:
-        node.left = j
-        node.right = leaf_id
-        node.prob = new_prob
-    nodes.push_back(node)
-
-
-cdef int _cover_two_words(vector[Node]& nodes, int id1, int id2, float prob) nogil:
-    """Introduce a new node, over two non-terminals."""
-    cdef Node node
-    node.left = -(id1+1)
-    node.right = -(id2+1)
-    node.prob = prob
-    nodes.push_back(node)
 
 
 cdef int assign_codes(vector[Node]& nodes, vector[Code]& codes, int i, Code path) except -1:

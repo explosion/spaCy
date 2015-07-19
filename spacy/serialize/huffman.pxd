@@ -8,7 +8,6 @@ from .bits cimport Code
 
 
 cdef struct Node:
-    float prob
     int32_t left
     int32_t right
 
@@ -16,3 +15,7 @@ cdef struct Node:
 cdef class HuffmanCodec:
     cdef vector[Node] nodes
     cdef vector[Code] codes
+    cdef Node root
+
+    cdef readonly list leaves
+    cdef readonly dict _map 
