@@ -35,6 +35,7 @@ cdef class TransitionSystem:
     cdef bint* _is_valid
     cdef readonly int n_moves
     cdef public int root_label
+    cdef public freqs
 
     cdef int initialize_state(self, StateClass state) except -1
     cdef int finalize_state(self, StateClass state) nogil

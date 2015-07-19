@@ -10,6 +10,7 @@ from .transition_system cimport do_func_t, get_cost_func_t
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse
 from ..gold cimport GoldParseC
+from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
@@ -309,6 +310,9 @@ cdef class ArcEager(TransitionSystem):
                     label = 'ROOT'
                 gold.c.heads[i] = gold.heads[i]
                 gold.c.labels[i] = self.strings[label]
+                # Count frequencies, for use in encoder
+                self.freqs[HEAD][gold.c.heads[i] - i] += 1
+                self.freqs[DEP][gold.c.labels[i]] += 1
         for end, brackets in gold.brackets.items():
             for start, label_strs in brackets.items():
                 gold.c.brackets[start][end] = 1

@@ -141,11 +141,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
         print '%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
                                                scorer.tags_acc,
                                                scorer.token_acc)
-    nlp.parser.model.end_training()
-    nlp.entity.model.end_training()
-    nlp.tagger.model.end_training()
-    nlp.vocab.strings.dump(path.join(model_dir, 'vocab', 'strings.txt'))
-
+    nlp.end_training()
 
 def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False,
              beam_width=None):

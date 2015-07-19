@@ -8,15 +8,17 @@ from libcpp.pair cimport pair
 from cymem.cymem cimport Address, Pool
 from preshed.maps cimport PreshMap
 
-from ..attrs cimport ORTH, SPACY, TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
+from ..attrs cimport ORTH, ID, SPACY, TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 from ..tokens.doc cimport Doc
 from ..vocab cimport Vocab
+from ..structs cimport LexemeC
 from ..typedefs cimport attr_t
 from .bits cimport BitArray
 from .huffman cimport HuffmanCodec
 
 from os import path
 import numpy
+from .. import util
 
 cimport cython
 
@@ -67,8 +69,8 @@ cdef class _AttributeCodec:
             item.first = count
             item.second = key
             items.push(item)
-        weights = numpy.ndarray(shape=(len(freqs),), dtype=numpy.float32)
-        self._keys = <attr_t*>self.mem.alloc(len(freqs), sizeof(attr_t))
+        weights = numpy.ndarray(shape=(items.size(),), dtype=numpy.float32)
+        self._keys = <attr_t*>self.mem.alloc(items.size(), sizeof(attr_t))
         self._map = {}
         cdef int i = 0
         while not items.empty():
@@ -94,20 +96,32 @@ cdef class _AttributeCodec:
             dest[i] = <attr_t>self._keys[dest[i]]
 
 
-cdef class Packer:
-    def __init__(self, Vocab vocab, list_of_attr_freqs):
-        self.vocab = vocab
-        codecs = []
-        attrs = []
+def _gen_orths(Vocab vocab):
+    cdef attr_t orth
+    cdef size_t addr
+    for orth, addr in vocab._by_orth.items():
+        lex = <LexemeC*>addr
+        yield orth, c_exp(lex.prob)
 
-        for attr, freqs in list_of_attr_freqs:
-            if attr == SPACY:
-                codecs.append(_BinaryCodec())
-            else:
-                codecs.append(_AttributeCodec(freqs))
+
+cdef class Packer:
+    def __init__(self, Vocab vocab, attr_freqs):
+        self.vocab = vocab
+        self.lex_codec = _AttributeCodec(_gen_orths(vocab))
+        
+        codecs = [_AttributeCodec(_gen_orths(vocab)), _BinaryCodec()]
+        attrs = [ORTH, SPACY]
+        for attr, freqs in sorted(attr_freqs):
+            if attr in (ORTH, ID, SPACY):
+                continue
+            codecs.append(_AttributeCodec(freqs))
             attrs.append(attr)
         self._codecs = tuple(codecs)
         self.attrs = tuple(attrs)
+
+    @classmethod
+    def from_dir(cls, Vocab vocab, data_dir):
+        return cls(vocab, util.read_encoding_freqs(data_dir))
 
     def pack(self, Doc doc):
         array = doc.to_array(self.attrs)
@@ -124,6 +138,4 @@ cdef class Packer:
         array = numpy.zeros(shape=(length, len(self._codecs)), dtype=numpy.int32)
         for i, codec in enumerate(self._codecs):
             codec.decode(bits, array[:, i])
-        doc = Doc.from_ids(self.vocab, array[:, 0], array[:, 1])
-        doc.from_array(self.attrs, array)
-        return doc
+        return array

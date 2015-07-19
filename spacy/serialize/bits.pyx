@@ -14,8 +14,8 @@ cdef Code bit_append(Code code, bint bit) nogil:
 
 
 cdef class BitArray:
-    def __init__(self):
-        self.data = b''
+    def __init__(self, data=b''):
+        self.data = data
         self.byte = 0
         self.bit_of_byte = 0
         self.i = 0

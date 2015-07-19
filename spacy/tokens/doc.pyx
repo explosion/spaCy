@@ -2,6 +2,7 @@ cimport cython
 from libc.string cimport memcpy, memset
 
 import numpy
+import struct
 
 from ..lexeme cimport EMPTY_LEXEME
 from ..strings cimport slice_unicode
@@ -16,6 +17,7 @@ from ..lexeme cimport get_attr as get_lex_attr
 from .spans import Span
 from ..structs cimport UniStr
 from .token cimport Token
+from ..serialize.bits cimport BitArray
 
 
 DEF PADDING = 5
@@ -54,7 +56,7 @@ cdef class Doc:
     Container class for annotated text.  Constructed via English.__call__ or
     Tokenizer.__call__.
     """
-    def __init__(self, Vocab vocab):
+    def __init__(self, Vocab vocab, orths_and_spaces=None):
         self.vocab = vocab
         size = 20
         self.mem = Pool()
@@ -71,24 +73,17 @@ cdef class Doc:
         self.is_tagged = False
         self.is_parsed = False
         self._py_tokens = []
-
-    @classmethod
-    def from_ids(cls, Vocab vocab, orths, spaces):
-        cdef int i
         cdef const LexemeC* lex
-        cdef Doc self = cls(vocab)
-        cdef bint space = 0
         cdef attr_t orth
-        for i in range(len(orths)):
-            orth = orths[i]
-            lex = <LexemeC*>self.vocab._by_orth.get(orth)
-            if lex != NULL:
-                assert lex.orth == orth
-                space = spaces[i]
-                self.push_back(lex, space)
-            else:
-                raise Exception('Lexeme not found: %d' % orth)
-        return self
+        cdef bint space
+        if orths_and_spaces is not None:
+            for orth, space in orths_and_spaces:
+                lex = <LexemeC*>self.vocab._by_orth.get(orth)
+                if lex != NULL:
+                    assert lex.orth == orth
+                    self.push_back(lex, space)
+                else:
+                    raise Exception('Lexeme not found: %d' % orth)
 
     def __getitem__(self, object i):
         """Get a token.
@@ -389,3 +384,26 @@ cdef class Doc:
             elif attr_id == ENT_TYPE:
                 for i in range(length):
                     tokens[i].ent_type = values[i]
+
+    def to_bytes(self):
+        bits = self.vocab.packer.pack(self)
+        return struct.pack('I', len(bits)) + bits.as_bytes()
+
+    @staticmethod
+    def from_bytes(Vocab vocab, file_):
+        keep_reading = True
+        while keep_reading:
+            try:
+                n_bits_str = file_.read(4)
+                if len(n_bits_str) < 4:
+                    break
+                n_bits = struct.unpack('I', n_bits_str)[0]
+                n_bytes = n_bits // 8 + bool(n_bits % 8)
+                data = file_.read(n_bytes)
+            except StopIteration:
+                keep_reading = False
+            bits = BitArray(data)
+            array = vocab.packer.unpack(bits)
+            doc = Doc(vocab, array[:, :2])
+            doc.from_array(vocab.packer.attrs, array)
+            yield doc

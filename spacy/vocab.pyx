@@ -16,6 +16,8 @@ from .orth cimport word_shape
 from .typedefs cimport attr_t
 
 from cymem.cymem cimport Address
+from . import util
+from .serialize.packer cimport Packer
 
 
 DEF MAX_VEC_SIZE = 100000
@@ -52,6 +54,8 @@ cdef class Vocab:
                               path.join(data_dir, 'lexemes.bin'))
             if load_vectors and path.exists(path.join(data_dir, 'vec.bin')):
                 self.repvec_length = self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
+
+        self.packer = Packer(self, util.read_encoding_freqs(data_dir))
 
     def __len__(self):
         """The current number of lexemes stored."""

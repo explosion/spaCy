@@ -5,7 +5,6 @@ import numpy
 
 from spacy.vocab import Vocab
 from spacy.serialize.packer import _BinaryCodec
-from spacy.serialize.packer import make_vocab_codec
 from spacy.serialize.packer import _AttributeCodec
 from spacy.serialize.bits import BitArray
 

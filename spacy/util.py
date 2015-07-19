@@ -2,6 +2,7 @@ from os import path
 import codecs
 import json
 import re
+from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 DATA_DIR = path.join(path.dirname(__file__), '..', 'data')
 
@@ -64,7 +65,17 @@ def read_tokenization(lang):
     return entries
 
 
-def read_detoken_rules(lang):
+def read_encoding_freqs(data_dir):
+    tags = json.load(open(path.join(data_dir, '..', 'pos', 'tag_freqs.json')))
+    heads = json.load(open(path.join(data_dir, '..', 'deps', 'head_freqs.json')))
+    deps = json.load(open(path.join(data_dir, '..', 'deps', 'dep_freqs.json')))
+    iob = json.load(open(path.join(data_dir, '..', 'ner', 'iob_freqs.json')))
+    ne_types = json.load(open(path.join(data_dir, '..', 'ner', 'ne_freqs.json')))
+    return [(TAG, tags), (HEAD, heads), (DEP, deps), (ENT_IOB, iob),
+            (ENT_TYPE, ne_types)]
+
+
+def read_detoken_rules(lang): # Deprecated?
     loc = path.join(DATA_DIR, lang, 'detokenize')
     entries = []
     with utf8open(loc) as file_:
@@ -73,7 +84,7 @@ def read_detoken_rules(lang):
     return entries
 
 
-def align_tokens(ref, indices):
+def align_tokens(ref, indices): # Deprecated, surely?
     start = 0
     queue = list(indices)
     for token in ref:
@@ -86,7 +97,7 @@ def align_tokens(ref, indices):
     assert not queue
 
 
-def detokenize(token_rules, words):
+def detokenize(token_rules, words): # Deprecated?
     """To align with treebanks, return a list of "chunks", where a chunk is a
     sequence of tokens that are separated by whitespace in actual strings. Each
     chunk should be a tuple of token indices, e.g.

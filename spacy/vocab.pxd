@@ -29,6 +29,7 @@ cdef class Vocab:
     cpdef readonly StringStore strings
     cdef readonly object pos_tags
     cdef readonly int length
+    cdef public object packer
 
     cdef const LexemeC* get(self, Pool mem, UniStr* s) except NULL
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1

@@ -1,8 +1,10 @@
 from cymem.cymem cimport Pool
-from ..structs cimport TokenC
 from thinc.typedefs cimport weight_t
+from collections import defaultdict
 
+from ..structs cimport TokenC
 from .stateclass cimport StateClass
+from ..attrs cimport TAG, HEAD, DEP, ENT_TYPE, ENT_IOB
 
 
 cdef weight_t MIN_SCORE = -90000
@@ -28,6 +30,9 @@ cdef class TransitionSystem:
                 i += 1
         self.c = moves
         self.root_label = self.strings['ROOT']
+        self.freqs = {}
+        for attr in (TAG, HEAD, DEP, ENT_TYPE, ENT_IOB):
+            self.freqs[attr] = defaultdict(int)
 
     cdef int initialize_state(self, StateClass state) except -1:
         pass
