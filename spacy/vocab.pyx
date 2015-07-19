@@ -55,7 +55,8 @@ cdef class Vocab:
             if load_vectors and path.exists(path.join(data_dir, 'vec.bin')):
                 self.repvec_length = self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
 
-        self.packer = Packer(self, util.read_encoding_freqs(data_dir))
+        #self.packer = Packer(self, util.read_encoding_freqs(data_dir))
+        self.packer = None
 
     def __len__(self):
         """The current number of lexemes stored."""
@@ -69,18 +70,17 @@ cdef class Vocab:
         lex = <LexemeC*>self._by_hash.get(c_str.key)
         if lex != NULL:
             return lex
-        #if c_str.n < 3:
-        oov = mem is not self.mem
-        mem = self.mem
+        cdef bint is_oov = mem is not self.mem
+        if c_str.n < 3:
+            mem = self.mem
         cdef unicode py_str = c_str.chars[:c_str.n]
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
         props = self.lexeme_props_getter(py_str)
         set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
-        #if mem is self.mem:
-        #else:
-        if oov:
+        if is_oov:
             lex.id = 0
-        self._add_lex_to_vocab(c_str.key, lex)
+        else:
+            self._add_lex_to_vocab(c_str.key, lex)
         return lex
 
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1:
