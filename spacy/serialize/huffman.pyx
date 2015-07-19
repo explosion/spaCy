@@ -1,6 +1,7 @@
 cimport cython
 from libcpp.queue cimport priority_queue
 from libcpp.pair cimport pair
+import numpy
 
 from ..typedefs cimport attr_t
 
@@ -58,6 +59,16 @@ cdef class HuffmanCodec:
             i = self._map[word]
             bits.extend(self.codes[i].bits, self.codes[i].length)
         return bits
+
+    def n_bits(self, msg, overhead=0):
+        cdef int i
+        length = 0
+        for word in msg:
+            if word not in self._map:
+                return numpy.nan
+            i = self._map[word]
+            length += self.codes[i].length
+        return length + overhead * len(msg)
 
     def decode(self, bits, msg):
         node = self.root
