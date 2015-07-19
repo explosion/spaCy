@@ -68,13 +68,15 @@ def _gen_orths(Vocab vocab):
 def _gen_chars(Vocab vocab):
     cdef attr_t orth
     cdef size_t addr
-    char_weights = {b' ': 0.0}
+    char_weights = {u' ': 0.0}
     cdef unicode string
-    cdef unicode char
+    cdef bytes char
+    cdef bytes utf8_str
     for orth, addr in vocab._by_orth.items():
         lex = <LexemeC*>addr
         string = vocab.strings[lex.orth]
-        for char in string:
+        utf8_str = string.encode('utf8')
+        for char in utf8_str:
             char_weights.setdefault(char, 0.0)
             char_weights[char] += c_exp(lex.prob)
         char_weights[u' '] += c_exp(lex.prob)
@@ -102,10 +104,7 @@ cdef class Packer:
         return cls(vocab, util.read_encoding_freqs(data_dir))
 
     def pack(self, Doc doc):
-        cdef BitArray bits = BitArray()
-        cdef uint32_t length = len(doc.string)
-        bits.extend(length, 32)
-        self._char_encode(doc, bits)
+        bits = self._orth_encode(doc)
         array = doc.to_array(self.attrs)
         for i, codec in enumerate(self._codecs):
             codec.encode(array[:, i], bits)
@@ -114,7 +113,7 @@ cdef class Packer:
     def unpack(self, BitArray bits):
         bits.seek(0)
         cdef uint32_t length = bits.read32()
-        doc = self._char_decode(bits, length)
+        doc = self._orth_decode(bits, length)
 
         array = numpy.zeros(shape=(len(doc), len(self._codecs)), dtype=numpy.int32)
         for i, codec in enumerate(self._codecs):
@@ -123,21 +122,45 @@ cdef class Packer:
         doc.from_array(self.attrs, array)
         return doc
 
-    def _char_encode(self, Doc doc, BitArray bits):
-        cdef unicode string = doc.string
-        self.char_codec.encode(string, bits)
+    def _orth_encode(self, Doc doc):
+        cdef BitArray bits = BitArray()
+        orths = [w.orth for w in doc]
+        cdef uint32_t length = len(doc)
+        bits.extend(length, 32)
+        self.orth_codec.encode(orths, bits)
+        for token in doc:
+            bits.append(bool(token.whitespace_))
+        return bits
+
+    def _orth_decode(self, BitArray bits, n):
+        orths = [0] * n
+        self.orth_codec.decode(bits, orths)
+        orths_and_spaces = zip(orths, bits)
+        cdef Doc doc = Doc(self.vocab, orths_and_spaces)
+        return doc
+
+    def _char_encode(self, Doc doc):
+        cdef BitArray bits = BitArray()
+        cdef bytes utf8_str = doc.string.encode('utf8')
+        cdef uint32_t length = len(utf8_str)
+        bits.extend(length, 32)
+
+        cdef bytes utf8_string = doc.string.encode('utf8')
+        self.char_codec.encode(utf8_string, bits)
         for token in doc:
             for i in range(len(token)-1):
                 bits.append(False)
             bits.append(True)
             if token.whitespace_:
                 bits.append(False)
+        return bits
 
     def _char_decode(self, BitArray bits, n):
-        chars = [u''] * n
+        chars = [b''] * n
         self.char_codec.decode(bits, chars)
+        cdef bytes utf8_str = b''.join(chars)
 
-        cdef unicode string = u''.join(chars)
+        cdef unicode string = utf8_str.decode('utf8')
         cdef Doc tokens = Doc(self.vocab)
         cdef int i
         cdef int start = 0
