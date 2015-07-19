@@ -403,7 +403,5 @@ cdef class Doc:
             except StopIteration:
                 keep_reading = False
             bits = BitArray(data)
-            array = vocab.packer.unpack(bits)
-            doc = Doc(vocab, array[:, :2])
-            doc.from_array(vocab.packer.attrs, array)
+            doc = vocab.packer.unpack(bits)
             yield doc
