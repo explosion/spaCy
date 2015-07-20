@@ -5,10 +5,15 @@ from .typedefs cimport attr_t
 
 from libc.stdint cimport int64_t
 
-from .structs cimport Utf8Str, UniStr
+from .structs cimport UniStr
 from .typedefs cimport hash_t
 
 cpdef hash_t hash_string(unicode string) except 0
+
+
+ctypedef union Utf8Str:
+    unsigned char[8] s
+    unsigned char* p
 
 
 cdef inline void slice_unicode(UniStr* s, Py_UNICODE* chars, int start, int end) nogil:
@@ -19,10 +24,10 @@ cdef inline void slice_unicode(UniStr* s, Py_UNICODE* chars, int start, int end)
 
 cdef class StringStore:
     cdef Pool mem
-    cdef Utf8Str* strings
+    cdef Utf8Str* c
     cdef int64_t size
 
     cdef PreshMap _map
     cdef size_t _resize_at
 
-    cdef const Utf8Str* intern(self, char* chars, int length, attr_t* id_) except NULL
+    cdef const Utf8Str* intern(self, unsigned char* chars, int length) except NULL
