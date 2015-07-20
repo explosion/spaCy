@@ -1,3 +1,4 @@
+# cython: profile=True
 cimport cython
 from libcpp.queue cimport priority_queue
 from libcpp.pair cimport pair
@@ -74,6 +75,8 @@ cdef class HuffmanCodec:
         node = self.root
         cdef int i = 0
         cdef int n = len(msg)
+        cdef int branch
+        cdef bint bit
         for bit in bits:
             branch = node.right if bit else node.left
             if branch >= 0:
