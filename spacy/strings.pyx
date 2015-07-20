@@ -123,7 +123,7 @@ cdef class StringStore:
             for i in range(1, self.size):
                 string = &self.c[i]
                 py_string = _decode(string)
-                file_.write(py_string.decode('utf8'))
+                file_.write(py_string)
                 if (i+1) != self.size:
                     file_.write(SEPARATOR)
 
