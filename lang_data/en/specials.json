@@ -6,21 +6,21 @@
 "ain't": [{"F": "ai", "L": "be", "pos": "VBP", "number": 2},
           {"F": "n't", "L": "not", "pos": "RB"}],
 "aint": [{"F": "ai", "L": "be", "pos": "VBP", "number": 2},
-          {"F": "n't", "L": "not", "pos": "RB"}],
+          {"F": "nt", "L": "not", "pos": "RB"}],
 "Ain't": [{"F": "Ai", "L": "be", "pos": "VBP", "number": 2},
           {"F": "n't", "L": "not", "pos": "RB"}],
 
 "aren't": [{"F": "are", "L": "be", "pos": "VBP", "number": 2},
            {"F": "n't", "L": "not"}],
 "arent": [{"F": "are", "L": "be", "pos": "VBP", "number": 2},
-           {"F": "n't", "L": "not"}],
+           {"F": "nt", "L": "not"}],
 "Aren't": [{"F": "Are", "L": "be", "pos": "VBP", "number": 2},
            {"F": "n't", "L": "not"}],
 
 "can't": [{"F": "ca", "L": "can", "pos": "MD"},
           {"F": "n't", "L": "not", "pos": "RB"}],
 "cant": [{"F": "ca", "L": "can", "pos": "MD"},
-          {"F": "n't", "L": "not", "pos": "RB"}],
+          {"F": "nt", "L": "not", "pos": "RB"}],
 "Can't": [{"F": "Ca", "L": "can", "pos": "MD"},
           {"F": "n't", "L": "not", "pos": "RB"}],
 
@@ -32,14 +32,14 @@
 "could've":    [{"F": "could", "pos": "MD"},
                 {"F": "'ve", "L": "have", "pos": "VB"}],
 "couldve":    [{"F": "could", "pos": "MD"},
-                {"F": "'ve", "L": "have", "pos": "VB"}],
+                {"F": "ve", "L": "have", "pos": "VB"}],
 "Could've":    [{"F": "Could", "pos": "MD"},
                 {"F": "'ve", "L": "have", "pos": "VB"}],
 
 "couldn't":    [{"F": "could", "pos": "MD"},
                 {"F": "n't", "L": "not", "pos": "RB"}],
 "couldnt":    [{"F": "could", "pos": "MD"},
-                {"F": "n't", "L": "not", "pos": "RB"}],
+                {"F": "nt", "L": "not", "pos": "RB"}],
 "Couldn't":    [{"F": "Could", "pos": "MD"},
                 {"F": "n't", "L": "not", "pos": "RB"}],
 
@@ -47,8 +47,8 @@
                 {"F": "n't", "L": "not", "pos": "RB"},
                 {"F": "'ve", "pos": "VB"}],
 "couldntve": [{"F": "could", "pos": "MD"},
-                {"F": "n't", "L": "not", "pos": "RB"},
-                {"F": "'ve", "pos": "VB"}],
+                {"F": "nt", "L": "not", "pos": "RB"},
+                {"F": "ve", "pos": "VB"}],
 "Couldn't've": [{"F": "Could", "pos": "MD"},
                 {"F": "n't", "L": "not", "pos": "RB"},
                 {"F": "'ve", "pos": "VB"}],
@@ -56,28 +56,28 @@
 "didn't":  [{"F": "did", "pos": "VBD", "L": "do"},
             {"F": "n't", "L": "not", "pos": "RB"}],
 "didnt":  [{"F": "did", "pos": "VBD", "L": "do"},
-            {"F": "n't", "L": "not", "pos": "RB"}],
+            {"F": "nt", "L": "not", "pos": "RB"}],
 "Didn't":  [{"F": "Did", "pos": "VBD", "L": "do"},
             {"F": "n't", "L": "not", "pos": "RB"}],
 
 "doesn't": [{"F": "does", "L": "do", "pos": "VBZ"},
             {"F": "n't", "L": "not", "pos": "RB"}],
 "doesnt": [{"F": "does", "L": "do", "pos": "VBZ"},
-            {"F": "n't", "L": "not", "pos": "RB"}],
+            {"F": "nt", "L": "not", "pos": "RB"}],
 "Doesn't": [{"F": "Does", "L": "do", "pos": "VBZ"},
             {"F": "n't", "L": "not", "pos": "RB"}],
 
 "don't":   [{"F": "do", "L": "do"},
             {"F": "n't", "L": "not", "pos": "RB"}],
 "dont":   [{"F": "do", "L": "do"},
-            {"F": "n't", "L": "not", "pos": "RB"}],
+            {"F": "nt", "L": "not", "pos": "RB"}],
 "Don't":   [{"F": "Do", "L": "do"},
             {"F": "n't", "L": "not", "pos": "RB"}],
 
 "hadn't": [{"F": "had", "L": "have", "pos": "VBD"},
             {"F": "n't", "L": "not", "pos": "RB"}],
 "hadnt": [{"F": "had", "L": "have", "pos": "VBD"},
-            {"F": "n't", "L": "not", "pos": "RB"}],
+            {"F": "nt", "L": "not", "pos": "RB"}],
 "Hadn't": [{"F": "Had", "L": "have", "pos": "VBD"},
             {"F": "n't", "L": "not", "pos": "RB"}],
 
@@ -88,25 +88,25 @@
 "hasn't": [{"F": "has"},
             {"F": "n't", "L": "not", "pos": "RB"}],
 "hasnt": [{"F": "has"},
-            {"F": "n't", "L": "not", "pos": "RB"}],
+            {"F": "nt", "L": "not", "pos": "RB"}],
 "haven't": [{"F": "have", "pos": "VB"},
             {"F": "n't", "L": "not", "pos": "RB"}],
 "havent": [{"F": "have", "pos": "VB"},
-            {"F": "n't", "L": "not", "pos": "RB"}],
+            {"F": "nt", "L": "not", "pos": "RB"}],
 
 
 "he'd": [{"F": "he", "L": "-PRON-"},
             {"F": "'d", "L": "would", "pos": "MD"}],
 "hed": [{"F": "he", "L": "-PRON-"},
-            {"F": "'d", "L": "would", "pos": "MD"}],
+            {"F": "d", "L": "would", "pos": "MD"}],
 
 
 "he'd've": [{"F": "he", "L": "-PRON-"},
             {"F": "'d", "L": "would", "pos": "MD"},
             {"F": "'ve", "pos": "VB"}],
 "hedve": [{"F": "he", "L": "-PRON-"},
-            {"F": "'d", "L": "would", "pos": "MD"},
-            {"F": "'ve", "pos": "VB"}],
+            {"F": "d", "L": "would", "pos": "MD"},
+            {"F": "ve", "pos": "VB"}],
 
 
 "he'll": [{"F": "he", "L": "-PRON-"},
@@ -116,25 +116,25 @@
             {"F": "'s"}],
 
 "hes": [{"F": "he", "L": "-PRON-"},
-            {"F": "'s"}],
+            {"F": "s"}],
 
 
 "how'd": [{"F": "how"},
             {"F": "'d", "L": "would", "pos": "MD"}],
 "howd": [{"F": "how"},
-            {"F": "'d", "L": "would", "pos": "MD"}],
+            {"F": "d", "L": "would", "pos": "MD"}],
 
 
 "how'll": [{"F": "how"},
             {"F": "'ll", "L": "will", "pos": "MD"}],
 "howll": [{"F": "how"},
-            {"F": "'ll", "L": "will", "pos": "MD"}],
+            {"F": "ll", "L": "will", "pos": "MD"}],
 
 
 "how's": [{"F": "how"},
             {"F": "'s"}],
 "hows": [{"F": "how"},
-            {"F": "'s"}],
+            {"F": "s"}],
 
 
 "I'd": [{"F": "I", "L": "-PRON-"},
@@ -150,9 +150,9 @@
 "I'm": [{"F": "I", "L": "-PRON-"},
         {"F": "'m", "L": "be", "pos": "VBP", "number": 1, "tenspect": 1}],
 "Im": [{"F": "I", "L": "-PRON-"},
-        {"F": "'m", "L": "be", "pos": "VBP", "number": 1, "tenspect": 1}],
-"im": [{"F": "m", "L": "-PRON-"},
-        {"F": "'m", "L": "be", "pos": "VBP", "number": 1, "tenspect": 1}],
+        {"F": "m", "L": "be", "pos": "VBP", "number": 1, "tenspect": 1}],
+"im": [{"F": "i", "L": "-PRON-"},
+        {"F": "m", "L": "be", "pos": "VBP", "number": 1, "tenspect": 1}],
 
 "I'ma": [{"F": "I", "L": "-PRON-"},
             {"F": "'ma"}],
@@ -163,7 +163,7 @@
 "isn't": [{"F": "is", "L": "be", "pos": "VBZ"},
             {"F": "n't", "L": "not", "pos": "RB"}],
 "isnt": [{"F": "is", "L": "be", "pos": "VBZ"},
-            {"F": "n't", "L": "not", "pos": "RB"}],
+            {"F": "nt", "L": "not", "pos": "RB"}],
 
 "Isn't": [{"F": "Is", "L": "be", "pos": "VBZ"},
             {"F": "n't", "L": "not", "pos": "RB"}],
@@ -179,7 +179,7 @@
 "it'll": [{"F": "it", "L": "-PRON-"},
             {"F": "'ll", "L": "will", "pos": "MD"}],
 "itll": [{"F": "it", "L": "-PRON-"},
-            {"F": "'ll", "L": "will", "pos": "MD"}],
+            {"F": "ll", "L": "will", "pos": "MD"}],
 
 
 "it's": [{"F": "it", "L": "-PRON-"},
@@ -188,7 +188,7 @@
 "let's": [{"F": "let"},
             {"F": "'s"}],
 "lets": [{"F": "let"},
-            {"F": "'s"}],
+            {"F": "s", "L": "'s"}],
 
 
 "mightn't": [{"F": "might"},
@@ -224,7 +224,7 @@
                 {"F": "'ve", "pos": "VB"}],
 
 "she'll": [{"F": "she", "L": "-PRON-"},
-            {"F": "will"}],
+            {"F": "'ll", "L": "will"}],
 
 "she's": [{"F": "she", "L": "-PRON-"},
             {"F": "'s"}],
@@ -243,7 +243,7 @@
             {"F": "'s"}],
 
 "thats":  [{"F": "that"},
-            {"F": "'s"}],
+            {"F": "s", "L": "'s"}],
 
 
 "there'd": [{"F": "there"},
@@ -369,7 +369,7 @@
 "won't":   [{"F": "wo"},
             {"F": "n't", "L": "not", "pos": "RB"}],
 "wont":   [{"F": "wo"},
-            {"F": "n't", "L": "not", "pos": "RB"}],
+            {"F": "nt", "L": "not", "pos": "RB"}],
 
 
 "would've":    [{"F": "would"},
@@ -391,16 +391,13 @@
 
 "you'll":  [{"F": "you", "L": "-PRON-"},
             {"F": "'ll", "L": "will", "pos": "MD"}],
-"You'll":  [{"F": "You", "L": "-PRON-"},
-            {"F": "'ll", "L": "will", "pos": "MD"}],
 
 "you're":  [{"F": "you", "L": "-PRON-"},
             {"F": "'re"}],
 "You're":  [{"F": "You", "L": "-PRON-"},
             {"F": "'re"}],
 
-"You've":  [{"F": "You", "L": "-PRON-"},
-            {"F": "'ve"}],
+
 "you've":  [{"F": "you", "L": "-PRON-"},
             {"F": "'ve", "L": "have", "pos": "VB"}],
 
@@ -621,8 +618,5 @@
 "I.E.": [{"F": "I.E."}],
 "e.g.": [{"F": "e.g."}],
 "E.g.": [{"F": "E.g."}],
-"E.G.": [{"F": "E.G."}],
-"\n": [{"F": "\n", "pos": "SP"}],
-"\t": [{"F": "\t", "pos": "SP"}],
-" ": [{"F": " ", "pos": "SP"}]
+"E.G.": [{"F": "E.G."}]
 }
