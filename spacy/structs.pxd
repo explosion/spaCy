@@ -80,11 +80,6 @@ cdef struct TokenC:
     int ent_type
 
 
-cdef struct Utf8Str:
-    unsigned char* chars
-    int length
-
-
 cdef struct UniStr:
     Py_UNICODE* chars
     size_t n
