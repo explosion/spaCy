@@ -120,7 +120,7 @@ cdef class Packer:
         if self.attrs:
             array = doc.to_array(self.attrs)
             for i, codec in enumerate(self._codecs):
-                codec.encode(array[:, i], bits)
+                codec.encode_int32(array[:, i], bits)
         return bits
 
     def unpack(self, BitArray bits):
@@ -133,7 +133,7 @@ cdef class Packer:
 
         array = numpy.zeros(shape=(len(doc), len(self._codecs)), dtype=numpy.int32)
         for i, codec in enumerate(self._codecs):
-            codec.decode(bits, array[:, i])
+            codec.decode_int32(bits, array[:, i])
 
         doc.from_array(self.attrs, array)
         return doc
@@ -142,7 +142,7 @@ cdef class Packer:
         cdef BitArray bits = BitArray()
         cdef int32_t length = len(doc)
         bits.extend(length, 32) 
-        self.orth_codec.encode(orths, bits)
+        self.orth_codec.encode_int32(orths, bits)
         for token in doc:
             bits.append(bool(token.whitespace_))
         return bits
