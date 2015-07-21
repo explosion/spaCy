@@ -106,15 +106,9 @@ cdef class Packer:
         return cls(vocab, util.read_encoding_freqs(data_dir))
 
     def pack(self, Doc doc):
-        orths = doc.to_array([ORTH])
-        orths = orths[:, 0]
-        cdef bytes chars = doc.string.encode('utf8')
-        # n_bits returns nan for oov words, i.e. can't encode message.
-        # So, it's important to write the conditional like this.
-        if self.orth_codec.n_bits(orths) < self.char_codec.n_bits(chars, overhead=1):
-            bits = self._orth_encode(doc, orths)
-        else:
-            bits = self._char_encode(doc, chars)
+        bits = self._orth_encode(doc)
+        if bits is None:
+            bits = self._char_encode(doc)
         
         cdef int i
         if self.attrs:
@@ -138,11 +132,14 @@ cdef class Packer:
         doc.from_array(self.attrs, array)
         return doc
 
-    def _orth_encode(self, Doc doc, attr_t[:] orths):
+    def _orth_encode(self, Doc doc):
         cdef BitArray bits = BitArray()
         cdef int32_t length = len(doc)
         bits.extend(length, 32) 
-        self.orth_codec.encode_int32(orths, bits)
+        orths = doc.to_array([ORTH])
+        n_bits = self.orth_codec.encode_int32(orths[:, 0], bits)
+        if n_bits == 0:
+            return None
         for token in doc:
             bits.append(bool(token.whitespace_))
         return bits
@@ -154,7 +151,8 @@ cdef class Packer:
         cdef Doc doc = Doc(self.vocab, orths_and_spaces)
         return doc
 
-    def _char_encode(self, Doc doc, bytes utf8_str):
+    def _char_encode(self, Doc doc):
+        cdef bytes utf8_str = doc.string.encode('utf8')
         cdef BitArray bits = BitArray()
         cdef int32_t length = len(utf8_str)
         # Signal chars with negative length
