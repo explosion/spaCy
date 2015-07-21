@@ -146,7 +146,7 @@ cdef class Packer:
 
     def _orth_decode(self, BitArray bits, n):
         orths = numpy.ndarray(shape=(n,), dtype=numpy.int32)
-        self.orth_codec.decode(bits, orths)
+        self.orth_codec.decode_int32(bits, orths)
         orths_and_spaces = zip(orths, bits)
         cdef Doc doc = Doc(self.vocab, orths_and_spaces)
         return doc
