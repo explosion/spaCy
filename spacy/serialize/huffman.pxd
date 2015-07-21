@@ -4,7 +4,7 @@ from libc.stdint cimport int64_t
 from libc.stdint cimport int32_t
 from libc.stdint cimport uint64_t
 
-from .bits cimport Code
+from .bits cimport BitArray, Code
 
 
 cdef struct Node:
@@ -19,3 +19,6 @@ cdef class HuffmanCodec:
 
     cdef readonly list leaves
     cdef readonly dict _map 
+    
+    cpdef int encode_int32(self, int32_t[:] msg, BitArray bits) except -1
+    cpdef int decode_int32(self, BitArray bits, int32_t[:] msg) except -1
