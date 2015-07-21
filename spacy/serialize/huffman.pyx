@@ -130,10 +130,8 @@ cdef class HuffmanCodec:
                     if i_msg == n_msg:
                         break
             i_byte += 1
-        else:
-            raise Exception("Buffer exhausted at %d/%d symbols read." % (i_msg, len(msg)))
-
-
+        # as_bytes doesn't seek forward, so consume the number of bits we used
+        bits.seek(bits.i + (i_byte * 8) + i_bit)
 
     property strings:
         @cython.boundscheck(False)
