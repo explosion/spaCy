@@ -105,6 +105,7 @@ cdef class HuffmanCodec:
 
     @cython.boundscheck(False)
     cpdef int decode_int32(self, BitArray bits, int32_t[:] msg) except -1:
+        assert bits.i % 8 == 0
         cdef Node node = self.root
         cdef int branch
 
@@ -112,26 +113,23 @@ cdef class HuffmanCodec:
         cdef bytes bytes_ = bits.as_bytes()
         cdef unsigned char byte
         cdef int i_msg = 0
-        cdef int i_byte = 0
-        cdef int i_bit = 0
-        cdef unsigned char bit
-        cdef int32_t one = 1
+        cdef int i_byte = bits.i // 8
+        cdef unsigned char i_bit = 0
+        cdef unsigned char one = 1
         while i_msg < n_msg:
-            byte = bytes_[i_byte]
+            byte = ord(bytes_[i_byte])
+            i_byte += 1
             for i_bit in range(8):
-                bit = byte & (one << i_bit)
-                branch = node.right if bit else node.left
+                branch = node.right if (byte & (one << i_bit)) else node.left
+                bits.i += 1
                 if branch >= 0:
                     node = self.nodes.at(branch)
                 else:
                     msg[i_msg] = self.leaves[-(branch + 1)]
-                    node = self.nodes.back()
                     i_msg += 1
                     if i_msg == n_msg:
                         break
-            i_byte += 1
-        # as_bytes doesn't seek forward, so consume the number of bits we used
-        bits.seek(bits.i + (i_byte * 8) + i_bit)
+                    node = self.root
 
     property strings:
         @cython.boundscheck(False)
