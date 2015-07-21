@@ -44,6 +44,9 @@ def setup_tokenizer(lang_data_dir, tok_dir):
 
 
 def _read_clusters(loc):
+    if not loc.exists():
+        print "Warning: Clusters file not found"
+        return {}
     clusters = {}
     for line in codecs.open(str(loc), 'r', 'utf8'):
         try:
@@ -68,6 +71,9 @@ def _read_clusters(loc):
 
 
 def _read_probs(loc):
+    if not loc.exists():
+        print "Warning: Probabilities file not found"
+        return {}
     probs = {}
     for i, line in enumerate(codecs.open(str(loc), 'r', 'utf8')):
         prob, word = line.split()
@@ -78,6 +84,9 @@ def _read_probs(loc):
 
 def _read_senses(loc):
     lexicon = defaultdict(lambda: defaultdict(list))
+    if not loc.exists():
+        print "Warning: WordNet senses not found"
+        return lexicon
     sense_names = dict((s, i) for i, s in enumerate(spacy.senses.STRINGS))
     pos_ids = {'noun': NOUN, 'verb': VERB, 'adjective': ADJ}
     for line in codecs.open(str(loc), 'r', 'utf8'):
@@ -99,6 +108,8 @@ def setup_vocab(src_dir, dst_dir):
     vectors_src = src_dir / 'vectors.tgz'
     if vectors_src.exists():
         write_binary_vectors(str(vectors_src), str(dst_dir / 'vec.bin'))
+    else:
+        print "Warning: Word vectors file not found"
     vocab = Vocab(data_dir=None, get_lex_props=get_lex_props)
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs = _read_probs(src_dir / 'words.sgt.prob')
