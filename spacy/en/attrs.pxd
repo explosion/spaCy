@@ -14,6 +14,9 @@ from ..attrs cimport LEMMA as _LEMMA
 from ..attrs cimport POS as _POS
 from ..attrs cimport TAG as _TAG
 from ..attrs cimport DEP as _DEP
+from ..attrs cimport HEAD as _HEAD
+from ..attrs cimport ENT_IOB as _ENT_IOB
+from ..attrs cimport ENT_TYPE as _ENT_TYPE
 
 
 cpdef enum:
