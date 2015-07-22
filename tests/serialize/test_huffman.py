@@ -96,6 +96,7 @@ def test_rosetta():
     assert my_exp_len == py_exp_len
 
 
+@pytest.mark.slow
 def test_vocab(EN):
     codec = HuffmanCodec([(w.orth, numpy.exp(w.prob)) for w in EN.vocab])
     expected_length = 0
@@ -105,6 +106,7 @@ def test_vocab(EN):
     assert 8 < expected_length < 15
 
 
+@pytest.mark.slow
 def test_freqs():
     freqs = []
     words = []

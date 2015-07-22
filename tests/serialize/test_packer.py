@@ -120,5 +120,3 @@ def test_packer_annotated(tokenizer):
     assert [t.tag_ for t in result] == ['DT', 'NN', 'VBD']
     assert [t.dep_ for t in result] == ['det', 'nsubj', 'ROOT']
     assert [(t.head.i - t.i) for t in result] == [1, 1, 0]
-
-
