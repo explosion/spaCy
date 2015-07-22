@@ -10,6 +10,7 @@ from cpython cimport Py_UNICODE_ISSPACE
 
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
+from murmurhash.mrmr cimport hash64
 
 from .morphology cimport set_morph_from_dict
 from .strings cimport hash_string
@@ -91,11 +92,11 @@ cdef class Tokenizer:
         # We find spans of whitespace and non-space characters, and ignore
         # spans that are exactly ' '. So, our sequences will all be separated
         # by either ' ' or nothing.
-        for i range(1, length):
+        for i in range(1, length):
             uc = chars_ptr[i]
             if Py_UNICODE_ISSPACE(uc) != in_ws:
                 if start < i:
-                    key = hash64(chars_ptr, (i - start) * sizeof(Py_UNICODE), 0)
+                    key = hash64(&chars_ptr[start], (i - start) * sizeof(Py_UNICODE), 0)
                     cache_hit = self._try_cache(key, tokens)
                     if not cache_hit:
                         self._tokenize(tokens, string[start:i], key)
@@ -107,7 +108,7 @@ cdef class Tokenizer:
                     start = i
         i += 1
         if start < i:
-            key = hash64(chars_ptr, (i - start) * sizeof(Py_UNICODE), 0)
+            key = hash64(&chars_ptr[start], (i - start) * sizeof(Py_UNICODE), 0)
             cache_hit = self._try_cache(key, tokens)
             if not cache_hit:
                 self._tokenize(tokens, string[start:], key)
