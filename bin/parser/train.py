@@ -139,8 +139,8 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                 nlp.tagger.train(tokens, gold.tags)
         random.shuffle(gold_tuples)
         print '%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
-                                               scorer.tags_acc,
-                                               scorer.token_acc)
+                                                   scorer.tags_acc,
+                                                   scorer.token_acc)
     nlp.end_training()
 
 def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False,
