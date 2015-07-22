@@ -85,6 +85,9 @@ cdef class BiluoPushDown(TransitionSystem):
             elif gold.c.ner[i].move == OUT:
                 self.freqs[ENT_IOB][1] += 1
                 self.freqs[ENT_TYPE][0] += 1
+            else:
+                self.freqs[ENT_IOB][1] += 1
+                self.freqs[ENT_TYPE][0] += 1
 
     cdef Transition lookup_transition(self, object name) except *:
         if name == '-':
