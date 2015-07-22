@@ -152,23 +152,18 @@ class English(object):
         self.entity.model.end_training()
         self.tagger.model.end_training()
         self.vocab.strings.dump(path.join(data_dir, 'vocab', 'strings.txt'))
-        
-        with open(path.join(data_dir, 'pos', 'tag_freqs.json'), 'w') as file_:
-            json.dump(list(self.tagger.freqs[TAG].items()), file_)
- 
-        with open(path.join(data_dir, 'deps', 'head_freqs.json'), 'w') as file_:
-            json.dump(list(self.parser.moves.freqs[HEAD].items()), file_)
- 
-        with open(path.join(data_dir, 'deps', 'dep_freqs.json'), 'w') as file_:
-            json.dump(list(self.parser.moves.freqs[DEP].items()), file_)
- 
-        with open(path.join(data_dir, 'ner', 'iob_freqs.json'), 'w') as file_:
-            json.dump(list(self.entity.moves.freqs[ENT_IOB].items()), file_)
- 
-        with open(path.join(data_dir, 'ner', 'ne_freqs.json'), 'w') as file_:
-            json.dump(list(self.entity.moves.freqs[ENT_TYPE].items()), file_)
+
+        packer = Packer(self.vocab, [
+            (TAG, self.tagger.moves.freqs[TAG].items()),
+            (HEAD, self.parser.moves.freqs[HEAD].items()),
+            (DEP, self.parser.moves.freqs[DEP].items()),
+            (ENT_IOB, self.entity.moves.freqs[ENT_IOB].items()),
+            (ENT_TYPE, self.entity.moves.freqs[ENT_TYPE].items())
+        ])
+
+        packer.dump(path.join(data_dir, 'vocab'))
 
     @property
     def tags(self):
-        """List of part-of-speech tag names."""
+        """Deprecated. List of part-of-speech tag names."""
         return self.tagger.tag_names
