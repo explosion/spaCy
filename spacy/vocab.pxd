@@ -4,7 +4,7 @@ from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
 
-from .structs cimport LexemeC, TokenC, UniStr
+from .structs cimport LexemeC, TokenC
 from .typedefs cimport utf8_t, hash_t
 from .strings cimport StringStore
 
@@ -31,7 +31,7 @@ cdef class Vocab:
     cdef readonly int length
     cdef public object packer
 
-    cdef const LexemeC* get(self, Pool mem, UniStr* s) except NULL
+    cdef const LexemeC* get(self, Pool mem, unicode string) except NULL
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1
 
     cdef PreshMap _by_hash

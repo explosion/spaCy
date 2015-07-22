@@ -10,7 +10,6 @@ import math
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport set_lex_struct_props
 from .lexeme cimport Lexeme
-from .strings cimport slice_unicode
 from .strings cimport hash_string
 from .orth cimport word_shape
 from .typedefs cimport attr_t
@@ -62,25 +61,25 @@ cdef class Vocab:
         """The current number of lexemes stored."""
         return self.length
 
-    cdef const LexemeC* get(self, Pool mem, UniStr* c_str) except NULL:
+    cdef const LexemeC* get(self, Pool mem, unicode string) except NULL:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
         if necessary, using memory acquired from the given pool.  If the pool
         is the lexicon's own memory, the lexeme is saved in the lexicon.'''
         cdef LexemeC* lex
-        lex = <LexemeC*>self._by_hash.get(c_str.key)
+        cdef hash_t key = hash_string(string)
+        lex = <LexemeC*>self._by_hash.get(key)
         if lex != NULL:
             return lex
         cdef bint is_oov = mem is not self.mem
-        if c_str.n < 3:
+        if len(string) < 3:
             mem = self.mem
-        cdef unicode py_str = c_str.chars[:c_str.n]
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        props = self.lexeme_props_getter(py_str)
+        props = self.lexeme_props_getter(string)
         set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
         if is_oov:
             lex.id = 0
         else:
-            self._add_lex_to_vocab(c_str.key, lex)
+            self._add_lex_to_vocab(key, lex)
         return lex
 
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1:
@@ -109,7 +108,6 @@ cdef class Vocab:
               An instance of the Lexeme Python class, with data copied on
               instantiation.
         '''
-        cdef UniStr c_str
         cdef const LexemeC* lexeme
         cdef attr_t orth
         if type(id_or_string) == int:
@@ -119,8 +117,7 @@ cdef class Vocab:
                 raise KeyError(id_or_string)
             assert lexeme.orth == orth, ('%d vs %d' % (lexeme.orth, orth))
         elif type(id_or_string) == unicode:
-            slice_unicode(&c_str, id_or_string, 0, len(id_or_string))
-            lexeme = self.get(self.mem, &c_str)
+            lexeme = self.get(self.mem, id_or_string)
             assert lexeme.orth == self.strings[id_or_string]
         else:
             raise ValueError("Vocab unable to map type: "
@@ -128,15 +125,14 @@ cdef class Vocab:
                 "int --> Lexeme" % str(type(id_or_string)))
         return Lexeme.from_ptr(lexeme, self.strings, self.repvec_length)
 
-    def __setitem__(self, unicode py_str, dict props):
-        cdef UniStr c_str
-        slice_unicode(&c_str, py_str, 0, len(py_str))
+    def __setitem__(self, unicode string, dict props):
+        cdef hash_t key = hash_string(string)
         cdef LexemeC* lex
-        lex = <LexemeC*>self._by_hash.get(c_str.key)
+        lex = <LexemeC*>self._by_hash.get(key)
         if lex == NULL:
             lex = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
         set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
-        self._add_lex_to_vocab(c_str.key, lex)
+        self._add_lex_to_vocab(key, lex)
 
     def dump(self, loc):
         if path.exists(loc):

@@ -6,13 +6,14 @@ import re
 
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
+from cpython cimport Py_UNICODE_ISSPACE
 
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 
-from .structs cimport UniStr
-from .strings cimport slice_unicode
 from .morphology cimport set_morph_from_dict
+from .strings cimport hash_string
+cimport cython
 
 from . import util
 from .util import read_lang_data
@@ -42,17 +43,16 @@ cdef class Tokenizer:
         cdef Doc tokens = Doc(self.vocab)
         if sum([len(s) for s in strings]) == 0:
             return tokens
-        cdef UniStr string_struct
         cdef unicode py_string
         cdef int idx = 0
         for i, py_string in enumerate(strings):
-            slice_unicode(&string_struct, py_string, 0, len(py_string))
             # Note that we pass tokens.mem here --- the Doc object has ownership
             tokens.push_back(
-                <const LexemeC*>self.vocab.get(tokens.mem, &string_struct), True)
+                <const LexemeC*>self.vocab.get(tokens.mem, py_string), True)
             idx += len(py_string) + 1
         return tokens
 
+    @cython.boundscheck(False)
     def __call__(self, unicode string):
         """Tokenize a string.
 
@@ -80,16 +80,21 @@ cdef class Tokenizer:
         cdef int i = 0
         cdef int start = 0
         cdef bint cache_hit
-        cdef Py_UNICODE* chars = string
+        chars = <Py_UNICODE*>string
         cdef bint in_ws = Py_UNICODE_ISSPACE(chars[0])
-        cdef UniStr span
+        cdef unicode span
+        # The task here is much like string.split, but not quite
+        # We find spans of whitespace and non-space characters, and ignore
+        # spans that are exactly ' '. So, our sequences will all be separated
+        # by either ' ' or nothing.
         for i in range(1, length):
             if Py_UNICODE_ISSPACE(chars[i]) != in_ws:
                 if start < i:
-                    slice_unicode(&span, chars, start, i)
-                    cache_hit = self._try_cache(span.key, tokens)
+                    span = string[start:i]
+                    key = hash_string(span)
+                    cache_hit = self._try_cache(key, tokens)
                     if not cache_hit:
-                        self._tokenize(tokens, &span, start, i)
+                        self._tokenize(tokens, span, key)
                 in_ws = not in_ws
                 start = i
                 if chars[i] == ' ':
@@ -97,10 +102,11 @@ cdef class Tokenizer:
                     start += 1
         i += 1
         if start < i:
-            slice_unicode(&span, chars, start, i)
-            cache_hit = self._try_cache(span.key, tokens)
+            span = string[start:i]
+            key = hash_string(span)
+            cache_hit = self._try_cache(key, tokens)
             if not cache_hit:
-                self._tokenize(tokens, &span, start, i)
+                self._tokenize(tokens, span, key)
 
             tokens.data[tokens.length - 1].spacy = string[-1] == ' '
         return tokens
@@ -118,91 +124,89 @@ cdef class Tokenizer:
                 tokens.push_back(&cached.data.tokens[i], False)
         return True
 
-    cdef int _tokenize(self, Doc tokens, UniStr* span, int start, int end) except -1:
+    cdef int _tokenize(self, Doc tokens, unicode span, hash_t orig_key) except -1:
         cdef vector[LexemeC*] prefixes
         cdef vector[LexemeC*] suffixes
-        cdef hash_t orig_key
         cdef int orig_size
-        orig_key = span.key
         orig_size = tokens.length
-        self._split_affixes(span, &prefixes, &suffixes)
-        self._attach_tokens(tokens, start, span, &prefixes, &suffixes)
+        span = self._split_affixes(span, &prefixes, &suffixes)
+        self._attach_tokens(tokens, span, &prefixes, &suffixes)
         self._save_cached(&tokens.data[orig_size], orig_key, tokens.length - orig_size)
 
-    cdef UniStr* _split_affixes(self, UniStr* string, vector[const LexemeC*] *prefixes,
-                                vector[const LexemeC*] *suffixes) except NULL:
+    cdef unicode _split_affixes(self, unicode string, vector[const LexemeC*] *prefixes,
+                                vector[const LexemeC*] *suffixes):
         cdef size_t i
-        cdef UniStr prefix
-        cdef UniStr suffix
-        cdef UniStr minus_pre
-        cdef UniStr minus_suf
+        cdef unicode prefix
+        cdef unicode suffix
+        cdef unicode minus_pre
+        cdef unicode minus_suf
         cdef size_t last_size = 0
-        while string.n != 0 and string.n != last_size:
-            last_size = string.n
-            pre_len = self._find_prefix(string.chars, string.n)
+        while string and len(string) != last_size:
+            last_size = len(string)
+            pre_len = self.find_prefix(string)
             if pre_len != 0:
-                slice_unicode(&prefix, string.chars, 0, pre_len)
-                slice_unicode(&minus_pre, string.chars, pre_len, string.n)
+                prefix = string[:pre_len]
+                minus_pre = string[pre_len:]
                 # Check whether we've hit a special-case
-                if minus_pre.n >= 1 and self._specials.get(minus_pre.key) != NULL:
-                    string[0] = minus_pre
-                    prefixes.push_back(self.vocab.get(self.vocab.mem, &prefix))
+                if minus_pre and self._specials.get(hash_string(minus_pre)) != NULL:
+                    string = minus_pre
+                    prefixes.push_back(self.vocab.get(self.vocab.mem, prefix))
                     break
-            suf_len = self._find_suffix(string.chars, string.n)
+            suf_len = self.find_suffix(string)
             if suf_len != 0:
-                slice_unicode(&suffix, string.chars, string.n - suf_len, string.n)
-                slice_unicode(&minus_suf, string.chars, 0, string.n - suf_len)
+                suffix = string[-suf_len:]
+                minus_suf = string[:-suf_len]
                 # Check whether we've hit a special-case
-                if minus_suf.n >= 1 and self._specials.get(minus_suf.key) != NULL:
-                    string[0] = minus_suf
-                    suffixes.push_back(self.vocab.get(self.vocab.mem, &suffix))
+                if minus_suf and (self._specials.get(hash_string(minus_suf)) != NULL):
+                    string = minus_suf
+                    suffixes.push_back(self.vocab.get(self.vocab.mem, suffix))
                     break
-            if pre_len and suf_len and (pre_len + suf_len) <= string.n:
-                slice_unicode(string, string.chars, pre_len, string.n - suf_len)
-                prefixes.push_back(self.vocab.get(self.vocab.mem, &prefix))
-                suffixes.push_back(self.vocab.get(self.vocab.mem, &suffix))
+            if pre_len and suf_len and (pre_len + suf_len) <= len(string):
+                string = string[pre_len:-suf_len]
+                prefixes.push_back(self.vocab.get(self.vocab.mem, prefix))
+                suffixes.push_back(self.vocab.get(self.vocab.mem, suffix))
             elif pre_len:
-                string[0] = minus_pre
-                prefixes.push_back(self.vocab.get(self.vocab.mem, &prefix))
+                string = minus_pre
+                prefixes.push_back(self.vocab.get(self.vocab.mem, prefix))
             elif suf_len:
-                string[0] = minus_suf
-                suffixes.push_back(self.vocab.get(self.vocab.mem, &suffix))
-            if self._specials.get(string.key):
+                string = minus_suf
+                suffixes.push_back(self.vocab.get(self.vocab.mem, suffix))
+            if string and (self._specials.get(hash_string(string)) != NULL):
                 break
         return string
 
-    cdef int _attach_tokens(self, Doc tokens, int idx, UniStr* string,
+    cdef int _attach_tokens(self, Doc tokens, unicode string,
                             vector[const LexemeC*] *prefixes,
                             vector[const LexemeC*] *suffixes) except -1:
         cdef bint cache_hit
         cdef int split, end
         cdef const LexemeC* const* lexemes
         cdef const LexemeC* lexeme
-        cdef UniStr span
+        cdef unicode span
         cdef int i
         if prefixes.size():
             for i in range(prefixes.size()):
                 tokens.push_back(prefixes[0][i], False)
-        if string.n != 0:
-            cache_hit = self._try_cache(string.key, tokens)
+        if string:
+            cache_hit = self._try_cache(hash_string(string), tokens)
             if cache_hit:
                 pass
             else:
-                match = self._find_infix(string.chars, string.n)
+                match = self.find_infix(string)
                 if match is None:
                     tokens.push_back(self.vocab.get(tokens.mem, string), False)
                 else:
                     split = match.start()
                     end = match.end()
-                    # Append the beginning, afix, end of the infix span
-                    slice_unicode(&span, string.chars, 0, split)
-                    tokens.push_back(self.vocab.get(tokens.mem, &span), False)
+                    # Append the beginning, affix, end of the infix span
+                    span = string[:split]
+                    tokens.push_back(self.vocab.get(tokens.mem, span), False)
                     
-                    slice_unicode(&span, string.chars, split, end)
-                    tokens.push_back(self.vocab.get(tokens.mem, &span), False)
+                    span = string[split:end]
+                    tokens.push_back(self.vocab.get(tokens.mem, span), False)
                     
-                    slice_unicode(&span, string.chars, end, string.n)
-                    tokens.push_back(self.vocab.get(tokens.mem, &span), False)
+                    span = string[end:]
+                    tokens.push_back(self.vocab.get(tokens.mem, span), False)
         cdef vector[const LexemeC*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
             lexeme = deref(it)
@@ -223,17 +227,14 @@ cdef class Tokenizer:
         cached.data.lexemes = <const LexemeC* const*>lexemes
         self._cache.set(key, cached)
 
-    cdef object _find_infix(self, Py_UNICODE* chars, size_t length):
-        cdef unicode string = chars[:length]
+    def find_infix(self, unicode string):
         return self._infix_re.search(string)
 
-    cdef int _find_prefix(self, Py_UNICODE* chars, size_t length) except -1:
-        cdef unicode string = chars[:length]
+    def find_prefix(self, unicode string):
         match = self._prefix_re.search(string)
         return (match.end() - match.start()) if match is not None else 0
 
-    cdef int _find_suffix(self, Py_UNICODE* chars, size_t length) except -1:
-        cdef unicode string = chars[:length]
+    def find_suffix(self, unicode string):
         match = self._suffix_re.search(string)
         return (match.end() - match.start()) if match is not None else 0
 
@@ -241,21 +242,19 @@ cdef class Tokenizer:
         '''Add a special-case tokenization rule.
         '''
         cdef int i
-        cdef unicode chunk
         cdef list substrings
+        cdef unicode chunk
         cdef unicode form
         cdef unicode lemma
         cdef dict props
         cdef LexemeC** lexemes
         cdef hash_t hashed
-        cdef UniStr string
         for chunk, substrings in sorted(rules.items()):
             tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
             for i, props in enumerate(substrings):
                 form = props['F']
                 lemma = props.get("L", None)
-                slice_unicode(&string, form, 0, len(form))
-                tokens[i].lex = <LexemeC*>self.vocab.get(self.vocab.mem, &string)
+                tokens[i].lex = <LexemeC*>self.vocab.get(self.vocab.mem, form)
                 if lemma is not None:
                     tokens[i].lemma = self.vocab.strings[lemma]
                 else:
@@ -273,6 +272,6 @@ cdef class Tokenizer:
             cached.length = len(substrings)
             cached.is_lex = False
             cached.data.tokens = tokens
-            slice_unicode(&string, chunk, 0, len(chunk))
-            self._specials.set(string.key, cached)
-            self._cache.set(string.key, cached)
+            hashed = hash_string(chunk)
+            self._specials.set(hashed, cached)
+            self._cache.set(hashed, cached)

@@ -5,7 +5,6 @@ from .typedefs cimport attr_t
 
 from libc.stdint cimport int64_t
 
-from .structs cimport UniStr
 from .typedefs cimport hash_t
 
 cpdef hash_t hash_string(unicode string) except 0
@@ -14,12 +13,6 @@ cpdef hash_t hash_string(unicode string) except 0
 ctypedef union Utf8Str:
     unsigned char[8] s
     unsigned char* p
-
-
-cdef inline void slice_unicode(UniStr* s, Py_UNICODE* chars, int start, int end) nogil:
-    s.chars = &chars[start]
-    s.n = end - start
-    s.key = hash64(s.chars, <int>(s.n * sizeof(Py_UNICODE)), 0)
 
 
 cdef class StringStore:
