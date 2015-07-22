@@ -7,9 +7,6 @@ from libc.math cimport exp as c_exp
 from libcpp.queue cimport priority_queue
 from libcpp.pair cimport pair
 
-from ..structs cimport UniStr
-from ..strings cimport slice_unicode
-
 from cymem.cymem cimport Address, Pool
 from preshed.maps cimport PreshMap
 from preshed.counter cimport PreshCounter
@@ -175,14 +172,13 @@ cdef class Packer:
         cdef Doc tokens = Doc(self.vocab)
         cdef int start = 0
         cdef bint is_spacy
-        cdef UniStr span
         cdef int length = len(string)
         cdef int i = 0
         cdef bint is_end_token
         for is_end_token in bits:
             if is_end_token:
-                slice_unicode(&span, string, start, i+1)
-                lex = self.vocab.get(tokens.mem, &span)
+                span = string[start:i+1]
+                lex = self.vocab.get(tokens.mem, span)
                 is_spacy = (i+1) < length and string[i+1] == u' '
                 tokens.push_back(lex, is_spacy)
                 start = i + 1 + is_spacy

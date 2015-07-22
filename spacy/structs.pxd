@@ -78,9 +78,3 @@ cdef struct TokenC:
 
     int ent_iob
     int ent_type
-
-
-cdef struct UniStr:
-    Py_UNICODE* chars
-    size_t n
-    hash_t key
