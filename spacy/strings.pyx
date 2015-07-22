@@ -13,6 +13,7 @@ SEPARATOR = '\n|-SEP-|\n'
 
 
 cpdef hash_t hash_string(unicode string) except 0:
+    # This should probably use Py_UCS4 API, but I can't in Python2.7
     chars = <Py_UNICODE*>string
     return hash64(chars, len(string) * sizeof(Py_UNICODE), 0)
 
