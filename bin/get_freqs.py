@@ -69,7 +69,7 @@ def merge_counts(locs, out_loc):
                 orth = string_map[word]
                 counts.inc(orth, int(freq))
     with codecs.open(out_loc, 'w', 'utf8') as file_:
-        for orth, count in sorted(counts, reverse=True, key=lambda item: item[1]):
+        for orth, count in counts:
             string = string_map[orth]
             file_.write('%d\t%s\n' % (count, string))
 
@@ -79,19 +79,24 @@ def merge_counts(locs, out_loc):
     freqs_dir=("Directory for frequency files"),
     output_loc=("Location for output file"),
     n_jobs=("Number of workers", "option", "n", int),
+    skip_existing=("Skip inputs where an output file exists", "flag", "s", bool),
 )
-def main(input_loc, freqs_dir, output_loc, n_jobs=2):
+def main(input_loc, freqs_dir, output_loc, n_jobs=2, skip_existing=False):
     tasks = []
+    outputs = []
     for input_path in open(input_loc):
         input_path = input_path.strip()
-        if not input_path: continue
+        if not input_path:
+            continue
         filename = input_path.split('/')[-1]
         output_path = path.join(freqs_dir, filename.replace('bz2', 'freq'))
-        tasks.append((input_path, output_path))
+        outputs.append(output_path)
+        if not path.exists(output_path) or not skip_existing:
+            tasks.append((input_path, output_path))
 
     parallelize(count_freqs, tasks, n_jobs)
 
-    merge_counts([out for in_, out in tasks], output_loc)
+    merge_counts(outputs, output_loc)
                 
 
 if __name__ == '__main__':
