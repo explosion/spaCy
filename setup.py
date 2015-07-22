@@ -162,6 +162,7 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.gold', 'spacy.orth',
              'spacy.tokens.doc', 'spacy.tokens.spans', 'spacy.tokens.token',
              'spacy.serialize.packer', 'spacy.serialize.huffman', 'spacy.serialize.bits',
+             'spacy.cfile',
              'spacy.syntax.ner']
 
 
