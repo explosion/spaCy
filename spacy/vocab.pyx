@@ -1,3 +1,6 @@
+from __future__ import unicode_literals
+
+
 from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 from libc.string cimport memset
 from libc.stdint cimport int32_t
