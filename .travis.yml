@@ -25,4 +25,8 @@ install:
 
 # run tests
 script:
-  - py.test tests/
+  - "ls corpora/en"
+  - "ls spacy/en/data"
+
+
+#- py.test tests/
