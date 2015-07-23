@@ -4,7 +4,7 @@ from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 cdef class CFile:
     def __init__(self, loc, mode):
         if isinstance(mode, unicode):
-            mode_str = mode.decode('ascii')
+            mode_str = mode.encode('ascii')
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self.fp = fopen(<char*>bytes_loc, mode)
         if self.fp == NULL:
