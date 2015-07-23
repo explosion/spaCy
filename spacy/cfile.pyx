@@ -6,7 +6,7 @@ cdef class CFile:
         if isinstance(mode, unicode):
             mode_str = mode.encode('ascii')
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
-        self.fp = fopen(<char*>bytes_loc, mode)
+        self.fp = fopen(<char*>bytes_loc, mode_str)
         if self.fp == NULL:
             raise IOError("Could not open binary file %s" % bytes_loc)
         self.is_open = True
