@@ -9,6 +9,7 @@ def doc(EN):
     return EN('This is a sentence. This is another sentence. And a third.')
 
 
+@pytest.mark.models
 def test_sent_spans(doc):
     sents = list(doc.sents)
     assert sents[0].start == 0
@@ -17,6 +18,7 @@ def test_sent_spans(doc):
     assert sum(len(sent) for sent in sents) == len(doc)
 
 
+@pytest.mark.models
 def test_root(doc):
     np = doc[2:4]
     assert len(np) == 2
