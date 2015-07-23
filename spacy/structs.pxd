@@ -1,6 +1,6 @@
 from libc.stdint cimport uint8_t, uint32_t, int32_t
 
-from .typedefs cimport flags_t, attr_t, id_t, hash_t
+from .typedefs cimport flags_t, attr_t, hash_t
 from .parts_of_speech cimport univ_pos_t
 
 
@@ -62,6 +62,7 @@ cdef struct TokenC:
     Morphology morph
     const Constituent* ctnt
     univ_pos_t pos
+    bint spacy
     int tag
     int idx
     int lemma
@@ -77,14 +78,3 @@ cdef struct TokenC:
 
     int ent_iob
     int ent_type
-
-
-cdef struct Utf8Str:
-    unsigned char* chars
-    int length
-
-
-cdef struct UniStr:
-    Py_UNICODE* chars
-    size_t n
-    hash_t key

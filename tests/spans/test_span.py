@@ -22,4 +22,4 @@ def test_root(doc):
     assert len(np) == 2
     assert np.orth_ == 'a sentence'
     assert np.root.orth_ == 'sentence'
-    assert nlp.root.head.orth_ == 'is'
+    assert np.root.head.orth_ == 'is'

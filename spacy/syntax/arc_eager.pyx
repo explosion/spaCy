@@ -10,6 +10,7 @@ from .transition_system cimport do_func_t, get_cost_func_t
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse
 from ..gold cimport GoldParseC
+from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
@@ -309,6 +310,9 @@ cdef class ArcEager(TransitionSystem):
                     label = 'ROOT'
                 gold.c.heads[i] = gold.heads[i]
                 gold.c.labels[i] = self.strings[label]
+                # Count frequencies, for use in encoder
+                self.freqs[HEAD][gold.c.heads[i] - i] += 1
+                self.freqs[DEP][gold.c.labels[i]] += 1
         for end, brackets in gold.brackets.items():
             for start, label_strs in brackets.items():
                 gold.c.brackets[start][end] = 1
@@ -374,17 +378,16 @@ cdef class ArcEager(TransitionSystem):
             st._sent[i].r_edge = i
         st.fast_forward()
 
-    cdef int finalize_state(self, StateClass st) except -1:
-        cdef int root_label = self.strings['ROOT']
+    cdef int finalize_state(self, StateClass st) nogil:
         for i in range(st.length):
             if st._sent[i].head == 0 and st._sent[i].dep == 0:
-                st._sent[i].dep = root_label
+                st._sent[i].dep = self.root_label
             # If we're not using the Break transition, we segment via root-labelled
             # arcs between the root words.
-            elif USE_ROOT_ARC_SEGMENT and st._sent[i].dep == root_label:
+            elif USE_ROOT_ARC_SEGMENT and st._sent[i].dep == self.root_label:
                 st._sent[i].head = 0
 
-    cdef int set_valid(self, bint* output, StateClass stcls) except -1:
+    cdef int set_valid(self, int* output, StateClass stcls) nogil:
         cdef bint[N_MOVES] is_valid
         is_valid[SHIFT] = Shift.is_valid(stcls, -1)
         is_valid[REDUCE] = Reduce.is_valid(stcls, -1)
@@ -392,13 +395,11 @@ cdef class ArcEager(TransitionSystem):
         is_valid[RIGHT] = RightArc.is_valid(stcls, -1)
         is_valid[BREAK] = Break.is_valid(stcls, -1)
         cdef int i
-        n_valid = 0
         for i in range(self.n_moves):
             output[i] = is_valid[self.c[i].move]
-            n_valid += output[i]
-        assert n_valid >= 1
 
-    cdef int set_costs(self, int* output, StateClass stcls, GoldParse gold) except -1:
+    cdef int set_costs(self, int* is_valid, int* costs, 
+                       StateClass stcls, GoldParse gold) except -1:
         cdef int i, move, label
         cdef label_cost_func_t[N_MOVES] label_cost_funcs
         cdef move_cost_func_t[N_MOVES] move_cost_funcs
@@ -423,30 +424,14 @@ cdef class ArcEager(TransitionSystem):
         n_gold = 0
         for i in range(self.n_moves):
             if self.c[i].is_valid(stcls, self.c[i].label):
+                is_valid[i] = True
                 move = self.c[i].move
                 label = self.c[i].label
                 if move_costs[move] == -1:
                     move_costs[move] = move_cost_funcs[move](stcls, &gold.c)
-                output[i] = move_costs[move] + label_cost_funcs[move](stcls, &gold.c, label)
-                n_gold += output[i] == 0
+                costs[i] = move_costs[move] + label_cost_funcs[move](stcls, &gold.c, label)
+                n_gold += costs[i] == 0
             else:
-                output[i] = 9000
+                is_valid[i] = False
+                costs[i] = 9000
         assert n_gold >= 1
-
-    cdef Transition best_valid(self, const weight_t* scores, StateClass stcls) except *:
-        cdef bint[N_MOVES] is_valid
-        is_valid[SHIFT] = Shift.is_valid(stcls, -1)
-        is_valid[REDUCE] = Reduce.is_valid(stcls, -1)
-        is_valid[LEFT] = LeftArc.is_valid(stcls, -1)
-        is_valid[RIGHT] = RightArc.is_valid(stcls, -1)
-        is_valid[BREAK] = Break.is_valid(stcls, -1)
-        cdef Transition best
-        cdef weight_t score = MIN_SCORE
-        cdef int i
-        for i in range(self.n_moves):
-            if scores[i] > score and is_valid[self.c[i].move]:
-                best = self.c[i]
-                score = scores[i]
-        assert best.clas < self.n_moves
-        assert score > MIN_SCORE, (stcls.stack_depth(), stcls.buffer_length(), stcls.is_final(), stcls._b_i, stcls.length)
-        return best

@@ -34,9 +34,11 @@ cdef class TransitionSystem:
     cdef const Transition* c
     cdef bint* _is_valid
     cdef readonly int n_moves
+    cdef public int root_label
+    cdef public freqs
 
     cdef int initialize_state(self, StateClass state) except -1
-    cdef int finalize_state(self, StateClass state) except -1
+    cdef int finalize_state(self, StateClass state) nogil
 
     cdef int preprocess_gold(self, GoldParse gold) except -1
 
@@ -44,11 +46,7 @@ cdef class TransitionSystem:
 
     cdef Transition init_transition(self, int clas, int move, int label) except *
 
-    cdef int set_valid(self, bint* output, StateClass state) except -1
+    cdef int set_valid(self, int* output, StateClass state) nogil
     
-    cdef int set_costs(self, int* output, StateClass state, GoldParse gold) except -1
-
-    cdef Transition best_valid(self, const weight_t* scores, StateClass stcls) except *
-
-    cdef Transition best_gold(self, const weight_t* scores, StateClass state,
-                              GoldParse gold) except *
+    cdef int set_costs(self, int* is_valid, int* costs,
+                       StateClass state, GoldParse gold) except -1

@@ -30,8 +30,6 @@ from spacy.vocab import write_binary_vectors
 
 from spacy.parts_of_speech import NOUN, VERB, ADJ
 
-import spacy.senses
-
 
 def setup_tokenizer(lang_data_dir, tok_dir):
     if not tok_dir.exists():
@@ -46,6 +44,9 @@ def setup_tokenizer(lang_data_dir, tok_dir):
 
 
 def _read_clusters(loc):
+    if not loc.exists():
+        print "Warning: Clusters file not found"
+        return {}
     clusters = {}
     for line in codecs.open(str(loc), 'r', 'utf8'):
         try:
@@ -70,6 +71,9 @@ def _read_clusters(loc):
 
 
 def _read_probs(loc):
+    if not loc.exists():
+        print "Warning: Probabilities file not found"
+        return {}
     probs = {}
     for i, line in enumerate(codecs.open(str(loc), 'r', 'utf8')):
         prob, word = line.split()
@@ -80,6 +84,9 @@ def _read_probs(loc):
 
 def _read_senses(loc):
     lexicon = defaultdict(lambda: defaultdict(list))
+    if not loc.exists():
+        print "Warning: WordNet senses not found"
+        return lexicon
     sense_names = dict((s, i) for i, s in enumerate(spacy.senses.STRINGS))
     pos_ids = {'noun': NOUN, 'verb': VERB, 'adjective': ADJ}
     for line in codecs.open(str(loc), 'r', 'utf8'):
@@ -101,13 +108,11 @@ def setup_vocab(src_dir, dst_dir):
     vectors_src = src_dir / 'vectors.tgz'
     if vectors_src.exists():
         write_binary_vectors(str(vectors_src), str(dst_dir / 'vec.bin'))
+    else:
+        print "Warning: Word vectors file not found"
     vocab = Vocab(data_dir=None, get_lex_props=get_lex_props)
     clusters = _read_clusters(src_dir / 'clusters.txt')
-    senses = _read_senses(src_dir / 'supersenses.txt')
     probs = _read_probs(src_dir / 'words.sgt.prob')
-    for word in set(clusters).union(set(senses)):
-        if word not in probs:
-            probs[word] = -17.0
     lemmatizer = Lemmatizer(str(src_dir / 'wordnet'), NOUN, VERB, ADJ)
     lexicon = []
     for word, prob in reversed(sorted(probs.items(), key=lambda item: item[1])):
@@ -120,15 +125,6 @@ def setup_vocab(src_dir, dst_dir):
             entry['cluster'] = int(cluster[::-1], 2)
             orth_senses = set()
             lemmas = []
-            for pos in [NOUN, VERB, ADJ]:
-                for lemma in lemmatizer(word.lower(), pos):
-                    lemmas.append(lemma)
-                    orth_senses.update(senses[lemma][pos])
-            if word.lower() == 'dogging':
-                print word
-                print lemmas
-                print [spacy.senses.STRINGS[si] for si in orth_senses]
-            entry['senses'] = list(sorted(orth_senses))
             vocab[word] = entry
     vocab.dump(str(dst_dir / 'lexemes.bin'))
     vocab.strings.dump(str(dst_dir / 'strings.txt'))

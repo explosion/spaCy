@@ -112,6 +112,8 @@ cpdef bint like_number(unicode string):
 
 
 cpdef unicode word_shape(unicode string):
+    if len(string) >= 100:
+        return 'LONG'
     length = len(string)
     shape = []
     last = ""

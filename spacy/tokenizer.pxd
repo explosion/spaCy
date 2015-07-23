@@ -1,14 +1,12 @@
 from libcpp.vector cimport vector
 
-from cpython cimport Py_UNICODE_ISSPACE, Py_UNICODE_ISALPHA, Py_UNICODE_ISUPPER
-
 from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
 
 from .typedefs cimport hash_t
-from .structs cimport LexemeC, TokenC, Morphology, UniStr
+from .structs cimport LexemeC, TokenC, Morphology
 from .strings cimport StringStore
-from .tokens cimport Doc
+from .tokens.doc cimport Doc
 from .vocab cimport Vocab, _Cached
 
 
@@ -29,13 +27,11 @@ cdef class Tokenizer:
 
     cpdef Doc tokens_from_list(self, list strings)
 
-    cdef int _try_cache(self, int idx, hash_t key, Doc tokens) except -1
-    cdef int _tokenize(self, Doc tokens, UniStr* span, int start, int end) except -1
-    cdef UniStr* _split_affixes(self, UniStr* string, vector[LexemeC*] *prefixes,
-                             vector[LexemeC*] *suffixes) except NULL
-    cdef int _attach_tokens(self, Doc tokens, int idx, UniStr* string,
+    cdef int _try_cache(self, hash_t key, Doc tokens) except -1
+    cdef int _tokenize(self, Doc tokens, unicode span, hash_t key) except -1
+    cdef unicode _split_affixes(self, unicode string, vector[LexemeC*] *prefixes,
+                             vector[LexemeC*] *suffixes)
+    cdef int _attach_tokens(self, Doc tokens, unicode string,
                             vector[LexemeC*] *prefixes, vector[LexemeC*] *suffixes) except -1
-    cdef int _find_prefix(self, Py_UNICODE* characters, size_t length) except -1
-    cdef int _find_suffix(self, Py_UNICODE* characters, size_t length) except -1
-    cdef int _find_infix(self, Py_UNICODE* characters, size_t length) except -1
+
     cdef int _save_cached(self, const TokenC* tokens, hash_t key, int n) except -1

@@ -7,18 +7,19 @@ from libc.string cimport memset
 
 from cymem.cymem cimport Address
 from thinc.typedefs cimport atom_t, weight_t
+from collections import defaultdict
 
 from ..parts_of_speech cimport univ_pos_t
 from ..parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON
 
 from ..parts_of_speech cimport PRT, VERB, X, PUNCT, EOL, SPACE
-from ..typedefs cimport id_t
 from ..structs cimport TokenC, Morphology, LexemeC
-from ..tokens cimport Doc
+from ..tokens.doc cimport Doc
 from ..morphology cimport set_morph_from_dict
 from .._ml cimport arg_max
 
-from .attrs cimport IS_ALPHA, IS_PUNCT, LIKE_NUM, LIKE_URL
+from .attrs cimport TAG, IS_ALPHA, IS_PUNCT, LIKE_NUM, LIKE_URL
+from ..typedefs cimport attr_t
 
 from .lemmatizer import Lemmatizer
 
@@ -260,6 +261,10 @@ cdef class EnPosTagger:
             self.load_morph_exceptions(json.load(open(path.join(data_dir, 'tokenizer',
                                                  'morphs.json'))))
         self.lemmatizer = Lemmatizer(path.join(data_dir, 'wordnet'), NOUN, VERB, ADJ)
+        self.freqs = {TAG: defaultdict(int)}
+        for tag in self.tag_names:
+            self.freqs[TAG][self.strings[tag]] = 1
+        self.freqs[TAG][0] = 1
 
     def __call__(self, Doc tokens):
         """Apply the tagger, setting the POS tags onto the Doc object.
@@ -309,6 +314,7 @@ cdef class EnPosTagger:
             tokens.data[i].tag = self.strings[self.tag_names[guess]]
             self.set_morph(i, &self.tags[guess], tokens.data)
             correct += loss == 0
+            self.freqs[TAG][tokens.data[i].tag] += 1
         return correct
 
     cdef int set_morph(self, const int i, const PosTag* tag, TokenC* tokens) except -1:
@@ -342,7 +348,7 @@ cdef class EnPosTagger:
         cdef dict entries
         cdef dict props
         cdef int lemma
-        cdef id_t orth
+        cdef attr_t orth
         cdef int pos
         for pos_str, entries in exc.items():
             pos = self.tag_names.index(pos_str)

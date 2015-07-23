@@ -4,7 +4,10 @@ from .._ml cimport Model
 
 from .arc_eager cimport TransitionSystem
 
-from ..tokens cimport Doc, TokenC
+from ..tokens.doc cimport Doc
+from ..structs cimport TokenC
+from thinc.api cimport Example, ExampleC
+from .stateclass cimport StateClass
 
 
 cdef class Parser:
@@ -12,5 +15,4 @@ cdef class Parser:
     cdef readonly Model model
     cdef readonly TransitionSystem moves
 
-    cdef int _greedy_parse(self, Doc tokens) except -1
-    cdef int _beam_parse(self, Doc tokens) except -1
+    cdef void parse(self, StateClass stcls, ExampleC eg) nogil

@@ -79,3 +79,7 @@ cpdef enum attr_id_t:
     POS
     TAG
     DEP
+    ENT_IOB
+    ENT_TYPE
+    HEAD
+    SPACY

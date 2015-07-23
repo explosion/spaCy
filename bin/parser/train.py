@@ -139,13 +139,9 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                 nlp.tagger.train(tokens, gold.tags)
         random.shuffle(gold_tuples)
         print '%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
-                                               scorer.tags_acc,
-                                               scorer.token_acc)
-    nlp.parser.model.end_training()
-    nlp.entity.model.end_training()
-    nlp.tagger.model.end_training()
-    nlp.vocab.strings.dump(path.join(model_dir, 'vocab', 'strings.txt'))
-
+                                                   scorer.tags_acc,
+                                                   scorer.token_acc)
+    nlp.end_training()
 
 def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False,
              beam_width=None):
@@ -207,29 +203,22 @@ def write_parses(Language, dev_loc, model_dir, out_loc, beam_width=None):
     out_loc=("Out location", "option", "o", str),
     n_sents=("Number of training sentences", "option", "n", int),
     n_iter=("Number of training iterations", "option", "i", int),
-    beam_width=("Number of candidates to maintain in the beam", "option", "k", int),
     verbose=("Verbose error reporting", "flag", "v", bool),
     debug=("Debug mode", "flag", "d", bool),
-    use_orig_arc_eager=("Use the original, monotonic arc-eager system", "flag", "m", bool)
 )
 def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
-         debug=False, corruption_level=0.0, gold_preproc=False, beam_width=1,
-         eval_only=False, use_orig_arc_eager=False):
-    if use_orig_arc_eager:
-        English.ParserTransitionSystem = TreeArcEager
+         debug=False, corruption_level=0.0, gold_preproc=False, eval_only=False):
     if not eval_only:
         gold_train = list(read_json_file(train_loc))
         train(English, gold_train, model_dir,
               feat_set='basic' if not debug else 'debug',
               gold_preproc=gold_preproc, n_sents=n_sents,
               corruption_level=corruption_level, n_iter=n_iter,
-              beam_width=beam_width, verbose=verbose,
-              use_orig_arc_eager=use_orig_arc_eager)
+              verbose=verbose)
     #if out_loc:
     #    write_parses(English, dev_loc, model_dir, out_loc, beam_width=beam_width)
     scorer = evaluate(English, list(read_json_file(dev_loc)),
-                      model_dir, gold_preproc=gold_preproc, verbose=verbose,
-                      beam_width=beam_width)
+                      model_dir, gold_preproc=gold_preproc, verbose=verbose)
     print 'TOK', scorer.token_acc
     print 'POS', scorer.tags_acc
     print 'UAS', scorer.uas

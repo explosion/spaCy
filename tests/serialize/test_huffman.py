@@ -3,33 +3,15 @@ from __future__ import division
 
 import pytest
 
-from spacy.serialize import HuffmanCodec
+from spacy.serialize.huffman import HuffmanCodec
+from spacy.serialize.bits import BitArray
 import numpy
+import math
 
 from heapq import heappush, heappop, heapify
 from collections import defaultdict
 
 
-class Vocab(object):
-    def __init__(self, freqs):
-        freqs['-eol-'] = 5
-        total = sum(freqs.values())
-        by_freq = freqs.items()
-        by_freq.sort(key=lambda item: item[1], reverse=True)
-        self.symbols = [sym for sym, freq in by_freq]
-        self.probs = numpy.array([item[1] / total for item in by_freq], dtype=numpy.float32)
-        self.table = {sym: i for i, sym in enumerate(self.symbols)}
-        self.codec = HuffmanCodec(self.probs, self.table['-eol-'])
-
-    def pack(self, message):
-        seq = [self.table[sym] for sym in message]
-        return self.codec.encode(numpy.array(seq, dtype=numpy.uint32))
-
-    def unpack(self, packed):
-        ids = self.codec.decode(packed)
-        return [self.symbols[i] for i in ids]
-
- 
 def py_encode(symb2freq):
     """Huffman encode the given dict mapping symbols to weights
     From Rosetta Code
@@ -60,7 +42,7 @@ def test1():
     probs[8] = 0.0001
     probs[9] = 0.000001
     
-    codec = HuffmanCodec(probs, 9)
+    codec = HuffmanCodec(list(enumerate(probs)))
     
     py_codes = py_encode(dict(enumerate(probs)))
     py_codes = py_codes.items()
@@ -71,19 +53,21 @@ def test1():
 def test_round_trip():
     freqs = {'the': 10, 'quick': 3, 'brown': 4, 'fox': 1, 'jumped': 5, 'over': 8,
             'lazy': 1, 'dog': 2, '.': 9}
-    vocab = Vocab(freqs)
+    codec = HuffmanCodec(freqs.items())
 
     message = ['the', 'quick', 'brown', 'fox', 'jumped', 'over', 'the',
                 'the', 'lazy', 'dog', '.']
-    strings = list(vocab.codec.strings)
-    codes = {vocab.symbols[i]: strings[i] for i in range(len(vocab.symbols))}
-    packed = vocab.pack(message)
-    string = b''.join(b'{0:b}'.format(ord(c)).rjust(8, b'0')[::-1] for c in packed.as_bytes())
+    strings = list(codec.strings)
+    codes = {codec.leaves[i]: strings[i] for i in range(len(codec.leaves))}
+    bits = codec.encode(message)
+    string = b''.join(b'{0:b}'.format(ord(c)).rjust(8, b'0')[::-1] for c in bits.as_bytes())
     for word in message:
         code = codes[word]
         assert string[:len(code)] == code
         string = string[len(code):]
-    unpacked = vocab.unpack(packed)
+    unpacked = [0] * len(message)
+    bits.seek(0)
+    codec.decode(bits, unpacked)
     assert message == unpacked
 
 
@@ -92,34 +76,37 @@ def test_rosetta():
     symb2freq = defaultdict(int)
     for ch in txt:
         symb2freq[ch] += 1
-    symb2freq['-eol-'] = 1
     by_freq = symb2freq.items()
     by_freq.sort(reverse=True, key=lambda item: item[1])
     symbols = [sym for sym, prob in by_freq]
-    probs = numpy.array([prob for sym, prob in by_freq], dtype=numpy.float32)
 
-    codec = HuffmanCodec(probs, symbols.index('-eol-'))
+    codec = HuffmanCodec(symb2freq.items())
     py_codec = py_encode(symb2freq)
+
+    codes = {codec.leaves[i]: codec.strings[i] for i in range(len(codec.leaves))}
 
     my_lengths = defaultdict(int)
     py_lengths = defaultdict(int)
-    for i, my in enumerate(codec.strings):
-        symb = by_freq[i][0]
-        my_lengths[len(my)] += by_freq[i][1]
-        py_lengths[len(py_codec[symb])] += by_freq[i][1]
+    for symb, freq in symb2freq.items():
+        my = codes[symb]
+        my_lengths[len(my)] += freq
+        py_lengths[len(py_codec[symb])] += freq
     my_exp_len = sum(length * weight for length, weight in my_lengths.items())
     py_exp_len = sum(length * weight for length, weight in py_lengths.items())
     assert my_exp_len == py_exp_len
 
 
+@pytest.mark.slow
 def test_vocab(EN):
-    codec = EN.vocab.codec
+    codec = HuffmanCodec([(w.orth, numpy.exp(w.prob)) for w in EN.vocab])
     expected_length = 0
     for i, code in enumerate(codec.strings):
-        expected_length += len(code) * numpy.exp(EN.vocab[i].prob)
+        leaf = codec.leaves[i]
+        expected_length += len(code) * numpy.exp(EN.vocab[leaf].prob)
     assert 8 < expected_length < 15
 
 
+@pytest.mark.slow
 def test_freqs():
     freqs = []
     words = []
@@ -129,11 +116,10 @@ def test_freqs():
            continue
         freq, word = pieces
         freqs.append(int(freq))
-    freqs.append(1)
-    total = sum(freqs)
-    freqs = [(float(f) / total) for f in freqs]
-    codec = HuffmanCodec(numpy.array(freqs, dtype=numpy.float32), len(freqs)-1)
+        words.append(word)
+    total = float(sum(freqs))
+    codec = HuffmanCodec(zip(words, freqs))
     expected_length = 0
     for i, code in enumerate(codec.strings):
-        expected_length += len(code) * freqs[i]
+        expected_length += len(code) * (freqs[i] / total)
     assert 8 < expected_length < 14

@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 from os import path
 import re
+import struct
+import json
 
 from .. import orth
 from ..vocab import Vocab
@@ -8,6 +10,7 @@ from ..tokenizer import Tokenizer
 from ..syntax.arc_eager import ArcEager
 from ..syntax.ner import BiluoPushDown
 from ..syntax.parser import ParserFactory
+from ..serialize.bits import BitArray
 
 from ..tokens import Doc
 from ..multi_words import RegexMerger
@@ -18,6 +21,8 @@ from .attrs import get_flags
 from . import regexes
 
 from ..util import read_lang_data
+
+from ..attrs import TAG, HEAD, DEP, ENT_TYPE, ENT_IOB
 
 
 def get_lex_props(string):
@@ -70,10 +75,11 @@ class English(object):
       Tagger=EnPosTagger,
       Parser=ParserFactory(ParserTransitionSystem),
       Entity=ParserFactory(EntityTransitionSystem),
+      Packer=None,
       load_vectors=True
     ):
         
-        self._data_dir = data_dir
+        self.data_dir = data_dir
         
         self.vocab = Vocab(data_dir=path.join(data_dir, 'vocab') if data_dir else None,
                            get_lex_props=get_lex_props, load_vectors=load_vectors,
@@ -101,6 +107,10 @@ class English(object):
             self.entity = Entity(self.vocab.strings, path.join(data_dir, 'ner'))
         else:
             self.entity = None
+        if Packer:
+            self.packer = Packer(self.vocab, data_dir)
+        else:
+            self.packer = None
         self.mwe_merger = RegexMerger([
             ('IN', 'O', regexes.MW_PREPOSITIONS_RE),
             ('CD', 'TIME', regexes.TIME_RE),
@@ -135,7 +145,24 @@ class English(object):
             self.mwe_merger(tokens)
         return tokens
 
+    def end_training(self, data_dir=None):
+        if data_dir is None:
+            data_dir = self.data_dir
+        self.parser.model.end_training()
+        self.entity.model.end_training()
+        self.tagger.model.end_training()
+        self.vocab.strings.dump(path.join(data_dir, 'vocab', 'strings.txt'))
+
+        with open(path.join(data_dir, 'vocab', 'serializer.json'), 'w') as file_:
+            file_.write(
+                json.dumps([
+                    (TAG, self.tagger.freqs[TAG].items()),
+                    (DEP, self.parser.moves.freqs[DEP].items()),
+                    (ENT_IOB, self.entity.moves.freqs[ENT_IOB].items()),
+                    (ENT_TYPE, self.entity.moves.freqs[ENT_TYPE].items()),
+                    (HEAD, self.parser.moves.freqs[HEAD].items())]))
+
     @property
     def tags(self):
-        """List of part-of-speech tag names."""
+        """Deprecated. List of part-of-speech tag names."""
         return self.tagger.tag_names

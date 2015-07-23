@@ -7,6 +7,7 @@ from spacy.en.attrs import IS_STOP
 import pytest
 
 
+@pytest.mark.models
 def test_strings(EN):
     tokens = EN(u'Give it back! He pleaded.')
     token = tokens[0]

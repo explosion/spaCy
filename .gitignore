@@ -17,6 +17,8 @@ models/
 spacy/syntax/*.cpp
 spacy/syntax/*.html
 spacy/en/*.cpp
+spacy/tokens/*.cpp
+spacy/serialize/*.cpp
 spacy/en/data/*
 spacy/*.cpp
 spacy/ner/*.cpp

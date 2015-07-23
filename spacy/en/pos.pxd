@@ -1,4 +1,5 @@
 from preshed.maps cimport PreshMapArray
+from preshed.counter cimport PreshCounter
 from cymem.cymem cimport Pool
 
 from .._ml cimport Model
@@ -14,6 +15,7 @@ cdef class EnPosTagger:
     cdef readonly Model model
     cdef public object lemmatizer
     cdef PreshMapArray _morph_cache
+    cdef public dict freqs
 
     cdef PosTag* tags
     cdef readonly object tag_names

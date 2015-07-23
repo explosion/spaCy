@@ -8,6 +8,7 @@ from ..structs cimport TokenC, Entity
 from thinc.typedefs cimport weight_t
 from ..gold cimport GoldParseC
 from ..gold cimport GoldParse
+from ..attrs cimport ENT_TYPE, ENT_IOB
 
 from .stateclass cimport StateClass
 
@@ -74,6 +75,19 @@ cdef class BiluoPushDown(TransitionSystem):
     cdef int preprocess_gold(self, GoldParse gold) except -1:
         for i in range(gold.length):
             gold.c.ner[i] = self.lookup_transition(gold.ner[i])
+            # Count frequencies, for use in encoder
+            if gold.c.ner[i].move in (BEGIN, UNIT):
+                self.freqs[ENT_IOB][3] += 1
+                self.freqs[ENT_TYPE][gold.c.ner[i].label] += 1
+            elif gold.c.ner[i].move in (IN, LAST):
+                self.freqs[ENT_IOB][2] += 1
+                self.freqs[ENT_TYPE][0] += 1
+            elif gold.c.ner[i].move == OUT:
+                self.freqs[ENT_IOB][1] += 1
+                self.freqs[ENT_TYPE][0] += 1
+            else:
+                self.freqs[ENT_IOB][1] += 1
+                self.freqs[ENT_TYPE][0] += 1
 
     cdef Transition lookup_transition(self, object name) except *:
         if name == '-':
@@ -127,27 +141,6 @@ cdef class BiluoPushDown(TransitionSystem):
         else:
             raise Exception(move)
         return t
-
-    cdef Transition best_valid(self, const weight_t* scores, StateClass stcls) except *:
-        cdef int best = -1
-        cdef weight_t score = -90000
-        cdef const Transition* m
-        cdef int i
-        for i in range(self.n_moves):
-            m = &self.c[i]
-            if m.is_valid(stcls, m.label) and scores[i] > score:
-                best = i
-                score = scores[i]
-        assert best >= 0
-        cdef Transition t = self.c[best]
-        t.score = score
-        return t
-
-    cdef int set_valid(self, bint* output, StateClass stcls) except -1:
-        cdef int i
-        for i in range(self.n_moves):
-            m = &self.c[i]
-            output[i] = m.is_valid(stcls, m.label)
 
 
 cdef class Missing:

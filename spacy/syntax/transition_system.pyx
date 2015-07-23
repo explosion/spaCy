@@ -1,8 +1,10 @@
 from cymem.cymem cimport Pool
-from ..structs cimport TokenC
 from thinc.typedefs cimport weight_t
+from collections import defaultdict
 
+from ..structs cimport TokenC
 from .stateclass cimport StateClass
+from ..attrs cimport TAG, HEAD, DEP, ENT_TYPE, ENT_IOB
 
 
 cdef weight_t MIN_SCORE = -90000
@@ -27,11 +29,20 @@ cdef class TransitionSystem:
                 moves[i] = self.init_transition(i, int(action), label_id)
                 i += 1
         self.c = moves
+        self.root_label = self.strings['ROOT']
+        self.freqs = {}
+        for attr in (TAG, HEAD, DEP, ENT_TYPE, ENT_IOB):
+            self.freqs[attr] = defaultdict(int)
+            self.freqs[attr][0] = 1
+        # Ensure we've seen heads. Need an official dependency length limit...
+        for i in range(512):
+            self.freqs[HEAD][i] = 1
+            self.freqs[HEAD][-i] = 1
 
     cdef int initialize_state(self, StateClass state) except -1:
         pass
 
-    cdef int finalize_state(self, StateClass state) except -1:
+    cdef int finalize_state(self, StateClass state) nogil:
         pass
 
     cdef int preprocess_gold(self, GoldParse gold) except -1:
@@ -43,30 +54,17 @@ cdef class TransitionSystem:
     cdef Transition init_transition(self, int clas, int move, int label) except *:
         raise NotImplementedError
 
-    cdef Transition best_valid(self, const weight_t* scores, StateClass s) except *:
-        raise NotImplementedError
-    
-    cdef int set_valid(self, bint* output, StateClass state) except -1:
-        raise NotImplementedError
-
-    cdef int set_costs(self, int* output, StateClass stcls, GoldParse gold) except -1:
+    cdef int set_valid(self, int* is_valid, StateClass stcls) nogil:
         cdef int i
         for i in range(self.n_moves):
-            if self.c[i].is_valid(stcls, self.c[i].label):
-                output[i] = self.c[i].get_cost(stcls, &gold.c, self.c[i].label)
+            is_valid[i] = self.c[i].is_valid(stcls, self.c[i].label)
+
+    cdef int set_costs(self, int* is_valid, int* costs,
+                       StateClass stcls, GoldParse gold) except -1:
+        cdef int i
+        self.set_valid(is_valid, stcls)
+        for i in range(self.n_moves):
+            if is_valid[i]:
+                costs[i] = self.c[i].get_cost(stcls, &gold.c, self.c[i].label)
             else:
-                output[i] = 9000
-
-    cdef Transition best_gold(self, const weight_t* scores, StateClass stcls,
-                              GoldParse gold) except *:
-        cdef Transition best
-        cdef weight_t score = MIN_SCORE
-        cdef int i
-        for i in range(self.n_moves):
-            if self.c[i].is_valid(stcls, self.c[i].label):
-                cost = self.c[i].get_cost(stcls, &gold.c, self.c[i].label)
-                if scores[i] > score and cost == 0:
-                    best = self.c[i]
-                    score = scores[i]
-        assert score > MIN_SCORE
-        return best
+                costs[i] = 9000

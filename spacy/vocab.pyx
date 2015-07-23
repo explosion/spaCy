@@ -1,23 +1,24 @@
 from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 from libc.string cimport memset
 from libc.stdint cimport int32_t
-from libc.math cimport exp as c_exp
 
 import bz2
 from os import path
 import codecs
 import math
+import json
 
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport set_lex_struct_props
 from .lexeme cimport Lexeme
-from .strings cimport slice_unicode
 from .strings cimport hash_string
 from .orth cimport word_shape
 from .typedefs cimport attr_t
-from .serialize cimport HuffmanCodec
+from .cfile cimport CFile
 
 from cymem.cymem cimport Address
+from . import util
+from .serialize.packer cimport Packer
 
 
 DEF MAX_VEC_SIZE = 100000
@@ -35,12 +36,15 @@ cdef class Vocab:
     def __init__(self, data_dir=None, get_lex_props=None, load_vectors=True,
                  pos_tags=None):
         self.mem = Pool()
-        self._map = PreshMap(2 ** 20)
+        self._by_hash = PreshMap()
+        self._by_orth = PreshMap()
         self.strings = StringStore()
         self.pos_tags = pos_tags if pos_tags is not None else {}
-        self.lexemes.push_back(&EMPTY_LEXEME)
+
         self.lexeme_props_getter = get_lex_props
         self.repvec_length = 0
+        self.length = 0
+        self._add_lex_to_vocab(0, &EMPTY_LEXEME)
         if data_dir is not None:
             if not path.exists(data_dir):
                 raise IOError("Directory %s not found -- cannot load Vocab." % data_dir)
@@ -51,38 +55,77 @@ cdef class Vocab:
                               path.join(data_dir, 'lexemes.bin'))
             if load_vectors and path.exists(path.join(data_dir, 'vec.bin')):
                 self.repvec_length = self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
-        self._codec = None
+
+        self._serializer = None
+        self.data_dir = data_dir
+
+    property serializer:
+        def __get__(self):
+            if self._serializer is None:
+                freqs = []
+                if self.data_dir is not None:
+                    freqs_loc = path.join(self.data_dir, 'serializer.json')
+                    if path.exists(freqs_loc):
+                        freqs = json.load(open(freqs_loc))
+                self._serializer = Packer(self, freqs)
+            return self._serializer
 
     def __len__(self):
         """The current number of lexemes stored."""
-        return self.lexemes.size()
+        return self.length
 
-    cdef const LexemeC* get(self, Pool mem, UniStr* c_str) except NULL:
+    cdef const LexemeC* get(self, Pool mem, unicode string) except NULL:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
         if necessary, using memory acquired from the given pool.  If the pool
         is the lexicon's own memory, the lexeme is saved in the lexicon.'''
         cdef LexemeC* lex
-        lex = <LexemeC*>self._map.get(c_str.key)
+        cdef hash_t key = hash_string(string)
+        lex = <LexemeC*>self._by_hash.get(key)
         if lex != NULL:
             return lex
-        if c_str.n < 3:
+        cdef bint is_oov = mem is not self.mem
+        if len(string) < 3:
             mem = self.mem
-        cdef unicode py_str = c_str.chars[:c_str.n]
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        props = self.lexeme_props_getter(py_str)
+        props = self.lexeme_props_getter(string)
         set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
-        if mem is self.mem:
-            lex.id = self.lexemes.size()
-            self._add_lex_to_vocab(c_str.key, lex)
+        if is_oov:
+            lex.id = 0
         else:
-            lex.id = 1
+            self._add_lex_to_vocab(key, lex)
+        return lex
+
+    cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL:
+        '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
+        if necessary, using memory acquired from the given pool.  If the pool
+        is the lexicon's own memory, the lexeme is saved in the lexicon.'''
+        cdef LexemeC* lex
+        lex = <LexemeC*>self._by_orth.get(orth)
+        if lex != NULL:
+            return lex
+        cdef unicode string = self.strings[orth]
+        cdef bint is_oov = mem is not self.mem
+        if len(string) < 3:
+            mem = self.mem
+        lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
+        props = self.lexeme_props_getter(string)
+        set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
+        if is_oov:
+            lex.id = 0
+        else:
+            self._add_lex_to_vocab(hash_string(string), lex)
         return lex
 
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1:
-        self._map.set(key, <void*>lex)
-        while self.lexemes.size() < (lex.id + 1):
-            self.lexemes.push_back(&EMPTY_LEXEME)
-        self.lexemes[lex.id] = lex
+        self._by_hash.set(key, <void*>lex)
+        self._by_orth.set(lex.orth, <void*>lex)
+        self.length += 1
+
+    def __iter__(self):
+        cdef attr_t orth
+        cdef size_t addr
+        for orth, addr in self._by_orth.items():
+            yield Lexeme.from_ptr(<LexemeC*>addr, self.strings, self.repvec_length)
 
     def __getitem__(self,  id_or_string):
         '''Retrieve a lexeme, given an int ID or a unicode string.  If a previously
@@ -99,51 +142,46 @@ cdef class Vocab:
               An instance of the Lexeme Python class, with data copied on
               instantiation.
         '''
-        cdef UniStr c_str
         cdef const LexemeC* lexeme
+        cdef attr_t orth
         if type(id_or_string) == int:
-            if id_or_string >= self.lexemes.size():
-                raise IndexError
-            lexeme = self.lexemes.at(id_or_string)
+            orth = id_or_string
+            lexeme = <LexemeC*>self._by_orth.get(orth)
+            if lexeme == NULL:
+                raise KeyError(id_or_string)
+            assert lexeme.orth == orth, ('%d vs %d' % (lexeme.orth, orth))
         elif type(id_or_string) == unicode:
-            slice_unicode(&c_str, id_or_string, 0, len(id_or_string))
-            lexeme = self.get(self.mem, &c_str)
+            lexeme = self.get(self.mem, id_or_string)
+            assert lexeme.orth == self.strings[id_or_string]
         else:
             raise ValueError("Vocab unable to map type: "
                 "%s. Maps unicode --> Lexeme or "
                 "int --> Lexeme" % str(type(id_or_string)))
         return Lexeme.from_ptr(lexeme, self.strings, self.repvec_length)
 
-    def __setitem__(self, unicode py_str, dict props):
-        cdef UniStr c_str
-        slice_unicode(&c_str, py_str, 0, len(py_str))
+    def __setitem__(self, unicode string, dict props):
+        cdef hash_t key = hash_string(string)
         cdef LexemeC* lex
-        lex = <LexemeC*>self._map.get(c_str.key)
+        lex = <LexemeC*>self._by_hash.get(key)
         if lex == NULL:
             lex = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
-            lex.id = self.lexemes.size()
-            self._add_lex_to_vocab(c_str.key, lex)
         set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
+        self._add_lex_to_vocab(key, lex)
 
     def dump(self, loc):
         if path.exists(loc):
             assert not path.isdir(loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
-        cdef FILE* fp = fopen(<char*>bytes_loc, 'wb')
-        assert fp != NULL
+
+        cdef CFile fp = CFile(bytes_loc, 'wb')
         cdef size_t st
+        cdef size_t addr
         cdef hash_t key
-        for i in range(self._map.length):
-            key = self._map.c_map.cells[i].key
-            if key == 0:
-                continue
-            lexeme = <LexemeC*>self._map.c_map.cells[i].value
-            st = fwrite(&lexeme.orth, sizeof(lexeme.orth), 1, fp)
-            assert st == 1
-            st = fwrite(lexeme, sizeof(LexemeC), 1, fp)
-            assert st == 1
-        st = fclose(fp)
-        assert st == 0
+        for key, addr in self._by_hash.items():
+            lexeme = <LexemeC*>addr
+            fp.write_from(&lexeme.orth, sizeof(lexeme.orth), 1)
+            fp.write_from(lexeme, sizeof(LexemeC), 1)
+        fp.close()
 
     def load_lexemes(self, strings_loc, loc):
         self.strings.load(strings_loc)
@@ -174,40 +212,37 @@ cdef class Vocab:
                 raise IOError('Error reading from lexemes.bin. Integrity check fails.')
             py_str = self.strings[orth]
             key = hash_string(py_str)
-            self._map.set(key, lexeme)
-            while self.lexemes.size() < (lexeme.id + 1):
-                self.lexemes.push_back(&EMPTY_LEXEME)
-            self.lexemes[lexeme.id] = lexeme
+            self._by_hash.set(key, lexeme)
+            self._by_orth.set(lexeme.orth, lexeme)
+            self.length += 1
             i += 1
         fclose(fp)
 
     def load_rep_vectors(self, loc):
-        file_ = _CFile(loc, b'rb')
+        cdef CFile file_ = CFile(loc, b'rb')
         cdef int32_t word_len
         cdef int32_t vec_len
         cdef int32_t prev_vec_len = 0
         cdef float* vec
         cdef Address mem
-        cdef id_t string_id
+        cdef attr_t string_id
         cdef bytes py_word
         cdef vector[float*] vectors
         cdef int i
+        cdef Pool tmp_mem = Pool()
         while True:
             try:
-                file_.read(&word_len, sizeof(word_len), 1)
+                file_.read_into(&word_len, sizeof(word_len), 1)
             except IOError:
                 break
-            file_.read(&vec_len, sizeof(vec_len), 1)
+            file_.read_into(&vec_len, sizeof(vec_len), 1)
             if prev_vec_len != 0 and vec_len != prev_vec_len:
                 raise VectorReadError.mismatched_sizes(loc, vec_len, prev_vec_len)
             if 0 >= vec_len >= MAX_VEC_SIZE:
                 raise VectorReadError.bad_size(loc, vec_len)
-            mem = Address(word_len, sizeof(char))
-            chars = <char*>mem.ptr
-            vec = <float*>self.mem.alloc(vec_len, sizeof(float))
 
-            file_.read(chars, sizeof(char), word_len)
-            file_.read(vec, sizeof(float), vec_len)
+            chars = <char*>file_.alloc_read(tmp_mem, word_len, sizeof(char))
+            vec = <float*>file_.alloc_read(self.mem, vec_len, sizeof(float))
 
             string_id = self.strings[chars[:word_len]]
             while string_id >= vectors.size():
@@ -215,9 +250,9 @@ cdef class Vocab:
             assert vec != NULL
             vectors[string_id] = vec
         cdef LexemeC* lex
-        for i in range(self.lexemes.size()):
-            # Cast away the const, cos we can modify our lexemes
-            lex = <LexemeC*>self.lexemes[i]
+        cdef size_t lex_addr
+        for orth, lex_addr in self._by_orth.items():
+            lex = <LexemeC*>lex_addr
             if lex.lower < vectors.size():
                 lex.repvec = vectors[lex.lower]
                 for i in range(vec_len):
@@ -227,25 +262,9 @@ cdef class Vocab:
                 lex.repvec = EMPTY_VEC
         return vec_len
 
-    property codec:
-        def __get__(self):
-            cdef Address mem
-            cdef int i
-            cdef float[:] cv_probs
-            if self._codec is not None:
-                return self._codec
-            else:
-                mem = Address(len(self), sizeof(float))
-                probs = <float*>mem.ptr
-                for i in range(len(self)):
-                    probs[i] = <float>c_exp(self.lexemes[i].prob)
-                cv_probs = <float[:len(self)]>probs
-                self._codec = HuffmanCodec(cv_probs, 0)
-                return self._codec
-
 
 def write_binary_vectors(in_loc, out_loc):
-    cdef _CFile out_file = _CFile(out_loc, 'wb')
+    cdef CFile out_file = CFile(out_loc, 'wb')
     cdef Address mem
     cdef int32_t word_len
     cdef int32_t vec_len
@@ -262,42 +281,12 @@ def write_binary_vectors(in_loc, out_loc):
             word_len = len(word)
             vec_len = len(pieces)
 
-            out_file.write(sizeof(word_len), 1, &word_len)
-            out_file.write(sizeof(vec_len), 1, &vec_len)
+            out_file.write_from(&word_len, 1, sizeof(word_len))
+            out_file.write_from(&vec_len, 1, sizeof(vec_len))
 
             chars = <char*>word
-            out_file.write(sizeof(char), len(word), chars)
-            out_file.write(sizeof(float), vec_len, vec)
-
-
-cdef class _CFile:
-    cdef FILE* fp
-    def __init__(self, loc, bytes mode):
-        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
-        self.fp = fopen(<char*>bytes_loc, mode)
-        if self.fp == NULL:
-            raise IOError
-
-    def __dealloc__(self):
-        fclose(self.fp)
-
-    def close(self):
-        fclose(self.fp)
-
-    cdef int read(self, void* dest, size_t elem_size, size_t n) except -1:
-        st = fread(dest, elem_size, n, self.fp)
-        if st != n:
-            raise IOError
-
-    cdef int write(self, size_t elem_size, size_t n, void* data) except -1:
-        st = fwrite(data, elem_size, n, self.fp)
-        if st != n:
-            raise IOError
-
-    cdef int write_unicode(self, unicode value):
-        cdef bytes py_bytes = value.encode('utf8')
-        cdef char* chars = <char*>py_bytes
-        self.write(sizeof(char), len(py_bytes), chars)
+            out_file.write_from(chars, len(word), sizeof(char))
+            out_file.write_from(vec, vec_len, sizeof(float))
 
 
 class VectorReadError(Exception):
