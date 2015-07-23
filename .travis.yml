@@ -13,7 +13,7 @@ install:
   - "pip install --upgrade setuptools"
   - "pip install cython fabric fabtools"
   - "pip install -r requirements.txt"
-  - "fab make"
+  - "python setup.py build_ext --inplace"
   - "mkdir corpora/en"
   - "python bin/init_model.py lang_data/en corpora/en spacy/en/data"
 
