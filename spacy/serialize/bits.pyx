@@ -80,7 +80,7 @@ cdef class BitArray:
         return output
 
     def as_bytes(self):
-        cdef unsigned char byte
+        cdef unsigned char byte_char
         if self.bit_of_byte != 0:
             byte = chr(self.byte)
             # Jump through some hoops for Python3
