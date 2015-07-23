@@ -113,7 +113,6 @@ def setup_vocab(src_dir, dst_dir):
     vocab = Vocab(data_dir=None, get_lex_props=get_lex_props)
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs = _read_probs(src_dir / 'words.sgt.prob')
-    lemmatizer = Lemmatizer(str(src_dir / 'wordnet'), NOUN, VERB, ADJ)
     lexicon = []
     for word, prob in reversed(sorted(probs.items(), key=lambda item: item[1])):
         entry = get_lex_props(word)
