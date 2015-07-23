@@ -95,15 +95,15 @@ class English(object):
 
         self.tokenizer = Tokenizer(self.vocab, path.join(data_dir, 'tokenizer'))
         
-        if Tagger:
+        if Tagger and path.exists(path.join(data_dir, 'pos')):
             self.tagger = Tagger(self.vocab.strings, data_dir)
         else:
             self.tagger = None
-        if Parser:
+        if Parser and path.exists(path.join(data_dir, 'deps')):
             self.parser = Parser(self.vocab.strings, path.join(data_dir, 'deps'))
         else:
             self.parser = None
-        if Entity:
+        if Entity and path.exists(path.join(data_dir, 'ner')):
             self.entity = Entity(self.vocab.strings, path.join(data_dir, 'ner'))
         else:
             self.entity = None
