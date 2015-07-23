@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from libc.string cimport memcpy
 
 # Note that we're setting the most significant bits here first, when in practice
@@ -14,7 +16,7 @@ cdef Code bit_append(Code code, bint bit) nogil:
 
 
 cdef class BitArray:
-    def __init__(self, data=b''):
+    def __init__(self, bytes data=b''):
         self.data = data
         self.byte = 0
         self.bit_of_byte = 0
@@ -78,8 +80,15 @@ cdef class BitArray:
         return output
 
     def as_bytes(self):
+        cdef unsigned char byte
         if self.bit_of_byte != 0:
-            return self.data + chr(self.byte)
+            byte = chr(self.byte)
+            # Jump through some hoops for Python3
+            if isinstance(byte, unicode):
+                byte_char = <unsigned char>byte
+                return self.data + <bytes>&byte_char
+            else:
+                return self.data + chr(self.byte)
         else:
             return self.data
 
