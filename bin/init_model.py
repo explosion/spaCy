@@ -124,7 +124,7 @@ def setup_vocab(src_dir, dst_dir):
             probs[word] = min_prob
 
     lexicon = []
-    for word, prob in reversed(sorted(probs.items(), key=lambda item: item[1])):
+    for word, prob in reversed(sorted(list(probs.items()), key=lambda item: item[1])):
         entry = get_lex_props(word)
         if word in clusters or float(prob) >= -17:
             entry['prob'] = float(prob)
