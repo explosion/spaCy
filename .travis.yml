@@ -22,11 +22,8 @@ install:
   - "cd ../../"
   - "export PYTHONPATH=`pwd`"
   - "python bin/init_model.py lang_data/en corpora/en spacy/en/data"
+  - "export SPACY_DATA='`pwd`/spacy/en/data"
 
 # run tests
 script:
-  - "ls corpora/en"
-  - "ls spacy/en/data"
-
-
-#- py.test tests/
+  - "py.test -x"
