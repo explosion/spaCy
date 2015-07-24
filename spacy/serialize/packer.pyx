@@ -66,7 +66,7 @@ def _gen_orths(Vocab vocab):
 def _gen_chars(Vocab vocab):
     cdef attr_t orth
     cdef size_t addr
-    char_weights = {chr(i): 1e-20 for i in range(256)}
+    char_weights = {i: 1e-20 for i in range(256)}
     cdef unicode string
     cdef bytes char
     cdef bytes utf8_str
@@ -75,9 +75,9 @@ def _gen_chars(Vocab vocab):
         string = vocab.strings[lex.orth]
         utf8_str = string.encode('utf8')
         for char in utf8_str:
-            char_weights.setdefault(char, 0.0)
-            char_weights[char] += c_exp(lex.prob)
-        char_weights[b' '] += c_exp(lex.prob)
+            char_weights.setdefault(ord(char), 0.0)
+            char_weights[ord(char)] += c_exp(lex.prob)
+        char_weights[ord(' ')] += c_exp(lex.prob)
     return char_weights.items()
 
 
@@ -110,12 +110,12 @@ cdef class Packer:
                 codec.encode(array[:, i], bits)
         return bits.as_bytes()
 
-    def unpack(self, bytes data):
+    def unpack(self, data):
         doc = Doc(self.vocab)
         self.unpack_into(data, doc)
         return doc
 
-    def unpack_into(self, bytes byte_string, Doc doc):
+    def unpack_into(self, byte_string, Doc doc):
         bits = BitArray(byte_string)
         bits.seek(0)
         cdef int32_t length = bits.read32()
@@ -149,7 +149,7 @@ cdef class Packer:
         cdef int32_t length = len(utf8_str)
         # Signal chars with negative length
         bits.extend(-length, 32)
-        self.char_codec.encode(utf8_str, bits)
+        self.char_codec.encode(bytearray(utf8_str), bits)
         cdef int i, j
         for i in range(doc.length):
             for j in range(doc.data[i].lex.length-1):
@@ -167,7 +167,7 @@ cdef class Packer:
         spaces = iter(bits)
         for i in range(n):
             orth = orths[i]
-            space = spaces.next()
+            space = next(spaces)
             lex = self.vocab.get_by_orth(doc.mem, orth)
             doc.push_back(lex, space)
         return doc

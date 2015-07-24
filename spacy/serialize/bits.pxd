@@ -13,7 +13,7 @@ cdef Code bit_append(Code code, bint bit) nogil
 
 
 cdef class BitArray:
-    cdef bytes data
+    cdef bytearray data
     cdef uchar byte
     cdef uchar bit_of_byte
     cdef uint32_t i
