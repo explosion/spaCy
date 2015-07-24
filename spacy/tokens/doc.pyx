@@ -111,9 +111,12 @@ cdef class Doc:
     def __unicode__(self):
         return u''.join([t.string for t in self])
 
+    def __str__(self):
+        return u''.join([t.string for t in self])
+
     @property
     def string(self):
-        return unicode(self)
+        return u''.join([t.string for t in self])
 
     @property
     def ents(self):
