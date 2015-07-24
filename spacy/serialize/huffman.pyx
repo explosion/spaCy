@@ -1,4 +1,5 @@
 # cython: profile=True
+from __future__ import unicode_literals
 cimport cython
 from libcpp.queue cimport priority_queue
 from libcpp.pair cimport pair
