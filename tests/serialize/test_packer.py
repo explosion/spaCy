@@ -56,7 +56,7 @@ def test_char_packer(vocab):
     bits = BitArray()
     bits.seek(0)
 
-    byte_str = b'the dog jumped'
+    byte_str = bytearray(b'the dog jumped')
     packer.char_codec.encode(byte_str, bits)
     bits.seek(0)
     result = [b''] * len(byte_str)

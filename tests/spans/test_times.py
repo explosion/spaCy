@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import pytest
 
 
+@pytest.mark.models
 def test_am_pm(en_nlp):
     numbers = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11', '12']
     variants = ['a.m.', 'am', 'p.m.', 'pm']
@@ -14,7 +15,7 @@ def test_am_pm(en_nlp):
                 tokens = en_nlp(string, merge_mwes=True)
                 assert tokens[4].orth_ == '%s%s%s' % (num, space, var)
                 ents = list(tokens.ents)
-                assert len(ents) == 1
+                assert len(ents) == 1, ents
                 assert ents[0].label_ == 'TIME', string
                 if ents[0].start == 4 and ents[0].end == 5:
                     assert ents[0].orth_ == '%s%s%s' % (num, space, var)
