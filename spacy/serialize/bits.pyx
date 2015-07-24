@@ -115,7 +115,7 @@ cdef class BitArray:
                 self.byte &= ~(one << self.bit_of_byte)
             self.bit_of_byte += 1
             if self.bit_of_byte == 8:
-                self.data += chr(self.byte)
+                self.data += <bytes>self.byte
                 self.byte = 0
                 self.bit_of_byte = 0
             self.i += 1
