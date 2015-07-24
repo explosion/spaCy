@@ -298,7 +298,7 @@ cdef class Doc:
         byte_string = self.vocab.serializer.pack(self)
         return struct.pack('I', len(byte_string)) + byte_string
 
-    def from_bytes(self, bytes data):
+    def from_bytes(self, data):
         self.vocab.serializer.unpack_into(data[4:], self)
         return self
     
