@@ -39,7 +39,7 @@ def test_retrieve_id(sstore):
 
 def test_med_string(sstore):
     nine_char_string = sstore[b'0123456789']
-    assert sstore[nine_char_string] == b'0123456789'
+    assert sstore[nine_char_string] == u'0123456789'
     dummy = sstore[b'A']
     assert sstore[b'0123456789'] == nine_char_string
 

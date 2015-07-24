@@ -61,7 +61,7 @@ def test_char_packer(vocab):
     bits.seek(0)
     result = [b''] * len(byte_str)
     packer.char_codec.decode(bits, result)
-    assert b''.join(result) == byte_str
+    assert bytearray(result) == byte_str
 
 
 def test_packer_unannotated(tokenizer):
