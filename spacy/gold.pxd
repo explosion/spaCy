@@ -3,8 +3,6 @@ from cymem.cymem cimport Pool
 from .structs cimport TokenC
 from .syntax.transition_system cimport Transition
 
-cimport numpy
-
 
 cdef struct GoldParseC:
     int* tags
