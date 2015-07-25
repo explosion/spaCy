@@ -88,7 +88,7 @@ def _read_probs(loc):
     return probs, probs['-OOV-']
 
 
-def _read_freqs(loc, max_length=100, min_doc_freq=5, min_freq=10):
+def _read_freqs(loc, max_length=100, min_doc_freq=5, min_freq=100):
     if not loc.exists():
         print("Warning: Frequencies file not found")
         return None
