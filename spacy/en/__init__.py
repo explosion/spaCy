@@ -25,7 +25,7 @@ from ..util import read_lang_data
 from ..attrs import TAG, HEAD, DEP, ENT_TYPE, ENT_IOB
 
 
-def get_lex_props(string):
+def get_lex_props(string, oov_prob=-30):
     return {
         'flags': get_flags(string),
         'length': len(string),
@@ -36,7 +36,7 @@ def get_lex_props(string):
         'prefix': string[0],
         'suffix': string[-3:],
         'cluster': 0,
-        'prob': -22,
+        'prob': oov_prob,
         'sentiment': 0
     }
 
@@ -83,7 +83,8 @@ class English(object):
         
         self.vocab = Vocab(data_dir=path.join(data_dir, 'vocab') if data_dir else None,
                            get_lex_props=get_lex_props, load_vectors=load_vectors,
-                           pos_tags=POS_TAGS)
+                           pos_tags=POS_TAGS,
+                           float(open(path.join(data_dir, 'vocab', 'oov_prob')).read()))
         if Tagger is True:
             Tagger = EnPosTagger
         if Parser is True:
