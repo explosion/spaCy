@@ -40,6 +40,7 @@ def null_props(string):
 
 
 def count_freqs(input_loc, output_loc):
+    print output_loc
     nlp = spacy.en.English(Parser=None, Tagger=None, Entity=None, load_vectors=False)
     nlp.vocab.lexeme_props_getter = null_props
 
@@ -94,8 +95,10 @@ def main(input_loc, freqs_dir, output_loc, n_jobs=2, skip_existing=False):
         if not path.exists(output_path) or not skip_existing:
             tasks.append((input_path, output_path))
 
-    parallelize(count_freqs, tasks, n_jobs)
+    if tasks:
+        parallelize(count_freqs, tasks, n_jobs)
 
+    print "Merge"
     merge_counts(outputs, output_loc)
                 
 
