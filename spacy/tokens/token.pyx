@@ -34,6 +34,9 @@ cdef class Token:
     def __unicode__(self):
         return self.string
 
+    def __str__(self):
+        return self.string
+
     cpdef bint check_flag(self, attr_id_t flag_id) except -1:
         return check_flag(self.c.lex, flag_id)
 

@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
+import pytest
 
 
+@pytest.mark.models
 def test_merge_tokens(EN):
     tokens = EN(u'Los Angeles start.')
     assert len(tokens) == 4
@@ -12,6 +14,7 @@ def test_merge_tokens(EN):
     assert tokens[0].head.orth_ == 'start'
 
 
+@pytest.mark.models
 def test_merge_heads(EN):
     tokens = EN(u'I found a pilates class near work.')
     assert len(tokens) == 8

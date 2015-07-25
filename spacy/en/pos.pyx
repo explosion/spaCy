@@ -262,6 +262,9 @@ cdef class EnPosTagger:
                                                  'morphs.json'))))
         self.lemmatizer = Lemmatizer(path.join(data_dir, 'wordnet'), NOUN, VERB, ADJ)
         self.freqs = {TAG: defaultdict(int)}
+        for tag in self.tag_names:
+            self.freqs[TAG][self.strings[tag]] = 1
+        self.freqs[TAG][0] = 1
 
     def __call__(self, Doc tokens):
         """Apply the tagger, setting the POS tags onto the Doc object.

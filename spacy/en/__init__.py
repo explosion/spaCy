@@ -95,15 +95,15 @@ class English(object):
 
         self.tokenizer = Tokenizer(self.vocab, path.join(data_dir, 'tokenizer'))
         
-        if Tagger:
+        if Tagger and path.exists(path.join(data_dir, 'pos')):
             self.tagger = Tagger(self.vocab.strings, data_dir)
         else:
             self.tagger = None
-        if Parser:
+        if Parser and path.exists(path.join(data_dir, 'deps')):
             self.parser = Parser(self.vocab.strings, path.join(data_dir, 'deps'))
         else:
             self.parser = None
-        if Entity:
+        if Entity and path.exists(path.join(data_dir, 'ner')):
             self.entity = Entity(self.vocab.strings, path.join(data_dir, 'ner'))
         else:
             self.entity = None
@@ -153,15 +153,14 @@ class English(object):
         self.tagger.model.end_training()
         self.vocab.strings.dump(path.join(data_dir, 'vocab', 'strings.txt'))
 
-        packer = Packer(self.vocab, [
-            (TAG, self.tagger.moves.freqs[TAG].items()),
-            (HEAD, self.parser.moves.freqs[HEAD].items()),
-            (DEP, self.parser.moves.freqs[DEP].items()),
-            (ENT_IOB, self.entity.moves.freqs[ENT_IOB].items()),
-            (ENT_TYPE, self.entity.moves.freqs[ENT_TYPE].items())
-        ])
-
-        packer.dump(path.join(data_dir, 'vocab'))
+        with open(path.join(data_dir, 'vocab', 'serializer.json'), 'w') as file_:
+            file_.write(
+                json.dumps([
+                    (TAG, self.tagger.freqs[TAG].items()),
+                    (DEP, self.parser.moves.freqs[DEP].items()),
+                    (ENT_IOB, self.entity.moves.freqs[ENT_IOB].items()),
+                    (ENT_TYPE, self.entity.moves.freqs[ENT_TYPE].items()),
+                    (HEAD, self.parser.moves.freqs[HEAD].items())]))
 
     @property
     def tags(self):

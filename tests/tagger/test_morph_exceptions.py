@@ -12,6 +12,7 @@ def morph_exc():
            }
 
 
+@pytest.mark.models
 def test_load_exc(morph_exc):
     # Do this local as we want to modify it
     nlp =  English()

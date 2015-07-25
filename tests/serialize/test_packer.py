@@ -56,12 +56,12 @@ def test_char_packer(vocab):
     bits = BitArray()
     bits.seek(0)
 
-    byte_str = b'the dog jumped'
+    byte_str = bytearray(b'the dog jumped')
     packer.char_codec.encode(byte_str, bits)
     bits.seek(0)
     result = [b''] * len(byte_str)
     packer.char_codec.decode(bits, result)
-    assert b''.join(result) == byte_str
+    assert bytearray(result) == byte_str
 
 
 def test_packer_unannotated(tokenizer):
@@ -120,5 +120,3 @@ def test_packer_annotated(tokenizer):
     assert [t.tag_ for t in result] == ['DT', 'NN', 'VBD']
     assert [t.dep_ for t in result] == ['det', 'nsubj', 'ROOT']
     assert [(t.head.i - t.i) for t in result] == [1, 1, 0]
-
-

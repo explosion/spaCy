@@ -15,6 +15,7 @@ def test_attr_of_token(EN):
     assert feats_array[0][0] != feats_array[0][1]
 
 
+@pytest.mark.models
 def test_tag(EN):
     text = u'A nice sentence.'
     tokens = EN(text)
@@ -26,6 +27,7 @@ def test_tag(EN):
     assert feats_array[3][1] == tokens[3].tag
 
 
+@pytest.mark.models
 def test_dep(EN):
     text = u'A nice sentence.'
     tokens = EN(text)

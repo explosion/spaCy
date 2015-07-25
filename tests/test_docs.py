@@ -1,8 +1,9 @@
 # -*- coding: utf-8 -*-
 """Sphinx doctest is just too hard. Manually paste doctest examples here"""
 from spacy.en.attrs import IS_LOWER
+import pytest
 
-
+@pytest.mark.models
 def test_1():
     import spacy.en
     from spacy.parts_of_speech import ADV
@@ -21,6 +22,7 @@ def test_1():
     assert o == -11.07155704498291
 
 
+@pytest.mark.models
 def test2():
     import spacy.en
     from spacy.parts_of_speech import ADV
@@ -41,6 +43,7 @@ def test2():
     -11.07155704498291
 
 
+@pytest.mark.models
 def test3():
     import spacy.en
     from spacy.parts_of_speech import ADV

@@ -17,6 +17,7 @@ def lemmas(tagged):
     return [t.lemma_ for t in tagged]
 
 
+@pytest.mark.models
 def test_lemmas(lemmas, tagged):
     assert lemmas[0] == 'banana'
     assert lemmas[1] == 'in'

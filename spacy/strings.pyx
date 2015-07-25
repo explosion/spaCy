@@ -81,6 +81,7 @@ cdef class StringStore:
     def __getitem__(self, object string_or_id):
         cdef bytes byte_string
         cdef const Utf8Str* utf8str
+        cdef int id_
         if isinstance(string_or_id, int) or isinstance(string_or_id, long):
             if string_or_id == 0:
                 return u''

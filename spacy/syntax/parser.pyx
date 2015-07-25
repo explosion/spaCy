@@ -1,4 +1,3 @@
-# cython: profile=True
 """
 MALT-style dependency parser
 """
@@ -85,18 +84,17 @@ cdef class Parser:
 
         cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
                                   self.model.n_feats, self.model.n_feats)
-        self.parse(stcls, eg.c)
+        with nogil:
+            self.parse(stcls, eg.c)
         tokens.set_parse(stcls._sent)
 
     cdef void parse(self, StateClass stcls, ExampleC eg) nogil:
         while not stcls.is_final():
             memset(eg.scores, 0, eg.nr_class * sizeof(weight_t))
-
             self.moves.set_valid(eg.is_valid, stcls)
             fill_context(eg.atoms, stcls)
             self.model.set_scores(eg.scores, eg.atoms)
             eg.guess = arg_max_if_true(eg.scores, eg.is_valid, self.model.n_classes)
-
             self.moves.c[eg.guess].do(stcls, self.moves.c[eg.guess].label)
         self.moves.finalize_state(stcls)
 

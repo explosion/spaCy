@@ -120,7 +120,7 @@ def run_setup(exts):
         ext_modules=exts,
         license="Dual: Commercial or AGPL",
         install_requires=['numpy', 'murmurhash', 'cymem >= 1.11', 'preshed == 0.37',
-                          'thinc == 3.2', "unidecode", 'wget', 'plac', 'six',
+                          'thinc == 3.3', "unidecode", 'wget', 'plac', 'six',
                           'ujson'],
         setup_requires=["headers_workaround"],
     )
@@ -162,6 +162,7 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.gold', 'spacy.orth',
              'spacy.tokens.doc', 'spacy.tokens.spans', 'spacy.tokens.token',
              'spacy.serialize.packer', 'spacy.serialize.huffman', 'spacy.serialize.bits',
+             'spacy.cfile',
              'spacy.syntax.ner']
 
 

@@ -45,7 +45,7 @@ def test1():
     codec = HuffmanCodec(list(enumerate(probs)))
     
     py_codes = py_encode(dict(enumerate(probs)))
-    py_codes = py_codes.items()
+    py_codes = list(py_codes.items())
     py_codes.sort()
     assert codec.strings == [c for i, c in py_codes]
     
@@ -60,7 +60,7 @@ def test_round_trip():
     strings = list(codec.strings)
     codes = {codec.leaves[i]: strings[i] for i in range(len(codec.leaves))}
     bits = codec.encode(message)
-    string = b''.join(b'{0:b}'.format(ord(c)).rjust(8, b'0')[::-1] for c in bits.as_bytes())
+    string = ''.join('{0:b}'.format(c).rjust(8, '0')[::-1] for c in bits.as_bytes())
     for word in message:
         code = codes[word]
         assert string[:len(code)] == code
@@ -76,7 +76,7 @@ def test_rosetta():
     symb2freq = defaultdict(int)
     for ch in txt:
         symb2freq[ch] += 1
-    by_freq = symb2freq.items()
+    by_freq = list(symb2freq.items())
     by_freq.sort(reverse=True, key=lambda item: item[1])
     symbols = [sym for sym, prob in by_freq]
 
@@ -96,6 +96,7 @@ def test_rosetta():
     assert my_exp_len == py_exp_len
 
 
+@pytest.mark.slow
 def test_vocab(EN):
     codec = HuffmanCodec([(w.orth, numpy.exp(w.prob)) for w in EN.vocab])
     expected_length = 0
@@ -105,6 +106,7 @@ def test_vocab(EN):
     assert 8 < expected_length < 15
 
 
+@pytest.mark.slow
 def test_freqs():
     freqs = []
     words = []

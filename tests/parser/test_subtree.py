@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
+import pytest
 
 
+@pytest.mark.models
 def test_subtrees(EN):
     sent = EN('The four wheels on the bus turned quickly')
     wheels = sent[2]

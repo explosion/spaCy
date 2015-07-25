@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 from libc.string cimport memcpy
 
 # Note that we're setting the most significant bits here first, when in practice
@@ -15,7 +17,7 @@ cdef Code bit_append(Code code, bint bit) nogil:
 
 cdef class BitArray:
     def __init__(self, data=b''):
-        self.data = data
+        self.data = bytearray(data)
         self.byte = 0
         self.bit_of_byte = 0
         self.i = 0
@@ -45,7 +47,7 @@ cdef class BitArray:
         start_bit = self.i % 8
 
         if start_bit != 0 and start_byte < len(self.data):
-            byte = ord(self.data[start_byte])
+            byte = self.data[start_byte]
             for i in range(start_bit, 8):
                 self.i += 1
                 yield 1 if (byte & (one << i)) else 0
@@ -68,18 +70,24 @@ cdef class BitArray:
 
         # TODO portability
         cdef uchar[4] chars
-        chars[0] = <uchar>ord(self.data[start_byte])
-        chars[1] = <uchar>ord(self.data[start_byte+1])
-        chars[2] = <uchar>ord(self.data[start_byte+2])
-        chars[3] = <uchar>ord(self.data[start_byte+3])
+        chars[0] = self.data[start_byte]
+        chars[1] = self.data[start_byte+1]
+        chars[2] = self.data[start_byte+2]
+        chars[3] = self.data[start_byte+3]
         cdef uint32_t output
         memcpy(&output, chars, 4)
         self.i += 32
         return output
 
     def as_bytes(self):
+        cdef unsigned char byte_char
         if self.bit_of_byte != 0:
-            return self.data + chr(self.byte)
+            byte = chr(self.byte)
+            # Jump through some hoops for Python3
+            if isinstance(byte, unicode):
+                return self.data + <bytes>(&self.byte)[:1]
+            else:
+                return self.data + chr(self.byte)
         else:
             return self.data
 
@@ -92,7 +100,7 @@ cdef class BitArray:
         self.bit_of_byte += 1
         self.i += 1
         if self.bit_of_byte == 8:
-            self.data += chr(self.byte)
+            self.data += bytearray((self.byte,))
             self.byte = 0
             self.bit_of_byte = 0
 
@@ -106,7 +114,7 @@ cdef class BitArray:
                 self.byte &= ~(one << self.bit_of_byte)
             self.bit_of_byte += 1
             if self.bit_of_byte == 8:
-                self.data += chr(self.byte)
+                self.data += <bytes>self.byte
                 self.byte = 0
                 self.bit_of_byte = 0
             self.i += 1

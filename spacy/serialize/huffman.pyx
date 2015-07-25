@@ -1,4 +1,5 @@
 # cython: profile=True
+from __future__ import unicode_literals
 cimport cython
 from libcpp.queue cimport priority_queue
 from libcpp.pair cimport pair
@@ -110,14 +111,14 @@ cdef class HuffmanCodec:
         cdef int branch
 
         cdef int n_msg = msg.shape[0]
-        cdef bytes bytes_ = bits.as_bytes()
+        cdef bytearray bytes_ = bits.as_bytes()
         cdef unsigned char byte
         cdef int i_msg = 0
         cdef int i_byte = bits.i // 8
         cdef unsigned char i_bit = 0
         cdef unsigned char one = 1
         while i_msg < n_msg:
-            byte = ord(bytes_[i_byte])
+            byte = bytes_[i_byte]
             i_byte += 1
             for i_bit in range(8):
                 branch = node.right if (byte & (one << i_bit)) else node.left
@@ -138,11 +139,11 @@ cdef class HuffmanCodec:
         def __get__(self):
             output = []
             cdef int i, j
-            cdef bytes string
+            cdef unicode string
             cdef Code code
             for i in range(self.codes.size()):
                 code = self.codes[i]
-                string = b'{0:b}'.format(code.bits).rjust(code.length, '0')
+                string = '{0:b}'.format(code.bits).rjust(code.length, '0')
                 string = string[::-1]
                 output.append(string)
             return output

@@ -9,6 +9,7 @@ data_dir = os.environ.get('SPACY_DATA', LOCAL_DATA_DIR)
 # Let this have its own instances, as we have to be careful about memory here
 # that's the point, after all
 
+@pytest.mark.models
 def get_orphan_token(text, i):
     nlp = English(load_vectors=False, data_dir=data_dir)
     tokens = nlp(text)
@@ -18,6 +19,7 @@ def get_orphan_token(text, i):
     return token
 
 
+@pytest.mark.models
 def test_orphan():
     orphan = get_orphan_token('An orphan token', 1)
     gc.collect()
@@ -36,6 +38,7 @@ def _orphan_from_list(toks):
     return lst
 
 
+@pytest.mark.models
 def test_list_orphans():
     # Test case from NSchrading
     nlp = English(load_vectors=False, data_dir=data_dir)

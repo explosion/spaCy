@@ -1,7 +1,9 @@
 from spacy.en import English
 import six
+import pytest
 
 
+@pytest.mark.models
 def test_tag_names(EN):
     tokens = EN(u'I ate pizzas with anchovies.', parse=False, tag=True)
     pizza = tokens[2]

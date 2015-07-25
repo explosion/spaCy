@@ -15,6 +15,8 @@ Requires:
         * clusters.txt --- Output of hierarchical clustering, e.g. Brown clusters
         * vectors.tgz --- output of something like word2vec
 """
+from __future__ import unicode_literals
+
 import plac
 from pathlib import Path
 
@@ -45,7 +47,7 @@ def setup_tokenizer(lang_data_dir, tok_dir):
 
 def _read_clusters(loc):
     if not loc.exists():
-        print "Warning: Clusters file not found"
+        print("Warning: Clusters file not found")
         return {}
     clusters = {}
     for line in codecs.open(str(loc), 'r', 'utf8'):
@@ -60,7 +62,7 @@ def _read_clusters(loc):
         else:
             clusters[word] = '0'
     # Expand clusters with re-casing
-    for word, cluster in clusters.items():
+    for word, cluster in list(clusters.items()):
         if word.lower() not in clusters:
             clusters[word.lower()] = cluster
         if word.title() not in clusters:
@@ -72,7 +74,7 @@ def _read_clusters(loc):
 
 def _read_probs(loc):
     if not loc.exists():
-        print "Warning: Probabilities file not found"
+        print("Warning: Probabilities file not found")
         return {}
     probs = {}
     for i, line in enumerate(codecs.open(str(loc), 'r', 'utf8')):
@@ -85,7 +87,7 @@ def _read_probs(loc):
 def _read_senses(loc):
     lexicon = defaultdict(lambda: defaultdict(list))
     if not loc.exists():
-        print "Warning: WordNet senses not found"
+        print("Warning: WordNet senses not found")
         return lexicon
     sense_names = dict((s, i) for i, s in enumerate(spacy.senses.STRINGS))
     pos_ids = {'noun': NOUN, 'verb': VERB, 'adjective': ADJ}
@@ -109,13 +111,20 @@ def setup_vocab(src_dir, dst_dir):
     if vectors_src.exists():
         write_binary_vectors(str(vectors_src), str(dst_dir / 'vec.bin'))
     else:
-        print "Warning: Word vectors file not found"
+        print("Warning: Word vectors file not found")
     vocab = Vocab(data_dir=None, get_lex_props=get_lex_props)
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs = _read_probs(src_dir / 'words.sgt.prob')
-    lemmatizer = Lemmatizer(str(src_dir / 'wordnet'), NOUN, VERB, ADJ)
+    if not probs:
+        min_prob = 0.0
+    else:
+        min_prob = min(probs.values())
+    for word in clusters:
+        if word not in probs:
+            probs[word] = min_prob
+
     lexicon = []
-    for word, prob in reversed(sorted(probs.items(), key=lambda item: item[1])):
+    for word, prob in reversed(sorted(list(probs.items()), key=lambda item: item[1])):
         entry = get_lex_props(word)
         if word in clusters or float(prob) >= -17:
             entry['prob'] = float(prob)
@@ -144,7 +153,7 @@ def main(lang_data_dir, corpora_dir, model_dir):
     setup_tokenizer(lang_data_dir, model_dir / 'tokenizer')
     setup_vocab(corpora_dir, model_dir / 'vocab')
     if not (model_dir / 'wordnet').exists():
-        copytree(str(corpora_dir / 'wordnet'), str(model_dir / 'wordnet'))
+        copytree(str(corpora_dir / 'wordnet' / 'dict'), str(model_dir / 'wordnet'))
 
 
 if __name__ == '__main__':

@@ -71,17 +71,6 @@ cdef class Doc:
         self.is_tagged = False
         self.is_parsed = False
         self._py_tokens = []
-        cdef const LexemeC* lex
-        cdef attr_t orth
-        cdef bint space
-        if orths_and_spaces is not None:
-            for orth, space in orths_and_spaces:
-                lex = <LexemeC*>self.vocab._by_orth.get(orth)
-                if lex != NULL:
-                    assert lex.orth == orth
-                    self.push_back(lex, space)
-                else:
-                    raise Exception('Lexeme not found: %d' % orth)
 
     def __getitem__(self, object i):
         """Get a token.
@@ -122,9 +111,12 @@ cdef class Doc:
     def __unicode__(self):
         return u''.join([t.string for t in self])
 
+    def __str__(self):
+        return u''.join([t.string for t in self])
+
     @property
     def string(self):
-        return unicode(self)
+        return u''.join([t.string for t in self])
 
     @property
     def ents(self):
@@ -303,12 +295,11 @@ cdef class Doc:
         return self
 
     def to_bytes(self):
-        bits = self.vocab.packer.pack(self)
-        return struct.pack('I', len(bits)) + bits.as_bytes()
+        byte_string = self.vocab.serializer.pack(self)
+        return struct.pack('I', len(byte_string)) + byte_string
 
     def from_bytes(self, data):
-        bits = BitArray(data)
-        self.vocab.packer.unpack_into(bits, self)
+        self.vocab.serializer.unpack_into(data[4:], self)
         return self
     
     @staticmethod
@@ -316,15 +307,14 @@ cdef class Doc:
         keep_reading = True
         while keep_reading:
             try:
-                n_bits_str = file_.read(4)
-                if len(n_bits_str) < 4:
+                n_bytes_str = file_.read(4)
+                if len(n_bytes_str) < 4:
                     break
-                n_bits = struct.unpack('I', n_bits_str)[0]
-                n_bytes = n_bits // 8 + bool(n_bits % 8)
+                n_bytes = struct.unpack('I', n_bytes_str)[0]
                 data = file_.read(n_bytes)
             except StopIteration:
                 keep_reading = False
-            yield data
+            yield n_bytes_str + data
 
     # This function is terrible --- need to fix this.
     def merge(self, int start_idx, int end_idx, unicode tag, unicode lemma,

@@ -33,6 +33,11 @@ cdef class TransitionSystem:
         self.freqs = {}
         for attr in (TAG, HEAD, DEP, ENT_TYPE, ENT_IOB):
             self.freqs[attr] = defaultdict(int)
+            self.freqs[attr][0] = 1
+        # Ensure we've seen heads. Need an official dependency length limit...
+        for i in range(512):
+            self.freqs[HEAD][i] = 1
+            self.freqs[HEAD][-i] = 1
 
     cdef int initialize_state(self, StateClass state) except -1:
         pass

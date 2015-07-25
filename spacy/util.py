@@ -65,16 +65,6 @@ def read_tokenization(lang):
     return entries
 
 
-def read_encoding_freqs(data_dir):
-    tags = json.load(open(path.join(data_dir, '..', 'pos', 'tag_freqs.json')))
-    heads = json.load(open(path.join(data_dir, '..', 'deps', 'head_freqs.json')))
-    deps = json.load(open(path.join(data_dir, '..', 'deps', 'dep_freqs.json')))
-    iob = json.load(open(path.join(data_dir, '..', 'ner', 'iob_freqs.json')))
-    ne_types = json.load(open(path.join(data_dir, '..', 'ner', 'ne_freqs.json')))
-    return [(TAG, tags), (HEAD, heads), (DEP, deps), (ENT_IOB, iob),
-            (ENT_TYPE, ne_types)]
-
-
 def read_detoken_rules(lang): # Deprecated?
     loc = path.join(DATA_DIR, lang, 'detokenize')
     entries = []

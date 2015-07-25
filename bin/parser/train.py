@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 from __future__ import division
 from __future__ import unicode_literals
+from __future__ import print_function
 
 import os
 from os import path
@@ -107,7 +108,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
 
     nlp = Language(data_dir=model_dir)
 
-    print "Itn.\tP.Loss\tUAS\tNER F.\tTag %\tToken %"
+    print("Itn.\tP.Loss\tUAS\tNER F.\tTag %\tToken %")
     for itn in range(n_iter):
         scorer = Scorer()
         loss = 0
@@ -138,9 +139,9 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                 nlp.entity.train(tokens, gold)
                 nlp.tagger.train(tokens, gold.tags)
         random.shuffle(gold_tuples)
-        print '%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
-                                               scorer.tags_acc,
-                                               scorer.token_acc)
+        print('%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
+                                                   scorer.tags_acc,
+                                                   scorer.token_acc))
     nlp.end_training()
 
 def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False,
@@ -219,14 +220,14 @@ def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbos
     #    write_parses(English, dev_loc, model_dir, out_loc, beam_width=beam_width)
     scorer = evaluate(English, list(read_json_file(dev_loc)),
                       model_dir, gold_preproc=gold_preproc, verbose=verbose)
-    print 'TOK', scorer.token_acc
-    print 'POS', scorer.tags_acc
-    print 'UAS', scorer.uas
-    print 'LAS', scorer.las
+    print('TOK', scorer.token_acc)
+    print('POS', scorer.tags_acc)
+    print('UAS', scorer.uas)
+    print('LAS', scorer.las)
 
-    print 'NER P', scorer.ents_p
-    print 'NER R', scorer.ents_r
-    print 'NER F', scorer.ents_f
+    print('NER P', scorer.ents_p)
+    print('NER R', scorer.ents_r)
+    print('NER F', scorer.ents_f)
 
 
 if __name__ == '__main__':
