@@ -1,13 +1,16 @@
 import numpy
 import codecs
-import json
-import ujson
 import random
 import re
 import os
 from os import path
 
 from libc.string cimport memset
+
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 
 def tags_to_entities(tags):
@@ -128,7 +131,7 @@ def read_json_file(loc, docs_filter=None):
             yield from read_json_file(path.join(loc, filename))
     else:
         with open(loc) as file_:
-            docs = ujson.load(file_)
+            docs = json.load(file_)
         for doc in docs:
             if docs_filter is not None and not docs_filter(doc):
                 continue
