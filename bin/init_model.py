@@ -80,13 +80,13 @@ def _read_clusters(loc):
 def _read_probs(loc):
     if not loc.exists():
         print("Warning: Probabilities file not found")
-        return {}
+        return {}, 0.0
     probs = {}
     for i, line in enumerate(codecs.open(str(loc), 'r', 'utf8')):
         prob, word = line.split()
         prob = float(prob)
         probs[word] = prob
-    return probs
+    return probs, probs['-OOV-']
 
 
 def _read_freqs(loc):
