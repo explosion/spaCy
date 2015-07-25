@@ -89,7 +89,7 @@ def _read_probs(loc):
     return probs, probs['-OOV-']
 
 
-def _read_freqs(loc):
+def _read_freqs(loc, max_length=100, min_doc_freq=5, min_freq=10):
     if not loc.exists():
         print("Warning: Frequencies file not found")
         return None
@@ -105,7 +105,9 @@ def _read_freqs(loc):
     probs = {}
     for line in loc.open():
         freq, doc_freq, key = line.split('\t', 2)
-        if int(doc_freq) >= 2 and int(freq) >= 5 and len(key) < 200:
+        doc_freq = int(doc_freq)
+        freq = int(freq)
+        if doc_freq >= min_doc_freq and freq >= min_freq and len(key) < max_length:
             word = literal_eval(key)
             smooth_count = counts.smoother(int(freq))
             log_smooth_count = math.log(smooth_count)
