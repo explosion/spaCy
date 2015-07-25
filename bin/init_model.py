@@ -91,7 +91,7 @@ def _read_probs(loc):
 def _read_freqs(loc):
     counts = PreshCounter()
     total = 0
-    for line in open(loc):
+    for line in loc.open():
         freq, doc_freq, key = line.split('\t', 2)
         freq = int(freq)
         counts[hash_string(key)] = freq
@@ -99,7 +99,7 @@ def _read_freqs(loc):
     counts.smooth()
     log_total = math.log(total)
     probs = {}
-    for line in open(loc):
+    for line in loc.open():
         freq, doc_freq, key = line.split('\t', 2)
         if int(doc_freq) >= 2 and int(freq) >= 5 and len(key) < 200:
             word = literal_eval(key)
