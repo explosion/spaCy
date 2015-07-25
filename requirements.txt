@@ -1,7 +1,7 @@
 cython
 cymem == 1.11
 pathlib
-preshed == 0.37
+preshed == 0.41
 thinc == 3.3
 murmurhash == 0.24
 unidecode
