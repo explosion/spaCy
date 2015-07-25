@@ -110,8 +110,8 @@ def _read_freqs(loc):
             smooth_count = counts.smoother(int(freq))
             log_smooth_count = math.log(smooth_count)
             probs[word] = math.log(smooth_count) - log_total
-    probs['-OOV-'] = math.log(counts.smoother(0)) - log_total
-    return probs
+    oov_prob = math.log(counts.smoother(0)) - log_total
+    return probs, oov_prob
 
 
 def _read_senses(loc):
@@ -144,29 +144,30 @@ def setup_vocab(src_dir, dst_dir):
         print("Warning: Word vectors file not found")
     vocab = Vocab(data_dir=None, get_lex_props=get_lex_props)
     clusters = _read_clusters(src_dir / 'clusters.txt')
-    probs = _read_probs(src_dir / 'words.sgt.prob')
+    probs, oov_prob = _read_probs(src_dir / 'words.sgt.prob')
     if not probs:
-        probs = _read_freqs(src_dir / 'freqs.txt')
+        probs, oov_prob = _read_freqs(src_dir / 'freqs.txt')
     if not probs:
-        min_prob = 0.0
+        oov_prob = 0.0
     else:
-        min_prob = min(probs.values())
+        oov_prob = min(probs.values())
     for word in clusters:
         if word not in probs:
-            probs[word] = min_prob
+            probs[word] = oov_prob
 
     lexicon = []
     for word, prob in reversed(sorted(list(probs.items()), key=lambda item: item[1])):
         entry = get_lex_props(word)
-        if word in clusters:
-            entry['prob'] = float(prob)
-            cluster = clusters.get(word, '0')
-            # Decode as a little-endian string, so that we can do & 15 to get
-            # the first 4 bits. See _parse_features.pyx
-            entry['cluster'] = int(cluster[::-1], 2)
-            vocab[word] = entry
+        entry['prob'] = float(prob)
+        cluster = clusters.get(word, '0')
+        # Decode as a little-endian string, so that we can do & 15 to get
+        # the first 4 bits. See _parse_features.pyx
+        entry['cluster'] = int(cluster[::-1], 2)
+        vocab[word] = entry
     vocab.dump(str(dst_dir / 'lexemes.bin'))
     vocab.strings.dump(str(dst_dir / 'strings.txt'))
+    with (dst_dir / 'oov_prob').open('w') as file_:
+        file_.write('%f' % oov_prob)
 
 
 def main(lang_data_dir, corpora_dir, model_dir):

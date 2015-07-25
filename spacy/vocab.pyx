@@ -37,7 +37,7 @@ cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
     def __init__(self, data_dir=None, get_lex_props=None, load_vectors=True,
-                 pos_tags=None):
+                 pos_tags=None, oov_prob=-30):
         self.mem = Pool()
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
@@ -61,6 +61,7 @@ cdef class Vocab:
 
         self._serializer = None
         self.data_dir = data_dir
+        self.oov_prob = oov_prob
 
     property serializer:
         def __get__(self):
@@ -90,7 +91,7 @@ cdef class Vocab:
         if len(string) < 3:
             mem = self.mem
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        props = self.lexeme_props_getter(string)
+        props = self.lexeme_props_getter(string, self.oov_prob)
         set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
         if is_oov:
             lex.id = 0

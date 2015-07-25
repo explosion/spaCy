@@ -31,6 +31,7 @@ cdef class Vocab:
     cdef readonly int length
     cdef public object _serializer
     cdef public object data_dir
+    cdef public float oov_prob
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL
     cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL
