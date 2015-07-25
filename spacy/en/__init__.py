@@ -84,7 +84,7 @@ class English(object):
         self.vocab = Vocab(data_dir=path.join(data_dir, 'vocab') if data_dir else None,
                            get_lex_props=get_lex_props, load_vectors=load_vectors,
                            pos_tags=POS_TAGS,
-                           float(open(path.join(data_dir, 'vocab', 'oov_prob')).read()))
+                           oov_prob=float(open(path.join(data_dir, 'vocab', 'oov_prob')).read()))
         if Tagger is True:
             Tagger = EnPosTagger
         if Parser is True:
