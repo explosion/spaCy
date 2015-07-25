@@ -5,6 +5,8 @@ cdef class CFile:
     def __init__(self, loc, mode):
         if isinstance(mode, unicode):
             mode_str = mode.encode('ascii')
+        else:
+            mode_str = mode
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self.fp = fopen(<char*>bytes_loc, mode_str)
         if self.fp == NULL:
