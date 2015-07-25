@@ -158,14 +158,12 @@ def setup_vocab(src_dir, dst_dir):
     lexicon = []
     for word, prob in reversed(sorted(list(probs.items()), key=lambda item: item[1])):
         entry = get_lex_props(word)
-        if word in clusters or float(prob) >= -17:
+        if word in clusters:
             entry['prob'] = float(prob)
             cluster = clusters.get(word, '0')
             # Decode as a little-endian string, so that we can do & 15 to get
             # the first 4 bits. See _parse_features.pyx
             entry['cluster'] = int(cluster[::-1], 2)
-            orth_senses = set()
-            lemmas = []
             vocab[word] = entry
     vocab.dump(str(dst_dir / 'lexemes.bin'))
     vocab.strings.dump(str(dst_dir / 'strings.txt'))
