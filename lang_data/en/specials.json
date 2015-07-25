@@ -147,7 +147,12 @@
 "I'll": [{"F": "I", "L": "-PRON-"},
             {"F": "'ll", "L": "will", "pos": "MD"}],
 
+"i'll": [{"F": "i", "L": "-PRON-"},
+            {"F": "'ll", "L": "will", "pos": "MD"}],
+
 "I'm": [{"F": "I", "L": "-PRON-"},
+        {"F": "'m", "L": "be", "pos": "VBP", "number": 1, "tenspect": 1}],
+"i'm": [{"F": "i", "L": "-PRON-"},
         {"F": "'m", "L": "be", "pos": "VBP", "number": 1, "tenspect": 1}],
 "Im": [{"F": "I", "L": "-PRON-"},
         {"F": "m", "L": "be", "pos": "VBP", "number": 1, "tenspect": 1}],
@@ -156,8 +161,13 @@
 
 "I'ma": [{"F": "I", "L": "-PRON-"},
             {"F": "'ma"}],
+"i'ma": [{"F": "i", "L": "-PRON-"},
+            {"F": "'ma"}],
+
 
 "I've": [{"F": "I", "L": "-PRON-"},
+            {"F": "'ve", "pos": "VB", "L": "have", "pos": "MD"}],
+"i've": [{"F": "i", "L": "-PRON-"},
             {"F": "'ve", "pos": "VB", "L": "have", "pos": "MD"}],
 
 "isn't": [{"F": "is", "L": "be", "pos": "VBZ"},
@@ -167,6 +177,10 @@
 
 "Isn't": [{"F": "Is", "L": "be", "pos": "VBZ"},
             {"F": "n't", "L": "not", "pos": "RB"}],
+
+
+"It'd": [{"F": "It", "L": "-PRON-"},
+            {"F": "'d", "L": "would", "pos": "MD"}],
 
 
 "it'd": [{"F": "it", "L": "-PRON-"},
