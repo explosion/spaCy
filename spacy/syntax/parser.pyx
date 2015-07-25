@@ -1,4 +1,3 @@
-# cython: profile=True
 """
 MALT-style dependency parser
 """
