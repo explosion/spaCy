@@ -46,8 +46,7 @@ def setup_tokenizer(lang_data_dir, tok_dir):
                      'suffix.txt'):
         src = lang_data_dir / filename
         dst = tok_dir / filename
-        if not dst.exists():
-            copyfile(str(src), str(dst))
+        copyfile(str(src), str(dst))
 
 
 def _read_clusters(loc):
