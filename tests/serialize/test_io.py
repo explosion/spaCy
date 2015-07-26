@@ -6,6 +6,7 @@ from spacy.tokens import Doc
 import math
 
 
+@pytest.mark.models
 def test_read_write(EN):
     doc1 = EN(u'This is a simple test. With a couple of sentences.')
     doc2 = EN(u'This is another test document.')
