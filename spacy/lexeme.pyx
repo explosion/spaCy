@@ -11,6 +11,7 @@ import numpy
 
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
+from .attrs cimport IS_OOV
 
 
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
@@ -50,6 +51,9 @@ cdef class Lexeme:
     cpdef bint check_flag(self, attr_id_t flag_id) except -1:
         cdef flags_t one = 1
         return self.flags & (one << flag_id)
+
+    property is_oov:
+        def __get__(self): return self.check_flag(IS_OOV)
 
     property is_alpha:
         def __get__(self): return self.check_flag(IS_ALPHA)

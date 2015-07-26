@@ -18,8 +18,7 @@ from ..parts_of_speech cimport CONJ, PUNCT
 
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
-
-
+from ..attrs cimport IS_OOV
 
 
 cdef class Token:
@@ -286,7 +285,9 @@ cdef class Token:
         def __get__(self):
             return self.vocab.strings[self.c.dep]
 
-    
+    property is_oov:
+        def __get__(self): return check_flag(self.c.lex, IS_OOV)
+
     property is_alpha:
         def __get__(self): return check_flag(self.c.lex, IS_ALPHA)
     

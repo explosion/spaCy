@@ -12,19 +12,8 @@ cpdef enum attr_id_t:
     LIKE_NUM
     LIKE_EMAIL
     IS_STOP
-    FLAG0
-    FLAG1
-    FLAG2
-    FLAG3
-    FLAG4
-    FLAG5
-    FLAG6
-    FLAG7
-    FLAG8
-    FLAG9
-    FLAG10
-    FLAG11
-    FLAG12
+    IS_OOV
+    
     FLAG13
     FLAG14
     FLAG15

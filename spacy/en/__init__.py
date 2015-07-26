@@ -25,9 +25,9 @@ from ..util import read_lang_data
 from ..attrs import TAG, HEAD, DEP, ENT_TYPE, ENT_IOB
 
 
-def get_lex_props(string, oov_prob=-30):
+def get_lex_props(string, oov_prob=-30, is_oov=False):
     return {
-        'flags': get_flags(string),
+        'flags': get_flags(string, is_oov=is_oov),
         'length': len(string),
         'orth': string,
         'lower': string.lower(),

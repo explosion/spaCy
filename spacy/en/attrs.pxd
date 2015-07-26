@@ -1,4 +1,4 @@
-from ..attrs cimport FLAG11, FLAG12, FLAG13, FLAG14
+from ..attrs cimport FLAG13, FLAG14
 from ..attrs cimport FLAG15, FLAG16, FLAG17, FLAG18, FLAG19, FLAG20, FLAG21
 from ..attrs cimport FLAG22, FLAG23, FLAG24, FLAG25, FLAG26, FLAG27, FLAG28
 from ..attrs cimport FLAG29,  FLAG30, FLAG31, FLAG32
@@ -10,6 +10,7 @@ from ..attrs cimport IS_PUNCT as _IS_PUNCT
 from ..attrs cimport IS_SPACE as _IS_SPACE
 from ..attrs cimport IS_TITLE as _IS_TITLE
 from ..attrs cimport IS_UPPER as _IS_UPPER
+from ..attrs cimport IS_OOV as _IS_OOV
 from ..attrs cimport LIKE_EMAIL as _LIKE_EMAIL
 from ..attrs cimport LIKE_URL as _LIKE_URL
 from ..attrs cimport LIKE_NUM as _LIKE_NUM
@@ -43,6 +44,7 @@ cpdef enum:
     LIKE_NUM = _LIKE_NUM
     LIKE_EMAIL = _LIKE_EMAIL
     IS_STOP = _IS_STOP
+    IS_OOV = _IS_OOV
  
     ORTH = _ORTH
     SHAPE = _SHAPE

@@ -95,7 +95,7 @@ cdef class Vocab:
         if len(string) < 3:
             mem = self.mem
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        props = self.lexeme_props_getter(string, self.oov_prob)
+        props = self.lexeme_props_getter(string, self.oov_prob, is_oov=is_oov)
         set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
         if is_oov:
             lex.id = 0
@@ -119,7 +119,7 @@ cdef class Vocab:
         if len(string) < 3:
             mem = self.mem
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        props = self.lexeme_props_getter(string)
+        props = self.lexeme_props_getter(string, self.oov_prob, is_oov=is_oov)
         set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
         if is_oov:
             lex.id = 0
