@@ -4,8 +4,9 @@ from ..orth cimport is_title, is_upper, like_url, like_number, like_email
 from ..typedefs cimport flags_t
 
 
-def get_flags(unicode string):
+def get_flags(unicode string, is_oov=False):
     cdef flags_t flags = 0
+    flags |= is_oov << IS_OOV
     flags |= is_alpha(string) << IS_ALPHA
     flags |= is_ascii(string) << IS_ASCII
     flags |= is_digit(string) << IS_DIGIT
