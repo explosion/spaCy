@@ -107,6 +107,8 @@ cdef class Vocab:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
         if necessary, using memory acquired from the given pool.  If the pool
         is the lexicon's own memory, the lexeme is saved in the lexicon.'''
+        if string == u'':
+            return &EMPTY_LEXEME
         cdef LexemeC* lex
         lex = <LexemeC*>self._by_orth.get(orth)
         if lex != NULL:
