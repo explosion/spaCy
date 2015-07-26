@@ -82,7 +82,8 @@ def cython_setup(mod_names, language, includes, compile_args, link_args):
         exts.append(e)
     distutils.core.setup(
         name='spacy',
-        packages=['spacy', 'spacy.en', 'spacy.syntax'],
+        packages=['spacy', 'spacy.tokens', 'spacy.en', 'spacy.serialize',
+                  'spacy.syntax', 'spacy.munge'],
         description="Industrial-strength NLP",
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
@@ -93,8 +94,6 @@ def cython_setup(mod_names, language, includes, compile_args, link_args):
                                    "data/wordnet/*", "data/tokenizer/*",
                                    "data/vocab/lexemes.bin",
                                    "data/vocab/strings.txt"],
-                      "spacy.tokens": ["*.pxd"],
-                      "spacy.serialize": ["*.pxd"],
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
         cmdclass={'build_ext': Cython.Distutils.build_ext},
@@ -105,7 +104,8 @@ def cython_setup(mod_names, language, includes, compile_args, link_args):
 def run_setup(exts):
     setup(
         name='spacy',
-        packages=['spacy', 'spacy.tokens', 'spacy.en', 'spacy.syntax', 'spacy.munge'],
+        packages=['spacy', 'spacy.tokens', 'spacy.en', 'spacy.serialize',
+                  'spacy.syntax', 'spacy.munge'],
         description="Industrial-strength NLP",
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
