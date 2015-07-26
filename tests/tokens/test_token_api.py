@@ -32,6 +32,18 @@ def test_flags(EN):
 
 
 def test_single_token_string(EN):
-
     tokens = EN(u'foobar')
     assert tokens[0].string == 'foobar'
+
+
+def test_is_properties(EN):
+    Hi, comma, my, email, is_, addr = EN(u'Hi, my email is test@me.com')
+    assert Hi.is_title
+    assert Hi.is_alpha
+    assert not Hi.is_digit
+    assert comma.is_punct
+    assert email.is_ascii
+    assert not email.like_url
+    assert is_.is_lower
+    assert addr.like_email
+
