@@ -23,8 +23,8 @@ def test_ellipsis(en_tokenizer):
 
 def test_email(en_tokenizer):
     tokens = en_tokenizer('hello@example.com')
-    assert len(tokens) == 3
+    assert len(tokens) == 1
     tokens = en_tokenizer('hi+there@gmail.it')
-    assert len(tokens) == 3
+    assert len(tokens) == 1
 
 
