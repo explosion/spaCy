@@ -91,7 +91,7 @@ def _read_probs(loc):
 def _read_freqs(loc, max_length=100, min_doc_freq=5, min_freq=100):
     if not loc.exists():
         print("Warning: Frequencies file not found")
-        return None
+        return None, None
     counts = PreshCounter()
     total = 0
     for i, line in enumerate(loc.open()):
