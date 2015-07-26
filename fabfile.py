@@ -1,19 +1,60 @@
-from fabric.api import local, lcd, env, settings
+from fabric.api import local, lcd, env, settings, prefix
 from os.path import exists as file_exists
 from fabtools.python import virtualenv
 from os import path
+import os
+import shutil
 
 
 PWD = path.dirname(__file__)
 VENV_DIR = path.join(PWD, '.env')
 
 
-def sdist():
-    if file_exists('dist/'):
-        local('rm -rf dist/')
-    local('mkdir dist')
-    with virtualenv(VENV_DIR):
-        local('python setup.py sdist')
+def counts():
+    pass
+    # Tokenize the corpus
+    # tokenize() 
+    # get_freqs()
+    # Collate the counts
+    # cat freqs | sort -k2 | gather_freqs()
+    # gather_freqs()
+    # smooth()
+
+
+# clean, make, sdist
+# cd to new env, install from sdist, 
+# Push changes to server
+# Pull changes on server
+# clean make init model
+# test --vectors --slow
+# train
+# test --vectors --slow --models
+# sdist
+# upload data to server
+# change to clean venv
+# py2: install from sdist, test --slow, download data, test --models --vectors
+# py3: install from sdist, test --slow, download data, test --models --vectors
+
+
+def prebuild(build_dir='/tmp/build_spacy'):
+    if file_exists(build_dir):
+        shutil.rmtree(build_dir)
+    os.mkdir(build_dir)
+    spacy_dir = path.dirname(__file__)
+    wn_url = 'http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz'
+    build_venv = path.join(build_dir, '.env')
+    with lcd(build_dir):
+        local('git clone %s .' % spacy_dir)
+        local('virtualenv ' + build_venv)
+        with prefix('cd %s && PYTHONPATH=`pwd` && source %s/bin/activate' % (build_dir, build_venv)):
+            local('pip install cython fabric fabtools')
+            local('pip install -r requirements.txt')
+            local('fab clean make')
+            local('cp -r %s/corpora/en/wordnet corpora/en/' % spacy_dir)
+            local('cp %s/corpora/en/freqs.txt.gz corpora/en/' % spacy_dir)
+            local('python bin/init_model.py lang_data/en corpora/en spacy/en/data')
+            local('fab test')
+            local('python setup.py sdist')
 
 def docs():
     with virtualenv(VENV_DIR):
