@@ -56,7 +56,7 @@ def test3():
     from numpy.linalg import norm
 
     cosine = lambda v1, v2: dot(v1, v2) / (norm(v1) * norm(v2))
-    words = [w for w in nlp.vocab if w.check(IS_LOWER) and w.has_repvec]
+    words = [w for w in nlp.vocab if w.is_lower and w.has_repvec]
     words.sort(key=lambda w: cosine(w.repvec, pleaded.repvec))
     words.reverse()
     o = [w.orth_ for w in words[0:20]]
