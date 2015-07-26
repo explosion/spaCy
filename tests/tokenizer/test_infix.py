@@ -12,3 +12,19 @@ def test_period(en_tokenizer):
     assert len(tokens) == 3
     tokens = en_tokenizer('zombo.com')
     assert len(tokens) == 1
+
+
+def test_ellipsis(en_tokenizer):
+    tokens = en_tokenizer('best...Known')
+    assert len(tokens) == 3
+    tokens = en_tokenizer('best...known')
+    assert len(tokens) == 3
+
+
+def test_email(en_tokenizer):
+    tokens = en_tokenizer('hello@example.com')
+    assert len(tokens) == 3
+    tokens = en_tokenizer('hi+there@gmail.it')
+    assert len(tokens) == 3
+
+
