@@ -101,6 +101,7 @@ cdef class Vocab:
             lex.id = 0
         else:
             self._add_lex_to_vocab(key, lex)
+        assert lex != NULL, string
         return lex
 
     cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL:
@@ -124,6 +125,7 @@ cdef class Vocab:
             lex.id = 0
         else:
             self._add_lex_to_vocab(hash_string(string), lex)
+        assert lex != NULL, orth
         return lex
 
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1:
