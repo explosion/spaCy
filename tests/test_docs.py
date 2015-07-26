@@ -36,11 +36,11 @@ def test2():
     o == u'‘Give it back,’ he pleaded ABJECTLY, ‘it’s mine.’'
 
     nlp.vocab[u'back'].prob
-    -7.403977394104004
+    -7.033305644989014
     nlp.vocab[u'not'].prob
-    -5.407193660736084
+    -5.332601070404053
     nlp.vocab[u'quietly'].prob
-    -11.07155704498291
+    -11.994928359985352
 
 
 @pytest.mark.models
@@ -74,11 +74,13 @@ def test3():
                  u'consented', u'acquiesced', u'petitioned', u'quarreled',
                  u'appealed', u'pleading']
     o = [w.orth_ for w in words[50:60]]
-    assert o == [u'counselled', u'bragged', u'backtracked', u'caucused', u'refiled',
-                 u'dueled', u'mused', u'dissented', u'yearned', u'confesses']
+    assert o == [u'endeavoured', u'martialed', u'counselled', u'bragged',
+                 u'backtracked', u'caucused', u'refiled', u'dueled', u'mused',
+                 u'dissented']
     o = [w.orth_ for w in words[100:110]]
-    assert o == [u'cabled', u'ducked', u'sentenced', u'perjured', u'absconded',
-                 u'bargained', u'overstayed', u'clerked', u'confided', u'sympathizes']
+    assert o == [u'prosecuted', u'acquits', u'cabled', u'ducked', u'sentenced',
+                 u'gaoled', u'perjured', u'absconded', u'bargained', u'overstayed']
+    
     #o = [w.orth_ for w in words[1000:1010]]
     #assert o == [u'scorned', u'baled', u'righted', u'requested', u'swindled',
     #             u'posited', u'firebombed', u'slimed', u'deferred', u'sagged']
