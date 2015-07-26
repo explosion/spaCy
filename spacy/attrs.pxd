@@ -1,5 +1,17 @@
 # Reserve 64 values for flag features
 cpdef enum attr_id_t:
+    IS_ALPHA
+    IS_ASCII
+    IS_DIGIT
+    IS_LOWER
+    IS_PUNCT
+    IS_SPACE
+    IS_TITLE
+    IS_UPPER
+    LIKE_URL
+    LIKE_NUM
+    LIKE_EMAIL
+    IS_STOP
     FLAG0
     FLAG1
     FLAG2

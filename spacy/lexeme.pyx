@@ -9,6 +9,9 @@ from .orth cimport word_shape
 from .typedefs cimport attr_t, flags_t
 import numpy
 
+from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
+from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
+
 
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
 
@@ -44,5 +47,36 @@ cdef class Lexeme:
     def has_repvec(self):
         return self.l2_norm != 0
 
-    cpdef bint check(self, attr_id_t flag_id) except -1:
-        return self.flags & (1 << flag_id)
+    cpdef bint check_flag(self, attr_id_t flag_id) except -1:
+        cdef flags_t one = 1
+        return self.flags & (one << flag_id)
+
+    property is_alpha:
+        def __get__(self): return self.check_flag(IS_ALPHA)
+    
+    property is_ascii:
+        def __get__(self): return self.check_flag(IS_ASCII)
+
+    property is_digit:
+        def __get__(self): return self.check_flag(IS_DIGIT)
+
+    property is_lower:
+        def __get__(self): return self.check_flag(IS_LOWER)
+
+    property is_title:
+        def __get__(self): return self.check_flag(IS_TITLE)
+
+    property is_punct:
+        def __get__(self): return self.check_flag(IS_PUNCT)
+
+    property is_space: 
+        def __get__(self): return self.check_flag(IS_SPACE)
+
+    property like_url:
+        def __get__(self): return self.check_flag(LIKE_URL)
+    
+    property like_num:
+        def __get__(self): return self.check_flag(LIKE_NUM)
+
+    property like_email:
+        def __get__(self): return self.check_flag(LIKE_EMAIL)

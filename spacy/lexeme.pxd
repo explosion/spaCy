@@ -72,7 +72,7 @@ cdef class Lexeme:
         py.sentiment = ptr.sentiment
         return py
 
-    cpdef bint check(self, attr_id_t flag_id) except -1
+    cpdef bint check_flag(self, attr_id_t flag_id) except -1
     
 
 cdef inline bint check_flag(const LexemeC* lexeme, attr_id_t flag_id) nogil:

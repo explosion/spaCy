@@ -1,6 +1,6 @@
 # cython: embedsignature=True
 from ..orth cimport is_alpha, is_ascii, is_digit, is_lower, is_punct, is_space
-from ..orth cimport is_title, is_upper, like_url, like_number
+from ..orth cimport is_title, is_upper, like_url, like_number, like_email
 from ..typedefs cimport flags_t
 
 
@@ -16,4 +16,5 @@ def get_flags(unicode string):
     flags |= is_upper(string) << IS_UPPER
     flags |= like_url(string) << LIKE_URL
     flags |= like_number(string) << LIKE_NUM
+    flags |= like_email(string) << LIKE_EMAIL
     return flags

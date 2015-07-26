@@ -1,8 +1,19 @@
-from ..attrs cimport FLAG0, FLAG1, FLAG2, FLAG3, FLAG4, FLAG5, FLAG6, FLAG7
-from ..attrs cimport FLAG8, FLAG9, FLAG10, FLAG11, FLAG12, FLAG13, FLAG14
+from ..attrs cimport FLAG11, FLAG12, FLAG13, FLAG14
 from ..attrs cimport FLAG15, FLAG16, FLAG17, FLAG18, FLAG19, FLAG20, FLAG21
 from ..attrs cimport FLAG22, FLAG23, FLAG24, FLAG25, FLAG26, FLAG27, FLAG28
 from ..attrs cimport FLAG29,  FLAG30, FLAG31, FLAG32
+from ..attrs cimport IS_ALPHA as _IS_ALPHA
+from ..attrs cimport IS_DIGIT as _IS_DIGIT
+from ..attrs cimport IS_ASCII as _IS_ASCII
+from ..attrs cimport IS_LOWER as _IS_LOWER
+from ..attrs cimport IS_PUNCT as _IS_PUNCT
+from ..attrs cimport IS_SPACE as _IS_SPACE
+from ..attrs cimport IS_TITLE as _IS_TITLE
+from ..attrs cimport IS_UPPER as _IS_UPPER
+from ..attrs cimport LIKE_EMAIL as _LIKE_EMAIL
+from ..attrs cimport LIKE_URL as _LIKE_URL
+from ..attrs cimport LIKE_NUM as _LIKE_NUM
+from ..attrs cimport IS_STOP as _IS_STOP
 from ..attrs cimport ORTH as _ORTH
 from ..attrs cimport SHAPE as _SHAPE
 from ..attrs cimport LOWER as _LOWER
@@ -20,43 +31,19 @@ from ..attrs cimport ENT_TYPE as _ENT_TYPE
 
 
 cpdef enum:
-    IS_ALPHA = FLAG0
-    IS_ASCII = FLAG1
-    IS_DIGIT = FLAG2
-    IS_LOWER = FLAG3
-    IS_PUNCT = FLAG4
-    IS_SPACE = FLAG5
-    IS_TITLE = FLAG6
-    IS_UPPER = FLAG7
-    LIKE_URL = FLAG8
-    LIKE_NUM = FLAG9
-    IS_STOP = FLAG10
+    IS_ALPHA = _IS_ALPHA
+    IS_ASCII = _IS_ASCII
+    IS_DIGIT = _IS_DIGIT
+    IS_LOWER = _IS_LOWER
+    IS_PUNCT = _IS_PUNCT
+    IS_SPACE = _IS_SPACE
+    IS_TITLE = _IS_TITLE
+    IS_UPPER = _IS_UPPER
+    LIKE_URL = _LIKE_URL
+    LIKE_NUM = _LIKE_NUM
+    LIKE_EMAIL = _LIKE_EMAIL
+    IS_STOP = _IS_STOP
  
-    EMO_POS = FLAG11
-    EMO_NEG = FLAG12
-
-    EMO_ANGER = FLAG13
-    EMO_APATE = FLAG14
-    EMO_DISGUST = FLAG15
-    EMO_FEAR = FLAG16
-    EMO_JOY = FLAG17
-    EMO_SAD = FLAG18
-    EMO_SURPRISE = FLAG19
-    EMO_TRUST = FLAG20
-
-    CLR_NONE = FLAG21
-    CLR_BLACK = FLAG22
-    CLR_BLUE = FLAG23
-    CLR_BROWN = FLAG24
-    CLR_GREEN = FLAG25
-    CLR_GREY = FLAG26
-    CLR_ORANGE = FLAG27
-    CLR_PURPLE = FLAG28
-    CLR_PINK = FLAG29
-    CLR_RED = FLAG30
-    CLR_WHITE = FLAG31
-    CLR_YELLOW = FLAG32
-
     ORTH = _ORTH
     SHAPE = _SHAPE
     LOWER = _LOWER

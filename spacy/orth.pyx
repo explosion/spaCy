@@ -111,6 +111,11 @@ cpdef bint like_number(unicode string):
     return False
 
 
+_like_email = re.compile(r"([a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+)").match
+cpdef bint like_email(unicode string):
+    return _like_email(string)
+
+
 cpdef unicode word_shape(unicode string):
     if len(string) >= 100:
         return 'LONG'

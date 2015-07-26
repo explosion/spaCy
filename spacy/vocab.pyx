@@ -38,6 +38,8 @@ cdef class Vocab:
     '''
     def __init__(self, data_dir=None, get_lex_props=None, load_vectors=True,
                  pos_tags=None, oov_prob=-30):
+        if oov_prob is None:
+            oov_prob = -30
         self.mem = Pool()
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()

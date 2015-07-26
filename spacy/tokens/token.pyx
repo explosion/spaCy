@@ -16,6 +16,11 @@ from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUST
 from ..attrs cimport POS, LEMMA, TAG, DEP
 from ..parts_of_speech cimport CONJ, PUNCT
 
+from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
+from ..attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
+
+
+
 
 cdef class Token:
     """An individual token --- i.e. a word, a punctuation symbol, etc.  Created
@@ -280,6 +285,37 @@ cdef class Token:
     property dep_:
         def __get__(self):
             return self.vocab.strings[self.c.dep]
+
+    
+    property is_alpha:
+        def __get__(self): return check_flag(self.c.lex, IS_ALPHA)
+    
+    property is_ascii:
+        def __get__(self): return check_flag(self.c.lex, IS_ASCII)
+
+    property is_digit:
+        def __get__(self): return check_flag(self.c.lex, IS_DIGIT)
+
+    property is_lower:
+        def __get__(self): return check_flag(self.c.lex, IS_LOWER)
+
+    property is_title:
+        def __get__(self): return check_flag(self.c.lex, IS_TITLE)
+
+    property is_punct:
+        def __get__(self): return check_flag(self.c.lex, IS_PUNCT)
+
+    property is_space: 
+        def __get__(self): return check_flag(self.c.lex, IS_SPACE)
+
+    property like_url:
+        def __get__(self): return check_flag(self.c.lex, LIKE_URL)
+    
+    property like_num:
+        def __get__(self): return check_flag(self.c.lex, LIKE_NUM)
+
+    property like_email:
+        def __get__(self): return check_flag(self.c.lex, LIKE_EMAIL)
 
 
 _pos_id_to_string = {id_: string for string, id_ in UNIV_POS_NAMES.items()}
