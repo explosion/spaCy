@@ -46,4 +46,6 @@ def test_is_properties(EN):
     assert not email.like_url
     assert is_.is_lower
     assert addr.like_email
+    assert addr.is_oov
+    assert not Hi.is_oov
 
