@@ -15,11 +15,11 @@ def test_1():
     assert u"‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’"
 
     o = nlp.vocab[u'back'].prob
-    assert o == -7.403977394104004
+    assert o == -7.033305644989014
     o = nlp.vocab[u'not'].prob
-    assert o == -5.407193660736084
+    assert o == -5.332601070404053
     o = nlp.vocab[u'quietly'].prob
-    assert o == -11.07155704498291
+    assert o == -11.994928359985352
 
 
 @pytest.mark.models
@@ -34,14 +34,6 @@ def test2():
     tokens = nlp(u"‘Give it back,’ he pleaded abjectly, ‘it’s mine.’")
     o = u''.join(tok.string.upper() if is_adverb(tok) else tok.string for tok in tokens)
     o == u'‘Give it back,’ he pleaded ABJECTLY, ‘it’s mine.’'
-
-    nlp.vocab[u'back'].prob
-    -7.033305644989014
-    nlp.vocab[u'not'].prob
-    -5.332601070404053
-    nlp.vocab[u'quietly'].prob
-    -11.994928359985352
-
 
 @pytest.mark.models
 def test3():
