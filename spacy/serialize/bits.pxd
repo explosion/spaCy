@@ -1,5 +1,5 @@
 from libc.stdint cimport uint64_t
-from libc.stdint cimport uint32_t
+from libc.stdint cimport int32_t, uint32_t
 
 ctypedef unsigned char uchar
 
@@ -20,4 +20,4 @@ cdef class BitArray:
     
     cdef int extend(self, uint64_t code, char n_bits) except -1
 
-    cdef int32_t read32(self) except 0
+    cpdef int32_t read32(self) except 0
