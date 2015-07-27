@@ -132,6 +132,9 @@ cdef class Packer:
         return doc
 
     def _orth_encode(self, Doc doc):
+        for t in doc:
+            if t.is_oov:
+                return None
         cdef BitArray bits = BitArray()
         cdef int32_t length = len(doc)
         bits.extend(length, 32) 
