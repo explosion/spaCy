@@ -152,7 +152,7 @@ cdef class Packer:
         cdef int32_t length = len(utf8_str)
         # Signal chars with negative length
         bits.extend(-length, 32)
-        self.char_codec.encode(bytearray(utf8_str), bits)
+        self.char_codec.encode(utf8_str, bits)
         cdef int i, j
         for i in range(doc.length):
             for j in range(doc.data[i].lex.length-1):
@@ -175,24 +175,24 @@ cdef class Packer:
             doc.push_back(lex, space)
         return doc
 
-    def _char_decode(self, BitArray bits, int32_t n, Doc doc):
-        cdef bytearray utf8_str = bytearray(n)
+    def _char_decode(self, BitArray bits, int32_t n_bytes, Doc doc):
+        cdef bytearray utf8_str = bytearray(n_bytes)
         self.char_codec.decode(bits, utf8_str)
 
         cdef unicode string = utf8_str.decode('utf8')
         cdef int start = 0
         cdef bint is_spacy
-        cdef int length = len(string)
+        cdef int n_unicode_chars = len(string)
         cdef int i = 0
         cdef bint is_end_token
         for is_end_token in bits:
             if is_end_token:
                 span = string[start:i+1]
                 lex = self.vocab.get(doc.mem, span)
-                is_spacy = (i+1) < length and string[i+1] == u' '
+                is_spacy = (i+1) < n_unicode_chars and string[i+1] == u' '
                 doc.push_back(lex, is_spacy)
                 start = i + 1 + is_spacy
             i += 1
-            if i >= n:
+            if i >= n_unicode_chars:
                 break
         return doc
