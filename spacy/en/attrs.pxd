@@ -29,6 +29,7 @@ from ..attrs cimport DEP as _DEP
 from ..attrs cimport HEAD as _HEAD
 from ..attrs cimport ENT_IOB as _ENT_IOB
 from ..attrs cimport ENT_TYPE as _ENT_TYPE
+from ..attrs cimport SPACY as _SPACY
 
 
 cpdef enum:
@@ -57,3 +58,7 @@ cpdef enum:
     POS = _POS
     TAG = _TAG
     DEP = _DEP
+    ENT_IOB = _ENT_IOB
+    ENT_TYPE = _ENT_TYPE
+    HEAD = _HEAD
+    SPACY = _SPACY
