@@ -1,5 +1,6 @@
 cimport cython
 from libc.string cimport memcpy, memset
+from libc.stdint cimport uint32_t
 
 import numpy
 import struct
@@ -274,6 +275,7 @@ cdef class Doc:
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.data
         cdef int length = len(array)
+        cdef attr_t[:] values
         for col, attr_id in enumerate(attrs): 
             values = array[:, col]
             if attr_id == HEAD:
@@ -296,7 +298,8 @@ cdef class Doc:
 
     def to_bytes(self):
         byte_string = self.vocab.serializer.pack(self)
-        return struct.pack('I', len(byte_string)) + byte_string
+        cdef uint32_t length = len(byte_string)
+        return struct.pack('I', length) + byte_string
 
     def from_bytes(self, data):
         self.vocab.serializer.unpack_into(data[4:], self)
