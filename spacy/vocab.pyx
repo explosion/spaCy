@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 from libc.string cimport memset
-from libc.stdint cimport int32_t
+from libc.stdint cimport int32_t, uint64_t
 
 import bz2
 from os import path
@@ -186,12 +186,17 @@ cdef class Vocab:
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
 
         cdef CFile fp = CFile(bytes_loc, 'wb')
-        cdef size_t st
+
+        cdef uint64_t size_of_lexeme = sizeof(LexemeC)
+        items = list(self._by_hash.items())
+        cdef uint64_t n_lexemes = len(items)
+        fp.write_from(&size_of_lexeme, 1, sizeof(size_of_lexeme))
+        fp.write_from(&n_lexemes, 1, sizeof(n_lexemes))
+
         cdef size_t addr
         cdef hash_t key
-        for key, addr in self._by_hash.items():
+        for key, addr in items:
             lexeme = <LexemeC*>addr
-            fp.write_from(&lexeme.orth, sizeof(lexeme.orth), 1)
             fp.write_from(lexeme, sizeof(LexemeC), 1)
         fp.close()
 
@@ -199,36 +204,28 @@ cdef class Vocab:
         self.strings.load(strings_loc)
         if not path.exists(loc):
             raise IOError('LexemeCs file not found at %s' % loc)
-        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
-        cdef FILE* fp = fopen(<char*>bytes_loc, b'rb')
-        if fp == NULL:
-            raise IOError('lexemes data file present, but cannot open from ' % loc)
-        cdef size_t st
-        cdef LexemeC* lexeme
-        cdef attr_t orth
+
+        cdef CFile fp = CFile(loc, 'rb')
+
+        cdef uint64_t size_of_lexeme
+        cdef uint64_t n_lexemes
+        fp.read_into(&size_of_lexeme, 1, sizeof(size_of_lexeme))
+        assert size_of_lexeme == sizeof(LexemeC)
+        fp.read_into(&n_lexemes, 1, sizeof(n_lexemes))
+
+        lexemes = <LexemeC*>self.mem.alloc(n_lexemes, sizeof(LexemeC))
         cdef hash_t key
         cdef unicode py_str
-        i = 0
-        while True:
-            st = fread(&orth, sizeof(orth), 1, fp)
-            if st != 1:
-                break
-            lexeme = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
-            # Copies data from the file into the lexeme
-            st = fread(lexeme, sizeof(LexemeC), 1, fp)
-            lexeme.repvec = EMPTY_VEC
-            if st != 1:
-                break
-            if orth != lexeme.orth:
-                # TODO: Improve this error message, pending resolution to Issue #64
-                raise IOError('Error reading from lexemes.bin. Integrity check fails.')
-            py_str = self.strings[orth]
+        cdef int i
+        self.length = n_lexemes
+        for i in range(n_lexemes):
+            fp.read_into(&lexemes[i], sizeof(LexemeC), 1)
+            lexemes[i].repvec = EMPTY_VEC
+            py_str = self.strings[lexemes[i].orth]
             key = hash_string(py_str)
-            self._by_hash.set(key, lexeme)
-            self._by_orth.set(lexeme.orth, lexeme)
-            self.length += 1
-            i += 1
-        fclose(fp)
+            self._by_hash.set(key, &lexemes[i])
+            self._by_orth.set(lexemes[i].orth, &lexemes[i])
+            assert lexemes[i].length == len(py_str)
 
     def load_rep_vectors(self, loc):
         cdef CFile file_ = CFile(loc, b'rb')
