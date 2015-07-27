@@ -17,7 +17,7 @@ from spacy.serialize.packer import Packer
 from spacy.serialize.bits import BitArray
 
 
-def get_lex_props(string, prob=-22):
+def get_lex_props(string, prob=-22, is_oov=False):
     return {
         'flags': 0,
         'length': len(string),
@@ -120,3 +120,22 @@ def test_packer_annotated(tokenizer):
     assert [t.tag_ for t in result] == ['DT', 'NN', 'VBD']
     assert [t.dep_ for t in result] == ['det', 'nsubj', 'ROOT']
     assert [(t.head.i - t.i) for t in result] == [1, 1, 0]
+
+
+def test_packer_bad_chars(tokenizer):
+    string = u'naja gut, is eher bl\xf6d und nicht mit reddit.com/digg.com vergleichbar; vielleicht auf dem weg dahin'
+    packer = Packer(tokenizer.vocab, [])
+
+    doc = tokenizer(string)
+    bits = packer.pack(doc)
+    result = packer.unpack(bits)
+    assert result.string == doc.string
+
+
+@pytest.mark.models
+def test_packer_bad_chars(EN):
+    string = u'naja gut, is eher bl\xf6d und nicht mit reddit.com/digg.com vergleichbar; vielleicht auf dem weg dahin'
+    doc = EN(string)
+    byte_string = doc.to_bytes()
+    result = Doc(EN.vocab).from_bytes(byte_string)
+    assert [t.tag_ for t in result] == [t.tag_ for t in doc]
