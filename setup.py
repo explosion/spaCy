@@ -115,6 +115,8 @@ def run_setup(exts):
                       "spacy.en": ["*.pxd", "data/pos/*",
                                    "data/wordnet/*", "data/tokenizer/*",
                                    "data/vocab/lexemes.bin",
+                                   "data/vocab/serializer.json",
+                                   "data/vocab/oov_prob",
                                    "data/vocab/strings.txt"],
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
