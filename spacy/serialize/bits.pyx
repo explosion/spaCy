@@ -65,7 +65,7 @@ cdef class BitArray:
                 self.i += 1
                 yield 1 if self.byte & (one << i) else 0
 
-    cdef uint32_t read32(self) except 0:
+    cpdef int32_t read32(self) except 0:
         cdef int start_byte = self.i // 8
 
         # TODO portability
