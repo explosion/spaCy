@@ -89,7 +89,7 @@ def _read_probs(loc):
     return probs, probs['-OOV-']
 
 
-def _read_freqs(loc, max_length=100, min_doc_freq=5, min_freq=100):
+def _read_freqs(loc, max_length=100, min_doc_freq=5, min_freq=200):
     if not loc.exists():
         print("Warning: Frequencies file not found")
         return {}, 0.0
@@ -152,7 +152,7 @@ def setup_vocab(src_dir, dst_dir):
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs, oov_prob = _read_probs(src_dir / 'words.sgt.prob')
     if not probs:
-        probs, oov_prob = _read_freqs(src_dir / 'freqs.txt.gz')
+        probs, oov_prob = _read_freqs(src_dir / 'freqs.txt')
     if not probs:
         oov_prob = 0.0
     else:
