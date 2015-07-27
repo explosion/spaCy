@@ -35,7 +35,7 @@ cdef class TransitionSystem:
             self.freqs[attr] = defaultdict(int)
             self.freqs[attr][0] = 1
         # Ensure we've seen heads. Need an official dependency length limit...
-        for i in range(512):
+        for i in range(1024):
             self.freqs[HEAD][i] = 1
             self.freqs[HEAD][-i] = 1
 
