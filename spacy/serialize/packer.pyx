@@ -152,7 +152,7 @@ cdef class Packer:
         cdef int32_t length = len(utf8_str)
         # Signal chars with negative length
         bits.extend(-length, 32)
-        self.char_codec.encode(utf8_str, bits)
+        self.char_codec.encode(bytearray(utf8_str), bits)
         cdef int i, j
         for i in range(doc.length):
             for j in range(doc.data[i].lex.length-1):
