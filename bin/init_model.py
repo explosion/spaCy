@@ -152,7 +152,7 @@ def setup_vocab(src_dir, dst_dir):
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs, oov_prob = _read_probs(src_dir / 'words.sgt.prob')
     if not probs:
-        probs, oov_prob = _read_freqs(src_dir / 'freqs.txt')
+        probs, oov_prob = _read_freqs(src_dir / 'freqs.txt.gz')
     if not probs:
         oov_prob = 0.0
     else:
