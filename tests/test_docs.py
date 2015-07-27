@@ -66,12 +66,13 @@ def test3():
                  u'consented', u'acquiesced', u'petitioned', u'quarreled',
                  u'appealed', u'pleading']
     o = [w.orth_ for w in words[50:60]]
-    assert o == [u'endeavoured', u'martialed', u'counselled', u'bragged',
+    assert o == [u'martialed', u'counselled', u'bragged',
                  u'backtracked', u'caucused', u'refiled', u'dueled', u'mused',
-                 u'dissented']
+                 u'dissented', u'yearned']
     o = [w.orth_ for w in words[100:110]]
-    assert o == [u'prosecuted', u'acquits', u'cabled', u'ducked', u'sentenced',
-                 u'gaoled', u'perjured', u'absconded', u'bargained', u'overstayed']
+    assert o == [u'acquits', u'cabled', u'ducked', u'sentenced',
+                 u'gaoled', u'perjured', u'absconded', u'bargained', u'overstayed',
+                 u'clerked']
     
     #o = [w.orth_ for w in words[1000:1010]]
     #assert o == [u'scorned', u'baled', u'righted', u'requested', u'swindled',
