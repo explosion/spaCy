@@ -15,8 +15,8 @@ ctypedef fused LexemeOrToken:
 
 
 cdef class Doc:
-    cdef Pool mem
-    cdef Vocab vocab
+    cdef readonly Pool mem
+    cdef readonly Vocab vocab
 
     cdef TokenC* data
 
