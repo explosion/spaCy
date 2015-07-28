@@ -3,6 +3,9 @@ import codecs
 from libc.string cimport memcpy
 from murmurhash.mrmr cimport hash64
 
+from cpython cimport PyUnicode_AS_DATA
+from cpython cimport PyUnicode_GET_DATA_SIZE
+
 from libc.stdint cimport int64_t
 
 
@@ -13,9 +16,10 @@ SEPARATOR = '\n|-SEP-|\n'
 
 
 cpdef hash_t hash_string(unicode string) except 0:
-    # This should probably use Py_UCS4 API, but I can't in Python2.7
-    chars = <Py_UNICODE*>string
-    return hash64(chars, len(string) * sizeof(Py_UNICODE), 0)
+    # This has to be like this for
+    chars = <char*>PyUnicode_AS_DATA(string)
+    size = PyUnicode_GET_DATA_SIZE(string)
+    return hash64(chars, size, 1)
 
 
 cdef unicode _decode(const Utf8Str* string):

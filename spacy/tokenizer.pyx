@@ -10,7 +10,6 @@ from cpython cimport Py_UNICODE_ISSPACE
 
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
-from murmurhash.mrmr cimport hash64
 
 from .morphology cimport set_morph_from_dict
 from .strings cimport hash_string
@@ -81,37 +80,38 @@ cdef class Tokenizer:
         cdef int i = 0
         cdef int start = 0
         cdef bint cache_hit
-        cdef bint in_ws = Py_UNICODE_ISSPACE(string[0])
+        cdef bint in_ws = False
         cdef unicode span
-        # Use of Py_UNICODE is deprecated, and I should be using Py_UCS4.
-        # But this is hard --- I need to acquire a pointer, but there's no
-        # Py_UCS4 API in Python 2.
-        cdef Py_UNICODE uc
-        cdef Py_UNICODE* chars_ptr = <Py_UNICODE*>string
         # The task here is much like string.split, but not quite
         # We find spans of whitespace and non-space characters, and ignore
         # spans that are exactly ' '. So, our sequences will all be separated
         # by either ' ' or nothing.
-        for i in range(1, length):
-            uc = chars_ptr[i]
-            if Py_UNICODE_ISSPACE(uc) != in_ws:
+        for uc in string:
+            if uc.isspace() != in_ws:
                 if start < i:
-                    key = hash64(&chars_ptr[start], (i - start) * sizeof(Py_UNICODE), 0)
+                    # When we want to make this fast, get the data buffer once
+                    # with PyUnicode_AS_DATA, and then maintain a start_byte
+                    # and end_byte, so we can call hash64 directly. That way
+                    # we don't have to create the slice when we hit the cache.
+                    span = string[start:i]
+                    key = hash_string(span)
                     cache_hit = self._try_cache(key, tokens)
                     if not cache_hit:
-                        self._tokenize(tokens, string[start:i], key)
+                        self._tokenize(tokens, span, key)
                 in_ws = not in_ws
                 if uc == ' ':
                     tokens.data[tokens.length - 1].spacy = True
                     start = i + 1
                 else:
                     start = i
+            i += 1
         i += 1
         if start < i:
-            key = hash64(&chars_ptr[start], (i - start) * sizeof(Py_UNICODE), 0)
+            span = string[start:]
+            key = hash_string(span)
             cache_hit = self._try_cache(key, tokens)
             if not cache_hit:
-                self._tokenize(tokens, string[start:], key)
+                self._tokenize(tokens, span, key)
             tokens.data[tokens.length - 1].spacy = string[-1] == ' '
         return tokens
 
