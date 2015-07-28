@@ -211,9 +211,9 @@ def do_web(src_dir, onto_dir, out_dir):
             src_doc = sgml_extract(open(src_loc).read())
             ptb_doc = [read_ptb.parse(parse_str, strip_bad_periods=True)[0]
                        for parse_str in read_ptb.split(open(ptb_loc).read())]
-            print 'Found'
+            print('Found')
         else:
-            print 'Miss'
+            print('Miss')
 
 
 def may_mkdir(parent, *subdirs):
