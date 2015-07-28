@@ -1,6 +1,8 @@
 """Align the raw sentences from Read et al (2012) to the PTB tokenization,
 outputting as a .json file. Used in bin/prepare_treebank.py
 """
+from __future__ import unicode_literals
+
 import plac
 from pathlib import Path
 import json
@@ -84,7 +86,6 @@ def get_alignment(raw_by_para, ptb_by_file):
     n_skipped = 0
     skips = []
     for (p_id, p_sent_id, raw) in raw_sents:
-        #print raw
         if ptb_idx >= len(ptb_sents):
             n_skipped += 1
             continue
@@ -104,8 +105,8 @@ def get_alignment(raw_by_para, ptb_by_file):
         output.append((f_id, p_id, f_sent_id, (ptb_id, ''.join(sepped))))
     if n_skipped + len(ptb_sents) != len(raw_sents):
         for ptb, raw in skips:
-            print ptb
-            print raw
+            print(ptb)
+            print(raw)
         raise Exception
     return output
 
