@@ -13,11 +13,6 @@ string-typed.
 
 **String Features**
 
-:code:`string`
-  The form of the word as it appears in the string, include trailing
-  whitespace.  This is useful when you need to use linguistic features to
-  add inline mark-up to the string.
-
 :code:`orth` / :code:`orth_`
   The form of the word with no string normalization or processing, as it
   appears in the string, without trailing whitespace.
@@ -52,6 +47,12 @@ string-typed.
 :code:`suffix` / :code:`suffix_`
   A length-N substring from the end of the word.  Length may vary by
   language; currently for English n=3, i.e. suffix = word.orth\_[-3:]
+
+:code:`string`
+  The form of the word as it appears in the string, **including trailing
+  whitespace**.  This is useful when you need to use linguistic features to
+  add inline mark-up to the string.
+
 
 **Distributional Features**
 
