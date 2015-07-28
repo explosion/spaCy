@@ -279,9 +279,12 @@ cdef class Doc:
         for col, attr_id in enumerate(attrs): 
             values = array[:, col]
             if attr_id == HEAD:
-                # TODO: Set left and right children
                 for i in range(length):
                     tokens[i].head = values[i]
+                    if values[i] >= 1:
+                        tokens[i + values[i]].l_kids += 1
+                    elif values[i] < 0:
+                        tokens[i + values[i]].r_kids += 1
             elif attr_id == TAG:
                 for i in range(length):
                     tokens[i].tag = values[i]
@@ -294,6 +297,20 @@ cdef class Doc:
             elif attr_id == ENT_TYPE:
                 for i in range(length):
                     tokens[i].ent_type = values[i]
+        cdef TokenC* head
+        cdef TokenC* child
+        # Set left edges
+        for i in range(length):
+            child = &tokens[i]
+            head = &tokens[i + child.head]
+            if child < head and child.l_edge < head.l_edge:
+                head.l_edge = child.l_edge
+        # Set right edges --- same as above, but iterate in reverse
+        for i in range(length-1, -1, -1):
+            child = &tokens[i]
+            head = &tokens[i + child.head]
+            if child > head and child.r_edge > head.r_edge:
+                head.r_edge = child.r_edge
         return self
 
     def to_bytes(self):
