@@ -218,7 +218,7 @@ cdef class GoldParse:
         self.cand_to_gold = align([t.orth_ for t in tokens], annot_tuples[1])
         self.gold_to_cand = align(annot_tuples[1], [t.orth_ for t in tokens])
 
-        self.orig_annot = zip(*annot_tuples)
+        self.orig_annot = list(zip(*annot_tuples))
 
         words = [w.orth_ for w in tokens]
         for i, gold_i in enumerate(self.cand_to_gold):
