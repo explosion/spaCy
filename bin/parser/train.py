@@ -10,8 +10,6 @@ import codecs
 import random
 
 import plac
-import cProfile
-import pstats
 import re
 
 import spacy.util

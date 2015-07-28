@@ -1,4 +1,6 @@
 from __future__ import division
+from __future__ import print_function
+from __future__ import unicode_literals
 
 from .gold import tags_to_entities
 
@@ -118,6 +120,6 @@ class Scorer(object):
         if verbose:
             gold_words = [item[1] for item in gold.orig_annot]
             for w_id, h_id, dep in (cand_deps - gold_deps):
-                print 'F', gold_words[w_id], dep, gold_words[h_id]
+                print('F', gold_words[w_id], dep, gold_words[h_id])
             for w_id, h_id, dep in (gold_deps - cand_deps):
-                print 'M', gold_words[w_id], dep, gold_words[h_id]
+                print('M', gold_words[w_id], dep, gold_words[h_id])

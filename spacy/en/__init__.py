@@ -162,11 +162,11 @@ class English(object):
         with open(path.join(data_dir, 'vocab', 'serializer.json'), 'w') as file_:
             file_.write(
                 json.dumps([
-                    (TAG, self.tagger.freqs[TAG].items()),
-                    (DEP, self.parser.moves.freqs[DEP].items()),
-                    (ENT_IOB, self.entity.moves.freqs[ENT_IOB].items()),
-                    (ENT_TYPE, self.entity.moves.freqs[ENT_TYPE].items()),
-                    (HEAD, self.parser.moves.freqs[HEAD].items())]))
+                    (TAG, list(self.tagger.freqs[TAG].items())),
+                    (DEP, list(self.parser.moves.freqs[DEP].items())),
+                    (ENT_IOB, list(self.entity.moves.freqs[ENT_IOB].items())),
+                    (ENT_TYPE, list(self.entity.moves.freqs[ENT_TYPE].items())),
+                    (HEAD, list(self.parser.moves.freqs[HEAD].items()))]))
 
     @property
     def tags(self):
