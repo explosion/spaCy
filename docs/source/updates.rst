@@ -10,17 +10,82 @@ To update your installation:
 
 Most updates ship a new model, so you will usually have to redownload the data.
 
-v0.89
------
+2015-07-28 v0.89
+----------------
+
+Major update!
+
+* Support efficient binary serialization.  The dependency tree,
+  part-of-speech tags, named entities, tokenization and text can be dumped to a
+  byte string smaller than the original text representation.  Serialization is
+  lossless, so there's no need to separately store the original text.
+
+  Serialize:
+    
+  .. code-block:: python
+
+      byte_string = doc.to_bytes()
+
+  Deserialize by first creating a Doc object, and then loading the bytes:
+  
+  .. code-block:: python
+      
+      doc = Doc(nlp.vocab)
+      doc.from_bytes(byte_string)
+
+  If you have a binary file with several parses saved, you can iterate over
+  them using the staticmethod `Doc.read_bytes`. Putting it all together:
+
+  .. code-block:: python
+
+      import codecs
+
+      from spacy.en import English
+
+      def serialize(nlp, texts, out_loc):
+          with open(out_loc, 'wb') as out_file:
+              for text in texts:
+                  doc = nlp(text)
+                  out_file.write(doc.to_bytes())
+
+      def deserialize(nlp, file_loc):
+          docs = []
+          with open(file_loc, 'rb') as read_file:
+              for byte_string in Doc.read_bytes(read_file, 'rb')):
+                  doc = Doc(nlp.vocab).from_bytes(byte_string)
+                  docs.append(doc)
+          return docs
+
+
+  Full tutorial coming soon.
+
+
+* Fix probability estimates, and base them off counts from the 2015 Reddit Comments
+  dump.  The probability estimates are now very reliable, and out-of-vocabulary
+  words now receive an accurate smoothed probability estimate.
 
 * Fix regression in parse times on very long texts. Recent versions were
   calculating parse features in a way that was polynomial in input length. 
-* Add tag SP (coarse tag SPACE) for whitespace tokens. Ensure entity recogniser
-  does not assign entities to whitespace.
+
+* Allow slicing into the Doc object, so that you can do e.g. doc[2:4]. Returns
+  a Span object.
+
+* Add tag SP (coarse tag SPACE) for whitespace tokens.  Fix bug where
+  whitespace was sometimes marked as an entity.
+
+* Reduce memory usage. Memory usage now under 2GB per process.
+
 * Rename :code:`Span.head` to :code:`Span.root`, fix its documentation, and make
   it more efficient.  I considered adding Span.head, Span.dep and Span.dep\_ as
   well, but for now I leave these as accessible via :code:`Span.root.head`,
   :code:`Span.head.dep`, and :code:`Span.head.dep\_`, to keep the API smaller.  
+
+* Add boolean features to Token and Lexeme objects.
+
+* Main parse function now marked **nogil**. This
+  means I'll be able to add a Worker class that allows multi-threaded
+  processing.  This will be available in the next version.  In the meantime,
+  you should continue to use multiprocessing for parallelization.
 
 
 2015-07-08 v0.88

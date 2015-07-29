@@ -53,6 +53,41 @@ string-typed.
   whitespace**.  This is useful when you need to use linguistic features to
   add inline mark-up to the string.
 
+**Boolean Features**
+
+:code:`is_oov`
+  Is the word out-of-vocabulary?
+
+:code:`is_alpha`
+  Equivalent to `word.orth_.isalpha()`
+
+:code:`is_ascii`
+  Equivalent to `any(ord(c) >= 128 for c in word.orth_)`
+
+:code:`is_digit`
+  Equivalent to `word.orth_.isdigit()`
+
+:code:`is_lower`
+  Equivalent to `word.orth_.islower()`
+
+:code:`is_title`
+  Equivalent to `word.orth_.istitle()`
+
+:code:`is_punct`
+  Equivalent to `word.orth_.ispunct()`
+
+:code:`is_space`
+  Equivalent to `word.orth_.isspace()`
+
+:code:`like_url`
+  Does the word resembles a URL?
+
+:code:`like_num`
+  Does the word represent a number? e.g. "10.9", "10", "ten", etc
+
+:code:`like_email`
+  Does the word resemble an email?
+
 
 **Distributional Features**
 
@@ -114,6 +149,12 @@ string-typed.
 :code:`subtree`
   An iterator for the part of the sentence syntactically governed by the
   word, including the word itself.
+
+:code:`left_edge`
+  The leftmost descendent of the word's subtree. Equivalent to `list(word.subtree)[0]`
+
+:code:`right_edge`
+  The rightmost descendent of the word's subtree. Equivalent to `list(word.subtree)[-1]`
 
 
 **Named Entities**

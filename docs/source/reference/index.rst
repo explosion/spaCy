@@ -59,6 +59,7 @@ and a small usage snippet.
     using/document.rst
     using/span.rst
     using/token.rst
+    using/lexeme.rst
 
 
 .. _English: processing.html
@@ -69,6 +70,8 @@ and a small usage snippet.
 
 .. _Span: using/span.html
 
+.. _Lexeme: using/lexeme.html
+
 .. _Vocab: lookup.html
 
 .. _StringStore: lookup.html
@@ -78,8 +81,6 @@ and a small usage snippet.
 .. _EnPosTagger: processing.html
 
 .. _Parser: processing.html
-
-.. _Lexeme: lookup.html
 
 .. _Scorer: misc.html
 
