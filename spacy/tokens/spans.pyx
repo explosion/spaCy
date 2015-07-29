@@ -40,6 +40,8 @@ cdef class Span:
         return self.end - self.start
 
     def __getitem__(self, int i):
+        if i < 0:
+            i = len(self) - i
         return self._seq[self.start + i]
 
     def __iter__(self):
