@@ -41,12 +41,16 @@ cdef class Span:
 
     def __getitem__(self, int i):
         if i < 0:
-            i = len(self) - i
-        return self._seq[self.start + i]
+            return self._seq[self.end + i]
+        else:
+            return self._seq[self.start + i]
 
     def __iter__(self):
         for i in range(self.start, self.end):
             yield self._seq[i]
+
+    def merge(self, unicode tag, unicode lemma, unicode ent_type):
+        self._seq.merge(self[0].idx, self[-1].idx + len(self[-1]), tag, lemma, ent_type)
 
     property root:
         """The first ancestor of the first word of the span that has its head
