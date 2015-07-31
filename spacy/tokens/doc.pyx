@@ -380,11 +380,11 @@ cdef class Doc:
         # Before thinking of something simpler, beware the case where a dependency
         # bridges over the entity. Here the alignment of the tokens changes.
         span_root = span.root.i
+        token.dep = span.root.dep
         for i in range(self.length):
             self.data[i].head += i
         # Set the head of the merged token, and its dep relation, from the Span
         token.head = self.data[span_root].head
-        token.dep = span.root.dep
         # Adjust deps before shrinking tokens
         # Tokens which point into the merged token should now point to it
         # Subtract the offset from all tokens which point to >= end
