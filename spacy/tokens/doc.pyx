@@ -119,40 +119,67 @@ cdef class Doc:
     def string(self):
         return u''.join([t.string for t in self])
 
-    @property
-    def ents(self):
-        """Yields named-entity Span objects.
+    property ents:
+        def __get__(self):
+            """Yields named-entity Span objects.
         
-        Iterate over the span to get individual Token objects, or access the label:
+            Iterate over the span to get individual Token objects, or access the label:
 
-        >>> from spacy.en import English
-        >>> nlp = English()
-        >>> tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
-        >>> ents = list(tokens.ents)
-        >>> ents[0].label, ents[0].label_, ''.join(t.orth_ for t in ents[0])
-        (112504, u'PERSON', u'Best ') 
-        """
-        cdef int i
-        cdef const TokenC* token
-        cdef int start = -1
-        cdef int label = 0
-        for i in range(self.length):
-            token = &self.data[i]
-            if token.ent_iob == 1:
-                assert start != -1
-                pass
-            elif token.ent_iob == 2:
-                if start != -1:
-                    yield Span(self, start, i, label=label)
-                start = -1
-                label = 0
-            elif token.ent_iob == 3:
-                if start != -1:
-                    yield Span(self, start, i, label=label)
-                start = i
-                label = token.ent_type
-        if start != -1:
-            yield Span(self, start, self.length, label=label)
+            >>> from spacy.en import English
+            >>> nlp = English()
+            >>> tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
+            >>> ents = list(tokens.ents)
+            >>> ents[0].label, ents[0].label_, ''.join(t.orth_ for t in ents[0])
+            (112504, u'PERSON', u'Best ') 
+            """
+            cdef int i
+            cdef const TokenC* token
+            cdef int start = -1
+            cdef int label = 0
+            output = []
+            for i in range(self.length):
+                token = &self.data[i]
+                if token.ent_iob == 1:
+                    assert start != -1
+                elif token.ent_iob == 2 or token.ent_iob == 0:
+                    if start != -1:
+                        output.append(Span(self, start, i, label=label))
+                    start = -1
+                    label = 0
+                elif token.ent_iob == 3:
+                    if start != -1:
+                        output.append(Span(self, start, i, label=label))
+                    start = i
+                    label = token.ent_type
+            if start != -1:
+                output.append(Span(self, start, self.length, label=label))
+            return tuple(output)
+
+        def __set__(self, ents):
+            # TODO:
+            # 1. Allow negative matches
+            # 2. Ensure pre-set NERs are not over-written during statistical prediction
+            # 3. Test basic data-driven ORTH gazetteer
+            # 4. Test more nuanced date and currency regex
+            cdef int i
+            for i in range(self.length):
+                self.data[i].ent_type = 0
+                self.data[i].ent_iob = 0
+            cdef attr_t ent_type
+            cdef int start, end
+            for ent_type, start, end in ents:
+                if ent_type is None:
+                    # Mark as O
+                    for i in range(start, end):
+                        self.data[i].ent_type = 0
+                        self.data[i].ent_iob = 2
+                else:
+                    # Mark (inside) as I
+                    for i in range(start, end):
+                        self.data[i].ent_type = ent_type
+                        self.data[i].ent_iob = 1
+                    # Set start as B
+                    self.data[start].ent_iob = 3
 
     @property
     def noun_chunks(self):

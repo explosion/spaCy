@@ -125,7 +125,7 @@ cdef class StateClass:
     cdef void add_arc(self, int head, int child, int label) nogil
     
     cdef void del_arc(self, int head, int child) nogil
-    
+
     cdef void open_ent(self, int label) nogil
     
     cdef void close_ent(self) nogil

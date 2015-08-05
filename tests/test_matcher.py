@@ -47,5 +47,14 @@ def test_match_multi(matcher, EN):
     assert matcher(tokens) == [(EN.vocab.strings['product'], 2, 4),
                                (EN.vocab.strings['product'], 5, 6)]
 
-def test_dummy():
-    pass
+def test_match_preserved(matcher, EN):
+    doc = EN.tokenizer('I like Java')
+    EN.tagger(doc)
+    EN.entity(doc)
+    assert len(doc.ents) == 0
+    doc = EN.tokenizer('I like Java')
+    matcher(doc)
+    assert len(doc.ents) == 1
+    EN.tagger(doc)
+    EN.entity(doc)
+    assert len(doc.ents) == 1

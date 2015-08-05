@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 import pytest
 
-
 @pytest.mark.models
 def test_merge_tokens(EN):
     tokens = EN(u'Los Angeles start.')
@@ -32,3 +31,21 @@ def test_merge_heads(EN):
 def test_issue_54(EN):
     text = u'Talks given by women had a slightly higher number of questions asked (3.2$\pm$0.2) than talks given by men (2.6$\pm$0.1).'
     tokens = EN(text, merge_mwes=True)
+
+@pytest.mark.models
+def test_np_merges(EN):
+    text = u'displaCy is a parse tool built with Javascript'
+    tokens = EN(text)
+    assert tokens[4].head.i == 1
+    tokens.merge(tokens[2].idx, tokens[4].idx + len(tokens[4]), u'NP', u'tool', u'O')
+    assert tokens[2].head.i == 1
+    tokens = EN('displaCy is a lightweight and modern dependency parse tree visualization tool built with CSS3 and JavaScript.')
+    
+    ents = [(e[0].idx, e[-1].idx + len(e[-1]), e.label_, e.lemma_)
+            for e in tokens.ents]
+    for start, end, label, lemma in ents:
+        merged = tokens.merge(start, end, label, lemma, label)
+        assert merged != None, (start, end, label, lemma) 
+    for tok in tokens:
+        print tok.orth_, tok.dep_, tok.head.orth_
+
