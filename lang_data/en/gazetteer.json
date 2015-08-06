@@ -62,4 +62,13 @@
 			[{"lower": "css3"}]
 		]
 	]
+    "HTML": [
+		"PRODUCT",
+		{},
+		[
+			[{"lower": "html"}],
+			[{"lower": "html5"}]
+		]
+	]
+
 }
