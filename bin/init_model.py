@@ -189,6 +189,10 @@ def main(lang_data_dir, corpora_dir, model_dir):
 
     setup_tokenizer(lang_data_dir, model_dir / 'tokenizer')
     setup_vocab(corpora_dir, model_dir / 'vocab')
+
+    if (lang_data_dir / 'gazetteer.json').exists():
+        copyfile(str(lang_data_dir / 'gazetteer.json'),
+                 str(model_dir / 'vocab' / 'gazetteer.json'))
     if not (model_dir / 'wordnet').exists():
         copytree(str(corpora_dir / 'wordnet' / 'dict'), str(model_dir / 'wordnet'))
 
