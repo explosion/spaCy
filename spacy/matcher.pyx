@@ -86,7 +86,7 @@ def map_attr_name(attr):
         return LEMMA
     elif attr == 'LOWER':
         return LOWER
-    elif attr == 'SHAOE':
+    elif attr == 'SHAPE':
         return SHAPE
     elif attr == 'NORM':
         return NORM
@@ -109,6 +109,8 @@ cdef class Matcher:
                 entity_key = vocab.strings[entity_key]
             if isinstance(etype, basestring):
                 etype = vocab.strings[etype]
+            elif etype is None:
+                etype = -1
             # TODO: Do something more clever about multiple patterns for single
             # entity
             for spec in specs:
