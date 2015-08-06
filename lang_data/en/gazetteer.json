@@ -69,7 +69,7 @@
 			[{"lower": "html"}],
 			[{"lower": "html5"}]
 		]
-	]
+	],
     "Python": [
         "PRODUCT",
         {},
@@ -164,17 +164,19 @@
     "false_positives": [
         null,
         {},
-        [{"orth": "Shit"}],
-        [{"orth": "Weed"}],
-        [{"orth": "Cool"}],
-        [{"orth": "Btw"}],
-        [{"orth": "Bah"}],
-        [{"orth": "Bullshit"}],
-        [{"orth": "Lol"}],
-        [{"orth": "Yo"}, {"lower": "dawg"}],
-        [{"orth": "Yay"}],
-        [{"orth": "Ahh"}],
-        [{"orth": "Yea"}],
-        [{"orth": "Bah"}]
+        [
+            [{"orth": "Shit"}],
+            [{"orth": "Weed"}],
+            [{"orth": "Cool"}],
+            [{"orth": "Btw"}],
+            [{"orth": "Bah"}],
+            [{"orth": "Bullshit"}],
+            [{"orth": "Lol"}],
+            [{"orth": "Yo"}, {"lower": "dawg"}],
+            [{"orth": "Yay"}],
+            [{"orth": "Ahh"}],
+            [{"orth": "Yea"}],
+            [{"orth": "Bah"}]
+        ]
     ]
 }
