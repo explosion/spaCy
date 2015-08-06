@@ -168,7 +168,7 @@ cdef class Doc:
             cdef attr_t ent_type
             cdef int start, end
             for ent_type, start, end in ents:
-                if ent_type is None:
+                if ent_type is None or ent_type < 0:
                     # Mark as O
                     for i in range(start, end):
                         self.data[i].ent_type = 0
