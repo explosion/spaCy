@@ -87,7 +87,7 @@ cdef inline attr_t get_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
     elif feat_name == ORTH:
         return lex.orth
     elif feat_name == LOWER:
-        return lex.norm
+        return lex.lower
     elif feat_name == NORM:
         return lex.norm
     elif feat_name == SHAPE:
