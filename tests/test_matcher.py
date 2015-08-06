@@ -11,9 +11,9 @@ from spacy.vocab import Vocab
 @pytest.fixture
 def matcher(EN):
     patterns = {
-        'Javascript': ['PRODUCT', {}, [{'ORTH': 'JavaScript'}]],
-        'GoogleNow':  ['PRODUCT', {}, [{'ORTH': 'Google'}, {'ORTH': 'Now'}]],
-        'Java':       ['PRODUCT', {}, [{'ORTH': 'Java'}]],
+        'Javascript': ['PRODUCT', {}, [[{'ORTH': 'JavaScript'}]]],
+        'GoogleNow':  ['PRODUCT', {}, [[{'ORTH': 'Google'}, {'ORTH': 'Now'}]]],
+        'Java':       ['PRODUCT', {}, [[{'ORTH': 'Java'}]]],
     }
     return Matcher(EN.vocab, patterns)
 
