@@ -11,6 +11,7 @@ from ..syntax.arc_eager import ArcEager
 from ..syntax.ner import BiluoPushDown
 from ..syntax.parser import ParserFactory
 from ..serialize.bits import BitArray
+from ..matcher import Matcher
 
 from ..tokens import Doc
 from ..multi_words import RegexMerger
@@ -75,6 +76,7 @@ class English(object):
       Tagger=EnPosTagger,
       Parser=ParserFactory(ParserTransitionSystem),
       Entity=ParserFactory(EntityTransitionSystem),
+      Matcher=Matcher.from_dir,
       Packer=None,
       load_vectors=True
     ):
@@ -113,6 +115,10 @@ class English(object):
             self.entity = Entity(self.vocab.strings, path.join(data_dir, 'ner'))
         else:
             self.entity = None
+        if Matcher:
+            self.matcher = Matcher(self.vocab, data_dir)
+        else:
+            self.matcher = None
         if Packer:
             self.packer = Packer(self.vocab, data_dir)
         else:
@@ -143,6 +149,8 @@ class English(object):
         tokens = self.tokenizer(text)
         if self.tagger and tag:
             self.tagger(tokens)
+        if self.matcher and entity:
+            self.matcher(tokens)
         if self.parser and parse:
             self.parser(tokens)
         if self.entity and entity:
