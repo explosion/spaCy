@@ -70,5 +70,111 @@
 			[{"lower": "html5"}]
 		]
 	]
-
+    "Python": [
+        "PRODUCT",
+        {},
+        [
+            [{"orth": "Python"}]
+        ]
+    ],
+    "Ruby": [
+        "PRODUCT",
+        {},
+        [
+            [{"orth": "Ruby"}]
+        ]
+    ],
+    "Digg": [
+        "PRODUCT",
+        {},
+        [
+            [{"lower": "digg"}]
+        ]
+    ],
+     "Fox": [
+        "ORG",
+        {},
+        [
+            [{"orth": "Fox"}]
+        ]
+    ],
+    "Google": [
+        "ORG",
+        {},
+        [
+            [{"lower": "google"}]
+        ]
+    ],
+    "Mac": [
+        "PRODUCT",
+        {},
+        [
+            [{"lower": "mac"}]
+        ]
+    ],
+    "Wikipedia": [
+        "PRODUCT",
+        {},
+        [
+            [{"lower": "wikipedia"}]
+        ]
+    ],
+    "Windows": [
+        "PRODUCT",
+        {},
+        [
+            [{"orth": "Windows"}]
+        ]
+    ],
+     "Dell": [
+        "ORG",
+        {},
+        [
+            [{"lower": "dell"}]
+        ]
+    ],
+    "Facebook": [
+        "ORG",
+        {},
+        [
+            [{"lower": "facebook"}]
+        ]
+    ],
+     "Blizzard": [
+        "ORG",
+        {},
+        [
+            [{"orth": "Facebook"}]
+        ]
+    ],
+    "Ubuntu": [
+        "ORG",
+        {},
+        [
+            [{"orth": "Ubuntu"}]
+        ]
+    ],
+    "Youtube": [
+        "PRODUCT",
+        {},
+        [
+            [{"lower": "youtube"}]
+        ]
+    ],
+    "false_positives": [
+        null,
+        {},
+        [{"orth": "Shit"}],
+        [{"orth": "Weed"}],
+        [{"orth": "Cool"}],
+        [{"orth": "Btw"}],
+        [{"orth": "Bah"}],
+        [{"orth": "Bullshit"}],
+        [{"orth": "Lol"}],
+        [{"orth": "Yo"}, {"orth": "dawg"}],
+        [{"orth": "Yay"}],
+        [{"orth": "Ahh"}],
+        [{"orth": "Yea"}],
+        [{"orth": "Bah"}]
+    ]
 }
