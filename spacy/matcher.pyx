@@ -154,5 +154,5 @@ cdef class Matcher:
                         matches.append(get_entity(state, token, token_i))
                     else:
                         partials.push_back(state + 1)
-        doc.ents = list(sorted(list(doc.ents) + matches))
+        doc.ents = [(e.label, e.start, e.end) for e in doc.ents] + matches
         return matches
