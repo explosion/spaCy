@@ -14,7 +14,7 @@ cpdef enum attr_id_t:
     IS_STOP
     IS_OOV
     
-    FLAG13
+    FLAG13 = 13
     FLAG14
     FLAG15
     FLAG16
