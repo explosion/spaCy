@@ -185,7 +185,7 @@ cdef class Doc:
     def noun_chunks(self):
         """Yield spans for base noun phrases."""
         cdef const TokenC* word
-        labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj', 'conj', 'attr']
+        labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj', 'attr']
         np_deps = [self.vocab.strings[label] for label in labels]
         np_label = self.vocab.strings['NP']
         for i in range(self.length):
