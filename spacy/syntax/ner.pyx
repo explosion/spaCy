@@ -300,6 +300,8 @@ cdef class Unit:
             return False
         elif preset_ent_iob == 1:
             return False
+        elif preset_ent_iob == 3 and st.B_(0).ent_type != label:
+            return False
         elif st.B_(1).ent_iob == 1:
             return False
         return label != 0 and not st.entity_is_open()
