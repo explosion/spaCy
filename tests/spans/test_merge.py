@@ -46,6 +46,4 @@ def test_np_merges(EN):
     for start, end, label, lemma in ents:
         merged = tokens.merge(start, end, label, lemma, label)
         assert merged != None, (start, end, label, lemma) 
-    for tok in tokens:
-        print tok.orth_, tok.dep_, tok.head.orth_
 
