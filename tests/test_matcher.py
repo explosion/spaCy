@@ -10,17 +10,17 @@ from spacy.vocab import Vocab
 
 @pytest.fixture
 def matcher(EN):
-    specs = []
-    for string in ['JavaScript', 'Google Now', 'Java']:
-        spec = []
-        for orth_ in string.split():
-            spec.append([(ORTH, EN.vocab.strings[orth_])])
-        specs.append((spec, EN.vocab.strings['product']))
-    return Matcher(specs)
+    patterns = {
+        'Javascript': ['PRODUCT', {}, [{'ORTH': 'JavaScript'}]],
+        'GoogleNow':  ['PRODUCT', {}, [{'ORTH': 'Google'}, {'ORTH': 'Now'}]],
+        'Java':       ['PRODUCT', {}, [{'ORTH': 'Java'}]],
+    }
+    return Matcher(EN.vocab, patterns)
 
 
 def test_compile(matcher):
     assert matcher.n_patterns == 3
+
 
 def test_no_match(matcher, EN):
     tokens = EN('I like cheese')
@@ -29,23 +29,24 @@ def test_no_match(matcher, EN):
 
 def test_match_start(matcher, EN):
     tokens = EN('JavaScript is good')
-    assert matcher(tokens) == [(EN.vocab.strings['product'], 0, 1)]
+    assert matcher(tokens) == [(EN.vocab.strings['PRODUCT'], 0, 1)]
 
 
 def test_match_end(matcher, EN):
     tokens = EN('I like Java')
-    assert matcher(tokens) == [(EN.vocab.strings['product'], 2, 3)]
+    assert matcher(tokens) == [(EN.vocab.strings['PRODUCT'], 2, 3)]
 
 
 def test_match_middle(matcher, EN):
     tokens = EN('I like Google Now best')
-    assert matcher(tokens) == [(EN.vocab.strings['product'], 2, 4)]
+    assert matcher(tokens) == [(EN.vocab.strings['PRODUCT'], 2, 4)]
 
 
 def test_match_multi(matcher, EN):
     tokens = EN('I like Google Now and Java best')
-    assert matcher(tokens) == [(EN.vocab.strings['product'], 2, 4),
-                               (EN.vocab.strings['product'], 5, 6)]
+    assert matcher(tokens) == [(EN.vocab.strings['PRODUCT'], 2, 4),
+                               (EN.vocab.strings['PRODUCT'], 5, 6)]
+
 
 def test_match_preserved(matcher, EN):
     doc = EN.tokenizer('I like Java')
