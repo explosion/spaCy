@@ -171,7 +171,7 @@
         [{"orth": "Bah"}],
         [{"orth": "Bullshit"}],
         [{"orth": "Lol"}],
-        [{"orth": "Yo"}, {"orth": "dawg"}],
+        [{"orth": "Yo"}, {"lower": "dawg"}],
         [{"orth": "Yay"}],
         [{"orth": "Ahh"}],
         [{"orth": "Yea"}],
