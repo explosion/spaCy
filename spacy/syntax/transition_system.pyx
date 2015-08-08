@@ -54,6 +54,10 @@ cdef class TransitionSystem:
     cdef Transition init_transition(self, int clas, int move, int label) except *:
         raise NotImplementedError
 
+    def is_valid(self, StateClass stcls, move_name):
+        action = self.lookup_transition(move_name)
+        return action.is_valid(stcls, action.label)
+
     cdef int set_valid(self, int* is_valid, StateClass stcls) nogil:
         cdef int i
         for i in range(self.n_moves):
