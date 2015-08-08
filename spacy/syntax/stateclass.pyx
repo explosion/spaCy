@@ -42,7 +42,7 @@ cdef class StateClass:
 
     @property
     def queue(self):
-        return {self.B(i) for i in range(self._b_i, self.length)}
+        return {self.B(i) for i in range(self._b_i)}
 
     cdef int E(self, int i) nogil:
         if self._e_i <= 0 or self._e_i >= self.length:
