@@ -54,11 +54,12 @@ and a small usage snippet.
 .. toctree::
     :maxdepth: 4
 
-    loading.rst
     processing.rst
     using/document.rst
     using/span.rst
     using/token.rst
+    using/lexeme.rst
+    lookup.rst
 
 
 .. _English: processing.html

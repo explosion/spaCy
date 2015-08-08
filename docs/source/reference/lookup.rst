@@ -17,33 +17,95 @@ up in the vocabulary directly:
 
 .. py:class:: vocab.Vocab(self, data_dir=None, lex_props_getter=None)
 
-  .. py:method:: __len__(self) --> int
+  .. py:method:: __len__(self)
 
-  .. py:method:: __getitem__(self, id: int) --> unicode
+    :returns: number of words in the vocabulary
+    :rtype: int
 
-  .. py:method:: __getitem__(self, string: unicode) --> int
+  .. py:method:: __getitem__(self, key_int)
 
-  .. py:method:: __setitem__(self, py_str: unicode, props: Dict[str, int[float]) --> None
+    :param int key:
+      Integer ID
 
-  .. py:method:: dump(self, loc: unicode) --> None
+    :returns: A Lexeme object
 
-  .. py:method:: load_lexemes(self, loc: unicode) --> None
+  .. py:method:: __getitem__(self, key_str)
 
-  .. py:method:: load_vectors(self, loc: unicode) --> None
+    :param unicode key_str:
+      A string in the vocabulary
+
+    :rtype: Lexeme
+
+
+  .. py:method:: __setitem__(self, orth_str, props)
+
+    :param unicode orth_str:
+      The orth key
+
+    :param dict props:
+      A props dictionary
+
+    :returns: None
+
+  .. py:method:: dump(self, loc)
+
+    :param unicode loc:
+      Path where the vocabulary should be saved
+
+  .. py:method:: load_lexemes(self, loc)
+
+    :param unicode loc:
+      Path to load the lexemes.bin file from
+
+  .. py:method:: load_vectors(self, loc)
+
+    :param unicode loc:
+      Path to load the vectors.bin from
 
 
 .. py:class:: strings.StringStore(self)
 
-  .. py:method:: __len__(self) --> int
+  .. py:method:: __len__(self)
 
-  .. py:method:: __getitem__(self, id: int) --> unicode
+    :returns:
+      Number of strings in the string-store
 
-  .. py:method:: __getitem__(self, string: bytes) --> id
+  .. py:method:: __getitem__(self, key_int)
 
-  .. py:method:: __getitem__(self, string: unicode) --> id
+    :param int key_int: An integer key
 
-  .. py:method:: dump(self, loc: unicode) --> None
+    :returns:
+      The string that the integer key maps to
 
-  .. py:method:: load(self, loc: unicode) --> None
+      :rtype: unicode
 
+  .. py:method:: __getitem__(self, key_unicode)
 
+    :param int key_unicode:
+      A key, as a unicode string
+
+    :returns:
+      The integer ID of the string.
+
+    :rtype: int
+
+  .. py:method:: __getitem__(self, key_utf8_bytes)
+
+    :param int key_utf8_bytes:
+      A key, as a UTF-8 encoded byte-string
+
+    :returns:
+      The integer ID of the string.
+
+    :rtype:
+      int
+
+  .. py:method:: dump(self, loc)
+
+    :param loc:
+      File path to save the strings.txt to.
+
+  .. py:method:: load(self, loc)
+
+    :param loc:
+      File path to load the strings.txt from.

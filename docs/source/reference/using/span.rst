@@ -4,29 +4,55 @@ The Span Object
 
 .. autoclass:: spacy.spans.Span
 
-:code:`__getitem__`, :code:`__iter__`, :code:`__len__`
-  Sequence API
+.. py:class:: Span
 
-:code:`head`
-  Syntactic head, or None
 
-:code:`left`
-  Tokens to the left of the span
+  .. py:method:: __getitem__
 
-:code:`rights`
-  Tokens to the left of the span
+  .. py:method:: __iter__
 
-:code:`orth` / :code:`orth_`
-  Orth string
+  .. py:method:: __len__
 
-:code:`lemma` / :code:`lemma_`
-  Lemma string
+  .. py:attribute:: root
 
-:code:`string`
-  String
+    Syntactic head
 
-:code:`label` / :code:`label_`
-  Label
+  .. py:attribute:: lefts
 
-:code:`subtree`
-  Lefts + [self] + Rights
+    Tokens that are:
+
+    1. To the left of the span;
+    2. Syntactic children of words within the span
+
+    i.e.
+
+    .. code::
+
+      lefts = [span.doc[i] for i in range(0, span.start) if span.doc[i].head in span]
+
+  .. py:attribute:: rights
+
+    Tokens that are:
+
+    1. To the right of the span;
+    2. Syntactic children of words within the span
+
+    i.e.
+
+    .. code::
+
+      rights = [span.doc[i] for i in range(span.end, len(span.doc)) if span.doc[i].head in span]
+
+    Tokens that are:
+
+    1. To the right of the span;
+    2. Syntactic children of words within the span
+
+
+  .. py:attribute:: string
+
+  .. py:attribute:: lemma / lemma\_
+
+  .. py:attribute:: label / label\_
+
+  .. py:attribute:: subtree

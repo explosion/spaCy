@@ -2,69 +2,93 @@
 The Doc Object
 ==============
 
-.. autoclass:: spacy.tokens.Tokens
 
-:code:`__getitem__`, :code:`__iter__`, :code:`__len__`
-  The Tokens class behaves as a Python sequence, supporting the usual operators,
-  len(), etc.  Negative indexing is supported. Slices are not yet.
+.. py:class:: spacy.tokens.doc.Doc
 
-  .. code::
+  .. py:method:: __init__(self, Vocab vocab, orths_and_spaces=None)
 
-    >>> tokens = nlp(u'Zero one two three four five six')
-    >>> tokens[0].orth_
-    u'Zero'
-    >>> tokens[-1].orth_
-    u'six'
-    >>> tokens[0:4]
-    Error
+    :param Vocab vocab: A vocabulary object.
 
-:code:`sents`
-  Iterate over sentences in the document.
+    :param list orths_and_spaces=None: Defaults to None.
 
-:code:`ents`
-  Iterate over entities in the document.
+  .. py:method:: __getitem__(self, int i)
+    
+    :returns: Token
 
-:code:`to_array`
-  Given a list of M attribute IDs, export the tokens to a numpy ndarray
-  of shape N*M, where N is the length of the sentence.
+  .. py:method:: __getitem__(self, slice start_colon_end)
 
-    Arguments:
-        attr_ids (list[int]): A list of attribute ID ints.
+    :returns: Span
 
-    Returns:
-        feat_array (numpy.ndarray[long, ndim=2]):
-        A feature matrix, with one row per word, and one column per attribute
-        indicated in the input attr_ids.
- 
-:code:`count_by`
-  Produce a dict of {attribute (int): count (ints)} frequencies, keyed
-  by the values of the given attribute ID.
+  .. py:method:: __iter__(self)
 
-    >>> from spacy.en import English, attrs
-    >>> nlp = English()
-    >>> tokens = nlp(u'apple apple orange banana')
-    >>> tokens.count_by(attrs.ORTH)
-    {12800L: 1, 11880L: 2, 7561L: 1}
-    >>> tokens.to_array([attrs.ORTH])
-    array([[11880],
-          [11880],
-          [ 7561],
-          [12800]])
+    Iterate over tokens
+    
+    .. code::
 
-:code:`merge`
-  Merge a multi-word expression into a single token.  Currently
-  experimental; API is likely to change.
+      >>> tokens = nlp(u'Zero one two three four five six')
+      >>> tokens[0].orth_
+      u'Zero'
+      >>> tokens[-1].orth_
+      u'six'
 
+  .. py:method:: __len__(self)
 
+    Number of tokens
 
-Internals
-  A Tokens instance stores the annotations in a C-array of `TokenC` structs.
-  Each TokenC struct holds a const pointer to a LexemeC struct, which describes
-  a vocabulary item.
+  .. py:attribute:: sents
+  
+    Iterate over sentences in the document.
 
-  The Token objects are built lazily, from this underlying C-data.
+    :returns generator: Sentences
 
-  For faster access, the underlying C data can be accessed from Cython.  You
-  can also export the data to a numpy array, via `Tokens.to_array`, if pure Python
-  access is required, and you need slightly better performance.  However, this
-  is both slower and has a worse API than Cython access.
+  .. py:attribute:: ents
+    
+    Iterate over named entities in the document.
+
+    :returns tuple: Named Entities
+
+  .. py:attribute:: noun_chunks
+
+    :returns generator:
+
+  .. py:method:: to_array(self, list attr_ids)
+
+    Given a list of M attribute IDs, export the tokens to a numpy ndarray
+    of shape N*M, where N is the length of the sentence.
+
+    :param list[int] attr_ids: A list of attribute ID ints.
+
+    :returns feat_array:
+      A feature matrix, with one row per word, and one column per attribute
+      indicated in the input attr_ids.
+
+  .. py:method:: count_by(self, attr_id)
+
+    Produce a dict of {attribute (int): count (ints)} frequencies, keyed
+    by the values of the given attribute ID.
+
+    .. code::
+    
+      >>> from spacy.en import English, attrs
+      >>> nlp = English()
+      >>> tokens = nlp(u'apple apple orange banana')
+      >>> tokens.count_by(attrs.ORTH)
+      {12800L: 1, 11880L: 2, 7561L: 1}
+      >>> tokens.to_array([attrs.ORTH])
+      array([[11880],
+            [11880],
+            [ 7561],
+            [12800]])
+
+  .. py:method:: from_array(self, attrs, array)
+
+  .. py:method:: to_bytes(self)
+
+  .. py:method:: from_bytes(self)
+
+  .. py:method:: read_bytes(self)
+
+  .. py:method:: merge(self, int start_idx, int end_idx, unicode tag, unicode lemma, unicode ent_type)
+
+    Merge a multi-word expression into a single token.  Currently
+    experimental; API is likely to change.
