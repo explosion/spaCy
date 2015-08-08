@@ -62,6 +62,21 @@
 			[{"lower": "css3"}]
 		]
 	],
+	"displaCy": [
+		"PRODUCT",
+		{},
+		[
+			[{"lower": "displacy"}]
+		]
+	],
+	"spaCy": [
+		"PRODUCT",
+		{},
+		[
+			[{"orth": "spaCy"}]
+		]
+	],
+
     "HTML": [
 		"PRODUCT",
 		{},
@@ -91,11 +106,12 @@
             [{"lower": "digg"}]
         ]
     ],
-     "Fox": [
+     "FoxNews": [
         "ORG",
         {},
         [
-            [{"orth": "Fox"}]
+            [{"orth": "Fox"}],
+            [{"orth": "News"}]
         ]
     ],
     "Google": [
