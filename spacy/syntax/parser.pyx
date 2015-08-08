@@ -96,11 +96,6 @@ cdef class Parser:
         for action_name in initial_actions:
             action = self.moves.lookup_transition(action_name)
             action.do(stcls, action.label)
-
-        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
-                                  self.model.n_feats, self.model.n_feats)
-        with nogil:
-            self.parse(stcls, eg.c)
         tokens.set_parse(stcls._sent)
         return stcls
 
