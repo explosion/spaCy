@@ -108,8 +108,8 @@ cdef class Parser:
                 self.moves.set_valid(eg.c.is_valid, stcls)
                 fill_context(eg.c.atoms, stcls)
                 self.model.set_scores(eg.c.scores, eg.c.atoms)
-                eg.guess = arg_max_if_true(eg.c.scores, eg.c.is_valid, self.model.n_classes)
-                self.moves.c[eg.guess].do(stcls, self.moves.c[eg.guess].label)
+                eg.c.guess = arg_max_if_true(eg.c.scores, eg.c.is_valid, self.model.n_classes)
+                self.moves.c[eg.c.guess].do(stcls, self.moves.c[eg.c.guess].label)
         if stcls.is_final():
             self.moves.finalize_state(stcls)
         tokens.set_parse(stcls._sent)
