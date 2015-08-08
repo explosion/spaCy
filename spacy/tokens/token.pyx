@@ -193,7 +193,7 @@ cdef class Token:
     property left_edge:
         def __get__(self):
             return self.doc[self.c.l_edge]
- 
+
     property right_edge:
         def __get__(self):
             return self.doc[self.c.r_edge]
@@ -202,7 +202,7 @@ cdef class Token:
         def __get__(self):
             """The token predicted by the parser to be the head of the current token."""
             return self.doc[self.i + self.c.head]
-        
+
     property conjuncts:
         def __get__(self):
             """Get a list of conjoined words"""
@@ -290,7 +290,7 @@ cdef class Token:
 
     property is_alpha:
         def __get__(self): return check_flag(self.c.lex, IS_ALPHA)
-    
+
     property is_ascii:
         def __get__(self): return check_flag(self.c.lex, IS_ASCII)
 
@@ -311,7 +311,7 @@ cdef class Token:
 
     property like_url:
         def __get__(self): return check_flag(self.c.lex, LIKE_URL)
-    
+
     property like_num:
         def __get__(self): return check_flag(self.c.lex, LIKE_NUM)
 
