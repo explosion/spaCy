@@ -88,6 +88,22 @@ cdef class Parser:
             self.parse(stcls, eg.c)
         tokens.set_parse(stcls._sent)
 
+    def partial(self, Doc tokens, initial_actions):
+        cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
+        self.moves.initialize_state(stcls)
+        cdef object action_name
+        cdef Transition action
+        for action_name in initial_actions:
+            action = self.moves.lookup_transition(action_name)
+            action.do(stcls, action.label)
+
+        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
+                                  self.model.n_feats, self.model.n_feats)
+        with nogil:
+            self.parse(stcls, eg.c)
+        tokens.set_parse(stcls._sent)
+        return stcls
+
     cdef void parse(self, StateClass stcls, ExampleC eg) nogil:
         while not stcls.is_final():
             memset(eg.scores, 0, eg.nr_class * sizeof(weight_t))
@@ -109,9 +125,9 @@ cdef class Parser:
         cdef Transition G
         while not stcls.is_final():
             memset(eg.c.scores, 0, eg.c.nr_class * sizeof(weight_t))
-        
+
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
-            
+
             fill_context(eg.c.atoms, stcls)
 
             self.model.train(eg)
