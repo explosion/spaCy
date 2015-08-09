@@ -88,28 +88,24 @@ cdef class Parser:
             self.parse(stcls, eg.c)
         tokens.set_parse(stcls._sent)
 
-    def get_state(self, Doc tokens, initial_actions, continue_for=0):
+    def get_state(self, Doc tokens, initial_actions):
         cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
         self.moves.initialize_state(stcls)
         cdef object action_name
         cdef Transition action
-        cdef Example eg
+        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
+                                  self.model.n_feats, self.model.n_feats)
         for action_name in initial_actions:
-            try:
-                action = self.moves.lookup_transition(action_name)
-            except IndexError:
-                break
-            action.do(stcls, action.label)
-        else:
-            eg = Example(self.model.n_classes, CONTEXT_SIZE,
-                         self.model.n_feats, self.model.n_feats)
-            while not stcls.is_final() and continue_for != 0:
+            if action_name == '_':
                 memset(eg.c.scores, 0, eg.c.nr_class * sizeof(weight_t))
                 self.moves.set_valid(eg.c.is_valid, stcls)
                 fill_context(eg.c.atoms, stcls)
                 self.model.set_scores(eg.c.scores, eg.c.atoms)
                 eg.c.guess = arg_max_if_true(eg.c.scores, eg.c.is_valid, self.model.n_classes)
-                self.moves.c[eg.c.guess].do(stcls, self.moves.c[eg.c.guess].label)
+                action = self.moves.c[eg.c.guess]
+            else:
+                action = self.moves.lookup_transition(action_name)
+            action.do(stcls, action.label)
         if stcls.is_final():
             self.moves.finalize_state(stcls)
         tokens.set_parse(stcls._sent)
