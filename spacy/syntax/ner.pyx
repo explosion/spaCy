@@ -47,6 +47,7 @@ cdef bint _entity_is_sunk(StateClass st, Transition* golds) nogil:
     else:
         return False
 
+
 cdef class BiluoPushDown(TransitionSystem):
     @classmethod
     def get_labels(cls, gold_tuples):
