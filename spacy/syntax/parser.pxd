@@ -16,3 +16,4 @@ cdef class Parser:
     cdef readonly TransitionSystem moves
 
     cdef void parse(self, StateClass stcls, ExampleC eg) nogil
+    cdef void predict(self, StateClass stcls, ExampleC* eg) nogil

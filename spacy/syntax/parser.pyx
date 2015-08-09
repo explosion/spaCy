@@ -97,11 +97,7 @@ cdef class Parser:
                                   self.model.n_feats, self.model.n_feats)
         for action_name in initial_actions:
             if action_name == '_':
-                memset(eg.c.scores, 0, eg.c.nr_class * sizeof(weight_t))
-                self.moves.set_valid(eg.c.is_valid, stcls)
-                fill_context(eg.c.atoms, stcls)
-                self.model.set_scores(eg.c.scores, eg.c.atoms)
-                eg.c.guess = arg_max_if_true(eg.c.scores, eg.c.is_valid, self.model.n_classes)
+                self.predict(stcls, &eg.c)
                 action = self.moves.c[eg.c.guess]
             else:
                 action = self.moves.lookup_transition(action_name)
@@ -111,13 +107,16 @@ cdef class Parser:
         tokens.set_parse(stcls._sent)
         return stcls
 
+    cdef void predict(self, StateClass stcls, ExampleC* eg) nogil:
+        memset(eg.scores, 0, eg.nr_class * sizeof(weight_t))
+        self.moves.set_valid(eg.is_valid, stcls)
+        fill_context(eg.atoms, stcls)
+        self.model.set_scores(eg.scores, eg.atoms)
+        eg.guess = arg_max_if_true(eg.scores, eg.is_valid, self.model.n_classes)
+
     cdef void parse(self, StateClass stcls, ExampleC eg) nogil:
         while not stcls.is_final():
-            memset(eg.scores, 0, eg.nr_class * sizeof(weight_t))
-            self.moves.set_valid(eg.is_valid, stcls)
-            fill_context(eg.atoms, stcls)
-            self.model.set_scores(eg.scores, eg.atoms)
-            eg.guess = arg_max_if_true(eg.scores, eg.is_valid, self.model.n_classes)
+            self.predict(stcls, &eg)
             self.moves.c[eg.guess].do(stcls, self.moves.c[eg.guess].label)
         self.moves.finalize_state(stcls)
 
@@ -132,13 +131,9 @@ cdef class Parser:
         cdef Transition G
         while not stcls.is_final():
             memset(eg.c.scores, 0, eg.c.nr_class * sizeof(weight_t))
-
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
-
             fill_context(eg.c.atoms, stcls)
-
             self.model.train(eg)
-
             G = self.moves.c[eg.c.guess]
 
             self.moves.c[eg.c.guess].do(stcls, self.moves.c[eg.c.guess].label)
