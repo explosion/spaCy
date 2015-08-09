@@ -71,7 +71,6 @@ cdef class StateClass:
             return -1
         return self._sent[i].head + i
 
-
     cdef int E(self, int i) nogil
 
     cdef int R(self, int i, int idx) nogil

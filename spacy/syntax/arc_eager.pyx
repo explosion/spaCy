@@ -109,7 +109,7 @@ cdef bint label_is_gold(const GoldParseC* gold, int head, int child, int label) 
 
 cdef bint _is_gold_root(const GoldParseC* gold, int word) nogil:
     return gold.labels[word] == -1 or gold.heads[word] == word
- 
+
 
 cdef class Shift:
     @staticmethod
