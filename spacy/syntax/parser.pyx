@@ -175,7 +175,8 @@ cdef class StepwiseState:
         moves = {'S': 0, 'D': 1, 'L': 2, 'R': 3}
         if action_name == '_':
             action_name = self.predict()
-        if action_name == 'L' or action_name == 'R':
+            action = self.parser.moves.lookup_transition(action_name)
+        elif action_name == 'L' or action_name == 'R':
             self.predict()
             move = moves[action_name]
             clas = _arg_max_clas(self.eg.c.scores, move, self.parser.moves.c,
@@ -198,6 +199,6 @@ cdef int _arg_max_clas(const weight_t* scores, int move, const Transition* actio
     cdef int i
     for i in range(nr_class):
         if actions[i].move == move and (mode == -1 or scores[i] >= score):
-            mode = actions[i].clas
+            mode = i
             score = scores[i]
     return mode
