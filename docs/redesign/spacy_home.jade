@@ -1,0 +1,263 @@
+- var slogan = "Build Tomorrow's Language Technologies"
+- var tag_line = "spaCy &ndash; #{slogan}"
+- var a_minor_miracle = '<a href="">a minor miracle</a>'
+
+mixin lede()
+  p.
+    <strong>spaCy</strong> is a library for industrial-strength NLP in Python and
+    Cython.  It features state-of-the-art speed and accuracy, a concise API, and
+    great documentation.  If you're a small company doing NLP, we want spaCy to
+    seem like !{a_minor_miracle}.
+
+mixin overview()
+  p.
+    Overview text
+
+mixin example()
+  p.
+    Example text
+
+mixin benchmarks()
+  p.
+    Benchmarks
+
+mixin get_started()
+  p.
+    Get Started
+
+mixin example(name)
+  details
+    summary
+      span(class="example-name")= name
+          
+    block
+
+
+mixin accuracy_head
+  tr
+    
+mixin columns(...names)
+  tr
+    each name in names
+      th= name
+
+
+mixin row(...cells)
+  tr
+    each cell in cells
+      td= cell
+
+
+doctype html
+html(lang="en")
+  head
+    meta(charset="utf-8")
+    title!= tag_line
+    meta(name="description" content="")
+    meta(name="author" content="Matthew Honnibal")
+    link(rel="stylesheet" href="css/style.css")
+    <!--[if lt IE 9]>
+    script(src="http://html5shiv.googlecode.com/svn/trunk/html5.js")
+    <![endif]-->
+
+  body(id="page" role="document")
+    header(role="banner")
+      h1(class="logo")!= tag_line
+      div(class="slogan")!= slogan
+
+    nav(role="navigation")
+      ul
+        li: a(href="#") Home
+        li: a(href="#") Docs
+        li: a(href="#") License
+        li: a(href="#") Blog
+
+    main(id="content" role="main")
+      section(class="intro")
+        +lede
+
+        nav(role="navigation")
+          ul
+            li: a(href="#overview" class="button") Examples
+            li: a(href="#overview" class="button") Comparisons
+            li: a(href="#example-use" class="button") Demo
+            li: a(href="#get-started" class="button") Install
+
+      article(class="page landing-page")
+        a(name="example-use"): h3 Usage by Example
+
+        +example("Load resources and process text")
+          pre.language-python
+            code
+              | from __future__ import unicode_literals, print_function
+              | from spacy.en import English
+              | nlp = English()
+              | doc = nlp('Hello, world. Here are two sentences.')
+
+        +example("Get tokens and sentences")
+          pre.language-python
+            code
+              | token = doc[0]
+              | sentence = doc.sents[0]
+              | assert token[0] is sentence[0]
+
+        +example("Use integer IDs for any string")
+          pre.language-python
+            code
+              | hello_id = nlp.vocab.strings['Hello']
+              | hello_str = nlp.vocab.strings[hello_id]
+              | 
+              | assert token.orth == hello_id == 52
+              | assert token.orth_ == hello_str == 'Hello'
+
+        +example("Get and set string views and flags")
+          pre.language-python
+            code
+              | assert token.shape_ == 'Xxxx'
+              | for lexeme in nlp.vocab:
+              |     if lexeme.is_alpha:
+              |         lexeme.shape_ = 'W'
+              |     elif lexeme.is_digit:
+              |         lexeme.shape_ = 'D'
+              |     elif lexeme.is_punct:
+              |         lexeme.shape_ = 'P'
+              |     else:
+              |         lexeme.shape_ = 'M'
+              | assert token.shape_ == 'W'
+
+        +example("Export to numpy arrays")
+          pre.language-python
+            code
+              | Do me
+
+        +example("Word vectors")
+          pre.language-python
+            code
+              | Do me
+
+        +example("Part-of-speech tags")
+          pre.language-python
+            code
+              | Do me
+
+        +example("Syntactic dependencies")
+          pre.language-python
+            code
+              | Do me
+
+        +example("Named entities")
+          pre.language-python
+            code
+              | Do me
+
+        +example("Define custom NER rules")
+          pre.language-python
+            code
+              | Do me
+
+        +example("Calculate inline mark-up on original string")
+          pre.language-python
+            code
+              | Do me
+
+        +example("Efficient binary serialization")
+          pre.language-python
+            code
+              | Do me
+
+        a(name="benchmarks"): h3 Benchmarks
+
+        details
+          summary: h4 Independent Evaluation
+          
+          p
+            | Independent evaluation by Yahoo! Labs and Emory
+            | University, to appear at ACL 2015. Higher is better.
+  
+          table
+            thead
+              +columns("System", "Language", "Accuracy", "Speed")
+
+            tbody
+              +row("spaCy v0.86", "Cython", "91.9", "13,963")
+              +row("spaCy v0.84", "Cython", "90.6", "13,963")
+              +row("ClearNLP", "Java", "91.7", "10,271")
+              +row("CoreNLP", "Java", "89.6", "8,602")
+              +row("MATE", "Java", "92.5", "550")
+              +row("Turbo", "C++", "92.4", "349")
+              +row("Yara", "Java", "92.3", "340")
+
+          p
+            | Accuracy is % unlabelled arcs correct, speed is tokens per second.
+
+          p
+            | Joel Tetreault and Amanda Stent (Yahoo! Labs) and Jin-ho Choi (Emory)
+            | performed a detailed comparison of the best parsers available.
+            | All numbers above are taken from the pre-print they kindly made
+            | available to me, except for spaCy v0.86. 
+
+          p
+            | I'm particularly grateful to the authors for discussion of their
+            | results, which led to the improvement in accuracy between v0.84 and
+            | v0.86.  A tip from Jin-ho developer of ClearNLP) was particularly
+            | useful.
+
+        details
+          summary: h4 Detailed Accuracy Comparison
+
+        details
+          summary: h4 Detailed Speed Comparison
+
+          table
+            thead
+              tr
+                th.
+                th(colspan=3) Absolute (ms per doc)
+                th(colspan=3) Relative (to spaCy)
+
+            tbody
+              tr
+                td: strong System
+                td: strong Split
+                td: strong Tag
+                td: strong Parse
+                td: strong Split
+                td: strong Tag
+                td: strong Parse
+
+              +row("spaCy", "0.2ms", "1ms", "19ms", "1x", "1x", "1x")
+              +row("spaCy", "0.2ms", "1ms", "19ms", "1x", "1x", "1x")
+              +row("CoreNLP", "2ms", "10ms", "49ms", "10x", "10x", "2.6x")
+              +row("ZPar", "1ms", "8ms", "850ms", "5x", "8x", "44.7x")
+              +row("NLTK", "4ms", "443ms", "n/a", "20x", "443x", "n/a")
+
+          p
+            | <strong>Set up</strong>: 100,000 plain-text documents were streamed
+            | from an SQLite3 database, and processed with an NLP library, to one
+            | of three levels of detail &ndash; tokenization, tagging, or parsing.
+            | The tasks are additive: to parse the text you have to tokenize and
+            | tag it.  The  pre-processing was not subtracted from the times &ndash;
+            | I report the time required for the pipeline to complete.  I report
+            | mean times per document, in milliseconds.
+
+          p
+            | <strong>Hardware</strong>: Intel i7-3770 (2012)
+
+
+          //+comparison("spaCy vs. NLTK")
+          //+comparison("spaCy vs. Pattern")
+          //+comparison("spaCy vs. CoreNLP")
+          //+comparison("spaCy vs. ClearNLP")
+          //+comparison("spaCy vs. OpenNLP")
+          //+comparison("spaCy vs. GATE")
+
+        a(name="get-started"): h3 Get started
+
+          +get_started
+
+
+
+
+      footer(role="contentinfo")
+
+      script(src="js/prism.js")
