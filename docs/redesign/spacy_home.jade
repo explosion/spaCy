@@ -32,10 +32,14 @@ mixin example(name)
           
     block
 
+mixin comparison(name)
+  details
+    summary
+      h4
+        name
 
-mixin accuracy_head
-  tr
-    
+    block
+ 
 mixin columns(...names)
   tr
     each name in names
@@ -167,6 +171,13 @@ html(lang="en")
 
         a(name="benchmarks"): h3 Benchmarks
 
+        +comparison("spaCy vs. NLTK")
+        +comparison("spaCy vs. Pattern")
+        +comparison("spaCy vs. CoreNLP")
+        +comparison("spaCy vs. ClearNLP")
+        +comparison("spaCy vs. OpenNLP")
+        +comparison("spaCy vs. GATE")
+
         details
           summary: h4 Independent Evaluation
           
@@ -242,14 +253,6 @@ html(lang="en")
 
           p
             | <strong>Hardware</strong>: Intel i7-3770 (2012)
-
-
-          //+comparison("spaCy vs. NLTK")
-          //+comparison("spaCy vs. Pattern")
-          //+comparison("spaCy vs. CoreNLP")
-          //+comparison("spaCy vs. ClearNLP")
-          //+comparison("spaCy vs. OpenNLP")
-          //+comparison("spaCy vs. GATE")
 
         a(name="get-started"): h3 Get started
 
