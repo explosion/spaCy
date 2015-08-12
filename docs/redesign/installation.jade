@@ -1,0 +1,40 @@
+p With Python 2.7 or Python 3, using Linux or OSX, run:
+
+pre.language-bash: code
+  | $ pip install spacy
+  | $ python -m spacy.en.download</code></pre>
+
+p
+  | The download command fetches and installs about 300mb of data, for
+  | the parser model and word vectors, which it installs within the spacy.en
+  | package directory.
+
+p
+  | If you're stuck using a server with an old version of Python, and you
+  | don't have root access, I've prepared a bootstrap script to help you
+  | compile a local Python install.  Run:
+
+pre.language-bash: code
+  | $ curl https://raw.githubusercontent.com/honnibal/spaCy/master/bootstrap_python_env.sh | bash && source .env/bin/activate
+
+p
+  | The other way to install the package is to clone the github repository,
+  | and build it from source.  This installs an additional dependency,
+  | Cython.  If you're using Python 2, I also recommend installing fabric
+  | and fabtools &ndash; this is how I build the project.
+
+pre.language-bash: code
+  | $ git clone https://github.com/honnibal/spaCy.git
+  | $ cd spaCy
+  | $ virtualenv .env && source .env/bin/activate
+  | $ export PYTHONPATH=`pwd`
+  | $ pip install -r requirements.txt
+  | $ python setup.py build_ext --inplace
+  | $ python -m spacy.en.download
+  | $ pip install pytest
+  | $ py.test tests/
+
+p
+  | Python packaging is awkward at the best of times, and it's particularly tricky
+  | with C extensions, built via Cython, requiring large data files.  So,
+  | please report issues as you encounter them.
