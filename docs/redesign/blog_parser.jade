@@ -87,7 +87,7 @@ html(lang='en')
               td 19
               td Java
               td
-                | > 50,000 
+                | > 4,000
                 sup
                   a(href='#note-1') [1]
             tr
@@ -96,7 +96,6 @@ html(lang='en')
               td 89.8%
               td 2,020
               td Python
-              td
                 strong ~500
             tr
               td Redshift
@@ -651,11 +650,11 @@ html(lang='en')
 
         p
           | So we have this function 
-          code.language-python Oracle(state)
+          code Oracle(state)
           | :
           pre
             code
-              Oracle(state) = | gold_arcs ∩ reachable_arcs(state) |
+              | Oracle(state) = | gold_arcs ∩ reachable_arcs(state) |
         p
           | We also have a set of actions, each of which returns a new state.
           | We want to know:
@@ -745,7 +744,7 @@ html(lang='en')
           a(name='note-1')
             | [1] I wasn’t really sure how to count the lines of code in the Stanford
             | parser. Its jar file ships over 200k, but there are a lot of different
-            | models in it. It’s not important, but over 50k seems safe.
+            | models in it. It’s not important, but it's certainly over 4k.
 
         p
           a(name='note-2')
