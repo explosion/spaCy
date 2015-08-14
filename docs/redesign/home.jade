@@ -1,5 +1,7 @@
 extends ./outline.jade
 
+include ./mixins.jade
+
 // Notes
 //
 // 1. Where to put version notice? Should say something like
@@ -16,11 +18,13 @@ mixin lede
   - var state_of_the_art = '<a href="#">state-of-the-art</a>'
   - var a_minor_miracle = '<a href="">a minor miracle</a>'
   - var great_documentation = '<a href="">great documentation</a>'
+  - var concise_API = '<a href="">concise API</a>'
   
   p.
     <a href="https://github.com/honnibal/spaCy"><strong>spaCy</strong></a> is a
-    library for industrial-strength NLP in Python and Cython.  It features
-    !{state_of_the_art} speed and accuracy, a concise API, and great documentation.
+    library for industrial-strength natural language processing in Python and
+    Cython.  It features !{state_of_the_art} speed and accuracy, a !{concise_API},
+    and <a href="#license">license terms</a> designed to get out of your way.
     If you're a small company doing NLP, we want <strong>spaCy</strong> to seem
     like !{a_minor_miracle}.
 
@@ -35,7 +39,6 @@ mixin benchmarks()
 mixin get_started()
   p.
     Get Started
-
 
 mixin comparison(name)
   details
@@ -68,19 +71,6 @@ mixin social
         | Discuss on Reddit
 
 
-mixin Section(title_text, link_name, include_file)
-  a(name=link_name): h3 #{title_text}
-
-  if (link_name == "example-use")
-    include ./usage_examples.jade
-  else if (link_name == "online-demo")
-    include ./online_demo.jade
-  else if (link_name == "comparisons")
-    include ./comparisons.jade
-  else if (link_name == "install")
-    include ./installation.jade
-
-
 block intro_block
   section(class="intro")
     +lede
@@ -90,7 +80,9 @@ block intro_block
         li: a(href="#example-use" class="button") Examples
         li: a(href="#online-demo" class="button") Demo
         li: a(href="#comparisons" class="button") Comparisons
-        li: a(href="#install" class="button") Install v0.89
+        li: a(href="#install" class="button")
+          | Install
+          <span class="button-caption">v0.89</span>
 
 
 block body_block
@@ -103,4 +95,3 @@ block body_block
     +Section("Comparisons and Benchmarks", "comparisons", "./comparisons.jade")
 
     +Section("Install", "install", "./install.jade")
-
