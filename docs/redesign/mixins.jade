@@ -1,5 +1,5 @@
 mixin Section(title_text, link_name, include_file)
-  h3: a(name=link_name href=link_name) #{title_text}
+  h3: a(name=link_name) #{title_text}
 
   if (link_name == "example-use")
     include ./usage_examples.jade
@@ -15,5 +15,3 @@ mixin Section(title_text, link_name, include_file)
     include ./tutorials.jade
   else if (link_name == "spec")
     include ./spec.jade
-
-

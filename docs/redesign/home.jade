@@ -28,17 +28,6 @@ mixin lede
     If you're a small company doing NLP, we want <strong>spaCy</strong> to seem
     like !{a_minor_miracle}.
 
-mixin overview()
-  p.
-    Overview text
-
-mixin benchmarks()
-  p.
-    Benchmarks
-
-mixin get_started()
-  p.
-    Get Started
 
 mixin comparison(name)
   details
@@ -78,11 +67,12 @@ block intro_block
     nav(role="navigation")
       ul
         li: a(href="#example-use" class="button") Examples
-        li: a(href="#online-demo" class="button") Demo
         li: a(href="#comparisons" class="button") Comparisons
+        li: a(href="#online-demo" class="button") Try Online
         li: a(href="#install" class="button")
           | Install
           <span class="button-caption">v0.89</span>
+
 
 
 block body_block
@@ -90,8 +80,9 @@ block body_block
 
     +Section("Usage by Example", "example-use", "./usage_examples.jade")
 
+    +Section("Comparisons and Benchmarks", "comparisons", "./comparisons.jade")
+      
     +Section("Online Demo", "online-demo", "./online_demo.jade")
 
-    +Section("Comparisons and Benchmarks", "comparisons", "./comparisons.jade")
 
     +Section("Install", "install", "./install.jade")

@@ -23,7 +23,7 @@ mixin example(name)
     | hello_id = nlp.vocab.strings['Hello']
     | hello_str = nlp.vocab.strings[hello_id]
     | 
-    | assert token.orth == hello_id == 52
+    | assert token.orth  == hello_id  == 52
     | assert token.orth_ == hello_str == 'Hello'
 
 +example("Get and set string views and flags")
@@ -66,51 +66,102 @@ mixin example(name)
 
 +example("Part-of-speech tags")
   pre.language-python: code
-    | doc[0].pos
-    | doc[0].tag
+    | from spacy.parts_of_speech import ADV
+    | 
+    | def is_adverb(token):
+    |     return token.pos == spacy.parts_of_speech.ADV
+    | 
+    | # These are data-specific, so no constants are provided. You have to look
+    | # up the IDs from the StringStore.
+    | NNS = nlp.vocab.strings['NNS']
+    | NNPS = nlp.vocab.strings['NNPS']
+    | def is_plural_noun(token):
+    |     return token.tag == NNS or token.tag == NNPS
+    | 
+    | def print_coarse_pos(token):
+    |     print(token.pos_)
+    | 
+    | def print_fine_pos(token):
+    |     print(token.tag_)
 
 +example("Syntactic dependencies")
   pre.language-python: code
-    | for head in tokens:
-    |     for child in head.lefts:
-    |         assert child.head is head
-    |     for child in head.rights:
-    |         assert child.head is head
-    | sent = nlp('The four wheels on the bus turned quickly.')
-    | wheels = sent[2]
-    | bus = sent[5]
-    | assert len(list(wheels.lefts)) == 2
-    | assert len(list(wheels.rights)) == 1
-    | assert len(list(wheels.children)) == 3
-    | assert len(list(bus.lefts)) == 1
-    | assert len(list(bus.rights)) == 0
-    | assert len(list(bus.children)) == 1
-    | 
-    | assert len(list(wheels.subtree)) == 6 
+    | def dependency_labels_to_root(token):
+    |     '''Walk up the syntactic tree, collecting the arc labels.'''
+    |     dep_labels = []
+    |     while token.root is not token:
+    |         dep_labels.append(token.dep)
+    |         token = token.head
+    |     return dep_labels
 
 +example("Named entities")
   pre.language-python: code
-    | doc.ents
-    | token.ent_type
-    | token.ent_iob
+    | def iter_products(docs):
+    |     for doc in docs:
+    |         for ent in doc.ents:
+    |             if ent.label_ == 'PRODUCT':
+    |                 yield ent
+    | 
+    | def word_is_in_entity(word):
+    |     return word.ent_type != 0
+    | 
+    | def count_parent_verb_by_person(docs):
+    |     counts = defaultdict(defaultdict(int))
+    |     for doc in docs:
+    |         for ent in doc.ents:
+    |             if ent.label_ == 'PERSON' and ent.root.head.pos == VERB:
+    |                 counts[ent.orth_][ent.root.head.lemma_] += 1
+    |     return counts
 
-+example("Define custom NER rules")
-  pre.language-python: code
-    | nlp.matcher
+  //+example("Define custom NER rules")
+  //  pre.language-python: code
+  //    | nlp.matcher
+
 
 +example("Calculate inline mark-up on original string")
   pre.language-python: code
-    | token.string
-    | token.spacy
-    | token.whitespace_
+    | def put_spans_around_tokens(doc, get_classes):
+    |     '''Given some function to compute class names, put each token in a
+    |     span element, with the appropriate classes computed.
+    |  
+    |     All whitespace is preserved, outside of the spans. (Yes, I know HTML
+    |     won't display it. But the point is no information is lost, so you can
+    |     calculate what you need, e.g. <br /> tags, <p> tags, etc.)
+    |     '''
+    |     output = []
+    |     template = '&lt;span classes="{classes}"&gt;{word}&lt;/span&gt;{space}'
+    |     for token in doc:
+    |         if token.is_space:
+    |             output.append(token.orth_)
+    |         else:
+    |             output.append(
+    |               template.format(
+    |                 classes=' '.join(get_classes(token)),
+    |                 word=token.orth_,
+    |                 space=token.whitespace_))
+    |     string = ''.join(output)
+    |     string = string.replace('\n', '<br />')
+    |     string = string.replace('\t', '&nbsp;&nbsp;&nbsp;&nbsp;'
+    |     return string
+
 
 +example("Efficient binary serialization")
   pre.language-python: code
-
+    | 
     | byte_string = doc.as_bytes()
     | open('/tmp/moby_dick.bin', 'wb').write(byte_string)
-
+    | 
     | nlp = spacy.en.English()
     | for byte_string in Doc.read(open('/tmp/moby_dick.bin', 'rb')):
     |    doc = Doc(nlp.vocab)
     |    doc.from_bytes(byte_string)
+
+
+p
+  | See the 
+  a(href="docs.html") docs page 
+  | for 
+  a(href="docs.html#api") API documentation, 
+  a(href="docs.html#tutorials") tutorials, 
+  | and 
+  a(href="docs.html#spec") annotation specs.
