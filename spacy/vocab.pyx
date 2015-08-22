@@ -36,24 +36,20 @@ EMPTY_LEXEME.repvec = EMPTY_VEC
 cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
-    def __init__(self, data_dir=None, get_lex_props=None, load_vectors=True,
-                 pos_tags=None, oov_prob=-30):
-        if oov_prob is None:
-            oov_prob = -30
+    def __init__(self, data_dir=None, get_lex_attr=None):
         self.mem = Pool()
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
         self.strings = StringStore()
         self.pos_tags = pos_tags if pos_tags is not None else {}
-
-        self.lexeme_props_getter = get_lex_props
+        
+        self.get_lex_attr = get_lex_attr
         self.repvec_length = 0
         self.length = 0
         self._add_lex_to_vocab(0, &EMPTY_LEXEME)
         if data_dir is not None:
             if not path.exists(data_dir):
                 raise IOError("Directory %s not found -- cannot load Vocab." % data_dir)
-        if data_dir is not None:
             if not path.isdir(data_dir):
                 raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
             self.load_lexemes(path.join(data_dir, 'strings.txt'),
@@ -63,7 +59,6 @@ cdef class Vocab:
 
         self._serializer = None
         self.data_dir = data_dir
-        self.oov_prob = oov_prob
 
     property serializer:
         def __get__(self):
@@ -91,18 +86,8 @@ cdef class Vocab:
         lex = <LexemeC*>self._by_hash.get(key)
         if lex != NULL:
             return lex
-        cdef bint is_oov = mem is not self.mem
-        if len(string) < 3:
-            mem = self.mem
-        lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        props = self.lexeme_props_getter(string, self.oov_prob, is_oov=is_oov)
-        set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
-        if is_oov:
-            lex.id = 0
         else:
-            self._add_lex_to_vocab(key, lex)
-        assert lex != NULL, string
-        return lex
+            return self._new_lexeme(mem, string)
 
     cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
@@ -114,18 +99,21 @@ cdef class Vocab:
         lex = <LexemeC*>self._by_orth.get(orth)
         if lex != NULL:
             return lex
-        cdef unicode string = self.strings[orth]
+        else:
+            return self._new_lexeme(mem, self.strings[orth])
+
+    cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL:
         cdef bint is_oov = mem is not self.mem
         if len(string) < 3:
             mem = self.mem
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        props = self.lexeme_props_getter(string, self.oov_prob, is_oov=is_oov)
-        set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
+        for attr, func in self.lex_attr_getters.items():
+            Lexeme.set_struct_attr(lex, attr, func(string))
         if is_oov:
             lex.id = 0
         else:
-            self._add_lex_to_vocab(hash_string(string), lex)
-        assert lex != NULL, orth
+            self._add_lex_to_vocab(key, lex)
+        assert lex != NULL, string
         return lex
 
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1:
@@ -170,15 +158,6 @@ cdef class Vocab:
                 "%s. Maps unicode --> Lexeme or "
                 "int --> Lexeme" % str(type(id_or_string)))
         return Lexeme.from_ptr(lexeme, self.strings, self.repvec_length)
-
-    def __setitem__(self, unicode string, dict props):
-        cdef hash_t key = hash_string(string)
-        cdef LexemeC* lex
-        lex = <LexemeC*>self._by_hash.get(key)
-        if lex == NULL:
-            lex = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
-        set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
-        self._add_lex_to_vocab(key, lex)
 
     def dump(self, loc):
         if path.exists(loc):

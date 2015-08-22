@@ -80,7 +80,6 @@ class English(object):
       Packer=None,
       load_vectors=True
     ):
-        
         self.data_dir = data_dir
 
         if path.exists(path.join(data_dir, 'vocab', 'oov_prob')):

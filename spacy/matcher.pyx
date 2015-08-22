@@ -12,6 +12,8 @@ from .tokens.doc cimport get_token_attr
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab
 
+from libcpp.vector cimport vector
+
 try:
     import ujson as json
 except ImportError:
@@ -96,28 +98,26 @@ def map_attr_name(attr):
 
 cdef class Matcher:
     cdef Pool mem
-    cdef Pattern** patterns
+    cdef vector[Pattern*] patterns
     cdef readonly int n_patterns
 
     def __init__(self, vocab, patterns):
         self.mem = Pool()
-        n_patterns = sum([len(specs) for etype, attrs, specs in patterns.values()])
-        self.patterns = <Pattern**>self.mem.alloc(n_patterns, sizeof(Pattern*))
-        cdef int i = 0
         for entity_key, (etype, attrs, specs) in sorted(patterns.items()):
-            if isinstance(entity_key, basestring):
-                entity_key = vocab.strings[entity_key]
-            if isinstance(etype, basestring):
-                etype = vocab.strings[etype]
-            elif etype is None:
-                etype = -1
-            # TODO: Do something more clever about multiple patterns for single
-            # entity
-            for spec in specs:
-                spec = _convert_strings(spec, vocab.strings)
-                self.patterns[i] = init_pattern(self.mem, spec, etype)
-                i += 1
-        self.n_patterns = len(patterns)
+            self.add(entity_key, etype, attrs, specs)
+
+    def add(self, entity_key, etype, attrs, specs):
+        if isinstance(entity_key, basestring):
+            entity_key = vocab.strings[entity_key]
+        if isinstance(etype, basestring):
+            etype = vocab.strings[etype]
+        elif etype is None:
+            etype = -1
+        # TODO: Do something more clever about multiple patterns for single
+        # entity
+        for spec in specs:
+            spec = _convert_strings(spec, vocab.strings)
+            self.patterns.push_back(init_pattern(self.mem, spec, etype))
 
     @classmethod
     def from_dir(cls, vocab, data_dir):

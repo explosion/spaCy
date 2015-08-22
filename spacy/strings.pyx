@@ -108,6 +108,11 @@ cdef class StringStore:
         else:
             raise TypeError(type(string_or_id))
 
+    def __iter__(self):
+        cdef int i
+        for i in range(self.size):
+            yield self[i]
+
     cdef const Utf8Str* intern(self, unsigned char* chars, int length) except NULL:
         # 0 means missing, but we don't bother offsetting the index.
         key = hash64(chars, length * sizeof(char), 0)
