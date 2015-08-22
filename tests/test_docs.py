@@ -1,7 +1,5 @@
 # -*- coding: utf-8 -*-
 """Sphinx doctest is just too hard. Manually paste doctest examples here"""
-from spacy.en.attrs import IS_LOWER
-import pytest
 
 @pytest.mark.models
 def test_1():
