@@ -94,7 +94,7 @@ starting_tokens = {
                 "there": {"'d": [], "'d've": [], "'s": ["contrLower", "contrUpper"]},
                 "they": {"'d": [], "'d've": [], "'ll": [], "'re": [], "'ve": []},
                 "was": {"n't": []},
-                "we": {"'d": ["contrLower", "contrUpper"], "'d've": [], "'ll": ["contrLower", "contrUpper"], "'re": ["contrLower", "contrUpper"]},
+                "we": {"'d": ["contrLower", "contrUpper"], "'d've": [], "'ll": ["contrLower", "contrUpper"], "'re": ["contrLower", "contrUpper"], "'ve": []},
                 "were": {"n't": []},
                 "what": {"'ll": [], "'re": [], "'s": [], "'ve": []},
                 "when": {"'s": []},
@@ -110,6 +110,11 @@ starting_tokens = {
 # other specials that don't really have contractions
 # so they are hardcoded
 hardcoded_specials = {
+
+                "'s":  [{"F": "'s", "L": "'s"}],
+
+                "'S":  [{"F": "'S", "L": "'s"}],
+
                 "'em": [{"F": "'em"}],
 
                 "'ol": [{"F": "'ol"}],
