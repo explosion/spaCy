@@ -4,6 +4,7 @@ from .attrs cimport ID, ORTH, LOWER, NORM, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTE
 
 from .structs cimport LexemeC
 from .strings cimport StringStore
+from .vocab cimport Vocab
 
 from numpy cimport ndarray
 
@@ -15,7 +16,8 @@ cdef class Lexeme:
     cdef readonly Vocab vocab
     cdef readonly attr_t orth
 
-    cdef int set_struct_props(Vocab vocab, LexemeC* lex, dict props) except -1:
+    @staticmethod
+    cdef inline int set_struct_props(Vocab vocab, LexemeC* lex, dict props) except -1:
         lex.length = props['length']
         lex.orth = vocab.strings[props['orth']]
         lex.lower = vocab.strings[props['lower']]
@@ -29,7 +31,6 @@ cdef class Lexeme:
         lex.sentiment = props['sentiment']
 
         lex.flags = props['flags']
-        lex.repvec = empty_vec
 
     @staticmethod
     cdef inline attr_t get_struct_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
@@ -55,6 +56,34 @@ cdef class Lexeme:
             return lex.cluster
         else:
             return 0
+    
+    @staticmethod
+    cdef inline void set_struct_attr(LexemeC* lex, attr_id_t name, attr_t value) nogil:
+        if name < (sizeof(flags_t) * 8):
+            Lexeme.set_flag(lex, name, value)
+        elif name == ID:
+            lex.id = value
+        elif name == LOWER:
+            lex.lower = value
+        elif name == NORM:
+            lex.norm = value
+        elif name == SHAPE:
+            lex.shape = value
+        elif name == PREFIX:
+            lex.prefix = value
+        elif name == SUFFIX:
+            lex.suffix = value
+        elif name == CLUSTER:
+            lex.cluster = value
 
+    @staticmethod
     cdef inline bint check_flag(const LexemeC* lexeme, attr_id_t flag_id) nogil:
         return lexeme.flags & (1 << flag_id)
+
+    @staticmethod
+    cdef inline bint set_flag(LexemeC* lex, attr_id_t flag_id, int value) nogil:
+        cdef flags_t one = 1
+        if value:
+            lex.flags |= one << flag_id
+        else:
+            lex.flags &= ~(one << flag_id)

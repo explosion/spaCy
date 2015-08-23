@@ -12,8 +12,7 @@ from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUST
 from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..parts_of_speech import UNIV_POS_NAMES
 from ..parts_of_speech cimport CONJ, PUNCT, NOUN
-from ..lexeme cimport check_flag
-from ..lexeme cimport get_attr as get_lex_attr
+from ..lexeme cimport Lexeme
 from .spans cimport Span
 from .token cimport Token
 from ..serialize.bits cimport BitArray
@@ -47,7 +46,7 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
     elif feat_name == ENT_TYPE:
         return token.ent_type
     else:
-        return get_lex_attr(token.lex, feat_name)
+        return Lexeme.get_struct_attr(token.lex, feat_name)
 
 
 cdef class Doc:
@@ -218,6 +217,7 @@ cdef class Doc:
             t.idx = 0
         else:
             t.idx = (t-1).idx + (t-1).lex.length + (t-1).spacy
+        assert t.lex.orth != 0
         t.spacy = has_space
         self.length += 1
         self._py_tokens.append(None)

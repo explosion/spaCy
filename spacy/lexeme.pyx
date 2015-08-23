@@ -26,12 +26,9 @@ cdef class Lexeme:
     def __init__(self, Vocab vocab, int orth):
         self.vocab = vocab
         self.orth = orth
-        self.c = <LexemeC*><void*>vocab.get_by_orth(orth)
+        self.c = <LexemeC*><void*>vocab.get_by_orth(vocab.mem, orth)
+        assert self.c.orth == orth
 
-    property orth:
-        def __get__(self): 
-            return self.c.orth
-    
     property lower:
         def __get__(self): return self.c.lower
         def __set__(self, int x): self.c.lower = x
@@ -113,7 +110,7 @@ cdef class Lexeme:
         def __set__(self, attr_id_t x): Lexeme.set_flag(self.c, LIKE_URL, x)
     
     property like_num:
-        def __get__(self): return Lexeme.like_num(self.c, IKE_NUM)
+        def __get__(self): return Lexeme.check_flag(self.c, LIKE_NUM)
         def __set__(self, attr_id_t x): Lexeme.set_flag(self.c, LIKE_NUM, x)
 
     property like_email:

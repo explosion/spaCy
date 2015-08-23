@@ -41,6 +41,8 @@ def get_lex_props(string, oov_prob=-30, is_oov=False):
         'sentiment': 0
     }
 
+get_lex_attr = {}
+
 if_model_present = -1
 LOCAL_DATA_DIR = path.join(path.dirname(__file__), 'data')
 

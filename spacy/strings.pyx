@@ -142,6 +142,8 @@ cdef class StringStore:
     def load(self, loc):
         with codecs.open(loc, 'r', 'utf8') as file_:
             strings = file_.read().split(SEPARATOR)
+        if strings == ['']:
+            return None
         cdef unicode string
         cdef bytes byte_string
         for string in strings: 

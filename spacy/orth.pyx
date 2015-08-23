@@ -92,6 +92,7 @@ cpdef bint like_url(unicode string):
     return False
 
 
+# TODO: This should live in the language.orth
 NUM_WORDS = set('zero one two three four five six seven eight nine ten'
                 'eleven twelve thirteen fourteen fifteen sixteen seventeen'
                 'eighteen nineteen twenty thirty forty fifty sixty seventy'

@@ -1,6 +1,5 @@
 from libc.string cimport memcpy
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
-from ..lexeme cimport check_flag
 # Compiler crashes on memory view coercion without this. Should report bug.
 from cython.view cimport array as cvarray
 cimport numpy as np
@@ -19,6 +18,8 @@ from ..parts_of_speech cimport CONJ, PUNCT
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from ..attrs cimport IS_OOV
+
+from ..lexeme cimport Lexeme
 
 
 cdef class Token:
@@ -42,7 +43,7 @@ cdef class Token:
         return self.string
 
     cpdef bint check_flag(self, attr_id_t flag_id) except -1:
-        return check_flag(self.c.lex, flag_id)
+        return Lexeme.check_flag(self.c.lex, flag_id)
 
     def nbor(self, int i=1):
         return self.doc[self.i+i]
@@ -286,37 +287,37 @@ cdef class Token:
             return self.vocab.strings[self.c.dep]
 
     property is_oov:
-        def __get__(self): return check_flag(self.c.lex, IS_OOV)
+        def __get__(self): return Lexeme.check_flag(self.c.lex, IS_OOV)
 
     property is_alpha:
-        def __get__(self): return check_flag(self.c.lex, IS_ALPHA)
+        def __get__(self): return Lexeme.check_flag(self.c.lex, IS_ALPHA)
 
     property is_ascii:
-        def __get__(self): return check_flag(self.c.lex, IS_ASCII)
+        def __get__(self): return Lexeme.check_flag(self.c.lex, IS_ASCII)
 
     property is_digit:
-        def __get__(self): return check_flag(self.c.lex, IS_DIGIT)
+        def __get__(self): return Lexeme.check_flag(self.c.lex, IS_DIGIT)
 
     property is_lower:
-        def __get__(self): return check_flag(self.c.lex, IS_LOWER)
+        def __get__(self): return Lexeme.check_flag(self.c.lex, IS_LOWER)
 
     property is_title:
-        def __get__(self): return check_flag(self.c.lex, IS_TITLE)
+        def __get__(self): return Lexeme.check_flag(self.c.lex, IS_TITLE)
 
     property is_punct:
-        def __get__(self): return check_flag(self.c.lex, IS_PUNCT)
+        def __get__(self): return Lexeme.check_flag(self.c.lex, IS_PUNCT)
 
     property is_space: 
-        def __get__(self): return check_flag(self.c.lex, IS_SPACE)
+        def __get__(self): return Lexeme.check_flag(self.c.lex, IS_SPACE)
 
     property like_url:
-        def __get__(self): return check_flag(self.c.lex, LIKE_URL)
+        def __get__(self): return Lexeme.check_flag(self.c.lex, LIKE_URL)
 
     property like_num:
-        def __get__(self): return check_flag(self.c.lex, LIKE_NUM)
+        def __get__(self): return Lexeme.check_flag(self.c.lex, LIKE_NUM)
 
     property like_email:
-        def __get__(self): return check_flag(self.c.lex, LIKE_EMAIL)
+        def __get__(self): return Lexeme.check_flag(self.c.lex, LIKE_EMAIL)
 
 
 _pos_id_to_string = {id_: string for string, id_ in UNIV_POS_NAMES.items()}
