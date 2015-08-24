@@ -64,7 +64,7 @@ def name_to_path(mod_name, ext):
 def c_ext(mod_name, language, includes, compile_args, link_args):
     mod_path = name_to_path(mod_name, language)
     return Extension(mod_name, [mod_path], include_dirs=includes,
-                     extra_compile_args=compile_args, extra_link_args=compile_args)
+                     extra_compile_args=compile_args, extra_link_args=link_args)
 
 
 def cython_setup(mod_names, language, includes, compile_args, link_args):
