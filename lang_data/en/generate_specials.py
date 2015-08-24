@@ -81,7 +81,7 @@ starting_tokens = {
                 "how": {"'d": [], "'ll": [], "'s": []},
                 "i": {"'d": ["contrLower", "contrUpper"], "'d've": [], "'ll": ["contrLower", "contrUpper"], "'m": [], "'ma": [], "'ve": []},
                 "is": {"n't": []},
-                "it": {"'d": [], "'d've": [], "'ll": [], "'s": []},
+                "it": {"'d": [], "'d've": [], "'ll": [], "'s": ["contrLower", "contrUpper"]},
                 "let": {"'s": ["contrLower", "contrUpper"]},
                 "might": {"n't": [], "n't've": [], "'ve": []},
                 "must": {"n't": [], "'ve": []},
