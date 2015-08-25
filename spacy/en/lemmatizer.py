@@ -3,39 +3,6 @@ from os import path
 import codecs
 
 
-NOUN_RULES = (
-    ('s', ''),
-    ('ses', 's'),
-    ('ves', 'f'),
-    ('xes', 'x'),
-    ('zes', 'z'),
-    ('ches', 'ch'),
-    ('shes', 'sh'),
-    ('men', 'man'),
-    ('ies', 'y')
-)
-
-
-VERB_RULES = (
-    ("s", ""),
-    ("ies", "y"),
-    ("es", "e"),
-    ("es", ""),
-    ("ed", "e"),
-    ("ed", ""),
-    ("ing", "e"),
-    ("ing", "")
-)
-
-
-ADJ_RULES = (
-    ("er", ""),
-    ("est", ""),
-    ("er", "e"),
-    ("est", "e")
-)
-
-
 class Lemmatizer(object):
     def __init__(self, wn_dict_dir, noun_id, verb_id, adj_id):
         self.noun_id = noun_id
@@ -48,6 +15,8 @@ class Lemmatizer(object):
             self.exc[pos] = read_exc(path.join(wn_dict_dir, '%s.exc' % pos))
 
     def __call__(self, string, pos):
+
+        return lemmatize(string, self.index[pos], self.exc[pos], self.rules[pos])
         if pos == self.noun_id:
             return self.noun(string)
         elif pos == self.verb_id:
@@ -58,13 +27,13 @@ class Lemmatizer(object):
             raise Exception("Cannot lemmatize with unknown pos: %s" % pos)
 
     def noun(self, string):
-        return lemmatize(string, self.index['noun'], self.exc['noun'], NOUN_RULES)
+        return self(string, 'noun')
 
     def verb(self, string):
-        return lemmatize(string, self.index['verb'], self.exc['verb'], VERB_RULES)
+        return self(string, 'verb')
 
     def adj(self, string):
-        return lemmatize(string, self.index['adj'], self.exc['adj'], ADJ_RULES)
+        return self(string, 'adj')
 
 
 def lemmatize(string, index, exceptions, rules):
