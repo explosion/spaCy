@@ -7,6 +7,7 @@ from murmurhash.mrmr cimport hash64
 from .structs cimport LexemeC, TokenC
 from .typedefs cimport utf8_t, attr_t, hash_t
 from .strings cimport StringStore
+from .morphology cimport Morphology
 
 
 cdef LexemeC EMPTY_LEXEME
@@ -27,6 +28,7 @@ cdef class Vocab:
     cpdef public lexeme_props_getter
     cdef Pool mem
     cpdef readonly StringStore strings
+    cpdef readonly Morphology morphology
     cdef readonly int length
     cdef public object _serializer
     cdef public object data_dir
