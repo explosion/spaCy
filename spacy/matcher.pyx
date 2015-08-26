@@ -99,13 +99,26 @@ def map_attr_name(attr):
 cdef class Matcher:
     cdef Pool mem
     cdef vector[Pattern*] patterns
-    cdef readonly int n_patterns
+    cdef readonly Vocab vocab
 
     def __init__(self, vocab, patterns):
         self.mem = Pool()
         self.vocab = vocab
         for entity_key, (etype, attrs, specs) in sorted(patterns.items()):
             self.add(entity_key, etype, attrs, specs)
+
+    @classmethod
+    def from_dir(cls, data_dir, Vocab vocab):
+        patterns_loc = path.join(data_dir, 'vocab', 'gazetteer.json')
+        if path.exists(patterns_loc):
+            patterns_data = open(patterns_loc).read()
+            patterns = json.loads(patterns_data)
+            return cls(vocab, patterns)
+        else:
+            return cls(vocab, {})
+
+    property n_patterns:
+        def __get__(self): return self.patterns.size()
 
     def add(self, entity_key, etype, attrs, specs):
         if isinstance(entity_key, basestring):
@@ -119,16 +132,6 @@ cdef class Matcher:
         for spec in specs:
             spec = _convert_strings(spec, self.vocab.strings)
             self.patterns.push_back(init_pattern(self.mem, spec, etype))
-
-    @classmethod
-    def from_dir(cls, vocab, data_dir):
-        patterns_loc = path.join(data_dir, 'vocab', 'gazetteer.json')
-        if path.exists(patterns_loc):
-            patterns_data = open(patterns_loc).read()
-            patterns = json.loads(patterns_data)
-            return cls(vocab, patterns)
-        else:
-            return cls(vocab, {})
 
     def __call__(self, Doc doc):
         cdef vector[Pattern*] partials
