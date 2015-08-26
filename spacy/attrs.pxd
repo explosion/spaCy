@@ -84,3 +84,4 @@ cpdef enum attr_id_t:
     ENT_TYPE
     HEAD
     SPACY
+    PROB
