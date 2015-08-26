@@ -151,7 +151,7 @@ def setup_vocab(get_lex_attr, src_dir, dst_dir):
         write_binary_vectors(str(vectors_src), str(dst_dir / 'vec.bin'))
     else:
         print("Warning: Word vectors file not found")
-    vocab = Vocab(data_dir=None, get_lex_attr=get_lex_attr)
+    vocab = Vocab(get_lex_attr=get_lex_attr)
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs, oov_prob = _read_probs(src_dir / 'words.sgt.prob')
     if not probs:
@@ -183,8 +183,8 @@ def setup_vocab(get_lex_attr, src_dir, dst_dir):
 
 def main(lang_id, lang_data_dir, corpora_dir, model_dir):
     languages = {
-        'en': spacy.en.get_lex_attr,
-        'de': spacy.en.get_lex_attr
+        'en': spacy.en.English.default_lex_attrs(),
+        'de': spacy.de.Deutsch.default_lex_attrs()
     }
 
     model_dir = Path(model_dir)
