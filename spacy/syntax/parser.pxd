@@ -11,7 +11,6 @@ from .stateclass cimport StateClass
 
 
 cdef class Parser:
-    cdef readonly object cfg
     cdef readonly Model model
     cdef readonly TransitionSystem moves
 
