@@ -4,8 +4,9 @@ from os import path
 
 from ..language import Language
 
+LOCAL_DATA_DIR = path.join(path.dirname(__file__), 'data')
 
 class English(Language):
     @classmethod
     def default_data_dir(cls):
-        return path.join(path.dirname(__file__), 'data')
+        return LOCAL_DATA_DIR
