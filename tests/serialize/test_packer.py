@@ -5,6 +5,7 @@ import re
 import pytest
 import numpy
 
+from spacy.language import Language
 from spacy.vocab import Vocab
 from spacy.tokens.doc import Doc
 from spacy.tokenizer import Tokenizer
@@ -17,30 +18,14 @@ from spacy.serialize.packer import Packer
 from spacy.serialize.bits import BitArray
 
 
-def get_lex_props(string, prob=-22, is_oov=False):
-    return {
-        'flags': 0,
-        'length': len(string),
-        'orth': string,
-        'lower': string, 
-        'norm': string,
-        'shape': string,
-        'prefix': string[0],
-        'suffix': string[-3:],
-        'cluster': 0,
-        'prob': prob,
-        'sentiment': 0
-    }
-
-
 @pytest.fixture
 def vocab():
-    vocab = Vocab(get_lex_props=get_lex_props)
-    vocab['dog'] = get_lex_props('dog', 0.001)
+    vocab = Vocab(Language.default_lex_attrs())
+    lex = vocab['dog']
     assert vocab[vocab.strings['dog']].orth_ == 'dog'
-    vocab['the'] = get_lex_props('the', 0.01)
-    vocab['quick'] = get_lex_props('quick', 0.005)
-    vocab['jumped'] = get_lex_props('jumped', 0.007)
+    lex  = vocab['the']
+    lex = vocab['quick']
+    lex = vocab['jumped']
     return vocab
 
 
