@@ -159,7 +159,11 @@ cdef class Tagger:
         cdef int i
         cdef int loss
         cdef const weight_t* scores
-        golds = [self.tag_names.index(g) if g is not None else -1 for g in gold_tag_strs]
+        try:
+            golds = [self.tag_names.index(g) if g is not None else -1 for g in gold_tag_strs]
+        except ValueError:
+            raise ValueError(
+                [g for g in gold_tag_strs if g is not None and g not in self.tag_names])
         correct = 0
         for i in range(tokens.length):
             guess = self.update(i, tokens.data, golds[i])
