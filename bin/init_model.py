@@ -38,6 +38,7 @@ from spacy.parts_of_speech import NOUN, VERB, ADJ
 
 import spacy.en
 import spacy.de
+import spacy.fi
 
 
 
@@ -184,7 +185,8 @@ def setup_vocab(get_lex_attr, src_dir, dst_dir):
 def main(lang_id, lang_data_dir, corpora_dir, model_dir):
     languages = {
         'en': spacy.en.English.default_lex_attrs(),
-        'de': spacy.de.Deutsch.default_lex_attrs()
+        'de': spacy.de.Deutsch.default_lex_attrs(),
+        'fi': spacy.fi.Finnish.default_lex_attrs()
     }
 
     model_dir = Path(model_dir)
@@ -203,6 +205,11 @@ def main(lang_id, lang_data_dir, corpora_dir, model_dir):
     if (lang_data_dir / 'gazetteer.json').exists():
         copyfile(str(lang_data_dir / 'gazetteer.json'),
                  str(model_dir / 'vocab' / 'gazetteer.json'))
+
+    if (lang_data_dir / 'lemma_rules.json').exists():
+        copyfile(str(lang_data_dir / 'lemma_rules.json'),
+                 str(model_dir / 'vocab' / 'lemma_rules.json'))
+
     if not (model_dir / 'wordnet').exists() and (corpora_dir / 'wordnet').exists():
         copytree(str(corpora_dir / 'wordnet' / 'dict'), str(model_dir / 'wordnet'))
 
