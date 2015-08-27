@@ -35,7 +35,7 @@ class Lemmatizer(object):
             pos = 'adj'
         else:
             return string
-        lemmas = lemmatize(string, self.index[pos], self.exc[pos], self.rules[pos])
+        lemmas = lemmatize(string, self.index[pos], self.exc[pos], self.rules.get(pos, []))
         return min(lemmas)
 
     def noun(self, string):
