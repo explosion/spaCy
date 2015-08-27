@@ -1,5 +1,10 @@
 from os import path
 
+try:
+    import ujson as json
+except ImportError:
+    import json
+
 from .tokenizer import Tokenizer
 from .morphology import Morphology
 from .vocab import Vocab
@@ -12,6 +17,8 @@ from . import attrs
 from . import orth
 from .syntax.ner import BiluoPushDown
 from .syntax.arc_eager import ArcEager
+
+from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD
 
 
 class Language(object):
@@ -114,14 +121,6 @@ class Language(object):
         }
 
     @classmethod
-    def default_dep_templates(cls):
-        return []
-
-    @classmethod
-    def default_ner_templates(cls):
-        return []
-
-    @classmethod
     def default_dep_labels(cls):
         return {0: {'ROOT': True}}
 
@@ -186,10 +185,11 @@ class Language(object):
             return None
 
     @classmethod
-    def default_matcher(cls, vocab, data_dir=None):
-        if data_dir is None:
-            data_dir = cls.default_data_dir()
-        return Matcher.from_dir(data_dir, vocab)
+    def default_matcher(cls, vocab, data_dir):
+        if path.exists(data_dir):
+            return Matcher.from_dir(data_dir, vocab)
+        else:
+            return None
 
     def __init__(self, data_dir=None, vocab=None, tokenizer=None, tagger=None,
                  parser=None, entity=None, matcher=None, serializer=None):
@@ -245,9 +245,9 @@ class Language(object):
     def end_training(self, data_dir=None):
         if data_dir is None:
             data_dir = self.data_dir
-        self.parser.model.end_training()
-        self.entity.model.end_training()
-        self.tagger.model.end_training()
+        self.parser.model.end_training(path.join(data_dir, 'deps', 'model'))
+        self.entity.model.end_training(path.join(data_dir, 'ner', 'model'))
+        self.tagger.model.end_training(path.join(data_dir, 'pos', 'model'))
         self.vocab.strings.dump(path.join(data_dir, 'vocab', 'strings.txt'))
 
         with open(path.join(data_dir, 'vocab', 'serializer.json'), 'w') as file_:

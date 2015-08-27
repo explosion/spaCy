@@ -8,7 +8,7 @@ from .typedefs cimport attr_t
 from .tokens.doc cimport Doc
 from .attrs cimport TAG
 from .parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON
-from .parts_of_speech cimport PRT, VERB, X, PUNCT, EOL, SPACE
+from .parts_of_speech cimport VERB, X, PUNCT, EOL, SPACE
 
 from .attrs cimport *
 from ._ml cimport arg_max
@@ -102,24 +102,10 @@ cdef class Tagger:
             (P2_flags,),
         )
 
-    def make_lemmatizer(self):
-        return None
-
-    def __init__(self, Vocab vocab, templates):
-        self.mem = Pool()
-        self.vocab = vocab
-        
-        cdef int n_tags = self.vocab.morphology.n_tags + 1
-
-        self.model = Model(n_tags, templates)
-        self.freqs = {TAG: defaultdict(int)}
-        for tag in self.tag_names:
-            self.freqs[TAG][self.vocab.strings[tag]] = 1
-        self.freqs[TAG][0] = 1
-
-    @property
-    def tag_names(self):
-        return tuple(sorted(self.vocab.morphology.tag_map.keys()))
+    @classmethod
+    def blank(cls, vocab, templates):
+        model = Model(vocab.morphology.n_tags, templates, model_loc=None)
+        return cls(vocab, model)
 
     @classmethod
     def from_dir(cls, data_dir, vocab):
@@ -127,7 +113,22 @@ cdef class Tagger:
             templates = json.loads(open(path.join(data_dir, 'templates.json')))
         else:
             templates = cls.default_templates()
-        return cls(vocab, templates)
+        model = Model(vocab.morphology.n_tags, templates, data_dir)
+        return cls(vocab, model)
+
+    def __init__(self, Vocab vocab, model):
+        self.vocab = vocab
+        self.model = model
+        
+        # TODO: Move this to tag map
+        self.freqs = {TAG: defaultdict(int)}
+        for tag in self.tag_names:
+            self.freqs[TAG][self.vocab.strings[tag]] = 1
+        self.freqs[TAG][0] = 1
+
+    @property
+    def tag_names(self):
+        return self.vocab.morphology.tag_names
 
     def __call__(self, Doc tokens):
         """Apply the tagger, setting the POS tags onto the Doc object.
@@ -142,29 +143,28 @@ cdef class Tagger:
         for i in range(tokens.length):
             if tokens.data[i].pos == 0:
                 guess = self.predict(i, tokens.data)
-                self.vocab.morphology.assign_tag(&tokens.data[i], guess)
+                self.vocab.morphology.assign_tag(self.vocab.strings, &tokens.data[i], guess)
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
     def tag_from_strings(self, Doc tokens, object tag_strs):
         cdef int i
         for i in range(tokens.length):
-            self.vocab.morphology.assign_tag(&tokens.data[i], tag_strs[i])
+            self.vocab.morphology.assign_tag(self.vocab.strings, &tokens.data[i], tag_strs[i])
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
     def train(self, Doc tokens, object gold_tag_strs):
+        assert len(tokens) == len(gold_tag_strs)
         cdef int i
         cdef int loss
         cdef const weight_t* scores
-        golds = [self.tag_names.index(g) if g is not None else -1
-                 for g in gold_tag_strs]
+        golds = [self.tag_names.index(g) if g is not None else -1 for g in gold_tag_strs]
         correct = 0
         for i in range(tokens.length):
             guess = self.update(i, tokens.data, golds[i])
             loss = golds[i] != -1 and guess != golds[i]
-
-            self.vocab.morphology.assign_tag(&tokens.data[i], guess)
+            self.vocab.morphology.assign_tag(self.vocab.strings, &tokens.data[i], guess)
             correct += loss == 0
             self.freqs[TAG][tokens.data[i].tag] += 1
         return correct

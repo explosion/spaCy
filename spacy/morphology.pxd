@@ -1,13 +1,16 @@
 from .structs cimport TokenC
+from .strings cimport StringStore
 
 
 cdef class Morphology:
+    cdef readonly object strings
+    cdef public object lemmatizer
     cdef public object tag_map
     cdef public object tag_names
     cdef public object tag_ids
     cdef public int n_tags
 
-    cdef int assign_tag(self, TokenC* token, int tag) except -1
+    cdef int assign_tag(self, StringStore strings, TokenC* token, int tag) except -1
 
     cdef int assign_from_dict(self, TokenC* token, props) except -1
 

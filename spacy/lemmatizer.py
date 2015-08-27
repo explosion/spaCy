@@ -2,29 +2,41 @@ from __future__ import unicode_literals
 from os import path
 import codecs
 
+try:
+    import ujson as json
+except ImportError:
+    import json
+
+from .parts_of_speech import NOUN, VERB, ADJ
+
 
 class Lemmatizer(object):
-    def __init__(self, wn_dict_dir, noun_id, verb_id, adj_id):
-        self.noun_id = noun_id
-        self.verb_id = verb_id
-        self.adj_id = adj_id
-        self.index = {}
-        self.exc = {}
+    @classmethod
+    def from_dir(cls, data_dir):
+        index = {}
+        exc = {}
         for pos in ['adj', 'adv', 'noun', 'verb']:
-            self.index[pos] = read_index(path.join(wn_dict_dir, 'index.%s' % pos))
-            self.exc[pos] = read_exc(path.join(wn_dict_dir, '%s.exc' % pos))
+            index[pos] = read_index(path.join(data_dir, 'index.%s' % pos))
+            exc[pos] = read_exc(path.join(data_dir, '%s.exc' % pos))
+        rules = json.load(open(path.join(data_dir, 'lemma_rules.json')))
+        return cls(index, exc, rules)
+
+    def __init__(self, index, exceptions, rules):
+        self.index = index
+        self.exc = exceptions
+        self.rules = rules
 
     def __call__(self, string, pos):
-
-        return lemmatize(string, self.index[pos], self.exc[pos], self.rules[pos])
-        if pos == self.noun_id:
-            return self.noun(string)
-        elif pos == self.verb_id:
-            return self.verb(string)
-        elif pos == self.adj_id:
-            return self.adj(string)
+        if pos == NOUN:
+            pos = 'noun'
+        elif pos == VERB:
+            pos = 'verb'
+        elif pos == ADJ:
+            pos = 'adj'
         else:
-            raise Exception("Cannot lemmatize with unknown pos: %s" % pos)
+            return string
+        lemmas = lemmatize(string, self.index[pos], self.exc[pos], self.rules[pos])
+        return min(lemmas)
 
     def noun(self, string):
         return self(string, 'noun')

@@ -91,6 +91,8 @@ cdef class Model:
             count_feats(counts[guess], feats, n_feats, -cost)
             self._model.update(counts)
 
-    def end_training(self):
+    def end_training(self, model_loc=None):
+        if model_loc is None:
+            model_loc = self.model_loc
         self._model.end_training()
-        self._model.dump(self.model_loc, freq_thresh=0)
+        self._model.dump(model_loc, freq_thresh=0)

@@ -1,4 +1,5 @@
 from os import path
+from .lemmatizer import Lemmatizer
 
 try:
     import ujson as json
@@ -9,7 +10,15 @@ from spacy.parts_of_speech import UNIV_POS_NAMES
     
 
 cdef class Morphology:
+    @classmethod
+    def from_dir(cls, data_dir, lemmatizer=None):
+        tag_map = json.load(open(path.join(data_dir, 'tag_map.json')))
+        if lemmatizer is None:
+            lemmatizer = Lemmatizer.from_dir(data_dir)
+        return cls(tag_map, {}, lemmatizer)
+
     def __init__(self, tag_map, fused_tokens, lemmatizer):
+        self.lemmatizer = lemmatizer
         self.tag_map = tag_map
         self.n_tags = len(tag_map)
         self.tag_names = tuple(sorted(tag_map.keys()))
@@ -17,15 +26,13 @@ cdef class Morphology:
         for i, tag_str in enumerate(self.tag_names):
             self.tag_ids[tag_str] = i
 
-    @classmethod
-    def from_dir(cls, data_dir):
-        tag_map = json.load(open(path.join(data_dir, 'tag_map.json')))
-        return cls(tag_map, {}, None)
-
-    cdef int assign_tag(self, TokenC* token, int tag) except -1:
+    cdef int assign_tag(self, StringStore strings, TokenC* token, int tag) except -1:
+        # TODO Caching
         props = self.tag_map[self.tag_names[tag]]
         token.pos = UNIV_POS_NAMES[props['pos'].upper()]
-        token.tag = tag
+        token.tag = strings[self.tag_names[tag]]
+        lemma = self.lemmatizer(strings[token.lex.orth], token.pos)
+        token.lemma = strings[lemma]
         #token.inflection = # TODO
 
     cdef int assign_from_dict(self, TokenC* token, props) except -1:
