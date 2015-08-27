@@ -7,6 +7,12 @@ except ImportError:
     import json
 
 from spacy.parts_of_speech import UNIV_POS_NAMES
+
+
+cdef struct MorphAnalysisC:
+    uint64_t[4] features
+    attr_t lemma
+    attr_t pos
     
 
 cdef class Morphology:
@@ -25,39 +31,74 @@ cdef class Morphology:
         self.tag_ids = {}
         for i, tag_str in enumerate(self.tag_names):
             self.tag_ids[tag_str] = i
+        self._cache = PreshMapArray()
 
-    cdef int assign_tag(self, StringStore strings, TokenC* token, int tag) except -1:
-        # TODO Caching
-        props = self.tag_map[self.tag_names[tag]]
-        token.pos = UNIV_POS_NAMES[props['pos'].upper()]
-        token.tag = strings[self.tag_names[tag]]
-        lemma = self.lemmatizer(strings[token.lex.orth], token.pos)
-        token.lemma = strings[lemma]
-        #token.inflection = # TODO
+    cdef int assign_tag(self, TokenC* token, tag) except -1:
+        analysis = <MorphAnalysisC*>self._cache.get(tag, token.lex.orth)
+        if analysis is NULL:
+            analysis = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
+            cached = self.decode_tag(tag)
+            cached.lemma = self.lemmatize(token.pos, token.lex)
+        token.lemma = analysis.lemma
+        token.pos = analysis.pos
+        token.tag = analysis.tag
+        token.morph = analysis.features
 
-    cdef int assign_from_dict(self, TokenC* token, props) except -1:
+    cdef int assign_feature(self, TokenC* token, feature, value) except -1:
         pass
 
     def load_morph_exceptions(self, dict exc):
-        pass
         # Map (form, pos) to (lemma, inflection)
-        #cdef unicode pos_str
-        #cdef unicode form_str
-        #cdef unicode lemma_str
-        #cdef dict entries
-        #cdef dict props
-        #cdef int lemma
-        #cdef attr_t orth
-        #cdef int pos
-        #for pos_str, entries in exc.items():
-        #    pos = self.tag_names.index(pos_str)
-        #    for form_str, props in entries.items():
-        #        lemma_str = props.get('L', form_str)
-        #        orth = self.strings[form_str]
-        #        cached = <InflectedLemma*>self.mem.alloc(1, sizeof(InflectedLemma))
-        #        cached.lemma = self.strings[lemma_str]
-        #        set_morph_from_dict(&cached.morph, props)
-        #        self._morph_cache.set(pos, orth, <void*>cached)
+        cdef unicode pos_str
+        cdef unicode form_str
+        cdef unicode lemma_str
+        cdef dict entries
+        cdef dict props
+        cdef int lemma
+        cdef attr_t orth
+        cdef int pos
+        for pos_str, entries in exc.items():
+            pos = self.tag_names.index(pos_str)
+            for form_str, props in entries.items():
+                lemma_str = props.get('L', form_str)
+                orth = self.strings[form_str]
+                cached = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
+                cached.lemma = self.strings[lemma_str]
+                self.set_features(cached, props)
+                self._cache.set(pos, orth, <void*>cached)
+
+    def _load_special_tokenization(self, special_cases):
+        '''Add a special-case tokenization rule.
+        '''
+        cdef int i
+        cdef list substrings
+        cdef unicode chunk
+        cdef unicode form
+        cdef unicode lemma
+        cdef dict props
+        cdef LexemeC** lexemes
+        cdef hash_t hashed
+        for chunk, substrings in sorted(special_cases.items()):
+            tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
+            for i, props in enumerate(substrings):
+                # Set the special tokens up to have morphology and lemmas if
+                # specified, otherwise use the part-of-speech tag (if specified)
+                form = props['F']
+                tokens[i].lex = <LexemeC*>self.vocab.get(self.vocab.mem, form)
+                morphology = self.vocab.morphology.decode_dict(props)
+                tokens[i].lemma = morph_analysis.lemma
+                tokens[i].pos = morph_analysis.pos
+                tokens[i].tag = morph_analysis.tag
+                tokens[i].morph = morph_analysis.morph
+            cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
+            cached.length = len(substrings)
+            cached.is_lex = False
+            cached.data.tokens = tokens
+            hashed = hash_string(chunk)
+            self._specials.set(hashed, cached)
+            self._cache.set(hashed, cached)
+
+
 
 
 #cdef int set_morph_from_dict(Morphology* morph, dict props) except -1:
