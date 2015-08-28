@@ -104,7 +104,7 @@ cdef class Tagger:
 
     @classmethod
     def blank(cls, vocab, templates):
-        model = Model(vocab.n_tags, templates, model_loc=None)
+        model = Model(vocab.morphology.n_tags, templates, model_loc=None)
         return cls(vocab, model)
 
     @classmethod
@@ -113,7 +113,7 @@ cdef class Tagger:
             templates = json.loads(open(path.join(data_dir, 'templates.json')))
         else:
             templates = cls.default_templates()
-        model = Model(vocab.n_tags, templates, data_dir)
+        model = Model(vocab.morphology.n_tags, templates, data_dir)
         return cls(vocab, model)
 
     def __init__(self, Vocab vocab, model):
@@ -128,7 +128,7 @@ cdef class Tagger:
 
     @property
     def tag_names(self):
-        return self.vocab.tag_names
+        return self.vocab.morphology.tag_names
 
     def __call__(self, Doc tokens):
         """Apply the tagger, setting the POS tags onto the Doc object.

@@ -22,7 +22,7 @@ cdef struct MorphAnalysisC:
 
 cdef class Morphology:
     cdef readonly Pool mem
-    cdef readonly object strings
+    cdef readonly StringStore strings
     cdef public object lemmatizer
     cdef public object n_tags
     cdef public object reverse_index

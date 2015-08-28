@@ -11,20 +11,15 @@ from .parts_of_speech cimport ADJ, VERB, NOUN
 
 
 cdef class Morphology:
-    @classmethod
-    def from_dir(cls, data_dir, lemmatizer=None):
-        tag_map = json.load(open(path.join(data_dir, 'tag_map.json')))
-        if lemmatizer is None:
-            lemmatizer = Lemmatizer.from_dir(data_dir)
-        return cls(tag_map, {}, lemmatizer)
-
-    def __init__(self, string_store, tag_map, lemmatizer):
+    def __init__(self, StringStore string_store, tag_map, lemmatizer):
         self.mem = Pool()
         self.strings = string_store
         self.lemmatizer = lemmatizer
-        self.n_tags = len(tag_map)
+        self.n_tags = len(tag_map) + 1
         self.tag_names = tuple(sorted(tag_map.keys()))
         self.reverse_index = {}
+        
+        self.rich_tags = <RichTagC*>self.mem.alloc(self.n_tags, sizeof(RichTagC))
         for i, (tag_str, props) in enumerate(sorted(tag_map.items())):
             self.rich_tags[i].id = i
             self.rich_tags[i].name = self.strings[tag_str]
@@ -33,12 +28,16 @@ cdef class Morphology:
         self._cache = PreshMapArray(self.n_tags)
 
     cdef int assign_tag(self, TokenC* token, tag) except -1:
-        cdef int tag_id = self.strings[tag] if isinstance(tag, basestring) else tag
+        cdef int tag_id
+        if isinstance(tag, basestring):
+            tag_id = self.reverse_index[self.strings[tag]]
+        else:
+            tag_id = tag
         analysis = <MorphAnalysisC*>self._cache.get(tag_id, token.lex.orth)
         if analysis is NULL:
             analysis = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
             analysis.tag = self.rich_tags[tag_id]
-            analysis.lemma = self.lemmatize(tag, token.lex.orth)
+            analysis.lemma = self.lemmatize(analysis.tag.pos, token.lex.orth)
         token.lemma = analysis.lemma
         token.pos = analysis.tag.pos
         token.tag = analysis.tag.name

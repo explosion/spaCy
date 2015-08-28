@@ -6,7 +6,6 @@ except ImportError:
     import json
 
 from .tokenizer import Tokenizer
-from .morphology import Morphology
 from .vocab import Vocab
 from .syntax.parser import Parser
 from .tagger import Tagger
@@ -133,15 +132,11 @@ class Language(object):
         return path.join(path.dirname(__file__), 'data')
 
     @classmethod
-    def default_morphology(cls, data_dir):
-        return Morphology.from_dir(data_dir)
-
-    @classmethod
     def default_vectors(cls, data_dir):
         return None
 
     @classmethod
-    def default_vocab(cls, data_dir=None, get_lex_attr=None, vectors=None, morphology=None):
+    def default_vocab(cls, data_dir=None, get_lex_attr=None, vectors=None):
         if data_dir is None:
             data_dir = cls.default_data_dir()
         if vectors is None:

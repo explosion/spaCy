@@ -49,13 +49,15 @@ cdef class Vocab:
         self._serializer = None
 
     @classmethod
-    def from_dir(cls, data_dir, get_lex_attr=None, morphology=None, vectors=None):
+    def from_dir(cls, data_dir, get_lex_attr=None, vectors=None):
         if not path.exists(data_dir):
             raise IOError("Directory %s not found -- cannot load Vocab." % data_dir)
         if not path.isdir(data_dir):
             raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
+
         tag_map = json.load(open(path.join(data_dir, 'tag_map.json')))
         cdef Vocab self = cls(get_lex_attr=get_lex_attr, vectors=vectors, tag_map=tag_map)
+
         self.load_lexemes(path.join(data_dir, 'strings.txt'), path.join(data_dir, 'lexemes.bin'))
         if vectors is None and path.exists(path.join(data_dir, 'vec.bin')):
             self.repvec_length = self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
