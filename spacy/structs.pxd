@@ -25,17 +25,6 @@ cdef struct LexemeC:
     float sentiment
     float l2_norm
 
-cdef struct MorphFeatC:
-    int name
-    int value
-
-
-cdef struct MorphologyC:
-    uint64_t[4] feature_set
-    MorphFeatC* features
-    univ_pos_t pos
-    int n
-
 
 cdef struct Entity:
     int start
@@ -54,8 +43,8 @@ cdef struct Constituent:
 
 cdef struct TokenC:
     const LexemeC* lex
-    const MorphologyC* morph
     const Constituent* ctnt
+    uint64_t morph
     univ_pos_t pos
     bint spacy
     int tag

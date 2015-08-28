@@ -104,7 +104,7 @@ cdef class Tagger:
 
     @classmethod
     def blank(cls, vocab, templates):
-        model = Model(vocab.morphology.n_tags, templates, model_loc=None)
+        model = Model(vocab.n_tags, templates, model_loc=None)
         return cls(vocab, model)
 
     @classmethod
@@ -113,7 +113,7 @@ cdef class Tagger:
             templates = json.loads(open(path.join(data_dir, 'templates.json')))
         else:
             templates = cls.default_templates()
-        model = Model(vocab.morphology.n_tags, templates, data_dir)
+        model = Model(vocab.n_tags, templates, data_dir)
         return cls(vocab, model)
 
     def __init__(self, Vocab vocab, model):
@@ -128,7 +128,7 @@ cdef class Tagger:
 
     @property
     def tag_names(self):
-        return self.vocab.morphology.tag_names
+        return self.vocab.tag_names
 
     def __call__(self, Doc tokens):
         """Apply the tagger, setting the POS tags onto the Doc object.
@@ -143,14 +143,15 @@ cdef class Tagger:
         for i in range(tokens.length):
             if tokens.data[i].pos == 0:
                 guess = self.predict(i, tokens.data)
-                self.vocab.morphology.assign_tag(self.vocab.strings, &tokens.data[i], guess)
+                self.vocab.morphology.assign_tag(&tokens.data[i], guess)
+
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
     def tag_from_strings(self, Doc tokens, object tag_strs):
         cdef int i
         for i in range(tokens.length):
-            self.vocab.morphology.assign_tag(self.vocab.strings, &tokens.data[i], tag_strs[i])
+            self.vocab.morphology.assign_tag(&tokens.data[i], tag_strs[i])
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
@@ -168,7 +169,9 @@ cdef class Tagger:
         for i in range(tokens.length):
             guess = self.update(i, tokens.data, golds[i])
             loss = golds[i] != -1 and guess != golds[i]
-            self.vocab.morphology.assign_tag(self.vocab.strings, &tokens.data[i], guess)
+
+            self.vocab.morphology.assign_tag(&tokens.data[i], guess)
+            
             correct += loss == 0
             self.freqs[TAG][tokens.data[i].tag] += 1
         return correct

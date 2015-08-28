@@ -1,18 +1,41 @@
+from cymem.cymem cimport Pool
+from preshed.maps cimport PreshMapArray
+from libc.stdint cimport uint64_t
+
 from .structs cimport TokenC
 from .strings cimport StringStore
+from .typedefs cimport attr_t
+from .parts_of_speech cimport univ_pos_t
+
+
+cdef struct RichTagC:
+    uint64_t morph
+    int id
+    univ_pos_t pos
+    attr_t name
+
+
+cdef struct MorphAnalysisC:
+    RichTagC tag
+    attr_t lemma
 
 
 cdef class Morphology:
+    cdef readonly Pool mem
     cdef readonly object strings
     cdef public object lemmatizer
-    cdef public object tag_map
+    cdef public object n_tags
+    cdef public object reverse_index
     cdef public object tag_names
-    cdef public object tag_ids
-    cdef public int n_tags
 
-    cdef int assign_tag(self, StringStore strings, TokenC* token, int tag) except -1
+    cdef RichTagC* rich_tags
+    cdef PreshMapArray _cache
 
-    cdef int assign_from_dict(self, TokenC* token, props) except -1
+    cdef int assign_tag(self, TokenC* token, tag) except -1
+
+    cdef int assign_feature(self, uint64_t* morph, feature, value) except -1
+
+
 
 #
 #cpdef enum Feature_t:

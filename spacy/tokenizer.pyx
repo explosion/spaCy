@@ -192,9 +192,7 @@ cdef class Tokenizer:
                 tokens.push_back(prefixes[0][i], False)
         if string:
             cache_hit = self._try_cache(hash_string(string), tokens)
-            if cache_hit:
-                pass
-            else:
+            if not cache_hit:
                 match = self.find_infix(string)
                 if match is None:
                     tokens.push_back(self.vocab.get(tokens.mem, string), False)
@@ -253,38 +251,10 @@ cdef class Tokenizer:
         cdef LexemeC** lexemes
         cdef hash_t hashed
         for chunk, substrings in sorted(special_cases.items()):
-            tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
-            for i, props in enumerate(substrings):
-                form = props['F']
-                tokens[i].lex = <LexemeC*>self.vocab.get(self.vocab.mem, form)
-                lemma = props.get('L', form)
-                tokens[i].lemma = self.vocab.strings[lemma]
-                #TODO
-                #self.vocab.morphology.assign_from_dict(&tokens[i], props)
             cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
             cached.length = len(substrings)
             cached.is_lex = False
-            cached.data.tokens = tokens
-            hashed = hash_string(chunk)
-            self._specials.set(hashed, cached)
-            self._cache.set(hashed, cached)
-
-
-#if lemma is not None:
-#    tokens[i].lemma = self.vocab.strings[lemma]
-#else:
-#    tokens[i].lemma = 0
-#if 'pos' in props:
-#    inflection = self.vocab.morphology.get(props['pos'])
-#    inflection.assign(&tokens[i])
-#    # These are defaults, which can be over-ridden by the
-#    # token-specific props.
-#    #pos, morph_features = self.vocab.morphology.tag_map[props['pos']]
-#    #tokens[i].pos = pos
-#    ## These are defaults, which can be over-ridden by the
-#    ## token-specific props.
-#    #set_morph_from_dict(&tokens[i].morph, morph_features)
-#    #if tokens[i].lemma == 0:
-#    #    tokens[i].lemma = tokens[i].lex.orth
-##set_morph_from_dict(&tokens[i].morph, props)
-
+            cached.data.tokens = self.vocab.make_fused_token(substrings)
+            key = hash_string(chunk)
+            self._specials.set(key, cached)
+            self._cache.set(key, cached)

@@ -209,7 +209,7 @@ cdef class Doc:
         if self.length == self.max_length:
             self._realloc(self.length * 2)
         cdef TokenC* t = &self.data[self.length]
-        if LexemeOrToken is TokenC_ptr:
+        if LexemeOrToken is const_TokenC_ptr:
             t[0] = lex_or_tok[0]
         else:
             t.lex = lex_or_tok

@@ -17,6 +17,7 @@ from .strings cimport hash_string
 from .orth cimport word_shape
 from .typedefs cimport attr_t
 from .cfile cimport CFile
+from .lemmatizer import Lemmatizer
 
 from cymem.cymem cimport Address
 from . import util
@@ -36,20 +37,13 @@ EMPTY_LEXEME.repvec = EMPTY_VEC
 cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
-    @classmethod
-    def default_morphology(cls):
-        return Morphology({'VBZ': ['VERB', {}]}, [], None)
-
-    def __init__(self, get_lex_attr=None, morphology=None, vectors=None):
-        self.get_lex_attr = get_lex_attr
-        if morphology is None:
-            morphology = self.default_morphology()
-        self.morphology = morphology
-        
+    def __init__(self, get_lex_attr=None, tag_map=None, vectors=None):
         self.mem = Pool()
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
         self.strings = StringStore()
+        self.get_lex_attr = get_lex_attr
+        self.morphology = Morphology(self.strings, tag_map, Lemmatizer({}, {}, {}))
         
         self.length = 1
         self._serializer = None
@@ -60,10 +54,9 @@ cdef class Vocab:
             raise IOError("Directory %s not found -- cannot load Vocab." % data_dir)
         if not path.isdir(data_dir):
             raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
-        cdef Vocab self = cls(get_lex_attr=get_lex_attr, vectors=vectors,
-                              morphology=morphology)
-        self.load_lexemes(path.join(data_dir, 'strings.txt'),
-                          path.join(data_dir, 'lexemes.bin'))
+        tag_map = json.load(open(path.join(data_dir, 'tag_map.json')))
+        cdef Vocab self = cls(get_lex_attr=get_lex_attr, vectors=vectors, tag_map=tag_map)
+        self.load_lexemes(path.join(data_dir, 'strings.txt'), path.join(data_dir, 'lexemes.bin'))
         if vectors is None and path.exists(path.join(data_dir, 'vec.bin')):
             self.repvec_length = self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
         return self
@@ -172,6 +165,22 @@ cdef class Vocab:
             orth = id_or_string
         return Lexeme(self, orth)
 
+    cdef const TokenC* make_fused_token(self, substrings) except NULL:
+        cdef int i
+        tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
+        for i, props in enumerate(substrings):
+            token = &tokens[i]
+            # Set the special tokens up to have morphology and lemmas if
+            # specified, otherwise use the part-of-speech tag (if specified)
+            token.lex = <LexemeC*>self.get(self.mem, props['F'])
+            if 'pos' in props:
+                self.morphology.assign_tag(token, props['pos'])
+            if 'L' in props:
+                tokens[i].lemma = self.strings[props['L']]
+            for feature, value in props.get('morph', {}).items():
+                self.morphology.assign_feature(&token.morph, feature, value)
+        return tokens
+    
     def dump(self, loc):
         if path.exists(loc):
             assert not path.isdir(loc)

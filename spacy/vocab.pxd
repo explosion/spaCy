@@ -15,7 +15,7 @@ cdef LexemeC EMPTY_LEXEME
 
 cdef union LexemesOrTokens:
     const LexemeC* const* lexemes
-    TokenC* tokens
+    const TokenC* tokens
 
 
 cdef struct _Cached:
@@ -37,6 +37,7 @@ cdef class Vocab:
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL
     cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL
+    cdef const TokenC* make_fused_token(self, substrings) except NULL
     
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1

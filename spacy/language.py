@@ -148,13 +148,10 @@ class Language(object):
             vectors = cls.default_vectors(data_dir)
         if get_lex_attr is None:
             get_lex_attr = cls.default_lex_attrs(data_dir)
-        if morphology is None:
-            morphology = cls.default_morphology(path.join(data_dir, 'vocab'))
         return Vocab.from_dir(
                 path.join(data_dir, 'vocab'),
                 get_lex_attr=get_lex_attr,
-                vectors=vectors,
-                morphology=morphology)
+                vectors=vectors)
 
     @classmethod
     def default_tokenizer(cls, vocab, data_dir):
