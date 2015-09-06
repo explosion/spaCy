@@ -69,7 +69,7 @@ TLDs = set("com|org|edu|gov|net|mil|aero|asia|biz|cat|coop|info|int|jobs|mobi|mu
 cpdef bint like_url(unicode string):
     # We're looking for things that function in text like URLs. So, valid URL
     # or not, anything they say http:// is going to be good.
-    if string.startswith('http://'):
+    if string.startswith('http://') or string.startswith('https://'):
         return True
     elif string.startswith('www.') and len(string) >= 5:
         return True
@@ -92,6 +92,7 @@ cpdef bint like_url(unicode string):
     return False
 
 
+# TODO: This should live in the language.orth
 NUM_WORDS = set('zero one two three four five six seven eight nine ten'
                 'eleven twelve thirteen fourteen fifteen sixteen seventeen'
                 'eighteen nineteen twenty thirty forty fifty sixty seventy'

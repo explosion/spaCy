@@ -20,6 +20,8 @@ from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from ..attrs cimport IS_OOV
 
+from ..lexeme cimport Lexeme
+
 
 cdef class Token:
     """An individual token --- i.e. a word, a punctuation symbol, etc.  Created

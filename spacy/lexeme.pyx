@@ -27,6 +27,17 @@ cdef class Lexeme:
         self.vocab = vocab
         self.orth = orth
         self.c = <LexemeC*><void*>vocab.get_by_orth(vocab.mem, orth)
+        assert self.c.orth == orth
+
+    def py_set_flag(self, attr_id_t flag_id):
+        Lexeme.set_flag(self.c, flag_id, True)
+    
+    def py_check_flag(self, attr_id_t flag_id):
+        return True if Lexeme.check_flag(self.c, flag_id) else False
+
+    property orth_:
+        def __get__(self):
+            return self.vocab.strings[self.c.orth]
 
     property lower:
         def __get__(self): return self.c.lower
@@ -48,9 +59,13 @@ cdef class Lexeme:
         def __get__(self): return self.c.suffix
         def __set__(self, int x): self.c.suffix = x
     
-    property orth_:
-        def __get__(self):
-            return self.vocab.strings[self.c.orth]
+    property cluster:
+        def __get__(self): return self.c.suffix
+        def __set__(self, int x): self.c.suffix = x
+ 
+    property prob:
+        def __get__(self): return self.c.suffix
+        def __set__(self, int x): self.c.suffix = x
 
     property lower_:
         def __get__(self): return self.vocab.strings[self.c.lower]
@@ -71,6 +86,10 @@ cdef class Lexeme:
     property suffix_:
         def __get__(self): return self.c.suffix
         def __set__(self, unicode x): self.c.suffix = self.vocab.strings[x]
+
+    property flags:
+        def __get__(self): return self.c.flags
+        def __set__(self, flags_t x): self.c.flags = x
 
     property is_oov:
         def __get__(self): return Lexeme.check_flag(self.c, IS_OOV)

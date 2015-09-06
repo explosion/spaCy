@@ -15,52 +15,23 @@ import re
 import spacy.util
 from spacy.en import English
 
+from spacy.tagger import Tagger
+
 from spacy.syntax.util import Config
 from spacy.gold import read_json_file
 from spacy.gold import GoldParse
 
 from spacy.scorer import Scorer
 
-from spacy.syntax.arc_eager import ArcEager
-from spacy.syntax.ner import BiluoPushDown
-from spacy.tagger import Tagger
-from spacy.syntax.parser import Parser
 
-
-def _corrupt(c, noise_level):
-    if random.random() >= noise_level:
-        return c
-    elif c == ' ':
-        return '\n'
-    elif c == '\n':
-        return ' '
-    elif c in ['.', "'", "!", "?"]:
-        return ''
-    else:
-        return c.lower()
-
-
-def add_noise(orig, noise_level):
-    if random.random() >= noise_level:
-        return orig
-    elif type(orig) == list:
-        corrupted = [_corrupt(word, noise_level) for word in orig]
-        corrupted = [w for w in corrupted if w]
-        return corrupted
-    else:
-        return ''.join(_corrupt(c, noise_level) for c in orig)
-
-
-def score_model(scorer, nlp, raw_text, annot_tuples, verbose=False):
+def score_model(scorer, nlp, raw_text, annot_tuples):
     if raw_text is None:
         tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
     else:
         tokens = nlp.tokenizer(raw_text)
     nlp.tagger(tokens)
-    nlp.entity(tokens)
-    nlp.parser(tokens)
     gold = GoldParse(tokens, annot_tuples)
-    scorer.score(tokens, gold, verbose=verbose)
+    scorer.score(tokens, gold)
 
 
 def _merge_sents(sents):
@@ -83,29 +54,13 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
           seed=0, gold_preproc=False, n_sents=0, corruption_level=0,
           beam_width=1, verbose=False,
           use_orig_arc_eager=False):
-    dep_model_dir = path.join(model_dir, 'deps')
-    ner_model_dir = path.join(model_dir, 'ner')
-    if path.exists(dep_model_dir):
-        shutil.rmtree(dep_model_dir)
-    if path.exists(ner_model_dir):
-        shutil.rmtree(ner_model_dir)
-    os.mkdir(dep_model_dir)
-    os.mkdir(ner_model_dir)
-
-    Config.write(dep_model_dir, 'config', features=feat_set, seed=seed,
-                 labels=ArcEager.get_labels(gold_tuples),
-                 beam_width=beam_width)
-    Config.write(ner_model_dir, 'config', features='ner', seed=seed,
-                 labels=BiluoPushDown.get_labels(gold_tuples),
-                 beam_width=0)
-
     if n_sents > 0:
         gold_tuples = gold_tuples[:n_sents]
+   
+    templates = Tagger.default_templates()
+    nlp = Language(data_dir=model_dir, tagger=False)
+    nlp.tagger = Tagger.blank(nlp.vocab, templates)
 
-    nlp = Language(data_dir=model_dir, tagger=False, parser=False, entity=False)
-    nlp.tagger = Tagger.blank(nlp.vocab, Tagger.default_templates())
-    nlp.parser = Parser.from_dir(dep_model_dir, nlp.vocab.strings, ArcEager)
-    nlp.entity = Parser.from_dir(ner_model_dir, nlp.vocab.strings, BiluoPushDown)
     print("Itn.\tP.Loss\tUAS\tNER F.\tTag %\tToken %")
     for itn in range(n_iter):
         scorer = Scorer()
@@ -116,26 +71,14 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
             else:
                 sents = _merge_sents(sents)
             for annot_tuples, ctnt in sents:
-                if len(annot_tuples[1]) == 1:
-                    continue
-                score_model(scorer, nlp, raw_text, annot_tuples,
-                            verbose=verbose if itn >= 2 else False)
+                words = annot_tuples[1]
+                gold_tags = annot_tuples[2]
+                score_model(scorer, nlp, raw_text, annot_tuples)
                 if raw_text is None:
-                    words = add_noise(annot_tuples[1], corruption_level)
                     tokens = nlp.tokenizer.tokens_from_list(words)
                 else:
-                    raw_text = add_noise(raw_text, corruption_level)
                     tokens = nlp.tokenizer(raw_text)
-                nlp.tagger(tokens)
-                gold = GoldParse(tokens, annot_tuples, make_projective=True)
-                if not gold.is_projective:
-                    raise Exception(
-                        "Non-projective sentence in training, after we should "
-                        "have enforced projectivity: %s" % annot_tuples
-                    )
-                loss += nlp.parser.train(tokens, gold)
-                nlp.entity.train(tokens, gold)
-                nlp.tagger.train(tokens, gold.tags)
+                loss += nlp.tagger.train(tokens, gold_tags)
         random.shuffle(gold_tuples)
         print('%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
                                                    scorer.tags_acc,

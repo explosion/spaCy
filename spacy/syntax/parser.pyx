@@ -67,16 +67,22 @@ def ParserFactory(transition_system):
 
 
 cdef class Parser:
-    def __init__(self, StringStore strings, model_dir, transition_system):
+    def __init__(self, StringStore strings, transition_system, model):
+        self.moves = transition_system
+        self.model = model
+
+    @classmethod
+    def from_dir(cls, model_dir, strings, transition_system):
         if not os.path.exists(model_dir):
             print >> sys.stderr, "Warning: No model found at", model_dir
         elif not os.path.isdir(model_dir):
             print >> sys.stderr, "Warning: model path:", model_dir, "is not a directory"
-        else:
-            self.cfg = Config.read(model_dir, 'config')
-            self.moves = transition_system(strings, self.cfg.labels)
-            templates = get_templates(self.cfg.features)
-            self.model = Model(self.moves.n_moves, templates, model_dir)
+        cfg = Config.read(model_dir, 'config')
+        moves = transition_system(strings, cfg.labels)
+        templates = get_templates(cfg.features)
+        model = Model(moves.n_moves, templates, model_dir)
+        return cls(strings, moves, model)
+
 
     def __call__(self, Doc tokens):
         cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)

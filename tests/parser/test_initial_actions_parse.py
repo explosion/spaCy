@@ -1,6 +1,7 @@
 import pytest
 
 
+@pytest.mark.models
 def test_initial(EN):
     doc = EN.tokenizer(u'I ate the pizza with anchovies.')
     EN.tagger(doc)

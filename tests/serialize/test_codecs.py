@@ -41,25 +41,10 @@ def test_attribute():
 
 
 def test_vocab_codec():
-    def get_lex_props(string, prob):
-        return {
-            'flags': 0,
-            'length': len(string),
-            'orth': string,
-            'lower': string, 
-            'norm': string,
-            'shape': string,
-            'prefix': string[0],
-            'suffix': string[-3:],
-            'cluster': 0,
-            'prob': prob,
-            'sentiment': 0
-        }
-
     vocab = Vocab()
-    vocab['dog'] = get_lex_props('dog', 0.001)
-    vocab['the'] = get_lex_props('the', 0.05)
-    vocab['jumped'] = get_lex_props('jumped', 0.005)
+    lex = vocab['dog']
+    lex = vocab['the']
+    lex = vocab['jumped']
 
     codec = HuffmanCodec([(lex.orth, lex.prob) for lex in vocab])
 

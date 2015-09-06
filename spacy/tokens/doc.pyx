@@ -14,6 +14,7 @@ from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..parts_of_speech import UNIV_POS_NAMES
 from ..parts_of_speech cimport CONJ, PUNCT, NOUN
 from ..parts_of_speech cimport univ_pos_t
+from ..lexeme cimport Lexeme
 from .spans cimport Span
 from .token cimport Token
 from ..serialize.bits cimport BitArray
@@ -210,7 +211,7 @@ cdef class Doc:
         if self.length == self.max_length:
             self._realloc(self.length * 2)
         cdef TokenC* t = &self.data[self.length]
-        if LexemeOrToken is TokenC_ptr:
+        if LexemeOrToken is const_TokenC_ptr:
             t[0] = lex_or_tok[0]
         else:
             t.lex = lex_or_tok
@@ -218,6 +219,7 @@ cdef class Doc:
             t.idx = 0
         else:
             t.idx = (t-1).idx + (t-1).lex.length + (t-1).spacy
+        assert t.lex.orth != 0
         t.spacy = has_space
         self.length += 1
         self._py_tokens.append(None)

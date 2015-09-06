@@ -153,7 +153,7 @@ def main(modules, is_pypy):
 
 MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.lexeme', 'spacy.vocab', 'spacy.attrs',
-             'spacy.morphology', 
+             'spacy.morphology', 'spacy.tagger',
              'spacy.syntax.stateclass', 
              'spacy._ml', 'spacy._theano',
              'spacy.tokenizer', 'spacy.en.attrs',

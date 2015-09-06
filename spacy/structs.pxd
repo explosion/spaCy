@@ -1,4 +1,4 @@
-from libc.stdint cimport uint8_t, uint32_t, int32_t
+from libc.stdint cimport uint8_t, uint32_t, int32_t, uint64_t
 
 from .typedefs cimport flags_t, attr_t, hash_t
 from .parts_of_speech cimport univ_pos_t
@@ -26,22 +26,6 @@ cdef struct LexemeC:
     float l2_norm
 
 
-cdef struct Morphology:
-    uint8_t number
-    uint8_t tenspect # Tense/aspect/voice
-    uint8_t mood
-    uint8_t gender
-    uint8_t person
-    uint8_t case
-    uint8_t misc
-
-
-cdef struct PosTag:
-    Morphology morph
-    int id
-    univ_pos_t pos
-
-
 cdef struct Entity:
     int start
     int end
@@ -59,8 +43,8 @@ cdef struct Constituent:
 
 cdef struct TokenC:
     const LexemeC* lex
-    Morphology morph
     const Constituent* ctnt
+    uint64_t morph
     univ_pos_t pos
     bint spacy
     int tag
