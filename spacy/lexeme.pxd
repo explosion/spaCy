@@ -35,7 +35,10 @@ cdef class Lexeme:
     @staticmethod
     cdef inline attr_t get_struct_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
         if feat_name < (sizeof(flags_t) * 8):
-            return Lexeme.check_flag(lex, feat_name)
+            if Lexeme.check_flag(lex, feat_name):
+                return 1
+            else:
+                return 0
         elif feat_name == ID:
             return lex.id
         elif feat_name == ORTH:
@@ -78,7 +81,10 @@ cdef class Lexeme:
 
     @staticmethod
     cdef inline bint check_flag(const LexemeC* lexeme, attr_id_t flag_id) nogil:
-        return lexeme.flags & (1 << flag_id)
+        if lexeme.flags & (1 << flag_id):
+            return True
+        else:
+            return False
 
     @staticmethod
     cdef inline bint set_flag(LexemeC* lex, attr_id_t flag_id, int value) nogil:
