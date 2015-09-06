@@ -1,0 +1,106 @@
+extends ./outline.jade
+
+// Notes
+//
+// 1. Where to put version notice? Should say something like
+//   2015-08-12: v0.89
+//   and be a link
+//   
+//   Only needs to appear on home page.
+
+
+- var slogan = "Build Tomorrow's Language Technologies"
+- var tag_line = "spaCy &ndash; " + slogan
+
+mixin lede
+  - var state_of_the_art = '<a href="#">state-of-the-art</a>'
+  - var a_minor_miracle = '<a href="">a minor miracle</a>'
+  - var great_documentation = '<a href="">great documentation</a>'
+  
+  p.
+    <a href="https://github.com/honnibal/spaCy"><strong>spaCy</strong></a> is a
+    library for industrial-strength NLP in Python and Cython.  It features
+    !{state_of_the_art} speed and accuracy, a concise API, and great documentation.
+    If you're a small company doing NLP, we want <strong>spaCy</strong> to seem
+    like !{a_minor_miracle}.
+
+mixin overview()
+  p.
+    Overview text
+
+mixin benchmarks()
+  p.
+    Benchmarks
+
+mixin get_started()
+  p.
+    Get Started
+
+
+mixin comparison(name)
+  details
+    summary
+      h4= name
+
+    block
+ 
+mixin columns(...names)
+  tr
+    each name in names
+      th= name
+
+
+mixin row(...cells)
+  tr
+    each cell in cells
+      td= cell
+
+
+mixin social      
+  footer(role="contentinfo")
+    a(href="http://twitter.com/share?text=[ARTICLE HEADLINE]&url=[ARTICLE LINK]&via=honnibal" title="Share on Twitter" rel="nofollow" class="button button-twitter") Share on Twitter
+
+    div.discuss
+      a(href="#" title="Discuss on Hacker News" rel="nofollow" class="button button-hn")
+        | Discuss on Hacker News
+
+      a(href="#" title="Discuss on Reddit" rel="nofollow" class="button button-reddit")
+        | Discuss on Reddit
+
+
+mixin Section(title_text, link_name, include_file)
+  a(name=link_name): h3 #{title_text}
+
+  if (link_name == "example-use")
+    include ./usage_examples.jade
+  else if (link_name == "online-demo")
+    include ./online_demo.jade
+  else if (link_name == "comparisons")
+    include ./comparisons.jade
+  else if (link_name == "install")
+    include ./installation.jade
+
+
+block intro_block
+  section(class="intro")
+    +lede
+
+    nav(role="navigation")
+      ul
+        li: a(href="#example-use" class="button") Examples
+        li: a(href="#online-demo" class="button") Demo
+        li: a(href="#comparisons" class="button") Comparisons
+        li: a(href="#install" class="button") Install v0.89
+
+
+block body_block
+  article(class="page landing-page")
+
+    +Section("Usage by Example", "example-use", "./usage_examples.jade")
+
+    +Section("Online Demo", "online-demo", "./online_demo.jade")
+
+    +Section("Comparisons and Benchmarks", "comparisons", "./comparisons.jade")
+
+    +Section("Install", "install", "./install.jade")
+

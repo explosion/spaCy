@@ -1,0 +1,109 @@
+mixin example(name)
+  details
+    summary
+      h4= name
+    block
+
+
++example("Load resources and process text")
+  pre.language-python: code
+    | from __future__ import unicode_literals, print_function
+    | from spacy.en import English
+    | nlp = English()
+    | doc = nlp('Hello, world. Here are two sentences.')
+
++example("Get tokens and sentences")
+  pre.language-python: code
+    | token = doc[0]
+    | sentence = doc.sents[0]
+    | assert token[0] is sentence[0]
+
++example("Use integer IDs for any string")
+  pre.language-python: code
+    | hello_id = nlp.vocab.strings['Hello']
+    | hello_str = nlp.vocab.strings[hello_id]
+    | 
+    | assert token.orth == hello_id == 52
+    | assert token.orth_ == hello_str == 'Hello'
+
++example("Get and set string views and flags")
+  pre.language-python: code
+    | assert token.shape_ == 'Xxxx'
+    | for lexeme in nlp.vocab:
+    |     if lexeme.is_alpha:
+    |         lexeme.shape_ = 'W'
+    |     elif lexeme.is_digit:
+    |         lexeme.shape_ = 'D'
+    |     elif lexeme.is_punct:
+    |         lexeme.shape_ = 'P'
+    |     else:
+    |         lexeme.shape_ = 'M'
+    | assert token.shape_ == 'W'
+
++example("Export to numpy arrays")
+  pre.language-python: code
+    | from spacy.en.attrs import ORTH, LIKE_URL, IS_OOV
+    | 
+    | attr_ids = [ORTH, LIKE_URL, IS_OOV]
+    | doc_array = doc.to_array(attr_ids)
+    | assert doc_array.shape == (len(doc), len(attrs)
+    | assert doc[0].orth == doc_array[0, 0]
+    | assert doc[1].orth == doc_array[1, 0]
+    | assert doc[0].like_url == doc_array[0, 1]
+    | assert doc_array[, 1] == [t.like_url for t in doc]
+
++example("Word vectors")
+  pre.language-python: code
+    | doc = nlp("Apples and oranges are similar. Boots and hippos aren't.")
+    | 
+    | apples = doc[0]
+    | oranges = doc[1]
+    | boots = doc[6]
+    | hippos = doc[8]
+    | 
+    | assert apples.similarity(oranges) > boots.similarity(hippos)
+
+
++example("Part-of-speech tags")
+  pre.language-python: code
+    | doc[0].pos
+    | doc[0].tag
+
++example("Syntactic dependencies")
+  pre.language-python: code
+    | for head in tokens:
+    |     for child in head.lefts:
+    |         assert child.head is head
+    |     for child in head.rights:
+    |         assert child.head is head
+    | sent = nlp('The four wheels on the bus turned quickly.')
+    | wheels = sent[2]
+    | bus = sent[5]
+    | assert len(list(wheels.lefts)) == 2
+    | assert len(list(wheels.rights)) == 1
+    | assert len(list(wheels.children)) == 3
+    | assert len(list(bus.lefts)) == 1
+    | assert len(list(bus.rights)) == 0
+    | assert len(list(bus.children)) == 1
+    | 
+    | assert len(list(wheels.subtree)) == 6 
+
++example("Named entities")
+  pre.language-python: code
+    | doc.ents
+    | token.ent_type
+    | token.ent_iob
+
++example("Define custom NER rules")
+  pre.language-python: code
+    | nlp.matcher
+
++example("Calculate inline mark-up on original string")
+  pre.language-python: code
+    | token.string
+    | token.spacy
+    | token.whitespace_
+
++example("Efficient binary serialization")
+  pre.language-python: code
+    | 

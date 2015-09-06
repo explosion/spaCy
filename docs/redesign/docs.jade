@@ -1,0 +1,705 @@
+- var py_docs = '<a class="reference" href="http://docs.python.org/library/'
+
+-
+  var types = {
+   'unicode': py_docs + 'functions.html#unicode"><em>unicode</em></a>',
+   'bool': py_docs + 'functions.html#bool"><em>bool</em></a>',
+   'int': py_docs + 'functions.html#int"><em>int</em></a>',
+   'generator': "",
+   'Vocab': "",
+   'Span': "",
+   'Doc': ""
+  }
+
+
+mixin declare_class(name)
+  details
+    summary
+      span.declaration
+        span.label class
+        code #{name}
+    block
+
+mixin method(name, parameters)
+  details(open=attributes.open)
+    summary
+      span.declaration
+        span.label #{name}
+        span.parameters
+          | self, #{parameters}
+    block
+
+
+mixin params
+  ul
+    block
+
+
+mixin param(name, type, value)
+  li
+    if type
+      <strong>#{name}</strong> (!{type}) &#8211;
+    else
+      <strong>#{name}</strong> &#8211;
+    block
+
+
+mixin attribute(name, type, value)
+  details(open=attributes.open)
+    summary
+      span.declaration
+        span.label #{name}
+    block
+
+
+mixin returns(name, type, value)
+  li
+    if type
+      <strong>#{name}</strong> (!{type}) &#8211;
+    else
+      <strong>#{name}</strong> &#8211;
+    block
+
+
+mixin returns(type)
+  | tmp
+
+mixin init
+  details
+    summary: h4 Init
+
+    block
+
+
+mixin callable
+  details
+    summary: h4 Callable
+
+    block
+
+
+mixin sequence
+  details
+    summary: h4 Sequence
+
+    block
+
+
+mixin maptype
+  details
+    summary: h4 Map
+
+    block
+
+
+mixin summary
+  block
+
+mixin en_example
+  pre.language-python
+    code
+      | from spacy.en import English
+      | from spacy._doc_examples import download_war_and_peace
+      | 
+      | unprocessed_unicode = download_war_and_peace()
+      | 
+      | nlp = English()
+      | doc = nlp(unprocessed_unicode)
+
+
+doctype html
+html(lang="en")
+  head
+    meta(charset="utf-8")
+    title spaCy &ndash; Industrial-strength NLP
+    meta(name="description" content="")
+    meta(name="author" content="Matthew Honnibal")
+    link(rel="stylesheet" href="css/style.css")
+    <!--[if lt IE 9]>
+    script(src="http://html5shiv.googlecode.com/svn/trunk/html5.js")
+    <![endif]-->
+
+  body(id="docs")
+    header(role="banner")
+      h1.logo spaCy &ndash; Industrial-strength NLP
+      div.slogan API
+
+
+    nav(role="navigation")
+      ul
+        li: a(href="#") Home
+        li.active: a(href="#") Docs
+        li: a(href="#") License
+        li: a(href="#") Blog
+
+    main.docs#content
+
+      article
+        +declare_class("English")
+          p Load models into a callable object to process English text.
+
+          +summary
+            +en_example
+
+          +init
+            p
+              | Load the resources.  Loading takes 20 seconds, and the instance
+              | consumes 2 to 3 gigabytes of memory.
+            
+            p 
+              | Intended use is for one instance to be created per process.
+              | You can create more if you're doing something unusual.
+            p
+              | You may wish to make the instance a global variable or "singleton".
+              | We usually instantiate the object in the <code>main()</code>
+              | function and pass it around as an explicit argument. 
+            +method("__init__", "data_dir=True, Tagger=True, Parser=True, Entity=True, Matcher=True, Packer=None, load_vectors=True")(open="true")
+
+              +params
+                +param("data_dir")
+                  | The data directory.  May be #{None}, to disable any data loading
+                  | (including the vocabulary).
+
+                +param("Tokenizer")
+                  | A class/function that creates the tokenizer.
+
+                +param("Tagger")
+                  | A class/function that creates the part-of-speech tagger.
+
+                +param("Parser")
+                  | A class/function that creates the dependency parser.
+
+                +param("Entity")
+                  | A class/function that creates the named entity recogniser.
+
+                +param("load_vectors")
+                  | A boolean value to control whether the word vectors are loaded.
+          
+          +callable
+            +method("__call__", "text, tag=True, parse=True, entity=True")
+
+              +params
+                +param("text", types.unicode)
+                  | The text to be processed.  No pre-processing needs to be applied,
+                  | and any length of text can be submitted.  Usually you will submit
+                  | a whole document. Text may be zero-length. An exception is raised
+                  | if byte strings are supplied.
+
+                +param("tag", bool_type)
+                  | Whether to apply the part-of-speech tagger. Required for parsing
+                  | and entity recognition.
+
+                +param("parse", bool_type)
+                  | Whether to apply the syntactic dependency parser.
+
+                +param("entity", bool_type)
+                  | Whether to apply the named entity recognizer.
+
+                pre.language-python
+                  code
+                    | from spacy.en import English
+                    | nlp = English()
+                    | doc = nlp(u'Some text.) # Applies tagger, parser, entity
+                    | doc = nlp(u'Some text.', parse=False) # Applies tagger and entity, not parser
+                    | doc = nlp(u'Some text.', entity=False) # Applies tagger and parser, not entity
+                    | doc = nlp(u'Some text.', tag=False) # Does not apply tagger, entity or parser
+                    | doc = nlp(u'') # Zero-length tokens, not an error
+                    | # doc = nlp(b'Some text') <-- Error: need unicode
+                    | doc = nlp(b'Some text'.decode('utf8')) # Encode to unicode first.
+    
+
+        +declare_class("Doc")
+          p I'm a doc
+
+          +init
+            +method("__init__", "vocab")
+              +params
+                +param("vocab", vocab_type)
+                  | A vocabulary object
+
+          +sequence
+            +method("__getitem__", "i", types.int)
+              +returns(types.Token)
+
+            +method("__getitem__", "start_end", types.slice)
+              +returns(types.Span)
+  
+            +method("__iter__")
+              | Iterate over tokens
+  
+            +method("__len__")
+              | Number of tokens in the document.
+  
+          details
+            summary: h4 Spans
+            
+            +attribute("sents", types.generator)
+              | Iterate over sentences in the document.
+          
+            +attribute("ents", types.generator)
+              | Iterate over named entities in the document.
+    
+            +attribute("noun_chunks", types.generator)
+          
+          details
+            summary: h4 Export/Import
+            
+            +method("to_array", "attr_ids")
+  
+              | Given a list of M attribute IDs, export the tokens to a numpy ndarray
+              | of shape N*M, where N is the length of the sentence.
+  
+              +params
+                +param("attr_ids", "list[int]")
+                  | A list of attribute ID ints.
+  
+              +returns("feat_array")
+                | A feature matrix, with one row per word, and one column per attribute
+                | indicated in the input attr_ids.
+  
+            +method("count_by", "attr_id")
+              | Produce a dict of {attribute (int): count (ints)} frequencies, keyed
+              | by the values of the given attribute ID.
+            
+              pre.language-python
+                code
+                  | >>> from spacy.en import English, attrs
+                  | >>> nlp = English()
+                  | >>> tokens = nlp(u'apple apple orange banana')
+                  | >>> tokens.count_by(attrs.ORTH)
+                  | {12800L: 1, 11880L: 2, 7561L: 1}
+                  | >>> tokens.to_array([attrs.ORTH])
+                  | array([[11880],
+                  |         [11880],
+                  |         [7561],
+                  |         [12800]])
+  
+            +method("from_array", "attrs, array")
+              | Load from array
+          
+            +method("from_bytes")
+              | Deserialize, loading from bytes
+  
+            +method("read_bytes")
+              | classmethod
+  
+            //+method("merge", "int start_idx, int end_idx, unicode tag, unicode lemma, unicode ent_type")
+  
+            //  | Merge a multi-word expression into a single token.  Currently
+            //  | experimental; API is likely to change.
+  
+  
+        +declare_class("Token")
+          +init
+            +method("__init__", "vocab, doc, offset")
+              +params
+                +param("vocab", types.Vocab)
+                  p A Vocab object
+  
+                +param("doc", types.Doc)
+                  p The parent sequence
+  
+              +param("offset", types.int)
+                p The index of the token within the document
+  
+          details
+            summary: h4 String Views
+  
+            +attribute("orth / orth_")
+              | The form of the word with no string normalization or processing, as
+              | it appears in the string, without trailing whitespace.
+  
+            +attribute("lemma / lemma_")
+              | The "base" of the word, with no inflectional suffixes, e.g. the lemma of
+              | "developing" is "develop", the lemma of "geese" is "goose", etc.  Note that
+              | <em>derivational</em> suffixes are not stripped, e.g. the lemma of
+              | "instutitions" is "institution", not "institute".  Lemmatization is
+              | performed using the WordNet data, but extended to also cover closed-class
+              | words such as pronouns.  By default, the WN lemmatizer returns "hi"
+              | as the lemma of "his". We assign pronouns the lemma -PRON-.
+  
+            +attribute("lower / lower_")
+              | The form of the word, but forced to lower-case, i.e.
+              pre.language-python: code lower = word.orth\_.lower()
+  
+            //+attribute("norm / norm_")
+            //  | The form of the word, after language-specific normalizations has been
+            //  | applied.
+  
+            +attribute("shape / shape_")
+              | A transform of the word's string, to show orthographic features.
+              | The characters a-z are mapped to x, A-Z is mapped to X, 0-9 is mapped
+              | to d. After these mappings, sequences of 4 or more of the same character
+              | are truncated to length 4.  Examples: C3Po --> XdXx, favorite --> xxxx,
+              | :) --> :)
+  
+            +attribute("prefix / prefix_")
+              | A length-N substring from the start of the word.  Length may vary by
+              | language; currently for English n=1, i.e.
+              pre.language-python: code prefix = word.orth\_[:1]
+  
+            +attribute("suffix / suffix_")
+              | A length-N substring from the end of the word.  Length may vary by
+              | language; currently for English n=3, i.e.
+              pre.language-python: code suffix = word.orth\_[-3:]
+  
+            //+attribute("lex_id")
+            //  | lex_id
+  
+          details
+            summary: h4 Alignment and Output
+  
+            +attribute("idx")
+              p Start index of the token in the string
+  
+            +method("__len__", "")
+              p Length of the token's orth string, in unicode code-points.
+  
+            +method("__unicode__", "")
+              p Same as token.orth_
+  
+            +method("__str__", "")
+              p Varies between Python 2 and Python 3
+  
+            +attribute("string")
+              p
+                | The form of the word as it appears in the string, <strong>including
+                | trailing whitespace</strong>.  This is useful when you need to use
+                | linguistic features to add inline mark-up to the string.
+  
+            +method("nbor, i=1")
+              +params
+                +param("i")
+                  p Offset relative to token
+    
+          details
+            summary: h4 Distributional Features
+    
+            +attribute("repvec")
+              p
+                | A "word embedding" representation: a dense real-valued vector that supports
+                | similarity queries between words.  By default, spaCy currently loads
+                | vectors produced by the Levy and Goldberg (2014) dependency-based word2vec
+                | model.
+    
+            +attribute("cluster")
+              p
+                | The Brown cluster ID of the word.  These are often useful features for
+                | linear models.  If you're using a non-linear model, particularly a
+                | neural net or random forest, consider using the real-valued word
+                | representation vector, in Token.repvec, instead.
+    
+            +attribute("prob")
+              p
+                | The unigram log-probability of the word, estimated from counts from a
+                | large corpus, smoothed using Simple Good Turing estimation.
+    
+          details
+            summary: h4 Syntactic Tags
+    
+            +attribute("pos / pos_")
+              p
+                | A part-of-speech tag, from the Google Universal Tag Set, e.g. 
+                | code>NOUN</code>, <code>VERB</code>, <code>ADV</code>.  Constants for
+                | the 17 tag values are provided in <code>spacy.parts_of_speech.</code>
+    
+            +attribute("tag / tag_")
+              p
+                | A morphosyntactic tag, e.g. <code>NN</code>, <code>VBZ</code>,
+                | <code>DT</code>, etc.  These tags are language/corpus specific, and
+                | typically describe part-of-speech and some amount of morphological
+                | information.  For instance, in the Penn Treebank tag set, <code>VBZ</code>
+                | is assigned to a present-tense singular verb.
+    
+            +attribute("dep / dep_")
+              p
+                | The type of syntactic dependency relation between the word and its
+                | syntactic head.
+    
+          details
+            summary: h4 Navigating the Parse Tree
+          
+            +attribute("head")
+              p
+                | The Token that is the immediate syntactic head of the word.  If the
+                | word is the root of the dependency tree, the same word is returned.
+    
+            +attribute("lefts")
+              p
+                | An iterator for the immediate leftward syntactic children of the
+                | word.
+    
+            +attribute("rights")
+              p
+                | An iterator for the immediate rightward syntactic children of the
+                | word.
+    
+            +attribute("n_lefts")
+              p
+                | The number of immediate syntactic children preceding the word in 
+                | the string.
+    
+            +attribute("n_rights")
+              p
+                | The number of immediate syntactic children following the word in
+                | the string.
+    
+            +attribute("children")
+              p
+                | An iterator that yields from lefts, and then yields from rights.
+    
+            +attribute("subtree")
+              p
+                | An iterator for the part of the sentence syntactically governed by
+                | the word, including the word itself.
+    
+            +attribute("left_edge")
+              p The leftmost edge of the token's subtree
+    
+            +attribute("right_edge")
+              p The rightmost edge of the token's subtree
+    
+          details
+            summary: h4 Named Entities
+    
+            +attribute("ent_type")
+              p If the token is part of an entity, its entity type.
+    
+            +attribute("ent_iob")
+              p The IOB (inside, outside, begin) entity recognition tag for the token.
+    
+          details
+            summary: h4 Lexeme Flags
+    
+            +method("check_flag", "flag_id")
+              +params
+                +param("flag_id")
+                  | flag ID
+    
+            +attribute("is_oov")
+            +attribute("is_alpha")
+            +attribute("is_ascii")
+            +attribute("is_digit")
+            +attribute("is_lower")
+            +attribute("is_title")
+            +attribute("is_punct")
+            +attribute("is_space")
+            +attribute("like_url")
+            +attribute("like_num")
+            +attribute("like_email")
+    
+            //+attribute("conjuncts")
+            //  | Conjuncts
+    
+        +declare_class("Span")
+          +init
+            +method("__init__")
+              Temp
+  
+            <code>span = doc[0:4]</code>
+  
+          +sequence
+            +method("__getitem__")
+              p Get item
+  
+            +method("__iter__")
+              p Iter
+                
+            +method("__len__")
+              p Len
+  
+          details
+            summary: h4 Parse
+  
+            +attribute("root")
+              p Syntactic head
+  
+            +attribute("lefts")
+              p Tokens that are:
+              ol
+                li To the left of the span;
+                li Syntactic children of words within the span
+  
+              p i.e.
+  
+              pre.language-python
+                code
+                  | lefts = [span.doc[i] for i in range(0, span.start)
+                  |          if span.doc[i].head in span]
+  
+            +attribute("rights")
+              p Tokens that are:
+                ol 
+                  li To the right of the span;
+                  li Syntactic children of words within the span
+              p i.e.
+              pre.language-python
+                code
+                  | rights = [span.doc[i] for i in range(span.end, len(span.doc))
+                  |           if span.doc[i].head in span]
+  
+  
+            +attribute("subtree")
+              p String
+  
+          details
+            summary: h4 String Views
+  
+            +attribute("string")
+              p String
+    
+            +attribute("lemma / lemma_")
+              p String
+  
+            +attribute("label / label_")
+              p String
+  
+        +declare_class("Lexeme")
+          p
+            | The Lexeme object represents a lexical type, stored in the vocabulary
+            | &ndash; as opposed to a token, occurring in a document.
+          p
+            | Lexemes store various features, so that these features can be computed
+            | once per type, rather than once per token. As job sizes grow, this
+            | can amount to a substantial efficiency improvement.
+  
+          p
+            | All Lexeme attributes are therefore context independent, as a single
+            | lexeme is reused for all usages of that word. Lexemes are keyed by
+            | the “orth” attribute.
+  
+          p
+            All Lexeme attributes are accessible directly on the Token object.
+  
+          +init
+            +method("__init__")
+              p Init
+  
+            details
+              summary: h4 String Features
+  
+                +attribute("orth / orth_")
+                  p
+                    | The form of the word with no string normalization or processing,
+                    | as it appears in the string, without trailing whitespace.
+              
+                +attribute("lower / lower_")
+                  p Tmp
+              
+                +attribute("norm / norm_")
+                  p Tmp
+              
+                +attribute("shape / shape_")
+                  p Tmp
+              
+                +attribute("prefix / prefix_")
+                  p Tmp
+              
+                +attribute("suffix / suffix_")
+                  p TMP
+  
+        +declare_class("Vocab", "data_dir=None, lex_props_getter=None")
+          +sequence
+            +method("__len__")
+              +returns
+                p Number of words in the vocabulary.
+  
+            +method("__iter__")
+              +returns
+                p Lexeme
+    
+          +maptype
+            +method("__getitem__", "key_int")
+              +params
+                +param("key")
+                  p Integer ID
+    
+              +returns: p A Lexeme object
+    
+            +method("__getitem__", "key_str")
+              +params
+                +param("key_str", types.unicode)
+                  p A string in the vocabulary
+    
+              +returns("Lexeme")
+    
+            +method("__setitem__", "orth_str", "props")
+              +params
+                +param("orth_str", types.unicode)
+                  p The orth key
+    
+                +param("props", types.dict)
+                  p A props dictionary
+    
+              +returns("None")
+  
+          details
+            summary: h4 Import/Export
+    
+            +method("dump", "loc")
+              +params
+                +param("loc", types.unicode)
+                  p Path where the vocabulary should be saved
+    
+            +method("load_lexemes", "loc")
+            +params
+              +param("loc", types.unicode)
+                p Path to load the lexemes.bin file from
+    
+            +method("load_vectors", "loc")
+              +params
+                +param("loc", types.unicode)
+                  p Path to load the vectors.bin from
+  
+        +declare_class("StringStore")
+          +init
+            Tmp
+  
+          +sequence
+            +method("__len__")
+              +returns("int")
+                p Number of strings in the string-store
+  
+            +method("__iter__")
+              +returns
+                p Lexeme
+  
+          +maptype
+            +method("__getitem__", "key_int")
+              +params
+                +param("key_int")
+                  p An integer key
+    
+              +returns(types.unicode)
+                p The string that the integer key maps to
+    
+            +method("__getitem__", "key_unicode")
+              +params
+                +param("key_unicode")
+                  p A key, as a unicode string
+    
+              +returns(types.int)
+                p The integer ID of the string.
+    
+            +method("__getitem__", "key_utf8_bytes")
+              +params
+                +param("key_utf8_bytes", types.bytes)
+                  p p A key, as a UTF-8 encoded byte-string
+    
+              +returns(types.int)
+                p The integer ID of the string.
+  
+          details
+            summary: h4 Import/Export
+    
+            +method("dump", "loc")
+              +params
+                +param("loc")
+                  p File path to save the strings.txt to.
+    
+            +method("load")
+              +params
+                +param("loc")
+                  p File path to load the strings.txt from.
+  
+    script(src="js/prism.js")
