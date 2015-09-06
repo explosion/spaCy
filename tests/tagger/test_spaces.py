@@ -14,6 +14,7 @@ def tagged(EN):
     tokens = EN(string, tag=True, parse=False)
     return tokens
 
+@pytest.mark.models
 def test_spaces(tagged):
     assert tagged[0].pos != SPACE
     assert tagged[0].pos_ != 'SPACE'

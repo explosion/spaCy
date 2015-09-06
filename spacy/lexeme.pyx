@@ -17,70 +17,120 @@ from .attrs cimport IS_OOV
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
 
 
-cdef int set_lex_struct_props(LexemeC* lex, dict props, StringStore string_store,
-                              const float* empty_vec) except -1:
-    lex.length = props['length']
-    lex.orth = string_store[props['orth']]
-    lex.lower = string_store[props['lower']]
-    lex.norm = string_store[props['norm']]
-    lex.shape = string_store[props['shape']]
-    lex.prefix = string_store[props['prefix']]
-    lex.suffix = string_store[props['suffix']]
-
-    lex.cluster = props['cluster']
-    lex.prob = props['prob']
-    lex.sentiment = props['sentiment']
-
-    lex.flags = props['flags']
-    lex.repvec = empty_vec
-
-
 cdef class Lexeme:
     """An entry in the vocabulary.  A Lexeme has no string context --- it's a
     word-type, as opposed to a word token.  It therefore has no part-of-speech
     tag, dependency parse, or lemma (lemmatization depends on the part-of-speech
     tag).
     """
-    def __cinit__(self, int vec_size):
-        self.repvec = numpy.ndarray(shape=(vec_size,), dtype=numpy.float32)
+    def __init__(self, Vocab vocab, int orth):
+        self.vocab = vocab
+        self.orth = orth
+        self.c = <LexemeC*><void*>vocab.get_by_orth(vocab.mem, orth)
+        assert self.c.orth == orth
 
-    @property
-    def has_repvec(self):
-        return self.l2_norm != 0
+    def py_set_flag(self, attr_id_t flag_id):
+        Lexeme.set_flag(self.c, flag_id, True)
+    
+    def py_check_flag(self, attr_id_t flag_id):
+        return True if Lexeme.check_flag(self.c, flag_id) else False
 
-    cpdef bint check_flag(self, attr_id_t flag_id) except -1:
-        cdef flags_t one = 1
-        return self.flags & (one << flag_id)
+    property orth_:
+        def __get__(self):
+            return self.vocab.strings[self.c.orth]
+
+    property lower:
+        def __get__(self): return self.c.lower
+        def __set__(self, int x): self.c.lower = x
+    
+    property norm:
+        def __get__(self): return self.c.norm
+        def __set__(self, int x): self.c.norm = x
+
+    property shape:
+        def __get__(self): return self.c.shape
+        def __set__(self, int x): self.c.shape = x
+
+    property prefix:
+        def __get__(self): return self.c.prefix
+        def __set__(self, int x): self.c.prefix = x
+
+    property suffix:
+        def __get__(self): return self.c.suffix
+        def __set__(self, int x): self.c.suffix = x
+    
+    property cluster:
+        def __get__(self): return self.c.suffix
+        def __set__(self, int x): self.c.suffix = x
+ 
+    property prob:
+        def __get__(self): return self.c.suffix
+        def __set__(self, int x): self.c.suffix = x
+
+    property lower_:
+        def __get__(self): return self.vocab.strings[self.c.lower]
+        def __set__(self, unicode x): self.c.lower = self.vocab.strings[x]
+ 
+    property norm_:
+        def __get__(self): return self.c.norm
+        def __set__(self, unicode x): self.c.norm = self.vocab.strings[x]
+    
+    property shape_:
+        def __get__(self): return self.vocab.strings[self.c.shape]
+        def __set__(self, unicode x): self.c.shape = self.vocab.strings[x]
+
+    property prefix_:
+        def __get__(self): return self.c.prefix
+        def __set__(self, unicode x): self.c.prefix = self.vocab.strings[x]
+
+    property suffix_:
+        def __get__(self): return self.c.suffix
+        def __set__(self, unicode x): self.c.suffix = self.vocab.strings[x]
+
+    property flags:
+        def __get__(self): return self.c.flags
+        def __set__(self, flags_t x): self.c.flags = x
 
     property is_oov:
-        def __get__(self): return self.check_flag(IS_OOV)
+        def __get__(self): return Lexeme.check_flag(self.c, IS_OOV)
+        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_OOV, x)
 
     property is_alpha:
-        def __get__(self): return self.check_flag(IS_ALPHA)
+        def __get__(self): return Lexeme.check_flag(self.c, IS_ALPHA)
+        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_ALPHA, x)
     
     property is_ascii:
-        def __get__(self): return self.check_flag(IS_ASCII)
+        def __get__(self): return Lexeme.check_flag(self.c, IS_ASCII)
+        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_ASCII, x)
 
     property is_digit:
-        def __get__(self): return self.check_flag(IS_DIGIT)
+        def __get__(self): return Lexeme.check_flag(self.c, IS_DIGIT)
+        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_DIGIT, x)
 
     property is_lower:
-        def __get__(self): return self.check_flag(IS_LOWER)
+        def __get__(self): return Lexeme.check_flag(self.c, IS_LOWER)
+        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_LOWER, x)
 
     property is_title:
-        def __get__(self): return self.check_flag(IS_TITLE)
+        def __get__(self): return Lexeme.check_flag(self.c, IS_TITLE)
+        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_TITLE, x)
 
     property is_punct:
-        def __get__(self): return self.check_flag(IS_PUNCT)
+        def __get__(self): return Lexeme.check_flag(self.c, IS_PUNCT)
+        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_PUNCT, x)
 
     property is_space: 
-        def __get__(self): return self.check_flag(IS_SPACE)
+        def __get__(self): return Lexeme.check_flag(self.c, IS_SPACE)
+        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_SPACE, x)
 
     property like_url:
-        def __get__(self): return self.check_flag(LIKE_URL)
+        def __get__(self): return Lexeme.check_flag(self.c, LIKE_URL)
+        def __set__(self, bint x): Lexeme.set_flag(self.c, LIKE_URL, x)
     
     property like_num:
-        def __get__(self): return self.check_flag(LIKE_NUM)
+        def __get__(self): return Lexeme.check_flag(self.c, LIKE_NUM)
+        def __set__(self, bint x): Lexeme.set_flag(self.c, LIKE_NUM, x)
 
     property like_email:
-        def __get__(self): return self.check_flag(LIKE_EMAIL)
+        def __get__(self): return Lexeme.check_flag(self.c, LIKE_EMAIL)
+        def __set__(self, bint x): Lexeme.set_flag(self.c, LIKE_EMAIL, x)

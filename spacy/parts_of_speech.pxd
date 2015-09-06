@@ -2,17 +2,22 @@
 cpdef enum univ_pos_t:
     NO_TAG
     ADJ
-    ADV
     ADP
+    ADV
+    AUX
     CONJ
     DET
+    INTJ
     NOUN
     NUM
+    PART
     PRON
-    PRT
+    PROPN
+    PUNCT
+    SCONJ
+    SYM
     VERB
     X
-    PUNCT
     EOL
     SPACE
     N_UNIV_TAGS

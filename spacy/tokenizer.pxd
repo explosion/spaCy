@@ -4,15 +4,10 @@ from preshed.maps cimport PreshMap
 from cymem.cymem cimport Pool
 
 from .typedefs cimport hash_t
-from .structs cimport LexemeC, TokenC, Morphology
+from .structs cimport LexemeC, TokenC
 from .strings cimport StringStore
 from .tokens.doc cimport Doc
-from .vocab cimport Vocab, _Cached
-
-
-cdef union LexemesOrTokens:
-    const LexemeC* const* lexemes
-    TokenC* tokens
+from .vocab cimport Vocab, LexemesOrTokens, _Cached
 
 
 cdef class Tokenizer:

@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 from collections import defaultdict
 
-from ..structs cimport Morphology, TokenC, LexemeC
+from ..structs cimport TokenC, LexemeC
 from ..typedefs cimport flags_t, attr_t
 from ..attrs cimport attr_id_t
 from ..parts_of_speech cimport univ_pos_t
@@ -40,11 +40,17 @@ cdef class Span:
         return self.end - self.start
 
     def __getitem__(self, int i):
-        return self._seq[self.start + i]
+        if i < 0:
+            return self._seq[self.end + i]
+        else:
+            return self._seq[self.start + i]
 
     def __iter__(self):
         for i in range(self.start, self.end):
             yield self._seq[i]
+
+    def merge(self, unicode tag, unicode lemma, unicode ent_type):
+        self._seq.merge(self[0].idx, self[-1].idx + len(self[-1]), tag, lemma, ent_type)
 
     property root:
         """The first ancestor of the first word of the span that has its head

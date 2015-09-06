@@ -13,6 +13,8 @@ MANIFEST
 
 corpora/
 models/
+examples/
+keys/
 
 spacy/syntax/*.cpp
 spacy/syntax/*.html

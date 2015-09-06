@@ -108,6 +108,11 @@ cdef class StringStore:
         else:
             raise TypeError(type(string_or_id))
 
+    def __iter__(self):
+        cdef int i
+        for i in range(self.size):
+            yield self[i]
+
     cdef const Utf8Str* intern(self, unsigned char* chars, int length) except NULL:
         # 0 means missing, but we don't bother offsetting the index.
         key = hash64(chars, length * sizeof(char), 0)
@@ -137,6 +142,8 @@ cdef class StringStore:
     def load(self, loc):
         with codecs.open(loc, 'r', 'utf8') as file_:
             strings = file_.read().split(SEPARATOR)
+        if strings == ['']:
+            return None
         cdef unicode string
         cdef bytes byte_string
         for string in strings: 

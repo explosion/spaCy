@@ -47,6 +47,7 @@ cdef bint _entity_is_sunk(StateClass st, Transition* golds) nogil:
     else:
         return False
 
+
 cdef class BiluoPushDown(TransitionSystem):
     @classmethod
     def get_labels(cls, gold_tuples):
@@ -160,7 +161,17 @@ cdef class Missing:
 cdef class Begin:
     @staticmethod
     cdef bint is_valid(StateClass st, int label) nogil:
-        return label != 0 and not st.entity_is_open()
+        # Ensure we don't clobber preset entities. If no entity preset,
+        # ent_iob is 0
+        cdef int preset_ent_iob = st.B_(0).ent_iob
+        if preset_ent_iob == 1:
+            return False
+        elif preset_ent_iob == 2:
+            return False
+        elif preset_ent_iob == 3 and st.B_(0).ent_type != label:
+            return False
+        else:
+            return label != 0 and not st.entity_is_open()
 
     @staticmethod
     cdef int transition(StateClass st, int label) nogil:
@@ -190,6 +201,14 @@ cdef class Begin:
 cdef class In:
     @staticmethod
     cdef bint is_valid(StateClass st, int label) nogil:
+        cdef int preset_ent_iob = st.B_(0).ent_iob
+        if preset_ent_iob == 2:
+            return False
+        elif preset_ent_iob == 3:
+            return False
+        # TODO: Is this quite right?
+        elif st.B_(1).ent_iob != preset_ent_iob:
+            return False
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
     
     @staticmethod
@@ -230,6 +249,14 @@ cdef class In:
 cdef class Last:
     @staticmethod
     cdef bint is_valid(StateClass st, int label) nogil:
+        cdef int preset_ent_iob = st.B_(0).ent_iob
+        if preset_ent_iob == 2:
+            return False
+        elif preset_ent_iob == 3:
+            return False
+        elif st.B_(1).ent_iob == 1:
+            return False
+ 
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
 
     @staticmethod
@@ -269,6 +296,15 @@ cdef class Last:
 cdef class Unit:
     @staticmethod
     cdef bint is_valid(StateClass st, int label) nogil:
+        cdef int preset_ent_iob = st.B_(0).ent_iob
+        if preset_ent_iob == 2:
+            return False
+        elif preset_ent_iob == 1:
+            return False
+        elif preset_ent_iob == 3 and st.B_(0).ent_type != label:
+            return False
+        elif st.B_(1).ent_iob == 1:
+            return False
         return label != 0 and not st.entity_is_open()
 
     @staticmethod
@@ -300,6 +336,11 @@ cdef class Unit:
 cdef class Out:
     @staticmethod
     cdef bint is_valid(StateClass st, int label) nogil:
+        cdef int preset_ent_iob = st.B_(0).ent_iob
+        if preset_ent_iob == 3:
+            return False
+        elif preset_ent_iob == 1:
+            return False
         return not st.entity_is_open()
 
     @staticmethod

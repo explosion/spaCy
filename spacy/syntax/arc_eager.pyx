@@ -109,7 +109,7 @@ cdef bint label_is_gold(const GoldParseC* gold, int head, int child, int label) 
 
 cdef bint _is_gold_root(const GoldParseC* gold, int word) nogil:
     return gold.labels[word] == -1 or gold.heads[word] == word
- 
+
 
 cdef class Shift:
     @staticmethod
@@ -267,7 +267,7 @@ cdef class Break:
             return cost
         else:
             return cost + 1
-    
+
     @staticmethod
     cdef inline int label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
         return 0
@@ -279,7 +279,7 @@ cdef int _get_root(int word, const GoldParseC* gold) nogil:
         return -1
     else:
         return word
-        
+
 
 cdef class ArcEager(TransitionSystem):
     @classmethod
@@ -322,8 +322,9 @@ cdef class ArcEager(TransitionSystem):
     cdef Transition lookup_transition(self, object name) except *:
         if '-' in name:
             move_str, label_str = name.split('-', 1)
-            label = self.label_ids[label_str]
+            label = self.strings[label_str]
         else:
+            move_str = name
             label = 0
         move = MOVE_NAMES.index(move_str)
         for i in range(self.n_moves):

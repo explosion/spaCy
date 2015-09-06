@@ -12,16 +12,17 @@ import math
 import json
 
 from .lexeme cimport EMPTY_LEXEME
-from .lexeme cimport set_lex_struct_props
 from .lexeme cimport Lexeme
 from .strings cimport hash_string
 from .orth cimport word_shape
 from .typedefs cimport attr_t
 from .cfile cimport CFile
+from .lemmatizer import Lemmatizer
 
 from cymem.cymem cimport Address
 from . import util
 from .serialize.packer cimport Packer
+from .attrs cimport PROB
 
 
 DEF MAX_VEC_SIZE = 100000
@@ -36,34 +37,33 @@ EMPTY_LEXEME.repvec = EMPTY_VEC
 cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
-    def __init__(self, data_dir=None, get_lex_props=None, load_vectors=True,
-                 pos_tags=None, oov_prob=-30):
-        if oov_prob is None:
-            oov_prob = -30
+    def __init__(self, get_lex_attr=None, tag_map=None, vectors=None):
+        if tag_map is None:
+            tag_map = {}
         self.mem = Pool()
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
         self.strings = StringStore()
-        self.pos_tags = pos_tags if pos_tags is not None else {}
-
-        self.lexeme_props_getter = get_lex_props
-        self.repvec_length = 0
-        self.length = 0
-        self._add_lex_to_vocab(0, &EMPTY_LEXEME)
-        if data_dir is not None:
-            if not path.exists(data_dir):
-                raise IOError("Directory %s not found -- cannot load Vocab." % data_dir)
-        if data_dir is not None:
-            if not path.isdir(data_dir):
-                raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
-            self.load_lexemes(path.join(data_dir, 'strings.txt'),
-                              path.join(data_dir, 'lexemes.bin'))
-            if load_vectors and path.exists(path.join(data_dir, 'vec.bin')):
-                self.repvec_length = self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
-
+        self.get_lex_attr = get_lex_attr
+        self.morphology = Morphology(self.strings, tag_map, Lemmatizer({}, {}, {}))
+        
+        self.length = 1
         self._serializer = None
-        self.data_dir = data_dir
-        self.oov_prob = oov_prob
+
+    @classmethod
+    def from_dir(cls, data_dir, get_lex_attr=None, vectors=None):
+        if not path.exists(data_dir):
+            raise IOError("Directory %s not found -- cannot load Vocab." % data_dir)
+        if not path.isdir(data_dir):
+            raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
+
+        tag_map = json.load(open(path.join(data_dir, 'tag_map.json')))
+        cdef Vocab self = cls(get_lex_attr=get_lex_attr, vectors=vectors, tag_map=tag_map)
+
+        self.load_lexemes(path.join(data_dir, 'strings.txt'), path.join(data_dir, 'lexemes.bin'))
+        if vectors is None and path.exists(path.join(data_dir, 'vec.bin')):
+            self.repvec_length = self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
+        return self
 
     property serializer:
         def __get__(self):
@@ -89,20 +89,12 @@ cdef class Vocab:
         cdef LexemeC* lex
         cdef hash_t key = hash_string(string)
         lex = <LexemeC*>self._by_hash.get(key)
+        cdef size_t addr
         if lex != NULL:
+            assert lex.orth == self.strings[string]
             return lex
-        cdef bint is_oov = mem is not self.mem
-        if len(string) < 3:
-            mem = self.mem
-        lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        props = self.lexeme_props_getter(string, self.oov_prob, is_oov=is_oov)
-        set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
-        if is_oov:
-            lex.id = 0
         else:
-            self._add_lex_to_vocab(key, lex)
-        assert lex != NULL, string
-        return lex
+            return self._new_lexeme(mem, string)
 
     cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
@@ -114,18 +106,34 @@ cdef class Vocab:
         lex = <LexemeC*>self._by_orth.get(orth)
         if lex != NULL:
             return lex
-        cdef unicode string = self.strings[orth]
+        else:
+            return self._new_lexeme(mem, self.strings[orth])
+
+    cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL:
+        cdef hash_t key
         cdef bint is_oov = mem is not self.mem
+        mem = self.mem
         if len(string) < 3:
             mem = self.mem
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        props = self.lexeme_props_getter(string, self.oov_prob, is_oov=is_oov)
-        set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
+        lex.orth = self.strings[string]
+        lex.length = len(string)
+        lex.id = self.length
+        if self.get_lex_attr is not None:
+            for attr, func in self.get_lex_attr.items():
+                value = func(string)
+                if isinstance(value, unicode):
+                    value = self.strings[value]
+                if attr == PROB:
+                    lex.prob = value
+                else:
+                    Lexeme.set_struct_attr(lex, attr, value)
         if is_oov:
             lex.id = 0
         else:
-            self._add_lex_to_vocab(hash_string(string), lex)
-        assert lex != NULL, orth
+            key = hash_string(string)
+            self._add_lex_to_vocab(key, lex)
+        assert lex != NULL, string
         return lex
 
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1:
@@ -137,7 +145,7 @@ cdef class Vocab:
         cdef attr_t orth
         cdef size_t addr
         for orth, addr in self._by_orth.items():
-            yield Lexeme.from_ptr(<LexemeC*>addr, self.strings, self.repvec_length)
+            yield Lexeme(self, orth)
 
     def __getitem__(self,  id_or_string):
         '''Retrieve a lexeme, given an int ID or a unicode string.  If a previously
@@ -154,32 +162,29 @@ cdef class Vocab:
               An instance of the Lexeme Python class, with data copied on
               instantiation.
         '''
-        cdef const LexemeC* lexeme
         cdef attr_t orth
-        if type(id_or_string) == int:
-            orth = id_or_string
-            lexeme = <LexemeC*>self._by_orth.get(orth)
-            if lexeme == NULL:
-                raise KeyError(id_or_string)
-            assert lexeme.orth == orth, ('%d vs %d' % (lexeme.orth, orth))
-        elif type(id_or_string) == unicode:
-            lexeme = self.get(self.mem, id_or_string)
-            assert lexeme.orth == self.strings[id_or_string]
+        if type(id_or_string) == unicode:
+            orth = self.strings[id_or_string]
         else:
-            raise ValueError("Vocab unable to map type: "
-                "%s. Maps unicode --> Lexeme or "
-                "int --> Lexeme" % str(type(id_or_string)))
-        return Lexeme.from_ptr(lexeme, self.strings, self.repvec_length)
+            orth = id_or_string
+        return Lexeme(self, orth)
 
-    def __setitem__(self, unicode string, dict props):
-        cdef hash_t key = hash_string(string)
-        cdef LexemeC* lex
-        lex = <LexemeC*>self._by_hash.get(key)
-        if lex == NULL:
-            lex = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
-        set_lex_struct_props(lex, props, self.strings, EMPTY_VEC)
-        self._add_lex_to_vocab(key, lex)
-
+    cdef const TokenC* make_fused_token(self, substrings) except NULL:
+        cdef int i
+        tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
+        for i, props in enumerate(substrings):
+            token = &tokens[i]
+            # Set the special tokens up to have morphology and lemmas if
+            # specified, otherwise use the part-of-speech tag (if specified)
+            token.lex = <LexemeC*>self.get(self.mem, props['F'])
+            if 'pos' in props:
+                self.morphology.assign_tag(token, props['pos'])
+            if 'L' in props:
+                tokens[i].lemma = self.strings[props['L']]
+            for feature, value in props.get('morph', {}).items():
+                self.morphology.assign_feature(&token.morph, feature, value)
+        return tokens
+    
     def dump(self, loc):
         if path.exists(loc):
             assert not path.isdir(loc)

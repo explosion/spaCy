@@ -14,7 +14,7 @@ cpdef enum attr_id_t:
     IS_STOP
     IS_OOV
     
-    FLAG13
+    FLAG13 = 13
     FLAG14
     FLAG15
     FLAG16
@@ -84,3 +84,4 @@ cpdef enum attr_id_t:
     ENT_TYPE
     HEAD
     SPACY
+    PROB

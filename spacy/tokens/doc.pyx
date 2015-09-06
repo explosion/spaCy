@@ -5,16 +5,17 @@ from libc.stdint cimport uint32_t
 import numpy
 import struct
 
+from ..lexeme cimport Lexeme
 from ..lexeme cimport EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport attr_id_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..parts_of_speech import UNIV_POS_NAMES
-from ..parts_of_speech cimport CONJ, PUNCT
-from ..lexeme cimport check_flag
-from ..lexeme cimport get_attr as get_lex_attr
-from .spans import Span
+from ..parts_of_speech cimport CONJ, PUNCT, NOUN
+from ..parts_of_speech cimport univ_pos_t
+from ..lexeme cimport Lexeme
+from .spans cimport Span
 from .token cimport Token
 from ..serialize.bits cimport BitArray
 
@@ -47,7 +48,7 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
     elif feat_name == ENT_TYPE:
         return token.ent_type
     else:
-        return get_lex_attr(token.lex, feat_name)
+        return Lexeme.get_struct_attr(token.lex, feat_name)
 
 
 cdef class Doc:
@@ -119,40 +120,79 @@ cdef class Doc:
     def string(self):
         return u''.join([t.string for t in self])
 
-    @property
-    def ents(self):
-        """Yields named-entity Span objects.
+    property ents:
+        def __get__(self):
+            """Yields named-entity Span objects.
         
-        Iterate over the span to get individual Token objects, or access the label:
+            Iterate over the span to get individual Token objects, or access the label:
 
-        >>> from spacy.en import English
-        >>> nlp = English()
-        >>> tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
-        >>> ents = list(tokens.ents)
-        >>> ents[0].label, ents[0].label_, ''.join(t.orth_ for t in ents[0])
-        (112504, u'PERSON', u'Best ') 
-        """
-        cdef int i
-        cdef const TokenC* token
-        cdef int start = -1
-        cdef int label = 0
+            >>> from spacy.en import English
+            >>> nlp = English()
+            >>> tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
+            >>> ents = list(tokens.ents)
+            >>> ents[0].label, ents[0].label_, ''.join(t.orth_ for t in ents[0])
+            (112504, u'PERSON', u'Best ') 
+            """
+            cdef int i
+            cdef const TokenC* token
+            cdef int start = -1
+            cdef int label = 0
+            output = []
+            for i in range(self.length):
+                token = &self.data[i]
+                if token.ent_iob == 1:
+                    assert start != -1
+                elif token.ent_iob == 2 or token.ent_iob == 0:
+                    if start != -1:
+                        output.append(Span(self, start, i, label=label))
+                    start = -1
+                    label = 0
+                elif token.ent_iob == 3:
+                    if start != -1:
+                        output.append(Span(self, start, i, label=label))
+                    start = i
+                    label = token.ent_type
+            if start != -1:
+                output.append(Span(self, start, self.length, label=label))
+            return tuple(output)
+
+        def __set__(self, ents):
+            # TODO:
+            # 1. Allow negative matches
+            # 2. Ensure pre-set NERs are not over-written during statistical prediction
+            # 3. Test basic data-driven ORTH gazetteer
+            # 4. Test more nuanced date and currency regex
+            cdef int i
+            for i in range(self.length):
+                self.data[i].ent_type = 0
+                self.data[i].ent_iob = 0
+            cdef attr_t ent_type
+            cdef int start, end
+            for ent_type, start, end in ents:
+                if ent_type is None or ent_type < 0:
+                    # Mark as O
+                    for i in range(start, end):
+                        self.data[i].ent_type = 0
+                        self.data[i].ent_iob = 2
+                else:
+                    # Mark (inside) as I
+                    for i in range(start, end):
+                        self.data[i].ent_type = ent_type
+                        self.data[i].ent_iob = 1
+                    # Set start as B
+                    self.data[start].ent_iob = 3
+
+    @property
+    def noun_chunks(self):
+        """Yield spans for base noun phrases."""
+        cdef const TokenC* word
+        labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj', 'attr']
+        np_deps = [self.vocab.strings[label] for label in labels]
+        np_label = self.vocab.strings['NP']
         for i in range(self.length):
-            token = &self.data[i]
-            if token.ent_iob == 1:
-                assert start != -1
-                pass
-            elif token.ent_iob == 2:
-                if start != -1:
-                    yield Span(self, start, i, label=label)
-                start = -1
-                label = 0
-            elif token.ent_iob == 3:
-                if start != -1:
-                    yield Span(self, start, i, label=label)
-                start = i
-                label = token.ent_type
-        if start != -1:
-            yield Span(self, start, self.length, label=label)
+            word = &self.data[i]
+            if word.pos == NOUN and word.dep in np_deps:
+                yield Span(self, word.l_edge, i+1, label=np_label)
 
     @property
     def sents(self):
@@ -171,7 +211,7 @@ cdef class Doc:
         if self.length == self.max_length:
             self._realloc(self.length * 2)
         cdef TokenC* t = &self.data[self.length]
-        if LexemeOrToken is TokenC_ptr:
+        if LexemeOrToken is const_TokenC_ptr:
             t[0] = lex_or_tok[0]
         else:
             t.lex = lex_or_tok
@@ -179,6 +219,7 @@ cdef class Doc:
             t.idx = 0
         else:
             t.idx = (t-1).idx + (t-1).lex.length + (t-1).spacy
+        assert t.lex.orth != 0
         t.spacy = has_space
         self.length += 1
         self._py_tokens.append(None)
@@ -288,6 +329,9 @@ cdef class Doc:
             elif attr_id == TAG:
                 for i in range(length):
                     tokens[i].tag = values[i]
+            elif attr_id == POS:
+                for i in range(length):
+                    tokens[i].pos = <univ_pos_t>values[i]
             elif attr_id == DEP:
                 for i in range(length):
                     tokens[i].dep = values[i]
@@ -297,20 +341,7 @@ cdef class Doc:
             elif attr_id == ENT_TYPE:
                 for i in range(length):
                     tokens[i].ent_type = values[i]
-        cdef TokenC* head
-        cdef TokenC* child
-        # Set left edges
-        for i in range(length):
-            child = &tokens[i]
-            head = &tokens[i + child.head]
-            if child < head and child.l_edge < head.l_edge:
-                head.l_edge = child.l_edge
-        # Set right edges --- same as above, but iterate in reverse
-        for i in range(length-1, -1, -1):
-            child = &tokens[i]
-            head = &tokens[i + child.head]
-            if child > head and child.r_edge > head.r_edge:
-                head.r_edge = child.r_edge
+        set_children_from_heads(self.data, self.length)
         return self
 
     def to_bytes(self):
@@ -354,14 +385,18 @@ cdef class Doc:
                 break
         else:
             return None
-        cdef unicode string = self.string
+
+        cdef Span span = self[start:end]
         # Get LexemeC for newly merged token
-        new_orth = string[start_idx:end_idx]
+        new_orth = ''.join([t.string for t in span])
+        if span[-1].whitespace_:
+            new_orth = new_orth[:-1]
         cdef const LexemeC* lex = self.vocab.get(self.mem, new_orth)
         # House the new merged token where it starts
         cdef TokenC* token = &self.data[start]
         # Update fields
         token.lex = lex
+        token.spacy = self.data[end].spacy
         # What to do about morphology??
         # TODO: token.morph = ???
         token.tag = self.vocab.strings[tag]
@@ -372,30 +407,16 @@ cdef class Doc:
         else:
             token.ent_iob = 3
             token.ent_type = self.vocab.strings[ent_type]
-        # Fix dependencies
         # Begin by setting all the head indices to absolute token positions
         # This is easier to work with for now than the offsets
+        # Before thinking of something simpler, beware the case where a dependency
+        # bridges over the entity. Here the alignment of the tokens changes.
+        span_root = span.root.i
+        token.dep = span.root.dep
         for i in range(self.length):
             self.data[i].head += i
-        # Find the head of the merged token, and its dep relation
-        outer_heads = {}
-        for i in range(start, end):
-            head_idx = self.data[i].head
-            if head_idx == i or head_idx < start or head_idx >= end:
-                # Don't consider "heads" which are actually dominated by a word
-                # in the region we're merging
-                gp = head_idx
-                while self.data[gp].head != gp:
-                    if start <= gp < end:
-                        break
-                    gp = self.data[gp].head
-                else:
-                    # If we have multiple words attaching to the same head,
-                    # but with different dep labels, we're preferring the last
-                    # occurring dep label. Shrug. What else could we do, I guess?
-                    outer_heads[head_idx] = self.data[i].dep
-
-        token.head, token.dep = max(outer_heads.items())
+        # Set the head of the merged token, and its dep relation, from the Span
+        token.head = self.data[span_root].head
         # Adjust deps before shrinking tokens
         # Tokens which point into the merged token should now point to it
         # Subtract the offset from all tokens which point to >= end
@@ -406,7 +427,6 @@ cdef class Doc:
                 self.data[i].head = start
             elif head_idx >= end:
                 self.data[i].head -= offset
-        # TODO: Fix left and right deps
         # Now compress the token array
         for i in range(end, self.length):
             self.data[i - offset] = self.data[i]
@@ -417,6 +437,28 @@ cdef class Doc:
         for i in range(self.length):
             # ...And, set heads back to a relative position
             self.data[i].head -= i
-
+        # Set the left/right children, left/right edges
+        set_children_from_heads(self.data, self.length)
+        # Clear the cached Python objects
+        self._py_tokens = [None] * self.length
         # Return the merged Python object
         return self[start]
+
+
+cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
+    cdef TokenC* head
+    cdef TokenC* child
+    cdef int i
+    # Set left edges
+    for i in range(length):
+        child = &tokens[i]
+        head = &tokens[i + child.head]
+        if child < head and child.l_edge < head.l_edge:
+            head.l_edge = child.l_edge
+    # Set right edges --- same as above, but iterate in reverse
+    for i in range(length-1, -1, -1):
+        child = &tokens[i]
+        head = &tokens[i + child.head]
+        if child > head and child.r_edge > head.r_edge:
+            head.r_edge = child.r_edge
+

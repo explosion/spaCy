@@ -11,7 +11,6 @@ from cpython cimport Py_UNICODE_ISSPACE
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 
-from .morphology cimport set_morph_from_dict
 from .strings cimport hash_string
 cimport cython
 
@@ -29,7 +28,7 @@ cdef class Tokenizer:
         self._suffix_re = suffix_re
         self._infix_re = infix_re
         self.vocab = vocab
-        self._load_special_tokenization(rules, self.vocab.pos_tags)
+        self._load_special_tokenization(rules)
 
     @classmethod
     def from_dir(cls, Vocab vocab, data_dir):
@@ -193,9 +192,7 @@ cdef class Tokenizer:
                 tokens.push_back(prefixes[0][i], False)
         if string:
             cache_hit = self._try_cache(hash_string(string), tokens)
-            if cache_hit:
-                pass
-            else:
+            if not cache_hit:
                 match = self.find_infix(string)
                 if match is None:
                     tokens.push_back(self.vocab.get(tokens.mem, string), False)
@@ -242,7 +239,7 @@ cdef class Tokenizer:
         match = self._suffix_re.search(string)
         return (match.end() - match.start()) if match is not None else 0
 
-    def _load_special_tokenization(self, object rules, object tag_map):
+    def _load_special_tokenization(self, special_cases):
         '''Add a special-case tokenization rule.
         '''
         cdef int i
@@ -253,29 +250,11 @@ cdef class Tokenizer:
         cdef dict props
         cdef LexemeC** lexemes
         cdef hash_t hashed
-        for chunk, substrings in sorted(rules.items()):
-            tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
-            for i, props in enumerate(substrings):
-                form = props['F']
-                lemma = props.get("L", None)
-                tokens[i].lex = <LexemeC*>self.vocab.get(self.vocab.mem, form)
-                if lemma is not None:
-                    tokens[i].lemma = self.vocab.strings[lemma]
-                else:
-                    tokens[i].lemma = 0
-                if 'pos' in props:
-                    tokens[i].tag = self.vocab.strings[props['pos']]
-                    tokens[i].pos = tag_map[props['pos']][0]
-                    # These are defaults, which can be over-ridden by the
-                    # token-specific props.
-                    set_morph_from_dict(&tokens[i].morph, tag_map[props['pos']][1])
-                    if tokens[i].lemma == 0:
-                        tokens[i].lemma = tokens[i].lex.orth
-                set_morph_from_dict(&tokens[i].morph, props)
+        for chunk, substrings in sorted(special_cases.items()):
             cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
             cached.length = len(substrings)
             cached.is_lex = False
-            cached.data.tokens = tokens
-            hashed = hash_string(chunk)
-            self._specials.set(hashed, cached)
-            self._cache.set(hashed, cached)
+            cached.data.tokens = self.vocab.make_fused_token(substrings)
+            key = hash_string(chunk)
+            self._specials.set(key, cached)
+            self._cache.set(key, cached)

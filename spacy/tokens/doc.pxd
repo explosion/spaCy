@@ -4,14 +4,19 @@ from preshed.counter cimport PreshCounter
 
 from ..vocab cimport Vocab
 from ..structs cimport TokenC, LexemeC
+from ..typedefs cimport attr_t
+from ..attrs cimport attr_id_t
+
+
+cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil
 
 
 ctypedef const LexemeC* const_Lexeme_ptr
-ctypedef TokenC* TokenC_ptr
+ctypedef const TokenC* const_TokenC_ptr
 
 ctypedef fused LexemeOrToken:
     const_Lexeme_ptr
-    TokenC_ptr
+    const_TokenC_ptr
 
 
 cdef class Doc:

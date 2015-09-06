@@ -36,6 +36,14 @@ cdef class StateClass:
             self._buffer[i] = i
         self._empty_token.lex = &EMPTY_LEXEME
 
+    @property
+    def stack(self):
+        return {self.S(i) for i in range(self._s_i)}
+
+    @property
+    def queue(self):
+        return {self.B(i) for i in range(self._b_i)}
+
     cdef int E(self, int i) nogil:
         if self._e_i <= 0 or self._e_i >= self.length:
             return 0
