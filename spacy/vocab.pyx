@@ -12,7 +12,6 @@ import math
 import json
 
 from .lexeme cimport EMPTY_LEXEME
-from .lexeme cimport set_lex_struct_props
 from .lexeme cimport Lexeme
 from .strings cimport hash_string
 from .orth cimport word_shape
@@ -36,12 +35,13 @@ EMPTY_LEXEME.repvec = EMPTY_VEC
 cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
-    def __init__(self, data_dir=None, get_lex_attr=None):
+    def __init__(self, data_dir=None, get_lex_attr=None, load_vectors=False):
         self.mem = Pool()
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
         self.strings = StringStore()
-        self.pos_tags = pos_tags if pos_tags is not None else {}
+        #self.pos_tags = pos_tags if pos_tags is not None else {}
+        self.pos_tags = {}
         
         self.get_lex_attr = get_lex_attr
         self.repvec_length = 0
@@ -112,7 +112,7 @@ cdef class Vocab:
         if is_oov:
             lex.id = 0
         else:
-            self._add_lex_to_vocab(key, lex)
+            self._add_lex_to_vocab(hash_string(string), lex)
         assert lex != NULL, string
         return lex
 
@@ -125,7 +125,7 @@ cdef class Vocab:
         cdef attr_t orth
         cdef size_t addr
         for orth, addr in self._by_orth.items():
-            yield Lexeme.from_ptr(<LexemeC*>addr, self.strings, self.repvec_length)
+            yield Lexeme.from_ptr(<LexemeC*>addr, self, self.repvec_length)
 
     def __getitem__(self,  id_or_string):
         '''Retrieve a lexeme, given an int ID or a unicode string.  If a previously
@@ -157,7 +157,7 @@ cdef class Vocab:
             raise ValueError("Vocab unable to map type: "
                 "%s. Maps unicode --> Lexeme or "
                 "int --> Lexeme" % str(type(id_or_string)))
-        return Lexeme.from_ptr(lexeme, self.strings, self.repvec_length)
+        return Lexeme.from_ptr(<LexemeC*><void*>lexeme, self, self.repvec_length)
 
     def dump(self, loc):
         if path.exists(loc):

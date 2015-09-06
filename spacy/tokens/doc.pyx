@@ -5,6 +5,7 @@ from libc.stdint cimport uint32_t
 import numpy
 import struct
 
+from ..lexeme cimport Lexeme
 from ..lexeme cimport EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport attr_id_t
@@ -13,8 +14,6 @@ from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..parts_of_speech import UNIV_POS_NAMES
 from ..parts_of_speech cimport CONJ, PUNCT, NOUN
 from ..parts_of_speech cimport univ_pos_t
-from ..lexeme cimport check_flag
-from ..lexeme cimport get_attr as get_lex_attr
 from .spans cimport Span
 from .token cimport Token
 from ..serialize.bits cimport BitArray
@@ -48,7 +47,7 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
     elif feat_name == ENT_TYPE:
         return token.ent_type
     else:
-        return get_lex_attr(token.lex, feat_name)
+        return Lexeme.get_struct_attr(token.lex, feat_name)
 
 
 cdef class Doc:

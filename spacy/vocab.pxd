@@ -37,6 +37,7 @@ cdef class Vocab:
     cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL
     
     cdef int _add_lex_to_vocab(self, hash_t key, const LexemeC* lex) except -1
+    cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL
 
     cdef PreshMap _by_hash
     cdef PreshMap _by_orth

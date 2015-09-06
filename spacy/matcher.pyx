@@ -102,21 +102,22 @@ cdef class Matcher:
     cdef readonly int n_patterns
 
     def __init__(self, vocab, patterns):
+        self.vocab = vocab
         self.mem = Pool()
         for entity_key, (etype, attrs, specs) in sorted(patterns.items()):
             self.add(entity_key, etype, attrs, specs)
 
     def add(self, entity_key, etype, attrs, specs):
         if isinstance(entity_key, basestring):
-            entity_key = vocab.strings[entity_key]
+            entity_key = self.vocab.strings[entity_key]
         if isinstance(etype, basestring):
-            etype = vocab.strings[etype]
+            etype = self.vocab.strings[etype]
         elif etype is None:
             etype = -1
         # TODO: Do something more clever about multiple patterns for single
         # entity
         for spec in specs:
-            spec = _convert_strings(spec, vocab.strings)
+            spec = _convert_strings(spec, self.vocab.strings)
             self.patterns.push_back(init_pattern(self.mem, spec, etype))
 
     @classmethod
