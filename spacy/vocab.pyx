@@ -38,6 +38,8 @@ cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
     def __init__(self, get_lex_attr=None, tag_map=None, vectors=None):
+        if tag_map is None:
+            tag_map = {}
         self.mem = Pool()
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
