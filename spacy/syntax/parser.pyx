@@ -84,8 +84,7 @@ cdef class Parser:
 
         cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
                                   self.model.n_feats, self.model.n_feats)
-        with nogil:
-            self.parse(stcls, eg.c)
+        self.parse(stcls, eg.c)
         tokens.set_parse(stcls._sent)
 
     cdef void predict(self, StateClass stcls, ExampleC* eg) nogil:
@@ -98,6 +97,8 @@ cdef class Parser:
     cdef void parse(self, StateClass stcls, ExampleC eg) nogil:
         while not stcls.is_final():
             self.predict(stcls, &eg)
+            if not eg.is_valid[eg.guess]:
+                break
             self.moves.c[eg.guess].do(stcls, self.moves.c[eg.guess].label)
         self.moves.finalize_state(stcls)
 

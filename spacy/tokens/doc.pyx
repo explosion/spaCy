@@ -12,6 +12,7 @@ from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUST
 from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..parts_of_speech import UNIV_POS_NAMES
 from ..parts_of_speech cimport CONJ, PUNCT, NOUN
+from ..parts_of_speech cimport univ_pos_t
 from ..lexeme cimport check_flag
 from ..lexeme cimport get_attr as get_lex_attr
 from .spans cimport Span
@@ -327,6 +328,9 @@ cdef class Doc:
             elif attr_id == TAG:
                 for i in range(length):
                     tokens[i].tag = values[i]
+            elif attr_id == POS:
+                for i in range(length):
+                    tokens[i].pos = <univ_pos_t>values[i]
             elif attr_id == DEP:
                 for i in range(length):
                     tokens[i].dep = values[i]
