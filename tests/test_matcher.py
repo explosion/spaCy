@@ -3,7 +3,7 @@ import pytest
 
 from spacy.strings import StringStore
 from spacy.matcher import *
-from spacy.attrs import ORTH
+from spacy.attrs import LOWER
 from spacy.tokens.doc import Doc
 from spacy.vocab import Vocab
 
@@ -13,7 +13,7 @@ def matcher(EN):
     patterns = {
         'Javascript': ['PRODUCT', {}, [[{'ORTH': 'JavaScript'}]]],
         'GoogleNow':  ['PRODUCT', {}, [[{'ORTH': 'Google'}, {'ORTH': 'Now'}]]],
-        'Java':       ['PRODUCT', {}, [[{'ORTH': 'Java'}]]],
+        'Java':       ['PRODUCT', {}, [[{'LOWER': 'java'}]]],
     }
     return Matcher(EN.vocab, patterns)
 
@@ -33,7 +33,7 @@ def test_match_start(matcher, EN):
 
 
 def test_match_end(matcher, EN):
-    tokens = EN('I like Java')
+    tokens = EN('I like java')
     assert matcher(tokens) == [(EN.vocab.strings['PRODUCT'], 2, 3)]
 
 
@@ -43,17 +43,17 @@ def test_match_middle(matcher, EN):
 
 
 def test_match_multi(matcher, EN):
-    tokens = EN('I like Google Now and Java best')
+    tokens = EN('I like Google Now and java best')
     assert matcher(tokens) == [(EN.vocab.strings['PRODUCT'], 2, 4),
                                (EN.vocab.strings['PRODUCT'], 5, 6)]
 
 
 def test_match_preserved(matcher, EN):
-    doc = EN.tokenizer('I like Java')
+    doc = EN.tokenizer('I like java')
     EN.tagger(doc)
     EN.entity(doc)
     assert len(doc.ents) == 0
-    doc = EN.tokenizer('I like Java')
+    doc = EN.tokenizer('I like java')
     matcher(doc)
     assert len(doc.ents) == 1
     EN.tagger(doc)
