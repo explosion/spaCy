@@ -20,6 +20,7 @@ from __future__ import unicode_literals
 from ast import literal_eval
 import math
 import gzip
+import json
 
 import plac
 from pathlib import Path
@@ -39,6 +40,7 @@ from spacy.parts_of_speech import NOUN, VERB, ADJ
 import spacy.en
 import spacy.de
 import spacy.fi
+import spacy.it
 
 
 
@@ -143,7 +145,7 @@ def _read_senses(loc):
     return lexicon
 
 
-def setup_vocab(get_lex_attr, src_dir, dst_dir):
+def setup_vocab(get_lex_attr, tag_map, src_dir, dst_dir):
     if not dst_dir.exists():
         dst_dir.mkdir()
 
@@ -152,7 +154,7 @@ def setup_vocab(get_lex_attr, src_dir, dst_dir):
         write_binary_vectors(str(vectors_src), str(dst_dir / 'vec.bin'))
     else:
         print("Warning: Word vectors file not found")
-    vocab = Vocab(get_lex_attr=get_lex_attr)
+    vocab = Vocab(get_lex_attr=get_lex_attr, tag_map=tag_map)
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs, oov_prob = _read_probs(src_dir / 'words.sgt.prob')
     if not probs:
@@ -186,7 +188,8 @@ def main(lang_id, lang_data_dir, corpora_dir, model_dir):
     languages = {
         'en': spacy.en.English.default_lex_attrs(),
         'de': spacy.de.Deutsch.default_lex_attrs(),
-        'fi': spacy.fi.Finnish.default_lex_attrs()
+        'fi': spacy.fi.Finnish.default_lex_attrs(),
+        'it': spacy.it.Italian.default_lex_attrs(),
     }
 
     model_dir = Path(model_dir)
@@ -199,8 +202,9 @@ def main(lang_id, lang_data_dir, corpora_dir, model_dir):
     if not model_dir.exists():
         model_dir.mkdir()
 
+    tag_map = json.load((lang_data_dir / 'tag_map.json').open())
     setup_tokenizer(lang_data_dir, model_dir / 'tokenizer')
-    setup_vocab(languages[lang_id], corpora_dir, model_dir / 'vocab')
+    setup_vocab(languages[lang_id], tag_map, corpora_dir, model_dir / 'vocab')
 
     if (lang_data_dir / 'gazetteer.json').exists():
         copyfile(str(lang_data_dir / 'gazetteer.json'),
