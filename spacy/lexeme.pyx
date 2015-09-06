@@ -29,6 +29,12 @@ cdef class Lexeme:
         self.c = <LexemeC*><void*>vocab.get_by_orth(vocab.mem, orth)
         assert self.c.orth == orth
 
+    def py_set_flag(self, attr_id_t flag_id):
+        Lexeme.set_flag(self.c, flag_id, True)
+    
+    def py_check_flag(self, attr_id_t flag_id):
+        return True if Lexeme.check_flag(self.c, flag_id) else False
+
     property orth_:
         def __get__(self):
             return self.vocab.strings[self.c.orth]
