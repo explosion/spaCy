@@ -142,7 +142,7 @@ cdef class Token:
             """The leftward immediate children of the word, in the syntactic
             dependency parse.
             """
-            cdef const TokenC* ptr = self.c - self.i
+            cdef const TokenC* ptr = self.c - (self.i - self.c.l_edge)
             while ptr < self.c:
                 # If this head is still to the right of us, we can skip to it
                 # No token that's between this token and this head could be our
@@ -160,7 +160,7 @@ cdef class Token:
         def __get__(self):
             """The rightward immediate children of the word, in the syntactic
             dependency parse."""
-            cdef const TokenC* ptr = (self.c - self.i) + (self.array_len - 1)
+            cdef const TokenC* ptr = self.c + (self.c.r_edge - self.i)
             tokens = []
             while ptr > self.c:
                 # If this head is still to the right of us, we can skip to it
