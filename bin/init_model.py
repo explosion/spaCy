@@ -187,7 +187,7 @@ def setup_vocab(get_lex_attr, tag_map, src_dir, dst_dir):
 def main(lang_id, lang_data_dir, corpora_dir, model_dir):
     languages = {
         'en': spacy.en.English.default_lex_attrs(),
-        'de': spacy.de.Deutsch.default_lex_attrs(),
+        'de': spacy.de.German.default_lex_attrs(),
         'fi': spacy.fi.Finnish.default_lex_attrs(),
         'it': spacy.it.Italian.default_lex_attrs(),
     }
