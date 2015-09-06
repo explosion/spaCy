@@ -56,5 +56,5 @@
 "HYPH": {"pos": "punct"},
 "XX": {"pos": "x"},
 "BES": {"pos": "verb"},
-"HVS": {"pos": "verb"},
+"HVS": {"pos": "verb"}
 }
