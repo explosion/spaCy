@@ -48,10 +48,10 @@ def test_match_multi(matcher, EN):
                                (EN.vocab.strings['PRODUCT'], 5, 6)]
 
 
+@pytest.mark.models
 def test_match_preserved(matcher, EN):
     doc = EN.tokenizer('I like java')
     EN.tagger(doc)
-    EN.entity(doc)
     assert len(doc.ents) == 0
     doc = EN.tokenizer('I like java')
     matcher(doc)
