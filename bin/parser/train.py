@@ -85,12 +85,16 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
           use_orig_arc_eager=False):
     dep_model_dir = path.join(model_dir, 'deps')
     ner_model_dir = path.join(model_dir, 'ner')
+    pos_model_dir = path.join(model_dir, 'pos')
     if path.exists(dep_model_dir):
         shutil.rmtree(dep_model_dir)
     if path.exists(ner_model_dir):
         shutil.rmtree(ner_model_dir)
+    if path.exists(pos_model_dir):
+        shutil.rmtree(pos_model_dir)
     os.mkdir(dep_model_dir)
     os.mkdir(ner_model_dir)
+    os.mkdir(pos_model_dir)
 
     Config.write(dep_model_dir, 'config', features=feat_set, seed=seed,
                  labels=ArcEager.get_labels(gold_tuples),
@@ -140,7 +144,9 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
         print('%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
                                                    scorer.tags_acc,
                                                    scorer.token_acc))
+    print('end training')
     nlp.end_training(model_dir)
+    print('done')
 
 def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False,
              beam_width=None):
