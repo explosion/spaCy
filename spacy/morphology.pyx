@@ -42,6 +42,7 @@ cdef class Morphology:
             analysis = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
             analysis.tag = self.rich_tags[tag_id]
             analysis.lemma = self.lemmatize(analysis.tag.pos, token.lex.orth)
+            self._cache.set(tag_id, token.lex.orth, analysis)
         token.lemma = analysis.lemma
         token.pos = analysis.tag.pos
         token.tag = analysis.tag.name
