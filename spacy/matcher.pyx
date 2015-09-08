@@ -54,8 +54,6 @@ cdef int match(const Pattern* pattern, const TokenC* token) except -1:
     cdef int i
     for i in range(pattern.length):
         if get_token_attr(token, pattern.spec[i].attr) != pattern.spec[i].value:
-            print "Pattern fail", pattern.spec[i].attr, pattern.spec[i].value
-            print get_token_attr(token, pattern.spec[i].attr)
             return False
     return True
 
@@ -82,7 +80,6 @@ def _convert_strings(token_specs, string_store):
             if isinstance(value, bool):
                 value = int(value)
             converted[-1].append((attr, value))
-            print "Converted", converted[-1]
     return converted
     
 
@@ -175,13 +172,11 @@ cdef class Matcher:
         cdef Pattern* state
         matches = []
         for token_i in range(doc.length):
-            print 'check', doc[token_i].orth_
             token = &doc.data[token_i]
             q = 0
             for i in range(partials.size()):
                 state = partials.at(i)
                 if match(state, token):
-                    print 'match!'
                     if is_final(state):
                         matches.append(get_entity(state, token, token_i))
                     else:
@@ -191,7 +186,6 @@ cdef class Matcher:
             for i in range(self.n_patterns):
                 state = self.patterns[i]
                 if match(state, token):
-                    print 'match!'
                     if is_final(state):
                         matches.append(get_entity(state, token, token_i))
                     else:
