@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 from libc.string cimport memset
 from libc.stdint cimport int32_t
+from libc.stdint cimport uint64_t
 
 import bz2
 from os import path
@@ -192,33 +193,56 @@ cdef class Vocab:
         for key, addr in self._by_hash.items():
             lexeme = <LexemeC*>addr
             fp.write_from(&lexeme.orth, sizeof(lexeme.orth), 1)
-            fp.write_from(lexeme, sizeof(LexemeC), 1)
+            fp.write_from(&lexeme.flags, sizeof(lexeme.flags), 1)
+            fp.write_from(&lexeme.id, sizeof(lexeme.flags), 1)
+            fp.write_from(&lexeme.length, sizeof(lexeme.length), 1)
+            fp.write_from(&lexeme.orth, sizeof(lexeme.orth), 1)
+            fp.write_from(&lexeme.lower, sizeof(lexeme.lower), 1)
+            fp.write_from(&lexeme.norm, sizeof(lexeme.norm), 1)
+            fp.write_from(&lexeme.shape, sizeof(lexeme.shape), 1)
+            fp.write_from(&lexeme.prefix, sizeof(lexeme.prefix), 1)
+            fp.write_from(&lexeme.suffix, sizeof(lexeme.suffix), 1)
+            fp.write_from(&lexeme.cluster, sizeof(lexeme.cluster), 1)
+            fp.write_from(&lexeme.prob, sizeof(lexeme.prob), 1)
+            fp.write_from(&lexeme.sentiment, sizeof(lexeme.sentiment), 1)
+            fp.write_from(&lexeme.l2_norm, sizeof(lexeme.l2_norm), 1)
         fp.close()
 
     def load_lexemes(self, strings_loc, loc):
         self.strings.load(strings_loc)
         if not path.exists(loc):
             raise IOError('LexemeCs file not found at %s' % loc)
-        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
-        cdef FILE* fp = fopen(<char*>bytes_loc, b'rb')
-        if fp == NULL:
-            raise IOError('lexemes data file present, but cannot open from ' % loc)
-        cdef size_t st
+        fp = CFile(loc, 'rb')
         cdef LexemeC* lexeme
         cdef attr_t orth
         cdef hash_t key
         cdef unicode py_str
+        cdef uint64_t bad_bytes
         i = 0
         while True:
-            st = fread(&orth, sizeof(orth), 1, fp)
-            if st != 1:
-                break
             lexeme = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
-            # Copies data from the file into the lexeme
-            st = fread(lexeme, sizeof(LexemeC), 1, fp)
-            lexeme.repvec = EMPTY_VEC
-            if st != 1:
+            try:
+                fp.read_into(&orth, 1, sizeof(orth))
+            except IOError:
                 break
+            # This 64 bit chunk is there for backwards compatibility. Remove on next release.
+            fp.read_into(&bad_bytes, 1, sizeof(bad_bytes))
+            # Copy data from the file into the lexeme
+            fp.read_into(&lexeme.flags, 1, sizeof(lexeme.flags))
+            fp.read_into(&lexeme.id, 1, sizeof(lexeme.id))
+            fp.read_into(&lexeme.length, 1, sizeof(lexeme.length))
+            fp.read_into(&lexeme.orth, 1, sizeof(lexeme.orth))
+            fp.read_into(&lexeme.lower, 1, sizeof(lexeme.lower))
+            fp.read_into(&lexeme.norm, 1, sizeof(lexeme.norm))
+            fp.read_into(&lexeme.shape, 1, sizeof(lexeme.shape))
+            fp.read_into(&lexeme.prefix, 1, sizeof(lexeme.prefix))
+            fp.read_into(&lexeme.suffix, 1, sizeof(lexeme.suffix))
+            fp.read_into(&lexeme.cluster, 1, sizeof(lexeme.cluster))
+            fp.read_into(&lexeme.prob, 1, sizeof(lexeme.prob))
+            fp.read_into(&lexeme.sentiment, 1, sizeof(lexeme.sentiment))
+            fp.read_into(&lexeme.l2_norm, 1, sizeof(lexeme.l2_norm))
+
+            lexeme.repvec = EMPTY_VEC
             if orth != lexeme.orth:
                 # TODO: Improve this error message, pending resolution to Issue #64
                 raise IOError('Error reading from lexemes.bin. Integrity check fails.')
@@ -228,7 +252,7 @@ cdef class Vocab:
             self._by_orth.set(lexeme.orth, lexeme)
             self.length += 1
             i += 1
-        fclose(fp)
+        fp.close()
 
     def load_rep_vectors(self, loc):
         cdef CFile file_ = CFile(loc, b'rb')
