@@ -112,7 +112,9 @@ cdef class Vocab:
 
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL:
         cdef hash_t key
-        cdef bint is_oov = mem is not self.mem
+        #cdef bint is_oov = mem is not self.mem
+        # TODO
+        is_oov = False
         mem = self.mem
         if len(string) < 3:
             mem = self.mem
@@ -197,7 +199,6 @@ cdef class Vocab:
         cdef hash_t key
         for key, addr in self._by_hash.items():
             lexeme = <LexemeC*>addr
-            fp.write_from(&lexeme.orth, sizeof(lexeme.orth), 1)
             fp.write_from(&lexeme.flags, sizeof(lexeme.flags), 1)
             fp.write_from(&lexeme.id, sizeof(lexeme.flags), 1)
             fp.write_from(&lexeme.length, sizeof(lexeme.length), 1)
@@ -219,17 +220,17 @@ cdef class Vocab:
             raise IOError('LexemeCs file not found at %s' % loc)
         fp = CFile(loc, 'rb')
         cdef LexemeC* lexeme
-        cdef attr_t orth
         cdef hash_t key
         cdef unicode py_str
+        cdef attr_t orth
         assert sizeof(orth) == sizeof(lexeme.orth)
         i = 0
         while True:
-            lexeme = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
             try:
                 fp.read_into(&orth, 1, sizeof(orth))
             except IOError:
                 break
+            lexeme = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
             # Copy data from the file into the lexeme
             fp.read_into(&lexeme.flags, 1, sizeof(lexeme.flags))
             fp.read_into(&lexeme.id, 1, sizeof(lexeme.id))
@@ -246,10 +247,8 @@ cdef class Vocab:
             fp.read_into(&lexeme.l2_norm, 1, sizeof(lexeme.l2_norm))
 
             lexeme.repvec = EMPTY_VEC
-            if orth != lexeme.orth:
-                # TODO: Improve this error message, pending resolution to Issue #64
-                raise IOError('Error reading from lexemes.bin. Integrity check fails.')
-            py_str = self.strings[orth]
+            py_str = self.strings[lexeme.orth]
+            assert py_str[-3:] == self.strings[lexeme.suffix], "%s (%d) suffix %s (%d)" % (repr(py_str), lexeme.orth, repr(self.strings[lexeme.suffix]), lexeme.suffix)
             key = hash_string(py_str)
             self._by_hash.set(key, lexeme)
             self._by_orth.set(lexeme.orth, lexeme)
