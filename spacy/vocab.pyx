@@ -222,7 +222,7 @@ cdef class Vocab:
         cdef attr_t orth
         cdef hash_t key
         cdef unicode py_str
-        cdef uint64_t bad_bytes
+        assert sizeof(orth) == sizeof(lexeme.orth)
         i = 0
         while True:
             lexeme = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
@@ -230,8 +230,6 @@ cdef class Vocab:
                 fp.read_into(&orth, 1, sizeof(orth))
             except IOError:
                 break
-            # This 64 bit chunk is there for backwards compatibility. Remove on next release.
-            fp.read_into(&bad_bytes, 1, sizeof(bad_bytes))
             # Copy data from the file into the lexeme
             fp.read_into(&lexeme.flags, 1, sizeof(lexeme.flags))
             fp.read_into(&lexeme.id, 1, sizeof(lexeme.id))
