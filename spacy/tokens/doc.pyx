@@ -67,6 +67,8 @@ cdef class Doc:
         cdef int i
         for i in range(size + (PADDING*2)):
             data_start[i].lex = &EMPTY_LEXEME
+            data_start[i].l_edge = i
+            data_start[i].r_edge = i
         self.data = data_start + PADDING
         self.max_length = size
         self.length = 0
@@ -219,6 +221,8 @@ cdef class Doc:
             t.idx = 0
         else:
             t.idx = (t-1).idx + (t-1).lex.length + (t-1).spacy
+        t.l_edge = self.length
+        t.r_edge = self.length
         assert t.lex.orth != 0
         t.spacy = has_space
         self.length += 1
@@ -310,6 +314,8 @@ cdef class Doc:
         self.is_parsed = True
         for i in range(self.length):
             self.data[i] = parsed[i]
+            assert self.data[i].l_edge <= i
+            assert self.data[i].r_edge >= i
 
     def from_array(self, attrs, array):
         cdef int i, col
