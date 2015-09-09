@@ -60,19 +60,19 @@ cdef class Lexeme:
         def __set__(self, int x): self.c.suffix = x
     
     property cluster:
-        def __get__(self): return self.c.suffix
-        def __set__(self, int x): self.c.suffix = x
+        def __get__(self): return self.c.cluster
+        def __set__(self, int x): self.c.cluster = x
  
     property prob:
-        def __get__(self): return self.c.suffix
-        def __set__(self, int x): self.c.suffix = x
+        def __get__(self): return self.c.prob
+        def __set__(self, float x): self.c.prob = x
 
     property lower_:
         def __get__(self): return self.vocab.strings[self.c.lower]
         def __set__(self, unicode x): self.c.lower = self.vocab.strings[x]
  
     property norm_:
-        def __get__(self): return self.c.norm
+        def __get__(self): return self.vocab.strings[self.c.norm]
         def __set__(self, unicode x): self.c.norm = self.vocab.strings[x]
     
     property shape_:
@@ -80,11 +80,11 @@ cdef class Lexeme:
         def __set__(self, unicode x): self.c.shape = self.vocab.strings[x]
 
     property prefix_:
-        def __get__(self): return self.c.prefix
+        def __get__(self): return self.vocab.strings[self.c.prefix]
         def __set__(self, unicode x): self.c.prefix = self.vocab.strings[x]
 
     property suffix_:
-        def __get__(self): return self.c.suffix
+        def __get__(self): return self.vocab.strings[self.c.suffix]
         def __set__(self, unicode x): self.c.suffix = self.vocab.strings[x]
 
     property flags:
