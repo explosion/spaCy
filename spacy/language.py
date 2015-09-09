@@ -1,4 +1,5 @@
 from os import path
+from warnings import warn
 
 try:
     import ujson as json
@@ -184,7 +185,10 @@ class Language(object):
             return None
 
     def __init__(self, data_dir=None, vocab=None, tokenizer=None, tagger=None,
-                 parser=None, entity=None, matcher=None, serializer=None):
+                 parser=None, entity=None, matcher=None, serializer=None,
+                 load_vectors=True):
+        if load_vectors is not True:
+            warn("load_vectors is deprecated", DeprecationWarning)
         if data_dir is None:
             data_dir = self.default_data_dir()
         if vocab is None:
