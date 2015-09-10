@@ -72,7 +72,8 @@ cdef class Lexeme:
     
     @staticmethod
     cdef inline bint check_flag(const LexemeC* lexeme, attr_id_t flag_id) nogil:
-        return lexeme.flags & (1 << flag_id)
+        cdef flags_t one = 1
+        return lexeme.flags & (one << flag_id)
 
     @staticmethod
     cdef inline bint set_flag(LexemeC* lex, attr_id_t flag_id, int value) nogil:
