@@ -402,7 +402,7 @@ cdef class Doc:
         cdef TokenC* token = &self.data[start]
         # Update fields
         token.lex = lex
-        token.spacy = self.data[end].spacy
+        token.spacy = self.data[end-1].spacy
         # What to do about morphology??
         # TODO: token.morph = ???
         token.tag = self.vocab.strings[tag]
