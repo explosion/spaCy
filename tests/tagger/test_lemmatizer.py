@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from spacy.en.lemmatizer import Lemmatizer, read_index, read_exc
+from spacy.lemmatizer import Lemmatizer, read_index, read_exc
 from spacy.en import LOCAL_DATA_DIR
 from os import path
 
@@ -23,7 +23,7 @@ def test_read_exc():
 
 @pytest.fixture
 def lemmatizer():
-    return Lemmatizer(path.join(LOCAL_DATA_DIR, 'wordnet'), 0, 0, 0)
+    return Lemmatizer.from_dir(path.join(LOCAL_DATA_DIR))
 
 
 def test_noun_lemmas(lemmatizer):

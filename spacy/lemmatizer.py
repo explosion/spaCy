@@ -16,9 +16,9 @@ class Lemmatizer(object):
         index = {}
         exc = {}
         for pos in ['adj', 'adv', 'noun', 'verb']:
-            index[pos] = read_index(path.join(data_dir, 'index.%s' % pos))
-            exc[pos] = read_exc(path.join(data_dir, '%s.exc' % pos))
-        rules = json.load(open(path.join(data_dir, 'lemma_rules.json')))
+            index[pos] = read_index(path.join(data_dir, 'wordnet', 'index.%s' % pos))
+            exc[pos] = read_exc(path.join(data_dir, 'wordnet', '%s.exc' % pos))
+        rules = json.load(open(path.join(data_dir, 'vocab', 'lemma_rules.json')))
         return cls(index, exc, rules)
 
     def __init__(self, index, exceptions, rules):
@@ -33,10 +33,8 @@ class Lemmatizer(object):
             pos = 'verb'
         elif pos == ADJ:
             pos = 'adj'
-        else:
-            return string
         lemmas = lemmatize(string, self.index[pos], self.exc[pos], self.rules.get(pos, []))
-        return min(lemmas)
+        return lemmas
 
     def noun(self, string):
         return self(string, 'noun')
