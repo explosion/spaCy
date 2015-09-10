@@ -34,7 +34,6 @@ cdef class Morphology:
             try:
                 tag_id = self.reverse_index[self.strings[tag]]
             except KeyError:
-                print tag
                 raise
         else:
             tag_id = tag
@@ -61,12 +60,16 @@ cdef class Morphology:
         cdef dict props
         cdef int lemma
         cdef attr_t orth
+        cdef attr_t tag_id
         cdef int pos
+        cdef RichTagC rich_tag
         for tag_str, entries in exc.items():
             tag = self.strings[tag_str]
-            rich_tag = self.rich_tags[self.reverse_index[tag]]
+            tag_id = self.reverse_index[tag] 
+            rich_tag = self.rich_tags[tag_id]
             for form_str, props in entries.items():
                 cached = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
+                cached.tag = rich_tag
                 orth = self.strings[form_str]
                 for name_str, value_str in props.items():
                     if name_str == 'L':
@@ -75,7 +78,7 @@ cdef class Morphology:
                         self.assign_feature(&cached.tag.morph, name_str, value_str)
                 if cached.lemma == 0:
                     cached.lemma = self.lemmatize(rich_tag.pos, orth)
-                self._cache.set(rich_tag.pos, orth, <void*>cached)
+                self._cache.set(tag_id, orth, <void*>cached)
 
     def lemmatize(self, const univ_pos_t pos, attr_t orth):
         if self.lemmatizer is None:
