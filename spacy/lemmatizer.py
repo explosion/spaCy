@@ -33,7 +33,7 @@ class Lemmatizer(object):
             pos = 'verb'
         elif pos == ADJ:
             pos = 'adj'
-        lemmas = lemmatize(string, self.index[pos], self.exc[pos], self.rules.get(pos, []))
+        lemmas = lemmatize(string, self.index.get(pos, {}), self.exc.get(pos, {}), self.rules.get(pos, []))
         return lemmas
 
     def noun(self, string):
