@@ -34,6 +34,7 @@ cdef class Vocab:
     cdef public object data_dir
     cdef public object get_lex_attr
     cdef public object pos_tags
+    cdef public object serializer_freqs
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL
     cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL
