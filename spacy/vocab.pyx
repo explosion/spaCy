@@ -199,8 +199,9 @@ cdef class Vocab:
         cdef hash_t key
         for key, addr in self._by_hash.items():
             lexeme = <LexemeC*>addr
+            fp.write_from(&lexeme.orth, sizeof(lexeme.orth), 1)
             fp.write_from(&lexeme.flags, sizeof(lexeme.flags), 1)
-            fp.write_from(&lexeme.id, sizeof(lexeme.flags), 1)
+            fp.write_from(&lexeme.id, sizeof(lexeme.id), 1)
             fp.write_from(&lexeme.length, sizeof(lexeme.length), 1)
             fp.write_from(&lexeme.orth, sizeof(lexeme.orth), 1)
             fp.write_from(&lexeme.lower, sizeof(lexeme.lower), 1)
