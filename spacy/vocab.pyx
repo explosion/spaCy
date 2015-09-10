@@ -38,19 +38,6 @@ EMPTY_LEXEME.repvec = EMPTY_VEC
 cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
-    def __init__(self, get_lex_attr=None, tag_map=None, vectors=None):
-        if tag_map is None:
-            tag_map = {}
-        self.mem = Pool()
-        self._by_hash = PreshMap()
-        self._by_orth = PreshMap()
-        self.strings = StringStore()
-        self.get_lex_attr = get_lex_attr
-        self.morphology = Morphology(self.strings, tag_map, Lemmatizer({}, {}, {}))
-        
-        self.length = 1
-        self._serializer = None
-
     @classmethod
     def from_dir(cls, data_dir, get_lex_attr=None, vectors=None):
         if not path.exists(data_dir):
@@ -59,13 +46,31 @@ cdef class Vocab:
             raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
 
         tag_map = json.load(open(path.join(data_dir, 'tag_map.json')))
-        cdef Vocab self = cls(get_lex_attr=get_lex_attr, vectors=vectors, tag_map=tag_map)
+        lemmatizer = Lemmatizer.from_dir(path.join(data_dir, '..'))
+
+        cdef Vocab self = cls(get_lex_attr=get_lex_attr, vectors=vectors, tag_map=tag_map,
+                              lemmatizer=lemmatizer)
 
         self.load_lexemes(path.join(data_dir, 'strings.txt'), path.join(data_dir, 'lexemes.bin'))
         if vectors is None and path.exists(path.join(data_dir, 'vec.bin')):
             self.repvec_length = self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
         return self
 
+    def __init__(self, get_lex_attr=None, tag_map=None, vectors=None, lemmatizer=None):
+        if tag_map is None:
+            tag_map = {}
+        if lemmatizer is None:
+            lemmatizer = Lemmatizer({}, {}, {})
+        self.mem = Pool()
+        self._by_hash = PreshMap()
+        self._by_orth = PreshMap()
+        self.strings = StringStore()
+        self.get_lex_attr = get_lex_attr
+        self.morphology = Morphology(self.strings, tag_map, lemmatizer)
+        
+        self.length = 1
+        self._serializer = None
+    
     property serializer:
         def __get__(self):
             if self._serializer is None:
