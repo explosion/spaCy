@@ -210,6 +210,10 @@ def main(lang_id, lang_data_dir, corpora_dir, model_dir):
         copyfile(str(lang_data_dir / 'gazetteer.json'),
                  str(model_dir / 'vocab' / 'gazetteer.json'))
 
+    if (lang_data_dir / 'tag_map.json').exists():
+        copyfile(str(lang_data_dir / 'tag_map.json'),
+                 str(model_dir / 'vocab' / 'tag_map.json'))
+
     if (lang_data_dir / 'lemma_rules.json').exists():
         copyfile(str(lang_data_dir / 'lemma_rules.json'),
                  str(model_dir / 'vocab' / 'lemma_rules.json'))
