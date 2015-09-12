@@ -21,7 +21,7 @@ install:
   - "mv WordNet-3.0 wordnet"
   - "cd ../../"
   - "export PYTHONPATH=`pwd`"
-  - "python bin/init_model.py lang_data/en corpora/en spacy/en/data"
+  - "python bin/init_model.py en lang_data/ corpora/ spacy/en/data"
 
 # run tests
 script:
