@@ -50,7 +50,7 @@ cdef class Vocab:
         if path.exists(path.join(data_dir, 'serializer.json')):
             serializer_freqs = json.load(open(path.join(data_dir, 'serializer.json')))
         else:
-            serialize_feqs=None
+            serializer_freqs = None
         cdef Vocab self = cls(get_lex_attr=get_lex_attr, vectors=vectors, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)
 
