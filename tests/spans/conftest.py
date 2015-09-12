@@ -6,4 +6,4 @@ import os
 @pytest.fixture(scope="session")
 def en_nlp():
     data_dir = os.environ.get('SPACY_DATA', LOCAL_DATA_DIR)
-    return English(load_vectors=False, data_dir=data_dir)
+    return English(data_dir=data_dir)
