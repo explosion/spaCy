@@ -104,22 +104,3 @@ def test_vocab(EN):
         leaf = codec.leaves[i]
         expected_length += len(code) * numpy.exp(EN.vocab[leaf].prob)
     assert 8 < expected_length < 15
-
-
-@pytest.mark.slow
-def test_freqs():
-    freqs = []
-    words = []
-    for i, line in enumerate(open('freqs.txt')):
-        pieces = line.strip().split()
-        if len(pieces) != 2:
-           continue
-        freq, word = pieces
-        freqs.append(int(freq))
-        words.append(word)
-    total = float(sum(freqs))
-    codec = HuffmanCodec(zip(words, freqs))
-    expected_length = 0
-    for i, code in enumerate(codec.strings):
-        expected_length += len(code) * (freqs[i] / total)
-    assert 8 < expected_length < 14
