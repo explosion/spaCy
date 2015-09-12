@@ -52,7 +52,7 @@ def prebuild(build_dir='/tmp/build_spacy'):
             local('fab clean make')
             local('cp -r %s/corpora/en/wordnet corpora/en/' % spacy_dir)
             local('cp %s/corpora/en/freqs.txt.gz corpora/en/' % spacy_dir)
-            local('PYTHONPATH=`pwd` python bin/init_model.py lang_data/en corpora/en spacy/en/data')
+            local('PYTHONPATH=`pwd` python bin/init_model.py en lang_data corpora spacy/en/data')
             local('fab test')
             local('python setup.py sdist')
 
