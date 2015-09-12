@@ -11,7 +11,7 @@ data_dir = os.environ.get('SPACY_DATA', LOCAL_DATA_DIR)
 
 @pytest.mark.models
 def get_orphan_token(text, i):
-    nlp = English(load_vectors=False, data_dir=data_dir)
+    nlp = English(data_dir=data_dir)
     tokens = nlp(text)
     gc.collect()
     token = tokens[i]
@@ -41,7 +41,7 @@ def _orphan_from_list(toks):
 @pytest.mark.models
 def test_list_orphans():
     # Test case from NSchrading
-    nlp = English(load_vectors=False, data_dir=data_dir)
+    nlp = English(data_dir=data_dir)
     samples = ["a", "test blah wat okay"]
     lst = []
     for sample in samples:
