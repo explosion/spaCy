@@ -16,7 +16,7 @@ def morph_exc():
 def test_load_exc(morph_exc):
     # Do this local as we want to modify it
     nlp =  English()
-    nlp.tagger.load_morph_exceptions(morph_exc)
+    nlp.vocab.morphology.load_morph_exceptions(morph_exc)
     tokens = nlp('I like his style.', tag=True, parse=False)
     his = tokens[2]
     assert his.tag_ == 'PRP$'
