@@ -15,7 +15,7 @@ class Lemmatizer(object):
     def from_dir(cls, data_dir):
         index = {}
         exc = {}
-        for pos in ['adj', 'adv', 'noun', 'verb']:
+        for pos in ['adj', 'noun', 'verb']:
             index[pos] = read_index(path.join(data_dir, 'wordnet', 'index.%s' % pos))
             exc[pos] = read_exc(path.join(data_dir, 'wordnet', '%s.exc' % pos))
         rules = json.load(open(path.join(data_dir, 'vocab', 'lemma_rules.json')))
