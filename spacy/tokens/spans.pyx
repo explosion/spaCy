@@ -52,6 +52,14 @@ cdef class Span:
     def merge(self, unicode tag, unicode lemma, unicode ent_type):
         self._seq.merge(self[0].idx, self[-1].idx + len(self[-1]), tag, lemma, ent_type)
 
+    property text:
+        def __get__(self):
+            return u' '.join([t.text for t in self])
+
+    property text_with_ws:
+        def __get__(self):
+            return u''.join([t.text_with_ws for t in self])
+
     property root:
         """The first ancestor of the first word of the span that has its head
         outside the span.

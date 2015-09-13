@@ -122,6 +122,14 @@ cdef class Doc:
     def string(self):
         return u''.join([t.string for t in self])
 
+    @property
+    def text_wth_ws(self):
+        return u''.join([t.text_with_ws for t in self])
+
+    @property
+    def text(self):
+        return u' '.join(t.text for t in self)
+
     property ents:
         def __get__(self):
             """Yields named-entity Span objects.
