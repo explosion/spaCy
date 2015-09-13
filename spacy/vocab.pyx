@@ -255,7 +255,6 @@ cdef class Vocab:
 
             lexeme.repvec = EMPTY_VEC
             py_str = self.strings[lexeme.orth]
-            assert py_str[-3:] == self.strings[lexeme.suffix], "%s (%d) suffix %s (%d)" % (repr(py_str), lexeme.orth, repr(self.strings[lexeme.suffix]), lexeme.suffix)
             key = hash_string(py_str)
             self._by_hash.set(key, lexeme)
             self._by_orth.set(lexeme.orth, lexeme)
