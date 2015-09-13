@@ -18,7 +18,10 @@ class Lemmatizer(object):
         for pos in ['adj', 'noun', 'verb']:
             index[pos] = read_index(path.join(data_dir, 'wordnet', 'index.%s' % pos))
             exc[pos] = read_exc(path.join(data_dir, 'wordnet', '%s.exc' % pos))
-        rules = json.load(open(path.join(data_dir, 'vocab', 'lemma_rules.json')))
+        if path.exists(path.join(data_dir, 'vocab', 'lemma_rules.json')):
+            rules = json.load(open(path.join(data_dir, 'vocab', 'lemma_rules.json')))
+        else:
+            rules = {}
         return cls(index, exc, rules)
 
     def __init__(self, index, exceptions, rules):
@@ -64,6 +67,8 @@ def lemmatize(string, index, exceptions, rules):
 
 def read_index(loc):
     index = set()
+    if not path.exists(loc):
+        return index
     for line in codecs.open(loc, 'r', 'utf8'):
         if line.startswith(' '):
             continue
@@ -76,6 +81,8 @@ def read_index(loc):
 
 def read_exc(loc):
     exceptions = {}
+    if not path.exists(loc):
+        return exceptions
     for line in codecs.open(loc, 'r', 'utf8'):
         if line.startswith(' '):
             continue
