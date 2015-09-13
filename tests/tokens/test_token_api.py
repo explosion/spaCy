@@ -12,6 +12,8 @@ def test_strings(EN):
     tokens = EN(u'Give it back! He pleaded.')
     token = tokens[0]
     assert token.orth_ == 'Give'
+    assert token.text == 'Give'
+    assert token.text_with_ws == 'Give '
     assert token.lower_ == 'give'
     assert token.shape_ == 'Xxxx'
     assert token.prefix_ == 'G'
@@ -33,7 +35,7 @@ def test_flags(EN):
 
 def test_single_token_string(EN):
     tokens = EN(u'foobar')
-    assert tokens[0].string == 'foobar'
+    assert tokens[0].text == 'foobar'
 
 
 def test_is_properties(EN):
