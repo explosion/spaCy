@@ -1,5 +1,8 @@
 from __future__ import unicode_literals
 from collections import defaultdict
+import numpy
+import numpy.linalg
+cimport numpy as np
 
 from ..structs cimport TokenC, LexemeC
 from ..typedefs cimport flags_t, attr_t
@@ -51,6 +54,17 @@ cdef class Span:
 
     def merge(self, unicode tag, unicode lemma, unicode ent_type):
         self._seq.merge(self[0].idx, self[-1].idx + len(self[-1]), tag, lemma, ent_type)
+
+    def similarity(self, other):
+        return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+
+    property vector:
+        def __get__(self):
+            return sum(t.vector for t in self if not t.is_stop) / len(self)
+
+    property vector_norm:
+        def __get__(self):
+            return numpy.linalg.norm(self.vector)
 
     property text:
         def __get__(self):

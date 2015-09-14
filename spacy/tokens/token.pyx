@@ -49,6 +49,9 @@ cdef class Token:
     def nbor(self, int i=1):
         return self.doc[self.i+i]
 
+    def similarity(self, other):
+        return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+
     property lex_id:
         def __get__(self):
             return self.c.lex.id
@@ -125,11 +128,19 @@ cdef class Token:
         def __get__(self):
             return self.c.dep
 
-    property repvec:
+    property vector:
         def __get__(self):
             cdef int length = self.vocab.repvec_length
             repvec_view = <float[:length,]>self.c.lex.repvec
             return numpy.asarray(repvec_view)
+
+    property repvec:
+        def __get__(self):
+            return self.vector
+
+    property vector_norm:
+        def __get__(self):
+            return self.c.lex.l2_norm
 
     property n_lefts:
         def __get__(self):
@@ -301,6 +312,9 @@ cdef class Token:
 
     property is_oov:
         def __get__(self): return Lexeme.check_flag(self.c.lex, IS_OOV)
+
+    property is_stop:
+        def __get__(self): return Lexeme.check_flag(self.c.lex, IS_STOP)
 
     property is_alpha:
         def __get__(self): return Lexeme.check_flag(self.c.lex, IS_ALPHA)
