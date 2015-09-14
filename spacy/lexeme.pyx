@@ -122,6 +122,10 @@ cdef class Lexeme:
         def __get__(self): return Lexeme.check_flag(self.c, IS_OOV)
         def __set__(self, bint x): Lexeme.set_flag(self.c, IS_OOV, x)
 
+    property is_stop:
+        def __get__(self): return Lexeme.check_flag(self.c, IS_STOP)
+        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_STOP, x)
+
     property is_alpha:
         def __get__(self): return Lexeme.check_flag(self.c, IS_ALPHA)
         def __set__(self, bint x): Lexeme.set_flag(self.c, IS_ALPHA, x)
