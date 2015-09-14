@@ -94,6 +94,10 @@ class Language(object):
     def like_email(string):
         return orth.like_email(string)
 
+    @staticmethod
+    def is_stop(string):
+        return 0
+
     @classmethod
     def default_lex_attrs(cls, data_dir=None):
         return {
@@ -116,7 +120,7 @@ class Language(object):
             attrs.LIKE_URL: cls.like_url,
             attrs.LIKE_NUM: cls.like_number,
             attrs.LIKE_EMAIL: cls.like_email,
-            attrs.IS_STOP: lambda string: False,
+            attrs.IS_STOP: cls.is_stop,
             attrs.IS_OOV: lambda string: True
         }
 
