@@ -31,10 +31,10 @@ def test_pp(EN):
 @pytest.mark.models
 def test_merge_pp(EN):
     sent = EN(u'A phrase with another phrase occurs')
-    nps = [(np[0].idx, np[-1].idx + len(np[-1]), np[0].ent_type_) for np in sent.noun_chunks]
+    nps = [(np[0].idx, np[-1].idx + len(np[-1]), np.lemma_, np[0].ent_type_) for np in sent.noun_chunks]
 
-    for start, end, ent_type in nps:
-        sent.merge(start, end, u'NP', np.lemma_, ent_type)
+    for start, end, lemma, ent_type in nps:
+        sent.merge(start, end, u'NP', lemma, ent_type)
     assert sent[0].string == 'A phrase '
     assert sent[1].string == 'with '
     assert sent[2].string == 'another phrase '
