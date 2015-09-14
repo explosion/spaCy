@@ -3,6 +3,13 @@ from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
 
+# Compiler crashes on memory view coercion without this. Should report bug.
+from cython.view cimport array as cvarray
+cimport numpy as np
+np.import_array()
+
+
+
 from libc.string cimport memset
 
 from .orth cimport word_shape
@@ -35,6 +42,26 @@ cdef class Lexeme:
     def py_check_flag(self, attr_id_t flag_id):
         return True if Lexeme.check_flag(self.c, flag_id) else False
 
+    def similarity(self, other):
+        return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+
+    property vector_norm:
+        def __get__(self):
+            return self.c.l2_norm
+
+        def __set__(self, float value):
+            self.c.l2_norm = value
+
+    property vector:
+        def __get__(self):
+            cdef int length = self.vocab.repvec_length
+            repvec_view = <float[:length,]>self.c.repvec
+            return numpy.asarray(repvec_view)
+
+    property repvec:
+        def __get__(self):
+            return self.vector
+        
     property orth_:
         def __get__(self):
             return self.vocab.strings[self.c.orth]

@@ -3,7 +3,9 @@ from libc.string cimport memcpy, memset
 from libc.stdint cimport uint32_t
 
 import numpy
+import numpy.linalg
 import struct
+cimport numpy as np
 
 from ..lexeme cimport Lexeme
 from ..lexeme cimport EMPTY_LEXEME
@@ -117,6 +119,22 @@ cdef class Doc:
 
     def __str__(self):
         return u''.join([t.string for t in self])
+
+    def similarity(self, other):
+        return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+
+    property repvec:
+        def __get__(self):
+            return self.vector
+
+    property vector:
+        def __get__(self):
+            return sum(t.vector for t in self if not t.is_stop) / len(self)
+
+
+    property vector_norm:
+        def __get__(self):
+            return numpy.linalg.norm(self.vector)
 
     @property
     def string(self):
