@@ -137,21 +137,14 @@ class Language(object):
         return path.join(path.dirname(__file__), 'data')
 
     @classmethod
-    def default_vectors(cls, data_dir):
-        return None
-
-    @classmethod
-    def default_vocab(cls, data_dir=None, get_lex_attr=None, vectors=None):
+    def default_vocab(cls, data_dir=None, get_lex_attr=None):
         if data_dir is None:
             data_dir = cls.default_data_dir()
-        if vectors is None:
-            vectors = cls.default_vectors(data_dir)
         if get_lex_attr is None:
             get_lex_attr = cls.default_lex_attrs(data_dir)
         return Vocab.from_dir(
                 path.join(data_dir, 'vocab'),
-                get_lex_attr=get_lex_attr,
-                vectors=vectors)
+                get_lex_attr=get_lex_attr)
 
     @classmethod
     def default_tokenizer(cls, vocab, data_dir):
@@ -214,7 +207,7 @@ class Language(object):
         self.entity = entity
         self.matcher = matcher
 
-    def __call__(self, text, tag=True, parse=True, entity=True, merge_mwes=False):
+    def __call__(self, text, tag=True, parse=True, entity=True):
         """Apply the pipeline to some text.  The text can span multiple sentences,
         and can contain arbtrary whitespace.  Alignment into the original string
         is preserved.

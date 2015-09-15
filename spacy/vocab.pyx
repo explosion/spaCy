@@ -56,11 +56,10 @@ cdef class Vocab:
 
         self.load_lexemes(path.join(data_dir, 'strings.txt'), path.join(data_dir, 'lexemes.bin'))
         if vectors is None and path.exists(path.join(data_dir, 'vec.bin')):
-            self.repvec_length = self.load_rep_vectors(path.join(data_dir, 'vec.bin'))
+            self.vectors_length = self.load_vectors(path.join(data_dir, 'vec.bin'))
         return self
 
-    def __init__(self, get_lex_attr=None, tag_map=None, vectors=None, lemmatizer=None,
-                 serializer_freqs=None):
+    def __init__(self, get_lex_attr=None, tag_map=None, lemmatizer=None, serializer_freqs=None):
         if tag_map is None:
             tag_map = {}
         if lemmatizer is None:
@@ -262,7 +261,7 @@ cdef class Vocab:
             i += 1
         fp.close()
 
-    def load_rep_vectors(self, loc):
+    def load_vectors(self, loc):
         cdef CFile file_ = CFile(loc, b'rb')
         cdef int32_t word_len
         cdef int32_t vec_len
