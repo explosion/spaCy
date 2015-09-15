@@ -39,7 +39,7 @@ cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
     @classmethod
-    def from_dir(cls, data_dir, get_lex_attr=None, vectors=None):
+    def from_dir(cls, data_dir, get_lex_attr=None):
         if not path.exists(data_dir):
             raise IOError("Directory %s not found -- cannot load Vocab." % data_dir)
         if not path.isdir(data_dir):
@@ -51,11 +51,11 @@ cdef class Vocab:
             serializer_freqs = json.load(open(path.join(data_dir, 'serializer.json')))
         else:
             serializer_freqs = None
-        cdef Vocab self = cls(get_lex_attr=get_lex_attr, vectors=vectors, tag_map=tag_map,
+        cdef Vocab self = cls(get_lex_attr=get_lex_attr, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)
 
         self.load_lexemes(path.join(data_dir, 'strings.txt'), path.join(data_dir, 'lexemes.bin'))
-        if vectors is None and path.exists(path.join(data_dir, 'vec.bin')):
+        if path.exists(path.join(data_dir, 'vec.bin')):
             self.vectors_length = self.load_vectors(path.join(data_dir, 'vec.bin'))
         return self
 
