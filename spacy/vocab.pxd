@@ -46,4 +46,4 @@ cdef class Vocab:
 
     cdef PreshMap _by_hash
     cdef PreshMap _by_orth
-    cdef readonly int repvec_length
+    cdef readonly int vectors_length
