@@ -5,7 +5,7 @@ from .parts_of_speech cimport univ_pos_t
 
 
 cdef struct LexemeC:
-    const float* repvec
+    float* repvec
 
     flags_t flags
 
