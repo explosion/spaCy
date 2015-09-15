@@ -36,11 +36,11 @@ cdef class Lexeme:
         self.c = <LexemeC*><void*>vocab.get_by_orth(vocab.mem, orth)
         assert self.c.orth == orth
 
-    def py_set_flag(self, attr_id_t flag_id):
-        Lexeme.set_flag(self.c, flag_id, True)
+    def set_flag(self, attr_id_t flag_id, bint value):
+        Lexeme.c_set_flag(self.c, flag_id, value)
     
-    def py_check_flag(self, attr_id_t flag_id):
-        return True if Lexeme.check_flag(self.c, flag_id) else False
+    def check_flag(self, attr_id_t flag_id):
+        return True if Lexeme.c_check_flag(self.c, flag_id) else False
 
     def similarity(self, other):
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
@@ -119,49 +119,49 @@ cdef class Lexeme:
         def __set__(self, flags_t x): self.c.flags = x
 
     property is_oov:
-        def __get__(self): return Lexeme.check_flag(self.c, IS_OOV)
-        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_OOV, x)
+        def __get__(self): return Lexeme.c_check_flag(self.c, IS_OOV)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_OOV, x)
 
     property is_stop:
-        def __get__(self): return Lexeme.check_flag(self.c, IS_STOP)
-        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_STOP, x)
+        def __get__(self): return Lexeme.c_check_flag(self.c, IS_STOP)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_STOP, x)
 
     property is_alpha:
-        def __get__(self): return Lexeme.check_flag(self.c, IS_ALPHA)
-        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_ALPHA, x)
+        def __get__(self): return Lexeme.c_check_flag(self.c, IS_ALPHA)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_ALPHA, x)
     
     property is_ascii:
-        def __get__(self): return Lexeme.check_flag(self.c, IS_ASCII)
-        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_ASCII, x)
+        def __get__(self): return Lexeme.c_check_flag(self.c, IS_ASCII)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_ASCII, x)
 
     property is_digit:
-        def __get__(self): return Lexeme.check_flag(self.c, IS_DIGIT)
-        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_DIGIT, x)
+        def __get__(self): return Lexeme.c_check_flag(self.c, IS_DIGIT)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_DIGIT, x)
 
     property is_lower:
-        def __get__(self): return Lexeme.check_flag(self.c, IS_LOWER)
-        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_LOWER, x)
+        def __get__(self): return Lexeme.c_check_flag(self.c, IS_LOWER)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_LOWER, x)
 
     property is_title:
-        def __get__(self): return Lexeme.check_flag(self.c, IS_TITLE)
-        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_TITLE, x)
+        def __get__(self): return Lexeme.c_check_flag(self.c, IS_TITLE)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_TITLE, x)
 
     property is_punct:
-        def __get__(self): return Lexeme.check_flag(self.c, IS_PUNCT)
-        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_PUNCT, x)
+        def __get__(self): return Lexeme.c_check_flag(self.c, IS_PUNCT)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_PUNCT, x)
 
     property is_space: 
-        def __get__(self): return Lexeme.check_flag(self.c, IS_SPACE)
-        def __set__(self, bint x): Lexeme.set_flag(self.c, IS_SPACE, x)
+        def __get__(self): return Lexeme.c_check_flag(self.c, IS_SPACE)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_SPACE, x)
 
     property like_url:
-        def __get__(self): return Lexeme.check_flag(self.c, LIKE_URL)
-        def __set__(self, bint x): Lexeme.set_flag(self.c, LIKE_URL, x)
+        def __get__(self): return Lexeme.c_check_flag(self.c, LIKE_URL)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, LIKE_URL, x)
     
     property like_num:
-        def __get__(self): return Lexeme.check_flag(self.c, LIKE_NUM)
-        def __set__(self, bint x): Lexeme.set_flag(self.c, LIKE_NUM, x)
+        def __get__(self): return Lexeme.c_check_flag(self.c, LIKE_NUM)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, LIKE_NUM, x)
 
     property like_email:
-        def __get__(self): return Lexeme.check_flag(self.c, LIKE_EMAIL)
-        def __set__(self, bint x): Lexeme.set_flag(self.c, LIKE_EMAIL, x)
+        def __get__(self): return Lexeme.c_check_flag(self.c, LIKE_EMAIL)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, LIKE_EMAIL, x)
