@@ -54,12 +54,12 @@ cdef class Lexeme:
 
     property vector:
         def __get__(self):
-            cdef int length = self.vocab.vector_length
+            cdef int length = self.vocab.vectors_length
             repvec_view = <float[:length,]>self.c.repvec
             return numpy.asarray(repvec_view)
 
         def __set__(self, vector):
-            assert len(vector) == self.vocab.vector_length
+            assert len(vector) == self.vocab.vectors_length
             cdef float value
             for i, value in enumerate(vector):
                 self.c.repvec[i] = value
