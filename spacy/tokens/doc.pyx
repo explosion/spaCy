@@ -88,6 +88,10 @@ cdef class Doc:
             if i.step is not None:
                 raise ValueError("Stepped slices not supported in Span objects."
                                  "Try: list(doc)[start:stop:step] instead.")
+            if i.start is None:
+                i.start = 0
+            if i.stop is None:
+                i.stop = len(self)
             return Span(self, i.start, i.stop, label=0)
 
         if i < 0:
