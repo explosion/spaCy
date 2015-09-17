@@ -23,6 +23,9 @@ cdef class Doc:
     cdef readonly Pool mem
     cdef readonly Vocab vocab
 
+    cdef public object _vector
+    cdef public object _vector_norm
+
     cdef TokenC* data
 
     cdef public bint is_tagged

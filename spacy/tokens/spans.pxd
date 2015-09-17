@@ -7,3 +7,6 @@ cdef class Span:
     cdef public int start
     cdef public int end
     cdef readonly int label
+
+    cdef public _vector
+    cdef public _vector_norm

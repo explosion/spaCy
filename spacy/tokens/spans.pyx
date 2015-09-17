@@ -3,6 +3,7 @@ from collections import defaultdict
 import numpy
 import numpy.linalg
 cimport numpy as np
+import math
 
 from ..structs cimport TokenC, LexemeC
 from ..typedefs cimport flags_t, attr_t
@@ -21,6 +22,8 @@ cdef class Span:
         self.start = start
         self.end = end
         self.label = label
+        self._vector = None
+        self._vector_norm = None
 
     def __richcmp__(self, Span other, int op):
         # Eq
@@ -60,15 +63,32 @@ cdef class Span:
 
     property vector:
         def __get__(self):
-            return sum(t.vector for t in self if not t.is_stop) / len(self)
+            if self._vector is None:
+                self._vector = sum(t.vector for t in self) / len(self)
+            return self._vector
+
+        def __set__(self, value):
+            self._vector = value
 
     property vector_norm:
         def __get__(self):
-            return numpy.linalg.norm(self.vector)
+            cdef float value
+            if self._vector_norm is None:
+                self._vector_norm = 1e-20
+                for value in self.vector:
+                    self._vector_norm += value * value
+                self._vector_norm = math.sqrt(self._vector_norm)
+            return self._vector_norm
+    
+        def __set__(self, value):
+            self._vector_norm = value
 
     property text:
         def __get__(self):
-            return u' '.join([t.text for t in self])
+            text = self.text_with_ws
+            if self[-1].whitespace_:
+                text = text[:-1]
+            return text
 
     property text_with_ws:
         def __get__(self):

@@ -6,6 +6,7 @@ import numpy
 import numpy.linalg
 import struct
 cimport numpy as np
+import math
 
 from ..lexeme cimport Lexeme
 from ..lexeme cimport EMPTY_LEXEME
@@ -77,6 +78,7 @@ cdef class Doc:
         self.is_tagged = False
         self.is_parsed = False
         self._py_tokens = []
+        self._vector = None
 
     def __getitem__(self, object i):
         """Get a token.
@@ -133,12 +135,25 @@ cdef class Doc:
 
     property vector:
         def __get__(self):
-            return sum(t.vector for t in self if not t.is_stop) / len(self)
+            if self._vector is None:
+                self._vector = sum(t.vector for t in self) / len(self)
+            return self._vector
 
+        def __set__(self, value):
+            self._vector = value
 
     property vector_norm:
         def __get__(self):
-            return numpy.linalg.norm(self.vector)
+            cdef float value
+            if self._vector_norm is None:
+                self._vector_norm = 1e-20
+                for value in self.vector:
+                    self._vector_norm += value * value
+                self._vector_norm = math.sqrt(self._vector_norm)
+            return self._vector_norm
+        
+        def __set__(self, value):
+            self._vector_norm = value 
 
     @property
     def string(self):
@@ -304,15 +319,14 @@ cdef class Doc:
         cdef size_t count
         
         if counts is None:
-            counts = PreshCounter(self.length)
+            counts = PreshCounter()
             output_dict = True
         else:
             output_dict = False
         # Take this check out of the loop, for a bit of extra speed
         if exclude is None:
             for i in range(self.length):
-                attr = get_token_attr(&self.data[i], attr_id)
-                counts.inc(attr, 1)
+                counts.inc(get_token_attr(&self.data[i], attr_id), 1)
         else:
             for i in range(self.length):
                 if not exclude(self[i]):
