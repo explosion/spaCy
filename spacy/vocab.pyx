@@ -262,6 +262,26 @@ cdef class Vocab:
         fp.close()
 
     def load_vectors(self, loc):
+        if loc.endswith('bz2'):
+            self.load_vectors_bz2(loc)
+        else:
+            self.load_vectors_bin(loc)
+
+    def load_vectors_bz2(self, loc):
+        cdef LexemeC* lexeme
+        cdef attr_t orth
+        with bz2.BZ2File(loc, 'r') as file_:
+            for line in file_:
+                pieces = line.split()
+                word_str = pieces.pop(0)
+                orth = self.strings[word_str]
+                lexeme = <LexemeC*><void*>self.get_by_orth(self.mem, orth)
+                lexeme.repvec = <float*>self.mem.alloc(len(pieces), sizeof(float))
+
+                for i, val_str in enumerate(pieces):
+                    lexeme.repvec[i] = float(val_str)
+
+    def load_vectors_bin(self, loc):
         cdef CFile file_ = CFile(loc, b'rb')
         cdef int32_t word_len
         cdef int32_t vec_len
