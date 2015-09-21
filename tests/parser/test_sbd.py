@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import pytest
 
 
+@pytest.mark.models
 def test_single_period(EN):
     string = 'A test sentence.'
     words = EN(string)
@@ -11,6 +12,7 @@ def test_single_period(EN):
     assert sum(len(sent) for sent in words.sents) == len(words)
 
 
+@pytest.mark.models
 def test_single_no_period(EN):
     string = 'A test sentence'
     words = EN(string)
@@ -19,6 +21,7 @@ def test_single_no_period(EN):
     assert sum(len(sent) for sent in words.sents) == len(words)
 
 
+@pytest.mark.models
 def test_single_exclamation(EN):
     string = 'A test sentence!'
     words = EN(string)
@@ -27,6 +30,7 @@ def test_single_exclamation(EN):
     assert sum(len(sent) for sent in words.sents) == len(words)
 
 
+@pytest.mark.models
 def test_single_question(EN):
     string = 'A test sentence?'
     words = EN(string, tag=False, parse=False)
