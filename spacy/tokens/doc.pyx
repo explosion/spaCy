@@ -232,6 +232,13 @@ cdef class Doc:
     @property
     def noun_chunks(self):
         """Yield spans for base noun phrases."""
+        if not self.is_parsed:
+            raise ValueError(
+                "noun_chunks requires the dependency parse, which "
+                "requires data to be installed. If you haven't done so, run: "
+                "\npython -m spacy.en.download all\n"
+                "to install the data")
+ 
         cdef const TokenC* word
         labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj', 'attr', 'conj']
         np_deps = [self.vocab.strings[label] for label in labels]
@@ -246,6 +253,12 @@ cdef class Doc:
         """
         Yield a list of sentence Span objects, calculated from the dependency parse.
         """
+        if not self.is_parsed:
+            raise ValueError(
+                "sentence boundary detection requires the dependency parse, which "
+                "requires data to be installed. If you haven't done so, run: "
+                "\npython -m spacy.en.download all\n"
+                "to install the data")
         cdef int i
         start = 0
         for i in range(1, self.length):

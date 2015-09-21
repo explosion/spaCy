@@ -131,6 +131,13 @@ cdef class Token:
     property vector:
         def __get__(self):
             cdef int length = self.vocab.vectors_length
+            if length == 0:
+                raise ValueError(
+                    "Word vectors set to length 0. This may be because the "
+                    "data is not installed. If you haven't already, run"
+                    "\npython -m spacy.en.download all\n"
+                    "to install the data."
+                )
             repvec_view = <float[:length,]>self.c.lex.repvec
             return numpy.asarray(repvec_view)
 
