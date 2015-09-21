@@ -128,6 +128,10 @@ cdef class Token:
         def __get__(self):
             return self.c.dep
 
+    property has_vector:
+        def __get__(self):
+            return sum(abs(self.c.lex.repvec)) != 0
+
     property vector:
         def __get__(self):
             cdef int length = self.vocab.vectors_length

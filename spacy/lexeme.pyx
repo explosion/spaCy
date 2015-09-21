@@ -45,6 +45,10 @@ cdef class Lexeme:
     def similarity(self, other):
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
+    property has_vector:
+        def __get__(self):
+            return sum(abs(self.c.repvec)) != 0
+
     property vector_norm:
         def __get__(self):
             return self.c.l2_norm
