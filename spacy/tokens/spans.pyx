@@ -13,7 +13,8 @@ from ..parts_of_speech cimport univ_pos_t
 
 cdef class Span:
     """A slice from a Doc object."""
-    def __cinit__(self, Doc tokens, int start, int end, int label=0):
+    def __cinit__(self, Doc tokens, int start, int end, int label=0, vector=None,
+                  vector_norm=None):
         if start < 0:
             start = tokens.length - start
         if end < 0:
@@ -22,8 +23,8 @@ cdef class Span:
         self.start = start
         self.end = end
         self.label = label
-        self._vector = None
-        self._vector_norm = None
+        self._vector = vector
+        self._vector_norm = vector_norm
 
     def __richcmp__(self, Span other, int op):
         # Eq
@@ -67,9 +68,6 @@ cdef class Span:
                 self._vector = sum(t.vector for t in self) / len(self)
             return self._vector
 
-        def __set__(self, value):
-            self._vector = value
-
     property vector_norm:
         def __get__(self):
             cdef float value
@@ -79,9 +77,6 @@ cdef class Span:
                     self._vector_norm += value * value
                 self._vector_norm = math.sqrt(self._vector_norm)
             return self._vector_norm
-    
-        def __set__(self, value):
-            self._vector_norm = value
 
     property text:
         def __get__(self):
