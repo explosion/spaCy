@@ -130,7 +130,7 @@ cdef class Token:
 
     property vector:
         def __get__(self):
-            cdef int length = self.vocab.repvec_length
+            cdef int length = self.vocab.vectors_length
             repvec_view = <float[:length,]>self.c.lex.repvec
             return numpy.asarray(repvec_view)
 
