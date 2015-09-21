@@ -1,0 +1,344 @@
+.\" $Id$
+.tr ~
+.TH PROLOGDB 5WN "Dec 2006" "WordNet 3.0" "WordNet\(tm File Formats"
+.SH NAME
+wn_\*.pl \- description of Prolog database files
+.SH DESCRIPTION
+The files \fBwn_\fP\fI*\fP\fB.pl\fP contain the WordNet database in a
+prolog-readable format.  A prolog interface to WordNet is not
+implemented.
+
+The prolog database is very large and may take many minutes to load
+into the Prolog workspace.  A separate file has been created for each
+WordNet relation giving the user the ability to load only those parts
+of the database that they are interested.
+
+See \fBFILES\fP, below, for a list of the database files and
+.BR wndb (5WN)
+and
+.BR wninput (5WN) 
+for detailed descriptions of the various WordNet relations (referred to
+as \fIoperators\fP in this manual page).
+.SS File Format
+Each prolog database file contains information corresponding to the
+synsets and word senses contained in the WordNet database.  In the
+prolog version of the database, the \fIsynset_id\fPs (defined below)
+are used as unique synset identifiers.
+
+Each line of a file contains an operator that corresponds to a WordNet
+relation.  All lines with the same \fIoperator\fP value are stored in
+the file \fBwn_\fP\fIoperator\fP\fB.pl\fP.
+
+The general format of a line in a prolog database file is as follows:
+
+.RS
+.nf
+\fIoperator\fB(\fIfield1\fB,\fI~~...~~\fB,\fIfieldn\fB).\fR
+.fi
+.RE
+
+Each line contains the name of the operator, followed by a left
+parenthesis, a comma-separated list of fields, a right parenthesis,
+and a period.  Note there are no spaces, and each line is terminated
+with a newline character. 
+.SS Operators
+Each WordNet relation is represented in a separate file by
+\fIoperator\fP name.  Some operators are reflexive (i.e. the "reverse"
+relation is implicit).  So, for example, if \fBx\fP is a hypernym of
+\fBy\fP, \fBy\fP is necessarily a hyponym of \fBx\fP.  In the prolog
+database, reflected pointers are usually implied for semantic
+relations.
+
+Semantic relations are represented by a pair of \fIsynset_id\fPs, in
+which the first \fIsynset_id\fP is generally the source of the
+relation and the second is the target.  If two pairs
+\fIsynset_id\fP\fB,\fP\fIw_num\fP are present, the operator represents
+a lexical relation between word forms.
+
+.nf
+\fBs(\fIsynset_id\fB,\fIw_num\fB,'\fIword\fB',\fIss_type\fB,\fIsense_number\fB,\fItag_count\fB).
+.fi
+.RS
+A \fBs\fP operator is present for every word sense in WordNet.  In
+\fBwn_s.pl\fP, \fIw_num\fP specifies the word number for \fIword\fP in
+the synset.
+.RE
+
+.nf
+\fBg(\fIsynset_id\fB,'(\fIgloss\fB)').
+.fi
+.RS
+The \fBg\fP operator specifies the gloss for a synset.  
+.RE
+
+.nf
+\fBhyp(\fIsynset_id\fB,\fIsynset_id\fB).
+.fi
+.RS
+The \fBhyp\fP operator specifies that the second synset is a
+hypernym of the first synset.  This relation holds for nouns and
+verbs.  The reflexive operator, hyponym, implies that the first
+synset is a hyponym of the second synset.
+.RE
+
+.nf
+\fBent(\fIsynset_id\fB,\fIsynset_id\fB).
+.fi
+.RS
+The \fBent\fP operator specifies that the second synset is
+an entailment of first synset.  This relation only holds for verbs.
+.RE
+
+.nf
+\fBsim(\fIsynset_id\fB,\fIsynset_id\fB).
+.fi
+.RS
+The \fBsim\fP operator specifies that the second synset is similar in
+meaning to the first synset.  This means that the second synset is a
+satellite the first synset, which is the cluster head.  This relation
+only holds for adjective synsets contained in adjective clusters.
+.RE
+
+.nf
+\fBmm(\fIsynset_id\fB,\fIsynset_id\fB).
+.fi
+.RS
+The \fBmm\fP operator specifies that the second synset is a
+member meronym of the first synset.  This relation only holds for
+nouns.  The reflexive operator, member holonym, can be implied.
+.RE
+
+.nf
+\fBms(\fIsynset_id\fB,\fIsynset_id\fB).
+.fi
+.RS
+The \fBms\fP operator specifies that the second synset is a
+substance meronym of the first synset.  This relation only holds for
+nouns.  The reflexive operator, substance holonym, can be implied.
+.RE
+
+.nf
+\fBmp(\fIsynset_id\fB,\fIsynset_id\fB).
+.fi
+.RS
+The \fBmp\fP operator specifies that the second synset is a
+part meronym of the first synset.  This relation only holds for
+nouns.  The reflexive operator, part holonym, can be implied.
+.RE
+
+.nf
+\fBcs(\fIsynset_id\fB,\fIsynset_id\fB).
+.fi
+.RS
+The \fBcs\fP operator specifies that the second synset is a cause
+of the first synset.  This relation only holds for verbs.
+.RE
+
+.nf
+\fBvgp(\fIsynset_id\fB,\fIsynset_id\fB).
+.fi
+.RS
+The \fBvgp\fP operator specifies verb synsets that are similar in
+meaning and should be grouped together when displayed in response to a
+grouped synset search.
+.RE
+
+.nf
+\fBat(\fIsynset_id\fB,\fIsynset_id\fB).
+.fi
+.RS
+The \fBat\fP operator defines the attribute relation between noun and
+adjective synset pairs in which the adjective is a value of the noun.
+For each pair, both relations are listed (ie. each \fIsynset_id\fP is
+both a source and target).
+.RE
+
+.nf
+\fBant(\fIsynset_id\fB,\fIw_num\fB,\fIsynset_id\fB,\fIw_num\fB).
+.fi
+.RS
+The \fBant\fP operator specifies antonymous \fIword\fPs.  This is a
+lexical relation that holds for all syntactic categories.  For each
+antonymous pair, both relations are listed (ie. each
+\fIsynset_id,w_num\fP pair is both a source and target word.)
+.RE
+
+.nf
+\fBsa(\fIsynset_id\fB,\fIw_num\fB,\fIsynset_id\fB,\fIw_num\fB).
+.fi
+.RS
+The \fBsa\fP operator specifies that additional information about the
+first word can be obtained by seeing the second word.  This
+operator is only defined for verbs and adjectives.  There is no reflexive
+relation (ie. it cannot be inferred that the additional information
+about the second word can be obtained from the first word).
+.RE
+
+.nf
+\fBppl(\fIsynset_id\fB,\fIw_num\fB,\fIsynset_id\fB,\fIw_num\fB).
+.fi
+.RS
+The \fBppl\fP operator specifies that the adjective first word is a
+participle of the verb second word.  The reflexive operator can be
+implied. 
+.RE
+
+.nf
+\fBper(\fIsynset_id\fB,\fIw_num\fB,\fIsynset_id\fB,\fIw_num\fB).
+.fi
+.RS
+The \fBper\fP operator specifies two different relations based on the
+parts of speech involved.  If the first word is in an adjective
+synset, that word pertains to either the noun or adjective second
+word.  If the first word is in an adverb synset, that word is derived
+from the adjective second word.
+.RE
+
+.nf
+\fBfr(\fIsynset_id\fB,\fIf_num\fB,\fIw_num\fB).
+.fi
+.RS
+The \fBfr\fP operator specifies a generic sentence frame for one or
+all words in a synset.  The operator is defined only for verbs.
+.RE
+.SS Field Definitions
+A \fIsynset_id\fP is a nine byte field in which the first
+byte defines the syntactic category of the synset and the remaining
+eight bytes are a \fIsynset_offset\fP, as defined in 
+.BR wndb (5WN),
+indicating the byte offset in the \fBdata.\fP\fIpos\fP file that
+corresponds to the syntactic category.
+
+The syntactic category is encoded as:  
+
+.RS
+.nf
+\fB1\fP	NOUN
+\fB2\fP	VERB
+\fB3\fP	ADJECTIVE
+\fB4\fP	ADVERB
+.fi
+.RE
+
+\fIw_num\fP, if present, indicates which word in the synset is being
+referred to.  Word numbers are assigned to the \fIword\fP fields in a
+synset, from left to right, beginning with 1.  When used to represent
+lexical WordNet relations \fIw_num\fP may be 0, indicating that the
+relation holds for all words in the synset indicated by the preceding
+\fIsynset_id\fP.  See
+.BR wninput (5WN)
+for a discussion of semantic and lexical relations.
+
+\fIss_type\fP is a one character code indicating the synset type:
+
+.RS
+.nf
+\fBn\fP	NOUN
+\fBv\fP	VERB
+\fBa\fP	ADJECTIVE
+\fBs\fP	ADJECTIVE~SATELLITE
+\fBr\fP	ADVERB
+.fi
+.RE
+
+\fIsense_number\fP specifies the sense number of the word, within the
+part of speech encoded in the \fIsynset_id\fP, in the WordNet
+database.
+
+\fIword\fP is the ASCII text of the word as entered in the synset by
+the lexicographer, with spaces replaced by underscore characters
+(\fB_\fP).  The text of the word is case sensitive.  An adjective
+\fIword\fP is immediately followed by a syntactic marker if one was
+specified in the lexicographer file.  A syntactic marker is appended,
+in parentheses, onto \fIword\fP without any intervening spaces.  See
+.BR wninput (5WN)
+for a list of the syntactic markers for adjectives.
+
+Each synset has a \fIgloss\fP that may contain a definition, one or
+more example sentences, or both.  Note that glosses are enclosed in
+single forward quotes and parentheses:~~\fB'(\fIgloss\fB)'\fR.
+
+\fIf_num\fP specifies the generic sentence frame number for word
+\fIw_num\fP in the synset indicated by \fIsynset_id\fP.  Note that
+when \fIw_num\fP is \fB0\fP, the frame number applies to all words in
+the synset.  If non-zero, the frame applies to that word in the
+synset.
+
+In WordNet, sense numbers are assigned as described in 
+.BR wndb (5WN).
+\fItag_count\fP is the number of times the sense was tagged in the
+Semantic Concordances, and \fB0\fP if it was not instantiated.
+.SH NOTES
+Since single forward quotes are used to enclose character strings,
+single quote characters found in \fIword\fP and \fIgloss\fP fields are
+represented as two adjacent single quote characters.
+
+The load time can be greatly reduced by creating "object language"
+versions of the files, an option that is supported by some
+implementations, such as Quintus Prolog. 
+.SH ENVIRONMENT VARIABLES (UNIX)
+.TP 20
+.B WNHOME
+Base directory for WordNet.  Default is
+\fB/usr/local/WordNet-3.0\fP.
+.SH REGISTRY (WINDOWS)
+.TP 20
+.B HKEY_LOCAL_MACHINE\eSOFTWARE\eWordNet\e3.0\eWNHome
+Base directory for WordNet.  Default is
+\fBC:\eProgram~Files\eWordNet\e3.0\fP.
+.SH FILES
+All files are in \fBWNHOME/prolog\fP on Unix platforms and
+\fBWNHome\eprolog\fP on Windows platforms
+.TP 20
+.B wn_s.pl
+synset pointers
+.TP 20
+.B wn_g.pl
+gloss pointers
+.TP 20
+.B wn_hyp.pl
+hypernym pointers
+.TP 20
+.B wn_ent.pl
+entailment pointers
+.TP 20
+.B wn_sim.pl
+similar pointers
+.TP 20
+.B wn_mm.pl
+member meronym pointers
+.TP 20
+.B wn_ms.pl
+substance meronym pointers
+.TP 20
+.B wn_mp.pl
+part meronym pointers
+.TP 20
+.B wn_cs.pl
+cause pointers
+.TP 20
+.B wn_vgp.pl
+grouped verb pointers
+.TP 20
+.B wn_at.pl
+attribute pointers
+.TP 20
+.B wn_ant.pl
+antonym pointers
+.TP 20
+.B wn_sa.pl
+see also pointers 
+.TP 20
+.B wn_ppl.pl
+participle pointers
+.TP 20
+.B wn_per.pl
+pertainym pointers
+.TP 20
+.B wn_fr.pl
+frame pointers
+.SH SEE ALSO
+.BR wndb (5WN),
+.BR wninput (5WN),
+.BR wngroups (7WN),
+.BR wnpkgs (7WN).

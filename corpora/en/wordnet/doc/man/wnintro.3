@@ -1,0 +1,280 @@
+'\" t
+.\" $Id$
+.tr ~
+.TH WNINTRO 3WN "Dec 2006" "WordNet 3.0" "WordNet\(tm Library Functions"
+.SH NAME
+wnintro \- introduction to WordNet library functions
+.SH DESCRIPTION
+This section of the \fIWordNet Reference Manual\fP contains manual
+pages that describe the WordNet library functions and API.
+
+Functions are organized into the following categories: 
+
+.TS
+center box ;
+l | l | l.
+\fBCategory\fP	\fBManual Page\fP	\fBObject File\fP
+_
+Database Search	wnsearch (3WN)	search.o
+Morphology	morph (3WN)	morph.o
+Misc. Utility	wnutil (3WN)	wnutil.o
+Binary Search	binsrch (3WN)	binsrch.o
+.TE
+
+The WordNet library is used by all of the searching interfaces
+provided with the various WordNet packages.  Additional programs in
+the system, such as
+.BR grind (1WN),
+also use functions in this library.
+
+The WordNet library is provided in both source and binary forms (on
+some platforms) to allow users to build applications and tools to
+their own specifications that utilize the WordNet database.  We do not
+provide programming support or assistance.
+
+The code conforms to ANSI C standards.  Functions are defined with
+function prototypes.  If you do not have a compiler that accepts
+prototypes, you must edit the source code and remove the prototypes
+before compiling.
+.SH LIST OF WORDNET LIBRARY FUNCTIONS
+Not all library functions are listed below. Missing are mainly
+functions that are called by documented ones, or ones that were
+written for specific applications or tools used during WordNet
+development.  Data structures are defined in
+\fBwn.h\fP.
+
+.SS Database Searching Functions (search.o)
+
+.TP 25
+.B findtheinfo 
+Primary search function for WordNet database.  Returns
+formatted search results in text buffer.  Used by WordNet interfaces
+to perform requested search.
+.TP 25
+.B findtheinfo_ds
+Primary search function for WordNet database.  Returns search results
+in linked list data structure.
+.TP 25
+.B is_defined
+Set bit for each search type that is valid for the search word passed
+and return bit mask.
+.TP 25
+.B in_wn
+Set bit for each syntactic category that search word is in.
+.TP 25
+.B index_lookup
+Find word in index file and return parsed entry in data structure.
+Input word must be exact match of string in database.  Called by
+\fBgetindex(\|)\fP.
+.TP 25
+.B getindex
+Find word in index file, trying different techniques \- replace hyphens
+with underscores, replace underscores with hyphens, strip hyphens and
+underscores, strip periods.
+.TP 25
+.B read_synset
+Read synset from data file at byte offset passed and return parsed
+entry in data structure.  Calls \fBparse_synset(\|)\fP.
+.TP 25
+.B parse_synset
+Read synset at current byte offset in file and return parsed entry in
+data structure.
+.TP 25
+.B free_syns
+Free a synset linked list allocated by \fBfindtheinfo_ds(\|)\fP.
+.TP 25
+.B free_synset
+Free a synset structure.
+.TP 25
+.B free_index
+Free an index structure.
+.TP 25
+.B traceptrs_ds
+Recursive search algorithm to trace a pointer tree and return results
+in linked list.
+.TP 25
+.B do_trace
+Do requested search on synset passed returning formatted output in
+buffer.
+
+.SS Morphology Functions (morph.o)
+
+.TP 25
+.B morphinit
+Open exception list files.
+.TP 25
+.B re_morphinit
+Close exception list files and reopen.
+.TP 25
+.B morphstr
+Try to find base form (lemma) of word or collocation in syntactic
+category passed.  Calls \fBmorphword(\|)\fP for each word in string
+passed.
+.TP 25
+.B morphword
+Try to find base form (lemma) of individual word in syntactic category
+passed.
+
+.SS Utility Functions (wnutil.o)
+
+.TP 25
+.B wninit
+Top level function to open database files and morphology exception
+lists.
+.TP 25
+.B re_wninit
+Top level function to close and reopen database files and morphology
+exception lists.
+.TP 25
+.B cntwords
+Count the number of underscore or space separated words in a string.
+.TP 25
+.B strtolower
+Convert string to lower case and remove trailing adjective marker if
+found.
+.TP 25
+.B ToLowerCase
+Convert string passed to lower case.
+.TP 25
+.B strsubst
+Replace all occurrences of \fIfrom\fP with \fIto\fP in \fIstr\fP.
+.TP 25
+.B getptrtype
+Return code for pointer type character passed.
+.TP 25
+.B getpos
+Return syntactic category code for string passed.
+.TP 25
+.B getsstype
+Return synset type code for string passed.
+.TP 25
+.B FmtSynset
+Reconstruct synset string from synset pointer.
+.TP 25
+.B StrToPos
+Passed string for syntactic category, returns corresponding integer
+value.
+.TP 25
+.B GetSynsetForSense
+Return synset for sense key passed.
+.TP 25
+.B GetDataOffset
+Find synset offset for sense.
+.TP 25
+.B GetPolyCount
+Find polysemy count for sense passed.
+.TP 25
+.B GetWORD
+Return word part of sense key.
+.TP 25
+.B GetPOS
+Return syntactic category code for sense key passed.
+.TP 25
+.B WNSnsToStr
+Generate sense key for index entry passed.
+.TP 25
+.B GetValidIndexPointer
+Search for string and/or base form of word in database and return index
+structure for word if found.
+.TP 25
+.B GetWNSense
+Return sense number in database for sense key.
+.TP 25
+.B GetSenseIndex
+Return parsed sense index entry for sense key passed.
+.TP 25
+.B default_display_message
+Default function to use as value of \fBdisplay_message\fP.  Simply
+returns \fB-1\fP.
+
+.SS Binary Search Functions (binsrch.o)
+
+.TP 25
+.B bin_search
+General purpose binary search function to search for key as first item
+on line in sorted file.
+.TP 25
+.B copyfile
+Copy contents from one file to another.
+.TP 25
+.B replace_line
+Replace a line in a sorted file. 
+.TP 25
+.B insert_line
+Insert a line into a sorted file.
+.SH HEADER FILE
+.TP 20
+.B wn.h
+WordNet include file of constants, data structures, external
+declarations for global variables initialized in \fBwnglobal.c\fP.
+Also lists function prototypes for library API. It must be included to
+use any WordNet library functions.
+.SH NOTES
+All library functions that access the database files expect the files
+to be open.  The function
+.BR wninit (3WN)
+must be called before other database access functions such as
+.BR findtheinfo (3WN)
+or
+.BR read_synset (3WN).  
+
+Inclusion of the header file \fBwn.h\fP is necessary.
+
+The command line interface is a good example of a simple application
+that uses several WordNet library functions. 
+
+Many of the library functions are passed or return syntactic category
+or synset type information.  The following table lists the possible
+categories as integer codes, synset type constant names, syntactic
+category constant names, single characters and character strings.
+
+.TS
+center box ;
+c | c | c | c | c
+c | l | l | c | l.
+\fBInteger\fP	\fBSynset Type\fP	\fBSyntactic Category\fP	\fBChar\fP	\fBString\fP 
+_
+1	NOUN	NOUN	n	noun
+2	VERB	VERB	v	verb
+3	ADJ	ADJ	a	adj
+4	ADV	ADV	r	adv
+5	SATELLITE	ADJ	s	\fIn/a\fP
+.TE
+.SH ENVIRONMENT VARIABLES (UNIX)
+.TP 20
+.B WNHOME
+Base directory for WordNet.  Default is
+\fB/usr/local/WordNet-3.0\fP.
+.TP 20
+.B WNSEARCHDIR
+Directory in which the WordNet database has been installed.  
+Default is \fBWNHOME/dict\fP.
+.SH REGISTRY (WINDOWS)
+.TP 20
+.B HKEY_LOCAL_MACHINE\eSOFTWARE\eWordNet\e3.0\eWNHome
+Base directory for WordNet.  Default is
+\fBC:\eProgram~Files\eWordNet\e3.0\fP.
+.SH FILES
+.TP 30
+.B lib/libwn.a
+WordNet library (Unix)
+.TP 30
+.B lib\ewn.lib
+WordNet library (Windows)
+.TP 30
+.B include
+header files for use with WordNet library
+.SH SEE ALSO
+.BR wnintro (1WN),
+.BR binsrch (3WN),
+.BR morph (3WN),
+.BR wnsearch (3WN),
+.BR wnutil (3WN),
+.BR wnintro (5WN),
+.BR wnintro (7WN).
+
+Fellbaum, C. (1998), ed.
+\fI"WordNet: An Electronic Lexical Database"\fP.
+MIT Press, Cambridge, MA.
+.SH BUGS
+Please report bugs to \fBwordnet@princeton.edu\fP.

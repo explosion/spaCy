@@ -1,0 +1,874 @@
+%!PS
+%%Version: 3.15
+%%DocumentFonts: (atend)
+%%Pages: (atend)
+%%EndComments
+%ident	"@(#)lp:filter/postscript/postscript/dpost.ps	1.1"
+%
+% Version 3.16 prologue for troff files.
+%
+
+/#copies 1 store
+/aspectratio 1 def
+/formsperpage 1 def
+/landscape false def
+/linewidth .3 def
+/magnification 1 def
+/margin 0 def
+/orientation 0 def
+/resolution 720 def
+/xoffset 0 def
+/yoffset 0 def
+
+/roundpage true def
+/useclippath true def
+/pagebbox [0 0 612 792] def
+
+/R  /Times-Roman def
+/I  /Times-Italic def
+/B  /Times-Bold def
+/BI /Times-BoldItalic def
+/H  /Helvetica def
+/HI /Helvetica-Oblique def
+/HB /Helvetica-Bold def
+/HX /Helvetica-BoldOblique def
+/CW /Courier def
+/CO /Courier def
+/CI /Courier-Oblique def
+/CB /Courier-Bold def
+/CX /Courier-BoldOblique def
+/PA /Palatino-Roman def
+/PI /Palatino-Italic def
+/PB /Palatino-Bold def
+/PX /Palatino-BoldItalic def
+/Hr /Helvetica-Narrow def
+/Hi /Helvetica-Narrow-Oblique def
+/Hb /Helvetica-Narrow-Bold def
+/Hx /Helvetica-Narrow-BoldOblique def
+/KR /Bookman-Light def
+/KI /Bookman-LightItalic def
+/KB /Bookman-Demi def
+/KX /Bookman-DemiItalic def
+/AR /AvantGarde-Book def
+/AI /AvantGarde-BookOblique def
+/AB /AvantGarde-Demi def
+/AX /AvantGarde-DemiOblique def
+/NR /NewCenturySchlbk-Roman def
+/NI /NewCenturySchlbk-Italic def
+/NB /NewCenturySchlbk-Bold def
+/NX /NewCenturySchlbk-BoldItalic def
+/ZD /ZapfDingbats def
+/ZI /ZapfChancery-MediumItalic def
+/VR /Varitimes#Roman def
+/VI /Varitimes#Italic def
+/VB /Varitimes#Bold def
+/VX /Varitimes#BoldItalic def
+/S  /S def
+/S1 /S1 def
+/GR /Symbol def
+
+/inch {72 mul} bind def
+/min {2 copy gt {exch} if pop} bind def
+
+/setup {
+	counttomark 2 idiv {def} repeat pop
+
+	landscape {/orientation 90 orientation add def} if
+	/scaling 72 resolution div def
+	linewidth setlinewidth
+	1 setlinecap
+
+	pagedimensions
+	xcenter ycenter translate
+	orientation neg rotate
+	width 2 div neg height 2 div translate
+	xoffset inch yoffset inch translate
+	margin 2 div dup neg translate
+	magnification dup aspectratio mul scale
+	scaling scaling scale
+
+	/Symbol /S Sdefs cf
+	/Times-Roman /S1 S1defs cf
+	0 0 moveto
+} def
+
+/pagedimensions {
+	useclippath userdict /gotpagebbox known not and {
+		/pagebbox [clippath pathbbox newpath] def
+		roundpage currentdict /roundpagebbox known and {roundpagebbox} if
+	} if
+	pagebbox aload pop
+	4 -1 roll exch 4 1 roll 4 copy
+	landscape {4 2 roll} if
+	sub /width exch def
+	sub /height exch def
+	add 2 div /xcenter exch def
+	add 2 div /ycenter exch def
+	userdict /gotpagebbox true put
+} def
+
+/pagesetup {
+	/page exch def
+	currentdict /pagedict known currentdict page known and {
+		page load pagedict exch get cvx exec
+	} if
+} def
+
+/decodingdefs [
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg /y exch def counttomark 2 idiv {y moveto show} repeat}
+	{neg moveto {2 index stringwidth pop sub exch div 0 32 4 -1 roll widthshow} repeat}
+	{neg moveto {spacewidth sub 0.0 32 4 -1 roll widthshow} repeat}
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg setfunnytext}
+] def
+
+/setdecoding {/t decodingdefs 3 -1 roll get bind def} bind def
+
+/w {neg moveto show} bind def
+/m {neg dup /y exch def moveto} bind def
+/done {/lastpage where {pop lastpage} if} def
+
+/f {
+	dup /font exch def findfont exch
+	dup /ptsize exch def scaling div dup /size exch def scalefont setfont
+	linewidth ptsize mul scaling 10 mul div setlinewidth
+	/spacewidth ( ) stringwidth pop def
+} bind def
+
+/changefont {
+	/fontheight exch def
+	/fontslant exch def
+	currentfont [
+		1 0
+		fontheight ptsize div fontslant sin mul fontslant cos div
+		fontheight ptsize div
+		0 0
+	] makefont setfont
+} bind def
+
+/sf {f} bind def
+
+/cf {
+	dup length 2 idiv
+	/entries exch def
+	/chtab exch def
+	/newfont exch def
+
+	findfont dup length 1 add dict
+	/newdict exch def
+	{1 index /FID ne {newdict 3 1 roll put} {pop pop} ifelse} forall
+
+	newdict /Metrics entries dict put
+	newdict /Metrics get
+	begin
+		chtab aload pop
+		1 1 entries {pop def} for
+		newfont newdict definefont pop
+	end
+} bind def
+
+%
+% A few arrays used to adjust reference points and character widths in some
+% of the printer resident fonts. If square roots are too high try changing
+% the lines describing /radical and /radicalex to,
+%
+%	/radical	[0 -75 550 0]
+%	/radicalex	[-50 -75 500 0]
+%
+
+/Sdefs [
+	/bracketlefttp		[220 500]
+	/bracketleftbt		[220 500]
+	/bracketrighttp		[-70 380]
+	/bracketrightbt		[-70 380]
+	/braceleftbt		[220 490]
+	/bracketrightex		[220 -125 500 0]
+	/radical		[0 0 550 0]
+	% NeWSprint's \(br is too low, compensate
+	statusdict /product get (NeWS Server) eq {
+		/radicalex		[-50 100 500 0]
+		/parenleftex		[-20 100 0 0]
+
+	} {
+		/radicalex		[-50 0 500 0]
+		/parenleftex		[-20 -170 0 0]
+	} ifelse
+	/integral		[100 -50 500 0]
+	/infinity		[10 -75 730 0]
+] def
+
+/S1defs [
+	/underscore		[0 80 500 0]
+	/endash			[7 90 650 0]
+] def
+%%EndProlog
+%%BeginSetup
+mark
+/resolution 720 def
+setup
+2 setdecoding
+%%EndSetup
+%%Page: 1 1
+save
+mark
+1 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 3WN \))3 330( WNUTIL)1 3130(Library Functions)1 727 3 1213 480 t
+9 B f
+(NAME)720 960 w
+10 R f
+(wninit, re)1 400 1 1080 1080 t
+10 S f
+(_)1480 1080 w
+10 R f
+(wninit, cntwords, strtolower, ToLowerCase, strsubst, getptrtype, getpos, getsstype, StrToPos,)8 3870 1 1530 1080 t
+( GetWNSense,)1 621(GetSynsetForSense, GetDataOffset, GetPolyCount, WNSnsToStr, GetValidIndexPointer,)4 3699 2 1080 1200 t
+(GetSenseIndex, default)1 939 1 1080 1320 t
+10 S f
+(_)2019 1320 w
+10 R f
+(display)2069 1320 w
+10 S f
+(_)2358 1320 w
+10 R f
+(message)2408 1320 w
+9 B f
+(SYNOPSIS)720 1488 w
+10 S1 f
+(#)1080 1608 w
+10 B f
+(include)1130 1608 w
+10 S1 f
+(")1475 1608 w
+10 B f
+(wn.h)1516 1608 w
+10 S1 f
+(")1725 1608 w
+10 B f
+(int wninit\(void\);)1 706 1 1080 1776 t
+(int re)1 238 1 1080 1944 t
+10 S f
+(_)1318 1944 w
+10 B f
+(wninit\(void\);)1368 1944 w
+(int cntwords\(char)1 771 1 1080 2112 t
+10 S f
+(*)1884 2112 w
+10 B f
+(str, char separator\);)2 877 1 1934 2112 t
+(char)1080 2280 w
+10 S f
+(*)1307 2280 w
+10 B f
+(strtolower\(char)1357 2280 w
+10 S f
+(*)2054 2280 w
+10 B f
+(str\);)2104 2280 w
+(char)1080 2448 w
+10 S f
+(*)1307 2448 w
+10 B f
+(ToLowerCase\(char)1357 2448 w
+10 S f
+(*)2216 2448 w
+10 B f
+(str\);)2266 2448 w
+(char)1080 2616 w
+10 S f
+(*)1307 2616 w
+10 B f
+(strsubst\(char)1357 2616 w
+10 S f
+(*)1956 2616 w
+10 B f
+(str, char from, char to\);)4 1045 1 2006 2616 t
+(int getptrtype\(char)1 820 1 1080 2784 t
+10 S f
+(*)1933 2784 w
+10 B f
+(ptr)1983 2784 w
+10 S f
+(_)2116 2784 w
+10 B f
+(symbol\);)2166 2784 w
+(int getpos\(char)1 649 1 1080 2952 t
+10 S f
+(*)1762 2952 w
+10 B f
+(ss)1812 2952 w
+10 S f
+(_)1890 2952 w
+10 B f
+(type\);)1940 2952 w
+(int getsstype\(char)1 765 1 1080 3120 t
+10 S f
+(*)1878 3120 w
+10 B f
+(ss)1928 3120 w
+10 S f
+(_)2006 3120 w
+10 B f
+(type\);)2056 3120 w
+(int StrToPos\(char pos\);)2 1021 1 1080 3288 t
+(SynsetPtr GetSynsetForSense\(char)1 1503 1 1080 3456 t
+10 S f
+(*)2616 3456 w
+10 B f
+(sense)2666 3456 w
+10 S f
+(_)2888 3456 w
+10 B f
+(key\);)2938 3456 w
+(long GetDataOffset\(char)1 1064 1 1080 3624 t
+10 S f
+(*)2177 3624 w
+10 B f
+(sense)2227 3624 w
+10 S f
+(_)2449 3624 w
+10 B f
+(key\);)2499 3624 w
+(int GetPolyCount\(char)1 988 1 1080 3792 t
+10 S f
+(*)2101 3792 w
+10 B f
+(sense)2151 3792 w
+10 S f
+(_)2373 3792 w
+10 B f
+(key\);)2423 3792 w
+(char)1080 3960 w
+10 S f
+(*)1307 3960 w
+10 B f
+(WNSnsToStr\(IndexPtr idx, int sense)3 1586 1 1357 3960 t
+10 S f
+(_)2943 3960 w
+10 B f
+(num\);)2993 3960 w
+(IndexPtr GetValidIndexPointer\(char)1 1593 1 1080 4128 t
+10 S f
+(*)2706 4128 w
+10 B f
+(str, int pos\);)2 535 1 2756 4128 t
+(int GetWNSense\(char)1 943 1 1080 4296 t
+10 S f
+(*)2056 4296 w
+10 B f
+(lemma,)2106 4296 w
+10 S f
+(*)2452 4296 w
+10 B f
+(lex)2502 4296 w
+10 S f
+(_)2624 4296 w
+10 B f
+(sense\);)2674 4296 w
+(SnsIndexPtr GetSenseIndex\(char)1 1433 1 1080 4464 t
+10 S f
+(*)2546 4464 w
+10 B f
+(sense)2596 4464 w
+10 S f
+(_)2818 4464 w
+10 B f
+(key\);)2868 4464 w
+(int GetTagcnt\(IndexPtr idx, int sense\);)4 1684 1 1080 4632 t
+(int default)1 450 1 1080 4800 t
+10 S f
+(_)1530 4800 w
+10 B f
+(display)1580 4800 w
+10 S f
+(_)1887 4800 w
+10 B f
+(message\(char)1937 4800 w
+10 S f
+(*)2546 4800 w
+10 B f
+(msg\);)2596 4800 w
+9 B f
+(DESCRIPTION)720 4968 w
+10 R f
+( functions used by the interface code, other library functions,)9 2548(The WordNet library contains many utility)5 1772 2 1080 5088 t
+( or which are)3 553( those of importance to the WordNet search code,)8 2069( Only)1 269(and various applications and tools.)4 1429 4 1080 5208 t
+(generally useful are described here.)4 1446 1 1080 5328 t
+10 B f
+(wninit\( \))1 355 1 1080 5568 t
+10 R f
+( database)1 378( The)1 223( necessary for using WordNet with the WordNet library functions.)9 2740(opens the \256les)2 590 4 1469 5568 t
+(\256les are opened, and)3 868 1 1080 5688 t
+10 B f
+(morphinit\( \))1 516 1 1989 5688 t
+10 R f
+( Returns)1 384(is called to open the exception list \256les.)7 1682 2 2545 5688 t
+10 B f
+(0)4651 5688 w
+10 R f
+(if successful,)1 536 1 4741 5688 t
+10 B f
+(-1)5317 5688 w
+10 R f
+( database and exception list \256les must be open before the WordNet search and morphol-)14 3683(otherwise. The)1 637 2 1080 5808 t
+( variable)1 358( the database is successfully opened, the global)7 1971( If)1 137(ogy functions are used.)3 965 4 1080 5928 t
+10 B f
+(OpenDB)4548 5928 w
+10 R f
+(is set to)2 330 1 4958 5928 t
+10 B f
+(1)5325 5928 w
+10 R f
+(.)5375 5928 w
+(Note that it is possible for the database \256les to be opened \()12 2540 1 1080 6048 t
+10 B f
+(OpenDB == 1)2 621 1 3620 6048 t
+10 R f
+( exception list)2 597(\), but not the)3 562 2 4241 6048 t
+(\256les.)1080 6168 w
+10 B f
+(re)1080 6408 w
+10 S f
+(_)1168 6408 w
+10 B f
+(wninit\( \))1 355 1 1218 6408 t
+10 R f
+( to close the database \256les and reopen them, and is used exclusively for WordNet)14 3493(is used)1 292 2 1615 6408 t
+(development.)1080 6528 w
+10 B f
+(re)1690 6528 w
+10 S f
+(_)1778 6528 w
+10 B f
+(morphinit\( \))1 516 1 1828 6528 t
+10 R f
+( codes are as)3 536( Return)1 340( to close and reopen the exception list \256les.)8 1803(is called)1 341 4 2380 6528 t
+(described above.)1 678 1 1080 6648 t
+10 B f
+(cntwords\( \))1 476 1 1080 6888 t
+10 R f
+(counts the number of underscore or space separated words in)9 2597 1 1599 6888 t
+10 I f
+(str)4239 6888 w
+10 R f
+( hyphen is passed in)4 881(. A)1 174 2 4345 6888 t
+10 I f
+(separator)1080 7008 w
+10 R f
+( Otherwise)1 479(if is is to be considered a word delimiter.)8 1722 2 1505 7008 t
+10 I f
+(separator)3742 7008 w
+10 R f
+(can be any other character, or)5 1233 1 4167 7008 t
+(an underscore if another character is not desired.)7 1994 1 1080 7128 t
+( 1)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 1 1
+%%Page: 2 2
+save
+mark
+2 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 3WN \))3 330( WNUTIL)1 3130(Library Functions)1 727 3 1213 480 t
+10 B f
+(strtolower\( \))1 519 1 1080 960 t
+10 R f
+(converts)1637 960 w
+10 I f
+(str)2013 960 w
+10 R f
+( case and removes a trailing adjective marker, if present.)9 2378(to lower)1 343 2 2157 960 t
+10 I f
+(str)4950 960 w
+10 R f
+(is actu-)1 305 1 5095 960 t
+(ally modi\256ed by this function, and a pointer to the modi\256ed string is returned.)13 3217 1 1080 1080 t
+10 B f
+(ToLowerCase\( \))1 681 1 1080 1320 t
+10 R f
+(converts)1794 1320 w
+10 I f
+(str)2165 1320 w
+10 R f
+(to lower case as above, without removing an adjective marker.)9 2569 1 2304 1320 t
+10 B f
+(strsubst\( \))1 421 1 1080 1560 t
+10 R f
+(replaces all occurrences of)3 1083 1 1534 1560 t
+10 I f
+(from)2650 1560 w
+10 R f
+(with)2872 1560 w
+10 I f
+(to)3083 1560 w
+10 R f
+(in)3194 1560 w
+10 I f
+(str)3305 1560 w
+10 R f
+(and returns resulting string.)3 1123 1 3444 1560 t
+10 B f
+(getptrtype\( \))1 525 1 1080 1800 t
+10 R f
+(returns the integer)2 766 1 1650 1800 t
+10 I f
+(ptr)2462 1800 w
+10 S f
+(_)2579 1800 w
+10 I f
+(type)2629 1800 w
+10 R f
+(corresponding to the pointer character passed in)6 2038 1 2841 1800 t
+10 I f
+(ptr)4925 1800 w
+10 S f
+(_)5042 1800 w
+10 I f
+(symbol)5092 1800 w
+10 R f
+(.)5375 1800 w
+(See)1080 1920 w
+10 B f
+(wnsearch)1257 1920 w
+10 R f
+(\(3WN\) for a table of pointer symbols and types.)8 1980 1 1662 1920 t
+10 B f
+(getpos\( \))1 354 1 1080 2160 t
+10 R f
+(returns the integer constant corresponding to the synset type passed.)9 2790 1 1467 2160 t
+10 I f
+(ss)4323 2160 w
+10 S f
+(_)4401 2160 w
+10 I f
+(type)4451 2160 w
+10 R f
+( one of the)3 451(may be)1 299 2 4650 2160 t
+(following:)1080 2280 w
+10 B f
+(n, v, a, r, s)4 471 1 1530 2280 t
+10 R f
+(. If)1 157 1 2001 2280 t
+10 B f
+(s)2191 2280 w
+10 R f
+(is passed,)1 391 1 2263 2280 t
+9 B f
+(ADJ)2687 2280 w
+10 R f
+( with)1 211( Exits)1 272(is returned.)1 457 3 2895 2280 t
+10 B f
+(-1)3868 2280 w
+10 R f
+(if)3984 2280 w
+10 I f
+(ss)4078 2280 w
+10 S f
+(_)4156 2280 w
+10 I f
+(type)4206 2280 w
+10 R f
+(is invalid.)1 403 1 4405 2280 t
+10 B f
+(getsstype\( \))1 470 1 1080 2520 t
+10 R f
+(works like)1 427 1 1583 2520 t
+10 B f
+(getpos\( \))1 354 1 2043 2520 t
+10 R f
+(, but returns)2 496 1 2397 2520 t
+9 B f
+(SATELLITE)2926 2520 w
+10 R f
+(if)3469 2520 w
+10 I f
+(ss)3563 2520 w
+10 S f
+(_)3641 2520 w
+10 I f
+(type)3691 2520 w
+10 R f
+(is)3890 2520 w
+10 B f
+(s)3990 2520 w
+10 R f
+(.)4029 2520 w
+10 B f
+(StrToPos\( \))1 482 1 1080 2760 t
+10 R f
+(returns the integer constant corresponding to the syntactic category passed in)10 3272 1 1607 2760 t
+10 I f
+(pos)4924 2760 w
+10 R f
+(.)5063 2760 w
+10 I f
+(string)5166 2760 w
+10 R f
+(must be one of the following:)5 1220 1 1080 2880 t
+10 B f
+(noun, verb, adj, adv)3 881 1 2366 2880 t
+10 R f
+(.)3247 2880 w
+10 B f
+(-1)3338 2880 w
+10 R f
+(is returned if)2 526 1 3454 2880 t
+10 I f
+(pos)4013 2880 w
+10 R f
+(is invalid.)1 403 1 4185 2880 t
+10 B f
+(GetSynsetForSense\( \))1 909 1 1080 3120 t
+10 R f
+( contains the word sense)4 1052(returns the synset that)3 928 2 2032 3120 t
+10 I f
+(sense)4056 3120 w
+10 S f
+(_)4272 3120 w
+10 I f
+(key)4322 3120 w
+10 R f
+(and)4498 3120 w
+9 B f
+(NULL)4686 3120 w
+10 R f
+(in case of)2 420 1 4980 3120 t
+(error.)1080 3240 w
+10 B f
+(GetDataOffset\( \))1 702 1 1080 3480 t
+10 R f
+( offset for synset that contains the word sense)8 1979(returns the synset)2 737 2 1826 3480 t
+10 I f
+(sense)4587 3480 w
+10 S f
+(_)4803 3480 w
+10 I f
+(key)4853 3480 w
+10 R f
+(, and)1 214 1 4985 3480 t
+10 B f
+(0)5244 3480 w
+10 R f
+(if)5339 3480 w
+10 I f
+(sense)1080 3600 w
+10 S f
+(_)1296 3600 w
+10 I f
+(key)1346 3600 w
+10 R f
+(is not in sense index \256le.)5 1029 1 1511 3600 t
+10 B f
+(GetPolyCount\( \))1 693 1 1080 3840 t
+10 R f
+( for)1 168(returns the polysemy count \(number of senses in WordNet\))8 2576 2 1824 3840 t
+10 I f
+(lemma)4620 3840 w
+10 R f
+(encoded in)1 462 1 4938 3840 t
+10 I f
+(sense)1080 3960 w
+10 S f
+(_)1296 3960 w
+10 I f
+(key)1346 3960 w
+10 R f
+(and)1511 3960 w
+10 B f
+(0)1688 3960 w
+10 R f
+(if word is not found.)4 851 1 1771 3960 t
+10 B f
+(WNSnsToStr\( \))1 655 1 1080 4200 t
+10 R f
+(returns sense key encoding for)4 1251 1 1768 4200 t
+10 I f
+(sense)3052 4200 w
+10 S f
+(_)3268 4200 w
+10 I f
+(num)3318 4200 w
+10 R f
+(entry in)1 316 1 3523 4200 t
+10 I f
+(idx)3872 4200 w
+10 R f
+(.)3994 4200 w
+10 B f
+(GetValidIndexPointer\( \))1 1032 1 1080 4440 t
+10 R f
+(returns the Index structure for)4 1259 1 2153 4440 t
+10 I f
+(word)3454 4440 w
+10 R f
+(in)3702 4440 w
+10 I f
+(pos)3822 4440 w
+10 R f
+(. Calls)1 306 1 3961 4440 t
+10 B f
+(morphstr)4309 4440 w
+10 R f
+(\(3WN\) to \256nd a)3 686 1 4714 4440 t
+(valid base form if)3 731 1 1080 4560 t
+10 I f
+(word)1844 4560 w
+10 R f
+(is in\257ected.)1 469 1 2083 4560 t
+10 B f
+(GetWNSense\( \))1 648 1 1080 4800 t
+10 R f
+( the sense key encoding represented by)6 1683(returns the WordNet sense number for)5 1632 2 1773 4800 t
+10 I f
+(lemma)5134 4800 w
+10 R f
+(and)1080 4920 w
+10 I f
+(lex)1257 4920 w
+10 S f
+(_)1373 4920 w
+10 I f
+(sense)1423 4920 w
+10 R f
+(.)1639 4920 w
+10 B f
+(GetSenseIndex\( \))1 721 1 1080 5160 t
+10 R f
+(returns parsed sense index entry for)5 1481 1 1838 5160 t
+10 I f
+(sense)3356 5160 w
+10 S f
+(_)3572 5160 w
+10 I f
+(key)3622 5160 w
+10 R f
+(and)3792 5160 w
+9 B f
+(NULL)3974 5160 w
+10 R f
+(if)4262 5160 w
+10 I f
+(sense)4361 5160 w
+10 S f
+(_)4577 5160 w
+10 I f
+(key)4627 5160 w
+10 R f
+(is not in sense)3 603 1 4797 5160 t
+(index.)1080 5280 w
+10 B f
+(GetTagcnt\( \))1 537 1 1080 5520 t
+10 R f
+(returns the number of times the sense passed has been tagged according to the)13 3217 1 1650 5520 t
+10 I f
+(cntlist)4900 5520 w
+10 R f
+(\256le.)5178 5520 w
+10 B f
+(default)1080 5760 w
+10 S f
+(_)1380 5760 w
+10 B f
+(display)1430 5760 w
+10 S f
+(_)1737 5760 w
+10 B f
+(message\( \))1 431 1 1787 5760 t
+10 R f
+(simply returns)1 618 1 2286 5760 t
+10 B f
+(-1)2972 5760 w
+10 R f
+( default value for the global variable)6 1716( is the)2 325(. This)1 304 3 3055 5760 t
+10 B f
+(display)1080 5880 w
+10 S f
+(_)1387 5880 w
+10 B f
+(message)1437 5880 w
+10 R f
+( general, applications)2 877( In)1 155(, that points to a function to call to display an error message.)12 2582 3 1786 5880 t
+( de\256ne an application speci\256c function and set)7 1990(\(including the WordNet interfaces\))3 1456 2 1080 6000 t
+10 B f
+(display)4571 6000 w
+10 S f
+(_)4878 6000 w
+10 B f
+(message)4928 6000 w
+10 R f
+(to)5322 6000 w
+(point to it.)2 431 1 1080 6120 t
+9 B f
+(NOTES)720 6288 w
+10 B f
+(include/wn.h)1080 6408 w
+10 R f
+( is no)2 241( There)1 302( pointer and search types and their corresponding constant values.)9 2736(lists all the)2 456 4 1665 6408 t
+( the WordNet interface is the best)6 1413( Using)1 309( returned.)1 394(description of what each search type is or the results)9 2204 4 1080 6528 t
+(way to see what types of searches are available, and the data returned for each.)14 3251 1 1080 6648 t
+9 B f
+(SEE ALSO)1 460 1 720 6816 t
+10 B f
+(wnintro)1080 6936 w
+10 R f
+(\(3WN\),)1419 6936 w
+10 B f
+(wnsearch)1759 6936 w
+10 R f
+(\(3WN\),)2164 6936 w
+10 B f
+(morph)2504 6936 w
+10 R f
+(\(3WN\),)2793 6936 w
+10 B f
+(wnintro)3133 6936 w
+10 R f
+(\(5WN\),)3472 6936 w
+10 B f
+(wnintro)3812 6936 w
+10 R f
+(\(7WN\).)4151 6936 w
+( 2)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 2 2
+%%Page: 3 3
+save
+mark
+3 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 3WN \))3 330( WNUTIL)1 3130(Library Functions)1 727 3 1213 480 t
+9 B f
+(WARNINGS)720 960 w
+10 R f
+( Passing)1 374(Error checking on passed arguments is not rigorous.)7 2150 2 1080 1080 t
+9 B f
+(NULL)3639 1080 w
+10 R f
+( will often)2 433(pointers or invalid values)3 1043 2 3924 1080 t
+(cause an application to die.)4 1116 1 1080 1200 t
+( 3)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 3 3
+%%Trailer
+done
+%%DocumentFonts: Times-Roman Symbol Times-Bold Times-Italic
+%%Pages: 3

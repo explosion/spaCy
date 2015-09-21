@@ -1,0 +1,513 @@
+'\" t
+.\" $Id$
+.tr ~
+.TH WNINPUT 5WN "Dec 2006" "WordNet 3.0" "WordNet\(tm File Formats"
+.SH NAME
+noun.\fIsuffix\fP, verb.\fIsuffix\fP, adj.\fIsuffix\fP, adv.\fIsuffix\fP \-
+WordNet lexicographer files that are input to 
+.BR grind (1WN)
+.SH DESCRIPTION
+WordNet's source files are written by lexicographers.  They are the
+product of a detailed relational analysis of lexical semantics: a
+variety of lexical and semantic relations are used to represent the
+organization of lexical knowledge.  Two kinds of building blocks are
+distinguished in the source files: word forms and word meanings.  Word
+forms are represented in their familiar orthography; word meanings are
+represented by synonym sets (\fIsynset\fPs) \- lists of synonymous
+word forms that are interchangeable in some context.  Two kinds of
+relations are recognized: lexical and semantic.  Lexical relations
+hold between word forms; semantic relations hold between word
+meanings.
+
+Lexicographer files correspond to the syntactic categories implemented
+in WordNet \- noun, verb, adjective and adverb.  All of the synsets in
+a lexicographer file are in the same syntactic category.  Each synset
+consists of a list of synonymous words or collocations
+(eg. \fB"fountain pen"\fP, \fB"take in"\fP), and pointers that
+describe the relations between this synset and other synsets.  These
+relations include (but are not limited to) hypernymy/hyponymy,
+antonymy, entailment, and meronymy/holonymy.  A word or collocation
+may appear in more than one synset, and in more than one part of
+speech.  Each use of a word in a synset represents a sense of that
+word in the part of speech corresponding to the synset.
+
+Adjectives may be organized into clusters containing head synsets and
+satellite synsets.  Adverbs generally point to the adjectives from
+which they are derived.
+
+See 
+.BR wngloss (7WN)
+for a glossary of WordNet terminology and a discussion of the
+database's content and logical organization.
+.SS Lexicographer File Names
+The names of the lexicographer files are of the form:
+
+.RS
+.IR pos . suffix
+.RE
+
+where \fIpos\fP is either \fBnoun\fP, \fBverb\fP, \fBadj\fP or
+\fBadv\fP.  \fIsuffix\fP may be used to organize groups of synsets
+into different files, for example \fBnoun.animal\fP and
+\fBnoun.plant\fP.  See
+.BR lexnames (5WN)
+for a list of lexicographer file names that are used in building
+WordNet.
+.SS Pointers
+Pointers are used to represent the relations between the words in one
+synset and another.  Semantic pointers represent relations between
+word meanings, and therefore pertain to all of the words in the source
+and target synsets.  Lexical pointers represent relations between word
+forms, and pertain only to specific words in the source and target
+synsets.  The following pointer types are usually used to indicate
+lexical relations: Antonym, Pertainym, Participle, Also See, Derivationally
+Related.  The remaining pointer types are generally used to represent semantic
+relations.
+
+A relation from a source to a target synset is formed by specifying
+a word from the target synset in the source synset, followed by the
+\fIpointer_symbol\fP indicating the pointer type.  The location of a pointer
+within a synset defines it as either lexical or semantic.  
+The
+.SB "Lexicographer File Format"
+section describes the syntax for entering a semantic pointer, and
+.SB "Word Syntax"
+describes the syntax for entering a lexical pointer.
+
+Although there are many pointer types, only certain types of relations
+are permitted between synsets of each syntactic category.
+
+The \fIpointer_symbol\fPs for nouns are:
+.RS
+.nf
+\fB!\fP 	Antonym
+\fB@\fP	Hypernym
+\fB@i\fP	Instance Hypernym
+\fB\(ap\fP	Hyponym
+\fB\(api\fP	Instance Hyponym
+\fB#m\fP	Member holonym
+\fB#s\fP	Substance holonym
+\fB#p\fP	Part holonym
+\fB%m\fP	Member meronym
+\fB%s\fP	Substance meronym
+\fB%p\fP	Part meronym
+\fB=\fP	Attribute
+\fB+\fP	Derivationally related form		
+\fB;c\fP	Domain of synset - TOPIC
+\fB-c\fP	Member of this domain - TOPIC
+\fB;r\fP	Domain of synset - REGION
+\fB-r\fP	Member of this domain - REGION
+\fB;u\fP	Domain of synset - USAGE
+\fB-u\fP	Member of this domain - USAGE
+.RE
+.fi
+
+The \fIpointer_symbol\fPs for verbs are:
+.RS
+.nf
+\fB!\fP 	Antonym
+\fB@\fP	Hypernym
+\fB\(ap\fP	Hyponym
+\fB*\fP	Entailment
+\fB>\fP	Cause
+\fB^\fP	Also see
+\fB$\fP	Verb Group
+\fB+\fP	Derivationally related form		
+\fB;c\fP	Domain of synset - TOPIC
+\fB;r\fP	Domain of synset - REGION
+\fB;u\fP	Domain of synset - USAGE
+.fi
+.RE
+
+The \fIpointer_symbol\fPs for adjectives are:
+.RS
+.nf
+\fB!\fP	Antonym
+\fB&\fP	Similar to
+\fB<\fP	Participle of verb
+\fB\e\fP	Pertainym (pertains to noun)
+\fB=\fP	Attribute
+\fB^\fP	Also see
+\fB;c\fP	Domain of synset - TOPIC
+\fB;r\fP	Domain of synset - REGION
+\fB;u\fP	Domain of synset - USAGE
+.fi
+.RE
+
+The \fIpointer_symbol\fPs for adverbs are:
+.RS
+.nf
+\fB!\fP	Antonym
+\fB\e\fP	Derived from adjective
+\fB;c\fP	Domain of synset - TOPIC
+\fB;r\fP	Domain of synset - REGION
+\fB;u\fP	Domain of synset - USAGE
+.fi
+.RE
+
+Many pointer types are reflexive, meaning that if a synset contains a
+pointer to another synset, the other synset should contain a
+corresponding reflexive pointer.  
+.BR grind (1WN)
+automatically inserts missing reflexive pointers for the following
+pointer types:
+
+.TS
+center box ;
+c | c 
+l | l .
+\fBPointer\fP	\fBReflect\fP
+_
+Antonym	Antonym
+Hyponym	Hypernym
+Hypernym	Hyponym
+Instance Hyponym	Instance Hypernym
+Instance Hypernym	Instance Hyponym
+Holonym	Meronym
+Meronym	Holonym
+Similar to	Similar to
+Attribute	Attribute
+Verb Group	Verb Group
+Derivationally Related	Derivationally Related
+Domain of synset	Member of Doman
+.TE
+.SS Verb Frames
+Each verb synset contains a list of generic sentence frames
+illustrating the types of simple sentences in which the verbs in the
+synset can be used.  For some verb senses, example sentences
+illustrating actual uses of the verb are provided.  (See
+.SB "Verb Example Sentences"
+in
+.BR wndb (5WN).)
+Whenever there is no example sentence, the generic sentence frames
+specified by the lexicographer are used.  The generic sentence frames
+are entered in a synset as a comma-separated list of integer frame
+numbers.  The following list is the text of the generic frames,
+preceded by their frame numbers:
+
+.RS
+.nf
+1	Something ----s
+2	Somebody ----s
+3	It is ----ing
+4	Something is ----ing PP
+5	Something ----s something Adjective/Noun
+6	Something ----s Adjective/Noun
+7	Somebody ----s Adjective
+8	Somebody ----s something
+9	Somebody ----s somebody
+10	Something ----s somebody
+11	Something ----s something
+12	Something ----s to somebody
+13	Somebody ----s on something
+14	Somebody ----s somebody something
+15	Somebody ----s something to somebody
+16	Somebody ----s something from somebody
+17	Somebody ----s somebody with something
+18	Somebody ----s somebody of something
+19	Somebody ----s something on somebody
+20	Somebody ----s somebody PP
+21	Somebody ----s something PP
+22	Somebody ----s PP
+23	Somebody's (body part) ----s
+24	Somebody ----s somebody to INFINITIVE
+25	Somebody ----s somebody INFINITIVE
+26	Somebody ----s that CLAUSE
+27	Somebody ----s to somebody
+28	Somebody ----s to INFINITIVE
+29	Somebody ----s whether INFINITIVE
+30	Somebody ----s somebody into V-ing something
+31	Somebody ----s something with something
+32	Somebody ----s INFINITIVE
+33	Somebody ----s VERB-ing
+34	It ----s that CLAUSE
+35	Something ----s INFINITIVE
+.fi
+.RE
+.SS Lexicographer File Format
+Synsets are entered one per line, and each line is terminated with a
+newline character.  A line containing a synset may be as long as
+necessary, but no newlines can be entered within a synset.  Within a
+synset, spaces or tabs may be used to separate entities.  Items
+enclosed in italicized square brackets may not be present.
+
+The general synset syntax is:
+
+.RS
+.nf
+\fB{\fP \fI~~words~~pointers~~\fP \fB(\fP \fI~gloss~\fP \fB)~~}\fR
+.fi
+.RE
+
+Synsets of this form are valid for all syntactic categories except
+verb, and are referred to as basic synsets.  At least one \fIword\fP
+and a \fIgloss\fP are required to form a valid synset.  Pointers
+entered following all the \fIwords\fP in a synset represent semantic
+relations between all the words in the source and target synsets.
+
+For verbs, the basic synset syntax is defined as follows:
+
+.KS
+.RS
+.nf
+\fB{\fP \fI~~words~~pointers~~frames~~\fP \fB(\fP ~\fIgloss~\fP \fB)~~}\fR
+.fi
+.RE
+
+Adjective may be organized into clusters containing one or more head
+synsets and optional satellite synsets.  Adjective clusters are of the
+form:
+
+.RS
+.nf
+\fB[
+\fIhead synset
+[satellite synsets]
+[\-]
+[additional head/satellite synsets]
+\fB]\fR
+.fi
+.RE
+.KE
+
+Each adjective cluster is enclosed in square brackets, and may have
+one or more parts.  Each part consists of a head synset and optional
+satellite synsets that are conceptually similar to the head synset's
+meaning.  Parts of a cluster are separated by one or more hyphens
+(\fB\-\fP) on a line by themselves, with the terminating square
+bracket following the last synset.  Head and satellite synsets follow
+the syntax of basic synsets, however a "Similar to" pointer must be
+specified in a head synset for each of its satellite synsets.  Most
+adjective clusters contain two antonymous parts.  See
+.BR wngloss (7WN)
+for a discussion of adjective clusters, and
+.SB "Special Adjective Syntax"
+for more information on adjective cluster syntax.
+
+Synsets for relational adjectives (pertainyms) and participial
+adjectives do not adhere to the cluster structure.  They use the basic
+synset syntax.
+
+Comments can be entered in a lexicographer file by enclosing the text
+of the comment in parentheses.  Note that comments \fBcannot\fP appear
+within a synset, as parentheses within a synset have an entirely
+different meaning (see
+.SB "Gloss Syntax"
+).  However, entire synsets (or adjective clusters) can be "commented
+out" by enclosing them in parentheses.  This is often used by the
+lexicographers to verify the syntax of files under development or to
+leave a note to oneself while working on entries.
+.SS Word Syntax
+A synset must have at least one word, and the words of a synset must
+appear after the opening brace and before any other synset constructs.
+A word may be entered in either the simple word or word/pointer
+syntax.
+
+A simple word is of the form:
+
+.RS
+.nf
+\fIword[\fP \fB(\fP \fImarker\fP \fB)\fP \fI][lex_id]\fP \fB,\fR
+.fi
+.RE
+
+\fIword\fP may be entered in any combination of upper and lower case
+unless it is in an adjective cluster.  A collocation is entered by
+joining the individual words with an underscore character (\fB_\fP).
+Numbers (integer or real) may be entered, either by themselves or as
+part of a word string, by following the number with a double quote
+(\fB"\fP).
+
+See 
+.SB "Special Adjective Syntax"
+for a description of adjective clusters and markers.
+
+\fIword\fP may be followed by an integer \fIlex_id\fP from \fB1\fP to
+\fB15\fP.  The \fIlex_id\fP is used to distinguish different senses of
+the same word within a lexicographer file.  The lexicographer assigns
+\fIlex_id\fP values, usually in ascending order, although there is no
+requirement that the numbers be consecutive.  The default is \fB0\fP,
+and does not have to be specified.  A \fIlex_id\fP must be used on
+pointers if the desired sense has a non-zero \fIlex_id\fP in its
+synset specification.
+
+Word/pointer syntax is of the form:
+
+.RS
+.nf
+\fB[~~\fP \fIword[\fP \fB(\fP \fImarker\fP \fB)\fP \fI][lex_id]\fP \fB,\fP \fI~~pointers~~\fP \fB]\fR
+.fi
+.RE
+
+This syntax is used when one or more pointers correspond only to the
+specific word in the word/pointer set, rather than all the words in
+the synset, and represents a lexical relation.  Note that a
+word/pointer set appears within a synset, therefore the square
+brackets used to enclose it are treated differently from those used to
+define an adjective cluster.  Only one word can be specified in each
+word/pointer set, and any number of pointers may be included.  A
+synset can have any number of word/pointer sets.  Each is treated by
+.BR grind (1WN) 
+essentially as a \fIword\fP, so they all must appear
+before any synset \fIpointers\fP representing semantic relations.
+
+For verbs, the word/pointer syntax is extended in the following manner
+to allow the user to specify generic sentence frames that, like
+pointers, correspond only to a specific word, rather than all the
+words in the synset.  In this case, \fIpointers\fP are optional.
+
+.RS
+.nf
+\fB[~~\fP \fIword\fP \fB,\fP ~~\fI[pointers]~~frames~~\fP \fB]\fR
+.fi
+.RE
+.SS Pointer Syntax
+Pointers are optional in synsets.  If a pointer is specified outside
+of a word/pointer set, the relation is applied to all of the words in
+the synset, including any words specified using the word/pointer
+syntax.  This indicates a semantic relation between the meanings of
+the words in the synsets.  If specified within a word/pointer set, the
+relation corresponds only to the word in the set and represents a
+lexical relation.
+
+A pointer is of the form:
+
+.RS
+.nf
+\fI[lex_filename\fP\fB:\fP \fI]word[lex_id]\fP\fB,\fP\fIpointer_symbol\fR
+.fi
+.RE
+
+or:
+
+.RS
+.nf
+\fI[lex_filename\fP\fB:\fP \fI]word[lex_id]\fP\fB^\fP\fIword[lex_id]\fP\fB,\fP\fIpointer_symbol\fR
+.fi
+.RE
+
+For pointers, \fIword\fP indicates a word in another synset.  When the
+second form of a pointer is used, the first \fIword\fP indicates a
+word in a head synset, and the second is a word in a satellite of that
+cluster.  \fIword\fP may be followed by a \fIlex_id\fP that is used to
+match the pointer to the correct target synset.  The synset containing
+\fIword\fP may reside in another lexicographer file.  In this case,
+\fIword\fP is preceded by \fIlex_filename\fP as shown.
+
+See
+.SB "Pointers"
+for a list of \fIpointer_symbol\fPs and their meanings.
+.SS Verb Frame List Syntax
+Frame numbers corresponding to generic sentence frames must be entered
+in each verb synset.  If a frame list is specified outside of a
+word/pointer set, the verb frames in the list apply to all of the
+words in the synset, including any words specified using the
+word/pointer syntax.  If specified within a word/pointer set, the verb
+frames in the list correspond only to the word in the set.
+
+A frame number list is entered as follows:
+
+.RS
+\fBframes:\fP~~\fIf_num\fP[\fB,\fP\fIf_num...]\fR
+.RE
+
+Where \fIf_num\fP specifies a generic frame number.
+See
+.SB "Verb Frames"
+for a list of generic sentences and their corresponding frame numbers.
+.SS Gloss Syntax
+A gloss is included in all synsets.  The lexicographer may enter a
+text string of any length desired.  A gloss is simply a string
+enclosed in parentheses with no embedded carriage returns.  It
+provides a definition of what the synset represents and/or example
+sentences.
+.SS Special Adjective Syntax
+The syntax for representing antonymous adjective synsets requires
+several additional conditions.
+
+The first word of a head synset \fBmust\fP be entered in upper case,
+and can be thought of as the head word of the head synset.  The
+\fIword\fP part of a pointer from one head synset to another head
+synset within the same cluster (usually an antonym) must also be
+entered in upper case.  Usually antonymous adjectives are entered
+using the word/pointer syntax described in
+.SB "Word Syntax"
+to indicate a lexical relation.  There is no restriction on the number
+of parts that a cluster may have, and some clusters have three parts,
+representing antonymous triplets, such as \fBsolid\fP, \fBliquid\fP,
+and \fBgas\fP.
+
+A cross-cluster pointer may be specified, allowing a head or satellite
+synset to point to a head synset in a different cluster.  A
+cross-cluster pointer is indicated by entering the \fIword\fP part of
+the pointer in upper case.
+
+An adjective may be annotated with a syntactic marker indicating a
+limitation on the syntactic position the adjective may have in
+relation to noun that it modifies.  If so marked, the marker appears
+between the word and its following comma.  If a \fIlex_id\fP is
+specified, the marker immediately follows it.  The syntactic markers
+are:
+.RS
+.nf
+\fB(p)\fP	predicate position
+\fB(a)\fP	prenominal (attributive) position
+\fB(ip)\fP	immediately postnominal position		
+.fi
+.RE
+.SH EXAMPLES
+\fI(Note that these are hypothetical examples not found in the WordNet
+lexicographer files.)\fP
+
+Sample noun synsets:
+.RS
+.nf
+{ canine, [ dog1, cat,! ] pooch, canid,@ }
+{ collie, dog1,@ (large multi-colored dog with pointy nose) }
+{ hound, hunting_dog, pack,#m dog1,@ }
+{ dog, }
+.fi
+.RE
+
+Sample verb synsets:
+.RS
+.nf
+{ [ confuse, clarify,! frames: 1 ] blur, obscure, frames: 8, 10 }
+{ [ clarify, confuse,! ] make_clear, interpret,@ frames: 8 }
+{ interpret, construe, understand,@ frames: 8 }
+.fi
+.RE
+
+Sample adjective clusters:
+.RS
+.nf
+[
+{ [ HOT, COLD,! ] lukewarm(a), TEPID,^ (hot to the touch) }
+{ warm, }
+\-
+{ [ COLD, HOT,! ] frigid, (cold to the touch) }
+{ freezing, }
+]
+.fi
+.RE
+
+Sample adverb synsets:
+.RS
+.nf
+{ [ basically, adj.all:essential^basic,\e ] [ essentially, adj.all:basic^fundamental,\e ] ( by one's very nature )}
+{ pointedly, adj.all:pungent^pointed,\e }
+{ [ badly, adj.all:bad,\e well,! ] ill, ("He was badly prepared") }
+.fi
+.RE
+.SH SEE ALSO
+.BR grind (1WN),
+.BR wnintro (5WN),
+.BR lexnames (5WN),
+.BR wndb (5WN),
+.BR uniqbeg (7WN),
+.BR wngloss (7WN).
+.LP
+Fellbaum, C. (1998), ed.
+\fI"WordNet: An Electronic Lexical Database"\fP.
+MIT Press, Cambridge, MA.
+

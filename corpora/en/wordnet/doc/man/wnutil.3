@@ -1,0 +1,177 @@
+'\" t
+.\" $Id$
+.TH WNUTIL 3WN  "Dec 2006" "WordNet 3.0" "WordNet\(tm Library Functions"
+.SH NAME
+wninit, re_wninit, cntwords, strtolower, ToLowerCase, strsubst,
+getptrtype, getpos, getsstype, StrToPos, GetSynsetForSense,
+GetDataOffset, GetPolyCount, WNSnsToStr,
+GetValidIndexPointer, GetWNSense, GetSenseIndex, default_display_message
+.SH SYNOPSIS
+.LP
+\fB#include "wn.h"\fP
+.LP
+\fBint wninit(void);\fP
+.LP
+\fBint re_wninit(void);\fP
+.LP
+\fBint cntwords(char *str, char separator);\fP
+.LP
+\fBchar *strtolower(char *str);\fP
+.LP 
+\fBchar *ToLowerCase(char *str);\fP
+.LP
+\fBchar *strsubst(char *str, char from, char to);\fP
+.LP
+\fBint getptrtype(char *ptr_symbol);\fP
+.LP
+\fBint getpos(char *ss_type);\fP
+.LP
+\fBint getsstype(char *ss_type);\fP
+.LP
+\fBint StrToPos(char \**pos);\fP
+.LP
+\fBSynsetPtr GetSynsetForSense(char *sense_key);\fP
+.LP
+\fBlong GetDataOffset(char *sense_key);\fP
+.LP
+\fBint GetPolyCount(char *sense_key);\fP
+.LP
+\fBchar *WNSnsToStr(IndexPtr idx, int sense_num);\fP
+.LP
+\fBIndexPtr GetValidIndexPointer(char *str, int pos);\fP
+.LP
+\fBint GetWNSense(char *lemma, *lex_sense);\fP
+.LP
+\fBSnsIndexPtr GetSenseIndex(char *sense_key);\fP
+.LP
+\fBint GetTagcnt(IndexPtr idx, int sense);\fP
+.LP
+\fBint default_display_message(char *msg);\fP
+.SH DESCRIPTION
+.LP
+The WordNet library contains many utility functions used by the
+interface code, other library functions, and various applications and
+tools.  Only those of importance to the WordNet search code, or which
+are generally useful are described here.
+
+.B wninit(\|)
+opens the files necessary for using WordNet with the WordNet library
+functions.  The database files are opened, and 
+.B morphinit(\|)
+is called to open the exception list files.  Returns \fB0\fP if
+successful, \fB-1\fP otherwise.  The database and exception list files
+must be open before the WordNet search and morphology functions are
+used.  If the database is successfully opened, the global variable
+\fBOpenDB\fP is set to \fB1\fP.  Note that it is possible for the
+database files to be opened (\fBOpenDB == 1\fP), but not the exception
+list files.
+
+.B re_wninit(\|)
+is used to close the database files and reopen them, and is used
+exclusively for WordNet development.
+.B re_morphinit(\|) 
+is called to close and reopen the exception list files.  Return codes
+are as described above.
+
+.B cntwords(\|)
+counts the number of underscore or space separated words in \fIstr\fP.
+A hyphen is passed in \fIseparator\fP if is is to be considered a
+word delimiter.  Otherwise \fIseparator\fP can be any other
+character, or an underscore if another character is not desired.
+
+.B strtolower(\|)
+converts \fIstr\fP to lower case and removes a trailing adjective
+marker, if present.  \fIstr\fP is actually modified by this function,
+and a pointer to the modified string is returned.
+
+.B ToLowerCase(\|)
+converts \fIstr\fP to lower case as above, without removing an
+adjective marker.
+
+.B strsubst(\|)
+replaces all occurrences of \fIfrom\fP with \fIto\fP in \fIstr\fP and
+returns resulting string.
+
+.B getptrtype(\|)
+returns the integer \fIptr_type\fP corresponding to the pointer
+character passed in \fIptr_symbol\fP.  See
+.BR wnsearch (3WN)
+for a table of pointer symbols and types.
+
+.B getpos(\|)
+returns the integer constant corresponding to the synset type passed.
+\fIss_type\fP may be one of the following: \fBn, v, a, r, s\fP.  If
+\fBs\fP is passed,
+.SB ADJ
+is returned.  Exits with \fB-1\fP if \fIss_type\fP is invalid.
+
+.B getsstype(\|)
+works like \fBgetpos(\|)\fP, but returns
+.SB SATELLITE
+if \fIss_type\fP is \fBs\fP.
+
+.B StrToPos(\|)
+returns the integer constant corresponding to the syntactic category
+passed in \fIpos\fP.  \fIstring\fP must be one of the following:
+\fBnoun, verb, adj, adv\fP.  \fB-1\fP is returned if \fIpos\fP is
+invalid.
+
+.B GetSynsetForSense(\|)
+returns the synset that contains the word sense \fIsense_key\fP and
+.SB NULL
+in case of error.
+
+.B GetDataOffset(\|)
+returns the synset offset for synset that contains the word sense
+\fIsense_key\fP, and \fB0\fP if \fIsense_key\fP is not in sense index
+file. 
+
+.B GetPolyCount(\|)
+returns the polysemy count (number of senses in WordNet) for
+\fIlemma\fP encoded in \fIsense_key\fP and \fB0\fP if word is not
+found. 
+
+.B WNSnsToStr(\|)
+returns sense key encoding for \fIsense_num\fP entry in \fIidx\fP.
+
+.B GetValidIndexPointer(\|)
+returns the Index structure for \fIword\fP in \fIpos\fP.  Calls
+.BR morphstr (3WN)
+to find a valid base form if \fIword\fP is inflected.
+
+.B GetWNSense(\|)
+returns the WordNet sense number for the sense key encoding
+represented by \fIlemma\fP and \fIlex_sense\fP.
+
+.B GetSenseIndex(\|)
+returns parsed sense index entry for \fIsense_key\fP and 
+.SB NULL
+if \fIsense_key\fP is not in sense index.
+
+.B GetTagcnt(\|)
+returns the number of times the sense passed has been tagged according
+to the \fIcntlist\fP file.
+
+.B default_display_message(\|)
+simply returns \fB-1\fP.  This is the default value for the global
+variable \fBdisplay_message\fP, that points to a function to call to
+display an error message.  In general, applications (including the
+WordNet interfaces) define an application specific function and set
+\fBdisplay_message\fP to point to it.
+.SH NOTES
+\fBinclude/wn.h\fP lists all the pointer and search
+types and their corresponding constant values.  There is no
+description of what each search type is or the results returned.
+Using the WordNet interface is the best way to see what types of
+searches are available, and the data returned for each.
+.SH SEE ALSO
+.BR wnintro (3WN),
+.BR wnsearch (3WN),
+.BR morph (3WN),
+.BR wnintro (5WN),
+.BR wnintro (7WN).
+
+.SH WARNINGS
+Error checking on passed arguments is not rigorous.  Passing 
+.SB NULL
+pointers or invalid values will often cause an application to die.

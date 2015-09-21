@@ -1,0 +1,54 @@
+'\" t
+.\" $Id$
+.tr ~
+.TH WNINTRO 5WN "Dec 2006" "WordNet 3.0" "WordNet\(tm File Formats"
+.SH NAME
+wnintro \- introduction to descriptions of WordNet file formats
+.SH SYNOPSIS
+.LP 
+\fBcntlist\fP \- format of \fBcntlist\fP and \fBcntlist.rev\fP files
+.LP
+\fBlexnames\fP \- list of lexicographer file names and numbers
+.LP
+\fBprologdb\fP \- description of Prolog database files
+.LP
+\fBsenseidx\fP \- format of sense index file
+.LP
+\fBsensemap\fP \- mapping from senses in WordNet 2.1 to corresponding
+3.0 senses
+.LP
+\fBwndb\fP \- format of WordNet database files 
+.LP
+\fBwninput\fP \- format of WordNet lexicographer files
+.SH DESCRIPTION
+This section of the \fIWordNet Reference Manual\fP contains manual pages
+that describe the formats of the various files included in different
+WordNet 3.0 packages.
+.SH NOMENCLATURE
+All files are in ASCII.  Fields are generally separated by one space,
+unless otherwise noted, and each line is terminated with a newline
+character.  In the file format descriptions, terms in \fIitalics\fP
+refer to field names.  Characters or strings in \fBboldface\fP
+represent an actual character or string as it appears in the file.
+Items enclosed in italicized square brackets (\fI[~~]\fP) may not be present.
+Since several files contain fields that have the identical meaning,
+field names are consistently defined.  For example, several WordNet
+files contain one or more \fIsynset_offset\fP fields.  In each case,
+the definition of \fIsynset_offset\fP is identical.
+.SH SEE ALSO
+.BR wnintro (1WN),
+.BR wnintro (3WN),
+.BR cntlist (5WN),
+.BR lexnames (5WN),
+.BR prologdb (5WN),
+.BR senseidx (5WN),
+.BR sensemap (5WN),
+.BR wndb (5WN),
+.BR wninput (5WN),
+.BR wnintro (7WN),
+.BR wngloss (7WN).
+.LP
+Fellbaum, C. (1998), ed.
+\fI"WordNet: An Electronic Lexical Database"\fP.
+MIT Press, Cambridge, MA.
+

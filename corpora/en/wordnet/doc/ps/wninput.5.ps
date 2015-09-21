@@ -1,0 +1,1526 @@
+%!PS
+%%Version: 3.15
+%%DocumentFonts: (atend)
+%%Pages: (atend)
+%%EndComments
+%ident	"@(#)lp:filter/postscript/postscript/dpost.ps	1.1"
+%
+% Version 3.16 prologue for troff files.
+%
+
+/#copies 1 store
+/aspectratio 1 def
+/formsperpage 1 def
+/landscape false def
+/linewidth .3 def
+/magnification 1 def
+/margin 0 def
+/orientation 0 def
+/resolution 720 def
+/xoffset 0 def
+/yoffset 0 def
+
+/roundpage true def
+/useclippath true def
+/pagebbox [0 0 612 792] def
+
+/R  /Times-Roman def
+/I  /Times-Italic def
+/B  /Times-Bold def
+/BI /Times-BoldItalic def
+/H  /Helvetica def
+/HI /Helvetica-Oblique def
+/HB /Helvetica-Bold def
+/HX /Helvetica-BoldOblique def
+/CW /Courier def
+/CO /Courier def
+/CI /Courier-Oblique def
+/CB /Courier-Bold def
+/CX /Courier-BoldOblique def
+/PA /Palatino-Roman def
+/PI /Palatino-Italic def
+/PB /Palatino-Bold def
+/PX /Palatino-BoldItalic def
+/Hr /Helvetica-Narrow def
+/Hi /Helvetica-Narrow-Oblique def
+/Hb /Helvetica-Narrow-Bold def
+/Hx /Helvetica-Narrow-BoldOblique def
+/KR /Bookman-Light def
+/KI /Bookman-LightItalic def
+/KB /Bookman-Demi def
+/KX /Bookman-DemiItalic def
+/AR /AvantGarde-Book def
+/AI /AvantGarde-BookOblique def
+/AB /AvantGarde-Demi def
+/AX /AvantGarde-DemiOblique def
+/NR /NewCenturySchlbk-Roman def
+/NI /NewCenturySchlbk-Italic def
+/NB /NewCenturySchlbk-Bold def
+/NX /NewCenturySchlbk-BoldItalic def
+/ZD /ZapfDingbats def
+/ZI /ZapfChancery-MediumItalic def
+/VR /Varitimes#Roman def
+/VI /Varitimes#Italic def
+/VB /Varitimes#Bold def
+/VX /Varitimes#BoldItalic def
+/S  /S def
+/S1 /S1 def
+/GR /Symbol def
+
+/inch {72 mul} bind def
+/min {2 copy gt {exch} if pop} bind def
+
+/setup {
+	counttomark 2 idiv {def} repeat pop
+
+	landscape {/orientation 90 orientation add def} if
+	/scaling 72 resolution div def
+	linewidth setlinewidth
+	1 setlinecap
+
+	pagedimensions
+	xcenter ycenter translate
+	orientation neg rotate
+	width 2 div neg height 2 div translate
+	xoffset inch yoffset inch translate
+	margin 2 div dup neg translate
+	magnification dup aspectratio mul scale
+	scaling scaling scale
+
+	/Symbol /S Sdefs cf
+	/Times-Roman /S1 S1defs cf
+	0 0 moveto
+} def
+
+/pagedimensions {
+	useclippath userdict /gotpagebbox known not and {
+		/pagebbox [clippath pathbbox newpath] def
+		roundpage currentdict /roundpagebbox known and {roundpagebbox} if
+	} if
+	pagebbox aload pop
+	4 -1 roll exch 4 1 roll 4 copy
+	landscape {4 2 roll} if
+	sub /width exch def
+	sub /height exch def
+	add 2 div /xcenter exch def
+	add 2 div /ycenter exch def
+	userdict /gotpagebbox true put
+} def
+
+/pagesetup {
+	/page exch def
+	currentdict /pagedict known currentdict page known and {
+		page load pagedict exch get cvx exec
+	} if
+} def
+
+/decodingdefs [
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg /y exch def counttomark 2 idiv {y moveto show} repeat}
+	{neg moveto {2 index stringwidth pop sub exch div 0 32 4 -1 roll widthshow} repeat}
+	{neg moveto {spacewidth sub 0.0 32 4 -1 roll widthshow} repeat}
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg setfunnytext}
+] def
+
+/setdecoding {/t decodingdefs 3 -1 roll get bind def} bind def
+
+/w {neg moveto show} bind def
+/m {neg dup /y exch def moveto} bind def
+/done {/lastpage where {pop lastpage} if} def
+
+/f {
+	dup /font exch def findfont exch
+	dup /ptsize exch def scaling div dup /size exch def scalefont setfont
+	linewidth ptsize mul scaling 10 mul div setlinewidth
+	/spacewidth ( ) stringwidth pop def
+} bind def
+
+/changefont {
+	/fontheight exch def
+	/fontslant exch def
+	currentfont [
+		1 0
+		fontheight ptsize div fontslant sin mul fontslant cos div
+		fontheight ptsize div
+		0 0
+	] makefont setfont
+} bind def
+
+/sf {f} bind def
+
+/cf {
+	dup length 2 idiv
+	/entries exch def
+	/chtab exch def
+	/newfont exch def
+
+	findfont dup length 1 add dict
+	/newdict exch def
+	{1 index /FID ne {newdict 3 1 roll put} {pop pop} ifelse} forall
+
+	newdict /Metrics entries dict put
+	newdict /Metrics get
+	begin
+		chtab aload pop
+		1 1 entries {pop def} for
+		newfont newdict definefont pop
+	end
+} bind def
+
+%
+% A few arrays used to adjust reference points and character widths in some
+% of the printer resident fonts. If square roots are too high try changing
+% the lines describing /radical and /radicalex to,
+%
+%	/radical	[0 -75 550 0]
+%	/radicalex	[-50 -75 500 0]
+%
+
+/Sdefs [
+	/bracketlefttp		[220 500]
+	/bracketleftbt		[220 500]
+	/bracketrighttp		[-70 380]
+	/bracketrightbt		[-70 380]
+	/braceleftbt		[220 490]
+	/bracketrightex		[220 -125 500 0]
+	/radical		[0 0 550 0]
+	% NeWSprint's \(br is too low, compensate
+	statusdict /product get (NeWS Server) eq {
+		/radicalex		[-50 100 500 0]
+		/parenleftex		[-20 100 0 0]
+
+	} {
+		/radicalex		[-50 0 500 0]
+		/parenleftex		[-20 -170 0 0]
+	} ifelse
+	/integral		[100 -50 500 0]
+	/infinity		[10 -75 730 0]
+] def
+
+/S1defs [
+	/underscore		[0 80 500 0]
+	/endash			[7 90 650 0]
+] def
+%%EndProlog
+%%BeginSetup
+mark
+/resolution 720 def
+setup
+2 setdecoding
+%%EndSetup
+%%Page: 1 1
+save
+mark
+1 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 5WN \))3 330( WNINPUT)1 3340(File Formats)1 517 3 1213 480 t
+9 B f
+(NAME)720 960 w
+10 R f
+(noun.)1080 1080 w
+10 I f
+(suf\256x)1305 1080 w
+10 R f
+(, verb.)1 260 1 1516 1080 t
+10 I f
+(suf\256x)1776 1080 w
+10 R f
+(, adj.)1 205 1 1987 1080 t
+10 I f
+(suf\256x)2192 1080 w
+10 R f
+(, adv.)1 227 1 2403 1080 t
+10 I f
+(suf\256x)2630 1080 w
+10 S1 f
+(\261)2874 1080 w
+10 R f
+(WordNet lexicographer \256les that are input to)6 1839 1 2972 1080 t
+10 B f
+(grind)4844 1080 w
+10 R f
+(\(1WN\))5078 1080 w
+9 B f
+(DESCRIPTION)720 1248 w
+10 R f
+( are the product of a detailed relational)7 1732( They)1 290(WordNet's source \256les are written by lexicographers.)6 2298 3 1080 1368 t
+( represent the organi-)3 877(analysis of lexical semantics: a variety of lexical and semantic relations are used to)13 3443 2 1080 1488 t
+( blocks are distinguished in the source \256les: word)8 2120( kinds of building)3 760( Two)1 258(zation of lexical knowledge.)3 1182 4 1080 1608 t
+( forms are represented in their familiar orthography; word meanings)9 2890( Word)1 305(forms and word meanings.)3 1125 3 1080 1728 t
+(are represented by synonym sets \()5 1410 1 1080 1848 t
+10 I f
+(synset)2490 1848 w
+10 R f
+(s\))2734 1848 w
+10 S1 f
+(\261)2842 1848 w
+10 R f
+(lists of synonymous word forms that are interchangeable in)8 2457 1 2943 1848 t
+( relations hold)2 628( Lexical)1 386( kinds of relations are recognized: lexical and semantic.)8 2452( Two)1 270(some context.)1 584 5 1080 1968 t
+(between word forms; semantic relations hold between word meanings.)8 2884 1 1080 2088 t
+( syntactic categories implemented in WordNet)5 1910(Lexicographer \256les correspond to the)4 1531 2 1080 2328 t
+10 S1 f
+(\261)4557 2328 w
+10 R f
+(noun, verb, adjec-)2 742 1 4658 2328 t
+( syn-)1 206( Each)1 266( the same syntactic category.)4 1186( of the synsets in a lexicographer \256le are in)9 1806( All)1 196(tive and adverb.)2 660 6 1080 2448 t
+(set consists of a list of synonymous words or collocations \(eg.)10 2599 1 1080 2568 t
+10 S1 f
+(")3716 2568 w
+10 B f
+(fountain pen)1 555 1 3757 2568 t
+10 S1 f
+(")4312 2568 w
+10 R f
+(,)4353 2568 w
+10 S1 f
+(")4415 2568 w
+10 B f
+(take in)1 304 1 4456 2568 t
+10 S1 f
+(")4760 2568 w
+10 R f
+( pointers)1 360(\), and)1 239 2 4801 2568 t
+( relations include \(but are not)5 1268( These)1 315( between this synset and other synsets.)6 1654(that describe the relations)3 1083 4 1080 2688 t
+( word or colloca-)3 720( A)1 142( entailment, and meronymy/holonymy.)3 1594(limited to\) hypernymy/hyponymy, antonymy,)3 1864 4 1080 2808 t
+( use of a word in a)6 791( Each)1 266( more than one part of speech.)6 1259(tion may appear in more than one synset, and in)9 2004 4 1080 2928 t
+(synset represents a sense of that word in the part of speech corresponding to the synset.)15 3602 1 1080 3048 t
+( gen-)1 220( Adverbs)1 414( organized into clusters containing head synsets and satellite synsets.)9 2909(Adjectives may be)2 777 4 1080 3288 t
+(erally point to the adjectives from which they are derived.)9 2384 1 1080 3408 t
+(See)1080 3648 w
+10 B f
+(wngloss)1267 3648 w
+10 R f
+( the database's content)3 963(\(7WN\) for a glossary of WordNet terminology and a discussion of)10 2836 2 1601 3648 t
+(and logical organization.)2 1006 1 1080 3768 t
+9 B f
+(Lexicographer File Names)2 1060 1 900 3936 t
+10 R f
+(The names of the lexicographer \256les are of the form:)9 2175 1 1080 4056 t
+10 I f
+(pos)1440 4296 w
+10 R f
+(.)1587 4296 w
+10 I f
+(suf\256x)1612 4296 w
+10 R f
+(where)1080 4536 w
+10 I f
+(pos)1360 4536 w
+10 R f
+(is either)1 332 1 1537 4536 t
+10 B f
+(noun)1907 4536 w
+10 R f
+(,)2125 4536 w
+10 B f
+(verb)2188 4536 w
+10 R f
+(,)2382 4536 w
+10 B f
+(adj)2445 4536 w
+10 R f
+(or)2622 4536 w
+10 B f
+(adv)2743 4536 w
+10 R f
+(.)2899 4536 w
+10 I f
+(suf\256x)2995 4536 w
+10 R f
+(may be used to organize groups of synsets into dif-)9 2156 1 3244 4536 t
+(ferent \256les, for example)3 995 1 1080 4656 t
+10 B f
+(noun.animal)2114 4656 w
+10 R f
+(and)2691 4656 w
+10 B f
+(noun.plant)2874 4656 w
+10 R f
+(. See)1 241 1 3340 4656 t
+10 B f
+(lexnames)3620 4656 w
+10 R f
+(\(5WN\) for a list of lexicographer)5 1386 1 4014 4656 t
+(\256le names that are used in building WordNet.)7 1876 1 1080 4776 t
+9 B f
+(Pointers)900 4944 w
+10 R f
+( Semantic)1 455(Pointers are used to represent the relations between the words in one synset and another.)14 3865 2 1080 5064 t
+( between word meanings, and therefore pertain to all of the words in the)13 3189(pointers represent relations)2 1131 2 1080 5184 t
+( relations between word forms, and pertain only to)8 2128( pointers represent)2 763( Lexical)1 370(source and target synsets.)3 1059 4 1080 5304 t
+( following pointer types are usually used to indicate)8 2150( The)1 224(speci\256c words in the source and target synsets.)7 1946 3 1080 5424 t
+( remaining)1 463( The)1 246( Participle, Also See, Derivationally Related.)5 1963(lexical relations: Antonym, Pertainym,)3 1648 4 1080 5544 t
+(pointer types are generally used to represent semantic relations.)8 2600 1 1080 5664 t
+( synset is formed by specifying a word from the target synset in the)13 2844(A relation from a source to a target)7 1476 2 1080 5904 t
+(source synset, followed by the)4 1304 1 1080 6024 t
+10 I f
+(pointer)2432 6024 w
+10 S f
+(_)2721 6024 w
+10 I f
+(symbol)2771 6024 w
+10 R f
+( location of a pointer)4 920( The)1 235(indicating the pointer type.)3 1143 3 3102 6024 t
+(within a synset de\256nes it as either lexical or semantic. The)10 2473 1 1080 6144 t
+9 B f
+(Lexicographer File Format)2 1074 1 3592 6144 t
+10 R f
+(section describes)1 694 1 4706 6144 t
+(the syntax for entering a semantic pointer, and)7 1964 1 1080 6264 t
+9 B f
+(Word Syntax)1 528 1 3085 6264 t
+10 R f
+(describes the syntax for entering a lexical)6 1747 1 3653 6264 t
+(pointer.)1080 6384 w
+( of)1 123(Although there are many pointer types, only certain types of relations are permitted between synsets)14 4197 2 1080 6624 t
+(each syntactic category.)2 971 1 1080 6744 t
+(The)1080 6984 w
+10 I f
+(pointer)1268 6984 w
+10 S f
+(_)1557 6984 w
+10 I f
+(symbol)1607 6984 w
+10 R f
+(s for nouns are:)3 642 1 1890 6984 t
+10 B f
+(!)1440 7104 w
+10 R f
+(Antonym)1800 7104 w
+10 S1 f
+(@)1440 7224 w
+10 R f
+(Hypernym)1800 7224 w
+( 1)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7704 t
+cleartomark
+showpage
+restore
+%%EndPage: 1 1
+%%Page: 2 2
+save
+mark
+2 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 5WN \))3 330( WNINPUT)1 3340(File Formats)1 517 3 1213 480 t
+10 S1 f
+(@)1440 960 w
+10 B f
+(i)1532 960 w
+10 R f
+(Instance Hypernym)1 792 1 1800 960 t
+10 S f
+(~)1440 1080 w
+10 R f
+(Hyponym)1800 1080 w
+10 S f
+(~)1440 1200 w
+10 B f
+(i)1495 1200 w
+10 R f
+(Instance Hyponym)1 765 1 1800 1200 t
+10 S1 f
+(#)1440 1320 w
+10 B f
+(m)1490 1320 w
+10 R f
+(Member holonym)1 727 1 1800 1320 t
+10 S1 f
+(#)1440 1440 w
+10 B f
+(s)1490 1440 w
+10 R f
+(Substance holonym)1 794 1 1800 1440 t
+10 S1 f
+(#)1440 1560 w
+10 B f
+(p)1490 1560 w
+10 R f
+(Part holonym)1 550 1 1800 1560 t
+10 B f
+(%m)1440 1680 w
+10 R f
+(Member meronym)1 754 1 1800 1680 t
+10 B f
+(%s)1440 1800 w
+10 R f
+(Substance meronym)1 821 1 1800 1800 t
+10 B f
+(%p)1440 1920 w
+10 R f
+(Part meronym)1 577 1 1800 1920 t
+10 B f
+(=)1440 2040 w
+10 R f
+(Attribute)1800 2040 w
+10 B f
+(+)1440 2160 w
+10 R f
+(Derivationally related form)2 1108 1 1800 2160 t
+10 B f
+(;c)1440 2280 w
+10 R f
+(Domain of synset - TOPIC)4 1109 1 1800 2280 t
+10 B f
+(-c)1440 2400 w
+10 R f
+(Member of this domain - TOPIC)5 1353 1 1800 2400 t
+10 B f
+(;r)1440 2520 w
+10 R f
+(Domain of synset - REGION)4 1197 1 1800 2520 t
+10 B f
+(-r)1440 2640 w
+10 R f
+(Member of this domain - REGION)5 1441 1 1800 2640 t
+10 B f
+(;u)1440 2760 w
+10 R f
+(Domain of synset - USAGE)4 1153 1 1800 2760 t
+10 B f
+(-u)1440 2880 w
+10 R f
+(Member of this domain - USAGE)5 1397 1 1800 2880 t
+(The)1080 3120 w
+10 I f
+(pointer)1268 3120 w
+10 S f
+(_)1557 3120 w
+10 I f
+(symbol)1607 3120 w
+10 R f
+(s for verbs are:)3 619 1 1890 3120 t
+10 B f
+(!)1440 3240 w
+10 R f
+(Antonym)1800 3240 w
+10 S1 f
+(@)1440 3360 w
+10 R f
+(Hypernym)1800 3360 w
+10 S f
+(~)1440 3480 w
+10 R f
+(Hyponym)1800 3480 w
+10 S f
+(*)1440 3600 w
+10 R f
+(Entailment)1800 3600 w
+10 S1 f
+(>)1440 3720 w
+10 R f
+(Cause)1800 3720 w
+10 S1 f
+(\303)1440 3840 w
+10 R f
+(Also see)1 349 1 1800 3840 t
+10 B f
+($)1440 3960 w
+10 R f
+(Verb Group)1 487 1 1800 3960 t
+10 B f
+(+)1440 4080 w
+10 R f
+(Derivationally related form)2 1108 1 1800 4080 t
+10 B f
+(;c)1440 4200 w
+10 R f
+(Domain of synset - TOPIC)4 1109 1 1800 4200 t
+10 B f
+(;r)1440 4320 w
+10 R f
+(Domain of synset - REGION)4 1197 1 1800 4320 t
+10 B f
+(;u)1440 4440 w
+10 R f
+(Domain of synset - USAGE)4 1153 1 1800 4440 t
+(The)1080 4680 w
+10 I f
+(pointer)1268 4680 w
+10 S f
+(_)1557 4680 w
+10 I f
+(symbol)1607 4680 w
+10 R f
+(s for adjectives are:)3 802 1 1890 4680 t
+10 B f
+(!)1440 4800 w
+10 R f
+(Antonym)1800 4800 w
+10 B f
+(&)1440 4920 w
+10 R f
+(Similar to)1 406 1 1800 4920 t
+10 S1 f
+(<)1440 5040 w
+10 R f
+(Participle of verb)2 709 1 1800 5040 t
+10 S1 f
+(\\)1440 5160 w
+10 R f
+(Pertainym \(pertains to noun\))3 1170 1 1800 5160 t
+10 B f
+(=)1440 5280 w
+10 R f
+(Attribute)1800 5280 w
+10 S1 f
+(\303)1440 5400 w
+10 R f
+(Also see)1 349 1 1800 5400 t
+10 B f
+(;c)1440 5520 w
+10 R f
+(Domain of synset - TOPIC)4 1109 1 1800 5520 t
+10 B f
+(;r)1440 5640 w
+10 R f
+(Domain of synset - REGION)4 1197 1 1800 5640 t
+10 B f
+(;u)1440 5760 w
+10 R f
+(Domain of synset - USAGE)4 1153 1 1800 5760 t
+(The)1080 6000 w
+10 I f
+(pointer)1268 6000 w
+10 S f
+(_)1557 6000 w
+10 I f
+(symbol)1607 6000 w
+10 R f
+(s for adverbs are:)3 713 1 1890 6000 t
+10 B f
+(!)1440 6120 w
+10 R f
+(Antonym)1800 6120 w
+10 S1 f
+(\\)1440 6240 w
+10 R f
+(Derived from adjective)2 941 1 1800 6240 t
+10 B f
+(;c)1440 6360 w
+10 R f
+(Domain of synset - TOPIC)4 1109 1 1800 6360 t
+10 B f
+(;r)1440 6480 w
+10 R f
+(Domain of synset - REGION)4 1197 1 1800 6480 t
+10 B f
+(;u)1440 6600 w
+10 R f
+(Domain of synset - USAGE)4 1153 1 1800 6600 t
+( are re\257exive, meaning that if a synset contains a pointer to another synset, the other)15 3523(Many pointer types)2 797 2 1080 6840 t
+( re\257exive pointer.)2 777(synset should contain a corresponding)4 1670 2 1080 6960 t
+10 B f
+(grind)3587 6960 w
+10 R f
+(\(1WN\) automatically inserts missing)3 1579 1 3821 6960 t
+(re\257exive pointers for the following pointer types:)6 2018 1 1080 7080 t
+( 2)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 2 2
+%%Page: 3 3
+save
+mark
+3 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 5WN \))3 330( WNINPUT)1 3340(File Formats)1 517 3 1213 480 t
+10 S f
+(_ _________________________________________)1 2080 1 2200 860 t
+10 B f
+(Pointer Re\257ect)1 1370 1 2549 980 t
+10 S f
+(_ _________________________________________)1 2080 1 2200 1000 t
+10 R f
+(Antonym Antonym)1 1443 1 2250 1120 t
+(Hyponym Hypernym)1 1492 1 2250 1240 t
+(Hypernym Hyponym)1 1465 1 2250 1360 t
+( Hypernym)1 460( Instance)1 632(Instance Hyponym)1 765 3 2250 1480 t
+( Hyponym)1 433( Instance)1 605(Instance Hypernym)1 792 3 2250 1600 t
+(Holonym Meronym)1 1459 1 2250 1720 t
+(Meronym Holonym)1 1443 1 2250 1840 t
+( to)1 111( Similar)1 954(Similar to)1 406 3 2250 1960 t
+(Attribute Attribute)1 1426 1 2250 2080 t
+( Group)1 288( Verb)1 777(Verb Group)1 487 3 2250 2200 t
+( Related)1 338( Derivationally)1 727(Derivationally Related)1 915 3 2250 2320 t
+( of Doman)2 443( Member)1 682(Domain of synset)2 721 3 2250 2440 t
+10 S f
+( \347)1 -2080(_ _________________________________________)1 2080 2 2200 2460 t
+(\347)2200 2360 w
+(\347)2200 2260 w
+(\347)2200 2160 w
+(\347)2200 2060 w
+(\347)2200 1960 w
+(\347)2200 1860 w
+(\347)2200 1760 w
+(\347)2200 1660 w
+(\347)2200 1560 w
+(\347)2200 1460 w
+(\347)2200 1360 w
+(\347)2200 1260 w
+(\347)2200 1160 w
+(\347)2200 1060 w
+(\347)2200 960 w
+(\347)3240 2460 w
+(\347)3240 2360 w
+(\347)3240 2260 w
+(\347)3240 2160 w
+(\347)3240 2060 w
+(\347)3240 1960 w
+(\347)3240 1860 w
+(\347)3240 1760 w
+(\347)3240 1660 w
+(\347)3240 1560 w
+(\347)3240 1460 w
+(\347)3240 1360 w
+(\347)3240 1260 w
+(\347)3240 1160 w
+(\347)3240 1060 w
+(\347)3240 960 w
+(\347)4280 2460 w
+(\347)4280 2360 w
+(\347)4280 2260 w
+(\347)4280 2160 w
+(\347)4280 2060 w
+(\347)4280 1960 w
+(\347)4280 1860 w
+(\347)4280 1760 w
+(\347)4280 1660 w
+(\347)4280 1560 w
+(\347)4280 1460 w
+(\347)4280 1360 w
+(\347)4280 1260 w
+(\347)4280 1160 w
+(\347)4280 1060 w
+(\347)4280 960 w
+9 B f
+(Verb Frames)1 530 1 900 2628 t
+10 R f
+( simple sentences in)3 847(Each verb synset contains a list of generic sentence frames illustrating the types of)13 3473 2 1080 2748 t
+( some verb senses, example sentences illustrating actual)7 2326( For)1 210(which the verbs in the synset can be used.)8 1784 3 1080 2868 t
+( \(See)1 256(uses of the verb are provided.)5 1280 2 1080 2988 t
+9 B f
+(Verb Example Sentences)2 996 1 2662 2988 t
+10 R f
+(in)3704 2988 w
+10 B f
+(wndb)3828 2988 w
+10 R f
+( there is no)3 504(\(5WN\).\) Whenever)1 828 2 4068 2988 t
+( generic sen-)2 527( The)1 222( lexicographer are used.)3 979(example sentence, the generic sentence frames speci\256ed by the)8 2592 4 1080 3108 t
+( following)1 425( The)1 224(tence frames are entered in a synset as a comma-separated list of integer frame numbers.)14 3671 3 1080 3228 t
+(list is the text of the generic frames, preceded by their frame numbers:)12 2898 1 1080 3348 t
+( ----s)1 204(1 Something)1 1399 2 1440 3588 t
+( ----s)1 204(2 Somebody)1 1393 2 1440 3708 t
+( is ----ing)2 393(3 It)1 1026 2 1440 3828 t
+( is ----ing PP)3 538(4 Something)1 1399 2 1440 3948 t
+( ----s something Adjective/Noun)3 1325(5 Something)1 1399 2 1440 4068 t
+( ----s Adjective/Noun)2 875(6 Something)1 1399 2 1440 4188 t
+( ----s Adjective)2 625(7 Somebody)1 1393 2 1440 4308 t
+( ----s something)2 654(8 Somebody)1 1393 2 1440 4428 t
+( ----s somebody)2 648(9 Somebody)1 1393 2 1440 4548 t
+( ----s somebody)2 648(10 Something)1 1399 2 1440 4668 t
+( ----s something)2 654(11 Something)1 1399 2 1440 4788 t
+( ----s to somebody)3 759(12 Something)1 1399 2 1440 4908 t
+( ----s on something)3 787(13 Somebody)1 1393 2 1440 5028 t
+( ----s somebody something)3 1098(14 Somebody)1 1393 2 1440 5148 t
+( ----s something to somebody)4 1209(15 Somebody)1 1393 2 1440 5268 t
+( ----s something from somebody)4 1325(16 Somebody)1 1393 2 1440 5388 t
+( ----s somebody with something)4 1309(17 Somebody)1 1393 2 1440 5508 t
+( ----s somebody of something)4 1214(18 Somebody)1 1393 2 1440 5628 t
+( ----s something on somebody)4 1231(19 Somebody)1 1393 2 1440 5748 t
+( ----s somebody PP)3 793(20 Somebody)1 1393 2 1440 5868 t
+( ----s something PP)3 799(21 Somebody)1 1393 2 1440 5988 t
+( ----s PP)2 349(22 Somebody)1 1393 2 1440 6108 t
+( \(body part\) ----s)3 691(23 Somebody's)1 1465 2 1440 6228 t
+( ----s somebody to INFINITIVE)4 1318(24 Somebody)1 1393 2 1440 6348 t
+( ----s somebody INFINITIVE)3 1207(25 Somebody)1 1393 2 1440 6468 t
+( ----s that CLAUSE)3 809(26 Somebody)1 1393 2 1440 6588 t
+( ----s to somebody)3 759(27 Somebody)1 1393 2 1440 6708 t
+( ----s to INFINITIVE)3 874(28 Somebody)1 1393 2 1440 6828 t
+( ----s whether INFINITIVE)3 1117(29 Somebody)1 1393 2 1440 6948 t
+( ----s somebody into V-ing something)5 1553(30 Somebody)1 1393 2 1440 7068 t
+( ----s something with something)4 1315(31 Somebody)1 1393 2 1440 7188 t
+( ----s INFINITIVE)2 763(32 Somebody)1 1393 2 1440 7308 t
+( 3)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7788 t
+cleartomark
+showpage
+restore
+%%EndPage: 3 3
+%%Page: 4 4
+save
+mark
+4 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 5WN \))3 330( WNINPUT)1 3340(File Formats)1 517 3 1213 480 t
+( ----s VERB-ing)2 665(33 Somebody)1 1393 2 1440 960 t
+( ----s that CLAUSE)3 809(34 It)1 1026 2 1440 1080 t
+( ----s INFINITIVE)2 763(35 Something)1 1399 2 1440 1200 t
+9 B f
+(Lexicographer File Format)2 1090 1 900 1368 t
+10 R f
+( line containing)2 642( A)1 139(Synsets are entered one per line, and each line is terminated with a newline character.)14 3539 3 1080 1488 t
+( a synset,)2 391( Within)1 347( but no newlines can be entered within a synset.)9 2007(a synset may be as long as necessary,)7 1575 4 1080 1608 t
+( may not be)3 505( enclosed in italicized square brackets)5 1565( Items)1 291(spaces or tabs may be used to separate entities.)8 1959 4 1080 1728 t
+(present.)1080 1848 w
+(The general synset syntax is:)4 1186 1 1080 2088 t
+10 S f
+({)1440 2328 w
+10 I f
+(words pointers)1 639 1 1587 2328 t
+10 B f
+(\()2325 2328 w
+10 I f
+(gloss)2424 2328 w
+10 B f
+(\))2696 2328 w
+10 S f
+(})2795 2328 w
+10 R f
+( are valid for all syntactic categories except verb, and are referred to as basic syn-)15 3475(Synsets of this form)3 845 2 1080 2568 t
+( least one)2 405(sets. At)1 347 2 1080 2688 t
+10 I f
+(word)1871 2688 w
+10 R f
+(and a)1 227 1 2116 2688 t
+10 I f
+(gloss)2382 2688 w
+10 R f
+( entered following all)3 896( Pointers)1 399(are required to form a valid synset.)6 1478 3 2627 2688 t
+(the)1080 2808 w
+10 I f
+(words)1235 2808 w
+10 R f
+(in a synset represent semantic relations between all the words in the source and target synsets.)15 3874 1 1513 2808 t
+(For verbs, the basic synset syntax is de\256ned as follows:)9 2287 1 1080 3048 t
+10 S f
+({)1440 3288 w
+10 I f
+(words pointers frames)2 977 1 1587 3288 t
+10 B f
+(\()2663 3288 w
+10 I f
+(gloss)2762 3288 w
+10 B f
+(\))3034 3288 w
+10 S f
+(})3133 3288 w
+10 R f
+( syn-)1 208(Adjective may be organized into clusters containing one or more head synsets and optional satellite)14 4112 2 1080 3528 t
+( clusters are of the form:)5 1018(sets. Adjective)1 629 2 1080 3648 t
+10 B f
+([)1440 3888 w
+10 I f
+(head synset)1 471 1 1440 4008 t
+([satellite synsets])1 711 1 1440 4128 t
+([)1440 4248 w
+10 S1 f
+(\261)1479 4248 w
+10 I f
+(])1544 4248 w
+([additional head/satellite synsets])2 1378 1 1440 4368 t
+10 B f
+(])1440 4488 w
+10 R f
+( part con-)2 412( Each)1 271(Each adjective cluster is enclosed in square brackets, and may have one or more parts.)14 3637 3 1080 4728 t
+( optional satellite synsets that are conceptually similar to the head synset's)11 3203(sists of a head synset and)5 1117 2 1080 4848 t
+( of a cluster are separated by one or more hyphens \()11 2173(meaning. Parts)1 637 2 1080 4968 t
+10 S1 f
+(\261)3890 4968 w
+10 R f
+( by themselves, with the)4 1013(\) on a line)3 432 2 3955 4968 t
+( synsets follow the syntax of)5 1251( and satellite)2 551( Head)1 291(terminating square bracket following the last synset.)6 2227 4 1080 5088 t
+(basic synsets, however a)3 1020 1 1080 5208 t
+10 S1 f
+(")2138 5208 w
+10 R f
+(Similar to)1 411 1 2179 5208 t
+10 S1 f
+(")2590 5208 w
+10 R f
+( satellite)1 350(pointer must be speci\256ed in a head synset for each of its)11 2381 2 2669 5208 t
+( See)1 215( contain two antonymous parts.)4 1304( adjective clusters)2 743(synsets. Most)1 592 4 1080 5328 t
+10 B f
+(wngloss)3972 5328 w
+10 R f
+(\(7WN\) for a discussion of)4 1094 1 4306 5328 t
+(adjective clusters, and)2 900 1 1080 5448 t
+9 B f
+(Special Adjective Syntax)2 965 1 2013 5448 t
+10 R f
+(for more information on adjective cluster syntax.)6 2003 1 3011 5448 t
+( cluster struc-)2 563(Synsets for relational adjectives \(pertainyms\) and participial adjectives do not adhere to the)12 3757 2 1080 5688 t
+( use the basic synset syntax.)5 1161(ture. They)1 451 2 1080 5808 t
+( the text of the comment in parentheses.)7 1711(Comments can be entered in a lexicographer \256le by enclosing)9 2609 2 1080 6048 t
+(Note that comments)2 831 1 1080 6168 t
+10 B f
+(cannot)1949 6168 w
+10 R f
+( dif-)1 181(appear within a synset, as parentheses within a synset have an entirely)11 2943 2 2276 6168 t
+(ferent meaning \(see)2 816 1 1080 6288 t
+9 B f
+(Gloss Syntax)1 512 1 1936 6288 t
+10 R f
+( be)1 135( entire synsets \(or adjective clusters\) can)6 1708(\). However,)1 521 3 2488 6288 t
+10 S1 f
+(")4893 6288 w
+10 R f
+(commented)4934 6288 w
+(out)1080 6408 w
+10 S1 f
+(")1208 6408 w
+10 R f
+( the syntax of)3 577( is often used by the lexicographers to verify)8 1884( This)1 249(by enclosing them in parentheses.)4 1403 4 1287 6408 t
+(\256les under development or to leave a note to oneself while working on entries.)13 3238 1 1080 6528 t
+9 B f
+(Word Syntax)1 535 1 900 6696 t
+10 R f
+(A synset must have at least one word, and the words of a synset must appear after the opening brace)19 4320 1 1080 6816 t
+( word may be entered in either the simple word or)10 2396( A)1 170( other synset constructs.)3 1080(and before any)2 674 4 1080 6936 t
+(word/pointer syntax.)1 835 1 1080 7056 t
+(A simple word is of the form:)6 1236 1 1080 7296 t
+( 4)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7776 t
+cleartomark
+showpage
+restore
+%%EndPage: 4 4
+%%Page: 5 5
+save
+mark
+5 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 5WN \))3 330( WNINPUT)1 3340(File Formats)1 517 3 1213 480 t
+10 I f
+(word[)1440 960 w
+10 B f
+(\()1718 960 w
+10 I f
+(marker)1784 960 w
+10 B f
+(\))2105 960 w
+10 I f
+(][lex)2171 960 w
+10 S f
+(_)2365 960 w
+10 I f
+(id])2415 960 w
+10 B f
+(,)2565 960 w
+10 I f
+(word)1080 1200 w
+10 R f
+( A)1 141( any combination of upper and lower case unless it is in an adjective cluster.)14 3196(may be entered in)3 742 3 1321 1200 t
+( words with an underscore character \()6 1692(collocation is entered by joining the individual)6 2064 2 1080 1320 t
+10 S f
+(_)4836 1320 w
+10 R f
+(\). Numbers)1 514 1 4886 1320 t
+( as part of a word string, by following the)9 1875(\(integer or real\) may be entered, either by themselves or)9 2445 2 1080 1440 t
+(number with a double quote \()5 1219 1 1080 1560 t
+10 S1 f
+(")2299 1560 w
+10 R f
+(\).)2340 1560 w
+(See)1080 1800 w
+9 B f
+(Special Adjective Syntax)2 965 1 1257 1800 t
+10 R f
+(for a description of adjective clusters and markers.)7 2073 1 2255 1800 t
+10 I f
+(word)1080 2040 w
+10 R f
+( an integer)2 459(may be followed by)3 850 2 1329 2040 t
+10 I f
+(lex)2682 2040 w
+10 S f
+(_)2798 2040 w
+10 I f
+(id)2848 2040 w
+10 R f
+(from)2970 2040 w
+10 B f
+(1)3208 2040 w
+10 R f
+(to)3302 2040 w
+10 B f
+(15)3424 2040 w
+10 R f
+(. The)1 257 1 3524 2040 t
+10 I f
+(lex)3825 2040 w
+10 S f
+(_)3941 2040 w
+10 I f
+(id)3991 2040 w
+10 R f
+(is used to distinguish different)4 1287 1 4113 2040 t
+( lexicographer assigns)2 907( The)1 223(senses of the same word within a lexicographer \256le.)8 2159 3 1080 2160 t
+10 I f
+(lex)4404 2160 w
+10 S f
+(_)4520 2160 w
+10 I f
+(id)4570 2160 w
+10 R f
+(values, usually in)2 717 1 4683 2160 t
+( is)1 101( default)1 310( The)1 221(ascending order, although there is no requirement that the numbers be consecutive.)11 3401 4 1080 2280 t
+10 B f
+(0)5147 2280 w
+10 R f
+(, and)1 203 1 5197 2280 t
+( A)1 148(does not have to be speci\256ed.)5 1266 2 1080 2400 t
+10 I f
+(lex)2537 2400 w
+10 S f
+(_)2653 2400 w
+10 I f
+(id)2703 2400 w
+10 R f
+( on pointers if the desired sense has a non-zero)9 2018(must be used)2 558 2 2824 2400 t
+10 I f
+(lex)1080 2520 w
+10 S f
+(_)1196 2520 w
+10 I f
+(id)1246 2520 w
+10 R f
+(in its synset speci\256cation.)3 1052 1 1357 2520 t
+(Word/pointer syntax is of the form:)5 1458 1 1080 2760 t
+10 B f
+([)1440 3000 w
+10 I f
+(word[)1572 3000 w
+10 B f
+(\()1850 3000 w
+10 I f
+(marker)1916 3000 w
+10 B f
+(\))2237 3000 w
+10 I f
+(][lex)2303 3000 w
+10 S f
+(_)2497 3000 w
+10 I f
+(id])2547 3000 w
+10 B f
+(,)2697 3000 w
+10 I f
+(pointers)2821 3000 w
+10 B f
+(])3248 3000 w
+10 R f
+( the word/pointer)2 712(This syntax is used when one or more pointers correspond only to the speci\256c word in)15 3608 2 1080 3240 t
+( that a word/pointer set)4 953( Note)1 260( represents a lexical relation.)4 1176(set, rather than all the words in the synset, and)9 1931 4 1080 3360 t
+( it are treated differently from those)6 1478(appears within a synset, therefore the square brackets used to enclose)10 2842 2 1080 3480 t
+( one word can be speci\256ed in each word/pointer set, and any)11 2587( Only)1 274( cluster.)1 332(used to de\256ne an adjective)4 1127 4 1080 3600 t
+( is)1 116( Each)1 281( word/pointer sets.)2 789( synset can have any number of)6 1396( A)1 153(number of pointers may be included.)5 1585 6 1080 3720 t
+(treated by)1 429 1 1080 3840 t
+10 B f
+(grind)1566 3840 w
+10 R f
+(\(1WN\) essentially as a)3 1002 1 1800 3840 t
+10 I f
+(word)2859 3840 w
+10 R f
+(, so they all must appear before any synset)8 1950 1 3065 3840 t
+10 I f
+(pointers)5072 3840 w
+10 R f
+(representing semantic relations.)2 1283 1 1080 3960 t
+(For verbs, the word/pointer syntax is extended in the following manner to allow the user to specify gen-)17 4320 1 1080 4200 t
+( all the words in)4 696(eric sentence frames that, like pointers, correspond only to a speci\256c word, rather than)13 3624 2 1080 4320 t
+( this case,)2 407( In)1 149(the synset.)1 430 3 1080 4440 t
+10 I f
+(pointers)2099 4440 w
+10 R f
+(are optional.)1 507 1 2460 4440 t
+10 B f
+([)1440 4680 w
+10 I f
+(word)1572 4680 w
+10 B f
+(,)1811 4680 w
+10 I f
+([pointers] frames)1 744 1 1935 4680 t
+10 B f
+(])2778 4680 w
+9 B f
+(Pointer Syntax)1 595 1 900 4848 t
+10 R f
+( is speci\256ed outside of a word/pointer set, the relation is)10 2424( a pointer)2 413( If)1 142(Pointers are optional in synsets.)4 1341 4 1080 4968 t
+( the synset, including any words speci\256ed using the word/pointer syntax.)10 3069(applied to all of the words in)6 1251 2 1080 5088 t
+( speci\256ed within)2 683( If)1 135( relation between the meanings of the words in the synsets.)10 2465(This indicates a semantic)3 1037 4 1080 5208 t
+(a word/pointer set, the relation corresponds only to the word in the set and represents a lexical relation.)17 4248 1 1080 5328 t
+(A pointer is of the form:)5 1014 1 1080 5568 t
+10 I f
+([lex)1440 5808 w
+10 S f
+(_)1595 5808 w
+10 I f
+(\256lename)1645 5808 w
+10 B f
+(:)1983 5808 w
+10 I f
+(]word[lex)2049 5808 w
+10 S f
+(_)2449 5808 w
+10 I f
+(id])2499 5808 w
+10 B f
+(,)2616 5808 w
+10 I f
+(pointer)2641 5808 w
+10 S f
+(_)2930 5808 w
+10 I f
+(symbol)2980 5808 w
+10 R f
+(or:)1080 6048 w
+10 I f
+([lex)1440 6288 w
+10 S f
+(_)1595 6288 w
+10 I f
+(\256lename)1645 6288 w
+10 B f
+(:)1983 6288 w
+10 I f
+(]word[lex)2049 6288 w
+10 S f
+(_)2449 6288 w
+10 I f
+(id])2499 6288 w
+10 S1 f
+(\303)2616 6288 w
+10 I f
+(word[lex)2649 6288 w
+10 S f
+(_)3010 6288 w
+10 I f
+(id])3060 6288 w
+10 B f
+(,)3177 6288 w
+10 I f
+(pointer)3202 6288 w
+10 S f
+(_)3491 6288 w
+10 I f
+(symbol)3541 6288 w
+10 R f
+(For pointers,)1 524 1 1080 6528 t
+10 I f
+(word)1643 6528 w
+10 R f
+( the second form of a pointer is used, the)9 1751( When)1 310(indicates a word in another synset.)5 1451 3 1888 6528 t
+(\256rst)1080 6648 w
+10 I f
+(word)1270 6648 w
+10 R f
+(indicates a word in a head synset, and the second is a word in a satellite of that cluster.)18 3617 1 1510 6648 t
+10 I f
+(word)5194 6648 w
+10 R f
+(may be followed by a)4 925 1 1080 6768 t
+10 I f
+(lex)2045 6768 w
+10 S f
+(_)2161 6768 w
+10 I f
+(id)2211 6768 w
+10 R f
+( synset)1 291( The)1 229( pointer to the correct target synset.)6 1507(that is used to match the)5 1044 4 2329 6768 t
+(containing)1080 6888 w
+10 I f
+(word)1537 6888 w
+10 R f
+( this case,)2 409( In)1 150(may reside in another lexicographer \256le.)5 1658 3 1777 6888 t
+10 I f
+(word)4028 6888 w
+10 R f
+(is preceded by)2 594 1 4268 6888 t
+10 I f
+(lex)4896 6888 w
+10 S f
+(_)5012 6888 w
+10 I f
+(\256lename)5062 6888 w
+10 R f
+(as shown.)1 402 1 1080 7008 t
+(See)1080 7248 w
+9 B f
+(Pointers)1257 7248 w
+10 R f
+(for a list of)3 465 1 1610 7248 t
+10 I f
+(pointer)2108 7248 w
+10 S f
+(_)2397 7248 w
+10 I f
+(symbol)2447 7248 w
+10 R f
+(s and their meanings.)3 873 1 2730 7248 t
+( 5)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7728 t
+cleartomark
+showpage
+restore
+%%EndPage: 5 5
+%%Page: 6 6
+save
+mark
+6 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 5WN \))3 330( WNINPUT)1 3340(File Formats)1 517 3 1213 480 t
+9 B f
+(Verb Frame List Syntax)3 1000 1 900 960 t
+10 R f
+( a)1 93( If)1 148( be entered in each verb synset.)6 1393(Frame numbers corresponding to generic sentence frames must)7 2686 4 1080 1080 t
+( list apply to all of the words)7 1224(frame list is speci\256ed outside of a word/pointer set, the verb frames in the)13 3096 2 1080 1200 t
+( speci\256ed within a)3 835( If)1 158(in the synset, including any words speci\256ed using the word/pointer syntax.)10 3327 3 1080 1320 t
+(word/pointer set, the verb frames in the list correspond only to the word in the set.)15 3402 1 1080 1440 t
+(A frame number list is entered as follows:)7 1734 1 1080 1680 t
+10 B f
+(frames:)1440 1920 w
+10 I f
+(f)1832 1920 w
+10 S f
+(_)1860 1920 w
+10 I f
+(num)1910 1920 w
+10 R f
+([)2082 1920 w
+10 B f
+(,)2115 1920 w
+10 I f
+(f)2140 1920 w
+10 S f
+(_)2168 1920 w
+10 I f
+(num...])2218 1920 w
+10 R f
+(Where)1080 2160 w
+10 I f
+(f)1389 2160 w
+10 S f
+(_)1417 2160 w
+10 I f
+(num)1467 2160 w
+10 R f
+( See)1 222(speci\256es a generic frame number.)4 1423 2 1683 2160 t
+9 B f
+(Verb Frames)1 527 1 3373 2160 t
+10 R f
+(for a list of generic sentences and)6 1455 1 3945 2160 t
+(their corresponding frame numbers.)3 1454 1 1080 2280 t
+9 B f
+(Gloss Syntax)1 520 1 900 2448 t
+10 R f
+( A)1 145( lexicographer may enter a text string of any length desired.)10 2531( The)1 228( synsets.)1 354(A gloss is included in all)5 1062 5 1080 2568 t
+( provides a)2 496( It)1 148( no embedded carriage returns.)4 1348(gloss is simply a string enclosed in parentheses with)8 2328 4 1080 2688 t
+(de\256nition of what the synset represents and/or example sentences.)8 2701 1 1080 2808 t
+9 B f
+(Special Adjective Syntax)2 995 1 900 2976 t
+10 R f
+(The syntax for representing antonymous adjective synsets requires several additional conditions.)10 3938 1 1080 3096 t
+(The \256rst word of a head synset)6 1303 1 1080 3336 t
+10 B f
+(must)2420 3336 w
+10 R f
+(be entered in upper case, and can be thought of as the head word)13 2732 1 2668 3336 t
+( The)1 226( synset.)1 313(of the head)2 471 3 1080 3456 t
+10 I f
+(word)2128 3456 w
+10 R f
+(part of a pointer from one head synset to another head synset within the)13 3028 1 2372 3456 t
+( antonymous adjectives)2 970( Usually)1 385(same cluster \(usually an antonym\) must also be entered in upper case.)11 2965 3 1080 3576 t
+( syntax described in)3 829(are entered using the word/pointer)4 1417 2 1080 3696 t
+9 B f
+(Word Syntax)1 523 1 3362 3696 t
+10 R f
+( There)1 301(to indicate a lexical relation.)4 1178 2 3921 3696 t
+( some clusters have three parts,)5 1357(is no restriction on the number of parts that a cluster may have, and)13 2963 2 1080 3816 t
+(representing antonymous triplets, such as)4 1683 1 1080 3936 t
+10 B f
+(solid)2796 3936 w
+10 R f
+(,)2997 3936 w
+10 B f
+(liquid)3055 3936 w
+10 R f
+(, and)1 202 1 3307 3936 t
+10 B f
+(gas)3542 3936 w
+10 R f
+(.)3681 3936 w
+( in)1 116(A cross-cluster pointer may be speci\256ed, allowing a head or satellite synset to point to a head synset)17 4204 2 1080 4176 t
+( cross-cluster pointer is indicated by entering the)7 2021( A)1 141(a different cluster.)2 752 3 1080 4296 t
+10 I f
+(word)4030 4296 w
+10 R f
+(part of the pointer in upper)5 1128 1 4272 4296 t
+(case.)1080 4416 w
+( a limitation on the syntactic position)6 1574(An adjective may be annotated with a syntactic marker indicating)9 2746 2 1080 4656 t
+( so marked, the marker appears between)6 1693( If)1 139( modi\256es.)1 410(the adjective may have in relation to noun that it)9 2078 4 1080 4776 t
+( a)1 77( If)1 132(the word and its following comma.)5 1439 3 1080 4896 t
+10 I f
+(lex)2761 4896 w
+10 S f
+(_)2877 4896 w
+10 I f
+(id)2927 4896 w
+10 R f
+( syn-)1 206( The)1 222( marker immediately follows it.)4 1299(is speci\256ed, the)2 635 4 3038 4896 t
+(tactic markers are:)2 752 1 1080 5016 t
+10 B f
+(\(p\))1440 5136 w
+10 R f
+(predicate position)1 721 1 2405 5136 t
+10 B f
+(\(a\))1440 5256 w
+10 R f
+(prenominal \(attributive\) position)2 1321 1 2405 5256 t
+10 B f
+(\(ip\))1440 5376 w
+10 R f
+(immediately postnominal position)2 1384 1 2405 5376 t
+9 B f
+(EXAMPLES)720 5544 w
+10 I f
+(\(Note that these are hypothetical examples not found in the WordNet lexicographer \256les.\))12 3673 1 1080 5664 t
+10 R f
+(Sample noun synsets:)2 883 1 1080 5904 t
+10 S f
+({)1440 6024 w
+10 R f
+(canine, [ dog1, cat,! ] pooch, canid,)6 1458 1 1521 6024 t
+10 S1 f
+(@)2979 6024 w
+10 S f
+(})3104 6024 w
+({)1440 6144 w
+10 R f
+(collie, dog1,)1 505 1 1521 6144 t
+10 S1 f
+(@)2026 6144 w
+10 R f
+(\(large multi-colored dog with pointy nose\))5 1741 1 2151 6144 t
+10 S f
+(})3925 6144 w
+({)1440 6264 w
+10 R f
+(hound, hunting)1 614 1 1521 6264 t
+10 S f
+(_)2135 6264 w
+10 R f
+(dog, pack,)1 421 1 2185 6264 t
+10 S1 f
+(#)2606 6264 w
+10 R f
+(m dog1,)1 336 1 2656 6264 t
+10 S1 f
+(@)2992 6264 w
+10 S f
+(})3117 6264 w
+({)1440 6384 w
+10 R f
+(dog,)1521 6384 w
+10 S f
+(})1729 6384 w
+10 R f
+(Sample verb synsets:)2 860 1 1080 6624 t
+10 S f
+({)1440 6744 w
+10 R f
+([ confuse, clarify,! frames: 1 ] blur, obscure, frames: 8, 10)10 2393 1 1521 6744 t
+10 S f
+(})3947 6744 w
+({)1440 6864 w
+10 R f
+([ clarify, confuse,! ] make)4 1067 1 1521 6864 t
+10 S f
+(_)2588 6864 w
+10 R f
+(clear, interpret,)1 614 1 2638 6864 t
+10 S1 f
+(@)3252 6864 w
+10 R f
+(frames: 8)1 382 1 3377 6864 t
+10 S f
+(})3792 6864 w
+({)1440 6984 w
+10 R f
+(interpret, construe, understand,)2 1255 1 1521 6984 t
+10 S1 f
+(@)2776 6984 w
+10 R f
+(frames: 8)1 382 1 2901 6984 t
+10 S f
+(})3316 6984 w
+10 R f
+(Sample adjective clusters:)2 1059 1 1080 7224 t
+( 6)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7704 t
+cleartomark
+showpage
+restore
+%%EndPage: 6 6
+%%Page: 7 7
+save
+mark
+7 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 5WN \))3 330( WNINPUT)1 3340(File Formats)1 517 3 1213 480 t
+([)1440 960 w
+10 S f
+({)1440 1080 w
+10 R f
+([ HOT, COLD,! ] lukewarm\(a\), TEPID,)5 1633 1 1521 1080 t
+10 S1 f
+(\303)3154 1080 w
+10 R f
+(\(hot to the touch\))3 715 1 3220 1080 t
+10 S f
+(})3968 1080 w
+({)1440 1200 w
+10 R f
+(warm,)1521 1200 w
+10 S f
+(})1806 1200 w
+10 S1 f
+(\261)1440 1320 w
+10 S f
+({)1440 1440 w
+10 R f
+([ COLD, HOT,! ] frigid, \(cold to the touch\))8 1797 1 1521 1440 t
+10 S f
+(})3351 1440 w
+({)1440 1560 w
+10 R f
+(freezing,)1521 1560 w
+10 S f
+(})1905 1560 w
+10 R f
+(])1440 1680 w
+(Sample adverb synsets:)2 954 1 1080 1920 t
+10 S f
+({)1440 2040 w
+10 R f
+([ basically, adj.all:essential)2 1098 1 1521 2040 t
+10 S1 f
+(\303)2619 2040 w
+10 R f
+(basic,)2652 2040 w
+10 S1 f
+(\\)2882 2040 w
+10 R f
+(] [ essentially, adj.all:basic)3 1092 1 2943 2040 t
+10 S1 f
+(\303)4035 2040 w
+10 R f
+(fundamental,)4068 2040 w
+10 S1 f
+(\\)4592 2040 w
+10 R f
+(] \( by one's very nature \))6 1039 1 4653 2040 t
+10 S f
+(})5692 2040 w
+({)1440 2160 w
+10 R f
+(pointedly, adj.all:pungent)1 1033 1 1521 2160 t
+10 S1 f
+(\303)2554 2160 w
+10 R f
+(pointed,)2587 2160 w
+10 S1 f
+(\\)2912 2160 w
+10 S f
+(})2973 2160 w
+({)1440 2280 w
+10 R f
+([ badly, adj.all:bad,)2 790 1 1521 2280 t
+10 S1 f
+(\\)2311 2280 w
+10 R f
+(well,! ] ill, \()3 504 1 2372 2280 t
+10 S1 f
+(")2876 2280 w
+10 R f
+(He was badly prepared)3 940 1 2917 2280 t
+10 S1 f
+(")3857 2280 w
+10 R f
+(\))3898 2280 w
+10 S f
+(})3964 2280 w
+9 B f
+(SEE ALSO)1 460 1 720 2448 t
+10 B f
+(grind)1080 2568 w
+10 R f
+(\(1WN\),)1314 2568 w
+10 B f
+(wnintro)1654 2568 w
+10 R f
+(\(5WN\),)1993 2568 w
+10 B f
+(lexnames)2333 2568 w
+10 R f
+(\(5WN\),)2727 2568 w
+10 B f
+(wndb)3067 2568 w
+10 R f
+(\(5WN\),)3307 2568 w
+10 B f
+(uniqbeg)3647 2568 w
+10 R f
+(\(7WN\),)3993 2568 w
+10 B f
+(wngloss)4333 2568 w
+10 R f
+(\(7WN\).)4667 2568 w
+(Fellbaum, C. \(1998\), ed.)3 1004 1 1080 2736 t
+10 S1 f
+(")2150 2736 w
+10 I f
+(WordNet: An Electronic Lexical Database)4 1730 1 2191 2736 t
+10 S1 f
+(")3921 2736 w
+10 R f
+( Press, Cambridge, MA.)3 990(. MIT)1 274 2 3962 2736 t
+( 7)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 7 7
+%%Trailer
+done
+%%DocumentFonts: Times-Roman Symbol Times-Bold Times-Italic
+%%Pages: 7
