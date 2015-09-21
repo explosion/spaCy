@@ -1,0 +1,343 @@
+'\" t
+.\" $Id$
+.TH WNSEARCH 3WN  "Dec 2006" "WordNet 3.0" "WordNet\(tm Library Functions"
+.SH NAME
+findtheinfo, findtheinfo_ds, is_defined, in_wn, index_lookup, parse_index, getindex, read_synset, parse_synset, free_syns, free_synset, free_index, traceptrs_ds, do_trace
+.SH SYNOPSIS
+.LP
+\fB#include "wn.h"
+.LP
+\fBchar *findtheinfo(char *searchstr, int pos, int ptr_type, int sense_num);\fP
+.LP
+\fBSynsetPtr findtheinfo_ds(char *searchstr, int pos, int ptr_type, int sense_num );\fP
+.LP
+\fBunsigned int is_defined(char *searchstr, int pos);\fP
+.LP
+\fBunsigned int in_wn(char *searchstr, int pos);\fP
+.LP
+\fBIndexPtr index_lookup(char *searchstr, int pos);\fP
+.LP
+\fBIndexPtr parse_index(long offset, int dabase, char *line);\fP
+.LP
+\fBIndexPtr getindex(char *searchstr, int pos);\fP
+.LP
+\fBSynsetPtr read_synset(int pos, long synset_offset, char *searchstr);\fP
+.LP
+\fBSynsetPtr parse_synset(FILE *fp, int pos, char *searchstr);\fP
+.LP
+\fBvoid free_syns(SynsetPtr synptr);\fP
+.LP
+\fBvoid free_synset(SynsetPtr synptr);\fP
+.LP
+\fBvoid free_index(IndexPtr idx);\fP
+.LP
+\fBSynsetPtr traceptrs_ds(SynsetPtr synptr, int ptr_type, int pos, int depth);\fP
+.LP
+\fBchar *do_trace(SynsetPtr synptr, int ptr_type, int pos, int depth);\fP
+.SH DESCRIPTION
+.LP
+These functions are used for searching the WordNet database.  They
+generally fall into several categories: functions for reading and
+parsing index file entries; functions for reading and parsing synsets
+in data files; functions for tracing pointers and hierarchies;
+functions for freeing space occupied by data structures allocated with
+.BR malloc (3).
+
+In the following function descriptions, \fIpos\fP is one of the
+following:
+
+.RS
+.nf
+\fB1\fP	NOUN
+\fB2\fP	VERB
+\fB3\fP	ADJECTIVE
+\fB4\fP	ADVERB
+.fi
+.RE
+
+.B findtheinfo(\|)
+is the primary search algorithm for use with database interface
+applications.  Search results are automatically formatted, and a
+pointer to the text buffer is returned.  All searches listed in 
+.B WNHOME/include/wn.h
+can be done by 
+.BR findtheinfo(\|) .
+.B findtheinfo_ds(\|)
+can be used to perform most of the searches, with results returned in
+a linked list data structure.  This is for use with applications that
+need to analyze the search results rather than just display them.
+
+Both functions are passed the same arguments: \fIsearchstr\fP is the
+word or collocation to search for; \fIpos\fP indicates the syntactic
+category to search in; \fIptr_type\fP is one of the valid search types
+for \fIsearchstr\fP in \fIpos\fP.  (Available searches can be obtained
+by calling
+.B is_defined(\|)
+described below.)  \fIsense_num\fP should be
+.SB ALLSENSES
+if the search is to be done on all senses of \fIsearchstr\fP in
+\fIpos\fP, or a positive integer indicating which sense to search.
+
+\fBfindtheinfo_ds(\|)\fP returns a linked list data structures
+representing synsets.  Senses are linked through the \fInextss\fP
+field of a \fBSynset\fP data structure.  For each sense, synsets that
+match the search specified with \fIptr_type\fP are linked through the
+\fIptrlist\fP field.  See
+.SB "Synset Navigation",
+below, for detailed information on the linked lists returned.
+
+\fBis_defined(\|)\fP sets a bit for each search type that is valid for
+\fIsearchstr\fP in \fIpos\fP, and returns the resulting unsigned
+integer.  Each bit number corresponds to a pointer type constant
+defined in \fBWNHOME/include/wn.h\fP.  For example, if bit 2 is
+set, the
+.SB HYPERPTR
+search is valid for \fIsearchstr\fP.  There are 29 possible searches.
+
+\fBin_wn(\|)\fP is used to find the syntactic categories in the
+WordNet database that contain one or more senses of \fIsearchstr\fP.
+If \fIpos\fP is
+.SB ALL_POS,
+all syntactic categories are checked.  Otherwise, only the part of
+speech passed is checked.  An unsigned integer is returned with a bit
+set corresponding to each syntactic category containing
+\fIsearchstr\fP.  The bit number matches the number for the part of
+speech.  \fB0\fP is returned if \fIsearchstr\fP is not present in
+\fIpos\fP.
+
+\fBindex_lookup(\|)\fP finds \fIsearchstr\fP in the index file for
+\fIpos\fP and returns a pointer to the parsed entry in an \fBIndex\fP
+data structure.  \fIsearchstr\fP must exactly match the form of the
+word (lower case only, hyphens and underscores in the same places) in
+the index file.
+.SB NULL 
+is returned if a match is not found.
+
+\fBparse_index(\|)\fP parses an entry from an index file and returns a
+pointer to the parsed entry in an \fBIndex\fP data structure.
+Passed the byte \fIoffset\fP and syntactic category, it reads the index
+entry at the desired location in the corresponding file.  If passed
+\fIline\fP, \fIline\fP contains an index file entry and the database
+index file is not consulted.  However, \fIoffset\fP and \fIdbase\fP
+should still be passed so the information can be stored in the
+\fBIndex\fP structure.
+
+\fBgetindex(\|)\fP is a "smart" search for \fIsearchstr\fP in the
+index file corresponding to \fIpos\fP.  It applies to \fIsearchstr\fP
+an algorithm that replaces underscores with hyphens, hyphens with
+underscores, removes hyphens and underscores, and removes periods in
+an attempt to find a form of the string that is an exact match for an
+entry in the index file corresponding to \fIpos\fP.
+\fBindex_lookup(\|)\fP is called on each transformed string until a
+match is found or all the different strings have been tried.  It
+returns a pointer to the parsed \fBIndex\fP data structure for
+\fIsearchstr\fP, or
+.SB NULL
+if a match is not found.
+
+\fBread_synset(\|)\fP is used to read a synset from a byte offset in a
+data file.  It performs an \fBfseek\fP(3) to \fIsynset_offset\fP in
+the data file corresponding to \fIpos\fP, and calls
+\fBparse_synset(\|)\fP to read and parse the synset.  A pointer to the
+\fBSynset\fP data structure containing the parsed synset is returned.
+
+\fBparse_synset(\|)\fP reads the synset at the current offset in the
+file indicated by \fIfp\fP.  \fIpos\fP is the syntactic category, and
+\fIsearchstr\fP, if not
+.SB NULL,
+indicates the word in the synset that the caller is interested in.  An
+attempt is made to match \fIsearchstr\fP to one of the words in the
+synset.  If an exact match is found, the \fIwhichword\fP field in the
+\fBSynset\fP structure is set to that word's number in the synset
+(beginning to count from \fB1\fP).
+
+\fBfree_syns(\|)\fP is used to free a linked list of \fBSynset\fP
+structures allocated by \fBfindtheinfo_ds(\|)\fP.  \fIsynptr\fP is a
+pointer to the list to free.
+
+\fBfree_synset(\|)\fP frees the \fBSynset\fP structure pointed to by
+\fIsynptr\fP.
+
+\fBfree_index(\|)\fP frees the \fBIndex\fP structure pointed to by
+\fIidx\fP.
+
+\fBtraceptrs_ds(\|)\fP is a recursive search algorithm that traces
+pointers matching \fIptr_type\fP starting with the synset pointed to
+by \fIsynptr\fP.  Setting \fIdepth\fP to \fB1\fP when
+\fBtraceptrs_ds(\|)\fP is called indicates a recursive search; \fB0\fP
+indicates a non-recursive call.  \fIsynptr\fP points to the data
+structure representing the synset to search for a pointer of type
+\fIptr_type\fP.  When a pointer type match is found, the synset
+pointed to is read is linked onto the \fInextss\fP chain.  Levels of
+the tree generated by a recursive search are linked via the
+\fIptrlist\fP field structure until
+.SB NULL
+is found, indicating the top (or bottom) of the tree.  This function
+is usually called from \fBfindtheinfo_ds(\|)\fP for each sense of the
+word.  See
+.SB "Synset Navigation",
+below, for detailed information on the linked lists returned.
+
+\fBdo_trace(\|)\fP performs the search indicated by \fIptr_type\fP on
+synset \fPsynptr\fP in syntactic category \fIpos\fP.  \fIdepth\fP is
+defined as above.  \fBdo_trace(\|)\fP returns the search results
+formatted in a text buffer.
+.SS Synset Navigation
+Since the \fBSynset\fP structure is used to represent the synsets for
+both word senses and pointers, the \fIptrlist\fP and \fInextss\fP
+fields have different meanings depending on whether the structure is a
+word sense or pointer.  This can make navigation through the lists
+returned by \fBfindtheinfo_ds(\|)\fP confusing.
+
+Navigation through the returned list involves the following:
+
+Following the \fInextss\fP chain from the synset returned moves
+through the various senses of \fIsearchstr\fP.
+.SB NULL
+indicates that end of the chain of senses.
+
+Following the \fIptrlist\fP chain from a \fBSynset\fP structure
+representing a sense traces the hierarchy of the search results for
+that sense.  Subsequent links in the \fIptrlist\fP chain indicate the
+next level (up or down, depending on the search) in the hierarchy.
+.SB NULL
+indicates the end of the chain of search result synsets.
+
+If a synset pointed to by \fIptrlist\fP has a value in the
+\fInextss\fP field, it represents another pointer of the same type at
+that level in the hierarchy.  For example, some noun synsets have two
+hypernyms.  Following this \fInextss\fP pointer, and then the
+\fIptrlist\fP chain from the \fBSynset\fP structure pointed to, traces
+another, parallel, hierarchy, until the end is indicated by
+.SB NULL
+on that \fIptrlist\fP chain.  So, a \fBsynset\fP representing a
+pointer (versus a sense of \fIsearchstr\fP) having a non-NULL
+value in \fInextss\fP has another chain of search results linked
+through the \fIptrlist\fP chain of the synset pointed to by
+\fInextss\fP.
+
+If \fIsearchstr\fP contains more than one base form in WordNet (as in
+the noun \fBaxes\fP, which has base forms \fBaxe\fP and \fBaxis\fP),
+synsets representing the search results for each base form are linked
+through the \fInextform\fP pointer of the \fBSynset\fP structure.
+.SS WordNet Searches
+There is no extensive description of what each search type is or the
+results returned.  Using the WordNet interface, examining the source
+code, and reading
+.BR wndb (5WN) 
+are the best ways to see what types of searches are available and the
+data returned for each.
+
+Listed below are the valid searches
+that can be passed as \fIptr_type\fP
+to \fBfindtheinfo(\|)\fP.  Passing a negative value (when applicable)
+causes a recursive, hierarchical search by setting \fIdepth\fP to
+\fB1\fP when \fBtraceptrs(\|)\fP is called.
+
+.bp
+.TS
+center box ;
+l | c | c | l
+l | c | c | l
+l | c | c | l .
+\fBptr_type\fP	\fBValue\fP	\fBPointer\fP	\fBSearch\fP
+		\fBSymbol\fP
+_
+ANTPTR	1	!	Antonyms
+HYPERPTR	2	@	Hypernyms
+HYPOPTR	3	\(ap	Hyponyms
+ENTAILPTR	4	*	Entailment
+SIMPTR	5	&	Similar
+ISMEMBERPTR	6	#m	Member meronym
+ISSTUFFPTR	7	#s	Substance meronym
+ISPARTPTR	8	#p	Part meronym
+HASMEMBERPTR	9	%m	Member holonym
+HASSTUFFPTR	10	%s	Substance holonym
+HASPARTPTR	11	%p	Part holonym
+MERONYM	12	%	All meronyms
+HOLONYM	13	#	All holonyms
+CAUSETO	14	>	Cause
+PPLPTR	15	<	Participle of verb
+SEEALSOPTR	16	^	Also see
+PERTPTR	17	\e	Pertains to noun or derived from adjective
+ATTRIBUTE	18	\\=	Attribute
+VERBGROUP	19	$	Verb group
+DERIVATION	20	+	Derivationally related form
+CLASSIFICATION	21	;	Domain of synset
+CLASS	22	-	Member of this domain
+SYNS	23	\fIn/a\fP	Find synonyms 
+FREQ	24	\fIn/a\fP	Polysemy
+FRAMES	25	\fIn/a\fP	Verb example sentences and generic frames
+COORDS	26	\fIn/a\fP	Noun coordinates
+RELATIVES	27	\fIn/a\fP	Group related senses
+HMERONYM	28	\fIn/a\fP	Hierarchical meronym search
+HHOLONYM	29	\fIn/a\fP	Hierarchical holonym search
+WNGREP	30	\fIn/a\fP	Find keywords by substring
+OVERVIEW	31	\fIn/a\fP	Show all synsets for word
+CLASSIF_CATEGORY	32	;c	Show domain topic
+CLASSIF_USAGE	33	;u	Show domain usage
+CLASSIF_REGIONAL	34	;r	Show domain region
+CLASS_CATEGORY	35	-c	Show domain terms for topic
+CLASS_USAGE	36	-u	Show domain terms for usage
+CLASS_REGIONAL	37	-r	Show domain terms for region
+INSTANCE	38	@i	Instance of
+INSTANCES	39	\(api	Show instances
+.TE
+
+\fBfindtheinfo_ds(\|)\fP cannot perform the following searches:
+
+.RS
+.nf
+SEEALSOPTR
+PERTPTR
+VERBGROUP
+FREQ
+FRAMES
+RELATIVES
+WNGREP
+OVERVIEW
+.fi
+.RE
+.SH NOTES
+Applications that use WordNet and/or the morphological functions
+must call \fBwninit(\|)\fP at the start of the program.  See
+.BR wnutil (3WN)
+for more information.
+
+In all function calls, \fIsearchstr\fP may be either a word or a
+collocation formed by joining individual words with underscore
+characters (\fB_\fP).
+
+The \fBSearchResults\fP structure defines fields in the
+\fIwnresults\fP global variable that are set by the various search
+functions.  This is a way to get additional information, such as the
+number of senses the word has, from the search functions.
+The \fIsearchds\fP field is set by \fBfindtheinfo_ds(\|)\fP.
+
+The \fIpos\fP passed to \fBtraceptrs_ds(\|)\fP is not used.
+
+.SH SEE ALSO
+.BR wn (1WN),
+.BR wnb (1WN),
+.BR wnintro (3WN),
+.BR binsrch (3WN),
+.BR malloc (3),
+.BR morph (3WN),
+.BR wnutil (3WN),
+.BR wnintro (5WN).
+.SH WARNINGS
+\fBparse_synset(\|)\fP must find an exact match between the
+\fIsearchstr\fP passed and a word in the synset to set
+\fIwhichword\fP.  No attempt is made to translate hyphens and
+underscores, as is done in \fBgetindex(\|)\fP.
+
+The WordNet database and exception list files must be opened with
+\fBwninit\fP prior to using any of the searching functions.
+
+A large search may cause \fBfindtheinfo(\|)\fP to run out of buffer
+space.  The maximum buffer size is determined by computer platform.
+If the buffer size is exceeded the following message is printed in the
+output buffer: \fB"Search too large.  Narrow search and try
+again..."\fP.
+
+Passing an invalid \fIpos\fP will probably result in a core dump.

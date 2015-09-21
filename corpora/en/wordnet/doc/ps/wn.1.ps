@@ -1,0 +1,1582 @@
+%!PS
+%%Version: 3.15
+%%DocumentFonts: (atend)
+%%Pages: (atend)
+%%EndComments
+%ident	"@(#)lp:filter/postscript/postscript/dpost.ps	1.1"
+%
+% Version 3.16 prologue for troff files.
+%
+
+/#copies 1 store
+/aspectratio 1 def
+/formsperpage 1 def
+/landscape false def
+/linewidth .3 def
+/magnification 1 def
+/margin 0 def
+/orientation 0 def
+/resolution 720 def
+/xoffset 0 def
+/yoffset 0 def
+
+/roundpage true def
+/useclippath true def
+/pagebbox [0 0 612 792] def
+
+/R  /Times-Roman def
+/I  /Times-Italic def
+/B  /Times-Bold def
+/BI /Times-BoldItalic def
+/H  /Helvetica def
+/HI /Helvetica-Oblique def
+/HB /Helvetica-Bold def
+/HX /Helvetica-BoldOblique def
+/CW /Courier def
+/CO /Courier def
+/CI /Courier-Oblique def
+/CB /Courier-Bold def
+/CX /Courier-BoldOblique def
+/PA /Palatino-Roman def
+/PI /Palatino-Italic def
+/PB /Palatino-Bold def
+/PX /Palatino-BoldItalic def
+/Hr /Helvetica-Narrow def
+/Hi /Helvetica-Narrow-Oblique def
+/Hb /Helvetica-Narrow-Bold def
+/Hx /Helvetica-Narrow-BoldOblique def
+/KR /Bookman-Light def
+/KI /Bookman-LightItalic def
+/KB /Bookman-Demi def
+/KX /Bookman-DemiItalic def
+/AR /AvantGarde-Book def
+/AI /AvantGarde-BookOblique def
+/AB /AvantGarde-Demi def
+/AX /AvantGarde-DemiOblique def
+/NR /NewCenturySchlbk-Roman def
+/NI /NewCenturySchlbk-Italic def
+/NB /NewCenturySchlbk-Bold def
+/NX /NewCenturySchlbk-BoldItalic def
+/ZD /ZapfDingbats def
+/ZI /ZapfChancery-MediumItalic def
+/VR /Varitimes#Roman def
+/VI /Varitimes#Italic def
+/VB /Varitimes#Bold def
+/VX /Varitimes#BoldItalic def
+/S  /S def
+/S1 /S1 def
+/GR /Symbol def
+
+/inch {72 mul} bind def
+/min {2 copy gt {exch} if pop} bind def
+
+/setup {
+	counttomark 2 idiv {def} repeat pop
+
+	landscape {/orientation 90 orientation add def} if
+	/scaling 72 resolution div def
+	linewidth setlinewidth
+	1 setlinecap
+
+	pagedimensions
+	xcenter ycenter translate
+	orientation neg rotate
+	width 2 div neg height 2 div translate
+	xoffset inch yoffset inch translate
+	margin 2 div dup neg translate
+	magnification dup aspectratio mul scale
+	scaling scaling scale
+
+	/Symbol /S Sdefs cf
+	/Times-Roman /S1 S1defs cf
+	0 0 moveto
+} def
+
+/pagedimensions {
+	useclippath userdict /gotpagebbox known not and {
+		/pagebbox [clippath pathbbox newpath] def
+		roundpage currentdict /roundpagebbox known and {roundpagebbox} if
+	} if
+	pagebbox aload pop
+	4 -1 roll exch 4 1 roll 4 copy
+	landscape {4 2 roll} if
+	sub /width exch def
+	sub /height exch def
+	add 2 div /xcenter exch def
+	add 2 div /ycenter exch def
+	userdict /gotpagebbox true put
+} def
+
+/pagesetup {
+	/page exch def
+	currentdict /pagedict known currentdict page known and {
+		page load pagedict exch get cvx exec
+	} if
+} def
+
+/decodingdefs [
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg /y exch def counttomark 2 idiv {y moveto show} repeat}
+	{neg moveto {2 index stringwidth pop sub exch div 0 32 4 -1 roll widthshow} repeat}
+	{neg moveto {spacewidth sub 0.0 32 4 -1 roll widthshow} repeat}
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg setfunnytext}
+] def
+
+/setdecoding {/t decodingdefs 3 -1 roll get bind def} bind def
+
+/w {neg moveto show} bind def
+/m {neg dup /y exch def moveto} bind def
+/done {/lastpage where {pop lastpage} if} def
+
+/f {
+	dup /font exch def findfont exch
+	dup /ptsize exch def scaling div dup /size exch def scalefont setfont
+	linewidth ptsize mul scaling 10 mul div setlinewidth
+	/spacewidth ( ) stringwidth pop def
+} bind def
+
+/changefont {
+	/fontheight exch def
+	/fontslant exch def
+	currentfont [
+		1 0
+		fontheight ptsize div fontslant sin mul fontslant cos div
+		fontheight ptsize div
+		0 0
+	] makefont setfont
+} bind def
+
+/sf {f} bind def
+
+/cf {
+	dup length 2 idiv
+	/entries exch def
+	/chtab exch def
+	/newfont exch def
+
+	findfont dup length 1 add dict
+	/newdict exch def
+	{1 index /FID ne {newdict 3 1 roll put} {pop pop} ifelse} forall
+
+	newdict /Metrics entries dict put
+	newdict /Metrics get
+	begin
+		chtab aload pop
+		1 1 entries {pop def} for
+		newfont newdict definefont pop
+	end
+} bind def
+
+%
+% A few arrays used to adjust reference points and character widths in some
+% of the printer resident fonts. If square roots are too high try changing
+% the lines describing /radical and /radicalex to,
+%
+%	/radical	[0 -75 550 0]
+%	/radicalex	[-50 -75 500 0]
+%
+
+/Sdefs [
+	/bracketlefttp		[220 500]
+	/bracketleftbt		[220 500]
+	/bracketrighttp		[-70 380]
+	/bracketrightbt		[-70 380]
+	/braceleftbt		[220 490]
+	/bracketrightex		[220 -125 500 0]
+	/radical		[0 0 550 0]
+	% NeWSprint's \(br is too low, compensate
+	statusdict /product get (NeWS Server) eq {
+		/radicalex		[-50 100 500 0]
+		/parenleftex		[-20 100 0 0]
+
+	} {
+		/radicalex		[-50 0 500 0]
+		/parenleftex		[-20 -170 0 0]
+	} ifelse
+	/integral		[100 -50 500 0]
+	/infinity		[10 -75 730 0]
+] def
+
+/S1defs [
+	/underscore		[0 80 500 0]
+	/endash			[7 90 650 0]
+] def
+%%EndProlog
+%%BeginSetup
+mark
+/resolution 720 def
+setup
+2 setdecoding
+%%EndSetup
+%%Page: 1 1
+save
+mark
+1 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 1WN \))3 330( WN)1 3180(User Commands)1 677 3 1213 480 t
+9 B f
+(NAME)720 960 w
+10 R f
+(wn)1080 1080 w
+10 S1 f
+(\261)1235 1080 w
+10 R f
+(command line interface to WordNet lexical database)6 2148 1 1333 1080 t
+9 B f
+(SYNOPSIS)720 1248 w
+10 B f
+(wn)1080 1368 w
+10 R f
+([)1241 1368 w
+10 I f
+(searchstr)1307 1368 w
+10 R f
+(] [)1 99 1 1712 1368 t
+10 S1 f
+(\261)1844 1368 w
+10 B f
+(h)1909 1368 w
+10 R f
+(] [)1 99 1 1965 1368 t
+10 S1 f
+(\261)2097 1368 w
+10 B f
+(g)2162 1368 w
+10 R f
+(] [)1 99 1 2245 1368 t
+10 S1 f
+(\261)2377 1368 w
+10 B f
+(a)2442 1368 w
+10 R f
+(] [)1 99 1 2525 1368 t
+10 S1 f
+(\261)2657 1368 w
+10 B f
+(l)2722 1368 w
+10 R f
+(] [)1 99 1 2783 1368 t
+10 S1 f
+(\261)2915 1368 w
+10 B f
+(o)2980 1368 w
+10 R f
+(] [)1 99 1 3063 1368 t
+10 S1 f
+(\261)3195 1368 w
+10 B f
+(s)3260 1368 w
+10 R f
+(] [)1 99 1 3332 1368 t
+10 S1 f
+(\261)3464 1368 w
+10 B f
+(n)3529 1368 w
+10 S1 f
+(#)3585 1368 w
+10 R f
+(] [)1 99 1 3668 1368 t
+10 I f
+(search)3800 1368 w
+10 S f
+(_)4066 1368 w
+10 I f
+(option)4116 1368 w
+10 R f
+(... ])1 141 1 4372 1368 t
+9 B f
+(DESCRIPTION)720 1536 w
+10 B f
+(wn\( \))1 210 1 1080 1656 t
+10 R f
+( database, allowing synsets and relations to be)7 1947(provides a command line interface to the WordNet)7 2124 2 1329 1656 t
+( on syntactic category)3 903( each word, different searches are provided, based)7 2072( For)1 208(displayed as formatted text.)3 1137 4 1080 1776 t
+( base forms of words are usually stored in WordNet, users may search)12 2928( only)1 213( Although)1 446(and pointer types.)2 733 4 1080 1896 t
+( is applied to the search string to generate a form that is)12 2405( morphological process)2 966( A)1 147(for in\257ected forms.)2 802 4 1080 2016 t
+(present in WordNet.)2 828 1 1080 2136 t
+( when writing scripts to extract information from the Word-)9 2523(The command line interface is often useful)6 1797 2 1080 2376 t
+( the output with various scripting tools can reformat the results as)11 2903( of)1 135( Post-processing)1 718(Net database.)1 564 4 1080 2496 t
+(desired.)1080 2616 w
+9 B f
+(OPTIONS)720 2784 w
+10 S1 f
+(\261)1080 2904 w
+10 B f
+(h)1145 2904 w
+10 R f
+(Print help text before search results.)5 1476 1 1830 2904 t
+10 S1 f
+(\261)1080 3072 w
+10 B f
+(g)1145 3072 w
+10 R f
+(Display textual glosses associated with synsets.)5 1939 1 1830 3072 t
+10 S1 f
+(\261)1080 3240 w
+10 B f
+(a)1145 3240 w
+10 R f
+(Display lexicographer \256le information.)3 1583 1 1830 3240 t
+10 S1 f
+(\261)1080 3408 w
+10 B f
+(o)1145 3408 w
+10 R f
+(Display synset offset of each synset.)5 1493 1 1830 3408 t
+10 S1 f
+(\261)1080 3576 w
+10 B f
+(s)1145 3576 w
+10 R f
+(Display each word's sense numbers in synsets.)6 1920 1 1830 3576 t
+10 S1 f
+(\261)1080 3744 w
+10 B f
+(l)1145 3744 w
+10 R f
+(Display the WordNet copyright notice, version number, and license.)8 2790 1 1830 3744 t
+10 S1 f
+(\261)1080 3912 w
+10 B f
+(n)1145 3912 w
+10 S1 f
+(#)1201 3912 w
+10 R f
+(Perform search on sense number)4 1334 1 1830 3912 t
+10 S1 f
+(#)3197 3912 w
+10 R f
+(only.)3280 3912 w
+10 B f
+(-over)1080 4080 w
+10 R f
+(Display overview of all senses of)5 1368 1 1830 4080 t
+10 I f
+(searchstr)3231 4080 w
+10 R f
+(in all syntactic categories.)3 1061 1 3636 4080 t
+9 B f
+(Search Options)1 615 1 900 4248 t
+10 R f
+(Note that the last letter of)5 1078 1 1080 4368 t
+10 I f
+(search)2195 4368 w
+10 S f
+(_)2461 4368 w
+10 I f
+(option)2511 4368 w
+10 R f
+( the search applies to:)4 917(generally denotes the part of speech that)6 1679 2 2804 4368 t
+10 B f
+(n)1080 4488 w
+10 R f
+(for nouns,)1 434 1 1190 4488 t
+10 B f
+(v)1678 4488 w
+10 R f
+(for verbs,)1 410 1 1781 4488 t
+10 B f
+(a)2244 4488 w
+10 R f
+(for adjectives, and)2 790 1 2347 4488 t
+10 B f
+(r)3190 4488 w
+10 R f
+( searches may be done for)5 1178( Multiple)1 431(for adverbs.)1 504 3 3287 4488 t
+10 I f
+(searchstr)1080 4608 w
+10 R f
+(with a single command by specifying all the appropriate search options.)10 2951 1 1485 4608 t
+10 S1 f
+(\261)1080 4896 w
+10 B f
+(syns)1145 4896 w
+10 R f
+(\()1329 4896 w
+10 I f
+(n)1362 4896 w
+10 S f
+(\372)1445 4896 w
+10 I f
+(v)1528 4896 w
+10 S f
+(\372)1605 4896 w
+10 I f
+(a)1688 4896 w
+10 S f
+(\372)1771 4896 w
+10 I f
+(r)1854 4896 w
+10 R f
+(\))1893 4896 w
+( immediate hypernyms of synsets containing)5 1835(Display synonyms and)2 929 2 1830 5016 t
+10 I f
+(searchstr)4629 5016 w
+10 R f
+(. Synsets)1 399 1 5001 5016 t
+( adjectives, if)2 573( For)1 216( by estimated frequency of use.)5 1342(are ordered)1 470 4 1830 5136 t
+10 I f
+(searchstr)4475 5136 w
+10 R f
+(is in a head)3 509 1 4891 5136 t
+( If)1 134(synset, the cluster's satellite synsets are displayed in place of hypernyms.)10 3029 2 1830 5256 t
+10 I f
+(searchstr)5028 5256 w
+10 R f
+(is in a satellite synset, its head synset is also displayed.)10 2274 1 1830 5376 t
+10 S1 f
+(\261)1080 5544 w
+10 B f
+(simsv)1145 5544 w
+10 R f
+( and immediate hypernyms of synsets containing)6 2122(Display verb synonyms)2 998 2 1830 5544 t
+10 I f
+(searchstr)5003 5544 w
+10 R f
+(.)5375 5544 w
+(Synsets are grouped by similarity of meaning.)6 1888 1 1830 5664 t
+10 S1 f
+(\261)1080 5832 w
+10 B f
+(ants)1145 5832 w
+10 R f
+(\()1323 5832 w
+10 I f
+(n)1356 5832 w
+10 S f
+(\372)1439 5832 w
+10 I f
+(v)1522 5832 w
+10 S f
+(\372)1599 5832 w
+10 I f
+(a)1682 5832 w
+10 S f
+(\372)1765 5832 w
+10 I f
+(r)1848 5832 w
+10 R f
+(\))1887 5832 w
+(Display synsets containing antonyms of)4 1646 1 1830 5952 t
+10 I f
+(searchstr)3514 5952 w
+10 R f
+( if)1 100( adjectives,)1 462(. For)1 235 3 3886 5952 t
+10 I f
+(searchstr)4722 5952 w
+10 R f
+(is in a)2 267 1 5133 5952 t
+(head synset,)1 503 1 1830 6072 t
+10 I f
+(searchstr)2373 6072 w
+10 R f
+( synset for the direct antonym)5 1260( head)1 228( The)1 228(has a direct antonym.)3 899 4 2785 6072 t
+( If)1 150(is displayed along with the direct antonym's satellite synsets.)8 2654 2 1830 6192 t
+10 I f
+(searchstr)4685 6192 w
+10 R f
+( a)1 96(is in)1 196 2 5108 6192 t
+(satellite synset,)1 646 1 1830 6312 t
+10 I f
+(searchstr)2536 6312 w
+10 R f
+( indirect antonym via the head synset, which is)8 2145(has an)1 287 2 2968 6312 t
+(displayed.)1830 6432 w
+10 S1 f
+(\261)1080 6600 w
+10 B f
+(faml)1145 6600 w
+10 R f
+(\()1339 6600 w
+10 I f
+(n)1372 6600 w
+10 S f
+(\372)1455 6600 w
+10 I f
+(v)1538 6600 w
+10 S f
+(\372)1615 6600 w
+10 I f
+(a)1698 6600 w
+10 S f
+(\372)1781 6600 w
+10 I f
+(r)1864 6600 w
+10 R f
+(\))1903 6600 w
+(Display familiarity and polysemy information for)5 2019 1 1830 6720 t
+10 I f
+(searchstr)3882 6720 w
+10 R f
+(.)4254 6720 w
+10 S1 f
+(\261)1080 6888 w
+10 B f
+(hype)1145 6888 w
+10 R f
+(\()1351 6888 w
+10 I f
+(n)1384 6888 w
+10 S f
+(\372)1467 6888 w
+10 I f
+(v)1550 6888 w
+10 R f
+( display hypernym \(superordinate\) tree for)5 1748(\) Recursively)1 713 2 1594 6888 t
+10 I f
+(searchstr)4092 6888 w
+10 R f
+(\()4501 6888 w
+10 I f
+(searchstr IS A KIND)3 866 1 4534 6888 t
+(OF)1830 7008 w
+10 S f
+(_____)1996 7008 w
+10 R f
+(relation\).)2279 7008 w
+10 S1 f
+(\261)1080 7176 w
+10 B f
+(hypo)1145 7176 w
+10 R f
+(\()1357 7176 w
+10 I f
+(n)1390 7176 w
+10 S f
+(\372)1473 7176 w
+10 I f
+(v)1556 7176 w
+10 R f
+( immediate hyponyms \(subordinates\) for)4 1750(\) Display)1 541 2 1600 7176 t
+10 I f
+(searchstr)3947 7176 w
+10 R f
+(\()4375 7176 w
+10 S f
+(_____)4408 7176 w
+10 I f
+( KIND OF)2 486(IS A)1 200 2 4714 7176 t
+(searchstr)1830 7296 w
+10 R f
+(relation\).)2235 7296 w
+( 1)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7776 t
+cleartomark
+showpage
+restore
+%%EndPage: 1 1
+%%Page: 2 2
+save
+mark
+2 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 1WN \))3 330( WN)1 3180(User Commands)1 677 3 1213 480 t
+10 S1 f
+(\261)1080 960 w
+10 B f
+(tree)1145 960 w
+10 R f
+(\()1310 960 w
+10 I f
+(n)1343 960 w
+10 S f
+(\372)1426 960 w
+10 I f
+(v)1509 960 w
+10 R f
+( hyponym \(subordinate\) tree for)4 1307(\) Display)1 588 2 1553 960 t
+10 I f
+(searchstr)3481 960 w
+10 R f
+( a recursive search that \256nds)5 1178( is)1 100(. This)1 269 3 3853 960 t
+(the hyponyms of each hyponym.)4 1339 1 1830 1080 t
+10 S1 f
+(\261)1080 1248 w
+10 B f
+(coor)1145 1248 w
+10 R f
+(\()1333 1248 w
+10 I f
+(n)1366 1248 w
+10 S f
+(\372)1449 1248 w
+10 I f
+(v)1532 1248 w
+10 R f
+( coordinates \(sisters\) of)3 964( the)1 156(\) Display)1 565 3 1576 1248 t
+10 I f
+(searchstr)3296 1248 w
+10 R f
+( search prints the immediate hyper-)5 1461(. This)1 271 2 3668 1248 t
+(nym for each synset that contains)5 1374 1 1830 1368 t
+10 I f
+(searchstr)3237 1368 w
+10 R f
+(and the hypernym's immediate hyponyms.)4 1739 1 3642 1368 t
+10 S1 f
+(\261)1080 1536 w
+10 B f
+(deri)1145 1536 w
+10 R f
+(\()1317 1536 w
+10 I f
+(n)1350 1536 w
+10 S f
+(\372)1433 1536 w
+10 I f
+(v)1516 1536 w
+10 R f
+( derivational morphology links between noun and verb forms.)8 2536(\) Display)1 581 2 1560 1536 t
+10 S1 f
+(\261)1080 1704 w
+10 B f
+(domn)1145 1704 w
+10 R f
+(\()1390 1704 w
+10 I f
+(n)1423 1704 w
+10 S f
+(\372)1506 1704 w
+10 I f
+(v)1589 1704 w
+10 S f
+(\372)1666 1704 w
+10 I f
+(a)1749 1704 w
+10 S f
+(\372)1832 1704 w
+10 I f
+(r)1915 1704 w
+10 R f
+(\))1954 1704 w
+(Display domain that)2 827 1 1830 1824 t
+10 I f
+(searchstr)2690 1824 w
+10 R f
+(has been classi\256ed in.)3 895 1 3095 1824 t
+10 S1 f
+(\261)1080 1992 w
+10 B f
+(domt)1145 1992 w
+10 R f
+(\()1367 1992 w
+10 I f
+(n)1400 1992 w
+10 S f
+(\372)1483 1992 w
+10 I f
+(v)1566 1992 w
+10 S f
+(\372)1643 1992 w
+10 I f
+(a)1726 1992 w
+10 S f
+(\372)1809 1992 w
+10 I f
+(r)1892 1992 w
+10 R f
+(\))1931 1992 w
+(Display all terms classi\256ed as members of the)7 1890 1 1830 2112 t
+10 I f
+(searchstr)3753 2112 w
+10 R f
+('s domain.)1 430 1 4125 2112 t
+10 S1 f
+(\261)1080 2280 w
+10 B f
+(subsn)1145 2280 w
+10 R f
+(Display substance meronyms of)3 1303 1 1830 2280 t
+10 I f
+(searchstr)3166 2280 w
+10 R f
+(\()3571 2280 w
+10 I f
+(HAS SUBSTANCE)1 761 1 3604 2280 t
+10 R f
+(relation\).)4398 2280 w
+10 S1 f
+(\261)1080 2448 w
+10 B f
+(partn)1145 2448 w
+10 R f
+(Display part meronyms of)3 1070 1 1830 2448 t
+10 I f
+(searchstr)2933 2448 w
+10 R f
+(\()3338 2448 w
+10 I f
+(HAS PART)1 455 1 3371 2448 t
+10 R f
+(relation\).)3859 2448 w
+10 S1 f
+(\261)1080 2616 w
+10 B f
+(membn)1145 2616 w
+10 R f
+(Display member meronyms of)3 1242 1 1830 2616 t
+10 I f
+(searchstr)3105 2616 w
+10 R f
+(\()3510 2616 w
+10 I f
+(HAS MEMBER)1 626 1 3543 2616 t
+10 R f
+(relation\).)4202 2616 w
+10 S1 f
+(\261)1080 2784 w
+10 B f
+(meron)1145 2784 w
+10 R f
+(Display all meronyms of)3 1051 1 1830 2784 t
+10 I f
+(searchstr)2926 2784 w
+10 R f
+(\()3344 2784 w
+10 I f
+(HAS PART, HAS MEMBER, HAS SUBSTANCE)5 2023 1 3377 2784 t
+10 R f
+(relations\).)1830 2904 w
+10 S1 f
+(\261)1080 3072 w
+10 B f
+(hmern)1145 3072 w
+10 R f
+(Display meronyms for)2 945 1 1830 3072 t
+10 I f
+(searchstr)2823 3072 w
+10 R f
+( is a recursive search that prints all the)8 1722(tree. This)1 434 2 3244 3072 t
+(meronyms of)1 538 1 1830 3192 t
+10 I f
+(searchstr)2401 3192 w
+10 R f
+(and all of its hypernyms.)4 1023 1 2806 3192 t
+10 S1 f
+(\261)1080 3360 w
+10 B f
+(sprtn)1145 3360 w
+10 R f
+(Display)1830 3360 w
+10 I f
+(part of)1 278 1 2174 3360 t
+10 R f
+(holonyms of)1 511 1 2485 3360 t
+10 I f
+(searchstr)3029 3360 w
+10 R f
+(\()3434 3360 w
+10 I f
+(PART OF)1 405 1 3467 3360 t
+10 R f
+(relation\).)3905 3360 w
+10 S1 f
+(\261)1080 3528 w
+10 B f
+(smemn)1145 3528 w
+10 R f
+(Display)1830 3528 w
+10 I f
+(member of)1 432 1 2174 3528 t
+10 R f
+(holonyms of)1 511 1 2639 3528 t
+10 I f
+(searchstr)3183 3528 w
+10 R f
+(\()3588 3528 w
+10 I f
+(MEMBER OF)1 576 1 3621 3528 t
+10 R f
+(relation\).)4230 3528 w
+10 S1 f
+(\261)1080 3696 w
+10 B f
+(ssubn)1145 3696 w
+10 R f
+(Display)1830 3696 w
+10 I f
+(substance of)1 505 1 2174 3696 t
+10 R f
+(holonyms of)1 511 1 2712 3696 t
+10 I f
+(searchstr)3256 3696 w
+10 R f
+(\()3661 3696 w
+10 I f
+(SUBSTANCE OF)1 711 1 3694 3696 t
+10 R f
+(relation\).)4438 3696 w
+10 S1 f
+(\261)1080 3864 w
+10 B f
+(holon)1145 3864 w
+10 R f
+(Display all holonyms of)3 1012 1 1830 3864 t
+10 I f
+(searchstr)2883 3864 w
+10 R f
+(\()3296 3864 w
+10 I f
+(PART OF, MEMBER OF, SUBSTANCE OF)5 1848 1 3329 3864 t
+10 R f
+(rela-)5218 3864 w
+(tions\).)1830 3984 w
+10 S1 f
+(\261)1080 4152 w
+10 B f
+(hholn)1145 4152 w
+10 R f
+(Display holonyms for)2 922 1 1830 4152 t
+10 I f
+(searchstr)2803 4152 w
+10 R f
+( is a recursive search that prints all the)8 1738(tree. This)1 436 2 3226 4152 t
+(holonyms of)1 511 1 1830 4272 t
+10 I f
+(searchstr)2374 4272 w
+10 R f
+(and all of each holonym's holonyms.)5 1522 1 2779 4272 t
+10 S1 f
+(\261)1080 4440 w
+10 B f
+(entav)1145 4440 w
+10 R f
+(Display entailment relations of)3 1259 1 1830 4440 t
+10 I f
+(searchstr)3122 4440 w
+10 R f
+(.)3494 4440 w
+10 S1 f
+(\261)1080 4608 w
+10 B f
+(framv)1145 4608 w
+10 R f
+(Display applicable verb sentence frames for)5 1793 1 1830 4608 t
+10 I f
+(searchstr)3656 4608 w
+10 R f
+(.)4028 4608 w
+10 S1 f
+(\261)1080 4776 w
+10 B f
+(causv)1145 4776 w
+10 R f
+(Display)1830 4776 w
+10 I f
+(cause to)1 338 1 2174 4776 t
+10 R f
+(relations of)1 460 1 2545 4776 t
+10 I f
+(searchstr)3038 4776 w
+10 R f
+(.)3410 4776 w
+10 S1 f
+(\261)1113 4944 w
+10 B f
+(pert)1178 4944 w
+10 R f
+(\()1355 4944 w
+10 I f
+(a)1388 4944 w
+10 S f
+(\372)1471 4944 w
+10 I f
+(r)1554 4944 w
+10 R f
+( pertainyms of)2 593(\) Display)1 548 2 1593 4944 t
+10 I f
+(searchstr)2767 4944 w
+10 R f
+(.)3139 4944 w
+10 S1 f
+(\261)1113 5112 w
+10 B f
+(attr)1178 5112 w
+10 R f
+(\()1338 5112 w
+10 I f
+(n)1371 5112 w
+10 S f
+(\372)1454 5112 w
+10 I f
+(a)1537 5112 w
+10 R f
+( adjective values for noun attribute, or noun attributes of adjective values.)11 3030(\) Display)1 554 2 1587 5112 t
+10 S1 f
+(\261)1080 5280 w
+10 B f
+(grep)1145 5280 w
+10 R f
+(\()1339 5280 w
+10 I f
+(n)1372 5280 w
+10 S f
+(\372)1455 5280 w
+10 I f
+(v)1538 5280 w
+10 S f
+(\372)1615 5280 w
+10 I f
+(a)1698 5280 w
+10 S f
+(\372)1781 5280 w
+10 I f
+(r)1864 5280 w
+10 R f
+(\))1903 5280 w
+(List compound words containing)3 1343 1 1830 5400 t
+10 I f
+(searchstr)3206 5400 w
+10 R f
+(as a substring.)2 585 1 3611 5400 t
+9 B f
+(SEARCH RESULTS)1 830 1 720 5568 t
+10 R f
+( search, the output consists a one line)7 1550( each)1 215( For)1 205(The results of a search are written to the standard output.)10 2350 4 1080 5688 t
+(description of the search, followed by the search results.)8 2309 1 1080 5808 t
+(All searches other than)3 947 1 1080 6048 t
+10 S1 f
+(\261)2062 6048 w
+10 B f
+(over)2127 6048 w
+10 R f
+( in the following general format.)5 1353(list all senses matching the search results)6 1697 2 2350 6048 t
+(Items enclosed in italicized square brackets \()6 1838 1 1080 6168 t
+10 I f
+([ ... ])2 219 1 2918 6168 t
+10 R f
+(\) may not be present.)4 872 1 3137 6168 t
+(One line listing the number of senses matching the search request.)10 2723 1 1440 6408 t
+(Each sense matching the search requested displayed as follows:)8 2603 1 1440 6648 t
+10 B f
+(Sense)1800 6888 w
+10 I f
+(n)2072 6888 w
+([)1800 7008 w
+10 S f
+({)1839 7008 w
+10 I f
+(synset)1887 7008 w
+10 S f
+(_)2131 7008 w
+10 I f
+(offset)2181 7008 w
+10 S f
+(})2398 7008 w
+10 I f
+(] [)1 111 1 2446 7008 t
+10 S1 f
+(<)2557 7008 w
+10 I f
+(lex)2613 7008 w
+10 S f
+(_)2729 7008 w
+10 I f
+(\256lename)2779 7008 w
+10 S1 f
+(>)3117 7008 w
+10 I f
+(] word1[)1 400 1 3173 7008 t
+10 S1 f
+(#)3573 7008 w
+10 I f
+(sense)3623 7008 w
+10 S f
+(_)3839 7008 w
+10 I f
+(number][, word2...])1 844 1 3889 7008 t
+10 R f
+(Where)1440 7248 w
+10 I f
+(n)1739 7248 w
+10 R f
+(is the sense number of the search word,)7 1637 1 1823 7248 t
+10 I f
+(synset)3494 7248 w
+10 S f
+(_)3738 7248 w
+10 I f
+(offset)3788 7248 w
+10 R f
+( synset in)2 398(is the byte offset of the)5 963 2 4039 7248 t
+( 2)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7728 t
+cleartomark
+showpage
+restore
+%%EndPage: 2 2
+%%Page: 3 3
+save
+mark
+3 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 1WN \))3 330( WN)1 3180(User Commands)1 677 3 1213 480 t
+(the)1440 960 w
+10 B f
+(data.)1603 960 w
+10 I f
+(pos)1817 960 w
+10 R f
+( category,)1 408(\256le corresponding to the syntactic)4 1418 2 1997 960 t
+10 I f
+(lex)3863 960 w
+10 S f
+(_)3979 960 w
+10 I f
+(\256lename)4029 960 w
+10 R f
+(is the name of the lexi-)5 993 1 4407 960 t
+(cographer \256le that the synset comes from,)6 1726 1 1440 1080 t
+10 I f
+(word1)3200 1080 w
+10 R f
+( that this is)3 467(is the \256rst word in the synset \(note)7 1443 2 3490 1080 t
+(not necessarily the search word\) and)5 1544 1 1440 1200 t
+10 I f
+(sense)3027 1200 w
+10 S f
+(_)3243 1200 w
+10 I f
+(number)3293 1200 w
+10 R f
+( assigned to)2 506(is the WordNet sense number)4 1253 2 3641 1200 t
+(the preceding word.)2 819 1 1440 1320 t
+10 I f
+(synset)2330 1320 w
+10 S f
+(_)2574 1320 w
+10 I f
+(offset, lex)1 396 1 2624 1320 t
+10 S f
+(_)3020 1320 w
+10 I f
+(\256lename)3070 1320 w
+10 R f
+(, and)1 207 1 3408 1320 t
+10 I f
+(sense)3653 1320 w
+10 S f
+(_)3869 1320 w
+10 I f
+(number)3919 1320 w
+10 R f
+(are generated when the)3 960 1 4262 1320 t
+10 S1 f
+(\261)5260 1320 w
+10 B f
+(o,)5325 1320 w
+10 S1 f
+(\261)1440 1440 w
+10 B f
+(a,)1505 1440 w
+10 R f
+(and)1613 1440 w
+10 S1 f
+(\261)1790 1440 w
+10 B f
+(s)1855 1440 w
+10 R f
+(options, respectively, are speci\256ed.)3 1427 1 1927 1440 t
+( printed below each sense's synset output)6 1887(The synsets matching the search requested are)6 2073 2 1440 1680 t
+( line of output is preceded by a marker \(usually)9 2005( Each)1 270(described above.)1 684 3 1440 1800 t
+10 B f
+(=)4437 1800 w
+10 S1 f
+(>)4494 1800 w
+10 R f
+(\), then a synset, for-)4 850 1 4550 1800 t
+( the tree, then successive)4 1077( a search traverses more one level of)7 1600( If)1 145(matted as described above.)3 1138 4 1440 1920 t
+( the)1 158( When)1 307(lines are indented by spaces corresponding to its level in the hierarchy.)11 2949 3 1440 2040 t
+10 S1 f
+(\261)4890 2040 w
+10 B f
+(g)4955 2040 w
+10 R f
+(option is)1 359 1 5041 2040 t
+( synset is)2 393( Each)1 270( displayed in parentheses at the end of each synset.)9 2146(speci\256ed, synset glosses are)3 1151 4 1440 2160 t
+(printed on one line.)3 801 1 1440 2280 t
+( most common sense)3 884(Senses are generally ordered from most to least frequently used, with the)11 3076 2 1440 2520 t
+(numbered)1440 2640 w
+10 B f
+(1)1879 2640 w
+10 R f
+( of use is determined by the number of times a sense is tagged in the)15 2952(. Frequency)1 519 2 1929 2640 t
+( that are not semantically tagged follow the ordered)8 2145( Senses)1 341(various semantic concordance texts.)3 1474 3 1440 2760 t
+( that this ordering is only an estimate based on usage in a small corpus.)14 2951(senses. Note)1 540 2 1440 2880 t
+( of meaning, rather than ordered by frequency of use.)9 2241(Verb senses can be grouped by similarity)6 1719 2 1440 3120 t
+(The)1440 3240 w
+10 S1 f
+(\261)1639 3240 w
+10 B f
+(simsv)1704 3240 w
+10 R f
+( that are close in meaning together, with a line of dashes)11 2444(search prints all senses)3 969 2 1987 3240 t
+( See)1 235(indicating the end of a group.)5 1341 2 1440 3360 t
+10 B f
+(wngroups)3074 3360 w
+10 R f
+(\(7WN\) for a discussion of how senses are)7 1903 1 3497 3360 t
+(grouped.)1440 3480 w
+(The)1440 3720 w
+10 S1 f
+(\261)1641 3720 w
+10 B f
+(over)1706 3720 w
+10 R f
+( overview of all the senses of the search word in all syntactic)12 2692(search displays an)2 768 2 1940 3720 t
+( results of this search are similar to the)8 1702(categories. The)1 662 2 1440 3840 t
+10 S1 f
+(\261)3849 3840 w
+10 B f
+(syns)3914 3840 w
+10 R f
+(search, however no additional)3 1257 1 4143 3840 t
+( are)1 168( senses)1 301( The)1 234(\(ex. hypernym\) synsets are displayed, and synset glosses are always printed.)10 3257 4 1440 3960 t
+( above with)2 564(grouped by syntactic category, and each synset is annotated as described)10 3396 2 1440 4080 t
+10 I f
+(synset)1440 4200 w
+10 S f
+(_)1684 4200 w
+10 I f
+(offset)1734 4200 w
+10 R f
+(,)1951 4200 w
+10 I f
+(lex)2016 4200 w
+10 S f
+(_)2132 4200 w
+10 I f
+(\256lename)2182 4200 w
+10 R f
+(, and)1 209 1 2520 4200 t
+10 I f
+(sense)2769 4200 w
+10 S f
+(_)2985 4200 w
+10 I f
+(number)3035 4200 w
+10 R f
+(as dictated by the)3 741 1 3380 4200 t
+10 S1 f
+(\261)4161 4200 w
+10 B f
+(o,)4226 4200 w
+10 S1 f
+(\261)4341 4200 w
+10 B f
+(a,)4406 4200 w
+10 R f
+(and)4521 4200 w
+10 S1 f
+(\261)4706 4200 w
+10 B f
+(s)4771 4200 w
+10 R f
+(options. The)1 549 1 4851 4200 t
+( indicates how many of the senses in each syntactic category are)11 3036(overview search also)2 924 2 1440 4320 t
+( determine whether a sense's sense)5 1443( is a way for the user to)7 997( This)1 245(represented in the tagged texts.)4 1275 4 1440 4440 t
+( that has)2 351( each sense)2 468( For)1 240(number is based on semantic tagging data, or was arbitrarily assigned.)10 2901 4 1440 4560 t
+( number of semantic tags to that sense are indicated in parentheses)11 2840(appeared in such texts, the)4 1120 2 1440 4680 t
+(after the sense number.)3 949 1 1440 4800 t
+( performed on some senses of)5 1239(If a search cannot be)4 860 2 1440 5040 t
+10 I f
+(searchstr)3574 5040 w
+10 R f
+(, the search results are headed by a)7 1454 1 3946 5040 t
+(string of the form:)3 754 1 1440 5160 t
+(X of Y senses of)4 697 1 1800 5280 t
+10 I f
+(searchstr)2530 5280 w
+10 R f
+(The output of the)3 715 1 1440 5520 t
+10 S1 f
+(\261)2188 5520 w
+10 B f
+(deri)2253 5520 w
+10 R f
+( morphologically related to)3 1112(search shows word forms that are)5 1378 2 2458 5520 t
+10 B f
+(searchstr)4982 5520 w
+10 R f
+(.)5375 5520 w
+(Each word form pointed to from)5 1350 1 1440 5640 t
+10 I f
+(searchstr)2826 5640 w
+10 R f
+(is displayed, preceded by)3 1042 1 3234 5640 t
+10 B f
+(RELATED TO-)1 697 1 4311 5640 t
+10 S1 f
+(>)5008 5640 w
+10 R f
+(and the)1 301 1 5099 5640 t
+( the word)2 407( after)1 221( Printed)1 361(syntactic category of the link, followed, on the next line, by its synset.)12 2971 4 1440 5760 t
+(form is)1 294 1 1440 5880 t
+10 S1 f
+(#)1767 5880 w
+10 I f
+(n)1817 5880 w
+10 R f
+(where)1900 5880 w
+10 I f
+(n)2176 5880 w
+10 R f
+(indicates the WordNet sense number of the term pointed to.)9 2457 1 2259 5880 t
+(The)1440 6120 w
+10 S1 f
+(\261)1628 6120 w
+10 B f
+(domn)1693 6120 w
+10 R f
+(and)1971 6120 w
+10 S1 f
+(\261)2148 6120 w
+10 B f
+(domt)2213 6120 w
+10 R f
+( been classi\256ed in and, con-)5 1154(searches show the domain that a synset has)7 1778 2 2468 6120 t
+( domain is either a)4 814( A)1 149( assigned to a speci\256c domain.)5 1316(versely, all of the terms that have been)7 1681 4 1440 6240 t
+10 B f
+(TOPIC, REGION)1 786 1 1440 6360 t
+10 R f
+(or)2264 6360 w
+10 B f
+(USAGE,)2385 6360 w
+10 R f
+( pointer character stored in the data-)6 1524(as re\257ected in the speci\256c)4 1083 2 2793 6360 t
+( A)1 145(base, and displayed in the output.)5 1410 2 1440 6480 t
+10 S1 f
+(\261)3035 6480 w
+10 B f
+(domn)3100 6480 w
+10 R f
+( if any, that)3 497(search on a term shows the domain,)6 1518 2 3385 6480 t
+(each synset containing)2 936 1 1440 6600 t
+10 I f
+(searchstr)2417 6600 w
+10 R f
+( output display shows the domain)5 1422( The)1 229(has been classi\256ed in.)3 919 3 2830 6600 t
+(type \()1 243 1 1440 6720 t
+10 B f
+(TOPIC, REGION)1 786 1 1683 6720 t
+10 R f
+(or)2507 6720 w
+10 B f
+(USAGE)2628 6720 w
+10 R f
+( the domain synset)3 783(\), followed by the syntactic category of)6 1644 2 2973 6720 t
+( by)1 136( term is followed)3 710( Each)1 267(and the terms in the synset.)5 1138 4 1440 6840 t
+10 S1 f
+(#)3727 6840 w
+10 I f
+(n)3777 6840 w
+10 R f
+(where)3863 6840 w
+10 I f
+(n)4142 6840 w
+10 R f
+(indicates the WordNet sense)3 1172 1 4228 6840 t
+( converse search,)2 731( The)1 238(number of the term.)3 868 3 1440 6960 t
+10 S1 f
+(\261)3326 6960 w
+10 B f
+(domt)3391 6960 w
+10 R f
+(, shows all of the synsets that have been)8 1787 1 3613 6960 t
+(placed into the domain)3 937 1 1440 7080 t
+10 I f
+(searchstr)2410 7080 w
+10 R f
+(, with analogous markers.)3 1053 1 2782 7080 t
+( 3)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 3 3
+%%Page: 4 4
+save
+mark
+4 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 1WN \))3 330( WN)1 3180(User Commands)1 677 3 1213 480 t
+(When)1440 960 w
+10 S1 f
+(\261)1740 960 w
+10 B f
+(framv)1805 960 w
+10 R f
+( sentence frames are)3 924(is speci\256ed, sample illustrative sentences and generic)6 2349 2 2127 960 t
+( a sample sentence is found, the base form of)9 1949(displayed. If)1 549 2 1440 1080 t
+10 I f
+(search)3980 1080 w
+10 R f
+( sen-)1 207(is substituted into the)3 905 2 4288 1080 t
+(tence, and it is printed below the synset, preceded with the)10 2445 1 1440 1200 t
+10 B f
+(EX:)3921 1200 w
+10 R f
+( no sample sen-)3 657(marker. When)1 614 2 4129 1200 t
+( frames that are accept-)4 997( Sentence)1 435( are displayed.)2 613(tences are found, the generic sentence frames)6 1915 4 1440 1320 t
+(able for all words in a synset are preceded by the marker)11 2411 1 1440 1440 t
+10 S f
+(*)3890 1440 w
+10 S1 f
+(>)3940 1440 w
+10 R f
+( a frame is acceptable for the)6 1241(. If)1 163 2 3996 1440 t
+(search word only, it is preceded by the marker)8 1912 1 1440 1560 t
+10 B f
+(=)3385 1560 w
+10 S1 f
+(>)3442 1560 w
+10 R f
+(.)3498 1560 w
+( When)1 313( parts of speech.)3 699(Search results for adjectives are slightly different from those for other)10 2948 3 1440 1800 t
+( When)1 312( one, is also printed in parentheses.)6 1494(an adjective is printed, its direct antonym, if it has)9 2154 3 1440 1920 t
+10 I f
+(searchstr)1440 2040 w
+10 R f
+( position)1 359( The)1 224( of the head synset's satellites are also displayed.)8 2043(is in a head synset, all)5 927 4 1847 2040 t
+( to the noun may be restricted to the)8 1629(of an adjective in relation)4 1120 2 1440 2160 t
+10 I f
+(prenominal)4238 2160 w
+10 R f
+(,)4699 2160 w
+10 I f
+(postnominal)4773 2160 w
+10 R f
+(or)5317 2160 w
+10 I f
+(predicative)1440 2280 w
+10 R f
+( present, these restrictions are noted in parentheses.)7 2104(position. Where)1 679 2 1922 2280 t
+(When an adjective is a participle of a verb, the output indicates the verb and displays its synset.)17 3944 1 1440 2520 t
+( based)1 265(When an adverb is derived from an adjective, the speci\256c adjectival sense on which it is)15 3695 2 1440 2760 t
+(is indicated.)1 491 1 1440 2880 t
+( more than one)3 644(The morphological transformations performed by the search code may result in)10 3316 2 1440 3120 t
+( the strings)2 465( automatically performs the requested search on all of)8 2257( WordNet)1 443(word to search for.)3 795 4 1440 3240 t
+( example, the verb)3 761( For)1 205(and returns the results grouped by word.)6 1659 3 1440 3360 t
+10 B f
+(saw)4098 3360 w
+10 R f
+(is both the present tense of)5 1108 1 4292 3360 t
+10 B f
+(saw)1440 3480 w
+10 R f
+(and the past tense of)4 915 1 1651 3480 t
+10 B f
+(see)2616 3480 w
+10 R f
+( passed)1 316(. When)1 346 2 2743 3480 t
+10 I f
+(searchstr)3455 3480 w
+10 B f
+(saw)3877 3480 w
+10 R f
+(, WordNet performs the desired)4 1362 1 4038 3480 t
+(search \256rst on)2 576 1 1440 3600 t
+10 B f
+(saw)2049 3600 w
+10 R f
+(and next on)2 482 1 2243 3600 t
+10 B f
+(see)2759 3600 w
+10 R f
+(, returning the list of)4 855 1 2886 3600 t
+10 B f
+(saw)3775 3600 w
+10 R f
+(senses and search results, followed)4 1430 1 3970 3600 t
+(by those for)2 493 1 1440 3720 t
+10 B f
+(see)1966 3720 w
+10 R f
+(.)2093 3720 w
+9 B f
+(EXIT STATUS)1 615 1 720 3888 t
+10 B f
+(wn\( \))1 210 1 1080 4008 t
+10 R f
+( If)1 142(normally exits with the number of senses displayed.)7 2195 2 1332 4008 t
+10 I f
+(searchword)3712 4008 w
+10 R f
+(is not found in WordNet, it)5 1173 1 4227 4008 t
+(exits with)1 400 1 1080 4128 t
+10 B f
+(0)1513 4128 w
+10 R f
+(.)1563 4128 w
+(If the WordNet database cannot be opened, an error messages is displayed and)12 3229 1 1080 4368 t
+10 B f
+(wn\( \))1 210 1 4342 4368 t
+10 R f
+(exits with)1 400 1 4585 4368 t
+10 B f
+(-1)5018 4368 w
+10 R f
+(.)5101 4368 w
+9 B f
+(ENVIRONMENT VARIABLES \(UNIX\))2 1600 1 720 4536 t
+10 B f
+(WNHOME)1080 4656 w
+10 R f
+( is)1 100( Default)1 365(Base directory for WordNet.)3 1165 3 2080 4656 t
+10 B f
+(/usr/local/WordNet-3.0)3743 4656 w
+10 R f
+(.)4723 4656 w
+10 B f
+(WNSEARCHDIR)1080 4824 w
+10 R f
+( which the WordNet database has been installed. Default is)9 2788(Directory in)1 532 2 2080 4824 t
+10 B f
+(WNHOME/dict)2080 4944 w
+10 R f
+(.)2758 4944 w
+9 B f
+(REGISTRY \(WINDOWS\))1 1040 1 720 5112 t
+10 B f
+(HKEY)1080 5232 w
+10 S f
+(_)1375 5232 w
+10 B f
+(LOCAL)1425 5232 w
+10 S f
+(_)1781 5232 w
+10 B f
+(MACHINE)1831 5232 w
+10 S1 f
+(\\)2325 5232 w
+10 B f
+(SOFTWARE)2353 5232 w
+10 S1 f
+(\\)2926 5232 w
+10 B f
+(WordNet)2954 5232 w
+10 S1 f
+(\\)3353 5232 w
+10 B f
+(3.0)3381 5232 w
+10 S1 f
+(\\)3506 5232 w
+10 B f
+(WNHome)3534 5232 w
+10 R f
+( is)1 100( Default)1 365(Base directory for WordNet.)3 1165 3 2080 5352 t
+10 B f
+(C:)3743 5352 w
+10 S1 f
+(\\)3848 5352 w
+10 B f
+(Program Files)1 615 1 3876 5352 t
+10 S1 f
+(\\)4491 5352 w
+10 B f
+(WordNet)4519 5352 w
+10 S1 f
+(\\)4918 5352 w
+10 B f
+(3.0)4946 5352 w
+10 R f
+(.)5071 5352 w
+9 B f
+(FILES)720 5520 w
+10 B f
+(index.)1080 5640 w
+10 I f
+(pos)1339 5640 w
+10 R f
+(database index \256les)2 798 1 2080 5640 t
+10 B f
+(data.)1080 5808 w
+10 I f
+(pos)1294 5808 w
+10 R f
+(database data \256les)2 742 1 2080 5808 t
+10 S f
+(*)1080 5976 w
+10 B f
+(.vrb)1130 5976 w
+10 R f
+(\256les of sentences illustrating the use of verbs)7 1851 1 2080 5976 t
+10 I f
+(pos)1080 6144 w
+10 B f
+(.exc)1219 6144 w
+10 R f
+(morphology exception lists)2 1105 1 2080 6144 t
+9 B f
+(SEE ALSO)1 460 1 720 6312 t
+10 B f
+(wnintro)1080 6432 w
+10 R f
+(\(1WN\),)1419 6432 w
+10 B f
+(wnb)1856 6432 w
+10 R f
+(\(1WN\),)2040 6432 w
+10 B f
+(wnintro)2477 6432 w
+10 R f
+(\(3WN\),)2816 6432 w
+10 B f
+(lexnames)3253 6432 w
+10 R f
+(\(5WN\),)3647 6432 w
+10 B f
+(senseidx)4084 6432 w
+10 R f
+(\(5WN\))4440 6432 w
+10 B f
+(wndb)4853 6432 w
+10 R f
+(\(5WN\),)5093 6432 w
+10 B f
+(wninput)1080 6552 w
+10 R f
+(\(5WN\),)1437 6552 w
+10 B f
+(morphy)1777 6552 w
+10 R f
+(\(7WN\),)2116 6552 w
+10 B f
+(wngloss)2456 6552 w
+10 R f
+(\(7WN\),)2790 6552 w
+10 B f
+(wngroups)3130 6552 w
+10 R f
+(\(7WN\).)3553 6552 w
+9 B f
+(BUGS)720 6720 w
+10 R f
+(Please report bugs to wordnet)4 1219 1 1080 6840 t
+10 S1 f
+(@)2299 6840 w
+10 R f
+(princeton.edu.)2391 6840 w
+( 4)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 4 4
+%%Trailer
+done
+%%DocumentFonts: Times-Roman Symbol Times-Bold Times-Italic
+%%Pages: 4

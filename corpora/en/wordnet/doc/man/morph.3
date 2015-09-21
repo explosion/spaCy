@@ -1,0 +1,110 @@
+'\" t
+.\" $Id$
+.TH MORPH 3WN  "Dec 2006" "WordNet 3.0" "WordNet\(tm Library Functions"
+.SH NAME
+morphinit, re_morphinit, morphstr, morphword
+.SH SYNOPSIS
+.LP
+\fB#include "wn.h"\fP
+.LP
+\fBint morphinit(void);\fP
+.LP
+\fBint re_morphinit(void);\fP
+.LP
+\fBchar *morphstr(char *origstr, int pos);\fP
+.LP
+\fBchar *morphword(char *word, int pos);\fP
+.SH DESCRIPTION
+.LP
+The WordNet morphological processor, Morphy, is accessed through these
+functions:
+.LP
+.B morphinit(\|)
+is used to open the exception list files.  It returns \fB0\fP if
+successful, \fB-1\fP otherwise.  The exception list files must be
+opened before
+.B morphstr(\|) 
+or
+.B morphword(\)
+are called.
+.LP
+.B re_morphinit(\|)
+is used to close the exception list files and reopen them, and is used
+exclusively for WordNet development.  Return codes are as described
+above.
+.LP
+.B morphstr(\|)
+is the basic user interface to Morphy.  It tries to find the base form
+(lemma) of the word or collocation \fIorigstr\fP in the specified
+\fIpos\fP.  The first call (with \fIorigstr\fP specified) returns a
+pointer to the first base form found.  Subsequent calls requesting
+base forms of the same string must be made with the first argument of
+.SB NULL.
+When no more base forms for \fIorigstr\fP can be found,
+.SB NULL
+is returned.  Note that \fBmorphstr()\fP returns a pointer to a static
+character buffer.  A subsequent call to \fBmorphstr()\fP with a new
+string (instead of \fBNULL\fP) will overwrite the string pointed to by
+a previous call.  Users should copy the returned string into a local
+buffer, or use the C library function \fBstrdup\fP to duplicate the
+returned string into a \fImalloc'd\fP buffer.
+.LP
+.B morphword(\|)
+tries to find the base form of \fIword\fP in the specified \fIpos\fP.
+This function is called by
+.B morphstr(\|)
+for each individual word in a collocation.
+Note that \fBmorphword()\fP returns a pointer to a static
+character buffer.  A subsequent call to \fBmorphword()\fP 
+will overwrite the string pointed to by
+a previous call.  Users should copy the returned string into a local
+buffer, or use the C library function \fBstrdup\fP to duplicate the
+returned string into a \fImalloc'd\fP buffer.
+.SH NOTES
+.B morphinit(\|)
+is called by 
+.B wninit(\|) 
+and is not intended to be called directly by an application.
+Applications wishing to use WordNet and/or the morphological functions
+must call \fBwninit(\|)\fP at the start of the program.  See
+.BR wnutil (3WN)
+for more information.
+
+\fIorigstr\fP may be either a word or a collocation formed by joining
+individual words with underscore characters (\fB_\fP).
+
+Usually only \fBmorphstr(\|)\fP is called from applications, as it
+works on both words and collocations.
+
+\fIpos\fP must be one of the following:
+
+.RS
+.nf
+\fB1\fP	NOUN
+\fB2\fP	VERB
+\fB3\fP	ADJECTIVE
+\fB4\fP	ADVERB
+\fB5\fP	ADJECTIVE_SATELLITE
+.fi
+.RE
+
+If 
+.SB ADJECTIVE_SATELLITE 
+is passed, it is treated by \fBmorphstr(\|)\fP as
+.SB ADJECTIVE.
+.SH SEE ALSO
+.BR wnintro (3WN),
+.BR wnsearch (3WN),
+.BR wndb (5WN),
+.BR morphy (7WN).
+
+.SH WARNINGS
+Passing an invalid part of speech will result in a core dump.
+
+The WordNet database files must be open to use \fBmorphstr(\|)\fP or
+\fBmorphword(\|). 
+
+.SH BUGS
+Morphy will allow non-words to be converted to words, if they follow
+one of the rules described above.  For example, it will happily
+convert \fBplantes\fP to \fBplants\fP.

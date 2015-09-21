@@ -1,0 +1,461 @@
+'\" t
+.\" $Id$
+.tr ~
+.TH WNB 1WN "Dec 2006" "WordNet 3.0" "WordNet\(tm User Commands"
+.SH NAME
+wnb \- WordNet window-based browser interface 
+.SH SYNOPSIS
+.LP
+\fBwnb\fP
+.SH DESCRIPTION
+\fBwnb(\|)\fP provides a window-based interface for browsing the
+WordNet database, allowing synsets and relations to be displayed as
+formatted text.  For each search word, different searches are
+available based on syntactic category and information available in the
+database.  
+
+\fBwnb\fP is written in Tcl/Tk, which is available for Unix and Windows
+platforms.  This allows the same code to work on all
+supported WordNet platforms without modification.
+.SH WNB WINDOWS
+\fBwnb(\|)\fP was developed with the philosophy that only those
+searches and buttons that are applicable at the current time are
+displayed.  As a result, the appearance of the interface changes as it
+is used.  Use the standard windowing system mouse functions to open
+and close the WordNet Browser Window, move the window, and change its
+size.
+
+The WordNet Browser Window contains the following areas, from top to
+bottom:
+.TP 20
+Menubar
+A menubar runs along the top of the browser window with pulldown menus
+and button
+entitled \fBFile\fP, \fBHistory\fP, \fBOptions\fP, and \fBHelp\fP.
+.TP 20
+Search Word Entry 
+Below the Menubar is a line for entering the search
+word.  A search word can be a single word, hyphenated string, or a
+collocation.  Case is ignored.  Although only uninflected forms of
+words are usually stored in WordNet, users may search for inflected
+forms.  WordNet's morphological processor finds the base form
+automatically.
+.TP 20
+Search Selection
+Below the Search Word Entry line is an area for selecting the search
+type and senses to search.  Until a search word is entered this area
+is blank.  After a search word is entered, buttons appear
+corresponding to each syntactic category (\fBNoun\fP, \fBVerb\fP,
+\fBAdjective\fP, \fBAdverb\fP) in which the search string is defined
+in WordNet.  
+
+At the right edge of the Search Selection line is a box for entering
+sense numbers.  When this box is empty, search results for all senses
+of the search word that match the search type are displayed.  The
+search may be restricted to one or more specific senses by entering a
+comma or space separated list of sense numbers in the \fBSenses\fP
+box.  These sense numbers remain in effect until either the user
+changes or deletes them, or a new search word is entered.
+.TP 20
+Results Window
+Most of the browser window consists of a large text buffer for
+displaying the results of WordNet searches.  Horizontal and vertical
+scroll bars are present for scrolling through the output.
+.TP 20
+Status Line 
+A status line is at the bottom of the browser window.
+When search results are displayed in the Results Window, this status
+line reflects the type of search selected.  When there is no search
+word entered, your are prompted to \fB"Enter search word and press
+return."\fP  If the search word entered is not in WordNet, the message
+\fB"Sorry, no matches found."\fP is displayed.
+.SH SEARCHING THE DATABASE
+The WordNet browser navigates through WordNet in two steps.  First a
+search word is entered and an overview of all the senses of the word
+in all syntactic categories is displayed in the Results Window.  
+The senses are
+grouped by syntactic category, and each synset is annotated as
+described above with \fIsynset_offset\fP, \fIlex_filename\fP, and
+\fIsense_number\fP as dictated by the advanced search options set.
+The overview search also indicates how many of the senses in each
+syntactic category are represented in the tagged texts.  This is a way
+for the user to determine whether a sense's sense number is based on
+semantic tagging data, or was arbitrarily assigned.  For each sense that
+has appeared in such texts, the number of semantic tags to that sense
+are indicated in parentheses after the sense number.
+
+Then, within a syntactic category, a specific search is selected.  The
+desired search is performed and the search results are displayed in
+the Results Window.  Additional searches on the same word can be
+performed, or a new search word can be entered.
+
+To enter a search word, click the mouse in the horizontal box labeled
+\fBSearch Word\fP, type a single word, hyphenated string, or
+collocation and press
+.SB RETURN.
+
+\fBwnb(\|)\fP responds by making a set of Part of Speech buttons appear in
+the Search Selection line.  Each button corresponds to a syntactic
+category in which the search string is defined in WordNet.  At the
+same time, an Overview of the synsets for all senses of the search
+word is displayed in the Results Window.  The Overview includes the
+gloss for each synset and also indicates which of the senses have
+appeared in the semantically tagged texts.  For each sense that has
+appeared in such texts, the number of semantic tags to that sense are
+indicated in parentheses after the sense number.
+
+The pulldown menus in the Search Selection line list all of the
+WordNet searches that can be performed for the search word in that
+part of speech.  To select a search, highlight it by dragging the
+mouse to it, and release the mouse while it is highlighted.  Drag the
+mouse outside of the pulldown list and release to hide the menu
+without making a selection.  Dragging the mouse across the Part of
+Speech buttons displays the available searches for each syntactic
+category.
+
+To restrict a search to one or more senses within a syntactic
+category, enter a comma or space separated list of sense numbers in
+the \fBSenses\fP box before selecting a search.
+
+After a search is selected, \fBwnb(\|)\fP performs the search on the
+WordNet database and displays the formatted results in the Results
+Window.  Whenever search results are displayed, a button entitled
+\fBRedisplay Overview\fP is present at the right edge of the Search Word
+Entry line.  Clicking on this button redisplays the Overview of all
+synsets for the search word in the Results Window.
+.SS Changing the Search Word
+A new search word can be entered at any time by moving to the Search
+Word Entry box, if necessary highlighting it by clicking, erasing the
+old string, typing a new one and pressing
+.SB RETURN.
+The \fBSenses\fP box is cleared if necessary, the Part of Speech buttons
+applicable to the new search word appear, and the Overview for the new
+search word is displayed.  
+
+The middle mouse button can also be used to select a new search word
+by placing the mouse over any word in the Results Window and
+clicking.  The selected word will replace the text in the Search Word
+Entry box, and the overview for that word will automatically be
+displayed.
+
+To select a new search string collocation from text in the
+Results Window, highlight the text with the mouse and press
+.SB CONTROL-S.
+
+.SS Interrupting a Search
+When a search is in progress the message \fB"Searching...(press escape
+to abort)"\fP is displayed in the Status Line.  Note that most
+searches return very quickly, so this message isn't noticeable.  As
+indicated, pressing the
+.SB ESCAPE
+key will interrupt the search.  The results of the search obtained
+before the time the search was interrupted are displayed in the
+Results Window.
+.SH MENUS
+.SS File Menu
+.RS
+.IP "Find keywords by substring"
+Display a popup window for specifying a search of WordNet for words or
+collocations that contain a specific substring.  If a search word is
+currently entered in the \fBSearch Word\fP box, it is used as the
+substring to search for by default.  The Substring Search Window
+contains a box for entering a substring, a pulldown menu to its right
+for specifying the part of speech to search, a large area for
+displaying the search results, and action buttons at the bottom
+entitled \fBSearch\fP, \fBSave\fP, \fBPrint\fP \fBDismiss\fP. 
+
+Once a substring is entered and a part of speech selected, clicking on
+the \fBSearch\fP button causes a search to be done for all words and
+collocations in WordNet, in that syntactic category, that contain the
+substring according to the following criteria:
+
+1. The substring can appear at the beginning or end of a word, hyphenated
+string o collocation.
+
+2. The substring can appear in the middle of a hyphenated string or
+collocation, but only delimited on both sides by spaces or
+hyphens.
+
+The search results are displayed in the large buffer.  Clicking on an
+item from the search results list causes \fBwnb(\|)\fP to automatically
+enter that word in the \fBSearch Word\fP box of the WordNet Browser
+Window and perform the Overview search.
+
+Clicking the \fBSave\fP button generates a popup dialog for specifying
+a filename to save the substring search results to.  Clicking the
+\fBPrint\fP button generates a popup dialog in which a print command
+can be specified.
+
+Selecting \fBDismiss\fP closes the Substring Search Window.
+.IP "Save current display"
+Display a popup dialog for specifying a filename to save the current
+Results Window contents to.
+.IP "Print current display"
+Display a popup dialog in which to specify a print command to which
+the current Results Window contents can be piped. Note - this option
+does not exist in the Windows version.
+.IP "Clear current display"
+Clear the \fBSearch Word\fP and \fBSenses\fP boxes, and Results
+Window.
+.IP "Exit"
+Does what you would expect.
+.RE
+.SS History
+This pulldown menu contains a list of the last searches performed.
+Selecting an item from this list performs that search again.  The
+maximum number of searches stored in the list can be adjusted from the
+\fBOptions\fP menu.  The default is 10.
+.SS Options
+.RS
+.IP "Show help with each search"
+When this checkbox is selected search results are preceded by some
+explanatory text about the type of search selected. This is off by
+default.
+.IP "Show descriptive gloss"
+When this checkbox is selected, synset glosses are displayed in all
+search results.  This is set by default.  Note that glosses are always
+displayed in the Overview.
+.IP "Wrap Lines"
+When this checkbox is selected, lines in the Results Window that are
+wider than the window are automatically wrapped.  This is set by
+default.  If not selected, a horizontal scroll bar is present if any
+lines are longer than the width of the window.
+.IP "Set advanced search options..."
+Selecting this item displays a popup window for setting the following
+search options:  \fBLexical file information; Synset location in database
+file; Sense number\fP.  Choices for each are:
+
+.nf
+	\fBDon't show\fP (default)
+	\fBShow with searches\fP
+	\fBShow with searches and overview\fP
+.fi
+
+When lexical file information is shown, the name of the lexicographer
+file is printed before each synset, enclosed in angle brackets
+(\fB<~~\fI...\fB~~>\fR).  When both lexical file information and
+synset location information are displayed, the synset location
+information appears first.  If within one lexicographer file more than
+one sense of a word is entered, an integer \fIlex_id\fP is appended
+onto all but one of the word's instances to uniquely identify it.  In
+each synset, each word having a non-zero \fIlex_id\fP is printed with
+the \fIlex_id\fP value printed immediately following the word.  If
+both lexicographer information and sense numbers are displayed,
+\fIlex_id\fPs, if present, precede sense numbers.
+
+When synset location is shown, the byte offset of the synset in the
+database "data" file corresponding to the syntactic category of the
+synset is printed before each synset, enclosed in curly braces
+(\fB{~~\fI...\fB~~}\fR).  When both lexical file information and
+synset location information are displayed, the synset location
+information appears first.
+
+When sense numbers are shown, the sense number of each word in each
+synset is printed immediately after the word, and is preceded by a
+number sign (\fB#\fP).
+.IP "Set maximum history length..."
+Display a popup dialog in which the maximum number of previous
+searches to be kept on the History list can be set.
+.IP "Set font...~~~~~~~~~~~"
+Display a popup window for setting the font (typeface) and font size
+to use for the Results Window.  Choices for typeface are: \fBCourier\fP,
+\fBHelvetica\fP, and \fBTimes\fP (default).  Font size can be
+\fBsmall\fP, \fBmedium\fP (default), or \fBlarge\fP.
+.IP "Save current options as default"
+Save the currently set options.  Next time the browser is started,
+these options will be used as the user defaults.
+.RE
+.SS Help
+.RS
+.IP "Help on using the WordNet browser"
+Display this manual page.
+.IP "Help on WordNet terminology"
+Display the 
+.BR wngloss (7WN)
+manual page.
+.IP "Display the WordNet license"
+Display the WordNet copyright notice and license agreement.
+.IP "About the WordNet browser"
+Information about this application.
+.RE
+.SH SHORCUTS
+Clicking on any word in the Results Window while holding down the 
+.SB SHIFT
+key on the keyboard causes the browser to replace \fBSearch
+Word\fP with the word and display its Overview and available searches.
+Clicking on any word in the Results Window with the middle mouse
+button does the same thing.
+
+Pressing the
+.SB CONTROL-S
+keys causes the browser to do as above on the text that is currently
+highlighted.  Under Unix, this will work even if the highlighted text
+is in another window.  This works on
+hyphenated strings and collocations, as well as individual words.
+
+Pressing the
+.SB CONTROL-G 
+keys displays the Substring Search Window.
+
+.SH SEARCH RESULTS
+The results of a search of the WordNet database are displayed in the
+Results Window.  Horizontal and vertical scroll bars are present for
+scrolling through the search results.
+
+All searches other than the Overview list all senses matching the
+search results in the following general format.  Items enclosed in
+italicized square brackets (\fI[~...~]\fP) may not be present.
+
+If a search cannot be performed on some senses of \fIsearchstr\fP, the
+search results are headed by a string of the form:
+.nf
+	X of Y senses of \fIsearchstr\fP
+.fi
+
+.RS
+One line listing the number of senses matching the search selected.
+
+Each sense matching the search selected displayed as follows:
+
+.nf
+	\fBSense \fIn\fR
+	\fI[\fB{\fIsynset_offset\fB}\fI] [\fB<\fIlex_filename\fB>\fI]~~word1[\fB#\fIsense_number][,~~word2...]\fR
+.fi
+
+Where \fIn\fP is the sense number of the search word,
+\fIsynset_offset\fP is the byte offset of the synset in the
+\fBdata.\fIpos\fR file corresponding to the syntactic category,
+\fIlex_filename\fP is the name of the lexicographer file that the
+synset comes from, \fIword1\fP is the first word in the synset (note
+that this is not necessarily the search word) and \fIsense_number\fP
+is the WordNet sense number assigned to the preceding word.
+\fIsynset_offset\fP, \fIlex_filename\fP, and \fIsense_number\fP are
+generated if the appropriate Options are specified.
+
+The synsets matching the search selected are printed below each
+sense's synset output described above.  Each line of output is
+preceded by a marker (usually \fB=>\fP), then a synset, formatted as
+described above.  If a search traverses more one level of the tree,
+then successive lines are indented by spaces corresponding to its
+level in the hierarchy.  Glosses are displayed in parentheses at the
+end of each synset if the appropriate Option is set.  Each synset is
+printed on one line.
+
+Senses are ordered from most to least frequently used, with
+the most common sense numbered \fB1\fP.  Frequency of use is
+determined by the number of times a sense is tagged in the various
+semantic concordance texts.  Senses that are not semantically tagged
+follow the ordered senses. Note that this ordering is only an
+estimate based on usage in a small corpus.
+
+Verb senses can be grouped by similarity of meaning, rather
+than ordered by frequency of use.  When the \fB"Synonyms, grouped by
+similarity"\fP search is selected, senses that are close
+in meaning are printed together, with a line of dashes indicating the
+end of a group.  See
+.BR wngroups (7WN)
+for a discussion how senses are grouped.
+
+The output of the \fB"Derivationally Related Forms"\fP 
+search shows word forms that are
+morphologically related to \fBsearchstr\fP. Each word form pointed to
+from \fIsearchstr\fP is displayed, preceded by \fBRELATED TO->\fP and
+the syntactic category of the link, followed, on the next line, by its
+synset.  Printed after the word form is \fB#\fP\fIn\fP where \fIn\fP
+indicates the WordNet sense number of the term pointed to.
+
+The \fB"Domain"\fP and \fB"Domain Terms"\fP searches show the domain that a
+synset has been classified in and, conversely, all of the terms that
+have been assigned to a specific domain.  A domain is
+either a \fBTOPIC,\fP \fBREGION\fP or \fBUSAGE,\fP as reflected in
+the specific pointer character stored in the database, and displayed
+in the output.  A \fBDomain\fP search on a term shows the domain, if
+any, that each synset containing \fIsearchstr\fP has been classified
+in.  The output display shows the domain type (\fBTOPIC,\fP
+\fBREGION\fP or \fBUSAGE\fP), followed by the syntactic category of
+the domain synset and the terms in the synset.  Each term is followed
+by \fB#\fP\fIn\fP where \fIn\fP indicates the WordNet sense number of
+the term.  The converse search, \fBDomain Terms\fP, shows all of the synsets
+that have been placed into the domain \fIsearchstr\fP, with analogous
+markers. 
+
+When the \fB"Sentence Frames"\fP search is specified, sample
+illustrative sentences and generic sentence frames are displayed.  If
+a sample sentence is found, the base form of the search word is
+substituted into the sentence, and it is printed below the synset,
+preceded with the \fBEX:\fP marker.  When no sample sentences are
+found, the generic sentence frames are displayed.  Sentence frames
+that are acceptable for all words in a synset are preceded by the
+marker \fB*>\fP.  If a frame is acceptable for the search word only,
+it is preceded by the marker \fB=>\fP.
+
+Search results for adjectives are slightly different from those for
+other parts of speech.  When an adjective is printed, its direct
+antonym, if it has one, is also printed in parentheses.  When
+the search word is in a head synset, all of the head synset's
+satellites are also displayed.  The position of an adjective in
+relation to the noun may be restricted to the \fIprenominal\fP,
+\fIpostnominal\fP or \fIpredicative\fP position.  Where present, these
+restrictions are noted in parentheses.
+
+When an adjective is a participle of a verb, the output indicates the
+verb and displays its synset.
+
+When an adverb is derived from an adjective, the specific adjectival
+sense on which it is based is indicated.
+
+The morphological transformations performed by the search code may
+result in more than one word to search for.  \fBwnb(\|)\fP
+automatically performs the requested search on all of the strings and
+returns the results grouped by word.  For example, the verb \fBsaw\fP
+is both the present tense of \fBsaw\fP and the past tense of
+\fBsee\fP.  When there is more than one word to search for, search
+results are grouped by word.
+.SH DIAGNOSTICS
+If the WordNet database files cannot be opened, error messages are
+displayed.  This is usually corrected by setting the environment
+variables described below to the proper location of the WordNet
+database for your installation.
+.SH ENVIRONMENT VARIABLES (UNIX)
+.TP 20
+.B WNHOME
+Base directory for WordNet.  Default is
+\fB/usr/local/WordNet-3.0\fP.
+.TP 20
+.B WNSEARCHDIR
+Directory in which the WordNet database has been installed.  
+Default is \fBWNHOME/dict\fP.
+.SH REGISTRY (WINDOWS)
+.TP 20
+.B HKEY_LOCAL_MACHINE\eSOFTWARE\eWordNet\e3.0\eWNHome
+Base directory for WordNet.  Default is
+\fBC:\eProgram~Files\eWordNet\e3.0\fP.
+.TP 20
+.B HKEY_CURRENT_USER\eSOFTWARE\eWordNet\e3.0\ewnres
+User's default browser options.
+.SH FILES
+.TP 20
+.B index.\fIpos\fP
+database index files
+.TP 20
+.B data.\fIpos\fP
+database data files
+.TP 20
+.B *.vrb
+files of sentences illustrating the use of verbs
+.TP 20
+.B \fIpos\fP.exc
+morphology exception lists
+.SH SEE ALSO
+.BR wnintro (1WN),
+.BR wn (1WN),
+.BR wnintro (3WN),
+.BR lexnames (5WN),
+.BR senseidx (5WN),
+.BR wndb (5WN), 
+.BR wninput (5WN),
+.BR morphy (7WN), 
+.BR wngloss (7WN),
+.BR wngroups (7WN).
+.SH BUGS
+Please reports bugs to wordnet@princeton.edu.

@@ -1,0 +1,92 @@
+'\" t
+.\" $Id$
+.tr ~
+.TH CNTLIST 5WN "Dec 2006" "WordNet 3.0" "WordNet\(tm File Formats"
+.SH NAME
+cntlist \- file listing number of times each tagged sense occurs in a
+semantic concordance, sorted most to least frequently tagged
+
+cntlist.rev \- file listing number of times each tagged sense occurs
+in a semantic concordance, sorted by sense key
+.SH DESCRIPTION
+A cntlist file for a semantic concordance lists the number of times
+each semantically tagged sense occurs in the concordance and its
+sense number in the WordNet database.  Each line in the file
+corresponds to a sense in the WordNet database to which at least one
+semantic tag points.  Only senses that are tagged in a concordance are
+in the concordance's cntlist file.
+
+.SS WordNet Database \fIcntlist\fP File
+In the WordNet database, words are assigned sense numbers based on
+frequency of use in semantically tagged corpora.  The cntlist file used
+by
+.BR grind (1WN) 
+to build the WordNet database and assign the sense numbers is a union
+of the cntlist files from the various semantic concordances that were
+formerly released by Princeton University.  This
+combined cntlist file is provided with the WordNet package and is
+found in the \fBWNSEARCHDIR\fP directory.
+
+The \fIcntlist.rev\fP file is used at run-time by the WordNet
+library code and browser interfaces to print in the output display the
+number of times each sense has been tagged.
+.SS File Format
+Each line in a cntlist file contains information for one sense.  The
+file is ordered from most to least frequently tagged sense.  The
+fields are separated by one space, and each line is terminated with a
+newline character.  Senses having the same \fItag_cnt\fP value are
+listed in reverse alphabetical order of the \fIlemma\fP field of the
+\fIsense_key\fP.
+
+Each line in \fBcntlist\fP is of the form:
+
+.RS
+\fItag_cnt~~sense_key~~sense_number\fP
+.RE
+
+where \fItag_cnt\fP is the decimal number of times the sense is tagged
+in the corresponding semantic concordance.  \fIsense_key\fP is a
+WordNet sense encoding and \fIsense_number\fP is a WordNet sense
+number as described in
+
+The \fIcntlist.rev\fP file contains the same fields described above,
+in the following order:
+
+.RS
+\fIsense_key~~sense_number~~tag_cnt\fP
+.RE
+
+.SH NOTES
+Princeton no longer maintains or releases the Semantic Concordance
+files.  The \fIcntlist\fP file used to order the senses in WordNet
+3.0 was generated from the Semantic Concordance files at the point
+that they were last updated in 2001.  In general, the order of senses
+presented usually reflects what the user would expect, however sense
+ordering is now less reliable than in prior releases and should not be
+construed as an accurate indicator of frequency of use.
+.SH ENVIRONMENT VARIABLES (UNIX)
+.TP 20
+.B WNHOME
+Base directory for WordNet.  Default is
+\fB/usr/local/WordNet-3.0\fP.
+.TP 20
+.B WNSEARCHDIR
+Directory in which the WordNet database has been installed.  
+Default is \fBWNHOME/dict\fP.
+.SH REGISTRY (WINDOWS)
+.TP 20
+.B HKEY_LOCAL_MACHINE\eSOFTWARE\eWordNet\e3.0\eWNHome
+Base directory for WordNet.  Default is
+\fBC:\eProgram~Files\eWordNet\e3.0\fP.
+.TP 20
+.B HKEY_CURRENT_USER\eSOFTWARE\eWordNet\e3.0\ewnres
+User's default browser options.
+.SH FILES
+.TP 20
+.B cntlist, cntlist.rev
+file of combined semantic concordance \fBcntlist\fP files.  Used to
+assign sense numbers in WordNet database
+.SH SEE ALSO
+.BR grind (1WN),
+.BR wnintro (5WN),
+.BR senseidx (5WN).

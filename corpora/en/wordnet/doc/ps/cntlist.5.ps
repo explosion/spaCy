@@ -1,0 +1,514 @@
+%!PS
+%%Version: 3.15
+%%DocumentFonts: (atend)
+%%Pages: (atend)
+%%EndComments
+%ident	"@(#)lp:filter/postscript/postscript/dpost.ps	1.1"
+%
+% Version 3.16 prologue for troff files.
+%
+
+/#copies 1 store
+/aspectratio 1 def
+/formsperpage 1 def
+/landscape false def
+/linewidth .3 def
+/magnification 1 def
+/margin 0 def
+/orientation 0 def
+/resolution 720 def
+/xoffset 0 def
+/yoffset 0 def
+
+/roundpage true def
+/useclippath true def
+/pagebbox [0 0 612 792] def
+
+/R  /Times-Roman def
+/I  /Times-Italic def
+/B  /Times-Bold def
+/BI /Times-BoldItalic def
+/H  /Helvetica def
+/HI /Helvetica-Oblique def
+/HB /Helvetica-Bold def
+/HX /Helvetica-BoldOblique def
+/CW /Courier def
+/CO /Courier def
+/CI /Courier-Oblique def
+/CB /Courier-Bold def
+/CX /Courier-BoldOblique def
+/PA /Palatino-Roman def
+/PI /Palatino-Italic def
+/PB /Palatino-Bold def
+/PX /Palatino-BoldItalic def
+/Hr /Helvetica-Narrow def
+/Hi /Helvetica-Narrow-Oblique def
+/Hb /Helvetica-Narrow-Bold def
+/Hx /Helvetica-Narrow-BoldOblique def
+/KR /Bookman-Light def
+/KI /Bookman-LightItalic def
+/KB /Bookman-Demi def
+/KX /Bookman-DemiItalic def
+/AR /AvantGarde-Book def
+/AI /AvantGarde-BookOblique def
+/AB /AvantGarde-Demi def
+/AX /AvantGarde-DemiOblique def
+/NR /NewCenturySchlbk-Roman def
+/NI /NewCenturySchlbk-Italic def
+/NB /NewCenturySchlbk-Bold def
+/NX /NewCenturySchlbk-BoldItalic def
+/ZD /ZapfDingbats def
+/ZI /ZapfChancery-MediumItalic def
+/VR /Varitimes#Roman def
+/VI /Varitimes#Italic def
+/VB /Varitimes#Bold def
+/VX /Varitimes#BoldItalic def
+/S  /S def
+/S1 /S1 def
+/GR /Symbol def
+
+/inch {72 mul} bind def
+/min {2 copy gt {exch} if pop} bind def
+
+/setup {
+	counttomark 2 idiv {def} repeat pop
+
+	landscape {/orientation 90 orientation add def} if
+	/scaling 72 resolution div def
+	linewidth setlinewidth
+	1 setlinecap
+
+	pagedimensions
+	xcenter ycenter translate
+	orientation neg rotate
+	width 2 div neg height 2 div translate
+	xoffset inch yoffset inch translate
+	margin 2 div dup neg translate
+	magnification dup aspectratio mul scale
+	scaling scaling scale
+
+	/Symbol /S Sdefs cf
+	/Times-Roman /S1 S1defs cf
+	0 0 moveto
+} def
+
+/pagedimensions {
+	useclippath userdict /gotpagebbox known not and {
+		/pagebbox [clippath pathbbox newpath] def
+		roundpage currentdict /roundpagebbox known and {roundpagebbox} if
+	} if
+	pagebbox aload pop
+	4 -1 roll exch 4 1 roll 4 copy
+	landscape {4 2 roll} if
+	sub /width exch def
+	sub /height exch def
+	add 2 div /xcenter exch def
+	add 2 div /ycenter exch def
+	userdict /gotpagebbox true put
+} def
+
+/pagesetup {
+	/page exch def
+	currentdict /pagedict known currentdict page known and {
+		page load pagedict exch get cvx exec
+	} if
+} def
+
+/decodingdefs [
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg /y exch def counttomark 2 idiv {y moveto show} repeat}
+	{neg moveto {2 index stringwidth pop sub exch div 0 32 4 -1 roll widthshow} repeat}
+	{neg moveto {spacewidth sub 0.0 32 4 -1 roll widthshow} repeat}
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg setfunnytext}
+] def
+
+/setdecoding {/t decodingdefs 3 -1 roll get bind def} bind def
+
+/w {neg moveto show} bind def
+/m {neg dup /y exch def moveto} bind def
+/done {/lastpage where {pop lastpage} if} def
+
+/f {
+	dup /font exch def findfont exch
+	dup /ptsize exch def scaling div dup /size exch def scalefont setfont
+	linewidth ptsize mul scaling 10 mul div setlinewidth
+	/spacewidth ( ) stringwidth pop def
+} bind def
+
+/changefont {
+	/fontheight exch def
+	/fontslant exch def
+	currentfont [
+		1 0
+		fontheight ptsize div fontslant sin mul fontslant cos div
+		fontheight ptsize div
+		0 0
+	] makefont setfont
+} bind def
+
+/sf {f} bind def
+
+/cf {
+	dup length 2 idiv
+	/entries exch def
+	/chtab exch def
+	/newfont exch def
+
+	findfont dup length 1 add dict
+	/newdict exch def
+	{1 index /FID ne {newdict 3 1 roll put} {pop pop} ifelse} forall
+
+	newdict /Metrics entries dict put
+	newdict /Metrics get
+	begin
+		chtab aload pop
+		1 1 entries {pop def} for
+		newfont newdict definefont pop
+	end
+} bind def
+
+%
+% A few arrays used to adjust reference points and character widths in some
+% of the printer resident fonts. If square roots are too high try changing
+% the lines describing /radical and /radicalex to,
+%
+%	/radical	[0 -75 550 0]
+%	/radicalex	[-50 -75 500 0]
+%
+
+/Sdefs [
+	/bracketlefttp		[220 500]
+	/bracketleftbt		[220 500]
+	/bracketrighttp		[-70 380]
+	/bracketrightbt		[-70 380]
+	/braceleftbt		[220 490]
+	/bracketrightex		[220 -125 500 0]
+	/radical		[0 0 550 0]
+	% NeWSprint's \(br is too low, compensate
+	statusdict /product get (NeWS Server) eq {
+		/radicalex		[-50 100 500 0]
+		/parenleftex		[-20 100 0 0]
+
+	} {
+		/radicalex		[-50 0 500 0]
+		/parenleftex		[-20 -170 0 0]
+	} ifelse
+	/integral		[100 -50 500 0]
+	/infinity		[10 -75 730 0]
+] def
+
+/S1defs [
+	/underscore		[0 80 500 0]
+	/endash			[7 90 650 0]
+] def
+%%EndProlog
+%%BeginSetup
+mark
+/resolution 720 def
+setup
+2 setdecoding
+%%EndSetup
+%%Page: 1 1
+save
+mark
+1 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 5WN \))3 330( CNTLIST)1 3340(File Formats)1 517 3 1213 480 t
+9 B f
+(NAME)720 960 w
+10 R f
+(cntlist)1080 1080 w
+10 S1 f
+(\261)1359 1080 w
+10 R f
+( most to)2 343(\256le listing number of times each tagged sense occurs in a semantic concordance, sorted)13 3599 2 1458 1080 t
+(least frequently tagged)2 925 1 1080 1200 t
+(cntlist.rev)1080 1440 w
+10 S1 f
+(\261)1514 1440 w
+10 R f
+( tagged sense occurs in a semantic concordance, sorted by)9 2433(\256le listing number of times each)5 1351 2 1616 1440 t
+(sense key)1 393 1 1080 1560 t
+9 B f
+(DESCRIPTION)720 1728 w
+10 R f
+( concordance lists the number of times each semantically tagged sense occurs)11 3195(A cntlist \256le for a semantic)5 1125 2 1080 1848 t
+( line in the \256le corresponds to a)7 1313( Each)1 265(in the concordance and its sense number in the WordNet database.)10 2742 3 1080 1968 t
+( senses that are tagged in)5 1045( Only)1 268( points.)1 305(sense in the WordNet database to which at least one semantic tag)11 2702 4 1080 2088 t
+(a concordance are in the concordance's cntlist \256le.)7 2072 1 1080 2208 t
+9 B f
+(WordNet Database)1 760 1 900 2496 t
+9 I f
+(cntlist)1705 2496 w
+9 B f
+(File)1970 2496 w
+10 R f
+( database, words are assigned sense numbers based on frequency of use in semantically)13 3668(In the WordNet)2 652 2 1080 2616 t
+( cntlist \256le used by)4 852( The)1 237(tagged corpora.)1 644 3 1080 2736 t
+10 B f
+(grind)2862 2736 w
+10 R f
+( the WordNet database and assign the)6 1640(\(1WN\) to build)2 664 2 3096 2736 t
+( union of the cntlist \256les from the various semantic concordances that were formerly)13 3538(sense numbers is a)3 782 2 1080 2856 t
+( cntlist \256le is provided with the WordNet package and)9 2269( combined)1 432( This)1 249(released by Princeton University.)3 1370 4 1080 2976 t
+(is found in the)3 599 1 1080 3096 t
+10 B f
+(WNSEARCHDIR)1712 3096 w
+10 R f
+(directory.)2517 3096 w
+(The)1080 3336 w
+10 I f
+(cntlist.rev)1268 3336 w
+10 R f
+( at run-time by the WordNet library code and browser interfaces to print in the)14 3258(\256le is used)2 444 2 1698 3336 t
+(output display the number of times each sense has been tagged.)10 2612 1 1080 3456 t
+9 B f
+(File Format)1 480 1 900 3624 t
+10 R f
+( ordered from most to least fre-)6 1319( \256le is)2 267( The)1 224(Each line in a cntlist \256le contains information for one sense.)10 2510 4 1080 3744 t
+( \256elds are separated by one space, and each line is terminated with a newline)14 3216( The)1 224( sense.)1 277(quently tagged)1 603 4 1080 3864 t
+( having the same)3 728(character. Senses)1 737 2 1080 3984 t
+10 I f
+(tag)2588 3984 w
+10 S f
+(_)2716 3984 w
+10 I f
+(cnt)2766 3984 w
+10 R f
+(value are listed in reverse alphabetical order of the)8 2160 1 2931 3984 t
+10 I f
+(lemma)5134 3984 w
+10 R f
+(\256eld of the)2 449 1 1080 4104 t
+10 I f
+(sense)1562 4104 w
+10 S f
+(_)1778 4104 w
+10 I f
+(key)1828 4104 w
+10 R f
+(.)1960 4104 w
+(Each line in)2 493 1 1080 4344 t
+10 B f
+(cntlist)1606 4344 w
+10 R f
+(is of the form:)3 593 1 1900 4344 t
+10 I f
+(tag)1440 4584 w
+10 S f
+(_)1568 4584 w
+10 I f
+(cnt sense)1 404 1 1618 4584 t
+10 S f
+(_)2022 4584 w
+10 I f
+(key sense)1 414 1 2072 4584 t
+10 S f
+(_)2486 4584 w
+10 I f
+(number)2536 4584 w
+10 R f
+(where)1080 4824 w
+10 I f
+(tag)1358 4824 w
+10 S f
+(_)1486 4824 w
+10 I f
+(cnt)1536 4824 w
+10 R f
+( tagged in the corresponding semantic concor-)6 1912(is the decimal number of times the sense is)8 1795 2 1693 4824 t
+(dance.)1080 4944 w
+10 I f
+(sense)1425 4944 w
+10 S f
+(_)1641 4944 w
+10 I f
+(key)1691 4944 w
+10 R f
+(is a WordNet sense encoding and)5 1483 1 1878 4944 t
+10 I f
+(sense)3416 4944 w
+10 S f
+(_)3632 4944 w
+10 I f
+(number)3682 4944 w
+10 R f
+( sense number as)3 766(is a WordNet)2 592 2 4042 4944 t
+(described in)1 493 1 1080 5064 t
+(The)1080 5304 w
+10 I f
+(cntlist.rev)1268 5304 w
+10 R f
+(\256le contains the same \256elds described above, in the following order:)10 2807 1 1698 5304 t
+10 I f
+(sense)1440 5544 w
+10 S f
+(_)1656 5544 w
+10 I f
+(key sense)1 414 1 1706 5544 t
+10 S f
+(_)2120 5544 w
+10 I f
+(number tag)1 499 1 2170 5544 t
+10 S f
+(_)2669 5544 w
+10 I f
+(cnt)2719 5544 w
+9 B f
+(NOTES)720 5832 w
+10 R f
+( The)1 225( releases the Semantic Concordance \256les.)5 1712(Princeton no longer maintains or)4 1354 3 1080 5952 t
+10 I f
+(cntlist)4408 5952 w
+10 R f
+(\256le used to order)3 710 1 4690 5952 t
+( was generated from the Semantic Concordance \256les at the point that they)12 3185(the senses in WordNet 3.0)4 1135 2 1080 6072 t
+( general, the order of senses presented usually re\257ects what the user would)12 3087( In)1 150(were last updated in 2001.)4 1083 3 1080 6192 t
+( prior releases and should not be construed as)8 1885(expect, however sense ordering is now less reliable than in)9 2435 2 1080 6312 t
+(an accurate indicator of frequency of use.)6 1700 1 1080 6432 t
+9 B f
+(ENVIRONMENT VARIABLES \(UNIX\))2 1600 1 720 6600 t
+10 B f
+(WNHOME)1080 6720 w
+10 R f
+( is)1 100( Default)1 365(Base directory for WordNet.)3 1165 3 2080 6720 t
+10 B f
+(/usr/local/WordNet-3.0)3743 6720 w
+10 R f
+(.)4723 6720 w
+10 B f
+(WNSEARCHDIR)1080 6888 w
+10 R f
+( which the WordNet database has been installed. Default is)9 2788(Directory in)1 532 2 2080 6888 t
+10 B f
+(WNHOME/dict)2080 7008 w
+10 R f
+(.)2758 7008 w
+( 1)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 1 1
+%%Page: 2 2
+save
+mark
+2 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 5WN \))3 330( CNTLIST)1 3340(File Formats)1 517 3 1213 480 t
+9 B f
+(REGISTRY \(WINDOWS\))1 1040 1 720 960 t
+10 B f
+(HKEY)1080 1080 w
+10 S f
+(_)1375 1080 w
+10 B f
+(LOCAL)1425 1080 w
+10 S f
+(_)1781 1080 w
+10 B f
+(MACHINE)1831 1080 w
+10 S1 f
+(\\)2325 1080 w
+10 B f
+(SOFTWARE)2353 1080 w
+10 S1 f
+(\\)2926 1080 w
+10 B f
+(WordNet)2954 1080 w
+10 S1 f
+(\\)3353 1080 w
+10 B f
+(3.0)3381 1080 w
+10 S1 f
+(\\)3506 1080 w
+10 B f
+(WNHome)3534 1080 w
+10 R f
+( is)1 100( Default)1 365(Base directory for WordNet.)3 1165 3 2080 1200 t
+10 B f
+(C:)3743 1200 w
+10 S1 f
+(\\)3848 1200 w
+10 B f
+(Program Files)1 615 1 3876 1200 t
+10 S1 f
+(\\)4491 1200 w
+10 B f
+(WordNet)4519 1200 w
+10 S1 f
+(\\)4918 1200 w
+10 B f
+(3.0)4946 1200 w
+10 R f
+(.)5071 1200 w
+10 B f
+(HKEY)1080 1368 w
+10 S f
+(_)1375 1368 w
+10 B f
+(CURRENT)1425 1368 w
+10 S f
+(_)1919 1368 w
+10 B f
+(USER)1969 1368 w
+10 S1 f
+(\\)2236 1368 w
+10 B f
+(SOFTWARE)2264 1368 w
+10 S1 f
+(\\)2837 1368 w
+10 B f
+(WordNet)2865 1368 w
+10 S1 f
+(\\)3264 1368 w
+10 B f
+(3.0)3292 1368 w
+10 S1 f
+(\\)3417 1368 w
+10 B f
+(wnres)3445 1368 w
+10 R f
+(User's default browser options.)3 1277 1 2080 1488 t
+9 B f
+(FILES)720 1656 w
+10 B f
+(cntlist, cntlist.rev)1 743 1 1080 1776 t
+10 R f
+(\256le of combined semantic concordance)4 1711 1 2080 1776 t
+10 B f
+(cntlist)3853 1776 w
+10 R f
+( assign sense)2 592( to)1 140(\256les. Used)1 492 3 4176 1776 t
+(numbers in WordNet database)3 1235 1 2080 1896 t
+9 B f
+(SEE ALSO)1 460 1 720 2064 t
+10 B f
+(grind)1080 2184 w
+10 R f
+(\(1WN\),)1314 2184 w
+10 B f
+(wnintro)1654 2184 w
+10 R f
+(\(5WN\),)1993 2184 w
+10 B f
+(senseidx)2333 2184 w
+10 R f
+(\(5WN\).)2689 2184 w
+( 2)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 2 2
+%%Trailer
+done
+%%DocumentFonts: Times-Roman Symbol Times-Bold Times-Italic
+%%Pages: 2

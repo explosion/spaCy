@@ -1,0 +1,340 @@
+'\" t
+.\" $Id$
+.tr ~
+.TH WN 1WN "Dec 2006" "WordNet 3.0" "WordNet\(tm User Commands"
+.SH NAME
+wn \- command line interface to WordNet lexical database  
+.SH SYNOPSIS
+\fBwn\fP [ \fIsearchstr\fP ] [ \fB\-h\fP] [ \fB\-g\fP ] [ \fB\-a\fP ] [ \fB\-l\fP ] [ \fB\-o\fP ] [ \fB\-s\fP ] [ \fB\-n\fI#\fR ] [ \fIsearch_option\fP... ]
+.SH DESCRIPTION
+\fBwn(\|)\fP provides a command line interface to the WordNet
+database, allowing synsets and relations to be displayed as formatted
+text.  For each word, different searches are provided, based on
+syntactic category and pointer types.  Although only base forms of
+words are usually stored in WordNet, users may search for inflected
+forms.  A morphological process is applied to the search string to
+generate a form that is present in WordNet.
+
+The command line interface is often useful when writing scripts to
+extract information from the WordNet database.  Post-processing of the
+output with various scripting tools can reformat the results as
+desired.
+.SH OPTIONS
+.TP 15
+.B \-h
+Print help text before search results.
+.TP 15
+.B \-g
+Display textual glosses associated with synsets.
+.TP 15
+.B \-a
+Display lexicographer file information.
+.TP 15
+.B \-o
+Display synset offset of each synset.
+.TP 15
+.B \-s
+Display each word's sense numbers in synsets.
+.TP 15
+.B \-l
+Display the WordNet copyright notice, version number, and license.
+.TP 15
+.B \-n\fI#\fP
+Perform search on sense number \fI#\fP only.
+.TP 15
+\fB-over\fP
+Display overview of all senses of \fIsearchstr\fP in all syntactic
+categories. 
+.SS Search Options
+Note that the last letter of \fIsearch_option\fP generally denotes the
+part of speech that the search applies to: \fBn\fP for nouns, \fBv\fP
+for verbs, \fBa\fP for adjectives, and \fBr\fP for adverbs.  Multiple
+searches may be done for \fIsearchstr\fP with a single command by
+specifying all the appropriate search options.
+
+.TP 15
+\fB\-syns\fP(\fIn\fP | \fIv\fP | \fIa\fP | \fIr\fP) 
+Display synonyms
+and immediate hypernyms of synsets containing \fIsearchstr\fP.
+Synsets are ordered by estimated frequency of use.  For adjectives, if
+\fIsearchstr\fP is in a head synset, the cluster's satellite synsets
+are displayed in place of hypernyms.  If \fIsearchstr\fP is in a
+satellite synset, its head synset is also displayed.
+.TP 15
+\fB\-simsv\fP
+Display verb synonyms and
+immediate hypernyms of synsets containing \fIsearchstr\fP.  Synsets
+are grouped by similarity of meaning.
+.TP 15
+\fB\-ants\fP(\fIn\fP | \fIv\fP | \fIa\fP | \fIr\fP)
+Display synsets containing antonyms of \fIsearchstr\fP.
+For adjectives, if \fIsearchstr\fP is
+in a head synset, \fIsearchstr\fP has a direct antonym.
+The head synset for the direct antonym is displayed along
+with the direct antonym's satellite synsets.  If \fIsearchstr\fP is in a
+satellite synset, \fIsearchstr\fP has an indirect antonym via the
+head synset, which is displayed.
+.TP 15
+\fB\-faml\fP(\fIn\fP | \fIv\fP | \fIa\fP | \fIr\fP)
+Display familiarity and polysemy information for \fIsearchstr\fP.
+.TP 15
+\fB\-hype\fP(\fIn\fP | \fIv\fP)
+Recursively display hypernym (superordinate) tree for \fIsearchstr\fP
+(\fIsearchstr\fP \fIIS A KIND OF _____\fP relation).
+.TP 15
+\fB\-hypo\fP(\fIn\fP | \fIv\fP)
+Display immediate hyponyms (subordinates) for \fIsearchstr\fP
+(\fI_____ IS A KIND OF\fP \fIsearchstr\fP relation).
+.TP 15
+\fB\-tree\fP(\fIn\fP | \fIv\fP)
+Display hyponym (subordinate) tree for \fIsearchstr\fP.  This is
+a recursive search that finds the hyponyms of each hyponym.
+.TP 15
+\fB\-coor\fP(\fIn\fP | \fIv\fP)
+Display the coordinates (sisters) of \fIsearchstr\fP.  This
+search prints the immediate hypernym for each synset that contains
+\fIsearchstr\fP and the hypernym's immediate hyponyms.
+.TP 15
+\fB\-deri\fP(\fIn\fP | \fIv\fP)
+Display derivational morphology links between noun and verb forms.
+.TP 15
+\fB\-domn\fP(\fIn\fP | \fIv\fP | \fIa\fP | \fIr\fP)
+Display domain that \fIsearchstr\fP has been classified in.
+.TP 15
+\fB\-domt\fP(\fIn\fP | \fIv\fP | \fIa\fP | \fIr\fP)
+Display all terms classified as members of the \fIsearchstr\fP's domain.
+.TP 15
+.B \-subsn
+Display substance meronyms of \fIsearchstr\fP
+(\fIHAS SUBSTANCE\fP relation).
+.TP 15
+.B \-partn
+Display part meronyms of \fIsearchstr\fP
+(\fIHAS PART\fP relation).
+.TP 15
+.B \-membn
+Display member meronyms of \fIsearchstr\fP
+(\fIHAS MEMBER\fP relation).
+.TP 15
+.B \-meron
+Display all meronyms of \fIsearchstr\fP
+(\fIHAS PART, HAS MEMBER, HAS SUBSTANCE\fP relations).
+.TP 15
+.B \-hmern
+Display meronyms for \fIsearchstr\fP tree.  This is a recursive search
+that prints all the meronyms of \fIsearchstr\fP and all of
+its hypernyms.
+.TP 15
+.B \-sprtn
+Display \fIpart of\fP holonyms of \fIsearchstr\fP
+(\fIPART OF\fP relation).
+.TP 15
+.B \-smemn
+Display \fImember of\fP holonyms of \fIsearchstr\fP
+(\fIMEMBER OF\fP relation).
+.TP 15
+.B \-ssubn
+Display \fIsubstance of\fP holonyms of \fIsearchstr\fP
+(\fISUBSTANCE OF\fP relation).
+.TP 15
+.B \-holon
+Display all holonyms of \fIsearchstr\fP
+(\fIPART OF, MEMBER OF, SUBSTANCE OF\fP relations).
+.TP 15
+.B \-hholn
+Display holonyms for \fIsearchstr\fP tree.  This is a recursive search
+that prints all the holonyms of \fIsearchstr\fP and all of each
+holonym's holonyms.
+.TP 15
+.B \-entav
+Display entailment relations of \fIsearchstr\fP.
+.TP 15
+.B \-framv
+Display applicable verb sentence frames for \fIsearchstr\fP. 
+.TP 15
+.B \-causv
+Display \fIcause to\fP relations of \fIsearchstr\fP.
+.TP 15
+\fB \-pert\fP(\fIa\fP | \fIr\fP)
+Display pertainyms of \fIsearchstr\fP.
+.TP 15
+\fB \-attr\fP(\fIn\fP | \fIa\fP)
+Display adjective values for noun attribute, or noun attributes of
+adjective values.
+.TP 15
+\fB\-grep\fP(\fIn\fP | \fIv\fP | \fIa\fP | \fIr\fP)
+List compound words containing \fIsearchstr\fP as a substring.
+.SH SEARCH RESULTS
+The results of a search are written to the standard output.  For each
+search, the output consists a one line description of the search,
+followed by the search results.
+
+All searches other than \fB\-over\fP list all senses matching the
+search results in the following general format.  Items enclosed in
+italicized square brackets (\fI[~...~]\fP) may not be present.
+
+.RS
+One line listing the number of senses matching the search request.
+
+Each sense matching the search requested displayed as follows:
+
+.nf
+	\fBSense \fIn\fR
+	\fI[\fB{\fIsynset_offset\fB}\fI] [\fB<\fIlex_filename\fB>\fI]~~word1[\fB#\fIsense_number][,~~word2...]\fR
+.fi
+
+Where \fIn\fP is the sense number of the search word,
+\fIsynset_offset\fP is the byte offset of the synset in the
+\fBdata.\fIpos\fR file corresponding to the syntactic category,
+\fIlex_filename\fP is the name of the lexicographer file that the
+synset comes from, \fIword1\fP is the first word in the synset (note
+that this is not necessarily the search word) and \fIsense_number\fP
+is the WordNet sense number assigned to the preceding word.
+\fIsynset_offset, lex_filename\fP, and \fIsense_number\fP are
+generated when the \fB\-o, \-a,\fP and \fB\-s\fP options,
+respectively, are specified.
+
+The synsets matching the search requested are printed below each sense's
+synset output described above.  Each line of output is preceded by a
+marker (usually \fB=>\fP), then a synset, formatted as described
+above.  If a search traverses more one level of the tree, then
+successive lines are indented by spaces corresponding to its level in
+the hierarchy.  When the \fB\-g\fP option is specified, synset glosses
+are displayed in parentheses at the end of each synset.  Each synset
+is printed on one line.
+
+Senses are generally ordered from most to least frequently used, with
+the most common sense numbered \fB1\fP.  Frequency of use is
+determined by the number of times a sense is tagged in the various
+semantic concordance texts.  Senses that are not semantically tagged
+follow the ordered senses.  Note that this ordering is only an
+estimate based on usage in a small corpus.
+
+Verb senses can be grouped by similarity of meaning, rather
+than ordered by frequency of use.  The \fB\-simsv\fP search prints all
+senses that are close in meaning together, with a line of dashes
+indicating the end of a group.  See
+.BR wngroups (7WN)
+for a discussion of how senses are grouped.
+
+The \fB\-over\fP search displays an overview of all the senses of the
+search word in all syntactic categories.  The results of this search
+are similar to the \fB\-syns\fP search, however no additional
+(ex. hypernym) synsets are displayed, and synset glosses are always
+printed.  The senses are grouped by syntactic category, and each
+synset is annotated as described above with \fIsynset_offset\fP,
+\fIlex_filename\fP, and \fIsense_number\fP as dictated by the
+\fB\-o, \-a,\fP and \fB\-s\fP options.  The overview search also
+indicates how many of the senses in each syntactic category are
+represented in the tagged texts.  This is a way for the user to
+determine whether a sense's sense number is based on semantic tagging
+data, or was arbitrarily assigned.   For each sense that has
+appeared in such texts, the number of semantic tags to that sense are
+indicated in parentheses after the sense number.
+
+If a search cannot be performed on some senses of \fIsearchstr\fP, the
+search results are headed by a string of the form:
+.nf
+	X of Y senses of \fIsearchstr\fP
+.fi
+
+The output of the \fB\-deri\fP search shows word forms that are
+morphologically related to \fBsearchstr\fP. Each word form pointed to
+from \fIsearchstr\fP is displayed, preceded by \fBRELATED TO->\fP and
+the syntactic category of the link, followed, on the next line, by its
+synset.  Printed after the word form is \fB#\fP\fIn\fP where \fIn\fP
+indicates the WordNet sense number of the term pointed to.
+
+The \fB\-domn\fP and \fB\-domt\fP searches show the domain that a
+synset has been classified in and, conversely, all of the terms that
+have been assigned to a specific domain.  A domain is
+either a \fBTOPIC,\fP \fBREGION\fP or \fBUSAGE,\fP as reflected in
+the specific pointer character stored in the database, and displayed
+in the output.  A \fB\-domn\fP search on a term shows the domain, if
+any, that each synset containing \fIsearchstr\fP has been classified
+in.  The output display shows the domain type (\fBTOPIC,\fP
+\fBREGION\fP or \fBUSAGE\fP), followed by the syntactic category of
+the domain synset and the terms in the synset.  Each term is followed
+by \fB#\fP\fIn\fP where \fIn\fP indicates the WordNet sense number of
+the term.  The converse search, \fB\-domt\fP, shows all of the synsets
+that have been placed into the domain \fIsearchstr\fP, with analogous
+markers. 
+
+When \fB\-framv\fP is specified, sample illustrative sentences and
+generic sentence frames are displayed.  If a sample sentence is found,
+the base form of \fIsearch\fP is substituted into the sentence, and it
+is printed below the synset, preceded with the \fBEX:\fP marker.  When
+no sample sentences are found, the generic sentence frames are
+displayed.  Sentence frames that are acceptable for all words in a
+synset are preceded by the marker \fB*>\fP.  If a frame is acceptable
+for the search word only, it is preceded by the marker \fB=>\fP.
+
+Search results for adjectives are slightly different from those for
+other parts of speech.  When an adjective is printed, its direct
+antonym, if it has one, is also printed in parentheses.  When
+\fIsearchstr\fP is in a head synset, all of the head synset's
+satellites are also displayed.  The position of an adjective in
+relation to the noun may be restricted to the \fIprenominal\fP,
+\fIpostnominal\fP or \fIpredicative\fP position.  Where present, these
+restrictions are noted in parentheses.
+
+When an adjective is a participle of a verb, the output indicates the
+verb and displays its synset.
+
+When an adverb is derived from an adjective, the specific adjectival
+sense on which it is based is indicated.
+
+The morphological transformations performed by the search code may
+result in more than one word to search for.  WordNet automatically
+performs the requested search on all of the strings and returns the
+results grouped by word.  For example, the verb \fBsaw\fP is both the
+present tense of \fBsaw\fP and the past tense of \fBsee\fP.  When
+passed \fIsearchstr\fP \fBsaw\fP, WordNet performs the desired search
+first on \fBsaw\fP and next on \fBsee\fP, returning the list of
+\fBsaw\fP senses and search results, followed by those for \fBsee\fP.
+.SH EXIT STATUS
+\fBwn(\|)\fP normally exits with the number of senses displayed.  If
+\fIsearchword\fP is not found in WordNet, it exits with \fB0\fP.
+
+If the WordNet database cannot be opened, an error messages is
+displayed and \fBwn(\|)\fP exits with \fB-1\fP.
+.SH ENVIRONMENT VARIABLES (UNIX)
+.TP 20
+.B WNHOME
+Base directory for WordNet.  Default is
+\fB/usr/local/WordNet-3.0\fP.
+.TP 20
+.B WNSEARCHDIR
+Directory in which the WordNet database has been installed.  
+Default is \fBWNHOME/dict\fP.
+.SH REGISTRY (WINDOWS)
+.TP 20
+.B HKEY_LOCAL_MACHINE\eSOFTWARE\eWordNet\e3.0\eWNHome
+Base directory for WordNet.  Default is
+\fBC:\eProgram~Files\eWordNet\e3.0\fP.
+.SH FILES
+.TP 20
+.B index.\fIpos\fP
+database index files
+.TP 20
+.B data.\fIpos\fP
+database data files
+.TP 20
+.B *.vrb
+files of sentences illustrating the use of verbs
+.TP 20
+.B \fIpos\fP.exc
+morphology exception lists
+.SH SEE ALSO
+.BR wnintro (1WN),
+.BR wnb (1WN),
+.BR wnintro (3WN),
+.BR lexnames (5WN),
+.BR senseidx (5WN)
+.BR wndb (5WN), 
+.BR wninput (5WN),
+.BR morphy (7WN),
+.BR wngloss (7WN),
+.BR wngroups (7WN).
+.SH BUGS
+Please report bugs to wordnet@princeton.edu.
