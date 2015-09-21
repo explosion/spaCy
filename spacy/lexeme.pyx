@@ -47,7 +47,12 @@ cdef class Lexeme:
 
     property has_vector:
         def __get__(self):
-            return sum(abs(self.c.repvec)) != 0
+            cdef int i
+            for i in range(self.vocab.vectors_length):
+                if self.c.repvec[i] != 0:
+                    return True
+            else:
+                return False
 
     property vector_norm:
         def __get__(self):

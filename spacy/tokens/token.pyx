@@ -130,7 +130,12 @@ cdef class Token:
 
     property has_vector:
         def __get__(self):
-            return sum(abs(self.c.lex.repvec)) != 0
+            cdef int i
+            for i in range(self.vocab.vectors_length):
+                if self.c.lex.repvec[i] != 0:
+                    return True
+            else:
+                return False
 
     property vector:
         def __get__(self):
