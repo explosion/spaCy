@@ -61,11 +61,14 @@ def docs():
         with lcd(path.join(path.dirname(__file__), 'docs')):
             local('make html')
 
-def publish():
+def publish(version):
     with virtualenv(VENV_DIR):
-        local('python setup.py register')
-        local('twine upload dist/*.tar.gz')
         local('git push origin master')
+        local('git tag -a %s' % version)
+        local('git push origin %s' % version)
+        local('python setup.py sdist')
+        local('python setup.py register')
+        local('twine upload dist/%s.tar.gz' % version)
 
 
 def env(lang="python2.7"):
