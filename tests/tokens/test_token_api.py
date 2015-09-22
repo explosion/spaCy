@@ -51,3 +51,14 @@ def test_is_properties(EN):
     assert addr.is_oov
     assert not Hi.is_oov
 
+@pytest.mark.models
+def test_vectors(EN):
+    apples, oranges, oov = EN(u'apples oranges ldskbjlsdkbflzdfbl')
+    assert apples.has_vector
+    assert oranges.has_vector
+    assert not oov.has_vector
+    assert apples.similarity(oranges) > apples.similarity(oov)
+    assert apples.similarity(oranges) == oranges.similarity(apples)
+    assert sum(apples.vector) != sum(oranges.vector)
+    assert apples.vector_norm != oranges.vector_norm
+    

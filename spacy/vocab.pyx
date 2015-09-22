@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 
-
 from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 from libc.string cimport memset
 from libc.stdint cimport int32_t
@@ -117,16 +116,14 @@ cdef class Vocab:
 
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL:
         cdef hash_t key
-        #cdef bint is_oov = mem is not self.mem
-        # TODO
-        is_oov = False
-        mem = self.mem
+        cdef bint is_oov = mem is not self.mem
         if len(string) < 3:
             mem = self.mem
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
         lex.orth = self.strings[string]
         lex.length = len(string)
         lex.id = self.length
+        lex.repvec = <float*>mem.alloc(self.vectors_length, sizeof(float))
         if self.get_lex_attr is not None:
             for attr, func in self.get_lex_attr.items():
                 value = func(string)
@@ -283,7 +280,7 @@ cdef class Vocab:
                                                            vec_len, len(pieces))
                 orth = self.strings[word_str]
                 lexeme = <LexemeC*><void*>self.get_by_orth(self.mem, orth)
-                lexeme.repvec = <float*>self.mem.alloc(len(pieces), sizeof(float))
+                lexeme.repvec = <float*>self.mem.alloc(self.vectors_length, sizeof(float))
 
                 for i, val_str in enumerate(pieces):
                     lexeme.repvec[i] = float(val_str)

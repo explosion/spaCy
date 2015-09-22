@@ -60,6 +60,8 @@ cdef class Span:
         self._seq.merge(self[0].idx, self[-1].idx + len(self[-1]), tag, lemma, ent_type)
 
     def similarity(self, other):
+        if self.vector_norm == 0.0 or other.vector_norm == 0.0:
+            return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     property vector:

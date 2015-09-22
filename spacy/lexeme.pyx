@@ -43,11 +43,18 @@ cdef class Lexeme:
         return True if Lexeme.c_check_flag(self.c, flag_id) else False
 
     def similarity(self, other):
+        if self.vector_norm == 0 or other.vector_norm == 0:
+            return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     property has_vector:
         def __get__(self):
-            return sum(abs(self.c.repvec)) != 0
+            cdef int i
+            for i in range(self.vocab.vectors_length):
+                if self.c.repvec[i] != 0:
+                    return True
+            else:
+                return False
 
     property vector_norm:
         def __get__(self):
