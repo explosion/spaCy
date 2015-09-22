@@ -9,7 +9,7 @@ import plac
 # TODO: Read this from the same source as the setup
 VERSION = '0.9.0'
 
-AWS_STORE = 'http://s3-us-west-1.amazonaws.com/media.spacynlp.com'
+AWS_STORE = 'https://s3-us-west-1.amazonaws.com/media.spacynlp.com'
 
 ALL_DATA_DIR_URL = '%s/en_data_all-%s.tgz' % (AWS_STORE, VERSION)
 
