@@ -127,6 +127,8 @@ cdef class Doc:
         return u''.join([t.string for t in self])
 
     def similarity(self, other):
+        if self.vector_norm == 0 or other.vector_norm == 0:
+            return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     property repvec:

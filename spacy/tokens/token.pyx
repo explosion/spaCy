@@ -50,6 +50,8 @@ cdef class Token:
         return self.doc[self.i+i]
 
     def similarity(self, other):
+        if self.vector_norm == 0 or other.vector_norm == 0:
+            return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     property lex_id:
