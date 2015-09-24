@@ -6,26 +6,13 @@ mixin example(name)
 
 
 +example("Load resources and process text")
-  pre.language-python: code
-    | from __future__ import unicode_literals, print_function
-    | from spacy.en import English
-    | nlp = English()
-    | doc = nlp('Hello, world. Here are two sentences.')
+  include:doctest_all ../../../tests/test_load_resources_and_process_text.txt
 
 +example("Get tokens and sentences")
-  pre.language-python: code
-    | token = doc[0]
-    | sentence = doc.sents.next()
-    | assert token is sentence[0]
-    | assert sentence.text == 'Hello, world.'
+  include:doctest ../../../tests/test_get_tokens_and_sentences.txt
 
 +example("Use integer IDs for any string")
-  pre.language-python: code
-    | hello_id = nlp.vocab.strings['Hello']
-    | hello_str = nlp.vocab.strings[hello_id]
-    | 
-    | assert token.orth  == hello_id  == 469755
-    | assert token.orth_ == hello_str == 'Hello'
+  include:doctest ../../../tests/test_use_interger_ids_for_any_strings.txt
 
 +example("Get and set string views and flags")
   pre.language-python: code

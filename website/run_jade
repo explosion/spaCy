@@ -1,0 +1,59 @@
+#!/usr/bin/env node
+'use strict';
+
+var fs = require('fs');
+var jade = require('jade');
+
+// returns all: code and return value (default)
+jade.filters.doctest_all = function (html, _, use_rv) {
+    use_rv = use_rv === undefined ? true : use_rv;
+
+    var lines = html.trim().split(/\n/),
+        block = [],
+        res = '';
+
+    lines.forEach(function (line) {
+        if (line.indexOf('>>> ') === 0) {
+            // we use ### to suppress lines
+            if (line.indexOf("###") === -1) {
+                block.push(line.replace(/^>>> /gm, ''));
+            }
+        } else if (block.length > 0) {
+            res += '<pre class="language-python"><code>' + block.join('\n') + '</code></pre>';
+            block = [];
+
+            if (use_rv) {
+                res += '<p>Which produces:</p>';
+                res += '<pre class="language-python"><code>' + line + '</code></pre>';
+            }
+        }
+    });
+
+    if (block.length > 0) {
+        res += '<pre class="language-python"><code>' + block.join('\n') + '</code></pre>';
+    }
+
+    return res;
+};
+
+// returns only code
+jade.filters.doctest = function (html) {
+    return jade.filters.doctest_all(html, null, false);
+};
+
+if (process.argv[0] === "node") {
+    process.argv.shift();
+}
+
+var in_file = process.argv[1];
+var out_file = process.argv[2];
+
+var html = jade.renderFile(in_file, {
+    pretty: true
+});
+
+fs.writeFile(out_file, html, function (err) {
+    if (err) {
+        throw err;
+    }
+});

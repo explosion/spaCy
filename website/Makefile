@@ -1,9 +1,12 @@
-all: site
+all: dir site
+
+dir:
+	mkdir -p site
 
 site: site/index.html site/blog/ site/docs/ site/license/ site/blog/introducing-spacy/ site/blog/parsing-english-in-python/ site/blog/part-of-speech-POS-tagger-in-python/ site/tutorials/twitter-filter/ site/tutorials/syntax-search/ site/tutorials/mark-adverbs/ site/blog/writing-c-in-cython/ site/blog/how-spacy-works/
 
 site/index.html: src/jade/header.jade src/jade/*.jade
-	jade -P src/jade/home/index.jade --out site/
+	./run_jade src/jade/home/index.jade $@
 
 site/docs/: src/jade/docs/*.jade src/jade/header.jade
 	jade -P src/jade/docs/index.jade --out $@
