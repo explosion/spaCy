@@ -12,7 +12,7 @@
 "AFX": {"pos": "adj",  "hyph": "hyph"},
 "CC": {"pos": "conj", "conjtype": "coor"},
 "CD": {"pos": "num", "numtype": "card"},
-"DT": {"pos": "adj", "prontype": "prn"},
+"DT": {"pos": "det"},
 "EX": {"pos": "adv", "advtype": "ex"},
 "FW": {"pos": "x", "foreign": "foreign"},
 "HYPH": {"pos": "punct", "puncttype": "dash"},
