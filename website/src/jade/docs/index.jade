@@ -1,0 +1,28 @@
+include ../mixins.jade
+include ../header.jade
+
+
+- var Page = InitPage(Site, Authors.spacy, 'docs', 'Docs')
+
+
++WritePage(Site, Authors.spacy, Page)
+    section.intro
+        p #[strong spaCy] consists of a vocabulary table that stores lexical types, a pipeline that produce annotations, and three classes to manipulate document, span and token data.  The annotations are predicted using statistical models, according to specifications that follow common practice in the research community.
+        
+        nav(role="navigation")
+            ul
+                li: a.button(href="#api") API
+                li: a.button(href="#tutorials") Tutorials
+                li: a.button(href="#spec") Spec
+
+    article
+        +Section("API", "api", "_api.jade")
+
+    section.intro
+        h2 #[a.permalink(href='#tutorials', name='tutorials') Tutorials]
+
+    section.tutorials
+        include ../tutorials/_teaser.jade
+
+    article
+        +Section("Annotation Specifications", "spec", "_spec.jade")

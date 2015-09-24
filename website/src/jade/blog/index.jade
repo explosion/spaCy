@@ -1,0 +1,55 @@
+mixin WriteTeaser(Authors, post_title)
+    if post_title == "parsing-english-in-python"
+        include ./parsing-english-in-python/meta.jade
+    else if post_title == "introducing-spacy"
+        include ./introducing-spacy/meta.jade
+    else if post_title == "part-of-speech-POS-tagger-in-python"
+        include ./part-of-speech-POS-tagger-in-python/meta.jade
+    else if post_title == "writing-c-in-cython"
+        include ./writing-c-in-cython/meta.jade
+    else if post_title == "how-spacy-works"
+        include ./how-spacy-works/meta.jade
+    else if post_title == "displacy"
+        include ./displacy/meta.jade
+    else if post_title == "eli5-computers-learn-reading"
+        include ./eli5-computers-learn-reading/meta.jade
+    else if post_title == "dead-code-should-be-buried"
+        include ./dead-code-should-be-buried/meta.jade
+
+    - var Author = Authors[Meta.author_id]
+    article.post
+        header
+                h2 #[a(href=Meta.url)= Meta.headline]
+                +WriteByline(Author, Meta)
+
+        p #{Meta.description} #[a.readmore(href=Meta.url) ►]
+
+include ../header.jade
+
+- var Page = InitPage(Site, Authors.spacy, "blog", "Blog")
+- Page.active.blog = true
+
++WritePage(Site, Authors.spacy, Page)
+    section.intro.profile
+        p A lot of work has gone into #[strong spaCy], but no magic. We plan to keep no secrets. We want you to be able to #[a(href="/license") build your business] on #[strong spaCy] &ndash; so we want you to understand it. Tell us whether you do. #[span.social #[a(href="//twitter.com/" + Site.twitter, target="_blank") Twitter] #[a(href="mailto:contact@spacy.io") Contact us]]
+            nav(role='navigation')
+                ul
+                    li #[a.button(href='#blogs') Blog]
+                    li #[a.button(href='#tutorials') Tutorials]
+
+    h2 #[a.permalink(href='#blogs', name='blogs') Blog]
+
+    section.blogs
+            +WriteTeaser(Authors, 'dead-code-should-be-buried')
+            +WriteTeaser(Authors, 'eli5-computers-learn-reading')
+            +WriteTeaser(Authors, 'displacy')
+            +WriteTeaser(Authors, 'introducing-spacy')
+            +WriteTeaser(Authors, 'how-spacy-works')
+            +WriteTeaser(Authors, 'writing-c-in-cython')
+            +WriteTeaser(Authors, 'parsing-english-in-python')
+            +WriteTeaser(Authors, 'part-of-speech-POS-tagger-in-python')
+        section.intro
+            h2 #[a.permalink(href='#tutorials', name='tutorials') Tutorials]
+
+        section.tutorials
+            include ../tutorials/_teaser.jade

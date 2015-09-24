@@ -1,0 +1,45 @@
+@mixin colors($background, $foreground)
+	@if $background != "inherit"
+		background-color: #{$background}
+	@if $foreground != "inherit"
+		color: #{$foreground}
+
+@mixin vendor($name, $argument)
+	-webkit-#{$name}: #{$argument}
+	-ms-#{$name}: #{$argument}
+	-moz-#{$name}: #{$argument}
+	-o-#{$name}: #{$argument}
+	#{$name}: #{$argument}
+
+@mixin position($type, $position, $direction, $positionval, $directionval)
+	position: #{$type}
+	#{$position}: #{$positionval}
+	#{$direction}: #{$directionval}
+
+@mixin spacing($margin, $padding)
+	@if $margin != "inherit"
+		margin: #{$margin}
+	@if $padding != "inherit"
+		padding: #{$padding}
+
+@mixin font-size($font-size, $line-height)
+	@if $font-size != "inherit"
+		font-size: #{$font-size}
+	
+	@if $line-height != "inherit"
+		line-height: #{$line-height}
+
+@mixin size($width, $height: $width)
+	@if $width != "auto"
+		width: $width
+
+	@if $height != "auto"
+		height: $height
+
+@mixin font($font, $text-transform, $text-align)
+	font: $font
+
+	@if $text-align != "inherit"
+		text-align: $text-align
+	@if $text-transform != "inherit"
+		text-transform: $text-transform

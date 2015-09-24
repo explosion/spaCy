@@ -1,0 +1,94 @@
+code,
+pre
+	@include font(bold 1rem/1.5em $ff-code, inherit, inherit)
+	@include vendor(tab-size, 4)
+	@include vendor(hyphens, none)
+	direction: ltr
+	white-space: pre
+	border: none
+	word:
+		spacing: normal
+		break: normal
+
+pre
+	@include spacing(0 0 2em 0, 2em)
+	@include colors($prism-bg, $prism-text)
+	overflow: auto
+	text-shadow: 0 1px rgba(0, 0, 0, 0.3)
+
+*:not(pre)
+	> code
+		@include spacing(0 .25em, 0 .5em)
+		display: inline-block
+		border-radius: .2em
+
+		&[class*="language-"]
+			@include colors($prism-bg, $prism-text)
+
+		&:not([class*="language-"])
+			border: 1px solid lighten($c-medium, 10%)
+
+.declaration code
+	background: transparent
+	border: none !important
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata
+	color: $prism-comment
+
+.token.punctuation
+	color: $prism-punct
+
+.namespace
+	opacity: .7
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted
+	color: $prism-tag
+
+.token.boolean,
+.token.number
+	color: $prism-number
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted
+	color: $prism-selector
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string,
+.token.variable
+	color: $prism-operator
+
+.token.atrule,
+.token.attr-value,
+.token.function
+	color: $prism-value
+
+.token.keyword
+	color: $prism-keyword
+
+.token.regex,
+.token.important
+	color: $prism-regex
+
+.token.important,
+.token.bold
+	font-weight: bold
+
+.token.italic
+	font-style: italic
+
+.token.entity
+	cursor: help

@@ -1,0 +1,193 @@
+- Site = {}
+- Site.name = "spaCy.io"
+- Site.slogan = "Build Tomorrow's Language Technologies"
+- Site.description = "spaCy is a library for industrial-strength text processing in Python. If you're a small company doing NLP, we want spaCy to seem like a minor miracle."
+- Site.image = "http://spacy.io/resources/img/social.png"
+- Site.image_small = "http://spacy.io/resources/img/social_small.png"
+- Site.twitter = "spacy_io"
+- Site.url = "http://spacy.io"
+-
+- Authors = {"matt": {}, "spacy": {}};
+- Authors.matt.name = "Matthew Honnibal"
+- Authors.matt.bio = "Matthew Honnibal is the author of the <a href=\"http://spacy.io\">spaCy</a>  software and the sole founder of its parent company. He studied linguistics as an undergrad, and never thought he'd be a programmer. By 2009 he had a PhD in computer science, and in 2014 he left academia to found Syllogism Co. He's from Sydney and lives in Berlin."
+
+- Authors.matt.image = "/resources/img/matt.png"
+- Authors.matt.twitter = "honnibal"
+- 
+- Authors.spacy.name = "SpaCy.io"
+- Authors.spacy.bio = "<a href=\"http://spacy.io\">spaCy</a> is a library for industrial-strength natural language processing in Python and Cython. It features state-of-the-art speed and accuracy, a concise API, and great documentation. If you're a small company doing NLP, we want spaCy to seem like a minor miracle."
+- Authors.spacy.image = "/resources/img/social_small.png"
+- Authors.spacy.twitter = "spacy_io"
+
+- function InitPage(Site, Author, type, headline) {
+-    var Page = {};
+-    Page.headline = headline;
+-    Page.type = type;
+-    Page.active = {};
+-    Page.active[type] = true;
+-    Page.links = [];
+-    if (type == "home") {
+-       Page.url = "";
+-    } else {
+-       Page.url = "/" + type;
+-    }
+-
+-    // Set defaults
+-    Page.description = Site.description;
+-    Page.image = Site.image;
+-    Page.image_small = Site.image_small;
+-
+-    // Compute titles
+-    if (type == "blog") {
+-       Page.title = headline;
+-       Page.title_full = Page.title + " | " + Site.name;
+-    } else if (type == "home") {
+-       Page.title = Site.name + ' | ' + headline;
+-       Page.title_full = Page.title;
+-    } else {
+-       Page.title = headline + " | " + Site.name;
+-       Page.title_full = headline + " | " + Site.name;
+-    }
+-    return Page;
+- }
+
+- function InitPost(Site, Author, Meta) {
+-    var Page = InitPage(Site, Author, "blog", Meta.headline) 
+-    Page.headline = Meta.headline
+-    Page.description = Meta.description
+-    Page.date = Meta.date
+-    Page.url = Meta.url
+-    Page.active["blog"] = true
+-    Page.links = Meta.links
+-    if (Meta.image != null) {
+-       Page.image = Meta.image
+-    } else {
+-       Page.image = Site.image
+-    }
+-    if (Meta.image_small != null) {
+-       Page.image_small = Meta.image_small
+-    } else {
+-       Page.image_small = Site.image_small
+-    }
+-    return Page;
+- }
+
+mixin WritePage(Site, Author, Page)
+    doctype html
+    html(lang="en")
+        head
+            title= Page.title_full
+
+            meta(charset="utf-8")
+            meta(name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no")
+            meta(name="description" content=Page.description)
+            meta(itemporop="name" content=Page.title)
+            meta(itemprop="description" content=Page.description)
+            meta(itemprop="image" content=Page.image)
+            meta(name="twitter:card" content="summary")
+            meta(name="twitter:site" content=Site.twitter)
+            meta(name="twitter:title" content=Page.title)
+            meta(name="twitter:description" content=Page.description)
+            meta(name="twitter:creator" content="@" + Author.twitter)
+            meta(name="twitter:image" content=Page.image_small)
+            meta(property="og:title" content=Page.title)
+            meta(property="og:type" content="article")
+            meta(property="og:url" content=Site.url + Page.url)
+            meta(property="og:image" content=Page.image)
+            meta(property="og:description" content=Page.description)
+            meta(property="og:site_name" content=Site.name)
+            meta(property="article:published_time" content=getDate(Page.date).timestamp)
+            link(rel="stylesheet" href="/resources/css/style.css")
+
+            //[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]
+
+        body(id=Page.type)
+            header(role="banner")
+                h1.logo !{Site.name}
+                div.slogan
+                    if Page.is_error
+                        | #{Site.slogan}
+                    else if Page.type == "home"
+                        | #{Site.slogan}
+                    else
+                        | #{Page.type.charAt(0).toUpperCase() + Page.type.slice(1)}
+            nav(role="navigation")
+                li(class={active: Page.active.home}): a(href="/") Home
+                li(class={active: Page.active.docs}): a(href="/docs") Docs
+                li: a(href="/displacy", target="_blank") Demo
+                li(class={active: Page.active.license}): a(href="/license") License
+                li(class={active: Page.active.blog}): a(href="/blog") Blog
+            main#content
+                block
+            script(src="/resources/js/prism.min.js")
+            // Details polyfill
+            script
+                | var details = document.getElementsByTagName("details");
+                | var summary = document.getElementsByTagName("summary");
+                | for(var i = 0; i < details.length; i++) {
+                |   (details[i].getAttribute("open") == null) ? details[i].setAttribute("data-open", "false") : details[i].setAttribute("data-open", "true");
+                | }
+                | for(var i = 0; i < summary.length; i++) {
+                |   summary[i].addEventListener( "click", function(e) {
+                |       var parent = this.parentElement;
+                |       (parent.getAttribute("data-open") == "false") ? parent.setAttribute("data-open", "true") : parent.setAttribute("data-open", "false");
+                |   });
+                | }
+            script
+                | (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+                | (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+                | m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+                | })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+                | ga('create', 'UA-58931649-1', 'auto');
+                | ga('send', 'pageview');
+            footer(role="contentinfo")
+                span.slogan.copyright
+                    | &copy; 2015 Syllogism Co. | #[a(href="mailto:contact@spacy.io") Contact]
+    
+mixin WritePost(Meta)
+    - var Author = Authors[Meta.author_id]
+    - var Page = InitPost(Site, Author, Meta)
+    +WritePage(Site, Author, Page)
+        article.post
+            header
+                h2: strike= Meta.struck_headline
+                h2= Meta.headline
+                +WriteByline(Author, Meta)
+            block
+            footer.meta(role="contentinfo")
+                +WriteShareLinks(Meta.headline, Meta.url, Site.twitter, Meta.links)
+                +WriteAuthorBio(Author)
+ 
+mixin WriteByline(Author, Meta)
+    .subhead by #[a(href="//twitter.com/" + Author.twitter, rel="author" target="_blank") #{Author.name}] on #[time #{getDate(Meta.date).fulldate}]
+
+mixin WriteShareLinks(headline, url, twitter, links)
+    a.button.button-twitter(href="http://twitter.com/share?text=" + headline + "&url=" + Site.url + url + "&via=" + twitter title="Share on Twitter" target="_blank")
+        | Share on Twitter 
+    if links
+        .discuss
+            for link in links
+                | 
+                a(class="button button-#{link.id}", target="_blank" href=link.url, title="Discuss on " + link.name)
+                    if link.title
+                        | #{link.title}
+                    else
+                        | Discuss on #{link.name}
+
+mixin TweetThis(text, url)
+    p #[span #{text} #[a.share(href='http://twitter.com/share?text="' + text + '"&url=' + Site.url + url + '&via=' + Site.twitter title='Share on Twitter' target='_blank') Tweet]]
+
+mixin WriteAuthorBio(Author)
+    section.intro.profile
+        p #[img(src=Author.image)] !{Author.bio} #[span.social #[a(href="//twitter.com/" + Author.twitter target="_blank") Twitter]]
+
+
+- var getDate = function(input) {
+-   var months = [ "January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December" ];
+-   var dates = [];
+
+-   var date = new Date(input);
+-   dates.fulldate = months[date.getMonth()] + " " + date.getDate() + ", " + date.getFullYear();
+-   dates.timestamp = JSON.parse(JSON.stringify(date));
+-   return dates;
+- }

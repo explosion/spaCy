@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>404 | spaCy.io</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="spaCy is a library for industrial-strength text processing in Python. If you're a small company doing NLP, we want spaCy to seem like a minor miracle.">
+    <meta itemporop="name" content="404 | spaCy.io">
+    <meta itemprop="description" content="spaCy is a library for industrial-strength text processing in Python. If you're a small company doing NLP, we want spaCy to seem like a minor miracle.">
+    <meta itemprop="image" content="http://spacy.io/resources/img/social.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="spacy_io">
+    <meta name="twitter:title" content="404 | spaCy.io">
+    <meta name="twitter:description" content="spaCy is a library for industrial-strength text processing in Python. If you're a small company doing NLP, we want spaCy to seem like a minor miracle.">
+    <meta name="twitter:creator" content="@spacy_io">
+    <meta name="twitter:image" content="http://spacy.io/resources/img/social_small.png">
+    <meta property="og:title" content="404 | spaCy.io">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="http://spacy.io/">
+    <meta property="og:image" content="http://spacy.io/resources/img/social.png">
+    <meta property="og:description" content="spaCy is a library for industrial-strength text processing in Python. If you're a small company doing NLP, we want spaCy to seem like a minor miracle.">
+    <meta property="og:site_name" content="spaCy.io">
+    <meta property="article:published_time">
+    <link rel="stylesheet" href="/resources/css/style.css">
+    <!--[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  </head>
+  <body id="">
+    <header role="banner">
+      <h1 class="logo">spaCy.io</h1>
+      <div class="slogan">
+      </div>
+    </header>
+    <nav role="navigation">
+      <li><a href="/">Home</a></li>
+      <li><a href="/docs">Docs</a></li>
+      <li><a href="/license">License</a></li>
+      <li><a href="/blog">Blog</a></li>
+    </nav>
+    <main id="content">
+    </main>
+    <script src="/resources/js/prism.min.js"></script>
+    <!-- Details polyfill-->
+    <script>
+      var details = document.getElementsByTagName("details");
+      var summary = document.getElementsByTagName("summary");
+      for(var i = 0; i < details.length; i++) {
+        (details[i].getAttribute("open") == null) ? details[i].setAttribute("data-open", "false") : details[i].setAttribute("data-open", "true");
+      }
+      for(var i = 0; i < summary.length; i++) {
+        summary[i].addEventListener( "click", function(e) {
+            var parent = this.parentElement;
+            (parent.getAttribute("data-open") == "false") ? parent.setAttribute("data-open", "true") : parent.setAttribute("data-open", "false");
+        });
+      }
+    </script>
+    <!-- Google analytics-->
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-58931649-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+    <footer role="contentinfo"><span class="slogan copyright">&copy; 2015 Syllogism Co. | <a href="mailto:contact@spacy.io">Contact</a></span></footer>
+  </body>
+</html>

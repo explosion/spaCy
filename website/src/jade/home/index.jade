@@ -1,0 +1,38 @@
+mixin LedeParagraph
+  p
+    a(href="//github.com/honnibal/spaCy"): strong spaCy
+    |  is a library for industrial-strength natural language processing in Python and Cython.  It features 
+    a(href="#comparisons") state-of-the-art
+    |  speed and accuracy, a concise API, and 
+    a(href="/docs") great documentation
+    | . If you're a small company doing NLP, we want 
+    strong spaCy
+    |  to seem like 
+    a(href="/blog/introducing-spacy") a minor miracle
+    | .
+
+
+include ../mixins.jade
+include ../header.jade
+
+- var Page = InitPage(Site, Authors.spacy, "home", Site.slogan)
+- Page.active.home = true
+
+
++WritePage(Site, Authors['spacy'], Page)
+  section.intro
+    +LedeParagraph
+    nav(role="navigation")
+      ul
+        li: a.button(href="#comparisons") Comparisons
+        li: a.button(href="#online-demo") Try Online
+        li: a.button(href="#example-use") Examples
+        li: a.button(href="#install")
+          | Install
+          <span class="button-caption">v0.92</span>
+
+  article.page.landing-page
+    +Section("Comparisons and Benchmarks", "comparisons", "./_comparisons.jade")
+    +Section("Online Demo", "online-demo", "./_online_demo.jade")
+    +Section("Usage by Example", "example-use", "./_usage_examples.jade")
+    +Section("Install v0.92", "install", "./_installation.jade")

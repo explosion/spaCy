@@ -1,0 +1,32 @@
+mixin Section(title_text, link_name, include_file)
+
+  h2: a(name=link_name href="#" + link_name) #{title_text}
+
+  if (link_name == "example-use")
+    include ./home/_usage.jade
+  else if (link_name == "online-demo")
+    include ./home/_online_demo.jade
+  else if (link_name == "comparisons")
+    include ./home/_comparisons.jade
+  else if (link_name == "install")
+    include ./home/_installation.jade
+  else if (link_name == "api")
+    include ./docs/_api.jade
+  else if (link_name == "tutorials")
+    include ./tutorials/_teaser.jade
+  else if (link_name == "spec")
+    include ./docs/_spec.jade
+
+
+mixin columns(...names)
+  tr
+    each name in names
+      th= name
+
+
+mixin row(...cells)
+  tr
+    each cell in cells
+      td= cell
+
+
