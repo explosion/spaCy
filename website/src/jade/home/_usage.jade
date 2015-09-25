@@ -6,13 +6,16 @@ mixin example(name)
 
 
 +example("Load resources and process text")
-  include:doctest_all ../../../tests/test_load_resources_and_process_text.txt
+  pre.language-python: code
+    include ../../code/home.load_resources_and_process_text
 
 +example("Get tokens and sentences")
-  include:doctest ../../../tests/test_get_tokens_and_sentences.txt
+  pre.language-python: code
+    include ../../code/home.get_tokens_and_sentences
 
 +example("Use integer IDs for any string")
-  include:doctest ../../../tests/test_use_interger_ids_for_any_strings.txt
+  pre.language-python: code
+    include ../../code/home.use_integer_ids_for_any_strings
 
 +example("Get and set string views and flags")
   pre.language-python: code

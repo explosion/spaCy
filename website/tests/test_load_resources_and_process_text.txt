@@ -1,5 +1,0 @@
->>> from spacy.en import English
->>> nlp = English()
->>> doc = nlp(u'Hello, world. Here are two sentences.')
->>> print([s.string for s in doc.sents])
-[u'Hello, world. ', u'Here are two sentences.']
