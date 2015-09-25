@@ -1,12 +1,13 @@
-all: dir site
+all: src/code site
 
-dir:
-	mkdir -p site
+src/code:
+	mkdir -p src/code/
+	./create_code_samples tests/ src/code/
 
 site: site/index.html site/blog/ site/docs/ site/license/ site/blog/introducing-spacy/ site/blog/parsing-english-in-python/ site/blog/part-of-speech-POS-tagger-in-python/ site/tutorials/twitter-filter/ site/tutorials/syntax-search/ site/tutorials/mark-adverbs/ site/blog/writing-c-in-cython/ site/blog/how-spacy-works/
 
 site/index.html: src/jade/header.jade src/jade/*.jade
-	./run_jade src/jade/home/index.jade $@
+	jade -P src/jade/home/index.jade --out site/
 
 site/docs/: src/jade/docs/*.jade src/jade/header.jade
 	jade -P src/jade/docs/index.jade --out $@
