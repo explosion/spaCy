@@ -1,14 +1,14 @@
 {
     "PRP": {
-        "I":          {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Sing",                        "Case": "Nom"},
-        "me":         {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Sing",                        "Case": "Acc"},
-        "you":        {"L": "-PRON-", "PronType": "Prs", "Person": "Two",                                            "Case": "Nom,Acc"},
+        "I":          {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Sing",                   "Case": "Nom"},
+        "me":         {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Sing",                   "Case": "Acc"},
+        "you":        {"L": "-PRON-", "PronType": "Prs", "Person": "Two"},
         "he":         {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Masc", "Case": "Nom"},
         "him":        {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Masc", "Case": "Acc"},
-        "she":        {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Masc", "Case": "Nom"},
+        "she":        {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Fem",  "Case": "Nom"},
         "her":        {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Fem",  "Case": "Acc"},
-        "it":         {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Neut", "Case": "Nom,Acc"},
-        "we":         {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Sing",                   "Case": "Nom"},
+        "it":         {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Neut"},
+        "we":         {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Plur",                   "Case": "Nom"},
         "us":         {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Plur",                   "Case": "Acc"},
         "they":       {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Plur",                   "Case": "Nom"},
         "them":       {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Plur",                   "Case": "Acc"},
@@ -35,25 +35,12 @@
     },
 
     "PRP$": {
-        "my":    {"L": "-PRON-", "Person": "One",   "Number": "Sing",                                 "PronType": "Prs", "Poss": "Yes"},
-        "your":  {"L": "-PRON-", "Person": "Two",   "Number": "Sing,Plur",                            "PronType": "Prs", "Poss": "Yes"},
-        "his":   {"L": "-PRON-", "Person": "Three", "Number": "Sing",      "Gender": "Masc",          "PronType": "Prs", "Poss": "Yes"},
-        "her":   {"L": "-PRON-", "Person": "Three", "Number": "Sing",      "Gender": "Fem",           "PronType": "Prs", "Poss": "Yes"},
-        "its":   {"L": "-PRON-", "Person": "Three", "Number": "Sing",      "Gender": "Neut",          "PronType": "Prs", "Poss": "Yes"},
-        "our":   {"L": "-PRON-", "Person": "One",   "Number": "Plur",                                 "PronType": "Prs", "Poss": "Yes"},
-        "their": {"L": "-PRON-", "Person": "Three", "Number": "Plur",      "Gender": "Masc,Fem,Neut", "PronType": "Prs", "Poss": "Yes"}
-    },
-    "JJR": {
-        "better": {"L": "good", "misc": 1}
-    },
-    "JJS": {
-        "best": {"L": "good", "misc": 2}
-    },
-    
-    "RBR": {
-        "better": {"L": "good", "misc": 1}
-    },
-    "RBS": {
-        "best": {"L": "good", "misc": 2}
+        "my":    {"L": "-PRON-", "Person": "One",   "Number": "Sing",                   "PronType": "Prs", "Poss": "Yes"},
+        "your":  {"L": "-PRON-", "Person": "Two",                                       "PronType": "Prs", "Poss": "Yes"},
+        "his":   {"L": "-PRON-", "Person": "Three", "Number": "Sing", "Gender": "Masc", "PronType": "Prs", "Poss": "Yes"},
+        "her":   {"L": "-PRON-", "Person": "Three", "Number": "Sing", "Gender": "Fem",  "PronType": "Prs", "Poss": "Yes"},
+        "its":   {"L": "-PRON-", "Person": "Three", "Number": "Sing", "Gender": "Neut", "PronType": "Prs", "Poss": "Yes"},
+        "our":   {"L": "-PRON-", "Person": "One",   "Number": "Plur",                   "PronType": "Prs", "Poss": "Yes"},
+        "their": {"L": "-PRON-", "Person": "Three", "Number": "Plur",                   "PronType": "Prs", "Poss": "Yes"}
     }
 }
