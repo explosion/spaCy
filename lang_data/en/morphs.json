@@ -42,5 +42,19 @@
         "its":   {"L": "-PRON-", "Person": "Three", "Number": "Sing", "Gender": "Neut", "PronType": "Prs", "Poss": "Yes"},
         "our":   {"L": "-PRON-", "Person": "One",   "Number": "Plur",                   "PronType": "Prs", "Poss": "Yes"},
         "their": {"L": "-PRON-", "Person": "Three", "Number": "Plur",                   "PronType": "Prs", "Poss": "Yes"}
+    },
+
+    "VBZ": {
+        "am":  {"L": "be", "VerbForm": "Fin", "Person": "One",   "Tense": "Pres", "Mood": "Ind"},
+        "are": {"L": "be", "VerbForm": "Fin", "Person": "Two",   "Tense": "Pres", "Mood": "Ind"},
+        "is":  {"L": "be", "VerbForm": "Fin", "Person": "Three", "Tense": "Pres", "Mood": "Ind"},
+    },
+    "VBP": {
+        "are":  {"L": "be", "VerbForm": "Fin", "Tense": "Pres", "Mood": "Ind"}
+    },
+    "VBD": {
+        "was":  {"L": "be", "VerbForm": "Fin", "Tense": "Past", "Number": "Sing"},
+        "were": {"L": "be", "VerbForm": "Fin", "Tense": "Past", "Number": "Plur"}
     }
+
 }
