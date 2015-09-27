@@ -14,6 +14,10 @@ def main():
     print("Before")
     for ent in before.ents:
         print(ent.text, ent.label_, [w.tag_ for w in ent])
+    # Output:
+    # Google ORG [u'NNP']
+    # google ORG [u'VB']
+    # google ORG [u'NNP']
     nlp.matcher.add(
         "GoogleNow", # Entity ID: Not really used at the moment.
         "PRODUCT",   # Entity type: should be one of the types in the NER data
@@ -46,6 +50,11 @@ def main():
     print("After")
     for ent in after.ents:
         print(ent.text, ent.label_, [w.tag_ for w in ent])
+    # Output
+    # Google Now PRODUCT [u'NNP', u'RB']
+    # google ORG [u'VB']
+    # google now PRODUCT [u'NNP', u'RB']
+    #
     # You can customize attribute values in the lexicon, and then refer to the
     # new attributes in your Token Specifiers.
     # This is particularly good for word-set membership.
@@ -81,6 +90,13 @@ def main():
     print('Sydney', nlp.vocab[u'Sydney'].check_flag(is_australian_capital))
     print('sydney', nlp.vocab[u'sydney'].check_flag(is_australian_capital))
     print('SYDNEY', nlp.vocab[u'SYDNEY'].check_flag(is_australian_capital))
+    # Output
+    # Sydney True
+    # sydney False
+    # Sydney True
+    # sydney True
+    # SYDNEY True
+    #
     # Now, let's use this in a pattern
     nlp.matcher.add("AuCitySportsTeam", "ORG", {},
         [
@@ -110,6 +126,10 @@ def main():
     doc = nlp(u'The pattern should match the Brisbane Broncos and the South Darwin Spiders, but not the Colorado Boulders')
     for ent in doc.ents:
         print(ent.text, ent.label_)
+    # Output
+    # the Brisbane Broncos ORG
+    # the South Darwin Spiders ORG
+
 
 # Output
 # Before
