@@ -6,7 +6,8 @@ spaCy is a library for advanced natural language processing in Python and Cython
 Documentation and details: http://spacy.io/
 
 spaCy is built on the very latest research, but it isn't researchware.  It was
-designed from day 1 to be used in real products. You can buy a commercial license, or you can use it under the AGPL.
+designed from day 1 to be used in real products. It's commercial open-source
+software, released under the MIT license.
 
 
 Features
