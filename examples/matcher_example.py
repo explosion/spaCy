@@ -97,6 +97,14 @@ def main():
     # sydney True
     # SYDNEY True
     #
+    # The key thing to note here is that we're setting these attributes once,
+    # over the vocabulary --- and then reusing them at run-time. This means the
+    # amortized complexity of anything we do this way is going to be O(1). You
+    # can match over expressions that need to have sets with tens of thousands
+    # of values, e.g. "all the street names in Germany", and you'll still have
+    # O(1) complexity. Most regular expression algorithms don't scale well to
+    # this sort of problem.
+    #
     # Now, let's use this in a pattern
     nlp.matcher.add("AuCitySportsTeam", "ORG", {},
         [
