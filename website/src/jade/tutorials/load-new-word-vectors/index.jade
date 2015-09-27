@@ -1,5 +1,5 @@
 include ./meta.jade
-include ../header.jade
+include ../../header.jade
 
 +WritePost(Meta)
 
@@ -12,9 +12,9 @@ include ../header.jade
 
     pre
         code
-            word_key1 0.92 0.45 -0.9 0.0
-            word_key2 0.3 0.1 0.6 0.3
-            ...
+            | word_key1 0.92 0.45 -0.9 0.0
+            | word_key2 0.3 0.1 0.6 0.3
+            | ...
 
     p That is, each line is a single entry. Each entry consists of a key string, followed by a sequence of floats. Each entry should have the same number of floats.
 
@@ -69,3 +69,7 @@ include ../header.jade
     p All tokens which have the #[code orth] attribute #[em apples] will inherit the updated vector.
 
     p Note that the updated vectors won't persist after exit, unless you persist them yourself, and then replace the #[code vec.bin] file as described above.
+
+    p A popular source of word vectors are the #[a(href="http://nlp.stanford.edu/projects/glove/") GloVe word vectors], particularly those calculated off the #[a(href="https://commoncrawl.org/") Common Crawl]. Note that the provided vector file has a few entries which are not valid UTF8 strings. These should be filtered out.
+
+    p Future versions of spaCy will allow you to provide a file-like object, instead of a location of a #[bz2] file.
