@@ -1,6 +1,6 @@
 all: src/code site
 
-src/code:
+src/code: tests/test_*.py
 	mkdir -p src/code/
 	./create_code_samples tests/ src/code/
 

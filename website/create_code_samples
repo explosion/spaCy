@@ -4,6 +4,12 @@ import re
 import os
 import ast
 
+# cgi.escape is deprecated since py32
+try:
+    from html import escape
+except ImportError:
+    from cgi import escape
+
 
 src_dirname = sys.argv[1]
 dst_dirname = sys.argv[2]
@@ -24,10 +30,18 @@ for filename in os.listdir(src_dirname):
 
             # only ast.expr and ast.stmt have line numbers, see:
             # https://docs.python.org/2/library/ast.html#ast.AST.lineno
-            line_numbers = [x.lineno for x in ast.iter_child_nodes(item)
-                            if isinstance(x, ast.expr) or
-                               isinstance(x, ast.stmt)]
+            line_numbers = []
 
+            def fill_line_numbers(node):
+                for child in ast.iter_child_nodes(node):
+                    if ((isinstance(child, ast.expr) or
+                         isinstance(child, ast.stmt)) and
+                        child.lineno > item.lineno):
+
+                        line_numbers.append(child.lineno)
+                    fill_line_numbers(child)
+
+            fill_line_numbers(item)
             body = source[min(line_numbers)-1:max(line_numbers)]
 
             # make sure we are inside an indented function body
@@ -38,6 +52,7 @@ for filename in os.listdir(src_dirname):
                 match = re.search(r"[^\s]", line)
                 if match:
                     offset = match.start(0)
+                    break
 
             # remove indentation
             assert offset > 0
@@ -51,4 +66,4 @@ for filename in os.listdir(src_dirname):
             code_filename = "%s.%s" % (name, item.name[len(prefix):])
 
             with open(os.path.join(dst_dirname, code_filename), "w") as f:
-                f.write("".join(body))
+                f.write(escape("".join(body)))
