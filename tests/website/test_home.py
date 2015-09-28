@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import pytest
+import spacy.en
 
 
 @pytest.fixture(scope="session")
@@ -36,7 +37,7 @@ def test_use_integer_ids_for_any_strings(nlp, token):
     hello_id = nlp.vocab.strings['Hello']
     hello_str = nlp.vocab.strings[hello_id]
 
-    assert token.orth  == hello_id  == 469755
+    assert token.orth  == hello_id  == 3404
     assert token.orth_ == hello_str == 'Hello'
 
 
@@ -71,7 +72,7 @@ def test_word_vectors(nlp):
     doc = nlp("Apples and oranges are similar. Boots and hippos aren't.")
 
     apples = doc[0]
-    oranges = doc[1]
+    oranges = doc[2]
     boots = doc[6]
     hippos = doc[8]
 
@@ -157,10 +158,12 @@ def test_calculate_inline_mark_up_on_original_string():
 
 @pytest.mark.models
 def test_efficient_binary_serialization(doc):
-    byte_string = doc.as_bytes()
+    from spacy.tokens.doc import Doc
+
+    byte_string = doc.to_bytes()
     open('/tmp/moby_dick.bin', 'wb').write(byte_string)
 
     nlp = spacy.en.English()
-    for byte_string in Doc.read(open('/tmp/moby_dick.bin', 'rb')):
+    for byte_string in Doc.read_bytes(open('/tmp/moby_dick.bin', 'rb')):
        doc = Doc(nlp.vocab)
        doc.from_bytes(byte_string)
