@@ -1,7 +1,16 @@
 # -*- coding: utf8 -*-
 from __future__ import unicode_literals
 import unicodedata
-from unidecode import unidecode
+
+# If your license is not GPL compatible, use text_unidecode. But if your code
+# is, you should use the unidecode library, because its performance is better.
+# spaCy does not list unidecode as a dependency, in case your license is not
+# GPL compatible.
+try:
+    from unidecode import unidecode
+except ImportError:
+    from text_unidecode import unidecode
+
 import re
 
 import math
