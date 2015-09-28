@@ -1,5 +1,6 @@
 from __future__ import unicode_literals
 import pytest
+import spacy.en
 
 
 @pytest.fixture()
@@ -13,6 +14,7 @@ def test_load_resources_and_process_text():
     doc = nlp('Hello, world. Here are two sentences.')
 
 
+@pytest.mark.models
 def test_get_tokens_and_sentences(doc):
     token = doc[0]
     sentence = doc.sents.next()
@@ -20,12 +22,11 @@ def test_get_tokens_and_sentences(doc):
     assert sentence.text == 'Hello, world.'
 
 
-@pytest.mark.xfail
 def test_use_integer_ids_for_any_strings(nlp, token):
     hello_id = nlp.vocab.strings['Hello']
     hello_str = nlp.vocab.strings[hello_id]
 
-    assert token.orth  == hello_id  == 469755
+    assert token.orth  == hello_id  == 3404
     assert token.orth_ == hello_str == 'Hello'
 
 
@@ -55,19 +56,18 @@ def test_export_to_numpy_arrays(nlp, doc):
     assert list(doc_array[:, 1]) == [t.like_url for t in doc]
 
 
-@pytest.mark.xfail
+@pytest.mark.models
 def test_word_vectors(nlp):
     doc = nlp("Apples and oranges are similar. Boots and hippos aren't.")
 
     apples = doc[0]
-    oranges = doc[1]
+    oranges = doc[2]
     boots = doc[6]
     hippos = doc[8]
 
     assert apples.similarity(oranges) > boots.similarity(hippos)
 
 
-@pytest.mark.xfail
 def test_part_of_speech_tags(nlp):
     from spacy.parts_of_speech import ADV
 
@@ -88,6 +88,7 @@ def test_part_of_speech_tags(nlp):
         print(token.tag_)
 
 
+@pytest.mark.models
 def test_syntactic_dependencies():
     def dependency_labels_to_root(token):
         '''Walk up the syntactic tree, collecting the arc labels.'''
@@ -98,6 +99,7 @@ def test_syntactic_dependencies():
         return dep_labels
 
 
+@pytest.mark.models
 def test_named_entities():
     def iter_products(docs):
         for doc in docs:
@@ -143,12 +145,14 @@ def test_calculate_inline_mark_up_on_original_string():
         return string
 
 
-@pytest.mark.xfail
+@pytest.mark.models
 def test_efficient_binary_serialization(doc):
-    byte_string = doc.as_bytes()
+    from spacy.tokens.doc import Doc
+
+    byte_string = doc.to_bytes()
     open('/tmp/moby_dick.bin', 'wb').write(byte_string)
 
     nlp = spacy.en.English()
-    for byte_string in Doc.read(open('/tmp/moby_dick.bin', 'rb')):
+    for byte_string in Doc.read_bytes(open('/tmp/moby_dick.bin', 'rb')):
        doc = Doc(nlp.vocab)
        doc.from_bytes(byte_string)
