@@ -1,0 +1,69 @@
+#!/usr/bin/env python
+import sys
+import re
+import os
+import ast
+
+# cgi.escape is deprecated since py32
+try:
+    from html import escape
+except ImportError:
+    from cgi import escape
+
+
+src_dirname = sys.argv[1]
+dst_dirname = sys.argv[2]
+prefix = "test_"
+
+
+for filename in os.listdir(src_dirname):
+    match = re.match(re.escape(prefix) + r"(.+)\.py", filename)
+    if not match:
+        continue
+
+    name = match.group(1)
+    source = open(os.path.join(src_dirname, filename)).readlines()
+    tree = ast.parse("".join(source))
+
+    for item in tree.body:
+        if isinstance(item, ast.FunctionDef) and item.name.startswith(prefix):
+
+            # only ast.expr and ast.stmt have line numbers, see:
+            # https://docs.python.org/2/library/ast.html#ast.AST.lineno
+            line_numbers = []
+
+            def fill_line_numbers(node):
+                for child in ast.iter_child_nodes(node):
+                    if ((isinstance(child, ast.expr) or
+                         isinstance(child, ast.stmt)) and
+                        child.lineno > item.lineno):
+
+                        line_numbers.append(child.lineno)
+                    fill_line_numbers(child)
+
+            fill_line_numbers(item)
+            body = source[min(line_numbers)-1:max(line_numbers)]
+
+            # make sure we are inside an indented function body
+            assert all([re.match(r"\s", l[0]) for l in body])
+
+            offset = 0
+            for line in body:
+                match = re.search(r"[^\s]", line)
+                if match:
+                    offset = match.start(0)
+                    break
+
+            # remove indentation
+            assert offset > 0
+
+            for i in range(len(body)):
+                body[i] = body[i][offset:] if len(body[i]) > offset else "\n"
+
+            # make sure empty lines contain a newline
+            assert all([l[-1] == "\n" for l in body])
+
+            code_filename = "%s.%s" % (name, item.name[len(prefix):])
+
+            with open(os.path.join(dst_dirname, code_filename), "w") as f:
+                f.write(escape("".join(body)))
