@@ -17,7 +17,7 @@ prefix = "test_"
 
 
 for filename in os.listdir(src_dirname):
-    match = re.match(re.escape(prefix) + r"(.+)\.py", filename)
+    match = re.match(re.escape(prefix) + r"(.+)\.py$", filename)
     if not match:
         continue
 
@@ -25,27 +25,23 @@ for filename in os.listdir(src_dirname):
     source = open(os.path.join(src_dirname, filename)).readlines()
     tree = ast.parse("".join(source))
 
-    for item in tree.body:
-        if isinstance(item, ast.FunctionDef) and item.name.startswith(prefix):
+    for root in tree.body:
+        if isinstance(root, ast.FunctionDef) and root.name.startswith(prefix):
 
             # only ast.expr and ast.stmt have line numbers, see:
             # https://docs.python.org/2/library/ast.html#ast.AST.lineno
             line_numbers = []
 
-            def fill_line_numbers(node):
-                for child in ast.iter_child_nodes(node):
-                    if ((isinstance(child, ast.expr) or
-                         isinstance(child, ast.stmt)) and
-                        child.lineno > item.lineno):
+            for node in ast.walk(root):
+                if hasattr(node, "lineno"):
+                    line_numbers.append(node.lineno)
 
-                        line_numbers.append(child.lineno)
-                    fill_line_numbers(child)
-
-            fill_line_numbers(item)
             body = source[min(line_numbers)-1:max(line_numbers)]
+            while not body[0][0].isspace():
+                body = body[1:]
 
             # make sure we are inside an indented function body
-            assert all([re.match(r"\s", l[0]) for l in body])
+            assert all([l[0].isspace() for l in body])
 
             offset = 0
             for line in body:
@@ -63,7 +59,7 @@ for filename in os.listdir(src_dirname):
             # make sure empty lines contain a newline
             assert all([l[-1] == "\n" for l in body])
 
-            code_filename = "%s.%s" % (name, item.name[len(prefix):])
+            code_filename = "%s.%s" % (name, root.name[len(prefix):])
 
             with open(os.path.join(dst_dirname, code_filename), "w") as f:
                 f.write(escape("".join(body)))

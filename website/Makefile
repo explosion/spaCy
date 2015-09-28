@@ -1,8 +1,8 @@
 all: src/code site
 
-src/code: tests/test_*.py
+src/code:
 	mkdir -p src/code/
-	./create_code_samples tests/ src/code/
+	./create_code_samples ../tests/website/ src/code/
 
 site: site/index.html site/blog/ site/docs/ site/license/ site/blog/introducing-spacy/ site/blog/parsing-english-in-python/ site/blog/part-of-speech-POS-tagger-in-python/ site/tutorials/twitter-filter/ site/tutorials/syntax-search/ site/tutorials/mark-adverbs/ site/blog/writing-c-in-cython/ site/blog/how-spacy-works/
 

@@ -76,15 +76,8 @@ mixin summary
     block
 
 mixin en_example
-    pre.language-python
-        code
-            | from spacy.en import English
-            | from spacy._doc_examples import download_war_and_peace
-            | 
-            | unprocessed_unicode = download_war_and_peace()
-            | 
-            | nlp = English()
-            | doc = nlp(unprocessed_unicode)
+    pre.language-python: code
+        include ../../code/api.example_war_and_peace
 
 mixin SeeAlso(name, link_target)
     a(href=link_target)
@@ -197,19 +190,19 @@ mixin Func(type1, type2)
 
             pre.language-python
                 code
-                    | >>> nlp = spacy.en.English()
+                    | nlp = spacy.en.English()
                 
             p To keep the default components, but load data from a specified directory, use:
 
             pre.language-python
                 code
-                    | >>> nlp = English(data_dir=u'path/to/data_directory')
+                    | nlp = English(data_dir=u'path/to/data_directory')
 
             p To disable (and avoid loading) parts of the processing pipeline:
 
             pre.language-python
                 code
-                    | >>> nlp = English(parser=False, tagger=False, entity=False)
+                    | nlp = English(parser=False, tagger=False, entity=False)
             
             +params
                 +param("data_dir") 
@@ -249,17 +242,8 @@ mixin Func(type1, type2)
             +param("entity", types.bool)
                 | Whether to apply the named entity recognizer.
 
-        pre.language-python
-            code
-                | from spacy.en import English
-                | nlp = English()
-                | doc = nlp(u'Some text.) # Applies tagger, parser, entity
-                | doc = nlp(u'Some text.', parse=False) # Applies tagger and entity, not parser
-                | doc = nlp(u'Some text.', entity=False) # Applies tagger and parser, not entity
-                | doc = nlp(u'Some text.', tag=False) # Does not apply tagger, entity or parser
-                | doc = nlp(u'') # Zero-length tokens, not an error
-                | # doc = nlp(b'Some text') <-- Error: need unicode
-                | doc = nlp(b'Some text'.decode('utf8')) # Encode to unicode first.
+        pre.language-python: code
+            include ../../code/api.main_entry_point
 
 
 +declare_class("Doc", "doc")
@@ -297,41 +281,19 @@ mixin Func(type1, type2)
         
         +attribute("sents", types.generator)(open=true)
             |  Yields sentence #[code Span] objects.  Iterate over the span to get individual #[code Token] objects.  Sentence spans have no label.
-            pre.language-python
-                code
-                    | >>> from spacy.en import English
-                    | >>> nlp = English()
-                    | >>> doc = nlp(u'This is a sentence. Here's another...')
-                    | >>> for sentence in doc.sents:
-                    | ...     sentence.root.orth_
-                    | is
-                    | 's
- 
-    
+            pre.language-python: code
+                include ../../code/api.sentence_spans
+
         +attribute("ents", types.generator)(open=true)
             |  Yields named-entity #[code Span] objects.  Iterate over the span to get individual #[code Token] objects, or access the label:
-            pre.language-python
-                code
-                    | >>> from spacy.en import English
-                    | >>> nlp = English()
-                    | >>> tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
-                    | >>> ents = list(tokens.ents)
-                    | >>> ents[0].label, ents[0].label_, ents[0].orth_, ents[0].string
-                    | (112504, 'PERSON', 'Best', ents[0].string) 
+            pre.language-python: code
+                include ../../code/api.entity_spans
  
         +attribute("noun_chunks", types.generator)(open=true)
             |  Yields base noun-phrase #[code Span ] objects.  A base noun phrase, or "NP chunk", is a noun phrase that does not permit other NPs to be nested within it &ndash; so no NP-level coordination, no prepositional phrases, and no relative clauses.  For example:
-            pre.language-python
-                code
-                    | >>> from spacy.en import English
-                    | >>> nlp = English()
-                    | >>> doc = nlp('The sentence in this example has three noun chunks.')
-                    | >>> for chunk in doc.noun_chunks:
-                    | ...     print(chunk.label, chunk.orth_, '<--', chunk.root.head.orth_)
-                    | NP The sentence <-- has
-                    | NP this example <-- in
-                    | NP three noun chunks <-- has
-    
+            pre.language-python: code
+                include ../../code/api.noun_chunk_spans
+
     details
         summary: h4 Export/Import
         
@@ -346,18 +308,8 @@ mixin Func(type1, type2)
         +method("count_by", "attr_id")(open=true)
             | Produce a dict of #[code {attribute (int): count (ints)}] frequencies, keyed by the values of the given attribute ID.
         
-            pre.language-python
-                code
-                    | >>> from spacy.en import English, attrs
-                    | >>> nlp = English()
-                    | >>> tokens = nlp(u'apple apple orange banana')
-                    | >>> tokens.count_by(attrs.ORTH)
-                    | {12800L: 1, 11880L: 2, 7561L: 1}
-                    | >>> tokens.to_array([attrs.ORTH])
-                    | array([[11880],
-                    |         [11880],
-                    |         [7561],
-                    |         [12800]])
+            pre.language-python: code
+                include ../../code/api.count_by
 
         +method("from_array", "attrs, array")(open=true)
             Write to a #[code Doc] object, from an M*N array of attributes.
@@ -371,10 +323,8 @@ mixin Func(type1, type2)
         +method("read_bytes")(open=true)
             | A staticmethod, used to read serialized #[code Doc] objects from a file.
             | For example:
-            pre.language-python
-                code
-                    | for byte_string in Doc.read_bytes(open(location_of_bytes)):
-                    |     doc = Doc(nlp.vocab).from_bytes(byte_string)
+            pre.language-python: code
+                include ../../code/api.read_bytes
 
 +declare_class("Token", "token")
     p A Token represents a single word, punctuation or significant whitespace symbol. Integer IDs are provided for all string features. The (unicode) string is provided by an attribute of the same name followed by an underscore, e.g. #[code token.orth] is an integer ID, #[code token.orth_] is the unicode value. The only exception is the Token.string attribute, which is (unicode) string-typed.
@@ -476,11 +426,8 @@ mixin Func(type1, type2)
 
     +Define("token = span[i]")
         | Get the #[code Token] object at position #[em i], where #[em i] is an offset within the #[code Span], not the document.  That is:
-        pre.language-python
-            code
-                | span = doc[4:6]
-                | token = span[0]
-                | assert token.i == 4
+        pre.language-python: code
+            include ../../code/api.token_span
 
     ul
         +Define("for token in span")
@@ -503,53 +450,34 @@ mixin Func(type1, type2)
 
         +attribute("root")(open=true)
             | The first ancestor of the first word of the span that has its head outside the span. For example:
-            pre.language-python
-                code
-                    | >>> toks = nlp(u'I like New York in Autumn.')
+            pre.language-python: code
+                include ../../code/api.example_i_like_new_york1
 
             p Let's name the indices --- easier than writing #[code toks[4]] etc.
-
-            pre.language-python
-                code
-                    | >>> i, like, new, york, in_, autumn, dot = range(len(toks)) 
+            pre.language-python: code
+                include ../../code/api.example_i_like_new_york2
 
             p The head of #[em new] is #[em York], and the head of #[em York] is #[em like]
-            pre.language-python
-                code
-                    | >>> toks[new].head.orth_
-                    | 'York'
-                    | >>> toks[york].head.orth_
-                    | 'like'
+            pre.language-python: code
+                include ../../code/api.example_i_like_new_york3
 
             p Create a span for "New York". Its root is "York".
-            pre.language-python
-                code
-                    | >>> new_york = toks[new:york+1]
-                    | >>> new_york.root.orth_
-                    | 'York'
+            pre.language-python: code
+                include ../../code/api.example_i_like_new_york4
 
             p When there are multiple words with external dependencies, we take the first:
-
-            pre.language-python
-                code
-                    | >>> toks[autumn].head.orth_, toks[dot].head.orth_
-                    | ('in', like')
-                    | >>> autumn_dot = toks[autumn:]
-                    | >>> autumn_dot.root.orth_
-                    | 'Autumn'
+            pre.language-python: code
+                include ../../code/api.example_i_like_new_york5
 
         +attribute("lefts")(open=true)
             | Tokens that are to the left of the span, whose head is within the span, i.e. 
-            code.language-python
-                | lefts = [span.doc[i] for i in range(0, span.start)
-                |          if span.doc[i].head in span]
+            pre.language-python: code
+                include ../../code/api.navigating_the_parse_tree_lefts
 
         +attribute("rights")(open=true)
             | Tokens that are to the right of the span, whose head is within the span, i.e.
-            code.language-python
-                | rights = [span.doc[i] for i in range(span.end, len(span.doc))
-                |           if span.doc[i].head in span]
-
+            pre.language-python: code
+                include ../../code/api.navigating_the_parse_tree_rights
 
         +attribute("subtree")(open=true)
             | Tokens in the range #[code (start, end+1)], where #[code start] is the index of the leftmost word descended from a token in the span, and #[code end] is the index of the rightmost token descended from a token in the span.
@@ -669,10 +597,8 @@ mixin Func(type1, type2)
 
         +Define("for string in string_store")(open=true)
             | Iterate over strings in the string store, in order, such that the #[em i]th string in the sequence has the ID #[em i]:
-            pre.language-python
-                code
-                    | for i, string in enumerate(string_store):
-                    |     assert i == string_store[string]
+            pre.language-python: code
+                include ../../code/api.string_store
 
     +init
         p #[code StringStore.__init__] takes no arguments, so a new instance can be constructed as follows:

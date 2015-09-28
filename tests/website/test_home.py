@@ -3,17 +3,6 @@ import pytest
 import spacy.en
 
 
-@pytest.fixture(scope="session")
-def nlp():
-    from spacy.en import English
-    return English()
-
-
-@pytest.fixture()
-def doc(nlp):
-    return nlp('Hello, world. Here are two sentences.')
-
-
 @pytest.fixture()
 def token(doc):
     return doc[0]
