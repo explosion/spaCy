@@ -24,6 +24,7 @@ def test_load_resources_and_process_text():
     doc = nlp('Hello, world. Here are two sentences.')
 
 
+@pytest.mark.models
 def test_get_tokens_and_sentences(doc):
     token = doc[0]
     sentence = doc.sents.next()
@@ -65,6 +66,7 @@ def test_export_to_numpy_arrays(nlp, doc):
     assert list(doc_array[:, 1]) == [t.like_url for t in doc]
 
 
+@pytest.mark.models
 def test_word_vectors(nlp):
     doc = nlp("Apples and oranges are similar. Boots and hippos aren't.")
 
@@ -96,6 +98,7 @@ def test_part_of_speech_tags(nlp):
         print(token.tag_)
 
 
+@pytest.mark.models
 def test_syntactic_dependencies():
     def dependency_labels_to_root(token):
         '''Walk up the syntactic tree, collecting the arc labels.'''
@@ -106,6 +109,7 @@ def test_syntactic_dependencies():
         return dep_labels
 
 
+@pytest.mark.models
 def test_named_entities():
     def iter_products(docs):
         for doc in docs:
@@ -151,6 +155,7 @@ def test_calculate_inline_mark_up_on_original_string():
         return string
 
 
+@pytest.mark.models
 def test_efficient_binary_serialization(doc):
     byte_string = doc.as_bytes()
     open('/tmp/moby_dick.bin', 'wb').write(byte_string)
