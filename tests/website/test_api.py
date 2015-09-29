@@ -33,13 +33,12 @@ def test_sentence_spans(nlp):
     assert [s.root.orth_ for s in doc.sents] == ["is", "'s"]
 
 
-@pytest.mark.xfail
 def test_entity_spans(nlp):
     # from spacy.en import English
     # nlp = English()
     tokens = nlp('Mr. Best flew to New York on Saturday morning.')
     ents = list(tokens.ents)
-    assert ents[0].label == 112504
+    assert ents[0].label == 28061
     assert ents[0].label_ == 'PERSON'
     assert ents[0].orth_ == 'Best'
     assert ents[0].string == ents[0].string
@@ -57,26 +56,30 @@ def test_noun_chunk_spans(nlp):
     # NP three noun chunks <-- has
 
 
-@pytest.mark.xfail
 def test_count_by(nlp):
     # from spacy.en import English, attrs
     # nlp = English()
+    import numpy
     from spacy.en import attrs
     tokens = nlp('apple apple orange banana')
-    assert tokens.count_by(attrs.ORTH) == {12800L: 1,
-                                           11880L: 2,
-                                           7561L: 1}
-    assert tokens.to_array([attrs.ORTH]) == array([[11880],
-                                                   [11880],
-                                                   [7561],
-                                                   [12800]])
+    assert tokens.count_by(attrs.ORTH) == {2529: 2, 4117: 1, 6650: 1}
+    assert repr(tokens.to_array([attrs.ORTH])) == repr(numpy.array([[2529],
+                                                        [2529],
+                                                        [4117],
+                                                        [6650]], dtype=numpy.int32))
 
-
-@pytest.mark.xfail
-def test_read_bytes():
-    # TODO: missing imports
-    for byte_string in Doc.read_bytes(open('path/to/data_directory')):
-        doc = Doc(nlp.vocab).from_bytes(byte_string)
+@pytest.mark.models
+def test_read_bytes(nlp):
+    from spacy.tokens.doc import Doc
+    loc = '/tmp/test_serialize.bin'
+    with open(loc, 'wb') as file_:
+        file_.write(nlp(u'This is a document.').to_bytes())
+        file_.write(nlp(u'This is another.').to_bytes())
+    docs = []
+    with open(loc) as file_:
+        for byte_string in Doc.read_bytes(file_):
+            docs.append(Doc(nlp.vocab).from_bytes(byte_string))
+    assert len(docs) == 2
 
 
 def test_token_span(doc):
@@ -134,25 +137,22 @@ def test_example_i_like_new_york4(toks, new, york):
     assert new_york.root.orth_ == 'York'
 
 
-@pytest.mark.xfail
 def test_example_i_like_new_york5(toks, autumn, dot):
     assert toks[autumn].head.orth_ == 'in'
     assert toks[dot].head.orth_ == 'like'
-    # TODO: TypeError: readonly attribute
     autumn_dot = toks[autumn:]
     assert autumn_dot.root.orth_ == 'Autumn'
 
 
-@pytest.mark.xfail
 def test_navigating_the_parse_tree_lefts(doc):
     # TODO: where does the span object come from?
+    span = doc[:2]
     lefts = [span.doc[i] for i in range(0, span.start)
              if span.doc[i].head in span]
 
 
-@pytest.mark.xfail
 def test_navigating_the_parse_tree_rights(doc):
-    # TODO: where does the span object come from?
+    span = doc[:2]
     rights = [span.doc[i] for i in range(span.end, len(span.doc))
               if span.doc[i].head in span]
 
