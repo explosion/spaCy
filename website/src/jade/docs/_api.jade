@@ -374,27 +374,27 @@ mixin Func(type1, type2)
             +Define("whitespace_")
                 | The number of immediate syntactic children following the word in the string.
 
-        define
-            summary: h4 Navigating the Parse Tree
-    
-            ul
-                +Define("head")
-                    | The immediate syntactic head of the token.  If the token is the root of its sentence, it is the token itself, i.e. #[code root_token.head is root_token]
+    details
+        summary: h4 Navigating the Parse Tree
 
-                +Define("children")
-                    | An iterator that yields from lefts, and then yields from rights.
-    
-                +Define("subtree")
-                    | An iterator for the part of the sentence syntactically governed by the word, including the word itself.
-    
-                +Define("left_edge")
-                    | The leftmost edge of the token's subtree
-    
-                +Define("right_edge")
-                    | The rightmost edge of the token's subtree
+        ul
+            +Define("head")
+                | The immediate syntactic head of the token.  If the token is the root of its sentence, it is the token itself, i.e. #[code root_token.head is root_token]
 
-            +method("nbor(i=1)")(open=true)
-                | Get the #[em i]th next / previous neighboring token.
+            +Define("children")
+                | An iterator that yields from lefts, and then yields from rights.
+
+            +Define("subtree")
+                | An iterator for the part of the sentence syntactically governed by the word, including the word itself.
+
+            +Define("left_edge")
+                | The leftmost edge of the token's subtree
+
+            +Define("right_edge")
+                | The rightmost edge of the token's subtree
+
+        +method("nbor(i=1)")(open=true)
+            | Get the #[em i]th next / previous neighboring token.
 
     details
         summary: h4 Named Entities
