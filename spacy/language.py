@@ -186,19 +186,19 @@ class Language(object):
                  load_vectors=True):
         if load_vectors is not True:
             warn("load_vectors is deprecated", DeprecationWarning)
-        if data_dir is None:
+        if data_dir in (None, True):
             data_dir = self.default_data_dir()
-        if vocab is None:
+        if vocab in (None, True):
             vocab = self.default_vocab(data_dir)
-        if tokenizer is None:
+        if tokenizer in (None, True):
             tokenizer = self.default_tokenizer(vocab, data_dir=path.join(data_dir, 'tokenizer'))
-        if tagger is None:
+        if tagger in (None, True):
             tagger = self.default_tagger(vocab, data_dir=path.join(data_dir, 'pos'))
-        if entity is None:
+        if entity in (None, True):
             entity = self.default_entity(vocab, data_dir=path.join(data_dir, 'ner'))
-        if parser is None:
+        if parser in (None, True):
             parser = self.default_parser(vocab, data_dir=path.join(data_dir, 'deps'))
-        if matcher is None:
+        if matcher in (None, True):
             matcher = self.default_matcher(vocab, data_dir=data_dir)
         self.vocab = vocab
         self.tokenizer = tokenizer
