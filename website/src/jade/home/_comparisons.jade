@@ -35,15 +35,14 @@ mixin comparison(name)
             +columns("System", "Language", "Accuracy", "Speed")
 
         tbody
-            +row("spaCy v0.84", "Cython", "90.6", "13,963")
-            +row("spaCy v0.89", "Cython", "91.8", "13,000 (est.)")
+            +row("spaCy v0.93", "Cython", "91.8", "13,000 (est.)")
             +row("ClearNLP", "Java", "91.7", "10,271")
             +row("CoreNLP", "Java", "89.6", "8,602")
             +row("MATE", "Java", "92.5", "550")
             +row("Turbo", "C++", "92.4", "349")
             +row("Yara", "Java", "92.3", "340")
 
-    p Discussion with the authors led to accuracy improvements in spaCy, which have been accepted for publication in EMNLP, in joint work with Macquarie University (#[a(href="honnibal_johnson_emnlp2015.pdf") Honnibal and Johnson, 2015]). 
+    p Discussion with the authors led to accuracy improvements in spaCy, which have been accepted for publication in EMNLP, in joint work with Macquarie University (#[a(href="//aclweb.org/anthology/D/D15/D15-1162.pdf") Honnibal and Johnson, 2015]). 
 
 
 +comparison("How does spaCy compare to NLTK?")
