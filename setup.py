@@ -120,9 +120,9 @@ def run_setup(exts):
                                    "data/vocab/strings.txt"],
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
-        license="Dual: Commercial or AGPL",
+        license="MIT",
         install_requires=['numpy', 'murmurhash', 'cymem >= 1.11', 'preshed == 0.41',
-                          'thinc == 3.3', "unidecode", 'wget', 'plac', 'six',
+                          'thinc == 3.3', "text_unidecode", 'wget', 'plac', 'six',
                           'ujson'],
         setup_requires=["headers_workaround"],
     )
