@@ -19,7 +19,7 @@ cdef class Span:
             start = tokens.length - start
         if end < 0:
             end = tokens.length - end
-        self._seq = tokens
+        self.doc = tokens
         self.start = start
         self.end = end
         self.label = label
@@ -48,16 +48,16 @@ cdef class Span:
 
     def __getitem__(self, int i):
         if i < 0:
-            return self._seq[self.end + i]
+            return self.doc[self.end + i]
         else:
-            return self._seq[self.start + i]
+            return self.doc[self.start + i]
 
     def __iter__(self):
         for i in range(self.start, self.end):
-            yield self._seq[i]
+            yield self.doc[i]
 
     def merge(self, unicode tag, unicode lemma, unicode ent_type):
-        self._seq.merge(self[0].idx, self[-1].idx + len(self[-1]), tag, lemma, ent_type)
+        self.doc.merge(self[0].idx, self[-1].idx + len(self[-1]), tag, lemma, ent_type)
 
     def similarity(self, other):
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
@@ -127,12 +127,12 @@ cdef class Span:
         def __get__(self):
             # This should probably be called 'head', and the other one called
             # 'gov'. But we went with 'head' elsehwhere, and now we're stuck =/
-            cdef const TokenC* start = &self._seq.data[self.start]
-            cdef const TokenC* end = &self._seq.data[self.end]
+            cdef const TokenC* start = &self.doc.data[self.start]
+            cdef const TokenC* end = &self.doc.data[self.end]
             head = start
             while start <= (head + head.head) < end and head.head != 0:
                 head += head.head
-            return self._seq[head - self._seq.data]
+            return self.doc[head - self.doc.data]
 
     property lefts:
         """Tokens that are to the left of the Span, whose head is within the Span."""
@@ -172,5 +172,5 @@ cdef class Span:
 
     property label_:
         def __get__(self):
-            return self._seq.vocab.strings[self.label]
+            return self.doc.vocab.strings[self.label]
 

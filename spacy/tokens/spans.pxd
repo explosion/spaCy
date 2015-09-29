@@ -2,7 +2,7 @@ from .doc cimport Doc
 
 
 cdef class Span:
-    cdef readonly Doc _seq
+    cdef readonly Doc doc
     cdef public int i
     cdef public int start
     cdef public int end
