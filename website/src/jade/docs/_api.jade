@@ -1,5 +1,5 @@
 mixin declare_class(name, ref)
-    details
+    details(open=true)
         summary
             a(name=ref)
                 span.declaration
@@ -8,7 +8,7 @@ mixin declare_class(name, ref)
         block
 
 mixin method(name, parameters, link_name)
-    details(open=attributes.open)
+    details(open=true)
         summary
             a(name=link_name)
                 span.declaration
@@ -30,7 +30,7 @@ mixin param(name, type, value)
         block
 
 mixin attribute(name, type, value)
-    details(open=attributes.open)
+    details(open=true)
         summary
             span.declaration
                 code= name
@@ -49,25 +49,25 @@ mixin returns(type)
     | tmp
 
 mixin init
-    details
+    details(open=true)
         summary: h4 Constructors
 
         block
 
 mixin callable
-    details
+    details(open=true)
         summary: h4 Callable
 
         block
 
 mixin sequence
-    details
+    details(open=true)
         summary: h4 Sequence API
 
         block
 
 mixin maptype
-    details
+    details(open=true)
         summary: h4 Map
 
         block
@@ -75,9 +75,9 @@ mixin maptype
 mixin summary
     block
 
-mixin en_example
-    pre.language-python: code
-        include ../../code/api.example_war_and_peace
+//mixin en_example
+//    pre.language-python: code
+//        include ../../code/api.example_war_and_peace
 
 mixin SeeAlso(name, link_target)
     a(href=link_target)
@@ -276,7 +276,7 @@ mixin Func(type1, type2)
             +Define("len(doc)")
                 |  The number of tokens in the document.
 
-    details
+    details(open=true)
         summary: h4 Sentence, entity and noun chunk spans
         
         +attribute("sents", types.generator)(open=true)
@@ -294,7 +294,7 @@ mixin Func(type1, type2)
             pre.language-python: code
                 include ../../code/api.noun_chunk_spans
 
-    details
+    details(open=true)
         summary: h4 Export/Import
         
         +method("to_array", "attr_ids")(open=true)
@@ -328,7 +328,7 @@ mixin Func(type1, type2)
 
 +declare_class("Token", "token")
     p A Token represents a single word, punctuation or significant whitespace symbol. Integer IDs are provided for all string features. The (unicode) string is provided by an attribute of the same name followed by an underscore, e.g. #[code token.orth] is an integer ID, #[code token.orth_] is the unicode value. The only exception is the Token.string attribute, which is (unicode) string-typed.
-    details
+    details(open=true)
         summary: h4 String Features
   
         ul
@@ -337,18 +337,18 @@ mixin Func(type1, type2)
 
         +LexemeStrings()
 
-    details
+    details(open=true)
         summary: h4 Boolean Flags
         +LexemeBooleans
 
         +method("check_flag", "flag_id")(open=true)
             | Get the value of one of the boolean flags
 
-    details
+    details(open=true)
         summary: h4 Distributional Features
         +LexemeDistributional()
 
-    details
+    details(open=true)
         summary: h4 Alignment and Output
 
         ul
@@ -374,7 +374,7 @@ mixin Func(type1, type2)
             +Define("whitespace_")
                 | The number of immediate syntactic children following the word in the string.
 
-    details
+    details(open=true)
         summary: h4 Navigating the Parse Tree
 
         ul
@@ -396,7 +396,7 @@ mixin Func(type1, type2)
         +method("nbor(i=1)")(open=true)
             | Get the #[em i]th next / previous neighboring token.
 
-    details
+    details(open=true)
         summary: h4 Named Entities
 
         ul
@@ -445,7 +445,7 @@ mixin Func(type1, type2)
         +Define("end")
             | The end offset of the span, i.e. #[code.language-python span[-1].i + 1]
 
-    details
+    details(open=true)
         summary: h4 Navigating the Parse Tree
 
         +attribute("root")(open=true)
@@ -490,7 +490,7 @@ mixin Func(type1, type2)
             +Define("for noun_phrase in doc.noun_chunks")
             +Define("span = Span(doc, start, end, label=0)")
 
-    details
+    details(open=true)
         summary: h4 Strings
 
         ul
@@ -512,15 +512,15 @@ mixin Func(type1, type2)
 
     p Most Lexeme attributes can be set, with the exception of the primary key, #[code orth]. Assigning to an attribute of the Lexeme object writes to the underlying struct, so all tokens that are backed by that Lexeme will inherit the new value.
 
-    details
+    details(open=true)
         summary: h4 String Features
         +LexemeStrings
     
-    details
+    details(open=true)
         summary: h4 Boolean Features
         +LexemeBooleans
 
-    details
+    details(open=true)
         summary: h4 Distributional Features
         +LexemeDistributional
 
@@ -557,7 +557,7 @@ mixin Func(type1, type2)
             +Define("token.vocab")
             +Define("lexeme.vocab")
 
-    details
+    details(open=true)
         summary: h4 Save and Load
 
         +method("dump", "loc")(open=true)
@@ -617,7 +617,7 @@ mixin Func(type1, type2)
 
         p If you create another instance, it will map strings to different integers &ndash; which is usually not what you want.
 
-    details
+    details(open=true)
         summary: h4 Save and Load
 
         +method("dump", "loc")(open=true)
