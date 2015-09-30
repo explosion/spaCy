@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 import os
 from os import path
 import shutil
-import codecs
+import io
 import random
 
 import plac
@@ -169,7 +169,7 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
     nlp = Language()
     gold_tuples = read_docparse_file(dev_loc)
     scorer = Scorer()
-    out_file = codecs.open(out_loc, 'w', 'utf8')
+    out_file = io.open(out_loc, 'w', encoding='utf8')
     for raw_text, segmented_text, annot_tuples in gold_tuples:
         tokens = nlp(raw_text)
         for t in tokens:
