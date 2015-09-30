@@ -1,5 +1,5 @@
 from os import path
-import codecs
+import io
 import json
 import re
 
@@ -7,7 +7,7 @@ DATA_DIR = path.join(path.dirname(__file__), '..', 'data')
 
 
 def utf8open(loc, mode='r'):
-    return codecs.open(loc, mode, 'utf8')
+    return io.open(loc, mode, encoding='utf8')
 
 
 def read_lang_data(data_dir):
