@@ -20,7 +20,7 @@ from pathlib import Path
 
 from shutil import copyfile
 from shutil import copytree
-import codecs
+import io
 
 from spacy.en import get_lex_props
 from spacy.vocab import Vocab
@@ -41,7 +41,7 @@ def setup_tokenizer(lang_data_dir, tok_dir):
 
 def _read_clusters(loc):
     clusters = {}
-    for line in codecs.open(str(loc), 'r', 'utf8'):
+    for line in io.open(str(loc), 'r', encoding='utf8'):
         try:
             cluster, word, freq = line.split()
         except ValueError:
@@ -65,7 +65,7 @@ def _read_clusters(loc):
 
 def _read_probs(loc):
     probs = {}
-    for i, line in enumerate(codecs.open(str(loc), 'r', 'utf8')):
+    for i, line in enumerate(io.open(str(loc), 'r', encoding='utf8')):
         prob, word = line.split()
         prob = float(prob)
         probs[word] = prob

@@ -1,4 +1,4 @@
-import codecs
+import io
 
 from libc.string cimport memcpy
 from murmurhash.mrmr cimport hash64
@@ -112,11 +112,11 @@ cdef class StringStore:
             string = &self.strings[i]
             py_string = string.chars[:string.length]
             strings.append(py_string.decode('utf8'))
-        with codecs.open(loc, 'w', 'utf8') as file_:
+        with io.open(loc, 'w', encoding='utf8') as file_:
             file_.write(SEPARATOR.join(strings))
 
     def load(self, loc):
-        with codecs.open(loc, 'r', 'utf8') as file_:
+        with io.open(loc, 'r', encoding='utf8') as file_:
             strings = file_.read().split(SEPARATOR)
         cdef unicode string
         cdef bytes byte_string

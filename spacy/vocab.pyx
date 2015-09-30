@@ -4,7 +4,7 @@ from libc.stdint cimport int32_t
 
 import bz2
 from os import path
-import codecs
+import io
 import math
 
 from .lexeme cimport EMPTY_LEXEME
