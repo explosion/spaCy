@@ -96,7 +96,9 @@ cdef class Vocab:
         lex = <LexemeC*>self._by_hash.get(key)
         cdef size_t addr
         if lex != NULL:
-            assert lex.orth == self.strings[string]
+            if lex.orth != self.strings[string]:
+                raise LookupError.mismatched_strings(
+                    lex.orth, self.strings[lex.orth], string)
             return lex
         else:
             return self._new_lexeme(mem, string)
@@ -350,6 +352,21 @@ def write_binary_vectors(in_loc, out_loc):
             chars = <char*>word
             out_file.write_from(chars, len(word), sizeof(char))
             out_file.write_from(vec, vec_len, sizeof(float))
+
+
+class LookupError(Exception):
+    @classmethod
+    def mismatched_strings(cls, id_, id_string, original_string):
+        return cls(
+            "Error fetching a Lexeme from the Vocab. When looking up a string, "
+            "the lexeme returned had an orth ID that did not match the query string. "
+            "This means that the cached lexeme structs are mismatched to the "
+            "string encoding table. The mismatched:\n"
+            "Query string: {query}\n"
+            "Orth cached: {orth_str}\n"
+            "ID of orth: {orth_id}".format(
+                query=original_string, orth_str=id_string, orth_id=id_)
+        )
 
 
 class VectorReadError(Exception):
