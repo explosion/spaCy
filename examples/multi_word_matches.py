@@ -90,5 +90,6 @@ def main():
     for token in doc:
         print(token.text, token.ent_type_)
     
+
 if __name__ == '__main__':
     plac.call(main)
