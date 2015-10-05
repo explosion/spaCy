@@ -148,8 +148,9 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
     nlp.end_training(model_dir)
     print('done')
 
+
 def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False,
-             beam_width=None):
+             beam_width=None, cand_preproc=None):
     nlp = Language(data_dir=model_dir)
     if beam_width is not None:
         nlp.parser.cfg.beam_width = beam_width
@@ -166,16 +167,14 @@ def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False
                 nlp.entity(tokens)
                 nlp.parser(tokens)
             else:
-                tokens = nlp(raw_text, merge_mwes=False)
+                tokens = nlp(raw_text)
             gold = GoldParse(tokens, annot_tuples)
             scorer.score(tokens, gold, verbose=verbose)
     return scorer
 
 
-def write_parses(Language, dev_loc, model_dir, out_loc, beam_width=None):
+def write_parses(Language, dev_loc, model_dir, out_loc):
     nlp = Language(data_dir=model_dir)
-    if beam_width is not None:
-        nlp.parser.cfg.beam_width = beam_width
     gold_tuples = read_json_file(dev_loc)
     scorer = Scorer()
     out_file = codecs.open(out_loc, 'w', 'utf8')
@@ -188,14 +187,16 @@ def write_parses(Language, dev_loc, model_dir, out_loc, beam_width=None):
                 nlp.entity(tokens)
                 nlp.parser(tokens)
             else:
-                tokens = nlp(raw_text, merge_mwes=False)
-            gold = GoldParse(tokens, annot_tuples)
-            scorer.score(tokens, gold, verbose=False)
-            for t in tokens:
-                out_file.write(
-                    '%s\t%s\t%s\t%s\n' % (t.orth_, t.tag_, t.head.orth_, t.dep_)
-                )
-    return scorer
+                tokens = nlp(raw_text)
+            #gold = GoldParse(tokens, annot_tuples)
+            #scorer.score(tokens, gold, verbose=False)
+            for sent in tokens.sents:
+                for t in sent:
+                    if not t.is_space:
+                        out_file.write(
+                            '%d\t%s\t%s\t%s\t%s\n' % (t.i, t.orth_, t.tag_, t.head.orth_, t.dep_)
+                        )
+                out_file.write('\n')
 
 
 @plac.annotations(
@@ -220,14 +221,15 @@ def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbos
               gold_preproc=gold_preproc, n_sents=n_sents,
               corruption_level=corruption_level, n_iter=n_iter,
               verbose=verbose)
-    #if out_loc:
-    #    write_parses(English, dev_loc, model_dir, out_loc, beam_width=beam_width)
+    if out_loc:
+        write_parses(English, dev_loc, model_dir, out_loc)
     scorer = evaluate(English, list(read_json_file(dev_loc)),
                       model_dir, gold_preproc=gold_preproc, verbose=verbose)
     print('TOK', scorer.token_acc)
     print('POS', scorer.tags_acc)
     print('UAS', scorer.uas)
     print('LAS', scorer.las)
+    print('SBD', scorer.sbd_acc)
 
     print('NER P', scorer.ents_p)
     print('NER R', scorer.ents_r)
