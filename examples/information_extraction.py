@@ -45,14 +45,14 @@ def main():
     nlp = English()
     texts = [
         u'Net income was $9.4 million compared to the prior year of $2.7 million.',
-        u'Revenue exceeded twelve billion dollars, with a loss of $1b',
+        u'Revenue exceeded twelve billion dollars, with a loss of $1b.',
     ]
                
     for text in texts:
         doc = nlp(text)
         relations = extract_currency_relations(doc)
         for r1, r2 in relations:
-            print(r1.text, r2.ent_type_)
+            print(r1.text, r2.ent_type_, r2.text)
 
 
 if __name__ == '__main__':
