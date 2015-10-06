@@ -12,6 +12,15 @@ def test_getitem(EN):
     with pytest.raises(IndexError):
         tokens[len(tokens)]
 
+    span = tokens[1:1]
+    assert not '/'.join(token.orth_ for token in span)
+    span = tokens[1:4]
+    assert '/'.join(token.orth_ for token in span) == 'it/back/!'
+    with pytest.raises(ValueError):
+        tokens[1:4:2]
+    with pytest.raises(ValueError):
+        tokens[1:4:-1]
+
 
 @pytest.mark.models
 def test_serialize(EN):
