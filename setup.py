@@ -165,7 +165,8 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.tokens.doc', 'spacy.tokens.spans', 'spacy.tokens.token',
              'spacy.serialize.packer', 'spacy.serialize.huffman', 'spacy.serialize.bits',
              'spacy.cfile', 'spacy.matcher',
-             'spacy.syntax.ner']
+             'spacy.syntax.ner',
+             'spacy.symbols']
 
 
 if __name__ == '__main__':

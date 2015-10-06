@@ -67,6 +67,21 @@ cdef class Vocab:
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
         self.strings = StringStore()
+        # Load strings in a special order, so that we have an onset number for
+        # the vocabulary. This way, when words are added in order, the orth ID
+        # is the frequency rank of the word, plus a certain offset. The structural
+        # strings are loaded first, because the vocab is open-class, and these
+        # symbols are closed class.
+        #for attr_name in sorted(ATTR_NAMES.keys()):
+        #    _ = self.strings[attr_name]
+        #for univ_pos_name in sorted(UNIV_POS_NAMES.keys()):
+        #    _ = self.strings[pos_name]
+        #for morph_name in sorted(UNIV_MORPH_NAMES.keys()):
+        #    _ = self.strings[morph_name]
+        #for entity_type_name in sorted(ENTITY_TYPES.keys()):
+        #    _ = self.strings[entity_type_name]
+        #for tag_name in sorted(TAG_MAP.keys()):
+        #    _ = self.strings[tag_name]
         self.get_lex_attr = get_lex_attr
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.serializer_freqs = serializer_freqs
