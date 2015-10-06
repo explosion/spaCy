@@ -57,6 +57,9 @@ def test_getitem(EN):
     span = tokens[40:50]
     assert span.start == span.end == 7 and not to_str(span)
 
+    span = tokens[1:4]
+    assert span[0].orth_ == 'it'
+
 
 @pytest.mark.models
 def test_serialize(EN):
