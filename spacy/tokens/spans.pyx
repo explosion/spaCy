@@ -16,9 +16,13 @@ cdef class Span:
     def __cinit__(self, Doc tokens, int start, int end, int label=0, vector=None,
                   vector_norm=None):
         if start < 0:
-            start = tokens.length - start
+            start = tokens.length + start
+        start = min(tokens.length, max(0, start))
+
         if end < 0:
-            end = tokens.length - end
+            end = tokens.length + end
+        end = min(tokens.length, max(start, end))
+
         self.doc = tokens
         self.start = start
         self.end = end
