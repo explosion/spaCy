@@ -16,6 +16,8 @@ def test_getitem(EN):
     assert not '/'.join(token.orth_ for token in span)
     span = tokens[1:4]
     assert '/'.join(token.orth_ for token in span) == 'it/back/!'
+    span = tokens[1:4:1]
+    assert '/'.join(token.orth_ for token in span) == 'it/back/!'
     with pytest.raises(ValueError):
         tokens[1:4:2]
     with pytest.raises(ValueError):

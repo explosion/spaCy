@@ -87,7 +87,7 @@ cdef class Doc:
             token (Token):
         """
         if isinstance(i, slice):
-            if i.step is not None:
+            if not (i.step is None or i.step == 1):
                 raise ValueError("Stepped slices not supported in Span objects."
                                  "Try: list(doc)[start:stop:step] instead.")
             if i.start is None:
