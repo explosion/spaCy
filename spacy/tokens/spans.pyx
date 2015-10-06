@@ -50,7 +50,26 @@ cdef class Span:
             return 0
         return self.end - self.start
 
-    def __getitem__(self, int i):
+    def __getitem__(self, object i):
+        if isinstance(i, slice):
+            start, end, step = i.start, i.stop, i.step
+            if start is None:
+               start = 0
+            elif start < 0:
+               start += len(self)
+            start = min(len(self), max(0, start))
+
+            if end is None:
+               end = len(self)
+            elif end < 0:
+               end += len(self)
+            end = min(len(self), max(start, end))
+
+            start += self.start
+            end += self.start
+
+            return self.doc[start:end:i.step]
+
         if i < 0:
             return self.doc[self.end + i]
         else:

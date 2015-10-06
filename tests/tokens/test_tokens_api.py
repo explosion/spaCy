@@ -59,6 +59,24 @@ def test_getitem(EN):
 
     span = tokens[1:4]
     assert span[0].orth_ == 'it'
+    subspan = span[:]
+    assert to_str(subspan) == 'it/back/!'
+    subspan = span[:2]
+    assert to_str(subspan) == 'it/back'
+    subspan = span[1:]
+    assert to_str(subspan) == 'back/!'
+    subspan = span[:-1]
+    assert to_str(subspan) == 'it/back'
+    subspan = span[-2:]
+    assert to_str(subspan) == 'back/!'
+    subspan = span[1:2]
+    assert to_str(subspan) == 'back'
+    subspan = span[-2:-1]
+    assert to_str(subspan) == 'back'
+    subspan = span[-50:50]
+    assert to_str(subspan) == 'it/back/!'
+    subspan = span[50:-50]
+    assert subspan.start == subspan.end == 4 and not to_str(subspan)
 
 
 @pytest.mark.models
