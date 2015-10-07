@@ -9,19 +9,15 @@ from ..structs cimport TokenC, LexemeC
 from ..typedefs cimport flags_t, attr_t
 from ..attrs cimport attr_id_t
 from ..parts_of_speech cimport univ_pos_t
+from ..util import normalize_slice
 
 
 cdef class Span:
     """A slice from a Doc object."""
     def __cinit__(self, Doc tokens, int start, int end, int label=0, vector=None,
                   vector_norm=None):
-        if start < 0:
-            start = tokens.length + start
-        start = min(tokens.length, max(0, start))
-
-        if end < 0:
-            end = tokens.length + end
-        end = min(tokens.length, max(start, end))
+        if not (0 <= start <= end <= len(tokens)):
+            raise IndexError
 
         self.doc = tokens
         self.start = start
@@ -52,23 +48,10 @@ cdef class Span:
 
     def __getitem__(self, object i):
         if isinstance(i, slice):
-            start, end, step = i.start, i.stop, i.step
-            if start is None:
-               start = 0
-            elif start < 0:
-               start += len(self)
-            start = min(len(self), max(0, start))
-
-            if end is None:
-               end = len(self)
-            elif end < 0:
-               end += len(self)
-            end = min(len(self), max(start, end))
-
+            start, end = normalize_slice(len(self), i.start, i.stop, i.step)
             start += self.start
             end += self.start
-
-            return self.doc[start:end:i.step]
+            return Span(self.doc, start, end)
 
         if i < 0:
             return self.doc[self.end + i]
