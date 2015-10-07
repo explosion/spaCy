@@ -82,10 +82,10 @@ cdef class Doc:
         self._vector = None
 
     def __getitem__(self, object i):
-        """Get a token.
+        """Get a Token or a Span from the Doc.
 
         Returns:
-            token (Token):
+            token (Token) or span (Span):
         """
         if isinstance(i, slice):
             start, stop = normalize_slice(len(self), i.start, i.stop, i.step)
