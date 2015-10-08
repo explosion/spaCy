@@ -31,10 +31,7 @@ cdef class Morphology:
     cdef int assign_tag(self, TokenC* token, tag) except -1:
         cdef int tag_id
         if isinstance(tag, basestring):
-            try:
-                tag_id = self.reverse_index[self.strings[tag]]
-            except KeyError:
-                raise
+            tag_id = self.reverse_index[self.strings[tag]]
         else:
             tag_id = tag
         analysis = <MorphAnalysisC*>self._cache.get(tag_id, token.lex.orth)
