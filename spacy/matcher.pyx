@@ -41,7 +41,7 @@ cdef Pattern* init_pattern(Pool mem, object token_specs, attr_t entity_type) exc
             pattern[i].spec[j].attr = attr
             pattern[i].spec[j].value = value
     i = len(token_specs)
-    pattern[i].spec = <AttrValue*>mem.alloc(1, sizeof(AttrValue))
+    pattern[i].spec = <AttrValue*>mem.alloc(2, sizeof(AttrValue))
     pattern[i].spec[0].attr = ENT_TYPE
     pattern[i].spec[0].value = entity_type
     pattern[i].spec[1].attr = LENGTH
