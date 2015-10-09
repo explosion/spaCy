@@ -39,5 +39,5 @@ def test_noun_lemmas(lemmatizer):
 
 def test_smart_quotes(lemmatizer):
     do = lemmatizer.punct
-    assert do('“') == set(['``'])
-    assert do('“') == set(['``'])
+    assert do('“') == set(['"'])
+    assert do('“') == set(['"'])
