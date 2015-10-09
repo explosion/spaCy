@@ -47,7 +47,7 @@ def prebuild(build_dir='/tmp/build_spacy'):
         local('git clone %s .' % spacy_dir)
         local('virtualenv ' + build_venv)
         with prefix('cd %s && PYTHONPATH=`pwd` && . %s/bin/activate' % (build_dir, build_venv)):
-            local('pip install cython fabric fabtools')
+            local('pip install cython fabric fabtools pytest')
             local('pip install -r requirements.txt')
             local('fab clean make')
             local('cp -r %s/corpora/en/wordnet corpora/en/' % spacy_dir)
