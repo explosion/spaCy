@@ -45,6 +45,8 @@ def read_gazetteer(tokenizer, loc, n=-1):
         if i >= n:
             break
         phrase = tokenizer(phrase)
+        if all((t.is_lower and t.prob >= -10) for t in phrase):
+            continue
         if len(phrase) >= 2:
             yield phrase
 
