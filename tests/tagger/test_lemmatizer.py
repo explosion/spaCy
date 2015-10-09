@@ -41,8 +41,3 @@ def test_smart_quotes(lemmatizer):
     do = lemmatizer.punct
     assert do('“') == set(['``'])
     assert do('“') == set(['``'])
-
-
-def test_smart_quotes(lemmatizer):
-    do = lemmatizer.punct
-    assert do('–') == set(["--"])
