@@ -229,7 +229,6 @@ def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbos
     print('POS', scorer.tags_acc)
     print('UAS', scorer.uas)
     print('LAS', scorer.las)
-    print('SBD', scorer.sbd_acc)
 
     print('NER P', scorer.ents_p)
     print('NER R', scorer.ents_r)
