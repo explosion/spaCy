@@ -11,6 +11,7 @@ try:
 except ImportError:
     from text_unidecode import unidecode
 
+
 import re
 
 import math
@@ -165,7 +166,7 @@ cpdef unicode norm1(unicode string, lower_pc=0.0, upper_pc=0.0, title_pc=0.0):
 
 
 cpdef bytes asciied(unicode string):
-    cdef str stripped = unidecode(string)
+    stripped = unidecode(string)
     if not stripped:
         return b'???'
     return stripped.encode('ascii')
