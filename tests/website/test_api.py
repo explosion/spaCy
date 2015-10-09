@@ -132,6 +132,7 @@ def dot(toks):
     return tok(toks, "dot")
 
 
+@pytest.mark.models
 def test_example_i_like_new_york3(toks, new, york):
     assert toks[new].head.orth_ == 'York'
     assert toks[york].head.orth_ == 'like'
@@ -142,6 +143,7 @@ def test_example_i_like_new_york4(toks, new, york):
     assert new_york.root.orth_ == 'York'
 
 
+@pytest.mark.models
 def test_example_i_like_new_york5(toks, autumn, dot):
     assert toks[autumn].head.orth_ == 'in'
     assert toks[dot].head.orth_ == 'like'
@@ -149,6 +151,7 @@ def test_example_i_like_new_york5(toks, autumn, dot):
     assert autumn_dot.root.orth_ == 'Autumn'
 
 
+@pytest.mark.models
 def test_navigating_the_parse_tree_lefts(doc):
     # TODO: where does the span object come from?
     span = doc[:2]
@@ -156,6 +159,7 @@ def test_navigating_the_parse_tree_lefts(doc):
              if span.doc[i].head in span]
 
 
+@pytest.mark.models
 def test_navigating_the_parse_tree_rights(doc):
     span = doc[:2]
     rights = [span.doc[i] for i in range(span.end, len(span.doc))
