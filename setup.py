@@ -138,7 +138,7 @@ VERSION = '0.94'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
-    compile_args = ['-O3', '-Wno-strict-prototypes']
+    compile_args = ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']
     link_args = []
     if sys.prefix == 'darwin':
         compile_args.append(['-mmacosx-version-min=10.8', '-stdlib=libc++'])
