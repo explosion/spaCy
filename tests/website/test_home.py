@@ -22,6 +22,7 @@ def test_get_tokens_and_sentences(doc):
     assert sentence.text == 'Hello, world.'
 
 
+@pytest.mark.models
 def test_use_integer_ids_for_any_strings(nlp, token):
     hello_id = nlp.vocab.strings['Hello']
     hello_str = nlp.vocab.strings[hello_id]
@@ -68,6 +69,7 @@ def test_word_vectors(nlp):
     assert apples.similarity(oranges) > boots.similarity(hippos)
 
 
+@pytest.mark.models
 def test_part_of_speech_tags(nlp):
     from spacy.parts_of_speech import ADV
 
