@@ -17,7 +17,7 @@ def test_load_resources_and_process_text():
 @pytest.mark.models
 def test_get_tokens_and_sentences(doc):
     token = doc[0]
-    sentence = doc.sents.next()
+    sentence = next(doc.sents)
     assert token is sentence[0]
     assert sentence.text == 'Hello, world.'
 
