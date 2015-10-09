@@ -59,6 +59,7 @@ def test_noun_chunk_spans(nlp):
     # NP three noun chunks <-- has
 
 
+@pytest.mark.models
 def test_count_by(nlp):
     # from spacy.en import English, attrs
     # nlp = English()
