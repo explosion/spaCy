@@ -26,6 +26,7 @@ def test_main_entry_point(nlp):
     doc = nlp(b'Some text'.decode('utf8')) # Encode to unicode first.
 
 
+@pytest.mark.models
 def test_sentence_spans(nlp):
     # from spacy.en import English
     # nlp = English()
@@ -33,6 +34,7 @@ def test_sentence_spans(nlp):
     assert [s.root.orth_ for s in doc.sents] == ["is", "'s"]
 
 
+@pytest.mark.models
 def test_entity_spans(nlp):
     # from spacy.en import English
     # nlp = English()
@@ -44,6 +46,7 @@ def test_entity_spans(nlp):
     assert ents[0].string == ents[0].string
 
 
+@pytest.mark.models
 def test_noun_chunk_spans(nlp):
     # from spacy.en import English
     # nlp = English()
