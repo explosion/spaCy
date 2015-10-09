@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from spacy.en.attrs import *
+from spacy.attrs import *
 
 
 def test_is_alpha(en_vocab):

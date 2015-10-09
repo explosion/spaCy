@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
 from spacy.en import English
-from spacy.en.attrs import IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT
-from spacy.en.attrs import IS_SPACE, IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM
-from spacy.en.attrs import IS_STOP
+from spacy.attrs import IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT
+from spacy.attrs import IS_SPACE, IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM
+from spacy.attrs import IS_STOP
 
 import pytest
 

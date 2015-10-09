@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 import pytest
-import spacy.en
+import spacy
 
 
 @pytest.fixture()
@@ -45,7 +45,7 @@ def test_get_and_set_string_views_and_flags(nlp, token):
 
 
 def test_export_to_numpy_arrays(nlp, doc):
-    from spacy.en.attrs import ORTH, LIKE_URL, IS_OOV
+    from spacy.attrs import ORTH, LIKE_URL, IS_OOV
 
     attr_ids = [ORTH, LIKE_URL, IS_OOV]
     doc_array = doc.to_array(attr_ids)
