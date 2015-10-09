@@ -92,6 +92,7 @@ def test_token_span(doc):
     assert token.i == 4
 
 
+@pytest.mark.models
 def test_example_i_like_new_york1(nlp):
     toks = nlp('I like New York in Autumn.')
 
