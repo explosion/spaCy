@@ -138,6 +138,7 @@ def test_example_i_like_new_york3(toks, new, york):
     assert toks[york].head.orth_ == 'like'
 
 
+@pytest.mark.models
 def test_example_i_like_new_york4(toks, new, york):
     new_york = toks[new:york+1]
     assert new_york.root.orth_ == 'York'
