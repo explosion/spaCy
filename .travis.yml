@@ -24,4 +24,4 @@ install:
 
 # run tests
 script:
-  - "py.test tests/ website/tests/ -x"
+  - "py.test tests/ -x"
