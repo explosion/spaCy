@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import pytest
 
-from spacy.en import attrs
+from spacy import attrs
 
 
 def test_attr_of_token(EN):
