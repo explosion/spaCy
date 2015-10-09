@@ -80,7 +80,7 @@ def test_read_bytes(nlp):
         file_.write(nlp(u'This is a document.').to_bytes())
         file_.write(nlp(u'This is another.').to_bytes())
     docs = []
-    with open(loc) as file_:
+    with open(loc, 'rb') as file_:
         for byte_string in Doc.read_bytes(file_):
             docs.append(Doc(nlp.vocab).from_bytes(byte_string))
     assert len(docs) == 2
