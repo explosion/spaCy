@@ -1,3 +1,4 @@
+# -#- coding: utf-8 -*-
 import json
 
 contractions = {"n't", "'nt", "not", "'ve", "'d", "'ll", "'s", "'m", "'ma", "'re"}
@@ -132,7 +133,6 @@ hardcoded_specials = {
                 "Mt.": [{"F": "Mt.", "L": "Mount"}],
 
                 "''": [{"F": "''"}],
-
                 "Corp.": [{"F": "Corp."}],
                 "Inc.": [{"F": "Inc."}],
                 "Co.": [{"F": "Co."}],
@@ -412,6 +412,6 @@ def generate_specials():
 
 if __name__ == "__main__":
     specials = generate_specials()
-    with open("specials.json", "w") as f:
-        json.dump(specials, f)
+    with open("specials.json", "w") as file_:
+        file_.write(json.dumps(specials, indent=2))
 
