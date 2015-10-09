@@ -7,7 +7,7 @@ except ImportError:
     import json
 
 from .parts_of_speech import UNIV_POS_NAMES
-from .parts_of_speech cimport ADJ, VERB, NOUN
+from .parts_of_speech cimport ADJ, VERB, NOUN, PUNCT
 
 
 cdef class Morphology:
@@ -81,7 +81,7 @@ cdef class Morphology:
         if self.lemmatizer is None:
             return orth
         cdef unicode py_string = self.strings[orth]
-        if pos != NOUN and pos != VERB and pos != ADJ:
+        if pos != NOUN and pos != VERB and pos != ADJ and pos != PUNCT:
             return orth
         cdef set lemma_strings
         cdef unicode lemma_string
