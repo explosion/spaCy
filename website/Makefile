@@ -12,9 +12,6 @@ site/index.html: src/jade/header.jade src/jade/*.jade
 site/docs/: src/jade/docs/*.jade src/jade/header.jade
 	jade -P src/jade/docs/index.jade --out $@
 
-site/license/: src/jade/license/*.jade src/jade/header.jade 
-	jade -P src/jade/license/index.jade --out $@
-
 site/blog/: src/jade/blog/*.jade site/blog/*/ site/tutorials/*/ src/jade/header.jade
 	jade -P src/jade/blog/index.jade --out $@
 
