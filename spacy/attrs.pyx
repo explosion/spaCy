@@ -1,5 +1,5 @@
 IDS = {
-    "NULL_ATTR": NULL_ATTR,
+    "": NULL_ATTR,
     "IS_ALPHA": IS_ALPHA,
     "IS_ASCII": IS_ASCII,
     "IS_DIGIT": IS_DIGIT,
