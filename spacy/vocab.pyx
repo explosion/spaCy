@@ -19,6 +19,9 @@ from .typedefs cimport attr_t
 from .cfile cimport CFile
 from .lemmatizer import Lemmatizer
 
+from . import attrs
+from . import parts_of_speech
+
 from cymem.cymem cimport Address
 from . import util
 from .serialize.packer cimport Packer
@@ -72,15 +75,15 @@ cdef class Vocab:
         # is the frequency rank of the word, plus a certain offset. The structural
         # strings are loaded first, because the vocab is open-class, and these
         # symbols are closed class.
-        #for attr_name in sorted(ATTR_NAMES.keys()):
-        #    _ = self.strings[attr_name]
-        #for univ_pos_name in sorted(UNIV_POS_NAMES.keys()):
-        #    _ = self.strings[pos_name]
-        #for morph_name in sorted(UNIV_MORPH_NAMES.keys()):
+        for name in attrs.NAMES:
+            _ = self.strings[name]
+        for name in parts_of_speech.NAMES:
+            _ = self.strings[name]
+        #for morph_name in UNIV_MORPH_NAMES:
         #    _ = self.strings[morph_name]
-        #for entity_type_name in sorted(ENTITY_TYPES.keys()):
+        #for entity_type_name in entity_types.NAMES:
         #    _ = self.strings[entity_type_name]
-        #for tag_name in sorted(TAG_MAP.keys()):
+        #for tag_name in sorted(tag_map.keys()):
         #    _ = self.strings[tag_name]
         self.get_lex_attr = get_lex_attr
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
