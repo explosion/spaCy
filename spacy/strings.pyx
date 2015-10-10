@@ -1,5 +1,5 @@
 from __future__ import unicode_literals
-import io
+import codecs
 
 from libc.string cimport memcpy
 from murmurhash.mrmr cimport hash64
@@ -131,7 +131,7 @@ cdef class StringStore:
         cdef Utf8Str* string
         cdef unicode py_string
         cdef int i
-        with io.open(loc, 'w', encoding='utf8') as file_:
+        with codecs.open(loc, 'w', 'utf8') as file_:
             for i in range(1, self.size):
                 string = &self.c[i]
                 py_string = _decode(string)
@@ -140,7 +140,7 @@ cdef class StringStore:
                     file_.write(SEPARATOR)
 
     def load(self, loc):
-        with io.open(loc, 'r', encoding='utf8') as file_:
+        with codecs.open(loc, 'r', 'utf8') as file_:
             strings = file_.read().split(SEPARATOR)
         if strings == ['']:
             return None
