@@ -12,6 +12,72 @@ def test_getitem(EN):
     with pytest.raises(IndexError):
         tokens[len(tokens)]
 
+    def to_str(span):
+       return '/'.join(token.orth_ for token in span)
+
+    span = tokens[1:1]
+    assert not to_str(span)
+    span = tokens[1:4]
+    assert to_str(span) == 'it/back/!'
+    span = tokens[1:4:1]
+    assert to_str(span) == 'it/back/!'
+    with pytest.raises(ValueError):
+        tokens[1:4:2]
+    with pytest.raises(ValueError):
+        tokens[1:4:-1]
+
+    span = tokens[-3:6]
+    assert to_str(span) == 'He/pleaded'
+    span = tokens[4:-1]
+    assert to_str(span) == 'He/pleaded'
+    span = tokens[-5:-3]
+    assert to_str(span) == 'back/!'
+    span = tokens[5:4]
+    assert span.start == span.end == 5 and not to_str(span)
+    span = tokens[4:-3]
+    assert span.start == span.end == 4 and not to_str(span)
+
+    span = tokens[:]
+    assert to_str(span) == 'Give/it/back/!/He/pleaded/.'
+    span = tokens[4:]
+    assert to_str(span) == 'He/pleaded/.'
+    span = tokens[:4]
+    assert to_str(span) == 'Give/it/back/!'
+    span = tokens[:-3]
+    assert to_str(span) == 'Give/it/back/!'
+    span = tokens[-3:]
+    assert to_str(span) == 'He/pleaded/.'
+
+    span = tokens[4:50]
+    assert to_str(span) == 'He/pleaded/.'
+    span = tokens[-50:4]
+    assert to_str(span) == 'Give/it/back/!'
+    span = tokens[-50:-40]
+    assert span.start == span.end == 0 and not to_str(span)
+    span = tokens[40:50]
+    assert span.start == span.end == 7 and not to_str(span)
+
+    span = tokens[1:4]
+    assert span[0].orth_ == 'it'
+    subspan = span[:]
+    assert to_str(subspan) == 'it/back/!'
+    subspan = span[:2]
+    assert to_str(subspan) == 'it/back'
+    subspan = span[1:]
+    assert to_str(subspan) == 'back/!'
+    subspan = span[:-1]
+    assert to_str(subspan) == 'it/back'
+    subspan = span[-2:]
+    assert to_str(subspan) == 'back/!'
+    subspan = span[1:2]
+    assert to_str(subspan) == 'back'
+    subspan = span[-2:-1]
+    assert to_str(subspan) == 'back'
+    subspan = span[-50:50]
+    assert to_str(subspan) == 'it/back/!'
+    subspan = span[50:-50]
+    assert subspan.start == subspan.end == 4 and not to_str(subspan)
+
 
 @pytest.mark.models
 def test_serialize(EN):
