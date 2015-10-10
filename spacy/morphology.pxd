@@ -7,6 +7,7 @@ from .strings cimport StringStore
 from .typedefs cimport attr_t
 from .parts_of_speech cimport univ_pos_t
 
+from . cimport symbols
 
 cdef struct RichTagC:
     uint64_t morph
@@ -36,720 +37,252 @@ cdef class Morphology:
     cdef int assign_feature(self, uint64_t* morph, feature, value) except -1
 
 
+cpdef enum univ_morph_t:
+    NIL = 0
+    Animacy_anim = symbols.Animacy_anim
+    Animacy_inam
+    Aspect_freq
+    Aspect_imp
+    Aspect_mod
+    Aspect_none
+    Aspect_perf
+    Case_abe
+    Case_abl
+    Case_abs
+    Case_acc
+    Case_ade
+    Case_all
+    Case_cau
+    Case_com
+    Case_dat
+    Case_del
+    Case_dis
+    Case_ela
+    Case_ess
+    Case_gen
+    Case_ill
+    Case_ine
+    Case_ins
+    Case_loc
+    Case_lat
+    Case_nom
+    Case_par
+    Case_sub
+    Case_sup
+    Case_tem
+    Case_ter
+    Case_tra
+    Case_voc
+    Definite_two
+    Definite_def
+    Definite_red
+    Definite_ind
+    Degree_cmp
+    Degree_comp
+    Degree_none
+    Degree_pos
+    Degree_sup
+    Degree_abs
+    Degree_com
+    Degree_dim # du
+    Gender_com
+    Gender_fem
+    Gender_masc
+    Gender_neut
+    Mood_cnd
+    Mood_imp
+    Mood_ind
+    Mood_n
+    Mood_pot
+    Mood_sub
+    Mood_opt
+    Negative_neg
+    Negative_pos
+    Negative_yes
+    Number_com
+    Number_dual
+    Number_none
+    Number_plur
+    Number_sing
+    Number_ptan # bg
+    Number_count # bg
+    NumType_card
+    NumType_dist
+    NumType_frac
+    NumType_gen
+    NumType_mult
+    NumType_none
+    NumType_ord
+    NumType_sets
+    Person_one
+    Person_two
+    Person_three
+    Person_none
+    Poss_yes
+    PronType_advPart
+    PronType_art
+    PronType_default
+    PronType_dem
+    PronType_ind
+    PronType_int
+    PronType_neg
+    PronType_prs
+    PronType_rcp
+    PronType_rel
+    PronType_tot
+    PronType_clit
+    PronType_exc # es, ca, it, fa
+    Reflex_yes
+    Tense_fut
+    Tense_imp
+    Tense_past
+    Tense_pres
+    VerbForm_fin
+    VerbForm_ger
+    VerbForm_inf
+    VerbForm_none
+    VerbForm_part
+    VerbForm_partFut
+    VerbForm_partPast
+    VerbForm_partPres
+    VerbForm_sup
+    VerbForm_trans
+    VerbForm_gdv # la
+    Voice_act
+    Voice_cau
+    Voice_pass
+    Voice_mid # gkc
+    Voice_int # hb
+    Abbr_yes # cz, fi, sl, U
+    AdpType_prep # cz, U
+    AdpType_post # U
+    AdpType_voc # cz
+    AdpType_comprep # cz
+    AdpType_circ # U
+    AdvType_man
+    AdvType_loc
+    AdvType_tim
+    AdvType_deg
+    AdvType_cau
+    AdvType_mod
+    AdvType_sta
+    AdvType_ex
+    AdvType_adadj
+    ConjType_oper # cz, U
+    ConjType_comp # cz, U
+    Connegative_yes # fi
+    Derivation_minen # fi
+    Derivation_sti # fi
+    Derivation_inen # fi
+    Derivation_lainen # fi
+    Derivation_ja # fi
+    Derivation_ton # fi
+    Derivation_vs # fi
+    Derivation_ttain # fi
+    Derivation_ttaa # fi
+    Echo_rdp # U
+    Echo_ech # U
+    Foreign_foreign # cz, fi, U
+    Foreign_fscript # cz, fi, U
+    Foreign_tscript # cz, U
+    Foreign_yes # sl
+    Gender_dat_masc # bq, U
+    Gender_dat_fem # bq, U
+    Gender_erg_masc # bq
+    Gender_erg_fem # bq
+    Gender_psor_masc # cz, sl, U
+    Gender_psor_fem # cz, sl, U
+    Gender_psor_neut # sl
+    Hyph_yes # cz, U
+    InfForm_one # fi
+    InfForm_two # fi
+    InfForm_three # fi
+    NameType_geo # U, cz
+    NameType_prs # U, cz
+    NameType_giv # U, cz
+    NameType_sur # U, cz
+    NameType_nat # U, cz
+    NameType_com # U, cz
+    NameType_pro # U, cz
+    NameType_oth # U, cz
+    NounType_com # U
+    NounType_prop # U
+    NounType_class # U
+    Number_abs_sing # bq, U
+    Number_abs_plur # bq, U
+    Number_dat_sing # bq, U
+    Number_dat_plur # bq, U
+    Number_erg_sing # bq, U
+    Number_erg_plur # bq, U
+    Number_psee_sing # U
+    Number_psee_plur # U
+    Number_psor_sing # cz, fi, sl, U
+    Number_psor_plur # cz, fi, sl, U
+    NumForm_digit # cz, sl, U
+    NumForm_roman # cz, sl, U
+    NumForm_word # cz, sl, U
+    NumValue_one # cz, U
+    NumValue_two # cz, U
+    NumValue_three # cz, U
+    PartForm_pres # fi
+    PartForm_past # fi
+    PartForm_agt # fi
+    PartForm_neg # fi
+    PartType_mod # U
+    PartType_emp # U
+    PartType_res # U
+    PartType_inf # U
+    PartType_vbp # U
+    Person_abs_one # bq, U
+    Person_abs_two # bq, U
+    Person_abs_three # bq, U
+    Person_dat_one # bq, U
+    Person_dat_two # bq, U
+    Person_dat_three # bq, U
+    Person_erg_one # bq, U
+    Person_erg_two # bq, U
+    Person_erg_three # bq, U
+    Person_psor_one # fi, U
+    Person_psor_two # fi, U
+    Person_psor_three # fi, U
+    Polite_inf # bq, U
+    Polite_pol # bq, U
+    Polite_abs_inf # bq, U
+    Polite_abs_pol # bq, U
+    Polite_erg_inf # bq, U
+    Polite_erg_pol # bq, U
+    Polite_dat_inf # bq, U
+    Polite_dat_pol # bq, U
+    Prefix_yes # U
+    PrepCase_npr # cz
+    PrepCase_pre # U
+    PunctSide_ini # U
+    PunctSide_fin # U
+    PunctType_peri # U
+    PunctType_qest # U
+    PunctType_excl # U
+    PunctType_quot # U
+    PunctType_brck # U
+    PunctType_comm # U
+    PunctType_colo # U
+    PunctType_semi # U
+    PunctType_dash # U
+    Style_arch # cz, fi, U
+    Style_rare # cz, fi, U
+    Style_poet # cz, U
+    Style_norm # cz, U
+    Style_coll # cz, U
+    Style_vrnc # cz, U
+    Style_sing # cz, U
+    Style_expr # cz, U
+    Style_derg # cz, U
+    Style_vulg # cz, U
+    Style_yes # fi, U
+    StyleVariant_styleShort # cz
+    StyleVariant_styleBound # cz, sl
+    VerbType_aux # U
+    VerbType_cop # U
+    VerbType_mod # U
+    VerbType_light # U
 
-#
-#cpdef enum Feature_t:
-#    Abbr
-#    AdpType
-#    AdvType
-#    ConjType
-#    Connegative
-#    Derivation
-#    Echo
-#    Foreign
-#    Gender_dat
-#    Gender_erg
-#    Gender_psor
-#    Hyph
-#    InfForm
-#    NameType
-#    NounType
-#    NumberAbs
-#    NumberDat
-#    NumberErg
-#    NumberPsee
-#    NumberPsor
-#    NumForm
-#    NumValue
-#    PartForm
-#    PartType
-#    Person_abs
-#    Person_dat
-#    Person_psor
-#    Polite
-#    Polite_abs
-#    Polite_dat
-#    Prefix
-#    PrepCase
-#    PunctSide
-#    PunctType
-#    Style
-#    Typo
-#    Variant
-#    VerbType
-#
-#
-#cpdef enum Animacy:
-#    Anim
-#    Inam
-#
-#
-#cpdef enum Aspect:
-#    Freq
-#    Imp
-#    Mod
-#    None_
-#    Perf
-#
-#
-#cpdef enum Case1:
-#    Nom
-#    Gen
-#    Acc
-#    Dat
-#    Voc
-#    Abl
-#    
-#cdef enum Case2:
-#    Abe
-#    Abs
-#    Ade
-#    All
-#    Cau
-#    Com
-#    Del
-#    Dis
-#
-#cdef enum Case3:
-#    Ela
-#    Ess
-#    Ill
-#    Ine
-#    Ins
-#    Loc
-#    Lat
-#    Par
-#
-#cdef enum Case4:
-#    Sub
-#    Sup
-#    Tem
-#    Ter
-#    Tra
-#
-#
-#cpdef enum Definite:
-#    Two
-#    Def
-#    Red
-#    Ind
-#
-#
-#cpdef enum Degree:
-#    Cmp
-#    Comp
-#    None_
-#    Pos
-#    Sup
-#    Abs
-#    Com
-#    Degree # du
-#
-#
-#cpdef enum Gender:
-#    Com
-#    Fem
-#    Masc
-#    Neut
-#
-#
-#cpdef enum Mood:
-#    Cnd
-#    Imp
-#    Ind
-#    N
-#    Pot
-#    Sub
-#    Opt
-#
-#
-#cpdef enum Negative:
-#    Neg
-#    Pos
-#    Yes
-#
-#
-#cpdef enum Number:
-#    Com
-#    Dual
-#    None_
-#    Plur
-#    Sing
-#    Ptan # bg
-#    Count # bg
-#
-#
-#cpdef enum NumType:
-#    Card
-#    Dist
-#    Frac
-#    Gen
-#    Mult
-#    None_
-#    Ord
-#    Sets
-#
-#
-#cpdef enum Person:
-#    One
-#    Two
-#    Three
-#    None_
-#
-#
-#cpdef enum Poss:
-#    Yes
-#
-#
-#cpdef enum PronType1:
-#    AdvPart
-#    Art
-#    Default
-#    Dem
-#    Ind
-#    Int
-#    Neg
-#
-#cpdef enum PronType2:
-#    Prs
-#    Rcp
-#    Rel
-#    Tot
-#    Clit
-#    Exc # es, ca, it, fa
-#    Clit # it
-#
-#
-#cpdef enum Reflex:
-#    Yes
-#
-#
-#cpdef enum Tense:
-#    Fut
-#    Imp
-#    Past
-#    Pres
-#
-#cpdef enum VerbForm1:
-#    Fin
-#    Ger
-#    Inf
-#    None_
-#    Part
-#    PartFut
-#    PartPast
-#
-#cpdef enum VerbForm2:
-#    PartPres
-#    Sup
-#    Trans
-#    Gdv # la
-#
-#
-#cpdef enum Voice:
-#    Act
-#    Cau
-#    Pass
-#    Mid # gkc
-#    Int # hb
-#
-#
-#cpdef enum Abbr:
-#    Yes # cz, fi, sl, U
-#
-#cpdef enum AdpType:
-#    Prep # cz, U
-#    Post # U
-#    Voc # cz
-#    Comprep # cz
-#    Circ # U
-#    Voc # U
-#
-#
-#cpdef enum AdvType1:
-#    # U
-#    Man
-#    Loc
-#    Tim
-#    Deg
-#    Cau
-#    Mod
-#    Sta
-#    Ex
-#
-#cpdef enum AdvType2:
-#    Adadj
-#
-#cpdef enum ConjType:
-#    Oper # cz, U
-#    Comp # cz, U
-#
-#cpdef enum Connegative:
-#    Yes # fi
-#
-#
-#cpdef enum Derivation1:
-#    Minen # fi
-#    Sti # fi
-#    Inen # fi
-#    Lainen # fi
-#    Ja # fi
-#    Ton # fi
-#    Vs # fi
-#    Ttain # fi
-#
-#cpdef enum Derivation2:
-#    Ttaa
-#
-#
-#cpdef enum Echo:
-#    Rdp # U
-#    Ech # U
-#
-#
-#cpdef enum Foreign:
-#    Foreign # cz, fi, U
-#    Fscript # cz, fi, U
-#    Tscript # cz, U
-#    Yes # sl
-#
-#
-#cpdef enum Gender_dat:
-#    Masc # bq, U
-#    Fem # bq, U
-#
-#
-#cpdef enum Gender_erg:
-#    Masc # bq
-#    Fem # bq
-#
-#
-#cpdef enum Gender_psor:
-#    Masc # cz, sl, U
-#    Fem # cz, sl, U
-#    Neut # sl
-#
-#
-#cpdef enum Hyph:
-#    Yes # cz, U
-#
-#
-#cpdef enum InfForm:
-#    One # fi
-#    Two # fi
-#    Three # fi
-#
-#
-#cpdef enum NameType:
-#    Geo # U, cz
-#    Prs # U, cz
-#    Giv # U, cz
-#    Sur # U, cz
-#    Nat # U, cz
-#    Com # U, cz
-#    Pro # U, cz
-#    Oth # U, cz
-#
-#
-#cpdef enum NounType:
-#    Com # U
-#    Prop # U
-#    Class # U
-#
-#cpdef enum Number_abs:
-#    Sing # bq, U
-#    Plur # bq, U
-#
-#cpdef enum Number_dat:
-#    Sing # bq, U
-#    Plur # bq, U
-#
-#cpdef enum Number_erg:
-#    Sing # bq, U
-#    Plur # bq, U
-#
-#cpdef enum Number_psee:
-#    Sing # U
-#    Plur # U
-#
-#
-#cpdef enum Number_psor:
-#    Sing # cz, fi, sl, U
-#    Plur # cz, fi, sl, U
-#
-#
-#cpdef enum NumForm:
-#    Digit # cz, sl, U
-#    Roman # cz, sl, U
-#    Word # cz, sl, U
-#
-#
-#cpdef enum NumValue:
-#    One # cz, U
-#    Two # cz, U
-#    Three # cz, U
-#
-#
-#cpdef enum PartForm:
-#    Pres # fi
-#    Past # fi
-#    Agt # fi
-#    Neg # fi
-#
-#
-#cpdef enum PartType:
-#    Mod # U
-#    Emp # U
-#    Res # U
-#    Inf # U
-#    Vbp # U
-#
-#cpdef enum Person_abs:
-#    One # bq, U
-#    Two # bq, U
-#    Three # bq, U
-#
-#
-#cpdef enum Person_dat:
-#    One # bq, U
-#    Two # bq, U
-#    Three # bq, U
-#
-#
-#cpdef enum Person_erg:
-#    One # bq, U
-#    Two # bq, U
-#    Three # bq, U
-#
-#
-#cpdef enum Person_psor:
-#    One # fi, U
-#    Two # fi, U
-#    Three # fi, U
-#
-#
-#cpdef enum Polite:
-#    Inf # bq, U
-#    Pol # bq, U
-#
-#
-#cpdef enum Polite_abs:
-#    Inf # bq, U
-#    Pol # bq, U
-#
-#
-#cpdef enum Polite_erg:
-#    Inf # bq, U
-#    Pol # bq, U
-#
-#
-#cpdef enum Polite_dat:
-#    Inf # bq, U
-#    Pol # bq, U
-#
-#
-#cpdef enum Prefix:
-#    Yes # U
-#
-#
-#cpdef enum PrepCase:
-#    Npr # cz
-#    Pre # U
-#
-#
-#cpdef enum PunctSide:
-#    Ini # U
-#    Fin # U
-#
-#cpdef enum PunctType1:
-#    Peri # U
-#    Qest # U
-#    Excl # U
-#    Quot # U
-#    Brck # U
-#    Comm # U
-#    Colo # U
-#    Semi # U
-#
-#cpdef enum PunctType2:
-#    Dash # U
-#
-#
-#cpdef enum Style1:
-#    Arch # cz, fi, U
-#    Rare # cz, fi, U
-#    Poet # cz, U
-#    Norm # cz, U
-#    Coll # cz, U
-#    Vrnc # cz, U
-#    Sing # cz, U
-#    Expr # cz, U
-#
-#
-#cpdef enum Style2:
-#    Derg # cz, U
-#    Vulg # cz, U
-#
-#
-#cpdef enum Typo:
-#    Yes # fi, U
-#
-#
-#cpdef enum Variant:
-#    Short # cz
-#    Bound # cz, sl
-#
-#
-#cpdef enum VerbType:
-#    Aux # U
-#    Cop # U
-#    Mod # U
-#    Light # U
-#
 
-cpdef enum Value_t:
-    Animacy_Anim
-    Animacy_Inam
-    Aspect_Freq
-    Aspect_Imp
-    Aspect_Mod
-    Aspect_None_
-    Aspect_Perf
-    Case_Abe
-    Case_Abl
-    Case_Abs
-    Case_Acc
-    Case_Ade
-    Case_All
-    Case_Cau
-    Case_Com
-    Case_Dat
-    Case_Del
-    Case_Dis
-    Case_Ela
-    Case_Ess
-    Case_Gen
-    Case_Ill
-    Case_Ine
-    Case_Ins
-    Case_Loc
-    Case_Lat
-    Case_Nom
-    Case_Par
-    Case_Sub
-    Case_Sup
-    Case_Tem
-    Case_Ter
-    Case_Tra
-    Case_Voc
-    Definite_Two
-    Definite_Def
-    Definite_Red
-    Definite_Ind
-    Degree_Cmp
-    Degree_Comp
-    Degree_None
-    Degree_Pos
-    Degree_Sup
-    Degree_Abs
-    Degree_Com
-    Degree_Dim # du
-    Gender_Com
-    Gender_Fem
-    Gender_Masc
-    Gender_Neut
-    Mood_Cnd
-    Mood_Imp
-    Mood_Ind
-    Mood_N
-    Mood_Pot
-    Mood_Sub
-    Mood_Opt
-    Negative_Neg
-    Negative_Pos
-    Negative_Yes
-    Number_Com
-    Number_Dual
-    Number_None
-    Number_Plur
-    Number_Sing
-    Number_Ptan # bg
-    Number_Count # bg
-    NumType_Card
-    NumType_Dist
-    NumType_Frac
-    NumType_Gen
-    NumType_Mult
-    NumType_None
-    NumType_Ord
-    NumType_Sets
-    Person_One
-    Person_Two
-    Person_Three
-    Person_None
-    Poss_Yes
-    PronType_AdvPart
-    PronType_Art
-    PronType_Default
-    PronType_Dem
-    PronType_Ind
-    PronType_Int
-    PronType_Neg
-    PronType_Prs
-    PronType_Rcp
-    PronType_Rel
-    PronType_Tot
-    PronType_Clit
-    PronType_Exc # es, ca, it, fa
-    Reflex_Yes
-    Tense_Fut
-    Tense_Imp
-    Tense_Past
-    Tense_Pres
-    VerbForm_Fin
-    VerbForm_Ger
-    VerbForm_Inf
-    VerbForm_None
-    VerbForm_Part
-    VerbForm_PartFut
-    VerbForm_PartPast
-    VerbForm_PartPres
-    VerbForm_Sup
-    VerbForm_Trans
-    VerbForm_Gdv # la
-    Voice_Act
-    Voice_Cau
-    Voice_Pass
-    Voice_Mid # gkc
-    Voice_Int # hb
-    Abbr_Yes # cz, fi, sl, U
-    AdpType_Prep # cz, U
-    AdpType_Post # U
-    AdpType_Voc # cz
-    AdpType_Comprep # cz
-    AdpType_Circ # U
-    AdvType_Man
-    AdvType_Loc
-    AdvType_Tim
-    AdvType_Deg
-    AdvType_Cau
-    AdvType_Mod
-    AdvType_Sta
-    AdvType_Ex
-    AdvType_Adadj
-    ConjType_Oper # cz, U
-    ConjType_Comp # cz, U
-    Connegative_Yes # fi
-    Derivation_Minen # fi
-    Derivation_Sti # fi
-    Derivation_Inen # fi
-    Derivation_Lainen # fi
-    Derivation_Ja # fi
-    Derivation_Ton # fi
-    Derivation_Vs # fi
-    Derivation_Ttain # fi
-    Derivation_Ttaa # fi
-    Echo_Rdp # U
-    Echo_Ech # U
-    Foreign_Foreign # cz, fi, U
-    Foreign_Fscript # cz, fi, U
-    Foreign_Tscript # cz, U
-    Foreign_Yes # sl
-    Gender_dat_Masc # bq, U
-    Gender_dat_Fem # bq, U
-    Gender_erg_Masc # bq
-    Gender_erg_Fem # bq
-    Gender_psor_Masc # cz, sl, U
-    Gender_psor_Fem # cz, sl, U
-    Gender_psor_Neut # sl
-    Hyph_Yes # cz, U
-    InfForm_One # fi
-    InfForm_Two # fi
-    InfForm_Three # fi
-    NameType_Geo # U, cz
-    NameType_Prs # U, cz
-    NameType_Giv # U, cz
-    NameType_Sur # U, cz
-    NameType_Nat # U, cz
-    NameType_Com # U, cz
-    NameType_Pro # U, cz
-    NameType_Oth # U, cz
-    NounType_Com # U
-    NounType_Prop # U
-    NounType_Class # U
-    Number_abs_Sing # bq, U
-    Number_abs_Plur # bq, U
-    Number_dat_Sing # bq, U
-    Number_dat_Plur # bq, U
-    Number_erg_Sing # bq, U
-    Number_erg_Plur # bq, U
-    Number_psee_Sing # U
-    Number_psee_Plur # U
-    Number_psor_Sing # cz, fi, sl, U
-    Number_psor_Plur # cz, fi, sl, U
-    NumForm_Digit # cz, sl, U
-    NumForm_Roman # cz, sl, U
-    NumForm_Word # cz, sl, U
-    NumValue_One # cz, U
-    NumValue_Two # cz, U
-    NumValue_Three # cz, U
-    PartForm_Pres # fi
-    PartForm_Past # fi
-    PartForm_Agt # fi
-    PartForm_Neg # fi
-    PartType_Mod # U
-    PartType_Emp # U
-    PartType_Res # U
-    PartType_Inf # U
-    PartType_Vbp # U
-    Person_abs_One # bq, U
-    Person_abs_Two # bq, U
-    Person_abs_Three # bq, U
-    Person_dat_One # bq, U
-    Person_dat_Two # bq, U
-    Person_dat_Three # bq, U
-    Person_erg_One # bq, U
-    Person_erg_Two # bq, U
-    Person_erg_Three # bq, U
-    Person_psor_One # fi, U
-    Person_psor_Two # fi, U
-    Person_psor_Three # fi, U
-    Polite_Inf # bq, U
-    Polite_Pol # bq, U
-    Polite_abs_Inf # bq, U
-    Polite_abs_Pol # bq, U
-    Polite_erg_Inf # bq, U
-    Polite_erg_Pol # bq, U
-    Polite_dat_Inf # bq, U
-    Polite_dat_Pol # bq, U
-    Prefix_Yes # U
-    PrepCase_Npr # cz
-    PrepCase_Pre # U
-    PunctSide_Ini # U
-    PunctSide_Fin # U
-    PunctType_Peri # U
-    PunctType_Qest # U
-    PunctType_Excl # U
-    PunctType_Quot # U
-    PunctType_Brck # U
-    PunctType_Comm # U
-    PunctType_Colo # U
-    PunctType_Semi # U
-    PunctType_Dash # U
-    Style_Arch # cz, fi, U
-    Style_Rare # cz, fi, U
-    Style_Poet # cz, U
-    Style_Norm # cz, U
-    Style_Coll # cz, U
-    Style_Vrnc # cz, U
-    Style_Sing # cz, U
-    Style_Expr # cz, U
-    Style_Derg # cz, U
-    Style_Vulg # cz, U
-    Style_Yes # fi, U
-    StyleVariant_StyleShort # cz
-    StyleVariant_StyleBound # cz, sl
-    VerbType_Aux # U
-    VerbType_Cop # U
-    VerbType_Mod # U
-    VerbType_Light # U
