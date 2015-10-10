@@ -21,6 +21,7 @@ from ..lexeme cimport Lexeme
 from .spans cimport Span
 from .token cimport Token
 from ..serialize.bits cimport BitArray
+from ..util import normalize_slice
 
 
 DEF PADDING = 5
@@ -81,20 +82,14 @@ cdef class Doc:
         self._vector = None
 
     def __getitem__(self, object i):
-        """Get a token.
+        """Get a Token or a Span from the Doc.
 
         Returns:
-            token (Token):
+            token (Token) or span (Span):
         """
         if isinstance(i, slice):
-            if i.step is not None:
-                raise ValueError("Stepped slices not supported in Span objects."
-                                 "Try: list(doc)[start:stop:step] instead.")
-            if i.start is None:
-                i = slice(0, i.stop)
-            if i.stop is None:
-                i = slice(i.start, len(self))
-            return Span(self, i.start, i.stop, label=0)
+            start, stop = normalize_slice(len(self), i.start, i.stop, i.step)
+            return Span(self, start, stop, label=0)
 
         if i < 0:
             i = self.length + i
