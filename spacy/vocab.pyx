@@ -76,9 +76,11 @@ cdef class Vocab:
         # strings are loaded first, because the vocab is open-class, and these
         # symbols are closed class.
         for name in attrs.NAMES:
-            _ = self.strings[name]
+            if name:
+                _ = self.strings[name]
         for name in parts_of_speech.NAMES:
-            _ = self.strings[name]
+            if name:
+                _ = self.strings[name]
         #for morph_name in UNIV_MORPH_NAMES:
         #    _ = self.strings[morph_name]
         #for entity_type_name in entity_types.NAMES:

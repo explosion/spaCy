@@ -2,7 +2,7 @@ from __future__ import unicode_literals
 
 
 IDS = {
-    "NO_TAG": NO_TAG,
+    "": NO_TAG,
     "ADJ": ADJ,
     "ADP": ADP,
     "ADV": ADV,
