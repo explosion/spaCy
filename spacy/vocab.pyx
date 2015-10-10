@@ -7,7 +7,7 @@ from libc.stdint cimport uint64_t
 
 import bz2
 from os import path
-import codecs
+import io
 import math
 import json
 

@@ -1,5 +1,7 @@
 import numpy
-import codecs
+import io
+import json
+import ujson
 import random
 import re
 import os
