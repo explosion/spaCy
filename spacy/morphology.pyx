@@ -6,7 +6,7 @@ try:
 except ImportError:
     import json
 
-from .parts_of_speech import UNIV_POS_NAMES
+from .parts_of_speech import IDS as POS_IDS
 from .parts_of_speech cimport ADJ, VERB, NOUN, PUNCT
 
 
@@ -24,7 +24,7 @@ cdef class Morphology:
             self.rich_tags[i].id = i
             self.rich_tags[i].name = self.strings[tag_str]
             self.rich_tags[i].morph = 0
-            self.rich_tags[i].pos = UNIV_POS_NAMES[props['pos'].upper()]
+            self.rich_tags[i].pos = POS_IDS[props['pos'].upper()]
             self.reverse_index[self.rich_tags[i].name] = i
         self._cache = PreshMapArray(self.n_tags)
 

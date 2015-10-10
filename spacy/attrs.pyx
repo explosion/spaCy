@@ -1,4 +1,4 @@
-ATTR_IDS = {
+IDS = {
     "NULL_ATTR": NULL_ATTR,
     "IS_ALPHA": IS_ALPHA,
     "IS_ASCII": IS_ASCII,
@@ -87,4 +87,4 @@ ATTR_IDS = {
 }
 
 # ATTR IDs, in order of the symbol
-ATTR_NAMES = [key for key, value in sorted(ATTR_IDS.items(), key=lambda item: item[1])]
+NAMES = [key for key, value in sorted(IDS.items(), key=lambda item: item[1])]
