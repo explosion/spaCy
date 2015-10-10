@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
 from spacy.lemmatizer import Lemmatizer, read_index, read_exc
@@ -34,3 +35,9 @@ def test_noun_lemmas(lemmatizer):
     assert do('planets') == set(['planet'])
     assert do('ring') == set(['ring'])
     assert do('axes') == set(['axis', 'axe', 'ax'])
+
+
+def test_smart_quotes(lemmatizer):
+    do = lemmatizer.punct
+    assert do('“') == set(['"'])
+    assert do('“') == set(['"'])

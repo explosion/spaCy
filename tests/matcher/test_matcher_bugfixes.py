@@ -3,6 +3,7 @@ import pytest
 
 from spacy.matcher import Matcher
 
+@pytest.mark.xfail
 def test_overlap_issue118(EN):
     '''Test a bug that arose from having overlapping matches'''
     doc = EN.tokenizer(u'how many points did lebron james score against the boston celtics last night')

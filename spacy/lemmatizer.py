@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 from os import path
 import codecs
 
@@ -7,7 +7,7 @@ try:
 except ImportError:
     import json
 
-from .parts_of_speech import NOUN, VERB, ADJ
+from .parts_of_speech import NOUN, VERB, ADJ, PUNCT
 
 
 class Lemmatizer(object):
@@ -36,6 +36,8 @@ class Lemmatizer(object):
             pos = 'verb'
         elif pos == ADJ:
             pos = 'adj'
+        elif pos == PUNCT:
+            pos = 'punct'
         lemmas = lemmatize(string, self.index.get(pos, {}), self.exc.get(pos, {}), self.rules.get(pos, []))
         return lemmas
 
@@ -48,6 +50,9 @@ class Lemmatizer(object):
     def adj(self, string):
         return self(string, 'adj')
 
+    def punct(self, string):
+        return self(string, 'punct')
+
 
 def lemmatize(string, index, exceptions, rules):
     string = string.lower()
@@ -58,7 +63,7 @@ def lemmatize(string, index, exceptions, rules):
     for old, new in rules:
         if string.endswith(old):
             form = string[:len(string) - len(old)] + new
-            if form in index:
+            if form in index or not form.isalpha():
                 forms.append(form)
     if not forms:
         forms.append(string)

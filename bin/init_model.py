@@ -27,8 +27,8 @@ from pathlib import Path
 
 from shutil import copyfile
 from shutil import copytree
-import codecs
 from collections import defaultdict
+import io
 
 from spacy.vocab import Vocab
 from spacy.vocab import write_binary_vectors
@@ -61,7 +61,7 @@ def _read_clusters(loc):
         print("Warning: Clusters file not found")
         return {}
     clusters = {}
-    for line in codecs.open(str(loc), 'r', 'utf8'):
+    for line in io.open(str(loc), 'r', encoding='utf8'):
         try:
             cluster, word, freq = line.split()
         except ValueError:
@@ -88,7 +88,7 @@ def _read_probs(loc):
         print("Probabilities file not found. Trying freqs.")
         return {}, 0.0
     probs = {}
-    for i, line in enumerate(codecs.open(str(loc), 'r', 'utf8')):
+    for i, line in enumerate(io.open(str(loc), 'r', encoding='utf8')):
         prob, word = line.split()
         prob = float(prob)
         probs[word] = prob

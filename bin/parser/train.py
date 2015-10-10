@@ -6,7 +6,7 @@ from __future__ import print_function
 import os
 from os import path
 import shutil
-import codecs
+import io
 import random
 
 import plac
@@ -177,7 +177,7 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
     nlp = Language(data_dir=model_dir)
     gold_tuples = read_json_file(dev_loc)
     scorer = Scorer()
-    out_file = codecs.open(out_loc, 'w', 'utf8')
+    out_file = io.open(out_loc, 'w', 'utf8')
     for raw_text, sents in gold_tuples:
         sents = _merge_sents(sents)
         for annot_tuples, brackets in sents:
@@ -229,7 +229,6 @@ def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbos
     print('POS', scorer.tags_acc)
     print('UAS', scorer.uas)
     print('LAS', scorer.las)
-    print('SBD', scorer.sbd_acc)
 
     print('NER P', scorer.ents_p)
     print('NER R', scorer.ents_r)

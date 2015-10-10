@@ -1,11 +1,11 @@
-import codecs
+import io
 import plac
 
 from spacy.en import English
 
 
 def main(text_loc):
-    with codecs.open(text_loc, 'r', 'utf8') as file_:
+    with io.open(text_loc, 'r', encoding='utf8') as file_:
         text = file_.read()
     NLU = English()
     for paragraph in text.split('\n\n'):

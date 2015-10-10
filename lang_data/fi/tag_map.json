@@ -13,5 +13,7 @@
     "ADP": {"pos": "ADP"},
     "SYM": {"pos": "SYM"},
     "X": {"pos": "X"},
-    "INTJ": {"pos": "INTJ"}
+    "INTJ": {"pos": "INTJ"},
+    "DET": {"pos": "DET"},
+    "PART": {"pos": "PART"}
 }

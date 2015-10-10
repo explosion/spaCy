@@ -26,6 +26,7 @@ def test_main_entry_point(nlp):
     doc = nlp(b'Some text'.decode('utf8')) # Encode to unicode first.
 
 
+@pytest.mark.models
 def test_sentence_spans(nlp):
     # from spacy.en import English
     # nlp = English()
@@ -33,6 +34,7 @@ def test_sentence_spans(nlp):
     assert [s.root.orth_ for s in doc.sents] == ["is", "'s"]
 
 
+@pytest.mark.models
 def test_entity_spans(nlp):
     # from spacy.en import English
     # nlp = English()
@@ -44,6 +46,7 @@ def test_entity_spans(nlp):
     assert ents[0].string == ents[0].string
 
 
+@pytest.mark.models
 def test_noun_chunk_spans(nlp):
     # from spacy.en import English
     # nlp = English()
@@ -56,11 +59,12 @@ def test_noun_chunk_spans(nlp):
     # NP three noun chunks <-- has
 
 
+@pytest.mark.models
 def test_count_by(nlp):
     # from spacy.en import English, attrs
     # nlp = English()
     import numpy
-    from spacy.en import attrs
+    from spacy import attrs
     tokens = nlp('apple apple orange banana')
     assert tokens.count_by(attrs.ORTH) == {2529: 2, 4117: 1, 6650: 1}
     assert repr(tokens.to_array([attrs.ORTH])) == repr(numpy.array([[2529],
@@ -76,7 +80,7 @@ def test_read_bytes(nlp):
         file_.write(nlp(u'This is a document.').to_bytes())
         file_.write(nlp(u'This is another.').to_bytes())
     docs = []
-    with open(loc) as file_:
+    with open(loc, 'rb') as file_:
         for byte_string in Doc.read_bytes(file_):
             docs.append(Doc(nlp.vocab).from_bytes(byte_string))
     assert len(docs) == 2
@@ -88,6 +92,7 @@ def test_token_span(doc):
     assert token.i == 4
 
 
+@pytest.mark.models
 def test_example_i_like_new_york1(nlp):
     toks = nlp('I like New York in Autumn.')
 
@@ -127,16 +132,19 @@ def dot(toks):
     return tok(toks, "dot")
 
 
+@pytest.mark.models
 def test_example_i_like_new_york3(toks, new, york):
     assert toks[new].head.orth_ == 'York'
     assert toks[york].head.orth_ == 'like'
 
 
+@pytest.mark.models
 def test_example_i_like_new_york4(toks, new, york):
     new_york = toks[new:york+1]
     assert new_york.root.orth_ == 'York'
 
 
+@pytest.mark.models
 def test_example_i_like_new_york5(toks, autumn, dot):
     assert toks[autumn].head.orth_ == 'in'
     assert toks[dot].head.orth_ == 'like'
@@ -144,6 +152,7 @@ def test_example_i_like_new_york5(toks, autumn, dot):
     assert autumn_dot.root.orth_ == 'Autumn'
 
 
+@pytest.mark.models
 def test_navigating_the_parse_tree_lefts(doc):
     # TODO: where does the span object come from?
     span = doc[:2]
@@ -151,6 +160,7 @@ def test_navigating_the_parse_tree_lefts(doc):
              if span.doc[i].head in span]
 
 
+@pytest.mark.models
 def test_navigating_the_parse_tree_rights(doc):
     span = doc[:2]
     rights = [span.doc[i] for i in range(span.end, len(span.doc))

@@ -134,13 +134,17 @@ def run_setup(exts):
     headers_workaround.install_headers('numpy')
 
 
-VERSION = '0.93'
+VERSION = '0.94'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
+<<<<<<< HEAD
 # This is gcc only. Also -03 is everywhere and is not recognized :()
 #    compile_args = ['-O3', '-Wno-strict-prototypes']
     compile_args = ['-Ox', '-EHsc']
+=======
+    compile_args = ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']
+>>>>>>> refs/remotes/honnibal/master
     link_args = []
 # It is not prefix !!!
     if sys.prefix == 'darwin':
@@ -159,9 +163,13 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.morphology', 'spacy.tagger',
              'spacy.syntax.stateclass', 
              'spacy._ml', 'spacy._theano',
+<<<<<<< HEAD
              'spacy.tokenizer', 
 #'spacy.en.attrs',
 #'spacy.en.pos', 
+=======
+             'spacy.tokenizer',
+>>>>>>> refs/remotes/honnibal/master
              'spacy.syntax.parser', 
              'spacy.syntax.transition_system',
              'spacy.syntax.arc_eager',
