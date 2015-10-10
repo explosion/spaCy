@@ -1,13 +1,17 @@
 from __future__ import unicode_literals
 from os import path
-import codecs
+import io
 
 import pytest
 
 
 @pytest.fixture
 def sun_text():
+<<<<<<< HEAD:tests/parser/test_parse_navigate.py
     with codecs.open(path.join(path.dirname(__file__), '..', 'sun.txt'), 'r', 'utf8') as file_:
+=======
+    with io.open(path.join(path.dirname(__file__), 'sun.txt'), 'r', encoding='utf8') as file_:
+>>>>>>> 8caedba42a5255b9996533a732e17eee3f20a2dd:tests/test_parse_navigate.py
         text = file_.read()
     return text
 

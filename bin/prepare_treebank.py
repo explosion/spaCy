@@ -27,7 +27,7 @@ import json
 from os import path
 import os
 import re
-import codecs
+import io
 from collections import defaultdict
 
 from spacy.munge import read_ptb
@@ -122,7 +122,7 @@ def read_file(*pieces):
     if not path.exists(loc):
         return None
     else:
-        return codecs.open(loc, 'r', 'utf8').read().strip()
+        return io.open(loc, 'r', encoding='utf8').read().strip()
 
 
 def get_file_names(section_dir, subsection):
