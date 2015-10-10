@@ -20,6 +20,11 @@ mixin Option(name, open)
     | $ conda install spacy
     | $ python -m spacy.en.download all
 
+  p Latest stable conda packages are available from the spacy channel:
+
+  pre.language-bash: code
+    | $ conda install -c https://conda.anaconda.org/spacy spacy
+
 +Option("pip and virtualenv", true)
     p With Python 2.7 or Python 3, using Linux or OSX, ensure that you have the following packages installed:
 
