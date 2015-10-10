@@ -9,7 +9,8 @@ from .transition_system cimport do_func_t, get_cost_func_t
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse
 from ..gold cimport GoldParseC
-from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
+from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE, IS_SPACE
+from ..lexeme cimport Lexeme
 
 from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
@@ -380,7 +381,10 @@ cdef class ArcEager(TransitionSystem):
 
     cdef int finalize_state(self, StateClass st) nogil:
         for i in range(st.length):
-            if st._sent[i].head == 0 and st._sent[i].dep == 0:
+            # Always attach spaces to the previous word
+            if Lexeme.c_check_flag(st._sent[i].lex, IS_SPACE):
+                st._sent[i].head = -1 if (i >= 1) else 1
+            elif st._sent[i].head == 0 and st._sent[i].dep == 0:
                 st._sent[i].dep = self.root_label
             # If we're not using the Break transition, we segment via root-labelled
             # arcs between the root words.
