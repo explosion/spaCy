@@ -121,7 +121,7 @@ def run_setup(exts):
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
         license="MIT",
-        install_requires=['numpy', 'murmurhash', 'cymem >= 1.11', 'preshed == 0.41',
+        install_requires=['numpy', 'murmurhash', 'cymem >= 1.11', 'preshed == 0.42',
                           'thinc == 3.3', "text_unidecode", 'wget', 'plac', 'six',
                           'ujson'],
         setup_requires=["headers_workaround"],
@@ -138,8 +138,11 @@ VERSION = '0.93'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
-    compile_args = ['-O3', '-Wno-strict-prototypes']
+# This is gcc only. Also -03 is everywhere and is not recognized :()
+#    compile_args = ['-O3', '-Wno-strict-prototypes']
+    compile_args = ['-Ox', '-EHsc']
     link_args = []
+# It is not prefix !!!
     if sys.prefix == 'darwin':
         compile_args.append(['-mmacosx-version-min=10.8', '-stdlib=libc++'])
         link_args.append('-lc++')
@@ -156,8 +159,10 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.morphology', 'spacy.tagger',
              'spacy.syntax.stateclass', 
              'spacy._ml', 'spacy._theano',
-             'spacy.tokenizer', 'spacy.en.attrs',
-             'spacy.en.pos', 'spacy.syntax.parser', 
+             'spacy.tokenizer', 
+#'spacy.en.attrs',
+#'spacy.en.pos', 
+             'spacy.syntax.parser', 
              'spacy.syntax.transition_system',
              'spacy.syntax.arc_eager',
              'spacy.syntax._parse_features',
