@@ -2,7 +2,7 @@ from .symbols cimport *
 
 
 cpdef enum univ_pos_t:
-    NO_TAG = EMPTY_VALUE
+    NO_TAG = NIL
     ADJ = POS_adj
     ADP = POS_adp
     ADV = POS_adv
