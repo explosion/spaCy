@@ -1,5 +1,4 @@
 SYMBOL_IDS = {
-    "EMPTY_VALUE": EMPTY_VALUE,
     "Attr_is_alpha": Attr_is_alpha,
     "Attr_is_ascii": Attr_is_ascii,
     "Attr_is_digit": Attr_is_digit,
