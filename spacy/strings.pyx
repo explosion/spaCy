@@ -1,9 +1,5 @@
-<<<<<<< HEAD
 from __future__ import unicode_literals
-import codecs
-=======
 import io
->>>>>>> 8caedba42a5255b9996533a732e17eee3f20a2dd
 
 from libc.string cimport memcpy
 from murmurhash.mrmr cimport hash64
@@ -133,25 +129,15 @@ cdef class StringStore:
 
     def dump(self, loc):
         cdef Utf8Str* string
-<<<<<<< HEAD
         cdef unicode py_string
         cdef int i
-        with codecs.open(loc, 'w', 'utf8') as file_:
+        with io.open(loc, 'w', 'utf8') as file_:
             for i in range(1, self.size):
                 string = &self.c[i]
                 py_string = _decode(string)
                 file_.write(py_string)
                 if (i+1) != self.size:
                     file_.write(SEPARATOR)
-=======
-        cdef bytes py_string
-        for i in range(self.size):
-            string = &self.strings[i]
-            py_string = string.chars[:string.length]
-            strings.append(py_string.decode('utf8'))
-        with io.open(loc, 'w', encoding='utf8') as file_:
-            file_.write(SEPARATOR.join(strings))
->>>>>>> 8caedba42a5255b9996533a732e17eee3f20a2dd
 
     def load(self, loc):
         with io.open(loc, 'r', encoding='utf8') as file_:
