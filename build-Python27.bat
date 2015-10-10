@@ -7,20 +7,27 @@ rem            http://www.microsoft.com/en-us/download/details.aspx?id=44266
 rem      C99 compliant stdint.h for MSVC: 
 rem            http://msinttypes.googlecode.com/svn/trunk/stdint.h
 
+IF "%1"=="32" GOTO x86-32
+IF "%1"=="64" GOTO x86-64
 
+@echo Usage: build-Python27 32/64
+EXIT /B
+
+:x86-32
+PATH = D:\Python27-32\;D:\Python27-32\Scripts;%PATH%
+GOTO run
+
+:x86-64
 PATH = D:\Python27\;D:\Python27\Scripts;%PATH%
+
+:run
+
 IF NOT EXIST "%LOCALAPPDATA%\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC\include\stdint.h" COPY D:\local\include\stdint.h "%LOCALAPPDATA%\Programs\Common\Microsoft\Visual C++ for Python\9.0\VC\include\stdint.h"
-
-
-SET INCLUDE = D:\local\include;%INCLUDE%
 
 pip install --upgrade setuptools
 pip install cython fabric fabtools
 pip install -r requirements.txt
 python setup.py build_ext --inplace
-pause
-python setup.py build
-python setup.py test
-python setup.py install
+rem python setup.py test
+rem python setup.py install
 rem python tests\conftest.py
-rem python tests\test_matcher.py    

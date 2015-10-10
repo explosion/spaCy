@@ -138,16 +138,11 @@ VERSION = '0.94'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
-<<<<<<< HEAD
-# This is gcc only. Also -03 is everywhere and is not recognized :()
-#    compile_args = ['-O3', '-Wno-strict-prototypes']
+# TODO: http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
+#    compile_args = ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']
     compile_args = ['-Ox', '-EHsc']
-=======
-    compile_args = ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']
->>>>>>> refs/remotes/honnibal/master
     link_args = []
-# It is not prefix !!!
-    if sys.prefix == 'darwin':
+    if sys.platform.startswith('darwin'):
         compile_args.append(['-mmacosx-version-min=10.8', '-stdlib=libc++'])
         link_args.append('-lc++')
     if use_cython:
@@ -163,13 +158,7 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.morphology', 'spacy.tagger',
              'spacy.syntax.stateclass', 
              'spacy._ml', 'spacy._theano',
-<<<<<<< HEAD
-             'spacy.tokenizer', 
-#'spacy.en.attrs',
-#'spacy.en.pos', 
-=======
              'spacy.tokenizer',
->>>>>>> refs/remotes/honnibal/master
              'spacy.syntax.parser', 
              'spacy.syntax.transition_system',
              'spacy.syntax.arc_eager',
