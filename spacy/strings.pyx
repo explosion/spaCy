@@ -131,7 +131,7 @@ cdef class StringStore:
         cdef Utf8Str* string
         cdef unicode py_string
         cdef int i
-        with io.open(loc, 'w', 'utf8') as file_:
+        with io.open(loc, 'w', encoding='utf8') as file_:
             for i in range(1, self.size):
                 string = &self.c[i]
                 py_string = _decode(string)
