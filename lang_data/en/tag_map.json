@@ -22,7 +22,7 @@
 "JJS": {"pos": "adj", "degree": "sup"},
 "LS": {"pos": "punct", "numtype": "ord"},
 "MD": {"pos": "verb", "verbtype": "mod"},
-"NIL": {"pos": "no_tag"},
+"NIL": {"pos": ""},
 "NN": {"pos": "noun", "number": "sing"},
 "NNP": {"pos": "noun", "nountype": "prop", "number": "sing"},
 "NNPS": {"pos": "noun", "nountype": "prop", "number": "plur"},
