@@ -14,11 +14,10 @@ environment:
       PYTHON_ARCH: "64"
 
 install:
-  - @ECHO OFF
-  - ECHO "Filesystem root:"
+  - @ECHO "Filesystem root:"
   - ps: "ls \"C:/\""
 
-  - ECHO "Installed SDKs:"
+  - @ECHO "Installed SDKs:"
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
   # Install Python (from the official .msi of http://python.org) and pip when
