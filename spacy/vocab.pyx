@@ -271,17 +271,17 @@ cdef class Vocab:
             i += 1
         fp.close()
 
-    def load_vectors(self, loc_or_file):
+    def load_vectors(self, file_):
         cdef LexemeC* lexeme
         cdef attr_t orth
         cdef int32_t vec_len = -1
-        for line_num, line in enumerate(loc_or_file):
+        for line_num, line in enumerate(file_):
             pieces = line.split()
             word_str = pieces.pop(0)
             if vec_len == -1:
                 vec_len = len(pieces)
             elif vec_len != len(pieces):
-                raise VectorReadError.mismatched_sizes(loc_or_file, line_num,
+                raise VectorReadError.mismatched_sizes(file_, line_num,
                                                         vec_len, len(pieces))
             orth = self.strings[word_str]
             lexeme = <LexemeC*><void*>self.get_by_orth(self.mem, orth)
