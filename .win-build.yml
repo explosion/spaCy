@@ -14,6 +14,7 @@ environment:
       PYTHON_ARCH: "64"
 
 install:
+  - @ECHO OFF
   - ECHO "Filesystem root:"
   - ps: "ls \"C:/\""
 
@@ -36,6 +37,8 @@ install:
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
   - "pip install --disable-pip-version-check --user --upgrade pip"
+  - "pip install --upgrade setuptools"
+  - "pip install cython fabric fabtools"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
