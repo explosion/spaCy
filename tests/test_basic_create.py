@@ -14,6 +14,7 @@ from spacy.syntax.arc_eager import ArcEager
 from spacy._ml import Model
 from spacy.tagger import Tagger
 from spacy.syntax.parser import Parser
+from spacy.matcher import Matcher
 
 
 class TestStringStore(unittest.TestCase):
