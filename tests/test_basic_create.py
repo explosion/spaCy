@@ -82,7 +82,7 @@ class TestParser(unittest.TestCase):
 class TestMatcher(unittest.TestCase):
     def test_create(self):
         vocab = Vocab()
-        matcher = Matcher(vocab, [])
+        matcher = Matcher(vocab, {})
 
 
 if __name__ == '__main__':
