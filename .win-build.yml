@@ -14,12 +14,6 @@ environment:
       PYTHON_ARCH: "64"
 
 install:
-  # Filesystem root
-  - ps: "ls \"C:/\""
-
-  # Installed SDKs
-  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
-
   # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
   - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
@@ -28,6 +22,12 @@ install:
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
+
+  # Filesystem root
+  - ps: "ls \"C:/\""
+
+  # Installed SDKs
+  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
   # Check that we have the expected version and architecture for Python
   - "python --version"

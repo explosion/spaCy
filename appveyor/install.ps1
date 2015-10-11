@@ -1,11 +1,14 @@
-# Sample script to install Python and pip under Windows
+# Based on the script to install Python and pip under Windows
 # Authors: Olivier Grisel, Jonathan Helmus, Kyle Kastner, and Alex Willmer
 # License: CC0 1.0 Universal: http://creativecommons.org/publicdomain/zero/1.0/
+#
+# Added: stdint.h download for Python 2.x
 
 $MINICONDA_URL = "http://repo.continuum.io/miniconda/"
 $BASE_URL = "https://www.python.org/ftp/python/"
 $GET_PIP_URL = "https://bootstrap.pypa.io/get-pip.py"
 $GET_PIP_PATH = "C:\get-pip.py"
+$STDINT_H_URL = "http://msinttypes.googlecode.com/svn/trunk/stdint.h"
 
 $PYTHON_PRERELEASE_REGEX = @"
 (?x)
@@ -221,9 +224,22 @@ function InstallMinicondaPip ($python_home) {
     }
 }
 
+function InstallStdintH ($python_version) {
+    $major, $minor, $micro, $prerelease = ParsePythonVersion $python_version
+    if ($major -le 2) {
+        Write-Host "Downloading stdint.h"
+        Download "..\include" $STDINT_H_URL
+    } else {
+        Write-Host $python_version " uses C99 compliant Microsoft compiler. stdint.h download is not required."
+    }
+}
+
+
 function main () {
     InstallPython $env:PYTHON_VERSION $env:PYTHON_ARCH $env:PYTHON
     InstallPip $env:PYTHON
+    InstallStdintH $env:PYTHON_VERSION
+    Download $pwd.Path + "\..\include"  
 }
 
 main

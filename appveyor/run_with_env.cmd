@@ -6,6 +6,9 @@
 :: variables to use the MSVC 2008 C++ compilers from GRMSDKX_EN_DVD.iso of:
 :: MS Windows SDK for Windows 7 and .NET Framework 3.5 (SDK v7.0)
 ::
+:: To provide C99 compatibility C:\projects\include is added to INCLUDE environment variable
+:: in a believe that stdin.h has been uploaded there earlier during the installation
+::
 :: 32 bit builds, and 64-bit builds for 3.5 and beyond, do not require specific
 :: environment configurations.
 ::
@@ -49,6 +52,8 @@ IF "%PYTHON_VERSION:~3,1%" == "." (
 IF %MAJOR_PYTHON_VERSION% == 2 (
     SET WINDOWS_SDK_VERSION="v7.0"
     SET SET_SDK_64=Y
+    SET INCLUDE=C:\projects\include;%INCLUDE%
+    SET
 ) ELSE (
     IF %MAJOR_PYTHON_VERSION% == 3 (
         SET WINDOWS_SDK_VERSION="v7.1"
