@@ -14,10 +14,10 @@ environment:
       PYTHON_ARCH: "64"
 
 install:
-  - ECHO "Filesystem root:"
+  # Filesystem root
   - ps: "ls \"C:/\""
 
-  - ECHO "Installed SDKs:"
+  # Installed SDKs
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
   # Install Python (from the official .msi of http://python.org) and pip when
@@ -36,14 +36,14 @@ install:
   # Upgrade to the latest version of pip to avoid it displaying warnings
   # about it being out of date.
   - "pip install --disable-pip-version-check --user --upgrade pip"
-  - "pip install --upgrade setuptools"
-  - "pip install cython fabric fabtools"
 
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
-  #- "%CMD_IN_ENV% pip install -r dev-requirements.txt"
+  - "pip install --upgrade setuptools"
+  - "pip install cython fabric fabtools"
+  - "%CMD_IN_ENV% pip install -r requirements.txt"
 
 build_script:
   # Build the compiled extension
