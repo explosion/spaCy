@@ -42,7 +42,10 @@ import spacy.de
 import spacy.fi
 import spacy.it
 
-
+try:
+    unicode
+except NameError:
+    unicode = str
 
 
 def setup_tokenizer(lang_data_dir, tok_dir):
@@ -112,8 +115,12 @@ def _read_freqs(loc, max_length=100, min_doc_freq=5, min_freq=200):
         total += freq
     counts.smooth()
     log_total = math.log(total)
+    if str(loc).endswith('gz'):
+        file_ = gzip.open(str(loc))
+    else:
+        file_ = loc.open()
     probs = {}
-    for line in loc.open():
+    for line in file_:
         freq, doc_freq, key = line.split('\t', 2)
         doc_freq = int(doc_freq)
         freq = int(freq)
@@ -158,7 +165,7 @@ def setup_vocab(get_lex_attr, tag_map, src_dir, dst_dir):
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs, oov_prob = _read_probs(src_dir / 'words.sgt.prob')
     if not probs:
-        probs, oov_prob = _read_freqs(src_dir / 'freqs.txt')
+        probs, oov_prob = _read_freqs(src_dir / 'freqs.txt.gz')
     if not probs:
         oov_prob = -20
     else:
