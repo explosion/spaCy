@@ -28,6 +28,18 @@ pip install --upgrade setuptools
 pip install cython fabric fabtools
 pip install -r requirements.txt
 python setup.py build_ext --inplace
+python setup.py install
+
+rem mkdir corpora
+rem cd corpora
+rem mkdir en
+rem cd en
+
+rem powershell -Command "(New-Object Net.WebClient).DownloadFile('http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz', 'WordNet-3.0.tar.gz')"
+
+rem set PYTHONPATH = %~dp0
+rem python bin\init_model.py en lang_data\ corpora\ spacy\en\data
+
 rem python setup.py test
 rem python setup.py install
 rem python tests\conftest.py

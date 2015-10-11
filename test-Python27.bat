@@ -16,12 +16,16 @@ PATH = D:\Python27\;D:\Python27\Scripts;%PATH%
 
 :run
 
+python tests\test_basic_create.py
+
+rem py.test tests/ -x
+
 rem python -m spacy.en.download
 
 @echo Patience ...
-python -c "import spacy.en; nlp = spacy.en.English(); print([w.text for w in nlp(u'I would like to be a dog')])"
+rem python -c "import spacy.en; nlp = spacy.en.English(); print([w.text for w in nlp(u'I would like to be a dog')])"
 @echo Patience ...
-python examples\information_extraction.py
+rem python examples\information_extraction.py
 @echo Patience ...
-python examples\matcher_example.py
+rem python examples\matcher_example.py
 
