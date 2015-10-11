@@ -227,6 +227,7 @@ function InstallMinicondaPip ($python_home) {
 function InstallStdintH ($python_version) {
     $major, $minor, $micro, $prerelease = ParsePythonVersion $python_version
     if ($major -le 2) {
+        md -Name "..\include"
         Download "..\include\stdint.h" $STDINT_H_URL
     } else {
         Write-Host $python_version " uses C99 compliant Microsoft compiler. stdint.h download is not required."
