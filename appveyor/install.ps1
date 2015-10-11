@@ -239,7 +239,7 @@ function main () {
     InstallPython $env:PYTHON_VERSION $env:PYTHON_ARCH $env:PYTHON
     InstallPip $env:PYTHON
     InstallStdintH $env:PYTHON_VERSION
-    Download "..\include\stdint.h" $STDINT_H_URL
+    Download "stdint.h" $STDINT_H_URL
 }
 
 main

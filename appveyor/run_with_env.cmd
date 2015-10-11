@@ -52,8 +52,8 @@ IF "%PYTHON_VERSION:~3,1%" == "." (
 IF %MAJOR_PYTHON_VERSION% == 2 (
     SET WINDOWS_SDK_VERSION="v7.0"
     SET SET_SDK_64=Y
-    SET INCLUDE=C:\projects\include;%INCLUDE%
-    SET
+::    SET INCLUDE=C:\projects\include;%INCLUDE%
+::    SET
 ) ELSE (
     IF %MAJOR_PYTHON_VERSION% == 3 (
         SET WINDOWS_SDK_VERSION="v7.1"
