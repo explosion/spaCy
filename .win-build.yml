@@ -29,6 +29,10 @@ install:
   # Installed SDKs
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
+  # Checking stdint.h
+  - ps: "ls \"C:/projects/include""
+
+
   # Check that we have the expected version and architecture for Python
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
