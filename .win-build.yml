@@ -24,13 +24,13 @@ install:
   - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
   # Filesystem root
-  - ps: "ls \"C:/\""
+  # - ps: "ls \"C:/\""
 
   # Installed SDKs
-  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
+  # - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
   # Checking stdint.h
-  - ps: "ls \"C:/projects/spacy\""
+  - ps: "ls \"C:/projects/include\""
 
 
   # Check that we have the expected version and architecture for Python
@@ -51,7 +51,8 @@ install:
 
 build_script:
   # Build the compiled extension
-  #- "%CMD_IN_ENV% python setup.py build"
+  - "%CMD_IN_ENV% python setup.py build_ext --inplace"
+
 
 test_script:
   # Run the project tests
