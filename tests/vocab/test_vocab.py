@@ -1,11 +1,11 @@
 from __future__ import unicode_literals
 import pytest
 import StringIO
+import cloudpickle
 import pickle
 
 from spacy.attrs import LEMMA, ORTH, PROB, IS_ALPHA
 from spacy.parts_of_speech import NOUN, VERB
-
 
 
 def test_neq(en_vocab):
@@ -44,7 +44,7 @@ def test_symbols(en_vocab):
 
 def test_pickle_vocab(en_vocab):
     file_ = StringIO.StringIO()
-    pickle.dump(en_vocab, file_)
+    cloudpickle.dump(en_vocab, file_)
 
     file_.seek(0)
 

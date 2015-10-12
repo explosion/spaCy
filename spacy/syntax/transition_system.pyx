@@ -15,7 +15,8 @@ class OracleError(Exception):
 
 
 cdef class TransitionSystem:
-    def __init__(self, StringStore string_table, dict labels_by_action):
+    def __init__(self, StringStore string_table, dict labels_by_action, _freqs=None):
+        self._labels_by_action = labels_by_action
         self.mem = Pool()
         self.n_moves = sum(len(labels) for labels in labels_by_action.values())
         self._is_valid = <bint*>self.mem.alloc(self.n_moves, sizeof(bint))
@@ -30,7 +31,7 @@ cdef class TransitionSystem:
                 i += 1
         self.c = moves
         self.root_label = self.strings['ROOT']
-        self.freqs = {}
+        self.freqs = {} if _freqs is None else _freqs
         for attr in (TAG, HEAD, DEP, ENT_TYPE, ENT_IOB):
             self.freqs[attr] = defaultdict(int)
             self.freqs[attr][0] = 1
@@ -38,6 +39,11 @@ cdef class TransitionSystem:
         for i in range(10024):
             self.freqs[HEAD][i] = 1
             self.freqs[HEAD][-i] = 1
+
+    def __reduce__(self):
+        return (self.__class__,
+                (self.strings, self._labels_by_action, self.freqs),
+                None, None)
 
     cdef int initialize_state(self, StateClass state) except -1:
         pass

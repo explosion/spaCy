@@ -99,16 +99,18 @@ cdef class Vocab:
         return self.length
 
     def __reduce__(self):
+        # TODO: Dump vectors
         tmp_dir = tempfile.mkdtemp()
         lex_loc = path.join(tmp_dir, 'lexemes.bin')
         str_loc = path.join(tmp_dir, 'strings.txt')
-        map_loc = path.join(tmp_dir, 'tag_map.json')
+        vec_loc = path.join(self.data_dir, 'vec.bin') if self.data_dir is not None else None
 
         self.dump(lex_loc)
         self.strings.dump(str_loc)
-        json.dump(self.morphology.tag_map, open(map_loc, 'w'))
-
-        return (unpickle_vocab, (tmp_dir,), None, None)
+        
+        state = (str_loc, lex_loc, vec_loc, self.morphology, self.get_lex_attr,
+                 self.serializer_freqs, self.data_dir)
+        return (unpickle_vocab, state, None, None)
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
@@ -353,11 +355,21 @@ cdef class Vocab:
         return vec_len
 
 
-def unpickle_vocab(data_dir):
-    # TODO: This needs fixing --- the trouble is, we can't pickle staticmethods,
-    # so we need to fiddle with the design of Language a little bit.
-    from .language import Language
-    return Vocab.from_dir(data_dir, Language.default_lex_attrs())
+def unpickle_vocab(strings_loc, lex_loc, vec_loc, morphology, get_lex_attr,
+                   serializer_freqs, data_dir):
+    cdef Vocab vocab = Vocab()
+
+    vocab.get_lex_attr = get_lex_attr
+    vocab.morphology = morphology
+    vocab.strings = morphology.strings
+    vocab.data_dir = data_dir
+    vocab.serializer_freqs = serializer_freqs
+
+    vocab.load_lexemes(strings_loc, lex_loc)
+    if vec_loc is not None:
+        vocab.load_vectors_from_bin_loc(vec_loc)
+    return vocab
+ 
 
 copy_reg.constructor(unpickle_vocab)
 
