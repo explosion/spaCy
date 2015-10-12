@@ -13,6 +13,7 @@ from distutils.command.build_ext import build_ext
 
 import platform
 
+# By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 compile_options =  {'msvc'  : ['/Ox', '/EHsc']  ,
                     'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']       }
