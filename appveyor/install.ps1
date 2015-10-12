@@ -228,7 +228,7 @@ function InstallMinicondaPip ($python_home) {
 function InstallStdintH ($python_version) {
     $major, $minor, $micro, $prerelease = ParsePythonVersion $python_version
     if ($major -le 2) {
-        if((Test-Path $STDINT_RELATIVE_PATH) -eq 0)
+        if((Test-Path $STDINT_H_RELATIVE_PATH) -eq 0)
         {
             mkdir $STDINT_H_RELATIVE_PATH;
         }
