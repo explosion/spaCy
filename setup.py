@@ -8,7 +8,42 @@ from os import path
 
 from setuptools import Extension
 from distutils import sysconfig
+from distutils.core import setup, Extension
+from distutils.command.build_ext import build_ext
+
 import platform
+
+# http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
+compile_options =  {'msvc'  : ['/Ox', '/EHsc']  ,
+                    'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']       }
+link_options    =  {'msvc'  : [] ,
+                    'other' : [] }
+class build_ext_options:
+    def build_options(self):
+        c_type = None
+        if compile_options.has_key(self.compiler.compiler_type):
+            c_type = self.compiler.compiler_type
+        elif compile_options.has_key('other'):
+            c_type = 'other'
+        if c_type is not None:
+           for e in self.extensions:
+               e.extra_compile_args = compile_options[c_type]
+
+        l_type = None 
+        if link_options.has_key(self.compiler.compiler_type):
+            l_type = self.compiler.compiler_type
+        elif link_options.has_key('other'):
+            l_type = 'other'
+        if l_type is not None:
+           for e in self.extensions:
+               e.extra_link_args = link_options[l_type]
+
+class build_ext_subclass( build_ext, build_ext_options ):
+    def build_extensions(self):
+        build_ext_options.build_options(self)
+        build_ext.build_extensions(self)
+        
+    
 
 # PyPy --- NB! PyPy doesn't really work, it segfaults all over the place. But,
 # this is necessary to get it compile.
@@ -61,24 +96,27 @@ def name_to_path(mod_name, ext):
     return '%s.%s' % (mod_name.replace('.', '/'), ext)
 
 
-def c_ext(mod_name, language, includes, compile_args, link_args):
+def c_ext(mod_name, language, includes):
     mod_path = name_to_path(mod_name, language)
-    return Extension(mod_name, [mod_path], include_dirs=includes,
-                     extra_compile_args=compile_args, extra_link_args=link_args)
+    return Extension(mod_name, [mod_path], include_dirs=includes)
 
 
-def cython_setup(mod_names, language, includes, compile_args, link_args):
+def cython_setup(mod_names, language, includes):
     import Cython.Distutils
     import Cython.Build
     import distutils.core
+
+    class build_ext_cython_subclass( Cython.Distutils.build_ext, build_ext_options ):
+        def build_extensions(self):
+            build_ext_options.build_options(self)
+            Cython.Distutils.build_ext.build_extensions(self)
 
     if language == 'cpp':
         language = 'c++'
     exts = []
     for mod_name in mod_names:
         mod_path = mod_name.replace('.', '/') + '.pyx'
-        e = Extension(mod_name, [mod_path], language=language, include_dirs=includes,
-                      extra_compile_args=compile_args, extra_link_args=link_args)
+        e = Extension(mod_name, [mod_path], language=language, include_dirs=includes)
         exts.append(e)
     distutils.core.setup(
         name='spacy',
@@ -96,7 +134,7 @@ def cython_setup(mod_names, language, includes, compile_args, link_args):
                                    "data/vocab/strings.txt"],
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
-        cmdclass={'build_ext': Cython.Distutils.build_ext},
+        cmdclass={'build_ext': build_ext_cython_subclass},
         license="Dual: Commercial or AGPL",
     )
 
@@ -125,6 +163,7 @@ def run_setup(exts):
                           'thinc == 3.3', "text_unidecode", 'wget', 'plac', 'six',
                           'ujson'],
         setup_requires=["headers_workaround"],
+        cmdclass = {'build_ext': build_ext_subclass },
     )
 
     import headers_workaround
@@ -138,20 +177,15 @@ VERSION = '0.94'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
-# TODO: http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
-#    compile_args = ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']
-    compile_args = ['-Ox', '-EHsc']
-    link_args = []
     if sys.platform.startswith('darwin'):
-        compile_args.append(['-mmacosx-version-min=10.8', '-stdlib=libc++'])
-        link_args.append('-lc++')
+        compile_options['other'].append(['-mmacosx-version-min=10.8', '-stdlib=libc++'])
+        link_opions['other'].append('-lc++')
     if use_cython:
-        cython_setup(modules, language, includes, compile_args, link_args)
+        cython_setup(modules, language, includes)
     else:
-        exts = [c_ext(mn, language, includes, compile_args, link_args)
+        exts = [c_ext(mn, language, includes)
                       for mn in modules]
         run_setup(exts)
-
 
 MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.lexeme', 'spacy.vocab', 'spacy.attrs',
