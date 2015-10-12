@@ -10,6 +10,8 @@ from os import path
 import io
 import math
 import json
+import tempfile
+import copy_reg
 
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
@@ -95,6 +97,18 @@ cdef class Vocab:
     def __len__(self):
         """The current number of lexemes stored."""
         return self.length
+
+    def __reduce__(self):
+        tmp_dir = tempfile.mkdtmp()
+        lex_loc = path.join(tmp_dir, 'lexemes.bin')
+        str_loc = path.join(tmp_dir, 'strings.txt')
+        map_loc = path.join(tmp_dir, 'tag_map.json')
+
+        self.dump(lex_loc)
+        self.strings.dump(str_loc)
+        json.dump(self.morphology.tag_map, open(map_loc, 'w'))
+
+        return (Vocab.from_dir, (tmp_dir, self.get_lex_attr), None, None)
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
@@ -337,6 +351,9 @@ cdef class Vocab:
             else:
                 lex.repvec = EMPTY_VEC
         return vec_len
+
+
+copy_reg.constructor(Vocab.from_dir)
 
 
 def write_binary_vectors(in_loc, out_loc):
