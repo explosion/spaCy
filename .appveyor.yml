@@ -30,7 +30,7 @@ install:
   # - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
   # Checking stdint.h
-  - ps: "ls \"C:/projects/include\""
+  - ps: "ls \"C:/projects/spacy/include\""
 
 
   # Check that we have the expected version and architecture for Python
