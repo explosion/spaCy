@@ -25,6 +25,7 @@ cdef class Morphology:
     cdef readonly Pool mem
     cdef readonly StringStore strings
     cdef public object lemmatizer
+    cdef readonly object tag_map
     cdef public object n_tags
     cdef public object reverse_index
     cdef public object tag_names
