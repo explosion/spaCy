@@ -22,18 +22,18 @@ link_options    =  {'msvc'  : [] ,
 class build_ext_options:
     def build_options(self):
         c_type = None
-        if compile_options.has_key(self.compiler.compiler_type):
+        if self.compiler.compiler_type in compile_options:
             c_type = self.compiler.compiler_type
-        elif compile_options.has_key('other'):
+        elif 'other' in compile_options:
             c_type = 'other'
         if c_type is not None:
            for e in self.extensions:
                e.extra_compile_args = compile_options[c_type]
 
         l_type = None 
-        if link_options.has_key(self.compiler.compiler_type):
+        if self.compiler.compiler_type in link_options:
             l_type = self.compiler.compiler_type
-        elif link_options.has_key('other'):
+        elif 'other' in link_options:
             l_type = 'other'
         if l_type is not None:
            for e in self.extensions:
