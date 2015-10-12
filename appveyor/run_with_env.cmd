@@ -49,10 +49,12 @@ IF "%PYTHON_VERSION:~3,1%" == "." (
 
 :: Based on the Python version, determine what SDK version to use, and whether
 :: to set the SDK for 64-bit.
+:: For Python 2.x INCLUDE environment variable is supplemented by local include directory
+:: which is supposed to contain C99 compliant stdint.h
 IF %MAJOR_PYTHON_VERSION% == 2 (
     SET WINDOWS_SDK_VERSION="v7.0"
     SET SET_SDK_64=Y
-    SET INCLUDE=C:\projects\include;%INCLUDE%
+    SET INCLUDE=%CD%\include;%INCLUDE%
     SET INCLUDE
 ) ELSE (
     IF %MAJOR_PYTHON_VERSION% == 3 (

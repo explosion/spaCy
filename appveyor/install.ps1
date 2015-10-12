@@ -9,6 +9,7 @@ $BASE_URL = "https://www.python.org/ftp/python/"
 $GET_PIP_URL = "https://bootstrap.pypa.io/get-pip.py"
 $GET_PIP_PATH = "C:\get-pip.py"
 $STDINT_H_URL = "http://msinttypes.googlecode.com/svn/trunk/stdint.h"
+$STDINT_RELATIVE_PATH = "include"
 
 $PYTHON_PRERELEASE_REGEX = @"
 (?x)
@@ -227,8 +228,11 @@ function InstallMinicondaPip ($python_home) {
 function InstallStdintH ($python_version) {
     $major, $minor, $micro, $prerelease = ParsePythonVersion $python_version
     if ($major -le 2) {
-        md -Name "..\include"
-        Download "..\include\stdint.h" $STDINT_H_URL
+        if((Test-Path $STDINT_RELATIVE_PATH) -eq 0)
+        {
+            mkdir $STDINT_RELATIVE_PATH;
+        }
+        Download $STDINT_RELATIVE_PATH + "\stdint.h" $STDINT_H_URL
     } else {
         Write-Host $python_version " uses C99 compliant Microsoft compiler. stdint.h download is not required."
     }
