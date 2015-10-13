@@ -92,6 +92,7 @@ def cython_setup(mod_names, language, includes, compile_args, link_args):
         package_data={"spacy": ["*.pxd"],
                       "spacy.en": ["*.pxd", "data/pos/*",
                                    "data/wordnet/*", "data/tokenizer/*",
+                                   "data/vocab/tag_map.json",
                                    "data/vocab/lexemes.bin",
                                    "data/vocab/strings.txt"],
                       "spacy.syntax": ["*.pxd"]},
@@ -134,7 +135,7 @@ def run_setup(exts):
     headers_workaround.install_headers('numpy')
 
 
-VERSION = '0.94'
+VERSION = '0.95'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
