@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
-import StringIO
+import io
 import pickle
 
 from spacy.lemmatizer import Lemmatizer, read_index, read_exc
@@ -46,7 +46,7 @@ def test_smart_quotes(lemmatizer):
 
 
 def test_pickle_lemmatizer(lemmatizer):
-    file_ = StringIO.StringIO()
+    file_ = io.BytesIO()
     pickle.dump(lemmatizer, file_)
 
     file_.seek(0)
