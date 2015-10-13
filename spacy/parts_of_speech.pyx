@@ -25,4 +25,4 @@ IDS = {
 }
 
 
-NAMES = [key for key, value in sorted(IDS.items(), key=lambda item: item[1])]
+NAMES = {value: key for key, value in IDS.items()}
