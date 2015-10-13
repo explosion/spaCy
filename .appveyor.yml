@@ -53,7 +53,7 @@ build_script:
   # Build the compiled extension
   #- "%CMD_IN_ENV% python setup.py build_ext --inplace"
   - ps: appveyor\download.ps1 
-  - "tar -xzf corpora\en\wordnet.tar.gz"
+  - "tar -xzf corpora/en/wordnet.tar.gz"
   - "ls \"C:/projects/spacy/include/"
   - "ls \"C:/projects/spacy/include/"
 
