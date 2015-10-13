@@ -25,7 +25,6 @@ cdef struct _Cached:
 
 
 cdef class Vocab:
-    cpdef public lexeme_props_getter
     cdef Pool mem
     cpdef readonly StringStore strings
     cpdef readonly Morphology morphology
@@ -33,7 +32,6 @@ cdef class Vocab:
     cdef public object _serializer
     cdef public object data_dir
     cdef public object get_lex_attr
-    cdef public object pos_tags
     cdef public object serializer_freqs
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL

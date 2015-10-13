@@ -69,12 +69,15 @@ cdef Utf8Str _allocate(Pool mem, const unsigned char* chars, int length) except 
 
 cdef class StringStore:
     '''Map strings to and from integer IDs.'''
-    def __init__(self):
+    def __init__(self, strings=None):
         self.mem = Pool()
         self._map = PreshMap()
         self._resize_at = 10000
         self.c = <Utf8Str*>self.mem.alloc(self._resize_at, sizeof(Utf8Str))
         self.size = 1
+        if strings is not None:
+            for string in strings:
+                _ = self[string]
 
     property size:
         def __get__(self):
@@ -112,6 +115,14 @@ cdef class StringStore:
         cdef int i
         for i in range(self.size):
             yield self[i]
+
+    def __reduce__(self):
+        strings = [""]
+        for i in range(1, self.size):
+            string = &self.c[i]
+            py_string = _decode(string)
+            strings.append(py_string)
+        return (StringStore, (strings,), None, None, None)
 
     cdef const Utf8Str* intern(self, unsigned char* chars, int length) except NULL:
         # 0 means missing, but we don't bother offsetting the index.

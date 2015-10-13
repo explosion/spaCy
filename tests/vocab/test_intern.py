@@ -1,5 +1,7 @@
 # -*- coding: utf8 -*-
 from __future__ import unicode_literals
+import pickle
+import StringIO
 
 from spacy.strings import StringStore
 
@@ -76,3 +78,18 @@ def test_massive_strings(sstore):
     s513 = '1' * 513
     orth = sstore[s513]
     assert sstore[orth] == s513
+
+
+def test_pickle_string_store(sstore):
+    hello_id = sstore[u'Hi']
+    string_file = StringIO.StringIO()
+    pickle.dump(sstore, string_file)
+
+    string_file.seek(0)
+    
+    loaded = pickle.load(string_file)
+
+    assert loaded[hello_id] == u'Hi'
+
+
+

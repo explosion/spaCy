@@ -1,5 +1,11 @@
 from __future__ import unicode_literals
 import pytest
+import StringIO
+import cloudpickle
+import pickle
+
+from spacy.attrs import LEMMA, ORTH, PROB, IS_ALPHA
+from spacy.parts_of_speech import NOUN, VERB
 
 from spacy.attrs import LEMMA, ORTH, PROB, IS_ALPHA
 from spacy.parts_of_speech import NOUN, VERB
@@ -38,3 +44,11 @@ def test_symbols(en_vocab):
     assert en_vocab.strings['ORTH'] == ORTH
     assert en_vocab.strings['PROB'] == PROB
     
+
+def test_pickle_vocab(en_vocab):
+    file_ = StringIO.StringIO()
+    cloudpickle.dump(en_vocab, file_)
+
+    file_.seek(0)
+
+    loaded = pickle.load(file_)

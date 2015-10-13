@@ -37,6 +37,8 @@ cdef class TransitionSystem:
     cdef public int root_label
     cdef public freqs
 
+    cdef object _labels_by_action
+
     cdef int initialize_state(self, StateClass state) except -1
     cdef int finalize_state(self, StateClass state) nogil
 

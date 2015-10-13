@@ -207,6 +207,12 @@ class Language(object):
         self.entity = entity
         self.matcher = matcher
 
+    def __reduce__(self):
+        return (self.__class__,
+                  (None, self.vocab, self.tokenizer, self.tagger, self.parser,
+                   self.entity, self.matcher, None),
+                None, None)
+
     def __call__(self, text, tag=True, parse=True, entity=True):
         """Apply the pipeline to some text.  The text can span multiple sentences,
         and can contain arbtrary whitespace.  Alignment into the original string

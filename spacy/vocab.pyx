@@ -10,6 +10,8 @@ from os import path
 import io
 import math
 import json
+import tempfile
+import copy_reg
 
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
@@ -95,6 +97,20 @@ cdef class Vocab:
     def __len__(self):
         """The current number of lexemes stored."""
         return self.length
+
+    def __reduce__(self):
+        # TODO: Dump vectors
+        tmp_dir = tempfile.mkdtemp()
+        lex_loc = path.join(tmp_dir, 'lexemes.bin')
+        str_loc = path.join(tmp_dir, 'strings.txt')
+        vec_loc = path.join(self.data_dir, 'vec.bin') if self.data_dir is not None else None
+
+        self.dump(lex_loc)
+        self.strings.dump(str_loc)
+        
+        state = (str_loc, lex_loc, vec_loc, self.morphology, self.get_lex_attr,
+                 self.serializer_freqs, self.data_dir)
+        return (unpickle_vocab, state, None, None)
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
@@ -271,17 +287,17 @@ cdef class Vocab:
             i += 1
         fp.close()
 
-    def load_vectors(self, loc_or_file):
+    def load_vectors(self, file_):
         cdef LexemeC* lexeme
         cdef attr_t orth
         cdef int32_t vec_len = -1
-        for line_num, line in enumerate(loc_or_file):
+        for line_num, line in enumerate(file_):
             pieces = line.split()
             word_str = pieces.pop(0)
             if vec_len == -1:
                 vec_len = len(pieces)
             elif vec_len != len(pieces):
-                raise VectorReadError.mismatched_sizes(loc_or_file, line_num,
+                raise VectorReadError.mismatched_sizes(file_, line_num,
                                                         vec_len, len(pieces))
             orth = self.strings[word_str]
             lexeme = <LexemeC*><void*>self.get_by_orth(self.mem, orth)
@@ -337,6 +353,25 @@ cdef class Vocab:
             else:
                 lex.repvec = EMPTY_VEC
         return vec_len
+
+
+def unpickle_vocab(strings_loc, lex_loc, vec_loc, morphology, get_lex_attr,
+                   serializer_freqs, data_dir):
+    cdef Vocab vocab = Vocab()
+
+    vocab.get_lex_attr = get_lex_attr
+    vocab.morphology = morphology
+    vocab.strings = morphology.strings
+    vocab.data_dir = data_dir
+    vocab.serializer_freqs = serializer_freqs
+
+    vocab.load_lexemes(strings_loc, lex_loc)
+    if vec_loc is not None:
+        vocab.load_vectors_from_bin_loc(vec_loc)
+    return vocab
+ 
+
+copy_reg.constructor(unpickle_vocab)
 
 
 def write_binary_vectors(in_loc, out_loc):

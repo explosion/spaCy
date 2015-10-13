@@ -14,6 +14,7 @@ cdef class Morphology:
     def __init__(self, StringStore string_store, tag_map, lemmatizer):
         self.mem = Pool()
         self.strings = string_store
+        self.tag_map = tag_map
         self.lemmatizer = lemmatizer
         self.n_tags = len(tag_map) + 1
         self.tag_names = tuple(sorted(tag_map.keys()))
@@ -27,6 +28,9 @@ cdef class Morphology:
             self.rich_tags[i].pos = POS_IDS[props['pos'].upper()]
             self.reverse_index[self.rich_tags[i].name] = i
         self._cache = PreshMapArray(self.n_tags)
+
+    def __reduce__(self):
+        return (Morphology, (self.strings, self.tag_map, self.lemmatizer), None, None)
 
     cdef int assign_tag(self, TokenC* token, tag) except -1:
         cdef int tag_id
