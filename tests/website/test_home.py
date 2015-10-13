@@ -29,7 +29,7 @@ def test_use_integer_ids_for_any_strings(nlp, token):
     hello_id = nlp.vocab.strings['Hello']
     hello_str = nlp.vocab.strings[hello_id]
 
-    assert token.orth  == hello_id  == 3404
+    assert token.orth  == hello_id  == 3125
     assert token.orth_ == hello_str == 'Hello'
 
 

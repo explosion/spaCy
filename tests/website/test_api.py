@@ -40,7 +40,7 @@ def test_entity_spans(nlp):
     # nlp = English()
     tokens = nlp('Mr. Best flew to New York on Saturday morning.')
     ents = list(tokens.ents)
-    assert ents[0].label == 28061
+    assert ents[0].label == 346
     assert ents[0].label_ == 'PERSON'
     assert ents[0].orth_ == 'Best'
     assert ents[0].string == ents[0].string
@@ -66,7 +66,7 @@ def test_count_by(nlp):
     import numpy
     from spacy import attrs
     tokens = nlp('apple apple orange banana')
-    assert tokens.count_by(attrs.ORTH) == {2529: 2, 4117: 1, 6650: 1}
+    assert tokens.count_by(attrs.ORTH) == {3699: 2, 3750: 1, 5965: 1}
     assert repr(tokens.to_array([attrs.ORTH])) == repr(numpy.array([[2529],
                                                         [2529],
                                                         [4117],
