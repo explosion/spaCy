@@ -178,7 +178,7 @@ VERSION = '0.94'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
-    if sys.platform.startswith('darwin'):
+    if sys.prefix == 'darwin':
         compile_options['other'].append(['-mmacosx-version-min=10.8', '-stdlib=libc++'])
         link_opions['other'].append('-lc++')
     if use_cython:
