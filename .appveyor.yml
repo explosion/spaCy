@@ -52,8 +52,8 @@ install:
 build_script:
   # Build the compiled extension
   - "%CMD_IN_ENV% python setup.py build_ext --inplace"
-  - "mkdir corpora\en"
-  - "cd corpora\en"
+  - "mkdir corpora/en"
+  - "cd corpora/en"
   - "wget --no-check-certificate http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"
   - "tar -xzf WordNet-3.0.tar.gz"
   - "mv WordNet-3.0 wordnet"
