@@ -1,7 +1,7 @@
 import pytest
 
 import pickle
-import StringIO
+import io
 
 
 from spacy.morphology import Morphology
@@ -12,6 +12,6 @@ from spacy.strings import StringStore
 def test_pickle():
     morphology = Morphology(StringStore(), {}, Lemmatizer({}, {}, {})) 
 
-    file_ = StringIO.StringIO()
+    file_ = io.BytesIO()
     pickle.dump(morphology, file_)
 

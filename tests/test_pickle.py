@@ -1,12 +1,12 @@
 import pytest
-import StringIO
+import io
 import cloudpickle
 import pickle
 
 
 @pytest.mark.models
 def test_pickle_english(EN):
-    file_ = StringIO.StringIO()
+    file_ = io.BytesIO()
     cloudpickle.dump(EN, file_)
 
     file_.seek(0)
