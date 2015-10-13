@@ -22,7 +22,7 @@ install:
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
   - "SET PATH=%CD%;%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  - "SET PYTHONPATH=%CD%;%PYTHONPATH%;
+  - "SET PYTHONPATH=%CD%;%PYTHONPATH%"
 
   # Filesystem root
   # - ps: "ls \"C:/\""
