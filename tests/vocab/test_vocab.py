@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 import pytest
-import StringIO
+import io
 import cloudpickle
 import pickle
 
@@ -46,7 +46,7 @@ def test_symbols(en_vocab):
     
 
 def test_pickle_vocab(en_vocab):
-    file_ = StringIO.StringIO()
+    file_ = io.BytesIO()
     cloudpickle.dump(en_vocab, file_)
 
     file_.seek(0)
