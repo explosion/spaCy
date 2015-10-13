@@ -19,6 +19,9 @@ from .typedefs cimport attr_t
 from .cfile cimport CFile
 from .lemmatizer import Lemmatizer
 
+from . import attrs
+from . import symbols
+
 from cymem.cymem cimport Address
 from . import util
 from .serialize.packer cimport Packer
@@ -67,6 +70,14 @@ cdef class Vocab:
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
         self.strings = StringStore()
+        # Load strings in a special order, so that we have an onset number for
+        # the vocabulary. This way, when words are added in order, the orth ID
+        # is the frequency rank of the word, plus a certain offset. The structural
+        # strings are loaded first, because the vocab is open-class, and these
+        # symbols are closed class.
+        for name in symbols.NAMES + list(sorted(tag_map.keys())):
+            if name:
+                _ = self.strings[name]
         self.get_lex_attr = get_lex_attr
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.serializer_freqs = serializer_freqs

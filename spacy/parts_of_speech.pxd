@@ -1,7 +1,8 @@
-# Google universal tag set
+from . cimport symbols
+
 cpdef enum univ_pos_t:
-    NO_TAG
-    ADJ
+    NO_TAG = 0
+    ADJ = symbols.ADJ
     ADP
     ADV
     AUX
@@ -20,4 +21,3 @@ cpdef enum univ_pos_t:
     X
     EOL
     SPACE
-    N_UNIV_TAGS
