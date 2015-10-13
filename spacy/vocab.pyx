@@ -11,7 +11,6 @@ import io
 import math
 import json
 import tempfile
-import copy_reg
 
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
@@ -28,6 +27,11 @@ from cymem.cymem cimport Address
 from . import util
 from .serialize.packer cimport Packer
 from .attrs cimport PROB
+
+try:
+    import copy_reg
+except ImportError:
+    import copyreg as copy_reg
 
 
 DEF MAX_VEC_SIZE = 100000
