@@ -63,7 +63,7 @@ cdef class Model:
             self._model.load(self.model_loc, freq_thresh=0)
 
     def __reduce__(self):
-        model_loc = tempfile.mkstemp()
+        _, model_loc = tempfile.mkstemp()
         # TODO: This is a potentially buggy implementation. We're not really
         # given a good guarantee that all internal state is saved correctly here,
         # since there are learning parameters for e.g. the model averaging in
