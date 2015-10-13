@@ -196,11 +196,11 @@ def test_gr39():
 
 def test_gr40():
     sents = get_sent_strings("This is a sentence\ncut off in the middle because pdf.")
-    assert sents == ["This is a sentence cut off in the middle because pdf."]
+    assert sents == ["This is a sentence\ncut off in the middle because pdf."]
 
 def test_gr41():
     sents = get_sent_strings("It was a cold \nnight in the city.")
-    assert sents == ["It was a cold night in the city."]
+    assert sents == ["It was a cold \nnight in the city."]
 
 def test_gr42():
     sents = get_sent_strings("features\ncontact manager\nevents, activities\n")
@@ -220,10 +220,10 @@ def test_gr45():
 
 def test_gr46():
     sents = get_sent_strings("Thoreau argues that by simplifying one’s life, “the laws of the universe will appear less complex. . . .”")
-    assert sents == ("Thoreau argues that by simplifying one’s life, “the laws of the universe will appear less complex. . . .”")
+    assert sents == ["Thoreau argues that by simplifying one’s life, “the laws of the universe will appear less complex. . . .”"]
 
 def test_gr47():
-    sents = get_sent_strings("""Bohr [...] used the analogy of parallel stairways [...]" (Smith 55).""")
+    sents = get_sent_strings(""""Bohr [...] used the analogy of parallel stairways [...]" (Smith 55).""")
     assert sents == ['"Bohr [...] used the analogy of parallel stairways [...]" (Smith 55).']
 
 def test_gr48():
