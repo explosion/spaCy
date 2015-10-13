@@ -69,8 +69,8 @@ def test_count_by(nlp):
     assert tokens.count_by(attrs.ORTH) == {3699: 2, 3750: 1, 5965: 1}
     assert repr(tokens.to_array([attrs.ORTH])) == repr(numpy.array([[2529],
                                                         [2529],
-                                                        [4117],
-                                                        [6650]], dtype=numpy.int32))
+                                                        [3750],
+                                                        [5965]], dtype=numpy.int32))
 
 @pytest.mark.models
 def test_read_bytes(nlp):
