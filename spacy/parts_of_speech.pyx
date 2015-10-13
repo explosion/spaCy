@@ -1,8 +1,8 @@
 from __future__ import unicode_literals
 
 
-UNIV_POS_NAMES = {
-    "NO_TAG": NO_TAG,
+IDS = {
+    "": NO_TAG,
     "ADJ": ADJ,
     "ADP": ADP,
     "ADV": ADV,
@@ -23,3 +23,6 @@ UNIV_POS_NAMES = {
     "EOL": EOL,
     "SPACE": SPACE
 }
+
+
+NAMES = [key for key, value in sorted(IDS.items(), key=lambda item: item[1])]

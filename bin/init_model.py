@@ -169,6 +169,11 @@ def setup_vocab(get_lex_attr, tag_map, src_dir, dst_dir):
 
     lexicon = []
     for word, prob in reversed(sorted(list(probs.items()), key=lambda item: item[1])):
+        # First encode the strings into the StringStore. This way, we can map
+        # the orth IDs to frequency ranks
+        orth = vocab.strings[word]
+    # Now actually load the vocab
+    for word, prob in reversed(sorted(list(probs.items()), key=lambda item: item[1])):
         lexeme = vocab[word]
         lexeme.prob = prob
         lexeme.is_oov = False

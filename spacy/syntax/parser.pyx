@@ -83,7 +83,6 @@ cdef class Parser:
         model = Model(moves.n_moves, templates, model_dir)
         return cls(strings, moves, model)
 
-
     def __call__(self, Doc tokens):
         cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
         self.moves.initialize_state(stcls)
@@ -92,6 +91,9 @@ cdef class Parser:
                                   self.model.n_feats, self.model.n_feats)
         self.parse(stcls, eg.c)
         tokens.set_parse(stcls._sent)
+
+    def __reduce__(self):
+        return (Parser, (self.moves.strings, self.moves, self.model), None, None)
 
     cdef void predict(self, StateClass stcls, ExampleC* eg) nogil:
         memset(eg.scores, 0, eg.nr_class * sizeof(weight_t))

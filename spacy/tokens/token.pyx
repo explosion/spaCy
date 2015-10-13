@@ -9,7 +9,7 @@ import numpy
 
 
 from ..lexeme cimport Lexeme
-from ..parts_of_speech import UNIV_POS_NAMES
+from .. import parts_of_speech
 
 from ..attrs cimport LEMMA
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
@@ -318,7 +318,7 @@ cdef class Token:
 
     property pos_:
         def __get__(self):
-            return _pos_id_to_string[self.c.pos]
+            return parts_of_speech.NAMES[self.c.pos]
 
     property tag_:
         def __get__(self):
@@ -363,6 +363,3 @@ cdef class Token:
 
     property like_email:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, LIKE_EMAIL)
-
-
-_pos_id_to_string = {id_: string for string, id_ in UNIV_POS_NAMES.items()}

@@ -15,7 +15,7 @@ from libcpp.vector cimport vector
 from murmurhash.mrmr cimport hash64
 
 from .attrs cimport LENGTH, ENT_TYPE, ORTH, NORM, LEMMA, LOWER, SHAPE
-from .attrs cimport FLAG13, FLAG14, FLAG15, FLAG16, FLAG17, FLAG18, FLAG19, FLAG20, FLAG21, FLAG22, FLAG23, FLAG24, FLAG25
+from .attrs cimport FLAG14, FLAG15, FLAG16, FLAG17, FLAG18, FLAG19, FLAG20, FLAG21, FLAG22, FLAG23, FLAG24, FLAG25
 from .tokens.doc cimport get_token_attr
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab
@@ -168,13 +168,7 @@ cdef class Matcher:
     cdef Pool mem
     cdef vector[Pattern*] patterns
     cdef readonly Vocab vocab
-
-    def __init__(self, vocab, patterns):
-        self.vocab = vocab
-        self.mem = Pool()
-        self.vocab = vocab
-        for entity_key, (etype, attrs, specs) in sorted(patterns.items()):
-            self.add(entity_key, etype, attrs, specs)
+    cdef object _patterns
 
     @classmethod
     def from_dir(cls, data_dir, Vocab vocab):
@@ -186,10 +180,22 @@ cdef class Matcher:
         else:
             return cls(vocab, {})
 
+    def __init__(self, vocab, patterns):
+        self.vocab = vocab
+        self.mem = Pool()
+        self.vocab = vocab
+        self._patterns = dict(patterns)
+        for entity_key, (etype, attrs, specs) in sorted(patterns.items()):
+            self.add(entity_key, etype, attrs, specs)
+
+    def __reduce__(self):
+        return (self.__class__, (self.vocab, self._patterns), None, None)
+    
     property n_patterns:
         def __get__(self): return self.patterns.size()
 
     def add(self, entity_key, etype, attrs, specs):
+        self._patterns[entity_key] = (etype, dict(attrs), list(specs))
         if isinstance(entity_key, basestring):
             entity_key = self.vocab.strings[entity_key]
         if isinstance(etype, basestring):

@@ -29,5 +29,6 @@ cdef class Model:
     cdef int update(self, atom_t* context, class_t guess, class_t gold, int cost) except -1
     
     cdef object model_loc
+    cdef object _templates
     cdef Extractor _extractor
     cdef LinearModel _model
