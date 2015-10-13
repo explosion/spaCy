@@ -92,6 +92,7 @@ def cython_setup(mod_names, language, includes, compile_args, link_args):
         package_data={"spacy": ["*.pxd"],
                       "spacy.en": ["*.pxd", "data/pos/*",
                                    "data/wordnet/*", "data/tokenizer/*",
+                                   "data/vocab/tag_map.json",
                                    "data/vocab/lexemes.bin",
                                    "data/vocab/strings.txt"],
                       "spacy.syntax": ["*.pxd"]},
