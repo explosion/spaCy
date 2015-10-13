@@ -10,3 +10,4 @@ wget
 plac
 six
 ujson
+cloudpickle
