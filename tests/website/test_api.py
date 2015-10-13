@@ -67,8 +67,8 @@ def test_count_by(nlp):
     from spacy import attrs
     tokens = nlp('apple apple orange banana')
     assert tokens.count_by(attrs.ORTH) == {3699: 2, 3750: 1, 5965: 1}
-    assert repr(tokens.to_array([attrs.ORTH])) == repr(numpy.array([[2529],
-                                                        [2529],
+    assert repr(tokens.to_array([attrs.ORTH])) == repr(numpy.array([[3699],
+                                                        [3699],
                                                         [3750],
                                                         [5965]], dtype=numpy.int32))
 
