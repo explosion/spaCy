@@ -71,7 +71,7 @@ cdef class Model:
         # that aren't necessarily saved. So, if we're part way through training
         # the model, and then we pickle it, we won't recover the state correctly.
         self._model.dump(model_loc)
-        return (Model, (self.n_classes, self.templates, model_loc),
+        return (Model, (self.n_classes, self._templates, model_loc),
                 None, None)
 
     def predict(self, Example eg):
