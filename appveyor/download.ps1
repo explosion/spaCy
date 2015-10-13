@@ -12,7 +12,7 @@ function Download ($filename, $url) {
         Write-Host "Reusing" $filepath
         return $filepath
     }
-                                                                               NET
+                                                                               
     # Download and retry up to 3 times in case of network transient errors.
     Write-Host "Downloading" $filename "from" $url
     $retry_attempts = 2

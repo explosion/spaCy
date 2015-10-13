@@ -54,8 +54,8 @@ build_script:
   #- "%CMD_IN_ENV% python setup.py build_ext --inplace"
   - ps: appveyor\download.ps1 
   - "tar -xzf corpora/en/wordnet.tar.gz"
-  - "ls \"C:/projects/spacy/include/"
-  - "ls \"C:/projects/spacy/include/"
+  - "ls \"C:/projects/spacy/corpora/en/"
+  - "ls \"C:/projects/spacy/"
 
 
 test_script:
