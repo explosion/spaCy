@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 from __future__ import unicode_literals
 import pickle
-import StringIO
+import io
 
 from spacy.strings import StringStore
 
@@ -82,7 +82,7 @@ def test_massive_strings(sstore):
 
 def test_pickle_string_store(sstore):
     hello_id = sstore[u'Hi']
-    string_file = StringIO.StringIO()
+    string_file = io.BytesIO()
     pickle.dump(sstore, string_file)
 
     string_file.seek(0)
