@@ -46,18 +46,18 @@ install:
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
   - "pip install --upgrade setuptools"
-  - "pip install cython fabric fabtools"
-  - "%CMD_IN_ENV% pip install -r requirements.txt"
+  #- "pip install cython fabric fabtools"
+  #- "%CMD_IN_ENV% pip install -r requirements.txt"
 
 build_script:
   # Build the compiled extension
-  - "%CMD_IN_ENV% python setup.py build_ext --inplace"
-  - "mkdir corpora/en"
-  - "cd corpora/en"
+  #- "%CMD_IN_ENV% python setup.py build_ext --inplace"
+  - "md corpora\\en"
+  - "cd corpora\\"
   - "wget --no-check-certificate http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"
   - "tar -xzf WordNet-3.0.tar.gz"
   - "mv WordNet-3.0 wordnet"
-  - "cd ../../"
+  - "cd ..\\..\\"
 
 
 test_script:
