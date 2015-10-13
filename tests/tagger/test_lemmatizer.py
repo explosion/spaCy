@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import StringIO
+import pickle
 
 from spacy.lemmatizer import Lemmatizer, read_index, read_exc
 from spacy.en import LOCAL_DATA_DIR
@@ -41,3 +43,12 @@ def test_smart_quotes(lemmatizer):
     do = lemmatizer.punct
     assert do('“') == set(['"'])
     assert do('“') == set(['"'])
+
+
+def test_pickle_lemmatizer(lemmatizer):
+    file_ = StringIO.StringIO()
+    pickle.dump(lemmatizer, file_)
+
+    file_.seek(0)
+    
+    loaded = pickle.load(file_)

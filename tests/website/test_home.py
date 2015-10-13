@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 import pytest
 import spacy
+import os
 
 
 @pytest.fixture()
@@ -9,8 +10,9 @@ def token(doc):
 
 
 def test_load_resources_and_process_text():
-    from spacy.en import English
-    nlp = English()
+    from spacy.en import English, LOCAL_DATA_DIR
+    data_dir = os.environ.get('SPACY_DATA', LOCAL_DATA_DIR)
+    nlp = English(data_dir=data_dir)
     doc = nlp('Hello, world. Here are two sentences.')
 
 
@@ -27,7 +29,7 @@ def test_use_integer_ids_for_any_strings(nlp, token):
     hello_id = nlp.vocab.strings['Hello']
     hello_str = nlp.vocab.strings[hello_id]
 
-    assert token.orth  == hello_id  == 3404
+    assert token.orth  == hello_id  == 3125
     assert token.orth_ == hello_str == 'Hello'
 
 

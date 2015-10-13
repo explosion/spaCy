@@ -1,5 +1,6 @@
 # Reserve 64 values for flag features
 cpdef enum attr_id_t:
+    NULL_ATTR
     IS_ALPHA
     IS_ASCII
     IS_DIGIT
@@ -14,8 +15,7 @@ cpdef enum attr_id_t:
     IS_STOP
     IS_OOV
     
-    FLAG13 = 13
-    FLAG14
+    FLAG14 = 14
     FLAG15
     FLAG16
     FLAG17

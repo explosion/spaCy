@@ -47,7 +47,7 @@ class TestVocab(unittest.TestCase):
     def test_get_lexeme(self):
         vocab = Vocab()
         lexeme = vocab[u'Hello']
-        assert lexeme.orth_ == u'Hello'
+        self.assertEqual(lexeme.orth_, u'Hello')
 
 
 class TestTokenizer(unittest.TestCase):

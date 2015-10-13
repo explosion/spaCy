@@ -1,46 +1,111 @@
-from cymem.cymem cimport Pool
-from preshed.maps cimport PreshMapArray
-from libc.stdint cimport uint64_t
+cpdef enum symbol_t:
+    NIL
+    IS_ALPHA
+    IS_ASCII
+    IS_DIGIT
+    IS_LOWER
+    IS_PUNCT
+    IS_SPACE
+    IS_TITLE
+    IS_UPPER
+    LIKE_URL
+    LIKE_NUM
+    LIKE_EMAIL
+    IS_STOP
+    IS_OOV
+    
+    FLAG14
+    FLAG15
+    FLAG16
+    FLAG17
+    FLAG18
+    FLAG19
+    FLAG20
+    FLAG21
+    FLAG22
+    FLAG23
+    FLAG24
+    FLAG25
+    FLAG26
+    FLAG27
+    FLAG28
+    FLAG29
+    FLAG30
+    FLAG31
+    FLAG32
+    FLAG33
+    FLAG34
+    FLAG35
+    FLAG36
+    FLAG37
+    FLAG38
+    FLAG39
+    FLAG40
+    FLAG41
+    FLAG42
+    FLAG43
+    FLAG44
+    FLAG45
+    FLAG46
+    FLAG47
+    FLAG48
+    FLAG49
+    FLAG50
+    FLAG51
+    FLAG52
+    FLAG53
+    FLAG54
+    FLAG55
+    FLAG56
+    FLAG57
+    FLAG58
+    FLAG59
+    FLAG60
+    FLAG61
+    FLAG62
+    FLAG63
 
-from .structs cimport TokenC
-from .strings cimport StringStore
-from .typedefs cimport attr_t
-from .parts_of_speech cimport univ_pos_t
+    ID
+    ORTH
+    LOWER
+    NORM
+    SHAPE
+    PREFIX
+    SUFFIX
 
-from . cimport symbols
+    LENGTH
+    CLUSTER
+    LEMMA
+    POS
+    TAG
+    DEP
+    ENT_IOB
+    ENT_TYPE
+    HEAD
+    SPACY
+    PROB
 
-cdef struct RichTagC:
-    uint64_t morph
-    int id
-    univ_pos_t pos
-    attr_t name
+    ADJ
+    ADP
+    ADV
+    AUX
+    CONJ
+    DET
+    INTJ
+    NOUN
+    NUM
+    PART
+    PRON
+    PROPN
+    PUNCT
+    SCONJ
+    SYM
+    VERB
+    X
+    EOL
+    SPACE
 
-
-cdef struct MorphAnalysisC:
-    RichTagC tag
-    attr_t lemma
-
-
-cdef class Morphology:
-    cdef readonly Pool mem
-    cdef readonly StringStore strings
-    cdef public object lemmatizer
-    cdef readonly object tag_map
-    cdef public object n_tags
-    cdef public object reverse_index
-    cdef public object tag_names
-
-    cdef RichTagC* rich_tags
-    cdef PreshMapArray _cache
-
-    cdef int assign_tag(self, TokenC* token, tag) except -1
-
-    cdef int assign_feature(self, uint64_t* morph, feature, value) except -1
-
-
-cpdef enum univ_morph_t:
-    NIL = 0
-    Animacy_anim = symbols.Animacy_anim
+    Animacy_anim
     Animacy_inam
     Aspect_freq
     Aspect_imp
@@ -286,4 +351,71 @@ cpdef enum univ_morph_t:
     VerbType_mod # U
     VerbType_light # U
 
+    PERSON
+    NORP
+    FACILITY
+    ORG
+    GPE
+    LOC
+    PRODUCT
+    EVENT
+    WORK_OF_ART
+    LANGUAGE
 
+    DATE
+    TIME
+    PERCENT
+    MONEY
+    QUANTITY
+    ORDINAL
+    CARDINAL
+
+    acomp
+    advcl
+    advmod
+    agent
+    amod
+    appos
+    attr
+    aux
+    auxpass
+    cc
+    ccomp
+    complm
+    conj
+    csubj
+    csubjpass
+    dep
+    det
+    dobj
+    expl
+    hmod
+    hyph
+    infmod
+    intj
+    iobj
+    mark
+    meta
+    neg
+    nmod
+    nn
+    npadvmod
+    nsubj
+    nsubjpass
+    num
+    number
+    oprd
+    parataxis
+    partmod
+    pcomp
+    pobj
+    poss
+    possessive
+    preconj
+    prep
+    prt
+    punct
+    quantmod
+    rcmod
+    root
+    xcomp

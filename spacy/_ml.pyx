@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from __future__ import division
 
 from os import path
+import tempfile
 import os
 import shutil
 import json
@@ -52,6 +53,7 @@ cdef class Model:
     def __init__(self, n_classes, templates, model_loc=None):
         if model_loc is not None and path.isdir(model_loc):
             model_loc = path.join(model_loc, 'model')
+        self._templates = templates
         self.n_classes = n_classes
         self._extractor = Extractor(templates)
         self.n_feats = self._extractor.n_templ
@@ -59,6 +61,18 @@ cdef class Model:
         self.model_loc = model_loc
         if self.model_loc and path.exists(self.model_loc):
             self._model.load(self.model_loc, freq_thresh=0)
+
+    def __reduce__(self):
+        _, model_loc = tempfile.mkstemp()
+        # TODO: This is a potentially buggy implementation. We're not really
+        # given a good guarantee that all internal state is saved correctly here,
+        # since there are learning parameters for e.g. the model averaging in
+        # averaged perceptron, the gradient calculations in AdaGrad, etc
+        # that aren't necessarily saved. So, if we're part way through training
+        # the model, and then we pickle it, we won't recover the state correctly.
+        self._model.dump(model_loc)
+        return (Model, (self.n_classes, self._templates, model_loc),
+                None, None)
 
     def predict(self, Example eg):
         self.set_scores(eg.c.scores, eg.c.atoms)

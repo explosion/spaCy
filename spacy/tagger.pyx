@@ -148,6 +148,9 @@ cdef class Tagger:
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
+    def __reduce__(self):
+        return (self.__class__, (self.vocab, self.model), None, None)
+
     def tag_from_strings(self, Doc tokens, object tag_strs):
         cdef int i
         for i in range(tokens.length):

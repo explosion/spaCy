@@ -131,6 +131,7 @@ def cython_setup(mod_names, language, includes):
         package_data={"spacy": ["*.pxd"],
                       "spacy.en": ["*.pxd", "data/pos/*",
                                    "data/wordnet/*", "data/tokenizer/*",
+                                   "data/vocab/tag_map.json",
                                    "data/vocab/lexemes.bin",
                                    "data/vocab/strings.txt"],
                       "spacy.syntax": ["*.pxd"]},
@@ -160,7 +161,7 @@ def run_setup(exts):
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
         license="MIT",
-        install_requires=['numpy', 'murmurhash', 'cymem >= 1.11', 'preshed == 0.42',
+        install_requires=['numpy', 'murmurhash', 'cymem >= 1.11', 'preshed >= 0.42',
                           'thinc == 3.3', "text_unidecode", 'wget', 'plac', 'six',
                           'ujson'],
         setup_requires=["headers_workaround"],
@@ -174,7 +175,7 @@ def run_setup(exts):
     headers_workaround.install_headers('numpy')
 
 
-VERSION = '0.94'
+VERSION = '0.95'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
@@ -202,7 +203,8 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.tokens.doc', 'spacy.tokens.spans', 'spacy.tokens.token',
              'spacy.serialize.packer', 'spacy.serialize.huffman', 'spacy.serialize.bits',
              'spacy.cfile', 'spacy.matcher',
-             'spacy.syntax.ner']
+             'spacy.syntax.ner',
+             'spacy.symbols']
 
 
 if __name__ == '__main__':
