@@ -384,10 +384,7 @@ cdef class ArcEager(TransitionSystem):
         for i in range(st.length):
             # Always attach spaces to the previous word
             if Lexeme.c_check_flag(st._sent[i].lex, IS_SPACE):
-                if i >= 1:
-                    st.add_arc(i-1, i, st._sent[i].dep)
-                else:
-                    st.add_arc(i+1, i, st._sent[i].dep)
+                st._sent[i].head = -1 if (i >= 1) else 1
                 if st._sent[i].sent_start and st._sent[i].head == -1:
                     st._sent[i].sent_start = False
                     # If we had this space token as the start of a sentence,
