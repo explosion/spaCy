@@ -13,6 +13,11 @@ environment:
       PYTHON_VERSION: "2.7.10"
       PYTHON_ARCH: "64"
 
+    # The lastest Python 3.4.
+    - PYTHON: "C:\\Python34-x64" 
+      PYTHON_VERSION: "3.4.x" # currently 3.4.3 
+      PYTHON_ARCH: "64" 
+
 install:
   # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
