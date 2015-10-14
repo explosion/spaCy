@@ -91,3 +91,10 @@ coverage.xml
 # Sphinx documentation
 docs/_build/
 docs/_themes/
+setup.py
+
+# Windows local helper files
+*.bat
+
+# Komodo project files
+*.komodoproject
