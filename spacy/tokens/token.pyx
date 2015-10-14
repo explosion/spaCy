@@ -248,12 +248,12 @@ cdef class Token:
 
     property conjuncts:
         def __get__(self):
-            """Get a list of conjoined words"""
+            """Get a list of conjoined words."""
             cdef Token word
             conjs = []
             if self.c.pos != CONJ and self.c.pos != PUNCT:
                 seen_conj = False
-                for word in reversed(list(self.lefts)):
+                for word in self.rights:
                     if word.c.pos == CONJ:
                         seen_conj = True
                     elif seen_conj and word.c.pos == self.c.pos:
