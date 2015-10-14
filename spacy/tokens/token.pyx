@@ -251,7 +251,7 @@ cdef class Token:
             """Get a list of conjoined words."""
             cdef Token word
             conjuncts = []
-            if self.c.pos != CONJ and self.c.pos != PUNCT:
+            if self.dep_ != 'conj':
                 for word in self.rights:
                     if word.dep_ == 'conj':
                         yield word
