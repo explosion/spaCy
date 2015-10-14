@@ -8,4 +8,5 @@ def test_space_attachment(EN):
     doc = EN(sentence)
 
     for sent in doc.sents:
-        assert not sent[-1].is_space
+        if len(sent) == 1:
+            assert not sent[-1].is_space
