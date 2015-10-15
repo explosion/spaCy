@@ -1,5 +1,5 @@
 
-https://ci.appveyor.com/api/projects/status/aoe3dtkep36rdaqf?svg=true
+Windows build status: <img src="https://ci.appveyor.com/api/projects/status/aoe3dtkep36rdaqf?svg=true" />
 
 spaCy: Industrial-strength NLP
 ==============================
