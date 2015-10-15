@@ -15,6 +15,8 @@ from joblib import Parallel, delayed
 import spacy.en
 from spacy.strings import StringStore
 from spacy.attrs import ORTH
+from spacy.tokenizer import Tokenizer
+from spacy.vocab import Vocab
 
 
 def iter_comments(loc):
