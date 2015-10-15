@@ -1,3 +1,7 @@
+
+[![Build status](https://ci.appveyor.com/api/projects/status/aoe3dtkep36rdaqfaqf?svg=true)](https://ci.appveyor.com/project/maxirmx/spacy) 
+
+
 spaCy: Industrial-strength NLP
 ==============================
 
@@ -50,7 +54,5 @@ Difficult to support:
 * PyPy 2.7
 * PyPy 3.4
 
-
-[![Build status](https://ci.appveyor.com/api/projects/status/aoe3dtkep36rdaqfaqf?svg=true)](https://ci.appveyor.com/project/maxirmx/spacy) 
 
 
