@@ -43,7 +43,7 @@ def null_props(string):
 
 def count_freqs(input_loc, output_loc):
     print(output_loc)
-    tokenizer = Tokenizer.from_dir(Vocab(), English.default_data_dir())
+    tokenizer = Tokenizer.from_dir(Vocab(), spacy.en.English.default_data_dir())
 
     counts = PreshCounter()
     for json_comment in iter_comments(input_loc):
