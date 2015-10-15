@@ -72,6 +72,10 @@ cdef class Tokenizer:
         Returns:
             tokens (Doc): A Doc object, giving access to a sequence of LexemeCs.
         """
+        if len(string) >= (2 ** 30):
+            raise ValueError(
+                "String is too long: %d characters. Max is 2**30." % len(string)
+            )
         cdef int length = len(string)
         cdef Doc tokens = Doc(self.vocab)
         if length == 0:
