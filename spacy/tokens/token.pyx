@@ -248,24 +248,16 @@ cdef class Token:
 
     property conjuncts:
         def __get__(self):
-            """Get a list of conjoined words"""
+            """Get a list of conjoined words."""
             cdef Token word
-            conjs = []
-            if self.c.pos != CONJ and self.c.pos != PUNCT:
-                seen_conj = False
-                for word in reversed(list(self.lefts)):
-                    if word.c.pos == CONJ:
-                        seen_conj = True
-                    elif seen_conj and word.c.pos == self.c.pos:
-                        conjs.append(word)
-            conjs.reverse()
-            conjs.append(self)
-            if seen_conj:
-                return conjs
-            elif self is not self.head and self in self.head.conjuncts:
-                return self.head.conjuncts
-            else:
-                return []
+            conjuncts = []
+            if self.dep_ != 'conj':
+                for word in self.rights:
+                    if word.dep_ == 'conj':
+                        yield word
+                        yield from word.conjuncts
+                        conjuncts.append(word)
+                        conjuncts.extend(word.conjuncts)
 
     property ent_type:
         def __get__(self):
