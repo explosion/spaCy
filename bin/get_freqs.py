@@ -12,7 +12,7 @@ import codecs
 from preshed.counter import PreshCounter
 from joblib import Parallel, delayed
 
-import spacy.en
+from spacy.en import English
 from spacy.strings import StringStore
 from spacy.attrs import ORTH
 from spacy.tokenizer import Tokenizer
@@ -27,8 +27,9 @@ def iter_comments(loc):
 
 def count_freqs(input_loc, output_loc):
     print(output_loc)
-    tokenizer = Tokenizer.from_dir(Vocab(),
-                    path.join(spacy.en.English.default_data_dir(), 'tokenizer'))
+    vocab = English.default_vocab(get_lex_attr=None)
+    tokenizer = Tokenizer.from_dir(vocab,
+                    path.join(English.default_data_dir(), 'tokenizer'))
 
     counts = PreshCounter()
     for json_comment in iter_comments(input_loc):
