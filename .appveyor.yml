@@ -8,15 +8,23 @@ environment:
   matrix:
 
     # Python 2.7.10 is the latest version and is not pre-installed.
-
     - PYTHON: "C:\\Python27.10-x64"
       PYTHON_VERSION: "2.7.10"
       PYTHON_ARCH: "64"
+
+    - PYTHON: "C:\\Python27.10-x32"
+      PYTHON_VERSION: "2.7.10"
+      PYTHON_ARCH: "32"
 
     # The lastest Python 3.4.
     - PYTHON: "C:\\Python34-x64" 
       PYTHON_VERSION: "3.4.x" # currently 3.4.3 
       PYTHON_ARCH: "64" 
+
+    - PYTHON: "C:\\Python34-x32" 
+      PYTHON_VERSION: "3.4.x" # currently 3.4.3 
+      PYTHON_ARCH: "32" 
+
 
 install:
   # Install Python (from the official .msi of http://python.org) and pip when
