@@ -1,6 +1,5 @@
 
-[![Build status](https://ci.appveyor.com/api/projects/status/aoe3dtkep36rdaqfaqf?svg=true)](https://ci.appveyor.com/project/maxirmx/spacy) 
-
+https://ci.appveyor.com/api/projects/status/aoe3dtkep36rdaqf?svg=true
 
 spaCy: Industrial-strength NLP
 ==============================
