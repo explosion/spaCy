@@ -25,25 +25,10 @@ def iter_comments(loc):
             yield ujson.loads(line)
 
 
-def null_props(string):
-    return {
-        'flags': 0,
-        'length': len(string),
-        'orth': string,
-        'lower': string,
-        'norm': string,
-        'shape': string,
-        'prefix': string,
-        'suffix': string,
-        'cluster': 0,
-        'prob': -22,
-        'sentiment': 0
-    }
-
-
 def count_freqs(input_loc, output_loc):
     print(output_loc)
-    tokenizer = Tokenizer.from_dir(Vocab(), spacy.en.English.default_data_dir())
+    tokenizer = Tokenizer.from_dir(Vocab(),
+                    path.join(spacy.en.English.default_data_dir(), 'tokenizer'))
 
     counts = PreshCounter()
     for json_comment in iter_comments(input_loc):
