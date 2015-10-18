@@ -6,7 +6,6 @@ thinc == 3.3
 murmurhash == 0.24
 text-unidecode
 numpy
-wget
 plac
 six
 ujson
