@@ -278,7 +278,7 @@ cdef class Token:
 
     property whitespace_:
         def __get__(self):
-            return self.string[self.c.lex.length:]
+            return ' ' if self.c.spacy else ''
 
     property orth_:
         def __get__(self):
