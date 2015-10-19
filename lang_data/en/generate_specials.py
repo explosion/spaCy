@@ -342,7 +342,7 @@ hardcoded_specials = {
                 "\n": [{"F": "\n", "pos": "SP"}],
                 "\t": [{"F": "\t", "pos": "SP"}],
                 " ": [{"F": " ", "pos": "SP"}],
-                u"\xa0": [{"F": u"\xa0", "pos": "SP", "L": "  "}]
+                u"\u0020": [{"F": u"\u0020", "pos": "SP", "L": "  "}]
 
 }
 
