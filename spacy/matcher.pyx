@@ -238,7 +238,16 @@ cdef class Matcher:
                             matches.append((label, start, end))
                     else:
                         partials.push_back(state + 1)
-        doc.ents = [(e.label, e.start, e.end) for e in doc.ents] + matches
+        seen = set()
+        filtered = []
+        for label, start, end in sorted(matches, key=lambda m: (m[1], -(m[1] - m[2]))):
+            if all(i in seen for i in range(start, end)):
+                continue
+            else:
+                for i in range(start, end):
+                    seen.add(i)
+                filtered.append((label, start, end))
+        doc.ents = [(e.label, e.start, e.end) for e in doc.ents] + filtered
         return matches
 
 
