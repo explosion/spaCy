@@ -48,7 +48,7 @@ def prebuild(build_dir='/tmp/build_spacy'):
         local('virtualenv ' + build_venv)
         with prefix('cd %s && PYTHONPATH=`pwd` && . %s/bin/activate' % (build_dir, build_venv)):
             local('pip install cython fabric fabtools pytest')
-            local('pip install -r requirements.txt')
+            local('pip install --no-cache-dir -r requirements.txt')
             local('fab clean make')
             local('cp -r %s/corpora/en/wordnet corpora/en/' % spacy_dir)
             local('cp %s/corpora/en/freqs.txt.gz corpora/en/' % spacy_dir)
