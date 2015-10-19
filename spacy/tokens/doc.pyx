@@ -448,7 +448,8 @@ cdef class Doc:
         cdef Span span = self[start:end]
         # Get LexemeC for newly merged token
         new_orth = ''.join([t.text_with_ws for t in span])
-        new_orth = new_orth[:-len(span[-1].whitespace_)]
+        if span[-1].whitespace_:
+            new_orth = new_orth[:-len(span[-1].whitespace_)]
         cdef const LexemeC* lex = self.vocab.get(self.mem, new_orth)
         # House the new merged token where it starts
         cdef TokenC* token = &self.data[start]

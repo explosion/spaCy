@@ -124,6 +124,18 @@ def test_merge(EN):
     assert doc[4].tag_ == 'NAMED'
 
 
+def test_merge_end_string(EN):
+    doc = EN('WKRO played songs by the beach boys all night')
+
+    assert len(doc) == 9
+    # merge 'The Beach Boys'
+    doc.merge(doc[7].idx, doc[8].idx + len(doc[8]), 'NAMED', 'LEMMA', 'TYPE')
+    assert len(doc) == 8
+
+    assert doc[7].text == 'all night'
+    assert doc[7].text_with_ws == 'all night'
+
+
 @pytest.mark.models
 def test_merge_children(EN):
     """Test that attachments work correctly after merging."""
