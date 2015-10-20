@@ -28,8 +28,10 @@ def install_data(url, path, filename):
     except FileExistsError:
         pass
 
-    filename = download_file(url, os.path.join(path, filename))
-    t = tarfile.open(filename)
+    download_path = os.path.join(path, filename)
+    tmp = download_file(url, download_path)
+    assert tmp == download_path
+    t = tarfile.open(download_path)
     t.extractall(path)
 
 
