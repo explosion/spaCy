@@ -11,6 +11,7 @@ import ujson
 import codecs
 from preshed.counter import PreshCounter
 from joblib import Parallel, delayed
+import io
 
 from spacy.en import English
 from spacy.strings import StringStore

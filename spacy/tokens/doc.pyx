@@ -447,9 +447,9 @@ cdef class Doc:
 
         cdef Span span = self[start:end]
         # Get LexemeC for newly merged token
-        new_orth = ''.join([t.string for t in span])
+        new_orth = ''.join([t.text_with_ws for t in span])
         if span[-1].whitespace_:
-            new_orth = new_orth[:-1]
+            new_orth = new_orth[:-len(span[-1].whitespace_)]
         cdef const LexemeC* lex = self.vocab.get(self.mem, new_orth)
         # House the new merged token where it starts
         cdef TokenC* token = &self.data[start]
@@ -508,16 +508,26 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
     cdef TokenC* head
     cdef TokenC* child
     cdef int i
+    # Set number of left/right children to 0. We'll increment it in the loops.
+    for i in range(length):
+        tokens[i].l_kids = 0
+        tokens[i].r_kids = 0
+        tokens[i].l_edge = i
+        tokens[i].r_edge = i
     # Set left edges
     for i in range(length):
         child = &tokens[i]
         head = &tokens[i + child.head]
-        if child < head and child.l_edge < head.l_edge:
-            head.l_edge = child.l_edge
+        if child < head:
+            if child.l_edge < head.l_edge:
+                head.l_edge = child.l_edge
+            head.l_kids += 1
+        
     # Set right edges --- same as above, but iterate in reverse
     for i in range(length-1, -1, -1):
         child = &tokens[i]
         head = &tokens[i + child.head]
-        if child > head and child.r_edge > head.r_edge:
-            head.r_edge = child.r_edge
-
+        if child > head:
+            if child.r_edge > head.r_edge:
+                head.r_edge = child.r_edge
+            head.r_kids += 1

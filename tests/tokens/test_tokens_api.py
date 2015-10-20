@@ -109,3 +109,42 @@ def test_set_ents(EN):
     assert ent.label_ == 'PRODUCT'
     assert ent.start == 2
     assert ent.end == 4
+
+
+def test_merge(EN):
+    doc = EN('WKRO played songs by the beach boys all night')
+
+    assert len(doc) == 9
+    # merge 'The Beach Boys'
+    doc.merge(doc[4].idx, doc[6].idx + len(doc[6]), 'NAMED', 'LEMMA', 'TYPE')
+    assert len(doc) == 7
+
+    assert doc[4].text == 'the beach boys'
+    assert doc[4].text_with_ws == 'the beach boys '
+    assert doc[4].tag_ == 'NAMED'
+
+
+def test_merge_end_string(EN):
+    doc = EN('WKRO played songs by the beach boys all night')
+
+    assert len(doc) == 9
+    # merge 'The Beach Boys'
+    doc.merge(doc[7].idx, doc[8].idx + len(doc[8]), 'NAMED', 'LEMMA', 'TYPE')
+    assert len(doc) == 8
+
+    assert doc[7].text == 'all night'
+    assert doc[7].text_with_ws == 'all night'
+
+
+@pytest.mark.models
+def test_merge_children(EN):
+    """Test that attachments work correctly after merging."""
+    doc = EN('WKRO played songs by the beach boys all night')
+    # merge 'The Beach Boys'
+    doc.merge(doc[4].idx, doc[6].idx + len(doc[6]), 'NAMED', 'LEMMA', 'TYPE')
+    
+    for word in doc:
+        if word.i < word.head.i:
+            assert word in list(word.head.lefts)
+        elif word.i > word.head.i:
+            assert word in list(word.head.rights)

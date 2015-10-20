@@ -20,8 +20,6 @@ from .tokens.doc cimport get_token_attr
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab
 
-from libcpp.vector cimport vector
-
 from .attrs import FLAG61 as U_ENT
 
 from .attrs import FLAG60 as B2_ENT
@@ -221,8 +219,7 @@ cdef class Matcher:
             q = 0
             # Go over the open matches, extending or finalizing if able. Otherwise,
             # we over-write them (q doesn't advance)
-            for i in range(partials.size()):
-                state = partials.at(i)
+            for state in partials:
                 if match(state, token):
                     if is_final(state):
                         label, start, end = get_entity(state, token, token_i)
@@ -233,8 +230,7 @@ cdef class Matcher:
                         q += 1
             partials.resize(q)
             # Check whether we open any new patterns on this token
-            for i in range(self.n_patterns):
-                state = self.patterns[i]
+            for state in self.patterns:
                 if match(state, token):
                     if is_final(state):
                         label, start, end = get_entity(state, token, token_i)
@@ -242,7 +238,16 @@ cdef class Matcher:
                             matches.append((label, start, end))
                     else:
                         partials.push_back(state + 1)
-        doc.ents = [(e.label, e.start, e.end) for e in doc.ents] + matches
+        seen = set()
+        filtered = []
+        for label, start, end in sorted(matches, key=lambda m: (m[1], -(m[1] - m[2]))):
+            if all(i in seen for i in range(start, end)):
+                continue
+            else:
+                for i in range(start, end):
+                    seen.add(i)
+                filtered.append((label, start, end))
+        doc.ents = [(e.label, e.start, e.end) for e in doc.ents] + filtered
         return matches
 
 

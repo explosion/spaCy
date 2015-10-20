@@ -162,7 +162,7 @@ def run_setup(exts):
         ext_modules=exts,
         license="MIT",
         install_requires=['numpy', 'murmurhash', 'cymem >= 1.11', 'preshed >= 0.42',
-                          'thinc == 3.3', "text_unidecode", 'wget', 'plac', 'six',
+                          'thinc == 3.3', "text_unidecode", 'plac', 'six',
                           'ujson', 'cloudpickle'],
         setup_requires=["headers_workaround"],
         cmdclass = {'build_ext': build_ext_subclass },
@@ -175,13 +175,14 @@ def run_setup(exts):
     headers_workaround.install_headers('numpy')
 
 
-VERSION = '0.95'
+VERSION = '0.96'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
     if sys.platform.startswith('darwin'):
-        compile_options['other'].append(['-mmacosx-version-min=10.8', '-stdlib=libc++'])
-        link_opions['other'].append('-lc++')
+        compile_options['other'].append('-mmacosx-version-min=10.8')
+        compile_options['other'].append('-stdlib=libc++')
+        link_options['other'].append('-lc++')
     if use_cython:
         cython_setup(modules, language, includes)
     else:

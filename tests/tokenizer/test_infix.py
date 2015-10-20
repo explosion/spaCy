@@ -7,6 +7,10 @@ def test_hyphen(en_tokenizer):
     assert len(tokens) == 3
 
 
+def test_numeric_range(en_tokenizer):
+    tokens = en_tokenizer('0.1-13.5')
+    assert len(tokens) == 3
+
 def test_period(en_tokenizer):
     tokens = en_tokenizer('best.Known')
     assert len(tokens) == 3
