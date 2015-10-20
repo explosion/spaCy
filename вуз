@@ -1,8 +1,0 @@
-fabtools   				
-cymem
-pathlib			[version 1.0 is available at menpo channel. The latest version 1.0.1]
-thinc
-murmurhash
-text-unidecode
-wget 			[the same package is available as pywget at anaconda_old channel]
-cloudpickle
