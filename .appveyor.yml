@@ -12,18 +12,18 @@ environment:
       PYTHON_VERSION: "2.7.10"
       PYTHON_ARCH: "64"
 
-    - PYTHON: "C:\\Python27.10-x32"
-      PYTHON_VERSION: "2.7.10"
-      PYTHON_ARCH: "32"
+    #- PYTHON: "C:\\Python27.10-x32"
+    #  PYTHON_VERSION: "2.7.10"
+    #  PYTHON_ARCH: "32"
 
     # The lastest Python 3.4.
     - PYTHON: "C:\\Python34-x64" 
       PYTHON_VERSION: "3.4.x" # currently 3.4.3 
       PYTHON_ARCH: "64" 
 
-    - PYTHON: "C:\\Python34-x32" 
-      PYTHON_VERSION: "3.4.x" # currently 3.4.3 
-      PYTHON_ARCH: "32" 
+    #- PYTHON: "C:\\Python34-x32" 
+    #  PYTHON_VERSION: "3.4.x" # currently 3.4.3 
+    #  PYTHON_ARCH: "32" 
 
 
 install:
@@ -38,10 +38,10 @@ install:
   - "SET PYTHONPATH=%CD%;%PYTHONPATH%"
 
   # Filesystem root
-  # - ps: "ls \"C:/\""
+   - ps: "ls \"C:/\""
 
   # Installed SDKs
-  # - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
+   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
   # Checking stdint.h
   #- ps: "ls \"C:/projects/spacy/include/\""
