@@ -38,10 +38,10 @@ install:
   - "SET PYTHONPATH=%CD%;%PYTHONPATH%"
 
   # Filesystem root
-   - ps: "ls \"C:/\""
+  - ps: "ls \"C:/\""
 
   # Installed SDKs
-   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
+  - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
 
   # Checking stdint.h
   #- ps: "ls \"C:/projects/spacy/include/\""
