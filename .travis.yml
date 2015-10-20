@@ -13,7 +13,6 @@ install:
   - "pip install cython fabric fabtools"
   - "pip install -r requirements.txt"
   - "python setup.py build_ext --inplace"
-# init model
   - "mkdir -p corpora/en"
   - "cd corpora/en"
   - "wget --no-check-certificate http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"
