@@ -18,42 +18,38 @@ ALL_DATA_DIR_URL = '%s/en_data_all-%s.tgz' % (AWS_STORE, VERSION)
 DEST_DIR = path.join(path.dirname(path.abspath(__file__)), 'data')
 
 
-def download_file(url, dest_dir):
-    return uget.download(url, dest_dir, console=sys.stdout)
+def download_file(url, path):
+    return uget.download(url, path, console=sys.stdout)
 
 
-def install_data(url, dest_dir):
-    filename = download_file(url, dest_dir)
+def install_data(url, path, filename):
+    try:
+        os.makedirs(path)
+    except FileExistsError:
+        pass
+
+    filename = download_file(url, os.path.join(path, filename))
     t = tarfile.open(filename)
-    t.extractall(dest_dir)
-
-
-def install_parser_model(url, dest_dir):
-    filename = download_file(url, dest_dir)
-    t = tarfile.open(filename, mode=":gz")
-    t.extractall(dest_dir)
-
-
-def install_dep_vectors(url, dest_dir):
-    download_file(url, dest_dir)
+    t.extractall(path)
 
 
 @plac.annotations(
     force=("Force overwrite", "flag", "f", bool),
 )
 def main(data_size='all', force=False):
-    if data_size == 'all':
-        data_url = ALL_DATA_DIR_URL
-    elif data_size == 'small':
-        data_url = SM_DATA_DIR_URL
-
     if force and path.exists(DEST_DIR):
         shutil.rmtree(DEST_DIR)
 
-    if not os.path.exists(DEST_DIR):
-        os.makedirs(DEST_DIR)
+    filename = ALL_DATA_DIR_URL.rsplit('/', 1)[1]
 
-    install_data(data_url, DEST_DIR)
+    if os.path.exists(DEST_DIR):
+        # ugly hack to find out whether something other
+        # than the currently wanted file lives there
+        if len([f for f in os.listdir(DEST_DIR) if f != filename]):
+            print('data already installed at %s, overwrite with --force' % DEST_DIR)
+            sys.exit(1)
+
+    install_data(ALL_DATA_DIR_URL, DEST_DIR, filename)
 
 
 if __name__ == '__main__':
