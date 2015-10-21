@@ -19,7 +19,7 @@ class Lemmatizer(object):
             index[pos] = read_index(path.join(data_dir, 'wordnet', 'index.%s' % pos))
             exc[pos] = read_exc(path.join(data_dir, 'wordnet', '%s.exc' % pos))
         if path.exists(path.join(data_dir, 'vocab', 'lemma_rules.json')):
-            rules = json.load(open(path.join(data_dir, 'vocab', 'lemma_rules.json')))
+            rules = json.load(open(path.join(data_dir, 'vocab', 'lemma_rules.json')), encoding="UTF-8")
         else:
             rules = {}
         return cls(index, exc, rules)
