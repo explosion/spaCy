@@ -1,5 +1,4 @@
 from __future__ import print_function
-from os import path
 import sys
 import os
 import tarfile
@@ -15,43 +14,44 @@ AWS_STORE = 'https://s3-us-west-1.amazonaws.com/media.spacynlp.com'
 
 ALL_DATA_DIR_URL = '%s/en_data_all-%s.tgz' % (AWS_STORE, VERSION)
 
-DEST_DIR = path.join(path.dirname(path.abspath(__file__)), 'data')
+DEST_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def download_file(url, path):
-    return uget.download(url, path, console=sys.stdout)
+def download_file(url, download_path):
+    return uget.download(url, download_path, console=sys.stdout)
 
 
-def install_data(url, path, filename):
+def install_data(url, extract_path, download_path):
     try:
-        os.makedirs(path)
+        os.makedirs(extract_path)
     except FileExistsError:
         pass
 
-    download_path = os.path.join(path, filename)
     tmp = download_file(url, download_path)
     assert tmp == download_path
     t = tarfile.open(download_path)
-    t.extractall(path)
+    t.extractall(extract_path)
 
 
 @plac.annotations(
     force=("Force overwrite", "flag", "f", bool),
 )
 def main(data_size='all', force=False):
-    if force and path.exists(DEST_DIR):
-        shutil.rmtree(DEST_DIR)
-
     filename = ALL_DATA_DIR_URL.rsplit('/', 1)[1]
+    download_path = os.path.join(DEST_DIR, filename)
+    data_path = os.path.join(DEST_DIR, 'data')
 
-    if os.path.exists(DEST_DIR):
-        # ugly hack to find out whether something other
-        # than the currently wanted file lives there
-        if len([f for f in os.listdir(DEST_DIR) if f != filename]):
-            print('data already installed at %s, overwrite with --force' % DEST_DIR)
-            sys.exit(1)
+    if force and os.path.exists(download_path):
+        os.unlink(download_path)
 
-    install_data(ALL_DATA_DIR_URL, DEST_DIR, filename)
+    if force and os.path.exists(data_path):
+        shutil.rmtree(data_path)
+
+    if os.path.exists(data_path):
+        print('data already installed at %s, overwrite with --force' % DEST_DIR)
+        sys.exit(1)
+
+    install_data(ALL_DATA_DIR_URL, DEST_DIR, download_path)
 
 
 if __name__ == '__main__':
