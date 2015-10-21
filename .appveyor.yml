@@ -12,9 +12,9 @@ environment:
       PYTHON_VERSION: "2.7.10"
       PYTHON_ARCH: "64"
 
-    #- PYTHON: "C:\\Python27.10-x32"
-    #  PYTHON_VERSION: "2.7.10"
-    #  PYTHON_ARCH: "32"
+    - PYTHON: "C:\\Python27.10-x32"
+      PYTHON_VERSION: "2.7.10"
+      PYTHON_ARCH: "32"
 
     # The lastest Python 3.4.
     - PYTHON: "C:\\Python34-x64" 
@@ -39,6 +39,7 @@ install:
 
   # Filesystem root
   - ps: "ls \"C:/\""
+  - SET
 
   # Installed SDKs
   - ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
