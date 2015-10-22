@@ -12,8 +12,15 @@ from libc.stdint cimport int64_t
 
 from .typedefs cimport hash_t, attr_t
 
+try:
+    import codecs as io
+except ImportError:
+    import io
 
-SEPARATOR = '\n|-SEP-|\n'
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 
 cpdef hash_t hash_string(unicode string) except 0:
@@ -114,7 +121,11 @@ cdef class StringStore:
     def __iter__(self):
         cdef int i
         for i in range(self.size):
-            yield self[i]
+            if i == 0:
+                yield u''
+            else:
+                utf8str = &self.c[i]
+                yield _decode(utf8str)
 
     def __reduce__(self):
         strings = [""]
@@ -138,28 +149,22 @@ cdef class StringStore:
         self.size += 1
         return &self.c[self.size-1]
 
-    def dump(self, loc):
-        cdef Utf8Str* string
-        cdef unicode py_string
-        cdef int i
-        with codecs.open(loc, 'w', 'utf8') as file_:
-            for i in range(1, self.size):
-                string = &self.c[i]
-                py_string = _decode(string)
-                file_.write(py_string)
-                if (i+1) != self.size:
-                    file_.write(SEPARATOR)
+    def dump(self, file_):
+        string_data = json.dumps([s for s in self])
+        if not isinstance(string_data, unicode):
+            string_data = string_data.decode('utf8')
+        file_.write(string_data)
 
-    def load(self, loc):
-        with codecs.open(loc, 'r', 'utf8') as file_:
-            strings = file_.read().split(SEPARATOR)
+    def load(self, file_):
+        strings = json.load(file_)
         if strings == ['']:
             return None
         cdef unicode string
         cdef bytes byte_string
         for string in strings: 
-            byte_string = string.encode('utf8')
-            self.intern(byte_string, len(byte_string))
+            if string:
+                byte_string = string.encode('utf8')
+                self.intern(byte_string, len(byte_string))
 
     def _realloc(self):
         # We want to map straight to pointers, but they'll be invalidated if

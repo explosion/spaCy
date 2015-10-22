@@ -133,7 +133,7 @@ def cython_setup(mod_names, language, includes):
                                    "data/wordnet/*", "data/tokenizer/*",
                                    "data/vocab/tag_map.json",
                                    "data/vocab/lexemes.bin",
-                                   "data/vocab/strings.txt"],
+                                   "data/vocab/strings.json"],
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
         cmdclass={'build_ext': build_ext_cython_subclass},

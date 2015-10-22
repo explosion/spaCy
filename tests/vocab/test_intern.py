@@ -1,11 +1,12 @@
 # -*- coding: utf8 -*-
 from __future__ import unicode_literals
 import pickle
-import io
 
 from spacy.strings import StringStore
 
 import pytest
+
+import io
 
 
 @pytest.fixture
@@ -92,4 +93,12 @@ def test_pickle_string_store(sstore):
     assert loaded[hello_id] == u'Hi'
 
 
-
+def test_dump_load(sstore):
+    id_ = sstore[u'qqqqq']
+    loc = '/tmp/sstore.json'
+    with io.open(loc, 'w', encoding='utf8') as file_:
+        sstore.dump(file_)
+    new_store = StringStore()
+    with io.open(loc, 'r', encoding='utf8') as file_:
+        new_store.load(file_)
+    assert new_store[id_] == u'qqqqq'
