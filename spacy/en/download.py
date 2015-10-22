@@ -1,5 +1,4 @@
 from __future__ import print_function
-from os import path
 import sys
 import os
 import tarfile
@@ -15,45 +14,44 @@ AWS_STORE = 'https://s3-us-west-1.amazonaws.com/media.spacynlp.com'
 
 ALL_DATA_DIR_URL = '%s/en_data_all-%s.tgz' % (AWS_STORE, VERSION)
 
-DEST_DIR = path.join(path.dirname(path.abspath(__file__)), 'data')
+DEST_DIR = os.path.dirname(os.path.abspath(__file__))
 
 
-def download_file(url, dest_dir):
-    return uget.download(url, dest_dir, console=sys.stdout)
+def download_file(url, download_path):
+    return uget.download(url, download_path, console=sys.stdout)
 
 
-def install_data(url, dest_dir):
-    filename = download_file(url, dest_dir)
-    t = tarfile.open(filename)
-    t.extractall(dest_dir)
+def install_data(url, extract_path, download_path):
+    try:
+        os.makedirs(extract_path)
+    except FileExistsError:
+        pass
 
-
-def install_parser_model(url, dest_dir):
-    filename = download_file(url, dest_dir)
-    t = tarfile.open(filename, mode=":gz")
-    t.extractall(dest_dir)
-
-
-def install_dep_vectors(url, dest_dir):
-    download_file(url, dest_dir)
+    tmp = download_file(url, download_path)
+    assert tmp == download_path
+    t = tarfile.open(download_path)
+    t.extractall(extract_path)
 
 
 @plac.annotations(
     force=("Force overwrite", "flag", "f", bool),
 )
 def main(data_size='all', force=False):
-    if data_size == 'all':
-        data_url = ALL_DATA_DIR_URL
-    elif data_size == 'small':
-        data_url = SM_DATA_DIR_URL
+    filename = ALL_DATA_DIR_URL.rsplit('/', 1)[1]
+    download_path = os.path.join(DEST_DIR, filename)
+    data_path = os.path.join(DEST_DIR, 'data')
 
-    if force and path.exists(DEST_DIR):
-        shutil.rmtree(DEST_DIR)
+    if force and os.path.exists(download_path):
+        os.unlink(download_path)
 
-    if not os.path.exists(DEST_DIR):
-        os.makedirs(DEST_DIR)
+    if force and os.path.exists(data_path):
+        shutil.rmtree(data_path)
 
-    install_data(data_url, DEST_DIR)
+    if os.path.exists(data_path):
+        print('data already installed at %s, overwrite with --force' % DEST_DIR)
+        sys.exit(1)
+
+    install_data(ALL_DATA_DIR_URL, DEST_DIR, download_path)
 
 
 if __name__ == '__main__':
