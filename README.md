@@ -1,3 +1,6 @@
+
+<img src="https://ci.appveyor.com/api/projects/status/aoe3dtkep36rdaqf?svg=true" />
+
 spaCy: Industrial-strength NLP
 ==============================
 
@@ -49,3 +52,6 @@ Difficult to support:
 
 * PyPy 2.7
 * PyPy 3.4
+
+
+
