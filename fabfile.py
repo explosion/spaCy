@@ -68,7 +68,7 @@ def publish(version):
         local('git push origin %s' % version)
         local('python setup.py sdist')
         local('python setup.py register')
-        local('twine upload dist/%s.tar.gz' % version)
+        local('twine upload dist/spacy-%s.tar.gz' % version)
 
 
 def env(lang="python2.7"):
