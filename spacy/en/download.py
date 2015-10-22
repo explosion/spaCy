@@ -7,6 +7,13 @@ import plac
 
 from . import uget
 
+
+try:
+    FileExistsError
+except NameError:
+    FileExistsError = Exception
+
+
 # TODO: Read this from the same source as the setup
 VERSION = '0.9.6'
 
