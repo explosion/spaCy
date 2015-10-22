@@ -129,6 +129,8 @@ def cython_setup(mod_names, language, includes):
         version=VERSION,
         url="http://honnibal.github.io/spaCy/",
         package_data={"spacy": ["*.pxd"],
+                      "spacy.tokens": ["*.pxd"],
+                      "spacy.serialize": ["*.pxd"],
                       "spacy.en": ["*.pxd", "data/pos/*",
                                    "data/wordnet/*", "data/tokenizer/*",
                                    "data/vocab/tag_map.json",
