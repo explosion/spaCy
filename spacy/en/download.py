@@ -4,8 +4,9 @@ import sys
 import os
 import tarfile
 import shutil
-import uget
 import plac
+
+from . import uget
 
 # TODO: Read this from the same source as the setup
 VERSION = '0.9.5'
