@@ -21,32 +21,20 @@ environment:
       PYTHON_VERSION: "3.4.x" # currently 3.4.3 
       PYTHON_ARCH: "64" 
 
-    #- PYTHON: "C:\\Python34-x32" 
-    #  PYTHON_VERSION: "3.4.x" # currently 3.4.3 
-    #  PYTHON_ARCH: "32" 
+    - PYTHON: "C:\\Python34-x32" 
+      PYTHON_VERSION: "3.4.x" # currently 3.4.3 
+      PYTHON_ARCH: "32" 
 
 
 install:
   # Install Python (from the official .msi of http://python.org) and pip when
   # not already installed.
-  - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 }
+  - ps: if (-not(Test-Path($env:PYTHON))) { & appveyor\install.ps1 -python -pip -stdint }
 
   # Prepend newly installed Python to the PATH of this build (this cannot be
   # done from inside the powershell script as it would require to restart
   # the parent CMD process).
-  - "SET PATH=%CD%;%PYTHON%;%PYTHON%\\Scripts;%PATH%"
-  - "SET PYTHONPATH=%CD%;%PYTHONPATH%"
-
-  # Filesystem root
-  #- ps: "ls \"C:/\""
-  #- SET
-
-  # Installed SDKs
-  #- ps: "ls \"C:/Program Files/Microsoft SDKs/Windows\""
-
-  # Checking stdint.h
-  #- ps: "ls \"C:/projects/spacy/include/\""
-
+  - "SET PATH=%PYTHON%;%PYTHON%\\Scripts;%PATH%"
 
   # Check that we have the expected version and architecture for Python
   - "python --version"
@@ -69,8 +57,6 @@ build_script:
   - "%CMD_IN_ENV% python setup.py build_ext --inplace"
   - ps: appveyor\download.ps1 
   - "tar -xzf corpora/en/wordnet.tar.gz"
-  #- "ls \"C:/projects/spacy/corpora/en/"
-  #- "ls \"C:/projects/spacy/"
   - "%CMD_IN_ENV% python bin/init_model.py en lang_data/ corpora/ spacy/en/data"
 
 
