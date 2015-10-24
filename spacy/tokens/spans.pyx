@@ -46,6 +46,12 @@ cdef class Span:
             return 0
         return self.end - self.start
 
+    def __repr__(self):
+        text = self.text_with_ws
+        if self[-1].whitespace_:
+            text = text[:-1]
+        return text
+
     def __getitem__(self, object i):
         if isinstance(i, slice):
             start, end = normalize_slice(len(self), i.start, i.stop, i.step)
