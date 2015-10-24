@@ -29,6 +29,16 @@ cdef class Tokenizer:
         self._infix_re = infix_re
         self.vocab = vocab
         self._load_special_tokenization(rules)
+        self._rules = rules
+
+    def __reduce__(self):
+        args = (self.vocab, 
+                self._rules, 
+                self._prefix_re, 
+                self._suffix_re, 
+                self._infix_re)
+
+        return (self.__class__, args, None, None)
 
     @classmethod
     def from_dir(cls, Vocab vocab, data_dir):
