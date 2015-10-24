@@ -1,0 +1,3 @@
+[submodule "appveyor"]
+	path = appveyor
+	url = https://github.com/maxirmx/spaCy-appveyor-toolkit
