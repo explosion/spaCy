@@ -9,5 +9,9 @@ Build steps:
 	- pip install cython fabric fabtools
 	- pip install -r requirements.txt
 	- python setup.py build_ext --inplace
+
+If you are using traditional Microsoft SDK (v7.0 for Python 2.x or v7.1 for Python 3.x) consider run_with_env.cmd from appveyor folder (submodule) as a guideline for environment setup. 
+It can be also used as shell conviguration script for your build, install and run commands, i.e.: cmd /E:ON /V:ON /C run_with_env.cmd <your command> 
+
  
  
