@@ -2,6 +2,19 @@
 from __future__ import unicode_literals
 
 import pytest
+import io
+import pickle
+import cloudpickle
+import tempfile
+
+
+@pytest.mark.models
+def test_pickle(en_tokenizer):
+    file_ = io.BytesIO()
+    cloudpickle.dump(en_tokenizer, file_)
+    file_.seek(0)
+    loaded = pickle.load(file_)
+    assert loaded is not None
 
 
 def test_no_word(en_tokenizer):
@@ -108,7 +121,7 @@ def test_cnts5(en_tokenizer):
 #    text = """Today is Tuesday.Mr."""
 #    tokens = en_tokenizer(text)
 #    assert len(tokens) == 5
-#    assert [w.orth_ for w in tokens] == ['Today', 'is', 'Tuesday', '.', 'Mr.']                
+#    assert [w.orth_ for w in tokens] == ['Today', 'is', 'Tuesday', '.', 'Mr.']
 
 
 def test_cnts6(en_tokenizer):
