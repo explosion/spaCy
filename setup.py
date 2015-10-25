@@ -128,7 +128,7 @@ def cython_setup(mod_names, language, includes):
         author_email='honnibal@gmail.com',
         version=VERSION,
         url="http://honnibal.github.io/spaCy/",
-        package_data={"spacy": ["*.pxd"],
+        package_data={"spacy": ["*.pxd", "tests/*.py", "tests/*/*.py"],
                       "spacy.tokens": ["*.pxd"],
                       "spacy.serialize": ["*.pxd"],
                       "spacy.en": ["*.pxd", "data/pos/*",
@@ -139,7 +139,7 @@ def cython_setup(mod_names, language, includes):
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
         cmdclass={'build_ext': build_ext_cython_subclass},
-        license="Dual: Commercial or AGPL",
+        license="MIT",
     )
 
 
