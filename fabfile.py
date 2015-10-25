@@ -68,7 +68,7 @@ def docs():
         local('jade -P %s --out %s' % (jade_loc, out_loc))
 
     with virtualenv(VENV_DIR):
-        local('./website/create_code_samples tests/website/ website/src/code/')t 
+        local('./website/create_code_samples tests/website/ website/src/code/')
 
     jade('home/index.jade', '')
     jade('docs/index.jade', 'docs/')
