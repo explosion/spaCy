@@ -1,9 +1,12 @@
+from __future__ import print_function
+
 from fabric.api import local, lcd, env, settings, prefix
 from os.path import exists as file_exists
 from fabtools.python import virtualenv
 from os import path
 import os
 import shutil
+from pathlib import Path
 
 
 PWD = path.dirname(__file__)
@@ -56,10 +59,28 @@ def prebuild(build_dir='/tmp/build_spacy'):
             local('fab test')
             local('python setup.py sdist')
 
+
 def docs():
+    def jade(source_name, out_dir):
+        pwd = path.join(path.dirname(__file__), 'website')
+        jade_loc = path.join(pwd, 'src', 'jade', source_name)
+        out_loc = path.join(pwd, 'site', out_dir)
+        local('jade -P %s --out %s' % (jade_loc, out_loc))
+
     with virtualenv(VENV_DIR):
-        with lcd(path.join(path.dirname(__file__), 'docs')):
-            local('make html')
+        local('./website/create_code_samples tests/website/ website/src/code/')
+
+    jade('home/index.jade', '')
+    jade('docs/index.jade', 'docs/')
+    jade('blog/index.jade', 'blog/')
+    jade('tutorials/index.jade', 'tutorials/')
+
+    for post_dir in (Path(__file__).parent / 'website' / 'src' / 'jade' / 'blog').iterdir():
+        if post_dir.is_dir() \
+        and (post_dir / 'index.jade').exists() \
+        and (post_dir / 'meta.jade').exists():
+            jade(str(post_dir / 'index.jade'), path.join('blogs', post_dir.parts[-1]))
+        
 
 def publish(version):
     with virtualenv(VENV_DIR):

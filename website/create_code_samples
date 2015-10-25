@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import os
 import ast
 import io
+import re
 
 import plac
 

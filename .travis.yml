@@ -24,4 +24,4 @@ install:
 
 # run tests
 script:
-  - "py.test tests/ -x"
+  - "py.test spacy/ -x"

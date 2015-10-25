@@ -10,7 +10,7 @@ mixin Option(name, open)
     pre.language-bash
         code
             $ pip install --upgrade spacy
-            $ python -m spacy.en.download all
+            $ python -m spacy.en.download --force all
     p Most updates ship a new model, so you will usually have to redownload the data.
 
 
@@ -92,6 +92,17 @@ mixin Option(name, open)
 
 h4 What's New?
 
+
+details
+    summary
+        h4 2015-10-24 v0.97: Reduce load time, bug fixes
+
+    ul
+        li Load the StringStore from a json list, instead of a text file. Accept a file-like object in the API instead of a path, for better flexibility.
+        li * Load from file, rather than path, in StringStore
+        li Fix bugs in download.py
+        li Require #[code --force] to over-write the data directory in download.py
+        li Fix bugs in #[code Matcher] and #[code doc.merge()]
 
 details
     summary

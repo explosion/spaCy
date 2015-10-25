@@ -128,7 +128,7 @@ def cython_setup(mod_names, language, includes):
         author_email='honnibal@gmail.com',
         version=VERSION,
         url="http://honnibal.github.io/spaCy/",
-        package_data={"spacy": ["*.pxd"],
+        package_data={"spacy": ["*.pxd", "tests/*.py", "tests/*/*.py"],
                       "spacy.tokens": ["*.pxd"],
                       "spacy.serialize": ["*.pxd"],
                       "spacy.en": ["*.pxd", "data/pos/*",
@@ -139,7 +139,7 @@ def cython_setup(mod_names, language, includes):
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
         cmdclass={'build_ext': build_ext_cython_subclass},
-        license="Dual: Commercial or AGPL",
+        license="MIT",
     )
 
 
@@ -147,7 +147,19 @@ def run_setup(exts):
     setup(
         name='spacy',
         packages=['spacy', 'spacy.tokens', 'spacy.en', 'spacy.serialize',
-                  'spacy.syntax', 'spacy.munge'],
+                  'spacy.syntax', 'spacy.munge',
+                  'spacy.tests',
+                  'spacy.tests.matcher',
+                  'spacy.tests.morphology',
+                  'spacy.tests.munge',
+                  'spacy.tests.parser',
+                  'spacy.tests.serialize',
+                  'spacy.tests.spans',
+                  'spacy.tests.tagger',
+                  'spacy.tests.tokenizer',
+                  'spacy.tests.tokens',
+                  'spacy.tests.vectors',
+                  'spacy.tests.vocab'],
         description="Industrial-strength NLP",
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
