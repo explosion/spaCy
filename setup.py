@@ -129,11 +129,13 @@ def cython_setup(mod_names, language, includes):
         version=VERSION,
         url="http://honnibal.github.io/spaCy/",
         package_data={"spacy": ["*.pxd"],
+                      "spacy.tokens": ["*.pxd"],
+                      "spacy.serialize": ["*.pxd"],
                       "spacy.en": ["*.pxd", "data/pos/*",
                                    "data/wordnet/*", "data/tokenizer/*",
                                    "data/vocab/tag_map.json",
                                    "data/vocab/lexemes.bin",
-                                   "data/vocab/strings.txt"],
+                                   "data/vocab/strings.json"],
                       "spacy.syntax": ["*.pxd"]},
         ext_modules=exts,
         cmdclass={'build_ext': build_ext_cython_subclass},
@@ -175,7 +177,7 @@ def run_setup(exts):
     headers_workaround.install_headers('numpy')
 
 
-VERSION = '0.96'
+VERSION = '0.97'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]

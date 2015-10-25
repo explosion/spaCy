@@ -1,5 +1,6 @@
 from os import path
 from warnings import warn
+import io
 
 try:
     import ujson as json
@@ -247,7 +248,10 @@ class Language(object):
         self.parser.model.end_training(path.join(data_dir, 'deps', 'model'))
         self.entity.model.end_training(path.join(data_dir, 'ner', 'model'))
         self.tagger.model.end_training(path.join(data_dir, 'pos', 'model'))
-        self.vocab.strings.dump(path.join(data_dir, 'vocab', 'strings.txt'))
+
+        strings_loc = path.join(data_dir, 'vocab', 'strings.json')
+        with io.open(strings_loc, 'w', encoding='utf8') as file_:
+            self.vocab.strings.dump(file_)
 
         with open(path.join(data_dir, 'vocab', 'serializer.json'), 'w') as file_:
             file_.write(

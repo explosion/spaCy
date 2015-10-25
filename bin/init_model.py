@@ -191,7 +191,8 @@ def setup_vocab(get_lex_attr, tag_map, src_dir, dst_dir):
         else:
             lexeme.cluster = 0
     vocab.dump(str(dst_dir / 'lexemes.bin'))
-    vocab.strings.dump(str(dst_dir / 'strings.txt'))
+    with (dst_dir / 'strings.json').open('w') as file_:
+        vocab.strings.dump(file_)
     with (dst_dir / 'oov_prob').open('w') as file_:
         file_.write('%f' % oov_prob)
 

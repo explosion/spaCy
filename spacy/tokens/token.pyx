@@ -43,6 +43,9 @@ cdef class Token:
     def __str__(self):
         return self.string
 
+    def __repr__(self):
+        return self.string
+
     cpdef bint check_flag(self, attr_id_t flag_id) except -1:
         return Lexeme.c_check_flag(self.c.lex, flag_id)
 

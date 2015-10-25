@@ -62,7 +62,9 @@ cdef class Vocab:
         cdef Vocab self = cls(get_lex_attr=get_lex_attr, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)
 
-        self.load_lexemes(path.join(data_dir, 'strings.txt'), path.join(data_dir, 'lexemes.bin'))
+        with io.open(path.join(data_dir, 'strings.json'), 'r', encoding='utf8') as file_:
+            self.strings.load(file_)
+        self.load_lexemes(path.join(data_dir, 'lexemes.bin'))
         if path.exists(path.join(data_dir, 'vec.bin')):
             self.vectors_length = self.load_vectors_from_bin_loc(path.join(data_dir, 'vec.bin'))
         return self
@@ -106,11 +108,12 @@ cdef class Vocab:
         # TODO: Dump vectors
         tmp_dir = tempfile.mkdtemp()
         lex_loc = path.join(tmp_dir, 'lexemes.bin')
-        str_loc = path.join(tmp_dir, 'strings.txt')
+        str_loc = path.join(tmp_dir, 'strings.json')
         vec_loc = path.join(self.data_dir, 'vec.bin') if self.data_dir is not None else None
 
         self.dump(lex_loc)
-        self.strings.dump(str_loc)
+        with io.open(str_loc, 'w', encoding='utf8') as file_:
+            self.strings.dump(file_)
         
         state = (str_loc, lex_loc, vec_loc, self.morphology, self.get_lex_attr,
                  self.serializer_freqs, self.data_dir)
@@ -250,8 +253,7 @@ cdef class Vocab:
             fp.write_from(&lexeme.l2_norm, sizeof(lexeme.l2_norm), 1)
         fp.close()
 
-    def load_lexemes(self, strings_loc, loc):
-        self.strings.load(strings_loc)
+    def load_lexemes(self, loc):
         if not path.exists(loc):
             raise IOError('LexemeCs file not found at %s' % loc)
         fp = CFile(loc, 'rb')
@@ -369,7 +371,9 @@ def unpickle_vocab(strings_loc, lex_loc, vec_loc, morphology, get_lex_attr,
     vocab.data_dir = data_dir
     vocab.serializer_freqs = serializer_freqs
 
-    vocab.load_lexemes(strings_loc, lex_loc)
+    with io.open(strings_loc, 'r', encoding='utf8') as file_:
+        vocab.strings.load(file_)
+    vocab.load_lexemes(lex_loc)
     if vec_loc is not None:
         vocab.load_vectors_from_bin_loc(vec_loc)
     return vocab

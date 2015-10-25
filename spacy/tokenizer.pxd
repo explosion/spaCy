@@ -19,6 +19,7 @@ cdef class Tokenizer:
     cdef object _prefix_re
     cdef object _suffix_re
     cdef object _infix_re
+    cdef object _rules
 
     cpdef Doc tokens_from_list(self, list strings)
 
