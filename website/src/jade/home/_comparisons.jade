@@ -35,7 +35,7 @@ mixin comparison(name)
             +columns("System", "Language", "Accuracy", "Speed")
 
         tbody
-            +row("spaCy v0.93", "Cython", "91.8", "13,000 (est.)")
+            +row("spaCy v0.97", "Cython", "91.8", "13,000 (est.)")
             +row("ClearNLP", "Java", "91.7", "10,271")
             +row("CoreNLP", "Java", "89.6", "8,602")
             +row("MATE", "Java", "92.5", "550")
@@ -80,7 +80,7 @@ mixin comparison(name)
                 li.con English only
                 li.pro Python
         .col
-            h5 CoreNLP features:
+            h5 CoreNLP
             ul
                 li.pro More accurate NER
                 li.pro Coreference resolution
@@ -103,7 +103,7 @@ mixin comparison(name)
                 li.pro Python
 
         .col
-            h5 ClearNLP:
+            h5 ClearNLP
             ul
                 li.pro Semantic Role Labelling
                 li.pro Model for biology/life-science
