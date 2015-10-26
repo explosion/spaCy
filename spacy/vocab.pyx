@@ -105,7 +105,6 @@ cdef class Vocab:
         return self.length
 
     def __reduce__(self):
-        # TODO: Dump vectors
         tmp_dir = tempfile.mkdtemp()
         lex_loc = path.join(tmp_dir, 'lexemes.bin')
         str_loc = path.join(tmp_dir, 'strings.json')
