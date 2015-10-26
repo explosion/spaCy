@@ -5,6 +5,7 @@ import pickle
 from spacy.strings import StringStore
 
 import pytest
+import tempfile
 
 import io
 
@@ -95,10 +96,9 @@ def test_pickle_string_store(sstore):
 
 def test_dump_load(sstore):
     id_ = sstore[u'qqqqq']
-    loc = '/tmp/sstore.json'
-    with io.open(loc, 'w', encoding='utf8') as file_:
+    with tempfile.TemporaryFile() as file_: 
         sstore.dump(file_)
-    new_store = StringStore()
-    with io.open(loc, 'r', encoding='utf8') as file_:
+        file_.seek(0)
+        new_store = StringStore()
         new_store.load(file_)
     assert new_store[id_] == u'qqqqq'
