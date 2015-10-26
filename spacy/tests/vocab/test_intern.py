@@ -96,7 +96,7 @@ def test_pickle_string_store(sstore):
 
 def test_dump_load(sstore):
     id_ = sstore[u'qqqqq']
-    with tempfile.TemporaryFile('w+bt') as file_: 
+    with tempfile.TemporaryFile('tw') as file_: 
         sstore.dump(file_)
         file_.seek(0)
         new_store = StringStore()
