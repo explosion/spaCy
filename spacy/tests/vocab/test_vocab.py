@@ -52,3 +52,33 @@ def test_pickle_vocab(en_vocab):
     file_.seek(0)
 
     loaded = pickle.load(file_)
+
+
+@pytest.mark.vectors
+def test_pickle_vocab_vectors(en_vocab):
+    vectors_length = en_vocab.vectors_length
+    assert vectors_length != 0
+
+    apples = en_vocab['apples']
+    oranges = en_vocab['oranges']
+    hippos = en_vocab['hippos']
+    
+    assert apples.similarity(oranges) > apples.similarity(hippos)
+
+    apples.vector = hippos.vector
+
+    assert apples.similarity(oranges) < apples.similarity(hippos)
+
+    file_ = io.BytesIO()
+    cloudpickle.dump(en_vocab, file_)
+
+    file_.seek(0)
+
+    loaded = pickle.load(file_)
+
+    apples = loaded['apples']
+    oranges = loaded['oranges']
+    hippos = loaded['hippos']
+
+    assert apples.similarity(oranges) < apples.similarity(hippos)
+   
