@@ -375,7 +375,7 @@ def unpickle_vocab(strings_loc, lex_loc, vec_loc, morphology, get_lex_attr,
         vocab.strings.load(file_)
     vocab.load_lexemes(lex_loc)
     if vec_loc is not None:
-        vocab.load_vectors_from_bin_loc(vec_loc)
+        vocab.vectors_length = vocab.load_vectors_from_bin_loc(vec_loc)
     return vocab
  
 
