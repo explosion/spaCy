@@ -109,11 +109,13 @@ cdef class Vocab:
         tmp_dir = tempfile.mkdtemp()
         lex_loc = path.join(tmp_dir, 'lexemes.bin')
         str_loc = path.join(tmp_dir, 'strings.json')
-        vec_loc = path.join(self.data_dir, 'vec.bin') if self.data_dir is not None else None
+        vec_loc = path.join(tmp_dir, 'vec.bin')
 
         self.dump(lex_loc)
         with io.open(str_loc, 'w', encoding='utf8') as file_:
             self.strings.dump(file_)
+
+        self.dump_vectors(vec_loc)
         
         state = (str_loc, lex_loc, vec_loc, self.morphology, self.get_lex_attr,
                  self.serializer_freqs, self.data_dir)
@@ -292,6 +294,27 @@ cdef class Vocab:
             self.length += 1
             i += 1
         fp.close()
+
+    def dump_vectors(self, out_loc):
+        cdef int32_t vec_len = self.vectors_length
+        cdef int32_t word_len
+        cdef bytes word_str
+        cdef char* chars
+        
+        cdef Lexeme lexeme
+        cdef CFile out_file = CFile(out_loc, 'wb')
+        for lexeme in self:
+            word_str = lexeme.orth_.encode('utf8')
+            vec = lexeme.c.repvec
+            word_len = len(word_str)
+
+            out_file.write_from(&word_len, 1, sizeof(word_len))
+            out_file.write_from(&vec_len, 1, sizeof(vec_len))
+
+            chars = <char*>word_str
+            out_file.write_from(chars, word_len, sizeof(char))
+            out_file.write_from(vec, vec_len, sizeof(float))
+        out_file.close()
 
     def load_vectors(self, file_):
         cdef LexemeC* lexeme
