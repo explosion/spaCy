@@ -388,9 +388,13 @@ cdef class Doc:
                         tokens[i + values[i]].l_kids += 1
                     elif values[i] < 0:
                         tokens[i + values[i]].r_kids += 1
+                    if not self.is_parsed and tokens[i].head != 0:
+                        self.is_parsed = True
             elif attr_id == TAG:
                 for i in range(length):
                     tokens[i].tag = values[i]
+                    if not self.is_tagged and tokens[i].tag != 0:
+                        self.is_tagged = True
             elif attr_id == POS:
                 for i in range(length):
                     tokens[i].pos = <univ_pos_t>values[i]
