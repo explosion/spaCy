@@ -36,63 +36,63 @@ def test_repr_doc_unicode(EN):
 
 def test_print_span(EN):
     try:
-        doc = EN(u'I sat down for coffee at the coffee store')[-3:]
-        print(doc)
+        span = EN(u'I sat down for coffee at the coffee store')[-3:]
+        print(span)
     except Exception:
         pytest.fail("Printing failed")
 
 
 def test_repr_span(EN):
     try:
-        doc = EN(u'I sat down for coffee at the coffee store')[-3:]
-        print(repr(doc))
+        span = EN(u'I sat down for coffee at the coffee store')[-3:]
+        print(repr(span))
     except Exception:
         pytest.fail("Printing failed")
 
 
 def test_print_span_unicode(EN):
     try:
-        doc = EN(u'I sat down for coffee at the café')[-3:]
-        print(doc)
+        span = EN(u'I sat down for coffee at the café')[-3:]
+        print(span)
     except Exception:
         pytest.fail("Printing failed")
 
 
 def test_repr_span_unicode(EN):
     try:
-        doc = EN(u'I sat down for coffee at the café')[-3:]
-        print(repr(doc))
+        span = EN(u'I sat down for coffee at the café')[-3:]
+        print(repr(span))
     except Exception:
         pytest.fail("Printing failed")
 
 
 def test_print_token(EN):
     try:
-        doc = EN(u'I sat down for coffee at the coffee store')[-1]
-        print(doc)
+        token = EN(u'I sat down for coffee at the coffee store')[-1]
+        print(token)
     except Exception:
         pytest.fail("Printing failed")
 
 
 def test_repr_token(EN):
     try:
-        doc = EN(u'I sat down for coffee at the coffee store')[-1]
-        print(repr(doc))
+        token = EN(u'I sat down for coffee at the coffee store')[-1]
+        print(repr(token))
     except Exception:
         pytest.fail("Printing failed")
 
 
 def test_print_token_unicode(EN):
     try:
-        doc = EN(u'I sat down for coffee at the café')[-1]
-        print(doc)
+        token = EN(u'I sat down for coffee at the café')[-1]
+        print(token)
     except Exception:
         pytest.fail("Printing failed")
 
 
 def test_repr_token_unicode(EN):
     try:
-        doc = EN(u'I sat down for coffee at the café')[-1]
-        print(repr(doc))
+        token = EN(u'I sat down for coffee at the café')[-1]
+        print(repr(token))
     except Exception:
         pytest.fail("Printing failed")
