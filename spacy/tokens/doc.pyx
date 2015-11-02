@@ -118,10 +118,10 @@ cdef class Doc:
         return u''.join([t.string for t in self])
 
     def __str__(self):
-        return u''.join([t.string for t in self])
+        return u''.join([t.string for t in self]).encode('utf-8')
 
     def __repr__(self):
-        return u''.join([t.string for t in self])
+        return u''.join([t.string for t in self]).encode('utf-8')
 
     def similarity(self, other):
         if self.vector_norm == 0 or other.vector_norm == 0:

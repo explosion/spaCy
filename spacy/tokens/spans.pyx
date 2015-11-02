@@ -50,7 +50,7 @@ cdef class Span:
         text = self.text_with_ws
         if self[-1].whitespace_:
             text = text[:-1]
-        return text
+        return text.encode('utf-8')
 
     def __getitem__(self, object i):
         if isinstance(i, slice):
