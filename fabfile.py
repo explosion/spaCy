@@ -56,7 +56,7 @@ def prebuild(build_dir='/tmp/build_spacy'):
             local('cp -r %s/corpora/en/wordnet corpora/en/' % spacy_dir)
             local('PYTHONPATH=`pwd` python bin/init_model.py en lang_data corpora spacy/en/data')
             local('fab test')
-            local('PYTHONPATH=`pwd` python spacy.en.download --force all en')
+            local('PYTHONPATH=`pwd` python -m spacy.en.download --force all')
             local('py.test --models spacy/tests/')
 
 
