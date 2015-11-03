@@ -62,9 +62,11 @@ cdef class Vocab:
         cdef Vocab self = cls(get_lex_attr=get_lex_attr, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)
 
-        with io.open(path.join(data_dir, 'strings.json'), 'r', encoding='utf8') as file_:
-            self.strings.load(file_)
-        self.load_lexemes(path.join(data_dir, 'lexemes.bin'))
+        if path.exists(path.join(data_dir, 'strings.json')):
+            with io.open(path.join(data_dir, 'strings.json'), 'r', encoding='utf8') as file_:
+                self.strings.load(file_)
+            self.load_lexemes(path.join(data_dir, 'lexemes.bin'))
+                
         if path.exists(path.join(data_dir, 'vec.bin')):
             self.vectors_length = self.load_vectors_from_bin_loc(path.join(data_dir, 'vec.bin'))
         return self
