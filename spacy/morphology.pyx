@@ -38,6 +38,8 @@ cdef class Morphology:
             tag_id = self.reverse_index[self.strings[tag]]
         else:
             tag_id = tag
+        if tag_id >= self.n_tags:
+            raise ValueError("Unknown tag: %s" % tag)
         analysis = <MorphAnalysisC*>self._cache.get(tag_id, token.lex.orth)
         if analysis is NULL:
             analysis = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))

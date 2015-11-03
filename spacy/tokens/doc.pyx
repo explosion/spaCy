@@ -398,7 +398,8 @@ cdef class Doc:
                         self.is_parsed = True
             elif attr_id == TAG:
                 for i in range(length):
-                    self.vocab.morphology.assign_tag(&tokens[i], values[i])
+                    self.vocab.morphology.assign_tag(&tokens[i],
+                                                     self.vocab.strings[values[i]])
                     if not self.is_tagged and tokens[i].tag != 0:
                         self.is_tagged = True
             elif attr_id == POS:
