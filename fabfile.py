@@ -122,7 +122,7 @@ def clean():
 def test():
     with virtualenv(VENV_DIR):
         with lcd(path.dirname(__file__)):
-            local('py.test -x --models spacy/tests')
+            local('py.test -x spacy/tests')
 
 
 def train(json_dir=None, dev_loc=None, model_dir=None):
