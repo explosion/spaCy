@@ -155,10 +155,10 @@ cdef class Packer:
         self.char_codec.encode(bytearray(utf8_str), bits)
         cdef int i, j
         for i in range(doc.length):
-            for j in range(doc.data[i].lex.length-1):
+            for j in range(doc.c[i].lex.length-1):
                 bits.append(False)
             bits.append(True)
-            if doc.data[i].spacy:
+            if doc.c[i].spacy:
                 bits.append(False)
         return bits
 
