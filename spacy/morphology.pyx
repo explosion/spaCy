@@ -88,6 +88,8 @@ cdef class Morphology:
             return orth
         cdef unicode py_string = self.strings[orth]
         if pos != NOUN and pos != VERB and pos != ADJ and pos != PUNCT:
+            # TODO: This should lower-case
+            # return self.strings[py_string.lower()]
             return orth
         cdef set lemma_strings
         cdef unicode lemma_string
