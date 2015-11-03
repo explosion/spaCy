@@ -4,6 +4,7 @@ import numpy
 import numpy.linalg
 cimport numpy as np
 import math
+import six
 
 from ..structs cimport TokenC, LexemeC
 from ..typedefs cimport flags_t, attr_t
@@ -47,10 +48,9 @@ cdef class Span:
         return self.end - self.start
 
     def __repr__(self):
-        text = self.text_with_ws
-        if self[-1].whitespace_:
-            text = text[:-1]
-        return text
+        if six.PY3:
+            return self.text
+        return self.text.encode('utf-8')
 
     def __getitem__(self, object i):
         if isinstance(i, slice):
