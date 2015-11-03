@@ -471,8 +471,7 @@ cdef class Doc:
         # Update fields
         token.lex = lex
         token.spacy = self.data[end-1].spacy
-        # What to do about morphology??
-        # TODO: token.morph = ???
+        self.vocab.morphology.assign_tag(token, self.vocab.strings[tag])
         token.tag = self.vocab.strings[tag]
         token.lemma = self.vocab.strings[lemma]
         if ent_type == 'O':
