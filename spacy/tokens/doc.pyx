@@ -473,7 +473,7 @@ cdef class Doc:
         token.lex = lex
         token.spacy = self.data[end-1].spacy
         if tag in self.vocab.morphology.tag_map:
-            self.vocab.morphology.assign_tag(token, self.vocab.strings[tag])
+            self.vocab.morphology.assign_tag(token, tag)
         else:
             token.tag = self.vocab.strings[tag]
         token.tag = self.vocab.strings[tag]
