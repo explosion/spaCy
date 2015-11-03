@@ -6,6 +6,7 @@ import pytest
 import numpy
 
 from spacy.language import Language
+from spacy.en import English
 from spacy.vocab import Vocab
 from spacy.tokens.doc import Doc
 from spacy.tokenizer import Tokenizer
@@ -20,7 +21,7 @@ from spacy.serialize.bits import BitArray
 
 @pytest.fixture
 def vocab():
-    vocab = Language.default_vocab()
+    vocab = English.default_vocab()
     lex = vocab['dog']
     assert vocab[vocab.strings['dog']].orth_ == 'dog'
     lex  = vocab['the']
