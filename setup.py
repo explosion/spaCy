@@ -163,7 +163,7 @@ def run_setup(exts):
                   'spacy.tests.munge',
                   'spacy.tests.parser',
                   'spacy.tests.serialize',
-                  'spacy.tests.spans',
+                  'spacy.tests.span',
                   'spacy.tests.tagger',
                   'spacy.tests.tokenizer',
                   'spacy.tests.tokens',

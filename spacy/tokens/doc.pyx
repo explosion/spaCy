@@ -18,7 +18,7 @@ from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..parts_of_speech cimport CONJ, PUNCT, NOUN
 from ..parts_of_speech cimport univ_pos_t
 from ..lexeme cimport Lexeme
-from .spans cimport Span
+from .span cimport Span
 from .token cimport Token
 from ..serialize.bits cimport BitArray
 from ..util import normalize_slice
