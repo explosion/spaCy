@@ -13,6 +13,21 @@ from distutils.command.build_ext import build_ext
 
 import platform
 
+PACKAGE_DATA =  {
+    "spacy": ["*.pxd"],
+    "spacy.tokens": ["*.pxd"],
+    "spacy.serialize": ["*.pxd"],
+    "spacy.syntax": ["*.pxd"],
+    "spacy.en": [
+        "*.pxd",
+        "data/wordnet/*.exc",
+        "data/wordnet/index.*",
+        "data/tokenizer/*",
+        "data/vocab/serializer.json"
+    ]
+}
+
+
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 compile_options =  {'msvc'  : ['/Ox', '/EHsc']  ,
@@ -81,6 +96,8 @@ except OSError:
     pass
 
 
+
+
 def clean(mod_names):
     for name in mod_names:
         name = name.replace('.', '/')
@@ -128,15 +145,7 @@ def cython_setup(mod_names, language, includes):
         author_email='honnibal@gmail.com',
         version=VERSION,
         url="http://honnibal.github.io/spaCy/",
-        package_data={"spacy": ["*.pxd", "tests/*.py", "tests/*/*.py"],
-                      "spacy.tokens": ["*.pxd"],
-                      "spacy.serialize": ["*.pxd"],
-                      "spacy.en": ["*.pxd", "data/pos/*",
-                                   "data/wordnet/*", "data/tokenizer/*",
-                                   "data/vocab/tag_map.json",
-                                   "data/vocab/lexemes.bin",
-                                   "data/vocab/strings.json"],
-                      "spacy.syntax": ["*.pxd"]},
+        package_data=PACKAGE_DATA,
         ext_modules=exts,
         cmdclass={'build_ext': build_ext_cython_subclass},
         license="MIT",
@@ -165,15 +174,7 @@ def run_setup(exts):
         author_email='honnibal@gmail.com',
         version=VERSION,
         url="http://honnibal.github.io/spaCy/",
-        package_data={"spacy": ["*.pxd"],
-                      "spacy.tokens": ["*.pxd"],
-                      "spacy.serialize": ["*.pxd"],
-                      "spacy.en": ["*.pxd",
-                                   "data/wordnet/*.exc",
-                                   "data/wordnet/index.*",
-                                   "data/tokenizer/*",
-                                   "data/vocab/serializer.json"],
-                      "spacy.syntax": ["*.pxd"]},
+        package_data=PACKAGE_DATA,
         ext_modules=exts,
         license="MIT",
         install_requires=['numpy', 'murmurhash', 'cymem >= 1.30', 'preshed >= 0.43',
