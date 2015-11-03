@@ -398,7 +398,7 @@ cdef class Doc:
                         self.is_parsed = True
             elif attr_id == TAG:
                 for i in range(length):
-                    tokens[i].tag = values[i]
+                    self.vocab.morphology.assign_tag(&tokens[i], values[i])
                     if not self.is_tagged and tokens[i].tag != 0:
                         self.is_tagged = True
             elif attr_id == POS:
@@ -413,6 +413,8 @@ cdef class Doc:
             elif attr_id == ENT_TYPE:
                 for i in range(length):
                     tokens[i].ent_type = values[i]
+            else:
+                raise ValueError("Unknown attribute ID: %d" % attr_id)
         set_children_from_heads(self.data, self.length)
         return self
 
