@@ -471,7 +471,10 @@ cdef class Doc:
         # Update fields
         token.lex = lex
         token.spacy = self.data[end-1].spacy
-        self.vocab.morphology.assign_tag(token, self.vocab.strings[tag])
+        if tag in self.vocab.morphology.tag_map:
+            self.vocab.morphology.assign_tag(token, self.vocab.strings[tag])
+        else:
+            token.tag = self.vocab.strings[tag]
         token.tag = self.vocab.strings[tag]
         token.lemma = self.vocab.strings[lemma]
         if ent_type == 'O':
@@ -545,3 +548,9 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
             if child.r_edge > head.r_edge:
                 head.r_edge = child.r_edge
             head.r_kids += 1
+
+    # Set sentence starts
+    for i in range(length):
+        if tokens[i].head == 0 and tokens[i].dep != 0:
+            tokens[tokens[i].l_edge].sent_start = True
+            
