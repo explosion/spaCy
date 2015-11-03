@@ -38,3 +38,15 @@ def test_left_right(EN):
         for child in word.rights:
             assert child.head.i == word.i
 
+
+@pytest.mark.models
+def test_lemmas(EN):
+    orig = EN(u'The geese are flying')
+    result = Doc(orig.vocab).from_bytes(orig.to_bytes())
+    the, geese, are, flying = result
+    assert the.lemma_ == 'the'
+    assert geese.lemma_ == 'goose'
+    assert are.lemma_ == 'be'
+    assert flying.lemma_ == 'fly'
+
+ 
