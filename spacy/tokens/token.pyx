@@ -253,14 +253,11 @@ cdef class Token:
         def __get__(self):
             """Get a list of conjoined words."""
             cdef Token word
-            conjuncts = []
             if self.dep_ != 'conj':
                 for word in self.rights:
                     if word.dep_ == 'conj':
                         yield word
                         yield from word.conjuncts
-                        conjuncts.append(word)
-                        conjuncts.extend(word.conjuncts)
 
     property ent_type:
         def __get__(self):
