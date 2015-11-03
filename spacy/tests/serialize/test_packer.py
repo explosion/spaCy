@@ -20,7 +20,7 @@ from spacy.serialize.bits import BitArray
 
 @pytest.fixture
 def vocab():
-    vocab = Vocab(Language.default_lex_attrs())
+    vocab = Language.default_vocab()
     lex = vocab['dog']
     assert vocab[vocab.strings['dog']].orth_ == 'dog'
     lex  = vocab['the']
