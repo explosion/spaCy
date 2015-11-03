@@ -472,7 +472,6 @@ cdef class Doc:
             self.vocab.morphology.assign_tag(token, tag)
         else:
             token.tag = self.vocab.strings[tag]
-        token.tag = self.vocab.strings[tag]
         token.lemma = self.vocab.strings[lemma]
         if ent_type == 'O':
             token.ent_iob = 2
