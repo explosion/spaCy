@@ -64,6 +64,7 @@ def test_packer_unannotated(tokenizer):
     assert result.string == 'the dog jumped'
 
 
+@pytest.mark.models
 def test_packer_annotated(tokenizer):
     vocab = tokenizer.vocab
     nn = vocab.strings['NN']
