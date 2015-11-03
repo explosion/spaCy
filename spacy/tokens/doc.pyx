@@ -7,6 +7,7 @@ import numpy.linalg
 import struct
 cimport numpy as np
 import math
+import six
 
 from ..lexeme cimport Lexeme
 from ..lexeme cimport EMPTY_LEXEME
@@ -117,11 +118,16 @@ cdef class Doc:
     def __unicode__(self):
         return u''.join([t.string for t in self])
 
+    def __bytes__(self):
+        return u''.join([t.string for t in self]).encode('utf-8')
+
     def __str__(self):
-        return u''.join([t.string for t in self])
+        if six.PY3:
+            return self.__unicode__()
+        return self.__bytes__()
 
     def __repr__(self):
-        return u''.join([t.string for t in self])
+        return self.__str__()
 
     def similarity(self, other):
         if self.vector_norm == 0 or other.vector_norm == 0:

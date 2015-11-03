@@ -6,6 +6,7 @@ cimport numpy as np
 np.import_array()
 
 import numpy
+import six
 
 
 from ..lexeme cimport Lexeme
@@ -40,11 +41,16 @@ cdef class Token:
     def __unicode__(self):
         return self.string
 
+    def __bytes__(self):
+        return self.string.encode('utf-8')
+
     def __str__(self):
-        return self.string
+        if six.PY3:
+            return self.__unicode__()
+        return self.__bytes__()
 
     def __repr__(self):
-        return self.string
+        return self.__str__()
 
     cpdef bint check_flag(self, attr_id_t flag_id) except -1:
         return Lexeme.c_check_flag(self.c.lex, flag_id)
