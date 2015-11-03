@@ -21,8 +21,11 @@ cdef class Span:
             raise IndexError
 
         self.doc = tokens
-        self.start = start
-        self.end = end
+        # keep char offsets - as these don't change when merging spans
+        self.start_token = start
+        self.start_idx = self.doc[start].idx
+        self.end_token = end
+        self.end_idx = self.doc[end - 1].idx + len(self.doc[end - 1])
         self.label = label
         self._vector = vector
         self._vector_norm = vector_norm
@@ -75,6 +78,30 @@ cdef class Span:
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+
+    property start:
+        def __get__(self):
+            # if we haven't merged anything below check is false - so we get start token
+            if self.start_token >= len(self.doc) or self.doc[self.start_token].idx != self.start_idx:
+                new_start = self.doc.token_index_start(self.start_idx)
+                if new_start is not None:
+                    self.start_token = new_start
+                else:
+                    raise IndexError('Something went terribly wrong during a merge.'
+                                     'No token found with idx %s' % self.start_idx)
+            return self.start_token
+
+    property end:
+        def __get__(self):
+            # if we haven't merged anything we have fast access
+            if self.end_token >= len(self.doc) or self.doc[self.end_token - 1].idx != self.end_idx:
+                new_end = self.doc.token_index_end(self.end_idx)
+                if new_end is not None:
+                    self.end_token = new_end
+                else:
+                    raise IndexError('Something went terribly wrong during a merge.'
+                                     'No token found with idx %s' % self.end_idx)
+            return self.end_token
 
     property vector:
         def __get__(self):

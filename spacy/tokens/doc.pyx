@@ -439,11 +439,23 @@ cdef class Doc:
                 keep_reading = False
             yield n_bytes_str + data
 
-    # This function is terrible --- need to fix this.
-    def merge(self, int start_idx, int end_idx, unicode tag, unicode lemma,
-              unicode ent_type):
-        """Merge a multi-word expression into a single token.  Currently
-        experimental; API is likely to change."""
+
+    def token_index_start(self, int start_idx):
+        cdef int i
+        for i in range(self.length):
+            if self.data[i].idx == start_idx:
+                return i
+        return None
+
+    def token_index_end(self, int end_idx):
+        cdef int i
+        for i in range(self.length):
+            if (self.data[i].idx + self.data[i].lex.length) == end_idx:
+                return i + 1
+        return None
+
+    def range_from_indices(self, int start_idx, int end_idx):
+        assert start_idx < end_idx
         cdef int i
         cdef int start = -1
         cdef int end = -1
@@ -454,10 +466,18 @@ cdef class Doc:
                 if start == -1:
                     return None
                 end = i + 1
-                break
-        else:
-            return None
+                return (start, end)
+        return None
 
+    # This function is terrible --- need to fix this.
+    def merge(self, int start_idx, int end_idx, unicode tag, unicode lemma,
+              unicode ent_type):
+        """Merge a multi-word expression into a single token.  Currently
+        experimental; API is likely to change."""
+        start_end = self.range_from_indices(start_idx, end_idx)
+        if start_end is None:
+            return None
+        start, end = start_end
         cdef Span span = self[start:end]
         # Get LexemeC for newly merged token
         new_orth = ''.join([t.text_with_ws for t in span])
