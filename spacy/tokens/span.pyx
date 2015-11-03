@@ -139,12 +139,12 @@ cdef class Span:
         def __get__(self):
             # This should probably be called 'head', and the other one called
             # 'gov'. But we went with 'head' elsehwhere, and now we're stuck =/
-            cdef const TokenC* start = &self.doc.data[self.start]
-            cdef const TokenC* end = &self.doc.data[self.end]
+            cdef const TokenC* start = &self.doc.c[self.start]
+            cdef const TokenC* end = &self.doc.c[self.end]
             head = start
             while start <= (head + head.head) < end and head.head != 0:
                 head += head.head
-            return self.doc[head - self.doc.data]
+            return self.doc[head - self.doc.c]
 
     property lefts:
         """Tokens that are to the left of the Span, whose head is within the Span."""

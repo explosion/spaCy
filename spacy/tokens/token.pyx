@@ -31,7 +31,7 @@ cdef class Token:
     def __cinit__(self, Vocab vocab, Doc doc, int offset):
         self.vocab = vocab
         self.doc = doc
-        self.c = &self.doc.data[offset]
+        self.c = &self.doc.c[offset]
         self.i = offset
         self.array_len = doc.length
 

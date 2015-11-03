@@ -26,7 +26,7 @@ cdef class Doc:
     cdef public object _vector
     cdef public object _vector_norm
 
-    cdef TokenC* data
+    cdef TokenC* c
 
     cdef public bint is_tagged
     cdef public bint is_parsed

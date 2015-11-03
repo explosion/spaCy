@@ -73,7 +73,7 @@ cdef class Doc:
             data_start[i].lex = &EMPTY_LEXEME
             data_start[i].l_edge = i
             data_start[i].r_edge = i
-        self.data = data_start + PADDING
+        self.c = data_start + PADDING
         self.max_length = size
         self.length = 0
         self.is_tagged = False
@@ -97,7 +97,7 @@ cdef class Doc:
         if self._py_tokens[i] is not None:
             return self._py_tokens[i]
         else:
-            return Token.cinit(self.vocab, &self.data[i], i, self)
+            return Token.cinit(self.vocab, &self.c[i], i, self)
 
     def __iter__(self):
         """Iterate over the tokens.
@@ -110,7 +110,7 @@ cdef class Doc:
             if self._py_tokens[i] is not None:
                 yield self._py_tokens[i]
             else:
-                yield Token.cinit(self.vocab, &self.data[i], i, self)
+                yield Token.cinit(self.vocab, &self.c[i], i, self)
 
     def __len__(self):
         return self.length
@@ -187,7 +187,7 @@ cdef class Doc:
             cdef int label = 0
             output = []
             for i in range(self.length):
-                token = &self.data[i]
+                token = &self.c[i]
                 if token.ent_iob == 1:
                     assert start != -1
                 elif token.ent_iob == 2 or token.ent_iob == 0:
@@ -212,23 +212,23 @@ cdef class Doc:
             # 4. Test more nuanced date and currency regex
             cdef int i
             for i in range(self.length):
-                self.data[i].ent_type = 0
-                self.data[i].ent_iob = 0
+                self.c[i].ent_type = 0
+                self.c[i].ent_iob = 0
             cdef attr_t ent_type
             cdef int start, end
             for ent_type, start, end in ents:
                 if ent_type is None or ent_type < 0:
                     # Mark as O
                     for i in range(start, end):
-                        self.data[i].ent_type = 0
-                        self.data[i].ent_iob = 2
+                        self.c[i].ent_type = 0
+                        self.c[i].ent_iob = 2
                 else:
                     # Mark (inside) as I
                     for i in range(start, end):
-                        self.data[i].ent_type = ent_type
-                        self.data[i].ent_iob = 1
+                        self.c[i].ent_type = ent_type
+                        self.c[i].ent_iob = 1
                     # Set start as B
-                    self.data[start].ent_iob = 3
+                    self.c[start].ent_iob = 3
 
     @property
     def noun_chunks(self):
@@ -245,7 +245,7 @@ cdef class Doc:
         np_deps = [self.vocab.strings[label] for label in labels]
         np_label = self.vocab.strings['NP']
         for i in range(self.length):
-            word = &self.data[i]
+            word = &self.c[i]
             if word.pos == NOUN and word.dep in np_deps:
                 yield Span(self, word.l_edge, i+1, label=np_label)
 
@@ -263,7 +263,7 @@ cdef class Doc:
         cdef int i
         start = 0
         for i in range(1, self.length):
-            if self.data[i].sent_start:
+            if self.c[i].sent_start:
                 yield Span(self, start, i)
                 start = i
         yield Span(self, start, self.length)
@@ -271,7 +271,7 @@ cdef class Doc:
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
         if self.length == self.max_length:
             self._realloc(self.length * 2)
-        cdef TokenC* t = &self.data[self.length]
+        cdef TokenC* t = &self.c[self.length]
         if LexemeOrToken is const_TokenC_ptr:
             t[0] = lex_or_tok[0]
         else:
@@ -310,7 +310,7 @@ cdef class Doc:
         output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.int32)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
-                output[i, j] = get_token_attr(&self.data[i], feature)
+                output[i, j] = get_token_attr(&self.c[i], feature)
         return output
 
     def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
@@ -340,11 +340,11 @@ cdef class Doc:
         # Take this check out of the loop, for a bit of extra speed
         if exclude is None:
             for i in range(self.length):
-                counts.inc(get_token_attr(&self.data[i], attr_id), 1)
+                counts.inc(get_token_attr(&self.c[i], attr_id), 1)
         else:
             for i in range(self.length):
                 if not exclude(self[i]):
-                    attr = get_token_attr(&self.data[i], attr_id)
+                    attr = get_token_attr(&self.c[i], attr_id)
                     counts.inc(attr, 1)
         if output_dict:
             return dict(counts)
@@ -357,12 +357,12 @@ cdef class Doc:
         # words out-of-bounds, and get out-of-bounds markers.
         # Now that we want to realloc, we need the address of the true start,
         # so we jump the pointer back PADDING places.
-        cdef TokenC* data_start = self.data - PADDING
+        cdef TokenC* data_start = self.c - PADDING
         data_start = <TokenC*>self.mem.realloc(data_start, n * sizeof(TokenC))
-        self.data = data_start + PADDING
+        self.c = data_start + PADDING
         cdef int i
         for i in range(self.length, self.max_length + PADDING):
-            self.data[i].lex = &EMPTY_LEXEME
+            self.c[i].lex = &EMPTY_LEXEME
 
     cdef int set_parse(self, const TokenC* parsed) except -1:
         # TODO: This method is fairly misleading atm. It's used by Parser
@@ -371,14 +371,14 @@ cdef class Doc:
         # Probably we should use from_array?
         self.is_parsed = True
         for i in range(self.length):
-            self.data[i] = parsed[i]
-            assert self.data[i].l_edge <= i
-            assert self.data[i].r_edge >= i
+            self.c[i] = parsed[i]
+            assert self.c[i].l_edge <= i
+            assert self.c[i].r_edge >= i
 
     def from_array(self, attrs, array):
         cdef int i, col
         cdef attr_id_t attr_id
-        cdef TokenC* tokens = self.data
+        cdef TokenC* tokens = self.c
         cdef int length = len(array)
         cdef attr_t[:] values
         for col, attr_id in enumerate(attrs): 
@@ -412,7 +412,7 @@ cdef class Doc:
                     tokens[i].ent_type = values[i]
             else:
                 raise ValueError("Unknown attribute ID: %d" % attr_id)
-        set_children_from_heads(self.data, self.length)
+        set_children_from_heads(self.c, self.length)
         return self
 
     def to_bytes(self):
@@ -447,9 +447,9 @@ cdef class Doc:
         cdef int start = -1
         cdef int end = -1
         for i in range(self.length):
-            if self.data[i].idx == start_idx:
+            if self.c[i].idx == start_idx:
                 start = i
-            if (self.data[i].idx + self.data[i].lex.length) == end_idx:
+            if (self.c[i].idx + self.c[i].lex.length) == end_idx:
                 if start == -1:
                     return None
                 end = i + 1
@@ -464,10 +464,10 @@ cdef class Doc:
             new_orth = new_orth[:-len(span[-1].whitespace_)]
         cdef const LexemeC* lex = self.vocab.get(self.mem, new_orth)
         # House the new merged token where it starts
-        cdef TokenC* token = &self.data[start]
+        cdef TokenC* token = &self.c[start]
         # Update fields
         token.lex = lex
-        token.spacy = self.data[end-1].spacy
+        token.spacy = self.c[end-1].spacy
         if tag in self.vocab.morphology.tag_map:
             self.vocab.morphology.assign_tag(token, tag)
         else:
@@ -486,31 +486,31 @@ cdef class Doc:
         span_root = span.root.i
         token.dep = span.root.dep
         for i in range(self.length):
-            self.data[i].head += i
+            self.c[i].head += i
         # Set the head of the merged token, and its dep relation, from the Span
-        token.head = self.data[span_root].head
+        token.head = self.c[span_root].head
         # Adjust deps before shrinking tokens
         # Tokens which point into the merged token should now point to it
         # Subtract the offset from all tokens which point to >= end
         offset = (end - start) - 1
         for i in range(self.length):
-            head_idx = self.data[i].head
+            head_idx = self.c[i].head
             if start <= head_idx < end:
-                self.data[i].head = start
+                self.c[i].head = start
             elif head_idx >= end:
-                self.data[i].head -= offset
+                self.c[i].head -= offset
         # Now compress the token array
         for i in range(end, self.length):
-            self.data[i - offset] = self.data[i]
+            self.c[i - offset] = self.c[i]
         for i in range(self.length - offset, self.length):
-            memset(&self.data[i], 0, sizeof(TokenC))
-            self.data[i].lex = &EMPTY_LEXEME
+            memset(&self.c[i], 0, sizeof(TokenC))
+            self.c[i].lex = &EMPTY_LEXEME
         self.length -= offset
         for i in range(self.length):
             # ...And, set heads back to a relative position
-            self.data[i].head -= i
+            self.c[i].head -= i
         # Set the left/right children, left/right edges
-        set_children_from_heads(self.data, self.length)
+        set_children_from_heads(self.c, self.length)
         # Clear the cached Python objects
         self._py_tokens = [None] * self.length
         # Return the merged Python object

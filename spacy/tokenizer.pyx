@@ -113,7 +113,7 @@ cdef class Tokenizer:
                         self._tokenize(tokens, span, key)
                 in_ws = not in_ws
                 if uc == ' ':
-                    tokens.data[tokens.length - 1].spacy = True
+                    tokens.c[tokens.length - 1].spacy = True
                     start = i + 1
                 else:
                     start = i
@@ -125,7 +125,7 @@ cdef class Tokenizer:
             cache_hit = self._try_cache(key, tokens)
             if not cache_hit:
                 self._tokenize(tokens, span, key)
-            tokens.data[tokens.length - 1].spacy = string[-1] == ' '
+            tokens.c[tokens.length - 1].spacy = string[-1] == ' '
         return tokens
 
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
@@ -148,7 +148,7 @@ cdef class Tokenizer:
         orig_size = tokens.length
         span = self._split_affixes(span, &prefixes, &suffixes)
         self._attach_tokens(tokens, span, &prefixes, &suffixes)
-        self._save_cached(&tokens.data[orig_size], orig_key, tokens.length - orig_size)
+        self._save_cached(&tokens.c[orig_size], orig_key, tokens.length - orig_size)
 
     cdef unicode _split_affixes(self, unicode string, vector[const LexemeC*] *prefixes,
                                 vector[const LexemeC*] *suffixes):
