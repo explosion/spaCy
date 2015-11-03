@@ -177,8 +177,8 @@ def run_setup(exts):
         package_data=PACKAGE_DATA,
         ext_modules=exts,
         license="MIT",
-        install_requires=['numpy', 'murmurhash', 'cymem >= 1.30', 'preshed >= 0.43',
-                          'thinc >= 3.4.1', "text_unidecode", 'plac', 'six',
+        install_requires=['numpy', 'murmurhash', 'cymem == 1.30', 'preshed == 0.43',
+                          'thinc == 3.4.1', "text_unidecode", 'plac', 'six',
                           'ujson', 'cloudpickle'],
         setup_requires=["headers_workaround"],
         cmdclass = {'build_ext': build_ext_subclass },
@@ -191,7 +191,7 @@ def run_setup(exts):
     headers_workaround.install_headers('numpy')
 
 
-VERSION = '0.98'
+VERSION = '0.99'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
