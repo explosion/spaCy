@@ -51,7 +51,7 @@ cdef class Lexeme:
         def __get__(self):
             cdef int i
             for i in range(self.vocab.vectors_length):
-                if self.c.repvec[i] != 0:
+                if self.c.vector[i] != 0:
                     return True
             else:
                 return False
@@ -74,14 +74,14 @@ cdef class Lexeme:
                     "to install the data."
                 )
  
-            repvec_view = <float[:length,]>self.c.repvec
-            return numpy.asarray(repvec_view)
+            vector_view = <float[:length,]>self.c.vector
+            return numpy.asarray(vector_view)
 
         def __set__(self, vector):
             assert len(vector) == self.vocab.vectors_length
             cdef float value
             for i, value in enumerate(vector):
-                self.c.repvec[i] = value
+                self.c.vector[i] = value
 
     property repvec:
         def __get__(self):

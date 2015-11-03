@@ -40,7 +40,7 @@ DEF MAX_VEC_SIZE = 100000
 cdef float[MAX_VEC_SIZE] EMPTY_VEC
 memset(EMPTY_VEC, 0, sizeof(EMPTY_VEC))
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
-EMPTY_LEXEME.repvec = EMPTY_VEC
+EMPTY_LEXEME.vector = EMPTY_VEC
 
 
 cdef class Vocab:
@@ -162,7 +162,7 @@ cdef class Vocab:
         lex.orth = self.strings[string]
         lex.length = len(string)
         lex.id = self.length
-        lex.repvec = <float*>mem.alloc(self.vectors_length, sizeof(float))
+        lex.vector = <float*>mem.alloc(self.vectors_length, sizeof(float))
         if self.get_lex_attr is not None:
             for attr, func in self.get_lex_attr.items():
                 value = func(string)
@@ -287,7 +287,7 @@ cdef class Vocab:
             fp.read_into(&lexeme.sentiment, 1, sizeof(lexeme.sentiment))
             fp.read_into(&lexeme.l2_norm, 1, sizeof(lexeme.l2_norm))
 
-            lexeme.repvec = EMPTY_VEC
+            lexeme.vector = EMPTY_VEC
             py_str = self.strings[lexeme.orth]
             key = hash_string(py_str)
             self._by_hash.set(key, lexeme)
@@ -306,7 +306,7 @@ cdef class Vocab:
         cdef CFile out_file = CFile(out_loc, 'wb')
         for lexeme in self:
             word_str = lexeme.orth_.encode('utf8')
-            vec = lexeme.c.repvec
+            vec = lexeme.c.vector
             word_len = len(word_str)
 
             out_file.write_from(&word_len, 1, sizeof(word_len))
@@ -331,10 +331,10 @@ cdef class Vocab:
                                                         vec_len, len(pieces))
             orth = self.strings[word_str]
             lexeme = <LexemeC*><void*>self.get_by_orth(self.mem, orth)
-            lexeme.repvec = <float*>self.mem.alloc(self.vectors_length, sizeof(float))
+            lexeme.vector = <float*>self.mem.alloc(self.vectors_length, sizeof(float))
 
             for i, val_str in enumerate(pieces):
-                lexeme.repvec[i] = float(val_str)
+                lexeme.vector[i] = float(val_str)
         return vec_len
 
     def load_vectors_from_bin_loc(self, loc):
@@ -376,12 +376,12 @@ cdef class Vocab:
         for orth, lex_addr in self._by_orth.items():
             lex = <LexemeC*>lex_addr
             if lex.lower < vectors.size():
-                lex.repvec = vectors[lex.lower]
+                lex.vector = vectors[lex.lower]
                 for i in range(vec_len):
-                    lex.l2_norm += (lex.repvec[i] * lex.repvec[i])
+                    lex.l2_norm += (lex.vector[i] * lex.vector[i])
                 lex.l2_norm = math.sqrt(lex.l2_norm)
             else:
-                lex.repvec = EMPTY_VEC
+                lex.vector = EMPTY_VEC
         return vec_len
 
 

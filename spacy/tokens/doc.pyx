@@ -134,10 +134,6 @@ cdef class Doc:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
-    property repvec:
-        def __get__(self):
-            return self.vector
-
     property vector:
         def __get__(self):
             if self._vector is None:
@@ -399,7 +395,7 @@ cdef class Doc:
             elif attr_id == TAG:
                 for i in range(length):
                     self.vocab.morphology.assign_tag(&tokens[i],
-                                                     self.vocab.strings[values[i]])
+                                self.vocab.morphology.reverse_index[values[i]])
                     if not self.is_tagged and tokens[i].tag != 0:
                         self.is_tagged = True
             elif attr_id == POS:
