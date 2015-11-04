@@ -443,7 +443,7 @@ cdef class Doc:
         """ Get index of token in doc that has character index start_idx """
         cdef int i
         for i in range(self.length):
-            if self.data[i].idx == start_idx:
+            if self.c[i].idx == start_idx:
                 return i
         return None
 
@@ -451,7 +451,7 @@ cdef class Doc:
         """ Get index+1 of token in doc ending with character index end_idx """
         cdef int i
         for i in range(self.length):
-            if (self.data[i].idx + self.data[i].lex.length) == end_idx:
+            if (self.c[i].idx + self.c[i].lex.length) == end_idx:
                 return i + 1
         return None
 
