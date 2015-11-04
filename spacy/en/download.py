@@ -38,6 +38,7 @@ def install_data(url, extract_path, download_path):
     assert tmp == download_path
     t = tarfile.open(download_path)
     t.extractall(extract_path)
+    os.unlink(download_path)
 
 
 @plac.annotations(

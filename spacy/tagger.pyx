@@ -141,9 +141,9 @@ cdef class Tagger:
         cdef int i
         cdef const weight_t* scores
         for i in range(tokens.length):
-            if tokens.data[i].pos == 0:
-                guess = self.predict(i, tokens.data)
-                self.vocab.morphology.assign_tag(&tokens.data[i], guess)
+            if tokens.c[i].pos == 0:
+                guess = self.predict(i, tokens.c)
+                self.vocab.morphology.assign_tag(&tokens.c[i], guess)
 
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
@@ -154,7 +154,7 @@ cdef class Tagger:
     def tag_from_strings(self, Doc tokens, object tag_strs):
         cdef int i
         for i in range(tokens.length):
-            self.vocab.morphology.assign_tag(&tokens.data[i], tag_strs[i])
+            self.vocab.morphology.assign_tag(&tokens.c[i], tag_strs[i])
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
@@ -170,13 +170,13 @@ cdef class Tagger:
                 [g for g in gold_tag_strs if g is not None and g not in self.tag_names])
         correct = 0
         for i in range(tokens.length):
-            guess = self.update(i, tokens.data, golds[i])
+            guess = self.update(i, tokens.c, golds[i])
             loss = golds[i] != -1 and guess != golds[i]
 
-            self.vocab.morphology.assign_tag(&tokens.data[i], guess)
+            self.vocab.morphology.assign_tag(&tokens.c[i], guess)
             
             correct += loss == 0
-            self.freqs[TAG][tokens.data[i].tag] += 1
+            self.freqs[TAG][tokens.c[i].tag] += 1
         return correct
 
     cdef int predict(self, int i, const TokenC* tokens) except -1:

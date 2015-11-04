@@ -17,10 +17,7 @@ try:
 except ImportError:
     import io
 
-try:
-    import ujson as json
-except ImportError:
-    import json
+import ujson as json
 
 
 cpdef hash_t hash_string(unicode string) except 0:

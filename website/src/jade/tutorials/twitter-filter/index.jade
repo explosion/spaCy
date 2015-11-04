@@ -80,10 +80,10 @@ include ./meta.jade
                 | 
                 | def match_tweet(spacy, text, query):
                 |     def get_vector(word):
-                |         return spacy.vocab[word].repvec
+                |         return spacy.vocab[word].vector
                 | 
                 |     tweet = spacy(text)
-                |     tweet = [w.repvec for w in tweet if w.is_alpha and w.lower_ != query]
+                |     tweet = [w.vector for w in tweet if w.is_alpha and w.lower_ != query]
                 |     if tweet:
                 |         accept = map(get_vector, 'Jeb Cheney Republican 9/11h'.split())
                 |         reject = map(get_vector, 'garden Reggie hairy'.split())
@@ -147,11 +147,11 @@ include ./meta.jade
         pre.language-python: code
             | def handle_tweet(spacy, resp, query):
             |     def get_vector(word):
-            |         return spacy.vocab[word].repvec
+            |         return spacy.vocab[word].vector
             | 
             |     text = resp.get('text', '').decode('utf8')
             |     tweet = spacy(text)
-            |     tweet = [w.repvec for w in tweet if w.is_alpha and w.lower_ != query]
+            |     tweet = [w.vector for w in tweet if w.is_alpha and w.lower_ != query]
             |     if tweet:
             |         accept = map(get_vector, 'Jeb Cheney Republican 9/11h'.split())
             |         reject = map(get_vector, 'garden Reggie hairy'.split())

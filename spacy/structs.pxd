@@ -5,7 +5,7 @@ from .parts_of_speech cimport univ_pos_t
 
 
 cdef struct LexemeC:
-    float* repvec
+    float* vector
 
     flags_t flags
 
@@ -32,18 +32,8 @@ cdef struct Entity:
     int label
 
 
-cdef struct Constituent:
-    const TokenC* head
-    const Constituent* parent
-    const Constituent* first
-    const Constituent* last
-    int label
-    int length
-
-
 cdef struct TokenC:
     const LexemeC* lex
-    const Constituent* ctnt
     uint64_t morph
     univ_pos_t pos
     bint spacy

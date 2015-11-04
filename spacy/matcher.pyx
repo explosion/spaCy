@@ -215,7 +215,7 @@ cdef class Matcher:
         cdef Pattern* state
         matches = []
         for token_i in range(doc.length):
-            token = &doc.data[token_i]
+            token = &doc.c[token_i]
             q = 0
             # Go over the open matches, extending or finalizing if able. Otherwise,
             # we over-write them (q doesn't advance)
@@ -286,7 +286,7 @@ cdef class PhraseMatcher:
         for i in range(self.max_length):
             self._phrase_key[i] = 0
         for i, tag in enumerate(tags):
-            lexeme = self.vocab[tokens.data[i].lex.orth]
+            lexeme = self.vocab[tokens.c[i].lex.orth]
             lexeme.set_flag(tag, True)
             self._phrase_key[i] = lexeme.orth
         cdef hash_t key = hash64(self._phrase_key, self.max_length * sizeof(attr_t), 0)
@@ -309,7 +309,7 @@ cdef class PhraseMatcher:
         for i in range(self.max_length):
             self._phrase_key[i] = 0
         for i, j in enumerate(range(start, end)):
-            self._phrase_key[i] = doc.data[j].lex.orth
+            self._phrase_key[i] = doc.c[j].lex.orth
         cdef hash_t key = hash64(self._phrase_key, self.max_length * sizeof(attr_t), 0)
         if self.phrase_ids.get(key):
             return True

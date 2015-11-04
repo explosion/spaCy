@@ -38,6 +38,8 @@ cdef class Morphology:
             tag_id = self.reverse_index[self.strings[tag]]
         else:
             tag_id = tag
+        if tag_id >= self.n_tags:
+            raise ValueError("Unknown tag: %s" % tag)
         analysis = <MorphAnalysisC*>self._cache.get(tag_id, token.lex.orth)
         if analysis is NULL:
             analysis = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
@@ -86,6 +88,8 @@ cdef class Morphology:
             return orth
         cdef unicode py_string = self.strings[orth]
         if pos != NOUN and pos != VERB and pos != ADJ and pos != PUNCT:
+            # TODO: This should lower-case
+            # return self.strings[py_string.lower()]
             return orth
         cdef set lemma_strings
         cdef unicode lemma_string

@@ -31,7 +31,7 @@ cdef class Token:
     def __cinit__(self, Vocab vocab, Doc doc, int offset):
         self.vocab = vocab
         self.doc = doc
-        self.c = &self.doc.data[offset]
+        self.c = &self.doc.c[offset]
         self.i = offset
         self.array_len = doc.length
 
@@ -143,7 +143,7 @@ cdef class Token:
         def __get__(self):
             cdef int i
             for i in range(self.vocab.vectors_length):
-                if self.c.lex.repvec[i] != 0:
+                if self.c.lex.vector[i] != 0:
                     return True
             else:
                 return False
@@ -158,8 +158,8 @@ cdef class Token:
                     "\npython -m spacy.en.download all\n"
                     "to install the data."
                 )
-            repvec_view = <float[:length,]>self.c.lex.repvec
-            return numpy.asarray(repvec_view)
+            vector_view = <float[:length,]>self.c.lex.vector
+            return numpy.asarray(vector_view)
 
     property repvec:
         def __get__(self):
@@ -259,14 +259,11 @@ cdef class Token:
         def __get__(self):
             """Get a list of conjoined words."""
             cdef Token word
-            conjuncts = []
             if self.dep_ != 'conj':
                 for word in self.rights:
                     if word.dep_ == 'conj':
                         yield word
                         yield from word.conjuncts
-                        conjuncts.append(word)
-                        conjuncts.extend(word.conjuncts)
 
     property ent_type:
         def __get__(self):

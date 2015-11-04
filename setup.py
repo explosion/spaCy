@@ -13,6 +13,21 @@ from distutils.command.build_ext import build_ext
 
 import platform
 
+PACKAGE_DATA =  {
+    "spacy": ["*.pxd"],
+    "spacy.tokens": ["*.pxd"],
+    "spacy.serialize": ["*.pxd"],
+    "spacy.syntax": ["*.pxd"],
+    "spacy.en": [
+        "*.pxd",
+        "data/wordnet/*.exc",
+        "data/wordnet/index.*",
+        "data/tokenizer/*",
+        "data/vocab/serializer.json"
+    ]
+}
+
+
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 compile_options =  {'msvc'  : ['/Ox', '/EHsc']  ,
@@ -81,6 +96,8 @@ except OSError:
     pass
 
 
+
+
 def clean(mod_names):
     for name in mod_names:
         name = name.replace('.', '/')
@@ -128,15 +145,7 @@ def cython_setup(mod_names, language, includes):
         author_email='honnibal@gmail.com',
         version=VERSION,
         url="http://honnibal.github.io/spaCy/",
-        package_data={"spacy": ["*.pxd", "tests/*.py", "tests/*/*.py"],
-                      "spacy.tokens": ["*.pxd"],
-                      "spacy.serialize": ["*.pxd"],
-                      "spacy.en": ["*.pxd", "data/pos/*",
-                                   "data/wordnet/*", "data/tokenizer/*",
-                                   "data/vocab/tag_map.json",
-                                   "data/vocab/lexemes.bin",
-                                   "data/vocab/strings.json"],
-                      "spacy.syntax": ["*.pxd"]},
+        package_data=PACKAGE_DATA,
         ext_modules=exts,
         cmdclass={'build_ext': build_ext_cython_subclass},
         license="MIT",
@@ -154,7 +163,7 @@ def run_setup(exts):
                   'spacy.tests.munge',
                   'spacy.tests.parser',
                   'spacy.tests.serialize',
-                  'spacy.tests.spans',
+                  'spacy.tests.span',
                   'spacy.tests.tagger',
                   'spacy.tests.tokenizer',
                   'spacy.tests.tokens',
@@ -165,18 +174,11 @@ def run_setup(exts):
         author_email='honnibal@gmail.com',
         version=VERSION,
         url="http://honnibal.github.io/spaCy/",
-        package_data={"spacy": ["*.pxd"],
-                      "spacy.en": ["*.pxd", "data/pos/*",
-                                   "data/wordnet/*", "data/tokenizer/*",
-                                   "data/vocab/lexemes.bin",
-                                   "data/vocab/serializer.json",
-                                   "data/vocab/oov_prob",
-                                   "data/vocab/strings.txt"],
-                      "spacy.syntax": ["*.pxd"]},
+        package_data=PACKAGE_DATA,
         ext_modules=exts,
         license="MIT",
-        install_requires=['numpy', 'murmurhash', 'cymem >= 1.30', 'preshed >= 0.43',
-                          'thinc >= 3.4.1', "text_unidecode", 'plac', 'six',
+        install_requires=['numpy', 'murmurhash', 'cymem == 1.30', 'preshed == 0.43',
+                          'thinc == 3.4.1', "text_unidecode", 'plac', 'six',
                           'ujson', 'cloudpickle'],
         setup_requires=["headers_workaround"],
         cmdclass = {'build_ext': build_ext_subclass },
@@ -189,7 +191,7 @@ def run_setup(exts):
     headers_workaround.install_headers('numpy')
 
 
-VERSION = '0.97'
+VERSION = '0.99'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
@@ -215,7 +217,7 @@ MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
              'spacy.syntax.arc_eager',
              'spacy.syntax._parse_features',
              'spacy.gold', 'spacy.orth',
-             'spacy.tokens.doc', 'spacy.tokens.spans', 'spacy.tokens.token',
+             'spacy.tokens.doc', 'spacy.tokens.span', 'spacy.tokens.token',
              'spacy.serialize.packer', 'spacy.serialize.huffman', 'spacy.serialize.bits',
              'spacy.cfile', 'spacy.matcher',
              'spacy.syntax.ner',

@@ -84,7 +84,7 @@ cdef class Parser:
         return cls(strings, moves, model)
 
     def __call__(self, Doc tokens):
-        cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
+        cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
         self.moves.initialize_state(stcls)
 
         cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
@@ -112,7 +112,7 @@ cdef class Parser:
 
     def train(self, Doc tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
-        cdef StateClass stcls = StateClass.init(tokens.data, tokens.length)
+        cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
         self.moves.initialize_state(stcls)
         cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
                                   self.model.n_feats, self.model.n_feats)
@@ -143,7 +143,7 @@ cdef class StepwiseState:
     def __init__(self, Parser parser, Doc doc):
         self.parser = parser
         self.doc = doc
-        self.stcls = StateClass.init(doc.data, doc.length)
+        self.stcls = StateClass.init(doc.c, doc.length)
         self.parser.moves.initialize_state(self.stcls)
         self.eg = Example(self.parser.model.n_classes, CONTEXT_SIZE,
                           self.parser.model.n_feats, self.parser.model.n_feats)

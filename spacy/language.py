@@ -88,7 +88,7 @@ class Language(object):
         return orth.like_url(string)
 
     @staticmethod
-    def like_number(string):
+    def like_num(string):
         return orth.like_number(string)
 
     @staticmethod
@@ -119,7 +119,7 @@ class Language(object):
             attrs.IS_TITLE: cls.is_title,
             attrs.IS_UPPER: cls.is_upper,
             attrs.LIKE_URL: cls.like_url,
-            attrs.LIKE_NUM: cls.like_number,
+            attrs.LIKE_NUM: cls.like_num,
             attrs.LIKE_EMAIL: cls.like_email,
             attrs.IS_STOP: cls.is_stop,
             attrs.IS_OOV: lambda string: True

@@ -54,10 +54,10 @@ def prebuild(build_dir='/tmp/build_spacy'):
             local('pip install --no-cache-dir -r requirements.txt')
             local('fab clean make')
             local('cp -r %s/corpora/en/wordnet corpora/en/' % spacy_dir)
-            local('cp %s/corpora/en/freqs.txt.gz corpora/en/' % spacy_dir)
             local('PYTHONPATH=`pwd` python bin/init_model.py en lang_data corpora spacy/en/data')
             local('fab test')
-            local('python setup.py sdist')
+            local('PYTHONPATH=`pwd` python -m spacy.en.download --force all')
+            local('py.test --models spacy/tests/')
 
 
 def docs():
@@ -121,9 +121,8 @@ def clean():
 
 def test():
     with virtualenv(VENV_DIR):
-        # Run each test file separately. pytest is performing poorly, not sure why
         with lcd(path.dirname(__file__)):
-            local('py.test -x tests/')
+            local('py.test -x spacy/tests')
 
 
 def train(json_dir=None, dev_loc=None, model_dir=None):
