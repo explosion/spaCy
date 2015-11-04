@@ -459,7 +459,6 @@ cdef class Doc:
     def range_from_indices(self, int start_idx, int end_idx):
         """ Get tuple - span of token indices which correspond to
             character indices (start_idx, end_idx) if such a span exists"""
-        assert start_idx < end_idx
         cdef int i
         cdef int start = -1
         cdef int end = -1
@@ -490,8 +489,6 @@ cdef class Doc:
         cdef const LexemeC* lex = self.vocab.get(self.mem, new_orth)
         # House the new merged token where it starts
         cdef TokenC* token = &self.data[start]
-        # Update fields
-        token.lex = lex
         token.spacy = self.data[end-1].spacy
         # What to do about morphology??
         # TODO: token.morph = ???
@@ -509,6 +506,10 @@ cdef class Doc:
         # bridges over the entity. Here the alignment of the tokens changes.
         span_root = span.root.i
         token.dep = span.root.dep
+        # We update token.lex after keeping span root and dep, since
+        # setting token.lex will change span.start and span.end properties
+        # as it modifies the character offsets in the doc
+        token.lex = lex
         for i in range(self.length):
             self.data[i].head += i
         # Set the head of the merged token, and its dep relation, from the Span
