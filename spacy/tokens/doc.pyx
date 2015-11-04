@@ -441,6 +441,7 @@ cdef class Doc:
 
 
     def token_index_start(self, int start_idx):
+        """ Get index of token in doc that has character index start_idx """
         cdef int i
         for i in range(self.length):
             if self.data[i].idx == start_idx:
@@ -448,6 +449,7 @@ cdef class Doc:
         return None
 
     def token_index_end(self, int end_idx):
+        """ Get index+1 of token in doc ending with character index end_idx """
         cdef int i
         for i in range(self.length):
             if (self.data[i].idx + self.data[i].lex.length) == end_idx:
@@ -455,6 +457,8 @@ cdef class Doc:
         return None
 
     def range_from_indices(self, int start_idx, int end_idx):
+        """ Get tuple - span of token indices which correspond to
+            character indices (start_idx, end_idx) if such a span exists"""
         assert start_idx < end_idx
         cdef int i
         cdef int start = -1

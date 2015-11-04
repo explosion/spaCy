@@ -14,14 +14,15 @@ from ..util import normalize_slice
 
 
 cdef class Span:
-    """A slice from a Doc object."""
+    """A slice from a Doc object. Internally keeps character offsets in order
+       to keep track of changes (merges) in the original Doc. Updates are
+       made in start and end property."""
     def __cinit__(self, Doc tokens, int start, int end, int label=0, vector=None,
                   vector_norm=None):
         if not (0 <= start <= end <= len(tokens)):
             raise IndexError
 
         self.doc = tokens
-        # keep char offsets - as these don't change when merging spans
         self.start_token = start
         self.start_idx = self.doc[start].idx
         self.end_token = end
@@ -80,9 +81,14 @@ cdef class Span:
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     property start:
+        """ Get start token index of this span from the Doc."""
         def __get__(self):
-            # if we haven't merged anything below check is false - so we get start token
+            # if we have merged spans in Doc start might have changed.
+            # check if token start index is in doc index range and the token
+            # index is start_idx (it hasn't changed).
+            # Potential IndexError if only second condition was used
             if self.start_token >= len(self.doc) or self.doc[self.start_token].idx != self.start_idx:
+                # go through tokens in Doc - find index of token equal to start_idx
                 new_start = self.doc.token_index_start(self.start_idx)
                 if new_start is not None:
                     self.start_token = new_start
@@ -92,9 +98,14 @@ cdef class Span:
             return self.start_token
 
     property end:
+        """ Get end token index of this span from the Doc."""
         def __get__(self):
-            # if we haven't merged anything we have fast access
+            # if we have merged spans in Doc end will have changed.
+            # check if token end index is in doc index range and the token
+            # index is end_idx (it hasn't changed).
+            # Potential IndexError if only second condition was used
             if self.end_token >= len(self.doc) or self.doc[self.end_token - 1].idx != self.end_idx:
+                # go through tokens in Doc - find index of token equal to end_idx
                 new_end = self.doc.token_index_end(self.end_idx)
                 if new_end is not None:
                     self.end_token = new_end
