@@ -135,7 +135,7 @@ cdef class Vocab:
         if lex != NULL:
             if lex.orth != self.strings[string]:
                 raise LookupError.mismatched_strings(
-                    lex.orth, self.strings[lex.orth], string)
+                    lex.orth, self.strings[string], self.strings[lex.orth], string)
             return lex
         else:
             return self._new_lexeme(mem, string)
@@ -443,7 +443,7 @@ class LookupError(Exception):
             "Query string: {query}\n"
             "Orth cached: {orth_str}\n"
             "ID of orth: {orth_id}".format(
-                query=original_string, orth_str=id_string, orth_id=id_)
+                query=repr(original_string), orth_str=repr(id_string), orth_id=id_)
         )
 
 
