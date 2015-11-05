@@ -3,6 +3,8 @@ from os import path
 from collections import defaultdict
 
 from thinc.typedefs cimport atom_t, weight_t
+from thinc.learner cimport arg_max, arg_max_if_true, arg_max_if_zero
+from thinc.api cimport Example
 
 from .typedefs cimport attr_t
 from .tokens.doc cimport Doc
@@ -11,7 +13,6 @@ from .parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON
 from .parts_of_speech cimport VERB, X, PUNCT, EOL, SPACE
 
 from .attrs cimport *
-from ._ml cimport arg_max
 
  
 cpdef enum:
@@ -138,12 +139,15 @@ cdef class Tagger:
         """
         if tokens.length == 0:
             return 0
+
+        cdef Example eg = self.model._eg
         cdef int i
-        cdef const weight_t* scores
         for i in range(tokens.length):
             if tokens.c[i].pos == 0:
-                guess = self.predict(i, tokens.c)
-                self.vocab.morphology.assign_tag(&tokens.c[i], guess)
+                eg.wipe()
+                fill_atoms(eg.c.atoms, tokens.c, i)
+                self.model(eg)
+                self.vocab.morphology.assign_tag(&tokens.c[i], eg.c.guess)
 
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
@@ -169,39 +173,26 @@ cdef class Tagger:
             raise ValueError(
                 [g for g in gold_tag_strs if g is not None and g not in self.tag_names])
         correct = 0
+        cdef Example eg = self.model._eg
         for i in range(tokens.length):
-            guess = self.update(i, tokens.c, golds[i])
-            loss = golds[i] != -1 and guess != golds[i]
+            eg.wipe()
+            fill_atoms(eg.c.atoms, tokens.c, i)
+            self.train(eg)
 
-            self.vocab.morphology.assign_tag(&tokens.c[i], guess)
+            self.vocab.morphology.assign_tag(&tokens.c[i], eg.c.guess)
             
-            correct += loss == 0
+            correct += eg.c.cost == 0
             self.freqs[TAG][tokens.c[i].tag] += 1
         return correct
 
-    cdef int predict(self, int i, const TokenC* tokens) except -1:
-        cdef atom_t[N_CONTEXT_FIELDS] context
-        _fill_from_token(&context[P2_orth], &tokens[i-2])
-        _fill_from_token(&context[P1_orth], &tokens[i-1])
-        _fill_from_token(&context[W_orth], &tokens[i])
-        _fill_from_token(&context[N1_orth], &tokens[i+1])
-        _fill_from_token(&context[N2_orth], &tokens[i+2])
-        scores = self.model.score(context)
-        return arg_max(scores, self.model.n_classes)
 
-    cdef int update(self, int i, const TokenC* tokens, int gold) except -1:
-        cdef atom_t[N_CONTEXT_FIELDS] context
-        _fill_from_token(&context[P2_orth], &tokens[i-2])
-        _fill_from_token(&context[P1_orth], &tokens[i-1])
-        _fill_from_token(&context[W_orth], &tokens[i])
-        _fill_from_token(&context[N1_orth], &tokens[i+1])
-        _fill_from_token(&context[N2_orth], &tokens[i+2])
-        scores = self.model.score(context)
-        guess = arg_max(scores, self.model.n_classes)
-        loss = guess != gold if gold != -1 else 0
-        self.model.update(context, guess, gold, loss)
-        return guess
-
+cdef inline void fill_atoms(atom_t* atoms, const TokenC* tokens, int i) nogil:
+    _fill_from_token(&atoms[P2_orth], &tokens[i-2])
+    _fill_from_token(&atoms[P1_orth], &tokens[i-1])
+    _fill_from_token(&atoms[W_orth], &tokens[i])
+    _fill_from_token(&atoms[N1_orth], &tokens[i+1])
+    _fill_from_token(&atoms[N2_orth], &tokens[i+2])
+    
 
 cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
     context[0] = t.lex.lower

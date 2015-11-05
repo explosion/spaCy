@@ -10,6 +10,8 @@ import json
 import cython
 import numpy.random
 
+from libc.string cimport memcpy
+
 from thinc.features cimport Feature, count_feats
 from thinc.api cimport Example
 
@@ -52,28 +54,12 @@ cdef class Model:
     cdef const weight_t* score(self, atom_t* context) except NULL:
         memcpy(self._eg.c.atoms, context, self._eg.c.nr_atom * sizeof(context[0]))
         self._model(self._eg)
-        return self._eg.scores
+        return self._eg.c.scores
 
     cdef int set_scores(self, weight_t* scores, atom_t* context) nogil:
-        cdef int nr_feat = self._model.extractor.set_feats(self._eg.features, context)
+        cdef int nr_feat = self._extractor.set_feats(self._eg.c.features, context)
 
-        self._model.set_scores(
-            scores,
-            self._model.weights.c_map,
-            self._eg.c.features,
-            nr_feat
-        )
-
-    cdef int update(self, atom_t* context, class_t guess, class_t gold, int cost) except -1:
-        cdef int n_feats
-        if cost == 0:
-            self._model.update({})
-        else:
-            feats = self._extractor.get_feats(context, &n_feats)
-            counts = {gold: {}, guess: {}}
-            count_feats(counts[gold], feats, n_feats, cost)
-            count_feats(counts[guess], feats, n_feats, -cost)
-            self._model.update(counts)
+        self._model.set_scores(scores, self._eg.c.features, nr_feat)
 
     def end_training(self, model_loc=None):
         if model_loc is None:

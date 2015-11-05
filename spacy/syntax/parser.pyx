@@ -40,7 +40,7 @@ from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 
-from .._ml cimport arg_max_if_true
+from thinc.learner cimport arg_max_if_true
 
 
 DEBUG = False
