@@ -21,8 +21,10 @@ cdef class Span:
             raise IndexError
 
         self.doc = tokens
-        self.start = start
-        self.end = end
+        self.start_token = start
+        self.start_idx = self.doc[start].idx
+        self.end_token = end
+        self.end_idx = self.doc[end - 1].idx + len(self.doc[end - 1])
         self.label = label
         self._vector = vector
         self._vector_norm = vector_norm
@@ -75,6 +77,46 @@ cdef class Span:
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+
+    property start:
+        """ Get start token index of this span from the Doc."""
+        def __get__(self):
+            # first is the first token of the span - get it from the doc
+            first = None
+            if self.start_token < len(self.doc):
+                first = self.doc[self.start_token]
+            # if we have merged spans in Doc start might have changed.
+            # check if token start index is in doc index range and the token
+            # index is start_idx (it hasn't changed).
+            if first is None or first.idx != self.start_idx:
+                # go through tokens in Doc - find index of token equal to start_idx
+                new_start = self.doc.token_index_start(self.start_idx)
+                if new_start is not None:
+                    self.start_token = new_start
+                else:
+                    raise IndexError('Something went terribly wrong during a merge.'
+                                     'No token found with idx %s' % self.start_idx)
+            return self.start_token
+
+    property end:
+        """ Get end token index of this span from the Doc."""
+        def __get__(self):
+            # last is the last token of the span - get it from the doc
+            last = None
+            if self.end_token <= len(self.doc):
+                last = self.doc[self.end_token -1]
+            # if we have merged spans in Doc end will have changed.
+            # check if token end index is in doc index range and the token
+            # index is end_idx + len(last_token) (it hasn't changed).
+            if last is None or last.idx + len(last) != self.end_idx:
+                # go through tokens in Doc - find index of token equal to end_idx
+                new_end = self.doc.token_index_end(self.end_idx)
+                if new_end is not None:
+                    self.end_token = new_end
+                else:
+                    raise IndexError('Something went terribly wrong during a merge.'
+                                     'No token found with idx %s' % self.end_idx)
+            return self.end_token
 
     property vector:
         def __get__(self):
