@@ -4,6 +4,8 @@ import codecs
 from libc.string cimport memcpy
 from murmurhash.mrmr cimport hash64
 
+from preshed.maps cimport map_iter, key_t
+
 from cpython cimport PyUnicode_AS_DATA
 from cpython cimport PyUnicode_GET_DATA_SIZE
 
@@ -76,7 +78,7 @@ cdef class StringStore:
     def __init__(self, strings=None):
         self.mem = Pool()
         self._map = PreshMap()
-        self._resize_at = 10000
+        self._resize_at = 10
         self.c = <Utf8Str*>self.mem.alloc(self._resize_at, sizeof(Utf8Str))
         self.size = 1
         if strings is not None:
@@ -92,6 +94,7 @@ cdef class StringStore:
 
     def __getitem__(self, object string_or_id):
         cdef bytes byte_string
+        cdef unicode py_string
         cdef const Utf8Str* utf8str
         cdef int id_
         if isinstance(string_or_id, int) or isinstance(string_or_id, long):
@@ -104,13 +107,14 @@ cdef class StringStore:
         elif isinstance(string_or_id, bytes):
             if len(string_or_id) == 0:
                 return 0
-            utf8str = self.intern(<unsigned char*>string_or_id, len(string_or_id))
+            py_string = string_or_id.decode('utf8')
+            utf8str = self.intern(py_string)
             return utf8str - self.c
         elif isinstance(string_or_id, unicode):
             if len(string_or_id) == 0:
                 return 0
-            byte_string = string_or_id.encode('utf8')
-            utf8str = self.intern(<unsigned char*>byte_string, len(byte_string))
+            py_string = string_or_id
+            utf8str = self.intern(py_string)
             return utf8str - self.c
         else:
             raise TypeError(type(string_or_id))
@@ -132,16 +136,17 @@ cdef class StringStore:
             strings.append(py_string)
         return (StringStore, (strings,), None, None, None)
 
-    cdef const Utf8Str* intern(self, unsigned char* chars, int length) except NULL:
+    cdef const Utf8Str* intern(self, unicode py_string) except NULL:
         # 0 means missing, but we don't bother offsetting the index.
-        key = hash64(chars, length * sizeof(char), 0)
+        cdef hash_t key = hash_string(py_string)
         value = <Utf8Str*>self._map.get(key)
         if value != NULL:
             return value
 
         if self.size == self._resize_at:
             self._realloc()
-        self.c[self.size] = _allocate(self.mem, chars, length)
+        cdef bytes byte_string = py_string.encode('utf8')
+        self.c[self.size] = _allocate(self.mem, <unsigned char*>byte_string, len(byte_string))
         self._map.set(key, <void*>&self.c[self.size])
         self.size += 1
         return &self.c[self.size-1]
@@ -157,26 +162,25 @@ cdef class StringStore:
         if strings == ['']:
             return None
         cdef unicode string
-        cdef bytes byte_string
         for string in strings: 
             if string:
-                byte_string = string.encode('utf8')
-                self.intern(byte_string, len(byte_string))
+                self.intern(string)
 
     def _realloc(self):
         # We want to map straight to pointers, but they'll be invalidated if
         # we resize our array. So, first we remap to indices, then we resize,
         # then we can acquire the new pointers.
         cdef Pool tmp_mem = Pool()
-        keys = <hash_t*>tmp_mem.alloc(self.size, sizeof(hash_t))
-        cdef hash_t key
-        cdef size_t addr
+        keys = <key_t*>tmp_mem.alloc(self.size, sizeof(key_t))
+        cdef key_t key
+        cdef void* value
         cdef const Utf8Str ptr
-        cdef size_t i
-        for key, addr in self._map.items():
+        cdef int i = 0
+        cdef size_t offset
+        while map_iter(self._map.c_map, &i, &key, &value):
             # Find array index with pointer arithmetic
-            i = (<Utf8Str*>addr) - self.c
-            keys[i] = key
+            offset = ((<Utf8Str*>value) - self.c)
+            keys[offset] = key
         
         self._resize_at *= 2
         cdef size_t new_size = self._resize_at * sizeof(Utf8Str)
@@ -184,4 +188,5 @@ cdef class StringStore:
 
         self._map = PreshMap(self.size)
         for i in range(self.size):
-            self._map.set(keys[i], &self.c[i])
+            if keys[i]:
+                self._map.set(keys[i], &self.c[i])
