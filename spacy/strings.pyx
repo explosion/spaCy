@@ -96,6 +96,7 @@ cdef class StringStore:
         cdef bytes byte_string
         cdef unicode py_string
         cdef const Utf8Str* utf8str
+
         cdef int id_
         if isinstance(string_or_id, int) or isinstance(string_or_id, long):
             if string_or_id == 0:
