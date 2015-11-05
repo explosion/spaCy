@@ -20,7 +20,7 @@ cdef class StringStore:
     cdef Utf8Str* c
     cdef int64_t size
 
-    cdef PreshMap _map
-    cdef size_t _resize_at
+    cdef public PreshMap _map
+    cdef int64_t _resize_at
 
-    cdef const Utf8Str* intern(self, unsigned char* chars, int length) except NULL
+    cdef const Utf8Str* intern(self, unicode py_string) except NULL
