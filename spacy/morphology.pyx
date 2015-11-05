@@ -85,12 +85,10 @@ cdef class Morphology:
 
     def lemmatize(self, const univ_pos_t pos, attr_t orth):
         if self.lemmatizer is None:
-            return orth
+            return self.strings[orth].lower()
         cdef unicode py_string = self.strings[orth]
         if pos != NOUN and pos != VERB and pos != ADJ and pos != PUNCT:
-            # TODO: This should lower-case
-            # return self.strings[py_string.lower()]
-            return orth
+            return py_string.lower()
         cdef set lemma_strings
         cdef unicode lemma_string
         lemma_strings = self.lemmatizer(py_string, pos)
