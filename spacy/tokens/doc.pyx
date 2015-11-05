@@ -438,11 +438,25 @@ cdef class Doc:
                 keep_reading = False
             yield n_bytes_str + data
 
-    # This function is terrible --- need to fix this.
-    def merge(self, int start_idx, int end_idx, unicode tag, unicode lemma,
-              unicode ent_type):
-        """Merge a multi-word expression into a single token.  Currently
-        experimental; API is likely to change."""
+    def token_index_start(self, int start_idx):
+        """ Get index of token in doc that has character index start_idx """
+        cdef int i
+        for i in range(self.length):
+            if self.c[i].idx == start_idx:
+                return i
+        return None
+
+    def token_index_end(self, int end_idx):
+        """ Get index+1 of token in doc ending with character index end_idx """
+        cdef int i
+        for i in range(self.length):
+            if (self.c[i].idx + self.c[i].lex.length) == end_idx:
+                return i + 1
+        return None
+
+    def range_from_indices(self, int start_idx, int end_idx):
+        """ Get tuple - span of token indices which correspond to
+            character indices (start_idx, end_idx) if such a span exists"""
         cdef int i
         cdef int start = -1
         cdef int end = -1
@@ -453,10 +467,18 @@ cdef class Doc:
                 if start == -1:
                     return None
                 end = i + 1
-                break
-        else:
-            return None
+                return (start, end)
+        return None
 
+    # This function is terrible --- need to fix this.
+    def merge(self, int start_idx, int end_idx, unicode tag, unicode lemma,
+              unicode ent_type):
+        """Merge a multi-word expression into a single token.  Currently
+        experimental; API is likely to change."""
+        start_end = self.range_from_indices(start_idx, end_idx)
+        if start_end is None:
+            return None
+        start, end = start_end
         cdef Span span = self[start:end]
         # Get LexemeC for newly merged token
         new_orth = ''.join([t.text_with_ws for t in span])
@@ -465,8 +487,6 @@ cdef class Doc:
         cdef const LexemeC* lex = self.vocab.get(self.mem, new_orth)
         # House the new merged token where it starts
         cdef TokenC* token = &self.c[start]
-        # Update fields
-        token.lex = lex
         token.spacy = self.c[end-1].spacy
         if tag in self.vocab.morphology.tag_map:
             self.vocab.morphology.assign_tag(token, tag)
@@ -485,6 +505,10 @@ cdef class Doc:
         # bridges over the entity. Here the alignment of the tokens changes.
         span_root = span.root.i
         token.dep = span.root.dep
+        # We update token.lex after keeping span root and dep, since
+        # setting token.lex will change span.start and span.end properties
+        # as it modifies the character offsets in the doc
+        token.lex = lex
         for i in range(self.length):
             self.c[i].head += i
         # Set the head of the merged token, and its dep relation, from the Span
