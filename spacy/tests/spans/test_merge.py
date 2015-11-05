@@ -1,7 +1,6 @@
 from __future__ import unicode_literals
 import pytest
 
-@pytest.mark.models
 def test_merge_tokens(EN):
     tokens = EN(u'Los Angeles start.')
     assert len(tokens) == 4
@@ -13,7 +12,6 @@ def test_merge_tokens(EN):
     assert tokens[0].head.orth_ == 'start'
 
 
-@pytest.mark.models
 def test_merge_heads(EN):
     tokens = EN(u'I found a pilates class near work.')
     assert len(tokens) == 8
@@ -32,7 +30,6 @@ def test_issue_54(EN):
     text = u'Talks given by women had a slightly higher number of questions asked (3.2$\pm$0.2) than talks given by men (2.6$\pm$0.1).'
     tokens = EN(text)
 
-@pytest.mark.models
 def test_np_merges(EN):
     text = u'displaCy is a parse tool built with Javascript'
     tokens = EN(text)
@@ -47,3 +44,31 @@ def test_np_merges(EN):
         merged = tokens.merge(start, end, label, lemma, label)
         assert merged != None, (start, end, label, lemma) 
 
+def test_entity_merge(EN):
+    tokens = EN(u'Stewart Lee is a stand up comedian who lives in England and loves Joe Pasquale.\n')
+    assert(len(tokens) == 17)
+    for ent in tokens.ents:
+        label, lemma, type_ = (ent.root.tag_, ent.root.lemma_, max(w.ent_type_ for w in ent))
+        ent.merge(label, lemma, type_)
+    # check looping is ok
+    assert(len(tokens) == 15)
+
+def test_sentence_update_after_merge(EN):
+    tokens = EN(u'Stewart Lee is a stand up comedian. He lives in England and loves Joe Pasquale.')
+    sent1, sent2 = list(tokens.sents)
+    init_len = len(sent1)
+    init_len2 = len(sent2)
+    merge_me = tokens[0:2]
+    merge_me.merge(u'none', u'none', u'none')
+    merge_me2 = tokens[-2:]
+    merge_me2.merge(u'none', u'none', u'none')
+    assert(len(sent1) == init_len - 1)
+    assert(len(sent2) == init_len2 - 1)
+
+def test_subtree_size_check(EN):
+    tokens = EN(u'Stewart Lee is a stand up comedian who lives in England and loves Joe Pasquale')
+    sent1 = list(tokens.sents)[0]
+    init_len = len(list(sent1.root.subtree))
+    merge_me = tokens[0:2]
+    merge_me.merge(u'none', u'none', u'none')
+    assert(len(list(sent1.root.subtree)) == init_len - 1)
