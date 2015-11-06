@@ -48,7 +48,7 @@ cdef class StateClass:
             return 0
         if i < 0 or i >= self.length:
             return 0
-        return self._ents[self._e_i-1].start
+        self._ents[self._e_i - (i+1)].start
 
     cdef int L(self, int i, int idx) nogil:
         if idx < 1:
