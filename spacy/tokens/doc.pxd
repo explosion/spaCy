@@ -19,6 +19,12 @@ ctypedef fused LexemeOrToken:
     const_TokenC_ptr
 
 
+cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2
+
+
+cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2
+
+
 cdef class Doc:
     cdef readonly Pool mem
     cdef readonly Vocab vocab

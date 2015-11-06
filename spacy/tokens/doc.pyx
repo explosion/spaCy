@@ -438,47 +438,19 @@ cdef class Doc:
                 keep_reading = False
             yield n_bytes_str + data
 
-    def token_index_start(self, int start_idx):
-        """ Get index of token in doc that has character index start_idx """
-        cdef int i
-        for i in range(self.length):
-            if self.c[i].idx == start_idx:
-                return i
-        return None
-
-    def token_index_end(self, int end_idx):
-        """ Get index+1 of token in doc ending with character index end_idx """
-        cdef int i
-        for i in range(self.length):
-            if (self.c[i].idx + self.c[i].lex.length) == end_idx:
-                return i + 1
-        return None
-
-    def range_from_indices(self, int start_idx, int end_idx):
-        """ Get tuple - span of token indices which correspond to
-            character indices (start_idx, end_idx) if such a span exists"""
-        cdef int i
-        cdef int start = -1
-        cdef int end = -1
-        for i in range(self.length):
-            if self.c[i].idx == start_idx:
-                start = i
-            if (self.c[i].idx + self.c[i].lex.length) == end_idx:
-                if start == -1:
-                    return None
-                end = i + 1
-                return (start, end)
-        return None
-
-    # This function is terrible --- need to fix this.
     def merge(self, int start_idx, int end_idx, unicode tag, unicode lemma,
               unicode ent_type):
         """Merge a multi-word expression into a single token.  Currently
         experimental; API is likely to change."""
-        start_end = self.range_from_indices(start_idx, end_idx)
-        if start_end is None:
+        cdef int start = token_by_start(self.c, self.length, start_idx)
+        if start == -1:
             return None
-        start, end = start_end
+        cdef int end = token_by_end(self.c, self.length, end_idx)
+        if end == -1:
+            return None
+        # Currently we have the token index, we want the range-end index
+        end += 1
+        
         cdef Span span = self[start:end]
         # Get LexemeC for newly merged token
         new_orth = ''.join([t.text_with_ws for t in span])
@@ -539,6 +511,24 @@ cdef class Doc:
         self._py_tokens = [None] * self.length
         # Return the merged Python object
         return self[start]
+
+
+cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:
+    cdef int i
+    for i in range(length):
+        if self.c[i].idx == start_char:
+            return i
+    else:
+        return -1
+
+
+cdef int token_by_end(const TokenC* tokens, int length, int end_char) except -2:
+    cdef int i
+    for i in range(length):
+        if tokens[i].idx + tokens[i].lex.length == end_char:
+            return i
+    else:
+        return -1
 
 
 cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
