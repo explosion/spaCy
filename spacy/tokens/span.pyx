@@ -37,7 +37,7 @@ cdef class Span:
         elif op == 1:
             return self.start_char <= other.start_char
         elif op == 2:
-            return self.start_char == other.start_idx and self.end_char == other.end_char
+            return self.start_char == other.start_char and self.end_char == other.end_char
         elif op == 3:
             return self.start_char != other.start_char or self.end_char != other.end_char
         elif op == 4:
