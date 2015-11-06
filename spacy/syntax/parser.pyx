@@ -105,9 +105,12 @@ cdef class Parser:
             self.moves.set_valid(eg.is_valid, stcls)
             self.model.set_prediction(&eg)
 
-            assert eg.is_valid[eg.guess]
-            
             action = self.moves.c[eg.guess]
+            if not eg.is_valid[eg.guess]:
+                raise ValueError(
+                    "Illegal action: %s" % self.moves.move_name(action.move, action.label)
+                )
+            
             action.do(stcls, action.label)
         self.moves.finalize_state(stcls)
         tokens.set_parse(stcls._sent)
