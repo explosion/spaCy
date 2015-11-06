@@ -63,7 +63,7 @@ class TestTagger(unittest.TestCase):
     def test_create(self):
         vocab = Vocab()
         templates = ((1,),)
-        model = TaggerModel(vocab.morphology.n_tags, templates, model_loc=None)
+        model = TaggerModel(vocab.morphology.n_tags, templates)
         tagger = Tagger(vocab, model)
 
 
