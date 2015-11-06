@@ -150,7 +150,7 @@ cdef class StepwiseState:
         self.doc = doc
         self.stcls = StateClass.init(doc.c, doc.length)
         self.parser.moves.initialize_state(self.stcls)
-        self.eg = Example(self.parser.model.n_classes, CONTEXT_SIZE,
+        self.eg = Example(self.parser.model.nr_class, CONTEXT_SIZE,
                           self.parser.model.n_feats, self.parser.model.n_feats)
 
     def __enter__(self):
