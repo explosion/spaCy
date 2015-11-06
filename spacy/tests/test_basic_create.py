@@ -11,8 +11,8 @@ from spacy.strings import StringStore
 from spacy.vocab import Vocab
 from spacy.tokenizer import Tokenizer
 from spacy.syntax.arc_eager import ArcEager
-from spacy.tagger import Tagger
-from spacy.syntax.parser import Parser
+from spacy.tagger import Tagger, TaggerModel
+from spacy.syntax.parser import Parser, ParserModel
 from spacy.matcher import Matcher
 
 
@@ -63,7 +63,7 @@ class TestTagger(unittest.TestCase):
     def test_create(self):
         vocab = Vocab()
         templates = ((1,),)
-        model = Model(vocab.morphology.n_tags, templates, model_loc=None)
+        model = TaggerModel(vocab.morphology.n_tags, templates, model_loc=None)
         tagger = Tagger(vocab, model)
 
 
@@ -73,7 +73,7 @@ class TestParser(unittest.TestCase):
         templates = ((1,),)
         labels_by_action = {0: ['One', 'Two'], 1: ['Two', 'Three']}
         transition_system = ArcEager(vocab.strings, labels_by_action)
-        model = Model(vocab.morphology.n_tags, templates, model_loc=None)
+        model = ParserModel(transition_system.n_moves, templates)
         
         parser = Parser(vocab.strings, transition_system, model)
 
