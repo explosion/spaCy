@@ -46,7 +46,7 @@ cdef class StateClass:
     cdef int E(self, int i) nogil:
         if self._e_i <= 0 or self._e_i >= self.length:
             return 0
-        if i < 0 or i > self._e_i:
+        if i < 0 or i >= self._e_i:
             return 0
         self._ents[self._e_i - (i+1)].start
 
@@ -174,8 +174,9 @@ cdef class StateClass:
         self._e_i += 1
 
     cdef void close_ent(self) nogil:
-        self._e_i -= 1
-        self._ents[self._e_i].end = self.B(0)+1
+        # Note that we don't decrement _e_i here! We want to maintain all
+        # entities, not over-write them...
+        self._ents[self._e_i-1].end = self.B(0)+1
         self._sent[self.B(0)].ent_iob = 1
 
     cdef void set_ent_tag(self, int i, int ent_iob, int ent_type) nogil:

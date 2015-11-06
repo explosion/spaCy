@@ -269,7 +269,7 @@ cdef class Last:
     @staticmethod
     cdef int transition(StateClass st, int label) nogil:
         st.close_ent()
-        st.set_ent_tag(st.B(0), 2, label)
+        st.set_ent_tag(st.B(0), 1, label)
         st.push()
         st.pop()
 
