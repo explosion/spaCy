@@ -516,7 +516,7 @@ cdef class Doc:
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:
     cdef int i
     for i in range(length):
-        if self.c[i].idx == start_char:
+        if tokens[i].idx == start_char:
             return i
     else:
         return -1

@@ -12,3 +12,6 @@ cdef class Span:
 
     cdef public _vector
     cdef public _vector_norm
+
+
+    cpdef int _recalculate_indices(self) except -1
