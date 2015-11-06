@@ -259,8 +259,6 @@ cdef class Last:
         cdef int preset_ent_iob = st.B_(0).ent_iob
         if preset_ent_iob == 2:
             return False
-        elif preset_ent_iob == 3:
-            return False
         elif st.B_(1).ent_iob == 1:
             return False
  
