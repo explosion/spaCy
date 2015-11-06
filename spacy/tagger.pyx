@@ -1,10 +1,12 @@
 import json
 from os import path
 from collections import defaultdict
+from libc.string cimport memset
 
+from cymem.cymem cimport Pool
 from thinc.typedefs cimport atom_t, weight_t
-from thinc.learner cimport arg_max, arg_max_if_true, arg_max_if_zero
-from thinc.api cimport Example
+from thinc.api cimport Example, ExampleC
+from thinc.features cimport ConjunctionExtracter
 
 from .typedefs cimport attr_t
 from .tokens.doc cimport Doc
@@ -64,6 +66,44 @@ cpdef enum:
     N_CONTEXT_FIELDS
 
 
+cdef class TaggerModel(AveragedPerceptron):
+    def __init__(self, n_classes, templates):
+        AveragedPerceptron.__init__(self, n_classes,
+            ConjunctionExtracter(N_CONTEXT_FIELDS, templates))
+
+    cdef void set_features(self, ExampleC* eg, const TokenC* tokens, int i) except *:
+        _fill_from_token(&eg.atoms[P2_orth], &tokens[i-2])
+        _fill_from_token(&eg.atoms[P1_orth], &tokens[i-1])
+        _fill_from_token(&eg.atoms[W_orth], &tokens[i])
+        _fill_from_token(&eg.atoms[N1_orth], &tokens[i+1])
+        _fill_from_token(&eg.atoms[N2_orth], &tokens[i+2])
+
+        eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
+
+    cdef void update(self, ExampleC* eg) except *:
+        self.updater.update(eg)
+   
+
+cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
+    context[0] = t.lex.lower
+    context[1] = t.lex.cluster
+    context[2] = t.lex.shape
+    context[3] = t.lex.prefix
+    context[4] = t.lex.suffix
+    context[5] = t.tag
+    context[6] = t.lemma
+    if t.lex.flags & (1 << IS_ALPHA):
+        context[7] = 1
+    elif t.lex.flags & (1 << IS_PUNCT):
+        context[7] = 2
+    elif t.lex.flags & (1 << LIKE_URL):
+        context[7] = 3
+    elif t.lex.flags & (1 << LIKE_NUM):
+        context[7] = 4
+    else:
+        context[7] = 0
+
+
 cdef class Tagger:
     """A part-of-speech tagger for English"""
     @classmethod
@@ -105,7 +145,7 @@ cdef class Tagger:
 
     @classmethod
     def blank(cls, vocab, templates):
-        model = Model(vocab.morphology.n_tags, templates, model_loc=None)
+        model = TaggerModel(vocab.morphology.n_tags, templates)
         return cls(vocab, model)
 
     @classmethod
@@ -114,10 +154,12 @@ cdef class Tagger:
             templates = json.loads(open(path.join(data_dir, 'templates.json')))
         else:
             templates = cls.default_templates()
-        model = Model(vocab.morphology.n_tags, templates, data_dir)
+        model = TaggerModel(vocab.morphology.n_tags, templates)
+        if path.exists(path.join(data_dir, 'model')):
+            model.load(path.join(data_dir, 'model'))
         return cls(vocab, model)
 
-    def __init__(self, Vocab vocab, model):
+    def __init__(self, Vocab vocab, TaggerModel model):
         self.vocab = vocab
         self.model = model
         
@@ -131,27 +173,6 @@ cdef class Tagger:
     def tag_names(self):
         return self.vocab.morphology.tag_names
 
-    def __call__(self, Doc tokens):
-        """Apply the tagger, setting the POS tags onto the Doc object.
-
-        Args:
-            tokens (Doc): The tokens to be tagged.
-        """
-        if tokens.length == 0:
-            return 0
-
-        cdef Example eg = self.model._eg
-        cdef int i
-        for i in range(tokens.length):
-            if tokens.c[i].pos == 0:
-                eg.wipe()
-                fill_atoms(eg.c.atoms, tokens.c, i)
-                self.model(eg)
-                self.vocab.morphology.assign_tag(&tokens.c[i], eg.c.guess)
-
-        tokens.is_tagged = True
-        tokens._py_tokens = [None] * tokens.length
-
     def __reduce__(self):
         return (self.__class__, (self.vocab, self.model), None, None)
 
@@ -162,53 +183,45 @@ cdef class Tagger:
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
+    def __call__(self, Doc tokens):
+        """Apply the tagger, setting the POS tags onto the Doc object.
+
+        Args:
+            tokens (Doc): The tokens to be tagged.
+        """
+        if tokens.length == 0:
+            return 0
+
+        cdef Pool mem = Pool()
+        cdef ExampleC eg 
+
+        cdef int i, tag
+        for i in range(tokens.length):
+            if tokens.c[i].pos == 0:
+                eg = self.model.allocate(mem)
+                self.model.set_features(&eg, tokens.c, i)
+                self.model.set_prediction(&eg)
+                self.vocab.morphology.assign_tag(&tokens.c[i], eg.guess)
+        tokens.is_tagged = True
+        tokens._py_tokens = [None] * tokens.length
+    
     def train(self, Doc tokens, object gold_tag_strs):
         assert len(tokens) == len(gold_tag_strs)
-        cdef int i
-        cdef int loss
-        cdef const weight_t* scores
-        try:
-            golds = [self.tag_names.index(g) if g is not None else -1 for g in gold_tag_strs]
-        except ValueError:
-            raise ValueError(
-                [g for g in gold_tag_strs if g is not None and g not in self.tag_names])
-        correct = 0
-        cdef Example eg = self.model._eg
+        golds = [self.tag_names.index(g) if g is not None else -1 for g in gold_tag_strs]
+        cdef int correct = 0
+        cdef Pool mem = Pool()
+        cdef ExampleC eg 
         for i in range(tokens.length):
-            eg.wipe()
-            fill_atoms(eg.c.atoms, tokens.c, i)
-            self.train(eg)
+            eg = self.model.allocate(mem)
+            self.model.set_features(&eg, tokens.c, i)
+            self.model.set_costs(&eg, golds[i])
+            self.model.set_prediction(&eg)
+            self.model.update(&eg)
 
-            self.vocab.morphology.assign_tag(&tokens.c[i], eg.c.guess)
+            self.vocab.morphology.assign_tag(&tokens.c[i], eg.guess)
             
-            correct += eg.c.cost == 0
+            correct += eg.cost == 0
             self.freqs[TAG][tokens.c[i].tag] += 1
+        tokens.is_tagged = True
+        tokens._py_tokens = [None] * tokens.length
         return correct
-
-
-cdef inline void fill_atoms(atom_t* atoms, const TokenC* tokens, int i) nogil:
-    _fill_from_token(&atoms[P2_orth], &tokens[i-2])
-    _fill_from_token(&atoms[P1_orth], &tokens[i-1])
-    _fill_from_token(&atoms[W_orth], &tokens[i])
-    _fill_from_token(&atoms[N1_orth], &tokens[i+1])
-    _fill_from_token(&atoms[N2_orth], &tokens[i+2])
-    
-
-cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
-    context[0] = t.lex.lower
-    context[1] = t.lex.cluster
-    context[2] = t.lex.shape
-    context[3] = t.lex.prefix
-    context[4] = t.lex.suffix
-    context[5] = t.tag
-    context[6] = t.lemma
-    if t.lex.flags & (1 << IS_ALPHA):
-        context[7] = 1
-    elif t.lex.flags & (1 << IS_PUNCT):
-        context[7] = 2
-    elif t.lex.flags & (1 << LIKE_URL):
-        context[7] = 3
-    elif t.lex.flags & (1 << LIKE_NUM):
-        context[7] = 4
-    else:
-        context[7] = 0

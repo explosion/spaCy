@@ -78,7 +78,7 @@ cdef class StringStore:
     def __init__(self, strings=None):
         self.mem = Pool()
         self._map = PreshMap()
-        self._resize_at = 10
+        self._resize_at = 10000
         self.c = <Utf8Str*>self.mem.alloc(self._resize_at, sizeof(Utf8Str))
         self.size = 1
         if strings is not None:

@@ -18,17 +18,14 @@ import sys
 from cymem.cymem cimport Pool, Address
 from murmurhash.mrmr cimport hash64
 from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
+from thinc.features cimport ConjunctionExtracter
 
 from util import Config
-
-from thinc.api cimport Example, ExampleC
-
 
 from ..structs cimport TokenC
 
 from ..tokens.doc cimport Doc
 from ..strings cimport StringStore
-
 
 from .transition_system import OracleError
 from .transition_system cimport TransitionSystem, Transition
@@ -40,7 +37,6 @@ from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 
-from thinc.learner cimport arg_max_if_true
 
 
 DEBUG = False
@@ -66,8 +62,18 @@ def ParserFactory(transition_system):
     return lambda strings, dir_: Parser(strings, dir_, transition_system)
 
 
+cdef class ParserModel(AveragedPerceptron):
+    def __init__(self, n_classes, templates):
+        AveragedPerceptron.__init__(self, n_classes,
+            ConjunctionExtracter(CONTEXT_SIZE, templates))
+
+    cdef void set_features(self, ExampleC* eg, StateClass stcls) except *: 
+        fill_context(eg.atoms, stcls)
+        eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
+
+
 cdef class Parser:
-    def __init__(self, StringStore strings, transition_system, model):
+    def __init__(self, StringStore strings, transition_system, ParserModel model):
         self.moves = transition_system
         self.model = model
 
@@ -80,54 +86,50 @@ cdef class Parser:
         cfg = Config.read(model_dir, 'config')
         moves = transition_system(strings, cfg.labels)
         templates = get_templates(cfg.features)
-        model = Model(moves.n_moves, templates, model_dir)
+        model = ParserModel(moves.n_moves, templates)
+        if path.exists(path.join(model_dir, 'model')):
+            model.load(path.join(model_dir, 'model'))
         return cls(strings, moves, model)
+
+    def __reduce__(self):
+        return (Parser, (self.moves.strings, self.moves, self.model), None, None)
 
     def __call__(self, Doc tokens):
         cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
         self.moves.initialize_state(stcls)
 
-        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
-                                  self.model.n_feats, self.model.n_feats)
-        self.parse(stcls, eg.c)
-        tokens.set_parse(stcls._sent)
-
-    def __reduce__(self):
-        return (Parser, (self.moves.strings, self.moves, self.model), None, None)
-
-    cdef void predict(self, StateClass stcls, ExampleC* eg) nogil:
-        memset(eg.scores, 0, eg.nr_class * sizeof(weight_t))
-        self.moves.set_valid(eg.is_valid, stcls)
-        fill_context(eg.atoms, stcls)
-        self.model.set_scores(eg.scores, eg.atoms)
-        eg.guess = arg_max_if_true(eg.scores, eg.is_valid, self.model.n_classes)
-
-    cdef void parse(self, StateClass stcls, ExampleC eg) nogil:
+        cdef Pool mem = Pool()
+        cdef ExampleC eg = self.model.allocate(mem)
         while not stcls.is_final():
-            self.predict(stcls, &eg)
-            if not eg.is_valid[eg.guess]:
-                break
-            self.moves.c[eg.guess].do(stcls, self.moves.c[eg.guess].label)
-        self.moves.finalize_state(stcls)
+            self.model.set_features(&eg, stcls)
+            self.moves.set_valid(eg.is_valid, stcls)
+            self.model.set_prediction(&eg)
 
+            assert eg.is_valid[eg.guess]
+            
+            action = self.moves.c[eg.guess]
+            action.do(stcls, action.label)
+        self.moves.finalize_state(stcls)
+        tokens.set_parse(stcls._sent)
+  
     def train(self, Doc tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
         cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
         self.moves.initialize_state(stcls)
-        cdef Example eg = Example(self.model.n_classes, CONTEXT_SIZE,
-                                  self.model.n_feats, self.model.n_feats)
+        cdef Pool mem = Pool()
+        cdef ExampleC eg = self.model.allocate(mem)
         cdef weight_t loss = 0
         words = [w.orth_ for w in tokens]
-        cdef Transition G
+        cdef Transition action
         while not stcls.is_final():
-            memset(eg.c.scores, 0, eg.c.nr_class * sizeof(weight_t))
-            self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
-            fill_context(eg.c.atoms, stcls)
-            self.model.train(eg)
-            G = self.moves.c[eg.c.guess]
+            self.model.set_features(&eg, stcls)
+            self.moves.set_costs(eg.is_valid, eg.costs, stcls, gold)
+            self.model.set_prediction(&eg)
+            self.model.update(&eg)
 
-            self.moves.c[eg.c.guess].do(stcls, self.moves.c[eg.c.guess].label)
-            loss += eg.c.loss
+            action = self.moves.c[eg.guess]
+            action.do(stcls, action.label)
+            loss += eg.costs[eg.guess]
         return loss
 
     def step_through(self, Doc doc):
@@ -176,7 +178,10 @@ cdef class StepwiseState:
                 for i in range(self.stcls.length)]
 
     def predict(self):
-        self.parser.predict(self.stcls, &self.eg.c)
+        self.parser.model.set_features(&self.eg.c, self.stcls)
+        self.parser.moves.set_valid(self.eg.c.is_valid, self.stcls)
+        self.parser.model.set_prediction(&self.eg.c)
+
         action = self.parser.moves.c[self.eg.c.guess]
         return self.parser.moves.move_name(action.move, action.label)
 

@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from os import path
 from warnings import warn
 import io
@@ -13,7 +14,6 @@ from .syntax.parser import Parser
 from .tagger import Tagger
 from .matcher import Matcher
 from .serialize.packer import Packer
-from ._ml import Model
 from . import attrs
 from . import orth
 from .syntax.ner import BiluoPushDown
@@ -245,9 +245,12 @@ class Language(object):
     def end_training(self, data_dir=None):
         if data_dir is None:
             data_dir = self.data_dir
-        self.parser.model.end_training(path.join(data_dir, 'deps', 'model'))
-        self.entity.model.end_training(path.join(data_dir, 'ner', 'model'))
-        self.tagger.model.end_training(path.join(data_dir, 'pos', 'model'))
+        self.parser.model.end_training()
+        self.parser.model.dump(path.join(data_dir, 'deps', 'model'))
+        self.entity.model.end_training()
+        self.entity.model.dump(path.join(data_dir, 'ner', 'model'))
+        self.tagger.model.end_training()
+        self.tagger.model.dump(path.join(data_dir, 'pos', 'model'))
 
         strings_loc = path.join(data_dir, 'vocab', 'strings.json')
         with io.open(strings_loc, 'w', encoding='utf8') as file_:

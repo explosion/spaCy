@@ -11,7 +11,6 @@ from spacy.strings import StringStore
 from spacy.vocab import Vocab
 from spacy.tokenizer import Tokenizer
 from spacy.syntax.arc_eager import ArcEager
-from spacy._ml import Model
 from spacy.tagger import Tagger
 from spacy.syntax.parser import Parser
 from spacy.matcher import Matcher
