@@ -170,6 +170,9 @@ cdef class Begin:
             return False
         elif preset_ent_iob == 3 and st.B_(0).ent_type != label:
             return False
+        # Don't allow entities to extend across sentence boundaries
+        elif st.B_(1).sent_start:
+            return False
         else:
             return label != 0 and not st.entity_is_open()
 
@@ -207,7 +210,11 @@ cdef class In:
         elif preset_ent_iob == 3:
             return False
         # TODO: Is this quite right?
+        # I think it's supposed to be ensuring the gazetteer matches are maintained
         elif st.B_(1).ent_iob != preset_ent_iob:
+            return False
+        # Don't allow entities to extend across sentence boundaries
+        elif st.B_(1).sent_start:
             return False
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
     
