@@ -1,8 +1,8 @@
 cython
 cymem == 1.30
 pathlib
-preshed >= 0.43
-thinc == 3.4.1
+preshed == 0.44
+thinc == 4.0
 murmurhash == 0.24
 text-unidecode
 numpy
