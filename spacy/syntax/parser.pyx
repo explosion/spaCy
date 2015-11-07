@@ -63,10 +63,6 @@ def ParserFactory(transition_system):
 
 
 cdef class ParserModel(AveragedPerceptron):
-    def __init__(self, n_classes, templates):
-        AveragedPerceptron.__init__(self, n_classes,
-            ConjunctionExtracter(CONTEXT_SIZE, templates))
-
     cdef void set_features(self, ExampleC* eg, StateClass stcls) except *: 
         fill_context(eg.atoms, stcls)
         eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
@@ -86,7 +82,8 @@ cdef class Parser:
         cfg = Config.read(model_dir, 'config')
         moves = transition_system(strings, cfg.labels)
         templates = get_templates(cfg.features)
-        model = ParserModel(moves.n_moves, templates)
+        model = ParserModel(moves.n_moves,
+            ConjunctionExtracter(CONTEXT_SIZE, templates))
         if path.exists(path.join(model_dir, 'model')):
             model.load(path.join(model_dir, 'model'))
         return cls(strings, moves, model)

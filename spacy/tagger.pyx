@@ -67,10 +67,6 @@ cpdef enum:
 
 
 cdef class TaggerModel(AveragedPerceptron):
-    def __init__(self, n_classes, templates):
-        AveragedPerceptron.__init__(self, n_classes,
-            ConjunctionExtracter(N_CONTEXT_FIELDS, templates))
-
     cdef void set_features(self, ExampleC* eg, const TokenC* tokens, int i) except *:
         _fill_from_token(&eg.atoms[P2_orth], &tokens[i-2])
         _fill_from_token(&eg.atoms[P1_orth], &tokens[i-1])
@@ -145,7 +141,8 @@ cdef class Tagger:
 
     @classmethod
     def blank(cls, vocab, templates):
-        model = TaggerModel(vocab.morphology.n_tags, templates)
+        model = TaggerModel(vocab.morphology.n_tags,
+            ConjunctionExtracter(N_CONTEXT_FIELDS, templates))
         return cls(vocab, model)
 
     @classmethod
@@ -154,7 +151,8 @@ cdef class Tagger:
             templates = json.loads(open(path.join(data_dir, 'templates.json')))
         else:
             templates = cls.default_templates()
-        model = TaggerModel(vocab.morphology.n_tags, templates)
+        model = TaggerModel(vocab.morphology.n_tags,
+            ConjunctionExtracter(N_CONTEXT_FIELDS, templates))
         if path.exists(path.join(data_dir, 'model')):
             model.load(path.join(data_dir, 'model'))
         return cls(vocab, model)
