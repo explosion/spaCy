@@ -238,6 +238,9 @@ cdef class Break:
         elif (st.S(0) + 1) != st.B(0):
             # Must break at the token boundary
             return False
+        # Don't allow spaces to be the first word of a sentence
+        elif Lexeme.c_check_flag(st.B_(0).lex, IS_SPACE):
+            return False
         else:
             return True
 
@@ -382,19 +385,7 @@ cdef class ArcEager(TransitionSystem):
     cdef int finalize_state(self, StateClass st) nogil:
         cdef int i
         for i in range(st.length):
-            # Always attach spaces to the previous word
-            if Lexeme.c_check_flag(st._sent[i].lex, IS_SPACE):
-                if st._sent[i].sent_start and st._sent[i].head == -1:
-                    st._sent[i].sent_start = False
-                    # If we had this space token as the start of a sentence,
-                    # move that sentence start forward one
-                    if (i + 1) < st.length and not st._sent[i+1].sent_start:
-                        st._sent[i+1].sent_start = True
-                    if i >= 1:
-                        st.add_arc(i-1, i, st._sent[i].dep)
-                    else:
-                        st.add_arc(i+1, i, st._sent[i].dep)
-            elif st._sent[i].head == 0 and st._sent[i].dep == 0:
+            if st._sent[i].head == 0 and st._sent[i].dep == 0:
                 st._sent[i].dep = self.root_label
             # If we're not using the Break transition, we segment via root-labelled
             # arcs between the root words.
