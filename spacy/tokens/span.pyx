@@ -23,9 +23,12 @@ cdef class Span:
 
         self.doc = tokens
         self.start = start
-        self.start_char = self.doc[start].idx
+        self.start_char = self.doc[start].idx if start < self.doc.length else 0
         self.end = end
-        self.end_char = self.doc[end - 1].idx + len(self.doc[end - 1])
+        if end >= 1:
+            self.end_char = self.doc[end - 1].idx + len(self.doc[end - 1])
+        else:
+            self.end_char = 0
         self.label = label
         self._vector = vector
         self._vector_norm = vector_norm
@@ -81,7 +84,7 @@ cdef class Span:
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     cpdef int _recalculate_indices(self) except -1:
-        if self.end >= self.doc.length \
+        if self.end > self.doc.length \
         or self.doc.c[self.start].idx != self.start_char \
         or (self.doc.c[self.end-1].idx + self.doc.c[self.end-1].lex.length) != self.end_char:
             start = token_by_start(self.doc.c, self.doc.length, self.start_char)
