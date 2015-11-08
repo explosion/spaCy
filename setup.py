@@ -178,7 +178,7 @@ def run_setup(exts):
         ext_modules=exts,
         license="MIT",
         install_requires=['numpy', 'murmurhash', 'cymem == 1.30', 'preshed == 0.43',
-                          'thinc == 3.4.1', "text_unidecode", 'plac', 'six',
+                          'thinc == 4.0.0', "text_unidecode", 'plac', 'six',
                           'ujson', 'cloudpickle'],
         setup_requires=["headers_workaround"],
         cmdclass = {'build_ext': build_ext_subclass },
