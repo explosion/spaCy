@@ -10,3 +10,9 @@ def test_simple_types(EN):
     assert ents[1].start == 4
     assert ents[1].end == 6
     assert ents[1].label_ == 'GPE'
+
+
+@pytest.mark.models
+def test_consistency_bug(EN):
+    '''Test an arbitrary sequence-consistency bug encountered during speed test'''
+    tokens = EN(u'Where rap essentially went mainstream, illustrated by seminal Public Enemy, Beastie Boys and L.L. Cool J. tracks.')
