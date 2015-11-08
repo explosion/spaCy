@@ -25,3 +25,4 @@ install:
 # run tests
 script:
   - "py.test spacy/ -x"
+  - "python -m spacy.en.download --force all && py.test --models spacy/ -x"
