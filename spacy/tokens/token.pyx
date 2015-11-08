@@ -67,6 +67,10 @@ cdef class Token:
         def __get__(self):
             return self.c.lex.id
 
+    property rank:
+        def __get__(self):
+            return self.c.lex.id
+
     property string:
         def __get__(self):
             cdef unicode orth = self.vocab.strings[self.c.lex.orth]

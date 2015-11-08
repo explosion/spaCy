@@ -83,6 +83,10 @@ cdef class Lexeme:
             for i, value in enumerate(vector):
                 self.c.vector[i] = value
 
+    property rank:
+        def __get__(self):
+            return self.c.id
+
     property repvec:
         def __get__(self):
             return self.vector
