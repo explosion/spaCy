@@ -256,12 +256,8 @@ cdef class In:
 cdef class Last:
     @staticmethod
     cdef bint is_valid(StateClass st, int label) nogil:
-        cdef int preset_ent_iob = st.B_(0).ent_iob
-        if preset_ent_iob == 2:
+        if st.B_(1).ent_iob == 1:
             return False
-        elif st.B_(1).ent_iob == 1:
-            return False
- 
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
 
     @staticmethod
