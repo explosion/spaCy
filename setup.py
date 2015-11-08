@@ -177,7 +177,7 @@ def run_setup(exts):
         package_data=PACKAGE_DATA,
         ext_modules=exts,
         license="MIT",
-        install_requires=['numpy', 'murmurhash', 'cymem == 1.30', 'preshed == 0.43',
+        install_requires=['numpy', 'murmurhash', 'cymem == 1.30', 'preshed == 0.44',
                           'thinc == 4.0.0', "text_unidecode", 'plac', 'six',
                           'ujson', 'cloudpickle'],
         setup_requires=["headers_workaround"],
