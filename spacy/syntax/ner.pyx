@@ -170,6 +170,9 @@ cdef class Begin:
             return False
         elif preset_ent_iob == 3 and st.B_(0).ent_type != label:
             return False
+        # If the next word is B or O, we can't B now
+        elif st.B_(1).ent_iob == 2 or st.B_(1).ent_iob == 3:
+            return False
         # Don't allow entities to extend across sentence boundaries
         elif st.B_(1).sent_start:
             return False
