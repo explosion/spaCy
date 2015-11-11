@@ -45,7 +45,7 @@ def test_unit_end_gazetteer(EN):
     if len(list(doc.ents)) == 0:
         ents = matcher(doc)
         assert len(ents) == 1
-        nlp.entity(doc)
+        EN.entity(doc)
         assert list(nlp.ents)[0].text == 'cal'
 
 
