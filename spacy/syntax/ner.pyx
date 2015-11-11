@@ -173,6 +173,10 @@ cdef class Begin:
         # If the next word is B or O, we can't B now
         elif st.B_(1).ent_iob == 2 or st.B_(1).ent_iob == 3:
             return False
+        # If the current word is B, and the next word isn't I, the current word
+        # is really U
+        elif preset_ent_iob == 3 and st.B_(1).ent_iob != 1:
+            return False
         # Don't allow entities to extend across sentence boundaries
         elif st.B_(1).sent_start:
             return False
