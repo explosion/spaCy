@@ -164,8 +164,8 @@ def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False
             if raw_text is None:
                 tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
                 nlp.tagger(tokens)
-                nlp.entity(tokens)
                 nlp.parser(tokens)
+                nlp.entity(tokens)
             else:
                 tokens = nlp(raw_text)
             gold = GoldParse(tokens, annot_tuples)
