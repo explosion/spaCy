@@ -24,7 +24,6 @@ token_properties = {
             "i": {"L": "-PRON-"},                           # no POS for i?
             "is": {"L": "be", "pos": "VBZ"},
             "it": {"L": "-PRON-"},                          # no POS for it?
-            "let": {},                                      # no POS or lemma for let?
             "'ll": {"L": "will", "pos": "MD"},
             "'m": {"L": "be", "pos": "VBP", "number": 1, "tenspect": 1},
             "'ma": {},                                      # no POS or lemma for ma?
@@ -83,7 +82,6 @@ starting_tokens = {
                 "i": {"'d": ["contrLower", "contrUpper"], "'d've": [], "'ll": ["contrLower", "contrUpper"], "'m": [], "'ma": [], "'ve": []},
                 "is": {"n't": []},
                 "it": {"'d": [], "'d've": [], "'ll": [], "'s": ["contrLower", "contrUpper"]},
-                "let": {"'s": ["contrLower", "contrUpper"]},
                 "might": {"n't": [], "n't've": [], "'ve": []},
                 "must": {"n't": [], "'ve": []},
                 "need": {"n't": []},
@@ -111,6 +109,8 @@ starting_tokens = {
 # other specials that don't really have contractions
 # so they are hardcoded
 hardcoded_specials = {
+                "let's": [{"F": "let"}, {"F": "'s", "L": "us"}],
+                "Let's": [{"F": "Let"}, {"F": "'s", "L": "us"}],
 
                 "'s":  [{"F": "'s", "L": "'s"}],
 
