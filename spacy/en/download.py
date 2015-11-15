@@ -18,8 +18,7 @@ def migrate(path):
 def link(package, path):
     if os.path.exists(path):
         os.unlink(path)
-    os.symlink(os.path.join(package.path, 'data'),
-               os.path.join(path))
+    os.symlink(package.dir_path('data'), path)
 
 
 @plac.annotations(
