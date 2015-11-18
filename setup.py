@@ -191,7 +191,7 @@ def run_setup(exts):
     headers_workaround.install_headers('numpy')
 
 
-VERSION = '0.99'
+VERSION = '0.100'
 def main(modules, is_pypy):
     language = "cpp"
     includes = ['.', path.join(sys.prefix, 'include')]
