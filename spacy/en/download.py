@@ -11,7 +11,7 @@ def migrate(path):
     if os.path.isdir(data_path) and not os.path.islink(data_path):
         shutil.rmtree(data_path)
     for filename in os.listdir(path):
-        if filename.endswith('tgz'):
+        if filename.endswith('.tgz'):
             os.unlink(os.path.join(path, filename))
 
 
@@ -24,14 +24,14 @@ def link(package, path):
 @plac.annotations(
     force=("Force overwrite", "flag", "f", bool),
 )
-def main(force=False):
+def main(data_size='all', force=False):
     # TODO read version from the same source as the setup
     sputnik = Sputnik('spacy', '0.99.0', console=sys.stdout)
 
     path = os.path.dirname(os.path.abspath(__file__))
 
     command = sputnik.make_command(
-        data_path=os.path.join(path, '..', 'data'),
+        data_path=os.path.abspath(os.path.join(path, '..', 'data')),
         repository_url='http://sputnik-production.elasticbeanstalk.com')
 
     if force:
