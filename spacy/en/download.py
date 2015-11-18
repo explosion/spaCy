@@ -32,7 +32,7 @@ def main(data_size='all', force=False):
 
     command = sputnik.make_command(
         data_path=os.path.abspath(os.path.join(path, '..', 'data')),
-        repository_url='http://sputnik-production.elasticbeanstalk.com')
+        repository_url='https://index.spacy.io')
 
     if force:
         command.purge()
