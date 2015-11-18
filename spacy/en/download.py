@@ -31,8 +31,8 @@ def main(force=False):
     path = os.path.dirname(os.path.abspath(__file__))
 
     command = sputnik.make_command(
-        data_path=path,
-        repository_url=os.environ.get('REPOSITORY_URL'))
+        data_path=os.path.join(path, '..', 'data'),
+        repository_url='http://sputnik-production.elasticbeanstalk.com')
 
     if force:
         command.purge()
