@@ -132,7 +132,7 @@ def train(json_dir=None, dev_loc=None, model_dir=None):
         model_dir = 'models/en/'
     with virtualenv(VENV_DIR):
         with lcd(path.dirname(__file__)):
-            local('python bin/init_model.py lang_data/en/ corpora/en/ ' + model_dir)
+            local('python bin/init_model.py en lang_data/ corpora/ ' + model_dir)
             local('python bin/parser/train.py %s %s' % (json_dir, model_dir))
 
 
