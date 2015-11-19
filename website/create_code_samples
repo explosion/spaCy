@@ -26,7 +26,7 @@ def main(src_dirname, dst_dirname):
             continue
     
         # Remove test_ prefix and .py suffix
-        name = filename[6:-3]
+        name = filename[5:-3]
         with io.open(os.path.join(src_dirname, filename), 'r', encoding='utf8') as file_:
             source = file_.readlines()
         tree = ast.parse("".join(source))
