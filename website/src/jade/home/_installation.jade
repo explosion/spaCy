@@ -31,7 +31,7 @@ mixin Option(name, open)
 
     pre.language-bash: code
       | $ pip install spacy
-      | $ python -m spacy.en.download all
+      | $ python -m spacy.en.download --force all
 
   p
     | The download command fetches and installs about 400mb of data, for
@@ -70,7 +70,7 @@ mixin Option(name, open)
     | $ python setup.py build_ext --inplace
     | $ python -m spacy.en.download
     | $ pip install pytest
-    | $ py.test tests/
+    | $ py.test spacy/tests/
 
   p
     | Python packaging is awkward at the best of times, and it's particularly tricky

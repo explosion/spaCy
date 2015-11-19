@@ -10,3 +10,4 @@ plac
 six
 ujson
 cloudpickle
+sputnik == 0.5.1
