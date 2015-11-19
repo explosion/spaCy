@@ -1,65 +1,49 @@
-from __future__ import print_function
 import sys
 import os
-import tarfile
 import shutil
+
 import plac
-
-from . import uget
-
-
-try:
-    FileExistsError
-except NameError:
-    FileExistsError = Exception
+from sputnik import Sputnik
 
 
-# TODO: Read this from the same source as the setup
-VERSION = '0.9.9'
-
-AWS_STORE = 'https://s3-us-west-1.amazonaws.com/media.spacynlp.com'
-
-ALL_DATA_DIR_URL = '%s/en_data_all-%s.tgz' % (AWS_STORE, VERSION)
-
-DEST_DIR = os.path.dirname(os.path.abspath(__file__))
-
-
-def download_file(url, download_path):
-    return uget.download(url, download_path, console=sys.stdout)
+def migrate(path):
+    data_path = os.path.join(path, 'data')
+    if os.path.isdir(data_path) and not os.path.islink(data_path):
+        shutil.rmtree(data_path)
+    for filename in os.listdir(path):
+        if filename.endswith('.tgz'):
+            os.unlink(os.path.join(path, filename))
 
 
-def install_data(url, extract_path, download_path):
-    try:
-        os.makedirs(extract_path)
-    except FileExistsError:
-        pass
-
-    tmp = download_file(url, download_path)
-    assert tmp == download_path
-    t = tarfile.open(download_path)
-    t.extractall(extract_path)
-    os.unlink(download_path)
+def link(package, path):
+    if os.path.exists(path):
+        os.unlink(path)
+    os.symlink(package.dir_path('data'), path)
 
 
 @plac.annotations(
     force=("Force overwrite", "flag", "f", bool),
 )
 def main(data_size='all', force=False):
-    filename = ALL_DATA_DIR_URL.rsplit('/', 1)[1]
-    download_path = os.path.join(DEST_DIR, filename)
-    data_path = os.path.join(DEST_DIR, 'data')
+    # TODO read version from the same source as the setup
+    sputnik = Sputnik('spacy', '0.99.0', console=sys.stdout)
 
-    if force and os.path.exists(download_path):
-        os.unlink(download_path)
+    path = os.path.dirname(os.path.abspath(__file__))
 
-    if force and os.path.exists(data_path):
-        shutil.rmtree(data_path)
+    command = sputnik.make_command(
+        data_path=os.path.abspath(os.path.join(path, '..', 'data')),
+        repository_url='https://index.spacy.io')
 
-    if os.path.exists(data_path):
-        print('data already installed at %s, overwrite with --force' % DEST_DIR)
-        sys.exit(1)
+    if force:
+        command.purge()
 
-    install_data(ALL_DATA_DIR_URL, DEST_DIR, download_path)
+    package = command.install('en_default')
+
+    # FIXME clean up old-style packages
+    migrate(path)
+
+    # FIXME supply spacy with an old-style data dir
+    link(package, os.path.join(path, 'data'))
 
 
 if __name__ == '__main__':
