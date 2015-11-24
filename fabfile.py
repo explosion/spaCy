@@ -82,10 +82,6 @@ def web():
             jade(str(post_dir / 'index.jade'), path.join('blog', post_dir.parts[-1]))
 
 
-def web_publish():
-    local('aws s3 sync --delete website/site/ s3://spacy.io')
-
-
 def web_publish(assets_path):
     local('aws s3 sync --delete website/site/ s3://spacy.io')
     local('aws s3 sync --delete %s s3://spacy.io/resources' % assets_path)
