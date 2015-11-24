@@ -68,7 +68,7 @@ def web():
         local('jade -P %s --out %s' % (jade_loc, out_loc))
 
     with virtualenv(VENV_DIR):
-        local('./website/create_code_samples tests/website/ website/src/code/')
+        local('./website/create_code_samples spacy/tests/website/ website/src/code/')
 
     jade('home/index.jade', '')
     jade('docs/index.jade', 'docs/')
@@ -79,8 +79,12 @@ def web():
         if post_dir.is_dir() \
         and (post_dir / 'index.jade').exists() \
         and (post_dir / 'meta.jade').exists():
-            jade(str(post_dir / 'index.jade'), path.join('blogs', post_dir.parts[-1]))
-        
+            jade(str(post_dir / 'index.jade'), path.join('blog', post_dir.parts[-1]))
+
+
+def web_publish():
+    local('aws s3 sync --delete website/site/ s3://spacy.io')
+
 
 def web_publish(assets_path):
     local('aws s3 sync --delete website/site/ s3://spacy.io')
