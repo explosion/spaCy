@@ -99,7 +99,7 @@ mixin WritePage(Site, Author, Page)
             meta(property="article:published_time" content=getDate(Page.date).timestamp)
             link(rel="stylesheet" href="/resources/css/style.css")
 
-            //[if lt IE 9]><script src="http://html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]
+            //[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]
 
         body(id=Page.type)
             header(role="banner")
@@ -114,7 +114,7 @@ mixin WritePage(Site, Author, Page)
             nav(role="navigation")
                 li(class={active: Page.active.home}): a(href="/") Home
                 li(class={active: Page.active.docs}): a(href="/docs") Docs
-                li: a(href="/displacy", target="_blank") Demo
+                li: a(href="http://api.spacy.io/displacy", target="_blank") Demo
                 //li(class={active: Page.active.license}): a(href="/license") License
                 li(class={active: Page.active.blog}): a(href="/blog") Blog
             main#content
