@@ -24,6 +24,6 @@ To make and test changes
 ```
   npm install jade --global
   fab web
-  python -m SimpleHTTPServer 8000 website/site
+  cd website/site; python -m SimpleHTTPServer 8000; cd -
 ```
 Then visit [localhost:8000](http://localhost:8000)
