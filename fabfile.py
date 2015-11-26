@@ -70,6 +70,7 @@ def web():
     with virtualenv(VENV_DIR):
         local('./website/create_code_samples spacy/tests/website/ website/src/code/')
 
+    jade('404.jade', '')
     jade('home/index.jade', '')
     jade('docs/index.jade', 'docs/')
     jade('blog/index.jade', 'blog/')
