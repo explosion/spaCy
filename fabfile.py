@@ -75,15 +75,16 @@ def web():
     jade('blog/index.jade', 'blog/')
     jade('tutorials/index.jade', 'tutorials/')
 
-    for post_dir in (Path(__file__).parent / 'website' / 'src' / 'jade' / 'blog').iterdir():
-        if post_dir.is_dir() \
-        and (post_dir / 'index.jade').exists() \
-        and (post_dir / 'meta.jade').exists():
-            jade(str(post_dir / 'index.jade'), path.join('blog', post_dir.parts[-1]))
+    for collection in ('blog', 'tutorials'):
+        for post_dir in (Path(__file__).parent / 'website' / 'src' / 'jade' / collection).iterdir():
+            if post_dir.is_dir() \
+            and (post_dir / 'index.jade').exists() \
+            and (post_dir / 'meta.jade').exists():
+                jade(str(post_dir / 'index.jade'), path.join(collection, post_dir.parts[-1]))
 
 
 def web_publish(assets_path):
-    local('aws s3 sync --delete website/site/ s3://spacy.io')
+    local('aws s3 sync --delete --exclude "resources/*" website/site/ s3://spacy.io')
     local('aws s3 sync --delete %s s3://spacy.io/resources' % assets_path)
 
 
