@@ -41,6 +41,7 @@ Supports
 
 * CPython 2.7
 * CPython 3.4
+* CPython 3.5
 * OSX
 * Linux 
 * Cygwin
