@@ -144,7 +144,7 @@ def cython_setup(mod_names, language, includes):
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
         version=VERSION,
-        url="http://honnibal.github.io/spaCy/",
+        url="http://spacy.io",
         package_data=PACKAGE_DATA,
         ext_modules=exts,
         cmdclass={'build_ext': build_ext_cython_subclass},
