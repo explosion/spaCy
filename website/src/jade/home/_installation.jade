@@ -7,10 +7,9 @@ mixin Option(name, open)
 +Option("Updating your installation")
     | To update your installation:
 
-    pre.language-bash
-        code
-            $ pip install --upgrade spacy
-            $ python -m spacy.en.download --force all
+    pre.language-bash: code
+      | $ pip install --upgrade spacy
+      | $ python -m spacy.en.download --force all
     p Most updates ship a new model, so you will usually have to redownload the data.
 
 

@@ -15,7 +15,7 @@ The Stack
 --------
 The site is built with the [Jade](http://jade-lang.com/) template language.
 
-See [the Makefile](Makefile) for more
+See [fabfile.py](/fabfile.py) under ```web()``` for more
 
 
 Developing
@@ -23,8 +23,7 @@ Developing
 To make and test changes
 ```
   npm install jade --global
-  cd website
-  make
-  python -m SimpleHTTPServer 8000
+  fab web
+  cd website/site; python -m SimpleHTTPServer 8000; cd -
 ```
-Then visit [localhost:8000/src/...](http://localhost:8000/src/)
+Then visit [localhost:8000](http://localhost:8000)
