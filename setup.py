@@ -144,7 +144,7 @@ def cython_setup(mod_names, language, includes):
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
         version=VERSION,
-        url="http://honnibal.github.io/spaCy/",
+        url="http://spacy.io",
         package_data=PACKAGE_DATA,
         ext_modules=exts,
         cmdclass={'build_ext': build_ext_cython_subclass},
@@ -179,7 +179,7 @@ def run_setup(exts):
         license="MIT",
         install_requires=['numpy', 'murmurhash == 0.24', 'cymem == 1.30', 'preshed == 0.44',
                           'thinc == 4.0.0', "text_unidecode", 'plac', 'six',
-                          'ujson', 'cloudpickle', 'sputnik == 0.5.1'],
+                          'ujson', 'cloudpickle', 'sputnik == 0.5.2'],
         setup_requires=["headers_workaround"],
         cmdclass = {'build_ext': build_ext_subclass },
     )
