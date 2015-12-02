@@ -1,5 +1,5 @@
 mixin Displacy(sentence, caption_text, height)
-  - var url = "http://api.spacy.io/displacy/?full=" + sentence.replace(" ", "%20")
+  - var url = "https://api.spacy.io/displacy/?full=" + sentence.replace(" ", "%20")
 
   .displacy
     iframe.displacy(src="/resources/displacy/displacy_demo.html" height=height)
@@ -17,6 +17,6 @@ mixin Displacy(sentence, caption_text, height)
   275
 )
 
-p #[a(href="http://api.spacy.io/displacy") displaCy] lets you peek inside spaCy's syntactic parser, as it reads a sentence word-by-word. By repeatedly choosing from a small set of actions, it links the words together according to their syntactic structure. This type of representation powers a wide range of technologies, from translation and summarization, to sentiment analysis and algorithmic trading.  #[a(href="/blog/displacy") Read more.]
+p #[a(href="https://api.spacy.io/displacy") displaCy] lets you peek inside spaCy's syntactic parser, as it reads a sentence word-by-word. By repeatedly choosing from a small set of actions, it links the words together according to their syntactic structure. This type of representation powers a wide range of technologies, from translation and summarization, to sentiment analysis and algorithmic trading.  #[a(href="/blog/displacy") Read more.]
 
 
