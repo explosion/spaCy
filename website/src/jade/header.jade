@@ -28,8 +28,10 @@
 -    Page.links = [];
 -    if (type == "home") {
 -       Page.url = "";
+-       Page.canonical_url = Site.url + Page.url;
 -    } else {
 -       Page.url = "/" + type;
+-       Page.canonical_url = Site.url + Page.url.replace(/\/?$/, '/');
 -    }
 -
 -    // Set defaults
@@ -57,6 +59,7 @@
 -    Page.description = Meta.description
 -    Page.date = Meta.date
 -    Page.url = Meta.url
+-    Page.canonical_url = Site.url + Page.url.replace(/\/?$/, '/');
 -    Page.active["blog"] = true
 -    Page.links = Meta.links
 -    if (Meta.image != null) {
@@ -98,6 +101,8 @@ mixin WritePage(Site, Author, Page)
             meta(property="og:site_name" content=Site.name)
             meta(property="article:published_time" content=getDate(Page.date).timestamp)
             link(rel="stylesheet" href="/resources/css/style.css")
+            if Page.canonical_url
+                link(rel="canonical" href=Page.canonical_url)
 
             //[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]
 
