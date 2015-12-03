@@ -74,7 +74,6 @@ def web():
     jade('home/index.jade', '')
     jade('docs/index.jade', 'docs/')
     jade('blog/index.jade', 'blog/')
-    jade('tutorials/index.jade', 'tutorials/')
 
     for collection in ('blog', 'tutorials'):
         for post_dir in (Path(__file__).parent / 'website' / 'src' / 'jade' / collection).iterdir():
