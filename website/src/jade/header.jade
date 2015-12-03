@@ -28,11 +28,10 @@
 -    Page.links = [];
 -    if (type == "home") {
 -       Page.url = "";
--       Page.canonical_url = Site.url + Page.url;
 -    } else {
 -       Page.url = "/" + type;
--       Page.canonical_url = Site.url + Page.url.replace(/\/?$/, '/');
 -    }
+-    Page.canonical_url = Site.url + Page.url;
 -
 -    // Set defaults
 -    Page.description = Site.description;
@@ -59,7 +58,7 @@
 -    Page.description = Meta.description
 -    Page.date = Meta.date
 -    Page.url = Meta.url
--    Page.canonical_url = Site.url + Page.url.replace(/\/?$/, '/');
+-    Page.canonical_url = Site.url + Page.url;
 -    Page.active["blog"] = true
 -    Page.links = Meta.links
 -    if (Meta.image != null) {
