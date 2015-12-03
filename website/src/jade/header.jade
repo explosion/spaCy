@@ -2,20 +2,20 @@
 - Site.name = "spaCy.io"
 - Site.slogan = "Build Tomorrow's Language Technologies"
 - Site.description = "spaCy is a library for industrial-strength text processing in Python. If you're a small company doing NLP, we want spaCy to seem like a minor miracle."
-- Site.image = "http://spacy.io/resources/img/social.png"
-- Site.image_small = "http://spacy.io/resources/img/social_small.png"
+- Site.image = "https://spacy.io/resources/img/social.png"
+- Site.image_small = "https://spacy.io/resources/img/social_small.png"
 - Site.twitter = "spacy_io"
-- Site.url = "http://spacy.io"
+- Site.url = "https://spacy.io"
 -
 - Authors = {"matt": {}, "spacy": {}};
 - Authors.matt.name = "Matthew Honnibal"
-- Authors.matt.bio = "Matthew Honnibal is the author of the <a href=\"http://spacy.io\">spaCy</a>  software and the sole founder of its parent company. He studied linguistics as an undergrad, and never thought he'd be a programmer. By 2009 he had a PhD in computer science, and in 2014 he left academia to found Syllogism Co. He's from Sydney and lives in Berlin."
+- Authors.matt.bio = "Matthew Honnibal is the author of the <a href=\"https://spacy.io\">spaCy</a>  software and the sole founder of its parent company. He studied linguistics as an undergrad, and never thought he'd be a programmer. By 2009 he had a PhD in computer science, and in 2014 he left academia to found Syllogism Co. He's from Sydney and lives in Berlin."
 
 - Authors.matt.image = "/resources/img/matt.png"
 - Authors.matt.twitter = "honnibal"
 - 
 - Authors.spacy.name = "SpaCy.io"
-- Authors.spacy.bio = "<a href=\"http://spacy.io\">spaCy</a> is a library for industrial-strength natural language processing in Python and Cython. It features state-of-the-art speed and accuracy, a concise API, and great documentation. If you're a small company doing NLP, we want spaCy to seem like a minor miracle."
+- Authors.spacy.bio = "<a href=\"https://spacy.io\">spaCy</a> is a library for industrial-strength natural language processing in Python and Cython. It features state-of-the-art speed and accuracy, a concise API, and great documentation. If you're a small company doing NLP, we want spaCy to seem like a minor miracle."
 - Authors.spacy.image = "/resources/img/social_small.png"
 - Authors.spacy.twitter = "spacy_io"
 
@@ -158,10 +158,10 @@ mixin WritePost(Meta)
                 +WriteAuthorBio(Author)
  
 mixin WriteByline(Author, Meta)
-    .subhead by #[a(href="//twitter.com/" + Author.twitter, rel="author" target="_blank") #{Author.name}] on #[time #{getDate(Meta.date).fulldate}]
+    .subhead by #[a(href="https://twitter.com/" + Author.twitter, rel="author" target="_blank") #{Author.name}] on #[time #{getDate(Meta.date).fulldate}]
 
 mixin WriteShareLinks(headline, url, twitter, links)
-    a.button.button-twitter(href="http://twitter.com/share?text=" + headline + "&url=" + Site.url + url + "&via=" + twitter title="Share on Twitter" target="_blank")
+    a.button.button-twitter(href="https://twitter.com/share?text=" + headline.replace(/\s+/g, "%20") + "&url=" + Site.url + url + "&via=" + twitter title="Share on Twitter" target="_blank")
         | Share on Twitter 
     if links
         .discuss
@@ -174,11 +174,11 @@ mixin WriteShareLinks(headline, url, twitter, links)
                         | Discuss on #{link.name}
 
 mixin TweetThis(text, url)
-    p #[span #{text} #[a.share(href='http://twitter.com/share?text="' + text + '"&url=' + Site.url + url + '&via=' + Site.twitter title='Share on Twitter' target='_blank') Tweet]]
+    p #[span #{text} #[a.share(href='https://twitter.com/share?text="' + text.replace(/\s+/g, "%20") + '"&url=' + Site.url + url + '&via=' + Site.twitter title='Share on Twitter' target='_blank') Tweet]]
 
 mixin WriteAuthorBio(Author)
     section.intro.profile
-        p #[img(src=Author.image)] !{Author.bio} #[span.social #[a(href="//twitter.com/" + Author.twitter target="_blank") Twitter]]
+        p #[img(src=Author.image alt=Author.name)] !{Author.bio} #[span.social #[a(href="https://twitter.com/" + Author.twitter target="_blank") Twitter]]
 
 
 - var getDate = function(input) {
