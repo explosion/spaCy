@@ -44,9 +44,8 @@ def transform_texts(batch_id, input_, out_dir):
     with io.open(out_loc, 'w', encoding='utf8') as file_:
         for text in input_:
             doc = nlp(text)
-            for sent in doc.sents:
-                file_.write(' '.join(represent_word(w) for w in doc if not w.is_space))
-                file_.write('\n')
+            file_.write(' '.join(represent_word(w) for w in doc if not w.is_space))
+            file_.write('\n')
 
 
 def represent_word(word):
