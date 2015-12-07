@@ -12,16 +12,21 @@ from .parts_of_speech import NOUN, VERB, ADJ, PUNCT
 
 class Lemmatizer(object):
     @classmethod
-    def from_dir(cls, data_dir):
+    def from_package(cls, package):
         index = {}
         exc = {}
         for pos in ['adj', 'noun', 'verb']:
-            index[pos] = read_index(path.join(data_dir, 'wordnet', 'index.%s' % pos))
-            exc[pos] = read_exc(path.join(data_dir, 'wordnet', '%s.exc' % pos))
-        if path.exists(path.join(data_dir, 'vocab', 'lemma_rules.json')):
-            rules = json.load(codecs.open(path.join(data_dir, 'vocab', 'lemma_rules.json'), encoding='utf_8'))
-        else:
-            rules = {}
+            index[pos] = package.load_utf8(read_index,
+                'data', 'wordnet', 'index.%s' % pos,
+                default=set())  # TODO: really optional?
+            exc[pos] = package.load_utf8(read_exc,
+                'data', 'wordnet', '%s.exc' % pos,
+                default={})  # TODO: really optional?
+
+        rules = package.load_utf8(json.load,
+            'data', 'vocab', 'lemma_rules.json',
+            default={})  # TODO: really optional?
+
         return cls(index, exc, rules)
 
     def __init__(self, index, exceptions, rules):
@@ -70,11 +75,9 @@ def lemmatize(string, index, exceptions, rules):
     return set(forms)
 
 
-def read_index(loc):
+def read_index(fileobj):
     index = set()
-    if not path.exists(loc):
-        return index
-    for line in codecs.open(loc, 'r', 'utf8'):
+    for line in fileobj:
         if line.startswith(' '):
             continue
         pieces = line.split()
@@ -84,11 +87,9 @@ def read_index(loc):
     return index
 
 
-def read_exc(loc):
+def read_exc(fileobj):
     exceptions = {}
-    if not path.exists(loc):
-        return exceptions
-    for line in codecs.open(loc, 'r', 'utf8'):
+    for line in fileobj:
         if line.startswith(' '):
             continue
         pieces = line.split()

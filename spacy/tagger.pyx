@@ -146,15 +146,17 @@ cdef class Tagger:
         return cls(vocab, model)
 
     @classmethod
-    def from_dir(cls, data_dir, vocab):
-        if path.exists(path.join(data_dir, 'templates.json')):
-            templates = json.loads(open(path.join(data_dir, 'templates.json')))
-        else:
-            templates = cls.default_templates()
+    def from_package(cls, package, vocab):
+        # TODO: templates.json deprecated? not present in latest package
+        templates = package.load_utf8(json.load,
+            'data', 'pos', 'templates.json',
+            default=cls.default_templates())
+
         model = TaggerModel(vocab.morphology.n_tags,
             ConjunctionExtracter(N_CONTEXT_FIELDS, templates))
-        if path.exists(path.join(data_dir, 'model')):
-            model.load(path.join(data_dir, 'model'))
+
+        model.load(package.file_path('data', 'pos', 'model', require=False))  # TODO: really optional?
+
         return cls(vocab, model)
 
     def __init__(self, Vocab vocab, TaggerModel model):

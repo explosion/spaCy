@@ -10,9 +10,8 @@ def token(doc):
 
 
 def test_load_resources_and_process_text():
-    from spacy.en import English, LOCAL_DATA_DIR
-    data_dir = os.environ.get('SPACY_DATA', LOCAL_DATA_DIR)
-    nlp = English(data_dir=data_dir)
+    from spacy.en import English
+    nlp = English()
     doc = nlp('Hello, world. Here are two sentences.')
 
 

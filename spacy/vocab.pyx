@@ -47,28 +47,27 @@ cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
     @classmethod
-    def from_dir(cls, data_dir, get_lex_attr=None):
-        if not path.exists(data_dir):
-            raise IOError("Directory %s not found -- cannot load Vocab." % data_dir)
-        if not path.isdir(data_dir):
-            raise IOError("Path %s is a file, not a dir -- cannot load Vocab." % data_dir)
+    def from_package(cls, package, get_lex_attr=None):
+        tag_map = package.load_utf8(json.load,
+            'data', 'vocab', 'tag_map.json')
 
-        tag_map = json.load(open(path.join(data_dir, 'tag_map.json')))
-        lemmatizer = Lemmatizer.from_dir(path.join(data_dir, '..'))
-        if path.exists(path.join(data_dir, 'serializer.json')):
-            serializer_freqs = json.load(open(path.join(data_dir, 'serializer.json')))
-        else:
-            serializer_freqs = None
+        lemmatizer = Lemmatizer.from_package(package)
+
+        serializer_freqs = package.load_utf8(json.load,
+            'data', 'vocab', 'serializer.json',
+            require=False)  # TODO: really optional?
+
         cdef Vocab self = cls(get_lex_attr=get_lex_attr, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)
 
-        if path.exists(path.join(data_dir, 'strings.json')):
-            with io.open(path.join(data_dir, 'strings.json'), 'r', encoding='utf8') as file_:
-                self.strings.load(file_)
-            self.load_lexemes(path.join(data_dir, 'lexemes.bin'))
-                
-        if path.exists(path.join(data_dir, 'vec.bin')):
-            self.vectors_length = self.load_vectors_from_bin_loc(path.join(data_dir, 'vec.bin'))
+        if package.has_file('data', 'vocab', 'strings.json'):  # TODO: really optional?
+            package.load_utf8(self.strings.load, 'data', 'vocab', 'strings.json')
+            self.load_lexemes(package.file_path('data', 'vocab', 'lexemes.bin'))
+
+        if package.has_file('data', 'vocab', 'vec.bin'):  # TODO: really optional?
+            self.vectors_length = self.load_vectors_from_bin_loc(
+                package.file_path('data', 'vocab', 'vec.bin'))
+
         return self
 
     def __init__(self, get_lex_attr=None, tag_map=None, lemmatizer=None, serializer_freqs=None):

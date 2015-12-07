@@ -1,10 +1,23 @@
-from os import path
+import os
 import io
 import json
 import re
+
+from sputnik import Sputnik
+
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
-DATA_DIR = path.join(path.dirname(__file__), '..', 'data')
+
+def default_package():
+    if os.environ.get('SPACY_DATA'):
+        data_path = os.environ.get('SPACY_DATA')
+    else:
+        data_path = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), 'data'))
+
+    sputnik = Sputnik('spacy', '0.99.0')  # TODO: retrieve version
+    pool = sputnik.pool(data_path)
+    return pool.get('en_default')
 
 
 def normalize_slice(length, start, stop, step=None):
@@ -31,67 +44,63 @@ def utf8open(loc, mode='r'):
     return io.open(loc, mode, encoding='utf8')
 
 
-def read_lang_data(data_dir):
-    with open(path.join(data_dir, 'specials.json')) as file_:
-        tokenization = json.load(file_)
-    prefix = read_prefix(data_dir)
-    suffix = read_suffix(data_dir)
-    infix = read_infix(data_dir)
+def read_lang_data(package):
+    tokenization = package.load_utf8(json.load, 'data', 'tokenizer', 'specials.json')
+    prefix = package.load_utf8(read_prefix, 'data', 'tokenizer', 'prefix.txt')
+    suffix = package.load_utf8(read_suffix, 'data', 'tokenizer', 'suffix.txt')
+    infix = package.load_utf8(read_infix, 'data', 'tokenizer', 'infix.txt')
     return tokenization, prefix, suffix, infix
 
 
-def read_prefix(data_dir):
-    with  utf8open(path.join(data_dir, 'prefix.txt')) as file_:
-        entries = file_.read().split('\n')
-        expression = '|'.join(['^' + re.escape(piece) for piece in entries if piece.strip()])
+def read_prefix(fileobj):
+    entries = fileobj.read().split('\n')
+    expression = '|'.join(['^' + re.escape(piece) for piece in entries if piece.strip()])
     return expression
 
 
-def read_suffix(data_dir):
-    with utf8open(path.join(data_dir, 'suffix.txt')) as file_:
-        entries = file_.read().split('\n')
-        expression = '|'.join([piece + '$' for piece in entries if piece.strip()])
+def read_suffix(fileobj):
+    entries = fileobj.read().split('\n')
+    expression = '|'.join([piece + '$' for piece in entries if piece.strip()])
     return expression
 
 
-def read_infix(data_dir):
-    with utf8open(path.join(data_dir, 'infix.txt')) as file_:
-        entries = file_.read().split('\n')
-        expression = '|'.join([piece for piece in entries if piece.strip()])
+def read_infix(fileobj):
+    entries = fileobj.read().split('\n')
+    expression = '|'.join([piece for piece in entries if piece.strip()])
     return expression
 
 
-def read_tokenization(lang):
-    loc = path.join(DATA_DIR, lang, 'tokenization')
-    entries = []
-    seen = set()
-    with utf8open(loc) as file_:
-        for line in file_:
-            line = line.strip()
-            if line.startswith('#'):
-                continue
-            if not line:
-                continue
-            pieces = line.split()
-            chunk = pieces.pop(0)
-            assert chunk not in seen, chunk
-            seen.add(chunk)
-            entries.append((chunk, list(pieces)))
-            if chunk[0].isalpha() and chunk[0].islower():
-                chunk = chunk[0].title() + chunk[1:]
-                pieces[0] = pieces[0][0].title() + pieces[0][1:]
-                seen.add(chunk)
-                entries.append((chunk, pieces))
-    return entries
+# def read_tokenization(lang):
+#     loc = path.join(DATA_DIR, lang, 'tokenization')
+#     entries = []
+#     seen = set()
+#     with utf8open(loc) as file_:
+#         for line in file_:
+#             line = line.strip()
+#             if line.startswith('#'):
+#                 continue
+#             if not line:
+#                 continue
+#             pieces = line.split()
+#             chunk = pieces.pop(0)
+#             assert chunk not in seen, chunk
+#             seen.add(chunk)
+#             entries.append((chunk, list(pieces)))
+#             if chunk[0].isalpha() and chunk[0].islower():
+#                 chunk = chunk[0].title() + chunk[1:]
+#                 pieces[0] = pieces[0][0].title() + pieces[0][1:]
+#                 seen.add(chunk)
+#                 entries.append((chunk, pieces))
+#     return entries
 
 
-def read_detoken_rules(lang): # Deprecated?
-    loc = path.join(DATA_DIR, lang, 'detokenize')
-    entries = []
-    with utf8open(loc) as file_:
-        for line in file_:
-            entries.append(line.strip())
-    return entries
+# def read_detoken_rules(lang): # Deprecated?
+#     loc = path.join(DATA_DIR, lang, 'detokenize')
+#     entries = []
+#     with utf8open(loc) as file_:
+#         for line in file_:
+#             entries.append(line.strip())
+#     return entries
 
 
 def align_tokens(ref, indices): # Deprecated, surely?

@@ -169,14 +169,11 @@ cdef class Matcher:
     cdef object _patterns
 
     @classmethod
-    def from_dir(cls, data_dir, Vocab vocab):
-        patterns_loc = path.join(data_dir, 'vocab', 'gazetteer.json')
-        if path.exists(patterns_loc):
-            patterns_data = open(patterns_loc).read()
-            patterns = json.loads(patterns_data)
-            return cls(vocab, patterns)
-        else:
-            return cls(vocab, {})
+    def from_package(cls, package, Vocab vocab):
+        patterns = package.load_utf8(json.load,
+            'data', 'vocab', 'gazetteer.json',
+            default={})  # TODO: really optional?
+        return cls(vocab, patterns)
 
     def __init__(self, vocab, patterns):
         self.vocab = vocab
