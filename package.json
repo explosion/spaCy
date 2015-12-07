@@ -1,0 +1,10 @@
+{
+    "name": "en_default",
+    "version": "0.99.0",
+    "description": "english default model",
+    "license": "public domain",
+    "include": ["data/**/*"],
+    "compatibility": {
+        "spacy": "==0.99.0"
+    }
+}

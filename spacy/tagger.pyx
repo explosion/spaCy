@@ -155,7 +155,8 @@ cdef class Tagger:
         model = TaggerModel(vocab.morphology.n_tags,
             ConjunctionExtracter(N_CONTEXT_FIELDS, templates))
 
-        model.load(package.file_path('data', 'pos', 'model', require=False))  # TODO: really optional?
+        if package.has_file('data', 'pos', 'model'):  # TODO: really optional?
+            model.load(package.file_path('data', 'pos', 'model'))
 
         return cls(vocab, model)
 

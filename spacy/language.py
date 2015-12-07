@@ -144,13 +144,15 @@ class Language(object):
 
     @classmethod
     def default_parser(cls, package, vocab):
-        data_dir = package.dir_path('data', 'deps')
-        return Parser.from_dir(data_dir, vocab.strings, ArcEager)
+        data_dir = package.dir_path('data', 'deps', require=False)
+        if data_dir and path.exists(data_dir):
+            return Parser.from_dir(data_dir, vocab.strings, ArcEager)
 
     @classmethod
     def default_entity(cls, package, vocab):
-        data_dir = package.dir_path('data', 'ner')
-        return Parser.from_dir(data_dir, vocab.strings, BiluoPushDown)
+        data_dir = package.dir_path('data', 'ner', require=False)
+        if data_dir and path.exists(data_dir):
+            return Parser.from_dir(data_dir, vocab.strings, BiluoPushDown)
 
     def __init__(self, package=None, vocab=None, tokenizer=None, tagger=None,
                  parser=None, entity=None, matcher=None, serializer=None,
