@@ -60,8 +60,9 @@ build_script:
   - "%CMD_IN_ENV% python setup.py build_ext --inplace"
   - ps: appveyor\download.ps1 
   - "tar -xzf corpora/en/wordnet.tar.gz"
-  - "%CMD_IN_ENV% python bin/init_model.py en lang_data/ corpora/ spacy/en/data"
-
+  - "%CMD_IN_ENV% python bin/init_model.py en lang_data/ corpora/ data"
+  - "%CMD_IN_ENV% sputnik build ."
+  - "%CMD_IN_ENV% sputnik install en_default-*.sputnik"
 
 test_script:
   # Run the project tests
