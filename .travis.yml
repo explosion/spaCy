@@ -1,15 +1,19 @@
 language: python
 
-sudo: required
-dist: precise
 group: edge
+
+python:
+   - "2.7"
+   - "3.4"
+   - "3.5"
 
 os:
   - linux
+  - osx
 
 install:
-  - pip install -U -r requirements.txt
-  - pip install -U tox pytest
+  - pip install --user -r requirements.txt
 
 script:
-  - tox
+  - python -m spacy.en.download
+  - python -m pytest spacy/ -x --models --vectors --slow
