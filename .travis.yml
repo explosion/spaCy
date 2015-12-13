@@ -1,12 +1,8 @@
 language: python
 
-matrix:
-  include:
-  - sudo: required
-    dist: precise
-    group: edge
-  - sudo: required
-    dist: trusty
+sudo: required
+dist: precise
+group: edge
 
 python:
    - "2.7"
@@ -17,6 +13,8 @@ os:
 
 install:
   - pip install -r requirements.txt
+  - python setup.py sdist
+  - pip install dist/*
 
 script:
   - python -m spacy.en.download
