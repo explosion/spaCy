@@ -172,8 +172,7 @@ if not release:
 def generate_cython():
     cwd = os.path.abspath(os.path.dirname(__file__))
     print('Cythonizing sources')
-    p = subprocess.call([sys.executable,
-                         os.path.join(cwd, 'bin', 'cythonize.py'),
+    p = subprocess.call([os.path.join(cwd, 'bin', 'cythonize.sh'),
                          'spacy'],
                          cwd=cwd)
     if p != 0:
