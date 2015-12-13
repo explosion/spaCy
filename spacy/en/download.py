@@ -30,8 +30,12 @@ def main(data_size='all', force=False):
 
     path = os.path.dirname(os.path.abspath(__file__))
 
+    data_path = os.path.abspath(os.path.join(path, '..', 'data'))
+    if not os.path.isdir(data_path):
+        os.mkdir(data_path)
+
     command = sputnik.make_command(
-        data_path=os.path.abspath(os.path.join(path, '..', 'data')),
+        data_path=data_path,
         repository_url='https://index.spacy.io')
 
     if force:

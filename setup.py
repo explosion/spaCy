@@ -1,231 +1,261 @@
 #!/usr/bin/env python
-from setuptools import setup
-import shutil
-
-import sys
+from __future__ import division, print_function
 import os
-from os import path
-
-from setuptools import Extension
-from distutils import sysconfig
-from distutils.core import setup, Extension
+import shutil
+import subprocess
+import sys
 from distutils.command.build_ext import build_ext
+from distutils.sysconfig import get_python_inc
 
-import platform
+try:
+    from setuptools import Extension, setup
+except ImportError:
+    from distutils.core import Extension, setup
 
-PACKAGE_DATA =  {
-    "spacy": ["*.pxd"],
-    "spacy.tokens": ["*.pxd"],
-    "spacy.serialize": ["*.pxd"],
-    "spacy.syntax": ["*.pxd"],
-    "spacy.en": [
-        "*.pxd",
-        "data/wordnet/*.exc",
-        "data/wordnet/index.*",
-        "data/tokenizer/*",
-        "data/vocab/serializer.json"
-    ]
-}
+
+MAJOR      = 0
+MINOR      = 100
+MICRO      = 0
+ISRELEASED = False
+VERSION    = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+
+
+PACKAGES = [
+    'spacy',
+    'spacy.tokens',
+    'spacy.en',
+    'spacy.serialize',
+    'spacy.syntax',
+    'spacy.munge',
+    'spacy.tests',
+    'spacy.tests.matcher',
+    'spacy.tests.morphology',
+    'spacy.tests.munge',
+    'spacy.tests.parser',
+    'spacy.tests.serialize',
+    'spacy.tests.spans',
+    'spacy.tests.tagger',
+    'spacy.tests.tokenizer',
+    'spacy.tests.tokens',
+    'spacy.tests.vectors',
+    'spacy.tests.vocab']
+
+
+MOD_NAMES = [
+    'spacy.parts_of_speech',
+    'spacy.strings',
+    'spacy.lexeme',
+    'spacy.vocab',
+    'spacy.attrs',
+    'spacy.morphology',
+    'spacy.tagger',
+    'spacy.syntax.stateclass',
+    'spacy.tokenizer',
+    'spacy.syntax.parser',
+    'spacy.syntax.transition_system',
+    'spacy.syntax.arc_eager',
+    'spacy.syntax._parse_features',
+    'spacy.gold',
+    'spacy.orth',
+    'spacy.tokens.doc',
+    'spacy.tokens.span',
+    'spacy.tokens.token',
+    'spacy.serialize.packer',
+    'spacy.serialize.huffman',
+    'spacy.serialize.bits',
+    'spacy.cfile',
+    'spacy.matcher',
+    'spacy.syntax.ner',
+    'spacy.symbols']
+
+
+if sys.version_info[:2] < (2, 7) or (3, 0) <= sys.version_info[0:2] < (3, 4):
+    raise RuntimeError('Python version 2.7 or >= 3.4 required.')
 
 
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
-compile_options =  {'msvc'  : ['/Ox', '/EHsc']  ,
-                    'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']       }
-link_options    =  {'msvc'  : [] ,
-                    'other' : [] }
+compile_options =  {'msvc'  : ['/Ox', '/EHsc'],
+                    'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']}
+link_options    =  {'msvc'  : [],
+                    'other' : []}
+
+if sys.platform.startswith('darwin'):
+    compile_options['other'].append('-mmacosx-version-min=10.8')
+    compile_options['other'].append('-stdlib=libc++')
+    link_options['other'].append('-lc++')
+
+
 class build_ext_options:
     def build_options(self):
-        c_type = None
-        if self.compiler.compiler_type in compile_options:
-            c_type = self.compiler.compiler_type
-        elif 'other' in compile_options:
-            c_type = 'other'
-        if c_type is not None:
-           for e in self.extensions:
-               e.extra_compile_args = compile_options[c_type]
+        for e in self.extensions:
+            e.extra_compile_args = compile_options.get(
+                self.compiler.compiler_type, compile_options['other'])
+        for e in self.extensions:
+            e.extra_link_args = link_options.get(
+                self.compiler.compiler_type, link_options['other'])
 
-        l_type = None 
-        if self.compiler.compiler_type in link_options:
-            l_type = self.compiler.compiler_type
-        elif 'other' in link_options:
-            l_type = 'other'
-        if l_type is not None:
-           for e in self.extensions:
-               e.extra_link_args = link_options[l_type]
 
-class build_ext_subclass( build_ext, build_ext_options ):
+class build_ext_subclass(build_ext, build_ext_options):
     def build_extensions(self):
         build_ext_options.build_options(self)
         build_ext.build_extensions(self)
-        
-    
-
-# PyPy --- NB! PyPy doesn't really work, it segfaults all over the place. But,
-# this is necessary to get it compile.
-# We have to resort to monkey-patching to set the compiler, because pypy broke
-# all the everything.
-
-pre_patch_customize_compiler = sysconfig.customize_compiler
-def my_customize_compiler(compiler):
-    pre_patch_customize_compiler(compiler)
-    compiler.compiler_cxx = ['c++']
 
 
-if platform.python_implementation() == 'PyPy':
-    sysconfig.customize_compiler = my_customize_compiler
+# Return the git revision as a string
+def git_version():
+    def _minimal_ext_cmd(cmd):
+        # construct minimal environment
+        env = {}
+        for k in ['SYSTEMROOT', 'PATH']:
+            v = os.environ.get(k)
+            if v is not None:
+                env[k] = v
+        # LANGUAGE is used on win32
+        env['LANGUAGE'] = 'C'
+        env['LANG'] = 'C'
+        env['LC_ALL'] = 'C'
+        out = subprocess.Popen(cmd, stdout = subprocess.PIPE, env=env).communicate()[0]
+        return out
 
-#def install_headers():
-#    dest_dir = path.join(sys.prefix, 'include', 'murmurhash')
-#    if not path.exists(dest_dir):
-#        shutil.copytree('murmurhash/headers/murmurhash', dest_dir)
-#
-#    dest_dir = path.join(sys.prefix, 'include', 'numpy')
+    try:
+        out = _minimal_ext_cmd(['git', 'rev-parse', 'HEAD'])
+        GIT_REVISION = out.strip().decode('ascii')
+    except OSError:
+        GIT_REVISION = 'Unknown'
 
-
-includes = ['.', path.join(sys.prefix, 'include')]
-
-
-try:
-    import numpy
-    numpy_headers = path.join(numpy.get_include(), 'numpy')
-    shutil.copytree(numpy_headers, path.join(sys.prefix, 'include', 'numpy'))
-except ImportError:
-    pass
-except OSError:
-    pass
-
-
-
-
-def clean(mod_names):
-    for name in mod_names:
-        name = name.replace('.', '/')
-        so = name + '.so'
-        html = name + '.html'
-        cpp = name + '.cpp'
-        c = name + '.c'
-        for file_path in [so, html, cpp, c]:
-            if os.path.exists(file_path):
-                os.unlink(file_path)
+    return GIT_REVISION
 
 
-def name_to_path(mod_name, ext):
-    return '%s.%s' % (mod_name.replace('.', '/'), ext)
-
-
-def c_ext(mod_name, language, includes):
-    mod_path = name_to_path(mod_name, language)
-    return Extension(mod_name, [mod_path], include_dirs=includes)
-
-
-def cython_setup(mod_names, language, includes):
-    import Cython.Distutils
-    import Cython.Build
-    import distutils.core
-
-    class build_ext_cython_subclass( Cython.Distutils.build_ext, build_ext_options ):
-        def build_extensions(self):
-            build_ext_options.build_options(self)
-            Cython.Distutils.build_ext.build_extensions(self)
-
-    if language == 'cpp':
-        language = 'c++'
-    exts = []
-    for mod_name in mod_names:
-        mod_path = mod_name.replace('.', '/') + '.pyx'
-        e = Extension(mod_name, [mod_path], language=language, include_dirs=includes)
-        exts.append(e)
-    distutils.core.setup(
-        name='spacy',
-        packages=['spacy', 'spacy.tokens', 'spacy.en', 'spacy.serialize',
-                  'spacy.syntax', 'spacy.munge'],
-        description="Industrial-strength NLP",
-        author='Matthew Honnibal',
-        author_email='honnibal@gmail.com',
-        version=VERSION,
-        url="http://spacy.io",
-        package_data=PACKAGE_DATA,
-        ext_modules=exts,
-        cmdclass={'build_ext': build_ext_cython_subclass},
-        license="MIT",
-    )
-
-
-def run_setup(exts):
-    setup(
-        name='spacy',
-        packages=['spacy', 'spacy.tokens', 'spacy.en', 'spacy.serialize',
-                  'spacy.syntax', 'spacy.munge',
-                  'spacy.tests',
-                  'spacy.tests.matcher',
-                  'spacy.tests.morphology',
-                  'spacy.tests.munge',
-                  'spacy.tests.parser',
-                  'spacy.tests.serialize',
-                  'spacy.tests.spans',
-                  'spacy.tests.tagger',
-                  'spacy.tests.tokenizer',
-                  'spacy.tests.tokens',
-                  'spacy.tests.vectors',
-                  'spacy.tests.vocab'],
-        description="Industrial-strength NLP",
-        author='Matthew Honnibal',
-        author_email='honnibal@gmail.com',
-        version=VERSION,
-        url="http://honnibal.github.io/spaCy/",
-        package_data=PACKAGE_DATA,
-        ext_modules=exts,
-        license="MIT",
-        install_requires=['numpy', 'murmurhash == 0.24', 'cymem == 1.30', 'preshed == 0.44',
-                          'thinc == 4.0.0', "text_unidecode", 'plac', 'six',
-                          'ujson', 'cloudpickle', 'sputnik == 0.5.2'],
-        setup_requires=["headers_workaround"],
-        cmdclass = {'build_ext': build_ext_subclass },
-    )
-
-    import headers_workaround
-
-    headers_workaround.fix_venv_pypy_include()
-    headers_workaround.install_headers('murmurhash')
-    headers_workaround.install_headers('numpy')
-
-
-VERSION = '0.100'
-def main(modules, is_pypy):
-    language = "cpp"
-    includes = ['.', path.join(sys.prefix, 'include')]
-    if sys.platform.startswith('darwin'):
-        compile_options['other'].append('-mmacosx-version-min=10.8')
-        compile_options['other'].append('-stdlib=libc++')
-        link_options['other'].append('-lc++')
-    if use_cython:
-        cython_setup(modules, language, includes)
+def get_version_info():
+    # Adding the git rev number needs to be done inside write_version_py(),
+    # otherwise the import of spacy.about messes up the build under Python 3.
+    FULLVERSION = VERSION
+    if os.path.exists('.git'):
+        GIT_REVISION = git_version()
+    elif os.path.exists('spacy/about.py'):
+        # must be a source distribution, use existing version file
+        try:
+            from spacy.about import git_revision as GIT_REVISION
+        except ImportError:
+            raise ImportError('Unable to import git_revision. Try removing '
+                              'spacy/about.py and the build directory '
+                              'before building.')
     else:
-        exts = [c_ext(mn, language, includes)
-                      for mn in modules]
-        run_setup(exts)
+        GIT_REVISION = 'Unknown'
 
-MOD_NAMES = ['spacy.parts_of_speech', 'spacy.strings',
-             'spacy.lexeme', 'spacy.vocab', 'spacy.attrs',
-             'spacy.morphology', 'spacy.tagger',
-             'spacy.syntax.stateclass', 
-             'spacy.tokenizer',
-             'spacy.syntax.parser', 
-             'spacy.syntax.transition_system',
-             'spacy.syntax.arc_eager',
-             'spacy.syntax._parse_features',
-             'spacy.gold', 'spacy.orth',
-             'spacy.tokens.doc', 'spacy.tokens.span', 'spacy.tokens.token',
-             'spacy.serialize.packer', 'spacy.serialize.huffman', 'spacy.serialize.bits',
-             'spacy.cfile', 'spacy.matcher',
-             'spacy.syntax.ner',
-             'spacy.symbols']
+    if not ISRELEASED:
+        FULLVERSION += '.dev0+' + GIT_REVISION[:7]
+
+    return FULLVERSION, GIT_REVISION
+
+
+def write_version_py(filename='spacy/about.py'):
+    cnt = """# THIS FILE IS GENERATED FROM SPACY SETUP.PY
+short_version = '%(version)s'
+version = '%(version)s'
+full_version = '%(full_version)s'
+git_revision = '%(git_revision)s'
+release = %(isrelease)s
+if not release:
+    version = full_version
+"""
+    FULLVERSION, GIT_REVISION = get_version_info()
+
+    with open(filename, 'w') as f:
+        f.write(cnt % {'version': VERSION,
+                       'full_version' : FULLVERSION,
+                       'git_revision' : GIT_REVISION,
+                       'isrelease': str(ISRELEASED)})
+
+
+def generate_cython():
+    cwd = os.path.abspath(os.path.dirname(__file__))
+    print('Cythonizing sources')
+    p = subprocess.call([sys.executable,
+                         os.path.join(cwd, 'bin', 'cythonize.py'),
+                         'spacy'],
+                         cwd=cwd)
+    if p != 0:
+        raise RuntimeError('Running cythonize failed')
+
+
+def clean():
+    for name in MOD_NAMES:
+        name = name.replace('.', '/')
+        for ext in ['.so', '.html', '.cpp', '.c']:
+            if os.path.exists(name + ext):
+                os.unlink(name + ext)
+
+
+def setup_package():
+    src_path = os.path.dirname(os.path.abspath(sys.argv[0]))
+    old_path = os.getcwd()
+    os.chdir(src_path)
+    sys.path.insert(0, src_path)
+
+    # Rewrite the version file everytime
+    write_version_py()
+
+    include_dirs = [
+        get_python_inc(plat_specific=True),
+        os.path.join(src_path, 'include')]
+
+    ext_modules = []
+    for mod_name in MOD_NAMES:
+        mod_path = mod_name.replace('.', '/') + '.cpp'
+        ext_modules.append(
+            Extension(mod_name, [mod_path],
+                language='c++', include_dirs=include_dirs))
+
+    metadata = dict(
+        name='spacy',
+        packages=PACKAGES,
+        description='Industrial-strength NLP',
+        author='Matthew Honnibal',
+        author_email='matt@spacy.io',
+        version=VERSION,
+        url='https://spacy.io',
+        license='MIT',
+        ext_modules=ext_modules,
+        install_requires=['numpy', 'murmurhash == 0.24', 'cymem == 1.30', 'preshed == 0.44',
+                          'thinc == 4.0.0', 'text_unidecode', 'plac', 'six',
+                          'ujson', 'cloudpickle', 'sputnik == 0.5.2'],
+        cmdclass = {
+            'build_ext': build_ext_subclass},
+    )
+
+    # Run build
+    cwd = os.path.abspath(os.path.dirname(__file__))
+    if not os.path.exists(os.path.join(cwd, 'PKG-INFO')):
+        # Generate Cython sources, unless building from source release
+        generate_cython()
+
+        # sync include dirs from native dependencies
+        include_dir = os.path.join(src_path, 'include')
+        if os.path.exists(include_dir):
+            shutil.rmtree(include_dir)
+        os.mkdir(include_dir)
+
+        import numpy
+        shutil.copytree(
+            os.path.join(numpy.get_include(), 'numpy'),
+            os.path.join(include_dir, 'numpy'))
+
+        import murmurhash
+        shutil.copytree(
+            os.path.join(os.path.dirname(murmurhash.__file__), 'headers', 'murmurhash'),
+            os.path.join(include_dir, 'murmurhash'))
+
+    try:
+        setup(**metadata)
+    finally:
+        del sys.path[0]
+        os.chdir(old_path)
 
 
 if __name__ == '__main__':
     if sys.argv[1] == 'clean':
-        clean(MOD_NAMES)
+        clean()
     else:
-        use_cython = sys.argv[1] == 'build_ext'
-        main(MOD_NAMES, use_cython)
+        setup_package()
