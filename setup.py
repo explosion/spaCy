@@ -197,8 +197,7 @@ def setup_package():
     write_version_py()
 
     include_dirs = [
-        get_python_inc(plat_specific=True),
-        os.path.join(src_path, 'include')]
+        get_python_inc(plat_specific=True)]
 
     ext_modules = []
     for mod_name in MOD_NAMES:
@@ -236,15 +235,15 @@ def setup_package():
             shutil.rmtree(include_dir)
         os.mkdir(include_dir)
 
-        import numpy
-        shutil.copytree(
-            os.path.join(numpy.get_include(), 'numpy'),
-            os.path.join(include_dir, 'numpy'))
+        # import numpy
+        # shutil.copytree(
+        #     os.path.join(numpy.get_include(), 'numpy'),
+        #     os.path.join(include_dir, 'numpy'))
 
-        import murmurhash
-        shutil.copytree(
-            os.path.join(os.path.dirname(murmurhash.__file__), 'headers', 'murmurhash'),
-            os.path.join(include_dir, 'murmurhash'))
+        # import murmurhash
+        # shutil.copytree(
+        #     os.path.join(os.path.dirname(murmurhash.__file__), 'headers', 'murmurhash'),
+        #     os.path.join(include_dir, 'murmurhash'))
 
     try:
         setup(**metadata)
