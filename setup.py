@@ -4,6 +4,7 @@ import os
 import shutil
 import subprocess
 import sys
+import contextlib
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
 
@@ -133,7 +134,7 @@ def get_version_info():
     FULLVERSION = VERSION
     if os.path.exists('.git'):
         GIT_REVISION = git_version()
-    elif os.path.exists('spacy/about.py'):
+    elif os.path.exists(os.path.join('spacy', 'about.py')):
         # must be a source distribution, use existing version file
         try:
             from spacy.about import git_revision as GIT_REVISION
@@ -150,7 +151,7 @@ def get_version_info():
     return FULLVERSION, GIT_REVISION
 
 
-def write_version_py(filename='spacy/about.py'):
+def write_version(path):
     cnt = """# THIS FILE IS GENERATED FROM SPACY SETUP.PY
 short_version = '%(version)s'
 version = '%(version)s'
@@ -162,100 +163,120 @@ if not release:
 """
     FULLVERSION, GIT_REVISION = get_version_info()
 
-    with open(filename, 'w') as f:
+    with open(path, 'w') as f:
         f.write(cnt % {'version': VERSION,
                        'full_version' : FULLVERSION,
                        'git_revision' : GIT_REVISION,
                        'isrelease': str(ISRELEASED)})
 
 
-def generate_cython():
-    cwd = os.path.abspath(os.path.dirname(__file__))
+def generate_cython(root, source):
     print('Cythonizing sources')
     p = subprocess.call([sys.executable,
-                         os.path.join(cwd, 'bin', 'cythonize.py'),
-                         'spacy'],
-                         cwd=cwd)
+                         os.path.join(root, 'bin', 'cythonize.py'),
+                         source])
     if p != 0:
         raise RuntimeError('Running cythonize failed')
 
 
-def clean():
+def import_include(module_name):
+    try:
+        return __import__(module_name, globals(), locals(), [], -1)
+    except ImportError:
+        raise ImportError('Unable to import %s. Create a virtual environment '
+                          'and install all dependencies from requirements.txt, '
+                          'e.g., run "pip install -r requirements.txt".' % module_name)
+
+
+def copy_include(src, dst, path):
+    assert os.path.isdir(src)
+    assert os.path.isdir(dst)
+    shutil.copytree(
+        os.path.join(src, path),
+        os.path.join(dst, path))
+
+
+def prepare_includes(path):
+    include_dir = os.path.join(path, 'include')
+    if os.path.exists(include_dir):
+        shutil.rmtree(include_dir)
+    os.mkdir(include_dir)
+
+    numpy = import_include('numpy')
+    copy_include(numpy.get_include(), include_dir, 'numpy')
+
+    murmurhash = import_include('murmurhash')
+    copy_include(
+        os.path.join(os.path.dirname(murmurhash.__file__), 'headers'),
+        include_dir, 'murmurhash')
+
+
+def is_source_release(path):
+    return os.path.exists(os.path.join(path, 'PKG-INFO'))
+
+
+def clean(path):
     for name in MOD_NAMES:
         name = name.replace('.', '/')
         for ext in ['.so', '.html', '.cpp', '.c']:
-            if os.path.exists(name + ext):
-                os.unlink(name + ext)
+            file_path = os.path.join(path, name + ext)
+            if os.path.exists(file_path):
+                os.unlink(file_path)
+
+
+@contextlib.contextmanager
+def chdir(new_dir):
+    old_dir = os.getcwd()
+    try:
+        os.chdir(new_dir)
+        sys.path.insert(0, new_dir)
+        yield
+    finally:
+        del sys.path[0]
+        os.chdir(old_dir)
 
 
 def setup_package():
-    src_path = os.path.dirname(os.path.abspath(sys.argv[0]))
-    old_path = os.getcwd()
-    os.chdir(src_path)
-    sys.path.insert(0, src_path)
+    root = os.path.abspath(os.path.dirname(__file__))
 
-    # Rewrite the version file everytime
-    write_version_py()
+    if len(sys.argv) > 1 and sys.argv[1] == 'clean':
+        return clean(root)
 
-    include_dirs = [
-        get_python_inc(plat_specific=True),
-        os.path.join(src_path, 'include')]
+    with chdir(root):
+        write_version(os.path.join(root, 'spacy', 'about.py'))
 
-    ext_modules = []
-    for mod_name in MOD_NAMES:
-        mod_path = mod_name.replace('.', '/') + '.cpp'
-        ext_modules.append(
-            Extension(mod_name, [mod_path],
-                language='c++', include_dirs=include_dirs))
+        include_dirs = [
+            get_python_inc(plat_specific=True),
+            os.path.join(root, 'include')]
 
-    metadata = dict(
-        name='spacy',
-        packages=PACKAGES,
-        description='Industrial-strength NLP',
-        author='Matthew Honnibal',
-        author_email='matt@spacy.io',
-        version=VERSION,
-        url='https://spacy.io',
-        license='MIT',
-        ext_modules=ext_modules,
-        install_requires=['numpy', 'murmurhash == 0.24', 'cymem == 1.30', 'preshed == 0.44',
-                          'thinc == 4.0.0', 'text_unidecode', 'plac', 'six',
-                          'ujson', 'cloudpickle', 'sputnik == 0.6.2'],
-        cmdclass = {
-            'build_ext': build_ext_subclass},
-    )
+        ext_modules = []
+        for mod_name in MOD_NAMES:
+            mod_path = mod_name.replace('.', '/') + '.cpp'
+            ext_modules.append(
+                Extension(mod_name, [mod_path],
+                    language='c++', include_dirs=include_dirs))
 
-    # Run build
-    cwd = os.path.abspath(os.path.dirname(__file__))
-    if not os.path.exists(os.path.join(cwd, 'PKG-INFO')):
-        # Generate Cython sources, unless building from source release
-        generate_cython()
+        if not is_source_release(root):
+            generate_cython(root, 'spacy')
+            prepare_includes(root)
 
-        # sync include dirs from native dependencies
-        include_dir = os.path.join(src_path, 'include')
-        if os.path.exists(include_dir):
-            shutil.rmtree(include_dir)
-        os.mkdir(include_dir)
-
-        import numpy
-        shutil.copytree(
-            os.path.join(numpy.get_include(), 'numpy'),
-            os.path.join(include_dir, 'numpy'))
-
-        import murmurhash
-        shutil.copytree(
-            os.path.join(os.path.dirname(murmurhash.__file__), 'headers', 'murmurhash'),
-            os.path.join(include_dir, 'murmurhash'))
-
-    try:
-        setup(**metadata)
-    finally:
-        del sys.path[0]
-        os.chdir(old_path)
+        setup(
+            name='spacy',
+            packages=PACKAGES,
+            description='Industrial-strength NLP',
+            author='Matthew Honnibal',
+            author_email='matt@spacy.io',
+            version=VERSION,
+            url='https://spacy.io',
+            license='MIT',
+            ext_modules=ext_modules,
+            install_requires=['numpy', 'murmurhash == 0.24', 'cymem == 1.30', 'preshed == 0.44',
+                              'thinc == 4.0.0', 'text_unidecode', 'plac', 'six',
+                              'ujson', 'cloudpickle', 'sputnik == 0.6.2'],
+            cmdclass = {
+                'build_ext': build_ext_subclass},
+        )
 
 
 if __name__ == '__main__':
-    if sys.argv[1] == 'clean':
-        clean()
-    else:
-        setup_package()
+    setup_package()
