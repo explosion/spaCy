@@ -34,7 +34,7 @@ def main(data_size='all', force=False):
     if not os.path.isdir(data_path):
         os.mkdir(data_path)
 
-    command = sputnik.make_command(
+    command = sputnik.command(
         data_path=data_path,
         repository_url='https://index.spacy.io')
 
