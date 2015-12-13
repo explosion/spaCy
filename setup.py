@@ -220,7 +220,7 @@ def setup_package():
         ext_modules=ext_modules,
         install_requires=['numpy', 'murmurhash == 0.24', 'cymem == 1.30', 'preshed == 0.44',
                           'thinc == 4.0.0', 'text_unidecode', 'plac', 'six',
-                          'ujson', 'cloudpickle', 'sputnik == 0.5.2'],
+                          'ujson', 'cloudpickle', 'sputnik == 0.6.2'],
         cmdclass = {
             'build_ext': build_ext_subclass},
     )
