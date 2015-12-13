@@ -1,5 +1,5 @@
 mixin Displacy(sentence, caption_text, height)
-  - var url = "https://api.spacy.io/displacy/?full=" + sentence.replace(" ", "%20")
+  - var url = "https://api.spacy.io/displacy/?full=" + sentence.replace(/\s+/g, "%20")
 
   .displacy
     iframe.displacy(src="/resources/displacy/displacy_demo.html" height=height)

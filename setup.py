@@ -173,7 +173,7 @@ def run_setup(exts):
         author='Matthew Honnibal',
         author_email='honnibal@gmail.com',
         version=VERSION,
-        url="http://honnibal.github.io/spaCy/",
+        url="https://spacy.io",
         package_data=PACKAGE_DATA,
         ext_modules=exts,
         license="MIT",
