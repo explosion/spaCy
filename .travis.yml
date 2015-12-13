@@ -1,12 +1,19 @@
 language: python
 
+matrix:
+  include:
+  - sudo: required
+    dist: precise
+    group: edge
+  - sudo: required
+    dist: trusty
+
 python:
    - "2.7"
    - "3.4"
 
 os:
   - linux
-  - osx
 
 install:
   - pip install -r requirements.txt
