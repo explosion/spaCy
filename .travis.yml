@@ -1,28 +1,14 @@
 language: python
 
+sudo: required
+dist: precise
+group: edge
+
 os:
   - linux
 
-python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
-
-# install dependencies
 install:
-  - "pip install --upgrade setuptools"
-  - "pip install cython fabric fabtools"
-  - "pip install -r requirements.txt"
-  - "python setup.py build_ext --inplace"
-  - "mkdir -p corpora/en"
-  - "cd corpora/en"
-  - "wget --no-check-certificate http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"
-  - "tar -xzf WordNet-3.0.tar.gz"
-  - "mv WordNet-3.0 wordnet"
-  - "cd ../../"
-  - "export PYTHONPATH=`pwd`"
-  - "python bin/init_model.py en lang_data/ corpora/ spacy/en/data"
+  - pip install tox
 
-# run tests
 script:
-  - "py.test spacy/ -x"
+  - tox
