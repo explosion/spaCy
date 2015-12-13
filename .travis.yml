@@ -17,5 +17,6 @@ install:
   - pip install dist/*
 
 script:
+  - mkdir tmp; cd tmp
   - python -m spacy.en.download
   - python -m pytest spacy/ -x --models --vectors --slow
