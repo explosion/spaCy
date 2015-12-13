@@ -19,4 +19,4 @@ install:
 script:
   - mkdir tmp; cd tmp
   - python -m spacy.en.download
-  - python -m pytest spacy/ -x --models --vectors --slow
+  - python -m pytest ../spacy/ -x --models --vectors --slow
