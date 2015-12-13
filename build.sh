@@ -4,4 +4,5 @@ if [ ! -d ".build" ]; then
 fi
 . .build/bin/activate
 pip install -U -r requirements.txt
+python setup.py sdist
 tox $@
