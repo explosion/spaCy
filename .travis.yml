@@ -8,7 +8,8 @@ os:
   - linux
 
 install:
-  - pip install tox
+  - pip install -U -r requirements.txt
+  - pip install -U tox pytest
 
 script:
   - tox
