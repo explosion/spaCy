@@ -181,7 +181,7 @@ def generate_cython(root, source):
 
 def import_include(module_name):
     try:
-        return __import__(module_name, globals(), locals(), [], -1)
+        return __import__(module_name, globals(), locals(), [], 0)
     except ImportError:
         raise ImportError('Unable to import %s. Create a virtual environment '
                           'and install all dependencies from requirements.txt, '
