@@ -197,6 +197,7 @@ def setup_package():
     write_version_py()
 
     include_dirs = [
+        os.path.join(sys.prefix, 'include'),
         get_python_inc(plat_specific=True)]
 
     ext_modules = []
