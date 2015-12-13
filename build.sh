@@ -1,6 +1,6 @@
 #!/bin/bash
 if [ ! -d ".build" ]; then
-    virtualenv --always-copy .build
+    virtualenv .build
 fi
 . .build/bin/activate
 pip install -U -r requirements.txt
