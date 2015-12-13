@@ -92,13 +92,13 @@ include ./meta.jade
 
     h3 Part-of-speech Tagger
 
-    p In 2013, I wrote a blog post describing #[a(href="/blog/part-of-speech-POS-tagger-in-python/") how to write a good part of speech tagger]. My recommendation then was to use greedy decoding with the averaged perceptron.  I think this is still the best approach, so it's what I implemented in spaCy.
+    p In 2013, I wrote a blog post describing #[a(href="/blog/part-of-speech-POS-tagger-in-python") how to write a good part of speech tagger]. My recommendation then was to use greedy decoding with the averaged perceptron.  I think this is still the best approach, so it's what I implemented in spaCy.
 
     p The tutorial also recommends the use of Brown cluster features, and case normalization features, as these make the model more robust and domain independent.  spaCy's tagger makes heavy use of these features.
 
     h3 Dependency Parser
 
-    p The parser uses the algorithm described in my #[a(href="/blog/parsing-english-in-python/") 2014 blog post].  This algorithm, shift-reduce dependency parsing, is becoming widely adopted due to its compelling speed/accuracy trade-off.
+    p The parser uses the algorithm described in my #[a(href="/blog/parsing-english-in-python") 2014 blog post].  This algorithm, shift-reduce dependency parsing, is becoming widely adopted due to its compelling speed/accuracy trade-off.
 
     p Some quick details about spaCy's take on this, for those who happen to know these models well.  I'll write up a better description shortly.
 

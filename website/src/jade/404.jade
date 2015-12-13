@@ -2,6 +2,7 @@ include ./header
 include ./mixins.jade
 
 - var Page = InitPage(Site, Authors.spacy, "home", '404')
+- Page.canonical_url = null
 - Page.is_error = true
 - Site.slogan = "404"
 - Page.active = {}

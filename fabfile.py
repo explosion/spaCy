@@ -74,7 +74,6 @@ def web():
     jade('home/index.jade', '')
     jade('docs/index.jade', 'docs/')
     jade('blog/index.jade', 'blog/')
-    jade('tutorials/index.jade', 'tutorials/')
 
     for collection in ('blog', 'tutorials'):
         for post_dir in (Path(__file__).parent / 'website' / 'src' / 'jade' / collection).iterdir():
@@ -85,7 +84,39 @@ def web():
 
 
 def web_publish(assets_path):
-    local('aws s3 sync --delete --exclude "resources/*" website/site/ s3://spacy.io')
+    from boto.s3.connection import S3Connection, OrdinaryCallingFormat
+
+    site_path = 'website/site'
+
+    os.environ['S3_USE_SIGV4'] = 'True'
+    conn = S3Connection(host='s3.eu-central-1.amazonaws.com',
+                        calling_format=OrdinaryCallingFormat())
+    bucket = conn.get_bucket('spacy.io', validate=False)
+
+    keys_left = set([k.name for k in bucket.list()
+                     if not k.name.startswith('resources')])
+
+    for root, dirnames, filenames in os.walk(site_path):
+        for filename in filenames:
+            source = os.path.join(root, filename)
+
+            target = os.path.relpath(root, site_path)
+            if target == '.':
+                target = filename
+            elif filename != 'index.html':
+                target = os.path.join(target, filename)
+
+            key = bucket.new_key(target)
+            key.set_metadata('Content-Type', 'text/html')
+            key.set_contents_from_filename(source)
+            print('uploading %s' % target)
+
+            keys_left.remove(target)
+
+    for key_name in keys_left:
+        print('deleting %s' % key_name)
+        bucket.delete_key(key_name)
+
     local('aws s3 sync --delete %s s3://spacy.io/resources' % assets_path)
 
 
