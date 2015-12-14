@@ -17,7 +17,8 @@ env:
   - SETUPTOOLS=17
 
 install:
-  - pip uninstall setuptools
+  - pip install -U pip
+  - pip uninstall -y setuptools
   - pip install setuptools<$SETUPTOOLS
   - pip install -r requirements.txt
   - python setup.py sdist
