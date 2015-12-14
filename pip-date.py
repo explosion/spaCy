@@ -49,7 +49,7 @@ options.force_reinstall = True
 options.ignore_installed = True
 
 try:
-    pip.run(options, args)
+    print(pip.run(options, args))
 except OSError as e:
     if e.errno != 13:
         raise e
