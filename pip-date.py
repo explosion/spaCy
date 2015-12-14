@@ -1,6 +1,5 @@
 #!/usr/bin/env python
 from __future__ import print_function
-import urllib
 import json
 import re
 import sys
@@ -8,12 +7,17 @@ from bisect import bisect
 from datetime import datetime
 from datetime import timedelta
 
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib import urlopen
+
 from pip.commands.install import InstallCommand
 
 
 def get_releases(package_name):
     url = 'https://pypi.python.org/pypi/%s/json' % package_name
-    return json.load(urllib.urlopen(url))['releases']
+    return json.loads(urlopen(url).read().decode('utf8'))['releases']
 
 
 def parse_iso8601(s):
