@@ -12,10 +12,10 @@ os:
   - linux
 
 env:
-  - DATE=2015-01-01
+  - PIP_DATE=2015-01-01
 
 install:
-  - python pip-date.py $DATE
+  - python pip-date.py $PIP_DATE pip setuptools wheel six
   - pip list
   - pip install -r requirements.txt
   - python setup.py sdist
