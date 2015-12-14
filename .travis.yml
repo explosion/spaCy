@@ -11,7 +11,14 @@ python:
 os:
   - linux
 
+env:
+  - SETUPTOOLS=19
+  - SETUPTOOLS=18
+  - SETUPTOOLS=17
+
 install:
+  - pip uninstall setuptools
+  - pip install setuptools<$SETUPTOOLS
   - pip install -r requirements.txt
   - python setup.py sdist
   - pip install dist/*
