@@ -12,33 +12,32 @@ os:
   - linux
 
 env:
-  - PIP_DATE=2015-01-01 PIP_INSTALL=1
-  - PIP_DATE=2015-04-01 PIP_INSTALL=1
-  - PIP_DATE=2015-07-01 PIP_INSTALL=1
-  - PIP_DATE=2015-10-01 PIP_INSTALL=1
+  - PIP_DATE=2015-01-01 PIP=1 INSTALL=0 DEVELOP=0
+  - PIP_DATE=2015-04-01 PIP=1 INSTALL=0 DEVELOP=0
+  - PIP_DATE=2015-07-01 PIP=1 INSTALL=0 DEVELOP=0
+  - PIP_DATE=2015-10-01 PIP=1 INSTALL=0 DEVELOP=0
 
-  - PIP_DATE=2015-01-01 SETUP_INSTALL=1
-  - PIP_DATE=2015-04-01 SETUP_INSTALL=1
-  - PIP_DATE=2015-07-01 SETUP_INSTALL=1
-  - PIP_DATE=2015-10-01 SETUP_INSTALL=1
+  - PIP_DATE=2015-01-01 PIP=0 INSTALL=1 DEVELOP=0
+  - PIP_DATE=2015-04-01 PIP=0 INSTALL=1 DEVELOP=0
+  - PIP_DATE=2015-07-01 PIP=0 INSTALL=1 DEVELOP=0
+  - PIP_DATE=2015-10-01 PIP=0 INSTALL=1 DEVELOP=0
 
-  - PIP_DATE=2015-01-01 SETUP_DEVELOP=1
-  - PIP_DATE=2015-04-01 SETUP_DEVELOP=1
-  - PIP_DATE=2015-07-01 SETUP_DEVELOP=1
-  - PIP_DATE=2015-10-01 SETUP_DEVELOP=1
+  - PIP_DATE=2015-01-01 PIP=0 INSTALL=0 DEVELOP=1
+  - PIP_DATE=2015-04-01 PIP=0 INSTALL=0 DEVELOP=1
+  - PIP_DATE=2015-07-01 PIP=0 INSTALL=0 DEVELOP=1
+  - PIP_DATE=2015-10-01 PIP=0 INSTALL=0 DEVELOP=1
 
 install:
   - pip install -U pip
   - python pip-date.py $PIP_DATE pip setuptools wheel six
   - pip install -r requirements.txt
 
-  - test $PIP_INSTALL = 1 && python setup.py sdist && pip install dist/*
-  - test $SETUP_INSTALL = 1 && python setup install
-  - test $SETUP_DEVELOP = 1 && python setup develop && pip install -e .
+  - test $PIP = 1 && python setup.py sdist && pip install dist/*
+  - test $INSTALL = 1 && python setup.py install
+  - test $DEVELOP = 1 && python setup.py develop && pip install -e .
 
   - pip install pytest
   - pip list
-
 
 script:
   - mkdir tmp; cd tmp
