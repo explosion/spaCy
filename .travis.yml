@@ -22,8 +22,8 @@ install:
   - "cd ../../"
   - "export PYTHONPATH=`pwd`"
   - "python bin/init_model.py en lang_data/ corpora/ data"
-  - "sputnik build ."
-  - "sputnik install en_default-*.sputnik"
+  - "sputnik build . en_default.sputnik"
+  - "sputnik install en_default.sputnik"
 
 # run tests
 script:
