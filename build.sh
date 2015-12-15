@@ -30,6 +30,6 @@ pip install pytest
 pip list
 
 # script
-mkdir tmp; cd tmp
+cd .build
 python -m spacy.en.download
 python -m pytest ../spacy/ -x --models --vectors --slow
