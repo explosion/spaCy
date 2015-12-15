@@ -12,7 +12,9 @@ try:
 except ImportError:
     from urllib import urlopen
 
+from pip.commands.uninstall import UninstallCommand
 from pip.commands.install import InstallCommand
+from pip import get_installed_distributions
 
 
 def get_releases(package_name):
@@ -40,16 +42,38 @@ def select_version(select_date, package_name):
     return versions[bisect([x[0] for x in versions], select_date) - 1][1]
 
 
-date = parse_iso8601(sys.argv[1])
-args = ['%s==%s' % (p, select_version(date, p)) for p in sys.argv[2:]]
+installed_packages = [
+    package.project_name
+    for package in
+    get_installed_distributions()
+    if (not package.location.endswith('dist-packages') and
+        package.project_name not in ('pip', 'setuptools'))
+]
 
-pip = InstallCommand()
-options, args = pip.parse_args(args)
-options.force_reinstall = True
-options.ignore_installed = True
+pip = UninstallCommand()
+options, args = pip.parse_args(installed_packages)
+options.yes = True
 
 try:
-    print(pip.run(options, args))
+    pip.run(options, args)
+except OSError as e:
+    if e.errno != 13:
+        raise e
+    print("You lack permissions to uninstall this package. Perhaps run with sudo? Exiting.")
+    exit(13)
+
+
+date = parse_iso8601(sys.argv[1])
+packages = {p: select_version(date, p) for p in sys.argv[2:]}
+args = ['=='.join(a) for a in packages.items()]
+
+cmd = InstallCommand()
+options, args = cmd.parse_args(args)
+options.ignore_installed = True
+options.force_reinstall = True
+
+try:
+    print(cmd.run(options, args))
 except OSError as e:
     if e.errno != 13:
         raise e
