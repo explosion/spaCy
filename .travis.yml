@@ -32,9 +32,19 @@ install:
   - python pip-date.py $PIP_DATE pip setuptools wheel six
   - pip install -r requirements.txt
 
-  - test $PIP = 1 && python setup.py sdist && pip install dist/*
-  - test $INSTALL = 1 && python setup.py install
-  - test $DEVELOP = 1 && python setup.py develop && pip install -e .
+  - if [[ "$PIP" == "1" ]]; then
+      python setup.py sdist;
+      pip install dist/*;
+    fi
+
+  - if [[ "$INSTALL" == "1" ]]; then
+      python setup.py install;
+    fi
+
+  - if [[ "$DEVELOP" == "1" ]]; then
+      python setup.py develop;
+      pip install -e .;
+    fi
 
   - pip install pytest
   - pip list
