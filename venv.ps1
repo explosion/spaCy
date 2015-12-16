@@ -10,4 +10,4 @@ if(!(Test-Path -Path ".build"))
 }
 .build\Scripts\activate.ps1
 
-python build.py $python $install_mode $pip_date
+python build.py $install_mode $pip_date
