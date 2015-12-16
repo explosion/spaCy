@@ -18,7 +18,7 @@ from pip import get_installed_distributions
 
 
 def get_releases(package_name):
-    url = 'https://pypi.python.org/pypi/%s/json' % package_name
+    url = 'http://pypi.python.org/pypi/%s/json' % package_name
     return json.loads(urlopen(url).read().decode('utf8'))['releases']
 
 
@@ -50,17 +50,18 @@ installed_packages = [
         package.project_name not in ('pip', 'setuptools'))
 ]
 
-pip = UninstallCommand()
-options, args = pip.parse_args(installed_packages)
-options.yes = True
+if installed_packages:
+    pip = UninstallCommand()
+    options, args = pip.parse_args(installed_packages)
+    options.yes = True
 
-try:
-    pip.run(options, args)
-except OSError as e:
-    if e.errno != 13:
-        raise e
-    print("You lack permissions to uninstall this package. Perhaps run with sudo? Exiting.")
-    exit(13)
+    try:
+        pip.run(options, args)
+    except OSError as e:
+        if e.errno != 13:
+            raise e
+        print("You lack permissions to uninstall this package. Perhaps run with sudo? Exiting.")
+        exit(13)
 
 
 date = parse_iso8601(sys.argv[1])
