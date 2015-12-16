@@ -1,8 +1,8 @@
 #!/bin/bash -x
 set -e
 
-if [[ $# < 3 ]]; then
-    echo "usage: $0 <python-path> <pip-date> <install-mode>"
+if [[ $# < 2 ]]; then
+    echo "usage: $0 <python-path> <install-mode> [<pip-date>]"
     exit
 fi
 
@@ -13,16 +13,20 @@ fi
 
 # install
 pip install -U pip
-python pip-date.py $2 pip setuptools wheel six
+
+if [ -n "${3+1}" ]; then
+    python pip-date.py $3 pip setuptools wheel six
+fi
+
 pip install -r requirements.txt
-if [[ "$3" == "pip" ]]; then
+if [[ "$2" == "pip" ]]; then
   python setup.py sdist;
   pip install dist/*;
 fi
-if [[ "$3" == "setup-install" ]]; then
+if [[ "$2" == "setup-install" ]]; then
   python setup.py install;
 fi
-if [[ "$3" == "setup-develop" ]]; then
+if [[ "$2" == "setup-develop" ]]; then
   python setup.py develop;
   pip install -e .;
 fi
