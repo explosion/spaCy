@@ -97,6 +97,17 @@ def web_publish(assets_path):
                      if not k.name.startswith('resources')])
 
     for root, dirnames, filenames in os.walk(site_path):
+        for dirname in dirnames:
+            target = os.path.relpath(os.path.join(root, dirname), site_path)
+            source = os.path.join(target, 'index.html')
+
+            if os.path.exists(os.path.join(root, dirname, 'index.html')):
+                key = bucket.new_key(source)
+                key.set_redirect('//%s/%s' % (bucket.name, target))
+                print('adding redirect for %s' % target)
+
+                keys_left.remove(source)
+
         for filename in filenames:
             source = os.path.join(root, filename)
 
