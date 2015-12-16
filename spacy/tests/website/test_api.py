@@ -75,7 +75,7 @@ def test_count_by(nlp):
 @pytest.mark.models
 def test_read_bytes(nlp):
     from spacy.tokens.doc import Doc
-    loc = '/tmp/test_serialize.bin'
+    loc = 'test_serialize.bin'
     with open(loc, 'wb') as file_:
         file_.write(nlp(u'This is a document.').to_bytes())
         file_.write(nlp(u'This is another.').to_bytes())
