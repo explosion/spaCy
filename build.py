@@ -52,7 +52,7 @@ try:
     os.chdir('tmp')
 
     x('python -m spacy.en.download')
-    x('python -m pytest ../spacy/ -x --models --vectors --slow')
+    x('python -m pytest ../spacy/ --models --vectors --slow')
 
 finally:
     os.chdir(old)

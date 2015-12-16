@@ -11,3 +11,4 @@ if(!(Test-Path -Path ".build"))
 .build\Scripts\activate.ps1
 
 python build.py $install_mode $pip_date
+exit $LASTEXITCODE
