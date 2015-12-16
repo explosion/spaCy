@@ -6,11 +6,12 @@ import sys
 from bisect import bisect
 from datetime import datetime
 from datetime import timedelta
+import ssl
 
 try:
-    from urllib.request import urlopen
+    from urllib.request import Request, build_opener, HTTPSHandler, URLError
 except ImportError:
-    from urllib import urlopen
+    from urllib2 import Request, build_opener, HTTPSHandler, URLError
 
 from pip.commands.uninstall import UninstallCommand
 from pip.commands.install import InstallCommand
@@ -18,8 +19,21 @@ from pip import get_installed_distributions
 
 
 def get_releases(package_name):
-    url = 'http://pypi.python.org/pypi/%s/json' % package_name
-    return json.loads(urlopen(url).read().decode('utf8'))['releases']
+    url = 'https://pypi.python.org/pypi/%s/json' % package_name
+
+    ssl_context = HTTPSHandler(
+        context=ssl.SSLContext(ssl.PROTOCOL_TLSv1))
+    opener = build_opener(ssl_context)
+
+    retries = 10
+    while retries > 0:
+        try:
+            r = opener.open(Request(url))
+            break
+        except URLError:
+            retries -= 1
+
+    return json.loads(r.read().decode('utf8'))['releases']
 
 
 def parse_iso8601(s):
