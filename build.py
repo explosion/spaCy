@@ -27,10 +27,12 @@ if pip_date:
 x('pip install -r requirements.txt')
 
 if install_mode == 'pip':
+    for filename in os.listdir('dist'):
+        os.unlink(os.path.join('dist', filename))
     x('python setup.py sdist')
-    dists = os.listdir('dist')
-    assert len(dists) == 1
-    x('pip install dist/%s' % dists[0])
+    filenames = os.listdir('dist')
+    assert len(filenames) == 1
+    x('pip install dist/%s' % filenames[0])
 
 elif install_mode == 'setup-install':
     x('python setup.py install')
