@@ -28,7 +28,9 @@ x('pip install -r requirements.txt')
 
 if install_mode == 'pip':
     x('python setup.py sdist')
-    x('pip install dist/*')
+    dists = os.listdir('dist')
+    assert len(dists) == 1
+    x('pip install dist/%s' % dists[0])
 
 elif install_mode == 'setup-install':
     x('python setup.py install')
