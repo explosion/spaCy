@@ -13,6 +13,8 @@ fi
 
 # install
 pip install -U pip
+pip install pyopenssl ndg-httpsclient pyasn1
+
 python pip-date.py $2 pip setuptools wheel six
 pip install -r requirements.txt
 if [[ "$3" == "pip" ]]; then
