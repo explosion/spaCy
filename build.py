@@ -23,7 +23,6 @@ install_mode = sys.argv[1]
 
 if install_mode == 'prepare':
     x('python pip-clear.py')
-    x('pip install --disable-pip-version-check -U pip setuptools')
 
     pip_date = len(sys.argv) > 2 and sys.argv[2]
     if pip_date:
@@ -50,10 +49,6 @@ elif install_mode == 'setup-install':
 
 
 elif install_mode == 'setup-develop':
-    x('python setup.py develop')
-    x('python pip-clear.py')
-
-    x('pip list')
     x('pip install -e .')
 
 

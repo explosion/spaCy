@@ -12,21 +12,14 @@ os:
   - linux
 
 env:
-  - PIP_DATE=2015-10-01 PIP=1 INSTALL=0 DEVELOP=0
-  - PIP_DATE=2015-10-01 PIP=0 INSTALL=1 DEVELOP=0
-  - PIP_DATE=2015-10-01 PIP=0 INSTALL=0 DEVELOP=1
+  - PIP_DATE=2015-10-01 MODE=pip
+  - PIP_DATE=2015-10-01 MODE=setup-install
+  - PIP_DATE=2015-10-01 MODE=setup-develop
 
 install:
+  - pip install --disable-pip-version-check -U pip
   - python build.py prepare $PIP_DATE
 
 script:
-  - if [[ "$PIP" == "1" ]]; then
-      python build.py pip;
-    fi
-  - if [[ "$INSTALL" == "1" ]]; then
-      python build.py setup-install;
-    fi
-  - if [[ "$DEVELOP" == "1" ]]; then
-      python build.py setup-develop;
-    fi
+  - python build.py $MODE;
   - python build.py test
