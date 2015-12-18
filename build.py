@@ -2,6 +2,7 @@
 from __future__ import print_function
 import os
 import sys
+import shutil
 from subprocess import call
 
 
@@ -38,14 +39,14 @@ elif install_mode == 'setup-install':
     x('python setup.py install')
 
 elif install_mode == 'setup-develop':
-    x('python setup.py develop')
     x('pip install -e .')
 
 x('pip install pytest')
 x('pip list')
 
-if not os.path.exists('tmp'):
-    os.mkdir('tmp')
+if os.path.exists('tmp'):
+    shutil.rmtree('tmp')
+os.mkdir('tmp')
 
 try:
     old = os.getcwd()
