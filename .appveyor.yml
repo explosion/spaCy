@@ -61,7 +61,8 @@ build_script:
   - ps: appveyor\download.ps1 
   - "tar -xzf corpora/en/wordnet.tar.gz"
   - "%CMD_IN_ENV% python bin/init_model.py en lang_data/ corpora/ data"
-  - "%CMD_IN_ENV% sputnik build . en_default.sputnik"
+  - "cp package.json data"
+  - "%CMD_IN_ENV% sputnik build data en_default.sputnik"
   - "%CMD_IN_ENV% sputnik install en_default.sputnik"
 
 test_script:
