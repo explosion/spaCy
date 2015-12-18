@@ -17,28 +17,16 @@ env:
   - PIP_DATE=2015-10-01 PIP=0 INSTALL=0 DEVELOP=1
 
 install:
-  - pip install -U pip
-  - python pip-date.py $PIP_DATE pip setuptools wheel six
-  - pip install -r requirements.txt
-
-  - if [[ "$PIP" == "1" ]]; then
-      python setup.py sdist;
-      pip install dist/*;
-    fi
-
-  - if [[ "$INSTALL" == "1" ]]; then
-      python setup.py install;
-    fi
-
-  - if [[ "$DEVELOP" == "1" ]]; then
-      python setup.py develop;
-      pip install -e .;
-    fi
-
-  - pip install pytest
-  - pip list
+  - python build.py prepare $PIP_DATE
 
 script:
-  - mkdir tmp; cd tmp
-  - python -m spacy.en.download
-  - python -m pytest ../spacy/ -x --models --vectors --slow
+  - if [[ "$PIP" == "1" ]]; then
+      python build.py pip;
+    fi
+  - if [[ "$INSTALL" == "1" ]]; then
+      python build.py setup-install;
+    fi
+  - if [[ "$DEVELOP" == "1" ]]; then
+      python build.py setup-develop;
+    fi
+  - python build.py test

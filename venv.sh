@@ -6,4 +6,6 @@ if [ ! -d ".build" ]; then
 fi
 
 . .build/bin/activate
-python build.py $2 $3
+python build.py prepare $3
+python build.py $2
+python build.py test

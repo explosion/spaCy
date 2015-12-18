@@ -19,41 +19,58 @@ if len(sys.argv) < 2:
 
 
 install_mode = sys.argv[1]
-pip_date = len(sys.argv) > 2 and sys.argv[2]
 
 
-x('pip install -U pip')
-if pip_date:
-    x('python pip-date.py %s pip setuptools wheel six' % pip_date)
-x('pip install -r requirements.txt')
+if install_mode == 'prepare':
+    x('python pip-clear.py')
+    x('pip install --disable-pip-version-check -U pip setuptools')
 
-if install_mode == 'pip':
-    for filename in os.listdir('dist'):
-        os.unlink(os.path.join('dist', filename))
+    pip_date = len(sys.argv) > 2 and sys.argv[2]
+    if pip_date:
+        x('python pip-date.py %s pip setuptools wheel six' % pip_date)
+
+    x('pip install -r requirements.txt')
+    x('pip list')
+
+
+elif install_mode == 'pip':
+    if os.path.exists('dist'):
+        shutil.rmtree('dist')
     x('python setup.py sdist')
+    x('python pip-clear.py')
+
     filenames = os.listdir('dist')
     assert len(filenames) == 1
+    x('pip list')
     x('pip install dist/%s' % filenames[0])
+
 
 elif install_mode == 'setup-install':
     x('python setup.py install')
 
+
 elif install_mode == 'setup-develop':
+    x('python setup.py develop')
+    x('python pip-clear.py')
+
+    x('pip list')
     x('pip install -e .')
 
-x('pip install pytest')
-x('pip list')
 
-if os.path.exists('tmp'):
-    shutil.rmtree('tmp')
-os.mkdir('tmp')
+elif install_mode == 'test':
+    x('pip install pytest')
+    x('pip list')
 
-try:
-    old = os.getcwd()
-    os.chdir('tmp')
+    if os.path.exists('tmp'):
+        shutil.rmtree('tmp')
+    os.mkdir('tmp')
 
-    x('python -m spacy.en.download')
-    x('python -m pytest ../spacy/ --models --vectors --slow')
+    try:
+        old = os.getcwd()
+        os.chdir('tmp')
 
-finally:
-    os.chdir(old)
+        x('python -m spacy.en.download')
+        x('python -m pytest ../spacy/ --models --vectors --slow')
+
+    finally:
+        os.chdir(old)

@@ -43,30 +43,20 @@ install:
   - "python --version"
   - "python -c \"import struct; print(struct.calcsize('P') * 8)\""
 
-  # Upgrade to the latest version of pip to avoid it displaying warnings
-  # about it being out of date.
-  - "pip install --disable-pip-version-check --user --upgrade pip"
-
   # Install the build dependencies of the project. If some dependencies contain
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
-  - "pip install --upgrade setuptools"
-  - "%CMD_IN_ENV% pip install cython fabric fabtools"
-  - "%CMD_IN_ENV% pip install -r requirements.txt"
+  - "%CMD_IN_ENV% python build.py prepare"
 
 build_script:
   # Build the compiled extension
-  - "%CMD_IN_ENV% python setup.py build_ext --inplace"
-  - ps: appveyor\download.ps1 
-  - "tar -xzf corpora/en/wordnet.tar.gz"
-  - "%CMD_IN_ENV% python bin/init_model.py en lang_data/ corpora/ spacy/en/data"
+  - "%CMD_IN_ENV% python build.py pip"
 
 
 test_script:
   # Run the project tests
-  - "pip install pytest"
-  - "%CMD_IN_ENV% py.test spacy/ -x"
+  - "%CMD_IN_ENV% python build.py test"
 
 after_test:
   # If tests are successful, create binary packages for the project.
