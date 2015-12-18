@@ -213,7 +213,6 @@ class Language(object):
             if model is None:
                 model = '%s_default' % (lang or 'en')
                 version = None
-            print(model, version)
             package = get_package(name=model, version=version,
                                   data_path=data_dir)
 

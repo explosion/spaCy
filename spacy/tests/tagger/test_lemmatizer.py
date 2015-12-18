@@ -4,14 +4,14 @@ import io
 import pickle
 
 from spacy.lemmatizer import Lemmatizer, read_index, read_exc
-from spacy.util import default_package
+from spacy.util import get_package
 
 import pytest
 
 
 @pytest.fixture
 def package():
-    return default_package()
+    return get_package()
 
 
 @pytest.fixture

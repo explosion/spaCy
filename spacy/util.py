@@ -19,6 +19,8 @@ def get_package(name=None, version=None, data_path=None):
     sputnik = Sputnik('spacy', '0.100.0')  # TODO: retrieve version
     pool = sputnik.pool(data_path)
 
+    if name is None:
+        name = 'en_default'
     if version:
         name += ' ==%s' % version
     return pool.get(name)
