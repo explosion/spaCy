@@ -8,17 +8,14 @@ from sputnik import Sputnik
 
 def migrate(path):
     data_path = os.path.join(path, 'data')
-    if os.path.isdir(data_path) and not os.path.islink(data_path):
-        shutil.rmtree(data_path)
+    if os.path.isdir(data_path):
+        if os.path.islink(data_path):
+            os.unlink(data_path)
+        else:
+            shutil.rmtree(data_path)
     for filename in os.listdir(path):
         if filename.endswith('.tgz'):
             os.unlink(os.path.join(path, filename))
-
-
-def link(package, path):
-    if os.path.exists(path):
-        os.unlink(path)
-    os.symlink(package.dir_path('data'), path)
 
 
 @plac.annotations(
@@ -30,8 +27,12 @@ def main(data_size='all', force=False):
 
     path = os.path.dirname(os.path.abspath(__file__))
 
-    command = sputnik.make_command(
-        data_path=os.path.abspath(os.path.join(path, '..', 'data')),
+    data_path = os.path.abspath(os.path.join(path, '..', 'data'))
+    if not os.path.isdir(data_path):
+        os.mkdir(data_path)
+
+    command = sputnik.command(
+        data_path=data_path,
         repository_url='https://index.spacy.io')
 
     if force:
@@ -41,9 +42,6 @@ def main(data_size='all', force=False):
 
     # FIXME clean up old-style packages
     migrate(path)
-
-    # FIXME supply spacy with an old-style data dir
-    link(package, os.path.join(path, 'data'))
 
 
 if __name__ == '__main__':
