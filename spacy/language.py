@@ -167,15 +167,14 @@ class Language(object):
 
            3) by a model name/version (and optionally a package root dir)
              - Language(model='en_default')
-             - Language(model='en_default', version='1.0.0')
-             - Language(model='en_default', version='1.0.0', data_dir='spacy/data')
+             - Language(model='en_default ==1.0.0')
+             - Language(model='en_default <1.1.0, data_dir='spacy/data')
         """
 
         data_dir = kwargs.pop('data_dir', None)
 
         lang = kwargs.pop('lang', None)
         model = kwargs.pop('model', None)
-        version = kwargs.pop('version', None)
 
         vocab = kwargs.pop('vocab', None)
         tokenizer = kwargs.pop('tokenizer', None)
@@ -210,11 +209,7 @@ class Language(object):
             warn("using non-package data_dir", DeprecationWarning)
             package = Package(data_dir)
         else:
-            if model is None:
-                model = '%s_default' % (lang or 'en')
-                version = None
-            package = get_package(name=model, version=version,
-                                  data_path=data_dir)
+            package = get_package(name=model, data_path=data_dir)
 
         if load_vectors is not True:
             warn("load_vectors is deprecated", DeprecationWarning)

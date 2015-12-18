@@ -8,7 +8,7 @@ from sputnik import Sputnik
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 
-def get_package(name=None, version=None, data_path=None):
+def get_package(name=None, data_path=None):
     if data_path is None:
         if os.environ.get('SPACY_DATA'):
             data_path = os.environ.get('SPACY_DATA')
@@ -18,12 +18,7 @@ def get_package(name=None, version=None, data_path=None):
 
     sputnik = Sputnik('spacy', '0.100.0')  # TODO: retrieve version
     pool = sputnik.pool(data_path)
-
-    if name is None:
-        name = 'en_default'
-    if version:
-        name += ' ==%s' % version
-    return pool.get(name)
+    return pool.get(name or 'en_default')
 
 
 def normalize_slice(length, start, stop, step=None):
