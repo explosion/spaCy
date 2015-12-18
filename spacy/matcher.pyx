@@ -171,7 +171,7 @@ cdef class Matcher:
     @classmethod
     def from_package(cls, package, Vocab vocab):
         patterns = package.load_utf8(json.load,
-            'data', 'vocab', 'gazetteer.json',
+            'vocab', 'gazetteer.json',
             default={})  # TODO: really optional?
         return cls(vocab, patterns)
 

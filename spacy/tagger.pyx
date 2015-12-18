@@ -148,15 +148,16 @@ cdef class Tagger:
     @classmethod
     def from_package(cls, package, vocab):
         # TODO: templates.json deprecated? not present in latest package
-        templates = package.load_utf8(json.load,
-            'data', 'pos', 'templates.json',
-            default=cls.default_templates())
+        templates = cls.default_templates()
+        # templates = package.load_utf8(json.load,
+        #     'pos', 'templates.json',
+        #     default=cls.default_templates())
 
         model = TaggerModel(vocab.morphology.n_tags,
             ConjunctionExtracter(N_CONTEXT_FIELDS, templates))
 
-        if package.has_file('data', 'pos', 'model'):  # TODO: really optional?
-            model.load(package.file_path('data', 'pos', 'model'))
+        if package.has_file('pos', 'model'):  # TODO: really optional?
+            model.load(package.file_path('pos', 'model'))
 
         return cls(vocab, model)
 

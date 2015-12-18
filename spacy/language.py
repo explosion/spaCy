@@ -20,7 +20,7 @@ from .syntax.ner import BiluoPushDown
 from .syntax.arc_eager import ArcEager
 
 from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD
-from .util import default_package
+from .util import get_package
 
 
 class Language(object):
@@ -137,48 +137,100 @@ class Language(object):
     @classmethod
     def default_vocab(cls, package=None, get_lex_attr=None):
         if package is None:
-            package = default_package()
+            package = get_package()
         if get_lex_attr is None:
             get_lex_attr = cls.default_lex_attrs()
         return Vocab.from_package(package, get_lex_attr=get_lex_attr)
 
     @classmethod
     def default_parser(cls, package, vocab):
-        data_dir = package.dir_path('data', 'deps', require=False)
+        data_dir = package.dir_path('deps', require=False)
         if data_dir and path.exists(data_dir):
             return Parser.from_dir(data_dir, vocab.strings, ArcEager)
 
     @classmethod
     def default_entity(cls, package, vocab):
-        data_dir = package.dir_path('data', 'ner', require=False)
+        data_dir = package.dir_path('ner', require=False)
         if data_dir and path.exists(data_dir):
             return Parser.from_dir(data_dir, vocab.strings, BiluoPushDown)
 
-    def __init__(self, package=None, vocab=None, tokenizer=None, tagger=None,
-                 parser=None, entity=None, matcher=None, serializer=None,
-                 load_vectors=True):
+    def __init__(self, **kwargs):
+        """
+           a model can be specified:
+
+           1) by a path to the model directory (DEPRECATED)
+             - Language(data_dir='path/to/data')
+
+           2) by a language identifier (and optionally a package root dir)
+             - Language(lang='en')
+             - Language(lang='en', data_dir='spacy/data')
+
+           3) by a model name/version (and optionally a package root dir)
+             - Language(model='en_default')
+             - Language(model='en_default', version='1.0.0')
+             - Language(model='en_default', version='1.0.0', data_dir='spacy/data')
+        """
+
+        data_dir = kwargs.pop('data_dir', None)
+
+        lang = kwargs.pop('lang', None)
+        model = kwargs.pop('model', None)
+        version = kwargs.pop('version', None)
+
+        vocab = kwargs.pop('vocab', None)
+        tokenizer = kwargs.pop('tokenizer', None)
+        tagger = kwargs.pop('tagger', None)
+        parser = kwargs.pop('parser', None)
+        entity = kwargs.pop('entity', None)
+        matcher = kwargs.pop('matcher', None)
+        serializer = kwargs.pop('serializer', None)
+
+        load_vectors = kwargs.pop('load_vectors', True)
+
+        # support non-package data dirs
+        if data_dir and path.exists(path.join(data_dir, 'vocab')):
+            class Package(object):
+                def __init__(self, root):
+                    self.root = root
+
+                def has_file(self, *path_parts):
+                    return path.exists(path.join(self.root, *path_parts))
+
+                def file_path(self, *path_parts, **kwargs):
+                    return path.join(self.root, *path_parts)
+
+                def dir_path(self, *path_parts, **kwargs):
+                    return path.join(self.root, *path_parts)
+
+                def load_utf8(self, func, *path_parts, **kwargs):
+                    with io.open(self.file_path(path.join(*path_parts)),
+                                 mode='r', encoding='utf8') as f:
+                        return func(f)
+
+            warn("using non-package data_dir", DeprecationWarning)
+            package = Package(data_dir)
+        else:
+            if model is None:
+                model = '%s_default' % (lang or 'en')
+                version = None
+            print(model, version)
+            package = get_package(name=model, version=version,
+                                  data_path=data_dir)
+
         if load_vectors is not True:
             warn("load_vectors is deprecated", DeprecationWarning)
-        if package in (None, True):
-            package = default_package()
         if vocab in (None, True):
-            vocab = self.default_vocab(package)
+            self.vocab = self.default_vocab(package)
         if tokenizer in (None, True):
-            tokenizer = Tokenizer.from_package(package, vocab)
+            self.tokenizer = Tokenizer.from_package(package, self.vocab)
         if tagger in (None, True):
-            tagger = Tagger.from_package(package, vocab)
+            self.tagger = Tagger.from_package(package, self.vocab)
         if entity in (None, True):
-            entity = self.default_entity(package, vocab)
+            self.entity = self.default_entity(package, self.vocab)
         if parser in (None, True):
-            parser = self.default_parser(package, vocab)
+            self.parser = self.default_parser(package, self.vocab)
         if matcher in (None, True):
-            matcher = Matcher.from_package(package, vocab)
-        self.vocab = vocab
-        self.tokenizer = tokenizer
-        self.tagger = tagger
-        self.parser = parser
-        self.entity = entity
-        self.matcher = matcher
+            self.matcher = Matcher.from_package(package, self.vocab)
 
     def __reduce__(self):
         return (self.__class__,

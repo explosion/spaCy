@@ -20,14 +20,14 @@ def lemmatizer(package):
 
 
 def test_read_index(package):
-    index = package.load_utf8(read_index, 'data', 'wordnet', 'index.noun')
+    index = package.load_utf8(read_index, 'wordnet', 'index.noun')
     assert 'man' in index
     assert 'plantes' not in index
     assert 'plant' in index
 
 
 def test_read_exc(package):
-    exc = package.load_utf8(read_exc, 'data', 'wordnet', 'verb.exc')
+    exc = package.load_utf8(read_exc, 'wordnet', 'verb.exc')
     assert exc['was'] == ('be',)
 
 

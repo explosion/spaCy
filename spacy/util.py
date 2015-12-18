@@ -8,16 +8,20 @@ from sputnik import Sputnik
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 
-def default_package():
-    if os.environ.get('SPACY_DATA'):
-        data_path = os.environ.get('SPACY_DATA')
-    else:
-        data_path = os.path.abspath(
-            os.path.join(os.path.dirname(__file__), 'data'))
+def get_package(name=None, version=None, data_path=None):
+    if data_path is None:
+        if os.environ.get('SPACY_DATA'):
+            data_path = os.environ.get('SPACY_DATA')
+        else:
+            data_path = os.path.abspath(
+                os.path.join(os.path.dirname(__file__), 'data'))
 
-    sputnik = Sputnik('spacy', '0.99.0')  # TODO: retrieve version
+    sputnik = Sputnik('spacy', '0.100.0')  # TODO: retrieve version
     pool = sputnik.pool(data_path)
-    return pool.get('en_default')
+
+    if version:
+        name += ' ==%s' % version
+    return pool.get(name)
 
 
 def normalize_slice(length, start, stop, step=None):
@@ -45,10 +49,10 @@ def utf8open(loc, mode='r'):
 
 
 def read_lang_data(package):
-    tokenization = package.load_utf8(json.load, 'data', 'tokenizer', 'specials.json')
-    prefix = package.load_utf8(read_prefix, 'data', 'tokenizer', 'prefix.txt')
-    suffix = package.load_utf8(read_suffix, 'data', 'tokenizer', 'suffix.txt')
-    infix = package.load_utf8(read_infix, 'data', 'tokenizer', 'infix.txt')
+    tokenization = package.load_utf8(json.load, 'tokenizer', 'specials.json')
+    prefix = package.load_utf8(read_prefix, 'tokenizer', 'prefix.txt')
+    suffix = package.load_utf8(read_suffix, 'tokenizer', 'suffix.txt')
+    infix = package.load_utf8(read_infix, 'tokenizer', 'infix.txt')
     return tokenization, prefix, suffix, infix
 
 

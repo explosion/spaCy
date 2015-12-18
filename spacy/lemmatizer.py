@@ -17,14 +17,14 @@ class Lemmatizer(object):
         exc = {}
         for pos in ['adj', 'noun', 'verb']:
             index[pos] = package.load_utf8(read_index,
-                'data', 'wordnet', 'index.%s' % pos,
+                'wordnet', 'index.%s' % pos,
                 default=set())  # TODO: really optional?
             exc[pos] = package.load_utf8(read_exc,
-                'data', 'wordnet', '%s.exc' % pos,
+                'wordnet', '%s.exc' % pos,
                 default={})  # TODO: really optional?
 
         rules = package.load_utf8(json.load,
-            'data', 'vocab', 'lemma_rules.json',
+            'vocab', 'lemma_rules.json',
             default={})  # TODO: really optional?
 
         return cls(index, exc, rules)

@@ -33,6 +33,10 @@ your yours yourself yourselves
 STOPWORDS = set(w for w in STOPWORDS.split() if w)
 
 class English(Language):
+    def __init__(self, **kwargs):
+        kwargs['lang'] = 'en'
+        super(English, self).__init__(**kwargs)
+
     @staticmethod
     def is_stop(string):
         return 1 if string.lower() in STOPWORDS else 0

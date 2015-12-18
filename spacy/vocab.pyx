@@ -49,24 +49,24 @@ cdef class Vocab:
     @classmethod
     def from_package(cls, package, get_lex_attr=None):
         tag_map = package.load_utf8(json.load,
-            'data', 'vocab', 'tag_map.json')
+            'vocab', 'tag_map.json')
 
         lemmatizer = Lemmatizer.from_package(package)
 
         serializer_freqs = package.load_utf8(json.load,
-            'data', 'vocab', 'serializer.json',
+            'vocab', 'serializer.json',
             require=False)  # TODO: really optional?
 
         cdef Vocab self = cls(get_lex_attr=get_lex_attr, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)
 
-        if package.has_file('data', 'vocab', 'strings.json'):  # TODO: really optional?
-            package.load_utf8(self.strings.load, 'data', 'vocab', 'strings.json')
-            self.load_lexemes(package.file_path('data', 'vocab', 'lexemes.bin'))
+        if package.has_file('vocab', 'strings.json'):  # TODO: really optional?
+            package.load_utf8(self.strings.load, 'vocab', 'strings.json')
+            self.load_lexemes(package.file_path('vocab', 'lexemes.bin'))
 
-        if package.has_file('data', 'vocab', 'vec.bin'):  # TODO: really optional?
+        if package.has_file('vocab', 'vec.bin'):  # TODO: really optional?
             self.vectors_length = self.load_vectors_from_bin_loc(
-                package.file_path('data', 'vocab', 'vec.bin'))
+                package.file_path('vocab', 'vec.bin'))
 
         return self
 
