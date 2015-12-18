@@ -1,10 +1,17 @@
 {
     "name": "en_default",
-    "version": "0.99.0",
+    "version": "0.100.0",
     "description": "english default model",
     "license": "public domain",
-    "include": ["data/**/*"],
+    "include": [
+        "deps/*",
+        "ner/*",
+        "pos/*",
+        "tokenizer/*",
+        "vocab/*",
+        "wordnet/*"
+    ],
     "compatibility": {
-        "spacy": "==0.99.0"
+        "spacy": "==0.100.0"
     }
 }
