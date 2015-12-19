@@ -1,3 +1,5 @@
+$ErrorActionPreference = "Stop"
+
 param (
     [string]$python = $(throw "-python is required."),
     [string]$install_mode = $(throw "-install_mode is required."),
