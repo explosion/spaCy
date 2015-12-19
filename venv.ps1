@@ -1,10 +1,10 @@
-$ErrorActionPreference = "Stop"
-
 param (
     [string]$python = $(throw "-python is required."),
     [string]$install_mode = $(throw "-install_mode is required."),
     [string]$pip_date
 )
+
+$ErrorActionPreference = "Stop"
  
 if(!(Test-Path -Path ".build"))
 {
