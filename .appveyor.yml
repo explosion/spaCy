@@ -57,7 +57,6 @@ build_script:
   # Build the compiled extension
   - "%CMD_IN_ENV% python build.py pip"
 
-
 test_script:
   # Run the project tests
   - "%CMD_IN_ENV% python build.py test"
