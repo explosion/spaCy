@@ -206,9 +206,7 @@ def prepare_includes(path):
     copy_include(numpy.get_include(), include_dir, 'numpy')
 
     murmurhash = import_include('murmurhash')
-    copy_include(
-        os.path.join(os.path.dirname(murmurhash.__file__), 'headers'),
-        include_dir, 'murmurhash')
+    copy_include(murmurhash.get_include(), include_dir, 'murmurhash')
 
 
 def is_source_release(path):
@@ -270,7 +268,7 @@ def setup_package():
             url='https://spacy.io',
             license='MIT',
             ext_modules=ext_modules,
-            install_requires=['numpy', 'murmurhash == 0.24', 'cymem == 1.30', 'preshed == 0.44',
+            install_requires=['numpy', 'murmurhash == 0.25', 'cymem == 1.30', 'preshed == 0.44',
                               'thinc == 4.0.0', 'text_unidecode', 'plac', 'six',
                               'ujson', 'cloudpickle', 'sputnik == 0.6.2'],
             cmdclass = {

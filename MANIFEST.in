@@ -1,1 +1,2 @@
 recursive-include include *.h
+recursive-include spacy *.pyx *.pxd

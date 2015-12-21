@@ -3,7 +3,7 @@ cymem == 1.30
 pathlib
 preshed == 0.44
 thinc == 4.0
-murmurhash == 0.24
+murmurhash == 0.25
 text-unidecode
 numpy
 plac
