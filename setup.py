@@ -261,6 +261,7 @@ def setup_package():
         setup(
             name='spacy',
             packages=PACKAGES,
+            package_data={'': ['*.pyx', '*.pxd']},
             description='Industrial-strength NLP',
             author='Matthew Honnibal',
             author_email='matt@spacy.io',
