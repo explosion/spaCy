@@ -17,8 +17,15 @@ def migrate(path):
 
 def link(package, path):
     if os.path.exists(path):
-        os.unlink(path)
-    os.symlink(package.dir_path('data'), path)
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.unlink(path)
+
+    if not hasattr(os, 'symlink'):  # not supported by win+py27
+        shutil.copytree(package.dir_path('data'), path)
+    else:
+        os.symlink(package.dir_path('data'), path)
 
 
 @plac.annotations(

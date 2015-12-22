@@ -2,14 +2,21 @@ param (
     [string]$python = $(throw "-python is required."),
     [string]$install_mode = $(throw "-install_mode is required."),
     [string]$pip_date
+    [string]$compiler
 )
 
 $ErrorActionPreference = "Stop"
- 
+
 if(!(Test-Path -Path ".build"))
 {
-    virtualenv .build --python $python
+    virtualenv .build --system-site-packages --python $python
 }
+
+if($compiler)
+{
+    "[build]`r`ncompiler=$compiler" | Out-File .\.build\Lib\distutils\distutils.cfg
+}
+
 .build\Scripts\activate.ps1
 
 python build.py prepare $pip_date
