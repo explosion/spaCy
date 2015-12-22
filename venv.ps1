@@ -1,7 +1,7 @@
 param (
     [string]$python = $(throw "-python is required."),
     [string]$install_mode = $(throw "-install_mode is required."),
-    [string]$pip_date
+    [string]$pip_date,
     [string]$compiler
 )
 
