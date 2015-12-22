@@ -270,7 +270,7 @@ def setup_package():
             license='MIT',
             ext_modules=ext_modules,
             install_requires=['numpy', 'murmurhash == 0.26', 'cymem == 1.30', 'preshed == 0.45',
-                              'thinc == 4.0.0', 'text_unidecode', 'plac', 'six',
+                              'thinc == 4.1.0', 'text_unidecode', 'plac', 'six',
                               'ujson', 'cloudpickle', 'sputnik == 0.6.2'],
             cmdclass = {
                 'build_ext': build_ext_subclass},
