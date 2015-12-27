@@ -21,7 +21,10 @@ install:
   - "mv WordNet-3.0 wordnet"
   - "cd ../../"
   - "export PYTHONPATH=`pwd`"
-  - "python bin/init_model.py en lang_data/ corpora/ spacy/en/data"
+  - "python bin/init_model.py en lang_data/ corpora/ data"
+  - "cp package.json data"
+  - "sputnik build data en_default.sputnik"
+  - "sputnik install en_default.sputnik"
 
 # run tests
 script:

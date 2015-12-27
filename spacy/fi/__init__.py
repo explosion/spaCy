@@ -6,6 +6,4 @@ from ..language import Language
 
 
 class Finnish(Language):
-    @classmethod
-    def default_data_dir(cls):
-        return path.join(path.dirname(__file__), 'data')
+    pass

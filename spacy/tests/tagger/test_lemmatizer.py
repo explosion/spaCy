@@ -4,29 +4,31 @@ import io
 import pickle
 
 from spacy.lemmatizer import Lemmatizer, read_index, read_exc
-from spacy.en import LOCAL_DATA_DIR
-from os import path
+from spacy.util import get_package
 
 import pytest
 
 
-def test_read_index():
-    wn = path.join(LOCAL_DATA_DIR, 'wordnet')
-    index = read_index(path.join(wn, 'index.noun'))
+@pytest.fixture
+def package():
+    return get_package()
+
+
+@pytest.fixture
+def lemmatizer(package):
+    return Lemmatizer.from_package(package)
+
+
+def test_read_index(package):
+    index = package.load_utf8(read_index, 'wordnet', 'index.noun')
     assert 'man' in index
     assert 'plantes' not in index
     assert 'plant' in index
 
 
-def test_read_exc():
-    wn = path.join(LOCAL_DATA_DIR, 'wordnet')
-    exc = read_exc(path.join(wn, 'verb.exc'))
+def test_read_exc(package):
+    exc = package.load_utf8(read_exc, 'wordnet', 'verb.exc')
     assert exc['was'] == ('be',)
-
-
-@pytest.fixture
-def lemmatizer():
-    return Lemmatizer.from_dir(path.join(LOCAL_DATA_DIR))
 
 
 def test_noun_lemmas(lemmatizer):
