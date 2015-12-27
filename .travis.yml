@@ -17,8 +17,21 @@ env:
   - PIP_DATE=2015-10-01 MODE=setup-develop
 
 install:
-  - pip install --disable-pip-version-check -U pip
-  - python build.py prepare $PIP_DATE
+  - "pip install --upgrade setuptools"
+  - "pip install cython fabric fabtools"
+  - "pip install -r requirements.txt"
+  - "python setup.py build_ext --inplace"
+  - "mkdir -p corpora/en"
+  - "cd corpora/en"
+  - "wget --no-check-certificate http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"
+  - "tar -xzf WordNet-3.0.tar.gz"
+  - "mv WordNet-3.0 wordnet"
+  - "cd ../../"
+  - "export PYTHONPATH=`pwd`"
+  - "python bin/init_model.py en lang_data/ corpora/ data"
+  - "cp package.json data"
+  - "sputnik build data en_default.sputnik"
+  - "sputnik install en_default.sputnik"
 
 script:
   - python build.py $MODE;

@@ -2,16 +2,15 @@ from __future__ import unicode_literals
 import pytest
 import gc
 
-from spacy.en import English, LOCAL_DATA_DIR
+from spacy.en import English
 import os
 
-data_dir = os.environ.get('SPACY_DATA', LOCAL_DATA_DIR)
 # Let this have its own instances, as we have to be careful about memory here
 # that's the point, after all
 
 @pytest.mark.models
 def get_orphan_token(text, i):
-    nlp = English(data_dir=data_dir)
+    nlp = English()
     tokens = nlp(text)
     gc.collect()
     token = tokens[i]
@@ -41,7 +40,7 @@ def _orphan_from_list(toks):
 @pytest.mark.models
 def test_list_orphans():
     # Test case from NSchrading
-    nlp = English(data_dir=data_dir)
+    nlp = English()
     samples = ["a", "test blah wat okay"]
     lst = []
     for sample in samples:

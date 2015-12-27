@@ -10,7 +10,6 @@ from spacy.en import English
 from spacy.vocab import Vocab
 from spacy.tokens.doc import Doc
 from spacy.tokenizer import Tokenizer
-from spacy.en import LOCAL_DATA_DIR
 from os import path
 
 from spacy.attrs import ORTH, SPACY, TAG, DEP, HEAD

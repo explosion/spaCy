@@ -55,7 +55,13 @@ install:
 
 build_script:
   # Build the compiled extension
-  - "%CMD_IN_ENV% python build.py pip"
+  - "%CMD_IN_ENV% python setup.py build_ext --inplace"
+  - ps: appveyor\download.ps1 
+  - "tar -xzf corpora/en/wordnet.tar.gz"
+  - "%CMD_IN_ENV% python bin/init_model.py en lang_data/ corpora/ data"
+  - "cp package.json data"
+  - "%CMD_IN_ENV% sputnik build data en_default.sputnik"
+  - "%CMD_IN_ENV% sputnik install en_default.sputnik"
 
 test_script:
   # Run the project tests
