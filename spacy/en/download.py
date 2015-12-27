@@ -17,8 +17,15 @@ def migrate(path):
 
 def link(package, path):
     if os.path.exists(path):
-        os.unlink(path)
-    os.symlink(package.dir_path('data'), path)
+        if os.path.isdir(path):
+            shutil.rmtree(path)
+        else:
+            os.unlink(path)
+
+    if not hasattr(os, 'symlink'):  # not supported by win+py27
+        shutil.copytree(package.dir_path('data'), path)
+    else:
+        os.symlink(package.dir_path('data'), path)
 
 
 @plac.annotations(
@@ -30,8 +37,12 @@ def main(data_size='all', force=False):
 
     path = os.path.dirname(os.path.abspath(__file__))
 
-    command = sputnik.make_command(
-        data_path=os.path.abspath(os.path.join(path, '..', 'data')),
+    data_path = os.path.abspath(os.path.join(path, '..', 'data'))
+    if not os.path.isdir(data_path):
+        os.mkdir(data_path)
+
+    command = sputnik.command(
+        data_path=data_path,
         repository_url='https://index.spacy.io')
 
     if force:
