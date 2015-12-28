@@ -36,7 +36,7 @@ def link(package, path):
 )
 def main(data_size='all', force=False):
     # TODO read version from the same source as the setup
-    sputnik = Sputnik('spacy', '0.99.0', console=sys.stdout)
+    sputnik = Sputnik('spacy', '0.100.0', console=sys.stdout)
 
     path = os.path.dirname(os.path.abspath(__file__))
 
