@@ -154,7 +154,18 @@ class Language(object):
         if data_dir and path.exists(data_dir):
             return Parser.from_dir(data_dir, vocab.strings, BiluoPushDown)
 
-    def __init__(self, **kwargs):
+    def __init__(self,
+        data_dir=None,
+        lang=None,
+        model=None,
+        vocab=None,
+        tokenizer=None,
+        tagger=None,
+        parser=None,
+        entity=None,
+        matcher=None,
+        serializer=None,
+        load_vectors=True):
         """
            a model can be specified:
 
@@ -170,22 +181,6 @@ class Language(object):
              - Language(model='en_default ==1.0.0')
              - Language(model='en_default <1.1.0, data_dir='spacy/data')
         """
-
-        data_dir = kwargs.pop('data_dir', None)
-
-        lang = kwargs.pop('lang', None)
-        model = kwargs.pop('model', None)
-
-        vocab = kwargs.pop('vocab', None)
-        tokenizer = kwargs.pop('tokenizer', None)
-        tagger = kwargs.pop('tagger', None)
-        parser = kwargs.pop('parser', None)
-        entity = kwargs.pop('entity', None)
-        matcher = kwargs.pop('matcher', None)
-        serializer = kwargs.pop('serializer', None)
-
-        load_vectors = kwargs.pop('load_vectors', True)
-
         # support non-package data dirs
         if data_dir and path.exists(path.join(data_dir, 'vocab')):
             class Package(object):
@@ -210,7 +205,6 @@ class Language(object):
             package = Package(data_dir)
         else:
             package = get_package(name=model, data_path=data_dir)
-
         if load_vectors is not True:
             warn("load_vectors is deprecated", DeprecationWarning)
         if vocab in (None, True):
@@ -227,10 +221,16 @@ class Language(object):
             self.matcher = Matcher.from_package(package, self.vocab)
 
     def __reduce__(self):
-        return (self.__class__,
-                  (None, self.vocab, self.tokenizer, self.tagger, self.parser,
-                   self.entity, self.matcher, None),
-                None, None)
+        args = (
+            None, # data_dir
+            self.vocab,
+            self.tokenizer,
+            self.tagger,
+            self.parser,
+            self.entity,
+            self.matcher,
+        )
+        return (self.__class__, args, None, None)
 
     def __call__(self, text, tag=True, parse=True, entity=True):
         """Apply the pipeline to some text.  The text can span multiple sentences,
