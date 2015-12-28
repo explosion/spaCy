@@ -24,6 +24,8 @@ from .util import get_package
 
 
 class Language(object):
+    lang = None
+
     @staticmethod
     def lower(string):
         return string.lower()
@@ -156,7 +158,6 @@ class Language(object):
 
     def __init__(self,
         data_dir=None,
-        lang=None,
         model=None,
         vocab=None,
         tokenizer=None,
@@ -209,26 +210,33 @@ class Language(object):
             warn("load_vectors is deprecated", DeprecationWarning)
         if vocab in (None, True):
             self.vocab = self.default_vocab(package)
+        self.vocab = vocab
         if tokenizer in (None, True):
             self.tokenizer = Tokenizer.from_package(package, self.vocab)
+        self.tokenizer = tokenizer
         if tagger in (None, True):
-            self.tagger = Tagger.from_package(package, self.vocab)
+            tagger = Tagger.from_package(package, self.vocab)
+        self.tagger = tagger
         if entity in (None, True):
-            self.entity = self.default_entity(package, self.vocab)
+            entity = self.default_entity(package, self.vocab)
+        self.entity = entity
         if parser in (None, True):
-            self.parser = self.default_parser(package, self.vocab)
+            parser = self.default_parser(package, self.vocab)
+        self.parser = parser
         if matcher in (None, True):
-            self.matcher = Matcher.from_package(package, self.vocab)
+            matcher = Matcher.from_package(package, self.vocab)
+        self.matcher = matcher
 
     def __reduce__(self):
         args = (
             None, # data_dir
+            None, # model
             self.vocab,
             self.tokenizer,
             self.tagger,
             self.parser,
             self.entity,
-            self.matcher,
+            self.matcher
         )
         return (self.__class__, args, None, None)
 
