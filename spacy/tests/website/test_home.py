@@ -10,9 +10,8 @@ def token(doc):
 
 
 def test_load_resources_and_process_text():
-    from spacy.en import English, LOCAL_DATA_DIR
-    data_dir = os.environ.get('SPACY_DATA', LOCAL_DATA_DIR)
-    nlp = English(data_dir=data_dir)
+    from spacy.en import English
+    nlp = English()
     doc = nlp('Hello, world. Here are two sentences.')
 
 
@@ -154,9 +153,9 @@ def test_efficient_binary_serialization(doc):
     from spacy.tokens.doc import Doc
 
     byte_string = doc.to_bytes()
-    open('/tmp/moby_dick.bin', 'wb').write(byte_string)
+    open('moby_dick.bin', 'wb').write(byte_string)
 
     nlp = spacy.en.English()
-    for byte_string in Doc.read_bytes(open('/tmp/moby_dick.bin', 'rb')):
+    for byte_string in Doc.read_bytes(open('moby_dick.bin', 'rb')):
        doc = Doc(nlp.vocab)
        doc.from_bytes(byte_string)

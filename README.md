@@ -45,9 +45,6 @@ Supports
 * OSX
 * Linux 
 * Cygwin
-
-Want to support:
-
 * Visual Studio
 
 Difficult to support:

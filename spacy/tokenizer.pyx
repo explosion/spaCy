@@ -41,8 +41,8 @@ cdef class Tokenizer:
         return (self.__class__, args, None, None)
 
     @classmethod
-    def from_dir(cls, Vocab vocab, data_dir):
-        rules, prefix_re, suffix_re, infix_re = read_lang_data(data_dir)
+    def from_package(cls, package, Vocab vocab):
+        rules, prefix_re, suffix_re, infix_re = read_lang_data(package)
         prefix_re = re.compile(prefix_re)
         suffix_re = re.compile(suffix_re)
         infix_re = re.compile(infix_re)

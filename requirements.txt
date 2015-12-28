@@ -1,13 +1,13 @@
 cython
 cymem == 1.30
 pathlib
-preshed == 0.44
-thinc == 4.0
-murmurhash == 0.24
+preshed == 0.46.1
+thinc == 4.1.0
+murmurhash == 0.26
 text-unidecode
 numpy
 plac
 six
 ujson
 cloudpickle
-sputnik == 0.5.2
+sputnik == 0.6.4

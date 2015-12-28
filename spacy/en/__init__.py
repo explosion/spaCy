@@ -4,8 +4,6 @@ from os import path
 
 from ..language import Language
 
-LOCAL_DATA_DIR = path.join(path.dirname(__file__), 'data')
-
 
 # improved list from Stone, Denis, Kwantes (2010)
 STOPWORDS = """
@@ -35,9 +33,7 @@ your yours yourself yourselves
 STOPWORDS = set(w for w in STOPWORDS.split() if w)
 
 class English(Language):
-    @classmethod
-    def default_data_dir(cls):
-        return LOCAL_DATA_DIR
+    lang = 'en'
 
     @staticmethod
     def is_stop(string):

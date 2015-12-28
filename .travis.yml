@@ -1,14 +1,21 @@
 language: python
 
+sudo: required
+dist: precise
+group: edge
+
+python:
+   - "2.7"
+   - "3.4"
+
 os:
   - linux
 
-python:
-  - "2.7"
-  - "3.4"
-  - "3.5"
+env:
+  - PIP_DATE=2015-10-01 MODE=pip
+  - PIP_DATE=2015-10-01 MODE=setup-install
+  - PIP_DATE=2015-10-01 MODE=setup-develop
 
-# install dependencies
 install:
   - "pip install --upgrade setuptools"
   - "pip install cython fabric fabtools"
@@ -21,8 +28,11 @@ install:
   - "mv WordNet-3.0 wordnet"
   - "cd ../../"
   - "export PYTHONPATH=`pwd`"
-  - "python bin/init_model.py en lang_data/ corpora/ spacy/en/data"
+  - "python bin/init_model.py en lang_data/ corpora/ data"
+  - "cp package.json data"
+  - "sputnik build data en_default.sputnik"
+  - "sputnik install en_default.sputnik"
 
-# run tests
 script:
-  - "py.test spacy/ -x"
+  - python build.py $MODE;
+  - python build.py test

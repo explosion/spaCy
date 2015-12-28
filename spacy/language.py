@@ -20,9 +20,12 @@ from .syntax.ner import BiluoPushDown
 from .syntax.arc_eager import ArcEager
 
 from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD
+from .util import get_package
 
 
 class Language(object):
+    lang = None
+
     @staticmethod
     def lower(string):
         return string.lower()
@@ -100,7 +103,7 @@ class Language(object):
         return 0
 
     @classmethod
-    def default_lex_attrs(cls, data_dir=None):
+    def default_lex_attrs(cls):
         return {
             attrs.LOWER: cls.lower,
             attrs.NORM: cls.norm,
@@ -134,85 +137,108 @@ class Language(object):
         return {0: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True}}
 
     @classmethod
-    def default_data_dir(cls):
-        return path.join(path.dirname(__file__), 'data')
-
-    @classmethod
-    def default_vocab(cls, data_dir=None, get_lex_attr=None):
-        if data_dir is None:
-            data_dir = cls.default_data_dir()
+    def default_vocab(cls, package=None, get_lex_attr=None):
+        if package is None:
+            package = get_package()
         if get_lex_attr is None:
-            get_lex_attr = cls.default_lex_attrs(data_dir)
-        return Vocab.from_dir(
-                path.join(data_dir, 'vocab'),
-                get_lex_attr=get_lex_attr)
+            get_lex_attr = cls.default_lex_attrs()
+        return Vocab.from_package(package, get_lex_attr=get_lex_attr)
 
     @classmethod
-    def default_tokenizer(cls, vocab, data_dir):
-        if path.exists(data_dir):
-            return Tokenizer.from_dir(vocab, data_dir)
-        else:
-            return Tokenizer(vocab, {}, None, None, None)
-
-    @classmethod
-    def default_tagger(cls, vocab, data_dir):
-        if path.exists(data_dir):
-            return Tagger.from_dir(data_dir, vocab)
-        else:
-            return None
-
-    @classmethod
-    def default_parser(cls, vocab, data_dir):
-        if path.exists(data_dir):
+    def default_parser(cls, package, vocab):
+        data_dir = package.dir_path('deps', require=False)
+        if data_dir and path.exists(data_dir):
             return Parser.from_dir(data_dir, vocab.strings, ArcEager)
-        else:
-            return None
 
     @classmethod
-    def default_entity(cls, vocab, data_dir):
-        if path.exists(data_dir):
+    def default_entity(cls, package, vocab):
+        data_dir = package.dir_path('ner', require=False)
+        if data_dir and path.exists(data_dir):
             return Parser.from_dir(data_dir, vocab.strings, BiluoPushDown)
-        else:
-            return None
 
-    @classmethod
-    def default_matcher(cls, vocab, data_dir):
-        if path.exists(data_dir):
-            return Matcher.from_dir(data_dir, vocab)
-        else:
-            return None
+    def __init__(self,
+        data_dir=None,
+        model=None,
+        vocab=None,
+        tokenizer=None,
+        tagger=None,
+        parser=None,
+        entity=None,
+        matcher=None,
+        serializer=None,
+        load_vectors=True):
+        """
+           a model can be specified:
 
-    def __init__(self, data_dir=None, vocab=None, tokenizer=None, tagger=None,
-                 parser=None, entity=None, matcher=None, serializer=None,
-                 load_vectors=True):
+           1) by a path to the model directory (DEPRECATED)
+             - Language(data_dir='path/to/data')
+
+           2) by a language identifier (and optionally a package root dir)
+             - Language(lang='en')
+             - Language(lang='en', data_dir='spacy/data')
+
+           3) by a model name/version (and optionally a package root dir)
+             - Language(model='en_default')
+             - Language(model='en_default ==1.0.0')
+             - Language(model='en_default <1.1.0, data_dir='spacy/data')
+        """
+        # support non-package data dirs
+        if data_dir and path.exists(path.join(data_dir, 'vocab')):
+            class Package(object):
+                def __init__(self, root):
+                    self.root = root
+
+                def has_file(self, *path_parts):
+                    return path.exists(path.join(self.root, *path_parts))
+
+                def file_path(self, *path_parts, **kwargs):
+                    return path.join(self.root, *path_parts)
+
+                def dir_path(self, *path_parts, **kwargs):
+                    return path.join(self.root, *path_parts)
+
+                def load_utf8(self, func, *path_parts, **kwargs):
+                    with io.open(self.file_path(path.join(*path_parts)),
+                                 mode='r', encoding='utf8') as f:
+                        return func(f)
+
+            warn("using non-package data_dir", DeprecationWarning)
+            package = Package(data_dir)
+        else:
+            package = get_package(name=model, data_path=data_dir)
         if load_vectors is not True:
             warn("load_vectors is deprecated", DeprecationWarning)
-        if data_dir in (None, True):
-            data_dir = self.default_data_dir()
         if vocab in (None, True):
-            vocab = self.default_vocab(data_dir)
-        if tokenizer in (None, True):
-            tokenizer = self.default_tokenizer(vocab, data_dir=path.join(data_dir, 'tokenizer'))
-        if tagger in (None, True):
-            tagger = self.default_tagger(vocab, data_dir=path.join(data_dir, 'pos'))
-        if entity in (None, True):
-            entity = self.default_entity(vocab, data_dir=path.join(data_dir, 'ner'))
-        if parser in (None, True):
-            parser = self.default_parser(vocab, data_dir=path.join(data_dir, 'deps'))
-        if matcher in (None, True):
-            matcher = self.default_matcher(vocab, data_dir=data_dir)
+            self.vocab = self.default_vocab(package)
         self.vocab = vocab
+        if tokenizer in (None, True):
+            self.tokenizer = Tokenizer.from_package(package, self.vocab)
         self.tokenizer = tokenizer
+        if tagger in (None, True):
+            tagger = Tagger.from_package(package, self.vocab)
         self.tagger = tagger
-        self.parser = parser
+        if entity in (None, True):
+            entity = self.default_entity(package, self.vocab)
         self.entity = entity
+        if parser in (None, True):
+            parser = self.default_parser(package, self.vocab)
+        self.parser = parser
+        if matcher in (None, True):
+            matcher = Matcher.from_package(package, self.vocab)
         self.matcher = matcher
 
     def __reduce__(self):
-        return (self.__class__,
-                  (None, self.vocab, self.tokenizer, self.tagger, self.parser,
-                   self.entity, self.matcher, None),
-                None, None)
+        args = (
+            None, # data_dir
+            None, # model
+            self.vocab,
+            self.tokenizer,
+            self.tagger,
+            self.parser,
+            self.entity,
+            self.matcher
+        )
+        return (self.__class__, args, None, None)
 
     def __call__(self, text, tag=True, parse=True, entity=True):
         """Apply the pipeline to some text.  The text can span multiple sentences,
