@@ -209,10 +209,10 @@ class Language(object):
         if load_vectors is not True:
             warn("load_vectors is deprecated", DeprecationWarning)
         if vocab in (None, True):
-            self.vocab = self.default_vocab(package)
+            vocab = self.default_vocab(package)
         self.vocab = vocab
         if tokenizer in (None, True):
-            self.tokenizer = Tokenizer.from_package(package, self.vocab)
+            tokenizer = Tokenizer.from_package(package, self.vocab)
         self.tokenizer = tokenizer
         if tagger in (None, True):
             tagger = Tagger.from_package(package, self.vocab)
