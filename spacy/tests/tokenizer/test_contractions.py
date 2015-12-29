@@ -48,3 +48,10 @@ def test_punct(en_tokenizer):
     assert len(tokens) == 2
     tokens = en_tokenizer("``We've")
     assert len(tokens) == 3
+
+
+def test_therell(en_tokenizer):
+    tokens = en_tokenizer("there'll")
+    assert len(tokens) == 2
+    assert tokens[0].text == "there"
+    assert tokens[1].text == "there"
