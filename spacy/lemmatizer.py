@@ -8,7 +8,7 @@ except ImportError:
     import json
 
 from .parts_of_speech import NOUN, VERB, ADJ, PUNCT
-from .util import MockPackage as Package
+from .util import Package
 
 
 class Lemmatizer(object):
