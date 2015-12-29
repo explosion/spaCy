@@ -21,7 +21,7 @@ from .tokens.doc cimport Doc
 from .vocab cimport Vocab
 
 from .attrs import FLAG61 as U_ENT
-from .util import MockPackage
+from .util import Package
 
 from .attrs import FLAG60 as B2_ENT
 from .attrs import FLAG59 as B3_ENT
@@ -171,7 +171,7 @@ cdef class Matcher:
 
     @classmethod
     def load(cls, pkg_or_str_or_file, Vocab vocab):
-        package = MockPackage.create_or_return(pkg_or_str_or_file)
+        package = Package.create_or_return(pkg_or_str_or_file)
         patterns = package.load_utf8(json.load,
             'vocab', 'gazetteer.json',
             default={})  # TODO: really optional?

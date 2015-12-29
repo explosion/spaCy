@@ -17,7 +17,7 @@ cimport cython
 from . import util
 from .tokens.doc cimport Doc
 from .util import read_lang_data
-from .util import MockPackage as Package
+from .util import Package
 
 
 cdef class Tokenizer:

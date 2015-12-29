@@ -20,7 +20,7 @@ from .syntax.ner import BiluoPushDown
 from .syntax.arc_eager import ArcEager
 
 from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD
-from .util import get_package, MockPackage
+from .util import get_package, Package
 
 
 class Language(object):
@@ -182,7 +182,7 @@ class Language(object):
              - Language(model='en_default ==1.0.0')
              - Language(model='en_default <1.1.0, data_dir='spacy/data')
         """
-        package = MockPackage(data_dir)
+        package = Package(data_dir)
         if load_vectors is not True:
             warn("load_vectors is deprecated", DeprecationWarning)
         if vocab in (None, True):
