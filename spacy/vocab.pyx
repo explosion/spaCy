@@ -19,6 +19,7 @@ from .orth cimport word_shape
 from .typedefs cimport attr_t
 from .cfile cimport CFile
 from .lemmatizer import Lemmatizer
+from .util import MockPackage
 
 from . import attrs
 from . import symbols
@@ -47,11 +48,12 @@ cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
     @classmethod
-    def from_package(cls, package, get_lex_attr=None):
+    def load(cls, pkg_or_str_or_file, get_lex_attr=None):
+        package = MockPackage.create_or_return(pkg_or_str_or_file)
         tag_map = package.load_utf8(json.load,
             'vocab', 'tag_map.json')
 
-        lemmatizer = Lemmatizer.from_package(package)
+        lemmatizer = Lemmatizer.load(package)
 
         serializer_freqs = package.load_utf8(json.load,
             'vocab', 'serializer.json',
@@ -67,7 +69,6 @@ cdef class Vocab:
         if package.has_file('vocab', 'vec.bin'):  # TODO: really optional?
             self.vectors_length = self.load_vectors_from_bin_loc(
                 package.file_path('vocab', 'vec.bin'))
-
         return self
 
     def __init__(self, get_lex_attr=None, tag_map=None, lemmatizer=None, serializer_freqs=None):
