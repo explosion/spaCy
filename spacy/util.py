@@ -63,19 +63,8 @@ class Package(object):
             file_.close()
 
 
-
 def get_package(name=None, data_path=None):
-    return MockPackage(data_path)
-    #if data_path is None:
-    #    if os.environ.get('SPACY_DATA'):
-    #        data_path = os.environ.get('SPACY_DATA')
-    #    else:
-    #        data_path = os.path.abspath(
-    #            os.path.join(os.path.dirname(__file__), 'data'))
-
-    #sputnik = Sputnik('spacy', '0.100.0')  # TODO: retrieve version
-    #pool = sputnik.pool(data_path)
-    #return pool.get(name or 'en_default')
+    return Package(data_path)
 
 
 def normalize_slice(length, start, stop, step=None):
