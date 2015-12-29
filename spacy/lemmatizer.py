@@ -8,25 +8,22 @@ except ImportError:
     import json
 
 from .parts_of_speech import NOUN, VERB, ADJ, PUNCT
+from .util import MockPackage
 
 
 class Lemmatizer(object):
     @classmethod
-    def from_package(cls, package):
+    def load(cls, pkg_or_str_or_file):
+        pkg = MockPackage.create_or_return(pkg_or_str_or_file)
         index = {}
         exc = {}
         for pos in ['adj', 'noun', 'verb']:
-            index[pos] = package.load_utf8(read_index,
-                'wordnet', 'index.%s' % pos,
-                default=set())  # TODO: really optional?
-            exc[pos] = package.load_utf8(read_exc,
-                'wordnet', '%s.exc' % pos,
-                default={})  # TODO: really optional?
-
-        rules = package.load_utf8(json.load,
-            'vocab', 'lemma_rules.json',
-            default={})  # TODO: really optional?
-
+            with pkg.open(('wordnet', 'index.%s' % pos), default=None) as file_:
+                index[pos] = read_index(file_) if file_ is not None else set()
+            with pkg.open(('wordnet', '%s.exc' % pos), default=None) as file_:
+                exc[pos] = read_exc(file_) if file_ is not None else {}
+        with pkg.open(('vocab', 'lemma_rules.json'), default=None) as file_:
+            rules = json.load(file_) if file_ is not None else {}
         return cls(index, exc, rules)
 
     def __init__(self, index, exceptions, rules):
