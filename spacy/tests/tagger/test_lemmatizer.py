@@ -1,22 +1,27 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import os
 import io
 import pickle
 
 from spacy.lemmatizer import Lemmatizer, read_index, read_exc
-from spacy.util import get_package
+from spacy.util import get_package, MockPackage
 
 import pytest
 
 
 @pytest.fixture
 def package():
-    return get_package()
+    if os.environ.get('SPACY_DATA'):
+        data_path = os.environ.get('SPACY_DATA')
+    else:
+        data_path = None
+    return get_package(data_path=data_path)
 
 
 @pytest.fixture
 def lemmatizer(package):
-    return Lemmatizer.from_package(package)
+    return Lemmatizer.load(package)
 
 
 def test_read_index(package):

@@ -6,7 +6,11 @@ import os
 @pytest.fixture(scope='session')
 def nlp():
     from spacy.en import English
-    return English()
+    if os.environ.get('SPACY_DATA'):
+        data_path = os.environ.get('SPACY_DATA')
+    else:
+        data_path = None
+    return English(data_dir=data_path)
 
 
 @pytest.fixture()

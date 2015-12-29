@@ -4,6 +4,7 @@ import json
 import re
 import os.path
 from contextlib import contextmanager
+import types
 
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
@@ -12,10 +13,10 @@ def local_path(subdir):
     return os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
 
 
-class MockPackage(object):
+class Package(object):
     @classmethod
     def create_or_return(cls, me_or_arg):
-        return me_or_arg if isinstance(me_or_arg, cls) else me_or_arg
+        return me_or_arg if isinstance(me_or_arg, cls) else cls(me_or_arg)
 
     def __init__(self, data_path=None):
         if data_path is None:
@@ -46,15 +47,20 @@ class MockPackage(object):
     
     @contextmanager
     def open(self, path_parts, default=IOError):
-        if isinstance(default, Exception):
-            raise default
-
-        # Enter
-        file_ = io.open(self.file_path(os.path.join(*path_parts)),
-                        mode='r', encoding='utf8')
-        yield file_
-        # Exit
-        file_.close()
+        if not self.has_file(*path_parts):
+            if isinstance(default, types.TypeType) and issubclass(default, Exception):
+                raise default(self.file_path(*path_parts))
+            elif isinstance(default, Exception):
+                raise default
+            else:
+                yield default
+        else:
+            # Enter
+            file_ = io.open(self.file_path(os.path.join(*path_parts)),
+                            mode='r', encoding='utf8')
+            yield file_
+            # Exit
+            file_.close()
 
 
 

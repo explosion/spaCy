@@ -10,8 +10,14 @@ def token(doc):
 
 
 def test_load_resources_and_process_text():
+    if os.environ.get('SPACY_DATA'):
+        data_path = os.environ.get('SPACY_DATA')
+    else:
+        data_path = None
+    print("Load EN from %s" % data_path)
+ 
     from spacy.en import English
-    nlp = English()
+    nlp = English(data_dir=data_path)
     doc = nlp('Hello, world. Here are two sentences.')
 
 

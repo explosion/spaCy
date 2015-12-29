@@ -1,11 +1,17 @@
 from spacy.en import English
 
 import pytest
+import os
 
 
 @pytest.fixture(scope="session")
 def EN():
-    return English()
+    if os.environ.get('SPACY_DATA'):
+        data_path = os.environ.get('SPACY_DATA')
+    else:
+        data_path = None
+    print("Load EN from %s" % data_path)
+    return English(data_dir=data_path)
 
 
 def pytest_addoption(parser):

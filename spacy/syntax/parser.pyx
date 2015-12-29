@@ -88,6 +88,13 @@ cdef class Parser:
             model.load(path.join(model_dir, 'model'))
         return cls(strings, moves, model)
 
+    @classmethod
+    def load(cls, pkg_or_str_or_file, vocab):
+        # TODO
+        raise NotImplementedError(
+                "This should be here, but isn't yet =/. Use Parser.from_dir")
+
+
     def __reduce__(self):
         return (Parser, (self.moves.strings, self.moves, self.model), None, None)
 
