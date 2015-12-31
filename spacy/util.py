@@ -9,8 +9,8 @@ import types
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 
-def local_path(subdir):
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), 'data'))
+def local_path(*dirs):
+    return os.path.abspath(os.path.join(os.path.dirname(__file__), *dirs))
 
 
 class Package(object):
@@ -18,10 +18,10 @@ class Package(object):
     def create_or_return(cls, me_or_arg):
         return me_or_arg if isinstance(me_or_arg, cls) else cls(me_or_arg)
 
-    def __init__(self, data_path=None):
+    def __init__(self, data_path=None, model='en_default-1.0.3'):
         if data_path is None:
-            data_path = local_path('data')
-        self.name = None
+            data_path = local_path('data', model)
+        self.model = model
         self.data_path = data_path
         self._root = self.data_path
 
@@ -37,18 +37,22 @@ class Package(object):
     def dir_path(self, *path_parts, **kwargs):
         return os.path.join(self._root, *path_parts)
 
-    def load_utf8(self, func, *path_parts, **kwargs):
-        if kwargs.get('require', True):
-            with io.open(self.file_path(os.path.join(*path_parts)),
-                        mode='r', encoding='utf8') as f:
-                return func(f)
-        else:
-            return None
+    def load_json(self, path_parts, default=None):
+        if not self.has_file(*path_parts):
+            if _is_error_class(default):
+                raise default(self.file_path(*path_parts))
+            elif isinstance(default, Exception):
+                raise default
+            else:
+                return default
+        with io.open(self.file_path(os.path.join(*path_parts)),
+                      mode='r', encoding='utf8') as file_:
+            return json.load(file_)
     
     @contextmanager
-    def open(self, path_parts, default=IOError):
+    def open(self, path_parts, mode='r', encoding='utf8', default=IOError):
         if not self.has_file(*path_parts):
-            if isinstance(default, types.TypeType) and issubclass(default, Exception):
+            if _is_error_class(default):
                 raise default(self.file_path(*path_parts))
             elif isinstance(default, Exception):
                 raise default
@@ -57,10 +61,14 @@ class Package(object):
         else:
             # Enter
             file_ = io.open(self.file_path(os.path.join(*path_parts)),
-                            mode='r', encoding='utf8')
+                            mode=mode, encoding='utf8')
             yield file_
             # Exit
             file_.close()
+
+
+def _is_error_class(e):
+    return isinstance(e, types.TypeType) and issubclass(e, Exception)
 
 
 def get_package(name=None, data_path=None):
@@ -92,10 +100,13 @@ def utf8open(loc, mode='r'):
 
 
 def read_lang_data(package):
-    tokenization = package.load_utf8(json.load, 'tokenizer', 'specials.json')
-    prefix = package.load_utf8(read_prefix, 'tokenizer', 'prefix.txt')
-    suffix = package.load_utf8(read_suffix, 'tokenizer', 'suffix.txt')
-    infix = package.load_utf8(read_infix, 'tokenizer', 'infix.txt')
+    tokenization = package.load_json(('tokenizer', 'specials.json'))
+    with package.open(('tokenizer', 'prefix.txt'), default=None) as file_:
+        prefix = read_prefix(file_) if file_ is not None else None
+    with package.open(('tokenizer', 'suffix.txt'), default=None) as file_:
+        suffix = read_suffix(file_) if file_ is not None else None
+    with package.open(('tokenizer', 'infix.txt'), default=None) as file_:
+        infix = read_infix(file_) if file_ is not None else None
     return tokenization, prefix, suffix, infix
 
 

@@ -50,13 +50,11 @@ cdef class Vocab:
     @classmethod
     def load(cls, pkg_or_str_or_file, get_lex_attr=None):
         package = Package.create_or_return(pkg_or_str_or_file)
-        with package.open(('vocab', 'tag_map.json'), default=None) as file_:
-            tag_map = json.load(file_) if file_ is not None else {}
+        tag_map = package.load_json(('vocab', 'tag_map.json'), default={})
 
         lemmatizer = Lemmatizer.load(package)
 
-        with package.open(('vocab', 'serializer.json'), default=None) as file_:
-            serializer_freqs = json.load(file_) if file_ is not None else {}
+        serializer_freqs = package.load_json(('vocab', 'serializer.json'), default={})
 
         cdef Vocab self = cls(get_lex_attr=get_lex_attr, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)

@@ -186,7 +186,7 @@ class Language(object):
         if load_vectors is not True:
             warn("load_vectors is deprecated", DeprecationWarning)
         if vocab in (None, True):
-            vocab = self.default_vocab(package)
+            vocab = Vocab.load(package, get_lex_attr=self.default_lex_attrs())
         self.vocab = vocab
         if tokenizer in (None, True):
             tokenizer = Tokenizer.load(package, self.vocab)

@@ -22,8 +22,7 @@ class Lemmatizer(object):
                 index[pos] = read_index(file_) if file_ is not None else set()
             with pkg.open(('wordnet', '%s.exc' % pos), default=None) as file_:
                 exc[pos] = read_exc(file_) if file_ is not None else {}
-        with pkg.open(('vocab', 'lemma_rules.json'), default=None) as file_:
-            rules = json.load(file_) if file_ is not None else {}
+        rules = pkg.load_json(('vocab', 'lemma_rules.json'), default={})
         return cls(index, exc, rules)
 
     def __init__(self, index, exceptions, rules):

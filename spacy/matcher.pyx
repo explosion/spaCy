@@ -172,9 +172,7 @@ cdef class Matcher:
     @classmethod
     def load(cls, pkg_or_str_or_file, Vocab vocab):
         package = Package.create_or_return(pkg_or_str_or_file)
-
-        with package.open(('vocab', 'serializer.json'), default=None) as file_:
-            patterns = json.load(file_) if file_ is not None else {}
+        patterns = package.load_json(('vocab', 'gazetteer.json'))
         return cls(vocab, patterns)
 
     def __init__(self, vocab, patterns):
