@@ -90,7 +90,7 @@ starting_tokens = {
                 "she": {"'d": ["contrLower", "contrUpper"], "'d've": [], "'ll": ["contrLower", "contrUpper"], "'s": []},
                 "should": {"'ve": [], "n't": [], "n't've": []},
                 "that": {"'s": []},
-                "there": {"'d": [], "'d've": [], "'s": ["contrLower", "contrUpper"]},
+                "there": {"'d": [], "'d've": [], "'s": ["contrLower", "contrUpper"], "'ll": []},
                 "they": {"'d": [], "'d've": [], "'ll": [], "'re": [], "'ve": []},
                 "was": {"n't": []},
                 "we": {"'d": ["contrLower", "contrUpper"], "'d've": [], "'ll": ["contrLower", "contrUpper"], "'re": ["contrLower", "contrUpper"], "'ve": []},
