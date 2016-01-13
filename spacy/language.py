@@ -20,7 +20,7 @@ from .syntax.ner import BiluoPushDown
 from .syntax.arc_eager import ArcEager
 
 from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD
-from .util import get_package, Package
+from .util import get_package
 
 
 class Language(object):
@@ -146,13 +146,13 @@ class Language(object):
 
     @classmethod
     def default_parser(cls, package, vocab):
-        data_dir = package.dir_path('deps', require=False)
+        data_dir = package.dir_path('deps')
         if data_dir and path.exists(data_dir):
             return Parser.from_dir(data_dir, vocab.strings, ArcEager)
 
     @classmethod
     def default_entity(cls, package, vocab):
-        data_dir = package.dir_path('ner', require=False)
+        data_dir = package.dir_path('ner')
         if data_dir and path.exists(data_dir):
             return Parser.from_dir(data_dir, vocab.strings, BiluoPushDown)
 
@@ -182,7 +182,7 @@ class Language(object):
              - Language(model='en_default ==1.0.0')
              - Language(model='en_default <1.1.0, data_dir='spacy/data')
         """
-        package = Package(data_dir)
+        package = get_package(model, data_path=data_dir)
         if load_vectors is not True:
             warn("load_vectors is deprecated", DeprecationWarning)
         if vocab in (None, True):

@@ -17,7 +17,7 @@ cimport cython
 from . import util
 from .tokens.doc cimport Doc
 from .util import read_lang_data
-from .util import Package
+from .util import get_package
 
 
 cdef class Tokenizer:
@@ -43,7 +43,7 @@ cdef class Tokenizer:
 
     @classmethod
     def load(cls, pkg_or_str_or_file, Vocab vocab):
-        pkg = Package.create_or_return(pkg_or_str_or_file)
+        pkg = get_package(pkg_or_str_or_file)
         rules, prefix_re, suffix_re, infix_re = read_lang_data(pkg)
         prefix_re = re.compile(prefix_re)
         suffix_re = re.compile(suffix_re)

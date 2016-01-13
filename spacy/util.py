@@ -3,76 +3,27 @@ import io
 import json
 import re
 import os.path
-from contextlib import contextmanager
-import types
 
+import sputnik
+from sputnik.dir_package import DirPackage
+from sputnik.package_stub import PackageStub
+
+from . import about
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 
-def local_path(*dirs):
-    return os.path.abspath(os.path.join(os.path.dirname(__file__), *dirs))
+def get_package(value=None, data_path=None):
+    if data_path is None:
+        if isinstance(value, PackageStub):
+            return value
+        elif value and os.path.isdir(value):
+            return DirPackage(value)
 
+    elif value is None and data_path is not None:
+        return DirPackage(data_path)
 
-class Package(object):
-    @classmethod
-    def create_or_return(cls, me_or_arg):
-        return me_or_arg if isinstance(me_or_arg, cls) else cls(me_or_arg)
-
-    def __init__(self, data_path=None, model='en_default-1.0.3'):
-        if data_path is None:
-            data_path = local_path('data', model)
-        self.model = model
-        self.data_path = data_path
-        self._root = self.data_path
-
-    def get(self, key):
-        pass
-
-    def has_file(self, *path_parts):
-        return os.path.exists(os.path.join(self._root, *path_parts))
-
-    def file_path(self, *path_parts, **kwargs):
-        return os.path.join(self._root, *path_parts)
-
-    def dir_path(self, *path_parts, **kwargs):
-        return os.path.join(self._root, *path_parts)
-
-    def load_json(self, path_parts, default=None):
-        if not self.has_file(*path_parts):
-            if _is_error_class(default):
-                raise default(self.file_path(*path_parts))
-            elif isinstance(default, Exception):
-                raise default
-            else:
-                return default
-        with io.open(self.file_path(os.path.join(*path_parts)),
-                      mode='r', encoding='utf8') as file_:
-            return json.load(file_)
-    
-    @contextmanager
-    def open(self, path_parts, mode='r', encoding='utf8', default=IOError):
-        if not self.has_file(*path_parts):
-            if _is_error_class(default):
-                raise default(self.file_path(*path_parts))
-            elif isinstance(default, Exception):
-                raise default
-            else:
-                yield default
-        else:
-            # Enter
-            file_ = io.open(self.file_path(os.path.join(*path_parts)),
-                            mode=mode, encoding='utf8')
-            yield file_
-            # Exit
-            file_.close()
-
-
-def _is_error_class(e):
-    return isinstance(e, types.TypeType) and issubclass(e, Exception)
-
-
-def get_package(name=None, data_path=None):
-    return Package(data_path)
+    return sputnik.package('spacy', about.short_version,
+                           value or 'en_default==1.0.4', data_path=data_path)
 
 
 def normalize_slice(length, start, stop, step=None):

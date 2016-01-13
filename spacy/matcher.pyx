@@ -21,7 +21,7 @@ from .tokens.doc cimport Doc
 from .vocab cimport Vocab
 
 from .attrs import FLAG61 as U_ENT
-from .util import Package
+from .util import get_package
 
 from .attrs import FLAG60 as B2_ENT
 from .attrs import FLAG59 as B3_ENT
@@ -171,7 +171,7 @@ cdef class Matcher:
 
     @classmethod
     def load(cls, pkg_or_str_or_file, Vocab vocab):
-        package = Package.create_or_return(pkg_or_str_or_file)
+        package = get_package(pkg_or_str_or_file)
         patterns = package.load_json(('vocab', 'gazetteer.json'))
         return cls(vocab, patterns)
 

@@ -8,13 +8,13 @@ except ImportError:
     import json
 
 from .parts_of_speech import NOUN, VERB, ADJ, PUNCT
-from .util import Package
+from .util import get_package
 
 
 class Lemmatizer(object):
     @classmethod
     def load(cls, pkg_or_str_or_file):
-        pkg = Package.create_or_return(pkg_or_str_or_file)
+        pkg = get_package(pkg_or_str_or_file)
         index = {}
         exc = {}
         for pos in ['adj', 'noun', 'verb']:

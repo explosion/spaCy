@@ -16,7 +16,7 @@ from .parts_of_speech cimport VERB, X, PUNCT, EOL, SPACE
 
 from .attrs cimport *
 
-from .util import Package
+from .util import get_package
 
  
 cpdef enum:
@@ -149,7 +149,7 @@ cdef class Tagger:
 
     @classmethod
     def load(cls, pkg_or_str_or_file, vocab):
-        pkg = Package.create_or_return(pkg_or_str_or_file)
+        pkg = get_package(pkg_or_str_or_file)
         # TODO: templates.json deprecated? not present in latest package
         templates = cls.default_templates()
         # templates = package.load_utf8(json.load,
