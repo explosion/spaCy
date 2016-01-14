@@ -7,6 +7,7 @@ import os.path
 import sputnik
 from sputnik.dir_package import DirPackage
 from sputnik.package_stub import PackageStub
+from sputnik.package_list import PackageNotFoundException, CompatiblePackageNotFoundException
 
 from . import about
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
@@ -22,8 +23,19 @@ def get_package(value=None, data_path=None):
     elif value is None and data_path is not None:
         return DirPackage(data_path)
 
-    return sputnik.package('spacy', about.short_version,
-                           value or 'en_default==1.0.4', data_path=data_path)
+    try:
+        return sputnik.package('spacy', about.short_version,
+                               value or 'en_default==1.0.4',
+                               data_path=data_path)
+
+    except PackageNotFoundException as e:
+        raise RuntimeError("Model not installed. Please run 'python -m "
+                           "spacy.en.download' to install latest compatible "
+                           "model.")
+    except CompatiblePackageNotFoundException as e:
+        raise RuntimeError("Installed model is not compatible with spaCy "
+                           "version. Please run 'python -m spacy.en.download "
+                           "--force' to install latest compatible model.")
 
 
 def normalize_slice(length, start, stop, step=None):
