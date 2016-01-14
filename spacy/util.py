@@ -34,7 +34,7 @@ def get_package(value=None, data_path=None):
                            "model.")
     except CompatiblePackageNotFoundException as e:
         raise RuntimeError("Installed model is not compatible with spaCy "
-                           "version. Please run 'python -m spacy.en.download "
+                           "version. Please run 'python -m spacy.en.download' "
                            "--force' to install latest compatible model.")
 
 
