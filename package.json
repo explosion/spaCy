@@ -1,17 +1,14 @@
 {
-    "name": "en_default",
-    "version": "0.100.0",
-    "description": "english default model",
+    "name": "en_test",
+    "version": "1.0.0",
+    "description": "english test model",
     "license": "public domain",
     "include": [
-        "deps/*",
-        "ner/*",
-        "pos/*",
-        "tokenizer/*",
-        "vocab/*",
-        "wordnet/*"
-    ],
-    "compatibility": {
-        "spacy": "==0.100.0"
-    }
+        ["deps", "*"],
+        ["ner", "*"],
+        ["pos", "*"],
+        ["tokenizer", "*"],
+        ["vocab", "*"],
+        ["wordnet", "*"]
+    ]
 }

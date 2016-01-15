@@ -3,7 +3,9 @@ import os
 import shutil
 
 import plac
-from sputnik import Sputnik
+import sputnik
+
+from .. import about
 
 
 def migrate(path):
@@ -35,23 +37,17 @@ def link(package, path):
     force=("Force overwrite", "flag", "f", bool),
 )
 def main(data_size='all', force=False):
-    # TODO read version from the same source as the setup
-    sputnik = Sputnik('spacy', '0.100.0', console=sys.stdout)
-
     path = os.path.dirname(os.path.abspath(__file__))
 
     data_path = os.path.abspath(os.path.join(path, '..', 'data'))
     if not os.path.isdir(data_path):
         os.mkdir(data_path)
 
-    command = sputnik.command(
-        data_path=data_path,
-        repository_url='https://index.spacy.io')
-
     if force:
-        command.purge()
+        sputnik.purge('spacy', about.short_version, data_path=data_path)
 
-    package = command.install('en_default')
+    package = sputnik.install('spacy', about.short_version, 'en_default==1.0.4',
+                              data_path=data_path)
 
     # FIXME clean up old-style packages
     migrate(path)

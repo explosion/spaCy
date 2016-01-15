@@ -5,7 +5,7 @@ import io
 import pickle
 
 from spacy.lemmatizer import Lemmatizer, read_index, read_exc
-from spacy.util import get_package, Package
+from spacy.util import get_package
 
 import pytest
 

@@ -19,7 +19,7 @@ from .orth cimport word_shape
 from .typedefs cimport attr_t
 from .cfile cimport CFile
 from .lemmatizer import Lemmatizer
-from .util import Package
+from .util import get_package
 
 from . import attrs
 from . import symbols
@@ -49,7 +49,7 @@ cdef class Vocab:
     '''
     @classmethod
     def load(cls, pkg_or_str_or_file, get_lex_attr=None):
-        package = Package.create_or_return(pkg_or_str_or_file)
+        package = get_package(pkg_or_str_or_file)
         tag_map = package.load_json(('vocab', 'tag_map.json'), default={})
 
         lemmatizer = Lemmatizer.load(package)
