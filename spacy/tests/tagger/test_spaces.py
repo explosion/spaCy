@@ -25,3 +25,16 @@ def test_spaces(tagged):
     assert tagged[3].pos != SPACE
     assert tagged[4].pos == SPACE
 
+
+@pytest.mark.xfail
+@pytest.mark.models
+def test_return_char(EN):
+    string = ('hi Aaron,\r\n\r\nHow is your schedule today, I was wondering if '
+              'you had time for a phone\r\ncall this afternoon?\r\n\r\n\r\n')
+    tokens = EN(string)
+    for token in tokens:
+        if token.is_space:
+            assert token.pos == SPACE
+    assert tokens[3] == '\r\n\r\n'
+    assert tokens[3].is_space
+    assert tokens[3].pos == SPACE
