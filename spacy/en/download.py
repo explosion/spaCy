@@ -39,16 +39,15 @@ def link(package, path):
     force=("Force overwrite", "flag", "f", bool),
 )
 def main(data_size='all', force=False):
-    package_name = 'en_default==1.0.4'
     path = os.path.dirname(os.path.abspath(__file__))
 
     if force:
         sputnik.purge('spacy', about.short_version)
 
-    package = sputnik.install('spacy', about.short_version, package_name)
+    package = sputnik.install('spacy', about.short_version, about.default_model)
 
     try:
-        sputnik.package('spacy', about.short_version, package_name)
+        sputnik.package('spacy', about.short_version, about.default_model)
     except PackageNotFoundException, CompatiblePackageNotFoundException:
         print("Model failed to install. Please run 'python -m "
               "spacy.en.download --force'.", file=sys.stderr)

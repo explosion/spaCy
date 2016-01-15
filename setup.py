@@ -158,6 +158,7 @@ version = '%(version)s'
 full_version = '%(full_version)s'
 git_revision = '%(git_revision)s'
 release = %(isrelease)s
+default_model = 'en_default==1.0.4'
 if not release:
     version = full_version
 """

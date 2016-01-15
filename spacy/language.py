@@ -196,7 +196,7 @@ class Language(object):
             via = data_dir
 
         if via is None:
-            package = util.get_package_by_name('en_default==1.0.4')
+            package = util.get_package_by_name(about.default_model)
         else:
             package = util.get_package(via)
 
