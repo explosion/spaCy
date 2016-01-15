@@ -8,6 +8,9 @@ try:
 except ImportError:
     import json
 
+import sputnik
+from sputnik.dir_package import DirPackage
+
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .syntax.parser import Parser
@@ -19,8 +22,9 @@ from . import orth
 from .syntax.ner import BiluoPushDown
 from .syntax.arc_eager import ArcEager
 
+from . import about
+from . import util
 from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD
-from .util import get_package
 
 
 class Language(object):
@@ -137,9 +141,7 @@ class Language(object):
         return {0: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True}}
 
     @classmethod
-    def default_vocab(cls, package=None, get_lex_attr=None):
-        if package is None:
-            package = get_package()
+    def default_vocab(cls, package, get_lex_attr=None):
         if get_lex_attr is None:
             get_lex_attr = cls.default_lex_attrs()
         return Vocab.load(package, get_lex_attr=get_lex_attr)
@@ -157,8 +159,8 @@ class Language(object):
             return Parser.from_dir(data_dir, vocab.strings, BiluoPushDown)
 
     def __init__(self,
+        via=None,
         data_dir=None,
-        model=None,
         vocab=None,
         tokenizer=None,
         tagger=None,
@@ -170,19 +172,34 @@ class Language(object):
         """
            a model can be specified:
 
-           1) by a path to the model directory (DEPRECATED)
-             - Language(data_dir='path/to/data')
+           1) by calling a Language subclass
+             - spacy.en.English()
 
-           2) by a language identifier (and optionally a package root dir)
-             - Language(lang='en')
-             - Language(lang='en', data_dir='spacy/data')
+           2) by calling a Language subclass with via (previously: data_dir)
+             - spacy.en.English('my/model/root')
+             - spacy.en.English(via='my/model/root')
 
-           3) by a model name/version (and optionally a package root dir)
-             - Language(model='en_default')
-             - Language(model='en_default ==1.0.0')
-             - Language(model='en_default <1.1.0, data_dir='spacy/data')
+           3) by package name
+             - spacy.load('en_default')
+             - spacy.load('en_default==1.0.0')
+
+           4) by package name with a relocated package base
+             - spacy.load('en_default', via='/my/package/root')
+             - spacy.load('en_default==1.0.0', via='/my/package/root')
+
+           5) by package object
+             - spacy.en.English(package)
         """
-        package = get_package(model, data_path=data_dir)
+
+        if data_dir is not None and via is None:
+            warn("Use of data_dir is deprecated, use via instead.", DeprecationWarning)
+            via = data_dir
+
+        if via is None:
+            package = util.get_package_by_name('en_default==1.0.4')
+        else:
+            package = util.get_package(via)
+
         if load_vectors is not True:
             warn("load_vectors is deprecated", DeprecationWarning)
         if vocab in (None, True):

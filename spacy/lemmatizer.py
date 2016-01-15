@@ -13,8 +13,8 @@ from .util import get_package
 
 class Lemmatizer(object):
     @classmethod
-    def load(cls, pkg_or_str_or_file):
-        pkg = get_package(pkg_or_str_or_file)
+    def load(cls, via):
+        pkg = get_package(via)
         index = {}
         exc = {}
         for pos in ['adj', 'noun', 'verb']:

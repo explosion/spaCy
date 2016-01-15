@@ -1,3 +1,5 @@
+from __future__ import print_function
+
 import sys
 import os
 import shutil
@@ -37,20 +39,25 @@ def link(package, path):
     force=("Force overwrite", "flag", "f", bool),
 )
 def main(data_size='all', force=False):
+    package_name = 'en_default==1.0.4'
     path = os.path.dirname(os.path.abspath(__file__))
 
-    data_path = os.path.abspath(os.path.join(path, '..', 'data'))
-    if not os.path.isdir(data_path):
-        os.mkdir(data_path)
-
     if force:
-        sputnik.purge('spacy', about.short_version, data_path=data_path)
+        sputnik.purge('spacy', about.short_version)
 
-    package = sputnik.install('spacy', about.short_version, 'en_default==1.0.4',
-                              data_path=data_path)
+    package = sputnik.install('spacy', about.short_version, package_name)
+
+    try:
+        sputnik.package('spacy', about.short_version, package_name)
+    except PackageNotFoundException, CompatiblePackageNotFoundException:
+        print("Model failed to install. Please run 'python -m "
+              "spacy.en.download --force'.", file=sys.stderr)
+        sys.exit(1)
 
     # FIXME clean up old-style packages
     migrate(path)
+
+    print("Model successfully installed.", file=sys.stderr)
 
 
 if __name__ == '__main__':

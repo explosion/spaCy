@@ -48,8 +48,8 @@ cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
     @classmethod
-    def load(cls, pkg_or_str_or_file, get_lex_attr=None):
-        package = get_package(pkg_or_str_or_file)
+    def load(cls, via, get_lex_attr=None):
+        package = get_package(via)
         tag_map = package.load_json(('vocab', 'tag_map.json'), default={})
 
         lemmatizer = Lemmatizer.load(package)

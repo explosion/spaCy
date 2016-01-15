@@ -42,8 +42,8 @@ cdef class Tokenizer:
         return (self.__class__, args, None, None)
 
     @classmethod
-    def load(cls, pkg_or_str_or_file, Vocab vocab):
-        pkg = get_package(pkg_or_str_or_file)
+    def load(cls, via, Vocab vocab):
+        pkg = get_package(via)
         rules, prefix_re, suffix_re, infix_re = read_lang_data(pkg)
         prefix_re = re.compile(prefix_re)
         suffix_re = re.compile(suffix_re)

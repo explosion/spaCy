@@ -7,34 +7,29 @@ import os.path
 import sputnik
 from sputnik.dir_package import DirPackage
 from sputnik.package_stub import PackageStub
-from sputnik.package_list import PackageNotFoundException, CompatiblePackageNotFoundException
+from sputnik.package_list import (PackageNotFoundException,
+                                  CompatiblePackageNotFoundException)
 
 from . import about
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 
-def get_package(value=None, data_path=None):
-    if data_path is None:
-        if isinstance(value, PackageStub):
-            return value
-        elif value and os.path.isdir(value):
-            return DirPackage(value)
+def get_package(via=None):
+    if isinstance(via, PackageStub):
+        return via
+    return DirPackage(via)
 
-    elif value is None and data_path is not None:
-        return DirPackage(data_path)
 
+def get_package_by_name(name, via=None):
     try:
-        return sputnik.package('spacy', about.short_version,
-                               value or 'en_default==1.0.4',
-                               data_path=data_path)
-
+        return sputnik.package('spacy', about.short_version, name, data_path=via)
     except PackageNotFoundException as e:
         raise RuntimeError("Model not installed. Please run 'python -m "
                            "spacy.en.download' to install latest compatible "
                            "model.")
     except CompatiblePackageNotFoundException as e:
         raise RuntimeError("Installed model is not compatible with spaCy "
-                           "version. Please run 'python -m spacy.en.download' "
+                           "version. Please run 'python -m spacy.en.download "
                            "--force' to install latest compatible model.")
 
 

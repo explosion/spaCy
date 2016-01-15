@@ -260,6 +260,7 @@ def setup_package():
 
         setup(
             name='spacy',
+            zip_safe=False,
             packages=PACKAGES,
             package_data={'': ['*.pyx', '*.pxd']},
             description='Industrial-strength NLP',

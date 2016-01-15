@@ -148,8 +148,8 @@ cdef class Tagger:
         return cls(vocab, model)
 
     @classmethod
-    def load(cls, pkg_or_str_or_file, vocab):
-        pkg = get_package(pkg_or_str_or_file)
+    def load(cls, via, vocab):
+        pkg = get_package(via)
         # TODO: templates.json deprecated? not present in latest package
         templates = cls.default_templates()
         # templates = package.load_utf8(json.load,
