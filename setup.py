@@ -14,11 +14,12 @@ except ImportError:
     from distutils.core import Extension, setup
 
 
-MAJOR      = 0
-MINOR      = 100
-MICRO      = 0
-ISRELEASED = False
-VERSION    = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+MAJOR         = 0
+MINOR         = 100
+MICRO         = 0
+ISRELEASE     = False
+VERSION       = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
+DEFAULT_MODEL = 'en_default==1.0.4'
 
 
 PACKAGES = [
@@ -145,7 +146,7 @@ def get_version_info():
     else:
         GIT_REVISION = 'Unknown'
 
-    if not ISRELEASED:
+    if not ISRELEASE:
         FULLVERSION += '.dev0+' + GIT_REVISION[:7]
 
     return FULLVERSION, GIT_REVISION
@@ -158,7 +159,7 @@ version = '%(version)s'
 full_version = '%(full_version)s'
 git_revision = '%(git_revision)s'
 release = %(isrelease)s
-default_model = 'en_default==1.0.4'
+default_model = '%(default_model)s'
 if not release:
     version = full_version
 """
@@ -168,7 +169,8 @@ if not release:
         f.write(cnt % {'version': VERSION,
                        'full_version' : FULLVERSION,
                        'git_revision' : GIT_REVISION,
-                       'isrelease': str(ISRELEASED)})
+                       'isrelease': str(ISRELEASE),
+                       'default_model': DEFAULT_MODEL})
 
 
 def generate_cython(root, source):
