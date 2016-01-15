@@ -8,9 +8,6 @@ try:
 except ImportError:
     import json
 
-import sputnik
-from sputnik.dir_package import DirPackage
-
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .syntax.parser import Parser
