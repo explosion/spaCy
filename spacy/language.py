@@ -19,7 +19,6 @@ from . import orth
 from .syntax.ner import BiluoPushDown
 from .syntax.arc_eager import ArcEager
 
-from . import about
 from . import util
 from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD
 
@@ -193,7 +192,7 @@ class Language(object):
             via = data_dir
 
         if via is None:
-            package = util.get_package_by_name(about.default_model)
+            package = util.get_package_by_name()
         else:
             package = util.get_package(via)
 

@@ -42,12 +42,12 @@ def main(data_size='all', force=False):
     path = os.path.dirname(os.path.abspath(__file__))
 
     if force:
-        sputnik.purge('spacy', about.short_version)
+        sputnik.purge(about.__name__, about.__version__)
 
-    package = sputnik.install('spacy', about.short_version, about.default_model)
+    package = sputnik.install(about.__name__, about.__version__, about.__default_model__)
 
     try:
-        sputnik.package('spacy', about.short_version, about.default_model)
+        sputnik.package(about.__name__, about.__version__, about.__default_model__)
     except PackageNotFoundException, CompatiblePackageNotFoundException:
         print("Model failed to install. Please run 'python -m "
               "spacy.en.download --force'.", file=sys.stderr)

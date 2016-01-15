@@ -20,9 +20,10 @@ def get_package(via=None):
     return DirPackage(via)
 
 
-def get_package_by_name(name, via=None):
+def get_package_by_name(name=None, via=None):
     try:
-        return sputnik.package('spacy', about.short_version, name, data_path=via)
+        return sputnik.package(about.__name__, about.__version__,
+                               name or about.__default_model__, data_path=via)
     except PackageNotFoundException as e:
         raise RuntimeError("Model not installed. Please run 'python -m "
                            "spacy.en.download' to install latest compatible "
