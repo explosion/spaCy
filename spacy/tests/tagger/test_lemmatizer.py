@@ -5,23 +5,23 @@ import io
 import pickle
 
 from spacy.lemmatizer import Lemmatizer, read_index, read_exc
-from spacy.util import get_package
+from spacy import util
 
 import pytest
 
 
 @pytest.fixture
 def package():
-    if os.environ.get('SPACY_DATA'):
-        data_path = os.environ.get('SPACY_DATA')
+    data_dir = os.environ.get('SPACY_DATA')
+    if data_dir is None:
+        return util.get_package_by_name()
     else:
-        data_path = None
-    return get_package(data_path=data_path)
+        return util.get_package(data_dir)
 
 
 @pytest.fixture
 def lemmatizer(package):
-    return Lemmatizer.load(package)
+    return Lemmatizer.from_package(package)
 
 
 def test_read_index(package):

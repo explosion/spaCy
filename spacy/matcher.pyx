@@ -170,8 +170,11 @@ cdef class Matcher:
     cdef object _patterns
 
     @classmethod
-    def load(cls, pkg_or_str_or_file, Vocab vocab):
-        package = get_package(pkg_or_str_or_file)
+    def load(cls, data_dir, Vocab vocab):
+        return cls.from_package(get_package(data_dir), vocab=vocab)
+
+    @classmethod
+    def from_package(cls, package, Vocab vocab):
         patterns = package.load_json(('vocab', 'gazetteer.json'))
         return cls(vocab, patterns)
 

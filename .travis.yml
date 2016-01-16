@@ -31,7 +31,7 @@ install:
   - "python bin/init_model.py en lang_data/ corpora/ data"
   - "cp package.json data"
   - "sputnik build data en_default.sputnik"
-  - "sputnik install en_default.sputnik"
+  - "sputnik --name spacy install en_default.sputnik"
 
 script:
   - python build.py $MODE;
