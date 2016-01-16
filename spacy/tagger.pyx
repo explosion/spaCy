@@ -148,8 +148,8 @@ cdef class Tagger:
         return cls(vocab, model)
 
     @classmethod
-    def load(cls, via, vocab):
-        return cls.from_package(get_package(via), vocab=vocab)
+    def load(cls, data_dir, vocab):
+        return cls.from_package(get_package(data_dir), vocab=vocab)
 
     @classmethod
     def from_package(cls, pkg, vocab):

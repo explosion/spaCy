@@ -6,6 +6,8 @@ import shutil
 
 import plac
 import sputnik
+from sputnik.package_list import (PackageNotFoundException,
+                                  CompatiblePackageNotFoundException)
 
 from .. import about
 
@@ -22,27 +24,20 @@ def migrate(path):
             os.unlink(os.path.join(path, filename))
 
 
-def link(package, path):
-    if os.path.exists(path):
-        if os.path.isdir(path):
-            shutil.rmtree(path)
-        else:
-            os.unlink(path)
-
-    if not hasattr(os, 'symlink'):  # not supported by win+py27
-        shutil.copytree(package.dir_path('data'), path)
-    else:
-        os.symlink(package.dir_path('data'), path)
-
-
 @plac.annotations(
     force=("Force overwrite", "flag", "f", bool),
 )
 def main(data_size='all', force=False):
-    path = os.path.dirname(os.path.abspath(__file__))
-
     if force:
         sputnik.purge(about.__name__, about.__version__)
+
+    try:
+        sputnik.package(about.__name__, about.__version__, about.__default_model__)
+        print("Model already installed. Please run 'python -m "
+              "spacy.en.download --force' to reinstall.", file=sys.stderr)
+        sys.exit(1)
+    except PackageNotFoundException, CompatiblePackageNotFoundException:
+        pass
 
     package = sputnik.install(about.__name__, about.__version__, about.__default_model__)
 
@@ -54,7 +49,7 @@ def main(data_size='all', force=False):
         sys.exit(1)
 
     # FIXME clean up old-style packages
-    migrate(path)
+    migrate(os.path.dirname(os.path.abspath(__file__)))
 
     print("Model successfully installed.", file=sys.stderr)
 

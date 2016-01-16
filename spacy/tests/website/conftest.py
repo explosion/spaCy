@@ -7,10 +7,10 @@ import os
 def nlp():
     from spacy.en import English
     if os.environ.get('SPACY_DATA'):
-        data_path = os.environ.get('SPACY_DATA')
+        data_dir = os.environ.get('SPACY_DATA')
     else:
-        data_path = None
-    return English(data_dir=data_path)
+        data_dir = None
+    return English(data_dir=data_dir)
 
 
 @pytest.fixture()

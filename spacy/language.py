@@ -155,7 +155,6 @@ class Language(object):
             return Parser.from_dir(data_dir, vocab.strings, BiluoPushDown)
 
     def __init__(self,
-        via=None,
         data_dir=None,
         vocab=None,
         tokenizer=None,
@@ -172,9 +171,9 @@ class Language(object):
            1) by calling a Language subclass
              - spacy.en.English()
 
-           2) by calling a Language subclass with via (previously: data_dir)
+           2) by calling a Language subclass with data_dir
              - spacy.en.English('my/model/root')
-             - spacy.en.English(via='my/model/root')
+             - spacy.en.English(data_dir='my/model/root')
 
            3) by package name
              - spacy.load('en_default')
@@ -185,15 +184,11 @@ class Language(object):
              - spacy.load('en_default==1.0.0', via='/my/package/root')
         """
 
-        if data_dir is not None and via is None:
-            warn("Use of data_dir is deprecated, use via instead.", DeprecationWarning)
-            via = data_dir
-
         if package is None:
-            if via is None:
+            if data_dir is None:
                 package = util.get_package_by_name()
             else:
-                package = util.get_package(via)
+                package = util.get_package(data_dir)
 
         if load_vectors is not True:
             warn("load_vectors is deprecated", DeprecationWarning)

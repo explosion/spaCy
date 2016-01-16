@@ -48,8 +48,8 @@ cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
     @classmethod
-    def load(cls, via, get_lex_attr=None):
-        return cls.from_package(get_package(via), get_lex_attr=get_lex_attr)
+    def load(cls, data_dir, get_lex_attr=None):
+        return cls.from_package(get_package(data_dir), get_lex_attr=get_lex_attr)
 
     @classmethod
     def from_package(cls, package, get_lex_attr=None):

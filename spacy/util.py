@@ -14,10 +14,10 @@ from . import about
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 
-def get_package():
-    if not isinstance(via, six.string_types):
-        raise RuntimeError('via must be a string')
-    return DirPackage(via)
+def get_package(data_dir):
+    if not isinstance(data_dir, six.string_types):
+        raise RuntimeError('data_dir must be a string')
+    return DirPackage(data_dir)
 
 
 def get_package_by_name(name=None, via=None):

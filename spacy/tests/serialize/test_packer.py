@@ -13,6 +13,7 @@ from spacy.tokenizer import Tokenizer
 from os import path
 import os
 
+from spacy import util
 from spacy.attrs import ORTH, SPACY, TAG, DEP, HEAD
 from spacy.serialize.packer import Packer
 
@@ -21,11 +22,13 @@ from spacy.serialize.bits import BitArray
 
 @pytest.fixture
 def vocab():
-    if os.environ.get('SPACY_DATA'):
-        data_path = os.environ.get('SPACY_DATA')
+    data_dir = os.environ.get('SPACY_DATA')
+    if data_dir is None:
+        package = util.get_package_by_name()
     else:
-        data_path = None
-    vocab = English.default_vocab(package=data_path)
+        package = util.get_package(data_dir)
+
+    vocab = English.default_vocab(package=package)
     lex = vocab['dog']
     assert vocab[vocab.strings['dog']].orth_ == 'dog'
     lex  = vocab['the']

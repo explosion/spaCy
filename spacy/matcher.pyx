@@ -170,8 +170,8 @@ cdef class Matcher:
     cdef object _patterns
 
     @classmethod
-    def load(cls, via, Vocab vocab):
-        return cls.from_package(get_package(via), vocab=vocab)
+    def load(cls, data_dir, Vocab vocab):
+        return cls.from_package(get_package(data_dir), vocab=vocab)
 
     @classmethod
     def from_package(cls, package, Vocab vocab):
