@@ -1,7 +1,9 @@
 from __future__ import unicode_literals
+from spacy.attrs import HEAD
+from spacy.en import English
+import numpy as np
 
 import pytest
-
 
 
 @pytest.fixture
@@ -25,3 +27,13 @@ def test_root(doc):
     assert np.orth_ == 'a sentence'
     assert np.root.orth_ == 'sentence'
     assert np.root.head.orth_ == 'is'
+
+
+def test_root2():
+    text = 'through North and South Carolina'
+    EN = English(parser=False)
+    doc = EN(text)
+    heads = np.asarray([[0, 3, -1, -2, -4]], dtype='int32')
+    doc.from_array([HEAD], heads.T)
+    south_carolina = doc[-2:]
+    assert south_carolina.root.text == 'Carolina'
