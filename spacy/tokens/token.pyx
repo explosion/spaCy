@@ -198,6 +198,7 @@ cdef class Token:
             """The leftward immediate children of the word, in the syntactic
             dependency parse.
             """
+            cdef int nr_iter = 0
             cdef const TokenC* ptr = self.c - (self.i - self.c.l_edge)
             while ptr < self.c:
                 # If this head is still to the right of us, we can skip to it
@@ -211,6 +212,11 @@ cdef class Token:
                     ptr += 1
                 else:
                     ptr += 1
+                nr_iter += 1
+                # This is ugly, but it's a way to guard out infinite loops
+                if nr_iter >= 10000000:
+                    raise RuntimeError(
+                        "Possibly infinite loop encountered while looking for token.lefts")
 
     property rights:
         def __get__(self):
@@ -218,6 +224,7 @@ cdef class Token:
             dependency parse."""
             cdef const TokenC* ptr = self.c + (self.c.r_edge - self.i)
             tokens = []
+            cdef int nr_iter = 0
             while ptr > self.c:
                 # If this head is still to the right of us, we can skip to it
                 # No token that's between this token and this head could be our
@@ -229,6 +236,9 @@ cdef class Token:
                     ptr -= 1
                 else:
                     ptr -= 1
+                if nr_iter >= 10000000:
+                    raise RuntimeError(
+                        "Possibly infinite loop encountered while looking for token.rights")
             tokens.reverse()
             for t in tokens:
                 yield t
