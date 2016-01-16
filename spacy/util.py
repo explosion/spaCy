@@ -4,9 +4,9 @@ import json
 import re
 import os.path
 
+import six
 import sputnik
 from sputnik.dir_package import DirPackage
-from sputnik.package_stub import PackageStub
 from sputnik.package_list import (PackageNotFoundException,
                                   CompatiblePackageNotFoundException)
 
@@ -15,8 +15,8 @@ from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 
 def get_package(via=None):
-    if isinstance(via, PackageStub):
-        return via
+    if not isinstance(via, six.string_types):
+        raise RuntimeError('via must be a string')
     return DirPackage(via)
 
 

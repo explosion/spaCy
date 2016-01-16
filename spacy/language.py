@@ -140,7 +140,7 @@ class Language(object):
     def default_vocab(cls, package, get_lex_attr=None):
         if get_lex_attr is None:
             get_lex_attr = cls.default_lex_attrs()
-        return Vocab.load(package, get_lex_attr=get_lex_attr)
+        return Vocab.from_package(package, get_lex_attr=get_lex_attr)
 
     @classmethod
     def default_parser(cls, package, vocab):
@@ -164,7 +164,8 @@ class Language(object):
         entity=None,
         matcher=None,
         serializer=None,
-        load_vectors=True):
+        load_vectors=True,
+        package=None):
         """
            a model can be specified:
 
@@ -182,30 +183,29 @@ class Language(object):
            4) by package name with a relocated package base
              - spacy.load('en_default', via='/my/package/root')
              - spacy.load('en_default==1.0.0', via='/my/package/root')
-
-           5) by package object
-             - spacy.en.English(package)
         """
 
         if data_dir is not None and via is None:
             warn("Use of data_dir is deprecated, use via instead.", DeprecationWarning)
             via = data_dir
 
-        if via is None:
-            package = util.get_package_by_name()
-        else:
-            package = util.get_package(via)
+        if package is None:
+            if via is None:
+                package = util.get_package_by_name()
+            else:
+                package = util.get_package(via)
 
         if load_vectors is not True:
             warn("load_vectors is deprecated", DeprecationWarning)
+
         if vocab in (None, True):
-            vocab = Vocab.load(package, get_lex_attr=self.default_lex_attrs())
+            vocab = self.default_vocab(package)
         self.vocab = vocab
         if tokenizer in (None, True):
-            tokenizer = Tokenizer.load(package, self.vocab)
+            tokenizer = Tokenizer.from_package(package, self.vocab)
         self.tokenizer = tokenizer
         if tagger in (None, True):
-            tagger = Tagger.load(package, self.vocab)
+            tagger = Tagger.from_package(package, self.vocab)
         self.tagger = tagger
         if entity in (None, True):
             entity = self.default_entity(package, self.vocab)
@@ -214,7 +214,7 @@ class Language(object):
             parser = self.default_parser(package, self.vocab)
         self.parser = parser
         if matcher in (None, True):
-            matcher = Matcher.load(package, self.vocab)
+            matcher = Matcher.from_package(package, self.vocab)
         self.matcher = matcher
 
     def __reduce__(self):

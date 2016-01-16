@@ -14,7 +14,10 @@ from .util import get_package
 class Lemmatizer(object):
     @classmethod
     def load(cls, via):
-        pkg = get_package(via)
+        return cls.from_package(get_package(via))
+
+    @classmethod
+    def from_package(cls, pkg):
         index = {}
         exc = {}
         for pos in ['adj', 'noun', 'verb']:

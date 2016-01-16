@@ -49,10 +49,13 @@ cdef class Vocab:
     '''
     @classmethod
     def load(cls, via, get_lex_attr=None):
-        package = get_package(via)
+        return cls.from_package(get_package(via), get_lex_attr=get_lex_attr)
+
+    @classmethod
+    def from_package(cls, package, get_lex_attr=None):
         tag_map = package.load_json(('vocab', 'tag_map.json'), default={})
 
-        lemmatizer = Lemmatizer.load(package)
+        lemmatizer = Lemmatizer.from_package(package)
 
         serializer_freqs = package.load_json(('vocab', 'serializer.json'), default={})
 
