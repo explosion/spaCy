@@ -241,7 +241,7 @@ cdef class Doc:
                 "to install the data")
  
         cdef const TokenC* word
-        labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj', 'attr', 'conj']
+        labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj', 'attr', 'root']
         np_deps = [self.vocab.strings[label] for label in labels]
         np_label = self.vocab.strings['NP']
         for i in range(self.length):
