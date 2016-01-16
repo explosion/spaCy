@@ -73,11 +73,7 @@ cdef class Token:
 
     property string:
         def __get__(self):
-            cdef unicode orth = self.vocab.strings[self.c.lex.orth]
-            if self.c.spacy:
-                return orth + u' '
-            else:
-                return orth
+            return self.text_with_ws
 
     property text:
         def __get__(self):
