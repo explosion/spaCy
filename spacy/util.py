@@ -14,7 +14,7 @@ from . import about
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 
-def get_package(via=None):
+def get_package():
     if not isinstance(via, six.string_types):
         raise RuntimeError('via must be a string')
     return DirPackage(via)
