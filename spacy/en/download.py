@@ -36,14 +36,14 @@ def main(data_size='all', force=False):
         print("Model already installed. Please run 'python -m "
               "spacy.en.download --force' to reinstall.", file=sys.stderr)
         sys.exit(1)
-    except PackageNotFoundException, CompatiblePackageNotFoundException:
+    except (PackageNotFoundException, CompatiblePackageNotFoundException):
         pass
 
     package = sputnik.install(about.__name__, about.__version__, about.__default_model__)
 
     try:
         sputnik.package(about.__name__, about.__version__, about.__default_model__)
-    except PackageNotFoundException, CompatiblePackageNotFoundException:
+    except (PackageNotFoundException, CompatiblePackageNotFoundException):
         print("Model failed to install. Please run 'python -m "
               "spacy.en.download --force'.", file=sys.stderr)
         sys.exit(1)
