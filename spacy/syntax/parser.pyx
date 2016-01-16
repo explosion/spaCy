@@ -5,6 +5,7 @@ from __future__ import unicode_literals
 cimport cython
 
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
+from cpython.exc cimport PyErr_CheckSignals
 
 from libc.stdint cimport uint32_t, uint64_t
 from libc.string cimport memset, memcpy
@@ -109,6 +110,8 @@ cdef class Parser:
                 )
             
             action.do(stcls, action.label)
+            # Check for KeyboardInterrupt etc. Untested
+            PyErr_CheckSignals()
         self.moves.finalize_state(stcls)
         tokens.set_parse(stcls._sent)
   
