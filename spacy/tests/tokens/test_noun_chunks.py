@@ -22,6 +22,8 @@ def test_not_nested():
                 [-2, conj],
                 [-5, dobj]
             ], dtype='int32'))
+    for chunk in tokens.noun_chunks:
+        print(chunk.text)
     word_occurred = {}
     for chunk in tokens.noun_chunks:
         for word in chunk:
