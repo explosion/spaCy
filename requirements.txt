@@ -10,4 +10,4 @@ plac
 six
 ujson
 cloudpickle
-sputnik>=0.6.4,<0.7.0
+sputnik>=0.7.0,<0.7.0
