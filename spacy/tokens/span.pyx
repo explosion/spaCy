@@ -170,6 +170,19 @@ cdef class Span:
             # This should probably be called 'head', and the other one called
             # 'gov'. But we went with 'head' elsehwhere, and now we're stuck =/
             cdef int i
+            # First, we scan through the Span, and check whether there's a word
+            # with head==0, i.e. a sentence root. If so, we can return it. The
+            # longer the span, the more likely it contains a sentence root, and
+            # in this case we return in linear time.
+            for i in range(self.start, self.end):
+                if self.doc.c[i].head == 0:
+                    return i
+            # If we don't have a sentence root, we do something that's not so
+            # algorithmically clever, but I think should be quite fast, especially
+            # for short spans.
+            # For each word, we count the path length, and arg min this measure.
+            # We could use better tree logic to save steps here...But I think this
+            # should be okay.
             cdef int current_best = _count_words_to_root(&self.doc.c[self.start],
                                                          self.doc.length)
             cdef int root = self.start
