@@ -148,3 +148,13 @@ def test_merge_children(EN):
             assert word in list(word.head.lefts)
         elif word.i > word.head.i:
             assert word in list(word.head.rights)
+
+
+def test_merge_hang():
+    text = 'through North and South Carolina'
+    EN = English(parser=False)
+    doc = EN(text, tag=True)
+    heads = np.asarray([[0, 3, -1, -2, -4]], dtype='int32')
+    doc.from_array([HEAD], heads.T)
+    doc.merge(18, 32, '', '', 'ORG')
+    doc.merge(8, 32, '', '', 'ORG')
