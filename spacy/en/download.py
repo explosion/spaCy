@@ -1,9 +1,15 @@
+from __future__ import print_function
+
 import sys
 import os
 import shutil
 
 import plac
-from sputnik import Sputnik
+import sputnik
+from sputnik.package_list import (PackageNotFoundException,
+                                  CompatiblePackageNotFoundException)
+
+from .. import about
 
 
 def migrate(path):
@@ -18,43 +24,34 @@ def migrate(path):
             os.unlink(os.path.join(path, filename))
 
 
-def link(package, path):
-    if os.path.exists(path):
-        if os.path.isdir(path):
-            shutil.rmtree(path)
-        else:
-            os.unlink(path)
-
-    if not hasattr(os, 'symlink'):  # not supported by win+py27
-        shutil.copytree(package.dir_path('data'), path)
-    else:
-        os.symlink(package.dir_path('data'), path)
-
-
 @plac.annotations(
     force=("Force overwrite", "flag", "f", bool),
 )
 def main(data_size='all', force=False):
-    # TODO read version from the same source as the setup
-    sputnik = Sputnik('spacy', '0.100.0', console=sys.stdout)
-
-    path = os.path.dirname(os.path.abspath(__file__))
-
-    data_path = os.path.abspath(os.path.join(path, '..', 'data'))
-    if not os.path.isdir(data_path):
-        os.mkdir(data_path)
-
-    command = sputnik.command(
-        data_path=data_path,
-        repository_url='https://index.spacy.io')
-
     if force:
-        command.purge()
+        sputnik.purge(about.__name__, about.__version__)
 
-    package = command.install('en_default')
+    try:
+        sputnik.package(about.__name__, about.__version__, about.__default_model__)
+        print("Model already installed. Please run 'python -m "
+              "spacy.en.download --force' to reinstall.", file=sys.stderr)
+        sys.exit(1)
+    except (PackageNotFoundException, CompatiblePackageNotFoundException):
+        pass
+
+    package = sputnik.install(about.__name__, about.__version__, about.__default_model__)
+
+    try:
+        sputnik.package(about.__name__, about.__version__, about.__default_model__)
+    except (PackageNotFoundException, CompatiblePackageNotFoundException):
+        print("Model failed to install. Please run 'python -m "
+              "spacy.en.download --force'.", file=sys.stderr)
+        sys.exit(1)
 
     # FIXME clean up old-style packages
-    migrate(path)
+    migrate(os.path.dirname(os.path.abspath(__file__)))
+
+    print("Model successfully installed.", file=sys.stderr)
 
 
 if __name__ == '__main__':

@@ -15,8 +15,9 @@ from .strings cimport hash_string
 cimport cython
 
 from . import util
-from .util import read_lang_data
 from .tokens.doc cimport Doc
+from .util import read_lang_data
+from .util import get_package
 
 
 cdef class Tokenizer:
@@ -39,6 +40,10 @@ cdef class Tokenizer:
                 self._infix_re)
 
         return (self.__class__, args, None, None)
+
+    @classmethod
+    def load(cls, data_dir, Vocab vocab):
+        return cls.from_package(get_package(data_dir), vocab=vocab)
 
     @classmethod
     def from_package(cls, package, Vocab vocab):

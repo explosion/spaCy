@@ -1,17 +1,22 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
+import os
 import io
 import pickle
 
 from spacy.lemmatizer import Lemmatizer, read_index, read_exc
-from spacy.util import get_package
+from spacy import util
 
 import pytest
 
 
 @pytest.fixture
 def package():
-    return get_package()
+    data_dir = os.environ.get('SPACY_DATA')
+    if data_dir is None:
+        return util.get_package_by_name()
+    else:
+        return util.get_package(data_dir)
 
 
 @pytest.fixture
@@ -20,14 +25,16 @@ def lemmatizer(package):
 
 
 def test_read_index(package):
-    index = package.load_utf8(read_index, 'wordnet', 'index.noun')
+    with package.open(('wordnet', 'index.noun')) as file_:
+        index = read_index(file_)
     assert 'man' in index
     assert 'plantes' not in index
     assert 'plant' in index
 
 
 def test_read_exc(package):
-    exc = package.load_utf8(read_exc, 'wordnet', 'verb.exc')
+    with package.open(('wordnet', 'verb.exc')) as file_:
+        exc = read_exc(file_)
     assert exc['was'] == ('be',)
 
 

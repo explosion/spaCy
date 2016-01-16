@@ -16,6 +16,8 @@ from .parts_of_speech cimport VERB, X, PUNCT, EOL, SPACE
 
 from .attrs cimport *
 
+from .util import get_package
+
  
 cpdef enum:
     P2_orth
@@ -146,7 +148,11 @@ cdef class Tagger:
         return cls(vocab, model)
 
     @classmethod
-    def from_package(cls, package, vocab):
+    def load(cls, data_dir, vocab):
+        return cls.from_package(get_package(data_dir), vocab=vocab)
+
+    @classmethod
+    def from_package(cls, pkg, vocab):
         # TODO: templates.json deprecated? not present in latest package
         templates = cls.default_templates()
         # templates = package.load_utf8(json.load,
@@ -156,8 +162,9 @@ cdef class Tagger:
         model = TaggerModel(vocab.morphology.n_tags,
             ConjunctionExtracter(N_CONTEXT_FIELDS, templates))
 
-        if package.has_file('pos', 'model'):  # TODO: really optional?
-            model.load(package.file_path('pos', 'model'))
+
+        if pkg.has_file('pos', 'model'):  # TODO: really optional?
+            model.load(pkg.file_path('pos', 'model'))
 
         return cls(vocab, model)
 

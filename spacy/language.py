@@ -19,8 +19,8 @@ from . import orth
 from .syntax.ner import BiluoPushDown
 from .syntax.arc_eager import ArcEager
 
+from . import util
 from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD
-from .util import get_package
 
 
 class Language(object):
@@ -137,28 +137,25 @@ class Language(object):
         return {0: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True}}
 
     @classmethod
-    def default_vocab(cls, package=None, get_lex_attr=None):
-        if package is None:
-            package = get_package()
+    def default_vocab(cls, package, get_lex_attr=None):
         if get_lex_attr is None:
             get_lex_attr = cls.default_lex_attrs()
         return Vocab.from_package(package, get_lex_attr=get_lex_attr)
 
     @classmethod
     def default_parser(cls, package, vocab):
-        data_dir = package.dir_path('deps', require=False)
+        data_dir = package.dir_path('deps')
         if data_dir and path.exists(data_dir):
             return Parser.from_dir(data_dir, vocab.strings, ArcEager)
 
     @classmethod
     def default_entity(cls, package, vocab):
-        data_dir = package.dir_path('ner', require=False)
+        data_dir = package.dir_path('ner')
         if data_dir and path.exists(data_dir):
             return Parser.from_dir(data_dir, vocab.strings, BiluoPushDown)
 
     def __init__(self,
         data_dir=None,
-        model=None,
         vocab=None,
         tokenizer=None,
         tagger=None,
@@ -166,48 +163,36 @@ class Language(object):
         entity=None,
         matcher=None,
         serializer=None,
-        load_vectors=True):
+        load_vectors=True,
+        package=None):
         """
            a model can be specified:
 
-           1) by a path to the model directory (DEPRECATED)
-             - Language(data_dir='path/to/data')
+           1) by calling a Language subclass
+             - spacy.en.English()
 
-           2) by a language identifier (and optionally a package root dir)
-             - Language(lang='en')
-             - Language(lang='en', data_dir='spacy/data')
+           2) by calling a Language subclass with data_dir
+             - spacy.en.English('my/model/root')
+             - spacy.en.English(data_dir='my/model/root')
 
-           3) by a model name/version (and optionally a package root dir)
-             - Language(model='en_default')
-             - Language(model='en_default ==1.0.0')
-             - Language(model='en_default <1.1.0, data_dir='spacy/data')
+           3) by package name
+             - spacy.load('en_default')
+             - spacy.load('en_default==1.0.0')
+
+           4) by package name with a relocated package base
+             - spacy.load('en_default', via='/my/package/root')
+             - spacy.load('en_default==1.0.0', via='/my/package/root')
         """
-        # support non-package data dirs
-        if data_dir and path.exists(path.join(data_dir, 'vocab')):
-            class Package(object):
-                def __init__(self, root):
-                    self.root = root
 
-                def has_file(self, *path_parts):
-                    return path.exists(path.join(self.root, *path_parts))
+        if package is None:
+            if data_dir is None:
+                package = util.get_package_by_name()
+            else:
+                package = util.get_package(data_dir)
 
-                def file_path(self, *path_parts, **kwargs):
-                    return path.join(self.root, *path_parts)
-
-                def dir_path(self, *path_parts, **kwargs):
-                    return path.join(self.root, *path_parts)
-
-                def load_utf8(self, func, *path_parts, **kwargs):
-                    with io.open(self.file_path(path.join(*path_parts)),
-                                 mode='r', encoding='utf8') as f:
-                        return func(f)
-
-            warn("using non-package data_dir", DeprecationWarning)
-            package = Package(data_dir)
-        else:
-            package = get_package(name=model, data_path=data_dir)
         if load_vectors is not True:
             warn("load_vectors is deprecated", DeprecationWarning)
+
         if vocab in (None, True):
             vocab = self.default_vocab(package)
         self.vocab = vocab
@@ -230,7 +215,6 @@ class Language(object):
     def __reduce__(self):
         args = (
             None, # data_dir
-            None, # model
             self.vocab,
             self.tokenizer,
             self.tagger,

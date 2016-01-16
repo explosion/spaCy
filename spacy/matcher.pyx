@@ -21,6 +21,7 @@ from .tokens.doc cimport Doc
 from .vocab cimport Vocab
 
 from .attrs import FLAG61 as U_ENT
+from .util import get_package
 
 from .attrs import FLAG60 as B2_ENT
 from .attrs import FLAG59 as B3_ENT
@@ -169,10 +170,12 @@ cdef class Matcher:
     cdef object _patterns
 
     @classmethod
+    def load(cls, data_dir, Vocab vocab):
+        return cls.from_package(get_package(data_dir), vocab=vocab)
+
+    @classmethod
     def from_package(cls, package, Vocab vocab):
-        patterns = package.load_utf8(json.load,
-            'vocab', 'gazetteer.json',
-            default={})  # TODO: really optional?
+        patterns = package.load_json(('vocab', 'gazetteer.json'))
         return cls(vocab, patterns)
 
     def __init__(self, vocab, patterns):

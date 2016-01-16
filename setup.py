@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-from __future__ import division, print_function
+from __future__ import print_function
 import os
 import shutil
 import subprocess
@@ -12,13 +12,6 @@ try:
     from setuptools import Extension, setup
 except ImportError:
     from distutils.core import Extension, setup
-
-
-MAJOR      = 0
-MINOR      = 100
-MICRO      = 0
-ISRELEASED = False
-VERSION    = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
 
 
 PACKAGES = [
@@ -103,73 +96,6 @@ class build_ext_subclass(build_ext, build_ext_options):
         build_ext.build_extensions(self)
 
 
-# Return the git revision as a string
-def git_version():
-    def _minimal_ext_cmd(cmd):
-        # construct minimal environment
-        env = {}
-        for k in ['SYSTEMROOT', 'PATH']:
-            v = os.environ.get(k)
-            if v is not None:
-                env[k] = v
-        # LANGUAGE is used on win32
-        env['LANGUAGE'] = 'C'
-        env['LANG'] = 'C'
-        env['LC_ALL'] = 'C'
-        out = subprocess.Popen(cmd, stdout = subprocess.PIPE, env=env).communicate()[0]
-        return out
-
-    try:
-        out = _minimal_ext_cmd(['git', 'rev-parse', 'HEAD'])
-        GIT_REVISION = out.strip().decode('ascii')
-    except OSError:
-        GIT_REVISION = 'Unknown'
-
-    return GIT_REVISION
-
-
-def get_version_info():
-    # Adding the git rev number needs to be done inside write_version_py(),
-    # otherwise the import of spacy.about messes up the build under Python 3.
-    FULLVERSION = VERSION
-    if os.path.exists('.git'):
-        GIT_REVISION = git_version()
-    elif os.path.exists(os.path.join('spacy', 'about.py')):
-        # must be a source distribution, use existing version file
-        try:
-            from spacy.about import git_revision as GIT_REVISION
-        except ImportError:
-            raise ImportError('Unable to import git_revision. Try removing '
-                              'spacy/about.py and the build directory '
-                              'before building.')
-    else:
-        GIT_REVISION = 'Unknown'
-
-    if not ISRELEASED:
-        FULLVERSION += '.dev0+' + GIT_REVISION[:7]
-
-    return FULLVERSION, GIT_REVISION
-
-
-def write_version(path):
-    cnt = """# THIS FILE IS GENERATED FROM SPACY SETUP.PY
-short_version = '%(version)s'
-version = '%(version)s'
-full_version = '%(full_version)s'
-git_revision = '%(git_revision)s'
-release = %(isrelease)s
-if not release:
-    version = full_version
-"""
-    FULLVERSION, GIT_REVISION = get_version_info()
-
-    with open(path, 'w') as f:
-        f.write(cnt % {'version': VERSION,
-                       'full_version' : FULLVERSION,
-                       'git_revision' : GIT_REVISION,
-                       'isrelease': str(ISRELEASED)})
-
-
 def generate_cython(root, source):
     print('Cythonizing sources')
     p = subprocess.call([sys.executable,
@@ -241,7 +167,9 @@ def setup_package():
         return clean(root)
 
     with chdir(root):
-        write_version(os.path.join(root, 'spacy', 'about.py'))
+        about = {}
+        with open(os.path.join(root, "spacy", "about.py")) as f:
+            exec(f.read(), about)
 
         include_dirs = [
             get_python_inc(plat_specific=True),
@@ -259,19 +187,20 @@ def setup_package():
             prepare_includes(root)
 
         setup(
-            name='spacy',
+            name=about['__name__'],
+            zip_safe=False,
             packages=PACKAGES,
             package_data={'': ['*.pyx', '*.pxd']},
-            description='Industrial-strength NLP',
-            author='Matthew Honnibal',
-            author_email='matt@spacy.io',
-            version=VERSION,
-            url='https://spacy.io',
-            license='MIT',
+            description=about['__summary__'],
+            author=about['__author__'],
+            author_email=about['__email__'],
+            version=about['__version__'],
+            url=about['__uri__'],
+            license=about['__license__'],
             ext_modules=ext_modules,
             install_requires=['numpy', 'murmurhash>=0.26,<0.27', 'cymem>=1.30,<1.31', 'preshed>=0.46.1,<0.47',
                               'thinc>=4.2.0,<4.3.0', 'text_unidecode', 'plac', 'six',
-                              'ujson', 'cloudpickle', 'sputnik>=0.6.4,<0.7.0'],
+                              'ujson', 'cloudpickle', 'sputnik>=0.7.0,<0.8.0'],
             cmdclass = {
                 'build_ext': build_ext_subclass},
         )

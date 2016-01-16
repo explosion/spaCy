@@ -19,6 +19,7 @@ from .orth cimport word_shape
 from .typedefs cimport attr_t
 from .cfile cimport CFile
 from .lemmatizer import Lemmatizer
+from .util import get_package
 
 from . import attrs
 from . import symbols
@@ -47,27 +48,27 @@ cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
     @classmethod
+    def load(cls, data_dir, get_lex_attr=None):
+        return cls.from_package(get_package(data_dir), get_lex_attr=get_lex_attr)
+
+    @classmethod
     def from_package(cls, package, get_lex_attr=None):
-        tag_map = package.load_utf8(json.load,
-            'vocab', 'tag_map.json')
+        tag_map = package.load_json(('vocab', 'tag_map.json'), default={})
 
         lemmatizer = Lemmatizer.from_package(package)
 
-        serializer_freqs = package.load_utf8(json.load,
-            'vocab', 'serializer.json',
-            require=False)  # TODO: really optional?
+        serializer_freqs = package.load_json(('vocab', 'serializer.json'), default={})
 
         cdef Vocab self = cls(get_lex_attr=get_lex_attr, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)
 
-        if package.has_file('vocab', 'strings.json'):  # TODO: really optional?
-            package.load_utf8(self.strings.load, 'vocab', 'strings.json')
-            self.load_lexemes(package.file_path('vocab', 'lexemes.bin'))
+        with package.open(('vocab', 'strings.json')) as file_:
+            self.strings.load(file_)
+        self.load_lexemes(package.file_path('vocab', 'lexemes.bin'))
 
-        if package.has_file('vocab', 'vec.bin'):  # TODO: really optional?
+        if package.has_file('vocab', 'vec.bin'):
             self.vectors_length = self.load_vectors_from_bin_loc(
                 package.file_path('vocab', 'vec.bin'))
-
         return self
 
     def __init__(self, get_lex_attr=None, tag_map=None, lemmatizer=None, serializer_freqs=None):

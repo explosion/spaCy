@@ -61,7 +61,7 @@ build_script:
   - "%CMD_IN_ENV% python bin/init_model.py en lang_data/ corpora/ data"
   - "cp package.json data"
   - "%CMD_IN_ENV% sputnik build data en_default.sputnik"
-  - "%CMD_IN_ENV% sputnik install en_default.sputnik"
+  - "%CMD_IN_ENV% sputnik --name spacy install en_default.sputnik"
 
 test_script:
   # Run the project tests

@@ -2,23 +2,36 @@ import os
 import io
 import json
 import re
+import os.path
 
-from sputnik import Sputnik
+import six
+import sputnik
+from sputnik.dir_package import DirPackage
+from sputnik.package_list import (PackageNotFoundException,
+                                  CompatiblePackageNotFoundException)
 
+from . import about
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 
-def get_package(name=None, data_path=None):
-    if data_path is None:
-        if os.environ.get('SPACY_DATA'):
-            data_path = os.environ.get('SPACY_DATA')
-        else:
-            data_path = os.path.abspath(
-                os.path.join(os.path.dirname(__file__), 'data'))
+def get_package(data_dir):
+    if not isinstance(data_dir, six.string_types):
+        raise RuntimeError('data_dir must be a string')
+    return DirPackage(data_dir)
 
-    sputnik = Sputnik('spacy', '0.100.0')  # TODO: retrieve version
-    pool = sputnik.pool(data_path)
-    return pool.get(name or 'en_default')
+
+def get_package_by_name(name=None, via=None):
+    try:
+        return sputnik.package(about.__name__, about.__version__,
+                               name or about.__default_model__, data_path=via)
+    except PackageNotFoundException as e:
+        raise RuntimeError("Model not installed. Please run 'python -m "
+                           "spacy.en.download' to install latest compatible "
+                           "model.")
+    except CompatiblePackageNotFoundException as e:
+        raise RuntimeError("Installed model is not compatible with spaCy "
+                           "version. Please run 'python -m spacy.en.download "
+                           "--force' to install latest compatible model.")
 
 
 def normalize_slice(length, start, stop, step=None):
@@ -46,10 +59,13 @@ def utf8open(loc, mode='r'):
 
 
 def read_lang_data(package):
-    tokenization = package.load_utf8(json.load, 'tokenizer', 'specials.json')
-    prefix = package.load_utf8(read_prefix, 'tokenizer', 'prefix.txt')
-    suffix = package.load_utf8(read_suffix, 'tokenizer', 'suffix.txt')
-    infix = package.load_utf8(read_infix, 'tokenizer', 'infix.txt')
+    tokenization = package.load_json(('tokenizer', 'specials.json'))
+    with package.open(('tokenizer', 'prefix.txt'), default=None) as file_:
+        prefix = read_prefix(file_) if file_ is not None else None
+    with package.open(('tokenizer', 'suffix.txt'), default=None) as file_:
+        suffix = read_suffix(file_) if file_ is not None else None
+    with package.open(('tokenizer', 'infix.txt'), default=None) as file_:
+        infix = read_infix(file_) if file_ is not None else None
     return tokenization, prefix, suffix, infix
 
 
