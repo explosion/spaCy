@@ -130,7 +130,7 @@ cdef class Tokenizer:
             cache_hit = self._try_cache(key, tokens)
             if not cache_hit:
                 self._tokenize(tokens, span, key)
-            tokens.c[tokens.length - 1].spacy = string[-1] == ' '
+            tokens.c[tokens.length - 1].spacy = string[-1] == ' ' and not in_ws
         return tokens
 
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
