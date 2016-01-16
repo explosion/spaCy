@@ -116,10 +116,10 @@ cdef class Doc:
         return self.length
 
     def __unicode__(self):
-        return u''.join([t.string for t in self])
+        return u''.join([t.text_with_ws for t in self])
 
     def __bytes__(self):
-        return u''.join([t.string for t in self]).encode('utf-8')
+        return u''.join([t.text_with_ws for t in self]).encode('utf-8')
 
     def __str__(self):
         if six.PY3:
@@ -158,10 +158,10 @@ cdef class Doc:
 
     @property
     def string(self):
-        return u''.join([t.string for t in self])
+        return self.text_with_ws
 
     @property
-    def text_wth_ws(self):
+    def text_with_ws(self):
         return u''.join([t.text_with_ws for t in self])
 
     @property
