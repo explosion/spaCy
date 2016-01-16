@@ -164,8 +164,28 @@ cdef class Span:
             cdef const TokenC* start = &self.doc.c[self.start]
             cdef const TokenC* end = &self.doc.c[self.end]
             head = start
+            cdef int nr_iter = 0
             while start <= (head + head.head) < end and head.head != 0:
                 head += head.head
+                # Guard against infinite loops
+                if nr_iter >= (self.doc.length+1):
+                    # Retrieve the words without getting the Python tokens, to
+                    # avoid potential problems
+                    try:
+                        words = [self.doc.vocab.strings[self.doc.c[i].lex.orth] for i
+                                 in range(self.doc.length)]
+                    except:
+                        words = '<Exception retrieving words!>'
+                    try:
+                        heads = [self.doc.c[i].head for i in range(self.doc.length)]
+                    except:
+                        heads = '<Exception retrieving heads!>'
+                    raise RuntimeError(
+                        "Invalid dependency parse, leading to potentially infinite loop. " +
+                        "Please report this error on the issue tracker.\n" +
+                        ("Words: %s\n" % repr(words)) + 
+                        ("Heads: %s\n" % repr(heads)))
+                nr_iter += 1
             return self.doc[head - self.doc.c]
 
     property lefts:
