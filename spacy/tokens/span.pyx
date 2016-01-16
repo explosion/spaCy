@@ -125,8 +125,10 @@ cdef class Span:
             return u''.join([t.text_with_ws for t in self])
 
     property root:
-        """The first ancestor of the first word of the span that has its head
-        outside the span.
+        """The word of the span that is highest in the parse tree, i.e. has the
+        shortest path to the root of the sentence (or is the root itself).
+
+        If multiple words are equally high in the tree, the first word is taken.
         
         For example:
         
@@ -149,45 +151,37 @@ cdef class Span:
         >>> new_york.root.orth_
         'York'
 
-        When there are multiple words with external dependencies, we take the first:
+        Here's a more complicated case, raise by Issue #214
 
-        >>> toks[autumn].head.orth_, toks[dot].head.orth_
-        ('in', like')
-        >>> autumn_dot = toks[autumn:]
-        >>> autumn_dot.root.orth_
-        'Autumn'
+        >>> toks = nlp(u'to, north and south carolina')
+        >>> to, north, and_, south, carolina = toks
+        >>> south.head.text, carolina.head.text
+        ('north', 'to')
+
+        Here 'south' is a child of 'north', which is a child of 'carolina'.
+        Carolina is the root of the span:
+
+        >>> south_carolina = toks[-2:]
+        >>> south_carolina.root.text
+        'carolina'
         """
         def __get__(self):
             self._recalculate_indices()
             # This should probably be called 'head', and the other one called
             # 'gov'. But we went with 'head' elsehwhere, and now we're stuck =/
-            cdef const TokenC* start = &self.doc.c[self.start]
-            cdef const TokenC* end = &self.doc.c[self.end]
-            head = start
-            cdef int nr_iter = 0
-            while start <= (head + head.head) < end and head.head != 0:
-                head += head.head
-                # Guard against infinite loops
-                if nr_iter >= (self.doc.length+1):
-                    # Retrieve the words without getting the Python tokens, to
-                    # avoid potential problems
-                    try:
-                        words = [self.doc.vocab.strings[self.doc.c[i].lex.orth] for i
-                                 in range(self.doc.length)]
-                    except:
-                        words = '<Exception retrieving words!>'
-                    try:
-                        heads = [self.doc.c[i].head for i in range(self.doc.length)]
-                    except:
-                        heads = '<Exception retrieving heads!>'
-                    raise RuntimeError(
-                        "Invalid dependency parse, leading to potentially infinite loop. " +
-                        "Please report this error on the issue tracker.\n" +
-                        ("Words: %s\n" % repr(words)) + 
-                        ("Heads: %s\n" % repr(heads)))
-                nr_iter += 1
-            return self.doc[head - self.doc.c]
-
+            cdef int i
+            cdef int current_best = _count_words_to_root(&self.doc.c[self.start],
+                                                         self.doc.length)
+            cdef int root = self.start
+            for i in range(self.start, self.end):
+                if current_best == 0:
+                    break
+                words_to_root = _count_words_to_root(&self.doc.c[i], self.doc.length)
+                if words_to_root < current_best:
+                    current_best = words_to_root
+                    root = i
+            return self.doc[root]
+    
     property lefts:
         """Tokens that are to the left of the Span, whose head is within the Span."""
         def __get__(self):
@@ -228,3 +222,16 @@ cdef class Span:
         def __get__(self):
             return self.doc.vocab.strings[self.label]
 
+
+cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
+    cdef int n = 0
+    while token.head != 0:
+        token += token.head
+        n += 1
+        if n >= sent_length:
+            raise RuntimeError(
+                "Array bounds exceeded while searching for root word. This likely "
+                "means the parse tree is in an invalid state. Please report this "
+                "issue here: http://github.com/honnibal/spaCy/")
+        token += token.head
+    return n
