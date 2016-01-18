@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 from spacy.tokens import Doc
 from spacy.en import English
 import numpy
+from spacy.attrs import HEAD
 
 import pytest
 
