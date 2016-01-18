@@ -187,8 +187,8 @@ cdef class Span:
                                                          self.doc.length)
             cdef int root = self.start
             for i in range(self.start, self.end):
-                if current_best == 0:
-                    break
+                if self.start <= (i+self.doc.c[i].head) < self.end:
+                    continue
                 words_to_root = _count_words_to_root(&self.doc.c[i], self.doc.length)
                 if words_to_root < current_best:
                     current_best = words_to_root
@@ -246,5 +246,4 @@ cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
                 "Array bounds exceeded while searching for root word. This likely "
                 "means the parse tree is in an invalid state. Please report this "
                 "issue here: http://github.com/honnibal/spaCy/")
-        token += token.head
     return n
