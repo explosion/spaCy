@@ -140,19 +140,32 @@ class Language(object):
     def default_vocab(cls, package, get_lex_attr=None):
         if get_lex_attr is None:
             get_lex_attr = cls.default_lex_attrs()
-        return Vocab.from_package(package, get_lex_attr=get_lex_attr)
+        if hasattr(package, 'dir_path'):
+            return Vocab.from_package(package, get_lex_attr=get_lex_attr)
+        else:
+            return Vocab.load(package, get_lex_attr)
 
     @classmethod
     def default_parser(cls, package, vocab):
-        data_dir = package.dir_path('deps')
+        if hasattr(package, 'dir_path'):
+            data_dir = package.dir_path('deps')
+        else:
+            data_dir = package
         if data_dir and path.exists(data_dir):
             return Parser.from_dir(data_dir, vocab.strings, ArcEager)
+        else:
+            return None
 
     @classmethod
     def default_entity(cls, package, vocab):
-        data_dir = package.dir_path('ner')
+        if hasattr(package, 'dir_path'):
+            data_dir = package.dir_path('ner')
+        else:
+            data_dir = package
         if data_dir and path.exists(data_dir):
             return Parser.from_dir(data_dir, vocab.strings, BiluoPushDown)
+        else:
+            return None
 
     def __init__(self,
         data_dir=None,
