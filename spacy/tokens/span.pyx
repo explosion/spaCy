@@ -12,6 +12,8 @@ from ..attrs cimport attr_id_t
 from ..parts_of_speech cimport univ_pos_t
 from ..util import normalize_slice
 from .doc cimport token_by_start, token_by_end
+from ..attrs cimport IS_PUNCT, IS_SPACE
+from ..lexeme cimport Lexeme
 
 
 cdef class Span:
@@ -183,11 +185,16 @@ cdef class Span:
             # For each word, we count the path length, and arg min this measure.
             # We could use better tree logic to save steps here...But I think this
             # should be okay.
-            cdef int current_best = _count_words_to_root(&self.doc.c[self.start],
-                                                         self.doc.length)
-            cdef int root = self.start
+            cdef int current_best = self.doc.length
+            cdef int root = -1
             for i in range(self.start, self.end):
                 if self.start <= (i+self.doc.c[i].head) < self.end:
+                    continue
+                # Don't allow punctuation or spaces to be the root, if there are
+                # better candidates
+                if root != -1 and Lexeme.c_check_flag(self.doc.c[i].lex, IS_PUNCT):
+                    continue
+                if root != -1 and Lexeme.c_check_flag(self.doc.c[i].lex, IS_SPACE):
                     continue
                 words_to_root = _count_words_to_root(&self.doc.c[i], self.doc.length)
                 if words_to_root < current_best:
