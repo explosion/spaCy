@@ -176,7 +176,7 @@ cdef class Span:
             # in this case we return in linear time.
             for i in range(self.start, self.end):
                 if self.doc.c[i].head == 0:
-                    return i
+                    return self.doc[i]
             # If we don't have a sentence root, we do something that's not so
             # algorithmically clever, but I think should be quite fast, especially
             # for short spans.
