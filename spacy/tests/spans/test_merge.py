@@ -1,9 +1,12 @@
 from __future__ import unicode_literals
+from spacy.attrs import HEAD
 import pytest
+import numpy
 
-@pytest.mark.models
+
 def test_merge_tokens(EN):
     tokens = EN(u'Los Angeles start.')
+    tokens.from_array([HEAD], numpy.asarray([[1, 1, 0, -1]], dtype='int32').T)
     assert len(tokens) == 4
     assert tokens[0].head.orth_ == 'Angeles'
     assert tokens[1].head.orth_ == 'start'
