@@ -40,6 +40,13 @@ cdef class Morphology:
             tag_id = tag
         if tag_id >= self.n_tags:
             raise ValueError("Unknown tag: %s" % tag)
+        # TODO: It's pretty arbitrary to put this logic here. I guess the justification
+        # is that this is where the specific word and the tag interact. Still,
+        # we should have a better way to enforce this rule, or figure out why
+        # the statistical model fails.
+        # Related to Issue #220
+        if Lexeme.c_check_flag(token.lex, IS_SPACE):
+            tag_id = self.reverse_index[self.strings['SP']]
         analysis = <MorphAnalysisC*>self._cache.get(tag_id, token.lex.orth)
         if analysis is NULL:
             analysis = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
