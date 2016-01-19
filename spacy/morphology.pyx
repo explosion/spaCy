@@ -8,6 +8,8 @@ except ImportError:
 
 from .parts_of_speech import IDS as POS_IDS
 from .parts_of_speech cimport ADJ, VERB, NOUN, PUNCT
+from .attrs cimport IS_SPACE
+from .lexeme cimport Lexeme
 
 
 cdef class Morphology:
