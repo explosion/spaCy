@@ -262,6 +262,10 @@ class Language(object):
         if self.parser and parse:
             self.parser(tokens)
         if self.entity and entity:
+            # Add any of the entity labels already set, in case we don't have them.
+            for tok in tokens:
+                if tok.ent_type != 0:
+                    self.entity.add_label(tok.ent_type)
             self.entity(tokens)
         return tokens
 
