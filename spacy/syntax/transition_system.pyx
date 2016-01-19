@@ -82,12 +82,17 @@ cdef class TransitionSystem:
                 costs[i] = 9000
 
     def add_action(self, int action, label):
+        if not isinstance(label, int):
+            label = self.strings[label]
+        # Check we're not creating a move we already have, so that this is
+        # idempotent
+        for trans in self.c[:self.n_moves]:
+            if trans.move == action and trans.label == label:
+                return 0
         if self.n_moves >= self._size:
             self._size *= 2
             self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
-
-        if not isinstance(label, int):
-            label = self.strings[label]
         
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label)
         self.n_moves += 1
+        return 1
