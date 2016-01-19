@@ -299,6 +299,10 @@ cdef class ArcEager(TransitionSystem):
                             move_labels[LEFT][label] = True
         return move_labels
 
+    property action_types:
+        def __get__(self):
+            return (SHIFT, REDUCE, LEFT, RIGHT, BREAK)
+
     cdef int preprocess_gold(self, GoldParse gold) except -1:
         for i in range(gold.length):
             if gold.heads[i] is None: # Missing values

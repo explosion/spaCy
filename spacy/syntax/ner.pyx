@@ -65,6 +65,10 @@ cdef class BiluoPushDown(TransitionSystem):
                             move_labels[moves.index(move_str)][label] = True
         return move_labels
 
+    property action_types:
+        def __get__(self):
+            return (BEGIN, IN, LAST, UNIT, OUT)
+
     def move_name(self, int move, int label):
         if move == OUT:
             return 'O'
