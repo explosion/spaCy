@@ -107,6 +107,9 @@ cdef class Vocab:
         return self.length
 
     def __reduce__(self):
+        # TODO: This is hopelessly broken. The state is transferred as just 
+        # a temp directory! We then fail to clean this up. This method therefore
+        # only pretends to work. What we need to do is form an archive file.
         tmp_dir = tempfile.mkdtemp()
         lex_loc = path.join(tmp_dir, 'lexemes.bin')
         str_loc = path.join(tmp_dir, 'strings.json')
