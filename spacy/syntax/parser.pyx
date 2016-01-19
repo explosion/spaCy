@@ -105,6 +105,7 @@ cdef class Parser:
 
         cdef Pool mem = Pool()
         cdef ExampleC eg = self.model.allocate(mem)
+        words = [t.text for t in tokens]
         while not stcls.is_final():
             self.model.set_features(&eg, stcls)
             self.moves.set_valid(eg.is_valid, stcls)
@@ -129,7 +130,6 @@ cdef class Parser:
         cdef Pool mem = Pool()
         cdef ExampleC eg = self.model.allocate(mem)
         cdef weight_t loss = 0
-        words = [w.orth_ for w in tokens]
         cdef Transition action
         while not stcls.is_final():
             self.model.set_features(&eg, stcls)
@@ -144,6 +144,15 @@ cdef class Parser:
 
     def step_through(self, Doc doc):
         return StepwiseState(self, doc)
+
+    def add_label(self, label):
+        for action in self.moves.action_types:
+            self.moves.add_action(action, label)
+        # This seems pretty dangerous. However, thinc uses sparse vectors for
+        # classes, so it doesn't need to have the classes pre-specified. Things
+        # get dicey if people have an Exampe class around, which is being reused.
+        self.model.nr_class = self.moves.n_moves
+
 
 
 cdef class StepwiseState:
