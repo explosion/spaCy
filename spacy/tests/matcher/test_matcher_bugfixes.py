@@ -110,10 +110,7 @@ def test_overlap_prefix_reorder(EN):
 def test_ner_interaction(EN):
     EN.matcher.add('LAX_Airport', 'AIRPORT', {}, [[{ORTH: 'LAX'}]])
     EN.matcher.add('SFO_Airport', 'AIRPORT', {}, [[{ORTH: 'SFO'}]])
-    doc = EN.tokenizer(u'get me a flight from SFO to LAX leaving 20 December and arriving on January 5th')
-    EN.tagger(doc)
-    EN.matcher(doc)
-    EN.entity(doc)
+    doc = EN(u'get me a flight from SFO to LAX leaving 20 December and arriving on January 5th')
 
     ents = [(ent.label_, ent.text) for ent in doc.ents]
     assert ents[0] == ('AIRPORT', 'SFO')
