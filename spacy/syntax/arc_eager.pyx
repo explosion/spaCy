@@ -9,7 +9,7 @@ from .transition_system cimport do_func_t, get_cost_func_t
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse
 from ..gold cimport GoldParseC
-from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE, IS_SPACE
+from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 from ..lexeme cimport Lexeme
 
 from libc.stdint cimport uint32_t
@@ -237,9 +237,6 @@ cdef class Break:
             return False
         elif (st.S(0) + 1) != st.B(0):
             # Must break at the token boundary
-            return False
-        # Don't allow spaces to be the first word of a sentence
-        elif Lexeme.c_check_flag(st.B_(0).lex, IS_SPACE):
             return False
         else:
             return True

@@ -2,6 +2,9 @@ from libc.string cimport memcpy, memset
 from libc.stdint cimport uint32_t
 from ..vocab cimport EMPTY_LEXEME
 from ..structs cimport Entity
+from ..lexeme cimport Lexeme
+from ..symbols cimport punct
+from ..attrs cimport IS_SPACE
 
 
 cdef class StateClass:
@@ -119,7 +122,9 @@ cdef class StateClass:
         self.shifted[self.B(0)] = True
 
     cdef void fast_forward(self) nogil:
-        while self.buffer_length() == 0 or self.stack_depth() == 0:
+        while self.buffer_length() == 0 \
+        or self.stack_depth() == 0 \
+        or Lexeme.c_check_flag(self.S_(0).lex, IS_SPACE):
             if self.buffer_length() == 1 and self.stack_depth() == 0:
                 self.push()
                 self.pop()
@@ -132,6 +137,9 @@ cdef class StateClass:
                     self.unshift()
             elif (self.length - self._b_i) >= 1 and self.stack_depth() == 0:
                 self.push()
+            elif Lexeme.c_check_flag(self.S_(0).lex, IS_SPACE):
+                self.add_arc(self.B(0), self.S(0), 0)
+                self.pop()
             else:
                 break
 
