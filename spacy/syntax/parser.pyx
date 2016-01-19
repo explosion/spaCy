@@ -105,7 +105,6 @@ cdef class Parser:
 
         cdef Pool mem = Pool()
         cdef ExampleC eg = self.model.allocate(mem)
-        words = [t.text for t in tokens]
         while not stcls.is_final():
             self.model.set_features(&eg, stcls)
             self.moves.set_valid(eg.is_valid, stcls)
