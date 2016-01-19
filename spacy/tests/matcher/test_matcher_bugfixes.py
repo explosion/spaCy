@@ -1,7 +1,9 @@
 import pytest
+import numpy
 
 from spacy.matcher import Matcher
-from spacy.attrs import LOWER
+from spacy.attrs import ORTH, LOWER, ENT_IOB, ENT_TYPE
+from spacy.symbols import DATE
 
 
 def test_overlap_issue118(EN):
@@ -103,3 +105,20 @@ def test_overlap_prefix_reorder(EN):
     assert ents[0].start == 9
     assert ents[0].end == 11
 
+
+@pytest.mark.models
+def test_ner_interaction(EN):
+    EN.matcher.add('LAX_Airport', 'AIRPORT', {}, [[{ORTH: 'LAX'}]])
+    EN.matcher.add('SFO_Airport', 'AIRPORT', {}, [[{ORTH: 'SFO'}]])
+    doc = EN.tokenizer(u'get me a flight from SFO to LAX leaving 20 December and arriving on January 5th')
+    EN.tagger(doc)
+    EN.matcher(doc)
+    EN.entity.add_label('AIRPORT')
+    EN.entity(doc)
+
+    ents = [(ent.label_, ent.text) for ent in doc.ents]
+    assert ents[0] == ('AIRPORT', 'SFO')
+    assert ents[1] == ('AIRPORT', 'LAX')
+    assert ents[2] == ('DATE', '20 December')
+    assert ents[3] == ('DATE', 'January 5th')
+ 
