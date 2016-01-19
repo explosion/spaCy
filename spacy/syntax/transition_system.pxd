@@ -31,13 +31,11 @@ ctypedef int (*do_func_t)(StateClass state, int label) nogil
 cdef class TransitionSystem:
     cdef Pool mem
     cdef StringStore strings
-    cdef const Transition* c
-    cdef bint* _is_valid
+    cdef Transition* c
     cdef readonly int n_moves
+    cdef int _size
     cdef public int root_label
     cdef public freqs
-
-    cdef object _labels_by_action
 
     cdef int initialize_state(self, StateClass state) except -1
     cdef int finalize_state(self, StateClass state) nogil
