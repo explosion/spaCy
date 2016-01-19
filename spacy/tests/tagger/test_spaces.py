@@ -35,6 +35,6 @@ def test_return_char(EN):
     for token in tokens:
         if token.is_space:
             assert token.pos == SPACE
-    assert tokens[3] == '\r\n\r\n'
+    assert tokens[3].text == '\r\n\r\n'
     assert tokens[3].is_space
     assert tokens[3].pos == SPACE
