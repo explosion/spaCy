@@ -116,12 +116,13 @@ def test_cnts5(en_tokenizer):
     tokens = en_tokenizer(text)
     assert len(tokens) == 11
 
-# TODO: This is currently difficult --- infix interferes here.
-#def test_mr(en_tokenizer):
-#    text = """Today is Tuesday.Mr."""
-#    tokens = en_tokenizer(text)
-#    assert len(tokens) == 5
-#    assert [w.orth_ for w in tokens] == ['Today', 'is', 'Tuesday', '.', 'Mr.']
+
+@pytest.mark.xfail
+def test_mr(en_tokenizer):
+    text = """Today is Tuesday.Mr."""
+    tokens = en_tokenizer(text)
+    assert len(tokens) == 5
+    assert [w.orth_ for w in tokens] == ['Today', 'is', 'Tuesday', '.', 'Mr.']
 
 
 def test_cnts6(en_tokenizer):
@@ -147,6 +148,16 @@ def test_two_whitespace(en_tokenizer):
     orig_str = u'there are 2 spaces after this  '
     tokens = en_tokenizer(orig_str)
     assert repr(tokens.text_with_ws) == repr(orig_str)
+
+
+@pytest.mark.xfail
+def test_em_dash_infix(en_tokenizer):
+    # Re Issue #225
+    tokens = en_tokenizer('''Will this road take me to Puddleton?\u2014No, '''
+                          '''you'll have to walk there.\u2014Ariel.''')
+    assert tokens[6].text == 'Puddleton'
+    assert tokens[7].text == '?'
+    assert tokens[8].text == '\u2014'
 
 #def test_cnts7():
 #    text = 'But then the 6,000-year ice age came...'
