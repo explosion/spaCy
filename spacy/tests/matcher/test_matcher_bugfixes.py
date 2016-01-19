@@ -113,7 +113,6 @@ def test_ner_interaction(EN):
     doc = EN.tokenizer(u'get me a flight from SFO to LAX leaving 20 December and arriving on January 5th')
     EN.tagger(doc)
     EN.matcher(doc)
-    EN.entity.add_label('AIRPORT')
     EN.entity(doc)
 
     ents = [(ent.label_, ent.text) for ent in doc.ents]
