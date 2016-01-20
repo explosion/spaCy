@@ -1,0 +1,71 @@
+include ../../header.jade
+include ./meta.jade
+
+
++WritePost(Meta)
+    p Until machines can think for themselves, we have to either program them explicitly, or give them examples.  Let's say you want to write a program that tags mentions of a certain type of thing in text --- let's say, food.  You can't write this program without supplying some definition of what you consider to be food, and what you don't. That much is fundamental. But, you don't necessarily need to sit down with an arbitrary sample of text, and start tagging it manually, word-by-word. Sometimes you do --- but sometimes there are easier ways.
+    
+    p In this post I'll describe how to adapt spaCy's named entity recogniser to recognise categories of your choosing, including a quick and dirty way to produce training data semi-automatically. The strategy is to define a handful of seed words or phrases, and then use word2vec to generate a more expansive list. Before using Gensim to train the word vectors, we merge base noun phrases and previously recognised entities into single tokens, using spaCy's annotations. This gives a vector space that includes phrases as well as words. To train our tagger, we can manually classify some of these phrases in context, or we can use an old data generation trick adapted from word sense disambiguation.
+
+    h4 Adding a new class to a pre-trained model
+
+    p spaCy provides a named entity recogniser trained on OntoNotes 5, that recognises the usual classes --- person, location, organization, etc. In this tutorial we'll look for video games, using comments posted to Reddit in 2015. The Reddit comment corpus is some of my favourite data. It's a good amount of text, and it's quite clean. We don't have to do any HTML or MediaWiki processing, and there's very little automatically generated text. Most of the comments are around the same length, and people mostly type in full sentences.
+
+    p First, let's have a look at what spaCy does out-of-the-box, with the pre-trained statistical model. Install spaCy and download the data:
+
+    pre
+        code
+            | $ pip install spacy && python -m spacy.en.download all
+
+    p Let's have a look at the default annotations of some Reddit comments. We'll print the annotations in color, and highlight the first letter to distinguish adjacent, but distinct spans.
+
+    pre
+        code
+            | def main(reddit_bz2_loc):
+            |     nlp = spacy.en.English() # Takes about two minutes to load =/
+            |     for comment in iter_comments(reddit_bz2_loc):
+            |         for sent in doc.sents:
+            |             string = []
+            |             for word in sent:
+            |                 text = color(word.ent_type, word.text_with_ws)
+            |                 if word.ent_iob_ == 'B':
+            |                     text = highlight(text[0]) + text[1:]
+            |                 strings.append(text)
+            |             print(''.join(strings))
+
+    p This prints:
+
+    p To add a new class to the existing model, we simply start providing examples to the #[code .train] method:
+
+    pre
+        code
+            | doc = nlp.tokenizer(u'Lions and tigers and grizzly bears!')
+            | annot = GoldParse(
+            |     ner=[u'U-ANIMAL', u'O', u'U-ANIMAL', u'O', u'B-ANIMAL', u'L-ANIMAL'])
+            |
+            | loss = nlp.entity.train(doc, annot)
+            | i = 0
+            | while loss != 0 and i < 1000:
+            |     loss = nlp.entity.train(doc, annot)
+            |     i += 1
+            | print("Used %d iterations" % i)
+            | nlp.entity(doc)
+            | print([ent.text for ent in doc.ents])
+
+    p This really isn't a good solution. It's just a quick hack that requires no set up, and very few lines of code. If we started from scratch with the old data and the new examples, we could almost certainly do better. And retraining the entity recognition model doesn't take very long. However, we can't distribute the training data to you, and the best solution will depend on the specifics of your problem. If you need better accuracy, you should get in touch.
+    
+    h4 Boot-strapping examples with nlp2vec
+
+    p We still need more examples. One solution is to sit down with a bunch of comments, and start annotating them from start to finish. For evaluation data, this is the only really satisfactory approach. But for training data, it's pretty inefficient.
+
+    p What we'll do is make a little seed dictionary of food terms. We'll then use a distributional similarity model to rank words and phrases for their similarity to our seed set. Then, we'll page through each of these words and phrases in turn, tagging examples of them in context. 
+
+    p Mostly, things are food or they aren't. Most words and phrases are unambiguous in this respect, which means they can be tagged in bulk, with one decision applying to many examples. And for the ambiguous entries, annotation decisions can be made much more quickly if you make lots of the same type of decision in a row.
+
+    p It's important that we're able to do this over #[em phrases], not just individual words. We want to be tagging instances of "hot dog", not just "dog". A simple way to achieve this is to use spaCy's syntactic parser to identify base noun phrases. We then merge these noun phrases into single tokens, before we send the data to Gensim's word2vec implementation. I did this over all comments posted to Reddit in 2015.
+
+    //p Note that the approach that I'm advocating here is actually fairly different from "active learning", where you try to get the classifier's uncertainty to prioritise a queue of examples to be annotated. This can minimise the total number of decisions you need to make to achieve some given accuracy. However, it makes the annotation task much more difficult, and introduces a whole new machine learning problem to tinker with. Active learning is well researched because it's generalisable: it doesn't require any specific insights about your annotation task. But this also makes it much less powerful.
+
+    //p Our next step is to cluster phrases. We will use the skip-grams with negative sampling algorithm, generally known as "word2vec". However, the vectors we'll learn will be keyed by larger units, discovered using linguistic annotations. Trask et al. describe an adaptation of word2vec that uses part-of-speech tagged keys as "sense2vec". I like the sound of "nlp2vec".
+    
+    
