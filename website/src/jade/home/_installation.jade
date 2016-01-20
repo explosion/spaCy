@@ -9,16 +9,18 @@ mixin Option(name, open)
 
     pre.language-bash: code
       | $ pip install --upgrade spacy
-      | $ python -m spacy.en.download --force all
+      | $ python -m spacy.en.download
     p Most updates ship a new model, so you will usually have to redownload the data.
 
 
 
 +Option("conda", true)
+    Sometimes conda is not up to date with the latest release. If you can't get the latest version on conda, you can always fall back to the pip install.
+
   pre.language-bash: code
     | $ conda config --add channels spacy
     | $ conda install spacy
-    | $ python -m spacy.en.download all
+    | $ python -m spacy.en.download
 
 +Option("pip and virtualenv", true)
     p With Python 2.7 or Python 3, using Linux or OSX, ensure that you have the following packages installed:
@@ -30,12 +32,18 @@ mixin Option(name, open)
 
     pre.language-bash: code
       | $ pip install spacy
-      | $ python -m spacy.en.download --force all
+      | $ python -m spacy.en.download
 
   p
-    | The download command fetches and installs about 400mb of data, for
-    | the parser model and word vectors, which it installs within the spacy.en
+    | The download command fetches and installs about 500mb of data, for
+    | the parser model and word vectors, which it installs within the spacy
     | package directory.
+
+
++Option("Windows (64 bit)", true)
+    | We've been working on Windows support. Our tests now succeed on 64 bit builds of Windows. Installation from pip should work if you have a C++ compiler installed. Please see the #[a(href="https://github.com/honnibal/spaCy/README-MSVC.txt") README-MSVC.txt] file for instructions on compiling from source.
+
+
 
 
   +Option("Workaround for obsolete system Python", false)
@@ -82,19 +90,45 @@ mixin Option(name, open)
   | be much slower on PyPy, as it's written in Cython, which produces code tuned
   | for the performance of CPython.
 
-+Option("Windows (Unsupported)")
-  | Unfortunately we don't currently support Windows.
-
 h4 What's New?
 
 
 details
     summary
+        h4 2016-01-19 v0.100: Smoother installation and model downloads, bug fixes
+
+    ul
+        li Redo setup.py, and remove ugly headers_workaround hack. Should result in fewer install problems.
+        li Update data downloading and installation functionality, by migrating to the Sputnik data-package manager. This will allow us to offer finer grained control of data installation in future. * Fix bug when using custom entity types in Matcher. This should work by default when using the #[code English.__call__] method of running the pipeline. If invoking #[code Parser.__call__] directly to do NER, you should call the #[code Parser.add_label()] method to register your entity type.
+        li Fix head-finding rules in Span.
+        li Fix problem that caused doc.merge() to sometimes hang
+        li Fix problems in handling of whitespace
+
+    summary
+        h4 2015-11-08 v0.99: Improve span merging, internal refactoring
+
+    ul
+        li Merging multi-word tokens into one, via the doc.merge() and span.merge() methods, no longer invalidates existing Span objects. This makes it much easier to merge multiple spans, e.g. to merge all named entities, or all base noun phrases. Thanks to @andreasgrv for help on this patch.
+        li Lots of internal refactoring, especially around the machine learning module, thinc. The thinc API has now been improved, and the spacy._ml wrapper module is no longer necessary.
+        li The lemmatizer now lower-cases non-noun, noun-verb and non-adjective words.
+        li A new attribute, .rank, is added to Token and Lexeme objects, giving the frequency rank of the word.
+
+    summary
+        h4 2015-11-03 v0.98: Smaller package, bug fixes
+
+    ul
+        li Remove binary data from PyPi package.
+        li Delete archive after downloading data
+        li Use updated cymem, preshed and thinc packages
+        li Fix information loss in deserialize
+        li Fix __str__ methods for Python2
+
+    summary
         h4 2015-10-24 v0.97: Reduce load time, bug fixes
 
     ul
         li Load the StringStore from a json list, instead of a text file. Accept a file-like object in the API instead of a path, for better flexibility.
-        li * Load from file, rather than path, in StringStore
+        li Load from file, rather than path, in StringStore
         li Fix bugs in download.py
         li Require #[code --force] to over-write the data directory in download.py
         li Fix bugs in #[code Matcher] and #[code doc.merge()]
