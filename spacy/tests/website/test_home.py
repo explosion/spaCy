@@ -9,15 +9,10 @@ def token(doc):
     return doc[0]
 
 
+@pytest.mark.models
 def test_load_resources_and_process_text():
-    if os.environ.get('SPACY_DATA'):
-        data_dir = os.environ.get('SPACY_DATA')
-    else:
-        data_dir = None
-    print("Load EN from %s" % data_dir)
- 
     from spacy.en import English
-    nlp = English(data_dir=data_dir)
+    nlp = English()
     doc = nlp('Hello, world. Here are two sentences.')
 
 
