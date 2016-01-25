@@ -190,12 +190,6 @@ cdef class Span:
             for i in range(self.start, self.end):
                 if self.start <= (i+self.doc.c[i].head) < self.end:
                     continue
-                # Don't allow punctuation or spaces to be the root, if there are
-                # better candidates
-                if root != -1 and Lexeme.c_check_flag(self.doc.c[i].lex, IS_PUNCT):
-                    continue
-                if root != -1 and Lexeme.c_check_flag(self.doc.c[i].lex, IS_SPACE):
-                    continue
                 words_to_root = _count_words_to_root(&self.doc.c[i], self.doc.length)
                 if words_to_root < current_best:
                     current_best = words_to_root
@@ -244,6 +238,11 @@ cdef class Span:
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
+    # Don't allow spaces to be the root, if there are
+    # better candidates
+    if Lexeme.c_check_flag(token.lex, IS_SPACE):
+        return sent_length-1
+
     cdef int n = 0
     while token.head != 0:
         token += token.head

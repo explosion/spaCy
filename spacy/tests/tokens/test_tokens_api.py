@@ -161,3 +161,21 @@ def test_merge_hang():
     doc.from_array([HEAD], heads.T)
     doc.merge(18, 32, '', '', 'ORG')
     doc.merge(8, 32, '', '', 'ORG')
+
+
+@pytest.mark.models
+def test_runtime_error(EN):
+    # Example that caused run-time error while parsing Reddit
+    text = u'67% of black households are single parent \n\n72% of all black babies born out of wedlock \n\n50% of all black kids don\u2019t finish high school'
+    doc = EN(text)
+    nps = []
+    for np in doc.noun_chunks:
+        while len(np) > 1 and np[0].dep_ not in ('advmod', 'amod', 'compound'):
+            np = np[1:]
+        if len(np) > 1:
+            nps.append((np.start_char, np.end_char, np.root.tag_, np.text, np.root.ent_type_))
+    for np in nps:
+        print(np)
+        for word in doc:
+            print(word.idx, word.text, word.head.i, word.head.text)
+        doc.merge(*np)
