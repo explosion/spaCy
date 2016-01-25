@@ -13,7 +13,7 @@ def token(doc):
 def test_load_resources_and_process_text():
     from spacy.en import English
     nlp = English()
-    doc = nlp('Hello, world. Here are two sentences.')
+    doc = nlp(u'Hello, world. Here are two sentences.')
 
 
 @pytest.mark.models
