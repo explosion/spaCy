@@ -74,12 +74,6 @@ compile_options =  {'msvc'  : ['/Ox', '/EHsc'],
 link_options    =  {'msvc'  : [],
                     'other' : []}
 
-if sys.platform.startswith('darwin'):
-    compile_options['other'].append('-mmacosx-version-min=10.8')
-    compile_options['other'].append('-stdlib=libc++')
-    link_options['other'].append('-lc++')
-
-
 class build_ext_options:
     def build_options(self):
         for e in self.extensions:
