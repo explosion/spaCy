@@ -1,14 +1,13 @@
-from thinc.api cimport AveragedPerceptron
-from thinc.api cimport ExampleC
+from thinc.linear.avgtron cimport AveragedPerceptron
+from thinc.extra.eg cimport Example
+from thinc.structs cimport ExampleC
 
 from .structs cimport TokenC
 from .vocab cimport Vocab
 
 
 cdef class TaggerModel(AveragedPerceptron):
-    cdef void set_features(self, ExampleC* eg, const TokenC* tokens, int i) except *
-    cdef void set_costs(self, ExampleC* eg, int gold) except *
-    cdef void update(self, ExampleC* eg) except *
+    cdef void set_featuresC(self, ExampleC* eg, const TokenC* tokens, int i) except *
  
 
 cdef class Tagger:
