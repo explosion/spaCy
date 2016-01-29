@@ -123,11 +123,9 @@ cdef class Packer:
             self._orth_decode(bits, length, doc)
         else:
             self._char_decode(bits, -length, doc)
-        
         array = numpy.zeros(shape=(len(doc), len(self._codecs)), dtype=numpy.int32)
         for i, codec in enumerate(self._codecs):
             codec.decode(bits, array[:, i])
-
         doc.from_array(self.attrs, array)
         return doc
 
