@@ -198,8 +198,8 @@ def setup_package():
             url=about['__uri__'],
             license=about['__license__'],
             ext_modules=ext_modules,
-            install_requires=['numpy', 'murmurhash>=0.26,<0.27', 'cymem>=1.30,<1.31', 'preshed>=0.46.1,<0.47',
-                              'thinc>=4.2.0,<4.3.0', 'text_unidecode', 'plac', 'six',
+            install_requires=['numpy', 'murmurhash>=0.26,<0.27', 'cymem>=1.30,<1.32.0', 'preshed>=0.46.1,<0.47',
+                              'thinc>=5.0.0,<5.1.0', 'text_unidecode', 'plac', 'six',
                               'ujson', 'cloudpickle', 'sputnik>=0.8.0,<0.9.0'],
             cmdclass = {
                 'build_ext': build_ext_subclass},
