@@ -373,7 +373,7 @@ cdef class Doc:
         for i in range(self.length, self.max_length + PADDING):
             self.c[i].lex = &EMPTY_LEXEME
 
-    cdef int set_parse(self, const TokenC* parsed) except -1:
+    cdef void set_parse(self, const TokenC* parsed) nogil:
         # TODO: This method is fairly misleading atm. It's used by Parser
         # to actually apply the parse calculated. Need to rethink this.
 
@@ -381,8 +381,6 @@ cdef class Doc:
         self.is_parsed = True
         for i in range(self.length):
             self.c[i] = parsed[i]
-            assert self.c[i].l_edge <= i
-            assert self.c[i].r_edge >= i
 
     def from_array(self, attrs, array):
         cdef int i, col
