@@ -48,8 +48,8 @@ MOVE_NAMES[BREAK] = 'B'
 
 # Helper functions for the arc-eager oracle
 
-cdef int push_cost(StateClass stcls, const GoldParseC* gold, int target) nogil:
-    cdef int cost = 0
+cdef weight_t push_cost(StateClass stcls, const GoldParseC* gold, int target) nogil:
+    cdef weight_t cost = 0
     cdef int i, S_i
     for i in range(stcls.stack_depth()):
         S_i = stcls.S(i)
@@ -61,8 +61,8 @@ cdef int push_cost(StateClass stcls, const GoldParseC* gold, int target) nogil:
     return cost
 
 
-cdef int pop_cost(StateClass stcls, const GoldParseC* gold, int target) nogil:
-    cdef int cost = 0
+cdef weight_t pop_cost(StateClass stcls, const GoldParseC* gold, int target) nogil:
+    cdef weight_t cost = 0
     cdef int i, B_i
     for i in range(stcls.buffer_length()):
         B_i = stcls.B(i)
@@ -70,11 +70,12 @@ cdef int pop_cost(StateClass stcls, const GoldParseC* gold, int target) nogil:
         cost += gold.heads[target] == B_i
         if gold.heads[B_i] == B_i or gold.heads[B_i] < target:
             break
-    cost += Break.is_valid(stcls, -1) and Break.move_cost(stcls, gold) == 0
+    if Break.is_valid(stcls, -1) and Break.move_cost(stcls, gold) == 0:
+        cost += 1
     return cost
 
 
-cdef int arc_cost(StateClass stcls, const GoldParseC* gold, int head, int child) nogil:
+cdef weight_t arc_cost(StateClass stcls, const GoldParseC* gold, int head, int child) nogil:
     if arc_is_gold(gold, head, child):
         return 0
     elif stcls.H(child) == gold.heads[child]:
@@ -123,15 +124,15 @@ cdef class Shift:
         st.fast_forward()
 
     @staticmethod
-    cdef int cost(StateClass st, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass st, const GoldParseC* gold, int label) nogil:
         return Shift.move_cost(st, gold) + Shift.label_cost(st, gold, label)
 
     @staticmethod
-    cdef inline int move_cost(StateClass s, const GoldParseC* gold) nogil:
+    cdef inline weight_t move_cost(StateClass s, const GoldParseC* gold) nogil:
         return push_cost(s, gold, s.B(0))
 
     @staticmethod
-    cdef inline int label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
         return 0
 
 
@@ -149,15 +150,15 @@ cdef class Reduce:
         st.fast_forward()
 
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
         return Reduce.move_cost(s, gold) + Reduce.label_cost(s, gold, label)
 
     @staticmethod
-    cdef inline int move_cost(StateClass st, const GoldParseC* gold) nogil:
+    cdef inline weight_t move_cost(StateClass st, const GoldParseC* gold) nogil:
         return pop_cost(st, gold, st.S(0))
 
     @staticmethod
-    cdef inline int label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
         return 0
 
 
@@ -173,12 +174,12 @@ cdef class LeftArc:
         st.fast_forward()
 
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
         return LeftArc.move_cost(s, gold) + LeftArc.label_cost(s, gold, label)
 
     @staticmethod
-    cdef inline int move_cost(StateClass s, const GoldParseC* gold) nogil:
-        cdef int cost = 0
+    cdef inline weight_t move_cost(StateClass s, const GoldParseC* gold) nogil:
+        cdef weight_t cost = 0
         if arc_is_gold(gold, s.B(0), s.S(0)):
             return 0
         else:
@@ -190,7 +191,7 @@ cdef class LeftArc:
             return pop_cost(s, gold, s.S(0)) + arc_cost(s, gold, s.B(0), s.S(0))
 
     @staticmethod
-    cdef inline int label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
         return arc_is_gold(gold, s.B(0), s.S(0)) and not label_is_gold(gold, s.B(0), s.S(0), label)
 
 
@@ -206,11 +207,11 @@ cdef class RightArc:
         st.fast_forward()
 
     @staticmethod
-    cdef inline int cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef inline weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
         return RightArc.move_cost(s, gold) + RightArc.label_cost(s, gold, label)
 
     @staticmethod
-    cdef inline int move_cost(StateClass s, const GoldParseC* gold) nogil:
+    cdef inline weight_t move_cost(StateClass s, const GoldParseC* gold) nogil:
         if arc_is_gold(gold, s.S(0), s.B(0)):
             return 0
         elif s.shifted[s.B(0)]:
@@ -219,7 +220,7 @@ cdef class RightArc:
             return push_cost(s, gold, s.B(0)) + arc_cost(s, gold, s.S(0), s.B(0))
 
     @staticmethod
-    cdef int label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
         return arc_is_gold(gold, s.S(0), s.B(0)) and not label_is_gold(gold, s.S(0), s.B(0), label)
 
 
@@ -247,12 +248,12 @@ cdef class Break:
         st.fast_forward()
 
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
         return Break.move_cost(s, gold) + Break.label_cost(s, gold, label)
 
     @staticmethod
-    cdef inline int move_cost(StateClass s, const GoldParseC* gold) nogil:
-        cdef int cost = 0
+    cdef inline weight_t move_cost(StateClass s, const GoldParseC* gold) nogil:
+        cdef weight_t cost = 0
         cdef int i, j, S_i, B_i
         for i in range(s.stack_depth()):
             S_i = s.S(i)
@@ -270,7 +271,7 @@ cdef class Break:
             return cost + 1
 
     @staticmethod
-    cdef inline int label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
         return 0
 
 cdef int _get_root(int word, const GoldParseC* gold) nogil:
@@ -404,12 +405,12 @@ cdef class ArcEager(TransitionSystem):
         for i in range(self.n_moves):
             output[i] = is_valid[self.c[i].move]
 
-    cdef int set_costs(self, int* is_valid, int* costs, 
+    cdef int set_costs(self, int* is_valid, weight_t* costs, 
                        StateClass stcls, GoldParse gold) except -1:
         cdef int i, move, label
         cdef label_cost_func_t[N_MOVES] label_cost_funcs
         cdef move_cost_func_t[N_MOVES] move_cost_funcs
-        cdef int[N_MOVES] move_costs
+        cdef weight_t[N_MOVES] move_costs
         for i in range(N_MOVES):
             move_costs[i] = -1
         move_cost_funcs[SHIFT] = Shift.move_cost

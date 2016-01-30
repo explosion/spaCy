@@ -19,7 +19,8 @@ import sys
 from cymem.cymem cimport Pool, Address
 from murmurhash.mrmr cimport hash64
 from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
-from thinc.features cimport ConjunctionExtracter
+from thinc.linear.avgtron cimport AveragedPerceptron
+from thinc.linalg cimport VecVec
 
 from util import Config
 
@@ -64,7 +65,7 @@ def ParserFactory(transition_system):
 
 
 cdef class ParserModel(AveragedPerceptron):
-    cdef void set_features(self, ExampleC* eg, StateClass stcls) except *: 
+    cdef void set_featuresC(self, ExampleC* eg, StateClass stcls) except *: 
         fill_context(eg.atoms, stcls)
         eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
 
@@ -83,8 +84,7 @@ cdef class Parser:
         cfg = Config.read(model_dir, 'config')
         moves = transition_system(strings, cfg.labels)
         templates = get_templates(cfg.features)
-        model = ParserModel(moves.n_moves,
-            ConjunctionExtracter(CONTEXT_SIZE, templates))
+        model = ParserModel(templates)
         if path.exists(path.join(model_dir, 'model')):
             model.load(path.join(model_dir, 'model'))
         return cls(strings, moves, model)
@@ -104,14 +104,19 @@ cdef class Parser:
         self.moves.initialize_state(stcls)
 
         cdef Pool mem = Pool()
-        cdef ExampleC eg = self.model.allocate(mem)
+        cdef Example eg = Example(
+                nr_class=self.moves.n_moves,
+                nr_atom=CONTEXT_SIZE,
+                nr_feat=self.model.nr_feat)
         while not stcls.is_final():
-            self.model.set_features(&eg, stcls)
-            self.moves.set_valid(eg.is_valid, stcls)
-            self.model.set_prediction(&eg)
+            self.model.set_featuresC(&eg.c, stcls)
+            self.moves.set_valid(eg.c.is_valid, stcls)
+            self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
 
-            action = self.moves.c[eg.guess]
-            if not eg.is_valid[eg.guess]:
+            guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
+
+            action = self.moves.c[guess]
+            if not eg.is_valid[guess]:
                 raise ValueError(
                     "Illegal action: %s" % self.moves.move_name(action.move, action.label)
                 )
@@ -119,6 +124,7 @@ cdef class Parser:
             action.do(stcls, action.label)
             # Check for KeyboardInterrupt etc. Untested
             PyErr_CheckSignals()
+            eg.reset_classes(eg.nr_class)
         self.moves.finalize_state(stcls)
         tokens.set_parse(stcls._sent)
   
@@ -127,18 +133,23 @@ cdef class Parser:
         cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
         self.moves.initialize_state(stcls)
         cdef Pool mem = Pool()
-        cdef ExampleC eg = self.model.allocate(mem)
+        cdef Example eg = Example(
+                nr_class=self.moves.n_moves,
+                nr_atom=CONTEXT_SIZE,
+                nr_feat=self.model.nr_feat)
         cdef weight_t loss = 0
         cdef Transition action
         while not stcls.is_final():
-            self.model.set_features(&eg, stcls)
-            self.moves.set_costs(eg.is_valid, eg.costs, stcls, gold)
-            self.model.set_prediction(&eg)
-            self.model.update(&eg)
+            self.model.set_featuresC(&eg.c, stcls)
+            self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
+            self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
+            self.model.updateC(&eg.c)
+            guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
 
             action = self.moves.c[eg.guess]
             action.do(stcls, action.label)
             loss += eg.costs[eg.guess]
+            eg.reset_classes(eg.nr_class)
         return loss
 
     def step_through(self, Doc doc):
@@ -147,11 +158,6 @@ cdef class Parser:
     def add_label(self, label):
         for action in self.moves.action_types:
             self.moves.add_action(action, label)
-        # This seems pretty dangerous. However, thinc uses sparse vectors for
-        # classes, so it doesn't need to have the classes pre-specified. Things
-        # get dicey if people have an Exampe class around, which is being reused.
-        self.model.nr_class = self.moves.n_moves
-
 
 
 cdef class StepwiseState:
@@ -165,8 +171,10 @@ cdef class StepwiseState:
         self.doc = doc
         self.stcls = StateClass.init(doc.c, doc.length)
         self.parser.moves.initialize_state(self.stcls)
-        self.eg = Example(self.parser.model.nr_class, CONTEXT_SIZE,
-                          self.parser.model.nr_templ, self.parser.model.nr_embed)
+        self.eg = Example(
+            nr_class=self.parser.moves.n_moves,
+            nr_atom=CONTEXT_SIZE,
+            nr_feat=self.parser.model.nr_feat)
 
     def __enter__(self):
         return self
@@ -196,11 +204,13 @@ cdef class StepwiseState:
                 for i in range(self.stcls.length)]
 
     def predict(self):
-        self.parser.model.set_features(&self.eg.c, self.stcls)
+        self.eg.reset()
+        self.parser.model.set_featuresC(&self.eg.c, self.stcls)
         self.parser.moves.set_valid(self.eg.c.is_valid, self.stcls)
-        self.parser.model.set_prediction(&self.eg.c)
+        self.parser.model.set_scoresC(self.eg.c.scores,
+            self.eg.c.features, self.eg.c.nr_feat)
 
-        action = self.parser.moves.c[self.eg.c.guess]
+        cdef Transition action = self.parser.moves.c[self.eg.guess]
         return self.parser.moves.move_name(action.move, action.label)
 
     def transition(self, action_name):

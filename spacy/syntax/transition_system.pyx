@@ -71,7 +71,7 @@ cdef class TransitionSystem:
         for i in range(self.n_moves):
             is_valid[i] = self.c[i].is_valid(stcls, self.c[i].label)
 
-    cdef int set_costs(self, int* is_valid, int* costs,
+    cdef int set_costs(self, int* is_valid, weight_t* costs,
                        StateClass stcls, GoldParse gold) except -1:
         cdef int i
         self.set_valid(is_valid, stcls)

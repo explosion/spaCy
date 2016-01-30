@@ -12,6 +12,6 @@ cdef class ArcEager(TransitionSystem):
     pass
 
 
-cdef int push_cost(StateClass stcls, const GoldParseC* gold, int target) nogil
-cdef int arc_cost(StateClass stcls, const GoldParseC* gold, int head, int child) nogil
+cdef weight_t push_cost(StateClass stcls, const GoldParseC* gold, int target) nogil
+cdef weight_t arc_cost(StateClass stcls, const GoldParseC* gold, int head, int child) nogil
 

@@ -158,7 +158,7 @@ cdef class Missing:
         pass
 
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
         return 9000
 
 
@@ -195,7 +195,7 @@ cdef class Begin:
         st.pop()
 
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
         cdef int g_act = gold.ner[s.B(0)].move
         cdef int g_tag = gold.ner[s.B(0)].label
 
@@ -236,7 +236,7 @@ cdef class In:
         st.pop()
 
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
         move = IN
         cdef int next_act = gold.ner[s.B(1)].move if s.B(0) < s.length else OUT
         cdef int g_act = gold.ner[s.B(0)].move
@@ -279,7 +279,7 @@ cdef class Last:
         st.pop()
 
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
         move = LAST
 
         cdef int g_act = gold.ner[s.B(0)].move
@@ -329,7 +329,7 @@ cdef class Unit:
         st.pop()
 
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
         cdef int g_act = gold.ner[s.B(0)].move
         cdef int g_tag = gold.ner[s.B(0)].label
 
@@ -363,7 +363,7 @@ cdef class Out:
         st.pop()
     
     @staticmethod
-    cdef int cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
         cdef int g_act = gold.ner[s.B(0)].move
         cdef int g_tag = gold.ner[s.B(0)].label
 

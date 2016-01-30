@@ -72,6 +72,7 @@ cpdef enum:
 
 cdef class TaggerModel(AveragedPerceptron):
     cdef void set_featuresC(self, ExampleC* eg, const TokenC* tokens, int i) except *:
+        
         _fill_from_token(&eg.atoms[P2_orth], &tokens[i-2])
         _fill_from_token(&eg.atoms[P1_orth], &tokens[i-1])
         _fill_from_token(&eg.atoms[W_orth], &tokens[i])
@@ -198,7 +199,9 @@ cdef class Tagger:
         cdef Pool mem = Pool()
 
         cdef int i, tag
-        cdef Example eg = Example(self.vocab.morphology.n_tags)
+        cdef Example eg = Example(nr_atom=N_CONTEXT_FIELDS,
+                                  nr_class=self.vocab.morphology.n_tags,
+                                  nr_feat=self.model.nr_feat)
         for i in range(tokens.length):
             if tokens.c[i].pos == 0:
                 self.model.set_featuresC(&eg.c, tokens.c, i)
@@ -206,6 +209,7 @@ cdef class Tagger:
                     eg.c.features, eg.c.nr_feat)
                 guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
                 self.vocab.morphology.assign_tag(&tokens.c[i], guess)
+                eg.reset_classes(eg.c.nr_class)
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
     
@@ -214,7 +218,10 @@ cdef class Tagger:
         golds = [self.tag_names.index(g) if g is not None else -1 for g in gold_tag_strs]
         cdef int correct = 0
         cdef Pool mem = Pool()
-        cdef Example eg = Example(self.vocab.morphology.n_tags)
+        cdef Example eg = Example(
+            nr_atom=N_CONTEXT_FIELDS,
+            nr_class=self.vocab.morphology.n_tags,
+            nr_feat=self.model.nr_feat)
         for i in range(tokens.length):
             self.model.set_featuresC(&eg.c, tokens.c, i)
             eg.set_label(golds[i])
@@ -227,7 +234,7 @@ cdef class Tagger:
             
             correct += eg.cost == 0
             self.freqs[TAG][tokens.c[i].tag] += 1
-            eg.wipe(tuple())
+            eg.reset_classes(eg.c.nr_class)
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
         return correct
