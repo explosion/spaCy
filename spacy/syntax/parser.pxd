@@ -9,9 +9,11 @@ from ..structs cimport TokenC
 
 
 cdef class ParserModel(AveragedPerceptron):
-    cdef void set_featuresC(self, ExampleC* eg, StateClass stcls) except *
+    cdef void set_featuresC(self, ExampleC* eg, StateClass stcls) nogil
 
 
 cdef class Parser:
     cdef readonly ParserModel model
     cdef readonly TransitionSystem moves
+
+    cdef void parseC(self, Doc tokens, StateClass stcls, Example eg) nogil

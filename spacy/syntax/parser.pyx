@@ -65,7 +65,7 @@ def ParserFactory(transition_system):
 
 
 cdef class ParserModel(AveragedPerceptron):
-    cdef void set_featuresC(self, ExampleC* eg, StateClass stcls) except *: 
+    cdef void set_featuresC(self, ExampleC* eg, StateClass stcls) nogil: 
         fill_context(eg.atoms, stcls)
         eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
 
@@ -95,7 +95,6 @@ cdef class Parser:
         raise NotImplementedError(
                 "This should be here, but isn't yet =/. Use Parser.from_dir")
 
-
     def __reduce__(self):
         return (Parser, (self.moves.strings, self.moves, self.model), None, None)
 
@@ -103,11 +102,16 @@ cdef class Parser:
         cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
         self.moves.initialize_state(stcls)
 
-        cdef Pool mem = Pool()
         cdef Example eg = Example(
                 nr_class=self.moves.n_moves,
                 nr_atom=CONTEXT_SIZE,
                 nr_feat=self.model.nr_feat)
+        with nogil:
+            self.parseC(tokens, stcls, eg)
+        # Check for KeyboardInterrupt etc. Untested
+        PyErr_CheckSignals()
+
+    cdef void parseC(self, Doc tokens, StateClass stcls, Example eg) nogil:
         while not stcls.is_final():
             self.model.set_featuresC(&eg.c, stcls)
             self.moves.set_valid(eg.c.is_valid, stcls)
@@ -116,15 +120,15 @@ cdef class Parser:
             guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
 
             action = self.moves.c[guess]
-            if not eg.is_valid[guess]:
-                raise ValueError(
-                    "Illegal action: %s" % self.moves.move_name(action.move, action.label)
-                )
-            
+            if not eg.c.is_valid[guess]:
+                with gil:
+                    move_name = self.moves.move_name(action.move, action.label)
+                    raise ValueError("Illegal action: %s" % move_name)
             action.do(stcls, action.label)
-            # Check for KeyboardInterrupt etc. Untested
-            PyErr_CheckSignals()
-            eg.reset_classes(eg.nr_class)
+            memset(eg.c.scores, 0, sizeof(eg.c.scores[0]) * eg.c.nr_class)
+            memset(eg.c.costs, 0, sizeof(eg.c.costs[0]) * eg.c.nr_class)
+            for i in range(eg.c.nr_class):
+                eg.c.is_valid[i] = 1
         self.moves.finalize_state(stcls)
         tokens.set_parse(stcls._sent)
   
