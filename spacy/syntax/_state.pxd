@@ -115,7 +115,7 @@ cdef cppclass StateC:
         if i < 0 or i >= this.length:
             return -1
         cdef const TokenC* target = &this._sent[i]
-        if target.l_kids < idx:
+        if target.l_kids < <uint32_t>idx:
             return -1
         cdef const TokenC* ptr = &this._sent[target.l_edge]
 
@@ -141,7 +141,7 @@ cdef cppclass StateC:
         if i < 0 or i >= this.length:
             return -1
         cdef const TokenC* target = &this._sent[i]
-        if target.r_kids < idx:
+        if target.r_kids < <uint32_t>idx:
             return -1
         cdef const TokenC* ptr = &this._sent[target.r_edge]
         while ptr > target:
