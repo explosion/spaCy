@@ -71,9 +71,9 @@ if sys.version_info[:2] < (2, 7) or (3, 0) <= sys.version_info[0:2] < (3, 4):
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 compile_options =  {'msvc'  : ['/Ox', '/EHsc'],
-                    'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']}
+                    'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function', '-fopenmp']}
 link_options    =  {'msvc'  : [],
-                    'other' : []}
+                    'other' : ['-fopenmp']}
 
 if sys.platform.startswith('darwin'):
     compile_options['other'].append('-mmacosx-version-min=10.8')

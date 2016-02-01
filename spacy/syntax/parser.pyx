@@ -21,6 +21,10 @@ from murmurhash.mrmr cimport hash64
 from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
 from thinc.linear.avgtron cimport AveragedPerceptron
 from thinc.linalg cimport VecVec
+from thinc.structs cimport SparseArrayC
+from thinc.structs cimport FeatureC
+from preshed.maps cimport MapStruct
+from preshed.maps cimport map_get
 
 from util import Config
 
@@ -101,7 +105,6 @@ cdef class Parser:
     def __call__(self, Doc tokens):
         cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
         self.moves.initialize_state(stcls)
-
         cdef Example eg = Example(
                 nr_class=self.moves.n_moves,
                 nr_atom=CONTEXT_SIZE,
@@ -112,13 +115,22 @@ cdef class Parser:
         PyErr_CheckSignals()
 
     cdef void parseC(self, Doc tokens, StateClass stcls, Example eg) nogil:
+        cdef const MapStruct* weights_table = self.model.weights.c_map
+        cdef int i, j
+        cdef FeatureC feat
         while not stcls.is_final():
             self.model.set_featuresC(&eg.c, stcls)
             self.moves.set_valid(eg.c.is_valid, stcls.c)
             self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
-
+            for i in range(eg.c.nr_feat):
+                feat = eg.c.features[i]
+                class_weights = <const SparseArrayC*>map_get(weights_table, feat.key)
+                if class_weights != NULL:
+                    j = 0
+                    while class_weights[j].key >= 0:
+                        eg.c.scores[class_weights[j].key] += class_weights[j].val * feat.value
+                        j += 1
             guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
-
             action = self.moves.c[guess]
             if not eg.c.is_valid[guess]:
                 with gil:
