@@ -56,11 +56,12 @@ cdef cppclass StateC:
             this._sent[i].lex = &EMPTY_LEXEME
 
     __dealloc__():
-        free(this._buffer)
-        free(this._stack)
-        free(this.shifted)
-        free(this._sent)
-        free(this._ents)
+        cdef int PADDING = 5
+        free(this._sent - PADDING)
+        free(this._ents - PADDING)
+        free(this._buffer - PADDING)
+        free(this._stack - PADDING)
+        free(this.shifted - PADDING)
 
     int S(int i) nogil:
         if i >= this._s_i:

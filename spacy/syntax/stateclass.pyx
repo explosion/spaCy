@@ -38,6 +38,10 @@ cdef class StateClass:
             self._buffer[i] = i
         self._empty_token.lex = &EMPTY_LEXEME
 
+
+    def __dealloc__(self):
+        del self.c
+
     @property
     def stack(self):
         return {self.S(i) for i in range(self._s_i)}
@@ -47,64 +51,13 @@ cdef class StateClass:
         return {self.B(i) for i in range(self._b_i)}
 
     cdef int E(self, int i) nogil:
-        self.c.E(i)
-        if self._e_i <= 0 or self._e_i >= self.length:
-            return 0
-        if i < 0 or i >= self._e_i:
-            return 0
-        return self._ents[self._e_i - (i+1)].start
+        return self.c.E(i)
 
     cdef int L(self, int i, int idx) nogil:
-        self.c.L(i, idx)
-        if idx < 1:
-            return -1
-        if i < 0 or i >= self.length:
-            return -1
-        cdef const TokenC* target = &self._sent[i]
-        if target.l_kids < idx:
-            return -1
-        cdef const TokenC* ptr = &self._sent[target.l_edge]
-
-        while ptr < target:
-            # If this head is still to the right of us, we can skip to it
-            # No token that's between this token and this head could be our
-            # child.
-            if (ptr.head >= 1) and (ptr + ptr.head) < target:
-                ptr += ptr.head
-
-            elif ptr + ptr.head == target:
-                idx -= 1
-                if idx == 0:
-                    return ptr - self._sent
-                ptr += 1
-            else:
-                ptr += 1
-        return -1
+        return self.c.L(i, idx)
 
     cdef int R(self, int i, int idx) nogil:
-        self.c.R(i, idx)
-        if idx < 1:
-            return -1
-        if i < 0 or i >= self.length:
-            return -1
-        cdef const TokenC* target = &self._sent[i]
-        if target.r_kids < idx:
-            return -1
-        cdef const TokenC* ptr = &self._sent[target.r_edge]
-        while ptr > target:
-            # If this head is still to the right of us, we can skip to it
-            # No token that's between this token and this head could be our
-            # child.
-            if (ptr.head < 0) and ((ptr + ptr.head) > target):
-                ptr += ptr.head
-            elif ptr + ptr.head == target:
-                idx -= 1
-                if idx == 0:
-                    return ptr - self._sent
-                ptr -= 1
-            else:
-                ptr -= 1
-        return -1
+        return self.c.R(i, idx)
 
     cdef void push(self) nogil:
         self.c.push()
@@ -203,6 +156,7 @@ cdef class StateClass:
         if 0 <= i < self.length:
             self._sent[i].ent_iob = ent_iob
             self._sent[i].ent_type = ent_type
+
 
     cdef void set_break(self, int _) nogil:
         self.c.set_break(_)

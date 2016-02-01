@@ -382,6 +382,9 @@ cdef class ArcEager(TransitionSystem):
             st._sent[i].sent_start = False
             st._sent[i].l_edge = i
             st._sent[i].r_edge = i
+            st.c._sent[i].sent_start = False
+            st.c._sent[i].l_edge = i
+            st.c._sent[i].r_edge = i
         st.fast_forward()
 
     cdef int finalize_state(self, StateClass st) nogil:
@@ -389,10 +392,12 @@ cdef class ArcEager(TransitionSystem):
         for i in range(st.length):
             if st._sent[i].head == 0 and st._sent[i].dep == 0:
                 st._sent[i].dep = self.root_label
+                st.c._sent[i].dep = self.root_label
             # If we're not using the Break transition, we segment via root-labelled
             # arcs between the root words.
             elif USE_ROOT_ARC_SEGMENT and st._sent[i].dep == self.root_label:
                 st._sent[i].head = 0
+                st.c._sent[i].head = 0
 
     cdef int set_valid(self, int* output, StateClass stcls) nogil:
         cdef bint[N_MOVES] is_valid

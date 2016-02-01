@@ -81,7 +81,7 @@ cdef class StateClass:
             return &self._sent[i]
 
     cdef inline int H(self, int i) nogil:
-        self.c.H(i)
+        return self.c.H(i)
         if i < 0 or i >= self.length:
             return -1
         return self._sent[i].head + i
@@ -109,7 +109,7 @@ cdef class StateClass:
         return self.stack_depth() <= 0 and self._b_i >= self.length
 
     cdef inline bint has_head(self, int i) nogil:
-        self.c.has_head(i)
+        #return self.c.has_head(i)
         return self.safe_get(i).head != 0
 
     cdef inline int n_L(self, int i) nogil:

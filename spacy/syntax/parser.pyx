@@ -204,7 +204,7 @@ cdef class StepwiseState:
 
     @property
     def deps(self):
-        return [self.doc.vocab.strings[self.stcls._sent[i].dep]
+        return [self.doc.vocab.strings[self.stcls.c._sent[i].dep]
                 for i in range(self.stcls.length)]
 
     def predict(self):
@@ -235,7 +235,7 @@ cdef class StepwiseState:
     def finish(self):
         if self.stcls.is_final():
             self.parser.moves.finalize_state(self.stcls)
-        self.doc.set_parse(self.stcls._sent)
+        self.doc.set_parse(self.stcls.c._sent)
 
 
 cdef int _arg_max_clas(const weight_t* scores, int move, const Transition* actions,
