@@ -158,7 +158,6 @@ cdef class Parser:
                     raise ValueError("Illegal action: %s" % move_name)
             action.do(state, action.label)
             memset(eg.scores, 0, sizeof(eg.scores[0]) * eg.nr_class)
-            memset(eg.costs, 0, sizeof(eg.costs[0]) * eg.nr_class)
             for i in range(eg.nr_class):
                 eg.is_valid[i] = 1
         self.moves.finalize_state(state)
