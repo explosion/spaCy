@@ -7,6 +7,7 @@ from ..gold cimport GoldParseC
 from ..strings cimport StringStore
 
 from .stateclass cimport StateClass
+from ._state cimport StateC
 
 
 cdef struct Transition:
@@ -16,16 +17,16 @@ cdef struct Transition:
 
     weight_t score
 
-    bint (*is_valid)(StateClass state, int label) nogil
+    bint (*is_valid)(const StateC* state, int label) nogil
     weight_t (*get_cost)(StateClass state, const GoldParseC* gold, int label) nogil
-    int (*do)(StateClass state, int label) nogil
+    int (*do)(StateC* state, int label) nogil
 
 
 ctypedef weight_t (*get_cost_func_t)(StateClass state, const GoldParseC* gold, int label) nogil
 ctypedef weight_t (*move_cost_func_t)(StateClass state, const GoldParseC* gold) nogil
 ctypedef weight_t (*label_cost_func_t)(StateClass state, const GoldParseC* gold, int label) nogil
 
-ctypedef int (*do_func_t)(StateClass state, int label) nogil
+ctypedef int (*do_func_t)(StateC* state, int label) nogil
 
 
 cdef class TransitionSystem:

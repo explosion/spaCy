@@ -64,12 +64,12 @@ cdef class TransitionSystem:
 
     def is_valid(self, StateClass stcls, move_name):
         action = self.lookup_transition(move_name)
-        return action.is_valid(stcls, action.label)
+        return action.is_valid(stcls.c, action.label)
 
     cdef int set_valid(self, int* is_valid, StateClass stcls) nogil:
         cdef int i
         for i in range(self.n_moves):
-            is_valid[i] = self.c[i].is_valid(stcls, self.c[i].label)
+            is_valid[i] = self.c[i].is_valid(stcls.c, self.c[i].label)
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
                        StateClass stcls, GoldParse gold) except -1:

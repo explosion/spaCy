@@ -11,6 +11,7 @@ from ..gold cimport GoldParse
 from ..attrs cimport ENT_TYPE, ENT_IOB
 
 from .stateclass cimport StateClass
+from ._state cimport StateC
 
 
 cdef enum:
@@ -150,11 +151,11 @@ cdef class BiluoPushDown(TransitionSystem):
 
 cdef class Missing:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) nogil:
+    cdef bint is_valid(const StateC* st, int label) nogil:
         return False
 
     @staticmethod
-    cdef int transition(StateClass s, int label) nogil:
+    cdef int transition(StateC* s, int label) nogil:
         pass
 
     @staticmethod
@@ -164,7 +165,7 @@ cdef class Missing:
 
 cdef class Begin:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) nogil:
+    cdef bint is_valid(const StateC* st, int label) nogil:
         # Ensure we don't clobber preset entities. If no entity preset,
         # ent_iob is 0
         cdef int preset_ent_iob = st.B_(0).ent_iob
@@ -188,7 +189,7 @@ cdef class Begin:
             return label != 0 and not st.entity_is_open()
 
     @staticmethod
-    cdef int transition(StateClass st, int label) nogil:
+    cdef int transition(StateC* st, int label) nogil:
         st.open_ent(label)
         st.set_ent_tag(st.B(0), 3, label)
         st.push()
@@ -214,7 +215,7 @@ cdef class Begin:
 
 cdef class In:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) nogil:
+    cdef bint is_valid(const StateC* st, int label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
         if preset_ent_iob == 2:
             return False
@@ -230,7 +231,7 @@ cdef class In:
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
     
     @staticmethod
-    cdef int transition(StateClass st, int label) nogil:
+    cdef int transition(StateC* st, int label) nogil:
         st.set_ent_tag(st.B(0), 1, label)
         st.push()
         st.pop()
@@ -266,13 +267,13 @@ cdef class In:
 
 cdef class Last:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) nogil:
+    cdef bint is_valid(const StateC* st, int label) nogil:
         if st.B_(1).ent_iob == 1:
             return False
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
 
     @staticmethod
-    cdef int transition(StateClass st, int label) nogil:
+    cdef int transition(StateC* st, int label) nogil:
         st.close_ent()
         st.set_ent_tag(st.B(0), 1, label)
         st.push()
@@ -308,7 +309,7 @@ cdef class Last:
 
 cdef class Unit:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) nogil:
+    cdef bint is_valid(const StateC* st, int label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
         if preset_ent_iob == 2:
             return False
@@ -321,7 +322,7 @@ cdef class Unit:
         return label != 0 and not st.entity_is_open()
 
     @staticmethod
-    cdef int transition(StateClass st, int label) nogil:
+    cdef int transition(StateC* st, int label) nogil:
         st.open_ent(label)
         st.close_ent()
         st.set_ent_tag(st.B(0), 3, label)
@@ -348,7 +349,7 @@ cdef class Unit:
 
 cdef class Out:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) nogil:
+    cdef bint is_valid(const StateC* st, int label) nogil:
         cdef int preset_ent_iob = st.B_(0).ent_iob
         if preset_ent_iob == 3:
             return False
@@ -357,7 +358,7 @@ cdef class Out:
         return not st.entity_is_open()
 
     @staticmethod
-    cdef int transition(StateClass st, int label) nogil:
+    cdef int transition(StateC* st, int label) nogil:
         st.set_ent_tag(st.B(0), 2, 0)
         st.push()
         st.pop()

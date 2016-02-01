@@ -124,7 +124,7 @@ cdef class Parser:
                 with gil:
                     move_name = self.moves.move_name(action.move, action.label)
                     raise ValueError("Illegal action: %s" % move_name)
-            action.do(stcls, action.label)
+            action.do(stcls.c, action.label)
             memset(eg.c.scores, 0, sizeof(eg.c.scores[0]) * eg.c.nr_class)
             memset(eg.c.costs, 0, sizeof(eg.c.costs[0]) * eg.c.nr_class)
             for i in range(eg.c.nr_class):
@@ -151,7 +151,7 @@ cdef class Parser:
             guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
 
             action = self.moves.c[eg.guess]
-            action.do(stcls, action.label)
+            action.do(stcls.c, action.label)
             loss += eg.costs[eg.guess]
             eg.reset_classes(eg.nr_class)
         return loss
@@ -230,7 +230,7 @@ cdef class StepwiseState:
             action = self.parser.moves.c[clas]
         else:
             action = self.parser.moves.lookup_transition(action_name)
-        action.do(self.stcls, action.label)
+        action.do(self.stcls.c, action.label)
 
     def finish(self):
         if self.stcls.is_final():

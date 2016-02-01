@@ -63,53 +63,53 @@ cdef cppclass StateC:
         free(this._stack - PADDING)
         free(this.shifted - PADDING)
 
-    int S(int i) nogil:
+    int S(int i) nogil const:
         if i >= this._s_i:
             return -1
         return this._stack[this._s_i - (i+1)]
 
-    int B(int i) nogil:
+    int B(int i) nogil const:
         if (i + this._b_i) >= this.length:
             return -1
         return this._buffer[this._b_i + i]
 
-    const TokenC* S_(int i) nogil:
+    const TokenC* S_(int i) nogil const:
         return this.safe_get(this.S(i))
 
-    const TokenC* B_(int i) nogil:
+    const TokenC* B_(int i) nogil const:
         return this.safe_get(this.B(i))
 
-    const TokenC* H_(int i) nogil:
+    const TokenC* H_(int i) nogil const:
         return this.safe_get(this.H(i))
 
-    const TokenC* E_(int i) nogil:
+    const TokenC* E_(int i) nogil const:
         return this.safe_get(this.E(i))
 
-    const TokenC* L_(int i, int idx) nogil:
+    const TokenC* L_(int i, int idx) nogil const:
         return this.safe_get(this.L(i, idx))
 
-    const TokenC* R_(int i, int idx) nogil:
+    const TokenC* R_(int i, int idx) nogil const:
         return this.safe_get(this.R(i, idx))
 
-    const TokenC* safe_get(int i) nogil:
+    const TokenC* safe_get(int i) nogil const:
         if i < 0 or i >= this.length:
             return &this._empty_token
         else:
             return &this._sent[i]
 
-    int H(int i) nogil:
+    int H(int i) nogil const:
         if i < 0 or i >= this.length:
             return -1
         return this._sent[i].head + i
 
-    int E(int i) nogil:
+    int E(int i) nogil const:
         if this._e_i <= 0 or this._e_i >= this.length:
             return 0
         if i < 0 or i >= this._e_i:
             return 0
         return this._ents[this._e_i - (i+1)].start
 
-    int L(int i, int idx) nogil:
+    int L(int i, int idx) nogil const:
         if idx < 1:
             return -1
         if i < 0 or i >= this.length:
@@ -135,7 +135,7 @@ cdef cppclass StateC:
                 ptr += 1
         return -1
     
-    int R(int i, int idx) nogil:
+    int R(int i, int idx) nogil const:
         if idx < 1:
             return -1
         if i < 0 or i >= this.length:
@@ -159,39 +159,39 @@ cdef cppclass StateC:
                 ptr -= 1
         return -1
 
-    bint empty() nogil:
+    bint empty() nogil const:
         return this._s_i <= 0
 
-    bint eol() nogil:
+    bint eol() nogil const:
         return this.buffer_length() == 0
 
-    bint at_break() nogil:
+    bint at_break() nogil const:
         return this._break != -1
 
-    bint is_final() nogil:
+    bint is_final() nogil const:
         return this.stack_depth() <= 0 and this._b_i >= this.length
 
-    bint has_head(int i) nogil:
+    bint has_head(int i) nogil const:
         return this.safe_get(i).head != 0
 
-    int n_L(int i) nogil:
+    int n_L(int i) nogil const:
         return this.safe_get(i).l_kids
 
-    int n_R(int i) nogil:
+    int n_R(int i) nogil const:
         return this.safe_get(i).r_kids
 
-    bint stack_is_connected() nogil:
+    bint stack_is_connected() nogil const:
         return False
 
-    bint entity_is_open() nogil:
+    bint entity_is_open() nogil const:
         if this._e_i < 1:
             return False
         return this._ents[this._e_i-1].end == -1
 
-    int stack_depth() nogil:
+    int stack_depth() nogil const:
         return this._s_i
 
-    int buffer_length() nogil:
+    int buffer_length() nogil const:
         if this._break != -1:
             return this._break - this._b_i
         else:

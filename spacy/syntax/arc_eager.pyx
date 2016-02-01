@@ -17,6 +17,7 @@ from libc.string cimport memcpy
 
 from cymem.cymem cimport Pool
 from .stateclass cimport StateClass
+from ._state cimport StateC
 
 
 DEF NON_MONOTONIC = True
@@ -57,7 +58,7 @@ cdef weight_t push_cost(StateClass stcls, const GoldParseC* gold, int target) no
             cost += 1
         if gold.heads[S_i] == target and (NON_MONOTONIC or not stcls.has_head(S_i)):
             cost += 1
-    cost += Break.is_valid(stcls, -1) and Break.move_cost(stcls, gold) == 0
+    cost += Break.is_valid(stcls.c, -1) and Break.move_cost(stcls, gold) == 0
     return cost
 
 
@@ -70,7 +71,7 @@ cdef weight_t pop_cost(StateClass stcls, const GoldParseC* gold, int target) nog
         cost += gold.heads[target] == B_i
         if gold.heads[B_i] == B_i or gold.heads[B_i] < target:
             break
-    if Break.is_valid(stcls, -1) and Break.move_cost(stcls, gold) == 0:
+    if Break.is_valid(stcls.c, -1) and Break.move_cost(stcls, gold) == 0:
         cost += 1
     return cost
 
@@ -115,11 +116,11 @@ cdef bint _is_gold_root(const GoldParseC* gold, int word) nogil:
 
 cdef class Shift:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) nogil:
-        return st.buffer_length() >= 2 and not st.c.shifted[st.B(0)] and not st.B_(0).sent_start
+    cdef bint is_valid(const StateC* st, int label) nogil:
+        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and not st.B_(0).sent_start
 
     @staticmethod
-    cdef int transition(StateClass st, int label) nogil:
+    cdef int transition(StateC* st, int label) nogil:
         st.push()
         st.fast_forward()
 
@@ -138,11 +139,11 @@ cdef class Shift:
 
 cdef class Reduce:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) nogil:
+    cdef bint is_valid(const StateC* st, int label) nogil:
         return st.stack_depth() >= 2
 
     @staticmethod
-    cdef int transition(StateClass st, int label) nogil:
+    cdef int transition(StateC* st, int label) nogil:
         if st.has_head(st.S(0)):
             st.pop()
         else:
@@ -164,11 +165,11 @@ cdef class Reduce:
 
 cdef class LeftArc:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) nogil:
+    cdef bint is_valid(const StateC* st, int label) nogil:
         return not st.B_(0).sent_start
 
     @staticmethod
-    cdef int transition(StateClass st, int label) nogil:
+    cdef int transition(StateC* st, int label) nogil:
         st.add_arc(st.B(0), st.S(0), label)
         st.pop()
         st.fast_forward()
@@ -197,11 +198,11 @@ cdef class LeftArc:
 
 cdef class RightArc:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) nogil:
+    cdef bint is_valid(const StateC* st, int label) nogil:
         return not st.B_(0).sent_start
 
     @staticmethod
-    cdef int transition(StateClass st, int label) nogil:
+    cdef int transition(StateC* st, int label) nogil:
         st.add_arc(st.S(0), st.B(0), label)
         st.push()
         st.fast_forward()
@@ -226,7 +227,7 @@ cdef class RightArc:
 
 cdef class Break:
     @staticmethod
-    cdef bint is_valid(StateClass st, int label) nogil:
+    cdef bint is_valid(const StateC* st, int label) nogil:
         cdef int i
         if not USE_BREAK:
             return False
@@ -243,7 +244,7 @@ cdef class Break:
             return True
 
     @staticmethod
-    cdef int transition(StateClass st, int label) nogil:
+    cdef int transition(StateC* st, int label) nogil:
         st.set_break(st.B(0))
         st.fast_forward()
 
@@ -396,11 +397,11 @@ cdef class ArcEager(TransitionSystem):
 
     cdef int set_valid(self, int* output, StateClass stcls) nogil:
         cdef bint[N_MOVES] is_valid
-        is_valid[SHIFT] = Shift.is_valid(stcls, -1)
-        is_valid[REDUCE] = Reduce.is_valid(stcls, -1)
-        is_valid[LEFT] = LeftArc.is_valid(stcls, -1)
-        is_valid[RIGHT] = RightArc.is_valid(stcls, -1)
-        is_valid[BREAK] = Break.is_valid(stcls, -1)
+        is_valid[SHIFT] = Shift.is_valid(stcls.c, -1)
+        is_valid[REDUCE] = Reduce.is_valid(stcls.c, -1)
+        is_valid[LEFT] = LeftArc.is_valid(stcls.c, -1)
+        is_valid[RIGHT] = RightArc.is_valid(stcls.c, -1)
+        is_valid[BREAK] = Break.is_valid(stcls.c, -1)
         cdef int i
         for i in range(self.n_moves):
             output[i] = is_valid[self.c[i].move]
@@ -430,7 +431,7 @@ cdef class ArcEager(TransitionSystem):
 
         n_gold = 0
         for i in range(self.n_moves):
-            if self.c[i].is_valid(stcls, self.c[i].label):
+            if self.c[i].is_valid(stcls.c, self.c[i].label):
                 is_valid[i] = True
                 move = self.c[i].move
                 label = self.c[i].label
