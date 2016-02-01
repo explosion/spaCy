@@ -116,7 +116,7 @@ cdef bint _is_gold_root(const GoldParseC* gold, int word) nogil:
 cdef class Shift:
     @staticmethod
     cdef bint is_valid(StateClass st, int label) nogil:
-        return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and not st.B_(0).sent_start
+        return st.buffer_length() >= 2 and not st.c.shifted[st.B(0)] and not st.B_(0).sent_start
 
     @staticmethod
     cdef int transition(StateClass st, int label) nogil:
@@ -214,7 +214,7 @@ cdef class RightArc:
     cdef inline weight_t move_cost(StateClass s, const GoldParseC* gold) nogil:
         if arc_is_gold(gold, s.S(0), s.B(0)):
             return 0
-        elif s.shifted[s.B(0)]:
+        elif s.c.shifted[s.B(0)]:
             return push_cost(s, gold, s.B(0))
         else:
             return push_cost(s, gold, s.B(0)) + arc_cost(s, gold, s.S(0), s.B(0))
@@ -378,10 +378,7 @@ cdef class ArcEager(TransitionSystem):
 
     cdef int initialize_state(self, StateClass st) except -1:
         # Ensure sent_start is set to 0 throughout
-        for i in range(st.length):
-            st._sent[i].sent_start = False
-            st._sent[i].l_edge = i
-            st._sent[i].r_edge = i
+        for i in range(st.c.length):
             st.c._sent[i].sent_start = False
             st.c._sent[i].l_edge = i
             st.c._sent[i].r_edge = i
@@ -389,14 +386,12 @@ cdef class ArcEager(TransitionSystem):
 
     cdef int finalize_state(self, StateClass st) nogil:
         cdef int i
-        for i in range(st.length):
-            if st._sent[i].head == 0 and st._sent[i].dep == 0:
-                st._sent[i].dep = self.root_label
+        for i in range(st.c.length):
+            if st.c._sent[i].head == 0 and st.c._sent[i].dep == 0:
                 st.c._sent[i].dep = self.root_label
             # If we're not using the Break transition, we segment via root-labelled
             # arcs between the root words.
-            elif USE_ROOT_ARC_SEGMENT and st._sent[i].dep == self.root_label:
-                st._sent[i].head = 0
+            elif USE_ROOT_ARC_SEGMENT and st.c._sent[i].dep == self.root_label:
                 st.c._sent[i].head = 0
 
     cdef int set_valid(self, int* output, StateClass stcls) nogil:

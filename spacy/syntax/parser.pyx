@@ -130,7 +130,7 @@ cdef class Parser:
             for i in range(eg.c.nr_class):
                 eg.c.is_valid[i] = 1
         self.moves.finalize_state(stcls)
-        tokens.set_parse(stcls._sent)
+        tokens.set_parse(stcls.c._sent)
   
     def train(self, Doc tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
