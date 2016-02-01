@@ -1,3 +1,4 @@
+# cython: infer_types=True
 """
 MALT-style dependency parser
 """
@@ -9,6 +10,7 @@ from cpython.exc cimport PyErr_CheckSignals
 
 from libc.stdint cimport uint32_t, uint64_t
 from libc.string cimport memset, memcpy
+from libc.stdlib cimport malloc, calloc, free
 import random
 import os.path
 from os import path
@@ -21,6 +23,7 @@ from murmurhash.mrmr cimport hash64
 from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
 from thinc.linear.avgtron cimport AveragedPerceptron
 from thinc.linalg cimport VecVec
+from thinc.structs cimport FeatureC
 
 from util import Config
 
@@ -38,6 +41,7 @@ from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
+from ._state cimport StateC
 
 
 
@@ -65,8 +69,8 @@ def ParserFactory(transition_system):
 
 
 cdef class ParserModel(AveragedPerceptron):
-    cdef void set_featuresC(self, ExampleC* eg, StateClass stcls) nogil: 
-        fill_context(eg.atoms, stcls)
+    cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil: 
+        fill_context(eg.atoms, state)
         eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
 
 
@@ -99,43 +103,77 @@ cdef class Parser:
         return (Parser, (self.moves.strings, self.moves, self.model), None, None)
 
     def __call__(self, Doc tokens):
-        cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
-        self.moves.initialize_state(stcls)
-
-        cdef Example eg = Example(
-                nr_class=self.moves.n_moves,
-                nr_atom=CONTEXT_SIZE,
-                nr_feat=self.model.nr_feat)
+        cdef int nr_class = self.moves.n_moves
+        cdef int nr_feat = self.model.nr_feat
         with nogil:
-            self.parseC(tokens, stcls, eg)
+            self.parseC(tokens.c, tokens.length, nr_feat, nr_class)
+            tokens.is_parsed = True
         # Check for KeyboardInterrupt etc. Untested
         PyErr_CheckSignals()
 
-    cdef void parseC(self, Doc tokens, StateClass stcls, Example eg) nogil:
-        while not stcls.is_final():
-            self.model.set_featuresC(&eg.c, stcls)
-            self.moves.set_valid(eg.c.is_valid, stcls.c)
-            self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
+    def parse_batch(self, batch):
+        cdef TokenC** doc_ptr = <TokenC**>calloc(len(batch), sizeof(TokenC*))
+        cdef int* lengths = <int*>calloc(len(batch), sizeof(int))
+        cdef Doc doc
+        cdef int i
+        for i, doc in enumerate(batch):
+            doc_ptr[i] = doc.c
+            lengths[i] = doc.length
+        cdef int nr_class = self.moves.n_moves
+        cdef int nr_feat = self.model.nr_feat
+        cdef int nr_doc = len(batch)
+        with nogil:
+            for i in range(nr_doc):
+                self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
+        for doc in batch:
+            doc.is_parsed = True
+        # Check for KeyboardInterrupt etc. Untested
+        PyErr_CheckSignals()
+        free(doc_ptr)
+        free(lengths)
 
-            guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
+    cdef void parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) nogil:
+        cdef ExampleC eg
+        eg.nr_feat = nr_feat
+        eg.nr_atom = CONTEXT_SIZE
+        eg.nr_class = nr_class
+        eg.features = <FeatureC*>calloc(sizeof(FeatureC), nr_feat)
+        eg.atoms = <atom_t*>calloc(sizeof(atom_t), CONTEXT_SIZE)
+        eg.scores = <weight_t*>calloc(sizeof(weight_t), nr_class)
+        eg.is_valid = <int*>calloc(sizeof(int), nr_class)
+        state = new StateC(tokens, length)
+        self.moves.initialize_state(state)
+        cdef int i
+        while not state.is_final():
+            self.model.set_featuresC(&eg, state)
+            self.moves.set_valid(eg.is_valid, state)
+            self.model.set_scoresC(eg.scores, eg.features, eg.nr_feat)
+
+            guess = VecVec.arg_max_if_true(eg.scores, eg.is_valid, eg.nr_class)
 
             action = self.moves.c[guess]
-            if not eg.c.is_valid[guess]:
+            if not eg.is_valid[guess]:
                 with gil:
                     move_name = self.moves.move_name(action.move, action.label)
                     raise ValueError("Illegal action: %s" % move_name)
-            action.do(stcls.c, action.label)
-            memset(eg.c.scores, 0, sizeof(eg.c.scores[0]) * eg.c.nr_class)
-            memset(eg.c.costs, 0, sizeof(eg.c.costs[0]) * eg.c.nr_class)
-            for i in range(eg.c.nr_class):
-                eg.c.is_valid[i] = 1
-        self.moves.finalize_state(stcls)
-        tokens.set_parse(stcls.c._sent)
+            action.do(state, action.label)
+            memset(eg.scores, 0, sizeof(eg.scores[0]) * eg.nr_class)
+            memset(eg.costs, 0, sizeof(eg.costs[0]) * eg.nr_class)
+            for i in range(eg.nr_class):
+                eg.is_valid[i] = 1
+        self.moves.finalize_state(state)
+        for i in range(length):
+            tokens[i] = state._sent[i]
+        del state
+        free(eg.features)
+        free(eg.atoms)
+        free(eg.scores)
+        free(eg.is_valid)
   
     def train(self, Doc tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
         cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
-        self.moves.initialize_state(stcls)
+        self.moves.initialize_state(stcls.c)
         cdef Pool mem = Pool()
         cdef Example eg = Example(
                 nr_class=self.moves.n_moves,
@@ -144,7 +182,7 @@ cdef class Parser:
         cdef weight_t loss = 0
         cdef Transition action
         while not stcls.is_final():
-            self.model.set_featuresC(&eg.c, stcls)
+            self.model.set_featuresC(&eg.c, stcls.c)
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
             self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
             self.model.updateC(&eg.c)
@@ -174,7 +212,7 @@ cdef class StepwiseState:
         self.parser = parser
         self.doc = doc
         self.stcls = StateClass.init(doc.c, doc.length)
-        self.parser.moves.initialize_state(self.stcls)
+        self.parser.moves.initialize_state(self.stcls.c)
         self.eg = Example(
             nr_class=self.parser.moves.n_moves,
             nr_atom=CONTEXT_SIZE,
@@ -209,7 +247,7 @@ cdef class StepwiseState:
 
     def predict(self):
         self.eg.reset()
-        self.parser.model.set_featuresC(&self.eg.c, self.stcls)
+        self.parser.model.set_featuresC(&self.eg.c, self.stcls.c)
         self.parser.moves.set_valid(self.eg.c.is_valid, self.stcls.c)
         self.parser.model.set_scoresC(self.eg.c.scores,
             self.eg.c.features, self.eg.c.nr_feat)
@@ -234,7 +272,7 @@ cdef class StepwiseState:
 
     def finish(self):
         if self.stcls.is_final():
-            self.parser.moves.finalize_state(self.stcls)
+            self.parser.moves.finalize_state(self.stcls.c)
         self.doc.set_parse(self.stcls.c._sent)
 
 
