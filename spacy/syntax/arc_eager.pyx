@@ -395,13 +395,13 @@ cdef class ArcEager(TransitionSystem):
             elif USE_ROOT_ARC_SEGMENT and st.c._sent[i].dep == self.root_label:
                 st.c._sent[i].head = 0
 
-    cdef int set_valid(self, int* output, StateClass stcls) nogil:
+    cdef int set_valid(self, int* output, const StateC* st) nogil:
         cdef bint[N_MOVES] is_valid
-        is_valid[SHIFT] = Shift.is_valid(stcls.c, -1)
-        is_valid[REDUCE] = Reduce.is_valid(stcls.c, -1)
-        is_valid[LEFT] = LeftArc.is_valid(stcls.c, -1)
-        is_valid[RIGHT] = RightArc.is_valid(stcls.c, -1)
-        is_valid[BREAK] = Break.is_valid(stcls.c, -1)
+        is_valid[SHIFT] = Shift.is_valid(st, -1)
+        is_valid[REDUCE] = Reduce.is_valid(st, -1)
+        is_valid[LEFT] = LeftArc.is_valid(st, -1)
+        is_valid[RIGHT] = RightArc.is_valid(st, -1)
+        is_valid[BREAK] = Break.is_valid(st, -1)
         cdef int i
         for i in range(self.n_moves):
             output[i] = is_valid[self.c[i].move]
