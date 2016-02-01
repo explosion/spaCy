@@ -269,6 +269,17 @@ class Language(object):
             self.entity(tokens)
         return tokens
 
+    def batch(self, texts, tag=True, parse=True, entity=True):
+        if tag is False:
+            return [self(text, tag=tag, parse=parse, entity=entity)
+                    for text in texts]
+        docs = []
+        for text in texts:
+            doc = self(text, tag=True, parse=False, entity=entity)
+        if self.parser and parse:
+            self.parser.parse_batch(docs)
+        return docs
+
     def end_training(self, data_dir=None):
         if data_dir is None:
             data_dir = self.data_dir
