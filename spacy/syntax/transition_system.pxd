@@ -47,7 +47,7 @@ cdef class TransitionSystem:
 
     cdef Transition init_transition(self, int clas, int move, int label) except *
 
-    cdef int set_valid(self, int* output, StateClass state) nogil
+    cdef int set_valid(self, int* output, const StateC* st) nogil
 
     cdef int set_costs(self, int* is_valid, weight_t* costs,
                        StateClass state, GoldParse gold) except -1

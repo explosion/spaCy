@@ -114,7 +114,7 @@ cdef class Parser:
     cdef void parseC(self, Doc tokens, StateClass stcls, Example eg) nogil:
         while not stcls.is_final():
             self.model.set_featuresC(&eg.c, stcls)
-            self.moves.set_valid(eg.c.is_valid, stcls)
+            self.moves.set_valid(eg.c.is_valid, stcls.c)
             self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
 
             guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
@@ -210,7 +210,7 @@ cdef class StepwiseState:
     def predict(self):
         self.eg.reset()
         self.parser.model.set_featuresC(&self.eg.c, self.stcls)
-        self.parser.moves.set_valid(self.eg.c.is_valid, self.stcls)
+        self.parser.moves.set_valid(self.eg.c.is_valid, self.stcls.c)
         self.parser.model.set_scoresC(self.eg.c.scores,
             self.eg.c.features, self.eg.c.nr_feat)
 
