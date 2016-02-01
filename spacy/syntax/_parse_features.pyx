@@ -14,6 +14,7 @@ from itertools import combinations
 from ..structs cimport TokenC
 
 from .stateclass cimport StateClass
+from ._state cimport StateC
 
 from cymem.cymem cimport Pool
 
@@ -59,7 +60,7 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[10] = token.ent_iob
         context[11] = token.ent_type
 
-cdef int fill_context(atom_t* ctxt, StateClass st) nogil:
+cdef int fill_context(atom_t* ctxt, const StateC* st) nogil:
     # Take care to fill every element of context!
     # We could memset, but this makes it very easy to have broken features that
     # make almost no impact on accuracy. If instead they're unset, the impact

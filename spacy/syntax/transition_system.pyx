@@ -47,10 +47,10 @@ cdef class TransitionSystem:
                 (self.strings, labels_by_action, self.freqs),
                 None, None)
 
-    cdef int initialize_state(self, StateClass state) except -1:
+    cdef int initialize_state(self, StateC* state) nogil:
         pass
 
-    cdef int finalize_state(self, StateClass state) nogil:
+    cdef int finalize_state(self, StateC* state) nogil:
         pass
 
     cdef int preprocess_gold(self, GoldParse gold) except -1:

@@ -377,23 +377,23 @@ cdef class ArcEager(TransitionSystem):
             raise Exception(move)
         return t
 
-    cdef int initialize_state(self, StateClass st) except -1:
+    cdef int initialize_state(self, StateC* st) nogil:
         # Ensure sent_start is set to 0 throughout
-        for i in range(st.c.length):
-            st.c._sent[i].sent_start = False
-            st.c._sent[i].l_edge = i
-            st.c._sent[i].r_edge = i
+        for i in range(st.length):
+            st._sent[i].sent_start = False
+            st._sent[i].l_edge = i
+            st._sent[i].r_edge = i
         st.fast_forward()
 
-    cdef int finalize_state(self, StateClass st) nogil:
+    cdef int finalize_state(self, StateC* st) nogil:
         cdef int i
-        for i in range(st.c.length):
-            if st.c._sent[i].head == 0 and st.c._sent[i].dep == 0:
-                st.c._sent[i].dep = self.root_label
+        for i in range(st.length):
+            if st._sent[i].head == 0 and st._sent[i].dep == 0:
+                st._sent[i].dep = self.root_label
             # If we're not using the Break transition, we segment via root-labelled
             # arcs between the root words.
-            elif USE_ROOT_ARC_SEGMENT and st.c._sent[i].dep == self.root_label:
-                st.c._sent[i].head = 0
+            elif USE_ROOT_ARC_SEGMENT and st._sent[i].dep == self.root_label:
+                st._sent[i].head = 0
 
     cdef int set_valid(self, int* output, const StateC* st) nogil:
         cdef bint[N_MOVES] is_valid

@@ -1,9 +1,10 @@
 from thinc.typedefs cimport atom_t
 
 from .stateclass cimport StateClass
+from ._state cimport StateC
 
 
-cdef int fill_context(atom_t* context, StateClass state) nogil
+cdef int fill_context(atom_t* context, const StateC* state) nogil
 # Context elements
 
 # Ensure each token's attributes are listed: w, p, c, c6, c4. The order
