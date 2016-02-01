@@ -275,7 +275,7 @@ class Language(object):
                     for text in texts]
         docs = []
         for text in texts:
-            doc = self(text, tag=True, parse=False, entity=entity)
+            docs.append(self(text, tag=True, parse=False, entity=entity))
         if self.parser and parse:
             self.parser.parse_batch(docs)
         return docs
