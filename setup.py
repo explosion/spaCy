@@ -44,6 +44,7 @@ MOD_NAMES = [
     'spacy.morphology',
     'spacy.tagger',
     'spacy.syntax.stateclass',
+    'spacy.syntax._state',
     'spacy.tokenizer',
     'spacy.syntax.parser',
     'spacy.syntax.transition_system',
