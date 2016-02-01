@@ -47,6 +47,7 @@ cdef class StateClass:
         return {self.B(i) for i in range(self._b_i)}
 
     cdef int E(self, int i) nogil:
+        self.c.E(i)
         if self._e_i <= 0 or self._e_i >= self.length:
             return 0
         if i < 0 or i >= self._e_i:
@@ -54,6 +55,7 @@ cdef class StateClass:
         return self._ents[self._e_i - (i+1)].start
 
     cdef int L(self, int i, int idx) nogil:
+        self.c.L(i, idx)
         if idx < 1:
             return -1
         if i < 0 or i >= self.length:
@@ -80,6 +82,7 @@ cdef class StateClass:
         return -1
 
     cdef int R(self, int i, int idx) nogil:
+        self.c.R(i, idx)
         if idx < 1:
             return -1
         if i < 0 or i >= self.length:
@@ -104,6 +107,7 @@ cdef class StateClass:
         return -1
 
     cdef void push(self) nogil:
+        self.c.push()
         if self.B(0) != -1:
             self._stack[self._s_i] = self.B(0)
         self._s_i += 1
@@ -112,16 +116,19 @@ cdef class StateClass:
             self._break = -1
 
     cdef void pop(self) nogil:
+        self.c.pop()
         if self._s_i >= 1:
             self._s_i -= 1
 
     cdef void unshift(self) nogil:
+        self.c.unshift()
         self._b_i -= 1
         self._buffer[self._b_i] = self.S(0)
         self._s_i -= 1
         self.shifted[self.B(0)] = True
 
     cdef void fast_forward(self) nogil:
+        self.c.fast_forward()
         while self.buffer_length() == 0 \
         or self.stack_depth() == 0 \
         or Lexeme.c_check_flag(self.S_(0).lex, IS_SPACE):
@@ -144,6 +151,7 @@ cdef class StateClass:
                 break
 
     cdef void add_arc(self, int head, int child, int label) nogil:
+        self.c.add_arc(head, child, label)
         if self.has_head(child):
             self.del_arc(self.H(child), child)
 
@@ -166,6 +174,7 @@ cdef class StateClass:
             self._sent[head].l_edge = self._sent[child].l_edge
 
     cdef void del_arc(self, int h_i, int c_i) nogil:
+        self.c.del_arc(h_i, c_i)
         cdef int dist = h_i - c_i
         cdef TokenC* h = &self._sent[h_i]
         if c_i > h_i:
@@ -176,28 +185,33 @@ cdef class StateClass:
             h.l_kids -= 1
 
     cdef void open_ent(self, int label) nogil:
+        self.c.open_ent(label)
         self._ents[self._e_i].start = self.B(0)
         self._ents[self._e_i].label = label
         self._ents[self._e_i].end = -1
         self._e_i += 1
 
     cdef void close_ent(self) nogil:
+        self.c.close_ent()
         # Note that we don't decrement _e_i here! We want to maintain all
         # entities, not over-write them...
         self._ents[self._e_i-1].end = self.B(0)+1
         self._sent[self.B(0)].ent_iob = 1
 
     cdef void set_ent_tag(self, int i, int ent_iob, int ent_type) nogil:
+        self.c.set_ent_tag(i, ent_iob, ent_type)
         if 0 <= i < self.length:
             self._sent[i].ent_iob = ent_iob
             self._sent[i].ent_type = ent_type
 
     cdef void set_break(self, int _) nogil:
+        self.c.set_break(_)
         if 0 <= self.B(0) < self.length: 
             self._sent[self.B(0)].sent_start = True
             self._break = self._b_i
 
     cdef void clone(self, StateClass src) nogil:
+        self.c.clone(src.c)
         memcpy(self._sent, src._sent, self.length * sizeof(TokenC))
         memcpy(self._stack, src._stack, self.length * sizeof(int))
         memcpy(self._buffer, src._buffer, self.length * sizeof(int))
