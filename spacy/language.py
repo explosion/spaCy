@@ -272,22 +272,43 @@ class Language(object):
     def end_training(self, data_dir=None):
         if data_dir is None:
             data_dir = self.data_dir
-        self.parser.model.end_training()
-        self.parser.model.dump(path.join(data_dir, 'deps', 'model'))
-        self.entity.model.end_training()
-        self.entity.model.dump(path.join(data_dir, 'ner', 'model'))
-        self.tagger.model.end_training()
-        self.tagger.model.dump(path.join(data_dir, 'pos', 'model'))
+        if self.parser:
+            self.parser.model.end_training()
+            self.parser.model.dump(path.join(data_dir, 'deps', 'model'))
+        if self.entity:
+            self.entity.model.end_training()
+            self.entity.model.dump(path.join(data_dir, 'ner', 'model'))
+        if self.tagger:
+            self.tagger.model.end_training()
+            self.tagger.model.dump(path.join(data_dir, 'pos', 'model'))
 
         strings_loc = path.join(data_dir, 'vocab', 'strings.json')
         with io.open(strings_loc, 'w', encoding='utf8') as file_:
             self.vocab.strings.dump(file_)
+        self.vocab.dump(path.join(data_dir, 'vocab', 'lexemes.bin'))
 
+        if self.tagger:
+            tagger_freqs = list(self.tagger.freqs[TAG].items())
+        else:
+            tagger_freqs = []
+        if self.parser:
+            dep_freqs = list(self.parser.moves.freqs[DEP].items())
+            head_freqs = list(self.parser.moves.freqs[HEAD].items())
+        else:
+            dep_freqs = []
+            head_freqs = []
+        if self.entity:
+            entity_iob_freqs = list(self.entity.moves.freqs[ENT_IOB].items())
+            entity_type_freqs = list(self.entity.moves.freqs[ENT_TYPE].items())
+        else:
+            entity_iob_freqs = []
+            entity_type_freqs = []
         with open(path.join(data_dir, 'vocab', 'serializer.json'), 'w') as file_:
             file_.write(
                 json.dumps([
-                    (TAG, list(self.tagger.freqs[TAG].items())),
-                    (DEP, list(self.parser.moves.freqs[DEP].items())),
-                    (ENT_IOB, list(self.entity.moves.freqs[ENT_IOB].items())),
-                    (ENT_TYPE, list(self.entity.moves.freqs[ENT_TYPE].items())),
-                    (HEAD, list(self.parser.moves.freqs[HEAD].items()))]))
+                    (TAG, tagger_freqs),
+                    (DEP, dep_freqs),
+                    (ENT_IOB, entity_iob_freqs),
+                    (ENT_TYPE, entity_type_freqs),
+                    (HEAD, head_freqs)
+                ]))
