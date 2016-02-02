@@ -129,10 +129,18 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic', seed=0
     print('done')
 
 
-def main(train_loc, dev_loc, model_dir):
+@plac.annotations(
+    train_loc=("Location of CoNLL 09 formatted training file"),
+    dev_loc=("Location of CoNLL 09 formatted development file"),
+    model_dir=("Location of output model directory"),
+    eval_only=("Skip training, and only evaluate", "flag", "e", bool),
+    n_iter=("Number of training iterations", "option", "i", int),
+)
+def main(train_loc, dev_loc, model_dir, n_iter=15):
     with io.open(train_loc, 'r', encoding='utf8') as file_:
         train_sents = read_conll(file_)
-    #train(English, train_sents, model_dir)
+    if not eval_only:
+        train(English, train_sents, model_dir, n_iter=n_iter)
     nlp = English(data_dir=model_dir)
     dev_sents = read_conll(io.open(dev_loc, 'r', encoding='utf8'))
     scorer = Scorer()
