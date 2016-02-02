@@ -62,8 +62,10 @@ def main(output_dir):
             tokens = tokenizer.tokens_from_list(words)
             tagger.train(tokens, tags)
         random.shuffle(DATA)
-    tagger.model.end_training(path.join(output_dir, 'pos', 'model'))
-    vocab.strings.dump(path.join(output_dir, 'vocab', 'strings.txt'))
+    tagger.model.end_training()
+    tagger.model.dump(path.join(output_dir, 'pos', 'model'))
+    with io.open(output_dir, 'vocab', 'strings.json') as file_:
+        tagger.vocab.strings.dump(file_)
 
 
 if __name__ == '__main__':
