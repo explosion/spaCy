@@ -145,6 +145,9 @@ mixin LexemeDistributional
       +Define("vector")
         |  A “word embedding” representation: a dense real-valued vector that supports similarity queries between words. By default, spaCy currently loads vectors produced by the Levy and Goldberg (2014) dependency-based word2vec model.
 
+      +Define("has_vector")
+        | A boolean value indicating whether a vector.
+
 
 mixin Func(type1, type2)
     #{"λ " + type1 + ", " + type2}
@@ -372,6 +375,17 @@ mixin Func(type1, type2)
 
             +Define("whitespace_")
                 | The number of immediate syntactic children following the word in the string.
+
+    details(open=true)
+        summary: h4 Part-of-Speech Tags
+
+        ul
+            +Define("pos / pos_")
+                | A coarse-grained, less detailed tag that represents the word-class of the token. The set of #[code .pos] tags are consistent across languages. The available tags are ADJ, ADP, ADV, AUX, CONJ, DET, INTJ, NOUN, NUM, PART, PRON, PROPN, PUNCT, SCONJ, SYM, VERB, X, EOL, SPACE.
+
+        ul
+            +Define("tag / tag_")
+                | A fine-grained, more detailed tag that represents the word-class and some basic morphological information for the token. These tags are primarily designed to be good features for subsequent models, particularly the syntactic parser. They are language and treebank dependent. The tagger is trained to predict these fine-grained tags, and then a mapping table is used to reduce them to the coarse-grained #[code .pos] tags.
 
     details(open=true)
         summary: h4 Navigating the Parse Tree
