@@ -18,8 +18,10 @@
 "KOUI":	{"pos": "SCONJ"},
 "KOUS":	{"pos": "SCONJ"},
 "NE": {"pos": "PROPN"},
+"NNE": {"pos": "PROPN"},
 "NN": {"pos": "NOUN"},
 "PAV": {"pos": "ADV", "PronType": "Dem"},
+"PROAV": {"pos": "ADV", "PronType": "Dem"},
 "PDAT":	{"pos": "DET", "PronType": "Dem"},
 "PDS": {"pos": "PRON", "PronType": "Dem"},
 "PIAT":	{"pos": "DET", "PronType": "Ind,Neg,Tot"},
@@ -52,5 +54,6 @@
 "VVINF":	{"pos": "VERB", "VerbForm": "Inf"},
 "VVIZU":	{"pos": "VERB", "VerbForm": "Inf"},
 "VVPP":	{"pos": "VERB", "Aspect": "Perf", "VerbForm": "Part"},
-"XY":	{"pos": "X"}
+"XY":	{"pos": "X"},
+"SP": {"pos": "SPACE"}
 }
