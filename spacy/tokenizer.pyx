@@ -133,6 +133,10 @@ cdef class Tokenizer:
             tokens.c[tokens.length - 1].spacy = string[-1] == ' ' and not in_ws
         return tokens
 
+    def pipe(self, texts, batch_size=1000, n_threads=2):
+        for text in texts:
+            yield self(text)
+
     cdef int _try_cache(self, hash_t key, Doc tokens) except -1:
         cached = <_Cached*>self._cache.get(key)
         if cached == NULL:
