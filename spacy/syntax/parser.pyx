@@ -114,26 +114,33 @@ cdef class Parser:
         # Check for KeyboardInterrupt etc. Untested
         PyErr_CheckSignals()
 
-    def parse_batch(self, batch):
-        cdef TokenC** doc_ptr = <TokenC**>calloc(len(batch), sizeof(TokenC*))
-        cdef int* lengths = <int*>calloc(len(batch), sizeof(int))
+    def pipe(self, stream, int batch_size=1000, int n_threads=2):
+        cdef Pool mem = Pool()
+        cdef TokenC** doc_ptr = <TokenC**>mem.alloc(batch_size, sizeof(TokenC*))
+        cdef int* lengths = <int*>mem.alloc(batch_size, sizeof(int))
         cdef Doc doc
         cdef int i
-        for i, doc in enumerate(batch):
-            doc_ptr[i] = doc.c
-            lengths[i] = doc.length
         cdef int nr_class = self.moves.n_moves
         cdef int nr_feat = self.model.nr_feat
-        cdef int nr_doc = len(batch)
-        with nogil:
-            for i in range(nr_doc):
-                self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
-        for doc in batch:
-            doc.is_parsed = True
-        # Check for KeyboardInterrupt etc. Untested
+        queue = []
+        for doc in stream:
+            queue.append(doc)
+            doc_ptr[len(queue)] = doc.c
+            lengths[len(queue)] = doc.length
+            if len(queue) == batch_size:
+                for i in cython.parallel.prange(batch_size, nogil=True,
+                                                num_threads=n_threads):
+                    self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
+                PyErr_CheckSignals()
+                for doc in queue:
+                    yield doc
+                queue = []
+        batch_size = len(queue)
+        for i in range(batch_size):
+            self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
+            for doc in queue:
+                yield doc
         PyErr_CheckSignals()
-        free(doc_ptr)
-        free(lengths)
 
     cdef void parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) nogil:
         cdef ExampleC eg

@@ -212,6 +212,11 @@ cdef class Tagger:
                 eg.reset_classes(eg.c.nr_class)
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
+
+    def pipe(self, stream, batch_size=1000, n_threads=2):
+        for doc in stream:
+            self(doc)
+            yield doc
     
     def train(self, Doc tokens, object gold_tag_strs):
         assert len(tokens) == len(gold_tag_strs)

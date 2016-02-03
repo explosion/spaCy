@@ -250,6 +250,10 @@ cdef class Matcher:
         doc.ents = [(e.label, e.start, e.end) for e in doc.ents] + filtered
         return matches
 
+    def pipe(self, texts, batch_size=1000, n_threads=2):
+        for text in texts:
+            yield self(text)
+
 
 cdef class PhraseMatcher:
     cdef Pool mem
@@ -302,6 +306,11 @@ cdef class PhraseMatcher:
         for match in matches:
             doc.merge(*match)
         return matches
+
+    def pipe(self, stream, batch_size=1000, n_threads=2):
+        for doc in stream:
+            self(doc)
+            yield doc
 
     def accept_match(self, Doc doc, int label, int start, int end):
         assert (end - start) < self.max_length

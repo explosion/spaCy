@@ -269,16 +269,24 @@ class Language(object):
             self.entity(tokens)
         return tokens
 
-    def batch(self, texts, tag=True, parse=True, entity=True):
-        if tag is False:
-            return [self(text, tag=tag, parse=parse, entity=entity)
-                    for text in texts]
-        docs = []
-        for text in texts:
-            docs.append(self(text, tag=True, parse=False, entity=entity))
+    def pipe(self, texts, tag=True, parse=True, entity=True, n_threads=2,
+            batch_size=1000):
+        stream = self.tokenizer.stream(texts,
+            n_threads=n_threads, batch_size=batch_size)
+        if self.tagger and tag:
+            stream = self.tagger.stream(stream,
+                n_threads=n_threads, batch_size=batch_size)
+        if self.matcher and entity:
+            stream = self.matcher.stream(stream,
+                n_threads=n_threads, batch_size=batch_size)
         if self.parser and parse:
-            self.parser.parse_batch(docs)
-        return docs
+            stream = self.parser.stream(stream,
+                n_threads=n_threads, batch_size=batch_size)
+        if self.entity and entity:
+            stream = self.entity.stream(stream,
+                n_threads=n_threads, batch_size=batch_size)
+        for doc in stream:
+            yield doc
 
     def end_training(self, data_dir=None):
         if data_dir is None:
