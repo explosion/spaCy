@@ -242,6 +242,8 @@ cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
     # better candidates
     if Lexeme.c_check_flag(token.lex, IS_SPACE):
         return sent_length-1
+    if Lexeme.c_check_flag(token.lex, IS_PUNCT):
+        return sent_length-1
 
     cdef int n = 0
     while token.head != 0:
