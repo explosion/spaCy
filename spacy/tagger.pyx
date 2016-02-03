@@ -216,6 +216,11 @@ cdef class Tagger:
     
     def train(self, Doc tokens, object gold_tag_strs):
         assert len(tokens) == len(gold_tag_strs)
+        for tag in gold_tag_strs:
+            if tag not in self.tag_names:
+                msg = ("Unrecognized gold tag: %s. tag_map.json must contain all"
+                       "gold tags, to maintain coarse-grained mapping.")
+                raise ValueError(msg % tag)
         golds = [self.tag_names.index(g) if g is not None else -1 for g in gold_tag_strs]
         cdef int correct = 0
         cdef Pool mem = Pool()
