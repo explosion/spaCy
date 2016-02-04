@@ -18,7 +18,10 @@ from ..attrs cimport POS, LEMMA, TAG, DEP
 from ..parts_of_speech cimport CONJ, PUNCT
 
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
-from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
+from ..attrs cimport FLAG14 as IS_BRACKET
+from ..attrs cimport FLAG15 as IS_QUOTE
+from ..attrs cimport FLAG16 as IS_LEFT_PUNCT
+from ..attrs cimport FLAG17 as IS_RIGHT_PUNCT
 from ..attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from ..attrs cimport IS_OOV
 
