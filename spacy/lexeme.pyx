@@ -18,6 +18,7 @@ import numpy
 
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
+from .attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT
 from .attrs cimport IS_OOV
 
 
@@ -182,6 +183,23 @@ cdef class Lexeme:
     property is_space: 
         def __get__(self): return Lexeme.c_check_flag(self.c, IS_SPACE)
         def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_SPACE, x)
+
+    property is_bracket: 
+        def __get__(self): return Lexeme.c_check_flag(self.c, IS_BRACKET)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_BRACKET, x)
+
+    property is_quote: 
+        def __get__(self): return Lexeme.c_check_flag(self.c, IS_QUOTE)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_QUOTE, x)
+
+    property is_left_punct: 
+        def __get__(self): return Lexeme.c_check_flag(self.c, IS_LEFT_PUNCT)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_LEFT_PUNCT, x)
+
+    property is_right_punct: 
+        def __get__(self): return Lexeme.c_check_flag(self.c, IS_RIGHT_PUNCT)
+        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_RIGHT_PUNCT, x)
+
 
     property like_url:
         def __get__(self): return Lexeme.c_check_flag(self.c, LIKE_URL)
