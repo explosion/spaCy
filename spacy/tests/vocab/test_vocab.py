@@ -45,6 +45,7 @@ def test_symbols(en_vocab):
     assert en_vocab.strings['PROB'] == PROB
     
 
+@pytest.mark.skip
 def test_pickle_vocab(en_vocab):
     file_ = io.BytesIO()
     cloudpickle.dump(en_vocab, file_)
