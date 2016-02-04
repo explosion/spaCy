@@ -13,7 +13,6 @@ IDS = {
     "LIKE_EMAIL": LIKE_EMAIL,
     "IS_STOP": IS_STOP,
     "IS_OOV": IS_OOV,
-    
     "FLAG14": FLAG14,
     "FLAG15": FLAG15,
     "FLAG16": FLAG16,

@@ -1,4 +1,5 @@
 # -*- coding: utf8 -*-
+# cython: infer_types=True
 from __future__ import unicode_literals
 import unicodedata
 
@@ -47,6 +48,21 @@ cpdef bint is_ascii(unicode string):
             return False
     else:
         return True
+
+cpdef bint is_bracket(unicode string):
+    return False
+
+cpdef bint is_quote(unicode string):
+    if string in ('"', "'"):
+        return True
+    else:
+        return False
+
+cpdef bint is_left_punct(unicode string):
+    return False
+
+cpdef bint is_right_punct(unicode string):
+    return False
 
 
 cpdef bint is_title(unicode string):

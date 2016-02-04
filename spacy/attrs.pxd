@@ -14,7 +14,7 @@ cpdef enum attr_id_t:
     LIKE_EMAIL
     IS_STOP
     IS_OOV
-    
+   
     FLAG14 = 14
     FLAG15
     FLAG16
@@ -85,3 +85,11 @@ cpdef enum attr_id_t:
     HEAD
     SPACY
     PROB
+    
+# Move these up to FLAG14--FLAG18 once we finish the functionality and
+# are ready to regenerate the model
+#IS_BRACKET
+#IS_QUOTE
+#IS_LEFT_PUNCT
+#IS_RIGHT_PUNCT
+ 

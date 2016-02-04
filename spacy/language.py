@@ -83,6 +83,22 @@ class Language(object):
         return orth.is_title(string)
 
     @staticmethod
+    def is_bracket(string):
+        return orth.is_bracket(string)
+
+    @staticmethod
+    def is_quote(string):
+        return orth.is_quote(string)
+
+    @staticmethod
+    def is_left_punct(string):
+        return orth.is_left_punct(string)
+
+    @staticmethod
+    def is_right_punct(string):
+        return orth.is_right_punct(string)
+
+    @staticmethod
     def is_upper(string):
         return orth.is_upper(string)
 
@@ -121,6 +137,10 @@ class Language(object):
             attrs.IS_SPACE: cls.is_space,
             attrs.IS_TITLE: cls.is_title,
             attrs.IS_UPPER: cls.is_upper,
+            attrs.FLAG14: cls.is_bracket,
+            attrs.FLAG15: cls.is_quote,
+            attrs.FLAG16: cls.is_left_punct,
+            attrs.FLAG17: cls.is_right_punct,
             attrs.LIKE_URL: cls.like_url,
             attrs.LIKE_NUM: cls.like_num,
             attrs.LIKE_EMAIL: cls.like_email,
