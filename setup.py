@@ -68,18 +68,24 @@ if sys.version_info[:2] < (2, 7) or (3, 0) <= sys.version_info[0:2] < (3, 4):
     raise RuntimeError('Python version 2.7 or >= 3.4 required.')
 
 
-# By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
+# By subclassing build_extensions we have the actual compiler that will be used
+# which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
-compile_options =  {'msvc'  : ['/Ox', '/EHsc'],
-                    'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']}
-link_options    =  {'msvc'  : [],
-                    'other' : []}
+compile_options =  {
+    'msvc': ['/Ox', '/EHsc'],
+    'mingw32' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function'],
+    'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']
+}
 
-if sys.platform.startswith('darwin'):
-    compile_options['other'].append('-mmacosx-version-min=10.8')
-    compile_options['other'].append('-stdlib=libc++')
-    link_options['other'].append('-lc++')
-else:
+
+link_options = {
+    'msvc' : [],
+    'mingw32': [],
+    'other' : []
+}
+
+
+if not sys.platform.startswith('darwin'):
     compile_options['other'].append('-fopenmp')
     link_options['other'].append('-fopenmp')
 
