@@ -4,6 +4,7 @@ MALT-style dependency parser
 """
 from __future__ import unicode_literals
 cimport cython
+cimport cython.parallel
 
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals
