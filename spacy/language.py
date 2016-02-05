@@ -271,19 +271,19 @@ class Language(object):
 
     def pipe(self, texts, tag=True, parse=True, entity=True, n_threads=2,
             batch_size=1000):
-        stream = self.tokenizer.stream(texts,
+        stream = self.tokenizer.pipe(texts,
             n_threads=n_threads, batch_size=batch_size)
         if self.tagger and tag:
-            stream = self.tagger.stream(stream,
+            stream = self.tagger.pipe(stream,
                 n_threads=n_threads, batch_size=batch_size)
         if self.matcher and entity:
-            stream = self.matcher.stream(stream,
+            stream = self.matcher.pipe(stream,
                 n_threads=n_threads, batch_size=batch_size)
         if self.parser and parse:
-            stream = self.parser.stream(stream,
+            stream = self.parser.pipe(stream,
                 n_threads=n_threads, batch_size=batch_size)
         if self.entity and entity:
-            stream = self.entity.stream(stream,
+            stream = self.entity.pipe(stream,
                 n_threads=n_threads, batch_size=batch_size)
         for doc in stream:
             yield doc
