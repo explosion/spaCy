@@ -249,9 +249,10 @@ cdef class Matcher:
         doc.ents = [(e.label, e.start, e.end) for e in doc.ents] + filtered
         return matches
 
-    def pipe(self, texts, batch_size=1000, n_threads=2):
-        for text in texts:
-            yield self(text)
+    def pipe(self, docs, batch_size=1000, n_threads=2):
+        for doc in docs:
+            self(doc)
+            yield doc
 
 
 cdef class PhraseMatcher:
