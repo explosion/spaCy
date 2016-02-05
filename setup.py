@@ -79,6 +79,9 @@ if sys.platform.startswith('darwin'):
     compile_options['other'].append('-mmacosx-version-min=10.8')
     compile_options['other'].append('-stdlib=libc++')
     link_options['other'].append('-lc++')
+else:
+    compile_options['other'].append('-fopenmp')
+    link_options['other'].append('-fopenmp')
 
 
 class build_ext_options:
