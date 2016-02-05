@@ -194,7 +194,10 @@ cdef class Span:
                 if words_to_root < current_best:
                     current_best = words_to_root
                     root = i
-            return self.doc[root]
+            if root == -1:
+                return self.doc[self.start]
+            else:
+                return self.doc[root]
     
     property lefts:
         """Tokens that are to the left of the Span, whose head is within the Span."""
