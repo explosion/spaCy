@@ -125,9 +125,9 @@ cdef class Parser:
         cdef int nr_feat = self.model.nr_feat
         queue = []
         for doc in stream:
-            queue.append(doc)
             doc_ptr[len(queue)] = doc.c
             lengths[len(queue)] = doc.length
+            queue.append(doc)
             if len(queue) == batch_size:
                 for i in cython.parallel.prange(batch_size, nogil=True,
                                                 num_threads=n_threads):
