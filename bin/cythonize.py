@@ -88,7 +88,8 @@ def load_hashes(filename):
 
 
 def save_hashes(hash_db, filename):
-    json.dump(hash_db, open(filename, 'wb'))
+    with open(filename, 'w') as f:
+        f.write(json.dumps(hash_db))
 
 
 def get_hash(path):
@@ -108,7 +109,7 @@ def hash_add(base, path, db):
 def process(base, filename, db):
     root, ext = os.path.splitext(filename)
     if ext in ['.pyx', '.cpp']:
-        if hash_changed(base, filename, db):
+        if hash_changed(base, filename, db) or not os.path.isfile(os.path.join(base, root + '.cpp')):
             preserve_cwd(base, process_pyx, root + '.pyx', root + '.cpp')
             hash_add(base, root + '.cpp', db)
             hash_add(base, root + '.pyx', db)
