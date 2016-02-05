@@ -209,7 +209,7 @@ cdef class Tagger:
                     eg.c.features, eg.c.nr_feat)
                 guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
                 self.vocab.morphology.assign_tag(&tokens.c[i], guess)
-                eg.reset_classes(eg.c.nr_class)
+                eg.fill_scores(0, eg.c.nr_class)
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
@@ -244,7 +244,8 @@ cdef class Tagger:
             
             correct += eg.cost == 0
             self.freqs[TAG][tokens.c[i].tag] += 1
-            eg.reset_classes(eg.c.nr_class)
+            eg.fill_scores(0, eg.c.nr_class)
+            eg.fill_costs(0, eg.c.nr_class)
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
         return correct

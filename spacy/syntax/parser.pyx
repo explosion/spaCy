@@ -200,7 +200,9 @@ cdef class Parser:
             action = self.moves.c[eg.guess]
             action.do(stcls.c, action.label)
             loss += eg.costs[eg.guess]
-            eg.reset_classes(eg.nr_class)
+            eg.fill_scores(0, eg.nr_class)
+            eg.fill_costs(0, eg.nr_class)
+            eg.fill_is_valid(0, eg.nr_class)
         return loss
 
     def step_through(self, Doc doc):
