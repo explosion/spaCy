@@ -150,7 +150,7 @@ def test_example_i_like_new_york5(toks, autumn, dot):
     assert toks[autumn].head.orth_ == 'in'
     assert toks[dot].head.orth_ == 'like'
     autumn_dot = toks[autumn:]
-    assert autumn_dot.root.orth_ == 'Autumn'
+    assert autumn_dot.root.orth_ == '.'
 
 
 def test_navigating_the_parse_tree_lefts(doc):

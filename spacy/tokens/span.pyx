@@ -241,12 +241,6 @@ cdef class Span:
 
 
 cdef int _count_words_to_root(const TokenC* token, int sent_length) except -1:
-    # Don't allow spaces to be the root, if there are
-    # better candidates
-    if Lexeme.c_check_flag(token.lex, IS_SPACE) and token.l_kids == 0 and token.r_kids == 0:
-        return sent_length-1
-    if Lexeme.c_check_flag(token.lex, IS_PUNCT) and token.l_kids == 0 and token.r_kids == 0:
-        return sent_length-1
     cdef int n = 0
     while token.head != 0:
         token += token.head
