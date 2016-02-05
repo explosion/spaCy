@@ -141,6 +141,7 @@ cdef class Parser:
         for i in range(batch_size):
             self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
             for doc in queue:
+                doc.is_parsed = True
                 yield doc
         PyErr_CheckSignals()
 
