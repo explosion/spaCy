@@ -88,11 +88,11 @@ def load_hashes(filename):
 
 
 def save_hashes(hash_db, filename):
-    json.dump(hash_db, open(filename, 'w'))
+    json.dump(hash_db, open(filename, 'wb'))
 
 
 def get_hash(path):
-    return hashlib.md5(open(path).read()).hexdigest()
+    return hashlib.md5(open(path, 'rb').read()).hexdigest()
 
 
 def hash_changed(base, path, db):
