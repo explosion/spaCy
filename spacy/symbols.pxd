@@ -14,7 +14,7 @@ cpdef enum symbol_t:
     IS_STOP
     IS_OOV
     
-    FLAG14
+    FLAG14 = 14
     FLAG15
     FLAG16
     FLAG17
@@ -419,3 +419,10 @@ cpdef enum symbol_t:
     rcmod
     root
     xcomp
+
+# Move these up to FLAG14--FLAG18 once we finish the functionality
+# and are ready to regenerate the model.
+#IS_BRACKET
+#IS_QUOTE
+#IS_LEFT_PUNCT
+#IS_RIGHT_PUNCT

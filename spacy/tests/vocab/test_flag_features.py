@@ -41,3 +41,18 @@ def test_is_digit(words):
     assert not is_digit(words[7])
     assert not is_digit(words[8])
     assert not is_digit(words[9])
+
+
+def test_is_quote(words):
+    pass
+
+
+def test_is_bracket(words):
+    pass
+
+
+def test_is_left_bracket(words):
+    pass
+
+def test_is_right_bracket(words):
+    pass
