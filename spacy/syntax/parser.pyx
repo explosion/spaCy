@@ -134,6 +134,7 @@ cdef class Parser:
                     self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
                 PyErr_CheckSignals()
                 for doc in queue:
+                    doc.is_parsed = True
                     yield doc
                 queue = []
         batch_size = len(queue)
