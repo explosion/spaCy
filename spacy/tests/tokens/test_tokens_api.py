@@ -179,3 +179,16 @@ def test_runtime_error(EN):
         for word in doc:
             print(word.idx, word.text, word.head.i, word.head.text)
         doc.merge(*np)
+
+
+@pytest.mark.models
+def test_right_edge(EN):
+    # Test for bug occurring from Unshift action, causing incorrect right edge
+    doc = EN(u'''I have proposed to myself, for the sake of such as live '''
+             u'''under the government of the Romans, to translate those books '''
+             u'''into the Greek tongue.''')
+    token = doc[6]
+    assert token.text == u'for'
+    subtree = [w.text for w in token.subtree]
+    assert subtree == [u'for' , u'the', u'sake', u'of']
+    assert token.right_edge.text == u'of'
