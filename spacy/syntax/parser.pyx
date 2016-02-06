@@ -123,29 +123,39 @@ cdef class Parser:
         cdef int i
         cdef int nr_class = self.moves.n_moves
         cdef int nr_feat = self.model.nr_feat
+        cdef int status
         queue = []
         for doc in stream:
             doc_ptr[len(queue)] = doc.c
             lengths[len(queue)] = doc.length
             queue.append(doc)
             if len(queue) == batch_size:
-                for i in cython.parallel.prange(batch_size, nogil=True,
-                                                num_threads=n_threads):
-                    self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
+                with nogil:
+                    for i in cython.parallel.prange(batch_size, num_threads=n_threads):
+                        status = self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
+                        if status != 0:
+                            with gil:
+                                sent_str = queue[i].text
+                                raise ValueError("Error parsing doc: %s" % sent_str)
                 PyErr_CheckSignals()
                 for doc in queue:
                     doc.is_parsed = True
                     yield doc
                 queue = []
         batch_size = len(queue)
-        for i in range(batch_size):
-            self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
-            for doc in queue:
-                doc.is_parsed = True
-                yield doc
+        with nogil:
+            for i in cython.parallel.prange(batch_size, num_threads=n_threads):
+                status = self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
+                if status != 0:
+                    with gil:
+                        sent_str = queue[i].text
+                        raise ValueError("Error parsing doc: %s" % sent_str)
+        for doc in queue:
+            doc.is_parsed = True
+            yield doc
         PyErr_CheckSignals()
 
-    cdef void parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) nogil:
+    cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) nogil:
         cdef ExampleC eg
         eg.nr_feat = nr_feat
         eg.nr_atom = CONTEXT_SIZE
@@ -168,7 +178,7 @@ cdef class Parser:
             if not eg.is_valid[guess]:
                 with gil:
                     move_name = self.moves.move_name(action.move, action.label)
-                    raise ValueError("Illegal action: %s" % move_name)
+                    return 1
             action.do(state, action.label)
             memset(eg.scores, 0, sizeof(eg.scores[0]) * eg.nr_class)
             for i in range(eg.nr_class):
@@ -181,6 +191,7 @@ cdef class Parser:
         free(eg.atoms)
         free(eg.scores)
         free(eg.is_valid)
+        return 0
   
     def train(self, Doc tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)

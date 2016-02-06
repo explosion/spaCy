@@ -12,9 +12,8 @@ from ._state cimport StateC
 cdef class ParserModel(AveragedPerceptron):
     cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil
 
-
 cdef class Parser:
     cdef readonly ParserModel model
     cdef readonly TransitionSystem moves
 
-    cdef void parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) nogil
+    cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) nogil
