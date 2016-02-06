@@ -47,10 +47,6 @@ class Language(object):
         return string[-3:]
 
     @staticmethod
-    def prob(string):
-        return -30
-
-    @staticmethod
     def cluster(string):
         return 0
 
@@ -119,7 +115,8 @@ class Language(object):
         return 0
 
     @classmethod
-    def default_lex_attrs(cls):
+    def default_lex_attrs(cls, *args, **kwargs):
+        oov_prob = kwargs.get('oov_prob', -20)
         return {
             attrs.LOWER: cls.lower,
             attrs.NORM: cls.norm,
@@ -127,8 +124,7 @@ class Language(object):
             attrs.PREFIX: cls.prefix,
             attrs.SUFFIX: cls.suffix,
             attrs.CLUSTER: cls.cluster,
-            attrs.PROB: lambda string: -10.0,
-    
+            attrs.PROB: lambda string: oov_prob,
             attrs.IS_ALPHA: cls.is_alpha,
             attrs.IS_ASCII: cls.is_ascii,
             attrs.IS_DIGIT: cls.is_digit,
@@ -159,7 +155,12 @@ class Language(object):
     @classmethod
     def default_vocab(cls, package, get_lex_attr=None):
         if get_lex_attr is None:
-            get_lex_attr = cls.default_lex_attrs()
+            if package.has_file('vocab', 'oov_prob'):
+                with package.open(('vocab', 'oov_prob')) as file_:
+                    oov_prob = float(file_.read().strip())
+                get_lex_attr = cls.default_lex_attrs(oov_prob=oov_prob)
+            else:
+                get_lex_attr = cls.default_lex_attrs()
         if hasattr(package, 'dir_path'):
             return Vocab.from_package(package, get_lex_attr=get_lex_attr)
         else:
