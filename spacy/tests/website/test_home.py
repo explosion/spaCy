@@ -4,6 +4,12 @@ import spacy
 import os
 
 
+try:
+    xrange
+except NameError:
+    xrange = range
+
+
 @pytest.fixture()
 def token(doc):
     return doc[0]
@@ -164,11 +170,11 @@ def test_efficient_binary_serialization(doc):
 
 @pytest.mark.models
 def test_multithreading(nlp):
-    texts = [
-        u'One document.',
-        u'A second document.',
-        u'Another document (you should use a generator!).'
-    ]
-    for doc in nlp.pipe(texts, batch_size=1000, n_threads=4):
+    texts = [u'One document.', u'...', u'Lots of documents']
+    # .pipe streams input, and produces streaming output
+    iter_texts = (texts[i % 3] for i in xrange(100000000))
+    for i, doc in enumerate(nlp.pipe(iter_texts, batch_size=50, n_threads=4)):
         assert doc.is_parsed
+        if i == 100:
+            break
 
