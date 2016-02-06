@@ -247,6 +247,24 @@ mixin Func(type1, type2)
         pre.language-python: code
             include ../../code/api.main_entry_point
 
+    +method("pipe", "self, texts_iterator, batch_size=1000, n_threads=2")(open=true)
+        p Parse a sequence of texts into a sequence of #[code Doc] objects. Accepts a generator as input, and produces a generator as output. spaCy releases the global interpreter lock around the parser and named entity recognizer, allowing shared-memory parallelism via OpenMP. However, OpenMP is not supported on OSX — so multiple threads will only be used on Linux and Windows.
+
+        p Internally, #[code .pipe] accumulates a buffer of #[code batch_size] texts, works on them with #[code n_threads] workers in parallel, and then yields the #[code Doc] objects one by one. Increasing #[code batch_size] results in higher latency (a longer time before the first document is yielded), and higher memory used (for the texts in the buffer), but can allow better parallelism.
+        params
+
+            +param("n_threads", types.int)
+                | The number of worker threads to use. If -1, OpenMP will decide how many to use at run time. Default is 2.
+
+            +param("texts")
+                | A sequence of unicode objects. Usually you will want this to be a generator, so that you don't need to have all of your texts in memory.
+
+            +param("batch_size", types.int)
+                | The number of texts to buffer. Let's say you have a #[code batch_size] of 1,000. The input, #[code texts], is a generator that yields the texts one-by-one. We want to operate on them in parallel. So, we accumulate a work queue. Instead of taking one document from #[code texts] and operating on it, we buffer #[code batch_size] documents, work on them in parallel, and then yield them one-by-one. Higher #[code batch_size] therefore often results in better parallelism, up to a point.
+
+        pre.language-python: code
+            include ../../code/home.multithreading
+
 
 +declare_class("Doc", "doc")
     p A sequence of #[code Token] objects.  Access sentences and named entities, export annotations to numpy arrays, losslessly serialize to compressed binary strings.
@@ -462,7 +480,7 @@ mixin Func(type1, type2)
         summary: h4 Navigating the Parse Tree
 
         +attribute("root")(open=true)
-            | The first ancestor of the first word of the span that has its head outside the span. For example:
+            | The word with the shortest path to the root of the sentence is the root of the span.
             pre.language-python: code
                 include ../../code/api.example_i_like_new_york1
 
