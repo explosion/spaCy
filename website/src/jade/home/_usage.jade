@@ -9,6 +9,10 @@ mixin example(name)
   pre.language-python: code
     include ../../code/home.load_resources_and_process_text
 
++example("Multi-threaded generator (using OpenMP. No GIL!)")
+  pre.language-python: code
+    include ../../code/home.multithreading
+
 +example("Get tokens and sentences")
   pre.language-python: code
     include ../../code/home.get_tokens_and_sentences
