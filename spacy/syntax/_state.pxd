@@ -240,10 +240,22 @@ cdef cppclass StateC:
     void del_arc(int h_i, int c_i) nogil:
         cdef int dist = h_i - c_i
         cdef TokenC* h = &this._sent[h_i]
+        cdef int i = 0
         if c_i > h_i:
+            # this.R_(h_i, 2) returns the second-rightmost child token of h_i
+            # If we have more than 2 rightmost children, our 2nd rightmost child's
+            # rightmost edge is going to be our new rightmost edge.
             h.r_edge = this.R_(h_i, 2).r_edge if h.r_kids >= 2 else h_i
             h.r_kids -= 1
+            new_edge = h.r_edge
+            # Correct upwards in the tree --- see Issue #251
+            while h.head < 0 and i < this.length: # Guard infinite loop
+                h += h.head
+                h.r_edge = new_edge
+                i += 1
         else:
+            # Same logic applies for left edge, but we don't need to walk up
+            # the tree, as the head is off the stack.
             h.l_edge = this.L_(h_i, 2).l_edge if h.l_kids >= 2 else h_i
             h.l_kids -= 1
 
