@@ -8,7 +8,6 @@ from ..symbols cimport punct
 from ..attrs cimport IS_SPACE
 
 
-
 cdef cppclass StateC:
     int* _stack
     int* _buffer
@@ -48,6 +47,7 @@ cdef cppclass StateC:
         this._e_i = 0
         for i in range(length):
             this._buffer[i] = i
+        memset(&this._empty_token, 0, sizeof(TokenC))
         this._empty_token.lex = &EMPTY_LEXEME
         for i in range(length):
             this._sent[i] = sent[i]
