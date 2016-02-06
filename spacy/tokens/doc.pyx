@@ -397,14 +397,10 @@ cdef class Doc:
                         tokens[i + values[i]].l_kids += 1
                     elif values[i] < 0:
                         tokens[i + values[i]].r_kids += 1
-                    if not self.is_parsed and tokens[i].head != 0:
-                        self.is_parsed = True
             elif attr_id == TAG:
                 for i in range(length):
                     self.vocab.morphology.assign_tag(&tokens[i],
                                 self.vocab.morphology.reverse_index[values[i]])
-                    if not self.is_tagged and tokens[i].tag != 0:
-                        self.is_tagged = True
             elif attr_id == POS:
                 for i in range(length):
                     tokens[i].pos = <univ_pos_t>values[i]
@@ -420,6 +416,9 @@ cdef class Doc:
             else:
                 raise ValueError("Unknown attribute ID: %d" % attr_id)
         set_children_from_heads(self.c, self.length)
+        self.is_parsed = bool(HEAD in attrs or DEP in attrs)
+        self.is_tagged = bool(TAG in attrs or POS in attrs)
+
         return self
 
     def to_bytes(self):
