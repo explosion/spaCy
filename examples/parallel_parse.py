@@ -43,7 +43,7 @@ def save_parses(batch_id, input_, out_dir, n_threads, batch_size):
     if path.exists(out_loc):
         return None
     print('Batch', batch_id)
-    nlp = spacy.en.English(parser=False)
+    nlp = spacy.en.English()
     nlp.matcher = None
     with open(out_loc, 'wb') as file_:
         texts = (strip_meta(text) for text in input_)
