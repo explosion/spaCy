@@ -43,14 +43,10 @@ Supports
 * CPython 3.4
 * CPython 3.5
 * OSX
-* Linux 
-* Cygwin
-* Visual Studio
+* Linux
+* Windows (Cygwin, MinGW, Visual Studio)
 
 Difficult to support:
 
 * PyPy 2.7
 * PyPy 3.4
-
-
-
