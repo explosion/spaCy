@@ -7,7 +7,7 @@ spaCy: Industrial-strength NLP
 
 spaCy is a library for advanced natural language processing in Python and Cython.
 
-Documentation and details: http://spacy.io/
+Documentation and details: https://spacy.io/
 
 spaCy is built on the very latest research, but it isn't researchware.  It was
 designed from day 1 to be used in real products. It's commercial open-source
