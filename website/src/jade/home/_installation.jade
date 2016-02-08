@@ -15,12 +15,12 @@ mixin Option(name, open)
 
 
 +Option("conda", true)
-    Sometimes conda is not up to date with the latest release. If you can't get the latest version on conda, you can always fall back to the pip install.
-
   pre.language-bash: code
     | $ conda config --add channels spacy
     | $ conda install spacy
     | $ python -m spacy.en.download
+
+  | Sometimes conda is not up to date with the latest release. If you can't get the latest version on conda, you can always fall back to the pip install.
 
 +Option("pip and virtualenv", true)
     p With Python 2.7 or Python 3, using Linux or OSX, ensure that you have the following packages installed:
@@ -38,6 +38,13 @@ mixin Option(name, open)
     | The download command fetches and installs about 500mb of data, for
     | the parser model and word vectors, which it installs within the spacy
     | package directory.
+    
+  p Usually you'll want to install spaCy within a #[a(href="https://virtualenv.readthedocs.org/en/latest/") virtualenv], to avoid modifying system state:
+
+    pre.language-bash: code
+      | virtualenv my_env_dir
+      | source my_env_dir/bin/activate
+
 
 
 +Option("Windows (64 bit)", true)
