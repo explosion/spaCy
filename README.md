@@ -1,4 +1,4 @@
-[![Travis CI status](https://travis-ci.org/honnibal/spaCy.svg?branch=master)](https://travis-ci.org/honnibal/spaCy)
+[![Travis CI status](https://travis-ci.org/spacy-io/spaCy.svg?branch=master)](https://travis-ci.org/spacy-io/spaCy)
 [![Appveyor status](https://ci.appveyor.com/api/projects/status/395x7jn0rakfs4ti/branch/master?svg=true)](https://ci.appveyor.com/project/honnibal/spacy/branch/master)
 
 
@@ -7,7 +7,7 @@ spaCy: Industrial-strength NLP
 
 spaCy is a library for advanced natural language processing in Python and Cython.
 
-Documentation and details: http://spacy.io/
+Documentation and details: https://spacy.io/
 
 spaCy is built on the very latest research, but it isn't researchware.  It was
 designed from day 1 to be used in real products. It's commercial open-source
@@ -43,14 +43,10 @@ Supports
 * CPython 3.4
 * CPython 3.5
 * OSX
-* Linux 
-* Cygwin
-* Visual Studio
+* Linux
+* Windows (Cygwin, MinGW, Visual Studio)
 
 Difficult to support:
 
 * PyPy 2.7
 * PyPy 3.4
-
-
-
