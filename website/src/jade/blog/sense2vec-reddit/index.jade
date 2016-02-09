@@ -1,0 +1,131 @@
+include ../../header.jade
+include ./meta.jade
+
+
++WritePost(Meta)
+
+    
+    p In late 2015, researchers from Digital Reasoning published some nice experiments applying word2vec to tagged text, instead of raw tokens.  This is a practical way to learn much more useful vectors.  What you get from word2vec is a look-up table. The same key always retrieves the same entry.  So, let's make our keys much more specific, by adding linguistic annotations to the text.  Of course, we still want to train our word vectors on large samples, so we want to make sure our annotations are automatic and efficient.
+    
+    h2 Demonstration of sense2vec
+
+    p Before explaining the process in more detail, let's play with the result. Enter a word or a phrase to find terms that were used in similar contexts on Reddit in 2015.  You can search at a few different levels of detail:
+
+    +table("Query type", "Example", "Semantics")
+        +row("Tagged", "take|NOUN", "Search with literal query")
+        +row("Case-sensitive", "Take", "Search with the word's most frequent tag")
+        +row("Basic", "take", "Search with most frequent tag and case")
+
+
+    p You can click on any of the search results to search for it, which allows you to walk around conceptual graph.  As soon as I started playing with these vectors, I found all sorts of interesting things. Here are some of my first impressions.
+    
+    h4 The vector space seems like it'll give a good way to show compositionality:
+
+    #[em fair game] is not a type of game:
+
+    pre
+        code.python
+            | >>> model.similarity('fair_game|NOUN', 'game|NOUN')
+            | 0.034977455677555599
+            | >>> model.similarity('multiplayer_game|NOUN', 'game|NOUN')
+            | 0.54464530644393849
+    
+    p A #[em class action] is only very weakly a type of action:
+
+    pre
+        code.python
+            | >>> model.similarity('class_action|NOUN', 'action|NOUN')
+            | 0.14957825452335169
+
+    p But a #[em class action lawsuit] is definitely a type of lawsuit:
+
+    pre
+        code.python
+            | >>> model.similarity('class_action_lawsuit|NOUN', 'lawsuit|NOUN')
+            | 0.69595765453644187
+
+    h4 Similarity between entities can be kind of fun.
+
+    p Here's what Reddit thinks of Donald Trump:
+
+    pre
+        code.python
+            | >>> model.most_similar(['Donald_Trump|PERSON'])
+            | [(u'Sarah_Palin|PERSON', 0.5510910749435425), (u'Rick_Perry|PERSON', 0.5508972406387329), (u'Stephen_Colbert|PERSON', 0.5499709844589233), (u'Alex_Jones|PERSON', 0.5492554306983948), (u'Michael_Moore|PERSON', 0.5363447666168213), (u'Charles_Manson|PERSON', 0.5363028645515442), (u'Dick_Cheney|PERSON', 0.5348431468009949), (u'Mark_Zuckerberg|PERSON', 0.5258212089538574), (u'Mark_Wahlberg|PERSON', 0.5251839756965637), (u'Michael_Jackson|PERSON', 0.5229078531265259)]
+
+    p Discussion of Bill Cosby makes some obvious (and some less obvious) comparisons:
+
+    pre
+        code.python
+            | >>> model.most_similar(['Bill_Cosby|PERSON'])
+            | [(u'Cosby|ORG', 0.6004706621170044), (u'Cosby|PERSON', 0.5874950885772705), (u'Roman_Polanski|PERSON', 0.5478169918060303), (u'George_Zimmerman|PERSON', 0.5398542881011963), (u'Charles_Manson|PERSON', 0.5387344360351562), (u'OJ_Simpson|PERSON', 0.5228893160820007), (u'Trayvon_Martin|PERSON', 0.514190137386322), (u'Adnan_Syed|PERSON', 0.49992451071739197), (u'rapist|NOUN', 0.49792540073394775), (u'srhbutts|NOUN', 0.49792492389678955)]
+
+    p Some queries produce more confusing results:
+
+    pre
+        code.python
+            | >>> model.most_similar(['Carrot_Top|PERSON'])
+            | [(u'Kate_Mara|PERSON', 0.5347248911857605), (u'Andy_Samberg|PERSON', 0.5336876511573792), (u'Ryan_Gosling|PERSON', 0.5287898182868958), (u'Emma_Stone|PERSON', 0.5243821740150452), (u'Charlie_Sheen|PERSON', 0.5209298133850098), (u'Joseph_Gordon_Levitt|PERSON', 0.5196050405502319), (u'Jonah_Hill|PERSON', 0.5151286125183105), (u'Zooey_Deschanel|PERSON', 0.514430582523346), (u'Gerard_Butler|PERSON', 0.5115377902984619), (u'Ellen_Page|PERSON', 0.5094753503799438)]
+
+    p I can't say the connection between Carrot Top and Kate Mara is obvious to me. I suppose this is true of most things about Carrot Top, so...Fair play.
+
+    h4 Reddit talks about food a lot, and those regions of the vector space seem very well defined:
+
+    pre
+        code.python
+            | >>> model.most_similar(['onion_rings|NOUN'])
+            | [(u'hashbrowns|NOUN', 0.8040812611579895), (u'hot_dogs|NOUN', 0.7978234887123108), (u'chicken_wings|NOUN', 0.793393611907959), (u'sandwiches|NOUN', 0.7903584241867065), (u'fries|NOUN', 0.7885469198226929), (u'tater_tots|NOUN', 0.7821801900863647), (u'bagels|NOUN', 0.7788236141204834), (u'chicken_nuggets|NOUN', 0.7787706255912781), (u'coleslaw|NOUN', 0.7771176099777222), (u'nachos|NOUN', 0.7755396366119385)]
+
+    p Some of Reddit's ideas about food are kind of...interesting. It seems to think bacon and brocolli are very similar:
+
+    pre
+        code.python
+            | >>> model.similarity('bacon|NOUN', 'broccoli|NOUN')
+            | 0.83276615202851845
+
+    p Reddit also thinks hot dogs are practically salad:
+
+    pre
+        code.python
+            | >>> model.similarity('hot_dogs|NOUN', 'salad|NOUN')
+            | 0.76765100035460465
+            | >>> model.similarity('hot_dogs|NOUN', 'entrails|NOUN')
+            | 0.28360725445449464
+
+    p Just keep telling yourself that Reddit.
+
+    
+    h2 What's word2vec, and how is sense2vec different?
+
+    p When humans write dictionaries and thesauruses, we define concepts in relation to other concepts.  For automatic natural language processing, it's often more effective to use dictionaries that define concepts in terms of their usage statistics.  The word2vec family of models are the most popular way of creating these dictionaries.  Given a large sample of text, word2vec gives you a dictionary where each definition is just a row of, say, 300 floating-point numbers.  To find out whether two entries in the dictionary are similar, you ask how similar their definitions are &ndash; a well-defined mathematical operation.  Neat.
+
+    p In the original presentation, the dictionary entries are lower-cased strings of alphabetic characters.  This is the obvious place to start, and it makes that part of the process super simple.  But when we write dictionaries, we have entries for multi-word expressions, and we allow multiple senses per entry, distinguished by part-of-speech.  The idea behind sense2vec is simply that a single word, out-of-context, is not a very fine-grained unit of meaning. Let's key our dictionaries with more interesting linguistic units.
+
+    p The word2vec software includes an extension in this direction: it allows you to pre-process the text and merge words into longer phrases, using cooccurrence statistics.  However, this is a pretty limited approach.  A lot of work has gone into recognizing higher-order linguistic units automatically.  Some neural networks researchers will want to avoid these, because they cloud the long-term project that they're working on, of understanding text from first-principles.  But if you just want to get things done, there's no reason to adopt this constraint.  You should process the text with whatever tools are available and convenient.  spaCy is both &ndash; so let's use it.
+
+    h4 Training a sense2vec model on Reddit with spaCy and Gensim
+
+    p I have lots of ideas for interesting ways to key the word vectors using the spaCy annotations. But for now, I thought I'd keep things relatively simple. The function below streams text through the spaCy pipeline, and uses the syntactic dependency parse to recognize base noun phrases. We strip determiners from these noun chunks, and merge them.  We also merge named entities, and follow Trask et al (2015) in attaching the part-of-speech tags to the tokens.
+    
+    code
+        pre
+            def transform_texts(texts):
+                nlp = English()
+                for doc in nlp.pipe(texts, n_threads=6):
+                    for np in doc.noun_chunks:
+                        while len(np) > 1 and np[0].dep_ not in ('amod', 'compound'):
+                            np = np[1:]
+                        if len(np) > 1:
+                            np.merge(np.root.tag_, np.text, np.root.ent_type_)
+                    for ent in doc.ents:
+                        if len(ent) > 1:
+                            ent.merge(ent.root.tag_, ent.text, ent.label_)
+                    yield ' '.join((w.text, w.ent_type_ or w.pos_) for w in doc)
+        
+    p Even with all this additional processing, we can still train massive models without difficulty. Because spaCy is written in Cython, we can release the GIL around the syntactic parser.allows efficient multi-threading. With 4 threads, throughput is over 100,000 words per second. These experiments were conducted on a 92 core machine, using credits generously grantd by Softlayer. On this single machine, we parsed every Reddit comment in under 48 hours.
+
+    p We're not doing anything clever to filter out compositional phrases yet, and we haven't tuned the model particularly well. We plan to experiment more with different transformations, e.g. adding prepositions/particles to verbs seems obvious. So does using dependency contexts, in the way you and Omer did.
+
+    p After pre-processing the text, the vectors can be trained as normal, using the original C code, Gensim, or a related technique like GloVe. So long as it expects the tokens to be whitespace delimited, and sentences to be separated by new lines, there should be no problem.  The only caveat is that the tool should not try to employ its own tokenization &ndash; otherwise it might split off our tags.
+
+    p I used Gensim, and trained the model using the Skip-Gram with negative sampling algorithm, using a frequency threshold of 10 and 5 iterations. After training, I applied a further frequency threshold of 50, to reduce the run-time memory requirements.
