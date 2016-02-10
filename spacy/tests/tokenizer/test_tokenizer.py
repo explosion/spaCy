@@ -8,13 +8,13 @@ import cloudpickle
 import tempfile
 
 
-@pytest.mark.xfail
-def test_pickle(en_tokenizer):
-    file_ = io.BytesIO()
-    cloudpickle.dump(en_tokenizer, file_)
-    file_.seek(0)
-    loaded = pickle.load(file_)
-    assert loaded is not None
+# @pytest.mark.xfail
+# def test_pickle(en_tokenizer):
+#     file_ = io.BytesIO()
+#     cloudpickle.dump(en_tokenizer, file_)
+#     file_.seek(0)
+#     loaded = pickle.load(file_)
+#     assert loaded is not None
 
 
 def test_no_word(en_tokenizer):
