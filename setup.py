@@ -64,10 +64,6 @@ MOD_NAMES = [
     'spacy.symbols']
 
 
-if sys.version_info[:2] < (2, 7) or (3, 0) <= sys.version_info[0:2] < (3, 4):
-    raise RuntimeError('Python version 2.7 or >= 3.4 required.')
-
-
 # By subclassing build_extensions we have the actual compiler that will be used
 # which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
