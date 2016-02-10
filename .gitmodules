@@ -1,3 +1,0 @@
-[submodule "appveyor"]
-	path = appveyor
-	url = https://github.com/henningpeters/spaCy-appveyor-toolkit
