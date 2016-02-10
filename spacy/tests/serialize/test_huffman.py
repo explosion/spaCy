@@ -58,7 +58,7 @@ def test_round_trip():
     message = ['the', 'quick', 'brown', 'fox', 'jumped', 'over', 'the',
                 'the', 'lazy', 'dog', '.']
     strings = list(codec.strings)
-    codes = {codec.leaves[i]: strings[i] for i in range(len(codec.leaves))}
+    codes = dict([(codec.leaves[i], strings[i]) for i in range(len(codec.leaves))])
     bits = codec.encode(message)
     string = ''.join('{0:b}'.format(c).rjust(8, '0')[::-1] for c in bits.as_bytes())
     for word in message:
@@ -83,7 +83,7 @@ def test_rosetta():
     codec = HuffmanCodec(symb2freq.items())
     py_codec = py_encode(symb2freq)
 
-    codes = {codec.leaves[i]: codec.strings[i] for i in range(len(codec.leaves))}
+    codes = dict([(codec.leaves[i], codec.strings[i]) for i in range(len(codec.leaves))])
 
     my_lengths = defaultdict(int)
     py_lengths = defaultdict(int)
