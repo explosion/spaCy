@@ -1,5 +1,5 @@
 [![Travis CI status](https://travis-ci.org/spacy-io/spaCy.svg?branch=master)](https://travis-ci.org/spacy-io/spaCy)
-[![Appveyor status](https://ci.appveyor.com/api/projects/status/395x7jn0rakfs4ti/branch/master?svg=true)](https://ci.appveyor.com/project/honnibal/spacy/branch/master)
+[![Appveyor status](https://ci.appveyor.com/api/projects/status/6u9qy8r9gyd082u3?svg=true)](https://ci.appveyor.com/project/honnibal/spacy/branch/master)
 
 
 spaCy: Industrial-strength NLP
