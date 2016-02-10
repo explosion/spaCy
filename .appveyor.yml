@@ -12,18 +12,18 @@ environment:
       PYTHON_VERSION: "2.7.10"
       PYTHON_ARCH: "64"
 
-    - PYTHON: "C:\\Python27.10-x32"
-      PYTHON_VERSION: "2.7.10"
-      PYTHON_ARCH: "32"
+    # - PYTHON: "C:\\Python27.10-x32"
+    #   PYTHON_VERSION: "2.7.10"
+    #   PYTHON_ARCH: "32"
 
     # The lastest Python 3.4.
     - PYTHON: "C:\\Python34-x64" 
       PYTHON_VERSION: "3.4.3" # currently 3.4.3 
       PYTHON_ARCH: "64" 
 
-    - PYTHON: "C:\\Python34-x32" 
-      PYTHON_VERSION: "3.4.3" # currently 3.4.3 
-      PYTHON_ARCH: "32" 
+    # - PYTHON: "C:\\Python34-x32" 
+    #   PYTHON_VERSION: "3.4.3" # currently 3.4.3 
+    #   PYTHON_ARCH: "32" 
 
 
 install:
@@ -51,12 +51,12 @@ install:
   # compiled extensions and are not provided as pre-built wheel packages,
   # pip will build them from source using the MSVC compiler matching the
   # target Python version and architecture
-  - "%CMD_IN_ENV% python build.py prepare"
+  - "%CMD_IN_ENV% pip install -r requirements.txt"
 
 build_script:
   # Build the compiled extension
-  - "%CMD_IN_ENV% python setup.py build_ext --inplace"
-  - ps: appveyor\download.ps1 
+  - "%CMD_IN_ENV% pip install -e ."
+  - ps: appveyor\download.ps1
   - "tar -xzf corpora/en/wordnet.tar.gz"
   - "%CMD_IN_ENV% python bin/init_model.py en lang_data/ corpora/ data"
   - "cp package.json data"
@@ -65,20 +65,5 @@ build_script:
 
 test_script:
   # Run the project tests
-  - "%CMD_IN_ENV% python build.py test"
-
-after_test:
-  # If tests are successful, create binary packages for the project.
-  #- "%CMD_IN_ENV% python setup.py bdist_wheel"
-  #- "%CMD_IN_ENV% python setup.py bdist_wininst"
-  #- "%CMD_IN_ENV% python setup.py bdist_msi"
-  #- ps: "ls dist"
-
-artifacts:
-  # Archive the generated packages in the ci.appveyor.com build report.
-  - path: dist\*
-
-#on_success:
-#  - TODO: upload the content of dist/*.whl to a public wheelhouse
-#
-
+  - "pip install pytest"
+  - "%CMD_IN_ENV% python -m pytest spacy"
