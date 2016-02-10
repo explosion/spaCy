@@ -15,6 +15,7 @@ def test_space_attachment(EN):
             assert not sent[-1].is_space
 
 
+@pytest.mark.models
 def test_sentence_space(EN):
     text = ('''I look forward to using Thingamajig.  I've been told it will '''
             '''make my life easier...''')
