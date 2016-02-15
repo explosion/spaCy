@@ -81,7 +81,7 @@ compile_options =  {
 link_options = {
     'msvc' : [],
     'mingw32': [],
-    'other' : []
+    'other' : ['-lcblas']
 }
 
 
@@ -153,6 +153,7 @@ def setup_package():
 
         include_dirs = [
             get_python_inc(plat_specific=True),
+            '/opt/OpenBLAS/include',
             os.path.join(root, 'include')]
 
         ext_modules = []

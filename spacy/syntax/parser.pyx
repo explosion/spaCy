@@ -23,6 +23,7 @@ from cymem.cymem cimport Pool, Address
 from murmurhash.mrmr cimport hash64
 from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
 from thinc.linear.avgtron cimport AveragedPerceptron
+from thinc.neural.nn cimport NeuralNet
 from thinc.linalg cimport VecVec
 from thinc.structs cimport SparseArrayC
 from preshed.maps cimport MapStruct
@@ -76,6 +77,41 @@ cdef class ParserModel(AveragedPerceptron):
     cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil: 
         fill_context(eg.atoms, state)
         eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
+
+cdef class ParserNeuralNet(NeuralNet):
+    cdef int nr_feat
+    def __init__(self, n_classes,
+            depth=2, hidden_width=50,
+            words_width=100, tags_width=5,
+            learn_rate=0.1):
+        self.nr_feat = 7
+        input_length = 5 * words_width + 2 * tags_width
+        widths = [input_length] + [hidden_width] * depth + [n_classes]
+        vector_widths = [words_width, tags_width]
+        slots = [0] * 5 + [1] * 2
+        NeuralNet.__init__(
+            self,
+            widths,
+            embed=(vector_widths, slots),
+            eta=learn_rate,
+            rho=0.0,
+            update_step='sgd')
+
+    cdef void set_featuresC(self, ExampleC* eg, const TokenC* tokens, int i) nogil:
+        eg.nr_feat = self.nr_feat
+        for j in range(eg.nr_feat):
+            eg.features[j].value = 1.0
+            eg.features[j].i = j
+        eg.features[0].key = tokens[i].lex.lower
+        eg.features[1].key = tokens[i-1].lex.orth
+        eg.features[2].key = tokens[i].lex.orth
+        eg.features[3].key = tokens[i+1].lex.orth
+        eg.features[4].key = tokens[i+2].lex.orth
+        eg.features[5].key = tokens[i-2].tag
+        eg.features[6].key = tokens[i-1].tag
+
+    cdef void set_scoresC(self, ExampleC* eg, const TokenC* tokens, int i) nogil:
+        pass
 
 
 cdef class Parser:

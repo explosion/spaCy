@@ -60,11 +60,13 @@ def prebuild(build_dir='/tmp/build_spacy'):
             local('PYTHONPATH=`pwd` py.test --models spacy/tests/')
 
 
-def web():
+def web(dest=None):
+    if dest is None:
+        dest = path.join(path.dirname(__file__), 'website', 'site')
     def jade(source_name, out_dir):
         pwd = path.join(path.dirname(__file__), 'website')
         jade_loc = path.join(pwd, 'src', 'jade', source_name)
-        out_loc = path.join(pwd, 'site', out_dir)
+        out_loc = path.join(dest, out_dir)
         local('jade -P %s --out %s' % (jade_loc, out_loc))
 
     with virtualenv(VENV_DIR):

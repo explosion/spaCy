@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import json
 from os import path
 from collections import defaultdict
@@ -70,17 +71,129 @@ cpdef enum:
     N_CONTEXT_FIELDS
 
 
-cdef class TaggerModel(AveragedPerceptron):
+cdef class TaggerNeuralNet(NeuralNet):
+    def __init__(self, n_classes,
+            depth=1, hidden_width=100,
+            words_width=20, shape_width=5, suffix_width=5, tags_width=5,
+            learn_rate=0.1):
+        input_length = 5 * words_width + 5 * shape_width + 5 * suffix_width + 2 * tags_width
+        widths = [input_length] + [hidden_width] * depth + [n_classes]
+        vector_widths = [words_width, shape_width, suffix_width, tags_width]
+        slots = [0] * 5 + [1] * 5 + [2] * 5 + [3] * 2
+        NeuralNet.__init__(
+            self,
+            widths,
+            embed=(vector_widths, slots),
+            eta=learn_rate,
+            rho=1e-6,
+            update_step='sgd')
+
     cdef void set_featuresC(self, ExampleC* eg, const TokenC* tokens, int i) except *:
+        eg.nr_feat = self.nr_feat
+        for j in range(eg.nr_feat):
+            eg.features[j].value = 1.0
+            eg.features[j].i = j
+        eg.features[0].key = tokens[i].lex.lower
+        eg.features[1].key = tokens[i-1].lex.lower
+        eg.features[2].key = tokens[i-2].lex.lower
+        eg.features[3].key = tokens[i+1].lex.lower
+        eg.features[4].key = tokens[i+2].lex.lower
+        eg.features[5].key = tokens[i].lex.shape
+        eg.features[6].key = tokens[i-1].lex.shape
+        eg.features[7].key = tokens[i-2].lex.shape
+        eg.features[8].key = tokens[i+1].lex.shape
+        eg.features[9].key = tokens[i+2].lex.shape
+        eg.features[10].key = tokens[i].lex.suffix
+        eg.features[11].key = tokens[i-1].lex.suffix
+        eg.features[12].key = tokens[i-2].lex.suffix
+        eg.features[13].key = tokens[i+1].lex.suffix
+        eg.features[14].key = tokens[i+2].lex.suffix
+ 
+        eg.features[15].key = tokens[i-2].tag
+        eg.features[16].key = tokens[i-1].tag
+
+    def end_training(self):
+        pass
+
+    def dump(self, loc):
+        pass
+
+    property nr_feat:
+        def __get__(self):
+            return 17
+
+
+cdef class CharacterTagger(NeuralNet):
+    def __init__(self, n_classes,
+            depth=2, hidden_width=100,
+            chars_width=5,
+            words_width=20, shape_width=5, suffix_width=5, tags_width=5,
+            learn_rate=0.1):
+        input_length = 5 * chars_width * self.chars_per_word + 2 * tags_width
+        widths = [input_length] + [hidden_width] * depth + [n_classes]
+        vector_widths = [chars_width, tags_width]
+        slots = [0] * 5 * self.chars_per_word + [1] * 2
+        NeuralNet.__init__(
+            self,
+            widths,
+            embed=(vector_widths, slots),
+            eta=learn_rate,
+            rho=1e-6,
+            update_step='sgd')
+
+    cdef void set_featuresC(self, ExampleC* eg, const TokenC* tokens, object strings, int i) except *:
+        oov = '_' * self.chars_per_word
+        p2 = strings[i-2] if i >= 2 else oov
+        p1 = strings[i-1] if i >= 1 else oov
+        w = strings[i]
+        n1 = strings[i+1] if (i+1) < len(strings) else oov
+        n2 = strings[i+2] if (i+2) < len(strings) else oov
+        cdef int p = 0
+        cdef int c
+        cdef int chars_per_word = self.chars_per_word
+        cdef unicode string
+        for string in (p2, p1, w, n1, n2):
+            for c in range(chars_per_word):
+                eg.features[p].i = p
+                eg.features[p].key = ord(string[c])
+                eg.features[p].value = 1.0 if string[c] != u'_' else 0.0
+                p += 1
+        eg.features[p].key = tokens[i-1].tag
+        eg.features[p].value = 1.0
+        eg.features[p].i = p
+        p += 1
+        eg.features[p].key = tokens[i-2].tag
+        eg.features[p].value = 1.0
+        eg.features[p].i = p
+        eg.nr_feat = p+1
+    
+    def end_training(self):
+        pass
+
+    def dump(self, loc):
+        pass
+
+    property nr_feat:
+        def __get__(self):
+            return self.chars_per_word * 5 + 2
+
+    property chars_per_word:
+        def __get__(self):
+            return 15
+
+
+def _pad(word, nr_char):
+    if len(word) == nr_char:
+        pass
+    elif len(word) > nr_char:
+        split = nr_char / 2
+        word = word[:split+1] + word[-split:]
+    else:
+        word = word.ljust(nr_char, ' ')
+    assert len(word) == nr_char, repr(word)
+    return word
+ 
         
-        _fill_from_token(&eg.atoms[P2_orth], &tokens[i-2])
-        _fill_from_token(&eg.atoms[P1_orth], &tokens[i-1])
-        _fill_from_token(&eg.atoms[W_orth], &tokens[i])
-        _fill_from_token(&eg.atoms[N1_orth], &tokens[i+1])
-        _fill_from_token(&eg.atoms[N2_orth], &tokens[i+2])
-
-        eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
-
 
 cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
     context[0] = t.lex.lower
@@ -142,8 +255,8 @@ cdef class Tagger:
         )
 
     @classmethod
-    def blank(cls, vocab, templates):
-        model = TaggerModel(N_CONTEXT_FIELDS, templates)
+    def blank(cls, vocab, templates, learn_rate=0.005):
+        model = CharacterTagger(vocab.morphology.n_tags, learn_rate=learn_rate)
         return cls(vocab, model)
 
     @classmethod
@@ -158,12 +271,12 @@ cdef class Tagger:
         #     'pos', 'templates.json',
         #     default=cls.default_templates())
 
-        model = TaggerModel(templates)
+        model = TaggerNeuralNet()
         if pkg.has_file('pos', 'model'):
             model.load(pkg.file_path('pos', 'model'))
         return cls(vocab, model)
 
-    def __init__(self, Vocab vocab, TaggerModel model):
+    def __init__(self, Vocab vocab, CharacterTagger model):
         self.vocab = vocab
         self.model = model
         
@@ -200,16 +313,19 @@ cdef class Tagger:
 
         cdef int i, tag
         cdef Example eg = Example(nr_atom=N_CONTEXT_FIELDS,
+                                  widths=self.model.widths,
                                   nr_class=self.vocab.morphology.n_tags,
                                   nr_feat=self.model.nr_feat)
+        strings = [_pad(tok.text, self.model.chars_per_word) for tok in tokens]
         for i in range(tokens.length):
+            eg.reset()
             if tokens.c[i].pos == 0:
-                self.model.set_featuresC(&eg.c, tokens.c, i)
-                self.model.set_scoresC(eg.c.scores,
-                    eg.c.features, eg.c.nr_feat)
+                self.model.set_featuresC(&eg.c, tokens.c, strings, i)
+                self.model.predict_example(eg)
+                #self.model.set_scoresC(eg.c.scores,
+                #    eg.c.features, eg.c.nr_feat)
                 guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
                 self.vocab.morphology.assign_tag(&tokens.c[i], guess)
-                eg.fill_scores(0, eg.c.nr_class)
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
@@ -226,26 +342,28 @@ cdef class Tagger:
                        "gold tags, to maintain coarse-grained mapping.")
                 raise ValueError(msg % tag)
         golds = [self.tag_names.index(g) if g is not None else -1 for g in gold_tag_strs]
+        strings = [_pad(tok.text, self.model.chars_per_word) for tok in tokens]
         cdef int correct = 0
         cdef Pool mem = Pool()
         cdef Example eg = Example(
             nr_atom=N_CONTEXT_FIELDS,
             nr_class=self.vocab.morphology.n_tags,
+            widths=self.model.widths,
             nr_feat=self.model.nr_feat)
         for i in range(tokens.length):
-            self.model.set_featuresC(&eg.c, tokens.c, i)
-            eg.set_label(golds[i])
-            self.model.set_scoresC(eg.c.scores,
-                eg.c.features, eg.c.nr_feat)
-            
-            self.model.updateC(&eg.c)
+            eg.reset()
+            self.model.set_featuresC(&eg.c, tokens.c, strings, i)
+            eg.costs = [golds[i] not in (j, -1) for j in range(eg.c.nr_class)]
+            self.model.train_example(eg)
+
+            #self.model.set_scoresC(eg.c.scores,
+            #    eg.c.features, eg.c.nr_feat)
+            #
+            #self.model.updateC(&eg.c)
 
             self.vocab.morphology.assign_tag(&tokens.c[i], eg.guess)
-            
             correct += eg.cost == 0
             self.freqs[TAG][tokens.c[i].tag] += 1
-            eg.fill_scores(0, eg.c.nr_class)
-            eg.fill_costs(0, eg.c.nr_class)
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
         return correct

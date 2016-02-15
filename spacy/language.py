@@ -305,7 +305,7 @@ class Language(object):
                 n_threads=n_threads, batch_size=batch_size)
         if self.entity and entity:
             stream = self.entity.pipe(stream,
-                n_threads=1, batch_size=batch_size)
+                n_threads=n_threads, batch_size=batch_size)
         for doc in stream:
             yield doc
 
