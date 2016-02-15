@@ -3,7 +3,7 @@
 # https://python-packaging-user-guide.readthedocs.org/en/latest/single_source_version/
 # https://github.com/pypa/warehouse/blob/master/warehouse/__about__.py
 
-__name__ = 'spacy'
+__title__ = 'spacy'
 __version__ = '0.100.5'
 __summary__ = 'Industrial-strength NLP'
 __uri__ = 'https://spacy.io'

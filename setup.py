@@ -162,7 +162,7 @@ def setup_package():
             generate_cython(root, 'spacy')
 
         setup(
-            name=about['__name__'],
+            name=about['__title__'],
             zip_safe=False,
             packages=PACKAGES,
             package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']},
