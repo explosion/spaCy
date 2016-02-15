@@ -1,0 +1,396 @@
+include ./meta.jade
+include ../../header.jade
+
+
++WritePost(Meta)
+    p In late 2015, researchers from Digital Reasoning published some nice experiments applying word2vec to tagged text, instead of raw tokens.  This is a practical way to learn much more useful vectors.  The core of the idea is easy to appreciate.  The output of word2vec is a look-up table.  When we use this table, the same key will always retrieve the same entry.  So, let's compute more complicated keys, and thereby receive more meaningful vectors.  Specifically, we want to make our keys more context-sensitive.  We're not limited to the raw text here &ndash; we can apply any automated pre-processing we want, so long as it's reasonably efficient, and we can repeat the process at run-time.
+    
+    h2 Online Demo
+
+    p Before explaining the process in more detail, let's play with the result. Enter a word or a phrase to find terms that were used in similar contexts on Reddit in 2015.  You can search at a few different levels of detail:
+
+    table
+        thead
+            tr
+                th Query type
+                th Input
+                th Computed key
+        tbody
+            tr
+                td Tagged
+                td take|NOUN
+                td take|NOUN
+            tr
+                td Case-sensitive
+                td Take
+                td Take|VERB
+            tr
+                td Basic
+                td take
+                td take|VERB
+
+    p If your query is in lower-case and does not specify a tag, we look up the most frequent cased and tagged version of your query, and search for that.  If your query has at least one upper-case character, we preserve the case, and find the most frequent tag.  If you specify a tag, we use the literal query.
+
+    p You can click on any of the search results to search for it, which allows you to walk around conceptual graph.
+    
+    h2 A few quick queries
+    
+    p As soon as I started playing with these vectors, I found all sorts of interesting things. Here are some of my first impressions.
+    
+    h4 1. The vector space seems like it'll give a good way to show compositionality:
+
+    p #[em fair game] is not a type of game:
+
+    pre.language-python
+        code
+            | >>> model.similarity('fair_game|NOUN', 'game|NOUN')
+            | 0.034977455677555599
+            | >>> model.similarity('multiplayer_game|NOUN', 'game|NOUN')
+            | 0.54464530644393849
+    
+    p A #[em class action] is only very weakly a type of action:
+
+    pre.language-python
+        code
+            | >>> model.similarity('class_action|NOUN', 'action|NOUN')
+            | 0.14957825452335169
+
+    p But a #[em class action lawsuit] is definitely a type of lawsuit:
+
+    pre.language-python
+        code
+            | >>> model.similarity('class_action_lawsuit|NOUN', 'lawsuit|NOUN')
+            | 0.69595765453644187
+
+    h4 2. Similarity between entities can be kind of fun.
+
+    p Here's what Reddit thinks of Donald Trump:
+
+    pre.language-python
+        code
+            | >>> model.most_similar(['Donald_Trump|PERSON'])
+            | [(u'Sarah_Palin|PERSON', 0.5510910749435425), (u'Rick_Perry|PERSON', 0.5508972406387329), (u'Stephen_Colbert|PERSON', 0.5499709844589233), (u'Alex_Jones|PERSON', 0.5492554306983948), (u'Michael_Moore|PERSON', 0.5363447666168213), (u'Charles_Manson|PERSON', 0.5363028645515442), (u'Dick_Cheney|PERSON', 0.5348431468009949), (u'Mark_Zuckerberg|PERSON', 0.5258212089538574), (u'Mark_Wahlberg|PERSON', 0.5251839756965637), (u'Michael_Jackson|PERSON', 0.5229078531265259)]
+
+    p Discussion of Bill Cosby makes some obvious (and some less obvious) comparisons:
+
+    pre.language-python
+        code
+            | >>> model.most_similar(['Bill_Cosby|PERSON'])
+            | [(u'Cosby|ORG', 0.6004706621170044), (u'Cosby|PERSON', 0.5874950885772705), (u'Roman_Polanski|PERSON', 0.5478169918060303), (u'George_Zimmerman|PERSON', 0.5398542881011963), (u'Charles_Manson|PERSON', 0.5387344360351562), (u'OJ_Simpson|PERSON', 0.5228893160820007), (u'Trayvon_Martin|PERSON', 0.514190137386322), (u'Adnan_Syed|PERSON', 0.49992451071739197), (u'rapist|NOUN', 0.49792540073394775), (u'srhbutts|NOUN', 0.49792492389678955)]
+
+    p Some queries produce more confusing results:
+
+    pre.language-python
+        code
+            | >>> model.most_similar(['Carrot_Top|PERSON'])
+            | [(u'Kate_Mara|PERSON', 0.5347248911857605), (u'Andy_Samberg|PERSON', 0.5336876511573792), (u'Ryan_Gosling|PERSON', 0.5287898182868958), (u'Emma_Stone|PERSON', 0.5243821740150452), (u'Charlie_Sheen|PERSON', 0.5209298133850098), (u'Joseph_Gordon_Levitt|PERSON', 0.5196050405502319), (u'Jonah_Hill|PERSON', 0.5151286125183105), (u'Zooey_Deschanel|PERSON', 0.514430582523346), (u'Gerard_Butler|PERSON', 0.5115377902984619), (u'Ellen_Page|PERSON', 0.5094753503799438)]
+
+    p I can't say the connection between Carrot Top and Kate Mara is obvious to me. I suppose this is true of most things about Carrot Top, so...Fair play.
+
+    h4 3. Reddit talks about food a lot, and those regions of the vector space seem very well defined:
+
+    pre.language-python
+        code
+            | >>> model.most_similar(['onion_rings|NOUN'])
+            | [(u'hashbrowns|NOUN', 0.8040812611579895), (u'hot_dogs|NOUN', 0.7978234887123108), (u'chicken_wings|NOUN', 0.793393611907959), (u'sandwiches|NOUN', 0.7903584241867065), (u'fries|NOUN', 0.7885469198226929), (u'tater_tots|NOUN', 0.7821801900863647), (u'bagels|NOUN', 0.7788236141204834), (u'chicken_nuggets|NOUN', 0.7787706255912781), (u'coleslaw|NOUN', 0.7771176099777222), (u'nachos|NOUN', 0.7755396366119385)]
+
+    p Some of Reddit's ideas about food are kind of...interesting. It seems to think bacon and brocoll are very similar:
+
+    pre
+        code.python
+            | >>> model.similarity('bacon|NOUN', 'broccoli|NOUN')
+            | 0.83276615202851845
+
+    p Reddit also thinks hot dogs are practically salad:
+
+    pre
+        code.python
+            | >>> model.similarity('hot_dogs|NOUN', 'salad|NOUN')
+            | 0.76765100035460465
+            | >>> model.similarity('hot_dogs|NOUN', 'entrails|NOUN')
+            | 0.28360725445449464
+
+    p Just keep telling yourself that Reddit.
+
+    
+    h2 What's word2vec, and how is sense2vec different?
+
+    p When humans write dictionaries and thesauruses, we define concepts in relation to other concepts.  For automatic natural language processing, it's often more effective to use dictionaries that define concepts in terms of their usage statistics.  The word2vec family of models are the most popular way of creating these dictionaries.  Given a large sample of text, word2vec gives you a dictionary where each definition is just a row of, say, 300 floating-point numbers.  To find out whether two entries in the dictionary are similar, you ask how similar their definitions are &ndash; a well-defined mathematical operation.  Neat.
+
+    p In the original presentation, the dictionary entries are lower-cased strings of alphabetic characters.  This is the obvious place to start, and it makes that part of the process super simple.  But when we write dictionaries, we have entries for multi-word expressions, and we allow multiple senses per entry, distinguished by part-of-speech.  The idea behind sense2vec is simply that a single word, out-of-context, is not a very fine-grained unit of meaning. Let's key our dictionaries with more interesting linguistic units.
+
+    p The word2vec software includes an extension in this direction: it allows you to pre-process the text and merge words into longer phrases, using cooccurrence statistics.  However, this is a pretty limited approach.  A lot of work has gone into recognizing higher-order linguistic units automatically.  Some neural networks researchers will want to avoid these, because they cloud the long-term project that they're working on, of understanding text from first-principles.  But if you just want to get things done, there's no reason to adopt this constraint.  You should process the text with whatever tools are available and convenient.  spaCy is both &ndash; so let's use it.
+
+    h4 Training a sense2vec model on Reddit with spaCy and Gensim
+
+    p I have lots of ideas for interesting ways to key the word vectors using the spaCy annotations. But for now, I thought I'd keep things relatively simple. The function below streams text through the spaCy pipeline, and uses the syntactic dependency parse to recognize base noun phrases. We strip determiners from these noun chunks, and merge them.  We also merge named entities, and follow Trask et al (2015) in attaching the part-of-speech tags to the tokens.
+    
+    pre
+        code.python
+            | def transform_texts(texts):
+            |     nlp = English()
+            |     for doc in nlp.pipe(texts, n_threads=6):
+            |         for np in doc.noun_chunks:
+            |             while len(np) > 1 and np[0].dep_ not in ('amod', 'compound'):
+            |                 np = np[1:]
+            |             if len(np) > 1:
+            |                 np.merge(np.root.tag_, np.text, np.root.ent_type_)
+            |         for ent in doc.ents:
+            |             if len(ent) > 1:
+            |                 ent.merge(ent.root.tag_, ent.text, ent.label_)
+            |         yield ' '.join((w.text, w.ent_type_ or w.pos_) for w in doc)
+        
+    p Even with all this additional processing, we can still train massive models without difficulty. Because spaCy is written in Cython, we can release the GIL around the syntactic parser.allows efficient multi-threading. With 4 threads, throughput is over 100,000 words per second. These experiments were conducted on a 92 core machine, using credits generously grantd by Softlayer. On this single machine, we parsed every Reddit comment in under 48 hours.
+
+    p We're not doing anything clever to filter out compositional phrases yet, and we haven't tuned the model particularly well. We plan to experiment more with different transformations, e.g. adding prepositions/particles to verbs seems obvious. So does using dependency contexts, in the way you and Omer did.
+
+    p After pre-processing the text, the vectors can be trained as normal, using the original C code, Gensim, or a related technique like GloVe. So long as it expects the tokens to be whitespace delimited, and sentences to be separated by new lines, there should be no problem.  The only caveat is that the tool should not try to employ its own tokenization &ndash; otherwise it might split off our tags.
+
+    p I used Gensim, and trained the model using the Skip-Gram with negative sampling algorithm, using a frequency threshold of 10 and 5 iterations. After training, I applied a further frequency threshold of 50, to reduce the run-time memory requirements.
+
+    p The Gensim #[code Word2Vec] class allows you to perform similarity queries on a trained model, using the #[code .most_similar] method.  I wanted to serve the queries faster, add a cache, and avoid storing Python unicode objects for the keys.  I also wanted to make sure that I could query directly for a vector, instead of a key, so that in future I could support funky vector math queries, like the "king - man + woman" query that made word2vec famous.
+    
+    p To achieve this, I wrote a class that held (or borrowed) the vectors and provided the similarity queries, #[code VectorStore]. This class knows nothing about the keys or frequencies &ndash; it's just an array of vectors that provides a similarity interface, and maintains a cache for the similarity queries.
+    
+    pre.language-python
+        code
+            | cdef class VectorStore:
+            |     '''Maintain an array of float* pointers for word vectors, which the
+            |     table may or may not own. Keys and frequencies sold separately --- 
+            |     we're just a dumb vector of data, that knows how to run linear-scan
+            |     similarity queries.'''
+            |     cdef readonly Pool mem
+            |     cdef readonly PreshMap cache
+            |     cdef vector[float*] vectors
+            |     cdef vector[float] norms
+            |     cdef vector[float] _similarities
+            |     cdef readonly int nr_dim
+            |     
+            |     def __init__(self, int nr_dim):
+            |         self.mem = Pool()
+            |         self.nr_dim = nr_dim 
+            |         zeros = <float*>self.mem.alloc(self.nr_dim, sizeof(float))
+            |         self.vectors.push_back(zeros)
+            |         self.norms.push_back(0)
+            |         self.cache = PreshMap(100000)
+
+            |     def __getitem__(self, int i):
+            |         cdef float* ptr = self.vectors.at(i)
+            |         cv = <float[:self.nr_dim]>ptr
+            |         return numpy.asarray(cv)
+
+            |     def add(self, float[:] vec):
+            |         assert len(vec) == self.nr_dim
+            |         ptr = <float*>self.mem.alloc(self.nr_dim, sizeof(float))
+            |         memcpy(ptr,
+            |             &vec[0], sizeof(ptr[0]) * self.nr_dim)
+            |         self.norms.push_back(get_l2_norm(&ptr[0], self.nr_dim))
+            |         self.vectors.push_back(ptr)
+            |     
+            |     def borrow(self, float[:] vec):
+            |         self.norms.push_back(get_l2_norm(&vec[0], self.nr_dim))
+            |         # Danger! User must ensure this is memory contiguous!
+            |         self.vectors.push_back(&vec[0])
+
+            |     def most_similar(self, float[:] query, int n):
+            |         cdef int[:] indices = np.ndarray(shape=(n,), dtype='int32')
+            |         cdef float[:] scores = np.ndarray(shape=(n,), dtype='float32')
+            |         cdef uint64_t cache_key = hash64(&query[0], sizeof(query[0]) * n, 0)
+            |         cached_result = <_CachedResult*>self.cache.get(cache_key)
+            |         if cached_result is not NULL and cached_result.n == n:
+            |             memcpy(&indices[0], cached_result.indices, sizeof(indices[0]) * n)
+            |             memcpy(&scores[0], cached_result.scores, sizeof(scores[0]) * n)
+            |         else:
+            |             # This shouldn't happen. But handle it if it does
+            |             if cached_result is not NULL:
+            |                 if cached_result.indices is not NULL:
+            |                     self.mem.free(cached_result.indices)
+            |                 if cached_result.scores is not NULL:
+            |                     self.mem.free(cached_result.scores)
+            |                 self.mem.free(cached_result)
+            |             self._similarities.reserve(self.vectors.size())
+            |             linear_similarity(&indices[0], &scores[0], &self._similarities[0],
+            |                 n, &query[0], self.nr_dim,
+            |                 &self.vectors[0], &self.norms[0], self.vectors.size(), 
+            |                 cosine_similarity)
+            |             cached_result = <_CachedResult*>self.mem.alloc(sizeof(_CachedResult), 1)
+            |             cached_result.n = n
+            |             cached_result.indices = <int*>self.mem.alloc(
+            |                 sizeof(cached_result.indices[0]), n)
+            |             cached_result.scores = <float*>self.mem.alloc(
+            |                 sizeof(cached_result.scores[0]), n)
+            |             self.cache.set(cache_key, cached_result)
+            |             memcpy(cached_result.indices, &indices[0], sizeof(indices[0]) * n)
+            |             memcpy(cached_result.scores, &scores[0], sizeof(scores[0]) * n)
+            |         return indices, scores
+
+            |     def save(self, loc):
+            |         cdef CFile cfile = CFile(loc, 'w')
+            |         cdef float* vec
+            |         cdef int32_t nr_vector = self.vectors.size()
+            |         cfile.write_from(&nr_vector, 1, sizeof(nr_vector))
+            |         cfile.write_from(&self.nr_dim, 1, sizeof(self.nr_dim))
+            |         for vec in self.vectors:
+            |             cfile.write_from(vec, self.nr_dim, sizeof(vec[0]))
+            |         cfile.close()
+
+            |     def load(self, loc):
+            |         cdef CFile cfile = CFile(loc, 'r')
+            |         cdef int32_t nr_vector
+            |         cfile.read_into(&nr_vector, 1, sizeof(nr_vector))
+            |         cfile.read_into(&self.nr_dim, 1, sizeof(self.nr_dim))
+            |         cdef vector[float] tmp
+            |         tmp.reserve(self.nr_dim)
+            |         cdef float[:] cv
+            |         for i in range(nr_vector):
+            |             cfile.read_into(&tmp[0], self.nr_dim, sizeof(tmp[0]))
+            |             ptr = &tmp[0]
+            |             cv = <float[:128]>ptr
+            |             if i >= 1:
+            |                 self.add(cv)
+            |         cfile.close()
+
+
+            | cdef void linear_similarity(int* indices, float* scores, float* tmp,
+            |         int nr_out, const float* query, int nr_dim,
+            |         const float* const* vectors, const float* norms, int nr_vector,
+            |         do_similarity_t get_similarity) nogil:
+            |     query_norm = get_l2_norm(query, nr_dim)
+            |     # Initialize the partially sorted heap
+            |     cdef int i
+            |     cdef float score
+            |     for i in cython.parallel.prange(nr_vector, nogil=True):
+            |         #tmp[i] = cblas_sdot(nr_dim, query, 1, vectors[i], 1) / (query_norm * norms[i])
+            |         tmp[i] = get_similarity(query, vectors[i], query_norm, norms[i], nr_dim)
+            |     cdef priority_queue[pair[float, int]] queue
+            |     cdef float cutoff = 0
+            |     for i in range(nr_vector):
+            |         score = tmp[i]
+            |         if score > cutoff:
+            |             queue.push(pair[float, int](-score, i))
+            |             cutoff = -queue.top().first
+            |             if queue.size() > nr_out:
+            |                 queue.pop()
+            |     # Fill the outputs
+            |     i = 0
+            |     while i < nr_out and not queue.empty(): 
+            |         entry = queue.top()
+            |         scores[nr_out-(i+1)] = -entry.first
+            |         indices[nr_out-(i+1)] = entry.second
+            |         queue.pop()
+            |         i += 1
+            |     
+
+            | cdef extern from "cblas_shim.h":
+            |     float cblas_sdot(int N, float  *x, int incX, float  *y, int incY ) nogil
+            |     float cblas_snrm2(int N, float  *x, int incX) nogil
+
+
+            | cdef extern from "math.h" nogil:
+            |     float sqrtf(float x)
+
+
+            | DEF USE_BLAS = True
+
+
+            | cdef float get_l2_norm(const float* vec, int n) nogil:
+            |     cdef float norm
+            |     if USE_BLAS:
+            |         return cblas_snrm2(n, vec, 1)
+            |     else:
+            |         norm = 0
+            |         for i in range(n):
+            |             norm += vec[i] ** 2
+            |         return sqrtf(norm)
+
+
+            | cdef float cosine_similarity(const float* v1, const float* v2,
+            |         float norm1, float norm2, int n) nogil:
+            |     cdef float dot
+            |     if USE_BLAS:
+            |         dot = cblas_sdot(n, v1, 1, v2, 1)
+            |     else:
+            |         dot = 0
+            |         for i in range(n):
+            |             dot += v1[i] * v2[i]
+            |     return dot / (norm1 * norm2)
+    
+
+    p The #[code VectorStore] class can only identify the vectors by their position in the array.  The keys are managed by a parent class, #[code VectorMap], that maps strings to their position in the #[code VectorStore] array. It also manages a table of frequencies.
+    
+    pre.language-python
+        code
+            | cdef class VectorMap:
+            |     '''Provide key-based access into the VectorStore. Keys are unicode strings.
+            |     Also manage freqs.'''
+            |     cdef readonly Pool mem
+            |     cdef VectorStore data
+            |     cdef readonly StringStore strings
+            |     cdef PreshMap freqs
+            |     
+            |     def __init__(self, nr_dim):
+            |         self.data = VectorStore(nr_dim)
+            |         self.strings = StringStore()
+            |         self.freqs = PreshMap()
+            |     
+            |     def __contains__(self, unicode string):
+            |         cdef uint64_t hashed = hash_string(string)
+            |         return bool(self.freqs[hashed])
+            | 
+            |     def __getitem__(self, unicode string):
+            |         cdef uint64_t hashed = hash_string(string)
+            |         freq = self.freqs[hashed]
+            |         if not freq:
+            |             raise KeyError(string)
+            |         else:
+            |             i = self.strings[string]
+            |             return freq, self.data[i]
+            | 
+            |     def __iter__(self):
+            |         cdef uint64_t hashed
+            |         for i, string in enumerate(self.strings):
+            |             hashed = hash_string(string)
+            |             freq = self.freqs[hashed]
+            |             yield (string, freq, self.data[i])
+            | 
+            |     def most_similar(self, float[:] vector, int n):
+            |         indices, scores = self.data.most_similar(vector, n)
+            |         return [self.strings[idx] for idx in indices], scores
+            | 
+            |     def add(self, unicode string, int freq, float[:] vector):
+            |         idx = self.strings[string]
+            |         cdef uint64_t hashed = hash_string(string)
+            |         self.freqs[hashed] = freq
+            |         assert self.data.vectors.size() == idx
+            |         self.data.add(vector)
+            | 
+            |     def borrow(self, unicode string, int freq, float[:] vector):
+            |         idx = self.strings[string]
+            |         cdef uint64_t hashed = hash_string(string)
+            |         self.freqs[hashed] = freq
+            |         assert self.data.vectors.size() == idx
+            |         self.data.borrow(vector)
+            | 
+            |     def save(self, data_dir):
+            |         with open(path.join(data_dir, 'strings.json'), 'w') as file_:
+            |             self.strings.dump(file_)
+            |         self.data.save(path.join(data_dir, 'vectors.bin'))
+            |         freqs = []
+            |         cdef uint64_t hashed
+            |         for hashed, freq in self.freqs.items():
+            |             freqs.append([hashed, freq])
+            |         with open(path.join(data_dir, 'freqs.json'), 'w') as file_:
+            |             json.dump(freqs, file_)
+            | 
+            |     def load(self, data_dir):
+            |         self.data.load(path.join(data_dir, 'vectors.bin'))
+            |         with open(path.join(data_dir, 'strings.json')) as file_:
+            |             self.strings.load(file_)
+            |         with open(path.join(data_dir, 'freqs.json')) as file_:
+            |             freqs = json.load(file_)
+            |         cdef uint64_t hashed
+            |         for hashed, freq in freqs:
+            |             self.freqs[hashed] = freq
+
+    
+    The implementation relies on spaCy's #[code StringStore] class, which holds strings in space-efficient, utf8-encoded structures, including a small-string optimization.  This removes the need to hold Python unicode objects, greatly reducing the memory required.
