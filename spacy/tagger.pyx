@@ -125,7 +125,7 @@ cdef class TaggerNeuralNet(NeuralNet):
 
 cdef class CharacterTagger(NeuralNet):
     def __init__(self, n_classes,
-            depth=2, hidden_width=100,
+            depth=4, hidden_width=100,
             chars_width=5,
             words_width=20, shape_width=5, suffix_width=5, tags_width=5,
             learn_rate=0.1):
