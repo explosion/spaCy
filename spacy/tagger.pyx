@@ -153,10 +153,8 @@ cdef class Tagger:
     @classmethod
     def from_package(cls, pkg, vocab):
         # TODO: templates.json deprecated? not present in latest package
-        templates = cls.default_templates()
-        # templates = package.load_utf8(json.load,
-        #     'pos', 'templates.json',
-        #     default=cls.default_templates())
+        # templates = cls.default_templates()
+        templates = pkg.load_json(('pos', 'templates.json'), default=cls.default_templates())
 
         model = TaggerModel(templates)
         if pkg.has_file('pos', 'model'):
@@ -203,7 +201,7 @@ cdef class Tagger:
                                   nr_class=self.vocab.morphology.n_tags,
                                   nr_feat=self.model.nr_feat)
         for i in range(tokens.length):
-            if tokens.c[i].pos == 0:
+            if tokens.c[i].pos == 0:                
                 self.model.set_featuresC(&eg.c, tokens.c, i)
                 self.model.set_scoresC(eg.c.scores,
                     eg.c.features, eg.c.nr_feat)
@@ -221,7 +219,7 @@ cdef class Tagger:
     def train(self, Doc tokens, object gold_tag_strs):
         assert len(tokens) == len(gold_tag_strs)
         for tag in gold_tag_strs:
-            if tag not in self.tag_names:
+            if tag != None and tag not in self.tag_names:
                 msg = ("Unrecognized gold tag: %s. tag_map.json must contain all"
                        "gold tags, to maintain coarse-grained mapping.")
                 raise ValueError(msg % tag)
@@ -234,10 +232,9 @@ cdef class Tagger:
             nr_feat=self.model.nr_feat)
         for i in range(tokens.length):
             self.model.set_featuresC(&eg.c, tokens.c, i)
-            eg.set_label(golds[i])
+            eg.costs = [ 1 if golds[i] not in (c, -1) else 0 for c in xrange(eg.nr_class) ]
             self.model.set_scoresC(eg.c.scores,
                 eg.c.features, eg.c.nr_feat)
-            
             self.model.updateC(&eg.c)
 
             self.vocab.morphology.assign_tag(&tokens.c[i], eg.guess)
