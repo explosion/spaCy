@@ -38,14 +38,11 @@ Top Peformance
 Supports
 --------
 
-* CPython 2.7
-* CPython 3.4
-* CPython 3.5
+* CPython 2.6, 2.7, 3.3, 3.4, 3.5 (only 64 bit)
 * OSX
 * Linux
 * Windows (Cygwin, MinGW, Visual Studio)
 
 Difficult to support:
 
-* PyPy 2.7
-* PyPy 3.4
+* PyPy
