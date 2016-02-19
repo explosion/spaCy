@@ -4,7 +4,7 @@ Question:
 
 In the documents and tutorials the main thing I haven't found is examples on how to break sentences down into small sub thoughts/chunks. The noun_chunks is handy, but having examples on using the token.head to find small (near-complete) sentence chunks would be neat.
 
-Lets take the example sentence on https://api.spacy.io/displacy/index.html
+Lets take the example sentence on https://displacy.spacy.io/displacy/index.html
 
 displaCy uses CSS and JavaScript to show you how computers understand language
 This sentence has two main parts (XCOMP & CCOMP) according to the breakdown:
