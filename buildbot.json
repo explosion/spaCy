@@ -1,12 +1,10 @@
 {
     "build": {
         "sdist": [
-            "python pip-clear.py",
             "pip install -r requirements.txt",
             "python setup.py sdist"
         ],
         "install": [
-            "python pip-clear.py",
             "pip install source.tar.gz",
             "python -m spacy.en.download --force"
         ]
