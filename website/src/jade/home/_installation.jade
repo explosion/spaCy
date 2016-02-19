@@ -79,12 +79,11 @@ mixin Option(name, open)
     | $ git clone https://github.com/honnibal/spaCy.git
     | $ cd spaCy
     | $ virtualenv .env && source .env/bin/activate
-    | $ export PYTHONPATH=`pwd`
     | $ pip install -r requirements.txt
-    | $ python setup.py build_ext --inplace
+    | $ pip install -e .
     | $ python -m spacy.en.download
     | $ pip install pytest
-    | $ py.test spacy/tests/
+    | $ python -m pytest spacy
 
   p
     | Python packaging is awkward at the best of times, and it's particularly tricky
