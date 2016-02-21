@@ -418,6 +418,8 @@ def write_binary_vectors(in_loc, out_loc):
     with bz2.BZ2File(in_loc, 'r') as file_:
         for line in file_:
             pieces = line.split()
+            # TODO: This should be explicit about the encoding to utf8,
+            # and the fact that len() refers to number of utf8 characters
             word = pieces.pop(0)
             mem = Address(len(pieces), sizeof(float))
             vec = <float*>mem.ptr
