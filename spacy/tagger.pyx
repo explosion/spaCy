@@ -125,9 +125,9 @@ cdef class TaggerNeuralNet(NeuralNet):
 
 cdef class CharacterTagger(NeuralNet):
     def __init__(self, n_classes,
-            depth=4, hidden_width=100,
-            chars_width=5,
-            words_width=20, shape_width=5, suffix_width=5, tags_width=5,
+            depth=5, hidden_width=20,
+            chars_width=10,
+            words_width=20, shape_width=5, suffix_width=5, tags_width=20,
             learn_rate=0.1):
         input_length = 5 * chars_width * self.chars_per_word + 2 * tags_width
         widths = [input_length] + [hidden_width] * depth + [n_classes]
@@ -153,10 +153,14 @@ cdef class CharacterTagger(NeuralNet):
         cdef int chars_per_word = self.chars_per_word
         cdef unicode string
         for string in (p2, p1, w, n1, n2):
-            for c in range(chars_per_word):
+            for c in range(chars_per_word / 2):
                 eg.features[p].i = p
                 eg.features[p].key = ord(string[c])
                 eg.features[p].value = 1.0 if string[c] != u'_' else 0.0
+                p += 1
+                eg.features[p].i = p
+                eg.features[p].key = ord(string[-(c+1)])
+                eg.features[p].value = 1.0 if string[-(c+1)] != u'_' else 0.0
                 p += 1
         eg.features[p].key = tokens[i-1].tag
         eg.features[p].value = 1.0
@@ -179,7 +183,7 @@ cdef class CharacterTagger(NeuralNet):
 
     property chars_per_word:
         def __get__(self):
-            return 15
+            return 16
 
 
 def _pad(word, nr_char):
@@ -187,13 +191,12 @@ def _pad(word, nr_char):
         pass
     elif len(word) > nr_char:
         split = nr_char / 2
-        word = word[:split+1] + word[-split:]
+        word = word[:split] + word[-split:]
     else:
-        word = word.ljust(nr_char, ' ')
+        word = word.ljust(nr_char, '_')
     assert len(word) == nr_char, repr(word)
     return word
  
-        
 
 cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
     context[0] = t.lex.lower
