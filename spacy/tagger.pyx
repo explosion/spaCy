@@ -73,8 +73,8 @@ cpdef enum:
 
 cdef class TaggerNeuralNet(NeuralNet):
     def __init__(self, n_classes,
-            depth=1, hidden_width=100,
-            words_width=20, shape_width=5, suffix_width=5, tags_width=5,
+            depth=5, hidden_width=50,
+            words_width=30, shape_width=20, suffix_width=20, tags_width=20,
             learn_rate=0.1):
         input_length = 5 * words_width + 5 * shape_width + 5 * suffix_width + 2 * tags_width
         widths = [input_length] + [hidden_width] * depth + [n_classes]
@@ -125,7 +125,7 @@ cdef class TaggerNeuralNet(NeuralNet):
 
 cdef class CharacterTagger(NeuralNet):
     def __init__(self, n_classes,
-            depth=5, hidden_width=20,
+            depth=4, hidden_width=50,
             chars_width=10,
             words_width=20, shape_width=5, suffix_width=5, tags_width=20,
             learn_rate=0.1):
@@ -274,12 +274,12 @@ cdef class Tagger:
         #     'pos', 'templates.json',
         #     default=cls.default_templates())
 
-        model = TaggerNeuralNet()
+        model = CharacterTagger()
         if pkg.has_file('pos', 'model'):
             model.load(pkg.file_path('pos', 'model'))
         return cls(vocab, model)
 
-    def __init__(self, Vocab vocab, CharacterTagger model):
+    def __init__(self, Vocab vocab, model):
         self.vocab = vocab
         self.model = model
         
