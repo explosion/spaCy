@@ -7,6 +7,10 @@
         "install": [
             "pip install source.tar.gz",
             "python -m spacy.en.download --force"
+        ],
+        "wheel": [
+            "python untar.py source.tar.gz .",
+            "python setup.py bdist_wheel"
         ]
     },
     "test": {
