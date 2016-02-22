@@ -14,6 +14,8 @@ try:
 except ImportError:
     import json
 
+import nonproj
+
 
 def tags_to_entities(tags):
     entities = []
@@ -236,34 +238,20 @@ cdef class GoldParse:
                 self.heads[i] = self.gold_to_cand[annot_tuples[3][gold_i]]
                 self.labels[i] = annot_tuples[4][gold_i]
                 self.ner[i] = annot_tuples[5][gold_i]
-       
-        # If we have any non-projective arcs, i.e. crossing brackets, consider
-        # the heads for those words missing in the gold-standard.
-        # This way, we can train from these sentences
-        cdef int w1, w2, h1, h2
-        if make_projective:
-            heads = list(self.heads)
-            for w1 in range(self.length):
-                if heads[w1] is not None:
-                    h1 = heads[w1]
-                    for w2 in range(w1+1, self.length):
-                        if heads[w2] is not None:
-                            h2 = heads[w2]
-                            if _arcs_cross(w1, h1, w2, h2):
-                                self.heads[w1] = None
-                                self.labels[w1] = ''
-                                self.heads[w2] = None
-                                self.labels[w2] = ''
 
-        # Check there are no cycles in the dependencies, i.e. we are a tree
-        for w in range(self.length):
-            seen = set([w])
-            head = w
-            while self.heads[head] != head and self.heads[head] != None:
-                head = self.heads[head]
-                if head in seen:
-                    raise Exception("Cycle found: %s" % seen)
-                seen.add(head)
+        cycle = nonproj.contains_cycle(self.heads)
+        if cycle != None:
+            raise Exception("Cycle found: %s" % cycle)
+
+        if make_projective:
+            # projectivity here means non-proj arcs are being disconnected
+            np_arcs = []
+            for word in range(self.length):
+                if nonproj.is_non_projective_arc(word,self.heads):
+                    np_arcs.append(word)
+            for np_arc in np_arcs:
+                self.heads[np_arc] = None
+                self.labels[np_arc] = ''
 
         self.brackets = {}
         for (gold_start, gold_end, label_str) in brackets:
@@ -278,25 +266,18 @@ cdef class GoldParse:
 
     @property
     def is_projective(self):
-        heads = list(self.heads)
-        for w1 in range(self.length):
-            if heads[w1] is not None:
-                h1 = heads[w1]
-                for w2 in range(self.length):
-                    if heads[w2] is not None and _arcs_cross(w1, h1, w2, heads[w2]):
-                        return False
-        return True
-
-
-cdef int _arcs_cross(int w1, int h1, int w2, int h2) except -1:
-    if w1 > h1:
-        w1, h1 = h1, w1
-    if w2 > h2:
-        w2, h2 = h2, w2
-    if w1 > w2:
-        w1, h1, w2, h2 = w2, h2, w1, h1
-    return w1 < w2 < h1 < h2 or w1 < w2 == h2 < h1
+        return not nonproj.is_non_projective_tree(self.heads)
 
 
 def is_punct_label(label):
     return label == 'P' or label.lower() == 'punct'
+
+
+
+
+
+
+
+
+
+
