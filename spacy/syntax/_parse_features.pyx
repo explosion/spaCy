@@ -6,6 +6,52 @@ out of "context") is in features/extractor.pyx
 
 The atomic feature names are listed in a big enum, so that the feature tuples
 can refer to them.
+
+
+Token names:
+
+S2: Stack[2] (i.e. third item on stack)
+S1: Stack[1] (i.e. second item on stack)
+S0: Stack[0] (i.e. first item on stack)
+N0: Buffer[0] (i.e. first word of buffer)
+N1: Buffer[1] (i.e. second word of buffer)
+N2: Buffer[2] (i.e. third word of buffer)
+P1: Word immediately before Buffer[0]
+P2: Word 2 before Buffer[0]
+E0: First word of the current entity (if any) (NER feature)
+E1: First word of the previous entity (if any) (NER feature)
+
+
+S0l: Left child of Stack[0]
+S0l2: 2nd leftmost child of Stack[0]
+(i.e. in "Yesterday I slept", if "slept" is S0, I=S0l2, yesterday=S0l)
+S0r2: 2nd rightmost child of Stack[0]
+S0r: rightmost child of Stack[0]
+(i.e. in "Give him money", if "Give" is S0, "him" is S0r2, "money" is S0r)
+N0l2: 2nd leftmost child of Buffer[0]
+N0l: leftmost child of Buffer[0]
+
+Integer-valued features (capped at 5)
+dist: Number of tokens between N0 and E0 # TODO: Name this better
+N0lv: Number of leftward children of N0
+S0lv: Number of leftward children of S0
+S0rv: Number of rightward children of S0
+S1rv: Number of rightward children of S1
+S1lv: Number of leftward children of S1
+
+
+S0w: Literal word form (i.e. token.orth)
+S0W: Lemma (i.e. token.lemma)
+S0p: Fine-grained POS tag (i.e. token.tag)
+S0c: Full Brown cluster
+S0c4: First 4 bits of Brown cluster
+S0c6: First 6 bits of Brown cluster
+S0L: Dependency label
+S0_prefix: Prefix of token.orth (i.e. token.prefix. Currently defined as length 1)
+S0_suffix: Suffix of token.orth (i.e. token.suffix. Currently defined as length 3)
+S0_shape: Word shape (i.e. token.shape. See spacy.orths.word_shape)
+S0_ne_iob: NER IOB tag. 0=None, 1=I, 2=O, 3=B. Used for NER
+S0_ne_type: NER type. Used for NER
 """
 from libc.string cimport memset
 
