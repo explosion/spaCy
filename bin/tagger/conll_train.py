@@ -116,37 +116,42 @@ def train(Language, train_sents, dev_sents, model_dir, n_iter=15, seed=0,
     random.shuffle(train_sents)
     heldout_sents = train_sents[:int(nr_train * 0.1)] 
     train_sents = train_sents[len(heldout_sents):]
-    assert len(heldout_sents) < len(train_sents)
+    #train_sents = train_sents[:500]
+    #assert len(heldout_sents) < len(train_sents)
     prev_score = 0.0
     variance = 0.001
     last_good_learn_rate = nlp.tagger.model.eta
-    for itn in range(n_iter):
-        random.shuffle(train_sents)
-        acc = 0
-        total = 0
-        for words, gold_tags in train_sents:
-            tokens = nlp.tokenizer.tokens_from_list(words)
-            acc += nlp.tagger.train(tokens, gold_tags)
-            total += len(tokens)
-        dev_score = score_model(nlp, heldout_sents)
-        eval_score = score_model(nlp, dev_sents)
-        if dev_score >= prev_score:
-            nlp.tagger.model.keep_update()
-            prev_score = dev_score
-            variance = 0.001
-            last_good_learn_rate = nlp.tagger.model.eta
-            nlp.tagger.model.eta *= 1.05
-            print('%d:\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, acc/total, dev_score, eval_score, nlp.tagger.model.eta))
-        else:
-            nlp.tagger.model.backtrack()
-            new_eta = numpy.random.normal(loc=last_good_learn_rate, scale=variance)
-            if new_eta >= 0.00001:
-                nlp.tagger.model.eta = new_eta
+    n = 0
+    total = 0
+    acc = 0
+    while True:
+        words, gold_tags = random.choice(train_sents)
+        tokens = nlp.tokenizer.tokens_from_list(words)
+        acc += nlp.tagger.train(tokens, gold_tags)
+        total += len(tokens)
+        n += 1
+        if n and n % 10000 == 0:
+            dev_score = score_model(nlp, heldout_sents)
+            eval_score = score_model(nlp, dev_sents)
+            if dev_score > prev_score:
+                nlp.tagger.model.keep_update()
+                prev_score = dev_score
+                variance = 0.001
+                last_good_learn_rate = nlp.tagger.model.eta
+                nlp.tagger.model.eta *= 1.05
+                print('%d:\t%.3f\t%.3f\t%.3f\t%.4f' % (n, acc/total, dev_score, eval_score, nlp.tagger.model.eta))
             else:
-                nlp.tagger.model.eta = 0.00001
-            print('X:\t%.3f\t%.3f\t%.3f\t%.4f' % (acc/total, dev_score, eval_score, nlp.tagger.model.eta))
-            variance *= 1.1
-            prev_score *= 0.9999
+                nlp.tagger.model.backtrack()
+                new_eta = numpy.random.normal(loc=last_good_learn_rate, scale=variance)
+                if new_eta >= 0.0001:
+                    nlp.tagger.model.eta = new_eta
+                else:
+                    nlp.tagger.model.eta = 0.0001
+                print('X:\t%.3f\t%.3f\t%.3f\t%.4f' % (acc/total, dev_score, eval_score, nlp.tagger.model.eta))
+                variance *= 1.1
+                prev_score *= 0.9999
+            acc = 0.0
+            total = 0.0
     nlp.end_training(data_dir=model_dir)
     return nlp
 
