@@ -5,7 +5,7 @@
             "python setup.py sdist"
         ],
         "install": [
-            "pip install source.tar.gz",
+            "pip install -v source.tar.gz",
             "python -m spacy.en.download --force"
         ],
         "wheel": [
