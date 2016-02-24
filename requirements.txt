@@ -4,7 +4,6 @@ pathlib
 preshed>=0.46.1,<0.47.0
 thinc>=5.0.0,<5.1.0
 murmurhash>=0.26,<0.27
-text-unidecode
 numpy
 plac
 six
