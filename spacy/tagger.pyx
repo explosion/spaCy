@@ -1,4 +1,5 @@
 from __future__ import unicode_literals
+cimport cython
 import json
 from os import path
 from collections import defaultdict
@@ -10,6 +11,7 @@ from thinc.extra.eg cimport Example
 from thinc.structs cimport ExampleC
 from thinc.linear.avgtron cimport AveragedPerceptron
 from thinc.linalg cimport VecVec
+from thinc.structs cimport FeatureC
 
 from .typedefs cimport attr_t
 from .tokens.doc cimport Doc
@@ -125,14 +127,29 @@ cdef class TaggerNeuralNet(NeuralNet):
 
 cdef class CharacterTagger(NeuralNet):
     def __init__(self, n_classes,
-            depth=4, hidden_width=50,
-            chars_width=10,
-            words_width=20, shape_width=5, suffix_width=5, tags_width=20,
-            learn_rate=0.1):
-        input_length = 5 * chars_width * self.chars_per_word + 2 * tags_width
-        widths = [input_length] + [hidden_width] * depth + [n_classes]
+            depth=3, hidden_width=100, chars_width=5, tags_width=10, learn_rate=0.1,
+            left_window=2, right_window=2, tags_window=10, chars_per_word=8):
+        self.chars_per_word = chars_per_word
+        self.chars_width = chars_width
+        self.tags_width = tags_width
+        self.left_window = left_window
+        self.right_window = right_window
+        self.tags_window = tags_window
+        self.depth = depth
+        self.hidden_width = hidden_width
+        
+        input_length = self.left_window * self.chars_width * self.chars_per_word \
+                     + self.right_window * self.chars_width * self.chars_per_word \
+                     + 1 * self.chars_width * self.chars_per_word \
+                     + self.tags_window * self.tags_width
+        
+        widths = [input_length] + [self.hidden_width] * self.depth + [n_classes]
+        
         vector_widths = [chars_width, tags_width]
-        slots = [0] * 5 * self.chars_per_word + [1] * 2
+        slots = [0] * self.left_window * self.chars_per_word \
+              + [0] * self.right_window * self.chars_per_word \
+              + [0] * 1 * self.chars_per_word \
+              + [1] * self.tags_window
         NeuralNet.__init__(
             self,
             widths,
@@ -141,36 +158,30 @@ cdef class CharacterTagger(NeuralNet):
             rho=1e-6,
             update_step='sgd')
 
-    cdef void set_featuresC(self, ExampleC* eg, const TokenC* tokens, object strings, int i) except *:
-        oov = '_' * self.chars_per_word
+    cdef void set_featuresC(self, ExampleC* eg,
+            const TokenC* tokens, object strings, const int i) except *:
+        cdef unicode oov = ''
         p2 = strings[i-2] if i >= 2 else oov
         p1 = strings[i-1] if i >= 1 else oov
         w = strings[i]
         n1 = strings[i+1] if (i+1) < len(strings) else oov
         n2 = strings[i+2] if (i+2) < len(strings) else oov
-        cdef int p = 0
-        cdef int c
         cdef int chars_per_word = self.chars_per_word
-        cdef unicode string
+        eg.nr_feat = 0
         for string in (p2, p1, w, n1, n2):
-            for c in range(chars_per_word / 2):
-                eg.features[p].i = p
-                eg.features[p].key = ord(string[c])
-                eg.features[p].value = 1.0 if string[c] != u'_' else 0.0
-                p += 1
-                eg.features[p].i = p
-                eg.features[p].key = ord(string[-(c+1)])
-                eg.features[p].value = 1.0 if string[-(c+1)] != u'_' else 0.0
-                p += 1
-        eg.features[p].key = tokens[i-1].tag
-        eg.features[p].value = 1.0
-        eg.features[p].i = p
-        p += 1
-        eg.features[p].key = tokens[i-2].tag
-        eg.features[p].value = 1.0
-        eg.features[p].i = p
-        eg.nr_feat = p+1
-    
+            set_character_features(&eg.features[eg.nr_feat],
+                string, chars_per_word)
+            eg.nr_feat += chars_per_word
+        cdef int hist
+        for hist in range(1, self.tags_window+1):
+            tag = tokens[i-hist].tag if hist <= i else 0
+            eg.features[eg.nr_feat].key = tag
+            eg.features[eg.nr_feat].value = 1.0
+            eg.nr_feat += 1
+        cdef int p
+        for p in range(eg.nr_feat):
+            eg.features[p].i = p
+   
     def end_training(self):
         pass
 
@@ -179,24 +190,9 @@ cdef class CharacterTagger(NeuralNet):
 
     property nr_feat:
         def __get__(self):
-            return self.chars_per_word * 5 + 2
+            nr_word = self.left_window + self.right_window + 1
+            return self.chars_per_word * nr_word + self.tags_window
 
-    property chars_per_word:
-        def __get__(self):
-            return 16
-
-
-def _pad(word, nr_char):
-    if len(word) == nr_char:
-        pass
-    elif len(word) > nr_char:
-        split = nr_char / 2
-        word = word[:split] + word[-split:]
-    else:
-        word = word.ljust(nr_char, '_')
-    assert len(word) == nr_char, repr(word)
-    return word
- 
 
 cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
     context[0] = t.lex.lower
@@ -293,9 +289,6 @@ cdef class Tagger:
     def tag_names(self):
         return self.vocab.morphology.tag_names
 
-    def __reduce__(self):
-        return (self.__class__, (self.vocab, self.model), None, None)
-
     def tag_from_strings(self, Doc tokens, object tag_strs):
         cdef int i
         for i in range(tokens.length):
@@ -319,14 +312,13 @@ cdef class Tagger:
                                   widths=self.model.widths,
                                   nr_class=self.vocab.morphology.n_tags,
                                   nr_feat=self.model.nr_feat)
-        strings = [_pad(tok.text, self.model.chars_per_word) for tok in tokens]
+        strings = [tok.text for tok in tokens]
         for i in range(tokens.length):
             eg.reset()
             if tokens.c[i].pos == 0:
                 self.model.set_featuresC(&eg.c, tokens.c, strings, i)
                 self.model.predict_example(eg)
-                #self.model.set_scoresC(eg.c.scores,
-                #    eg.c.features, eg.c.nr_feat)
+                
                 guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
                 self.vocab.morphology.assign_tag(&tokens.c[i], guess)
         tokens.is_tagged = True
@@ -345,7 +337,7 @@ cdef class Tagger:
                        "gold tags, to maintain coarse-grained mapping.")
                 raise ValueError(msg % tag)
         golds = [self.tag_names.index(g) if g is not None else -1 for g in gold_tag_strs]
-        strings = [_pad(tok.text, self.model.chars_per_word) for tok in tokens]
+        strings = [tok.text for tok in tokens]
         cdef int correct = 0
         cdef Pool mem = Pool()
         cdef Example eg = Example(
@@ -357,16 +349,35 @@ cdef class Tagger:
             eg.reset()
             self.model.set_featuresC(&eg.c, tokens.c, strings, i)
             eg.costs = [golds[i] not in (j, -1) for j in range(eg.c.nr_class)]
+            
             self.model.train_example(eg)
-
-            #self.model.set_scoresC(eg.c.scores,
-            #    eg.c.features, eg.c.nr_feat)
-            #
-            #self.model.updateC(&eg.c)
-
+            
             self.vocab.morphology.assign_tag(&tokens.c[i], eg.guess)
+            
             correct += eg.cost == 0
             self.freqs[TAG][tokens.c[i].tag] += 1
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
         return correct
+
+
+@cython.cdivision(True)
+cdef int set_character_features(FeatureC* feat, unicode string, int chars_per_word) except -1:
+    cdef unicode oov = ''
+    cdef int chars_per_side = min(chars_per_word / 2, len(string))
+    # Fill from start
+    cdef int c
+    for c in range(chars_per_side):
+        feat.key = ord(string[c])
+        feat.value = 1.0
+        feat += 1
+    # If word is too short, zero this part of the array
+    for c in range(chars_per_side, chars_per_word - chars_per_side):
+        feat.key = 0
+        feat.value = 0
+        feat += 1
+    # Fill suffix
+    for c in range(chars_per_side):
+        feat.key = ord(string[-(c+1)])
+        feat.value = 1.0
+        feat += 1
