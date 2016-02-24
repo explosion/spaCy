@@ -9,12 +9,13 @@
             "python -m spacy.en.download --force"
         ],
         "wheel": [
-            "python untar.py source.tar.gz .",
-            "python setup.py bdist_wheel"
+            "python untar.py source.tar.gz src",
+            "python src/setup.py bdist_wheel",
+            "python cpdist.py src/dist"
         ]
     },
     "test": {
-        "after": ["install"],
+        "after": ["install", "wheel"],
         "package": "spacy",
         "args": "--tb=native -x --models --vectors --slow"
     }
