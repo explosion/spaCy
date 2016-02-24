@@ -247,7 +247,7 @@ cdef class GoldParse:
             # projectivity here means non-proj arcs are being disconnected
             np_arcs = []
             for word in range(self.length):
-                if nonproj.is_non_projective_arc(word,self.heads):
+                if nonproj.is_nonproj_arc(word,self.heads):
                     np_arcs.append(word)
             for np_arc in np_arcs:
                 self.heads[np_arc] = None
@@ -266,7 +266,7 @@ cdef class GoldParse:
 
     @property
     def is_projective(self):
-        return not nonproj.is_non_projective_tree(self.heads)
+        return not nonproj.is_nonproj_tree(self.heads)
 
 
 def is_punct_label(label):

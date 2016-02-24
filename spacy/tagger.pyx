@@ -211,11 +211,6 @@ cdef class Tagger:
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
-    def tags_from_list(self, Doc tokens, list strings):
-        assert(tokens.length == len(strings))
-        for i in range(tokens.length):
-            self.vocab.morphology.assign_tag(&tokens.c[i], strings[i])
-
     def pipe(self, stream, batch_size=1000, n_threads=2):
         for doc in stream:
             self(doc)
