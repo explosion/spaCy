@@ -254,8 +254,8 @@ cdef class Tagger:
         )
 
     @classmethod
-    def blank(cls, vocab, templates, learn_rate=0.005):
-        model = CharacterTagger(vocab.morphology.n_tags, learn_rate=learn_rate)
+    def blank(cls, vocab, templates, **kwargs):
+        model = CharacterTagger(vocab.morphology.n_tags, **kwargs)
         return cls(vocab, model)
 
     @classmethod
