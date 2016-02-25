@@ -12,7 +12,6 @@ from cpython.exc cimport PyErr_CheckSignals
 from libc.stdint cimport uint32_t, uint64_t
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport malloc, calloc, free
-import random
 import os.path
 from os import path
 import shutil
