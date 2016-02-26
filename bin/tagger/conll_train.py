@@ -26,7 +26,7 @@ from spacy.tagger import Tagger
 
 
 class GoldSents(object):
-    def __init__(self, tokenizer, sents, n=5000):
+    def __init__(self, tokenizer, sents, n=10000):
         self.tokenizer = tokenizer
         self.sents = sents
         self.n = n
@@ -62,22 +62,21 @@ def _parse_line(line):
     return id_, word, pos
 
 
-def beam_sgd(tagger, train_data, check_data):
+def best_first_sgd(tagger, train_data, check_data):
     print(tagger.model.widths)
     print("Itn.\tTrain\tPrev\tNew")
-    queue = [(score_model(check_data, tagger), 0, tagger)]
-    workers = [None] * 100
+    queue = [[score_model(check_data, tagger), 0, tagger]]
     limit = 4
     while True:
-        for prev_score, i, tagger in list(queue):
-            #prev_score, i, tagger = max(queue)
-            train_acc, new_model = get_new_model(train_data, tagger)
-            new_score = score_model(check_data, new_model)
-            queue.append((new_score, i+1, new_model))
-            print('%d:\t%.3f\t%.3f\t%.3f\t%.4f' % (i, train_acc, prev_score, new_score,
-                tagger.model.eta))
         queue.sort(reverse=True)
         queue = queue[:limit]
+        prev_score, i, tagger = queue[0]
+        queue[0][0] *= 0.999
+        train_acc, new_model = get_new_model(train_data, tagger)
+        new_score = score_model(check_data, new_model)
+        queue.append([new_score, i+1, new_model])
+        print('%d:\t%.3f\t%.3f\t%.3f\t%.4f' % (i+1, train_acc, prev_score, new_score,
+            tagger.model.eta))
     return max(queue)
 
 
@@ -93,7 +92,7 @@ def score_model(gold_sents, tagger):
 
 
 def get_new_model(gold_sents, tagger):
-    learn_rate = numpy.random.normal(loc=tagger.model.learn_rate, scale=0.001)
+    learn_rate = numpy.random.normal(loc=tagger.model.eta, scale=0.0001)
     if learn_rate < 0.0001:
         learn_rate = 0.0001
 
@@ -137,46 +136,7 @@ def train(Language, train_sents, dev_sents, model_dir, n_iter=15, seed=0,
     heldout_sents = GoldSents(nlp.tokenizer, heldout_sents)
 
     tagger = Tagger.blank(nlp.vocab, [], **model_args)
-    return beam_sgd(tagger, train_sents, heldout_sents)
-
-    #prev_score = 0.0
-    #variance = 0.001
-    #last_good_learn_rate = nlp.tagger.model.eta
-    #n = 0
-    #total = 0
-    #acc = 0
-    #last_model = (nlp.tagger.model.weights, nlp.tagger.model.embeddings)
-    #while True:
-    #    words, gold_tags = random.choice(train_sents)
-    #    tokens = nlp.tokenizer.tokens_from_list(words)
-    #    acc += nlp.tagger.train(tokens, gold_tags)
-    #    total += len(tokens)
-    #    n += 1
-    #    if n and n % 20000 == 0:
-    #        dev_score = score_model(nlp, heldout_sents)
-    #        eval_score = score_model(nlp, dev_sents)
-    #        if dev_score >= prev_score:
-    #            last_model = (nlp.tagger.model.weights, nlp.tagger.model.embeddings)
-    #            prev_score = dev_score
-    #            variance = 0.001
-    #            last_good_learn_rate = nlp.tagger.model.eta
-    #            nlp.tagger.model.eta *= 1.01
-    #            
-    #        else:
-    #            nlp.tagger.model.weights = last_model[0]
-    #            nlp.tagger.model.embeddings = last_model[1]
-    #            new_eta = numpy.random.normal(loc=last_good_learn_rate, scale=variance)
-    #            if new_eta >= 0.0001:
-    #                nlp.tagger.model.eta = new_eta
-    #            else:
-    #                nlp.tagger.model.eta = 0.0001
-    #            print('X:\t%.3f\t%.3f\t%.3f\t%.4f' % (acc/total, dev_score, eval_score, nlp.tagger.model.eta))
-    #            variance *= 1.1
-    #            prev_score *= 0.9999
-    #        acc = 0.0
-    #        total = 0.0
-    #nlp.end_training(data_dir=model_dir)
-    #return nlp
+    return best_first_sgd(tagger, train_sents, heldout_sents)
 
 
 @plac.annotations(
