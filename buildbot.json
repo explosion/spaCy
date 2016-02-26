@@ -5,18 +5,19 @@
             "python setup.py sdist"
         ],
         "install": [
-            "pip install -v source.tar.gz",
-            "python -m spacy.en.download --force"
+            "pip install -v source.tar.gz"
         ],
         "wheel": [
             "python untar.py source.tar.gz .",
             "python setup.py bdist_wheel",
-            "python cpdist.py dist",
-            "python -m spacy.en.download --force"
+            "python cpdist.py dist"
         ]
     },
     "test": {
         "after": ["install", "wheel"],
+        "run": [
+            "python -m spacy.en.download --force"
+        ],
         "package": "spacy",
         "args": "--tb=native -x --models --vectors --slow"
     }
