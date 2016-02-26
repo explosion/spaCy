@@ -9,9 +9,9 @@
             "python -m spacy.en.download --force"
         ],
         "wheel": [
-            "python untar.py source.tar.gz src",
-            "python src/setup.py bdist_wheel",
-            "python cpdist.py src/dist",
+            "python untar.py source.tar.gz .",
+            "python setup.py bdist_wheel",
+            "python cpdist.py dist",
             "python -m spacy.en.download --force"
         ]
     },
