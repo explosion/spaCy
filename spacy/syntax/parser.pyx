@@ -17,6 +17,7 @@ from os import path
 import shutil
 import json
 import sys
+from .nonproj import PseudoProjectivity
 
 from cymem.cymem cimport Pool, Address
 from murmurhash.mrmr cimport hash64
@@ -78,9 +79,10 @@ cdef class ParserModel(AveragedPerceptron):
 
 
 cdef class Parser:
-    def __init__(self, StringStore strings, transition_system, ParserModel model):
+    def __init__(self, StringStore strings, transition_system, ParserModel model, int projectivize = 0):
         self.moves = transition_system
         self.model = model
+        self._projectivize = projectivize
 
     @classmethod
     def from_dir(cls, model_dir, strings, transition_system):
@@ -94,7 +96,7 @@ cdef class Parser:
         model = ParserModel(templates)
         if path.exists(path.join(model_dir, 'model')):
             model.load(path.join(model_dir, 'model'))
-        return cls(strings, moves, model)
+        return cls(strings, moves, model, cfg.projectivize)
 
     @classmethod
     def load(cls, pkg_or_str_or_file, vocab):
@@ -113,6 +115,9 @@ cdef class Parser:
             tokens.is_parsed = True
         # Check for KeyboardInterrupt etc. Untested
         PyErr_CheckSignals()
+        # projectivize output
+        if self._projectivize:
+            PseudoProjectivity.deprojectivize(tokens)
 
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
         cdef Pool mem = Pool()

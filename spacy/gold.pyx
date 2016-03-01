@@ -14,7 +14,7 @@ try:
 except ImportError:
     import json
 
-import nonproj
+from .syntax import nonproj
 
 
 def tags_to_entities(tags):

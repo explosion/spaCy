@@ -201,17 +201,9 @@ cdef class Token:
             cdef int nr_iter = 0
             cdef const TokenC* ptr = self.c - (self.i - self.c.l_edge)
             while ptr < self.c:
-                # If this head is still to the right of us, we can skip to it
-                # No token that's between this token and this head could be our
-                # child.
-                if (ptr.head >= 1) and (ptr + ptr.head) < self.c:
-                    ptr += ptr.head
-
-                elif ptr + ptr.head == self.c:
+                if ptr + ptr.head == self.c:
                     yield self.doc[ptr - (self.c - self.i)]
-                    ptr += 1
-                else:
-                    ptr += 1
+                ptr += 1
                 nr_iter += 1
                 # This is ugly, but it's a way to guard out infinite loops
                 if nr_iter >= 10000000:
@@ -226,16 +218,10 @@ cdef class Token:
             tokens = []
             cdef int nr_iter = 0
             while ptr > self.c:
-                # If this head is still to the right of us, we can skip to it
-                # No token that's between this token and this head could be our
-                # child.
-                if (ptr.head < 0) and ((ptr + ptr.head) > self.c):
-                    ptr += ptr.head
-                elif ptr + ptr.head == self.c:
+                if ptr + ptr.head == self.c:
                     tokens.append(self.doc[ptr - (self.c - self.i)])
-                    ptr -= 1
-                else:
-                    ptr -= 1
+                ptr -= 1
+                nr_iter += 1
                 if nr_iter >= 10000000:
                     raise RuntimeError(
                         "Possibly infinite loop encountered while looking for token.rights")

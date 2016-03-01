@@ -1,6 +1,10 @@
 from copy import copy
 from collections import Counter
 
+from ..tokens.doc cimport Doc
+from spacy.attrs import DEP, HEAD
+
+
 def ancestors(tokenid, heads):
     # returns all words going from the word up the path to the root
     # the path to root cannot be longer than the number of words in the sentence
@@ -55,69 +59,90 @@ def is_nonproj_tree(heads):
     return any( is_nonproj_arc(word,heads) for word in range(len(heads)) )
 
 
-class PseudoProjective:
+cdef class PseudoProjectivity:
     # implements the projectivize/deprojectivize mechanism in Nivre & Nilsson 2005
     # for doing pseudo-projective parsing
     # implementation uses the HEAD decoration scheme
 
-    def preprocess_training_data(self, labeled_trees, label_freq_cutoff=30):
-        # expects a sequence of pairs of head arrays and labels
+    delimiter = '||'
+
+    @classmethod
+    def decompose(cls, label):
+        return label.partition(cls.delimiter)[::2]
+
+    @classmethod
+    def is_decorated(cls, label):
+        return label.find(cls.delimiter) != -1
+
+    @classmethod
+    def preprocess_training_data(cls, gold_tuples, label_freq_cutoff=30):
         preprocessed = []
-        for heads,labels in labeled_trees:
-            proj_heads,deco_labels = self.projectivize(heads,labels)
-            # set the label to ROOT for each root dependent
-            deco_labels = [ 'ROOT' if head == i else deco_labels[i] for i,head in enumerate(proj_heads) ]
-            preprocessed.append((proj_heads,deco_labels))
+        freqs = Counter()
+        for raw_text, sents in gold_tuples:
+            prepro_sents = []
+            for (ids, words, tags, heads, labels, iob), ctnts in sents:
+                proj_heads,deco_labels = cls.projectivize(heads,labels)
+                # set the label to ROOT for each root dependent
+                deco_labels = [ 'ROOT' if head == i else deco_labels[i] for i,head in enumerate(proj_heads) ]
+                # count label frequencies
+                if label_freq_cutoff > 0:
+                    freqs.update( label for label in deco_labels if cls.is_decorated(label) )
+                prepro_sents.append(((ids,words,tags,proj_heads,deco_labels,iob), ctnts))
+            preprocessed.append((raw_text, prepro_sents))
 
         if label_freq_cutoff > 0:
-            return self._filter_labels(preprocessed,label_freq_cutoff)
+            return cls._filter_labels(preprocessed,label_freq_cutoff,freqs)
         return preprocessed
 
 
-    def projectivize(self, heads, labels):
+    @classmethod
+    def projectivize(cls, heads, labels):
         # use the algorithm by Nivre & Nilsson 2005
         # assumes heads to be a proper tree, i.e. connected and cycle-free
         # returns a new pair (heads,labels) which encode
         # a projective and decorated tree
         proj_heads = copy(heads)
-        smallest_np_arc = self._get_smallest_nonproj_arc(proj_heads)
+        smallest_np_arc = cls._get_smallest_nonproj_arc(proj_heads)
         if smallest_np_arc == None: # this sentence is already projective
             return proj_heads, copy(labels)
         while smallest_np_arc != None:
-            self._lift(smallest_np_arc, proj_heads)
-            smallest_np_arc = self._get_smallest_nonproj_arc(proj_heads)
-        deco_labels = self._decorate(heads, proj_heads, labels)
+            cls._lift(smallest_np_arc, proj_heads)
+            smallest_np_arc = cls._get_smallest_nonproj_arc(proj_heads)
+        deco_labels = cls._decorate(heads, proj_heads, labels)
         return proj_heads, deco_labels
 
 
-    def deprojectivize(self, heads, labels):
+    @classmethod
+    def deprojectivize(cls, Doc tokens):
         # reattach arcs with decorated labels (following HEAD scheme)
         # for each decorated arc X||Y, search top-down, left-to-right,
         # breadth-first until hitting a Y then make this the new head
-        newheads, newlabels = copy(heads), copy(labels)
-        spans = None
-        for tokenid, head in enumerate(heads):
-            if labels[tokenid].find('||') != -1:
-                newlabel,_,headlabel = labels[tokenid].partition('||')
-                newhead = self._find_new_head(head,tokenid,headlabel,heads,labels,spans=spans)
-                newheads[tokenid] = newhead
-                newlabels[tokenid] = newlabel
-        return newheads, newlabels
+        parse = tokens.to_array([HEAD, DEP])
+        labels = [ tokens.vocab.strings[int(p[1])] for p in parse ]
+        for token in tokens:
+            if cls.is_decorated(token.dep_):
+                newlabel,headlabel = cls.decompose(token.dep_)
+                newhead = cls._find_new_head(token,headlabel)
+                parse[token.i,1] = tokens.vocab.strings[newlabel]
+                parse[token.i,0] = newhead.i - token.i
+        tokens.from_array([HEAD, DEP],parse)
 
 
-    def _decorate(self, heads, proj_heads, labels):
+    @classmethod
+    def _decorate(cls, heads, proj_heads, labels):
         # uses decoration scheme HEAD from Nivre & Nilsson 2005
         assert(len(heads) == len(proj_heads) == len(labels))
         deco_labels = []
         for tokenid,head in enumerate(heads):
             if head != proj_heads[tokenid]:
-                deco_labels.append('%s||%s' % (labels[tokenid],labels[head]))
+                deco_labels.append('%s%s%s' % (labels[tokenid],cls.delimiter,labels[head]))
             else:
                 deco_labels.append(labels[tokenid])
         return deco_labels
 
 
-    def _get_smallest_nonproj_arc(self, heads):
+    @classmethod
+    def _get_smallest_nonproj_arc(cls, heads):
         # return the smallest non-proj arc or None
         # where size is defined as the distance between dep and head
         # and ties are broken left to right
@@ -131,7 +156,8 @@ class PseudoProjective:
         return smallest_np_arc
 
 
-    def _lift(self, tokenid, heads):
+    @classmethod
+    def _lift(cls, tokenid, heads):
         # reattaches a word to it's grandfather
         head = heads[tokenid]
         ghead = heads[head]
@@ -139,43 +165,36 @@ class PseudoProjective:
         heads[tokenid] = ghead if head != ghead else tokenid
 
 
-    def _find_new_head(self, rootid, tokenid, headlabel, heads, labels, spans=None):
+    @classmethod
+    def _find_new_head(cls, token, headlabel):
         # search through the tree starting from root
         # returns the id of the first descendant with the given label
         # if there is none, return the current head (no change)
-        if not spans:
-            spans = self._make_span_index(heads)
-        queue = spans.get(rootid,[])
-        queue.remove(tokenid) # don't search in the subtree of the nonproj arc
+        queue = [token.head]
         while queue:
             next_queue = []
-            for idx in queue:
-                if labels[idx] == headlabel:
-                    return idx
-                next_queue.extend(spans.get(idx,[]))
+            for qtoken in queue:
+                for child in qtoken.children:
+                    if child == token:
+                        continue
+                    if child.dep_ == headlabel:
+                        return child
+                    next_queue.append(child)
             queue = next_queue
-        return heads[tokenid]
+        return token.head
 
 
-    def _make_span_index(self, heads):
-        # stores the direct dependents for each token
-        # for searching top-down through a tree
-        spans = {}
-        for tokenid, head in enumerate(heads):
-            if tokenid == head: # root
-                continue
-            if head not in spans:
-                spans[head] = []
-            spans[head].append(tokenid)
-        return spans
-
-
-    def _filter_labels(self, labeled_trees, cutoff):
+    @classmethod
+    def _filter_labels(cls, gold_tuples, cutoff, freqs):
         # throw away infrequent decorated labels
         # can't learn them reliably anyway and keeps label set smaller
-        freqs = Counter([ label for _,labels in labeled_trees for label in labels if label.find('||') != -1 ])
         filtered = []
-        for proj_heads,deco_labels in labeled_trees:
-            filtered_labels = [ label.partition('||')[0] if freqs.get(label,cutoff) < cutoff else label for label in deco_labels ]
-            filtered.append((proj_heads,filtered_labels))
+        for raw_text, sents in gold_tuples:
+            filtered_sents = []
+            for (ids, words, tags, heads, labels, iob), ctnts in sents:
+                filtered_labels = [ cls.decompose(label)[0] if freqs.get(label,cutoff) < cutoff else label for label in labels ]
+                filtered_sents.append(((ids,words,tags,heads,filtered_labels,iob), ctnts))
+            filtered.append((raw_text, filtered_sents))
         return filtered
+
+
