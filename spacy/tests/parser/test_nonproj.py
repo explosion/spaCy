@@ -1,9 +1,6 @@
 from __future__ import unicode_literals
 import pytest
 
-from spacy.tokens.doc import Doc
-from spacy.vocab import Vocab
-from spacy.tokenizer import Tokenizer
 from spacy.attrs import DEP, HEAD
 import numpy
 
@@ -56,12 +53,28 @@ def test_is_nonproj_tree():
 	assert(is_nonproj_tree(partial_tree) == False)
 	assert(is_nonproj_tree(multirooted_tree) == True)
 
-def test_pseudoprojectivity():
+
+def deprojectivize(proj_heads, deco_labels, EN):
+	slen = len(proj_heads)
+	sent = EN.tokenizer.tokens_from_list(['whatever'] * slen)
+	rel_proj_heads = [ head-i for i,head in enumerate(proj_heads) ]
+	labelids = [ EN.vocab.strings[label] for label in deco_labels ]
+	parse = numpy.asarray(zip(rel_proj_heads,labelids), dtype=numpy.int32)	
+	sent.from_array([HEAD,DEP],parse)
+	PseudoProjectivity.deprojectivize(sent)
+	parse = sent.to_array([HEAD,DEP])
+	deproj_heads = [ i+head for i,head in enumerate(parse[:,0]) ]
+	undeco_labels = [ EN.vocab.strings[int(labelid)] for labelid in parse[:,1] ]
+	return deproj_heads, undeco_labels
+
+
+@pytest.mark.models
+def test_pseudoprojectivity(EN):
 	tree = [1,2,2]
 	nonproj_tree = [1,2,2,4,5,2,7,4,2]
-	labels = ['NK','SB','ROOT','NK','OA','OC','SB','RC','--']
+	labels = ['det','nsubj','root','det','dobj','aux','nsubj','acl','punct']
 	nonproj_tree2 = [9,1,3,1,5,6,9,8,6,1,6,12,13,10,1]
-	labels2 = ['MO','ROOT','NK','SB','MO','NK','OA','NK','AG','OC','MNR','MO','NK','NK','--']
+	labels2 = ['advmod','root','det','nsubj','advmod','det','dobj','det','nmod','aux','nmod','advmod','det','amod','punct']
 
 	assert(PseudoProjectivity.decompose('X||Y') == ('X','Y'))
 	assert(PseudoProjectivity.decompose('X') == ('X',''))
@@ -80,29 +93,32 @@ def test_pseudoprojectivity():
 
 	proj_heads, deco_labels = PseudoProjectivity.projectivize(nonproj_tree,labels)
 	assert(proj_heads == [1,2,2,4,5,2,7,5,2])
-	assert(deco_labels == ['NK','SB','ROOT','NK','OA','OC','SB','RC||OA','--'])
-	# deproj_heads, undeco_labels = PseudoProjectivity.deprojectivize(proj_heads,deco_labels)
-	# assert(deproj_heads == nonproj_tree)
-	# assert(undeco_labels == labels)
+	assert(deco_labels == ['det','nsubj','root','det','dobj','aux','nsubj','acl||dobj','punct'])
+	deproj_heads, undeco_labels = deprojectivize(proj_heads,deco_labels,EN)
+	assert(deproj_heads == nonproj_tree)
+	assert(undeco_labels == labels)
 
 	proj_heads, deco_labels = PseudoProjectivity.projectivize(nonproj_tree2,labels2)
 	assert(proj_heads == [1,1,3,1,5,6,9,8,6,1,9,12,13,10,1])
-	assert(deco_labels == ['MO||OC','ROOT','NK','SB','MO','NK','OA','NK','AG','OC','MNR||OA','MO','NK','NK','--'])
-	# deproj_heads, undeco_labels = PseudoProjectivity.deprojectivize(proj_heads,deco_labels)
-	# assert(deproj_heads == nonproj_tree2)
-	# assert(undeco_labels == labels2)
+	assert(deco_labels == ['advmod||aux','root','det','nsubj','advmod','det','dobj','det','nmod','aux','nmod||dobj','advmod','det','amod','punct'])
+	deproj_heads, undeco_labels = deprojectivize(proj_heads,deco_labels,EN)
+	assert(deproj_heads == nonproj_tree2)
+	assert(undeco_labels == labels2)
 
 	# if decoration is wrong such that there is no head with the desired label
 	# the structure is kept and the label is undecorated
-	# deproj_heads, undeco_labels = PseudoProjectivity.deprojectivize([1,2,2,4,5,2,7,5,2],['NK','SB','ROOT','NK','OA','OC','SB','RC||DA','--'])
-	# assert(deproj_heads == [1,2,2,4,5,2,7,5,2])
-	# assert(undeco_labels == ['NK','SB','ROOT','NK','OA','OC','SB','RC','--'])
+	proj_heads = [1,2,2,4,5,2,7,5,2]
+	deco_labels = ['det','nsubj','root','det','dobj','aux','nsubj','acl||iobj','punct']
+	deproj_heads, undeco_labels = deprojectivize(proj_heads,deco_labels,EN)
+	assert(deproj_heads == proj_heads)
+	assert(undeco_labels == ['det','nsubj','root','det','dobj','aux','nsubj','acl','punct'])
 
 	# if there are two potential new heads, the first one is chosen even if it's wrong
-	# deproj_heads, undeco_labels = PseudoProjectivity.deprojectivize([1,1,3,1,5,6,9,8,6,1,9,12,13,10,1], \
-	# 	                                            ['MO||OC','ROOT','NK','OC','MO','NK','OA','NK','AG','OC','MNR||OA','MO','NK','NK','--'])
-	# assert(deproj_heads == [3,1,3,1,5,6,9,8,6,1,6,12,13,10,1])
-	# assert(undeco_labels == ['MO','ROOT','NK','OC','MO','NK','OA','NK','AG','OC','MNR','MO','NK','NK','--'])
+	proj_heads = [1,1,3,1,5,6,9,8,6,1,9,12,13,10,1]
+	deco_labels = ['advmod||aux','root','det','aux','advmod','det','dobj','det','nmod','aux','nmod||dobj','advmod','det','amod','punct']
+	deproj_heads, undeco_labels = deprojectivize(proj_heads,deco_labels,EN)
+	assert(deproj_heads == [3,1,3,1,5,6,9,8,6,1,6,12,13,10,1])
+	assert(undeco_labels == ['advmod','root','det','aux','advmod','det','dobj','det','nmod','aux','nmod','advmod','det','amod','punct'])
 
 
 

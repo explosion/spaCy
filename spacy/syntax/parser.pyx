@@ -94,9 +94,10 @@ cdef class Parser:
         moves = transition_system(strings, cfg.labels)
         templates = get_templates(cfg.features)
         model = ParserModel(templates)
+        project = cfg.projectivize if hasattr(cfg,'projectivize') else False
         if path.exists(path.join(model_dir, 'model')):
             model.load(path.join(model_dir, 'model'))
-        return cls(strings, moves, model, cfg.projectivize)
+        return cls(strings, moves, model, project)
 
     @classmethod
     def load(cls, pkg_or_str_or_file, vocab):

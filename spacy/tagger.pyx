@@ -143,7 +143,7 @@ cdef class Tagger:
 
     @classmethod
     def blank(cls, vocab, templates):
-        model = TaggerModel(N_CONTEXT_FIELDS, templates)
+        model = TaggerModel(templates)
         return cls(vocab, model)
 
     @classmethod

@@ -244,14 +244,8 @@ cdef class GoldParse:
             raise Exception("Cycle found: %s" % cycle)
 
         if make_projective:
-            # projectivity here means non-proj arcs are being disconnected
-            np_arcs = []
-            for word in range(self.length):
-                if nonproj.is_nonproj_arc(word,self.heads):
-                    np_arcs.append(word)
-            for np_arc in np_arcs:
-                self.heads[np_arc] = None
-                self.labels[np_arc] = ''
+            proj_heads,_ = nonproj.PseudoProjectivity.projectivize(self.heads,self.labels)
+            self.heads = proj_heads
 
         self.brackets = {}
         for (gold_start, gold_end, label_str) in brackets:
