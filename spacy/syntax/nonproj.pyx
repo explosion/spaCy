@@ -1,3 +1,6 @@
+from future.standard_library import install_aliases
+install_aliases()
+
 from copy import copy
 from collections import Counter
 
