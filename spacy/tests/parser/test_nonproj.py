@@ -59,7 +59,7 @@ def deprojectivize(proj_heads, deco_labels, EN):
 	sent = EN.tokenizer.tokens_from_list(['whatever'] * slen)
 	rel_proj_heads = [ head-i for i,head in enumerate(proj_heads) ]
 	labelids = [ EN.vocab.strings[label] for label in deco_labels ]
-	pairs = zip(rel_proj_heads,labelids)
+	pairs = list(zip(rel_proj_heads,labelids))
 	parse = numpy.asarray(pairs, dtype=numpy.int32)	
 	sent.from_array([HEAD,DEP],parse)
 	PseudoProjectivity.deprojectivize(sent)
