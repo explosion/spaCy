@@ -59,7 +59,7 @@ def is_nonproj_tree(heads):
     return any( is_nonproj_arc(word,heads) for word in range(len(heads)) )
 
 
-cdef class PseudoProjectivity:
+class PseudoProjectivity:
     # implements the projectivize/deprojectivize mechanism in Nivre & Nilsson 2005
     # for doing pseudo-projective parsing
     # implementation uses the HEAD decoration scheme
