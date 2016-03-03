@@ -6,4 +6,4 @@ from ..language import Language
 
 
 class German(Language):
-    pass
+    lang = 'de'

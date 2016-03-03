@@ -15,5 +15,6 @@ cdef class ParserModel(AveragedPerceptron):
 cdef class Parser:
     cdef readonly ParserModel model
     cdef readonly TransitionSystem moves
+    cdef int _projectivize
 
     cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) nogil

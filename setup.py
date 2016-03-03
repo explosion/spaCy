@@ -47,6 +47,7 @@ MOD_NAMES = [
     'spacy.syntax._state',
     'spacy.tokenizer',
     'spacy.syntax.parser',
+    'spacy.syntax.nonproj',
     'spacy.syntax.transition_system',
     'spacy.syntax.arc_eager',
     'spacy.syntax._parse_features',

@@ -98,7 +98,7 @@ def _read_probs(loc):
     return probs, probs['-OOV-']
 
 
-def _read_freqs(loc, max_length=100, min_doc_freq=5, min_freq=200):
+def _read_freqs(loc, max_length=100, min_doc_freq=0, min_freq=200):
     if not loc.exists():
         print("Warning: Frequencies file not found")
         return {}, 0.0
@@ -125,7 +125,8 @@ def _read_freqs(loc, max_length=100, min_doc_freq=5, min_freq=200):
         doc_freq = int(doc_freq)
         freq = int(freq)
         if doc_freq >= min_doc_freq and freq >= min_freq and len(key) < max_length:
-            word = literal_eval(key)
+#            word = literal_eval(key)
+            word = key
             smooth_count = counts.smoother(int(freq))
             log_smooth_count = math.log(smooth_count)
             probs[word] = math.log(smooth_count) - log_total
@@ -165,7 +166,7 @@ def setup_vocab(get_lex_attr, tag_map, src_dir, dst_dir):
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs, oov_prob = _read_probs(src_dir / 'words.sgt.prob')
     if not probs:
-        probs, oov_prob = _read_freqs(src_dir / 'freqs.txt.gz')
+        probs, oov_prob = _read_freqs(src_dir / 'freqs.txt')
     if not probs:
         oov_prob = -20
     else:
@@ -223,9 +224,8 @@ def main(lang_id, lang_data_dir, corpora_dir, model_dir):
         copyfile(str(lang_data_dir / 'gazetteer.json'),
                  str(model_dir / 'vocab' / 'gazetteer.json'))
 
-    if (lang_data_dir / 'tag_map.json').exists():
-        copyfile(str(lang_data_dir / 'tag_map.json'),
-                 str(model_dir / 'vocab' / 'tag_map.json'))
+    copyfile(str(lang_data_dir / 'tag_map.json'),
+             str(model_dir / 'vocab' / 'tag_map.json'))
 
     if (lang_data_dir / 'lemma_rules.json').exists():
         copyfile(str(lang_data_dir / 'lemma_rules.json'),

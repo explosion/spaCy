@@ -1,0 +1,319 @@
+# surface form lemma pos 
+# multiple values are separated by |
+# empty lines and lines starting with # are being ignored 
+
+''	''
+\")	\")
+\n	\n	<nl>	SP
+\t	\t	<tab>	SP
+ 	 	<space>	SP
+
+# example: Wie geht's?
+'s	's	es
+'S	'S	es
+
+# example: Haste mal 'nen Euro?
+'n	'n	ein
+'ne	'ne	eine
+'nen	'nen	einen
+
+# example: Kommen S’ nur herein!
+s'	s'	sie
+S'	S'	sie
+
+# example: Da haben wir's!
+ich's	ich|'s	ich|es
+du's	du|'s	du|es
+er's	er|'s	er|es
+sie's	sie|'s	sie|es
+wir's	wir|'s	wir|es
+ihr's	ihr|'s	ihr|es
+
+# example: Die katze auf'm dach.
+auf'm	auf|'m	auf|dem
+unter'm	unter|'m	unter|dem
+über'm	über|'m	über|dem
+vor'm	vor|'m	vor|dem
+hinter'm	hinter|'m	hinter|dem
+
+# persons
+B.A.	B.A.
+B.Sc.	B.Sc.
+Dipl.	Dipl.
+Dipl.-Ing.	Dipl.-Ing.
+Dr.	Dr.
+Fr.	Fr.
+Frl.	Frl.
+Hr.	Hr.
+Hrn.	Hrn.
+Frl.	Frl.
+Prof.	Prof.
+St.	St.
+Hrgs.	Hrgs.
+Hg.	Hg.
+a.Z.	a.Z.
+a.D.	a.D.
+h.c.	h.c.
+Jr.	Jr.
+jr.	jr.
+jun.	jun.
+sen.	sen.
+rer.	rer.
+Ing.	Ing.
+M.A.	M.A.
+Mr.	Mr.
+M.Sc.	M.Sc.
+nat.	nat.
+phil.	phil.
+
+# companies
+Co.	Co.
+co.	co.
+Cie.	Cie.
+A.G.	A.G.
+G.m.b.H.	G.m.b.H.
+i.G.	i.G.
+e.V.	e.V.
+
+# popular german abbreviations
+Abb.	Abb.
+Abk.	Abk.
+Abs.	Abs.
+Abt.	Abt.
+abzgl.	abzgl.
+allg.	allg.
+a.M.	a.M.
+Bd.	Bd.
+betr.	betr.
+Betr.	Betr.
+Biol.	Biol.
+biol.	biol.
+Bf.	Bf.
+Bhf.	Bhf.
+Bsp.	Bsp.
+bspw.	bspw.
+bzgl.	bzgl.
+bzw.	bzw.
+d.h.	d.h.
+dgl.	dgl.
+ebd.	ebd.
+ehem.	ehem.
+eigtl.	eigtl.
+entspr.	entspr.
+erm.	erm.
+ev.	ev.
+evtl.	evtl.
+Fa.	Fa.
+Fam.	Fam.
+geb.	geb.
+Gebr.	Gebr.
+gem.	gem.
+ggf.	ggf.
+ggü.	ggü.
+ggfs.	ggfs.
+gegr.	gegr.
+Hbf.	Hbf.
+Hrsg.	Hrsg.
+hrsg.	hrsg.
+i.A.	i.A.
+i.d.R.	i.d.R.
+inkl.	inkl.
+insb.	insb.
+i.O.	i.O.
+i.Tr.	i.Tr.
+i.V.	i.V.
+jur.	jur.
+kath.	kath.
+K.O.	K.O.
+lt.	lt.
+max.	max.
+m.E.	m.E.
+m.M.	m.M.
+mtl.	mtl.
+min.	min.
+mind.	mind.
+MwSt.	MwSt.
+Nr.	Nr.
+o.a.	o.a.
+o.ä.	o.ä.
+o.Ä.	o.Ä.
+o.g.	o.g.
+o.k.	o.k.
+O.K.	O.K.
+Orig.	Orig.
+orig.	orig.
+pers.	pers.
+Pkt.	Pkt.
+Red.	Red.
+röm.	röm.
+s.o.	s.o.
+sog.	sog.
+std.	std.
+stellv.	stellv.
+Str.	Str.
+tägl.	tägl.
+Tel.	Tel.
+u.a.	u.a.
+usf.	usf.
+u.s.w.	u.s.w.
+usw.	usw.
+u.U.	u.U.
+u.v.m.	u.v.m.
+uvm.	uvm.
+v.a.	v.a.
+vgl.	vgl.
+vllt.	vllt.
+v.l.n.r.	v.l.n.r.
+vlt.	vlt.
+Vol.	Vol.
+wiss.	wiss.
+Univ.	Univ.
+z.B.	z.B.
+z.b.	z.b.
+z.Bsp.	z.Bsp.
+z.T.	z.T.
+z.Z.	z.Z.
+zzgl.	zzgl.
+z.Zt.	z.Zt.
+
+# popular latin abbreviations
+vs.	vs.
+adv.	adv.
+Chr.	Chr.
+A.C.	A.C.
+A.D.	A.D.
+e.g.	e.g.
+i.e.	i.e.
+al.	al.
+p.a.	p.a.
+P.S.	P.S.
+q.e.d.	q.e.d.
+R.I.P.	R.I.P.
+etc.	etc.
+incl.	incl.
+ca.	ca.
+n.Chr.	n.Chr.
+p.s.	p.s.
+v.Chr.	v.Chr.
+
+# popular english abbreviations
+D.C.	D.C.
+N.Y.	N.Y.
+N.Y.C.	N.Y.C.
+U.S.	U.S.
+U.S.A.	U.S.A.
+L.A.	L.A.
+U.S.S.	U.S.S.
+
+# dates & time
+Jan.	Jan.
+Feb.	Feb.
+Mrz.	Mrz.
+Mär.	Mär.
+Apr.	Apr.
+Jun.	Jun.
+Jul.	Jul.
+Aug.	Aug.
+Sep.	Sep.
+Sept.	Sept.
+Okt.	Okt.
+Nov.	Nov.
+Dez.	Dez.
+Mo.	Mo.
+Di.	Di.
+Mi.	Mi.
+Do.	Do.
+Fr.	Fr.
+Sa.	Sa.
+So.	So.
+Std.	Std.
+Jh.	Jh.
+Jhd.	Jhd.
+
+# numbers
+Tsd.	Tsd.
+Mio.	Mio.
+Mrd.	Mrd.
+
+# countries & languages
+engl.	engl.
+frz.	frz.
+lat.	lat.
+österr.	österr.
+
+# smileys
+:)	:)
+<3	<3
+;)	;)
+(:	(:
+:(	:(
+-_-	-_-
+=)	=)
+:/	:/
+:>	:>
+;-)	;-)
+:Y	:Y
+:P	:P
+:-P	:-P
+:3	:3
+=3	=3
+xD	xD
+^_^	^_^
+=]	=]
+=D	=D
+<333	<333
+:))	:))
+:0	:0
+-__-	-__-
+xDD	xDD
+o_o	o_o
+o_O	o_O
+V_V	V_V
+=[[	=[[
+<33	<33
+;p	;p
+;D	;D
+;-p	;-p
+;(	;(
+:p	:p
+:]	:]
+:O	:O
+:-/	:-/
+:-)	:-)
+:(((	:(((
+:((	:((
+:')	:')
+(^_^)	(^_^)
+(=	(=
+o.O	o.O
+
+# single letters
+a.	a.
+b.	b.
+c.	c.
+d.	d.
+e.	e.
+f.	f.
+g.	g.
+h.	h.
+i.	i.
+j.	j.
+k.	k.
+l.	l.
+m.	m.
+n.	n.
+o.	o.
+p.	p.
+q.	q.
+r.	r.
+s.	s.
+t.	t.
+u.	u.
+v.	v.
+w.	w.
+x.	x.
+y.	y.
+z.	z.
+ä.	ä.
+ö.	ö.
+ü.	ü.
