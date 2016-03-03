@@ -1,8 +1,4 @@
-from future.standard_library import install_aliases
-install_aliases()
-
 from copy import copy
-from collections import Counter
 
 from ..tokens.doc cimport Doc
 from spacy.attrs import DEP, HEAD
@@ -80,7 +76,7 @@ class PseudoProjectivity:
     @classmethod
     def preprocess_training_data(cls, gold_tuples, label_freq_cutoff=30):
         preprocessed = []
-        freqs = Counter()
+        freqs = {}
         for raw_text, sents in gold_tuples:
             prepro_sents = []
             for (ids, words, tags, heads, labels, iob), ctnts in sents:
@@ -89,7 +85,9 @@ class PseudoProjectivity:
                 deco_labels = [ 'ROOT' if head == i else deco_labels[i] for i,head in enumerate(proj_heads) ]
                 # count label frequencies
                 if label_freq_cutoff > 0:
-                    freqs.update( label for label in deco_labels if cls.is_decorated(label) )
+                    for label in deco_labels:
+                        if cls.is_decorated(label):
+                            freqs[label] = freqs.get(label,0) + 1
                 prepro_sents.append(((ids,words,tags,proj_heads,deco_labels,iob), ctnts))
             preprocessed.append((raw_text, prepro_sents))
 
