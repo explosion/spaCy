@@ -23,10 +23,8 @@ import ujson as json
 
 
 cpdef hash_t hash_string(unicode string) except 0:
-    # This has to be like this for
-    chars = <char*>PyUnicode_AS_DATA(string)
-    size = PyUnicode_GET_DATA_SIZE(string)
-    return hash64(chars, size, 1)
+    chars = string.encode('utf8')
+    return hash64(<char*>chars, len(chars), 1)
 
 
 cdef unicode _decode(const Utf8Str* string):
