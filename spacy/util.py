@@ -25,9 +25,9 @@ def get_package_by_name(name=None, via=None):
         return sputnik.package(about.__title__, about.__version__,
                                name or about.__default_model__, data_path=via)
     except PackageNotFoundException as e:
-        raise RuntimeError("Model not installed. Please run 'python -m "
+        raise RuntimeError("Model %s not installed. Please run 'python -m "
                            "spacy.en.download' to install latest compatible "
-                           "model.")
+                           "model." % name)
     except CompatiblePackageNotFoundException as e:
         raise RuntimeError("Installed model is not compatible with spaCy "
                            "version. Please run 'python -m spacy.en.download "

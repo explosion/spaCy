@@ -52,7 +52,7 @@ cdef class Vocab:
         return cls.from_package(get_package(data_dir), get_lex_attr=get_lex_attr)
 
     @classmethod
-    def from_package(cls, package, get_lex_attr=None):
+    def from_package(cls, package, get_lex_attr=None, vectors_package=None):
         tag_map = package.load_json(('vocab', 'tag_map.json'), default={})
 
         lemmatizer = Lemmatizer.from_package(package)
@@ -66,7 +66,10 @@ cdef class Vocab:
             self.strings.load(file_)
         self.load_lexemes(package.file_path('vocab', 'lexemes.bin'))
 
-        if package.has_file('vocab', 'vec.bin'):
+        if vectors_package and vectors_package.has_file('vocab', 'vec.bin'):
+            self.vectors_length = self.load_vectors_from_bin_loc(
+                vectors_package.file_path('vocab', 'vec.bin'))
+        elif package.has_file('vocab', 'vec.bin'):
             self.vectors_length = self.load_vectors_from_bin_loc(
                 package.file_path('vocab', 'vec.bin'))
         return self
