@@ -109,25 +109,6 @@ cdef class Vocab:
         """The current number of lexemes stored."""
         return self.length
 
-    def __reduce__(self):
-        # TODO: This is hopelessly broken. The state is transferred as just 
-        # a temp directory! We then fail to clean this up. This method therefore
-        # only pretends to work. What we need to do is form an archive file.
-        tmp_dir = tempfile.mkdtemp()
-        lex_loc = path.join(tmp_dir, 'lexemes.bin')
-        str_loc = path.join(tmp_dir, 'strings.json')
-        vec_loc = path.join(tmp_dir, 'vec.bin')
-
-        self.dump(lex_loc)
-        with io.open(str_loc, 'w', encoding='utf8') as file_:
-            self.strings.dump(file_)
-
-        self.dump_vectors(vec_loc)
-        
-        state = (str_loc, lex_loc, vec_loc, self.morphology, self.get_lex_attr,
-                 self.serializer_freqs, self.data_dir)
-        return (unpickle_vocab, state, None, None)
-
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
         if necessary, using memory acquired from the given pool.  If the pool
@@ -389,27 +370,6 @@ cdef class Vocab:
             else:
                 lex.vector = EMPTY_VEC
         return vec_len
-
-
-def unpickle_vocab(strings_loc, lex_loc, vec_loc, morphology, get_lex_attr,
-                   serializer_freqs, data_dir):
-    cdef Vocab vocab = Vocab()
-
-    vocab.get_lex_attr = get_lex_attr
-    vocab.morphology = morphology
-    vocab.strings = morphology.strings
-    vocab.data_dir = data_dir
-    vocab.serializer_freqs = serializer_freqs
-
-    with io.open(strings_loc, 'r', encoding='utf8') as file_:
-        vocab.strings.load(file_)
-    vocab.load_lexemes(lex_loc)
-    if vec_loc is not None:
-        vocab.vectors_length = vocab.load_vectors_from_bin_loc(vec_loc)
-    return vocab
- 
-
-copy_reg.constructor(unpickle_vocab)
 
 
 def write_binary_vectors(in_loc, out_loc):
