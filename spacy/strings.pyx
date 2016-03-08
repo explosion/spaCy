@@ -118,6 +118,11 @@ cdef class StringStore:
         else:
             raise TypeError(type(string_or_id))
 
+    def __contains__(self, unicode string):
+        cdef hash_t key = hash_string(string)
+        value = <Utf8Str*>self._map.get(key)
+        return True if value is not NULL else False
+
     def __iter__(self):
         cdef int i
         for i in range(self.size):

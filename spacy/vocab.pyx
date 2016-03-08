@@ -172,6 +172,11 @@ cdef class Vocab:
         self._by_orth.set(lex.orth, <void*>lex)
         self.length += 1
 
+    def __contains__(self, unicode string):
+        key = hash_string(string)
+        lex = self._by_hash.get(key)
+        return True if lex is not NULL else False
+
     def __iter__(self):
         cdef attr_t orth
         cdef size_t addr
