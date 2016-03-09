@@ -5,9 +5,6 @@ import unicodedata
 import re
 
 
-TAGS = 'adj adp adv conj det noun num pdt pos pron prt punct verb'.upper().split()
-
-
 # Binary string features
 cpdef bint is_alpha(unicode string):
     return string.isalpha()
@@ -36,20 +33,25 @@ cpdef bint is_ascii(unicode string):
     else:
         return True
 
+
 cpdef bint is_bracket(unicode string):
-    return False
+    brackets = ('(',')','[',']','{','}','<','>')
+    return string in brackets
+
 
 cpdef bint is_quote(unicode string):
-    if string in ('"', "'"):
-        return True
-    else:
-        return False
+    quotes = ('"',"'",'`','«','»','‘','’','‚','‛','“','”','„','‟','‹','›','❮','❯')
+    return string in quotes
+
 
 cpdef bint is_left_punct(unicode string):
-    return False
+    left_punct = ('(','[','{','<','"',"'",'«','‘','‚','‛','“','„','‟','‹','❮')        
+    return string in left_punct
+
 
 cpdef bint is_right_punct(unicode string):
-    return False
+    right_punct = (')',']','}','>','"',"'",'»','’','”','›','❯')        
+    return string in right_punct
 
 
 cpdef bint is_title(unicode string):
