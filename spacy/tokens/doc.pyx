@@ -23,6 +23,7 @@ from .token cimport Token
 from ..serialize.bits cimport BitArray
 from ..util import normalize_slice
 
+import npchunks
 
 DEF PADDING = 5
 
@@ -239,24 +240,15 @@ cdef class Doc:
                 "requires data to be installed. If you haven't done so, run: "
                 "\npython -m spacy.en.download all\n"
                 "to install the data")
- 
-        cdef const TokenC* word
-        labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj',
-                  'attr', 'root']
-        np_deps = [self.vocab.strings[label] for label in labels]
-        conj = self.vocab.strings['conj']
-        np_label = self.vocab.strings['NP']
-        for i in range(self.length):
-            word = &self.c[i]
-            if word.pos == NOUN and word.dep in np_deps:
-                yield Span(self, word.l_edge, i+1, label=np_label)
-            elif word.pos == NOUN and word.dep == conj:
-                head = word+word.head
-                while head.dep == conj and head.head < 0:
-                    head += head.head
-                # If the head is an NP, and we're coordinated to it, we're an NP
-                if head.dep in np_deps:
-                    yield Span(self, word.l_edge, i+1, label=np_label)
+
+        chunk_rules = {'en':npchunks.english, 'de':npchunks.german}
+
+        for sent in self.sents:
+            lang = 'en' # todo: make dependent on language of root token
+            for chunk in chunk_rules.get(lang)(sent):
+                yield chunk
+
+        
 
     @property
     def sents(self):

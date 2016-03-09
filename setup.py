@@ -56,6 +56,7 @@ MOD_NAMES = [
     'spacy.tokens.doc',
     'spacy.tokens.span',
     'spacy.tokens.token',
+    'spacy.tokens.npchunks',
     'spacy.serialize.packer',
     'spacy.serialize.huffman',
     'spacy.serialize.bits',
@@ -184,3 +185,4 @@ def setup_package():
 
 if __name__ == '__main__':
     setup_package()
+
