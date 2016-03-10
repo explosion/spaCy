@@ -40,17 +40,17 @@ cpdef bint is_bracket(unicode string):
 
 
 cpdef bint is_quote(unicode string):
-    quotes = ('"',"'",'`','«','»','‘','’','‚','‛','“','”','„','‟','‹','›','❮','❯')
+    quotes = ('"',"'",'`','«','»','‘','’','‚','‛','“','”','„','‟','‹','›','❮','❯',"''",'``')
     return string in quotes
 
 
 cpdef bint is_left_punct(unicode string):
-    left_punct = ('(','[','{','<','"',"'",'«','‘','‚','‛','“','„','‟','‹','❮')        
+    left_punct = ('(','[','{','<','"',"'",'«','‘','‚','‛','“','„','‟','‹','❮','``')
     return string in left_punct
 
 
 cpdef bint is_right_punct(unicode string):
-    right_punct = (')',']','}','>','"',"'",'»','’','”','›','❯')        
+    right_punct = (')',']','}','>','"',"'",'»','’','”','›','❯',"''")
     return string in right_punct
 
 

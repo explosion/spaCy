@@ -1,31 +1,9 @@
+from spacy.structs cimport TokenC
+from spacy.tokens.span cimport Span
 
-from ..structs cimport TokenC
-from .doc cimport Doc
-from .span cimport Span
+from spacy.parts_of_speech cimport NOUN
 
-from ..parts_of_speech cimport NOUN, PROPN, PRON
-
-def english(Span sent):
-    cdef const TokenC* word
-    strings = sent.doc.vocab.strings
-    labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj', 'attr', 'root']
-    np_deps = [strings[label] for label in labels]
-    conj = strings['conj']
-    np_label = strings['NP']
-    for i in range(sent.start, sent.end):
-        word = &sent.doc.c[i]
-        if word.pos == NOUN and word.dep in np_deps:
-            yield Span(sent.doc, word.l_edge, i+1, label=np_label)
-        elif word.pos == NOUN and word.dep == conj:
-            head = word+word.head
-            while head.dep == conj and head.head < 0:
-                head += head.head
-            # If the head is an NP, and we're coordinated to it, we're an NP
-            if head.dep in np_deps:
-                yield Span(sent.doc, word.l_edge, i+1, label=np_label)
-
-
-def german(Span sent):
+def noun_chunks(Span sent):
     # this function extracts spans headed by NOUNs starting from the left-most
     # syntactic dependent until the NOUN itself
     # for close apposition and measurement construction, the span is sometimes
@@ -48,7 +26,3 @@ def german(Span sent):
                 if rdep.pos == NOUN and rdep.dep == close_app:
                     rbracket = rdep.i+1
             yield Span(sent.doc, word.l_edge, rbracket, label=np_label)
-
-
-
-

@@ -246,6 +246,7 @@ cdef class Vocab:
             fp.write_from(&lexeme.prob, sizeof(lexeme.prob), 1)
             fp.write_from(&lexeme.sentiment, sizeof(lexeme.sentiment), 1)
             fp.write_from(&lexeme.l2_norm, sizeof(lexeme.l2_norm), 1)
+            fp.write_from(&lexeme.lang, sizeof(lexeme.lang), 1)
         fp.close()
 
     def load_lexemes(self, loc):
@@ -278,6 +279,7 @@ cdef class Vocab:
             fp.read_into(&lexeme.prob, 1, sizeof(lexeme.prob))
             fp.read_into(&lexeme.sentiment, 1, sizeof(lexeme.sentiment))
             fp.read_into(&lexeme.l2_norm, 1, sizeof(lexeme.l2_norm))
+            fp.read_into(&lexeme.lang, 1, sizeof(lexeme.lang))
 
             lexeme.vector = EMPTY_VEC
             py_str = self.strings[lexeme.orth]

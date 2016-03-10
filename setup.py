@@ -56,14 +56,15 @@ MOD_NAMES = [
     'spacy.tokens.doc',
     'spacy.tokens.span',
     'spacy.tokens.token',
-    'spacy.tokens.npchunks',
     'spacy.serialize.packer',
     'spacy.serialize.huffman',
     'spacy.serialize.bits',
     'spacy.cfile',
     'spacy.matcher',
     'spacy.syntax.ner',
-    'spacy.symbols']
+    'spacy.symbols',
+    'spacy.en.iterators',
+    'spacy.de.iterators']
 
 
 # By subclassing build_extensions we have the actual compiler that will be used

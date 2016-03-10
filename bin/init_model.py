@@ -109,7 +109,7 @@ def _read_freqs(loc, max_length=100, min_doc_freq=0, min_freq=200):
     else:
         file_ = loc.open()
     for i, line in enumerate(file_):
-        freq, doc_freq, key = line.split('\t', 2)
+        freq, doc_freq, key = line.rstrip().split('\t', 2)
         freq = int(freq)
         counts.inc(i+1, freq)
         total += freq
@@ -121,7 +121,7 @@ def _read_freqs(loc, max_length=100, min_doc_freq=0, min_freq=200):
         file_ = loc.open()
     probs = {}
     for line in file_:
-        freq, doc_freq, key = line.split('\t', 2)
+        freq, doc_freq, key = line.rstrip().split('\t', 2)
         doc_freq = int(doc_freq)
         freq = int(freq)
         if doc_freq >= min_doc_freq and freq >= min_freq and len(key) < max_length:

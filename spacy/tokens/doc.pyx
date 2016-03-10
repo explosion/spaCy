@@ -8,6 +8,7 @@ import struct
 cimport numpy as np
 import math
 import six
+import warnings
 
 from ..lexeme cimport Lexeme
 from ..lexeme cimport EMPTY_LEXEME
@@ -23,7 +24,6 @@ from .token cimport Token
 from ..serialize.bits cimport BitArray
 from ..util import normalize_slice
 
-import npchunks
 
 DEF PADDING = 5
 
@@ -241,11 +241,23 @@ cdef class Doc:
                 "\npython -m spacy.en.download all\n"
                 "to install the data")
 
-        chunk_rules = {'en':npchunks.english, 'de':npchunks.german}
+        from spacy.en.iterators import noun_chunks as en_noun_chunks
+        from spacy.de.iterators import noun_chunks as de_noun_chunks
+
+        chunk_rules = {'en':en_noun_chunks, 
+                       'de':de_noun_chunks,
+                       }
 
         for sent in self.sents:
-            lang = 'en' # todo: make dependent on language of root token
-            for chunk in chunk_rules.get(lang)(sent):
+            print(sent)
+            lang = sent.root.lang_
+            chunker = chunk_rules.get(lang,None)
+            if chunker == None:
+                warnings.warn("noun_chunks is not available for language %s." % lang)
+                print(sent.root.orth_)
+                continue
+
+            for chunk in chunker(sent):
                 yield chunk
 
         
