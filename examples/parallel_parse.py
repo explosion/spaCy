@@ -58,7 +58,7 @@ def save_parses(batch_id, input_, out_dir, n_threads, batch_size):
     n_thread=("Number of threads per process", "option", "t", int),
     batch_size=("Number of texts to accumulate in a buffer", "option", "b", int)
 )
-def main(in_loc, out_dir, n_process=1, n_thread=4):
+def main(in_loc, out_dir, n_process=1, n_thread=4, batch_size=100):
     if not path.exists(out_dir):
         path.join(out_dir)
     if n_process >= 2:
