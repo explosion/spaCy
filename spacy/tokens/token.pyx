@@ -142,6 +142,8 @@ cdef class Token:
     property dep:
         def __get__(self):
             return self.c.dep
+        def __set__(self, int label):
+            self.c.dep = label
 
     property has_vector:
         def __get__(self):
@@ -250,10 +252,122 @@ cdef class Token:
         def __get__(self):
             return self.doc[self.c.r_edge]
 
+    property ancestors:
+        def __get__(self):
+            cdef const TokenC* head_ptr = self.c
+            # guard against infinite loop, no token can have 
+            # more ancestors than tokens in the tree
+            cdef int i = 0
+            while head_ptr.head != 0 and i < self.doc.length:
+                head_ptr += head_ptr.head
+                yield self.doc[head_ptr - (self.c - self.i)]
+                i += 1
+
+    def is_ancestor_of(self, descendant):
+        return any( ancestor.i == self.i for ancestor in descendant.ancestors )
+
     property head:
         def __get__(self):
             """The token predicted by the parser to be the head of the current token."""
             return self.doc[self.i + self.c.head]
+        def __set__(self, Token new_head):
+            # this function sets the head of self to new_head
+            # and updates the counters for left/right dependents
+            # and left/right corner for the new and the old head
+
+            # do nothing if old head is new head
+            if self.i + self.c.head == new_head.i:
+                return
+
+            cdef Token old_head = self.head
+            cdef int rel_newhead_i = new_head.i - self.i
+
+            # is the new head a descendant of the old head
+            cdef bint is_desc = old_head.is_ancestor_of(new_head)
+            
+            cdef int token_i
+            cdef int new_edge
+            cdef Token anc
+
+            # update number of deps of old head
+            if self.c.head > 0: # left dependent
+                old_head.c.l_kids -= 1
+                if self.c.l_edge == old_head.c.l_edge:
+                    # the token dominates the left edge so the left edge of the head
+                    # may change when the token is reattached
+                    # it may not change if the new head is a descendant of the current head
+
+                    # find new l_edge if new head is not a descendant of old head
+                    # a new l_edge is any token between l_edge and old_head
+                    # that is a descendant of old_head but not of self
+                    new_edge = self.c.l_edge
+                    if not is_desc:
+                        for token_i in range(old_head.l_edge+1,old_head.i):
+                            if self.doc.c[token_i].l_kids == 0: # only a token without left deps can be a left edge
+                                if self.is_ancestor_of(self.doc[token_i]):
+                                    continue
+                                if old_head.is_ancestor_of(self.doc[token_i]):
+                                    new_edge = token_i
+                                    break
+                        else: # set the new l_edge to old_head if no other was found
+                            new_edge = old_head.i
+
+                    # assign new l_edge to old_head
+                    old_head.c.l_edge = new_edge
+                    # walk up the tree from old_head and assign new l_edge to ancestors
+                    # until an ancestor already has an l_edge that's further left
+                    for anc in old_head.ancestors:
+                        if anc.c.l_edge <= new_edge:
+                            break
+                        anc.c.l_edge = new_edge
+            
+            elif self.c.head < 0: # right dependent
+                old_head.c.r_kids -= 1
+                # do the same thing as for l_edge
+                if self.c.r_edge == old_head.c.r_edge:
+                    new_edge = self.c.r_edge
+                    if not is_desc:
+                        for token_i in range(old_head.r_edge-1,old_head.i,-1):
+                            if self.doc.c[token_i].r_kids == 0:
+                                if self.is_ancestor_of(self.doc[token_i]):
+                                    continue
+                                if old_head.is_ancestor_of(self.doc[token_i]):
+                                    new_edge = token_i
+                                    break
+                        else: 
+                            new_edge = old_head.i
+                    old_head.c.r_edge = new_edge
+                    for anc in old_head.ancestors:
+                        if anc.c.r_edge >= new_edge:
+                            break
+                        anc.c.r_edge = new_edge
+
+            # update number of deps of new head
+            if rel_newhead_i > 0: # left dependent
+                new_head.c.l_kids += 1
+                # walk up the tree from new head and set l_edge to self.l_edge
+                # until you hit a token with an l_edge further to the left
+                if self.c.l_edge < new_head.c.l_edge:
+                    new_edge = self.c.l_edge
+                    new_head.c.l_edge = new_edge
+                    for anc in new_head.ancestors:
+                        if anc.c.l_edge <= new_edge:
+                            break
+                        anc.c.l_edge = new_edge
+
+            elif rel_newhead_i < 0: # right dependent
+                new_head.c.r_kids += 1
+                # do the same as for l_edge
+                if self.c.r_edge > new_head.c.r_edge:
+                    new_edge = self.c.r_edge
+                    new_head.c.r_edge = new_edge
+                    for anc in new_head.ancestors:
+                        if anc.c.r_edge >= new_edge:
+                            break
+                        anc.c.r_edge = new_edge
+
+            # set new head
+            self.c.head = rel_newhead_i
 
     property conjuncts:
         def __get__(self):
@@ -325,6 +439,8 @@ cdef class Token:
     property dep_:
         def __get__(self):
             return self.vocab.strings[self.c.dep]
+        def __set__(self, unicode label):
+            self.c.dep = self.vocab.strings[label]
 
     property is_oov:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_OOV)
