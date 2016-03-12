@@ -168,7 +168,6 @@ def setup_package():
             packages=PACKAGES,
             package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']},
             description=about['__summary__'],
-            long_description=open(os.path.join(root, 'README.rst')).read(),
             author=about['__author__'],
             author_email=about['__email__'],
             version=about['__version__'],
