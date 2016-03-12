@@ -1,9 +1,9 @@
+.. image:: https://travis-ci.org/spacy-io/spaCy.svg?branch=master
+    :target: https://travis-ci.org/spacy-io/spaCy
+
 ==============================
 spaCy: Industrial-strength NLP
 ==============================
-
-.. image:: https://travis-ci.org/spacy-io/spaCy.svg?branch=master
-    :target: https://travis-ci.org/spacy-io/spaCy
 
 spaCy is a library for advanced natural language processing in Python and Cython.
 
