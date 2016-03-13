@@ -144,9 +144,12 @@ def setup_package():
         return clean(root)
 
     with chdir(root):
-        about = {}
         with open(os.path.join(root, "spacy", "about.py")) as f:
+            about = {}
             exec(f.read(), about)
+
+        with open(os.path.join(root, 'README.rst')) as f:
+            readme = f.read()
 
         include_dirs = [
             get_python_inc(plat_specific=True),
@@ -168,15 +171,24 @@ def setup_package():
             packages=PACKAGES,
             package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']},
             description=about['__summary__'],
+            long_description=readme,
             author=about['__author__'],
             author_email=about['__email__'],
             version=about['__version__'],
             url=about['__uri__'],
             license=about['__license__'],
             ext_modules=ext_modules,
-            install_requires=['numpy', 'murmurhash>=0.26,<0.27', 'cymem>=1.30,<1.32.0', 'preshed>=0.46.1,<0.47',
-                              'thinc>=5.0.0,<5.1.0', 'plac', 'six',
-                              'ujson', 'cloudpickle', 'sputnik>=0.9.2,<0.10.0'],
+            install_requires=[
+                'numpy',
+                'murmurhash>=0.26,<0.27',
+                'cymem>=1.30,<1.32.0',
+                'preshed>=0.46.1,<0.47',
+                'thinc>=5.0.0,<5.1.0',
+                'plac',
+                'six',
+                'ujson',
+                'cloudpickle',
+                'sputnik>=0.9.2,<0.10.0'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',

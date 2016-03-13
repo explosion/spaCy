@@ -28,7 +28,7 @@ Features
 * No pre-processing required. spaCy takes raw text as input, warts and newlines and all.
 
 Top Peformance
--------------
+--------------
 
 * Fastest in the world: <50ms per document.  No faster system has ever been
   announced.
