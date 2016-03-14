@@ -10,5 +10,4 @@ __uri__ = 'https://spacy.io'
 __author__ = 'Matthew Honnibal'
 __email__ = 'matt@spacy.io'
 __license__ = 'MIT'
-__release__ = True
 __default_model__ = 'en>=1.0.0,<1.1.0'

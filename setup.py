@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
 import os
-import shutil
 import subprocess
 import sys
 import contextlib
@@ -26,13 +25,15 @@ PACKAGES = [
     'spacy.tests.morphology',
     'spacy.tests.munge',
     'spacy.tests.parser',
+    'spacy.tests.print',
     'spacy.tests.serialize',
     'spacy.tests.spans',
     'spacy.tests.tagger',
     'spacy.tests.tokenizer',
     'spacy.tests.tokens',
     'spacy.tests.vectors',
-    'spacy.tests.vocab']
+    'spacy.tests.vocab',
+    'spacy.tests.website']
 
 
 MOD_NAMES = [
@@ -144,7 +145,7 @@ def setup_package():
         return clean(root)
 
     with chdir(root):
-        with open(os.path.join(root, "spacy", "about.py")) as f:
+        with open(os.path.join(root, 'spacy', 'about.py')) as f:
             about = {}
             exec(f.read(), about)
 
@@ -198,6 +199,7 @@ def setup_package():
                 'Operating System :: POSIX :: Linux',
                 'Operating System :: MacOS :: MacOS X',
                 'Operating System :: Microsoft :: Windows',
+                'Programming Language :: Cython',
                 'Programming Language :: Python :: 2.6',
                 'Programming Language :: Python :: 2.7',
                 'Programming Language :: Python :: 3.3',
