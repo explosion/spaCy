@@ -285,9 +285,8 @@ cdef class Token:
             # is the new head a descendant of the old head
             cdef bint is_desc = old_head.is_ancestor_of(new_head)
             
-            cdef int token_i
             cdef int new_edge
-            cdef Token anc
+            cdef Token anc, child
 
             # update number of deps of old head
             if self.c.head > 0: # left dependent
@@ -297,23 +296,18 @@ cdef class Token:
                     # may change when the token is reattached
                     # it may not change if the new head is a descendant of the current head
 
-                    # find new l_edge if new head is not a descendant of old head
-                    # a new l_edge is any token between l_edge and old_head
-                    # that is a descendant of old_head but not of self
                     new_edge = self.c.l_edge
+                    # the new l_edge is the left-most l_edge on any of the other dependents
+                    # where the l_edge is left of the head, otherwise it is the head
                     if not is_desc:
-                        for token_i in range(old_head.l_edge+1,old_head.i):
-                            if self.doc.c[token_i].l_kids == 0: # only a token without left deps can be a left edge
-                                if self.is_ancestor_of(self.doc[token_i]):
-                                    continue
-                                if old_head.is_ancestor_of(self.doc[token_i]):
-                                    new_edge = token_i
-                                    break
-                        else: # set the new l_edge to old_head if no other was found
-                            new_edge = old_head.i
+                        new_edge = old_head.i
+                        for child in old_head.children:
+                            if child == self:
+                                continue
+                            if child.c.l_edge < new_edge:
+                                new_edge = child.c.l_edge
+                        old_head.c.l_edge = new_edge
 
-                    # assign new l_edge to old_head
-                    old_head.c.l_edge = new_edge
                     # walk up the tree from old_head and assign new l_edge to ancestors
                     # until an ancestor already has an l_edge that's further left
                     for anc in old_head.ancestors:
@@ -326,17 +320,16 @@ cdef class Token:
                 # do the same thing as for l_edge
                 if self.c.r_edge == old_head.c.r_edge:
                     new_edge = self.c.r_edge
+
                     if not is_desc:
-                        for token_i in range(old_head.r_edge-1,old_head.i,-1):
-                            if self.doc.c[token_i].r_kids == 0:
-                                if self.is_ancestor_of(self.doc[token_i]):
-                                    continue
-                                if old_head.is_ancestor_of(self.doc[token_i]):
-                                    new_edge = token_i
-                                    break
-                        else: 
-                            new_edge = old_head.i
-                    old_head.c.r_edge = new_edge
+                        new_edge = old_head.i
+                        for child in old_head.children:
+                            if child == self:
+                                continue
+                            if child.c.r_edge > new_edge:
+                                new_edge = child.c.r_edge
+                        old_head.c.r_edge = new_edge
+                    
                     for anc in old_head.ancestors:
                         if anc.c.r_edge >= new_edge:
                             break
@@ -348,23 +341,21 @@ cdef class Token:
                 # walk up the tree from new head and set l_edge to self.l_edge
                 # until you hit a token with an l_edge further to the left
                 if self.c.l_edge < new_head.c.l_edge:
-                    new_edge = self.c.l_edge
-                    new_head.c.l_edge = new_edge
+                    new_head.c.l_edge = self.c.l_edge
                     for anc in new_head.ancestors:
-                        if anc.c.l_edge <= new_edge:
+                        if anc.c.l_edge <= self.c.l_edge:
                             break
-                        anc.c.l_edge = new_edge
+                        anc.c.l_edge = self.c.l_edge
 
             elif rel_newhead_i < 0: # right dependent
                 new_head.c.r_kids += 1
                 # do the same as for l_edge
                 if self.c.r_edge > new_head.c.r_edge:
-                    new_edge = self.c.r_edge
-                    new_head.c.r_edge = new_edge
+                    new_head.c.r_edge = self.c.r_edge
                     for anc in new_head.ancestors:
-                        if anc.c.r_edge >= new_edge:
+                        if anc.c.r_edge >= self.c.r_edge:
                             break
-                        anc.c.r_edge = new_edge
+                        anc.c.r_edge = self.c.r_edge
 
             # set new head
             self.c.head = rel_newhead_i
