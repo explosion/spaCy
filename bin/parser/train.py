@@ -14,6 +14,7 @@ import re
 
 import spacy.util
 from spacy.en import English
+from spacy.de import German
 
 from spacy.syntax.util import Config
 from spacy.gold import read_json_file
@@ -25,6 +26,7 @@ from spacy.syntax.arc_eager import ArcEager
 from spacy.syntax.ner import BiluoPushDown
 from spacy.tagger import Tagger
 from spacy.syntax.parser import Parser
+from spacy.syntax.nonproj import PseudoProjectivity
 
 
 def _corrupt(c, noise_level):
@@ -82,7 +84,7 @@ def _merge_sents(sents):
 def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
           seed=0, gold_preproc=False, n_sents=0, corruption_level=0,
           beam_width=1, verbose=False,
-          use_orig_arc_eager=False):
+          use_orig_arc_eager=False, pseudoprojective=False):
     dep_model_dir = path.join(model_dir, 'deps')
     ner_model_dir = path.join(model_dir, 'ner')
     pos_model_dir = path.join(model_dir, 'pos')
@@ -96,9 +98,13 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
     os.mkdir(ner_model_dir)
     os.mkdir(pos_model_dir)
 
+    if pseudoprojective:
+        # preprocess training data here before ArcEager.get_labels() is called
+        gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
+
     Config.write(dep_model_dir, 'config', features=feat_set, seed=seed,
                  labels=ArcEager.get_labels(gold_tuples),
-                 beam_width=beam_width)
+                 beam_width=beam_width,projectivize=pseudoprojective)
     Config.write(ner_model_dir, 'config', features='ner', seed=seed,
                  labels=BiluoPushDown.get_labels(gold_tuples),
                  beam_width=0)
@@ -107,6 +113,8 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
         gold_tuples = gold_tuples[:n_sents]
 
     nlp = Language(data_dir=model_dir, tagger=False, parser=False, entity=False)
+    if nlp.lang == 'de':
+        nlp.vocab.morphology.lemmatizer = lambda string,pos: set([string])
     nlp.tagger = Tagger.blank(nlp.vocab, Tagger.default_templates())
     nlp.parser = Parser.from_dir(dep_model_dir, nlp.vocab.strings, ArcEager)
     nlp.entity = Parser.from_dir(ner_model_dir, nlp.vocab.strings, BiluoPushDown)
@@ -131,12 +139,9 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                     raw_text = add_noise(raw_text, corruption_level)
                     tokens = nlp.tokenizer(raw_text)
                 nlp.tagger(tokens)
-                gold = GoldParse(tokens, annot_tuples, make_projective=True)
+                gold = GoldParse(tokens, annot_tuples)
                 if not gold.is_projective:
-                    raise Exception(
-                        "Non-projective sentence in training, after we should "
-                        "have enforced projectivity: %s" % annot_tuples
-                    )
+                    raise Exception("Non-projective sentence in training: %s" % annot_tuples)
                 loss += nlp.parser.train(tokens, gold)
                 nlp.entity.train(tokens, gold)
                 nlp.tagger.train(tokens, gold.tags)
@@ -152,6 +157,8 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
 def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False,
              beam_width=None, cand_preproc=None):
     nlp = Language(data_dir=model_dir)
+    if nlp.lang == 'de':
+        nlp.vocab.morphology.lemmatizer = lambda string,pos: set([string])
     if beam_width is not None:
         nlp.parser.cfg.beam_width = beam_width
     scorer = Scorer()
@@ -200,6 +207,7 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
 
 
 @plac.annotations(
+    language=("The language to train", "positional", None, str, ['en','de']),
     train_loc=("Location of training file or directory"),
     dev_loc=("Location of development file or directory"),
     model_dir=("Location of output model directory",),
@@ -211,19 +219,22 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
     n_iter=("Number of training iterations", "option", "i", int),
     verbose=("Verbose error reporting", "flag", "v", bool),
     debug=("Debug mode", "flag", "d", bool),
+    pseudoprojective=("Use pseudo-projective parsing", "flag", "p", bool),
 )
-def main(train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
-         debug=False, corruption_level=0.0, gold_preproc=False, eval_only=False):
+def main(language, train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
+         debug=False, corruption_level=0.0, gold_preproc=False, eval_only=False, pseudoprojective=False):
+    lang = {'en':English, 'de':German}.get(language)
+
     if not eval_only:
         gold_train = list(read_json_file(train_loc))
-        train(English, gold_train, model_dir,
+        train(lang, gold_train, model_dir,
               feat_set='basic' if not debug else 'debug',
               gold_preproc=gold_preproc, n_sents=n_sents,
               corruption_level=corruption_level, n_iter=n_iter,
-              verbose=verbose)
+              verbose=verbose,pseudoprojective=pseudoprojective)
     if out_loc:
-        write_parses(English, dev_loc, model_dir, out_loc)
-    scorer = evaluate(English, list(read_json_file(dev_loc)),
+        write_parses(lang, dev_loc, model_dir, out_loc)
+    scorer = evaluate(lang, list(read_json_file(dev_loc)),
                       model_dir, gold_preproc=gold_preproc, verbose=verbose)
     print('TOK', scorer.token_acc)
     print('POS', scorer.tags_acc)

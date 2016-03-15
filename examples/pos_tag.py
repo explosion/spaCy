@@ -54,7 +54,7 @@ def represent_word(word):
     # Only do this if the lower-cased form is more probable.
     if text.istitle() \
     and is_sent_begin(word) \
-    and word.prob < word.vocab[text.lower()].prob:
+    and word.prob < word.doc.vocab[text.lower()].prob:
         text = text.lower()
     return text + '|' + word.tag_
 

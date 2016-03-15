@@ -1,7 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
 import os
-import shutil
 import subprocess
 import sys
 import contextlib
@@ -26,13 +25,15 @@ PACKAGES = [
     'spacy.tests.morphology',
     'spacy.tests.munge',
     'spacy.tests.parser',
+    'spacy.tests.print',
     'spacy.tests.serialize',
     'spacy.tests.spans',
     'spacy.tests.tagger',
     'spacy.tests.tokenizer',
     'spacy.tests.tokens',
     'spacy.tests.vectors',
-    'spacy.tests.vocab']
+    'spacy.tests.vocab',
+    'spacy.tests.website']
 
 
 MOD_NAMES = [
@@ -47,6 +48,7 @@ MOD_NAMES = [
     'spacy.syntax._state',
     'spacy.tokenizer',
     'spacy.syntax.parser',
+    'spacy.syntax.nonproj',
     'spacy.syntax.transition_system',
     'spacy.syntax.arc_eager',
     'spacy.syntax._parse_features',
@@ -143,9 +145,12 @@ def setup_package():
         return clean(root)
 
     with chdir(root):
-        about = {}
-        with open(os.path.join(root, "spacy", "about.py")) as f:
+        with open(os.path.join(root, 'spacy', 'about.py')) as f:
+            about = {}
             exec(f.read(), about)
+
+        with open(os.path.join(root, 'README.rst')) as f:
+            readme = f.read()
 
         include_dirs = [
             get_python_inc(plat_specific=True),
@@ -162,20 +167,45 @@ def setup_package():
             generate_cython(root, 'spacy')
 
         setup(
-            name=about['__name__'],
+            name=about['__title__'],
             zip_safe=False,
             packages=PACKAGES,
             package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']},
             description=about['__summary__'],
+            long_description=readme,
             author=about['__author__'],
             author_email=about['__email__'],
             version=about['__version__'],
             url=about['__uri__'],
             license=about['__license__'],
             ext_modules=ext_modules,
-            install_requires=['numpy', 'murmurhash>=0.26,<0.27', 'cymem>=1.30,<1.32.0', 'preshed>=0.46.1,<0.47',
-                              'thinc>=5.0.0,<5.1.0', 'text_unidecode', 'plac', 'six',
-                              'ujson', 'cloudpickle', 'sputnik>=0.8.0,<0.9.0'],
+            install_requires=[
+                'numpy',
+                'murmurhash>=0.26,<0.27',
+                'cymem>=1.30,<1.32.0',
+                'preshed>=0.46.1,<0.47',
+                'thinc>=5.0.0,<5.1.0',
+                'plac',
+                'six',
+                'ujson',
+                'cloudpickle',
+                'sputnik>=0.9.2,<0.10.0'],
+            classifiers=[
+                'Development Status :: 5 - Production/Stable',
+                'Environment :: Console',
+                'Intended Audience :: Developers',
+                'Intended Audience :: Science/Research',
+                'License :: OSI Approved :: MIT License',
+                'Operating System :: POSIX :: Linux',
+                'Operating System :: MacOS :: MacOS X',
+                'Operating System :: Microsoft :: Windows',
+                'Programming Language :: Cython',
+                'Programming Language :: Python :: 2.6',
+                'Programming Language :: Python :: 2.7',
+                'Programming Language :: Python :: 3.3',
+                'Programming Language :: Python :: 3.4',
+                'Programming Language :: Python :: 3.5',
+                'Topic :: Scientific/Engineering'],
             cmdclass = {
                 'build_ext': build_ext_subclass},
         )

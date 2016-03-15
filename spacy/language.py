@@ -153,7 +153,7 @@ class Language(object):
         return {0: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True}}
 
     @classmethod
-    def default_vocab(cls, package, get_lex_attr=None):
+    def default_vocab(cls, package, get_lex_attr=None, vectors_package=None):
         if get_lex_attr is None:
             if package.has_file('vocab', 'oov_prob'):
                 with package.open(('vocab', 'oov_prob')) as file_:
@@ -162,7 +162,8 @@ class Language(object):
             else:
                 get_lex_attr = cls.default_lex_attrs()
         if hasattr(package, 'dir_path'):
-            return Vocab.from_package(package, get_lex_attr=get_lex_attr)
+            return Vocab.from_package(package, get_lex_attr=get_lex_attr,
+                vectors_package=vectors_package)
         else:
             return Vocab.load(package, get_lex_attr)
 
@@ -198,7 +199,8 @@ class Language(object):
         matcher=None,
         serializer=None,
         load_vectors=True,
-        package=None):
+        package=None,
+        vectors_package=None):
         """
            a model can be specified:
 
@@ -228,7 +230,7 @@ class Language(object):
             warn("load_vectors is deprecated", DeprecationWarning)
 
         if vocab in (None, True):
-            vocab = self.default_vocab(package)
+            vocab = self.default_vocab(package, vectors_package=vectors_package)
         self.vocab = vocab
         if tokenizer in (None, True):
             tokenizer = Tokenizer.from_package(package, self.vocab)

@@ -43,6 +43,11 @@ def test_symbols(en_vocab):
     assert en_vocab.strings['LEMMA'] == LEMMA
     assert en_vocab.strings['ORTH'] == ORTH
     assert en_vocab.strings['PROB'] == PROB
+
+
+def test_contains(en_vocab):
+    assert 'Hello' in en_vocab
+    assert 'LKsdjvlsakdvlaksdvlkasjdvljasdlkfvm' not in en_vocab
     
 
 @pytest.mark.xfail

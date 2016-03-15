@@ -1,6 +1,7 @@
-[![Travis CI status](https://travis-ci.org/spacy-io/spaCy.svg?branch=master)](https://travis-ci.org/spacy-io/spaCy)
+.. image:: https://travis-ci.org/spacy-io/spaCy.svg?branch=master
+    :target: https://travis-ci.org/spacy-io/spaCy
 
-
+==============================
 spaCy: Industrial-strength NLP
 ==============================
 
@@ -27,7 +28,7 @@ Features
 * No pre-processing required. spaCy takes raw text as input, warts and newlines and all.
 
 Top Peformance
--------------
+--------------
 
 * Fastest in the world: <50ms per document.  No faster system has ever been
   announced.
@@ -38,14 +39,11 @@ Top Peformance
 Supports
 --------
 
-* CPython 2.7
-* CPython 3.4
-* CPython 3.5
+* CPython 2.6, 2.7, 3.3, 3.4, 3.5 (only 64 bit)
 * OSX
 * Linux
 * Windows (Cygwin, MinGW, Visual Studio)
 
 Difficult to support:
 
-* PyPy 2.7
-* PyPy 3.4
+* PyPy

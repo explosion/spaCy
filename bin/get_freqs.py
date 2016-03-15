@@ -8,7 +8,6 @@ from os import path
 import os
 import bz2
 import ujson
-import codecs
 from preshed.counter import PreshCounter
 from joblib import Parallel, delayed
 import io
@@ -37,7 +36,7 @@ def count_freqs(input_loc, output_loc):
         doc = tokenizer(json_comment['body'])
         doc.count_by(ORTH, counts=counts)
 
-    with codecs.open(output_loc, 'w', 'utf8') as file_:
+    with io.open(output_loc, 'w', 'utf8') as file_:
         for orth, freq in counts:
             string = tokenizer.vocab.strings[orth]
             if not string.isspace():

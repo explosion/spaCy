@@ -118,7 +118,7 @@ mixin WritePage(Site, Author, Page)
             nav(role="navigation")
                 li(class={active: Page.active.home}): a(href="/") Home
                 li(class={active: Page.active.docs}): a(href="/docs") Docs
-                li: a(href="https://api.spacy.io/displacy", target="_blank") Demo
+                li: a(href="https://displacy.spacy.io/displacy", target="_blank") Demo
                 li(class={active: Page.active.blog}): a(href="/blog") Blog
             main#content
                 block

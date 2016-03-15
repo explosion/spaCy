@@ -60,7 +60,7 @@ mixin Option(name, open)
       | compile a local Python install.  Run:
 
     pre.language-bash: code
-      | $ curl https://raw.githubusercontent.com/honnibal/spaCy/master/bootstrap_python_env.sh | bash && source .env/bin/activate
+      | $ curl https://gist.githubusercontent.com/henningpeters/e0c89c0d640b575ce0fb/raw/63c5b8def46629359465816902181d5708dd582b/bootstrap_python_env.sh | bash && source .env/bin/activate
 
 
 +Option("Compile from source", false)
@@ -79,12 +79,11 @@ mixin Option(name, open)
     | $ git clone https://github.com/honnibal/spaCy.git
     | $ cd spaCy
     | $ virtualenv .env && source .env/bin/activate
-    | $ export PYTHONPATH=`pwd`
     | $ pip install -r requirements.txt
-    | $ python setup.py build_ext --inplace
+    | $ pip install -e .
     | $ python -m spacy.en.download
     | $ pip install pytest
-    | $ py.test spacy/tests/
+    | $ python -m pytest spacy
 
   p
     | Python packaging is awkward at the best of times, and it's particularly tricky

@@ -29,20 +29,20 @@ def migrate(path):
 )
 def main(data_size='all', force=False):
     if force:
-        sputnik.purge(about.__name__, about.__version__)
+        sputnik.purge(about.__title__, about.__version__)
 
     try:
-        sputnik.package(about.__name__, about.__version__, about.__default_model__)
+        sputnik.package(about.__title__, about.__version__, about.__default_model__)
         print("Model already installed. Please run 'python -m "
               "spacy.en.download --force' to reinstall.", file=sys.stderr)
         sys.exit(1)
     except (PackageNotFoundException, CompatiblePackageNotFoundException):
         pass
 
-    package = sputnik.install(about.__name__, about.__version__, about.__default_model__)
+    package = sputnik.install(about.__title__, about.__version__, about.__default_model__)
 
     try:
-        sputnik.package(about.__name__, about.__version__, about.__default_model__)
+        sputnik.package(about.__title__, about.__version__, about.__default_model__)
     except (PackageNotFoundException, CompatiblePackageNotFoundException):
         print("Model failed to install. Please run 'python -m "
               "spacy.en.download --force'.", file=sys.stderr)

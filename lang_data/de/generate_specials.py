@@ -1,5 +1,7 @@
 # coding=utf8
 import json
+import io
+import itertools
 
 contractions = {}
 
@@ -262,13 +264,29 @@ def get_token_properties(token, capitalize=False, remove_contractions=False):
     props["F"] = token
     return props
 
+
 def create_entry(token, endings, capitalize=False, remove_contractions=False):
-    
     properties = []
     properties.append(get_token_properties(token, capitalize=capitalize, remove_contractions=remove_contractions))
     for e in endings:
         properties.append(get_token_properties(e, remove_contractions=remove_contractions))
     return properties
+
+
+FIELDNAMES = ['F','L','pos']
+def read_hardcoded(stream):
+    hc_specials = {}
+    for line in stream:
+        line = line.strip()
+        if line.startswith('#') or not line:
+            continue
+        key,_,rest = line.partition('\t')
+        values = []
+        for annotation in zip(*[ e.split('|') for e in rest.split('\t') ]):
+            values.append({ k:v for k,v in itertools.izip_longest(FIELDNAMES,annotation) if v })
+        hc_specials[key] = values
+    return hc_specials
+
 
 def generate_specials():
 
@@ -303,7 +321,10 @@ def generate_specials():
                 specials[special] = create_entry(token, endings, capitalize=True, remove_contractions=True)
 
     # add in hardcoded specials
-    specials = dict(specials, **hardcoded_specials)
+    # changed it so it generates them from a file
+    with io.open('abbrev.de.tab','r',encoding='utf8') as abbrev_:
+        hc_specials = read_hardcoded(abbrev_)
+    specials = dict(specials, **hc_specials)
 
     return specials
 
