@@ -27,7 +27,7 @@ from . import symbols
 from cymem.cymem cimport Address
 from . import util
 from .serialize.packer cimport Packer
-from .attrs cimport PROB
+from .attrs cimport PROB, LANG
 
 try:
     import copy_reg
@@ -104,6 +104,13 @@ cdef class Vocab:
                 freqs = []
                 self._serializer = Packer(self, self.serializer_freqs)
             return self._serializer
+
+    property lang:
+        def __get__(self):
+            langfunc = None
+            if self.get_lex_attr:
+                langfunc = self.get_lex_attr.get(LANG,None)
+            return langfunc('_') if langfunc else ''
 
     def __len__(self):
         """The current number of lexemes stored."""

@@ -63,8 +63,7 @@ MOD_NAMES = [
     'spacy.matcher',
     'spacy.syntax.ner',
     'spacy.symbols',
-    'spacy.en.iterators',
-    'spacy.de.iterators']
+    'spacy.syntax.iterators']
 
 
 # By subclassing build_extensions we have the actual compiler that will be used

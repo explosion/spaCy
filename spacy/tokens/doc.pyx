@@ -81,6 +81,7 @@ cdef class Doc:
         self.is_parsed = False
         self._py_tokens = []
         self._vector = None
+        self.noun_chunks_iterator = DocIterator(self)
 
     def __getitem__(self, object i):
         """Get a Token or a Span from the Doc.
@@ -231,36 +232,22 @@ cdef class Doc:
                     # Set start as B
                     self.c[start].ent_iob = 3
 
-    @property
-    def noun_chunks(self):
-        """Yield spans for base noun phrases."""
-        if not self.is_parsed:
-            raise ValueError(
-                "noun_chunks requires the dependency parse, which "
-                "requires data to be installed. If you haven't done so, run: "
-                "\npython -m spacy.en.download all\n"
-                "to install the data")
 
-        from spacy.en.iterators import noun_chunks as en_noun_chunks
-        from spacy.de.iterators import noun_chunks as de_noun_chunks
+    property noun_chunks:
+        def __get__(self):
+            """Yield spans for base noun phrases."""
+            if not self.is_parsed:
+                raise ValueError(
+                    "noun_chunks requires the dependency parse, which "
+                    "requires data to be installed. If you haven't done so, run: "
+                    "\npython -m spacy.en.download all\n"
+                    "to install the data")
 
-        chunk_rules = {'en':en_noun_chunks, 
-                       'de':de_noun_chunks,
-                       }
+            yield from self.noun_chunks_iterator
 
-        for sent in self.sents:
-            print(sent)
-            lang = sent.root.lang_
-            chunker = chunk_rules.get(lang,None)
-            if chunker == None:
-                warnings.warn("noun_chunks is not available for language %s." % lang)
-                print(sent.root.orth_)
-                continue
+        def __set__(self, DocIterator):            
+            self.noun_chunks_iterator = DocIterator(self)
 
-            for chunk in chunker(sent):
-                yield chunk
-
-        
 
     @property
     def sents(self):
