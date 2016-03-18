@@ -129,7 +129,7 @@ def _read_freqs(loc, max_length=100, min_doc_freq=0, min_freq=200):
             word = key
             smooth_count = counts.smoother(int(freq))
             log_smooth_count = math.log(smooth_count)
-            probs[word] = math.log(smooth_count) - log_total
+            probs[word] = log_smooth_count - log_total
     oov_prob = math.log(counts.smoother(0)) - log_total
     return probs, oov_prob
 
