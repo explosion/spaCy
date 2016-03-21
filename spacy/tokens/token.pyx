@@ -179,23 +179,11 @@ cdef class Token:
 
     property n_lefts:
         def __get__(self):
-            cdef int n = 0
-            cdef const TokenC* ptr = self.c - self.i
-            while ptr != self.c:
-                if ptr + ptr.head == self.c:
-                    n += 1
-                ptr += 1
-            return n
+            return self.c.l_kids
 
     property n_rights:
         def __get__(self):
-            cdef int n = 0
-            cdef const TokenC* ptr = self.c + (self.array_len - self.i)
-            while ptr != self.c:
-                if ptr + ptr.head == self.c:
-                    n += 1
-                ptr -= 1
-            return n
+            return self.c.r_kids
 
     property lefts:
         def __get__(self):
