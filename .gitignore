@@ -96,5 +96,8 @@ setup.py
 # Windows local helper files
 *.bat
 
+# Mac OS X
+*.DS_Store
+
 # Komodo project files
 *.komodoproject
