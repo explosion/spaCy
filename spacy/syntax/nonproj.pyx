@@ -118,15 +118,18 @@ class PseudoProjectivity:
         # reattach arcs with decorated labels (following HEAD scheme)
         # for each decorated arc X||Y, search top-down, left-to-right,
         # breadth-first until hitting a Y then make this the new head
-        parse = tokens.to_array([HEAD, DEP])
-        labels = [ tokens.vocab.strings[int(p[1])] for p in parse ]
+        #parse = tokens.to_array([HEAD, DEP])
         for token in tokens:
             if cls.is_decorated(token.dep_):
                 newlabel,headlabel = cls.decompose(token.dep_)
                 newhead = cls._find_new_head(token,headlabel)
-                parse[token.i,1] = tokens.vocab.strings[newlabel]
-                parse[token.i,0] = newhead.i - token.i
-        tokens.from_array([HEAD, DEP],parse)
+                token.head = newhead
+                token.dep_ = newlabel
+
+                # tokens.attach(token,newhead,newlabel)
+                #parse[token.i,1] = tokens.vocab.strings[newlabel]
+                #parse[token.i,0] = newhead.i - token.i
+        #tokens.from_array([HEAD, DEP],parse)
 
 
     @classmethod
@@ -168,7 +171,7 @@ class PseudoProjectivity:
 
     @classmethod
     def _find_new_head(cls, token, headlabel):
-        # search through the tree starting from root
+        # search through the tree starting from the head of the given token
         # returns the id of the first descendant with the given label
         # if there is none, return the current head (no change)
         queue = [token.head]
@@ -176,8 +179,8 @@ class PseudoProjectivity:
             next_queue = []
             for qtoken in queue:
                 for child in qtoken.children:
-                    if child == token:
-                        continue
+                    if child.is_space: continue                        
+                    if child == token: continue
                     if child.dep_ == headlabel:
                         return child
                     next_queue.append(child)

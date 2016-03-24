@@ -6,7 +6,7 @@ from .doc cimport Doc
 
 cdef class Token:
     cdef Vocab vocab
-    cdef const TokenC* c
+    cdef TokenC* c
     cdef readonly int i
     cdef int array_len
     cdef readonly Doc doc
