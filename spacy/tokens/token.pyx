@@ -163,8 +163,8 @@ cdef class Token:
                 raise ValueError(
                     "Word vectors set to length 0. This may be because the "
                     "data is not installed. If you haven't already, run"
-                    "\npython -m spacy.en.download all\n"
-                    "to install the data."
+                    "\npython -m spacy.%s.download all\n"
+                    "to install the data." % self.vocab.lang
                 )
             vector_view = <float[:length,]>self.c.lex.vector
             return numpy.asarray(vector_view)
