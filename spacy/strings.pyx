@@ -116,7 +116,9 @@ cdef class StringStore:
         else:
             raise TypeError(type(string_or_id))
 
-    def __contains__(self, unicode string):
+    def __contains__(self, unicode string not None):
+        if len(string) == 0:
+            return True
         cdef hash_t key = hash_string(string)
         return self._map.get(key) is not NULL
 
