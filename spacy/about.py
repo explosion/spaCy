@@ -10,4 +10,16 @@ __uri__ = 'https://spacy.io'
 __author__ = 'Matthew Honnibal'
 __email__ = 'matt@spacy.io'
 __license__ = 'MIT'
-__default_model__ = 'en>=1.0.0,<1.1.0'
+__models__ = {
+    'en': {
+        'module': 'en',
+        'class': 'English',
+        'package': 'en>=1.0.0,<1.1.0',
+    },
+    'de': {
+        'module': 'de',
+        'class': 'German',
+        'package': 'de>=1.0.0,<1.1.0',
+    },
+}
+__default_model__ = 'en'

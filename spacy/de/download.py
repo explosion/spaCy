@@ -6,7 +6,7 @@ from ..download import download
     force=("Force overwrite", "flag", "f", bool),
 )
 def main(data_size='all', force=False):
-    download('en', force)
+    download('de', force)
 
 
 if __name__ == '__main__':
