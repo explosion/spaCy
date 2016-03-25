@@ -2,7 +2,6 @@ from . import util
 
 from .en import English
 from .de import German
-from . import util
 
 
 util.register_lang(English.lang, English)
