@@ -17,12 +17,12 @@ from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 LANGUAGES = {}
 
 
-def register_lang(name, cls):
+def set_lang_class(name, cls):
     global LANGUAGES
     LANGUAGES[name] = cls
 
 
-def get_lang(name):
+def get_lang_class(name):
     lang = re.split('[^a-zA-Z0-9_]', name, 1)[0]
     if lang not in LANGUAGES:
         raise RuntimeError('Language not supported: %s' % lang)
@@ -37,7 +37,7 @@ def get_package(data_dir):
 
 def get_package_by_name(name=None, via=None):
     package_name = name or about.__models__[about.__default_lang__]
-    lang = get_lang(package_name)
+    lang = get_lang_class(package_name)
     try:
         return sputnik.package(about.__title__, about.__version__,
             package_name, data_path=via)
