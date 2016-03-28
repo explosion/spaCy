@@ -9,7 +9,7 @@ from .transition_system cimport do_func_t, get_cost_func_t
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse
 from ..gold cimport GoldParseC
-from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
+from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE, IS_SPACE
 from ..lexeme cimport Lexeme
 
 from libc.stdint cimport uint32_t
@@ -166,7 +166,7 @@ cdef class Reduce:
 cdef class LeftArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, int label) nogil:
-        return not st.B_(0).sent_start
+        return not st.B_(0).sent_start and not Lexeme.c_check_flag(st.B_(0).lex,IS_SPACE)
 
     @staticmethod
     cdef int transition(StateC* st, int label) nogil:
@@ -199,7 +199,7 @@ cdef class LeftArc:
 cdef class RightArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, int label) nogil:
-        return not st.B_(0).sent_start
+        return not st.B_(0).sent_start and not Lexeme.c_check_flag(st.S_(0).lex,IS_SPACE)
 
     @staticmethod
     cdef int transition(StateC* st, int label) nogil:
