@@ -166,7 +166,7 @@ cdef class Doc:
 
     @property
     def text(self):
-        return u' '.join(t.text for t in self)
+        return u''.join(t.text for t in self)
 
     property ents:
         def __get__(self):
