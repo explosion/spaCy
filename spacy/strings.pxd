@@ -24,3 +24,4 @@ cdef class StringStore:
     cdef int64_t _resize_at
 
     cdef const Utf8Str* intern(self, unicode py_string) except NULL
+    cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length) except NULL
