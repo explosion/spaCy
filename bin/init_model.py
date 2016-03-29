@@ -98,7 +98,7 @@ def _read_probs(loc):
     return probs, probs['-OOV-']
 
 
-def _read_freqs(loc, max_length=100, min_doc_freq=0, min_freq=200):
+def _read_freqs(loc, max_length=100, min_doc_freq=5, min_freq=200):
     if not loc.exists():
         print("Warning: Frequencies file not found")
         return {}, 0.0
@@ -109,7 +109,7 @@ def _read_freqs(loc, max_length=100, min_doc_freq=0, min_freq=200):
     else:
         file_ = loc.open()
     for i, line in enumerate(file_):
-        freq, doc_freq, key = line.split('\t', 2)
+        freq, doc_freq, key = line.rstrip().split('\t', 2)
         freq = int(freq)
         counts.inc(i+1, freq)
         total += freq
@@ -121,15 +121,13 @@ def _read_freqs(loc, max_length=100, min_doc_freq=0, min_freq=200):
         file_ = loc.open()
     probs = {}
     for line in file_:
-        freq, doc_freq, key = line.split('\t', 2)
+        freq, doc_freq, key = line.rstrip().split('\t', 2)
         doc_freq = int(doc_freq)
         freq = int(freq)
         if doc_freq >= min_doc_freq and freq >= min_freq and len(key) < max_length:
-#            word = literal_eval(key)
-            word = key
+            word = literal_eval(key)
             smooth_count = counts.smoother(int(freq))
-            log_smooth_count = math.log(smooth_count)
-            probs[word] = log_smooth_count - log_total
+            probs[word] = math.log(smooth_count) - log_total
     oov_prob = math.log(counts.smoother(0)) - log_total
     return probs, oov_prob
 
@@ -166,7 +164,7 @@ def setup_vocab(get_lex_attr, tag_map, src_dir, dst_dir):
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs, oov_prob = _read_probs(src_dir / 'words.sgt.prob')
     if not probs:
-        probs, oov_prob = _read_freqs(src_dir / 'freqs.txt')
+        probs, oov_prob = _read_freqs(src_dir / 'freqs.txt.gz')
     if not probs:
         oov_prob = -20
     else:
