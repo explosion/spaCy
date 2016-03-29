@@ -32,3 +32,9 @@ def test_email(en_tokenizer):
     assert len(tokens) == 1
 
 
+def test_double_hyphen(en_tokenizer):
+    tokens = en_tokenizer(u'No decent--let alone well-bred--people.')
+    assert tokens[0].text == u'No'
+    assert tokens[1].text == u'decent'
+    assert tokens[2].text == u'--'
+    assert tokens[3].text == u'let'
