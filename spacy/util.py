@@ -14,6 +14,21 @@ from . import about
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 
+LANGUAGES = {}
+
+
+def set_lang_class(name, cls):
+    global LANGUAGES
+    LANGUAGES[name] = cls
+
+
+def get_lang_class(name):
+    lang = re.split('[^a-zA-Z0-9_]', name, 1)[0]
+    if lang not in LANGUAGES:
+        raise RuntimeError('Language not supported: %s' % lang)
+    return LANGUAGES[lang]
+
+
 def get_package(data_dir):
     if not isinstance(data_dir, six.string_types):
         raise RuntimeError('data_dir must be a string')
@@ -21,17 +36,20 @@ def get_package(data_dir):
 
 
 def get_package_by_name(name=None, via=None):
+    package_name = name or about.__models__[about.__default_lang__]
+    lang = get_lang_class(package_name)
     try:
         return sputnik.package(about.__title__, about.__version__,
-                               name or about.__default_model__, data_path=via)
+            package_name, data_path=via)
     except PackageNotFoundException as e:
-        raise RuntimeError("Model %s not installed. Please run 'python -m "
-                           "spacy.en.download' to install latest compatible "
-                           "model." % name)
+        raise RuntimeError("Model '%s' not installed. Please run 'python -m "
+                           "%s.download' to install latest compatible "
+                           "model." % (name, lang.__module__))
     except CompatiblePackageNotFoundException as e:
         raise RuntimeError("Installed model is not compatible with spaCy "
-                           "version. Please run 'python -m spacy.en.download "
-                           "--force' to install latest compatible model.")
+                           "version. Please run 'python -m %s.download "
+                           "--force' to install latest compatible model." %
+                           (lang.__module__))
 
 
 def normalize_slice(length, start, stop, step=None):

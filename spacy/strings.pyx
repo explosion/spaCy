@@ -1,30 +1,25 @@
-from __future__ import unicode_literals
-import codecs
+from __future__ import unicode_literals, absolute_import
 
+cimport cython
 from libc.string cimport memcpy
+from libc.stdint cimport uint64_t
+
 from murmurhash.mrmr cimport hash64
 
 from preshed.maps cimport map_iter, key_t
 
-from cpython cimport PyUnicode_AS_DATA
-from cpython cimport PyUnicode_GET_DATA_SIZE
-
-from libc.stdint cimport int64_t
-
-
-from .typedefs cimport hash_t, attr_t
-
-try:
-    import codecs as io
-except ImportError:
-    import io
+from .typedefs cimport hash_t
 
 import ujson as json
 
 
 cpdef hash_t hash_string(unicode string) except 0:
     chars = string.encode('utf8')
-    return hash64(<char*>chars, len(chars), 1)
+    return _hash_utf8(chars, len(chars))
+
+
+cdef hash_t _hash_utf8(char* utf8_string, int length):
+    return hash64(utf8_string, length, 1)
 
 
 cdef unicode _decode(const Utf8Str* string):
@@ -92,45 +87,45 @@ cdef class StringStore:
 
     def __getitem__(self, object string_or_id):
         cdef bytes byte_string
-        cdef unicode py_string
         cdef const Utf8Str* utf8str
+        cdef unsigned int int_id
 
-        cdef int id_
-        if isinstance(string_or_id, int) or isinstance(string_or_id, long):
-            if string_or_id == 0:
-                return u''
-            elif string_or_id < 1 or string_or_id >= self.size:
+        if isinstance(string_or_id, (int, long)):
+            try:
+                int_id = string_or_id
+            except OverflowError:
                 raise IndexError(string_or_id)
-            utf8str = &self.c[<int>string_or_id]
+            if int_id == 0:
+                return u''
+            elif int_id >= <uint64_t>self.size:
+                raise IndexError(string_or_id)
+            utf8str = &self.c[int_id]
             return _decode(utf8str)
         elif isinstance(string_or_id, bytes):
-            if len(string_or_id) == 0:
+            byte_string = <bytes>string_or_id
+            if len(byte_string) == 0:
                 return 0
-            py_string = string_or_id.decode('utf8')
-            utf8str = self.intern(py_string)
+            utf8str = self._intern_utf8(byte_string, len(byte_string))
             return utf8str - self.c
         elif isinstance(string_or_id, unicode):
-            if len(string_or_id) == 0:
+            if len(<unicode>string_or_id) == 0:
                 return 0
-            py_string = string_or_id
-            utf8str = self.intern(py_string)
+            byte_string = (<unicode>string_or_id).encode('utf8')
+            utf8str = self._intern_utf8(byte_string, len(byte_string))
             return utf8str - self.c
         else:
             raise TypeError(type(string_or_id))
 
-    def __contains__(self, unicode string):
+    def __contains__(self, unicode string not None):
+        if len(string) == 0:
+            return True
         cdef hash_t key = hash_string(string)
-        value = <Utf8Str*>self._map.get(key)
-        return True if value is not NULL else False
+        return self._map.get(key) is not NULL
 
     def __iter__(self):
         cdef int i
         for i in range(self.size):
-            if i == 0:
-                yield u''
-            else:
-                utf8str = &self.c[i]
-                yield _decode(utf8str)
+            yield _decode(&self.c[i]) if i > 0 else u''
 
     def __reduce__(self):
         strings = [""]
@@ -142,21 +137,26 @@ cdef class StringStore:
 
     cdef const Utf8Str* intern(self, unicode py_string) except NULL:
         # 0 means missing, but we don't bother offsetting the index.
-        cdef hash_t key = hash_string(py_string)
+        cdef bytes byte_string = py_string.encode('utf8')
+        return self._intern_utf8(byte_string, len(byte_string))
+
+    @cython.final
+    cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length) except NULL:
+        # 0 means missing, but we don't bother offsetting the index.
+        cdef hash_t key = _hash_utf8(utf8_string, length)
         value = <Utf8Str*>self._map.get(key)
-        if value != NULL:
+        if value is not NULL:
             return value
 
         if self.size == self._resize_at:
             self._realloc()
-        cdef bytes byte_string = py_string.encode('utf8')
-        self.c[self.size] = _allocate(self.mem, <unsigned char*>byte_string, len(byte_string))
+        self.c[self.size] = _allocate(self.mem, <unsigned char*>utf8_string, length)
         self._map.set(key, <void*>&self.c[self.size])
         self.size += 1
         return &self.c[self.size-1]
 
     def dump(self, file_):
-        string_data = json.dumps([s for s in self])
+        string_data = json.dumps(list(self))
         if not isinstance(string_data, unicode):
             string_data = string_data.decode('utf8')
         file_.write(string_data)
@@ -166,8 +166,10 @@ cdef class StringStore:
         if strings == ['']:
             return None
         cdef unicode string
-        for string in strings: 
-            if string:
+        for string in strings:
+            # explicit None/len check instead of simple truth testing
+            # (bug in Cython <= 0.23.4)
+            if string is not None and len(string):
                 self.intern(string)
 
     def _realloc(self):

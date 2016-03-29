@@ -25,7 +25,6 @@ from . import attrs
 from . import symbols
 
 from cymem.cymem cimport Address
-from . import util
 from .serialize.packer cimport Packer
 from .attrs cimport PROB
 
