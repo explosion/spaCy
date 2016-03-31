@@ -1,0 +1,30 @@
+include _includes/_mixins
+
+//- ----------------------------------------------------------------------------
+//-  Blog Feed
+//- ----------------------------------------------------------------------------
+
+doctype xml
+rss(version='2.0', xmlns:atom='http://www.w3.org/2005/Atom')
+    channel
+        title= title
+        link= url
+        description= description
+        atom:link(href='#{ url }/feed.xml', rel='self', type='application/rss+xml')
+        for post, slug in public.blog._data
+            if post.published != false
+                item
+                title=post.title
+                description 
+                    | <![CDATA[ 
+                    if post.image
+                        p: img(src=url + '/blog/img/' + post.image.file)
+
+                    !=partial('blog/' + slug)
+                    | ]]>
+
+                if post.date
+                    pubDate=convertPubDate(post.date)
+
+                link #{ url }/blog/#{ slug }
+                guid(isPermaLink='true') #{ url }/blog/#{ slug }

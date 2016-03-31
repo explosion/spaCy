@@ -1,0 +1,60 @@
+//  Links - Variables
+// ============================================================================
+
+$link-border            : 1px solid currentColor
+$link-color             : color($theme)
+$link-icon-color        : color(grey, dark)
+$link-icon-color-hidden : color(grey)
+$link-icon-size         : 2rem
+$link-list-padding      : 0.5em
+$link-transition        : $transition
+
+
+//  Links - Style
+// ============================================================================
+
+.link
+    color: $link-color
+    transition: $link-transition
+
+.link-strong
+    @extend .link
+    border-bottom: $link-border
+
+p a,
+.table-cell a,
+.list-item a,
+.aside a
+    @extend .link-strong
+
+
+//  Permalinks
+//  :before        - indicate permalink with icon
+//  :hover:before  - hover effect on permalink indicator
+//  :active:before - different styling of active permalink indicator
+
+.permalink
+    @include icon(permalink, $link-icon-color-hidden, 0 $link-icon-size 0 0, $link-icon-size)
+    position: relative
+
+    &:before
+        @include position(absolute, top, left, calc(50% - #{$link-icon-size / 2}), (-$link-icon-size * 1.5))
+        transition: $link-transition
+        width: $link-icon-size
+
+    &:hover:before
+        color: $link-icon-color
+
+    &:active:before
+        color: $link-color
+
+
+// List of links, like social profiles
+
+.link-list
+    @extend .text-label
+    font-weight: 600
+
+    & > *
+        display: inline-block
+        padding: $link-list-padding

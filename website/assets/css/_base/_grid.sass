@@ -1,0 +1,131 @@
+//  Grid - Variables
+// ============================================================================
+
+$grid-cols      : $columns
+$grid-padding   : 2.25rem
+$grid-margin    : 1rem
+
+
+//  Grid - Style
+// ============================================================================
+
+// Blocks
+
+p,
+.block
+    @extend .has-aside
+    margin-bottom: 5rem
+
+.no-block.no-block
+    margin-bottom: 0
+
+
+// Responsive containers
+
+.responsive-container
+    max-width: 100%
+    overflow: auto
+    width: 100%
+
+
+//  Flexbox grid container
+//  .grid--wrap          - wraps chrildren if bigger than the container
+//  .grid--space-between - aligns children horizontally, adds space between them
+//  .grid--space-around  - aligns children horizontally, adds space around them
+//  .grid--align-center  - aligns children horizonally and centered
+//  .grid--align-right   - aligns children horizontally on the right
+//  .grid--valign-bottom - aligns children vertically at the bottom
+//  .grid-padding        - adds padding to children
+//  .grid--margin-right  - adds right margin to children
+//  .grid--margin-left   - adds left margin to children
+//  .grid--block         - extends block style
+
+.grid,
+.grid-col    
+    align-items: flex-start
+    display: flex
+    flex-wrap: wrap
+
+    &.grid--nowrap,
+    &.grid-col--nowrap
+        flex-wrap: nowrap
+
+    &.grid--space-between,
+    &.grid-col--space-between
+        justify-content: space-between
+
+    &.grid--space-around,
+    &.grid-col--space-around
+        justify-content: space-around
+
+    &.grid--align-center,
+    &.grid-col--align-center
+        justify-content: center
+
+    &.grid--align-right,
+    &.grid-col--align-right
+        justify-content: flex-end
+
+    &.grid--valign-center,
+    &.grid-col--valign-center
+        align-items: center
+
+    &.grid--valign-bottom,
+    &.grid-col--valign-bottom
+        align-items: flex-end
+
+    &.grid--valign-space-between,
+    &.grid-col--valign-space-between
+        align-items: space-between
+
+    &.grid--text-center,
+    &.grid-col--text-center
+        text-align: center
+
+    &.grid--block,
+    &.grid-col--block
+        @extend .block
+
+
+.grid    
+    &--padding > *
+        padding: $grid-padding
+
+    &--margin-right > *
+        margin-right: $grid-margin
+
+    &--margin-left > *
+        margin-left: $grid-margin
+
+
+.grid-col
+    overflow: hidden
+
+    & > *
+        flex-shrink: 1
+        max-width: 100%
+
+
+//  Responsive grid elements
+//  adapted from Gridly, https://github.com/IonicaBizau/gridly
+
+@media (min-width: #{$screen-size-medium})
+    .grid
+        flex-direction: row
+        align-items: stretch
+
+    .grid-col
+        display: flex
+        flex: 0 0 100%
+        flex-direction: column
+
+        @each $grid-mode, $grid-percentage in $grid-cols
+            &--#{$grid-mode}
+                flex: 0 0 $grid-percentage
+                max-width: $grid-percentage
+
+
+@media(max-width: #{$screen-size-medium})
+    .grid-col.grid-col
+        flex: 0 0 100%
+        flex-flow: column wrap

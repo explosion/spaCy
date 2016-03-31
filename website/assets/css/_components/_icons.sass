@@ -1,0 +1,39 @@
+//  Icons - Variables
+// ============================================================================
+
+$icon-padding       : 0.5em
+$icon-large-size    : 3rem
+$icon-medium-size   : 1.75rem
+
+
+//  Icons - Style
+// ============================================================================
+
+//  .icon--secondary - non-colored version of icon
+//  .icon--large     - large version of graphic icon
+//  .icon-#{$icon}   - graphic icon
+
+%icon
+    display: inline-block
+    font-family: $font-icons
+    font-style: normal
+    font-weight: normal
+    line-height: 1
+
+.icon
+    display: inline-block
+    vertical-align: middle
+
+    &--secondary:before
+        color: currentColor !important
+
+    &--medium:before
+        font-size: $icon-medium-size
+
+    &--large:before
+        font-size: $icon-large-size
+
+@each $icon, $unicode in $icons
+    .icon-#{$icon}
+        @extend .icon
+        @include icon($icon, color(social, $icon), 0 $icon-padding)

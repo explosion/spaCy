@@ -1,0 +1,18 @@
+include ../_includes/_mixins
+
++lead spaCy is a new library for text processing in Python and Cython. I wrote it because I think small companies are terrible at natural language processing (NLP).  Or rather: small companies are using terrible NLP technology.  
+
+p To do great NLP, you have to know a little about linguistics, a lot about machine learning, and almost everything about the latest research.  The people who fit this description seldom join small companies.  Most are broke &ndash; they've just finished grad school.  If they don't want to stay in academia, they join Google, IBM, etc.  
+
+p The net result is that outside of the tech giants, commercial NLP has changed little in the last ten years.  In academia, it's changed entirely.  Amazing improvements in quality.  Orders of magnitude faster.  But the academic code is always GPL, undocumented, unuseable, or all three.  You could implement the ideas yourself, but the papers are hard to read, and training data is exorbitantly expensive.  So what are you left with?  A common answer is NLTK, which was written primarily as an educational resource.  Nothing past the tokenizer is suitable for production use.  
+
+p I used to think that the NLP community just needed to do more to communicate its findings to software engineers.  So I wrote two blog posts, explaining #[a(href="/blog/part-of-speech-pos-tagger-in-python" target="_blank") how to write a part-of-speech tagger] and #[a(href="/blog/parsing-english-in-python" target="_blank") parser]. Both were well received, and there's been a bit of interest in #[a(href="https://github.com/syllog1sm/redshift/tree/develop" target="_blank") my research software] &ndash; even though it's entirely undocumented, and mostly unuseable to anyone but me.
+
+p So six months ago I quit my post-doc, and I've been working day and night on spaCy since.  I'm now pleased to announce an alpha release.
+
+p If you're a small company doing NLP, I think spaCy will seem like a minor miracle.  It's by far the fastest NLP software ever released.  The full processing pipeline completes in 20ms per document, including accurate tagging and parsing.  All strings are mapped to integer IDs, tokens are linked to embedded word representations, and a range of useful features are pre-calculated and cached.
+
++pullquote("Computers don't understand text. This is unfortunate, because that's what the web is mostly made of.")
+
+p If none of that made any sense to you, here's the gist of it.  Computers don't understand text.  This is unfortunate, because that's what the web almost entirely consists of.  We want to recommend people text based on other text they liked.  We want to shorten text to display it on a mobile screen.  We want to aggregate it, link it, filter it, categorise it, generate it and correct it.  
+p spaCy provides a library of utility functions that help programmers build such products.  It's commercial open source software: you can either use it under the AGPL, or you can  buy a commercial license under generous terms.

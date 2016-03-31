@@ -1,0 +1,101 @@
+//-  Functions
+//- ============================================================================
+
+//- Full page title
+
+-   function getPageTitle() {
+-       if(current.path[0] == 'blog' && current.source != 'index') title += ' | Blog';
+-       return (current.path[0] == 'index') ? sitename + ' | ' + slogan : title + ' | ' + sitename;
+-   }
+
+
+//- Get current URL
+    current - [string] current path
+
+-   function getCurrentUrl() {
+-       var base = current.path;
+-       if(current.source == 'index') base.pop();
+-       return url + '/' + base.join('/');
+-   }
+
+
+//- Assign flexbox order, elements are assigned negative values to always move
+    them to the start of a flexbox in the correct order (i.e. -3, -2, -1)
+    counter - [integer] index of current item
+    max     - [integer] amount of items in total
+    start   - [integer] index of start position, i.e. 0 -> oder: -1 (optional)
+
+-   function assignOrder(counter, max, start) {
+-       if(counter >= 0 && counter < max) return "order: -" + (max - counter + (start || 0));
+-   }
+
+
+//- Create Twitter share URL
+    current - [string] current path
+    tweet   - [string] text to be shared with link
+
+-   function twitterShareUrl(current, tweet) {
+-       return "https://twitter.com/share?text=" + tweet + "&amp;url=" + getCurrentUrl(current) + ";via=" + profiles.twitter;
+-   }
+
+
+//- Add prefix to each item in an array (used for modifier CSS classes)
+    array   - [array] array of strings, taken from mixin arguments 
+    prefix  - [string] class prefix (i.e. 'button--')
+
+-   function prefixArgs(array, prefix) {
+-       for(var i = 0; i < array.length; i++) {
+-           array[i] = prefix + array[i];
+-       }
+-       return array.join(' ');
+-   }
+
+
+//- Convert date to human readable and timestamp format
+    input - [string] date in the format YYYY-MM-DD
+
+-   function convertDate(input) {
+-       var dates = [];
+-       var months = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ];
+-       var date = new Date(input);
+-       dates.full = months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear();
+-       dates.timestamp = JSON.parse(JSON.stringify(date));
+-       return dates;
+-   }
+
+
+//- Convert date to valid RSS pubDate
+    input - [string] date in the format YYYY-MM-DD
+
+- function convertPubDate(input) {
+-   var date = new Date(input);
+-   var pieces = date.toString().split(' ');
+-   var offsetTime = pieces[5].match(/[-+]\d{4}/);
+-   var offset = (offsetTime) ? offsetTime : pieces[5];
+-   var parts = [ pieces[0] + ',', pieces[2], pieces[1], pieces[3], pieces[4], offset ];
+-   return parts.join(' ');
+- }
+
+
+//- Compile scrset attribute for hero images
+    image - [object] article image object from _data.json
+    path  - [string] relative path to image folder
+
+-   function getScrset(image, path) {
+-       var scrset = path + image.file + ' ' + image_sizes.medium + 'w';
+-       if(image.file_small) scrset += ', ' + path + image.file_small + ' ' + image_sizes.small + 'w';
+-       if(image.file_large) scrset += ', ' + path + image.file_large + ' ' + image_sizes.large + 'w';
+-       return scrset;
+-   }
+
+
+//- Get meta image
+
+-   function getMetaImage() {
+-       if(current.path[0] == 'blog' && image && image.file) {    
+-           return url + '/blog/img/' + image.file;
+-        }
+-       else {
+-           return url + '/assets/img/social.png';
+-       }
+-   }

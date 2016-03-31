@@ -1,0 +1,59 @@
+//  Lists - Variables
+// ============================================================================
+
+$list-alternatives  : (letters, upper-latin), (roman, lower-roman)
+$list-icon-color    : color($theme)
+$list-icon-size     : 2.4rem
+$list-item-padding  : 1em
+$list-margin-side   : 5%
+$list-padding-side  : 2rem
+
+
+//  Lists - Style
+// ============================================================================
+
+//  .list          - list of items
+//  .list--bullets - unordered list with bullets
+//  .list--numbers - ordered list with numbers
+//  .list--letters - ordered list with letters
+//  .list--roman   - ordered list with roman numerals
+//  .list-item     - list item
+
+.list
+    @extend .block, .text
+    padding-left: $list-margin-side
+
+    &--bullets
+        margin-left: $list-margin-side
+
+        .list-item
+            @include icon(bullet, none, 0 $list-padding-side 0 0, $list-icon-size)
+
+    &--numbers
+        counter-reset: li
+        margin-left: $list-margin-side
+
+        .list-item:before
+            @extend .h3
+            content: counter(li) '.'
+            counter-increment: li
+            padding-right: $list-padding-side
+
+    @each $list-type, $list-counter in $list-alternatives
+        &--#{$list-type}
+            @extend .list--numbers
+
+            .list-item:before
+                content: counter(li, #{$list-counter}) '.'
+
+.list-item
+    margin-bottom: $list-item-padding
+    text-indent: -$list-margin-side
+
+    &:before
+        color: $list-icon-color
+        display: inline-block
+        line-height: 1
+        text-align: center
+        width: $list-icon-size
+        vertical-align: middle

@@ -1,0 +1,147 @@
+include ../_includes/_mixins
+
++lead In a small team, everyone should be able to contribute content to the website and make use of the full set of visual components, without having to worry about design or write complex HTML. To help us write docs, tutorials and blog posts about #[a(href=url target="_blank") spaCy], we've developed a powerful set of modularized markup components, implemented using #[a(href="http://jade-lang.com" target="_blank") Jade].
+
+    +aside("What's spaCy?") spaCy is a library for industrial-strength Natural Language Processing written in Python / Cython. We're helping advanced text understanding AI get out into real products.
+
+p This approach has worked well for us, so we decided to #[a(href="https://github.com/" + profiles.github + "/spaCy/blob/master/website" target="_blank") open source] our site, and explain the motivation.  You can see the idea in action by taking a look at the #[a(href="https://github.com/" + profiles.github + "/spaCy/blob/master/website/blog/modular-markup.jade" target="_blank") source code for this post], or our #[a(href="/styleguide" target="_blank") style guide], which lets you see most of our current markup components. There are also some simpler examples to follow in this post.
+
++h2("modularizing-markup") Modularizing the Markup
+
+p A product website will never stand still &ndash; it will be in constant development. Its architecture therefore needs to be set up from the start to be updated and modified frequently, and allow changes to its components. Instead of thinking in #[em sections] and #[em pages], we need to start thinking in #[em design systems] and #[em modules]. #[a(href="http://bradfrost.com/blog/post/atomic-web-design/" target="_blank") Atomic Design] is a popular methodology for modular design systems: small elements (atoms) are combined to larger structures (molecules), which can be connected to form complex components (organisms). For example, a permalink atom and a heading atom can be combined to form a headline molecule, which becomes part of a larger text block organism.
+
+p We need a lot of those flexible organisms, and they all come with custom markup that will likely change over time &ndash; think responsive embeds, data tables, or code blocks. Every time a component is used, its full markup needs to be implemented. This also means that every change to this markup requires changing every instance of the respective component. In order to make this work, we need a concise and dynamic markup language to define those components and make them accessible for content creators to use. In short: we need a markup language as compact as Markdown, as feature-rich as HTML and as programmable as JavasScript.
+
++h2("markup-language") Introducing a Programmable Markup Language
+
+p #[a(href="http://jade-lang.com" target="_blank") Jade] (recently renamed to Pug) is a markup language that comes with a very powerful feature: #[a(href="http://jade-lang.com/reference/mixins/" target="_blank") mixins]. Mixins are reusable content elements that act as "content functions", by taking custom arguments. Mixins offer a powerful way to implement a modular design. Every component and its mark-up can be defined once, and reused in different contexts across the site.
+
++image("markup_mixins.jpg", "How a mixin works", "Mixins can be reused with different configuration across the entire site.")
+
+p Jade maintains the full power of HTML, but adds vital syntactic sugar and the option to extend the markup using JavaScript. Its syntax is simplified and whitespace-sensitive, making the code compact and easy to read. Here's an example:
+
++code("jade", "Jade").
+    each text in [ "one", "two", "three" ]
+        article.teaser(class=(text == "two") ? "active" : "")
+            p=text
+
++code("markup", "Compiled HTML").
+    &lt;article class="teaser"&gt;
+        &lt;p&gt;one&lt;/p&gt;
+    &lt;/article&gt;
+
+    &lt;article class="teaser active"&gt;
+        &lt;p&gt;two&lt;/p&gt;
+    &lt;/article&gt;
+
+    &lt;article class="teaser"&gt;
+        &lt;p&gt;three&lt;/p&gt;
+    &lt;/article&gt;
+
+p To put it simply, Jade lets you program. Writing both the templates and the content itself in Jade keeps the markup consistent, and eliminates the problems and inflexibilities usually associated with the use of a simplified subset of a markup language.
+
+p Here's an example for an image mixin that can be used to insert a figure containing an image, complete with alt text and caption using only one line of code. Note how all markup, including the path to the image folder, is defined within the mixin:
+
++code("jade", "Jade Mixin").
+    //- Definition
+    mixin image(source, alt, caption)
+        figure.figure-class
+            img.image-class(src="images/" + source alt=alt)
+
+            if caption
+                figcaption.caption-class=caption
+
+    //- Usage
+    +image("my-image.jpg", "This is a caption", "My image")
+
++code("markup", "Compiled HTML").
+    &lt;figure class="figure-class"&gt;
+        &lt;img class="image-class" src="images/my-image.jpg" alt="My image" /&gt;
+        &lt;figcaption class="caption-class"&gt;This is a caption"&lt;/figcaption&gt;
+    &lt;/figure&gt;
+
++h2("framework") Working With Your Framework (Not Against It)
+
+p While we've implemented our own design system, the same principles apply if you're using an existing boilerplate. For instance, let's assume you're trying to get your project off the ground as quicky as possible and you're using #[a(href="http://getbootstrap.com/" target="_blank") Bootstrap] and its alert plugin to create #[a(href="http://getbootstrap.com/components/#alerts" target="_blank") dismissible and non-dismissible alerts]. Technically, alerts are very simple, self-contained elements, but (using Bootstrap) they still require a fair bit of markup to add JavaScript functionality and accessibility.
+
+    +aside("Jade Bootstrap") While writing these examples, I came across #[a(href="http://rajasegar.github.io/JADE-Bootstrap/components.html" target="_blank") Jade Bootstrap], a library of Bootstrap components as reusable Jade mixins. In case this is something you're interested in, it might be worth checking out and adapting.
+
++image("markup_bootstrap.jpg", "Example of Bootstrap Alerts created by mixins")
+
+p The mixin needs an option to specify the style ("success", "info", "warning" or "alert"), which will be translated to the corresponding class, as well as an option to make it dismissible and add a close button. The markup could look like this:
+
++code("jade", "Jade Mixin").
+    //- Definition
+    mixin alert(style, dismissible)
+        .alert(class="alert-" + style + ( (dismissible) ? " alert-dismissible" : "") role="alert")
+            if dismissible
+                button.close(type="button" data-dismiss="alert" aria-label="Close")
+                    span(aria-hidden="true") &amp;times;
+
+            block
+
+    //- Usage
+    +alert("success") You successfully used an alert mixin.
+    +alert("danger", true) This danger alert can be dismissed.
+
+p Alternatively, maybe you're using #[a(href="http://www.basscss.com/" target="_blank") Basscss]'s #[a(href="http://www.basscss.com/#basscss-flexbox" target="_blank") flexbox grid utility] to create responsive cards and column layouts like the one below.
+
++image("markup_basscss.jpg", "Example of Basscss flexbox created by mixins")
+
+.has-aside
+    +code("jade", "Jade Mixins").
+        //- Definitions
+        mixin grid(...style)
+            .flex(class=style.join(" "))
+                block
+
+        mixin col(width, ...style)
+            .col(class="col-" + width + " " + style.join(" "))
+                block
+
+        //- Usage
+        +grid("border", "p2")
+            each column in [ "one", "two", "three", "four"]
+                +col(6, "border", "p1", "m1") Column &#35;{column}
+
+    +aside("Note") The "rest argument" syntax (#[code ...style]) lets your mixin take an unknown number of arguments that become available to your mixin as an array. This is especially useful for CSS classes.#[br]#[br]To handle modifiers, we're using a #[a(href="https://github.com/" + profiles.github + "/spaCy/blob/master/website/_includes/_functions.jade#L42" target="_blank") helper function] called #[code prefixArgs()], which adds a given prefix (like "grid-" or "table-") to the arguments and returns a list of class names.
+
+p The above markup still requires content creators to know and use the respective #[a(href="https://github.com/basscss/basscss/blob/master/modules/flexbox/index.css" target="_blank") classes] manually. To avoid this, you could instead define the styles within the mixins. This would give the content creators a #[code +grid()] utility that didn't expose any details of the design system. If the layout of the blog is ever going to change, the blog posts would remain untouched, and only the mixins would have to be adjusted to the new style.
+
++h2("content-creators") Developing Tools For Content Creators
+
+p Content creators should never have to worry about stylistic properties like margins, paddings and borders. They shouldn't have to worry about an arbitrary order of nested elements, responsive breakpoints or sizing. Thus, the details of the underlying CSS framework should not leak into the markup. After all, this is why we're creating sophisticated design systems in the first place: to make it easy to author effective #[em content].
+
++pullquote("Content creators should never have to worry about stylistic properties like margins, paddings and borders.")
+
+p Providing authors with a reasonable subset of markup utilities puts them back in control of the content they create and enables them to ship quickly and efficiently. In small teams, a short publishing pipeline like this is absolutely vital.
+
++image("markup_workflow.jpg", "Workflow between development and content creation", "Front-end developers produce modular markup components that lead to better workflows for creating content.")
+
++h2("cms") Refining the Workflow With a Static CMS
+
+p While building a site with Jade alone is certainly possible, it requires some extra scaffolding to make it work as a CMS. For example, the main way to store metadata with Jade is in Javascript-like variables, which quickly becomes impractical and #[a(href="http://jade-lang.com/reference/code/" target="_blank") awkward]. Our setup improved significantly after we started using #[a(href="http://harpjs.com/" target="_blank") Harp]. Harp is a static web server and compiler with built-in pre-processing, including Jade, EJS, Sass, Less, Stylus, CoffeeScript and Markdown. Metadata and additional content can be provided in JSON. Code is not only processed on build, but also while serving and previewing locally, which is as easy as this:
+
++code("bash").
+    sudo npm install --global harp
+    git clone https://github.com/spacy-io/spacy
+    cd spacy/website
+    harp server
+
+p Like most static site generators, Harp compiles files into the same directory if they don't have a leading underscore. For instance, #[code blog-post.jade] would become #[code blog-post.html]. Files with a leading underscore are not compiled directly and can be used to store metadata and layout partials. This allows you to build dynamic templates that can accommodate both static content and dynamic data supplied via #[code _data.json] files.
+
+p There are two ways to set up reusable components:
+
++list("numbers")
+    +item #[strong Generate mixins] that are combined into a global #[code _mixins.jade] file and #[a(href="http://jade-lang.com/reference/includes/" target="_blank") included] at the top of a page. This makes sense for smaller components that will be used a lot by content authors, especially since mixins can take long #[a(href="http://jade-lang.com/reference/mixins/" target="_blank") blocks of content] to be used within the mixin.
+    +item #[strong Use dynamic partials] via Harp's #[code !=partial()] syntax. This is useful for layout partials and widgets. Similar to mixin arguments, partials allow you to #[a(href="http://harpjs.com/docs/development/partial#jade" target="_blank") pass in] data and variables to modify the included file. We're using this feature in a "latest blog posts" partial to display a mutable number of teasers.
+
+p During development, we use Harp to serve our entire site locally using one simple command only, #[code harp server]. To deploy the site, we pre-process and compile the code and upload the files.
+
++h2("conclusion") Conclusion
+
+p Modular markup gives content authors more powerful, domain-specific components that allow them to use more complex markup while effectively writing less. Instead of optimizing the look and feel of individual pages that might change tomorrow, the front-end developer takes on a blacksmith role of forging reusable tools.
+
++grid('margin-right')
+    +button('secondary')(href="https://github.com/" + profiles.github + "/spaCy/blob/master/website" target="_blank") #[+icon('github', 'secondary')] View Website Source
+    +button('secondary')(href="/styleguide" target="_blank") View Styleguide

@@ -1,0 +1,33 @@
+//  Variables
+// ============================================================================
+
+$alert-background   : color(white)
+$alert-border       : 1px solid
+$alert-close-size   : 2.25rem
+$alert-color        : color($theme)
+$alert-padding      : 1.5rem 2rem
+
+
+//  Style
+// ============================================================================
+
+//  Alert boxes
+//  .alert       - alert container
+//  .alert-close - icon to close alert
+
+.alert
+    @include position(fixed, bottom, left, 0, 0)
+    align-items: center
+    background: $alert-background
+    border-top: $alert-border
+    color: $alert-color
+    display: flex
+    justify-content: space-between
+    padding: $alert-padding
+    width: 100%
+    z-index: 200
+
+.alert-close
+    @include icon(close, currentColor, 0, $alert-close-size)
+    background: transparent
+    color: $alert-color

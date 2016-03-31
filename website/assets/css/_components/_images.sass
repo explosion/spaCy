@@ -1,0 +1,39 @@
+//  Images - Variables
+// ============================================================================
+
+$image-background       : color(grey, light)
+$image-profile-margin   : 1rem 3rem
+$image-profile-width    : $width-profile
+$image-ratio            : $image-ratio
+
+
+//  Images - Style
+// ============================================================================
+
+//  Image Containers
+//  .image-container - container for figures and inline images
+//  .image-hero      - container for hero image for blog posts
+//  .image-profile   - container for profile photo
+
+.image-container
+    @extend .block
+    margin-left: 0
+    margin-right: 0
+
+.image-profile
+    @include size($image-profile-width)
+    background: $image-background
+    border-radius: 50%
+    margin: $image-profile-margin
+    overflow: hidden
+    shape-outside: circle()
+
+
+// Global image ratio
+
+.image-ratio
+    background: $image-background
+    height: 0
+    overflow: hidden
+    padding-bottom: (100% / $image-ratio)
+    width: 100%

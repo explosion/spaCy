@@ -1,0 +1,15 @@
+include ../_includes/_mixins
+
+//-  Demos
+//- ============================================================================
+
++grid('padding')
+    each demo in demos
+        - var teaser = public.demos[demo]._data.index
+        - teaser.target = '_blank'
+        - teaser.showmeta = false
+
+        +grid-col('half', 'space-between')
+            !=partial('../_includes/_teaser', { teaser: teaser, showmeta: false, slug: demo, _root: '/demos/' })
+
+    !=partial('../_includes/_newsletter', { divider: 'top' })

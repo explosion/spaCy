@@ -1,0 +1,20 @@
+//  Footer - Variables
+// ============================================================================
+
+$footer-background  : color($theme) pattern($theme)
+$footer-color       : color(white)
+$footer-padding     : 2.75rem
+$footer-text-align  : center
+
+
+//  Footer - Style
+// ============================================================================
+
+.footer
+    @extend .link-list
+    background: $footer-background
+    color: $footer-color
+    overflow: auto
+    padding: $footer-padding
+    text-align: $footer-text-align
+    z-index: 100

@@ -1,0 +1,23 @@
+//  Animations
+// ============================================================================
+
+// Element slides in from the top
+
+@keyframes slideInDown
+    from
+        transform: translate3d(0, -100%, 0);
+        visibility: visible;
+
+    to
+        transform: translate3d(0, 0, 0);
+
+
+// Element blinks
+
+@keyframes blink
+    0% 
+        opacity: 1
+    50%
+        opacity: 0
+    100%
+        opacity: 1

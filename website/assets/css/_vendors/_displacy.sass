@@ -1,0 +1,42 @@
+//  displaCy Custom Visualization - Variables
+// ============================================================================
+
+$displacy-classes:      ( bad: color(red), good: color(green), highlight: color(yellow), lowlight: color(grey, dark) )
+$displacy-word-margin   : 3rem
+
+
+//  displaCy Custom Visualization - Style
+// ============================================================================
+
+//  displaCy visualization (refers to exports from displaCy v1)
+//  .word                            - token container
+//  .word span                       - word
+//  .arrow:before                    - arrow label
+//  .word:after                      - part-of-speech tag
+//  .arrow.#{$displacy-class}:before - arrow with special styling
+//  .arrow.#{$displacy-class}:after  - arrow head with special styling
+//  .word.#{$displacy-class} span    - word with special styling
+//  $displacy-classes                - refers to $displacy-classes in settings
+
+#displacy
+    width: 100%
+
+    .word
+        margin-top: $displacy-word-margin
+
+    .word span
+        @extend .h4
+
+    .arrow:before,
+    .word:after
+        @extend .text-label
+
+    @each $displacy-class, $displacy-color in $displacy-classes
+        .arrow.#{$displacy-class}:before
+            border-color: $displacy-color
+
+        .arrow.#{$displacy-class}:after
+            border-top-color: $displacy-color
+
+        .word.#{$displacy-class} span
+            color: $displacy-color

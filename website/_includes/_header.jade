@@ -1,0 +1,21 @@
+include _mixins
+
+//-  Header
+//- ============================================================================
+
+header.header(class=(image) ? 'hero' : '')
+
+    if image
+        img(srcset=getScrset(image, 'img/') alt=image.alt sizes='100vw')
+
+        if image.credit
+            .hero-credit
+              if image.url
+                a(href=image.url target='_blank')=image.credit
+
+              else
+                !=image.credit
+
+    else
+        if !is_article && headline != false
+            h1.header-title=title

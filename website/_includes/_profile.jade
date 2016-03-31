@@ -1,0 +1,21 @@
+//-  Author profile
+//- ============================================================================
+
+include _mixins
+
+if authors[author]
+   .box.box--info(data-label=label)
+        if image != false
+            .box-image: img(src='/assets/img/profile_' + author + ( (style) ? '_' + style : '' ) + '.png')
+
+        p.box-body.text-big
+            if authors[author].name
+                strong=authors[author].name + ' '
+
+            if authors[author].description
+                !=authors[author].description
+
+        if authors[author].links
+            span.box-links
+                each link, index in authors[author].links
+                    a(href=link[0] target='_blank') #[+icon(index)=(link[1] || index)]

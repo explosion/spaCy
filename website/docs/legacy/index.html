@@ -1,0 +1,933 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <title>Docs | spaCy.io</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="description" content="spaCy is a library for industrial-strength text processing in Python. If you're a small company doing NLP, we want spaCy to seem like a minor miracle.">
+    <meta itemporop="name" content="Docs | spaCy.io">
+    <meta itemprop="description" content="spaCy is a library for industrial-strength text processing in Python. If you're a small company doing NLP, we want spaCy to seem like a minor miracle.">
+    <meta itemprop="image" content="https://spacy.io/resources/img/social.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:site" content="spacy_io">
+    <meta name="twitter:title" content="Docs | spaCy.io">
+    <meta name="twitter:description" content="spaCy is a library for industrial-strength text processing in Python. If you're a small company doing NLP, we want spaCy to seem like a minor miracle.">
+    <meta name="twitter:creator" content="@spacy_io">
+    <meta name="twitter:image" content="https://spacy.io/resources/img/social_small.png">
+    <meta property="og:title" content="Docs | spaCy.io">
+    <meta property="og:type" content="article">
+    <meta property="og:url" content="https://spacy.io/docs">
+    <meta property="og:image" content="https://spacy.io/resources/img/social.png">
+    <meta property="og:description" content="spaCy is a library for industrial-strength text processing in Python. If you're a small company doing NLP, we want spaCy to seem like a minor miracle.">
+    <meta property="og:site_name" content="spaCy.io">
+    <meta property="article:published_time">
+    <link rel="stylesheet" href="/docs/legacy/resources/css/style.css">
+    <link rel="canonical" href="https://spacy.io/docs">
+    <!--[if lt IE 9]><script src="//html5shiv.googlecode.com/svn/trunk/html5.js"></script><![endif]-->
+  </head>
+  <body id="docs">
+    <header role="banner">
+      <h1 class="logo">spaCy.io</h1>
+      <div class="slogan">Legacy Docs (v0.100.6)
+      </div>
+    </header>
+    <nav role="navigation">
+      <li><a href="/">Home</a></li>
+      <li><a href="/docs">Back to the docs</a></li>
+    </nav>
+    <main id="content">
+      <section class="intro">
+          <p>This page shows documentation for <strong>spaCy</strong> in the legacy style. We've kept this page accessible to ease your transition to <a href="https://spacy.io/docs/">our current documentation</a>, since we know change can be jarring, especially when you're working against a deadline. This page will not be updated when the library changes, so if you're using a version of the library newer than v0.100.6, the information on this page may not be accurate.</p>
+        <nav role="navigation">
+          <ul>
+            <li><a href="#api" class="button">API</a></li>
+            <li><a href="#tutorials" class="button">Tutorials</a></li>
+            <li><a href="#spec" class="button">Spec</a></li>
+          </ul>
+        </nav>
+      </section>
+      <article>
+        <h2><a name="api" href="#api">API</a></h2>
+        <!--mixin en_example-->
+        <!--    pre.language-python: code-->
+        <!--        include ../../code/api.example_war_and_peace-->
+        <!-- TODO-->
+        <!-- Doc-->
+        <!-- to_array-->
+        <!-- count_by-->
+        <!-- from_array-->
+        <!-- from_bytes-->
+        <!-- to_bytes-->
+        <!-- read_bytes-->
+        <!-- -->
+        <!-- Examples for repvec. Rename?-->
+        <details open="open">
+          <summary><a name="pipeline"><span class="declaration"><span class="label">class</span><code>English</code></span></a></summary>
+          <p>Load models into a callable object to process English text.  Intended use is for one instance to be created per process.  You can create more if you're doing something unusual.   You may wish to make the instance a global variable or "singleton".  We usually instantiate the object in the <code>main()</code> function and pass it around as an explicit argument. </p>
+          <details open="open">
+            <summary><a><span class="declaration"><code>__init__</code><span class="parameters">self, data_dir=None, vocab=None, tokenizer=None, tagger=None, parser=None, entity=None, matcher=None, serializer=None)</span></span></a></summary>
+            <p>Load the linguistic analysis pipeline.  Loading may take up to a minute, and the instance consumes 2 to 3 gigabytes of memory. The pipeline class is responsible for loading and saving the components, and applying them in sequence. Each component can be passed as an argument to the <code>__init__</code> function, or left as <code>None</code>, in which case it will be loaded from a classmethod, named e.g. <code>default_vocab</code>.</p>
+            <p>Common usage is to accept all defaults, in which case loading is simply:</p>
+            <pre class="language-python"><code>nlp = spacy.en.English()</code></pre>
+            <p>To keep the default components, but load data from a specified directory, use:</p>
+            <pre class="language-python"><code>nlp = English(data_dir=u'path/to/data_directory')</code></pre>
+            <p>To disable (and avoid loading) parts of the processing pipeline:</p>
+            <pre class="language-python"><code>nlp = English(parser=False, tagger=False, entity=False)</code></pre>
+            <ul>
+              <li><strong>data_dir</strong> &#8211; The data directory.  If <code>None</code>, value is obtained via the <code>default_data_dir()</code> method.
+              </li>
+              <li><strong>vocab</strong> &#8211;The <code>vocab</code> object, which should be an instance of class <code>spacy.vocab.Vocab</code>. If <code>None</code>, the object is obtained from the <code>default_vocab()</code> class method.  The <code>vocab</code> object manages all of the language specific rules and definitions, maintains the cache of lexical types, and manages the word vectors. Because the <code>vocab</code> owns this important data, most objects hold a reference to the <code>vocab</code>.
+              </li>
+              <li><strong>tokenizer</strong> &#8211; The tokenizer, which should be a callable that accepts a unicode string, and returns a <code>Doc</code> object. If set to <code>None</code>, the default tokenizer is constructed from the <code>default_tokenizer()</code> method.
+              </li>
+              <li><strong>tagger</strong> &#8211; The part-of-speech tagger, which should be a callable that accepts a <code>Doc</code> object, and sets the part-of-speech tags in-place. If set to <code>None</code>, the default tagger is constructed from the <code>default_tagger()</code> method.
+              </li>
+              <li><strong>parser</strong> &#8211; The dependency parser, which should be a callable that accepts a <code>Doc</code> object, and sets the syntactic heads and dependency labels in-place. If set to <code>None</code>, the default parser is constructed from the <code>default_parser()</code> method.
+              </li>
+              <li><strong>entity</strong> &#8211; The named entity recognizer, which should be a callable that accepts a <code>Doc</code> object, and sets the named entity annotations in-place. If set to <code>None</code>, the default entity recognizer is constructed from the <code>default_entity()</code> method.
+              </li>
+              <li><strong>matcher</strong> &#8211; The pattern matcher, which should be a callable that accepts a <code>Doc</code> object, and sets annotations in-place. If set to <code>None</code>, the default matcher is constructed from the <code>default_matcher()</code> method.
+              </li>
+            </ul>
+          </details>
+          <details open="open">
+            <summary><a name="English-__call__"><span class="declaration"><code>__call__</code><span class="parameters">text, tag=True, parse=True, entity=True</span></span></a></summary>
+            <p>The main entry point to spaCy. Takes raw unicode text, and returns a <code>Doc</code> object, which can be iterated to access <code>Token</code> and <code>Span</code> objects.  spaCy's models are all linear-time, so you can supply documents of arbitrary length, e.g. whole novels.</p>
+            <ul>
+              <li><strong>text</strong> (<a class="reference" href="http://docs.python.org/library/functions.html#unicode"><em>unicode</em></a>) &#8211;The text to be processed.  spaCy expects raw unicode txt &ndash; you don't necessarily need to, say, split it into paragraphs.  However, depending on your documents, you might be better off applying custom pre-processing.  Non-text formatting, e.g. from HTML mark-up, should be removed before sending the document to spaCy.  If your documents have a consistent format, you may be able to improve accuracy by pre-processing.  For instance, if the first word of your documents are always in upper-case, it may be helpful to normalize them before supplying them to spaCy.
+              </li>
+              <li><strong>tag</strong> (<a class="reference" href="http://docs.python.org/library/functions.html#bool"><em>bool</em></a>) &#8211;Whether to apply the part-of-speech tagger. Required for parsing and entity recognition.
+              </li>
+              <li><strong>parse</strong> (<a class="reference" href="http://docs.python.org/library/functions.html#bool"><em>bool</em></a>) &#8211; Whether to apply the syntactic dependency parser.
+              </li>
+              <li><strong>entity</strong> (<a class="reference" href="http://docs.python.org/library/functions.html#bool"><em>bool</em></a>) &#8211;Whether to apply the named entity recognizer.
+              </li>
+            </ul>
+            <pre class="language-python"><code># from spacy.en import English
+# nlp = English()
+doc = nlp('Some text.') # Applies tagger, parser, entity
+doc = nlp('Some text.', parse=False) # Applies tagger and entity, not parser
+doc = nlp('Some text.', entity=False) # Applies tagger and parser, not entity
+doc = nlp('Some text.', tag=False) # Does not apply tagger, entity or parser
+doc = nlp('') # Zero-length tokens, not an error
+# doc = nlp(b'Some text') &lt;-- Error: need unicode
+doc = nlp(b'Some text'.decode('utf8')) # Encode to unicode first.
+</code></pre>
+          </details>
+          <details open="open">
+            <summary><a><span class="declaration"><code>pipe</code><span class="parameters">self, texts_iterator, batch_size=1000, n_threads=2</span></span></a></summary>
+            <p>Parse a sequence of texts into a sequence of <code>Doc</code> objects. Accepts a generator as input, and produces a generator as output. spaCy releases the global interpreter lock around the parser and named entity recognizer, allowing shared-memory parallelism via OpenMP. However, OpenMP is not supported on OSX — so multiple threads will only be used on Linux and Windows.</p>
+            <p>Internally, <code>.pipe</code> accumulates a buffer of <code>batch_size</code> texts, works on them with <code>n_threads</code> workers in parallel, and then yields the <code>Doc</code> objects one by one. Increasing <code>batch_size</code> results in higher latency (a longer time before the first document is yielded), and higher memory used (for the texts in the buffer), but can allow better parallelism.</p>
+            <params>
+              <li><strong>n_threads</strong> (<a class="reference" href="http://docs.python.org/library/functions.html#int"><em>int</em></a>) &#8211;The number of worker threads to use. If -1, OpenMP will decide how many to use at run time. Default is 2.
+              </li>
+              <li><strong>texts</strong> &#8211;A sequence of unicode objects. Usually you will want this to be a generator, so that you don't need to have all of your texts in memory.
+              </li>
+              <li><strong>batch_size</strong> (<a class="reference" href="http://docs.python.org/library/functions.html#int"><em>int</em></a>) &#8211;The number of texts to buffer. Let's say you have a <code>batch_size</code> of 1,000. The input, <code>texts</code>, is a generator that yields the texts one-by-one. We want to operate on them in parallel. So, we accumulate a work queue. Instead of taking one document from <code>texts</code> and operating on it, we buffer <code>batch_size</code> documents, work on them in parallel, and then yield them one-by-one. Higher <code>batch_size</code> therefore often results in better parallelism, up to a point.
+              </li>
+            </params>
+            <pre class="language-python"><code>texts = [u'One document.', u'...', u'Lots of documents']
+# .pipe streams input, and produces streaming output
+iter_texts = (texts[i % 3] for i in xrange(100000000))
+for i, doc in enumerate(nlp.pipe(iter_texts, batch_size=50, n_threads=4)):
+    assert doc.is_parsed
+    if i == 100:
+        break
+</code></pre>
+          </details>
+        </details>
+        <details open="open">
+          <summary><a name="doc"><span class="declaration"><span class="label">class</span><code>Doc</code></span></a></summary>
+          <p>A sequence of <code>Token</code> objects.  Access sentences and named entities, export annotations to numpy arrays, losslessly serialize to compressed binary strings.</p>
+          <p>Internally, the <code>Doc</code> object holds an array of <code>TokenC</code> structs.  The Python-level <code>Token</code> and <code>Span</code> objects are views of this array, i.e. they don't own the data themselves. This details of the internals shouldn't matter for the API &ndash; but it may help you read the code, and understand how spaCy is designed.</p>
+          <details open="open">
+            <summary>
+              <h4>Constructors</h4>
+            </summary><a href="#English-__call__"><span class="declaration"><span class="label">via</span><code>English.__call__(unicode text)</code></span></a>
+            <details open="open">
+              <summary><a><span class="declaration"><code>__init__</code><span class="parameters">self, vocab, orth_and_spaces=None</span></span></a></summary> This method of constructing a <code>Doc</code> object is usually only used for deserialization.  Standard usage is to construct the document via a call to the language object.
+              <ul>
+                <li><strong>vocab</strong> &#8211; A Vocabulary object, which must match any models you want to use (e.g. tokenizer, parser, entity recognizer).
+                </li>
+                <li><strong>orth_and_spaces</strong> &#8211; A list of <code>(orth_id, has_space)</code> tuples, where <code>orth_id</code> is an integer, and has_space is a boolean, indicating whether the token has a trailing space.
+                </li>
+              </ul>
+            </details>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Sequence API</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>doc[i]</code></span> Get the <code>Token</code> object at position <code>i</code>, where <code>i</code> is an integer. Negative indexing is supported, and follows the usual Python semantics, i.e. <code>doc[-2]</code> is <code>doc[len(doc) - 2]</code>.
+              </li>
+              <li><span class="declaration"><code>doc[start : end]</code></span> Get a <code>Span</code> object, starting at position <code>start</code> and ending at position <code>end</code>. For instance, <code>doc[2:5]</code> produces a span consisting of tokens 2, 3 and 4. Stepped slices (e.g. <code>doc[start : end : step]</code>) are not supported, as <code>Span</code> objects must be contiguous (cannot have gaps).
+              </li>
+              <li><span class="declaration"><code>for token in doc</code></span>Iterate over <code>Token </code> objects, from which the annotations can be easily accessed.  This is  the main way of accessing <code>Token</code> objects, which are the main way annotations are accessed from Python. If faster-than-Python speeds are required, you can instead access the annotations as a numpy array, or access the underlying C data directly from Cython, via <code>Doc.data</code>, an array of <code>TokenC</code> structs. The C API has not yet been finalized, and is subject to change.
+              </li>
+              <li><span class="declaration"><code>len(doc)</code></span> The number of tokens in the document.
+              </li>
+            </ul>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Sentence, entity and noun chunk spans</h4>
+            </summary>
+            <details open="open">
+              <summary><span class="declaration"><code>sents</code></span></summary>
+              <p> Yields sentence <code>Span</code> objects.  Iterate over the span to get individual <code>Token</code> objects.  Sentence spans have no label.
+                <pre class="language-python"><code># from spacy.en import English
+# nlp = English()
+doc = nlp("This is a sentence. Here's another...")
+assert [s.root.orth_ for s in doc.sents] == ["is", "'s"]
+</code></pre>
+              </p>
+            </details>
+            <details open="open">
+              <summary><span class="declaration"><code>ents</code></span></summary>
+              <p> Yields named-entity <code>Span</code> objects.  Iterate over the span to get individual <code>Token</code> objects, or access the label:
+                <pre class="language-python"><code># from spacy.en import English
+# nlp = English()
+tokens = nlp('Mr. Best flew to New York on Saturday morning.')
+ents = list(tokens.ents)
+assert ents[0].label == 346
+assert ents[0].label_ == 'PERSON'
+assert ents[0].orth_ == 'Best'
+assert ents[0].string == ents[0].string
+</code></pre>
+              </p>
+            </details>
+            <details open="open">
+              <summary><span class="declaration"><code>noun_chunks</code></span></summary>
+              <p> Yields base noun-phrase <code>Span </code> objects.  A base noun phrase, or "NP chunk", is a noun phrase that does not permit other NPs to be nested within it &ndash; so no NP-level coordination, no prepositional phrases, and no relative clauses.  For example:
+                <pre class="language-python"><code># from spacy.en import English
+# nlp = English()
+doc = nlp('The sentence in this example has three noun chunks.')
+for chunk in doc.noun_chunks:
+    print(chunk.label, chunk.orth_, '&lt;--', chunk.root.head.orth_)
+</code></pre>
+              </p>
+            </details>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Export/Import</h4>
+            </summary>
+            <details open="open">
+              <summary><a><span class="declaration"><code>to_array</code><span class="parameters">attr_ids</span></span></a></summary>Given a list of M attribute IDs, export the tokens to a numpy ndarray of shape N*M, where N is the length of the sentence.
+              <ul>
+                <li><strong>attr_ids</strong> (list[int]) &#8211;A list of attribute ID ints.  Attribute IDs can be imported from  <code>spacy.attrs</code>
+                </li>
+              </ul>
+            </details>
+            <details open="open">
+              <summary><a><span class="declaration"><code>count_by</code><span class="parameters">attr_id</span></span></a></summary>Produce a dict of <code>{attribute (int): count (ints)}</code> frequencies, keyed by the values of the given attribute ID.
+              <pre class="language-python"><code># from spacy.en import English, attrs
+# nlp = English()
+import numpy
+from spacy import attrs
+tokens = nlp('apple apple orange banana')
+assert tokens.count_by(attrs.ORTH) == {3699: 2, 3750: 1, 5965: 1}
+assert repr(tokens.to_array([attrs.ORTH])) == repr(numpy.array([[3699],
+                                                    [3699],
+                                                    [3750],
+                                                    [5965]], dtype=numpy.int32))
+</code></pre>
+            </details>
+            <details open="open">
+              <summary><a><span class="declaration"><code>from_array</code><span class="parameters">attrs, array</span></span></a></summary>
+              <Write>to a <code>Doc</code> object, from an M*N array of attributes.</Write>
+            </details>
+            <details open="open">
+              <summary><a><span class="declaration"><code>from_bytes</code><span class="parameters">byte_string</span></span></a></summary>Deserialize, loading from bytes.
+            </details>
+            <details open="open">
+              <summary><a><span class="declaration"><code>to_bytes</code><span class="parameters"></span></span></a></summary>Serialize, producing a byte string.
+            </details>
+            <details open="open">
+              <summary><a><span class="declaration"><code>read_bytes</code><span class="parameters"></span></span></a></summary>A staticmethod, used to read serialized <code>Doc</code> objects from a file.For example:
+              <pre class="language-python"><code>from spacy.tokens.doc import Doc
+loc = 'test_serialize.bin'
+with open(loc, 'wb') as file_:
+    file_.write(nlp(u'This is a document.').to_bytes())
+    file_.write(nlp(u'This is another.').to_bytes())
+docs = []
+with open(loc, 'rb') as file_:
+    for byte_string in Doc.read_bytes(file_):
+        docs.append(Doc(nlp.vocab).from_bytes(byte_string))
+assert len(docs) == 2
+</code></pre>
+            </details>
+          </details>
+        </details>
+        <details open="open">
+          <summary><a name="token"><span class="declaration"><span class="label">class</span><code>Token</code></span></a></summary>
+          <p>A Token represents a single word, punctuation or significant whitespace symbol. Integer IDs are provided for all string features. The (unicode) string is provided by an attribute of the same name followed by an underscore, e.g. <code>token.orth</code> is an integer ID, <code>token.orth_</code> is the unicode value. The only exception is the Token.string attribute, which is (unicode) string-typed.</p>
+          <details open="open">
+            <summary>
+              <h4>String Features</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>lemma / lemma_</code></span>The "base" of the word, with no inflectional suffixes, e.g. the lemma of "developing" is "develop", the lemma of "geese" is "goose", etc.  Note that <em>derivational</em> suffixes are not stripped, e.g. the lemma of "instutitions" is "institution", not "institute".  Lemmatization is performed using the WordNet data, but extended to also cover closed-class words such as pronouns.  By default, the WN lemmatizer returns "hi" as the lemma of "his". We assign pronouns the lemma <code>-PRON-</code>.  
+              </li>
+            </ul>
+            <ul>
+              <li><span class="declaration"><code>orth / orth_</code></span>The form of the word with no string normalization or processing, as it appears in the string, without trailing whitespace.
+              </li>
+              <li><span class="declaration"><code>lower / lower_</code></span>The form of the word, but forced to lower-case, i.e. <code class="language-python">lower = word.orth_.lower()</code>
+              </li>
+              <li><span class="declaration"><code>shape / shape_</code></span>A transform of the word's string, to show orthographic features. The characters a-z are mapped to x, A-Z is mapped to X, 0-9 is mapped to d. After these mappings, sequences of 4 or more of the same character are truncated to length 4.  Examples: C3Po --> XdXx, favorite --> xxxx, :) --> :) 
+              </li>
+              <li><span class="declaration"><code>prefix / prefix_</code></span>A length-N substring from the start of the word.  Length may vary by language; currently for English n=1, i.e. <code class="language-python">prefix = word.orth_[:1]</code>
+              </li>
+              <li><span class="declaration"><code>suffix / suffix_</code></span>A length-N substring from the end of the word.  Length may vary by language; currently for English n=3, i.e. <code class="language-python">suffix = word.orth_[-3:]</code>
+              </li>
+            </ul>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Boolean Flags</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>is_alpha</code></span> Equivalent to <code class="language-python">word.orth_.isalpha()</code>
+              </li>
+              <li><span class="declaration"><code>is_ascii</code></span> Equivalent to <code class="language-python">any(ord(c) >= 128 for c in word.orth_)</code>
+              </li>
+              <li><span class="declaration"><code>is_digit</code></span> Equivalent to <code class="language-python">word.orth_.isdigit()</code>
+              </li>
+              <li><span class="declaration"><code>is_lower</code></span> Equivalent to <code class="language-python">word.orth_.islower()</code>
+              </li>
+              <li><span class="declaration"><code>is_title</code></span> Equivalent to <code class="language-python">word.orth_.istitle()</code>
+              </li>
+              <li><span class="declaration"><code>is_punct</code></span> Equivalent to <code class="language-python">word.orth_.ispunct()</code>
+              </li>
+              <li><span class="declaration"><code>is_space</code></span> Equivalent to <code class="language-python">word.orth_.isspace()</code>
+              </li>
+              <li><span class="declaration"><code>like_url</code></span> Does the word resembles a URL?
+              </li>
+              <li><span class="declaration"><code>like_num</code></span> Does the word represent a number? e.g. “10.9”, “10”, “ten”, etc
+              </li>
+              <li><span class="declaration"><code>like_email</code></span> Does the word resemble an email?
+              </li>
+              <li><span class="declaration"><code>is_oov</code></span> Is the word out-of-vocabulary?
+              </li>
+              <li><span class="declaration"><code>is_stop</code></span>Is the word part of a "stop list"? Stop lists are used to improve the quality of topic models, by filtering out common, domain-general words.
+              </li>
+            </ul>
+            <details open="open">
+              <summary><a><span class="declaration"><code>check_flag</code><span class="parameters">flag_id</span></span></a></summary>Get the value of one of the boolean flags
+            </details>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Distributional Features</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>prob</code></span> The unigram log-probability of the word, estimated from counts from a large corpus, smoothed using Simple Good Turing estimation.
+              </li>
+              <li><span class="declaration"><code>cluster</code></span> The Brown cluster ID of the word. These are often useful features for linear models. If you’re using a non-linear model, particularly a neural net or random forest, consider using the real-valued word representation vector, in Token.repvec, instead.
+              </li>
+              <li><span class="declaration"><code>vector</code></span> A “word embedding” representation: a dense real-valued vector that supports similarity queries between words. By default, spaCy currently loads vectors produced by the Levy and Goldberg (2014) dependency-based word2vec model.
+              </li>
+              <li><span class="declaration"><code>has_vector</code></span>A boolean value indicating whether a vector.
+              </li>
+            </ul>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Alignment and Output</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>idx</code></span>Start index of the token in the string
+              </li>
+              <li><span class="declaration"><code>len(token)</code></span>Length of the token's orth string, in unicode code-points.
+              </li>
+              <li><span class="declaration"><code>unicode(token)</code></span>Same as <code>token.orth_</code>
+              </li>
+              <li><span class="declaration"><code>str(token)</code></span>In Python 3, returns <code>token.orth_</code>. In Python 2, returns<code>token.orth_.encode('utf8')</code>
+              </li>
+              <li><span class="declaration"><code>text</code></span>An alias for <code>token.orth_</code>.
+              </li>
+              <li><span class="declaration"><code>text_with_ws</code></span><code>token.orth_ + token.whitespace_</code>, i.e. the form of the word as it appears in the string, 
+                <including>trailing whitespace</including>.  This is useful when you need to use linguistic features to add inline mark-up to the string.
+              </li>
+              <li><span class="declaration"><code>whitespace_</code></span>The number of immediate syntactic children following the word in the string.
+              </li>
+            </ul>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Part-of-Speech Tags</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>pos / pos_</code></span>A coarse-grained, less detailed tag that represents the word-class of the token. The set of <code>.pos</code> tags are consistent across languages. The available tags are ADJ, ADP, ADV, AUX, CONJ, DET, INTJ, NOUN, NUM, PART, PRON, PROPN, PUNCT, SCONJ, SYM, VERB, X, EOL, SPACE.
+              </li>
+            </ul>
+            <ul>
+              <li><span class="declaration"><code>tag / tag_</code></span>A fine-grained, more detailed tag that represents the word-class and some basic morphological information for the token. These tags are primarily designed to be good features for subsequent models, particularly the syntactic parser. They are language and treebank dependent. The tagger is trained to predict these fine-grained tags, and then a mapping table is used to reduce them to the coarse-grained <code>.pos</code> tags.
+              </li>
+            </ul>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Navigating the Parse Tree</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>head</code></span>The immediate syntactic head of the token.  If the token is the root of its sentence, it is the token itself, i.e. <code>root_token.head is root_token</code>
+              </li>
+              <li><span class="declaration"><code>children</code></span>An iterator that yields from lefts, and then yields from rights.
+              </li>
+              <li><span class="declaration"><code>subtree</code></span>An iterator for the part of the sentence syntactically governed by the word, including the word itself.
+              </li>
+              <li><span class="declaration"><code>left_edge</code></span>The leftmost edge of the token's subtree
+              </li>
+              <li><span class="declaration"><code>right_edge</code></span>The rightmost edge of the token's subtree
+              </li>
+            </ul>
+            <details open="open">
+              <summary><a><span class="declaration"><code>nbor(i=1)</code><span class="parameters"></span></span></a></summary>Get the <em>i</em>th next / previous neighboring token.
+            </details>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Named Entities</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>ent_type</code></span>If the token is part of an entity, its entity type.
+              </li>
+              <li><span class="declaration"><code>ent_iob</code></span>The IOB (inside, outside, begin) entity recognition tag for the token.
+              </li>
+            </ul>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Constructors</h4>
+            </summary>
+            <details open="open">
+              <summary><a><span class="declaration"><code>__init__</code><span class="parameters">vocab, doc, offset</span></span></a></summary>
+              <ul>
+                <li><strong>vocab</strong> &#8211;A Vocab object
+                </li>
+                <li><strong>doc</strong> &#8211;The parent sequence
+                </li>
+                <li><strong>offset</strong> (<a class="reference" href="http://docs.python.org/library/functions.html#int"><em>int</em></a>) &#8211;The index of the token within the document
+                </li>
+              </ul>
+            </details>
+            <!--+attribute("conjuncts")-->
+            <!--  | Conjuncts-->
+          </details>
+        </details>
+        <details open="open">
+          <summary><a name="span"><span class="declaration"><span class="label">class</span><code>Span</code></span></a></summary>A <code>Span</code> is a slice of a <code>Doc</code> object, consisting of zero or more tokens.  Spans are used to represent sentences, named entities, phrases, and arbitrary contiguous slices from the <code>Doc</code> object.  <code>Span</code> objects are views &ndash; that is, they do not copy the underlying C data.  This makes them cheap to construct, as internally are simply a reference to the <code>Doc</code> object, a start position, an end position, and a label ID.
+          <li><span class="declaration"><code>token = span[i]</code></span>Get the <code>Token</code> object at position <em>i</em>, where <em>i</em> is an offset within the <code>Span</code>, not the document.  That is:
+            <pre class="language-python"><code>span = doc[4:6]
+token = span[0]
+assert token.i == 4
+</code></pre>
+          </li>
+          <ul>
+            <li><span class="declaration"><code>for token in span</code></span>Iterate over the <code>Token</code> objects in the span.
+            </li>
+            <li><span class="declaration"><code>__len__</code></span>Number of tokens in the span.
+            </li>
+            <li><span class="declaration"><code>text</code></span>The text content of the span, obtained from <code class="language-python">''.join(token.text_with_ws for token in span)</code>
+            </li>
+            <li><span class="declaration"><code>start</code></span>The start offset of the span, i.e. <code class="language-python">span[0].i</code>.
+            </li>
+            <li><span class="declaration"><code>end</code></span>The end offset of the span, i.e. <code class="language-python">span[-1].i + 1</code>
+            </li>
+          </ul>
+          <details open="open">
+            <summary>
+              <h4>Navigating the Parse Tree</h4>
+            </summary>
+            <details open="open">
+              <summary><span class="declaration"><code>root</code></span></summary>
+              <p>The word with the shortest path to the root of the sentence is the root of the span.
+                <pre class="language-python"><code>toks = nlp('I like New York in Autumn.')
+</code></pre>
+                <p>Let's name the indices --- easier than writing <code>toks[4]</code> etc.</p>
+                <pre class="language-python"><code>i, like, new, york, in_, autumn, dot = range(len(toks))
+</code></pre>
+                <p>The head of <em>new</em> is <em>York</em>, and the head of <em>York</em> is <em>like</em></p>
+                <pre class="language-python"><code>assert toks[new].head.orth_ == 'York'
+assert toks[york].head.orth_ == 'like'
+</code></pre>
+                <p>Create a span for "New York". Its root is "York".</p>
+                <pre class="language-python"><code>new_york = toks[new:york+1]
+assert new_york.root.orth_ == 'York'
+</code></pre>
+                <p>When there are multiple words with external dependencies, we take the first:</p>
+                <pre class="language-python"><code>assert toks[autumn].head.orth_ == 'in'
+assert toks[dot].head.orth_ == 'like'
+autumn_dot = toks[autumn:]
+assert autumn_dot.root.orth_ == 'Autumn'
+</code></pre>
+              </p>
+            </details>
+            <details open="open">
+              <summary><span class="declaration"><code>lefts</code></span></summary>
+              <p>Tokens that are to the left of the span, whose head is within the span, i.e. 
+                <pre class="language-python"><code># TODO: where does the span object come from?
+span = doc[:2]
+lefts = [span.doc[i] for i in range(0, span.start)
+         if span.doc[i].head in span]
+</code></pre>
+              </p>
+            </details>
+            <details open="open">
+              <summary><span class="declaration"><code>rights</code></span></summary>
+              <p>Tokens that are to the right of the span, whose head is within the span, i.e.
+                <pre class="language-python"><code>span = doc[:2]
+rights = [span.doc[i] for i in range(span.end, len(span.doc))
+          if span.doc[i].head in span]
+</code></pre>
+              </p>
+            </details>
+            <details open="open">
+              <summary><span class="declaration"><code>subtree</code></span></summary>
+              <p>Tokens in the range <code>(start, end+1)</code>, where <code>start</code> is the index of the leftmost word descended from a token in the span, and <code>end</code> is the index of the rightmost token descended from a token in the span.
+              </p>
+            </details>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Constructors</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>doc[start : end]</code></span>
+              </li>
+              <li><span class="declaration"><code>for entity in doc.ents</code></span>
+              </li>
+              <li><span class="declaration"><code>for sentence in doc.sents</code></span>
+              </li>
+              <li><span class="declaration"><code>for noun_phrase in doc.noun_chunks</code></span>
+              </li>
+              <li><span class="declaration"><code>span = Span(doc, start, end, label=0)</code></span>
+              </li>
+            </ul>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Strings</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>text_with_ws</code></span>The form of the span as it appears in the string, 
+                <including>trailing whitespace</including>.  This is useful when you need to use linguistic features to add inline mark-up to the string.
+              </li>
+              <li><span class="declaration"><code>lemma / lemma_</code></span>Whitespace-concatenated lemmas of each token in the span.
+              </li>
+              <li><span class="declaration"><code>label / label_</code></span>The span label, used particularly for named entities.
+              </li>
+            </ul>
+          </details>
+        </details>
+        <details open="open">
+          <summary><a name="lexeme"><span class="declaration"><span class="label">class</span><code>Lexeme</code></span></a></summary>
+          <p>The Lexeme object represents a lexical type, stored in the vocabulary &ndash; as opposed to a token, occurring in a document.</p>
+          <p>Each <code>Token</code> object receives a reference to a lexeme object (specifically, it receives a pointer to a <code>LexemeC</code> struct). This allows features to be computed and saved once per <em>type</em>, rather than once per <em>token</em>. As job sizes grow, this amounts to substantial efficiency improvements, as the vocabulary size (number of types) will be much smaller than the total number of words processed (number of tokens).</p>
+          <p>All Lexeme attributes are therefore context independent, as a single lexeme is reused for all usages of that word. Lexemes are keyed by the “orth” attribute.  </p>
+          <p>Most Lexeme attributes can be set, with the exception of the primary key, <code>orth</code>. Assigning to an attribute of the Lexeme object writes to the underlying struct, so all tokens that are backed by that Lexeme will inherit the new value.</p>
+          <details open="open">
+            <summary>
+              <h4>String Features</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>orth / orth_</code></span>The form of the word with no string normalization or processing, as it appears in the string, without trailing whitespace.
+              </li>
+              <li><span class="declaration"><code>lower / lower_</code></span>The form of the word, but forced to lower-case, i.e. <code class="language-python">lower = word.orth_.lower()</code>
+              </li>
+              <li><span class="declaration"><code>shape / shape_</code></span>A transform of the word's string, to show orthographic features. The characters a-z are mapped to x, A-Z is mapped to X, 0-9 is mapped to d. After these mappings, sequences of 4 or more of the same character are truncated to length 4.  Examples: C3Po --> XdXx, favorite --> xxxx, :) --> :) 
+              </li>
+              <li><span class="declaration"><code>prefix / prefix_</code></span>A length-N substring from the start of the word.  Length may vary by language; currently for English n=1, i.e. <code class="language-python">prefix = word.orth_[:1]</code>
+              </li>
+              <li><span class="declaration"><code>suffix / suffix_</code></span>A length-N substring from the end of the word.  Length may vary by language; currently for English n=3, i.e. <code class="language-python">suffix = word.orth_[-3:]</code>
+              </li>
+            </ul>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Boolean Features</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>is_alpha</code></span> Equivalent to <code class="language-python">word.orth_.isalpha()</code>
+              </li>
+              <li><span class="declaration"><code>is_ascii</code></span> Equivalent to <code class="language-python">any(ord(c) >= 128 for c in word.orth_)</code>
+              </li>
+              <li><span class="declaration"><code>is_digit</code></span> Equivalent to <code class="language-python">word.orth_.isdigit()</code>
+              </li>
+              <li><span class="declaration"><code>is_lower</code></span> Equivalent to <code class="language-python">word.orth_.islower()</code>
+              </li>
+              <li><span class="declaration"><code>is_title</code></span> Equivalent to <code class="language-python">word.orth_.istitle()</code>
+              </li>
+              <li><span class="declaration"><code>is_punct</code></span> Equivalent to <code class="language-python">word.orth_.ispunct()</code>
+              </li>
+              <li><span class="declaration"><code>is_space</code></span> Equivalent to <code class="language-python">word.orth_.isspace()</code>
+              </li>
+              <li><span class="declaration"><code>like_url</code></span> Does the word resembles a URL?
+              </li>
+              <li><span class="declaration"><code>like_num</code></span> Does the word represent a number? e.g. “10.9”, “10”, “ten”, etc
+              </li>
+              <li><span class="declaration"><code>like_email</code></span> Does the word resemble an email?
+              </li>
+              <li><span class="declaration"><code>is_oov</code></span> Is the word out-of-vocabulary?
+              </li>
+              <li><span class="declaration"><code>is_stop</code></span>Is the word part of a "stop list"? Stop lists are used to improve the quality of topic models, by filtering out common, domain-general words.
+              </li>
+            </ul>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Distributional Features</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>prob</code></span> The unigram log-probability of the word, estimated from counts from a large corpus, smoothed using Simple Good Turing estimation.
+              </li>
+              <li><span class="declaration"><code>cluster</code></span> The Brown cluster ID of the word. These are often useful features for linear models. If you’re using a non-linear model, particularly a neural net or random forest, consider using the real-valued word representation vector, in Token.repvec, instead.
+              </li>
+              <li><span class="declaration"><code>vector</code></span> A “word embedding” representation: a dense real-valued vector that supports similarity queries between words. By default, spaCy currently loads vectors produced by the Levy and Goldberg (2014) dependency-based word2vec model.
+              </li>
+              <li><span class="declaration"><code>has_vector</code></span>A boolean value indicating whether a vector.
+              </li>
+            </ul>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Constructors</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>lexeme = vocab[string]</code></span>
+              </li>
+              <li><span class="declaration"><code>lexeme = vocab[i]</code></span>
+              </li>
+            </ul>
+          </details>
+        </details>
+        <details open="open">
+          <summary><a><span class="declaration"><span class="label">class</span><code>Vocab</code></span></a></summary>
+          <ul>
+            <li><span class="declaration"><code>lexeme = vocab[integer_id]</code></span>Get a lexeme by its orth ID
+            </li>
+            <li><span class="declaration"><code>lexeme = vocab[string]</code></span>Get a lexeme by the string corresponding to its orth ID.
+            </li>
+            <li><span class="declaration"><code>for lexeme in vocab</code></span>Iterate over <code>Lexeme</code> objects
+            </li>
+            <li><span class="declaration"><code>vocab[integer_id] = attributes_dict</code></span>A props dictionary
+            </li>
+            <li><span class="declaration"><code>len(vocab)</code></span>Number of lexemes (unique words) in the 
+            </li>
+          </ul>
+          <details open="open">
+            <summary>
+              <h4>Constructors</h4>
+            </summary>
+            <ul>
+              <li><span class="declaration"><code>nlp.vocab</code></span>
+              </li>
+              <li><span class="declaration"><code>doc.vocab</code></span>
+              </li>
+              <li><span class="declaration"><code>span.vocab</code></span>
+              </li>
+              <li><span class="declaration"><code>token.vocab</code></span>
+              </li>
+              <li><span class="declaration"><code>lexeme.vocab</code></span>
+              </li>
+            </ul>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Save and Load</h4>
+            </summary>
+            <details open="open">
+              <summary><a><span class="declaration"><code>dump</code><span class="parameters">loc</span></span></a></summary>
+              <ul>
+                <li><strong>loc</strong> (<a class="reference" href="http://docs.python.org/library/functions.html#unicode"><em>unicode</em></a>) &#8211;Path where the vocabulary should be saved
+                </li>
+              </ul>
+            </details>
+            <details open="open">
+              <summary><a><span class="declaration"><code>load_lexemes</code><span class="parameters">loc</span></span></a></summary>
+              <ul>
+                <li><strong>loc</strong> (<a class="reference" href="http://docs.python.org/library/functions.html#unicode"><em>unicode</em></a>) &#8211;Path to load the lexemes.bin file from
+                </li>
+              </ul>
+            </details>
+            <details open="open">
+              <summary><a><span class="declaration"><code>load_vectors</code><span class="parameters">file</span></span></a></summary>
+              <ul>
+                <li><strong>file</strong> (<a class="reference" href="http://docs.python.org/library/functions.html#unicode"><em>unicode</em></a>) &#8211;A file-like object, to load word vectors from.
+                </li>
+              </ul>
+            </details>
+            <details open="open">
+              <summary><a><span class="declaration"><code>load_vectors_from_bin_loc</code><span class="parameters">loc</span></span></a></summary>
+              <ul>
+                <li><strong>loc</strong> (<a class="reference" href="http://docs.python.org/library/functions.html#unicode"><em>unicode</em></a>) &#8211;A path to a file, in spaCy's binary word-vectors file format.
+                </li>
+              </ul>
+            </details>
+          </details>
+        </details>
+        <details open="open">
+          <summary><a><span class="declaration"><span class="label">class</span><code>StringStore</code></span></a></summary>
+          <p>Intern strings, and map them to sequential integer IDs. The mapping table is very efficient , and a small-string optimization is used to maintain a small memory footprint.  Only the integer IDs are held by spaCy's data classes (<code>Doc</code>, <code>Token</code>, <code>Span</code> and <code>Lexeme</code>) &ndash; when you use a string-valued attribute like <code>token.orth_</code>, you access a property that computes <code>token.strings[token.orth]</code>.</p>
+          <ul>
+            <li><span class="declaration"><code>string = string_store[int_id]</code></span>Retrieve a string from a given integer ID. If the integer ID is not found, raise <code>IndexError</code>
+            </li>
+            <li><span class="declaration"><code>int_id = string_store[unicode_string]</code></span> Map a unicode string to an integer ID. If the string is previously unseen, it is interned, and a new ID is returned. 
+            </li>
+            <li><span class="declaration"><code>int_id = string_store[utf8_byte_string]</code></span> Byte strings are assumed to be in UTF-8 encoding.  Strings encoded with other codecs may fail silently.  Given a utf8 string, the behaviour is the same as for unicode strings.  Internally, strings are stored in UTF-8 format.  So if you start with a UTF-8 byte string, it's less efficient to first decode it as unicode, as StringStore will then have to encode it as UTF-8 once again.  
+            </li>
+            <li><span class="declaration"><code>n_strings = len(string_store)</code></span>Number of strings in the string-store
+            </li>
+            <li><span class="declaration"><code>for string in string_store</code></span>Iterate over strings in the string store, in order, such that the <em>i</em>th string in the sequence has the ID <em>i</em>:
+              <pre class="language-python"><code>string_store = doc.vocab.strings
+for i, string in enumerate(string_store):
+    assert i == string_store[string]
+</code></pre>
+            </li>
+          </ul>
+          <details open="open">
+            <summary>
+              <h4>Constructors</h4>
+            </summary>
+            <p><code>StringStore.__init__</code> takes no arguments, so a new instance can be constructed as follows:</p>
+            <pre class="language-python"><code>string_store = StringStore()</code></pre>
+            <p>However, in practice you'll usually use the instance owned by the language's <code>vocab</code> object, which all classes hold a reference to:</p>
+            <ul>
+              <li><code class="language-python">english.vocab.strings</code></li>
+              <li><code class="language-python">doc.vocab.strings</code></li>
+              <li><code class="language-python">span.vocab.strings</code></li>
+              <li><code class="language-python">token.vocab.strings</code></li>
+              <li><code class="language-python">lexeme.vocab.strings</code></li>
+            </ul>
+            <p>If you create another instance, it will map strings to different integers &ndash; which is usually not what you want.</p>
+          </details>
+          <details open="open">
+            <summary>
+              <h4>Save and Load</h4>
+            </summary>
+            <details open="open">
+              <summary><a><span class="declaration"><code>dump</code><span class="parameters">loc</span></span></a></summary>
+              <p>Save the strings mapping to the given location, in plain text. The format is subject to change; so if you need to read/write compatible files, please can find details in the <code>strings.pyx</code> source.</p>
+            </details>
+            <details open="open">
+              <summary><a><span class="declaration"><code>load</code><span class="parameters">loc</span></span></a></summary>
+              <p>Load the strings mapping from a plain-text file in the given location.  The format is subject to change; so if you need to read/write compatible files, please can find details in the <code>strings.pyx</code> source.</p>
+            </details>
+          </details>
+        </details>
+      </article>
+      <section class="intro">
+        <h2><a href="#tutorials" name="tutorials" class="permalink">Tutorials</a></h2>
+      </section>
+      <section class="tutorials">
+          <details open>
+            <summary>
+              <h4>Mark all adverbs, particularly for verbs of speech</h4>
+            </summary>
+            <p><a href="/docs/tutorials/mark-adverbs">Let's say you're developing a proofreading tool, or possibly an IDE for writers.  You're convinced by Stephen King's advice that adverbs are not your friend so you want to highlight all adverbs.</a> <a href="/docs/tutorials/mark-adverbs" class="readmore">►</a></p>
+          </details>
+          <details open>
+            <summary>
+              <h4>Search Reddit for comments about Google doing something</h4>
+            </summary>
+            <p><a href="/docs/tutorials/syntax-search">Example use of the spaCy NLP tools for data exploration. Here we will look for Reddit comments that describe Google doing something, i.e. discuss the company's actions. This is difficult, because other senses of &quot;Google&quot; now dominate usage of the word in conversation, particularly references to using Google products.</a> <a href="/docs/tutorials/syntax-search" class="readmore">►</a></p>
+          </details>
+          <details open>
+            <summary>
+              <h4>Finding Relevant Tweets</h4>
+            </summary>
+            <p><a href="/docs/tutorials/twitter-filter">In this tutorial, we will use word vectors to search for tweets about Jeb Bush. We'll do this by building up two word lists: one that represents the type of meanings in the Jeb Bush tweets, and another to help screen out irrelevant tweets that mention the common, ambiguous word 'bush'.</a> <a href="/docs/tutorials/twitter-filter" class="readmore">►</a></p>
+          </details>
+      </section>
+      <article>
+        <h2><a name="spec" href="#spec">Annotation Specifications</a></h2>
+        <details>
+          <summary>
+            <h4>Overview</h4>
+          </summary>
+          <p>This document describes the target annotations spaCy is trained to predict. This is currently a work in progress. Please ask questions on the issue tracker, so that the answers can be integrated here to improve the documentation.</p>
+        </details>
+        <details>
+          <summary>
+            <h4>Tokenization</h4>
+          </summary>
+          <p>Tokenization standards are based on the OntoNotes 5 corpus.</p>
+          <p>The tokenizer differs from most by including tokens for significant whitespace. Any sequence of whitespace characters beyond a single space (' ') is included as a token. For instance:</p>
+          <pre class="language-python"><code>from spacy.en import English
+nlp = English(parse=False)
+tokens = nlp('Some\nspaces  and\ttab characters')
+print([t.orth_ for t in tokens])</code></pre>
+          <p>Which produces:</p>
+          <pre class="language-python"><code>['Some', '\n', 'spaces', ' ', 'and', '\t', 'tab', 'characters']</code></pre>
+          <p>The whitespace tokens are useful for much the same reason punctuation is &ndash; it's often an important delimiter in the text.  By preserving it in the token output, we are able to maintain a simple alignment between the tokens and the original string, and we ensure that no information is lost during processing.</p>
+        </details>
+        <details>
+          <summary>
+            <h4>Sentence boundary detection</h4>
+          </summary>
+          <p>Sentence boundaries are calculated from the syntactic parse tree, so features such as punctuation and capitalisation play an important but non-decisive role in determining the sentence boundaries.  Usually this means that the sentence boundaries will at least coincide with clause boundaries, even given poorly punctuated text.  </p>
+        </details>
+        <details>
+          <summary>
+            <h4>Part-of-speech Tagging</h4>
+          </summary>
+          <p>The part-of-speech tagger uses the OntoNotes 5 version of the Penn Treebank tag set.  We also map the tags to the simpler Google Universal POS Tag set.</p>
+          <p>Details <a href="https://github.com/honnibal/spaCy/blob/master/spacy/tagger.pyx">here</a>.</p>
+        </details>
+        <details>
+          <summary>
+            <h4>Lemmatization</h4>
+          </summary>
+          <p>
+            A "lemma" is the uninflected form of a word. In English, this means:
+            
+          </p>
+          <ul>
+            <li>Adjectives: The form like "happy", not "happier" or "happiest"</li>
+            <li>Adverbs: The form like "badly", not "worse" or "worst"</li>
+            <li>Nouns: The form like "dog", not "dogs"; like "child", not "children"</li>
+            <li>Verbs: The form like "write", not "writes", "writing", "wrote" or "written" </li>
+          </ul>
+          <p>
+            The lemmatization data is taken from WordNet. However, we also add a
+            special case for pronouns: all pronouns are lemmatized to the special
+            token <code>-PRON-</code>.
+            
+            
+          </p>
+        </details>
+        <details>
+          <summary>
+            <h4>Syntactic Dependency Parsing</h4>
+          </summary>
+          <p>The parser is trained on data produced by the ClearNLP converter. Details of the annotation scheme can be found <a href="http://www.mathcs.emory.edu/~choi/doc/clear-dependency-2012.pdf">here</a>.</p>
+        </details>
+        <details>
+          <summary>
+            <h4>Named Entity Recognition</h4>
+          </summary>
+          <table>
+            <thead>
+              <tr>
+                <th>Entity Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>PERSON</td>
+                <td>People, including fictional.</td>
+              </tr>
+              <tr>
+                <td>NORP</td>
+                <td>Nationalities or religious or political groups.</td>
+              </tr>
+              <tr>
+                <td>FACILITY</td>
+                <td>Buildings, airports, highways, bridges, etc.</td>
+              </tr>
+              <tr>
+                <td>ORG</td>
+                <td>Companies, agencies, institutions, etc.</td>
+              </tr>
+              <tr>
+                <td>GPE</td>
+                <td>Countries, cities, states.</td>
+              </tr>
+              <tr>
+                <td>LOC</td>
+                <td>Non-GPE locations, mountain ranges, bodies of water.</td>
+              </tr>
+              <tr>
+                <td>PRODUCT</td>
+                <td>Vehicles, weapons, foods, etc. (Not services</td>
+              </tr>
+              <tr>
+                <td>EVENT</td>
+                <td>Named hurricanes, battles, wars, sports events, etc.</td>
+              </tr>
+              <tr>
+                <td>WORK_OF_ART</td>
+                <td>Titles of books, songs, etc.</td>
+              </tr>
+              <tr>
+                <td>LAW</td>
+                <td>Named documents made into laws</td>
+              </tr>
+              <tr>
+                <td>LANGUAGE</td>
+                <td>Any named language</td>
+              </tr>
+            </tbody>
+          </table>
+          <p>The following values are also annotated in a style similar to names:</p>
+          <table>
+            <thead>
+              <tr>
+                <th>Entity Type</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>DATE</td>
+                <td>Absolute or relative dates or periods</td>
+              </tr>
+              <tr>
+                <td>TIME</td>
+                <td>Times smaller than a day</td>
+              </tr>
+              <tr>
+                <td>PERCENT</td>
+                <td>Percentage (including “%”)</td>
+              </tr>
+              <tr>
+                <td>MONEY</td>
+                <td>Monetary values, including unit</td>
+              </tr>
+              <tr>
+                <td>QUANTITY</td>
+                <td>Measurements, as of weight or distance</td>
+              </tr>
+              <tr>
+                <td>ORDINAL</td>
+                <td>first&quot;, &quot;second&quot;</td>
+              </tr>
+              <tr>
+                <td>CARDINAL</td>
+                <td>Numerals that do not fall under another type</td>
+              </tr>
+            </tbody>
+          </table>
+        </details>
+      </article>
+    </main>
+    <script src="/docs/legacy/resources/js/prism.min.js"></script>
+    <!-- Details polyfill-->
+    <script>
+      var details = document.getElementsByTagName("details");
+      var summary = document.getElementsByTagName("summary");
+      for(var i = 0; i < details.length; i++) {
+        (details[i].getAttribute("open") == null) ? details[i].setAttribute("data-open", "false") : details[i].setAttribute("data-open", "true");
+      }
+      for(var i = 0; i < summary.length; i++) {
+        summary[i].addEventListener( "click", function(e) {
+            var parent = this.parentElement;
+            (parent.getAttribute("data-open") == "false") ? parent.setAttribute("data-open", "true") : parent.setAttribute("data-open", "false");
+        });
+      }
+    </script>
+    <script>
+      (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+      (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+      })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+      ga('create', 'UA-58931649-1', 'auto');
+      ga('send', 'pageview');
+    </script>
+    <footer role="contentinfo"><span class="slogan copyright">&copy; 2015 Syllogism Co. | <a href="mailto:contact@spacy.io">Contact</a></span></footer>
+  </body>
+</html>

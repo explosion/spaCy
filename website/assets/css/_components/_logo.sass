@@ -1,0 +1,36 @@
+//  Logo - Variables
+// ============================================================================
+
+$logo-size-large    : nth($width-logo, 1)
+$logo-size-regular  : nth($width-logo, 2)
+$logo-size-small    : nth($width-logo, 3)
+$logo-size-tiny     : nth($width-logo, 4)
+
+
+//  Logo - Style
+// ============================================================================
+
+//  path           - SVG path of logo
+//  .logo--small   - smaller style
+//  .logo--regular - regular style
+//  .logo--large   - bigger style
+
+.logo 
+    width: 100%
+
+    path
+        width: 100%
+        fill: currentColor
+
+    &--tiny
+        vertical-align: text-bottom
+        width: $logo-size-tiny
+
+    &--small
+        width: $logo-size-small
+
+    &--regular
+        width: $logo-size-regular
+
+    &--large
+        width: $logo-size-large

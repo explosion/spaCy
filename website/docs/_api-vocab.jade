@@ -1,0 +1,157 @@
+//-  Docs > API > Vocab
+//- ============================================================================
+
++section('vocab')
+    +h2('vocab', 'https://github.com/' + profiles.github + '/spaCy/blob/master/spacy/vocab.pyx#L47')
+        | #[+label('tag') class] Vocab
+
+    p
+        | A look-up table that allows you to access #[code.lang-python Lexeme]
+        | objects. The #[code.lang-python Vocab] instance also provides access to
+        | the #[code.lang-python StringStore], and owns underlying C-data that
+        | is shared between #[code.lang-python Doc] objects.
+
+        +aside('Caveat').
+            You should avoid working with #[code Doc], #[code Token] or #[code Span]
+            objects backed by multiple different #[code Vocab] instances, as
+            they may assume inconsistent string-to-integer encodings. All #[code Doc]
+            objects produced by the same #[code Language] instance will hold
+            a reference to the same #[code Vocab] instance.
+
+    +code('python', 'Overview').
+        class Vocab:
+            StringStore strings
+            Morphology morphology
+            dict get_lex_attr
+            int vectors_length
+
+            def __init__(self, get_lex_attr=None, tag_map=None, lemmatizer=None, serializer_freqs=None):
+                return self
+
+            @classmethod
+            def load(cls, data_dir, get_lex_attr):
+                return Vocab()
+
+            @classmethod
+            def from_package(cls, package, get_lx_attr=None, vectors_package=None):
+                return Vocab()
+
+            property serializer:
+                return Packer()
+
+            def __len__(self):
+                return int
+
+            def __contains__(self, string):
+                return bool
+
+            def __getitem__(self, id_or_string):
+                return Lexeme()
+
+            def dump(self, loc):
+                return None
+
+            def load_lexemes(self, loc):
+                return None
+
+            def dump_vectors(self, out_loc):
+                return None
+
+            def load_vectors(self, file_):
+                return int
+
+            def load_vectors_from_bin_loc(self, loc):
+                return int
+    
+    +table(['Example', 'Description'], 'code')
+        +row
+            +cell #[code.lang-python lexeme = vocab[integer_id]]
+            +cell.
+                Get a lexeme by its orth ID.
+
+        +row
+            +cell #[code.lang-python lexeme = vocab[string]]
+            +cell.
+                Get a lexeme by the string corresponding to its orth ID.
+
+        +row
+            +cell #[code.lang-python for lexeme in vocab]
+            +cell.
+                Iterate over #[code Lexeme] objects.
+        +row
+            +cell #[code.lang-python int_id = vocab.strings[u'dog']]
+            +cell.
+                Access the #[code StringStore] via #[code vocab.strings]
+        +row
+            +cell #[code.lang-python nlp.vocab is nlp.tokenizer.vocab]
+            +cell.
+                Access the from #[code.lang-python Doc]
+
+    +section('vocab-dump')
+        +h3('vocab-dump')
+            | #[+label('tag') method] Vocab.dump
+
+        +code('python', 'definition').
+            def dump(self, loc):
+                return None
+
+        +table(['Name', 'Type', 'Description'], 'params')
+            +row
+                +cell loc
+                +cell #[a(href=link_unicode target='_blank') unicode]
+                +cell.
+                    Path where the vocabulary should be saved.
+
+    +section('vocab-load_lexemes')
+        +h3('vocab-load_lexemes')
+            | #[+label('tag') method] Vocab.load_lexemes
+
+        +code('python', 'definition').
+            def load_lexemes(self, loc):
+                return None
+
+        +table(['Name', 'Type', 'Description'], 'params')
+            +row
+                +cell loc
+                +cell #[a(href=link_unicode target='_blank') unicode]
+                +cell.
+                    Path to load the lexemes.bin file from.
+
+        +section('vocab-dump_vectors')
+            +h3('vocab-dump_vectors')
+                | #[+label('tag') method] Vocab.dump_vectors
+
+            +code('python', 'definition').
+                def dump_vectors(self, loc):
+                    return None
+
+    +section('vocab-loadvectors')
+        +h3('vocab-loadvectors')
+            | #[+label('tag') method] Vocab.load_vectors
+
+        +code('python', 'definition').
+            def load_vectors(self, file_):
+                return None
+
+        +table(['Name', 'Type', 'Description'], 'params')
+            +row
+                +cell file
+                +cell #[a(href=link_unicode target='_blank') unicode]
+                +cell.
+                    A file-like object, to load word vectors from.
+
+
+    +section('vocab-loadvectorsfrombinloc')
+        +h3('vocab-saveload-loadvectorsfrom')
+            | #[+label('tag') method] Vocab.load_vectors_from_bin_loc
+
+        +code('python', 'definition').
+            def load_vectors_from_bin_loc(self, loc):
+                return None
+
+        +table(['Name', 'Type', 'Description'], 'params')
+            +row
+                +cell loc
+                +cell #[a(href=link_unicode target='_blank') unicode]
+                +cell.
+                    A path to a file, in spaCy's binary word-vectors file  format.

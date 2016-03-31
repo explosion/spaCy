@@ -1,0 +1,174 @@
+//  Typography - Variables
+// ============================================================================
+
+$font-size              : 1.6rem
+$headings               : h1, h2, h3, h4, h5, h6
+$heading-font-family    : $font-secondary
+$heading-font-sizes     : 5rem, 2.8rem, 2.4rem, 2rem, 1.8rem, 1.6rem
+$heading-font-weight    : bold
+$heading-padding        : $height-navbar 0 1.5rem 0
+$heading-text-shadow    : 2px 2px
+$line-height            : 1.375
+$page-title-size        : 6rem
+$color-highlight        : color($theme)
+$color-highlight-dark   : color($theme, dark)
+
+
+//  Typography - Style
+// ============================================================================
+
+// Placeholders
+
+%font-base
+    font-size: $font-size
+    line-height: $line-height
+
+%font-big
+    font-size: round-dec($font-size * 1.25)
+    line-height: round-dec($line-height * 1.15)
+
+%font-lead
+    font-size: round-dec($font-size * 1.75)
+    line-height: round-dec($line-height * 1.2)
+
+%font-small
+    font-size: round-dec($font-size * 0.75)
+    line-height: round-dec($line-height * 1.1)
+
+%font-medium-small
+    font-size: round-dec($font-size * 0.875)
+    line-height: round-dec($line-height * 1.1)
+
+%font-primary
+    font-family: $font-primary
+
+%font-secondary
+    font-family: $font-secondary
+
+%font-code
+    font-family: $font-code
+
+
+// Text styles
+//  .text             - regular text
+//  .text-big         - bigger style for blogs
+//  .text-lead        - large style for intro paragraphs
+//  .text-small       - smaller font size
+//  .text-quote       - style for quotation
+//  .text-meta        - slightly fainter but emphasized font for meta text
+//  .text-meta-strong - emphasized meta text
+//  .text-label       - text for labels
+//  .text-credit      -  meta text with copyright symbol for image credits
+//  .text-caption     - text for figure captions
+//  .text-source      - text for bibliography sources
+//  .text-example     - text for linguistic examples
+
+.text
+    @extend %font-primary, %font-base
+
+.text-big
+    @extend %font-primary, %font-big
+
+.text-lead
+    @extend %font-primary, %font-lead
+
+.text-medium-small
+    @extend %font-medium-small
+
+.text-small
+    @extend %font-small
+
+.text-quote
+    @extend .text-big
+    font-style: italic
+
+.text-meta
+    @extend %font-secondary, %font-base
+    font-style: normal
+    font-weight: 600
+    text-transform: uppercase
+
+.text-meta-strong
+    @extend .text-meta
+    font-weight: bold
+
+.text-label
+    @extend %font-secondary
+    font-size: round-dec($font-size * 0.875)
+    line-height: $line-height
+    font-weight: normal
+    text-transform: uppercase
+
+.text-credit
+    @extend .text-meta, .text-small
+    @include icon(copyright, currentColor, 0 0.25em 0 0)
+    color: color(grey, dark)
+
+.text-caption
+    @extend .text-small
+    color: color(grey, dark)
+    padding-top: 2rem
+
+.text-source
+    @extend .text-quote
+    display: block
+
+.text-example
+    @extend .text-lead
+    color: color(grey, dark)
+    font-style: italic
+
+.text-code
+    @extend %font-code
+    font-size: round-dec($font-size * 0.875)
+    font-weight: 600
+    font-style: normal
+    line-height: round-dec($line-height * 1.65)
+
+.text-center
+    text-align: center
+
+
+//  Headings - Style
+// ============================================================================
+
+//  Global heading style
+
+%heading
+    font-weight: $heading-font-weight
+    font-family: $heading-font-family
+    position: relative
+
+
+// Headings
+
+.h0
+    font-size: $page-title-size
+    line-height: round-dec($line-height * 0.9)
+    margin: 0
+    text-shadow: $heading-text-shadow $color-highlight-dark
+
+@for $i from 1 through length($headings)
+    $heading: nth($headings, $i)
+
+    #{$heading},
+    .#{$heading}
+        @extend %heading
+        font-size: nth($heading-font-sizes, $i)
+
+    @if $i == 1
+        .#{$heading}
+            padding: 0
+
+    @else
+        #{$heading}
+            padding: $heading-padding
+
+
+//  Selection - Style
+// ============================================================================
+
+*::selection
+    text-shadow: none
+    background: $color-highlight
+    color: color(white)

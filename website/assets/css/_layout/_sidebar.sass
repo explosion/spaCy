@@ -1,0 +1,65 @@
+//  Sidebar - Variables
+// ============================================================================
+
+$sidebar-breakpoint         : 900px
+$sidebar-highlight-color    : color($theme)
+$sidebar-margin-left        : 4rem
+$sidebar-margin-right       : 6rem
+$sidebar-margin-top         : $height-navbar
+$sidebar-menu-spacing       : 3rem
+$sidebar-small-border       : 1px solid color(grey, light)
+$sidebar-small-padding      : 2rem 3rem
+$sidebar-width              : $width-sidebar
+
+
+//  Sidebar - Style
+// ============================================================================
+
+//  .sidebar       - sidebar
+//  .fixed         - sticky version
+//  .menu          - menu list in sidebar
+//  .active        - active menu item
+//  .sidebar-label - menu label
+
+.sidebar
+    @media (min-width: #{$sidebar-breakpoint})
+        flex: 0 0 $sidebar-width
+        margin-right: $sidebar-margin-right
+        margin-left: $sidebar-margin-left
+        padding-top: $height-navbar
+        width: $sidebar-width
+
+        &.fixed .sidebar-body
+            @include position(fixed, top, left, $sidebar-margin-top, $sidebar-margin-left)
+            @include size($sidebar-width, calc(100vh - #{$sidebar-margin-top}))
+            overflow: auto
+            transition: none
+
+    @media (max-width: #{$sidebar-breakpoint})
+        border-bottom: $sidebar-small-border
+        flex: 100%
+        width: 100%
+
+        .sidebar-body
+            display: flex
+            flex-flow: row wrap
+
+.sidebar-menu
+    @media (min-width: #{$sidebar-breakpoint})
+        margin-bottom: $sidebar-menu-spacing
+
+    @media (max-width: #{$sidebar-breakpoint})
+        flex: 1
+        margin: 0
+        padding: $sidebar-small-padding
+        border-top: $sidebar-small-border
+
+        &:not(:last-child)
+            border-right: $sidebar-small-border
+
+    .active
+        color: $sidebar-highlight-color
+        font-weight: bold
+
+.sidebar-menu[data-label]:before
+    @extend .label

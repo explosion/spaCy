@@ -1,0 +1,51 @@
+{
+    "index": {
+        "landing": true
+    },
+
+    "feed": {
+        "layout": false
+    },
+
+    "robots": {
+        "layout": false
+    },
+
+    "404": {
+        "title": "404 Error",
+        "asides": false
+    },
+
+    "team": {
+        "title": "Team"
+    },
+
+    "legal": {
+        "title": "Legal & Imprint",
+        "sidebar": true,
+        "asides": true
+    },
+
+    "styleguide": {
+        "title" : "Styleguide",
+        "standalone" : true,
+        "asides": true,
+
+        "sidebar": {
+            "About": [
+                ["Introduction", "#section-introduction", "introduction"]
+            ],
+            "Design": [
+                ["Colors", "#section-colors", "colors"],
+                ["Logo", "#section-logo", "logo"],
+                ["Typography", "#section-typography", "typography"],
+                ["Grid", "#section-grid", "grid"],
+                ["Elements", "#section-elements", "elements"],
+                ["Components", "#section-components", "components"]
+            ],
+            "Code": [
+                ["Source", "#section-source", "source"]
+            ]
+        }
+    }
+}

@@ -1,0 +1,121 @@
+include ../../_includes/_mixins
+
++lead Let's say you're developing a proofreading tool, or possibly an IDE for writers.  You're convinced by Stephen King's advice that #[a(href="http://www.brainpickings.org/2013/03/13/stephen-king-on-adverbs" target="_blank") adverbs are not your friend] so you want to #[strong highlight all adverbs].  We'll use one of the examples he finds particularly egregious:
+
++code.
+    &gt;&gt;&gt; import spacy.en
+    &gt;&gt;&gt; from spacy.parts_of_speech import ADV
+    &gt;&gt;&gt; # Load the pipeline, and call it with some text.
+    &gt;&gt;&gt; nlp = spacy.en.English()
+    &gt;&gt;&gt; tokens = nlp(u"‘Give it back,’ he pleaded abjectly, ‘it’s mine.’", tag=True, parse=False)
+    &gt;&gt;&gt; print u''.join(tok.string.upper() if tok.pos == ADV else tok.string for tok in tokens)
+    u‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’
+
+p Easy enough --- but the problem is that we've also highlighted "back".  While "back" is undoubtedly an adverb, we probably don't want to highlight it. If what we're trying to do is flag dubious stylistic choices, we'll need to refine our logic.  It turns out only a certain type of adverb is of interest to us.  
+
+p There are lots of ways we might do this, depending on just what words we want to flag.  The simplest way to exclude adverbs like "back" and "not" is by word frequency: these words are much more common than the prototypical manner adverbs that the style guides are worried about.
+
+p The #[code Lexeme.prob] and #[code Token.prob] attribute gives a log probability estimate of the word:
+
++code.
+    &gt;&gt;&gt; nlp.vocab[u'back'].prob
+    -7.403977394104004
+    &gt;&gt;&gt; nlp.vocab[u'not'].prob
+    -5.407193660736084
+    &gt;&gt;&gt; nlp.vocab[u'quietly'].prob
+    -11.07155704498291
+
+p (The probability estimate is based on counts from a 3 billion word corpus, smoothed using the `Simple Good-Turing`_ method.) 
+
+p So we can easily exclude the N most frequent words in English from our adverb marker.  Let's try N=1000 for now:
+
++code.
+    &gt;&gt;&gt; import spacy.en
+    &gt;&gt;&gt; from spacy.parts_of_speech import ADV
+    &gt;&gt;&gt; nlp = spacy.en.English()
+    &gt;&gt;&gt; # Find log probability of Nth most frequent word
+    &gt;&gt;&gt; probs = [lex.prob for lex in nlp.vocab]
+    &gt;&gt;&gt; probs.sort()
+    &gt;&gt;&gt; is_adverb = lambda tok: tok.pos == ADV and tok.prob &lt; probs[-1000]
+    &gt;&gt;&gt; tokens = nlp(u"‘Give it back,’ he pleaded abjectly, ‘it’s mine.’")
+    &gt;&gt;&gt; print u''.join(tok.string.upper() if is_adverb(tok) else tok.string for tok in tokens)
+    ‘Give it back,’ he pleaded ABJECTLY, ‘it’s mine.’
+
+p There are lots of other ways we could refine the logic, depending on just what words we want to flag.  Let's say we wanted to only flag adverbs that modified words similar to "pleaded".  This is easy to do, as spaCy loads a vector-space representation for every word (by default, the vectors produced by `Levy and Goldberg (2014)`_).  Naturally, the vector is provided as a numpy array:
+
++code.
+    &gt;&gt;&gt; pleaded = tokens[7]
+    &gt;&gt;&gt; pleaded.vector.shape
+    (300,)
+    &gt;&gt;&gt; pleaded.vector[:5]
+    array([ 0.04229792,  0.07459262,  0.00820188, -0.02181299,  0.07519238], dtype=float32)
+
+p We want to sort the words in our vocabulary by their similarity to "pleaded".  There are lots of ways to measure the similarity of two vectors.  We'll use the cosine metric:
+
++code.
+    &gt;&gt;&gt; from numpy import dot
+    &gt;&gt;&gt; from numpy.linalg import norm
+
+    &gt;&gt;&gt; cosine = lambda v1, v2: dot(v1, v2) / (norm(v1) * norm(v2))
+    &gt;&gt;&gt; words = [w for w in nlp.vocab if w.has_vector]
+    &gt;&gt;&gt; words.sort(key=lambda w: cosine(w.vector, pleaded.vector))
+    &gt;&gt;&gt; words.reverse()
+    &gt;&gt;&gt; print('1-20', ', '.join(w.orth_ for w in words[0:20]))
+    1-20 pleaded, pled, plead, confessed, interceded, pleads, testified, conspired, motioned, demurred, countersued, remonstrated, begged, apologised, consented, acquiesced, petitioned, quarreled, appealed, pleading
+    &gt;&gt;&gt; print('50-60', ', '.join(w.orth_ for w in words[50:60]))
+    50-60 counselled, bragged, backtracked, caucused, refiled, dueled, mused, dissented, yearned, confesses
+    &gt;&gt;&gt; print('100-110', ', '.join(w.orth_ for w in words[100:110]))
+    100-110 cabled, ducked, sentenced, perjured, absconded, bargained, overstayed, clerked, confided, sympathizes
+    &gt;&gt;&gt; print('1000-1010', ', '.join(w.orth_ for w in words[1000:1010]))
+    1000-1010 scorned, baled, righted, requested, swindled, posited, firebombed, slimed, deferred, sagged
+    &gt;&gt;&gt; print('50000-50010', ', '.join(w.orth_ for w in words[50000:50010]))
+    50000-50010, fb, ford, systems, puck, anglers, ik, tabloid, dirty, rims, artists
+
+p As you can see, the similarity model that these vectors give us is excellent &mdash; we're still getting meaningful results at 1000 words, off a single prototype!  The only problem is that the list really contains two clusters of words: one associated with the legal meaning of "pleaded", and one for the more general sense.  Sorting out these clusters is an area of active research.
+
+p A simple work-around is to average the vectors of several words, and use that as our target:
+
++code.
+    &gt;&gt;&gt; say_verbs = ['pleaded', 'confessed', 'remonstrated', 'begged', 'bragged', 'confided', 'requested']
+    &gt;&gt;&gt; say_vector = sum(nlp.vocab[verb].vector for verb in say_verbs) / len(say_verbs)
+    &gt;&gt;&gt; words.sort(key=lambda w: cosine(w.vector * say_vector))
+    &gt;&gt;&gt; words.reverse()
+    &gt;&gt;&gt; print('1-20', ', '.join(w.orth_ for w in words[0:20]))
+    1-20 bragged, remonstrated, enquired, demurred, sighed, mused, intimated, retorted, entreated, motioned, ranted, confided, countersued, gestured, implored, interceded, muttered, marvelled, bickered, despaired
+    &gt;&gt;&gt; print('50-60', ', '.join(w.orth_ for w in words[50:60]))
+    50-60 flaunted, quarrelled, ingratiated, vouched, agonized, apologised, lunched, joked, chafed, schemed
+    &gt;&gt;&gt; print('1000-1010', ', '.join(w.orth_ for w in words[1000:1010]))
+    1000-1010 hoarded, waded, ensnared, clamoring, abided, deploring, shriveled, endeared, rethought, berate
+
+p These definitely look like words that King might scold a writer for attaching adverbs to.  Recall that our original adverb highlighting function looked like this:
+
++code.
+    &gt;&gt;&gt; import spacy.en
+    &gt;&gt;&gt; from spacy.parts_of_speech import ADV
+    &gt;&gt;&gt; # Load the pipeline, and call it with some text.
+    &gt;&gt;&gt; nlp = spacy.en.English()
+    &gt;&gt;&gt; tokens = nlp("‘Give it back,’ he pleaded abjectly, ‘it’s mine.’",
+                     tag=True, parse=False)
+    &gt;&gt;&gt; print(''.join(tok.string.upper() if tok.pos == ADV else tok.string for tok in tokens))
+    ‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’
+
+p We wanted to refine the logic so that only adverbs modifying evocative verbs of communication, like "pleaded", were highlighted.  We've now built a vector that represents that type of word, so now we can highlight adverbs based on subtle logic, honing in on adverbs that seem the most stylistically problematic, given our starting assumptions:
+
++code.
+    &gt;&gt;&gt; import numpy
+    &gt;&gt;&gt; from numpy import dot
+    &gt;&gt;&gt; from numpy.linalg import norm
+    &gt;&gt;&gt; import spacy.en
+    &gt;&gt;&gt; from spacy.parts_of_speech import ADV, VERB
+    &gt;&gt;&gt; cosine = lambda v1, v2: dot(v1, v2) / (norm(v1) * norm(v2))
+    &gt;&gt;&gt; def is_bad_adverb(token, target_verb, tol):
+    ...   if token.pos != ADV
+    ...     return False
+    ...   elif token.head.pos != VERB:
+    ...     return False
+    ...   elif cosine(token.head.vector, target_verb) &lt; tol:
+    ...     return False
+    ...   else:
+    ...     return True
+
+p This example was somewhat contrived &mdash; and, truth be told, I've never really bought the idea that adverbs were a grave stylistic sin.  But hopefully it got the message across: the state-of-the-art NLP technologies are very powerful. spaCy gives you easy and efficient access to them, which lets you build all sorts of useful products and features that were previously impossible.

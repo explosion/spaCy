@@ -1,0 +1,44 @@
+//  Cards - Variables
+// ============================================================================
+
+$card-border-radius     : $border-radius
+$card-border            : 1px solid color(grey)
+$card-figure-background : color(grey, light)
+$card-figure-ratio      : $image-ratio
+$card-padding           : 8%
+$card-shadow-light      : 0 0 5px color(grey, light)
+$card-shadow            : 0 0 5px color(grey)
+$card-transition        : $transition
+
+
+//  Cards - Style
+// ============================================================================
+
+// .card        - card element, ideally used within grids
+// .card-strong - highlighted style
+// .card-figure - graphic element within card 
+
+.card
+    border: $card-border
+    border-radius: $border-radius
+    flex: 1
+    overflow: auto
+    padding: $card-padding
+    width: 100%
+
+.card-strong
+    @extend .card
+    box-shadow: $card-shadow
+    transition: $card-transition
+
+    &:hover
+        box-shadow: $card-shadow-light
+
+.card-figure
+    background: $card-figure-background
+    border-radius: $card-border-radius
+    display: block
+    height: 0
+    margin-bottom: $card-padding
+    overflow: hidden
+    padding-bottom: 50%

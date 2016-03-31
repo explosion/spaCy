@@ -1,0 +1,187 @@
+{
+
+    "index": {
+        "title" : "Blog"
+    },
+
+    "modular-markup": {
+        "title": "Rebuilding a Website with Modular Markup Components",
+        "date": "2016-03-31",
+        "author": "ines",
+        "description": "In a small team, everyone should be able to contribute content to the website and make use of the full set of visual components, without having to worry about design or write complex HTML. To help us write docs, tutorials and blog posts about spaCy, we've developed a powerful set of modularized markup components, implemented using Jade.",
+        "image": {
+            "file": "markup.jpg",
+            "file_small": "markup_small.jpg",
+            "file_large": "markup_large.jpg",
+            "credit": "Kemal Sanli",
+            "url": "https://dribbble.com/kemal"
+        }
+    },
+
+    "sense2vec-with-spacy": {
+        "title": "Sense2vec with spaCy and Gensim",
+        "date": "2016-02-15",
+        "author": "matt",
+        "description": "If you were doing text analytics in 2015, you were probably using word2vec. Sense2vec (Trask et. al, 2015) is a new twist on word2vec that lets you learn more interesting, detailed and context-sensitive word vectors. This post motivates the idea, explains our implementation, and comes with an interactive demo that we've found surprisingly addictive.",
+        "image" : {
+            "file": "sense2vec.jpg",
+            "file_small": "sense2vec_small.jpg",
+            "file_large": "sense2vec_large.jpg",
+            "credit": "Kemal Sanli",
+            "url": "https://dribbble.com/kemal"
+        },
+        "links": {
+            "HackerNews": "https://news.ycombinator.com/item?id=11106386",
+            "ProductHunt": "https://www.producthunt.com/tech/spacy-io"
+        }
+    },
+
+    "spacy-now-mit": {
+        "title": "AGPL Not Free Enough: spaCy now MIT",
+        "date": "2015-09-28",
+        "author": "matt",
+        "description": "Three big announcements: we're changing license, to MIT from AGPL; a new co-founder is coming on board, Henning Peters; and we're launching a new service, to adapt spaCy's statistical models to your task.",
+        "image" : {
+            "file": "agpl-not-free.jpg",
+            "file_small": "agpl-not-free_small.jpg",
+            "file_large": "agpl-not-free_large.jpg",
+            "credit": "Kemal Sanli",
+            "url": "https://dribbble.com/kemal"
+        },
+        "links": {
+            "HackerNews": "https://news.ycombinator.com/item?id=10288089"
+        }
+    },
+
+    "dead-code-should-be-buried": {
+        "title": "Dead Code Should Be Buried",
+        "date": "2015-09-04",
+        "author": "matt",
+        "description": "Natural Language Processing moves fast, so maintaining a good library means constantly throwing things away. Most libraries are failing badly at this, as academics hate to editorialize. This post explains the problem, why it's so damaging, and why I wrote spaCy to do things differently.",
+        "image" : {
+            "file": "deadcode.jpg",
+            "file_small": "deadcode_small.jpg",
+            "file_large": "deadcode_large.jpg",
+            "credit": "Kemal Sanli",
+            "url": "https://dribbble.com/kemal"
+        },
+        "links": {
+            "Reddit": "https://www.reddit.com/r/programming/comments/3jmgck/dead_code_should_be_buried_why_i_wrote_spacy/",
+            "HackerNews": "https://news.ycombinator.com/item?id=10173669"
+        }
+    },
+
+    "eli5-computers-learn-reading": {
+        "title": "Statistical NLP in Basic English",
+        "date": "2015-08-24",
+        "author": "matt",
+        "description": "When I was little, my favorite TV shows all had talking computers. Now I’m big and there are still no talking computers, so I’m trying to make some myself. Well, we can make computers say things. But when we say things back, they don’t really understand. Why not?",
+        "image" : {
+            "file": "basic-english.jpg",
+            "file_small": "basic-english_small.jpg",
+            "file_large": "basic-english_large.jpg",
+            "credit": "Kemal Sanli",
+            "url": "https://dribbble.com/kemal"
+        },
+        "links": false
+    },
+
+    "displacy": {
+        "featured": true,
+        "title": "Displaying Linguistic Structure With CSS",
+        "date": "2015-08-19",
+        "author": "matt",
+        "description": "One of the features of the relaunch I'm most excited about is the displaCy visualizer and annotation tool. This solves two problems I've thought about a lot: first, how can I help people understand what information spaCy gives them access to? Without a good visualization, the ideas are very abstract.  Second, how can we make dependency trees easy for humans to create?",
+        "image": {
+            "file": "displacy.jpg",
+            "file_small": "displacy_small.jpg",
+            "file_large": "displacy_large.jpg"
+        },
+        "links": {
+            "Reddit": "https://www.reddit.com/r/programming/comments/3hoj0b/displaying_linguistic_structure_with_css/"
+        }
+    },
+
+    "introducing-spacy": {
+        "title": "Introducing spaCy",
+        "date": "2015-02-19",
+        "author": "matt",
+        "description": "Computers don't understand text.  This is unfortunate, because that's what the web almost entirely consists of.  We want to recommend people text based on other text they liked.  We want to shorten text to display it on a mobile screen.  We want to aggregate it, link it, filter it, categorise it, generate it and correct it. spaCy provides a library of utility functions that help programmers build such products.",
+        "image": {
+            "file": "introducing-spacy.jpg",
+            "file_small": "introducing-spacy_small.jpg",
+            "file_large": "introducing-spacy_large.jpg"
+        },
+        "links": {
+            "Reddit": "https://www.reddit.com/r/programming/comments/2tlyrr/spacy_industrialstrength_nlp_with_pythoncython",
+            "HackerNews": "https://news.ycombinator.com/item?id=8942783"
+        }
+    },
+
+    "how-spacy-works": {
+        "title": "How spaCy Works",
+        "date": "2015-02-19",
+        "author": "matt",
+        "description": "This post is a work in progress, explaining some of how spaCy is designed and implemented, and noting which algorithms were used.  spaCy is built on science, not alchemy, and when new discoveries are made, we publish them. We want to stay on the same page as the academic community, to use their work. Still, explaining everything takes time — so this post isn't yet as complete as we'd like it to be. Stay tuned.",
+        "image": {
+            "file": "how-spacy-works.jpg",
+            "file_small": "how-spacy-works_small.jpg",
+            "file_large": "how-spacy-works_large.jpg",
+            "credit": "Kemal Sanli",
+            "url": "https://dribbble.com/kemal"
+        }
+    },
+
+    "writing-c-in-cython": {
+        "title": "Writing C in Cython",
+        "date": "2014-10-21",
+        "author": "matt",
+        "description": "For the last two years, I’ve done almost all of my work in Cython. And I don’t mean, I write Python, and then “Cythonize” it, with various type-declarations et cetera. I just, write Cython. I use \"raw\" C structs and arrays, and occasionally C++ vectors, with a thin wrapper around malloc/free that I wrote myself. The code is almost always exactly as fast as C/C++, because that's really all it is, but with Python right there, if I want it.",
+        "image" : {
+            "file": "cython.jpg",
+            "file_small": "cython_small.jpg",
+            "file_large": "cython_large.jpg",
+            "credit": "Kemal Sanli",
+            "url": "https://dribbble.com/kemal"
+        },
+        "links": {
+            "Reddit": "https://www.reddit.com/r/Python/comments/2jvdw9/writing_c_in_cython/",
+            "HackerNews": "https://news.ycombinator.com/item?id=8483872"
+        }
+    },
+
+    "parsing-english-in-python": {
+        "title": "Parsing English in 500 Lines of Python",
+        "date": "2013-12-18",
+        "author": "matt",
+        "description": "This post explains how transition-based dependency parsers work, and argues that this algorithm represents a break-through in natural language understanding.  A concise sample implementation is provided, in 500 lines of Python, with no external dependencies.  This post was written in 2013. In 2015 this type of parser is now increasingly dominant.",
+        "image" : {
+            "file": "pizza.jpg",
+            "file_small": "pizza_small.jpg",
+            "file_large": "pizza_large.jpg",
+            "credit": "Kemal Sanli",
+            "url": "https://dribbble.com/kemal"
+        },
+        "links": {
+            "Reddit": "https://www.reddit.com/r/programming/comments/245jte/parsing_english_with_500_lines_of_python/",
+            "HackerNews": "https://news.ycombinator.com/item?id=7658864"
+        }
+    },
+
+    "part-of-speech-pos-tagger-in-python": {
+        "title": "A Good Part-of-Speech Tagger in about 200 Lines of Python",
+        "date": "2013-09-18",
+        "author": "matt",
+        "description": "Up-to-date knowledge about natural language processing is mostly locked away in academia. And academics are mostly pretty self-conscious when we write. We’re careful. We don’t want to stick our necks out too much. But under-confident recommendations suck, so here’s how to write a good part-of-speech tagger.",
+        "image" : {
+            "file": "pos-tagger.jpg",
+            "file_small": "pos-tagger_small.jpg",
+            "file_large": "pos-tagger_large.jpg",
+            "credit": "Kemal Sanli",
+            "url": "https://dribbble.com/kemal"
+        },
+        "links": {
+            "Reddit": "https://www.reddit.com/r/programming/comments/1mdn75/a_good_partofspeech_tagger_in_200_lines_of_python/"
+        }
+    }
+}

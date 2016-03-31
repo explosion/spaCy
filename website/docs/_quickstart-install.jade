@@ -1,0 +1,119 @@
+//-  Docs > Quickstart > Install
+//- ============================================================================
+
++section('install')
+    +h2('install')
+        | Install spaCy v#{spacy_version}
+
+    +section('install-pip-virtualenv')
+        +h3('install-pip-virtualenv')
+            | pip and virtualenv
+
+        p.
+            With Python 2.7 or Python 3, using Linux or OSX, ensure that you have 
+            the packages #[code build-essential] and #[code python-dev] installed. 
+            Then run:
+
+        +code('bash').
+            pip install spacy
+            python -m spacy.en.download
+
+        p.
+            The download command fetches and installs about 500mb of data, for the 
+            parser model and word vectors, which it installs within the spacy 
+            package directory. Usually you'll want to install spaCy within a 
+            #[a(href='https://virtualenv.readthedocs.org/en/latest/' target='_blank') virtualenv], 
+            to avoid modifying system state:
+
+        +code('bash').
+            virtualenv my_env_dir
+            source my_env_dir/bin/activate
+
+    +section('install-conda')
+        +h3('install-conda')
+            | conda
+
+        +code('bash').
+            conda config --add channels spacy
+            conda install spacy
+            python -m spacy.en.download
+
+        p.
+            Sometimes conda is not up to date with the latest release. If you 
+            can't get the latest version on conda, you can always fall back to the 
+            pip install.
+
+    +section('install-windows')
+        +h3('install-windows')
+            | Windows (64 bit)
+
+        p.
+            We've been working on Windows support. Our tests now succeed on 64 bit 
+            builds of Windows. Installation from pip should work if you have a C++ 
+            compiler installed. Please see the README-MSVC.txt file for instructions 
+            on compiling from source.
+    
+    +section('install-update')
+        +h3('install-update')
+            | Updating your installation
+
+        p.
+            To update your installation:
+
+        +code('bash').
+            pip install --upgrade spacy
+            python -m spacy.en.download
+
+        p.
+            Most updates ship a new model, so you will usually have to redownload 
+            the data.
+
+
+    +section('install-obsolete-python')
+        +h3('install-obsolete-python')
+            | Workaround for obsolete system Python
+
+        p.
+            If you're stuck using a server with an old version of Python, and you 
+            don't have root access, we've prepared a bootstrap script to help you 
+            compile a local Python install. Run:
+
+        +code('bash')
+            curl https://raw.githubusercontent.com/spacy-io/gist/master/bootstrap_python_env.sh | bash && source .env/bin/activate
+
+    +section('install-compile')
+        +h3('install-compile')
+            | Compile from source
+
+        p.
+            The other way to install the package is to clone the github repository, 
+            and build it from source. This installs an additional dependency, Cython. 
+            If you're using Python 2, we also recommend installing fabric and 
+            fabtools – this is how we build the project. Ensure that you have the 
+            packages #[code build-essential], #[code python-dev], #[code git] and 
+            #[code python-virtualenv] installed.
+
+        +code('bash')
+            git clone https://github.com/spacy-io/spaCy.git
+            cd spaCy
+            virtualenv .env && source .env/bin/activate
+            pip install -r requirements.txt
+            pip install -e .
+            python -m spacy.en.download
+            pip install pytest
+            python -m pytest spacy
+
+        p.
+            Python packaging is awkward at the best of times, and it's particularly 
+            tricky with C extensions, built via Cython, requiring large data files. 
+            So, please report issues as you encounter them.
+
+    +section('install-pypy')
+        +h3('install-pypy')
+            | pypy (unsupported)
+
+        p.
+            If PyPy support is a priority for you, please get in touch. We could 
+            likely fix the remaining issues, if necessary. However, the library 
+            is likely to be much slower on PyPy, as it's written in Cython, which 
+            produces code tuned for the performance of CPython.

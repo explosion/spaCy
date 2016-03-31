@@ -1,0 +1,96 @@
+//  Mixins
+// ============================================================================
+
+//  Helper for position
+//  $position    - valid position value (static, absolute, fixed, relative)
+//  $pos-y       - position direction Y (top, bottom)
+//  $pos-x       - position direction X (left, right)
+//  $pos-y-value - value of position Y direction
+//  $pos-x-value - value of position X direction
+
+@mixin position($position, $pos-y, $pos-x, $pos-y-value, $pos-x-value)
+    position: $position
+    #{$pos-y}: $pos-y-value
+    #{$pos-x}: $pos-x-value
+
+
+//  Helper for width and height
+//  $width  - width of element
+//  $height - height of element (default: $width)
+
+@mixin size($width, $height: $width)
+    height: $height
+    width: $width
+
+
+//  Icon before or after an element
+//  $icon-name     - name of icon, refers to icon specified in settings
+//  $icon-color    - color of icon (default: no color specified)
+//  $icon-padding  - padding around icon (in shorthand style, default: 0)
+//  $icon-size     - font size of icon (default: no size specified)
+
+@mixin icon($icon-name, $icon-color: none, $icon-padding: 0, $icon-size: none)
+    &:before
+        @extend %icon
+        content: map-get($icons, $icon-name)
+        padding: $icon-padding
+
+        @if $icon-color != none
+            color: $icon-color
+
+        @if $icon-size != none
+            font-size: $icon-size
+
+
+//  Triangle pointing down
+//  $triangle-size - width of the triangle
+
+@mixin triangle-down($triangle-size)
+    @include size(0)
+    border-color: transparent
+    border-style: solid
+    border-top-color: inherit
+    border-width: $triangle-size $triangle-size 0 $triangle-size
+    content: ''
+
+
+//  Make element visible or invisible (included as mixin to work in media queries)
+//  $visibility-state      - visible or invisible
+//  $visibility-transition - transition (default: $transition)
+
+@mixin visibility($visibility-state, $visibility-transition: $transition)
+    transition: $visibility-transition
+    
+    @if $visibility-state == hidden
+        opacity: 0
+        pointer-events: none
+        visibility: hidden
+
+    @else
+        opacity: 1
+        pointer-events: initial
+        visibility: visible
+
+
+// Scroll shadows for reponsive tables
+// adapted from David Bushell, http://codepen.io/dbushell/pen/wGaamR
+// $scroll-shadow-color      - color of shadow
+// $scroll-shadow-side       - side to cover shadow (left or right)
+// $scroll-shadow-background - original background color to match
+
+@mixin scroll-shadow-base($scroll-shadow-color)
+    background: radial-gradient(left, ellipse, rgba(0,0,0, .2) 0%, rgba(0,0,0, 0) 75%) 0 center, radial-gradient(right, ellipse, rgba(0,0,0, .2) 0%, rgba(0,0,0, 0) 75%) 100% center
+    background-size: 10px 100%, 10px 100%
+    background-attachment: scroll, scroll
+    background-repeat: no-repeat
+
+@mixin scroll-shadow-cover($scroll-shadow-side, $scroll-shadow-background)
+    $scroll-gradient-direction: right !default
+
+    @if $scroll-shadow-side == right
+        $scroll-gradient-direction: left
+        background-position: 100% 0
+
+    background-image: linear-gradient(to #{$scroll-gradient-direction}, rgba($scroll-shadow-background, 1) 50%, rgba($scroll-shadow-background, 0) 100%)
+    background-repeat: no-repeat
+    background-size: 20px 100%
