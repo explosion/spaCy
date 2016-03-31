@@ -73,6 +73,11 @@ htmlcov/
 nosetests.xml
 coverage.xml
 
+# Website
+website/www/
+website/demos/displacy/
+website/demos/sense2vec/
+
 # Translations
 *.mo
 
@@ -87,11 +92,6 @@ coverage.xml
 # Django stuff:
 *.log
 *.pot
-
-# Sphinx documentation
-docs/_build/
-docs/_themes/
-setup.py
 
 # Windows local helper files
 *.bat
