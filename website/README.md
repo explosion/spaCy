@@ -17,6 +17,6 @@ This will serve the site on [http://localhost:9000](http://localhost:9000). You 
 
 Jade is an extensible templating language with a readable syntax, that compiles to HTML.
 The website source makes extensive use of Jade mixins, so that the design system is abstracted away from the content you're
-writing. You can read more about our approach in our blog post, ["Rebuilding a Site with Modular Markup"](https://spacy.io/blog/modular-markup).
+writing. You can read more about our approach in our blog post, ["Rebuilding a Website with Modular Markup Components"](https://spacy.io/blog/modular-markup).
 
 If you want to write or edit the pages, the site's [styleguide](http://spacy.io/styleguide) serves as a useful reference of the available mixins.
