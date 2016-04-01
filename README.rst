@@ -43,7 +43,3 @@ Supports
 * OSX
 * Linux
 * Windows (Cygwin, MinGW, Visual Studio)
-
-Difficult to support:
-
-* PyPy
