@@ -1,7 +1,6 @@
 import inventoryCount as mainModule
 import os
-from spacy.en import English, LOCAL_DATA_DIR
-data_dir = os.environ.get('SPACY_DATA', LOCAL_DATA_DIR)
+from spacy.en import English
 
 if __name__ == '__main__':
     """

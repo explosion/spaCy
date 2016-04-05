@@ -33,10 +33,6 @@ your yours yourself yourselves
 STOPWORDS = set(w for w in STOPWORDS.split() if w)
 
 
-# This is deprecated as of v100
-LOCAL_DATA_DIR = path.join(path.dirname(__file__), 'data')
-
-
 class English(Language):
     lang = 'en'
 
