@@ -1,0 +1,53 @@
+//  Body - Variables
+// ============================================================================
+
+$body-background            : color(white)
+$body-color                 : color(black)
+$main-padding-sides         : 4rem
+$main-padding-bottom        : 8rem
+$main-article-margin-left   : 10rem
+
+
+//  Body - Style
+// ============================================================================
+
+.body
+    @extend .text
+    background: $body-background
+    color: $body-color
+    display: flex
+    flex-flow: row wrap
+
+
+//  Main content
+//  .main          - main content container
+//  .main--asides  - main content with asides
+//  .main--article - main content for articles
+
+.main
+    flex: 1 1 auto
+    max-width: 100%
+    padding: $height-navbar $main-padding-sides $main-padding-bottom $main-padding-sides
+    width: $width-content - $width-aside
+
+
+    // Remove top padding from first element if it's a level 2 headline
+
+    & > *:first-child > h2:first-child
+        padding-top: 0
+
+
+    // Large screens only
+
+    @media (min-width: #{$screen-size-large})
+        &.main--asides
+            margin-right: $width-aside
+
+        &.main--article
+            margin-left: $main-article-margin-left
+
+
+//  Sections
+
+.section
+    @extend .block

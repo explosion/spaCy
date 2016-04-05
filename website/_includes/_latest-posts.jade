@@ -1,0 +1,17 @@
+include _mixins
+
+- var post_counter = 0
+- var is_docs = (_section == 'docs')
+
+
+//-  Latest Posts
+//- ============================================================================
+
++grid('padding')
+    each post, slug in ( (_section == 'docs' ) ? public.docs.tutorials._data : public.blog._data)
+        if slug != 'index' && slug != current.source && post_counter < (max || 3)
+
+            +grid-col('space-between', ((max > 2 && max % 3 == 0) ? 'third' : 'half'))
+                !=partial('_teaser', { teaser: post, slug: slug, _root: (is_docs) ? '/docs/tutorials/' : '/blog/' })
+
+            - post_counter++

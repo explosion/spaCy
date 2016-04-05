@@ -1,0 +1,28 @@
+//  Form Elements - Variables
+// ============================================================================
+
+$input-border           : 1px solid color(grey)
+$input-border-radius    : $border-radius
+$input-color            : color(grey, dark)
+$input-padding          : 0.5em 0.75em
+$input-transition       : $transition
+
+
+//  Form Elements - Style
+// ============================================================================
+
+//  Text input field
+//  :hover - style on hover
+//  :focus - style on focus
+
+.input
+    @extend .text
+    border: $input-border
+    border-radius: $input-border-radius
+    color: $input-color
+    padding: $input-padding
+    transition: $input-transition
+
+    &:hover,
+    &:focus
+        border-color: currentColor

@@ -1,0 +1,154 @@
+include ../../_includes/_mixins
+
++lead #[a(href=url) spaCy] is great for data exploration. Poking, prodding and sifting is fundamental to good data science. In this tutorial, we'll do a broad keword search of Twitter, and then sift through the live stream of tweets, zooming in on some topics and excluding others.
+
+p An example filter-function:
+
++code.
+    accept = map(get_vector, 'Jeb Cheney Republican 9/11h'.split())
+    reject = map(get_vector, 'garden Reggie hairy'.split())
+            
+    y = sum(max(cos(w1, w2), 0) for w1 in tweet for w2 in accept)
+    n = sum(max(cos(w1, w2), 0) for w1 in tweet for w2 in reject)
+            
+    if (y / (y + n)) >= 0.5 or True:
+        print(text)
+
+p We'll build the filter as we go, simply editing the script in place.  However, we don't want to disconnect and reconnect from Twitter on every change.  To do this, we'll just put our match function in a different file, and reload the module every few seconds. It's probably not a UI you'd deliver to someone else, but so what? Data exploration is between you and your terminal.
+
++code("python", "twitter_filter.py (complete script)").
+    # encoding: utf8
+    from __future__ import unicode_literals, print_function
+    import plac
+    import codecs
+    import pathlib
+    import random
+    
+    import twython
+    import spacy.en
+    
+    import _handler
+    
+    
+    class Connection(twython.TwythonStreamer):
+        def __init__(self, keys_dir, nlp, query):
+            keys_dir = pathlib.Path(keys_dir)
+            read = lambda fn: (keys_dir / (fn + '.txt')).open().read().strip()
+            api_key = map(read, ['key', 'secret', 'token', 'token_secret'])
+            twython.TwythonStreamer.__init__(self, *api_key)
+            self.nlp = nlp
+            self.query = query
+    
+        def on_success(self, data):
+            _handler.handle_tweet(self.nlp, data, self.query)
+            if random.random() >= 0.1:
+                reload(_handler)
+    
+    
+    def main(keys_dir, term):
+        nlp = spacy.en.English()
+        twitter = Connection(keys_dir, nlp, term)
+        twitter.statuses.filter(track=term, language='en')
+    
+    
+    if __name__ == '__main__':
+        plac.call(main)
+
+
++code("python", "handler.py (complete script)").
+    from __future__ import unicode_literals, print_function
+    
+    from math import sqrt
+    from numpy import dot
+    from numpy.linalg import norm
+    
+    
+    def handle_tweet(spacy, tweet_data, query):
+        text = tweet_data.get('text', '')
+        match_tweet(spacy, text.decode('utf8'), query)
+    
+    
+    def match_tweet(spacy, text, query):
+        def get_vector(word):
+            return spacy.vocab[word].repvec
+    
+        tweet = spacy(text)
+        tweet = [w.repvec for w in tweet if w.is_alpha and w.lower_ != query]
+        if tweet:
+            accept = map(get_vector, 'Jeb Cheney Republican 9/11h'.split())
+            reject = map(get_vector, 'garden Reggie hairy'.split())
+            y = sum(max(cos(w1, w2), 0) for w1 in tweet for w2 in accept)
+            n = sum(max(cos(w1, w2), 0) for w1 in tweet for w2 in reject)
+            
+            if (y / (y + n)) >= 0.5 or True:
+                print(text)
+    
+    
+    def cos(v1, v2):
+        return dot(v1, v2) / (norm(v1) * norm(v2))
+
+p Below, I go through the script in execution-order.
+
++h3("command-line-interface-main") Command-line Interface and main()
+    
+p I always use the plac library for command-line arguments, as I think it "scales down" the best.  This just wraps the main functon, so that the two arguments of main are positional arguments on the command-line.
+    
+p We accept a directory that stores the twitter keys, and a search term, which we live-filter twitter for. We build a spaCy instance, and pass it to the connection. From here, #[code Connection.on_success] is called with each tweet &ndash; so that's where the rest of our logic lives.
+
++code.
+    def main(keys_dir, term):
+        nlp = spacy.en.English()
+        twitter = Connection(keys_dir, nlp, term)
+        twitter.statuses.filter(track=term, language='en')
+    
+    
+    if __name__ == '__main__':
+        plac.call(main)
+
++h3("event-loop") The Event Loop
+
+p We read our key files off disk, and connect to Twitter. In the #[code on_success()] method, which is called with each tweet, we reload the handler 10% of the time. This way we can live-edit the handler, without constantly reconnecting to Twitter.
+
++code.
+    class Connection(twython.TwythonStreamer):
+        def __init__(self, keys_dir, nlp, query):
+            keys_dir = pathlib.Path(keys_dir)
+            read = lambda fn: (keys_dir / (fn + '.txt')).open().read().strip()
+            api_key = map(read, ['key', 'secret', 'token', 'token_secret'])
+            twython.TwythonStreamer.__init__(self, *api_key)
+            self.nlp = nlp
+            self.query = query
+    
+        def on_success(self, data):
+            _handler.handle_tweet(self.nlp, data, self.query)
+            if random.random() >= 0.1:
+                reload(_handler)
+
+
++h3("the-part-you-live-edit") The Part You Live Edit
+
+p We can now use spaCy on the live Twitter feed. In the example below I sketch out a simple word-vector based tweet filter. The idea here is to be a bit more flexible than simple keyword filters, as we can turn the strictness of the filter up or down with the constant given, and we can specify exclusion terms to filter out distractor topics as they arise.
+
+p Instead of averaging the vectors in the tweet, I've set it to sum the values above zero, taking a little inspiration from what works well in neural networks. This is just an idea, to show that we can really come up with arbtrary logic quite quickly here.
+
++code.
+    def handle_tweet(spacy, resp, query):
+        def get_vector(word):
+            return spacy.vocab[word].repvec
+    
+        text = resp.get('text', '').decode('utf8')
+        tweet = spacy(text)
+        tweet = [w.repvec for w in tweet if w.is_alpha and w.lower_ != query]
+        if tweet:
+            accept = map(get_vector, 'Jeb Cheney Republican 9/11h'.split())
+            reject = map(get_vector, 'garden Reggie hairy'.split())
+            
+            y = sum(max(cos(w1, w2), 0) for w1 in tweet for w2 in accept)
+            n = sum(max(cos(w1, w2), 0) for w1 in tweet for w2 in reject)
+            
+            if (y / (y + n)) >= 0.5 or True:
+                print(text)
+    
+    
+    def cos(v1, v2):
+        return dot(v1, v2) / (norm(v1) * norm(v2))

@@ -1,0 +1,72 @@
+//  Dividers - Variables
+// ============================================================================
+
+$divider-border     : 1px solid color(grey)
+$divider-locations  : top, bottom
+$divider-margin     : 5rem
+$divider-padding    : 3rem
+$divider-text-align : center
+
+
+//  Dividers - Style
+// ============================================================================
+
+// General divider
+
+.divider
+    @extend %clearfix
+    width: 100%
+    margin: $divider-margin 0
+
+@each $divider-location in $divider-locations
+    %divider-#{$divider-location}
+        @extend .divider
+        border-#{$divider-location}: $divider-border
+
+
+//  Divider above element
+//  .divider-top        - add divider to top of element
+//  .divider-bottom     - add divider to bottom of element
+//  .divider-both       - add divider to top and bottom of element
+
+.divider-top
+    @extend %divider-top
+    padding-top: $divider-padding
+
+.divider-bottom
+    @extend %divider-bottom
+    padding-bottom: $divider-padding
+
+.divider-both
+    @extend .divider-top
+    @extend .divider-bottom
+
+
+// Divider bar for text and links
+// .divider-bar - container element
+
+.divider-bar
+    @extend %divider-top, %divider-bottom, .label
+    margin: 0
+    text-align: $divider-text-align
+
+
+// Divider with text
+// .divider-text         - container element
+// .divider-text-content - text content
+
+.divider-text
+    @extend %divider-top
+    text-align: $divider-text-align
+    margin: $divider-margin 0
+
+    .divider-text-content
+        background: color(white)
+        display: inline-block
+        line-height: 0.5
+        margin: -0.5em 0 0 0
+        padding: 0 0.5em
+
+        & > *
+            margin: 0
+            padding: 0

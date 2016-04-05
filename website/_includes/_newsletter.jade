@@ -1,0 +1,21 @@
+include _mixins
+
+//-  Newsletter Signup
+//- ============================================================================
+
+.block.text-center(class=(divider) ? 'divider-' + divider : '')
+
+    +label('strong') Sign up for the spaCy newsletter
+    +h3.h1 Stay in the loop!
+    +lead Receive updates about new releases, tutorials and more.
+
+    form(action='https://spacy.us12.list-manage.com/subscribe/post?u=83b0498b1e7fa3c91ce68c3f1&amp;id=89ad33e698' method='post' id='mc-embedded-subscribe-form' name='mc-embedded-subscribe-form' target="_blank" novalidate)
+    
+        +grid('align-center', 'valign-center', 'margin-right')
+            +input('Your email address', '')(type='email' name='EMAIL' id='mce-EMAIL')
+
+            //- Spam bot protection
+            div(style='position: absolute; left: -5000px;' aria-hidden='true')
+                input(type='text' name='b_83b0498b1e7fa3c91ce68c3f1_89ad33e698' tabindex='-1' value='')
+
+            +form-button('primary', 'small')(type='submit' name='subscribe' id='mc-embedded-subscribe') Sign up

@@ -1,0 +1,22 @@
+include _mixins
+
+//-  Teaser
+//- ============================================================================
+
+.teaser
+    if teaser.image
+      a(href=(_root || '') + slug target=teaser.target)
+          .image-ratio: img(src=(_root || '') + 'img/' + ((is_featured) ? teaser.image.file : teaser.image.file_small || teaser.image.file))
+
+    +h2
+        if is_featured
+            div: .label-strong Featured
+
+        a.block(href=(_root || '') + slug target=teaser.target class=(is_featured) ? 'h1' : 'h2')=teaser.title
+
+    p(class=(is_featured) ? 'text-lead' : '')=teaser.description
+
+if showmeta != false
+    .text-meta.text-small 
+        //- | by #{authors[teaser.author].name} on 
+        | #[+date(teaser.date)]

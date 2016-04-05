@@ -1,0 +1,105 @@
+//-  Docs > API > StringStore
+//- ============================================================================
+
++section('stringstore')
+    +h2('stringstore', 'https://github.com/' + profiles.github + '/spaCy/blob/master/spacy/strings.pyx#L74')
+        | #[+label('tag') class] StringStore
+
+    p
+        | Intern strings, and map them to sequential integer IDs.
+
+    p
+        | Only the integer IDs are held by spaCy's data 
+        | classes (#[code Doc], #[code Token], #[code Span] and #[code Lexeme]) 
+        | &ndash; when you use a string-valued attribute like #[code token.orth_], 
+        | you access a property that computes #[code token.strings[token.orth]].
+
+        +aside('Efficiency').
+            The mapping table is very efficient , and a small-string optimization
+            is used to maintain a small memory footprint.
+
+
+    +table(['Usage', 'Description'], 'code')
+        +row
+            +cell #[code.lang-python string = string_store[int_id]]
+            +cell.
+                Retrieve a string from a given integer ID. If the integer ID 
+                is not found, raise #[code IndexError].
+
+        +row
+            +cell #[code.lang-python int_id = string_store[unicode_string]]
+            +cell.
+                Map a unicode string to an integer ID. If the string is 
+                previously unseen, it is interned, and a new ID is returned.
+
+        +row
+            +cell #[code.lang-python int_id = string_store[utf8_byte_string]]
+            +cell.
+                Byte strings are assumed to be in UTF-8 encoding. Strings 
+                encoded with other codecs may fail silently. Given a utf8 
+                string, the behaviour is the same as for unicode strings. 
+                Internally, strings are stored in UTF-8 format. So if you start 
+                with a UTF-8 byte string, it's less efficient to first decode 
+                it as unicode, as StringStore will then have to encode it as 
+                UTF-8 once again.
+
+        +row
+            +cell #[code.lang-python n_strings = len(string_store)]
+            +cell.
+                Number of strings in the string-store.
+
+        +row
+            +cell #[code.lang-python for string in string_store]
+            +cell 
+                p.
+                    Iterate over strings in the string store, in order, such 
+                    that the ith string in the sequence has the ID #[code i]:
+
+                +code.code-block-small.no-block.
+                    string_store = doc.vocab.strings
+                    for i, string in enumerate(string_store):
+                        assert i == string_store[string]
+
+    +section('stringstore-init')
+        +h3('stringstore-init')
+            | #[+label('tag') method] StringStore.__init__
+
+        +code('python', 'Definition').
+            def __init__(self):
+                return self
+
+    +section('stringstore-dump')
+        +h3('stringstore-dump')
+            | #[+label('tag') method] StringStore.dump
+        
+        p Save the string-to-int mapping to the given file.
+
+        +code('python', 'Definition').
+            def dump(self, file):
+                return None
+
+        +table(['Name', 'Type', 'Description'], 'params')
+            +row 
+                +cell loc
+                +cell str
+                +cell.
+                    The file to write the data to.
+
+    +section('stringstore-load')
+        +h3('stringstore-load')
+            | #[+label('tag') method] StringStore.load
+        
+        p Load the strings from the given file.
+
+        +code('python', 'Definition').
+            def load(self, file):
+                return None
+
+        +table(['Name', 'Type', 'Description'], 'params')
+            +row 
+                +cell file
+                +cell file
+                +cell.
+                    File-like object to load the data from. The format is subject
+                    to change; so if you need to read/write compatible files, please
+                    find details in the strings.pyx source.

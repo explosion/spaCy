@@ -1,0 +1,66 @@
+include ../../_includes/_mixins
+
+p By default spaCy loads a #[code data/vocab/vec.bin] file, where the #[em data] directory is within the #[code spacy.en] module directory.  This file can be replaced, to customize the word vectors that spaCy loads. You can also replace the word vectors at run-time.
+
++h3("replacing-vec-bin") Replacing vec.bin
+
+p The function #[code spacy.vocab.write_binary_vectors] creates a word vectors file in spaCy's binary data format. It expects a #[code bz2] file in the following format:
+
++code.
+    word_key1 0.92 0.45 -0.9 0.0
+    word_key2 0.3 0.1 0.6 0.3
+    ...
+
+p That is, each line is a single entry. Each entry consists of a key string, followed by a sequence of floats. Each entry should have the same number of floats.
+
+p The following example script will replace the #[code vec.bin] file with vectors read from a #[code bz2] archive:
+
++code.
+    from spacy.vocab import write_binary_vectors
+    import spacy.en
+    from os import path
+
+    def main(bz2_loc, bin_loc=None):
+            if bin_loc is None:
+                    bin_loc = path.join(path.dirname(spacy.en.__file__), 'data', 'vocab', 'vec.bin')
+            write_binary_vectors(bz2_loc, bin_loc)
+
+    if __name__ == '__main__':
+            plac.call(main)
+
++h3("replace-vectors-archive") Replace the Vectors at Run-Time, From an Archive
+
+p Since v0.93, instances of #[code Vocab] allow new vectors to be loaded from #[code bz2] archive files. This allows vectors to be loaded as follows:
+
++code.
+    &gt;&gt;&gt; from spacy.en import English
+    &gt;&gt;&gt; nlp = English()
+    &gt;&gt;&gt; n_dimensions = nlp.vocab.load_vectors('glove.840B.300d.txt.bz2')
+    &gt;&gt;&gt; n_dimensions
+    300
+
++h3("replace-vectors-per-word") Replace Vectors at Run-Time, Per Word
+
+p Since v0.93, you can assign to the #[code .vector] attribute of #[code Lexeme] instances. Tokens of that lexical type will then inherit the updated vector. For instance:
+
++code.
+    &gt;&gt;&gt; from spacy.en import English
+    &gt;&gt;&gt; nlp = English()
+    &gt;&gt;&gt; apples, oranges = nlp(u'apples oranges')
+    &lt;type 'spacy.tokens.token.Token'&gt;
+    &gt;&gt;&gt; apples_lexeme = nlp.vocab[u'apples']
+    &gt;&gt;&gt; type(apples), type(apples_lexeme)
+    (&lt;type 'spacy.tokens.token.Token'&gt;, &lt;type 'spacy.lexeme.Lexeme'&gt;)
+    &gt;&gt;&gt; sum(apples.vector)
+    0.56299778164247982
+    &gt;&gt;&gt; apples_lexeme.vector *= 2
+    &gt;&gt;&gt; sum(apples.vector)
+    1.1259955632849596
+
+p All tokens which have the #[code orth] attribute #[em apples] will inherit the updated vector.
+
+p Note that the updated vectors won't persist after exit, unless you persist them yourself, and then replace the #[code vec.bin] file as described above.
+
+p A popular source of word vectors are the #[a(href="http://nlp.stanford.edu/projects/glove/" target="_blank") GloVe word vectors], particularly those calculated off the #[a(href="https://commoncrawl.org/" target="_blank") Common Crawl]. Note that the provided vector file has a few entries which are not valid UTF8 strings. These should be filtered out.
+
+p Future versions of spaCy will allow you to provide a file-like object, instead of a location of a #[bz2] file.

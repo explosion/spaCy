@@ -1,0 +1,108 @@
+//  Top Navigation Bar - Variables
+// ============================================================================
+
+$nav-animation          : slideInDown 0.5s ease-in-out
+$nav-background         : color(white)
+$nav-color              : color($theme)
+$nav-height             : $height-navbar
+$nav-height-small       : $nav-height * 0.8
+$nav-icon-size          : 3.5rem
+$nav-item-spacing       : 1em
+$nav-mobile-border      : 1px solid
+$nav-mobile-font-size   : 1.25em
+$nav-mobile-padding     : 1rem
+$nav-mobile-width       : 20vw
+$nav-padding            : 0 0 0 2rem
+$nav-triangle-size      : 8px
+
+
+//  Top Navigation Bar - Style
+// ============================================================================
+
+//  .nav          - top and primary navigation bar
+//  .fixed        - sticky version
+//  .logo         - special styling for logo
+//  .nav-menu     - menu bar containing menu items
+//  .nav-item     - menu list item
+//  .nav-button   - button to toggle mobile navigation
+//  .nav-checkbox - checkbox for checkbox hack
+//  .active       - active menu item
+
+.nav
+    @extend .text-label
+    @include position(absolute, top, left, 0, 0)
+    @include size(100%, $nav-height)
+    align-items: center
+    background: $nav-background
+    border-color: $nav-background
+    color: $nav-color
+    display: flex
+    justify-content: space-between
+    padding: $nav-padding
+    z-index: 10
+    width: 100%
+
+    &.fixed
+        animation: $nav-animation
+        background: $nav-color
+        border-color: $nav-color
+        color: $nav-background
+        position: fixed
+        
+        @media (min-width: #{$screen-size-small})
+            height: $nav-height-small
+
+.nav-menu
+    @include size(100%)
+    justify-content: flex-end
+    border-color: inherit
+    display: flex
+    margin: 0
+
+    @media (max-width: #{$screen-size-small})
+        @include position(absolute, top, left, $nav-height, 0)
+        flex-flow: row wrap
+
+        .nav-checkbox:checked + &
+            background: inherit
+
+            .nav-item
+                @include visibility(visible)
+
+            & + .nav-button:before
+                color: color(grey)
+
+.nav-item
+    align-items: center
+    border-color: inherit
+    display: flex
+    height: 100%
+    position: relative
+
+    &--active
+        font-weight: bold
+
+    @media (min-width: #{$screen-size-small})
+        margin-right: $nav-item-spacing
+    
+        &--active:after
+            @include triangle-down($nav-triangle-size)
+            @include position(absolute, bottom, left, -$nav-triangle-size, calc(50% - #{$nav-triangle-size}))
+
+    @media (max-width: #{$screen-size-small})
+        @include size(100%, auto)
+        @include visibility(hidden)
+        background: inherit
+        border-top: $nav-mobile-border
+        font-size: $nav-mobile-font-size
+        justify-content: center
+        padding: $nav-mobile-padding
+
+.nav-button
+    @media (max-width: #{$screen-size-small})
+        @include icon(menu, none, $nav-mobile-padding 0 0 0, $nav-icon-size)
+        cursor: pointer
+        padding: 0 1em 1em 0
+
+.nav-checkbox
+    display: none

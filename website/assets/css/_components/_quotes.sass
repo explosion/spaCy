@@ -1,0 +1,36 @@
+//  Quotes - Variables
+// ============================================================================
+
+$quote-icon-color   : color($theme)
+$quote-icon-size    : 6rem
+$quote-padding-side : 10rem
+
+
+//  Quotes - Style
+// ============================================================================
+
+//  :before - icon to emphasize blockquote
+//  .quote-text - quote text content
+//  .quote-text-strong - emphasized style of quote text content
+//  .quote-source - source of quote (link optional)
+
+.quote
+    @extend .block
+    @include icon(quote, color(grey), 0, $quote-icon-size)
+    padding-left: $quote-padding-side
+
+    &:before
+        @include position(relative, top, left, ($quote-icon-size / 1.75), -$quote-padding-side)
+        color: $quote-icon-color
+
+.quote-text
+    @extend .text-quote
+
+.quote-text-strong
+    @extend .h2
+    padding: 0
+
+.quote-source
+    @extend .text-meta-strong
+    @include icon(dash, color(grey), 0 0.75rem 0 0)
+    border: none

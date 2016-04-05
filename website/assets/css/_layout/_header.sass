@@ -1,0 +1,50 @@
+//  Header - Variables
+// ============================================================================
+
+$header-background      : color($theme) pattern($theme)
+$header-color-highlight : color($theme, dark)
+$header-min-height      : 250px
+$header-padding         : 4rem 5rem 5rem
+$header-text-color      : color(white)
+$header-text-shadow     : 2px 2px
+$hero-credit-bottom     : -2em
+$hero-credit-right      : 1em
+
+
+//  Header - Style
+// ============================================================================
+
+.header
+    background: $header-background
+    display: flex
+    flex-flow: column nowrap
+    justify-content: center
+    margin-top: $height-navbar
+    min-height: $header-min-height
+    text-align: center
+
+.header-title
+    @extend .h0
+    color: $header-text-color
+
+    &.header-title--center
+        @extend .text-center
+
+.header-body
+    color: $header-text-color
+    padding: $header-padding
+    text-align: left
+
+.header-text
+    text-shadow: $header-text-shadow $header-color-highlight
+
+
+// Hero image
+
+.hero
+    position: relative
+    min-height: 0
+
+.hero-credit
+    @extend .text-credit
+    @include position(absolute, bottom, right, $hero-credit-bottom, $hero-credit-right)

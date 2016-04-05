@@ -1,0 +1,10 @@
+include _includes/_mixins
+
+//-  404 Error
+//- ============================================================================
+
++lead.text-center Ooops, this page does not exist. Click #[a(href='javascript:history.go(-1)') here] to go back or check out one of the latest posts below.
+
++divider('bottom')
+
+!=partial('_includes/_latest-posts', { max: 3 } )

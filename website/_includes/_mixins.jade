@@ -1,0 +1,381 @@
+include _functions
+
+//-  Mixins
+//- ============================================================================
+
+//- Sections for content pages
+    id    - [string] id, can be headline id as it's being prefixed (optional)
+    block - section content (block and inline elements)
+
+mixin section(id)
+    section.section(id=(id) ? 'section-' + id : '')&attributes(attributes)
+        block
+
+
+//- Flexbox grid to align children elements
+    ...style  - [strings] flexbox CSS classes without prefix (optional)
+    block     - container content (block and inline elements)
+
+mixin grid(...style)
+    .grid(class=prefixArgs(style, 'grid--'))&attributes(attributes)
+        block
+
+mixin grid-col(...style)
+    .grid-col(class=prefixArgs(style, 'grid-col--'))&attributes(attributes)
+        block
+
+
+//- Aside
+    headline  - [string] Headline of aside (optional)
+    block     - aside content (inline elements)
+
+mixin aside(headline)
+    span.aside(data-label=headline)&attributes(attributes)
+        span.aside-body
+            block
+
+
+//- Paragraphs
+    block - paragraph content (inline elements)
+
+mixin lead
+    p.text-lead&attributes(attributes)
+        block
+
+
+//- Various text styles
+    block - text (inline elements)
+
+mixin example
+    p.text-example&attributes(attributes)
+        block
+
+mixin source
+    span.text-source&attributes(attributes)
+        block
+
+mixin label(...style)
+    span(class=(style != '') ? prefixArgs(style, 'label-') : 'label')&attributes(attributes)
+        block
+
+
+//- Headings with optional permalinks
+    id      - [string] unique id (optional, no permalink without id)
+    source  - [string] link for source button (optional)
+    block   - headline text (inline elements)
+
+mixin headline(level, id, source)
+    if level == 2
+        +h2(id, source)
+            block
+
+    else if level == 3
+        +h3(id, source)
+            block
+
+    else if level == 4
+        +h4(id, source)
+            block
+
+    else if level == 5
+        +h5(id, source)
+            block
+
+    else
+        +h6(id, source)
+            block
+
+mixin h1(id, source)
+    h1(id=id)&attributes(attributes)
+        +permalink(id, source)
+            block
+
+mixin h2(id, source)
+    h2(id=id)&attributes(attributes)
+        +permalink(id, source)
+            block
+
+mixin h3(id, source)
+    h3(id=id)&attributes(attributes)
+        +permalink(id, source)
+            block
+
+mixin h4(id, source)
+    h4(id=id)&attributes(attributes)
+        +permalink(id, source)
+            block
+
+mixin h5(id, source)
+    h5(id=id)&attributes(attributes)
+        +permalink(id, source)
+            block
+
+mixin h6(id, source)
+    h6(id=id)&attributes(attributes)
+        +permalink(id, source)
+            block
+
+mixin permalink(id, source)
+    if id
+        a.permalink(href='#' + id)
+            block
+
+    else
+        block
+
+    if source
+        +button('secondary', 'small', 'source')(href=source target='_blank') Source
+
+
+//- Button
+    element   - [string] specifies HTML element, 'button' or 'link'
+    ...style  - [strings] button CSS classes without prefix (optional)
+    block     - button text (inline elements)
+
+mixin button(type, ...style)
+    - var classname = 'button-' + type + ' ' + ((style) ? prefixArgs(style, 'button--') : '')
+
+    a.button(class=classname)&attributes(attributes)
+        block
+
+mixin form-button(type, ...style)
+    - var classname = 'button-' + type + ' ' + ((style) ? prefixArgs(style, 'button--') : '')
+    button(class=classname)&attributes(attributes)
+        block
+
+
+//- Input
+    placeholder - [string] placeholder for input field (optional)
+    value       - [string] value of input field (optional)
+
+mixin input(placeholder, value)
+    input.input(placeholder=placeholder value=value)&attributes(attributes)
+
+
+//- Icon
+    name  - [string] icon name, refers to CSS classes
+    size  - [string] 'medium' or 'large' (optional)
+    type  - [string] 'button' (optional)
+    block - description, if as a text node to the icon element it prevents line 
+            breaks between icon and text (inline elements)
+
+mixin icon(type, ...style)
+    span(class='icon-' + type + ' ' + prefixArgs(style, 'icon--') aria-hidden="true")&attributes(attributes)
+        block
+
+
+//- Image for illustration purposes
+    file    - [string] file name (in /img)
+    alt     - [string] descriptive alt text (optional)
+    caption - [string] image caption (optional)
+
+mixin image(file, alt, caption)
+    figure.image-container&attributes(attributes)
+        img(src='img/' + file alt=alt)
+
+        if caption
+            figcaption.text-caption=caption
+
+        block
+
+
+//- Illustrated code view
+    title - [string] title of window
+
+mixin code-demo(title)
+    .x-terminal&attributes(attributes)
+        .x-terminal-icons: span
+        .x-terminal-title=title
+        +code.x-terminal-code
+            block
+
+
+//- Data table
+    head      - [array] column headings (optional, without headings no table 
+                head is displayed)
+     ...style  - [strings] table CSS classes without prefix (optional)
+    block     - only +row (tr)
+
+mixin table(head, ...style)
+    table.table(class=prefixArgs(style, 'table--'))&attributes(attributes)
+
+        if head
+            tr.table-row
+                each column in head
+                    th.table-head-cell=column
+
+        block
+
+
+//- Data table row
+    block - only +cell (td)
+
+mixin row(...style)
+    tr.table-row(class=prefixArgs(style, 'table-cell--'))&attributes(attributes)
+        block
+
+
+//- Data table cell
+    block - table cell content (inline elements)
+
+mixin cell(...style)
+    td.table-cell(class=prefixArgs(style, 'table-cell--'))&attributes(attributes)
+        block
+
+
+//- General list (ordered and unordered)
+    type  - [string] 'numbers', 'letters', 'roman' (optional)
+    start - [integer] starting point of list (1 = list starts at 1 or A)
+    block - only +item (li)
+
+mixin list(type, start)
+    if type
+        ol.list(class='list--' + type style=(start === 0 || start) ? 'counter-reset: li ' + (start - 1) : '')&attributes(attributes)
+            block
+
+    else
+        ul.list.list--bullets&attributes(attributes)
+            block
+
+
+//- List item
+    block - item text (inline elements)
+
+mixin item
+    li.list-item&attributes(attributes)
+        block
+
+
+//- Blockquote
+    source - [string] quote source / author (optional)
+    link   - [string] link to quote source (only with source, optional)
+    block  - quote text (inline elements)
+
+mixin quote(source, link)
+    blockquote.quote&attributes(attributes)
+        p.quote-text
+            block
+
+            if source && link
+                |  #[a.quote-source(href=link target='_blank')=source]
+
+            else if source && !link
+                .quote-source  !{source}
+
+
+//- Pullquotes with optional 'tweet this' function
+    tweet - [string] text to be tweeted (optional)
+    block - pullquote text (inline elements, only shown if no tweet text)
+
+mixin pullquote(tweet)
+    blockquote.quote&attributes(attributes)
+        
+        p.quote-text-strong
+            if tweet
+                | !{tweet} #[a.quote-source(href=twitterShareUrl(current.path, tweet) target='_blank') Tweet this]
+
+            else
+                block
+
+
+//- Code block
+    use as +code(args). to preserve whitespace and prevent code interprettion
+    language  - [string] language for syntax highlighting (optional, default: 
+                'python', see Prism for options: http://prismjs.com)
+    label     - [string] code block headline (optional)     
+    block     - code text (inline elements)  
+
+
+mixin code(language, label)
+    pre.code-block(class='lang-' + (language || default_syntax) data-label=label)&attributes(attributes)
+        code.code-inline
+            block
+
+
+//- Infobox for notes and alerts
+    label - [string] infobox headline (optional)
+    block - infobox text (inline and block elements)
+
+mixin infobox(label)
+    .box.box--info(data-label=label)&attributes(attributes)
+        p.box-body
+            block
+
+
+//- Alerts for notes and updates
+
+mixin alert(button)
+    .alert&attributes(attributes)
+        block
+
+        if button
+            +form-button('primary', 'small')(onclick='this.parentNode.parentNode.removeChild(this.parentNode);')=button
+
+        else
+            button.alert-close(onclick='this.parentNode.parentNode.removeChild(this.parentNode);')
+
+
+
+//- Embeds
+    border  - [boolean] add border to embed container
+    caption - [string] embed caption
+    block   - embed content (inline and block elements)
+
+mixin embed(border, caption)
+    figure.embed(class=(border) ? 'embed--border' : '')&attributes(attributes)
+        block
+
+        if caption
+            figcaption.embed-caption=caption
+
+
+//- displaCy
+    filename - [string] name of file in displacy folder (no .html)
+    caption  - [string] caption (optional)
+    height   - [integer] iframe height in px (optional)
+
+mixin displacy(filename, caption, height)
+    +embed(true, caption).embed--displacy
+        iframe(src='/blog/displacy/' + filename height=height)
+
+
+//- Logo, imports SVG
+    size - [string] 'tiny', 'small', 'regular' or 'large'
+
+mixin logo(size)
+    !=partial('/_includes/_logo', { logo_size: size })
+
+
+//- <time> element with date
+    input - [string] date in the format YYYY-MM-DD
+    type  - [string] 'timestamp' (optional)
+
+mixin date(input, type)
+    - var dates = convertDate(input)
+
+    if type == 'timestamp'
+        time=dates.timestamp
+
+    else
+        time(datetime=dates.timestamp)=dates.full
+
+
+//- Divider
+    type - [string] divider tpe
+
+mixin divider(type, ...style)
+    div(class=((type) ? 'divider-' + type : 'divider') + ' ' + prefixArgs(style, 'divider--'))&attributes(attributes)
+        if type == 'text'
+            .divider-text-content
+                block
+
+        else
+            block
+
+
+//- Twitter Share Button
+        tweet - [string] text to be shared with the tweet
+
+mixin tweet(tweet)
+    a(href=twitterShareUrl(current.path, tweet) target='_blank' aria-label="Shsre on Twitter")
+        +icon('twitter', 'large')

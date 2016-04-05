@@ -1,0 +1,35 @@
+//  Embeds - Variables
+// ============================================================================
+
+$embed-border           : 1px solid color(grey)
+$embed-caption-align    : center
+$embed-padding          : 2rem
+$embed-displacy-min     : 325px
+
+
+//  Embeds - Style
+// ============================================================================
+
+//  iframe           - content of embed
+//  .embed--border   - embed with border
+//  .embed--displacy - embed for displaCy visualization
+
+.embed
+    @extend .block
+    margin-left: 0
+    padding: $embed-padding
+
+    iframe
+        max-width: 100%
+        width: 100%
+
+    &--border
+      border: $embed-border
+
+    &--displacy iframe
+      min-height: $embed-displacy-min
+
+.embed-caption
+  @extend .label
+  display: block
+  text-align: $embed-caption-align
