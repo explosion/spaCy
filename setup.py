@@ -63,7 +63,8 @@ MOD_NAMES = [
     'spacy.cfile',
     'spacy.matcher',
     'spacy.syntax.ner',
-    'spacy.symbols']
+    'spacy.symbols',
+    'spacy.syntax.iterators']
 
 
 # By subclassing build_extensions we have the actual compiler that will be used
@@ -213,3 +214,4 @@ def setup_package():
 
 if __name__ == '__main__':
     setup_package()
+

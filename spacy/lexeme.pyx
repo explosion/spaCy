@@ -18,10 +18,10 @@ import numpy
 
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
-from .attrs cimport FLAG14 as IS_BRACKET
-from .attrs cimport FLAG15 as IS_QUOTE
-from .attrs cimport FLAG16 as IS_LEFT_PUNCT
-from .attrs cimport FLAG17 as IS_RIGHT_PUNCT
+from .attrs cimport IS_BRACKET
+from .attrs cimport IS_QUOTE
+from .attrs cimport IS_LEFT_PUNCT
+from .attrs cimport IS_RIGHT_PUNCT
 from .attrs cimport IS_OOV
 
 
@@ -74,8 +74,8 @@ cdef class Lexeme:
                 raise ValueError(
                     "Word vectors set to length 0. This may be because the "
                     "data is not installed. If you haven't already, run"
-                    "\npython -m spacy.en.download all\n"
-                    "to install the data."
+                    "\npython -m spacy.%s.download all\n"
+                    "to install the data." % self.vocab.lang
                 )
  
             vector_view = <float[:length,]>self.c.vector
@@ -123,6 +123,10 @@ cdef class Lexeme:
         def __get__(self): return self.c.cluster
         def __set__(self, int x): self.c.cluster = x
  
+    property lang:
+        def __get__(self): return self.c.lang
+        def __set__(self, int x): self.c.lang = x
+
     property prob:
         def __get__(self): return self.c.prob
         def __set__(self, float x): self.c.prob = x
@@ -146,6 +150,10 @@ cdef class Lexeme:
     property suffix_:
         def __get__(self): return self.vocab.strings[self.c.suffix]
         def __set__(self, unicode x): self.c.suffix = self.vocab.strings[x]
+
+    property lang_:
+        def __get__(self): return self.vocab.strings[self.c.lang]
+        def __set__(self, unicode x): self.c.lang = self.vocab.strings[x]
 
     property flags:
         def __get__(self): return self.c.flags

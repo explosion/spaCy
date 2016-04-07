@@ -1,6 +1,6 @@
 from .typedefs cimport attr_t, hash_t, flags_t, len_t, tag_t
 from .attrs cimport attr_id_t
-from .attrs cimport ID, ORTH, LOWER, NORM, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
+from .attrs cimport ID, ORTH, LOWER, NORM, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER, LANG
 
 from .structs cimport LexemeC
 from .strings cimport StringStore
@@ -41,6 +41,8 @@ cdef class Lexeme:
             lex.suffix = value
         elif name == CLUSTER:
             lex.cluster = value
+        elif name == LANG:
+            lex.lang = value
 
     @staticmethod
     cdef inline attr_t get_struct_attr(const LexemeC* lex, attr_id_t feat_name) nogil:
@@ -67,6 +69,8 @@ cdef class Lexeme:
             return lex.length
         elif feat_name == CLUSTER:
             return lex.cluster
+        elif feat_name == LANG:
+            return lex.lang
         else:
             return 0
     
