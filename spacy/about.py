@@ -4,14 +4,14 @@
 # https://github.com/pypa/warehouse/blob/master/warehouse/__about__.py
 
 __title__ = 'spacy'
-__version__ = '0.100.6'
+__version__ = '0.100.7'
 __summary__ = 'Industrial-strength NLP'
 __uri__ = 'https://spacy.io'
 __author__ = 'Matthew Honnibal'
 __email__ = 'matt@spacy.io'
 __license__ = 'MIT'
 __models__ = {
-    'en': 'en>=1.0.0,<1.1.0',
+    'en': 'en>=1.1.0,<1.2.0',
     'de': 'de>=1.0.0,<1.1.0',
 }
 __default_lang__ = 'en'
