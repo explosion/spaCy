@@ -3,11 +3,11 @@ import numpy as np
 from spacy.attrs import HEAD, DEP
 from spacy.symbols import nsubj, dobj, punct, amod, nmod, conj, cc, root
 from spacy.en import English
-
+from spacy.syntax.iterators import EnglishNounChunks
 
 
 def test_not_nested():
-    nlp = English(parser=False)
+    nlp = English(parser=False, entity=False)
     sent = u'''Peter has chronic command and control issues'''.strip()
     tokens = nlp(sent)
     tokens.from_array(
@@ -22,6 +22,7 @@ def test_not_nested():
                 [-2, conj],
                 [-5, dobj]
             ], dtype='int32'))
+    tokens.noun_chunks = EnglishNounChunks
     for chunk in tokens.noun_chunks:
         print(chunk.text)
     word_occurred = {}
@@ -31,3 +32,4 @@ def test_not_nested():
             word_occurred[word.text] += 1
     for word, freq in word_occurred.items():
         assert freq == 1, (word, [chunk.text for chunk in tokens.noun_chunks])
+

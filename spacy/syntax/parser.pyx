@@ -47,8 +47,7 @@ from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from ._state cimport StateC
 
-from spacy.syntax.iterators cimport DocIterator, EnglishNounChunks, GermanNounChunks
-CHUNKERS = {'en':EnglishNounChunks, 'de':GermanNounChunks}
+from spacy.syntax.iterators cimport CHUNKERS, DocIterator, EnglishNounChunks, GermanNounChunks
 
 
 DEBUG = False

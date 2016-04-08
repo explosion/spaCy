@@ -5,6 +5,8 @@ from spacy.tokens.token cimport Token
 
 from spacy.parts_of_speech cimport NOUN
 
+CHUNKERS = {'en':EnglishNounChunks, 'de':GermanNounChunks}
+
 # base class for document iterators
 cdef class DocIterator:
     def __init__(self, Doc doc):

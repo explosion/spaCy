@@ -1,6 +1,8 @@
 
 from spacy.tokens.doc cimport Doc
 
+cdef dict CHUNKERS
+
 cdef class DocIterator:
     cdef Doc _doc
 
