@@ -13,7 +13,7 @@ Requires:
         * WordNet
         * words.sgt.prob --- Smoothed unigram probabilities
         * clusters.txt --- Output of hierarchical clustering, e.g. Brown clusters
-        * vectors.tgz --- output of something like word2vec
+        * vectors.bz2 --- output of something like word2vec, compressed with bzip
 """
 from __future__ import unicode_literals
 
@@ -155,7 +155,7 @@ def setup_vocab(get_lex_attr, tag_map, src_dir, dst_dir):
     if not dst_dir.exists():
         dst_dir.mkdir()
 
-    vectors_src = src_dir / 'vectors.tgz'
+    vectors_src = src_dir / 'vectors.bz2'
     if vectors_src.exists():
         write_binary_vectors(str(vectors_src), str(dst_dir / 'vec.bin'))
     else:
