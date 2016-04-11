@@ -1,0 +1,96 @@
+include ../_includes/_mixins
+
++lead For the last two years, I&#8217;ve done almost all of my work in #[a(href="https://en.wikipedia.org/wiki/Cython" target="_blank") Cython]. And I don&#8217;t mean, I write Python, and then &#8220;Cythonize&#8221; it, with various type-declarations etc. I just, write Cython. I use &#8220;raw&#8221; C structs and arrays, and occasionally C++ vectors, with a thin wrapper around malloc/free that I wrote myself. The code is almost always exactly as fast as C/C++, because it really is just C/C++ with some syntactic sugar &#8212; but with Python &#8220;right there&#8221;, should I need/want it.
+
+p This is basically the inverse of the old promise that languages like Python came with: that you would write your whole application in Python, optimise the &#8220;hot spots&#8221; with C, and voila! C speed, Python convenience, and money in the bank.
+
+p This was always much nicer in theory than practice. In practice, your data structures have a huge influence on both the efficiency of your code, and how annoying it is to write. Arrays are a pain and fast; lists are blissfully convenient, and very slow. Python loops and function calls are also quite slow, so the part you have to write in C tends to wriggle its way up the stack, until it&#8217;s almost your whole application.
+
+p Today a post came up on HN, on #[a(href="https://www.crumpington.com/blog/2014/10-19-high-performance-python-extensions-part-1.html" target="_blank") writing C extensions for Python]. The author wrote both a pure Python implementation, and a C implementation, using the Numpy C API. This seemed a good opportunity to demonstrate the difference, so I wrote a Cython implementation for comparison:
+
++code.
+    import random
+    from cymem.cymem cimport Pool
+
+    from libc.math cimport sqrt
+
+    cimport cython
+
+    cdef struct Point:
+        double x
+        double y
+
+    cdef class World:
+        cdef Pool mem
+        cdef int N
+        cdef double* m
+        cdef Point* r
+        cdef Point* v
+        cdef Point* F
+        cdef readonly double dt
+        def __init__(self, N, threads=1, m_min=1, m_max=30.0, r_max=50.0, v_max=4.0, dt=1e-3):
+            self.mem = Pool()
+            self.N = N
+            self.m = &lt;double*&gt;self.mem.alloc(N, sizeof(double))
+            self.r = &lt;Point*&gt;self.mem.alloc(N, sizeof(Point))
+            self.v = &lt;Point*&gt;self.mem.alloc(N, sizeof(Point))
+            self.F = &lt;Point*&gt;self.mem.alloc(N, sizeof(Point))
+            for i in range(N):
+                self.m[i] = random.uniform(m_min, m_max)
+                self.r[i].x = random.uniform(-r_max, r_max)
+                self.r[i].y = random.uniform(-r_max, r_max)
+                self.v[i].x = random.uniform(-v_max, v_max)
+                self.v[i].y = random.uniform(-v_max, v_max)
+                self.F[i].x = 0
+                self.F[i].y = 0
+            self.dt = dt
+
+
+    @cython.cdivision(True)
+    def compute_F(World w):
+        &quot;&quot;&quot;Compute the force on each body in the world, w.&quot;&quot;&quot;
+        cdef int i, j
+        cdef double s3, tmp
+        cdef Point s
+        cdef Point F
+        for i in range(w.N):
+            # Set all forces to zero. 
+            w.F[i].x = 0
+            w.F[i].y = 0
+            for j in range(i+1, w.N):
+                s.x = w.r[j].x - w.r[i].x
+                s.y = w.r[j].y - w.r[i].y
+
+                s3 = sqrt(s.x * s.x + s.y * s.y)
+                s3 *= s3 * s3;
+
+                tmp = w.m[i] * w.m[j] / s3
+                F.x = tmp * s.x
+                F.y = tmp * s.y
+
+                w.F[i].x += F.x
+                w.F[i].y += F.y
+
+                w.F[j].x -= F.x
+                w.F[j].y -= F.y
+
+
+    @cython.cdivision(True)
+    def evolve(World w, int steps):
+        &quot;&quot;&quot;Evolve the world, w, through the given number of steps.&quot;&quot;&quot;
+        cdef int _, i
+        for _ in range(steps):
+            compute_F(w)
+            for i in range(w.N):
+                w.v[i].x += w.F[i].x * w.dt / w.m[i]
+                w.v[i].y += w.F[i].y * w.dt / w.m[i]
+                w.r[i].x += w.v[i].x * w.dt
+                w.r[i].y += w.v[i].y * w.dt
+
+p The Cython version took about 30 minutes to write, and it runs just as fast as the C code &#8212; because, why wouldn&#8217;t it? It *is* C code, really, with just some syntactic sugar. And you don&#8217;t even have to learn or think about a foreign, complicated C API&#8230;You just, write C. Or C++ &#8212; although that&#8217;s a little more awkward. Both the Cython version and the C version are about 70x faster than the pure Python version, which uses Numpy arrays.
+
+p One difference from C: I wrote a little wrapper around malloc/free, #[a(href="https://github.com/syllog1sm/cymem" target="_blank") cymem]. All it does is remember the addresses it served, and when the Pool is garbage collected, it frees the memory it allocated. I&#8217;ve had no trouble with memory leaks since I started using this.
+
+p The &#8220;intermediate&#8221; way of writing Cython, using typed memory-views, allows you to use the Numpy multi-dimensional array features. However, to me it feels more complicated, and the applications I tend to write involve very sparse arrays &#8212; where, once again, I want to define my own data structures.
+
++infobox("Note") I found a Russian translation of this post #[a(href="http://habrahabr.ru/company/mailru/blog/242533/" target="_blank") here]. I don&#8217;t know how accurate it is.

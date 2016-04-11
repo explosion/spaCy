@@ -7,6 +7,8 @@ from ..structs cimport TokenC, LexemeC
 from ..typedefs cimport attr_t
 from ..attrs cimport attr_id_t
 
+from spacy.syntax.iterators cimport DocIterator
+
 
 cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil
 
@@ -41,6 +43,8 @@ cdef class Doc:
 
     cdef int length
     cdef int max_length
+
+    cdef DocIterator noun_chunks_iterator
 
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint trailing_space) except -1
 

@@ -1,0 +1,12 @@
+include _mixins
+
+//-  Sidebar
+//- ============================================================================
+
+nav#sidebar.sidebar: .sidebar-body
+    each items, menu in sidebar
+
+        ul.sidebar-menu(data-label=menu)
+            each item in items
+                li.sidebar-menu-item
+                  a(href=item[1] data-section=(item[2]) ? 'section-' + item[2] : null)=item[0]

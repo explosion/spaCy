@@ -1,0 +1,43 @@
+include _includes/_mixins
+
+- var _section = current.path[0]
+- var _site = current.source
+
+- var is_article = ( (_section == 'blog' && _site != 'index') || template == 'article')
+- var has_asides = (is_article || (_section == 'docs' && asides != false) || asides)
+
+
+//-  Layout
+//- ============================================================================
+
+doctype html
+
+html(lang="en")
+    !=partial("_includes/_head", { _section: _section })
+
+    body.body
+        !=partial('_includes/_nav', { _section: _section, _site: _site })
+
+        if landing
+            != yield
+        
+        else
+            !=partial('_includes/_header', { is_article: is_article })
+
+            if sidebar
+                !=partial('_includes/_sidebar')
+
+            main.main(class='#{(sidebar) ? "main--sidebar" : "" } #{(has_asides) ? "main--asides" : "" } #{(is_article) ? "main--article" : "" }')
+
+                if is_article
+                    !=partial('_includes/_article', { _section: _section })
+
+                else
+                    !=yield
+
+        !=partial('_includes/_footer')
+
+        each script in scripts
+            script(src='/assets/js/' + script + '.js', type='text/javascript')
+
+        !=partial('_includes/_analytics')

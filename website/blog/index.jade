@@ -1,0 +1,31 @@
+include ../_includes/_mixins
+
+- var featured_counter = 0
+- var post_counter = 0
+
+
+//-  Blog
+//- ============================================================================
+
+//- Display all blog posts in order and highlight the first post set to
+    `featured: true` as the fourth post 
+
++grid('padding')
+
+    each post, slug in public.blog._data
+        if slug != 'index'
+
+            if post.featured && featured_counter === 0
+                +grid-col(style='order: -1').divider-both
+                    !=partial('../_includes/_teaser', { teaser: post, slug: slug, is_featured: true, _root: '/blog/'  })
+
+                - featured_counter++
+
+            else
+                +grid-col('third', 'space-between')(style=assignOrder(post_counter, 3, 1))
+                    !=partial('../_includes/_teaser', { teaser: post, slug: slug, _root: '/blog/' })
+
+                - post_counter++
+
+                if post_counter === 6
+                    !=partial('../_includes/_newsletter', { divider: 'both' })

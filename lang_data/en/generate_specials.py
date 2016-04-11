@@ -11,49 +11,48 @@ token_properties = {
             "are": {"L": "be", "pos": "VBP", "number": 2},
             "ca": {"L": "can", "pos": "MD"},
             "can": {"L": "can", "pos": "MD"},
-            "could": {"pos": "MD"},                         # no lemma for could?
+            "could": {"pos": "MD", "L": "could"},
             "'d": {"L": "would", "pos": "MD"},
             "did": {"L": "do", "pos": "VBD"},
-            "do": {"L": "do"},                              # no POS for do?
+            "do": {"L": "do"},
             "does": {"L": "do", "pos": "VBZ"},
             "had": {"L": "have", "pos": "VBD"},
-            "has": {},                                      # no POS or lemma for has?
-            "have": {"pos": "VB"},                          # no lemma for have?
-            "he": {"L": "-PRON-"},                          # no POS for he?
-            "how": {},                                      # no POS or lemma for how?
-            "i": {"L": "-PRON-"},                           # no POS for i?
+            "has": {"L": "have", "pos": "VBZ"},
+            "have": {"pos": "VB"},
+            "he": {"L": "-PRON-", "pos": "PRP"},
+            "how": {},
+            "i": {"L": "-PRON-", "pos": "PRP"},
             "is": {"L": "be", "pos": "VBZ"},
-            "it": {"L": "-PRON-"},                          # no POS for it?
+            "it": {"L": "-PRON-", "pos": "PRP"},
             "'ll": {"L": "will", "pos": "MD"},
             "'m": {"L": "be", "pos": "VBP", "number": 1, "tenspect": 1},
-            "'ma": {},                                      # no POS or lemma for ma?
-            "might": {},                                    # no POS or lemma for might?
-            "must": {},                                     # no POS or lemma for must?
-            "need": {},                                     # no POS or lemma for need?
+            "'ma": {},
+            "might": {},
+            "must": {},
+            "need": {}, 
             "not": {"L": "not", "pos": "RB"},
             "'nt": {"L": "not", "pos": "RB"},
             "n't": {"L": "not", "pos": "RB"},
-            "'re": {},                                      # no POS or lemma for re?
+            "'re": {"L": "be", "pos": "VBZ"},
             "'s": {},                                       # no POS or lemma for s?
-            "sha": {},                                      # no POS or lemma for sha?
-            "she": {"L": "-PRON-"},                         # no POS for she?
-            "should": {},                                   # no POS or lemma for should?
-            "that": {},                                     # no POS or lemma for that?
-            "there": {},                                    # no POS or lemma for there?
-            "they": {"L": "-PRON-"},                        # no POS for they?
-            "was": {},                                      # no POS or lemma for was?
-            "we": {},                                       # no POS or lemma for we?
-            "were": {},                                     # no POS or lemma for were?
-            "what": {},                                     # no POS or lemma for what?
-            "when": {},                                     # no POS or lemma for when?
-            "where": {},                                    # no POS or lemma for where?
-            "who": {},                                      # no POS or lemma for who?
-            "why": {},                                      # no POS or lemma for why?
-            "wo": {},                                       # no POS or lemma for wo?
-            "would": {},                                    # no POS or lemma for would?
-            "you": {"L": "-PRON-"},                         # no POS or lemma for you?
+            "sha": {"L": "shall", "pos": "MD"},
+            "she": {"L": "-PRON-", "pos": "PRP"},
+            "should": {},
+            "that": {},
+            "there": {},
+            "they": {"L": "-PRON-", "pos": "PRP"},
+            "was": {},
+            "we": {"L": "-PRON-", "pos": "PRP"},
+            "were": {},
+            "what": {},
+            "when": {},
+            "where": {},
+            "who": {},
+            "why": {},
+            "wo": {},
+            "would": {},
+            "you": {"L": "-PRON-", "pos": "PRP"},
             "'ve": {"L": "have", "pos": "VB"}
-
 }
 
 # contains starting tokens with their potential contractions

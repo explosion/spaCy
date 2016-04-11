@@ -8,6 +8,7 @@ import struct
 cimport numpy as np
 import math
 import six
+import warnings
 
 from ..lexeme cimport Lexeme
 from ..lexeme cimport EMPTY_LEXEME
@@ -80,6 +81,7 @@ cdef class Doc:
         self.is_parsed = False
         self._py_tokens = []
         self._vector = None
+        self.noun_chunks_iterator = DocIterator(self)
 
     def __getitem__(self, object i):
         """Get a Token or a Span from the Doc.
@@ -166,7 +168,7 @@ cdef class Doc:
 
     @property
     def text(self):
-        return u' '.join(t.text for t in self)
+        return u''.join(t.text for t in self)
 
     property ents:
         def __get__(self):
@@ -230,33 +232,22 @@ cdef class Doc:
                     # Set start as B
                     self.c[start].ent_iob = 3
 
-    @property
-    def noun_chunks(self):
-        """Yield spans for base noun phrases."""
-        if not self.is_parsed:
-            raise ValueError(
-                "noun_chunks requires the dependency parse, which "
-                "requires data to be installed. If you haven't done so, run: "
-                "\npython -m spacy.en.download all\n"
-                "to install the data")
- 
-        cdef const TokenC* word
-        labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj',
-                  'attr', 'root']
-        np_deps = [self.vocab.strings[label] for label in labels]
-        conj = self.vocab.strings['conj']
-        np_label = self.vocab.strings['NP']
-        for i in range(self.length):
-            word = &self.c[i]
-            if word.pos == NOUN and word.dep in np_deps:
-                yield Span(self, word.l_edge, i+1, label=np_label)
-            elif word.pos == NOUN and word.dep == conj:
-                head = word+word.head
-                while head.dep == conj and head.head < 0:
-                    head += head.head
-                # If the head is an NP, and we're coordinated to it, we're an NP
-                if head.dep in np_deps:
-                    yield Span(self, word.l_edge, i+1, label=np_label)
+
+    property noun_chunks:
+        def __get__(self):
+            """Yield spans for base noun phrases."""
+            if not self.is_parsed:
+                raise ValueError(
+                    "noun_chunks requires the dependency parse, which "
+                    "requires data to be installed. If you haven't done so, run: "
+                    "\npython -m spacy.%s.download all\n"
+                    "to install the data" % self.vocab.lang)
+
+            yield from self.noun_chunks_iterator
+
+        def __set__(self, DocIterator):            
+            self.noun_chunks_iterator = DocIterator(self)
+
 
     @property
     def sents(self):
@@ -267,8 +258,8 @@ cdef class Doc:
             raise ValueError(
                 "sentence boundary detection requires the dependency parse, which "
                 "requires data to be installed. If you haven't done so, run: "
-                "\npython -m spacy.en.download all\n"
-                "to install the data")
+                "\npython -m spacy.%s.download all\n"
+                "to install the data" % self.vocab.lang)
         cdef int i
         start = 0
         for i in range(1, self.length):

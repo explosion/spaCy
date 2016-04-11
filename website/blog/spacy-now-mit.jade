@@ -1,0 +1,50 @@
+include ../_includes/_mixins
+
++lead Three big announcements for #[a(href=url) spaCy], a Python library for industrial-strength natural language processing (NLP).
+
++list("numbers")
+    +item I'd like to welcome my new co-founder, #[a(href="https://de.linkedin.com/in/hepeters" target="_blank") Henning Peters].
+    +item spaCy is now available under #[a(href="https://en.wikipedia.org/wiki/MIT_License" target="_blank") the MIT license]. Formerly, spaCy was dual licensed: #[a(href="https://en.wikipedia.org/wiki/Affero_General_Public_License" target="_blank") AGPL], or pay a fee to use it unencumbered.
+    +item A new service is entering closed beta: #[em Adaptation]. We want to work with you to deliver custom statistical models, optimized for your task, using your metrics, on your data.
+
++h3("the-old-model") The old model: AGPL-or-$
+
+p In mid 2014, I quit my day job as an academic, and started writing spaCy. I did this because I saw that companies were trying to use the code I'd been publishing to support my experiments in natural language understanding --- even though that code was never designed to be actually #[em used]. Its mission in life was to print some annotation and exit: to demonstrate some point about how we should design these systems going forward.
+
+p My idea for spaCy was simple. I'd write a better library, crafted lovingly for first-rate performance and usability, ensure it had great documentation and a simple install procedure, and offer long-term, business-friendly licenses.
+
+p I quickly ruled out an entirely closed source model. Users are valuable, whether or not they submit patches. They find problems and suggest solutions. And there's no better advertising than adoption.
+
+p But I did want spaCy to be the product, the thing that I was paid to make great. I wanted a business model that maximised the value of the library. To me, this excluded a SaaS model, since I think using the technology behind an API is an inferior technical approach to having the source code, and running the library locally.
+    
+p So I settled on a dual license model. Anyone could download and use spaCy under the AGPL. However, most companies have a blanket ban on GPL libraries, since they're usually unwilling to release their own code under the GPL. These companies could instead sign up for a commercial license, which offered them near complete freedom, to use the library and its source however they wanted.
+    
+p Commercial licenses were available as a free 90 day trial. On release, I offered lifetime licenses for a one-time fee of $5,000. As the library improved, this was repriced to $5,000 a year, or $20,000 for 5 years. I wanted to offer the library at prices that were very low relative to engineering salaries. I felt that spaCy could easily represent many weeks of development time savings per year, over a similar open source library.
+
++h3("why-agpl-or-dollar-wasnt-right") Why AGPL-or-$ wasn't quite right
+
+p While copyleft licenses may be maximally "free" in some philosophical sense, engineers interested in spaCy were not free to simply download and try the library at work. And that's the sort of freedom we're most interested in. You shouldn't have to get management to sign a legal agreement to try out some code you read about on the internet.
+    
+p Even though the trial was free, and the terms were pretty simple, a commercial license agreement was still a major barrier to adoption. When looking around for a new solution, there are always endless avenues to explore, almost all of which turn out to be dead ends. There's not a lot of room in this process for potential solutions that ask you to do additional leg-work.
+    
+p Another huge problem is that neither of spaCy's licenses were suitable for most open-source developers. The ecosystem around copyleft licenses such as AGPL is tiny in comparison to the ecosystem around permissive licenses such as MIT. This cut spaCy off from a large community of potential users, making it much less useful than it should be.
+    
+p I knew when I settled on the AGPL-or-$ idea that it was an unusual model. I expected to face the usual novelty problems: I'd have more explaining to do, perceptions might be unfavorable etc. Instead I think the novelty made this model intrinsically worse. It doesn't integrate well into the rest of the ecosystem.
+
++h3("spacy-now-mit") spaCy now MIT licensed
+
+p spaCy is now available under the MIT license. Essentially, everyone now gets a free version of what used to be the commercial license (but in a standard form, that you don't have to bug management and legal to okay).
+
+p Anyone can now use spaCy in closed-source applications, however you like, without paying any license fees.
+    
+p Any open-source libraries that want to build on spaCy, can.
+
++h3("adaptation-as-a-service") Adaptation as a service
+
+p spaCy provides a suite of general-purpose natural language understanding components. In development, we measure and optimize the accuracy of these components against manually labelled data. But these annotations are a means to an end. They're only useful when you make use of them &ndash; when you put them to work in your product. So that's how we want to define success. We want to optimize spaCy for the metrics you care about, and we only want to be paid if we can improve them.
+
+p There are lots of ways we can deliver an improvement. The simplest is traditional training and consulting, which is particularly effective for NLP since it's such a deep and narrow niche. There are also a set of reuseable strategies for making spaCy work better on your data. Instead of the general purpose statistical model, you could get a model optimized specifically for your use case.
+    
+p The details of all of this will vary, on a case-by-case basis. It will often be useful to gather a variety of statistics about how spaCy performs on your text, and we might spend time improving them. But these accuracy statistics are not the bottom-line. The numbers that really matter are the ones that get you paid. That's the needle we want to move.
+
+p To apply for the closed beta, #[a(href="mailto:" + email) send us an email] explaining what you're doing.

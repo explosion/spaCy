@@ -1,0 +1,19 @@
+include _includes/_mixins
+
+//-  Team
+//- ============================================================================
+
++grid('align-center', 'padding')
+    each member in team_members
+        +grid-col('fifth', 'valign-center')
+            .image-container
+                img(src='/assets/img/profile_' + member + '.png')
+
+            !=authors[member].name
+            +label=(authors[member].title || 'job title')
+
+            if authors[member].links
+                .block
+                    each link, index in authors[member].links
+                        a(href=link[0] target='_blank') 
+                            +icon(index)(data-tooltip=(link[1] || index))

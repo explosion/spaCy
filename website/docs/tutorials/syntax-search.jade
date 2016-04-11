@@ -1,0 +1,76 @@
+include ../../_includes/_mixins
+
++lead Example use of the #[a(href="/docs") spaCy NLP tools] for data exploration.  Here we will look for Reddit comments that describe Google doing something, i.e. discuss the company's actions. This is difficult, because other senses of "Google" now dominate usage of the word in conversation, particularly references to using Google products.
+
+p The heuristics used are quick and dirty &ndash; about 5 minutes work.
+    
++h3("imports") Imports
+
++code.
+    from __future__ import unicode_literals
+    from __future__ import print_function
+    import sys
+    
+    import plac
+    import bz2
+    import ujson
+    import spacy.en
+    
++h3("load-model-and-iterate") Load the Model and Iterate Over the Data
+
++code.
+    def main(input_loc):
+            nlp = spacy.en.English()                 # Load the model takes 10-20 seconds.
+            for line in bz2.BZ2File(input_loc):      # Iterate over the Reddit comments from the dump. 
+                    comment_str = ujson.loads(line)['body']  # Parse the json object, and extract the 'body' attribute. 
+    
++h3("apply-spacy-pipeline") Apply the spaCy NLP Pipeline, and Look For the Cases We Want
+
++code.
+    comment_parse = nlp(comment_str) 
+    for word in comment_parse:  
+        if google_doing_something(word):
+            # Print the clause
+            print(''.join(w.string for w in word.head.subtree).strip())
+
++h3("define-filter-function") Define the Filter Function
+
++code.
+    def google_doing_something(w):
+        if w.lower_ != 'google':
+            return False
+        # Is it the subject of a verb?
+        elif w.dep_ != 'nsubj': 
+            return False
+        # And not 'is'
+        elif w.head.lemma_ == 'be' and w.head.dep_ != 'aux': 
+            return False
+        # Exclude e.g. "Google says..."
+        elif w.head.lemma_ in ('say', 'show'): 
+            return False
+        else:
+            return True
+
++h3("call-main") Call main
+
++code.
+    if __name__ == '__main__':
+        plac.call(main)
+
++h3("example-output") Example output
+
+p Many false positives remain. Some are from incorrect interpretations of the sentence by spaCy, some are flaws in our filtering logic. But the results are vastly better than a string-based search, which returns almost no examples of the pattern we're looking for.  
+
++code("markup").
+    Google dropped support for Android &lt; 4.0 already
+    google drive
+    Google to enforce a little more uniformity in its hardware so that we can see a better 3rd party market for things like mounts, cases, etc
+    When Google responds
+    Google translate cyka pasterino.
+    A quick google looks like Synology does have a sync'ing feature which does support block level so that should work 
+    (google came up with some weird One Piece/FairyTail crossover stuff), and is their knowledge universally infallible?
+    Until you have the gear, google some videos on best farming runs on each planet, you can get a lot REAL fast with the right loop.
+    Google offers something like this already, but it is truly terrible.
+    google isn't helping me
+    Google tells me: 0 results, 250 pages removed from google.
+    how did Google swoop in and eat our lunch

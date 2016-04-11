@@ -1,0 +1,28 @@
+include ../_includes/_mixins
+
++lead A syntactic dependency parse is a kind of shallow meaning representation. It's an important piece of many language understanding and text processing technologies. Now that these representations can be computed quickly, and with increasingly high accuracy, they're being used in lots of applications &ndash; translation, sentiment analysis, and summarization are major application areas.
+
+p I've been living and breathing similar representations for most of my career. But there's always been a problem: talking about these things is tough. Most people haven't thought much about grammatical structure, and the idea of them is inherently abstract.  When I left academia to write #[a(href=url target="_blank") spaCy], I knew I wanted a good visualizer. Unfortunately, I also knew I'd never be the one to write it. I'm deeply graphically challenged. Fortunately, when working with #[a(href="http://ines.io" target="_blank") Ines] to build this site, she really nailed the problem, with a solution I'd never have thought of. I really love the result, which we're calling #[a(href="/demos/displacy" target="_blank") displaCy]:
+
++displacy("robots-in-popular-culture", "Scroll to see the full parse")
+
+ p The #[a(href="https://code.google.com/p/whatswrong/" target="_blank") best alternative] is a Java command-line tool that outputs static images, which look like this:
+
+ +image("linguistic-structure.jpg", "Output of the Brat parse tree visualizer")
+
+ p I find the output of the CMU visualizer basically unreadable. Pretty much all visualizers suffer from this problem: they don't add enough space. I always thought this was a hard problem, and a good Javascript visualizer would need to do something crazy with Canvas. Ines quickly proposed a much better solution, based on native, web-standard technologies.
+
+p The idea is to use CSS to draw shapes, mostly with border styling, and some arithmetic to figure out the spacing:
+
++quote("Ines Montani, Developing Displacy", "http://ines.io/blog/developing-displacy") The arrow needs only one HTML element, #[code &lt;div class="arrow"&gt;] and the CSS pseudo-elements #[code :before] and #[code :after]. The #[code :before] pseudo-element is used for the arc and is essentially a circle (#[code border-radius: 50%]) with a black outline. Since its parent #[code .arrow] is only half its height and set to #[code overflow: hidden], it’s "cut in half" and ends up looking like a half circle.
+
+p To me, this seemed like witchcraft, or a hack at best. But I was quickly won over: if all we do is declare the data and the relationships, in standards-compliant HTML and CSS, then we can simply step back and let the browser do its job. We know the code will be small, the layout will work on a variety of display, and we'll have a ready separation of style and content. For long output, we simply let the graphic overflow, and let users scroll.
+
+p What I'm particularly excited about is the potential for displaCy as an #[a(href="http://spacy.io/displacy/?manual=Robots%20in%20popular%20culture%20are%20there%20to%20remind%20us%20of%20the%20awesomeness%20of%20unbounded%20human%20agency" target="_blank") annotation tool]. It may seem unintuitive at first, but I think it will be much better to annotate texts the way the parser operates, with a small set of actions and a stack, than by selecting arcs directly. Why? A few reasons:
+
++list
+    +item You're always asked a question. You don't have to decide-what-to-decide.
+    +item The viewport can scroll with the user, making it easier to work with spacious, readable designs.
+    +item With only 4-6 different actions, it's easy to have key-based input.
+
+p Efficient manual annotation is incredibly important. If we can get that right, then we can offer you cheap domain adaptation. You give us some text, we get it annotated, and ship you a custom model, that's much more accurate on your data.  If you're interested in helping us beta test this idea, #[a(href="mailto:" + email) get in touch].

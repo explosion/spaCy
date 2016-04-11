@@ -141,7 +141,7 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                 nlp.tagger(tokens)
                 gold = GoldParse(tokens, annot_tuples)
                 if not gold.is_projective:
-                    raise Exception("Non-projective sentence in training: %s" % annot_tuples)
+                    raise Exception("Non-projective sentence in training: %s" % annot_tuples[1])
                 loss += nlp.parser.train(tokens, gold)
                 nlp.entity.train(tokens, gold)
                 nlp.tagger.train(tokens, gold.tags)

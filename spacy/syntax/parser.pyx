@@ -47,6 +47,7 @@ from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from ._state cimport StateC
 
+from spacy.syntax.iterators cimport CHUNKERS, DocIterator, EnglishNounChunks, GermanNounChunks
 
 
 DEBUG = False
@@ -113,12 +114,9 @@ cdef class Parser:
         cdef int nr_feat = self.model.nr_feat
         with nogil:
             self.parseC(tokens.c, tokens.length, nr_feat, nr_class)
-            tokens.is_parsed = True
         # Check for KeyboardInterrupt etc. Untested
         PyErr_CheckSignals()
-        # projectivize output
-        if self._projectivize:
-            PseudoProjectivity.deprojectivize(tokens)
+        self._finalize(tokens)
 
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
         cdef Pool mem = Pool()
@@ -144,7 +142,7 @@ cdef class Parser:
                                 raise ValueError("Error parsing doc: %s" % sent_str)
                 PyErr_CheckSignals()
                 for doc in queue:
-                    doc.is_parsed = True
+                    self._finalize(doc)
                     yield doc
                 queue = []
         batch_size = len(queue)
@@ -155,10 +153,19 @@ cdef class Parser:
                     with gil:
                         sent_str = queue[i].text
                         raise ValueError("Error parsing doc: %s" % sent_str)
-        for doc in queue:
-            doc.is_parsed = True
-            yield doc
         PyErr_CheckSignals()
+        for doc in queue:
+            self._finalize(doc)
+            yield doc
+
+    def _finalize(self, Doc doc):
+        # deprojectivize output
+        if self._projectivize:
+            PseudoProjectivity.deprojectivize(doc)
+        # set annotation-specific iterators
+        doc.noun_chunks = CHUNKERS.get(doc.vocab.lang,DocIterator)
+        # mark doc as parsed
+        doc.is_parsed = True
 
     cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) nogil:
         cdef ExampleC eg

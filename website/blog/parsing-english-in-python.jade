@@ -1,0 +1,575 @@
+include ../_includes/_mixins
+
++infobox("Update (August 19, 2015)") I wrote this blog post in 2013, describing an exciting advance in natural language understanding technology. Today, almost all high-performance parsers are using a variant of the algorithm described below (including spaCy). The original post is preserved below, with added commentary in light of recent research.
+
+p A #[a(href="http://googleresearch.blogspot.de/2013/05/syntactic-ngrams-over-time.html" target="_blank") syntactic parser] describes a sentence’s grammatical structure, to help another application reason about it. Natural languages introduce many unexpected ambiguities, which our world-knowledge immediately filters out. A favourite example:
+
++example They ate the pizza with anchovies
+
++image("anchovies.png", "Eat-with pizza-with ambiguity")
+
+p A correct parse links “with” to “pizza”, while an incorrect parse links “with” to “eat”:
+
++displacy("pizza-with-anchovies-bad")
+
++displacy("pizza-with-anchovies-good")
+
+p The Natural Language Processing (NLP) community has made big progress in syntactic parsing over the last few years. It’s now possible for a tiny Python implementation to perform better than the widely-used Stanford PCFG parser.
+
+.has-aside
+    +table([ "Parser", "Accuracy", "Speed (w/s)", "Language", "LOC"])
+        +row
+            +cell Stanford PCFG
+            +cell 89.6%
+            +cell 19
+            +cell Java
+            +cell &gt; 4,000
+
+        +row
+            +cell: strong parser.py
+            +cell 89.8%
+            +cell 2,020
+            +cell Python
+            +cell: strong ~500
+
+        +row
+            +cell Redshift
+            +cell: strong 93.6%
+            +cell: strong 2,580
+            +cell Cython
+            +cell ~4,000
+
+        +row("highlight")
+            +cell spaCy v0.89
+            +cell 92.7%
+            +cell 22,106
+            +cell Cython
+            +cell ~10,000
+
+        +row("highlight")
+            +cell Stanford NN
+            +cell 91.7%
+            +cell 16,800
+            +cell Java
+            +cell &gt; 4,000
+
+    +aside("Note") I wasn’t really sure how to count the lines of code in the Stanford parser. Its jar file ships over 200k, but there are a lot of different models in it. It’s not important, but it's certainly over 4k.
+
++infobox("Update") Stanford's CoreNLP now features high-performance transition-based models.  It is much faster than the Redshift parser (my research system), but less accurate. spaCy is faster again still, more accurate than CoreNLP, but less accurate than Redshift, due to spaCy's use of greedy search. It would be relatively easy to provide a beam-search version of spaCy...But, I think the gap in accuracy will continue to close, especially given advances in neural network learning. 
+
+p The rest of the post sets up the problem, and then takes you through #[a(href="https://gist.github.com/syllog1sm/10343947" target="_blank") a concise implementation], prepared for this post. The first 200 lines of parser.py, the part-of-speech tagger and learner, are described #[a(href="#") here]. You should probably at least skim that post before reading this one, unless you’re very familiar with NLP research.
+
+p The Cython system, Redshift, was written for my current research. I plan to improve it for general use in June, after my contract ends at Macquarie University. The current version is #[a(href="http://github.com/syllog1sm/redshift" target="_blank") hosted on GitHub].
+
+
++h3("problem-description") Problem Description
+
+p It’d be nice to type an instruction like this into your phone:
+
++example Set volume to zero when I’m in a meeting, unless John’s school calls.
+
+p And have it set the appropriate policy. On Android you can do this sort of thing with #[a(href="https://play.google.com/store/apps/details?id=net.dinglisch.android.taskerm" target="_blank") Tasker], but an NL interface would be much better. It’d be especially nice to receive a meaning representation you could edit, so you could see what it thinks you said, and correct it.
+
+p There are lots of problems to solve to make that work, but some sort of syntactic representation is definitely necessary. We need to know that:
+
++example Unless John’s school calls, when I’m in a meeting, set volume to zero
+
+p is another way of phrasing the first instruction, while:
+
++example Unless John’s school, call when I’m in a meeting
+
+p means something completely different.
+
+p A dependency parser returns a graph of word-word relationships, intended to make such reasoning easier. Our graphs will be trees &ndash; edges will be directed, and every node (word) will have exactly one incoming arc (one dependency, with its head), except one.
+
+
++h4('example-usage') Example usage
+
++code.
+    parser = parser.Parser()
+    tokens = "Set the volume to zero when I 'm in a meeting unless John 's school calls".split()
+    &gt;&gt;&gt; tags, heads = parser.parse(tokens)
+    &gt;&gt;&gt; heads
+    [-1, 2, 0, 0, 3, 0, 7, 5, 7, 10, 8, 0, 13, 15, 15, 11]
+    &gt;&gt;&gt; for i, h in enumerate(heads): 
+    ...   head = tokens[heads[h]] if h &gt;= 1 else 'None'
+    ...   print(tokens[i] + ' &lt;-- ' + head])
+    Set &lt;-- None
+    the &lt;-- volume
+    volume &lt;-- Set
+    to &lt;-- Set
+    zero &lt;-- to
+    when &lt;-- Set
+    I &lt;-- 'm
+    'm &lt;-- when
+    in &lt;-- 'm
+    a &lt;-- meeting
+    meeting &lt;-- in
+    unless &lt;-- Set
+    John &lt;-- 's
+    's   &lt;-- calls
+    school &lt;-- calls
+    calls &lt;-- unless
+
+p The idea is that it should be slightly easier to reason from the parse, than it was from the string. The parse-to-meaning mapping is hopefully simpler than the string-to-meaning mapping.
+
+p The most confusing thing about this problem area is that “correctness” is defined by convention — by annotation guidelines. If you haven’t read the guidelines and you’re not a linguist, you can’t tell whether the parse is “wrong” or “right”, which makes the whole task feel weird and artificial.
+
+p For instance, there’s a mistake in the parse above: “John’s school calls” is structured wrongly, according to the Stanford annotation guidelines. The structure of that part of the sentence is how the annotators were instructed to parse an example like “John’s school clothes”.
+
+p It’s worth dwelling on this point a bit. We could, in theory, have written our guidelines so that the “correct” parses were reversed. There’s good reason to believe the parsing task will be harder if we reversed our convention, as it’d be less consistent with the rest of the grammar. But we could test that empirically, and we’d be pleased to gain an advantage by reversing the policy.
+
+    +aside("Note") For instance, how would you parse, “John’s school of music calls”? You want to make sure the phrase “John’s school” has a consistent structure in both “John’s school calls” and “John’s school of music calls”. Reasoning about the different “slots” you can put a phrase into is a key way we reason about what syntactic analyses look like. You can think of each phrase as having a different shaped connector, which you need to plug into different slots — which each phrase also has a certain number of, each of a different shape. We’re trying to figure out what connectors are where, so we can figure out how the sentences are put together.
+
+p We definitely do want that distinction in the guidelines — we don’t want both to receive the same structure, or our output will be less useful. The annotation guidelines strike a balance between what distinctions downstream applications will find useful, and what parsers will be able to predict easily.
+
++h4("projective-trees") Projective trees
+
+p There’s a particularly useful simplification that we can make, when deciding what we want the graph to look like: we can restrict the graph structures we’ll be dealing with. This doesn’t just give us a likely advantage in learnability; it can have deep algorithmic implications. We follow most work on English in constraining the dependency graphs to be #[em projective trees]:
+
++list("numbers")
+    +item Tree. Every word has exactly one head, except for the dummy ROOT symbol.
+    +item Projective. For every pair of dependencies (a1, a2) and (b1, b2), if a1 &lt; b2, then a2 &gt;= b2. In other words, dependencies cannot “cross”. You can’t have a pair of dependencies that goes a1 b1 a2 b2, or b1 a1 b2 a2.
+
+p There’s a rich literature on parsing non-projective trees, and a smaller literature on parsing DAGs. But the parsing algorithm I’ll be explaining deals with projective trees.
+
++h3("greedy-transition-based-parsing") Greedy transition-based parsing
+
+p Our parser takes as input a list of string tokens, and outputs a list of head indices, representing edges in the graph. If the #[em i]th member of heads is #[em j], the dependency parse contains an edge (j, i). A transition-based parser is a finite-state transducer; it maps an array of N words onto an output array of N head indices:
+
++table
+    +row
+        +cell: em start
+        +cell MSNBC
+        +cell reported
+        +cell that
+        +cell Facebook
+        +cell bought
+        +cell WhatsApp
+        +cell for
+        +cell $16bn
+        +cell: em root
+
+    +row
+        +cell 0
+        +cell 2
+        +cell 9
+        +cell 2
+        +cell 4
+        +cell 2
+        +cell 4
+        +cell 4
+        +cell 7
+        +cell 0
+
+p The heads array denotes that the head of #[em MSNBC] is #[em reported]: #[em MSNBC] is word 1, and #[em reported] is word 2, and #[code heads[1] == 2]. You can already see why parsing a tree is handy — this data structure wouldn’t work if we had to output a DAG, where words may have multiple heads.
+
+p Although #[code heads] can be represented as an array, we’d actually like to maintain some alternate ways to access the parse, to make it easy and efficient to extract features. Our #[code Parse] class looks like this:
+
++code.
+    class Parse(object):
+        def __init__(self, n):
+            self.n = n
+            self.heads = [None] * (n-1)
+            self.lefts = []
+            self.rights = []
+            for i in range(n+1):
+                self.lefts.append(DefaultList(0))
+                self.rights.append(DefaultList(0))
+            
+        def add_arc(self, head, child):
+            self.heads[child] = head
+                if child &lt; head:
+                    self.lefts[head].append(child)
+                else:
+                    self.rights[head].append(child)
+
+p As well as the parse, we also have to keep track of where we’re up to in the sentence. We’ll do this with an index into the #[code words] array, and a stack, to which we’ll push words, before popping them once their head is set. So our state data structure is fundamentally:
+
++list
+    +item An index, i, into the list of tokens;
+    +item The dependencies added so far, in Parse
+    +item A stack, containing words that occurred before i, for which we’re yet to assign a head.
+
+p Each step of the parsing process applies one of three actions to the state:
+
++code.
+    SHIFT = 0; RIGHT = 1; LEFT = 2
+    MOVES = [SHIFT, RIGHT, LEFT]
+    
+    def transition(move, i, stack, parse):
+        global SHIFT, RIGHT, LEFT
+        if move == SHIFT:
+            stack.append(i)
+            return i + 1
+        elif move == RIGHT:
+            parse.add_arc(stack[-2], stack.pop())
+            return i
+        elif move == LEFT:
+            parse.add_arc(i, stack.pop())
+            return i
+        raise GrammarError(&quot;Unknown move: %d&quot; % move)
+
+p The #[code LEFT] and #[code RIGHT] actions add dependencies and pop the stack, while #[code SHIFT] pushes the stack and advances i into the buffer.
+
+p So, the parser starts with an empty stack, and a buffer index at 0, with no dependencies recorded. It chooses one of the (valid) actions, and applies it to the state. It continues choosing actions and applying them until the stack is empty and the buffer index is at the end of the input. (It’s hard to understand this sort of algorithm without stepping through it. Try coming up with a sentence, drawing a projective parse tree over it, and then try to reach the parse tree by choosing the right sequence of transitions.)
+
+p Here’s what the parsing loop looks like in code:
+
++code.
+    class Parser(object):
+        ...
+        def parse(self, words):
+            tags = self.tagger(words)
+            n = len(words)
+            idx = 1
+            stack = [0]
+            deps = Parse(n)
+            while stack or idx &lt; n:
+                features = extract_features(words, tags, idx, n, stack, deps)
+                scores = self.model.score(features)
+                valid_moves = get_valid_moves(i, n, len(stack))
+                next_move = max(valid_moves, key=lambda move: scores[move])
+                idx = transition(next_move, idx, stack, parse)
+            return tags, parse
+
+    def get_valid_moves(i, n, stack_depth):
+        moves = []
+        if i &lt; n:
+            moves.append(SHIFT)
+        if stack_depth &lt;= 2:
+            moves.append(RIGHT)
+        if stack_depth &lt;= 1:
+            moves.append(LEFT)
+        return moves
+
+p We start by tagging the sentence, and initializing the state. We then map the state to a set of features, which we score using a linear model. We then find the best-scoring valid move, and apply it to the state.
+
+p The model scoring works the same as it did in #[a(href="/blog/part-of-speech-POS-tagger-in-python/" target="_blank") the POS tagger]. If you’re confused about the idea of extracting features and scoring them with a linear model, you should review that post. Here’s a reminder of how the model scoring works:
+
++code.
+    class Perceptron(object)
+        ...
+        def score(self, features):
+            all_weights = self.weights
+            scores = dict((clas, 0) for clas in self.classes)
+            for feat, value in features.items():
+                if value == 0:
+                    continue
+                if feat not in all_weights:
+                    continue
+                weights = all_weights[feat]
+                for clas, weight in weights.items():
+                    scores[clas] += value * weight
+            return scores
+
+p It’s just summing the class-weights for each feature. This is often expressed as a dot-product, but when you’re dealing with multiple classes, that gets awkward, I find.
+
+p The beam parser (RedShift) tracks multiple candidates, and only decides on the best one at the very end. We’re going to trade away accuracy in favour of efficiency and simplicity. We’ll only follow a single analysis. Our search strategy will be entirely greedy, as it was with the POS tagger. We’ll lock-in our choices at every step.
+
+p If you read the POS tagger post carefully, you might see the underlying similarity. What we’ve done is mapped the parsing problem onto a sequence-labelling problem, which we address using a “flat”, or unstructured, learning algorithm (by doing greedy search).
+
++h3("features") Features
+
+p Feature extraction code is always pretty ugly. The features for the parser refer to a few tokens from the context:
+
++list
+    +item The first three words of the buffer (n0, n1, n2)
+    +item The top three words of the stack (s0, s1, s2)
+    +item The two leftmost children of s0 (s0b1, s0b2);
+    +item The two rightmost children of s0 (s0f1, s0f2);
+    +item The two leftmost children of n0 (n0b1, n0b2)
+
+p For these 12 tokens, we refer to the word-form, the part-of-speech tag, and the number of left and right children attached to the token.
+
+p Because we’re using a linear model, we have our features refer to pairs and triples of these atomic properties.
+
++code.
+    def extract_features(words, tags, n0, n, stack, parse):
+        def get_stack_context(depth, stack, data):
+            if depth &gt;= 3:
+                return data[stack[-1]], data[stack[-2]], data[stack[-3]]
+            elif depth &gt;= 2:
+                return data[stack[-1]], data[stack[-2]], ''
+            elif depth == 1:
+                return data[stack[-1]], '', ''
+            else:
+                return '', '', ''
+
+        def get_buffer_context(i, n, data):
+            if i + 1 &gt;= n:
+                return data[i], '', ''
+            elif i + 2 &gt;= n:
+                return data[i], data[i + 1], ''
+            else:
+                return data[i], data[i + 1], data[i + 2]
+
+        def get_parse_context(word, deps, data):
+            if word == -1:
+                return 0, '', ''
+            deps = deps[word]
+            valency = len(deps)
+            if not valency:
+                return 0, '', ''
+            elif valency == 1:
+                return 1, data[deps[-1]], ''
+            else:
+                return valency, data[deps[-1]], data[deps[-2]]
+
+        features = {}
+        # Set up the context pieces --- the word, W, and tag, T, of:
+        # S0-2: Top three words on the stack
+        # N0-2: First three words of the buffer
+        # n0b1, n0b2: Two leftmost children of the first word of the buffer
+        # s0b1, s0b2: Two leftmost children of the top word of the stack
+        # s0f1, s0f2: Two rightmost children of the top word of the stack
+
+        depth = len(stack)
+        s0 = stack[-1] if depth else -1
+
+        Ws0, Ws1, Ws2 = get_stack_context(depth, stack, words)
+        Ts0, Ts1, Ts2 = get_stack_context(depth, stack, tags)
+
+        Wn0, Wn1, Wn2 = get_buffer_context(n0, n, words)
+        Tn0, Tn1, Tn2 = get_buffer_context(n0, n, tags)
+
+        Vn0b, Wn0b1, Wn0b2 = get_parse_context(n0, parse.lefts, words)
+        Vn0b, Tn0b1, Tn0b2 = get_parse_context(n0, parse.lefts, tags)
+
+        Vn0f, Wn0f1, Wn0f2 = get_parse_context(n0, parse.rights, words)
+        _, Tn0f1, Tn0f2 = get_parse_context(n0, parse.rights, tags)
+
+        Vs0b, Ws0b1, Ws0b2 = get_parse_context(s0, parse.lefts, words)
+        _, Ts0b1, Ts0b2 = get_parse_context(s0, parse.lefts, tags)
+
+        Vs0f, Ws0f1, Ws0f2 = get_parse_context(s0, parse.rights, words)
+        _, Ts0f1, Ts0f2 = get_parse_context(s0, parse.rights, tags)
+
+        # Cap numeric features at 5? 
+        # String-distance
+        Ds0n0 = min((n0 - s0, 5)) if s0 != 0 else 0
+
+        features['bias'] = 1
+        # Add word and tag unigrams
+        for w in (Wn0, Wn1, Wn2, Ws0, Ws1, Ws2, Wn0b1, Wn0b2, Ws0b1, Ws0b2, Ws0f1, Ws0f2):
+            if w:
+                features['w=%s' % w] = 1
+        for t in (Tn0, Tn1, Tn2, Ts0, Ts1, Ts2, Tn0b1, Tn0b2, Ts0b1, Ts0b2, Ts0f1, Ts0f2):
+            if t:
+                features['t=%s' % t] = 1
+
+        # Add word/tag pairs
+        for i, (w, t) in enumerate(((Wn0, Tn0), (Wn1, Tn1), (Wn2, Tn2), (Ws0, Ts0))):
+            if w or t:
+                features['%d w=%s, t=%s' % (i, w, t)] = 1
+
+        # Add some bigrams
+        features['s0w=%s,  n0w=%s' % (Ws0, Wn0)] = 1
+        features['wn0tn0-ws0 %s/%s %s' % (Wn0, Tn0, Ws0)] = 1
+        features['wn0tn0-ts0 %s/%s %s' % (Wn0, Tn0, Ts0)] = 1
+        features['ws0ts0-wn0 %s/%s %s' % (Ws0, Ts0, Wn0)] = 1
+        features['ws0-ts0 tn0 %s/%s %s' % (Ws0, Ts0, Tn0)] = 1
+        features['wt-wt %s/%s %s/%s' % (Ws0, Ts0, Wn0, Tn0)] = 1
+        features['tt s0=%s n0=%s' % (Ts0, Tn0)] = 1
+        features['tt n0=%s n1=%s' % (Tn0, Tn1)] = 1
+
+        # Add some tag trigrams
+        trigrams = ((Tn0, Tn1, Tn2), (Ts0, Tn0, Tn1), (Ts0, Ts1, Tn0), 
+                    (Ts0, Ts0f1, Tn0), (Ts0, Ts0f1, Tn0), (Ts0, Tn0, Tn0b1),
+                    (Ts0, Ts0b1, Ts0b2), (Ts0, Ts0f1, Ts0f2), (Tn0, Tn0b1, Tn0b2),
+                    (Ts0, Ts1, Ts1))
+        for i, (t1, t2, t3) in enumerate(trigrams):
+            if t1 or t2 or t3:
+                features['ttt-%d %s %s %s' % (i, t1, t2, t3)] = 1
+
+        # Add some valency and distance features
+        vw = ((Ws0, Vs0f), (Ws0, Vs0b), (Wn0, Vn0b))
+        vt = ((Ts0, Vs0f), (Ts0, Vs0b), (Tn0, Vn0b))
+        d = ((Ws0, Ds0n0), (Wn0, Ds0n0), (Ts0, Ds0n0), (Tn0, Ds0n0),
+            ('t' + Tn0+Ts0, Ds0n0), ('w' + Wn0+Ws0, Ds0n0))
+        for i, (w_t, v_d) in enumerate(vw + vt + d):
+            if w_t or v_d:
+                features['val/d-%d %s %d' % (i, w_t, v_d)] = 1
+        return features
+
++h3("training") Training
+
+p Weights are learned using the same algorithm, averaged perceptron, that we used for part-of-speech tagging. Its key strength is that it’s an online learning algorithm: examples stream in one-by-one, we make our prediction, check the actual answer, and adjust our beliefs (weights) if we were wrong.
+        
+p The training loop looks like this:
+
++code.
+    class Parser(object):
+        ...
+        def train_one(self, itn, words, gold_tags, gold_heads):
+            n = len(words)
+            i = 2; stack = [1]; parse = Parse(n)
+            tags = self.tagger.tag(words)
+            while stack or (i + 1) &lt; n:
+                features = extract_features(words, tags, i, n, stack, parse)
+                scores = self.model.score(features)
+                valid_moves = get_valid_moves(i, n, len(stack))
+                guess = max(valid_moves, key=lambda move: scores[move])
+                gold_moves = get_gold_moves(i, n, stack, parse.heads, gold_heads)
+                best = max(gold_moves, key=lambda move: scores[move])
+            self.model.update(best, guess, features)
+            i = transition(guess, i, stack, parse)
+        # Return number correct
+        return len([i for i in range(n-1) if parse.heads[i] == gold_heads[i]])
+
+p The most interesting part of the training process is in #[code get_gold_moves]. The performance of our parser is made possible by an advance by Goldberg and Nivre (2012), who showed that we’d been doing this wrong for years.
+
++infobox("Update") Interestingly, CoreNLP continues to "do it wrong" &ndash; their transition-based parser uses the static-oracle, rather than the dynamic oracle described here. I attribute spaCy's accuracy advantage to this difference in training algorithm. The ClearNLP parser uses an iterative algorithm that achieves the same sort of thing (and was published prior to the dynamic oracle). I find the dynamic oracle idea much more conceptually clear.
+
+p In the POS-tagging post, I cautioned that during training you need to make sure you pass in the last two #[em predicted] tags as features for the current tag, not the last two #[em gold] tags. At test time you’ll only have the predicted tags, so if you base your features on the gold sequence during training, your training contexts won’t resemble your test-time contexts, so you’ll learn the wrong weights.
+
+p In parsing, the problem was that we didn’t know #[em how] to pass in the predicted sequence! Training worked by taking the gold-standard tree, and finding a transition sequence that led to it. i.e., you got back a sequence of moves, with the guarantee that if you followed those moves, you’d get the gold-standard dependencies.
+
+p The problem is, we didn’t know how to define the “correct” move to teach a parser to make if it was in any state that #[em wasn’t] along that gold-standard sequence. Once the parser had made a mistake, we didn’t know how to train from that example.
+
+p That was a big problem, because it meant that once the parser started making mistakes, it would end up in states unlike any in its training data &ndash; leading to yet more mistakes. The problem was specific to greedy parsers: once you use a beam, there’s a natural way to do structured prediction.
+
++infobox("Update") It's since been pointed out to me that what we're calling a "dynamic oracle" here is really a form of #[a(href="http://www.ausy.tu-darmstadt.de/Research/ICML2011" target="_blank") imitation learning].
+
+p The solution seems obvious once you know it, like all the best breakthroughs. What we do is define a function that asks “How many gold-standard dependencies can be recovered from this state?”. If you can define that function, then you can apply each move in turn, and ask, “How many gold-standard dependencies can be recovered from #[em this] state?”. If the action you applied allows #[em fewer] gold-standard dependencies to be reached, then it is sub-optimal.
+
+p That’s a lot to take in.
+
+p So we have this function #[code Oracle(state)]:
+
++code.
+    Oracle(state) = gold_arcs ∩ reachable_arcs(state) |
+
+p We also have a set of actions, each of which returns a new state. We want to know:
+
++list
+    +item #[code shift_cost = Oracle(state) – Oracle(shift(state))]
+    +item #[code right_cost = Oracle(state) – Oracle(right(state))]
+    +item #[code left_cost = Oracle(state) – Oracle(left(state))]
+
+p Now, at least one of those costs #[em has] to be zero. Oracle(state) is asking, “what’s the cost of the best path forward?”, and the first action of that best path has to be shift, right, or left.
+
+p It turns out that we can derive Oracle fairly simply for many transition systems. The derivation for the transition system we’re using, Arc Hybrid, is in Goldberg and Nivre (2013).
+
+p We’re going to implement the oracle as a function that returns the zero-cost moves, rather than implementing a function Oracle(state). This prevents us from doing a bunch of costly copy operations. Hopefully the reasoning in the code isn’t too hard to follow, but you can also consult Goldberg and Nivre’s papers if you’re confused and want to get to the bottom of this.
+
++code.
+    def get_gold_moves(n0, n, stack, heads, gold):
+        def deps_between(target, others, gold):
+            for word in others:
+                if gold[word] == target or gold[target] == word:
+                    return True
+            return False
+
+        valid = get_valid_moves(n0, n, len(stack))
+        if not stack or (SHIFT in valid and gold[n0] == stack[-1]):
+            return [SHIFT]
+        if gold[stack[-1]] == n0:
+            return [LEFT]
+        costly = set([m for m in MOVES if m not in valid])
+        # If the word behind s0 is its gold head, Left is incorrect
+        if len(stack) &gt;= 2 and gold[stack[-1]] == stack[-2]:
+            costly.add(LEFT)
+        # If there are any dependencies between n0 and the stack,
+        # pushing n0 will lose them.
+        if SHIFT not in costly and deps_between(n0, stack, gold):
+            costly.add(SHIFT)
+        # If there are any dependencies between s0 and the buffer, popping
+        # s0 will lose them.
+        if deps_between(stack[-1], range(n0+1, n-1), gold):
+            costly.add(LEFT)
+            costly.add(RIGHT)
+        return [m for m in MOVES if m not in costly]
+
+p Doing this “dynamic oracle” training procedure makes a big difference to accuracy — typically 1-2%, with no difference to the way the run-time works. The old “static oracle” greedy training procedure is fully obsolete; there’s no reason to do it that way any more.
+
++h3("conclusion") Conclusion
+
+p I have the sense that language technologies, particularly those relating to grammar, are particularly mysterious. I can imagine having no idea what the program might even do.
+
+p I think it therefore seems natural to people that the best solutions would be over-whelmingly complicated. A 200,000 line Java package feels appropriate.
+
+p But, algorithmic code is usually short, when only a single algorithm is implemented. And when you only implement one algorithm, and you know exactly what you want to write before you write a line, you also don’t pay for any unnecessary abstractions, which can have a big performance impact.
+
++h3("idle-speculation") Idle speculation
+
+p For a long time, incremental language processing algorithms were primarily of scientific interest. If you want to write a parser to test a theory about how the human sentence processor might work, well, that parser needs to build partial interpretations. There’s a wealth of evidence, including commonsense introspection, that establishes that we don’t buffer input and analyse it once the speaker has finished.
+
+p But now algorithms with that neat scientific feature are winning! As best as I can tell, the secret to that success is to be:
+
++list
+    +item Incremental. Earlier words constrain the search.
+    +item Error-driven. Training involves a working hypothesis, which is updated as it makes mistakes.
+
+p The links to human sentence processing seem tantalising. I look forward to seeing whether these engineering breakthroughs lead to any psycholinguistic advances.
+
+
++h3("bibliography") Bibliography
+
+p The NLP literature is almost entirely open access. All of the relavant papers can be found #[a(href="http://aclweb.org/anthology/" target="_blank") here].
+
+p The parser I’ve described is an implementation of the dynamic-oracle Arc-Hybrid system here: #[+source Goldberg, Yoav; Nivre, Joakim. #[em Training Deterministic Parsers with Non-Deterministic Oracles]. TACL 2013]
+
+p However, I wrote my own features for it. The arc-hybrid system was originally described here: #[+source Kuhlmann, Marco; Gomez-Rodriguez, Carlos; Satta, Giorgio. Dynamic programming algorithms for transition-based dependency parsers. ACL 2011]
+
+p The dynamic oracle training method was first described here: #[+source A Dynamic Oracle for Arc-Eager Dependency Parsing. Goldberg, Yoav; Nivre, Joakim. COLING 2012]
+
+p This work depended on a big break-through in accuracy for transition-based parsers, when beam-search was properly explored by Zhang and Clark. They have several papers, but the preferred citation is: #[+source Zhang, Yue; Clark, Steven. Syntactic Processing Using the Generalized Perceptron and Beam Search. Computational Linguistics 2011 (1)]
+
+p Another important paper was this little feature engineering paper, which further improved the accuracy: #[+source Zhang, Yue;  Nivre, Joakim. Transition-based Dependency Parsing with Rich Non-local Features. ACL 2011]
+
+p The generalised perceptron, which is the learning framework for these beam parsers, is from this paper: #[+source Collins, Michael. Discriminative Training Methods for Hidden Markov Models: Theory and Experiments with Perceptron Algorithms. EMNLP 2002]
+
+
++h3("experimental-details") Experimental details
+
+p The results at the start of the post refer to Section 22 of the Wall Street Journal corpus. The Stanford parser was run as follows:
+
++code("bash").
+    java -mx10000m -cp "$scriptdir/*:" edu.stanford.nlp.parser.lexparser.LexicalizedParser \
+    -outputFormat "penn" edu/stanford/nlp/models/lexparser/englishFactored.ser.gz $*
+
+p A small post-process was applied, to undo the fancy tokenisation Stanford adds for numbers, to make them match the PTB tokenisation:
+
++code.
+    """Stanford parser retokenises numbers. Split them."""
+    import sys
+    import re
+     
+    qp_re = re.compile('\xc2\xa0')
+    for line in sys.stdin:
+        line = line.rstrip()
+        if qp_re.search(line):
+                line = line.replace('(CD', '(QP (CD', 1) + ')'
+                line = line.replace('\xc2\xa0', ') (CD ')
+        print line
+
+p The resulting PTB-format files were then converted into dependencies using the Stanford converter:
+
++code("bash").
+    for f in $1&#x2F;*.mrg; do
+        echo $f
+        grep -v CODE $f &gt; "$f.2"
+        out="$f.dep"
+        java -mx800m -cp "$scriptdir/*:" edu.stanford.nlp.trees.EnglishGrammaticalStructure \
+    -treeFile "$f.2" -basic -makeCopulaHead -conllx > $out
+    done
+
+p I can’t easily read that anymore, but it should just convert every .mrg file in a folder to a CoNLL-format Stanford basic dependencies file, using the settings common in the dependency literature.
+
+p I then converted the gold-standard trees from WSJ 22, for the evaluation. Accuracy scores refer to unlabelled attachment score (i.e. the head index) of all non-punctuation tokens.
+
+p To train parser.py, I fed the gold-standard PTB trees for WSJ 02-21 into the same conversion script.
+
+p In a nutshell: The Stanford model and parser.py are trained on the same set of sentences, and they each make their predictions on a held-out test set, for which we know the answers. Accuracy refers to how many of the words’ heads we got correct.
+
+p Speeds were measured on a 2.4Ghz Xeon. I ran the experiments on a server, to give the Stanford parser more memory. The parser.py system runs fine on my MacBook Air. I used PyPy for the parser.py experiments; CPython was about half as fast on an early benchmark.
+
+p One of the reasons parser.py is so fast is that it does unlabelled parsing. Based on previous experiments, a labelled parser would likely be about 40x slower, and about 1% more accurate. Adapting the program to labelled parsing would be a good exercise for the reader, if you have access to the data.
+
+p The result from the Redshift parser was produced from commit #[code b6b624c9900f3bf], which was run as follows:
+
++code("bash").
+    ./scripts/train.py -x zhang+stack -k 8 -p ~/data/stanford/train.conll ~/data/parsers/tmp
+    ./scripts/parse.py ~/data/parsers/tmp ~/data/stanford/devi.txt /tmp/parse/
+    ./scripts/evaluate.py /tmp/parse/parses ~/data/stanford/dev.conll

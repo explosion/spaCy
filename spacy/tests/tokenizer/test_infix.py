@@ -32,3 +32,18 @@ def test_email(en_tokenizer):
     assert len(tokens) == 1
 
 
+def test_double_hyphen(en_tokenizer):
+    tokens = en_tokenizer(u'No decent--let alone well-bred--people.')
+    assert tokens[0].text == u'No'
+    assert tokens[1].text == u'decent'
+    assert tokens[2].text == u'--'
+    assert tokens[3].text == u'let'
+    assert tokens[4].text == u'alone'
+    assert tokens[5].text == u'well'
+    assert tokens[6].text == u'-'
+    # TODO: This points to a deeper issue with the tokenizer: it doesn't re-enter
+    # on infixes.
+    #assert tokens[7].text == u'bred'
+    #assert tokens[8].text == u'--'
+    #assert tokens[9].text == u'people'
+

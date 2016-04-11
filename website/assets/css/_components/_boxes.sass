@@ -1,0 +1,39 @@
+//  Boxes - Variables
+// ============================================================================
+
+$box-border     : 1px solid
+$box-padding    : 2em
+
+
+//  Boxes - Style
+// ============================================================================
+
+//  Box for notes and alerts
+//  [data-label] - style of box labels
+//  .box--info   - emphasized style for info boxes
+//  .box-image   - optional image, like profile image
+//  .box-body    - body text of box
+//  .box-links   - link list
+
+.box
+    @extend .block, .text
+    padding: ($box-padding / 2) 0
+
+    &[data-label]:before
+        @extend .label-box
+
+    &--info
+        background: color($theme, light)
+        border: $box-border darken(color($theme, light), 4)
+
+.box-image
+    @extend .image-profile
+    float: right
+
+.box-body
+    margin-bottom: 0
+    padding: $box-padding
+
+.box-links
+    @extend .link-list
+    padding: $box-padding

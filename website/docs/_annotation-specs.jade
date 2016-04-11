@@ -1,0 +1,170 @@
+//-  Docs > Annotation Specs
+//- ============================================================================
+
++section('annotation')
+    +h2('annotation').
+        Annotation Specifications
+
+    p.
+        This document describes the target annotations spaCy is trained to predict. 
+        This is currently a work in progress. Please ask questions on the 
+        #[a(href='https://github.com/' + profiles.github + '/spaCy/issues' target="_blank") issue tracker], 
+        so that the answers can be integrated here to improve the documentation.
+
+    +section('annotation-tokenization')
+        +h3('annotation-tokenization').
+            Tokenization
+
+        p.
+            Tokenization standards are based on the OntoNotes 5 corpus. The 
+            tokenizer differs from most by including tokens for significant 
+            whitespace. Any sequence of whitespace characters beyond a single 
+            space (' ') is included as a token. For instance:
+
+        +code.
+            from spacy.en import English
+            nlp = English(parse=False)
+            tokens = nlp('Some\nspaces  and\ttab characters')
+            print([t.orth_ for t in tokens])
+
+        p.
+            Which produces:
+
+        +code.
+            ['Some', '\n', 'spaces', ' ', 'and', '\t', 'tab', 'characters']
+
+        p.
+            The whitespace tokens are useful for much the same reason punctuation 
+            is – it's often an important delimiter in the text. By preserving it 
+            in the token output, we are able to maintain a simple alignment between 
+            the tokens and the original string, and we ensure that no information 
+            is lost during processing.
+
+    +section('annotation-sentence-boundary')
+        +h3('annotation-sentence-boundary').
+            Sentence boundary detection
+
+        p.
+            Sentence boundaries are calculated from the syntactic parse tree, so 
+            features such as punctuation and capitalisation play an important but 
+            non-decisive role in determining the sentence boundaries. Usually 
+            this means that the sentence boundaries will at least coincide with 
+            clause boundaries, even given poorly punctuated text.
+
+    +section('annotation-pos-tagging')
+        +h3('annotation-pos-tagging').
+            Part-of-speech Tagging
+
+        p.
+            The part-of-speech tagger uses the OntoNotes 5 version of the Penn 
+            Treebank tag set. We also map the tags to the simpler Google Universal 
+            POS Tag set. Details #[a(href='https://github.com/' + profiles.github + '/spaCy/blob/master/spacy/tagger.pyx' target='_blank') here].
+
+
+    +section('annotation-lemmatization')
+        +h3('annotation-lemmatization').
+            Lemmatization
+
+        p.
+            A "lemma" is the uninflected form of a word. In English, this means:
+
+        +list
+            +item #[strong Adjectives:] The form like "happy", not "happier" or "happiest"
+            +item #[strong Adverbs:] The form like "badly", not "worse" or "worst"
+            +item #[strong Nouns:] The form like "dog", not "dogs"; like "child", not "children"
+            +item #[strong Verbs:] The form like "write", not "writes", "writing", "wrote" or "written"
+        
+        p.
+            The lemmatization data is taken from WordNet. However, we also add a 
+            special case for pronouns: all pronouns are lemmatized to the special 
+            token #[code -PRON-].
+
+    +section('annotation-dependency')
+        +h3('annotation-dependency').
+            Syntactic Dependency Parsing
+
+        p.
+            The parser is trained on data produced by the ClearNLP converter. 
+            Details of the annotation scheme can be found 
+            #[a(href='http://www.mathcs.emory.edu/~choi/doc/clear-dependency-2012.pdf' target='_blank') here].
+
+    +section('annotation-ner')
+        +h3('annotation-ner').
+            Named Entity Recognition
+
+        +table(['Entity Type', 'Description'], 'params')
+            +row
+                +cell PERSON
+                +cell People, including fictional.
+
+            +row
+                +cell NORP
+                +cell Nationalities or religious or political groups.
+
+            +row
+                +cell FACILITY
+                +cell Buildings, airports, highways, bridges, etc.
+
+            +row
+                +cell ORG
+                +cell Companies, agencies, institutions, etc.
+
+            +row
+                +cell GPE
+                +cell Countries, cities, states.
+
+            +row
+                +cell LOC
+                +cell Non-GPE locations, mountain ranges, bodies of water.
+
+            +row
+                +cell PRODUCT
+                +cell Vehicles, weapons, foods, etc. (Not services)
+
+            +row
+                +cell EVENT
+                +cell Named hurricanes, battles, wars, sports events, etc.
+
+            +row
+                +cell WORK_OF_ART
+                +cell Titles of books, songs, etc.
+
+            +row
+                +cell LAW
+                +cell Named documents made into laws
+
+            +row
+                +cell LANGUAGE
+                +cell Any named language
+
+        p.
+            The following values are also annotated in a style similar to names:
+
+        +table(['Entity Type', 'Description'], 'params')
+            +row
+                +cell DATE
+                +cell Absolute or relative dates or periods
+
+            +row
+                +cell TIME
+                +cell Times smaller than a day
+
+            +row
+                +cell PERCENT
+                +cell Percentage (including “%”)
+
+            +row
+                +cell MONEY
+                +cell Monetary values, including unit
+
+            +row
+                +cell QUANTITY
+                +cell Measurements, as of weight or distance
+
+            +row
+                +cell ORDINAL
+                +cell "first", "second"
+
+            +row
+                +cell CARDINAL
+                +cell Numerals that do not fall under another type

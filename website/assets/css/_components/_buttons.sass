@@ -1,0 +1,75 @@
+//  Buttons - Variables
+// ============================================================================
+
+$button-border-radius   : $border-radius
+$button-border-style    : solid
+$button-border-width    : 2px
+$button-color           : color($theme)
+$button-opacity-hover   : 0.85
+$button-padding         : 1em 1.5em 0.75em
+$button-margin          : 0.5rem
+
+
+//  Buttons - Style
+// ============================================================================
+
+//  :active                    - effect on active
+//  :hover                     - effect on hover
+//  .button--small             - small style
+//  .button--#{$social-button} - social button styled according to site
+//  .button-primary            - primary style
+//  .button-secondary          - secondary style
+//  .button-tertiary           - tertiary style
+
+.button
+    @extend .text-meta
+    border: $button-border-width $button-border-style
+    border-radius: $button-border-radius
+    padding: $button-padding
+
+    &--small
+        @extend .text-small
+        border-width: ($button-border-width / 2)
+
+    &--source
+        float: right
+        margin-left: $button-margin
+
+    @each $social-button in $social-buttons
+        &.button--#{$social-button}
+            background: color(social, $social-button)
+            border-color: color(social, $social-button)
+            color: color(white)
+
+.button-primary
+    @extend .button
+    background-color: $button-color
+    border-color: $button-color
+    color: color(white)
+
+    &:hover,
+    &:active
+        opacity: $button-opacity-hover
+
+.button-secondary
+    @extend .button
+    background: color(white)
+    color: $button-color
+
+    &:hover,
+    &:active
+        background: $button-color
+        color: color(white)
+        opacity: 1
+
+.button-tertiary
+    @extend .button
+    background: color(white)
+    color: color(grey, dark)
+    border-color: currentColor
+
+    &:hover,
+    &:active
+        border-color: $button-color
+        color: $button-color
+        opacity: 1

@@ -1,0 +1,82 @@
+//-  Docs > API > Matcher
+//- ============================================================================
+
++section('matcher')
+    +h2('matcher', 'https://github.com/' + profiles.github + '/spaCy/blob/master/spacy/matcher.pyx#L165')
+        | #[+label('tag') class] Matcher
+
+    p A full example can be found #[a(href="https://github.com/" + profiles.github + "blob/master/examples/matcher_example.py") here].
+
+    +table(['Usage', 'Description'], 'code')
+            +row
+                +cell #[code.lang-python nlp(doc)]
+                +cell.
+                    As part of annotation pipeline.
+
+            +row
+                +cell #[code.lang-python nlp.matcher(doc)]
+                +cell.
+                    Explicit invocation.
+
+            +row
+                +cell #[code.lang-python nlp.matcher.add(u'FooCorp', u'ORG', {}, [[{u'ORTH': u'Foo'}]])]
+                +cell.
+                    Add a pattern to match.
+
+    +section('matcher-init')
+        +h3('matcher-init') __init__(self, vocab, patterns)
+            +table(['Name', 'Type', 'Description'], 'params')
+                +row
+                    +cell vocab
+                    +cell #[code.lang-python spacy.vocab.Vocab]
+                    +cell Reference to the shared vocabulary object.
+
+                +row
+                    +cell patterns
+                    +cell #[code {entity_key: (etype, attrs, specs)}]
+                    +cell.
+                        Initial patterns to match. See #[code Matcher.add]
+                               
+    +section('matcher-add')
+        +h3('matcher-add') add(self, entity_key, etype, attrs, specs)
+            +table(['Name', 'Type', 'Description'], 'params')
+                +row
+                    +cell entity_key
+                    +cell unicode or int
+                    +cell Your arbitrary ID string (or its integer encoding)
+                +row
+                    +cell etype
+                    +cell unicode or int
+                    +cell A pre-registered entity type, e.g. u'PERSON', u'ORG', etc.
+                +row
+                    +cell attrs
+                    +cell #[code dict]
+                    +cell Placeholder for future support of entity attributes.
+                +row
+                    +cell specs
+                    +cell #[code [[{int: unicode}]]]
+                    +cell A list of surface forms, where each surface form is defined as a list of token definitions, and each token definition is a dictionary mapping attribute IDs to attribute values.
+
+    +section('matcher-saveload')
+        +h3('matcher-saveload')
+            | Save and Load
+
+        +section('matcher-saveload-dump')
+            +h4('matcher-saveload-dump') dump(loc)
+
+            +table(['Name', 'Type', 'Description'], 'params')
+                    +row
+                        +cell loc
+                        +cell #[a(href=link_unicode target='_blank') unicode]
+                        +cell.
+                            Path to save the gazetteer.json file.
+
+        +section('matcher-saveload-load')
+            +h4('matcher-saveload-load') load(loc)
+
+            +table(['Name', 'Type', 'Description'], 'params')
+                    +row
+                        +cell loc
+                        +cell #[a(href=link_unicode target='_blank') unicode]
+                        +cell.
+                            Path to load the gazetteer.json file from.

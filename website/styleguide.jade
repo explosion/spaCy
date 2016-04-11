@@ -1,0 +1,391 @@
+include _includes/_mixins
+
+- var colors_primary = { 'spaCy Blue' : '#09a3d5', 'spaCy Red': '#e4514f', 'spaCy Yellow' : '#f4c025', 'Black' : '#222222', 'Dark Grey': '#999999', 'Medium Grey': '#dddddd', 'Light Grey': '#f6f6f6', 'White': '#ffffff' }
+- var colors_secondary = { 'spaCy Blue' : '#09a3d5', 'spaCy Red': '#e4514f', 'Green': '#3ec930', 'Purple' : '#8130c9', 'Orange' : '#f47725', 'spaCy Yellow' : '#f4c025', 'Dark Grey': '#999999' }
+- var colors_logo = [colors_primary['Black'], colors_primary['spaCy Blue'], colors_primary['spaCy Red']]
+- var grid = { 'half': 2, 'third': 3, 'quarter': 4, 'fifth': 5 }
+
+
+//-  Styleguide
+//- ============================================================================
+
+//- Introduction
+
++section('introduction')
+    +h2('introduction') Introduction
+
+    p.text-big.
+        This style guide is loosely based on the concept and principles of 
+        #[a(href='http://bradfrost.com/blog/post/atomic-web-design/' target='_blank') Atomic Design]. 
+        The templates consist of small elements (atoms) which are combined and 
+        connected to form larger molecules and full components. CSS is written in 
+        #[a(href='http://sass-lang.com' target='_blank') Sass] and preprocessed 
+        using #[a(href='https://github.com/postcss/autoprefixer' target='_blank') Autoprefixer]. 
+        It follows an adapted version of the standards presented in the 
+        #[a(href='https://pages.18f.gov/frontend/css-coding-styleguide/' target='_blank') 18F CSS Coding Styleguide] 
+        and #[a(href='https://en.bem.info' target='_blank') BEM]-oriented naming conventions.
+
+    p.text-big.
+        The site is compiled using #[a(href='#section-harp') Harp], a static web 
+        server with built-in preprocessing. Templates are written entirely in 
+        #[a(href='#section-jade') Jade], a clean, whitespace-sensitive templating 
+        language that compiles to HTML.
+
+
++divider
+
+//- Design: Colors
+
++section('colors')
+    +h2('colors') Colors 
+        +button('secondary', 'small', 'source')(href='https://github.com/' + profiles.github + '/spacy/blob/master/website/assets/css/_variables.scss#L44' target='_blank') SCSS Color Swatches
+
+    +grid('space-between', 'padding').block
+        each hex, color in colors_primary
+            +grid-col('quarter')
+                .card
+                    .card-figure(style='background: ' + hex)
+                    +label #{color}
+                    div #{hex}
+
+    +section('colors-syntax')
+
+        +label('strong') Secondary Colors for Syntax Highlighting
+
+        +grid
+            each hex, color in colors_secondary
+                .x-bubble(style='background: ' + hex data-tooltip=color + ': ' + hex)
+
+
+//- Design: Logo
+
++section('logo')
+    +h2('logo') Logo #[+button('secondary', 'small', 'source')(href='/assets/img/logo.svg' target='_blank') SVG] #[+button('secondary', 'small', 'source')(href='/assets/img/logo.png' target='_blank') PNG]
+
+    p.text-big.
+        The spaCy logo changes colour across the site and can be used in colour 
+        or in white on a coloured background.
+
+    +grid('padding').has-aside
+        each hex, color in colors_logo
+            +grid-col('third')
+                .card(style='color: ' + hex): +logo
+    
+        each hex, color in colors_logo
+            +grid-col('third')
+                .card(style='color: #fff; background: ' + hex + '; border-color: ' + hex): +logo
+
+        +aside('Usage (Jade)')
+            +code('jade').
+                +logo(size)
+
+            | Possible values for #[code size] are 'tiny', 'small', 'regular' 
+            | or 'large'.
+
++divider
+
+//- Design: Typography
+
++section('typography')
+
+    +h2('typography', 'https://github.com/' + profiles.github + '/spacy/blob/master/website/assets/css/_base/_typography.sass') Typography
+
+    +section('typography-headings').has-aside
+
+        +h1 Heading Level One #[span.label Work Sans bold, 50px]
+        +h2 Heading Level Two #[span.label Work Sans bold, 28px]
+        +h3 Heading Level Three #[span.label Work Sans bold, 24px]
+        +h4 Heading Level Four #[span.label Work Sans bold, 20px]
+        +h5 Heading Level Five #[span.label Work Sans bold, 16px]
+        +h6 Heading Level Six #[span.label Work Sans bold, 14px]
+
+        +aside('Usage (Jade)')
+            +code('jade').
+                +h2(id, source) ...
+
+            | If a unique #[code id] is specified, the headline becomes a permalink. 
+            | #[code source] takes a string containing a link that's used to add 
+            | a source button to the headline (both optional).
+
+    +section('typography-paragraphs')
+
+        +lead.
+            This is a lead paragraph. It is bigger and can be used for introduction 
+            texts in blog posts. #[span.label Lato regular, 28px]
+
+        p.text-big.
+            This is a big text paragraph. The font size is slightly bigger than 
+            the regular base size which makes the content a lot easier to read. 
+            It's mainly used in blog posts. #[span.label Lato regular, 20px]
+
+        p.
+            This is a regular paragraph. It's used everywhere else across the whole 
+            website. It can contain #[strong bold text] and of course 
+            #[em italicized text] as well. #[span.label Lato regular, 16px]
+
++divider
+
+
+//- Design: Grid
+
++section('grid')
+    +h2('grid', 'https://github.com/' + profiles.github + '/spacy/blob/master/website/assets/css/_base/_grid.sass') Grid
+
+    +grid('padding').has-aside
+        each count, col in grid
+            - var i = 0
+            
+            while i < count
+                +grid-col(col, 'text-center')
+                    .card=col
+                
+                - i++
+
+        +aside('Usage (Jade)')
+            +code('jade').
+                +grid(...style)
+                    +grid-col(...style)
+                        ...
+
+            | #[code style] arguments can be flexbox attributes like 
+            | 'space-around', alignment attributes like 'valign-bottom' 
+            | or the column type ('third', 'quarter' etc.) for grid columns.
+
++divider
+
+//- Design: Elements
+
++section('elements')
+    +h2('elements') Elements
+
+    +section('elements-buttons')
+        +label('strong') Buttons
+
+        +grid('margin-right').block.has-aside
+            +button('primary')(href="#") Primary
+            +button('secondary')(href="#") Secondary
+            +button('tertiary')(href="#") Tertiary
+
+            +aside('Usage (Jade)')
+                +code('jade').
+                    +button(type, ...style)
+                        ...
+
+                | Possible values for #[code type] are 'primary', 'secondary' and  
+                | 'tertiary'. #[code style] can be 'small'. 
+
+        +grid('margin-right')
+            +button('primary', 'small')(href="#") Primary small
+            +button('secondary', 'small')(href="#") Secondary small
+            +button('tertiary', 'small')(href="#") Tertiary small
+
+
+    +section('elements-tooltips')
+        +label('strong') Tooltips
+
+        +grid('space-between').has-aside
+            p(data-tooltip='I am a tooltip!').visible This is text
+            p(data-tooltip='Tooltip!'): strong Hover me
+            p(data-tooltip='Type something here')
+                +input('Input with tooltip')
+
+            +aside('Usage (Jade)')
+                +code('jade').
+                    a(data-tooltip='Tooltip text')
+
+                | A tooltip can be attached to most elements, but should ideally   
+                | be used on only links and icons.
+
+    +section('elements-icons')
+        +label('strong') Icons
+
+        +grid.has-aside
+            each icon in [ 'Website', 'Feed', 'Permalink', 'Twitter', 'GitHub', 'Facebook', 'LinkedIn', 'HackerNews', 'Reddit', 'ProductHunt', 'Medium', 'Codepen']
+                +icon(icon.toLowerCase(), 'large')(data-tooltip=icon)
+
+            +aside('Usage (Jade)')
+                +code('jade').
+                    +icon(type, ...style)
+
+                | #[code type] takes the name of the icon, #[code style] can be 
+                | 'small', 'medium' or 'large'. 
+
+
++divider
+
+//- Design: Components
+
++section('components')
+    +h2('components', 'https://github.com/' + profiles.github + '/spacy/blob/master/website/assets/css/_components') Components
+
+    +section('components-lists')
+        +label('strong') Lists
+
+        .has-aside
+            +grid('space-between')
+                +grid-col('half')
+                    +list
+                        +item I am a bulleted list
+                        +item I have nice bullets
+                        +item And I'm very
+                        +item flexible
+
+                +grid-col('half')
+                    +list('numbers')
+                        +item I am an ordered list
+                        +item I have nice numbers
+                        +item And I'm very
+                        +item flexible
+
+            +grid('space-between')
+                +grid-col('half')
+                    +list('letters')
+                        +item I am an ordered list
+                        +item I have uppercase letters
+                        +item And I'm very
+                        +item flexible
+
+                +grid-col('half')
+                    +list('roman')
+                        +item I am an ordered list
+                        +item I have roman numerals
+                        +item And I'm very
+                        +item flexible
+
+            +aside('Usage (Jade)')
+                    +code('jade').
+                        +list(type, start)
+                            +item ...
+                            +item ...
+
+                    | Possible values for #[code type] are 'numbers' (default), 
+                    | 'letters' and 'roman'. #[code start] is an integer and defines 
+                    | the starting point of the list (defaults to 0).
+
+    +section('components-blockquote')
+
+        +label('strong') Blockquote
+
+        .has-aside
+            +quote('This is a source link', '#').
+                This is a blockquote. It stands out from the rest of the content 
+                with the quotation marks being a bold visual statement. It can be 
+                used all over the site but its main purpose is displaying quotes 
+                in the blog posts.
+
+            +aside('Usage (Jade)')
+                +code('jade').
+                    +quote(source, link)
+                        ...
+
+                | #[code source] (author / source of the quote) and #[code link] 
+                | (full link to source) both take strings (optional)
+
+    +section('components-codeblock')
+
+        +label('strong') Code block
+
+        .has-aside
+            +code('python', 'This is a label').
+                # This is an example of a regular code block. It supports syntax highlighting.
+                nlp = English()
+
+            +aside('Usage (Jade)')
+                +code('jade').
+                    +code(language, label).
+                        ...
+
+                | #[code language] defaults to 'python', see 
+                | #[a(href='http://prismjs.com/download.html') Prism.js] for more 
+                | options. #[code label] takes a string (optional). 
+                | #[strong Important:] The #[code .] preserves whitespace and 
+                | prevents code from being interpreted.
+
+    +section('components-table')
+
+        +label('strong') Table
+
+        .has-aside
+            +table([ 'Column 1', 'Column 2', 'Column 3'], 'table--data')
+                +row
+                    +cell This is a table
+                    +cell It displays data
+                    +cell #[code and even code!]
+
+                +row
+                    +cell Tables are uncool but in this case
+                    +cell they're actually really useful.
+                    +cell('highlight') I am highlighted!
+
+            +aside('Usage (Jade)')
+                +code('jade').
+                    +table(head)
+                        +row
+                            +cell ...
+                            +cell ...
+
+                | #[code head] takes an array of strings containing the column 
+                | heading names (optional, otherwise table is displayed without headings)
+
+
+    +section('components-infobox')
+
+        +label('strong') Info Box
+
+        .has-aside
+            +infobox('This is a label', 'has-aside').
+                This is an infobox. It can be used to add notes,updates or warnings 
+                to blog articles or docs sections. It comes with an optional label 
+                or headline that's displayed at the top.
+
+            +aside('Usage (Jade)')
+                +code('jade').
+                    +infobox(label)
+                        ...
+
+                #[code label] takes a string (optional).
+
+
+    +section('components-aside')
+
+        +label('strong') Aside
+
+        .has-aside
+            p.
+                #[strong See example on the right.] Asides can be used in blog 
+                posts or the documentation to display additional information without 
+                spoiling the flow of reading (typically footnotes). They can contain 
+                a headline, links, images and even code blocks.
+
+            p.
+                Paragraphs (#[code p]) and table cells (#[code td] or #[code +cell]) 
+                support nested asides by default. All other elements can be wrapped 
+                in the class #[code .has-aside] together with their respective aside.
+
+            +aside('Usage (Jade)')
+                +code('jade').
+                    +aside(headline)
+                        ...
+
+                | #[code headline] takes a string (optional).
+
++divider
+
+//- Code: Source
+
++section('source')
+    +h2('source') Source
+
+    p.text-big.
+        The source of this website is published on 
+        #[a(href='https://github.com/' + profiles.github + '/spaCy/tree/master/website' target='_blank') GitHub] 
+        under the MIT license. To compile the site, you need to install and run 
+        #[a(href='http://harpjs.com/' target='_blank') Harp]:
+
+    +code('bash').
+        sudo npm install --global harp
+        git clone https://github.com/#{profiles.github}/spaCy
+        cd spaCy/website
+        harp server
+
++divider

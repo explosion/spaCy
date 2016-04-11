@@ -1,0 +1,37 @@
+include ../_includes/_mixins
+
+- var link_bool = 'http://docs.python.org/library/functions.html#bool'
+- var link_int = 'http://docs.python.org/library/functions.html#int'
+- var link_unicode = 'http://docs.python.org/library/functions.html#unicode'
+
+
+//-  Docs
+//- ============================================================================
+
++infobox('Update March, 2016').
+    We know change can be jarring, especially when you've got a deadline. So to
+    ease the transition to the new documentation style, we've kept
+    #[a(href='/docs/legacy' target='_blank') the old docs] online too. 
+    If you have any problems, you can let us know on the 
+    #[a(href='https://github.com/' + profiles.github + '/spaCy' target='_blank') spaCy issue tracker] 
+    or the #[a(href='https://reddit.com/r/' + profiles.reddit target='_blank') Reddit user group].
+
+include _quickstart-install
+include _quickstart-examples
+
++divider('bottom')
+
++h2('api') API
+
+include _api-english
+include _api-doc
+include _api-token
+include _api-span
+include _api-lexeme
+include _api-vocab
+include _api-stringstore
+
++divider
+
+include _annotation-specs
+include _tutorials

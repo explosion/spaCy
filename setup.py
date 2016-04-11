@@ -17,6 +17,7 @@ PACKAGES = [
     'spacy',
     'spacy.tokens',
     'spacy.en',
+    'spacy.de',
     'spacy.serialize',
     'spacy.syntax',
     'spacy.munge',
@@ -63,14 +64,15 @@ MOD_NAMES = [
     'spacy.cfile',
     'spacy.matcher',
     'spacy.syntax.ner',
-    'spacy.symbols']
+    'spacy.symbols',
+    'spacy.syntax.iterators']
 
 
 # By subclassing build_extensions we have the actual compiler that will be used
 # which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 compile_options =  {
-    'msvc': ['/Ox', '/EHsc'],
+    'msvc': ['/Ox', '/EHsc', '/openmp'],
     'mingw32' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function'],
     'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']
 }
@@ -213,3 +215,4 @@ def setup_package():
 
 if __name__ == '__main__':
     setup_package()
+

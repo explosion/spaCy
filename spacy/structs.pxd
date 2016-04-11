@@ -9,6 +9,8 @@ cdef struct LexemeC:
 
     flags_t flags
 
+    attr_t lang
+
     attr_t id
     attr_t length
 

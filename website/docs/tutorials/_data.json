@@ -1,0 +1,29 @@
+{
+    "load-new-word-vectors": {
+        "template": "article",
+        "title": "Load new word vectors",
+        "date": "2015-09-24",
+        "description": "Word vectors allow simple similarity queries, and drive many NLP applications. This tutorial explains how to load custom word vectors into spaCy, to make use of task or data-specific representations."
+    },
+
+    "mark-adverbs": {
+        "template": "article",
+        "title": "Mark all adverbs, particularly for verbs of speech",
+        "date": "2015-08-18",
+        "description": "Let's say you're developing a proofreading tool, or possibly an IDE for writers.  You're convinced by Stephen King's advice that adverbs are not your friend so you want to highlight all adverbs."
+    },
+
+    "syntax-search": {
+        "template": "article",
+        "title": "Search Reddit for comments about Google doing something",
+        "date": "2015-08-18",
+        "description": "Example use of the spaCy NLP tools for data exploration. Here we will look for Reddit comments that describe Google doing something, i.e. discuss the company's actions. This is difficult, because other senses of \"Google\" now dominate usage of the word in conversation, particularly references to using Google products."
+    },
+
+    "twitter-filter": {
+        "template": "article",
+        "title": "Finding Relevant Tweets",
+        "date": "2015-08-18",
+        "description": "In this tutorial, we will use word vectors to search for tweets about Jeb Bush. We'll do this by building up two word lists: one that represents the type of meanings in the Jeb Bush tweets, and another to help screen out irrelevant tweets that mention the common, ambiguous word \"bush\"."
+    }
+}

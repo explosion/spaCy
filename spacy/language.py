@@ -33,10 +33,6 @@ class Language(object):
     @staticmethod
     def norm(string):
         return string
-    
-    @staticmethod
-    def shape(string):
-        return orth.word_shape(string)
 
     @staticmethod
     def prefix(string):
@@ -51,64 +47,12 @@ class Language(object):
         return 0
 
     @staticmethod
-    def is_alpha(string):
-        return orth.is_alpha(string)
-
-    @staticmethod
-    def is_ascii(string):
-        return orth.is_ascii(string)
-
-    @staticmethod
     def is_digit(string):
         return string.isdigit()
 
     @staticmethod
-    def is_lower(string):
-        return orth.is_lower(string)
-
-    @staticmethod
-    def is_punct(string):
-        return orth.is_punct(string)
-
-    @staticmethod
     def is_space(string):
         return string.isspace()
-
-    @staticmethod
-    def is_title(string):
-        return orth.is_title(string)
-
-    @staticmethod
-    def is_bracket(string):
-        return orth.is_bracket(string)
-
-    @staticmethod
-    def is_quote(string):
-        return orth.is_quote(string)
-
-    @staticmethod
-    def is_left_punct(string):
-        return orth.is_left_punct(string)
-
-    @staticmethod
-    def is_right_punct(string):
-        return orth.is_right_punct(string)
-
-    @staticmethod
-    def is_upper(string):
-        return orth.is_upper(string)
-
-    @staticmethod
-    def like_url(string):
-        return orth.like_url(string)
-
-    @staticmethod
-    def like_num(string):
-        return orth.like_number(string)
-
-    @staticmethod
-    def like_email(string):
-        return orth.like_email(string)
 
     @staticmethod
     def is_stop(string):
@@ -120,26 +64,27 @@ class Language(object):
         return {
             attrs.LOWER: cls.lower,
             attrs.NORM: cls.norm,
-            attrs.SHAPE: cls.shape,
+            attrs.SHAPE: orth.word_shape,
             attrs.PREFIX: cls.prefix,
             attrs.SUFFIX: cls.suffix,
             attrs.CLUSTER: cls.cluster,
             attrs.PROB: lambda string: oov_prob,
-            attrs.IS_ALPHA: cls.is_alpha,
-            attrs.IS_ASCII: cls.is_ascii,
+            attrs.LANG: lambda string: cls.lang,
+            attrs.IS_ALPHA: orth.is_alpha,
+            attrs.IS_ASCII: orth.is_ascii,
             attrs.IS_DIGIT: cls.is_digit,
-            attrs.IS_LOWER: cls.is_lower,
-            attrs.IS_PUNCT: cls.is_punct,
+            attrs.IS_LOWER: orth.is_lower,
+            attrs.IS_PUNCT: orth.is_punct,
             attrs.IS_SPACE: cls.is_space,
-            attrs.IS_TITLE: cls.is_title,
-            attrs.IS_UPPER: cls.is_upper,
-            attrs.FLAG14: cls.is_bracket,
-            attrs.FLAG15: cls.is_quote,
-            attrs.FLAG16: cls.is_left_punct,
-            attrs.FLAG17: cls.is_right_punct,
-            attrs.LIKE_URL: cls.like_url,
-            attrs.LIKE_NUM: cls.like_num,
-            attrs.LIKE_EMAIL: cls.like_email,
+            attrs.IS_TITLE: orth.is_title,
+            attrs.IS_UPPER: orth.is_upper,
+            attrs.IS_BRACKET: orth.is_bracket,
+            attrs.IS_QUOTE: orth.is_quote,
+            attrs.IS_LEFT_PUNCT: orth.is_left_punct,
+            attrs.IS_RIGHT_PUNCT: orth.is_right_punct,
+            attrs.LIKE_URL: orth.like_url,
+            attrs.LIKE_NUM: orth.like_number,
+            attrs.LIKE_EMAIL: orth.like_email,
             attrs.IS_STOP: cls.is_stop,
             attrs.IS_OOV: lambda string: True
         }

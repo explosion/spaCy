@@ -1,0 +1,77 @@
+//  prism.js Syntax Highlighting
+// ============================================================================
+
+//  Commment, prolog, doctype, CDATA, punctuation
+
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata,
+.token.punctuation
+    color: color(grey, dark)
+
+
+//  Property, tag, constant, symbol, deleted
+
+.token.property,
+.token.tag,
+.token.constant,
+.token.symbol,
+.token.deleted
+    color: color(green)
+
+
+//  Boolean, number
+
+.token.boolean,
+.token.number
+    color: color(purple)
+
+
+//  Selector, attribute name, string, char, built in, inserted
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted
+    color: color(blue)
+
+
+//  Operator, entity, URL, CSS string, variable
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string,
+.token.variable
+    color: color(red)
+
+
+//  @-rule, attribute value, function
+
+.token.atrule,
+.token.attr-value,
+.token.function
+    color: color(blue)
+
+
+//  Keyword
+
+.token.keyword
+    color: color(red)
+
+
+//  Regex, important
+
+.token.regex,
+.token.important
+    color: color(yellow)
+
+
+//  Italic
+
+.token.italic
+    font-style: italic

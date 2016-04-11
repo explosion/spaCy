@@ -1,0 +1,29 @@
+{
+    "index": {
+        "title" : "Documentation",
+
+        "sidebar": {
+            "Quickstart": [
+                ["Install", "#install", "install"],
+                ["Usage Examples", "#examples", "examples"]
+            ],
+            "API": [
+                ["English", "#english", "english"],
+                ["Doc", "#doc", "doc"],
+                ["Token", "#token", "token"],
+                ["Span", "#span", "span"],
+                ["Lexeme", "#lexeme", "lexeme"],
+                ["Vocab", "#vocab", "vocab"],
+                ["StringStore", "#stringstore", "stringstore"]
+            ],
+            "More": [
+                ["Annotation Specs", "#annotation", "annotation"],
+                ["Tutorials", "#tutorials", "tutorials"]
+            ],
+            "Feedback": [
+                ["Suggest Edits", "https://github.com/spacy-io/spaCy/tree/master/website/docs"],
+                ["Github Issue Tracker", "https://github.com/spacy-io/spaCy/issues"]
+            ]
+        }
+    }
+}

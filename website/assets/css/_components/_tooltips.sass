@@ -1,0 +1,44 @@
+//  Tooltips - Variables
+// ============================================================================
+
+$tooltip-background     : color(black)
+$tooltip-border-radius  : $border-radius
+$tooltip-color          : color(white)
+$tooltip-padding        : 0.15rem 1rem
+
+
+//  Tooltips - Style
+// ============================================================================
+
+//  [data-tooltip] - tooltip
+//  :after         - tooltip content
+//  :hover         - display tooltip on hover
+//  .visible       - makes tooltip visible
+
+[data-tooltip]
+    display: inline
+    position: relative
+
+    &:after
+        @extend .text, .text-small
+        @include position(absolute, top, left, 125%, 50%)
+        background: $tooltip-background
+        border-radius: $tooltip-border-radius
+        color: $tooltip-color
+        content: attr(data-tooltip)
+        opacity: 0
+        padding: $tooltip-padding
+        text-shadow: none
+        text-transform: none
+        transform: translateX(-50%) translateY(-2px)
+        transition: opacity 0.2s cubic-bezier(0.64, 0.09, 0.08, 1), transform 0.2s cubic-bezier(0.64, 0.09, 0.08, 1)
+        visibility: hidden
+        white-space: nowrap
+        z-index: 200
+
+    &:hover:after,
+    &.visible:after
+        display: block
+        opacity: 1
+        transform: translateX(-50%) translateY(0)
+        visibility: visible

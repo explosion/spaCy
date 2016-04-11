@@ -18,10 +18,10 @@ from ..attrs cimport POS, LEMMA, TAG, DEP
 from ..parts_of_speech cimport CONJ, PUNCT
 
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
-from ..attrs cimport FLAG14 as IS_BRACKET
-from ..attrs cimport FLAG15 as IS_QUOTE
-from ..attrs cimport FLAG16 as IS_LEFT_PUNCT
-from ..attrs cimport FLAG17 as IS_RIGHT_PUNCT
+from ..attrs cimport IS_BRACKET
+from ..attrs cimport IS_QUOTE
+from ..attrs cimport IS_LEFT_PUNCT
+from ..attrs cimport IS_RIGHT_PUNCT
 from ..attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from ..attrs cimport IS_OOV
 
@@ -95,6 +95,10 @@ cdef class Token:
         def __get__(self):
             return self.c.lex.prob
 
+    property lang:
+        def __get__(self):
+            return self.c.lex.lang
+
     property idx:
         def __get__(self):
             return self.c.idx
@@ -161,8 +165,8 @@ cdef class Token:
                 raise ValueError(
                     "Word vectors set to length 0. This may be because the "
                     "data is not installed. If you haven't already, run"
-                    "\npython -m spacy.en.download all\n"
-                    "to install the data."
+                    "\npython -m spacy.%s.download all\n"
+                    "to install the data." % self.vocab.lang
                 )
             vector_view = <float[:length,]>self.c.lex.vector
             return numpy.asarray(vector_view)
@@ -177,23 +181,11 @@ cdef class Token:
 
     property n_lefts:
         def __get__(self):
-            cdef int n = 0
-            cdef const TokenC* ptr = self.c - self.i
-            while ptr != self.c:
-                if ptr + ptr.head == self.c:
-                    n += 1
-                ptr += 1
-            return n
+            return self.c.l_kids
 
     property n_rights:
         def __get__(self):
-            cdef int n = 0
-            cdef const TokenC* ptr = self.c + (self.array_len - self.i)
-            while ptr != self.c:
-                if ptr + ptr.head == self.c:
-                    n += 1
-                ptr -= 1
-            return n
+            return self.c.r_kids
 
     property lefts:
         def __get__(self):
@@ -414,6 +406,10 @@ cdef class Token:
     property suffix_:
         def __get__(self):
             return self.vocab.strings[self.c.lex.suffix]
+
+    property lang_:
+        def __get__(self):
+            return self.vocab.strings[self.c.lex.lang]
 
     property lemma_:
         def __get__(self):

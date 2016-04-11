@@ -1,0 +1,30 @@
+include ../_includes/_mixins
+
++lead Natural Language Processing moves fast, so maintaining a good library means constantly throwing things away.  Most libraries are failing badly at this, as academics hate to editorialize. This post explains the problem, why it's so damaging, and why I wrote #[a(href=url target="_blank") spaCy] to do things differently.
+
+p Imagine: you try to use Google Translate, but it asks you to first select which model you want. The new, awesome deep-learning model is there, but so are lots of others. You pick one that sounds fancy, but it turns out it's a 20-year old experimental model trained on a corpus of oven manuals. When it performs little better than chance, you can't even tell from its output.  Of course, Google Translate would not do this to you. But most Natural Language Processing libraries do, and it's terrible.
+
+p Natural Language Processing (NLP) research moves very quickly. The new models supercede the old ones. And yet most NLP libraries are loathe to ever throw anything away. The ones that have been around a long time then start to look very large and impressive. But big is not beautiful here. It is not a virtue to present users with a dozen bad options.
+
+p Have a look through the #[a(href="http://gate.ac.uk/sale/tao/split.html" target="_blank") GATE software]. There's a lot there, developed over 12 years and many person-hours. But there's approximately zero curation.  The philosophy is just to provide things. It's up to you to decide what to use.
+
+p This is bad. It's bad to provide an implementation of #[a(href="https://gate.ac.uk/sale/tao/splitch18.html" target="_blank") MiniPar], and have it just...sit there, with no hint that it's 20 years old and should not be used. The RASP parser, too. Why are these provided? Worse, why is there no warning? The #[a(href="http://wayback.archive.org/web/20150510100903/http://webdocs.cs.ualberta.ca/~lindek/minipar.htm" target="_blank") Minipar homepage] puts the software in the right context:
+
++quote MINIPAR is a broad-coverage parser for the English language. An evaluation with the SUSANNE corpus shows that MINIPAR achieves about 88% precision and 80% recall with respect to dependency relationships. MINIPAR is very efficient, #[strong on a Pentium II 300 with 128MB memory], it parses about 300 words per second.
+
+p Ideally there would be a date, but it's still obvious that this isn't software anyone should be executing in 2015, unless they're investigating the history of the field.
+
+p A less extreme example is #[a(href="http://nlp.stanford.edu/software/corenlp.shtml" target="_blank") CoreNLP]. They offer a range of models with complicated speed/accuracy/loading time trade-offs, many with subtly different output. Mostly no model is strictly dominated by another, so there's some case for offering all these options. But to my taste there's still far too much there, and the recommendation of what to use is far from clear.
+
++h3("why-i-didnt-contribute-to-nltk") Why I didn't contribute to NLTK
+
+p Various people have asked me why I decided to make a new Python NLP library, #[a(href=url target="_blank") spaCy], instead of supporting the #[a(href="http://nltk.org" target="_blank") NLTK] project. This is the main reason. You can't contribute to a project if you believe that the first thing that they should do is throw almost all of it away. You should just make your own project, which is what I did.
+p Have a look through #[a(href="http://www.nltk.org/py-modindex.html" target="_blank") the module list of NLTK]. It looks like there's a lot there, but there's not. What NLTK has is a decent tokenizer, some passable stemmers, a good implementation of the Punkt sentence boundary detector (after #[a(href="http://joelnothman.com/" target="_blank") Joel Nothman] rewrote it), some visualization tools, and some wrappers for other libraries. Nothing else is of any use.
+
+p For instance, consider #[code nltk.parse]. You might think that amongst all this code there was something that could actually predict the syntactic structure of a sentence for you, but you would be wrong. There are wrappers for the BLLIP and Stanford parsers, and since March there's been an implementation of Nivre's 2003 transition-based dependency parser. Unfortunately no model is provided for it, as they rely on an external wrapper of an external learner, which is unsuitable for the structure of their problem. So the implementation is too slow to be actually useable.
+
+p This problem is totally avoidable, if you just sit down and write good code, instead of stitching together external dependencies.  I pointed NLTK to my tutorial describing #[a(href="/blog/parsing-english-in-python" target="_blank") how to implement a modern dependency parser], which includes a BSD-licensed implementation in 500 lines of Python. I was told "thanks but no thanks", and #[a(href="https://github.com/nltk/nltk/issues/694") the issue was abruptly closed]. Another researcher's offer from 2012 to implement this type of model also went #[a(href="http://arxiv.org/pdf/1409.7386v1.pdf") unanswered].
+
+p The story in #[code nltk.tag] is similar. There are plenty of wrappers, for the external libraries that have actual taggers. The only actual tagger model they distribute is #[a(href="/blog/part-of-speech-POS-tagger-in-python/") terrible].  Now it seems that #[a(href="https://github.com/nltk/nltk/issues/1063" target="_blank") NLTK does not even know how its POS tagger was trained]. The model is just this .pickle file that's been passed around for 5 years, its origins lost to time. It's not okay to offer this to people, to recommend they use it.
+
+p I think open source software should be very careful to make its limitations clear. It's a disservice to provide something that's much less useful than you imply. It's like offering your friend a lift and then not showing up. It's totally fine to not do something &ndash; so long as you never suggested you were going to do it. There are ways to do worse than nothing. 

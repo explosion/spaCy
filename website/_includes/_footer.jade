@@ -1,0 +1,14 @@
+include _mixins
+
+//-  Footer
+//- ============================================================================
+
+footer.footer
+    span &copy; #{new Date().getFullYear()} #{company}
+    a(href='/legal') Legal / Imprint
+
+    a(href='https://twitter.com/' + profiles.twitter target='_blank' aria-label="Twitter") 
+        +icon('twitter', 'secondary')
+
+    a(href='/feed.xml' target='_blank' aria-label="RSS Feed")
+        +icon('feed', 'secondary')
