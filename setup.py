@@ -193,7 +193,6 @@ def setup_package():
                 'thinc>=5.0.0,<5.1.0',
                 'plac',
                 'six',
-                'ujson',
                 'cloudpickle',
                 'sputnik>=0.9.2,<0.10.0'],
             classifiers=[

@@ -10,7 +10,10 @@ from preshed.maps cimport map_iter, key_t
 
 from .typedefs cimport hash_t
 
-import ujson as json
+try:
+    import ujson as json
+except ImportError:
+    import json
 
 
 cpdef hash_t hash_string(unicode string) except 0:
