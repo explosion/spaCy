@@ -14,7 +14,7 @@ import pytest
 def package():
     data_dir = os.environ.get('SPACY_DATA')
     if data_dir is None:
-        return util.get_package_by_name()
+        return util.get_package_by_name('en')
     else:
         return util.get_package(data_dir)
 
