@@ -38,6 +38,12 @@ def test_single_token_string(EN):
     assert tokens[0].text == 'foobar'
 
 
+def test_str_builtin(EN):
+    tokens = EN('one two')
+    assert str(tokens[0]) == u'one'
+    assert str(tokens[1]) == u'two'
+
+
 def test_is_properties(EN):
     Hi, comma, my, email, is_, addr = EN(u'Hi, my email is test@me.com')
     assert Hi.is_title
