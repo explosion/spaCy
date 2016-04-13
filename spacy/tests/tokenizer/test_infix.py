@@ -43,7 +43,7 @@ def test_double_hyphen(en_tokenizer):
     assert tokens[6].text == u'-'
     # TODO: This points to a deeper issue with the tokenizer: it doesn't re-enter
     # on infixes.
-    #assert tokens[7].text == u'bred'
-    #assert tokens[8].text == u'--'
-    #assert tokens[9].text == u'people'
+    assert tokens[7].text == u'bred'
+    assert tokens[8].text == u'--'
+    assert tokens[9].text == u'people'
 

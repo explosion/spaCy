@@ -28,8 +28,9 @@ cdef class Tokenizer:
         self._suffix_re = suffix_re
         self._infix_re = infix_re
         self.vocab = vocab
-        self._load_special_tokenization(rules)
-        self._rules = rules
+        self._rules = {}
+        for chunk, substrings in sorted(rules.items()):
+            self.add_special_case(chunk, substrings)
 
     def __reduce__(self):
         args = (self.vocab, 
@@ -158,7 +159,8 @@ cdef class Tokenizer:
         self._attach_tokens(tokens, span, &prefixes, &suffixes)
         self._save_cached(&tokens.c[orig_size], orig_key, tokens.length - orig_size)
 
-    cdef unicode _split_affixes(self, Pool mem, unicode string, vector[const LexemeC*] *prefixes,
+    cdef unicode _split_affixes(self, Pool mem, unicode string,
+                                vector[const LexemeC*] *prefixes,
                                 vector[const LexemeC*] *suffixes):
         cdef size_t i
         cdef unicode prefix
@@ -215,20 +217,23 @@ cdef class Tokenizer:
         if string:
             cache_hit = self._try_cache(hash_string(string), tokens)
             if not cache_hit:
-                match = self.find_infix(string)
-                if match is None:
+                matches = self.find_infix(string)
+                if not matches:
                     tokens.push_back(self.vocab.get(tokens.mem, string), False)
                 else:
-                    split = match.start()
-                    end = match.end()
-                    # Append the beginning, affix, end of the infix span
-                    span = string[:split]
-                    tokens.push_back(self.vocab.get(tokens.mem, span), False)
+                    # let's say we have dyn-o-mite-dave
+                    # the regex finds the start and end positions of the hyphens
+                    start = 0
+                    for match in matches:
+                        infix_start = match.start()
+                        infix_end = match.end()
+                        span = string[start:infix_start]
+                        tokens.push_back(self.vocab.get(tokens.mem, span), False)
                     
-                    span = string[split:end]
-                    tokens.push_back(self.vocab.get(tokens.mem, span), False)
-                    
-                    span = string[end:]
+                        infix_span = string[infix_start:infix_end]
+                        tokens.push_back(self.vocab.get(tokens.mem, infix_span), False)
+                        start = infix_end
+                    span = string[start:]
                     tokens.push_back(self.vocab.get(tokens.mem, span), False)
         cdef vector[const LexemeC*].reverse_iterator it = suffixes.rbegin()
         while it != suffixes.rend():
@@ -251,7 +256,7 @@ cdef class Tokenizer:
         self._cache.set(key, cached)
 
     def find_infix(self, unicode string):
-        return self._infix_re.search(string)
+        return list(self._infix_re.finditer(string))
 
     def find_prefix(self, unicode string):
         match = self._prefix_re.search(string)
@@ -262,21 +267,24 @@ cdef class Tokenizer:
         return (match.end() - match.start()) if match is not None else 0
 
     def _load_special_tokenization(self, special_cases):
-        '''Add a special-case tokenization rule.
+        '''Add special-case tokenization rules.
         '''
-        cdef int i
-        cdef list substrings
-        cdef unicode chunk
-        cdef unicode form
-        cdef unicode lemma
-        cdef dict props
-        cdef LexemeC** lexemes
-        cdef hash_t hashed
         for chunk, substrings in sorted(special_cases.items()):
-            cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
-            cached.length = len(substrings)
-            cached.is_lex = False
-            cached.data.tokens = self.vocab.make_fused_token(substrings)
-            key = hash_string(chunk)
-            self._specials.set(key, cached)
-            self._cache.set(key, cached)
+            self.add_special_case(chunk, substrings)
+    
+    def add_special_case(self, unicode chunk, substrings):
+        '''Add a special-case tokenization rule.
+
+        For instance, "don't" is special-cased to tokenize into
+        ["do", "n't"]. The split tokens can have lemmas and part-of-speech
+        tags.
+        '''
+        substrings = list(substrings)
+        cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
+        cached.length = len(substrings)
+        cached.is_lex = False
+        cached.data.tokens = self.vocab.make_fused_token(substrings)
+        key = hash_string(chunk)
+        self._specials.set(key, cached)
+        self._cache.set(key, cached)
+        self._rules[chunk] = substrings
