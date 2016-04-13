@@ -17,7 +17,7 @@ from libc.string cimport memcpy
 
 from cymem.cymem cimport Pool
 from .stateclass cimport StateClass
-from ._state cimport StateC
+from ._state cimport StateC, is_space_token
 
 
 DEF NON_MONOTONIC = True
@@ -166,7 +166,7 @@ cdef class Reduce:
 cdef class LeftArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, int label) nogil:
-        return not st.B_(0).sent_start and not Lexeme.c_check_flag(st.B_(0).lex,IS_SPACE)
+        return not st.B_(0).sent_start
 
     @staticmethod
     cdef int transition(StateC* st, int label) nogil:
@@ -199,7 +199,7 @@ cdef class LeftArc:
 cdef class RightArc:
     @staticmethod
     cdef bint is_valid(const StateC* st, int label) nogil:
-        return not st.B_(0).sent_start and not Lexeme.c_check_flag(st.S_(0).lex,IS_SPACE)
+        return not st.B_(0).sent_start
 
     @staticmethod
     cdef int transition(StateC* st, int label) nogil:
@@ -233,11 +233,23 @@ cdef class Break:
             return False
         elif st.at_break():
             return False
-        elif st.B(0) == 0:
-            return False
+        # unnecessary, since the first item in the buffer is always put onto the stack
+        # automatically by fast_forward() in initialize_state()
+        # elif st.B(0) == 0:
+        #     return False
         elif st.stack_depth() < 1:
             return False
-        elif (st.S(0) + 1) != st.B(0):
+        # It is okay to predict a sentence boundary if the top item on the stack
+        # and the first item on the buffer are adjacent tokens. If this is not the
+        # case, it is still okay if there are only space tokens in between.
+        # This is checked by testing whether the head of a space token immediately
+        # preceding the first item in the buffer is the top item on the stack.
+        # Intervening space tokens must be attached to the previous non-space token.
+        # Therefore, if the head of a space token that immediately precedes the first
+        # item on the buffer is the top item on the stack, a sentence boundary can be
+        # predicted.
+        elif (st.S(0) + 1) != st.B(0) \
+        and not (is_space_token(st.safe_get(st.B(0)-1)) and st.H(st.B(0)-1) == st.S(0)):
             # Must break at the token boundary
             return False
         else:

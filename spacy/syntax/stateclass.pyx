@@ -17,11 +17,11 @@ cdef class StateClass:
 
     @property
     def stack(self):
-        return {self.S(i) for i in range(self._s_i)}
+        return {self.S(i) for i in range(self.c._s_i)}
 
     @property
     def queue(self):
-        return {self.B(i) for i in range(self._b_i)}
+        return {self.B(i) for i in range(self.c._b_i)}
 
     def print_state(self, words):
         words = list(words) + ['_']
