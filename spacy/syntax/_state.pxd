@@ -296,27 +296,6 @@ cdef cppclass StateC:
         this._break = src._break
 
     void fast_forward() nogil:
-        # while this.buffer_length() == 0 \
-        # or this.stack_depth() == 0 \
-        # or Lexeme.c_check_flag(this.S_(0).lex, IS_SPACE):
-        #     if this.buffer_length() == 1 and this.stack_depth() == 0:
-        #         this.push()
-        #         this.pop()
-        #     elif this.buffer_length() == 0 and this.stack_depth() == 1:
-        #         this.pop()
-        #     elif this.buffer_length() == 0 and this.stack_depth() >= 2:
-        #         if this.has_head(this.S(0)):
-        #             this.pop()
-        #         else:
-        #             this.unshift()
-        #     elif (this.length - this._b_i) >= 1 and this.stack_depth() == 0:
-        #         this.push()
-        #     elif Lexeme.c_check_flag(this.S_(0).lex, IS_SPACE):
-        #         this.add_arc(this.B(0), this.S(0), 0)
-        #         this.pop()
-        #     else:
-        #         break
-
         # space token attachement policy:
         # - attach space tokens always to the last preceding real token
         # - except if it's the beginning of a sentence, then attach to the first following

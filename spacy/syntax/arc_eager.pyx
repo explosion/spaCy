@@ -233,10 +233,6 @@ cdef class Break:
             return False
         elif st.at_break():
             return False
-        # unnecessary, since the first item in the buffer is always put onto the stack
-        # automatically by fast_forward() in initialize_state()
-        # elif st.B(0) == 0:
-        #     return False
         elif st.stack_depth() < 1:
             return False
         # It is okay to predict a sentence boundary if the top item on the stack
