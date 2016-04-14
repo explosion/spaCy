@@ -72,7 +72,7 @@ MOD_NAMES = [
 # which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 compile_options =  {
-    'msvc': ['/Ox', '/EHsc', '/openmp'],
+    'msvc': ['/Ox', '/EHsc'],
     'mingw32' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function'],
     'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']
 }
@@ -83,6 +83,10 @@ link_options = {
     'mingw32': [],
     'other' : []
 }
+
+
+if os.environ.get('USE_OPENMP') == '1':
+    compile_options['msvc'].append('/openmp')
 
 
 if not sys.platform.startswith('darwin'):
@@ -189,7 +193,6 @@ def setup_package():
                 'thinc>=5.0.0,<5.1.0',
                 'plac',
                 'six',
-                'ujson',
                 'cloudpickle',
                 'sputnik>=0.9.2,<0.10.0'],
             classifiers=[

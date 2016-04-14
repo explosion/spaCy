@@ -20,6 +20,7 @@ from .syntax.ner import BiluoPushDown
 from .syntax.arc_eager import ArcEager
 
 from . import util
+from . import about
 from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD
 
 
@@ -166,7 +167,7 @@ class Language(object):
         """
         if package is None:
             if data_dir is None:
-                package = util.get_package_by_name()
+                package = util.get_package_by_name(about.__models__[self.lang])
             else:
                 package = util.get_package(data_dir)
 

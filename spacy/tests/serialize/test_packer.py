@@ -24,7 +24,7 @@ from spacy.serialize.bits import BitArray
 def vocab():
     data_dir = os.environ.get('SPACY_DATA')
     if data_dir is None:
-        package = util.get_package_by_name()
+        package = util.get_package_by_name('en')
     else:
         package = util.get_package(data_dir)
 

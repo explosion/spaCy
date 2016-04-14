@@ -1,11 +1,11 @@
 from .util import set_lang_class, get_lang_class, get_package, get_package_by_name
 
-from .en import English
-from .de import German
+from . import en
+from . import de
 
 
-set_lang_class(English.lang, English)
-set_lang_class(German.lang, German)
+set_lang_class(en.English.lang, en.English)
+set_lang_class(de.German.lang, de.German)
 
 
 def load(name, vectors=None, via=None):
