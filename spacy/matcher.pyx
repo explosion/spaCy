@@ -15,6 +15,7 @@ from libcpp.vector cimport vector
 from murmurhash.mrmr cimport hash64
 
 from .attrs cimport LENGTH, ENT_TYPE, ORTH, NORM, LEMMA, LOWER, SHAPE
+from . import attrs
 from .tokens.doc cimport get_token_attr
 from .tokens.doc cimport Doc
 from .vocab cimport Vocab
@@ -111,12 +112,13 @@ def _convert_strings(token_specs, string_store):
         converted.append([])
         for attr, value in spec.items():
             if isinstance(attr, basestring):
-                attr = map_attr_name(attr)
+                attr = attrs.IDS.get(attr)
             if isinstance(value, basestring):
                 value = string_store[value]
             if isinstance(value, bool):
                 value = int(value)
-            converted[-1].append((attr, value))
+            if attr is not None:
+                converted[-1].append((attr, value))
     return converted
 
 
@@ -144,22 +146,6 @@ def get_bilou(length):
                 I10_ENT, I10_ENT, L10_ENT]
     else:
         raise ValueError("Max length currently 10 for phrase matching")
-
-
-def map_attr_name(attr):
-    attr = attr.upper()
-    if attr == 'ORTH':
-        return ORTH
-    elif attr == 'LEMMA':
-        return LEMMA
-    elif attr == 'LOWER':
-        return LOWER
-    elif attr == 'SHAPE':
-        return SHAPE
-    elif attr == 'NORM':
-        return NORM
-    else:
-        raise Exception("TODO: Finish supporting attr mapping %s" % attr)
 
 
 cdef class Matcher:
