@@ -47,3 +47,10 @@ def test_double_hyphen(en_tokenizer):
     assert tokens[8].text == u'--'
     assert tokens[9].text == u'people'
 
+
+def test_infix_comma(en_tokenizer):
+    # Re issue #326
+    tokens = en_tokenizer(u'Hello,world')
+    assert tokens[0].text == u'Hello'
+    assert tokens[1].text == u','
+    assert tokens[2].text == u'world'
