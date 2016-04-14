@@ -147,24 +147,23 @@ class Language(object):
         package=None,
         vectors_package=None):
         """
-           a model can be specified:
+        A model can be specified:
 
-           1) by calling a Language subclass
-             - spacy.en.English()
+        1) by calling a Language subclass
+            - spacy.en.English()
 
-           2) by calling a Language subclass with data_dir
-             - spacy.en.English('my/model/root')
-             - spacy.en.English(data_dir='my/model/root')
+        2) by calling a Language subclass with data_dir
+            - spacy.en.English('my/model/root')
+            - spacy.en.English(data_dir='my/model/root')
 
-           3) by package name
-             - spacy.load('en_default')
-             - spacy.load('en_default==1.0.0')
+        3) by package name
+            - spacy.load('en_default')
+            - spacy.load('en_default==1.0.0')
 
-           4) by package name with a relocated package base
-             - spacy.load('en_default', via='/my/package/root')
-             - spacy.load('en_default==1.0.0', via='/my/package/root')
+        4) by package name with a relocated package base
+            - spacy.load('en_default', via='/my/package/root')
+            - spacy.load('en_default==1.0.0', via='/my/package/root')
         """
-
         if package is None:
             if data_dir is None:
                 package = util.get_package_by_name()
