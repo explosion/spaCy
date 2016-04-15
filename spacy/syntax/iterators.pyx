@@ -28,6 +28,10 @@ cdef class EnglishNounChunks(DocIterator):
         self._conjunct = self._doc.vocab.strings['conj']
         self.i = 0
 
+    def __iter__(self):
+        self.i = 0
+        return super(EnglishNounChunks,self).__iter__()
+
     def __next__(self):
         cdef const TokenC* word
         cdef widx
@@ -63,6 +67,10 @@ cdef class GermanNounChunks(DocIterator):
         self._close_app = self._doc.vocab.strings['nk']
         self.i = 0
 
+    def __iter__(self):
+        self.i = 0
+        return super(GermanNounChunks,self).__iter__()
+
     def __next__(self):
         cdef const TokenC* word
         cdef int rbracket
@@ -79,6 +87,6 @@ cdef class GermanNounChunks(DocIterator):
                 for rdep in self._doc[widx].rights:
                     if rdep.pos == NOUN and rdep.dep == self._close_app:
                         rbracket = rdep.i+1
-                return Span(self._doc, word.l_edge, rbracket, label=self._np_label)                
+                return Span(self._doc, word.l_edge, rbracket, label=self._np_label)
         raise StopIteration
 
