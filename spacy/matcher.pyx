@@ -112,7 +112,7 @@ def _convert_strings(token_specs, string_store):
         converted.append([])
         for attr, value in spec.items():
             if isinstance(attr, basestring):
-                attr = attrs.IDS.get(attr)
+                attr = attrs.IDS.get(attr.upper())
             if isinstance(value, basestring):
                 value = string_store[value]
             if isinstance(value, bool):
