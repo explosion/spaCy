@@ -188,9 +188,11 @@ cdef class Parser:
 
             action = self.moves.c[guess]
             if not eg.is_valid[guess]:
-                with gil:
-                    move_name = self.moves.move_name(action.move, action.label)
-                    return 1
+                # with gil:
+                #     move_name = self.moves.move_name(action.move, action.label)
+                #     print 'invalid action:', move_name
+                return 1
+
             action.do(state, action.label)
             memset(eg.scores, 0, sizeof(eg.scores[0]) * eg.nr_class)
             for i in range(eg.nr_class):
@@ -275,12 +277,12 @@ cdef class StepwiseState:
 
     @property
     def heads(self):
-        return [self.stcls.H(i) for i in range(self.stcls.length)]
+        return [self.stcls.H(i) for i in range(self.stcls.c.length)]
 
     @property
     def deps(self):
         return [self.doc.vocab.strings[self.stcls.c._sent[i].dep]
-                for i in range(self.stcls.length)]
+                for i in range(self.stcls.c.length)]
 
     def predict(self):
         self.eg.reset()
