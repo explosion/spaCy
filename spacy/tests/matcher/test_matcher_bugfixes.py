@@ -51,11 +51,12 @@ def test_overlap_issue242():
 
     nlp.matcher.add('FOOD', 'FOOD', {}, patterns)
 
-    doc = nlp(u'There are different food safety standards in different countries.')
-
-    food_safety, safety_standards = doc.ents
-    assert food_safety.text == u'food safety'
-    assert safety_standards.text == u'safety standards'
+    doc = nlp.tokenizer(u'There are different food safety standards in different countries.')
+    food_safety, safety_standards = nlp.matcher(doc)
+    assert food_safety[1] == 3
+    assert food_safety[2] == 5
+    assert safety_standards[1] == 4
+    assert safety_standards[2] == 6
 
 
 def test_overlap_reorder(EN):
