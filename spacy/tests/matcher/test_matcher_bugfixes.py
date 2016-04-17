@@ -35,7 +35,7 @@ def test_overlap_issue118(EN):
 
 
 def test_overlap_issue242():
-    '''Test bug from multi-word phrases breaking text representation.'''
+    '''Test overlapping multi-word phrases.'''
 
     patterns = [
         [{LOWER: 'food'}, {LOWER: 'safety'}],
