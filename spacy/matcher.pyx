@@ -163,12 +163,12 @@ cdef class Matcher:
         patterns = package.load_json(('vocab', 'gazetteer.json'))
         return cls(vocab, patterns)
 
-    def __init__(self, vocab, patterns):
+    def __init__(self, vocab, patterns={}):
+        self._patterns = dict(patterns) # Make sure we own the object
         self.vocab = vocab
         self.mem = Pool()
         self.vocab = vocab
-        self._patterns = dict(patterns)
-        for entity_key, (etype, attrs, specs) in sorted(patterns.items()):
+        for entity_key, (etype, attrs, specs) in sorted(self._patterns.items()):
             self.add(entity_key, etype, attrs, specs)
 
     def __reduce__(self):
