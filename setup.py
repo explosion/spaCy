@@ -68,9 +68,6 @@ MOD_NAMES = [
     'spacy.syntax.iterators']
 
 
-# By subclassing build_extensions we have the actual compiler that will be used
-# which is really known only after finalize_options
-# http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 compile_options =  {
     'msvc': ['/Ox', '/EHsc'],
     'mingw32' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function'],
@@ -94,6 +91,8 @@ if not sys.platform.startswith('darwin'):
     link_options['other'].append('-fopenmp')
 
 
+# By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
+# http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 class build_ext_options:
     def build_options(self):
         for e in self.extensions:
@@ -186,9 +185,9 @@ def setup_package():
             license=about['__license__'],
             ext_modules=ext_modules,
             install_requires=[
-                'numpy',
+                'numpy>=1.7',
                 'murmurhash>=0.26,<0.27',
-                'cymem>=1.30,<1.32.0',
+                'cymem>=1.30,<1.32',
                 'preshed>=0.46.1,<0.47',
                 'thinc>=5.0.0,<5.1.0',
                 'plac',

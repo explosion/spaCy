@@ -1,5 +1,5 @@
 
-#if defined(_MULTIARRAYMODULE) || defined(WITH_CPYCHECKER_STEALS_REFERENCE_TO_ARG_ATTRIBUTE)
+#ifdef _MULTIARRAYMODULE
 
 typedef struct {
         PyObject_HEAD
@@ -16,7 +16,7 @@ NPY_NO_EXPORT PyTypeObject PyArrayNeighborhoodIter_Type;
 NPY_NO_EXPORT PyBoolScalarObject _PyArrayScalar_BoolValues[2];
 #endif
 
-NPY_NO_EXPORT  unsigned int PyArray_GetNDArrayCVersion \
+NPY_NO_EXPORT unsigned int PyArray_GetNDArrayCVersion \
        (void);
 #ifdef NPY_ENABLE_SEPARATE_COMPILATION
     extern NPY_NO_EXPORT PyTypeObject PyBigArray_Type;
@@ -252,353 +252,353 @@ NPY_NO_EXPORT PyBoolScalarObject _PyArrayScalar_BoolValues[2];
     NPY_NO_EXPORT PyTypeObject PyVoidArrType_Type;
 #endif
 
-NPY_NO_EXPORT  int PyArray_SetNumericOps \
+NPY_NO_EXPORT int PyArray_SetNumericOps \
        (PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_GetNumericOps \
+NPY_NO_EXPORT PyObject * PyArray_GetNumericOps \
        (void);
-NPY_NO_EXPORT  int PyArray_INCREF \
+NPY_NO_EXPORT int PyArray_INCREF \
        (PyArrayObject *);
-NPY_NO_EXPORT  int PyArray_XDECREF \
+NPY_NO_EXPORT int PyArray_XDECREF \
        (PyArrayObject *);
-NPY_NO_EXPORT  void PyArray_SetStringFunction \
+NPY_NO_EXPORT void PyArray_SetStringFunction \
        (PyObject *, int);
-NPY_NO_EXPORT  PyArray_Descr * PyArray_DescrFromType \
+NPY_NO_EXPORT PyArray_Descr * PyArray_DescrFromType \
        (int);
-NPY_NO_EXPORT  PyObject * PyArray_TypeObjectFromType \
+NPY_NO_EXPORT PyObject * PyArray_TypeObjectFromType \
        (int);
-NPY_NO_EXPORT  char * PyArray_Zero \
+NPY_NO_EXPORT char * PyArray_Zero \
        (PyArrayObject *);
-NPY_NO_EXPORT  char * PyArray_One \
+NPY_NO_EXPORT char * PyArray_One \
        (PyArrayObject *);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(2) NPY_GCC_NONNULL(2) PyObject * PyArray_CastToType \
+NPY_NO_EXPORT PyObject * PyArray_CastToType \
        (PyArrayObject *, PyArray_Descr *, int);
-NPY_NO_EXPORT  int PyArray_CastTo \
+NPY_NO_EXPORT int PyArray_CastTo \
        (PyArrayObject *, PyArrayObject *);
-NPY_NO_EXPORT  int PyArray_CastAnyTo \
+NPY_NO_EXPORT int PyArray_CastAnyTo \
        (PyArrayObject *, PyArrayObject *);
-NPY_NO_EXPORT  int PyArray_CanCastSafely \
+NPY_NO_EXPORT int PyArray_CanCastSafely \
        (int, int);
-NPY_NO_EXPORT  npy_bool PyArray_CanCastTo \
+NPY_NO_EXPORT npy_bool PyArray_CanCastTo \
        (PyArray_Descr *, PyArray_Descr *);
-NPY_NO_EXPORT  int PyArray_ObjectType \
+NPY_NO_EXPORT int PyArray_ObjectType \
        (PyObject *, int);
-NPY_NO_EXPORT  PyArray_Descr * PyArray_DescrFromObject \
+NPY_NO_EXPORT PyArray_Descr * PyArray_DescrFromObject \
        (PyObject *, PyArray_Descr *);
-NPY_NO_EXPORT  PyArrayObject ** PyArray_ConvertToCommonType \
+NPY_NO_EXPORT PyArrayObject ** PyArray_ConvertToCommonType \
        (PyObject *, int *);
-NPY_NO_EXPORT  PyArray_Descr * PyArray_DescrFromScalar \
+NPY_NO_EXPORT PyArray_Descr * PyArray_DescrFromScalar \
        (PyObject *);
-NPY_NO_EXPORT  PyArray_Descr * PyArray_DescrFromTypeObject \
+NPY_NO_EXPORT PyArray_Descr * PyArray_DescrFromTypeObject \
        (PyObject *);
-NPY_NO_EXPORT  npy_intp PyArray_Size \
+NPY_NO_EXPORT npy_intp PyArray_Size \
        (PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Scalar \
+NPY_NO_EXPORT PyObject * PyArray_Scalar \
        (void *, PyArray_Descr *, PyObject *);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(2) PyObject * PyArray_FromScalar \
+NPY_NO_EXPORT PyObject * PyArray_FromScalar \
        (PyObject *, PyArray_Descr *);
-NPY_NO_EXPORT  void PyArray_ScalarAsCtype \
+NPY_NO_EXPORT void PyArray_ScalarAsCtype \
        (PyObject *, void *);
-NPY_NO_EXPORT  int PyArray_CastScalarToCtype \
+NPY_NO_EXPORT int PyArray_CastScalarToCtype \
        (PyObject *, void *, PyArray_Descr *);
-NPY_NO_EXPORT  int PyArray_CastScalarDirect \
+NPY_NO_EXPORT int PyArray_CastScalarDirect \
        (PyObject *, PyArray_Descr *, void *, int);
-NPY_NO_EXPORT  PyObject * PyArray_ScalarFromObject \
+NPY_NO_EXPORT PyObject * PyArray_ScalarFromObject \
        (PyObject *);
-NPY_NO_EXPORT  PyArray_VectorUnaryFunc * PyArray_GetCastFunc \
+NPY_NO_EXPORT PyArray_VectorUnaryFunc * PyArray_GetCastFunc \
        (PyArray_Descr *, int);
-NPY_NO_EXPORT  PyObject * PyArray_FromDims \
+NPY_NO_EXPORT PyObject * PyArray_FromDims \
        (int, int *, int);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(3) PyObject * PyArray_FromDimsAndDataAndDescr \
+NPY_NO_EXPORT PyObject * PyArray_FromDimsAndDataAndDescr \
        (int, int *, PyArray_Descr *, char *);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(2) PyObject * PyArray_FromAny \
+NPY_NO_EXPORT PyObject * PyArray_FromAny \
        (PyObject *, PyArray_Descr *, int, int, int, PyObject *);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(1) PyObject * PyArray_EnsureArray \
+NPY_NO_EXPORT PyObject * PyArray_EnsureArray \
        (PyObject *);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(1) PyObject * PyArray_EnsureAnyArray \
+NPY_NO_EXPORT PyObject * PyArray_EnsureAnyArray \
        (PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_FromFile \
+NPY_NO_EXPORT PyObject * PyArray_FromFile \
        (FILE *, PyArray_Descr *, npy_intp, char *);
-NPY_NO_EXPORT  PyObject * PyArray_FromString \
+NPY_NO_EXPORT PyObject * PyArray_FromString \
        (char *, npy_intp, PyArray_Descr *, npy_intp, char *);
-NPY_NO_EXPORT  PyObject * PyArray_FromBuffer \
+NPY_NO_EXPORT PyObject * PyArray_FromBuffer \
        (PyObject *, PyArray_Descr *, npy_intp, npy_intp);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(2) PyObject * PyArray_FromIter \
+NPY_NO_EXPORT PyObject * PyArray_FromIter \
        (PyObject *, PyArray_Descr *, npy_intp);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(1) PyObject * PyArray_Return \
+NPY_NO_EXPORT PyObject * PyArray_Return \
        (PyArrayObject *);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(2) NPY_GCC_NONNULL(2) PyObject * PyArray_GetField \
+NPY_NO_EXPORT PyObject * PyArray_GetField \
        (PyArrayObject *, PyArray_Descr *, int);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(2) NPY_GCC_NONNULL(2) int PyArray_SetField \
+NPY_NO_EXPORT int PyArray_SetField \
        (PyArrayObject *, PyArray_Descr *, int, PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Byteswap \
+NPY_NO_EXPORT PyObject * PyArray_Byteswap \
        (PyArrayObject *, npy_bool);
-NPY_NO_EXPORT  PyObject * PyArray_Resize \
+NPY_NO_EXPORT PyObject * PyArray_Resize \
        (PyArrayObject *, PyArray_Dims *, int, NPY_ORDER);
-NPY_NO_EXPORT  int PyArray_MoveInto \
+NPY_NO_EXPORT int PyArray_MoveInto \
        (PyArrayObject *, PyArrayObject *);
-NPY_NO_EXPORT  int PyArray_CopyInto \
+NPY_NO_EXPORT int PyArray_CopyInto \
        (PyArrayObject *, PyArrayObject *);
-NPY_NO_EXPORT  int PyArray_CopyAnyInto \
+NPY_NO_EXPORT int PyArray_CopyAnyInto \
        (PyArrayObject *, PyArrayObject *);
-NPY_NO_EXPORT  int PyArray_CopyObject \
+NPY_NO_EXPORT int PyArray_CopyObject \
        (PyArrayObject *, PyObject *);
-NPY_NO_EXPORT NPY_GCC_NONNULL(1) PyObject * PyArray_NewCopy \
+NPY_NO_EXPORT PyObject * PyArray_NewCopy \
        (PyArrayObject *, NPY_ORDER);
-NPY_NO_EXPORT  PyObject * PyArray_ToList \
+NPY_NO_EXPORT PyObject * PyArray_ToList \
        (PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_ToString \
+NPY_NO_EXPORT PyObject * PyArray_ToString \
        (PyArrayObject *, NPY_ORDER);
-NPY_NO_EXPORT  int PyArray_ToFile \
+NPY_NO_EXPORT int PyArray_ToFile \
        (PyArrayObject *, FILE *, char *, char *);
-NPY_NO_EXPORT  int PyArray_Dump \
+NPY_NO_EXPORT int PyArray_Dump \
        (PyObject *, PyObject *, int);
-NPY_NO_EXPORT  PyObject * PyArray_Dumps \
+NPY_NO_EXPORT PyObject * PyArray_Dumps \
        (PyObject *, int);
-NPY_NO_EXPORT  int PyArray_ValidType \
+NPY_NO_EXPORT int PyArray_ValidType \
        (int);
-NPY_NO_EXPORT  void PyArray_UpdateFlags \
+NPY_NO_EXPORT void PyArray_UpdateFlags \
        (PyArrayObject *, int);
-NPY_NO_EXPORT NPY_GCC_NONNULL(1) PyObject * PyArray_New \
+NPY_NO_EXPORT PyObject * PyArray_New \
        (PyTypeObject *, int, npy_intp *, int, npy_intp *, void *, int, int, PyObject *);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(2) NPY_GCC_NONNULL(1) NPY_GCC_NONNULL(2) PyObject * PyArray_NewFromDescr \
+NPY_NO_EXPORT PyObject * PyArray_NewFromDescr \
        (PyTypeObject *, PyArray_Descr *, int, npy_intp *, npy_intp *, void *, int, PyObject *);
-NPY_NO_EXPORT  PyArray_Descr * PyArray_DescrNew \
+NPY_NO_EXPORT PyArray_Descr * PyArray_DescrNew \
        (PyArray_Descr *);
-NPY_NO_EXPORT  PyArray_Descr * PyArray_DescrNewFromType \
+NPY_NO_EXPORT PyArray_Descr * PyArray_DescrNewFromType \
        (int);
-NPY_NO_EXPORT  double PyArray_GetPriority \
+NPY_NO_EXPORT double PyArray_GetPriority \
        (PyObject *, double);
-NPY_NO_EXPORT  PyObject * PyArray_IterNew \
+NPY_NO_EXPORT PyObject * PyArray_IterNew \
        (PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_MultiIterNew \
+NPY_NO_EXPORT PyObject * PyArray_MultiIterNew \
        (int, ...);
-NPY_NO_EXPORT  int PyArray_PyIntAsInt \
+NPY_NO_EXPORT int PyArray_PyIntAsInt \
        (PyObject *);
-NPY_NO_EXPORT  npy_intp PyArray_PyIntAsIntp \
+NPY_NO_EXPORT npy_intp PyArray_PyIntAsIntp \
        (PyObject *);
-NPY_NO_EXPORT  int PyArray_Broadcast \
+NPY_NO_EXPORT int PyArray_Broadcast \
        (PyArrayMultiIterObject *);
-NPY_NO_EXPORT  void PyArray_FillObjectArray \
+NPY_NO_EXPORT void PyArray_FillObjectArray \
        (PyArrayObject *, PyObject *);
-NPY_NO_EXPORT  int PyArray_FillWithScalar \
+NPY_NO_EXPORT int PyArray_FillWithScalar \
        (PyArrayObject *, PyObject *);
-NPY_NO_EXPORT  npy_bool PyArray_CheckStrides \
+NPY_NO_EXPORT npy_bool PyArray_CheckStrides \
        (int, int, npy_intp, npy_intp, npy_intp *, npy_intp *);
-NPY_NO_EXPORT  PyArray_Descr * PyArray_DescrNewByteorder \
+NPY_NO_EXPORT PyArray_Descr * PyArray_DescrNewByteorder \
        (PyArray_Descr *, char);
-NPY_NO_EXPORT  PyObject * PyArray_IterAllButAxis \
+NPY_NO_EXPORT PyObject * PyArray_IterAllButAxis \
        (PyObject *, int *);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(2) PyObject * PyArray_CheckFromAny \
+NPY_NO_EXPORT PyObject * PyArray_CheckFromAny \
        (PyObject *, PyArray_Descr *, int, int, int, PyObject *);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(2) PyObject * PyArray_FromArray \
+NPY_NO_EXPORT PyObject * PyArray_FromArray \
        (PyArrayObject *, PyArray_Descr *, int);
-NPY_NO_EXPORT  PyObject * PyArray_FromInterface \
+NPY_NO_EXPORT PyObject * PyArray_FromInterface \
        (PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_FromStructInterface \
+NPY_NO_EXPORT PyObject * PyArray_FromStructInterface \
        (PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_FromArrayAttr \
+NPY_NO_EXPORT PyObject * PyArray_FromArrayAttr \
        (PyObject *, PyArray_Descr *, PyObject *);
-NPY_NO_EXPORT  NPY_SCALARKIND PyArray_ScalarKind \
+NPY_NO_EXPORT NPY_SCALARKIND PyArray_ScalarKind \
        (int, PyArrayObject **);
-NPY_NO_EXPORT  int PyArray_CanCoerceScalar \
+NPY_NO_EXPORT int PyArray_CanCoerceScalar \
        (int, int, NPY_SCALARKIND);
-NPY_NO_EXPORT  PyObject * PyArray_NewFlagsObject \
+NPY_NO_EXPORT PyObject * PyArray_NewFlagsObject \
        (PyObject *);
-NPY_NO_EXPORT  npy_bool PyArray_CanCastScalar \
+NPY_NO_EXPORT npy_bool PyArray_CanCastScalar \
        (PyTypeObject *, PyTypeObject *);
-NPY_NO_EXPORT  int PyArray_CompareUCS4 \
+NPY_NO_EXPORT int PyArray_CompareUCS4 \
        (npy_ucs4 *, npy_ucs4 *, size_t);
-NPY_NO_EXPORT  int PyArray_RemoveSmallest \
+NPY_NO_EXPORT int PyArray_RemoveSmallest \
        (PyArrayMultiIterObject *);
-NPY_NO_EXPORT  int PyArray_ElementStrides \
+NPY_NO_EXPORT int PyArray_ElementStrides \
        (PyObject *);
-NPY_NO_EXPORT  void PyArray_Item_INCREF \
+NPY_NO_EXPORT void PyArray_Item_INCREF \
        (char *, PyArray_Descr *);
-NPY_NO_EXPORT  void PyArray_Item_XDECREF \
+NPY_NO_EXPORT void PyArray_Item_XDECREF \
        (char *, PyArray_Descr *);
-NPY_NO_EXPORT  PyObject * PyArray_FieldNames \
+NPY_NO_EXPORT PyObject * PyArray_FieldNames \
        (PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Transpose \
+NPY_NO_EXPORT PyObject * PyArray_Transpose \
        (PyArrayObject *, PyArray_Dims *);
-NPY_NO_EXPORT  PyObject * PyArray_TakeFrom \
+NPY_NO_EXPORT PyObject * PyArray_TakeFrom \
        (PyArrayObject *, PyObject *, int, PyArrayObject *, NPY_CLIPMODE);
-NPY_NO_EXPORT  PyObject * PyArray_PutTo \
+NPY_NO_EXPORT PyObject * PyArray_PutTo \
        (PyArrayObject *, PyObject*, PyObject *, NPY_CLIPMODE);
-NPY_NO_EXPORT  PyObject * PyArray_PutMask \
+NPY_NO_EXPORT PyObject * PyArray_PutMask \
        (PyArrayObject *, PyObject*, PyObject*);
-NPY_NO_EXPORT  PyObject * PyArray_Repeat \
+NPY_NO_EXPORT PyObject * PyArray_Repeat \
        (PyArrayObject *, PyObject *, int);
-NPY_NO_EXPORT  PyObject * PyArray_Choose \
+NPY_NO_EXPORT PyObject * PyArray_Choose \
        (PyArrayObject *, PyObject *, PyArrayObject *, NPY_CLIPMODE);
-NPY_NO_EXPORT  int PyArray_Sort \
+NPY_NO_EXPORT int PyArray_Sort \
        (PyArrayObject *, int, NPY_SORTKIND);
-NPY_NO_EXPORT  PyObject * PyArray_ArgSort \
+NPY_NO_EXPORT PyObject * PyArray_ArgSort \
        (PyArrayObject *, int, NPY_SORTKIND);
-NPY_NO_EXPORT  PyObject * PyArray_SearchSorted \
+NPY_NO_EXPORT PyObject * PyArray_SearchSorted \
        (PyArrayObject *, PyObject *, NPY_SEARCHSIDE, PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_ArgMax \
+NPY_NO_EXPORT PyObject * PyArray_ArgMax \
        (PyArrayObject *, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_ArgMin \
+NPY_NO_EXPORT PyObject * PyArray_ArgMin \
        (PyArrayObject *, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Reshape \
+NPY_NO_EXPORT PyObject * PyArray_Reshape \
        (PyArrayObject *, PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Newshape \
+NPY_NO_EXPORT PyObject * PyArray_Newshape \
        (PyArrayObject *, PyArray_Dims *, NPY_ORDER);
-NPY_NO_EXPORT  PyObject * PyArray_Squeeze \
+NPY_NO_EXPORT PyObject * PyArray_Squeeze \
        (PyArrayObject *);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(2) PyObject * PyArray_View \
+NPY_NO_EXPORT PyObject * PyArray_View \
        (PyArrayObject *, PyArray_Descr *, PyTypeObject *);
-NPY_NO_EXPORT  PyObject * PyArray_SwapAxes \
+NPY_NO_EXPORT PyObject * PyArray_SwapAxes \
        (PyArrayObject *, int, int);
-NPY_NO_EXPORT  PyObject * PyArray_Max \
+NPY_NO_EXPORT PyObject * PyArray_Max \
        (PyArrayObject *, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Min \
+NPY_NO_EXPORT PyObject * PyArray_Min \
        (PyArrayObject *, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Ptp \
+NPY_NO_EXPORT PyObject * PyArray_Ptp \
        (PyArrayObject *, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Mean \
+NPY_NO_EXPORT PyObject * PyArray_Mean \
        (PyArrayObject *, int, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Trace \
+NPY_NO_EXPORT PyObject * PyArray_Trace \
        (PyArrayObject *, int, int, int, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Diagonal \
+NPY_NO_EXPORT PyObject * PyArray_Diagonal \
        (PyArrayObject *, int, int, int);
-NPY_NO_EXPORT  PyObject * PyArray_Clip \
+NPY_NO_EXPORT PyObject * PyArray_Clip \
        (PyArrayObject *, PyObject *, PyObject *, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Conjugate \
+NPY_NO_EXPORT PyObject * PyArray_Conjugate \
        (PyArrayObject *, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Nonzero \
+NPY_NO_EXPORT PyObject * PyArray_Nonzero \
        (PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Std \
+NPY_NO_EXPORT PyObject * PyArray_Std \
        (PyArrayObject *, int, int, PyArrayObject *, int);
-NPY_NO_EXPORT  PyObject * PyArray_Sum \
+NPY_NO_EXPORT PyObject * PyArray_Sum \
        (PyArrayObject *, int, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_CumSum \
+NPY_NO_EXPORT PyObject * PyArray_CumSum \
        (PyArrayObject *, int, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Prod \
+NPY_NO_EXPORT PyObject * PyArray_Prod \
        (PyArrayObject *, int, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_CumProd \
+NPY_NO_EXPORT PyObject * PyArray_CumProd \
        (PyArrayObject *, int, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_All \
+NPY_NO_EXPORT PyObject * PyArray_All \
        (PyArrayObject *, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Any \
+NPY_NO_EXPORT PyObject * PyArray_Any \
        (PyArrayObject *, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Compress \
+NPY_NO_EXPORT PyObject * PyArray_Compress \
        (PyArrayObject *, PyObject *, int, PyArrayObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Flatten \
+NPY_NO_EXPORT PyObject * PyArray_Flatten \
        (PyArrayObject *, NPY_ORDER);
-NPY_NO_EXPORT  PyObject * PyArray_Ravel \
+NPY_NO_EXPORT PyObject * PyArray_Ravel \
        (PyArrayObject *, NPY_ORDER);
-NPY_NO_EXPORT  npy_intp PyArray_MultiplyList \
+NPY_NO_EXPORT npy_intp PyArray_MultiplyList \
        (npy_intp *, int);
-NPY_NO_EXPORT  int PyArray_MultiplyIntList \
+NPY_NO_EXPORT int PyArray_MultiplyIntList \
        (int *, int);
-NPY_NO_EXPORT  void * PyArray_GetPtr \
+NPY_NO_EXPORT void * PyArray_GetPtr \
        (PyArrayObject *, npy_intp*);
-NPY_NO_EXPORT  int PyArray_CompareLists \
+NPY_NO_EXPORT int PyArray_CompareLists \
        (npy_intp *, npy_intp *, int);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(5) int PyArray_AsCArray \
+NPY_NO_EXPORT int PyArray_AsCArray \
        (PyObject **, void *, npy_intp *, int, PyArray_Descr*);
-NPY_NO_EXPORT  int PyArray_As1D \
+NPY_NO_EXPORT int PyArray_As1D \
        (PyObject **, char **, int *, int);
-NPY_NO_EXPORT  int PyArray_As2D \
+NPY_NO_EXPORT int PyArray_As2D \
        (PyObject **, char ***, int *, int *, int);
-NPY_NO_EXPORT  int PyArray_Free \
+NPY_NO_EXPORT int PyArray_Free \
        (PyObject *, void *);
-NPY_NO_EXPORT  int PyArray_Converter \
+NPY_NO_EXPORT int PyArray_Converter \
        (PyObject *, PyObject **);
-NPY_NO_EXPORT  int PyArray_IntpFromSequence \
+NPY_NO_EXPORT int PyArray_IntpFromSequence \
        (PyObject *, npy_intp *, int);
-NPY_NO_EXPORT  PyObject * PyArray_Concatenate \
+NPY_NO_EXPORT PyObject * PyArray_Concatenate \
        (PyObject *, int);
-NPY_NO_EXPORT  PyObject * PyArray_InnerProduct \
+NPY_NO_EXPORT PyObject * PyArray_InnerProduct \
        (PyObject *, PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_MatrixProduct \
+NPY_NO_EXPORT PyObject * PyArray_MatrixProduct \
        (PyObject *, PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_CopyAndTranspose \
+NPY_NO_EXPORT PyObject * PyArray_CopyAndTranspose \
        (PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Correlate \
+NPY_NO_EXPORT PyObject * PyArray_Correlate \
        (PyObject *, PyObject *, int);
-NPY_NO_EXPORT  int PyArray_TypestrConvert \
+NPY_NO_EXPORT int PyArray_TypestrConvert \
        (int, int);
-NPY_NO_EXPORT  int PyArray_DescrConverter \
+NPY_NO_EXPORT int PyArray_DescrConverter \
        (PyObject *, PyArray_Descr **);
-NPY_NO_EXPORT  int PyArray_DescrConverter2 \
+NPY_NO_EXPORT int PyArray_DescrConverter2 \
        (PyObject *, PyArray_Descr **);
-NPY_NO_EXPORT  int PyArray_IntpConverter \
+NPY_NO_EXPORT int PyArray_IntpConverter \
        (PyObject *, PyArray_Dims *);
-NPY_NO_EXPORT  int PyArray_BufferConverter \
+NPY_NO_EXPORT int PyArray_BufferConverter \
        (PyObject *, PyArray_Chunk *);
-NPY_NO_EXPORT  int PyArray_AxisConverter \
+NPY_NO_EXPORT int PyArray_AxisConverter \
        (PyObject *, int *);
-NPY_NO_EXPORT  int PyArray_BoolConverter \
+NPY_NO_EXPORT int PyArray_BoolConverter \
        (PyObject *, npy_bool *);
-NPY_NO_EXPORT  int PyArray_ByteorderConverter \
+NPY_NO_EXPORT int PyArray_ByteorderConverter \
        (PyObject *, char *);
-NPY_NO_EXPORT  int PyArray_OrderConverter \
+NPY_NO_EXPORT int PyArray_OrderConverter \
        (PyObject *, NPY_ORDER *);
-NPY_NO_EXPORT  unsigned char PyArray_EquivTypes \
+NPY_NO_EXPORT unsigned char PyArray_EquivTypes \
        (PyArray_Descr *, PyArray_Descr *);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(3) PyObject * PyArray_Zeros \
+NPY_NO_EXPORT PyObject * PyArray_Zeros \
        (int, npy_intp *, PyArray_Descr *, int);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(3) PyObject * PyArray_Empty \
+NPY_NO_EXPORT PyObject * PyArray_Empty \
        (int, npy_intp *, PyArray_Descr *, int);
-NPY_NO_EXPORT  PyObject * PyArray_Where \
+NPY_NO_EXPORT PyObject * PyArray_Where \
        (PyObject *, PyObject *, PyObject *);
-NPY_NO_EXPORT  PyObject * PyArray_Arange \
+NPY_NO_EXPORT PyObject * PyArray_Arange \
        (double, double, double, int);
-NPY_NO_EXPORT  PyObject * PyArray_ArangeObj \
+NPY_NO_EXPORT PyObject * PyArray_ArangeObj \
        (PyObject *, PyObject *, PyObject *, PyArray_Descr *);
-NPY_NO_EXPORT  int PyArray_SortkindConverter \
+NPY_NO_EXPORT int PyArray_SortkindConverter \
        (PyObject *, NPY_SORTKIND *);
-NPY_NO_EXPORT  PyObject * PyArray_LexSort \
+NPY_NO_EXPORT PyObject * PyArray_LexSort \
        (PyObject *, int);
-NPY_NO_EXPORT  PyObject * PyArray_Round \
+NPY_NO_EXPORT PyObject * PyArray_Round \
        (PyArrayObject *, int, PyArrayObject *);
-NPY_NO_EXPORT  unsigned char PyArray_EquivTypenums \
+NPY_NO_EXPORT unsigned char PyArray_EquivTypenums \
        (int, int);
-NPY_NO_EXPORT  int PyArray_RegisterDataType \
+NPY_NO_EXPORT int PyArray_RegisterDataType \
        (PyArray_Descr *);
-NPY_NO_EXPORT  int PyArray_RegisterCastFunc \
+NPY_NO_EXPORT int PyArray_RegisterCastFunc \
        (PyArray_Descr *, int, PyArray_VectorUnaryFunc *);
-NPY_NO_EXPORT  int PyArray_RegisterCanCast \
+NPY_NO_EXPORT int PyArray_RegisterCanCast \
        (PyArray_Descr *, int, NPY_SCALARKIND);
-NPY_NO_EXPORT  void PyArray_InitArrFuncs \
+NPY_NO_EXPORT void PyArray_InitArrFuncs \
        (PyArray_ArrFuncs *);
-NPY_NO_EXPORT  PyObject * PyArray_IntTupleFromIntp \
+NPY_NO_EXPORT PyObject * PyArray_IntTupleFromIntp \
        (int, npy_intp *);
-NPY_NO_EXPORT  int PyArray_TypeNumFromName \
+NPY_NO_EXPORT int PyArray_TypeNumFromName \
        (char *);
-NPY_NO_EXPORT  int PyArray_ClipmodeConverter \
+NPY_NO_EXPORT int PyArray_ClipmodeConverter \
        (PyObject *, NPY_CLIPMODE *);
-NPY_NO_EXPORT  int PyArray_OutputConverter \
+NPY_NO_EXPORT int PyArray_OutputConverter \
        (PyObject *, PyArrayObject **);
-NPY_NO_EXPORT  PyObject * PyArray_BroadcastToShape \
+NPY_NO_EXPORT PyObject * PyArray_BroadcastToShape \
        (PyObject *, npy_intp *, int);
-NPY_NO_EXPORT  void _PyArray_SigintHandler \
+NPY_NO_EXPORT void _PyArray_SigintHandler \
        (int);
-NPY_NO_EXPORT  void* _PyArray_GetSigintBuf \
+NPY_NO_EXPORT void* _PyArray_GetSigintBuf \
        (void);
-NPY_NO_EXPORT  int PyArray_DescrAlignConverter \
+NPY_NO_EXPORT int PyArray_DescrAlignConverter \
        (PyObject *, PyArray_Descr **);
-NPY_NO_EXPORT  int PyArray_DescrAlignConverter2 \
+NPY_NO_EXPORT int PyArray_DescrAlignConverter2 \
        (PyObject *, PyArray_Descr **);
-NPY_NO_EXPORT  int PyArray_SearchsideConverter \
+NPY_NO_EXPORT int PyArray_SearchsideConverter \
        (PyObject *, void *);
-NPY_NO_EXPORT  PyObject * PyArray_CheckAxis \
+NPY_NO_EXPORT PyObject * PyArray_CheckAxis \
        (PyArrayObject *, int *, int);
-NPY_NO_EXPORT  npy_intp PyArray_OverflowMultiplyList \
+NPY_NO_EXPORT npy_intp PyArray_OverflowMultiplyList \
        (npy_intp *, int);
-NPY_NO_EXPORT  int PyArray_CompareString \
+NPY_NO_EXPORT int PyArray_CompareString \
        (char *, char *, size_t);
-NPY_NO_EXPORT  PyObject * PyArray_MultiIterFromObjects \
+NPY_NO_EXPORT PyObject * PyArray_MultiIterFromObjects \
        (PyObject **, int, int, ...);
-NPY_NO_EXPORT  int PyArray_GetEndianness \
+NPY_NO_EXPORT int PyArray_GetEndianness \
        (void);
-NPY_NO_EXPORT  unsigned int PyArray_GetNDArrayCFeatureVersion \
+NPY_NO_EXPORT unsigned int PyArray_GetNDArrayCFeatureVersion \
        (void);
-NPY_NO_EXPORT  PyObject * PyArray_Correlate2 \
+NPY_NO_EXPORT PyObject * PyArray_Correlate2 \
        (PyObject *, PyObject *, int);
-NPY_NO_EXPORT  PyObject* PyArray_NeighborhoodIterNew \
+NPY_NO_EXPORT PyObject* PyArray_NeighborhoodIterNew \
        (PyArrayIterObject *, npy_intp *, int, PyArrayObject*);
 #ifdef NPY_ENABLE_SEPARATE_COMPILATION
     extern NPY_NO_EXPORT PyTypeObject PyTimeIntegerArrType_Type;
@@ -630,151 +630,151 @@ NPY_NO_EXPORT  PyObject* PyArray_NeighborhoodIterNew \
     NPY_NO_EXPORT PyTypeObject NpyIter_Type;
 #endif
 
-NPY_NO_EXPORT  void PyArray_SetDatetimeParseFunction \
+NPY_NO_EXPORT void PyArray_SetDatetimeParseFunction \
        (PyObject *);
-NPY_NO_EXPORT  void PyArray_DatetimeToDatetimeStruct \
+NPY_NO_EXPORT void PyArray_DatetimeToDatetimeStruct \
        (npy_datetime, NPY_DATETIMEUNIT, npy_datetimestruct *);
-NPY_NO_EXPORT  void PyArray_TimedeltaToTimedeltaStruct \
+NPY_NO_EXPORT void PyArray_TimedeltaToTimedeltaStruct \
        (npy_timedelta, NPY_DATETIMEUNIT, npy_timedeltastruct *);
-NPY_NO_EXPORT  npy_datetime PyArray_DatetimeStructToDatetime \
+NPY_NO_EXPORT npy_datetime PyArray_DatetimeStructToDatetime \
        (NPY_DATETIMEUNIT, npy_datetimestruct *);
-NPY_NO_EXPORT  npy_datetime PyArray_TimedeltaStructToTimedelta \
+NPY_NO_EXPORT npy_datetime PyArray_TimedeltaStructToTimedelta \
        (NPY_DATETIMEUNIT, npy_timedeltastruct *);
-NPY_NO_EXPORT  NpyIter * NpyIter_New \
+NPY_NO_EXPORT NpyIter * NpyIter_New \
        (PyArrayObject *, npy_uint32, NPY_ORDER, NPY_CASTING, PyArray_Descr*);
-NPY_NO_EXPORT  NpyIter * NpyIter_MultiNew \
+NPY_NO_EXPORT NpyIter * NpyIter_MultiNew \
        (int, PyArrayObject **, npy_uint32, NPY_ORDER, NPY_CASTING, npy_uint32 *, PyArray_Descr **);
-NPY_NO_EXPORT  NpyIter * NpyIter_AdvancedNew \
+NPY_NO_EXPORT NpyIter * NpyIter_AdvancedNew \
        (int, PyArrayObject **, npy_uint32, NPY_ORDER, NPY_CASTING, npy_uint32 *, PyArray_Descr **, int, int **, npy_intp *, npy_intp);
-NPY_NO_EXPORT  NpyIter * NpyIter_Copy \
+NPY_NO_EXPORT NpyIter * NpyIter_Copy \
        (NpyIter *);
-NPY_NO_EXPORT  int NpyIter_Deallocate \
+NPY_NO_EXPORT int NpyIter_Deallocate \
        (NpyIter *);
-NPY_NO_EXPORT  npy_bool NpyIter_HasDelayedBufAlloc \
+NPY_NO_EXPORT npy_bool NpyIter_HasDelayedBufAlloc \
        (NpyIter *);
-NPY_NO_EXPORT  npy_bool NpyIter_HasExternalLoop \
+NPY_NO_EXPORT npy_bool NpyIter_HasExternalLoop \
        (NpyIter *);
-NPY_NO_EXPORT  int NpyIter_EnableExternalLoop \
+NPY_NO_EXPORT int NpyIter_EnableExternalLoop \
        (NpyIter *);
-NPY_NO_EXPORT  npy_intp * NpyIter_GetInnerStrideArray \
+NPY_NO_EXPORT npy_intp * NpyIter_GetInnerStrideArray \
        (NpyIter *);
-NPY_NO_EXPORT  npy_intp * NpyIter_GetInnerLoopSizePtr \
+NPY_NO_EXPORT npy_intp * NpyIter_GetInnerLoopSizePtr \
        (NpyIter *);
-NPY_NO_EXPORT  int NpyIter_Reset \
+NPY_NO_EXPORT int NpyIter_Reset \
        (NpyIter *, char **);
-NPY_NO_EXPORT  int NpyIter_ResetBasePointers \
+NPY_NO_EXPORT int NpyIter_ResetBasePointers \
        (NpyIter *, char **, char **);
-NPY_NO_EXPORT  int NpyIter_ResetToIterIndexRange \
+NPY_NO_EXPORT int NpyIter_ResetToIterIndexRange \
        (NpyIter *, npy_intp, npy_intp, char **);
-NPY_NO_EXPORT  int NpyIter_GetNDim \
+NPY_NO_EXPORT int NpyIter_GetNDim \
        (NpyIter *);
-NPY_NO_EXPORT  int NpyIter_GetNOp \
+NPY_NO_EXPORT int NpyIter_GetNOp \
        (NpyIter *);
-NPY_NO_EXPORT  NpyIter_IterNextFunc * NpyIter_GetIterNext \
+NPY_NO_EXPORT NpyIter_IterNextFunc * NpyIter_GetIterNext \
        (NpyIter *, char **);
-NPY_NO_EXPORT  npy_intp NpyIter_GetIterSize \
+NPY_NO_EXPORT npy_intp NpyIter_GetIterSize \
        (NpyIter *);
-NPY_NO_EXPORT  void NpyIter_GetIterIndexRange \
+NPY_NO_EXPORT void NpyIter_GetIterIndexRange \
        (NpyIter *, npy_intp *, npy_intp *);
-NPY_NO_EXPORT  npy_intp NpyIter_GetIterIndex \
+NPY_NO_EXPORT npy_intp NpyIter_GetIterIndex \
        (NpyIter *);
-NPY_NO_EXPORT  int NpyIter_GotoIterIndex \
+NPY_NO_EXPORT int NpyIter_GotoIterIndex \
        (NpyIter *, npy_intp);
-NPY_NO_EXPORT  npy_bool NpyIter_HasMultiIndex \
+NPY_NO_EXPORT npy_bool NpyIter_HasMultiIndex \
        (NpyIter *);
-NPY_NO_EXPORT  int NpyIter_GetShape \
+NPY_NO_EXPORT int NpyIter_GetShape \
        (NpyIter *, npy_intp *);
-NPY_NO_EXPORT  NpyIter_GetMultiIndexFunc * NpyIter_GetGetMultiIndex \
+NPY_NO_EXPORT NpyIter_GetMultiIndexFunc * NpyIter_GetGetMultiIndex \
        (NpyIter *, char **);
-NPY_NO_EXPORT  int NpyIter_GotoMultiIndex \
+NPY_NO_EXPORT int NpyIter_GotoMultiIndex \
        (NpyIter *, npy_intp *);
-NPY_NO_EXPORT  int NpyIter_RemoveMultiIndex \
+NPY_NO_EXPORT int NpyIter_RemoveMultiIndex \
        (NpyIter *);
-NPY_NO_EXPORT  npy_bool NpyIter_HasIndex \
+NPY_NO_EXPORT npy_bool NpyIter_HasIndex \
        (NpyIter *);
-NPY_NO_EXPORT  npy_bool NpyIter_IsBuffered \
+NPY_NO_EXPORT npy_bool NpyIter_IsBuffered \
        (NpyIter *);
-NPY_NO_EXPORT  npy_bool NpyIter_IsGrowInner \
+NPY_NO_EXPORT npy_bool NpyIter_IsGrowInner \
        (NpyIter *);
-NPY_NO_EXPORT  npy_intp NpyIter_GetBufferSize \
+NPY_NO_EXPORT npy_intp NpyIter_GetBufferSize \
        (NpyIter *);
-NPY_NO_EXPORT  npy_intp * NpyIter_GetIndexPtr \
+NPY_NO_EXPORT npy_intp * NpyIter_GetIndexPtr \
        (NpyIter *);
-NPY_NO_EXPORT  int NpyIter_GotoIndex \
+NPY_NO_EXPORT int NpyIter_GotoIndex \
        (NpyIter *, npy_intp);
-NPY_NO_EXPORT  char ** NpyIter_GetDataPtrArray \
+NPY_NO_EXPORT char ** NpyIter_GetDataPtrArray \
        (NpyIter *);
-NPY_NO_EXPORT  PyArray_Descr ** NpyIter_GetDescrArray \
+NPY_NO_EXPORT PyArray_Descr ** NpyIter_GetDescrArray \
        (NpyIter *);
-NPY_NO_EXPORT  PyArrayObject ** NpyIter_GetOperandArray \
+NPY_NO_EXPORT PyArrayObject ** NpyIter_GetOperandArray \
        (NpyIter *);
-NPY_NO_EXPORT  PyArrayObject * NpyIter_GetIterView \
+NPY_NO_EXPORT PyArrayObject * NpyIter_GetIterView \
        (NpyIter *, npy_intp);
-NPY_NO_EXPORT  void NpyIter_GetReadFlags \
+NPY_NO_EXPORT void NpyIter_GetReadFlags \
        (NpyIter *, char *);
-NPY_NO_EXPORT  void NpyIter_GetWriteFlags \
+NPY_NO_EXPORT void NpyIter_GetWriteFlags \
        (NpyIter *, char *);
-NPY_NO_EXPORT  void NpyIter_DebugPrint \
+NPY_NO_EXPORT void NpyIter_DebugPrint \
        (NpyIter *);
-NPY_NO_EXPORT  npy_bool NpyIter_IterationNeedsAPI \
+NPY_NO_EXPORT npy_bool NpyIter_IterationNeedsAPI \
        (NpyIter *);
-NPY_NO_EXPORT  void NpyIter_GetInnerFixedStrideArray \
+NPY_NO_EXPORT void NpyIter_GetInnerFixedStrideArray \
        (NpyIter *, npy_intp *);
-NPY_NO_EXPORT  int NpyIter_RemoveAxis \
+NPY_NO_EXPORT int NpyIter_RemoveAxis \
        (NpyIter *, int);
-NPY_NO_EXPORT  npy_intp * NpyIter_GetAxisStrideArray \
+NPY_NO_EXPORT npy_intp * NpyIter_GetAxisStrideArray \
        (NpyIter *, int);
-NPY_NO_EXPORT  npy_bool NpyIter_RequiresBuffering \
+NPY_NO_EXPORT npy_bool NpyIter_RequiresBuffering \
        (NpyIter *);
-NPY_NO_EXPORT  char ** NpyIter_GetInitialDataPtrArray \
+NPY_NO_EXPORT char ** NpyIter_GetInitialDataPtrArray \
        (NpyIter *);
-NPY_NO_EXPORT  int NpyIter_CreateCompatibleStrides \
+NPY_NO_EXPORT int NpyIter_CreateCompatibleStrides \
        (NpyIter *, npy_intp, npy_intp *);
-NPY_NO_EXPORT  int PyArray_CastingConverter \
+NPY_NO_EXPORT int PyArray_CastingConverter \
        (PyObject *, NPY_CASTING *);
-NPY_NO_EXPORT  npy_intp PyArray_CountNonzero \
+NPY_NO_EXPORT npy_intp PyArray_CountNonzero \
        (PyArrayObject *);
-NPY_NO_EXPORT  PyArray_Descr * PyArray_PromoteTypes \
+NPY_NO_EXPORT PyArray_Descr * PyArray_PromoteTypes \
        (PyArray_Descr *, PyArray_Descr *);
-NPY_NO_EXPORT  PyArray_Descr * PyArray_MinScalarType \
+NPY_NO_EXPORT PyArray_Descr * PyArray_MinScalarType \
        (PyArrayObject *);
-NPY_NO_EXPORT  PyArray_Descr * PyArray_ResultType \
+NPY_NO_EXPORT PyArray_Descr * PyArray_ResultType \
        (npy_intp, PyArrayObject **, npy_intp, PyArray_Descr **);
-NPY_NO_EXPORT  npy_bool PyArray_CanCastArrayTo \
+NPY_NO_EXPORT npy_bool PyArray_CanCastArrayTo \
        (PyArrayObject *, PyArray_Descr *, NPY_CASTING);
-NPY_NO_EXPORT  npy_bool PyArray_CanCastTypeTo \
+NPY_NO_EXPORT npy_bool PyArray_CanCastTypeTo \
        (PyArray_Descr *, PyArray_Descr *, NPY_CASTING);
-NPY_NO_EXPORT  PyArrayObject * PyArray_EinsteinSum \
+NPY_NO_EXPORT PyArrayObject * PyArray_EinsteinSum \
        (char *, npy_intp, PyArrayObject **, PyArray_Descr *, NPY_ORDER, NPY_CASTING, PyArrayObject *);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(3) NPY_GCC_NONNULL(1) PyObject * PyArray_NewLikeArray \
+NPY_NO_EXPORT PyObject * PyArray_NewLikeArray \
        (PyArrayObject *, NPY_ORDER, PyArray_Descr *, int);
-NPY_NO_EXPORT  int PyArray_GetArrayParamsFromObject \
+NPY_NO_EXPORT int PyArray_GetArrayParamsFromObject \
        (PyObject *, PyArray_Descr *, npy_bool, PyArray_Descr **, int *, npy_intp *, PyArrayObject **, PyObject *);
-NPY_NO_EXPORT  int PyArray_ConvertClipmodeSequence \
+NPY_NO_EXPORT int PyArray_ConvertClipmodeSequence \
        (PyObject *, NPY_CLIPMODE *, int);
-NPY_NO_EXPORT  PyObject * PyArray_MatrixProduct2 \
+NPY_NO_EXPORT PyObject * PyArray_MatrixProduct2 \
        (PyObject *, PyObject *, PyArrayObject*);
-NPY_NO_EXPORT  npy_bool NpyIter_IsFirstVisit \
+NPY_NO_EXPORT npy_bool NpyIter_IsFirstVisit \
        (NpyIter *, int);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(2) int PyArray_SetBaseObject \
+NPY_NO_EXPORT int PyArray_SetBaseObject \
        (PyArrayObject *, PyObject *);
-NPY_NO_EXPORT  void PyArray_CreateSortedStridePerm \
+NPY_NO_EXPORT void PyArray_CreateSortedStridePerm \
        (int, npy_intp *, npy_stride_sort_item *);
-NPY_NO_EXPORT  void PyArray_RemoveAxesInPlace \
+NPY_NO_EXPORT void PyArray_RemoveAxesInPlace \
        (PyArrayObject *, npy_bool *);
-NPY_NO_EXPORT  void PyArray_DebugPrint \
+NPY_NO_EXPORT void PyArray_DebugPrint \
        (PyArrayObject *);
-NPY_NO_EXPORT  int PyArray_FailUnlessWriteable \
+NPY_NO_EXPORT int PyArray_FailUnlessWriteable \
        (PyArrayObject *, const char *);
-NPY_NO_EXPORT NPY_STEALS_REF_TO_ARG(2) int PyArray_SetUpdateIfCopyBase \
+NPY_NO_EXPORT int PyArray_SetUpdateIfCopyBase \
        (PyArrayObject *, PyArrayObject *);
-NPY_NO_EXPORT  void * PyDataMem_NEW \
+NPY_NO_EXPORT void * PyDataMem_NEW \
        (size_t);
-NPY_NO_EXPORT  void PyDataMem_FREE \
+NPY_NO_EXPORT void PyDataMem_FREE \
        (void *);
-NPY_NO_EXPORT  void * PyDataMem_RENEW \
+NPY_NO_EXPORT void * PyDataMem_RENEW \
        (void *, size_t);
-NPY_NO_EXPORT  PyDataMem_EventHookFunc * PyDataMem_SetEventHook \
+NPY_NO_EXPORT PyDataMem_EventHookFunc * PyDataMem_SetEventHook \
        (PyDataMem_EventHookFunc *, void *, void **);
 #ifdef NPY_ENABLE_SEPARATE_COMPILATION
     extern NPY_NO_EXPORT NPY_CASTING NPY_DEFAULT_ASSIGN_CASTING;
@@ -782,22 +782,6 @@ NPY_NO_EXPORT  PyDataMem_EventHookFunc * PyDataMem_SetEventHook \
     NPY_NO_EXPORT NPY_CASTING NPY_DEFAULT_ASSIGN_CASTING;
 #endif
 
-NPY_NO_EXPORT  void PyArray_MapIterSwapAxes \
-       (PyArrayMapIterObject *, PyArrayObject **, int);
-NPY_NO_EXPORT  PyObject * PyArray_MapIterArray \
-       (PyArrayObject *, PyObject *);
-NPY_NO_EXPORT  void PyArray_MapIterNext \
-       (PyArrayMapIterObject *);
-NPY_NO_EXPORT  int PyArray_Partition \
-       (PyArrayObject *, PyArrayObject *, int, NPY_SELECTKIND);
-NPY_NO_EXPORT  PyObject * PyArray_ArgPartition \
-       (PyArrayObject *, PyArrayObject *, int, NPY_SELECTKIND);
-NPY_NO_EXPORT  int PyArray_SelectkindConverter \
-       (PyObject *, NPY_SELECTKIND *);
-NPY_NO_EXPORT  void * PyDataMem_NEW_ZEROED \
-       (size_t, size_t);
-NPY_NO_EXPORT NPY_GCC_NONNULL(1) int PyArray_CheckAnyScalarExact \
-       (PyObject *);
 
 #else
 
@@ -1604,30 +1588,6 @@ static void **PyArray_API=NULL;
         (*(PyDataMem_EventHookFunc * (*)(PyDataMem_EventHookFunc *, void *, void **)) \
          PyArray_API[291])
 #define NPY_DEFAULT_ASSIGN_CASTING (*(NPY_CASTING *)PyArray_API[292])
-#define PyArray_MapIterSwapAxes \
-        (*(void (*)(PyArrayMapIterObject *, PyArrayObject **, int)) \
-         PyArray_API[293])
-#define PyArray_MapIterArray \
-        (*(PyObject * (*)(PyArrayObject *, PyObject *)) \
-         PyArray_API[294])
-#define PyArray_MapIterNext \
-        (*(void (*)(PyArrayMapIterObject *)) \
-         PyArray_API[295])
-#define PyArray_Partition \
-        (*(int (*)(PyArrayObject *, PyArrayObject *, int, NPY_SELECTKIND)) \
-         PyArray_API[296])
-#define PyArray_ArgPartition \
-        (*(PyObject * (*)(PyArrayObject *, PyArrayObject *, int, NPY_SELECTKIND)) \
-         PyArray_API[297])
-#define PyArray_SelectkindConverter \
-        (*(int (*)(PyObject *, NPY_SELECTKIND *)) \
-         PyArray_API[298])
-#define PyDataMem_NEW_ZEROED \
-        (*(void * (*)(size_t, size_t)) \
-         PyArray_API[299])
-#define PyArray_CheckAnyScalarExact \
-        (*(int (*)(PyObject *)) \
-         PyArray_API[300])
 
 #if !defined(NO_IMPORT_ARRAY) && !defined(NO_IMPORT)
 static int

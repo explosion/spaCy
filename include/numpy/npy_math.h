@@ -1,19 +1,11 @@
 #ifndef __NPY_MATH_C99_H_
 #define __NPY_MATH_C99_H_
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
 #include <math.h>
 #ifdef __SUNPRO_CC
 #include <sunmath.h>
 #endif
-#ifdef HAVE_NPY_CONFIG_H
-#include <npy_config.h>
-#endif
 #include <numpy/npy_common.h>
-
 
 /*
  * NAN and INFINITY like macros (same behavior as glibc for NAN, same as C99
@@ -118,12 +110,15 @@ double npy_tanh(double x);
 double npy_asin(double x);
 double npy_acos(double x);
 double npy_atan(double x);
+double npy_aexp(double x);
+double npy_alog(double x);
+double npy_asqrt(double x);
+double npy_afabs(double x);
 
 double npy_log(double x);
 double npy_log10(double x);
 double npy_exp(double x);
 double npy_sqrt(double x);
-double npy_cbrt(double x);
 
 double npy_fabs(double x);
 double npy_ceil(double x);
@@ -144,8 +139,6 @@ double npy_log2(double x);
 double npy_atan2(double x, double y);
 double npy_pow(double x, double y);
 double npy_modf(double x, double* y);
-double npy_frexp(double x, int* y);
-double npy_ldexp(double n, int y);
 
 double npy_copysign(double x, double y);
 double npy_nextafter(double x, double y);
@@ -154,51 +147,33 @@ double npy_spacing(double x);
 /*
  * IEEE 754 fpu handling. Those are guaranteed to be macros
  */
-
-/* use builtins to avoid function calls in tight loops
- * only available if npy_config.h is available (= numpys own build) */
-#if HAVE___BUILTIN_ISNAN
-    #define npy_isnan(x) __builtin_isnan(x)
+#ifndef NPY_HAVE_DECL_ISNAN
+    #define npy_isnan(x) ((x) != (x))
 #else
-    #ifndef NPY_HAVE_DECL_ISNAN
-        #define npy_isnan(x) ((x) != (x))
+    #ifdef _MSC_VER
+        #define npy_isnan(x) _isnan((x))
     #else
-        #if defined(_MSC_VER) && (_MSC_VER < 1900)
-            #define npy_isnan(x) _isnan((x))
-        #else
-            #define npy_isnan(x) isnan(x)
-        #endif
+        #define npy_isnan(x) isnan((x))
     #endif
 #endif
 
-
-/* only available if npy_config.h is available (= numpys own build) */
-#if HAVE___BUILTIN_ISFINITE
-    #define npy_isfinite(x) __builtin_isfinite(x)
-#else
-    #ifndef NPY_HAVE_DECL_ISFINITE
-        #ifdef _MSC_VER
-            #define npy_isfinite(x) _finite((x))
-        #else
-            #define npy_isfinite(x) !npy_isnan((x) + (-x))
-        #endif
+#ifndef NPY_HAVE_DECL_ISFINITE
+    #ifdef _MSC_VER
+        #define npy_isfinite(x) _finite((x))
     #else
-        #define npy_isfinite(x) isfinite((x))
+        #define npy_isfinite(x) !npy_isnan((x) + (-x))
     #endif
+#else
+    #define npy_isfinite(x) isfinite((x))
 #endif
 
-/* only available if npy_config.h is available (= numpys own build) */
-#if HAVE___BUILTIN_ISINF
-    #define npy_isinf(x) __builtin_isinf(x)
+#ifndef NPY_HAVE_DECL_ISINF
+    #define npy_isinf(x) (!npy_isfinite(x) && !npy_isnan(x))
 #else
-    #ifndef NPY_HAVE_DECL_ISINF
-        #define npy_isinf(x) (!npy_isfinite(x) && !npy_isnan(x))
+    #ifdef _MSC_VER
+        #define npy_isinf(x) (!_finite((x)) && !_isnan((x)))
     #else
-        #if defined(_MSC_VER) && (_MSC_VER < 1900)
-            #define npy_isinf(x) (!_finite((x)) && !_isnan((x)))
-        #else
-            #define npy_isinf(x) isinf((x))
-        #endif
+        #define npy_isinf(x) isinf((x))
     #endif
 #endif
 
@@ -230,7 +205,6 @@ float npy_ceilf(float x);
 float npy_rintf(float x);
 float npy_truncf(float x);
 float npy_sqrtf(float x);
-float npy_cbrtf(float x);
 float npy_log10f(float x);
 float npy_logf(float x);
 float npy_expf(float x);
@@ -251,15 +225,13 @@ float npy_powf(float x, float y);
 float npy_fmodf(float x, float y);
 
 float npy_modff(float x, float* y);
-float npy_frexpf(float x, int* y);
-float npy_ldexpf(float x, int y);
 
 float npy_copysignf(float x, float y);
 float npy_nextafterf(float x, float y);
 float npy_spacingf(float x);
 
 /*
- * long double C99 math functions
+ * float C99 math functions
  */
 
 npy_longdouble npy_sinl(npy_longdouble x);
@@ -274,7 +246,6 @@ npy_longdouble npy_ceill(npy_longdouble x);
 npy_longdouble npy_rintl(npy_longdouble x);
 npy_longdouble npy_truncl(npy_longdouble x);
 npy_longdouble npy_sqrtl(npy_longdouble x);
-npy_longdouble npy_cbrtl(npy_longdouble x);
 npy_longdouble npy_log10l(npy_longdouble x);
 npy_longdouble npy_logl(npy_longdouble x);
 npy_longdouble npy_expl(npy_longdouble x);
@@ -295,8 +266,6 @@ npy_longdouble npy_powl(npy_longdouble x, npy_longdouble y);
 npy_longdouble npy_fmodl(npy_longdouble x, npy_longdouble y);
 
 npy_longdouble npy_modfl(npy_longdouble x, npy_longdouble* y);
-npy_longdouble npy_frexpl(npy_longdouble x, int* y);
-npy_longdouble npy_ldexpl(npy_longdouble x, int y);
 
 npy_longdouble npy_copysignl(npy_longdouble x, npy_longdouble y);
 npy_longdouble npy_nextafterl(npy_longdouble x, npy_longdouble y);
@@ -425,19 +394,6 @@ npy_cdouble npy_csqrt(npy_cdouble z);
 
 npy_cdouble npy_ccos(npy_cdouble z);
 npy_cdouble npy_csin(npy_cdouble z);
-npy_cdouble npy_ctan(npy_cdouble z);
-
-npy_cdouble npy_ccosh(npy_cdouble z);
-npy_cdouble npy_csinh(npy_cdouble z);
-npy_cdouble npy_ctanh(npy_cdouble z);
-
-npy_cdouble npy_cacos(npy_cdouble z);
-npy_cdouble npy_casin(npy_cdouble z);
-npy_cdouble npy_catan(npy_cdouble z);
-
-npy_cdouble npy_cacosh(npy_cdouble z);
-npy_cdouble npy_casinh(npy_cdouble z);
-npy_cdouble npy_catanh(npy_cdouble z);
 
 /*
  * Single precision complex functions
@@ -453,20 +409,6 @@ npy_cfloat npy_csqrtf(npy_cfloat z);
 
 npy_cfloat npy_ccosf(npy_cfloat z);
 npy_cfloat npy_csinf(npy_cfloat z);
-npy_cfloat npy_ctanf(npy_cfloat z);
-
-npy_cfloat npy_ccoshf(npy_cfloat z);
-npy_cfloat npy_csinhf(npy_cfloat z);
-npy_cfloat npy_ctanhf(npy_cfloat z);
-
-npy_cfloat npy_cacosf(npy_cfloat z);
-npy_cfloat npy_casinf(npy_cfloat z);
-npy_cfloat npy_catanf(npy_cfloat z);
-
-npy_cfloat npy_cacoshf(npy_cfloat z);
-npy_cfloat npy_casinhf(npy_cfloat z);
-npy_cfloat npy_catanhf(npy_cfloat z);
-
 
 /*
  * Extended precision complex functions
@@ -482,44 +424,15 @@ npy_clongdouble npy_csqrtl(npy_clongdouble z);
 
 npy_clongdouble npy_ccosl(npy_clongdouble z);
 npy_clongdouble npy_csinl(npy_clongdouble z);
-npy_clongdouble npy_ctanl(npy_clongdouble z);
-
-npy_clongdouble npy_ccoshl(npy_clongdouble z);
-npy_clongdouble npy_csinhl(npy_clongdouble z);
-npy_clongdouble npy_ctanhl(npy_clongdouble z);
-
-npy_clongdouble npy_cacosl(npy_clongdouble z);
-npy_clongdouble npy_casinl(npy_clongdouble z);
-npy_clongdouble npy_catanl(npy_clongdouble z);
-
-npy_clongdouble npy_cacoshl(npy_clongdouble z);
-npy_clongdouble npy_casinhl(npy_clongdouble z);
-npy_clongdouble npy_catanhl(npy_clongdouble z);
-
 
 /*
  * Functions that set the floating point error
  * status word.
  */
 
-/*
- * platform-dependent code translates floating point
- * status to an integer sum of these values
- */
-#define NPY_FPE_DIVIDEBYZERO  1
-#define NPY_FPE_OVERFLOW      2
-#define NPY_FPE_UNDERFLOW     4
-#define NPY_FPE_INVALID       8
-
-int npy_get_floatstatus(void);
-int npy_clear_floatstatus(void);
 void npy_set_floatstatus_divbyzero(void);
 void npy_set_floatstatus_overflow(void);
 void npy_set_floatstatus_underflow(void);
 void npy_set_floatstatus_invalid(void);
-
-#ifdef __cplusplus
-}
-#endif
 
 #endif

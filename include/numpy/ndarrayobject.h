@@ -14,7 +14,6 @@ extern "C" CONFUSE_EMACS
        everything when you're typing */
 #endif
 
-#include <Python.h>
 #include "ndarraytypes.h"
 
 /* Includes the "function" C-API -- these are all stored in a
@@ -51,32 +50,24 @@ extern "C" CONFUSE_EMACS
 
 #define PyArray_CheckScalar(m) (PyArray_IsScalar(m, Generic) ||               \
                                 PyArray_IsZeroDim(m))
-#if PY_MAJOR_VERSION >= 3
-#define PyArray_IsPythonNumber(obj)                                           \
-        (PyFloat_Check(obj) || PyComplex_Check(obj) ||                        \
-         PyLong_Check(obj) || PyBool_Check(obj))
-#define PyArray_IsIntegerScalar(obj) (PyLong_Check(obj)                       \
-              || PyArray_IsScalar((obj), Integer))
-#define PyArray_IsPythonScalar(obj)                                           \
-        (PyArray_IsPythonNumber(obj) || PyBytes_Check(obj) ||                 \
-         PyUnicode_Check(obj))
-#else
+
 #define PyArray_IsPythonNumber(obj)                                           \
         (PyInt_Check(obj) || PyFloat_Check(obj) || PyComplex_Check(obj) ||    \
          PyLong_Check(obj) || PyBool_Check(obj))
-#define PyArray_IsIntegerScalar(obj) (PyInt_Check(obj)                        \
-              || PyLong_Check(obj)                                            \
-              || PyArray_IsScalar((obj), Integer))
+
 #define PyArray_IsPythonScalar(obj)                                           \
         (PyArray_IsPythonNumber(obj) || PyString_Check(obj) ||                \
          PyUnicode_Check(obj))
-#endif
 
 #define PyArray_IsAnyScalar(obj)                                              \
         (PyArray_IsScalar(obj, Generic) || PyArray_IsPythonScalar(obj))
 
 #define PyArray_CheckAnyScalar(obj) (PyArray_IsPythonScalar(obj) ||           \
                                      PyArray_CheckScalar(obj))
+
+#define PyArray_IsIntegerScalar(obj) (PyInt_Check(obj)                        \
+              || PyLong_Check(obj)                                            \
+              || PyArray_IsScalar((obj), Integer))
 
 
 #define PyArray_GETCONTIGUOUS(m) (PyArray_ISCONTIGUOUS(m) ?                   \
@@ -96,7 +87,7 @@ extern "C" CONFUSE_EMACS
                                                       NULL)
 
 #define PyArray_FROM_OT(m,type) PyArray_FromAny(m,                            \
-                                PyArray_DescrFromType(type), 0, 0, 0, NULL)
+                                PyArray_DescrFromType(type), 0, 0, 0, NULL);
 
 #define PyArray_FROM_OTF(m, type, flags) \
         PyArray_FromAny(m, PyArray_DescrFromType(type), 0, 0, \
@@ -234,8 +225,15 @@ PyArray_XDECREF_ERR(PyArrayObject *arr)
                                    (PyTuple_GET_ITEM((value), 2) == (key)))
 
 
+/* Define python version independent deprecation macro */
+
+#if PY_VERSION_HEX >= 0x02050000
 #define DEPRECATE(msg) PyErr_WarnEx(PyExc_DeprecationWarning,msg,1)
 #define DEPRECATE_FUTUREWARNING(msg) PyErr_WarnEx(PyExc_FutureWarning,msg,1)
+#else
+#define DEPRECATE(msg) PyErr_Warn(PyExc_DeprecationWarning,msg)
+#define DEPRECATE_FUTUREWARNING(msg) PyErr_Warn(PyExc_FutureWarning,msg)
+#endif
 
 
 #ifdef __cplusplus

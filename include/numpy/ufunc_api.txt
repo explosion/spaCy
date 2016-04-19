@@ -7,8 +7,8 @@ Numpy Ufunc C-API
   PyObject *
   PyUFunc_FromFuncAndData(PyUFuncGenericFunction *func, void
                           **data, char *types, int ntypes, int nin, int
-                          nout, int identity, const char *name, const
-                          char *doc, int check_return)
+                          nout, int identity, char *name, char *doc, int
+                          check_return)
 
 
 ::
@@ -229,9 +229,9 @@ owns a new reference to errobj.
   PyUFunc_FromFuncAndDataAndSignature(PyUFuncGenericFunction *func, void
                                       **data, char *types, int
                                       ntypes, int nin, int nout, int
-                                      identity, const char *name, const
-                                      char *doc, int check_return, const
-                                      char *signature)
+                                      identity, char *name, char
+                                      *doc, int check_return, const char
+                                      *signature)
 
 
 ::
@@ -309,13 +309,4 @@ the input types, and the output types can be cast to
 the output operands where provided.
 
 Returns 0 on success, -1 (with exception raised) on validation failure.
-
-::
-
-  int
-  PyUFunc_RegisterLoopForDescr(PyUFuncObject *ufunc, PyArray_Descr
-                               *user_dtype, PyUFuncGenericFunction
-                               function, PyArray_Descr
-                               **arg_dtypes, void *data)
-
 
