@@ -1,8 +1,11 @@
 import pytest
 import numpy
+import os
 
+import spacy
 from spacy.matcher import Matcher
 from spacy.attrs import ORTH, LOWER, ENT_IOB, ENT_TYPE
+from spacy.attrs import ORTH, TAG, LOWER, IS_ALPHA, FLAG63
 from spacy.symbols import DATE
 
 
@@ -29,6 +32,31 @@ def test_overlap_issue118(EN):
     assert ents[0].label == ORG
     assert ents[0].start == 9
     assert ents[0].end == 11
+
+
+def test_overlap_issue242():
+    '''Test overlapping multi-word phrases.'''
+
+    patterns = [
+        [{LOWER: 'food'}, {LOWER: 'safety'}],
+        [{LOWER: 'safety'}, {LOWER: 'standards'}],
+    ]
+
+    if os.environ.get('SPACY_DATA'):
+        data_dir = os.environ.get('SPACY_DATA')
+    else:
+        data_dir = None
+ 
+    nlp = spacy.en.English(data_dir=data_dir, tagger=False, parser=False, entity=False)
+
+    nlp.matcher.add('FOOD', 'FOOD', {}, patterns)
+
+    doc = nlp.tokenizer(u'There are different food safety standards in different countries.')
+    food_safety, safety_standards = nlp.matcher(doc)
+    assert food_safety[1] == 3
+    assert food_safety[2] == 5
+    assert safety_standards[1] == 4
+    assert safety_standards[2] == 6
 
 
 def test_overlap_reorder(EN):
