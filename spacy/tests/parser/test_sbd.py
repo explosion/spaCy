@@ -123,24 +123,21 @@ def test_sentence_breaks_with_space(EN):
 
 
 
-@pytest.fixture
+def apply_transition_sequence(model, doc, sequence):
+    with model.parser.step_through(doc) as stepwise:
+        for transition in sequence:
+            stepwise.transition(transition)
+
+
 @pytest.mark.models
-def example(EN):
-    def apply_transition_sequence(model, doc, sequence):
-        with model.parser.step_through(doc) as stepwise:
-            for transition in sequence:
-                stepwise.transition(transition)
-    doc = EN.tokenizer.tokens_from_list(u"I bought a couch from IKEA. It was n't very comfortable .".split(' '))
-    EN.tagger(doc)
-    apply_transition_sequence(EN, doc, ['L-nsubj','S','L-det','R-dobj','D','R-prep','R-pobj','D','D','S','L-nsubj','R-ROOT','R-neg','D','S','L-advmod','R-acomp','D','R-punct'])
-    return doc
-
-
-def test_sbd_for_root_label_dependents(example):
+def test_sbd_for_root_label_dependents(EN):
     """
     make sure that the parser properly introduces a sentence boundary without
     the break transition by checking for dependents with the root label
     """
+    example = EN.tokenizer.tokens_from_list(u"I bought a couch from IKEA. It was n't very comfortable .".split(' '))
+    EN.tagger(example)
+    apply_transition_sequence(EN, example, ['L-nsubj','S','L-det','R-dobj','D','R-prep','R-pobj','D','D','S','L-nsubj','R-ROOT','R-neg','D','S','L-advmod','R-acomp','D','R-punct'])
 
     assert example[1].head.i == 1
     assert example[7].head.i == 7
@@ -152,7 +149,7 @@ def test_sbd_for_root_label_dependents(example):
 
 
 @pytest.mark.models
-def test_sbd_serialization(EN, example):
+def test_sbd_serialization(EN):
     """
     test that before and after serialization, the sentence boundaries are the same even
     if the parser predicted two roots for the sentence that were made into two sentences
@@ -167,6 +164,10 @@ def test_sbd_serialization(EN, example):
     BUG that is tested here: So far, the parser wasn't introducing a sentence start when 
     it introduced the second root node.
     """
+
+    example = EN.tokenizer.tokens_from_list(u"I bought a couch from IKEA. It was n't very comfortable .".split(' '))
+    EN.tagger(example)
+    apply_transition_sequence(EN, example, ['L-nsubj','S','L-det','R-dobj','D','R-prep','R-pobj','D','D','S','L-nsubj','R-ROOT','R-neg','D','S','L-advmod','R-acomp','D','R-punct'])
 
     example_serialized = Doc(EN.vocab).from_bytes(example.to_bytes())
 
