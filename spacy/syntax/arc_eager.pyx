@@ -447,6 +447,7 @@ cdef class ArcEager(TransitionSystem):
                 # note that this can create non-projective trees if there are arcs
                 # between nodes on both sides of the new root node
                 st._sent[i].head = 0
+                st._sent[st._sent[i].l_edge].sent_start = True
 
     cdef int set_valid(self, int* output, const StateC* st) nogil:
         cdef bint[N_MOVES] is_valid
