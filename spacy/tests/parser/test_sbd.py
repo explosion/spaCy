@@ -172,19 +172,3 @@ def test_sbd_serialization(EN, example):
 
     assert example.to_bytes() == example_serialized.to_bytes()
     assert [s.text for s in example.sents] == [s.text for s in example_serialized.sents]
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
