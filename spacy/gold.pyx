@@ -151,9 +151,9 @@ def read_json_file(loc, docs_filter=None):
                     for i, token in enumerate(sent['tokens']):
                         words.append(token['orth'])
                         ids.append(i)
-                        tags.append(token['tag'])
-                        heads.append(token['head'] + i)
-                        labels.append(token['dep'])
+                        tags.append(token.get('tag','-'))
+                        heads.append(token.get('head',0) + i)
+                        labels.append(token.get('dep','ROOT'))
                         # Ensure ROOT label is case-insensitive
                         if labels[-1].lower() == 'root':
                             labels[-1] = 'ROOT'
