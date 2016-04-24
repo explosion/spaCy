@@ -13,8 +13,6 @@ import plac
 import re
 
 import spacy.util
-from spacy.en import English
-from spacy.de import German
 
 from spacy.syntax.util import Config
 from spacy.gold import read_json_file
@@ -207,7 +205,7 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
 
 
 @plac.annotations(
-    language=("The language to train", "positional", None, str, ['en','de']),
+    language=("The language to train", "positional", None, str, ['en','de', 'zh']),
     train_loc=("Location of training file or directory"),
     dev_loc=("Location of development file or directory"),
     model_dir=("Location of output model directory",),
@@ -223,7 +221,7 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
 )
 def main(language, train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
          debug=False, corruption_level=0.0, gold_preproc=False, eval_only=False, pseudoprojective=False):
-    lang = {'en':English, 'de':German}.get(language)
+    lang = spacy.util.get_lang_class(language)
 
     if not eval_only:
         gold_train = list(read_json_file(train_loc))

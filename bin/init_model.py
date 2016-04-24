@@ -36,11 +36,8 @@ from spacy.strings import hash_string
 from preshed.counter import PreshCounter
 
 from spacy.parts_of_speech import NOUN, VERB, ADJ
+from spacy.util import get_lang_class
 
-import spacy.en
-import spacy.de
-import spacy.fi
-import spacy.it
 
 try:
     unicode
@@ -197,13 +194,6 @@ def setup_vocab(get_lex_attr, tag_map, src_dir, dst_dir):
 
 
 def main(lang_id, lang_data_dir, corpora_dir, model_dir):
-    languages = {
-        'en': spacy.en.English.default_lex_attrs(),
-        'de': spacy.de.German.default_lex_attrs(),
-        'fi': spacy.fi.Finnish.default_lex_attrs(),
-        'it': spacy.it.Italian.default_lex_attrs(),
-    }
-
     model_dir = Path(model_dir)
     lang_data_dir = Path(lang_data_dir) / lang_id
     corpora_dir = Path(corpora_dir) / lang_id
@@ -216,7 +206,8 @@ def main(lang_id, lang_data_dir, corpora_dir, model_dir):
 
     tag_map = json.load((lang_data_dir / 'tag_map.json').open())
     setup_tokenizer(lang_data_dir, model_dir / 'tokenizer')
-    setup_vocab(languages[lang_id], tag_map, corpora_dir, model_dir / 'vocab')
+    setup_vocab(get_lang_class(lang_id).default_lex_attrs(), tag_map, corpora_dir,
+                model_dir / 'vocab')
 
     if (lang_data_dir / 'gazetteer.json').exists():
         copyfile(str(lang_data_dir / 'gazetteer.json'),

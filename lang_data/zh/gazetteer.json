@@ -1,0 +1,194 @@
+{
+	"Reddit": [
+		"PRODUCT",
+		{},
+		[
+			[{"lower": "reddit"}]
+		]
+	],
+	"SeptemberElevenAttacks": [
+		"EVENT",
+		{},
+		[
+			[
+				{"orth": "9/11"}
+			],
+			[
+				{"lower": "september"},
+				{"orth": "11"}
+			]
+		]
+	],
+	"Linux": [
+		"PRODUCT",
+		{},
+		[
+			[{"lower": "linux"}]
+		]
+	],
+	"Haskell": [
+		"PRODUCT",
+		{},
+		[
+			[{"lower": "haskell"}]
+		]
+	],
+	"HaskellCurry": [
+		"PERSON",
+		{},
+		[
+			[
+				{"lower": "haskell"},
+				{"lower": "curry"}
+			]
+		]
+	],
+	"Javascript": [
+		"PRODUCT",
+		{},
+		[
+			[{"lower": "javascript"}]
+		]
+	],
+	"CSS": [
+		"PRODUCT",
+		{},
+		[
+			[{"lower": "css"}],
+			[{"lower": "css3"}]
+		]
+	],
+	"displaCy": [
+		"PRODUCT",
+		{},
+		[
+			[{"lower": "displacy"}]
+		]
+	],
+	"spaCy": [
+		"PRODUCT",
+		{},
+		[
+			[{"orth": "spaCy"}]
+		]
+	],
+
+    "HTML": [
+		"PRODUCT",
+		{},
+		[
+			[{"lower": "html"}],
+			[{"lower": "html5"}]
+		]
+	],
+    "Python": [
+        "PRODUCT",
+        {},
+        [
+            [{"orth": "Python"}]
+        ]
+    ],
+    "Ruby": [
+        "PRODUCT",
+        {},
+        [
+            [{"orth": "Ruby"}]
+        ]
+    ],
+    "Digg": [
+        "PRODUCT",
+        {},
+        [
+            [{"lower": "digg"}]
+        ]
+    ],
+     "FoxNews": [
+        "ORG",
+        {},
+        [
+            [{"orth": "Fox"}],
+            [{"orth": "News"}]
+        ]
+    ],
+    "Google": [
+        "ORG",
+        {},
+        [
+            [{"lower": "google"}]
+        ]
+    ],
+    "Mac": [
+        "PRODUCT",
+        {},
+        [
+            [{"lower": "mac"}]
+        ]
+    ],
+    "Wikipedia": [
+        "PRODUCT",
+        {},
+        [
+            [{"lower": "wikipedia"}]
+        ]
+    ],
+    "Windows": [
+        "PRODUCT",
+        {},
+        [
+            [{"orth": "Windows"}]
+        ]
+    ],
+     "Dell": [
+        "ORG",
+        {},
+        [
+            [{"lower": "dell"}]
+        ]
+    ],
+    "Facebook": [
+        "ORG",
+        {},
+        [
+            [{"lower": "facebook"}]
+        ]
+    ],
+     "Blizzard": [
+        "ORG",
+        {},
+        [
+            [{"orth": "Blizzard"}]
+        ]
+    ],
+    "Ubuntu": [
+        "ORG",
+        {},
+        [
+            [{"orth": "Ubuntu"}]
+        ]
+    ],
+    "Youtube": [
+        "PRODUCT",
+        {},
+        [
+            [{"lower": "youtube"}]
+        ]
+    ],
+    "false_positives": [
+        null,
+        {},
+        [
+            [{"orth": "Shit"}],
+            [{"orth": "Weed"}],
+            [{"orth": "Cool"}],
+            [{"orth": "Btw"}],
+            [{"orth": "Bah"}],
+            [{"orth": "Bullshit"}],
+            [{"orth": "Lol"}],
+            [{"orth": "Yo"}, {"lower": "dawg"}],
+            [{"orth": "Yay"}],
+            [{"orth": "Ahh"}],
+            [{"orth": "Yea"}],
+            [{"orth": "Bah"}]
+        ]
+    ]
+}
