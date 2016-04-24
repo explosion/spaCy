@@ -2,10 +2,12 @@ from .util import set_lang_class, get_lang_class, get_package, get_package_by_na
 
 from . import en
 from . import de
+from . import zh
 
 
 set_lang_class(en.English.lang, en.English)
 set_lang_class(de.German.lang, de.German)
+set_lang_class(zh.Chinese.lang, zh.Chinese)
 
 
 def load(name, vocab=None, tokenizer=None, parser=None, tagger=None, entity=None,
