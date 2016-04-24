@@ -135,6 +135,10 @@ class Language(object):
         else:
             return None
 
+    @classmethod
+    def default_tokenizer(cls, package, vocab):
+        return Tokenizer.from_package(package, vocab)
+
     def __init__(self,
         data_dir=None,
         vocab=None,
@@ -178,7 +182,7 @@ class Language(object):
             vocab = self.default_vocab(package, vectors_package=vectors_package)
         self.vocab = vocab
         if tokenizer in (None, True):
-            tokenizer = Tokenizer.from_package(package, self.vocab)
+            tokenizer = self.default_tokenizer(package, self.vocab)
         self.tokenizer = tokenizer
         if tagger in (None, True):
             tagger = Tagger.from_package(package, self.vocab)
