@@ -1,29 +1,27 @@
-#ifndef _NPY_1_7_DEPRECATED_API_H
-#define _NPY_1_7_DEPRECATED_API_H
-
-#ifndef NPY_DEPRECATED_INCLUDES
-#error "Should never include npy_*_*_deprecated_api directly."
-#endif
+#ifndef _NPY_DEPRECATED_API_H
+#define _NPY_DEPRECATED_API_H
 
 #if defined(_WIN32)
 #define _WARN___STR2__(x) #x
 #define _WARN___STR1__(x) _WARN___STR2__(x)
 #define _WARN___LOC__ __FILE__ "(" _WARN___STR1__(__LINE__) ") : Warning Msg: "
 #pragma message(_WARN___LOC__"Using deprecated NumPy API, disable it by " \
-                         "#defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION")
+                            "#defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION")
 #elif defined(__GNUC__)
-#warning "Using deprecated NumPy API, disable it by " \
-         "#defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION"
+#warning "Using deprecated NumPy API, disable it by #defining NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION"
 #endif
 /* TODO: How to do this warning message for other compilers? */
 
 /*
- * This header exists to collect all dangerous/deprecated NumPy API
- * as of NumPy 1.7.
+ * This header exists to collect all dangerous/deprecated NumPy API.
  *
  * This is an attempt to remove bad API, the proliferation of macros,
  * and namespace pollution currently produced by the NumPy headers.
  */
+
+#if defined(NPY_NO_DEPRECATED_API)
+#error Should never include npy_deprecated_api directly.
+#endif
 
 /* These array flags are deprecated as of NumPy 1.7 */
 #define NPY_CONTIGUOUS NPY_ARRAY_C_CONTIGUOUS
@@ -126,5 +124,6 @@
  * removed in the next major release.
  */
 #include "old_defines.h"
+
 
 #endif

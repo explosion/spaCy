@@ -57,8 +57,7 @@ def test_child_consistency(EN, sun_text):
 
 
 @pytest.mark.models
-def test_edges(EN):
-    sun_text = u"Chemically, about three quarters of the Sun's mass consists of hydrogen, while the rest is mostly helium."
+def test_edges(EN, sun_text):
     tokens = EN(sun_text)
     for token in tokens:
         subtree = list(token.subtree)

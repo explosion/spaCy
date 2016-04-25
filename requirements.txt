@@ -1,6 +1,6 @@
-cython < 0.24
+cython<0.24
 pathlib
-numpy
+numpy>=1.7
 cymem>=1.30,<1.32
 preshed>=0.46.1,<0.47.0
 thinc>=5.0.0,<5.1.0

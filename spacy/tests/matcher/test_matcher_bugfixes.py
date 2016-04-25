@@ -6,7 +6,7 @@ import spacy
 from spacy.matcher import Matcher
 from spacy.attrs import ORTH, LOWER, ENT_IOB, ENT_TYPE
 from spacy.attrs import ORTH, TAG, LOWER, IS_ALPHA, FLAG63
-from spacy.symbols import DATE
+from spacy.symbols import DATE, LOC
 
 
 def test_overlap_issue118(EN):
@@ -134,15 +134,59 @@ def test_overlap_prefix_reorder(EN):
     assert ents[0].end == 11
 
 
-@pytest.mark.models
-def test_ner_interaction(EN):
-    EN.matcher.add('LAX_Airport', 'AIRPORT', {}, [[{ORTH: 'LAX'}]])
-    EN.matcher.add('SFO_Airport', 'AIRPORT', {}, [[{ORTH: 'SFO'}]])
-    doc = EN(u'get me a flight from SFO to LAX leaving 20 December and arriving on January 5th')
+# @pytest.mark.models
+# def test_ner_interaction(EN):
+#     EN.matcher.add('LAX_Airport', 'AIRPORT', {}, [[{ORTH: 'LAX'}]])
+#     EN.matcher.add('SFO_Airport', 'AIRPORT', {}, [[{ORTH: 'SFO'}]])
+#     doc = EN(u'get me a flight from SFO to LAX leaving 20 December and arriving on January 5th')
 
-    ents = [(ent.label_, ent.text) for ent in doc.ents]
-    assert ents[0] == ('AIRPORT', 'SFO')
-    assert ents[1] == ('AIRPORT', 'LAX')
-    assert ents[2] == ('DATE', '20 December')
-    assert ents[3] == ('DATE', 'January 5th')
+#     ents = [(ent.label_, ent.text) for ent in doc.ents]
+#     assert ents[0] == ('AIRPORT', 'SFO')
+#     assert ents[1] == ('AIRPORT', 'LAX')
+#     assert ents[2] == ('DATE', '20 December')
+#     assert ents[3] == ('DATE', 'January 5th')
  
+
+# @pytest.mark.models
+# def test_ner_interaction(EN):
+#     # ensure that matcher doesn't overwrite annotations set by the NER model
+#     doc = EN.tokenizer.tokens_from_list(u'get me a flight from SFO to LAX leaving 20 December and arriving on January 5th'.split(' '))
+#     EN.tagger(doc)
+
+#     columns = [ENT_IOB, ENT_TYPE]
+#     values = numpy.ndarray(shape=(len(doc),len(columns)), dtype='int32')
+#     # IOB values are 0=missing, 1=I, 2=O, 3=B 
+#     iobs = [2,2,2,2,2,3,2,3,2,3,1,2,2,2,3,1]
+#     types = [0,0,0,0,0,LOC,0,LOC,0,DATE,DATE,0,0,0,DATE,DATE]
+#     values[:] = zip(iobs,types)
+#     doc.from_array(columns,values)
+
+#     assert doc[5].ent_type_ == 'LOC'
+#     assert doc[7].ent_type_ == 'LOC'
+#     assert doc[9].ent_type_ == 'DATE'
+#     assert doc[10].ent_type_ == 'DATE'
+#     assert doc[14].ent_type_ == 'DATE'
+#     assert doc[15].ent_type_ == 'DATE'
+
+#     EN.matcher.add('LAX_Airport', 'AIRPORT', {}, [[{ORTH: 'LAX'}]])
+#     EN.matcher.add('SFO_Airport', 'AIRPORT', {}, [[{ORTH: 'SFO'}]])
+#     EN.matcher(doc)
+
+#     assert doc[5].ent_type_ != 'AIRPORT'
+#     assert doc[7].ent_type_ != 'AIRPORT'
+#     assert doc[5].ent_type_ == 'LOC'
+#     assert doc[7].ent_type_ == 'LOC'
+#     assert doc[9].ent_type_ == 'DATE'
+#     assert doc[10].ent_type_ == 'DATE'
+#     assert doc[14].ent_type_ == 'DATE'
+#     assert doc[15].ent_type_ == 'DATE'
+
+
+
+
+
+
+
+
+
+
