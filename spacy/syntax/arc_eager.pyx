@@ -399,31 +399,34 @@ cdef class ArcEager(TransitionSystem):
         cdef TokenC* orig_head
         cdef int new_edge
         cdef int child_i
-        cdef TokenC* head_i
+        cdef int head_i
         for i in range(st.length):
             if st._sent[i].head == 0 and st._sent[i].dep == 0:
                 st._sent[i].dep = self.root_label
             # If we're not using the Break transition, we segment via root-labelled
             # arcs between the root words.
             elif USE_ROOT_ARC_SEGMENT and st._sent[i].dep == self.root_label:
-                orig_head_id = st._sent[i].head
+                orig_head_id = i + st._sent[i].head
                 orig_head = &st._sent[orig_head_id]
                 if i < orig_head_id: # i is left dependent
                     orig_head.l_kids -= 1
                     if i == orig_head.l_edge: # i is left-most child
                         # find the second left-most child and make it the new l_edge
                         new_edge = orig_head_id
-                        child_i = i
+                        child_i = i+1
                         while child_i < orig_head_id:
-                            if st._sent[child_i].head == orig_head_id:
+                            if child_i + st._sent[child_i].head == orig_head_id:
                                 new_edge = child_i
+                                break
                             child_i += 1
                         # then walk up the path to root and update the l_edges of all ancestors
                         # the logic here works because the tree is guaranteed to be projective
-                        head_i = &st._sent[orig_head.head]
-                        while head_i.l_edge == orig_head.l_edge:
-                            head_i.l_edge = new_edge
-                            head_i = &st._sent[head_i.head]
+                        head_i = orig_head_id + orig_head.head
+                        while st._sent[head_i].l_edge == orig_head.l_edge:
+                            st._sent[head_i].l_edge = new_edge
+                            if st._sent[head_i].head == 0:
+                                break
+                            head_i += st._sent[head_i].head
                         orig_head.l_edge = new_edge
 
                 elif i > orig_head_id: # i is right dependent
@@ -431,23 +434,27 @@ cdef class ArcEager(TransitionSystem):
                     if i == orig_head.r_edge:
                         # find the second right-most child and make it the new r_edge
                         new_edge = orig_head_id
-                        child_i = i
+                        child_i = i-1
                         while child_i > orig_head_id:
-                            if st._sent[child_i].head == orig_head_id:
+                            if child_i + st._sent[child_i].head == orig_head_id:
                                 new_edge = child_i
+                                break
                             child_i -= 1
-                        # then walk up the path to root and update the l_edges of all ancestors
+                        # then walk up the path to root and update the r_edges of all ancestors
                         # the logic here works because the tree is guaranteed to be projective
-                        head_i = &st._sent[orig_head.head]
-                        while head_i.r_edge == orig_head.r_edge:
-                            head_i.r_edge = new_edge
-                            head_i = &st._sent[head_i.head]
+                        head_i = orig_head_id + orig_head.head
+                        while st._sent[head_i].r_edge == orig_head.r_edge:
+                            st._sent[head_i].r_edge = new_edge
+                            if st._sent[head_i].head == 0:
+                                break
+                            head_i += st._sent[head_i].head
                         orig_head.r_edge = new_edge
 
-                # note that this can create non-projective trees if there are arcs
+                # note that this may create non-projective trees if there are arcs
                 # between nodes on both sides of the new root node
                 st._sent[i].head = 0
                 st._sent[st._sent[i].l_edge].sent_start = True
+
 
     cdef int set_valid(self, int* output, const StateC* st) nogil:
         cdef bint[N_MOVES] is_valid

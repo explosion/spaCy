@@ -135,12 +135,13 @@ def test_sbd_for_root_label_dependents(EN):
     make sure that the parser properly introduces a sentence boundary without
     the break transition by checking for dependents with the root label
     """
-    example = EN.tokenizer.tokens_from_list(u"I bought a couch from IKEA. It was n't very comfortable .".split(' '))
+    example = EN.tokenizer.tokens_from_list(u"I saw a firefly It glowed".split(' '))
     EN.tagger(example)
-    apply_transition_sequence(EN, example, ['L-nsubj','S','L-det','R-dobj','D','R-prep','R-pobj','D','D','S','L-nsubj','R-ROOT','R-neg','D','S','L-advmod','R-acomp','D','R-punct'])
+    apply_transition_sequence(EN, example, ['L-nsubj','S','L-det','R-dobj','D','S','L-nsubj','R-ROOT'])
+    print ['%s/%s' % (t.dep_,t.head.i) for t in example]
 
     assert example[1].head.i == 1
-    assert example[7].head.i == 7
+    assert example[5].head.i == 5
 
     sents = list(example.sents)
     assert len(sents) == 2
