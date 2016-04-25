@@ -60,7 +60,7 @@ def score_model(scorer, nlp, raw_text, annot_tuples, verbose=False):
     nlp.entity(tokens)
     nlp.parser(tokens)
     gold = GoldParse(tokens, annot_tuples)
-    scorer.score(tokens, gold, verbose=verbose)
+    scorer.score(tokens, gold, verbose=verbose, punct_labels=('p', 'punct', 'char'))
 
 
 def _merge_sents(sents):
