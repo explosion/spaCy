@@ -378,7 +378,10 @@ cdef class ArcEager(TransitionSystem):
         st.fast_forward()
 
     cdef int finalize_state(self, StateC* st) nogil:
-        pass
+        cdef int i
+        for i in range(st.length):
+            if st._sent[i].head == 0 and st._sent[i].dep == 0:
+                st._sent[i].dep = self.root_label
 
     cdef int set_valid(self, int* output, const StateC* st) nogil:
         cdef bint[N_MOVES] is_valid
