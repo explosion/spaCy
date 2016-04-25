@@ -138,7 +138,6 @@ def test_sbd_for_root_label_dependents(EN):
     example = EN.tokenizer.tokens_from_list(u"I saw a firefly It glowed".split(' '))
     EN.tagger(example)
     apply_transition_sequence(EN, example, ['L-nsubj','S','L-det','R-dobj','D','S','L-nsubj','R-ROOT'])
-    print ['%s/%s' % (t.dep_,t.head.i) for t in example]
 
     assert example[1].head.i == 1
     assert example[5].head.i == 5

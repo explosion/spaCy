@@ -32,7 +32,6 @@ def test_arc_eager_finalize_state(EN):
 	# right branching
 	example = EN.tokenizer.tokens_from_list(u"a b c d e".split(' '))
 	apply_transition_sequence(EN, example, ['R-nsubj','D','R-nsubj','R-nsubj','D','R-ROOT'])
-	print [ '%s/%s' % (t.dep_,t.head.i) for t in example ]
 
 	assert example[0].n_lefts == 0
 	assert example[0].n_rights == 2
@@ -67,7 +66,6 @@ def test_arc_eager_finalize_state(EN):
 	# left branching
 	example = EN.tokenizer.tokens_from_list(u"a b c d e".split(' '))
 	apply_transition_sequence(EN, example, ['S','L-nsubj','L-ROOT','S','L-nsubj','L-nsubj'])
-	print [ '%s/%s' % (t.dep_,t.head.i) for t in example ]
 
 	assert example[0].n_lefts == 0
 	assert example[0].n_rights == 0
