@@ -174,7 +174,7 @@ def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False
             else:
                 tokens = nlp(raw_text)
             gold = GoldParse(tokens, annot_tuples)
-            scorer.score(tokens, gold, verbose=verbose)
+            scorer.score(tokens, gold, verbose=verbose, punct_labels=('p', 'punct', 'char'))
     return scorer
 
 
