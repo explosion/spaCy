@@ -82,6 +82,13 @@ cdef class Doc:
         self._py_tokens = []
         self._vector = None
         self.noun_chunks_iterator = DocIterator(self)
+        cdef unicode orth
+        cdef bint has_space
+        cdef const LexemeC* lex
+        if orths_and_spaces:
+            for orth, has_space in orths_and_spaces:
+                lex = self.vocab.get(self.mem, orth)
+                self.push_back(lex, has_space)
 
     def __getitem__(self, object i):
         """Get a Token or a Span from the Doc.
