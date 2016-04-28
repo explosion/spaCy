@@ -41,17 +41,21 @@ def _corrupt(c, noise_level):
 
 
 def add_noise(orig, noise_level):
-    if random.random() >= noise_level:
-        return orig
-    elif type(orig) == list:
-        corrupted = [_corrupt(word, noise_level) for word in orig]
-        corrupted = [w for w in corrupted if w]
-        return corrupted
-    else:
-        return ''.join(_corrupt(c, noise_level) for c in orig)
+    # TODO
+    return orig.replace(' ', '')
+    #if random.random() >= noise_level:
+    #    return orig
+    #elif type(orig) == list:
+    #    corrupted = [_corrupt(word, noise_level) for word in orig]
+    #    corrupted = [w for w in corrupted if w]
+    #    return corrupted
+    #else:
+    #    return ''.join(_corrupt(c, noise_level) for c in orig)
 
 
 def score_model(scorer, nlp, raw_text, annot_tuples, verbose=False):
+    # TODO
+    raw_text = raw_text.replace(' ', '')
     if raw_text is None:
         tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
     else:
@@ -139,7 +143,10 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
                 nlp.tagger(tokens)
                 gold = GoldParse(tokens, annot_tuples)
                 if not gold.is_projective:
-                    raise Exception("Non-projective sentence in training: %s" % annot_tuples[1])
+                    # TODO
+                    nlp.tagger.train(tokens, gold.tags)
+                    continue
+                    #raise Exception("Non-projective sentence in training: %s" % annot_tuples[1])
                 loss += nlp.parser.train(tokens, gold)
                 nlp.entity.train(tokens, gold)
                 nlp.tagger.train(tokens, gold.tags)
