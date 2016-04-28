@@ -6,6 +6,7 @@ import sys
 import contextlib
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
+from distutils import ccompiler, msvccompiler
 
 try:
     from setuptools import Extension, setup
@@ -160,6 +161,10 @@ def setup_package():
         include_dirs = [
             get_python_inc(plat_specific=True),
             os.path.join(root, 'include')]
+
+        if (ccompiler.new_compiler().compiler_type == 'msvc'
+            and msvccompiler.get_build_version() == 9):
+            include_dirs.append(os.path.join(root, 'include', 'msvc9'))
 
         ext_modules = []
         for mod_name in MOD_NAMES:
