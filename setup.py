@@ -193,7 +193,8 @@ def setup_package():
                 'plac',
                 'six',
                 'cloudpickle',
-                'sputnik>=0.9.2,<0.10.0'],
+                'sputnik>=0.9.2,<0.10.0',
+                'jieba'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',
