@@ -30,8 +30,6 @@
 // 
 ///////////////////////////////////////////////////////////////////////////////
 
-#include <stdint.h>
-
 #ifndef _MSC_VER // [
 #error "Use this header only with Microsoft Visual C++ compilers!"
 #endif // _MSC_VER ]
