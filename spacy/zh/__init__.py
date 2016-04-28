@@ -23,10 +23,11 @@ class CharacterTokenizer(Tokenizer):
     def __call__(self, text):
         return self.tokens_from_list(list(text))
 
+
 class Chinese(Language):
     lang = u'zh'
 
     @classmethod
     def default_tokenizer(cls, package, vocab):
         '''Return Jieba-wrapper tokenizer.'''
-        return CharacterTokenizer.from_package(package, vocab)
+        return JiebaTokenizer.from_package(package, vocab)
