@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 import numpy
 import io
 import json
@@ -42,7 +43,6 @@ def tags_to_entities(tags):
     return entities
 
 
-
 def align(cand_words, gold_words):
     cost, edit_path = _min_edit_path(cand_words, gold_words)
     alignment = []
@@ -63,7 +63,7 @@ def align(cand_words, gold_words):
     return alignment
 
 
-punct_re = re.compile(r'\W')
+punct_re = re.compile(r'\W', re.UNICODE)
 def _min_edit_path(cand_words, gold_words):
     cdef:
         Pool mem
@@ -264,13 +264,3 @@ cdef class GoldParse:
 
 def is_punct_label(label):
     return label == 'P' or label.lower() == 'punct'
-
-
-
-
-
-
-
-
-
-
