@@ -186,7 +186,7 @@ cdef class LeftArc:
                 for i in range(1, s.stack_depth()):
                     cost += gold.heads[s.S(i)] == s.S(0)
                     cost += gold.heads[s.S(0)] == s.S(i)
-            return pop_cost(s, gold, s.S(0)) + arc_cost(s, gold, s.B(0), s.S(0))
+            return cost + pop_cost(s, gold, s.S(0)) + arc_cost(s, gold, s.B(0), s.S(0))
 
     @staticmethod
     cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
