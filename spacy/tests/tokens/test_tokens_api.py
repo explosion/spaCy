@@ -190,5 +190,5 @@ def test_right_edge(EN):
     token = doc[6]
     assert token.text == u'for'
     subtree = [w.text for w in token.subtree]
-    assert subtree == [u'for' , u'the', u'sake', u'of']
-    assert token.right_edge.text == u'of'
+    assert subtree == [u'for' , u'the', u'sake', u'of', u'such', u'as', u'live', u'under', u'the', u'government', u'of', u'the', u'Romans', u',']
+    assert token.right_edge.text == u','

@@ -85,7 +85,7 @@ Get pointer to one of correct type for array
 For backward compatibility
 
 Cast an array using typecode structure.
-steals reference to dtype --- cannot be NULL
+steals reference to at --- cannot be NULL
 
 This function always makes a copy of arr, even if the dtype
 doesn't change.
@@ -356,7 +356,6 @@ steals a reference to dtype (which cannot be NULL)
 
 Return either an array or the appropriate Python object if the array
 is 0d and matches a Python type.
-steals reference to mp
 
 ::
 
@@ -365,7 +364,6 @@ steals reference to mp
                    offset)
 
 Get a subset of bytes from each element of the array
-steals reference to typed, must not be NULL
 
 ::
 
@@ -374,7 +372,6 @@ steals reference to typed, must not be NULL
                    offset, PyObject *val)
 
 Set a subset of bytes from each element of the array
-steals reference to dtype, must not be NULL
 
 ::
 
@@ -1109,7 +1106,7 @@ as you get a new reference to it.
   PyArray_IntpFromSequence(PyObject *seq, npy_intp *vals, int maxvals)
 
 PyArray_IntpFromSequence
-Returns the number of integers converted or -1 if an error occurred.
+Returns the number of dimensions or -1 if an error occurred.
 vals must be large enough to hold maxvals
 
 ::
@@ -2181,7 +2178,7 @@ int ndim = 0;
 npy_intp dims[NPY_MAXDIMS];
 
 if (PyArray_GetArrayParamsFromObject(op, NULL, 1, &dtype,
-&ndim, dims, &arr, NULL) < 0) {
+&ndim, &dims, &arr, NULL) < 0) {
 return NULL;
 }
 if (arr == NULL) {
@@ -2221,7 +2218,7 @@ could be applied to each axis, like in ravel_multi_index.
   PyArray_MatrixProduct2(PyObject *op1, PyObject
                          *op2, PyArrayObject*out)
 
-Numeric.matrixproduct2(a,v,out)
+Numeric.matrixproduct(a,v,out)
 just like inner product but does the swapaxes stuff on the fly
 
 ::
@@ -2287,10 +2284,6 @@ index zero for that axis.
 WARNING: If an axis flagged for removal has a shape equal to zero,
 the array will point to invalid memory. The caller must
 validate this!
-If an axis flagged for removal has a shape larger then one,
-the aligned flag (and in the future the contiguous flags),
-may need explicite update.
-(check also NPY_RELAXED_STRIDES_CHECKING)
 
 For example, this can be used to remove the reduction axes
 from a reduction result once its computation is complete.
@@ -2379,71 +2372,4 @@ thread.  The hook should be written to be reentrant, if it performs
 operations that might cause new allocation events (such as the
 creation/descruction numpy objects, or creating/destroying Python
 objects which might cause a gc)
-
-::
-
-  void
-  PyArray_MapIterSwapAxes(PyArrayMapIterObject *mit, PyArrayObject
-                          **ret, int getmap)
-
-
-::
-
-  PyObject *
-  PyArray_MapIterArray(PyArrayObject *a, PyObject *index)
-
-
-Use advanced indexing to iterate an array. Please note
-that most of this public API is currently not guaranteed
-to stay the same between versions. If you plan on using
-it, please consider adding more utility functions here
-to accommodate new features.
-
-::
-
-  void
-  PyArray_MapIterNext(PyArrayMapIterObject *mit)
-
-This function needs to update the state of the map iterator
-and point mit->dataptr to the memory-location of the next object
-
-Note that this function never handles an extra operand but provides
-compatibility for an old (exposed) API.
-
-::
-
-  int
-  PyArray_Partition(PyArrayObject *op, PyArrayObject *ktharray, int
-                    axis, NPY_SELECTKIND which)
-
-Partition an array in-place
-
-::
-
-  PyObject *
-  PyArray_ArgPartition(PyArrayObject *op, PyArrayObject *ktharray, int
-                       axis, NPY_SELECTKIND which)
-
-ArgPartition an array
-
-::
-
-  int
-  PyArray_SelectkindConverter(PyObject *obj, NPY_SELECTKIND *selectkind)
-
-Convert object to select kind
-
-::
-
-  void *
-  PyDataMem_NEW_ZEROED(size_t size, size_t elsize)
-
-Allocates zeroed memory for array data.
-
-::
-
-  int
-  PyArray_CheckAnyScalarExact(PyObject *obj)
-
-return true an object is exactly a numpy scalar
 

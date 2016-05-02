@@ -22,7 +22,6 @@ from ._state cimport StateC, is_space_token
 
 DEF NON_MONOTONIC = True
 DEF USE_BREAK = True
-DEF USE_ROOT_ARC_SEGMENT = True
 
 cdef weight_t MIN_SCORE = -90000
 
@@ -90,8 +89,6 @@ cdef weight_t arc_cost(StateClass stcls, const GoldParseC* gold, int head, int c
 
 cdef bint arc_is_gold(const GoldParseC* gold, int head, int child) nogil:
     if gold.labels[child] == -1:
-        return True
-    elif USE_ROOT_ARC_SEGMENT and _is_gold_root(gold, head) and _is_gold_root(gold, child):
         return True
     elif gold.heads[child] == head:
         return True
@@ -235,25 +232,12 @@ cdef class Break:
             return False
         elif st.stack_depth() < 1:
             return False
-        # It is okay to predict a sentence boundary if the top item on the stack
-        # and the first item on the buffer are adjacent tokens. If this is not the
-        # case, it is still okay if there are only space tokens in between.
-        # This is checked by testing whether the head of a space token immediately
-        # preceding the first item in the buffer is the top item on the stack.
-        # Intervening space tokens must be attached to the previous non-space token.
-        # Therefore, if the head of a space token that immediately precedes the first
-        # item on the buffer is the top item on the stack, a sentence boundary can be
-        # predicted.
-        elif (st.S(0) + 1) != st.B(0) \
-        and not (is_space_token(st.safe_get(st.B(0)-1)) and st.H(st.B(0)-1) == st.S(0)):
-            # Must break at the token boundary
-            return False
         else:
             return True
 
     @staticmethod
     cdef int transition(StateC* st, int label) nogil:
-        st.set_break(st.B(0))
+        st.set_break(st.B_(0).l_edge)
         st.fast_forward()
 
     @staticmethod
@@ -295,8 +279,8 @@ cdef int _get_root(int word, const GoldParseC* gold) nogil:
 cdef class ArcEager(TransitionSystem):
     @classmethod
     def get_labels(cls, gold_parses):
-        move_labels = {SHIFT: {'': True}, REDUCE: {'': True}, RIGHT: {'ROOT': True},
-                       LEFT: {'ROOT': True}, BREAK: {'ROOT': True}}
+        move_labels = {SHIFT: {'': True}, REDUCE: {'': True}, RIGHT: {},
+                       LEFT: {}, BREAK: {'ROOT': True}}
         for raw_text, sents in gold_parses:
             for (ids, words, tags, heads, labels, iob), ctnts in sents:
                 for child, head, label in zip(ids, heads, labels):
@@ -398,10 +382,6 @@ cdef class ArcEager(TransitionSystem):
         for i in range(st.length):
             if st._sent[i].head == 0 and st._sent[i].dep == 0:
                 st._sent[i].dep = self.root_label
-            # If we're not using the Break transition, we segment via root-labelled
-            # arcs between the root words.
-            elif USE_ROOT_ARC_SEGMENT and st._sent[i].dep == self.root_label:
-                st._sent[i].head = 0
 
     cdef int set_valid(self, int* output, const StateC* st) nogil:
         cdef bint[N_MOVES] is_valid
