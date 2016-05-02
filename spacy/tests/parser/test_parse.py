@@ -12,13 +12,13 @@ def test_root(EN):
 
 @pytest.mark.models
 def test_one_word_sentence(EN):
-	# one word sentence
-	doc = EN.tokenizer.tokens_from_list(['Hello'])
-	EN.tagger(doc)
-	assert len(doc) == 1
-	with EN.parser.step_through(doc) as _:
-		pass
-	assert doc[0].dep != 0
+    # one word sentence
+    doc = EN.tokenizer.tokens_from_list(['Hello'])
+    EN.tagger(doc)
+    assert len(doc) == 1
+    with EN.parser.step_through(doc) as _:
+        pass
+    assert doc[0].dep != 0
 
 
 def apply_transition_sequence(model, doc, sequence):
