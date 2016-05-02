@@ -34,7 +34,7 @@ def test_single_exclamation(EN):
 @pytest.mark.models
 def test_single_question(EN):
     string = 'A test sentence?'
-    words = EN(string, tag=False, parse=False)
+    words = EN(string, tag=False, parse=True)
     assert len(words) == 4
     assert len(list(words.sents)) == 1
     assert sum(len(sent) for sent in words.sents) == len(words)
