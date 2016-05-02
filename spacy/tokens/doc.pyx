@@ -23,6 +23,7 @@ from .span cimport Span
 from .token cimport Token
 from ..serialize.bits cimport BitArray
 from ..util import normalize_slice
+from ..syntax.iterators import CHUNKERS
 
 
 DEF PADDING = 5
@@ -81,7 +82,7 @@ cdef class Doc:
         self.is_parsed = False
         self._py_tokens = []
         self._vector = None
-        self.noun_chunks_iterator = DocIterator(self)
+        self.noun_chunks_iterator = CHUNKERS.get(self.vocab.lang)
 
     def __getitem__(self, object i):
         """Get a Token or a Span from the Doc.
@@ -233,21 +234,17 @@ cdef class Doc:
                     self.c[start].ent_iob = 3
 
 
-    property noun_chunks:
-        def __get__(self):
-            """Yield spans for base noun phrases."""
-            if not self.is_parsed:
-                raise ValueError(
-                    "noun_chunks requires the dependency parse, which "
-                    "requires data to be installed. If you haven't done so, run: "
-                    "\npython -m spacy.%s.download all\n"
-                    "to install the data" % self.vocab.lang)
-
-            yield from self.noun_chunks_iterator
-
-        def __set__(self, DocIterator):            
-            self.noun_chunks_iterator = DocIterator(self)
-
+    @property
+    def noun_chunks(self):
+        """Yield spans for base noun phrases."""
+        if not self.is_parsed:
+            raise ValueError(
+                "noun_chunks requires the dependency parse, which "
+                "requires data to be installed. If you haven't done so, run: "
+                "\npython -m spacy.%s.download all\n"
+                "to install the data" % self.vocab.lang)
+        for start, end, label in self.noun_chunks_iterator(self):
+            yield Span(self, start, end, label=label)
 
     @property
     def sents(self):

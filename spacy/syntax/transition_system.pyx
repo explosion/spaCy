@@ -53,6 +53,9 @@ cdef class TransitionSystem:
     cdef int finalize_state(self, StateC* state) nogil:
         pass
 
+    def finalize_doc(self, doc):
+        pass
+
     cdef int preprocess_gold(self, GoldParse gold) except -1:
         raise NotImplementedError
 

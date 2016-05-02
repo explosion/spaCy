@@ -47,8 +47,6 @@ from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from ._state cimport StateC
 
-from spacy.syntax.iterators cimport CHUNKERS, DocIterator, EnglishNounChunks, GermanNounChunks
-
 
 DEBUG = False
 def set_debug(val):
@@ -116,7 +114,7 @@ cdef class Parser:
             self.parseC(tokens.c, tokens.length, nr_feat, nr_class)
         # Check for KeyboardInterrupt etc. Untested
         PyErr_CheckSignals()
-        self._finalize(tokens)
+        self.moves.finalize_doc(tokens)
 
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
         cdef Pool mem = Pool()
@@ -142,7 +140,7 @@ cdef class Parser:
                                 raise ValueError("Error parsing doc: %s" % sent_str)
                 PyErr_CheckSignals()
                 for doc in queue:
-                    self._finalize(doc)
+                    self.moves.finalize_doc(doc)
                     yield doc
                 queue = []
         batch_size = len(queue)
@@ -155,17 +153,8 @@ cdef class Parser:
                         raise ValueError("Error parsing doc: %s" % sent_str)
         PyErr_CheckSignals()
         for doc in queue:
-            self._finalize(doc)
+            self.moves.finalize_doc(doc)
             yield doc
-
-    def _finalize(self, Doc doc):
-        # deprojectivize output
-        if self._projectivize:
-            PseudoProjectivity.deprojectivize(doc)
-        # set annotation-specific iterators
-        doc.noun_chunks = CHUNKERS.get(doc.vocab.lang,DocIterator)
-        # mark doc as parsed
-        doc.is_parsed = True
 
     cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) nogil:
         cdef ExampleC eg
@@ -313,6 +302,7 @@ cdef class StepwiseState:
         if self.stcls.is_final():
             self.parser.moves.finalize_state(self.stcls.c)
         self.doc.set_parse(self.stcls.c._sent)
+        self.parser.moves.finalize_doc(self.doc)
 
 
 cdef int _arg_max_clas(const weight_t* scores, int move, const Transition* actions,

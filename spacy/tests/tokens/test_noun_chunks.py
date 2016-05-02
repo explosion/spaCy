@@ -3,7 +3,7 @@ import numpy as np
 from spacy.attrs import HEAD, DEP
 from spacy.symbols import nsubj, dobj, punct, amod, nmod, conj, cc, root
 from spacy.en import English
-from spacy.syntax.iterators import EnglishNounChunks
+from spacy.syntax.iterators import english_noun_chunks
 
 
 def test_not_nested():
@@ -22,9 +22,7 @@ def test_not_nested():
                 [-2, conj],
                 [-5, dobj]
             ], dtype='int32'))
-    tokens.noun_chunks = EnglishNounChunks
-    for chunk in tokens.noun_chunks:
-        print(chunk.text)
+    tokens.noun_chunks_iterator = english_noun_chunks
     word_occurred = {}
     for chunk in tokens.noun_chunks:
         for word in chunk:

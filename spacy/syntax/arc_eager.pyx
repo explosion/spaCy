@@ -383,6 +383,9 @@ cdef class ArcEager(TransitionSystem):
             if st._sent[i].head == 0 and st._sent[i].dep == 0:
                 st._sent[i].dep = self.root_label
 
+    def finalize_doc(self, doc):
+        doc.is_parsed = True
+
     cdef int set_valid(self, int* output, const StateC* st) nogil:
         cdef bint[N_MOVES] is_valid
         is_valid[SHIFT] = Shift.is_valid(st, -1)
