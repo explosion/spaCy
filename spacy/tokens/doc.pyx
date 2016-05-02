@@ -387,8 +387,9 @@ cdef class Doc:
                         tokens[i + values[i]].r_kids += 1
             elif attr_id == TAG:
                 for i in range(length):
-                    self.vocab.morphology.assign_tag(&tokens[i],
-                                self.vocab.morphology.reverse_index[values[i]])
+                    if values[i] != 0:
+                        self.vocab.morphology.assign_tag(&tokens[i],
+                            self.vocab.morphology.reverse_index[values[i]])
             elif attr_id == POS:
                 for i in range(length):
                     tokens[i].pos = <univ_pos_t>values[i]
