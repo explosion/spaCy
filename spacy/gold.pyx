@@ -153,7 +153,7 @@ def read_json_file(loc, docs_filter=None):
                         ids.append(i)
                         tags.append(token.get('tag','-'))
                         heads.append(token.get('head',0) + i)
-                        labels.append(token.get('dep','ROOT'))
+                        labels.append(token.get('dep',''))
                         # Ensure ROOT label is case-insensitive
                         if labels[-1].lower() == 'root':
                             labels[-1] = 'ROOT'
