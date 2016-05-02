@@ -111,8 +111,6 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
         gold_tuples = gold_tuples[:n_sents]
 
     nlp = Language(data_dir=model_dir, tagger=False, parser=False, entity=False)
-    if nlp.lang == 'de':
-        nlp.vocab.morphology.lemmatizer = lambda string,pos: set([string])
     nlp.tagger = Tagger.blank(nlp.vocab, Tagger.default_templates())
     nlp.parser = Parser.from_dir(dep_model_dir, nlp.vocab.strings, ArcEager)
     nlp.entity = Parser.from_dir(ner_model_dir, nlp.vocab.strings, BiluoPushDown)
