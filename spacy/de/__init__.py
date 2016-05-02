@@ -3,10 +3,6 @@ from __future__ import unicode_literals, print_function
 from os import path
 
 from ..language import Language
-from ..vocab import Vocab
-from .. import attrs
-from .. import util
-from .. import about
 
 
 class German(Language):
