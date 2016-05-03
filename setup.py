@@ -19,6 +19,7 @@ PACKAGES = [
     'spacy.tokens',
     'spacy.en',
     'spacy.de',
+    'spacy.zh',
     'spacy.serialize',
     'spacy.syntax',
     'spacy.munge',
