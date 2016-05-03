@@ -65,18 +65,35 @@ class TestNounChunks:
             ], dtype='int32'))
         return example
 
-    def test_standard_chunk(self, ex1_en):
+    # @pytest.fixture(score="class")
+    # def ex1_de(self, DE):
+    #     example = EN.tokenizer.tokens_from_list('Eine Tasse steht auf dem Tisch .'.split(' '))
+    #     EN.tagger.tag_from_strings(example, 'ART NN VVFIN APPR ART NN $.'.split(' '))
+    #     example.from_array([HEAD, DEP],
+    #     numpy.asarray(
+    #         [
+    #             [1, det],
+    #             [4, nsubj],
+    #             [-1, prep],
+    #             [1, det],
+    #             [-2, pobj],
+    #             [0, root],
+    #             [-1, punct]
+    #         ], dtype='int32'))
+    #     return example
+
+    def test_en_standard_chunk(self, ex1_en):
         chunks = list(ex1_en.noun_chunks)
         assert len(chunks) == 1
         assert chunks[0].string == 'A base phrase '
 
-    def test_coordinated_chunks(self, ex2_en):
+    def test_en_coordinated_chunks(self, ex2_en):
         chunks = list(ex2_en.noun_chunks)
         assert len(chunks) == 2
         assert chunks[0].string == 'A base phrase '
         assert chunks[1].string == 'a good phrase '
 
-    def test_pp_chunks(self, ex3_en):
+    def test_en_pp_chunks(self, ex3_en):
         chunks = list(ex3_en.noun_chunks)
         assert len(chunks) == 2
         assert chunks[0].string == 'A phrase '
