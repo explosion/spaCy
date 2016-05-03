@@ -40,7 +40,7 @@ def german_noun_chunks(doc):
             for rdep in doc[word.i].rights:
                 if rdep.pos == NOUN and rdep.dep == close_app:
                     rbracket = rdep.i+1
-            yield word.l_edge, rbracket, np_label
+            yield word.left_edge.i, rbracket, np_label
 
 
 CHUNKERS = {'en': english_noun_chunks, 'de': german_noun_chunks}
