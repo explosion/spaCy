@@ -225,6 +225,11 @@ cdef class Parser:
     def step_through(self, Doc doc):
         return StepwiseState(self, doc)
 
+    def from_transition_sequence(self, Doc doc, sequence):
+        with self.step_through(doc) as stepwise:
+            for transition in sequence:
+                stepwise.transition(transition)
+
     def add_label(self, label):
         for action in self.moves.action_types:
             self.moves.add_action(action, label)

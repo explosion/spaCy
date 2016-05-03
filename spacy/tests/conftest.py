@@ -7,7 +7,7 @@ import spacy
 def EN():
     return spacy.load("en")
 
-@pytest.fixture(score="session")
+@pytest.fixture(scope="session")
 def DE():
     return spacy.load("de")
 
