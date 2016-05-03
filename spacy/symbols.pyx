@@ -381,7 +381,6 @@ IDS = {
     "cc": cc,
     "ccomp": ccomp,
     "complm": complm,
-    "compound": compound,
     "conj": conj,
     "csubj": csubj,
     "csubjpass": csubjpass,

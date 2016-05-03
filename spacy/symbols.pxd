@@ -382,7 +382,6 @@ cpdef enum symbol_t:
     cc
     ccomp
     complm
-    compound
     conj
     csubj
     csubjpass
