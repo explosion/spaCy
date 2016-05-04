@@ -98,7 +98,7 @@ cdef class Tokenizer:
         cdef int i = 0
         cdef int start = 0
         cdef bint cache_hit
-        cdef bint in_ws = False
+        cdef bint in_ws = string[0].isspace()
         cdef unicode span
         # The task here is much like string.split, but not quite
         # We find spans of whitespace and non-space characters, and ignore
@@ -116,12 +116,12 @@ cdef class Tokenizer:
                     cache_hit = self._try_cache(key, tokens)
                     if not cache_hit:
                         self._tokenize(tokens, span, key)
-                in_ws = not in_ws
                 if uc == ' ':
                     tokens.c[tokens.length - 1].spacy = True
                     start = i + 1
                 else:
                     start = i
+                in_ws = not in_ws
             i += 1
         i += 1
         if start < i:
