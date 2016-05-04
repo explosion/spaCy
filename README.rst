@@ -18,18 +18,23 @@ software, released under the MIT license.
 
 spaCy finally supports another language, in addition to English. We're lucky to have Wolfgang Seeker on the team, and the new German model is just the beginning.
 Now that there are multiple languages, you should consider loading spaCy via the load() function. This function also makes it easier to load extra word vector data for English:
-    
+
+.. code:: python
+
     import spacy
-    
     en_nlp = spacy.load('en', vectors='en_glove_cc_300_1m_vectors')
     de_nlp = spacy.load('de')
     
 To support use of the load function, there are also two new helper functions: spacy.get_lang_class and spacy.set_lang_class.
 Once the German model is loaded, you can use it just like the English model:
 
+.. code:: python
+
     doc = nlp(u'''Wikipedia ist ein Projekt zum Aufbau einer Enzyklopädie aus freien Inhalten, zu dem du mit deinem Wissen beitragen kannst. Seit Mai 2001 sind 1.936.257 Artikel in deutscher Sprache entstanden.''')
+    
     for sent in doc.sents:
         print(sent.root.text, sent.root.n_lefts, sent.root.n_rights)
+    
     # (u'ist', 1, 2)
     # (u'sind', 1, 3)
     
