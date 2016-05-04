@@ -32,7 +32,10 @@ def german_noun_chunks(doc):
     np_deps = set(doc.vocab.strings[label] for label in labels)
     close_app = doc.vocab.strings['nk']
 
-    for word in doc:
+    rbracket = 0
+    for i, word in enumerate(doc):
+        if i < rbracket:
+            continue
         if word.pos == NOUN and word.dep in np_deps:
             rbracket = word.i+1
             # try to extend the span to the right
@@ -40,7 +43,7 @@ def german_noun_chunks(doc):
             for rdep in doc[word.i].rights:
                 if rdep.pos == NOUN and rdep.dep == close_app:
                     rbracket = rdep.i+1
-            yield word.l_edge, rbracket, np_label
+            yield word.left_edge.i, rbracket, np_label
 
 
 CHUNKERS = {'en': english_noun_chunks, 'de': german_noun_chunks}
