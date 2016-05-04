@@ -161,15 +161,15 @@ cdef class Doc:
 
     @property
     def string(self):
-        return self.text_with_ws
+        return self.text
 
     @property
     def text_with_ws(self):
-        return u''.join([t.text_with_ws for t in self])
+        return self.text
 
     @property
     def text(self):
-        return u''.join(t.text for t in self)
+        return u''.join(t.text_with_ws for t in self)
 
     property ents:
         def __get__(self):
