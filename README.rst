@@ -37,26 +37,39 @@ The German model provides tokenization, POS tagging, sentence boundary detection
 
 Bugfixes
 --------
-* spaCy < 0.100.7 had a bug in the semantics of the Token.__str__ and Token.__unicode__
-built-ins: they included a trailing space.
+
+* spaCy < 0.100.7 had a bug in the semantics of the Token.__str__ and Token.__unicode__ built-ins: they included a trailing space.
 * Improve handling of "infixed" hyphens. Previously the tokenizer struggled with multiple hyphens, such as "well-to-do".
+
 * Improve handling of periods after mixed-case tokens
+
 * Improve lemmatization for English special-case tokens
+
 * Fix bug that allowed spaces to be treated as heads in the syntactic parse
+
 * Fix bug that led to inconsistent sentence boundaries before and after serialisation.
+
 * Fix bug from deserialising untagged documents.
 
 Features
 --------
 
 * Labelled dependency parsing (91.8% accuracy on OntoNotes 5)
+
 * Named entity recognition (82.6% accuracy on OntoNotes 5)
+
 * Part-of-speech tagging (97.1% accuracy on OntoNotes 5)
+
 * Easy to use word vectors
+
 * All strings mapped to integer IDs
+
 * Export to numpy data arrays
+
 * Alignment maintained to original string, ensuring easy mark up calculation
+
 * Range of easy-to-use orthographic features.
+
 * No pre-processing required. spaCy takes raw text as input, warts and newlines and all.
 
 Top Peformance
@@ -64,6 +77,7 @@ Top Peformance
 
 * Fastest in the world: <50ms per document.  No faster system has ever been
   announced.
+
 * Accuracy within 1% of the current state of the art on all tasks performed
   (parsing, named entity recognition, part-of-speech tagging).  The only more
   accurate systems are an order of magnitude slower or more.
