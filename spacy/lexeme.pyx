@@ -40,6 +40,34 @@ cdef class Lexeme:
         self.c = <LexemeC*><void*>vocab.get_by_orth(vocab.mem, orth)
         assert self.c.orth == orth
 
+    def __richcmp__(self, other, int op):
+        if isinstance(other, Lexeme):
+            a = self.orth
+            b = other.orth
+        elif isinstance(other, int):
+            a = self.orth
+            b = other
+        elif isinstance(other, str):
+            a = self.orth
+            b = other
+        else:
+            a = 0
+            b = 1
+        if op == 2: # ==
+            return a == b
+        elif op == 3: # !=
+            return a != b
+        elif op == 0: # <
+            return a < b
+        elif op == 1: # <=
+            return a <= b
+        elif op == 4: # >
+            return a > b
+        elif op == 5: # >=
+            return a >= b
+        else:
+            raise NotImplementedError(op)
+
     def set_flag(self, attr_id_t flag_id, bint value):
         Lexeme.c_set_flag(self.c, flag_id, value)
     
