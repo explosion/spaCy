@@ -100,6 +100,16 @@ def test_sbd_serialization_projective(EN):
     assert [s.text for s in example.sents] == [s.text for s in example_serialized.sents]
 
 
+def test_sbd_empty_string(EN):
+    '''Test Issue #309: SBD fails on empty string
+    '''
+    doc = EN(u' ')
+    doc.is_parsed = True
+    assert len(doc) == 1
+    sents = list(doc.sents)
+    assert len(sents) == 1
+
+
 # TODO:
 # @pytest.mark.models
 # def test_sbd_serialization_nonprojective(DE):
