@@ -387,7 +387,7 @@ cdef class ArcEager(TransitionSystem):
     def finalize_doc(self, doc):
         doc.is_parsed = True
         if doc.vocab.lang == 'de':
-            PseudoProjectivity.projectivize(doc)
+            PseudoProjectivity.deprojectivize(doc)
 
     cdef int set_valid(self, int* output, const StateC* st) nogil:
         cdef bint[N_MOVES] is_valid
