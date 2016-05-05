@@ -1,4 +1,4 @@
-from spacy.parts_of_speech cimport NOUN
+from spacy.parts_of_speech cimport NOUN, PROPN, PRON
 
 
 def english_noun_chunks(doc):
@@ -9,7 +9,7 @@ def english_noun_chunks(doc):
     np_label = doc.vocab.strings['NP']
     for i in range(len(doc)):
         word = doc[i]
-        if word.pos == NOUN and word.dep in np_deps:
+        if word.pos in (NOUN, PROPN, PRON) and word.dep in np_deps:
             yield word.left_edge.i, word.i+1, np_label
         elif word.pos == NOUN and word.dep == conj:
             head = word.head
@@ -36,7 +36,7 @@ def german_noun_chunks(doc):
     for i, word in enumerate(doc):
         if i < rbracket:
             continue
-        if word.pos == NOUN and word.dep in np_deps:
+        if word.pos == (NOUN, PROPN, PRON) and word.dep in np_deps:
             rbracket = word.i+1
             # try to extend the span to the right
             # to capture close apposition/measurement constructions
