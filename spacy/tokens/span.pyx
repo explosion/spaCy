@@ -103,7 +103,7 @@ cdef class Span:
         '''Get the sentence span that this span is a part of.'''
         def __get__(self):
             # This should raise if we're not parsed.
-            doc.sents
+            self.doc.sents
             cdef int n = 0
             root = &self.doc.c[self.start]
             while root.head != 0:
