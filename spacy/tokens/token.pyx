@@ -218,6 +218,18 @@ cdef class Token:
         def __get__(self):
             return self.c.r_kids
 
+    property sent_start:
+        def __get__(self):
+            return self.c.sent_start
+
+        def __set__(self, bint value):
+            if self.doc.is_parsed:
+                raise ValueError(
+                    'Refusing to write to token.sent_start if its document is parsed, '
+                    'because this may cause inconsistent state. '
+                    'See https://github.com/spacy-io/spaCy/issues/235 for workarounds.')
+            self.c.sent_start = value
+
     property lefts:
         def __get__(self):
             """The leftward immediate children of the word, in the syntactic
