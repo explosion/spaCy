@@ -82,6 +82,7 @@ cpdef enum symbol_t:
     ENT_IOB
     ENT_TYPE
     HEAD
+    SENT_START
     SPACY
     PROB
 

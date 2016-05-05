@@ -81,6 +81,7 @@ IDS = {
     "ENT_IOB": ENT_IOB,
     "ENT_TYPE": ENT_TYPE,
     "HEAD": HEAD,
+    "SENT_START": SENT_START,
     "SPACY": SPACY,
     "PROB": PROB,
 
