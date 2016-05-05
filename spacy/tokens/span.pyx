@@ -98,6 +98,20 @@ cdef class Span:
             
             self.start = start
             self.end = end + 1
+
+    property sent:
+        '''Get the sentence span that this span is a part of.'''
+        def __get__(self):
+            # This should raise if we're not parsed.
+            doc.sents
+            cdef int n = 0
+            root = &self.doc.c[self.start]
+            while root.head != 0:
+                root += root.head
+                n += 1
+                if n >= self.doc.length:
+                    raise RuntimeError
+            return self.doc[root.l_edge : root.r_edge + 1]
     
     property vector:
         def __get__(self):

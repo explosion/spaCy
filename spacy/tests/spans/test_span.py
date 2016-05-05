@@ -37,3 +37,16 @@ def test_root2():
     doc.from_array([HEAD], heads.T)
     south_carolina = doc[-2:]
     assert south_carolina.root.text == 'Carolina'
+
+
+def test_sent(doc):
+    '''Test new span.sent property'''
+    #return EN('This is a sentence. This is another sentence. And a third.')
+    heads = np.asarray([[1, 0, -1, -1, -1, 1, 0, -1, -1, -1, 2, 1, 0, -1]], dtype='int32')
+    doc.from_array([HEAD], heads.T)
+    assert len(list(doc.sents))
+    span = doc[:2]
+    assert span.sent.root.text == 'is'
+    assert span.sent.text == 'This is a sentence.'
+    span = doc[6:7]
+    assert span.sent.root.left_edge.text == 'This'
