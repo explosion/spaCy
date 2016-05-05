@@ -27,7 +27,6 @@ def test_lexeme_lt(en_vocab):
 
     opera = en_vocab['opera']
 
-    print(noun.orth, opera.orth)
     assert noun < opera
     assert opera > noun
 
