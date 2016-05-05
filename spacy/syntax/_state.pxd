@@ -281,8 +281,8 @@ cdef cppclass StateC:
             this._sent[i].ent_type = ent_type
 
     void set_break(int i) nogil:
-        if 0 <= this.B(0) < this.length: 
-            this._sent[this.B(0)].sent_start = True
+        if 0 <= i < this.length: 
+            this._sent[i].sent_start = True
             this._break = this._b_i
 
     void clone(const StateC* src) nogil:
