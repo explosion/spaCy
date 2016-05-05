@@ -36,12 +36,12 @@ def german_noun_chunks(doc):
     for i, word in enumerate(doc):
         if i < rbracket:
             continue
-        if word.pos == (NOUN, PROPN, PRON) and word.dep in np_deps:
+        if word.pos in (NOUN, PROPN, PRON) and word.dep in np_deps:
             rbracket = word.i+1
             # try to extend the span to the right
             # to capture close apposition/measurement constructions
             for rdep in doc[word.i].rights:
-                if rdep.pos == NOUN and rdep.dep == close_app:
+                if rdep.pos in (NOUN, PROPN) and rdep.dep == close_app:
                     rbracket = rdep.i+1
             yield word.left_edge.i, rbracket, np_label
 
