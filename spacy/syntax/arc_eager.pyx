@@ -18,6 +18,7 @@ from libc.string cimport memcpy
 from cymem.cymem cimport Pool
 from .stateclass cimport StateClass
 from ._state cimport StateC, is_space_token
+from .nonproj import PseudoProjectivity
 
 
 DEF NON_MONOTONIC = True
@@ -385,6 +386,8 @@ cdef class ArcEager(TransitionSystem):
 
     def finalize_doc(self, doc):
         doc.is_parsed = True
+        if doc.vocab.lang == 'de':
+            PseudoProjectivity.projectivize(doc)
 
     cdef int set_valid(self, int* output, const StateC* st) nogil:
         cdef bint[N_MOVES] is_valid

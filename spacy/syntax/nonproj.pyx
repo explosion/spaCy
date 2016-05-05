@@ -114,7 +114,7 @@ class PseudoProjectivity:
 
 
     @classmethod
-    def deprojectivize(cls, Doc tokens):
+    def deprojectivize(cls, tokens):
         # reattach arcs with decorated labels (following HEAD scheme)
         # for each decorated arc X||Y, search top-down, left-to-right,
         # breadth-first until hitting a Y then make this the new head
