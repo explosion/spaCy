@@ -227,6 +227,8 @@ cdef class Tokenizer:
                     for match in matches:
                         infix_start = match.start()
                         infix_end = match.end()
+                        if infix_start == start:
+                            continue
                         span = string[start:infix_start]
                         tokens.push_back(self.vocab.get(tokens.mem, span), False)
                     

@@ -24,6 +24,12 @@ def test_ellipsis(en_tokenizer):
     tokens = en_tokenizer('best...known')
     assert len(tokens) == 3
 
+def test_big_ellipsis(en_tokenizer):
+    '''Test regression identified in Issue #360'''
+    tokens = en_tokenizer(u'$45...............Asking')
+    assert len(tokens) > 2
+
+
 
 def test_email(en_tokenizer):
     tokens = en_tokenizer('hello@example.com')
