@@ -137,6 +137,10 @@ cdef class Doc:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
+    property has_vector:
+        def __get__(self):
+            return any(token.has_vector for token in self)
+
     property vector:
         def __get__(self):
             if self._vector is None:

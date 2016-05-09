@@ -112,6 +112,10 @@ cdef class Span:
                 if n >= self.doc.length:
                     raise RuntimeError
             return self.doc[root.l_edge : root.r_edge + 1]
+
+    property has_vector:
+        def __get__(self):
+            return any(token.has_vector for token in self)
     
     property vector:
         def __get__(self):

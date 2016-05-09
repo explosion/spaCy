@@ -7,6 +7,7 @@ from spacy.attrs import HEAD
 
 import pytest
 
+
 @pytest.mark.models
 def test_getitem(EN):
     tokens = EN(u'Give it back! He pleaded.')
@@ -192,3 +193,10 @@ def test_right_edge(EN):
     subtree = [w.text for w in token.subtree]
     assert subtree == [u'for' , u'the', u'sake', u'of', u'such', u'as', u'live', u'under', u'the', u'government', u'of', u'the', u'Romans', u',']
     assert token.right_edge.text == u','
+
+
+@pytest.mark.vectors
+def test_has_vector(EN):
+    doc = EN(u'''apple orange pear''')
+    assert doc.has_vector
+
