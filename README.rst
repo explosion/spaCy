@@ -53,7 +53,21 @@ Supports
 * Windows (Cygwin, MinGW, Visual Studio)
 
 
-2016-04-05 v0.100.7: German!
+2016-05-0 0.101.0: Fixed German model
+-------------------------------------
+
+* Fixed bug that prevented German parses from being deprojectivised.
+
+* Bug fixes to sentence boundary detection.
+
+* Add rich comparison methods to the Lexeme class.
+
+* Add missing Doc.has_vector and Span.has_vector properties.
+
+* Add missing Span.sent property.
+
+
+2016-05-05 v0.100.7: German!
 ----------------------------
 
 spaCy finally supports another language, in addition to English. We're lucky to have Wolfgang Seeker on the team, and the new German model is just the beginning.
