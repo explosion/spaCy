@@ -48,7 +48,7 @@ cdef class Lexeme:
             a = self.orth
             b = other
         elif isinstance(other, str):
-            a = self.orth
+            a = self.orth_
             b = other
         else:
             a = 0
