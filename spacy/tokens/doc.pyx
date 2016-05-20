@@ -247,8 +247,15 @@ cdef class Doc:
                 "requires data to be installed. If you haven't done so, run: "
                 "\npython -m spacy.%s.download all\n"
                 "to install the data" % self.vocab.lang)
+        # Accumulate the result before beginning to iterate over it. This prevents
+        # the tokenisation from being changed out from under us during the iteration.
+        # The tricky thing here is that Span accepts its tokenisation changing,
+        # so it's okay once we have the Span objects. See Issue #375
+        spans = []
         for start, end, label in self.noun_chunks_iterator(self):
-            yield Span(self, start, end, label=label)
+            spans.append(Span(self, start, end, label=label))
+        for span in spans:
+            yield span
 
     @property
     def sents(self):
