@@ -14,6 +14,7 @@ from spacy.syntax.parser import Parser
 from spacy.syntax.arc_eager import ArcEager
 from spacy.syntax.parser import get_templates
 from spacy.scorer import Scorer
+import spacy.attrs
 
 from spacy.language import Language
 
@@ -47,6 +48,7 @@ class TreebankParser(object):
     @classmethod
     def from_dir(cls, tag_map, model_dir):
         vocab = Vocab(tag_map=tag_map, get_lex_attr=Language.default_lex_attrs())
+        vocab.get_lex_attr[spacy.attrs.LANG] = lambda _: 0
         tokenizer = Tokenizer(vocab, {}, None, None, None)
         tagger = Tagger.blank(vocab, TAGGER_TEMPLATES)
 
@@ -99,7 +101,7 @@ def read_conllx(loc):
     for sent in text.strip().split('\n\n'):
         lines = sent.strip().split('\n')
         if lines:
-            if lines[0].startswith('#'):
+            while lines[0].startswith('#'):
                 lines.pop(0)
             tokens = []
             for line in lines:
