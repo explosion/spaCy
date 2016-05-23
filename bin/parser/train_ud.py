@@ -4,6 +4,7 @@ from os import path
 import shutil
 import os
 import random
+import io
 
 from spacy.syntax.util import Config
 from spacy.gold import GoldParse
@@ -90,9 +91,16 @@ class TreebankParser(object):
         return tokens
 
     def end_training(self, data_dir):
-        self.parser.model.end_training(path.join(data_dir, 'deps', 'model'))
-        self.tagger.model.end_training(path.join(data_dir, 'pos', 'model'))
-        self.vocab.strings.dump(path.join(data_dir, 'vocab', 'strings.txt'))
+        self.parser.model.end_training()
+        self.parser.model.dump(path.join(data_dir, 'deps', 'model'))
+        self.tagger.model.end_training()
+        self.tagger.model.dump(path.join(data_dir, 'pos', 'model'))
+        strings_loc = path.join(data_dir, 'vocab', 'strings.json')
+        with io.open(strings_loc, 'w', encoding='utf8') as file_:
+            self.vocab.strings.dump(file_)
+        self.vocab.dump(path.join(data_dir, 'vocab', 'lexemes.bin'))
+
+
  
 
 def read_conllx(loc):
