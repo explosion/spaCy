@@ -24,7 +24,7 @@ from murmurhash.mrmr cimport hash64
 from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
 from thinc.linear.avgtron cimport AveragedPerceptron
 from thinc.linalg cimport VecVec
-from thinc.structs cimport SparseArrayC
+from thinc.structs cimport SparseArrayC, ExampleC
 from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
 from thinc.structs cimport FeatureC
@@ -44,6 +44,7 @@ from ..gold cimport GoldParse
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
+from ._parse_features cimport *
 from .stateclass cimport StateClass
 from ._state cimport StateC
 
@@ -71,14 +72,70 @@ def ParserFactory(transition_system):
     return lambda strings, dir_: Parser(strings, dir_, transition_system)
 
 
-cdef class ParserModel(AveragedPerceptron):
+cdef class ParserPerceptron(AveragedPerceptron):
     cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil: 
         fill_context(eg.atoms, state)
         eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
 
 
+cdef class ParserNeuralNet(NeuralNet):
+    def __init__(self, nr_class, hidden_width=50, depth=2, word_width=50,
+            tag_width=20, dep_width=20, update_step='sgd', eta=0.01, rho=0.0):
+        #input_length = 3 * word_width + 5 * tag_width + 3 * dep_width
+        input_length = 12 * word_width + 7 * dep_width
+        widths = [input_length] + [hidden_width] * depth + [nr_class]
+        #vector_widths = [word_width, tag_width, dep_width]
+        #slots = [0] * 3 + [1] * 5 + [2] * 3
+        vector_widths = [word_width, dep_width]
+        slots = [0] * 12 + [1] * 7
+        NeuralNet.__init__(
+            self,
+            widths,
+            embed=(vector_widths, slots),
+            eta=eta,
+            rho=rho,
+            update_step=update_step)
+
+    @property
+    def nr_feat(self):
+        #return 3+5+3
+        return 12+7
+
+    cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil: 
+        fill_context(eg.atoms, state)
+        eg.nr_feat = 12 + 7
+        for j in range(eg.nr_feat):
+            eg.features[j].value = 1.0
+            eg.features[j].i = j
+        #eg.features[0].key = eg.atoms[S0w]
+        #eg.features[1].key = eg.atoms[S1w]
+        #eg.features[2].key = eg.atoms[N0w]
+
+        eg.features[0].key = eg.atoms[S2W]
+        eg.features[1].key = eg.atoms[S1W]
+        eg.features[2].key = eg.atoms[S0lW]
+        eg.features[3].key = eg.atoms[S0l2W]
+        eg.features[4].key = eg.atoms[S0W]
+        eg.features[5].key = eg.atoms[S0r2W]
+        eg.features[6].key = eg.atoms[S0rW]
+        eg.features[7].key = eg.atoms[N0lW]
+        eg.features[8].key = eg.atoms[N0l2W]
+        eg.features[9].key = eg.atoms[N0W]
+        eg.features[10].key = eg.atoms[N1W]
+        eg.features[11].key = eg.atoms[N2W]
+
+        eg.features[12].key = eg.atoms[S2L]
+        eg.features[13].key = eg.atoms[S1L]
+        eg.features[14].key = eg.atoms[S0l2L]
+        eg.features[15].key = eg.atoms[S0lL]
+        eg.features[16].key = eg.atoms[S0L]
+        eg.features[17].key = eg.atoms[S0r2L]
+        eg.features[18].key = eg.atoms[S0rL]
+
+
 cdef class Parser:
-    def __init__(self, StringStore strings, transition_system, ParserModel model, int projectivize = 0):
+    def __init__(self, StringStore strings, transition_system, ParserNeuralNet model,
+            int projectivize = 0):
         self.moves = transition_system
         self.model = model
         self._projectivize = projectivize
@@ -91,8 +148,12 @@ cdef class Parser:
             print >> sys.stderr, "Warning: model path:", model_dir, "is not a directory"
         cfg = Config.read(model_dir, 'config')
         moves = transition_system(strings, cfg.labels)
-        templates = get_templates(cfg.features)
-        model = ParserModel(templates)
+        model = ParserNeuralNet(moves.n_moves, hidden_width=cfg.hidden_width,
+                                depth=cfg.depth, word_width=cfg.word_width,
+                                tag_width=cfg.tag_width, dep_width=cfg.dep_width,
+                                update_step=cfg.update_step,
+                                eta=cfg.eta, rho=cfg.rho)
+
         project = cfg.projectivize if hasattr(cfg,'projectivize') else False
         if path.exists(path.join(model_dir, 'model')):
             model.load(path.join(model_dir, 'model'))
@@ -156,44 +217,30 @@ cdef class Parser:
             self.moves.finalize_doc(doc)
             yield doc
 
-    cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) nogil:
-        cdef ExampleC eg
-        eg.nr_feat = nr_feat
-        eg.nr_atom = CONTEXT_SIZE
-        eg.nr_class = nr_class
-        eg.features = <FeatureC*>calloc(sizeof(FeatureC), nr_feat)
-        eg.atoms = <atom_t*>calloc(sizeof(atom_t), CONTEXT_SIZE)
-        eg.scores = <weight_t*>calloc(sizeof(weight_t), nr_class)
-        eg.is_valid = <int*>calloc(sizeof(int), nr_class)
+    cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) with gil:
+        cdef Example py_eg = Example(nr_class=nr_class, nr_atom=CONTEXT_SIZE, nr_feat=nr_feat,
+                                  widths=self.model.widths)
+        cdef ExampleC* eg = py_eg.c
         state = new StateC(tokens, length)
         self.moves.initialize_state(state)
         cdef int i
         while not state.is_final():
-            self.model.set_featuresC(&eg, state)
+            self.model.set_featuresC(eg, state)
             self.moves.set_valid(eg.is_valid, state)
-            self.model.set_scoresC(eg.scores, eg.features, eg.nr_feat)
+            self.model.set_scoresC(eg.scores, eg.features, eg.nr_feat, 1)
 
             guess = VecVec.arg_max_if_true(eg.scores, eg.is_valid, eg.nr_class)
 
             action = self.moves.c[guess]
             if not eg.is_valid[guess]:
-                # with gil:
-                #     move_name = self.moves.move_name(action.move, action.label)
-                #     print 'invalid action:', move_name
                 return 1
 
             action.do(state, action.label)
-            memset(eg.scores, 0, sizeof(eg.scores[0]) * eg.nr_class)
-            for i in range(eg.nr_class):
-                eg.is_valid[i] = 1
+            py_eg.reset()
         self.moves.finalize_state(state)
         for i in range(length):
             tokens[i] = state._sent[i]
         del state
-        free(eg.features)
-        free(eg.atoms)
-        free(eg.scores)
-        free(eg.is_valid)
         return 0
   
     def train(self, Doc tokens, GoldParse gold):
@@ -203,23 +250,22 @@ cdef class Parser:
         cdef Pool mem = Pool()
         cdef Example eg = Example(
                 nr_class=self.moves.n_moves,
+                widths=self.model.widths,
                 nr_atom=CONTEXT_SIZE,
                 nr_feat=self.model.nr_feat)
         cdef weight_t loss = 0
         cdef Transition action
         while not stcls.is_final():
-            self.model.set_featuresC(&eg.c, stcls.c)
+            self.model.set_featuresC(eg.c, stcls.c)
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
-            self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
-            self.model.updateC(&eg.c)
-            guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
-
+            
+            # Sets eg.c.scores, which Example uses to calculate eg.guess
+            self.model.updateC(eg.c)
+            
             action = self.moves.c[eg.guess]
             action.do(stcls.c, action.label)
-            loss += eg.costs[eg.guess]
-            eg.fill_scores(0, eg.nr_class)
-            eg.fill_costs(0, eg.nr_class)
-            eg.fill_is_valid(0, eg.nr_class)
+            loss += eg.loss
+            eg.reset()
         return loss
 
     def step_through(self, Doc doc):
@@ -280,10 +326,10 @@ cdef class StepwiseState:
 
     def predict(self):
         self.eg.reset()
-        self.parser.model.set_featuresC(&self.eg.c, self.stcls.c)
+        self.parser.model.set_featuresC(self.eg.c, self.stcls.c)
         self.parser.moves.set_valid(self.eg.c.is_valid, self.stcls.c)
         self.parser.model.set_scoresC(self.eg.c.scores,
-            self.eg.c.features, self.eg.c.nr_feat)
+            self.eg.c.features, self.eg.c.nr_feat, 1)
 
         cdef Transition action = self.parser.moves.c[self.eg.guess]
         return self.parser.moves.move_name(action.move, action.label)
