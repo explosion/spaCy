@@ -17,7 +17,7 @@ def download(lang, force=False):
         sputnik.package(about.__title__, about.__version__, about.__models__[lang])
         print("Model already installed. Please run 'python -m "
               "spacy.%s.download --force' to reinstall." % lang, file=sys.stderr)
-        sys.exit(1)
+        sys.exit(0)
     except (PackageNotFoundException, CompatiblePackageNotFoundException):
         pass
 
