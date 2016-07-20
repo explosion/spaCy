@@ -23,7 +23,8 @@ from spacy.scorer import Scorer
 from spacy.syntax.arc_eager import ArcEager
 from spacy.syntax.ner import BiluoPushDown
 from spacy.tagger import Tagger
-from spacy.syntax.parser import Parser
+from spacy.syntax.parser import Parser, get_templates
+from spacy.syntax.beam_parser import BeamParser
 from spacy.syntax.nonproj import PseudoProjectivity
 
 
@@ -103,6 +104,23 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
     Config.write(dep_model_dir, 'config', features=feat_set, seed=seed,
                  labels=ArcEager.get_labels(gold_tuples),
                  beam_width=beam_width,projectivize=pseudoprojective)
+    #feat_set, slots = get_templates('neural')
+    #vector_widths = [10, 10, 10]
+    #hidden_layers = [100, 100, 100]
+    #update_step = 'adam'
+    #eta = 0.001
+    #rho = 1e-4
+    #Config.write(dep_model_dir, 'config', model='neural',
+    #             seed=seed, labels=ArcEager.get_labels(gold_tuples),
+    #             feat_set=feat_set,
+    #             vector_widths=vector_widths,
+    #             slots=slots,
+    #             hidden_layers=hidden_layers,
+    #             update_step=update_step,
+    #             eta=eta,
+    #             rho=rho)
+
+
     Config.write(ner_model_dir, 'config', features='ner', seed=seed,
                  labels=BiluoPushDown.get_labels(gold_tuples),
                  beam_width=0)
@@ -112,8 +130,13 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
 
     nlp = Language(data_dir=model_dir, tagger=False, parser=False, entity=False)
     nlp.tagger = Tagger.blank(nlp.vocab, Tagger.default_templates())
-    nlp.parser = Parser.from_dir(dep_model_dir, nlp.vocab.strings, ArcEager)
-    nlp.entity = Parser.from_dir(ner_model_dir, nlp.vocab.strings, BiluoPushDown)
+    nlp.parser = BeamParser.from_dir(dep_model_dir, nlp.vocab.strings, ArcEager)
+    nlp.entity = BeamParser.from_dir(ner_model_dir, nlp.vocab.strings, BiluoPushDown)
+    print(nlp.parser.model.widths)
+    for raw_text, sents in gold_tuples:
+        for annot_tuples, ctnt in sents:
+            for word in annot_tuples[1]:
+                _ = nlp.vocab[word]
     print("Itn.\tP.Loss\tUAS\tNER F.\tTag %\tToken %")
     for itn in range(n_iter):
         scorer = Scorer()
@@ -224,12 +247,13 @@ def main(language, train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc=
     if not eval_only:
         gold_train = list(read_json_file(train_loc))
         train(lang, gold_train, model_dir,
-              feat_set='basic' if not debug else 'debug',
+              feat_set='neural' if not debug else 'debug',
               gold_preproc=gold_preproc, n_sents=n_sents,
               corruption_level=corruption_level, n_iter=n_iter,
               verbose=verbose,pseudoprojective=pseudoprojective)
     if out_loc:
         write_parses(lang, dev_loc, model_dir, out_loc)
+    print(model_dir)
     scorer = evaluate(lang, list(read_json_file(dev_loc)),
                       model_dir, gold_preproc=gold_preproc, verbose=verbose)
     print('TOK', scorer.token_acc)

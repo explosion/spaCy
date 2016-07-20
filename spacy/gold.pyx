@@ -1,3 +1,4 @@
+# cython: profile=True
 import numpy
 import io
 import json
@@ -264,13 +265,3 @@ cdef class GoldParse:
 
 def is_punct_label(label):
     return label == 'P' or label.lower() == 'punct'
-
-
-
-
-
-
-
-
-
-

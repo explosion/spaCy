@@ -436,4 +436,11 @@ cdef class ArcEager(TransitionSystem):
             else:
                 is_valid[i] = False
                 costs[i] = 9000
-        assert n_gold >= 1
+        if n_gold < 1:
+            for annot in gold.orig_annot:
+                print(annot)
+            print([move_costs[i] for i in range(N_MOVES)])
+            print(gold.orig_annot[stcls.S(0)][1], gold.orig_annot[stcls.B(0)][1])
+            print(gold.heads[stcls.S(0)], gold.heads[stcls.B(0)])
+            print(gold.labels[stcls.S(0)], gold.labels[stcls.B(0)])
+            raise Exception("No gold moves")

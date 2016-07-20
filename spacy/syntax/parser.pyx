@@ -1,4 +1,5 @@
 # cython: infer_types=True
+# cython: profile=True
 """
 MALT-style dependency parser
 """
@@ -18,13 +19,14 @@ import shutil
 import json
 import sys
 from .nonproj import PseudoProjectivity
+import random
 
 from cymem.cymem cimport Pool, Address
 from murmurhash.mrmr cimport hash64
-from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
+from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t, idx_t
 from thinc.linear.avgtron cimport AveragedPerceptron
 from thinc.linalg cimport VecVec
-from thinc.structs cimport SparseArrayC, ExampleC
+from thinc.structs cimport NeuralNetC, SparseArrayC, ExampleC
 from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
 from thinc.structs cimport FeatureC
@@ -61,8 +63,10 @@ def get_templates(name):
         return pf.ner
     elif name == 'debug':
         return pf.unigrams
-    elif name.startswith('embed'):
-        return (pf.words, pf.tags, pf.labels)
+    elif name.startswith('neural'):
+        features = pf.words + pf.tags + pf.labels
+        slots = [0] * len(pf.words) + [1] * len(pf.tags) + [2] * len(pf.labels)
+        return ([(f,) for f in features], slots)
     else:
         return (pf.unigrams + pf.s0_n0 + pf.s1_n0 + pf.s1_s0 + pf.s0_n1 + pf.n0_n1 + \
                 pf.tree_shape + pf.trigrams)
@@ -73,72 +77,238 @@ def ParserFactory(transition_system):
 
 
 cdef class ParserPerceptron(AveragedPerceptron):
-    cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil: 
+    @property
+    def widths(self):
+        return (self.extracter.nr_templ,)
+
+    def update(self, Example eg):
+        '''Does regression on negative cost. Sort of cute?'''
+        self.time += 1
+        cdef weight_t loss = 0.0
+        best = eg.best
+        for clas in range(eg.c.nr_class):
+            if not eg.c.is_valid[clas]:
+                continue
+            if eg.c.scores[clas] < eg.c.scores[best]:
+                continue
+            loss += (-eg.c.costs[clas] - eg.c.scores[clas]) ** 2
+            d_loss = 2 * (-eg.c.costs[clas] - eg.c.scores[clas])
+            step = d_loss * 0.001
+            for feat in eg.c.features[:eg.c.nr_feat]:
+                self.update_weight(feat.key, clas, feat.value * step)
+        return int(loss)
+
+    cdef void set_featuresC(self, ExampleC* eg, const void* _state) nogil: 
+        state = <const StateC*>_state
         fill_context(eg.atoms, state)
         eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
 
 
 cdef class ParserNeuralNet(NeuralNet):
-    def __init__(self, nr_class, hidden_width=50, depth=2, word_width=50,
-            tag_width=20, dep_width=20, update_step='sgd', eta=0.01, rho=0.0):
-        #input_length = 3 * word_width + 5 * tag_width + 3 * dep_width
-        input_length = 12 * word_width + 7 * dep_width
-        widths = [input_length] + [hidden_width] * depth + [nr_class]
-        #vector_widths = [word_width, tag_width, dep_width]
-        #slots = [0] * 3 + [1] * 5 + [2] * 3
-        vector_widths = [word_width, dep_width]
-        slots = [0] * 12 + [1] * 7
-        NeuralNet.__init__(
-            self,
-            widths,
-            embed=(vector_widths, slots),
-            eta=eta,
-            rho=rho,
-            update_step=update_step)
+    def __init__(self, shape, **kwargs):
+        vector_widths = [4] * 57
+        slots =  [0, 1, 2, 3] # S0
+        slots += [4, 5, 6, 7] # S1
+        slots += [8, 9, 10, 11] # S2
+        slots += [12, 13, 14, 15] # S3+
+        slots += [16, 17, 18, 19] # B0
+        slots += [20, 21, 22, 23] # B1
+        slots += [24, 25, 26, 27] # B2
+        slots += [28, 29, 30, 31] # B3+
+        slots += [32, 33, 34, 35] * 2 # S0l, S0r
+        slots += [36, 37, 38, 39] * 2 # B0l, B0r
+        slots += [40, 41, 42, 43] * 2 # S1l, S1r
+        slots += [44, 45, 46, 47] * 2 # S2l, S2r
+        slots += [48, 49, 50, 51, 52]
+        slots += [53, 54, 55, 56]
+        input_length = sum(vector_widths[slot] for slot in slots)
+        widths = [input_length] + shape[3:]
+        
+        NeuralNet.__init__(self, widths, embed=(vector_widths, slots), **kwargs)
 
     @property
     def nr_feat(self):
-        #return 3+5+3
-        return 12+7
+        return 2000
 
-    cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil: 
+    cdef void set_featuresC(self, ExampleC* eg, const void* _state) nogil: 
+        memset(eg.features, 0, 2000 * sizeof(FeatureC))
+        state = <const StateC*>_state
         fill_context(eg.atoms, state)
-        eg.nr_feat = 12 + 7
-        for j in range(eg.nr_feat):
-            eg.features[j].value = 1.0
-            eg.features[j].i = j
-        #eg.features[0].key = eg.atoms[S0w]
-        #eg.features[1].key = eg.atoms[S1w]
-        #eg.features[2].key = eg.atoms[N0w]
+        feats = eg.features
 
-        eg.features[0].key = eg.atoms[S2W]
-        eg.features[1].key = eg.atoms[S1W]
-        eg.features[2].key = eg.atoms[S0lW]
-        eg.features[3].key = eg.atoms[S0l2W]
-        eg.features[4].key = eg.atoms[S0W]
-        eg.features[5].key = eg.atoms[S0r2W]
-        eg.features[6].key = eg.atoms[S0rW]
-        eg.features[7].key = eg.atoms[N0lW]
-        eg.features[8].key = eg.atoms[N0l2W]
-        eg.features[9].key = eg.atoms[N0W]
-        eg.features[10].key = eg.atoms[N1W]
-        eg.features[11].key = eg.atoms[N2W]
+        feats = _add_token(feats, 0, state.S_(0), 1.0)
+        feats = _add_token(feats, 4, state.S_(1), 1.0)
+        feats = _add_token(feats, 8, state.S_(2), 1.0)
+        # Rest of the stack, with exponential decay
+        for i in range(3, state.stack_depth()):
+            feats = _add_token(feats, 12, state.S_(i), 1.0 * 0.5**(i-2))
+        feats = _add_token(feats, 16, state.B_(0), 1.0)
+        feats = _add_token(feats, 20, state.B_(1), 1.0)
+        feats = _add_token(feats, 24, state.B_(2), 1.0)
+        # Rest of the buffer, with exponential decay
+        for i in range(3, min(8, state.buffer_length())):
+            feats = _add_token(feats, 28, state.B_(i), 1.0 * 0.5**(i-2))
+        feats = _add_subtree(feats, 32, state, state.S(0))
+        feats = _add_subtree(feats, 40, state, state.B(0))
+        feats = _add_subtree(feats, 48, state, state.S(1))
+        feats = _add_subtree(feats, 56, state, state.S(2))
+        feats = _add_pos_bigram(feats, 64, state.S_(0), state.B_(0))
+        feats = _add_pos_bigram(feats, 65, state.S_(1), state.S_(0))
+        feats = _add_pos_bigram(feats, 66, state.S_(1), state.B_(0))
+        feats = _add_pos_bigram(feats, 67, state.S_(0), state.B_(1))
+        feats = _add_pos_bigram(feats, 68, state.B_(0), state.B_(1))
+        feats = _add_pos_trigram(feats, 69, state.S_(1), state.S_(0), state.B_(0))
+        feats = _add_pos_trigram(feats, 70, state.S_(0), state.B_(0), state.B_(1))
+        feats = _add_pos_trigram(feats, 71, state.S_(0), state.R_(state.S(0), 1),
+                                 state.R_(state.S(0), 2))
+        feats = _add_pos_trigram(feats, 72, state.S_(0), state.L_(state.S(0), 1),
+                                 state.L_(state.S(0), 2))
+        eg.nr_feat = feats - eg.features
 
-        eg.features[12].key = eg.atoms[S2L]
-        eg.features[13].key = eg.atoms[S1L]
-        eg.features[14].key = eg.atoms[S0l2L]
-        eg.features[15].key = eg.atoms[S0lL]
-        eg.features[16].key = eg.atoms[S0L]
-        eg.features[17].key = eg.atoms[S0r2L]
-        eg.features[18].key = eg.atoms[S0rL]
+
+cdef inline FeatureC* _add_token(FeatureC* feats,
+        int slot, const TokenC* token, weight_t value) nogil:
+    # Word
+    feats.i = slot
+    feats.key = token.lex.norm
+    feats.value = value
+    feats += 1
+    # POS tag
+    feats.i = slot+1
+    feats.key = token.tag
+    feats.value = value
+    feats += 1
+    # Dependency label 
+    feats.i = slot+2
+    feats.key = token.dep
+    feats.value = value
+    feats += 1
+    # Word, label, tag
+    feats.i = slot+3
+    cdef uint64_t key[3]
+    key[0] = token.lex.cluster
+    key[1] = token.tag
+    key[2] = token.dep
+    feats.key = hash64(key, sizeof(key), 0)
+    feats.value = value
+    feats += 1
+    return feats
+
+
+cdef inline FeatureC* _add_subtree(FeatureC* feats, int slot, const StateC* state, int t) nogil:
+    value = 1.0
+    for i in range(state.n_R(t)):
+        feats = _add_token(feats, slot, state.R_(t, i+1), value)
+        value *= 0.5
+    slot += 4
+    value = 1.0
+    for i in range(state.n_L(t)):
+        feats = _add_token(feats, slot, state.L_(t, i+1), value)
+        value *= 0.5
+    return feats
+
+
+cdef inline FeatureC* _add_pos_bigram(FeatureC* feat, int slot,
+        const TokenC* t1, const TokenC* t2) nogil:
+    cdef uint64_t[2] key
+    key[0] = t1.tag
+    key[1] = t2.tag
+    feat.i = slot
+    feat.key = hash64(key, sizeof(key), slot)
+    feat.value = 1.0
+    return feat+1
+ 
+
+cdef inline FeatureC* _add_pos_trigram(FeatureC* feat, int slot,
+        const TokenC* t1, const TokenC* t2, const TokenC* t3) nogil:
+    cdef uint64_t[3] key
+    key[0] = t1.tag
+    key[1] = t2.tag
+    key[2] = t3.tag
+    feat.i = slot
+    feat.key = hash64(key, sizeof(key), slot)
+    feat.value = 1.0
+    return feat+1
+ 
+cdef class ParserNeuralNetEnsemble(ParserNeuralNet):
+    def __init__(self, shape, update_step='sgd', eta=0.01, rho=0.0, n=5):
+        ParserNeuralNet.__init__(self, shape, update_step=update_step, eta=eta, rho=rho)
+        self._models_c = <NeuralNetC**>self.mem.alloc(sizeof(NeuralNetC*), n)
+        self._masks = <int**>self.mem.alloc(sizeof(int*), n)
+        self._models = []
+        cdef ParserNeuralNet model
+        threshold = 1.5 / n
+        self._nr_model = n
+        for i in range(n):
+            self._masks[i] = <int*>self.mem.alloc(sizeof(int), self.nr_feat)
+            for j in range(self.nr_feat):
+                self._masks[i][j] = random.random() < threshold
+            # We have to pass our pool here, because the embedding table passes
+            # it around.
+            model = ParserNeuralNet(shape, update_step=update_step, eta=eta, rho=rho)
+            self._models_c[i] = &model.c
+            self._models.append(model)
+
+    property eta:
+        def __get__(self):
+            return self._models[0].eta
+
+        def __set__(self, weight_t value):
+            for model in self._models:
+                model.eta = value
+
+    def sparsify_embeddings(self, penalty):
+        p = 0.0
+        for model in self._models:
+            p += model.sparsify_embeddings(penalty)
+        return p / len(self._models)
+
+    cdef void set_scoresC(self, weight_t* scores, const void* _feats,
+            int nr_feat, int is_sparse) nogil:
+        nr_class = self.c.widths[self.c.nr_layer-1]
+        sub_scores = <weight_t*>calloc(sizeof(weight_t), nr_class)
+        sub_feats = <FeatureC*>calloc(sizeof(FeatureC), nr_feat)
+        feats = <const FeatureC*>_feats
+        for i in range(self._nr_model):
+            for j in range(nr_feat):
+                sub_feats[j] = feats[j]
+                sub_feats[j].value *= self._masks[i][j]
+            self.c = self._models_c[i][0]
+            self.c.weights = self._models_c[i].weights
+            self.c.gradient = self._models_c[i].gradient
+            ParserNeuralNet.set_scoresC(self, sub_scores, sub_feats, nr_feat, 1)
+            for j in range(nr_class):
+                scores[j] += sub_scores[j]
+                sub_scores[j] = 0.0
+        for j in range(nr_class):
+            scores[j] /= self._nr_model
+        free(sub_feats)
+        free(sub_scores)
+
+    def update(self, Example eg):
+        if eg.cost == 0:
+            return 0.0
+        loss = 0.0
+        full_feats = <FeatureC*>calloc(sizeof(FeatureC), eg.nr_feat)
+        memcpy(full_feats, eg.c.features, sizeof(FeatureC) * eg.nr_feat)
+        cdef ParserNeuralNet model
+        for i, model in enumerate(self._models):
+            for j in range(eg.nr_feat):
+                eg.c.features[j].value *= self._masks[i][j]
+            loss += model.update(eg)
+            memcpy(eg.c.features, full_feats, sizeof(FeatureC) * eg.nr_feat)
+        free(full_feats)
+        return loss
+
+    def end_training(self):
+        for model in self._models:
+            model.end_training()
 
 
 cdef class Parser:
-    def __init__(self, StringStore strings, transition_system, ParserNeuralNet model,
-            int projectivize = 0):
+    def __init__(self, StringStore strings, transition_system, model):
         self.moves = transition_system
         self.model = model
-        self._projectivize = projectivize
 
     @classmethod
     def from_dir(cls, model_dir, strings, transition_system):
@@ -148,16 +318,24 @@ cdef class Parser:
             print >> sys.stderr, "Warning: model path:", model_dir, "is not a directory"
         cfg = Config.read(model_dir, 'config')
         moves = transition_system(strings, cfg.labels)
-        model = ParserNeuralNet(moves.n_moves, hidden_width=cfg.hidden_width,
-                                depth=cfg.depth, word_width=cfg.word_width,
-                                tag_width=cfg.tag_width, dep_width=cfg.dep_width,
-                                update_step=cfg.update_step,
-                                eta=cfg.eta, rho=cfg.rho)
 
-        project = cfg.projectivize if hasattr(cfg,'projectivize') else False
+        if cfg.get('model') == 'neural':
+            shape = [cfg.vector_widths, cfg.slots, cfg.feat_set]
+            shape.extend(cfg.hidden_layers)
+            shape.append(moves.n_moves)
+            if cfg.get('ensemble_size') >= 2:
+                model = ParserNeuralNetEnsemble(shape, update_step=cfg.update_step,
+                                                eta=cfg.eta, rho=cfg.rho, 
+                                                n=cfg.ensemble_size)
+            else:
+                model = ParserNeuralNet(shape, update_step=cfg.update_step,
+                                        eta=cfg.eta, rho=cfg.rho)
+        else:
+            model = ParserPerceptron(get_templates(cfg.feat_set))
+
         if path.exists(path.join(model_dir, 'model')):
             model.load(path.join(model_dir, 'model'))
-        return cls(strings, moves, model, project)
+        return cls(strings, moves, model)
 
     @classmethod
     def load(cls, pkg_or_str_or_file, vocab):
@@ -253,18 +431,18 @@ cdef class Parser:
                 widths=self.model.widths,
                 nr_atom=CONTEXT_SIZE,
                 nr_feat=self.model.nr_feat)
-        cdef weight_t loss = 0
+        loss = 0
         cdef Transition action
         while not stcls.is_final():
             self.model.set_featuresC(eg.c, stcls.c)
+            self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat, 1)
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
-            
-            # Sets eg.c.scores, which Example uses to calculate eg.guess
-            self.model.updateC(eg.c)
-            
-            action = self.moves.c[eg.guess]
+            guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
+            assert guess >= 0
+            action = self.moves.c[guess]
             action.do(stcls.c, action.label)
-            loss += eg.loss
+            
+            loss += self.model.update(eg)
             eg.reset()
         return loss
 

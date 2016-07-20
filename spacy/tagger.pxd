@@ -7,7 +7,7 @@ from .vocab cimport Vocab
 
 
 cdef class TaggerModel(AveragedPerceptron):
-    cdef void set_featuresC(self, ExampleC* eg, const TokenC* tokens, int i) except *
+    cdef void set_featuresC(self, ExampleC* eg, const void* _token) nogil
  
 
 cdef class Tagger:

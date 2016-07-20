@@ -71,13 +71,13 @@ cpdef enum:
 
 
 cdef class TaggerModel(AveragedPerceptron):
-    cdef void set_featuresC(self, ExampleC* eg, const TokenC* tokens, int i) except *:
-        
-        _fill_from_token(&eg.atoms[P2_orth], &tokens[i-2])
-        _fill_from_token(&eg.atoms[P1_orth], &tokens[i-1])
-        _fill_from_token(&eg.atoms[W_orth], &tokens[i])
-        _fill_from_token(&eg.atoms[N1_orth], &tokens[i+1])
-        _fill_from_token(&eg.atoms[N2_orth], &tokens[i+2])
+    cdef void set_featuresC(self, ExampleC* eg, const void* _token) nogil:
+        token = <const TokenC*>_token
+        _fill_from_token(&eg.atoms[P2_orth], token - 2)
+        _fill_from_token(&eg.atoms[P1_orth], token - 1)
+        _fill_from_token(&eg.atoms[W_orth], token)
+        _fill_from_token(&eg.atoms[N1_orth], token + 1)
+        _fill_from_token(&eg.atoms[N2_orth], token + 2)
 
         eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
 
@@ -153,7 +153,7 @@ cdef class Tagger:
     @classmethod
     def from_package(cls, pkg, vocab):
         # TODO: templates.json deprecated? not present in latest package
-        # templates = cls.default_templates()
+        #templates = cls.default_templates()
         templates = pkg.load_json(('pos', 'templates.json'), default=cls.default_templates())
 
         model = TaggerModel(templates)
@@ -202,12 +202,13 @@ cdef class Tagger:
                                   nr_feat=self.model.nr_feat)
         for i in range(tokens.length):
             if tokens.c[i].pos == 0:                
-                self.model.set_featuresC(eg.c, tokens.c, i)
+                self.model.set_featuresC(eg.c, &tokens.c[i])
                 self.model.set_scoresC(eg.c.scores,
                     eg.c.features, eg.c.nr_feat, 1)
                 guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
                 self.vocab.morphology.assign_tag(&tokens.c[i], guess)
                 eg.fill_scores(0, eg.c.nr_class)
+                eg.reset()
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
@@ -231,18 +232,15 @@ cdef class Tagger:
             nr_class=self.vocab.morphology.n_tags,
             nr_feat=self.model.nr_feat)
         for i in range(tokens.length):
-            self.model.set_featuresC(eg.c, tokens.c, i)
+            self.model.set_featuresC(eg.c, &tokens.c[i])
             eg.costs = [ 1 if golds[i] not in (c, -1) else 0 for c in xrange(eg.nr_class) ]
             self.model.set_scoresC(eg.c.scores,
                 eg.c.features, eg.c.nr_feat, 1)
-            self.model.updateC(eg.c)
-
             self.vocab.morphology.assign_tag(&tokens.c[i], eg.guess)
-            
+            self.model.update(eg)
             correct += eg.cost == 0
             self.freqs[TAG][tokens.c[i].tag] += 1
-            eg.fill_scores(0, eg.c.nr_class)
-            eg.fill_costs(0, eg.c.nr_class)
+            eg.reset()
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
         return correct

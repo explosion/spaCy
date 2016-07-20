@@ -10,7 +10,7 @@ def english_noun_chunks(doc):
     for i, word in enumerate(doc):
         if word.pos in (NOUN, PROPN, PRON) and word.dep in np_deps:
             yield word.left_edge.i, word.i+1, np_label
-        elif word.pos == NOUN and word.dep == conj:
+        elif word.pos in (NOUN, PROPN, PRON) and word.dep == conj:
             head = word.head
             while head.dep == conj and head.head.i < head.i:
                 head = head.head

@@ -35,8 +35,8 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[11] = 0
         context[12] = 0
     else:
-        context[0] = token.lex.orth
-        context[1] = token.lemma
+        context[0] = token.lex.norm
+        context[1] = token.lex.norm
         context[2] = token.tag
         context[3] = token.lex.cluster
         # We've read in the string little-endian, so now we can take & (2**n)-1
@@ -366,27 +366,26 @@ trigrams = (
 
 
 words = (
-    S2w,
-    S1w,
-    S1rw,
-    S0lw,
-    S0l2w,
-    S0w,
-    S0r2w,
-    S0rw,
-    N0lw,
-    N0l2w,
-    N0w,
-    N1w,
-    N2w,
-    P1w,
-    P2w
+    S2W,
+    S1W,
+    S1rW,
+    S0lW,
+    S0l2W,
+    S0W,
+    S0r2W,
+    S0rW,
+    N0lW,
+    N0l2W,
+    N0W,
+    N1W,
+    N2W,
+    P1W,
+    P2W
 )
 
 tags = (
     S2p,
     S1p,
-    S1rp,
     S0lp,
     S0l2p,
     S0p,
@@ -404,7 +403,6 @@ tags = (
 labels = (
     S2L,
     S1L,
-    S1rL,
     S0lL,
     S0l2L,
     S0L,
@@ -412,9 +410,88 @@ labels = (
     S0rL,
     N0lL,
     N0l2L,
-    N0L,
-    N1L,
-    N2L,
-    P1L,
-    P2L
 )
+
+core_words = (
+    S2w,
+    S1w,
+    S0lw,
+    S0l2w,
+    S0w,
+    S0rw,
+    S0r2w,
+    N0lw,
+    N0l2w,
+    N0w,
+    N1w,
+    N2w,
+)
+
+
+core_shapes = (
+    S2_shape,
+    S1_shape,
+    S0l_shape,
+    S0l2_shape,
+    S0_shape,
+    S0r_shape,
+    S0r2_shape,
+    N0l_shape,
+    N0l2_shape,
+    N0_shape,
+    N1_shape,
+    N2_shape,
+)
+
+
+core_clusters = (
+    S2c,
+    S1c,
+    S0lc,
+    S0l2c,
+    S0c,
+    S0rc,
+    S0r2c,
+    N0lc,
+    N0l2c,
+    N0c,
+    N1c,
+    N2c,
+)
+
+
+
+core_tags = (
+    S2p,
+    S1p,
+    S0lp,
+    S0l2p,
+    S0p,
+    S0r2p,
+    S0rp,
+    N0lp,
+    N0l2p,
+    N0p,
+    N1p,
+    N2p,
+)
+
+core_labels = (
+    S2L,
+    S1L,
+    S0lL,
+    S0l2L,
+    S0L,
+    S0r2L,
+    S0rL,
+    N0lL,
+    N0l2L,
+)
+
+valencies = (
+    (N0lv,),
+    (S0lv,),
+    (S0rv,),
+    (S1lv,),
+    (S1rv,),
+) 
