@@ -13,6 +13,7 @@ from cpython.exc cimport PyErr_CheckSignals
 from libc.stdint cimport uint32_t, uint64_t
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport malloc, calloc, free
+from libc.math cimport exp
 import os.path
 from os import path
 import shutil
@@ -106,7 +107,7 @@ cdef class ParserPerceptron(AveragedPerceptron):
 
 cdef class ParserNeuralNet(NeuralNet):
     def __init__(self, shape, **kwargs):
-        vector_widths = [4] * 57
+        vector_widths = [4] * 76
         slots =  [0, 1, 2, 3] # S0
         slots += [4, 5, 6, 7] # S1
         slots += [8, 9, 10, 11] # S2
@@ -119,11 +120,10 @@ cdef class ParserNeuralNet(NeuralNet):
         slots += [36, 37, 38, 39] * 2 # B0l, B0r
         slots += [40, 41, 42, 43] * 2 # S1l, S1r
         slots += [44, 45, 46, 47] * 2 # S2l, S2r
-        slots += [48, 49, 50, 51, 52]
+        slots += [48, 49, 50, 51, 52, 53, 54, 55]
         slots += [53, 54, 55, 56]
         input_length = sum(vector_widths[slot] for slot in slots)
-        widths = [input_length] + shape[3:]
-        
+        widths = [input_length] + shape
         NeuralNet.__init__(self, widths, embed=(vector_widths, slots), **kwargs)
 
     @property
@@ -156,14 +156,25 @@ cdef class ParserNeuralNet(NeuralNet):
         feats = _add_pos_bigram(feats, 65, state.S_(1), state.S_(0))
         feats = _add_pos_bigram(feats, 66, state.S_(1), state.B_(0))
         feats = _add_pos_bigram(feats, 67, state.S_(0), state.B_(1))
-        feats = _add_pos_bigram(feats, 68, state.B_(0), state.B_(1))
-        feats = _add_pos_trigram(feats, 69, state.S_(1), state.S_(0), state.B_(0))
-        feats = _add_pos_trigram(feats, 70, state.S_(0), state.B_(0), state.B_(1))
-        feats = _add_pos_trigram(feats, 71, state.S_(0), state.R_(state.S(0), 1),
+        feats = _add_pos_bigram(feats, 68, state.S_(0), state.R_(state.S(0), 1))
+        feats = _add_pos_bigram(feats, 69, state.S_(0), state.R_(state.S(0), 2))
+        feats = _add_pos_bigram(feats, 70, state.S_(0), state.L_(state.S(0), 1))
+        feats = _add_pos_bigram(feats, 71, state.S_(0), state.L_(state.S(0), 2))
+        feats = _add_pos_trigram(feats, 72, state.S_(1), state.S_(0), state.B_(0))
+        feats = _add_pos_trigram(feats, 73, state.S_(0), state.B_(0), state.B_(1))
+        feats = _add_pos_trigram(feats, 74, state.S_(0), state.R_(state.S(0), 1),
                                  state.R_(state.S(0), 2))
-        feats = _add_pos_trigram(feats, 72, state.S_(0), state.L_(state.S(0), 1),
+        feats = _add_pos_trigram(feats, 75, state.S_(0), state.L_(state.S(0), 1),
                                  state.L_(state.S(0), 2))
         eg.nr_feat = feats - eg.features
+
+    cdef void _set_delta_lossC(self, weight_t* delta_loss,
+            const weight_t* Zs, const weight_t* scores) nogil:
+        for i in range(self.c.widths[self.c.nr_layer-1]):
+            delta_loss[i] = Zs[i]
+
+    cdef void _softmaxC(self, weight_t* out) nogil:
+        pass
 
 
 cdef inline FeatureC* _add_token(FeatureC* feats,
@@ -230,80 +241,6 @@ cdef inline FeatureC* _add_pos_trigram(FeatureC* feat, int slot,
     feat.value = 1.0
     return feat+1
  
-cdef class ParserNeuralNetEnsemble(ParserNeuralNet):
-    def __init__(self, shape, update_step='sgd', eta=0.01, rho=0.0, n=5):
-        ParserNeuralNet.__init__(self, shape, update_step=update_step, eta=eta, rho=rho)
-        self._models_c = <NeuralNetC**>self.mem.alloc(sizeof(NeuralNetC*), n)
-        self._masks = <int**>self.mem.alloc(sizeof(int*), n)
-        self._models = []
-        cdef ParserNeuralNet model
-        threshold = 1.5 / n
-        self._nr_model = n
-        for i in range(n):
-            self._masks[i] = <int*>self.mem.alloc(sizeof(int), self.nr_feat)
-            for j in range(self.nr_feat):
-                self._masks[i][j] = random.random() < threshold
-            # We have to pass our pool here, because the embedding table passes
-            # it around.
-            model = ParserNeuralNet(shape, update_step=update_step, eta=eta, rho=rho)
-            self._models_c[i] = &model.c
-            self._models.append(model)
-
-    property eta:
-        def __get__(self):
-            return self._models[0].eta
-
-        def __set__(self, weight_t value):
-            for model in self._models:
-                model.eta = value
-
-    def sparsify_embeddings(self, penalty):
-        p = 0.0
-        for model in self._models:
-            p += model.sparsify_embeddings(penalty)
-        return p / len(self._models)
-
-    cdef void set_scoresC(self, weight_t* scores, const void* _feats,
-            int nr_feat, int is_sparse) nogil:
-        nr_class = self.c.widths[self.c.nr_layer-1]
-        sub_scores = <weight_t*>calloc(sizeof(weight_t), nr_class)
-        sub_feats = <FeatureC*>calloc(sizeof(FeatureC), nr_feat)
-        feats = <const FeatureC*>_feats
-        for i in range(self._nr_model):
-            for j in range(nr_feat):
-                sub_feats[j] = feats[j]
-                sub_feats[j].value *= self._masks[i][j]
-            self.c = self._models_c[i][0]
-            self.c.weights = self._models_c[i].weights
-            self.c.gradient = self._models_c[i].gradient
-            ParserNeuralNet.set_scoresC(self, sub_scores, sub_feats, nr_feat, 1)
-            for j in range(nr_class):
-                scores[j] += sub_scores[j]
-                sub_scores[j] = 0.0
-        for j in range(nr_class):
-            scores[j] /= self._nr_model
-        free(sub_feats)
-        free(sub_scores)
-
-    def update(self, Example eg):
-        if eg.cost == 0:
-            return 0.0
-        loss = 0.0
-        full_feats = <FeatureC*>calloc(sizeof(FeatureC), eg.nr_feat)
-        memcpy(full_feats, eg.c.features, sizeof(FeatureC) * eg.nr_feat)
-        cdef ParserNeuralNet model
-        for i, model in enumerate(self._models):
-            for j in range(eg.nr_feat):
-                eg.c.features[j].value *= self._masks[i][j]
-            loss += model.update(eg)
-            memcpy(eg.c.features, full_feats, sizeof(FeatureC) * eg.nr_feat)
-        free(full_feats)
-        return loss
-
-    def end_training(self):
-        for model in self._models:
-            model.end_training()
-
 
 cdef class Parser:
     def __init__(self, StringStore strings, transition_system, model):
@@ -320,16 +257,8 @@ cdef class Parser:
         moves = transition_system(strings, cfg.labels)
 
         if cfg.get('model') == 'neural':
-            shape = [cfg.vector_widths, cfg.slots, cfg.feat_set]
-            shape.extend(cfg.hidden_layers)
-            shape.append(moves.n_moves)
-            if cfg.get('ensemble_size') >= 2:
-                model = ParserNeuralNetEnsemble(shape, update_step=cfg.update_step,
-                                                eta=cfg.eta, rho=cfg.rho, 
-                                                n=cfg.ensemble_size)
-            else:
-                model = ParserNeuralNet(shape, update_step=cfg.update_step,
-                                        eta=cfg.eta, rho=cfg.rho)
+            model = ParserNeuralNet(cfg.hidden_layers + [moves.n_moves],
+                        update_step=cfg.update_step, eta=cfg.eta, rho=cfg.rho)
         else:
             model = ParserPerceptron(get_templates(cfg.feat_set))
 

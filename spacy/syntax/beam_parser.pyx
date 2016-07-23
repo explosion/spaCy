@@ -26,10 +26,11 @@ from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
 from util import Config
 
 from thinc.linear.features cimport ConjunctionExtracter
-from thinc.structs cimport FeatureC
+from thinc.structs cimport FeatureC, ExampleC
 
 from thinc.extra.search cimport Beam
 from thinc.extra.search cimport MaxViolation
+from thinc.extra.eg cimport Example
 
 from ..structs cimport TokenC
 
@@ -46,6 +47,7 @@ from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from .parser cimport Parser
 from .parser cimport ParserPerceptron
+from .parser cimport ParserNeuralNet
 
 DEBUG = False
 def set_debug(val):
@@ -78,7 +80,6 @@ cdef class BeamParser(Parser):
         self._parseC(tokens, length, nr_feat, nr_class)
 
     cdef int _parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) except -1:
-        
         cdef Beam beam = Beam(self.moves.n_moves, self.beam_width)
         beam.initialize(_init_state, length, tokens)
         beam.check_done(_check_final_state, NULL)
@@ -104,34 +105,39 @@ cdef class BeamParser(Parser):
         while not pred.is_done and not gold.is_done:
             self._advance_beam(pred, gold_parse, False)
             self._advance_beam(gold, gold_parse, True)
-            violn.check(pred, gold)
-        self.model.time += 1
-        if pred.is_done and pred.loss == 0:
-            pass
-        elif pred.is_done and pred.loss > 0:
-            self._update(tokens, pred.histories[0], -1.0)
-            self._update(tokens, gold.histories[0], 1.0)
-        elif violn.cost > 0:
-            self._update(tokens, violn.p_hist, -1.0)
-            self._update(tokens, violn.g_hist, 1.0)
+            if pred.min_score > gold.score:
+                break
+        #print(pred.score, pred.min_score, gold.score)
+        cdef long double Z = 0.0
+        for i in range(pred.size):
+            if pred._states[i].loss > 0:
+                Z += exp(pred._states[i].score)
+        if Z > 0:
+            Z += exp(gold.score)
+            for i, hist in enumerate(pred.histories):
+                if pred._states[i].loss > 0:
+                    self._update_dense(tokens, hist, exp(pred._states[i].score) / Z)
+            self._update_dense(tokens, gold.histories[0], (exp(gold.score) / Z) - 1)
         _cleanup(pred)
         _cleanup(gold)
         return pred.loss
 
     def _advance_beam(self, Beam beam, GoldParse gold, bint follow_gold):
-        cdef atom_t[CONTEXT_SIZE] context
-        cdef Pool mem = Pool()
-        features = <FeatureC*>mem.alloc(self.model.nr_feat, sizeof(FeatureC))
-        cdef ParserPerceptron model = self.model
+        cdef Example py_eg = Example(nr_class=self.moves.n_moves, nr_atom=CONTEXT_SIZE,
+                                     nr_feat=self.model.nr_feat, widths=self.model.widths)
+        cdef ExampleC* eg = py_eg.c
+ 
+        cdef ParserNeuralNet model = self.model
         for i in range(beam.size):
+            py_eg.reset()
             stcls = <StateClass>beam.at(i)
             if not stcls.c.is_final():
-                fill_context(context, stcls.c)
-                nr_feat = model.extracter.set_features(features, context)
-                self.model.set_scoresC(beam.scores[i], features, nr_feat, 1)
+                model.set_featuresC(eg, stcls.c)
+                model.set_scoresC(beam.scores[i], eg.features, eg.nr_feat, 1)
                 self.moves.set_valid(beam.is_valid[i], stcls.c)
         if gold is not None:
             for i in range(beam.size):
+                py_eg.reset()
                 stcls = <StateClass>beam.at(i)
                 if not stcls.c.is_final():
                     self.moves.set_costs(beam.is_valid[i], beam.costs[i], stcls, gold)
@@ -141,88 +147,24 @@ cdef class BeamParser(Parser):
         beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
         beam.check_done(_check_final_state, NULL)
 
-    def _maxent_update_dense(self, doc, pred_scores, pred_hist, gold_scores,
-            gold_hist, step_size=0.001):
-        for i, history in enumerate(pred_hist):
-            stcls = StateClass.init(doc.c, doc.length)
-            self.moves.initialize_state(stcls.c)
-            for j, clas in enumerate(history):
-                fill_context(context, stcls.c)
-                nr_feat = model.extracter.set_features(features, context)
-
-                self.moves.set_valid(is_valid, stcls)
-                # Move weight away from this outcome
-                for i in range(nr_class):
-                    costs[i] = 0.0
-                costs[clas] = 1.0
-                self.update(features, nr_feat, True, costs, is_valid, False)
-                
-                self.moves.c[clas].do(stcls.c, self.moves.c[clas].label)
-         for i, history in enumerate(gold_hist):
-            stcls = StateClass.init(doc.c, doc.length)
-            self.moves.initialize_state(stcls.c)
-            for j, clas in enumerate(history):
-                fill_context(context, stcls.c)
-                nr_feat = model.extracter.set_features(features, context)
-
-                self.moves.set_valid(is_valid, stcls)
-                # Move weight towards this outcome
-                for i in range(nr_class):
-                    costs[i] = 1.0
-                costs[clas] = 0.0
-                self.update(features, nr_feat, True, costs, is_valid, False)
-                
-                self.moves.c[clas].do(stcls.c, self.moves.c[clas].label)
-
-    def _maxent_update(self, doc, pred_scores, pred_hist, gold_scores, gold_hist,
-            step_size=0.001):
-        cdef weight_t Z, gZ, value
-        cdef feat_t feat
-        cdef class_t clas
-        gZ, g_counts = self._maxent_counts(doc, gold_scores, gold_hist)
-        Z, counts = self._maxent_counts(doc, pred_scores, pred_hist)
-        update = {}
-        if gZ > 0:
-            for (clas, feat), value in g_counts.items():
-                update[(clas, feat)] = value / gZ
-        Z += gZ
-        for (clas, feat), value in counts.items():
-            update.setdefault((clas, feat), 0.0)
-            update[(clas, feat)] -= value / Z
-        for (clas, feat), value in update.items():
-            if value < 1000:
-                self.model.update_weight(feat, clas, step_size * value)
- 
-    def _maxent_counts(self, Doc doc, scores, history):
-        cdef Pool mem = Pool()
-        cdef atom_t[CONTEXT_SIZE] context
-        features = <FeatureC*>mem.alloc(self.model.nr_feat, sizeof(FeatureC))
-        
-        cdef StateClass stcls
-
-        cdef class_t clas
-        cdef ParserPerceptron model = self.model
- 
-        cdef weight_t Z = 0.0
-        cdef weight_t score
-        counts = {}
-        for i, (score, history) in enumerate(zip(scores, history)):
-            prob = exp(score)
-            if prob < 1e-6:
-                continue
-            stcls = StateClass.init(doc.c, doc.length)
-            self.moves.initialize_state(stcls.c)
-            for clas in history:
-                fill_context(context, stcls.c)
-                nr_feat = model.extracter.set_features(features, context)
-                for feat in features[:nr_feat]:
-                    key = (clas, feat.key)
-                    counts[key] = counts.get(key, 0.0) + feat.value
-                self.moves.c[clas].do(stcls.c, self.moves.c[clas].label)
-            for key in counts:
-                counts[key] *= prob
-            Z += prob
-        return Z, counts
+    def _update_dense(self, Doc doc, history, weight_t loss):
+        cdef Example py_eg = Example(nr_class=self.moves.n_moves,
+                                     nr_atom=CONTEXT_SIZE,
+                                     nr_feat=self.model.nr_feat,
+                                     widths=self.model.widths)
+        cdef ExampleC* eg = py_eg.c
+        cdef ParserNeuralNet model = self.model
+        stcls = StateClass.init(doc.c, doc.length)
+        self.moves.initialize_state(stcls.c)
+        for clas in history:
+            model.set_featuresC(eg, stcls.c)
+            self.moves.set_valid(eg.is_valid, stcls.c)
+            for i in range(self.moves.n_moves):
+                eg.costs[i] = loss if i == clas else 0
+            model.updateC(
+                eg.features, eg.nr_feat, True, eg.costs, eg.is_valid, False)
+            self.moves.c[clas].do(stcls.c, self.moves.c[clas].label)
+            py_eg.reset()
 
     def _update(self, Doc tokens, list hist, weight_t inc):
         cdef Pool mem = Pool()
@@ -278,7 +220,88 @@ cdef hash_t _hash_state(void* _state, void* _) except 0:
     #return <uint64_t>state.c
     return state.c.hash()
 
+#
+#    def _maxent_update(self, Doc doc, pred_scores, pred_hist, gold_scores, gold_hist):
+#        Z = 0
+#        for i, (score, history) in enumerate(zip(pred_scores, pred_hist)):
+#            prob = exp(score)
+#            if prob < 1e-6:
+#                continue
+#            stcls = StateClass.init(doc.c, doc.length)
+#            self.moves.initialize_state(stcls.c)
+#            for clas in history:
+#                delta_loss[clas] = prob * 1/Z
+#                gradient = [(input_ * prob) / Z for input_ in hidden]
+#                fill_context(context, stcls.c)
+#                nr_feat = model.extracter.set_features(features, context)
+#                for feat in features[:nr_feat]:
+#                    key = (clas, feat.key)
+#                    counts[key] = counts.get(key, 0.0) + feat.value
+#                    self.moves.c[clas].do(stcls.c, self.moves.c[clas].label)
+#                for key in counts:
+#                    counts[key] *= prob
+#            Z += prob
+#        gZ, g_counts = self._maxent_counts(doc, gold_scores, gold_hist)
+#        for (clas, feat), value in g_counts.items():
+#            self.model.update_weight(feat, clas, value / gZ)
+#
+#        Z, counts = self._maxent_counts(doc, pred_scores, pred_hist)
+#        for (clas, feat), value in counts.items():
+#            self.model.update_weight(feat, clas, -value / (Z + gZ))
+#
+#
 
+
+#    def _maxent_update(self, doc, pred_scores, pred_hist, gold_scores, gold_hist,
+#            step_size=0.001):
+#        cdef weight_t Z, gZ, value
+#        cdef feat_t feat
+#        cdef class_t clas
+#        gZ, g_counts = self._maxent_counts(doc, gold_scores, gold_hist)
+#        Z, counts = self._maxent_counts(doc, pred_scores, pred_hist)
+#        update = {}
+#        if gZ > 0:
+#            for (clas, feat), value in g_counts.items():
+#                update[(clas, feat)] = value / gZ
+#        Z += gZ
+#        for (clas, feat), value in counts.items():
+#            update.setdefault((clas, feat), 0.0)
+#            update[(clas, feat)] -= value / Z
+#        for (clas, feat), value in update.items():
+#            if value < 1000:
+#                self.model.update_weight(feat, clas, step_size * value)
+# 
+#    def _maxent_counts(self, Doc doc, scores, history):
+#        cdef Pool mem = Pool()
+#        cdef atom_t[CONTEXT_SIZE] context
+#        features = <FeatureC*>mem.alloc(self.model.nr_feat, sizeof(FeatureC))
+#        
+#        cdef StateClass stcls
+#
+#        cdef class_t clas
+#        cdef ParserPerceptron model = self.model
+# 
+#        cdef weight_t Z = 0.0
+#        cdef weight_t score
+#        counts = {}
+#        for i, (score, history) in enumerate(zip(scores, history)):
+#            prob = exp(score)
+#            if prob < 1e-6:
+#                continue
+#            stcls = StateClass.init(doc.c, doc.length)
+#            self.moves.initialize_state(stcls.c)
+#            for clas in history:
+#                fill_context(context, stcls.c)
+#                nr_feat = model.extracter.set_features(features, context)
+#                for feat in features[:nr_feat]:
+#                    key = (clas, feat.key)
+#                    counts[key] = counts.get(key, 0.0) + feat.value
+#                self.moves.c[clas].do(stcls.c, self.moves.c[clas].label)
+#            for key in counts:
+#                counts[key] *= prob
+#            Z += prob
+#        return Z, counts
+#
 #
 #    def _advance_beam(self, Beam beam, GoldParse gold, bint follow_gold, words):
 #        cdef atom_t[CONTEXT_SIZE] context
