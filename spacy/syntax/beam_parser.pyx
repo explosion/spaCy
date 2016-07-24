@@ -105,28 +105,36 @@ cdef class BeamParser(Parser):
             # parse.
             self._advance_beam(pred, gold_parse, False)
             self._advance_beam(gold, gold_parse, True)
-            # Early update
-            if pred.min_score > gold.score:
+            if MAX_VIOLN_UPDATE:
+                violn.check_crf(pred, gold)
+            elif pred.min_score > gold.score: # Early update
                 break
-        # Gather the partition function --- Z --- by which we can normalize the
-        # scores into a probability distribution. The simple idea here is that
-        # we clip the probability of all parses outside the beam to 0.
         cdef long double Z = 0.0
-        for i in range(pred.size):
-            # Make sure we've only got negative examples here.
-            # Otherwise, we might double-count the gold.
-            if pred._states[i].loss > 0: 
-                Z += exp(pred._states[i].score)
-        if Z > 0: # If no negative examples, don't update.
-            Z += exp(gold.score)
-            for i, hist in enumerate(pred.histories):
-                if pred._states[i].loss > 0:
-                    # Update with the negative example.
-                    # Gradient of loss is P(parse) - 0
-                    self._update_dense(tokens, hist, exp(pred._states[i].score) / Z)
-            # Update with the positive example.
-            # Gradient of loss is P(parse) - 1
-            self._update_dense(tokens, gold.histories[0], (exp(gold.score) / Z) - 1)
+        if MAX_VIOLN_UPDATE:
+            if violn.delta != -1:
+                for prob, hist in zip(violn.p_scores, violn.p_hist):
+                    self._update_dense(tokens, hist, prob / violn.Z)
+                for prob, hist in zip(violn.g_scores, violn.g_hist):
+                    self._update_dense(tokens, hist, -prob / violn.gZ)
+        else:
+            # Gather the partition function --- Z --- by which we can normalize the
+            # scores into a probability distribution. The simple idea here is that
+            # we clip the probability of all parses outside the beam to 0.
+            for i in range(pred.size):
+                # Make sure we've only got negative examples here.
+                # Otherwise, we might double-count the gold.
+                if pred._states[i].loss > 0: 
+                    Z += exp(pred._states[i].score)
+            if Z > 0: # If no negative examples, don't update.
+                Z += exp(gold.score)
+                for i, hist in enumerate(pred.histories):
+                    if pred._states[i].loss > 0:
+                        # Update with the negative example.
+                        # Gradient of loss is P(parse) - 0
+                        self._update_dense(tokens, hist, exp(pred._states[i].score) / Z)
+                # Update with the positive example.
+                # Gradient of loss is P(parse) - 1
+                self._update_dense(tokens, gold.histories[0], (exp(gold.score) / Z) - 1)
         _cleanup(pred)
         _cleanup(gold)
         return pred.loss
