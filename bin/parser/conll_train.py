@@ -101,6 +101,23 @@ def score_model(scorer, nlp, raw_text, annot_tuples, verbose=False):
     scorer.score(tokens, gold, verbose=verbose, punct_labels=('--', 'p', 'punct'))
 
 
+def score_file(nlp, loc):
+    scorer = Scorer()
+    with io.open(loc, 'r', encoding='utf8') as file_:
+        for _, sents in read_conll(file_):
+            for annot_tuples, _ in sents:
+                score_model(scorer, nlp, None, annot_tuples)
+    return scorer
+
+
+def score_sents(nlp, gold_tuples):
+    scorer = Scorer()
+    for _, sents in gold_tuples:
+        for annot_tuples, _ in sents:
+            score_model(scorer, nlp, None, annot_tuples)
+    return scorer
+
+
 def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic',
           learn_rate=0.001, update_step='sgd_cm', 
           batch_norm=False, seed=0, gold_preproc=False, force_gold=False):
@@ -114,35 +131,17 @@ def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic
     os.mkdir(pos_model_dir)
 
     if feat_set != 'neural':
-        Config.write(dep_model_dir, 'config', features=feat_set, seed=seed,
+        Config.write(dep_model_dir, 'config', feat_set=feat_set, seed=seed,
             labels=ArcEager.get_labels(gold_tuples))
 
     else:
-        feat_groups = [
-            (pf.core_words, 8),
-            (pf.core_tags, 4),
-            (pf.core_labels, 4),
-            (pf.core_shapes, 4),
-            ([f[0] for f in pf.valencies], 2)
-        ]
-        slots = []
-        vector_widths = []
-        feat_set = []
-        input_length = 0
-        for i, (feat_group, width) in enumerate(feat_groups):
-            feat_set.extend((f,) for f in feat_group)
-            slots += [i] * len(feat_group)
-            vector_widths.append(width)
-            input_length += width * len(feat_group)
-        hidden_layers = [128] * 5
+        hidden_layers = [128] * 3
         rho = 1e-4
         Config.write(dep_model_dir, 'config',
                      model='neural',
                      seed=seed,
                      labels=ArcEager.get_labels(gold_tuples),
                      feat_set=feat_set,
-                     vector_widths=vector_widths,
-                     slots=slots,
                      hidden_layers=hidden_layers,
                      update_step=update_step,
                      batch_norm=batch_norm,
@@ -153,29 +152,9 @@ def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic
 
     nlp = Language(data_dir=model_dir, tagger=False, parser=False, entity=False)
     nlp.tagger = Tagger.blank(nlp.vocab, Tagger.default_templates())
-    nlp.parser = Parser.from_dir(dep_model_dir, nlp.vocab.strings, ArcEager)
+    nlp.parser = BeamParser.from_dir(dep_model_dir, nlp.vocab.strings, ArcEager)
     for word in nlp.vocab:
         word.norm = word.orth
-    words = list(nlp.vocab)
-    top5k = numpy.ndarray(shape=(10000, len(word.vector)), dtype='float32')
-    norms = numpy.ndarray(shape=(10000,), dtype='float32')
-    for i in range(10000):
-        if i >= 400 and words[i].has_vector:
-            top5k[i] = words[i].vector
-            norms[i] = numpy.sqrt(sum(top5k[i] ** 2))
-        else:
-            # Make these way off values, to make big distance.
-            top5k[i] = 100.0
-            norms[i] = 100.0
-    print("Setting vectors")
-    for word in words[10000:]:
-        if word.has_vector:
-            cosines = numpy.dot(top5k, word.vector)
-            cosines /= norms * numpy.sqrt(sum(word.vector ** 2))
-            most_similar = words[numpy.argmax(cosines)]
-            word.norm = most_similar.norm
-        else:
-            word.norm = word.shape
     
     print(nlp.parser.model.widths)
  
@@ -192,25 +171,15 @@ def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic
                 nlp.tagger.tag_from_strings(tokens, annot_tuples[2])
                 gold = GoldParse(tokens, annot_tuples)
                 loss += nlp.parser.train(tokens, gold)
+                
                 eg_seen += 1
                 if eg_seen % 10000 == 0:
-                    scorer = Scorer()
-                    with io.open(dev_loc, 'r', encoding='utf8') as file_:
-                        for _, sents in read_conll(file_):
-                            for annot_tuples, _ in sents:
-                                score_model(scorer, nlp, None, annot_tuples)
-                    train_scorer = Scorer()
-                    for _, sents in gold_tuples[:1000]:
-                        for annot_tuples, _ in sents:
-                            score_model(train_scorer, nlp, None, annot_tuples)
+                    dev_uas = score_file(nlp, dev_loc).uas
+                    train_uas = score_sents(nlp, gold_tuples[:1000]).uas
+                    size = nlp.parser.model.mem.size
                     print('%d:\t%d\t%.3f\t%.3f\t%.3f\t%d' % (itn, int(loss), nr_trimmed,
-                                                             train_scorer.uas, scorer.uas,
-                                                             nlp.parser.model.mem.size))
+                                                             train_uas, dev_uas, size))
                     loss = 0
-        if feat_set != 'basic':
-            nlp.parser.model.eta *= 0.99
-            threshold = 0.05 * (1.05 ** itn)
-            nr_trimmed = nlp.parser.model.sparsify_embeddings(threshold, True) 
     nlp.end_training(model_dir)
     return nlp
 
