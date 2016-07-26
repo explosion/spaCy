@@ -1,6 +1,7 @@
 # cython: profile=True
 # cython: experimental_cpp_class_def=True
 # cython: cdivision=True
+# cython: infer_types=True
 """
 MALT-style dependency parser
 """
@@ -18,9 +19,10 @@ import os.path
 from os import path
 import shutil
 import json
+import math
 
 from cymem.cymem cimport Pool, Address
-from murmurhash.mrmr cimport hash64
+from murmurhash.mrmr cimport real_hash64 as hash64
 from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
 
 
@@ -47,8 +49,9 @@ from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from .parser cimport Parser
-from .parser cimport ParserPerceptron
-from .parser cimport ParserNeuralNet
+from ._neural cimport ParserPerceptron
+from ._neural cimport ParserNeuralNet
+
 
 DEBUG = False
 def set_debug(val):
@@ -68,7 +71,6 @@ def get_templates(name):
 
 
 cdef int BEAM_WIDTH = 8
-MAX_VIOLN_UPDATE = False
 
 cdef class BeamParser(Parser):
     cdef public int beam_width
@@ -103,67 +105,63 @@ cdef class BeamParser(Parser):
         gold.check_done(_check_final_state, NULL)
         violn = MaxViolation()
         while not pred.is_done and not gold.is_done:
-            # We search separately here, to allow for ambiguity in the gold
-            # parse.
+            # We search separately here, to allow for ambiguity in the gold parse.
             self._advance_beam(pred, gold_parse, False)
             self._advance_beam(gold, gold_parse, True)
-            if MAX_VIOLN_UPDATE:
-                violn.check_crf(pred, gold)
-                if violn.delta >= 10000:
-                    break
-            elif pred.min_score > gold.score: # Early update
+            violn.check_crf(pred, gold)
+            if pred.loss > 0 and pred.min_score > (gold.score + self.model.time):
                 break
-        if MAX_VIOLN_UPDATE:
-            self._max_violation_update(
-                tokens, violn.p_probs, violn.p_hist,
-                violn.g_probs, violn.g_hist)
         else:
-            self._early_update(tokens, pred, gold)
+            violn.check_crf(pred, gold)
+        if isinstance(self.model, ParserNeuralNet):
+            min_grad = 0.01 ** (itn+1)
+            for grad, hist in zip(violn.p_probs, violn.p_hist):
+                assert not math.isnan(grad)
+                assert not math.isinf(grad)
+                if abs(grad) >= min_grad:
+                    self._update_dense(tokens, hist, grad)
+            for grad, hist in zip(violn.g_probs, violn.g_hist):
+                assert not math.isnan(grad)
+                assert not math.isinf(grad)
+                if abs(grad) >= min_grad:
+                    self._update_dense(tokens, hist, grad)
+        else:
+            self.model.time += 1
+            #min_grad = 0.01 ** (itn+1)
+            #for grad, hist in zip(violn.p_probs, violn.p_hist):
+            #    assert not math.isnan(grad)
+            #    assert not math.isinf(grad)
+            #    if abs(grad) >= min_grad:
+            #        self._update(tokens, hist, -grad)
+            #for grad, hist in zip(violn.g_probs, violn.g_hist):
+            #    assert not math.isnan(grad)
+            #    assert not math.isinf(grad)
+            #    if abs(grad) >= min_grad:
+            #        self._update(tokens, hist, -grad)
+            if violn.p_hist:
+                self._update(tokens, violn.p_hist[0], -1.0)
+            if violn.g_hist:
+                self._update(tokens, violn.g_hist[0], 1.0)
         _cleanup(pred)
         _cleanup(gold)
         return pred.loss
-
-    def _max_violation_update(self, Doc doc, p_grads, p_hist, g_grads, g_hist):
-        for grad, hist in zip(p_grads, p_hist):
-            if abs(grad) >= 1e-5:
-                self._update_dense(doc, hist, grad)
-        for grad, hist in zip(g_grads, g_hist):
-            if abs(grad) >= 1e-5:
-                self._update_dense(doc, hist, -grad)
-
-    def _early_update(self, Doc doc, Beam pred, Beam gold):
-        # Gather the partition function --- Z --- by which we can normalize the
-        # scores into a probability distribution. The simple idea here is that
-        # we clip the probability of all parses outside the beam to 0.
-        cdef long double Z = 0.0
-        for i in range(pred.size):
-            # Make sure we've only got negative examples here.
-            # Otherwise, we might double-count the gold.
-            if pred._states[i].loss > 0: 
-                Z += exp(pred._states[i].score)
-        if Z > 0: # If no negative examples, don't update.
-            Z += exp(gold.score)
-            for i, hist in enumerate(pred.histories):
-                if pred._states[i].loss > 0:
-                    # Update with the negative example.
-                    # Gradient of loss is P(parse) - 0
-                    self._update_dense(doc, hist, exp(pred._states[i].score) / Z)
-            # Update with the positive example.
-            # Gradient of loss is P(parse) - 1
-            self._update_dense(doc, gold.histories[0], (exp(gold.score) / Z) - 1)
-
+    
     def _advance_beam(self, Beam beam, GoldParse gold, bint follow_gold):
         cdef Example py_eg = Example(nr_class=self.moves.n_moves, nr_atom=CONTEXT_SIZE,
                                      nr_feat=self.model.nr_feat, widths=self.model.widths)
         cdef ExampleC* eg = py_eg.c
  
-        cdef ParserNeuralNet model = self.model
+        cdef ParserNeuralNet nn_model
+        cdef ParserPerceptron ap_model
         for i in range(beam.size):
             py_eg.reset()
             stcls = <StateClass>beam.at(i)
             if not stcls.c.is_final():
-                model.set_featuresC(eg, stcls.c)
-                model.set_scoresC(beam.scores[i], eg.features, eg.nr_feat, 1)
+                if isinstance(self.model, ParserNeuralNet):
+                    ParserNeuralNet.set_featuresC(self.model, eg, stcls.c)
+                else:
+                    ParserPerceptron.set_featuresC(self.model, eg, stcls.c)
+                self.model.set_scoresC(beam.scores[i], eg.features, eg.nr_feat, 1)
                 self.moves.set_valid(beam.is_valid[i], stcls.c)
         if gold is not None:
             for i in range(beam.size):
@@ -173,28 +171,45 @@ cdef class BeamParser(Parser):
                     self.moves.set_costs(beam.is_valid[i], beam.costs[i], stcls, gold)
                     if follow_gold:
                         for j in range(self.moves.n_moves):
-                            beam.is_valid[i][j] *= beam.costs[i][j] == 0
+                            beam.is_valid[i][j] *= beam.costs[i][j] < 1
         beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
         beam.check_done(_check_final_state, NULL)
 
     def _update_dense(self, Doc doc, history, weight_t loss):
-        cdef Example py_eg = Example(nr_class=self.moves.n_moves,
-                                     nr_atom=CONTEXT_SIZE,
-                                     nr_feat=self.model.nr_feat,
-                                     widths=self.model.widths)
+        cdef Example py_eg = Example(nr_class=self.moves.n_moves, nr_atom=CONTEXT_SIZE,
+                                     nr_feat=self.model.nr_feat, widths=self.model.widths)
         cdef ExampleC* eg = py_eg.c
         cdef ParserNeuralNet model = self.model
         stcls = StateClass.init(doc.c, doc.length)
         self.moves.initialize_state(stcls.c)
+        cdef uint64_t[2] key
+        key[0] = hash64(doc.c, sizeof(TokenC) * doc.length, 0)
+        key[1] = 0
+        cdef uint64_t clas
         for clas in history:
             model.set_featuresC(eg, stcls.c)
             self.moves.set_valid(eg.is_valid, stcls.c)
-            for i in range(self.moves.n_moves):
-                eg.costs[i] = loss if i == clas else 0
+            # Update with a sparse gradient: everything's 0, except our class.
+            # Remember, this is a component of the global update. It's not our
+            # "job" here to think about the other beam candidates. We just want
+            # to work on this sequence. However, other beam candidates will
+            # have gradients that refer to the same state.
+            # We therefore have a key that indicates the current sequence, so that
+            # the model can merge updates that refer to the same state together,
+            # by summing their gradients.
+            memset(eg.costs, 0, self.moves.n_moves)
+            eg.costs[clas] = loss
             model.updateC(
-                eg.features, eg.nr_feat, True, eg.costs, eg.is_valid, False)
+                eg.features, eg.nr_feat, True, eg.costs, eg.is_valid, False, key=key[0])
             self.moves.c[clas].do(stcls.c, self.moves.c[clas].label)
             py_eg.reset()
+            # Build a hash of the state sequence.
+            # Position 0 represents the previous sequence, position 1 the new class.
+            # So we want to do:
+            # key.prev = hash((key.prev, key.new))
+            # key.new = clas
+            key[1] = clas
+            key[0] = hash64(key, sizeof(key), 0)
 
     def _update(self, Doc tokens, list hist, weight_t inc):
         cdef Pool mem = Pool()
@@ -248,3 +263,32 @@ def _cleanup(Beam beam):
 cdef hash_t _hash_state(void* _state, void* _) except 0:
     state = <StateClass>_state
     return state.c.hash()
+
+
+#    def _early_update(self, Doc doc, Beam pred, Beam gold):
+#        # Gather the partition function --- Z --- by which we can normalize the
+#        # scores into a probability distribution. The simple idea here is that
+#        # we clip the probability of all parses outside the beam to 0.
+#        cdef long double Z = 0.0
+#        for i in range(pred.size):
+#            # Make sure we've only got negative examples here.
+#            # Otherwise, we might double-count the gold.
+#            if pred._states[i].loss > 0: 
+#                Z += exp(pred._states[i].score)
+#        cdef weight_t grad
+#        if Z > 0: # If no negative examples, don't update.
+#            Z += exp(gold.score)
+#            for i, hist in enumerate(pred.histories):
+#                if pred._states[i].loss > 0:
+#                    # Update with the negative example.
+#                    # Gradient of loss is P(parse) - 0
+#                    grad = exp(pred._states[i].score) / Z
+#                    if abs(grad) >= 0.01:
+#                        self._update_dense(doc, hist, grad)
+#            # Update with the positive example.
+#            # Gradient of loss is P(parse) - 1
+#            grad = (exp(gold.score) / Z) - 1
+#            if abs(grad) >= 0.01:
+#                self._update_dense(doc, gold.histories[0], grad)
+#
+#
