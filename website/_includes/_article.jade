@@ -1,0 +1,34 @@
+include ../_includes/_mixins
+
+//-  Article
+//- ============================================================================
+
+article.article(id=current.source)
+
+    header.article-header
+        +h2.article-title=title
+        .article-meta 
+            if author
+                | by #[a.link(href=(authors[author].url || url) target='_blank')=authors[author].name] on 
+            | #[+date(date)]
+
+    .article-body!=yield
+
+    footer.article-footer
+
+        +grid('padding', 'align-right', 'valign-center')
+            +tweet(title)
+
+            if links
+                for link, index in links
+                    div: +button('primary', 'small', index.toLowerCase())(href=link target='_blank')
+                        +icon(index.toLowerCase(), 'medium', 'secondary') 
+                        | Discussion on #{index}
+
+        if author
+            +divider
+
+            !=partial('_profile', { label: 'About the Author', style: 'alt' })
+
+!=partial('_newsletter', { divider: 'both' })
+!=partial('_latest-posts', { max: 2, _section: _section } )

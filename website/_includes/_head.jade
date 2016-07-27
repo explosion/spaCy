@@ -1,0 +1,31 @@
+include _mixins
+
+- var is_blog = (_section == 'blog')
+
+
+//-  Head
+//- ============================================================================
+
+head
+    title=getPageTitle()
+
+    meta(charset='utf-8')
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    meta(name='referrer' content='always')
+
+    meta(property='og:type' content='website')
+    meta(property='og:site_name' content=sitename)
+    meta(property='og:url' content=getCurrentUrl())
+    meta(property='og:title' content=title)
+    meta(property='og:description' content=description)
+    meta(property='og:image' content=getMetaImage())
+
+    meta(name='twitter:card' content='summary_large_image')
+    meta(name='twitter:site' content='@' + profiles.twitter)
+    meta(name='twitter:title' content=title)
+    meta(name='twitter:description' content=description)
+    meta(name='twitter:image' content=getMetaImage())
+
+    link(rel='icon' type='image/x-icon' href='/assets/img/favicon.ico')
+    link(href='/assets/css/' + ((is_blog) ? stylesheets.blog : stylesheets.default) + '.css' rel='stylesheet')
+    link(href='/' + feed rel='alternate' type='application/rss+xml' title='RSS')

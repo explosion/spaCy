@@ -1,0 +1,23 @@
+//  Functions
+// ============================================================================
+
+//  Helper to round to decimals (used for rem units)
+//  $calculation - value or performed calculation 
+
+@function round-dec($calculation)
+    @return round($calculation * 10) / 10
+
+
+//  Helper for colors (refers to $colors in colors)
+//  $color-name    - name of predefined color (i.e. blue) 
+//  $color-variant - predefined hue (default: base)
+
+@function color($color-name, $color-variant: base)
+    @return map-get(map-get($colors, $color-name), $color-variant)
+
+
+//  Helper for patterns, returns pattern image of color
+//  $color-name - name of predefined color (i.e. blue)
+
+@function pattern($color-name)
+    @return url('../img/pattern_#{$color-name}.jpg') center center repeat scroll

@@ -1,0 +1,79 @@
+//  Tables - Variables
+// ============================================================================
+
+$table-background-color : color(white)
+$table-border-color     : color(grey)
+$table-border-style     : solid 
+$table-border-width     : 1px
+$table-color            : color($theme)
+$table-head-color       : color(white)
+$table-highlight-border : 3px solid color($theme)
+$table-padding          : 1em
+$table-shade-color      : color(grey, light)
+$table-shadow-color     : color(black, dark)
+
+
+//  Tables - Style
+// ============================================================================
+
+//  .table                 - data table
+//  .table--code           - table with code in first column
+//  .table--params         - table with parameters in first column
+//  .table-row             - table row
+//  .table-cell            - table cell
+//  .table-cell--highlight - style for highlighted table cell(s)
+//  .table-head-cell       - table head cell
+//  .table-container       - block containing table
+
+.table
+    @extend .table-responsive, .block, .text
+    vertical-align: top
+
+    &--code .table-cell:first-child
+        background: $table-shade-color
+
+    &--params .table-cell:first-child
+        font-weight: bold
+        white-space: nowrap
+
+.table-cell
+    border: $table-border-width $table-border-style $table-border-color
+    padding: $table-padding
+
+    &--highlight
+        border: $table-highlight-border
+
+.table-head-cell
+    @extend .text-meta
+    background: $table-color
+    border: $table-border-width $table-border-style $table-color
+    color: $table-head-color
+    display: table-cell
+    padding: $table-padding
+
+.table-container
+    @extend .responsive-container
+
+
+// Responsive Table Markup
+// adapted from David Bushell, http://codepen.io/dbushell/pen/wGaamR
+
+@media(max-width: #{$screen-size-large})
+    .table-responsive
+        @include scroll-shadow-base($table-shadow-color)
+        display: inline-block
+        overflow-x: auto
+        width: auto
+        -webkit-overflow-scrolling: touch
+
+        .table-cell
+            &:first-child
+                @include scroll-shadow-cover(left, $table-background-color)
+
+            &:last-child
+                @include scroll-shadow-cover(right, $table-background-color)
+
+    .table-responsive.table--code
+        .table-cell
+            &:first-child
+                @include scroll-shadow-cover(left, $table-shade-color)

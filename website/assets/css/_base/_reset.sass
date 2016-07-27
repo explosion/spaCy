@@ -1,0 +1,75 @@
+//  Reset - Variables
+// ============================================================================
+
+$reset-font-size        : $base-font-size
+$reset-font-size-small  : $base-font-size * 0.8
+
+
+//  Reset - Style
+// ============================================================================
+
+// normalize.css
+
+@import ../_vendors/normalize
+
+
+// Clearfix
+
+%clearfix
+    *zoom: 1
+
+    &:before,
+    &:after
+        content: ''
+        display: table
+
+    &:after
+        clear: both
+
+
+// Custom Resets
+
+*
+    border: 0
+    box-sizing: border-box
+    margin: 0
+    outline: 0
+    padding: 0
+    -webkit-font-smoothing: antialiased
+
+html
+    font-size: $reset-font-size
+
+    @media (max-width: #{$screen-size-small})
+        font-size: $reset-font-size-small
+
+header,
+footer,
+figure
+    width: 100%
+    max-width: 100%
+
+table
+    border-collapse: collapse
+    max-width: 100%
+    text-align: left
+    width: 100%
+
+    td,
+    th
+        vertical-align: top
+
+ul,
+ol
+    list-style: none
+
+a
+    color: inherit
+    text-decoration: none
+
+img
+    height: auto
+    max-width: 100%
+
+[data-label]:before
+    content: attr(data-label)

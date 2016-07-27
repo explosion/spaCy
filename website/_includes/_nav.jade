@@ -1,0 +1,32 @@
+include _mixins
+
+- var nav_active_class = 'nav-item--active'
+
+
+//-  Top Navigation Bar
+//- ============================================================================
+
+nav#topnav.nav
+
+    a(href='/')
+        !=partial('_logo', { logo_size: 'small' })
+
+    input(type='checkbox' class='nav-checkbox' id='nav-checkbox' aria-hidden='true')
+
+    ul.nav-menu
+
+        if standalone
+            li.nav-item(class=nav_active_class)=title
+            li.nav-item: a(href='/') Back to website
+
+        else
+            li.nav-item(class=(_section == 'index') ? nav_active_class : '')
+                a(href='/') Home
+
+            each slug, item in navigation
+                li.nav-item(class=(_section == slug) ? nav_active_class : '')
+                    a(href='/' + slug)=item
+
+            li.nav-item: a(href='https://github.com/' + profiles.github + '/spaCy' target='_blank') GitHub
+
+    label(for='nav-checkbox' class='nav-button' arial-label='Toggle Navigation')

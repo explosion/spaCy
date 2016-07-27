@@ -1,0 +1,59 @@
+{
+    "PRP": {
+        "I":          {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Sing",                   "Case": "Nom"},
+        "me":         {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Sing",                   "Case": "Acc"},
+        "you":        {"L": "-PRON-", "PronType": "Prs", "Person": "Two"},
+        "he":         {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Masc", "Case": "Nom"},
+        "him":        {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Masc", "Case": "Acc"},
+        "she":        {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Fem",  "Case": "Nom"},
+        "her":        {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Fem",  "Case": "Acc"},
+        "it":         {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Neut"},
+        "we":         {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Plur",                   "Case": "Nom"},
+        "us":         {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Plur",                   "Case": "Acc"},
+        "they":       {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Plur",                   "Case": "Nom"},
+        "them":       {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Plur",                   "Case": "Acc"},
+        
+        "mine":       {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Sing",                   "Poss": "Yes", "Reflex": "Yes"},
+        "yours":      {"L": "-PRON-", "PronType": "Prs", "Person": "Two",                                       "Poss": "Yes", "Reflex": "Yes"},
+        "his":        {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Masc", "Poss": "Yes", "Reflex": "Yes"},
+        "hers":       {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Fem",  "Poss": "Yes", "Reflex": "Yes"},
+        "its":        {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Neut", "Poss": "Yes", "Reflex": "Yes"},
+        "ours":       {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Plur",                   "Poss": "Yes", "Reflex": "Yes"},
+        "yours":      {"L": "-PRON-", "PronType": "Prs", "Person": "Two",   "Number": "Plur",                   "Poss": "Yes", "Reflex": "Yes"},
+        "theirs":     {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Plur",                   "Poss": "Yes", "Reflex": "Yes"},
+        
+        "myself":     {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Sing",  "Case": "Acc",                  "Reflex": "Yes"},
+        "yourself":   {"L": "-PRON-", "PronType": "Prs", "Person": "Two",                     "Case": "Acc",                   "Reflex": "Yes"},
+        "himself":    {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Case": "Acc", "Gender": "Masc", "Reflex": "Yes"},
+        "herself":    {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Case": "Acc", "Gender": "Fem",  "Reflex": "Yes"},
+        "itself":     {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Case": "Acc", "Gender": "Neut", "Reflex": "Yes"},
+        "themself":   {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Sing", "Case": "Acc",                   "Reflex": "Yes"},
+        "ourselves":  {"L": "-PRON-", "PronType": "Prs", "Person": "One",   "Number": "Plur", "Case": "Acc",                   "Reflex": "Yes"},
+        "yourselves": {"L": "-PRON-", "PronType": "Prs", "Person": "Two",                     "Case": "Acc",                   "Reflex": "Yes"},
+        "themselves": {"L": "-PRON-", "PronType": "Prs", "Person": "Three", "Number": "Plur", "Case": "Acc",                   "Reflex": "Yes"}
+ 
+    },
+
+    "PRP$": {
+        "my":    {"L": "-PRON-", "Person": "One",   "Number": "Sing",                   "PronType": "Prs", "Poss": "Yes"},
+        "your":  {"L": "-PRON-", "Person": "Two",                                       "PronType": "Prs", "Poss": "Yes"},
+        "his":   {"L": "-PRON-", "Person": "Three", "Number": "Sing", "Gender": "Masc", "PronType": "Prs", "Poss": "Yes"},
+        "her":   {"L": "-PRON-", "Person": "Three", "Number": "Sing", "Gender": "Fem",  "PronType": "Prs", "Poss": "Yes"},
+        "its":   {"L": "-PRON-", "Person": "Three", "Number": "Sing", "Gender": "Neut", "PronType": "Prs", "Poss": "Yes"},
+        "our":   {"L": "-PRON-", "Person": "One",   "Number": "Plur",                   "PronType": "Prs", "Poss": "Yes"},
+        "their": {"L": "-PRON-", "Person": "Three", "Number": "Plur",                   "PronType": "Prs", "Poss": "Yes"}
+    },
+
+    "VBZ": {
+        "am":  {"L": "be", "VerbForm": "Fin", "Person": "One",   "Tense": "Pres", "Mood": "Ind"},
+        "are": {"L": "be", "VerbForm": "Fin", "Person": "Two",   "Tense": "Pres", "Mood": "Ind"},
+        "is":  {"L": "be", "VerbForm": "Fin", "Person": "Three", "Tense": "Pres", "Mood": "Ind"},
+    },
+    "VBP": {
+        "are":  {"L": "be", "VerbForm": "Fin", "Tense": "Pres", "Mood": "Ind"}
+    },
+    "VBD": {
+        "was":  {"L": "be", "VerbForm": "Fin", "Tense": "Past", "Number": "Sing"},
+        "were": {"L": "be", "VerbForm": "Fin", "Tense": "Past", "Number": "Plur"}
+    }
+}

@@ -1,0 +1,6 @@
+{
+    "index": {
+        "title": "Demos",
+        "demos": ["displacy", "sense2vec"]
+    }
+}

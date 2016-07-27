@@ -1,0 +1,69 @@
+//  Variables
+// ============================================================================
+
+$aside-block-margin : 4rem
+$aside-border       : 1px solid color(grey)
+$aside-font-size    : 1.4rem
+$aside-font-family  : $font-primary
+$aside-line-height  : 1.65
+$aside-margin-side  : 1.5rem
+$aside-opacity      : 0.4
+$aside-padding      : 0 2rem
+$aside-transition   : $transition
+$aside-width        : $width-aside
+
+
+//  Style
+// ============================================================================
+
+//  Aside content
+//  :hover       - show aside on hover
+//  [data-label] - style of aside headlines
+
+.aside
+    @extend .text-small
+    
+    @media (max-width: #{$screen-size-large})
+        display: block
+        margin-bottom: $aside-block-margin
+        margin-top: $aside-block-margin
+
+    @media (min-width: #{$screen-size-large})
+        @include position(absolute, top, left, 0, calc(100% + #{$aside-margin-side}))
+        border-left: $aside-border
+        opacity: $aside-opacity
+        padding: $aside-padding
+        transition: $aside-transition
+        white-space: normal
+        width: $aside-width
+
+    &:hover
+        opacity: 1
+
+    &[data-label]:before
+        @extend .label-strong
+        display: block
+
+    .block
+        margin-bottom: ($aside-block-margin / 2)
+
+    .code-inline
+        @extend .code-small
+
+    .code-block
+        @extend .code-block-small
+
+    .table &
+        top: initial
+
+.aside-body
+    display: block
+
+
+//  Aside container
+
+.has-aside
+    position: relative
+
+    &:hover > .aside
+        opacity: 1 

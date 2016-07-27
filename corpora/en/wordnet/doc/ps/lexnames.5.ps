@@ -1,0 +1,456 @@
+%!PS
+%%Version: 3.15
+%%DocumentFonts: (atend)
+%%Pages: (atend)
+%%EndComments
+%ident	"@(#)lp:filter/postscript/postscript/dpost.ps	1.1"
+%
+% Version 3.16 prologue for troff files.
+%
+
+/#copies 1 store
+/aspectratio 1 def
+/formsperpage 1 def
+/landscape false def
+/linewidth .3 def
+/magnification 1 def
+/margin 0 def
+/orientation 0 def
+/resolution 720 def
+/xoffset 0 def
+/yoffset 0 def
+
+/roundpage true def
+/useclippath true def
+/pagebbox [0 0 612 792] def
+
+/R  /Times-Roman def
+/I  /Times-Italic def
+/B  /Times-Bold def
+/BI /Times-BoldItalic def
+/H  /Helvetica def
+/HI /Helvetica-Oblique def
+/HB /Helvetica-Bold def
+/HX /Helvetica-BoldOblique def
+/CW /Courier def
+/CO /Courier def
+/CI /Courier-Oblique def
+/CB /Courier-Bold def
+/CX /Courier-BoldOblique def
+/PA /Palatino-Roman def
+/PI /Palatino-Italic def
+/PB /Palatino-Bold def
+/PX /Palatino-BoldItalic def
+/Hr /Helvetica-Narrow def
+/Hi /Helvetica-Narrow-Oblique def
+/Hb /Helvetica-Narrow-Bold def
+/Hx /Helvetica-Narrow-BoldOblique def
+/KR /Bookman-Light def
+/KI /Bookman-LightItalic def
+/KB /Bookman-Demi def
+/KX /Bookman-DemiItalic def
+/AR /AvantGarde-Book def
+/AI /AvantGarde-BookOblique def
+/AB /AvantGarde-Demi def
+/AX /AvantGarde-DemiOblique def
+/NR /NewCenturySchlbk-Roman def
+/NI /NewCenturySchlbk-Italic def
+/NB /NewCenturySchlbk-Bold def
+/NX /NewCenturySchlbk-BoldItalic def
+/ZD /ZapfDingbats def
+/ZI /ZapfChancery-MediumItalic def
+/VR /Varitimes#Roman def
+/VI /Varitimes#Italic def
+/VB /Varitimes#Bold def
+/VX /Varitimes#BoldItalic def
+/S  /S def
+/S1 /S1 def
+/GR /Symbol def
+
+/inch {72 mul} bind def
+/min {2 copy gt {exch} if pop} bind def
+
+/setup {
+	counttomark 2 idiv {def} repeat pop
+
+	landscape {/orientation 90 orientation add def} if
+	/scaling 72 resolution div def
+	linewidth setlinewidth
+	1 setlinecap
+
+	pagedimensions
+	xcenter ycenter translate
+	orientation neg rotate
+	width 2 div neg height 2 div translate
+	xoffset inch yoffset inch translate
+	margin 2 div dup neg translate
+	magnification dup aspectratio mul scale
+	scaling scaling scale
+
+	/Symbol /S Sdefs cf
+	/Times-Roman /S1 S1defs cf
+	0 0 moveto
+} def
+
+/pagedimensions {
+	useclippath userdict /gotpagebbox known not and {
+		/pagebbox [clippath pathbbox newpath] def
+		roundpage currentdict /roundpagebbox known and {roundpagebbox} if
+	} if
+	pagebbox aload pop
+	4 -1 roll exch 4 1 roll 4 copy
+	landscape {4 2 roll} if
+	sub /width exch def
+	sub /height exch def
+	add 2 div /xcenter exch def
+	add 2 div /ycenter exch def
+	userdict /gotpagebbox true put
+} def
+
+/pagesetup {
+	/page exch def
+	currentdict /pagedict known currentdict page known and {
+		page load pagedict exch get cvx exec
+	} if
+} def
+
+/decodingdefs [
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg /y exch def counttomark 2 idiv {y moveto show} repeat}
+	{neg moveto {2 index stringwidth pop sub exch div 0 32 4 -1 roll widthshow} repeat}
+	{neg moveto {spacewidth sub 0.0 32 4 -1 roll widthshow} repeat}
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg setfunnytext}
+] def
+
+/setdecoding {/t decodingdefs 3 -1 roll get bind def} bind def
+
+/w {neg moveto show} bind def
+/m {neg dup /y exch def moveto} bind def
+/done {/lastpage where {pop lastpage} if} def
+
+/f {
+	dup /font exch def findfont exch
+	dup /ptsize exch def scaling div dup /size exch def scalefont setfont
+	linewidth ptsize mul scaling 10 mul div setlinewidth
+	/spacewidth ( ) stringwidth pop def
+} bind def
+
+/changefont {
+	/fontheight exch def
+	/fontslant exch def
+	currentfont [
+		1 0
+		fontheight ptsize div fontslant sin mul fontslant cos div
+		fontheight ptsize div
+		0 0
+	] makefont setfont
+} bind def
+
+/sf {f} bind def
+
+/cf {
+	dup length 2 idiv
+	/entries exch def
+	/chtab exch def
+	/newfont exch def
+
+	findfont dup length 1 add dict
+	/newdict exch def
+	{1 index /FID ne {newdict 3 1 roll put} {pop pop} ifelse} forall
+
+	newdict /Metrics entries dict put
+	newdict /Metrics get
+	begin
+		chtab aload pop
+		1 1 entries {pop def} for
+		newfont newdict definefont pop
+	end
+} bind def
+
+%
+% A few arrays used to adjust reference points and character widths in some
+% of the printer resident fonts. If square roots are too high try changing
+% the lines describing /radical and /radicalex to,
+%
+%	/radical	[0 -75 550 0]
+%	/radicalex	[-50 -75 500 0]
+%
+
+/Sdefs [
+	/bracketlefttp		[220 500]
+	/bracketleftbt		[220 500]
+	/bracketrighttp		[-70 380]
+	/bracketrightbt		[-70 380]
+	/braceleftbt		[220 490]
+	/bracketrightex		[220 -125 500 0]
+	/radical		[0 0 550 0]
+	% NeWSprint's \(br is too low, compensate
+	statusdict /product get (NeWS Server) eq {
+		/radicalex		[-50 100 500 0]
+		/parenleftex		[-20 100 0 0]
+
+	} {
+		/radicalex		[-50 0 500 0]
+		/parenleftex		[-20 -170 0 0]
+	} ifelse
+	/integral		[100 -50 500 0]
+	/infinity		[10 -75 730 0]
+] def
+
+/S1defs [
+	/underscore		[0 80 500 0]
+	/endash			[7 90 650 0]
+] def
+%%EndProlog
+%%BeginSetup
+mark
+/resolution 720 def
+setup
+2 setdecoding
+%%EndSetup
+%%Page: 1 1
+save
+mark
+1 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 5WN \))3 330( LEXNAMES)1 3340(File Formats)1 517 3 1213 480 t
+9 B f
+(NAME)720 960 w
+10 R f
+(List of WordNet lexicographer \256le names and numbers)7 2260 1 1080 1080 t
+9 B f
+(DESCRIPTION)720 1248 w
+10 R f
+( are organized into forty-\256ve lexicographer \256les based on syntactic)9 2759(During WordNet development synsets)3 1561 2 1080 1368 t
+(category and logical groupings.)3 1304 1 1080 1488 t
+10 B f
+(grind)2457 1488 w
+10 R f
+( produces a database suitable for)5 1369(\(1WN\) processes these \256les and)4 1340 2 2691 1488 t
+( format of the lexicographer)4 1191( The)1 231( WordNet library, interface code, and other applications.)7 2381(use with the)2 517 4 1080 1608 t
+(\256les is described in)3 793 1 1080 1728 t
+10 B f
+(wninput)1906 1728 w
+10 R f
+(\(5WN\).)2263 1728 w
+( parts of the)3 519( numbers are encoded in several)5 1352( File)1 228(A \256le number corresponds to each lexicographer \256le.)7 2221 4 1080 1968 t
+( \256le)1 168( The)1 229(WordNet system as an ef\256cient way to indicate a lexicographer \256le name.)11 3125 3 1080 2088 t
+10 B f
+(lexnames)4642 2088 w
+10 R f
+(lists the)1 324 1 5076 2088 t
+( and can be used by programs or end users to correlate the)12 2532(mapping between \256le names and numbers,)5 1788 2 1080 2208 t
+(two.)1080 2328 w
+9 B f
+(File Format)1 480 1 900 2496 t
+10 R f
+( in)1 117(Each line)1 387 2 1080 2616 t
+10 B f
+(lexnames)1623 2616 w
+10 R f
+( The)1 227(contains 3 tab separated \256elds, and is terminated with a newline character.)11 3117 2 2056 2616 t
+( in the list is numbered)5 989( \256rst \256le)2 366( \(The)1 262(\256rst \256eld is the two digit decimal integer \256le number.)9 2277 4 1080 2736 t
+10 B f
+(00)5014 2736 w
+10 R f
+(.\) The)1 286 1 5114 2736 t
+( that number, and the third \256eld)6 1347(second \256eld is the name of the lexicographer \256le that is represented by)12 2973 2 1080 2856 t
+( is simply a)3 504( This)1 251( of the synsets contained in the \256le.)7 1515(is an integer that indicates the syntactic category)7 2050 4 1080 2976 t
+( syntactic category is also part of the lexicographer \256le's)9 2466(shortcut for programs and scripts, since the)6 1854 2 1080 3096 t
+(name.)1080 3216 w
+9 B f
+(Syntactic Category)1 755 1 900 3384 t
+10 R f
+(The syntactic category \256eld is encoded as follows:)7 2072 1 1080 3504 t
+10 B f
+(1)1440 3744 w
+10 R f
+(NOUN)1800 3744 w
+10 B f
+(2)1440 3864 w
+10 R f
+(VERB)1800 3864 w
+10 B f
+(3)1440 3984 w
+10 R f
+(ADJECTIVE)1800 3984 w
+10 B f
+(4)1440 4104 w
+10 R f
+(ADVERB)1800 4104 w
+9 B f
+(Lexicographer Files)1 790 1 900 4272 t
+10 R f
+( with a)2 298(The names of the lexicographer \256les and their corresponding \256le numbers are listed below along)14 4022 2 1080 4392 t
+(brief description each \256le's contents.)4 1504 1 1080 4512 t
+10 B f
+( Contents)1 1131( Name)1 399(File Number)1 549 3 1334 4752 t
+10 S f
+(_ ___________________________________________________________________________________)1 4173 1 1334 4772 t
+10 R f
+( adjective clusters)2 731( all)1 850(00 adj.all)1 946 3 1334 4892 t
+( adjectives \(pertainyms\))2 975( relational)1 1072(01 adj.pert)1 1001 3 1334 5012 t
+( adverbs)1 343( all)1 828(02 adv.all)1 968 3 1334 5132 t
+( beginner for nouns)3 803( unique)1 844(03 noun.Tops)1 1124 3 1334 5252 t
+( denoting acts or actions)4 1003( nouns)1 895(04 noun.act)1 1040 3 1334 5372 t
+( denoting animals)2 727( nouns)1 739(05 noun.animal)1 1196 3 1334 5492 t
+( denoting man-made objects)3 1153( nouns)1 729(06 noun.artifact)1 1206 3 1334 5612 t
+( denoting attributes of people and objects)6 1696( nouns)1 678(07 noun.attribute)1 1257 3 1334 5732 t
+( denoting body parts)3 843( nouns)1 811(08 noun.body)1 1124 3 1334 5852 t
+( denoting cognitive processes and contents)5 1746( nouns)1 633(09 noun.cognition)1 1302 3 1334 5972 t
+( denoting communicative processes and contents)5 1990( nouns)1 389(10 noun.communication)1 1546 3 1334 6092 t
+( denoting natural events)3 981( nouns)1 795(11 noun.event)1 1140 3 1334 6212 t
+( denoting feelings and emotions)4 1309( nouns)1 734(12 noun.feeling)1 1201 3 1334 6332 t
+( denoting foods and drinks)4 1098( nouns)1 828(13 noun.food)1 1107 3 1334 6452 t
+( denoting groupings of people or objects)6 1663( nouns)1 778(14 noun.group)1 1157 3 1334 6572 t
+( denoting spatial position)3 1033( nouns)1 689(15 noun.location)1 1246 3 1334 6692 t
+( denoting goals)2 627( nouns)1 733(16 noun.motive)1 1202 3 1334 6812 t
+( denoting natural objects \(not man-made\))5 1690( nouns)1 767(17 noun.object)1 1168 3 1334 6932 t
+( denoting people)2 682( nouns)1 745(18 noun.person)1 1190 3 1334 7052 t
+( denoting natural phenomena)3 1186( nouns)1 495(19 noun.phenomenon)1 1440 3 1334 7172 t
+( denoting plants)2 655( nouns)1 811(20 noun.plant)1 1124 3 1334 7292 t
+( 1)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7772 t
+cleartomark
+showpage
+restore
+%%EndPage: 1 1
+%%Page: 2 2
+save
+mark
+2 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 5WN \))3 330( LEXNAMES)1 3340(File Formats)1 517 3 1213 480 t
+( denoting possession and transfer of possession)6 1935( nouns)1 583(21 noun.possession)1 1352 3 1334 960 t
+( denoting natural processes)3 1108( nouns)1 712(22 noun.process)1 1223 3 1334 1080 t
+( denoting quantities and units of measure)6 1691( nouns)1 683(23 noun.quantity)1 1252 3 1334 1200 t
+( denoting relations between people or things or ideas)8 2172( nouns)1 706(24 noun.relation)1 1229 3 1334 1320 t
+( denoting two and three dimensional shapes)6 1796( nouns)1 784(25 noun.shape)1 1151 3 1334 1440 t
+( denoting stable states of affairs)5 1307( nouns)1 828(26 noun.state)1 1107 3 1334 1560 t
+( denoting substances)2 843( nouns)1 623(27 noun.substance)1 1312 3 1334 1680 t
+( denoting time and temporal relations)5 1536( nouns)1 833(28 noun.time)1 1102 3 1334 1800 t
+( of grooming, dressing and bodily care)6 1593( verbs)1 811(29 verb.body)1 1101 3 1334 1920 t
+( of size, temperature change, intensifying, etc.)6 1888( verbs)1 729(30 verb.change)1 1183 3 1334 2040 t
+( of thinking, judging, analyzing, doubting)5 1707( verbs)1 633(31 verb.cognition)1 1279 3 1334 2160 t
+( of telling, asking, ordering, singing)5 1473( verbs)1 389(32 verb.communication)1 1523 3 1334 2280 t
+( of \256ghting, athletic activities)4 1207( verbs)1 533(33 verb.competition)1 1379 3 1334 2400 t
+( of eating and drinking)4 942( verbs)1 494(34 verb.consumption)1 1418 3 1334 2520 t
+( of touching, hitting, tying, digging)5 1447( verbs)1 723(35 verb.contact)1 1189 3 1334 2640 t
+( of sewing, baking, painting, performing)5 1655( verbs)1 690(36 verb.creation)1 1222 3 1334 2760 t
+( of feeling)2 426( verbs)1 683(37 verb.emotion)1 1229 3 1334 2880 t
+( of walking, \257ying, swimming)4 1244( verbs)1 727(38 verb.motion)1 1185 3 1334 3000 t
+( of seeing, hearing, feeling)4 1096( verbs)1 590(39 verb.perception)1 1322 3 1334 3120 t
+( of buying, selling, owning)4 1110( verbs)1 583(40 verb.possession)1 1329 3 1334 3240 t
+( of political and social activities and events)7 1779( verbs)1 778(41 verb.social)1 1134 3 1334 3360 t
+( of being, having, spatial relations)5 1397( verbs)1 750(42 verb.stative)1 1162 3 1334 3480 t
+( of raining, snowing, thawing, thundering)5 1700( verbs)1 696(43 verb.weather)1 1216 3 1334 3600 t
+( adjectives)1 432( participial)1 1127(44 adj.ppl)1 974 3 1334 3720 t
+9 B f
+(NOTES)720 3888 w
+10 R f
+(The lexicographer \256les are not included in the WordNet database package.)10 3058 1 1080 4008 t
+9 B f
+(ENVIRONMENT VARIABLES \(UNIX\))2 1600 1 720 4176 t
+10 B f
+(WNHOME)1080 4296 w
+10 R f
+( is)1 100( Default)1 365(Base directory for WordNet.)3 1165 3 2080 4296 t
+10 B f
+(/usr/local/WordNet-3.0)3743 4296 w
+10 R f
+(.)4723 4296 w
+10 B f
+(WNSEARCHDIR)1080 4464 w
+10 R f
+( which the WordNet database has been installed. Default is)9 2788(Directory in)1 532 2 2080 4464 t
+10 B f
+(WNHOME/dict)2080 4584 w
+10 R f
+(.)2758 4584 w
+9 B f
+(REGISTRY \(WINDOWS\))1 1040 1 720 4752 t
+10 B f
+(HKEY)1080 4872 w
+10 S f
+(_)1375 4872 w
+10 B f
+(LOCAL)1425 4872 w
+10 S f
+(_)1781 4872 w
+10 B f
+(MACHINE)1831 4872 w
+10 S1 f
+(\\)2325 4872 w
+10 B f
+(SOFTWARE)2353 4872 w
+10 S1 f
+(\\)2926 4872 w
+10 B f
+(WordNet)2954 4872 w
+10 S1 f
+(\\)3353 4872 w
+10 B f
+(3.0)3381 4872 w
+10 S1 f
+(\\)3506 4872 w
+10 B f
+(WNHome)3534 4872 w
+10 R f
+( is)1 100( Default)1 365(Base directory for WordNet.)3 1165 3 2080 4992 t
+10 B f
+(C:)3743 4992 w
+10 S1 f
+(\\)3848 4992 w
+10 B f
+(Program Files)1 615 1 3876 4992 t
+10 S1 f
+(\\)4491 4992 w
+10 B f
+(WordNet)4519 4992 w
+10 S1 f
+(\\)4918 4992 w
+10 B f
+(3.0)4946 4992 w
+10 R f
+(.)5071 4992 w
+9 B f
+(FILES)720 5160 w
+10 B f
+(lexnames)1080 5280 w
+10 R f
+(list of lexicographer \256le names and numbers)6 1823 1 2080 5280 t
+9 B f
+(SEE ALSO)1 460 1 720 5448 t
+10 B f
+(grind)1080 5568 w
+10 R f
+(\(1WN\),)1314 5568 w
+10 B f
+(wnintro)1654 5568 w
+10 R f
+(\(5WN\),)1993 5568 w
+10 B f
+(wndb)2333 5568 w
+10 R f
+(\(5WN\),)2573 5568 w
+10 B f
+(wninput)2913 5568 w
+10 R f
+(\(5WN\).)3270 5568 w
+( 2)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 2 2
+%%Trailer
+done
+%%DocumentFonts: Times-Roman Symbol Times-Bold
+%%Pages: 2

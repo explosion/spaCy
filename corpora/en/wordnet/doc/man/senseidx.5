@@ -1,0 +1,164 @@
+'\" t
+.\" $Id$
+.tr ~
+.TH SENSEIDX 5WN "Dec 2006" "WordNet 3.0" "WordNet\(tm File Formats"
+.SH NAME
+index.sense, sense.idx \- WordNet's sense index
+.SH DESCRIPTION
+The WordNet sense index provides an alternate method for accessing
+synsets and word senses in the WordNet database.  It is useful to
+applications that retrieve synsets or other information related to a
+specific sense in WordNet, rather than all the senses of a word or
+collocation.  It can also be used with tools like \fBgrep\fP and Perl
+to find all senses of a word in one or more parts of speech.  A
+specific WordNet sense, encoded as a \fIsense_key\fP, can be used as
+an index into this file to obtain its WordNet sense number, the
+database byte offset of the synset containing the sense, and the
+number of times it has been tagged in the semantic concordance texts.
+
+Concatenating the \fIlemma\fP and \fIlex_sense\fP fields of a
+semantically tagged word (represented in a \fB<wf~\fP...~\fB>\fP
+attribute/value pair) in a semantic concordance file, using \fB%\fP as
+the concatenation character, creates the \fIsense_key\fP for that
+sense, which can in turn be used to search the sense index file.
+
+A \fIsense_key\fP is the best way to represent a sense in semantic
+tagging or other systems that refer to WordNet senses.
+\fIsense_key\fPs are independent of WordNet sense numbers and
+\fIsynset_offset\fPs, which vary between versions of the database.
+Using the sense index and a \fIsense_key\fP, the corresponding synset
+(via the \fIsynset_offset\fP) and WordNet sense number can easily be
+obtained.  A mapping from noun \fIsense_key\fPs in WordNet 1.6 to
+corresponding 2.0 \fIsense_key\fPs is provided with version 2.0,
+and is described in
+.BR sensemap (5WN).
+
+See
+.BR wndb (5WN)
+for a thorough discussion of the WordNet database files.
+.SS File Format
+The sense index file lists all of the senses in the WordNet database
+with each line representing one sense.  The file is in alphabetical
+order, fields are separated by one space, and each line is terminated
+with a newline character.
+
+Each line is of the form:
+
+.RS
+\fIsense_key~~synset_offset~~sense_number~~tag_cnt\fP
+.RE
+
+\fIsense_key\fP is an encoding of the word sense.  Programs can
+construct a sense key in this format and use it as a binary search key
+into the sense index file.  
+The format of a \fIsense_key\fP is
+described below.
+
+\fIsynset_offset\fP is the byte offset that the synset containing the
+sense is found at in the database "data" file corresponding to the
+part of speech encoded in the \fIsense_key\fP.  \fIsynset_offset\fP is
+an 8 digit, zero-filled decimal integer, and can be used with
+.BR fseek (3)
+to read a synset from the data file.  When passed to the WordNet library
+function \fBread_synset(\|)\fP along with the syntactic category, a data
+structure containing the parsed synset is returned.
+
+\fIsense_number\fP is a decimal integer indicating the sense number of
+the word, within the part of speech encoded in \fIsense_key\fP, in the
+WordNet database.  See
+.BR wndb (5WN)
+for information about how sense numbers are assigned.
+
+\fItag_cnt\fP represents the decimal number of times the sense is
+tagged in various semantic concordance texts.  A \fItag_cnt\fP of
+\fB0\fP indicates that the sense has not been semantically tagged.
+.SS Sense Key Encoding
+A \fIsense_key\fP is represented as:
+
+.RS
+\fIlemma\fP\fB%\fP\fIlex_sense\fP
+.RE
+
+where \fIlex_sense\fP is encoded as:
+
+.RS
+\fIss_type\fB:\fIlex_filenum\fB:\fIlex_id\fB:\fIhead_word\fB:\fIhead_id\fR
+.RE
+
+\fIlemma\fP is the ASCII text of the word or collocation as found in
+the WordNet database index file corresponding to \fIpos\fP.
+\fIlemma\fP is in lower case, and collocations are formed by joining
+individual words with an underscore (\fB_\fP) character.
+
+\fIss_type\fP is a one digit decimal integer representing the synset type
+for the sense.  See
+.SB "Synset Type"
+below for a listing of the numbers corresponding to each synset type.
+
+\fIlex_filenum\fP is a two digit decimal integer representing the
+name of the lexicographer file containing the synset for the sense.
+See
+.BR lexnames (5WN)
+for the list of lexicographer file names and their corresponding numbers.
+
+\fIlex_id\fP is a two digit decimal integer that, when appended onto
+\fIlemma\fP, uniquely identifies a sense within a lexicographer file.
+\fIlex_id\fP numbers usually start with \fB00\fP, and are incremented
+as additional senses of the word are added to the same file, although
+there is no requirement that the numbers be consecutive or begin with
+\fB00\fP.  Note that a value of \fB00\fP is the default, and therefore
+is not present in lexicographer files.  Only non-default \fIlex_id\fP
+values must be explicitly assigned in lexicographer files.  See
+.BR wninput (5WN)
+for information on the format of lexicographer files.
+
+\fIhead_word\fP is only present if the sense is in an adjective
+satellite synset.  It is the lemma of the first word of the
+satellite's head synset.
+
+\fIhead_id\fP is a two digit decimal integer that, when appended onto
+\fIhead_word\fP, uniquely identifies the sense of \fIhead_word\fP
+within a lexicographer file, as described for \fIlex_id\fP.  There is
+a value in this field only if \fIhead_word\fP is present.
+.SS Synset Type
+The synset type is encoded as follows:
+
+.RS
+.nf
+\fB1\fP	NOUN
+\fB2\fP	VERB
+\fB3\fP	ADJECTIVE
+\fB4\fP	ADVERB
+\fB5\fP	ADJECTIVE SATELLITE
+.fi
+.RE
+.SH NOTES
+For non-satellite senses the \fIhead_word\fP and \fIhead_id\fP fields
+have no values, however the field separator character (\fB:\fP) is
+present. 
+.SH ENVIRONMENT VARIABLES (UNIX)
+.TP 20
+.B WNHOME
+Base directory for WordNet.  Default is
+\fB/usr/local/WordNet-3.0\fP.
+.TP 20
+.B WNSEARCHDIR
+Directory in which the WordNet database has been installed.  
+Default is \fBWNHOME/dict\fP.
+.SH REGISTRY (WINDOWS)
+.TP 20
+.B HKEY_LOCAL_MACHINE\eSOFTWARE\eWordNet\e3.0\eWNHome
+Base directory for WordNet.  Default is
+\fBC:\eProgram~Files\eWordNet\e3.0\fP.
+.SH FILES
+.TP 20
+.B index.sense
+sense index
+.SH SEE ALSO
+.BR binsrch (3WN),
+.BR wnsearch (3WN),
+.BR lexnames (5WN),
+.BR wnintro (5WN),
+.BR sensemap (5WN),
+.BR wndb (5WN),
+.BR wninput (5WN).

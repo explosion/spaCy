@@ -1,0 +1,186 @@
+include _includes/_mixins
+
+- var logos = [ ['chartbeat', 'https://chartbeat.com'], ['socrata', 'https://www.socrata.com'], ['keyreply', 'https://keyreply.com/'], [ 'kip', 'http://kipthis.com'], ['cytora', 'http://www.cytora.com'], ['signaln', 'http://signaln.com'] ]
+
+
+//-  Landing Page
+//- ============================================================================
+
+header.header
+    .header-body
+        +h1.header-title.header-text
+            | Industrial-strength#[br]
+            | Natural Language#[br]
+            | Processing
+
+        +lead.header-text
+            strong
+                | Thousands of researchers are trying to make#[br]
+                | computers understand text. They're succeeding.#[br]
+                | We help you get their work out of papers and#[br]
+                | into production.#[br]
+
+        +button('secondary')(href='/docs/#install') Install spaCy
+
++divider('bar') 
+    | #[a(href='https://github.com/' + profiles.github + '/spaCy/releases' target='_blank'): #[strong Latest Release:] v#{spacy_version}] 
+    | #[a(href='https://github.com/' + profiles.github + '/spaCy' target='_blank'): +icon('github', 'secondary') #[strong #{spacy_stars}+ stars] on GitHub] 
+    | #[a(href='https://www.reddit.com/r/' + profiles.reddit target='_blank'): +icon('reddit', 'secondary') #[strong User Group] on Reddit]
+
+main.main
+
+    +grid('padding', 'space-between')
+        +grid-col('half')
+            +h2 Built for Production
+            
+            p.text-big.
+                Most AI software is built for research.  Over the last ten years,
+                we've used a lot of that software, and built some of it ourselves, 
+                especially for natural language processing (NLP).
+                But the faster the research has moved, the more impatient we've
+                become. We want to see advanced NLP technologies get out into 
+                great products, as the basis of great businesses. We built spaCy 
+                to make that happen.
+                
+            +h2 Easy and Powerful
+                
+            p.text-big.
+                For any NLP task, there are always lots of competing algorithms. 
+                We don't believe in implementing them all and letting you choose. 
+                Instead, we just implement one &ndash; the best one.   
+                When better algorithms are developed, we can update the library without 
+                breaking your code or bloating the API. This approach makes spaCy
+                both #[strong easier] and #[strong more powerful] than a pluggable
+                architecture. spaCy also features a #[strong unique whole-document design].
+                Where other NLP libraries rely on sentence detection as
+                a pre-process, spaCy reads the whole document at once, making it much more
+                robust to informal and poorly formatted text.  
+               
+            +h2 Permissive open-source license (MIT)
+            p.text-big.
+                We think spaCy is valuable software, so we made it free, to raise
+                its value even higher.
+                Making spaCy open-source puts us on the same side &ndash;
+                we can tell you everything about how it works, and let
+                you run it however you like. We think the software would be much
+                less valuable as a service, which could disappear at any point.
+            
+        +grid-col('half', 'valign-bottom')
+            +code-demo('lightning_tour.py').block.
+                # pip install spacy && python -m spacy.en.download
+                import spacy
+                
+                # Load English tokenizer, tagger, parser, NER and word vectors
+                nlp = spacy.load('en')
+                # Process a document, of any size
+                text = open('war_and_peace.txt').read()
+                doc = nlp(text)
+                
+                from spacy.attrs import *
+                # All strings mapped to integers, for easy export to numpy
+                np_array = doc.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
+
+                from reddit_corpus import RedditComments
+                reddit = RedditComments('/path/to/reddit/corpus')
+                # Parse a stream of documents, with multi-threading (no GIL!)
+                # Processes over 100,000 tokens per second.
+                for doc in nlp.pipe(reddit.texts, batch_size=10000, n_threads=4):
+                    # Multi-word expressions, such as names, dates etc
+                    # can be merged into single tokens
+                    for ent in doc.ents:
+                        ent.merge(ent.root.tag_, ent.text, ent.ent_type_)
+                    # Efficient, lossless serialization --- all annotations
+                    # saved, same size as uncompressed text
+                    byte_string = doc.to_bytes()
+
+    +h2.text-center
+        +label('strong') spaCy is trusted by
+
+    +grid('space-around', 'valign-center', 'padding')
+        each logo in logos
+            a(href=logo[1] target='_blank')
+                img(src='assets/img/logos/' + logo[0] + '.png').logo--small
+
+    +divider
+
+    +grid
+        +grid-col('half', 'valign-center', 'align-center')
+            .image-container
+                img(src='assets/img/spacy_screen.png' style='display: block')
+
+        +grid-col('half')
+            +h2 
+                +label('strong') About spaCy
+                .h2 What we do
+
+            p.text-big spaCy helps you write programs that do clever things with text.  You give it a string of characters, it gives you an object that provides multiple useful views of its meaning and linguistic structure.  Specifically, spaCy features a high performance tokenizer, part-of-speech tagger, named entity recognizer and syntactic dependency parser, with built-in support for word vectors. All of the functionality is united behind a clean high-level Python API, that makes it easy to use the different annotations together.
+            
+            p.text-big To make spaCy as fast and easy to install as we could, we built it #[strong from the ground up] from custom components, with #[strong custom implementations], and sometimes #[strong custom algorithms]. It's written in clean but efficient Cython code, which allows us to manage both low level details and the high-level Python API in a single codebase.
+ 
+    +divider
+
+    +h2.text-center
+        +label('strong') What our users say...
+
+    +grid('padding')
+        +grid-col('third', 'valign-center')
+            <blockquote class="twitter-tweet" data-cards="hidden" data-lang="en"><p lang="en" dir="ltr">&quot;Dead Code Should be Buried&quot; <a href="http://t.co/AxfZRRz8nB">http://t.co/AxfZRRz8nB</a> by <a href="https://twitter.com/honnibal">@honnibal</a> on NLP tools &amp; new Python library spaCy <a href="http://t.co/C9f798R3aO">http://t.co/C9f798R3aO</a> looks nice!</p>&mdash; Andrej Karpathy (@karpathy) <a href="https://twitter.com/karpathy/status/640098689894232064">September 5, 2015</a></blockquote>
+
+        +grid-col('third', 'valign-center')
+            <blockquote class="twitter-tweet" data-cards="hidden" data-lang="en"><p lang="en" dir="ltr">spaCy seems pretty exciting to me - and it is clear that NLTK has not kept up with <a href="https://twitter.com/hashtag/NLP?src=hash">#NLP</a>. <a href="http://t.co/mUPFUMLrbo">http://t.co/mUPFUMLrbo</a> <a href="https://twitter.com/hashtag/python?src=hash">#python</a> <a href="https://twitter.com/hashtag/datascience?src=hash">#datascience</a></p>&mdash; Alex Engler (@AlexCEngler) <a href="https://twitter.com/AlexCEngler/status/648537133544833025">September 28, 2015</a></blockquote>
+
+        +grid-col('third', 'valign-center')
+            <blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Explore what NLP can do these days with Sense2vec and Spacy <a href="https://t.co/MHZEP2yLo4">https://t.co/MHZEP2yLo4</a></p>&mdash; Chattermill.io (@chatter_mill) <a href="https://twitter.com/chatter_mill/status/699660272907059200">February 16, 2016</a></blockquote>
+
+    +divider
+
+    +grid('padding', 'valign-center')
+        +grid-col('half')
+            +h2
+                .label-strong Benchmarks
+                .h2 State-of-the-art speed and accuracy
+
+            p.text-big spaCy is committed to rigorous evaluation under standard methodology.  Two peer-reviewed papers in 2015 confirm that it offers the #[strong fastest syntactic parser in the world] and that #[strong its accuracy is within 1% of the best] available. The few systems that are more accurate are 20&times; slower or more.
+            
+            p.text-big The first of the evaluations was published by #[strong Yahoo! Labs] and #[strong Emory University], as part of a survey of current parsing technologies #[a(href="http://aclweb.org/anthology/P/P15/P15-1038.pdf" target="_blank") (Choi et al., 2015)].  Their results and subsequent discussions helped us develop a novel psychologically-motivated technique to improve spaCy's accuracy, which we published in joint work with Macquarie University #[a(href="https://aclweb.org/anthology/D/D15/D15-1162.pdf" target="_blank") (Honnibal and Johnson, 2015)].
+        
+        +grid-col('half')
+            +table(["System", "Language", "Accuracy", "Speed (WPS)"])
+               +row
+                   +cell #[+logo('tiny')]
+                   +cell #[strong Cython]
+                   +cell #[strong 91.8]
+                   +cell #[strong 13,963]
+               +row
+                   +cell ClearNLP
+                   +cell Java
+                   +cell 91.7
+                   +cell 10,271
+               +row
+                   +cell CoreNLP
+                   +cell Java
+                   +cell 89.6
+                   +cell 8,602
+               +row
+                   +cell MATE
+                   +cell Java
+                   +cell 92.5
+                   +cell 550
+               +row
+                   +cell Turbo
+                   +cell C++
+                   +cell 92.4
+                   +cell 349
+
+            
+    +divider
+
+    +h2.text-center
+        .label-strong Latest Blog Posts
+        .h3 Read more about NLP
+
+    !=partial('_includes/_latest-posts', { max: 3 } )
+
+    !=partial('_includes/_newsletter', { divider: 'top' } )
+
+    script(async src="https://platform.twitter.com/widgets.js" charset="utf-8")

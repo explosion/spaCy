@@ -1,0 +1,362 @@
+'\" t
+.\" $Id$
+.tr ~
+.TH WNDB 5WN "Dec 2006" "WordNet 3.0" "WordNet\(tm File Formats"
+.SH NAME
+index.noun, data.noun, index.verb, data.verb, index.adj, data.adj, index.adv, data.adv \- WordNet database files
+.LP
+noun.exc, verb.exc. adj.exc adv.exc \- morphology exception lists
+.LP
+sentidx.vrb, sents.vrb \- files used by search code to display
+sentences illustrating the use of some specific verbs
+.SH DESCRIPTION
+For each syntactic category, two files are needed to represent the
+contents of the WordNet database \- \fBindex.\fP\fIpos\fP and
+\fBdata.\fP\fIpos\fP, where \fIpos\fP is \fBnoun\fP, \fBverb\fP,
+\fBadj\fP and \fBadv\fP.  The other auxiliary files are used by the
+WordNet library's searching functions and are needed to run the
+various WordNet browsers.
+
+Each index file is an alphabetized list of all the words found in
+WordNet in the corresponding part of speech.  On each line, following
+the word, is a list of byte offsets (\fIsynset_offset\fPs) in the
+corresponding data file, one for each synset containing the word.
+Words in the index file are in lower case only, regardless of how they
+were entered in the lexicographer files.  This folds various
+orthographic representations of the word into one line enabling
+database searches to be case insensitive.  See
+.BR wninput (5WN)
+for a detailed description of the lexicographer files
+
+A data file for a syntactic category contains information
+corresponding to the synsets that were specified in the lexicographer
+files, with relational pointers resolved to \fIsynset_offset\fPs.
+Each line corresponds to a synset.  Pointers are followed and
+hierarchies traversed by moving from one synset to another via the
+\fIsynset_offset\fPs.  
+
+The exception list files, \fIpos\fP\fB.exc\fP, are used to help the
+morphological processor find base forms from irregular inflections.
+
+The files \fBsentidx.vrb\fP and \fBsents.vrb\fP contain sentences
+illustrating the use of specific senses of some verbs.  These files
+are used by the searching software in response to a request for verb
+sentence frames.  Generic sentence frames are displayed when an
+illustrative sentence is not present.
+
+The various database files are in ASCII formats that are easily read
+by both humans and machines.  All fields, unless otherwise noted, are
+separated by one space character, and all lines are terminated by a
+newline character.  Fields enclosed in italicized square brackets may
+not be present.
+
+See 
+.BR wngloss (7WN)
+for a glossary of WordNet terminology and a discussion of the
+database's content and logical organization.
+.SS Index File Format
+Each index file begins with several lines containing a copyright
+notice, version number and license agreement.  These lines all begin
+with two spaces and the line number so they do not interfere with the
+binary search algorithm that is used to look up entries in the index
+files.  All other lines are in the following format.  In the field
+descriptions, \fBnumber\fP always refers to a decimal integer unless
+otherwise defined.
+
+.nf
+\fIlemma~~pos~~synset_cnt~~p_cnt~~[ptr_symbol...]~~sense_cnt~~tagsense_cnt ~~synset_offset~~[synset_offset...]\fP
+.fi
+
+.TP 15
+.I lemma
+lower case ASCII text of word or collocation.  Collocations are formed
+by joining individual words with an underscore (\fB_\fP) character.
+.TP 15
+.I pos
+Syntactic category: \fBn\fP for noun files, 
+\fBv\fP for verb files, \fBa\fP for adjective files, \fBr\fP for
+adverb files.
+
+.LP
+All remaining fields are with respect to senses of \fIlemma\fP in
+\fIpos\fP.
+
+.TP 15
+.I synset_cnt
+Number of synsets that \fIlemma\fP is in.  This is the
+number of senses of the word in WordNet. See 
+.SM \fBSense Numbers\fP
+below for a discussion of how sense numbers are assigned and the order
+of \fIsynset_offset\fPs in the index files.
+.TP 15
+.I p_cnt
+Number of different pointers that \fIlemma\fP has in all synsets
+containing it.
+.TP 15
+.I ptr_symbol
+A space separated list of \fIp_cnt\fP different types of pointers that
+\fIlemma\fP has in all synsets containing it. See
+.BR wninput (5WN)
+for a list of \fIpointer_symbol\fPs.  If all senses of \fIlemma\fP
+have no pointers, this field is omitted and \fIp_cnt\fP is \fB0\fP.
+.TP 15
+.I sense_cnt
+Same as \fIsense_cnt\fP above.  This is redundant, but the field was
+preserved for compatibility reasons.
+.TP 15
+.I tagsense_cnt
+Number of senses of \fIlemma\fP that are ranked according to
+their frequency of occurrence in semantic concordance texts.
+.TP 15
+.I synset_offset
+Byte offset in \fBdata.\fIpos\fR file of a synset containing
+\fIlemma\fP.  Each \fIsynset_offset\fP in the list corresponds to a
+different sense of \fIlemma\fP in WordNet.  \fIsynset_offset\fP is an
+8 digit, zero-filled decimal integer that can be used with
+.BR fseek (3)
+to read a synset from the data file.  When passed to
+.BR read_synset (3WN)
+along with the syntactic category, a data structure containing the
+parsed synset is returned.
+.SS Data File Format
+Each data file begins with several lines containing a copyright
+notice, version number and license agreement.  These lines all begin
+with two spaces and the line number.  All other lines are in the
+following format.  Integer fields are of fixed length, and are
+zero-filled.
+
+.nf
+\fIsynset_offset~~lex_filenum~~ss_type~~w_cnt~~word~~lex_id~~[word~~lex_id...]~~p_cnt~~[ptr...]~~[frames...]~~\fB|\fP\fI~~gloss\fP
+.fi
+
+.TP 15
+.I synset_offset
+Current byte offset in the file represented as an 8 digit decimal
+integer. 
+.TP 15
+.I lex_filenum
+Two digit decimal integer corresponding to the lexicographer file name
+containing the synset.  See
+.BR lexnames (5WN)
+for the list of filenames and their corresponding numbers.
+.TP 15
+.I ss_type
+One character code indicating the synset type: 
+
+.RS
+.nf
+\fBn\fP	NOUN
+\fBv\fP	VERB
+\fBa\fP	ADJECTIVE
+\fBs\fP	ADJECTIVE SATELLITE
+\fBr\fP	ADVERB
+.fi
+.RE
+.TP 15
+.I w_cnt
+Two digit hexadecimal integer indicating the number of words in the
+synset.
+.TP 15
+.I word
+ASCII form of a word as entered in the synset by the lexicographer,
+with spaces replaced by underscore characters (\fB_\fP).  The text of
+the word is case sensitive, in contrast to its form in the
+corresponding \fBindex.\fP\fIpos\fP file, that contains only
+lower-case forms.  In \fBdata.adj\fP, a \fIword\fP is followed by a
+syntactic marker if one was specified in the lexicographer file.  A
+syntactic marker is appended, in parentheses, onto \fIword\fP without
+any intervening spaces.  See
+.BR wninput (5WN)
+for a list of the syntactic markers for adjectives.
+.TP 15
+.I lex_id
+One digit hexadecimal integer that, when appended onto \fIlemma\fP,
+uniquely identifies a sense within a lexicographer file.  \fIlex_id\fP
+numbers usually start with \fB0\fP, and are incremented as additional
+senses of the word are added to the same file, although there is no
+requirement that the numbers be consecutive or begin with \fB0\fP.
+Note that a value of \fB0\fP is the default, and therefore is not
+present in lexicographer files. 
+.TP 15
+.I p_cnt
+Three digit decimal integer indicating the number of pointers from
+this synset to other synsets.  If \fIp_cnt\fP is \fB000\fP the synset
+has no pointers.
+.TP 15
+.I ptr
+A pointer from this synset to another.  \fIptr\fP is of the form:
+
+.nf
+\fIpointer_symbol~~synset_offset~~pos~~source/target\fR
+.fi
+
+where \fIsynset_offset\fP is the byte offset of the target synset in
+the data file corresponding to \fIpos\fP.
+
+The \fIsource/target\fP field distinguishes lexical and semantic
+pointers.  It is a four byte field, containing two two-digit
+hexadecimal integers.  The first two digits indicates the word number
+in the current (source) synset, the last two digits indicate the word
+number in the target synset.  A value of \fB0000\fP means that
+\fIpointer_symbol\fP represents a semantic relation between the
+current (source) synset and the target synset indicated by
+\fIsynset_offset\fP.
+
+A lexical relation between two words in different synsets is
+represented by non-zero values in the source and target word numbers.
+The first and last two bytes of this field indicate the word numbers
+in the source and target synsets, respectively, between which the
+relation holds.  Word numbers are assigned to the \fIword\fP fields in
+a synset, from left to right, beginning with \fB1\fP.
+
+See 
+.BR wninput (5WN)
+for a list of \fIpointer_symbol\fPs, and semantic and lexical pointer
+classifications.
+.TP 15
+.I frames
+In \fBdata.verb\fP only, a list of numbers corresponding to the
+generic verb sentence frames for \fIword\fPs in the synset.  
+\fIframes\fP is of the form:
+
+.nf
+\fIf_cnt~~\fP \fB+\fP \fI~~f_num~~w_num~~[\fP \fB+\fP \fI~~f_num~~w_num...]\fP
+.fi
+
+where \fIf_cnt\fP a two digit decimal integer indicating the number of
+generic frames listed, \fIf_num\fP is a two digit decimal integer
+frame number, and \fIw_num\fP is a two digit hexadecimal integer
+indicating the word in the synset that the frame applies to.  As with
+pointers, if this number is \fB00\fP, \fIf_num\fP applies to all
+\fIword\fPs in the synset.  If non-zero, it is applicable only to the
+word indicated.  Word numbers are assigned as described for pointers.
+Each \fIf_num~~w_num\fP pair is preceded by a \fB+\fP.
+See
+.BR wninput (5WN)
+for the text of the generic sentence frames.
+.TP
+.I gloss
+Each synset contains a gloss.  A \fIgloss\fP is represented as a
+vertical bar (\fB|\fP), followed by a text string that continues until
+the end of the line.  The gloss may contain a definition, one or more
+example sentences, or both.
+.SS Sense Numbers
+Senses in WordNet are generally ordered from most to least frequently
+used, with the most common sense numbered \fB1\fP.  Frequency of use is
+determined by the number of times a sense is tagged in the various
+semantic concordance texts.  Senses that are not semantically tagged
+follow the ordered senses.  The \fItagsense_cnt\fP field for each
+entry in the \fBindex.\fIpos\fR files indicates how many of the senses
+in the list have been tagged.
+
+The 
+.BR cntlist (5WN)
+file provided with the database lists the number of times each sense
+is tagged in the semantic concordances.  The data from \fBcntlist\fP
+is used by
+.BR grind (1WN)
+to order the senses of each word.  When the \fBindex\fP.\fIpos\fP
+files are generated, the \fIsynset_offset\fPs are output in sense
+number order, with sense 1 first in the list.  Senses with the same
+number of semantic tags are assigned unique but consecutive sense
+numbers.  The WordNet 
+.SB OVERVIEW
+search displays all senses of the
+specified word, in all syntactic categories, and indicates which of
+the senses are represented in the semantically tagged texts.
+.SS Exception List File Format
+Exception lists are alphabetized lists of inflected forms of words and
+their base forms.  The first field of each line is an inflected form,
+followed by a space separated list of one or more base forms of the
+word.  There is one exception list file for each syntactic category.
+
+Note that the noun and verb exception lists were automatically
+generated from a machine-readable dictionary, and contain many words
+that are not in WordNet.  Also, for many of the inflected forms, base
+forms could be easily derived using the standard rules of detachment
+programmed into Morphy (See
+.BR morph (7WN)).
+These anomalies are allowed to remain in the exception list files,
+as they do no harm.
+
+.SS Verb Example Sentences
+For some verb senses, example sentences illustrating the use of the
+verb sense can be displayed.  Each line of the file \fBsentidx.vrb\fP
+contains a \fIsense_key\fP followed by a space and a comma separated
+list of example sentence template numbers, in decimal.  The file
+\fBsents.vrb\fP lists all of the example sentence templates.  Each
+line begins with the template number followed by a space.  The rest of
+the line is the text of a template example sentence, with \fB%s\fP
+used as a placeholder in the text for the verb.  Both files are sorted
+alphabetically so that the \fIsense_key\fP and template sentence
+number can be used as indices, via
+.BR binsrch (3WN), 
+into the appropriate file.
+
+When a request for 
+.SB FRAMES
+is made, the WordNet search code looks
+for the sense in \fBsentidx.vrb\fP.  If found, the sentence
+template(s) listed is retrieved from \fBsents.vrb\fP, and the \fB%s\fP
+is replaced with the verb.  If the sense is not found, the applicable
+generic sentence frame(s) listed in \fIframes\fP is displayed.
+.SH NOTES
+Information in the \fBdata.\fIpos\fR and \fBindex.\fIpos\fR files
+represents all of the word senses and synsets in the WordNet database.
+The \fIword\fP, \fIlex_id\fP, and \fIlex_filenum\fP fields together
+uniquely identify each word sense in WordNet.  These can be encoded in
+a \fIsense_key\fP as described in
+.BR senseidx (5WN).
+Each synset in the database can be uniquely identified by combining
+the \fIsynset_offset\fP for the synset with a code for the syntactic
+category (since it is possible for synsets in different
+\fBdata.\fIpos\fR files to have the same \fIsynset_offset\fP).
+
+The WordNet system provide both command line and window-based browser
+interfaces to the database.  Both interfaces utilize a common library
+of search and morphology code.  The source code for the library and
+interfaces is included in the WordNet package.  See
+.BR wnintro (3WN)
+for an overview of the WordNet source code.
+.SH ENVIRONMENT VARIABLES (UNIX)
+.TP 20
+.B WNHOME
+Base directory for WordNet.  Default is
+\fB/usr/local/WordNet-3.0\fP.
+.TP 20
+.B WNSEARCHDIR
+Directory in which the WordNet database has been installed.  
+Default is \fBWNHOME/dict\fP.
+.SH REGISTRY (WINDOWS)
+.TP 20
+.B HKEY_LOCAL_MACHINE\eSOFTWARE\eWordNet\e3.0\eWNHome
+Base directory for WordNet.  Default is
+\fBC:\eProgram~Files\eWordNet\e3.0\fP.
+.SH FILES
+.TP 20
+.B index.\fIpos\fP
+database index files
+.TP 20
+.B data.\fIpos\fP
+database data files
+.TP 20
+.B *.vrb
+files of sentences illustrating the use of verbs
+.TP 20
+.B \fIpos\fP.exc
+morphology exception lists
+.SH SEE ALSO
+.BR grind (1WN),
+.BR wn (1WN),
+.BR wnb (1WN),
+.BR wnintro (3WN),
+.BR binsrch (3WN),
+.BR wnintro (5WN),
+.BR cntlist (5WN),
+.BR lexnames (5WN),
+.BR senseidx (5WN),
+.BR wninput (5WN),
+.BR morphy (7WN),
+.BR wngloss (7WN),
+.BR wngroups (7WN),
+.BR wnstats (7WN).

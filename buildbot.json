@@ -1,0 +1,25 @@
+{
+    "build": {
+        "sdist": [
+            "pip install -r requirements.txt",
+            "pip install \"numpy<1.8\"",
+            "python setup.py sdist"
+        ],
+        "install": [
+            "pip install -v source.tar.gz"
+        ],
+        "wheel": [
+            "python untar.py source.tar.gz .",
+            "python setup.py bdist_wheel",
+            "python cpdist.py dist"
+        ]
+    },
+    "test": {
+        "after": ["install", "wheel"],
+        "run": [
+            "python -m spacy.en.download --force"
+        ],
+        "package": "spacy",
+        "args": "--tb=native -x --models --vectors --slow"
+    }
+}

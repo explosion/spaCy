@@ -1,0 +1,273 @@
+//-  Docs > API > English
+//- ============================================================================
+
++section('english')
+    +h2('english', 'https://github.com/' + profiles.github + '/spaCy/blob/master/spacy/language.py#L40')
+        | #[+label('tag') class] English(Language)
+
+    p.
+        The English analysis pipeline. Usually you'll load this once per process,
+        and pass the instance around your program.
+    
+    +code('python', 'overview').
+        class Language:
+            lang = None
+            def __init__(self, data_dir=None, tokenizer=None, tagger=None, parser=None, entity=None, matcher=None):
+                return self
+            
+            def __call__(self, text, tag=True, parse=True, entity=True):
+                return Doc()
+
+            def pipe(self, texts_iterator, batch_size=1000, n_threads=2):
+                yield Doc()
+
+            def end_training(self, data_dir=None):
+                return None
+
+        class English(Language):
+            lang = 'en'
+
+        # class German(Language): &lt;-- Coming soon
+        #    lang = 'de'
+
+    +section('english-init')
+        +h3('english-init')
+            | #[+label('tag') method] English.__init__
+            
+        p
+            | Load the pipeline.  Each component can be passed
+            | as an argument, or left as #[code None], in which case it will be loaded
+            | from a classmethod, named e.g. #[code default_vocab()].
+            
+            +aside("Efficiency").
+                Loading takes 10-20 seconds, and the instance consumes 2 to 3 
+                gigabytes of memory.  Intended use is for one instance to be
+                created for each language per process, but you can create more
+                if you're doing something unusual. You may wish to make the
+                instance a global variable or 'singleton'.
+
+        +table(['Example', 'Description'], 'code')
+            +row
+                +cell #[code.lang-python nlp = English()]
+                +cell Load everything, from default package
+
+            +row
+                +cell #[code.lang-python nlp = English(data_dir='my_data')]
+                +cell Load everything, from specified dir
+
+            +row
+                +cell #[code.lang-python nlp = English(parser=False)]
+                +cell Load everything except the parser.
+
+            +row
+                +cell #[code.lang-python nlp = English(parser=False, tagger=False)]
+                +cell Load everything except the parser and tagger.
+
+            +row
+                +cell #[code.lang-python nlp = English(parser=MyParser())]
+                +cell Supply your own parser
+
+        +code('python', 'Definition').
+            def __init__(self, data_dir=None, tokenizer=None, tagger=None, parser=None, entity=None, matcher=None):
+                return self
+           
+        +table(['Arg', 'Type', 'Description'], 'params')
+            +row
+                +cell data_dir
+                +cell str
+                +cell.
+                    The data directory. If None, value is obtained via the 
+                    #[code default_data_dir()] method.
+
+            +row
+                +cell vocab
+                +cell #[code Vocab]
+                +cell.
+                    The vocab object, which should be an instance of class 
+                    #[code spacy.vocab.Vocab]. If #[code None], the object is 
+                    obtained from the #[code default_vocab()] class method. The 
+                    vocab object manages all of the language specific rules and 
+                    definitions, maintains the cache of lexical types, and manages 
+                    the word vectors. Because the vocab owns this important data, 
+                    most objects hold a reference to the vocab.
+
+            +row
+                +cell tokenizer
+                +cell #[code Tokenizer]
+                +cell.
+                    The tokenizer, which should be a callable that accepts a 
+                    unicode string, and returns a #[code Doc] object. If set to 
+                    #[code None], the default tokenizer is constructed from the 
+                    #[code default_tokenizer()] method.
+
+            +row
+                +cell tagger
+                +cell #[code Tagger]
+                +cell.
+                    The part-of-speech tagger, which should be a callable that 
+                    accepts a #[code Doc] object, and sets the part-of-speech 
+                    tags in-place. If set to None, the default tagger is constructed 
+                    from the #[code default_tagger()] method.
+
+            +row
+                +cell parser
+                +cell #[code Parser]
+                +cell.
+                    The dependency parser, which should be a callable that accepts 
+                    a #[code Doc] object, and sets the sentence boundaries,
+                    syntactic heads and dependency labels in-place.
+                    If set to #[code None], the default parser is 
+                    constructed from the #[code default_parser()] method. To disable
+                    the parser and prevent it from being loaded, pass #[code parser=False].
+
+            +row
+                +cell entity
+                +cell #[code Parser]
+                +cell.
+                    The named entity recognizer, which should be a callable that 
+                    accepts a #[code Doc] object, and sets the named entity annotations 
+                    in-place. If set to None, the default entity recognizer is 
+                    constructed from the #[code default_entity()] method. To disable
+                    the entity recognizer and prevent it from being loaded, pass
+                    #[code entity=False].
+
+            +row
+                +cell matcher
+                +cell #[code Matcher]
+                +cell.
+                    The pattern matcher, which should be a callable that accepts 
+                    a #[code Doc] object, and sets named entity annotations in-place
+                    using token-based rules. If set 
+                    to None, the default matcher is constructed from the 
+                    #[code default_matcher()] method.
+
+        +section('english-call')
+            +h3('english-call')
+                | #[+label('tag') method] English.__call__
+
+            p
+                | The main entry point to spaCy. Takes raw unicode text, and returns 
+                | a #[code Doc] object, which can be iterated to access #[code Token] 
+                | and #[code Span] objects.
+                
+                +aside("Efficiency").
+                    spaCy's algorithms are all linear-time, so you can supply 
+                    documents of arbitrary length, e.g. whole novels.
+
+            +table(['Example', 'Description'], 'code')
+                +row
+                    +cell #[code.lang-python doc = nlp(u'Some text.')]
+                    +cell Apply the full pipeline.
+                +row
+                    +cell #[code.lang-python doc = nlp(u'Some text.', parse=False)]
+                    +cell Applies tagger and entity, not parser
+                +row
+                    +cell #[code.lang-python doc = nlp(u'Some text.', entity=False)]
+                    +cell Applies tagger and parser, not entity.
+                +row
+                    +cell #[code.lang-python doc = nlp(u'Some text.', tag=False)]
+                    +cell Does not apply tagger, entity or parser
+                +row
+                    +cell #[code.lang-python doc = nlp(u'')]
+                    +cell Zero-length tokens, not an error
+                +row
+                    +cell #[code.lang-python doc = nlp(b'Some text')]
+                    +cell Error: need unicode
+                +row
+                    +cell #[code.lang-python doc = nlp(b'Some text'.decode('utf8'))]
+                    +cell Decode bytes into unicode first.
+
+            +code('python', 'Definition').
+                def __call__(self, text, tag=True, parse=True, entity=True, matcher=True):
+                    return self
+
+            +table(['Name', 'Type', 'Description'], 'params')
+                +row
+                    +cell text
+                    +cell #[a(href=link_unicode target='_blank') unicode]
+                    +cell.
+                        The text to be processed. spaCy expects raw unicode text 
+                        – you don't necessarily need to, say, split it into paragraphs. 
+                        However, depending on your documents, you might be better 
+                        off applying custom pre-processing. Non-text formatting, 
+                        e.g. from HTML mark-up, should be removed before sending 
+                        the document to spaCy. If your documents have a consistent 
+                        format, you may be able to improve accuracy by pre-processing. 
+                        For instance, if the first word of your documents are always 
+                        in upper-case, it may be helpful to normalize them before 
+                        supplying them to spaCy.
+
+                +row
+                    +cell tag
+                    +cell #[a(href=link_bool target='_blank') bool]
+                    +cell.
+                        Whether to apply the part-of-speech tagger. Required for 
+                        parsing and entity recognition.
+
+                +row
+                    +cell parse
+                    +cell #[a(href=link_bool target='_blank') bool]
+                    +cell.
+                        Whether to apply the syntactic dependency parser.
+
+                +row
+                    +cell entity
+                    +cell #[a(href=link_bool target='_blank') bool]
+                    +cell.
+                        Whether to apply the named entity recognizer.
+
+        +section('english-pipe')
+            +h3('english-pipe')
+                | #[+label('tag') method] English.pipe
+
+            p
+                | Parse a sequence of texts into a sequence of #[code Doc] objects. 
+                | Accepts a generator as input, and produces a generator as output. 
+                | Internally, it accumulates a buffer of #[code batch_size] 
+                | texts, works on them with #[code n_threads] workers in parallel, 
+                | and then yields the #[code Doc] objects one by one.
+                
+                +aside('Efficiency').
+                    spaCy releases the global interpreter lock around the parser and 
+                    named entity recognizer, allowing shared-memory parallelism via 
+                    OpenMP. However, OpenMP is not supported on OSX — so multiple 
+                    threads will only be used on Linux and Windows.
+
+            +table(["Example", "Description"], 'usage')
+                +row
+                    +cell #[a(href='https://github.com/' + profiles.github + '/spaCy/blob/master/examples/parallel_parse.py' target='_blank') parallel_parse.py]
+                    +cell Parse comments from Reddit in parallel.
+
+            +code('python', 'Definition').
+                def pipe(self, texts, n_threads=2, batch_size=1000):
+                    yield Doc()
+
+            +table(['Arg', 'Type', 'Description'], 'params')
+                +row
+                    +cell texts
+                    +cell
+                    +cell.
+                        A sequence of unicode objects. Usually you will want this 
+                        to be a generator, so that you don't need to have all of 
+                        your texts in memory.
+
+                +row
+                    +cell n_threads
+                    +cell #[a(href=link_int target='_blank') int]
+                    +cell.
+                        The number of worker threads to use. If -1, OpenMP will 
+                        decide how many to use at run time. Default is 2.
+
+                +row
+                    +cell batch_size
+                    +cell #[a(href=link_int target='_blank') int]
+                    +cell.
+                        The number of texts to buffer. Let's say you have a 
+                        #[code batch_size] of 1,000. The input, #[code texts], is 
+                        a generator that yields the texts one-by-one. We want to 
+                        operate on them in parallel. So, we accumulate a work queue. 
+                        Instead of taking one document from #[code texts] and 
+                        operating on it, we buffer #[code batch_size] documents, 
+                        work on them in parallel, and then yield them one-by-one. 
+                        Higher #[code batch_size] therefore often results in better
+                        parallelism, up to a point.

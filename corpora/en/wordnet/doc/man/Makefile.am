@@ -1,0 +1,1 @@
+man_MANS = binsrch.3 cntlist.5 grind.1 lexnames.5 morph.3 morphy.7 senseidx.5 uniqbeg.7 wn.1 wnb.1 wndb.5 wngloss.7 wngroups.7 wninput.5 wnintro.1 wnintro.3 wnintro.5 wnintro.7 wnlicens.7 wnpkgs.7 wnsearch.3 wnstats.7 wnutil.3

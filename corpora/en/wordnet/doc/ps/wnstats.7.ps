@@ -1,0 +1,421 @@
+%!PS
+%%Version: 3.15
+%%DocumentFonts: (atend)
+%%Pages: (atend)
+%%EndComments
+%ident	"@(#)lp:filter/postscript/postscript/dpost.ps	1.1"
+%
+% Version 3.16 prologue for troff files.
+%
+
+/#copies 1 store
+/aspectratio 1 def
+/formsperpage 1 def
+/landscape false def
+/linewidth .3 def
+/magnification 1 def
+/margin 0 def
+/orientation 0 def
+/resolution 720 def
+/xoffset 0 def
+/yoffset 0 def
+
+/roundpage true def
+/useclippath true def
+/pagebbox [0 0 612 792] def
+
+/R  /Times-Roman def
+/I  /Times-Italic def
+/B  /Times-Bold def
+/BI /Times-BoldItalic def
+/H  /Helvetica def
+/HI /Helvetica-Oblique def
+/HB /Helvetica-Bold def
+/HX /Helvetica-BoldOblique def
+/CW /Courier def
+/CO /Courier def
+/CI /Courier-Oblique def
+/CB /Courier-Bold def
+/CX /Courier-BoldOblique def
+/PA /Palatino-Roman def
+/PI /Palatino-Italic def
+/PB /Palatino-Bold def
+/PX /Palatino-BoldItalic def
+/Hr /Helvetica-Narrow def
+/Hi /Helvetica-Narrow-Oblique def
+/Hb /Helvetica-Narrow-Bold def
+/Hx /Helvetica-Narrow-BoldOblique def
+/KR /Bookman-Light def
+/KI /Bookman-LightItalic def
+/KB /Bookman-Demi def
+/KX /Bookman-DemiItalic def
+/AR /AvantGarde-Book def
+/AI /AvantGarde-BookOblique def
+/AB /AvantGarde-Demi def
+/AX /AvantGarde-DemiOblique def
+/NR /NewCenturySchlbk-Roman def
+/NI /NewCenturySchlbk-Italic def
+/NB /NewCenturySchlbk-Bold def
+/NX /NewCenturySchlbk-BoldItalic def
+/ZD /ZapfDingbats def
+/ZI /ZapfChancery-MediumItalic def
+/VR /Varitimes#Roman def
+/VI /Varitimes#Italic def
+/VB /Varitimes#Bold def
+/VX /Varitimes#BoldItalic def
+/S  /S def
+/S1 /S1 def
+/GR /Symbol def
+
+/inch {72 mul} bind def
+/min {2 copy gt {exch} if pop} bind def
+
+/setup {
+	counttomark 2 idiv {def} repeat pop
+
+	landscape {/orientation 90 orientation add def} if
+	/scaling 72 resolution div def
+	linewidth setlinewidth
+	1 setlinecap
+
+	pagedimensions
+	xcenter ycenter translate
+	orientation neg rotate
+	width 2 div neg height 2 div translate
+	xoffset inch yoffset inch translate
+	margin 2 div dup neg translate
+	magnification dup aspectratio mul scale
+	scaling scaling scale
+
+	/Symbol /S Sdefs cf
+	/Times-Roman /S1 S1defs cf
+	0 0 moveto
+} def
+
+/pagedimensions {
+	useclippath userdict /gotpagebbox known not and {
+		/pagebbox [clippath pathbbox newpath] def
+		roundpage currentdict /roundpagebbox known and {roundpagebbox} if
+	} if
+	pagebbox aload pop
+	4 -1 roll exch 4 1 roll 4 copy
+	landscape {4 2 roll} if
+	sub /width exch def
+	sub /height exch def
+	add 2 div /xcenter exch def
+	add 2 div /ycenter exch def
+	userdict /gotpagebbox true put
+} def
+
+/pagesetup {
+	/page exch def
+	currentdict /pagedict known currentdict page known and {
+		page load pagedict exch get cvx exec
+	} if
+} def
+
+/decodingdefs [
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg /y exch def counttomark 2 idiv {y moveto show} repeat}
+	{neg moveto {2 index stringwidth pop sub exch div 0 32 4 -1 roll widthshow} repeat}
+	{neg moveto {spacewidth sub 0.0 32 4 -1 roll widthshow} repeat}
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg setfunnytext}
+] def
+
+/setdecoding {/t decodingdefs 3 -1 roll get bind def} bind def
+
+/w {neg moveto show} bind def
+/m {neg dup /y exch def moveto} bind def
+/done {/lastpage where {pop lastpage} if} def
+
+/f {
+	dup /font exch def findfont exch
+	dup /ptsize exch def scaling div dup /size exch def scalefont setfont
+	linewidth ptsize mul scaling 10 mul div setlinewidth
+	/spacewidth ( ) stringwidth pop def
+} bind def
+
+/changefont {
+	/fontheight exch def
+	/fontslant exch def
+	currentfont [
+		1 0
+		fontheight ptsize div fontslant sin mul fontslant cos div
+		fontheight ptsize div
+		0 0
+	] makefont setfont
+} bind def
+
+/sf {f} bind def
+
+/cf {
+	dup length 2 idiv
+	/entries exch def
+	/chtab exch def
+	/newfont exch def
+
+	findfont dup length 1 add dict
+	/newdict exch def
+	{1 index /FID ne {newdict 3 1 roll put} {pop pop} ifelse} forall
+
+	newdict /Metrics entries dict put
+	newdict /Metrics get
+	begin
+		chtab aload pop
+		1 1 entries {pop def} for
+		newfont newdict definefont pop
+	end
+} bind def
+
+%
+% A few arrays used to adjust reference points and character widths in some
+% of the printer resident fonts. If square roots are too high try changing
+% the lines describing /radical and /radicalex to,
+%
+%	/radical	[0 -75 550 0]
+%	/radicalex	[-50 -75 500 0]
+%
+
+/Sdefs [
+	/bracketlefttp		[220 500]
+	/bracketleftbt		[220 500]
+	/bracketrighttp		[-70 380]
+	/bracketrightbt		[-70 380]
+	/braceleftbt		[220 490]
+	/bracketrightex		[220 -125 500 0]
+	/radical		[0 0 550 0]
+	% NeWSprint's \(br is too low, compensate
+	statusdict /product get (NeWS Server) eq {
+		/radicalex		[-50 100 500 0]
+		/parenleftex		[-20 100 0 0]
+
+	} {
+		/radicalex		[-50 0 500 0]
+		/parenleftex		[-20 -170 0 0]
+	} ifelse
+	/integral		[100 -50 500 0]
+	/infinity		[10 -75 730 0]
+] def
+
+/S1defs [
+	/underscore		[0 80 500 0]
+	/endash			[7 90 650 0]
+] def
+%%EndProlog
+%%BeginSetup
+mark
+/resolution 720 def
+setup
+2 setdecoding
+%%EndSetup
+%%Page: 1 1
+save
+mark
+1 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+(WNSTATS \( 7WN \))3 802 1 4598 480 t
+9 B f
+(NAME)720 960 w
+10 R f
+(wnstats)1080 1080 w
+10 S1 f
+(\261)1413 1080 w
+10 R f
+(WordNet 3.0 database statistics)3 1283 1 1511 1080 t
+9 B f
+(DESCRIPTION)720 1248 w
+(Number of words, synsets, and senses)5 1551 1 900 1368 t
+10 S f
+(_ ______________________________________________)1 2344 1 2068 1388 t
+10 B f
+( Total)1 652( Synsets)1 467(POS Unique)1 754 3 2214 1508 t
+( Pairs)1 255(Strings Word-Sense)1 1448 2 2659 1628 t
+10 S f
+(_ ______________________________________________)1 2344 1 2068 1648 t
+10 R f
+( 145104)1 927( 81426)1 467(Noun 117097)1 850 3 2118 1768 t
+( 24890)1 927( 13650)1 467(Verb 11488)1 850 3 2118 1888 t
+( 31302)1 927( 18877)1 467(Adjective 22141)1 850 3 2118 2008 t
+( 5720)1 927( 3644)1 467(Adverb 4601)1 850 3 2118 2128 t
+10 S f
+(_ ______________________________________________)1 2344 1 2068 2138 t
+(_ ______________________________________________)1 2344 1 2068 2158 t
+10 R f
+( 207016)1 927( 117597)1 467(Totals 155327)1 850 3 2118 2268 t
+10 S f
+( \347)1 -2344(_ ______________________________________________)1 2344 2 2068 2288 t
+(\347)2068 2188 w
+(\347)2068 2088 w
+(\347)2068 1988 w
+(\347)2068 1888 w
+(\347)2068 1788 w
+(\347)2068 1688 w
+(\347)2068 1588 w
+(\347)2068 1488 w
+(\347)2581 2288 w
+(\347)2581 2188 w
+(\347)2581 2088 w
+(\347)2581 1988 w
+(\347)2581 1888 w
+(\347)2581 1788 w
+(\347)2581 1688 w
+(\347)2581 1588 w
+(\347)2581 1488 w
+(\347)3043 2288 w
+(\347)3043 2188 w
+(\347)3043 2088 w
+(\347)3043 1988 w
+(\347)3043 1888 w
+(\347)3043 1788 w
+(\347)3043 1688 w
+(\347)3043 1588 w
+(\347)3043 1488 w
+(\347)3510 2288 w
+(\347)3510 2188 w
+(\347)3510 2088 w
+(\347)3510 1988 w
+(\347)3510 1888 w
+(\347)3510 1788 w
+(\347)3510 1688 w
+(\347)3510 1588 w
+(\347)3510 1488 w
+(\347)4412 2288 w
+(\347)4412 2188 w
+(\347)4412 2088 w
+(\347)4412 1988 w
+(\347)4412 1888 w
+(\347)4412 1788 w
+(\347)4412 1688 w
+(\347)4412 1588 w
+(\347)4412 1488 w
+9 B f
+(Polysemy information)1 870 1 900 2576 t
+10 S f
+(_ ______________________________________________________)1 2733 1 1873 2596 t
+10 B f
+( Polysemous)1 650( Polysemous)1 767(POS Monosemous)1 1120 3 2019 2716 t
+( Senses)1 645( Words)1 544(Words and Senses)2 795 3 2461 2836 t
+10 S f
+(_ ______________________________________________________)1 2733 1 1873 2856 t
+10 R f
+( 15776 43783)2 1300(Noun 101321)1 1333 2 1923 2976 t
+( 18629)1 650( 5227)1 650(Verb 6261)1 1333 3 1923 3096 t
+( 14413)1 650( 5252)1 650(Adjective 16889)1 1333 3 1923 3216 t
+( 1870)1 650( 751)1 650(Adverb 3850)1 1333 3 1923 3336 t
+10 S f
+(_ ______________________________________________________)1 2733 1 1873 3346 t
+(_ ______________________________________________________)1 2733 1 1873 3366 t
+10 R f
+( 27006 78695)2 1300(Totals 128321)1 1333 2 1923 3476 t
+10 S f
+( \347)1 -2733(_ ______________________________________________________)1 2733 2 1873 3496 t
+(\347)1873 3396 w
+(\347)1873 3296 w
+(\347)1873 3196 w
+(\347)1873 3096 w
+(\347)1873 2996 w
+(\347)1873 2896 w
+(\347)1873 2796 w
+(\347)1873 2696 w
+(\347)2386 3496 w
+(\347)2386 3396 w
+(\347)2386 3296 w
+(\347)2386 3196 w
+(\347)2386 3096 w
+(\347)2386 2996 w
+(\347)2386 2896 w
+(\347)2386 2796 w
+(\347)2386 2696 w
+(\347)3331 3496 w
+(\347)3331 3396 w
+(\347)3331 3296 w
+(\347)3331 3196 w
+(\347)3331 3096 w
+(\347)3331 2996 w
+(\347)3331 2896 w
+(\347)3331 2796 w
+(\347)3331 2696 w
+(\347)3981 3496 w
+(\347)3981 3396 w
+(\347)3981 3296 w
+(\347)3981 3196 w
+(\347)3981 3096 w
+(\347)3981 2996 w
+(\347)3981 2896 w
+(\347)3981 2796 w
+(\347)3981 2696 w
+(\347)4606 3496 w
+(\347)4606 3396 w
+(\347)4606 3296 w
+(\347)4606 3196 w
+(\347)4606 3096 w
+(\347)4606 2996 w
+(\347)4606 2896 w
+(\347)4606 2796 w
+(\347)4606 2696 w
+(_ _____________________________________________________________________)1 3468 1 1506 3636 t
+10 B f
+( Polysemy)1 438( Average)1 1052( Polysemy)1 438(POS Average)1 1064 4 1652 3756 t
+( Monosemous Words)2 916( Excluding)1 585(Including Monosemous Words)2 1329 3 2094 3876 t
+10 S f
+(_ _____________________________________________________________________)1 3468 1 1506 3896 t
+10 R f
+( 2.77)1 1501(Noun 1.23)1 1867 2 1556 4016 t
+( 3.56)1 1501(Verb 2.16)1 1867 2 1556 4136 t
+( 2.74)1 1501(Adjective 1.41)1 1867 2 1556 4256 t
+( 2.49)1 1501(Adverb 1.24)1 1867 2 1556 4376 t
+10 S f
+(_ _____________________________________________________________________)1 3468 1 1506 4396 t
+(\347)1506 4406 w
+(\347)1506 4336 w
+(\347)1506 4236 w
+(\347)1506 4136 w
+(\347)1506 4036 w
+(\347)1506 3936 w
+(\347)1506 3836 w
+(\347)1506 3736 w
+(\347)2019 4386 w
+(\347)2019 4336 w
+(\347)2019 4236 w
+(\347)2019 4136 w
+(\347)2019 4036 w
+(\347)2019 3936 w
+(\347)2019 3836 w
+(\347)2019 3736 w
+(\347)3498 4386 w
+(\347)3498 4336 w
+(\347)3498 4236 w
+(\347)3498 4136 w
+(\347)3498 4036 w
+(\347)3498 3936 w
+(\347)3498 3836 w
+(\347)3498 3736 w
+(\347)4974 4406 w
+(\347)4974 4336 w
+(\347)4974 4236 w
+(\347)4974 4136 w
+(\347)4974 4036 w
+(\347)4974 3936 w
+(\347)4974 3836 w
+(\347)4974 3736 w
+9 B f
+(NOTES)720 4684 w
+10 R f
+(Statistics for all types of adjectives and adjective satellites are combined.)10 2995 1 1080 4804 t
+( many)1 268( However,)1 469( verb, adjective, and adverb strings is actually 147249.)8 2345(The total of all unique noun,)5 1238 4 1080 5044 t
+( \256gures)1 309( The)1 225(strings are unique within a syntactic category, but are in more than one syntactic category.)14 3786 3 1080 5164 t
+(in the table represent the unique strings in each syntactic category.)10 2733 1 1080 5284 t
+( 1)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 1 1
+%%Trailer
+done
+%%DocumentFonts: Times-Roman Symbol Times-Bold
+%%Pages: 1

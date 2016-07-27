@@ -1,0 +1,257 @@
+include ../_includes/_mixins
+
++lead Up-to-date knowledge about natural language processing is mostly locked away in academia. And academics are mostly pretty self-conscious when we write. We’re careful. We don’t want to stick our necks out too much. But under-confident recommendations suck, so here’s how to write a good part-of-speech tagger.
+    
+p There are a tonne of “best known techniques” for POS tagging, and you should ignore the others and just use Averaged Perceptron.
+    
+p You should use two tags of history, and features derived from the Brown word clusters distributed here.
+    
+p If you only need the tagger to work on carefully edited text, you should use case-sensitive features, but if you want a more robust tagger you should avoid them because they’ll make you over-fit to the conventions of your training domain. Instead, features that ask “how frequently is this word title-cased, in a large sample from the web?” work well. Then you can lower-case your comparatively tiny training corpus.
+    
+p For efficiency, you should figure out which frequent words in your training data have unambiguous tags, so you don’t have to do anything but output their tags when they come up. About 50% of the words can be tagged that way.
+    
+p And unless you really, really can’t do without an extra 0.1% of accuracy, you probably shouldn’t bother with any kind of search strategy  you should just use a greedy model.
+    
+p If you do all that, you’ll find your tagger easy to write and understand, and an efficient Cython implementation will perform as follows on the standard evaluation, 130,000 words of text from the Wall Street Journal:
+
++table(["Tagger", "Accurarcy", "Time (130k words)"], "parameters")
+    +row    
+        +cell CyGreedyAP
+        +cell 97.1%
+        +cell 4s
+
+p The 4s includes initialisation time — the actual per-token speed is high enough to be irrelevant; it won’t be your bottleneck.
+    
+p It’s tempting to look at 97% accuracy and say something similar, but that’s not true. My parser is about 1% more accurate if the input has hand-labelled POS tags, and the taggers all perform much worse on out-of-domain data. Unfortunately accuracies have been fairly flat for the last ten years. That’s why my recommendation is to just use a simple and fast tagger that’s roughly as good.
+    
+p The thing is though, it’s very common to see people using taggers that aren’t anywhere near that good!  For an example of what a non-expert is likely to use, these were the two taggers wrapped by TextBlob, a new Python api that I think is quite neat:
+
++table(["Tagger", "Accurarcy", "Time (130k words)"], "parameters")
+    +row
+        +cell NLTK
+        +cell 94.0%
+        +cell 3m56s
+
+    +row
+        +cell Pattern
+        +cell 93.5%
+        +cell 26s
+
+p Both Pattern and NLTK are very robust and beautifully well documented, so the appeal of using them is obvious. But Pattern’s algorithms are pretty crappy, and NLTK carries tremendous baggage around in its implementation because of its massive framework, and double-duty as a teaching tool.
+
+p As a stand-alone tagger, my Cython implementation is needlessly complicated &ndash; it was written for my parser. So today I wrote a 200 line version of my recommended algorithm for TextBlob. It gets:
+
++table(["Tagger", "Accurarcy", "Time (130k words)"], "parameters")
+    +row
+        +cell PyGreedyAP
+        +cell 96.8%
+        +cell 12s
+
+p I traded some accuracy and a lot of efficiency to keep the implementation simple. Here’s a far-too-brief description of how it works.
+    
++h3("averaged-perceptron") Averaged Perceptron
+
+p POS tagging is a “supervised learning problem”. You’re given a table of data, and you’re told that the values in the last column will be missing during run-time. You have to find correlations from the other columns to predict that value.
+    
+p So for us, the missing column will be “part of speech at word i“. The predictor columns (features) will be things like “part of speech at word i-1“, “last three letters of word at i+1“, etc
+    
+p First, here’s what prediction looks like at run-time:
+
++code.
+    def predict(self, features):
+        '''Dot-product the features and current weights and return the best class.'''
+        scores = defaultdict(float)
+        for feat in features:
+            if feat not in self.weights:
+                continue
+            weights = self.weights[feat]
+            for clas, weight in weights.items():
+                scores[clas] += weight
+        # Do a secondary alphabetic sort, for stability
+        return max(self.classes, key=lambda clas: (scores[clas], clas))
+
+p Earlier I described the learning problem as a table, with one of the columns marked as missing-at-runtime. For NLP, our tables are always exceedingly sparse. You have columns like “word i-1=Parliament”, which is almost always 0. So our “weight vectors” can pretty much never be implemented as vectors. Map-types are good though — here we use dictionaries.
+    
+p The input data, features, is a set with a member for every non-zero “column” in our “table” &ndash; every active feature. Usually this is actually a dictionary, to let you set values for the features. But here all my features are binary present-or-absent type deals.
+    
+p The weights data-structure is a dictionary of dictionaries, that ultimately associates feature/class pairs with some weight. You want to structure it this way instead of the reverse because of the way word frequencies are distributed: most words are rare, frequent words are very frequent.
+    
++h3("learning-the-weights") Learning the Weights
+
+p Okay, so how do we get the values for the weights? We start with an empty weights dictionary, and iteratively do the following:
+
++list("numbers")
+    +item Receive a new (features, POS-tag) pair
+    +item Guess the value of the POS tag given the current “weights” for the features
+    +item If guess is wrong, add +1 to the weights associated with the correct class for these features, and -1 to the weights for the predicted class.
+
+p It’s one of the simplest learning algorithms. Whenever you make a mistake, increment the weights for the correct class, and penalise the weights that led to your false prediction. In code:
+
++code.
+    def train(self, nr_iter, examples):
+        for i in range(nr_iter):
+            for features, true_tag in examples:
+                guess = self.predict(features)
+                if guess != true_tag:
+                    for f in features:
+                        self.weights[f][true_tag] += 1
+                        self.weights[f][guess] -= 1
+            random.shuffle(examples)
+
+p If you iterate over the same example this way, the weights for the correct class would have to come out ahead, and you’d get the example right. If you think about what happens with two examples, you should be able to see that it will get them both right unless the features are identical. In general the algorithm will converge so long as the examples are linearly separable, although that doesn’t matter for our purpose.
+    
++h3("averaging-the-weights") Averaging the Weights
+
+p We need to do one more thing to make the perceptron algorithm competitive. The problem with the algorithm so far is that if you train it twice on slightly different sets of examples, you end up with really different models. It doesn’t generalise that smartly. And the problem is really in the later iterations — if you let it run to convergence, it’ll pay lots of attention to the few examples it’s getting wrong, and mutate its whole model around them.
+
+p So, what we’re going to do is make the weights more "sticky" &ndash; give the model less chance to ruin all its hard work in the later rounds. And we’re going to do that by returning the averaged weights, not the final weights.
+
+p I doubt there are many people who are convinced that’s the most obvious solution to the problem, but whatever. We’re not here to innovate, and this way is time tested on lots of problems. If you have another idea, run the experiments and tell us what you find. Actually I’d love to see more work on this, now that the averaged perceptron has become such a prominent learning algorithm in NLP.
+    
+p Okay. So this averaging. How’s that going to work? Note that we don’t want to just average after each outer-loop iteration. We want the average of all the values — from the inner loop. So if we have 5,000 examples, and we train for 10 iterations, we’ll average across 50,000 values for each weight.
+    
+p Obviously we’re not going to store all those intermediate values. Instead, we’ll track an accumulator for each weight, and divide it by the number of iterations at the end. Again: we want the average weight assigned to a feature/class pair during learning, so the key component we need is the total weight it was assigned. But we also want to be careful about how we compute that accumulator, too. On almost any instance, we’re going to see a tiny fraction of active feature/class pairs. All the other feature/class weights won’t change. So we shouldn’t have to go back and add the unchanged value to our accumulators anyway, like chumps.
+    
+p Since we’re not chumps, we’ll make the obvious improvement. We’ll maintain another dictionary that tracks how long each weight has gone unchanged. Now when we do change a weight, we can do a fast-forwarded update to the accumulator, for all those iterations where it lay unchanged.
+    
+p Here’s what a weight update looks like now that we have to maintain the totals and the time-stamps:
+    
++code.
+    def update(self, truth, guess, features):
+        def upd_feat(c, f, v):
+            nr_iters_at_this_weight = self.i - self._timestamps[f][c]
+            self._totals[f][c] += nr_iters_at_this_weight * self.weights[f][c]
+            self.weights[f][c] += v
+            self._timestamps[f][c] = self.i
+
+        self.i += 1
+        for f in features:
+            upd_feat(truth, f, 1.0)
+            upd_feat(guess, f, -1.0)
+
++h3("features-and-pre-processing") Features and Pre-processing
+
+p The POS tagging literature has tonnes of intricate features sensitive to case, punctuation, etc. They help on the standard test-set, which is from Wall Street Journal articles from the 1980s, but I don’t see how they’ll help us learn models that are useful on other text.
+    
+p To help us learn a more general model, we’ll pre-process the data prior to feature extraction, as follows:
+    
++list
+    +item All words are lower cased;
+    +item Digits in the range 1800-2100 are represented as !YEAR;
+    +item Other digit strings are represented as !DIGITS
+    +item It would be better to have a module recognising dates, phone numbers, emails, hash-tags, etc. but that will have to be pushed back into the tokenization.
+
+p I played around with the features a little, and this seems to be a reasonable bang-for-buck configuration in terms of getting the development-data accuracy to 97% (where it typically converges anyway), and having a smaller memory foot-print:
+
++code.
+    def _get_features(self, i, word, context, prev, prev2):
+        '''Map tokens-in-contexts into a feature representation, implemented as a
+        set. If the features change, a new model must be trained.'''
+        def add(name, *args):
+            features.add('+'.join((name,) + tuple(args)))
+
+        features = set()
+        add('bias') # This acts sort of like a prior
+        add('i suffix', word[-3:])
+        add('i pref1', word[0])
+        add('i-1 tag', prev)
+        add('i-2 tag', prev2)
+        add('i tag+i-2 tag', prev, prev2)
+        add('i word', context[i])
+        add('i-1 tag+i word', prev, context[i])
+        add('i-1 word', context[i-1])
+        add('i-1 suffix', context[i-1][-3:])
+        add('i-2 word', context[i-2])
+        add('i+1 word', context[i+1])
+        add('i+1 suffix', context[i+1][-3:])
+        add('i+2 word', context[i+2])
+        return features
+
+p I haven’t added any features from external data, such as case frequency statistics from the Google Web 1T corpus. I might add those later, but for now I figured I’d keep things simple.
+    
++h2("what-about-search") What About Search?
+
+p The model I’ve recommended commits to its predictions on each word, and moves on to the next one. Those predictions are then used as features for the next word. There’s a potential problem here, but it turns out it doesn’t matter much. It’s easy to fix with beam-search, but I say it’s not really worth bothering. And it definitely doesn’t matter enough to adopt a slow and complicated algorithm like Conditional Random Fields.
+    
+p Here’s the problem. The best indicator for the tag at position, say, 3 in a sentence is the word at position 3. But the next-best indicators are the tags at positions 2 and 4. So there’s a chicken-and-egg problem: we want the predictions for the surrounding words in hand before we commit to a prediction for the current word. Here’s an example where search might matter:
+    
++example Their management plan reforms worked
+    
+p Depending on just what you’ve learned from your training data, you can imagine making a different decision if you started at the left and moved right, conditioning on your previous decisions, than if you’d started at the right and moved left.
+    
+p If that’s not obvious to you, think about it this way: “worked” is almost surely a verb, so if you tag “reforms” with that in hand, you’ll have a different idea of its tag than if you’d just come from “plan“, which you might have regarded as either a noun or a verb.
+    
+p Search can only help you when you make a mistake. It can prevent that error from throwing off your subsequent decisions, or sometimes your future choices will correct the mistake. And that’s why for POS tagging, search hardly matters! Your model is so good straight-up that your past predictions are almost always true. So you really need the planets to align for search to matter at all.
+    
+p And as we improve our taggers, search will matter less and less. Instead of search, what we should be caring about is multi-tagging. If we let the model be a bit uncertain, we can get over 99% accuracy assigning an average of 1.05 tags per word (Vadas et al, ACL 2006). The averaged perceptron is rubbish at multi-tagging though. That’s its big weakness. You really want a probability distribution for that.
+
+p One caveat when doing greedy search, though. It’s very important that your training data model the fact that the history will be imperfect at run-time. Otherwise, it will be way over-reliant on the tag-history features. Because the Perceptron is iterative, this is very easy.
+    
+p Here’s the training loop for the tagger:
+
++code.
+    def train(self, sentences, save_loc=None, nr_iter=5, quiet=False):
+        '''Train a model from sentences, and save it at save_loc. nr_iter
+        controls the number of Perceptron training iterations.'''
+        self._make_tagdict(sentences, quiet=quiet)
+        self.model.classes = self.classes
+        prev, prev2 = START
+        for iter_ in range(nr_iter):
+            c = 0; n = 0
+            for words, tags in sentences:
+                context = START + [self._normalize(w) for w in words] + END
+                for i, word in enumerate(words):
+                    guess = self.tagdict.get(word)
+                    if not guess:
+                        feats = self._get_features(
+                                    i, word, context, prev, prev2)
+                        guess = self.model.predict(feats)
+                        self.model.update(tags[i], guess, feats)
+                    # Set the history features from the guesses, not the
+                    # true tags
+                    prev2 = prev; prev = guess
+                    c += guess == tags[i]; n += 1
+            random.shuffle(sentences)
+            if not quiet:
+                print(&quot;Iter %d: %d/%d=%.3f&quot; % (iter_, c, n, _pc(c, n)))
+        self.model.average_weights()
+        # Pickle as a binary file
+        if save_loc is not None:
+            cPickle.dump((self.model.weights, self.tagdict, self.classes),
+                         open(save_loc, 'wb'), -1)
+
+p Unlike the previous snippets, this one’s literal &ndash; I tended to edit the previous ones to simplify. So if they have bugs, hopefully that’s why!
+    
+p At the time of writing, I’m just finishing up the implementation before I submit a pull request to TextBlob. You can see the rest of the source here:
+    
++list
+    +item #[a(href="https://github.com/sloria/textblob-aptagger/blob/master/textblob_aptagger/taggers.py" target="_blank") taggers.py]
+    +item #[a(href="https://github.com/sloria/textblob-aptagger/blob/master/textblob_aptagger/_perceptron.py" target="_blank") perceptron.py]
+    
++h2("comparison") A final comparison…
+
+p Over the years I’ve seen a lot of cynicism about the WSJ evaluation methodology. The claim is that we’ve just been meticulously over-fitting our methods to this data. Actually the evidence doesn’t really bear this out. Mostly, if a technique is clearly better on one evaluation, it improves others as well. Still, it’s very reasonable to want to know how these tools perform on other text. So I ran the unchanged models over two other sections from the OntoNotes corpus:
+
++table(["Tagger", "WSJ", "ABC", "Web"], "parameters")
+    +row
+        +cell Pattern
+        +cell 93.5
+        +cell 90.7
+        +cell 88.1
+
+    +row
+        +cell NLTK
+        +cell 94.0
+        +cell 91.5
+        +cell 88.4
+    +row
+        +cell PyGreedyAP
+        +cell 96.8
+        +cell 94.8
+        +cell 91.8
+
+p The ABC section is broadcast news, Web is text from the web (blogs etc — I haven’t looked at the data much).
+    
+p As you can see, the order of the systems is stable across the three comparisons, and the advantage of our Averaged Perceptron tagger over the other two is real enough. Actually the pattern tagger does very poorly on out-of-domain text. It mostly just looks up the words, so it’s very domain dependent. I hadn’t realised it before, but it’s obvious enough now that I think about it.
+    
+p We can improve our score greatly by training on some of the foreign data. The technique described in this paper (Daume III, 2007) is the first thing I try when I have to do that.

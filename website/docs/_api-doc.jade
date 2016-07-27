@@ -1,0 +1,313 @@
+//-  Docs > API > Doc
+//- ============================================================================
+
++section('doc')
+    +h2('doc', 'https://github.com/' + profiles.github + '/spaCy/blob/master/spacy/tokens/doc.pyx#L58')
+        | #[+label('tag') class] Doc
+
+    p
+        | A sequence of #[code Token] objects. Access sentences and named entities, 
+        | export annotations to numpy arrays, losslessly serialize to compressed 
+        | binary strings.
+
+        +aside.
+            Internally, the #[code Doc] object holds an array of #[code TokenC] structs. 
+            The Python-level #[code Token] and #[code Span] objects are views of this 
+            array, i.e. they don't own the data themselves.
+
+
+    +code('python', 'overview').
+        class Doc:
+            def __init__(self, vocab, orths_and_spaces=None):
+                return self
+
+            def __getitem__(self, int i):
+                return Token()
+            def __getitem__(self, slice i_j):
+                return Span()
+            def __iter__(self):
+                yield Token()
+            def __len__(self):
+                return int
+            
+            def __unicode__(self):
+                return unicode
+            def __bytes__(self):
+                return utf8
+            def __repr__(self):
+                return unicode
+
+            @property
+            def text(self):
+                return unicode
+            @property
+            def text_with_ws(self):
+                return unicode
+
+            @property
+            def vector(self):
+                return numpy.ndarray(dtype='float32')
+            @property
+            def vector_norm(self):
+                return float
+            @property
+            def ents(self):
+                yield Span()
+            @property
+            def noun_chunks(self):
+                yield Span()
+            @property
+            def sents(self):
+                yield Span()
+
+            def similarity(self, other):
+                return float
+
+            def merge(self, start_char, end_char, tag, lemma, ent_type):
+                return None
+ 
+            def to_array(self, attr_ids):
+                return numpy.ndarray(shape=(len(self), len(attr_ids)), dtype='int64')
+
+            def count_by(self, attr_id, exclude=None, counts=None):
+                return dict
+
+            def to_bytes(self):
+                return bytes
+
+            def from_array(self, attrs, array):
+                return None
+            
+            def from_bytes(self, data):
+                return self
+    
+            @staticmethod
+            def read_bytes(file_):
+                yield bytes
+ 
+    
+    +section('doc-init')
+        +h3('doc-init')
+            | #[+label('tag') method] Doc.__init__
+
+        .has-aside
+            +code('python', 'definition').
+                def __init__(self, vocab, orths_and_spaces=None):
+                    return Doc
+
+            +aside('Implementation').
+                This method of constructing a #[code Doc] object is usually only used 
+                for deserialization. Standard usage is to construct the document via 
+                a call to the language object.
+
+        +table(['Name', 'Type', 'Description'], 'params')
+            +row
+                +cell vocab
+                +cell.
+                    A Vocabulary object, which must match any models you want to 
+                    use (e.g. tokenizer, parser, entity recognizer).
+
+            +row
+                +cell orth_and_spaces
+                +cell.
+                    A list of tokens in the document as a sequence of 
+                    #[code (orth_id, has_space)] tuples, where #[code orth_id] 
+                    is an integer and #[code has_space] is a boolean, indicating
+                    whether the token has a trailing space.
+
+    +section('doc-sequenceapi')
+        +h3('doc-sequenceapi')
+            | #[+label('tag') Section] Sequence API
+
+        +table(['Example', 'Description'], 'code')
+            +row 
+                +cell #[code.lang-python doc[i]]
+                +cell.
+                    Get the Token object at position i, where i is an integer. 
+                    Negative indexing is supported, and follows the usual Python 
+                    semantics, i.e. doc[-2] is doc[len(doc) - 2].
+
+            +row
+                +cell #[code.lang-python doc[start : end]]
+                +cell.
+                    Get a #[code Span] object, starting at position #[code start]
+                    and ending at position #[code end], where #[code start] and
+                    #[code end] are token indices. For instance,
+                    #[code doc[2:5]] produces a span consisting of 
+                    tokens 2, 3 and 4. Stepped slices (e.g. #[code doc[start : end : step]]) 
+                    are not supported, as #[code Span] objects must be contiguous 
+                    (cannot have gaps). You can use negative indices and open-ended
+                    ranges, which have their normal Python semantics.
+
+            +row
+                +cell #[code.lang-python for token in doc]
+                +cell.
+                    Iterate over Token  objects, from which the annotations can 
+                    be easily accessed. This is the main way of accessing Token 
+                    objects, which are the main way annotations are accessed from 
+                    Python. If faster-than-Python speeds are required, you can 
+                    instead access the annotations as a numpy array, or access the 
+                    underlying C data directly from Cython.
+
+            +row
+                +cell #[code.lang-python len(doc)]
+                +cell.
+                    The number of tokens in the document.
+
+    +section('doc-spans')
+        +h3('doc-spans-sents')
+            | #[+label('tag') property] Doc.sents
+
+        p.
+            Yields sentence #[code Span] objects. Sentence spans have no label.
+            To improve accuracy on informal texts, spaCy calculates sentence
+            boundaries from the syntactic dependency parse. If the parser is disabled,
+            the #[code sents] iterator will be unavailable.
+
+        +code('python', 'Example').
+            from spacy.en import English
+            nlp = English()
+            doc = nlp("This is a sentence. Here's another...")
+            assert [s.root.orth_ for s in doc.sents] == ["is", "'s"]
+
+        +h3('doc-spans-ents')
+            | #[+label('tag') property] Doc.ents
+
+        p.
+            Yields named-entity #[code Span] objects, if the entity recognizer
+            has been applied to the document. Iterate over the span to get 
+            individual Token objects, or access the label:
+
+        +code('python', 'Example').
+            from spacy.en import English
+            nlp = English()
+            tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
+            ents = list(tokens.ents)
+            assert ents[0].label == 346
+            assert ents[0].label_ == 'PERSON'
+            assert ents[0].orth_ == 'Best'
+            assert ents[0].string == ents[0].string
+
+        +h3('doc-spans-nounchunks')
+            | #[+label('tag') property] Doc.noun_chunks
+
+        p.
+            Yields base noun-phrase #[code Span] objects, if the document
+            has been syntactically parsed. A base noun phrase, or 
+            'NP chunk', is a noun phrase that does not permit other NPs to 
+            be nested within it – so no NP-level coordination, no prepositional 
+            phrases, and no relative clauses. For example:
+
+        +code('python', 'Example').
+            from spacy.en import English
+            nlp = English()
+            doc = nlp(u'The sentence in this example has three noun chunks.')
+            for chunk in doc.noun_chunks:
+                print(chunk.label_, chunk.orth_, '&lt;--', chunk.root.head.orth_)
+
+    +section('doc-exportimport-toarray') 
+        +h3('doc-exportimport-toarray')
+            | #[+label('tag') method] Doc.to_array
+           
+        p.
+            Given a list of M attribute IDs, export the tokens to a numpy 
+            #[code ndarray] of shape #[code N*M], where #[code N] is the length 
+            of the document. The values will be 32-bit integers.
+
+        +code('python', 'Example').
+            from spacy import attrs
+            doc = nlp(text)
+            # All strings mapped to integers, for easy export to numpy
+            np_array = doc.to_array([attrs.LOWER, attrs.POS, attrs.ENT_TYPE, attrs.IS_ALPHA])
+                
+        +code('python', 'definition').
+            def to_array(self, attr_ids):
+                return numpy.ndarray(shape=(len(self), len(attr_ids)), dtype='int64')
+ 
+        +table(['Name', 'Type', 'Description'], 'params')
+            +row
+                +cell attr_ids
+                +cell list of ints
+                +cell.
+                    A list of attribute ID ints. Attribute IDs can be imported 
+                    from #[code spacy.attrs] or #[code spacy.symbols].
+
+    +section('doc-exportimport-countby') 
+        +h4('doc-exportimport-countby')
+            | #[+label('tag') method] Doc.count_by
+
+        p.
+            Produce a dict of #[code {attribute (int): count (ints)}] frequencies, 
+            keyed by the values of the given attribute ID.
+
+        +code('python', 'Example').
+            def count_by(self, attr_id):
+                return dict
+
+        +table(['Name', 'Type', 'Description'], 'params')
+            +row
+                +cell attr_id
+                +cell int
+                +cell.
+                    The attribute ID to key the counts.
+
+
+    +section('doc-exportimport-fromarray') 
+        +h4('doc-exportimport-fromarray')
+            | #[+label('tag') method] Doc.from_array
+        
+        p.
+            Write to a #[code Doc] object, from an M*N array of attributes.
+
+        +code('python', 'definition').
+            def from_array(self, attrs, array):
+                return None
+ 
+    +section('doc-exportimport-frombytes') 
+        +h4('doc-exportimport-frombytes') Doc.from_bytes
+        
+        p.
+            Deserialize, loading from bytes.
+
+        +code('python', 'definition').
+            def from_bytes(self, byte_string):
+                return Doc
+
+    +section('doc-exportimport-tobytes') 
+        +h4('doc-exportimport-tobytes')
+            | #[+label('tag') method] Doc.to_bytes
+        
+        p.
+            Serialize, producing a byte string.
+
+        +code('python', 'definition').
+            def to_bytes(self):
+                return bytes
+
+
+    +section('doc-exportimport-readbytes') 
+        +h4('doc-exportimport-readbytes')
+            | #[+label('tag') method] Doc.read_bytes
+
+        p.
+            A static method, used to read serialized #[code Doc] objects from 
+            a file. For example:
+
+        +code('python', 'Example').
+            from spacy.tokens.doc import Doc
+            loc = 'test_serialize.bin'
+            with open(loc, 'wb') as file_:
+                file_.write(nlp(u'This is a document.').to_bytes())
+                file_.write(nlp(u'This is another.').to_bytes())
+            docs = []
+            with open(loc, 'rb') as file_:
+                for byte_string in Doc.read_bytes(file_):
+                    docs.append(Doc(nlp.vocab).from_bytes(byte_string))
+            assert len(docs) == 2
+
+        +code('python', 'definition').
+            @staticmethod
+            def read_bytes(file_):
+                yield bytes
+
+

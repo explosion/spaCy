@@ -1,0 +1,93 @@
+//  Variables
+// ============================================================================
+
+// Settings and Sizes
+
+$theme              : blue !default;
+
+$base-font-size     : 10px !default;
+
+$width-logo         : 500px, 250px, 100px, 65px !default;
+$width-content      : 800px;
+$width-aside        : 300px;
+$width-sidebar      : 230px;
+$width-profile      : 160px;
+$height-navbar      : 55px;
+
+$border-radius      : 4px;
+$image-ratio        : 3 / 1;
+$transition         : all 0.2s;
+$social-buttons     : twitter, reddit, hackernews, producthunt;
+
+$screen-size-small  : 480px;
+$screen-size-medium : 800px;
+$screen-size-large  : 1200px;
+
+
+// Grid Columns
+
+$columns: ( fifth, 20% ), 
+          ( quarter, 25% ), 
+          ( third, (100% / 3) ), 
+          ( half, 50% ), 
+          ( two-thirds, (100% / 1.5) ), 
+          ( full, 100% );
+
+//  Fonts
+
+$font-primary   : Lato, Tahoma, Geneva, sans-serif !default;
+$font-secondary : 'Work Sans', 'Arial Black', Gadget, sans-serif !default;
+$font-code      : 'Source Code Pro', Consolas, 'Andale Mono', Menlo, Monaco, Courier, monospace !default;
+$font-icons     : Icomoon !default;
+
+
+// Colors
+// only to be used with the color() function, i.e. color(blue, light)
+
+$colors: (
+    blue    : ( base: #09a3d5, dark: #008ebc, light: #e2f7fe ),
+    red     : ( base: #e4514f, dark: #dd2422, light: #fceeed ),
+    grey    : ( base: #dddddd, dark: #999999, light: #f6f6f6 ),
+    black   : ( base: #222222, dark: #000000 ),
+    white   : ( base: #ffffff ),
+    yellow  : ( base: #f4c025 ),
+    green   : ( base: #3ec930 ),
+    purple  : ( base: #8130c9 ),
+    orange  : ( base: #f47725 ),
+
+    social: (
+        twitter     : #5ea9dd,
+        hackernews  : #ff6600,
+        reddit      : #ff4500,
+        producthunt : #da552f,
+        github      : #000000,
+        linkedin    : #0077b5,
+        facebook    : #3b5999,
+        medium      : #02b875,
+    ),
+);
+
+
+// Icons
+
+$icons: (
+    website     : '\1f310',
+    search      : '\1f50d',
+    feed        : '\1f525',
+    quote       : '\275d',
+    twitter     : '\e900',
+    github      : '\e901',
+    producthunt : '\e902',
+    linkedin    : '\e903',
+    hackernews  : '\e904',
+    reddit      : '\e905',
+    facebook    : '\e906',
+    medium      : '\e907',
+    codepen     : '\e908',
+    dash        : '\2014',
+    bullet      : '\2022',
+    menu        : '\2261',
+    close       : '\2715',
+    copyright   : '\00a9',
+    permalink   : '\0023',
+);

@@ -1,0 +1,1329 @@
+%!PS
+%%Version: 3.15
+%%DocumentFonts: (atend)
+%%Pages: (atend)
+%%EndComments
+%ident	"@(#)lp:filter/postscript/postscript/dpost.ps	1.1"
+%
+% Version 3.16 prologue for troff files.
+%
+
+/#copies 1 store
+/aspectratio 1 def
+/formsperpage 1 def
+/landscape false def
+/linewidth .3 def
+/magnification 1 def
+/margin 0 def
+/orientation 0 def
+/resolution 720 def
+/xoffset 0 def
+/yoffset 0 def
+
+/roundpage true def
+/useclippath true def
+/pagebbox [0 0 612 792] def
+
+/R  /Times-Roman def
+/I  /Times-Italic def
+/B  /Times-Bold def
+/BI /Times-BoldItalic def
+/H  /Helvetica def
+/HI /Helvetica-Oblique def
+/HB /Helvetica-Bold def
+/HX /Helvetica-BoldOblique def
+/CW /Courier def
+/CO /Courier def
+/CI /Courier-Oblique def
+/CB /Courier-Bold def
+/CX /Courier-BoldOblique def
+/PA /Palatino-Roman def
+/PI /Palatino-Italic def
+/PB /Palatino-Bold def
+/PX /Palatino-BoldItalic def
+/Hr /Helvetica-Narrow def
+/Hi /Helvetica-Narrow-Oblique def
+/Hb /Helvetica-Narrow-Bold def
+/Hx /Helvetica-Narrow-BoldOblique def
+/KR /Bookman-Light def
+/KI /Bookman-LightItalic def
+/KB /Bookman-Demi def
+/KX /Bookman-DemiItalic def
+/AR /AvantGarde-Book def
+/AI /AvantGarde-BookOblique def
+/AB /AvantGarde-Demi def
+/AX /AvantGarde-DemiOblique def
+/NR /NewCenturySchlbk-Roman def
+/NI /NewCenturySchlbk-Italic def
+/NB /NewCenturySchlbk-Bold def
+/NX /NewCenturySchlbk-BoldItalic def
+/ZD /ZapfDingbats def
+/ZI /ZapfChancery-MediumItalic def
+/VR /Varitimes#Roman def
+/VI /Varitimes#Italic def
+/VB /Varitimes#Bold def
+/VX /Varitimes#BoldItalic def
+/S  /S def
+/S1 /S1 def
+/GR /Symbol def
+
+/inch {72 mul} bind def
+/min {2 copy gt {exch} if pop} bind def
+
+/setup {
+	counttomark 2 idiv {def} repeat pop
+
+	landscape {/orientation 90 orientation add def} if
+	/scaling 72 resolution div def
+	linewidth setlinewidth
+	1 setlinecap
+
+	pagedimensions
+	xcenter ycenter translate
+	orientation neg rotate
+	width 2 div neg height 2 div translate
+	xoffset inch yoffset inch translate
+	margin 2 div dup neg translate
+	magnification dup aspectratio mul scale
+	scaling scaling scale
+
+	/Symbol /S Sdefs cf
+	/Times-Roman /S1 S1defs cf
+	0 0 moveto
+} def
+
+/pagedimensions {
+	useclippath userdict /gotpagebbox known not and {
+		/pagebbox [clippath pathbbox newpath] def
+		roundpage currentdict /roundpagebbox known and {roundpagebbox} if
+	} if
+	pagebbox aload pop
+	4 -1 roll exch 4 1 roll 4 copy
+	landscape {4 2 roll} if
+	sub /width exch def
+	sub /height exch def
+	add 2 div /xcenter exch def
+	add 2 div /ycenter exch def
+	userdict /gotpagebbox true put
+} def
+
+/pagesetup {
+	/page exch def
+	currentdict /pagedict known currentdict page known and {
+		page load pagedict exch get cvx exec
+	} if
+} def
+
+/decodingdefs [
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg /y exch def counttomark 2 idiv {y moveto show} repeat}
+	{neg moveto {2 index stringwidth pop sub exch div 0 32 4 -1 roll widthshow} repeat}
+	{neg moveto {spacewidth sub 0.0 32 4 -1 roll widthshow} repeat}
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg setfunnytext}
+] def
+
+/setdecoding {/t decodingdefs 3 -1 roll get bind def} bind def
+
+/w {neg moveto show} bind def
+/m {neg dup /y exch def moveto} bind def
+/done {/lastpage where {pop lastpage} if} def
+
+/f {
+	dup /font exch def findfont exch
+	dup /ptsize exch def scaling div dup /size exch def scalefont setfont
+	linewidth ptsize mul scaling 10 mul div setlinewidth
+	/spacewidth ( ) stringwidth pop def
+} bind def
+
+/changefont {
+	/fontheight exch def
+	/fontslant exch def
+	currentfont [
+		1 0
+		fontheight ptsize div fontslant sin mul fontslant cos div
+		fontheight ptsize div
+		0 0
+	] makefont setfont
+} bind def
+
+/sf {f} bind def
+
+/cf {
+	dup length 2 idiv
+	/entries exch def
+	/chtab exch def
+	/newfont exch def
+
+	findfont dup length 1 add dict
+	/newdict exch def
+	{1 index /FID ne {newdict 3 1 roll put} {pop pop} ifelse} forall
+
+	newdict /Metrics entries dict put
+	newdict /Metrics get
+	begin
+		chtab aload pop
+		1 1 entries {pop def} for
+		newfont newdict definefont pop
+	end
+} bind def
+
+%
+% A few arrays used to adjust reference points and character widths in some
+% of the printer resident fonts. If square roots are too high try changing
+% the lines describing /radical and /radicalex to,
+%
+%	/radical	[0 -75 550 0]
+%	/radicalex	[-50 -75 500 0]
+%
+
+/Sdefs [
+	/bracketlefttp		[220 500]
+	/bracketleftbt		[220 500]
+	/bracketrighttp		[-70 380]
+	/bracketrightbt		[-70 380]
+	/braceleftbt		[220 490]
+	/bracketrightex		[220 -125 500 0]
+	/radical		[0 0 550 0]
+	% NeWSprint's \(br is too low, compensate
+	statusdict /product get (NeWS Server) eq {
+		/radicalex		[-50 100 500 0]
+		/parenleftex		[-20 100 0 0]
+
+	} {
+		/radicalex		[-50 0 500 0]
+		/parenleftex		[-20 -170 0 0]
+	} ifelse
+	/integral		[100 -50 500 0]
+	/infinity		[10 -75 730 0]
+] def
+
+/S1defs [
+	/underscore		[0 80 500 0]
+	/endash			[7 90 650 0]
+] def
+%%EndProlog
+%%BeginSetup
+mark
+/resolution 720 def
+setup
+2 setdecoding
+%%EndSetup
+%%Page: 1 1
+save
+mark
+1 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 1WN \))3 330( WNB)1 3180(User Commands)1 677 3 1213 480 t
+9 B f
+(NAME)720 960 w
+10 R f
+(wnb)1080 1080 w
+10 S1 f
+(\261)1285 1080 w
+10 R f
+(WordNet window-based browser interface)3 1721 1 1383 1080 t
+9 B f
+(SYNOPSIS)720 1248 w
+10 B f
+(wnb)1080 1368 w
+9 B f
+(DESCRIPTION)720 1536 w
+10 B f
+(wnb\( \))1 266 1 1080 1656 t
+10 R f
+( database, allowing synsets and)4 1355(provides a window-based interface for browsing the WordNet)7 2649 2 1396 1656 t
+( word, different searches are available based)6 1834( each search)2 510( For)1 209(relations to be displayed as formatted text.)6 1767 4 1080 1776 t
+(on syntactic category and information available in the database.)8 2606 1 1080 1896 t
+10 B f
+(wnb)1080 2136 w
+10 R f
+( the same)2 415( allows)1 304( This)1 254(is written in Tcl/Tk, which is available for Unix and Windows platforms.)11 3120 4 1307 2136 t
+(code to work on all supported WordNet platforms without modi\256cation.)9 2953 1 1080 2256 t
+9 B f
+(WNB WINDOWS)1 725 1 720 2424 t
+10 B f
+(wnb\( \))1 266 1 1080 2544 t
+10 R f
+( only those searches and buttons that are applicable at the)10 2390(was developed with the philosophy that)5 1630 2 1380 2544 t
+( the)1 162( Use)1 228( the interface changes as it is used.)7 1485( a result, the appearance of)5 1148( As)1 185(current time are displayed.)3 1112 6 1080 2664 t
+( close the WordNet Browser Window, move)6 1897(standard windowing system mouse functions to open and)7 2423 2 1080 2784 t
+(the window, and change its size.)5 1335 1 1080 2904 t
+(The WordNet Browser Window contains the following areas, from top to bottom:)11 3356 1 1080 3144 t
+( with pulldown menus and)4 1101( menubar runs along the top of the browser window)9 2147(Menubar A)1 1072 3 1080 3312 t
+(button entitled)1 589 1 2080 3432 t
+10 B f
+(File)2702 3432 w
+10 R f
+(,)2863 3432 w
+10 B f
+(History)2921 3432 w
+10 R f
+(,)3243 3432 w
+10 B f
+(Options)3301 3432 w
+10 R f
+(, and)1 202 1 3641 3432 t
+10 B f
+(Help)3876 3432 w
+10 R f
+(.)4082 3432 w
+( search word can)3 720( A)1 146( word.)1 271( the Menubar is a line for entering the search)9 1922( Below)1 475(Search Word Entry)2 786 6 1080 3600 t
+( ignored.)1 400( is)1 138( Case)1 298(be a single word, hyphenated string, or a collocation.)8 2484 4 2080 3720 t
+( forms of words are usually stored in WordNet, users)9 2244(Although only unin\257ected)2 1076 2 2080 3840 t
+( morphological processor \256nds the)4 1466( WordNet's)1 522(may search for in\257ected forms.)4 1332 3 2080 3960 t
+(base form automatically.)2 1006 1 2080 4080 t
+( the search type and)4 860( the Search Word Entry line is an area for selecting)10 2199( Below)1 585(Search Selection)1 676 4 1080 4248 t
+( a)1 93( After)1 292( area is blank.)3 626( a search word is entered this)6 1308( Until)1 289(senses to search.)2 712 6 2080 4368 t
+( buttons appear corresponding to each syntactic category)7 2362(search word is entered,)3 958 2 2080 4488 t
+(\()2080 4608 w
+10 B f
+(Noun)2113 4608 w
+10 R f
+(,)2347 4608 w
+10 B f
+(Verb)2430 4608 w
+10 R f
+(,)2646 4608 w
+10 B f
+(Adjective)2729 4608 w
+10 R f
+(,)3133 4608 w
+10 B f
+(Adverb)3216 4608 w
+10 R f
+(\) in which the search string is de\256ned in)8 1862 1 3538 4608 t
+(WordNet.)2080 4728 w
+( a box for entering sense)5 1143(At the right edge of the Search Selection line is)9 2177 2 2080 4968 t
+( this box is empty, search results for all senses of the search)12 2634(numbers. When)1 686 2 2080 5088 t
+( search may be restricted to)5 1159( The)1 226(word that match the search type are displayed.)7 1935 3 2080 5208 t
+( more speci\256c senses by entering a comma or space separated list of)12 3040(one or)1 280 2 2080 5328 t
+(sense numbers in the)3 886 1 2080 5448 t
+10 B f
+(Senses)3008 5448 w
+10 R f
+( sense numbers remain in effect until)6 1583(box. These)1 489 2 3328 5448 t
+(either the user changes or deletes them, or a new search word is entered.)13 2987 1 2080 5568 t
+( for displaying the)3 790( of the browser window consists of a large text buffer)10 2324( Most)1 534(Results Window)1 672 4 1080 5736 t
+( present for)2 480( and vertical scroll bars are)5 1147( Horizontal)1 499(results of WordNet searches.)3 1194 4 2080 5856 t
+(scrolling through the output.)3 1163 1 2080 5976 t
+( search results are)3 753( When)1 310( line is at the bottom of the browser window.)9 1919( status)1 266( A)1 611(Status Line)1 461 6 1080 6144 t
+( re\257ects the type of search)5 1179(displayed in the Results Window, this status line)7 2141 2 2080 6264 t
+( entered, your are prompted to)5 1298( there is no search word)5 1035(selected. When)1 659 3 2080 6384 t
+10 S1 f
+(")5115 6384 w
+10 B f
+(Enter)5156 6384 w
+(search word and press return.)4 1325 1 2080 6504 t
+10 S1 f
+(")3405 6504 w
+10 R f
+( not in WordNet,)3 704(If the search word entered is)5 1182 2 3514 6504 t
+(the message)1 493 1 2080 6624 t
+10 S1 f
+(")2606 6624 w
+10 B f
+(Sorry, no matches found.)3 1099 1 2647 6624 t
+10 S1 f
+(")3746 6624 w
+10 R f
+(is displayed.)1 508 1 3820 6624 t
+9 B f
+(SEARCHING THE DATABASE)2 1315 1 720 6792 t
+10 R f
+( entered and an)3 654( a search word is)4 730( First)1 257(The WordNet browser navigates through WordNet in two steps.)8 2679 4 1080 6912 t
+( the Results Window.)3 912(overview of all the senses of the word in all syntactic categories is displayed in)14 3408 2 1080 7032 t
+( synset is annotated as described above with)7 1929(The senses are grouped by syntactic category, and each)8 2391 2 1080 7152 t
+10 I f
+(synset)1080 7272 w
+10 S f
+(_)1324 7272 w
+10 I f
+(offset)1374 7272 w
+10 R f
+(,)1591 7272 w
+10 I f
+(lex)1672 7272 w
+10 S f
+(_)1788 7272 w
+10 I f
+(\256lename)1838 7272 w
+10 R f
+(, and)1 225 1 2176 7272 t
+10 I f
+(sense)2457 7272 w
+10 S f
+(_)2673 7272 w
+10 I f
+(number)2723 7272 w
+10 R f
+( The)1 243( set.)1 191(as dictated by the advanced search options)6 1882 3 3084 7272 t
+( 1)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7752 t
+cleartomark
+showpage
+restore
+%%EndPage: 1 1
+%%Page: 2 2
+save
+mark
+2 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 1WN \))3 330( WNB)1 3180(User Commands)1 677 3 1213 480 t
+( of the senses in each syntactic category are represented in the)11 2605(overview search also indicates how many)5 1715 2 1080 960 t
+( a way for the user to determine whether a sense's sense number is based on)15 3409( is)1 118( This)1 262(tagged texts.)1 531 4 1080 1080 t
+( such texts, the)3 645( each sense that has appeared in)6 1364( For)1 213(semantic tagging data, or was arbitrarily assigned.)6 2098 4 1080 1200 t
+(number of semantic tags to that sense are indicated in parentheses after the sense number.)14 3690 1 1080 1320 t
+( desired search is performed and the)6 1506( The)1 224( category, a speci\256c search is selected.)6 1600(Then, within a syntactic)3 990 4 1080 1560 t
+( searches on the same word can be per-)8 1665( Additional)1 499(search results are displayed in the Results Window.)7 2156 3 1080 1680 t
+(formed, or a new search word can be entered.)8 1879 1 1080 1800 t
+( click the mouse in the horizontal box labeled)8 1892(To enter a search word,)4 970 2 1080 2040 t
+10 B f
+(Search Word)1 578 1 3976 2040 t
+10 R f
+(, type a single word,)4 846 1 4554 2040 t
+(hyphenated string, or collocation and press)5 1754 1 1080 2160 t
+9 B f
+(RETURN.)2867 2160 w
+10 B f
+(wnb\( \))1 266 1 1080 2400 t
+10 R f
+( Each)1 275( the Search Selection line.)4 1112(responds by making a set of Part of Speech buttons appear in)11 2625 3 1388 2400 t
+( the)1 168( At)1 179( is de\256ned in WordNet.)4 1019(button corresponds to a syntactic category in which the search string)10 2954 4 1080 2520 t
+(same time, an Overview of the synsets for all senses of the search word is displayed in the Results Win-)19 4320 1 1080 2640 t
+( the senses have)3 709( Overview includes the gloss for each synset and also indicates which of)12 3177(dow. The)1 434 3 1080 2760 t
+( of)1 118( each sense that has appeared in such texts, the number)10 2282( For)1 206(appeared in the semantically tagged texts.)5 1714 4 1080 2880 t
+(semantic tags to that sense are indicated in parentheses after the sense number.)12 3236 1 1080 3000 t
+( searches that can be performed)5 1314(The pulldown menus in the Search Selection line list all of the WordNet)12 3006 2 1080 3240 t
+( highlight it by dragging the mouse to it,)8 1711( select a search,)3 664( To)1 182(for the search word in that part of speech.)8 1763 4 1080 3360 t
+( the mouse outside of the pulldown list and release)9 2149( Drag)1 271( mouse while it is highlighted.)5 1282(and release the)2 618 4 1080 3480 t
+( the mouse across the Part of Speech buttons)8 1933( Dragging)1 454( the menu without making a selection.)6 1638(to hide)1 295 4 1080 3600 t
+(displays the available searches for each syntactic category.)7 2399 1 1080 3720 t
+( a search to one or more senses within a syntactic category, enter a comma or space separated)17 3898(To restrict)1 422 2 1080 3960 t
+(list of sense numbers in the)5 1131 1 1080 4080 t
+10 B f
+(Senses)2244 4080 w
+10 R f
+(box before selecting a search.)4 1214 1 2555 4080 t
+(After a search is selected,)4 1061 1 1080 4320 t
+10 B f
+(wnb\( \))1 266 1 2176 4320 t
+10 R f
+( on the WordNet database and displays the format-)8 2117(performs the search)2 806 2 2477 4320 t
+( search results are displayed, a button entitled)7 1924( Whenever)1 482( Window.)1 409(ted results in the Results)4 1042 4 1080 4440 t
+10 B f
+(Redisplay)4977 4440 w
+(Overview)1080 4560 w
+10 R f
+( on this button redisplays)4 1050( Clicking)1 414(is present at the right edge of the Search Word Entry line.)11 2411 3 1525 4560 t
+(the Overview of all synsets for the search word in the Results Window.)12 2944 1 1080 4680 t
+9 B f
+(Changing the Search Word)3 1120 1 900 4848 t
+10 R f
+( entered at any time by moving to the Search Word Entry box, if necessary)14 3196(A new search word can be)5 1124 2 1080 4968 t
+( old string, typing a new one and pressing)8 1772(highlighting it by clicking, erasing the)5 1598 2 1080 5088 t
+9 B f
+(RETURN.)4488 5088 w
+10 R f
+(The)4929 5088 w
+10 B f
+(Senses)5122 5088 w
+10 R f
+( applicable to the new search word appear, and the)9 2097(box is cleared if necessary, the Part of Speech buttons)9 2223 2 1080 5208 t
+(Overview for the new search word is displayed.)7 1962 1 1080 5328 t
+(The middle mouse button can also be used to select a new search word by placing the mouse over any)19 4320 1 1080 5568 t
+( text in the Search Word)5 1038( selected word will replace the)5 1286( The)1 227(word in the Results Window and clicking.)6 1769 4 1080 5688 t
+(Entry box, and the overview for that word will automatically be displayed.)11 3070 1 1080 5808 t
+( Results Window, highlight the text with the)7 1892(To select a new search string collocation from text in the)10 2428 2 1080 6048 t
+(mouse and press)2 676 1 1080 6168 t
+9 B f
+(CONTROL-S.)1789 6168 w
+(Interrupting a Search)2 885 1 900 6456 t
+10 R f
+(When a search is in progress the message)7 1815 1 1080 6576 t
+10 S1 f
+(")2943 6576 w
+10 B f
+( abort\))1 315(Searching...\(press escape to)2 1214 2 2984 6576 t
+10 S1 f
+(")4513 6576 w
+10 R f
+(is displayed in the)3 797 1 4603 6576 t
+( indicated,)1 424( As)1 177( most searches return very quickly, so this message isn't noticeable.)10 2787( that)1 184( Note)1 261(Status Line.)1 487 6 1080 6696 t
+(pressing the)1 496 1 1080 6816 t
+9 B f
+(ESCAPE)1617 6816 w
+10 R f
+( before the time)3 680( results of the search obtained)5 1269( The)1 229(key will interrupt the search.)4 1209 4 2013 6816 t
+(the search was interrupted are displayed in the Results Window.)9 2634 1 1080 6936 t
+( 2)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 2 2
+%%Page: 3 3
+save
+mark
+3 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 1WN \))3 330( WNB)1 3180(User Commands)1 677 3 1213 480 t
+9 B f
+(MENUS)720 960 w
+(File Menu)1 415 1 900 1080 t
+10 R f
+(Find keywords by substring)3 1138 1 1440 1200 t
+( a search of WordNet for words or collocations)8 1966(Display a popup window for specifying)5 1634 2 1800 1320 t
+( in the)2 284( a search word is currently entered)6 1481( If)1 142(that contain a speci\256c substring.)4 1357 4 1800 1440 t
+10 B f
+(Search)5106 1440 w
+(Word)1800 1560 w
+10 R f
+( Substring Search)2 737( The)1 229( default.)1 343(box, it is used as the substring to search for by)10 2001 4 2090 1560 t
+(Window contains a box for entering a substring, a pulldown menu to its right for)14 3600 1 1800 1680 t
+( for displaying the search results,)5 1410(specifying the part of speech to search, a large area)9 2190 2 1800 1800 t
+(and action buttons at the bottom entitled)6 1659 1 1800 1920 t
+10 B f
+(Search)3492 1920 w
+10 R f
+(,)3786 1920 w
+10 B f
+(Save)3844 1920 w
+10 R f
+(,)4044 1920 w
+10 B f
+(Print Dismiss)1 583 1 4102 1920 t
+10 R f
+(.)4685 1920 w
+( speech selected, clicking on the)5 1356(Once a substring is entered and a part of)8 1711 2 1800 2160 t
+10 B f
+(Search)4906 2160 w
+10 R f
+(but-)5239 2160 w
+( in WordNet, in that syn-)5 1054(ton causes a search to be done for all words and collocations)11 2546 2 1800 2280 t
+(tactic category, that contain the substring according to the following criteria:)10 3139 1 1800 2400 t
+( col-)1 189(1. The substring can appear at the beginning or end of a word, hyphenated string o)15 3411 2 1800 2640 t
+(location.)1800 2760 w
+( appear in the middle of a hyphenated string or collocation, but)11 2733(2. The substring can)3 867 2 1800 3000 t
+(only delimited on both sides by spaces or hyphens.)8 2099 1 1800 3120 t
+( on an item from the)5 938( Clicking)1 428( buffer.)1 318(The search results are displayed in the large)7 1916 4 1800 3360 t
+(search results list causes)3 1018 1 1800 3480 t
+10 B f
+(wnb\( \))1 266 1 2858 3480 t
+10 R f
+( in the)2 278(to automatically enter that word)4 1336 2 3164 3480 t
+10 B f
+(Search Word)1 583 1 4817 3480 t
+10 R f
+(box of the WordNet Browser Window and perform the Overview search.)10 2997 1 1800 3600 t
+(Clicking the)1 511 1 1800 3840 t
+10 B f
+(Save)2355 3840 w
+10 R f
+(button generates a popup dialog for specifying a \256lename to save)10 2801 1 2599 3840 t
+( the)1 162( Clicking)1 418(the substring search results to.)4 1267 3 1800 3960 t
+10 B f
+(Print)3687 3960 w
+10 R f
+( popup dialog in)3 695(button generates a)2 756 2 3949 3960 t
+(which a print command can be speci\256ed.)6 1681 1 1800 4080 t
+(Selecting)1800 4320 w
+10 B f
+(Dismiss)2205 4320 w
+10 R f
+(closes the Substring Search Window.)4 1522 1 2566 4320 t
+(Save current display)2 831 1 1440 4488 t
+( \256lename to save the current Results Window)7 1929(Display a popup dialog for specifying a)6 1671 2 1800 4608 t
+(contents to.)1 469 1 1800 4728 t
+(Print current display)2 832 1 1440 4896 t
+( to which the current)4 930(Display a popup dialog in which to specify a print command)10 2670 2 1800 5016 t
+( contents can be piped. Note - this option does not exist in the Win-)14 2919(Results Window)1 681 2 1800 5136 t
+(dows version.)1 563 1 1800 5256 t
+(Clear current display)2 853 1 1440 5424 t
+(Clear the)1 371 1 1800 5544 t
+10 B f
+(Search Word)1 577 1 2204 5544 t
+10 R f
+(and)2814 5544 w
+10 B f
+(Senses)2991 5544 w
+10 R f
+(boxes, and Results Window.)3 1165 1 3302 5544 t
+( what you would expect.)4 1011(Exit Does)1 565 2 1440 5712 t
+9 B f
+(History)900 5880 w
+10 R f
+( an item from this list per-)6 1116( Selecting)1 442( last searches performed.)3 1027(This pulldown menu contains a list of the)7 1735 4 1080 6000 t
+( can be adjusted from the)5 1076( maximum number of searches stored in the list)8 2018( The)1 228(forms that search again.)3 998 4 1080 6120 t
+10 B f
+(Options)1080 6240 w
+10 R f
+( default is 10.)3 568(menu. The)1 468 2 1453 6240 t
+9 B f
+(Options)900 6408 w
+10 R f
+(Show help with each search)4 1146 1 1440 6528 t
+( by some explanatory text)4 1108(When this checkbox is selected search results are preceded)8 2492 2 1800 6648 t
+(about the type of search selected. This is off by default.)10 2292 1 1800 6768 t
+(Show descriptive gloss)2 938 1 1440 6936 t
+( This)1 246( glosses are displayed in all search results.)7 1756(When this checkbox is selected, synset)5 1598 3 1800 7056 t
+( that glosses are always displayed in the Overview.)8 2102( Note)1 260(is set by default.)3 679 3 1800 7176 t
+( 3)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 3 3
+%%Page: 4 4
+save
+mark
+4 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 1WN \))3 330( WNB)1 3180(User Commands)1 677 3 1213 480 t
+(Wrap Lines)1 476 1 1440 960 t
+(When this checkbox is selected, lines in the Results Window that are wider than the)14 3600 1 1800 1080 t
+( not selected, a horizontal)4 1055( If)1 132( is set by default.)4 712( This)1 244(window are automatically wrapped.)3 1457 5 1800 1200 t
+(scroll bar is present if any lines are longer than the width of the window.)14 3010 1 1800 1320 t
+(Set advanced search options...)3 1227 1 1440 1488 t
+( displays a popup window for setting the following search options:)10 2825(Selecting this item)2 775 2 1800 1608 t
+10 B f
+(Lexical \256le information; Synset location in database \256le; Sense number)9 3179 1 1800 1728 t
+10 R f
+(. Choices)1 421 1 4979 1728 t
+(for each are:)2 513 1 1800 1848 t
+10 B f
+(Don't show)1 494 1 2160 2088 t
+10 R f
+(\(default\))2687 2088 w
+10 B f
+(Show with searches)2 849 1 2160 2208 t
+(Show with searches and overview)4 1459 1 2160 2328 t
+10 R f
+( is printed)2 440(When lexical \256le information is shown, the name of the lexicographer \256le)11 3160 2 1800 2568 t
+( enclosed in angle brackets \()5 1188(before each synset,)2 785 2 1800 2688 t
+10 S1 f
+(<)3773 2688 w
+10 I f
+(...)3895 2688 w
+10 S1 f
+(>)4036 2688 w
+10 R f
+( both lexical \256le infor-)4 943(\). When)1 365 2 4092 2688 t
+( synset location information are displayed, the synset location information)9 3135(mation and)1 465 2 1800 2808 t
+( more than one sense of a word is)8 1592( within one lexicographer \256le)4 1308( If)1 157(appears \256rst.)1 543 4 1800 2928 t
+(entered, an integer)2 795 1 1800 3048 t
+10 I f
+(lex)2648 3048 w
+10 S f
+(_)2764 3048 w
+10 I f
+(id)2814 3048 w
+10 R f
+(is appended onto all but one of the word's instances to)10 2455 1 2945 3048 t
+( each synset, each word having a non-zero)7 1857( In)1 165(uniquely identify it.)2 840 3 1800 3168 t
+10 I f
+(lex)4710 3168 w
+10 S f
+(_)4826 3168 w
+10 I f
+(id)4876 3168 w
+10 R f
+(is printed)1 398 1 5002 3168 t
+(with the)1 344 1 1800 3288 t
+10 I f
+(lex)2188 3288 w
+10 S f
+(_)2304 3288 w
+10 I f
+(id)2354 3288 w
+10 R f
+( both lexicographer)2 816( If)1 144( immediately following the word.)4 1421(value printed)1 543 4 2476 3288 t
+(information and sense numbers are displayed,)5 2050 1 1800 3408 t
+10 I f
+(lex)3919 3408 w
+10 S f
+(_)4035 3408 w
+10 I f
+(id)4085 3408 w
+10 R f
+( precede sense)2 661(s, if present,)2 576 2 4163 3408 t
+(numbers.)1800 3528 w
+(When synset location is shown, the byte offset of the synset in the database)13 3150 1 1800 3768 t
+10 S1 f
+(")4987 3768 w
+10 R f
+(data)5028 3768 w
+10 S1 f
+(")5194 3768 w
+10 R f
+(\256le)5272 3768 w
+( category of the synset is printed before each synset,)9 2318(corresponding to the syntactic)3 1282 2 1800 3888 t
+(enclosed in curly braces \()4 1055 1 1800 4008 t
+10 S f
+({)2855 4008 w
+10 I f
+(...)2969 4008 w
+10 S f
+(})3110 4008 w
+10 R f
+( information and synset loca-)4 1205( both lexical \256le)3 674(\). When)1 363 3 3158 4008 t
+(tion information are displayed, the synset location information appears \256rst.)9 3105 1 1800 4128 t
+( word in each synset is)5 1037(When sense numbers are shown, the sense number of each)9 2563 2 1800 4368 t
+(printed immediately after the word, and is preceded by a number sign \()12 2932 1 1800 4488 t
+10 S1 f
+(#)4732 4488 w
+10 R f
+(\).)4782 4488 w
+(Set maximum history length...)3 1236 1 1440 4656 t
+( of previous searches to be kept)6 1318(Display a popup dialog in which the maximum number)8 2282 2 1800 4776 t
+(on the History list can be set.)6 1211 1 1800 4896 t
+(Set font...)1 397 1 1440 5064 t
+( size to use for the)5 839(Display a popup window for setting the font \(typeface\) and font)10 2761 2 1800 5184 t
+( for typeface are:)3 728( Choices)1 397(Results Window.)1 706 3 1800 5304 t
+10 B f
+(Courier)3673 5304 w
+10 R f
+(,)4011 5304 w
+10 B f
+(Helvetica)4078 5304 w
+10 R f
+(, and)1 211 1 4477 5304 t
+10 B f
+(Times)4730 5304 w
+10 R f
+(\(default\).)5032 5304 w
+(Font size can be)3 670 1 1800 5424 t
+10 B f
+(small)2503 5424 w
+10 R f
+(,)2731 5424 w
+10 B f
+(medium)2789 5424 w
+10 R f
+(\(default\), or)1 484 1 3172 5424 t
+10 B f
+(large)3689 5424 w
+10 R f
+(.)3905 5424 w
+(Save current options as default)4 1263 1 1440 5592 t
+( started, these options will be)5 1236( time the browser is)4 840( Next)1 265(Save the currently set options.)4 1259 4 1800 5712 t
+(used as the user defaults.)4 1027 1 1800 5832 t
+9 B f
+(Help)900 6000 w
+10 R f
+(Help on using the WordNet browser)5 1490 1 1440 6120 t
+(Display this manual page.)3 1062 1 1800 6240 t
+(Help on WordNet terminology)3 1253 1 1440 6408 t
+(Display the)1 466 1 1800 6528 t
+10 B f
+(wngloss)2299 6528 w
+10 R f
+(\(7WN\) manual page.)2 855 1 2633 6528 t
+(Display the WordNet license)3 1180 1 1440 6696 t
+(Display the WordNet copyright notice and license agreement.)7 2523 1 1800 6816 t
+(About the WordNet browser)3 1163 1 1440 6984 t
+(Information about this application.)3 1412 1 1800 7104 t
+( 4)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 4 4
+%%Page: 5 5
+save
+mark
+5 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 1WN \))3 330( WNB)1 3180(User Commands)1 677 3 1213 480 t
+9 B f
+(SHORCUTS)720 960 w
+10 R f
+( holding down the)3 803(Clicking on any word in the Results Window while)8 2255 2 1080 1080 t
+9 B f
+(SHIFT)4189 1080 w
+10 R f
+(key on the keyboard)3 890 1 4510 1080 t
+(causes the browser to replace)4 1276 1 1080 1200 t
+10 B f
+(Search Word)1 596 1 2408 1200 t
+10 R f
+( and available)2 606(with the word and display its Overview)6 1738 2 3056 1200 t
+( on any word in the Results Window with the middle mouse button does the same)15 3538(searches. Clicking)1 782 2 1080 1320 t
+(thing.)1080 1440 w
+(Pressing the)1 522 1 1080 1680 t
+9 B f
+(CONTROL-S)1663 1680 w
+10 R f
+(keys causes the browser to do as above on the text that is currently)13 3140 1 2260 1680 t
+( works)1 281( This)1 248( in another window.)3 835( Unix, this will work even if the highlighted text is)10 2155(highlighted. Under)1 801 5 1080 1800 t
+(on hyphenated strings and collocations, as well as individual words.)9 2789 1 1080 1920 t
+(Pressing the)1 494 1 1080 2160 t
+9 B f
+(CONTROL-G)1607 2160 w
+10 R f
+(keys displays the Substring Search Window.)5 1822 1 2195 2160 t
+9 B f
+(SEARCH RESULTS)1 830 1 720 2448 t
+10 R f
+( and)1 184( Horizontal)1 500( are displayed in the Results Window.)6 1608(The results of a search of the WordNet database)8 2028 4 1080 2568 t
+(vertical scroll bars are present for scrolling through the search results.)10 2865 1 1080 2688 t
+( following general)2 758(All searches other than the Overview list all senses matching the search results in the)14 3562 2 1080 2928 t
+( enclosed in italicized square brackets \()6 1616(format. Items)1 579 2 1080 3048 t
+10 I f
+([ ... ])2 219 1 3275 3048 t
+10 R f
+(\) may not be present.)4 872 1 3494 3048 t
+( some senses of)3 651(If a search cannot be performed on)6 1437 2 1080 3288 t
+10 I f
+(searchstr)3202 3288 w
+10 R f
+(, the search results are headed by a string of)9 1826 1 3574 3288 t
+(the form:)1 377 1 1080 3408 t
+(X of Y senses of)4 697 1 1440 3528 t
+10 I f
+(searchstr)2170 3528 w
+10 R f
+(One line listing the number of senses matching the search selected.)10 2756 1 1440 3768 t
+(Each sense matching the search selected displayed as follows:)8 2542 1 1440 4008 t
+10 B f
+(Sense)1800 4248 w
+10 I f
+(n)2072 4248 w
+([)1800 4368 w
+10 S f
+({)1839 4368 w
+10 I f
+(synset)1887 4368 w
+10 S f
+(_)2131 4368 w
+10 I f
+(offset)2181 4368 w
+10 S f
+(})2398 4368 w
+10 I f
+(] [)1 111 1 2446 4368 t
+10 S1 f
+(<)2557 4368 w
+10 I f
+(lex)2613 4368 w
+10 S f
+(_)2729 4368 w
+10 I f
+(\256lename)2779 4368 w
+10 S1 f
+(>)3117 4368 w
+10 I f
+(] word1[)1 400 1 3173 4368 t
+10 S1 f
+(#)3573 4368 w
+10 I f
+(sense)3623 4368 w
+10 S f
+(_)3839 4368 w
+10 I f
+(number][, word2...])1 844 1 3889 4368 t
+10 R f
+(Where)1440 4608 w
+10 I f
+(n)1739 4608 w
+10 R f
+(is the sense number of the search word,)7 1637 1 1823 4608 t
+10 I f
+(synset)3494 4608 w
+10 S f
+(_)3738 4608 w
+10 I f
+(offset)3788 4608 w
+10 R f
+( synset in)2 398(is the byte offset of the)5 963 2 4039 4608 t
+(the)1440 4728 w
+10 B f
+(data.)1603 4728 w
+10 I f
+(pos)1817 4728 w
+10 R f
+( category,)1 408(\256le corresponding to the syntactic)4 1418 2 1997 4728 t
+10 I f
+(lex)3863 4728 w
+10 S f
+(_)3979 4728 w
+10 I f
+(\256lename)4029 4728 w
+10 R f
+(is the name of the lexi-)5 993 1 4407 4728 t
+(cographer \256le that the synset comes from,)6 1726 1 1440 4848 t
+10 I f
+(word1)3200 4848 w
+10 R f
+( that this is)3 467(is the \256rst word in the synset \(note)7 1443 2 3490 4848 t
+(not necessarily the search word\) and)5 1544 1 1440 4968 t
+10 I f
+(sense)3027 4968 w
+10 S f
+(_)3243 4968 w
+10 I f
+(number)3293 4968 w
+10 R f
+( assigned to)2 506(is the WordNet sense number)4 1253 2 3641 4968 t
+(the preceding word.)2 887 1 1440 5088 t
+10 I f
+(synset)2431 5088 w
+10 S f
+(_)2675 5088 w
+10 I f
+(offset)2725 5088 w
+10 R f
+(,)2942 5088 w
+10 I f
+(lex)3038 5088 w
+10 S f
+(_)3154 5088 w
+10 I f
+(\256lename)3204 5088 w
+10 R f
+(, and)1 240 1 3542 5088 t
+10 I f
+(sense)3853 5088 w
+10 S f
+(_)4069 5088 w
+10 I f
+(number)4119 5088 w
+10 R f
+( the)1 194(are generated if)2 711 2 4495 5088 t
+(appropriate Options are speci\256ed.)3 1371 1 1440 5208 t
+( matching the search selected are printed below each sense's synset output described)12 3483(The synsets)1 477 2 1440 5448 t
+( line of output is preceded by a marker \(usually)9 2041(above. Each)1 537 2 1440 5568 t
+10 B f
+(=)4060 5568 w
+10 S1 f
+(>)4117 5568 w
+10 R f
+( synset, formatted as)3 869(\), then a)2 358 2 4173 5568 t
+( then successive lines are)4 1103( a search traverses more one level of the tree,)9 2015( If)1 148(described above.)1 694 4 1440 5688 t
+( displayed in)2 581( are)1 182( Glosses)1 405(indented by spaces corresponding to its level in the hierarchy.)9 2792 4 1440 5808 t
+( synset is printed on)4 840( Each)1 267( of each synset if the appropriate Option is set.)9 1948(parentheses at the end)3 905 4 1440 5928 t
+(one line.)1 352 1 1440 6048 t
+( common sense numbered)3 1082(Senses are ordered from most to least frequently used, with the most)11 2878 2 1440 6288 t
+10 B f
+(1)1440 6408 w
+10 R f
+( is determined by the number of times a sense is tagged in the various)14 3074( of use)2 310(. Frequency)1 526 3 1490 6408 t
+( ordered senses.)2 660( that are not semantically tagged follow the)7 1812( Senses)1 342(semantic concordance texts.)2 1146 4 1440 6528 t
+(Note that this ordering is only an estimate based on usage in a small corpus.)14 3145 1 1440 6648 t
+( of meaning, rather than ordered by frequency of use.)9 2241(Verb senses can be grouped by similarity)6 1719 2 1440 6888 t
+(When the)1 415 1 1440 7008 t
+10 S1 f
+(")1910 7008 w
+10 B f
+(Synonyms, grouped by similarity)3 1500 1 1951 7008 t
+10 S1 f
+(")3451 7008 w
+10 R f
+(search is selected, senses that are close in)7 1854 1 3546 7008 t
+( See)1 238( a line of dashes indicating the end of a group.)10 2204(meaning are printed together, with)4 1518 3 1440 7128 t
+10 B f
+(wngroups)1440 7248 w
+10 R f
+(\(7WN\) for a discussion how senses are grouped.)7 1990 1 1863 7248 t
+( 5)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7728 t
+cleartomark
+showpage
+restore
+%%EndPage: 5 5
+%%Page: 6 6
+save
+mark
+6 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 1WN \))3 330( WNB)1 3180(User Commands)1 677 3 1213 480 t
+(The output of the)3 727 1 1440 960 t
+10 S1 f
+(")2204 960 w
+10 B f
+(Derivationally Related Forms)2 1291 1 2245 960 t
+10 S1 f
+(")3536 960 w
+10 R f
+(search shows word forms that are morpho-)6 1785 1 3615 960 t
+(logically related to)2 771 1 1440 1080 t
+10 B f
+(searchstr)2247 1080 w
+10 R f
+(. Each word form pointed to from)6 1411 1 2640 1080 t
+10 I f
+(searchstr)4087 1080 w
+10 R f
+( preceded)1 394(is displayed,)1 511 2 4495 1080 t
+(by)1440 1200 w
+10 B f
+(RELATED TO-)1 702 1 1580 1200 t
+10 S1 f
+(>)2282 1200 w
+10 R f
+( link, followed, on the next line, by its)8 1653(and the syntactic category of the)5 1369 2 2378 1200 t
+( the word form is)4 744( after)1 222(synset. Printed)1 637 3 1440 1320 t
+10 S1 f
+(#)3082 1320 w
+10 I f
+(n)3132 1320 w
+10 R f
+(where)3221 1320 w
+10 I f
+(n)3503 1320 w
+10 R f
+(indicates the WordNet sense number of the)6 1808 1 3592 1320 t
+(term pointed to.)2 652 1 1440 1440 t
+(The)1440 1680 w
+10 S1 f
+(")1657 1680 w
+10 B f
+(Domain)1698 1680 w
+10 S1 f
+(")2037 1680 w
+10 R f
+(and)2140 1680 w
+10 S1 f
+(")2346 1680 w
+10 B f
+(Domain Terms)1 678 1 2387 1680 t
+10 S1 f
+(")3065 1680 w
+10 R f
+( been)1 251(searches show the domain that a synset has)7 1981 2 3168 1680 t
+( A)1 144( terms that have been assigned to a speci\256c domain.)9 2195(classi\256ed in and, conversely, all of the)6 1621 3 1440 1800 t
+(domain is either a)3 752 1 1440 1920 t
+10 B f
+(TOPIC, REGION)1 787 1 2231 1920 t
+10 R f
+(or)3057 1920 w
+10 B f
+(USAGE,)3179 1920 w
+10 R f
+(as re\257ected in the speci\256c pointer character)6 1812 1 3588 1920 t
+( A)1 151( output.)1 327(stored in the database, and displayed in the)7 1868 3 1440 2040 t
+10 B f
+(Domain)3832 2040 w
+10 R f
+(search on a term shows the)5 1183 1 4217 2040 t
+( synset containing)2 744(domain, if any, that each)4 1027 2 1440 2160 t
+10 I f
+(searchstr)3247 2160 w
+10 R f
+( output display)2 617( The)1 224(has been classi\256ed in.)3 904 3 3655 2160 t
+(shows the domain type \()4 1029 1 1440 2280 t
+10 B f
+(TOPIC, REGION)1 786 1 2469 2280 t
+10 R f
+(or)3293 2280 w
+10 B f
+(USAGE)3414 2280 w
+10 R f
+( syntactic category of)3 892(\), followed by the)3 749 2 3759 2280 t
+( term is followed by)4 857( Each)1 270( the synset.)2 473(the domain synset and the terms in)6 1460 4 1440 2400 t
+10 S1 f
+(#)4538 2400 w
+10 I f
+(n)4588 2400 w
+10 R f
+(where)4676 2400 w
+10 I f
+(n)4957 2400 w
+10 R f
+(indicates)5045 2400 w
+( converse search,)2 701( The)1 222(the WordNet sense number of the term.)6 1637 3 1440 2520 t
+10 B f
+(Domain Terms)1 650 1 4034 2520 t
+10 R f
+(, shows all of the)4 716 1 4684 2520 t
+(synsets that have been placed into the domain)7 1884 1 1440 2640 t
+10 I f
+(searchstr)3357 2640 w
+10 R f
+(, with analogous markers.)3 1053 1 3729 2640 t
+(When the)1 395 1 1440 2880 t
+10 S1 f
+(")1870 2880 w
+10 B f
+(Sentence Frames)1 733 1 1911 2880 t
+10 S1 f
+(")2644 2880 w
+10 R f
+( and generic sen-)3 711(search is speci\256ed, sample illustrative sentences)5 1969 2 2720 2880 t
+( a sample sentence is found, the base form of the search word is)13 2700( If)1 136(tence frames are displayed.)3 1124 3 1440 3000 t
+( it is printed below the synset, preceded with the)9 2039(substituted into the sentence, and)4 1368 2 1440 3120 t
+10 B f
+(EX:)4884 3120 w
+10 R f
+(marker.)5093 3120 w
+( Sentence)1 445( are found, the generic sentence frames are displayed.)8 2353(When no sample sentences)3 1162 3 1440 3240 t
+( synset are preceded by the marker)6 1462(frames that are acceptable for all words in a)8 1840 2 1440 3360 t
+10 S f
+(*)4780 3360 w
+10 S1 f
+(>)4830 3360 w
+10 R f
+( a frame)2 352(. If)1 162 2 4886 3360 t
+(is acceptable for the search word only, it is preceded by the marker)12 2769 1 1440 3480 t
+10 B f
+(=)4242 3480 w
+10 S1 f
+(>)4299 3480 w
+10 R f
+(.)4355 3480 w
+( When)1 313( parts of speech.)3 699(Search results for adjectives are slightly different from those for other)10 2948 3 1440 3720 t
+( When)1 312( one, is also printed in parentheses.)6 1494(an adjective is printed, its direct antonym, if it has)9 2154 3 1440 3840 t
+( The)1 229( are also displayed.)3 813(the search word is in a head synset, all of the head synset's satellites)13 2918 3 1440 3960 t
+( relation to the noun may be restricted to the)9 1839(position of an adjective in)4 1074 2 1440 4080 t
+10 I f
+(prenominal)4386 4080 w
+10 R f
+(,)4847 4080 w
+10 I f
+(postnominal)4905 4080 w
+10 R f
+(or)1440 4200 w
+10 I f
+(predicative)1556 4200 w
+10 R f
+( present, these restrictions are noted in parentheses.)7 2104(position. Where)1 679 2 2038 4200 t
+(When an adjective is a participle of a verb, the output indicates the verb and displays its synset.)17 3944 1 1440 4440 t
+( based)1 265(When an adverb is derived from an adjective, the speci\256c adjectival sense on which it is)15 3695 2 1440 4680 t
+(is indicated.)1 491 1 1440 4800 t
+( more than one)3 644(The morphological transformations performed by the search code may result in)10 3316 2 1440 5040 t
+(word to search for.)3 780 1 1440 5160 t
+10 B f
+(wnb\( \))1 266 1 2287 5160 t
+10 R f
+( all of the strings and)5 881(automatically performs the requested search on)5 1932 2 2587 5160 t
+( example, the verb)3 794( For)1 216(returns the results grouped by word.)5 1537 3 1440 5280 t
+10 B f
+(saw)4031 5280 w
+10 R f
+( of)1 128(is both the present tense)4 1036 2 4236 5280 t
+10 B f
+(saw)1440 5400 w
+10 R f
+(and the past tense of)4 867 1 1639 5400 t
+10 B f
+(see)2544 5400 w
+10 R f
+( for, search results)3 767( there is more than one word to search)8 1628(. When)1 334 3 2671 5400 t
+(are grouped by word.)3 877 1 1440 5520 t
+9 B f
+(DIAGNOSTICS)720 5688 w
+10 R f
+( usually corrected)2 733( is)1 103( This)1 247(If the WordNet database \256les cannot be opened, error messages are displayed.)11 3237 4 1080 5808 t
+( database for)2 527(by setting the environment variables described below to the proper location of the WordNet)13 3793 2 1080 5928 t
+(your installation.)1 686 1 1080 6048 t
+9 B f
+(ENVIRONMENT VARIABLES \(UNIX\))2 1600 1 720 6216 t
+10 B f
+(WNHOME)1080 6336 w
+10 R f
+( is)1 100( Default)1 365(Base directory for WordNet.)3 1165 3 2080 6336 t
+10 B f
+(/usr/local/WordNet-3.0)3743 6336 w
+10 R f
+(.)4723 6336 w
+10 B f
+(WNSEARCHDIR)1080 6504 w
+10 R f
+( which the WordNet database has been installed. Default is)9 2788(Directory in)1 532 2 2080 6504 t
+10 B f
+(WNHOME/dict)2080 6624 w
+10 R f
+(.)2758 6624 w
+9 B f
+(REGISTRY \(WINDOWS\))1 1040 1 720 6792 t
+10 B f
+(HKEY)1080 6912 w
+10 S f
+(_)1375 6912 w
+10 B f
+(LOCAL)1425 6912 w
+10 S f
+(_)1781 6912 w
+10 B f
+(MACHINE)1831 6912 w
+10 S1 f
+(\\)2325 6912 w
+10 B f
+(SOFTWARE)2353 6912 w
+10 S1 f
+(\\)2926 6912 w
+10 B f
+(WordNet)2954 6912 w
+10 S1 f
+(\\)3353 6912 w
+10 B f
+(3.0)3381 6912 w
+10 S1 f
+(\\)3506 6912 w
+10 B f
+(WNHome)3534 6912 w
+10 R f
+( is)1 100( Default)1 365(Base directory for WordNet.)3 1165 3 2080 7032 t
+10 B f
+(C:)3743 7032 w
+10 S1 f
+(\\)3848 7032 w
+10 B f
+(Program Files)1 615 1 3876 7032 t
+10 S1 f
+(\\)4491 7032 w
+10 B f
+(WordNet)4519 7032 w
+10 S1 f
+(\\)4918 7032 w
+10 B f
+(3.0)4946 7032 w
+10 R f
+(.)5071 7032 w
+10 B f
+(HKEY)1080 7200 w
+10 S f
+(_)1375 7200 w
+10 B f
+(CURRENT)1425 7200 w
+10 S f
+(_)1919 7200 w
+10 B f
+(USER)1969 7200 w
+10 S1 f
+(\\)2236 7200 w
+10 B f
+(SOFTWARE)2264 7200 w
+10 S1 f
+(\\)2837 7200 w
+10 B f
+(WordNet)2865 7200 w
+10 S1 f
+(\\)3264 7200 w
+10 B f
+(3.0)3292 7200 w
+10 S1 f
+(\\)3417 7200 w
+10 B f
+(wnres)3445 7200 w
+10 R f
+( 6)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 6 6
+%%Page: 7 7
+save
+mark
+7 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 1WN \))3 330( WNB)1 3180(User Commands)1 677 3 1213 480 t
+(User's default browser options.)3 1277 1 2080 960 t
+9 B f
+(FILES)720 1128 w
+10 B f
+(index.)1080 1248 w
+10 I f
+(pos)1339 1248 w
+10 R f
+(database index \256les)2 798 1 2080 1248 t
+10 B f
+(data.)1080 1416 w
+10 I f
+(pos)1294 1416 w
+10 R f
+(database data \256les)2 742 1 2080 1416 t
+10 S f
+(*)1080 1584 w
+10 B f
+(.vrb)1130 1584 w
+10 R f
+(\256les of sentences illustrating the use of verbs)7 1851 1 2080 1584 t
+10 I f
+(pos)1080 1752 w
+10 B f
+(.exc)1219 1752 w
+10 R f
+(morphology exception lists)2 1105 1 2080 1752 t
+9 B f
+(SEE ALSO)1 460 1 720 1920 t
+10 B f
+(wnintro)1080 2040 w
+10 R f
+(\(1WN\),)1419 2040 w
+10 B f
+(wn)1862 2040 w
+10 R f
+(\(1WN\),)1990 2040 w
+10 B f
+(wnintro)2433 2040 w
+10 R f
+(\(3WN\),)2772 2040 w
+10 B f
+(lexnames)3215 2040 w
+10 R f
+(\(5WN\),)3609 2040 w
+10 B f
+(senseidx)4053 2040 w
+10 R f
+(\(5WN\),)4409 2040 w
+10 B f
+(wndb)4853 2040 w
+10 R f
+(\(5WN\),)5093 2040 w
+10 B f
+(wninput)1080 2160 w
+10 R f
+(\(5WN\),)1437 2160 w
+10 B f
+(morphy)1777 2160 w
+10 R f
+(\(7WN\),)2116 2160 w
+10 B f
+(wngloss)2456 2160 w
+10 R f
+(\(7WN\),)2790 2160 w
+10 B f
+(wngroups)3130 2160 w
+10 R f
+(\(7WN\).)3553 2160 w
+9 B f
+(BUGS)720 2328 w
+10 R f
+(Please reports bugs to wordnet)4 1258 1 1080 2448 t
+10 S1 f
+(@)2338 2448 w
+10 R f
+(princeton.edu.)2430 2448 w
+( 7)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 7 7
+%%Trailer
+done
+%%DocumentFonts: Times-Roman Symbol Times-Bold Times-Italic
+%%Pages: 7

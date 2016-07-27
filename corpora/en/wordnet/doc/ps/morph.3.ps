@@ -1,0 +1,530 @@
+%!PS
+%%Version: 3.15
+%%DocumentFonts: (atend)
+%%Pages: (atend)
+%%EndComments
+%ident	"@(#)lp:filter/postscript/postscript/dpost.ps	1.1"
+%
+% Version 3.16 prologue for troff files.
+%
+
+/#copies 1 store
+/aspectratio 1 def
+/formsperpage 1 def
+/landscape false def
+/linewidth .3 def
+/magnification 1 def
+/margin 0 def
+/orientation 0 def
+/resolution 720 def
+/xoffset 0 def
+/yoffset 0 def
+
+/roundpage true def
+/useclippath true def
+/pagebbox [0 0 612 792] def
+
+/R  /Times-Roman def
+/I  /Times-Italic def
+/B  /Times-Bold def
+/BI /Times-BoldItalic def
+/H  /Helvetica def
+/HI /Helvetica-Oblique def
+/HB /Helvetica-Bold def
+/HX /Helvetica-BoldOblique def
+/CW /Courier def
+/CO /Courier def
+/CI /Courier-Oblique def
+/CB /Courier-Bold def
+/CX /Courier-BoldOblique def
+/PA /Palatino-Roman def
+/PI /Palatino-Italic def
+/PB /Palatino-Bold def
+/PX /Palatino-BoldItalic def
+/Hr /Helvetica-Narrow def
+/Hi /Helvetica-Narrow-Oblique def
+/Hb /Helvetica-Narrow-Bold def
+/Hx /Helvetica-Narrow-BoldOblique def
+/KR /Bookman-Light def
+/KI /Bookman-LightItalic def
+/KB /Bookman-Demi def
+/KX /Bookman-DemiItalic def
+/AR /AvantGarde-Book def
+/AI /AvantGarde-BookOblique def
+/AB /AvantGarde-Demi def
+/AX /AvantGarde-DemiOblique def
+/NR /NewCenturySchlbk-Roman def
+/NI /NewCenturySchlbk-Italic def
+/NB /NewCenturySchlbk-Bold def
+/NX /NewCenturySchlbk-BoldItalic def
+/ZD /ZapfDingbats def
+/ZI /ZapfChancery-MediumItalic def
+/VR /Varitimes#Roman def
+/VI /Varitimes#Italic def
+/VB /Varitimes#Bold def
+/VX /Varitimes#BoldItalic def
+/S  /S def
+/S1 /S1 def
+/GR /Symbol def
+
+/inch {72 mul} bind def
+/min {2 copy gt {exch} if pop} bind def
+
+/setup {
+	counttomark 2 idiv {def} repeat pop
+
+	landscape {/orientation 90 orientation add def} if
+	/scaling 72 resolution div def
+	linewidth setlinewidth
+	1 setlinecap
+
+	pagedimensions
+	xcenter ycenter translate
+	orientation neg rotate
+	width 2 div neg height 2 div translate
+	xoffset inch yoffset inch translate
+	margin 2 div dup neg translate
+	magnification dup aspectratio mul scale
+	scaling scaling scale
+
+	/Symbol /S Sdefs cf
+	/Times-Roman /S1 S1defs cf
+	0 0 moveto
+} def
+
+/pagedimensions {
+	useclippath userdict /gotpagebbox known not and {
+		/pagebbox [clippath pathbbox newpath] def
+		roundpage currentdict /roundpagebbox known and {roundpagebbox} if
+	} if
+	pagebbox aload pop
+	4 -1 roll exch 4 1 roll 4 copy
+	landscape {4 2 roll} if
+	sub /width exch def
+	sub /height exch def
+	add 2 div /xcenter exch def
+	add 2 div /ycenter exch def
+	userdict /gotpagebbox true put
+} def
+
+/pagesetup {
+	/page exch def
+	currentdict /pagedict known currentdict page known and {
+		page load pagedict exch get cvx exec
+	} if
+} def
+
+/decodingdefs [
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg /y exch def counttomark 2 idiv {y moveto show} repeat}
+	{neg moveto {2 index stringwidth pop sub exch div 0 32 4 -1 roll widthshow} repeat}
+	{neg moveto {spacewidth sub 0.0 32 4 -1 roll widthshow} repeat}
+	{counttomark 2 idiv {y moveto show} repeat}
+	{neg setfunnytext}
+] def
+
+/setdecoding {/t decodingdefs 3 -1 roll get bind def} bind def
+
+/w {neg moveto show} bind def
+/m {neg dup /y exch def moveto} bind def
+/done {/lastpage where {pop lastpage} if} def
+
+/f {
+	dup /font exch def findfont exch
+	dup /ptsize exch def scaling div dup /size exch def scalefont setfont
+	linewidth ptsize mul scaling 10 mul div setlinewidth
+	/spacewidth ( ) stringwidth pop def
+} bind def
+
+/changefont {
+	/fontheight exch def
+	/fontslant exch def
+	currentfont [
+		1 0
+		fontheight ptsize div fontslant sin mul fontslant cos div
+		fontheight ptsize div
+		0 0
+	] makefont setfont
+} bind def
+
+/sf {f} bind def
+
+/cf {
+	dup length 2 idiv
+	/entries exch def
+	/chtab exch def
+	/newfont exch def
+
+	findfont dup length 1 add dict
+	/newdict exch def
+	{1 index /FID ne {newdict 3 1 roll put} {pop pop} ifelse} forall
+
+	newdict /Metrics entries dict put
+	newdict /Metrics get
+	begin
+		chtab aload pop
+		1 1 entries {pop def} for
+		newfont newdict definefont pop
+	end
+} bind def
+
+%
+% A few arrays used to adjust reference points and character widths in some
+% of the printer resident fonts. If square roots are too high try changing
+% the lines describing /radical and /radicalex to,
+%
+%	/radical	[0 -75 550 0]
+%	/radicalex	[-50 -75 500 0]
+%
+
+/Sdefs [
+	/bracketlefttp		[220 500]
+	/bracketleftbt		[220 500]
+	/bracketrighttp		[-70 380]
+	/bracketrightbt		[-70 380]
+	/braceleftbt		[220 490]
+	/bracketrightex		[220 -125 500 0]
+	/radical		[0 0 550 0]
+	% NeWSprint's \(br is too low, compensate
+	statusdict /product get (NeWS Server) eq {
+		/radicalex		[-50 100 500 0]
+		/parenleftex		[-20 100 0 0]
+
+	} {
+		/radicalex		[-50 0 500 0]
+		/parenleftex		[-20 -170 0 0]
+	} ifelse
+	/integral		[100 -50 500 0]
+	/infinity		[10 -75 730 0]
+] def
+
+/S1defs [
+	/underscore		[0 80 500 0]
+	/endash			[7 90 650 0]
+] def
+%%EndProlog
+%%BeginSetup
+mark
+/resolution 720 def
+setup
+2 setdecoding
+%%EndSetup
+%%Page: 1 1
+save
+mark
+1 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 3WN \))3 330( MORPH)1 3130(Library Functions)1 727 3 1213 480 t
+9 B f
+(NAME)720 960 w
+10 R f
+(morphinit, re)1 530 1 1080 1080 t
+10 S f
+(_)1610 1080 w
+10 R f
+(morphinit, morphstr, morphword)2 1338 1 1660 1080 t
+9 B f
+(SYNOPSIS)720 1248 w
+10 S1 f
+(#)1080 1368 w
+10 B f
+(include)1130 1368 w
+10 S1 f
+(")1475 1368 w
+10 B f
+(wn.h)1516 1368 w
+10 S1 f
+(")1725 1368 w
+10 B f
+(int morphinit\(void\);)1 867 1 1080 1536 t
+(int re)1 238 1 1080 1704 t
+10 S f
+(_)1318 1704 w
+10 B f
+(morphinit\(void\);)1368 1704 w
+(char)1080 1872 w
+10 S f
+(*)1307 1872 w
+10 B f
+(morphstr\(char)1357 1872 w
+10 S f
+(*)2022 1872 w
+10 B f
+(origstr, int pos\);)2 707 1 2072 1872 t
+(char)1080 2040 w
+10 S f
+(*)1307 2040 w
+10 B f
+(morphword\(char)1357 2040 w
+10 S f
+(*)2128 2040 w
+10 B f
+(word, int pos\);)2 641 1 2178 2040 t
+9 B f
+(DESCRIPTION)720 2208 w
+10 R f
+(The WordNet morphological processor, Morphy, is accessed through these functions:)9 3491 1 1080 2328 t
+10 B f
+(morphinit\( \))1 516 1 1080 2496 t
+10 R f
+( returns)1 312( It)1 129( the exception list \256les.)4 965(is used to open)3 624 4 1630 2496 t
+10 B f
+(0)3695 2496 w
+10 R f
+(if successful,)1 531 1 3780 2496 t
+10 B f
+(-1)4346 2496 w
+10 R f
+( excep-)1 300(otherwise. The)1 636 2 4464 2496 t
+(tion list \256les must be opened before)6 1475 1 1080 2616 t
+10 B f
+(morphstr\( \))1 487 1 2588 2616 t
+10 R f
+(or)3108 2616 w
+10 B f
+(morphword\(\))3224 2616 w
+10 R f
+(are called.)1 417 1 3834 2616 t
+10 B f
+(re)1080 2784 w
+10 S f
+(_)1168 2784 w
+10 B f
+(morphinit\( \))1 516 1 1218 2784 t
+10 R f
+( and reopen them, and is used exclusively for)8 1973(is used to close the exception list \256les)7 1648 2 1779 2784 t
+( codes are as described above.)5 1241( Return)1 338(WordNet development.)1 945 3 1080 2904 t
+10 B f
+(morphstr\( \))1 487 1 1080 3072 t
+10 R f
+( tries to \256nd the base form \(lemma\) of the word or)11 2126( It)1 129(is the basic user interface to Morphy.)6 1543 3 1602 3072 t
+(collocation)1080 3192 w
+10 I f
+(origstr)1558 3192 w
+10 R f
+( speci\256ed)1 388(in the)1 234 2 1865 3192 t
+10 I f
+(pos)2520 3192 w
+10 R f
+( \256rst call \(with)3 610(. The)1 246 2 2659 3192 t
+10 I f
+(origstr)3548 3192 w
+10 R f
+(speci\256ed\) returns a pointer to the \256rst)6 1546 1 3854 3192 t
+( forms of the same string must be made with the \256rst)11 2217( calls requesting base)3 878( Subsequent)1 528(base form found.)2 697 4 1080 3312 t
+(argument of)1 502 1 1080 3432 t
+9 B f
+(NULL.)1624 3432 w
+10 R f
+( for)1 157(When no more base forms)4 1121 2 1939 3432 t
+10 I f
+(origstr)3258 3432 w
+10 R f
+(can be found,)2 572 1 3572 3432 t
+9 B f
+(NULL)4185 3432 w
+10 R f
+( that)1 191( Note)1 268(is returned.)1 465 3 4476 3432 t
+10 B f
+(morphstr\(\))1080 3552 w
+10 R f
+( subsequent call to)3 789( A)1 146( character buffer.)2 714(returns a pointer to a static)5 1137 4 1591 3552 t
+10 B f
+(morphstr\(\))4418 3552 w
+10 R f
+(with a new)2 470 1 4930 3552 t
+(string \(instead of)2 701 1 1080 3672 t
+10 B f
+(NULL)1818 3672 w
+10 R f
+( should copy the)3 691( Users)1 296( overwrite the string pointed to by a previous call.)9 2091(\) will)1 226 4 2096 3672 t
+(returned string into a local buffer, or use the C library function)11 2666 1 1080 3792 t
+10 B f
+(strdup)3786 3792 w
+10 R f
+(to duplicate the returned string)4 1290 1 4110 3792 t
+(into a)1 233 1 1080 3912 t
+10 I f
+(malloc'd)1346 3912 w
+10 R f
+(buffer.)1734 3912 w
+10 B f
+(morphword\( \))1 593 1 1080 4080 t
+10 R f
+(tries to \256nd the base form of)6 1288 1 1724 4080 t
+10 I f
+(word)3063 4080 w
+10 R f
+(in the speci\256ed)2 657 1 3320 4080 t
+10 I f
+(pos)4028 4080 w
+10 R f
+( function is called by)4 946(. This)1 287 2 4167 4080 t
+10 B f
+(morphstr\( \))1 487 1 1080 4200 t
+10 R f
+( that)1 193( Note)1 271(for each individual word in a collocation.)6 1764 3 1611 4200 t
+10 B f
+(morphword\(\))3882 4200 w
+10 R f
+(returns a pointer to a)4 898 1 4502 4200 t
+( subsequent call to)3 771( A)1 140( buffer.)1 303(static character)1 609 4 1080 4320 t
+10 B f
+(morphword\(\))2938 4320 w
+10 R f
+(will overwrite the string pointed to by a pre-)8 1850 1 3550 4320 t
+( library function)2 699( should copy the returned string into a local buffer, or use the C)13 2873( Users)1 311(vious call.)1 437 4 1080 4440 t
+10 B f
+(strdup)1080 4560 w
+10 R f
+(to duplicate the returned string into a)6 1524 1 1397 4560 t
+10 I f
+(malloc'd)2954 4560 w
+10 R f
+(buffer.)3342 4560 w
+9 B f
+(NOTES)720 4728 w
+10 B f
+(morphinit\( \))1 516 1 1080 4848 t
+10 R f
+(is called by)2 479 1 1633 4848 t
+10 B f
+(wninit\( \))1 355 1 2149 4848 t
+10 R f
+( Applica-)1 420( intended to be called directly by an application.)8 2026(and is not)2 413 3 2541 4848 t
+( the morphological functions must call)5 1611(tions wishing to use WordNet and/or)5 1549 2 1080 4968 t
+10 B f
+(wninit\( \))1 355 1 4279 4968 t
+10 R f
+(at the start of the)4 727 1 4673 4968 t
+(program. See)1 573 1 1080 5088 t
+10 B f
+(wnutil)1686 5088 w
+10 R f
+(\(3WN\) for more information.)3 1199 1 1959 5088 t
+10 I f
+(origstr)1080 5328 w
+10 R f
+( char-)1 242(may be either a word or a collocation formed by joining individual words with underscore)14 3768 2 1390 5328 t
+(acters \()1 298 1 1080 5448 t
+10 S f
+(_)1378 5448 w
+10 R f
+(\).)1428 5448 w
+(Usually only)1 522 1 1080 5688 t
+10 B f
+(morphstr\( \))1 487 1 1635 5688 t
+10 R f
+(is called from applications, as it works on both words and collocations.)11 2927 1 2155 5688 t
+10 I f
+(pos)1080 5928 w
+10 R f
+(must be one of the following:)5 1220 1 1252 5928 t
+10 B f
+(1)1440 6168 w
+10 R f
+(NOUN)1800 6168 w
+10 B f
+(2)1440 6288 w
+10 R f
+(VERB)1800 6288 w
+10 B f
+(3)1440 6408 w
+10 R f
+(ADJECTIVE)1800 6408 w
+10 B f
+(4)1440 6528 w
+10 R f
+(ADVERB)1800 6528 w
+10 B f
+(5)1440 6648 w
+10 R f
+(ADJECTIVE)1800 6648 w
+10 S f
+(_)2338 6648 w
+10 R f
+(SATELLITE)2388 6648 w
+(If)1080 6888 w
+9 B f
+(ADJECTIVE)1179 6888 w
+9 S f
+(_)1699 6888 w
+9 B f
+(SATELLITE)1744 6888 w
+10 R f
+(is passed, it is treated by)5 1017 1 2287 6888 t
+10 B f
+(morphstr\( \))1 487 1 3337 6888 t
+10 R f
+(as)3857 6888 w
+9 B f
+(ADJECTIVE.)3973 6888 w
+(SEE ALSO)1 460 1 720 7056 t
+10 B f
+(wnintro)1080 7176 w
+10 R f
+(\(3WN\),)1419 7176 w
+10 B f
+(wnsearch)1759 7176 w
+10 R f
+(\(3WN\),)2164 7176 w
+10 B f
+(wndb)2504 7176 w
+10 R f
+(\(5WN\),)2744 7176 w
+10 B f
+(morphy)3084 7176 w
+10 R f
+(\(7WN\).)3423 7176 w
+( 1)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 1 1
+%%Page: 2 2
+save
+mark
+2 pagesetup
+10 R f
+(WordNet)720 480 w
+10 S f
+(\324)1091 480 w
+10 R f
+( \( 3WN \))3 330( MORPH)1 3130(Library Functions)1 727 3 1213 480 t
+9 B f
+(WARNINGS)720 960 w
+10 R f
+(Passing an invalid part of speech will result in a core dump.)11 2474 1 1080 1080 t
+(The WordNet database \256les must be open to use)8 1994 1 1080 1320 t
+10 B f
+(morphstr\( \))1 487 1 3107 1320 t
+10 R f
+(or)3627 1320 w
+10 B f
+(morphword\( \).)1 618 1 3743 1320 t
+9 B f
+(BUGS)720 1608 w
+10 R f
+( the rules described above.)4 1105(Morphy will allow non-words to be converted to words, if they follow one of)13 3215 2 1080 1728 t
+(For example, it will happily convert)5 1478 1 1080 1848 t
+10 B f
+(plantes)2591 1848 w
+10 R f
+(to)2930 1848 w
+10 B f
+(plants)3041 1848 w
+10 R f
+(.)3303 1848 w
+( 2)1 1870( change: Dec 2006)3 769( Last)1 1512(WordNet 3.0)1 529 4 720 7680 t
+cleartomark
+showpage
+restore
+%%EndPage: 2 2
+%%Trailer
+done
+%%DocumentFonts: Times-Roman Symbol Times-Bold Times-Italic
+%%Pages: 2

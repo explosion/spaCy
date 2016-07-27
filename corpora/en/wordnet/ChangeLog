@@ -1,0 +1,9 @@
+Changes between WordNet 2.1 and 3.0
+
+Some changes were made to the graphical interface and WordNet library
+with regard to adjective and adverb searches.  The adjective search
+"Synonyms/Related Nouns" was relabeled "Synonyms", and, similarly, the
+adverb search "Synonyms/Stem Adjectives" was relabled "Synonyms".  A
+separate "Related Noun" search was inserted for adjectives, and a
+separate "Base Adjective" search was added for adverbs.
+

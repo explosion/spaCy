@@ -1,0 +1,85 @@
+{
+    "globals": {
+        "title": "spaCy.io",
+        "sitename": "spaCy",
+        "slogan": "Industrial-strength Natural Language Processing",
+        "description": "spaCy is a free open-source library featuring state-of-the-art speed and accuracy and a powerful Python API.",
+        "url": "https://spacy.io",
+        "email": "contact@spacy.io",
+        "company": "spaCy GmbH",
+        "team_members": [ "henning", "matt", "wolfgang", "elmar", "ines" ],
+
+        "navigation": { "Docs": "docs", "Demos": "demos", "Team": "team", "Blog": "blog" },
+        "profiles": { "twitter": "spacy_io", "github": "spacy-io", "reddit": "spacynlp", "medium": "spacy" },
+        "google_analytics": "UA-58931649-1",
+
+        "stylesheets": { "default": "style", "blog": "style_blog" },
+        "scripts" : [ "main", "prism" ],
+        "feed": "feed.xml",
+        "image_sizes" : { "small" : "640", "medium": "1440", "large": "2000" },
+        "default_syntax" : "python",
+
+        "spacy_version": "0.100.6",
+        "spacy_stars": "1500",
+        "github_settings": { "user": "spacy-io", "repo": "spacy" },
+
+        "apis": {
+            "displacy": "https://displacy.spacy.io/",
+            "sense2vec": "https://sense2vec.spacy.io/api/similarity/reddit/"
+        },
+
+        "authors" : {
+            "matt" : {
+                "name" : "Matthew Honnibal",
+                "title": "CTO",
+                "description" : "is co-founder and CTO of spaCy. He studied linguistics as an undergrad, and never thought he'd be a programmer. By 2009 he had a PhD in computer science, and in 2014 he left academia to write spaCy. He's from Sydney and lives in Berlin.",
+                "links": {
+                    "twitter": [ "https://twitter.com/honnibal", "Twitter" ],
+                    "website": [ "https://www.semanticscholar.org/search?q=Matthew%20Honnibal", "Semantic Scholar" ]
+                }
+            },
+
+            "henning": {
+                "name": "Henning Peters",
+                "title": "CEO",
+                "description": "is co-founder and CEO of spaCy. He holds a MSc in computer science and has been co-founder and CTO of Skoobe and Absolventa. His passions are uncommon languages and backcountry skiing.",
+                "links": {
+                    "twitter": [ "https://twitter.com/henningpeters", "Twitter"],
+                    "linkedin": [ "https://de.linkedin.com/in/hepeters", "LinkedIn"],
+                    "github": [ "https://github.com/henningpeters", "GitHub"]
+                }
+            },
+
+            "ines": {
+                "name": "Ines Montani",
+                "title": "Front-End",
+                "description": "As Head of Front-End, Ines is in charge of showing people what spaCy can do. She develops, designs and implements our interactive demos and the spacy.io website. Ines has a degree in media, linguistics and communications, and over ten years experience in web development.",
+                "links": {
+                    "twitter": [ "https://twitter.com/_inesmontani", "Twitter" ],
+                    "codepen": [ "https://codepen.io/inesmontani", "Codepen"],
+                    "github": [ "https://github.com/inesmontani", "GitHub"],
+                    "website": [ "http://ines.io", "Blog" ]
+                }
+            },
+
+            "wolfgang": {
+                "name": "Wolfgang Seeker",
+                "title": "NLP Engineer",
+                "description": "is a computational linguist from Germany. He is fascinated with the complexity and variety of human language, and spent his PhD looking for ways to make NLP work well with any kind of language in the world. He joined spaCy to build effective and truly multilingual NLP software.",
+                "links": {
+                    "website": [ "https://www.semanticscholar.org/search?q=Wolfgang%20Seeker", "Semantic Scholar" ]
+                }
+            },
+
+            "elmar": {
+                "name": "Elmar Haußmann",
+                "title": "NLP Engineer",
+                "description": "is an NLP engineer at spaCy, passionate about deep learning. He has a background in both, academic research, with a PhD in computer science, and industry, as a former consultant and software engineer at IBM. Originally from Stuttgart, the avid snowboarder and mountain biker doesn't only ride powder and trails but also covers distances via plane between the spaCy office in Berlin and his new home in Beijing.",
+                "links": {
+                    "github": [ "https://github.com/elmar-haussmann", "GitHub"],
+                    "twitter": [ "https://twitter.com/elhaussmann", "Twitter" ]
+                }
+            }
+        }
+    }
+}

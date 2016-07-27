@@ -1,0 +1,88 @@
+//  Misc - Variables
+// ============================================================================
+
+$x-terminal-background          : color(grey)
+$x-terminal-border-radius       : $border-radius * 2
+$x-terminal-color               : color(black)
+$x-terminal-cursor-animation    : blink 0.9s infinite
+$x-terminal-cursor              : '\258B'
+$x-terminal-icon-colors         : color(red), color(green), color(yellow)
+$x-terminal-icon-size           : 1em
+$x-terminal-padding             : 0.75em
+
+$x-bubble-size                  : 35px
+$x-bubble-margin                : 1rem
+
+
+//  Misc - Style
+// ============================================================================
+
+//  Terminal window illustration to display code
+//  .x-terminal            - terminal window
+//  .x-terminal-title      - title of terminal window
+//  .x-terminal-icons      - container for toolbar icons
+//  .x-terminal-code       - code box
+//  .x-terminal-code:after - cursor in last line
+//  %x-terminal-icon       - general style of toolbar icons
+
+.x-terminal
+    background: $x-terminal-background
+    border-radius: $x-terminal-border-radius
+    color: $x-terminal-color
+    width: 100%
+
+    &--cursor
+        .code:after
+            animation: $x-terminal-cursor-animation
+            opacity: 1
+            content: $x-terminal-cursor
+
+.x-terminal-title
+    text-align: center
+    padding: $x-terminal-padding
+
+.x-terminal-icons
+    padding: $x-terminal-padding
+    position: absolute
+
+    &:before
+        @extend %x-terminal-icon
+        content: ''
+        background: nth($x-terminal-icon-colors, 1)
+
+    span
+        @extend %x-terminal-icon
+        background: nth($x-terminal-icon-colors, 2)
+
+    &:after
+        @extend %x-terminal-icon
+        content: ''
+        background: nth($x-terminal-icon-colors, 3)
+
+.x-terminal-code
+    @extend .code-block-dark
+    border-bottom-left-radius: $x-terminal-border-radius
+    border-bottom-right-radius: $x-terminal-border-radius
+    padding: $x-terminal-padding * 2
+    max-width: 100%
+    width: 100%
+    white-space: pre-wrap
+
+    &.code-block
+        margin-bottom: 0
+
+%x-terminal-icon
+    @include size($x-terminal-icon-size)
+    display: inline-block
+    float: left
+    border-radius: 50%
+    margin-right: $x-terminal-padding
+
+
+// Bubble to display colors
+
+.x-bubble
+    @include size($x-bubble-size)
+    border-radius: 50%
+    cursor: pointer
+    margin-right: $x-bubble-margin

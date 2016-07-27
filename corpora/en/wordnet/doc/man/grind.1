@@ -1,0 +1,161 @@
+'\" t
+.\" $Id$
+.tr ~
+.TH GRIND 1 "Dec 2006" "WordNet 3.0" "WordNet\(tm User Commands"
+.SH NAME
+grind \- process WordNet lexicographer files
+.SH SYNOPSIS
+\fBgrind\fP [ \fB\-v\fP ] [ \fB\-s\fP ] [ \fB\-L\fP\fIlogfile\fP ] [ \fB\-a\fP ] [ \fB\-d\fP ] [ \fB\-i\fP ] [ \fB\-o\fP ] [ \fB\-n\fP ] \fIfilename\fP [ \fIfilename\fP\&.\|.\|. ]
+.SH DESCRIPTION
+\fBgrind(\|)\fP processes WordNet lexicographer files, producing
+database files suitable for use with the WordNet search and interface
+code and other applications.  The syntactic and structural integrity
+of the input files is verified.  Warnings and errors are reported via
+\fBstderr\fP and a run-time log is produced on \fBstdout\fP.  A
+database is generated only if there are no errors.
+.SS Input Files
+Input files correspond to the syntactic categories implemented in
+WordNet \-
+.BR noun ", " 
+.BR verb ", " 
+.BR adjective " and " 
+.BR adverb .
+Each input lexicographer file consists of a list of synonym sets
+(\fIsynsets\fP) for one part of speech.  Although the basic synset
+syntax is the same for all of the parts of speech, some parts of the
+syntax only apply to a particular part of speech.  See
+.BR wninput (5WN) 
+for a description of the input file format.
+
+Each \fIfilename\fP specified is of the form:
+
+.RS
+.IB pathname / pos . suffix
+.RE
+
+where \fIpathname\fP is optional and \fIpos\fP is either
+.BR noun ", " 
+.BR verb ", " 
+.BR adj " or " 
+.BR adv .
+\fIsuffix\fP may be used to separate groups of synsets into different
+files, for example \fBnoun.animal\fP and \fBnoun.plant\fP.  One or
+more input files, in any combination of syntactic categories, may be
+specified.  See
+.BR lexnames (5WN)
+for a list of the lexicographer files used to build the complete
+WordNet database.
+.SS Output Files
+\fBgrind(\|)\fP produces the following output files:
+
+.TS 
+center box ;
+c | c
+l | l.
+\fBFilename	Description\fP
+_
+\fBindex.\fIpos\fR	Index file for each syntactic category
+\fBdata.\fIpos\fR	Data file for each syntactic category
+\fBindex.sense\fP	Sense index
+.TE
+
+See 
+.BR wndb (5WN) 
+for a description of the database file formats.
+
+Each time \fBgrind(\|)\fP is run, any existing database files are
+overwritten with the database files generated from the specified input
+files.  If no input files from a syntactic category are specified,
+the corresponding database files are not overwritten.
+.SS Sense Numbers
+Senses are generally ordered from most to least frequently used, with
+the most common sense numbered \fB1\fP.  Frequency of use is
+determined by the number of times a sense is tagged in the various
+semantic concordance texts.  Senses that are not semantically tagged
+follow the ordered senses in an arbitrary order.  
+Note that this ordering is only an
+estimate based on usage in a small corpus.
+
+The \fItagsense_cnt\fP field for each
+entry in the \fBindex.\fIpos\fR files indicates how many of the senses
+in the list have been tagged.
+
+The \fBcntlist\fP file provided with the database lists the number of
+times each sense is tagged in the semantic concordances.
+\fBgrind(\|)\fP uses the data from \fBcntlist\fP to order the senses
+of each word.  When the \fBindex\fP.\fIpos\fP files are generated, the
+\fIsynset_offset\fPs are output in sense number order, with sense 1
+first in the list.  Senses with the same number of semantic tags are
+assigned unique but consecutive sense numbers.  The WordNet
+.SB OVERVIEW
+search displays all senses of the specified word, in all syntactic
+categories, and indicates which of the senses are represented in the
+semantically tagged texts.
+.SH OPTIONS
+.TP 15
+.B \-v
+Verify integrity of input without generating database.
+.TP 15
+.B \-s
+Suppress generation of warning messages.  Usually \fBgrind\fP is run
+with this option until all syntactic and structural errors are corrected
+since the warning messages may make it difficult to spot error
+messages.
+.TP 15
+.BI \-L logfile
+Write all messages to \fIlogfile\fP instead of \fBstderr\fP.
+.TP 15
+.B \-a
+Generate statistical report on input files processed.
+.TP 15
+.B \-d
+Generate distribution of senses by string length report on input files
+processed. 
+.TP 15
+.B \-i
+Generate sense index file.
+.TP 15
+.B \-o
+Order senses using \fBcntlist\fP.
+.TP 15
+.B \-n
+Generate nominalization (derivational morphology) links in database.
+.TP 15
+.I filename
+Input file of the form described in 
+.SB Input Files.
+.SH FILES
+.TP 20
+.B \fIpos\fP.*
+lexicographer files to use to build database
+.TP 20
+.B cntlist
+file of combined semantic concordance \fBcntlist\fP files.  Used to
+assign sense numbers in WordNet database
+.SH SEE ALSO
+.BR cntlist (5WN),
+.BR lexnames (5WN),
+.BR senseidx (5WN),
+.BR wndb (5WN),
+.BR wninput (5WN),
+.BR uniqbeg (7WN),
+.BR wngloss (7WN).
+.SH DIAGNOSTICS
+Exit status is normally 0.
+Exit status is -1 if non-specific error occurs.
+If syntactic or structural errors exist, exit status is number of
+errors detected.
+.TP 
+.B "usage: grind [\-v] [\-s] [\-Llogfile] [\-a ] [\-d] [\-i] [\-o] [\-n] filename [filename...]"
+Invalid options were specified on the command line.
+.TP 
+.B No input files processed.
+None of the filenames specified were of the appropriate form.
+.TP 
+.B \fIn\fP syntactic errors found.
+Syntax errors were found while parsing the input files.
+.TP 
+.B \fIn\fP structural errors found.
+Pointer errors were found that could not be automatically corrected.
+.SH BUGS
+Please report bugs to \fBwordnet@princeton.edu\fP.

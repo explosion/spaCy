@@ -1,0 +1,19 @@
+{
+    "NOUN": {"pos": "NOUN"},
+    "VERB": {"pos": "VERB"},
+    "PUNCT": {"pos": "PUNCT"},
+    "ADV": {"pos": "ADV"},
+    "ADJ": {"pos": "ADJ"},
+    "PRON": {"pos": "PRON"},
+    "PROPN": {"pos": "PROPN"},
+    "CONJ": {"pos": "CONJ"},
+    "NUM": {"pos": "NUM"},
+    "AUX": {"pos": "AUX"},
+    "SCONJ": {"pos": "SCONJ"},
+    "ADP": {"pos": "ADP"},
+    "SYM": {"pos": "SYM"},
+    "X": {"pos": "X"},
+    "INTJ": {"pos": "INTJ"},
+    "DET": {"pos": "DET"},
+    "PART": {"pos": "PART"}
+}

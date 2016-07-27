@@ -1,0 +1,55 @@
+{
+    "PRP": {
+        "I":          {"L": "-PRON-", "person": 1, "number": 1, "gender": 0, "case": 1},
+        "me":         {"L": "-PRON-", "person": 1, "number": 1, "gender": 0, "case": 3},
+        "mine":       {"L": "-PRON-", "person": 1, "number": 1, "gender": 0, "case": 2},
+        "myself":     {"L": "-PRON-", "person": 1, "number": 1, "gender": 0, "case": 4},
+        "you":        {"L": "-PRON-", "person": 2, "number": 0, "gender": 0, "case": 0},
+        "yours":      {"L": "-PRON-", "person": 2, "number": 0, "gender": 0, "case": 2},
+        "yourself":   {"L": "-PRON-", "person": 2, "number": 0, "gender": 0, "case": 4},
+        "he":         {"L": "-PRON-", "person": 3, "number": 1, "gender": 1, "case": 1},
+        "him":        {"L": "-PRON-", "person": 3, "number": 1, "gender": 1, "case": 3},
+        "his":        {"L": "-PRON-", "person": 3, "number": 1, "gender": 1, "case": 2},
+        "himself":    {"L": "-PRON-", "person": 3, "number": 1, "gender": 1, "case": 4},
+        "she":        {"L": "-PRON-", "person": 3, "number": 1, "gender": 2, "case": 1},
+        "her":        {"L": "-PRON-", "person": 3, "number": 1, "gender": 2, "case": 3},
+        "hers":       {"L": "-PRON-", "person": 3, "number": 1, "gender": 2, "case": 2},
+        "herself":    {"L": "-PRON-", "person": 3, "number": 1, "gender": 2, "case": 4},
+        "it":         {"L": "-PRON-", "person": 3, "number": 1, "gender": 3, "case": 0},
+        "its":        {"L": "-PRON-", "person": 3, "number": 1, "gender": 3, "case": 2},
+        "itself":     {"L": "-PRON-", "person": 3, "number": 1, "gender": 3, "case": 4},
+        "themself":   {"L": "-PRON-", "person": 3, "number": 1, "gender": 0, "case": 4},
+        "we":         {"L": "-PRON-", "person": 1, "number": 2, "gender": 0, "case": 1},
+        "us":         {"L": "-PRON-", "person": 1, "number": 2, "gender": 0, "case": 3},
+        "ours":       {"L": "-PRON-", "person": 1, "number": 2, "gender": 0, "case": 3},
+        "ourselves":  {"L": "-PRON-", "person": 1, "number": 2, "gender": 0, "case": 4},
+        "yourselves": {"L": "-PRON-", "person": 2, "number": 2, "gender": 0, "case": 4},
+        "they":       {"L": "-PRON-", "person": 3, "number": 2, "gender": 0, "case": 1},
+        "them":       {"L": "-PRON-", "person": 3, "number": 2, "gender": 0, "case": 3},
+        "their":      {"L": "-PRON-", "person": 3, "number": 2, "gender": 0, "case": 2},
+        "themselves": {"L": "-PRON-", "person": 3, "number": 2, "gender": 0, "case": 4}
+    },
+
+    "PRP$": {
+        "my":    {"L": "-PRON-", "person": 1, "number": 1, "gender": 0, "case": 2},
+        "your":  {"L": "-PRON-", "person": 2, "number": 0, "gender": 0, "case": 2},
+        "his":   {"L": "-PRON-", "person": 3, "number": 1, "gender": 1, "case": 2},
+        "her":   {"L": "-PRON-", "person": 3, "number": 1, "gender": 2, "case": 2},
+        "its":   {"L": "-PRON-", "person": 3, "number": 1, "gender": 3, "case": 2},
+        "our":   {"L": "-PRON-", "person": 1, "number": 1, "gender": 0, "case": 2},
+        "their": {"L": "-PRON-", "person": 3, "number": 2, "gender": 0, "case": 2}
+    },
+    "JJR": {
+        "better": {"L": "good", "misc": 1}
+    },
+    "JJS": {
+        "best": {"L": "good", "misc": 2}
+    },
+    
+    "RBR": {
+        "better": {"L": "good", "misc": 1}
+    },
+    "RBS": {
+        "best": {"L": "good", "misc": 2}
+    }
+}

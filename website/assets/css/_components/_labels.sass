@@ -1,0 +1,46 @@
+//  Labels - Variables
+// ============================================================================
+
+$label-border-radius    : $border-radius
+$label-color            : color(grey, dark)
+$label-color-light      : color(grey, light)
+$label-color-dark       : color($theme)
+$label-padding          : 0.75em
+$label-padding-small    : 0.25em 0.75em
+$label-margin-side      : 1rem
+
+
+//  Labels - Style
+// ============================================================================
+
+//  .label        - regular label
+//  .label-strong - stronger version
+//  .label-box    - label in box with background
+//  .label-tag    - label in inline-tag style
+
+.label
+    @extend .text-label
+    color: $label-color
+    display: inline-block
+    padding: $label-padding 0
+
+.label-strong
+    @extend .label
+    color: $label-color-dark
+    font-weight: bold
+
+.label-box
+    @extend .label
+    background: $label-color-dark
+    color: color(white)
+    font-weight: 600
+    padding: $label-padding
+
+.label-tag
+    @extend .label, .text-small
+    background: $label-color-light
+    border: 1px solid darken($label-color-light, 7.5)
+    border-radius: $label-border-radius
+    margin: 0 $label-margin-side 0 0
+    padding: $label-padding-small
+    vertical-align: text-top

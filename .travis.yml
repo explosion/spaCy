@@ -1,0 +1,30 @@
+language: python
+
+sudo: required
+dist: precise
+group: edge
+
+python:
+   - "2.7"
+   - "3.4"
+
+os:
+  - linux
+
+install:
+  - "pip install -r requirements.txt"
+  - "pip install -e ."
+  - "mkdir -p corpora/en"
+  - "cd corpora/en"
+  - "wget --no-check-certificate http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"
+  - "tar -xzf WordNet-3.0.tar.gz"
+  - "mv WordNet-3.0 wordnet"
+  - "cd ../../"
+  - "python bin/init_model.py en lang_data/ corpora/ data"
+  - "cp package.json data"
+  - "sputnik build data en_default.sputnik"
+  - "sputnik --name spacy install en_default.sputnik"
+
+script:
+  - "pip install pytest"
+  - "python -m pytest spacy"

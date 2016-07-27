@@ -1,0 +1,66 @@
+'\" t
+.\" $Id$
+.TH BINSRCH 3WN  "Dec 2006" "WordNet 3.0" "WordNet\(tm Library Functions"
+.SH NAME
+bin_search, copyfile, replace_line, insert_line
+.SH SYNOPSIS
+.LP
+\fBchar *bin_search(char *key, FILE *fp);\fP
+.LP
+\fBvoid copyfile(FILE *fromfp, FILE *tofp);\fP
+.LP
+\fBchar *replace_line(char *new_line, char *key, FILE *fp);\fP
+.LP
+\fBchar *insert_line(char *new_line, char *key, FILE *fp);\fP
+.SH DESCRIPTION
+.LP
+The WordNet library contains several general purpose functions for
+performing a binary search and modifying sorted files.
+.LP
+.B bin_search(\|)
+is the primary binary search algorithm to search for \fIkey\fP as the
+first item on a line in the file pointed to by \fIfp\fP.  The
+delimiter between the key and the rest of the fields on the line, if
+any, must be a space.  A pointer to a static variable containing the
+entire line is returned.
+.SB NULL 
+is returned if a match is not found.
+.LP
+The remaining functions are not used by WordNet, and are only briefly
+described.
+.LP
+.B copyfile(\|)
+copies the contents of one file to another.
+.LP
+.B replace_line(\|)
+replaces a line in a file having searchkey \fIkey\fP
+with the contents of \fInew_line\fP.
+It returns the original line or
+.SB NULL
+in case of error.
+.LP
+.B insert_line(\|)
+finds the proper place to insert the contents of \fInew_line\fP,
+having searchkey \fIkey\fP in the sorted file pointed to by \fIfp\fP.
+It returns
+.SB NULL 
+if a line with this searchkey is already in the file.
+.SH NOTES
+The maximum length of \fIkey\fP is 1024.
+
+The maximum line length in a file is 25K.
+
+If there are no additional fields after the search key, the key must
+be followed by at least one space before the newline character.
+.SH SEE ALSO
+.BR wnintro (3WN),
+.BR morph (3WN),
+.BR wnsearch (3WN),
+.BR wnutil (3WN),
+.BR wnintro (5WN).
+.SH WARNINGS
+\fBbinsearch(\|)\fP returns a pointer to a static character buffer.
+The returned string should be copied by the caller if the results need
+to be saved, as a subsequent call will replace the contents of the
+static buffer.
+
