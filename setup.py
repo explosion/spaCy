@@ -50,6 +50,7 @@ MOD_NAMES = [
     'spacy.syntax.stateclass',
     'spacy.syntax._state',
     'spacy.tokenizer',
+    'spacy.syntax._neural',
     'spacy.syntax.parser',
     'spacy.syntax.beam_parser',
     'spacy.syntax.nonproj',
@@ -174,7 +175,8 @@ def setup_package():
             mod_path = mod_name.replace('.', '/') + '.cpp'
             ext_modules.append(
                 Extension(mod_name, [mod_path],
-                    language='c++', include_dirs=include_dirs))
+                    language='c++', include_dirs=include_dirs,
+                    libraries=['/Users/matt/blis/lib/blis']))
 
         if not is_source_release(root):
             generate_cython(root, 'spacy')

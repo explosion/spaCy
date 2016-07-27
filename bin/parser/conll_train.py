@@ -163,25 +163,42 @@ def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic
     nr_trimmed = 0
     eg_seen = 0
     loss = 0
+    micro_eval = gold_tuples[:50]
     for itn in range(n_iter):
-        random.shuffle(gold_tuples)
-        for _, sents in gold_tuples:
-            for annot_tuples, _ in sents:
-                tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
-                nlp.tagger.tag_from_strings(tokens, annot_tuples[2])
-                gold = GoldParse(tokens, annot_tuples)
-                loss += nlp.parser.train(tokens, gold)
-                
-                eg_seen += 1
-                if eg_seen % 10000 == 0:
-                    dev_uas = score_file(nlp, dev_loc).uas
-                    train_uas = score_sents(nlp, gold_tuples[:1000]).uas
-                    size = nlp.parser.model.mem.size
-                    print('%d:\t%d\t%.3f\t%.3f\t%.3f\t%d' % (itn, int(loss), nr_trimmed,
-                                                             train_uas, dev_uas, size))
-                    loss = 0
-    nlp.end_training(model_dir)
+        try:
+            eg_seen = _train_epoch(nlp, gold_tuples, eg_seen, itn,
+                                   dev_loc, micro_eval)
+        except KeyboardInterrupt:
+            print("Saving model...")
+            break
+    #nlp.end_training(model_dir)
+    nlp.parser.model.end_training()
+    print("Saved. Evaluating...")
     return nlp
+
+def _train_epoch(nlp, gold_tuples, eg_seen, itn, dev_loc, micro_eval):
+    random.shuffle(gold_tuples)
+    loss = 0
+    nr_trimmed = 0
+    for _, sents in gold_tuples:
+        for annot_tuples, _ in sents:
+            tokens = nlp.tokenizer.tokens_from_list(annot_tuples[1])
+            nlp.tagger.tag_from_strings(tokens, annot_tuples[2])
+            gold = GoldParse(tokens, annot_tuples)
+            loss += nlp.parser.train(tokens, gold, itn=itn)
+            eg_seen += 1
+            if eg_seen % 1000 == 0:
+                if eg_seen % 20000 == 0:
+                    dev_uas = score_file(nlp, dev_loc).uas
+                else:
+                    dev_uas = 0.0
+                train_uas = score_sents(nlp, micro_eval).uas
+                size = nlp.parser.model.mem.size
+                nr_upd = nlp.parser.model.time
+                print('%d,%d:\t%d\t%.3f\t%.3f\t%.3f\t%d' % (itn, nr_upd, int(loss), nr_trimmed,
+                                                             train_uas, dev_uas, size))
+                loss = 0
+    return eg_seen
 
 
 @plac.annotations(
@@ -206,11 +223,13 @@ def main(train_loc, dev_loc, model_dir, n_iter=15, neural=False, batch_norm=Fals
                 batch_norm=batch_norm,
                 learn_rate=learn_rate,
                 update_step=update_step)
-    scorer = Scorer()
-    with io.open(dev_loc, 'r', encoding='utf8') as file_:
-        for _, sents in read_conll(file_):
-            for annot_tuples, _ in sents:
-                score_model(scorer, nlp, None, annot_tuples)
+
+    scorer = score_file(nlp, dev_loc)
+    #scorer = Scorer()
+    #with io.open(dev_loc, 'r', encoding='utf8') as file_:
+    #    for _, sents in read_conll(file_):
+    #        for annot_tuples, _ in sents:
+    #            score_model(scorer, nlp, None, annot_tuples)
     print('TOK', scorer.token_acc)
     print('POS', scorer.tags_acc)
     print('UAS', scorer.uas)

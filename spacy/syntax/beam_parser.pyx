@@ -114,15 +114,13 @@ cdef class BeamParser(Parser):
         else:
             violn.check_crf(pred, gold)
         if isinstance(self.model, ParserNeuralNet):
-            min_grad = 0.01 ** (itn+1)
+            min_grad = 0.1 ** (itn+1)
             for grad, hist in zip(violn.p_probs, violn.p_hist):
-                assert not math.isnan(grad)
-                assert not math.isinf(grad)
+                assert not math.isnan(grad) and not math.isinf(grad)
                 if abs(grad) >= min_grad:
                     self._update_dense(tokens, hist, grad)
             for grad, hist in zip(violn.g_probs, violn.g_hist):
-                assert not math.isnan(grad)
-                assert not math.isinf(grad)
+                assert not math.isnan(grad) and not math.isinf(grad)
                 if abs(grad) >= min_grad:
                     self._update_dense(tokens, hist, grad)
         else:
