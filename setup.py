@@ -75,8 +75,7 @@ MOD_NAMES = [
 compile_options =  {
     'msvc': ['/Ox', '/EHsc'],
     'mingw32' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function'],
-    'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function',
-               '-I/Users/matt/blis/include/blis']
+    'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']
 }
 
 
@@ -175,8 +174,7 @@ def setup_package():
             mod_path = mod_name.replace('.', '/') + '.cpp'
             ext_modules.append(
                 Extension(mod_name, [mod_path],
-                    language='c++', include_dirs=include_dirs,
-                    libraries=['/Users/matt/blis/lib/blis']))
+                    language='c++', include_dirs=include_dirs))
 
         if not is_source_release(root):
             generate_cython(root, 'spacy')
