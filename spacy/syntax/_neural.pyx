@@ -48,14 +48,14 @@ cdef class ParserPerceptron(AveragedPerceptron):
                 self.update_weight(feat.key, clas, feat.value * step)
         return int(loss)
 
-    cdef void set_featuresC(self, ExampleC* eg, const void* _state) nogil: 
+    cdef int _set_featuresC(self, FeatureC* feats, const void* _state) nogil: 
+        cdef atom_t[CONTEXT_SIZE] context
         state = <const StateC*>_state
-        fill_context(eg.atoms, state)
-        eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
+        fill_context(context, state)
+        return self.extracter.set_features(feats, context)
 
     def _update_from_history(self, TransitionSystem moves, Doc doc, history, weight_t grad):
         cdef Pool mem = Pool()
-        cdef atom_t[CONTEXT_SIZE] context
         features = <FeatureC*>mem.alloc(self.nr_feat, sizeof(FeatureC))
         
         cdef StateClass stcls = StateClass.init(doc.c, doc.length)
@@ -64,8 +64,7 @@ cdef class ParserPerceptron(AveragedPerceptron):
         cdef class_t clas
         self.time += 1
         for clas in history:
-            fill_context(context, stcls.c)
-            nr_feat = self.extracter.set_features(features, context)
+            nr_feat = self._set_featuresC(features, stcls.c)
             for feat in features[:nr_feat]:
                 self.update_weight(feat.key, clas, feat.value * grad)
             moves.c[clas].do(stcls.c, moves.c[clas].label)
@@ -96,11 +95,10 @@ cdef class ParserNeuralNet(NeuralNet):
     def nr_feat(self):
         return 2000
 
-    cdef void set_featuresC(self, ExampleC* eg, const void* _state) nogil: 
-        memset(eg.features, 0, 2000 * sizeof(FeatureC))
+    cdef int _set_featuresC(self, FeatureC* feats, const void* _state) nogil: 
+        memset(feats, 0, 2000 * sizeof(FeatureC))
         state = <const StateC*>_state
-        fill_context(eg.atoms, state)
-        feats = eg.features
+        start = feats
 
         feats = _add_token(feats, 0, state.S_(0), 1.0)
         feats = _add_token(feats, 4, state.S_(1), 1.0)
@@ -132,7 +130,7 @@ cdef class ParserNeuralNet(NeuralNet):
                                  state.R_(state.S(0), 2))
         feats = _add_pos_trigram(feats, 75, state.S_(0), state.L_(state.S(0), 1),
                                  state.L_(state.S(0), 2))
-        eg.nr_feat = feats - eg.features
+        return feats - start
 
     cdef void _set_delta_lossC(self, weight_t* delta_loss,
             const weight_t* cost, const weight_t* scores) nogil:
@@ -143,8 +141,11 @@ cdef class ParserNeuralNet(NeuralNet):
         pass
 
     def _update_from_history(self, TransitionSystem moves, Doc doc, history, weight_t grad):
-        cdef Example py_eg = Example(nr_class=moves.n_moves, nr_atom=CONTEXT_SIZE,
-                                     nr_feat=self.nr_feat, widths=self.widths)
+        cdef Pool mem = Pool()
+        features = <FeatureC*>mem.alloc(self.nr_feat, sizeof(FeatureC))
+        is_valid = <int*>mem.alloc(self.moves.n_moves, sizeof(int))
+        costs = <weight_t*>mem.alloc(self.moves.n_moves, sizeof(weight_t))
+ 
         stcls = StateClass.init(doc.c, doc.length)
         moves.initialize_state(stcls.c)
         cdef uint64_t[2] key
@@ -152,8 +153,8 @@ cdef class ParserNeuralNet(NeuralNet):
         key[1] = 0
         cdef uint64_t clas
         for clas in history:
-            self.set_featuresC(py_eg.c, stcls.c)
-            moves.set_valid(py_eg.c.is_valid, stcls.c)
+            nr_feat = self._set_featuresC(features, stcls.c)
+            moves.set_valid(is_valid, stcls.c)
             # Update with a sparse gradient: everything's 0, except our class.
             # Remember, this is a component of the global update. It's not our
             # "job" here to think about the other beam candidates. We just want
@@ -162,13 +163,11 @@ cdef class ParserNeuralNet(NeuralNet):
             # We therefore have a key that indicates the current sequence, so that
             # the model can merge updates that refer to the same state together,
             # by summing their gradients.
-            memset(py_eg.c.costs, 0, self.moves.n_moves)
-            py_eg.c.costs[clas] = grad
-            self.updateC(
-                py_eg.c.features, py_eg.c.nr_feat, True, py_eg.c.costs, py_eg.c.is_valid,
-                False, key=key[0])
+            memset(costs, 0, self.moves.n_moves)
+            costs[clas] = grad
+            self.updateC(features,
+                nr_feat, True, costs, is_valid, False, key=key[0])
             moves.c[clas].do(stcls.c, self.moves.c[clas].label)
-            py_eg.c.reset()
             # Build a hash of the state sequence.
             # Position 0 represents the previous sequence, position 1 the new class.
             # So we want to do:

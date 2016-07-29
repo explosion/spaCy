@@ -1,13 +1,13 @@
 from thinc.linear.avgtron cimport AveragedPerceptron
 from thinc.neural.nn cimport NeuralNet
 from thinc.linear.features cimport ConjunctionExtracter
-from thinc.structs cimport NeuralNetC, ExampleC
+from thinc.structs cimport NeuralNetC, FeatureC
 
 
 cdef class ParserNeuralNet(NeuralNet):
     cdef ConjunctionExtracter extracter
-    cdef void set_featuresC(self, ExampleC* eg, const void* _state) nogil
+    cdef int _set_featuresC(self, FeatureC* feats, const void* _state) nogil
 
 
 cdef class ParserPerceptron(AveragedPerceptron):
-    cdef void set_featuresC(self, ExampleC* eg, const void* _state) nogil
+    cdef int _set_featuresC(self, FeatureC* feats, const void* _state) nogil
