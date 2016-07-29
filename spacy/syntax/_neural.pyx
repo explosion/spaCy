@@ -22,6 +22,8 @@ from ._parse_features cimport fill_context
 from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
 from ._parse_features cimport *
+from .transition_system cimport TransitionSystem
+from ..tokens.doc cimport Doc
 
 
 cdef class ParserPerceptron(AveragedPerceptron):
@@ -51,6 +53,23 @@ cdef class ParserPerceptron(AveragedPerceptron):
         fill_context(eg.atoms, state)
         eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
 
+    def _update_from_history(self, TransitionSystem moves, Doc doc, history, weight_t grad):
+        cdef Pool mem = Pool()
+        cdef atom_t[CONTEXT_SIZE] context
+        features = <FeatureC*>mem.alloc(self.nr_feat, sizeof(FeatureC))
+        
+        cdef StateClass stcls = StateClass.init(doc.c, doc.length)
+        moves.initialize_state(stcls.c)
+
+        cdef class_t clas
+        self.time += 1
+        for clas in history:
+            fill_context(context, stcls.c)
+            nr_feat = self.extracter.set_features(features, context)
+            for feat in features[:nr_feat]:
+                self.update_weight(feat.key, clas, feat.value * grad)
+            moves.c[clas].do(stcls.c, moves.c[clas].label)
+ 
 
 cdef class ParserNeuralNet(NeuralNet):
     def __init__(self, shape, **kwargs):
@@ -122,6 +141,41 @@ cdef class ParserNeuralNet(NeuralNet):
 
     cdef void _softmaxC(self, weight_t* out) nogil:
         pass
+
+    def _update_from_history(self, TransitionSystem moves, Doc doc, history, weight_t grad):
+        cdef Example py_eg = Example(nr_class=moves.n_moves, nr_atom=CONTEXT_SIZE,
+                                     nr_feat=self.nr_feat, widths=self.widths)
+        stcls = StateClass.init(doc.c, doc.length)
+        moves.initialize_state(stcls.c)
+        cdef uint64_t[2] key
+        key[0] = hash64(doc.c, sizeof(TokenC) * doc.length, 0)
+        key[1] = 0
+        cdef uint64_t clas
+        for clas in history:
+            self.set_featuresC(py_eg.c, stcls.c)
+            moves.set_valid(py_eg.c.is_valid, stcls.c)
+            # Update with a sparse gradient: everything's 0, except our class.
+            # Remember, this is a component of the global update. It's not our
+            # "job" here to think about the other beam candidates. We just want
+            # to work on this sequence. However, other beam candidates will
+            # have gradients that refer to the same state.
+            # We therefore have a key that indicates the current sequence, so that
+            # the model can merge updates that refer to the same state together,
+            # by summing their gradients.
+            memset(py_eg.c.costs, 0, self.moves.n_moves)
+            py_eg.c.costs[clas] = grad
+            self.updateC(
+                py_eg.c.features, py_eg.c.nr_feat, True, py_eg.c.costs, py_eg.c.is_valid,
+                False, key=key[0])
+            moves.c[clas].do(stcls.c, self.moves.c[clas].label)
+            py_eg.c.reset()
+            # Build a hash of the state sequence.
+            # Position 0 represents the previous sequence, position 1 the new class.
+            # So we want to do:
+            # key.prev = hash((key.prev, key.new))
+            # key.new = clas
+            key[1] = clas
+            key[0] = hash64(key, sizeof(key), 0)
 
 
 cdef inline FeatureC* _add_token(FeatureC* feats,
