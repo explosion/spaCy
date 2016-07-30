@@ -46,13 +46,13 @@
         assert token.shape_ == 'Xxxxx'
         for lexeme in nlp.vocab:
             if lexeme.is_alpha:
-                lexeme.shape_ = 'W'
+                lexeme.shape_ = u'W'
             elif lexeme.is_digit:
-                lexeme.shape_ = 'D'
+                lexeme.shape_ = u'D'
             elif lexeme.is_punct:
-                lexeme.shape_ = 'P'
+                lexeme.shape_ = u'P'
             else:
-                lexeme.shape_ = 'M'
+                lexeme.shape_ = u'M'
         assert token.shape_ == 'W'
 
     +h3('examples-numpy-arrays') Export to numpy arrays
