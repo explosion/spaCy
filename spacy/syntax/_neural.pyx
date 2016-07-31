@@ -166,7 +166,7 @@ cdef class ParserNeuralNet(NeuralNet):
             memset(costs, 0, self.moves.n_moves)
             costs[clas] = grad
             self.updateC(features,
-                nr_feat, True, costs, is_valid, False, key=key[0])
+                nr_feat, costs, is_valid, False, key=key[0])
             moves.c[clas].do(stcls.c, self.moves.c[clas].label)
             # Build a hash of the state sequence.
             # Position 0 represents the previous sequence, position 1 the new class.
