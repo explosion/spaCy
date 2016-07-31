@@ -173,7 +173,7 @@ cdef class Parser:
         while not state.is_final():
             self.model.set_featuresC(eg, state)
             self.moves.set_valid(eg.is_valid, state)
-            self.model.set_scoresC(eg.scores, eg.features, eg.nr_feat, 1)
+            self.model.set_scoresC(eg.scores, eg.features, eg.nr_feat)
 
             guess = VecVec.arg_max_if_true(eg.scores, eg.is_valid, eg.nr_class)
 
@@ -203,7 +203,7 @@ cdef class Parser:
         cdef Transition action
         while not stcls.is_final():
             self.model.set_featuresC(eg.c, stcls.c)
-            self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat, 1)
+            self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
             guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
             assert guess >= 0
@@ -275,7 +275,7 @@ cdef class StepwiseState:
         self.parser.model.set_featuresC(self.eg.c, self.stcls.c)
         self.parser.moves.set_valid(self.eg.c.is_valid, self.stcls.c)
         self.parser.model.set_scoresC(self.eg.c.scores,
-            self.eg.c.features, self.eg.c.nr_feat, 1)
+            self.eg.c.features, self.eg.c.nr_feat)
 
         cdef Transition action = self.parser.moves.c[self.eg.guess]
         return self.parser.moves.move_name(action.move, action.label)
