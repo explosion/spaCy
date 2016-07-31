@@ -133,7 +133,7 @@ cdef class BeamParser(Parser):
             stcls = <StateClass>beam.at(i)
             if not stcls.c.is_final():
                 self.model.set_featuresC(eg, stcls.c)
-                self.model.set_scoresC(beam.scores[i], eg.features, eg.nr_feat, 1)
+                self.model.set_scoresC(beam.scores[i], eg.features, eg.nr_feat)
                 self.moves.set_valid(beam.is_valid[i], stcls.c)
         if gold is not None:
             for i in range(beam.size):
