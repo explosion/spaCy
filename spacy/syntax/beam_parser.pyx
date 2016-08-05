@@ -118,6 +118,7 @@ cdef class BeamParser(Parser):
             violn.check_crf(pred, gold)
         min_grad = 0.1 ** (itn+1)
         histories = zip(violn.p_probs, violn.p_hist) + zip(violn.g_probs, violn.g_hist)
+        random.shuffle(histories)
         for grad, hist in histories:
             assert not math.isnan(grad) and not math.isinf(grad)
             if abs(grad) >= min_grad:
