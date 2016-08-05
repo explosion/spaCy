@@ -97,7 +97,8 @@ cdef class Parser:
 
         if cfg.get('model') == 'neural':
             model = ParserNeuralNet(cfg.hidden_layers + [moves.n_moves],
-                        update_step=cfg.update_step, eta=cfg.eta, rho=cfg.rho)
+                        update_step=cfg.update_step, eta=cfg.eta, rho=cfg.rho,
+                        noise=cfg.noise)
         else:
             model = ParserPerceptron(get_templates(cfg.feat_set))
 
