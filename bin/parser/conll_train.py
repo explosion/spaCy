@@ -119,7 +119,7 @@ def score_sents(nlp, gold_tuples):
 
 
 def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic',
-          learn_rate=0.001, update_step='sgd_cm', 
+          learn_rate=0.001, noise=0.01, update_step='sgd_cm', 
           batch_norm=False, seed=0, gold_preproc=False, force_gold=False):
     dep_model_dir = path.join(model_dir, 'deps')
     pos_model_dir = path.join(model_dir, 'pos')
@@ -147,6 +147,7 @@ def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic
                      batch_norm=batch_norm,
                      eta=learn_rate,
                      mu=0.9,
+                     noise=noise,
                      ensemble_size=1,
                      rho=rho)
 
@@ -171,7 +172,7 @@ def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic
         except KeyboardInterrupt:
             print("Saving model...")
             break
-    nlp.end_training(model_dir)
+    nlp.parser.model.end_training()
     print("Saved. Evaluating...")
     return nlp
 
@@ -208,10 +209,11 @@ def _train_epoch(nlp, gold_tuples, eg_seen, itn, dev_loc, micro_eval):
     batch_norm=("Use batch normalization and residual connections", "flag", "b"),
     update_step=("Update step", "option", "u", str),
     learn_rate=("Learn rate", "option", "e", float),
+    gradient_noise=("Gradient noise", "option", "w", float),
     neural=("Use neural network?", "flag", "N")
 )
 def main(train_loc, dev_loc, model_dir, n_iter=15, neural=False, batch_norm=False,
-         learn_rate=0.001, update_step='sgd_cm'):
+         learn_rate=0.001, gradient_noise=0.1, update_step='sgd_cm'):
     with io.open(train_loc, 'r', encoding='utf8') as file_:
         train_sents = list(read_conll(file_))
     # Preprocess training data here before ArcEager.get_labels() is called
@@ -221,7 +223,8 @@ def main(train_loc, dev_loc, model_dir, n_iter=15, neural=False, batch_norm=Fals
                 feat_set='neural' if neural else 'basic',
                 batch_norm=batch_norm,
                 learn_rate=learn_rate,
-                update_step=update_step)
+                update_step=update_step,
+                noise=gradient_noise)
 
     scorer = score_file(nlp, dev_loc)
     print('TOK', scorer.token_acc)
