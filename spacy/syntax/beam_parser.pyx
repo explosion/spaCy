@@ -71,7 +71,7 @@ def get_templates(name):
 
 
 cdef int BEAM_WIDTH = 16
-cdef weight_t BEAM_DENSITY = 0.01
+cdef weight_t BEAM_DENSITY = 0.001
 
 cdef class BeamParser(Parser):
     cdef public int beam_width
@@ -116,7 +116,7 @@ cdef class BeamParser(Parser):
                 break
         else:
             violn.check_crf(pred, gold)
-        min_grad = 0.1 ** (itn+1)
+        min_grad = 0.01 ** (itn+1)
         histories = zip(violn.p_probs, violn.p_hist) + zip(violn.g_probs, violn.g_hist)
         random.shuffle(histories)
         for grad, hist in histories:
