@@ -213,7 +213,7 @@ def _train_epoch(nlp, gold_tuples, eg_seen, itn, dev_loc, micro_eval):
     neural=("Use neural network?", "flag", "N")
 )
 def main(train_loc, dev_loc, model_dir, n_iter=15, neural=False, batch_norm=False,
-         learn_rate=0.001, gradient_noise=0.1, update_step='sgd_cm'):
+         learn_rate=0.001, gradient_noise=0.0, update_step='sgd_cm'):
     with io.open(train_loc, 'r', encoding='utf8') as file_:
         train_sents = list(read_conll(file_))
     # Preprocess training data here before ArcEager.get_labels() is called
