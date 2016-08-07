@@ -116,7 +116,7 @@ cdef class BeamParser(Parser):
                 break
         else:
             violn.check_crf(pred, gold)
-        min_grad = 0.01 ** (itn+1)
+        min_grad = 0.001 ** (itn+1)
         histories = zip(violn.p_probs, violn.p_hist) + zip(violn.g_probs, violn.g_hist)
         random.shuffle(histories)
         for grad, hist in histories:
