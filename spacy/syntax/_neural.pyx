@@ -139,7 +139,11 @@ cdef class ParserNeuralNet(NeuralNet):
 
     cdef void _softmaxC(self, weight_t* out) nogil:
         pass
-
+    
+    cdef void dropoutC(self, FeatureC* feats, weight_t drop_prob,
+            int nr_feat) nogil:
+        pass
+    
     def _update_from_history(self, TransitionSystem moves, Doc doc, history, weight_t grad):
         cdef Pool mem = Pool()
         features = <FeatureC*>mem.alloc(self.nr_feat, sizeof(FeatureC))
