@@ -172,9 +172,13 @@ def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic
         except KeyboardInterrupt:
             print("Saving model...")
             break
+    dev_uas = score_file(nlp, dev_loc).uas
+    print("Dev before average", dev_uas)
+
     nlp.parser.model.end_training()
     print("Saved. Evaluating...")
     return nlp
+
 
 def _train_epoch(nlp, gold_tuples, eg_seen, itn, dev_loc, micro_eval):
     random.shuffle(gold_tuples)
