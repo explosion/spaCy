@@ -48,8 +48,9 @@ cdef class ParserPerceptron(AveragedPerceptron):
                 self.update_weight(feat.key, clas, feat.value * step)
         return int(loss)
 
-    cdef int _set_featuresC(self, FeatureC* feats, const void* _state) nogil: 
+    cdef int set_featuresC(self, FeatureC* feats, const void* _state) nogil: 
         cdef atom_t[CONTEXT_SIZE] context
+        memset(context, 0, sizeof(context))
         state = <const StateC*>_state
         fill_context(context, state)
         return self.extracter.set_features(feats, context)
@@ -64,9 +65,9 @@ cdef class ParserPerceptron(AveragedPerceptron):
         cdef class_t clas
         self.time += 1
         for clas in history:
-            nr_feat = self._set_featuresC(features, stcls.c)
+            nr_feat = self.set_featuresC(features, stcls.c)
             for feat in features[:nr_feat]:
-                self.update_weight(feat.key, clas, feat.value * grad)
+                self.update_weight(feat.key, clas, feat.value * -grad)
             moves.c[clas].do(stcls.c, moves.c[clas].label)
  
 
@@ -95,7 +96,7 @@ cdef class ParserNeuralNet(NeuralNet):
     def nr_feat(self):
         return 2000
 
-    cdef int _set_featuresC(self, FeatureC* feats, const void* _state) nogil: 
+    cdef int set_featuresC(self, FeatureC* feats, const void* _state) nogil: 
         memset(feats, 0, 2000 * sizeof(FeatureC))
         state = <const StateC*>_state
         start = feats
@@ -160,7 +161,7 @@ cdef class ParserNeuralNet(NeuralNet):
             memset(costs, 0, moves.n_moves * sizeof(costs[0]))
             for i in range(moves.n_moves):
                 is_valid[i] = 1
-            nr_feat = self._set_featuresC(features, stcls.c)
+            nr_feat = self.set_featuresC(features, stcls.c)
             moves.set_valid(is_valid, stcls.c)
             # Update with a sparse gradient: everything's 0, except our class.
             # Remember, this is a component of the global update. It's not our

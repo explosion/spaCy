@@ -6,8 +6,7 @@ from thinc.structs cimport NeuralNetC, FeatureC
 
 cdef class ParserNeuralNet(NeuralNet):
     cdef ConjunctionExtracter extracter
-    cdef int _set_featuresC(self, FeatureC* feats, const void* _state) nogil
 
 
 cdef class ParserPerceptron(AveragedPerceptron):
-    cdef int _set_featuresC(self, FeatureC* feats, const void* _state) nogil
+    pass
