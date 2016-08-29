@@ -71,15 +71,17 @@ cpdef enum:
 
 
 cdef class TaggerModel(AveragedPerceptron):
-    cdef void set_featuresC(self, ExampleC* eg, const void* _token) nogil:
+    cdef int set_featuresC(self, FeatureC* features, const void* _token) nogil:
+        cdef atom_t[N_CONTEXT_FIELDS] context
+        memset(context, 0, sizeof(context))
         token = <const TokenC*>_token
-        _fill_from_token(&eg.atoms[P2_orth], token - 2)
-        _fill_from_token(&eg.atoms[P1_orth], token - 1)
-        _fill_from_token(&eg.atoms[W_orth], token)
-        _fill_from_token(&eg.atoms[N1_orth], token + 1)
-        _fill_from_token(&eg.atoms[N2_orth], token + 2)
+        _fill_from_token(&context[P2_orth], token - 2)
+        _fill_from_token(&context[P1_orth], token - 1)
+        _fill_from_token(&context[W_orth], token)
+        _fill_from_token(&context[N1_orth], token + 1)
+        _fill_from_token(&context[N2_orth], token + 2)
 
-        eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
+        return self.extracter.set_features(features, context)
 
 
 cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
@@ -202,7 +204,7 @@ cdef class Tagger:
                                   nr_feat=self.model.nr_feat)
         for i in range(tokens.length):
             if tokens.c[i].pos == 0:                
-                self.model.set_featuresC(eg.c, &tokens.c[i])
+                eg.c.nr_feat = self.model.set_featuresC(eg.c.features, &tokens.c[i])
                 self.model.set_scoresC(eg.c.scores,
                     eg.c.features, eg.c.nr_feat)
                 guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
@@ -232,7 +234,7 @@ cdef class Tagger:
             nr_class=self.vocab.morphology.n_tags,
             nr_feat=self.model.nr_feat)
         for i in range(tokens.length):
-            self.model.set_featuresC(eg.c, &tokens.c[i])
+            eg.c.nr_feat = self.model.set_featuresC(eg.c.features, &tokens.c[i])
             eg.costs = [ 1 if golds[i] not in (c, -1) else 0 for c in xrange(eg.nr_class) ]
             self.model.set_scoresC(eg.c.scores,
                 eg.c.features, eg.c.nr_feat)
