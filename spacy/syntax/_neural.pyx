@@ -43,9 +43,8 @@ cdef class ParserPerceptron(AveragedPerceptron):
                 continue
             loss += (-eg.c.costs[clas] - eg.c.scores[clas]) ** 2
             d_loss = 2 * (-eg.c.costs[clas] - eg.c.scores[clas])
-            step = d_loss * 0.001
             for feat in eg.c.features[:eg.c.nr_feat]:
-                self.update_weight(feat.key, clas, feat.value * step)
+                self.update_weight(feat.key, clas, feat.value * -d_loss)
         return int(loss)
 
     cdef int set_featuresC(self, FeatureC* feats, const void* _state) nogil: 
