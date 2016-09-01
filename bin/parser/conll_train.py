@@ -152,6 +152,11 @@ def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic
                      rho=regularization)
 
     nlp = Language(data_dir=model_dir, tagger=False, parser=False, entity=False)
+    # Insert into vocab
+    for _, sents in gold_tuples:
+        for annot_tuples, _ in sents:
+            for word in annot_tuples[1]:
+                _ = nlp.vocab[word] 
     nlp.tagger = Tagger.blank(nlp.vocab, Tagger.default_templates())
     #nlp.parser = BeamParser.from_dir(dep_model_dir, nlp.vocab.strings, ArcEager)
     nlp.parser = Parser.from_dir(dep_model_dir, nlp.vocab.strings, ArcEager)
@@ -160,7 +165,7 @@ def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic
     
     print(nlp.parser.model.widths)
  
-    print("Itn.\tP.Loss\tTrain\tDev\tnr_weight")
+    print("Itn.\tP.Loss\tTrain\tDev\tnr_weight\tnr_feat")
     last_score = 0.0
     nr_trimmed = 0
     eg_seen = 0
@@ -177,6 +182,7 @@ def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic
     print("Dev before average", dev_uas)
 
     nlp.parser.model.end_training()
+    nlp.parser.model.dump(path.join(model_dir, 'deps', 'model'))
     print("Saved. Evaluating...")
     return nlp
 
@@ -198,10 +204,12 @@ def _train_epoch(nlp, gold_tuples, eg_seen, itn, dev_loc, micro_eval):
                 else:
                     dev_uas = 0.0
                 train_uas = score_sents(nlp, micro_eval).uas
-                size = nlp.parser.model.nr_weight
                 nr_upd = nlp.parser.model.time
-                print('%d,%d:\t%d\t%.3f\t%.3f\t%d' % (itn, nr_upd, int(loss),
-                                                             train_uas, dev_uas, size))
+                nr_weight = nlp.parser.model.nr_weight
+                nr_feat = nlp.parser.model.nr_active_feat
+                print('%d,%d:\t%d\t%.3f\t%.3f\t%d\t%d' % (itn, nr_upd, int(loss),
+                                                          train_uas, dev_uas,
+                                                          nr_weight, nr_feat))
                 loss = 0
     return eg_seen
 
@@ -242,6 +250,8 @@ def main(train_loc, dev_loc, model_dir, n_iter=15, neural=False, batch_norm=Fals
     print('POS', scorer.tags_acc)
     print('UAS', scorer.uas)
     print('LAS', scorer.las)
+    print('nr_weight', nlp.parser.model.nr_weight)
+    print('nr_feat', nlp.parser.model.nr_active_feat)
 
 
 if __name__ == '__main__':
