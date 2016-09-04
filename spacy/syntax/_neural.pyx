@@ -2,6 +2,7 @@
 # cython: profile=True
 from libc.stdint cimport uint64_t
 from libc.string cimport memcpy, memset
+from libc.math cimport sqrt
 
 from cymem.cymem cimport Pool, Address
 from murmurhash.mrmr cimport hash64
@@ -12,6 +13,7 @@ from thinc.linalg cimport VecVec
 from thinc.structs cimport NeuralNetC, SparseArrayC, ExampleC
 from thinc.structs cimport FeatureC
 from thinc.extra.eg cimport Example
+from thinc.neural.forward cimport softmax
 
 from preshed.maps cimport map_get
 from preshed.maps cimport MapStruct
@@ -31,21 +33,48 @@ cdef class ParserPerceptron(AveragedPerceptron):
     def widths(self):
         return (self.extracter.nr_templ,)
 
-    def update(self, Example eg):
-        '''Does regression on negative cost. Sort of cute?'''
+    def update(self, Example eg, loss='regression'):
         self.time += 1
-        cdef weight_t loss = 0.0
         best = eg.best
-        for clas in range(eg.c.nr_class):
-            if not eg.c.is_valid[clas]:
-                continue
-            if eg.c.scores[clas] < eg.c.scores[best]:
-                continue
-            loss += (-eg.c.costs[clas] - eg.c.scores[clas]) ** 2
-            d_loss = 2 * (-eg.c.costs[clas] - eg.c.scores[clas])
+        guess = eg.guess
+        assert best >= 0, best
+        assert guess >= 0, guess
+        d_losses = {}
+        if loss == 'regression':
+            # Does regression on negative cost. Sort of cute?
+            # Clip to guess and best, to keep gradient sparse.
+            d_losses[guess] = -2 * (-eg.c.costs[guess] - eg.c.scores[guess])
+            d_losses[best] = -2 * (-eg.c.costs[best] - eg.c.scores[best])
+        elif loss == 'nll':
+            # Clip to guess and best, to keep gradient sparse.
+            if eg.c.scores[guess] == 0.0:
+                d_losses[guess] = 1.0
+                d_losses[best] = -1.0
+            else:
+                softmax(eg.c.scores, eg.c.nr_class)
+                for i in range(eg.c.nr_class):
+                    if eg.c.is_valid[i] \
+                    and eg.c.scores[i] >= eg.c.scores[best]:
+                        d_losses[i] = eg.c.scores[i] - (eg.c.costs[i] <= 0)
+        elif loss == 'hinge':
+            for i in range(eg.c.nr_class):
+                if eg.c.is_valid[i] \
+                and eg.c.costs[i] > 0 \
+                and eg.c.scores[i] > (eg.c.scores[best]-1):
+                    margin = eg.c.scores[i] - (eg.c.scores[best] - 1)
+                    d_losses[i] = margin
+                    d_losses[best] = min(-margin, d_losses.get(best, 0.0))
+        elif loss == 'perceptron':
+            if guess != best:
+                d_losses = {best: -1.0, guess: 1.0}
+        step = 0.0
+        i = 0
+        for clas, d_loss in d_losses.items():
             for feat in eg.c.features[:eg.c.nr_feat]:
-                self.update_weight(feat.key, clas, feat.value * -d_loss)
-        return int(loss)
+                step += abs(self.update_weight(feat.key, clas, feat.value * d_loss))
+                i += 1
+        self.total_L1 += self.l1_penalty *  self.learn_rate
+        return sum(map(abs, d_losses.values()))
 
     cdef int set_featuresC(self, FeatureC* feats, const void* _state) nogil: 
         cdef atom_t[CONTEXT_SIZE] context

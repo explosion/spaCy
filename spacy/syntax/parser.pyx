@@ -21,6 +21,7 @@ import json
 import sys
 from .nonproj import PseudoProjectivity
 import random
+import numpy.random
 
 from cymem.cymem cimport Pool, Address
 from murmurhash.mrmr cimport hash64
@@ -203,15 +204,18 @@ cdef class Parser:
         cdef Transition action
         while not stcls.is_final():
             eg.c.nr_feat = self.model.set_featuresC(eg.c.features, stcls.c)
+            self.model.dropoutC(eg.c.features,
+                0.5, eg.c.nr_feat)
+            if eg.c.features[0].i == 1:
+                eg.c.features[0].value = 1.0
+            #for i in range(eg.c.nr_feat):
+            #    if eg.c.features[i].value != 0:
+            #        self.model.apply_L1(eg.c.features[i].key)
             self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
-            for i in range(self.moves.n_moves):
-                if eg.c.costs[i] < 0:
-                    eg.c.costs[i] = 0
             action = self.moves.c[eg.guess]
             action.do(stcls.c, action.label)
-            
-            loss += self.model.update(eg)
+            loss += self.model.update(eg, loss='nll')
             eg.reset()
         return loss
 
