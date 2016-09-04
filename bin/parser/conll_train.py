@@ -12,6 +12,7 @@ import time
 import gzip
 import re
 import numpy
+from math import sqrt
 
 import plac
 import cProfile
@@ -211,6 +212,7 @@ def _train_epoch(nlp, gold_tuples, eg_seen, itn, dev_loc, micro_eval):
                                                           train_uas, dev_uas,
                                                           nr_weight, nr_feat))
                 loss = 0
+    nlp.parser.model.learn_rate *= 0.99
     return eg_seen
 
 
