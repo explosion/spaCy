@@ -91,7 +91,7 @@ def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic
 
     Config.write(dep_model_dir, 'config', feat_set=feat_set, seed=seed,
                  labels=ArcEager.get_labels(gold_tuples),
-                 rho=0.0, eta=1.0, mu=0.9, noise=0.0,
+                 rho=1e-5, eta=1.0, mu=0.9, noise=0.0,
                  beam_width=beam_width,projectivize=pseudoprojective)
     #feat_set, slots = get_templates('neural')
     #vector_widths = [10, 10, 10]
@@ -112,15 +112,19 @@ def train(Language, gold_tuples, model_dir, dev_loc, n_iter=15, feat_set=u'basic
 
     Config.write(ner_model_dir, 'config', feat_set='ner', seed=seed,
                  labels=BiluoPushDown.get_labels(gold_tuples),
-                 beam_width=0, rho=0.0, eta=1.0, mu=0.9, noise=0.0)
+                 beam_width=beam_width, rho=1e-8, eta=1.0, mu=0.9, noise=0.0)
 
     if n_sents > 0:
         gold_tuples = gold_tuples[:n_sents]
     micro_eval = gold_tuples[:50]
     nlp = Language(data_dir=model_dir, tagger=False, parser=False, entity=False)
     nlp.tagger = Tagger.blank(nlp.vocab, Tagger.default_templates())
-    nlp.parser = Parser.from_dir(dep_model_dir, nlp.vocab.strings, ArcEager)
-    nlp.entity = Parser.from_dir(ner_model_dir, nlp.vocab.strings, BiluoPushDown)
+    if beam_width >= 2:
+        nlp.parser = Parser.from_dir(dep_model_dir, nlp.vocab.strings, ArcEager)
+        nlp.entity = BeamParser.from_dir(ner_model_dir, nlp.vocab.strings, BiluoPushDown)
+    else:
+        nlp.parser = Parser.from_dir(dep_model_dir, nlp.vocab.strings, ArcEager)
+        nlp.entity = Parser.from_dir(ner_model_dir, nlp.vocab.strings, BiluoPushDown)
     print(nlp.parser.model.widths)
     for raw_text, sents in gold_tuples:
         for annot_tuples, ctnt in sents:
@@ -178,7 +182,7 @@ def _train_epoch(nlp, gold_tuples, eg_seen, itn, dev_loc, micro_eval,
                                                            nlp.parser.model.nr_active_feat,
                                                            nlp.entity.model.nr_active_feat))
                 loss = 0
-    nlp.parser.model.learn_rate *= 0.99
+    #nlp.parser.model.learn_rate *= 0.99
     scorer = score_file(nlp, dev_loc)
     print('D:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' %  (loss, scorer.uas, scorer.ents_f,
                                                scorer.tags_acc, scorer.token_acc))
@@ -271,6 +275,7 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
     train_loc=("Location of training file or directory"),
     dev_loc=("Location of development file or directory"),
     model_dir=("Location of output model directory",),
+    beam_width=("Parser and NER beam width", "option", "k", int),
     eval_only=("Skip training, and only evaluate", "flag", "e", bool),
     corruption_level=("Amount of noise to add to training data", "option", "c", float),
     gold_preproc=("Use gold-standard sentence boundaries in training?", "flag", "g", bool),
@@ -282,7 +287,8 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
     pseudoprojective=("Use pseudo-projective parsing", "flag", "p", bool),
 )
 def main(language, train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
-         debug=False, corruption_level=0.0, gold_preproc=False, eval_only=False, pseudoprojective=False):
+         debug=False, corruption_level=0.0, beam_width=1,
+         gold_preproc=False, eval_only=False, pseudoprojective=False):
     lang = spacy.util.get_lang_class(language)
 
     if not eval_only:
@@ -291,7 +297,8 @@ def main(language, train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc=
               feat_set='basic', #'neural' if not debug else 'debug',
               gold_preproc=gold_preproc, n_sents=n_sents,
               corruption_level=corruption_level, n_iter=n_iter,
-              verbose=verbose,pseudoprojective=pseudoprojective)
+              verbose=verbose, pseudoprojective=pseudoprojective,
+              beam_width=beam_width)
     if out_loc:
         write_parses(lang, dev_loc, model_dir, out_loc)
     print(model_dir)
