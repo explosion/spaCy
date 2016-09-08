@@ -23,6 +23,7 @@ from ._state cimport StateC
 from ._parse_features cimport fill_context
 from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
+from ._parse_features import ner as ner_templates
 from ._parse_features cimport *
 from .transition_system cimport TransitionSystem
 from ..tokens.doc cimport Doc
@@ -45,6 +46,10 @@ cdef class ParserPerceptron(AveragedPerceptron):
             # Clip to guess and best, to keep gradient sparse.
             d_losses[guess] = -2 * (-eg.c.costs[guess] - eg.c.scores[guess])
             d_losses[best] = -2 * (-eg.c.costs[best] - eg.c.scores[best])
+            #for i in range(eg.c.nr_class):
+            #    if eg.c.is_valid[i] \
+            #    and eg.c.scores[i] >= eg.c.scores[best]:
+            #        d_losses[i] = -2 * (-eg.c.costs[i] - eg.c.scores[i])
         elif loss == 'nll':
             # Clip to guess and best, to keep gradient sparse.
             if eg.c.scores[guess] == 0.0:
@@ -69,11 +74,11 @@ cdef class ParserPerceptron(AveragedPerceptron):
                 d_losses = {best: -1.0, guess: 1.0}
         step = 0.0
         i = 0
-        for clas, d_loss in d_losses.items():
+        for clas, d_loss in sorted(d_losses.items()):
             for feat in eg.c.features[:eg.c.nr_feat]:
-                step += abs(self.update_weight(feat.key, clas, feat.value * d_loss))
+                self.update_weight(feat.key, clas, feat.value * d_loss)
                 i += 1
-        self.total_L1 += self.l1_penalty *  self.learn_rate
+        #self.total_L1 += self.l1_penalty *  self.learn_rate
         return sum(map(abs, d_losses.values()))
 
     cdef int set_featuresC(self, FeatureC* feats, const void* _state) nogil: 
@@ -95,38 +100,53 @@ cdef class ParserPerceptron(AveragedPerceptron):
         for clas in history:
             nr_feat = self.set_featuresC(features, stcls.c)
             for feat in features[:nr_feat]:
-                self.update_weight(feat.key, clas, feat.value * -grad)
+                self.update_weight(feat.key, clas, feat.value * grad)
             moves.c[clas].do(stcls.c, moves.c[clas].label)
  
 
 cdef class ParserNeuralNet(NeuralNet):
     def __init__(self, shape, **kwargs):
-        vector_widths = [4] * 76
-        slots =  [0, 1, 2, 3] # S0
-        slots += [4, 5, 6, 7] # S1
-        slots += [8, 9, 10, 11] # S2
-        slots += [12, 13, 14, 15] # S3+
-        slots += [16, 17, 18, 19] # B0
-        slots += [20, 21, 22, 23] # B1
-        slots += [24, 25, 26, 27] # B2
-        slots += [28, 29, 30, 31] # B3+
-        slots += [32, 33, 34, 35] * 2 # S0l, S0r
-        slots += [36, 37, 38, 39] * 2 # B0l, B0r
-        slots += [40, 41, 42, 43] * 2 # S1l, S1r
-        slots += [44, 45, 46, 47] * 2 # S2l, S2r
-        slots += [48, 49, 50, 51, 52, 53, 54, 55]
-        slots += [53, 54, 55, 56]
+        if kwargs.get('feat_set', 'parser') == 'parser':
+            vector_widths = [4] * 76
+            slots =  [0, 1, 2, 3] # S0
+            slots += [4, 5, 6, 7] # S1
+            slots += [8, 9, 10, 11] # S2
+            slots += [12, 13, 14, 15] # S3+
+            slots += [16, 17, 18, 19] # B0
+            slots += [20, 21, 22, 23] # B1
+            slots += [24, 25, 26, 27] # B2
+            slots += [28, 29, 30, 31] # B3+
+            slots += [32, 33, 34, 35] * 2 # S0l, S0r
+            slots += [36, 37, 38, 39] * 2 # B0l, B0r
+            slots += [40, 41, 42, 43] * 2 # S1l, S1r
+            slots += [44, 45, 46, 47] * 2 # S2l, S2r
+            slots += [48, 49, 50, 51, 52, 53, 54, 55]
+            slots += [53, 54, 55, 56]
+            self.extracter = None
+        else:
+            templates = ner_templates
+            vector_widths = [4] * len(templates)
+            slots = list(range(templates))
+            self.extracter = ConjunctionExtracter(templates)
+ 
         input_length = sum(vector_widths[slot] for slot in slots)
         widths = [input_length] + shape
         NeuralNet.__init__(self, widths, embed=(vector_widths, slots), **kwargs)
 
     @property
     def nr_feat(self):
-        return 2000
+        if self.extracter is None:
+            return 2000
+        else:
+            return self.extracter.nr_feat
 
     cdef int set_featuresC(self, FeatureC* feats, const void* _state) nogil: 
-        memset(feats, 0, 2000 * sizeof(FeatureC))
+        cdef atom_t[CONTEXT_SIZE] context
         state = <const StateC*>_state
+        if self.extracter is not None:
+            fill_context(context, state)
+            return self.extracter.set_features(feats, context)
+        memset(feats, 0, 2000 * sizeof(FeatureC))
         start = feats
 
         feats = _add_token(feats, 0, state.S_(0), 1.0)
@@ -161,13 +181,13 @@ cdef class ParserNeuralNet(NeuralNet):
                                  state.L_(state.S(0), 2))
         return feats - start
 
-    cdef void _set_delta_lossC(self, weight_t* delta_loss,
-            const weight_t* cost, const weight_t* scores) nogil:
-        for i in range(self.c.widths[self.c.nr_layer-1]):
-            delta_loss[i] = cost[i]
+    #cdef void _set_delta_lossC(self, weight_t* delta_loss,
+    #        const weight_t* cost, const weight_t* scores) nogil:
+    #    for i in range(self.c.widths[self.c.nr_layer-1]):
+    #        delta_loss[i] = cost[i]
 
-    cdef void _softmaxC(self, weight_t* out) nogil:
-        pass
+    #cdef void _softmaxC(self, weight_t* out) nogil:
+    #    pass
     
     cdef void dropoutC(self, FeatureC* feats, weight_t drop_prob,
             int nr_feat) nogil:
@@ -240,6 +260,37 @@ cdef inline FeatureC* _add_token(FeatureC* feats,
     feats += 1
     return feats
 
+
+cdef inline FeatureC* _add_characters(FeatureC* feats,
+        int slot, uint64_t* chars, int length, weight_t value) with gil:
+    nr_start_chars = 4
+    nr_end_chars = 4
+    for i in range(min(nr_start_chars, length)):
+        feats.i = slot
+        feats.key = chars[i]
+        feats.value = value
+        feats += 1
+        slot += 1
+    for _ in range(length, nr_start_chars):
+        feats.i = slot
+        feats.key = 0
+        feats.value = 0
+        feats += 1
+        slot += 1
+    for i in range(min(nr_end_chars, length)):
+        feats.i = slot
+        feats.key = chars[(length-nr_end_chars)+i]
+        feats.value = value
+        feats += 1
+        slot += 1
+    for _ in range(length, nr_start_chars):
+        feats.i = slot
+        feats.key = 0
+        feats.value = 0
+        feats += 1
+        slot += 1
+    return feats
+ 
 
 cdef inline FeatureC* _add_subtree(FeatureC* feats, int slot, const StateC* state, int t) nogil:
     value = 1.0

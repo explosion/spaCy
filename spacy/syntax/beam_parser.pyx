@@ -90,6 +90,9 @@ cdef class BeamParser(Parser):
         cdef Beam beam = Beam(self.moves.n_moves, self.beam_width, min_density=self.beam_density)
         beam.initialize(_init_state, length, tokens)
         beam.check_done(_check_final_state, NULL)
+        if beam.is_done:
+            _cleanup(beam)
+            return 0
         while not beam.is_done:
             self._advance_beam(beam, None, False)
         state = <StateClass>beam.at(0)
@@ -100,7 +103,7 @@ cdef class BeamParser(Parser):
 
     def train(self, Doc tokens, GoldParse gold_parse, itn=0):
         self.moves.preprocess_gold(gold_parse)
-        cdef Beam pred = Beam(self.moves.n_moves, self.beam_width, min_density=self.beam_density)
+        cdef Beam pred = Beam(self.moves.n_moves, self.beam_width)
         pred.initialize(_init_state, tokens.length, tokens.c)
         pred.check_done(_check_final_state, NULL)
         
@@ -124,13 +127,15 @@ cdef class BeamParser(Parser):
                 elif pred._states[i].loss == 0.0:
                     pred._states[i].loss = 1.0
             violn.check_crf(pred, gold)
-        _check_train_integrity(pred, gold, gold_parse, self.moves)
+        assert pred.size >= 1
+        assert gold.size >= 1
+        #_check_train_integrity(pred, gold, gold_parse, self.moves)
         histories = zip(violn.p_probs, violn.p_hist) + zip(violn.g_probs, violn.g_hist)
         min_grad = 0.001 ** (itn+1)
         histories = [(grad, hist) for grad, hist in histories if abs(grad) >= min_grad]
         random.shuffle(histories)
         for grad, hist in histories:
-            assert not math.isnan(grad) and not math.isinf(grad)
+            assert not math.isnan(grad) and not math.isinf(grad), hist
             self.model._update_from_history(self.moves, tokens, hist, grad)
         _cleanup(pred)
         _cleanup(gold)
@@ -155,7 +160,7 @@ cdef class BeamParser(Parser):
         else:
             for i in range(beam.size):
                 stcls = <StateClass>beam.at(i)
-                if not stcls.c.is_final():
+                if not stcls.is_final():
                     nr_feat = self.model.set_featuresC(features, stcls.c)
                     self.moves.set_valid(beam.is_valid[i], stcls.c)
                     self.model.set_scoresC(beam.scores[i], features, nr_feat)
@@ -185,12 +190,12 @@ cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) 
 
 cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
     cdef StateClass st = StateClass.init(<const TokenC*>tokens, length)
-    # Ensure sent_start is set to 0 throughout
-    for i in range(st.c.length):
-        st.c._sent[i].sent_start = False
-        st.c._sent[i].l_edge = i
-        st.c._sent[i].r_edge = i
-    st.fast_forward()
+    ## Ensure sent_start is set to 0 throughout
+    #for i in range(st.c.length):
+    #    st.c._sent[i].sent_start = False
+    #    st.c._sent[i].l_edge = i
+    #    st.c._sent[i].r_edge = i
+    #st.fast_forward()
     Py_INCREF(st)
     return <void*>st
 
@@ -219,7 +224,6 @@ def _check_train_integrity(Beam pred, Beam gold, GoldParse gold_parse, Transitio
             continue
         state = <StateClass>pred.at(i)
         if is_gold(state, gold_parse, moves.strings) == True:
-            print("Truth")
             for dep in gold_parse.orig_annot:
                 print(dep[1], dep[3], dep[4])
             print("Cost", pred._states[i].loss)

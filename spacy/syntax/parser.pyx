@@ -84,7 +84,7 @@ def ParserFactory(transition_system):
 
 
 cdef class Parser:
-    def __init__(self, StringStore strings, transition_system, model):
+    def __init__(self, StringStore strings, transition_system, model, *args, **kwargs):
         self.moves = transition_system
         self.model = model
 
@@ -98,17 +98,18 @@ cdef class Parser:
         moves = transition_system(strings, cfg.labels)
 
         if cfg.get('model') == 'neural':
-            model = ParserNeuralNet(cfg.hidden_layers + [moves.n_moves],
-                        update_step=cfg.update_step, eta=cfg.eta, rho=cfg.rho,
-                        noise=cfg.noise)
+            model = ParserNeuralNet(cfg.hyper_params['hidden_layers'] + [moves.n_moves],
+                        update_step=cfg.hyper_params['update_step'],
+                        eta=cfg.hyper_params['learn_rate'],
+                        rho=cfg.hyper_params['L2'],
+                        noise=cfg.hyper_params['noise'])
         else:
             model = ParserPerceptron(get_templates(cfg.feat_set),
                         learn_rate=cfg.get('eta', 0.001),
                         l1_penalty=cfg.rho)
-
         if path.exists(path.join(model_dir, 'model')):
             model.load(path.join(model_dir, 'model'))
-        return cls(strings, moves, model)
+        return cls(strings, moves, model, beam_width=cfg.get('beam_width', 1))
 
     @classmethod
     def load(cls, pkg_or_str_or_file, vocab):
@@ -206,16 +207,13 @@ cdef class Parser:
             eg.c.nr_feat = self.model.set_featuresC(eg.c.features, stcls.c)
             self.model.dropoutC(eg.c.features,
                 0.5, eg.c.nr_feat)
-            if eg.c.features[0].i == 1:
+            if eg.c.features[0].key == 1:
                 eg.c.features[0].value = 1.0
-            #for i in range(eg.c.nr_feat):
-            #    if eg.c.features[i].value != 0:
-            #        self.model.apply_L1(eg.c.features[i].key)
             self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
             action = self.moves.c[eg.guess]
             action.do(stcls.c, action.label)
-            loss += self.model.update(eg, loss='nll')
+            loss += self.model.update(eg)
             eg.reset()
         return loss
 
