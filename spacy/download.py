@@ -9,15 +9,16 @@ from sputnik.package_list import (PackageNotFoundException,
 from . import about
 
 
-def download(lang, force=False):
+def download(lang, force=False, fail_on_exist=True):
     if force:
         sputnik.purge(about.__title__, about.__version__)
 
     try:
         sputnik.package(about.__title__, about.__version__, about.__models__[lang])
-        print("Model already installed. Please run 'python -m "
-              "spacy.%s.download --force' to reinstall." % lang, file=sys.stderr)
-        sys.exit(0)
+        if fail_on_exist:
+            print("Model already installed. Please run 'python -m "
+                  "spacy.%s.download --force' to reinstall." % lang, file=sys.stderr)
+            sys.exit(0)
     except (PackageNotFoundException, CompatiblePackageNotFoundException):
         pass
 
