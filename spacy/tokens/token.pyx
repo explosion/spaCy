@@ -58,7 +58,6 @@ cdef class Token:
         self.doc = doc
         self.c = &self.doc.c[offset]
         self.i = offset
-        self.array_len = doc.length
 
     def __len__(self):
         return self.c.lex.length
@@ -410,6 +409,28 @@ cdef class Token:
             iob_strings = ('', 'I', 'O', 'B')
             return iob_strings[self.c.ent_iob]
 
+    property ent_id:
+        '''An (integer) entity ID. Usually assigned by patterns in the Matcher.'''
+        def __get__(self):
+            return self.c.ent.ent_id
+
+        def __set__(self, hash_t key):
+            # TODO
+            raise NotImplementedError(
+                "Can't yet set ent_id from Token. Vote for this feature on the issue "
+                "tracker: http://github.com/spacy-io/spaCy")
+
+    property ent_id_:
+        '''A (string) entity ID. Usually assigned by patterns in the Matcher.'''
+        def __get__(self):
+            return self.vocab.strings[self.c.ent_id]
+
+        def __set__(self, hash_t key):
+            # TODO
+            raise NotImplementedError(
+                "Can't yet set ent_id_ from Token. Vote for this feature on the issue "
+                "tracker: http://github.com/spacy-io/spaCy")
+
     property whitespace_:
         def __get__(self):
             return ' ' if self.c.spacy else ''
@@ -507,3 +528,17 @@ cdef class Token:
 
     property like_email:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, LIKE_EMAIL)
+
+
+
+
+
+doc = nlp('Google Now is a moribund project destined for closure.')
+
+google_now = doc.ents[0] # Span instance
+
+google_now.attrs['category'] == 'TECHNOLOGY'
+
+ent_id = google_now.ent_id
+
+attrs = nlp.matcher.get_attrs(ent_id)

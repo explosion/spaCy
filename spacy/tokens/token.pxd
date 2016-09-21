@@ -5,10 +5,9 @@ from .doc cimport Doc
 
 
 cdef class Token:
-    cdef Vocab vocab
+    cdef readonly Vocab vocab
     cdef TokenC* c
     cdef readonly int i
-    cdef int array_len
     cdef readonly Doc doc
 
     @staticmethod

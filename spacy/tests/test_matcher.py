@@ -6,46 +6,85 @@ from spacy.matcher import *
 from spacy.attrs import LOWER
 from spacy.tokens.doc import Doc
 from spacy.vocab import Vocab
+from spacy.en import English
 
 
 @pytest.fixture
-def matcher(EN):
+def matcher():
     patterns = {
-        'Javascript': ['PRODUCT', {}, [[{'ORTH': 'JavaScript'}]]],
+        'JS': ['PRODUCT', {}, [[{'ORTH': 'JavaScript'}]]],
         'GoogleNow':  ['PRODUCT', {}, [[{'ORTH': 'Google'}, {'ORTH': 'Now'}]]],
         'Java':       ['PRODUCT', {}, [[{'LOWER': 'java'}]]],
     }
-    return Matcher(EN.vocab, patterns)
+    return Matcher(Vocab(get_lex_attr=English.default_lex_attrs()), patterns)
 
 
 def test_compile(matcher):
     assert matcher.n_patterns == 3
 
 
-def test_no_match(matcher, EN):
-    tokens = EN('I like cheese')
-    assert matcher(tokens) == []
+def test_no_match(matcher):
+    doc = Doc(matcher.vocab, ['I', 'like', 'cheese', '.'])
+    assert matcher(doc) == []
 
 
-def test_match_start(matcher, EN):
-    tokens = EN('JavaScript is good')
-    assert matcher(tokens) == [(EN.vocab.strings['PRODUCT'], 0, 1)]
+def test_match_start(matcher):
+    doc = Doc(matcher.vocab, ['JavaScript', 'is', 'good'])
+    assert matcher(doc) == [(matcher.vocab.strings['JS'],
+                             matcher.vocab.strings['PRODUCT'], 0, 1)]
 
 
-def test_match_end(matcher, EN):
-    tokens = EN('I like java')
-    assert matcher(tokens) == [(EN.vocab.strings['PRODUCT'], 2, 3)]
+def test_match_end(matcher):
+    doc = Doc(matcher.vocab, ['I', 'like', 'java'])
+    assert matcher(doc) == [(doc.vocab.strings['Java'],
+                             doc.vocab.strings['PRODUCT'], 2, 3)]
 
 
-def test_match_middle(matcher, EN):
-    tokens = EN('I like Google Now best')
-    assert matcher(tokens) == [(EN.vocab.strings['PRODUCT'], 2, 4)]
+def test_match_middle(matcher):
+    doc = Doc(matcher.vocab, ['I', 'like', 'Google', 'Now', 'best'])
+    assert matcher(doc) == [(doc.vocab.strings['GoogleNow'],
+                             doc.vocab.strings['PRODUCT'], 2, 4)]
 
 
-def test_match_multi(matcher, EN):
-    tokens = EN('I like Google Now and java best')
-    assert matcher(tokens) == [(EN.vocab.strings['PRODUCT'], 2, 4),
-                               (EN.vocab.strings['PRODUCT'], 5, 6)]
+def test_match_multi(matcher):
+    doc = Doc(matcher.vocab, 'I like Google Now and java best'.split())
+    assert matcher(doc) == [(doc.vocab.strings['GoogleNow'],
+                             doc.vocab.strings['PRODUCT'], 2, 4),
+                            (doc.vocab.strings['Java'],
+                             doc.vocab.strings['PRODUCT'], 5, 6)]
+
+def test_match_zero(matcher):
+    matcher.add('Quote', '', {}, [
+        [
+            {'ORTH': '"'},
+            {'OP': '!', 'IS_PUNCT': True},
+            {'OP': '!', 'IS_PUNCT': True},
+            {'ORTH': '"'}
+        ]])
+    doc = Doc(matcher.vocab, 'He said , " some words " ...'.split())
+    assert len(matcher(doc)) == 1
+    doc = Doc(matcher.vocab, 'He said , " some three words " ...'.split())
+    assert len(matcher(doc)) == 0
+    matcher.add('Quote', '', {}, [
+        [
+            {'ORTH': '"'},
+            {'IS_PUNCT': True},
+            {'IS_PUNCT': True},
+            {'IS_PUNCT': True},
+            {'ORTH': '"'}
+        ]])
+    assert len(matcher(doc)) == 0
+
+
+def test_match_zero_plus(matcher):
+    matcher.add('Quote', '', {}, [
+        [
+            {'ORTH': '"'},
+            {'OP': '*', 'IS_PUNCT': False},
+            {'ORTH': '"'}
+        ]])
+    doc = Doc(matcher.vocab, 'He said , " some words " ...'.split())
+    assert len(matcher(doc)) == 1
 
 
 @pytest.mark.models

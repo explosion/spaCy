@@ -241,6 +241,27 @@ cdef class Span:
             for word in self.rights:
                 yield from word.subtree
 
+    property ent_id:
+        '''An (integer) entity ID. Usually assigned by patterns in the Matcher.'''
+        def __get__(self):
+            return self.root.ent_id
+
+        def __set__(self, hash_t key):
+            # TODO
+            raise NotImplementedError(
+                "Can't yet set ent_id from Span. Vote for this feature on the issue "
+                "tracker: http://github.com/spacy-io/spaCy")
+    property ent_id_:
+        '''A (string) entity ID. Usually assigned by patterns in the Matcher.'''
+        def __get__(self):
+            return self.root.ent_id_
+
+        def __set__(self, hash_t key):
+            # TODO
+            raise NotImplementedError(
+                "Can't yet set ent_id_ from Span. Vote for this feature on the issue "
+                "tracker: http://github.com/spacy-io/spaCy")
+
     property orth_:
         def __get__(self):
             return ''.join([t.string for t in self]).strip()

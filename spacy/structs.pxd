@@ -29,6 +29,7 @@ cdef struct LexemeC:
 
 
 cdef struct Entity:
+    hash_t id
     int start
     int end
     int label
@@ -53,4 +54,5 @@ cdef struct TokenC:
     uint32_t r_edge
 
     int ent_iob
-    int ent_type
+    int ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
+    hash_t ent_id
