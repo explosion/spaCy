@@ -37,7 +37,7 @@ p Here's how the current pre-processing function looks, at the time of writing. 
                         # Merge them into single tokens
                         ent.merge(ent.root.tag_, ent.text, ent.label_)
             token_strings = []
-            for token in tokens:
+            for token in doc:
                 text = token.text.replace(' ', '_')
                 tag = token.ent_type_ or token.pos_
                 token_strings.append('%s|%s' % (text, tag))
