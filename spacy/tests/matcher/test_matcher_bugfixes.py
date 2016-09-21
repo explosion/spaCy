@@ -25,7 +25,7 @@ def test_overlap_issue118(EN):
     )
     
     assert len(list(doc.ents)) == 0
-    matches = matcher(doc)
+    matches = [(ent_type, start, end) for ent_id, ent_type, start, end in matcher(doc)]
     assert matches == [(ORG, 9, 11), (ORG, 10, 11)]
     ents = list(doc.ents)
     assert len(ents) == 1
@@ -52,7 +52,9 @@ def test_overlap_issue242():
     nlp.matcher.add('FOOD', 'FOOD', {}, patterns)
 
     doc = nlp.tokenizer(u'There are different food safety standards in different countries.')
-    food_safety, safety_standards = nlp.matcher(doc)
+
+    matches = [(ent_type, start, end) for ent_id, ent_type, start, end in nlp.matcher(doc)]
+    food_safety, safety_standards = matches
     assert food_safety[1] == 3
     assert food_safety[2] == 5
     assert safety_standards[1] == 4
@@ -75,7 +77,7 @@ def test_overlap_reorder(EN):
     )
     
     assert len(list(doc.ents)) == 0
-    matches = matcher(doc)
+    matches = [(ent_type, start, end) for ent_id, ent_type, start, end in matcher(doc)]
     assert matches == [(ORG, 9, 11), (ORG, 10, 11)]
     ents = list(doc.ents)
     assert len(ents) == 1
@@ -100,7 +102,7 @@ def test_overlap_prefix(EN):
     )
     
     assert len(list(doc.ents)) == 0
-    matches = matcher(doc)
+    matches = [(ent_type, start, end) for ent_id, ent_type, start, end in matcher(doc)]
     assert matches == [(ORG, 9, 10), (ORG, 9, 11)]
     ents = list(doc.ents)
     assert len(ents) == 1
@@ -125,7 +127,7 @@ def test_overlap_prefix_reorder(EN):
     )
     
     assert len(list(doc.ents)) == 0
-    matches = matcher(doc)
+    matches = [(ent_type, start, end) for ent_id, ent_type, start, end in matcher(doc)]
     assert matches == [(ORG, 9, 10), (ORG, 9, 11)]
     ents = list(doc.ents)
     assert len(ents) == 1
