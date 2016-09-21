@@ -83,6 +83,23 @@ cdef class Doc:
         self._py_tokens = []
         self._vector = None
         self.noun_chunks_iterator = CHUNKERS.get(self.vocab.lang)
+        cdef unicode orth
+        cdef bint has_space
+        if orths_and_spaces is not None:
+            for orth_space in orths_and_spaces:
+                if isinstance(orth_space, unicode):
+                    orth = orth_space
+                    has_space = True
+                elif isinstance(orth_space, bytes):
+                    raise ValueError(
+                        "orths_and_spaces expects either List(unicode) or "
+                        "List((unicode, bool)). Got bytes instance: %s" % (str(orth_space)))
+                else:
+                    orth, has_space = orth_space
+                # Note that we pass self.mem here --- we have ownership, if LexemeC
+                # must be created.
+                self.push_back(
+                    <const LexemeC*>self.vocab.get(self.mem, orth), has_space)
 
     def __getitem__(self, object i):
         """Get a Token or a Span from the Doc.
