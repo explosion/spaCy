@@ -528,17 +528,3 @@ cdef class Token:
 
     property like_email:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, LIKE_EMAIL)
-
-
-
-
-
-doc = nlp('Google Now is a moribund project destined for closure.')
-
-google_now = doc.ents[0] # Span instance
-
-google_now.attrs['category'] == 'TECHNOLOGY'
-
-ent_id = google_now.ent_id
-
-attrs = nlp.matcher.get_attrs(ent_id)
