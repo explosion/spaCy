@@ -294,17 +294,6 @@ cdef class Matcher:
                     label = pattern[1].attrs[1].value
                     if acceptor is None or acceptor(doc, ent_id, label, start, end):
                         matches.append((ent_id, label, start, end))
-        seen = set()
-        filtered = []
-        for ent_id, label, start, end in sorted(matches,
-                                                key=lambda m: (m[2],-(m[2]-m[3]))):
-            if all(i in seen for i in range(start, end)):
-                continue
-            else:
-                for i in range(start, end):
-                    seen.add(i)
-                filtered.append((label, start, end))
-        doc.ents = [(e.label, e.start, e.end) for e in doc.ents] + filtered
         return matches
 
     def pipe(self, docs, batch_size=1000, n_threads=2):
