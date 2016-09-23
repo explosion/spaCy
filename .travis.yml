@@ -1,7 +1,7 @@
 language: python
 
 sudo: required
-dist: precise
+dist: trusty
 group: edge
 
 python:
