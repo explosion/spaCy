@@ -240,7 +240,16 @@ cdef class Doc:
                 self.c[i].ent_iob = 0
             cdef attr_t ent_type
             cdef int start, end
-            for ent_type, start, end in ents:
+            for ent_info in ents:
+                if isinstance(ent_info, Span):
+                    ent_id = ent_info.ent_id
+                    ent_type = ent_info.label
+                    start = ent_info.start
+                    end = ent_info.end
+                elif len(ent_info) == 3:
+                    ent_type, start, end = ent_info
+                else:
+                    ent_id, ent_type, start, end = ent_info
                 if ent_type is None or ent_type < 0:
                     # Mark as O
                     for i in range(start, end):
@@ -253,7 +262,6 @@ cdef class Doc:
                         self.c[i].ent_iob = 1
                     # Set start as B
                     self.c[start].ent_iob = 3
-
 
     @property
     def noun_chunks(self):
