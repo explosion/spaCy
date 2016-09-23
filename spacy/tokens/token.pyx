@@ -413,7 +413,7 @@ cdef class Token:
     property ent_id:
         '''An (integer) entity ID. Usually assigned by patterns in the Matcher.'''
         def __get__(self):
-            return self.c.ent.ent_id
+            return self.c.ent_id
 
         def __set__(self, hash_t key):
             # TODO
