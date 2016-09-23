@@ -9,6 +9,7 @@ import numpy
 import six
 
 
+from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
 from .. import parts_of_speech
 
