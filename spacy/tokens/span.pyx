@@ -7,7 +7,7 @@ import math
 import six
 
 from ..structs cimport TokenC, LexemeC
-from ..typedefs cimport flags_t, attr_t
+from ..typedefs cimport flags_t, attr_t, hash_t
 from ..attrs cimport attr_id_t
 from ..parts_of_speech cimport univ_pos_t
 from ..util import normalize_slice
