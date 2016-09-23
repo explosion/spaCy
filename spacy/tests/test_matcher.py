@@ -93,7 +93,7 @@ def test_match_preserved(matcher, EN):
     EN.tagger(doc)
     assert len(doc.ents) == 0
     doc = EN.tokenizer('I like java')
-    matcher(doc)
+    doc.ents += tuple(matcher(doc))
     assert len(doc.ents) == 1
     EN.tagger(doc)
     EN.entity(doc)
