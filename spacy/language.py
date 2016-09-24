@@ -9,6 +9,13 @@ except ImportError:
     import json
 
 
+try:
+    basestring
+except NameError:
+    basestring = str
+
+
+
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .syntax.parser import Parser
@@ -162,7 +169,7 @@ class Language(object):
         self.entity    = entity if entity is not True else defaults.Entity(self.vocab)
         self.parser    = parser if parser is not True else defaults.Parser(self.vocab)
         self.matcher   = matcher if matcher is not True else defaults.Matcher(self.vocab)
-        self.pipeline  = self.pipeline if pipeline is not True else defaults.Pipeline(self)
+        self.pipeline  = pipeline(self) if pipeline is not True else defaults.Pipeline(self)
 
     def __reduce__(self):
         args = (
