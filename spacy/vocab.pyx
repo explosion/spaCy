@@ -241,6 +241,8 @@ cdef class Vocab:
         return tokens
     
     def dump(self, loc):
+        if hasattr(loc, 'as_posix'):
+            loc = loc.as_posix()
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
 
         cdef CFile fp = CFile(bytes_loc, 'wb')
