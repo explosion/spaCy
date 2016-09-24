@@ -16,7 +16,7 @@ def matcher():
         'GoogleNow':  ['PRODUCT', {}, [[{'ORTH': 'Google'}, {'ORTH': 'Now'}]]],
         'Java':       ['PRODUCT', {}, [[{'LOWER': 'java'}]]],
     }
-    return Matcher(Vocab(get_lex_attr=English.default_lex_attrs()), patterns)
+    return Matcher(Vocab(get_lex_attr=English.Defaults.lex_attr_getters), patterns)
 
 
 def test_compile(matcher):

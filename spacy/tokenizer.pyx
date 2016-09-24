@@ -1,12 +1,19 @@
 # cython: embedsignature=True
 from __future__ import unicode_literals
 
-from os import path
 import re
+import pathlib
 
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from cpython cimport Py_UNICODE_ISSPACE
+
+
+try:
+    import ujson as json
+except ImportError:
+    import json
+
 
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
@@ -16,17 +23,53 @@ cimport cython
 
 from . import util
 from .tokens.doc cimport Doc
-from .util import read_lang_data, get_package
 
 
 cdef class Tokenizer:
-    def __init__(self, Vocab vocab, rules, prefix_re, suffix_re, infix_re):
+    @classmethod
+    def load(cls, path, Vocab vocab, rules=None, prefix_search=None, suffix_search=None,
+             infix_finditer=None):
+        '''Load a Tokenizer, reading unsupplied components from the path.
+        
+        Arguments:
+            path pathlib.Path (or string, or Path-like)
+            vocab Vocab
+            rules dict
+            prefix_search callable -- Signature of re.compile(string).search
+            suffix_search callable -- Signature of re.compile(string).search
+            infix_finditer callable -- Signature of re.compile(string).finditer
+        '''
+        if isinstance(path, basestring):
+            path = pathlib.Path(path)
+
+        if rules is None:
+            with (path / 'tokenizer' / 'specials.json').open() as file_:
+                rules = json.load(file_)
+        if prefix_search is None:
+            prefix_search = util.read_regex(path / 'tokenizer' / 'prefix.txt').search
+        if suffix_search is None:
+            suffix_search = util.read_regex(path / 'tokenizer' / 'suffix.txt').search
+        if infix_finditer is None:
+            infix_finditer = util.read_regex(path / 'tokenizer' / 'infix.txt').finditer
+        return cls(vocab, rules, prefix_search, suffix_search, infix_finditer)
+
+
+    def __init__(self, Vocab vocab, rules, prefix_search, suffix_search, infix_finditer):
+        '''Create a Tokenizer, to create Doc objects given unicode text.
+        
+        Arguments:
+            vocab Vocab
+            rules dict
+            prefix_search callable -- Signature of re.compile(string).search
+            suffix_search callable -- Signature of re.compile(string).search
+            infix_finditer callable -- Signature of re.compile(string).finditer
+        '''
         self.mem = Pool()
         self._cache = PreshMap()
         self._specials = PreshMap()
-        self._prefix_re = prefix_re
-        self._suffix_re = suffix_re
-        self._infix_re = infix_re
+        self.prefix_search = prefix_search
+        self.suffix_search = suffix_search
+        self.infix_finditer = infix_finditer
         self.vocab = vocab
         self._rules = {}
         for chunk, substrings in sorted(rules.items()):
@@ -40,19 +83,7 @@ cdef class Tokenizer:
                 self._infix_re)
 
         return (self.__class__, args, None, None)
-
-    @classmethod
-    def load(cls, data_dir, Vocab vocab):
-        return cls.from_package(get_package(data_dir), vocab=vocab)
-
-    @classmethod
-    def from_package(cls, package, Vocab vocab):
-        rules, prefix_re, suffix_re, infix_re = read_lang_data(package)
-        prefix_re = re.compile(prefix_re)
-        suffix_re = re.compile(suffix_re)
-        infix_re = re.compile(infix_re)
-        return cls(vocab, rules, prefix_re, suffix_re, infix_re)
-
+    
     cpdef Doc tokens_from_list(self, list strings):
         cdef Doc tokens = Doc(self.vocab)
         if sum([len(s) for s in strings]) == 0:
@@ -258,14 +289,14 @@ cdef class Tokenizer:
         self._cache.set(key, cached)
 
     def find_infix(self, unicode string):
-        return list(self._infix_re.finditer(string))
+        return list(self.infix_finditer(string))
 
     def find_prefix(self, unicode string):
-        match = self._prefix_re.search(string)
+        match = self.prefix_search(string)
         return (match.end() - match.start()) if match is not None else 0
 
     def find_suffix(self, unicode string):
-        match = self._suffix_re.search(string)
+        match = self.suffix_search(string)
         return (match.end() - match.start()) if match is not None else 0
 
     def _load_special_tokenization(self, special_cases):

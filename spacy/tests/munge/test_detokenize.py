@@ -1,4 +1,4 @@
-from spacy.util import detokenize
+from spacy.deprecated import detokenize
 
 def test_punct():
     tokens = 'Pierre Vinken , 61 years old .'.split()

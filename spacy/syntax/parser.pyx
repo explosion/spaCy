@@ -78,34 +78,24 @@ cdef class ParserModel(AveragedPerceptron):
 
 
 cdef class Parser:
-    def __init__(self, StringStore strings, transition_system, ParserModel model, int projectivize = 0):
+    @classmethod
+    def load(cls, path, Vocab vocab, moves_class):
+        with (path / 'config.json').open() as file_:
+            cfg = json.loads(file_)
+        moves = moves_class(vocab.strings, cfg['labels'])
+        templates = get_templates(cfg['features'])
+        model = ParserModel(templates)
+        if (path / 'model').exists():
+            model.load(path / 'model')
+        return cls(vocab, moves, model, **cfg)
+
+    def __init__(self, Vocab vocab, transition_system, ParserModel model, **cfg):
         self.moves = transition_system
         self.model = model
-        self._projectivize = projectivize
-
-    @classmethod
-    def from_dir(cls, model_dir, strings, transition_system):
-        if not os.path.exists(model_dir):
-            print >> sys.stderr, "Warning: No model found at", model_dir
-        elif not os.path.isdir(model_dir):
-            print >> sys.stderr, "Warning: model path:", model_dir, "is not a directory"
-        cfg = Config.read(model_dir, 'config')
-        moves = transition_system(strings, cfg.labels)
-        templates = get_templates(cfg.features)
-        model = ParserModel(templates)
-        project = cfg.projectivize if hasattr(cfg,'projectivize') else False
-        if path.exists(path.join(model_dir, 'model')):
-            model.load(path.join(model_dir, 'model'))
-        return cls(strings, moves, model, project)
-
-    @classmethod
-    def load(cls, pkg_or_str_or_file, vocab):
-        # TODO
-        raise NotImplementedError(
-                "This should be here, but isn't yet =/. Use Parser.from_dir")
+        self.cfg = cfg
 
     def __reduce__(self):
-        return (Parser, (self.moves.strings, self.moves, self.model), None, None)
+        return (Parser, (self.vocab, self.moves, self.model), None, None)
 
     def __call__(self, Doc tokens):
         cdef int nr_class = self.moves.n_moves

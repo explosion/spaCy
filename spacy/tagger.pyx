@@ -18,8 +18,6 @@ from .parts_of_speech cimport VERB, X, PUNCT, EOL, SPACE
 
 from .attrs cimport *
 
-from .util import get_package
-
  
 cpdef enum:
     P2_orth
@@ -147,24 +145,21 @@ cdef class Tagger:
         return cls(vocab, model)
 
     @classmethod
-    def load(cls, data_dir, vocab):
-        return cls.from_package(get_package(data_dir), vocab=vocab)
-
-    @classmethod
-    def from_package(cls, pkg, vocab):
-        # TODO: templates.json deprecated? not present in latest package
-        # templates = cls.default_templates()
-        templates = pkg.load_json(('pos', 'templates.json'), default=cls.default_templates())
+    def load(cls, path, vocab):
+        if (path / 'pos' / 'templates.json').exists():
+            with (path / 'pos' / 'templates.json').open() as file_:
+                templates = json.load(file_)
+        else:
+            templates = cls.default_templates()
 
         model = TaggerModel(templates)
-        if pkg.has_file('pos', 'model'):
-            model.load(pkg.file_path('pos', 'model'))
+        if (path / 'pos' / 'model').exists():
+            model.load(path / 'pos' / 'model')
         return cls(vocab, model)
 
     def __init__(self, Vocab vocab, TaggerModel model):
         self.vocab = vocab
         self.model = model
-        
         # TODO: Move this to tag map
         self.freqs = {TAG: defaultdict(int)}
         for tag in self.tag_names:

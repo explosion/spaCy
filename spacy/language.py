@@ -25,13 +25,19 @@ class Defaults(object):
     def __init__(self, lang, path):
         self.lang = lang
         self.path = path
+        self.lex_attr_getters = dict(self.__class__.lex_attr_getters)
+        if (self.path / 'vocab' / 'oov_prob').exists():
+            with (self.path / 'vocab' / 'oov_prob').open() as file_:
+                oov_prob = file_.read().strip()
+            self.lex_attr_getters['PROB'] = lambda string: oov_prob
+        self.lex_attr_getters['LANG'] = lambda string: self.lang,
 
     def Vectors(self):
         pass
     
-    def Vocab(self, vectors=None, get_lex_attr=None):
-        if get_lex_attr is None:
-            get_lex_attr = self.lex_attrs()
+    def Vocab(self, vectors=None, lex_attr_getters=None):
+        if lex_attr_getters is None:
+            lex_attr_getters = dict(self.lex_attr_getters)
         if vectors is None:
             vectors = self.Vectors()
         return Vocab.load(self.path, get_lex_attr=get_lex_attr, vectors=vectors)
@@ -64,84 +70,42 @@ class Defaults(object):
             nlp.parser,
             nlp.entity]
 
-    def dep_labels(self):
-        return {0: {'ROOT': True}}
+    dep_labels = {0: {'ROOT': True}}
 
-    def ner_labels(self):
-        return {0: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True}}
+    ner_labels = {0: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True}}
 
-    def lex_attrs(self, *args, **kwargs):
-        if 'oov_prob' in kwargs:
-            oov_prob = kwargs.get('oov_prob', -20)
-        else:
-            with (self.path / 'vocab' / 'oov_prob').open() as file_:
-                oov_prob = file_.read().strip()
-        return {
-            attrs.LOWER: self.lower,
-            attrs.NORM: self.norm,
-            attrs.SHAPE: orth.word_shape,
-            attrs.PREFIX: self.prefix,
-            attrs.SUFFIX: self.suffix,
-            attrs.CLUSTER: self.cluster,
-            attrs.PROB: lambda string: oov_prob,
-            attrs.LANG: lambda string: self.lang,
-            attrs.IS_ALPHA: orth.is_alpha,
-            attrs.IS_ASCII: orth.is_ascii,
-            attrs.IS_DIGIT: self.is_digit,
-            attrs.IS_LOWER: orth.is_lower,
-            attrs.IS_PUNCT: orth.is_punct,
-            attrs.IS_SPACE: self.is_space,
-            attrs.IS_TITLE: orth.is_title,
-            attrs.IS_UPPER: orth.is_upper,
-            attrs.IS_BRACKET: orth.is_bracket,
-            attrs.IS_QUOTE: orth.is_quote,
-            attrs.IS_LEFT_PUNCT: orth.is_left_punct,
-            attrs.IS_RIGHT_PUNCT: orth.is_right_punct,
-            attrs.LIKE_URL: orth.like_url,
-            attrs.LIKE_NUM: orth.like_number,
-            attrs.LIKE_EMAIL: orth.like_email,
-            attrs.IS_STOP: self.is_stop,
-            attrs.IS_OOV: lambda string: True
-        }
-
-    @staticmethod
-    def lower(string):
-        return string.lower()
-
-    @staticmethod
-    def norm(string):
-        return string
-
-    @staticmethod
-    def prefix(string):
-        return string[0]
-
-    @staticmethod
-    def suffix(string):
-        return string[-3:]
-
-    @staticmethod
-    def cluster(string):
-        return 0
-
-    @staticmethod
-    def is_digit(string):
-        return string.isdigit()
-
-    @staticmethod
-    def is_space(string):
-        return string.isspace()
-
-    @staticmethod
-    def is_stop(string):
-        return 0
+    lex_attr_getters = {
+        attrs.LOWER: lambda string: string.lower(),
+        attrs.NORM: lambda string: string,
+        attrs.SHAPE: orth.word_shape,
+        attrs.PREFIX: lambda string: string[0],
+        attrs.SUFFIX: lambda string: string[-3:],
+        attrs.CLUSTER: lambda string: 0,
+        attrs.IS_ALPHA: orth.is_alpha,
+        attrs.IS_ASCII: orth.is_ascii,
+        attrs.IS_DIGIT: lambda string: string.isdigit(),
+        attrs.IS_LOWER: orth.is_lower,
+        attrs.IS_PUNCT: orth.is_punct,
+        attrs.IS_SPACE: lambda string: string.isspace(),
+        attrs.IS_TITLE: orth.is_title,
+        attrs.IS_UPPER: orth.is_upper,
+        attrs.IS_BRACKET: orth.is_bracket,
+        attrs.IS_QUOTE: orth.is_quote,
+        attrs.IS_LEFT_PUNCT: orth.is_left_punct,
+        attrs.IS_RIGHT_PUNCT: orth.is_right_punct,
+        attrs.LIKE_URL: orth.like_url,
+        attrs.LIKE_NUM: orth.like_number,
+        attrs.LIKE_EMAIL: orth.like_email,
+        attrs.IS_STOP: lambda string: False,
+        attrs.IS_OOV: lambda string: True
+    }
 
 
 class Language(object):
     '''A text-processing pipeline. Usually you'll load this once per process, and
     pass the instance around your program.
     '''
-    
+    Defaults = Defaults
     lang = None
 
     def __init__(self,
@@ -180,6 +144,7 @@ class Language(object):
             path = data_dir
         if isinstance(path, basestring):
             path = pathlib.Path(path)
+        self.path = path
         defaults = defaults if defaults is not True else self.get_defaults(self.path)
         
         self.vocab     = vocab if vocab is not True else defaults.Vocab(vectors=vectors)
@@ -291,4 +256,4 @@ class Language(object):
 
         
     def get_defaults(self, path):
-        return Defaults(path)
+        return Defaults(self.lang, path)

@@ -1,4 +1,4 @@
-from spacy.util import align_tokens
+from spacy.deprecated import align_tokens
 
 
 def test_perfect_align():

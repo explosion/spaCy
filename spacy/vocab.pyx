@@ -19,7 +19,6 @@ from .orth cimport word_shape
 from .typedefs cimport attr_t
 from .cfile cimport CFile
 from .lemmatizer import Lemmatizer
-from .util import get_package
 
 from . import attrs
 from . import symbols
@@ -27,6 +26,7 @@ from . import symbols
 from cymem.cymem cimport Address
 from .serialize.packer cimport Packer
 from .attrs cimport PROB, LANG
+
 
 try:
     import copy_reg
@@ -47,30 +47,32 @@ cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
     @classmethod
-    def load(cls, data_dir, get_lex_attr=None):
-        return cls.from_package(get_package(data_dir), get_lex_attr=get_lex_attr)
+    def load(cls, path, get_lex_attr=None, vectors=True, lemmatizer=None):
+        if (path / 'vocab' / 'tag_map.json').exists():
+            with (path / 'vocab' / 'tag_map.json').open() as file_:
+                tag_map = json.loads(file_)
+        else:
+            tag_map = {}
 
-    @classmethod
-    def from_package(cls, package, get_lex_attr=None, vectors_package=None):
-        tag_map = package.load_json(('vocab', 'tag_map.json'), default={})
+        if lemmatizer is None:
+            lemmatizer = Lemmatizer.load(path)
 
-        lemmatizer = Lemmatizer.from_package(package)
-
-        serializer_freqs = package.load_json(('vocab', 'serializer.json'), default={})
+        if (path / 'vocab' / 'serializer.json').exists():
+            with (path / 'vocab' / 'serializer.json').open() as file_:
+                serializer_freqs = json.loads(file_)
+        else:
+            serializer_freqs = {}
 
         cdef Vocab self = cls(get_lex_attr=get_lex_attr, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)
 
-        with package.open(('vocab', 'strings.json')) as file_:
+        with (path / 'vocab' / 'strings.json').open() as file_:
             self.strings.load(file_)
-        self.load_lexemes(package.file_path('vocab', 'lexemes.bin'))
+        self.load_lexemes(path / 'vocab' / 'lexemes.bin')
 
-        if vectors_package and vectors_package.has_file('vocab', 'vec.bin'):
-            self.vectors_length = self.load_vectors_from_bin_loc(
-                vectors_package.file_path('vocab', 'vec.bin'))
-        elif package.has_file('vocab', 'vec.bin'):
-            self.vectors_length = self.load_vectors_from_bin_loc(
-                package.file_path('vocab', 'vec.bin'))
+        if vectors is True:
+            vectors = lambda self_: self_.load_vectors_from_bin_loc(path / 'vocab' / 'vec.bin')
+        self.vectors_length = vectors(self)
         return self
 
     def __init__(self, get_lex_attr=None, tag_map=None, lemmatizer=None, serializer_freqs=None):
@@ -87,6 +89,9 @@ cdef class Vocab:
         # is the frequency rank of the word, plus a certain offset. The structural
         # strings are loaded first, because the vocab is open-class, and these
         # symbols are closed class.
+        # TODO: Actually this has turned out to be a pain in the ass...
+        # It means the data is invalidated when we add a symbol :(
+        # Need to rethink this.
         for name in symbols.NAMES + list(sorted(tag_map.keys())):
             if name:
                 _ = self.strings[name]
