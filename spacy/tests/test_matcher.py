@@ -88,11 +88,17 @@ def test_match_zero_plus(matcher):
 
 
 @pytest.mark.models
-def test_match_preserved(matcher, EN):
-    doc = EN.tokenizer('I like java')
+def test_match_preserved(EN):
+    patterns = {
+        'JS': ['PRODUCT', {}, [[{'ORTH': 'JavaScript'}]]],
+        'GoogleNow':  ['PRODUCT', {}, [[{'ORTH': 'Google'}, {'ORTH': 'Now'}]]],
+        'Java':       ['PRODUCT', {}, [[{'LOWER': 'java'}]]],
+    }
+    matcher = Matcher(EN.vocab, patterns)
+    doc = EN.tokenizer('I like java.')
     EN.tagger(doc)
     assert len(doc.ents) == 0
-    doc = EN.tokenizer('I like java')
+    doc = EN.tokenizer('I like java.')
     doc.ents += tuple(matcher(doc))
     assert len(doc.ents) == 1
     EN.tagger(doc)
