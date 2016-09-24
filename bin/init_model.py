@@ -154,7 +154,7 @@ def setup_vocab(get_lex_attr, tag_map, src_dir, dst_dir):
 
     vectors_src = src_dir / 'vectors.bz2'
     if vectors_src.exists():
-        write_binary_vectors(str(vectors_src), str(dst_dir / 'vec.bin'))
+        write_binary_vectors(vectors_src.as_posix, (dst_dir / 'vec.bin').as_posix())
     else:
         print("Warning: Word vectors file not found")
     vocab = Vocab(get_lex_attr=get_lex_attr, tag_map=tag_map)
@@ -186,7 +186,7 @@ def setup_vocab(get_lex_attr, tag_map, src_dir, dst_dir):
             lexeme.cluster = int(clusters[word][::-1], 2)
         else:
             lexeme.cluster = 0
-    vocab.dump(str(dst_dir / 'lexemes.bin'))
+    vocab.dump((dst_dir / 'lexemes.bin').as_posix())
     with (dst_dir / 'strings.json').open('w') as file_:
         vocab.strings.dump(file_)
     with (dst_dir / 'oov_prob').open('w') as file_:
@@ -210,18 +210,19 @@ def main(lang_id, lang_data_dir, corpora_dir, model_dir):
                 model_dir / 'vocab')
 
     if (lang_data_dir / 'gazetteer.json').exists():
-        copyfile(str(lang_data_dir / 'gazetteer.json'),
-                 str(model_dir / 'vocab' / 'gazetteer.json'))
+        copyfile((lang_data_dir / 'gazetteer.json').as_posix(),
+                 (model_dir / 'vocab' / 'gazetteer.json').as_posix())
 
-    copyfile(str(lang_data_dir / 'tag_map.json'),
-             str(model_dir / 'vocab' / 'tag_map.json'))
+    copyfile((lang_data_dir / 'tag_map.json').as_posix(),
+             (model_dir / 'vocab' / 'tag_map.json').as_posix())
 
     if (lang_data_dir / 'lemma_rules.json').exists():
-        copyfile(str(lang_data_dir / 'lemma_rules.json'),
-                 str(model_dir / 'vocab' / 'lemma_rules.json'))
+        copyfile((lang_data_dir / 'lemma_rules.json').as_posix(),
+                 (model_dir / 'vocab' / 'lemma_rules.json').as_posix())
 
     if not (model_dir / 'wordnet').exists() and (corpora_dir / 'wordnet').exists():
-        copytree(str(corpora_dir / 'wordnet' / 'dict'), str(model_dir / 'wordnet'))
+        copytree((corpora_dir / 'wordnet' / 'dict').as_posix(),
+                 (model_dir / 'wordnet').as_posix())
 
 
 if __name__ == '__main__':
