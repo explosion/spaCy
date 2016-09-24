@@ -8,6 +8,10 @@ import pathlib
 import six
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
+try:
+  basestring
+except NameError:
+  basestring = str
 
 LANGUAGES = {}
 _data_path = pathlib.Path(__file__).parent / 'data'
