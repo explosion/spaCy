@@ -81,12 +81,12 @@ cdef class Parser:
     @classmethod
     def load(cls, path, Vocab vocab, moves_class):
         with (path / 'config.json').open() as file_:
-            cfg = json.loads(file_)
+            cfg = json.load(file_)
         moves = moves_class(vocab.strings, cfg['labels'])
         templates = get_templates(cfg['features'])
         model = ParserModel(templates)
         if (path / 'model').exists():
-            model.load(path / 'model')
+            model.load(str(path / 'model'))
         return cls(vocab, moves, model, **cfg)
 
     def __init__(self, Vocab vocab, transition_system, ParserModel model, **cfg):

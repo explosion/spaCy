@@ -1,4 +1,5 @@
 from __future__ import absolute_import
+from __future__ import unicode_literals
 from warnings import warn
 import pathlib
 
@@ -17,36 +18,38 @@ from . import attrs
 from . import orth
 from .syntax.ner import BiluoPushDown
 from .syntax.arc_eager import ArcEager
+from . import util
 
-from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD
+from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD, PROB, LANG, IS_STOP
 
 
-class Defaults(object):
+class BaseDefaults(object):
     def __init__(self, lang, path):
-        self.lang = lang
         self.path = path
+        self.lang = lang
         self.lex_attr_getters = dict(self.__class__.lex_attr_getters)
         if (self.path / 'vocab' / 'oov_prob').exists():
             with (self.path / 'vocab' / 'oov_prob').open() as file_:
                 oov_prob = file_.read().strip()
-            self.lex_attr_getters['PROB'] = lambda string: oov_prob
-        self.lex_attr_getters['LANG'] = lambda string: self.lang,
+            self.lex_attr_getters[PROB] = lambda string: oov_prob
+        self.lex_attr_getters[LANG] = lambda string: lang
+        self.lex_attr_getters[IS_STOP] = lambda string: string in self.stop_words
 
     def Vectors(self):
-        pass
+        return True
     
     def Vocab(self, vectors=None, lex_attr_getters=None):
         if lex_attr_getters is None:
             lex_attr_getters = dict(self.lex_attr_getters)
         if vectors is None:
             vectors = self.Vectors()
-        return Vocab.load(self.path, get_lex_attr=get_lex_attr, vectors=vectors)
+        return Vocab.load(self.path, get_lex_attr=self.lex_attr_getters, vectors=vectors)
 
     def Tokenizer(self, vocab):
         return Tokenizer.load(self.path, vocab) 
 
     def Tagger(self, vocab):
-        return Tagger.load(self.path, self.vocab)
+        return Tagger.load(self.path / 'pos', vocab)
 
     def Parser(self, vocab):
         if (self.path / 'deps').exists():
@@ -73,6 +76,9 @@ class Defaults(object):
     dep_labels = {0: {'ROOT': True}}
 
     ner_labels = {0: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True}}
+
+
+    stop_words = set()
 
     lex_attr_getters = {
         attrs.LOWER: lambda string: string.lower(),
@@ -101,11 +107,12 @@ class Defaults(object):
     }
 
 
+
 class Language(object):
     '''A text-processing pipeline. Usually you'll load this once per process, and
     pass the instance around your program.
     '''
-    Defaults = Defaults
+    Defaults = BaseDefaults
     lang = None
 
     def __init__(self,
@@ -144,6 +151,8 @@ class Language(object):
             path = data_dir
         if isinstance(path, basestring):
             path = pathlib.Path(path)
+        if path is None:
+            path = util.match_best_version(self.lang, '', util.get_data_path())
         self.path = path
         defaults = defaults if defaults is not True else self.get_defaults(self.path)
         
@@ -256,4 +265,4 @@ class Language(object):
 
         
     def get_defaults(self, path):
-        return Defaults(self.lang, path)
+        return self.Defaults(self.lang, path)

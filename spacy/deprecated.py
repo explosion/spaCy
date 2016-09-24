@@ -43,23 +43,6 @@ def read_lang_data(package):
     return tokenization, prefix, suffix, infix
 
 
-def read_prefix(fileobj):
-    entries = fileobj.read().split('\n')
-    expression = '|'.join(['^' + re.escape(piece) for piece in entries if piece.strip()])
-    return expression
-
-
-def read_suffix(fileobj):
-    entries = fileobj.read().split('\n')
-    expression = '|'.join([piece + '$' for piece in entries if piece.strip()])
-    return expression
-
-
-def read_infix(fileobj):
-    entries = fileobj.read().split('\n')
-    expression = '|'.join([piece for piece in entries if piece.strip()])
-    return expression
-
 
 def align_tokens(ref, indices): # Deprecated, surely?
     start = 0

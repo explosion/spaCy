@@ -2,15 +2,19 @@ from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 
 
 cdef class CFile:
-    def __init__(self, loc, mode):
+    def __init__(self, loc, mode, on_open_error=None):
         if isinstance(mode, unicode):
             mode_str = mode.encode('ascii')
         else:
             mode_str = mode
+        loc = str(loc)
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self.fp = fopen(<char*>bytes_loc, mode_str)
         if self.fp == NULL:
-            raise IOError("Could not open binary file %s" % bytes_loc)
+            if on_open_error is not None:
+                on_open_error()
+            else:
+                raise IOError("Could not open binary file %s" % bytes_loc)
         self.is_open = True
 
     def __dealloc__(self):

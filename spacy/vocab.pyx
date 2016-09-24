@@ -47,19 +47,21 @@ cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
     @classmethod
-    def load(cls, path, get_lex_attr=None, vectors=True, lemmatizer=None):
+    def load(cls, path, get_lex_attr=None, vectors=True, lemmatizer=True):
         if (path / 'vocab' / 'tag_map.json').exists():
             with (path / 'vocab' / 'tag_map.json').open() as file_:
-                tag_map = json.loads(file_)
+                tag_map = json.load(file_)
         else:
             tag_map = {}
 
-        if lemmatizer is None:
+        if lemmatizer is True:
             lemmatizer = Lemmatizer.load(path)
+        elif not lemmatizer:
+            lemmatizer = lambda string, pos: set((string,))
 
         if (path / 'vocab' / 'serializer.json').exists():
             with (path / 'vocab' / 'serializer.json').open() as file_:
-                serializer_freqs = json.loads(file_)
+                serializer_freqs = json.load(file_)
         else:
             serializer_freqs = {}
 
@@ -72,7 +74,8 @@ cdef class Vocab:
 
         if vectors is True:
             vectors = lambda self_: self_.load_vectors_from_bin_loc(path / 'vocab' / 'vec.bin')
-        self.vectors_length = vectors(self)
+        if vectors:
+            self.vectors_length = vectors(self)
         return self
 
     def __init__(self, get_lex_attr=None, tag_map=None, lemmatizer=None, serializer_freqs=None):
@@ -101,6 +104,7 @@ cdef class Vocab:
         
         self.length = 1
         self._serializer = None
+        print("Vocab lang", self.lang)
     
     property serializer:
         def __get__(self):
@@ -113,7 +117,7 @@ cdef class Vocab:
         def __get__(self):
             langfunc = None
             if self.get_lex_attr:
-                langfunc = self.get_lex_attr.get(LANG,None)
+                langfunc = self.get_lex_attr.get(LANG, None)
             return langfunc('_') if langfunc else ''
 
     def __len__(self):
@@ -261,9 +265,8 @@ cdef class Vocab:
         fp.close()
 
     def load_lexemes(self, loc):
-        if not path.exists(loc):
-            raise IOError('LexemeCs file not found at %s' % loc)
-        fp = CFile(loc, 'rb')
+        fp = CFile(loc, 'rb',
+                on_open_error=lambda: IOError('LexemeCs file not found at %s' % loc))
         cdef LexemeC* lexeme
         cdef hash_t key
         cdef unicode py_str

@@ -22,13 +22,13 @@ from spacy.serialize.bits import BitArray
 
 @pytest.fixture
 def vocab():
-    data_dir = os.environ.get('SPACY_DATA')
-    if data_dir is None:
-        package = util.get_package_by_name('en')
+    path = os.environ.get('SPACY_DATA')
+    if path is None:
+        path = util.match_best_version('en', None, util.get_data_path())
     else:
-        package = util.get_package(data_dir)
+        path = util.match_best_version('en', None, path)
 
-    vocab = English.default_vocab(package=package)
+    vocab = English.Defaults('en', path).Vocab()
     lex = vocab['dog']
     assert vocab[vocab.strings['dog']].orth_ == 'dog'
     lex  = vocab['the']
@@ -40,7 +40,7 @@ def vocab():
 @pytest.fixture
 def tokenizer(vocab):
     null_re = re.compile(r'!!!!!!!!!')
-    tokenizer = Tokenizer(vocab, {}, null_re, null_re, null_re)
+    tokenizer = Tokenizer(vocab, {}, null_re.search, null_re.search, null_re.finditer)
     return tokenizer
 
 

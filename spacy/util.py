@@ -3,12 +3,14 @@ import io
 import json
 import re
 import os.path
+import pathlib
 
 import six
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 
 LANGUAGES = {}
+_data_path = pathlib.Path(__file__).parent / 'data'
 
 
 def set_lang_class(name, cls):
@@ -21,6 +23,81 @@ def get_lang_class(name):
     if lang not in LANGUAGES:
         raise RuntimeError('Language not supported: %s' % lang)
     return LANGUAGES[lang]
+
+
+def get_data_path():
+    return _data_path
+
+
+def set_data_path(path):
+    global _data_path
+    if isinstance(path, basestring):
+        path = pathlib.Path(path)
+    _data_path = path
+
+
+
+def match_best_version(target_name, target_version, path):
+    path = path if not isinstance(path, basestring) else pathlib.Path(path)
+    matches = []
+    for data_name in path.iterdir():
+        name, version = split_data_name(data_name.parts[-1])
+        if name == target_name and constraint_match(target_version, version):
+            matches.append((tuple(float(v) for v in version.split('.')), data_name))
+    if matches:
+        return pathlib.Path(max(matches)[1])
+    else:
+        return None
+
+
+def split_data_name(name):
+    return name.split('-', 1) if '-' in name else (name, '')
+
+
+def constraint_match(constraint_string, version):
+    # From http://github.com/spacy-io/sputnik
+    if not constraint_string:
+        return True
+
+    constraints = [c.strip() for c in constraint_string.split(',') if c.strip()]
+
+    for c in constraints:
+        if not re.match(r'[><=][=]?\d+(\.\d+)*', c):
+            raise ValueError('invalid constraint: %s' % c)
+
+    return all(semver.match(version, c) for c in constraints)
+
+
+def read_regex(path):
+    path = path if not isinstance(path, basestring) else pathlib.Path(path)
+    with path.open() as file_:
+        entries = file_.read().split('\n')
+    expression = '|'.join(['^' + re.escape(piece) for piece in entries if piece.strip()])
+    return re.compile(expression)
+
+
+def read_prefix_regex(path):
+    path = path if not isinstance(path, basestring) else pathlib.Path(path)
+    with path.open() as file_:
+        entries = file_.read().split('\n')
+    expression = '|'.join(['^' + re.escape(piece) for piece in entries if piece.strip()])
+    return re.compile(expression)
+
+
+def read_suffix_regex(path):
+    path = path if not isinstance(path, basestring) else pathlib.Path(path)
+    with path.open() as file_:
+        entries = file_.read().split('\n')
+    expression = '|'.join([piece + '$' for piece in entries if piece.strip()])
+    return re.compile(expression)
+
+
+def read_infix_regex(path):
+    path = path if not isinstance(path, basestring) else pathlib.Path(path)
+    with path.open() as file_:
+        entries = file_.read().split('\n')
+    expression = '|'.join([piece for piece in entries if piece.strip()])
+    return re.compile(expression)
 
 
 def normalize_slice(length, start, stop, step=None):

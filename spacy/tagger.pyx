@@ -1,5 +1,5 @@
 import json
-from os import path
+import pathlib
 from collections import defaultdict
 from libc.string cimport memset
 
@@ -103,10 +103,6 @@ cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
 cdef class Tagger:
     """A part-of-speech tagger for English"""
     @classmethod
-    def read_config(cls, data_dir):
-        return json.load(open(path.join(data_dir, 'pos', 'config.json')))
-
-    @classmethod
     def default_templates(cls):
         return (
             (W_orth,),
@@ -146,15 +142,16 @@ cdef class Tagger:
 
     @classmethod
     def load(cls, path, vocab):
-        if (path / 'pos' / 'templates.json').exists():
-            with (path / 'pos' / 'templates.json').open() as file_:
+        path = path if not isinstance(path, basestring) else pathlib.Path(path)
+        if (path / 'templates.json').exists():
+            with (path / 'templates.json').open() as file_:
                 templates = json.load(file_)
         else:
             templates = cls.default_templates()
 
         model = TaggerModel(templates)
-        if (path / 'pos' / 'model').exists():
-            model.load(path / 'pos' / 'model')
+        if (path / 'model').exists():
+            model.load(str(path / 'model'))
         return cls(vocab, model)
 
     def __init__(self, Vocab vocab, TaggerModel model):

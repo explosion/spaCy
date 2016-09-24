@@ -17,5 +17,6 @@ cdef class Parser:
     cdef readonly Vocab vocab
     cdef readonly ParserModel model
     cdef readonly TransitionSystem moves
+    cdef readonly object cfg
 
     cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) nogil

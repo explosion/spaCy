@@ -1,6 +1,6 @@
 from __future__ import unicode_literals, print_function
-from os import path
 import codecs
+import pathlib
 
 try:
     import ujson as json
@@ -12,19 +12,24 @@ from .parts_of_speech import NOUN, VERB, ADJ, PUNCT
 
 class Lemmatizer(object):
     @classmethod
-    def load(cls, via):
-        return cls.from_package(get_package(via))
-
-    @classmethod
-    def from_package(cls, pkg):
+    def load(cls, path):
         index = {}
         exc = {}
         for pos in ['adj', 'noun', 'verb']:
-            with pkg.open(('wordnet', 'index.%s' % pos), default=None) as file_:
-                index[pos] = read_index(file_) if file_ is not None else set()
-            with pkg.open(('wordnet', '%s.exc' % pos), default=None) as file_:
-                exc[pos] = read_exc(file_) if file_ is not None else {}
-        rules = pkg.load_json(('vocab', 'lemma_rules.json'), default={})
+            pos_index_path = path / 'wordnet' / 'index.{pos}'.format(pos=pos)
+            if pos_index_path.exists():
+                with pos_index_path.open() as file_:
+                    index[pos] = read_index(file_)
+            else:
+                index[pos] = set()
+            pos_exc_path = path / 'wordnet' / '{pos}.exc'.format(pos=pos)
+            if pos_exc_path.exists():
+                with pos_exc_path.open() as file_:
+                    exc[pos] = read_exc(file_)
+            else:
+                exc[pos] = {}
+        with (path / 'vocab' / 'lemma_rules.json').open() as file_:
+            rules = json.load(file_)
         return cls(index, exc, rules)
 
     def __init__(self, index, exceptions, rules):

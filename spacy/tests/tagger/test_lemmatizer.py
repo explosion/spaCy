@@ -11,29 +11,26 @@ import pytest
 
 
 @pytest.fixture
-def package():
-    data_dir = os.environ.get('SPACY_DATA')
-    if data_dir is None:
-        return util.get_package_by_name('en')
-    else:
-        return util.get_package(data_dir)
+def path():
+    return util.match_best_version('en', None,
+                os.environ.get('SPACY_DATA', util.get_data_path()))
 
 
 @pytest.fixture
-def lemmatizer(package):
-    return Lemmatizer.from_package(package)
+def lemmatizer(path):
+    return Lemmatizer.load(path)
 
 
-def test_read_index(package):
-    with package.open(('wordnet', 'index.noun')) as file_:
+def test_read_index(path):
+    with (path / 'wordnet' / 'index.noun').open() as file_:
         index = read_index(file_)
     assert 'man' in index
     assert 'plantes' not in index
     assert 'plant' in index
 
 
-def test_read_exc(package):
-    with package.open(('wordnet', 'verb.exc')) as file_:
+def test_read_exc(path):
+    with (path / 'wordnet' / 'verb.exc').open() as file_:
         exc = read_exc(file_)
     assert exc['was'] == ('be',)
 
