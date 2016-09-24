@@ -9,9 +9,9 @@ import six
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 try:
-  basestring
+    basestring
 except NameError:
-  basestring = str
+    basestring = str
 
 LANGUAGES = {}
 _data_path = pathlib.Path(__file__).parent / 'data'

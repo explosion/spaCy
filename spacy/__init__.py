@@ -8,9 +8,9 @@ from . import zh
 
 
 try:
-  basestring
+    basestring
 except NameError:
-  basestring = str
+    basestring = str
 
 
 
