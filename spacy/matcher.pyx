@@ -194,7 +194,7 @@ cdef class Matcher:
     cdef Pool mem
     cdef vector[TokenPatternC*] patterns
     cdef readonly Vocab vocab
-    cdef object _patterns
+    cdef public object _patterns
 
     @classmethod
     def load(cls, data_dir, Vocab vocab):
