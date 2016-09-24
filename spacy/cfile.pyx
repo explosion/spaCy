@@ -7,7 +7,8 @@ cdef class CFile:
             mode_str = mode.encode('ascii')
         else:
             mode_str = mode
-        loc = str(loc)
+        if hasattr(loc, 'as_posix'):
+            loc = loc.as_posix()
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
         self.fp = fopen(<char*>bytes_loc, mode_str)
         if self.fp == NULL:
