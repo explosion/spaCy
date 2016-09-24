@@ -73,7 +73,11 @@ cdef class Vocab:
         self.load_lexemes(path / 'vocab' / 'lexemes.bin')
 
         if vectors is True:
-            vectors = lambda self_: self_.load_vectors_from_bin_loc(path / 'vocab' / 'vec.bin')
+            vec_path = path / 'vocab' / 'vec.bin'
+            if vec_path.exists():
+                vectors = lambda self_: self_.load_vectors_from_bin_loc(vec_path)
+            else:
+                vectors = lambda self_: 0
         if vectors:
             self.vectors_length = vectors(self)
         return self
