@@ -206,7 +206,7 @@ def main(lang_id, lang_data_dir, corpora_dir, model_dir):
 
     tag_map = json.load((lang_data_dir / 'tag_map.json').open())
     setup_tokenizer(lang_data_dir, model_dir / 'tokenizer')
-    setup_vocab(get_lang_class(lang_id).default_lex_attrs(), tag_map, corpora_dir,
+    setup_vocab(get_lang_class(lang_id).Defaults.lex_attr_getters, tag_map, corpora_dir,
                 model_dir / 'vocab')
 
     if (lang_data_dir / 'gazetteer.json').exists():
