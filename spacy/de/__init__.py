@@ -3,22 +3,22 @@ from __future__ import unicode_literals, print_function
 from os import path
 
 from ..language import Language
-from ..vocab import Vocab
-from ..attrs import LANG
+from . import language_data
 
 
 class German(Language):
     lang = 'de'
     
     class Defaults(Language.Defaults):
-        def Vocab(self, vectors=None, lex_attr_getters=None):
-            if lex_attr_getters is None:
-                lex_attr_getters = dict(self.lex_attr_getters)
-            if vectors is None:
-                vectors = self.Vectors()
-            # set a dummy lemmatizer for now that simply returns the same string
-            # until the morphology is done for German
-            return Vocab.load(self.path, lex_attr_getters=lex_attr_getters, vectors=vectors,
-                              lemmatizer=False)
+        tokenizer_exceptions = dict(language_data.TOKENIZER_EXCEPTIONS)
+        
+        prefixes = tuple(language_data.TOKENIZER_PREFIXES)
+        
+        suffixes = tuple(language_data.TOKENIZER_SUFFIXES)
+        
+        infixes = tuple(language_data.TOKENIZER_INFIXES)
 
-        stop_words = set()
+        tag_map = dict(language_data.TAG_MAP)
+
+        stop_words = set(language_data.STOP_WORDS)
+

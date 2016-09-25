@@ -26,6 +26,7 @@ from . import orth
 from .syntax.ner import BiluoPushDown
 from .syntax.arc_eager import ArcEager
 from . import util
+from .lemmatizer import Lemmatizer
 
 from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD, PROB, LANG, IS_STOP
 
@@ -42,18 +43,39 @@ class BaseDefaults(object):
         self.lex_attr_getters[LANG] = lambda string: lang
         self.lex_attr_getters[IS_STOP] = lambda string: string in self.stop_words
 
+    def Lemmatizer(self):
+        return Lemmatizer.load(self.path)
+
     def Vectors(self):
         return True
-    
-    def Vocab(self, vectors=None, lex_attr_getters=None):
-        if lex_attr_getters is None:
-            lex_attr_getters = dict(self.lex_attr_getters)
-        if vectors is None:
-            vectors = self.Vectors()
-        return Vocab.load(self.path, lex_attr_getters=self.lex_attr_getters, vectors=vectors)
 
-    def Tokenizer(self, vocab):
-        return Tokenizer.load(self.path, vocab) 
+    def Vocab(self, lex_attr_getters=True, tag_map=True,
+              lemmatizer=True, serializer_freqs=True, vectors=True):
+        if lex_attr_getters is True:
+            lex_attr_getters = self.lex_attr_getters
+        if tag_map is True:
+            tag_map = self.tag_map
+        if lemmatizer is True:
+            lemmatizer = self.Lemmatizer()
+        if vectors is True:
+            vectors = self.Vectors()
+        return Vocab.load(self.path, lex_attr_getters=lex_attr_getters,
+                          tag_map=tag_map, lemmatizer=lemmatizer,
+                          serializer_freqs=serializer_freqs)
+
+    def Tokenizer(self, vocab, rules=None, prefix_search=None, suffix_search=None,
+                  infix_finditer=None):
+        if rules is None:
+            rules = self.tokenizer_exceptions
+        if prefix_search is None:
+            prefix_search  = util.compile_prefix_regex(self.prefixes).search
+        if suffix_search is None:
+            suffix_search  = util.compile_suffix_regex(self.suffixes).search
+        if infix_finditer is None:
+            infix_finditer = util.compile_infix_regex(self.infixes).finditer
+        return Tokenizer(vocab, rules=rules,
+                prefix_search=prefix_search, suffix_search=suffix_search,
+                infix_finditer=infix_finditer)
 
     def Tagger(self, vocab):
         return Tagger.load(self.path / 'pos', vocab)
