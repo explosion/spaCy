@@ -18,7 +18,7 @@ class German(Language):
                 vectors = self.Vectors()
             # set a dummy lemmatizer for now that simply returns the same string
             # until the morphology is done for German
-            return Vocab.load(self.path, get_lex_attr=lex_attr_getters, vectors=vectors,
+            return Vocab.load(self.path, lex_attr_getters=lex_attr_getters, vectors=vectors,
                               lemmatizer=False)
 
         stop_words = set()

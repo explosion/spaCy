@@ -45,12 +45,18 @@ cdef class Tokenizer:
         if rules is None:
             with (path / 'tokenizer' / 'specials.json').open() as file_:
                 rules = json.load(file_)
-        if prefix_search is None:
-            prefix_search = util.read_prefix_regex(path / 'tokenizer' / 'prefix.txt').search
-        if suffix_search is None:
-            suffix_search = util.read_suffix_regex(path / 'tokenizer' / 'suffix.txt').search
-        if infix_finditer is None:
-            infix_finditer = util.read_infix_regex(path / 'tokenizer' / 'infix.txt').finditer
+        if prefix_search in (None, True):
+            with (path / 'tokenizer' / 'prefix.txt').open() as file_:
+                entries = file_.read().split('\n')
+            prefix_search = util.compile_prefix_regex(entries).search
+        if suffix_search in (None, True):
+            with (path / 'tokenizer' / 'suffix.txt').open() as file_:
+                entries = file_.read().split('\n')
+            suffix_search = util.compile_suffix_regex(entries).search
+        if infix_finditer in (None, True):
+            with (path / 'tokenizer' / 'infix.txt').open() as file_:
+                entries = file_.read().split('\n')
+            infix_finditer = util.compile_infix_regex(entries).finditer
         return cls(vocab, rules, prefix_search, suffix_search, infix_finditer)
 
 
@@ -76,8 +82,8 @@ cdef class Tokenizer:
             self.add_special_case(chunk, substrings)
 
     def __reduce__(self):
-        args = (self.vocab, 
-                self._rules, 
+        args = (self.vocab,
+                self._rules,
                 self._prefix_re, 
                 self._suffix_re, 
                 self._infix_re)
@@ -297,7 +303,6 @@ cdef class Tokenizer:
 
     def find_suffix(self, unicode string):
         match = self.suffix_search(string)
-        print("Suffix", match, string)
         return (match.end() - match.start()) if match is not None else 0
 
     def _load_special_tokenization(self, special_cases):

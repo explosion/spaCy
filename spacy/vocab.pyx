@@ -26,6 +26,8 @@ from . import symbols
 from cymem.cymem cimport Address
 from .serialize.packer cimport Packer
 from .attrs cimport PROB, LANG
+from . import deprecated
+from . import util
 
 
 try:
@@ -47,25 +49,20 @@ cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
     @classmethod
-    def load(cls, path, get_lex_attr=None, vectors=True, lemmatizer=True):
-        if (path / 'vocab' / 'tag_map.json').exists():
+    def load(cls, path, lex_attr_getters=None, vectors=True, lemmatizer=True,
+             tag_map=True, serializer_freqs=None, **deprecated_kwargs): 
+        util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
+        if tag_map is True and (path / 'vocab' / 'tag_map.json').exists():
             with (path / 'vocab' / 'tag_map.json').open() as file_:
                 tag_map = json.load(file_)
-        else:
-            tag_map = {}
 
         if lemmatizer is True:
             lemmatizer = Lemmatizer.load(path)
-        elif not lemmatizer:
-            lemmatizer = lambda string, pos: set((string,))
-
-        if (path / 'vocab' / 'serializer.json').exists():
+        if serializer_freqs is True and (path / 'vocab' / 'serializer.json').exists():
             with (path / 'vocab' / 'serializer.json').open() as file_:
                 serializer_freqs = json.load(file_)
-        else:
-            serializer_freqs = {}
 
-        cdef Vocab self = cls(get_lex_attr=get_lex_attr, tag_map=tag_map,
+        cdef Vocab self = cls(lex_attr_getters=lex_attr_getters, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)
 
         with (path / 'vocab' / 'strings.json').open() as file_:
@@ -82,11 +79,16 @@ cdef class Vocab:
             self.vectors_length = vectors(self)
         return self
 
-    def __init__(self, get_lex_attr=None, tag_map=None, lemmatizer=None, serializer_freqs=None):
-        if tag_map is None:
-            tag_map = {}
-        if lemmatizer is None:
+    def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
+            serializer_freqs=None, **deprecated_kwargs):
+        util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
+        
+        lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
+        tag_map = tag_map if tag_map is not None else {}
+        if lemmatizer in (None, True, False):
             lemmatizer = Lemmatizer({}, {}, {})
+        serializer_freqs = serializer_freqs if serializer_freqs is not None else {}
+
         self.mem = Pool()
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
@@ -102,13 +104,12 @@ cdef class Vocab:
         for name in symbols.NAMES + list(sorted(tag_map.keys())):
             if name:
                 _ = self.strings[name]
-        self.get_lex_attr = get_lex_attr
+        self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.serializer_freqs = serializer_freqs
         
         self.length = 1
         self._serializer = None
-        print("Vocab lang", self.lang)
     
     property serializer:
         def __get__(self):
@@ -120,8 +121,8 @@ cdef class Vocab:
     property lang:
         def __get__(self):
             langfunc = None
-            if self.get_lex_attr:
-                langfunc = self.get_lex_attr.get(LANG, None)
+            if self.lex_attr_getters:
+                langfunc = self.lex_attr_getters.get(LANG, None)
             return langfunc('_') if langfunc else ''
 
     def __len__(self):
@@ -169,8 +170,8 @@ cdef class Vocab:
         lex.length = len(string)
         lex.id = self.length
         lex.vector = <float*>mem.alloc(self.vectors_length, sizeof(float))
-        if self.get_lex_attr is not None:
-            for attr, func in self.get_lex_attr.items():
+        if self.lex_attr_getters is not None:
+            for attr, func in self.lex_attr_getters.items():
                 value = func(string)
                 if isinstance(value, unicode):
                     value = self.strings[value]

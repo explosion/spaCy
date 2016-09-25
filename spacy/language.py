@@ -50,7 +50,7 @@ class BaseDefaults(object):
             lex_attr_getters = dict(self.lex_attr_getters)
         if vectors is None:
             vectors = self.Vectors()
-        return Vocab.load(self.path, get_lex_attr=self.lex_attr_getters, vectors=vectors)
+        return Vocab.load(self.path, lex_attr_getters=self.lex_attr_getters, vectors=vectors)
 
     def Tokenizer(self, vocab):
         return Tokenizer.load(self.path, vocab) 
@@ -84,7 +84,6 @@ class BaseDefaults(object):
 
     ner_labels = {0: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True}}
 
-
     stop_words = set()
 
     lex_attr_getters = {
@@ -112,7 +111,6 @@ class BaseDefaults(object):
         attrs.IS_STOP: lambda string: False,
         attrs.IS_OOV: lambda string: True
     }
-
 
 
 class Language(object):
@@ -270,6 +268,5 @@ class Language(object):
                     (HEAD, head_freqs)
                 ]))
 
-        
     def get_defaults(self, path):
         return self.Defaults(self.lang, path)

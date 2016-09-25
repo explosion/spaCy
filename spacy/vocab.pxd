@@ -31,7 +31,7 @@ cdef class Vocab:
     cdef readonly int length
     cdef public object _serializer
     cdef public object data_dir
-    cdef public object get_lex_attr
+    cdef public object lex_attr_getters
     cdef public object serializer_freqs
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL

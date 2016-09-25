@@ -40,6 +40,15 @@ def set_data_path(path):
     _data_path = path
 
 
+def or_(val1, val2):
+    if val1 is not None:
+        return val1
+    elif callable(val2):
+        return val2()
+    else:
+        return val2
+
+
 
 def match_best_version(target_name, target_version, path):
     path = path if not isinstance(path, basestring) else pathlib.Path(path)
@@ -80,26 +89,17 @@ def read_regex(path):
     return re.compile(expression)
 
 
-def read_prefix_regex(path):
-    path = path if not isinstance(path, basestring) else pathlib.Path(path)
-    with path.open() as file_:
-        entries = file_.read().split('\n')
+def compile_prefix_regex(entries):
     expression = '|'.join(['^' + re.escape(piece) for piece in entries if piece.strip()])
     return re.compile(expression)
 
 
-def read_suffix_regex(path):
-    path = path if not isinstance(path, basestring) else pathlib.Path(path)
-    with path.open() as file_:
-        entries = file_.read().split('\n')
+def compile_suffix_regex(entries):
     expression = '|'.join([piece + '$' for piece in entries if piece.strip()])
     return re.compile(expression)
 
 
-def read_infix_regex(path):
-    path = path if not isinstance(path, basestring) else pathlib.Path(path)
-    with path.open() as file_:
-        entries = file_.read().split('\n')
+def compile_infix_regex(entries):
     expression = '|'.join([piece for piece in entries if piece.strip()])
     return re.compile(expression)
 
@@ -126,3 +126,9 @@ def normalize_slice(length, start, stop, step=None):
 
 def utf8open(loc, mode='r'):
     return io.open(loc, mode, encoding='utf8')
+
+
+def check_renamed_kwargs(renamed, kwargs):
+    for old, new in renamed.items():
+        if old in kwargs:
+            raise TypeError("Keyword argument %s now renamed to %s" % (old, new))

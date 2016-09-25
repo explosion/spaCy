@@ -3,37 +3,57 @@ from __future__ import unicode_literals, print_function
 from os import path
 
 from ..language import Language
-
+from . import language_data
+from .. import util
+from ..lemmatizer import Lemmatizer
+from ..vocab import Vocab
+from ..tokenizer import Tokenizer
 
 
 class English(Language):
     lang = 'en'
 
     class Defaults(Language.Defaults):
+        def Vocab(self, lex_attr_getters=True, tag_map=True,
+                  lemmatizer=True, serializer_freqs=True, vectors=True):
+            if lex_attr_getters is True:
+                lex_attr_getters = self.lex_attr_getters
+            if tag_map is True:
+                tag_map = self.tag_map
+            if lemmatizer is True:
+                lemmatizer = self.Lemmatizer()
+            return Vocab.load(self.path, lex_attr_getters=lex_attr_getters,
+                              tag_map=tag_map, lemmatizer=lemmatizer,
+                              serializer_freqs=serializer_freqs)
+
+        def Tokenizer(self, vocab, rules=None, prefix_search=None, suffix_search=None,
+                infix_finditer=None):
+            if rules is None:
+                rules = self.tokenizer_exceptions
+            if prefix_search is None:
+                prefix_search  = util.compile_prefix_regex(self.prefixes).search
+            if suffix_search is None:
+                suffix_search  = util.compile_suffix_regex(self.suffixes).search
+            if infix_finditer is None:
+                infix_finditer = util.compile_infix_regex(self.infixes).finditer
+            return Tokenizer(vocab, rules=rules,
+                    prefix_search=prefix_search, suffix_search=suffix_search,
+                    infix_finditer=infix_finditer)
+
+        def Lemmatizer(self):
+            return Lemmatizer.load(self.path)
+            
         lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
 
-        # improved list from Stone, Denis, Kwantes (2010)
-        stop_words = set("""
-        a about above across after afterwards again against all almost alone along already also although always am among amongst amoungst amount an and another any anyhow anyone anything anyway anywhere are around as at back be
-        became because become becomes becoming been before beforehand behind being below beside besides between beyond bill both bottom but by call can
-        cannot cant co computer con could couldnt cry de describe
-        detail did didn do does doesn doing don done down due during
-        each eg eight either eleven else elsewhere empty enough etc even ever every everyone everything everywhere except few fifteen
-        fify fill find fire first five for former formerly forty found four from front full further get give go
-        had has hasnt have he hence her here hereafter hereby herein hereupon hers herself him himself his how however hundred i ie
-        if in inc indeed interest into is it its itself keep last latter latterly least less ltd
-        just
-        kg km
-        made make many may me meanwhile might mill mine more moreover most mostly move much must my myself name namely
-        neither never nevertheless next nine no nobody none noone nor not nothing now nowhere of off
-        often on once one only onto or other others otherwise our ours ourselves out over own part per
-        perhaps please put rather re
-        quite
-        rather really regarding
-        same say see seem seemed seeming seems serious several she should show side since sincere six sixty so some somehow someone something sometime sometimes somewhere still such system take ten
-        than that the their them themselves then thence there thereafter thereby therefore therein thereupon these they thick thin third this those though three through throughout thru thus to together too top toward towards twelve twenty two un under
-        until up unless upon us used using
-        various very very via
-        was we well were what whatever when whence whenever where whereafter whereas whereby wherein whereupon wherever whether which while whither who whoever whole whom whose why will with within without would yet you
-        your yours yourself yourselves
-        """.split())
+        tokenizer_exceptions = dict(language_data.TOKENIZER_EXCEPTIONS)
+        
+        prefixes = tuple(language_data.TOKENIZER_PREFIXES)
+        
+        suffixes = tuple(language_data.TOKENIZER_SUFFIXES)
+        
+        infixes = tuple(language_data.TOKENIZER_INFIXES)
+
+        tag_map = dict(language_data.TAG_MAP)
+
+        stop_words = set(language_data.STOP_WORDS)
+
