@@ -148,7 +148,7 @@ def _read_senses(loc):
     return lexicon
 
 
-def setup_vocab(get_lex_attr, tag_map, src_dir, dst_dir):
+def setup_vocab(lex_attr_getters, tag_map, src_dir, dst_dir):
     if not dst_dir.exists():
         dst_dir.mkdir()
 
@@ -157,7 +157,7 @@ def setup_vocab(get_lex_attr, tag_map, src_dir, dst_dir):
         write_binary_vectors(vectors_src.as_posix, (dst_dir / 'vec.bin').as_posix())
     else:
         print("Warning: Word vectors file not found")
-    vocab = Vocab(get_lex_attr=get_lex_attr, tag_map=tag_map)
+    vocab = Vocab(lex_attr_getters=lex_attr_getters, tag_map=tag_map)
     clusters = _read_clusters(src_dir / 'clusters.txt')
     probs, oov_prob = _read_probs(src_dir / 'words.sgt.prob')
     if not probs:
