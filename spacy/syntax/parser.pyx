@@ -89,6 +89,14 @@ cdef class Parser:
             model.load(str(path / 'model'))
         return cls(vocab, moves, model, **cfg)
 
+    @classmethod
+    def blank(cls, Vocab vocab, moves_class, **cfg):
+        moves = moves_class(vocab.strings, cfg.get('labels', {}))
+        templates = get_templates(cfg.get('features', tuple()))
+        model = ParserModel(templates)
+        return cls(vocab, moves, model, **cfg)
+
+
     def __init__(self, Vocab vocab, transition_system, ParserModel model, **cfg):
         self.moves = transition_system
         self.model = model

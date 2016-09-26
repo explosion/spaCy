@@ -3,6 +3,7 @@ import os
 
 import spacy
 
+
 @pytest.fixture(scope="session")
 def EN():
     return spacy.load("en")
@@ -19,7 +20,6 @@ def pytest_addoption(parser):
         help="include word vectors tests")
     parser.addoption("--slow", action="store_true",
         help="include slow tests")
-
 
 
 def pytest_runtest_setup(item):

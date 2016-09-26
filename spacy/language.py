@@ -29,6 +29,7 @@ from . import util
 from .lemmatizer import Lemmatizer
 
 from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD, PROB, LANG, IS_STOP
+from .syntax.parser import get_templates
 
 
 class BaseDefaults(object):
@@ -98,14 +99,14 @@ class BaseDefaults(object):
             return Parser.load(self.path / 'deps', vocab, ArcEager)
         else:
             return Parser.blank(vocab, ArcEager,
-                Parser.default_templates('%s-parser' % self.lang))
+                features=self.parser_features, labels=self.parser_labels)
 
     def Entity(self, vocab):
         if self.path and (self.path / 'ner').exists():
             return Parser.load(self.path / 'ner', vocab, BiluoPushDown)
         else:
             return Parser.blank(vocab, BiluoPushdown,
-                Parser.default_templates('%s-entity' % self.lang))
+                features=self.entity_features, labels=self.entity_labels)
 
     def Matcher(self, vocab):
         if self.path:
@@ -120,9 +121,13 @@ class BaseDefaults(object):
             nlp.parser,
             nlp.entity]
 
-    dep_labels = {0: {'ROOT': True}}
+    parser_labels = {0: {'ROOT': True}}
 
-    ner_labels = {0: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True}}
+    entity_labels = {0: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True}}
+
+    parser_features = get_templates('parser')
+    
+    entity_features = get_templates('ner')
 
     stop_words = set()
 
