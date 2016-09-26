@@ -80,8 +80,9 @@ cdef class ParserModel(AveragedPerceptron):
 cdef class Parser:
     @classmethod
     def load(cls, path, Vocab vocab, moves_class):
-        with (path / 'config.json').open() as file_:
-            cfg = json.load(file_)
+        if (path / 'config.json').exists():
+            with (path / 'config.json').open() as file_:
+                cfg = json.load(file_)
         moves = moves_class(vocab.strings, cfg['labels'])
         templates = get_templates(cfg['features'])
         model = ParserModel(templates)
