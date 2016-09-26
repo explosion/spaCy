@@ -105,7 +105,7 @@ class BaseDefaults(object):
         if self.path and (self.path / 'ner').exists():
             return Parser.load(self.path / 'ner', vocab, BiluoPushDown)
         else:
-            return Parser.blank(vocab, BiluoPushdown,
+            return Parser.blank(vocab, BiluoPushDown,
                 features=self.entity_features, labels=self.entity_labels)
 
     def Matcher(self, vocab):
