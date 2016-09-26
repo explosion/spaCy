@@ -96,14 +96,20 @@ class BaseDefaults(object):
 
     def Parser(self, vocab):
         if self.path:
-            return Parser.load(self.path / 'deps', vocab, ArcEager)
+            if (self.path / 'deps').exists():
+                return Parser.load(self.path / 'deps', vocab, ArcEager)
+            else:
+                return None
         else:
             return Parser.blank(vocab, ArcEager,
                 features=self.parser_features, labels=self.parser_labels)
 
     def Entity(self, vocab):
-        if self.path and (self.path / 'ner').exists():
-            return Parser.load(self.path / 'ner', vocab, BiluoPushDown)
+        if self.path:
+            if (self.path / 'ner').exists():
+                return Parser.load(self.path / 'ner', vocab, BiluoPushDown)
+            else:
+                return None
         else:
             return Parser.blank(vocab, BiluoPushDown,
                 features=self.entity_features, labels=self.entity_labels)
