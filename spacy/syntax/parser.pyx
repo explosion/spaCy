@@ -92,7 +92,10 @@ cdef class Parser:
     @classmethod
     def blank(cls, Vocab vocab, moves_class, **cfg):
         moves = moves_class(vocab.strings, cfg.get('labels', {}))
-        templates = get_templates(cfg.get('features', tuple()))
+        if 'features' in cfg:
+            templates = get_templates(cfg['features'])
+        else:
+            templates = tuple()
         model = ParserModel(templates)
         return cls(vocab, moves, model, **cfg)
 
