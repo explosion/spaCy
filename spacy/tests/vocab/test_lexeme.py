@@ -30,3 +30,13 @@ def test_lexeme_lt(en_vocab):
     assert noun < opera
     assert opera > noun
 
+
+def test_lexeme_hash(en_vocab):
+    '''Test that lexemes are hashable.'''
+    phantom = en_vocab['phantom']
+
+    opera = en_vocab['opera']
+
+    lexes = {phantom: phantom, opera: opera}
+    assert lexes[phantom].orth_ == 'phantom'
+    assert lexes[opera].orth_ == 'opera'

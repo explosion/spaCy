@@ -68,6 +68,9 @@ cdef class Lexeme:
         else:
             raise NotImplementedError(op)
 
+    def __hash__(self):
+        return self.c.orth
+
     def set_flag(self, attr_id_t flag_id, bint value):
         Lexeme.c_set_flag(self.c, flag_id, value)
     
