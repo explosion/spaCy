@@ -3,7 +3,7 @@ from spacy.parts_of_speech cimport NOUN, PROPN, PRON
 
 def english_noun_chunks(doc):
     labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj',
-              'attr', 'root']
+              'attr', 'ROOT', 'root']
     np_deps = [doc.vocab.strings[label] for label in labels]
     conj = doc.vocab.strings['conj']
     np_label = doc.vocab.strings['NP']
@@ -26,7 +26,7 @@ def english_noun_chunks(doc):
 # example: "eine Tasse Tee" (a cup (of) tea) returns "eine Tasse Tee" and not
 # just "eine Tasse", same for "das Thema Familie"
 def german_noun_chunks(doc):
-    labels = ['sb', 'oa', 'da', 'nk', 'mo', 'ag', 'root', 'cj', 'pd', 'og', 'app']
+    labels = ['sb', 'oa', 'da', 'nk', 'mo', 'ag', 'ROOT', 'root', 'cj', 'pd', 'og', 'app']
     np_label = doc.vocab.strings['NP']
     np_deps = set(doc.vocab.strings[label] for label in labels)
     close_app = doc.vocab.strings['nk']
