@@ -37,15 +37,15 @@ class Lemmatizer(object):
         self.exc = exceptions
         self.rules = rules
 
-    def __call__(self, string, pos, **morphology):
-        if pos == NOUN:
-            pos = 'noun'
-        elif pos == VERB:
-            pos = 'verb'
-        elif pos == ADJ:
-            pos = 'adj'
-        elif pos == PUNCT:
-            pos = 'punct'
+    def __call__(self, string, univ_pos, **morphology):
+        if univ_pos == NOUN:
+            univ_pos = 'noun'
+        elif univ_pos == VERB:
+            univ_pos = 'verb'
+        elif univ_pos == ADJ:
+            univ_pos = 'adj'
+        elif univ_pos == PUNCT:
+            univ_pos = 'punct'
         # See Issue #435 for example of where this logic is requied.
         if self.is_base_form(pos, **morphology):
             return set([string.lower()])
