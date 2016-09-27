@@ -45,6 +45,12 @@ def test_noun_lemmas(lemmatizer):
     assert do('axes') == set(['axis', 'axe', 'ax'])
 
 
+def test_base_form_dive(lemmatizer):
+    do = lemmatizer.noun
+    assert do('dive', number='sing') == set(['dive'])
+    assert do('dive', number='plur') == set(['diva'])
+
+
 def test_smart_quotes(lemmatizer):
     do = lemmatizer.punct
     assert do('“') == set(['"'])
