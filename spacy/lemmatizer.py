@@ -55,9 +55,10 @@ class Lemmatizer(object):
     def is_base_form(self, pos, **morphology):
         '''Check whether we're dealing with an uninflected paradigm, so we can
         avoid lemmatization entirely.'''
-        if pos == 'noun' and morphology.get('number') == 'sing' and len(morphology) == 1:
+        others = [key for key in morphology if key not in ('number', 'pos', 'verbform')]
+        if pos == 'noun' and morphology.get('number') == 'sing' and not others:
             return True
-        elif pos == 'verb' and morphology.get('verbform') == 'inf' and len(morphology) == 1:
+        elif pos == 'verb' and morphology.get('verbform') == 'inf' and not others:
             return True
         else:
             return False
