@@ -132,3 +132,15 @@ def test_head_setter(EN):
     assert a.left_edge == yesterday
     assert dog.left_edge == yesterday
     assert saw.left_edge == yesterday
+
+
+def test_sent_start(EN):
+    doc = EN.tokenizer(u'This is a sentence. This is another.')
+    assert not doc[0].sent_start
+    assert not doc[5].sent_start
+    doc[5].sent_start = True
+    assert doc[5].sent_start
+    assert not doc[0].sent_start
+    doc.is_parsed = True
+    assert len(list(doc.sents)) == 2
+
