@@ -109,9 +109,11 @@ cdef class Parser:
         cdef int nr_class = self.moves.n_moves
         cdef int nr_feat = self.model.nr_feat
         with nogil:
-            self.parseC(tokens.c, tokens.length, nr_feat, nr_class)
+            status = self.parseC(tokens.c, tokens.length, nr_feat, nr_class)
         # Check for KeyboardInterrupt etc. Untested
         PyErr_CheckSignals()
+        if status != 0:
+            raise ValueError("Error parsing doc: %s" % tokens.text)
         self.moves.finalize_doc(tokens)
 
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
