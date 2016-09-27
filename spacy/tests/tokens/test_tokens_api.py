@@ -166,6 +166,7 @@ def test_merge_hang():
 
 def test_sents_empty_string(EN):
     doc = EN(u'')
+    doc.is_parsed = True
     sents = list(doc.sents)
     assert len(sents) == 0
 
