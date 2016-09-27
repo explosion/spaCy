@@ -92,7 +92,7 @@ class BaseDefaults(object):
         if self.path:
             return Tagger.load(self.path / 'pos', vocab)
         else:
-            return Tagger.blank(vocab, Tagger.default_templates(self.lang))
+            return Tagger.blank(vocab, Tagger.default_templates())
 
     def Parser(self, vocab):
         if self.path:
