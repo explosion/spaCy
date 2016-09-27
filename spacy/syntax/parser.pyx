@@ -113,7 +113,7 @@ cdef class Parser:
         # Check for KeyboardInterrupt etc. Untested
         PyErr_CheckSignals()
         if status != 0:
-            raise ValueError("Error parsing doc: %s" % tokens.text)
+            raise ParserStateError(tokens)
         self.moves.finalize_doc(tokens)
 
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
@@ -136,8 +136,7 @@ cdef class Parser:
                         status = self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
                         if status != 0:
                             with gil:
-                                sent_str = queue[i].text
-                                raise ValueError("Error parsing doc: %s" % sent_str)
+                                raise ParserStateError(queue[i])
                 PyErr_CheckSignals()
                 for doc in queue:
                     self.moves.finalize_doc(doc)
@@ -149,8 +148,7 @@ cdef class Parser:
                 status = self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
                 if status != 0:
                     with gil:
-                        sent_str = queue[i].text
-                        raise ValueError("Error parsing doc: %s" % sent_str)
+                        raise ParserStateError(queue[i])
         PyErr_CheckSignals()
         for doc in queue:
             self.moves.finalize_doc(doc)
@@ -305,6 +303,17 @@ cdef class StepwiseState:
             self.parser.moves.finalize_state(self.stcls.c)
         self.doc.set_parse(self.stcls.c._sent)
         self.parser.moves.finalize_doc(self.doc)
+
+
+class ParserStateError(ValueError):
+    def __repr__(self):
+        raise ValueError(
+            "Error analysing doc -- no valid actions available. This should "
+            "never happen, so please report the error on the issue tracker. "
+            "Here's the thread to do so --- reopen it if it's closed:\n"
+            "https://github.com/spacy-io/spaCy/issues/429\n"
+            "Please include the text that the parser failed on, which is:\n"
+            "%s" % repr(self.args[0].text))
 
 
 cdef int _arg_max_clas(const weight_t* scores, int move, const Transition* actions,
