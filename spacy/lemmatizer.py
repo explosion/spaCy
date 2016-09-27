@@ -47,18 +47,20 @@ class Lemmatizer(object):
         elif univ_pos == PUNCT:
             univ_pos = 'punct'
         # See Issue #435 for example of where this logic is requied.
-        if self.is_base_form(pos, **morphology):
+        if self.is_base_form(univ_pos, **morphology):
             return set([string.lower()])
-        lemmas = lemmatize(string, self.index.get(pos, {}), self.exc.get(pos, {}), self.rules.get(pos, []))
+        lemmas = lemmatize(string, self.index.get(univ_pos, {}),
+                           self.exc.get(univ_pos, {}),
+                           self.rules.get(univ_pos, []))
         return lemmas
 
-    def is_base_form(self, pos, **morphology):
+    def is_base_form(self, univ_pos, **morphology):
         '''Check whether we're dealing with an uninflected paradigm, so we can
         avoid lemmatization entirely.'''
         others = [key for key in morphology if key not in ('number', 'pos', 'verbform')]
-        if pos == 'noun' and morphology.get('number') == 'sing' and not others:
+        if univ_pos == 'noun' and morphology.get('number') == 'sing' and not others:
             return True
-        elif pos == 'verb' and morphology.get('verbform') == 'inf' and not others:
+        elif univ_pos == 'verb' and morphology.get('verbform') == 'inf' and not others:
             return True
         else:
             return False
