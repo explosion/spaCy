@@ -96,15 +96,15 @@ cdef class Morphology:
                                                   self.tag_map.get(tag_str, {}))
                 self._cache.set(tag_id, orth, <void*>cached)
 
-    def lemmatize(self, const univ_pos_t pos, attr_t orth, **morphology):
+    def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, **morphology):
         cdef unicode py_string = self.strings[orth]
         if self.lemmatizer is None:
             return self.strings[py_string.lower()]
-        if pos != NOUN and pos != VERB and pos != ADJ and pos != PUNCT:
+        if univ_pos not in (NOUN, VERB, ADJ, PUNCT):
             return self.strings[py_string.lower()]
         cdef set lemma_strings
         cdef unicode lemma_string
-        lemma_strings = self.lemmatizer(py_string, pos, **morphology)
+        lemma_strings = self.lemmatizer(py_string, univ_pos, **morphology)
         lemma_string = sorted(lemma_strings)[0]
         lemma = self.strings[lemma_string]
         return lemma
