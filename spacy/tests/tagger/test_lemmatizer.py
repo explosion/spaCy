@@ -51,6 +51,11 @@ def test_base_form_dive(lemmatizer):
     assert do('dive', number='plur') == set(['diva'])
 
 
+def test_base_form_saw(lemmatizer):
+    do = lemmatizer.verb
+    assert do('saw', verbform='past') == set(['see'])
+
+
 def test_smart_quotes(lemmatizer):
     do = lemmatizer.punct
     assert do('“') == set(['"'])
