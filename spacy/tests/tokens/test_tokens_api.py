@@ -164,6 +164,12 @@ def test_merge_hang():
     doc.merge(8, 32, '', '', 'ORG')
 
 
+def test_sents_empty_string(EN):
+    doc = EN(u'')
+    sents = list(doc.sents)
+    assert len(sents) == 0
+
+
 @pytest.mark.models
 def test_runtime_error(EN):
     # Example that caused run-time error while parsing Reddit
@@ -199,4 +205,3 @@ def test_right_edge(EN):
 def test_has_vector(EN):
     doc = EN(u'''apple orange pear''')
     assert doc.has_vector
-

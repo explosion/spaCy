@@ -299,7 +299,8 @@ cdef class Doc:
             if self.c[i].sent_start:
                 yield Span(self, start, i)
                 start = i
-        yield Span(self, start, self.length)
+        if start != self.length:
+            yield Span(self, start, self.length)
 
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
         if self.length == self.max_length:
