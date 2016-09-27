@@ -37,7 +37,7 @@ class Lemmatizer(object):
         self.exc = exceptions
         self.rules = rules
 
-    def __call__(self, string, pos):
+    def __call__(self, string, pos, **morphology):
         if pos == NOUN:
             pos = 'noun'
         elif pos == VERB:
@@ -46,27 +46,41 @@ class Lemmatizer(object):
             pos = 'adj'
         elif pos == PUNCT:
             pos = 'punct'
+        # See Issue #435 for example of where this logic is requied.
+        if self.is_base_form(pos, **morphology):
+            return set([string.lower()])
         lemmas = lemmatize(string, self.index.get(pos, {}), self.exc.get(pos, {}), self.rules.get(pos, []))
         return lemmas
 
-    def noun(self, string):
-        return self(string, 'noun')
+    def is_base_form(self, pos, **morphology):
+        '''Check whether we're dealing with an uninflected paradigm, so we can
+        avoid lemmatization entirely.'''
+        if pos == 'noun' and morphology.get('number') == 'sing' and len(morphology) == 1:
+            return True
+        elif pos == 'verb' and morphology.get('verbform') == 'inf' and len(morphology) == 1:
+            return True
+        else:
+            return False
 
-    def verb(self, string):
-        return self(string, 'verb')
+    def noun(self, string, **morphology):
+        return self(string, 'noun', **morphology)
 
-    def adj(self, string):
-        return self(string, 'adj')
+    def verb(self, string, **morphology):
+        return self(string, 'verb', **morphology)
 
-    def punct(self, string):
-        return self(string, 'punct')
+    def adj(self, string, **morphology):
+        return self(string, 'adj', **morphology)
+
+    def punct(self, string, **morphology):
+        return self(string, 'punct', **morphology)
 
 
 def lemmatize(string, index, exceptions, rules):
     string = string.lower()
     forms = []
-    if string in index:
-        forms.append(string)
+    # TODO: Is this correct? See discussion in Issue #435.
+    #if string in index:
+    #    forms.append(string)
     forms.extend(exceptions.get(string, []))
     for old, new in rules:
         if string.endswith(old):
