@@ -38,8 +38,10 @@ cdef class Morphology:
         cdef int tag_id
         if isinstance(tag, basestring):
             tag_id = self.reverse_index[self.strings[tag]]
+            tag_str = tag
         else:
             tag_id = tag
+            tag_str = self.strings[tag]
         if tag_id >= self.n_tags:
             raise ValueError("Unknown tag: %s" % tag)
         # TODO: It's pretty arbitrary to put this logic here. I guess the justification
@@ -53,7 +55,8 @@ cdef class Morphology:
         if analysis is NULL:
             analysis = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
             analysis.tag = self.rich_tags[tag_id]
-            analysis.lemma = self.lemmatize(analysis.tag.pos, token.lex.orth)
+            analysis.lemma = self.lemmatize(analysis.tag.pos, token.lex.orth,
+                                            **self.tag_map.get(tag_str, {}))
             self._cache.set(tag_id, token.lex.orth, analysis)
         token.lemma = analysis.lemma
         token.pos = analysis.tag.pos
@@ -89,10 +92,11 @@ cdef class Morphology:
                     else:
                         self.assign_feature(&cached.tag.morph, name_str, value_str)
                 if cached.lemma == 0:
-                    cached.lemma = self.lemmatize(rich_tag.pos, orth)
+                    cached.lemma = self.lemmatize(rich_tag.pos, orth,
+                                                  self.tag_map.get(tag_str, {}))
                 self._cache.set(tag_id, orth, <void*>cached)
 
-    def lemmatize(self, const univ_pos_t pos, attr_t orth):
+    def lemmatize(self, const univ_pos_t pos, attr_t orth, **morphology):
         cdef unicode py_string = self.strings[orth]
         if self.lemmatizer is None:
             return self.strings[py_string.lower()]
@@ -100,7 +104,7 @@ cdef class Morphology:
             return self.strings[py_string.lower()]
         cdef set lemma_strings
         cdef unicode lemma_string
-        lemma_strings = self.lemmatizer(py_string, pos)
+        lemma_strings = self.lemmatizer(py_string, pos, **morphology)
         lemma_string = sorted(lemma_strings)[0]
         lemma = self.strings[lemma_string]
         return lemma
