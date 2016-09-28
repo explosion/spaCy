@@ -320,7 +320,7 @@ cdef class Doc:
                     # Set start as B
                     self.c[start].ent_iob = 3
 
-    property:
+    property noun_chunks:
         '''
         Yields base noun-phrase #[code Span] objects, if the document
         has been syntactically parsed. A base noun phrase, or 
