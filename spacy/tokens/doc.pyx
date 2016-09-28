@@ -59,10 +59,42 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
 
 cdef class Doc:
     """
-    Container class for annotated text.  Constructed via English.__call__ or
-    Tokenizer.__call__.
+    A sequence of `Token` objects. Access sentences and named entities, 
+    export annotations to numpy arrays, losslessly serialize to compressed 
+    binary strings.
+
+    Aside: Internals
+        The `Doc` object holds an array of `TokenC` structs. 
+        The Python-level `Token` and `Span` objects are views of this 
+        array, i.e. they don't own the data themselves.
+
+    Code: Construction 1
+        doc = nlp.tokenizer(u'Some text')
+
+    Code: Construction 2
+        doc = Doc(nlp.vocab, orths_and_spaces=[(u'Some', True), (u'text', True)])
+
     """
     def __init__(self, Vocab vocab, orths_and_spaces=None):
+        '''
+        Create a Doc object.
+
+        Aside: Implementation
+            This method of constructing a `Doc` object is usually only used 
+            for deserialization. Standard usage is to construct the document via 
+            a call to the language object.
+
+        Arguments:
+            vocab:
+                A Vocabulary object, which must match any models you want to 
+                use (e.g. tokenizer, parser, entity recognizer).
+
+            orths_and_spaces:
+                A list of tokens in the document as a sequence of 
+                `(orth_id, has_space)` tuples, where `orth_id` is an
+                integer and `has_space` is a boolean, indicating whether the
+                token has a trailing space.
+        '''
         self.vocab = vocab
         size = 20
         self.mem = Pool()
@@ -100,13 +132,23 @@ cdef class Doc:
                 # must be created.
                 self.push_back(
                     <const LexemeC*>self.vocab.get(self.mem, orth), has_space)
-
+    
     def __getitem__(self, object i):
-        """Get a Token or a Span from the Doc.
-
-        Returns:
-            token (Token) or span (Span):
-        """
+        '''
+        doc[i]
+            Get the Token object at position i, where i is an integer. 
+            Negative indexing is supported, and follows the usual Python 
+            semantics, i.e. doc[-2] is doc[len(doc) - 2].
+        doc[start : end]]
+            Get a `Span` object, starting at position `start`
+            and ending at position `end`, where `start` and
+            `end` are token indices. For instance,
+            `doc[2:5]` produces a span consisting of 
+            tokens 2, 3 and 4. Stepped slices (e.g. `doc[start : end : step]`) 
+            are not supported, as `Span` objects must be contiguous (cannot have gaps).
+            You can use negative indices and open-ended ranges, which have their
+            normal Python semantics.
+        '''
         if isinstance(i, slice):
             start, stop = normalize_slice(len(self), i.start, i.stop, i.step)
             return Span(self, start, stop, label=0)
@@ -120,11 +162,15 @@ cdef class Doc:
             return Token.cinit(self.vocab, &self.c[i], i, self)
 
     def __iter__(self):
-        """Iterate over the tokens.
-
-        Yields:
-            token (Token):
-        """
+        '''
+        for token in doc
+            Iterate over `Token`  objects, from which the annotations can 
+            be easily accessed. This is the main way of accessing Token 
+            objects, which are the main way annotations are accessed from 
+            Python. If faster-than-Python speeds are required, you can 
+            instead access the annotations as a numpy array, or access the 
+            underlying C data directly from Cython.
+        '''
         cdef int i
         for i in range(self.length):
             if self._py_tokens[i] is not None:
@@ -133,6 +179,10 @@ cdef class Doc:
                 yield Token.cinit(self.vocab, &self.c[i], i, self)
 
     def __len__(self):
+        '''
+        len(doc)
+            The number of tokens in the document.
+        '''
         return self.length
 
     def __unicode__(self):
@@ -161,7 +211,10 @@ cdef class Doc:
     property vector:
         def __get__(self):
             if self._vector is None:
-                self._vector = sum(t.vector for t in self) / len(self)
+                if len(self):
+                    self._vector = sum(t.vector for t in self) / len(self)
+                else:
+                    return numpy.zeros((self.vocab.vectors_length,), dtype='float32')
             return self._vector
 
         def __set__(self, value):
@@ -193,18 +246,22 @@ cdef class Doc:
         return u''.join(t.text_with_ws for t in self)
 
     property ents:
-        def __get__(self):
-            """Yields named-entity Span objects.
-        
-            Iterate over the span to get individual Token objects, or access the label:
+        '''
+        Yields named-entity `Span` objects, if the entity recognizer
+        has been applied to the document. Iterate over the span to get 
+        individual Token objects, or access the label:
 
-            >>> from spacy.en import English
-            >>> nlp = English()
-            >>> tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
-            >>> ents = list(tokens.ents)
-            >>> ents[0].label, ents[0].label_, ''.join(t.orth_ for t in ents[0])
-            (112504, u'PERSON', u'Best ') 
-            """
+        Example:
+            from spacy.en import English
+            nlp = English()
+            tokens = nlp(u'Mr. Best flew to New York on Saturday morning.')
+            ents = list(tokens.ents)
+            assert ents[0].label == 346
+            assert ents[0].label_ == 'PERSON'
+            assert ents[0].orth_ == 'Best'
+            assert ents[0].text == 'Mr. Best'
+        '''
+        def __get__(self):
             cdef int i
             cdef const TokenC* token
             cdef int start = -1
@@ -263,44 +320,59 @@ cdef class Doc:
                     # Set start as B
                     self.c[start].ent_iob = 3
 
-    @property
-    def noun_chunks(self):
-        """Yield spans for base noun phrases."""
-        if not self.is_parsed:
-            raise ValueError(
-                "noun_chunks requires the dependency parse, which "
-                "requires data to be installed. If you haven't done so, run: "
-                "\npython -m spacy.%s.download all\n"
-                "to install the data" % self.vocab.lang)
-        # Accumulate the result before beginning to iterate over it. This prevents
-        # the tokenisation from being changed out from under us during the iteration.
-        # The tricky thing here is that Span accepts its tokenisation changing,
-        # so it's okay once we have the Span objects. See Issue #375
-        spans = []
-        for start, end, label in self.noun_chunks_iterator(self):
-            spans.append(Span(self, start, end, label=label))
-        for span in spans:
-            yield span
+    property:
+        '''
+        Yields base noun-phrase #[code Span] objects, if the document
+        has been syntactically parsed. A base noun phrase, or 
+        'NP chunk', is a noun phrase that does not permit other NPs to 
+        be nested within it – so no NP-level coordination, no prepositional 
+        phrases, and no relative clauses. For example:
+        '''
+        def __get__(self):
+            if not self.is_parsed:
+                raise ValueError(
+                    "noun_chunks requires the dependency parse, which "
+                    "requires data to be installed. If you haven't done so, run: "
+                    "\npython -m spacy.%s.download all\n"
+                    "to install the data" % self.vocab.lang)
+            # Accumulate the result before beginning to iterate over it. This prevents
+            # the tokenisation from being changed out from under us during the iteration.
+            # The tricky thing here is that Span accepts its tokenisation changing,
+            # so it's okay once we have the Span objects. See Issue #375
+            spans = []
+            for start, end, label in self.noun_chunks_iterator(self):
+                spans.append(Span(self, start, end, label=label))
+            for span in spans:
+                yield span
 
-    @property
-    def sents(self):
+    property sents:
         """
-        Yield a list of sentence Span objects, calculated from the dependency parse.
+        Yields sentence `Span` objects. Sentence spans have no label.
+        To improve accuracy on informal texts, spaCy calculates sentence
+        boundaries from the syntactic dependency parse. If the parser is disabled,
+        `sents` iterator will be unavailable.
+
+        Example:
+            from spacy.en import English
+            nlp = English()
+            doc = nlp("This is a sentence. Here's another...")
+            assert [s.root.orth_ for s in doc.sents] == ["is", "'s"]
         """
-        if not self.is_parsed:
-            raise ValueError(
-                "sentence boundary detection requires the dependency parse, which "
-                "requires data to be installed. If you haven't done so, run: "
-                "\npython -m spacy.%s.download all\n"
-                "to install the data" % self.vocab.lang)
-        cdef int i
-        start = 0
-        for i in range(1, self.length):
-            if self.c[i].sent_start:
-                yield Span(self, start, i)
-                start = i
-        if start != self.length:
-            yield Span(self, start, self.length)
+        def __get__(self):
+            if not self.is_parsed:
+                raise ValueError(
+                    "sentence boundary detection requires the dependency parse, which "
+                    "requires data to be installed. If you haven't done so, run: "
+                    "\npython -m spacy.%s.download all\n"
+                    "to install the data" % self.vocab.lang)
+            cdef int i
+            start = 0
+            for i in range(1, self.length):
+                if self.c[i].sent_start:
+                    yield Span(self, start, i)
+                    start = i
+            if start != self.length:
+                yield Span(self, start, self.length)
 
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
         if self.length == self.max_length:
@@ -324,9 +396,17 @@ cdef class Doc:
 
     @cython.boundscheck(False)
     cpdef np.ndarray to_array(self, object py_attr_ids):
-        """Given a list of M attribute IDs, export the tokens to a numpy ndarray
-        of shape N*M, where N is the length of the sentence.
+        """
+        Given a list of M attribute IDs, export the tokens to a numpy 
+        `ndarray` of shape (N, M), where `N` is the length 
+        of the document. The values will be 32-bit integers.
 
+        Example:
+            from spacy import attrs
+            doc = nlp(text)
+            # All strings mapped to integers, for easy export to numpy
+            np_array = doc.to_array([attrs.LOWER, attrs.POS, attrs.ENT_TYPE, attrs.IS_ALPHA])
+                
         Arguments:
             attr_ids (list[int]): A list of attribute ID ints.
 
@@ -351,16 +431,22 @@ cdef class Doc:
         """Produce a dict of {attribute (int): count (ints)} frequencies, keyed
         by the values of the given attribute ID.
 
-        >>> from spacy.en import English, attrs
-        >>> nlp = English()
-        >>> tokens = nlp(u'apple apple orange banana')
-        >>> tokens.count_by(attrs.ORTH)
-        {12800L: 1, 11880L: 2, 7561L: 1}
-        >>> tokens.to_array([attrs.ORTH])
-        array([[11880],
-               [11880],
-               [ 7561],
-               [12800]])
+        Example:
+            from spacy.en import English, attrs
+            nlp = English()
+            tokens = nlp(u'apple apple orange banana')
+            tokens.count_by(attrs.ORTH)
+            # {12800L: 1, 11880L: 2, 7561L: 1}
+            tokens.to_array([attrs.ORTH])
+            # array([[11880],
+            #   [11880],
+            #   [ 7561],
+            #   [12800]])
+
+        Arguments:
+            attr_id
+                int
+                The attribute ID to key the counts.
         """
         cdef int i
         cdef attr_t attr
@@ -408,6 +494,8 @@ cdef class Doc:
             self.c[i] = parsed[i]
 
     def from_array(self, attrs, array):
+        '''Write to a `Doc` object, from an `(M, N)` array of attributes.
+        '''
         cdef int i, col
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.c
@@ -448,16 +536,34 @@ cdef class Doc:
         return self
 
     def to_bytes(self):
+        '''Serialize, producing a byte string.'''
         byte_string = self.vocab.serializer.pack(self)
         cdef uint32_t length = len(byte_string)
         return struct.pack('I', length) + byte_string
 
     def from_bytes(self, data):
+        '''Deserialize, loading from bytes.'''
         self.vocab.serializer.unpack_into(data[4:], self)
         return self
     
     @staticmethod
     def read_bytes(file_):
+        '''
+        A static method, used to read serialized #[code Doc] objects from 
+        a file. For example:
+
+        Example:
+            from spacy.tokens.doc import Doc
+            loc = 'test_serialize.bin'
+            with open(loc, 'wb') as file_:
+                file_.write(nlp(u'This is a document.').to_bytes())
+                file_.write(nlp(u'This is another.').to_bytes())
+            docs = []
+            with open(loc, 'rb') as file_:
+                for byte_string in Doc.read_bytes(file_):
+                    docs.append(Doc(nlp.vocab).from_bytes(byte_string))
+            assert len(docs) == 2
+        '''
         keep_reading = True
         while keep_reading:
             try:
@@ -472,8 +578,7 @@ cdef class Doc:
 
     def merge(self, int start_idx, int end_idx, unicode tag, unicode lemma,
               unicode ent_type):
-        """Merge a multi-word expression into a single token.  Currently
-        experimental; API is likely to change."""
+        """Merge a multi-word expression into a single token."""
         cdef int start = token_by_start(self.c, self.length, start_idx)
         if start == -1:
             return None
