@@ -198,7 +198,7 @@ cdef class Tagger:
                 self.model.set_scoresC(eg.c.scores,
                     eg.c.features, eg.c.nr_feat)
                 guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
-                self.vocab.morphology.assign_tag(&tokens.c[i], guess, mem=tokens.mem)
+                self.vocab.morphology.assign_tag(&tokens.c[i], guess)
                 eg.fill_scores(0, eg.c.nr_class)
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
