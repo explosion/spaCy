@@ -93,7 +93,6 @@ cdef class Vocab:
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
         self.strings = StringStore()
-        self.oov_stores = {}
         # Load strings in a special order, so that we have an onset number for
         # the vocabulary. This way, when words are added in order, the orth ID
         # is the frequency rank of the word, plus a certain offset. The structural
@@ -141,7 +140,7 @@ cdef class Vocab:
         lex = <LexemeC*>self._by_hash.get(key)
         cdef size_t addr
         if lex != NULL:
-            if (string not in self.strings) or (lex.orth != self.strings[string]):
+            if lex.orth != self.strings[string]:
                 raise LookupError.mismatched_strings(
                     lex.orth, self.strings[string], self.strings[lex.orth], string)
             return lex
@@ -164,10 +163,10 @@ cdef class Vocab:
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL:
         cdef hash_t key
         cdef bint is_oov = mem is not self.mem
-        if len(string) < 3 or not is_oov:
+        if len(string) < 3:
             mem = self.mem
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        lex.orth = self.strings.intern(string, mem=mem)
+        lex.orth = self.strings[string]
         lex.length = len(string)
         lex.id = self.length
         lex.vector = <float*>mem.alloc(self.vectors_length, sizeof(float))
@@ -175,7 +174,7 @@ cdef class Vocab:
             for attr, func in self.lex_attr_getters.items():
                 value = func(string)
                 if isinstance(value, unicode):
-                    value = self.strings.intern(value)
+                    value = self.strings[value]
                 if attr == PROB:
                     lex.prob = value
                 else:
@@ -206,8 +205,7 @@ cdef class Vocab:
 
     def __getitem__(self,  id_or_string):
         '''Retrieve a lexeme, given an int ID or a unicode string.  If a previously
-        unseen unicode string is given, a new lexeme is created and stored, and
-        the string is interned in the vocabulary.
+        unseen unicode string is given, a new lexeme is created and stored.
 
         Args:
             id_or_string (int or unicode):
@@ -222,7 +220,7 @@ cdef class Vocab:
         '''
         cdef attr_t orth
         if type(id_or_string) == unicode:
-            orth = self.strings.intern(id_or_string)
+            orth = self.strings[id_or_string]
         else:
             orth = id_or_string
         return Lexeme(self, orth)
@@ -238,7 +236,7 @@ cdef class Vocab:
             if 'pos' in props:
                 self.morphology.assign_tag(token, props['pos'])
             if 'L' in props:
-                tokens[i].lemma = self.strings.intern(props['L'])
+                tokens[i].lemma = self.strings[props['L']]
             for feature, value in props.get('morph', {}).items():
                 self.morphology.assign_feature(&token.morph, feature, value)
         return tokens

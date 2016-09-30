@@ -1,4 +1,3 @@
-# cython: infer_types=True
 from __future__ import unicode_literals, absolute_import
 
 cimport cython
@@ -7,8 +6,7 @@ from libc.stdint cimport uint64_t
 
 from murmurhash.mrmr cimport hash64
 
-from preshed.maps cimport map_init, map_set, map_get, map_iter
-from preshed.maps cimport MapStruct
+from preshed.maps cimport map_iter, key_t
 
 from .typedefs cimport hash_t
 
@@ -18,17 +16,13 @@ except ImportError:
     import json
 
 
-DEF UINT64_MAX = 18446744073709551615
-
-
 cpdef hash_t hash_string(unicode string) except 0:
-    byte_string = string.encode('utf8')
-    cdef unsigned char* chars = byte_string
-    return _hash_utf8(chars, len(byte_string))
+    chars = string.encode('utf8')
+    return _hash_utf8(chars, len(chars))
 
 
-cdef hash_t _hash_utf8(const unsigned char* utf8_string, int length) nogil:
-    return hash64(<void*>utf8_string, length, 1)
+cdef hash_t _hash_utf8(char* utf8_string, int length):
+    return hash64(utf8_string, length, 1)
 
 
 cdef unicode _decode(const Utf8Str* string):
@@ -80,7 +74,6 @@ cdef class StringStore:
     def __init__(self, strings=None):
         self.mem = Pool()
         self._map = PreshMap()
-        self.oov_maps = PreshMap()
         self._resize_at = 10000
         self.c = <Utf8Str*>self.mem.alloc(self._resize_at, sizeof(Utf8Str))
         self.size = 1
@@ -115,21 +108,14 @@ cdef class StringStore:
             byte_string = <bytes>string_or_id
             if len(byte_string) == 0:
                 return 0
-            key = _hash_utf8(byte_string, len(byte_string))
-            utf8str = <Utf8Str*>self._map.get(key)
-            if utf8str is NULL:
-                raise KeyError(byte_string)
-            else:
-                return utf8str - self.c
+            utf8str = self._intern_utf8(byte_string, len(byte_string))
+            return utf8str - self.c
         elif isinstance(string_or_id, unicode):
             if len(<unicode>string_or_id) == 0:
                 return 0
-            key = hash_string(string_or_id)
-            utf8str = <Utf8Str*>self._map.get(key)
-            if utf8str is NULL:
-                raise KeyError(string_or_id)
-            else:
-                return utf8str - self.c
+            byte_string = (<unicode>string_or_id).encode('utf8')
+            utf8str = self._intern_utf8(byte_string, len(byte_string))
+            return utf8str - self.c
         else:
             raise TypeError(type(string_or_id))
 
@@ -145,8 +131,6 @@ cdef class StringStore:
             yield _decode(&self.c[i]) if i > 0 else u''
 
     def __reduce__(self):
-        # TODO: Is it problematic that we don't save the OOV strings?
-        # Probably yes? We're not restoring all the state...
         strings = [""]
         for i in range(1, self.size):
             string = &self.c[i]
@@ -154,77 +138,27 @@ cdef class StringStore:
             strings.append(py_string)
         return (StringStore, (strings,), None, None, None)
 
-    cdef hash_t intern(self, unicode py_string, Pool mem=None) except UINT64_MAX:
-        if mem is None:
-            mem = self.mem
-        cdef hash_t map_key = id(mem)
+    cdef const Utf8Str* intern(self, unicode py_string) except NULL:
+        # 0 means missing, but we don't bother offsetting the index.
         cdef bytes byte_string = py_string.encode('utf8')
-        cdef hash_t key = _hash_utf8(byte_string, len(byte_string))
-        cdef const Utf8Str* utf8str = <Utf8Str*>self._map.get(key)
-        cdef hash_t map_id = id(mem)
-        cdef MapStruct* oov_map
-        if utf8str is not NULL:
-            return utf8str - self.c
-        elif mem is None or mem is self.mem:
-            utf8str = self._intern_utf8(byte_string, len(byte_string))
-            return utf8str - self.c
-        else:
-            new_utf8str = <Utf8Str*>mem.alloc(sizeof(Utf8Str), 1)
-            oov_map = <MapStruct*>self.oov_maps.get(map_key)
-            if oov_map is NULL:
-                oov_map = <MapStruct*>mem.alloc(sizeof(MapStruct), 1)
-                map_init(mem, oov_map, 16)
-                self.oov_maps.set(id(mem), oov_map)
-            new_utf8str[0] = _allocate(mem, byte_string, len(byte_string))
-            map_set(mem, oov_map, key, new_utf8str)
-            return key
-
-    def decode_int(self, hash_t int_, Pool mem=None):
-        cdef hash_t map_key
-        if int_ == 0:
-            return u''
-        elif int_ < <uint64_t>self.size:
-            return _decode(&self.c[int_])
-        elif mem is None or mem is self.mem:
-            raise IndexError(int_)
-        else:
-            map_key = id(mem)
-            oov_map = <MapStruct*>self.oov_maps.get(map_key)
-            if oov_map is NULL:
-                raise IndexError(
-                    "Trying to decode integer into string, but it's not in " +
-                    "the main store, and the memory pool hasn't been seen before.\n" +
-                    ("int_ == %d\n" % int_) + 
-                    "id(mem) == %d" % map_key) 
-            else:
-                utf8str = <const Utf8Str*>map_get(oov_map, int_)
-                if utf8str is NULL:
-                    raise IndexError(
-                        "Trying to decode integer into string, but it's not in " +
-                        "the main store. The integer was also not found in the " +
-                        "indicated auxiliary pool " +
-                        "(which is usually specific to a document)." +
-                        ("int_ == %d\n" % int_) +
-                        "id(mem) == %d" % map_key)
-                return _decode(utf8str)
+        return self._intern_utf8(byte_string, len(byte_string))
 
     @cython.final
-    cdef const Utf8Str* _intern_utf8(self, const unsigned char* utf8_string,
-            int length) except NULL:
+    cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length) except NULL:
+        # 0 means missing, but we don't bother offsetting the index.
+        cdef hash_t key = _hash_utf8(utf8_string, length)
+        value = <Utf8Str*>self._map.get(key)
+        if value is not NULL:
+            return value
+
         if self.size == self._resize_at:
             self._realloc()
-        key = _hash_utf8(utf8_string, length)
-        self.c[self.size] = _allocate(self.mem, utf8_string, length)
+        self.c[self.size] = _allocate(self.mem, <unsigned char*>utf8_string, length)
         self._map.set(key, <void*>&self.c[self.size])
         self.size += 1
         return &self.c[self.size-1]
 
-    cpdef int remove_oov_map(self, Pool mem) except -1:
-        cdef hash_t key = id(mem)
-        self._maps.pop(key)
-
     def dump(self, file_):
-        # TODO: Is it problematic that we don't save the OOV strings? No, right?
         string_data = json.dumps(list(self))
         if not isinstance(string_data, unicode):
             string_data = string_data.decode('utf8')
@@ -246,8 +180,8 @@ cdef class StringStore:
         # we resize our array. So, first we remap to indices, then we resize,
         # then we can acquire the new pointers.
         cdef Pool tmp_mem = Pool()
-        keys = <hash_t*>tmp_mem.alloc(self.size, sizeof(hash_t))
-        cdef hash_t key
+        keys = <key_t*>tmp_mem.alloc(self.size, sizeof(key_t))
+        cdef key_t key
         cdef void* value
         cdef const Utf8Str ptr
         cdef int i = 0
