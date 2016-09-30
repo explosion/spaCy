@@ -1,3 +1,5 @@
+from __future__ import unicode_literals
+
 IDS = {
     "": NIL,
     "IS_ALPHA": IS_ALPHA,
