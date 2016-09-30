@@ -116,11 +116,11 @@ cdef class Token:
 
     property text_with_ws:
         def __get__(self):
-            cdef unicode orth = self.vocab.strings[self.c.lex.orth]
+            orth_ = self.orth_
             if self.c.spacy:
-                return orth + u' '
+                return orth_ + u' '
             else:
-                return orth
+                return orth_
 
     property prob:
         def __get__(self):
@@ -403,7 +403,7 @@ cdef class Token:
 
     property ent_type_:
         def __get__(self):
-            return self.vocab.strings[self.c.ent_type]
+            return self.vocab.strings.decode_int(self.c.ent_type, mem=self.mem)
 
     property ent_iob_:
         def __get__(self):
@@ -424,7 +424,7 @@ cdef class Token:
     property ent_id_:
         '''A (string) entity ID. Usually assigned by patterns in the Matcher.'''
         def __get__(self):
-            return self.vocab.strings[self.c.ent_id]
+            return self.vocab.strings.decode_int(self.c.ent_id, mem=self.mem)
 
         def __set__(self, hash_t key):
             # TODO
@@ -438,35 +438,35 @@ cdef class Token:
 
     property orth_:
         def __get__(self):
-            return self.vocab.strings[self.c.lex.orth]
+            return self.vocab.strings.decode_int(self.c.lex.orth, mem=self.mem)
 
     property lower_:
         def __get__(self):
-            return self.vocab.strings[self.c.lex.lower]
+            return self.vocab.strings.decode_int(self.c.lex.lower, mem=self.mem)
 
     property norm_:
         def __get__(self):
-            return self.vocab.strings[self.c.lex.norm]
+            return self.vocab.strings.decode_int(self.c.lex.norm, mem=self.mem)
 
     property shape_:
         def __get__(self):
-            return self.vocab.strings[self.c.lex.shape]
+            return self.vocab.strings.decode_int(self.c.lex.shape, mem=self.mem)
 
     property prefix_:
         def __get__(self):
-            return self.vocab.strings[self.c.lex.prefix]
+            return self.vocab.strings.decode_int(self.c.lex.prefix, mem=self.mem)
 
     property suffix_:
         def __get__(self):
-            return self.vocab.strings[self.c.lex.suffix]
+            return self.vocab.strings.decode_int(self.c.lex.suffix, mem=self.mem)
 
     property lang_:
         def __get__(self):
-            return self.vocab.strings[self.c.lex.lang]
+            return self.vocab.strings.decode_int(self.c.lex.lang, mem=self.mem)
 
     property lemma_:
         def __get__(self):
-            return self.vocab.strings[self.c.lemma]
+            return self.vocab.strings.decode_int(self.c.lemma, mem=self.mem)
 
     property pos_:
         def __get__(self):
@@ -474,13 +474,13 @@ cdef class Token:
 
     property tag_:
         def __get__(self):
-            return self.vocab.strings[self.c.tag]
+            return self.vocab.strings.decode_int(self.c.tag, mem=self.mem)
 
     property dep_:
         def __get__(self):
-            return self.vocab.strings[self.c.dep]
+            return self.vocab.decode_int(self.c.dep, mem=self.mem)
         def __set__(self, unicode label):
-            self.c.dep = self.vocab.strings[label]
+            self.c.dep = self.vocab.strings.intern(label, mem=self.mem)
 
     property is_oov:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_OOV)
