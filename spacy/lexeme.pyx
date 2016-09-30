@@ -1,4 +1,7 @@
 # cython: embedsignature=True
+# cython: infer_types=True
+
+from __future__ import unicode_literals
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
