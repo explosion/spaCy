@@ -1,0 +1,118 @@
+include ../../_includes/_mixins
+
++lead spaCy assumes by default that your data is raw text. However, sometimes your data is partially annotated, e.g. with pre-existing tokenization, part-of-speech tags, etc. This tutorial explains how to use these annotations in spaCy.
+
++h2 Quick Reference
+
++table(['Description', 'Usage'], 'code')
+    +row
+        +cell Use pre-existing tokenization
+        +cell #[code.lang-python doc = Doc(nlp.vocab, [('A', True), ('token', False), ('!', False)])]
+    +row
+        +cell Use pre-existing tokenization (deprecated)
+        +cell #[code.lang-python doc = nlp.tokenizer.tokens_from_list([u'A', u'token', u'!'])]
+ 
+    +row
+        +cell Assign pre-existing tags
+        +cell #[code.lang-python nlp.tagger.tag_from_strings(doc, ['DT', 'NN'])]
+    +row
+        +cell Assign named entity annotations from an array
+        +cell #[code.lang-python doc.from_array([ENT_TYPE, ENT_IOB], values)]
+    +row
+        +cell Assign dependency parse annotations from an array
+        +cell #[code.lang-python doc.from_array([HEAD, DEP], values)]
+
++h2 Examples
+
++code('python', 'Tokenization').
+    import spacy
+
+    nlp = spacy.load('en')
+
+    tokens = [u'A', u'list', u'of', u'strings', u'.']
+
+    doc = nlp.tokenizer.tokens_from_list(tokens)
+
+    assert len(doc) == len(tokens)
+    # With this method, we don't get to specify how the corresponding string
+    # would be spaced, so we have to assume a space before every token.
+    assert doc.text == u'A list of strings .'
+
++code('python', 'Tokenization').
+    import spacy
+    from spacy.tokens import Doc
+
+    nlp = spacy.load('en')
+
+    tokens = [u'A', u'list', u'of', u'strings', u'.']
+    has_space = [True, True, True, False, False]
+
+    doc = Doc(nlp.vocab, orth_and_spaces=zip(tokens, has_space))
+
+    assert len(doc) == len(tokens)
+    # Spacing is correct, given by boolean values above.
+    assert doc.text == u'A list of strings.'
+    # Here's how it would look with different boolean values.
+    tokens = [u'A', u'list', u'of', u'strings', u'.']
+    has_space = [False, True, True, True, False]
+    doc = Doc(nlp.vocab, orth_and_spaces=zip(tokens, has_space))
+    assert doc.text == u'Alist of strings .'
+
++code('python', 'POS Tags').
+    import spacy
+
+    nlp = spacy.load('en')
+
+    # Tokenize a string into a Doc, but don't apply the whole pipeline ---
+    # that is, don't predict the part-of-speech tags, syntactic parse, named
+    # entities, etc.
+    doc = nlp.tokenizer(u'A unicode string, untokenized.')
+    nlp.tagger.tag_from_strings([u'DT', u'JJ', u'NN', u',', u'VBN', u'.'])
+    # Now predict dependency parse and named entities. Note that if you assign
+    # tags in a way that's very unlike the behaviour of the POS tagger model,
+    # the subsequent models may perform worse. These models use the POS tags
+    # as features, so if you give them unexpected tags, you may be giving them
+    # run-time conditions that don't resemble the training data.
+    nlp.parser(doc)
+    nlp.entity(doc)
+
++code('python', 'Dependency Parse').
+    import spacy
+    from spacy.attrs import HEAD, DEP
+    from spacy.symbols import det, nmod, root, punct
+    from numpy import ndarray
+
+    nlp = spacy.load('en')
+
+    # Get the Doc object, and apply the pipeline except the dependency parser
+    doc = nlp(u'A unicode string.', parse=False)
+
+    columns = [HEAD, DEP]
+    values = ndarray(shape=(len(columns), len(doc)), dtype='int32')
+    # Syntactic parse specified as head offsets
+    heads = [2, 1, 0, -1]
+    # Integer IDs for the dependency labels. See the parse in the displaCy
+    # demo at spacy.io/demos/displacy
+    labels = [det, nmod, root, punct]
+    values[0] = heads
+    values[1] = labels
+    doc.from_array(columns, values)
+
++code('python', 'Named Entities').
+    import spacy
+    from spacy.attrs import ENT_TYPE, ENT_IOB
+    from spacy.symbols import PERSON, ORG
+    from numpy import ndarray
+
+    nlp = spacy.load('en')
+
+    # Get the Doc object, and apply the pipeline except the entity recognizer
+    doc = nlp(u'My name is Matt.', entity=False)
+
+    columns = [ENT_TYPE, ENT_IOB]
+    values = ndarray(shape=(len(columns), len(doc)), dtype='int32')
+    # IOB values are 0=missing, 1=I, 2=O, 3=B 
+    values[0] = [1, 1, 1, 3, 1]
+    values[1] = [0, 0, 0, PERSON, 0]
+    doc.from_array(columns, values)
+

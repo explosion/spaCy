@@ -3,6 +3,7 @@ include _includes/_mixins
 - var _section = current.path[0]
 - var _site = current.source
 
+- var is_blog = (_section == 'blog')
 - var is_article = ( (_section == 'blog' && _site != 'index') || template == 'article')
 - var has_asides = (is_article || (_section == 'docs' && asides != false) || asides)
 
@@ -14,6 +15,8 @@ doctype html
 
 html(lang="en")
     !=partial("_includes/_head", { _section: _section })
+    link(href='/assets/css/' + ((is_blog) ? stylesheets.blog : stylesheets.default) + '.css' rel='stylesheet')
+    link(href='/' + feed rel='alternate' type='application/rss+xml' title='RSS')
 
     body.body
         !=partial('_includes/_nav', { _section: _section, _site: _site })
@@ -36,7 +39,7 @@ html(lang="en")
                     !=yield
 
         !=partial('_includes/_footer')
-
+        
         each script in scripts
             script(src='/assets/js/' + script + '.js', type='text/javascript')
 

@@ -2,10 +2,11 @@
 // ============================================================================
 
 $alert-background   : color(white)
-$alert-border       : 1px solid
+$alert-border       : 2px solid
 $alert-close-size   : 2.25rem
 $alert-color        : color($theme)
 $alert-padding      : 1.5rem 2rem
+$alert-shadow       : 0 0 10px rgba(color(black), 0.25)
 
 
 //  Style
@@ -20,6 +21,7 @@ $alert-padding      : 1.5rem 2rem
     align-items: center
     background: $alert-background
     border-top: $alert-border
+    box-shadow: $alert-shadow
     color: $alert-color
     display: flex
     justify-content: space-between

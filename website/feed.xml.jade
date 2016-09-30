@@ -12,19 +12,19 @@ rss(version='2.0', xmlns:atom='http://www.w3.org/2005/Atom')
         description= description
         atom:link(href='#{ url }/feed.xml', rel='self', type='application/rss+xml')
         for post, slug in public.blog._data
-            if post.published != false
+            if post.published != false && slug != 'index'
                 item
-                title=post.title
-                description 
-                    | <![CDATA[ 
-                    if post.image
-                        p: img(src=url + '/blog/img/' + post.image.file)
+                    title=post.title
+                    description 
+                        | <![CDATA[ 
+                        if post.image
+                            p: img(src=url + '/blog/img/' + post.image.file)
 
-                    !=partial('blog/' + slug)
-                    | ]]>
+                        !=partial('blog/' + slug)
+                        | ]]>
 
-                if post.date
-                    pubDate=convertPubDate(post.date)
+                    if post.date
+                        pubDate=convertPubDate(post.date)
 
-                link #{ url }/blog/#{ slug }
-                guid(isPermaLink='true') #{ url }/blog/#{ slug }
+                    link #{ url }/blog/#{ slug }
+                    guid(isPermaLink='true') #{ url }/blog/#{ slug }

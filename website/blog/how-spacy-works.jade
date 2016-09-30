@@ -74,15 +74,15 @@ p The algorithm then proceeds roughly like this (consider this like pseudo-code;
             else&#58;
                 break
 
-p This procedure splits off tokens from the start and end of the string, at each point checking whether the remaining string is in our special-cases table.  If it is, we stop splitting, and return the tokenization at that point.  
+p This procedure splits off tokens from the start and end of the string, at each point checking whether the remaining string is in our special-cases table.  If it is, we stop splitting, and return the tokenization at that point.
 
 p The advantage of this design is that the prefixes, suffixes and special-cases can be declared separately, in easy-to-understand files.  If a new entry is added to the special-cases, you can be sure that it won't have some unforeseen consequence to a complicated regular-expression grammar.
 
 +h3("coupling-tokenizer-lexicon") Coupling the Tokenizer and Lexicon
 
-p As mentioned above, the tokenizer is designed to support easy caching.  If all we were caching were the matched substrings, this would not be so advantageous. Instead, what we do is create a struct which houses all of our lexical features, and cache *that*. The tokens are then simply pointers to these rich lexical types.  
+p As mentioned above, the tokenizer is designed to support easy caching.  If all we were caching were the matched substrings, this would not be so advantageous. Instead, what we do is create a struct which houses all of our lexical features, and cache *that*. The tokens are then simply pointers to these rich lexical types.
 
-p In a sample of text, vocabulary size grows exponentially slower than word count.  So any computations we can perform over the vocabulary and apply to the word count are efficient.  
+p In a sample of text, vocabulary size grows exponentially slower than word count.  So any computations we can perform over the vocabulary and apply to the word count are efficient.
 
 +h3("part-of-speech-tagger") Part-of-speech Tagger
 

@@ -169,9 +169,9 @@ mixin icon(type, ...style)
     alt     - [string] descriptive alt text (optional)
     caption - [string] image caption (optional)
 
-mixin image(file, alt, caption)
+mixin image(file, alt, caption, size)
     figure.image-container&attributes(attributes)
-        img(src='img/' + file alt=alt)
+        img(src='img/' + file alt=alt class=(size) ? 'image--' + size : '')
 
         if caption
             figcaption.text-caption=caption
@@ -306,7 +306,8 @@ mixin infobox(label)
 
 mixin alert(button)
     .alert&attributes(attributes)
-        block
+        span
+            block
 
         if button
             +form-button('primary', 'small')(onclick='this.parentNode.parentNode.removeChild(this.parentNode);')=button
