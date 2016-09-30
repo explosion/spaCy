@@ -132,6 +132,12 @@ cdef class Doc:
                 # must be created.
                 self.push_back(
                     <const LexemeC*>self.vocab.get(self.mem, orth), has_space)
+
+    def __dealloc__(self):
+        if self.mem is not None \
+        and self.vocab is not None \
+        and self.vocab.strings is not None:
+            self.vocab.strings.remove_oov_map(self.mem)
     
     def __getitem__(self, object i):
         '''
@@ -600,14 +606,14 @@ cdef class Doc:
         if tag in self.vocab.morphology.tag_map:
             self.vocab.morphology.assign_tag(token, tag)
         else:
-            token.tag = self.vocab.strings[tag]
-        token.lemma = self.vocab.strings[lemma]
+            token.tag = self.vocab.strings.intern(tag)
+        token.lemma = self.vocab.strings.intern(lemma, mem=self.mem)
         if ent_type == 'O':
             token.ent_iob = 2
             token.ent_type = 0
         else:
             token.ent_iob = 3
-            token.ent_type = self.vocab.strings[ent_type]
+            token.ent_type = self.vocab.strings.intern(ent_type)
         # Begin by setting all the head indices to absolute token positions
         # This is easier to work with for now than the offsets
         # Before thinking of something simpler, beware the case where a dependency
