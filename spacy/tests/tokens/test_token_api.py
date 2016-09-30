@@ -44,7 +44,6 @@ def test_str_builtin(EN):
     assert str(tokens[1]) == u'two'
 
 
-@pytest.mark.models
 def test_is_properties(EN):
     Hi, comma, my, email, is_, addr = EN(u'Hi, my email is test@me.com')
     assert Hi.is_title

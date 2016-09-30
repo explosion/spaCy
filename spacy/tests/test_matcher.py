@@ -30,7 +30,6 @@ def test_no_match(matcher):
 
 def test_match_start(matcher):
     doc = Doc(matcher.vocab, ['JavaScript', 'is', 'good'])
-    print([(t.text, t.orth) for t in doc])
     assert matcher(doc) == [(matcher.vocab.strings['JS'],
                              matcher.vocab.strings['PRODUCT'], 0, 1)]
 

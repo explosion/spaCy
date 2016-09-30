@@ -9,9 +9,9 @@ def test_lexeme_eq(en_vocab):
     '''Test Issue #361: Equality of lexemes'''
     cat1 = en_vocab['cat']
 
-    #cat2 = en_vocab['cat']
+    cat2 = en_vocab['cat']
 
-    #assert cat1 == cat2
+    assert cat1 == cat2
 
 def test_lexeme_neq(en_vocab):
     '''Inequality of lexemes'''

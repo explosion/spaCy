@@ -43,12 +43,10 @@ def test_punct(en_tokenizer):
 
 
 def test_digits(en_tokenizer):
-    The = en_tokenizer.vocab['The'].orth
-    nineteen_84 = en_tokenizer.vocab['1984'].orth
     tokens = en_tokenizer('The year: 1984.')
     assert len(tokens) == 5
-    assert tokens[0].orth == The
-    assert tokens[3].orth == nineteen_84
+    assert tokens[0].orth == en_tokenizer.vocab['The'].orth
+    assert tokens[3].orth == en_tokenizer.vocab['1984'].orth
 
 
 def test_contraction(en_tokenizer):
