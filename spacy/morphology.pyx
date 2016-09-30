@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from os import path
 from .lemmatizer import Lemmatizer
 
@@ -27,7 +25,7 @@ cdef class Morphology:
         self.rich_tags = <RichTagC*>self.mem.alloc(self.n_tags, sizeof(RichTagC))
         for i, (tag_str, props) in enumerate(sorted(tag_map.items())):
             self.rich_tags[i].id = i
-            self.rich_tags[i].name = self.strings.intern(tag_str)
+            self.rich_tags[i].name = self.strings[tag_str]
             self.rich_tags[i].morph = 0
             self.rich_tags[i].pos = POS_IDS[props['pos'].upper()]
             self.reverse_index[self.rich_tags[i].name] = i
@@ -36,14 +34,14 @@ cdef class Morphology:
     def __reduce__(self):
         return (Morphology, (self.strings, self.tag_map, self.lemmatizer), None, None)
 
-    cdef int assign_tag(self, TokenC* token, tag, Pool mem=None) except -1:
+    cdef int assign_tag(self, TokenC* token, tag) except -1:
         cdef int tag_id
         if isinstance(tag, basestring):
-            tag_id = self.reverse_index[self.strings.intern(tag)]
+            tag_id = self.reverse_index[self.strings[tag]]
             tag_str = tag
         else:
             tag_id = tag
-            tag_str = self.strings.decode_int(tag)
+            tag_str = self.strings[tag]
         if tag_id >= self.n_tags:
             raise ValueError("Unknown tag: %s" % tag)
         # TODO: It's pretty arbitrary to put this logic here. I guess the justification
@@ -52,13 +50,13 @@ cdef class Morphology:
         # the statistical model fails.
         # Related to Issue #220
         if Lexeme.c_check_flag(token.lex, IS_SPACE):
-            tag_id = self.reverse_index[self.strings.intern('SP')]
+            tag_id = self.reverse_index[self.strings['SP']]
         analysis = <MorphAnalysisC*>self._cache.get(tag_id, token.lex.orth)
         if analysis is NULL:
             analysis = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
             analysis.tag = self.rich_tags[tag_id]
             analysis.lemma = self.lemmatize(analysis.tag.pos, token.lex.orth,
-                                            mem=mem, **self.tag_map.get(tag_str, {}))
+                                            **self.tag_map.get(tag_str, {}))
             self._cache.set(tag_id, token.lex.orth, analysis)
         token.lemma = analysis.lemma
         token.pos = analysis.tag.pos
@@ -81,16 +79,16 @@ cdef class Morphology:
         cdef int pos
         cdef RichTagC rich_tag
         for tag_str, entries in exc.items():
-            tag = self.strings.intern(tag_str)
+            tag = self.strings[tag_str]
             tag_id = self.reverse_index[tag] 
             rich_tag = self.rich_tags[tag_id]
             for form_str, props in entries.items():
                 cached = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
                 cached.tag = rich_tag
-                orth = self.strings.intern(form_str)
+                orth = self.strings[form_str]
                 for name_str, value_str in props.items():
                     if name_str == 'L':
-                        cached.lemma = self.strings.intern(value_str)
+                        cached.lemma = self.strings[value_str]
                     else:
                         self.assign_feature(&cached.tag.morph, name_str, value_str)
                 if cached.lemma == 0:
@@ -98,18 +96,17 @@ cdef class Morphology:
                                                   self.tag_map.get(tag_str, {}))
                 self._cache.set(tag_id, orth, <void*>cached)
 
-    def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, Pool mem=None,
-            **morphology):
-        cdef unicode py_string = self.strings.decode_int(orth, mem=mem)
+    def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, **morphology):
+        cdef unicode py_string = self.strings[orth]
         if self.lemmatizer is None:
-            return self.strings.intern(py_string.lower(), mem=mem)
+            return self.strings[py_string.lower()]
         if univ_pos not in (NOUN, VERB, ADJ, PUNCT):
-            return self.strings.intern(py_string.lower(), mem=mem)
+            return self.strings[py_string.lower()]
         cdef set lemma_strings
         cdef unicode lemma_string
         lemma_strings = self.lemmatizer(py_string, univ_pos, **morphology)
         lemma_string = sorted(lemma_strings)[0]
-        lemma = self.strings.intern(lemma_string, mem=mem)
+        lemma = self.strings[lemma_string]
         return lemma
 
 IDS = {

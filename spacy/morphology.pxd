@@ -33,7 +33,7 @@ cdef class Morphology:
     cdef RichTagC* rich_tags
     cdef PreshMapArray _cache
 
-    cdef int assign_tag(self, TokenC* token, tag, Pool mem=*) except -1
+    cdef int assign_tag(self, TokenC* token, tag) except -1
 
     cdef int assign_feature(self, uint64_t* morph, feature, value) except -1
 
