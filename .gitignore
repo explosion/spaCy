@@ -9,6 +9,7 @@ tmp/
 .eggs
 *.tgz
 .sass-cache
+.python-version
 
 MANIFEST
 
