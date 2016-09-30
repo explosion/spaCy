@@ -27,7 +27,7 @@ cdef class TransitionSystem:
             for label_str in sorted(label_strs):
                 self.add_action(int(action), label_str)
         
-        self.root_label = self.strings.intern('ROOT')
+        self.root_label = self.strings['ROOT']
         self.freqs = {} if _freqs is None else _freqs
         for attr in (TAG, HEAD, DEP, ENT_TYPE, ENT_IOB):
             self.freqs[attr] = defaultdict(int)
@@ -41,7 +41,7 @@ cdef class TransitionSystem:
         labels_by_action = {}
         cdef Transition t
         for trans in self.c[:self.n_moves]:
-            label_str = self.strings.decode_int(trans.label)
+            label_str = self.strings[trans.label]
             labels_by_action.setdefault(trans.move, []).append(label_str)
         return (self.__class__,
                 (self.strings, labels_by_action, self.freqs),
@@ -86,7 +86,7 @@ cdef class TransitionSystem:
 
     def add_action(self, int action, label):
         if not isinstance(label, int):
-            label = self.strings.intern(label)
+            label = self.strings[label]
         # Check we're not creating a move we already have, so that this is
         # idempotent
         for trans in self.c[:self.n_moves]:
