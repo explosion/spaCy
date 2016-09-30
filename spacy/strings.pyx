@@ -86,7 +86,7 @@ cdef class StringStore:
         self.size = 1
         if strings is not None:
             for string in strings:
-                _ = self[string]
+                self.intern(string)
 
     property size:
         def __get__(self):
@@ -115,7 +115,7 @@ cdef class StringStore:
             byte_string = <bytes>string_or_id
             if len(byte_string) == 0:
                 return 0
-            key = _hash_utf8(byte_string, len(byte_string))
+            key = <attr_t>_hash_utf8(byte_string, len(byte_string))
             utf8str = <Utf8Str*>self._map.get(key)
             if utf8str is NULL:
                 raise KeyError(byte_string)
@@ -124,7 +124,7 @@ cdef class StringStore:
         elif isinstance(string_or_id, unicode):
             if len(<unicode>string_or_id) == 0:
                 return 0
-            key = hash_string(string_or_id)
+            key = <attr_t>hash_string(string_or_id)
             utf8str = <Utf8Str*>self._map.get(key)
             if utf8str is NULL:
                 raise KeyError(string_or_id)
@@ -136,7 +136,7 @@ cdef class StringStore:
     def __contains__(self, unicode string not None):
         if len(string) == 0:
             return True
-        cdef hash_t key = hash_string(string)
+        cdef attr_t key = <attr_t>hash_string(string)
         return self._map.get(key) is not NULL
 
     def __iter__(self):
@@ -154,12 +154,17 @@ cdef class StringStore:
             strings.append(py_string)
         return (StringStore, (strings,), None, None, None)
 
-    cdef hash_t intern(self, unicode py_string, Pool mem=None) except UINT64_MAX:
+    cpdef attr_t intern(self, basestring base_string, Pool mem=None) except -1:
+        if len(base_string) == 0:
+            return 0
         if mem is None:
             mem = self.mem
+        if isinstance(base_string, unicode):
+            byte_string = base_string.encode('utf8')
+        else:
+            byte_string = base_string
         cdef hash_t map_key = id(mem)
-        cdef bytes byte_string = py_string.encode('utf8')
-        cdef hash_t key = _hash_utf8(byte_string, len(byte_string))
+        cdef attr_t key = <attr_t>_hash_utf8(byte_string, len(byte_string))
         cdef const Utf8Str* utf8str = <Utf8Str*>self._map.get(key)
         cdef hash_t map_id = id(mem)
         cdef MapStruct* oov_map
@@ -179,7 +184,7 @@ cdef class StringStore:
             map_set(mem, oov_map, key, new_utf8str)
             return key
 
-    def decode_int(self, hash_t int_, Pool mem=None):
+    def decode_int(self, attr_t int_, Pool mem=None):
         cdef hash_t map_key
         if int_ == 0:
             return u''
@@ -213,15 +218,16 @@ cdef class StringStore:
             int length) except NULL:
         if self.size == self._resize_at:
             self._realloc()
-        key = _hash_utf8(utf8_string, length)
+        cdef attr_t key = <attr_t>_hash_utf8(utf8_string, length)
         self.c[self.size] = _allocate(self.mem, utf8_string, length)
         self._map.set(key, <void*>&self.c[self.size])
         self.size += 1
         return &self.c[self.size-1]
 
     cpdef int remove_oov_map(self, Pool mem) except -1:
+        print("Remove mem", id(mem))
         cdef hash_t key = id(mem)
-        self._maps.pop(key)
+        self.oov_maps.pop(key)
 
     def dump(self, file_):
         # TODO: Is it problematic that we don't save the OOV strings? No, right?
