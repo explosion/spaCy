@@ -28,6 +28,6 @@ cdef class StringStore:
 
     cpdef int remove_oov_map(self, Pool mem) except -1
 
-    cpdef attr_t intern(self, basestring base_string, Pool mem=*) except -1
+    cdef hash_t intern(self, unicode py_string, Pool mem=*) except UINT64_MAX
     cdef const Utf8Str* _intern_utf8(self, const unsigned char* utf8_string,
                                      int length) except NULL
