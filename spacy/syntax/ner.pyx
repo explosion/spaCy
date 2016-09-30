@@ -76,7 +76,7 @@ cdef class BiluoPushDown(TransitionSystem):
         elif move == 'MISSING':
             return 'M'
         else:
-            return MOVE_NAMES[move] + '-' + self.strings[label]
+            return MOVE_NAMES[move] + '-' + self.strings.decode_int(label)
 
     cdef int preprocess_gold(self, GoldParse gold) except -1:
         for i in range(gold.length):
@@ -101,7 +101,7 @@ cdef class BiluoPushDown(TransitionSystem):
             label = 0
         elif '-' in name:
             move_str, label_str = name.split('-', 1)
-            label = self.strings[label_str]
+            label = self.strings.intern(label_str)
         else:
             move_str = name
             label = 0
