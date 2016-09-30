@@ -108,7 +108,7 @@
                     use (e.g. tokenizer, parser, entity recognizer).
 
             +row
-                +cell orth_and_spaces
+                +cell orths_and_spaces
                 +cell.
                     A list of tokens in the document as a sequence of 
                     #[code (orth_id, has_space)] tuples, where #[code orth_id] 
@@ -186,7 +186,7 @@
             assert ents[0].label == 346
             assert ents[0].label_ == 'PERSON'
             assert ents[0].orth_ == 'Best'
-            assert ents[0].string == ents[0].string
+            assert ents[0].text == 'Mr. Best'
 
         +h3('doc-spans-nounchunks')
             | #[+label('tag') property] Doc.noun_chunks

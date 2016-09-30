@@ -1,119 +1,177 @@
-//-  Docs > Quickstart > Install
+//-  Docs > Quickstart > Getting started
 //- ============================================================================
 
-+section('install')
-    +h2('install')
-        | Install spaCy v#{spacy_version}
++section('getting-started')
+    +h2('getting-started')
+        | Getting started
 
-    +section('install-pip-virtualenv')
-        +h3('install-pip-virtualenv')
-            | pip and virtualenv
-
-        p.
-            With Python 2.7 or Python 3, using Linux or OSX, ensure that you have 
-            the packages #[code build-essential] and #[code python-dev] installed. 
-            Then run:
-
-        +code('bash').
-            pip install spacy
-            python -m spacy.en.download
+    +section('install-spacy')
+        +h3('install-spacy')
+            | Install spaCy
 
         p.
-            The download command fetches and installs about 500mb of data, for the 
-            parser model and word vectors, which it installs within the spacy 
-            package directory. Usually you'll want to install spaCy within a 
-            #[a(href='https://virtualenv.readthedocs.org/en/latest/' target='_blank') virtualenv], 
+            spaCy is compatible with 64-bit CPython 2.6+/3.3+ and runs on Unix/Linux,
+            OS X and Windows. Source and binary packages are available via
+            #[a(href='https://pypi.python.org/pypi/spacy' target='_blank') pip] and
+            #[a(href='https://anaconda.org/spacy/spacy' target='_blank') conda]. If there are
+            no binary packages for your platform available please make sure that you have
+            a working build enviroment set up. See
+            notes on #[a(href="/docs#install-source-ubuntu") Ubuntu],
+            #[a(href="/docs#install-source-osx") OS X] and
+            #[a(href="/docs#install-source-windows") Windows] for details.
+
+        +code('bash', 'conda').
+            conda config --add channels spacy  # only needed once
+            conda install spacy
+
+        p.
+            When using pip it is generally recommended to install packages in a
+            #[a(href='https://virtualenv.readthedocs.org/en/latest/' target='_blank') virtualenv] 
             to avoid modifying system state:
 
-        +code('bash').
-            virtualenv my_env_dir
-            source my_env_dir/bin/activate
+        +code('bash', 'pip').
+            # make sure you are using a recent pip/virtualenv version
+            python -m pip install -U pip virtualenv
 
-    +section('install-conda')
-        +h3('install-conda')
-            | conda
+            virtualenv .env
+            source .env/bin/activate
 
-        +code('bash').
-            conda config --add channels spacy
-            conda install spacy
-            python -m spacy.en.download
-
-        p.
-            Sometimes conda is not up to date with the latest release. If you 
-            can't get the latest version on conda, you can always fall back to the 
-            pip install.
-
-    +section('install-windows')
-        +h3('install-windows')
-            | Windows (64 bit)
-
-        p.
-            We've been working on Windows support. Our tests now succeed on 64 bit 
-            builds of Windows. Installation from pip should work if you have a C++ 
-            compiler installed. Please see the README-MSVC.txt file for instructions 
-            on compiling from source.
-    
-    +section('install-update')
-        +h3('install-update')
-            | Updating your installation
-
-        p.
-            To update your installation:
-
-        +code('bash').
-            pip install --upgrade spacy
-            python -m spacy.en.download
-
-        p.
-            Most updates ship a new model, so you will usually have to redownload 
-            the data.
-
-
-    +section('install-obsolete-python')
-        +h3('install-obsolete-python')
-            | Workaround for obsolete system Python
-
-        p.
-            If you're stuck using a server with an old version of Python, and you 
-            don't have root access, we've prepared a bootstrap script to help you 
-            compile a local Python install. Run:
-
-        +code('bash')
-            curl https://raw.githubusercontent.com/spacy-io/gist/master/bootstrap_python_env.sh | bash && source .env/bin/activate
-
-    +section('install-compile')
-        +h3('install-compile')
-            | Compile from source
-
-        p.
-            The other way to install the package is to clone the github repository, 
-            and build it from source. This installs an additional dependency, Cython. 
-            If you're using Python 2, we also recommend installing fabric and 
-            fabtools – this is how we build the project. Ensure that you have the 
-            packages #[code build-essential], #[code python-dev], #[code git] and 
-            #[code python-virtualenv] installed.
-
-        +code('bash')
-            git clone https://github.com/spacy-io/spaCy.git
-            cd spaCy
-            virtualenv .env && source .env/bin/activate
-            pip install -r requirements.txt
-            pip install -e .
-            python -m spacy.en.download
-            pip install pytest
-            python -m pytest spacy
+            pip install spacy
 
         p.
             Python packaging is awkward at the best of times, and it's particularly 
             tricky with C extensions, built via Cython, requiring large data files. 
             So, please report issues as you encounter them.
 
-    +section('install-pypy')
-        +h3('install-pypy')
-            | pypy (unsupported)
+    +section('install-model')
+        +h3('install-model')
+            | Install model
 
         p.
-            If PyPy support is a priority for you, please get in touch. We could 
-            likely fix the remaining issues, if necessary. However, the library 
-            is likely to be much slower on PyPy, as it's written in Cython, which 
-            produces code tuned for the performance of CPython.
+            After installation you need to download a language model.
+            Currently only models for English and German, named #[code en] and #[code de], are available. Please get in touch with us if you need support for a particular language.
+ 
+        +code('bash').
+            sputnik --name spacy --repository-url http://index.spacy.io install en==1.1.0
+
+        p.
+            Then check whether the model was successfully installed:
+
+        +code('bash').
+            python -c "import spacy; spacy.load('en'); print('OK')"
+
+        p.
+            The download command fetches and installs about 500 MB of data which it installs
+            within the #[code spacy] package directory.
+
+    +section('install-upgrade')
+        +h3('install-upgrade')
+            | Upgrading spaCy
+
+        p.
+            To upgrade spaCy to the latest release:
+
+        +code('bash', 'conda').
+            conda update spacy
+
+        +code('bash', 'pip').
+            pip install -U spacy
+
+        p.
+            Sometimes new releases require a new language model. Then you will have to upgrade to
+            a new model, too. You can also force re-downloading and installing a new language model:
+
+        +code('bash').
+            python -m spacy.en.download --force
+
+    +section('install-source')
+        +h3('install-source')
+            | Compile from source
+
+        p.
+            The other way to install spaCy is to clone its
+            #[a(href="https://github.com/spacy-io/spaCy") GitHub repository] and
+            build it from source. That is the common way if you want to make changes
+            to the code base.
+
+        p.
+            You'll need to make sure that you have a development enviroment consisting
+            of a Python distribution including header files, a compiler, pip,
+            virtualenv and git installed. The compiler
+            part is the trickiest. How to do that depends on your system. See
+            notes on #[a(href="/docs#install-source-ubuntu") Ubuntu],
+            #[a(href="/docs#install-source-osx") OS X] and
+            #[a(href="/docs#install-source-windows") Windows] for details.
+
+        +code('bash').
+            # make sure you are using recent pip/virtualenv versions
+            python -m pip install -U pip virtualenv
+
+            #  find git install instructions at https://git-scm.com/downloads
+            git clone https://github.com/spacy-io/spaCy.git
+
+            cd spaCy
+            virtualenv .env && source .env/bin/activate
+            pip install -r requirements.txt
+            pip install -e .
+
+        p.
+            Compared to regular install via #[code pip] and #[code conda]
+            #[a(href="https://github.com/spacy-io/spaCy/blob/master/requirements.txt") requirements.txt]
+            additionally installs developer dependencies such as #[code cython].
+
+        +h4('install-source-ubuntu')
+            | Ubuntu
+
+        p.
+            Install system-level dependencies via #[code apt-get]:
+
+        +code('bash').
+            sudo apt-get install build-essential python-dev git
+
+        +h4('install-source-osx')
+            | OS X
+
+        p.
+            Install a recent version of XCode, including the so-called "Command Line Tools". OS X
+            ships with Python and git preinstalled.
+
+        +h4('install-source-windows')
+            | Windows
+
+        p.
+            Install a version of Visual Studio Express or higher that matches the version that was
+            used to compile your Python interpreter. For official distributions
+            these are VS 2008 (Python 2.7), VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
+
+    +section('install-obsolete-python')
+        +h3('install-obsolete-python')
+            | Workaround for obsolete system Python
+
+        p.
+            If you're stuck using a system with an old version of Python, and you 
+            don't have root access, we've prepared a bootstrap script to help you 
+            compile a local Python install. Run:
+
+        +code('bash').
+            curl https://raw.githubusercontent.com/spacy-io/gist/master/bootstrap_python_env.sh | bash && source .env/bin/activate
+
+    +section('run-tests')
+        +h3('run-tests')
+            | Run tests
+
+        p.
+            spaCy comes with an extensive test suite. First, find out where spaCy is installed:
+
+        +code('bash').
+            python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
+
+        p.
+            Then run #[code pytest] on that directory. The flags #[code --vectors],
+            #[code --slow] and #[code --model] are optional and enable additional tests:
+
+        +code('bash').
+            # make sure you are using recent pytest version
+            python -m pip install -U pytest
+
+            python -m pytest &lt;spacy-directory&gt; --vectors --model --slow

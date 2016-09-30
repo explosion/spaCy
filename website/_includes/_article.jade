@@ -7,9 +7,9 @@ article.article(id=current.source)
 
     header.article-header
         +h2.article-title=title
-        .article-meta 
+        .article-meta
             if author
-                | by #[a.link(href=(authors[author].url || url) target='_blank')=authors[author].name] on 
+                | by #[a.link(href=(authors[author].url || url) target='_blank')=authors[author].name] on &nbsp;
             | #[+date(date)]
 
     .article-body!=yield
@@ -17,12 +17,13 @@ article.article(id=current.source)
     footer.article-footer
 
         +grid('padding', 'align-right', 'valign-center')
-            +tweet(title)
+            if hide_social != true
+                +tweet(title)
 
             if links
                 for link, index in links
                     div: +button('primary', 'small', index.toLowerCase())(href=link target='_blank')
-                        +icon(index.toLowerCase(), 'medium', 'secondary') 
+                        +icon(index.toLowerCase(), 'medium', 'secondary')
                         | Discussion on #{index}
 
         if author

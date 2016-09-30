@@ -1,6 +1,6 @@
 include _includes/_mixins
 
-- var logos = [ ['chartbeat', 'https://chartbeat.com'], ['socrata', 'https://www.socrata.com'], ['keyreply', 'https://keyreply.com/'], [ 'kip', 'http://kipthis.com'], ['cytora', 'http://www.cytora.com'], ['signaln', 'http://signaln.com'] ]
+- var logos = [ ['chartbeat', 'https://chartbeat.com'], ['socrata', 'https://www.socrata.com'], ['chattermill', 'https://chattermill.io'], ['cytora', 'http://www.cytora.com'], ['signaln', 'http://signaln.com'], ['duedil', 'https://www.duedil.com/'], ['spyjack', 'https://spyjack.io'], ['keyreply', 'https://keyreply.com/'], ['dato', 'https://dato.com'], [ 'kip', 'http://kipthis.com'], ['wonderflow', 'http://www.wonderflow.co'], ['foxtype', 'https://foxtype.com'], ['synapsify', 'http://www.gosynapsify.com'], ['stitchfix', 'https://www.stitchfix.com/'], ['wayblazer', 'http://wayblazer.com'] ]
 
 
 //-  Landing Page
@@ -20,7 +20,7 @@ header.header
                 | We help you get their work out of papers and#[br]
                 | into production.#[br]
 
-        +button('secondary')(href='/docs/#install') Install spaCy
+        +button('secondary')(href='/docs/#getting-started') Install spaCy
 
 +divider('bar') 
     | #[a(href='https://github.com/' + profiles.github + '/spaCy/releases' target='_blank'): #[strong Latest Release:] v#{spacy_version}] 
@@ -96,10 +96,12 @@ main.main
     +h2.text-center
         +label('strong') spaCy is trusted by
 
-    +grid('space-around', 'valign-center', 'padding')
-        each logo in logos
-            a(href=logo[1] target='_blank')
-                img(src='assets/img/logos/' + logo[0] + '.png').logo--small
+    +grid('align-center')
+        +grid-col('two-thirds')
+            +grid('align-center', 'valign-center', 'padding')
+                each logo in logos
+                    a(href=logo[1] target='_blank')
+                        img(src='assets/img/logos/' + logo[0] + '.png').logo--small
 
     +divider
 
@@ -130,7 +132,7 @@ main.main
             <blockquote class="twitter-tweet" data-cards="hidden" data-lang="en"><p lang="en" dir="ltr">spaCy seems pretty exciting to me - and it is clear that NLTK has not kept up with <a href="https://twitter.com/hashtag/NLP?src=hash">#NLP</a>. <a href="http://t.co/mUPFUMLrbo">http://t.co/mUPFUMLrbo</a> <a href="https://twitter.com/hashtag/python?src=hash">#python</a> <a href="https://twitter.com/hashtag/datascience?src=hash">#datascience</a></p>&mdash; Alex Engler (@AlexCEngler) <a href="https://twitter.com/AlexCEngler/status/648537133544833025">September 28, 2015</a></blockquote>
 
         +grid-col('third', 'valign-center')
-            <blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">Explore what NLP can do these days with Sense2vec and Spacy <a href="https://t.co/MHZEP2yLo4">https://t.co/MHZEP2yLo4</a></p>&mdash; Chattermill.io (@chatter_mill) <a href="https://twitter.com/chatter_mill/status/699660272907059200">February 16, 2016</a></blockquote>
+            <blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">I wish I&#39;d known about nlp.pipe about two weeks ago. Nice feature in <a href="https://twitter.com/Spacy">@spacy</a> to parallelize your NLP pipeline.</p>&mdash; Matti Lyra (@mattilyra) <a href="https://twitter.com/mattilyra/status/704753660329369600">March 1, 2016</a></blockquote>
 
     +divider
 

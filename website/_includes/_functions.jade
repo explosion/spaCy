@@ -93,7 +93,7 @@
 
 -   function getMetaImage() {
 -       if(current.path[0] == 'blog' && image && image.file) {    
--           return url + '/blog/img/' + image.file;
+-           return url + '/blog/img/' + (image.file_small || image.file);
 -        }
 -       else {
 -           return url + '/assets/img/social.png';

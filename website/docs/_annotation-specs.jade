@@ -23,7 +23,7 @@
 
         +code.
             from spacy.en import English
-            nlp = English(parse=False)
+            nlp = English(parser=False)
             tokens = nlp('Some\nspaces  and\ttab characters')
             print([t.orth_ for t in tokens])
 
@@ -102,8 +102,8 @@
                 +cell Nationalities or religious or political groups.
 
             +row
-                +cell FACILITY
-                +cell Buildings, airports, highways, bridges, etc.
+                +cell FAC
+                +cell Facilities, such as buildings, airports, highways, bridges, etc.
 
             +row
                 +cell ORG

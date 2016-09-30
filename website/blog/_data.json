@@ -4,6 +4,81 @@
         "title" : "Blog"
     },
 
+    "announcement" : {
+        "title": "Important Announcement",
+        "date": "2016-08-09",
+        "description": "Dear spaCy users, Unfortunately, we (Henning Peters and Matthew Honnibal) are parting ways. Breaking up is never easy, and it's taken us a while to get our stuff together. Hopefully, you didn't notice anything was up — if you did, we hope you haven't been inconvenienced.",
+        "image": {
+            "file": "introducing-spacy.jpg",
+            "file_small": "introducing-spacy_small.jpg",
+            "file_large": "introducing-spacy_large.jpg"
+        },
+        "links": false,
+        "hide_social": true
+    },
+
+    "syntaxnet-in-context": {
+        "title": "SyntaxNet in context: Understanding Google's new TensorFlow NLP model",
+        "date": "2016-05-13",
+        "author": "matt",
+        "description": "Yesterday, Google open sourced their Tensorflow-based dependency parsing library, SyntaxNet. The library gives access to a line of neural network parsing models published by Google researchers over the last two years. I've been following this work closely since it was published, and have been looking forward to the software being published. This post tries to provide some context around the release — what's new here, and how important is it?",
+        "image": {
+            "file": "syntaxnet.jpg",
+            "file_small": "syntaxnet_small.jpg",
+            "file_large": "syntaxnet_large.jpg",
+            "credit": "Kemal Sanli",
+            "url": "https://dribbble.com/kemal"
+        },
+        "links": false
+    },
+
+    "german-model": {
+        "title": "spaCy now speaks German",
+        "date": "2016-05-09",
+        "author": "wolfgang",
+        "description": "Many people have asked us to make spaCy available for their language. Being based in Berlin, German was an obvious choice for our first second language. Now spaCy can do all the cool things you use for processing English on German text too. But more importantly, teaching spaCy to speak German required us to drop some comfortable but English-specific assumptions about how language works and made spaCy fit to learn more languages in the future.",
+        "image": {
+            "file": "german.jpg",
+            "file_small": "german_small.jpg",
+            "file_large": "german_large.jpg",
+            "credit": "Kemal Sanli",
+            "url": "https://dribbble.com/kemal"
+        },
+        "links": {
+            "HackerNews": "https://news.ycombinator.com/item?id=11690212"
+        }
+    },
+
+    "multithreading-with-cython": {
+        "title": "Multi-threading spaCy's parser and named entity recogniser",
+        "date": "2016-05-11",
+        "author": "matt",
+        "description": "In v0.100.3, we quietly rolled out support for GIL-free multi-threading for spaCy's syntactic dependency parsing and named entity recognition models.  Because these models take up a lot of memory, we've wanted to release the global interpretter lock (GIL) around them for a long time.  When we finally did, it seemed a little too good to be true, so we delayed celebration &mdash; and then quickly moved on to other things. It's now past time for a write-up.",
+        "image" : {
+            "file": "cython.jpg",
+            "file_small": "cython_small.jpg",
+            "file_large": "cython_large.jpg",
+            "credit": "Kemal Sanli",
+            "url": "https://dribbble.com/kemal"
+        },
+        "links": false
+    },
+
+    "eli5-computers-learn-reading": {
+        "title": "Statistical NLP in the Ten Hundred Most Common English Words",
+        "date": "2016-04-04",
+        "author": "matt",
+        "description": "When I was little, my favorite TV shows all had talking computers. Now I’m big and there are still no talking computers, so I’m trying to make some myself. Well, we can make computers say things. But when we say things back, they don’t really understand. Why not?",
+        "image" : {
+            "file": "basic-english.jpg",
+            "file_small": "basic-english_small.jpg",
+            "file_large": "basic-english_large.jpg",
+            "credit": "Kemal Sanli",
+            "url": "https://dribbble.com/kemal"
+        },
+        "links": false
+    },
+
     "modular-markup": {
         "title": "Rebuilding a Website with Modular Markup Components",
         "date": "2016-03-31",
@@ -71,24 +146,9 @@
         }
     },
 
-    "eli5-computers-learn-reading": {
-        "title": "Statistical NLP in Basic English",
-        "date": "2015-08-24",
-        "author": "matt",
-        "description": "When I was little, my favorite TV shows all had talking computers. Now I’m big and there are still no talking computers, so I’m trying to make some myself. Well, we can make computers say things. But when we say things back, they don’t really understand. Why not?",
-        "image" : {
-            "file": "basic-english.jpg",
-            "file_small": "basic-english_small.jpg",
-            "file_large": "basic-english_large.jpg",
-            "credit": "Kemal Sanli",
-            "url": "https://dribbble.com/kemal"
-        },
-        "links": false
-    },
-
-    "displacy": {
+    "displacy-dependency-visualizer": {
         "featured": true,
-        "title": "Displaying Linguistic Structure With CSS",
+        "title": "Displaying Linguistic Structure with CSS",
         "date": "2015-08-19",
         "author": "matt",
         "description": "One of the features of the relaunch I'm most excited about is the displaCy visualizer and annotation tool. This solves two problems I've thought about a lot: first, how can I help people understand what information spaCy gives them access to? Without a good visualization, the ideas are very abstract.  Second, how can we make dependency trees easy for humans to create?",

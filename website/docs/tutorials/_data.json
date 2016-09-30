@@ -6,6 +6,13 @@
         "description": "Word vectors allow simple similarity queries, and drive many NLP applications. This tutorial explains how to load custom word vectors into spaCy, to make use of task or data-specific representations."
     },
 
+    "byo-annotations": {
+        "template": "article",
+        "title": "Using Pre-existing Tokenization, Tags, and Other Annotations",
+        "date": "2016-04-15",
+        "description": "spaCy assumes by default that your data is raw text. However, sometimes your data is partially annotated, e.g. with pre-existing tokenization, part-of-speech tags, etc. This tutorial explains how to use these annotations in spaCy."
+    },
+
     "mark-adverbs": {
         "template": "article",
         "title": "Mark all adverbs, particularly for verbs of speech",

@@ -4,12 +4,15 @@ include ../_includes/_mixins
 //- ============================================================================
 
 +grid('padding')
-    each demo in demos
-        - var teaser = public.demos[demo]._data.index
-        - teaser.target = '_blank'
-        - teaser.showmeta = false
-
+    each demo, slug in demos
         +grid-col('half', 'space-between')
-            !=partial('../_includes/_teaser', { teaser: teaser, showmeta: false, slug: demo, _root: '/demos/' })
+            .teaser
+                a(href='https://' + slug + '.spacy.io' target='_blank')
+                    .image-ratio: img(src='/demos/img/' + demo.image.file)
+                
+                +h2
+                    a.block(href='https://' + slug + '.spacy.io' target='_blank')=demo.title
+                
+                p=demo.description
 
     !=partial('../_includes/_newsletter', { divider: 'top' })

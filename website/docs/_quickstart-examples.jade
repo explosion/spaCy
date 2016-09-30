@@ -8,9 +8,10 @@
     +h3('examples-resources') Load resources and process text
 
     +code.
-        from spacy.en import English
-        nlp = English()
-        doc = nlp(u'Hello, world. Here are two sentences.')
+        import spacy
+        en_nlp = spacy.load('en')
+        en_doc = en_nlp(u'Hello, world. Here are two sentences.')
+        de_doc = de_nlp(u'ich bin ein Berliner.')
 
     +h3('multi-threaded') Multi-threaded generator (using OpenMP. No GIL!)
 
@@ -46,13 +47,13 @@
         assert token.shape_ == 'Xxxxx'
         for lexeme in nlp.vocab:
             if lexeme.is_alpha:
-                lexeme.shape_ = u'W'
+                lexeme.shape_ = 'W'
             elif lexeme.is_digit:
-                lexeme.shape_ = u'D'
+                lexeme.shape_ = 'D'
             elif lexeme.is_punct:
-                lexeme.shape_ = u'P'
+                lexeme.shape_ = 'P'
             else:
-                lexeme.shape_ = u'M'
+                lexeme.shape_ = 'M'
         assert token.shape_ == 'W'
 
     +h3('examples-numpy-arrays') Export to numpy arrays
@@ -162,12 +163,13 @@
     +h3('examples-binary') Efficient binary serialization
 
     +code.
+        import spacy
         from spacy.tokens.doc import Doc
 
         byte_string = doc.to_bytes()
         open('moby_dick.bin', 'wb').write(byte_string)
 
-        nlp = spacy.en.English()
+        nlp = spacy.load('en')
         for byte_string in Doc.read_bytes(open('moby_dick.bin', 'rb')):
            doc = Doc(nlp.vocab)
            doc.from_bytes(byte_string)
