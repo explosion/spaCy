@@ -4,9 +4,9 @@ from spacy.parts_of_speech cimport NOUN, PROPN, PRON
 def english_noun_chunks(doc):
     labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj',
               'attr', 'ROOT', 'root']
-    np_deps = [doc.vocab.strings[label] for label in labels]
-    conj = doc.vocab.strings['conj']
-    np_label = doc.vocab.strings['NP']
+    np_deps = [doc.vocab.strings.intern(label) for label in labels]
+    conj = doc.vocab.strings.intern('conj')
+    np_label = doc.vocab.strings.intern('NP')
     for i, word in enumerate(doc):
         if word.pos in (NOUN, PROPN, PRON) and word.dep in np_deps:
             yield word.left_edge.i, word.i+1, np_label
@@ -27,10 +27,9 @@ def english_noun_chunks(doc):
 # just "eine Tasse", same for "das Thema Familie"
 def german_noun_chunks(doc):
     labels = ['sb', 'oa', 'da', 'nk', 'mo', 'ag', 'ROOT', 'root', 'cj', 'pd', 'og', 'app']
-    np_label = doc.vocab.strings['NP']
-    np_deps = set(doc.vocab.strings[label] for label in labels)
-    close_app = doc.vocab.strings['nk']
-
+    np_label = doc.vocab.strings.intern('NP')
+    np_deps = set(doc.vocab.strings.intern(label) for label in labels)
+    close_app = doc.vocab.strings.intern('nk')
     rbracket = 0
     for i, word in enumerate(doc):
         if i < rbracket:
