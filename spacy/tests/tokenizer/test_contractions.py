@@ -3,10 +3,10 @@ import pytest
 
 
 def test_possess(en_tokenizer):
-    tokens = en_tokenizer("Mike's")
-    assert en_tokenizer.vocab.strings[tokens[0].orth] == "Mike"
-    assert en_tokenizer.vocab.strings[tokens[1].orth] == "'s"
-    assert len(tokens) == 2
+    doc = en_tokenizer("Mike's")
+    assert en_tokenizer.vocab.strings.decode_int(doc[0].orth, mem=doc.mem) == "Mike"
+    assert en_tokenizer.vocab.strings.decode_int(doc[1].orth, mem=doc.mem) == "'s"
+    assert len(doc) == 2
 
 
 def test_apostrophe(en_tokenizer):
@@ -50,9 +50,8 @@ def test_punct(en_tokenizer):
     assert len(tokens) == 3
 
 
-@pytest.mark.xfail
 def test_therell(en_tokenizer):
     tokens = en_tokenizer("there'll")
     assert len(tokens) == 2
     assert tokens[0].text == "there"
-    assert tokens[1].text == "there"
+    assert tokens[1].text == "'ll"
