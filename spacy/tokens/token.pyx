@@ -1,5 +1,3 @@
-from __future__ import unicode_literals
-
 from libc.string cimport memcpy
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 # Compiler crashes on memory view coercion without this. Should report bug.
@@ -440,19 +438,19 @@ cdef class Token:
 
     property orth_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lex.orth, mem=self.doc.mem)
+            return self.vocab.strings.decode_int(self.c.lex.orth, mem=self.mem)
 
     property lower_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lex.lower, mem=self.doc.mem)
+            return self.vocab.strings.decode_int(self.c.lex.lower, mem=self.mem)
 
     property norm_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lex.norm, mem=self.doc.mem)
+            return self.vocab.strings.decode_int(self.c.lex.norm, mem=self.mem)
 
     property shape_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lex.shape, mem=self.doc.mem)
+            return self.vocab.strings.decode_int(self.c.lex.shape, mem=self.mem)
 
     property prefix_:
         def __get__(self):
@@ -464,11 +462,11 @@ cdef class Token:
 
     property lang_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lex.lang, mem=self.doc.mem)
+            return self.vocab.strings.decode_int(self.c.lex.lang, mem=self.mem)
 
     property lemma_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lemma, mem=self.doc.mem)
+            return self.vocab.strings.decode_int(self.c.lemma, mem=self.mem)
 
     property pos_:
         def __get__(self):
@@ -476,7 +474,7 @@ cdef class Token:
 
     property tag_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.tag, mem=self.doc.mem)
+            return self.vocab.strings.decode_int(self.c.tag, mem=self.mem)
 
     property dep_:
         def __get__(self):
