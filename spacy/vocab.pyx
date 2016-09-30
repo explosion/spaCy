@@ -104,7 +104,7 @@ cdef class Vocab:
         # Need to rethink this.
         for name in symbols.NAMES + list(sorted(tag_map.keys())):
             if name:
-                self.strings.intern(name)
+                _ = self.strings[name]
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.serializer_freqs = serializer_freqs
@@ -159,38 +159,28 @@ cdef class Vocab:
         if lex != NULL:
             return lex
         else:
-            return self._new_lexeme(mem, self.strings.decode_int(orth))
+            return self._new_lexeme(mem, self.strings[orth])
 
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL:
-        # TODO: This is all quite a mess, and doesn't work currently.
-        # The current state is:
-        # - mem is None: Denotes that the string should be interned within the StringStore
-        # - mem is self.mem: Denotes that the string wll be permanently available,
-        #                    but that it will be stored within the *Vocab*
-        # - mem is Doc.mem: Denotes that the string will 'belong' to the Doc
         cdef hash_t key
-        if mem is None:
-            lex = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
-        else:
-            lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        print("Add new lexeme", "id(mem)", id(mem), "id(self.mem)", id(self.mem))
+        cdef bint is_oov = mem is not self.mem
+        if len(string) < 3 or not is_oov:
+            mem = self.mem
+        lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
         lex.orth = self.strings.intern(string, mem=mem)
         lex.length = len(string)
         lex.id = self.length
-        if mem is None:
-            lex.vector = <float*>self.mem.alloc(self.vectors_length, sizeof(float))
-        else:
-            lex.vector = <float*>mem.alloc(self.vectors_length, sizeof(float))
+        lex.vector = <float*>mem.alloc(self.vectors_length, sizeof(float))
         if self.lex_attr_getters is not None:
             for attr, func in self.lex_attr_getters.items():
                 value = func(string)
                 if isinstance(value, unicode):
-                    value = self.strings.intern(value, mem=mem)
+                    value = self.strings.intern(value)
                 if attr == PROB:
                     lex.prob = value
                 else:
                     Lexeme.set_struct_attr(lex, attr, value)
-        if mem not in (None, self.mem):
+        if is_oov:
             lex.id = 0
         else:
             key = hash_string(string)
@@ -231,9 +221,8 @@ cdef class Vocab:
               instantiation.
         '''
         cdef attr_t orth
-        if isinstance(id_or_string, basestring):
-            print("Intern", id_or_string, id(self.mem))
-            orth = self.strings.intern(id_or_string, mem=self.mem)
+        if type(id_or_string) == unicode:
+            orth = self.strings.intern(id_or_string)
         else:
             orth = id_or_string
         return Lexeme(self, orth)
@@ -245,7 +234,7 @@ cdef class Vocab:
             token = &tokens[i]
             # Set the special tokens up to have morphology and lemmas if
             # specified, otherwise use the part-of-speech tag (if specified)
-            token.lex = <LexemeC*>self.get(None, props['F'])
+            token.lex = <LexemeC*>self.get(self.mem, props['F'])
             if 'pos' in props:
                 self.morphology.assign_tag(token, props['pos'])
             if 'L' in props:
@@ -356,7 +345,7 @@ cdef class Vocab:
                 raise VectorReadError.mismatched_sizes(file_, line_num,
                                                         vec_len, len(pieces))
             orth = self.strings[word_str]
-            lexeme = <LexemeC*><void*>self.get_by_orth(None, orth)
+            lexeme = <LexemeC*><void*>self.get_by_orth(self.mem, orth)
             lexeme.vector = <float*>self.mem.alloc(self.vectors_length, sizeof(float))
 
             for i, val_str in enumerate(pieces):
