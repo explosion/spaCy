@@ -94,25 +94,23 @@ class BaseDefaults(object):
         else:
             return Tagger.blank(vocab, Tagger.default_templates())
 
-    def Parser(self, vocab):
-        if self.path:
-            if (self.path / 'deps').exists():
-                return Parser.load(self.path / 'deps', vocab, ArcEager)
-            else:
-                return None
-        else:
+    def Parser(self, vocab, blank=False):
+        if blank:
             return Parser.blank(vocab, ArcEager,
                 features=self.parser_features, labels=self.parser_labels)
-
-    def Entity(self, vocab):
-        if self.path:
-            if (self.path / 'ner').exists():
-                return Parser.load(self.path / 'ner', vocab, BiluoPushDown)
-            else:
-                return None
+        elif self.path and (self.path / 'deps').exists():
+            return Parser.load(self.path / 'deps', vocab, ArcEager)
         else:
+            return None
+
+    def Entity(self, vocab, blank=False):
+        if blank:
             return Parser.blank(vocab, BiluoPushDown,
                 features=self.entity_features, labels=self.entity_labels)
+        elif self.path and (self.path / 'ner').exists():
+            return Parser.load(self.path / 'ner', vocab, BiluoPushDown)
+        else:
+            return None
 
     def Matcher(self, vocab):
         if self.path:
