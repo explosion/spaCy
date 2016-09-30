@@ -53,14 +53,16 @@ If there are no binary packages for your platform available please make sure tha
 you have a working build enviroment set up. See notes on Ubuntu, OS X and Windows
 for details.
 
-**conda**
+conda
+-----
 
 .. code:: bash
 
     conda config --add channels spacy  # only needed once
     conda install spacy
 
-**pip**
+pip
+---
 
 When using pip it is generally recommended to install packages in a virtualenv to
 avoid modifying system state:
@@ -105,13 +107,15 @@ Upgrading spaCy
 
 To upgrade spaCy to the latest release:
 
-**conda**
+conda
+-----
 
 .. code:: bash
 
     conda update spacy
 
-**pip**
+pip
+---
 
 .. code:: bash
 
@@ -151,7 +155,8 @@ system. See notes on Ubuntu, OS X and Windows for details.
 Compared to regular install via pip and conda `requirements.txt <requirements.txt>`_ 
 additionally installs developer dependencies such as cython.
 
-**Ubuntu**
+Ubuntu
+------
 
 Install system-level dependencies via ``apt-get``:
 
@@ -159,18 +164,21 @@ Install system-level dependencies via ``apt-get``:
 
     sudo apt-get install build-essential python-dev git
 
-**OS X**
+OS X
+----
 
 Install a recent version of XCode, including the so-called "Command Line Tools". 
 OS X ships with Python and git preinstalled.
 
-**Windows**
+Windows
+-------
 
 Install a version of Visual Studio Express or higher that matches the version 
 that was used to compile your Python interpreter. For official distributions 
 these are VS 2008 (Python 2.7), VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
 
-**Workaround for obsolete system Python**
+Workaround for obsolete system Python
+=====================================
 
 If you're stuck using a system with an old version of Python, and you don't 
 have root access, we've prepared a bootstrap script to help you compile a local 
@@ -180,7 +188,8 @@ Python install. Run:
 
     curl https://raw.githubusercontent.com/spacy-io/gist/master/bootstrap_python_env.sh | bash && source .env/bin/activate
 
-**Run tests**
+Run tests
+=========
 
 spaCy comes with an extensive test suite. First, find out where spaCy is 
 installed:
