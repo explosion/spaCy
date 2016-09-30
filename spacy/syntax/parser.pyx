@@ -113,7 +113,7 @@ cdef class Parser:
         # Check for KeyboardInterrupt etc. Untested
         PyErr_CheckSignals()
         if status != 0:
-            raise ParserStateError(tokens)
+            raise ParserStateError(self.moves, tokens)
         self.moves.finalize_doc(tokens)
 
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
@@ -306,14 +306,16 @@ cdef class StepwiseState:
 
 
 class ParserStateError(ValueError):
-    def __repr__(self):
-        raise ValueError(
+    def __init__(self, TransitionSystem moves, doc):
+        actions = [moves.move_name(moves.c[i].move, moves.c[i].label) for i
+                   in range(moves.n_moves)]
+        ValueError.__init__(self,
             "Error analysing doc -- no valid actions available. This should "
             "never happen, so please report the error on the issue tracker. "
             "Here's the thread to do so --- reopen it if it's closed:\n"
             "https://github.com/spacy-io/spaCy/issues/429\n"
             "Please include the text that the parser failed on, which is:\n"
-            "%s" % repr(self.args[0].text))
+            "'%s'\nAnd the list of actions, which is:%s\n" % (doc.text, actions))
 
 
 cdef int _arg_max_clas(const weight_t* scores, int move, const Transition* actions,
