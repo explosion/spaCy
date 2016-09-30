@@ -1,17 +1,17 @@
 spaCy: Industrial-strength NLP
 ******************************
 
-    .. image:: http://i.imgur.com/jYM3iOy.png
-        :target: https://spacy.io
-
-    .. image:: https://travis-ci.org/spacy-io/spaCy.svg?branch=master
-        :target: https://travis-ci.org/spacy-io/spaCy
-
 spaCy is a library for advanced natural language processing in Python and 
 Cython. `See here <https://spacy.io>`_ for documentation and details. spaCy is built on 
 the very latest research, but it isn't researchware.  It was designed from day 1 
 to be used in real products. It's commercial open-source software, released under 
 the MIT license.
+
+.. image:: http://i.imgur.com/wFvLZyJ.png
+    :target: https://travis-ci.org/spacy-io/spaCy
+
+.. image:: https://travis-ci.org/spacy-io/spaCy.svg?branch=master
+    :target: https://travis-ci.org/spacy-io/spaCy
 
 Features
 ========
