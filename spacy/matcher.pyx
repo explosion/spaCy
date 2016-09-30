@@ -153,7 +153,7 @@ def _convert_strings(token_specs, string_store):
             if isinstance(attr, basestring):
                 attr = attrs.IDS.get(attr.upper())
             if isinstance(value, basestring):
-                value = string_store[value]
+                value = string_store.intern(value)
             if isinstance(value, bool):
                 value = int(value)
             if attr is not None:
@@ -221,9 +221,9 @@ cdef class Matcher:
     def add(self, entity_key, etype, attrs, specs):
         self._patterns[entity_key] = (etype, dict(attrs), list(specs))
         if isinstance(entity_key, basestring):
-            entity_key = self.vocab.strings[entity_key]
+            entity_key = self.vocab.strings.intern(entity_key)
         if isinstance(etype, basestring):
-            etype = self.vocab.strings[etype]
+            etype = self.vocab.strings.intern(etype)
         elif etype is None:
             etype = -1
         # TODO: Do something more clever about multiple patterns for single
