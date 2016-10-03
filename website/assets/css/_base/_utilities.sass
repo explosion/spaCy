@@ -1,0 +1,134 @@
+//- ----------------------------------
+//- 💫 BASE > UTILITIES
+//- ----------------------------------
+
+//- Text
+
+%text
+    font-family: $font-primary
+    line-height: 1.5
+
+.u-text-regular
+    @extend %text
+    font-size: 1.6rem
+
+.u-text-medium
+    @extend %text
+    font-size: 2rem
+
+.u-text-small
+    @extend %text
+    font-size: 1.2rem
+
+.u-text-large
+    @extend %text
+    font-size: 2.8rem
+
+.u-text-label
+    @extend %text
+    font-size: 1.4rem
+    font-weight: normal
+    text-transform: uppercase
+
+.u-text-strong
+    font-weight: bold
+
+.u-code-regular
+    font: normal normal 1.3rem/#{2} $font-code
+
+.u-code-small
+    font: normal normal 0.85em $font-code
+    line-height: inherit
+
+.u-link
+    color: $color-theme
+    border-bottom: 1px solid
+
+
+//- Headings
+
+.u-heading-0
+    font: normal bold 7rem/#{1} $font-primary
+
+@each $level, $size in (1: 5.5, 2: 3, 3: 2.6, 4: 2, 5: 1.8)
+    .u-heading-#{$level}
+        font: normal bold #{$size}rem/#{1.25} $font-primary
+        margin-bottom: 2rem
+
+.u-heading-label
+    @extend .u-text-label
+    margin-bottom: 1rem
+
+
+//- Permalinks
+
+.u-permalink
+    position: relative
+
+    &:target
+        display: inline-block
+        padding-top: $nav-height * 1.5
+
+        & + *
+            margin-top: $nav-height * 1.5
+
+.u-permalink__icon
+    @include position(absolute, bottom, left, 0.25em, -3.25rem)
+    @include size(2rem)
+    color: $color-subtle
+
+    .u-permalink:hover &
+        color: $color-subtle-dark
+
+    .u-permalink:active &
+        color: $color-theme
+
+
+//- Layout
+
+.u-text-center
+    text-align: center
+
+.u-float-right
+    float: right
+
+.u-padding-small
+    padding: 0.5em 0.75em
+
+.u-padding-medium
+    padding: 2rem
+
+.u-padding
+    padding: 5rem
+
+.u-border
+    border: 1px solid $color-subtle
+    border-radius: 3px
+
+.u-border-top
+    border-top: 1px solid $color-subtle
+
+.u-border-bottom
+    border-bottom: 1px solid $color-subtle
+
+.u-color-theme
+    color: $color-theme
+
+.u-color-subtle
+    color: $color-subtle-dark
+
+.u-text-shadow
+    text-shadow: 2px 2px $color-theme-dark
+
+.u-pattern
+    background: $color-theme url("/assets/img/pattern.jpg")
+    color: $color-back
+
+
+.u-hidden
+    display: none
+
+@each $breakpoint in (sm, md)
+    .u-hidden-#{$breakpoint}
+        @include breakpoint(max, $breakpoint)
+            display: none

@@ -1,31 +1,29 @@
-//-  Docs > API > Matcher
-//- ============================================================================
+//- ----------------------------------
+//- 💫 DOCS > API > MATCHER
+//- ----------------------------------
 
-+section('matcher')
-    +h2('matcher', 'https://github.com/' + profiles.github + '/spaCy/blob/master/spacy/matcher.pyx#L165')
-        | #[+label('tag') class] Matcher
++section("matcher")
+    +h(2, "matcher", "https://github.com/" + SOCIAL.github + "/spaCy/blob/master/spacy/matcher.pyx")
+        | #[+tag class] Matcher
 
-    p A full example can be found #[a(href="https://github.com/" + profiles.github + "blob/master/examples/matcher_example.py") here].
+    p A full example can be found #[a(href="https://github.com/" + SOCIAL.github + "blob/master/examples/matcher_example.py") here].
 
-    +table(['Usage', 'Description'], 'code')
+    +table(["Usage", "Description"])
             +row
                 +cell #[code.lang-python nlp(doc)]
-                +cell.
-                    As part of annotation pipeline.
+                +cell As part of annotation pipeline.
 
             +row
                 +cell #[code.lang-python nlp.matcher(doc)]
-                +cell.
-                    Explicit invocation.
+                +cell Explicit invocation.
 
             +row
                 +cell #[code.lang-python nlp.matcher.add(u'FooCorp', u'ORG', {}, [[{u'ORTH': u'Foo'}]])]
-                +cell.
-                    Add a pattern to match.
+                +cell Add a pattern to match.
 
-    +section('matcher-init')
-        +h3('matcher-init') __init__(self, vocab, patterns)
-            +table(['Name', 'Type', 'Description'], 'params')
+    +section("matcher-init")
+        +h(3, "matcher-init") __init__(self, vocab, patterns)
+            +table(["Name", "Type", "Description"])
                 +row
                     +cell vocab
                     +cell #[code.lang-python spacy.vocab.Vocab]
@@ -36,10 +34,10 @@
                     +cell #[code {entity_key: (etype, attrs, specs)}]
                     +cell.
                         Initial patterns to match. See #[code Matcher.add]
-                               
-    +section('matcher-add')
-        +h3('matcher-add') add(self, entity_key, etype, attrs, specs)
-            +table(['Name', 'Type', 'Description'], 'params')
+
+    +section("matcher-add")
+        +h(3, "matcher-add") add(self, entity_key, etype, attrs, specs)
+            +table(["Name", "Type", "Description"])
                 +row
                     +cell entity_key
                     +cell unicode or int
@@ -57,26 +55,25 @@
                     +cell #[code [[{int: unicode}]]]
                     +cell A list of surface forms, where each surface form is defined as a list of token definitions, and each token definition is a dictionary mapping attribute IDs to attribute values.
 
-    +section('matcher-saveload')
-        +h3('matcher-saveload')
+    +section("matcher-saveload")
+        +h(3, "matcher-saveload")
             | Save and Load
 
-        +section('matcher-saveload-dump')
-            +h4('matcher-saveload-dump') dump(loc)
+        +section("matcher-saveload-dump")
+            +h(4, "matcher-saveload-dump") dump(loc)
 
-            +table(['Name', 'Type', 'Description'], 'params')
+            +table(["Name", "Type", "Description"])
                     +row
                         +cell loc
-                        +cell #[a(href=link_unicode target='_blank') unicode]
-                        +cell.
-                            Path to save the gazetteer.json file.
+                        +cell #[+a(link_unicode) unicode]
+                        +cell Path to save the gazetteer.json file.
 
-        +section('matcher-saveload-load')
-            +h4('matcher-saveload-load') load(loc)
+        +section("matcher-saveload-load")
+            +h(4, "matcher-saveload-load") load(loc)
 
-            +table(['Name', 'Type', 'Description'], 'params')
+            +table(["Name", "Type", "Description"])
                     +row
                         +cell loc
-                        +cell #[a(href=link_unicode target='_blank') unicode]
+                        +cell #[+a(link_unicode) unicode]
                         +cell.
                             Path to load the gazetteer.json file from.

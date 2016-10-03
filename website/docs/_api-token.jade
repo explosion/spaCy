@@ -1,99 +1,100 @@
-//-  Docs > API > Token
-//- ============================================================================
+//- ----------------------------------
+//- 💫 DOCS > API > TOKEN
+//- ----------------------------------
 
-+section('token')
-    +h2('token', 'https://github.com/' + profiles.github + '/spaCy/blob/master/spacy/tokens/token.pyx#L31')
-        | #[+label('tag') class] Token
++section("token")
+    +h(2, "token", "https://github.com/" + SOCIAL.github + "/spaCy/blob/master/spacy/tokens/token.pyx")
+        | #[+tag class] Token
 
     p.
-        A Token represents a single word, punctuation or significant whitespace 
-        symbol. Integer IDs are provided for all string features. The (unicode) 
-        string is provided by an attribute of the same name followed by an underscore, 
-        e.g. #[code token.orth] is an integer ID, #[code token.orth_] is the unicode 
-        value. The only exception is the #[code token.text] attribute, which is (unicode) 
+        A Token represents a single word, punctuation or significant whitespace
+        symbol. Integer IDs are provided for all string features. The (unicode)
+        string is provided by an attribute of the same name followed by an underscore,
+        e.g. #[code token.orth] is an integer ID, #[code token.orth_] is the unicode
+        value. The only exception is the #[code token.text] attribute, which is (unicode)
         string-typed.
 
-    +section('token-init')
-        +h3('token-init')
+    +section("token-init")
+        +h(3, "token-init")
             | Token.__init__
 
-        +code('python', 'definition').
+        +code("python", "Definition").
             def __init__(vocab, doc, offset):
                 return Token()
 
-        +table(['Name', 'Type', 'Description'], 'params')
+        +table(["Name", "Type", "Description"])
                 +row
                     +cell vocab
-                    +cell
+                    +cell Vocab
                     +cell A Vocab object
 
                 +row
                     +cell doc
-                    +cell
+                    +cell Doc
                     +cell The parent sequence
 
                 +row
                     +cell offset
-                    +cell #[a(href=link_int target='_blank') int]
+                    +cell #[+a(link_int) int]
                     +cell The index of the token within the document
 
-    +section('token-stringfeatures')
-        +h3('token-stringfeatures')
+    +section("token-stringfeatures")
+        +h(3, "token-stringfeatures")
             | String Features
 
-        +table(['Name', 'Description'], 'params')
+        +table(["Name", "Description"])
             +row
                 +cell lemma / lemma_
                 +cell.
-                    The "base" of the word, with no inflectional suffixes, e.g. 
-                    the lemma of "developing" is "develop", the lemma of "geese" 
-                    is "goose", etc.  Note that #[em derivational] suffixes are 
-                    not stripped, e.g. the lemma of "instutitions" is "institution", 
-                    not "institute".  Lemmatization is performed using the WordNet 
-                    data, but extended to also cover closed-class words such as 
-                    pronouns.  By default, the WN lemmatizer returns "hi" as the 
+                    The "base" of the word, with no inflectional suffixes, e.g.
+                    the lemma of "developing" is "develop", the lemma of "geese"
+                    is "goose", etc.  Note that #[em derivational] suffixes are
+                    not stripped, e.g. the lemma of "instutitions" is "institution",
+                    not "institute".  Lemmatization is performed using the WordNet
+                    data, but extended to also cover closed-class words such as
+                    pronouns.  By default, the WN lemmatizer returns "hi" as the
                     lemma of "his". We assign pronouns the lemma #[code -PRON-].
 
             +row
                 +cell orth / orth_
                 +cell.
-                    The form of the word with no string normalization or processing, 
+                    The form of the word with no string normalization or processing,
                     as it appears in the string, without trailing whitespace.
 
             +row
                 +cell lower / lower_
                 +cell.
-                    The form of the word, but forced to lower-case, i.e. 
+                    The form of the word, but forced to lower-case, i.e.
                     #[code lower = word.orth_.lower()]
 
             +row
                 +cell shape / shape_
                 +cell.
                     A transform of the word's string, to show orthographic features.
-                    The characters a-z are mapped to x, A-Z is mapped to X, 0-9 
-                    is mapped to d. After these mappings, sequences of 4 or more 
-                    of the same character are truncated to length 4. Examples: 
+                    The characters a-z are mapped to x, A-Z is mapped to X, 0-9
+                    is mapped to d. After these mappings, sequences of 4 or more
+                    of the same character are truncated to length 4. Examples:
                     C3Po --&gt; XdXx, favorite --&gt; xxxx, :) --&gt; :)
 
             +row
                 +cell prefix / prefix_
                 +cell.
-                    A length-N substring from the start of the word. Length may 
-                    vary by language; currently for English n=1, i.e. 
+                    A length-N substring from the start of the word. Length may
+                    vary by language; currently for English n=1, i.e.
                     #[code prefix = word.orth_[:1]]
 
             +row
                 +cell suffix / suffix_
                 +cell.
-                    A length-N substring from the end of the word. Length may 
-                    vary by language; currently for English n=3, i.e. 
+                    A length-N substring from the end of the word. Length may
+                    vary by language; currently for English n=3, i.e.
                     #[code suffix = word.orth_[-3:]]
 
-    +section('token-booleanflags')
-        +h3('token-booleanflags')
+    +section("token-booleanflags")
+        +h(3, "token-booleanflags")
             | Boolean Flags
 
-        +table(['Name', 'Description'], 'params')
+        +table(["Name", "Description"])
             +row
                 +cell is_alpha
                 +cell.
@@ -152,36 +153,36 @@
             +row
                 +cell is_stop
                 +cell.
-                    Is the word part of a "stop list"? Stop lists are used to 
-                    improve the quality of topic models, by filtering out common, 
+                    Is the word part of a "stop list"? Stop lists are used to
+                    improve the quality of topic models, by filtering out common,
                     domain-general words.
 
-    +section('token-distributional')
-        +h3('token-distributional')
+    +section("token-distributional")
+        +h(3, "token-distributional")
             | Distributional Features
 
-        +table(['Name', 'Description'], 'params')
+        +table(["Name", "Description"])
             +row
                 +cell prob
                 +cell.
-                    The unigram log-probability of the word, estimated from 
-                    counts from a large corpus, smoothed using Simple Good Turing 
+                    The unigram log-probability of the word, estimated from
+                    counts from a large corpus, smoothed using Simple Good Turing
                     estimation.
 
             +row
                 +cell cluster
                 +cell.
-                    The Brown cluster ID of the word. These are often useful features 
-                    for linear models. If you’re using a non-linear model, particularly 
-                        a neural net or random forest, consider using the real-valued 
+                    The Brown cluster ID of the word. These are often useful features
+                    for linear models. If you’re using a non-linear model, particularly
+                        a neural net or random forest, consider using the real-valued
                         word representation vector, in #[code Token.repvec], instead.
 
             +row
                 +cell vector
                 +cell.
-                    A "word embedding" representation: a dense real-valued vector 
-                    that supports similarity queries between words. By default, 
-                    spaCy currently loads vectors produced by the Levy and 
+                    A "word embedding" representation: a dense real-valued vector
+                    that supports similarity queries between words. By default,
+                    spaCy currently loads vectors produced by the Levy and
                     Goldberg (2014) dependency-based word2vec model.
 
             +row
@@ -189,11 +190,11 @@
                 +cell.
                     A boolean value indicating whether a vector.
 
-    +section('token-alignment')
-        +h3('token-alignment')
+    +section("token-alignment")
+        +h(3, "token-alignment")
             | Alignment and Output
 
-        +table(['Name', 'Description'], 'params')
+        +table(["Name", "Description"])
             +row
                 +cell idx
                 +cell.
@@ -212,7 +213,7 @@
             +row
                 +cell str(token)
                 +cell.
-                    In Python 3, returns #[code token.orth_]. In Python 2, returns 
+                    In Python 3, returns #[code token.orth_]. In Python 2, returns
                     #[code token.orth_.encode('utf8')].
 
             +row
@@ -223,9 +224,9 @@
             +row
                 +cell text_with_ws
                 +cell.
-                    #[code token.orth_ + token.whitespace_], i.e. the form of the 
-                    word as it appears in the string, trailing whitespace. This is 
-                    useful when you need to use linguistic features to add inline 
+                    #[code token.orth_ + token.whitespace_], i.e. the form of the
+                    word as it appears in the string, trailing whitespace. This is
+                    useful when you need to use linguistic features to add inline
                     mark-up to the string.
 
             +row
@@ -234,44 +235,47 @@
                     The number of immediate syntactic children following the word
                     in the string.
 
-    +section('token-postags')
-        +h3('token-postags')
+    +section("token-postags")
+        +h(3, "token-postags")
             | Part-of-Speech Tags
 
-        +table(['Name', 'Description'], 'params')
+        +table(["Name", "Description"])
             +row
                 +cell pos / pos_
                 +cell.
-                    A coarse-grained, less detailed tag that represents the 
-                    word-class of the token. The set of #[code .pos] tags are 
-                    consistent across languages. The available tags are #[code ADJ], 
-                    #[code ADP], #[code ADV], #[code AUX], #[code CONJ], #[code DET], 
-                    #[code INTJ], #[code NOUN], #[code NUM], #[code PART], 
-                    #[code PRON], #[code PROPN], #[code PUNCT], #[code SCONJ], 
+                    A coarse-grained, less detailed tag that represents the
+                    word-class of the token. The set of #[code .pos] tags are
+                    consistent across languages. The available tags are #[code ADJ],
+                    #[code ADP], #[code ADV], #[code AUX], #[code CONJ], #[code DET],
+                    #[code INTJ], #[code NOUN], #[code NUM], #[code PART],
+                    #[code PRON], #[code PROPN], #[code PUNCT], #[code SCONJ],
                     #[code SYM], #[code VERB], #[code X], #[code EOL], #[code SPACE].
 
             +row
                 +cell tag / tag_
                 +cell.
-                    A fine-grained, more detailed tag that represents the 
-                    word-class and some basic morphological information for the 
-                    token. These tags are primarily designed to be good features 
-                    for subsequent models, particularly the syntactic parser. 
-                        They are language and treebank dependent. The tagger is 
-                        trained to predict these fine-grained tags, and then a 
-                        mapping table is used to reduce them to the coarse-grained 
+                    A fine-grained, more detailed tag that represents the
+                    word-class and some basic morphological information for the
+                    token. These tags are primarily designed to be good features
+                    for subsequent models, particularly the syntactic parser.
+                        They are language and treebank dependent. The tagger is
+                        trained to predict these fine-grained tags, and then a
+                        mapping table is used to reduce them to the coarse-grained
                         #[code .pos] tags.
 
-    +section('token-navigating')
-        +h3('token-navigating')
-            | Navigating the Parse Tree
+    +section("token-navigating")
+        +h(3, "token-navigating") Navigating the Parse Tree
 
-        +table(['Name', 'Description'], 'params')
+        +table(["Name", "Description"])
+            +row
+                +cell dep / dep_
+                +cell.
+                    The syntactic relation type, aka the dependency label, connecting the word to its head.
             +row
                 +cell head
                 +cell.
-                    The immediate syntactic head of the token. If the token is the 
-                    root of its sentence, it is the token itself, i.e. 
+                    The immediate syntactic head of the token. If the token is the
+                    root of its sentence, it is the token itself, i.e.
                     #[code root_token.head is root_token].
 
             +row
@@ -300,11 +304,11 @@
                 +cell.
                     Get the #[code i]#[sup th] next / previous neighboring token.
 
-    +section('token-namedentities')
-        +h3('token-namedentities')
+    +section("token-namedentities")
+        +h(3, "token-namedentities")
             | Named Entity Recognition
 
-        +table(['Name', 'Description'], 'params')
+        +table(["Name", "Description"])
             +row
                 +cell ent_type
                 +cell.
@@ -313,5 +317,5 @@
             +row
                 +cell ent_iob
                 +cell.
-                    The IOB (inside, outside, begin) entity recognition tag for 
+                    The IOB (inside, outside, begin) entity recognition tag for
                     the token.

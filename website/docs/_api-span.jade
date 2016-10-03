@@ -1,22 +1,23 @@
-//-  Docs > API > Span
-//- ============================================================================
+//- ----------------------------------
+//- 💫 DOCS > API > SPAN
+//- ----------------------------------
 
-+section('span')
-    +h2('span', 'https://github.com/' + profiles.github + '/spaCy/blob/master/spacy/tokens/span.pyx#L19')
-        | #[+label('tag') class] Span
++section("span")
+    +h(2, "span", "https://github.com/" + SOCIAL.github + "/spaCy/blob/master/spacy/tokens/span.pyx")
+        | #[+tag class] Span
 
-    p
-        | A slice of a #[code Doc] object, consisting of zero or 
-        | more tokens.  Spans are usually used to represent sentences, named entities, 
-        | phrases. 
-        
-        +aside('Implementation')
-            #[code Span] objects are views &ndash; that is, they do not copy the 
-            underlying C data.  This makes them cheap to construct, as internally are 
-            simply a reference to the #[code Doc] object, a start position, an end 
+    p.
+        A slice of a #[code Doc] object, consisting of zero or
+        more tokens.  Spans are usually used to represent sentences, named entities,
+        phrases.
+
+        +aside("Implementation").
+            #[code Span] objects are views — that is, they do not copy the
+            underlying C data.  This makes them cheap to construct, as internally are
+            simply a reference to the #[code Doc] object, a start position, an end
             position, and a label ID.
 
-    +code('python', 'Overview').
+    +code("python", "Overview").
         class Span:
             doc = Doc
             start = int
@@ -38,14 +39,14 @@
 
             def merge(self, tag, lemma, ent_type):
                 return None
-            
+
             @property
             def label_(self):
                 return unicode
 
             @property
             def vector(self):
-                return numpy.ndarray(dtype='float64')
+                return numpy.ndarray(dtype="float64")
             @property
             def vector_norm(self):
                 return float
@@ -75,15 +76,15 @@
             @property
             def subtree(self):
                 yield Token()
-    
-    +section('span-create')
-        +h3('span-init')
-            | #[+label('tag') Section] Create a Span
 
-        p
-            | Span instances are usually created via the #[code Doc] object.
+    +section("span-create")
+        +h(3, "span-init")
+            | #[+tag Section] Create a Span
 
-        +table(['Example', 'Description'], 'code')
+        p.
+            Span instances are usually created via the #[code Doc] object.
+
+        +table(["Example", "Description"])
             +row
                 +cell #[code.lang-python span = doc[4 : 7]]
                 +cell Produce a span with tokens 4, 5 and 6.
@@ -99,12 +100,12 @@
             +row
                 +cell #[code.lang-python for noun_phrase in doc.noun_chunks]
                 +cell See #[a(href="/docs#doc-spans-nounchunks") Doc.noun_chunks]
-        
-        +code('python', 'Definition').
+
+        +code("python", "Definition").
             def __init__(self, doc, start, end, label=0, vector=None, vector_norm=None):
                 return Span()
 
-    +table(['Name', 'Type', 'Description'], 'params')
+    +table(["Name", "Type", "Description"])
         +row
             +cell doc
             +cell Doc
@@ -120,32 +121,32 @@
         +row
             +cell label
             +cell int or unicode
-            +cell A label for the span. Either a string, or an integer ID, that should refer to a string mapped by the #[code Doc] object's #[code StringStore].
+            +cell A label for the span. Either a string, or an integer ID, that should refer to a string mapped by the #[code Doc] object"s #[code StringStore].
         +row
             +cell vector
-            +cell 
+            +cell
             +cell
         +row
             +cell vector_norm
-            +cell 
             +cell
-    
-    +section('span-merge')
-        +h3('span-merge')
-            | #[+label('tag') method] Span.merge
+            +cell
 
-        p
-            | Merge the span into a single token, modifying the underlying
-            | #[code.lang-python Doc] object in place.
-            
-            +aside('Caveat').
+    +section("span-merge")
+        +h(3, "span-merge")
+            | #[+tag method] Span.merge
+
+        p.
+            Merge the span into a single token, modifying the underlying
+            #[code.lang-python Doc] object in place.
+
+            +aside("Caveat").
                 Magic is done to allow you to call #[code.lang-python merge()]
                 without invalidating other #[code.lang-python Span] objects.
-                However, it's difficult to ensure all indices are recomputed
-                correctly. Please report any errors encountered on the issue 
+                However, it"s difficult to ensure all indices are recomputed
+                correctly. Please report any errors encountered on the issue
                 tracker.
 
-        +code('python', 'Example').
+        +code("python", "Example").
             for ent in doc.ents:
                 ent.merge(ent.root.tag_, ent.text, ent.label_)
             for np in doc.noun_chunks:
@@ -153,11 +154,11 @@
                     np = np[1:]
                 np.merge(np.root.tag_, np.text, np.root.ent_type_)
 
-        +code('python', 'Definition').
+        +code("python", "Definition").
             def merge(self, tag, lemma, ent_type):
                 return None
 
-        +table(['Name', 'Type', 'Description'], 'params')
+        +table(["Name", "Type", "Description"])
             +row
                 +cell tag
                 +cell unicode
@@ -171,52 +172,50 @@
                 +cell unicode
                 +cell The named entity type to assign to the new token.
 
-    +section('span-similarity')
-        +h3('span-similarity')
-            | #[+label('tag') method] Span.similarity
+    +section("span-similarity")
+        +h(3, "span-similarity")
+            | #[+tag method] Span.similarity
 
-        p
-            | Estimate the semantic similarity between the span and another #[code Span],
-            #[code Doc], #[code Token] or #[code Lexeme].
-            
-            +aside('Algorithm').
+        p Estimate the semantic similarity between the span and another #[code Span], #[code Doc], #[code Token] or #[code Lexeme].
+
+            +aside("Algorithm").
                 Similarity is estimated
                 using the cosine metric, between #[code Span.vector] and #[code other.vector].
                 By default, #[code Span.vector] is computed by averaging the vectors
                 of its tokens.
 
-        +code('python', 'Example').
+        +code("python", "Example").
             doc = nlp("Apples and oranges are similar. Boots and hippos aren't.")
             apples_sent, boots_sent = doc.sents
             fruit = doc.vocab[u'fruit']
             assert apples_sent.similarity(fruit) > boot_sent.similarity(fruit)
 
-        +code('python', 'Definition').
+        +code("python", "Definition").
             def similarity(self, other):
                 return float
 
-        +table(['Name', 'Type', 'Description'], 'params')
+        +table(["Name", "Type", "Description"])
             +row
                 +cell other
                 +cell Token, Span, Doc or Lexeme
                 +cell The other object to judge similarity with.
 
-    +section('span-sequence')
-        +h3('span-sequence')
-            | #[+label('tag') section] Span as a Sequence
+    +section("span-sequence")
+        +h(3, "span-sequence")
+            | #[+tag section] Span as a Sequence
 
         p.
             #[code Span] objects act as a sequence of #[code Token] objects. In
             this way they mirror the API of the #[code Doc] object.
 
-        +table(['Name', 'Description'], 'params')
+        +table(["Name", "Description"], "params")
             +row
                 +cell #[code.lang-python token = span[i]]
-                +cell
-                    | Get the #[code Token] object at position #[em i], where 
-                    | #[code i] is an offset within the #[code Span], not the 
-                    | document. That is, if you have #[code.lang-python span = doc[4:6]], 
-                    | then #[code.lang-python span[0].i == 4]
+                +cell.
+                    Get the #[code Token] object at position #[em i], where
+                    #[code i] is an offset within the #[code Span], not the
+                    document. That is, if you have #[code.lang-python span = doc[4:6]],
+                    then #[code.lang-python span[0].i == 4]
 
             +row
                 +cell #[code.lang-python for token in span]
@@ -225,13 +224,12 @@
 
             +row
                 +cell __len__
-                +cell.
-                    Number of tokens in the span.
+                +cell Number of tokens in the span.
 
             +row
                 +cell text
                 +cell.
-                    The text content of the span, obtained from 
+                    The text content of the span, obtained from
                     #[code ''.join(token.text_with_ws for token in span)].
 
             +row
@@ -244,21 +242,21 @@
                 +cell.
                     The end offset of the span, i.e. #[code span[-1].i + 1].
 
-    +section('span-navigating-parse')
-        +h3('span-navigativing-parse')
-            | #[+label('tag') Section] Span and the Syntactic Parse
+    +section("span-navigating-parse")
+        +h(3, "span-navigativing-parse")
+            | #[+tag Section] Span and the Syntactic Parse
 
         p.
             Span objects allow similar access to the syntactic parse as individual
             tokens.
 
-        +table(['Name', 'Type', 'Description'], 'params')
+        +table(["Name", "Type", "Description"])
             +row
                 +cell root
                 +cell #[code.lang-python Token]
-                +cell
-                    | The word with the shortest path to the root of the sentence is 
-                    | the root of the span.
+                +cell.
+                    The word with the shortest path to the root of the sentence is
+                    the root of the span.
             +row
                 +cell lefts
                 +cell #[code.lang-python yield Token]
@@ -271,27 +269,27 @@
             +row
                 +cell subtree
                 +cell #[code.lang-python yield Token]
-                +cell
-                    | Tokens in the range #[code (start, end+1)], where #[code start] 
-                    | is the index of the leftmost word descended from a token in the 
-                    | span, and #[code end] is the index of the rightmost token descended 
-                    | from a token in the span.
+                +cell.
+                    Tokens in the range #[code (start, end+1)], where #[code start]
+                    is the index of the leftmost word descended from a token in the
+                    span, and #[code end] is the index of the rightmost token descended
+                    from a token in the span.
 
-    +section('span-strings')
-        +h3('span-strings')
-            | #[+label('tag') section] Span's Strings API
+    +section("span-strings")
+        +h(3, "span-strings")
+            | #[+tag section] Span"s Strings API
 
         p.
             You can access the textual content of the span, and different view of
             it, with the following properties.
 
-        +table(['Name', 'Type', 'Description'], 'params')
+        +table(["Name", "Type", "Description"])
             +row
                 +cell text_with_ws
                 +cell unicode
                 +cell.
-                    The form of the span as it appears in the string, including 
-                    trailing whitespace. This is useful when you need to use linguistic 
+                    The form of the span as it appears in the string, including
+                    trailing whitespace. This is useful when you need to use linguistic
                     features to add inline mark-up to the string.
 
             +row

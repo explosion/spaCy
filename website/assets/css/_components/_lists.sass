@@ -1,59 +1,32 @@
-//  Lists - Variables
-// ============================================================================
+//- ----------------------------------
+//- 💫 COMPONENTS > LISTS
+//- ----------------------------------
 
-$list-alternatives  : (letters, upper-latin), (roman, lower-roman)
-$list-icon-color    : color($theme)
-$list-icon-size     : 2.4rem
-$list-item-padding  : 1em
-$list-margin-side   : 5%
-$list-padding-side  : 2rem
+//- List Container
+
+.c-list
+    @each $type, $counter in (numbers: decimal, letters: upper-latin, roman: lower-roman)
+        &.c-list--#{$type}
+            counter-reset: li
+
+            .c-list__item:before
+                content: counter(li, #{$counter}) '.'
 
 
-//  Lists - Style
-// ============================================================================
+//- List Item
 
-//  .list          - list of items
-//  .list--bullets - unordered list with bullets
-//  .list--numbers - ordered list with numbers
-//  .list--letters - ordered list with letters
-//  .list--roman   - ordered list with roman numerals
-//  .list-item     - list item
-
-.list
-    @extend .block, .text
-    padding-left: $list-margin-side
-
-    &--bullets
-        margin-left: $list-margin-side
-
-        .list-item
-            @include icon(bullet, none, 0 $list-padding-side 0 0, $list-icon-size)
-
-    &--numbers
-        counter-reset: li
-        margin-left: $list-margin-side
-
-        .list-item:before
-            @extend .h3
-            content: counter(li) '.'
-            counter-increment: li
-            padding-right: $list-padding-side
-
-    @each $list-type, $list-counter in $list-alternatives
-        &--#{$list-type}
-            @extend .list--numbers
-
-            .list-item:before
-                content: counter(li, #{$list-counter}) '.'
-
-.list-item
-    margin-bottom: $list-item-padding
-    text-indent: -$list-margin-side
+.c-list__item
+    padding-left: 2rem
+    margin-bottom: 1em
+    margin-left: 1.25rem
 
     &:before
-        color: $list-icon-color
+        content: '\25CF'
         display: inline-block
-        line-height: 1
-        text-align: center
-        width: $list-icon-size
-        vertical-align: middle
+        font-size: 1.25em
+        font-weight: bold
+        padding-right: 1.25rem
+        margin-left: -3.75rem
+        text-align: right
+        width: 2.5rem
+        counter-increment: li

@@ -1,87 +1,81 @@
-//  Variables
-// ============================================================================
+//- ----------------------------------
+//- 💫 COMPONENTS > CODE
+//- ----------------------------------
 
-$code-background            : color(grey, light)
-$code-background-dark       : color(black)
-$code-block-border          : 4px solid color($theme)
-$code-block-padding         : 2em 3em
-$code-block-padding-small   : 1em 1.5em
-$code-inline-margin         : 0.25em 0.5em 0 0.5em
-$code-inline-padding        : 0 0.25rem
-$code-line-height           : 2.25
-$code-text-shadow           : 1px 1px 0 color(white)
+//- Code block
 
-
-//  Style
-// ============================================================================
-
-//  General code style
-//  .code-inline - source code
-//  .code-small  - smaller style
-
-.code-inline
-    @extend .text-code
-    direction: ltr
-    text-shadow: $code-text-shadow
-    white-space: pre
-    word-spacing: normal
-    word-break: normal
-
-.code-small
-    @extend .text-small
-    padding-top: 0
-    padding-bottom: 0
-
-
-//  Inline Code
-//  :not(.code-block) - style for items outside of code blocks
-
-code
-    @extend .code-inline
-
-:not(.code-block) > .code-inline
-    background: $code-background
-    display: inline
-    line-height: inherit
-    margin: $code-inline-margin
-    padding: $code-inline-padding
-
-
-//  Code blocks in preformatted text
-//  .code-block       - block of source code
-//  .code             - text content of code blocks
-//  [data-label]      - style of code labels
-//  .code-block-small - smaller style
-//  .code-block-dark  - alternative dark style
-
-.code-block
-    @extend .block
-    background: $code-background
-    border-left: $code-block-border
-    max-width: 100%
-    overflow: auto
+.c-code-block
+    background: $color-subtle-light
     padding: 1em 0
-    white-space: pre
+    border-left: 5px solid $color-theme
+    overflow: auto
     width: 100%
+    max-width: 100%
+    white-space: pre
+    direction: ltr
 
-    .code-inline
-        display: block
-        padding: $code-block-padding
+    :not(.o-block)
+        margin-bottom: 2rem
 
-    &[data-label]:before
-        @extend .label-box
 
-.code-block-small
-    @extend .code-small
+//- Code block content
 
-    .code-inline
-        padding: $code-block-padding-small
+.c-code-block__content
+    display: block
+    padding: 2em 2.5em
 
-.code-block-dark
-    @extend .code-block
-    background: $code-background-dark
-    border: none
-    color: color(white)
 
-    .code-inline
-        text-shadow: none
+//- Code block label
+
+.c-code-block__label
+    display: inline-block
+    background: $color-theme
+    color: $color-back
+    padding: 1rem
+    margin-bottom: 1.5rem
+
+
+//- Inline code
+
+:not(.c-code-block) > code
+    @extend .u-code-small
+
+    background: $color-subtle-light
+    box-shadow: 1px 1px 0 $color-subtle
+    color: $color-front
+    padding: 0.15em 0.5em
+    margin: 0 0.25em
+    border-radius: 2px
+    text-shadow: 1px 1px 0 $color-back
+
+
+//- Syntax Highlighting
+
+[class*="language-"] .token
+    &.comment, &.prolog, &.doctype, &.cdata, &.punctuation
+        color: map-get($syntax-highlighting, comment)
+
+    &.property, &.tag, &.constant, &.symbol, &.deleted
+        color: map-get($syntax-highlighting, tag)
+
+    &.boolean, &.number
+        color: map-get($syntax-highlighting, number)
+
+    &.selector, &.attr-name, &.string, &.char, &.builtin, &.inserted
+        color: map-get($syntax-highlighting, selector)
+
+    @at-root .language-css .token.string,
+    &.operator, &.entity, &.url, &.variable
+        color: map-get($syntax-highlighting, operator)
+
+    &.atrule, &.attr-value, &.function
+        color: map-get($syntax-highlighting, function)
+
+    &.regex, &.important
+        color: map-get($syntax-highlighting, regex)
+
+    &.keyword
+        color: map-get($syntax-highlighting, keyword)
+
+    &.italic
+        font-style: italic

@@ -1,10 +1,12 @@
-//-  Docs > Tutorials
-//- ============================================================================
+//- ----------------------------------
+//- 💫 DOCS > TUTORIALS
+//- ----------------------------------
 
-+section('tutorials')
-    +h2('tutorials') Tutorials
++section("tutorials")
+    +h(2, "tutorials") Tutorials
 
     each post, slug in public.docs.tutorials._data
         if slug != 'index'
-            +h3: a(href='/docs/tutorials/' + slug)=post.title
-            a.block(href='/docs/tutorials/' + slug)=post.description
+            a.o-block(href='/docs/tutorials/' + slug)
+                +h(3)=post.title
+                p=post.description

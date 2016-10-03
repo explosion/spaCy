@@ -1,14 +1,17 @@
+//- ----------------------------------
+//- 💫 INCLUDES > FOOTER
+//- ----------------------------------
+
 include _mixins
 
-//-  Footer
-//- ============================================================================
+footer.o-footer.o-inline-list.u-pattern.u-text-center.u-text-label.u-text-strong
+    span &copy; #{new Date().getFullYear()} #[+a(COMPANY_URL, true)=COMPANY]
 
-footer.footer
-    span &copy; #{new Date().getFullYear()} #{company}
-    a(href='/legal') Legal / Imprint
+    +a(COMPANY_URL + "/legal", true) Legal / Imprint
+    a(href="mailto:#{EMAIL}") #[+icon("mail", 16)]
 
-    a(href='https://twitter.com/' + profiles.twitter target='_blank' aria-label="Twitter") 
-        +icon('twitter', 'secondary')
+    +a("https://twitter.com/" + SOCIAL.twitter)(aria-label="Twitter")
+        +icon("twitter", 20)
 
-    a(href='/feed.xml' target='_blank' aria-label="RSS Feed")
-        +icon('feed', 'secondary')
+    +a("https://github.com/" + SOCIAL.github + "/spaCy")(aria-label="GitHub")
+        +icon("github", 20)

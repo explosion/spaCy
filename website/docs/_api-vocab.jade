@@ -1,9 +1,10 @@
-//-  Docs > API > Vocab
-//- ============================================================================
+//- ----------------------------------
+//- 💫 DOCS > API > VOCAB
+//- ----------------------------------
 
-+section('vocab')
-    +h2('vocab', 'https://github.com/' + profiles.github + '/spaCy/blob/master/spacy/vocab.pyx#L47')
-        | #[+label('tag') class] Vocab
++section("vocab")
+    +h(2, "vocab", "https://github.com/" + SOCIAL.github + "/spaCy/blob/master/spacy/vocab.pyx")
+        | #[+tag class] Vocab
 
     p
         | A look-up table that allows you to access #[code.lang-python Lexeme]
@@ -18,7 +19,7 @@
             objects produced by the same #[code Language] instance will hold
             a reference to the same #[code Vocab] instance.
 
-    +code('python', 'Overview').
+    +code("python", "Overview").
         class Vocab:
             StringStore strings
             Morphology morphology
@@ -62,8 +63,8 @@
 
             def load_vectors_from_bin_loc(self, loc):
                 return int
-    
-    +table(['Example', 'Description'], 'code')
+
+    +table(["Example", "Description"])
         +row
             +cell #[code.lang-python lexeme = vocab[integer_id]]
             +cell.
@@ -87,71 +88,67 @@
             +cell.
                 Access the from #[code.lang-python Doc]
 
-    +section('vocab-dump')
-        +h3('vocab-dump')
-            | #[+label('tag') method] Vocab.dump
+    +section("vocab-dump")
+        +h(3, "vocab-dump")
+            | #[+tag method] Vocab.dump
 
-        +code('python', 'definition').
+        +code("python", "Definition").
             def dump(self, loc):
                 return None
 
-        +table(['Name', 'Type', 'Description'], 'params')
+        +table(["Name", "Type", "Description"])
             +row
                 +cell loc
-                +cell #[a(href=link_unicode target='_blank') unicode]
-                +cell.
-                    Path where the vocabulary should be saved.
+                +cell #[+a(link_unicode) unicode]
+                +cell Path where the vocabulary should be saved.
 
-    +section('vocab-load_lexemes')
-        +h3('vocab-load_lexemes')
-            | #[+label('tag') method] Vocab.load_lexemes
+    +section("vocab-load_lexemes")
+        +h(3, "vocab-load_lexemes")
+            | #[+tag method] Vocab.load_lexemes
 
-        +code('python', 'definition').
+        +code("python", "Definition").
             def load_lexemes(self, loc):
                 return None
 
-        +table(['Name', 'Type', 'Description'], 'params')
+        +table(["Name", "Type", "Description"])
             +row
                 +cell loc
-                +cell #[a(href=link_unicode target='_blank') unicode]
-                +cell.
-                    Path to load the lexemes.bin file from.
+                +cell #[+a(link_unicode) unicode]
+                +cell Path to load the lexemes.bin file from.
 
-        +section('vocab-dump_vectors')
-            +h3('vocab-dump_vectors')
-                | #[+label('tag') method] Vocab.dump_vectors
+        +section("vocab-dump_vectors")
+            +h(3, "vocab-dump_vectors")
+                | #[+tag method] Vocab.dump_vectors
 
-            +code('python', 'definition').
+            +code("python", "Definition").
                 def dump_vectors(self, loc):
                     return None
 
-    +section('vocab-loadvectors')
-        +h3('vocab-loadvectors')
-            | #[+label('tag') method] Vocab.load_vectors
+    +section("vocab-loadvectors")
+        +h(3, "vocab-loadvectors")
+            | #[+tag method] Vocab.load_vectors
 
-        +code('python', 'definition').
+        +code("python", "Definition").
             def load_vectors(self, file_):
                 return None
 
-        +table(['Name', 'Type', 'Description'], 'params')
+        +table(["Name", "Type", "Description"])
             +row
                 +cell file
-                +cell #[a(href=link_unicode target='_blank') unicode]
-                +cell.
-                    A file-like object, to load word vectors from.
+                +cell #[+a(link_unicode) unicode]
+                +cell A file-like object, to load word vectors from.
 
+    +section("vocab-loadvectorsfrombinloc")
+        +h(3, "vocab-saveload-loadvectorsfrom")
+            | #[+tag method] Vocab.load_vectors_from_bin_loc
 
-    +section('vocab-loadvectorsfrombinloc')
-        +h3('vocab-saveload-loadvectorsfrom')
-            | #[+label('tag') method] Vocab.load_vectors_from_bin_loc
-
-        +code('python', 'definition').
+        +code("python", "Definition").
             def load_vectors_from_bin_loc(self, loc):
                 return None
 
-        +table(['Name', 'Type', 'Description'], 'params')
+        +table(["Name", "Type", "Description"])
             +row
                 +cell loc
-                +cell #[a(href=link_unicode target='_blank') unicode]
+                +cell #[+a(link_unicode) unicode]
                 +cell.
                     A path to a file, in spaCy's binary word-vectors file  format.

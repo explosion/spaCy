@@ -1,10 +1,29 @@
 {
     "index": {
-        "landing": true
-    },
-
-    "feed": {
-        "layout": false
+        "landing": true,
+        "logos": [
+            [
+                ["chartbeat", "https://chartbeat.com"],
+                ["socrata", "https://www.socrata.com"],
+                ["chattermill", "https://chattermill.io"],
+                ["cytora", "http://www.cytora.com"],
+                ["signaln", "http://signaln.com"],
+                ["duedil", "https://www.duedil.com/"],
+                ["spyjack", "https://spyjack.io"]
+            ],
+            [
+                ["keyreply", "https://keyreply.com/"],
+                ["dato", "https://dato.com"],
+                ["kip", "http://kipthis.com"],
+                ["wonderflow", "http://www.wonderflow.co"],
+                ["foxtype", "https://foxtype.com"]
+            ],
+            [
+                ["synapsify", "http://www.gosynapsify.com"],
+                ["stitchfix", "https://www.stitchfix.com/"],
+                ["wayblazer", "http://wayblazer.com"]
+            ]
+        ]
     },
 
     "robots": {
@@ -16,19 +35,8 @@
         "asides": false
     },
 
-    "team": {
-        "title": "Team"
-    },
-
-    "legal": {
-        "title": "Legal & Imprint",
-        "sidebar": true,
-        "asides": true
-    },
-
     "styleguide": {
         "title" : "Styleguide",
-        "standalone" : true,
         "asides": true,
 
         "sidebar": {

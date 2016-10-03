@@ -1,0 +1,75 @@
+//- ----------------------------------
+//- 💫 BASE > OBJECTS
+//- ----------------------------------
+
+//- Containers
+
+.o-content
+    flex: 1 1 auto
+    padding: $nav-height 4rem 8rem
+    width: $content-width - $aside-width
+    max-width: 100%
+
+    @include breakpoint(min, md)
+        &.o-content--asides
+            padding-left: 5rem
+            padding-right: $aside-width + $aside-padding * 2
+
+//- Header
+
+.o-header
+    display: flex
+    justify-content: center
+    flex-flow: column nowrap
+    padding: 3rem 5rem
+    margin-top: $nav-height
+    width: 100%
+    min-height: 250px
+
+
+//- Footer
+
+.o-footer
+    position: relative
+    padding: 5rem 0
+    overflow: auto
+    width: 100%
+    z-index: 200
+
+
+//- Blocks
+
+.o-block
+    margin-bottom: 5rem
+
+.o-block-small
+    margin-bottom: 2rem
+
+.o-responsive
+    overflow: auto
+    width: 100%
+    max-width: 100%
+
+.o-icon
+    vertical-align: middle
+
+
+//- Inline List
+
+.o-inline-list > *
+    display: inline
+    margin-bottom: 3rem
+
+    &:not(:last-child)
+        margin-right: 3rem
+
+
+//- Logo
+
+.o-logo
+    @include size(100%, auto)
+    fill: currentColor
+
+    @each $name, $size in $logo-sizes
+        &.o-logo--#{$name}
+            width: $size

@@ -1,43 +1,59 @@
+//- ----------------------------------
+//- 💫 GLOBAL LAYOUT
+//- ----------------------------------
+
 include _includes/_mixins
-
-- var _section = current.path[0]
-- var _site = current.source
-
-- var is_article = ( (_section == 'blog' && _site != 'index') || template == 'article')
-- var has_asides = (is_article || (_section == 'docs' && asides != false) || asides)
-
-
-//-  Layout
-//- ============================================================================
 
 doctype html
 
 html(lang="en")
-    !=partial("_includes/_head", { _section: _section })
+    title=(current.path[0] == "index") ? SITENAME + " | " + SLOGAN : title + " | " + SITENAME
 
-    body.body
-        !=partial('_includes/_nav', { _section: _section, _site: _site })
+    meta(charset="utf-8")
+    meta(name="viewport" content="width=device-width, initial-scale=1.0")
+    meta(name="referrer" content="always")
+    meta(name="description" content=description)
 
-        if landing
-            != yield
-        
-        else
-            !=partial('_includes/_header', { is_article: is_article })
+    meta(property="og:type" content="website")
+    meta(property="og:site_name" content=sitename)
+    meta(property="og:url" content="#{SITE_URL}/#{current.path.join('/')}")
+    meta(property="og:title" content=title)
+    meta(property="og:description" content=description)
+    meta(property="og:image" content="/assets/img/social.png")
 
-            if sidebar
-                !=partial('_includes/_sidebar')
+    meta(name="twitter:card" content="summary_large_image")
+    meta(name="twitter:site" content="@" + SOCIAL.twitter)
+    meta(name="twitter:title" content=title)
+    meta(name="twitter:description" content=description)
+    meta(name="twitter:image" content="/assets/img/social.jpg")
 
-            main.main(class='#{(sidebar) ? "main--sidebar" : "" } #{(has_asides) ? "main--asides" : "" } #{(is_article) ? "main--article" : "" }')
+    link(rel="shortcut icon" href="/assets/img/favicon.ico")
+    link(rel="icon" type="image/x-icon" href="/assets/img/favicon.ico")
+    link(href="/assets/css/style.css" rel="stylesheet")
 
-                if is_article
-                    !=partial('_includes/_article', { _section: _section })
+    body
+        include _includes/_navigation
+
+        if !landing
+            header.o-header.u-pattern.u-text-center
+                if current.path[1] == "tutorials"
+                    h2.u-heading-1.u-text-shadow Tutorials
 
                 else
-                    !=yield
+                    +h(1).u-text-shadow=title
 
-        !=partial('_includes/_footer')
+            if sidebar
+                include _includes/_sidebar
 
-        each script in scripts
-            script(src='/assets/js/' + script + '.js', type='text/javascript')
+            main.o-content(class="#{(sidebar) ? 'o-content--sidebar' : '' } #{((current.path[0] == 'docs' && asides != false) || asides) ? 'o-content--asides' : '' }")
+                if current.path[1] == "tutorials"
+                    +h(1)=title
 
-        !=partial('_includes/_analytics')
+                !=yield
+
+        else
+            !=yield
+
+        include _includes/_footer
+
+        include _includes/_scripts
