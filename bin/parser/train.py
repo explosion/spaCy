@@ -79,10 +79,8 @@ def _merge_sents(sents):
     return [(m_deps, m_brackets)]
 
 
-def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
-          seed=0, gold_preproc=False, n_sents=0, corruption_level=0,
-          beam_width=1, verbose=False,
-          use_orig_arc_eager=False, pseudoprojective=False):
+def train(Language, gold_tuples, model_dir, tagger_cfg, parser_cfg, entity_cfg,
+        n_iter=15, seed=0, gold_preproc=False, n_sents=0, corruption_level=0):
     dep_model_dir = path.join(model_dir, 'deps')
     ner_model_dir = path.join(model_dir, 'ner')
     pos_model_dir = path.join(model_dir, 'pos')
@@ -96,24 +94,28 @@ def train(Language, gold_tuples, model_dir, n_iter=15, feat_set=u'basic',
     os.mkdir(ner_model_dir)
     os.mkdir(pos_model_dir)
 
-    if pseudoprojective:
+    if parser_cfg['pseudoprojective']:
         # preprocess training data here before ArcEager.get_labels() is called
         gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
 
-    Config.write(dep_model_dir, 'config', features=feat_set, seed=seed,
-                 labels=ArcEager.get_labels(gold_tuples),
-                 beam_width=beam_width,projectivize=pseudoprojective)
-    Config.write(ner_model_dir, 'config', features='ner', seed=seed,
-                 labels=BiluoPushDown.get_labels(gold_tuples),
-                 beam_width=0)
+    parser_cfg['labels'] = ArcEager.get_labels(gold_tuples)
+    entity_cfg['labels'] = BiluoPushDown.get_labels(gold_tuples)
+
+    with (dep_model_dir / 'config.json').open('w') as file_:
+        json.dump(file_, parser_config)
+    with (ner_model_dir / 'config.json').open('w') as file_:
+        json.dump(file_, entity_config)
+    with (pos_model_dir / 'config.json').open('w') as file_:
+        json.dump(file_, tagger_config)
 
     if n_sents > 0:
         gold_tuples = gold_tuples[:n_sents]
 
-    nlp = Language(data_dir=model_dir, tagger=False, parser=False, entity=False)
-    nlp.tagger = Tagger.blank(nlp.vocab, Tagger.default_templates())
-    nlp.parser = Parser.from_dir(dep_model_dir, nlp.vocab.strings, ArcEager)
-    nlp.entity = Parser.from_dir(ner_model_dir, nlp.vocab.strings, BiluoPushDown)
+    nlp = Language(
+            data_dir=model_dir,
+            tagger=Tagger.blank(nlp.vocab, **tagger_cfg),
+            parser=Parser.blank(nlp.vocab, ArcEager, **parser_cfg),
+            entity=Parser.blank(nlp.vocab, BiluoPushDown, **entity_cfg))
     print("Itn.\tP.Loss\tUAS\tNER F.\tTag %\tToken %")
     for itn in range(n_iter):
         scorer = Scorer()
@@ -219,15 +221,17 @@ def write_parses(Language, dev_loc, model_dir, out_loc):
 )
 def main(language, train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc="", verbose=False,
          debug=False, corruption_level=0.0, gold_preproc=False, eval_only=False, pseudoprojective=False):
+    parser_cfg = dict(locals())
+    tagger_cfg = dict(locals())
+    entity_cfg = dict(locals())
+
     lang = spacy.util.get_lang_class(language)
 
     if not eval_only:
         gold_train = list(read_json_file(train_loc))
-        train(lang, gold_train, model_dir,
-              feat_set='basic' if not debug else 'debug',
-              gold_preproc=gold_preproc, n_sents=n_sents,
-              corruption_level=corruption_level, n_iter=n_iter,
-              verbose=verbose,pseudoprojective=pseudoprojective)
+        train(lang, gold_train, model_dir, tagger_cfg, parser_cfg, entity_cfg,
+              n_sents=n_sents, gold_preproc=gold_preproc, corruption_level=corruption_level,
+              n_iter=n_iter)
     if out_loc:
         write_parses(lang, dev_loc, model_dir, out_loc)
     scorer = evaluate(lang, list(read_json_file(dev_loc)),
