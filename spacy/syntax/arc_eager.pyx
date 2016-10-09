@@ -312,12 +312,6 @@ cdef class ArcEager(TransitionSystem):
                 # Count frequencies, for use in encoder
                 self.freqs[HEAD][gold.c.heads[i] - i] += 1
                 self.freqs[DEP][gold.c.labels[i]] += 1
-        for end, brackets in gold.brackets.items():
-            for start, label_strs in brackets.items():
-                gold.c.brackets[start][end] = 1
-                for label_str in label_strs:
-                    # Add the encoded label to the set
-                    gold.brackets[end][start].add(self.strings[label_str])
 
     cdef Transition lookup_transition(self, object name) except *:
         if '-' in name:

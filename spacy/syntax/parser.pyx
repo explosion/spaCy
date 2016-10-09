@@ -83,8 +83,7 @@ cdef class Parser:
         with (path / 'config.json').open() as file_:
             cfg = json.load(file_)
         moves = moves_class(vocab.strings, cfg['labels'])
-        templates = get_templates(cfg['features'])
-        model = ParserModel(templates)
+        model = ParserModel(cfg['features'])
         if (path / 'model').exists():
             model.load(str(path / 'model'))
         return cls(vocab, moves, model, **cfg)
@@ -95,7 +94,6 @@ cdef class Parser:
         templates = cfg.get('features', tuple())
         model = ParserModel(templates)
         return cls(vocab, moves, model, **cfg)
-
 
     def __init__(self, Vocab vocab, transition_system, ParserModel model, **cfg):
         self.moves = transition_system
@@ -191,7 +189,7 @@ cdef class Parser:
         free(eg.is_valid)
         return 0
   
-    def train(self, Doc tokens, GoldParse gold):
+    def update(self, Doc tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
         cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
         self.moves.initialize_state(stcls.c)

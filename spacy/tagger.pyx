@@ -154,7 +154,7 @@ cdef class Tagger:
             model.load(str(path / 'model'))
         return cls(vocab, model)
 
-    def __init__(self, Vocab vocab, TaggerModel model):
+    def __init__(self, Vocab vocab, TaggerModel model, **cfg):
         self.vocab = vocab
         self.model = model
         # TODO: Move this to tag map
@@ -208,11 +208,13 @@ cdef class Tagger:
             self(doc)
             yield doc
     
-    def train(self, Doc tokens, object gold_tag_strs):
+    def update(self, Doc tokens, object gold):
+        if hasattr(gold, 'tags'):
+            gold_tag_strs = list(gold.tags)
         assert len(tokens) == len(gold_tag_strs)
         for tag in gold_tag_strs:
             if tag != None and tag not in self.tag_names:
-                msg = ("Unrecognized gold tag: %s. tag_map.json must contain all"
+                msg = ("Unrecognized gold tag: %s. tag_map.json must contain all "
                        "gold tags, to maintain coarse-grained mapping.")
                 raise ValueError(msg % tag)
         golds = [self.tag_names.index(g) if g is not None else -1 for g in gold_tag_strs]

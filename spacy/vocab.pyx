@@ -177,7 +177,7 @@ cdef class Vocab:
                     value = self.strings[value]
                 if attr == PROB:
                     lex.prob = value
-                else:
+                elif value is not None:
                     Lexeme.set_struct_attr(lex, attr, value)
         if is_oov:
             lex.id = 0

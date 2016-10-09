@@ -1,3 +1,5 @@
+from __future__ import unicode_literals, print_function
+
 import numpy
 import io
 import json
@@ -128,7 +130,6 @@ def _min_edit_path(cand_words, gold_words):
 
 
 def read_json_file(loc, docs_filter=None):
-    print loc
     if path.isdir(loc):
         for filename in os.listdir(loc):
             yield from read_json_file(path.join(loc, filename))
@@ -199,7 +200,7 @@ def _consume_ent(tags):
 
 
 cdef class GoldParse:
-    def __init__(self, tokens, annot_tuples, brackets=tuple(), make_projective=False):
+    def __init__(self, tokens, annot_tuples, make_projective=False):
         self.mem = Pool()
         self.loss = 0
         self.length = len(tokens)
@@ -209,9 +210,6 @@ cdef class GoldParse:
         self.c.heads = <int*>self.mem.alloc(len(tokens), sizeof(int))
         self.c.labels = <int*>self.mem.alloc(len(tokens), sizeof(int))
         self.c.ner = <Transition*>self.mem.alloc(len(tokens), sizeof(Transition))
-        self.c.brackets = <int**>self.mem.alloc(len(tokens), sizeof(int*))
-        for i in range(len(tokens)):
-            self.c.brackets[i] = <int*>self.mem.alloc(len(tokens), sizeof(int))
 
         self.tags = [None] * len(tokens)
         self.heads = [None] * len(tokens)
@@ -245,14 +243,6 @@ cdef class GoldParse:
         if make_projective:
             proj_heads,_ = nonproj.PseudoProjectivity.projectivize(self.heads,self.labels)
             self.heads = proj_heads
-
-        self.brackets = {}
-        for (gold_start, gold_end, label_str) in brackets:
-            start = self.gold_to_cand[gold_start]
-            end = self.gold_to_cand[gold_end]
-            if start is not None and end is not None:
-                self.brackets.setdefault(start, {}).setdefault(end, set())
-                self.brackets[end][start].add(label_str)
 
     def __len__(self):
         return self.length

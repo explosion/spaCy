@@ -79,82 +79,23 @@ def _merge_sents(sents):
     return [(m_deps, m_brackets)]
 
 
-def train(Language, gold_tuples, model_dir, tagger_cfg, parser_cfg, entity_cfg,
+def train(Language, train_data, dev_data, model_dir, tagger_cfg, parser_cfg, entity_cfg,
         n_iter=15, seed=0, gold_preproc=False, n_sents=0, corruption_level=0):
-    dep_model_dir = path.join(model_dir, 'deps')
-    ner_model_dir = path.join(model_dir, 'ner')
-    pos_model_dir = path.join(model_dir, 'pos')
-    if path.exists(dep_model_dir):
-        shutil.rmtree(dep_model_dir)
-    if path.exists(ner_model_dir):
-        shutil.rmtree(ner_model_dir)
-    if path.exists(pos_model_dir):
-        shutil.rmtree(pos_model_dir)
-    os.mkdir(dep_model_dir)
-    os.mkdir(ner_model_dir)
-    os.mkdir(pos_model_dir)
-
-    if parser_cfg['pseudoprojective']:
-        # preprocess training data here before ArcEager.get_labels() is called
-        gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
-
-    parser_cfg['labels'] = ArcEager.get_labels(gold_tuples)
-    entity_cfg['labels'] = BiluoPushDown.get_labels(gold_tuples)
-
-    with (dep_model_dir / 'config.json').open('w') as file_:
-        json.dump(file_, parser_config)
-    with (ner_model_dir / 'config.json').open('w') as file_:
-        json.dump(file_, entity_config)
-    with (pos_model_dir / 'config.json').open('w') as file_:
-        json.dump(file_, tagger_config)
-
-    if n_sents > 0:
-        gold_tuples = gold_tuples[:n_sents]
-
-    nlp = Language(
-            data_dir=model_dir,
-            tagger=Tagger.blank(nlp.vocab, **tagger_cfg),
-            parser=Parser.blank(nlp.vocab, ArcEager, **parser_cfg),
-            entity=Parser.blank(nlp.vocab, BiluoPushDown, **entity_cfg))
     print("Itn.\tP.Loss\tUAS\tNER F.\tTag %\tToken %")
-    for itn in range(n_iter):
-        scorer = Scorer()
+    format_str = '{:d}\t{:d}\t{uas:.3f}\t{ents_f:.3f}\t{tags_acc:.3f}\t{token_acc:.3f}'
+    with Language.train(model_dir, train_data,
+            tagger_cfg, parser_cfg, entity_cfg) as trainer:
         loss = 0
-        for raw_text, sents in gold_tuples:
-            if gold_preproc:
-                raw_text = None
-            else:
-                sents = _merge_sents(sents)
-            for annot_tuples, ctnt in sents:
-                if len(annot_tuples[1]) == 1:
-                    continue
-                score_model(scorer, nlp, raw_text, annot_tuples,
-                            verbose=verbose if itn >= 2 else False)
-                if raw_text is None:
-                    words = add_noise(annot_tuples[1], corruption_level)
-                    tokens = nlp.tokenizer.tokens_from_list(words)
-                else:
-                    raw_text = add_noise(raw_text, corruption_level)
-                    tokens = nlp.tokenizer(raw_text)
-                nlp.tagger(tokens)
-                gold = GoldParse(tokens, annot_tuples)
-                if not gold.is_projective:
-                    raise Exception("Non-projective sentence in training: %s" % annot_tuples[1])
-                loss += nlp.parser.train(tokens, gold)
-                nlp.entity.train(tokens, gold)
-                nlp.tagger.train(tokens, gold.tags)
-        random.shuffle(gold_tuples)
-        print('%d:\t%d\t%.3f\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.ents_f,
-                                                   scorer.tags_acc,
-                                                   scorer.token_acc))
-    print('end training')
-    nlp.end_training(model_dir)
-    print('done')
+        for itn, epoch in enumerate(trainer.epochs(n_iter, augment_data=None)):
+            for doc, gold in epoch:
+                trainer.update(doc, gold)
+            dev_scores = trainer.evaluate(dev_data)
+            print(format_str.format(itn, loss, **dev_scores.scores))
 
 
 def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False,
              beam_width=None, cand_preproc=None):
-    nlp = Language(data_dir=model_dir)
+    nlp = Language(path=model_dir)
     if nlp.lang == 'de':
         nlp.vocab.morphology.lemmatizer = lambda string,pos: set([string])
     if beam_width is not None:
@@ -226,10 +167,14 @@ def main(language, train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc=
     entity_cfg = dict(locals())
 
     lang = spacy.util.get_lang_class(language)
+    
+    parser_cfg['features'] = lang.Defaults.parser_features
+    entity_cfg['features'] = lang.Defaults.entity_features
 
     if not eval_only:
         gold_train = list(read_json_file(train_loc))
-        train(lang, gold_train, model_dir, tagger_cfg, parser_cfg, entity_cfg,
+        gold_dev = list(read_json_file(dev_loc))
+        train(lang, gold_train, gold_dev, model_dir, tagger_cfg, parser_cfg, entity_cfg,
               n_sents=n_sents, gold_preproc=gold_preproc, corruption_level=corruption_level,
               n_iter=n_iter)
     if out_loc:

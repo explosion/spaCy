@@ -13,6 +13,7 @@ try:
 except NameError:
     basestring = str
 
+
 LANGUAGES = {}
 _data_path = pathlib.Path(__file__).parent / 'data'
 

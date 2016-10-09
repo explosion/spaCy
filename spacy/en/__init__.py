@@ -27,4 +27,3 @@ class English(Language):
         tag_map = dict(language_data.TAG_MAP)
 
         stop_words = set(language_data.STOP_WORDS)
-

@@ -2,6 +2,8 @@ from __future__ import absolute_import
 from __future__ import unicode_literals
 from warnings import warn
 import pathlib
+from contextlib import contextmanager
+import shutil
 
 try:
     import ujson as json
@@ -15,7 +17,6 @@ except NameError:
     basestring = str
 
 
-
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .syntax.parser import Parser
@@ -27,9 +28,12 @@ from .syntax.ner import BiluoPushDown
 from .syntax.arc_eager import ArcEager
 from . import util
 from .lemmatizer import Lemmatizer
+from .train import Trainer
 
 from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD, PROB, LANG, IS_STOP
 from .syntax.parser import get_templates
+from .syntax.nonproj import PseudoProjectivity
+
 
 
 class BaseDefaults(object):
@@ -84,47 +88,63 @@ class BaseDefaults(object):
                                   suffix_search=suffix_search,
                                   infix_finditer=infix_finditer)
         else:
-            return Tokenizer(vocab, rules=rules,
+            tokenizer =  Tokenizer(vocab, rules=rules,
                     prefix_search=prefix_search, suffix_search=suffix_search,
                     infix_finditer=infix_finditer)
+            return tokenizer
 
-    def Tagger(self, vocab):
+    def Tagger(self, vocab, **cfg):
         if self.path:
             return Tagger.load(self.path / 'pos', vocab)
         else:
             return Tagger.blank(vocab, Tagger.default_templates())
 
-    def Parser(self, vocab, blank=False):
-        if blank:
-            return Parser.blank(vocab, ArcEager,
-                features=self.parser_features, labels=self.parser_labels)
-        elif self.path and (self.path / 'deps').exists():
-            return Parser.load(self.path / 'deps', vocab, ArcEager)
+    def Parser(self, vocab, **cfg):
+        if self.path and (self.path / 'dep').exists():
+            return Parser.load(self.path / 'dep', vocab, ArcEager)
         else:
-            return None
+            if 'features' not in cfg:
+                cfg['features'] = self.parser_features
+            if 'labels' not in cfg:
+                cfg['labels'] = self.parser_labels
+            return Parser.blank(vocab, ArcEager, **cfg)
 
-    def Entity(self, vocab, blank=False):
-        if blank:
-            return Parser.blank(vocab, BiluoPushDown,
-                features=self.entity_features, labels=self.entity_labels)
-        elif self.path and (self.path / 'ner').exists():
+    def Entity(self, vocab, **cfg):
+        if self.path and (self.path / 'ner').exists():
             return Parser.load(self.path / 'ner', vocab, BiluoPushDown)
         else:
-            return None
+            if 'features' not in cfg:
+                cfg['features'] = self.entity_features
+            if 'labels' not in cfg:
+                cfg['labels'] = self.entity_labels
+            return Parser.blank(vocab, BiluoPushDown, **cfg)
 
-    def Matcher(self, vocab):
+    def Matcher(self, vocab, **cfg):
         if self.path:
             return Matcher.load(self.path, vocab)
         else:
             return Matcher(vocab)
 
-    def Pipeline(self, nlp):
-        return [
-            nlp.tokenizer,
-            nlp.tagger,
-            nlp.parser,
-            nlp.entity]
+    def Pipeline(self, nlp, **cfg):
+        pipeline = [nlp.tokenizer]
+        if nlp.tagger:
+            pipeline.append(nlp.tagger)
+        if nlp.parser:
+            pipeline.append(nlp.parser)
+        if nlp.entity:
+            pipeline.append(nlp.entity)
+        return pipeline
+    
+    prefixes = tuple()
 
+    suffixes = tuple()
+
+    infixes = tuple()
+ 
+    tag_map = {}
+
+    tokenizer_exceptions = {}
+   
     parser_labels = {0: {'ROOT': True}}
 
     entity_labels = {0: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True}}
@@ -169,6 +189,58 @@ class Language(object):
     Defaults = BaseDefaults
     lang = None
 
+    @classmethod
+    def blank(cls):
+        return cls(path=False, vocab=False, tokenizer=False, tagger=False,
+                   parser=False, entity=False, matcher=False, serializer=False,
+                   vectors=False, pipeline=False)
+
+    @classmethod
+    @contextmanager
+    def train(cls, path, gold_tuples, *configs):
+        if isinstance(path, basestring):
+            path = pathlib.Path(path)
+        tagger_cfg, parser_cfg, entity_cfg = configs
+        dep_model_dir = path / 'dep'
+        ner_model_dir = path / 'ner'
+        pos_model_dir = path / 'pos'
+        if dep_model_dir.exists():
+            shutil.rmtree(str(dep_model_dir))
+        if ner_model_dir.exists():
+            shutil.rmtree(str(ner_model_dir))
+        if pos_model_dir.exists():
+            shutil.rmtree(str(pos_model_dir))
+        dep_model_dir.mkdir()
+        ner_model_dir.mkdir()
+        pos_model_dir.mkdir()
+
+        if parser_cfg['pseudoprojective']:
+            # preprocess training data here before ArcEager.get_labels() is called
+            gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
+
+        parser_cfg['labels'] = ArcEager.get_labels(gold_tuples)
+        entity_cfg['labels'] = BiluoPushDown.get_labels(gold_tuples)
+
+        with (dep_model_dir / 'config.json').open('wb') as file_:
+            json.dump(parser_cfg, file_)
+        with (ner_model_dir / 'config.json').open('wb') as file_:
+            json.dump(entity_cfg, file_)
+        with (pos_model_dir / 'config.json').open('wb') as file_:
+            json.dump(tagger_cfg, file_)
+
+        self = cls.blank()
+        self.path = path
+        self.vocab = self.defaults.Vocab()
+        self.defaults.parser_labels = parser_cfg['labels']
+        self.defaults.entity_labels = entity_cfg['labels']
+        self.tokenizer = self.defaults.Tokenizer(self.vocab)
+        self.tagger = self.defaults.Tagger(self.vocab, **tagger_cfg)
+        self.parser = self.defaults.Parser(self.vocab, **parser_cfg)
+        self.entity = self.defaults.Entity(self.vocab, **entity_cfg)
+        self.pipeline = self.defaults.Pipeline(self)
+        yield Trainer(self, gold_tuples)
+        self.end_training()
+
     def __init__(self,
         path=None,
         vocab=True,
@@ -210,13 +282,19 @@ class Language(object):
         self.path = path
         defaults = defaults if defaults is not True else self.get_defaults(self.path)
         
+        self.defaults = defaults
         self.vocab     = vocab if vocab is not True else defaults.Vocab(vectors=vectors)
         self.tokenizer = tokenizer if tokenizer is not True else defaults.Tokenizer(self.vocab)
         self.tagger    = tagger if tagger is not True else defaults.Tagger(self.vocab)
         self.entity    = entity if entity is not True else defaults.Entity(self.vocab)
         self.parser    = parser if parser is not True else defaults.Parser(self.vocab)
         self.matcher   = matcher if matcher is not True else defaults.Matcher(self.vocab)
-        self.pipeline  = pipeline(self) if pipeline is not True else defaults.Pipeline(self)
+        if pipeline in (None, False):
+            self.pipeline = []
+        elif pipeline is True:
+            self.pipeline = defaults.Pipeline(self)
+        else:
+            self.pipeline = pipeline(self)
 
     def __reduce__(self):
         args = (
@@ -276,16 +354,19 @@ class Language(object):
     def end_training(self, path=None):
         if path is None:
             path = self.path
-        if self.parser:
-            self.parser.model.end_training()
-            self.parser.model.dump(path / 'deps' / 'model')
-        if self.entity:
-            self.entity.model.end_training()
-            self.entity.model.dump(path / 'ner' / 'model')
+        elif isinstance(path, basestring):
+            path = pathlib.Path(path)
+        
         if self.tagger:
             self.tagger.model.end_training()
-            self.tagger.model.dump(path / 'pos' / 'model')
-
+            self.tagger.model.dump(str(path / 'pos' / 'model'))
+        if self.parser:
+            self.parser.model.end_training()
+            self.parser.model.dump(str(path / 'dep' / 'model'))
+        if self.entity:
+            self.entity.model.end_training()
+            self.entity.model.dump(str(path / 'ner' / 'model'))
+        
         strings_loc = path / 'vocab' / 'strings.json'
         with strings_loc.open('w', encoding='utf8') as file_:
             self.vocab.strings.dump(file_)
@@ -307,7 +388,7 @@ class Language(object):
         else:
             entity_iob_freqs = []
             entity_type_freqs = []
-        with (path / 'vocab' / 'serializer.json').open('w') as file_:
+        with (path / 'vocab' / 'serializer.json').open('wb') as file_:
             file_.write(
                 json.dumps([
                     (TAG, tagger_freqs),

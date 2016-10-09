@@ -1,11 +1,11 @@
+from libc.stdint cimport int64_t
+
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 from murmurhash.mrmr cimport hash64
-from .typedefs cimport attr_t
 
-from libc.stdint cimport int64_t
+from .typedefs cimport attr_t, hash_t
 
-from .typedefs cimport hash_t
 
 cpdef hash_t hash_string(unicode string) except 0
 
