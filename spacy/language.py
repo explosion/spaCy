@@ -190,12 +190,6 @@ class Language(object):
     lang = None
 
     @classmethod
-    def blank(cls):
-        return cls(path=False, vocab=False, tokenizer=False, tagger=False,
-                   parser=False, entity=False, matcher=False, serializer=False,
-                   vectors=False, pipeline=False)
-
-    @classmethod
     @contextmanager
     def train(cls, path, gold_tuples, *configs):
         if isinstance(path, basestring):
@@ -228,11 +222,22 @@ class Language(object):
         with (pos_model_dir / 'config.json').open('wb') as file_:
             json.dump(tagger_cfg, file_)
 
-        self = cls.blank()
-        self.path = path
-        self.vocab = self.defaults.Vocab()
+        self = cls(
+                path=path,
+                vocab=False,
+                tokenizer=False,
+                tagger=False,
+                parser=False,
+                entity=False,
+                matcher=False,
+                serializer=False,
+                vectors=False,
+                pipeline=False)
+
         self.defaults.parser_labels = parser_cfg['labels']
         self.defaults.entity_labels = entity_cfg['labels']
+
+        self.vocab = self.defaults.Vocab()
         self.tokenizer = self.defaults.Tokenizer(self.vocab)
         self.tagger = self.defaults.Tagger(self.vocab, **tagger_cfg)
         self.parser = self.defaults.Parser(self.vocab, **parser_cfg)
