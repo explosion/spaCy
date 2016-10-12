@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 import os
 import io
 import pickle
+import pathlib
 
 from spacy.lemmatizer import Lemmatizer, read_index, read_exc
 from spacy import util
@@ -12,12 +13,15 @@ import pytest
 
 @pytest.fixture
 def path():
-    return util.match_best_version('en', None,
-                os.environ.get('SPACY_DATA', util.get_data_path()))
+    if 'SPACY_DATA' in os.environ:
+        return pathlib.Path(os.environ['SPACY_DATA'])
+    else:
+        return util.match_best_version('en', None, util.get_data_path())
 
 
 @pytest.fixture
 def lemmatizer(path):
+    print('Path', repr(path))
     return Lemmatizer.load(path)
 
 
