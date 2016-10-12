@@ -82,6 +82,9 @@ cdef class Parser:
     def load(cls, path, Vocab vocab, moves_class):
         with (path / 'config.json').open() as file_:
             cfg = json.load(file_)
+        # TODO: Remove this when we no longer need to support old-style models
+        if isinstance(cfg.get('features'), basestring):
+            cfg['features'] = get_templates(cfg['features'])
         moves = moves_class(vocab.strings, cfg['labels'])
         model = ParserModel(cfg['features'])
         if (path / 'model').exists():
