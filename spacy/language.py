@@ -100,8 +100,8 @@ class BaseDefaults(object):
             return Tagger.blank(vocab, Tagger.default_templates())
 
     def Parser(self, vocab, **cfg):
-        if self.path and (self.path / 'dep').exists():
-            return Parser.load(self.path / 'dep', vocab, ArcEager)
+        if self.path and (self.path / 'deps').exists():
+            return Parser.load(self.path / 'deps', vocab, ArcEager)
         else:
             if 'features' not in cfg:
                 cfg['features'] = self.parser_features
@@ -204,7 +204,7 @@ class Language(object):
         if isinstance(path, basestring):
             path = pathlib.Path(path)
         tagger_cfg, parser_cfg, entity_cfg = configs
-        dep_model_dir = path / 'dep'
+        dep_model_dir = path / 'deps'
         ner_model_dir = path / 'ner'
         pos_model_dir = path / 'pos'
         if dep_model_dir.exists():
@@ -376,7 +376,7 @@ class Language(object):
             self.tagger.model.dump(str(path / 'pos' / 'model'))
         if self.parser:
             self.parser.model.end_training()
-            self.parser.model.dump(str(path / 'dep' / 'model'))
+            self.parser.model.dump(str(path / 'deps' / 'model'))
         if self.entity:
             self.entity.model.end_training()
             self.entity.model.dump(str(path / 'ner' / 'model'))
