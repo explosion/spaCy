@@ -145,9 +145,18 @@ class BaseDefaults(object):
 
     tokenizer_exceptions = {}
    
-    parser_labels = {0: {'ROOT': True}}
+    parser_labels = {0: {'': True}, 1: {'': True}, 2: {'ROOT': True, 'nmod': True},
+                         3: {'ROOT': True, 'nmod': True}, 4: {'ROOT': True}}
+ 
 
-    entity_labels = {0: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True}}
+    entity_labels = {
+                        0: {'': True},
+                        1: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True},
+                        2: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True},
+                        3: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True},
+                        4: {'PER': True, 'LOC': True, 'ORG': True, 'MISC': True},
+                        5: {'': True}
+                     }
 
     parser_features = get_templates('parser')
     
