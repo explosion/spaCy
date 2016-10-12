@@ -305,12 +305,13 @@ cdef class StepwiseState:
 
 class ParserStateError(ValueError):
     def __init__(self, doc):
-        self.message = ("Error analysing doc -- no valid actions available. This should "
-                        "never happen, so please report the error on the issue tracker. "
-                        "Here's the thread to do so --- reopen it if it's closed:\n"
-                        "https://github.com/spacy-io/spaCy/issues/429\n"
-                        "Please include the text that the parser failed on, which is:\n"
-                        "%s" % repr(doc.text))
+        ValueError.__init__(self,
+            "Error analysing doc -- no valid actions available. This should "
+            "never happen, so please report the error on the issue tracker. "
+            "Here's the thread to do so --- reopen it if it's closed:\n"
+            "https://github.com/spacy-io/spaCy/issues/429\n"
+            "Please include the text that the parser failed on, which is:\n"
+            "%s" % repr(doc.text))
 
 
 cdef int _arg_max_clas(const weight_t* scores, int move, const Transition* actions,
