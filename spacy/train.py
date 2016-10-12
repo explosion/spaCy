@@ -7,6 +7,7 @@ from .scorer import Scorer
 
 
 class Trainer(object):
+    '''Manage training of an NLP pipeline.'''
     def __init__(self, nlp, gold_tuples):
         self.nlp = nlp
         self.gold_tuples = gold_tuples
