@@ -1,16 +1,17 @@
 import pytest
 import os
 
-import spacy
+from ..en import English
+from ..de import German
 
 
 @pytest.fixture(scope="session")
 def EN():
-    return spacy.load("en")
+    return English(path=None)
 
 @pytest.fixture(scope="session")
 def DE():
-    return spacy.load("de")
+    return German(path=None)
 
 
 def pytest_addoption(parser):
