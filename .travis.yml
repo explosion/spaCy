@@ -20,11 +20,9 @@ install:
   - "tar -xzf WordNet-3.0.tar.gz"
   - "mv WordNet-3.0 wordnet"
   - "cd ../../"
-  - "python bin/init_model.py en lang_data/ corpora/ data"
-  - "cp package.json data"
-  - "sputnik build data en_default.sputnik"
-  - "sputnik --name spacy install en_default.sputnik"
+  - "mkdir models/"
+  - "python bin/init_model.py en lang_data/ corpora/ models/en"
 
 script:
   - "pip install pytest"
-  - "python -m pytest spacy"
+  - "SPACY_DATA=models/en python -m pytest spacy"
