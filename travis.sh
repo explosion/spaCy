@@ -7,6 +7,7 @@ fi
 
 
 if "${VIA}" == "compile"]; then
+  echo "compile"
   pip install -r requirements.txt
   pip install -e .
   mkdir -p corpora/en
