@@ -16,17 +16,9 @@ env:
   - VIA="compile"
 
 install:
-  - "pip install -r requirements.txt"
-  - "pip install -e ."
-  - "mkdir -p corpora/en"
-  - "cd corpora/en"
-  - "wget --no-check-certificate http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"
-  - "tar -xzf WordNet-3.0.tar.gz"
-  - "mv WordNet-3.0 wordnet"
-  - "cd ../../"
-  - "mkdir models/"
-  - "python bin/init_model.py en lang_data/ corpora/ models/en"
+  - "travis.sh"
 
 script:
   - "pip install pytest"
-  - "SPACY_DATA=models/en python -m pytest spacy"
+  - if [[ "${VIA}" == "compile" ]]; then SPACY_DATA=models/en python -m pytest spacy; fi
+  - if [[ "${VIA}" == "pip" ]]; then python -m pytest spacy
