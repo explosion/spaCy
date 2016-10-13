@@ -1,6 +1,6 @@
 #!/bin/bash
 
-if [ "${TRAVIS_PULL_REQUEST}" = "false" && "${VIA}" == "pypi"]; then
+if [ "${TRAVIS_PULL_REQUEST}" == "false" && "${VIA}" == "pypi"]; then
     rm -rf *
     pip install spacy
 fi
