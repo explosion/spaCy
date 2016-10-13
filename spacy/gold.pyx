@@ -44,6 +44,21 @@ def tags_to_entities(tags):
     return entities
 
 
+def merge_sents(sents):
+    m_deps = [[], [], [], [], [], []]
+    m_brackets = []
+    i = 0
+    for (ids, words, tags, heads, labels, ner), brackets in sents:
+        m_deps[0].extend(id_ + i for id_ in ids)
+        m_deps[1].extend(words)
+        m_deps[2].extend(tags)
+        m_deps[3].extend(head + i for head in heads)
+        m_deps[4].extend(labels)
+        m_deps[5].extend(ner)
+        m_brackets.extend((b['first'] + i, b['last'] + i, b['label']) for b in brackets)
+        i += len(ids)
+    return [(m_deps, m_brackets)]
+
 
 def align(cand_words, gold_words):
     cost, edit_path = _min_edit_path(cand_words, gold_words)
