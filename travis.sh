@@ -1,12 +1,12 @@
 #!/bin/bash
 
-if [ "${TRAVIS_PULL_REQUEST}" == "false" && "${VIA}" == "pypi"]; then
+if [ "${TRAVIS_PULL_REQUEST}" == "false" && "${VIA}" == "pypi" ]; then
     rm -rf *
     pip install spacy
 fi
 
 
-if "${VIA}" == "compile"]; then
+if [ "${VIA}" == "compile" ]; then
   echo "compile"
   pip install -r requirements.txt
   pip install -e .
