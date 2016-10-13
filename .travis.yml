@@ -21,4 +21,4 @@ install:
 script:
   - "pip install pytest"
   - if [[ "${VIA}" == "compile" ]]; then SPACY_DATA=models/en python -m pytest spacy; fi
-  - if [[ "${VIA}" == "pip" ]]; then python -m pytest spacy
+  - if [[ "${VIA}" == "pip" ]]; then python -m pytest spacy; fi
