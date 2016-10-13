@@ -10,6 +10,7 @@ python:
 
 os:
   - linux
+  - osx
 
 install:
   - "pip install -r requirements.txt"
