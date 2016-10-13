@@ -199,6 +199,7 @@ def setup_package():
                 'plac',
                 'six',
                 'cloudpickle',
+                'pathlib',
                 'sputnik>=0.9.2,<0.10.0'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
