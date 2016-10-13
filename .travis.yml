@@ -10,7 +10,10 @@ python:
 
 os:
   - linux
-  - osx
+
+env:
+  - VIA="pypi"
+  - VIA="compile"
 
 install:
   - "pip install -r requirements.txt"
