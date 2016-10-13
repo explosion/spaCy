@@ -16,7 +16,7 @@ env:
   - VIA="compile"
 
 install:
-  - "travis.sh"
+  - "./travis.sh"
 
 script:
   - "pip install pytest"
