@@ -182,7 +182,7 @@ def train(json_dir=None, dev_loc=None, model_dir=None):
     with virtualenv(VENV_DIR):
         with lcd(path.dirname(__file__)):
             local('python bin/init_model.py en lang_data/ corpora/ ' + model_dir)
-            local('python bin/parser/train.py %s %s' % (json_dir, model_dir))
+            local('python bin/parser/train.py -p en %s/train/ %s/development %s' % (json_dir, json_dir, model_dir))
 
 
 def travis():
