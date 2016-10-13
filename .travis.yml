@@ -19,6 +19,8 @@ install:
   - "./travis.sh"
 
 script:
+  - echo $VIA
+  - echo $TRAVIS_PULL_REQUEST
   - "pip install pytest"
   - if [[ "${VIA}" == "compile" ]]; then SPACY_DATA=models/en python -m pytest spacy; fi
   - if [[ "${TRAVIS_PULL_REQUEST}" == "false" && "${VIA}" == "pip" ]]; then python -m pytest spacy; fi
