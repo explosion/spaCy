@@ -7,8 +7,8 @@ fi
 
 if [ "${VIA}" == "sdist" ]; then
   rm -rf *
-  wget https://api.explosion.ai/build/spacy/sdist/$TRAVIS_COMMIT spacy.tgz
-  pip install spacy.tgz
+  wget https://api.explosion.ai/build/spacy/sdist/$TRAVIS_COMMIT
+  pip install $TRAVIS_COMMIT
 fi
 
 
