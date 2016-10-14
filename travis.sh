@@ -1,8 +1,14 @@
 #!/bin/bash
 
-if [ "${TRAVIS_PULL_REQUEST}" == "false" && "${VIA}" == "pypi" ]; then
+if [ "${VIA}" == "pypi" ]; then
     rm -rf *
     pip install spacy
+fi
+
+if [ "${VIA}" == "sdist" ]; then
+  rm -rf *
+  wget https://api.explosion.ai/build/spaCy/$TRAVIS_COMMIT spacy.tgz
+  pip install spacy.tgz
 fi
 
 
