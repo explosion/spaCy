@@ -32,6 +32,8 @@ cdef class Doc:
     cdef public object _vector
     cdef public object _vector_norm
 
+    cdef public np.ndarray tensor
+
     cdef TokenC* c
 
     cdef public bint is_tagged

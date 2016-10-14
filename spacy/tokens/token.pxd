@@ -1,3 +1,4 @@
+from numpy cimport ndarray
 from ..vocab cimport Vocab
 from ..structs cimport TokenC
 from ..attrs cimport attr_id_t
@@ -9,6 +10,7 @@ cdef class Token:
     cdef TokenC* c
     cdef readonly int i
     cdef readonly Doc doc
+    cdef public ndarray tensor
 
     @staticmethod
     cdef inline Token cinit(Vocab vocab, const TokenC* token, int offset, Doc doc):
