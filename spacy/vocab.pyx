@@ -129,6 +129,44 @@ cdef class Vocab:
         """The current number of lexemes stored."""
         return self.length
 
+    def add_flag(self, flag_getter, int flag_id=-1):
+        '''Set a new boolean flag to words in the vocabulary. The flag_setter
+        function will be called over the words currently in the vocab, and then
+        applied to new words as they occur. You'll then be able to access the
+        flag value on each token, using token.check_flag(flag_id). See also:
+        Lexeme.set_flag, Lexeme.check_flag, Token.set_flag, Token.check_flag.
+
+        Arguments:
+            flag_getter:
+                A function f(unicode) -> bool, to get the flag value.
+
+            flag_id (int):
+                An integer between 1 and 63 (inclusive), specifying the bit at which the
+                flag will be stored. If -1, the lowest available bit will be 
+                chosen.
+
+        Returns:
+            flag_id (int): The integer ID by which the flag value can be checked.
+        '''
+        if flag_id == -1:
+            for bit in range(1, 64):
+                if bit not in self.lex_attr_getters:
+                    flag_id = bit
+                    break
+            else:
+                raise ValueError(
+                    "Cannot find empty bit for new lexical flag. All bits between "
+                    "0 and 63 are occupied. You can replace one by specifying the "
+                    "flag_id explicitly, e.g. nlp.vocab.add_flag(your_func, flag_id=IS_ALPHA")
+        elif flag_id >= 64 or flag_id < 1:
+            raise ValueError(
+                "Invalid value for flag_id: %d. Flag IDs must be between "
+                "1 and 63 (inclusive)" % flag_id)
+        for lex in self:
+            lex.set_flag(flag_id, flag_getter(lex.orth_))
+        self.lex_attr_getters[flag_id] = flag_getter
+        return flag_id
+
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
         if necessary, using memory acquired from the given pool.  If the pool
