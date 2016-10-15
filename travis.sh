@@ -9,9 +9,10 @@ fi
 
 if [ "${VIA}" == "sdist" ]; then
   rm -rf *
+  pip uninstall spacy
   wget https://api.explosion.ai/build/spacy/sdist/$TRAVIS_COMMIT
   mv $TRAVIS_COMMIT sdist.tgz
-  pip install sdist.tgz
+  pip install -U sdist.tgz
 fi
 
 
