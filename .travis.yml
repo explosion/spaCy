@@ -32,3 +32,4 @@ script:
 notifications:
   slack:
     secure: F8GvqnweSdzImuLL64TpfG0i5rYl89liyr9tmFVsHl4c0DNiDuGhZivUz0M1broS8svE3OPOllLfQbACG/4KxD890qfF9MoHzvRDlp7U+RtwMV/YAkYn8MGWjPIbRbX0HpGdY7O2Rc9Qy4Kk0T8ZgiqXYIqAz2Eva9/9BlSmsJQ=
+  email: false
