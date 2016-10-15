@@ -3,6 +3,8 @@
 if [ "${VIA}" == "pypi" ]; then
     rm -rf *
     pip install spacy
+    python -m spacy.en.download
+    python -m spacy.de.download
 fi
 
 if [ "${VIA}" == "sdist" ]; then
