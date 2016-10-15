@@ -1,0 +1,52 @@
+//- ----------------------------------
+//- 💫 COMPONENTS > NAVIGATION
+//- ----------------------------------
+
+.c-nav
+    @include position(absolute, top, left, 0, 0)
+    @include size(100%, $nav-height)
+    align-items: center
+    background: $color-back
+    border-color: $color-back
+    color: $color-theme
+    display: flex
+    justify-content: space-between
+    padding: 0 2rem
+    z-index: 10
+    width: 100%
+
+    &.is-fixed
+        animation: slideInDown 0.5s ease-in-out
+        position: fixed
+        background: $color-theme
+        color: $color-back
+        border-color: $color-theme
+
+        @include breakpoint(min, sm)
+            height: $nav-height * 0.8
+
+.c-nav__menu
+    @include size(100%)
+    display: flex
+    justify-content: flex-end
+    flex-flow: row nowrap
+    border-color: inherit
+
+.c-nav__menu__item
+    display: flex
+    align-items: center
+    height: 100%
+
+    &:not(:last-child)
+        margin-right: 1em
+
+    &.is-active
+        position: relative
+        font-weight: bold
+        border-color: inherit
+
+        &:after
+            $triangle: 8px
+
+            @include triangle-down($triangle)
+            @include position(absolute, top, left, 100%, calc(50% - #{$triangle}))

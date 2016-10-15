@@ -1,6 +1,6 @@
 include ../../_includes/_mixins
 
-+lead Let's say you're developing a proofreading tool, or possibly an IDE for writers.  You're convinced by Stephen King's advice that #[a(href="http://www.brainpickings.org/2013/03/13/stephen-king-on-adverbs" target="_blank") adverbs are not your friend] so you want to #[strong highlight all adverbs].  We'll use one of the examples he finds particularly egregious:
+p.u-text-large Let's say you're developing a proofreading tool, or possibly an IDE for writers.  You're convinced by Stephen King's advice that #[a(href="http://www.brainpickings.org/2013/03/13/stephen-king-on-adverbs" target="_blank") adverbs are not your friend] so you want to #[strong highlight all adverbs].  We'll use one of the examples he finds particularly egregious:
 
 +code.
     &gt;&gt;&gt; import spacy.en
@@ -11,7 +11,7 @@ include ../../_includes/_mixins
     &gt;&gt;&gt; print u''.join(tok.string.upper() if tok.pos == ADV else tok.string for tok in tokens)
     u‘Give it BACK,’ he pleaded ABJECTLY, ‘it’s mine.’
 
-p Easy enough --- but the problem is that we've also highlighted "back".  While "back" is undoubtedly an adverb, we probably don't want to highlight it. If what we're trying to do is flag dubious stylistic choices, we'll need to refine our logic.  It turns out only a certain type of adverb is of interest to us.  
+p Easy enough --- but the problem is that we've also highlighted "back".  While "back" is undoubtedly an adverb, we probably don't want to highlight it. If what we're trying to do is flag dubious stylistic choices, we'll need to refine our logic.  It turns out only a certain type of adverb is of interest to us.
 
 p There are lots of ways we might do this, depending on just what words we want to flag.  The simplest way to exclude adverbs like "back" and "not" is by word frequency: these words are much more common than the prototypical manner adverbs that the style guides are worried about.
 
@@ -25,7 +25,7 @@ p The #[code Lexeme.prob] and #[code Token.prob] attribute gives a log probabili
     &gt;&gt;&gt; nlp.vocab[u'quietly'].prob
     -11.07155704498291
 
-p (The probability estimate is based on counts from a 3 billion word corpus, smoothed using the `Simple Good-Turing`_ method.) 
+p (The probability estimate is based on counts from a 3 billion word corpus, smoothed using the `Simple Good-Turing`_ method.)
 
 p So we can easily exclude the N most frequent words in English from our adverb marker.  Let's try N=1000 for now:
 
@@ -41,7 +41,7 @@ p So we can easily exclude the N most frequent words in English from our adverb 
     &gt;&gt;&gt; print u''.join(tok.string.upper() if is_adverb(tok) else tok.string for tok in tokens)
     ‘Give it back,’ he pleaded ABJECTLY, ‘it’s mine.’
 
-p There are lots of other ways we could refine the logic, depending on just what words we want to flag.  Let's say we wanted to only flag adverbs that modified words similar to "pleaded".  This is easy to do, as spaCy loads a vector-space representation for every word (by default, the vectors produced by `Levy and Goldberg (2014)`_).  Naturally, the vector is provided as a numpy array:
+p There are lots of other ways we could refine the logic, depending on just what words we want to flag.  Let's say we wanted to only flag adverbs that modified words similar to "pleaded".  This is easy to do, as spaCy loads a vector-space representation for every word (by default, the vectors produced by Levy and Goldberg (2014)).  Naturally, the vector is provided as a numpy array:
 
 +code.
     &gt;&gt;&gt; pleaded = tokens[7]

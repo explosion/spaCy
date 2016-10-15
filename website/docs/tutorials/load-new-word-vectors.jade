@@ -2,7 +2,7 @@ include ../../_includes/_mixins
 
 p By default spaCy loads a #[code data/vocab/vec.bin] file, where the #[em data] directory is within the #[code spacy.en] module directory.  This file can be replaced, to customize the word vectors that spaCy loads. You can also replace the word vectors at run-time.
 
-+h3("replacing-vec-bin") Replacing vec.bin
++h(2, "replacing-vec-bin") Replacing vec.bin
 
 p The function #[code spacy.vocab.write_binary_vectors] creates a word vectors file in spaCy's binary data format. It expects a #[code bz2] file in the following format:
 
@@ -28,7 +28,7 @@ p The following example script will replace the #[code vec.bin] file with vector
     if __name__ == '__main__':
             plac.call(main)
 
-+h3("replace-vectors-archive") Replace the Vectors at Run-Time, From an Archive
++h(2, "replace-vectors-archive") Replace the Vectors at Run-Time, From an Archive
 
 p Since v0.93, instances of #[code Vocab] allow new vectors to be loaded from #[code bz2] archive files. This allows vectors to be loaded as follows:
 
@@ -39,7 +39,7 @@ p Since v0.93, instances of #[code Vocab] allow new vectors to be loaded from #[
     &gt;&gt;&gt; n_dimensions
     300
 
-+h3("replace-vectors-per-word") Replace Vectors at Run-Time, Per Word
++h(2, "replace-vectors-per-word") Replace Vectors at Run-Time, Per Word
 
 p Since v0.93, you can assign to the #[code .vector] attribute of #[code Lexeme] instances. Tokens of that lexical type will then inherit the updated vector. For instance:
 

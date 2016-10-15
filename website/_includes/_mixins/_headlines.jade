@@ -1,0 +1,49 @@
+//- ----------------------------------
+//- 💫 MIXINS > HEADLINES
+//- ----------------------------------
+
+//- Headlines Helper Mixin
+
+mixin headline(level)
+    if level == 1
+        h1.u-heading-1&attributes(attributes)
+            block
+
+    else if level == 2
+        h2.u-heading-2&attributes(attributes)
+            block
+
+    else if level == 3
+        h3.u-heading-3&attributes(attributes)
+            block
+
+    else if level == 4
+        h4.u-heading-4&attributes(attributes)
+            block
+
+    else if level == 5
+        h5.u-heading-5&attributes(attributes)
+            block
+
+
+//- Permalink rendering
+
+mixin permalink(id)
+    if id
+        a.u-permalink(id=id href="##{id}")
+            +icon("link").u-permalink__icon
+            block
+
+    else
+        block
+
+
+//- Headlines
+
+mixin h(level, id, source)
+    +headline(level)&attributes(attributes)
+        +permalink(id)
+            block
+
+            if source
+                +button(source, false, "secondary").u-text-small.u-float-right Source

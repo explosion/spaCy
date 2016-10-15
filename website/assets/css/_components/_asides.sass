@@ -1,63 +1,31 @@
-//  Variables
-// ============================================================================
+//- ----------------------------------
+//- 💫 COMPONENTS > ASIDES
+//- ----------------------------------
 
-$aside-block-margin : 4rem
-$aside-border       : 1px solid color(grey)
-$aside-font-size    : 1.4rem
-$aside-font-family  : $font-primary
-$aside-line-height  : 1.65
-$aside-margin-side  : 1.5rem
-$aside-opacity      : 0.4
-$aside-padding      : 0 2rem
-$aside-transition   : $transition
-$aside-width        : $width-aside
+//- Aside
 
-
-//  Style
-// ============================================================================
-
-//  Aside content
-//  :hover       - show aside on hover
-//  [data-label] - style of aside headlines
-
-.aside
-    @extend .text-small
-    
-    @media (max-width: #{$screen-size-large})
-        display: block
-        margin-bottom: $aside-block-margin
-        margin-top: $aside-block-margin
-
-    @media (min-width: #{$screen-size-large})
-        @include position(absolute, top, left, 0, calc(100% + #{$aside-margin-side}))
-        border-left: $aside-border
-        opacity: $aside-opacity
-        padding: $aside-padding
-        transition: $aside-transition
-        white-space: normal
+.c-aside
+    @include breakpoint(min, md)
+        @include position(absolute, top, left, 0, calc(100% + #{$aside-padding}))
+        border-left: 1px solid $color-subtle
+        opacity: 0.5
+        transition: opacity 0.25s ease
+        padding: 0 $aside-padding
         width: $aside-width
 
-    &:hover
-        opacity: 1
+        &:hover
+            opacity: 1
 
-    &[data-label]:before
-        @extend .label-strong
+    @include breakpoint(max, sm)
         display: block
+        margin: type(5) 0
 
-    .block
-        margin-bottom: ($aside-block-margin / 2)
 
-    .code-inline
-        @extend .code-small
+//- Aside label
 
-    .code-block
-        @extend .code-block-small
-
-    .table &
-        top: initial
-
-.aside-body
+.c-aside__label
     display: block
+    margin-bottom: 1rem
 
 
 //  Aside container
@@ -65,5 +33,5 @@ $aside-width        : $width-aside
 .has-aside
     position: relative
 
-    &:hover > .aside
-        opacity: 1 
+    &:hover > .c-aside
+        opacity: 1

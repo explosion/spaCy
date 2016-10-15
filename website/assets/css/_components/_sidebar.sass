@@ -1,0 +1,40 @@
+//- ----------------------------------
+//- 💫 COMPONENTS > SIDEBAR
+//- ----------------------------------
+
+.c-sidebar
+    @include breakpoint(min, md)
+        flex: 0 0 $sidebar-width
+        margin-right: 6rem
+        margin-left: 4rem
+        padding-top: $nav-height
+        width: $sidebar-width
+
+        &.is-fixed .c-sidebar__body
+            @include position(fixed, top, left, $nav-height, 4rem)
+            @include size($sidebar-width, calc(100vh - #{$nav-height}))
+            overflow: auto
+            transition: none
+
+    @include breakpoint(max, sm)
+        flex: 100%
+        width: 100%
+
+        .c-sidebar__body
+            display: flex
+            flex-flow: row wrap
+            width: 100%
+
+            & > *
+                flex: 1 1 0
+                padding: 1rem
+                border-bottom: 1px solid $color-subtle
+
+
+                &:not(:last-child)
+                    border-right: 1px solid $color-subtle
+
+.c-sidebar__body
+    .is-active
+        font-weight: bold
+        color: $color-theme

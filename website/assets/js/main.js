@@ -1,92 +1,55 @@
-(function() {
+//- ----------------------------------
+//- 💫 MAIN JAVASCRIPT
+//- ----------------------------------
 
-    // Elements
-    var topnav = document.getElementById('topnav');
-    var sidebar = document.getElementById('sidebar');
-    
-    if(sidebar) {
-        var navSelector = 'data-section';
-        var sidebarOffset = sidebar.offsetTop;
-        var navLinks = document.querySelectorAll('[' + navSelector + ']');
-        var elements = getElements();
-    }
+'use strict';
 
-    var vh = getVh();
-    var vhPadding = 525;
-    var scrollY = 0;
-    var ticking = false;
-    var scrollUp = false;
+const $ = document.querySelector.bind(document);
+const $$ = document.querySelectorAll.bind(document);
 
-    // Load
-    document.addEventListener('DOMContentLoaded', function() {  
-        window.addEventListener('scroll', onScroll, false);
-        window.addEventListener('resize', onResize, false);
-    });
+{
+    const updateVh = () => Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
 
+    const nav = $('.js-nav');
+    const sidebar = $('.js-sidebar');
+    const vhPadding = 525;
 
-    function onScroll() {
-        var newScrollY = (window.pageYOffset || document.scrollTop) - (document.clientTop || 0);
+    let vh = updateVh();
+    let scrollY = 0;
+    let scrollUp = false;
+
+    const updateNav = () => {
+        const vh = updateVh();
+        const newScrollY = (window.pageYOffset || document.scrollTop) - (document.clientTop || 0);
         scrollUp = newScrollY <= scrollY;
         scrollY = newScrollY;
 
-        if(!ticking) {
-            requestAnimationFrame(update);
-            ticking = true;
-        }
+        if(scrollUp && !(isNaN(scrollY) || scrollY <= vh)) topnav.classList.add('is-fixed');
+        else if(!scrollUp || (isNaN(scrollY) || scrollY <= vh/2)) topnav.classList.remove('is-fixed');
     }
 
-    function update() {
+    const updateSidebar = () => {
+        const sidebar = $('.js-sidebar');
+        if(sidebar.offsetTop - scrollY <= 0) sidebar.classList.add('is-fixed');
+        else sidebar.classList.remove('is-fixed');
 
-        if(sidebar) {
-            // Fix sidebar
-            if(sidebarOffset - scrollY <= 0) sidebar.classList.add('fixed');
-            else sidebar.classList.remove('fixed');
+        [...$$('[data-section]')].map(el => {
+            const trigger = el.getAttribute('data-section');
 
-            // Toggle navlinks
-            for(var i = 0; i < elements.length; i++) {
-                if(inViewport(elements[i])) elements[i].target.classList.add('active');
-                else elements[i].target.classList.remove('active');
+            if(trigger) {
+                const target = $(`#${trigger}`);
+                const offset = parseInt(target.offsetTop);
+                const height = parseInt(target.scrollHeight);
+
+                if((offset - scrollY) <= vh/2 && (offset - scrollY) > -height + vhPadding) {
+                    [...$$('[data-section]')].forEach(item => item.classList.remove('is-active'));
+                    $(`[data-section="${trigger}"]`).classList.add('is-active');
+                }
             }
-        }
-
-        // Fix topnav
-        if(scrollUp && !(isNaN(scrollY) || scrollY <= vh)) topnav.classList.add('fixed');
-        else if(!scrollUp || (isNaN(scrollY) || scrollY <= vh/2)) topnav.classList.remove('fixed');
-
-        ticking = false;
+        });
     }
 
-    function onResize() {
-        vh = getVh();
-
-        if(sidebar) {
-            sidebarOffset = sidebar.offsetTop;
-            elements = getElements();
-        }
-    }
-
-    function getElements() {
-        var elements = [];
-
-        for(var i = 0; i < navLinks.length; i++) {
-            var trigger = document.getElementById(navLinks[i].getAttribute(navSelector));
-
-            elements.push({
-                trigger: trigger,
-                target: navLinks[i],
-                height: parseInt(trigger.scrollHeight),
-                offset: parseInt(trigger.offsetTop)
-            });
-        }
-
-        return elements;
-    }
-
-    function getVh() {
-        return Math.max(document.documentElement.clientHeight, window.innerHeight || 0);
-    }
-
-    function inViewport(element) {
-        return (element.offset - scrollY) <= vh/2 && (element.offset - scrollY) > -element.height + vhPadding;
-    }
-})();
+    window.addEventListener('resize', () => vh = updateVh());
+    window.addEventListener('scroll', updateNav);
+    if($('.js-sidebar')) window.addEventListener('scroll', updateSidebar);
+}

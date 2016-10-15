@@ -101,3 +101,7 @@ website/demos/sense2vec/
 
 # Komodo project files
 *.komodoproject
+
+# Website
+website/_deploy.sh
+website/package.json

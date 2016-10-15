@@ -1,0 +1,41 @@
+//- ----------------------------------
+//- 💫 BASE > LAYOUT
+//- ----------------------------------
+
+//- HTML
+
+html
+    @include breakpoint(min, lg)
+        font-size: $type-base
+
+    @include breakpoint(max, md)
+        font-size: $type-base * 0.8
+
+//- Body
+
+body
+    display: flex
+    flex-flow: row wrap
+    animation: fadeIn 0.25s ease
+    background: $color-back
+    color: $color-front
+
+
+//- Paragraphs
+
+p
+    @extend .u-text-regular, .o-block, .has-aside
+
+
+//- Links
+
+main p a, main table a, main li a, .c-aside a
+    @extend .u-link
+
+
+//- Selection
+
+::selection
+    background: $color-theme
+    color: $color-back
+    text-shadow: none
