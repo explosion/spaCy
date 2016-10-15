@@ -12,6 +12,12 @@ the MIT license.
 
 .. image:: https://travis-ci.org/explosion/spaCy.svg?branch=master
     :target: https://travis-ci.org/explosion/spaCy
+    
+.. image:: https://img.shields.io/github/tag/explosion/spacy.svg
+    :target: https://github.com/explosion/spaCy/releases   
+
+.. image:: https://img.shields.io/pypi/v/spacy.svg   
+    :target: https://pypi.python.org/pypi/spacy
 
 Where to ask questions
 ======================
