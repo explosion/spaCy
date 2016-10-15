@@ -32,7 +32,7 @@ class Trainer(object):
             yield _epoch()
  
     def update(self, doc, gold):
-        for process in self.nlp.pipeline[1:]:
+        for process in self.nlp.pipeline:
             if hasattr(process, 'update'):
                 process.update(doc, gold)
             process(doc)
