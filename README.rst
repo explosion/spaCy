@@ -8,10 +8,10 @@ to be used in real products. It's commercial open-source software, released unde
 the MIT license.
 
 .. image:: http://i.imgur.com/wFvLZyJ.png
-    :target: https://travis-ci.org/spacy-io/spaCy
+    :target: https://travis-ci.org/explosion/spaCy
 
-.. image:: https://travis-ci.org/spacy-io/spaCy.svg?branch=master
-    :target: https://travis-ci.org/spacy-io/spaCy
+.. image:: https://travis-ci.org/explosion/spaCy.svg?branch=master
+    :target: https://travis-ci.org/explosion/spaCy
 
 Features
 ========
