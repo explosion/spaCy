@@ -215,6 +215,26 @@ def _consume_ent(tags):
 
 
 cdef class GoldParse:
+    @classmethod
+    def new_init(cls, doc, annot_tuples=None, words=None, tags=None, heads=None,
+                 deps=None, entities=None):
+        if words is None:
+            words = [token.text for token in doc]
+        if tags is None:
+            tags = [None for _ in doc]
+        if heads is None:
+            heads = [None for _ in doc]
+        if deps is None:
+            deps = [None for _ in doc]
+        if entities is None:
+            entities = [None for _ in doc]
+        elif len(entities) == 0:
+            entities = ['O' for _ in doc]
+        elif not isinstance(entities[0], basestring):
+            # Assume we have entities specified by character offset.
+            entities = biluo_tags_from_offsets(doc, entities)
+        return cls(doc, [(range(len(doc)), words, tags, heads, deps, entities)])
+
     def __init__(self, tokens, annot_tuples, make_projective=False):
         self.mem = Pool()
         self.loss = 0
