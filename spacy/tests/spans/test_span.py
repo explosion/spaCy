@@ -29,9 +29,8 @@ def test_root(doc):
     assert np.root.head.orth_ == 'is'
 
 
-def test_root2():
+def test_root2(EN):
     text = 'through North and South Carolina'
-    EN = English(parser=False)
     doc = EN(text)
     heads = np.asarray([[0, 3, -1, -2, -4]], dtype='int32')
     doc.from_array([HEAD], heads.T)
