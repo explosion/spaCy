@@ -53,6 +53,8 @@ def or_(val1, val2):
 
 def match_best_version(target_name, target_version, path):
     path = path if not isinstance(path, basestring) else pathlib.Path(path)
+    if not path.exists():
+        return None
     matches = []
     for data_name in path.iterdir():
         name, version = split_data_name(data_name.parts[-1])
