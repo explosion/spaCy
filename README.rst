@@ -13,6 +13,20 @@ the MIT license.
 .. image:: https://travis-ci.org/explosion/spaCy.svg?branch=master
     :target: https://travis-ci.org/explosion/spaCy
 
+Where to ask questions
+======================
+
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| 🔴 **Bug reports**        | `GitHub Issue tracker <https://github.com/explosion/spaCy/issues>`_                                        |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| ⁉️ **Usage questions**    | `StackOverflow <http://stackoverflow.com/questions/tagged/spacy>`_, `Reddit usergroup                      | 
+|                           | <https://www.reddit.com/r/spacynlp>`_, `Gitter chat <https://gitter.im/spaCy-users>`_                      |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| 💬 **General discussion** |  `Reddit usergroup <https://www.reddit.com/r/spacynlp>`_, `Gitter chat <https://gitter.im/spaCy-users>`_   |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+| 💥 **Commercial support** |  contact@explosion.ai                                                                                      |
++---------------------------+------------------------------------------------------------------------------------------------------------+
+
 Features
 ========
 
