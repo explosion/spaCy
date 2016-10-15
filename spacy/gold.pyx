@@ -221,8 +221,8 @@ cdef class GoldParse:
         return cls(doc, words=words, tags=tags, heads=heads, deps=deps, entities=entities,
                    make_projective=make_projective)
 
-    def __init__(cls, doc, annot_tuples=None, words=None, tags=None, heads=None,
-                 deps=None, entities=None):
+    def __init__(self, doc, annot_tuples=None, words=None, tags=None, heads=None,
+                 deps=None, entities=None, make_projective=False):
         if words is None:
             words = [token.text for token in doc]
         if tags is None:
@@ -241,7 +241,7 @@ cdef class GoldParse:
 
         self.mem = Pool()
         self.loss = 0
-        self.length = len(tokens)
+        self.length = len(doc)
 
         # These are filled by the tagger/parser/entity recogniser
         self.c.tags = <int*>self.mem.alloc(len(doc), sizeof(int))
