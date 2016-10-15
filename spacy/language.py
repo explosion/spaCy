@@ -258,7 +258,7 @@ class Language(object):
         self.end_training()
 
     def __init__(self,
-        path=None,
+        path=True,
         vocab=True,
         tokenizer=True,
         tagger=True,
@@ -294,7 +294,7 @@ class Language(object):
             path = data_dir
         if isinstance(path, basestring):
             path = pathlib.Path(path)
-        if path is None:
+        if path is True:
             path = util.match_best_version(self.lang, '', util.get_data_path())
         self.path = path
         defaults = defaults if defaults is not True else self.get_defaults(self.path)
