@@ -53,7 +53,7 @@ def main(output_dir=None):
     vocab = Vocab(tag_map=TAG_MAP)
     # The default_templates argument is where features are specified. See
     # spacy/tagger.pyx for the defaults.
-    tagger = Tagger.blank(vocab, Tagger.default_templates())
+    tagger = Tagger(vocab)
     for i in range(5):
         for words, tags in DATA:
             doc = Doc(vocab, words=words)

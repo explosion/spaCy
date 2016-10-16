@@ -19,7 +19,6 @@ except NameError:
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
-from .syntax.parser import Parser
 from .tagger import Tagger
 from .matcher import Matcher
 from . import attrs
@@ -95,7 +94,9 @@ class BaseDefaults(object):
         if self.path:
             return Tagger.load(self.path / 'pos', vocab)
         else:
-            return Tagger.blank(vocab, Tagger.default_templates())
+            if 'features' not in cfg:
+                cfg['features'] = self.parser_features
+            return Tagger(vocab, **cfg)
 
     def Parser(self, vocab, **cfg):
         if self.path and (self.path / 'deps').exists():
@@ -103,7 +104,7 @@ class BaseDefaults(object):
         else:
             if 'features' not in cfg:
                 cfg['features'] = self.parser_features
-            return DependencyParser.blank(vocab, **cfg)
+            return DependencyParser(vocab, **cfg)
 
     def Entity(self, vocab, **cfg):
         if self.path and (self.path / 'ner').exists():
@@ -111,7 +112,7 @@ class BaseDefaults(object):
         else:
             if 'features' not in cfg:
                 cfg['features'] = self.entity_features
-            return EntityRecognizer.blank(vocab, **cfg)
+            return EntityRecognizer(vocab, **cfg)
 
     def Matcher(self, vocab, **cfg):
         if self.path:

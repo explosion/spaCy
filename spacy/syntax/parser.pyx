@@ -67,10 +67,6 @@ def get_templates(name):
                 pf.tree_shape + pf.trigrams)
 
 
-def ParserFactory(transition_system):
-    return lambda strings, dir_: Parser(strings, dir_, transition_system)
-
-
 cdef class ParserModel(AveragedPerceptron):
     cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil: 
         fill_context(eg.atoms, state)
@@ -79,28 +75,26 @@ cdef class ParserModel(AveragedPerceptron):
 
 cdef class Parser:
     @classmethod
-    def load(cls, path, Vocab vocab, moves_class):
+    def load(cls, path, Vocab vocab, TransitionSystem=None, require=False):
         with (path / 'config.json').open() as file_:
             cfg = json.load(file_)
+        self = cls(vocab, TransitionSystem=TransitionSystem, model=None, **cfg)
+        if (path / 'model').exists():
+            self.model.load(str(path / 'model'))
+        elif require:
+            raise IOError(
+                "Required file %s/model not found when loading" % str(path))
+        return self
+
+    def __init__(self, Vocab vocab, TransitionSystem=None, ParserModel model=None, **cfg):
+        if TransitionSystem is None:
+            TransitionSystem = self.TransitionSystem
+        actions = TransitionSystem.get_actions(**cfg)
+        self.moves = TransitionSystem(vocab.strings, actions)
         # TODO: Remove this when we no longer need to support old-style models
         if isinstance(cfg.get('features'), basestring):
             cfg['features'] = get_templates(cfg['features'])
-        moves = moves_class(vocab.strings, cfg['actions'])
-        model = ParserModel(cfg['features'])
-        if (path / 'model').exists():
-            model.load(str(path / 'model'))
-        return cls(vocab, moves, model, **cfg)
-
-    @classmethod
-    def blank(cls, Vocab vocab, moves_class, **cfg):
-        moves = moves_class(vocab.strings, cfg.get('actions', {}))
-        templates = cfg.get('features', tuple())
-        model = ParserModel(templates)
-        return cls(vocab, moves, model, **cfg)
-
-    def __init__(self, Vocab vocab, transition_system, ParserModel model, **cfg):
-        self.moves = transition_system
-        self.model = model
+        self.model = ParserModel(cfg['features'])
         self.cfg = cfg
 
     def __reduce__(self):
@@ -192,8 +186,8 @@ cdef class Parser:
         free(eg.is_valid)
         return 0
   
-    def update(self, Doc tokens, GoldParse gold):
-        self.moves.preprocess_gold(gold)
+    def update(self, Doc tokens, raw_gold):
+        cdef GoldParse gold = self.preprocess_gold(raw_gold)
         cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
         self.moves.initialize_state(stcls.c)
         cdef Pool mem = Pool()
@@ -229,6 +223,15 @@ cdef class Parser:
     def add_label(self, label):
         for action in self.moves.action_types:
             self.moves.add_action(action, label)
+
+    def preprocess_gold(self, raw_gold):
+        cdef GoldParse gold
+        if isinstance(raw_gold, GoldParse):
+            gold = raw_gold
+            self.moves.preprocess_gold(raw_gold)
+            return gold
+        else:
+            raise ValueError("Parser.preprocess_gold requires GoldParse-type input.")
 
 
 cdef class StepwiseState:

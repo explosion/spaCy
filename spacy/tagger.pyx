@@ -103,58 +103,30 @@ cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
 cdef class Tagger:
     """A part-of-speech tagger for English"""
     @classmethod
-    def default_templates(cls):
-        return (
-            (W_orth,),
-            (P1_lemma, P1_pos),
-            (P2_lemma, P2_pos),
-            (N1_orth,),
-            (N2_orth,),
-
-            (W_suffix,),
-            (W_prefix,),
-
-            (P1_pos,),
-            (P2_pos,),
-            (P1_pos, P2_pos),
-            (P1_pos, W_orth),
-            (P1_suffix,),
-            (N1_suffix,),
-
-            (W_shape,),
-            (W_cluster,),
-            (N1_cluster,),
-            (N2_cluster,),
-            (P1_cluster,),
-            (P2_cluster,),
-
-            (W_flags,),
-            (N1_flags,),
-            (N2_flags,),
-            (P1_flags,),
-            (P2_flags,),
-        )
-
-    @classmethod
-    def blank(cls, vocab, templates):
-        model = TaggerModel(templates)
-        return cls(vocab, model)
-
-    @classmethod
-    def load(cls, path, vocab):
+    def load(cls, path, vocab, require=False):
+        # TODO: Change this to expect config.json when we don't have to
+        # support old data.
         path = path if not isinstance(path, basestring) else pathlib.Path(path)
         if (path / 'templates.json').exists():
             with (path / 'templates.json').open() as file_:
                 templates = json.load(file_)
+        elif require:
+            raise IOError(
+                "Required file %s/templates.json not found when loading Tagger" % str(path))
         else:
-            templates = cls.default_templates()
+            templates = cls.feature_templates
+        self = cls(vocab, model=None, feature_templates=templates)
 
-        model = TaggerModel(templates)
         if (path / 'model').exists():
-            model.load(str(path / 'model'))
-        return cls(vocab, model)
+            self.model.load(str(path / 'model'))
+        elif require:
+            raise IOError(
+                "Required file %s/model not found when loading Tagger" % str(path))
+        return self
 
-    def __init__(self, Vocab vocab, TaggerModel model, **cfg):
+    def __init__(self, Vocab vocab, TaggerModel model=None, **cfg):
+        if model is None:
+            model = TaggerModel(cfg.get('features', self.feature_templates))
         self.vocab = vocab
         self.model = model
         # TODO: Move this to tag map
@@ -242,3 +214,35 @@ cdef class Tagger:
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
         return correct
+
+
+    feature_templates = (
+        (W_orth,),
+        (P1_lemma, P1_pos),
+        (P2_lemma, P2_pos),
+        (N1_orth,),
+        (N2_orth,),
+
+        (W_suffix,),
+        (W_prefix,),
+
+        (P1_pos,),
+        (P2_pos,),
+        (P1_pos, P2_pos),
+        (P1_pos, W_orth),
+        (P1_suffix,),
+        (N1_suffix,),
+
+        (W_shape,),
+        (W_cluster,),
+        (N1_cluster,),
+        (N2_cluster,),
+        (P1_cluster,),
+        (P2_cluster,),
+
+        (W_flags,),
+        (N1_flags,),
+        (N2_flags,),
+        (P1_flags,),
+        (P2_flags,),
+    )

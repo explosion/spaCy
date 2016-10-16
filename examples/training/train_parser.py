@@ -10,11 +10,10 @@ from spacy.tokens import Doc
 
 
 def train_parser(nlp, train_data, left_labels, right_labels):
-    parser = DependencyParser.blank(
-                                nlp.vocab,
-                                left_labels=left_labels,
-                                right_labels=right_labels,
-                                features=nlp.defaults.parser_features)
+    parser = DependencyParser(
+                nlp.vocab,
+                left_labels=left_labels,
+                right_labels=right_labels)
     for itn in range(1000):
         random.shuffle(train_data)
         loss = 0

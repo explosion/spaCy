@@ -24,7 +24,7 @@ def blank(name, vocab=None, tokenizer=None, parser=None, tagger=None, entity=Non
     target_name, target_version = util.split_data_name(name)
     cls = get_lang_class(target_name)
     return cls(
-        path,
+        path=None,
         vectors=vectors,
         vocab=vocab,
         tokenizer=tokenizer,

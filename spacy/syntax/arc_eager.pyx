@@ -279,20 +279,36 @@ cdef int _get_root(int word, const GoldParseC* gold) nogil:
 
 cdef class ArcEager(TransitionSystem):
     @classmethod
-    def get_labels(cls, gold_parses):
-        move_labels = {SHIFT: {'': True}, REDUCE: {'': True}, RIGHT: {},
-                       LEFT: {}, BREAK: {'ROOT': True}}
-        for raw_text, sents in gold_parses:
+    def get_actions(cls, **kwargs):
+        actions = kwargs.get('actions', 
+                    {
+                        SHIFT: {'': True},
+                        REDUCE: {'': True},
+                        RIGHT: {},
+                        LEFT: {},
+                        BREAK: {'ROOT': True}})
+        for label in kwargs.get('labels', []):
+            if label.upper() != 'ROOT':
+                actions[LEFT][label] = True
+                actions[RIGHT][label] = True
+        for label in kwargs.get('left_labels', []):
+            if label.upper() != 'ROOT':
+                actions[LEFT][label] = True
+        for label in kwargs.get('right_labels', []):
+            if label.upper() != 'ROOT':
+                actions[RIGHT][label] = True
+ 
+        for raw_text, sents in kwargs.get('gold_parses', []):
             for (ids, words, tags, heads, labels, iob), ctnts in sents:
                 for child, head, label in zip(ids, heads, labels):
                     if label.upper() == 'ROOT':
                         label = 'ROOT'
                     if label != 'ROOT':
                         if head < child:
-                            move_labels[RIGHT][label] = True
+                            actions[RIGHT][label] = True
                         elif head > child:
-                            move_labels[LEFT][label] = True
-        return move_labels
+                            actions[LEFT][label] = True
+        return actions
 
     property action_types:
         def __get__(self):
