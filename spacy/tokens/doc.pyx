@@ -120,6 +120,12 @@ cdef class Doc:
         if orths_and_spaces is None and words is not None:
             if spaces is None:
                 spaces = [True] * len(words)
+            elif len(spaces) != len(words):
+                raise ValueError(
+                    "Arguments 'words' and 'spaces' should be sequences of the "
+                    "same length, or 'spaces' should be left default at None. "
+                    "spaces should be a sequence of booleans, with True meaning "
+                    "that the word owns a ' ' character following it.")
             orths_and_spaces = zip(words, spaces)
         if orths_and_spaces is not None:
             for orth_space in orths_and_spaces:
