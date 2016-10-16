@@ -54,10 +54,9 @@ def main(output_dir=None):
     # The default_templates argument is where features are specified. See
     # spacy/tagger.pyx for the defaults.
     tagger = Tagger.blank(vocab, Tagger.default_templates())
-
     for i in range(5):
         for words, tags in DATA:
-            doc = Doc(vocab, orths_and_spaces=zip(words, [True] * len(words)))
+            doc = Doc(vocab, words=words)
             tagger.update(doc, tags)
         random.shuffle(DATA)
     tagger.model.end_training()
