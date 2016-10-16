@@ -94,6 +94,8 @@ cdef class Parser:
         # TODO: Remove this when we no longer need to support old-style models
         if isinstance(cfg.get('features'), basestring):
             cfg['features'] = get_templates(cfg['features'])
+        elif 'features' not in cfg:
+            cfg['features'] = self.feature_templates
         self.model = ParserModel(cfg['features'])
         self.cfg = cfg
 
