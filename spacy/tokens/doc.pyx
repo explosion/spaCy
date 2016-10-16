@@ -75,7 +75,7 @@ cdef class Doc:
         doc = Doc(nlp.vocab, orths_and_spaces=[(u'Some', True), (u'text', True)])
 
     """
-    def __init__(self, Vocab vocab, orths_and_spaces=None):
+    def __init__(self, Vocab vocab, words=None, spaces=None, orths_and_spaces=None):
         '''
         Create a Doc object.
 
@@ -117,6 +117,10 @@ cdef class Doc:
         self.noun_chunks_iterator = CHUNKERS.get(self.vocab.lang)
         cdef unicode orth
         cdef bint has_space
+        if orths_and_spaces is None and words is not None:
+            if spaces is None:
+                spaces = [True] * len(words)
+            orths_and_spaces = zip(words, spaces)
         if orths_and_spaces is not None:
             for orth_space in orths_and_spaces:
                 if isinstance(orth_space, unicode):
