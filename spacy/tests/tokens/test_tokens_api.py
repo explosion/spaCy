@@ -208,9 +208,14 @@ def test_has_vector(EN):
     assert doc.has_vector
 
 
-@pytest.mark.models
 def test_parse_tree(EN):
-    trees = EN.parse_tree(u'''Bob brought Alice the pizza.''')
+    text = 'I like New York in Autumn.'
+    EN = English(parser=False)
+    doc = EN(text, tag=True)
+    doc.from_array([HEAD], numpy.asarray([[1, 0, 1, -2, -3, -1, -5]], dtype='int32').T)
+    # full method parse_tree(text) is a trivial composition
+    trees = EN.parse_tree_(doc)
     assert len(trees) > 0
     tree = trees[0]
     assert all(k in list(tree.keys()) for k in ['word', 'lemma', 'NE', 'POS_fine', 'POS_coarse', 'arc', 'modifiers'])
+    assert tree['word'] == 'like' # check root is correct
