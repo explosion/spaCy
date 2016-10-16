@@ -85,7 +85,7 @@ cdef class Parser:
         # TODO: Remove this when we no longer need to support old-style models
         if isinstance(cfg.get('features'), basestring):
             cfg['features'] = get_templates(cfg['features'])
-        moves = moves_class(vocab.strings, cfg['labels'])
+        moves = moves_class(vocab.strings, cfg['actions'])
         model = ParserModel(cfg['features'])
         if (path / 'model').exists():
             model.load(str(path / 'model'))
@@ -93,7 +93,7 @@ cdef class Parser:
 
     @classmethod
     def blank(cls, Vocab vocab, moves_class, **cfg):
-        moves = moves_class(vocab.strings, cfg.get('labels', {}))
+        moves = moves_class(vocab.strings, cfg.get('actions', {}))
         templates = cfg.get('features', tuple())
         model = ParserModel(templates)
         return cls(vocab, moves, model, **cfg)
