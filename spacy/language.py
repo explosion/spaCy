@@ -125,7 +125,7 @@ class BaseDefaults(object):
             return Matcher(vocab)
 
     def MakeDoc(self, nlp, **cfg):
-        return nlp.tokenizer.__call__
+        return lambda text: nlp.tokenizer(text)
 
     def Pipeline(self, nlp, **cfg):
         pipeline = []
