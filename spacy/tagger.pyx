@@ -211,6 +211,8 @@ cdef class Tagger:
     def update(self, Doc tokens, object gold):
         if hasattr(gold, 'tags'):
             gold_tag_strs = list(gold.tags)
+        else:
+            gold_tag_strs = gold
         assert len(tokens) == len(gold_tag_strs)
         for tag in gold_tag_strs:
             if tag != None and tag not in self.tag_names:
