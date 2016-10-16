@@ -18,7 +18,7 @@ def train_parser(nlp, train_data, left_labels, right_labels):
         random.shuffle(train_data)
         loss = 0
         for words, heads, deps in train_data:
-            doc = nlp.make_doc(words)
+            doc = Doc(nlp.vocab, words=words)
             gold = GoldParse(doc, heads=heads, deps=deps)
             loss += parser.update(doc, gold)
     parser.model.end_training()
@@ -33,7 +33,6 @@ def main(model_dir=None):
         assert model_dir.isdir()
 
     nlp = spacy.load('en', tagger=False, parser=False, entity=False, vectors=False)
-    nlp.make_doc = lambda words: Doc(nlp.vocab, zip(words, [True]*len(words)))
 
     train_data = [
         (
@@ -57,7 +56,7 @@ def main(model_dir=None):
                 right_labels.add(dep)
     parser = train_parser(nlp, train_data, sorted(left_labels), sorted(right_labels))
 
-    doc = nlp.make_doc(['I', 'like', 'securities', '.'])
+    doc = Doc(nlp.vocab, words=['I', 'like', 'securities', '.'])
     parser(doc)
     for word in doc:
         print(word.text, word.dep_, word.head.text)
