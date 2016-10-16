@@ -45,4 +45,4 @@ def test_misalign(vocab):
     doc = Doc(vocab, orths_and_spaces=orths_and_spaces)
     entities = [(len("I flew to "), len("I flew to San Francisco Valley"), 'LOC')]
     tags = biluo_tags_from_offsets(doc, entities)
-    assert tags == ['O', 'O', 'O', '', '', '']
+    assert tags == ['O', 'O', 'O', '-', '-', '-']
