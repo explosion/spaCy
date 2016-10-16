@@ -287,10 +287,6 @@ cdef class ArcEager(TransitionSystem):
                         RIGHT: {},
                         LEFT: {},
                         BREAK: {'ROOT': True}})
-        for label in kwargs.get('labels', []):
-            if label.upper() != 'ROOT':
-                actions[LEFT][label] = True
-                actions[RIGHT][label] = True
         for label in kwargs.get('left_labels', []):
             if label.upper() != 'ROOT':
                 actions[LEFT][label] = True

@@ -78,6 +78,9 @@ cdef class Parser:
     def load(cls, path, Vocab vocab, TransitionSystem=None, require=False):
         with (path / 'config.json').open() as file_:
             cfg = json.load(file_)
+        # TODO: remove this shim when we don't have to support older data
+        if 'labels' in cfg:
+            cfg['actions'] = cfg.pop('labels')
         self = cls(vocab, TransitionSystem=TransitionSystem, model=None, **cfg)
         if (path / 'model').exists():
             self.model.load(str(path / 'model'))
@@ -188,8 +191,8 @@ cdef class Parser:
         free(eg.is_valid)
         return 0
   
-    def update(self, Doc tokens, raw_gold):
-        cdef GoldParse gold = self.preprocess_gold(raw_gold)
+    def update(self, Doc tokens, GoldParse gold):
+        self.moves.preprocess_gold(gold)
         cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
         self.moves.initialize_state(stcls.c)
         cdef Pool mem = Pool()
@@ -225,15 +228,6 @@ cdef class Parser:
     def add_label(self, label):
         for action in self.moves.action_types:
             self.moves.add_action(action, label)
-
-    def preprocess_gold(self, raw_gold):
-        cdef GoldParse gold
-        if isinstance(raw_gold, GoldParse):
-            gold = raw_gold
-            self.moves.preprocess_gold(raw_gold)
-            return gold
-        else:
-            raise ValueError("Parser.preprocess_gold requires GoldParse-type input.")
 
 
 cdef class StepwiseState:
