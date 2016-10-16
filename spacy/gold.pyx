@@ -228,7 +228,7 @@ cdef class GoldParse:
         if tags is None:
             tags = [None for _ in doc]
         if heads is None:
-            heads = [None for _ in doc]
+            heads = [token.i for token in doc]
         if deps is None:
             deps = [None for _ in doc]
         if entities is None:
@@ -261,12 +261,12 @@ cdef class GoldParse:
         self.orig_annot = list(zip(*annot_tuples))
 
         for i, gold_i in enumerate(self.cand_to_gold):
-            if doc[i].isspace():
+            if doc[i].text.isspace():
                 self.tags[i] = 'SP'
                 self.heads[i] = None
                 self.labels[i] = None
                 self.ner[i] = 'O'
-            elif gold_i is None:
+            if gold_i is None:
                 pass
             else:
                 self.tags[i] = tags[gold_i]
@@ -307,7 +307,7 @@ def biluo_tags_from_offsets(doc, entities):
         tags (list):
             A list of unicode strings, describing the tags. Each tag string will
             be of the form either "", "O" or "{action}-{label}", where action is one
-            of "B", "I", "L", "U". The empty string "" is used where the entity
+            of "B", "I", "L", "U". The string "-" is used where the entity
             offsets don't align with the tokenization in the Doc object. The
             training algorithm will view these as missing values. "O" denotes
             a non-entity token. "B" denotes the beginning of a multi-token entity,
@@ -325,7 +325,7 @@ def biluo_tags_from_offsets(doc, entities):
     '''
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx+len(token): token.i for token in doc}
-    biluo = ['' for _ in doc]
+    biluo = ['-' for _ in doc]
     # Handle entity cases
     for start_char, end_char, label in entities:
         start_token = starts.get(start_char)
@@ -355,13 +355,3 @@ def biluo_tags_from_offsets(doc, entities):
 
 def is_punct_label(label):
     return label == 'P' or label.lower() == 'punct'
-
-
-
-
-
-
-
-
-
-
