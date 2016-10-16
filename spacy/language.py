@@ -104,8 +104,8 @@ class BaseDefaults(object):
         else:
             if 'features' not in cfg:
                 cfg['features'] = self.parser_features
-            if 'labels' not in cfg:
-                cfg['labels'] = self.parser_labels
+            if 'actions' not in cfg:
+                cfg['actions'] = self.parser_labels
             return Parser.blank(vocab, ArcEager, **cfg)
 
     def Entity(self, vocab, **cfg):
@@ -114,8 +114,8 @@ class BaseDefaults(object):
         else:
             if 'features' not in cfg:
                 cfg['features'] = self.entity_features
-            if 'labels' not in cfg:
-                cfg['labels'] = self.entity_labels
+            if 'actions' not in cfg:
+                cfg['actions'] = self.entity_labels
             return Parser.blank(vocab, BiluoPushDown, **cfg)
 
     def Matcher(self, vocab, **cfg):
