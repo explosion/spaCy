@@ -21,7 +21,7 @@ cdef class StateClass:
 
     @property
     def queue(self):
-        return {self.B(i) for i in range(self.c._b_i)}
+        return {self.B(i) for i in range(self.c.buffer_length())}
 
     def print_state(self, words):
         words = list(words) + ['_']
