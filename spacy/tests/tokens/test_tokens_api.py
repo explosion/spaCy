@@ -208,6 +208,7 @@ def test_has_vector(EN):
     assert doc.has_vector
 
 
+@pytest.mark.models
 def test_parse_tree(EN):
     trees = EN.parse_tree(u'''Bob brought Alice the pizza.''')
     assert len(trees) > 0
