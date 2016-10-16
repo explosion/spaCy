@@ -59,11 +59,7 @@ def main(model_dir=None):
     parser = train_parser(nlp, train_data, sorted(left_labels), sorted(right_labels))
 
     doc = nlp.make_doc(['I', 'like', 'securities', '.'])
-    with parser.step_through(doc) as state:
-        while not state.is_final:
-            action = state.predict()
-            state.transition(action)
-    #parser(doc)
+    parser(doc)
     for word in doc:
         print(word.text, word.dep_, word.head.text)
 
