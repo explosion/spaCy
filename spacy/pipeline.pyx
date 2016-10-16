@@ -28,14 +28,14 @@ cdef class DependencyParser(Parser):
     @classmethod
     def blank(cls, Vocab vocab, **cfg):
         if 'actions' not in cfg:
-            cfg['actions'] = {1: {'': True}, 2: {'': True}, 3: {}, 4: {},
-                              5: {'ROOT': True}}
+            cfg['actions'] = {0: {'': True}, 1: {'': True}, 2: {}, 3: {},
+                              4: {'ROOT': True}}
             for label in cfg.get('left_labels', []):
-                cfg['actions'][3][label] = True
+                cfg['actions'][2][label] = True
             for label in cfg.get('right_labels', []):
-                cfg['actions'][4][label] = True
+                cfg['actions'][3][label] = True
             for label in cfg.get('break_labels', []):
-                cfg['actions'][5][label] = True
+                cfg['actions'][4][label] = True
         return Parser.blank(vocab, ArcEager, **cfg)
 
 
