@@ -206,3 +206,10 @@ def test_right_edge(EN):
 def test_has_vector(EN):
     doc = EN(u'''apple orange pear''')
     assert doc.has_vector
+
+
+def test_parse_tree(EN):
+    trees = EN.parse_tree(u'''Bob brought Alice the pizza.''')
+    assert len(trees) > 0
+    tree = trees[0]
+    assert all(k in list(tree.keys()) for k in ['word', 'lemma', 'NE', 'POS_fine', 'POS_coarse', 'arc', 'modifiers'])
