@@ -284,7 +284,9 @@ cdef class StepwiseState:
         cdef Transition action = self.parser.moves.c[self.eg.guess]
         return self.parser.moves.move_name(action.move, action.label)
 
-    def transition(self, action_name):
+    def transition(self, action_name=None):
+        if action_name is None:
+            action_name = self.predict()
         moves = {'S': 0, 'D': 1, 'L': 2, 'R': 3}
         if action_name == '_':
             action_name = self.predict()
