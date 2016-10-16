@@ -13,7 +13,7 @@ cdef class EntityRecognizer(Parser):
     @classmethod
     def blank(cls, Vocab vocab, **cfg):
         if 'actions' not in cfg:
-            cfg['actions'] = {}
+            cfg['actions'] = {0: {'': True}, 5: {'': True}}
             entity_types = cfg.get('entity_types', [''])
             for action_type in (1, 2, 3, 4):
                 cfg['actions'][action_type] = {ent_type: True for ent_type in entity_types}
