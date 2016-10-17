@@ -117,7 +117,7 @@ cdef class Doc:
         self.is_parsed = False
         self.getters_for_tokens = {}
         self.getters_for_spans = {}
-        self.tensor = np.zeros((0,), dtype='float32')
+        self.tensor = numpy.zeros((0,), dtype='float32')
         self.user_data = {}
         self._py_tokens = []
         self._vector = None
@@ -599,9 +599,9 @@ cdef class Doc:
         if len(args) == 3:
             # TODO: Warn deprecation
             tag, lemma, ent_type = args
-            attributes[TAG] = self.strings[tag]
-            attributes[LEMMA] = self.strings[lemma]
-            attributes[ENT_TYPE] = self.strings[ent_type]
+            attributes[TAG] = self.vocab.strings[tag]
+            attributes[LEMMA] = self.vocab.strings[lemma]
+            attributes[ENT_TYPE] = self.vocab.strings[ent_type]
         elif args:
             raise ValueError(
                 "Doc.merge received %d non-keyword arguments. "
@@ -618,9 +618,9 @@ cdef class Doc:
         # Currently we have the token index, we want the range-end index
         end += 1
         cdef Span span = self[start:end]
-        tag = self.strings[attributes.get(TAG, span.root.tag)]
-        lemma = self.strings[attributes.get(LEMMA, span.root.lemma)]
-        ent_type = self.strings[attributes.get(ENT_TYPE, span.root.ent_type)]
+        tag = self.vocab.strings[attributes.get(TAG, span.root.tag)]
+        lemma = self.vocab.strings[attributes.get(LEMMA, span.root.lemma)]
+        ent_type = self.vocab.strings[attributes.get(ENT_TYPE, span.root.ent_type)]
 
         # Get LexemeC for newly merged token
         new_orth = ''.join([t.text_with_ws for t in span])
