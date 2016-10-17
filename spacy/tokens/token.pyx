@@ -43,20 +43,10 @@ cdef class Token:
         return self.c.lex.length
 
     def __unicode__(self):
-        # Users can toggle this on to preserve former buggy semantics.
-        # Remove this in future versions.
-        if _STR_TRAILING_WHITESPACE:
-            return self.text_with_ws
-        else:
-            return self.text
+        return self.text
 
     def __bytes__(self):
-        # Users can toggle this on to preserve former buggy semantics.
-        # Remove this in future versions.
-        if _STR_TRAILING_WHITESPACE:
-            return self.text_with_ws.encode('utf8')
-        else:
-            return self.text.encode('utf8')
+        return self.text.encode('utf8')
 
     def __str__(self):
         if six.PY3:
