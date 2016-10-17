@@ -26,8 +26,13 @@ def test_overlap_issue118(EN):
     
     assert len(list(doc.ents)) == 0
     matches = [(ent_type, start, end) for ent_id, ent_type, start, end in matcher(doc)]
-    assert matches == [(ORG, doc[9:11].start_char, doc[9:11].end_char), \
-                       (ORG, doc[10:11].start_char, doc[10:11].end_char)]
+    assert matches == [(ORG, 9, 11), (ORG, 10, 11)]
+    doc.ents = matches[:1]
+    ents = list(doc.ents)
+    assert len(ents) == 1
+    assert ents[0].label == ORG
+    assert ents[0].start == 9
+    assert ents[0].end == 11
 
 
 def test_overlap_issue242():
@@ -45,101 +50,97 @@ def test_overlap_issue242():
  
     nlp = spacy.en.English(path=data_dir, tagger=False, parser=False, entity=False)
 
-    nlp.matcher.add('FOOD', 'FOOD', {}, patterns,
-        on_match=lambda _, doc, i, match: doc.merge(match[i][2], match[i][3]))
+    nlp.matcher.add('FOOD', 'FOOD', {}, patterns)
 
     doc = nlp.tokenizer(u'There are different food safety standards in different countries.')
 
     matches = [(ent_type, start, end) for ent_id, ent_type, start, end in nlp.matcher(doc)]
     doc.ents += tuple(matches)
     food_safety, safety_standards = matches
-    assert food_safety[1] == len('There are different ')
-    assert food_safety[2] == len('There are different food safety')
-    assert safety_standards[1] == len('There are different food ')
-    assert safety_standards[2] == len('There are different food safety standards')
+    assert food_safety[1] == 3
+    assert food_safety[2] == 5
+    assert safety_standards[1] == 4
+    assert safety_standards[2] == 6
 
 
-# These are issues that arose in the old Matcher. Rather than updating them all,
-# let's see whether they re-occur --- they don't have such a high prior atm.
-#
-#def test_overlap_reorder(EN):
-#    '''Test order dependence'''
-#    doc = EN.tokenizer(u'how many points did lebron james score against the boston celtics last night')
-#    ORG = doc.vocab.strings['ORG']
-#    matcher = Matcher(EN.vocab,
-#        {'BostonCeltics':
-#            ('ORG', {},
-#                [
-#                    [{LOWER: 'boston'}, {LOWER: 'celtics'}],
-#                    [{LOWER: 'celtics'}],
-#                ]
-#            )
-#        }
-#    )
-#    
-#    assert len(list(doc.ents)) == 0
-#    matches = [(ent_type, start, end) for ent_id, ent_type, start, end in matcher(doc)]
-#    assert matches == [(ORG, 9, 11), (ORG, 10, 11)]
-#    doc.ents = matches[:1]
-#    ents = list(doc.ents)
-#    assert len(ents) == 1
-#    assert ents[0].label == ORG
-#    assert ents[0].start == 9
-#    assert ents[0].end == 11
-#
-#
-#def test_overlap_prefix(EN):
-#    '''Test order dependence'''
-#    doc = EN.tokenizer(u'how many points did lebron james score against the boston celtics last night')
-#    ORG = doc.vocab.strings['ORG']
-#    matcher = Matcher(EN.vocab,
-#        {'BostonCeltics':
-#            ('ORG', {},
-#                [
-#                    [{LOWER: 'boston'}],
-#                    [{LOWER: 'boston'}, {LOWER: 'celtics'}],
-#                ]
-#            )
-#        }
-#    )
-#    
-#    assert len(list(doc.ents)) == 0
-#    matches = [(ent_type, start, end) for ent_id, ent_type, start, end in matcher(doc)]
-#    doc.ents = matches[1:]
-#    assert matches == [(ORG, 9, 10), (ORG, 9, 11)]
-#    ents = list(doc.ents)
-#    assert len(ents) == 1
-#    assert ents[0].label == ORG
-#    assert ents[0].start == 9
-#    assert ents[0].end == 11
-#
-#
-#def test_overlap_prefix_reorder(EN):
-#    '''Test order dependence'''
-#    doc = EN.tokenizer(u'how many points did lebron james score against the boston celtics last night')
-#    ORG = doc.vocab.strings['ORG']
-#    matcher = Matcher(EN.vocab,
-#        {'BostonCeltics':
-#            ('ORG', {},
-#                [
-#                    [{LOWER: 'boston'}, {LOWER: 'celtics'}],
-#                    [{LOWER: 'boston'}],
-#                ]
-#            )
-#        }
-#    )
-#    
-#    assert len(list(doc.ents)) == 0
-#    matches = [(ent_type, start, end) for ent_id, ent_type, start, end in matcher(doc)]
-#    doc.ents += tuple(matches)[1:]
-#    assert matches == [(ORG, 9, 10), (ORG, 9, 11)]
-#    ents = doc.ents
-#    assert len(ents) == 1
-#    assert ents[0].label == ORG
-#    assert ents[0].start == 9
-#    assert ents[0].end == 11
-#
-#
+def test_overlap_reorder(EN):
+    '''Test order dependence'''
+    doc = EN.tokenizer(u'how many points did lebron james score against the boston celtics last night')
+    ORG = doc.vocab.strings['ORG']
+    matcher = Matcher(EN.vocab,
+        {'BostonCeltics':
+            ('ORG', {},
+                [
+                    [{LOWER: 'boston'}, {LOWER: 'celtics'}],
+                    [{LOWER: 'celtics'}],
+                ]
+            )
+        }
+    )
+    
+    assert len(list(doc.ents)) == 0
+    matches = [(ent_type, start, end) for ent_id, ent_type, start, end in matcher(doc)]
+    assert matches == [(ORG, 9, 11), (ORG, 10, 11)]
+    doc.ents = matches[:1]
+    ents = list(doc.ents)
+    assert len(ents) == 1
+    assert ents[0].label == ORG
+    assert ents[0].start == 9
+    assert ents[0].end == 11
+
+
+def test_overlap_prefix(EN):
+    '''Test order dependence'''
+    doc = EN.tokenizer(u'how many points did lebron james score against the boston celtics last night')
+    ORG = doc.vocab.strings['ORG']
+    matcher = Matcher(EN.vocab,
+        {'BostonCeltics':
+            ('ORG', {},
+                [
+                    [{LOWER: 'boston'}],
+                    [{LOWER: 'boston'}, {LOWER: 'celtics'}],
+                ]
+            )
+        }
+    )
+    
+    assert len(list(doc.ents)) == 0
+    matches = [(ent_type, start, end) for ent_id, ent_type, start, end in matcher(doc)]
+    doc.ents = matches[1:]
+    assert matches == [(ORG, 9, 10), (ORG, 9, 11)]
+    ents = list(doc.ents)
+    assert len(ents) == 1
+    assert ents[0].label == ORG
+    assert ents[0].start == 9
+    assert ents[0].end == 11
+
+
+def test_overlap_prefix_reorder(EN):
+    '''Test order dependence'''
+    doc = EN.tokenizer(u'how many points did lebron james score against the boston celtics last night')
+    ORG = doc.vocab.strings['ORG']
+    matcher = Matcher(EN.vocab,
+        {'BostonCeltics':
+            ('ORG', {},
+                [
+                    [{LOWER: 'boston'}, {LOWER: 'celtics'}],
+                    [{LOWER: 'boston'}],
+                ]
+            )
+        }
+    )
+    
+    assert len(list(doc.ents)) == 0
+    matches = [(ent_type, start, end) for ent_id, ent_type, start, end in matcher(doc)]
+    doc.ents += tuple(matches)[1:]
+    assert matches == [(ORG, 9, 10), (ORG, 9, 11)]
+    ents = doc.ents
+    assert len(ents) == 1
+    assert ents[0].label == ORG
+    assert ents[0].start == 9
+    assert ents[0].end == 11
+
+
 # @pytest.mark.models
 # def test_ner_interaction(EN):
 #     EN.matcher.add('LAX_Airport', 'AIRPORT', {}, [[{ORTH: 'LAX'}]])
