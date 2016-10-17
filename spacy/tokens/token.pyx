@@ -29,27 +29,6 @@ from ..attrs cimport IS_OOV
 from ..lexeme cimport Lexeme
 
 
-_STR_TRAILING_WHITESPACE = False
-
-def use_deprecated_Token__str__semantics(value):
-    '''
-    Preserve deprecated semantics for Token.__str__ and Token.__unicode__ methods.
-    
-    spaCy < 0.100.7 had a bug in the semantics of the Token.__str__ and Token.__unicode__
-    built-ins: they included a trailing space. To ease the transition to the
-    new semantics, you can use this function to switch the old semantics back on.
-    
-    Example:
-
-        from spacy.tokens.token import keep_deprecated_Token.__str__semantics
-        keep_deprecated_Token.__str__semantics(True)
-
-    This function will not remain in future versions --- it's a temporary shim.
-    '''
-    global _STR_TRAILING_WHITESPACE
-    _STR_TRAILING_WHITESPACE = value
-
-
 cdef class Token:
     """An individual token --- i.e. a word, a punctuation symbol, etc.  Created
     via Doc.__getitem__ and Doc.__iter__.
@@ -210,10 +189,15 @@ cdef class Token:
 
     property repvec:
         def __get__(self):
-            return self.vector
+            raise AttributeError("repvec was renamed to vector in v0.100")
+    property has_repvec:
+        def __get__(self):
+            raise AttributeError("has_repvec was renamed to has_vector in v0.100")
 
     property vector_norm:
         def __get__(self):
+            if 'vector_norm' in self.doc.getters_for_tokens:
+                return self.doc.getters_for_tokens['vector_norm'](self)
             return self.c.lex.l2_norm
 
     property n_lefts:
