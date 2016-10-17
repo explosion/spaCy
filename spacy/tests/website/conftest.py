@@ -9,7 +9,7 @@ def nlp():
     if os.environ.get('SPACY_DATA'):
         data_dir = os.environ.get('SPACY_DATA')
     else:
-        data_dir = None
+        data_dir = True
     return English(path=data_dir)
 
 

@@ -7,11 +7,11 @@ from ..de import German
 
 @pytest.fixture(scope="session")
 def EN():
-    return English(path=False)
+    return English()
 
 @pytest.fixture(scope="session")
 def DE():
-    return German(path=False)
+    return German()
 
 
 def pytest_addoption(parser):
