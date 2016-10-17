@@ -77,8 +77,8 @@ cdef class Span:
         for i in range(self.start, self.end):
             yield self.doc[i]
 
-    def merge(self, unicode tag, unicode lemma, unicode ent_type):
-        self.doc.merge(self.start_char, self.end_char, tag, lemma, ent_type)
+    def merge(self, *args, **attributes):
+        self.doc.merge(self.start_char, self.end_char, *args, **attributes)
 
     def similarity(self, other):
         if 'similarity' in self.doc.getters_for_spans:

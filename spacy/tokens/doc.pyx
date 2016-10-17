@@ -593,9 +593,22 @@ cdef class Doc:
                 keep_reading = False
             yield n_bytes_str + data
 
-    def merge(self, int start_idx, int end_idx, unicode tag, unicode lemma,
-              unicode ent_type):
+    def merge(self, int start_idx, int end_idx, *args, **attributes):
         """Merge a multi-word expression into a single token."""
+        cdef unicode tag, lemma, ent_type
+        if len(args) == 3:
+            # TODO: Warn deprecation
+            tag, lemma, ent_type = args
+            attributes[TAG] = self.strings[tag]
+            attributes[LEMMA] = self.strings[lemma]
+            attributes[ENT_TYPE] = self.strings[ent_type]
+        elif args:
+            raise ValueError(
+                "Doc.merge received %d non-keyword arguments. "
+                "Expected either 3 arguments (deprecated), or 0 (use keyword arguments). "
+                "Arguments supplied:\n%s\n"
+                "Keyword arguments:%s\n" % (len(args), repr(args), repr(attributes)))
+ 
         cdef int start = token_by_start(self.c, self.length, start_idx)
         if start == -1:
             return None
@@ -604,8 +617,11 @@ cdef class Doc:
             return None
         # Currently we have the token index, we want the range-end index
         end += 1
-        
         cdef Span span = self[start:end]
+        tag = self.strings[attributes.get(TAG, span.root.tag)]
+        lemma = self.strings[attributes.get(LEMMA, span.root.lemma)]
+        ent_type = self.strings[attributes.get(ENT_TYPE, span.root.ent_type)]
+
         # Get LexemeC for newly merged token
         new_orth = ''.join([t.text_with_ws for t in span])
         if span[-1].whitespace_:
