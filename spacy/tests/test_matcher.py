@@ -31,27 +31,32 @@ def test_no_match(matcher):
 def test_match_start(matcher):
     doc = Doc(matcher.vocab, words=['JavaScript', 'is', 'good'])
     assert matcher(doc) == [(matcher.vocab.strings['JS'],
-                             matcher.vocab.strings['PRODUCT'], 0, 1)]
+                             matcher.vocab.strings['PRODUCT'], 0, len('JavaScript'))]
 
 
 def test_match_end(matcher):
     doc = Doc(matcher.vocab, words=['I', 'like', 'java'])
     assert matcher(doc) == [(doc.vocab.strings['Java'],
-                             doc.vocab.strings['PRODUCT'], 2, 3)]
+                             doc.vocab.strings['PRODUCT'],
+                             len('I like '), len('I like java'))]
 
 
 def test_match_middle(matcher):
     doc = Doc(matcher.vocab, words=['I', 'like', 'Google', 'Now', 'best'])
     assert matcher(doc) == [(doc.vocab.strings['GoogleNow'],
-                             doc.vocab.strings['PRODUCT'], 2, 4)]
+                             doc.vocab.strings['PRODUCT'], len('I like '),
+                             len('I like Google Now'))]
 
 
 def test_match_multi(matcher):
     doc = Doc(matcher.vocab, words='I like Google Now and java best'.split())
     assert matcher(doc) == [(doc.vocab.strings['GoogleNow'],
-                             doc.vocab.strings['PRODUCT'], 2, 4),
+                             doc.vocab.strings['PRODUCT'], len('I like '),
+                             len('I like Google Now')),
                             (doc.vocab.strings['Java'],
-                             doc.vocab.strings['PRODUCT'], 5, 6)]
+                             doc.vocab.strings['PRODUCT'],
+                             len('I like Google Now and '),
+                             len('I like Google Now and java'))]
 
 def test_match_zero(matcher):
     matcher.add('Quote', '', {}, [
@@ -87,20 +92,20 @@ def test_match_zero_plus(matcher):
     assert len(matcher(doc)) == 1
 
 
-#@pytest.mark.models
-#def test_match_preserved(EN):
-#    patterns = {
-#        'JS': ['PRODUCT', {}, [[{'ORTH': 'JavaScript'}]]],
-#        'GoogleNow':  ['PRODUCT', {}, [[{'ORTH': 'Google'}, {'ORTH': 'Now'}]]],
-#        'Java':       ['PRODUCT', {}, [[{'LOWER': 'java'}]]],
-#    }
-#    matcher = Matcher(EN.vocab, patterns)
-#    doc = EN.tokenizer('I like java.')
-#    EN.tagger(doc)
-#    assert len(doc.ents) == 0
-#    doc = EN.tokenizer('I like java.')
-#    doc.ents += tuple(matcher(doc))
-#    assert len(doc.ents) == 1
-#    EN.tagger(doc)
-#    EN.entity(doc)
-#    assert len(doc.ents) == 1
+@pytest.mark.models
+def test_match_preserved(EN):
+    patterns = {
+        'JS': ['PRODUCT', {}, [[{'ORTH': 'JavaScript'}]]],
+        'GoogleNow':  ['PRODUCT', {}, [[{'ORTH': 'Google'}, {'ORTH': 'Now'}]]],
+        'Java':       ['PRODUCT', {}, [[{'LOWER': 'java'}]]],
+    }
+    matcher = Matcher(EN.vocab, patterns)
+    doc = EN.tokenizer('I like java.')
+    EN.tagger(doc)
+    assert len(doc.ents) == 0
+    doc = EN.tokenizer('I like java.')
+    doc.ents += tuple(matcher(doc))
+    assert len(doc.ents) == 1
+    EN.tagger(doc)
+    EN.entity(doc)
+    assert len(doc.ents) == 1
