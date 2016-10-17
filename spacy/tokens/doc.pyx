@@ -89,11 +89,14 @@ cdef class Doc:
                 A Vocabulary object, which must match any models you want to 
                 use (e.g. tokenizer, parser, entity recognizer).
 
-            orths_and_spaces:
-                A list of tokens in the document as a sequence of 
-                `(orth_id, has_space)` tuples, where `orth_id` is an
-                integer and `has_space` is a boolean, indicating whether the
-                token has a trailing space.
+            words:
+                A list of unicode strings to add to the document as words. If None,
+                defaults to empty list.
+
+            spaces:
+                A list of boolean values, of the same length as words. True
+                means that the word is followed by a space, False means it is not.
+                If None, defaults to [True]*len(words)
         '''
         self.vocab = vocab
         size = 20
@@ -112,6 +115,8 @@ cdef class Doc:
         self.length = 0
         self.is_tagged = False
         self.is_parsed = False
+        self.getters_for_tokens = {}
+        self.getters_for_spans = {}
         self._py_tokens = []
         self._vector = None
         self.noun_chunks_iterator = CHUNKERS.get(self.vocab.lang)
