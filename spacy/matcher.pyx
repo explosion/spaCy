@@ -291,8 +291,8 @@ cdef class Matcher:
                 elif action == ACCEPT:
                     # TODO: What to do about patterns starting with ZERO? Need to
                     # adjust the start position.
-                    start = doc.c[state.first].idx
-                    end = doc.c[token_i].idx + doc.c[token_i].lex.length
+                    start = state.first
+                    end = token_i+1
                     ent_id = state.second[1].attrs[0].value
                     label = state.second[1].attrs[1].value
                     acceptor = self._acceptors.get(ent_id)
@@ -319,16 +319,12 @@ cdef class Matcher:
                     state.second = pattern + 1
                     partials.push_back(state)
                 elif action == ACCEPT:
-                    start = token.idx
-                    end = token.idx + token.lex.length
+                    start = token_i
+                    end = token_i+1
                     ent_id = pattern[1].attrs[0].value
                     label = pattern[1].attrs[1].value
-                    acceptor = self._acceptors.get(ent_id)
-                    if acceptor is not None:
-                        match = acceptor(doc, ent_id, label, start, end)
-                        if match:
-                            ent_id, label, start, end = match
-                    matches.append((ent_id, label, start, end))
+                    if acceptor is None or acceptor(doc, ent_id, label, start, end):
+                        matches.append((ent_id, label, start, end))
         for i, (ent_id, label, start, end) in enumerate(matches):
             on_match = self._callbacks.get(ent_id)
             if on_match is not None:
