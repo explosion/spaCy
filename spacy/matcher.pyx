@@ -194,6 +194,9 @@ cdef class Matcher:
             for spec in specs:
                 self.add_pattern(entity_key, spec, label=etype)
 
+    def __reduce__(self):
+        return (self.__class__, (self.vocab, self._patterns), None, None)
+    
     property n_patterns:
         def __get__(self): return self.patterns.size()
 
