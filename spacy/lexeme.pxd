@@ -15,7 +15,6 @@ cdef class Lexeme:
     cdef LexemeC* c
     cdef readonly Vocab vocab
     cdef readonly attr_t orth
-    cdef public ndarray tensor
 
     @staticmethod
     cdef inline Lexeme from_ptr(LexemeC* lex, Vocab vocab, int vector_length):
