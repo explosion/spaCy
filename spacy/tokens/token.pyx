@@ -94,6 +94,8 @@ cdef class Token:
         return self.doc[self.i+i]
 
     def similarity(self, other):
+        if 'similarity' in self.doc.getters_for_tokens:
+            return self.doc.getters_for_tokens['similarity'](self, other)
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
@@ -182,6 +184,8 @@ cdef class Token:
 
     property has_vector:
         def __get__(self):
+            if 'has_vector' in self.doc.getters_for_tokens:
+                return self.doc.getters_for_tokens['has_vector'](self)
             cdef int i
             for i in range(self.vocab.vectors_length):
                 if self.c.lex.vector[i] != 0:
@@ -191,6 +195,8 @@ cdef class Token:
 
     property vector:
         def __get__(self):
+            if 'vector' in self.doc.getters_for_tokens:
+                return self.doc.getters_for_tokens['vector'](self)
             cdef int length = self.vocab.vectors_length
             if length == 0:
                 raise ValueError(
@@ -387,11 +393,14 @@ cdef class Token:
         def __get__(self):
             """Get a list of conjoined words."""
             cdef Token word
-            if self.dep_ != 'conj':
-                for word in self.rights:
-                    if word.dep_ == 'conj':
-                        yield word
-                        yield from word.conjuncts
+            if 'conjuncts' in self.doc.getters_for_tokens:
+                yield from self.doc.getters_for_tokens['conjuncts'](self)
+            else:
+                if self.dep_ != 'conj':
+                    for word in self.rights:
+                        if word.dep_ == 'conj':
+                            yield word
+                            yield from word.conjuncts
 
     property ent_type:
         def __get__(self):
