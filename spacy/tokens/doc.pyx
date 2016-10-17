@@ -117,6 +117,8 @@ cdef class Doc:
         self.is_parsed = False
         self.getters_for_tokens = {}
         self.getters_for_spans = {}
+        self.tensor = np.zeros((0,), dtype='float32')
+        self.user_data = {}
         self._py_tokens = []
         self._vector = None
         self.noun_chunks_iterator = CHUNKERS.get(self.vocab.lang)
