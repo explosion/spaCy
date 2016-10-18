@@ -228,8 +228,10 @@ cdef class Matcher:
             self.add_entity(entity_key)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
-        
+        elif label is None:
+            label = 0
         spec = _convert_strings(token_specs, self.vocab.strings)
+
         self.patterns.push_back(init_pattern(self.mem, entity_key, label, spec))
         self._patterns[entity_key].append((label, token_specs))
 
