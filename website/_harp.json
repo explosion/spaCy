@@ -2,13 +2,16 @@
     "globals": {
         "title": "spaCy.io",
         "description": "spaCy is a free open-source library featuring state-of-the-art speed and accuracy and a powerful Python API.",
-        "url": "https://spacy.io",
-        "email": "contact@spacy.io",
-        "company": "spaCy.io",
 
-        "navigation": { "Docs": "docs", "Demos": "demos", "Blog": "blog" },
-        "profiles": { "twitter": "spacy_io", "github": "spacy-io", "reddit": "spacynlp", "medium": "spacy" },
-        "google_analytics": "UA-58931649-1",
+        "SITENAME": "spaCy",
+        "SLOGAN": "Industrial-strength Natural Language Processing",
+        "SITE_URL": "https://spacy.io",
+        "EMAIL": "contact@explosion.ai",
+
+        "COMPANY": "Explosion AI",
+        "COMPANY_URL": "https://explosion.ai",
+        "DEMOS_URL": "https://demos.explosion.ai",
+
         "SOCIAL": {
             "twitter": "spacy_io",
             "github": "explosion",
@@ -22,38 +25,5 @@
         "SPACY_VERSION": "0.101.0",
         "SPACY_STARS": "2300",
         "GITHUB": { "user": "explosion", "repo": "spacy" }
-        "spacy_version": "0.101.0",
-        "spacy_stars": "2100",
-        "github_settings": { "user": "spacy-io", "repo": "spacy" },
-
-        "authors" : {
-            "matt" : {
-                "name" : "Matthew Honnibal",
-                "description" : "studied linguistics as an undergrad, and never thought he'd be a programmer. By 2009 he had a PhD in computer science, and in 2014 he left academia to write spaCy. He's from Sydney and lives in Berlin.",
-                "links": {
-                    "twitter": [ "https://twitter.com/honnibal", "Twitter" ],
-                    "website": [ "https://www.semanticscholar.org/search?q=Matthew%20Honnibal", "Semantic Scholar" ]
-                }
-            },
-
-            "ines": {
-                "name": "Ines Montani",
-                "description": "has developed, designed and implemented our interactive demos and the spacy.io website. She has a degree in media, linguistics and communications, and over ten years experience in web development.",
-                "links": {
-                    "twitter": [ "https://twitter.com/_inesmontani", "Twitter" ],
-                    "codepen": [ "https://codepen.io/ines", "Codepen"],
-                    "github": [ "https://github.com/ines", "GitHub"],
-                    "website": [ "http://ines.io", "Blog" ]
-                }
-            },
-
-            "wolfgang": {
-                "name": "Wolfgang Seeker",
-                "description": "is a computational linguist from Germany. He is fascinated with the complexity and variety of human language, and spent his PhD looking for ways to make NLP work well with any kind of language in the world. He joined spaCy to build effective and truly multilingual NLP software.",
-                "links": {
-                    "website": [ "https://www.semanticscholar.org/search?q=Wolfgang%20Seeker", "Semantic Scholar" ]
-                }
-            }
-        }
     }
 }

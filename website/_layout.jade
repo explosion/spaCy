@@ -1,24 +1,12 @@
-<<<<<<< HEAD
 //- ----------------------------------
 //- 💫 GLOBAL LAYOUT
 //- ----------------------------------
-=======
-include _includes/_mixins
-
-- var _section = current.path[0]
-- var _site = current.source
-
-- var is_blog = (_section == 'blog')
-- var is_article = ( (_section == 'blog' && _site != 'index') || template == 'article')
-- var has_asides = (is_article || (_section == 'docs' && asides != false) || asides)
->>>>>>> v1.0.0-rc1
 
 include _includes/_mixins
 
 doctype html
 
 html(lang="en")
-<<<<<<< HEAD
     title=(current.path[0] == "index") ? SITENAME + " | " + SLOGAN : title + " | " + SITENAME
 
     meta(charset="utf-8")
@@ -50,14 +38,6 @@ html(lang="en")
             header.o-header.u-pattern.u-text-center
                 if current.path[1] == "tutorials"
                     h2.u-heading-1.u-text-shadow Tutorials
-=======
-    !=partial("_includes/_head", { _section: _section })
-    link(href='/assets/css/' + ((is_blog) ? stylesheets.blog : stylesheets.default) + '.css' rel='stylesheet')
-    link(href='/' + feed rel='alternate' type='application/rss+xml' title='RSS')
-
-    body.body
-        !=partial('_includes/_nav', { _section: _section, _site: _site })
->>>>>>> v1.0.0-rc1
 
                 else
                     +h(1).u-text-shadow=title
@@ -71,19 +51,9 @@ html(lang="en")
 
                 !=yield
 
-<<<<<<< HEAD
         else
             !=yield
 
         include _includes/_footer
-=======
-                else
-                    !=yield
-
-        !=partial('_includes/_footer')
-        
-        each script in scripts
-            script(src='/assets/js/' + script + '.js', type='text/javascript')
->>>>>>> v1.0.0-rc1
 
         include _includes/_scripts
