@@ -50,7 +50,7 @@ cdef class Vocab:
     '''
     @classmethod
     def load(cls, path, lex_attr_getters=None, vectors=True, lemmatizer=True,
-             tag_map=True, serializer_freqs=None, **deprecated_kwargs): 
+             tag_map=True, serializer_freqs=True, **deprecated_kwargs): 
         util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
         if tag_map is True and (path / 'vocab' / 'tag_map.json').exists():
             with (path / 'vocab' / 'tag_map.json').open() as file_:
