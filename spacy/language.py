@@ -244,7 +244,7 @@ class Language(object):
         self.tagger    = self.Defaults.create_tagger(self) \
                          if 'tagger' not in overrides \
                          else overrides['tagger']
-        self.parser    = self.Defaults.create_tagger(self) \
+        self.parser    = self.Defaults.create_parser(self) \
                          if 'parser' not in overrides \
                          else overrides['parser']
         self.entity    = self.Defaults.create_entity(self) \
