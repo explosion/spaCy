@@ -5,12 +5,11 @@ from __future__ import unicode_literals
 from __future__ import print_function
 
 import plac
-from os import path
-import os
+from pathlib import Path
 
 from spacy.vocab import Vocab
-from spacy.tokenizer import Tokenizer
 from spacy.tagger import Tagger
+from spacy.tokens import Doc
 import random
 
 
@@ -39,34 +38,41 @@ DATA = [
     )
 ]
     
-def ensure_dir(*parts):
-    path_ = path.join(*parts)
-    if not path.exists(path_):
-        os.mkdir(path_)
-    return path_
+def ensure_dir(path):
+    if not path.exists():
+        path.mkdir()
 
 
-def main(output_dir):
-    ensure_dir(output_dir)
-    ensure_dir(output_dir, "pos")
-    ensure_dir(output_dir, "vocab")
+def main(output_dir=None):
+    if output_dir is not None:
+        output_dir = Path(output_dir)
+        ensure_dir(output_dir)
+        ensure_dir(output_dir / "pos")
+        ensure_dir(output_dir / "vocab")
     
     vocab = Vocab(tag_map=TAG_MAP)
-    tokenizer = Tokenizer(vocab, {}, None, None, None)
     # The default_templates argument is where features are specified. See
     # spacy/tagger.pyx for the defaults.
-    tagger = Tagger.blank(vocab, Tagger.default_templates())
-
+    tagger = Tagger(vocab)
     for i in range(5):
         for words, tags in DATA:
-            tokens = tokenizer.tokens_from_list(words)
-            tagger.train(tokens, tags)
+            doc = Doc(vocab, words=words)
+            tagger.update(doc, tags)
         random.shuffle(DATA)
     tagger.model.end_training()
-    tagger.model.dump(path.join(output_dir, 'pos', 'model'))
-    with io.open(output_dir, 'vocab', 'strings.json') as file_:
-        tagger.vocab.strings.dump(file_)
+    doc = Doc(vocab, orths_and_spaces=zip(["I", "like", "blue", "eggs"], [True]*4))
+    tagger(doc)
+    for word in doc:
+        print(word.text, word.tag_, word.pos_)
+    if output_dir is not None:
+        tagger.model.dump(str(output_dir / 'pos' / 'model'))
+        with (output_dir / 'vocab' / 'strings.json').open('wb') as file_:
+            tagger.vocab.strings.dump(file_)
 
 
 if __name__ == '__main__':
     plac.call(main)
+    # I V VERB
+    # like V VERB
+    # blue N NOUN
+    # eggs N NOUN

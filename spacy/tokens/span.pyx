@@ -77,10 +77,12 @@ cdef class Span:
         for i in range(self.start, self.end):
             yield self.doc[i]
 
-    def merge(self, unicode tag, unicode lemma, unicode ent_type):
-        self.doc.merge(self.start_char, self.end_char, tag, lemma, ent_type)
+    def merge(self, *args, **attributes):
+        self.doc.merge(self.start_char, self.end_char, *args, **attributes)
 
     def similarity(self, other):
+        if 'similarity' in self.doc.getters_for_spans:
+            self.doc.getters_for_spans['similarity'](self, other)
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
@@ -102,6 +104,8 @@ cdef class Span:
     property sent:
         '''Get the sentence span that this span is a part of.'''
         def __get__(self):
+            if 'sent' in self.doc.getters_for_spans:
+                return self.doc.getters_for_spans['sent'](self)
             # This should raise if we're not parsed.
             self.doc.sents
             cdef int n = 0
@@ -115,16 +119,22 @@ cdef class Span:
 
     property has_vector:
         def __get__(self):
+            if 'has_vector' in self.doc.getters_for_spans:
+                return self.doc.getters_for_spans['has_vector'](self)
             return any(token.has_vector for token in self)
     
     property vector:
         def __get__(self):
+            if 'vector' in self.doc.getters_for_spans:
+                return self.doc.getters_for_spans['vector'](self)
             if self._vector is None:
                 self._vector = sum(t.vector for t in self) / len(self)
             return self._vector
 
     property vector_norm:
         def __get__(self):
+            if 'vector_norm' in self.doc.getters_for_spans:
+                return self.doc.getters_for_spans['vector'](self)
             cdef float value
             if self._vector_norm is None:
                 self._vector_norm = 1e-20
@@ -187,6 +197,8 @@ cdef class Span:
         """
         def __get__(self):
             self._recalculate_indices()
+            if 'root' in self.doc.getters_for_spans:
+                return self.doc.getters_for_spans['root'](self)
             # This should probably be called 'head', and the other one called
             # 'gov'. But we went with 'head' elsehwhere, and now we're stuck =/
             cdef int i

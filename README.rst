@@ -192,6 +192,7 @@ OS X ships with Python and git preinstalled.
 
 Windows
 -------
+<<<<<<< HEAD
 
 Install a version of Visual Studio Express or higher that matches the version 
 that was used to compile your Python interpreter. For official distributions 
@@ -211,6 +212,27 @@ Python install. Run:
 Run tests
 =========
 
+=======
+
+Install a version of Visual Studio Express or higher that matches the version 
+that was used to compile your Python interpreter. For official distributions 
+these are VS 2008 (Python 2.7), VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
+
+Workaround for obsolete system Python
+=====================================
+
+If you're stuck using a system with an old version of Python, and you don't 
+have root access, we've prepared a bootstrap script to help you compile a local 
+Python install. Run:
+
+.. code:: bash
+
+    curl https://raw.githubusercontent.com/spacy-io/gist/master/bootstrap_python_env.sh | bash && source .env/bin/activate
+
+Run tests
+=========
+
+>>>>>>> v1.0.0-rc1
 spaCy comes with an extensive test suite. First, find out where spaCy is 
 installed:
 

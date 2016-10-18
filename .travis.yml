@@ -1,34 +1,30 @@
 language: python
 
-sudo: required
+sudo: false
 dist: trusty
 group: edge
 
 python:
    - "2.7"
-   - "3.4"
+   - "3.5"
 
 os:
   - linux
 
+env:
+  - VIA="compile"
+  - VIA="sdist"
+
 install:
-  - "pip install -r requirements.txt"
-  - "pip install -e ."
-  - "mkdir -p corpora/en"
-  - "cd corpora/en"
-  - "wget --no-check-certificate http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz"
-  - "tar -xzf WordNet-3.0.tar.gz"
-  - "mv WordNet-3.0 wordnet"
-  - "cd ../../"
-  - "python bin/init_model.py en lang_data/ corpora/ data"
-  - "cp package.json data"
-  - "sputnik build data en_default.sputnik"
-  - "sputnik --name spacy install en_default.sputnik"
+  - "./travis.sh"
 
 script:
   - "pip install pytest"
-  - "python -m pytest spacy"
-
+  - if [[ "${VIA}" == "compile" ]]; then SPACY_DATA=models/en python -m pytest spacy; fi
+  - if [[ "${VIA}" == "pypi" ]]; then python -m pytest `python -c "import pathlib; import spacy; print(pathlib.Path(spacy.__file__).parent.resolve())"`; fi
+  - if [[ "${VIA}" == "sdist" ]]; then python -m pytest `python -c "import pathlib; import spacy; print(pathlib.Path(spacy.__file__).parent.resolve())"`; fi
+  
 notifications:
   slack:
     secure: F8GvqnweSdzImuLL64TpfG0i5rYl89liyr9tmFVsHl4c0DNiDuGhZivUz0M1broS8svE3OPOllLfQbACG/4KxD890qfF9MoHzvRDlp7U+RtwMV/YAkYn8MGWjPIbRbX0HpGdY7O2Rc9Qy4Kk0T8ZgiqXYIqAz2Eva9/9BlSmsJQ=
+  email: false

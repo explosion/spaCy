@@ -1,8 +1,14 @@
 include ../../_includes/_mixins
 
+<<<<<<< HEAD
 p.u-text-large spaCy assumes by default that your data is raw text. However, sometimes your data is partially annotated, e.g. with pre-existing tokenization, part-of-speech tags, etc. This tutorial explains how to use these annotations in spaCy.
 
 +h(2, "quick-reference") Quick Reference
+=======
++lead spaCy assumes by default that your data is raw text. However, sometimes your data is partially annotated, e.g. with pre-existing tokenization, part-of-speech tags, etc. This tutorial explains how to use these annotations in spaCy.
+
++h2 Quick Reference
+>>>>>>> v1.0.0-rc1
 
 +table(['Description', 'Usage'], 'code')
     +row
@@ -11,7 +17,11 @@ p.u-text-large spaCy assumes by default that your data is raw text. However, som
     +row
         +cell Use pre-existing tokenization (deprecated)
         +cell #[code.lang-python doc = nlp.tokenizer.tokens_from_list([u'A', u'token', u'!'])]
+<<<<<<< HEAD
 
+=======
+ 
+>>>>>>> v1.0.0-rc1
     +row
         +cell Assign pre-existing tags
         +cell #[code.lang-python nlp.tagger.tag_from_strings(doc, ['DT', 'NN'])]
@@ -22,7 +32,11 @@ p.u-text-large spaCy assumes by default that your data is raw text. However, som
         +cell Assign dependency parse annotations from an array
         +cell #[code.lang-python doc.from_array([HEAD, DEP], values)]
 
+<<<<<<< HEAD
 +h(2, "examples") Examples
+=======
++h2 Examples
+>>>>>>> v1.0.0-rc1
 
 +code('python', 'Tokenization').
     import spacy
@@ -111,7 +125,15 @@ p.u-text-large spaCy assumes by default that your data is raw text. However, som
 
     columns = [ENT_TYPE, ENT_IOB]
     values = ndarray(shape=(len(columns), len(doc)), dtype='int32')
+<<<<<<< HEAD
     # IOB values are 0=missing, 1=I, 2=O, 3=B
     values[0] = [1, 1, 1, 3, 1]
     values[1] = [0, 0, 0, PERSON, 0]
     doc.from_array(columns, values)
+=======
+    # IOB values are 0=missing, 1=I, 2=O, 3=B 
+    values[0] = [1, 1, 1, 3, 1]
+    values[1] = [0, 0, 0, PERSON, 0]
+    doc.from_array(columns, values)
+
+>>>>>>> v1.0.0-rc1

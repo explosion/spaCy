@@ -1,3 +1,4 @@
+from numpy cimport ndarray
 from ..vocab cimport Vocab
 from ..structs cimport TokenC
 from ..attrs cimport attr_id_t

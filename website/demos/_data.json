@@ -1,0 +1,26 @@
+{
+    "index": {
+        "title": "Demos",
+        "demos": {
+            "displacy": {
+                "title": "displaCy: Dependency Parse Tree Visualization with CSS and JavaScript",
+                "description": "displaCy lets you peek inside spaCy's syntactic parser, as it reads a sentence word-by-word. By repeatedly choosing from a small set of actions, it links the words together according to their syntactic structure.",
+                "image": {
+                    "file": "displacy.jpg"
+                }
+            },
+
+            "sense2vec": {
+              "title": "Semantic Analysis of the Reddit Hivemind",
+              "description": "Our neural network read every comment posted to Reddit from 2015. We combined word2vec with sophisticated natural language processing, to give you a little look into the Reddit hivemind. Type a phrase, and see what Reddit associates it with.",
+              "image": {
+                  "file": "sense2vec.jpg"
+              },
+              "links": {
+                  "blogpost": "https://spacy.io/blog/sense2vec-with-spacy",
+                  "github": "https://github.com/spacy-io/sense2vec"
+              }
+            }
+        }
+    }
+}

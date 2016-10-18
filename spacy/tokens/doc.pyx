@@ -75,7 +75,7 @@ cdef class Doc:
         doc = Doc(nlp.vocab, orths_and_spaces=[(u'Some', True), (u'text', True)])
 
     """
-    def __init__(self, Vocab vocab, orths_and_spaces=None):
+    def __init__(self, Vocab vocab, words=None, spaces=None, orths_and_spaces=None):
         '''
         Create a Doc object.
 
@@ -89,11 +89,14 @@ cdef class Doc:
                 A Vocabulary object, which must match any models you want to 
                 use (e.g. tokenizer, parser, entity recognizer).
 
-            orths_and_spaces:
-                A list of tokens in the document as a sequence of 
-                `(orth_id, has_space)` tuples, where `orth_id` is an
-                integer and `has_space` is a boolean, indicating whether the
-                token has a trailing space.
+            words:
+                A list of unicode strings to add to the document as words. If None,
+                defaults to empty list.
+
+            spaces:
+                A list of boolean values, of the same length as words. True
+                means that the word is followed by a space, False means it is not.
+                If None, defaults to [True]*len(words)
         '''
         self.vocab = vocab
         size = 20
@@ -112,11 +115,25 @@ cdef class Doc:
         self.length = 0
         self.is_tagged = False
         self.is_parsed = False
+        self.getters_for_tokens = {}
+        self.getters_for_spans = {}
+        self.tensor = numpy.zeros((0,), dtype='float32')
+        self.user_data = {}
         self._py_tokens = []
         self._vector = None
         self.noun_chunks_iterator = CHUNKERS.get(self.vocab.lang)
         cdef unicode orth
         cdef bint has_space
+        if orths_and_spaces is None and words is not None:
+            if spaces is None:
+                spaces = [True] * len(words)
+            elif len(spaces) != len(words):
+                raise ValueError(
+                    "Arguments 'words' and 'spaces' should be sequences of the "
+                    "same length, or 'spaces' should be left default at None. "
+                    "spaces should be a sequence of booleans, with True meaning "
+                    "that the word owns a ' ' character following it.")
+            orths_and_spaces = zip(words, spaces)
         if orths_and_spaces is not None:
             for orth_space in orths_and_spaces:
                 if isinstance(orth_space, unicode):
@@ -576,9 +593,22 @@ cdef class Doc:
                 keep_reading = False
             yield n_bytes_str + data
 
-    def merge(self, int start_idx, int end_idx, unicode tag, unicode lemma,
-              unicode ent_type):
+    def merge(self, int start_idx, int end_idx, *args, **attributes):
         """Merge a multi-word expression into a single token."""
+        cdef unicode tag, lemma, ent_type
+        if len(args) == 3:
+            # TODO: Warn deprecation
+            tag, lemma, ent_type = args
+            attributes[TAG] = self.vocab.strings[tag]
+            attributes[LEMMA] = self.vocab.strings[lemma]
+            attributes[ENT_TYPE] = self.vocab.strings[ent_type]
+        elif args:
+            raise ValueError(
+                "Doc.merge received %d non-keyword arguments. "
+                "Expected either 3 arguments (deprecated), or 0 (use keyword arguments). "
+                "Arguments supplied:\n%s\n"
+                "Keyword arguments:%s\n" % (len(args), repr(args), repr(attributes)))
+ 
         cdef int start = token_by_start(self.c, self.length, start_idx)
         if start == -1:
             return None
@@ -587,8 +617,11 @@ cdef class Doc:
             return None
         # Currently we have the token index, we want the range-end index
         end += 1
-        
         cdef Span span = self[start:end]
+        tag = self.vocab.strings[attributes.get(TAG, span.root.tag)]
+        lemma = self.vocab.strings[attributes.get(LEMMA, span.root.lemma)]
+        ent_type = self.vocab.strings[attributes.get(ENT_TYPE, span.root.ent_type)]
+
         # Get LexemeC for newly merged token
         new_orth = ''.join([t.text_with_ws for t in span])
         if span[-1].whitespace_:

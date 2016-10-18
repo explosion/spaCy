@@ -29,27 +29,6 @@ from ..attrs cimport IS_OOV
 from ..lexeme cimport Lexeme
 
 
-_STR_TRAILING_WHITESPACE = False
-
-def use_deprecated_Token__str__semantics(value):
-    '''
-    Preserve deprecated semantics for Token.__str__ and Token.__unicode__ methods.
-    
-    spaCy < 0.100.7 had a bug in the semantics of the Token.__str__ and Token.__unicode__
-    built-ins: they included a trailing space. To ease the transition to the
-    new semantics, you can use this function to switch the old semantics back on.
-    
-    Example:
-
-        from spacy.tokens.token import keep_deprecated_Token.__str__semantics
-        keep_deprecated_Token.__str__semantics(True)
-
-    This function will not remain in future versions --- it's a temporary shim.
-    '''
-    global _STR_TRAILING_WHITESPACE
-    _STR_TRAILING_WHITESPACE = value
-
-
 cdef class Token:
     """An individual token --- i.e. a word, a punctuation symbol, etc.  Created
     via Doc.__getitem__ and Doc.__iter__.
@@ -64,20 +43,10 @@ cdef class Token:
         return self.c.lex.length
 
     def __unicode__(self):
-        # Users can toggle this on to preserve former buggy semantics.
-        # Remove this in future versions.
-        if _STR_TRAILING_WHITESPACE:
-            return self.text_with_ws
-        else:
-            return self.text
+        return self.text
 
     def __bytes__(self):
-        # Users can toggle this on to preserve former buggy semantics.
-        # Remove this in future versions.
-        if _STR_TRAILING_WHITESPACE:
-            return self.text_with_ws.encode('utf8')
-        else:
-            return self.text.encode('utf8')
+        return self.text.encode('utf8')
 
     def __str__(self):
         if six.PY3:
@@ -94,6 +63,8 @@ cdef class Token:
         return self.doc[self.i+i]
 
     def similarity(self, other):
+        if 'similarity' in self.doc.getters_for_tokens:
+            return self.doc.getters_for_tokens['similarity'](self, other)
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
@@ -116,11 +87,11 @@ cdef class Token:
 
     property text_with_ws:
         def __get__(self):
-            orth_ = self.orth_
+            cdef unicode orth = self.vocab.strings[self.c.lex.orth]
             if self.c.spacy:
-                return orth_ + u' '
+                return orth + u' '
             else:
-                return orth_
+                return orth
 
     property prob:
         def __get__(self):
@@ -182,6 +153,8 @@ cdef class Token:
 
     property has_vector:
         def __get__(self):
+            if 'has_vector' in self.doc.getters_for_tokens:
+                return self.doc.getters_for_tokens['has_vector'](self)
             cdef int i
             for i in range(self.vocab.vectors_length):
                 if self.c.lex.vector[i] != 0:
@@ -191,6 +164,8 @@ cdef class Token:
 
     property vector:
         def __get__(self):
+            if 'vector' in self.doc.getters_for_tokens:
+                return self.doc.getters_for_tokens['vector'](self)
             cdef int length = self.vocab.vectors_length
             if length == 0:
                 raise ValueError(
@@ -204,10 +179,15 @@ cdef class Token:
 
     property repvec:
         def __get__(self):
-            return self.vector
+            raise AttributeError("repvec was renamed to vector in v0.100")
+    property has_repvec:
+        def __get__(self):
+            raise AttributeError("has_repvec was renamed to has_vector in v0.100")
 
     property vector_norm:
         def __get__(self):
+            if 'vector_norm' in self.doc.getters_for_tokens:
+                return self.doc.getters_for_tokens['vector_norm'](self)
             return self.c.lex.l2_norm
 
     property n_lefts:
@@ -387,11 +367,14 @@ cdef class Token:
         def __get__(self):
             """Get a list of conjoined words."""
             cdef Token word
-            if self.dep_ != 'conj':
-                for word in self.rights:
-                    if word.dep_ == 'conj':
-                        yield word
-                        yield from word.conjuncts
+            if 'conjuncts' in self.doc.getters_for_tokens:
+                yield from self.doc.getters_for_tokens['conjuncts'](self)
+            else:
+                if self.dep_ != 'conj':
+                    for word in self.rights:
+                        if word.dep_ == 'conj':
+                            yield word
+                            yield from word.conjuncts
 
     property ent_type:
         def __get__(self):
@@ -403,7 +386,7 @@ cdef class Token:
 
     property ent_type_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.ent_type, mem=self.mem)
+            return self.vocab.strings[self.c.ent_type]
 
     property ent_iob_:
         def __get__(self):
@@ -424,7 +407,7 @@ cdef class Token:
     property ent_id_:
         '''A (string) entity ID. Usually assigned by patterns in the Matcher.'''
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.ent_id, mem=self.mem)
+            return self.vocab.strings[self.c.ent_id]
 
         def __set__(self, hash_t key):
             # TODO
@@ -438,35 +421,35 @@ cdef class Token:
 
     property orth_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lex.orth, mem=self.mem)
+            return self.vocab.strings[self.c.lex.orth]
 
     property lower_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lex.lower, mem=self.mem)
+            return self.vocab.strings[self.c.lex.lower]
 
     property norm_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lex.norm, mem=self.mem)
+            return self.vocab.strings[self.c.lex.norm]
 
     property shape_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lex.shape, mem=self.mem)
+            return self.vocab.strings[self.c.lex.shape]
 
     property prefix_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lex.prefix, mem=self.mem)
+            return self.vocab.strings[self.c.lex.prefix]
 
     property suffix_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lex.suffix, mem=self.mem)
+            return self.vocab.strings[self.c.lex.suffix]
 
     property lang_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lex.lang, mem=self.mem)
+            return self.vocab.strings[self.c.lex.lang]
 
     property lemma_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.lemma, mem=self.mem)
+            return self.vocab.strings[self.c.lemma]
 
     property pos_:
         def __get__(self):
@@ -474,13 +457,13 @@ cdef class Token:
 
     property tag_:
         def __get__(self):
-            return self.vocab.strings.decode_int(self.c.tag, mem=self.mem)
+            return self.vocab.strings[self.c.tag]
 
     property dep_:
         def __get__(self):
-            return self.vocab.decode_int(self.c.dep, mem=self.mem)
+            return self.vocab.strings[self.c.dep]
         def __set__(self, unicode label):
-            self.c.dep = self.vocab.strings.intern(label, mem=self.mem)
+            self.c.dep = self.vocab.strings[label]
 
     property is_oov:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_OOV)

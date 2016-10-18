@@ -3,6 +3,7 @@ from __future__ import unicode_literals, print_function
 from os import path
 
 from ..language import Language
+from ..attrs import LANG
 from . import language_data
 
 
@@ -11,6 +12,8 @@ class German(Language):
     
     class Defaults(Language.Defaults):
         tokenizer_exceptions = dict(language_data.TOKENIZER_EXCEPTIONS)
+        lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+        lex_attr_getters[LANG] = lambda text: 'de'
         
         prefixes = tuple(language_data.TOKENIZER_PREFIXES)
         

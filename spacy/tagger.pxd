@@ -14,3 +14,4 @@ cdef class Tagger:
     cdef readonly Vocab vocab
     cdef readonly TaggerModel model
     cdef public dict freqs
+    cdef public object cfg

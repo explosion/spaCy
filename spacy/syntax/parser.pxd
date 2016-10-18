@@ -13,6 +13,7 @@ from ._state cimport StateC
 cdef class ParserModel(AveragedPerceptron):
     cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil
 
+
 cdef class Parser:
     cdef readonly Vocab vocab
     cdef readonly ParserModel model

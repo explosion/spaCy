@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
+from __future__ import unicode_literals
 import os
 import subprocess
 import sys
@@ -47,6 +48,7 @@ MOD_NAMES = [
     'spacy.attrs',
     'spacy.morphology',
     'spacy.tagger',
+    'spacy.pipeline',
     'spacy.syntax.stateclass',
     'spacy.syntax._state',
     'spacy.tokenizer',
@@ -152,11 +154,11 @@ def setup_package():
         return clean(root)
 
     with chdir(root):
-        with open(os.path.join(root, 'spacy', 'about.py')) as f:
+        with io.open(os.path.join(root, 'spacy', 'about.py'), encoding='utf8') as f:
             about = {}
             exec(f.read(), about)
 
-        with open(os.path.join(root, 'README.rst')) as f:
+        with io.open(os.path.join(root, 'README.rst'), encoding='utf8') as f:
             readme = f.read()
 
         include_dirs = [
@@ -181,7 +183,7 @@ def setup_package():
             name=about['__title__'],
             zip_safe=False,
             packages=PACKAGES,
-            package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']},
+            package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens', 'data']},
             description=about['__summary__'],
             long_description=readme,
             author=about['__author__'],
@@ -194,11 +196,12 @@ def setup_package():
                 'numpy>=1.7',
                 'murmurhash>=0.26,<0.27',
                 'cymem>=1.30,<1.32',
-                'preshed>=0.46.1,<0.47',
+                'preshed>=0.46.0,<0.47.0',
                 'thinc>=5.0.0,<5.1.0',
                 'plac',
                 'six',
                 'cloudpickle',
+                'pathlib',
                 'sputnik>=0.9.2,<0.10.0'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',

@@ -50,7 +50,7 @@ cdef class Vocab:
     '''
     @classmethod
     def load(cls, path, lex_attr_getters=None, vectors=True, lemmatizer=True,
-             tag_map=True, serializer_freqs=None, **deprecated_kwargs): 
+             tag_map=True, serializer_freqs=True, **deprecated_kwargs): 
         util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
         if tag_map is True and (path / 'vocab' / 'tag_map.json').exists():
             with (path / 'vocab' / 'tag_map.json').open() as file_:
@@ -93,7 +93,6 @@ cdef class Vocab:
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
         self.strings = StringStore()
-        self.oov_stores = {}
         # Load strings in a special order, so that we have an onset number for
         # the vocabulary. This way, when words are added in order, the orth ID
         # is the frequency rank of the word, plus a certain offset. The structural
@@ -130,6 +129,44 @@ cdef class Vocab:
         """The current number of lexemes stored."""
         return self.length
 
+    def add_flag(self, flag_getter, int flag_id=-1):
+        '''Set a new boolean flag to words in the vocabulary. The flag_setter
+        function will be called over the words currently in the vocab, and then
+        applied to new words as they occur. You'll then be able to access the
+        flag value on each token, using token.check_flag(flag_id). See also:
+        Lexeme.set_flag, Lexeme.check_flag, Token.set_flag, Token.check_flag.
+
+        Arguments:
+            flag_getter:
+                A function f(unicode) -> bool, to get the flag value.
+
+            flag_id (int):
+                An integer between 1 and 63 (inclusive), specifying the bit at which the
+                flag will be stored. If -1, the lowest available bit will be 
+                chosen.
+
+        Returns:
+            flag_id (int): The integer ID by which the flag value can be checked.
+        '''
+        if flag_id == -1:
+            for bit in range(1, 64):
+                if bit not in self.lex_attr_getters:
+                    flag_id = bit
+                    break
+            else:
+                raise ValueError(
+                    "Cannot find empty bit for new lexical flag. All bits between "
+                    "0 and 63 are occupied. You can replace one by specifying the "
+                    "flag_id explicitly, e.g. nlp.vocab.add_flag(your_func, flag_id=IS_ALPHA")
+        elif flag_id >= 64 or flag_id < 1:
+            raise ValueError(
+                "Invalid value for flag_id: %d. Flag IDs must be between "
+                "1 and 63 (inclusive)" % flag_id)
+        for lex in self:
+            lex.set_flag(flag_id, flag_getter(lex.orth_))
+        self.lex_attr_getters[flag_id] = flag_getter
+        return flag_id
+
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
         if necessary, using memory acquired from the given pool.  If the pool
@@ -141,7 +178,7 @@ cdef class Vocab:
         lex = <LexemeC*>self._by_hash.get(key)
         cdef size_t addr
         if lex != NULL:
-            if (string not in self.strings) or (lex.orth != self.strings[string]):
+            if lex.orth != self.strings[string]:
                 raise LookupError.mismatched_strings(
                     lex.orth, self.strings[string], self.strings[lex.orth], string)
             return lex
@@ -164,10 +201,10 @@ cdef class Vocab:
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL:
         cdef hash_t key
         cdef bint is_oov = mem is not self.mem
-        if len(string) < 3 or not is_oov:
+        if len(string) < 3:
             mem = self.mem
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        lex.orth = self.strings.intern(string, mem=mem)
+        lex.orth = self.strings[string]
         lex.length = len(string)
         lex.id = self.length
         lex.vector = <float*>mem.alloc(self.vectors_length, sizeof(float))
@@ -175,10 +212,10 @@ cdef class Vocab:
             for attr, func in self.lex_attr_getters.items():
                 value = func(string)
                 if isinstance(value, unicode):
-                    value = self.strings.intern(value)
+                    value = self.strings[value]
                 if attr == PROB:
                     lex.prob = value
-                else:
+                elif value is not None:
                     Lexeme.set_struct_attr(lex, attr, value)
         if is_oov:
             lex.id = 0
@@ -206,8 +243,7 @@ cdef class Vocab:
 
     def __getitem__(self,  id_or_string):
         '''Retrieve a lexeme, given an int ID or a unicode string.  If a previously
-        unseen unicode string is given, a new lexeme is created and stored, and
-        the string is interned in the vocabulary.
+        unseen unicode string is given, a new lexeme is created and stored.
 
         Args:
             id_or_string (int or unicode):
@@ -222,7 +258,7 @@ cdef class Vocab:
         '''
         cdef attr_t orth
         if type(id_or_string) == unicode:
-            orth = self.strings.intern(id_or_string)
+            orth = self.strings[id_or_string]
         else:
             orth = id_or_string
         return Lexeme(self, orth)
@@ -238,7 +274,7 @@ cdef class Vocab:
             if 'pos' in props:
                 self.morphology.assign_tag(token, props['pos'])
             if 'L' in props:
-                tokens[i].lemma = self.strings.intern(props['L'])
+                tokens[i].lemma = self.strings[props['L']]
             for feature, value in props.get('morph', {}).items():
                 self.morphology.assign_feature(&token.morph, feature, value)
         return tokens

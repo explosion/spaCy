@@ -27,7 +27,6 @@ cdef struct _Cached:
 cdef class Vocab:
     cdef Pool mem
     cpdef readonly StringStore strings
-    cpdef readonly dict oov_stores
     cpdef readonly Morphology morphology
     cdef readonly int length
     cdef public object _serializer

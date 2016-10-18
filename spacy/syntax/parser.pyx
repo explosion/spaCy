@@ -67,10 +67,6 @@ def get_templates(name):
                 pf.tree_shape + pf.trigrams)
 
 
-def ParserFactory(transition_system):
-    return lambda strings, dir_: Parser(strings, dir_, transition_system)
-
-
 cdef class ParserModel(AveragedPerceptron):
     cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil: 
         fill_context(eg.atoms, state)
@@ -79,27 +75,31 @@ cdef class ParserModel(AveragedPerceptron):
 
 cdef class Parser:
     @classmethod
-    def load(cls, path, Vocab vocab, moves_class):
+    def load(cls, path, Vocab vocab, TransitionSystem=None, require=False):
         with (path / 'config.json').open() as file_:
             cfg = json.load(file_)
-        moves = moves_class(vocab.strings, cfg['labels'])
-        templates = get_templates(cfg['features'])
-        model = ParserModel(templates)
+        # TODO: remove this shim when we don't have to support older data
+        if 'labels' in cfg:
+            cfg['actions'] = cfg.pop('labels')
+        self = cls(vocab, TransitionSystem=TransitionSystem, model=None, **cfg)
         if (path / 'model').exists():
-            model.load(str(path / 'model'))
-        return cls(vocab, moves, model, **cfg)
+            self.model.load(str(path / 'model'))
+        elif require:
+            raise IOError(
+                "Required file %s/model not found when loading" % str(path))
+        return self
 
-    @classmethod
-    def blank(cls, Vocab vocab, moves_class, **cfg):
-        moves = moves_class(vocab.strings, cfg.get('labels', {}))
-        templates = cfg.get('features', tuple())
-        model = ParserModel(templates)
-        return cls(vocab, moves, model, **cfg)
-
-
-    def __init__(self, Vocab vocab, transition_system, ParserModel model, **cfg):
-        self.moves = transition_system
-        self.model = model
+    def __init__(self, Vocab vocab, TransitionSystem=None, ParserModel model=None, **cfg):
+        if TransitionSystem is None:
+            TransitionSystem = self.TransitionSystem
+        actions = TransitionSystem.get_actions(**cfg)
+        self.moves = TransitionSystem(vocab.strings, actions)
+        # TODO: Remove this when we no longer need to support old-style models
+        if isinstance(cfg.get('features'), basestring):
+            cfg['features'] = get_templates(cfg['features'])
+        elif 'features' not in cfg:
+            cfg['features'] = self.feature_templates
+        self.model = ParserModel(cfg['features'])
         self.cfg = cfg
 
     def __reduce__(self):
@@ -191,7 +191,7 @@ cdef class Parser:
         free(eg.is_valid)
         return 0
   
-    def train(self, Doc tokens, GoldParse gold):
+    def update(self, Doc tokens, GoldParse gold):
         self.moves.preprocess_gold(gold)
         cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
         self.moves.initialize_state(stcls.c)
@@ -283,7 +283,9 @@ cdef class StepwiseState:
         cdef Transition action = self.parser.moves.c[self.eg.guess]
         return self.parser.moves.move_name(action.move, action.label)
 
-    def transition(self, action_name):
+    def transition(self, action_name=None):
+        if action_name is None:
+            action_name = self.predict()
         moves = {'S': 0, 'D': 1, 'L': 2, 'R': 3}
         if action_name == '_':
             action_name = self.predict()
@@ -306,14 +308,14 @@ cdef class StepwiseState:
 
 
 class ParserStateError(ValueError):
-    def __repr__(self):
-        raise ValueError(
+    def __init__(self, doc):
+        ValueError.__init__(self,
             "Error analysing doc -- no valid actions available. This should "
             "never happen, so please report the error on the issue tracker. "
             "Here's the thread to do so --- reopen it if it's closed:\n"
             "https://github.com/spacy-io/spaCy/issues/429\n"
             "Please include the text that the parser failed on, which is:\n"
-            "%s" % repr(self.args[0].text))
+            "%s" % repr(doc.text))
 
 
 cdef int _arg_max_clas(const weight_t* scores, int move, const Transition* actions,

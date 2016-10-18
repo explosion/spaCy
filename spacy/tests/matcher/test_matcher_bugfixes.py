@@ -46,9 +46,9 @@ def test_overlap_issue242():
     if os.environ.get('SPACY_DATA'):
         data_dir = os.environ.get('SPACY_DATA')
     else:
-        data_dir = None
+        data_dir = False
  
-    nlp = spacy.en.English(data_dir=data_dir, tagger=False, parser=False, entity=False)
+    nlp = spacy.en.English(path=data_dir, tagger=False, parser=False, entity=False)
 
     nlp.matcher.add('FOOD', 'FOOD', {}, patterns)
 

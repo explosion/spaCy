@@ -28,7 +28,7 @@ def vocab():
     else:
         path = util.match_best_version('en', None, path)
 
-    vocab = English.Defaults('en', path).Vocab()
+    vocab = English.Defaults.create_vocab()
     lex = vocab['dog']
     assert vocab[vocab.strings['dog']].orth_ == 'dog'
     lex  = vocab['the']
