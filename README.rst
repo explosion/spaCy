@@ -9,15 +9,23 @@ the MIT license.
 
 .. image:: http://i.imgur.com/wFvLZyJ.png
     :target: https://travis-ci.org/explosion/spaCy
-
+    :alt: spaCy on Travis CI
+    
 .. image:: https://travis-ci.org/explosion/spaCy.svg?branch=master
     :target: https://travis-ci.org/explosion/spaCy
+    :alt: Build Status
     
 .. image:: https://img.shields.io/github/tag/explosion/spacy.svg
     :target: https://github.com/explosion/spaCy/releases   
-
+    :alt: Current Release Version
+    
 .. image:: https://img.shields.io/pypi/v/spacy.svg   
     :target: https://pypi.python.org/pypi/spacy
+    :alt: pypi Version
+
+.. image:: https://badges.gitter.im/spaCy-users.png
+    :target: https://gitter.im/explosion/spaCy
+    :alt: spaCy on Gitter
 
 Where to ask questions
 ======================
@@ -26,9 +34,10 @@ Where to ask questions
 | 🔴 **Bug reports**        | `GitHub Issue tracker <https://github.com/explosion/spaCy/issues>`_                                        |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
 | ⁉️ **Usage questions**    | `StackOverflow <http://stackoverflow.com/questions/tagged/spacy>`_, `Reddit usergroup                      | 
-|                           | <https://www.reddit.com/r/spacynlp>`_, `Gitter chat <https://gitter.im/spaCy-users>`_                      |
+|                           | <https://www.reddit.com/r/spacynlp>`_, `Gitter chat <https://gitter.im/explosion/spaCy>`_                  |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| 💬 **General discussion** |  `Reddit usergroup <https://www.reddit.com/r/spacynlp>`_, `Gitter chat <https://gitter.im/spaCy-users>`_   |
+| 💬 **General discussion** |  `Reddit usergroup <https://www.reddit.com/r/spacynlp>`_,                                                  |
+|                           | `Gitter chat <https://gitter.im/explosion/spaCy>`_                                                         |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
 | 💥 **Commercial support** |  contact@explosion.ai                                                                                      |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
