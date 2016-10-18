@@ -1,0 +1,61 @@
+include ../../_includes/_mixins
+
+p.u-text-large spaCy features a rule-matching engine that operates over tokens. The rules can refer to token annotations and flags, and matches support callbacks to accept, modify and/or act on the match. The rule matcher also allows you to associate patterns with entity IDs, to allow some basic entity linking or disambiguation.
+
++code("python", "Matcher Example").
+    from spacy.matcher import Matcher
+    from spacy.attributes import *
+    import spacy
+
+    nlp = spacy.load('en', parser=False, entity=False)
+
+    matcher = Matcher(nlp.vocab)
+
+    matcher.add_entity(
+        "GoogleNow", # Entity ID -- Helps you act on the match.
+        {"ent_type": "PRODUCT", "wiki_en": "Google_Now"}, # Arbitrary attributes (optional)
+        acceptor=None, # Accept or modify the match
+        on_match=merge_phrases # Callback to act on the matches
+    )
+    matcher.add_pattern(
+        "GoogleNow", # Entity ID -- Created if doesn't exist.
+        [ # The pattern is a list of *Token Specifiers*.
+            { # This Token Specifier matches tokens whose orth field is "Google"
+              ORTH: "Google"
+            },
+            { # This Token Specifier matches tokens whose orth field is "Now"
+              ORTH: "Now"
+            }
+        ],
+        label=None # Can associate a label to the pattern-match, to handle it better.
+    )
+    doc = nlp(u"I prefer Siri to Google Now.")
+    matches = matcher(doc)
+    for ent_id, label, start, end in matches:
+        print(nlp.strings[ent_id], nlp.strings[label], doc[start : end].text)
+        entity = matcher.get_entity(ent_id)
+        print(entity)
+
+    matcher.add_pattern(
+        "GoogleNow",
+        [ # This Surface Form matches "google now", verbatim, and requires
+          # "google" to have the NNP tag. This helps prevent the pattern from
+          # matching cases like "I will google now to look up the time"
+          {
+            ORTH: "google",
+            TAG: "NNP"
+          },
+          {
+            ORTH: "now"
+          }
+        ]
+    )
+
+    doc = nlp(u"I'll google now to find out how the google now service works.")
+    matches = matcher(doc)
+    for ent_id, label, start, end in matches:
+        print(ent_id, label, start, end, doc[start : end].text)
+    # Because we specified the on_match=merge_phrases callback,
+    # we should see 'google now' as a single token.
+    for token in doc:
+        print(token.text, token.lemma_, token.tag_, token.ent_type_)
