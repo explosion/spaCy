@@ -70,10 +70,10 @@ class BaseDefaults(object):
     def create_tagger(cls, nlp=None):
         if nlp is None:
             return Tagger(cls.create_vocab(), features=cls.tagger_features)
-        elif nlp.path is None or not (nlp.path / 'ner').exists():
+        elif nlp.path is None or not (nlp.path / 'pos').exists():
             return Tagger(nlp.vocab, features=cls.tagger_features)
         else:
-            return Tagger.load(nlp.path / 'ner', nlp.vocab)
+            return Tagger.load(nlp.path / 'pos', nlp.vocab)
 
     @classmethod
     def create_parser(cls, nlp=None):
