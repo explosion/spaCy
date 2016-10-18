@@ -10,6 +10,7 @@ python:
 
 os:
   - linux
+  - osx
 
 env:
   - VIA="compile"
