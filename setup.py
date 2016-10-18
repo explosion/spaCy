@@ -1,5 +1,6 @@
 #!/usr/bin/env python
 from __future__ import print_function
+from __future__ import unicode_literals
 import os
 import subprocess
 import sys
@@ -153,11 +154,11 @@ def setup_package():
         return clean(root)
 
     with chdir(root):
-        with open(os.path.join(root, 'spacy', 'about.py')) as f:
+        with io.open(os.path.join(root, 'spacy', 'about.py'), encoding='utf8') as f:
             about = {}
             exec(f.read(), about)
 
-        with open(os.path.join(root, 'README.rst')) as f:
+        with io.open(os.path.join(root, 'README.rst'), encoding='utf8') as f:
             readme = f.read()
 
         include_dirs = [
