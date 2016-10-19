@@ -45,7 +45,7 @@ html(lang="en")
             if sidebar
                 include _includes/_sidebar
 
-            main.o-content(class="#{(sidebar) ? 'o-content--sidebar' : '' } #{((current.path[0] == 'docs' && asides != false) || asides) ? 'o-content--asides' : '' }")
+            main.o-content(class="#{(sidebar) ? 'o-content--sidebar' : '' } #{((current.path[0] == 'docs' && asides != false) || asides) ? 'o-content--asides' : '' } #{(current.path[1] == 'tutorials') ? 'o-content--article' : '' }")
                 if current.path[1] == "tutorials"
                     +h(1)=title
 

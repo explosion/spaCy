@@ -24,7 +24,10 @@ body
 //- Paragraphs
 
 p
-    @extend .u-text-regular, .o-block, .has-aside
+    @extend .o-block, .u-text-regular, .has-aside
+
+    .o-content--article &:not([class])
+        @extend .u-text-medium
 
 
 //- Links

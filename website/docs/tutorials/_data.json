@@ -1,34 +1,47 @@
 {
+    "training": {
+        "title": "Training the tagger, entity recogniser and parser",
+        "date": "2016-10-17",
+        "description": "This tutorial describes how to train new statistical models for spaCy's part-of-speech tagger, named entity recognizer and dependency parser."
+    },
+
+    "custom-pipelines": {
+        "title": "Custom Pipelines",
+        "date": "2016-10-17",
+        "description": "spaCy 1.0 introduces dynamic pipelines, so that you can easily create custom workflows. This tutorial describes the feature, and introduces experimental support for dynamic Token attributes. The tutorial also discusses how we can make it easier to use bidirectional LSTMs with spaCy."
+    },
+
+    "rule-based-matcher": {
+        "title": "Rule-based Matcher",
+        "date": "2016-10-17",
+        "description": "spaCy features a rule-matching engine that operates over tokens. The rules can refer to token annotations and flags, and matches support callbacks to accept, modify and/or act on the match. The rule matcher also allows you to associate patterns with entity IDs, to allow some basic entity linking or disambiguation."
+    },
+
     "load-new-word-vectors": {
-        "template": "article",
         "title": "Load new word vectors",
         "date": "2015-09-24",
         "description": "Word vectors allow simple similarity queries, and drive many NLP applications. This tutorial explains how to load custom word vectors into spaCy, to make use of task or data-specific representations."
     },
 
     "byo-annotations": {
-        "template": "article",
         "title": "Using Pre-existing Tokenization, Tags, and Other Annotations",
         "date": "2016-04-15",
         "description": "spaCy assumes by default that your data is raw text. However, sometimes your data is partially annotated, e.g. with pre-existing tokenization, part-of-speech tags, etc. This tutorial explains how to use these annotations in spaCy."
     },
 
     "mark-adverbs": {
-        "template": "article",
         "title": "Mark all adverbs, particularly for verbs of speech",
         "date": "2015-08-18",
         "description": "Let's say you're developing a proofreading tool, or possibly an IDE for writers.  You're convinced by Stephen King's advice that adverbs are not your friend so you want to highlight all adverbs."
     },
 
     "syntax-search": {
-        "template": "article",
         "title": "Search Reddit for comments about Google doing something",
         "date": "2015-08-18",
         "description": "Example use of the spaCy NLP tools for data exploration. Here we will look for Reddit comments that describe Google doing something, i.e. discuss the company's actions. This is difficult, because other senses of \"Google\" now dominate usage of the word in conversation, particularly references to using Google products."
     },
 
     "twitter-filter": {
-        "template": "article",
         "title": "Finding Relevant Tweets",
         "date": "2015-08-18",
         "description": "In this tutorial, we will use word vectors to search for tweets about Jeb Bush. We'll do this by building up two word lists: one that represents the type of meanings in the Jeb Bush tweets, and another to help screen out irrelevant tweets that mention the common, ambiguous word \"bush\"."

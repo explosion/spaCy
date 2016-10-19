@@ -24,8 +24,8 @@ const $$ = document.querySelectorAll.bind(document);
         scrollUp = newScrollY <= scrollY;
         scrollY = newScrollY;
 
-        if(scrollUp && !(isNaN(scrollY) || scrollY <= vh)) topnav.classList.add('is-fixed');
-        else if(!scrollUp || (isNaN(scrollY) || scrollY <= vh/2)) topnav.classList.remove('is-fixed');
+        if(scrollUp && !(isNaN(scrollY) || scrollY <= vh)) nav.classList.add('is-fixed');
+        else if(!scrollUp || (isNaN(scrollY) || scrollY <= vh/2)) nav.classList.remove('is-fixed');
     }
 
     const updateSidebar = () => {

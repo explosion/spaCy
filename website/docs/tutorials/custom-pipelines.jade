@@ -1,0 +1,89 @@
+include ../../_includes/_mixins
+
+p.u-text-large spaCy 1.0 introduces dynamic pipelines, so that you can easily create custom workflows. This tutorial describes the feature, and introduces experimental support for dynamic Token attributes. The tutorial also discusses how we can make it easier to use bidirectional LSTMs with spaCy.
+
+p Best practices in NLP are now already pretty different from when I first designed spaCy, even though it's only been two years. The spaCy 1.0 release has a new custom pipeline API to help you use the new hotness.
+
+p Before 1.0, spaCy's pipeline was hard-coded. When you called #[code nlp(text)], spaCy would apply the tokenizer, tagger, parser and named entity recognizer, in sequence. This design assumed that users should subclass the #[code Language] class to customize the pipeline. However, the #[code Language] class has gotten more complicated, and subclassing it now feels like a relatively "serious" thing to do. It feels hard.
+
+p In spaCy 1.0, the order of operations is no longer hard-coded. Instead, the new #[code Language.__call__] does something like this:
+
++code.
+    def __call__(self, text):
+        doc = self.make_doc(text)
+        for process in self.pipeline:
+            process(doc)
+        return doc
+
+p The pipeline can consist of any sequence of callables. They should accept a Doc object, and modify it in-place. You can install the pipeline by passing a callable to the #[code spacy.load()] function, or the constructor of the #[code Language] class:
+
++code("python", "Basic Example").
+    import spacy
+
+    def arbitrary_fixup_rules(doc):
+        for token in doc:
+            if token.text == u'bill' and token.tag_ == u'NNP':
+                token.tag_ = u'NN'
+
+    def custom_pipeline(nlp):
+        return (nlp.tagger, arbitrary_fixup_rules, nlp.parser, nlp.entity)
+
+    nlp = spacy.load('en', pipeline=custom_pipeline)
+
+
+p The value passed to the #[code pipeline] keyword should be a callable that takes the #[code Language] instance (i.e. #[code nlp]) as an argument. The callable should return a sequence of callables. Each member of the sequence should take a Doc object as its sole positional argument.
+
++h(2, "experimental-lstm") Experimental: Bidirectional LSTM with custom pipeline
+
+p Probably the most important new technology in Natural Language Processing is the rise of bidirectional LSTM models. These models associate each word with a #[em context-specific] vector. You can also neatly include character level features, so that all relevant aspects of the word are captured. This is pretty much the best way to do feature extraction in NLP at the moment, for almost any task.
+
+p spaCy doesn't feature any pre-trained LSTM models yet, and the details of this API are still being refined. But, because BiLSTMs are proving so important, I wanted to get the proposal up.
+
+p Version 1.0 adds an attribute #[code tensor] to the #[code Doc] object. The #[code tensor] attribute expects a numpy ndarray object, and is publicly writeable. This gives you a place to store the output of the LSTM (or some other real-valued output you want to keep).
+
++code("python", "Basic Example").
+    import spacy
+    from spacy.symbols import LEMMA, TAG
+
+    class LSTMModel(object):
+        def __init__(self, **kwargs):
+            # Load your weights etc
+            pass
+
+        def __call__(self, doc):
+            features = doc.to_array([LEMMA, TAG])
+            doc.tensor = lstm(features)
+
+    def custom_pipeline(nlp):
+        return (nlp.tagger, LSTMModel(), nlp.parser, nlp.entity)
+
+    nlp = spacy.load('en', pipeline=custom_pipeline)
+
+p Now, so far we only have the LSTM output as an attribute of the #[code Doc] object. We'd like to be able to do stuff like #[code doc[0].vector], and have that get us the LSTM vector for the token. We can do #[code doc.tensor[doc[0].i]], but I'd like a little more sugar. The details of this part are still experimental — in particular, don't take the names too seriously at this point.
+
+p A relevant implementation detail of spaCy is that the #[code Token] objects are thin proxies, that can be created and destroyed as convenient. The #[code Doc] object owns all the data. This means that we can't simply assign a vector to the #[code Token] objects. Instead, we'll add a hook that gets called by #[code token.vector]. We'll also add space for hooks in other places we might need them.
+
++aside("Why don't Token and Span own their data?") Well, we want the sequence of tokens to be stored together in memory. That means we really want to have a sequence owned by the #[code Doc] object. But if we have that, then we would have to copy data to the #[code Token] objects. This gets super messy, especially if the tokens should be able to modify their state. The Token therefore proxies to the Doc, to maintain a single source of truth.
+
+p Here's what that looks like:
+
++code.
+    def install_vector_hook(doc):
+        doc.getters_for_token['similarity'] = lambda token: doc.tensor[token.i]
+
+    def custom_pipeline(nlp):
+        return (nlp.tagger, LSTMModel(), install_vector_hook, nlp.parser, nlp.entity)
+
+    nlp = spacy.load('en', pipeline=custom_pipeline)
+
+p The #[code install_vector_hook] function will run after the LSTM. It modifies the #[code Doc], setting a value in a dictionary that the #[code Token] knows to look for. When you access the #[code token.vector] property, the token checks whether there's a special-case listener for that attribute:
+
++code.
+    @property
+    def vector(self):
+        if 'vector' in self.doc.getters_for_tokens:
+            return self.doc.getters_for_tokens['vector'](self)
+        else:
+            return self.c.lex.vector
+
+p As I said — don't take the names too seriously at this point. But do test out the feature — it should be all working. You should be able to customize he behaviour of a lot of attributes this way already. Possibly we should just make it everything on the Token and the Span, but I think it might not be nice to have so much uncertainty about how some values are being calculated. There's such a thing as being too dynamic.
