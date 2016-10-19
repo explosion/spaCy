@@ -7,7 +7,7 @@ the very latest research, but it isn't researchware.  It was designed from day 1
 to be used in real products. It's commercial open-source software, released under 
 the MIT license.
 
-💫 **Version 1.0.0 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
+💫 **Version 1.0 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: http://i.imgur.com/wFvLZyJ.png
     :target: https://travis-ci.org/explosion/spaCy
