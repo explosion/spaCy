@@ -242,6 +242,11 @@ For the detailed documentation, check out the `spaCy website <https://spacy.io/d
 Changelog
 =========
 
+2016-10-18 v1.0.1
+-----------------
+
+* Fix README for `PyPi <https://pypi.python.org/pypi/spacy>`_
+
 2016-10-18 `v1.0.0 <https://github.com/explosion/spaCy/releases/>`_: *Support for deep learning workflows and entity-aware rule matcher*
 ----------------------------------------------------------------------------------------------------------------------------------------
 
