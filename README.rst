@@ -176,7 +176,7 @@ system. See notes on Ubuntu, OS X and Windows for details.
     python -m pip install -U pip virtualenv
 
     #  find git install instructions at https://git-scm.com/downloads
-    git clone https://github.com/spacy-io/spaCy.git
+    git clone https://github.com/explosion/spaCy.git
 
     cd spaCy
     virtualenv .env && source .env/bin/activate
