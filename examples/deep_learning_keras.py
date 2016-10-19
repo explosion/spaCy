@@ -14,7 +14,7 @@ class SentimentAnalyser(object):
     
     def __call__(self, doc):
         X = get_features([doc], self.max_length)
-        y = self._keras_model.predict(X)
+        y = self._model.predict(X)
         self.set_sentiment(doc, y)
 
     def pipe(self, docs, batch_size=1000, n_threads=2):
@@ -28,6 +28,13 @@ class SentimentAnalyser(object):
         doc.user_data['sentiment'] = y
 
 
+def get_features(docs, max_length):
+    Xs = numpy.zeros(len(docs), max_length, dtype='int32')
+    for i, doc in enumerate(minibatch):
+        for j, token in enumerate(doc[:max_length]):
+            Xs[i, j] = token.rank if token.has_vector else 0
+    return Xs
+ 
 def compile_lstm(embeddings, shape, settings, optimizer):
     model = Sequential()
     model.add(
@@ -58,14 +65,6 @@ def get_embeddings(vocab):
             vectors[lex.rank] = lex.vector
     return vectors
 
-
-def get_features(docs, max_length):
-    Xs = numpy.zeros(len(docs), max_length, dtype='int32')
-    for i, doc in enumerate(minibatch):
-        for j, token in enumerate(doc[:max_length]):
-            Xs[i, j] = token.rank if token.has_vector else 0
-    return Xs
- 
 
 def train(train_texts, train_labels, dev_texts, dev_labels,
         lstm_shape, lstm_settings, lstm_optimizer, batch_size=100, nb_epoch=5):
