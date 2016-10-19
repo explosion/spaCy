@@ -50,12 +50,17 @@ cdef class Vocab:
     '''
     @classmethod
     def load(cls, path, lex_attr_getters=None, vectors=True, lemmatizer=True,
-             tag_map=True, serializer_freqs=True, **deprecated_kwargs): 
+             tag_map=True, serializer_freqs=True, oov_prob=True, **deprecated_kwargs): 
         util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
         if tag_map is True and (path / 'vocab' / 'tag_map.json').exists():
             with (path / 'vocab' / 'tag_map.json').open() as file_:
                 tag_map = json.load(file_)
-
+        if lex_attr_getters is not None \
+        and oov_prob is True \
+        and (path / 'vocab' / 'oov_prob').exists():
+            with (path / 'vocab' / 'oov_prob').open() as file_:
+                oov_prob = float(file_.read())
+            lex_attr_getters[PROB] = lambda text: oov_prob
         if lemmatizer is True:
             lemmatizer = Lemmatizer.load(path)
         if serializer_freqs is True and (path / 'vocab' / 'serializer.json').exists():
