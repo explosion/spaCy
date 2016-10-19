@@ -176,7 +176,7 @@ system. See notes on Ubuntu, OS X and Windows for details.
     python -m pip install -U pip virtualenv
 
     #  find git install instructions at https://git-scm.com/downloads
-    git clone https://github.com/spacy-io/spaCy.git
+    git clone https://github.com/explosion/spaCy.git
 
     cd spaCy
     virtualenv .env && source .env/bin/activate
@@ -207,17 +207,6 @@ Windows
 Install a version of Visual Studio Express or higher that matches the version 
 that was used to compile your Python interpreter. For official distributions 
 these are VS 2008 (Python 2.7), VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
-
-Workaround for obsolete system Python
-=====================================
-
-If you're stuck using a system with an old version of Python, and you don't 
-have root access, we've prepared a bootstrap script to help you compile a local 
-Python install. Run:
-
-.. code:: bash
-
-    curl https://raw.githubusercontent.com/spacy-io/gist/master/bootstrap_python_env.sh | bash && source .env/bin/activate
 
 Run tests
 =========
