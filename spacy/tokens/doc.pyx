@@ -116,8 +116,9 @@ cdef class Doc:
         self.is_tagged = False
         self.is_parsed = False
         self.sentiment = 0.0
-        self.getters_for_tokens = {}
-        self.getters_for_spans = {}
+        self.user_hooks = {}
+        self.user_token_hooks = {}
+        self.user_span_hooks = {}
         self.tensor = numpy.zeros((0,), dtype='float32')
         self.user_data = {}
         self._py_tokens = []
