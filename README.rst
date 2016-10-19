@@ -7,6 +7,8 @@ the very latest research, but it isn't researchware.  It was designed from day 1
 to be used in real products. It's commercial open-source software, released under 
 the MIT license.
 
+💫 **Version 1.0.0 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/tag/v1.0.0>`_
+
 .. image:: http://i.imgur.com/wFvLZyJ.png
     :target: https://travis-ci.org/explosion/spaCy
     :alt: spaCy on Travis CI
@@ -201,7 +203,6 @@ OS X ships with Python and git preinstalled.
 
 Windows
 -------
-<<<<<<< HEAD
 
 Install a version of Visual Studio Express or higher that matches the version 
 that was used to compile your Python interpreter. For official distributions 
@@ -221,27 +222,6 @@ Python install. Run:
 Run tests
 =========
 
-=======
-
-Install a version of Visual Studio Express or higher that matches the version 
-that was used to compile your Python interpreter. For official distributions 
-these are VS 2008 (Python 2.7), VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
-
-Workaround for obsolete system Python
-=====================================
-
-If you're stuck using a system with an old version of Python, and you don't 
-have root access, we've prepared a bootstrap script to help you compile a local 
-Python install. Run:
-
-.. code:: bash
-
-    curl https://raw.githubusercontent.com/spacy-io/gist/master/bootstrap_python_env.sh | bash && source .env/bin/activate
-
-Run tests
-=========
-
->>>>>>> v1.0.0-rc1
 spaCy comes with an extensive test suite. First, find out where spaCy is 
 installed:
 
@@ -273,7 +253,43 @@ For the detailed documentation, check out the `spaCy website <https://spacy.io/d
 Changelog
 =========
 
-2016-05-10 `v0.101.0 <../../releases/tag/0.101.0>`_: *Fixed German model*
+2016-10-18 `v1.0.0 <https://github.com/explosion/spaCy/releases/tag/v1.0.0>`_: *Support for deep learning workflows and entity-aware rule matcher*
+-----------------------------------------------------------------------------------------------------------
+
+**✨ Major features and improvements**
+
+* **NEW:** `custom processing pipelines <https://spacy.io/docs/tutorials/custom-pipelines>`_, to support deep learning workflows
+* **NEW:** `Rule matcher <https://spacy.io/docs/tutorials/rule-based-matcher>`_ now supports entity IDs and attributes
+* **NEW:** Official/documented `training APIs <https://spacy.io/docs/tutorials/training>`_ and `GoldParse` class
+* Download and use GloVe vectors by default
+* Make it easier to load and unload word vectors
+* Improved rule matching functionality
+* Move basic data into the code, rather than the json files. This makes it simpler to use the tokenizer without the models installed, and makes adding new languages much easier.
+* Replace file-system strings with ``Path`` objects. You can now load resources over your network, or do similar trickery, by passing any object that supports the ``Path`` protocol.
+
+**⚠️  Backwards incompatibilities**
+
+* The data_dir keyword argument of ``Language.__init__`` (and its subclasses ``English.__init__`` and ``German.__init__``) has been renamed to ``path``.
+* Details of how the Language base-class and its sub-classes are loaded, and how defaults are accessed, have been heavily changed. If you have your own subclasses, you should review the changes.
+* The deprecated ``token.repvec`` name has been removed.
+* The ``.train()`` method of Tagger and Parser has been renamed to ``.update()``
+* The previously undocumented ``GoldParse`` class has a new ``__init__()`` method. The old method has been preserved in ``GoldParse.from_annot_tuples()``.
+* Previously undocumented details of the ``Parser`` class have changed.
+* The previously undocumented ``get_package`` and ``get_package_by_name`` helper functions have been moved into a new module, ``spacy.deprecated``, in case you still need them while you update.
+
+**🔴  Bug fixes**
+
+* Fix ``get_lang_class`` bug when GloVe vectors are used.
+* Fix Issue `#411 <https://github.com/explosion/spaCy/issues/411>`_: ``doc.sents`` raised IndexError on empty string.
+* Fix Issue `#455 <https://github.com/explosion/spaCy/issues/455>`_: Correct lemmatization logic
+* Fix Issue `#371 <https://github.com/explosion/spaCy/issues/371>`_: Make ``Lexeme`` objects hashable
+* Fix Issue `#469 <https://github.com/explosion/spaCy/issues/469>`_: Make ``noun_chunks`` detect root NPs
+
+**👥  Contributors**
+
+Thanks to `@daylen <https://github.com/daylen>`_, `@RahulKulhari <https://github.com/RahulKulhari>`_, `@stared <https://github.com/stared>`_, `@adamhadani <https://github.com/adamhadani>`_, `@izeye <https://github.com/adamhadani>`_ and `@crawfordcomeaux <https://github.com/adamhadani>`_ for the pull requests!
+
+2016-05-10 `v0.101.0 <https://github.com/explosion/spaCy/releases/tag/0.101.0>`_: *Fixed German model*
 -------------------------------------------------------------------------
 
 * Fixed bug that prevented German parses from being deprojectivised.
@@ -282,7 +298,7 @@ Changelog
 * Add missing ``Doc.has_vector`` and ``Span.has_vector`` properties.
 * Add missing ``Span.sent`` property.
 
-2016-05-05 `v0.100.7 <../../releases/tag/0.100.7>`_: *German!*
+2016-05-05 `v0.100.7 <https://github.com/explosion/spaCy/releases/tag/0.100.7>`_: *German!*
 --------------------------------------------------------------
 
 spaCy finally supports another language, in addition to English. We're lucky 
@@ -327,7 +343,7 @@ and it doesn't yet recognise numeric entities such as numbers and dates.
 * Fix bug that led to inconsistent sentence boundaries before and after serialisation.
 * Fix bug from deserialising untagged documents.
 
-2016-03-08 `v0.100.6 <../../releases/tag/0.100.6>`_: *Add support for GloVe vectors*
+2016-03-08 `v0.100.6 <https://github.com/explosion/spaCy/releases/tag/0.100.6>`_: *Add support for GloVe vectors*
 ------------------------------------------------------------------------------------
 
 This release offers improved support for replacing the word vectors used by spaCy. 
@@ -345,17 +361,17 @@ function. To load the English model with the GloVe vectors:
 .. code:: python
     spacy.load('en', vectors='en_glove_cc_300_1m_vectors')
 
-2016-02-07 `v0.100.5 <../../releases/tag/0.100.5>`_
+2016-02-07 `v0.100.5 <https://github.com/explosion/spaCy/releases/tag/0.100.5>`_
 ---------------------------------------------------
 
 Fix incorrect use of header file, caused from problem with thinc
 
-2016-02-07 `v0.100.4 <../../releases/tag/0.100.4>`_: *Fix OSX problem introduced in 0.100.3*
+2016-02-07 `v0.100.4 <https://github.com/explosion/spaCy/releases/tag/0.100.4>`_: *Fix OSX problem introduced in 0.100.3*
 --------------------------------------------------------------------------------------------
 
 Small correction to right_edge calculation
 
-2016-02-06 `v0.100.3 <../../releases/tag/0.100.3>`_
+2016-02-06 `v0.100.3 <https://github.com/explosion/spaCy/releases/tag/0.100.3>`_
 ---------------------------------------------------
 
 Support multi-threading, via the ``.pipe`` method. spaCy now releases the GIL around the
@@ -364,19 +380,19 @@ shared memory parallelism at close to full efficiency.
 
 We've also greatly reduced loading time, and fixed a number of bugs.
 
-2016-01-21 `v0.100.2 <../../releases/tag/0.100.2>`_
+2016-01-21 `v0.100.2 <https://github.com/explosion/spaCy/releases/tag/0.100.2>`_
 ---------------------------------------------------
 
 Fix data version lock that affected v0.100.1
 
-2016-01-21 `v0.100.1 <../../releases/tag/0.100.1>`_: *Fix install for OSX*
+2016-01-21 `v0.100.1 <https://github.com/explosion/spaCy/releases/tag/0.100.1>`_: *Fix install for OSX*
 --------------------------------------------------------------------------
 
 v0.100 included header files built on Linux that caused installation to fail on OSX.
 This should now be corrected. We also update the default data distribution, to
 include a small fix to the tokenizer.
 
-2016-01-19 `v0.100 <../../releases/tag/0.100>`_: *Revise setup.py, better model downloads, bug fixes*
+2016-01-19 `v0.100 <https://github.com/explosion/spaCy/releases/tag/0.100>`_: *Revise setup.py, better model downloads, bug fixes*
 -----------------------------------------------------------------------------------------------------
 
 * Redo setup.py, and remove ugly headers_workaround hack. Should result in fewer install problems.
@@ -388,7 +404,7 @@ include a small fix to the tokenizer.
 * Fix problem that caused ``doc.merge()`` to sometimes hang
 * Fix problems in handling of whitespace
 
-2015-11-08 `v0.99 <../../releases/tag/0.99>`_: *Improve span merging, internal refactoring*
+2015-11-08 `v0.99 <https://github.com/explosion/spaCy/releases/tag/0.99>`_: *Improve span merging, internal refactoring*
 -------------------------------------------------------------------------------------------
 
 * Merging multi-word tokens into one, via the ``doc.merge()`` and ``span.merge()`` methods, no longer invalidates existing ``Span`` objects. This makes it much easier to merge multiple spans, e.g. to merge all named entities, or all base noun phrases. Thanks to @andreasgrv for help on this patch.
@@ -396,7 +412,7 @@ include a small fix to the tokenizer.
 * The lemmatizer now lower-cases non-noun, noun-verb and non-adjective words.
 * A new attribute, ``.rank``, is added to Token and Lexeme objects, giving the frequency rank of the word.
 
-2015-11-03 `v0.98 <../../releases/tag/0.98>`_: *Smaller package, bug fixes*
+2015-11-03 `v0.98 <https://github.com/explosion/spaCy/releases/tag/0.98>`_: *Smaller package, bug fixes*
 ---------------------------------------------------------------------------
 
 * Remove binary data from PyPi package.
@@ -405,20 +421,20 @@ include a small fix to the tokenizer.
 * Fix information loss in deserialize
 * Fix ``__str__`` methods for Python2
 
-2015-10-23 `v0.97 <../../releases/tag/0.97>`_: *Load the StringStore from a json list, instead of a text file*
+2015-10-23 `v0.97 <https://github.com/explosion/spaCy/releases/tag/0.97>`_: *Load the StringStore from a json list, instead of a text file*
 --------------------------------------------------------------------------------------------------------------
 
 * Fix bugs in download.py
 * Require ``--force`` to over-write the data directory in download.py
 * Fix bugs in ``Matcher`` and ``doc.merge()``
 
-2015-10-19 `v0.96 <../../releases/tag/0.96>`_: *Hotfix to .merge method*
+2015-10-19 `v0.96 <https://github.com/explosion/spaCy/releases/tag/0.96>`_: *Hotfix to .merge method*
 ------------------------------------------------------------------------
 
 * Fix bug that caused text to be lost after ``.merge``
 * Fix bug in Matcher when matched entities overlapped
 
-2015-10-18 `v0.95 <../../releases/tag/0.95>`_: *Bugfixes*
+2015-10-18 `v0.95 <https://github.com/explosion/spaCy/releases/tag/0.95>`_: *Bugfixes*
 ---------------------------------------------------------
 
 * Reform encoding of symbols
@@ -428,13 +444,13 @@ include a small fix to the tokenizer.
 * Add specific string-length cap in Tokenizer
 * Fix ``token.conjuncts```
 
-2015-10-09 `v0.94 <../../releases/tag/0.94>`_
+2015-10-09 `v0.94 <https://github.com/explosion/spaCy/releases/tag/0.94>`_
 ---------------------------------------------
 
 * Fix memory error that caused crashes on 32bit platforms
 * Fix parse errors caused by smart quotes and em-dashes
 
-2015-09-22 `v0.93 <../../releases/tag/0.93>`_
+2015-09-22 `v0.93 <https://github.com/explosion/spaCy/releases/tag/0.93>`_
 ---------------------------------------------
 
 Bug fixes to word vectors
