@@ -124,7 +124,13 @@ cdef class Lexeme:
 
     property repvec:
         def __get__(self):
-            return self.vector
+            raise AttributeError("lex.repvec has been renamed to lex.vector")
+
+    property sentiment:
+        def __get__(self):
+            return self.c.sentiment
+        def __set__(self, float sentiment):
+            self.c.sentiment = sentiment
         
     property orth_:
         def __get__(self):
