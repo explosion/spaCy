@@ -7,7 +7,7 @@ the very latest research, but it isn't researchware.  It was designed from day 1
 to be used in real products. It's commercial open-source software, released under 
 the MIT license.
 
-💫 **Version 1.0.0 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/tag/v1.0.0>`_
+💫 **Version 1.0.0 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: http://i.imgur.com/wFvLZyJ.png
     :target: https://travis-ci.org/explosion/spaCy
@@ -253,7 +253,7 @@ For the detailed documentation, check out the `spaCy website <https://spacy.io/d
 Changelog
 =========
 
-2016-10-18 `v1.0.0 <https://github.com/explosion/spaCy/releases/tag/v1.0.0>`_: *Support for deep learning workflows and entity-aware rule matcher*
+2016-10-18 `v1.0.0 <https://github.com/explosion/spaCy/releases/>`_: *Support for deep learning workflows and entity-aware rule matcher*
 -----------------------------------------------------------------------------------------------------------
 
 **✨ Major features and improvements**
