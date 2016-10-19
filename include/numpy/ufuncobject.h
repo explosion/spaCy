@@ -389,9 +389,6 @@ typedef struct _loop1d_info {
 #if defined(__GLIBC__) || defined(__APPLE__) || \
     defined(__MINGW32__) || defined(__FreeBSD__)
 #include <fenv.h>
-#elif defined(__CYGWIN__)
-#include "fenv/fenv.c"
-#endif
 
 #define UFUNC_CHECK_STATUS(ret) { \
         int fpstatus = (int) fetestexcept(FE_DIVBYZERO | FE_OVERFLOW | \
