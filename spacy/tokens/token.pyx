@@ -63,8 +63,8 @@ cdef class Token:
         return self.doc[self.i+i]
 
     def similarity(self, other):
-        if 'similarity' in self.doc.getters_for_tokens:
-            return self.doc.getters_for_tokens['similarity'](self, other)
+        if 'similarity' in self.doc.user_token_hooks:
+                return self.doc.user_token_hooks['similarity'](self)
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
@@ -96,6 +96,12 @@ cdef class Token:
     property prob:
         def __get__(self):
             return self.c.lex.prob
+
+    property sentiment:
+        def __get__(self):
+            if 'sentiment' in self.doc.user_token_hooks:
+                return self.doc.user_token_hooks['sentiment'](self)
+            return self.c.lex.sentiment
 
     property lang:
         def __get__(self):
@@ -153,8 +159,8 @@ cdef class Token:
 
     property has_vector:
         def __get__(self):
-            if 'has_vector' in self.doc.getters_for_tokens:
-                return self.doc.getters_for_tokens['has_vector'](self)
+            if 'has_vector' in self.doc.user_token_hooks:
+                return self.doc.user_token_hooks['has_vector'](self)
             cdef int i
             for i in range(self.vocab.vectors_length):
                 if self.c.lex.vector[i] != 0:
@@ -164,8 +170,8 @@ cdef class Token:
 
     property vector:
         def __get__(self):
-            if 'vector' in self.doc.getters_for_tokens:
-                return self.doc.getters_for_tokens['vector'](self)
+            if 'vector' in self.doc.user_token_hooks:
+                return self.doc.user_token_hooks['vector'](self)
             cdef int length = self.vocab.vectors_length
             if length == 0:
                 raise ValueError(
@@ -186,8 +192,8 @@ cdef class Token:
 
     property vector_norm:
         def __get__(self):
-            if 'vector_norm' in self.doc.getters_for_tokens:
-                return self.doc.getters_for_tokens['vector_norm'](self)
+            if 'vector_norm' in self.doc.user_token_hooks:
+                return self.doc.user_token_hooks['vector_norm'](self)
             return self.c.lex.l2_norm
 
     property n_lefts:
@@ -367,8 +373,8 @@ cdef class Token:
         def __get__(self):
             """Get a list of conjoined words."""
             cdef Token word
-            if 'conjuncts' in self.doc.getters_for_tokens:
-                yield from self.doc.getters_for_tokens['conjuncts'](self)
+            if 'conjuncts' in self.doc.user_token_hooks:
+                yield from self.doc.user_token_hooks['conjuncts'](self)
             else:
                 if self.dep_ != 'conj':
                     for word in self.rights:

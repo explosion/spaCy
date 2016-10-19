@@ -40,8 +40,11 @@ cdef class Doc:
     cdef public bint is_tagged
     cdef public bint is_parsed
 
-    cdef public dict getters_for_tokens
-    cdef public dict getters_for_spans
+    cdef public float sentiment
+
+    cdef public dict user_hooks
+    cdef public dict user_token_hooks
+    cdef public dict user_span_hooks
 
     cdef public list _py_tokens
 

@@ -115,6 +115,7 @@ cdef class Doc:
         self.length = 0
         self.is_tagged = False
         self.is_parsed = False
+        self.sentiment = 0.0
         self.getters_for_tokens = {}
         self.getters_for_spans = {}
         self.tensor = numpy.zeros((0,), dtype='float32')
@@ -217,16 +218,23 @@ cdef class Doc:
         return self.__str__()
 
     def similarity(self, other):
+        if 'similarity' in self.user_hooks:
+            return self.user_hooks['similarity'](self, other)
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     property has_vector:
         def __get__(self):
+            if 'has_vector' in self.user_hooks:
+                return self.user_hooks['has_vector'](self)
+ 
             return any(token.has_vector for token in self)
 
     property vector:
         def __get__(self):
+            if 'vector' in self.user_hooks:
+                return self.user_hooks['vector'](self)
             if self._vector is None:
                 if len(self):
                     self._vector = sum(t.vector for t in self) / len(self)
@@ -239,6 +247,8 @@ cdef class Doc:
 
     property vector_norm:
         def __get__(self):
+            if 'vector_norm' in self.user_hooks:
+                return self.user_hooks['vector_norm'](self)
             cdef float value
             if self._vector_norm is None:
                 self._vector_norm = 1e-20
@@ -376,6 +386,9 @@ cdef class Doc:
             assert [s.root.orth_ for s in doc.sents] == ["is", "'s"]
         """
         def __get__(self):
+            if 'sents' in self.user_hooks:
+                return self.user_hooks['sents'](self)
+ 
             if not self.is_parsed:
                 raise ValueError(
                     "sentence boundary detection requires the dependency parse, which "

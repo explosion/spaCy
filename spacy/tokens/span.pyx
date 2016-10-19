@@ -81,8 +81,8 @@ cdef class Span:
         self.doc.merge(self.start_char, self.end_char, *args, **attributes)
 
     def similarity(self, other):
-        if 'similarity' in self.doc.getters_for_spans:
-            self.doc.getters_for_spans['similarity'](self, other)
+        if 'similarity' in self.doc.user_span_hooks:
+            self.doc.user_span_hooks['similarity'](self, other)
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
@@ -104,8 +104,8 @@ cdef class Span:
     property sent:
         '''Get the sentence span that this span is a part of.'''
         def __get__(self):
-            if 'sent' in self.doc.getters_for_spans:
-                return self.doc.getters_for_spans['sent'](self)
+            if 'sent' in self.doc.user_span_hooks:
+                return self.doc.user_span_hooks['sent'](self)
             # This should raise if we're not parsed.
             self.doc.sents
             cdef int n = 0
@@ -119,14 +119,14 @@ cdef class Span:
 
     property has_vector:
         def __get__(self):
-            if 'has_vector' in self.doc.getters_for_spans:
-                return self.doc.getters_for_spans['has_vector'](self)
+            if 'has_vector' in self.doc.user_span_hooks:
+                return self.doc.user_span_hooks['has_vector'](self)
             return any(token.has_vector for token in self)
     
     property vector:
         def __get__(self):
-            if 'vector' in self.doc.getters_for_spans:
-                return self.doc.getters_for_spans['vector'](self)
+            if 'vector' in self.doc.user_span_hooks:
+                return self.doc.user_span_hooks['vector'](self)
             if self._vector is None:
                 self._vector = sum(t.vector for t in self) / len(self)
             return self._vector
@@ -197,8 +197,8 @@ cdef class Span:
         """
         def __get__(self):
             self._recalculate_indices()
-            if 'root' in self.doc.getters_for_spans:
-                return self.doc.getters_for_spans['root'](self)
+            if 'root' in self.doc.user_span_hooks:
+                return self.doc.user_span_hooks['root'](self)
             # This should probably be called 'head', and the other one called
             # 'gov'. But we went with 'head' elsehwhere, and now we're stuck =/
             cdef int i
