@@ -27,10 +27,10 @@ def train_parser(nlp, train_data, left_labels, right_labels):
 
 def main(model_dir=None):
     if model_dir is not None:
-        model_dir = pathlb.Path(model_dir)
+        model_dir = pathlib.Path(model_dir)
         if not model_dir.exists():
             model_dir.mkdir()
-        assert model_dir.isdir()
+        assert model_dir.is_dir()
 
     nlp = spacy.load('en', tagger=False, parser=False, entity=False, vectors=False)
 
@@ -62,7 +62,7 @@ def main(model_dir=None):
         print(word.text, word.dep_, word.head.text)
 
     if model_dir is not None:
-        with (model_dir / 'config.json').open('wb') as file_:
+        with (model_dir / 'config.json').open('w') as file_:
             json.dump(parser.cfg, file_)
         parser.model.dump(str(model_dir / 'model'))
 
