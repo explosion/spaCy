@@ -7,6 +7,7 @@ import cytoolz
 import numpy
 from keras.models import Sequential, model_from_json
 from keras.layers import LSTM, Dense, Embedding, Dropout, Bidirectional
+from keras.layers import TimeDistributed
 from keras.optimizers import Adam
 import cPickle as pickle
 
@@ -48,10 +49,16 @@ class SentimentAnalyser(object):
 
 
 def get_features(docs, max_length):
-    Xs = numpy.zeros((len(list(docs)), max_length), dtype='int32')
+    docs = list(docs)
+    Xs = numpy.zeros((len(docs), max_length), dtype='int32')
     for i, doc in enumerate(docs):
-        for j, token in enumerate(doc[:max_length]):
-            Xs[i, j] = token.rank if token.has_vector else 0
+        j = 0
+        for token in doc:
+            if token.has_vector and not token.is_punct and not token.is_space:
+                Xs[i, j] = token.rank + 1
+                j += 1
+                if j >= max_length:
+                    break
     return Xs
 
 
@@ -75,9 +82,12 @@ def compile_lstm(embeddings, shape, settings):
             embeddings.shape[1],
             input_length=shape['max_length'],
             trainable=False,
-            weights=[embeddings]
+            weights=[embeddings],
+            mask_zero=True
         )
     )
+    model.add(TimeDistributed(Dense(shape['nr_hidden'] * 2)))
+    model.add(Dropout(settings['dropout']))
     model.add(Bidirectional(LSTM(shape['nr_hidden'])))
     model.add(Dropout(settings['dropout']))
     model.add(Dense(shape['nr_class'], activation='sigmoid'))
@@ -87,11 +97,11 @@ def compile_lstm(embeddings, shape, settings):
 
 
 def get_embeddings(vocab):
-    max_rank = max(lex.rank for lex in vocab if lex.has_vector)
+    max_rank = max(lex.rank+1 for lex in vocab if lex.has_vector)
     vectors = numpy.ndarray((max_rank+1, vocab.vectors_length), dtype='float32')
     for lex in vocab:
         if lex.has_vector:
-            vectors[lex.rank] = lex.vector
+            vectors[lex.rank + 1] = lex.vector
     return vectors
 
 
