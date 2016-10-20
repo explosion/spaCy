@@ -175,7 +175,7 @@ cdef class Matcher:
     @classmethod
     def load(cls, path, vocab):
         if (path / 'gazetteer.json').exists():
-            with (path / 'gazetteer.json').open() as file_:
+            with (path / 'gazetteer.json').open('rb') as file_:
                 patterns = json.load(file_)
         else:
             patterns = {}
