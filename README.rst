@@ -17,7 +17,7 @@ the MIT license.
     :target: https://travis-ci.org/explosion/spaCy
     :alt: Build Status
     
-.. image:: https://img.shields.io/github/tag/explosion/spacy.svg
+.. image:: https://img.shields.io/github/release/explosion/spacy.svg
     :target: https://github.com/explosion/spaCy/releases   
     :alt: Current Release Version
     
