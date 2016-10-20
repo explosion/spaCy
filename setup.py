@@ -183,7 +183,7 @@ def setup_package():
             name=about['__title__'],
             zip_safe=False,
             packages=PACKAGES,
-            package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens', 'data']},
+            package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']},
             description=about['__summary__'],
             long_description=readme,
             author=about['__author__'],

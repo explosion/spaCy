@@ -2,10 +2,7 @@ from __future__ import unicode_literals, print_function
 import codecs
 import pathlib
 
-try:
-    import ujson as json
-except ImportError:
-    import json
+import ujson as json
 
 from .parts_of_speech import NOUN, VERB, ADJ, PUNCT
 
@@ -28,7 +25,7 @@ class Lemmatizer(object):
                     exc[pos] = read_exc(file_)
             else:
                 exc[pos] = {}
-        with (path / 'vocab' / 'lemma_rules.json').open('rb') as file_:
+        with (path / 'vocab' / 'lemma_rules.json').open('r', encoding='utf8') as file_:
             rules = json.load(file_)
         return cls(index, exc, rules)
 
