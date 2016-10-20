@@ -10,10 +10,7 @@ from os import path
 
 from libc.string cimport memset
 
-try:
-    import ujson as json
-except ImportError:
-    import json
+import ujson as json
 
 from .syntax import nonproj
 
@@ -149,7 +146,7 @@ def read_json_file(loc, docs_filter=None):
         for filename in os.listdir(loc):
             yield from read_json_file(path.join(loc, filename))
     else:
-        with open(loc) as file_:
+        with io.open(loc, 'r', encoding='utf8') as file_:
             docs = json.load(file_)
         for doc in docs:
             if docs_filter is not None and not docs_filter(doc):

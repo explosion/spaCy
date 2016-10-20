@@ -2,10 +2,7 @@ from __future__ import unicode_literals, print_function
 import codecs
 import pathlib
 
-try:
-    import ujson as json
-except ImportError:
-    import json
+import ujson as json
 
 from .parts_of_speech import NOUN, VERB, ADJ, PUNCT
 

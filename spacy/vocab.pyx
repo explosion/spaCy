@@ -57,24 +57,24 @@ cdef class Vocab:
                 "vectors argument to Vocab.load() deprecated. "
                 "Install vectors after loading.")
         if tag_map is True and (path / 'vocab' / 'tag_map.json').exists():
-            with (path / 'vocab' / 'tag_map.json').open() as file_:
+            with (path / 'vocab' / 'tag_map.json').open('r', encoding='utf8') as file_:
                 tag_map = json.load(file_)
         if lex_attr_getters is not None \
         and oov_prob is True \
         and (path / 'vocab' / 'oov_prob').exists():
-            with (path / 'vocab' / 'oov_prob').open() as file_:
+            with (path / 'vocab' / 'oov_prob').open('r', encoding='utf8') as file_:
                 oov_prob = float(file_.read())
             lex_attr_getters[PROB] = lambda text: oov_prob
         if lemmatizer is True:
             lemmatizer = Lemmatizer.load(path)
         if serializer_freqs is True and (path / 'vocab' / 'serializer.json').exists():
-            with (path / 'vocab' / 'serializer.json').open() as file_:
+            with (path / 'vocab' / 'serializer.json').open('r', encoding='utf8') as file_:
                 serializer_freqs = json.load(file_)
 
         cdef Vocab self = cls(lex_attr_getters=lex_attr_getters, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)
 
-        with (path / 'vocab' / 'strings.json').open() as file_:
+        with (path / 'vocab' / 'strings.json').open('r', encoding='utf8') as file_:
             self.strings.load(file_)
         self.load_lexemes(path / 'vocab' / 'lexemes.bin')
         return self
