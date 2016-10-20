@@ -7,6 +7,7 @@ import cytoolz
 import numpy
 from keras.models import Sequential, model_from_json
 from keras.layers import LSTM, Dense, Embedding, Dropout, Bidirectional
+from keras.optimizers import Adam
 import cPickle as pickle
 
 import spacy
@@ -61,7 +62,7 @@ def train(train_texts, train_labels, dev_texts, dev_labels,
     model = compile_lstm(embeddings, lstm_shape, lstm_settings)
     train_X = get_features(nlp.pipe(train_texts), lstm_shape['max_length'])
     dev_X = get_features(nlp.pipe(dev_texts), lstm_shape['max_length'])
-    model.fit(train_X, train_labels, dev_X, dev_labels,
+    model.fit(train_X, train_labels, validation_data=(dev_X, dev_labels),
               nb_epoch=nb_epoch, batch_size=batch_size)
     return model
 
@@ -80,6 +81,8 @@ def compile_lstm(embeddings, shape, settings):
     model.add(Bidirectional(LSTM(shape['nr_hidden'])))
     model.add(Dropout(settings['dropout']))
     model.add(Dense(shape['nr_class'], activation='sigmoid'))
+    model.compile(optimizer=Adam(lr=settings['lr']), loss='binary_crossentropy',
+		  metrics=['accuracy'])
     return model
 
 
@@ -134,6 +137,7 @@ def read_data(data_dir, limit=0):
     nr_hidden=("Number of hidden units", "option", "H", int),
     max_length=("Maximum sentence length", "option", "L", int),
     dropout=("Dropout", "option", "d", float),
+    learn_rate=("Learn rate", "option", "e", float),
     nb_epoch=("Number of training epochs", "option", "i", int),
     batch_size=("Size of minibatches for training LSTM", "option", "b", int),
     nr_examples=("Limit to N examples", "option", "n", int)
@@ -141,7 +145,7 @@ def read_data(data_dir, limit=0):
 def main(model_dir, train_dir, dev_dir,
          is_runtime=False,
          nr_hidden=64, max_length=100, # Shape
-         dropout=0.5,                  # General NN config
+         dropout=0.5, learn_rate=0.001, # General NN config
          nb_epoch=5, batch_size=100, nr_examples=-1):  # Training params
     model_dir = pathlib.Path(model_dir)
     train_dir = pathlib.Path(train_dir)
@@ -152,9 +156,11 @@ def main(model_dir, train_dir, dev_dir,
     else:
         train_texts, train_labels = read_data(train_dir, limit=nr_examples)
         dev_texts, dev_labels = read_data(dev_dir)
+        train_labels = numpy.asarray(train_labels, dtype='int32')
+        dev_labels = numpy.asarray(dev_labels, dtype='int32')
         lstm = train(train_texts, train_labels, dev_texts, dev_labels,
                      {'nr_hidden': nr_hidden, 'max_length': max_length, 'nr_class': 1},
-                     {'dropout': 0.5},
+                     {'dropout': 0.5, 'lr': learn_rate},
                      {},
                      nb_epoch=nb_epoch, batch_size=batch_size)
         weights = lstm.get_weights()
