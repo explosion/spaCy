@@ -28,7 +28,7 @@ class Lemmatizer(object):
                     exc[pos] = read_exc(file_)
             else:
                 exc[pos] = {}
-        with (path / 'vocab' / 'lemma_rules.json').open('rb') as file_:
+        with (path / 'vocab' / 'lemma_rules.json').open('r', encoding='utf8') as file_:
             rules = json.load(file_)
         return cls(index, exc, rules)
 
