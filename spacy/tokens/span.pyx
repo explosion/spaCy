@@ -133,8 +133,8 @@ cdef class Span:
 
     property vector_norm:
         def __get__(self):
-            if 'vector_norm' in self.doc.getters_for_spans:
-                return self.doc.getters_for_spans['vector'](self)
+            if 'vector_norm' in self.doc.user_span_hooks:
+                return self.doc.user_span_hooks['vector'](self)
             cdef float value
             if self._vector_norm is None:
                 self._vector_norm = 1e-20
