@@ -12,8 +12,9 @@ os:
   - linux
 
 env:
-  - VIA="compile"
-  - VIA="sdist"
+  - VIA=compile LC_ALL=en_US.ascii 
+  - VIA=compile
+  - VIA=sdist
 
 install:
   - "./travis.sh"
