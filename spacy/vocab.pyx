@@ -49,9 +49,13 @@ cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
     @classmethod
-    def load(cls, path, lex_attr_getters=None, vectors=True, lemmatizer=True,
+    def load(cls, path, lex_attr_getters=None, lemmatizer=True,
              tag_map=True, serializer_freqs=True, oov_prob=True, **deprecated_kwargs): 
         util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
+        if 'vectors' in deprecated_kwargs:
+            raise AttributeError(
+                "vectors argument to Vocab.load() deprecated. "
+                "Install vectors after loading.")
         if tag_map is True and (path / 'vocab' / 'tag_map.json').exists():
             with (path / 'vocab' / 'tag_map.json').open() as file_:
                 tag_map = json.load(file_)
@@ -73,15 +77,6 @@ cdef class Vocab:
         with (path / 'vocab' / 'strings.json').open() as file_:
             self.strings.load(file_)
         self.load_lexemes(path / 'vocab' / 'lexemes.bin')
-
-        if vectors is True:
-            vec_path = path / 'vocab' / 'vec.bin'
-            if vec_path.exists():
-                vectors = lambda self_: self_.load_vectors_from_bin_loc(vec_path)
-            else:
-                vectors = lambda self_: 0
-        if vectors:
-            self.vectors_length = vectors(self)
         return self
 
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
@@ -387,10 +382,11 @@ cdef class Vocab:
                                                         vec_len, len(pieces))
             orth = self.strings[word_str]
             lexeme = <LexemeC*><void*>self.get_by_orth(self.mem, orth)
-            lexeme.vector = <float*>self.mem.alloc(self.vectors_length, sizeof(float))
+            lexeme.vector = <float*>self.mem.alloc(vec_len, sizeof(float))
 
             for i, val_str in enumerate(pieces):
                 lexeme.vector[i] = float(val_str)
+        self.vectors_length = vec_len
         return vec_len
 
     def load_vectors_from_bin_loc(self, loc):
@@ -438,6 +434,7 @@ cdef class Vocab:
                 lex.l2_norm = math.sqrt(lex.l2_norm)
             else:
                 lex.vector = EMPTY_VEC
+        self.vectors_length = vec_len
         return vec_len
 
 

@@ -53,7 +53,11 @@ class BaseDefaults(object):
     
     @classmethod
     def add_vectors(cls, nlp=None):
-        return True
+        if nlp is None or nlp.path is None:
+            return False
+        else:
+            vec_path = nlp.path / 'vocab' / 'vec.bin'
+            return lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
 
     @classmethod
     def create_tokenizer(cls, nlp=None):
@@ -246,6 +250,11 @@ class Language(object):
         self.vocab     = self.Defaults.create_vocab(self) \
                          if 'vocab' not in overrides \
                          else overrides['vocab']
+        add_vectors    = self.Defaults.add_vectors(self) \
+                         if 'add_vectors' not in overrides \
+                         else overrides['add_vectors']
+        if add_vectors:
+            add_vectors(self.vocab)
         self.tokenizer = self.Defaults.create_tokenizer(self) \
                          if 'tokenizer' not in overrides \
                          else overrides['tokenizer']
