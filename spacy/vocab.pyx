@@ -9,7 +9,7 @@ import bz2
 from os import path
 import io
 import math
-import json
+import ujson as json
 import tempfile
 
 from .lexeme cimport EMPTY_LEXEME
@@ -128,6 +128,20 @@ cdef class Vocab:
     def __len__(self):
         """The current number of lexemes stored."""
         return self.length
+
+    def resize_vectors(self, int new_size):
+        '''
+        Set vectors_length to a new size, and allocate more memory for the Lexeme
+        vectors if necessary. The memory will be zeroed.
+        '''
+        cdef hash_t key
+        cdef size_t addr
+        if new_size > self.vectors_length:
+            for key, addr in self._by_hash.items():
+                lex = <LexemeC*>addr
+                lex.vector = <float*>self.mem.realloc(lex.vector,
+                                        new_size * sizeof(lex.vector[0]))
+        self.vectors_length = new_size
 
     def add_flag(self, flag_getter, int flag_id=-1):
         '''Set a new boolean flag to words in the vocabulary. The flag_setter
