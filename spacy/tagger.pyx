@@ -109,7 +109,7 @@ cdef class Tagger:
         # support old data.
         path = path if not isinstance(path, basestring) else pathlib.Path(path)
         if (path / 'templates.json').exists():
-            with (path / 'templates.json').open() as file_:
+            with (path / 'templates.json').open('r', encoding='utf8') as file_:
                 templates = json.load(file_)
         elif require:
             raise IOError(
