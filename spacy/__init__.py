@@ -25,7 +25,9 @@ def load(name, **overrides):
     path = util.match_best_version(target_name, target_version, path)
 
     if isinstance(overrides.get('vectors'), basestring):
-        vectors = util.match_best_version(overrides.get('vectors'), None, path)
+        vectors_path = util.match_best_version(overrides.get('vectors'), None, path)
+        overrides['vectors'] = lambda nlp: nlp.vocab.load_vectors_from_bin_loc(
+                                                vectors_path / 'vocab' / 'vec.bin')
     
     cls = get_lang_class(target_name)
     return cls(path=path, **overrides)
