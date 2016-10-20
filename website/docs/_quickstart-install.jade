@@ -12,78 +12,35 @@
 
         p.
             spaCy is compatible with 64-bit CPython 2.6+/3.3+ and runs on Unix/Linux,
-            OS X and Windows. Source and binary packages are available via
-            #[+a("https://pypi.python.org/pypi/spacy") pip] and
-            #[+a("https://anaconda.org/spacy/spacy") conda]. If there are
-            no binary packages for your platform available please make sure that you have
-            a working build enviroment set up. See
-            notes on #[a(href="/docs#install-source-ubuntu") Ubuntu],
+            OS X and Windows. The latest spaCy releases are currently only available as source packages over #[+a("https://pypy.python.org/pypi/spacy") pip]. Installaton requires a working build environment. See notes on #[a(href="/docs#install-source-ubuntu") Ubuntu],
             #[a(href="/docs#install-source-osx") OS X] and
             #[a(href="/docs#install-source-windows") Windows] for details.
-
-        +code("bash", "conda").
-            conda config --add channels spacy  # only needed once
-            conda install spacy
-
-        p.
-            When using pip it is generally recommended to install packages in a
-            #[+a("https://virtualenv.readthedocs.org/en/latest/") virtualenv]
-            to avoid modifying system state:
-
-        +code("bash", "pip").
-            # make sure you are using a recent pip/virtualenv version
-            python -m pip install -U pip virtualenv
-
-            virtualenv .env
-            source .env/bin/activate
-
-            pip install spacy
-
-        p.
-            Python packaging is awkward at the best of times, and it's particularly
-            tricky with C extensions, built via Cython, requiring large data files.
-            So, please report issues as you encounter them.
-
-    +section("install-model")
-        +h(3, "install-model")
-            | Install model
-
-        p.
-            After installation you need to download a language model.
-            Currently only models for English and German, named #[code en] and #[code de], are available. Please get in touch with us if you need support for a particular language.
-
-        +code("bash").
-            sputnik --name spacy --repository-url http://index.spacy.io install en==1.1.0
-
-        p.
-            Then check whether the model was successfully installed:
-
-        +code("bash").
-            python -c "import spacy; spacy.load('en'); print('OK')"
-
-        p.
-            The download command fetches and installs about 500 MB of data which it installs
-            within the #[code spacy] package directory.
-
-    +section("install-upgrade")
-        +h(3, "install-upgrade")
-            | Upgrading spaCy
-
-        p.
-            To upgrade spaCy to the latest release:
-
-        +code("bash", "conda").
-            conda update spacy
 
         +code("bash", "pip").
             pip install -U spacy
 
         p.
-            Sometimes new releases require a new language model. Then you will have to upgrade to
-            a new model, too. You can also force re-downloading and installing a new language model:
+            After installation you need to download a language model. Models for English (#[code en]) and German (#[code de]) are available. 
 
         +code("bash").
+            # English:
+            # - Install tagger, parser, NER and GloVe vectors:
+            python -m spacy.en.download all 
+            # - OR install English tagger, parser and NER
+            python -m spacy.en.download parser
+            # - OR install English GloVe vectors
+            python -m spacy.en.download glove
+            # German:
+            # - Install German tagger, parser, NER and word vectors
+            python -m spacy.de.download all
+            # Upgrade/overwrite existing data 
             python -m spacy.en.download --force
+            # Check whether the model was successfully installed
+            python -c "import spacy; spacy.load('en'); print('OK')"
+
+        p.
+            The download command fetches and installs about 1 GB of data which it installs
+            within the #[code spacy] package directory.
 
     +section("install-source")
         +h(3, "install-source")
@@ -143,18 +100,6 @@
             Install a version of Visual Studio Express or higher that matches the version that was
             used to compile your Python interpreter. For official distributions
             these are VS 2008 (Python 2.7), VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
-
-    +section("install-obsolete-python")
-        +h(3, "install-obsolete-python")
-            | Workaround for obsolete system Python
-
-        p.
-            If you're stuck using a system with an old version of Python, and you
-            don't have root access, we've prepared a bootstrap script to help you
-            compile a local Python install. Run:
-
-        +code("bash").
-            curl https://raw.githubusercontent.com/spacy-io/gist/master/bootstrap_python_env.sh | bash && source .env/bin/activate
 
     +section("run-tests")
         +h(3, "run-tests")
