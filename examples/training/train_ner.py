@@ -22,10 +22,10 @@ def train_ner(nlp, train_data, entity_types):
 
 def main(model_dir=None):
     if model_dir is not None:
-        model_dir = pathlb.Path(model_dir)
+        model_dir = pathlib.Path(model_dir)
         if not model_dir.exists():
             model_dir.mkdir()
-        assert model_dir.isdir()
+        assert model_dir.is_dir()
 
     nlp = spacy.load('en', parser=False, entity=False, vectors=False)
 
@@ -49,7 +49,7 @@ def main(model_dir=None):
         print(word.text, word.tag_, word.ent_type_, word.ent_iob)
 
     if model_dir is not None:
-        with (model_dir / 'config.json').open('wb') as file_:
+        with (model_dir / 'config.json').open('w') as file_:
             json.dump(ner.cfg, file_)
         ner.model.dump(str(model_dir / 'model'))
 
