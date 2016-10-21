@@ -8,7 +8,7 @@
                 ["Usage Examples", "#examples", "examples"]
             ],
             "API": [
-                ["English", "#english", "english"],
+                ["Language", "#language", "language"],
                 ["Doc", "#doc", "doc"],
                 ["Token", "#token", "token"],
                 ["Span", "#span", "span"],

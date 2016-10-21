@@ -78,19 +78,10 @@ Install spaCy
 =============
 
 spaCy is compatible with 64-bit CPython 2.6+/3.3+ and runs on Unix/Linux, OS X 
-and Windows. Source and binary packages are available via 
-`pip <https://pypi.python.org/pypi/spacy>`_ and `conda <https://anaconda.org/spacy/spacy>`_. 
-If there are no binary packages for your platform available please make sure that
+and Windows. Source packages are available via 
+`pip <https://pypi.python.org/pypi/spacy>`_. Please make sure that
 you have a working build enviroment set up. See notes on Ubuntu, OS X and Windows
 for details.
-
-conda
------
-
-.. code:: bash
-
-    conda config --add channels spacy  # only needed once
-    conda install spacy
 
 pip
 ---
@@ -99,12 +90,6 @@ When using pip it is generally recommended to install packages in a virtualenv t
 avoid modifying system state:
 
 .. code:: bash
-
-    # make sure you are using a recent pip/virtualenv version
-    python -m pip install -U pip virtualenv
-
-    virtualenv .env
-    source .env/bin/activate
 
     pip install spacy
 
@@ -120,30 +105,16 @@ English and German, named ``en`` and ``de``, are available.
 
 .. code:: bash
 
-    python -m spacy.en.download
-    python -m spacy.de.download
-    sputnik --name spacy en_glove_cc_300_1m_vectors # For better word vectors
+    python -m spacy.en.download all
+    python -m spacy.de.download all
 
-Then check whether the model was successfully installed:
-
-.. code:: bash
-
-    python -c "import spacy; spacy.load('en'); print('OK')"
-
-The download command fetches and installs about 500 MB of data which it installs 
+The download command fetches about 1 GB of data which it installs 
 within the ``spacy`` package directory.
 
 Upgrading spaCy
 ===============
 
 To upgrade spaCy to the latest release:
-
-conda
------
-
-.. code:: bash
-
-    conda update spacy
 
 pip
 ---
@@ -183,7 +154,7 @@ system. See notes on Ubuntu, OS X and Windows for details.
     pip install -r requirements.txt
     pip install -e .
     
-Compared to regular install via pip and conda `requirements.txt <requirements.txt>`_ 
+Compared to regular install via pip `requirements.txt <requirements.txt>`_ 
 additionally installs developer dependencies such as cython.
 
 Ubuntu

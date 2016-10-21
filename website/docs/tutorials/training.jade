@@ -27,12 +27,13 @@ p #[+a("https://github.com/" + SOCIAL.github + "/spaCy/examples/training/train_t
     from spacy.vocab import Vocab
     from spacy.pipeline import EntityRecognizer
     from spacy.tokens import Doc
+    from spacy.gold import GoldParse
 
     vocab = Vocab()
     entity = EntityRecognizer(vocab, entity_types=['PERSON', 'LOC'])
 
     doc = Doc(vocab, words=['Who', 'is', 'Shaka', 'Khan', '?'])
-    entity.update(doc, ['O', 'O', 'B-PERSON', 'L-PERSON', 'O'])
+    entity.update(doc, GoldParse(doc, entities=['O', 'O', 'B-PERSON', 'L-PERSON', 'O']))
 
     entity.model.end_training()
 
@@ -49,8 +50,7 @@ p #[+a("https://github.com/" + SOCIAL.github + "/spaCy/examples/training/train_n
     parser = DependencyParser(vocab, labels=['nsubj', 'compound', 'dobj', 'punct'])
 
     doc = Doc(vocab, words=['Who', 'is', 'Shaka', 'Khan', '?'])
-    parser.update(doc, [(1, 'nsubj'), (1, 'ROOT'), (3, 'compound'), (1, 'dobj'),
-                        (1, 'punct')])
+    parser.update(doc, GoldParse(doc, heads=[1, 1, 3, 1, 1,], deps=['nsubj', 'ROOT', 'compound', 'dobj', 'punct']))
 
     parser.model.end_training()
 
