@@ -64,9 +64,9 @@ p Because it's a linear model, it's important for accuracy to build conjunction 
 
 p The feature extraction proceeds in two passes. In the first pass, we fill an array with the values of all of the atomic predictors. In the second pass, we iterate over the feature templates, and fill a small temporary array with the predictors that will be combined into a conjunction feature. Finally, we hash this array into a 64-bit integer, using the MurmurHash algorithm. You can see this at work in the #[+a("https://github.com/" + SOCIAL.github + "/thinc/blob/94dbe06fd3c8f24d86ab0f5c7984e52dbfcdc6cb/thinc/linear/features.pyx") thinc.linear.features] module.
 
-p It's very easy to change the feature templates, to create novel combinations of the existing atomic predictors. There's currently no API available to add new atomic predictors, though. You'll have to create a subclass of the model, and write your own #[+code set_featuresC] method.
+p It's very easy to change the feature templates, to create novel combinations of the existing atomic predictors. There's currently no API available to add new atomic predictors, though. You'll have to create a subclass of the model, and write your own #[code set_featuresC] method.
 
-p The feature templates are passed in using the #[+code features] keyword argument to the constructors of the Tagger, DependencyParser and EntityRecognizer:
+p The feature templates are passed in using the #[code features] keyword argument to the constructors of the Tagger, DependencyParser and EntityRecognizer:
 
 +code('python', 'custom tagger templates').
     from spacy.vocab import Vocab
@@ -79,4 +79,4 @@ p The feature templates are passed in using the #[+code features] keyword argume
                                      (P2_orth,), (P1_orth,), (W_orth,),
                                      (N1_orth,), (N2_orth,)])
 
-p Custom feature templates can be passed to the DependencyParser and EntityRecognizer as well, also using the #[+code features] keyword argument of the constructor.
+p Custom feature templates can be passed to the DependencyParser and EntityRecognizer as well, also using the #[code features] keyword argument of the constructor.
