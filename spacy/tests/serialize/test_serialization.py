@@ -2,6 +2,9 @@ from __future__ import unicode_literals
 import pytest
 
 from spacy.tokens import Doc
+import spacy.en
+from spacy.serialize.packer import Packer
+
 
 def equal(doc1, doc2):
     # tokens
@@ -84,3 +87,13 @@ def test_serialize_tokens_tags_parse_ner(EN):
 
     doc2 = Doc(EN.vocab).from_bytes(doc1.to_bytes())
     equal(doc1, doc2)
+
+
+def test_serialize_empty_doc():
+    vocab = spacy.en.English.Defaults.create_vocab()
+    doc = Doc(vocab)
+    packer = Packer(vocab, {})
+    b = packer.pack(doc)
+    assert b == b''
+    loaded = Doc(vocab).from_bytes(b)
+    assert len(loaded) == 0
