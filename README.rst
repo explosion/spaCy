@@ -7,7 +7,7 @@ the very latest research, but it isn't researchware.  It was designed from day 1
 to be used in real products. It's commercial open-source software, released under 
 the MIT license.
 
-💫 **Version 1.0 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
+💫 **Version 1.1 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: http://i.imgur.com/wFvLZyJ.png
     :target: https://travis-ci.org/explosion/spaCy
@@ -218,7 +218,24 @@ For the detailed documentation, check out the `spaCy website <https://spacy.io/d
 Changelog
 =========
 
-2016-10-18 `v1.0 <https://github.com/explosion/spaCy/releases/>`_: *Support for deep learning workflows and entity-aware rule matcher*
+2016-10-23 `v1.1.0 <https://github.com/explosion/spaCy/releases>`_: *Bug fixes and adjustments*
+------------------------------------------------------------------------------------------------------
+
+* Rename new ``pipeline`` keyword argument of ``spacy.load()`` to ``create_pipeline``.
+* Rename new ``vectors`` keyword argument of ``spacy.load()`` to ``add_vectors``.
+
+**🔴 Bug fixes**
+
+* Fix issue `#544 <https://github.com/explosion/spaCy/issues/544>`_: Add ``vocab.resize_vectors()`` method, to support changing to vectors of different dimensionality.
+* Fix issue `#536 <https://github.com/explosion/spaCy/issues/536>`_: Default probability was incorrect for OOV words.
+* Fix issue `#539 <https://github.com/explosion/spaCy/issues/539>`_: Unspecified encoding when opening some JSON files.
+* Fix issue `#541 <https://github.com/explosion/spaCy/issues/541>`_: GloVe vectors were being loaded incorrectly.
+* Fix issue `#522 <https://github.com/explosion/spaCy/issues/522>`_: Similarities and vector norms were calculated incorrectly.
+* Fix issue `#461 <https://github.com/explosion/spaCy/issues/461>`_: ``ent_iob`` attribute was incorrect after setting entities via ``doc.ents``
+* Fix issue `#459 <https://github.com/explosion/spaCy/issues/459>`_: Deserialiser failed on empty doc
+* Fix issue `#514 <https://github.com/explosion/spaCy/issues/514>`_: Serialization failed after adding a new entity label.
+
+2016-10-18 `v1.0.0 <https://github.com/explosion/spaCy/releases/tag/v1.0.0>`_: *Support for deep learning workflows and entity-aware rule matcher*
 ----------------------------------------------------------------------------------------------------------------------------------------
 
 **✨ Major features and improvements**
