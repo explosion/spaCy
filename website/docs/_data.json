@@ -14,7 +14,8 @@
                 ["Span", "#span", "span"],
                 ["Lexeme", "#lexeme", "lexeme"],
                 ["Vocab", "#vocab", "vocab"],
-                ["StringStore", "#stringstore", "stringstore"]
+                ["StringStore", "#stringstore", "stringstore"],
+                ["Matcher", "#matcher", "matcher"]
             ],
             "More": [
                 ["Annotation Specs", "#annotation", "annotation"],
