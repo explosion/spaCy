@@ -22,8 +22,8 @@
         "DEFAULT_SYNTAX" : "python",
         "ANALYTICS": "UA-58931649-1",
 
-        "SPACY_VERSION": "0.101.0",
-        "SPACY_STARS": "2300",
+        "SPACY_VERSION": "1.0",
+        "SPACY_STARS": "2500",
         "GITHUB": { "user": "explosion", "repo": "spacy" }
     }
 }

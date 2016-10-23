@@ -1,4 +1,5 @@
 # cython: embedsignature=True
+from libc.math cimport sqrt
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
@@ -115,8 +116,11 @@ cdef class Lexeme:
         def __set__(self, vector):
             assert len(vector) == self.vocab.vectors_length
             cdef float value
+            cdef double norm = 0.0
             for i, value in enumerate(vector):
                 self.c.vector[i] = value
+                norm += value * value
+            self.c.l2_norm = sqrt(norm)
 
     property rank:
         def __get__(self):

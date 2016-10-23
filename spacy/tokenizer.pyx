@@ -43,7 +43,7 @@ cdef class Tokenizer:
             path = pathlib.Path(path)
 
         if rules is None:
-            with (path / 'tokenizer' / 'specials.json').open() as file_:
+            with (path / 'tokenizer' / 'specials.json').open('r', encoding='utf8') as file_:
                 rules = json.load(file_)
         if prefix_search in (None, True):
             with (path / 'tokenizer' / 'prefix.txt').open() as file_:

@@ -48,6 +48,11 @@ def test1():
     py_codes = list(py_codes.items())
     py_codes.sort()
     assert codec.strings == [c for i, c in py_codes]
+
+
+def test_empty():
+    codec = HuffmanCodec({})
+    assert codec.strings == []
     
 
 def test_round_trip():

@@ -7,7 +7,7 @@ the very latest research, but it isn't researchware.  It was designed from day 1
 to be used in real products. It's commercial open-source software, released under 
 the MIT license.
 
-💫 **Version 1.0 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
+💫 **Version 1.1 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: http://i.imgur.com/wFvLZyJ.png
     :target: https://travis-ci.org/explosion/spaCy
@@ -78,19 +78,10 @@ Install spaCy
 =============
 
 spaCy is compatible with 64-bit CPython 2.6+/3.3+ and runs on Unix/Linux, OS X 
-and Windows. Source and binary packages are available via 
-`pip <https://pypi.python.org/pypi/spacy>`_ and `conda <https://anaconda.org/spacy/spacy>`_. 
-If there are no binary packages for your platform available please make sure that
+and Windows. Source packages are available via 
+`pip <https://pypi.python.org/pypi/spacy>`_. Please make sure that
 you have a working build enviroment set up. See notes on Ubuntu, OS X and Windows
 for details.
-
-conda
------
-
-.. code:: bash
-
-    conda config --add channels spacy  # only needed once
-    conda install spacy
 
 pip
 ---
@@ -99,12 +90,6 @@ When using pip it is generally recommended to install packages in a virtualenv t
 avoid modifying system state:
 
 .. code:: bash
-
-    # make sure you are using a recent pip/virtualenv version
-    python -m pip install -U pip virtualenv
-
-    virtualenv .env
-    source .env/bin/activate
 
     pip install spacy
 
@@ -120,30 +105,16 @@ English and German, named ``en`` and ``de``, are available.
 
 .. code:: bash
 
-    python -m spacy.en.download
-    python -m spacy.de.download
-    sputnik --name spacy en_glove_cc_300_1m_vectors # For better word vectors
+    python -m spacy.en.download all
+    python -m spacy.de.download all
 
-Then check whether the model was successfully installed:
-
-.. code:: bash
-
-    python -c "import spacy; spacy.load('en'); print('OK')"
-
-The download command fetches and installs about 500 MB of data which it installs 
+The download command fetches about 1 GB of data which it installs 
 within the ``spacy`` package directory.
 
 Upgrading spaCy
 ===============
 
 To upgrade spaCy to the latest release:
-
-conda
------
-
-.. code:: bash
-
-    conda update spacy
 
 pip
 ---
@@ -183,7 +154,7 @@ system. See notes on Ubuntu, OS X and Windows for details.
     pip install -r requirements.txt
     pip install -e .
     
-Compared to regular install via pip and conda `requirements.txt <requirements.txt>`_ 
+Compared to regular install via pip `requirements.txt <requirements.txt>`_ 
 additionally installs developer dependencies such as cython.
 
 Ubuntu
@@ -207,6 +178,11 @@ Windows
 Install a version of Visual Studio Express or higher that matches the version 
 that was used to compile your Python interpreter. For official distributions 
 these are VS 2008 (Python 2.7), VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
+
+If you don't want to install the entire Visual Studio, you can install a
+stand-alone compiler. Make sure that you install the correct version for 
+your version of Python. See https://wiki.python.org/moin/WindowsCompilers for 
+links to download these.
 
 Run tests
 =========
@@ -242,8 +218,25 @@ For the detailed documentation, check out the `spaCy website <https://spacy.io/d
 Changelog
 =========
 
-2016-10-18 `v1.0 <https://github.com/explosion/spaCy/releases/>`_: *Support for deep learning workflows and entity-aware rule matcher*
-----------------------------------------------------------------------------------------------------------------------------------------
+2016-10-23 `v1.1.0 <https://github.com/explosion/spaCy/releases>`_: *Bug fixes and adjustments*
+-----------------------------------------------------------------------------------------------
+
+* Rename new ``pipeline`` keyword argument of ``spacy.load()`` to ``create_pipeline``.
+* Rename new ``vectors`` keyword argument of ``spacy.load()`` to ``add_vectors``.
+
+**🔴 Bug fixes**
+
+* Fix issue `#544 <https://github.com/explosion/spaCy/issues/544>`_: Add ``vocab.resize_vectors()`` method, to support changing to vectors of different dimensionality.
+* Fix issue `#536 <https://github.com/explosion/spaCy/issues/536>`_: Default probability was incorrect for OOV words.
+* Fix issue `#539 <https://github.com/explosion/spaCy/issues/539>`_: Unspecified encoding when opening some JSON files.
+* Fix issue `#541 <https://github.com/explosion/spaCy/issues/541>`_: GloVe vectors were being loaded incorrectly.
+* Fix issue `#522 <https://github.com/explosion/spaCy/issues/522>`_: Similarities and vector norms were calculated incorrectly.
+* Fix issue `#461 <https://github.com/explosion/spaCy/issues/461>`_: ``ent_iob`` attribute was incorrect after setting entities via ``doc.ents``
+* Fix issue `#459 <https://github.com/explosion/spaCy/issues/459>`_: Deserialiser failed on empty doc
+* Fix issue `#514 <https://github.com/explosion/spaCy/issues/514>`_: Serialization failed after adding a new entity label.
+
+2016-10-18 `v1.0.0 <https://github.com/explosion/spaCy/releases/tag/v1.0.0>`_: *Support for deep learning workflows and entity-aware rule matcher*
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 **✨ Major features and improvements**
 

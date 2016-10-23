@@ -100,6 +100,8 @@ cdef class Packer:
         self.attrs = tuple(attrs)
 
     def pack(self, Doc doc):
+        if len(doc) == 0:
+            return b''
         bits = self._orth_encode(doc)
         if bits is None:
             bits = self._char_encode(doc)
@@ -116,6 +118,8 @@ cdef class Packer:
         return doc
 
     def unpack_into(self, byte_string, Doc doc):
+        if byte_string == b'':
+            return None
         bits = BitArray(byte_string)
         bits.seek(0)
         cdef int32_t length = bits.read32()

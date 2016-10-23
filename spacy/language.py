@@ -74,9 +74,9 @@ class BaseDefaults(object):
     def create_tagger(cls, nlp=None):
         if nlp is None:
             return Tagger(cls.create_vocab(), features=cls.tagger_features)
-        elif nlp.path is None:
+        elif nlp.path is False:
             return Tagger(nlp.vocab, features=cls.tagger_features)
-        elif not (nlp.path / 'pos').exists():
+        elif nlp.path is None or not (nlp.path / 'pos').exists():
             return None
         else:
             return Tagger.load(nlp.path / 'pos', nlp.vocab)
@@ -85,9 +85,9 @@ class BaseDefaults(object):
     def create_parser(cls, nlp=None):
         if nlp is None:
             return DependencyParser(cls.create_vocab(), features=cls.parser_features)
-        elif nlp.path is None:
+        elif nlp.path is False:
             return DependencyParser(nlp.vocab, features=cls.parser_features)
-        elif not (nlp.path / 'deps').exists():
+        elif nlp.path is None or not (nlp.path / 'deps').exists():
             return None
         else:
             return DependencyParser.load(nlp.path / 'deps', nlp.vocab)
@@ -96,9 +96,9 @@ class BaseDefaults(object):
     def create_entity(cls, nlp=None):
         if nlp is None:
             return EntityRecognizer(cls.create_vocab(), features=cls.entity_features)
-        elif nlp.path is None:
+        elif nlp.path is False:
             return EntityRecognizer(nlp.vocab, features=cls.entity_features)
-        elif not (nlp.path / 'ner').exists():
+        elif nlp.path is None or not (nlp.path / 'ner').exists():
             return None
         else:
             return EntityRecognizer.load(nlp.path / 'ner', nlp.vocab)
@@ -107,9 +107,9 @@ class BaseDefaults(object):
     def create_matcher(cls, nlp=None):
         if nlp is None:
             return Matcher(cls.create_vocab())
-        elif nlp.path is None:
+        elif nlp.path is False:
             return Matcher(nlp.vocab)
-        elif not (nlp.path / 'vocab').exists():
+        elif nlp.path is None or not (nlp.path / 'vocab').exists():
             return None
         else:
             return Matcher.load(nlp.path / 'vocab', nlp.vocab)
@@ -274,13 +274,13 @@ class Language(object):
         if 'make_doc' in overrides:
             self.make_doc = overrides['make_doc']
         elif 'create_make_doc' in overrides:
-            self.make_doc = overrides['create_make_doc']
+            self.make_doc = overrides['create_make_doc'](self)
         else:
             self.make_doc = lambda text: self.tokenizer(text)
         if 'pipeline' in overrides:
             self.pipeline = overrides['pipeline']
         elif 'create_pipeline' in overrides:
-            self.pipeline = overrides['create_pipeline']
+            self.pipeline = overrides['create_pipeline'](self)
         else:
             self.pipeline = [self.tagger, self.parser, self.matcher, self.entity]
 

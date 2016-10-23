@@ -7,6 +7,7 @@ from sputnik.package_list import (PackageNotFoundException,
                                   CompatiblePackageNotFoundException)
 
 from . import about
+from . import util
 
 
 def download(lang, force=False, fail_on_exist=True):
@@ -34,4 +35,5 @@ def download(lang, force=False, fail_on_exist=True):
               "spacy.%s.download --force'." % lang, file=sys.stderr)
         sys.exit(1)
 
-    print("Model successfully installed.", file=sys.stderr)
+    data_path = util.get_data_path()
+    print("Model successfully installed to %s" % data_path, file=sys.stderr)

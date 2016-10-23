@@ -4,10 +4,22 @@ p.u-text-large spaCy features a rule-matching engine that operates over tokens. 
 
 +code("python", "Matcher Example").
     from spacy.matcher import Matcher
-    from spacy.attributes import *
+    from spacy.attrs import *
     import spacy
 
     nlp = spacy.load('en', parser=False, entity=False)
+
+    def merge_phrases(matcher, doc, i, matches):
+        '''
+        Merge a phrase. We have to be careful here because we'll change the token indices.
+        To avoid problems, merge all the phrases once we're called on the last match.
+        '''
+        if i != len(matches)-1:
+            return None
+        # Get Span objects
+        spans = [(ent_id, label, doc[start : end]) for ent_id, label, start, end in matches]
+        for ent_id, label, span in spans:
+            span.merge(label=label, tag='NNP' if label else span.root.tag_)
 
     matcher = Matcher(nlp.vocab)
 
@@ -17,6 +29,7 @@ p.u-text-large spaCy features a rule-matching engine that operates over tokens. 
         acceptor=None, # Accept or modify the match
         on_match=merge_phrases # Callback to act on the matches
     )
+
     matcher.add_pattern(
         "GoogleNow", # Entity ID -- Created if doesn't exist.
         [ # The pattern is a list of *Token Specifiers*.
@@ -32,7 +45,7 @@ p.u-text-large spaCy features a rule-matching engine that operates over tokens. 
     doc = nlp(u"I prefer Siri to Google Now.")
     matches = matcher(doc)
     for ent_id, label, start, end in matches:
-        print(nlp.strings[ent_id], nlp.strings[label], doc[start : end].text)
+        print(nlp.vocab.strings[ent_id], nlp.vocab.strings[label], doc[start : end].text)
         entity = matcher.get_entity(ent_id)
         print(entity)
 

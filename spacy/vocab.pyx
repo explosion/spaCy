@@ -4,12 +4,13 @@ from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 from libc.string cimport memset
 from libc.stdint cimport int32_t
 from libc.stdint cimport uint64_t
+from libc.math cimport sqrt
 
 import bz2
 from os import path
 import io
 import math
-import json
+import ujson as json
 import tempfile
 
 from .lexeme cimport EMPTY_LEXEME
@@ -112,9 +113,9 @@ cdef class Vocab:
         self._serializer = None
     
     property serializer:
+        # Having the serializer live here is super messy :(
         def __get__(self):
             if self._serializer is None:
-                freqs = []
                 self._serializer = Packer(self, self.serializer_freqs)
             return self._serializer
 
@@ -128,6 +129,20 @@ cdef class Vocab:
     def __len__(self):
         """The current number of lexemes stored."""
         return self.length
+
+    def resize_vectors(self, int new_size):
+        '''
+        Set vectors_length to a new size, and allocate more memory for the Lexeme
+        vectors if necessary. The memory will be zeroed.
+        '''
+        cdef hash_t key
+        cdef size_t addr
+        if new_size > self.vectors_length:
+            for key, addr in self._by_hash.items():
+                lex = <LexemeC*>addr
+                lex.vector = <float*>self.mem.realloc(lex.vector,
+                                        new_size * sizeof(lex.vector[0]))
+        self.vectors_length = new_size
 
     def add_flag(self, flag_getter, int flag_id=-1):
         '''Set a new boolean flag to words in the vocabulary. The flag_setter
@@ -372,6 +387,7 @@ cdef class Vocab:
         cdef LexemeC* lexeme
         cdef attr_t orth
         cdef int32_t vec_len = -1
+        cdef double norm = 0.0
         for line_num, line in enumerate(file_):
             pieces = line.split()
             word_str = pieces.pop(0)
@@ -383,9 +399,12 @@ cdef class Vocab:
             orth = self.strings[word_str]
             lexeme = <LexemeC*><void*>self.get_by_orth(self.mem, orth)
             lexeme.vector = <float*>self.mem.alloc(vec_len, sizeof(float))
-
             for i, val_str in enumerate(pieces):
                 lexeme.vector[i] = float(val_str)
+            norm = 0.0
+            for i in range(vec_len):
+                norm += lexeme.vector[i] * lexeme.vector[i]
+            lexeme.l2_norm = sqrt(norm)
         self.vectors_length = vec_len
         return vec_len
 
@@ -424,14 +443,16 @@ cdef class Vocab:
             line_num += 1
         cdef LexemeC* lex
         cdef size_t lex_addr
+        cdef double norm = 0.0
         cdef int i
         for orth, lex_addr in self._by_orth.items():
             lex = <LexemeC*>lex_addr
             if lex.lower < vectors.size():
                 lex.vector = vectors[lex.lower]
+                norm = 0.0
                 for i in range(vec_len):
-                    lex.l2_norm += (lex.vector[i] * lex.vector[i])
-                lex.l2_norm = math.sqrt(lex.l2_norm)
+                    norm += lex.vector[i] * lex.vector[i]
+                lex.l2_norm = sqrt(norm)
             else:
                 lex.vector = EMPTY_VEC
         self.vectors_length = vec_len

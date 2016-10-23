@@ -29,6 +29,15 @@ main.o-main
 
     +grid.u-border-bottom
         +grid-col("half").u-padding
+            +label Release update
+            +h(2)
+                +a("https://github.com/" + SOCIAL.github + "/spaCy/releases") spaCy v1.0 out now!
+
+            p.u-text-medium I'm excited — and more than a little nervous! — to finally make the #[+a("https://github.com/" + SOCIAL.github + "/spaCy/releases") 1.0 release of spaCy]. By far my favourite part of the release is the new support for custom pipelines. Default support for GloVe vectors is also nice. The trickiest change was a significant rewrite of the Matcher class, to support entity IDs and attributes. I've added #[a(href="/docs/#tutorials") tutorials] for the new features, and some training examples.#[br]#[br]
+
+                +button("https://explosion.ai/blog/spacy-deep-learning-keras", true, "primary") Read the blog post
+
+        +grid-col("half").u-padding
             +label Are you using spaCy?
             +h(2)
                 +a("https://survey.spacy.io", true) Take the spaCy user survey
@@ -41,14 +50,6 @@ main.o-main
                 #[br]#[br]
 
                 #[+button("https://survey.spacy.io", true, "primary") Take the survey]
-
-        +grid-col("half").u-padding
-            +label The blog posts have moved
-            +h(2) Check out the new blog
-
-            p.u-text-medium We've updated the site to make it more focussed on the library itself. This will help us stay organised when we expand the tutorials section — by far the clearest message we've gotten from the survey so far. The blog posts have been moved to the new site for our consulting services, #[+a("https://explosion.ai", true) Explosion AI]. We've also updated our demos, and have open-sourced the services behind them. There are lots more releases to come. #[br]#[br]
-
-                +button("https://explosion.ai/blog", true, "primary") Go to the new blogs
 
     +grid
         +grid-col("half").u-padding

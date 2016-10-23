@@ -1,12 +1,12 @@
 cimport cython
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint32_t
+from libc.math cimport sqrt
 
 import numpy
 import numpy.linalg
 import struct
 cimport numpy as np
-import math
 import six
 import warnings
 
@@ -251,11 +251,12 @@ cdef class Doc:
             if 'vector_norm' in self.user_hooks:
                 return self.user_hooks['vector_norm'](self)
             cdef float value
+            cdef double norm = 0
             if self._vector_norm is None:
-                self._vector_norm = 1e-20
+                norm = 0.0
                 for value in self.vector:
-                    self._vector_norm += value * value
-                self._vector_norm = math.sqrt(self._vector_norm)
+                    norm += value * value
+                self._vector_norm = sqrt(norm) if norm != 0 else 0
             return self._vector_norm
         
         def __set__(self, value):
@@ -322,7 +323,7 @@ cdef class Doc:
             cdef int i
             for i in range(self.length):
                 self.c[i].ent_type = 0
-                self.c[i].ent_iob = 0
+                self.c[i].ent_iob = 2 # Means O, not missing!
             cdef attr_t ent_type
             cdef int start, end
             for ent_info in ents:

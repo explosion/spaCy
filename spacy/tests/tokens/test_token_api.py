@@ -5,6 +5,7 @@ from spacy.attrs import IS_SPACE, IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM
 from spacy.attrs import IS_STOP
 
 import pytest
+import numpy
 
 
 @pytest.mark.models
@@ -67,7 +68,9 @@ def test_vectors(EN):
     assert apples.similarity(oranges) > apples.similarity(oov)
     assert apples.similarity(oranges) == oranges.similarity(apples)
     assert sum(apples.vector) != sum(oranges.vector)
-    assert apples.vector_norm != oranges.vector_norm
+    assert numpy.isclose(
+                apples.vector_norm,
+                numpy.sqrt(numpy.dot(apples.vector, apples.vector)))
     
 @pytest.mark.models
 def test_ancestors(EN):
