@@ -3,7 +3,7 @@ from collections import defaultdict
 import numpy
 import numpy.linalg
 cimport numpy as np
-import math
+from libc.math cimport sqrt
 import six
 
 from ..structs cimport TokenC, LexemeC
@@ -136,11 +136,12 @@ cdef class Span:
             if 'vector_norm' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['vector'](self)
             cdef float value
+            cdef double norm = 0
             if self._vector_norm is None:
-                self._vector_norm = 1e-20
+                norm = 0
                 for value in self.vector:
-                    self._vector_norm += value * value
-                self._vector_norm = math.sqrt(self._vector_norm)
+                    norm += value * value
+                self._vector_norm = sqrt(norm) if norm != 0 else 0
             return self._vector_norm
 
     property text:
