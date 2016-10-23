@@ -49,7 +49,7 @@ def test_overlap_issue242():
         data_dir = None
  
     nlp = spacy.en.English(path=data_dir, tagger=False, parser=False, entity=False)
-    nlp.matcher = spacy.en.English.Defaults.create_matcher(nlp=nlp)
+    nlp.matcher = Matcher(nlp.vocab)
 
     nlp.matcher.add('FOOD', 'FOOD', {}, patterns)
 
