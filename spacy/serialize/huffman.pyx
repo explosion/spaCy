@@ -46,12 +46,14 @@ cdef class HuffmanCodec:
             item.first = item1.first + item2.first
             item.second = self.nodes.size()-1
             queue.push(item)
-        item = queue.top()
-        self.root = self.nodes[item.second]
+        # Careful of empty freqs dicts
         cdef Code path
-        path.bits = 0
-        path.length = 0
-        assign_codes(self.nodes, self.codes, item.second, path)
+        if queue.size() >= 1:
+            item = queue.top()
+            self.root = self.nodes[item.second]
+            path.bits = 0
+            path.length = 0
+            assign_codes(self.nodes, self.codes, item.second, path)
 
     def encode(self, msg, BitArray bits=None):
         if bits is None:
