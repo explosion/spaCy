@@ -108,10 +108,20 @@ def test_serialize_after_adding_entity():
     entity_recognizer.add_label('Food')
     entity_recognizer(doc)
 
-
     label_id = vocab.strings[u'Food']
     doc.ents = [(label_id, 5,6)]
 
     assert [(ent.label_, ent.text) for ent in doc.ents] == [(u'Food', u'pasta')]
 
     byte_string = doc.to_bytes()
+
+
+@pytest.mark.models
+def test_serialize_after_adding_entity(EN):
+    EN.entity.add_label(u'Food')
+    doc = EN(u'This is a sentence about pasta.')
+    label_id = EN.vocab.strings[u'Food']
+    doc.ents = [(label_id, 5,6)]
+    byte_string = doc.to_bytes()
+    doc2 = Doc(EN.vocab).from_bytes(byte_string)
+    assert [(ent.label_, ent.text) for ent in doc2.ents] == [(u'Food', u'pasta')]
