@@ -219,7 +219,7 @@ Changelog
 =========
 
 2016-10-23 `v1.1.0 <https://github.com/explosion/spaCy/releases>`_: *Bug fixes and adjustments*
-------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
 
 * Rename new ``pipeline`` keyword argument of ``spacy.load()`` to ``create_pipeline``.
 * Rename new ``vectors`` keyword argument of ``spacy.load()`` to ``add_vectors``.
@@ -236,7 +236,7 @@ Changelog
 * Fix issue `#514 <https://github.com/explosion/spaCy/issues/514>`_: Serialization failed after adding a new entity label.
 
 2016-10-18 `v1.0.0 <https://github.com/explosion/spaCy/releases/tag/v1.0.0>`_: *Support for deep learning workflows and entity-aware rule matcher*
-----------------------------------------------------------------------------------------------------------------------------------------
+--------------------------------------------------------------------------------------------------------------------------------------------------
 
 **✨ Major features and improvements**
 
