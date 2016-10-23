@@ -323,7 +323,7 @@ cdef class Doc:
             cdef int i
             for i in range(self.length):
                 self.c[i].ent_type = 0
-                self.c[i].ent_iob = 0
+                self.c[i].ent_iob = 2 # Means O, not missing!
             cdef attr_t ent_type
             cdef int start, end
             for ent_info in ents:
