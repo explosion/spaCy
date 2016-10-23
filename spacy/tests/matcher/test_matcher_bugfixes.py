@@ -46,7 +46,7 @@ def test_overlap_issue242():
     if os.environ.get('SPACY_DATA'):
         data_dir = os.environ.get('SPACY_DATA')
     else:
-        data_dir = False
+        data_dir = None
  
     nlp = spacy.en.English(path=data_dir, tagger=False, parser=False, entity=False)
 
