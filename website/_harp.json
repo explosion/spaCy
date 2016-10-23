@@ -24,6 +24,10 @@
 
         "SPACY_VERSION": "1.0",
         "SPACY_STARS": "2500",
-        "GITHUB": { "user": "explosion", "repo": "spacy" }
+        "GITHUB": {
+            "user": "explosion",
+            "repo": "spacy",
+            "file_url_base": "https://github.com/explosion/spaCy/blob/master"
+        }
     }
 }
