@@ -9,7 +9,7 @@ import pytest
 
 
 def get_vector(letters):
-    return numpy.asarray(map(ord, letters), dtype='float32')
+    return numpy.asarray([ord(letter) for letter in letters], dtype='float32')
 
 
 def get_cosine(vec1, vec2):
