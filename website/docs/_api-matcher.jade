@@ -9,51 +9,53 @@
     p A full example can be found #[a(href="https://github.com/" + SOCIAL.github + "/spaCy/blob/master/examples/matcher_example.py") here].
 
     +table(["Usage", "Description"])
-            +row
-                +cell #[code.lang-python nlp(doc)]
-                +cell As part of annotation pipeline.
+        +row
+            +cell #[code.lang-python nlp(doc)]
+            +cell As part of annotation pipeline.
 
-            +row
-                +cell #[code.lang-python nlp.matcher(doc)]
-                +cell Explicit invocation.
+        +row
+            +cell #[code.lang-python nlp.matcher(doc)]
+            +cell Explicit invocation.
 
-            +row
-                +cell #[code.lang-python nlp.matcher.add(u'FooCorp', u'ORG', {}, [[{u'ORTH': u'Foo'}]])]
-                +cell Add a pattern to match.
+        +row
+            +cell #[code.lang-python nlp.matcher.add(u'FooCorp', u'ORG', {}, [[{u'ORTH': u'Foo'}]])]
+            +cell Add a pattern to match.
 
     +section("matcher-init")
         +h(3, "matcher-init") __init__(self, vocab, patterns)
-            +table(["Name", "Type", "Description"])
-                +row
-                    +cell vocab
-                    +cell #[code.lang-python spacy.vocab.Vocab]
-                    +cell Reference to the shared vocabulary object.
 
-                +row
-                    +cell patterns
-                    +cell #[code {entity_key: (etype, attrs, specs)}]
-                    +cell.
-                        Initial patterns to match. See #[code Matcher.add]
+        +table(["Name", "Type", "Description"])
+            +row
+                +cell vocab
+                +cell #[code.lang-python spacy.vocab.Vocab]
+                +cell Reference to the shared vocabulary object.
+
+            +row
+                +cell patterns
+                +cell #[code {entity_key: (etype, attrs, specs)}]
+                +cell.
+                    Initial patterns to match. See #[code Matcher.add]
 
     +section("matcher-add")
         +h(3, "matcher-add") add(self, entity_key, etype, attrs, specs)
-            +table(["Name", "Type", "Description"])
-                +row
-                    +cell entity_key
-                    +cell unicode or int
-                    +cell Your arbitrary ID string (or its integer encoding)
-                +row
-                    +cell etype
-                    +cell unicode or int
-                    +cell A pre-registered entity type, e.g. u'PERSON', u'ORG', etc.
-                +row
-                    +cell attrs
-                    +cell #[code dict]
-                    +cell Placeholder for future support of entity attributes.
-                +row
-                    +cell specs
-                    +cell #[code [[{int: unicode}]]]
-                    +cell A list of surface forms, where each surface form is defined as a list of token definitions, and each token definition is a dictionary mapping attribute IDs to attribute values.
+
+        +table(["Name", "Type", "Description"])
+            +row
+                +cell entity_key
+                +cell unicode or int
+                +cell Your arbitrary ID string (or its integer encoding)
+            +row
+                +cell etype
+                +cell unicode or int
+                +cell A pre-registered entity type, e.g. u'PERSON', u'ORG', etc.
+            +row
+                +cell attrs
+                +cell #[code dict]
+                +cell Placeholder for future support of entity attributes.
+            +row
+                +cell specs
+                +cell #[code [[{int: unicode}]]]
+                +cell A list of surface forms, where each surface form is defined as a list of token definitions, and each token definition is a dictionary mapping attribute IDs to attribute values.
 
     +section("matcher-saveload")
         +h(3, "matcher-saveload")
