@@ -179,6 +179,11 @@ Install a version of Visual Studio Express or higher that matches the version
 that was used to compile your Python interpreter. For official distributions 
 these are VS 2008 (Python 2.7), VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
 
+If you don't want to install the entire Visual Studio, you can install a
+stand-alone compiler. Make sure that you install the correct version for 
+your version of Python. See https://wiki.python.org/moin/WindowsCompilers for 
+links to download these.
+
 Run tests
 =========
 
