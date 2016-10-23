@@ -92,6 +92,7 @@ cdef class Parser:
     def __init__(self, Vocab vocab, TransitionSystem=None, ParserModel model=None, **cfg):
         if TransitionSystem is None:
             TransitionSystem = self.TransitionSystem
+        self.vocab = vocab
         actions = TransitionSystem.get_actions(**cfg)
         self.moves = TransitionSystem(vocab.strings, actions)
         # TODO: Remove this when we no longer need to support old-style models
@@ -226,8 +227,10 @@ cdef class Parser:
                 stepwise.transition(transition)
 
     def add_label(self, label):
+        # Doesn't set label into serializer -- subclasses override it to do that.
         for action in self.moves.action_types:
             self.moves.add_action(action, label)
+                
 
 
 cdef class StepwiseState:

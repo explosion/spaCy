@@ -113,9 +113,9 @@ cdef class Vocab:
         self._serializer = None
     
     property serializer:
+        # Having the serializer live here is super messy :(
         def __get__(self):
             if self._serializer is None:
-                freqs = []
                 self._serializer = Packer(self, self.serializer_freqs)
             return self._serializer
 
