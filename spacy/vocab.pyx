@@ -404,7 +404,7 @@ cdef class Vocab:
             norm = 0.0
             for i in range(vec_len):
                 norm += lexeme.vector[i] * lexeme.vector[i]
-            lex.l2_norm = sqrt(norm)
+            lexeme.l2_norm = sqrt(norm)
         self.vectors_length = vec_len
         return vec_len
 
