@@ -16,18 +16,18 @@ import spacy
 
 class SentimentAnalyser(object):
     @classmethod
-    def load(cls, path, nlp):
+    def load(cls, path, nlp, max_length=100):
         with (path / 'config.json').open() as file_:
-
             model = model_from_json(file_.read())
         with (path / 'model').open('rb') as file_:
             lstm_weights = pickle.load(file_)
         embeddings = get_embeddings(nlp.vocab)
         model.set_weights([embeddings] + lstm_weights)
-        return cls(model)
+        return cls(model, max_length=max_length)
 
-    def __init__(self, model):
+    def __init__(self, model, max_length=100):
         self._model = model
+        self.max_length = max_length
 
     def __call__(self, doc):
         X = get_features([doc], self.max_length)
@@ -36,16 +36,32 @@ class SentimentAnalyser(object):
 
     def pipe(self, docs, batch_size=1000, n_threads=2):
         for minibatch in cytoolz.partition_all(batch_size, docs):
-            Xs = get_features(minibatch, self.max_length)
+            minibatch = list(minibatch)
+            sentences = []
+            for doc in minibatch:
+                sentences.extend(doc.sents)
+            Xs = get_features(sentences, self.max_length)
             ys = self._model.predict(Xs)
-            for i, doc in enumerate(minibatch):
-                doc.user_data['sentiment'] = ys[i]
+            for sent, label in zip(sentences, ys):
+                sent.doc.sentiment += label - 0.5
+            for doc in minibatch:
+                yield doc
 
     def set_sentiment(self, doc, y):
         doc.sentiment = float(y[0])
         # Sentiment has a native slot for a single float.
         # For arbitrary data storage, there's:
         # doc.user_data['my_data'] = y
+
+
+def get_labelled_sentences(docs, doc_labels):
+    labels = []
+    sentences = []
+    for doc, y in zip(docs, doc_labels):
+        for sent in doc.sents:
+            sentences.append(sent)
+            labels.append(y)
+    return sentences, numpy.asarray(labels, dtype='int32')
 
 
 def get_features(docs, max_length):
@@ -63,12 +79,21 @@ def get_features(docs, max_length):
 
 
 def train(train_texts, train_labels, dev_texts, dev_labels,
-        lstm_shape, lstm_settings, lstm_optimizer, batch_size=100, nb_epoch=5):
-    nlp = spacy.load('en', parser=False, tagger=False, entity=False)
+        lstm_shape, lstm_settings, lstm_optimizer, batch_size=100, nb_epoch=5,
+        by_sentence=True):
+    print("Loading spaCy")
+    nlp = spacy.load('en', entity=False)
     embeddings = get_embeddings(nlp.vocab)
     model = compile_lstm(embeddings, lstm_shape, lstm_settings)
-    train_X = get_features(nlp.pipe(train_texts), lstm_shape['max_length'])
-    dev_X = get_features(nlp.pipe(dev_texts), lstm_shape['max_length'])
+    print("Parsing texts...")
+    train_docs = list(nlp.pipe(train_texts, batch_size=5000, n_threads=3))
+    dev_docs = list(nlp.pipe(dev_texts, batch_size=5000, n_threads=3))
+    if by_sentence:
+        train_docs, train_labels = get_labelled_sentences(train_docs, train_labels)
+        dev_docs, dev_labels = get_labelled_sentences(dev_docs, dev_labels)
+        
+    train_X = get_features(train_docs, lstm_shape['max_length'])
+    dev_X = get_features(dev_docs, lstm_shape['max_length'])
     model.fit(train_X, train_labels, validation_data=(dev_X, dev_labels),
               nb_epoch=nb_epoch, batch_size=batch_size)
     return model
@@ -86,7 +111,7 @@ def compile_lstm(embeddings, shape, settings):
             mask_zero=True
         )
     )
-    model.add(TimeDistributed(Dense(shape['nr_hidden'] * 2)))
+    model.add(TimeDistributed(Dense(shape['nr_hidden'] * 2, bias=False)))
     model.add(Dropout(settings['dropout']))
     model.add(Bidirectional(LSTM(shape['nr_hidden'])))
     model.add(Dropout(settings['dropout']))
@@ -105,25 +130,23 @@ def get_embeddings(vocab):
     return vectors
 
 
-def demonstrate_runtime(model_dir, texts):
-    '''Demonstrate runtime usage of the custom sentiment model with spaCy.
-    
-    Here we return a dictionary mapping entities to the average sentiment of the
-    documents they occurred in.
-    '''
+def evaluate(model_dir, texts, labels, max_length=100):
     def create_pipeline(nlp):
         '''
         This could be a lambda, but named functions are easier to read in Python.
         '''
-        return [nlp.tagger, nlp.entity, SentimentAnalyser.load(model_dir, nlp)]
+        return [nlp.tagger, nlp.parser, SentimentAnalyser.load(model_dir, nlp,
+                                                               max_length=max_length)]
     
-    nlp = spacy.load('en', create_pipeline=create_pipeline)
+    nlp = spacy.load('en')
+    nlp.pipeline = create_pipeline(nlp)
 
-    entity_sentiments = collections.Counter(float)
+    correct = 0
+    i = 0 
     for doc in nlp.pipe(texts, batch_size=1000, n_threads=4):
-        for ent in doc.ents:
-            entity_sentiments[ent.text] += doc.sentiment
-    return entity_sentiments
+        correct += bool(doc.sentiment >= 0.5) == bool(labels[i])
+        i += 1
+    return float(correct) / i
 
 
 def read_data(data_dir, limit=0):
@@ -162,10 +185,12 @@ def main(model_dir, train_dir, dev_dir,
     dev_dir = pathlib.Path(dev_dir)
     if is_runtime:
         dev_texts, dev_labels = read_data(dev_dir)
-        demonstrate_runtime(model_dir, dev_texts)
+        acc = evaluate(model_dir, dev_texts, dev_labels, max_length=max_length)
+        print(acc)
     else:
+        print("Read data")
         train_texts, train_labels = read_data(train_dir, limit=nr_examples)
-        dev_texts, dev_labels = read_data(dev_dir)
+        dev_texts, dev_labels = read_data(dev_dir, limit=nr_examples)
         train_labels = numpy.asarray(train_labels, dtype='int32')
         dev_labels = numpy.asarray(dev_labels, dtype='int32')
         lstm = train(train_texts, train_labels, dev_texts, dev_labels,
@@ -175,7 +200,9 @@ def main(model_dir, train_dir, dev_dir,
                      nb_epoch=nb_epoch, batch_size=batch_size)
         weights = lstm.get_weights()
         with (model_dir / 'model').open('wb') as file_:
-            pickle.dump(file_, weights[1:])
+            pickle.dump(weights[1:], file_)
+        with (model_dir / 'config.json').open('wb') as file_:
+            file_.write(lstm.to_json())
 
 
 if __name__ == '__main__':
