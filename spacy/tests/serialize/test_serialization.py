@@ -97,3 +97,21 @@ def test_serialize_empty_doc():
     assert b == b''
     loaded = Doc(vocab).from_bytes(b)
     assert len(loaded) == 0
+
+
+def test_serialize_after_adding_entity():
+    # Re issue #514
+    vocab = spacy.en.English.Defaults.create_vocab()
+    entity_recognizer = spacy.en.English.Defaults.create_entity()
+
+    doc = Doc(vocab, words=u'This is a sentence about pasta .'.split())
+    entity_recognizer.add_label('Food')
+    entity_recognizer(doc)
+
+
+    label_id = vocab.strings[u'Food']
+    doc.ents = [(label_id, 5,6)]
+
+    assert [(ent.label_, ent.text) for ent in doc.ents] == [(u'Food', u'pasta')]
+
+    byte_string = doc.to_bytes()
