@@ -274,13 +274,13 @@ class Language(object):
         if 'make_doc' in overrides:
             self.make_doc = overrides['make_doc']
         elif 'create_make_doc' in overrides:
-            self.make_doc = overrides['create_make_doc']
+            self.make_doc = overrides['create_make_doc'](self)
         else:
             self.make_doc = lambda text: self.tokenizer(text)
         if 'pipeline' in overrides:
             self.pipeline = overrides['pipeline']
         elif 'create_pipeline' in overrides:
-            self.pipeline = overrides['create_pipeline']
+            self.pipeline = overrides['create_pipeline'](self)
         else:
             self.pipeline = [self.tagger, self.parser, self.matcher, self.entity]
 
