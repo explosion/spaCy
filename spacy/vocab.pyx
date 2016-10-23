@@ -449,6 +449,7 @@ cdef class Vocab:
             lex = <LexemeC*>lex_addr
             if lex.lower < vectors.size():
                 lex.vector = vectors[lex.lower]
+                norm = 0.0
                 for i in range(vec_len):
                     norm += lex.vector[i] * lex.vector[i]
                 lex.l2_norm = sqrt(norm)
