@@ -32,7 +32,7 @@ def main(model_dir=None):
             model_dir.mkdir()
         assert model_dir.is_dir()
 
-    nlp = spacy.load('en', tagger=False, parser=False, entity=False, vectors=False)
+    nlp = spacy.load('en', tagger=False, parser=False, entity=False, add_vectors=False)
 
     train_data = [
         (
