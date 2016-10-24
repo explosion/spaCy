@@ -19,6 +19,7 @@ from cymem.cymem cimport Pool
 from .stateclass cimport StateClass
 from ._state cimport StateC, is_space_token
 from .nonproj import PseudoProjectivity
+from .nonproj import is_nonproj_tree
 
 
 DEF NON_MONOTONIC = True
@@ -442,4 +443,21 @@ cdef class ArcEager(TransitionSystem):
             else:
                 is_valid[i] = False
                 costs[i] = 9000
+        if n_gold == 0:
+            # Check projectivity --- leading cause
+            if is_nonproj_tree(gold.heads):
+                raise ValueError(
+                    "Could not find a gold-standard action to supervise the dependency "
+                    "parser.\n"
+                    "Likely cause: the tree is non-projective (i.e. it has crossing "
+                    "arcs -- see spacy/syntax/nonproj.pyx for definitions)\n"
+                    "The ArcEager transition system only supports projective trees.\n"
+                    "To learn non-projective representations, transform the data "
+                    "before training and after parsing. Either pass make_projective=True "
+                    "to the GoldParse class, or use PseudoProjectivity.preprocess_training_data")
+            else:
+                raise ValueError(
+                    "Could not find a gold-standard action to supervise the dependency "
+                    "parser.\n"
+                    "The GoldParse was projective.")
         assert n_gold >= 1
