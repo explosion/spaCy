@@ -110,11 +110,13 @@ cdef class StringStore:
                     return _decode(utf8str)
                 else:
                     raise IndexError(string_or_id)
-        elif isinstance(string_or_id, basestring):
+        else:
             if isinstance(string_or_id, bytes):
                 byte_string = <bytes>string_or_id
-            else:
+            elif isinstance(string_or_id, unicode):
                 byte_string = (<unicode>string_or_id).encode('utf8')
+            else:
+                raise TypeError(type(string_or_id))
             utf8str = self._intern_utf8(byte_string, len(byte_string))
             if utf8str is NULL:
                 # TODO: We could get unlucky here, and hash into a value that
@@ -123,8 +125,6 @@ cdef class StringStore:
                 return _hash_utf8(byte_string, len(byte_string))
             else:
                 return utf8str - self.c
-        else:
-            raise TypeError(type(string_or_id))
 
     def __contains__(self, unicode string not None):
         if len(string) == 0:
