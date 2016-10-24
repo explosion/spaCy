@@ -6,6 +6,7 @@ import random
 import spacy
 from spacy.pipeline import EntityRecognizer
 from spacy.gold import GoldParse
+from spacy.tagger import Tagger
 
 
 def train_ner(nlp, train_data, entity_types):
@@ -28,6 +29,15 @@ def main(model_dir=None):
         assert model_dir.is_dir()
 
     nlp = spacy.load('en', parser=False, entity=False, add_vectors=False)
+
+    # v1.1.2 onwards
+    if nlp.tagger is None:
+        print('---- WARNING ----')
+        print('Data directory not found')
+        print('please run: `python -m spacy.en.download –force all` for better performance')
+        print('Using feature templates for tagging')
+        print('-----------------')
+        nlp.tagger = Tagger(nlp.vocab, features=Tagger.feature_templates)
 
     train_data = [
         (
