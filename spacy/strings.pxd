@@ -19,9 +19,11 @@ cdef class StringStore:
     cdef Pool mem
     cdef Utf8Str* c
     cdef int64_t size
+    cdef bint is_frozen
 
     cdef public PreshMap _map
+    cdef public PreshMap _oov
     cdef int64_t _resize_at
 
-    cdef const Utf8Str* intern(self, unicode py_string) except NULL
-    cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length) except NULL
+    cdef const Utf8Str* intern_unicode(self, unicode py_string)
+    cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length)
