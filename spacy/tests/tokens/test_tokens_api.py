@@ -108,7 +108,7 @@ def test_set_ents(EN):
     assert len(tokens.ents) == 0
     tokens.ents = [(EN.vocab.strings['PRODUCT'], 2, 4)]
     assert len(list(tokens.ents)) == 1
-    assert [t.ent_iob for t in tokens] == [2, 2, 3, 1, 2, 2, 2, 2]
+    assert [t.ent_iob for t in tokens] == [0, 0, 3, 1, 0, 0, 0, 0]
     ent = tokens.ents[0]
     assert ent.label_ == 'PRODUCT'
     assert ent.start == 2
