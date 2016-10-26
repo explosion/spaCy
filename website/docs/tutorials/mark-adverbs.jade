@@ -78,7 +78,7 @@ p A simple work-around is to average the vectors of several words, and use that 
 +code.
     &gt;&gt;&gt; say_verbs = ['pleaded', 'confessed', 'remonstrated', 'begged', 'bragged', 'confided', 'requested']
     &gt;&gt;&gt; say_vector = sum(nlp.vocab[verb].vector for verb in say_verbs) / len(say_verbs)
-    &gt;&gt;&gt; words.sort(key=lambda w: cosine(w.vector * say_vector))
+    &gt;&gt;&gt; words.sort(key=lambda w: cosine(w.vector, say_vector))
     &gt;&gt;&gt; words.reverse()
     &gt;&gt;&gt; print('1-20', ', '.join(w.orth_ for w in words[0:20]))
     1-20 bragged, remonstrated, enquired, demurred, sighed, mused, intimated, retorted, entreated, motioned, ranted, confided, countersued, gestured, implored, interceded, muttered, marvelled, bickered, despaired
