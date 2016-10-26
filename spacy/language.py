@@ -371,6 +371,3 @@ class Language(object):
                     (ENT_TYPE, entity_type_freqs),
                     (HEAD, head_freqs)
                 ]))
-
-    def get_defaults(self, path):
-        return self.Defaults(self.lang, path)
