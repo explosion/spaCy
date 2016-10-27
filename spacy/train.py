@@ -48,7 +48,7 @@ class Trainer(object):
             docs = self.make_docs(raw_text, paragraph_tuples)
             golds = self.make_golds(docs, paragraph_tuples)
             for doc, gold in zip(docs, golds):
-                for process in self.nlp.pipeline[1:]:
+                for process in self.nlp.pipeline:
                     process(doc)
                 scorer.score(doc, gold)
         return scorer
