@@ -107,10 +107,9 @@ cdef class Parser:
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
     def __call__(self, Doc tokens):
-        cdef int nr_class = self.moves.n_moves
         cdef int nr_feat = self.model.nr_feat
         with nogil:
-            status = self.parseC(tokens.c, tokens.length, nr_feat, nr_class)
+            status = self.parseC(tokens.c, tokens.length, nr_feat)
         # Check for KeyboardInterrupt etc. Untested
         PyErr_CheckSignals()
         if status != 0:
@@ -123,7 +122,6 @@ cdef class Parser:
         cdef int* lengths = <int*>mem.alloc(batch_size, sizeof(int))
         cdef Doc doc
         cdef int i
-        cdef int nr_class = self.moves.n_moves
         cdef int nr_feat = self.model.nr_feat
         cdef int status
         queue = []
@@ -134,7 +132,7 @@ cdef class Parser:
             if len(queue) == batch_size:
                 with nogil:
                     for i in cython.parallel.prange(batch_size, num_threads=n_threads):
-                        status = self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
+                        status = self.parseC(doc_ptr[i], lengths[i], nr_feat)
                         if status != 0:
                             with gil:
                                 raise ParserStateError(queue[i])
@@ -146,7 +144,7 @@ cdef class Parser:
         batch_size = len(queue)
         with nogil:
             for i in cython.parallel.prange(batch_size, num_threads=n_threads):
-                status = self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
+                status = self.parseC(doc_ptr[i], lengths[i], nr_feat)
                 if status != 0:
                     with gil:
                         raise ParserStateError(queue[i])
@@ -155,7 +153,12 @@ cdef class Parser:
             self.moves.finalize_doc(doc)
             yield doc
 
-    cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) nogil:
+    cdef int parseC(self, TokenC* tokens, int length, int nr_feat) nogil:
+        state = new StateC(tokens, length)
+        # NB: This can change self.moves.n_moves!
+        self.moves.initialize_state(state)
+        nr_class = self.moves.n_moves
+
         cdef ExampleC eg
         eg.nr_feat = nr_feat
         eg.nr_atom = CONTEXT_SIZE
@@ -164,8 +167,6 @@ cdef class Parser:
         eg.atoms = <atom_t*>calloc(sizeof(atom_t), CONTEXT_SIZE)
         eg.scores = <weight_t*>calloc(sizeof(weight_t), nr_class)
         eg.is_valid = <int*>calloc(sizeof(int), nr_class)
-        state = new StateC(tokens, length)
-        self.moves.initialize_state(state)
         cdef int i
         while not state.is_final():
             self.model.set_featuresC(&eg, state)
