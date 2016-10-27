@@ -158,6 +158,15 @@ cdef class BiluoPushDown(TransitionSystem):
             raise Exception(move)
         return t
 
+    cdef int initialize_state(self, StateC* st) nogil:
+        for i in range(st.length):
+            if st._sent[i].ent_type != 0:
+                with gil:
+                    self.add_action(BEGIN, st._sent[i].ent_type)
+                    self.add_action(IN, st._sent[i].ent_type)
+                    self.add_action(UNIT, st._sent[i].ent_type)
+                    self.add_action(LAST, st._sent[i].ent_type)
+
 
 cdef class Missing:
     @staticmethod
