@@ -16,9 +16,12 @@
 ## Reproduction
 <!--- Important! Please provide exact steps, and their order required to reproduce the bug -->
 **Steps**
+
 1. Step
 2. Step
 3. Step
+4. Step
+
 <!--- If you have a code snippet that reproduces the bug, insert snippet here -->
 
 # Context
@@ -32,7 +35,7 @@
 * Environment Information: 
 
 # Checklist
-<!--- Place 'x' into below boxes -->
+<!--- Place 'x' into below boxes as you finish them -->
 - [] Included Explanation of Issue
 - [] Can Replicate Issue With Your Provided Steps
 - [] Code / error snippet is present
