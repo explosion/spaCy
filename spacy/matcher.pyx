@@ -1,4 +1,5 @@
 # cython: profile=True
+# cython: infer_types=True
 from __future__ import unicode_literals
 
 from os import path
@@ -277,6 +278,8 @@ cdef class Matcher:
             # we over-write them (q doesn't advance)
             for state in partials:
                 action = get_action(state.second, token)
+                if action == PANIC:
+                    raise Exception("Error selecting action in matcher")
                 while action == ADVANCE_ZERO:
                     state.second += 1
                     action = get_action(state.second, token)
@@ -288,6 +291,7 @@ cdef class Matcher:
                 elif action == REJECT:
                     pass
                 elif action == ADVANCE:
+                    partials[q] = state
                     partials[q].second += 1
                     q += 1
                 elif action == ACCEPT:
@@ -307,6 +311,8 @@ cdef class Matcher:
             # Check whether we open any new patterns on this token
             for pattern in self.patterns:
                 action = get_action(pattern, token)
+                if action == PANIC:
+                    raise Exception("Error selecting action in matcher")
                 while action == ADVANCE_ZERO:
                     pattern += 1
                     action = get_action(pattern, token)
