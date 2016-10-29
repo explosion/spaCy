@@ -8,7 +8,7 @@ Has your issue been discussed on stackoverflow? http://stackoverflow.com/questio
 
 
 ## Your Environment
-<!-- Include details of the environment you were using -->
+<!-- Include details of your environment -->
 * Operating System:
 * Python Version Used:
 * spaCy Version Used:
