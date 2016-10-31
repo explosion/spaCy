@@ -29,19 +29,33 @@ the MIT license.
     :target: https://gitter.im/explosion/spaCy
     :alt: spaCy on Gitter
 
-Where to ask questions
-======================
+📖 Documentation
+=============
+
++----------------------------------------------------------------+-----------------------------------------------------------------------+
+| `Usage Workflows <https://spacy.io/docs/usage/>`_              | How to use spaCy and its features.                                    |
++----------------------------------------------------------------+-----------------------------------------------------------------------+
+| `API Reference <https://spacy.io/docs/api/>`_                  | The detailed reference for spaCy's API.                               |
++----------------------------------------------------------------+-----------------------------------------------------------------------+
+| `Tutorials <https://spacy.io/docs/usage/tutorials>`_           | End-to-end examples, with code you can modify and run.                |
++----------------------------------------------------------------+-----------------------------------------------------------------------+
+| `Showcase & Demos <https://spacy.io/docs/usage/showcase>`_     | Demos, libraries and products from the spaCy community.               |
++----------------------------------------------------------------+-----------------------------------------------------------------------+
+
+
+💬 Where to ask questions
+==========================
 
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| 🔴 **Bug reports**        | `GitHub Issue tracker <https://github.com/explosion/spaCy/issues>`_                                        |
+| **Bug reports**           | `GitHub Issue tracker <https://github.com/explosion/spaCy/issues>`_                                        |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| ⁉️ **Usage questions**    | `StackOverflow <http://stackoverflow.com/questions/tagged/spacy>`_, `Reddit usergroup                      | 
+| **Usage questions**       | `StackOverflow <http://stackoverflow.com/questions/tagged/spacy>`_, `Reddit usergroup                      | 
 |                           | <https://www.reddit.com/r/spacynlp>`_, `Gitter chat <https://gitter.im/explosion/spaCy>`_                  |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| 💬 **General discussion** |  `Reddit usergroup <https://www.reddit.com/r/spacynlp>`_,                                                  |
+| **General discussion**    |  `Reddit usergroup <https://www.reddit.com/r/spacynlp>`_,                                                  |
 |                           | `Gitter chat <https://gitter.im/explosion/spaCy>`_                                                         |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| 💥 **Commercial support** |  contact@explosion.ai                                                                                      |
+| **Commercial support**    |  contact@explosion.ai                                                                                      |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
 
 Features
@@ -203,17 +217,6 @@ and ``--model`` are optional and enable additional tests:
     python -m pip install -U pytest
 
     python -m pytest <spacy-directory> --vectors --model --slow
-
-API Documentation and Usage Examples
-====================================
-
-For the detailed documentation, check out the `spaCy website <https://spacy.io/docs/>`_.
-
-* `Usage Examples <https://spacy.io/docs/#examples>`_
-* `API <https://spacy.io/docs/#api>`_
-* `Annotation Specification <https://spacy.io/docs/#annotation>`_
-* `Tutorials <https://spacy.io/docs/#tutorials>`_
-
 
 Changelog
 =========
