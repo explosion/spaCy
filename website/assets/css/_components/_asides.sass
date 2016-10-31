@@ -1,37 +1,41 @@
-//- ----------------------------------
-//- 💫 COMPONENTS > ASIDES
-//- ----------------------------------
+//- 💫 CSS > COMPONENTS > ASIDES
 
-//- Aside
+//- Aside container
 
 .c-aside
-    @include breakpoint(min, md)
-        @include position(absolute, top, left, 0, calc(100% + #{$aside-padding}))
-        border-left: 1px solid $color-subtle
-        opacity: 0.5
-        transition: opacity 0.25s ease
-        padding: 0 $aside-padding
-        width: $aside-width
+    position: relative
 
-        &:hover
-            opacity: 1
+
+//- Aside content
+
+.c-aside__content
+    background: $color-front
+    z-index: 10
+
+    @include breakpoint(min, md)
+        @include position(absolute, top, left, -3rem, calc(100% + 5.5rem))
+        width: calc(#{$aside-width} + 2rem)
+
+        // Banner effect
+
+        &:after
+            $triangle-size: 2rem
+
+            @include position(absolute, bottom, left, -$triangle-size / 2, 0)
+            @include size(0)
+            border-color: transparent
+            border-style: solid
+            border-top-color: $color-dark
+            border-width: $triangle-size / 2 0 0 $triangle-size
+            content: ""
 
     @include breakpoint(max, sm)
         display: block
-        margin: type(5) 0
+        margin: 2rem 0
 
 
-//- Aside label
+//- Aside text
 
-.c-aside__label
-    display: block
-    margin-bottom: 1rem
-
-
-//  Aside container
-
-.has-aside
-    position: relative
-
-    &:hover > .c-aside
-        opacity: 1
+.c-aside__text
+    color: $color-back
+    padding: 1.5rem 2.5rem 3rem 2rem

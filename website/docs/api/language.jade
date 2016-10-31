@@ -1,0 +1,138 @@
+//- 💫 DOCS > API > LANGUAGE
+
+include ../../_includes/_mixins
+
+p A text processing pipeline.
+
++h(2, "attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell A container for the lexical types.
+
+    +row
+        +cell #[code tokenizer]
+        +cell #[code Tokenizer]
+        +cell Find word boundaries and create #[code Doc] object.
+
+    +row
+        +cell #[code tagger]
+        +cell #[code Tagger]
+        +cell Annotate #[code Doc] objects with POS tags.
+
+    +row
+        +cell #[code parser]
+        +cell #[code DependencyParser]
+        +cell Annotate #[code Doc] objects with syntactic dependencies.
+
+    +row
+        +cell #[code entity]
+        +cell #[code EntityRecognizer]
+        +cell Annotate #[code Doc] objects with named entities.
+
+    +row
+        +cell #[code matcher]
+        +cell #[code Matcher]
+        +cell Rule-based sequence matcher.
+
+    +row
+        +cell #[code make_doc]
+        +cell #[code lambda text: Doc]
+        +cell Create a #[code Doc] object from unicode text.
+
+    +row
+        +cell #[code pipeline]
+        +cell -
+        +cell Sequence of annotation functions.
+
+
++h(2, "init") Language.__init__
+    +tag method
+
+p Create or load the pipeline.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code **kwrags]
+        +cell -
+        +cell Keyword arguments indicating which defaults to override.
+
+    +footrow
+        +cell return
+        +cell #[code Language]
+        +cell #[code self]
+
++h(2, "call") Language.__call__
+    +tag method
+
+p Apply the pipeline to a single text.
+
++aside-code("Example").
+    from spacy.en import English
+    nlp = English()
+    doc = nlp('An example sentence. Another example sentence.')
+    doc[0].orth_, doc[0].head.tag_
+    # ('An', 'NN')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code text]
+        +cell unicode
+        +cell The text to be processed.
+
+    +row
+        +cell #[code tag]
+        +cell bool
+        +cell Whether to apply the part-of-speech tagger.
+
+    +row
+        +cell #[code parse]
+        +cell bool
+        +cell Whether to apply the syntactic dependency parser.
+
+    +row
+        +cell #[code entity]
+        +cell bool
+        +cell Whether to apply the named entity recognizer.
+
+    +footrow
+        +cell return
+        +cell #[code Doc]
+        +cell A container for accessing the linguistic annotations.
+
++h(2, "pipe") Language.pipe
+    +tag method
+
+p
+    |  Process texts as a stream, and yield #[code Doc] objects in order.
+    |  Supports GIL-free multi-threading.
+
++aside-code("Example").
+    texts = [u'One document.', u'...', u'Lots of documents']
+    for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
+        assert doc.is_parsed
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code texts]
+        +cell -
+        +cell A sequence of unicode objects.
+
+    +row
+        +cell #[code n_threads]
+        +cell int
+        +cell
+            |  The number of worker threads to use. If #[code -1], OpenMP will
+            |  decide how many to use at run time. Default is #[code 2].
+
+    +row
+        +cell #[code batch_size]
+        +cell int
+        +cell The number of texts to buffer.
+
+    +footrow
+        +cell yield
+        +cell #[code Doc]
+        +cell Containers for accessing the linguistic annotations.

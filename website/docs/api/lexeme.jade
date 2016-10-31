@@ -1,0 +1,239 @@
+//- 💫 DOCS > API > LEXEME
+
+include ../../_includes/_mixins
+
+p An entry in the vocabulary.
+
++h(2, "attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell
+
+    +row
+        +cell #[code lower]
+        +cell int
+        +cell Lower-case form of the word.
+
+    +row
+        +cell #[code lower_]
+        +cell unicode
+        +cell Lower-case form of the word.
+
+    +row
+        +cell #[code shape]
+        +cell int
+        +cell Transform of the word's string, to show orthographic features.
+
+    +row
+        +cell #[code shape_]
+        +cell unicode
+        +cell Transform of the word's string, to show orthographic features.
+
+    +row
+        +cell #[code prefix]
+        +cell int
+        +cell Length-N substring from the start of the word. Defaults to #[code N=1].
+
+    +row
+        +cell #[code prefix_]
+        +cell unicode
+        +cell Length-N substring from the start of the word. Defaults to #[code N=1].
+
+    +row
+        +cell #[code suffix]
+        +cell int
+        +cell Length-N substring from the end of the word. Defaults to #[code N=3].
+
+    +row
+        +cell #[code suffix_]
+        +cell unicode
+        +cell Length-N substring from the start of the word. Defaults to #[code N=3].
+
+    +row
+        +cell #[code is_alpha]
+        +cell bool
+        +cell Equivalent to #[code word.orth_.isalpha()].
+
+    +row
+        +cell #[code is_ascii]
+        +cell bool
+        +cell Equivalent to #[code [any(ord(c) >= 128 for c in word.orth_)]].
+
+    +row
+        +cell #[code is_digit]
+        +cell bool
+        +cell Equivalent to #[code word.orth_.isdigit()].
+
+    +row
+        +cell #[code is_lower]
+        +cell bool
+        +cell Equivalent to #[code word.orth_.islower()].
+
+    +row
+        +cell #[code is_title]
+        +cell bool
+        +cell Equivalent to #[code word.orth_.istitle()].
+
+    +row
+        +cell #[code is_punct]
+        +cell bool
+        +cell Equivalent to #[code word.orth_.ispunct()].
+
+    +row
+        +cell #[code is_space]
+        +cell bool
+        +cell Equivalent to #[code word.orth_.isspace()].
+
+    +row
+        +cell #[code like_url]
+        +cell bool
+        +cell Does the word resemble a URL?
+
+    +row
+        +cell #[code like_num]
+        +cell bool
+        +cell Does the word represent a number? e.g. “10.9”, “10”, “ten”, etc.
+
+    +row
+        +cell #[code like_email]
+        +cell bool
+        +cell Does the word resemble an email address?
+
+    +row
+        +cell #[code is_oov]
+        +cell bool
+        +cell Is the word out-of-vocabulary?
+
+    +row
+        +cell #[code is_stop]
+        +cell bool
+        +cell Is the word part of a "stop list"?
+
+    +row
+        +cell #[code lang]
+        +cell int
+        +cell Language of the parent vocabulary.
+    +row
+        +cell #[code lang_]
+        +cell unicode
+        +cell Language of the parent vocabulary.
+
+    +row
+        +cell #[code prob]
+        +cell float
+        +cell Smoothed log probability estimate of token's type.
+
+    +row
+        +cell #[code sentiment]
+        +cell float
+        +cell A scalar value indicating the positivity or negativity of the token.
+    +row
+        +cell #[code lex_id]
+        +cell int
+        +cell ID of the token's lexical type.
+
+    +row
+        +cell #[code text]
+        +cell unicode
+        +cell Verbatim text content.
+
++h(2, "init") Lexeme.__init__
+    +tag method
+
+p Create a #[code Lexeme] object.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell The parent vocabulary.
+
+    +row
+        +cell #[code orth]
+        +cell int
+        +cell The orth id of the lexeme.
+
+    +footrow
+        +cell return
+        +cell #[code Lexeme]
+        +cell The newly constructed object.
+
++h(2, "set_flag") Lexeme.set_flag
+    +tag method
+
+p Change the value of a boolean flag.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code flag_id]
+        +cell int
+        +cell The attribute ID of the flag to set.
+
+    +row
+        +cell #[code value]
+        +cell bool
+        +cell The new value of the flag.
+
+    +footrow
+        +cell return
+        +cell #[code None]
+        +cell -
+
++h(2, "check_flag") Lexeme.check_flag
+    +tag method
+
+p Check the value of a boolean flag.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code flag_id]
+        +cell int
+        +cell The attribute ID of the flag to query.
+
+    +footrow
+        +cell return
+        +cell bool
+        +cell The value of the flag.
+
++h(2, "similarity") Lexeme.similarity
+    +tag method
+
+p Compute a semantic similarity estimate. Defaults to cosine over vectors.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code other]
+        +cell -
+        +cell
+            |  The object to compare with. By default, accepts #[code Doc],
+            |  #[code Span], #[code Token] and #[code Lexeme] objects.
+
+    +footrow
+        +cell return
+        +cell float
+        +cell A scalar similarity score. Higher is more similar.
+
++h(2, "vector") Lexeme.vector
+    +tag property
+
+p A real-valued meaning representation.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
+        +cell A real-valued meaning representation.
+
++h(2, "has_vector") Lexeme.has_vector
+    +tag property
+
+p A boolean value indicating whether a word vector is associated with the object.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell bool
+        +cell Whether a word vector is associated with the object.

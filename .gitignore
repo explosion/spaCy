@@ -75,11 +75,6 @@ htmlcov/
 nosetests.xml
 coverage.xml
 
-# Website
-website/www/
-website/demos/displacy/
-website/demos/sense2vec/
-
 # Translations
 *.mo
 
@@ -107,3 +102,6 @@ website/demos/sense2vec/
 # Website
 website/_deploy.sh
 website/package.json
+website/blog/announcement.jade
+website/www/
+website/.gitignore

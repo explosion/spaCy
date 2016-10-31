@@ -1,0 +1,179 @@
+//- 💫 DOCS > API > MATCHER
+
+include ../../_includes/_mixins
+
+p Match sequences of tokens, based on pattern rules.
+
++h(2, "load") Matcher.load
+    +tag classmethod
+
+p Load the matcher and patterns from a file path.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell #[code Path]
+        +cell Path to a JSON-formatted patterns file.
+
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell The vocabulary that the documents to match over will refer to.
+
+    +footrow
+        +cell return
+        +cell #[code Matcher]
+        +cell The newly constructed object.
+
++h(2, "init") Matcher.__init__
+    +tag method
+
+p Create the Matcher.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell
+            |  The vocabulary object, which must be shared with the documents
+            |  the matcher will operate on.
+
+    +row
+        +cell #[code patterns]
+        +cell dict
+        +cell Patterns to add to the matcher.
+
+    +footrow
+        +cell return
+        +cell #[code Matcher]
+        +cell The newly constructed object.
+
++h(2, "call") Matcher.__call__
+    +tag method
+
+p Find all token sequences matching the supplied patterns on the Doc.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The document to match over.
+
+    +footrow
+        +cell return
+        +cell list
+        +cell
+            |  A list of#[code (entity_key, label_id,  start, end)] tuples,
+            |  describing the matches. A match tuple describes a
+            |  #[code span doc[start:end]]. The #[code label_id] and
+            |  #[code entity_key] are both integers.
+
++h(2, "pipe") Matcher.pipe
+    +tag method
+
+p Match a stream of documents, yielding them in turn.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code docs]
+        +cell -
+        +cell A stream of documents.
+
+    +row
+        +cell #[code batch_size]
+        +cell int
+        +cell The number of documents to accumulate into a working set.
+
+    +row
+        +cell #[code n_threads]
+        +cell int
+        +cell
+            |  The number of threads with which to work on the buffer in
+            |  parallel, if the #[code Matcher] implementation supports
+            |  multi-threading.
+
+    +footrow
+        +cell yield
+        +cell #[code Doc]
+        +cell Documents, in order.
+
++h(2, "add_entity") Matcher.add_entity
+    +tag method
+
+p Add an entity to the matcher.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code entity_key]
+        +cell unicode / int
+        +cell An ID for the entity.
+
+    +row
+        +cell #[code attrs]
+        +cell -
+        +cell Attributes to associate with the Matcher.
+
+    +row
+        +cell #[code if_exists]
+        +cell unicode
+        +cell
+            |  #[code 'raise'], #[code 'ignore'] or #[code 'update']. Controls
+            |  what happens if the entity ID already exists. Defaults to
+            |  #[code 'raise'].
+
+    +row
+        +cell #[code acceptor]
+        +cell -
+        +cell Callback function to filter matches of the entity.
+
+    +row
+        +cell #[code on_match]
+        +cell -
+        +cell Callback function to act on matches of the entity.
+
+    +footrow
+        +cell return
+        +cell #[code None]
+        +cell -
+
++h(2, "add_pattern") Matcher.add_pattern
+    +tag method
+
+p Add a pattern to the matcher.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code entity_key]
+        +cell unicode / int
+        +cell An ID for the entity.
+
+    +row
+        +cell #[code token_specs]
+        +cell -
+        +cell Description of the pattern to be matched.
+
+    +row
+        +cell #[code label]
+        +cell unicode / int
+        +cell Label to assign to the matched pattern. Defaults to #[code ""].
+
+    +footrow
+        +cell return
+        +cell #[code None]
+        +cell -
+
++h(2, "has_entity") Matcher.has_entity
+    +tag method
+
+p Check whether the matcher has an entity.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code entity_key]
+        +cell unicode / int
+        +cell The entity key to check.
+
+    +footrow
+        +cell return
+        +cell bool
+        +cell Whether the matcher has the entity.

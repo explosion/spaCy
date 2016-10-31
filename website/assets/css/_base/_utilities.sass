@@ -1,80 +1,84 @@
-//- ----------------------------------
-//- 💫 BASE > UTILITIES
-//- ----------------------------------
+//- 💫 CSS > BASE > UTILITIES
 
 //- Text
 
-%text
-    font-family: $font-primary
-    line-height: 1.5
-
-.u-text-regular
-    @extend %text
-    font-size: 1.6rem
-
-.u-text-medium
-    @extend %text
-    font-size: 2rem
+.u-text
+    font: 1.5rem/#{1.55} $font-primary
 
 .u-text-small
-    @extend %text
-    font-size: 1.2rem
+    font: 1.4rem/#{1.375} $font-primary
 
-.u-text-large
-    @extend %text
-    font-size: 2.8rem
+.u-text-tiny
+    font: 1.1rem/#{1.375} $font-primary
+
+
+//- Labels & Tags
 
 .u-text-label
-    @extend %text
-    font-size: 1.4rem
-    font-weight: normal
+    font: normal 600 1.4rem/#{1.5} $font-code
     text-transform: uppercase
 
-.u-text-strong
-    font-weight: bold
+    &.u-text-label--dark
+        display: inline-block
+        background: $color-dark
+        box-shadow: inset 1px 1px 1px rgba($color-front, 0.25)
+        color: $color-back
+        padding: 0 0.75rem
+        margin: 1.5rem 0 0 2rem
+        border-radius: 2px
 
-.u-code-regular
-    font: normal normal 1.3rem/#{2} $font-code
+.u-text-tag
+    display: inline-block
+    font: 600 1.1rem/#{1} $font-code
+    background: $color-theme
+    color: $color-back
+    padding: 0.15em 0.25em
+    border-radius: 2px
+    text-transform: uppercase
+    vertical-align: middle
 
-.u-code-small
-    font: normal normal 0.85em $font-code
-    line-height: inherit
-
-.u-link
-    color: $color-theme
-    border-bottom: 1px solid
+    &.u-text-tag--spaced
+        margin-left: 0.75em
 
 
 //- Headings
 
+.u-heading
+    margin-bottom: 2rem
+
+    @include breakpoint(max, md)
+        word-wrap: break-word
+
+    &:not(:first-child)
+        padding-top: 3.5rem
+
 .u-heading-0
     font: normal bold 7rem/#{1} $font-primary
 
-@each $level, $size in (1: 5.5, 2: 3, 3: 2.6, 4: 2, 5: 1.8)
+@each $level, $size in $headings
     .u-heading-#{$level}
         font: normal bold #{$size}rem/#{1.25} $font-primary
-        margin-bottom: 2rem
-
-.u-heading-label
-    @extend .u-text-label
-    margin-bottom: 1rem
 
 
-//- Permalinks
+//- Links
+
+.u-link
+    color: $color-theme
+    border-bottom: 1px solid
 
 .u-permalink
     position: relative
 
     &:target
         display: inline-block
-        padding-top: $nav-height * 1.5
+        padding-top: $nav-height * 1.25
 
         & + *
-            margin-top: $nav-height * 1.5
+            margin-top: $nav-height * 1.25
 
 .u-permalink__icon
-    @include position(absolute, bottom, left, 0.25em, -3.25rem)
-    @include size(2rem)
+    @include position(absolute, bottom, left, 0.35em, -2.75rem)
+    @include size(1.5rem)
     color: $color-subtle
 
     .u-permalink:hover &
@@ -89,46 +93,56 @@
 .u-text-center
     text-align: center
 
-.u-float-right
-    float: right
+.u-text-right
+    text-align: right
+
+.u-padding
+    padding: 5rem
 
 .u-padding-small
     padding: 0.5em 0.75em
 
 .u-padding-medium
-    padding: 2rem
+    padding: 2.5rem
 
-.u-padding
-    padding: 5rem
+.u-inline-block
+    display: inline-block
+
+.u-no-border
+    border: none
 
 .u-border
     border: 1px solid $color-subtle
-    border-radius: 3px
-
-.u-border-top
-    border-top: 1px solid $color-subtle
+    border-radius: 2px
 
 .u-border-bottom
-    border-bottom: 1px solid $color-subtle
+    border: 1px solid $color-subtle
 
-.u-color-theme
-    color: $color-theme
+.u-border-dotted
+    border-top: 1px dotted $color-subtle
 
-.u-color-subtle
-    color: $color-subtle-dark
+@each $name, $color in (theme: $color-theme, subtle: $color-subtle-dark, light: $color-back, red: $color-red, green: $color-green, yellow: $color-yellow)
+    .u-color-#{$name}
+        color: $color
 
-.u-text-shadow
-    text-shadow: 2px 2px $color-theme-dark
+.u-grayscale
+    filter: grayscale(100%)
+    transition: filter 0.15s ease
+    user-select: none
+
+    &:hover
+        filter: none
 
 .u-pattern
-    background: $color-theme url("/assets/img/pattern.jpg")
-    color: $color-back
+    background: $pattern
 
+
+//- Hidden elements
 
 .u-hidden
     display: none
 
-@each $breakpoint in (sm, md)
-    .u-hidden-#{$breakpoint}
+@each $breakpoint in (xs, sm, md)
+    .u-hidden-#{$breakpoint}.u-hidden-#{$breakpoint}
         @include breakpoint(max, $breakpoint)
             display: none

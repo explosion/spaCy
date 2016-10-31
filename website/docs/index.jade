@@ -1,26 +1,27 @@
-//- ----------------------------------
 //- 💫 DOCS
-//- ----------------------------------
 
 include ../_includes/_mixins
 
-- var link_bool = 'http://docs.python.org/library/functions.html#bool'
-- var link_int = 'http://docs.python.org/library/functions.html#int'
-- var link_unicode = 'http://docs.python.org/library/functions.html#unicode'
+p=lorem_short
 
-include _quickstart-install
-include _quickstart-examples
++aside("Help us improve the docs")
+    |  Did you spot a mistake or come across explanations that
+    |  are unclear? You can find a "Suggest edits" button at the
+    |  bottom at each page that points you to the source.
+    |  We always appreciate
+    |  #[+a(gh("spaCy") + "/pulls") pull requests].#[br]#[br]
+    |  Have you built something cool with spaCy, or did you
+    |  write a tutorial to help others use spaCy?
+    |  #[a(href="mailto:#{EMAIL}") Let us know!]
 
-+h(2, "api") API
++grid
+    each details, title in sections
+        +card(false, false)
+            a(href=details.url)
+                +svg("graphics", details.svg, 300, 150).u-color-theme
 
-include _api-language
-include _api-doc
-include _api-token
-include _api-span
-include _api-lexeme
-include _api-vocab
-include _api-stringstore
-include _api-matcher
+            a(href=details.url)
+                +h(3)=title
 
-include _annotation-specs
-include _tutorials
+            p=details.description
+            +button(details.url, true, "primary")(target="_self") View

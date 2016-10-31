@@ -1,6 +1,11 @@
-//- ----------------------------------
 //- 💫 INCLUDES > FUNCTIONS
-//- ----------------------------------
+
+//- More descriptive variables for current.path and current.source
+
+- CURRENT = current.source
+- SECTION = current.path[0]
+- SUBSECTION = current.path[1]
+
 
 //- Add prefixes to items of an array (for modifier CSS classes)
 
@@ -8,4 +13,11 @@
 -       return array.map(function(arg) {
 -           return prefix + '--' + arg;
 -       }).join(' ');
+-   }
+
+
+//- Generate GitHub links
+
+-   function gh(repo, filepath, branch) {
+-       return 'https://github.com/' + SOCIAL.github + '/' + repo + (filepath ? '/blob/' + (branch || 'master') + '/' + filepath : '' );
 -   }

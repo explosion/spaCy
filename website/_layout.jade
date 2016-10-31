@@ -1,13 +1,19 @@
-//- ----------------------------------
 //- 💫 GLOBAL LAYOUT
-//- ----------------------------------
 
 include _includes/_mixins
 
 doctype html
 
 html(lang="en")
-    title=(current.path[0] == "index") ? SITENAME + " | " + SLOGAN : title + " | " + SITENAME
+    title
+        if SECTION == "docs" && SUBSECTION && SUBSECTION != "index"
+            | #{title} | #{SITENAME} #{SUBSECTION == "api" ? "API" : "Usage"} Documentation
+
+        else if SECTION != "index"
+            | #{title} | #{SITENAME}
+
+        else
+            | #{SITENAME} - #{SLOGAN}
 
     meta(charset="utf-8")
     meta(name="viewport" content="width=device-width, initial-scale=1.0")
@@ -17,43 +23,42 @@ html(lang="en")
     meta(property="og:type" content="website")
     meta(property="og:site_name" content=sitename)
     meta(property="og:url" content="#{SITE_URL}/#{current.path.join('/')}")
-    meta(property="og:title" content=title)
+    meta(property="og:title" content="#{title} - spaCy")
     meta(property="og:description" content=description)
-    meta(property="og:image" content="/assets/img/social.png")
+    meta(property="og:image" content="#{SITE_URL}/assets/img/social#{(SECTION == 'docs') ? '_docs' : ''}.jpg")
 
     meta(name="twitter:card" content="summary_large_image")
     meta(name="twitter:site" content="@" + SOCIAL.twitter)
-    meta(name="twitter:title" content=title)
+    meta(name="twitter:title" content="#{title} - spaCy")
     meta(name="twitter:description" content=description)
-    meta(name="twitter:image" content="/assets/img/social.jpg")
+    meta(name="twitter:image" content="#{SITE_URL}/assets/img/social#{(SECTION == 'docs') ? '_docs' : ''}.jpg")
 
     link(rel="shortcut icon" href="/assets/img/favicon.ico")
     link(rel="icon" type="image/x-icon" href="/assets/img/favicon.ico")
-    link(href="/assets/css/style.css" rel="stylesheet")
+
+    if SUBSECTION == "usage"
+        link(href="/assets/css/style_red.css?v1" rel="stylesheet")
+
+    else
+        link(href="/assets/css/style.css?v1" rel="stylesheet")
 
     body
         include _includes/_navigation
 
-        if !landing
-            header.o-header.u-pattern.u-text-center
-                if current.path[1] == "tutorials"
-                    h2.u-heading-1.u-text-shadow Tutorials
-
-                else
-                    +h(1).u-text-shadow=title
-
-            if sidebar
-                include _includes/_sidebar
-
-            main.o-content(class="#{(sidebar) ? 'o-content--sidebar' : '' } #{((current.path[0] == 'docs' && asides != false) || asides) ? 'o-content--asides' : '' } #{(current.path[1] == 'tutorials') ? 'o-content--article' : '' }")
-                if current.path[1] == "tutorials"
-                    +h(1)=title
-
-                !=yield
+        if SECTION == "docs"
+            include _includes/_page-docs
 
         else
-            !=yield
+            main!=yield
+                include _includes/_footer
 
-        include _includes/_footer
+        each script in SCRIPTS
+            script(src="/assets/js/" + script + ".js?v1", type="text/javascript")
 
-        include _includes/_scripts
+        if environment == "deploy"
+            script
+                | window.ga=window.ga||function(){
+                | (ga.q=ga.q||[]).push(arguments)}; ga.l=+new Date;
+                | ga('create', '#{ANALYTICS}', 'auto'); ga('send', 'pageview');
+
+            script(async src="https://www.google-analytics.com/analytics.js")

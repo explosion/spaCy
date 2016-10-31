@@ -2,10 +2,9 @@ spaCy: Industrial-strength NLP
 ******************************
 
 spaCy is a library for advanced natural language processing in Python and 
-Cython. `See here <https://spacy.io>`_ for documentation and details. spaCy is built on 
-the very latest research, but it isn't researchware.  It was designed from day 1 
-to be used in real products. It's commercial open-source software, released under 
-the MIT license.
+Cython. spaCy is built on  the very latest research, but it isn't researchware.  
+It was designed from day 1 to be used in real products. It's commercial 
+open-source software, released under the MIT license.
 
 💫 **Version 1.1 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
@@ -29,19 +28,33 @@ the MIT license.
     :target: https://gitter.im/explosion/spaCy
     :alt: spaCy on Gitter
 
-Where to ask questions
-======================
+📖 Documentation
+=============
+
++----------------------------------------------------------------+-----------------------------------------------------------------------+
+| `Usage Workflows <https://spacy.io/docs/usage/>`_              | How to use spaCy and its features.                                    |
++----------------------------------------------------------------+-----------------------------------------------------------------------+
+| `API Reference <https://spacy.io/docs/api/>`_                  | The detailed reference for spaCy's API.                               |
++----------------------------------------------------------------+-----------------------------------------------------------------------+
+| `Tutorials <https://spacy.io/docs/usage/tutorials>`_           | End-to-end examples, with code you can modify and run.                |
++----------------------------------------------------------------+-----------------------------------------------------------------------+
+| `Showcase & Demos <https://spacy.io/docs/usage/showcase>`_     | Demos, libraries and products from the spaCy community.               |
++----------------------------------------------------------------+-----------------------------------------------------------------------+
+
+
+💬 Where to ask questions
+==========================
 
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| 🔴 **Bug reports**        | `GitHub Issue tracker <https://github.com/explosion/spaCy/issues>`_                                        |
+| **Bug reports**           | `GitHub Issue tracker <https://github.com/explosion/spaCy/issues>`_                                        |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| ⁉️ **Usage questions**    | `StackOverflow <http://stackoverflow.com/questions/tagged/spacy>`_, `Reddit usergroup                      | 
+| **Usage questions**       | `StackOverflow <http://stackoverflow.com/questions/tagged/spacy>`_, `Reddit usergroup                      | 
 |                           | <https://www.reddit.com/r/spacynlp>`_, `Gitter chat <https://gitter.im/explosion/spaCy>`_                  |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| 💬 **General discussion** |  `Reddit usergroup <https://www.reddit.com/r/spacynlp>`_,                                                  |
+| **General discussion**    |  `Reddit usergroup <https://www.reddit.com/r/spacynlp>`_,                                                  |
 |                           | `Gitter chat <https://gitter.im/explosion/spaCy>`_                                                         |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| 💥 **Commercial support** |  contact@explosion.ai                                                                                      |
+| **Commercial support**    |  contact@explosion.ai                                                                                      |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
 
 Features
@@ -70,7 +83,7 @@ Supports
 ========
 
 * CPython 2.6, 2.7, 3.3, 3.4, 3.5 (only 64 bit)
-* OSX
+* macOS / OS X
 * Linux
 * Windows (Cygwin, MinGW, Visual Studio)
 
@@ -80,7 +93,7 @@ Install spaCy
 spaCy is compatible with 64-bit CPython 2.6+/3.3+ and runs on Unix/Linux, OS X 
 and Windows. Source packages are available via 
 `pip <https://pypi.python.org/pypi/spacy>`_. Please make sure that
-you have a working build enviroment set up. See notes on Ubuntu, OS X and Windows
+you have a working build enviroment set up. See notes on Ubuntu, macOS/OS X and Windows
 for details.
 
 pip
@@ -166,23 +179,20 @@ Install system-level dependencies via ``apt-get``:
 
     sudo apt-get install build-essential python-dev git
 
-OS X
-----
+macOS / OS X
+------------
 
-Install a recent version of XCode, including the so-called "Command Line Tools". 
-OS X ships with Python and git preinstalled.
+Install a recent version of `XCode <https://developer.apple.com/xcode/>`_, 
+including the so-called "Command Line Tools". macOS and OS X ship with Python 
+and git preinstalled.
 
 Windows
 -------
 
-Install a version of Visual Studio Express or higher that matches the version 
-that was used to compile your Python interpreter. For official distributions 
-these are VS 2008 (Python 2.7), VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
-
-If you don't want to install the entire Visual Studio, you can install a
-stand-alone compiler. Make sure that you install the correct version for 
-your version of Python. See https://wiki.python.org/moin/WindowsCompilers for 
-links to download these.
+Install a version of `Visual Studio Express <https://www.visualstudio.com/vs/visual-studio-express/>`_
+or higher that matches the version that was used to compile your Python 
+interpreter. For official distributions these are VS 2008 (Python 2.7), 
+VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
 
 Run tests
 =========
@@ -203,17 +213,6 @@ and ``--model`` are optional and enable additional tests:
     python -m pip install -U pytest
 
     python -m pytest <spacy-directory> --vectors --model --slow
-
-API Documentation and Usage Examples
-====================================
-
-For the detailed documentation, check out the `spaCy website <https://spacy.io/docs/>`_.
-
-* `Usage Examples <https://spacy.io/docs/#examples>`_
-* `API <https://spacy.io/docs/#api>`_
-* `Annotation Specification <https://spacy.io/docs/#annotation>`_
-* `Tutorials <https://spacy.io/docs/#tutorials>`_
-
 
 Changelog
 =========

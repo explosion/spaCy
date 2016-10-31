@@ -1,0 +1,111 @@
+//- 💫 DOCS > USAGE
+
+include ../../_includes/_mixins
+
+p
+    |  spaCy is compatible with #[strong 64-bit CPython 2.6+&#8725;3.3+] and
+    |  runs on #[strong Unix/Linux], #[strong macOS/OS X] and
+    |  #[strong Windows]. The latest spaCy releases are currently only
+    |  available as source packages over
+    |  #[+a("https://pypi.python.org/pypi/spacy") pip]. Installaton requires a
+    |  working build environment. See notes on
+    |  #[a(href="#source-ubuntu") Ubuntu], #[a(href="#source-osx") macOS/OS X]
+    |  and #[a(href="#source-windows") Windows] for details.
+
++code(false, "bash").
+    pip install -U spacy
+
+p
+    |  After installation you need to download a language model. Models for
+    |  English (#[code en]) and German (#[code de]) are available.
+
++code(false, "bash").
+    python -m spacy.en.download all
+    python -m spacy.de.download all
+
++aside-code("Examples", "bash").
+    # Install English tagger, parser and NER
+    python -m spacy.en.download parser
+
+    # Install English GloVe vectors
+    python -m spacy.en.download glove
+
+    # Upgrade/overwrite existing data
+    python -m spacy.en.download --force
+
+    # Check whether the model was successfully installed
+    python -c "import spacy; spacy.load('en'); print('OK')"
+
+p The download command fetches about 1 GB of data which it installs within the #[code spacy] package directory.
+
++h(2, "source") Compile from source
+
+p
+    |  The other way to install spaCy is to clone its
+    |  #[+a(gh("spaCy")) GitHub repository] and build it from source. That is
+    |  the common way if you want to make changes to the code base.
+
+p
+    |  You'll need to make sure that you have a development enviroment
+    |  consisting of a Python distribution including header files, a compiler,
+    |  #[+a("https://pip.pypa.io/en/latest/installing/") pip],
+    |  #[+a("https://virtualenv.pypa.io/") virtualenv] and
+    |  #[+a("https://git-scm.com") git] installed. The compiler part is the
+    |  trickiest. How to do that depends on your system. See notes on
+    |  #[a(href="#source-ubuntu") Ubuntu], #[a(href="#source-osx") OS X] and
+    |  #[a(href="#source-windows") Windows] for details.
+
++h(3, "source-ubuntu") Ubuntu
+
+p Install system-level dependencies via #[code apt-get]:
+
++code(false, "bash").
+    sudo apt-get install build-essential python-dev git
+
++h(3, "source-osx") macOS / OS X
+
+p
+    |  Install a recent version of #[+a("https://developer.apple.com/xcode/") XCode],
+    |  including the so-called "Command Line Tools". macOS and OS X ship with
+    |  Python and git preinstalled.
+
++h(3, "source-windows") Windows
+
+p
+    |  Install a version of
+    |  #[+a("https://www.visualstudio.com/vs/visual-studio-express/") Visual Studio Express]
+    |  that matches the version that was used to compile your Python
+    |  interpreter. For official distributions these are:
+
++table([ "Distribution", "Version"])
+    +row
+        +cell Python 2.7
+        +cell Visual Studio 2008
+
+    +row
+        +cell Python 3.4
+        +cell Visual Studio 2010
+
+    +row
+        +cell Python 3.5
+        +cell Visual Studio 2015
+
++h(2, "tests") Run tests
+
+p
+    |  spaCy comes with an extensive test suite. First, find out where spaCy is
+    |  installed:
+
++code(false, "bash").
+    python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
+
+p
+    |  Then run #[code pytest] on that directory. The flags #[code --vectors],
+    |  #[code --slow] and #[code --model] are optional and enable additional
+    |  tests:
+
++code(false, "bash").
+    # make sure you are using recent pytest version
+    python -m pip install -U pytest
+
+    python -m pytest &lt;spacy-directory&gt; --vectors --model --slow

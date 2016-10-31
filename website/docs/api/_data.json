@@ -1,0 +1,103 @@
+{
+    "sidebar": {
+        "Introduction": {
+            "Facts & Figures": "./",
+            "Philosophy": "philosophy"
+        },
+        "Classes": {
+            "Doc": "doc",
+            "Token": "token",
+            "Span": "span",
+            "Language": "language",
+            "Tagger": "tagger",
+            "DependencyParser": "dependencyparser",
+            "EntityRecognizer": "entityrecognizer",
+            "Matcher": "matcher",
+            "Lexeme": "lexeme",
+            "Vocab": "vocab",
+            "StringStore": "stringstore",
+            "GoldParse": "goldparse"
+        },
+        "Other": {
+            "Annotation Specs": "annotation"
+        }
+    },
+
+    "index": {
+        "title": "Facts & Figures",
+        "next": "philosophy"
+    },
+
+    "philosophy": {
+        "title": "Philosophy"
+    },
+
+    "language": {
+        "title": "Language",
+        "tag": "class"
+    },
+
+    "doc": {
+        "title": "Doc",
+        "tag": "class"
+    },
+
+    "token": {
+        "title": "Token",
+        "tag": "class"
+    },
+
+    "span": {
+        "title": "Span",
+        "tag": "class"
+    },
+
+    "lexeme": {
+        "title": "Lexeme",
+        "tag": "class"
+    },
+
+    "vocab": {
+        "title": "Vocab",
+        "tag": "class"
+    },
+
+    "stringstore": {
+        "title": "StringStore",
+        "tag": "class"
+    },
+
+    "matcher": {
+        "title": "Matcher",
+        "tag": "class"
+    },
+
+    "dependenyparser": {
+        "title": "DependencyParser",
+        "tag": "class"
+    },
+
+    "entityrecognizer": {
+        "title": "EntityRecognizer",
+        "tag": "class"
+    },
+
+    "dependencyparser": {
+        "title": "DependencyParser",
+        "tag": "class"
+    },
+
+    "tagger": {
+        "title": "Tagger",
+        "tag": "class"
+    },
+
+    "goldparse": {
+        "title": "GoldParse",
+        "tag": "class"
+    },
+
+    "annotation": {
+        "title": "Annotation Specifications"
+    }
+}
