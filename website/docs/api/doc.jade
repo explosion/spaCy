@@ -1,0 +1,416 @@
+//- 💫 DOCS > API > DOC
+
+include ../../_includes/_mixins
+
+p A container for accessing linguistic annotations.
+
++h(2, "attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code mem]
+        +cell #[code Pool]
+        +cell The document's local memory heap, for all C data it owns.
+
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell The store of lexical types.
+
+    +row
+        +cell #[code user_data]
+        +cell -
+        +cell A generic storage area, for user custom data.
+
+    +row
+        +cell #[code is_tagged]
+        +cell bool
+        +cell
+            |  A flag indicating that the document has been part-of-speech
+            |  tagged.
+
+    +row
+        +cell #[code is_parsed]
+        +cell bool
+        +cell A flag indicating that the document has been syntactically parsed.
+
+    +row
+        +cell #[code sentiment]
+        +cell float
+        +cell The document's positivity/negativity score, if available.
+
+    +row
+        +cell #[code user_hooks]
+        +cell dict
+        +cell
+            |  A dictionary that allows customisation of the #[code Doc]'s
+            |  properties.
+
+    +row
+        +cell #[code user_token_hooks]
+        +cell dict
+        +cell
+            |  A dictionary that allows customisation of properties of
+            |  #[code Token] chldren.
+
+    +row
+        +cell #[code user_span_hooks]
+        +cell dict
+        +cell
+            |  A dictionary that allows customisation of properties of
+            |  #[code Span] chldren.
+
++h(2, "init") Doc.__init__
+    +tag method
+
+p Construct a #[code Doc] object.
+
++aside("Note")
+    |  The most common way to get a #[code Doc] object is via the #[code nlp]
+    |  object. This method is usually only used for deserialization or preset
+    |  tokenization.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell A storage container for lexical types.
+
+    +row
+        +cell #[code words]
+        +cell -
+        +cell A list of strings to add to the container.
+
+    +row
+        +cell #[code spaces]
+        +cell -
+        +cell
+            |  A list of boolean values indicating whether each word has a
+            |  subsequent space. Must have the same length as #[code words], if
+            |  specified. Defaults to a sequence of #[code True].
+
+    +footrow
+        +cell return
+        +cell #[code Doc]
+        +cell The newly constructed object.
+
++h(2, "getitem") Doc.__getitem__
+    +tag method
+
+p Get a #[code Token] object.
+
++aside-code("Example").
+    doc = nlp(u'Give it back! He pleaded.')
+    assert doc[0].text == 'Give'
+    assert doc[-1].text == '.'
+    span = doc[1:1]
+    assert span.text == 'it back'
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code i]
+        +cell int
+        +cell The index of the token.
+
+    +footrow
+        +cell return
+        +cell #[code Token]
+        +cell The token at #[code doc[i]].
+
+p Get a #[code Span] object.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code start_end]
+        +cell tuple
+        +cell The slice of the document to get.
+
+    +footrow
+        +cell return
+        +cell #[code Span]
+        +cell The span at #[code doc[start : end]].
+
++h(2, "iter") Doc.__iter__
+    +tag method
+
+p Iterate over #[code Token] objects.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell yield
+        +cell #[code Token]
+        +cell A #[code Token] object.
+
++h(2, "len") Doc.__len__
+    +tag method
+
+p Get the number of tokens in the document.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell int
+        +cell The number of tokens in the document.
+
++h(2, "similarity") Doc.similarity
+    +tag method
+
+p
+    |  Make a semantic similarity estimate. The default estimate is cosine
+    |  similarity using an average of word vectors.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code other]
+        +cell -
+        +cell
+            | The object to compare with. By default, accepts #[code Doc],
+            | #[code Span], #[code Token] and #[code Lexeme] objects.
+
+    +footrow
+        +cell return
+        +cell float
+        +cell A scalar similarity score. Higher is more similar.
+
++h(2, "to_array") Doc.to_array
+    +tag method
+
+p
+    |  Export the document annotations to a numpy array of shape #[code N*M]
+    |  where #[code N] is the length of the document and #[code M] is the number
+    |  of attribute IDs to export. The values will be 32-bit integers.
+
++aside-code("Example").
+    from spacy import attrs
+    doc = nlp(text)
+    # All strings mapped to integers, for easy export to numpy
+    np_array = doc.to_array([attrs.LOWER, attrs.POS,
+                             attrs.ENT_TYPE, attrs.IS_ALPHA])
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code attr_ids]
+        +cell ints
+        +cell A list of attribute ID ints.
+
+    +footrow
+        +cell return
+        +cell #[code numpy.ndarray[ndim=2, dtype='int32']]
+        +cell
+            |  The exported attributes as a 2D numpy array, with one row per
+            |  token and one column per attribute.
+
++h(2, "count_by") Doc.count_by
+    +tag method
+
+p Count the frequencies of a given attribute.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code attr_id]
+        +cell int
+        +cell The attribute ID
+
+    +footrow
+        +cell return
+        +cell dict
+        +cell A dictionary mapping attributes to integer counts.
+
++h(2, "from_array") Doc.from_array
+    +tag method
+
+p Load attributes from a numpy array.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code attr_ids]
+        +cell ints
+        +cell A list of attribute ID ints.
+
+    +row
+        +cell #[code values]
+        +cell #[code numpy.ndarray[ndim=2, dtype='int32']]
+        +cell The attribute values to load.
+
+    +footrow
+        +cell return
+        +cell #[code None]
+        +cell -
+
++h(2, "to_bytes") Doc.to_bytes
+    +tag method
+
+p Export the document contents to a binary string.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell bytes
+        +cell
+            |  A losslessly serialized copy of the #[code Doc] including all
+            |  annotations.
+
++h(2, "from_bytes") Doc.from_bytes
+    +tag method
+
+p Import the document contents from a binary string.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code byte_string]
+        +cell bytes
+        +cell The string to load from.
+
+    +footrow
+        +cell return
+        +cell #[code Doc]
+        +cell The #[code self] variable.
+
++h(2, "merge") Doc.merge
+    +tag method
+
+p
+    |  Retokenize the document, such that the span at
+    |  #[code doc.text[start_idx : end_idx]] is merged into a single token. If
+    |  #[code start_idx] and #[end_idx] do not mark start and end token
+    |  boundaries, the document remains unchanged.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code start_idx]
+        +cell int
+        +cell The character index of the start of the slice to merge.
+
+    +row
+        +cell #[code end_idx]
+        +cell int
+        +cell The character index after the end of the slice to merge.
+
+    +row
+        +cell #[code **attributes]
+        +cell -
+        +cell
+            |  Attributes to assign to the merged token. By default,
+            |  attributes are inherited from the syntactic root token of
+            |  the span.
+
+    +footrow
+        +cell return
+        +cell #[code Token]
+        +cell
+            |  The newly merged token, or None if the start and end
+            |  indices did not fall at token boundaries
+
++h(2, "read_bytes") Doc.read_bytes
+    +tag staticmethod
+
+p A static method, used to read serialized #[code Doc] objects from a file.
+
++aside-code("Example").
+    from spacy.tokens.doc import Doc
+    loc = 'test_serialize.bin'
+    with open(loc, 'wb') as file_:
+        file_.write(nlp(u'This is a document.').to_bytes())
+        file_.write(nlp(u'This is another.').to_bytes())
+    docs = []
+    with open(loc, 'rb') as file_:
+        for byte_string in Doc.read_bytes(file_):
+            docs.append(Doc(nlp.vocab).from_bytes(byte_string))
+    assert len(docs) == 2
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell file
+        +cell buffer
+        +cell A binary buffer to read the serialized annotations from.
+
+    +footrow
+        +cell yield
+        +cell bytes
+        +cell Binary strings from with documents can be loaded.
+
++h(2, "text") Doc.text
+    +tag property
+
+p A unicode representation of the document text.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell unicode
+        +cell The original verbatim text of the document.
+
++h(2, "text_with_ws") Doc.text_with_ws
+    +tag property
+
+p
+    |  An alias of #[code Doc.text], provided for duck-type compatibility with
+    |  #[code Span] and #[code Token].
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell unicode
+        +cell The original verbatim text of the document.
+
++h(2, "sents") Doc.sents
+    +tag property
+
+p Iterate over the sentences in the document.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell yield
+        +cell #[code Span]
+        +cell Sentences in the document.
+
++h(2, "ents") Doc.ents
+    +tag property
+
+p Iterate over the entities in the document.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell yield
+        +cell #[code Span]
+        +cell Entities in the document.
+
++h(2, "noun_chunks") Doc.noun_chunks
+    +tag property
+
+p
+    |  Iterate over the base noun phrases in the document. A base noun phrase,
+    |  or "NP chunk", is a noun phrase that does not permit other NPs to be
+    |  nested within it.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell yield
+        +cell #[code Span]
+        +cell Noun chunks in the document
+
++h(2, "vector") Doc.vector
+    +tag property
+
+p
+    |  A real-valued meaning representation. Defaults to an average of the
+    |  token vectors.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
+        +cell A 1D numpy array representing the document's semantics.
+
++h(2, "has_vector") Doc.has_vector
+    +tag property
+
+p
+    |  A boolean value indicating whether a word vector is associated with the
+    |  object.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell bool
+        +cell Whether the document has a vector data attached.

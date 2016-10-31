@@ -1,0 +1,107 @@
+//- 💫 DOCS > API > STRINGSTORE
+
+include ../../_includes/_mixins
+
+p Map strings to and from integer IDs.
+
++h(2, "init") StringStore.__init__
+    +tag method
+
+p Create the #[code StringStore].
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code strings]
+        +cell -
+        +cell A sequence of unicode strings to add to the store.
+
+    +footrow
+        +cell return
+        +cell #[code StringStore]
+        +cell The newly constructed object.
+
++h(2, "len") StringStore.__len__
+    +tag method
+
+p Get the number of strings in the store.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell int
+        +cell The number of strings in the store.
+
++h(2, "getitem") StringStore.__getitem__
+    +tag method
+
+p Retrieve a string from a given integer ID, or vice versa.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code string_or_id]
+        +cell bytes / unicode / int
+        +cell The value to encode.
+
+    +footrow
+        +cell return
+        +cell unicode / int
+        +cell The value to retrieved.
+
++h(2, "contains") StringStore.__contains__
+    +tag method
+
+p Check whether a string is in the store.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code string]
+        +cell unicode
+        +cell The string to check.
+
+    +footrow
+        +cell return
+        +cell bool
+        +cell Whether the store contains the string.
+
++h(2, "iter") StringStore.__iter__
+    +tag method
+
+p Iterate over the strings in the store, in order.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell yield
+        +cell unicode
+        +cell A string in the store.
+
++h(2, "dump") StringStore.dump
+    +tag method
+
+p Save the strings to a JSON file.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code file]
+        +cell buffer
+        +cell The file to save the strings.
+
+    +footrow
+        +cell return
+        +cell #[code None]
+        +cell -
+
++h(2, "load") StringStore.load
+    +tag method
+
+p Load the strings from a JSON file.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code file]
+        +cell buffer
+        +cell The file from which to load the strings.
+
+    +footrow
+        +cell return
+        +cell #[code None]
+        +cell -

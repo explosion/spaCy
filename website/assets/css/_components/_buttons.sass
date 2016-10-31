@@ -1,22 +1,22 @@
-//- ----------------------------------
-//- 💫 COMPONENTS > BUTTONS
-//- ----------------------------------
+//- 💫 CSS > COMPONENTS > BUTTONS
 
 .c-button
     display: inline-block
     font-weight: bold
-    padding: 0.5em 0.75em
+    padding: 0.75em 1em
     border: 2px solid
-    border-radius: 3px
-    transition: opacity 0.25s ease
-
-    &:hover
-        opacity: 0.8
+    border-radius: 2px
+    text-align: center
+    transition: background 0.25s ease
 
     &.c-button--primary
         background: $color-theme
         color: $color-back
         border-color: $color-theme
+
+        &:hover
+            background: $color-theme-dark
+            border-color: $color-theme-dark
 
     &.c-button--secondary
         background: $color-back

@@ -1,0 +1,278 @@
+//- 💫 DOCS > API > VOCAB
+
+include ../../_includes/_mixins
+
+p
+    |  A look-up table that allows you to access #[code Lexeme] objects. The
+    |  #[code Vocab] instance also provides access to the #[code StringStore],
+    |  and owns underlying C-data that is shared between #[code Doc] objects.
+
++h(2, "attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code strings]
+        +cell #[code StringStore]
+        +cell A table managing the string-to-int mapping.
+
+    +row
+        +cell #[code vectors_length]
+        +cell int
+        +cell The dimensionality of the word vectors, if present.
+
++h(2, "load") Vocab.load
+    +tag classmethod
+
+p Load the vocabulary from a path.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell #[code Path]
+        +cell The path to load from.
+
+    +row
+        +cell #[code lex_attr_getters]
+        +cell dict
+        +cell
+            |  A dictionary mapping attribute IDs to functions to compute them.
+            |  Defaults to #[code None].
+
+    +row
+        +cell #[code lemmatizer]
+        +cell -
+        +cell A lemmatizer. Defaults to #[code None].
+
+    +row
+        +cell #[code tag_map]
+        +cell dict
+        +cell
+            |  A dictionary mapping fine-grained tags to coarse-grained
+            |  parts-of-speech, and optionally morphological attributes.
+
+    +row
+        +cell #[code oov_prob]
+        +cell float
+        +cell The default probability for out-of-vocabulary words.
+
+    +footrow
+        +cell return
+        +cell #[code Vocab]
+        +cell The newly constructed object.
+
++h(2, "init") Vocab.__init__
+    +tag method
+
+p Create the vocabulary.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code lex_attr_getters]
+        +cell dict
+        +cell
+            | A dictionary mapping attribute IDs to functions to compute them.
+            | Defaults to #[code None].
+
+    +row
+        +cell #[code lemmatizer]
+        +cell -
+        +cell A lemmatizer. Defaults to #[code None].
+
+    +row
+        +cell #[code tag_map]
+        +cell dict
+        +cell
+            |  A dictionary mapping fine-grained tags to coarse-grained
+            |  parts-of-speech, and optionally morphological attributes.
+
+    +row
+        +cell #[code oov_prob]
+        +cell float
+        +cell The default probability for out-of-vocabulary words.
+
+    +footrow
+        +cell return
+        +cell #[code Vocab]
+        +cell The newly constructed object.
+
++h(2, "len") Vocab.__len__
+    +tag method
+
+p Get the number of lexemes in the vocabulary.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell int
+        +cell The number of lexems in the vocabulary.
+
++h(2, "getitem") Vocab.__getitem__
+    +tag method
+
+p
+    |  Retrieve a lexeme, given an int ID or a unicode string. If a previously
+    |  unseen unicode string is given, a new lexeme is created and stored.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code id_or_string]
+        +cell int / unicode
+        +cell The integer ID of a word, or its unicode string.
+
+    +footrow
+        +cell return
+        +cell #[code Lexeme]
+        +cell The lexeme indicated by the given ID.
+
++h(2, "iter") Span.__iter__
+    +tag method
+
+p Iterate over the lexemes in the vocabulary.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell yield
+        +cell #[code Lexeme]
+        +cell An entry in the vocabulary.
+
++h(2, "contains") Vocab.__contains__
+    +tag method
+
+p Check whether the string has an entry in the vocabulary.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code string]
+        +cell unicode
+        +cell The ID string.
+
+    +footrow
+        +cell return
+        +cell bool
+        +cell Whether the string has an entry in the vocabulary.
+
++h(2, "resize_vectors") Vocab.resize_vectors
+    +tag method
+
+p
+    |  Set #[code vectors_length] to a new size, and allocate more memory for
+    |  the #[code Lexeme] vectors if necessary. The memory will be zeroed.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code new_size]
+        +cell int
+        +cell The new size of the vectors.
+
+    +footrow
+        +cell return
+        +cell #[code None]
+        +cell -
+
++h(2, "add_flag") Vocab.add_flag
+    +tag method
+
+p Set a new boolean flag to words in the vocabulary.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code flag_getter]
+        +cell dict
+        +cell A function #[code f(unicode) -> bool], to get the flag value.
+
+    +row
+        +cell #[code flag_id]
+        +cell int
+        +cell
+            |  An integer between 1 and 63 (inclusive), specifying the bit at
+            |  which the flag will be stored. If #[code -1], the lowest
+            |  available bit will be chosen.
+
+    +footrow
+        +cell return
+        +cell int
+        +cell The integer ID by which the flag value can be checked.
+
++h(2, "dump") Vocab.dump
+    +tag method
+
+p Save the lexemes binary data to the given location.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code loc]
+        +cell #[code Path]
+        +cell The path to load from.
+
+    +footrow
+        +cell return
+        +cell #[code None]
+        +cell -
+
++h(2, "load_lexemes") Vocab.load_lexemes
+    +tag method
+
+p
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code loc]
+        +cell unicode
+        +cell Path to load the lexemes.bin file from.
+
+    +footrow
+        +cell return
+        +cell #[code None]
+        +cell -
+
++h(2, "dump_vectors") Vocab.dump_vectors
+    +tag method
+
+p Save the word vectors to a binary file.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code loc]
+        +cell #[code Path]
+        +cell The path to save to.
+
+    +footrow
+        +cell return
+        +cell #[code None]
+        +cell -
+
++h(2, "load_vectors") Vocab.load_vectors
+    +tag method
+
+p Load vectors from a text-based file.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code file_]
+        +cell buffer
+        +cell
+            |  The file to read from. Entries should be separated by newlines,
+            |  and each entry should be whitespace delimited. The first value
+            |  of the entry should be the word string, and subsequent entries
+            |  should be the values of the vector.
+
+    +footrow
+        +cell return
+        +cell int
+        +cell The length of the vectors loaded.
+
++h(2, "load_vectors_from_bin_loc") Vocab.load_vectors_from_bin_loc
+    +tag method
+
+p Load vectors from the location of a binary file.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code loc]
+        +cell unicode
+        +cell The path of the binary file to load from.
+
+    +footrow
+        +cell return
+        +cell int
+        +cell The length of the vectors loaded.

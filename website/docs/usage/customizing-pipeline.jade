@@ -1,0 +1,38 @@
+//- 💫 DOCS > USAGE > CUSTOMIZING THE PIPELINE
+
+include ../../_includes/_mixins
+
+p
+    |  spaCy provides several linguistic annotation functions by default. Each
+    |  function takes a Doc object, and modifies it in-place. The default
+    |  pipeline is #[code [nlp.tagger, nlp.entity, nlp.parser]]. spaCy 1.0
+    |  introduced the ability to customise this pipeline with arbitrary
+    |  functions.
+
++code.
+    def arbitrary_fixup_rules(doc):
+        for token in doc:
+            if token.text == u'bill' and token.tag_ == u'NNP':
+                token.tag_ = u'NN'
+
+    def custom_pipeline(nlp):
+        return (nlp.tagger, arbitrary_fixup_rules, nlp.parser, nlp.entity)
+
+    nlp = spacy.load('en', create_pipeline=custom_pipeline)
+
+p
+    |  The easiest way to customise the pipeline is to pass a
+    |  #[code create_pipeline] callback to the #[code spacy.load()] function.
+
+p
+    |  The callback you pass to #[code create_pipeline] should take a single
+    |  argument, and return a sequence of callables. Each callable in the
+    |  sequence should accept a #[code Doc] object and modify it in place.
+
+p
+    |  Instead of passing a callback, you can also write to the
+    |  #[code .pipeline] attribute directly.
+
++code.
+    nlp = spacy.load('en')
+    nlp.pipeline = [nlp.tagger]

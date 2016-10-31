@@ -2,27 +2,27 @@
     "index": {
         "landing": true,
         "logos": [
-            [
-                ["chartbeat", "https://chartbeat.com"],
-                ["socrata", "https://www.socrata.com"],
-                ["chattermill", "https://chattermill.io"],
-                ["cytora", "http://www.cytora.com"],
-                ["signaln", "http://signaln.com"],
-                ["duedil", "https://www.duedil.com/"],
-                ["spyjack", "https://spyjack.io"]
-            ],
-            [
-                ["keyreply", "https://keyreply.com/"],
-                ["dato", "https://dato.com"],
-                ["kip", "http://kipthis.com"],
-                ["wonderflow", "http://www.wonderflow.co"],
-                ["foxtype", "https://foxtype.com"]
-            ],
-            [
-                ["synapsify", "http://www.gosynapsify.com"],
-                ["stitchfix", "https://www.stitchfix.com/"],
-                ["wayblazer", "http://wayblazer.com"]
-            ]
+            {
+                "chartbeat": "https://chartbeat.com",
+                "cytora": "http://www.cytora.com",
+                "duedil": "https://www.duedil.com",
+                "socrata": "https://www.socrata.com",
+                "indico": "https://indico.io",
+                "signaln": "http://signaln.com"
+            },
+            {
+                "keyreply": "https://keyreply.com",
+                "dato": "https://dato.com",
+                "kip": "http://kipthis.com",
+                "wonderflow": "http://www.wonderflow.co",
+                "foxtype": "https://foxtype.com"
+            },
+            {
+                "synapsify": "http://www.gosynapsify.com",
+                "stitchfix": "https://www.stitchfix.com",
+                "wayblazer": "http://wayblazer.com",
+                "chattermill": "https://chattermill.io"
+            }
         ]
     },
 
@@ -32,28 +32,10 @@
 
     "404": {
         "title": "404 Error",
-        "asides": false
+        "landing": true
     },
 
-    "styleguide": {
-        "title" : "Styleguide",
-        "asides": true,
-
-        "sidebar": {
-            "About": [
-                ["Introduction", "#section-introduction", "introduction"]
-            ],
-            "Design": [
-                ["Colors", "#section-colors", "colors"],
-                ["Logo", "#section-logo", "logo"],
-                ["Typography", "#section-typography", "typography"],
-                ["Grid", "#section-grid", "grid"],
-                ["Elements", "#section-elements", "elements"],
-                ["Components", "#section-components", "components"]
-            ],
-            "Code": [
-                ["Source", "#section-source", "source"]
-            ]
-        }
+    "announcement" : {
+        "title": "Important Announcement"
     }
 }

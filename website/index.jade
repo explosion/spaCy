@@ -1,162 +1,153 @@
-//- ----------------------------------
 //- 💫 LANDING PAGE
-//- ----------------------------------
 
 include _includes/_mixins
 
-header.o-header.u-pattern
-        h1.o-block-small.u-heading-0.u-text-shadow
-            | Industrial-strength#[br]
-            | Natural Language#[br]
-            | Processing
++landing-header
+    h1.c-landing__title.u-heading-0
+        | Industrial-Strength#[br]
+        | Natural Language#[br]
+        | Processing
 
-        .o-block-small.u-text-medium.u-text-strong.u-text-shadow
-            | Thousands of researchers are trying to make#[br]
-            | computers understand text. They're succeeding.#[br]
-            | spaCy is a Python NLP library that helps you get#[br]
-            | their work out of papers and into production.
+    h2.c-landing__title.o-block.u-heading-1
+        | in Python
 
-        .o-inline-list
-            +button("/docs/#getting-started", true, "secondary")(target="_self") Install spaCy
+    +grid.o-content
+        +grid-col("third").o-card.u-padding-medium
+            +h(2) Fastest in the world
+            p
+                |  spaCy excells at large-scale information extraction tasks.
+                |  It's written from the ground up in carefully memory-managed
+                |  Cython. Independent research has confirmed that spaCy is
+                |  the fastest in the world.  If your application needs to
+                |  process entire web dumps, spaCy is the library you want to
+                |  be using.
 
-main.o-main
-    .o-inline-list.u-padding-small.u-text-center.u-text-label.u-color-subtle.u-border-bottom
-        +a("https://github.com/" + SOCIAL.github + "/spaCy/releases") #[strong Latest Release:] v#{SPACY_VERSION}
+            +button("/docs/api", true, "primary")(target="_self")
+                |  Facts & figures
 
-        +a("https://github.com/" + SOCIAL.github + "/spaCy") #[+icon("github")] #[strong #{SPACY_STARS}+ stars] on GitHub
+        +grid-col("third").o-card.u-padding-medium
+            +h(2) Get things done
+            p
+                |  spaCy is designed to help you do real work — to build real
+                |  products, or gather real insights. The library respects
+                |  your time, and tries to avoid wasting it. It's easy to
+                |  install, and its API is simple and productive. I like to
+                |  think of spaCy as the Ruby on Rails of Natural Language
+                |  Processing.
 
-        +a("https://www.reddit.com/r/" + SOCIAL.reddit) #[+icon("reddit")] #[strong User Group] on Reddit
+            +button("/docs/usage", true, "primary")(target="_self")
+                |  Get started
 
-    +grid.u-border-bottom
-        +grid-col("half").u-padding
-            +label Release update
-            +h(2)
-                +a("https://github.com/" + SOCIAL.github + "/spaCy/releases") spaCy v1.0 out now!
+        +grid-col("third").o-card.u-padding-medium
+            +h(2) Deep learning
+            p
+                |  spaCy is the best way to prepare text for deep learning.
+                |  It interoperates seamlessly with
+                |  #[+a("https://www.tensorflow.org") TensorFlow],
+                |  #[+a("https://keras.io") Keras],
+                |  #[+a("http://scikit-learn.org") Scikit-Learn],
+                |  #[+a("https://radimrehurek.com/gensim") Gensim] and the
+                |  rest of Python's awesome AI ecosystem. spaCy helps you
+                |  connect the statistical models trained by these libraries
+                |  to the rest of your application.
 
-            p.u-text-medium I'm excited — and more than a little nervous! — to finally make the #[+a("https://github.com/" + SOCIAL.github + "/spaCy/releases") 1.0 release of spaCy]. By far my favourite part of the release is the new support for custom pipelines. Default support for GloVe vectors is also nice. The trickiest change was a significant rewrite of the Matcher class, to support entity IDs and attributes. I've added #[a(href="/docs/#tutorials") tutorials] for the new features, and some training examples.#[br]#[br]
+            +button("/docs/usage/deep-learning", true, "primary")(target="_self")
+                |  Read more
 
-                +button("https://explosion.ai/blog/spacy-deep-learning-keras", true, "primary") Read the blog post
+.o-inline-list.o-block.u-border-bottom.u-text-small.u-text-center.u-padding-small
+    +a(gh("spaCy") + "/releases")
+        strong.u-text-label.u-color-subtle #[+icon("code", 18)] Latest release:
+        |  v#{SPACY_VERSION}
 
-        +grid-col("half").u-padding
-            +label Are you using spaCy?
-            +h(2)
-                +a("https://survey.spacy.io", true) Take the spaCy user survey
-
-            p.u-text-medium.
-                Two years after I started working on spaCy full time, I'm finally pushing forward with a #[strong 1.0 release]. It's also past time to take a bit of a census. I hope you'll take a few minutes to fill out this survey, to help me understand how you're using the library, and how it can be better.#[br]#[br]
-
-                #[strong Thanks for your support!]#[br]
-                #[strong.u-heading-3.u-color-theme Matt]
-                #[br]#[br]
-
-                #[+button("https://survey.spacy.io", true, "primary") Take the survey]
-
+.o-content
     +grid
-        +grid-col("half").u-padding
-            +h(2) Built for Production
-            p.u-text-medium Most AI software is built for research.  Over the last ten years, we've used a lot of that software, and built some of it ourselves, especially for natural language processing (NLP). But the faster the research has moved, the more impatient we've become. We want to see advanced NLP technologies get out into great products, as the basis of great businesses. We built spaCy to make that happen.
+        +grid-col("two-thirds")
+            +terminal("lightning_tour.py").
+                # Install: pip install spacy && python -m spacy.en.download
+                import spacy
 
-            +h(2) Easy and Powerful
-            p.u-text-medium For any NLP task, there are always lots of competing algorithms. We don't believe in implementing them all and letting you choose. Instead, we just implement one &ndash; the best one. When better algorithms are developed, we can update the library without breaking your code or bloating the API. This approach makes spaCy both #[strong easier] and #[strong more powerful] than a pluggable architecture. spaCy also features a #[strong unique whole-document design]. Where other NLP libraries rely on sentence detection as a pre-process, spaCy reads the whole document at once, making it much more robust to informal and poorly formatted text.
+                # Load English tokenizer, tagger, parser, NER and word vectors
+                nlp = spacy.load('en')
 
-            +h(2) Permissive open-source license (MIT)
-            p.u-text-medium We think spaCy is valuable software, so we made it free, to raise its value even higher. Making spaCy open-source puts us on the same side &ndash; we can tell you everything about how it works, and let you run it however you like. We think the software would be much less valuable as a service, which could disappear at any point.
+                # Process a document, of any size
+                text = open('war_and_peace.txt').read()
+                doc = nlp(text)
 
-        +grid-col("half").u-padding-medium
-            .x-terminal
-                .x-terminal__icons: span
-                .u-padding-small.u-text-label.u-text-strong.u-text-center lightning_tour.py
+                # Hook in your own deep learning models
+                similarity_model = load_my_neural_network()
+                def install_similarity(doc):
+                    doc.user_hooks['similarity'] = similarity_model
+                nlp.pipeline.append(install_similarity)
 
-                +code.x-terminal__code.
-                    # pip install spacy && python -m spacy.en.download
-                    import spacy
+                doc1 = nlp(u'the fries were gross')
+                doc2 = nlp(u'worst fries ever')
+                doc1.similarity(doc2)
 
-                    # Load English tokenizer, tagger, parser, NER and word vectors
-                    nlp = spacy.load('en')
-                    # Process a document, of any size
-                    text = open('war_and_peace.txt').read()
-                    doc = nlp(text)
+        +grid-col("third")
+            +h(2) Features
+            +list
+                +item Non-destructive #[strong tokenization]
+                +item Syntax-driven sentence segmentation
+                +item Pre-trained #[strong word vectors]
+                +item Part-of-speech tagging
+                +item #[strong Named entity] recognition
+                +item Labelled dependency parsing
+                +item Convenient string-to-int mapping
+                +item Export to numpy data arrays
+                +item Efficient #[strong multi-threading]
+                +item Efficient binary serialization
+                +item Easy #[strong deep learning] integration
+                +item State-of-the-art speed
+                +item Robust, rigorously evaluated accuracy
 
-                    from spacy.attrs import *
-                    # All strings mapped to integers, for easy export to numpy
-                    np_array = doc.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
+            .o-inline-list
+                +button("/docs/usage/lightning-tour", true, "secondary")(target="_self")
+                    | See examples
 
-                    from reddit_corpus import RedditComments
-                    reddit = RedditComments('/path/to/reddit/corpus')
-                    # Parse a stream of documents, with multi-threading (no GIL!)
-                    # Processes over 100,000 tokens per second.
-                    for doc in nlp.pipe(reddit.texts, batch_size=10000, n_threads=4):
-                        # Multi-word expressions, such as names, dates etc
-                        # can be merged into single tokens
-                        for ent in doc.ents:
-                            ent.merge(ent.root.tag_, ent.text, ent.ent_type_)
-                        # Efficient, lossless serialization --- all annotations
-                        # saved, same size as uncompressed text
-                        byte_string = doc.to_bytes()
-
-    .o-block.u-text-center
-        +label spaCy is trusted by
+    .o-block.u-text-center.u-padding
+        h3.u-text-label.u-color-subtle.o-block spaCy is trusted by
 
         .o-block
             each row in logos
-                .o-inline-list.u-padding-medium
-                each logo in row
-                    +a(logo[1])
-                        img(src="/assets/img/logos/" + logo[0] + ".png" width="150").u-padding-medium
+                each url, name in row
+                    +a(url)
+                        img(src="/assets/img/logos/#{name}.png" alt="name" width="150").u-padding-medium.u-grayscale
+                br
 
-    .o-block.u-text-center.u-padding
-        +label What our users say...
+.u-pattern.u-padding
+    +grid.o-card.o-content
+        +grid-col("quarter")
+            img(src="/assets/img/profile_matt.png" width="280")
 
-        +grid
-            +grid-col("third")
-                <blockquote class="twitter-tweet" data-cards="hidden" data-lang="en"><p lang="en" dir="ltr">&quot;Dead Code Should be Buried&quot; <a href="http://t.co/AxfZRRz8nB">http://t.co/AxfZRRz8nB</a> by <a href="https://twitter.com/honnibal">@honnibal</a> on NLP tools &amp; new Python library spaCy <a href="http://t.co/C9f798R3aO">http://t.co/C9f798R3aO</a> looks nice!</p>&mdash; Andrej Karpathy (@karpathy) <a href="https://twitter.com/karpathy/status/640098689894232064">September 5, 2015</a></blockquote>
+        +grid-col("three-quarters")
+            +h(2) What's spaCy all about?
 
-            +grid-col("third")
-                <blockquote class="twitter-tweet" data-cards="hidden" data-lang="en"><p lang="en" dir="ltr">spaCy seems pretty exciting to me - and it is clear that NLTK has not kept up with <a href="https://twitter.com/hashtag/NLP?src=hash">#NLP</a>. <a href="http://t.co/mUPFUMLrbo">http://t.co/mUPFUMLrbo</a> <a href="https://twitter.com/hashtag/python?src=hash">#python</a> <a href="https://twitter.com/hashtag/datascience?src=hash">#datascience</a></p>&mdash; Alex Engler (@AlexCEngler) <a href="https://twitter.com/AlexCEngler/status/648537133544833025">September 28, 2015</a></blockquote>
+            p
+                |  By 2014, I'd been publishing NLP research for about 10
+                |  years. During that time, I saw a huge gap open between the
+                |  technology that Google-sized companies could take to market,
+                |  and what was available to everyone else. This was especially
+                |  clear when companies started trying to use my research. Like
+                |  most researchers, my work was free to read, but expensive to
+                |  apply. You could run my code, but its requirements were
+                |  narrow. My code's mission in life was to print results
+                |  tables for my papers — it was good at this job, and bad at
+                |  all others.
 
-            +grid-col("third")
-                <blockquote class="twitter-tweet" data-lang="en"><p lang="en" dir="ltr">I wish I&#39;d known about nlp.pipe about two weeks ago. Nice feature in <a href="https://twitter.com/Spacy">@spacy</a> to parallelize your NLP pipeline.</p>&mdash; Matti Lyra (@mattilyra) <a href="https://twitter.com/mattilyra/status/704753660329369600">March 1, 2016</a></blockquote>
+            p
+                |  spaCy's #[a(href="/docs/api/philosophy") mission] is to make
+                |  cutting-edge NLP practical and commonly available.  That's
+                |  why I left academia in 2014, to build a production-quality
+                |  open-source NLP library. It's why
+                |  #[+a("https://twitter.com/_inesmontani") Ines] joined the
+                |  project in 2015, to build visualisations, demos and
+                |  annotation tools that make NLP technologies less abstract
+                |  and easier to use. Together, we've founded
+                |  #[+a(COMPANY_URL, true) Explosion AI], to develop data packs
+                |  you can drop into spaCy to extend its capabilities. If
+                |  you're processing Hindi insurance claims, you need a model
+                |  for that. We can build it for you.
 
-    +grid
-        +grid-col("half").u-padding
-            +label Benchmarks
-            +h(2) State-of-the-art speed and accuracy
-
-            p.u-text-medium spaCy is committed to rigorous evaluation under standard methodology.  Two peer-reviewed papers in 2015 confirm that it offers the #[strong fastest syntactic parser in the world] and that #[strong its accuracy is within 2% of the best] available.
-
-                sup #[+a("http://aclweb.org/anthology/P/P15/P15-1038.pdf") [1]], #[+a("https://aclweb.org/anthology/D/D15/D15-1162.pdf") [2]], #[+a("http://homes.cs.washington.edu/~lsz/papers/llz-naacl16.pdf") [3]]
-
-        +grid-col("half").u-padding
-            +table(["System", "Language", "Accuracy", "Speed (WPS)"])
-                +row
-                    +cell
-                        !=partial("_includes/_logo", { logo_size: "tiny" })
-                    +cell #[strong Cython]
-                    +cell #[strong 91.8]
-                    +cell #[strong 13,963]
-
-                +row
-                    +cell ClearNLP
-                    +cell Java
-                    +cell 91.7
-                    +cell 10,271
-
-                +row
-                    +cell CoreNLP
-                    +cell Java
-                    +cell 89.6
-                    +cell 8,602
-
-                +row
-                    +cell MATE
-                    +cell Java
-                    +cell 92.5
-                    +cell 550
-
-                +row
-                    +cell Turbo
-                    +cell C++
-                    +cell 92.4
-                    +cell 349
-
-    include _includes/_newsletter
+            .o-block
+                +a("https://twitter.com/honnibal")
+                    +svg("graphics", "matt-signature", 60, 45).u-color-theme

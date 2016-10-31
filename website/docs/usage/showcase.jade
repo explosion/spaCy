@@ -1,0 +1,44 @@
+//- 💫 DOCS > USAGE > SHOWCASE
+
+include ../../_includes/_mixins
+
+p
+    |  On this page, we'll be featuring demos, libraries and products from
+    |  the spaCy community. Have you done something cool with spaCy?
+    |  #[a(href="mailto:#{EMAIL}") Let us know!]
+
++h(2, "libraries") Third-party libraries
+
++list
+    each details, title in libraries
+        +card-item(title, details)
+
++h(2, "visualizations") Visualizations
+
++grid
+    each details, name in visualizations
+        - details.image = "/assets/img/showcase/" + details.image
+        +card(name, details)
+
++h(2, "products") Built with spaCy
+
++grid
+    each details, name in products
+        - details.image = "/assets/img/showcase/" + details.image
+        +card(name, details)
+
++h(2, "books") Books
+
+p We're excited to see books featuring spaCy already start to appear.
+
++list
+    each details, title in books
+        +card-item(title, details)
+
++h(2, "research") Research systems
+
+p Researchers are using spaCy to build ambitious, next-generation text processing technologies. spaCy is particularly popular amongst the biomedical NLP community, who are working on extracting knowledge from the huge volume of literature in their field. For an up-to-date list of the papers citing spaCy, see #[+a("https://www.semanticscholar.org/search?year%5B%5D=2015&year%5B%5D=2020&q=spacy&sort=relevance&ae=false") Semantic Scholar].
+
++list
+    each details, title in research
+        +card-item(title, details)

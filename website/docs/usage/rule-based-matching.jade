@@ -1,0 +1,155 @@
+//- 💫 DOCS > USAGE > RULE-BASED MATCHING
+
+include ../../_includes/_mixins
+
+p
+    |  spaCy features a rule-matching engine that operates over tokens, similar
+    |  to regular expressions. The rules can refer to token annotations and
+    |  flags, and matches support callbacks to accept, modify and/or act on the
+    |  match. The rule matcher also allows you to associate patterns with
+    |  entity IDs, to allow some basic entity linking or disambiguation.
+
+p Here's a minimal example. We first add a pattern that specifies three tokens:
+
++list("numbers")
+    +item A token whose lower-case form matches "hello"
+    +item A token whose #[code is_punct] flag is set to #[code True]
+    +item A token whose lower-case form matches "world"
+
+p
+    |  Once we've added the pattern, we can use the #[code matcher] as a
+    |  callable, to receive a list of #[code (ent_id, start, end)] tuples:
+
++code.
+    matcher = Matcher(nlp.vocab)
+    matcher.add_pattern("HelloWorld", [{LOWER: "hello"}, {IS_PUNCT: True}, {LOWER: "world"}])
+
+    doc = nlp(u'Hello, world!')
+    matches = matcher(doc)
+
+p
+    |  The returned matches include the ID, to let you associate the matches
+    |  with the patterns. You can also group multiple patterns together, which
+    |  is useful when you have a knowledge base of entities you want to match,
+    |  and you want to write multiple patterns for each entity.
+
++h(2, "entities-patterns") Entities and patterns
+
++code.
+    matcher.add_entity(
+        "GoogleNow", # Entity ID -- Helps you act on the match.
+        {"ent_type": "PRODUCT", "wiki_en": "Google_Now"}, # Arbitrary attributes (optional)
+    )
+
+    matcher.add_pattern(
+        "GoogleNow", # Entity ID -- Created if doesn't exist.
+        [ # The pattern is a list of *Token Specifiers*.
+            { # This Token Specifier matches tokens whose orth field is "Google"
+              ORTH: "Google"
+            },
+            { # This Token Specifier matches tokens whose orth field is "Now"
+              ORTH: "Now"
+            }
+        ],
+        label=None # Can associate a label to the pattern-match, to handle it better.
+    )
+
++h(2, "quantifiers") Using quantifiers
+
++table([ "Name", "Description", "Example"])
+    +row
+        +cell #[code !]
+        +cell match exactly 0 times
+        +cell negation
+
+    +row
+        +cell #[code *]
+        +cell match 0 or more times
+        +cell optional, variable number
+
+    +row
+        +cell #[code +]
+        +cell match 1 or more times
+        +cell mandatory, variable number
+
+    +row
+        +cell #[code ?]
+        +cell match 0 or 1 times
+        +cell optional, max one
+
+p
+    |  There are no nested or scoped quantifiers. You can build those
+    |  behaviours with acceptors and
+    |  #[+api("matcher#add_entity") #[code on_match]] callbacks.
+
++h(2, "acceptor-functions") Acceptor functions
+
+p
+    |  The #[code acceptor] keyword of #[code matcher.add_entity()] allows you to
+    |  pass a function to reject or modify matches. The function you pass should
+    |  take five arguments: #[code doc], #[code ent_id], #[code label], #[code start],
+    |  and #[code end].  You can return a falsey value to reject the match, or
+    |  return a 4-tuple #[code (ent_id, label, start, end)].
+
++code.
+    def trim_title(doc, ent_id, label, start, end):
+        if doc[start].check_flag(IS_TITLE_TERM):
+            return (ent_id, label, start+1, end)
+        else:
+            return (ent_id, label, start, end)
+    titles = set(title.lower() for title in [u'Mr.', 'Dr.', 'Ms.', u'Admiral'])
+    IS_TITLE_TERM = matcher.vocab.add_flag(lambda string: string.lower() in titles)
+    matcher.add_entity('PersonName', acceptor=trim_title)
+    matcher.add_pattern('PersonName', {LOWER: 'mr.'}, {LOWER: 'cruise'}])
+    matcher.add_pattern('PersonName', {LOWER: 'dr.'}, {LOWER: 'seuss'}])
+    doc = Doc(matcher.vocab, words=[u'Mr.', u'Cruise', u'likes', 'Dr.', u'Seuss'])
+    for ent_id, label, start, end in matcher(doc):
+        print(doc[start:end].text)
+        # Cruise
+        # Seuss
+
+p
+    |  Passing an #[code acceptor] function allows you to match patterns with
+    |  arbitrary logic that can't easily be expressed by a finite-state machine.
+    |  You can look at the entirety of the
+    |  matched phrase, and its context in the document, and decide to move
+    |  the boundaries or reject the match entirely.
+
++h(2, "callback-functions") Callback functions
+
+p
+    |  In spaCy &lt;1.0, the #[code Matcher] automatically tagged matched phrases
+    |  with entity types. Since spaCy 1.0, the matcher no longer acts on matches
+    |  automatically. By default, the match list is returned for the user to action.
+    |  However, it's often more convenient to register the required actions as a
+    |  callback. You can do this by passing a function to the #[code on_match]
+    |  keyword argument of #[code matcher.add_entity].
+
++aside-code("Example").
+    def merge_phrases(matcher, doc, i, matches):
+        '''
+        Merge a phrase. We have to be careful here because we'll change the token indices.
+        To avoid problems, merge all the phrases once we're called on the last match.
+        '''
+        if i != len(matches)-1:
+            return None
+        # Get Span objects
+        spans = [(ent_id, label, doc[start : end]) for ent_id, label, start, end in matches]
+        for ent_id, label, span in spans:
+            span.merge(label=label, tag='NNP' if label else span.root.tag_)
+
+    matcher.add_entity('GoogleNow', on_match=merge_phrases)
+    matcher.add_pattern('GoogleNow', {ORTH: 'Google'}, {ORTH: 'Now'}])
+    doc = Doc(matcher.vocab, words=[u'Google', u'Now', u'is', u'being', u'rebranded'])
+    matcher(doc)
+    print([w.text for w in doc])
+    # [u'Google Now', u'is', u'being', u'rebranded']
+
+p
+    |  The matcher will first collect all matches over the document. It will
+    |  then iterate over the matches, look-up the callback for the entity ID
+    |  that was matched, and invoke it. When the callback is invoked, it is
+    |  passed four arguments: the matcher itself, the document, the position of
+    |  the current match, and the total list of matches. This allows you to
+    |  write callbacks that consider the entire set of matched phrases, so that
+    |  you can resolve overlaps and other conflicts in whatever way you prefer.

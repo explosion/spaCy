@@ -1,11 +1,11 @@
-//- ----------------------------------
-//- 💫 COMPONENTS > MISC
-//- ----------------------------------
+//- 💫 CSS > COMPONENTS > MISC
 
 .x-terminal
-    background: $color-subtle
+    background: $color-subtle-light
     color: $color-front
-    border-radius: 10px
+    padding: 4px
+    border: 1px dotted $color-subtle
+    border-radius: 5px
     width: 100%
 
 .x-terminal__icons
@@ -23,22 +23,20 @@
 
     &:before
         content: ""
-        background: #e4514f
+        background: $color-red
 
     span
-        background: #3ec930
+        background: $color-green
 
     &:after
         content: ""
-        background: #f4c025
+        background: $color-yellow
 
 .x-terminal__code
-    background: $color-front
-    color: $color-back
     margin: 0
     border: none
-    border-bottom-left-radius: 10px
-    border-bottom-right-radius: 10px
+    border-bottom-left-radius: 5px
+    border-bottom-right-radius: 5px
     width: 100%
     max-width: 100%
     white-space: pre-wrap

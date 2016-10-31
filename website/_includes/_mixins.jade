@@ -1,9 +1,255 @@
-//- ----------------------------------
 //- 💫 INCLUDES > MIXINS
-//- ----------------------------------
 
 include _functions
+include _mixins-base
 
-include _mixins/_base
-include _mixins/_components
-include _mixins/_headlines
+
+//- Headlines
+    level - [integer] headline level, corresponds to h1, h2, h3 etc.
+    id    - [string] unique identifier, creates permalink (optional)
+
+mixin h(level, id)
+    +headline(level).u-heading&attributes(attributes)
+        +permalink(id)
+            block
+
+
+//- External links
+    url     - [string] link href
+    trusted - [boolean] if not set / false, rel="noopener nofollow" is added
+              info: https://mathiasbynens.github.io/rel-noopener/
+
+mixin a(url, trusted)
+    a(href=url target="_blank" rel=(!trusted) ? "noopener nofollow" : "")&attributes(attributes)
+        block
+
+//- Source link (with added icon for "code")
+    url - [string] link href, can also be gh() function to generate GitHub link
+          see _functions.jade for more info
+
+mixin src(url)
+    +a(url)
+        block
+
+    |   #[+icon("code", 16).u-color-subtle]
+
+
+//- API link (with added tag and automatically generated path)
+    path - [string] path to API docs page relative to /docs/api/
+
+mixin api(path)
+    +a("/docs/api/" + path, true)(target="_self").u-no-border.u-inline-block
+        block
+
+        |  #[+icon("book", 18).o-help-icon.u-color-subtle]
+
+
+//- Aside for text
+    label - [string] aside title (optional)
+
+mixin aside(label)
+    +aside-wrapper(label)
+        .c-aside__text.u-text-small
+            block
+
+
+//- Aside for code
+    label    - [string] aside title (optional or false for no label)
+    language - [string] language for syntax highlighting (default: "python")
+               supports basic relevant languages available for PrismJS
+
+mixin aside-code(label, language)
+    +aside-wrapper(label)
+        +code(false, language).o-no-block
+            block
+
+
+//- Link button
+    url      - [string] link href
+    trusted  - [boolean] if not set / false, rel="noopener nofollow" is added
+               info: https://mathiasbynens.github.io/rel-noopener/
+    ...style - all other arguments are added as class names c-button--argument
+               see assets/css/_components/_buttons.sass
+
+mixin button(url, trusted, ...style)
+    a.c-button.u-text-label(href=url class=prefixArgs(style, "c-button") role="button" target="_blank" rel=(!trusted) ? "noopener nofollow" : "")&attributes(attributes)
+        block
+
+
+//- Code block
+    label    - [string] aside title (optional or false for no label)
+    language - [string] language for syntax highlighting (default: "python")
+               supports basic relevant languages available for PrismJS
+
+mixin code(label, language)
+    pre.c-code-block.o-block(class="lang-#{(language || DEFAULT_SYNTAX)}")&attributes(attributes)
+        if label
+            h4.u-text-label.u-text-label--dark=label
+
+        code.c-code-block__content
+            block
+
+
+//- Images / figures
+    url     - [string] url or path to image
+    width   - [integer] image width in px, for better rendering (default: 500)
+    caption - [string] image caption
+    alt     - [string] alternative image text, defaults to caption
+
+mixin image(url, width, caption, alt)
+    figure.o-block&attributes(attributes)
+        img(src=url alt=(alt || caption) width="#{width || 500}")
+
+        if caption
+            +image-caption=caption
+
+        else
+            block
+
+//- Image caption
+
+mixin image-caption()
+    figcaption.u-text-small.u-color-subtle.u-padding-small&attributes(attributes)
+        block
+
+
+//- Label
+
+mixin label()
+    .u-text-label.u-color-subtle&attributes(attributes)
+        block
+
+
+//- Tag
+
+mixin tag()
+    span.u-text-tag.u-text-tag--spaced(aria-hidden="true")
+        block
+
+
+//- List
+    type  - [string] "numbers", "letters", "roman" (bulleted list if none set)
+    start - [integer] start number
+
+mixin list(type, start)
+    if type
+        ol.c-list.o-block.u-text(class="c-list--#{type}" style=(start === 0 || start) ? "counter-reset: li #{(start - 1)}" : "")&attributes(attributes)
+            block
+
+    else
+        ul.c-list.c-list--bullets.o-block.u-text&attributes(attributes)
+            block
+
+
+//- List item (only used within +list)
+
+mixin item(procon)
+    if procon
+        li&attributes(attributes)
+            +procon(procon).c-list__icon
+            block
+
+    else
+        li.c-list__item&attributes(attributes)
+            block
+
+
+//- Table
+    head - [array] table headings (should match number of columns)
+
+mixin table(head)
+    table.c-table.o-block&attributes(attributes)
+
+        if head
+            +row
+                each column in head
+                    th.c-table__head-cell.u-text-label=column
+
+        block
+
+
+//- Table row (only used within +table)
+
+mixin row()
+    tr.c-table__row&attributes(attributes)
+        block
+
+
+//- Footer table row (only ued within +table)
+
+mixin footrow()
+    tr.c-table__row.c-table__row--foot&attributes(attributes)
+        block
+
+
+//- Table cell (only used within +row in +table)
+
+mixin cell()
+    td.c-table__cell.u-text&attributes(attributes)
+        block
+
+
+//- Grid Container
+
+mixin grid()
+    .o-grid.o-block&attributes(attributes)
+        block
+
+
+//- Grid Column (only used within +grid)
+    width - [string] "quarter", "third", "half", "two-thirds", "three-quarters"
+    see $grid in assets/css/_variables.sass
+
+mixin grid-col(width)
+    .o-grid__col(class="o-grid__col--#{width}")&attributes(attributes)
+        block
+
+
+//- Card (only used within +grid)
+    title     - [string] card title
+    details   - [object] url, image, author, description, tags etc.
+                (see /docs/usage/_data.json)
+
+mixin card(title, details)
+    +grid-col("half").u-border.u-padding-medium.u-text&attributes(attributes)
+        if details.image
+            +a(details.url).o-block-small
+                img(src=details.image alt=title width="300" role="presentation")
+
+        if title
+            +a(details.url)
+                +h(3)=title
+
+                    if details.author
+                        .u-text-small.u-color-subtle by #{details.author}
+
+        if details.description || details.tags
+            ul
+                if details.description
+                    li=details.description
+
+                if details.tags
+                    li
+                        each tag in details.tags
+                            span.u-text-tag #{tag}
+                            | &nbsp;
+
+        block
+
+
+//- Simpler card list item (only used within +list)
+    title     - [string] card title
+    details   - [object] url, image, author, description, tags etc.
+                (see /docs/usage/_data.json)
+
+mixin card-item(title, details)
+    +item&attributes(attributes)
+        +a(details.url)=title
+
+        if details.description
+            br
+            span=details.description
+
+        if details.author
+            br
+            span.u-text-small.u-color-subtle by #{details.author}

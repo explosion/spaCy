@@ -1,6 +1,4 @@
-//- ----------------------------------
-//- 💫 MIXINS
-//- ----------------------------------
+//- 💫 CSS > MIXINS
 
 //  Helper for position
 //  $position    - valid position value (static, absolute, fixed, relative)
@@ -36,18 +34,6 @@
     @else if $limit == "max"
         @media(max-width: #{map-get($breakpoints-max, $size)})
             @content
-
-
-//  Triangle pointing down
-//  $triangle-size - width of the triangle
-
-@mixin triangle-down($triangle-size)
-    @include size(0)
-    border-color: transparent
-    border-style: solid
-    border-top-color: inherit
-    border-width: $triangle-size $triangle-size 0 $triangle-size
-    content: ""
 
 
 // Scroll shadows for reponsive tables

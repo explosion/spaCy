@@ -1,9 +1,4 @@
-//- ----------------------------------
-//- 💥 BASE > RESET
-//- ----------------------------------
-
-//- adapted from "normalize.css" by Nicolas Gallagher & Jonathan Neal
-//- https://github.com/necolas/normalize.css
+//- 💫 CSS > BASE > RESET
 
 *
     box-sizing: border-box
@@ -11,12 +6,14 @@
     margin: 0
     border: 0
     outline: 0
-    -webkit-font-smoothing: antialiased
 
 html
     font-family: sans-serif
+    text-rendering: optimizeSpeed
     -ms-text-size-adjust: 100%
     -webkit-text-size-adjust: 100%
+    -webkit-font-smoothing: antialiased
+    -moz-osx-font-smoothing: grayscale
 
 body
     margin: 0
@@ -64,6 +61,7 @@ img
     max-width: 100%
 
 svg
+    max-width: 100%
     color-interpolation-filters: sRGB
     fill: currentColor
 
@@ -88,17 +86,15 @@ table
     max-width: 100%
     border-collapse: collapse
 
-    td,
-    th
+    td, th
         vertical-align: top
 
-ul,
-ol
+ul, ol
     list-style: none
 
-input,
-button
+input, button
     appearance: none
 
 button
+    background: transparent
     cursor: pointer

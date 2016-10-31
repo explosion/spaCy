@@ -1,26 +1,17 @@
-//- ----------------------------------
 //- 💫 INCLUDES > TOP NAVIGATION
-//- ----------------------------------
 
 include _mixins
 
-nav.c-nav.u-text-label.js-nav
+nav.c-nav.u-text.js-nav(class=landing ? "c-nav--theme" : "")
+    a(href='/') #[+logo]
 
-    a(href='/')
-        !=partial("_includes/_logo", { logo_size: 'small' })
+    if SUBSECTION != "index"
+        .u-text-label.u-padding-small=SUBSECTION
 
     ul.c-nav__menu
-        li.c-nav__menu__item(class=(current.path[0] == 'index') ? "is-active" : "")
-            a(href='/') Home
-
-        li.c-nav__menu__item(class=(current.path[0] == 'docs') ? "is-active" : "")
-            a(href="/docs") Docs
+        each url, item in NAVIGATION
+            li.c-nav__menu__item
+                a(href=url target=url.includes("http") ? "_blank" : "")=item
 
         li.c-nav__menu__item
-            a(href="https://demos.explosion.ai" target="_blank") Demos
-
-        li.c-nav__menu__item
-            a(href="https://explosion.ai/blog" target="_blank") Blog
-
-        li.c-nav__menu__item
-            a(href="https://github.com/" + SOCIAL.github + "/spaCy" target="_blank") #[+icon("github", 18)] #[span.u-hidden-sm GitHub]
+            +a(gh("spaCy"))(aria-label="GitHub").u-hidden-xs #[+icon("github", 20)]
