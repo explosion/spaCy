@@ -211,7 +211,7 @@ mixin grid-col(width)
                 (see /docs/usage/_data.json)
 
 mixin card(title, details)
-    +grid-col("half").u-border.u-padding-medium.u-text&attributes(attributes)
+    +grid-col("half").o-card.u-text&attributes(attributes)
         if details.image
             +a(details.url).o-block-small
                 img(src=details.image alt=title width="300" role="presentation")
