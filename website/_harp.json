@@ -11,22 +11,12 @@
         "COMPANY": "Explosion AI",
         "COMPANY_URL": "https://explosion.ai",
         "DEMOS_URL": "https://demos.explosion.ai",
-
         "SPACY_VERSION": "1.1",
 
         "SOCIAL": {
             "twitter": "spacy_io",
             "github": "explosion",
             "reddit": "spacynlp"
-        },
-
-        "SCRIPTS" : [ "main", "prism" ],
-        "DEFAULT_SYNTAX" : "python",
-        "ANALYTICS": "UA-58931649-1",
-        "MAILCHIMP": {
-            "user": "spacy.us12",
-            "id": "83b0498b1e7fa3c91ce68c3f1",
-            "list": "89ad33e698"
         },
 
         "NAVIGATION": {
@@ -55,6 +45,16 @@
                 "Blog": "https://explosion.ai/blog",
                 "Contact": "mailto:contact@explosion.ai"
             }
+        },
+
+        "V_CSS": "1.4",
+        "V_JS": "1.0",
+        "DEFAULT_SYNTAX" : "python",
+        "ANALYTICS": "UA-58931649-1",
+        "MAILCHIMP": {
+            "user": "spacy.us12",
+            "id": "83b0498b1e7fa3c91ce68c3f1",
+            "list": "89ad33e698"
         }
 
     }
