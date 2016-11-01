@@ -31,7 +31,7 @@ cdef class Span:
         Returns:
             Span The newly constructed object.
         '''
-        if not (0 <= start <= end <= len(tokens)):
+        if not (0 <= start <= end <= len(doc)):
             raise IndexError
 
         self.doc = doc
