@@ -263,7 +263,7 @@
                 "tags": [ "big data" ]
             },
             "Inventory count": {
-                "url": "https://github.com/explosion/spaCy/tree/master/examples/InventoryCount",
+                "url": "https://github.com/explosion/spaCy/tree/master/examples/inventory_count",
                 "author": "Oleg Zd"
             },
             "Multi-word matches": {
