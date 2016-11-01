@@ -8,7 +8,7 @@ by [Parikh et al. (2016)](https://arxiv.org/pdf/1606.01933.pdf). The model is no
 for its competitive performance with very few parameters.
 
 The model is implemented using [Keras](https://keras.io/) and [spaCy](https://spacy.io). 
-Keras is used to build and train the network, while spaCy is used to load 
+Keras is used to build and train the network. spaCy is used to load 
 the [GloVe](http://nlp.stanford.edu/projects/glove/) vectors, perform the 
 feature extraction, and help you apply the model at run-time. The following 
 demo code shows how the entailment model  can be used at runtime, once the 
