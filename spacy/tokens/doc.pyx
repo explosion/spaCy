@@ -284,7 +284,7 @@ cdef class Doc:
     def string(self):
         return self.text
     
-    property text
+    property text:
         '''A unicode representation of the document text.'''
         def __get__(self):
             return u''.join(t.text_with_ws for t in self)
