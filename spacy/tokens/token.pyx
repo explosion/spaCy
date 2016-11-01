@@ -336,7 +336,7 @@ cdef class Token:
         Returns:
             is_ancestor (bool): Whether this token is the ancestor of the descendant.
         '''
-        if self.doc is not other.doc:
+        if self.doc is not descendant.doc:
             return False
         return any( ancestor.i == self.i for ancestor in descendant.ancestors )
 
