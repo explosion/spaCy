@@ -30,45 +30,53 @@ def demo(model_dir):
 
 I'm working on a blog post to explain Parikh et al.'s model in more detail.
 I think it is a very interesting example of the attention mechanism, which
-I didn't understand very well before working through this paper.
+I didn't understand very well before working through this paper. There are
+lots of ways to extend the model.
 
-## How to run the example
+## What's where
 
-### 1. Install spaCy and its English models (about 1GB of data)
+* `keras_parikh_entailment/__main__.py`: The script that will be executed.
+    Defines the CLI, the data reading, etc — all the boring stuff.
+    
+* `keras_parikh_entailment/spacy_hook.py`: Provides a class `SimilarityShim`
+    that lets you use an arbitrary function to customize spaCy's
+    `doc.similarity()` method. Instead of the default average-of-vectors algorithm,
+    when you call `doc1.similarity(doc2)`, you'll get the result of `your_model(doc1, doc2)`.
+    
+* `keras_parikh_entailment/keras_decomposable_attention.py`: Defines the neural network model.
+    This part knows nothing of spaCy --- its ordinary Keras usage.
+
+## Setting up
+
+First, install keras, spaCy and the spaCy English models (about 1GB of data):
 
 ```bash
-pip install spacy
+pip install keras spacy
 python -m spacy.en.download
 ```
 
-This will give you the spaCy's tokenization, tagging, NER and parsing models,
-as well as the GloVe word vectors.
+You'll also want to get keras working on your GPU. This will depend on your
+set up, so you're mostly on your own for this step. If you're using AWS, try the NVidia
+AMI. It made things pretty easy.
 
-### 2. Install Keras
-
-```bash
-pip install keras
-```
-
-### 3. Get Keras working with your GPU
-
-You're mostly on your own here. My only advice is, if you're setting up on AWS,
-try using the AMI published by NVidia. With the image, getting everything set
-up wasn't *too* painful. 
-
-###4. Test the Keras model:
+Once you've installed the dependencies, you can run a small preliminary test of
+the keras model:
 
 ```bash
 py.test keras_parikh_entailment/keras_decomposable_attention.py
 ```
 
-This should tell you that two tests passed.
+This compiles the model and fits it with some dummy data. You should see that
+both tests passed.
 
-### 5. Download the Stanford Natural Language Inference data
+Finally, download the Stanford Natural Language Inference corpus.
 
 Source: http://nlp.stanford.edu/projects/snli/
 
-### 6. Train the model:
+## Running the example
+
+You can run the `keras_parikh_entailment/` directory as a script, which executes the file
+`keras_parikh_entailment/__main__.py`. The first thing you'll want to do is train the model:
 
 ```bash
 python keras_parikh_entailment/ train <your_model_dir> <train_directory> <dev_directory>
@@ -76,18 +84,15 @@ python keras_parikh_entailment/ train <your_model_dir> <train_directory> <dev_di
 
 Training takes about 300 epochs for full accuracy, and I haven't rerun the full
 experiment since refactoring things to publish this example — please let me
-know if I've broken something.
+know if I've broken something. You should get to at least 85% on the development data.
 
-You should get to at least 85% on the development data.
+The other two modes demonstrate run-time usage. I never like relying on the accuracy printed
+by `.fit()` methods. I never really feel confident until I've run a new process that loads
+the model and starts making predictions, without access to the gold labels. I've therefore
+included an `evaluate` mode. Finally, there's also a little demo, which mostly exists to show
+you how run-time usage will eventually look.
 
-### 7. Evaluate the model (optional):
+## Getting updates
 
-```bash
-python keras_parikh_entailment/ evaluate <your_model_dir> <dev_directory>
-```
-
-### 8. Run the demo (optional):
-
-```bash
-python keras_parikh_entailment/ demo <your_model_dir>
-```
+We should have the blog post explaining the model ready before the end of the week. To get
+notified when it's published, you can either the follow me on Twitter, or subscribe to our mailing list.
