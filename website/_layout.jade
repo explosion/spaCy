@@ -37,10 +37,10 @@ html(lang="en")
     link(rel="icon" type="image/x-icon" href="/assets/img/favicon.ico")
 
     if SUBSECTION == "usage"
-        link(href="/assets/css/style_red.css?v1" rel="stylesheet")
+        link(href="/assets/css/style_red.css?v#{V_CSS}" rel="stylesheet")
 
     else
-        link(href="/assets/css/style.css?v1" rel="stylesheet")
+        link(href="/assets/css/style.css?v#{V_CSS}" rel="stylesheet")
 
     body
         include _includes/_navigation
@@ -52,8 +52,8 @@ html(lang="en")
             main!=yield
                 include _includes/_footer
 
-        each script in SCRIPTS
-            script(src="/assets/js/" + script + ".js?v1", type="text/javascript")
+        script(src="/assets/js/main.js?v#{V_JS}", type="text/javascript")
+        script(src="/assets/js/prism.js", type="text/javascript")
 
         if environment == "deploy"
             script
