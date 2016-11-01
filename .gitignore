@@ -15,7 +15,6 @@ MANIFEST
 
 corpora/
 models/
-examples/
 keys/
 
 spacy/syntax/*.cpp
