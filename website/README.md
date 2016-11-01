@@ -27,7 +27,7 @@ The docs can always use another example or more detail, and they should always b
 
 While all page content lives in the `.jade` files, article meta (page titles, sidebars etc.) is stored as JSON. Each folder contains a `_data.json` with all required meta for its files.
 
-For simplicity, all sites linked in the [tutorials](https://spacy.io/docs/usage/tutorials) and [showcase](https://spacy.io/docs/usage/showcase) are also stored as JSON. So in order to edit those pages, there's no need to dig into the Jade files – simply edit the [`_data.json`](website/docs/usage/_data.json).
+For simplicity, all sites linked in the [tutorials](https://spacy.io/docs/usage/tutorials) and [showcase](https://spacy.io/docs/usage/showcase) are also stored as JSON. So in order to edit those pages, there's no need to dig into the Jade files – simply edit the [`_data.json`](docs/usage/_data.json).
 
 ### Markup language and conventions
 
@@ -54,7 +54,7 @@ Note that for external links, `+a("...")` is used instead of `a(href="...")` –
 
 ### Mixins
 
-Each file includes a collection of [custom mixins](website/_includes/_mixins.jade) that make it easier to add content components – no HTML or class names required.
+Each file includes a collection of [custom mixins](_includes/_mixins.jade) that make it easier to add content components – no HTML or class names required.
 
 For example:
 ```pug
@@ -89,7 +89,7 @@ Code blocks are implemented using the `+code` or `+aside-code` (to display them 
     en_doc = en_nlp(u'Hello, world. Here are two sentences.')
 ```
 
-You can find the documentation for the available mixins in [`_includes/_mixins.jade`](website/_includes/_mixins.jade).
+You can find the documentation for the available mixins in [`_includes/_mixins.jade`](_includes/_mixins.jade).
 
 ### Linking to the Github repo
 
