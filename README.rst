@@ -425,7 +425,7 @@ include a small fix to the tokenizer.
 * Fix bugs in ``Span``
 * Add tokenizer rule to fix numeric range tokenization
 * Add specific string-length cap in Tokenizer
-* Fix ``token.conjuncts```
+* Fix ``token.conjuncts``
 
 2015-10-09 `v0.94 <https://github.com/explosion/spaCy/releases/tag/0.94>`_
 --------------------------------------------------------------------------
