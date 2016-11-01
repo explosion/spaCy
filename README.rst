@@ -239,9 +239,9 @@ Changelog
 
 **✨ Major features and improvements**
 
-* **NEW:** `custom processing pipelines <https://spacy.io/docs/tutorials/custom-pipelines>`_, to support deep learning workflows
-* **NEW:** `Rule matcher <https://spacy.io/docs/tutorials/rule-based-matcher>`_ now supports entity IDs and attributes
-* **NEW:** Official/documented `training APIs <https://spacy.io/docs/tutorials/training>`_ and `GoldParse` class
+* **NEW:** `custom processing pipelines <https://spacy.io/docs/usage/customizing-pipeline>`_, to support deep learning workflows
+* **NEW:** `Rule matcher <https://spacy.io/docs/usage/rule-based-matching>`_ now supports entity IDs and attributes
+* **NEW:** Official/documented `training APIs <https://github.com/explosion/spaCy/tree/master/examples/training>`_ and `GoldParse` class
 * Download and use GloVe vectors by default
 * Make it easier to load and unload word vectors
 * Improved rule matching functionality
