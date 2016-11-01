@@ -3,7 +3,7 @@
 # A decomposable attention model for Natural Language Inference
 **by Matthew Honnibal, [@honnibal](https://github.com/honnibal)**
 
-This directory contains an implementation of entailment prediction model described
+This directory contains an implementation of the entailment prediction model described
 by [Parikh et al. (2016)](https://arxiv.org/pdf/1606.01933.pdf). The model is notable 
 for its competitive performance with very few parameters.
 
