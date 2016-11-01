@@ -165,6 +165,7 @@ def _convert_strings(token_specs, string_store):
 
 
 cdef class Matcher:
+    '''Match sequences of tokens, based on pattern rules.'''
     cdef Pool mem
     cdef vector[TokenPatternC*] patterns
     cdef readonly Vocab vocab
@@ -175,6 +176,16 @@ cdef class Matcher:
     
     @classmethod
     def load(cls, path, vocab):
+        '''Load the matcher and patterns from a file path.
+
+        Arguments:
+            path (Path):
+                Path to a JSON-formatted patterns file.
+            vocab (Vocab):
+                The vocabulary that the documents to match over will refer to.
+        Returns:
+            Matcher: The newly constructed object.
+        '''
         if (path / 'gazetteer.json').exists():
             with (path / 'gazetteer.json').open('r', encoding='utf8') as file_:
                 patterns = json.load(file_)
@@ -183,6 +194,16 @@ cdef class Matcher:
         return cls(vocab, patterns)
 
     def __init__(self, vocab, patterns={}):
+        """Create the Matcher.
+
+        Arguments:
+            vocab (Vocab):
+                The vocabulary object, which must be shared with the documents
+                the matcher will operate on.
+            patterns (dict): Patterns to add to the matcher.
+        Returns:
+            The newly constructed object.
+        """
         self._patterns = {}
         self._entities = {}
         self._acceptors = {}
@@ -203,6 +224,22 @@ cdef class Matcher:
 
     def add_entity(self, entity_key, attrs=None, if_exists='raise',
                    acceptor=None, on_match=None):
+        """Add an entity to the matcher.
+
+        Arguments:
+            entity_key (unicode or int):
+                An ID for the entity.
+            attrs:
+                Attributes to associate with the Matcher.
+            if_exists ('raise', 'ignore' or 'update'):
+                Controls what happens if the entity ID already exists. Defaults to 'raise'.
+            acceptor:
+                Callback function to filter matches of the entity.
+            on_match:
+                Callback function to act on matches of the entity.
+        Returns:
+            None
+        """
         if if_exists not in ('raise', 'ignore', 'update'):
             raise ValueError(
                 "Unexpected value for if_exists: %s.\n"
@@ -224,6 +261,18 @@ cdef class Matcher:
         self._callbacks[entity_key] = on_match
 
     def add_pattern(self, entity_key, token_specs, label=""):
+        """Add a pattern to the matcher.
+
+        Arguments:
+            entity_key (unicode or int):
+                An ID for the entity.
+            token_specs:
+                Description of the pattern to be matched.
+            label:
+                Label to assign to the matched pattern. Defaults to "".
+        Returns:
+            None
+        """
         entity_key = self.normalize_entity_key(entity_key)
         if not self.has_entity(entity_key):
             self.add_entity(entity_key)
@@ -249,10 +298,24 @@ cdef class Matcher:
             return entity_key
 
     def has_entity(self, entity_key):
+        """Check whether the matcher has an entity.
+
+        Arguments:
+            entity_key (string or int): The entity key to check.
+        Returns:
+            bool: Whether the matcher has the entity.
+        """
         entity_key = self.normalize_entity_key(entity_key)
         return entity_key in self._entities
 
     def get_entity(self, entity_key):
+        """Retrieve the attributes stored for an entity.
+
+        Arguments:
+            entity_key (unicode or int): The entity to retrieve.
+        Returns:
+            The entity attributes if present, otherwise None.
+        """
         entity_key = self.normalize_entity_key(entity_key)
         if entity_key in self._entities:
             return self._entities[entity_key]
@@ -260,6 +323,17 @@ cdef class Matcher:
             return None
 
     def __call__(self, Doc doc, acceptor=None):
+        """Find all token sequences matching the supplied patterns on the Doc.
+
+        Arguments:
+            doc (Doc):
+                The document to match over.
+        Returns:
+            list
+            A list of (entity_key, label_id, start, end) tuples,
+            describing the matches. A match tuple describes a span doc[start:end].
+            The label_id and entity_key are both integers.
+        """
         if acceptor is not None:
             raise ValueError(
                 "acceptor keyword argument to Matcher deprecated. Specify acceptor "
@@ -340,6 +414,18 @@ cdef class Matcher:
         return matches
 
     def pipe(self, docs, batch_size=1000, n_threads=2):
+        """Match a stream of documents, yielding them in turn.
+
+        Arguments:
+            docs: A stream of documents.
+            batch_size (int):
+                The number of documents to accumulate into a working set.
+            n_threads (int):
+                The number of threads with which to work on the buffer in parallel,
+                if the Matcher implementation supports multi-threading.
+        Yields:
+            Doc Documents, in order.
+        """
         for doc in docs:
             self(doc)
             yield doc

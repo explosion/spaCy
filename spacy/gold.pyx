@@ -212,6 +212,7 @@ def _consume_ent(tags):
 
 
 cdef class GoldParse:
+    """Collection for training annotations."""
     @classmethod
     def from_annot_tuples(cls, doc, annot_tuples, make_projective=False):
         _, words, tags, heads, deps, entities = annot_tuples
@@ -220,6 +221,25 @@ cdef class GoldParse:
 
     def __init__(self, doc, annot_tuples=None, words=None, tags=None, heads=None,
                  deps=None, entities=None, make_projective=False):
+        """Create a GoldParse.
+
+        Arguments:
+            doc (Doc):
+                The document the annotations refer to.
+            words:
+                A sequence of unicode word strings.
+            tags:
+                A sequence of strings, representing tag annotations.
+            heads:
+                A sequence of integers, representing syntactic head offsets.
+            deps:
+                A sequence of strings, representing the syntactic relation types.
+            entities:
+                A sequence of named entity annotations, either as BILUO tag strings,
+                or as (start_char, end_char, label) tuples, representing the entity
+                positions.
+        Returns (GoldParse): The newly constructed object.
+        """
         if words is None:
             words = [token.text for token in doc]
         if tags is None:
@@ -280,10 +300,16 @@ cdef class GoldParse:
             self.heads = proj_heads
 
     def __len__(self):
+        """Get the number of gold-standard tokens.
+        
+        Returns (int): The number of gold-standard tokens.
+        """
         return self.length
 
     @property
     def is_projective(self):
+        """Whether the provided syntactic annotations form a projective dependency
+        tree."""
         return not nonproj.is_nonproj_tree(self.heads)
 
 

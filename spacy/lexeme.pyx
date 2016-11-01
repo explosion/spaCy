@@ -36,6 +36,13 @@ cdef class Lexeme:
     tag).
     """
     def __init__(self, Vocab vocab, int orth):
+        """Create a Lexeme object.
+
+        Arguments:
+            vocab (Vocab): The parent vocabulary
+            orth (int): The orth id of the lexeme.
+        Returns (Lexeme): The newly constructd object.
+        """
         self.vocab = vocab
         self.orth = orth
         self.c = <LexemeC*><void*>vocab.get_by_orth(vocab.mem, orth)
@@ -73,12 +80,33 @@ cdef class Lexeme:
         return self.c.orth
 
     def set_flag(self, attr_id_t flag_id, bint value):
+        """Change the value of a boolean flag.
+
+        Arguments:
+            flag_id (int): The attribute ID of the flag to set.
+            value (bool): The new value of the flag.
+        """
         Lexeme.c_set_flag(self.c, flag_id, value)
     
     def check_flag(self, attr_id_t flag_id):
+        """Check the value of a boolean flag.
+
+        Arguments:
+            flag_id (int): The attribute ID of the flag to query.
+        Returns (bool): The value of the flag.
+        """
         return True if Lexeme.c_check_flag(self.c, flag_id) else False
 
     def similarity(self, other):
+        '''Compute a semantic similarity estimate. Defaults to cosine over vectors.
+
+        Arguments:
+            other:
+                The object to compare with. By default, accepts Doc, Span,
+                Token and Lexeme objects.
+        Returns:
+            score (float): A scalar similarity score. Higher is more similar.
+        '''
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)

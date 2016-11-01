@@ -293,13 +293,14 @@ class Language(object):
             text (unicode): The text to be processed.
 
         Returns:
-            tokens (spacy.tokens.Doc):
+            doc (Doc): A container for accessing the annotations.
 
-        >>> from spacy.en import English
-        >>> nlp = English()
-        >>> tokens = nlp('An example sentence. Another example sentence.')
-        >>> tokens[0].orth_, tokens[0].head.tag_
-        ('An', 'NN')
+        Example:
+            >>> from spacy.en import English
+            >>> nlp = English()
+            >>> tokens = nlp('An example sentence. Another example sentence.')
+            >>> tokens[0].orth_, tokens[0].head.tag_
+            ('An', 'NN')
         """
         doc = self.make_doc(text)
         if self.entity and entity:
@@ -314,6 +315,16 @@ class Language(object):
         return doc
 
     def pipe(self, texts, tag=True, parse=True, entity=True, n_threads=2, batch_size=1000):
+        '''Process texts as a stream, and yield Doc objects in order.
+        
+        Supports GIL-free multi-threading.
+        
+        Arguments:
+            texts (iterator)
+            tag (bool)
+            parse (bool)
+            entity (bool)
+        '''
         skip = {self.tagger: not tag, self.parser: not parse, self.entity: not entity}
         stream = (self.make_doc(text) for text in texts)
         for proc in self.pipeline:

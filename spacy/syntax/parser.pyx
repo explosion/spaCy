@@ -74,8 +74,21 @@ cdef class ParserModel(AveragedPerceptron):
 
 
 cdef class Parser:
+    """Base class of the DependencyParser and EntityRecognizer."""
     @classmethod
     def load(cls, path, Vocab vocab, TransitionSystem=None, require=False):
+        """Load the statistical model from the supplied path.
+
+        Arguments:
+            path (Path):
+                The path to load from.
+            vocab (Vocab):
+                The vocabulary. Must be shared by the documents to be processed.
+            require (bool):
+                Whether to raise an error if the files are not found.
+        Returns (Parser):
+            The newly constructed object.
+        """
         with (path / 'config.json').open() as file_:
             cfg = json.load(file_)
         # TODO: remove this shim when we don't have to support older data
@@ -90,6 +103,16 @@ cdef class Parser:
         return self
 
     def __init__(self, Vocab vocab, TransitionSystem=None, ParserModel model=None, **cfg):
+        """Create a Parser.
+
+        Arguments:
+            vocab (Vocab):
+                The vocabulary object. Must be shared with documents to be processed.
+            model (thinc.linear.AveragedPerceptron):
+                The statistical model.
+        Returns (Parser):
+            The newly constructed object.
+        """
         if TransitionSystem is None:
             TransitionSystem = self.TransitionSystem
         self.vocab = vocab
@@ -107,6 +130,13 @@ cdef class Parser:
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
     def __call__(self, Doc tokens):
+        """Apply the entity recognizer, setting the annotations onto the Doc object.
+
+        Arguments:
+            doc (Doc): The document to be processed.
+        Returns:
+            None
+        """
         cdef int nr_feat = self.model.nr_feat
         with nogil:
             status = self.parseC(tokens.c, tokens.length, nr_feat)
@@ -117,6 +147,16 @@ cdef class Parser:
         self.moves.finalize_doc(tokens)
 
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
+        """Process a stream of documents.
+
+        Arguments:
+            stream: The sequence of documents to process.
+            batch_size (int):
+                The number of documents to accumulate into a working set.
+            n_threads (int):
+                The number of threads with which to work on the buffer in parallel.
+        Yields (Doc): Documents, in order.
+        """
         cdef Pool mem = Pool()
         cdef TokenC** doc_ptr = <TokenC**>mem.alloc(batch_size, sizeof(TokenC*))
         cdef int* lengths = <int*>mem.alloc(batch_size, sizeof(int))
@@ -194,6 +234,16 @@ cdef class Parser:
         return 0
   
     def update(self, Doc tokens, GoldParse gold):
+        """Update the statistical model.
+
+        Arguments:
+            doc (Doc):
+                The example document for the update.
+            gold (GoldParse):
+                The gold-standard annotations, to calculate the loss.
+        Returns (float):
+            The loss on this example.
+        """
         self.moves.preprocess_gold(gold)
         cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
         self.moves.initialize_state(stcls.c)
@@ -220,9 +270,24 @@ cdef class Parser:
         return loss
 
     def step_through(self, Doc doc):
+        """Set up a stepwise state, to introspect and control the transition sequence.
+
+        Arguments:
+            doc (Doc): The document to step through.
+        Returns (StepwiseState):
+            A state object, to step through the annotation process.
+        """
         return StepwiseState(self, doc)
 
     def from_transition_sequence(self, Doc doc, sequence):
+        """Control the annotations on a document by specifying a transition sequence
+        to follow.
+
+        Arguments:
+            doc (Doc): The document to annotate.
+            sequence: A sequence of action names, as unicode strings.
+        Returns: None
+        """
         with self.step_through(doc) as stepwise:
             for transition in sequence:
                 stepwise.transition(transition)
@@ -232,7 +297,6 @@ cdef class Parser:
         for action in self.moves.action_types:
             self.moves.add_action(action, label)
                 
-
 
 cdef class StepwiseState:
     cdef readonly StateClass stcls

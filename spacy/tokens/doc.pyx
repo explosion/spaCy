@@ -219,6 +219,16 @@ cdef class Doc:
         return self.__str__()
 
     def similarity(self, other):
+        '''Make a semantic similarity estimate. The default estimate is cosine
+        similarity using an average of word vectors.
+
+        Arguments:
+            other (object): The object to compare with. By default, accepts Doc,
+                Span, Token and Lexeme objects.
+
+        Return:
+            score (float): A scalar similarity score. Higher is more similar.
+        '''
         if 'similarity' in self.user_hooks:
             return self.user_hooks['similarity'](self, other)
         if self.vector_norm == 0 or other.vector_norm == 0:
@@ -226,6 +236,9 @@ cdef class Doc:
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     property has_vector:
+        '''
+        A boolean value indicating whether a word vector is associated with the object.
+        '''
         def __get__(self):
             if 'has_vector' in self.user_hooks:
                 return self.user_hooks['has_vector'](self)
@@ -233,6 +246,11 @@ cdef class Doc:
             return any(token.has_vector for token in self)
 
     property vector:
+        '''
+        A real-valued meaning representation. Defaults to an average of the token vectors.
+        
+        Type: numpy.ndarray[ndim=1, dtype='float32']
+        '''
         def __get__(self):
             if 'vector' in self.user_hooks:
                 return self.user_hooks['vector'](self)
@@ -265,14 +283,16 @@ cdef class Doc:
     @property
     def string(self):
         return self.text
+    
+    property text
+        '''A unicode representation of the document text.'''
+        def __get__(self):
+            return u''.join(t.text_with_ws for t in self)
 
-    @property
-    def text_with_ws(self):
-        return self.text
-
-    @property
-    def text(self):
-        return u''.join(t.text_with_ws for t in self)
+    property text_with_ws:
+        '''An alias of Doc.text, provided for duck-type compatibility with Span and Token.'''
+        def __get__(self):
+            return self.text
 
     property ents:
         '''
@@ -567,7 +587,6 @@ cdef class Doc:
         set_children_from_heads(self.c, self.length)
         self.is_parsed = bool(HEAD in attrs or DEP in attrs)
         self.is_tagged = bool(TAG in attrs or POS in attrs)
-
         return self
 
     def to_bytes(self):
@@ -612,7 +631,22 @@ cdef class Doc:
             yield n_bytes_str + data
 
     def merge(self, int start_idx, int end_idx, *args, **attributes):
-        """Merge a multi-word expression into a single token."""
+        """Retokenize the document, such that the span at doc.text[start_idx : end_idx]
+        is merged into a single token. If start_idx and end_idx do not mark start
+        and end token boundaries, the document remains unchanged.
+
+        Arguments:
+            start_idx (int): The character index of the start of the slice to merge.
+            end_idx (int): The character index after the end of the slice to merge.
+            **attributes:
+                Attributes to assign to the merged token. By default, attributes
+                are inherited from the syntactic root token of the span.
+        Returns:
+            token (Token):
+                The newly merged token, or None if the start and end indices did
+                not fall at token boundaries.
+
+        """
         cdef unicode tag, lemma, ent_type
         if len(args) == 3:
             # TODO: Warn deprecation

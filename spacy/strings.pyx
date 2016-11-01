@@ -73,6 +73,11 @@ cdef Utf8Str _allocate(Pool mem, const unsigned char* chars, int length) except 
 cdef class StringStore:
     '''Map strings to and from integer IDs.'''
     def __init__(self, strings=None, freeze=False):
+        '''Create the StringStore.
+
+        Arguments:
+            strings: A sequence of unicode strings to add to the store.
+        '''
         self.mem = Pool()
         self._map = PreshMap()
         self._oov = PreshMap()
@@ -89,9 +94,22 @@ cdef class StringStore:
             return self.size -1
 
     def __len__(self):
+        """The number of strings in the store.
+
+        Returns:
+            int The number of strings in the store.
+        """
         return self.size-1
 
     def __getitem__(self, object string_or_id):
+        """Retrieve a string from a given integer ID, or vice versa.
+        
+        Arguments:
+            string_or_id (bytes or unicode or int):
+                The value to encode.
+        Returns:
+            unicode or int: The value to retrieved.
+        """
         if isinstance(string_or_id, basestring) and len(string_or_id) == 0:
             return 0
         elif string_or_id == 0:
@@ -127,12 +145,23 @@ cdef class StringStore:
                 return utf8str - self.c
 
     def __contains__(self, unicode string not None):
+        """Check whether a string is in the store.
+
+        Arguments:
+            string (unicode): The string to check.
+        Returns bool:
+            Whether the store contains the string.
+        """
         if len(string) == 0:
             return True
         cdef hash_t key = hash_string(string)
         return self._map.get(key) is not NULL
 
     def __iter__(self):
+        """Iterate over the strings in the store, in order.
+
+        Yields: unicode A string in the store.
+        """
         cdef int i
         for i in range(self.size):
             yield _decode(&self.c[i]) if i > 0 else u''
@@ -185,6 +214,13 @@ cdef class StringStore:
         return &self.c[self.size-1]
 
     def dump(self, file_):
+        """Save the strings to a JSON file.
+
+        Arguments:
+            file_ (buffer): The file to save the strings.
+        Returns:
+            None
+        """
         string_data = json.dumps(list(self))
         if not isinstance(string_data, unicode):
             string_data = string_data.decode('utf8')
@@ -192,6 +228,13 @@ cdef class StringStore:
         file_.write(string_data)
 
     def load(self, file_):
+        """Load the strings from a JSON file.
+
+        Arguments:
+            file_ (buffer): The file from which to load the strings.
+        Returns:
+            None
+        """
         strings = json.load(file_)
         if strings == ['']:
             return None
