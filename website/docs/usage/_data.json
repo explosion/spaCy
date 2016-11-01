@@ -214,6 +214,12 @@
                 "author": "Matthew Honnibal",
                 "tags": [ "keras", "sentiment" ]
             },
+            "A decomposable attention model for Natural Language Inference": {
+                "url": "https://github.com/explosion/spaCy/tree/master/examples/keras_parikh_entailment",
+                "author": "Matthew Honnibal",
+                "tags": [ "keras", "similarity" ]
+            },
+
             "Using the German model": {
                 "url": "https://explosion.ai/blog/german-model",
                 "author": "Wolfgang Seeker",
@@ -263,7 +269,7 @@
                 "tags": [ "big data" ]
             },
             "Inventory count": {
-                "url": "https://github.com/explosion/spaCy/tree/master/examples/InventoryCount",
+                "url": "https://github.com/explosion/spaCy/tree/master/examples/inventory_count",
                 "author": "Oleg Zd"
             },
             "Multi-word matches": {
