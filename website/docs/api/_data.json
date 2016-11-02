@@ -10,6 +10,7 @@
             "Token": "token",
             "Span": "span",
             "Language": "language",
+            "Tokenizer": "tokenizer",
             "Tagger": "tagger",
             "DependencyParser": "dependencyparser",
             "EntityRecognizer": "entityrecognizer",
@@ -90,6 +91,11 @@
 
     "dependencyparser": {
         "title": "DependencyParser",
+        "tag": "class"
+    },
+
+    "tokenizer": {
+        "title": "Tokenizer",
         "tag": "class"
     },
 

@@ -1,0 +1,249 @@
+//- 💫 DOCS > API > TOKENIZER
+
+include ../../_includes/_mixins
+
+p
+    |  Segment text, and create #[code Doc] objects with the discovered segment
+    |  boundaries.
+
++h(2, "attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell The vocab object of the parent #[code Doc].
+
+    +row
+        +cell #[code prefix_search]
+        +cell -
+        +cell
+            |  A function to find segment boundaries from the start of a
+            |  string. Returns the length of the segment, or #[code None].
+
+    +row
+        +cell #[code suffix_search]
+        +cell -
+        +cell
+            |  A function to find segment boundaries from the end of a string.
+            |  Returns the length of the segment, or #[code None].
+
+    +row
+        +cell #[code infix_finditer]
+        +cell -
+        +cell
+            |  A function to find internal segment separators, e.g. hyphens.
+            |  Returns a (possibly empty) list of #[code re.MatchObject]
+            |  objects.
+
++h(2, "load") Tokenizer.load
+    +tag classmethod
+
+p Load a #[code Tokenizer], reading unsupplied components from the path.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell #[code Path]
+        +cell The path to load from.
+
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell A storage container for lexical types.
+
+    +row
+        +cell #[code rules]
+        +cell dict
+        +cell Exceptions and special-cases for the tokenizer.
+
+    +row
+        +cell #[code prefix_search]
+        +cell callable
+        +cell
+            |  A function matching the signature of
+            |  #[code re.compile(string).search] to match prefixes.
+
+    +row
+        +cell #[code suffix_search]
+        +cell callable
+        +cell
+            |  A function matching the signature of
+            |  #[code re.compile(string).search] to match suffixes.
+
+    +row
+        +cell #[code infix_finditer]
+        +cell callable
+        +cell
+            |  A function matching the signature of
+            |  #[code re.compile(string).finditer] to find infixes.
+
+    +footrow
+        +cell return
+        +cell #[code Tokenizer]
+        +cell The newly constructed object.
+
++h(2, "init") Tokenizer.__init__
+    +tag method
+
+p Create a #[code Tokenizer], to create #[code Doc] objects given unicode text.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell A storage container for lexical types.
+
+    +row
+        +cell #[code rules]
+        +cell dict
+        +cell Exceptions and special-cases for the tokenizer.
+
+    +row
+        +cell #[code prefix_search]
+        +cell callable
+        +cell
+            |  A function matching the signature of
+            |  #[code re.compile(string).search] to match prefixes.
+
+    +row
+        +cell #[code suffix_search]
+        +cell callable
+        +cell
+            |  A function matching the signature of
+            |  #[code re.compile(string).search] to match suffixes.
+
+    +row
+        +cell #[code infix_finditer]
+        +cell callable
+        +cell
+            |  A function matching the signature of
+            |  #[code re.compile(string).finditer] to find infixes.
+
+    +footrow
+        +cell return
+        +cell #[code Tokenizer]
+        +cell The newly constructed object.
+
++h(2, "call") Tokenizer.__call__
+    +tag method
+
+p Tokenize a string.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code string]
+        +cell unicode
+        +cell The string to tokenize.
+
+    +footrow
+        +cell return
+        +cell #[code Doc]
+        +cell A container for linguistic annotations.
+
++h(2, "pipe") Tokenizer.pipe
+    +tag method
+
+p Tokenize a stream of texts.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code texts]
+        +cell -
+        +cell A sequence of unicode texts.
+
+    +row
+        +cell #[code batch_size]
+        +cell int
+        +cell The number of texts to accumulate in an internal buffer.
+
+    +row
+        +cell #[code n_threads]
+        +cell int
+        +cell
+            |  The number of threads to use, if the implementation supports
+            |  multi-threading. The default tokenizer is single-threaded.
+
+    +footrow
+        +cell yield
+        +cell #[code Doc]
+        +cell A sequence of Doc objects, in order.
+
++h(2, "find_infix") Tokenizer.find_infix
+    +tag method
+
+p Find internal split points of the string.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code string]
+        +cell unicode
+        +cell The string to split.
+
+    +footrow
+        +cell return
+        +cell #[code List[re.MatchObject]]
+        +cell
+            |  A list of objects that have #[code .start()] and #[code .end()]
+            |  methods, denoting the placement of internal segment separators,
+            |  e.g. hyphens.
+
++h(2, "find_prefix") Tokenizer.find_prefix
+    +tag method
+
+p
+    |  Find the length of a prefix that should be segmented from the string, or
+    |  #[code None] if no prefix rules match.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code string]
+        +cell unicode
+        +cell The string to segment.
+
+    +footrow
+        +cell return
+        +cell int / #[code None]
+        +cell The length of the prefix if present, otherwise #[code None].
+
++h(2, "find_suffix") Tokenizer.find_suffix
+    +tag method
+
+p
+    |  Find the length of a suffix that should be segmented from the string, or
+    |  #[code None] if no suffix rules match.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code string]
+        +cell unicode
+        +cell The string to segment.
+
+    +footrow
+        +cell return
+        +cell int / #[code None]
+        +cell The length of the suffix if present, otherwise #[code None].
+
++h(2, "add_special_case") Tokenizer.add_special_case
+    +tag method
+
+p Add a special-case tokenization rule.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code string]
+        +cell unicode
+        +cell The string to specially tokenize.
+
+    +row
+        +cell #[code token_attrs]
+        +cell -
+        +cell
+            |  A sequence of dicts, where each dict describes a token and its
+            |  attributes. The #[code ORTH] fields of the attributes must
+            |  exactly match the string when they are concatenated.
+
+    +footrow
+        +cell return
+        +cell #[code None]
+        +cell -
