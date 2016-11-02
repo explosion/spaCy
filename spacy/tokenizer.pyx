@@ -266,6 +266,16 @@ cdef class Tokenizer:
                         infix_end = match.end()
                         if infix_start == start:
                             continue
+                        if infix_start == infix_end:
+                            msg = ("Tokenizer found a zero-width 'infix' token.\n"
+                                   "If you're using a built-in tokenizer, please\n"
+                                   "report this bug. If you're using a tokenizer\n"
+                                   "you developed, check your TOKENIZER_INFIXES\n"
+                                   "tuple.\n"
+                                   "String being matched: {string}\n"
+                                   "Language: {lang}")
+                            raise ValueError(msg.format(string=string, lang=self.vocab.lang))
+
                         span = string[start:infix_start]
                         tokens.push_back(self.vocab.get(tokens.mem, span), False)
                     
@@ -295,13 +305,19 @@ cdef class Tokenizer:
         self._cache.set(key, cached)
 
     def find_infix(self, unicode string):
+        if self.infix_finditer is None:
+            return 0
         return list(self.infix_finditer(string))
 
     def find_prefix(self, unicode string):
+        if self.prefix_search is None:
+            return 0
         match = self.prefix_search(string)
         return (match.end() - match.start()) if match is not None else 0
 
     def find_suffix(self, unicode string):
+        if self.suffix_search is None:
+            return 0
         match = self.suffix_search(string)
         return (match.end() - match.start()) if match is not None else 0
 
