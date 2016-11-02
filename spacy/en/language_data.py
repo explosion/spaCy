@@ -112,6 +112,10 @@ TOKENIZER_INFIXES = (r'''\.\.\.+ (?<=[a-z])\.(?=[A-Z]) (?<=[a-zA-Z])-(?=[a-zA-z]
 
 
 TOKENIZER_EXCEPTIONS = {
+  "Ph.D.": [
+    {
+        "F": "Ph.D."
+    }],
   "d.": [
     {
       "F": "d."
