@@ -7,6 +7,7 @@ from . import de
 from . import zh
 from . import es
 from . import it
+from . import fr
 from . import pt
 
 
