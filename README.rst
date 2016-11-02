@@ -60,15 +60,22 @@ open-source software, released under the MIT license.
 Features
 ========
 
-* Labelled dependency parsing (91.8% accuracy on OntoNotes 5)
-* Named entity recognition (82.6% accuracy on OntoNotes 5)
-* Part-of-speech tagging (97.1% accuracy on OntoNotes 5)
-* Easy to use word vectors
-* All strings mapped to integer IDs
+* Non-destructive **tokenization**
+* Syntax-driven sentence segmentation
+* Pre-trained **word vectors**
+* Part-of-speech tagging
+* **Named entity** recognition
+* Labelled dependency parsing
+* Convenient string-to-int mapping
 * Export to numpy data arrays
-* Alignment maintained to original string, ensuring easy mark up calculation
-* Range of easy-to-use orthographic features.
-* No pre-processing required. spaCy takes raw text as input, warts and newlines and all.
+* GIL-free **multi-threading**
+* Efficient binary serialization
+* Easy **deep learning** integration
+* Statistical models for **English** and **German**
+* State-of-the-art speed
+* Robust, rigorously evaluated accuracy
+
+See `facts, figures and benchmarks <https://spacy.io/docs/api/>`_.
 
 Top Peformance
 ==============
