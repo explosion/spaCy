@@ -151,6 +151,11 @@ cdef class Doc:
                 # must be created.
                 self.push_back(
                     <const LexemeC*>self.vocab.get(self.mem, orth), has_space)
+        # Tough to decide on policy for this. Is an empty doc tagged and parsed?
+        # There's no information we'd like to add to it, so I guess so?
+        if self.length == 0:
+            self.is_tagged = True
+            self.is_parsed = True
     
     def __getitem__(self, object i):
         '''
@@ -430,6 +435,10 @@ cdef class Doc:
                 yield Span(self, start, self.length)
 
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
+        if self.length == 0:
+            # Flip these to false when we see the first token.
+            self.is_tagged = False
+            self.is_parsed = False
         if self.length == self.max_length:
             self._realloc(self.length * 2)
         cdef TokenC* t = &self.c[self.length]
