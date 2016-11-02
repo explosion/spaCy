@@ -2,6 +2,7 @@
     "sidebar": {
         "Introduction": {
             "Facts & Figures": "./",
+            "Language models": "language-models",
             "Philosophy": "philosophy"
         },
         "Classes": {
@@ -25,6 +26,11 @@
 
     "index": {
         "title": "Facts & Figures",
+        "next": "language-models"
+    },
+
+    "language-models": {
+        "title": "Language models",
         "next": "philosophy"
     },
 

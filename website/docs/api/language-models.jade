@@ -1,0 +1,22 @@
+//- 💫 DOCS > API > FACTS & FIGURES
+
+include ../../_includes/_mixins
+
+p You can download data packs that add the following capabilities to spaCy.
+
++aside-code("Download language models", "bash").
+    python -m spacy.en.download all
+    python -m spacy.de.download all
+
++table([ "Language", "Token", "SBD", "Lemma", "POS", "NER", "Dep", "Vector", "Sentiment"])
+    +row
+        +cell English #[code en]
+        each icon in [ "pro", "pro", "pro", "pro", "pro", "pro", "pro", "con" ]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell German #[code de]
+        each icon in [ "pro", "pro", "con", "pro", "pro", "pro", "pro", "con" ]
+            +cell.u-text-center #[+procon(icon)]
+
+p We're working hard to extend support for more languages and more capabilities. The next language packs we're planning to add are Spanish, Chinese, French and Portuguese.
