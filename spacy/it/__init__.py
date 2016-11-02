@@ -7,7 +7,7 @@ from ..attrs import LANG
 from . import language_data
 
 
-class German(Language):
+class Italian(Language):
     lang = 'it'
     
     class Defaults(Language.Defaults):
