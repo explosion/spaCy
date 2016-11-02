@@ -273,6 +273,12 @@ cdef class Matcher:
         Returns:
             None
         """
+        token_specs = list(token_specs)
+        if len(token_specs) == 0:
+            msg = ("Cannot add pattern for zero tokens to matcher.\n"
+                   "entity_key: {entity_key}\n"
+                   "label: {label}")
+            raise ValueError(msg.format(entity_key=entity_key, label=label))
         entity_key = self.normalize_entity_key(entity_key)
         if not self.has_entity(entity_key):
             self.add_entity(entity_key)
