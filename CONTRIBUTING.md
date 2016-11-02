@@ -1,3 +1,5 @@
+<a href="https://explosion.ai"><img src="https://explosion.ai/assets/img/logo.svg" width="125" height="125" align="right" /></a>
+
 # Contribute to spaCy
 
 Following the v1.0 release, it's time to welcome more contributors into the spaCy project and code base 🎉 This page will give you a quick overview of how things are organised and most importantly, how to get involved.
