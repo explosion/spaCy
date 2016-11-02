@@ -275,7 +275,7 @@ class Language(object):
             self.make_doc = overrides['make_doc']
         elif 'create_make_doc' in overrides:
             self.make_doc = overrides['create_make_doc'](self)
-        else:
+        elif not hasattr(self, 'make_doc'):
             self.make_doc = lambda text: self.tokenizer(text)
         if 'pipeline' in overrides:
             self.pipeline = overrides['pipeline']
