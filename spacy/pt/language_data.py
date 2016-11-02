@@ -114,7 +114,10 @@ _
 '''.strip().split('\n')
 
 
-TOKENIZER_INFIXES = tuple()
+TOKENIZER_INFIXES = (r'''\.\.\.+ (?<=[a-z])\.(?=[A-Z]) (?<=[a-zA-Z])-(?=[a-zA-z]) '''
+                     r'''(?<=[a-zA-Z])--(?=[a-zA-z]) (?<=[0-9])-(?=[0-9]) '''
+                     r'''(?<=[A-Za-z]),(?=[A-Za-z])''').split()
+
 
 
 TOKENIZER_EXCEPTIONS = {
