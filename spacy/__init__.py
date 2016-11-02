@@ -5,6 +5,9 @@ from .util import set_lang_class, get_lang_class
 from . import en
 from . import de
 from . import zh
+from . import es
+from . import it
+from . import pt
 
 
 try:
@@ -15,6 +18,10 @@ except NameError:
 
 set_lang_class(en.English.lang, en.English)
 set_lang_class(de.German.lang, de.German)
+set_lang_class(es.Spanish.lang, es.Spanish)
+set_lang_class(pt.Portuguese.lang, pt.Portuguese)
+set_lang_class(fr.French.lang, fr.French)
+set_lang_class(it.Italian.lang, it.Italian)
 set_lang_class(zh.Chinese.lang, zh.Chinese)
 
 
