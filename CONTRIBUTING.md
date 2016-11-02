@@ -84,7 +84,7 @@ To make it easy to add content components, we use a [collection of custom mixins
 
 ## Submitting a tutorial
 
-Did you write [tutorial](https://spacy.io/docs/usage/tutorials) to help others use spaCy, or did you come across one that should be added to our directory? You can submit it by making a pull request to [`website/docs/usage/_data.json`](website/docs/usage/_data.json):
+Did you write a [tutorial](https://spacy.io/docs/usage/tutorials) to help others use spaCy, or did you come across one that should be added to our directory? You can submit it by making a pull request to [`website/docs/usage/_data.json`](website/docs/usage/_data.json):
 
 ```json
 {
