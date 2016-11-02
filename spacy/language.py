@@ -62,9 +62,18 @@ class BaseDefaults(object):
     @classmethod
     def create_tokenizer(cls, nlp=None):
         rules = cls.tokenizer_exceptions
-        prefix_search  = util.compile_prefix_regex(cls.prefixes).search
-        suffix_search  = util.compile_suffix_regex(cls.suffixes).search
-        infix_finditer = util.compile_infix_regex(cls.infixes).finditer
+        if cls.prefixes:
+            prefix_search  = util.compile_prefix_regex(cls.prefixes).search
+        else:
+            prefix_search = None
+        if cls.suffixes:
+            suffix_search  = util.compile_suffix_regex(cls.suffixes).search
+        else:
+            suffix_search = None
+        if cls.infixes:
+            infix_finditer = util.compile_infix_regex(cls.infixes).finditer
+        else:
+            infix_finditer = None
         vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
         return Tokenizer(nlp.vocab, rules=rules,
                          prefix_search=prefix_search, suffix_search=suffix_search,
