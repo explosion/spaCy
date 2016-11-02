@@ -60,15 +60,22 @@ open-source software, released under the MIT license.
 Features
 ========
 
-* Labelled dependency parsing (91.8% accuracy on OntoNotes 5)
-* Named entity recognition (82.6% accuracy on OntoNotes 5)
-* Part-of-speech tagging (97.1% accuracy on OntoNotes 5)
-* Easy to use word vectors
-* All strings mapped to integer IDs
+* Non-destructive **tokenization**
+* Syntax-driven sentence segmentation
+* Pre-trained **word vectors**
+* Part-of-speech tagging
+* **Named entity** recognition
+* Labelled dependency parsing
+* Convenient string-to-int mapping
 * Export to numpy data arrays
-* Alignment maintained to original string, ensuring easy mark up calculation
-* Range of easy-to-use orthographic features.
-* No pre-processing required. spaCy takes raw text as input, warts and newlines and all.
+* GIL-free **multi-threading**
+* Efficient binary serialization
+* Easy **deep learning** integration
+* Statistical models for **English** and **German**
+* State-of-the-art speed
+* Robust, rigorously evaluated accuracy
+
+See `facts, figures and benchmarks <https://spacy.io/docs/api/>`_.
 
 Top Peformance
 ==============
@@ -239,9 +246,9 @@ Changelog
 
 **✨ Major features and improvements**
 
-* **NEW:** `custom processing pipelines <https://spacy.io/docs/tutorials/custom-pipelines>`_, to support deep learning workflows
-* **NEW:** `Rule matcher <https://spacy.io/docs/tutorials/rule-based-matcher>`_ now supports entity IDs and attributes
-* **NEW:** Official/documented `training APIs <https://spacy.io/docs/tutorials/training>`_ and `GoldParse` class
+* **NEW:** `custom processing pipelines <https://spacy.io/docs/usage/customizing-pipeline>`_, to support deep learning workflows
+* **NEW:** `Rule matcher <https://spacy.io/docs/usage/rule-based-matching>`_ now supports entity IDs and attributes
+* **NEW:** Official/documented `training APIs <https://github.com/explosion/spaCy/tree/master/examples/training>`_ and `GoldParse` class
 * Download and use GloVe vectors by default
 * Make it easier to load and unload word vectors
 * Improved rule matching functionality
@@ -425,7 +432,7 @@ include a small fix to the tokenizer.
 * Fix bugs in ``Span``
 * Add tokenizer rule to fix numeric range tokenization
 * Add specific string-length cap in Tokenizer
-* Fix ``token.conjuncts```
+* Fix ``token.conjuncts``
 
 2015-10-09 `v0.94 <https://github.com/explosion/spaCy/releases/tag/0.94>`_
 --------------------------------------------------------------------------

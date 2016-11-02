@@ -80,7 +80,7 @@ For example:
 +h(2, "link-id") Headline 2 with link to #link-id
 ```
 
-Code blocks are implemented using the `+code` or `+aside-code` (to display them in the sidebar). A `.` is added after the mixin call to preserve whitespace:
+Code blocks are implemented using `+code` or `+aside-code` (to display them in the right sidebar). A `.` is added after the mixin call to preserve whitespace:
 
 ```pug
 +code("This is a label").

@@ -208,7 +208,7 @@
             }
         },
 
-        "features": {
+        "deep_dives": {
             "Deep Learning with custom pipelines and Keras": {
                 "url": "https://explosion.ai/blog/spacy-deep-learning-keras",
                 "author": "Matthew Honnibal",
