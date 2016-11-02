@@ -173,6 +173,12 @@ cdef class Token:
     property tag:
         def __get__(self):
             return self.c.tag
+        def __set__(self, int tag):
+            # TODO: The behaviour here --- that it fails when we don't have the
+            # tag in the 'reverse index' --- really sucks. But we can't fix it
+            # here if we don't fix it elsewhere...
+            self.vocab.morphology.assign_tag(self.c,
+                self.vocab.morphology.reverse_index[tag])
 
     property dep:
         def __get__(self):
@@ -537,6 +543,8 @@ cdef class Token:
     property tag_:
         def __get__(self):
             return self.vocab.strings[self.c.tag]
+        def __set__(self, tag):
+            self.tag = self.vocab.strings[tag]
 
     property dep_:
         def __get__(self):
