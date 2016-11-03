@@ -3,25 +3,24 @@
         "landing": true,
         "logos": [
             {
-                "chartbeat": "https://chartbeat.com",
-                "cytora": "http://www.cytora.com",
-                "duedil": "https://www.duedil.com",
-                "socrata": "https://www.socrata.com",
-                "indico": "https://indico.io",
-                "signaln": "http://signaln.com"
+                "quora": [ "https://www.quora.com", 150 ],
+                "chartbeat": [ "https://chartbeat.com", 200 ],
+                "duedil": [ "https://www.duedil.com", 150 ],
+                "stitchfix": [ "https://www.stitchfix.com", 190 ]
             },
             {
-                "keyreply": "https://keyreply.com",
-                "dato": "https://dato.com",
-                "kip": "http://kipthis.com",
-                "wonderflow": "http://www.wonderflow.co",
-                "foxtype": "https://foxtype.com"
+                "wayblazer": [ "http://wayblazer.com", 200 ],
+                "indico": [ "https://indico.io", 150 ],
+                "chattermill": [ "https://chattermill.io", 175 ],
+                "turi": [ "https://turi.com", 150 ],
+                "kip": [ "http://kipthis.com", 70 ]
             },
             {
-                "synapsify": "http://www.gosynapsify.com",
-                "stitchfix": "https://www.stitchfix.com",
-                "wayblazer": "http://wayblazer.com",
-                "chattermill": "https://chattermill.io"
+                "socrata": [ "https://www.socrata.com", 150 ],
+                "cytora": [ "http://www.cytora.com", 125 ],
+                "signaln": [ "http://signaln.com", 150 ],
+                "wonderflow": [ "http://www.wonderflow.co", 200 ],
+                "synapsify": [ "http://www.gosynapsify.com", 150 ]
             }
         ]
     },
