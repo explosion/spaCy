@@ -35,15 +35,15 @@ cdef class Morphology:
         return (Morphology, (self.strings, self.tag_map, self.lemmatizer), None, None)
 
     cdef int assign_tag(self, TokenC* token, tag) except -1:
-        cdef int tag_id
         if isinstance(tag, basestring):
             tag_id = self.reverse_index[self.strings[tag]]
-            tag_str = tag
         else:
-            tag_id = tag
-            tag_str = self.strings[tag]
+            tag_id = self.reverse_index[tag]
+        self.assign_tag_id(token, tag_id)
+
+    cdef int _assign_tag_id(self, TokenC* token, int tag_id) except -1:
         if tag_id >= self.n_tags:
-            raise ValueError("Unknown tag: %s" % tag)
+            raise ValueError("Unknown tag ID: %s" % tag_id)
         # TODO: It's pretty arbitrary to put this logic here. I guess the justification
         # is that this is where the specific word and the tag interact. Still,
         # we should have a better way to enforce this rule, or figure out why
@@ -55,6 +55,7 @@ cdef class Morphology:
         if analysis is NULL:
             analysis = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
             analysis.tag = self.rich_tags[tag_id]
+            tag_str = self.strings[self.rich_tags[tag_id].name]
             analysis.lemma = self.lemmatize(analysis.tag.pos, token.lex.orth,
                                             **self.tag_map.get(tag_str, {}))
             self._cache.set(tag_id, token.lex.orth, analysis)
