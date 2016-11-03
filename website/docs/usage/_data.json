@@ -104,6 +104,12 @@
                 "description": "Semantic analysis of the Reddit hivemind",
                 "image": "sense2vec.jpg"
             },
+            "TruthBot": {
+                "url": "http://summerscope.github.io/govhack/2016/truthbot/",
+                "author": "Team Truthbot",
+                "description": "The world's first artificially intelligent fact checking robot.",
+                "image": "truthbot.jpg"
+            },
             "Laice": {
                 "url": "https://github.com/kendricktan/laice",
                 "author": "Kendrick Tan",
