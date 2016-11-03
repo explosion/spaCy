@@ -70,30 +70,30 @@
             "spacy-nlp": {
                 "url": "https://github.com/kengz/spacy-nlp",
                 "author": "Wah Loon Keng",
-                "description": "Expose spaCy NLP text parsing to Node.js (and other languages) via Socket.IO"
+                "description": "Expose spaCy NLP text parsing to Node.js (and other languages) via Socket.IO."
             },
             "textacy": {
                 "url": "https://github.com/chartbeat-labs/textacy",
                 "author": " Burton DeWilde (Chartbeat)",
-                "description": "Higher-level NLP built on spaCy"
+                "description": "Higher-level NLP built on spaCy."
             },
             "visual-qa": {
                 "url": "https://github.com/avisingh599/visual-qa",
                 "author": "Avi Singh",
-                "description": "Keras-based LSTM/CNN models for Visual Question Answering"
+                "description": "Keras-based LSTM/CNN models for Visual Question Answering."
             }
         },
         "visualizations": {
             "displaCy": {
                 "url": "https://demos.explosion.ai/displacy",
                 "author": "Ines Montani",
-                "description": "An open-source NLP visualiser for the modern web",
+                "description": "An open-source NLP visualiser for the modern web.",
                 "image": "displacy.jpg"
             },
             "displaCy ENT": {
                 "url": "https://demos.explosion.ai/displacy-ent",
                 "author": "Ines Montani",
-                "description": "An open-source named entity visualiser for the modern web",
+                "description": "An open-source named entity visualiser for the modern web.",
                 "image": "displacy-ent.jpg"
             }
         },
@@ -101,7 +101,7 @@
             "sense2vec": {
                 "url": "https://demos.explosion.ai/sense2vec",
                 "author": "Matthew Honnibal and Ines Montani",
-                "description": "Semantic analysis of the Reddit hivemind",
+                "description": "Semantic analysis of the Reddit hivemind.",
                 "image": "sense2vec.jpg"
             },
             "TruthBot": {
@@ -113,22 +113,22 @@
             "Laice": {
                 "url": "https://github.com/kendricktan/laice",
                 "author": "Kendrick Tan",
-                "description": "Train your own Natural Language Processor from a browser",
+                "description": "Train your own Natural Language Processor from a browser.",
                 "image": "laice.jpg"
             },
             "FoxType": {
                 "url": "https://foxtype.com",
-                "description": "Smart tools for writers",
+                "description": "Smart tools for writers.",
                 "image": "foxtype.jpg"
             },
             "Kip": {
                 "url": "https://kipthis.com",
-                "description": "An AI chat assistant for group shopping",
+                "description": "An AI chat assistant for group shopping.",
                 "image": "kip.jpg"
             },
             "Indico": {
                 "url": "https://indico.io",
-                "description": "Text and image analysis powered by Machine Learning",
+                "description": "Text and image analysis powered by Machine Learning.",
                 "image": "indico.jpg"
             },
             "TextAnalysisOnline": {
