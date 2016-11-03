@@ -190,9 +190,11 @@ mixin cell()
 
 
 //- Grid Container
+    ...style - all arguments are added as class names o-grid--argument
+               see assets/css/_base/_grid.sass
 
-mixin grid()
-    .o-grid.o-block&attributes(attributes)
+mixin grid(...style)
+    .o-grid.o-block(class=prefixArgs(style, "o-grid"))&attributes(attributes)
         block
 
 
