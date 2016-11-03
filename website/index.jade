@@ -108,12 +108,11 @@ include _includes/_mixins
     .o-block.u-text-center.u-padding
         h3.u-text-label.u-color-subtle.o-block spaCy is trusted by
 
-        .o-block
-            each row in logos
-                each url, name in row
-                    +a(url)
-                        img(src="/assets/img/logos/#{name}.png" alt="name" width="150").u-padding-medium.u-grayscale
-                br
+        each row in logos
+            +grid("center").o-inline-list
+                each details, name in row
+                    +a(details[0])
+                        img(src="/assets/img/logos/#{name}.png" alt=name width=(details[1] || 150)).u-padding-small
 
 .u-pattern.u-padding
     +grid.o-card.o-content
