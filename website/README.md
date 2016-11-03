@@ -50,7 +50,14 @@ p
     |  like this: #[+a("https://google.com") Google].
 ```
 
-Note that for external links, `+a("...")` is used instead of `a(href="...")` – it's a mixin that takes care of adding all required attributes.
+Note that for external links, `+a("...")` is used instead of `a(href="...")` – it's a mixin that takes care of adding all required attributes. If possible, always use a mixin instead of regular HTML elements. The only plain HTML elements we use are:
+
+| Element | Description |
+| --- | --- |
+| `p` | paragraphs |
+| `code` | inline `code` |
+| `em` | *italicized* text |
+| `strong` | **bold** text |
 
 ### Mixins
 
@@ -91,20 +98,40 @@ Code blocks are implemented using `+code` or `+aside-code` (to display them in t
 
 You can find the documentation for the available mixins in [`_includes/_mixins.jade`](_includes/_mixins.jade).
 
-### Linking to the Github repo
+### Helpers for linking to content
+
+Aside from the `+a()` mixin, there are three other helpers to make linking to content more convenient.
+
+#### Linking to GitHub
 
 Since GitHub links can be long and tricky, you can use the `gh()` function to generate them automatically for spaCy and all repositories owned by [explosion](https://github.com/explosion):
 
-```pug
-//- Syntax: gh(repo, [file], [branch])
+```javascript
+// Syntax: gh(repo, [file], [branch])
 
-+src(gh("spaCy", "spacy/matcher.pyx"))
-
-//- https://github.com/explosion/spaCy/blob/master/spacy/matcher.pyx
+gh("spaCy", "spacy/matcher.pyx")
+// https://github.com/explosion/spaCy/blob/master/spacy/matcher.pyx
 
 ```
 
-`+src()` creates a link with a little source icon to indicate it's linking to a code source.
+#### Linking to source
+
+`+src()` generates a link with a little source icon to indicate it's linking to a code source. Ideally, it's used in combination with `gh()`:
+
+```pug
++src(gh("spaCy", "spacy/matcher.pyx")) matcher.pxy
+```
+
+#### Linking to API reference
+
+`+api()` generates a link to a page in the API docs, with an added icon. It should only be used across the workflows in the usage section, and only on the first mention of the respective class.
+
+It takes the slug of an API page as the argument. You can also use anchors to link to specific sections – they're usually the method or property names.
+
+```pug
++api("tokenizer") #[code Tokenizer]
++api("doc#similarity") #[code Doc.similarity()]
+```
 
 ### Most common causes of compile errors
 
