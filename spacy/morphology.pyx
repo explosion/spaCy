@@ -39,7 +39,7 @@ cdef class Morphology:
             tag_id = self.reverse_index[self.strings[tag]]
         else:
             tag_id = self.reverse_index[tag]
-        self.assign_tag_id(token, tag_id)
+        self._assign_tag_id(token, tag_id)
 
     cdef int _assign_tag_id(self, TokenC* token, int tag_id) except -1:
         if tag_id >= self.n_tags:
