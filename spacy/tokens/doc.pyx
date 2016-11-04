@@ -577,8 +577,7 @@ cdef class Doc:
             elif attr_id == TAG:
                 for i in range(length):
                     if values[i] != 0:
-                        self.vocab.morphology.assign_tag(&tokens[i],
-                            self.vocab.morphology.reverse_index[values[i]])
+                        self.vocab.morphology.assign_tag(&tokens[i], values[i])
             elif attr_id == POS:
                 for i in range(length):
                     tokens[i].pos = <univ_pos_t>values[i]
