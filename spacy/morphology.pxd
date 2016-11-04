@@ -35,7 +35,7 @@ cdef class Morphology:
 
     cdef int assign_tag(self, TokenC* token, tag) except -1
 
-    cdef int _assign_tag_id(self, TokenC* token, int tag_id) except -1
+    cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1
     
     cdef int assign_feature(self, uint64_t* morph, feature, value) except -1
 
