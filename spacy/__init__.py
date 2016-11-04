@@ -1,6 +1,7 @@
 import pathlib
 
 from .util import set_lang_class, get_lang_class
+from .about import __version__
 
 from . import en
 from . import de
