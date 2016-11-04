@@ -11,13 +11,12 @@ from . import util
 
 
 def download(lang, force=False, fail_on_exist=True):
-    if force:
-        sputnik.purge(about.__title__, about.__version__)
-
     try:
-        sputnik.package(about.__title__, about.__version__,
+        pkg = sputnik.package(about.__title__, about.__version__,
                         about.__models__.get(lang, lang))
-        if fail_on_exist:
+        if force:
+            shutil.rmtree(pkg.path)
+        elif fail_on_exist:
             print("Model already installed. Please run 'python -m "
                   "spacy.%s.download --force' to reinstall." % lang, file=sys.stderr)
             sys.exit(0)
