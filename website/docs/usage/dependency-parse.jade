@@ -43,7 +43,7 @@ p
     |  #[code token.dep_].
 
 +aside-code("Example").
-    from spacy.symbols import DET
+    from spacy.symbols import det
     the, dog = nlp(u'the dog')
     assert the.dep == det
     assert the.dep_ == 'det'
@@ -96,14 +96,14 @@ p
     print([w.text for w in apples.rights])
     # ['on']
     assert apples.n_lefts == 2
-    assert apples.n_rights == 3
+    assert apples.n_rights == 1
 
     from spacy.symbols import nsubj
     doc = nlp(u'Credit and mortgage account holders must submit their requests within 30 days.')
     root = [w for w in doc if w.head is w][0]
     subject = list(root.lefts)[0]
     for descendant in subject.subtree:
-        assert subject.is_ancestor(descendant)
+        assert subject.is_ancestor_of(descendant)
 
     from spacy.symbols import nsubj
     doc = nlp(u'Credit and mortgage account holders must submit their requests.')
@@ -131,7 +131,7 @@ p
 
 p
     |  Finally, I often find the #[code .left_edge] and #[code right_edge]
-    |  attributes especially useful. They give you the first and right tokens
+    |  attributes especially useful. They give you the first and last token
     |  of the subtree. This is the easiest way to create a #[code Span] object
     |  for a syntactic phrase — a useful operation.
 
@@ -160,4 +160,4 @@ p
 +code.
     nlp = spacy.load('en')
     doc1 = nlp(u'Text I do want parsed.')
-    doc2 = nlp(u'Text I don't want parsed', parser=False)
+    doc2 = nlp(u"Text I don't want parsed", parse=False)
