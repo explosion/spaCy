@@ -107,10 +107,11 @@ cdef class Tokenizer:
         return (self.__class__, args, None, None)
     
     cpdef Doc tokens_from_list(self, list strings):
-        raise NotImplementedError(
-            "Method deprecated in 1.0.\n"
-            "Old: tokenizer.tokens_from_list(strings)\n"
-            "New: Doc(tokenizer.vocab, words=strings)")
+        return Doc(self.vocab, words=strings)
+        #raise NotImplementedError(
+        #    "Method deprecated in 1.0.\n"
+        #    "Old: tokenizer.tokens_from_list(strings)\n"
+        #    "New: Doc(tokenizer.vocab, words=strings)")
 
     @cython.boundscheck(False)
     def __call__(self, unicode string):
