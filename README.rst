@@ -6,7 +6,7 @@ Cython. spaCy is built on  the very latest research, but it isn't researchware.
 It was designed from day 1 to be used in real products. It's commercial 
 open-source software, released under the MIT license.
 
-💫 **Version 1.1 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
+💫 **Version 1.2 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: http://i.imgur.com/wFvLZyJ.png
     :target: https://travis-ci.org/explosion/spaCy
@@ -225,8 +225,29 @@ and ``--model`` are optional and enable additional tests:
 Changelog
 =========
 
-2016-10-23 `v1.1.0 <https://github.com/explosion/spaCy/releases>`_: *Bug fixes and adjustments*
------------------------------------------------------------------------------------------------
+2016-11-04 `v1.2.0 <https://github.com/explosion/spaCy/releases>`_: *Alpha tokenizers for Chinese, French, Spanish, Italian and Portuguese*
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+**✨ Major features and improvements**
+
+* **NEW:** Support Chinese tokenization, via `Jieba <https://github.com/fxsjy/jieba>`_.
+* **NEW:** Alpha support for French, Spanish, Italian and Portuguese tokenization.
+
+**🔴 Bug fixes**
+
+* Fix issue `#376 <https://github.com/explosion/spaCy/issues/376>`_: POS tags for "and/or" are now correct.
+* Fix issue `#578 <https://github.com/explosion/spaCy/issues578/>`_: ``--force`` argument on download command now operates correctly.
+* Fix issue `#595 <https://github.com/explosion/spaCy/issues/595>`_: Lemmatization corrected for some base forms.
+* Fix issue `#588 <https://github.com/explosion/spaCy/issues/588>`_: `Matcher` now rejects empty patterns.
+* Fix issue `#592 <https://github.com/explosion/spaCy/issues/592>`_: Added exception rule for tokenization of "Ph.D."
+* Fix issue `#599 <https://github.com/explosion/spaCy/issues/599>`_: Empty documents now considered tagged and parsed.
+* Fix issue `#600 <https://github.com/explosion/spaCy/issues/600>`_: Add missing ``token.tag`` and ``token.tag`` setters.
+* Fix issue `#596 <https://github.com/explosion/spaCy/issues/596>`_: Added missing unicode import when compiling regexes that led to incorrect tokenization.
+* Fix issue `#587 <https://github.com/explosion/spaCy/issues/587>`_: Resolved bug that caused ``Matcher`` to sometimes segfault.
+* Fix issue `#429 <https://github.com/explosion/spaCy/issues/429>`_: Ensure missing entity types are added to the entity recognizer.
+
+2016-10-23 `v1.1.0 <https://github.com/explosion/spaCy/releases/tag/v1.1.0>`_: *Bug fixes and adjustments*
+----------------------------------------------------------------------------------------------------------
 
 * Rename new ``pipeline`` keyword argument of ``spacy.load()`` to ``create_pipeline``.
 * Rename new ``vectors`` keyword argument of ``spacy.load()`` to ``add_vectors``.
