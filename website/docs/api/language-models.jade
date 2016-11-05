@@ -19,7 +19,13 @@ p You can download data packs that add the following capabilities to spaCy.
         each icon in [ "pro", "pro", "con", "pro", "pro", "pro", "pro", "con" ]
             +cell.u-text-center #[+procon(icon)]
 
+    +row
+        +cell Chinese #[code zh]
+        each icon in [ "pro", "con", "con", "con", "con", "con", "con", "con" ]
+            +cell.u-text-center #[+procon(icon)]
+
 p
-    |  We're working hard to extend support for more languages and more
-    |  capabilities. The next language packs we're planning to add are Spanish,
-    |  Chinese, French and Portuguese.
+    |  Chinese tokenization requires the
+    |  #[+a("https://github.com/fxsjy/jieba") Jieba] library. Statistical
+    |  models are coming soon. Tokenizers for Spanish, French, Italian and
+    |  Portuguese are now under development. 
