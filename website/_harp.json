@@ -11,7 +11,7 @@
         "COMPANY": "Explosion AI",
         "COMPANY_URL": "https://explosion.ai",
         "DEMOS_URL": "https://demos.explosion.ai",
-        "SPACY_VERSION": "1.1",
+        "SPACY_VERSION": "1.2",
 
         "SOCIAL": {
             "twitter": "spacy_io",
@@ -47,7 +47,7 @@
             }
         },
 
-        "V_CSS": "1.7",
+        "V_CSS": "1.8",
         "V_JS": "1.0",
         "DEFAULT_SYNTAX" : "python",
         "ANALYTICS": "UA-58931649-1",
