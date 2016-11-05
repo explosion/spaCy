@@ -29,7 +29,7 @@ open-source software, released under the MIT license.
     :alt: spaCy on Gitter
 
 📖 Documentation
-=============
+================
 
 +--------------------------------------------------------------------------------+---------------------------------------------------------+
 | `Usage Workflows <https://spacy.io/docs/usage/>`_                              | How to use spaCy and its features.                      |
