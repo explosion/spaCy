@@ -241,7 +241,7 @@ Changelog
 * Fix issue `#588 <https://github.com/explosion/spaCy/issues/588>`_: `Matcher` now rejects empty patterns.
 * Fix issue `#592 <https://github.com/explosion/spaCy/issues/592>`_: Added exception rule for tokenization of "Ph.D."
 * Fix issue `#599 <https://github.com/explosion/spaCy/issues/599>`_: Empty documents now considered tagged and parsed.
-* Fix issue `#600 <https://github.com/explosion/spaCy/issues/600>`_: Add missing ``token.tag`` and ``token.tag`` setters.
+* Fix issue `#600 <https://github.com/explosion/spaCy/issues/600>`_: Add missing ``token.tag`` and ``token.tag_`` setters.
 * Fix issue `#596 <https://github.com/explosion/spaCy/issues/596>`_: Added missing unicode import when compiling regexes that led to incorrect tokenization.
 * Fix issue `#587 <https://github.com/explosion/spaCy/issues/587>`_: Resolved bug that caused ``Matcher`` to sometimes segfault.
 * Fix issue `#429 <https://github.com/explosion/spaCy/issues/429>`_: Ensure missing entity types are added to the entity recognizer.
