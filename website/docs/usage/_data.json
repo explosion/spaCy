@@ -12,7 +12,9 @@
             "Custom pipelines": "customizing-pipeline",
             "Rule-based matching": "rule-based-matching",
             "Word vectors": "word-vectors-similarities",
-            "Deep learning": "deep-learning"
+            "Deep learning": "deep-learning",
+            "Custom tokenization": "customizing-tokenizer",
+            "Training": "training"
         },
         "Examples": {
             "Tutorials": "tutorials",
@@ -35,7 +37,8 @@
     },
 
     "customizing-pipeline": {
-        "title": "Customizing the pipeline"
+        "title": "Customizing the pipeline",
+        "next": "customizing-tokenizer"
     },
 
     "processing-text": {
@@ -61,6 +64,15 @@
 
     "deep-learning": {
         "title": "Hooking a deep learning model into spaCy"
+    },
+
+    "customizing-tokenizer": {
+        "title": "Customizing the tokenizer",
+        "next": "training"
+    },
+
+    "training": {
+        "title": "Training the tagger, parser and entity recognizer"
     },
 
     "showcase": {
