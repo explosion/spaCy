@@ -382,11 +382,12 @@ cdef class Matcher:
                     ent_id = state.second[1].attrs[0].value
                     label = state.second[1].attrs[1].value
                     acceptor = self._acceptors.get(ent_id)
-                    if acceptor is not None:
+                    if acceptor is None:
+                        matches.append((ent_id, label, start, end))
+                    else:
                         match = acceptor(doc, ent_id, label, start, end)
                         if match:
-                            ent_id, label, start, end = match
-                    matches.append((ent_id, label, start, end))
+                            matches.append(match)
             partials.resize(q)
             # Check whether we open any new patterns on this token
             for pattern in self.patterns:
@@ -411,8 +412,13 @@ cdef class Matcher:
                     end = token_i+1
                     ent_id = pattern[1].attrs[0].value
                     label = pattern[1].attrs[1].value
-                    if acceptor is None or acceptor(doc, ent_id, label, start, end):
+                    acceptor = self._acceptors.get(ent_id)
+                    if acceptor is None:
                         matches.append((ent_id, label, start, end))
+                    else:
+                        match = acceptor(doc, ent_id, label, start, end)
+                        if match:
+                            matches.append(match)
         for i, (ent_id, label, start, end) in enumerate(matches):
             on_match = self._callbacks.get(ent_id)
             if on_match is not None:
