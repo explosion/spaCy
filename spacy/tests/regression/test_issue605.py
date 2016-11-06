@@ -17,8 +17,8 @@ def test_matcher_accept():
     ]
     matcher = Matcher(doc.vocab)
 
-    matcher.add_entity('Sport_Equipment', acceptor=return_false)
-    matcher.add_pattern("Sport_Equipment", golf_pattern)
+    matcher.add_entity(u'Sport_Equipment', acceptor=return_false)
+    matcher.add_pattern(u"Sport_Equipment", golf_pattern)
     match = matcher(doc)
 
     assert match == []
