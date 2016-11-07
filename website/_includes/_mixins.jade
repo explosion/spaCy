@@ -20,7 +20,7 @@ mixin h(level, id)
               info: https://mathiasbynens.github.io/rel-noopener/
 
 mixin a(url, trusted)
-    a(href=url target="_blank" rel=(!trusted) ? "noopener nofollow" : "")&attributes(attributes)
+    a(href=url target="_blank" rel=!trusted ? "noopener nofollow" : false)&attributes(attributes)
         block
 
 //- Source link (with added icon for "code")
@@ -72,7 +72,7 @@ mixin aside-code(label, language)
                see assets/css/_components/_buttons.sass
 
 mixin button(url, trusted, ...style)
-    a.c-button.u-text-label(href=url class=prefixArgs(style, "c-button") role="button" target="_blank" rel=(!trusted) ? "noopener nofollow" : "")&attributes(attributes)
+    a.c-button.u-text-label(href=url class=prefixArgs(style, "c-button") role="button" target="_blank" rel=!trusted ? "noopener nofollow" : false)&attributes(attributes)
         block
 
 
@@ -133,7 +133,7 @@ mixin tag()
 
 mixin list(type, start)
     if type
-        ol.c-list.o-block.u-text(class="c-list--#{type}" style=(start === 0 || start) ? "counter-reset: li #{(start - 1)}" : "")&attributes(attributes)
+        ol.c-list.o-block.u-text(class="c-list--#{type}" style=(start === 0 || start) ? "counter-reset: li #{(start - 1)}" : false)&attributes(attributes)
             block
 
     else
