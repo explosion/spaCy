@@ -59,6 +59,9 @@ include _includes/_mixins
         strong.u-text-label.u-color-subtle #[+icon("code", 18)] Latest release:
         |  v#{SPACY_VERSION}
 
+    if LATEST_NEWS
+        +a(LATEST_NEWS.url) #[+tag.o-icon New!] #{LATEST_NEWS.title}
+
 .o-content
     +grid
         +grid-col("two-thirds")
