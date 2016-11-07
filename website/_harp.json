@@ -11,7 +11,12 @@
         "COMPANY": "Explosion AI",
         "COMPANY_URL": "https://explosion.ai",
         "DEMOS_URL": "https://demos.explosion.ai",
+
         "SPACY_VERSION": "1.2",
+        "LATEST_NEWS": {
+            "url": "https://explosion.ai/blog/spacy-user-survey",
+            "title": "The results of the spaCy user survey"
+        },
 
         "SOCIAL": {
             "twitter": "spacy_io",
