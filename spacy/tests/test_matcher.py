@@ -87,6 +87,13 @@ def test_match_zero_plus(matcher):
     assert len(matcher(doc)) == 1
 
 
+def test_phrase_matcher():
+    vocab = Vocab(lex_attr_getters=English.Defaults.lex_attr_getters)
+    matcher = PhraseMatcher(vocab, [Doc(vocab, words='Google Now'.split())])
+    doc = Doc(vocab, words=['I', 'like', 'Google', 'Now', 'best'])
+    assert len(matcher(doc)) == 1
+
+
 #@pytest.mark.models
 #def test_match_preserved(EN):
 #    patterns = {
