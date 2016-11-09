@@ -78,9 +78,8 @@ took place before the date you sign these terms.
     * each contribution shall be in compliance with U.S. export control laws and
     other applicable export and import laws. You agree to notify us if you
     become aware of any circumstance which would make any of the foregoing
-    representations inaccurate in any respect. ExplosionAI UG
-    (haftungsbeschränkt) may publicly disclose your participation in the
-    project, including the fact that you have signed the SCA.
+    representations inaccurate in any respect. We may publicly disclose your 
+    participation in the project, including the fact that you have signed the SCA.
 
 6. This SCA is governed by the laws of the State of California and applicable
 U.S. Federal law. Any choice of law rules will not apply.
