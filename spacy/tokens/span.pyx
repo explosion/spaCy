@@ -99,7 +99,7 @@ cdef class Span:
             token (Token):
                 The newly merged token.
         """
-        self.doc.merge(self.start_char, self.end_char, *args, **attributes)
+        return self.doc.merge(self.start_char, self.end_char, *args, **attributes)
 
     def similarity(self, other):
         '''Make a semantic similarity estimate. The default estimate is cosine
