@@ -17,6 +17,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Maxim Samsonov, [@maxirmx](https://github.com/maxirmx)
 * Oleg Zd, [@olegzd](https://github.com/olegzd)
 * Sam Bozek, [@sambozek](https://github.com/sambozek)
+* Tiago Rodrigues, [@TiagoMRodrigues](https://github.com/TiagoMRodrigues)
 * Vsevolod Solovyov, [@vsolovyov](https://github.com/vsolovyov)
 * Wah Loon Keng, [@kengz](https://github.com/kengz)
 * Wolfgang Seeker, [@wbwseeker](https://github.com/wbwseeker)
