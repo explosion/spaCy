@@ -84,6 +84,11 @@
                 "author": "Wah Loon Keng",
                 "description": "Expose spaCy NLP text parsing to Node.js (and other languages) via Socket.IO."
             },
+            "spacy-api-docker": {
+                "url": "https://github.com/jgontrum/spacy-api-docker",
+                "author": "Johannes Gontrum",
+                "description": "spaCy accessed by a REST API, wrapped in a Docker container."
+            },
             "textacy": {
                 "url": "https://github.com/chartbeat-labs/textacy",
                 "author": " Burton DeWilde (Chartbeat)",

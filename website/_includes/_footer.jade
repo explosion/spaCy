@@ -11,7 +11,7 @@ footer.o-footer.u-text.u-border-dotted
 
                     each url, item in group
                         li
-                            +a(url)(target=url.includes("http") ? "_blank" : "")=item
+                            +a(url)(target=url.includes("http") ? "_blank" : false)=item
 
         if SECTION != "docs"
             +grid-col("quarter")

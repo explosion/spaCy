@@ -20,6 +20,10 @@ If you're looking for help with your code, consider posting a question on [Stack
 
 When opening an issue, use a descriptive title and include your environment (operating system, Python version, spaCy version). Our [issue template](https://github.com/explosion/spaCy/issues/new) helps you remember the most important details to include.
 
+If you've discovered a bug, you can also submit a [regression test](#fixing-bugs) straight away. When you're opening an issue to report the bug, simply refer to your pull request in the issue body.
+
+### Issue labels
+
 We use the following system to tag our issues:
 
 | Issue label | Description |
@@ -48,6 +52,11 @@ Coming soon.
 ### Conventions for Cython
 
 Coming soon.
+
+### Contributor agreement
+
+If you've made a substantial contribution to spaCy, you should fill in the [spaCy contributor agreement](.github/CONTRIBUTOR_AGREEMENT.md) to ensure that your contribution can be used across the project. If you agree to be bound by the terms of the agreement, fill in the [template]((.github/CONTRIBUTOR_AGREEMENT.md)) and include it with your pull request, or sumit it separately to [`.github/contributors/`](/.github/contributors). The name of the file should be your GitHub username, with the extension `.md`. For example, the user
+example_user would create the file `.github/contributors/example_user.md`.
 
 
 ### Fixing bugs

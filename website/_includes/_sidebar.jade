@@ -9,5 +9,5 @@ menu.c-sidebar.js-sidebar.u-text
                 li.u-text-label.u-color-subtle=menu
 
                 each url, item in items
-                    li(class=(CURRENT == url || (CURRENT == "index" && url == "./")) ? "is-active" : "")
-                        +a(url)(target=url.includes("http") ? "_blank" : "")=item
+                    li(class=(CURRENT == url || (CURRENT == "index" && url == "./")) ? "is-active" : false)
+                        +a(url)(target=url.includes("http") ? "_blank" : false)=item

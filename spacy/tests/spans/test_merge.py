@@ -52,6 +52,13 @@ def test_np_merges(EN):
         merged = tokens.merge(start, end, label, lemma, label)
         assert merged != None, (start, end, label, lemma) 
 
+
+    tokens = EN(u'One test with entities like New York City so the ents list is not void')
+
+    for span in tokens.ents:
+        merged = span.merge()
+        assert merged != None, (span.start, span.end, span.label_, span.lemma_) 
+
 @pytest.mark.models
 def test_entity_merge(EN):
     tokens = EN(u'Stewart Lee is a stand up comedian who lives in England and loves Joe Pasquale.\n')

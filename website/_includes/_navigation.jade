@@ -2,7 +2,7 @@
 
 include _mixins
 
-nav.c-nav.u-text.js-nav(class=landing ? "c-nav--theme" : "")
+nav.c-nav.u-text.js-nav(class=landing ? "c-nav--theme" : false)
     a(href='/') #[+logo]
 
     if SUBSECTION != "index"
@@ -11,7 +11,7 @@ nav.c-nav.u-text.js-nav(class=landing ? "c-nav--theme" : "")
     ul.c-nav__menu
         each url, item in NAVIGATION
             li.c-nav__menu__item
-                a(href=url target=url.includes("http") ? "_blank" : "")=item
+                a(href=url target=url.includes("http") ? "_blank" : false)=item
 
         li.c-nav__menu__item
             +a(gh("spaCy"))(aria-label="GitHub").u-hidden-xs #[+icon("github", 20)]
