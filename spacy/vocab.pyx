@@ -6,8 +6,8 @@ from libc.stdint cimport int32_t
 from libc.stdint cimport uint64_t
 from libc.math cimport sqrt
 
+from pathlib import Path
 import bz2
-from os import path
 import io
 import math
 import ujson as json
@@ -71,6 +71,8 @@ cdef class Vocab:
         Returns:
             Vocab: The newly constructed vocab object.
         """
+        if isinstance(path, basestring):
+            path = Path(path)
         util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
         if 'vectors' in deprecated_kwargs:
             raise AttributeError(
