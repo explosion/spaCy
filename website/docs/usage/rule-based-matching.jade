@@ -21,6 +21,7 @@ p
     |  callable, to receive a list of #[code (ent_id, start, end)] tuples:
 
 +code.
+    from spacy.matcher import Matcher
     matcher = Matcher(nlp.vocab)
     matcher.add_pattern("HelloWorld", [{LOWER: "hello"}, {IS_PUNCT: True}, {LOWER: "world"}])
 
