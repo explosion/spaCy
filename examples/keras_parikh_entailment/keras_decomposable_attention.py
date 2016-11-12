@@ -4,6 +4,7 @@ import numpy
 
 from keras.layers import InputSpec, Layer, Input, Dense, merge
 from keras.layers import Activation, Dropout, Embedding, TimeDistributed
+from keras.layers import Bidirectional, GRU
 import keras.backend as K
 import theano.tensor as T
 from keras.models import Sequential, Model, model_from_json
@@ -12,7 +13,7 @@ from keras.optimizers import Adam
 from keras.layers.normalization import BatchNormalization
 
 
-def build_model(vectors, shape, settings, use_rnn_encoding=False):
+def build_model(vectors, shape, settings):
     '''Compile the model.'''
     max_length, nr_hidden, nr_class = shape
     # Declare inputs.
@@ -21,8 +22,8 @@ def build_model(vectors, shape, settings, use_rnn_encoding=False):
 
     # Construct operations, which we'll chain together.
     embed = _StaticEmbedding(vectors, max_length, nr_hidden)
-    if use_rnn_encoding:
-        encode = _BiLSTMEncode(max_length, nr_hidden)
+    if settings['gru_encode']:
+        encode = _BiRNNEncoding(max_length, nr_hidden)
     attend = _Attention(max_length, nr_hidden)
     align = _SoftAlignment(max_length, nr_hidden)
     compare = _Comparison(max_length, nr_hidden)
@@ -32,7 +33,7 @@ def build_model(vectors, shape, settings, use_rnn_encoding=False):
     sent1 = embed(ids1) # Shape: (i, n)
     sent2 = embed(ids2) # Shape: (j, n)
     
-    if use_rnn_encoding:
+    if settings['gru_encode']:
         sent1 = encode(sent1)
         sent2 = encode(sent2)
 
@@ -78,14 +79,17 @@ class _StaticEmbedding(object):
 
     def __call__(self, sentence):
         return self.project(self.embed(sentence))
-    
+
+
 class _BiRNNEncoding(object):
     def __init__(self, max_length, nr_out):
         self.model = Sequential()
-        self.model.add(Bidirectional(LSTM(nr_out, input_length=max_length)))
+        self.model.add(Bidirectional(GRU(int(nr_out/2), return_sequences=True),
+                       input_shape=(max_length, nr_out)))
 
     def __call__(self, sentence):
         return self.model(sentence)
+
 
 class _Attention(object):
     def __init__(self, max_length, nr_hidden, dropout=0.0, L2=1e-4, activation='relu'):

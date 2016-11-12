@@ -3,25 +3,46 @@ import spacy
 
 import plac
 from pathlib import Path
+import ujson as json
+import numpy
+from keras.utils.np_utils import to_categorical
 
 from spacy_hook import get_embeddings, get_word_ids
 from spacy_hook import create_similarity_pipeline
 
 from keras_decomposable_attention import build_model
 
+
 def train(model_dir, train_loc, dev_loc, shape, settings):
+    train_texts1, train_texts2, train_labels = read_snli(train_loc)
+    dev_texts1, dev_texts2, dev_labels = read_snli(dev_loc)
+    
     print("Loading spaCy")
-    nlp = spacy.load('en', tagger=False, parser=False, entity=False, matcher=False)
+    nlp = spacy.load('en')
     print("Compiling network")
     model = build_model(get_embeddings(nlp.vocab), shape, settings)
     print("Processing texts...")
-    train_X = get_features(list(nlp.pipe(train_texts)))
-    dev_X = get_features(list(nlp.pipe(dev_texts)))
+    train_X1 = get_word_ids(list(nlp.pipe(train_texts1, n_threads=10, batch_size=10000)),
+                            max_length=shape[0],
+                            tree_truncate=settings['tree_truncate'])
+    train_X2 = get_word_ids(list(nlp.pipe(train_texts2, n_threads=10, batch_size=10000)),
+                            max_length=shape[0],
+                            tree_truncate=settings['tree_truncate'])
+    dev_X1 = get_word_ids(list(nlp.pipe(dev_texts1, n_threads=10, batch_size=10000)),
+                            max_length=shape[0],
+                            tree_truncate=settings['tree_truncate'])
+    dev_X2 = get_word_ids(list(nlp.pipe(dev_texts2, n_threads=10, batch_size=10000)),
+                            max_length=shape[0],
+                            tree_truncate=settings['tree_truncate'])
 
+    print(train_X1.shape, train_X2.shape)
+    print(dev_X1.shape, dev_X2.shape)
+    print(train_labels.shape, dev_labels.shape)
+    print(settings)
     model.fit(
-        train_X,
+        [train_X1, train_X2],
         train_labels,
-        validation_data=(dev_X, dev_labels),
+        validation_data=([dev_X1, dev_X2], dev_labels),
         nb_epoch=settings['nr_epoch'],
         batch_size=settings['batch_size'])
 
@@ -56,16 +77,20 @@ def demo(model_dir):
 
 
 LABELS = {'entailment': 0, 'contradiction': 1, 'neutral': 2}
-def read_snli(loc):
-    with open(loc) as file_:
+def read_snli(path):
+    texts1 = []
+    texts2 = []
+    labels = []
+    with path.open() as file_:
         for line in file_:
             eg = json.loads(line)
             label = eg['gold_label']
             if label == '-':
                 continue
-            text1 = eg['sentence1']
-            text2 = eg['sentence2']
-            yield text1, text2, LABELS[label]
+            texts1.append(eg['sentence1'])
+            texts2.append(eg['sentence2'])
+            labels.append(LABELS[label])
+    return texts1, texts2, to_categorical(numpy.asarray(labels, dtype='int32'))
 
 
 @plac.annotations(
@@ -78,9 +103,13 @@ def read_snli(loc):
     dropout=("Dropout level", "option", "d", float),
     learn_rate=("Learning rate", "option", "e", float),
     batch_size=("Batch size for neural network training", "option", "b", float),
-    nr_epoch=("Number of training epochs", "option", "i", float)
+    nr_epoch=("Number of training epochs", "option", "i", float),
+    tree_truncate=("Truncate sentences by tree distance", "flag", "T", bool),
+    gru_encode=("Encode sentences with bidirectional GRU", "flag", "E", bool),
 )
 def main(mode, model_dir, train_loc, dev_loc,
+        tree_truncate=False,
+        gru_encode=False,
         max_length=100,
         nr_hidden=100,
         dropout=0.2,
@@ -92,7 +121,9 @@ def main(mode, model_dir, train_loc, dev_loc,
         'lr': learn_rate,
         'dropout': dropout,
         'batch_size': batch_size,
-        'nr_epoch': nr_epoch
+        'nr_epoch': nr_epoch,
+        'tree_truncate': tree_truncate,
+        'gru_encode': gru_encode
     }
     if mode == 'train':
         train(model_dir, train_loc, dev_loc, shape, settings)
@@ -100,7 +131,6 @@ def main(mode, model_dir, train_loc, dev_loc,
         evaluate(model_dir, dev_loc)
     else:
         demo(model_dir)
-
 
 if __name__ == '__main__':
     plac.call(main)
