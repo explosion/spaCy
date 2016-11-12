@@ -101,9 +101,10 @@ class _Attention(object):
         self.model = TimeDistributed(self.model)
     
     def __call__(self, sent1, sent2):
-        def _outer((A, B)):
-            att_ji = T.batched_dot(B, A.dimshuffle((0, 2, 1)))
+        def _outer(AB):
+            att_ji = T.batched_dot(AB[1], AB[0].dimshuffle((0, 2, 1)))
             return att_ji.dimshuffle((0, 2, 1))
+
 
         return merge(
                 [self.model(sent1), self.model(sent2)],
@@ -117,7 +118,9 @@ class _SoftAlignment(object):
         self.nr_hidden = nr_hidden
 
     def __call__(self, sentence, attention, transpose=False):
-        def _normalize_attention((att, mat)):
+        def _normalize_attention(attmat):
+            att = attmat[0]
+            mat = attmat[1]
             if transpose:
                 att = att.dimshuffle((0, 2, 1))
             # 3d softmax

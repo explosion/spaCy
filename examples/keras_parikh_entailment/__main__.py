@@ -7,6 +7,7 @@ from pathlib import Path
 from spacy_hook import get_embeddings, get_word_ids
 from spacy_hook import create_similarity_pipeline
 
+from keras_decomposable_attention import build_model
 
 def train(model_dir, train_loc, dev_loc, shape, settings):
     print("Loading spaCy")
