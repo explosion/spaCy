@@ -56,7 +56,7 @@ class Extractor(object):
         self.vector.fill(0)
         n = 0
         for orth_id, freq in bow.items():
-            self.vector += self.nlp.vocab[self.nlp.vocab.strings[orth_id]].repvec * freq
+            self.vector += self.nlp.vocab[self.nlp.vocab.strings[orth_id]].vector * freq
             # Apply the fine-tuning we've learned
             if orth_id < E.shape[0]:
                 self.vector += E[orth_id] * freq
