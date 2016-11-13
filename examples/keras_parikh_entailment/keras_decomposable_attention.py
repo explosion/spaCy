@@ -199,7 +199,7 @@ class _GlobalSumPooling1D(Layer):
 def test_build_model():
     vectors = numpy.ndarray((100, 8), dtype='float32')
     shape = (10, 16, 3)
-    settings = {'lr': 0.001, 'dropout': 0.2}
+    settings = {'lr': 0.001, 'dropout': 0.2, 'gru_encode':True}
     model = build_model(vectors, shape, settings)
 
 
@@ -220,7 +220,7 @@ def test_fit_model():
 
     vectors = numpy.ndarray((100, 8), dtype='float32')
     shape = (10, 16, 3)
-    settings = {'lr': 0.001, 'dropout': 0.2}
+    settings = {'lr': 0.001, 'dropout': 0.2, 'gru_encode':True}
     model = build_model(vectors, shape, settings)
     
     train_X = _generate_X(20, shape[0], vectors.shape[1])
