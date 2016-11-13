@@ -22,22 +22,13 @@ def train(model_dir, train_loc, dev_loc, shape, settings):
     print("Compiling network")
     model = build_model(get_embeddings(nlp.vocab), shape, settings)
     print("Processing texts...")
-    train_X1 = get_word_ids(list(nlp.pipe(train_texts1, n_threads=10, batch_size=10000)),
-                            max_length=shape[0],
-                            tree_truncate=settings['tree_truncate'])
-    train_X2 = get_word_ids(list(nlp.pipe(train_texts2, n_threads=10, batch_size=10000)),
-                            max_length=shape[0],
-                            tree_truncate=settings['tree_truncate'])
-    dev_X1 = get_word_ids(list(nlp.pipe(dev_texts1, n_threads=10, batch_size=10000)),
-                            max_length=shape[0],
-                            tree_truncate=settings['tree_truncate'])
-    dev_X2 = get_word_ids(list(nlp.pipe(dev_texts2, n_threads=10, batch_size=10000)),
-                            max_length=shape[0],
-                            tree_truncate=settings['tree_truncate'])
-
-    print(train_X1.shape, train_X2.shape)
-    print(dev_X1.shape, dev_X2.shape)
-    print(train_labels.shape, dev_labels.shape)
+    Xs = []    
+    for texts in (train_texts1, train_texts2, dev_texts1, dev_texts2):
+        Xs.append(get_word_ids(list(nlp.pipe(texts, n_threads=20, batch_size=20000)),
+                         max_length=shape[0],
+                         rnn_encode=settings['gru_encode'],
+                         tree_truncate=settings['tree_truncate']))
+    train_X1, train_X2, dev_X1, dev_X2 = Xs
     print(settings)
     model.fit(
         [train_X1, train_X2],
@@ -103,7 +94,7 @@ def read_snli(path):
     dropout=("Dropout level", "option", "d", float),
     learn_rate=("Learning rate", "option", "e", float),
     batch_size=("Batch size for neural network training", "option", "b", float),
-    nr_epoch=("Number of training epochs", "option", "i", float),
+    nr_epoch=("Number of training epochs", "option", "i", int),
     tree_truncate=("Truncate sentences by tree distance", "flag", "T", bool),
     gru_encode=("Encode sentences with bidirectional GRU", "flag", "E", bool),
 )

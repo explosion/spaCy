@@ -107,8 +107,6 @@ class _Attention(object):
         def _outer(AB):
             att_ji = K.batch_dot(AB[1], K.permute_dimensions(AB[0], (0, 2, 1)))
             return K.permute_dimensions(att_ji,(0, 2, 1))
-
-
         return merge(
                 [self.model(sent1), self.model(sent2)],
                 mode=_outer,
@@ -153,6 +151,7 @@ class _Comparison(object):
     def __call__(self, sent, align, **kwargs):
         result = self.model(merge([sent, align], mode='concat')) # Shape: (i, n)
         result = _GlobalSumPooling1D()(result, mask=self.words)
+        result = BatchNormalization()(result)
         return result
  
 

@@ -40,16 +40,19 @@ def get_embeddings(vocab):
     return vectors
 
 
-def get_word_ids(docs, tree_truncate=False, max_length=100):
+def get_word_ids(docs, rnn_encode=False, tree_truncate=False, max_length=100):
     Xs = numpy.zeros((len(docs), max_length), dtype='int32')
     for i, doc in enumerate(docs):
-        j = 0
-        queue = [sent.root for sent in doc.sents]
+        if tree_truncate:
+            queue = [sent.root for sent in doc.sents]
+        else:
+            queue = list(doc)
         words = []
         while len(words) <= max_length and queue:
             word = queue.pop(0)
-            if word.has_vector and not word.is_punct and not word.is_space:
+            if rnn_encode or (word.has_vector and not word.is_punct and not word.is_space):
                 words.append(word)
+            if tree_truncate:
                 queue.extend(list(word.lefts))
                 queue.extend(list(word.rights))
         words.sort()
