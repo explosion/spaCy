@@ -250,7 +250,7 @@ cdef class Tagger:
                 eg.c.features, eg.c.nr_feat)
             self.model.updateC(&eg.c)
 
-            self.vocab.morphology.assign_tag(&tokens.c[i], eg.guess)
+            self.vocab.morphology.assign_tag_id(&tokens.c[i], eg.guess)
             
             correct += eg.cost == 0
             self.freqs[TAG][tokens.c[i].tag] += 1
