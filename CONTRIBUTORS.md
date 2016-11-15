@@ -23,4 +23,5 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Vsevolod Solovyov, [@vsolovyov](https://github.com/vsolovyov)
 * Wah Loon Keng, [@kengz](https://github.com/kengz)
 * Wolfgang Seeker, [@wbwseeker](https://github.com/wbwseeker)
+* Yanhao Yang, [@YanhaoYang](https://github.com/YanhaoYang)
 * Yubing Dong, [@tomtung](https://github.com/tomtung)
