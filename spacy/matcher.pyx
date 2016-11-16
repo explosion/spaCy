@@ -210,7 +210,6 @@ cdef class Matcher:
         self._callbacks = {}
         self.vocab = vocab
         self.mem = Pool()
-        self.vocab = vocab
         for entity_key, (etype, attrs, specs) in sorted(patterns.items()):
             self.add_entity(entity_key, attrs)
             for spec in specs:
