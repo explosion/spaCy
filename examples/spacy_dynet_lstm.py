@@ -7,14 +7,17 @@ import plac
 import random
 from collections import Counter
 import numpy as np
+import os
 
 from collections import defaultdict
 from itertools import count
 
-#import _gdynet as dynet
-#from _gdynet import cg
-import dynet
-from dynet import cg
+if os.environ.get('DYNET_GPU') == '1':
+    import _gdynet as dynet
+    from _gdynet import cg
+else:
+    import dynet
+    from dynet import cg
 
 
 class Vocab:
@@ -180,7 +183,7 @@ def main(train_loc, dev_loc, model_dir):
 
     tagged = loss = 0
  
-    for ITER in xrange(50):
+    for ITER in xrange(1):
         random.shuffle(train)
         for i, s in enumerate(train,1):
             if i % 5000 == 0:
