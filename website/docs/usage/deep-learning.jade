@@ -71,7 +71,7 @@ p
         def pipe(self, docs, batch_size=1000, n_threads=2):
             for minibatch in cytoolz.partition_all(batch_size, docs):
                 Xs = get_features(minibatch)
-                ys = self._model.predict(X)
+                ys = self._model.predict(Xs)
                 for i, doc in enumerate(minibatch):
                     doc.sentiment = ys[i]
 
