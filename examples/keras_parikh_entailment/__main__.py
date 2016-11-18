@@ -93,7 +93,7 @@ def read_snli(path):
     nr_hidden=("Number of hidden units", "option", "H", int),
     dropout=("Dropout level", "option", "d", float),
     learn_rate=("Learning rate", "option", "e", float),
-    batch_size=("Batch size for neural network training", "option", "b", float),
+    batch_size=("Batch size for neural network training", "option", "b", int),
     nr_epoch=("Number of training epochs", "option", "i", int),
     tree_truncate=("Truncate sentences by tree distance", "flag", "T", bool),
     gru_encode=("Encode sentences with bidirectional GRU", "flag", "E", bool),
