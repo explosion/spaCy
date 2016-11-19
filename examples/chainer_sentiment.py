@@ -1,6 +1,7 @@
 '''WIP --- Doesn't work well yet'''
 import plac
 import random
+import six
 
 import pathlib
 import cPickle as pickle
@@ -9,7 +10,10 @@ from itertools import izip
 import spacy
 
 import cytoolz
-import numpy as np
+import cupy as xp
+import cupy.cuda
+import chainer.cuda
+
 import chainer.links as L
 import chainer.functions as F
 from chainer import Chain, Variable, report
@@ -17,7 +21,7 @@ import chainer.training
 import chainer.optimizers
 from chainer.training import extensions
 from chainer.iterators import SerialIterator
-from chainer.datasets.tuple_dataset import TupleDataset
+from chainer.datasets import TupleDataset
 
 
 class SentimentAnalyser(object):
@@ -79,6 +83,7 @@ class SentimentModel(Chain):
             encode=_Encode(shape['nr_hidden'], shape['nr_hidden']),
             attend=_Attend(shape['nr_hidden'], shape['nr_hidden']),
             predict=_Predict(shape['nr_hidden'], shape['nr_class']))
+        self.to_gpu(0)
 
     def __call__(self, sentence):
         return self.predict(
@@ -145,6 +150,16 @@ class SentenceDataset(TupleDataset):
             get_features(sents, max_length),
             labels)
 
+    def __getitem__(self, index):
+        batches = [dataset[index] for dataset in self._datasets]
+        if isinstance(index, slice):
+            length = len(batches[0])
+            returns = [tuple([batch[i] for batch in batches])
+                       for i in six.moves.range(length)]
+            return returns
+        else:
+            return tuple(batches)
+
     def _get_labelled_sentences(self, docs, doc_labels):
         labels = []
         sentences = []
@@ -152,18 +167,16 @@ class SentenceDataset(TupleDataset):
             for sent in doc.sents:
                 sentences.append(sent)
                 labels.append(y)
-        return sentences, labels
+        return sentences, xp.asarray(labels, dtype='i')
 
 
 class DocDataset(TupleDataset):
     def __init__(self, nlp, texts, labels):
         self.max_length = max_length
-        TupleDataset.__init__(self,
+        DatasetMixin.__init__(self,
             get_features(
                 nlp.pipe(texts, batch_size=5000, n_threads=3), self.max_length),
             labels)
-
-
 
 def read_data(data_dir, limit=0):
     examples = []
@@ -180,7 +193,7 @@ def read_data(data_dir, limit=0):
 
 def get_features(docs, max_length):
     docs = list(docs)
-    Xs = np.zeros((len(docs), max_length), dtype='int32')
+    Xs = xp.zeros((len(docs), max_length), dtype='i')
     for i, doc in enumerate(docs):
         j = 0
         for token in doc:
@@ -195,7 +208,7 @@ def get_features(docs, max_length):
 def get_embeddings(vocab, max_rank=1000):
     if max_rank is None:
         max_rank = max(lex.rank+1 for lex in vocab if lex.has_vector)
-    vectors = np.ndarray((max_rank+1, vocab.vectors_length), dtype='float32')
+    vectors = xp.ndarray((max_rank+1, vocab.vectors_length), dtype='f')
     for lex in vocab:
         if lex.has_vector and lex.rank < max_rank:
             lex.norm = lex.rank+1
@@ -208,15 +221,12 @@ def get_embeddings(vocab, max_rank=1000):
 def train(train_texts, train_labels, dev_texts, dev_labels,
         lstm_shape, lstm_settings, lstm_optimizer, batch_size=100, nb_epoch=5,
         by_sentence=True):
-    print("Loading spaCy")
     nlp = spacy.load('en', entity=False)
     for lex in nlp.vocab:
         if lex.rank >= (lstm_shape['nr_vector'] - 1):
             lex.norm = 0
         else:
             lex.norm = lex.rank+1
-    #print("Get embeddings")
-    #embeddings = get_embeddings(nlp.vocab)
     print("Make model")
     model = Classifier(SentimentModel(lstm_shape, **lstm_settings))
     print("Parsing texts...")
@@ -230,13 +240,12 @@ def train(train_texts, train_labels, dev_texts, dev_labels,
                                 shuffle=True, repeat=True)
     dev_iter = SerialIterator(dev_data, batch_size=batch_size,
                               shuffle=False, repeat=False)
-
     optimizer = chainer.optimizers.Adam()
     optimizer.setup(model)
-    updater = chainer.training.StandardUpdater(train_iter, optimizer)
+    updater = chainer.training.StandardUpdater(train_iter, optimizer, device=0)
     trainer = chainer.training.Trainer(updater, (20, 'epoch'), out='result')
 
-    trainer.extend(extensions.Evaluator(dev_iter, model))
+    trainer.extend(extensions.Evaluator(dev_iter, model, device=0))
     trainer.extend(extensions.LogReport())
     trainer.extend(extensions.PrintReport([
         'epoch', 'main/accuracy', 'validation/main/accuracy']))
@@ -293,14 +302,16 @@ def main(model_dir, train_dir, dev_dir,
         print("Read data")
         train_texts, train_labels = read_data(train_dir, limit=nr_examples)
         dev_texts, dev_labels = read_data(dev_dir, limit=nr_examples)
-        train_labels = np.asarray(train_labels, dtype='int32')
-        dev_labels = np.asarray(dev_labels, dtype='int32')
+        print("Using GPU 0")
+        #chainer.cuda.get_device(0).use()
+        train_labels = xp.asarray(train_labels, dtype='i')
+        dev_labels = xp.asarray(dev_labels, dtype='i')
         lstm = train(train_texts, train_labels, dev_texts, dev_labels,
                      {'nr_hidden': nr_hidden, 'max_length': max_length, 'nr_class': 2,
                       'nr_vector': 2000, 'nr_dim': 32},
-                     {'dropout': 0.5, 'lr': learn_rate},
-                     {},
-                     nb_epoch=nb_epoch, batch_size=batch_size)
+                      {'dropout': 0.5, 'lr': learn_rate},
+                      {},
+                      nb_epoch=nb_epoch, batch_size=batch_size)
 
 
 if __name__ == '__main__':
