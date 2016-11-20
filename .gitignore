@@ -37,6 +37,7 @@ data/en/strings
 _build/
 .env/
 tmp/
+cythonize.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
