@@ -4,11 +4,11 @@ import re
 
 
 STOP_WORDS = set("""
-a ab aber ach acht achte achten achter achtes
+ab aber ach acht achte achten achter achtes
 ag alle allein allem allen aller allerdings alles
 allgemeinen als also am an andere anderen
 andern anders au auch auf aus ausser außer
-ausserdem außerdem b bald bei beide beiden
+ausserdem außerdem bald bei beide beiden
 beim beispiel bekannt bereits besonders
 besser besten bin bis bisher bist da
 dabei dadurch dafür dagegen daher
