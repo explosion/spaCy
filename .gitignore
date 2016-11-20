@@ -29,10 +29,7 @@ spacy/orthography/*.cpp
 ext/murmurhash.cpp
 ext/sparsehash.cpp
 
-data/en/pos
-data/en/ner
-data/en/lexemes
-data/en/strings
+/spacy/data/
 
 _build/
 .env/
