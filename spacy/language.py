@@ -248,7 +248,6 @@ class Language(object):
     def __init__(self, path=True, **overrides):
         if 'data_dir' in overrides and 'path' not in overrides:
             raise ValueError("The argument 'data_dir' has been renamed to 'path'")
-        path = overrides.get('path', True)
         if isinstance(path, basestring):
             path = pathlib.Path(path)
         if path is True:
