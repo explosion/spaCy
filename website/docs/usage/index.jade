@@ -114,3 +114,20 @@ p
     python -m pip install -U pytest
 
     python -m pytest &lt;spacy-directory&gt; --vectors --model --slow
+
++h(2, "custom-location") Download model to custom location
+
+p
+    |   You can specify where #[code spacy.en.download] and
+    |  #[code spacy.de.download] download the language model to using the
+    |  #[code --data-path] or #[code -d] argument:
+
++code(false, "bash").
+    python -m spacy.en.download all --data-path /some/dir
+
+p
+    |  If you choose to download to a custom location, you will need to tell
+    |  spaCy where to load the model from in order to use it. You can do this
+    |  either by calling #[code spacy.util.set_data_path()] before calling
+    |  #[code spacy.load()], or by passing a #[code path] argument to the
+    |  #[code spacy.en.English] or #[code spacy.de.German] constructors.
