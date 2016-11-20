@@ -1,5 +1,6 @@
 from paddle.trainer.PyDataProvider2 import *
 from itertools import izip
+import spacy
 
 
 def get_features(doc):
@@ -17,7 +18,7 @@ def read_data(data_dir):
                 yield text, label
 
 
-def on_init(settings, lang_name, **kwargs):
+def on_init(settings, **kwargs):
     print("Loading spaCy")
     nlp = spacy.load('en', entity=False)
     vectors = get_vectors(nlp)
@@ -32,6 +33,7 @@ def on_init(settings, lang_name, **kwargs):
     ]
     settings.nlp = nlp
     settings.vectors = vectors
+    settings['batch_size'] = 32
 
 
 @provider(init_hook=on_init)
