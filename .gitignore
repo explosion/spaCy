@@ -93,6 +93,9 @@ coverage.xml
 # Mac OS X
 *.DS_Store
 
+# Temporary files / Dropbox hack
+*.~*
+
 # Komodo project files
 *.komodoproject
 
