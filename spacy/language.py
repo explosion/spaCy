@@ -45,7 +45,11 @@ class BaseDefaults(object):
     def create_vocab(cls, nlp=None):
         lemmatizer = cls.create_lemmatizer(nlp)
         if nlp is None or nlp.path is None:
-            return Vocab(lex_attr_getters=cls.lex_attr_getters, tag_map=cls.tag_map,
+            lex_attr_getters = dict(cls.lex_attr_getters)
+            # This is very messy, but it's the minimal working fix to Issue #639.
+            # This defaults stuff needs to be refactored (again)
+            lex_attr_getters[IS_STOP] = lambda string: string.lower() in cls.stop_words
+            return Vocab(lex_attr_getters=lex_attr_getters, tag_map=cls.tag_map,
                          lemmatizer=lemmatizer)
         else:
             return Vocab.load(nlp.path, lex_attr_getters=cls.lex_attr_getters,
