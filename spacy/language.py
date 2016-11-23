@@ -247,7 +247,7 @@ class Language(object):
         self.end_training()
 
     def __init__(self, **overrides):
-        if 'data_dir' in overrides and overrides.get(path) is True:
+        if 'data_dir' in overrides and 'path' not in overrides:
             raise ValueError("The argument 'data_dir' has been renamed to 'path'")
         path = overrides.get('path')
         if isinstance(path, basestring):
