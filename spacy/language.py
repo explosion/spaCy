@@ -57,7 +57,8 @@ class BaseDefaults(object):
             return False
         else:
             vec_path = nlp.path / 'vocab' / 'vec.bin'
-            return lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
+            if vec_path.exists():
+                return lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
 
     @classmethod
     def create_tokenizer(cls, nlp=None):
