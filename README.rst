@@ -222,6 +222,22 @@ and ``--model`` are optional and enable additional tests:
 
     python -m pytest <spacy-directory> --vectors --model --slow
 
+Download model to custom location
+=================================
+
+You can specify where ``spacy.en.download`` and ``spacy.de.download`` download the language model
+to using the ``--data-path`` or ``-d`` argument:
+
+.. code:: bash
+    
+    python -m spacy.en.download all --data-path /some/dir
+
+
+If you choose to download to a custom location, you will need to tell spaCy where to load the model
+from in order to use it. You can do this either by calling ``spacy.util.set_data_path()`` before
+calling ``spacy.load()``, or by passing a ``path`` argument to the ``spacy.en.English`` or
+``spacy.de.German`` constructors.
+
 Changelog
 =========
 
