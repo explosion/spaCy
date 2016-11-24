@@ -18,6 +18,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Matthew Honnibal, [@honnibal](https://github.com/honnibal)
 * Maxim Samsonov, [@maxirmx](https://github.com/maxirmx)
 * Oleg Zd, [@olegzd](https://github.com/olegzd)
+* Pokey Rule, [@pokey](https://github.com/pokey)
 * Sam Bozek, [@sambozek](https://github.com/sambozek)
 * Sasho Savkov [@savkov](https://github.com/savkov)
 * Tiago Rodrigues, [@TiagoMRodrigues](https://github.com/TiagoMRodrigues)
