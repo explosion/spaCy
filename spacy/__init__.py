@@ -10,6 +10,7 @@ from . import es
 from . import it
 from . import fr
 from . import pt
+from . import nl
 
 
 try:
@@ -33,7 +34,7 @@ def load(name, **overrides):
     if target_name == 'en' and 'add_vectors' not in overrides:
         if 'vectors' in overrides:
             vec_path = util.match_best_version(overrides['vectors'], None, data_path)
-            if vec_path is None: 
+            if vec_path is None:
                 raise IOError(
                     'Could not load data pack %s from %s' % (overrides['vectors'], data_path))
 
