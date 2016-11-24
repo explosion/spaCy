@@ -7,6 +7,10 @@ import pickle
 import cloudpickle
 import tempfile
 
+from ... import util
+from ...en.language_data import TOKENIZER_PREFIXES as EN_TOKENIZER_PREFIXES
+
+en_search_prefixes = util.compile_prefix_regex(EN_TOKENIZER_PREFIXES).search
 
 # @pytest.mark.xfail
 # def test_pickle(en_tokenizer):
@@ -16,6 +20,10 @@ import tempfile
 #     loaded = pickle.load(file_)
 #     assert loaded is not None
 
+def test_pre_punct_regex():
+    string = "(can't"
+    match = en_search_prefixes(string)
+    assert match.group() == "("
 
 def test_no_word(en_tokenizer):
     tokens = en_tokenizer(u'')
@@ -57,10 +65,9 @@ def test_contraction(en_tokenizer):
     assert len(tokens) == 5
     assert tokens[4].orth == en_tokenizer.vocab['!'].orth
 
-
 def test_contraction_punct(en_tokenizer):
-    tokens = en_tokenizer("(can't")
-    assert len(tokens) == 3
+    tokens = [w.text for w in en_tokenizer("(can't")]
+    assert tokens == ['(', 'ca', "n't"]
     tokens = en_tokenizer("`ain't")
     assert len(tokens) == 3
     tokens = en_tokenizer('''"isn't''')
