@@ -1,13 +1,14 @@
 from spacy.parts_of_speech cimport NOUN, PROPN, PRON
 
 
-def english_noun_chunks(doc):
+def english_noun_chunks(obj):
     labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj',
               'attr', 'ROOT', 'root']
+    doc = obj.doc
     np_deps = [doc.vocab.strings[label] for label in labels]
     conj = doc.vocab.strings['conj']
     np_label = doc.vocab.strings['NP']
-    for i, word in enumerate(doc):
+    for i, word in enumerate(obj):
         if word.pos in (NOUN, PROPN, PRON) and word.dep in np_deps:
             yield word.left_edge.i, word.i+1, np_label
         elif word.pos == NOUN and word.dep == conj:

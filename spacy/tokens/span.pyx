@@ -190,6 +190,31 @@ cdef class Span:
         def __get__(self):
             return u''.join([t.text_with_ws for t in self])
 
+    property noun_chunks:
+        '''
+        Yields base noun-phrase #[code Span] objects, if the document
+        has been syntactically parsed. A base noun phrase, or 
+        'NP chunk', is a noun phrase that does not permit other NPs to 
+        be nested within it – so no NP-level coordination, no prepositional 
+        phrases, and no relative clauses. For example:
+        '''
+        def __get__(self):
+            if not self.doc.is_parsed:
+                raise ValueError(
+                    "noun_chunks requires the dependency parse, which "
+                    "requires data to be installed. If you haven't done so, run: "
+                    "\npython -m spacy.%s.download all\n"
+                    "to install the data" % self.vocab.lang)
+            # Accumulate the result before beginning to iterate over it. This prevents
+            # the tokenisation from being changed out from under us during the iteration.
+            # The tricky thing here is that Span accepts its tokenisation changing,
+            # so it's okay once we have the Span objects. See Issue #375
+            spans = []
+            for start, end, label in self.doc.noun_chunks_iterator(self):
+                spans.append(Span(self, start, end, label=label))
+            for span in spans:
+                yield span
+
     property root:
         """The token within the span that's highest in the parse tree. If there's a tie, the earlist is prefered.
 
