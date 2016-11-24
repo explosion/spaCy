@@ -82,7 +82,7 @@ zurück zusammen zwanzig zwar zwei zweite zweiten zweiter zweites zwischen
 """.split())
 
 
-TOKENIZER_PREFIXES = map(re.escape, r'''
+TOKENIZER_PREFIXES = r'''
 ,
 "
 (
@@ -106,11 +106,11 @@ a-
 ‘
 ....
 ...
+…
 ‚
 »
-_
 §
-'''.strip().split('\n'))
+'''.strip().split('\n')
 
 
 TOKENIZER_SUFFIXES = r'''
@@ -141,6 +141,7 @@ _
 ‘
 °
 €
+…
 \.\.
 \.\.\.
 \.\.\.\.
@@ -191,7 +192,8 @@ _
 
 
 TOKENIZER_INFIXES = r'''
-\.\.\.
+…
+\.\.\.+
 (?<=[a-z])\.(?=[A-Z])
 (?<=[a-zöäüßA-ZÖÄÜ"]):(?=[a-zöäüßA-ZÖÄÜ])
 (?<=[a-zöäüßA-ZÖÄÜ"])>(?=[a-zöäüßA-ZÖÄÜ])
