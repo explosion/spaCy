@@ -14,6 +14,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Kendrick Tan, [@kendricktan](https://github.com/kendricktan)
 * Kyle P. Johnson, [@kylepjohnson](https://github.com/kylepjohnson)
 * Liling Tan, [@alvations](https://github.com/alvations)
+* Mark Amery, [@ExplodingCabbage](https://github.com/ExplodingCabbage)
 * Matthew Honnibal, [@honnibal](https://github.com/honnibal)
 * Maxim Samsonov, [@maxirmx](https://github.com/maxirmx)
 * Oleg Zd, [@olegzd](https://github.com/olegzd)
