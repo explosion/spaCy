@@ -1,13 +1,16 @@
 from spacy.parts_of_speech cimport NOUN, PROPN, PRON
 
 
-def english_noun_chunks(doc):
+def english_noun_chunks(obj):
+    '''Detect base noun phrases from a dependency parse.
+    Works on both Doc and Span.'''
     labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj',
               'attr', 'ROOT', 'root']
+    doc = obj.doc # Ensure works on both Doc and Span.
     np_deps = [doc.vocab.strings[label] for label in labels]
     conj = doc.vocab.strings['conj']
     np_label = doc.vocab.strings['NP']
-    for i, word in enumerate(doc):
+    for i, word in enumerate(obj):
         if word.pos in (NOUN, PROPN, PRON) and word.dep in np_deps:
             yield word.left_edge.i, word.i+1, np_label
         elif word.pos == NOUN and word.dep == conj:
@@ -25,14 +28,15 @@ def english_noun_chunks(doc):
 # extended to the right of the NOUN
 # example: "eine Tasse Tee" (a cup (of) tea) returns "eine Tasse Tee" and not
 # just "eine Tasse", same for "das Thema Familie"
-def german_noun_chunks(doc):
+def german_noun_chunks(obj):
     labels = ['sb', 'oa', 'da', 'nk', 'mo', 'ag', 'ROOT', 'root', 'cj', 'pd', 'og', 'app']
+    doc = obj.doc # Ensure works on both Doc and Span.
     np_label = doc.vocab.strings['NP']
     np_deps = set(doc.vocab.strings[label] for label in labels)
     close_app = doc.vocab.strings['nk']
 
     rbracket = 0
-    for i, word in enumerate(doc):
+    for i, word in enumerate(obj):
         if i < rbracket:
             continue
         if word.pos in (NOUN, PROPN, PRON) and word.dep in np_deps:

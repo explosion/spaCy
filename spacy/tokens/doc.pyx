@@ -223,6 +223,10 @@ cdef class Doc:
     def __repr__(self):
         return self.__str__()
 
+    @property
+    def doc(self):
+        return self
+
     def similarity(self, other):
         '''Make a semantic similarity estimate. The default estimate is cosine
         similarity using an average of word vectors.
