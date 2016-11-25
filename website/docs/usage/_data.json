@@ -9,6 +9,7 @@
             "Processing text": "processing-text",
             "spaCy's data model": "data-model",
             "Using the parse": "dependency-parse",
+            "Entity recognition": "entity-recognition",
             "Custom pipelines": "customizing-pipeline",
             "Rule-based matching": "rule-based-matching",
             "Word vectors": "word-vectors-similarities",
@@ -51,7 +52,13 @@
     },
 
     "dependency-parse": {
-        "title": "Using the dependency parse"
+        "title": "Using the dependency parse",
+        "next": "entity-recognition"
+    },
+
+    "entity-recognition": {
+        "title": "Entity recognition",
+        "next": "rule-based-matching"
     },
 
     "rule-based-matching": {
