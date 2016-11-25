@@ -15,12 +15,19 @@ except ImportError:
     from distutils.core import Extension, setup
 
 
+PACKAGE_DATA = {'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']}
+
+
 PACKAGES = [
     'spacy',
     'spacy.tokens',
     'spacy.en',
     'spacy.de',
     'spacy.zh',
+    'spacy.es',
+    'spacy.fr',
+    'spacy.it',
+    'spacy.pt',
     'spacy.serialize',
     'spacy.syntax',
     'spacy.munge',
@@ -72,39 +79,56 @@ MOD_NAMES = [
     'spacy.syntax.iterators']
 
 
-compile_options =  {
+COMPILE_OPTIONS =  {
     'msvc': ['/Ox', '/EHsc'],
     'mingw32' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function'],
     'other' : ['-O3', '-Wno-strict-prototypes', '-Wno-unused-function']
 }
 
 
-link_options = {
+LINK_OPTIONS = {
     'msvc' : [],
     'mingw32': [],
     'other' : []
 }
 
+ 
+# I don't understand this very well yet. See Issue #267
+# Fingers crossed!
+#if os.environ.get('USE_OPENMP') == '1':
+#    compile_options['msvc'].append('/openmp')
+#
+#
+#if not sys.platform.startswith('darwin'):
+#    compile_options['other'].append('-fopenmp')
+#    link_options['other'].append('-fopenmp')
+#
 
-if os.environ.get('USE_OPENMP') == '1':
-    compile_options['msvc'].append('/openmp')
+USE_OPENMP_DEFAULT = '1' if sys.platform != 'darwin' else None
+if os.environ.get('USE_OPENMP', USE_OPENMP_DEFAULT) == '1':
+    if sys.platform == 'darwin':
+        COMPILE_OPTIONS['other'].append('-fopenmp')
+        LINK_OPTIONS['other'].append('-fopenmp')
+        PACKAGE_DATA['spacy.platform.darwin.lib'] = ['*.dylib']
+        PACKAGES.append('spacy.platform.darwin.lib')
 
+    elif sys.platform == 'win32':
+        COMPILE_OPTIONS['msvc'].append('/openmp')
 
-if not sys.platform.startswith('darwin'):
-    compile_options['other'].append('-fopenmp')
-    link_options['other'].append('-fopenmp')
-
+    else:
+        COMPILE_OPTIONS['other'].append('-fopenmp')
+        LINK_OPTIONS['other'].append('-fopenmp')
 
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
 class build_ext_options:
     def build_options(self):
         for e in self.extensions:
-            e.extra_compile_args = compile_options.get(
-                self.compiler.compiler_type, compile_options['other'])
+            e.extra_compile_args += COMPILE_OPTIONS.get(
+                self.compiler.compiler_type, COMPILE_OPTIONS['other'])
         for e in self.extensions:
-            e.extra_link_args = link_options.get(
-                self.compiler.compiler_type, link_options['other'])
+            e.extra_link_args += LINK_OPTIONS.get(
+                self.compiler.compiler_type, LINK_OPTIONS['other'])
 
 
 class build_ext_subclass(build_ext, build_ext_options):
@@ -166,15 +190,25 @@ def setup_package():
             os.path.join(root, 'include')]
 
         if (ccompiler.new_compiler().compiler_type == 'msvc'
-            and msvccompiler.get_build_version() == 9):
+        and msvccompiler.get_build_version() == 9):
             include_dirs.append(os.path.join(root, 'include', 'msvc9'))
 
         ext_modules = []
         for mod_name in MOD_NAMES:
             mod_path = mod_name.replace('.', '/') + '.cpp'
+            extra_link_args = []
+            # ???
+            # Imported from patch from @mikepb
+            # See Issue #267. Running blind here...
+            if sys.platform == 'darwin':
+                dylib_path = ['..' for _ in range(mod_name.count('.'))]
+                dylib_path = '/'.join(dylib_path)
+                dylib_path = '@loader_path/%s/spacy/platform/darwin/lib' % dylib_path
+                extra_link_args.append('-Wl,-rpath,%s' % dylib_path)
             ext_modules.append(
                 Extension(mod_name, [mod_path],
-                    language='c++', include_dirs=include_dirs))
+                    language='c++', include_dirs=include_dirs,
+                    extra_link_args=extra_link_args))
 
         if not is_source_release(root):
             generate_cython(root, 'spacy')
@@ -183,7 +217,7 @@ def setup_package():
             name=about['__title__'],
             zip_safe=False,
             packages=PACKAGES,
-            package_data={'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']},
+            package_data=PACKAGE_DATA,
             description=about['__summary__'],
             long_description=readme,
             author=about['__author__'],
@@ -227,4 +261,3 @@ def setup_package():
 
 if __name__ == '__main__':
     setup_package()
-

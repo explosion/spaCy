@@ -1,3 +1,11 @@
+"""This script expects something like a binary sentiment data set, such as
+ that available here: `http://www.cs.cornell.edu/people/pabo/movie-review-data/`
+
+It expects a directory structure like: `data_dir/train/{pos|neg}`
+ and `data_dir/test/{pos|neg}`. Put (say) 90% of the files in the former
+ and the remainder in the latter.
+"""
+
 from __future__ import unicode_literals
 from __future__ import print_function
 from __future__ import division
@@ -56,7 +64,7 @@ class Extractor(object):
         self.vector.fill(0)
         n = 0
         for orth_id, freq in bow.items():
-            self.vector += self.nlp.vocab[self.nlp.vocab.strings[orth_id]].repvec * freq
+            self.vector += self.nlp.vocab[self.nlp.vocab.strings[orth_id]].vector * freq
             # Apply the fine-tuning we've learned
             if orth_id < E.shape[0]:
                 self.vector += E[orth_id] * freq

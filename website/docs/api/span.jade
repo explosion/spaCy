@@ -1,0 +1,264 @@
+//- 💫 DOCS > API > SPAN
+
+include ../../_includes/_mixins
+
+p A slice from a #[code Doc] object.
+
++h(2, "attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The parent document.
+
+    +row
+        +cell #[code start]
+        +cell int
+        +cell The token offset for the start of the span.
+
+    +row
+        +cell #[code end]
+        +cell int
+        +cell The token offset for the end of the span.
+
+    +row
+        +cell #[code start_char]
+        +cell int
+        +cell The character offset for the end of the span.
+
+    +row
+        +cell #[code end_char]
+        +cell int
+        +cell The character offset for the end of the span.
+
+    +row
+        +cell #[code label]
+        +cell int
+        +cell The span's label.
+
+    +row
+        +cell #[code label_]
+        +cell unicode
+        +cell The span's label.
+
+    +row
+        +cell #[code lemma_]
+        +cell unicode
+        +cell The span's lemma.
+
+    +row
+        +cell #[code ent_id]
+        +cell int
+        +cell The integer ID of the named entity the token is an instance of.
+
+    +row
+        +cell #[code ent_id_]
+        +cell unicode
+        +cell The string ID of the named entity the token is an instance of.
+
++h(2, "init") Span.__init__
+    +tag method
+
+p Create a Span object from the #[code slice doc[start : end]].
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The parent document.
+
+    +row
+        +cell #[code start]
+        +cell int
+        +cell The index of the first token of the span.
+
+    +row
+        +cell #[code end]
+        +cell int
+        +cell The index of the first token after the span.
+
+    +row
+        +cell #[code label]
+        +cell int
+        +cell A label to attach to the span, e.g. for named entities.
+
+    +row
+        +cell #[code vector]
+        +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
+        +cell A meaning representation of the span.
+
+    +footrow
+        +cell return
+        +cell #[code Span]
+        +cell The newly constructed object.
+
++h(2, "getitem") Span.__getitem__
+    +tag method
+
+p Get a #[code Token] object.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code i]
+        +cell int
+        +cell The index of the token within the span.
+
+    +footrow
+        +cell return
+        +cell #[code Token]
+        +cell The token at #[code span[i]].
+
+p Get a #[code Span] object.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code start_end]
+        +cell tuple
+        +cell The slice of the span to get.
+
+    +footrow
+        +cell return
+        +cell #[code Span]
+        +cell The span at #[code span[start : end]].
+
++h(2, "iter") Span.__iter__
+    +tag method
+
+p Iterate over #[code Token] objects.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell yield
+        +cell #[code Token]
+        +cell A #[code Token] object.
+
++h(2, "len") Span.__len__
+    +tag method
+
+p Get the number of tokens in the span.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell int
+        +cell The number of tokens in the span.
+
++h(2, "similarity") Span.similarity
+    +tag method
+
+p
+    |  Make a semantic similarity estimate. The default estimate is cosine
+    |  similarity using an average of word vectors.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code other]
+        +cell -
+        +cell
+            |  The object to compare with. By default, accepts #[code Doc],
+            |  #[code Span], #[code Token] and #[code Lexeme] objects.
+
+    +footrow
+        +cell return
+        +cell float
+        +cell A scalar similarity score. Higher is more similar.
+
++h(2, "merge") Span.merge
+    +tag method
+
+p Retokenize the document, such that the span is merged into a single token.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code **attributes]
+        +cell -
+        +cell
+            |  Attributes to assign to the merged token. By default, attributes
+            |  are inherited from the syntactic root token of the span.
+
+    +footrow
+        +cell return
+        +cell #[code Token]
+        +cell The newly merged token.
+
++h(2, "text") Span.text
+    +tag property
+
+p A unicode representation of the span text.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell unicode
+        +cell The original verbatim text of the span.
+
++h(2, "text_with_ws") Span.text_with_ws
+    +tag property
+
+p
+    |  The text content of the span with a trailing whitespace character if the
+    |  last token has one.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell unicode
+        +cell The text content of the span (with trailing whitespace).
+
++h(2, "sent") Span.sent
+    +tag property
+
+p The sentence span that this span is a part of.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell #[code Span]
+        +cell The sentence this is part of.
+
++h(2, "root") Span.root
+    +tag property
+
+p
+    |  The token within the span that's highest in the parse tree. If there's a
+    |  tie, the earlist is prefered.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell #[code Token]
+        +cell The root token.
+
++h(2, "lefts") Span.lefts
+    +tag property
+
+p Tokens that are to the left of the span, whose head is within the span.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell yield
+        +cell #[code Token]
+        +cell A left-child of a token of the span.
+
++h(2, "rights") Span.rights
+    +tag property
+
+p Tokens that are to the right of the span, whose head is within the span.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell yield
+        +cell #[code Token]
+        +cell A right-child of a token of the span.
+
++h(2, "subtree") Span.subtree
+    +tag property
+
+p Tokens that descend from tokens in the span, but fall outside it.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell yield
+        +cell #[code Token]
+        +cell A descendant of a token within the span.

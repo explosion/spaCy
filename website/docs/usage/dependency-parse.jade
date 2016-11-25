@@ -1,0 +1,164 @@
+//- 💫 DOCS > USAGE > DEPENDENCY PARSE
+
+include ../../_includes/_mixins
+
+p
+    |  spaCy features a fast and accurate syntactic dependency parser, and has
+    |  a rich API for navigating the tree. The parser also powers the sentence
+    |  boundary detection, and lets you iterate over base noun phrases, or
+    |  "chunks".
+
++aside-code("Example").
+    import spacy
+    nlp = spacy.load('en')
+    doc = nlp(u'I like green eggs and ham.')
+    for np in doc.noun_chunks:
+        print(np.text, np.root.text, np.root.dep_, np.root.head.text)
+        # I I nsubj like
+        # green eggs eggs dobj like
+        # ham ham conj eggs
+
+p
+    |  You can check whether a #[+api("doc") #[code Doc]] object has been
+    |  parsed with the #[code doc.is_parsed] attribute, which returns a boolean
+    |  value. If this attribute is #[code False], the default sentence iterator
+    |  will raise an exception.
+
++h(2, "displacy") The displaCy visualizer
+
+p
+    |  The best way to understand spaCy's dependency parser is interactively,
+    |  through the #[+a(DEMOS_URL + "/displacy", true) displaCy visualizer]. If
+    |  you want to know how to write rules that hook into some type of syntactic
+    |  construction, just plug the sentence into the visualizer and see how
+    |  spaCy annotates it.
+
++h(2, "navigating") Navigating the parse tree
+
+p
+    |  spaCy uses the terms #[em head] and #[em child] to describe the words
+    |  connected by a single arc in the dependency tree. The term #[em dep] is
+    |  used for the arc label, which describes the type of syntactic relation
+    |  that connects the child to the head. As with other attributes, the value
+    |  of #[code token.dep] is an integer. You can get the string value with
+    |  #[code token.dep_].
+
++aside-code("Example").
+    from spacy.symbols import det
+    the, dog = nlp(u'the dog')
+    assert the.dep == det
+    assert the.dep_ == 'det'
+
+p
+    |  Because the syntactic relations form a tree, every word has exactly one
+    |  head. You can therefore iterate over the arcs in the tree by iterating
+    |  over the words in the sentence. This is usually the best way to match an
+    |  arc of interest — from below:
+
++code.
+    from spacy.symbols import nsubj, VERB
+    # Finding a verb with a subject from below — good
+    verbs = set()
+    for possible_subject in doc:
+        if possible_subject.dep == nsubj and possible_subject.head.pos == VERB:
+            verbs.add(possible_subject.head)
+
+p
+    |  If you try to match from above, you'll have to iterate twice: once for
+    |  the head, and then again through the children:
+
++code.
+    # Finding a verb with a subject from above — less good
+    verbs = []
+    for possible_verb in doc:
+        if possible_verb.pos == VERB:
+            for possible_subject in possible_verb.children:
+                if possible_subject.dep == nsubj:
+                    verbs.append(possible_verb)
+                    break
+
+p
+    |  To iterate through the children, use the #[code token.children]
+    |  attribute, which provides a sequence of #[+api("token") #[code Token]]
+    |  objects.
+
+p
+    |  A few more convenience attributes are provided for iterating around the
+    |  local tree from the token. The #[code .lefts] and #[code .rights]
+    |  attributes provide sequences of syntactic children that occur before and
+    |  after the token. Both sequences are in sentences order. There are also
+    |  two integer-typed attributes, #[code .n_rights] and #[code .n_lefts],
+    |  that give the number of left and right children.
+
++aside-code("Examples").
+    apples = nlp(u'bright red apples on the tree')[2]
+    print([w.text for w in apples.lefts])
+    # ['bright', 'red']
+    print([w.text for w in apples.rights])
+    # ['on']
+    assert apples.n_lefts == 2
+    assert apples.n_rights == 1
+
+    from spacy.symbols import nsubj
+    doc = nlp(u'Credit and mortgage account holders must submit their requests within 30 days.')
+    root = [w for w in doc if w.head is w][0]
+    subject = list(root.lefts)[0]
+    for descendant in subject.subtree:
+        assert subject.is_ancestor_of(descendant)
+
+    from spacy.symbols import nsubj
+    doc = nlp(u'Credit and mortgage account holders must submit their requests.')
+    holders = doc[4]
+    span = doc[holders.left_edge.i : holders.right_edge.i + 1]
+    span.merge()
+    for word in doc:
+        print(word.text, word.pos_, word.dep_, word.head.text)
+        # Credit and mortgage account holders nsubj NOUN submit
+        # must VERB aux submit
+        # submit VERB ROOT submit
+        # their DET det requests
+        # requests NOUN dobj submit
+
+p
+    |  You can get a whole phrase by its syntactic head using the
+    |  #[code .subtree] attribute. This returns an ordered sequence of tokens.
+    |  For the default English model, the parse tree is #[em projective], which
+    |  means that there are no crossing brackets. The tokens returned by
+    |  #[code .subtree] are therefore guaranteed to be contiguous. This is not
+    |  true for the German model, which has many
+    |  #[+a("https://explosion.ai/blog/german-model#word-order", true) non-projective dependencies].
+    |  You can walk up the tree with the #[code .ancestors] attribute, and
+    |  check dominance with the #[code .is_ancestor()] method.
+
+p
+    |  Finally, I often find the #[code .left_edge] and #[code right_edge]
+    |  attributes especially useful. They give you the first and last token
+    |  of the subtree. This is the easiest way to create a #[code Span] object
+    |  for a syntactic phrase — a useful operation.
+
+p
+    |  Note that #[code .right_edge] gives a token #[em within] the subtree —
+    |  so if you use it as the end-point of a range, don't forget to #[code +1]!
+
++h(2, "disabling") Disabling the parser
+
+p
+    |  The parser is loaded and enabled by default. If you don't need any of
+    |  the syntactic information, you should disable the parser. Disabling the
+    |  parser will make spaCy load and run much faster. Here's how to prevent
+    |  the parser from being loaded:
+
++code.
+    import spacy
+
+    nlp = spacy.load('en', parser=False)
+
+p
+    |  If you need to load the parser, but need to disable it for specific
+    |  documents, you can control its use with the #[code parse] keyword
+    |  argument:
+
++code.
+    nlp = spacy.load('en')
+    doc1 = nlp(u'Text I do want parsed.')
+    doc2 = nlp(u"Text I don't want parsed", parse=False)

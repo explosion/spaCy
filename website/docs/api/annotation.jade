@@ -1,0 +1,144 @@
+//- 💫 DOCS > API > ANNOTATION SPECS
+
+include ../../_includes/_mixins
+
+p This document describes the target annotations spaCy is trained to predict.
+
++h(2, "tokenization") Tokenization
+
+p
+    |  Tokenization standards are based on the
+    |  #[+a("https://catalog.ldc.upenn.edu/LDC2013T19") OntoNotes 5] corpus.
+    |  The tokenizer differs from most by including tokens for significant
+    |  whitespace. Any sequence of whitespace characters beyond a single space
+    |  (#[code ' ']) is included as a token.
+
++aside-code("Example").
+    from spacy.en import English
+    nlp = English(parser=False)
+    tokens = nlp('Some\nspaces  and\ttab characters')
+    print([t.orth_ for t in tokens])
+    # ['Some', '\n', 'spaces', ' ', 'and', '\t', 'tab', 'characters']
+
+p
+    |  The whitespace tokens are useful for much the same reason punctuation is
+    |  – it's often an important delimiter in the text. By preserving it in the
+    |  token output, we are able to maintain a simple alignment between the
+    |  tokens and the original string, and we ensure that no information is
+    |  lost during processing.
+
++h(2, "sentence-boundary") Sentence boundary detection
+
+p
+    |  Sentence boundaries are calculated from the syntactic parse tree, so
+    |  features such as punctuation and capitalisation play an important but
+    |  non-decisive role in determining the sentence boundaries. Usually this
+    |  means that the sentence boundaries will at least coincide with clause
+    |  boundaries, even given poorly punctuated text.
+
++h(2, "pos-tagging") Part-of-speech Tagging
+
+p
+    |  The part-of-speech tagger uses the
+    |  #[+a("https://catalog.ldc.upenn.edu/LDC2013T19") OntoNotes 5] version of
+    |  the Penn Treebank tag set. We also map the tags to the simpler Google
+    |  Universal POS Tag set. See
+    |  #[+src(gh("spaCy", "spacy/tagger.pyx")) tagger.pyx] for details.
+
++h(2, "lemmatization") Lemmatization
+
+p A "lemma" is the uninflected form of a word. In English, this means:
+
++list
+    +item #[strong Adjectives]: The form like "happy", not "happier" or "happiest"
+    +item #[strong Adverbs]: The form like "badly", not "worse" or "worst"
+    +item #[strong Nouns]: The form like "dog", not "dogs"; like "child", not "children"
+    +item #[strong Verbs]: The form like "write", not "writes", "writing", "wrote" or "written"
+
+p
+    |  The lemmatization data is taken from
+    |  #[+a("https://wordnet.princeton.edu") WordNet]. However, we also add a
+    |  special case for pronouns: all pronouns are lemmatized to the special
+    |  token #[code -PRON-].
+
++h(2, "dependency-parsing") Syntactic Dependency Parsing
+
+p
+    |  The parser is trained on data produced by the
+    |  #[+a("http://www.clearnlp.com") ClearNLP] converter. Details of the
+    |  annotation scheme can be found
+    |  #[+a("http://www.mathcs.emory.edu/~choi/doc/clear-dependency-2012.pdf") here].
+
++h(2, "named-entities") Named Entity Recognition
+
++table([ "Type", "Description" ])
+    +row
+        +cell #[code PERSON]
+        +cell People, including fictional.
+
+    +row
+        +cell #[code NORP]
+        +cell Nationalities or religious or political groups.
+
+    +row
+        +cell #[code FACILITY]
+        +cell Buildings, airports, highways, bridges, etc.
+
+    +row
+        +cell #[code ORG]
+        +cell Companies, agencies, institutions, etc.
+
+    +row
+        +cell #[code GPE]
+        +cell Countries, cities, states.
+
+    +row
+        +cell #[code LOC]
+        +cell Non-GPE locations, mountain ranges, bodies of water.
+
+    +row
+        +cell #[code PRODUCT]
+        +cell Objects, vehicles, foods, etc. (Not services.)
+
+    +row
+        +cell #[code EVENT]
+        +cell Named hurricanes, battles, wars, sports events, etc.
+
+    +row
+        +cell #[code WORK_OF_ART]
+        +cell Titles of books, songs, etc.
+
+    +row
+        +cell #[code LANGUAGE]
+        +cell Any named language.
+
+p The following values are also annotated in a style similar to names:
+
++table([ "Type", "Description" ])
+    +row
+        +cell #[code DATE]
+        +cell Absolute or relative dates or periods.
+
+    +row
+        +cell #[code TIME]
+        +cell Times smaller than a day.
+
+    +row
+        +cell #[code PERCENT]
+        +cell Percentage, including "%".
+
+    +row
+        +cell #[code MONEY]
+        +cell Monetary values, including unit.
+
+    +row
+        +cell #[code QUANTITY]
+        +cell Measurements, as of weight or distance.
+
+    +row
+        +cell #[code ORDINAL]
+        +cell "first", "second", etc.
+
+    +row
+        +cell #[code CARDINAL]
+        +cell Numerals that do not fall under another type.

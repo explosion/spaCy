@@ -1,0 +1,290 @@
+//- 💫 DOCS > USAGE > NAMED ENTITY RECOGNITION
+
+include ../../_includes/_mixins
+
+p
+    |  spaCy features an extremely fast statistical entity recognition system,
+    |  that assigns labels to contiguous spans of tokens. The default model
+    |  identifies a variety of named and numeric entities, including companies,
+    |  locations, organizations and products. You can add arbitrary classes to
+    |  the entity recognition system, and update the model with new examples.
+
++aside-code("Example").
+    import spacy
+    nlp = spacy.load('en')
+    doc = nlp(u'London is a big city in the United Kingdom.')
+    for ent in doc.ents:
+        print(ent.label_, ent.text)
+        # GPE London
+        # GPE United Kingdom
+
+p
+    |  The standard way to access entity annotations is the
+    |  #[+api("doc#ents") #[code doc.ents]] property, which produces a sequence
+    |  of #[+api("span") #[code Span]] objects. The entity type is accessible
+    |  either as an integer ID or as a string, using the attributes
+    |  #[code ent.label] and #[code ent.label_]. The #[code Span] object acts
+    |  as a sequence of tokens, so you can iterate over the entity or index into
+    |  it. You can also get the text form of the whole entity, as though it were
+    |  a single token. See the #[+api("span") API reference] for more details.
+
+p
+    |  You can access token entity annotations using the #[code token.ent_iob]
+    |  and #[code token.ent_type] attributes. The #[code token.ent_iob]
+    |  attribute indicates whether an entity starts, continues or ends on the
+    |  tag (In, Begin, Out).
+
++code("Example").
+    doc = nlp(u'London is a big city in the United Kingdom.')
+    print(doc[0].text, doc[0].ent_iob, doc[0].ent_type_))
+    # (u'London', 2, u'GPE')
+    print(doc[1].text, doc[1].ent_iob, doc[1].ent_type_))
+    (u'is', 3, u'')]
+
++h(2, "setting") Setting entity annotations
+
+p
+    |  To ensure that the sequence of token annotations remains consistent, you
+    |  have to set entity annotations at the document level — you can't write
+    |  directly to the #[code token.ent_iob] or #[code token.ent_type]
+    |  attributes. The easiest way to set entities is to assign to the
+    |  #[code doc.ents] attribute.
+
++code("Example").
+    doc = nlp(u'London is a big city in the United Kingdom.')
+    doc.ents = []
+    assert doc[0].ent_type_ == ''
+    doc.ents = [Span(0, 1, label='GPE')]
+    assert doc[0].ent_type_ == 'GPE'
+    doc.ents = []
+    doc.ents = [(u'LondonCity', 0, 1, u'GPE')]
+
+p
+    |  The value you assign should be a sequence, the values of which
+    |  can either be #[code Span] objects, or #[code (ent_id, ent_type, start, end)]
+    |  tuples, where #[code start] and #[code end] are token offsets that
+    |  describe the slice of the document that should be annotated.
+
+p
+    |  You can also assign entity annotations using the #[code doc.from_array()]
+    |  method. To do this, you should include both the #[code ENT_TYPE] and the
+    |  #[code ENT_IOB] attributes in the array you're importing from.
+
++code("Example").
+    from spacy.attrs import ENT_IOB, ENT_TYPE
+    import numpy
+
+    doc = nlp.make_doc(u'London is a big city in the United Kingdom.')
+    assert list(doc.ents) == []
+    header = [ENT_IOB, ENT_TYPE]
+    attr_array = numpy.zeros((len(doc), len(header)))
+    attr_array[0, 0] = 2 # B
+    attr_array[0, 1] = doc.vocab.strings[u'GPE']
+    doc.from_array(header, attr_array)
+    assert list(doc.ents)[0].text == u'London'
+
+p
+    |  Finally, you can always write to the underlying struct, if you compile
+    |  a Cython function. This is easy to do, and allows you to write efficient
+    |  native code.
+
++code("Example").
+    # cython: infer_types=True
+    from spacy.tokens.doc cimport Doc
+
+    cpdef set_entity(Doc doc, int start, int end, int ent_type):
+        for i in range(start, end):
+            doc.c[i].ent_type = ent_type
+        doc.c[start].ent_iob = 3
+        for i in range(start+1, end):
+            doc.c[i].ent_iob = 2
+
+p
+    |  Obviously, if you write directly to the array of #[code TokenC*] structs,
+    |  you'll have responsibility for ensuring that the data is left in a
+    |  consistent state.
+
+
++h(2, "displacy") The displaCy #[sup ENT] visualizer
+
+p
+    |  The #[+a(DEMOS_URL + "/displacy-ent/") displaCy #[sup ENT] visualizer]
+    |  lets you explore an entity recognition model's behaviour interactively.
+    |  If you're training a model, it's very useful to run the visualization
+    |  server yourself. To help you do that, we've open-sourced both the
+    |  #[+a(gh("spacy-services")) back-end service] and the
+    |  #[+a(gh("displacy-ent")) front-end client].
+
++codepen("ALxpQO", 450)
+
++h(2, "entity-types") Built-in entity types
+
++h(3, "entity-types-named") Named types
+
++table([ "Type", "Description" ])
+    +row
+        +cell #[code PERSON]
+        +cell People, including fictional.
+
+    +row
+        +cell #[code NORP]
+        +cell Nationalities or religious or political groups.
+
+    +row
+        +cell #[code FACILITY]
+        +cell Buildings, airports, highways, bridges, etc.
+
+    +row
+        +cell #[code ORG]
+        +cell Companies, agencies, institutions, etc.
+
+    +row
+        +cell #[code GPE]
+        +cell Countries, cities, states.
+
+    +row
+        +cell #[code LOC]
+        +cell Non-GPE locations, mountain ranges, bodies of water.
+
+    +row
+        +cell #[code PRODUCT]
+        +cell Objects, vehicles, foods, etc. (Not services.)
+
+    +row
+        +cell #[code EVENT]
+        +cell Named hurricanes, battles, wars, sports events, etc.
+
+    +row
+        +cell #[code WORK_OF_ART]
+        +cell Titles of books, songs, etc.
+
+    +row
+        +cell #[code LANGUAGE]
+        +cell Any named language
+
++h(3, "entity-types-numeric") Numeric types
+
++table([ "Type", "Description" ])
+    +row
+        +cell #[code DATE]
+        +cell Absolute or relative dates or periods.
+
+    +row
+        +cell #[code TIME]
+        +cell Times smaller than a day.
+
+    +row
+        +cell #[code PERCENT]
+        +cell Percentage, including "%".
+
+    +row
+        +cell #[code MONEY]
+        +cell Monetary values, including unit.
+
+    +row
+        +cell #[code QUANTITY]
+        +cell Measurements, as of weight or distance.
+
+    +row
+        +cell #[code ORDINAL]
+        +cell "first", "second", etc.
+
+    +row
+        +cell #[code CARDINAL]
+        +cell Numerals that do not fall under another type.
+
++aside("Install")
+    |  The #[+api("load") spacy.load()] function configures a pipeline that
+    |  includes all of the available annotators for the given ID. In the example
+    |  above, the #[code 'en'] ID tells spaCy to load the default English
+    |  pipeline. If you have installed the data with
+    |  #[code python -m spacy.en.download] this will include the entity
+    |  recognition model.
+
++h(2, "updating") Training and updating
+
+p
+    |  To provide training examples to the entity recogniser, you'll first need
+    |  to create an instance of the #[code GoldParse] class. You can specify
+    |  your annotations in a stand-off format or as token tags.
+
++code.
+    import spacy
+    from spacy.gold import GoldParse
+
+    train_data = [
+        ('Who is Chaka Khan?', [(7, 17, 'PERSON')]),
+        ('I like London and Berlin.', [(7, 13, 'LOC'), (18, 24, 'LOC')])
+    ]
+
+    nlp = spacy.load(entity=False, parser=False)
+    ner = EntityRecognizer(nlp.vocab, entity_types=['PERSON', 'LOC'])
+
+    for itn in range(5):
+        random.shuffle(train_data)
+        for raw_text, entity_offsets in train_data:
+            doc = nlp.make_doc(raw_text)
+            gold = GoldParse(doc, entities=entity_offsets)
+
+            nlp.tagger(doc)
+            ner.update(doc, gold)
+    ner.model.end_training()
+
+p
+    |  If a character offset in your entity annotations don't fall on a token
+    |  boundary, the #[code GoldParse] class will treat that annotation as a
+    |  missing value.  This allows for more realistic training, because the
+    |  entity recogniser is allowed to learn from examples that may feature
+    |  tokenizer errors.
+
++aside-code("Example").
+    doc = Doc(nlp.vocab, [u'rats', u'make', u'good', u'pets'])
+    gold = GoldParse(doc, [u'U-ANIMAL', u'O', u'O', u'O'])
+    ner = EntityRecognizer(nlp.vocab, entity_types=['ANIMAL'])
+    ner.update(doc, gold)
+
+p
+    |  You can also provide token-level entity annotation, using the
+    |  following tagging scheme to describe the entity boundaries:
+
++table([ "Tag", "Description" ])
+    +row
+        +cell #[code #[span.u-color-theme B] EGIN]
+        +cell The first token of a multi-token entity.
+
+    +row
+        +cell #[code #[span.u-color-theme I] N]
+        +cell An inner token of a multi-token entity.
+
+    +row
+        +cell #[code #[span.u-color-theme L] AST]
+        +cell The final token of a multi-token entity.
+
+    +row
+        +cell #[code #[span.u-color-theme U] NIT]
+        +cell A single-token entity.
+
+    +row
+        +cell #[code #[span.u-color-theme O] UT]
+        +cell A non-entity token.
+
++aside("Why BILUO, not IOB?")
+    |  There are several coding schemes for encoding entity annotations as
+    |  token tags.  These coding schemes are equally expressive, but not
+    |  necessarily equally learnable.
+    |  #[+a("http://www.aclweb.org/anthology/W09-1119") Ratinov and Roth]
+    |  showed that the minimal #[strong Begin], #[strong In], #[strong Out]
+    |  scheme was more difficult to learn than the #[strong BILUO] scheme that
+    |  we use, which explicitly marks boundary tokens.
+
+p
+    |  spaCy translates the character offsets into this scheme, in order to
+    |  decide the cost of each action given the current state of the entity
+    |  recogniser. The costs are then used to calculate the gradient of the
+    |  loss, to train the model. The exact algorithm is a pastiche of
+    |  well-known methods, and is not currently described in any single
+    |  publication. The model is a greedy transition-based parser guided by a
+    |  linear model whose weights are learned using the averaged perceptron
+    |  loss, via the #[+a("http://www.aclweb.org/anthology/C12-1059") dynamic oracle]
+    |  imitation learning strategy. The transition system is equivalent to the
+    |  BILOU tagging scheme.

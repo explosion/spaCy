@@ -15,7 +15,6 @@ MANIFEST
 
 corpora/
 models/
-examples/
 keys/
 
 spacy/syntax/*.cpp
@@ -30,14 +29,12 @@ spacy/orthography/*.cpp
 ext/murmurhash.cpp
 ext/sparsehash.cpp
 
-data/en/pos
-data/en/ner
-data/en/lexemes
-data/en/strings
+/spacy/data/
 
 _build/
 .env/
 tmp/
+cythonize.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -75,11 +72,6 @@ htmlcov/
 nosetests.xml
 coverage.xml
 
-# Website
-website/www/
-website/demos/displacy/
-website/demos/sense2vec/
-
 # Translations
 *.mo
 
@@ -101,9 +93,15 @@ website/demos/sense2vec/
 # Mac OS X
 *.DS_Store
 
+# Temporary files / Dropbox hack
+*.~*
+
 # Komodo project files
 *.komodoproject
 
 # Website
 website/_deploy.sh
 website/package.json
+website/blog/announcement.jade
+website/www/
+website/.gitignore

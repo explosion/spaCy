@@ -1,29 +1,26 @@
-//- ----------------------------------
-//- 💫 COMPONENTS > NAVIGATION
-//- ----------------------------------
+//- 💫 CSS > COMPONENTS > NAVIGATION
 
 .c-nav
     @include position(absolute, top, left, 0, 0)
     @include size(100%, $nav-height)
-    align-items: center
     background: $color-back
-    border-color: $color-back
     color: $color-theme
+    align-items: center
     display: flex
     justify-content: space-between
-    padding: 0 2rem
-    z-index: 10
+    padding: 0 2rem 0 1rem
+    z-index: 20
     width: 100%
+    border-bottom: 1px solid $color-subtle
+
+    &.c-nav--theme
+        background: $color-theme
+        color: $color-back
+        border-bottom: none
 
     &.is-fixed
         animation: slideInDown 0.5s ease-in-out
         position: fixed
-        background: $color-theme
-        color: $color-back
-        border-color: $color-theme
-
-        @include breakpoint(min, sm)
-            height: $nav-height * 0.8
 
 .c-nav__menu
     @include size(100%)
@@ -36,17 +33,7 @@
     display: flex
     align-items: center
     height: 100%
+    text-transform: uppercase
 
     &:not(:last-child)
         margin-right: 1em
-
-    &.is-active
-        position: relative
-        font-weight: bold
-        border-color: inherit
-
-        &:after
-            $triangle: 8px
-
-            @include triangle-down($triangle)
-            @include position(absolute, top, left, 100%, calc(50% - #{$triangle}))

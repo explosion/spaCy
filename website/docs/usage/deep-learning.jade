@@ -1,0 +1,213 @@
+//- 💫 DOCS > USAGE > DEEP LEARNING
+
+include ../../_includes/_mixins
+
+p
+    |  In this example, we'll be using #[+a("https://keras.io/") Keras], as
+    |  it's the most popular deep learning library for Python. Let's assume
+    |  you've written a custom sentiment analysis model that predicts whether a
+    |  document is positive or negative. Now you want to find which entities
+    |  are commonly associated with positive or negative documents. Here's a
+    |  quick example of how that can look at runtime.
+
++aside("What's Keras?")
+    |  #[+a("https://keras.io/") Keras] gives you a high-level, declarative
+    |  interface to define neural networks. Models are trained using Google's
+    |  #[+a("https://www.tensorflow.org") TensorFlow] by default.
+    |  #[+a("http://deeplearning.net/software/theano/") Theano] is also
+    |  supported.
+
++code("Runtime usage").
+    def count_entity_sentiment(nlp, texts):
+        '''Compute the net document sentiment for each entity in the texts.'''
+        entity_sentiments = collections.Counter(float)
+        for doc in nlp.pipe(texts, batch_size=1000, n_threads=4):
+            for ent in doc.ents:
+                entity_sentiments[ent.text] += doc.sentiment
+        return entity_sentiments
+
+    def load_nlp(lstm_path, lang_id='en'):
+        def create_pipeline(nlp):
+            return [nlp.tagger, nlp.entity, SentimentAnalyser.load(lstm_path, nlp)]
+        return spacy.load(lang_id, create_pipeline=create_pipeline)
+
+p
+    |  All you have to do is pass a #[code create_pipeline] callback function
+    |  to #[code spacy.load()]. The function should take a
+    |  #[code spacy.language.Language] object as its only argument, and return
+    |  a sequence of callables. Each callable should accept a
+    |  #[+api("docs") #[code Doc]] object, modify it in place, and return
+    |  #[code None].
+
+p
+    |  Of course, operating on single documents is inefficient, especially for
+    |  deep learning models. Usually we want to annotate many texts, and we
+    |  want to process them in parallel. You should therefore ensure that your
+    |  model component also supports a #[code .pipe()] method. The
+    |  #[code .pipe()] method should be a well-behaved generator function that
+    |  operates on arbitrarily large sequences. It should consume a small
+    |  buffer of documents, work on them in parallel, and yield them one-by-one.
+
++code("Custom Annotator Class").
+    class SentimentAnalyser(object):
+        @classmethod
+        def load(cls, path, nlp):
+            with (path / 'config.json').open() as file_:
+                model = model_from_json(file_.read())
+            with (path / 'model').open('rb') as file_:
+                lstm_weights = pickle.load(file_)
+            embeddings = get_embeddings(nlp.vocab)
+            model.set_weights([embeddings] + lstm_weights)
+            return cls(model)
+
+        def __init__(self, model):
+            self._model = model
+
+        def __call__(self, doc):
+            X = get_features([doc], self.max_length)
+            y = self._model.predict(X)
+            self.set_sentiment(doc, y)
+
+        def pipe(self, docs, batch_size=1000, n_threads=2):
+            for minibatch in cytoolz.partition_all(batch_size, docs):
+                Xs = get_features(minibatch)
+                ys = self._model.predict(Xs)
+                for i, doc in enumerate(minibatch):
+                    doc.sentiment = ys[i]
+
+        def set_sentiment(self, doc, y):
+            doc.sentiment = float(y[0])
+            # Sentiment has a native slot for a single float.
+            # For arbitrary data storage, there's:
+            # doc.user_data['my_data'] = y
+
+    def get_features(docs, max_length):
+        Xs = numpy.zeros((len(docs), max_length), dtype='int32')
+        for i, doc in enumerate(minibatch):
+            for j, token in enumerate(doc[:max_length]):
+                Xs[i, j] = token.rank if token.has_vector else 0
+        return Xs
+
+p
+    |  By default, spaCy 1.0 downloads and uses the 300-dimensional
+    |  #[+a("http://nlp.stanford.edu/projects/glove/") GloVe] common crawl
+    |  vectors. It's also easy to replace these vectors with ones you've
+    |  trained yourself, or to disable the word vectors entirely. If you've
+    |  installed your word vectors into spaCy's #[+api("vocab") #[code Vocab]]
+    |  object, here's how to use them in a Keras model:
+
++code("Training with Keras").
+    def train(train_texts, train_labels, dev_texts, dev_labels,
+            lstm_shape, lstm_settings, lstm_optimizer, batch_size=100, nb_epoch=5):
+        nlp = spacy.load('en', parser=False, tagger=False, entity=False)
+        embeddings = get_embeddings(nlp.vocab)
+        model = compile_lstm(embeddings, lstm_shape, lstm_settings)
+        train_X = get_features(nlp.pipe(train_texts))
+        dev_X = get_features(nlp.pipe(dev_texts))
+        model.fit(train_X, train_labels, validation_data=(dev_X, dev_labels),
+                  nb_epoch=nb_epoch, batch_size=batch_size)
+        return model
+
+    def compile_lstm(embeddings, shape, settings):
+        model = Sequential()
+        model.add(
+            Embedding(
+                embeddings.shape[1],
+                embeddings.shape[0],
+                input_length=shape['max_length'],
+                trainable=False,
+                weights=[embeddings]
+            )
+        )
+        model.add(Bidirectional(LSTM(shape['nr_hidden'])))
+        model.add(Dropout(settings['dropout']))
+        model.add(Dense(shape['nr_class'], activation='sigmoid'))
+        model.compile(optimizer=Adam(lr=settings['lr']), loss='binary_crossentropy',
+                      metrics=['accuracy'])
+
+        return model
+
+    def get_embeddings(vocab):
+        max_rank = max(lex.rank for lex in vocab if lex.has_vector)
+        vectors = numpy.ndarray((max_rank+1, vocab.vectors_length), dtype='float32')
+        for lex in vocab:
+            if lex.has_vector:
+                vectors[lex.rank] = lex.vector
+        return vectors
+
+    def get_features(docs, max_length):
+        Xs = numpy.zeros(len(list(docs)), max_length, dtype='int32')
+        for i, doc in enumerate(docs):
+            for j, token in enumerate(doc[:max_length]):
+                Xs[i, j] = token.rank if token.has_vector else 0
+        return Xs
+
+p
+    |  For most applications, I recommend using pre-trained word embeddings
+    |  without "fine-tuning". This means that you'll use the same embeddings
+    |  across different models, and avoid learning adjustments to them on your
+    |  training data. The embeddings table is large, and the values provided by
+    |  the pre-trained vectors are already pretty good. Fine-tuning the
+    |  embeddings table is therefore a waste of your "parameter budget". It's
+    |  usually better to make your network larger some other way, e.g. by
+    |  adding another LSTM layer, using attention mechanism, using character
+    |  features, etc.
+
++h(2, "attribute-hooks") Attribute hooks (experimental)
+
+p
+    |  Earlier, we saw how to store data in the new generic #[code user_data]
+    |  dict. This generalises well, but it's not terribly satisfying. Ideally,
+    |  we want to let the custom data drive more "native" behaviours. For
+    |  instance, consider the #[code .similarity()] methods provided by spaCy's
+    |  #[+api("doc") #[code Doc]], #[+api("token") #[code Token]] and
+    |  #[+api("span") #[code Span]] objects:
+
++code("Polymorphic similarity example").
+    span.similarity(doc)
+    token.similarity(span)
+    doc1.similarity(doc2)
+
+p
+    |  By default, this just averages the vectors for each document, and
+    |  computes their cosine. Obviously, spaCy should make it easy for you to
+    |  install your own similarity model. This introduces a tricky design
+    |  challenge. The current solution is to add three more dicts to the
+    |  #[code Doc] object:
+
++aside("Implementation note")
+    |  The hooks live on the #[code Doc] object because the #[code Span] and
+    |  #[code Token] objects are created lazily, and don't own any data. They
+    |  just proxy to their parent #[code Doc]. This turns out to be convenient
+    |  here — we only have to worry about installing hooks in one place.
+
++table(["Name", "Description"])
+    +row
+        +cell #[code user_hooks]
+        +cell Customise behaviour of #[code doc.vector], #[code doc.has_vector], #[code doc.vector_norm] or #[code doc.sents]
+
+    +row
+        +cell #[code user_token_hooks]
+        +cell Customise behaviour of #[code token.similarity], #[code token.vector], #[code token.has_vector], #[code token.vector_norm] or #[code token.conjuncts]
+
+    +row
+        +cell #[code user_span_hooks]
+        +cell Customise behaviour of #[code span.similarity], #[code span.vector], #[code span.has_vector], #[code span.vector_norm] or #[code span.root]
+
+p
+    |  To sum up, here's an example of hooking in custom #[code .similarity()]
+    |  methods:
+
++code("Add custom similarity hooks").
+    class SimilarityModel(object):
+        def __init__(self, model):
+            self._model = model
+
+        def __call__(self, doc):
+            doc.user_hooks['similarity'] = self.similarity
+            doc.user_span_hooks['similarity'] = self.similarity
+            doc.user_token_hooks['similarity'] = self.similarity
+
+        def similarity(self, obj1, obj2):
+            y = self._model([obj1.vector, obj2.vector])
+            return float(y[0])

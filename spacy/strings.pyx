@@ -5,11 +5,12 @@ cimport cython
 from libc.string cimport memcpy
 from libc.stdint cimport uint64_t
 
-from murmurhash.mrmr cimport hash64
+from murmurhash.mrmr cimport hash64, hash32
 
 from preshed.maps cimport map_iter, key_t
 
 from .typedefs cimport hash_t
+from libc.stdint cimport uint32_t
 
 try:
     import ujson as json
@@ -24,6 +25,10 @@ cpdef hash_t hash_string(unicode string) except 0:
 
 cdef hash_t _hash_utf8(char* utf8_string, int length):
     return hash64(utf8_string, length, 1)
+
+
+cdef uint32_t _hash32_utf8(char* utf8_string, int length):
+    return hash32(utf8_string, length, 1)
 
 
 cdef unicode _decode(const Utf8Str* string):
@@ -73,13 +78,18 @@ cdef Utf8Str _allocate(Pool mem, const unsigned char* chars, int length) except 
 cdef class StringStore:
     '''Map strings to and from integer IDs.'''
     def __init__(self, strings=None, freeze=False):
+        '''Create the StringStore.
+
+        Arguments:
+            strings: A sequence of unicode strings to add to the store.
+        '''
         self.mem = Pool()
         self._map = PreshMap()
         self._oov = PreshMap()
         self._resize_at = 10000
         self.c = <Utf8Str*>self.mem.alloc(self._resize_at, sizeof(Utf8Str))
         self.size = 1
-        self.is_frozen = False
+        self.is_frozen = freeze
         if strings is not None:
             for string in strings:
                 _ = self[string]
@@ -89,9 +99,22 @@ cdef class StringStore:
             return self.size -1
 
     def __len__(self):
+        """The number of strings in the store.
+
+        Returns:
+            int The number of strings in the store.
+        """
         return self.size-1
 
     def __getitem__(self, object string_or_id):
+        """Retrieve a string from a given integer ID, or vice versa.
+        
+        Arguments:
+            string_or_id (bytes or unicode or int):
+                The value to encode.
+        Returns:
+            unicode or int: The value to retrieved.
+        """
         if isinstance(string_or_id, basestring) and len(string_or_id) == 0:
             return 0
         elif string_or_id == 0:
@@ -100,12 +123,14 @@ cdef class StringStore:
         cdef bytes byte_string
         cdef const Utf8Str* utf8str
         cdef uint64_t int_id
+        cdef uint32_t oov_id
         if isinstance(string_or_id, (int, long)):
             int_id = string_or_id
+            oov_id = string_or_id
             if int_id < <uint64_t>self.size:
                 return _decode(&self.c[int_id])
             else:
-                utf8str = <Utf8Str*>self._oov.get(int_id)
+                utf8str = <Utf8Str*>self._oov.get(oov_id)
                 if utf8str is not NULL:
                     return _decode(utf8str)
                 else:
@@ -119,20 +144,33 @@ cdef class StringStore:
                 raise TypeError(type(string_or_id))
             utf8str = self._intern_utf8(byte_string, len(byte_string))
             if utf8str is NULL:
-                # TODO: We could get unlucky here, and hash into a value that
-                # collides with the 'real' strings. All we have to do is offset
-                # I think?
-                return _hash_utf8(byte_string, len(byte_string))
+                # TODO: We need to use 32 bit here, for compatibility with the 
+                # vocabulary values. This makes birthday paradox probabilities
+                # pretty bad.
+                # We could also get unlucky here, and hash into a value that
+                # collides with the 'real' strings. 
+                return _hash32_utf8(byte_string, len(byte_string))
             else:
                 return utf8str - self.c
 
     def __contains__(self, unicode string not None):
+        """Check whether a string is in the store.
+
+        Arguments:
+            string (unicode): The string to check.
+        Returns bool:
+            Whether the store contains the string.
+        """
         if len(string) == 0:
             return True
         cdef hash_t key = hash_string(string)
         return self._map.get(key) is not NULL
 
     def __iter__(self):
+        """Iterate over the strings in the store, in order.
+
+        Yields: unicode A string in the store.
+        """
         cdef int i
         for i in range(self.size):
             yield _decode(&self.c[i]) if i > 0 else u''
@@ -170,11 +208,13 @@ cdef class StringStore:
         if value is not NULL:
             return value
         if self.is_frozen:
+            # OOV store uses 32 bit hashes. Pretty ugly :(
+            key32 = _hash32_utf8(utf8_string, length)
             # Important: Make the OOV store own the memory. That way it's trivial
             # to flush them all.
             value = <Utf8Str*>self._oov.mem.alloc(1, sizeof(Utf8Str))
             value[0] = _allocate(self._oov.mem, <unsigned char*>utf8_string, length)
-            self._oov.set(key, value)
+            self._oov.set(key32, value)
             return NULL
 
         if self.size == self._resize_at:
@@ -185,6 +225,13 @@ cdef class StringStore:
         return &self.c[self.size-1]
 
     def dump(self, file_):
+        """Save the strings to a JSON file.
+
+        Arguments:
+            file_ (buffer): The file to save the strings.
+        Returns:
+            None
+        """
         string_data = json.dumps(list(self))
         if not isinstance(string_data, unicode):
             string_data = string_data.decode('utf8')
@@ -192,6 +239,13 @@ cdef class StringStore:
         file_.write(string_data)
 
     def load(self, file_):
+        """Load the strings from a JSON file.
+
+        Arguments:
+            file_ (buffer): The file from which to load the strings.
+        Returns:
+            None
+        """
         strings = json.load(file_)
         if strings == ['']:
             return None

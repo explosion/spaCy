@@ -4,7 +4,7 @@ import pathlib
 
 import ujson as json
 
-from .parts_of_speech import NOUN, VERB, ADJ, PUNCT
+from .symbols import NOUN, VERB, ADJ, PUNCT
 
 
 class Lemmatizer(object):

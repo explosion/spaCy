@@ -1,0 +1,38 @@
+//- 💫 DOCS > USAGE > TUTORIALS
+
+include ../../_includes/_mixins
+
+p
+    |  Have you written a tutorial on spaCy, or did you find one that should be
+    |  featured here? #[a(href="mailto:#{EMAIL}") Let us know!]
+
++h(2, "first-steps") First steps
+
+p
+    |  These tutorials help you get started. They describe how to set up your
+    |  environment and start using spaCy.
+
++grid
+    each details, title in first_steps
+        +card(title, details)
+
++h(2, "features") Deep dives
+
+p
+    |  These tutorials take a closer look at particular features of spaCy, or
+    |  particular types of NLP problems. Most come with more explanatory text,
+    |  to help introduce you to new concepts.
+
++grid
+    each details, title in deep_dives
+        +card(title, details)
+
++h(2, "code") Programs and scripts
+
+p
+    |  These tutorials give you all the code and nothing but the code — they're
+    |  Python scripts you can modify and run.
+
++grid
+    each details, title in code
+        +card(title, details)

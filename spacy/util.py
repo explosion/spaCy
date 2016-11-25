@@ -1,3 +1,5 @@
+# encoding: utf8
+from __future__ import unicode_literals
 import os
 import io
 import json

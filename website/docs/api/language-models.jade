@@ -1,0 +1,31 @@
+//- 💫 DOCS > API > LANGUAGE MODELS
+
+include ../../_includes/_mixins
+
+p You can download data packs that add the following capabilities to spaCy.
+
++aside-code("Download language models", "bash").
+    python -m spacy.en.download all
+    python -m spacy.de.download all
+
++table([ "Language", "Token", "SBD", "Lemma", "POS", "NER", "Dep", "Vector", "Sentiment"])
+    +row
+        +cell English #[code en]
+        each icon in [ "pro", "pro", "pro", "pro", "pro", "pro", "pro", "con" ]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell German #[code de]
+        each icon in [ "pro", "pro", "con", "pro", "pro", "pro", "pro", "con" ]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Chinese #[code zh]
+        each icon in [ "pro", "con", "con", "con", "con", "con", "con", "con" ]
+            +cell.u-text-center #[+procon(icon)]
+
+p
+    |  Chinese tokenization requires the
+    |  #[+a("https://github.com/fxsjy/jieba") Jieba] library. Statistical
+    |  models are coming soon. Tokenizers for Spanish, French, Italian and
+    |  Portuguese are now under development. 

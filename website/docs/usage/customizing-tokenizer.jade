@@ -1,0 +1,242 @@
+//- <U+1F4AB> DOCS > USAGE > TOKENIZER
+
+include ../../_includes/_mixins
+
+p
+    |  Tokenization is the task of splitting a text into meaningful segments,
+    |  called #[em tokens].  The input to the tokenizer is a unicode text, and
+    |  the output is a #[+api("doc") #[code Doc]] object. To construct a
+    |  #[code Doc] object, you need a #[+api("vocab") #[code Vocab]] instance,
+    |  a sequence of #[code word] strings, and optionally a sequence of
+    |  #[code spaces] booleans, which allow you to maintain alignment of the
+    |  tokens into the original string.
+
++aside("See Also")
+    |  If you haven't read up on spaCy's #[+a("data-model") data model] yet,
+    |  you should probably have a look. The main point to keep in mind is that
+    |  spaCy's #[code Doc] doesn't copy or refer to the original string. The
+    |  string is reconstructed from the tokens when required.
+
+
++h(2, "special-cases") Adding special case tokenization rules
+
+p
+    |  Most domains have at least some idiosyncracies that require custom
+    |  tokenization rules. Here's how to add a special case rule to an existing
+    |  #[+api("tokenizer") #[code Tokenizer]] instance:
+
++code.
+    nlp = spacy.load('en')
+    assert [w.text for w in nlp(u'gimme that')] == [u'gimme', u'that']
+    nlp.tokenizer.add_special_case(u'gimme',
+        [
+            {
+                ORTH: u'gim',
+                LEMMA: u'give',
+                POS: u'VERB'},
+            {
+                ORTH: u'me'}])
+    assert [w.text for w in nlp(u'gimme that')] == [u'gim', u'me', u'that']
+    assert [w.lemma_ for w in nlp(u'gimme that')] == [u'give', u'-PRON-', u'that']
+
+p
+    |  The special case doesn't have to match an entire whitespace-delimited
+    |  substring. The tokenizer will incrementally split off punctuation, and
+    |  keep looking up the remaining substring:
+
++code.
+    assert 'gimme' not in [w.text for w in nlp(u'gimme!')]
+    assert 'gimme' not in [w.text for w in nlp(u'("...gimme...?")')]
+
+p
+    |  The special case rules have precedence over the punctuation splitting:
+
++code.
+    nlp.tokenizer.add_special_case(u"...gimme...?",
+        [{
+            ORTH: u'...gimme...?", LEMMA: "give", TAG: "VB"}])
+    assert len(nlp(u'...gimme...?')) == 1
+
+p
+    |  Because the special-case rules allow you to set arbitrary token
+    |  attributes, such as the part-of-speech, lemma, etc, they make a good
+    |  mechanism for arbitrary fix-up rules. Having this logic live in the
+    |  tokenizer isn't very satisfying from a design perspective, however, so
+    |  the API may eventually be exposed on the
+    |  #[+api("language") #[code Language]] class itself.
+
+
++h(2, "how-tokenizer-works") How spaCy's tokenizer works
+
+p
+    |  spaCy introduces a novel tokenization algorithm, that gives a better
+    |  balance between performance, ease of definition, and ease of alignment
+    |  into the original string.
+
+p
+    |  After consuming a prefix or infix, we consult the special cases again.
+    |  We want the special cases to handle things like "don't" in English, and
+    |  we want the same rule to work for "(don't)!". We do this by splitting
+    |  off the open bracket, then the exclamation, then the close bracket, and
+    |  finally matching the special-case. Here's an implementation of the
+    |  algorithm in Python, optimized for readability rather than performance:
+
++code.
+    def tokenizer_pseudo_code(text, find_prefix, find_suffix,
+                              find_infixes, special_cases):
+        tokens = []
+        for substring in text.split(' '):
+            suffixes = []
+            while substring:
+                if substring in special_cases:
+                    tokens.extend(special_cases[substring])
+                    substring = ''
+                elif find_prefix(substring) is not None:
+                    split = find_prefix(substring)
+                    tokens.append(substring[:split])
+                    substring = substring[split:]
+                elif find_suffix(substring) is not None:
+                    split = find_suffix(substring)
+                    suffixes.append(substring[split:])
+                    substring = substring[:split]
+                elif find_infixes(substring):
+                    infixes = find_infixes(substring)
+                    offset = 0
+                    for match in infixes:
+                        tokens.append(substring[i : match.start()])
+                        tokens.append(substring[match.start() : match.end()])
+                        offset = match.end()
+                    substring = substring[offset:]
+                else:
+                    tokens.append(substring)
+                    substring = ''
+            tokens.extend(suffixes)
+            return tokens
+
+p
+    |  The algorithm can be summarized as follows:
+
++list("numbers")
+    +item Iterate over space-separated substrings
+    +item
+        |  Check whether we have an explicitly defined rule for this substring.
+        |  If we do, use it.
+    +item Otherwise, try to consume a prefix.
+    +item
+        |  If we consumed a prefix, go back to the beginning of the loop, so
+        |  that special-cases always get priority.
+    +item If we didn't consume a prefix, try to consume a suffix.
+    +item
+        |  If we can't consume a prefix or suffix, look for "infixes" — stuff
+        |  like hyphens etc.
+    +item Once we can't consume any more of the string, handle it as a single token.
+
++h(2, "native-tokenizers") Customizing spaCy's Tokenizer class
+
+p
+    |  Let's imagine you wanted to create a tokenizer for a new language. There
+    |  are four things you would need to define:
+
++list("numbers")
+    +item
+        |  A dictionary of #[strong special cases]. This handles things like
+        |  contractions, units of measurement, emoticons, certain
+        |  abbreviations, etc.
+
+    +item
+        |  A function #[code prefix_search], to handle
+        |  #[strong preceding punctuation], such as open quotes, open brackets,
+        |  etc
+
+    +item
+        |  A function #[code suffix_search], to handle
+        |  #[strong succeeding punctuation], such as commas, periods, close
+        |  quotes, etc.
+
+    +item
+        |  A function #[code infixes_finditer], to handle non-whitespace
+        |  separators, such as hyphens etc.
+
+p
+    |  You shouldn't usually need to create a #[code Tokenizer] subclass.
+    |  Standard usage is to use #[code re.compile()] to build a regular
+    |  expression object, and pass its #[code .search()] and
+    |  #[code .finditer()] methods:
+
++code.
+    import re
+    from spacy.tokenizer import Tokenizer
+
+    prefix_re = re.compile(r'''[\[\(&quot;']''')
+    suffix_re = re.compile(r'''[\]\)&quot;']''')
+    def create_tokenizer(nlp):
+        return Tokenizer(nlp.vocab,
+                prefix_search=prefix_re.search,
+                suffix_search=suffix_re.search)
+
+    nlp = spacy.load('en', tokenizer=create_make_doc)
+
+p
+    |  If you need to subclass the tokenizer instead, the relevant methods to
+    |  specialize are #[code find_prefix], #[code find_suffix] and
+    |  #[code find_infix].
+
++h(2, "custom-tokenizer") Hooking an arbitrary tokenizer into the pipeline
+
+p
+    |  You can pass a custom tokenizer using the #[code make_doc] keyword, when
+    |  you're creating the pipeline:
+
++code.
+    import spacy
+
+    nlp = spacy.load('en', make_doc=my_tokenizer)
+
+p
+    |  However, this approach often leaves us with a chicken-and-egg problem.
+    |  To construct the tokenizer, we usually want attributes of the #[code nlp]
+    |  pipeline. Specifically, we want the tokenizer to hold a reference to the
+    |  pipeline's vocabulary object. Let's say we have the following class as
+    |  our tokenizer:
+
+
++code.
+    import spacy
+    from spacy.tokens import Doc
+
+    class WhitespaceTokenizer(object):
+        def __init__(self, nlp):
+            self.vocab = nlp.vocab
+
+        def __call__(self, text):
+            words = text.split(' ')
+            # All tokens 'own' a subsequent space character in this tokenizer
+            spaces = [True] * len(word)
+            return Doc(self.vocab, words=words, spaces=spaces)
+
+p
+    |  As you can see, we need a #[code vocab] instance to construct this — but
+    |  we won't get the #[code vocab] instance until we get back the #[code nlp]
+    |  object from #[code spacy.load()]. The simplest solution is to build the
+    |  object in two steps:
+
++code.
+    nlp = spacy.load('en')
+    nlp.make_doc = WhitespaceTokenizer(nlp)
+
+p
+    |  You can instead pass the class to the #[code create_make_doc] keyword,
+    |  which is invoked as callback once the #[code nlp] object is ready:
+
++code.
+    nlp = spacy.load('en', create_make_doc=WhitespaceTokenizer)
+
+p
+    |  Finally, you can of course create your own subclasses, and create a bound
+    |  #[code make_doc] method. The disadvantage of this approach is that spaCy
+    |  uses inheritance to give each language-specific pipeline its own class.
+    |  If you're working with multiple languages, a naive solution will
+    |  therefore require one custom class per language you're working with.
+    |  This might be at least annoying. You may be able to do something more
+    |  generic by doing some clever magic with metaclasses or mixins, if that's
+    |  the sort of thing you're into.

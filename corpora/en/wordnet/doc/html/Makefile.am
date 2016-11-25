@@ -1,2 +1,0 @@
-htmldir = $(prefix)/doc/html
-html_DATA = binsrch.3WN.html cntlist.5WN.html grind.1WN.html lexnames.5WN.html morph.3WN.html morphy.7WN.html senseidx.5WN.html uniqbeg.7WN.html wn.1WN.html wnb.1WN.html wndb.5WN.html wngloss.7WN.html wngroups.7WN.html wninput.5WN.html wnintro.1WN.html wnintro.3WN.html wnintro.5WN.html wnintro.7WN.html wnlicens.7WN.html wnpkgs.7WN.html wnsearch.3WN.html wnstats.7WN.html wnutil.3WN.html

@@ -1,0 +1,66 @@
+//- 💫 DOCS > USAGE > WORD VECTORS & SIMILARITIES
+
+include ../../_includes/_mixins
+
+p
+    |  Dense, real valued vectors representing distributional similarity
+    |  information are now a cornerstone of practical NLP. The most common way
+    |  to train these vectors is the #[+a("https://en.wikipedia.org/wiki/Word2vec") word2vec]
+    |  family of algorithms.
+
++aside("Tip")
+    |  If you need to train a word2vec model, we recommend the implementation in
+    |  the Python library #[+a("https://radimrehurek.com/gensim/") Gensim].
+
+p
+    |  spaCy makes using word vectors very easy. The
+    |  #[+api("lexeme") #[code Lexeme]], #[+api("token") #[code Token]],
+    |  #[+api("span") #[code Span]] and #[+api("doc") #[code Doc]] classes all
+    |  have a #[code .vector] property, which is a 1-dimensional numpy array of
+    |  32-bit floats:
+
++code.
+    import numpy
+
+    apples, and_, oranges = nlp(u'apples and oranges')
+    print(apples.vector.shape)
+    # (1,)
+    apples.similarity(oranges)
+
+p
+    |  By default, #[code Token.vector] returns the vector for its underlying
+    |  lexeme, while #[code Doc.vector] and #[code Span.vector] return an
+    |  average of the vectors of their tokens. You can customize these
+    |  behaviours by modifying the #[code doc.user_hooks],
+    |  #[code doc.user_span_hooks] and #[code doc.user_token_hooks]
+    |  dictionaries.
+
++aside-code("Example").
+    # TODO
+
+p
+    |  The default English model installs vectors for one million vocabulary
+    |  entries, using the 300-dimensional vectors trained on the Common Crawl
+    |  corpus using the #[+a("http://nlp.stanford.edu/projects/glove/") GloVe]
+    |  algorithm. The GloVe common crawl vectors have become a de facto
+    |  standard for practical NLP.
+
++aside-code("Example").
+    # TODO
+
+p
+    |  You can load new word vectors from a file-like buffer using the
+    |  #[code vocab.load_vectors()] method. The file should be a
+    |  whitespace-delimited text file, where the word is in the first column,
+    |  and subsequent columns provide the vector data.  For faster loading, you
+    |  can use the #[code vocab.vectors_from_bin_loc()] method, which accepts a
+    |  path to a binary file written by #[code vocab.dump_vectors()].
+
++aside-code("Example").
+    # TODO
+
+p
+    |  You can also load vectors from memory, by writing to the #[code lexeme.vector]
+    |  property. If the vectors you are writing are of different dimensionality
+    |  from the ones currently loaded, you should first call
+    |  #[code vocab.resize_vectors(new_size)].

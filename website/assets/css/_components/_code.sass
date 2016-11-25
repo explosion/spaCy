@@ -1,52 +1,40 @@
-//- ----------------------------------
-//- 💫 COMPONENTS > CODE
-//- ----------------------------------
+//- 💫 CSS > COMPONENTS > CODE
 
 //- Code block
 
 .c-code-block
-    background: $color-subtle-light
-    padding: 1em 0
-    border-left: 5px solid $color-theme
+    background: $color-front
+    color: $color-back
+    padding: 0.75em 0
+    border-radius: 2px
     overflow: auto
     width: 100%
     max-width: 100%
     white-space: pre
     direction: ltr
 
-    :not(.o-block)
-        margin-bottom: 2rem
-
 
 //- Code block content
 
 .c-code-block__content
     display: block
-    padding: 2em 2.5em
-
-
-//- Code block label
-
-.c-code-block__label
-    display: inline-block
-    background: $color-theme
-    color: $color-back
-    padding: 1rem
-    margin-bottom: 1.5rem
+    font: normal normal 1.1rem/#{2} $font-code
+    padding: 1em 2em
 
 
 //- Inline code
 
-:not(.c-code-block) > code
-    @extend .u-code-small
-
+*:not(.c-code-block) > code
+    font: normal 600 0.8em/#{1} $font-code
     background: $color-subtle-light
-    box-shadow: 1px 1px 0 $color-subtle
     color: $color-front
-    padding: 0.15em 0.5em
-    margin: 0 0.25em
-    border-radius: 2px
-    text-shadow: 1px 1px 0 $color-back
+    padding: 0.1em 0.5em
+    margin: 0
+    border-radius: 1px
+
+    .c-aside__content &
+        background: $color-dark
+        color: $color-back
 
 
 //- Syntax Highlighting

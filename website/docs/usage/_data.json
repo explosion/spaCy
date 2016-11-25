@@ -1,0 +1,318 @@
+{
+    "sidebar": {
+        "Get started": {
+            "Installation": "./",
+            "Lightning tour": "lightning-tour"
+        },
+        "Workflows": {
+            "Loading the pipeline": "language-processing-pipeline",
+            "Processing text": "processing-text",
+            "spaCy's data model": "data-model",
+            "Using the parse": "dependency-parse",
+            "Entity recognition": "entity-recognition",
+            "Custom pipelines": "customizing-pipeline",
+            "Rule-based matching": "rule-based-matching",
+            "Word vectors": "word-vectors-similarities",
+            "Deep learning": "deep-learning",
+            "Custom tokenization": "customizing-tokenizer",
+            "Training": "training"
+        },
+        "Examples": {
+            "Tutorials": "tutorials",
+            "Showcase": "showcase"
+        }
+    },
+
+    "index": {
+        "title": "Install spaCy",
+        "next": "lightning-tour"
+    },
+
+    "lightning-tour": {
+        "title": "Lightning tour"
+    },
+
+    "language-processing-pipeline": {
+        "title": "Loading a language processing pipeline",
+        "next": "processing-text"
+    },
+
+    "customizing-pipeline": {
+        "title": "Customizing the pipeline",
+        "next": "customizing-tokenizer"
+    },
+
+    "processing-text": {
+        "title": "Processing text",
+        "next": "data-model"
+    },
+
+    "data-model": {
+        "title": "Understanding spaCy's data model"
+    },
+
+    "dependency-parse": {
+        "title": "Using the dependency parse",
+        "next": "entity-recognition"
+    },
+
+    "entity-recognition": {
+        "title": "Entity recognition",
+        "next": "rule-based-matching"
+    },
+
+    "rule-based-matching": {
+        "title": "Rule-based matching"
+    },
+
+    "word-vectors-similarities": {
+        "title": "Using word vectors and semantic similarities"
+    },
+
+    "deep-learning": {
+        "title": "Hooking a deep learning model into spaCy"
+    },
+
+    "customizing-tokenizer": {
+        "title": "Customizing the tokenizer",
+        "next": "training"
+    },
+
+    "training": {
+        "title": "Training the tagger, parser and entity recognizer"
+    },
+
+    "showcase": {
+        "title": "Showcase",
+
+        "libraries": {
+            "spacy-nlp": {
+                "url": "https://github.com/kengz/spacy-nlp",
+                "author": "Wah Loon Keng",
+                "description": "Expose spaCy NLP text parsing to Node.js (and other languages) via Socket.IO."
+            },
+            "spacy-api-docker": {
+                "url": "https://github.com/jgontrum/spacy-api-docker",
+                "author": "Johannes Gontrum",
+                "description": "spaCy accessed by a REST API, wrapped in a Docker container."
+            },
+            "textacy": {
+                "url": "https://github.com/chartbeat-labs/textacy",
+                "author": " Burton DeWilde (Chartbeat)",
+                "description": "Higher-level NLP built on spaCy."
+            },
+            "visual-qa": {
+                "url": "https://github.com/avisingh599/visual-qa",
+                "author": "Avi Singh",
+                "description": "Keras-based LSTM/CNN models for Visual Question Answering."
+            }
+        },
+        "visualizations": {
+            "displaCy": {
+                "url": "https://demos.explosion.ai/displacy",
+                "author": "Ines Montani",
+                "description": "An open-source NLP visualiser for the modern web.",
+                "image": "displacy.jpg"
+            },
+            "displaCy ENT": {
+                "url": "https://demos.explosion.ai/displacy-ent",
+                "author": "Ines Montani",
+                "description": "An open-source named entity visualiser for the modern web.",
+                "image": "displacy-ent.jpg"
+            }
+        },
+        "products": {
+            "sense2vec": {
+                "url": "https://demos.explosion.ai/sense2vec",
+                "author": "Matthew Honnibal and Ines Montani",
+                "description": "Semantic analysis of the Reddit hivemind.",
+                "image": "sense2vec.jpg"
+            },
+            "TruthBot": {
+                "url": "http://summerscope.github.io/govhack/2016/truthbot/",
+                "author": "Team Truthbot",
+                "description": "The world's first artificially intelligent fact checking robot.",
+                "image": "truthbot.jpg"
+            },
+            "Laice": {
+                "url": "https://github.com/kendricktan/laice",
+                "author": "Kendrick Tan",
+                "description": "Train your own Natural Language Processor from a browser.",
+                "image": "laice.jpg"
+            },
+            "FoxType": {
+                "url": "https://foxtype.com",
+                "description": "Smart tools for writers.",
+                "image": "foxtype.jpg"
+            },
+            "Kip": {
+                "url": "https://kipthis.com",
+                "description": "An AI chat assistant for group shopping.",
+                "image": "kip.jpg"
+            },
+            "Indico": {
+                "url": "https://indico.io",
+                "description": "Text and image analysis powered by Machine Learning.",
+                "image": "indico.jpg"
+            },
+            "TextAnalysisOnline": {
+                "url": "http://textanalysisonline.com",
+                "description": "Online tool for spaCy's tokenizer, parser, NER and more.",
+                "image": "textanalysis.jpg"
+            }
+        },
+        "books": {
+            "Introduction to Machine Learning with Python: A Guide for Data Scientists": {
+                "url": "https://books.google.de/books?id=vbQlDQAAQBAJ",
+                "author": "Andreas C. Müller and Sarah Guido (O'Reilly, 2016)",
+                "description": "Andreas is a lead developer of Scikit-Learn, and Sarah is a lead data scientist at Mashable. We're proud to get a mention."
+            }
+        },
+        "research": {
+            "Refactoring the Genia Event Extraction Shared Task Toward a General Framework for IE-Driven KB Development": {
+                "url": "https://www.semanticscholar.org/paper/Refactoring-the-Genia-Event-Extraction-Shared-Task-Kim-Wang/06d94b64a7bd2d3433f57caddad5084435d6a91f",
+                "author": "Jin-Dong Kim et al. (2016)"
+            },
+            "Mixing Dirichlet Topic Models and Word Embeddings to Make lda2vec": {
+                "url": "https://www.semanticscholar.org/paper/Mixing-Dirichlet-Topic-Models-and-Word-Embeddings-Moody/bf8116e06f7b498c6abfbf97aeb67d0838c08609",
+                "author": "Christopher E. Moody (2016)"
+            },
+            "Predicting Pre-click Quality for Native Advertisements": {
+                "url": "https://www.semanticscholar.org/paper/Predicting-Pre-click-Quality-for-Native-Zhou-Redi/564985430ff2fbc3a9daa9c2af8997b7f5046da8",
+                "author": "Ke Zhou et al. (2016)"
+            },
+            "Threat detection in online discussions": {
+                "url": "https://www.semanticscholar.org/paper/Threat-detection-in-online-discussions-Wester-%C3%98vrelid/f4150e2fb4d8646ebc2ea84f1a86afa1b593239b",
+                "author": "Aksel Wester et al. (2016)"
+            },
+            "The language of mental health problems in social media": {
+                "url": "https://www.semanticscholar.org/paper/The-language-of-mental-health-problems-in-social-Gkotsis-Oellrich/537db6c2984514d92a754a591841e2e20845985a",
+                "author": "George Gkotsis et al. (2016)"
+            }
+        }
+    },
+
+    "tutorials": {
+        "title": "Tutorials",
+        "next": "showcase",
+
+        "first_steps": {
+            "Setting up an NLP environment with Python": {
+                "url": "https://shirishkadam.com/2016/10/06/setting-up-natural-language-processing-environment-with-python/",
+                "author": "Shirish Kadam"
+            },
+            "NLP with spaCy in 10 lines of code": {
+                "url": "https://github.com/cytora/pycon-nlp-in-10-lines",
+                "author": "Andraz Hribernik et al. (Cytora)",
+                "tags": [ "jupyter" ]
+            },
+            "Intro to NLP with spaCy": {
+                "url": "https://nicschrading.com/project/Intro-to-NLP-with-spaCy/",
+                "author": "J Nicolas Schrading"
+            },
+            "NLP with spaCy and IPython Notebook": {
+                "url": "http://blog.sharepointexperience.com/2016/01/nlp-and-sharepoint-part-1/",
+                "author": "Dustin Miller (SharePoint)",
+                "tags": [ "jupyter" ]
+            },
+            "Getting Started with spaCy": {
+                "url": "http://textminingonline.com/getting-started-with-spacy",
+                "author": "TextMiner"
+            },
+            "spaCy – A fast natural language processing library": {
+                "url": "https://bjoernkw.com/2015/11/22/spacy-a-fast-natural-language-processing-library/",
+                "author": "Björn Wilmsmann"
+            },
+            "NLP (almost) From Scratch - POS Network with spaCy": {
+                "url": "http://sujitpal.blogspot.de/2016/07/nlp-almost-from-scratch-implementing.html",
+                "author": "Sujit Pal",
+                "tags": [ "gensim", "keras" ]
+            },
+            "NLP tasks with various libraries": {
+                "url": "http://clarkgrubb.com/nlp",
+                "author": "Clark Grubb"
+            },
+            "A very (very) short primer on spacy.io": {
+                "url": "http://blog.milonimrod.com/2015/10/a-very-very-short-primer-on-spacyio.html",
+                "author": "Nimrod Milo  "
+            }
+        },
+
+        "deep_dives": {
+            "Modern NLP in Python – What you can learn about food by analyzing a million Yelp reviews": {
+                "url": "http://nbviewer.jupyter.org/github/skipgram/modern-nlp-in-python/blob/master/executable/Modern_NLP_in_Python.ipynb",
+                "author": "Patrick Harrison (S&P Global)",
+                "tags": [ "jupyter", "gensim" ]
+            },
+
+            "Deep Learning with custom pipelines and Keras": {
+                "url": "https://explosion.ai/blog/spacy-deep-learning-keras",
+                "author": "Matthew Honnibal",
+                "tags": [ "keras", "sentiment" ]
+            },
+            "A decomposable attention model for Natural Language Inference": {
+                "url": "https://github.com/explosion/spaCy/tree/master/examples/keras_parikh_entailment",
+                "author": "Matthew Honnibal",
+                "tags": [ "keras", "similarity" ]
+            },
+
+            "Using the German model": {
+                "url": "https://explosion.ai/blog/german-model",
+                "author": "Wolfgang Seeker",
+                "tags": [ "multi-lingual" ]
+            },
+            "Sense2vec with spaCy and Gensim": {
+                "url": "https://explosion.ai/blog/sense2vec-with-spacy",
+                "author": "Matthew Honnibal",
+                "tags": [ "big data", "gensim" ]
+            },
+            "Building your bot's brain with Node.js and spaCy": {
+                "url": "https://explosion.ai/blog/chatbot-node-js-spacy",
+                "author": "Wah Loon Keng",
+                "tags": [ "bots", "node.js" ]
+            },
+            "An intent classifier with spaCy": {
+                "url": "http://blog.themusio.com/2016/07/18/musios-intent-classifier-2/",
+                "author": "Musio",
+                "tags": [ "bots", "keras" ]
+            },
+            "Visual Question Answering with spaCy": {
+                "url": "http://iamaaditya.github.io/2016/04/visual_question_answering_demo_notebook",
+                "author": "Aaditya Prakash",
+                "tags": [ "vqa", "keras" ]
+            }
+        },
+
+        "code": {
+            "Information extraction": {
+                "url": "https://github.com/explosion/spaCy/blob/master/examples/information_extraction.py",
+                "author": "Matthew Honnibal",
+                "tags": [ "snippet" ]
+            },
+            "Neural bag of words": {
+                "url": "https://github.com/explosion/spaCy/blob/master/examples/nn_text_class.py",
+                "author": "Matthew Honnibal",
+                "tags": [ "sentiment" ]
+            },
+            "Part-of-speech tagging": {
+                "url": "https://github.com/explosion/spaCy/blob/master/examples/pos_tag.py",
+                "author": "Matthew Honnibal",
+                "tags": [ "pos" ]
+            },
+            "Parallel parse": {
+                "url": "https://github.com/explosion/spaCy/blob/master/examples/parallel_parse.py",
+                "author": "Matthew Honnibal",
+                "tags": [ "big data" ]
+            },
+            "Inventory count": {
+                "url": "https://github.com/explosion/spaCy/tree/master/examples/inventory_count",
+                "author": "Oleg Zd"
+            },
+            "Multi-word matches": {
+                "url": "https://github.com/explosion/spaCy/blob/master/examples/multi_word_matches.py",
+                "author": "Matthew Honnibal",
+                "tags": [ "matcher", "out of date" ]
+            }
+        }
+    }
+}

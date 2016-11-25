@@ -26,18 +26,26 @@ from .tokens.doc cimport Doc
 
 
 cdef class Tokenizer:
+    """Segment text, and create Doc objects with the discovered segment boundaries."""
     @classmethod
     def load(cls, path, Vocab vocab, rules=None, prefix_search=None, suffix_search=None,
              infix_finditer=None):
         '''Load a Tokenizer, reading unsupplied components from the path.
         
         Arguments:
-            path pathlib.Path (or string, or Path-like)
-            vocab Vocab
-            rules dict
-            prefix_search callable -- Signature of re.compile(string).search
-            suffix_search callable -- Signature of re.compile(string).search
-            infix_finditer callable -- Signature of re.compile(string).finditer
+            path (Path):
+                The path to load from.
+            vocab (Vocab):
+                A storage container for lexical types.
+            rules (dict):
+                Exceptions and special-cases for the tokenizer.
+            prefix_search:
+                Signature of re.compile(string).search
+            suffix_search:
+                Signature of re.compile(string).search
+            infix_finditer:
+                Signature of re.compile(string).finditer
+        Returns Tokenizer
         '''
         if isinstance(path, basestring):
             path = pathlib.Path(path)
@@ -64,11 +72,19 @@ cdef class Tokenizer:
         '''Create a Tokenizer, to create Doc objects given unicode text.
         
         Arguments:
-            vocab Vocab
-            rules dict
-            prefix_search callable -- Signature of re.compile(string).search
-            suffix_search callable -- Signature of re.compile(string).search
-            infix_finditer callable -- Signature of re.compile(string).finditer
+            vocab (Vocab):
+                A storage container for lexical types.
+            rules (dict):
+                Exceptions and special-cases for the tokenizer.
+            prefix_search:
+                A function matching the signature of re.compile(string).search
+                to match prefixes.
+            suffix_search:
+                A function matching the signature of re.compile(string).search
+                to match suffixes.
+            infix_finditer:
+                A function matching the signature of re.compile(string).finditer
+                to find infixes.
         '''
         self.mem = Pool()
         self._cache = PreshMap()
@@ -91,38 +107,20 @@ cdef class Tokenizer:
         return (self.__class__, args, None, None)
     
     cpdef Doc tokens_from_list(self, list strings):
-        cdef Doc tokens = Doc(self.vocab)
-        if sum([len(s) for s in strings]) == 0:
-            return tokens
-        cdef unicode py_string
-        cdef int idx = 0
-        for i, py_string in enumerate(strings):
-            # Note that we pass tokens.mem here --- the Doc object has ownership
-            tokens.push_back(
-                <const LexemeC*>self.vocab.get(tokens.mem, py_string), True)
-            idx += len(py_string) + 1
-        return tokens
+        return Doc(self.vocab, words=strings)
+        #raise NotImplementedError(
+        #    "Method deprecated in 1.0.\n"
+        #    "Old: tokenizer.tokens_from_list(strings)\n"
+        #    "New: Doc(tokenizer.vocab, words=strings)")
 
     @cython.boundscheck(False)
     def __call__(self, unicode string):
         """Tokenize a string.
 
-        The tokenization rules are defined in three places:
-
-        * The data/<lang>/tokenization table, which handles special cases like contractions;
-        * The data/<lang>/prefix file, used to build a regex to split off prefixes;
-        * The data/<lang>/suffix file, used to build a regex to split off suffixes.
-
-        The string is first split on whitespace.  To tokenize a whitespace-delimited
-        chunk, we first try to look it up in the special-cases. If it's not found,
-        we split off a prefix, and then try again. If it's still not found, we
-        split off a suffix, and repeat.
-
-        Args:
-            string (unicode): The string to be tokenized.
-
+        Arguments:
+            string (unicode): The string to tokenize.
         Returns:
-            tokens (Doc): A Doc object, giving access to a sequence of LexemeCs.
+            Doc A container for linguistic annotations.
         """
         if len(string) >= (2 ** 30):
             raise ValueError(
@@ -171,6 +169,18 @@ cdef class Tokenizer:
         return tokens
 
     def pipe(self, texts, batch_size=1000, n_threads=2):
+        """Tokenize a stream of texts.
+
+        Arguments:
+            texts: A sequence of unicode texts.
+            batch_size (int):
+                The number of texts to accumulate in an internal buffer.
+            n_threads (int):
+                The number of threads to use, if the implementation supports
+                multi-threading. The default tokenizer is single-threaded.
+        Yields:
+            Doc A sequence of Doc objects, in order.
+        """
         for text in texts:
             yield self(text)
 
@@ -266,6 +276,16 @@ cdef class Tokenizer:
                         infix_end = match.end()
                         if infix_start == start:
                             continue
+                        if infix_start == infix_end:
+                            msg = ("Tokenizer found a zero-width 'infix' token.\n"
+                                   "If you're using a built-in tokenizer, please\n"
+                                   "report this bug. If you're using a tokenizer\n"
+                                   "you developed, check your TOKENIZER_INFIXES\n"
+                                   "tuple.\n"
+                                   "String being matched: {string}\n"
+                                   "Language: {lang}")
+                            raise ValueError(msg.format(string=string, lang=self.vocab.lang))
+
                         span = string[start:infix_start]
                         tokens.push_back(self.vocab.get(tokens.mem, span), False)
                     
@@ -295,13 +315,41 @@ cdef class Tokenizer:
         self._cache.set(key, cached)
 
     def find_infix(self, unicode string):
+        """Find internal split points of the string, such as hyphens.
+
+        string (unicode): The string to segment.
+
+        Returns List[re.MatchObject]
+            A list of objects that have .start() and .end() methods, denoting the
+            placement of internal segment separators, e.g. hyphens.
+        """
+        if self.infix_finditer is None:
+            return 0
         return list(self.infix_finditer(string))
 
     def find_prefix(self, unicode string):
+        """Find the length of a prefix that should be segmented from the string,
+        or None if no prefix rules match.
+
+        Arguments:
+            string (unicode): The string to segment.
+        Returns (int or None): The length of the prefix if present, otherwise None.
+        """
+        if self.prefix_search is None:
+            return 0
         match = self.prefix_search(string)
         return (match.end() - match.start()) if match is not None else 0
 
     def find_suffix(self, unicode string):
+        """Find the length of a suffix that should be segmented from the string,
+        or None if no suffix rules match.
+
+        Arguments:
+            string (unicode): The string to segment.
+        Returns (int or None): The length of the suffix if present, otherwise None.
+        """
+        if self.suffix_search is None:
+            return 0
         match = self.suffix_search(string)
         return (match.end() - match.start()) if match is not None else 0
 
@@ -311,19 +359,23 @@ cdef class Tokenizer:
         for chunk, substrings in sorted(special_cases.items()):
             self.add_special_case(chunk, substrings)
     
-    def add_special_case(self, unicode chunk, substrings):
+    def add_special_case(self, unicode string, substrings):
         '''Add a special-case tokenization rule.
 
-        For instance, "don't" is special-cased to tokenize into
-        ["do", "n't"]. The split tokens can have lemmas and part-of-speech
-        tags.
+        Arguments:
+            string (unicode): The string to specially tokenize.
+            token_attrs:
+                A sequence of dicts, where each dict describes a token and its
+                attributes. The ORTH fields of the attributes must exactly match
+                the string when they are concatenated.
+        Returns None
         '''
         substrings = list(substrings)
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
         cached.length = len(substrings)
         cached.is_lex = False
         cached.data.tokens = self.vocab.make_fused_token(substrings)
-        key = hash_string(chunk)
+        key = hash_string(string)
         self._specials.set(key, cached)
         self._cache.set(key, cached)
-        self._rules[chunk] = substrings
+        self._rules[string] = substrings

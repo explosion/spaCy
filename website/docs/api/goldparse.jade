@@ -1,0 +1,103 @@
+//- 💫 DOCS > API > GOLDPARSE
+
+include ../../_includes/_mixins
+
+p Collection for training annotations.
+
++h(2, "attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code tags]
+        +cell list
+        +cell The part-of-speech tag annotations.
+
+    +row
+        +cell #[code heads]
+        +cell list
+        +cell The syntactic head annotations.
+
+    +row
+        +cell #[code labels]
+        +cell list
+        +cell The syntactic relation-type annotations.
+
+    +row
+        +cell #[code ents]
+        +cell list
+        +cell The named entity annotations.
+
+    +row
+        +cell #[code cand_to_gold]
+        +cell list
+        +cell The alignment from candidate tokenization to gold tokenization.
+
+    +row
+        +cell #[code gold_to_cand]
+        +cell list
+        +cell The alignment from gold tokenization to candidate tokenization.
+
++h(2, "init") GoldParse.__init__
+    +tag method
+
+p Create a GoldParse.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The document the annotations refer to.
+
+    +row
+        +cell #[code words]
+        +cell -
+        +cell A sequence of unicode word strings.
+
+    +row
+        +cell #[code tags]
+        +cell -
+        +cell A sequence of strings, representing tag annotations.
+
+    +row
+        +cell #[code heads]
+        +cell -
+        +cell A sequence of integers, representing syntactic head offsets.
+
+    +row
+        +cell #[code deps]
+        +cell -
+        +cell A sequence of strings, representing the syntactic relation types.
+
+    +row
+        +cell #[code entities]
+        +cell -
+        +cell A sequence of named entity annotations, either as BILUO tag strings, or as #[code (start_char, end_char, label)] tuples, representing the entity positions.
+
+    +footrow
+        +cell return
+        +cell #[code GoldParse]
+        +cell The newly constructed object.
+
++h(2, "len") GoldParse.__len__
+    +tag method
+
+p Get the number of gold-standard tokens.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell int
+        +cell The number of gold-standard tokens.
+
++h(2, "is_projective") GoldParse.is_projective
+    +tag property
+
+p
+    |  Whether the provided syntactic annotations form a projective dependency
+    |  tree.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell bool
+        +cell Whether annotations form projective tree.

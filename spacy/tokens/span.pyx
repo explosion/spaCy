@@ -18,12 +18,23 @@ from ..lexeme cimport Lexeme
 
 cdef class Span:
     """A slice from a Doc object."""
-    def __cinit__(self, Doc tokens, int start, int end, int label=0, vector=None,
+    def __cinit__(self, Doc doc, int start, int end, int label=0, vector=None,
                   vector_norm=None):
-        if not (0 <= start <= end <= len(tokens)):
+        '''Create a Span object from the slice doc[start : end]
+
+        Arguments:
+            doc (Doc): The parent document.
+            start (int): The index of the first token of the span.
+            end (int): The index of the first token after the span.
+            label (int): A label to attach to the Span, e.g. for named entities.
+            vector (ndarray[ndim=1, dtype='float32']): A meaning representation of the span.
+        Returns:
+            Span The newly constructed object.
+        '''
+        if not (0 <= start <= end <= len(doc)):
             raise IndexError
 
-        self.doc = tokens
+        self.doc = doc
         self.start = start
         self.start_char = self.doc[start].idx if start < self.doc.length else 0
         self.end = end
@@ -78,9 +89,29 @@ cdef class Span:
             yield self.doc[i]
 
     def merge(self, *args, **attributes):
-        self.doc.merge(self.start_char, self.end_char, *args, **attributes)
+        """Retokenize the document, such that the span is merged into a single token.
+
+        Arguments:
+            **attributes:
+                Attributes to assign to the merged token. By default, attributes
+                are inherited from the syntactic root token of the span.
+        Returns:
+            token (Token):
+                The newly merged token.
+        """
+        return self.doc.merge(self.start_char, self.end_char, *args, **attributes)
 
     def similarity(self, other):
+        '''Make a semantic similarity estimate. The default estimate is cosine
+        similarity using an average of word vectors.
+
+        Arguments:
+            other (object): The object to compare with. By default, accepts Doc,
+                Span, Token and Lexeme objects.
+
+        Return:
+            score (float): A scalar similarity score. Higher is more similar.
+        '''
         if 'similarity' in self.doc.user_span_hooks:
             self.doc.user_span_hooks['similarity'](self, other)
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
@@ -102,7 +133,11 @@ cdef class Span:
             self.end = end + 1
 
     property sent:
-        '''Get the sentence span that this span is a part of.'''
+        '''The sentence span that this span is a part of.
+        
+        Returns:
+            Span The sentence this is part of.
+        '''
         def __get__(self):
             if 'sent' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['sent'](self)
@@ -155,8 +190,38 @@ cdef class Span:
         def __get__(self):
             return u''.join([t.text_with_ws for t in self])
 
+    property noun_chunks:
+        '''
+        Yields base noun-phrase #[code Span] objects, if the document
+        has been syntactically parsed. A base noun phrase, or 
+        'NP chunk', is a noun phrase that does not permit other NPs to 
+        be nested within it – so no NP-level coordination, no prepositional 
+        phrases, and no relative clauses. For example:
+        '''
+        def __get__(self):
+            if not self.doc.is_parsed:
+                raise ValueError(
+                    "noun_chunks requires the dependency parse, which "
+                    "requires data to be installed. If you haven't done so, run: "
+                    "\npython -m spacy.%s.download all\n"
+                    "to install the data" % self.vocab.lang)
+            # Accumulate the result before beginning to iterate over it. This prevents
+            # the tokenisation from being changed out from under us during the iteration.
+            # The tricky thing here is that Span accepts its tokenisation changing,
+            # so it's okay once we have the Span objects. See Issue #375
+            spans = []
+            for start, end, label in self.doc.noun_chunks_iterator(self):
+                spans.append(Span(self, start, end, label=label))
+            for span in spans:
+                yield span
+
     property root:
-        """The word of the span that is highest in the parse tree, i.e. has the
+        """The token within the span that's highest in the parse tree. If there's a tie, the earlist is prefered.
+
+        Returns:
+            Token: The root token.
+        
+        i.e. has the
         shortest path to the root of the sentence (or is the root itself).
 
         If multiple words are equally high in the tree, the first word is taken.
@@ -231,7 +296,10 @@ cdef class Span:
                 return self.doc[root]
     
     property lefts:
-        """Tokens that are to the left of the Span, whose head is within the Span."""
+        """Tokens that are to the left of the span, whose head is within the Span.
+        
+        Yields: Token A left-child of a token of the span.
+        """
         def __get__(self):
             for token in reversed(self): # Reverse, so we get the tokens in order
                 for left in token.lefts:
@@ -239,7 +307,10 @@ cdef class Span:
                         yield left
 
     property rights:
-        """Tokens that are to the right of the Span, whose head is within the Span."""
+        """Tokens that are to the right of the Span, whose head is within the Span.
+        
+        Yields: Token A right-child of a token of the span.
+        """
         def __get__(self):
             for token in self:
                 for right in token.rights:
@@ -247,6 +318,10 @@ cdef class Span:
                         yield right
 
     property subtree:
+        """Tokens that descend from tokens in the span, but fall outside it.
+
+        Yields: Token A descendant of a token within the span.
+        """
         def __get__(self):
             for word in self.lefts:
                 yield from word.subtree

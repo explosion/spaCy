@@ -1,0 +1,134 @@
+//- 💫 DOCS > USAGE > PROCESSING TEXT
+
+include ../../_includes/_mixins
+
+p
+    |  Once you have loaded the #[code nlp] object, you can call it as though
+    |  it were a function. This allows you to process a single unicode string.
+
++code.
+    doc = nlp(u'Hello, world! A three sentence document.\nWith new lines...')
+
+p
+    |  The library should perform equally well with short or long documents.
+    |  All algorithms are linear-time in the length of the string, and once the
+    |  data is loaded, there's no significant start-up cost to consider. This
+    |  means that you don't have to strategically merge or split your text —
+    |  you should feel free to feed in either single tweets or whole novels.
+
+p
+    |  If you run #[code nlp = spacy.load('en')], the #[code nlp] object will
+    |  be an instance of #[code spacy.en.English]. This means that when you run
+    |  #[code doc = nlp(text)], you're executing
+    |  #[code spacy.en.English.__call__], which is implemented on its parent
+    |  class, #[+api("language") #[code Language]].
+
++code.
+    doc = nlp.make_doc(text)
+    for proc in nlp.pipeline:
+        proc(doc)
+
+p
+    |  I've tried to make sure that the #[code Language.__call__] function
+    |  doesn't do any "heavy lifting", so that you won't have complicated logic
+    |  to replicate if you need to make your own pipeline class. This is all it
+    |  does.
+
+p
+    |  The #[code .make_doc()] method and #[code .pipeline] attribute make it
+    |  easier to customise spaCy's behaviour. If you're using the default
+    |  pipeline, we can desugar one more time.
+
++code.
+    doc = nlp.tokenizer(text)
+    nlp.tagger(doc)
+    nlp.parser(doc)
+    nlp.entity(doc)
+
+p Finally, here's where you can find out about each of those components:
+
++table(["Name", "Source"])
+    +row
+        +cell #[code tokenizer]
+        +cell #[+src(gh("spacy", "spacy/tokenizer.pyx")) spacy.tokenizer.Tokenizer]
+
+    +row
+        +cell #[code tagger]
+        +cell #[+src(gh("spacy", "spacy/tagger.pyx")) spacy.pipeline.Tagger]
+
+    +row
+        +cell #[code parser]
+        +cell #[+src(gh("spacy", "spacy/syntax/parser.pyx")) spacy.pipeline.DependencyParser]
+
+    +row
+        +cell #[code entity]
+        +cell #[+src(gh("spacy", "spacy/syntax/parser.pyx")) spacy.pipeline.EntityRecognizer]
+
++h(2, "multithreading") Multi-threading with #[code .pipe()]
+
+p
+    |  If you have a sequence of documents to process, you should use the
+    |  #[+api("language#pipe") #[code .pipe()]] method. The #[code .pipe()]
+    |  method takes an iterator of texts, and accumulates an internal buffer,
+    |  which it works on in parallel. It then yields the documents in order,
+    |  one-by-one. After a long and bitter struggle, the global interpreter
+    |  lock was freed around spaCy's main parsing loop in v0.100.3. This means
+    |  that the #[code .pipe()] method will be significantly faster in most
+    |  practical situations, because it allows shared memory parallelism.
+
++code.
+    for doc in nlp.pipe(texts, batch_size=10000, n_threads=3):
+       pass
+
+p
+    |  To make full use of the #[code .pipe()] function, you might want to
+    |  brush up on Python generators. Here are a few quick hints:
+
++list
+    +item
+        |  Generator comprehensions can be written
+        |  (#[code item for item in sequence])
+
+    +item
+        |  The #[code itertools] built-in library and the #[code cytoolz]
+        |  package provide a lot of handy generator tools
+
+    +item
+        |  Often you'll have an input stream that pairs text with some
+        |  important metadata, e.g. a JSON document. To pair up the metadata
+        |  with the processed #[code Doc] object, you should use the tee
+        |  function to split the generator in two, and then #[code izip] the
+        |  extra stream to the document stream.
+
++h(2, "own-annotations") Bringing your own annotations
+
+p
+    |  spaCy generally assumes by default that your data is raw text. However,
+    |  sometimes your data is partially annotated, e.g. with pre-existing
+    |  tokenization, part-of-speech tags, etc. The most common situation is
+    |  that you have pre-defined tokenization. If you have a list of strings,
+    |  you can create a #[code Doc] object directly. Optionally, you can also
+    |  specify a list of boolean values, indicating whether each word has a
+    |  subsequent space.
+
++code.
+    doc = Doc(nlp.vocab, words=[u'Hello', u',', u'world', u'!'], spaces=[False, True, False, False])
+
+p
+    |  If provided, the spaces list must be the same length as the words list.
+    |  The spaces list affects the #[code doc.text], #[code span.text],
+    |  #[code token.idx], #[code span.start_char] and #[code span.end_char]
+    |  attributes. If you don't provide a #[code spaces] sequence, spaCy will
+    |  assume that all words are whitespace delimited.
+
++code.
+    good_spaces = Doc(nlp.vocab, words=[u'Hello', u',', u'world', u'!'], spaces=[False, True, False, False])
+    bad_spaces = Doc(nlp.vocab, words=[u'Hello', u',', u'world', u'!'])
+    assert bad_spaces.text == u'Hello , world !'
+    assert good_spaces.text == u'Hello, world!'
+
+p
+    |  Once you have a #[+api("doc") #[code Doc]] object, you can write to its
+    |  attributes to set the part-of-speech tags, syntactic dependencies, named
+    |  entities and other attributes. For details, see the respective usage
+    |  pages.

@@ -1,67 +1,81 @@
-//- ----------------------------------
-//- 💫 BASE > OBJECTS
-//- ----------------------------------
+//- 💫 CSS > BASE > OBJECTS
 
-//- Containers
+//- Main container
 
-.o-content
-    flex: 1 1 auto
-    padding: $nav-height 4rem 8rem
-    width: $content-width - $aside-width
+.o-main
+    padding: $nav-height 0 0 0
     max-width: 100%
+    min-height: 100vh
 
     @include breakpoint(min, md)
-        &.o-content--asides
-            padding-left: 5rem
-            padding-right: $aside-width + $aside-padding * 2
+        &.o-main--sidebar
+            margin-left: $sidebar-width
 
-//- Header
+        &.o-main--aside
+            margin-right: $aside-width
+            position: relative
 
-.o-header
-    display: flex
-    justify-content: center
-    flex-flow: column nowrap
-    padding: 3rem 5rem
-    margin-top: $nav-height
-    width: 100%
-    min-height: 250px
+            &:after
+                @include position(absolute, top, left, 0, 100%)
+                @include size($aside-width, 100%)
+                content: ""
+                display: block
+                background: $pattern
+                z-index: -1
+                min-height: 100vh
+
+
+//- Content container
+
+.o-content
+    padding: 3rem 7.5rem
+    margin: 0 auto
+    width: $content-width
+    max-width: 100%
+
+    @include breakpoint(max, sm)
+        padding: 3rem
 
 
 //- Footer
 
 .o-footer
     position: relative
-    padding: 5rem 0
+    padding: 2.5rem 0
     overflow: auto
-    width: 100%
-    z-index: 200
 
 
 //- Blocks
 
 .o-block
-    margin-bottom: 5rem
+    margin-bottom: 3rem
 
 .o-block-small
     margin-bottom: 2rem
 
-.o-section
-    margin-bottom: 12.5rem
+.o-no-block
+    margin-bottom: 0
 
-.o-responsive
-    overflow: auto
-    width: 100%
-    max-width: 100%
+.o-card
+    background: $color-back
+    border-radius: 2px
+    border: 1px solid $color-subtle
+    padding: 3.5% 2.5%
+
+//- Icons
 
 .o-icon
     vertical-align: middle
+
+.o-help-icon
+    cursor: help
+    margin: 0 0.5rem 0 0.25rem
 
 
 //- Inline List
 
 .o-inline-list > *
     display: inline
-    margin-bottom: 3rem
 
     &:not(:last-child)
         margin-right: 3rem
@@ -70,9 +84,7 @@
 //- Logo
 
 .o-logo
-    @include size(100%, auto)
+    @include size($logo-width, auto)
     fill: currentColor
-
-    @each $name, $size in $logo-sizes
-        &.o-logo--#{$name}
-            width: $size
+    vertical-align: middle
+    margin: 0 0.5rem

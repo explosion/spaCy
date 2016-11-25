@@ -2,12 +2,11 @@ spaCy: Industrial-strength NLP
 ******************************
 
 spaCy is a library for advanced natural language processing in Python and 
-Cython. `See here <https://spacy.io>`_ for documentation and details. spaCy is built on 
-the very latest research, but it isn't researchware.  It was designed from day 1 
-to be used in real products. It's commercial open-source software, released under 
-the MIT license.
+Cython. spaCy is built on  the very latest research, but it isn't researchware.  
+It was designed from day 1 to be used in real products. It's commercial 
+open-source software, released under the MIT license.
 
-💫 **Version 1.1 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
+💫 **Version 1.2 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: http://i.imgur.com/wFvLZyJ.png
     :target: https://travis-ci.org/explosion/spaCy
@@ -29,33 +28,55 @@ the MIT license.
     :target: https://gitter.im/explosion/spaCy
     :alt: spaCy on Gitter
 
-Where to ask questions
-======================
+📖 Documentation
+================
+
++--------------------------------------------------------------------------------+---------------------------------------------------------+
+| `Usage Workflows <https://spacy.io/docs/usage/>`_                              | How to use spaCy and its features.                      |
++--------------------------------------------------------------------------------+---------------------------------------------------------+
+| `API Reference <https://spacy.io/docs/api/>`_                                  | The detailed reference for spaCy's API.                 |
++--------------------------------------------------------------------------------+---------------------------------------------------------+
+| `Tutorials <https://spacy.io/docs/usage/tutorials>`_                           | End-to-end examples, with code you can modify and run.  |
++--------------------------------------------------------------------------------+---------------------------------------------------------+
+| `Showcase & Demos <https://spacy.io/docs/usage/showcase>`_                     | Demos, libraries and products from the spaCy community. |
++--------------------------------------------------------------------------------+---------------------------------------------------------+
+| `Contribute <https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md>`_ | How to contribute to the spaCy project and code base.   |
++--------------------------------------------------------------------------------+---------------------------------------------------------+
+
+💬 Where to ask questions
+==========================
 
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| 🔴 **Bug reports**        | `GitHub Issue tracker <https://github.com/explosion/spaCy/issues>`_                                        |
+| **Bug reports**           | `GitHub Issue tracker <https://github.com/explosion/spaCy/issues>`_                                        |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| ⁉️ **Usage questions**    | `StackOverflow <http://stackoverflow.com/questions/tagged/spacy>`_, `Reddit usergroup                      | 
+| **Usage questions**       | `StackOverflow <http://stackoverflow.com/questions/tagged/spacy>`_, `Reddit usergroup                      | 
 |                           | <https://www.reddit.com/r/spacynlp>`_, `Gitter chat <https://gitter.im/explosion/spaCy>`_                  |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| 💬 **General discussion** |  `Reddit usergroup <https://www.reddit.com/r/spacynlp>`_,                                                  |
+| **General discussion**    |  `Reddit usergroup <https://www.reddit.com/r/spacynlp>`_,                                                  |
 |                           | `Gitter chat <https://gitter.im/explosion/spaCy>`_                                                         |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| 💥 **Commercial support** |  contact@explosion.ai                                                                                      |
+| **Commercial support**    |  contact@explosion.ai                                                                                      |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
 
 Features
 ========
 
-* Labelled dependency parsing (91.8% accuracy on OntoNotes 5)
-* Named entity recognition (82.6% accuracy on OntoNotes 5)
-* Part-of-speech tagging (97.1% accuracy on OntoNotes 5)
-* Easy to use word vectors
-* All strings mapped to integer IDs
+* Non-destructive **tokenization**
+* Syntax-driven sentence segmentation
+* Pre-trained **word vectors**
+* Part-of-speech tagging
+* **Named entity** recognition
+* Labelled dependency parsing
+* Convenient string-to-int mapping
 * Export to numpy data arrays
-* Alignment maintained to original string, ensuring easy mark up calculation
-* Range of easy-to-use orthographic features.
-* No pre-processing required. spaCy takes raw text as input, warts and newlines and all.
+* GIL-free **multi-threading**
+* Efficient binary serialization
+* Easy **deep learning** integration
+* Statistical models for **English** and **German**
+* State-of-the-art speed
+* Robust, rigorously evaluated accuracy
+
+See `facts, figures and benchmarks <https://spacy.io/docs/api/>`_.
 
 Top Peformance
 ==============
@@ -70,7 +91,7 @@ Supports
 ========
 
 * CPython 2.6, 2.7, 3.3, 3.4, 3.5 (only 64 bit)
-* OSX
+* macOS / OS X
 * Linux
 * Windows (Cygwin, MinGW, Visual Studio)
 
@@ -80,7 +101,7 @@ Install spaCy
 spaCy is compatible with 64-bit CPython 2.6+/3.3+ and runs on Unix/Linux, OS X 
 and Windows. Source packages are available via 
 `pip <https://pypi.python.org/pypi/spacy>`_. Please make sure that
-you have a working build enviroment set up. See notes on Ubuntu, OS X and Windows
+you have a working build enviroment set up. See notes on Ubuntu, macOS/OS X and Windows
 for details.
 
 pip
@@ -166,23 +187,20 @@ Install system-level dependencies via ``apt-get``:
 
     sudo apt-get install build-essential python-dev git
 
-OS X
-----
+macOS / OS X
+------------
 
-Install a recent version of XCode, including the so-called "Command Line Tools". 
-OS X ships with Python and git preinstalled.
+Install a recent version of `XCode <https://developer.apple.com/xcode/>`_, 
+including the so-called "Command Line Tools". macOS and OS X ship with Python 
+and git preinstalled.
 
 Windows
 -------
 
-Install a version of Visual Studio Express or higher that matches the version 
-that was used to compile your Python interpreter. For official distributions 
-these are VS 2008 (Python 2.7), VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
-
-If you don't want to install the entire Visual Studio, you can install a
-stand-alone compiler. Make sure that you install the correct version for 
-your version of Python. See https://wiki.python.org/moin/WindowsCompilers for 
-links to download these.
+Install a version of `Visual Studio Express <https://www.visualstudio.com/vs/visual-studio-express/>`_
+or higher that matches the version that was used to compile your Python 
+interpreter. For official distributions these are VS 2008 (Python 2.7), 
+VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
 
 Run tests
 =========
@@ -204,22 +222,48 @@ and ``--model`` are optional and enable additional tests:
 
     python -m pytest <spacy-directory> --vectors --model --slow
 
-API Documentation and Usage Examples
-====================================
+Download model to custom location
+=================================
 
-For the detailed documentation, check out the `spaCy website <https://spacy.io/docs/>`_.
+You can specify where ``spacy.en.download`` and ``spacy.de.download`` download the language model
+to using the ``--data-path`` or ``-d`` argument:
 
-* `Usage Examples <https://spacy.io/docs/#examples>`_
-* `API <https://spacy.io/docs/#api>`_
-* `Annotation Specification <https://spacy.io/docs/#annotation>`_
-* `Tutorials <https://spacy.io/docs/#tutorials>`_
+.. code:: bash
+    
+    python -m spacy.en.download all --data-path /some/dir
 
+
+If you choose to download to a custom location, you will need to tell spaCy where to load the model
+from in order to use it. You can do this either by calling ``spacy.util.set_data_path()`` before
+calling ``spacy.load()``, or by passing a ``path`` argument to the ``spacy.en.English`` or
+``spacy.de.German`` constructors.
 
 Changelog
 =========
 
-2016-10-23 `v1.1.0 <https://github.com/explosion/spaCy/releases>`_: *Bug fixes and adjustments*
------------------------------------------------------------------------------------------------
+2016-11-04 `v1.2.0 <https://github.com/explosion/spaCy/releases>`_: *Alpha tokenizers for Chinese, French, Spanish, Italian and Portuguese*
+-------------------------------------------------------------------------------------------------------------------------------------------
+
+**✨ Major features and improvements**
+
+* **NEW:** Support Chinese tokenization, via `Jieba <https://github.com/fxsjy/jieba>`_.
+* **NEW:** Alpha support for French, Spanish, Italian and Portuguese tokenization.
+
+**🔴 Bug fixes**
+
+* Fix issue `#376 <https://github.com/explosion/spaCy/issues/376>`_: POS tags for "and/or" are now correct.
+* Fix issue `#578 <https://github.com/explosion/spaCy/issues578/>`_: ``--force`` argument on download command now operates correctly.
+* Fix issue `#595 <https://github.com/explosion/spaCy/issues/595>`_: Lemmatization corrected for some base forms.
+* Fix issue `#588 <https://github.com/explosion/spaCy/issues/588>`_: `Matcher` now rejects empty patterns.
+* Fix issue `#592 <https://github.com/explosion/spaCy/issues/592>`_: Added exception rule for tokenization of "Ph.D."
+* Fix issue `#599 <https://github.com/explosion/spaCy/issues/599>`_: Empty documents now considered tagged and parsed.
+* Fix issue `#600 <https://github.com/explosion/spaCy/issues/600>`_: Add missing ``token.tag`` and ``token.tag_`` setters.
+* Fix issue `#596 <https://github.com/explosion/spaCy/issues/596>`_: Added missing unicode import when compiling regexes that led to incorrect tokenization.
+* Fix issue `#587 <https://github.com/explosion/spaCy/issues/587>`_: Resolved bug that caused ``Matcher`` to sometimes segfault.
+* Fix issue `#429 <https://github.com/explosion/spaCy/issues/429>`_: Ensure missing entity types are added to the entity recognizer.
+
+2016-10-23 `v1.1.0 <https://github.com/explosion/spaCy/releases/tag/v1.1.0>`_: *Bug fixes and adjustments*
+----------------------------------------------------------------------------------------------------------
 
 * Rename new ``pipeline`` keyword argument of ``spacy.load()`` to ``create_pipeline``.
 * Rename new ``vectors`` keyword argument of ``spacy.load()`` to ``add_vectors``.
@@ -240,9 +284,9 @@ Changelog
 
 **✨ Major features and improvements**
 
-* **NEW:** `custom processing pipelines <https://spacy.io/docs/tutorials/custom-pipelines>`_, to support deep learning workflows
-* **NEW:** `Rule matcher <https://spacy.io/docs/tutorials/rule-based-matcher>`_ now supports entity IDs and attributes
-* **NEW:** Official/documented `training APIs <https://spacy.io/docs/tutorials/training>`_ and `GoldParse` class
+* **NEW:** `custom processing pipelines <https://spacy.io/docs/usage/customizing-pipeline>`_, to support deep learning workflows
+* **NEW:** `Rule matcher <https://spacy.io/docs/usage/rule-based-matching>`_ now supports entity IDs and attributes
+* **NEW:** Official/documented `training APIs <https://github.com/explosion/spaCy/tree/master/examples/training>`_ and `GoldParse` class
 * Download and use GloVe vectors by default
 * Make it easier to load and unload word vectors
 * Improved rule matching functionality
@@ -426,7 +470,7 @@ include a small fix to the tokenizer.
 * Fix bugs in ``Span``
 * Add tokenizer rule to fix numeric range tokenization
 * Add specific string-length cap in Tokenizer
-* Fix ``token.conjuncts```
+* Fix ``token.conjuncts``
 
 2015-10-09 `v0.94 <https://github.com/explosion/spaCy/releases/tag/0.94>`_
 --------------------------------------------------------------------------
