@@ -20,6 +20,8 @@ from .orth cimport word_shape
 from .typedefs cimport attr_t
 from .cfile cimport CFile
 from .lemmatizer import Lemmatizer
+from .attrs import intify_attrs
+from .tokens.token cimport Token
 
 from . import attrs
 from . import symbols
@@ -336,16 +338,14 @@ cdef class Vocab:
         cdef int i
         tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
         for i, props in enumerate(substrings):
+            props = intify_attrs(props, strings_map=self.strings, _do_deprecated=True)
             token = &tokens[i]
-            # Set the special tokens up to have morphology and lemmas if
-            # specified, otherwise use the part-of-speech tag (if specified)
-            token.lex = <LexemeC*>self.get(self.mem, props['F'])
-            if 'pos' in props:
-                self.morphology.assign_tag(token, props['pos'])
-            if 'L' in props:
-                tokens[i].lemma = self.strings[props['L']]
-            for feature, value in props.get('morph', {}).items():
-                self.morphology.assign_feature(&token.morph, feature, value)
+            # Set the special tokens up to have arbitrary attributes
+            token.lex = <LexemeC*>self.get_by_orth(self.mem, props[attrs.ORTH])
+            if attrs.TAG in props:
+                self.morphology.assign_tag(token, props[attrs.TAG])
+            for attr_id, value in props.items():
+                Token.set_struct_attr(token, attr_id, value)
         return tokens
     
     def dump(self, loc):
