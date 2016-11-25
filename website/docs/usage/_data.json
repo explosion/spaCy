@@ -9,6 +9,7 @@
             "Processing text": "processing-text",
             "spaCy's data model": "data-model",
             "Using the parse": "dependency-parse",
+            "Entity recognition": "entity-recognition",
             "Custom pipelines": "customizing-pipeline",
             "Rule-based matching": "rule-based-matching",
             "Word vectors": "word-vectors-similarities",
@@ -51,7 +52,13 @@
     },
 
     "dependency-parse": {
-        "title": "Using the dependency parse"
+        "title": "Using the dependency parse",
+        "next": "entity-recognition"
+    },
+
+    "entity-recognition": {
+        "title": "Entity recognition",
+        "next": "rule-based-matching"
     },
 
     "rule-based-matching": {
@@ -232,6 +239,12 @@
         },
 
         "deep_dives": {
+            "Modern NLP in Python – What you can learn about food by analyzing a million Yelp reviews": {
+                "url": "http://nbviewer.jupyter.org/github/skipgram/modern-nlp-in-python/blob/master/executable/Modern_NLP_in_Python.ipynb",
+                "author": "Patrick Harrison (S&P Global)",
+                "tags": [ "jupyter", "gensim" ]
+            },
+
             "Deep Learning with custom pipelines and Keras": {
                 "url": "https://explosion.ai/blog/spacy-deep-learning-keras",
                 "author": "Matthew Honnibal",
