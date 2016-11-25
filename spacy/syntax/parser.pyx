@@ -75,11 +75,11 @@ cdef class ParserModel(AveragedPerceptron):
 
 cdef class Parser:
     @classmethod
-    def load(cls, path, Vocab vocab, TransitionSystem=None, require=False):
+    def load(cls, path, Vocab vocab, TransitionSystem=None, require=False, **cfg):
         with (path / 'config.json').open() as file_:
             cfg = json.load(file_)
         # TODO: remove this shim when we don't have to support older data
-        if 'labels' in cfg:
+        if 'labels' in cfg and 'actions' not in cfg:
             cfg['actions'] = cfg.pop('labels')
         self = cls(vocab, TransitionSystem=TransitionSystem, model=None, **cfg)
         if (path / 'model').exists():
@@ -215,7 +215,7 @@ cdef class Parser:
             loss += eg.costs[eg.guess]
             eg.fill_scores(0, eg.nr_class)
             eg.fill_costs(0, eg.nr_class)
-            eg.fill_is_valid(0, eg.nr_class)
+            eg.fill_is_valid(1, eg.nr_class)
         return loss
 
     def step_through(self, Doc doc):
