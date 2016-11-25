@@ -1,8 +1,10 @@
 from numpy cimport ndarray
 from ..vocab cimport Vocab
 from ..structs cimport TokenC
-from ..attrs cimport attr_id_t
+from ..attrs cimport *
+from ..typedefs cimport attr_t, flags_t
 from .doc cimport Doc
+from ..lexeme cimport Lexeme
 
 
 cdef class Token:
@@ -22,4 +24,31 @@ cdef class Token:
         doc._py_tokens[offset] = self
         return self
 
+    #cdef inline TokenC struct_from_attrs(Vocab vocab, attrs):
+    #    cdef TokenC token
+    #    attrs = normalize_attrs(attrs)
+
     cpdef bint check_flag(self, attr_id_t flag_id) except -1
+
+    @staticmethod
+    cdef inline attr_t get_struct_attr(const TokenC* token, attr_id_t feat_name) nogil:
+        if feat_name < (sizeof(flags_t) * 8):
+            return Lexeme.c_check_flag(token.lex, feat_name)
+        elif feat_name == LEMMA:
+            return token.lemma
+        elif feat_name == POS:
+            return token.pos
+        elif feat_name == TAG:
+            return token.tag
+        elif feat_name == DEP:
+            return token.dep
+        elif feat_name == HEAD:
+            return token.head
+        elif feat_name == SPACY:
+            return token.spacy
+        elif feat_name == ENT_IOB:
+            return token.ent_iob
+        elif feat_name == ENT_TYPE:
+            return token.ent_type
+        else:
+            return Lexeme.get_struct_attr(token.lex, feat_name)
