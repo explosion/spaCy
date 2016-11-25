@@ -235,7 +235,7 @@
             "Modern NLP in Python – What you can learn about food by analyzing a million Yelp reviews": {
                 "url": "http://nbviewer.jupyter.org/github/skipgram/modern-nlp-in-python/blob/master/executable/Modern_NLP_in_Python.ipynb",
                 "author": "Patrick Harrison (S&P Global)",
-                "tags": [ "jupyter", "keras" ]
+                "tags": [ "jupyter", "gensim" ]
             },
 
             "Deep Learning with custom pipelines and Keras": {
