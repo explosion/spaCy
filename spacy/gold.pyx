@@ -19,6 +19,8 @@ def tags_to_entities(tags):
     entities = []
     start = None
     for i, tag in enumerate(tags):
+        if tag is None:
+            continue
         if tag.startswith('O'):
             # TODO: We shouldn't be getting these malformed inputs. Fix this.
             if start is not None:
@@ -229,7 +231,7 @@ cdef class GoldParse:
         if deps is None:
             deps = [None for _ in doc]
         if entities is None:
-            entities = [None for _ in doc]
+            entities = ['-' for _ in doc]
         elif len(entities) == 0:
             entities = ['O' for _ in doc]
         elif not isinstance(entities[0], basestring):
@@ -246,6 +248,7 @@ cdef class GoldParse:
         self.c.labels = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
 
+        self.words = [None] * len(doc)
         self.tags = [None] * len(doc)
         self.heads = [None] * len(doc)
         self.labels = [''] * len(doc)
@@ -259,6 +262,7 @@ cdef class GoldParse:
 
         for i, gold_i in enumerate(self.cand_to_gold):
             if doc[i].text.isspace():
+                self.words[i] = doc[i].text
                 self.tags[i] = 'SP'
                 self.heads[i] = None
                 self.labels[i] = None
@@ -266,6 +270,7 @@ cdef class GoldParse:
             if gold_i is None:
                 pass
             else:
+                self.words[i] = words[gold_i]
                 self.tags[i] = tags[gold_i]
                 self.heads[i] = self.gold_to_cand[heads[gold_i]]
                 self.labels[i] = deps[gold_i]
