@@ -114,8 +114,8 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
             stringy_attrs["LEMMA"] = stringy_attrs.pop("L")
         if 'pos' in stringy_attrs:
             stringy_attrs["TAG"] = stringy_attrs.pop("pos")
-        #if 'morph' in stringy_attrs:
-        #    morphs = stringy_attrs.pop('morph')
+        if 'morph' in stringy_attrs:
+            morphs = stringy_attrs.pop('morph')
         #    for name, value in morphs.items():
         #        stringy_attrs[name] = value
     for name, value in stringy_attrs.items():
