@@ -71,7 +71,7 @@ def main(train_loc, dev_loc, model_dir, tag_map_loc):
     features = get_templates('basic')
     
     model_dir = pathlib.Path(model_dir)
-    with (model_dir / 'deps' / 'config.json').open('wb') as file_:
+    with (model_dir / 'deps' / 'config.json').open('w') as file_:
         json.dump({'pseudoprojective': True, 'labels': actions, 'features': features}, file_)
 
     vocab = Vocab(lex_attr_getters=Language.Defaults.lex_attr_getters, tag_map=tag_map)

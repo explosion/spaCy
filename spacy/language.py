@@ -5,10 +5,7 @@ import pathlib
 from contextlib import contextmanager
 import shutil
 
-try:
-    import ujson as json
-except ImportError:
-    import json
+import ujson as json
 
 
 try:
@@ -222,11 +219,11 @@ class Language(object):
         parser_cfg['actions'] = ArcEager.get_actions(gold_parses=gold_tuples)
         entity_cfg['actions'] = BiluoPushDown.get_actions(gold_parses=gold_tuples)
 
-        with (dep_model_dir / 'config.json').open('wb') as file_:
+        with (dep_model_dir / 'config.json').open('w') as file_:
             json.dump(parser_cfg, file_)
-        with (ner_model_dir / 'config.json').open('wb') as file_:
+        with (ner_model_dir / 'config.json').open('w') as file_:
             json.dump(entity_cfg, file_)
-        with (pos_model_dir / 'config.json').open('wb') as file_:
+        with (pos_model_dir / 'config.json').open('w') as file_:
             json.dump(tagger_cfg, file_)
 
         self = cls(
@@ -387,7 +384,7 @@ class Language(object):
         else:
             entity_iob_freqs = []
             entity_type_freqs = []
-        with (path / 'vocab' / 'serializer.json').open('wb') as file_:
+        with (path / 'vocab' / 'serializer.json').open('w') as file_:
             file_.write(
                 json.dumps([
                     (TAG, tagger_freqs),
