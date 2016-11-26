@@ -80,7 +80,7 @@ class BaseDefaults(object):
         else:
             infix_finditer = None
         vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
-        return Tokenizer(nlp.vocab, rules=rules,
+        return Tokenizer(vocab, rules=rules,
                          prefix_search=prefix_search, suffix_search=suffix_search,
                          infix_finditer=infix_finditer)
 
