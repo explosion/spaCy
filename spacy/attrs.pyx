@@ -116,6 +116,10 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
             stringy_attrs["TAG"] = stringy_attrs.pop("pos")
         if 'morph' in stringy_attrs:
             morphs = stringy_attrs.pop('morph')
+        if 'number' in stringy_attrs:
+            stringy_attrs.pop('number')
+        if 'tenspect' in stringy_attrs:
+            stringy_attrs.pop('tenspect')
         #    for name, value in morphs.items():
         #        stringy_attrs[name] = value
     for name, value in stringy_attrs.items():
