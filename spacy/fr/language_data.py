@@ -119,8 +119,14 @@ TOKENIZER_INFIXES = (r'''\.\.\.+ (?<=[a-z])\.(?=[A-Z]) (?<=[a-zA-Z])-(?=[a-zA-z]
                      r'''(?<=[A-Za-z]),(?=[A-Za-z])''').split()
 
 
-
 TOKENIZER_EXCEPTIONS = {
+    "aujourd'hui": [
+        {
+            "F": "aujourd'hui",
+            "L": "auhourd'hui",
+            "pos": "ADV"
+        }
+    ],
     "vs.": [{"F": "vs."}],
 
     "''": [{"F": "''"}],
