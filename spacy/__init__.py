@@ -26,6 +26,7 @@ set_lang_class(pt.Portuguese.lang, pt.Portuguese)
 set_lang_class(fr.French.lang, fr.French)
 set_lang_class(it.Italian.lang, it.Italian)
 set_lang_class(zh.Chinese.lang, zh.Chinese)
+set_lang_class(nl.Dutch.lang, nl.Dutch)
 
 
 def load(name, **overrides):
