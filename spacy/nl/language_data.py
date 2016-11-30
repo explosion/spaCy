@@ -230,1547 +230,614 @@ TOKENIZER_INFIXES = r'''
 
 
 #TODO Make tokenizer excpetions for Dutch
-TOKENIZER_EXCEPTIONS = {
-    "''": [
-        {
-            "F": "''"
-        }
-    ],
-    "'S": [
-        {
-            "F": "'S",
-            "L": "es"
-        }
-    ],
-    "'n": [
-        {
-            "F": "'n",
-            "L": "ein"
-        }
-    ],
-    "'ne": [
-        {
-            "F": "'ne",
-            "L": "eine"
-        }
-    ],
-    "'nen": [
-        {
-            "F": "'nen",
-            "L": "einen"
-        }
-    ],
-    "'s": [
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "(:": [
-        {
-            "F": "(:"
-        }
-    ],
-    "(=": [
-        {
-            "F": "(="
-        }
-    ],
-    "(^_^)": [
-        {
-            "F": "(^_^)"
-        }
-    ],
-    "-_-": [
-        {
-            "F": "-_-"
-        }
-    ],
-    "-__-": [
-        {
-            "F": "-__-"
-        }
-    ],
-    ":')": [
-        {
-            "F": ":')"
-        }
-    ],
-    ":(": [
-        {
-            "F": ":("
-        }
-    ],
-    ":((": [
-        {
-            "F": ":(("
-        }
-    ],
-    ":(((": [
-        {
-            "F": ":((("
-        }
-    ],
-    ":)": [
-        {
-            "F": ":)"
-        }
-    ],
-    ":))": [
-        {
-            "F": ":))"
-        }
-    ],
-    ":-)": [
-        {
-            "F": ":-)"
-        }
-    ],
-    ":-/": [
-        {
-            "F": ":-/"
-        }
-    ],
-    ":-P": [
-        {
-            "F": ":-P"
-        }
-    ],
-    ":/": [
-        {
-            "F": ":/"
-        }
-    ],
-    ":0": [
-        {
-            "F": ":0"
-        }
-    ],
-    ":3": [
-        {
-            "F": ":3"
-        }
-    ],
-    ":>": [
-        {
-            "F": ":>"
-        }
-    ],
-    ":O": [
-        {
-            "F": ":O"
-        }
-    ],
-    ":P": [
-        {
-            "F": ":P"
-        }
-    ],
-    ":Y": [
-        {
-            "F": ":Y"
-        }
-    ],
-    ":]": [
-        {
-            "F": ":]"
-        }
-    ],
-    ":p": [
-        {
-            "F": ":p"
-        }
-    ],
-    ";(": [
-        {
-            "F": ";("
-        }
-    ],
-    ";)": [
-        {
-            "F": ";)"
-        }
-    ],
-    ";-)": [
-        {
-            "F": ";-)"
-        }
-    ],
-    ";-p": [
-        {
-            "F": ";-p"
-        }
-    ],
-    ";D": [
-        {
-            "F": ";D"
-        }
-    ],
-    ";p": [
-        {
-            "F": ";p"
-        }
-    ],
-    "<3": [
-        {
-            "F": "<3"
-        }
-    ],
-    "<33": [
-        {
-            "F": "<33"
-        }
-    ],
-    "<333": [
-        {
-            "F": "<333"
-        }
-    ],
-    "<space>": [
-        {
-            "F": "SP"
-        }
-    ],
-    "=)": [
-        {
-            "F": "=)"
-        }
-    ],
-    "=3": [
-        {
-            "F": "=3"
-        }
-    ],
-    "=D": [
-        {
-            "F": "=D"
-        }
-    ],
-    "=[[": [
-        {
-            "F": "=[["
-        }
-    ],
-    "=]": [
-        {
-            "F": "=]"
-        }
-    ],
-    "A.C.": [
-        {
-            "F": "A.C."
-        }
-    ],
-    "A.D.": [
-        {
-            "F": "A.D."
-        }
-    ],
-    "A.G.": [
-        {
-            "F": "A.G."
-        }
-    ],
-    "Abb.": [
-        {
-            "F": "Abb."
-        }
-    ],
-    "Abk.": [
-        {
-            "F": "Abk."
-        }
-    ],
-    "Abs.": [
-        {
-            "F": "Abs."
-        }
-    ],
-    "Abt.": [
-        {
-            "F": "Abt."
-        }
-    ],
-    "Apr.": [
-        {
-            "F": "Apr."
-        }
-    ],
-    "Aug.": [
-        {
-            "F": "Aug."
-        }
-    ],
-    "B.A.": [
-        {
-            "F": "B.A."
-        }
-    ],
-    "B.Sc.": [
-        {
-            "F": "B.Sc."
-        }
-    ],
-    "Bd.": [
-        {
-            "F": "Bd."
-        }
-    ],
-    "Betr.": [
-        {
-            "F": "Betr."
-        }
-    ],
-    "Bf.": [
-        {
-            "F": "Bf."
-        }
-    ],
-    "Bhf.": [
-        {
-            "F": "Bhf."
-        }
-    ],
-    "Biol.": [
-        {
-            "F": "Biol."
-        }
-    ],
-    "Bsp.": [
-        {
-            "F": "Bsp."
-        }
-    ],
-    "Chr.": [
-        {
-            "F": "Chr."
-        }
-    ],
-    "Cie.": [
-        {
-            "F": "Cie."
-        }
-    ],
-    "Co.": [
-        {
-            "F": "Co."
-        }
-    ],
-    "D.C.": [
-        {
-            "F": "D.C."
-        }
-    ],
-    "Dez.": [
-        {
-            "F": "Dez."
-        }
-    ],
-    "Di.": [
-        {
-            "F": "Di."
-        }
-    ],
-    "Dipl.": [
-        {
-            "F": "Dipl."
-        }
-    ],
-    "Dipl.-Ing.": [
-        {
-            "F": "Dipl.-Ing."
-        }
-    ],
-    "Do.": [
-        {
-            "F": "Do."
-        }
-    ],
-    "Dr.": [
-        {
-            "F": "Dr."
-        }
-    ],
-    "Fa.": [
-        {
-            "F": "Fa."
-        }
-    ],
-    "Fam.": [
-        {
-            "F": "Fam."
-        }
-    ],
-    "Feb.": [
-        {
-            "F": "Feb."
-        }
-    ],
-    "Fr.": [
-        {
-            "F": "Fr."
-        }
-    ],
-    "Frl.": [
-        {
-            "F": "Frl."
-        }
-    ],
-    "G.m.b.H.": [
-        {
-            "F": "G.m.b.H."
-        }
-    ],
-    "Gebr.": [
-        {
-            "F": "Gebr."
-        }
-    ],
-    "Hbf.": [
-        {
-            "F": "Hbf."
-        }
-    ],
-    "Hg.": [
-        {
-            "F": "Hg."
-        }
-    ],
-    "Hr.": [
-        {
-            "F": "Hr."
-        }
-    ],
-    "Hrgs.": [
-        {
-            "F": "Hrgs."
-        }
-    ],
-    "Hrn.": [
-        {
-            "F": "Hrn."
-        }
-    ],
-    "Hrsg.": [
-        {
-            "F": "Hrsg."
-        }
-    ],
-    "Ing.": [
-        {
-            "F": "Ing."
-        }
-    ],
-    "Jan.": [
-        {
-            "F": "Jan."
-        }
-    ],
-    "Jh.": [
-        {
-            "F": "Jh."
-        }
-    ],
-    "Jhd.": [
-        {
-            "F": "Jhd."
-        }
-    ],
-    "Jr.": [
-        {
-            "F": "Jr."
-        }
-    ],
-    "Jul.": [
-        {
-            "F": "Jul."
-        }
-    ],
-    "Jun.": [
-        {
-            "F": "Jun."
-        }
-    ],
-    "K.O.": [
-        {
-            "F": "K.O."
-        }
-    ],
-    "L.A.": [
-        {
-            "F": "L.A."
-        }
-    ],
-    "M.A.": [
-        {
-            "F": "M.A."
-        }
-    ],
-    "M.Sc.": [
-        {
-            "F": "M.Sc."
-        }
-    ],
-    "Mi.": [
-        {
-            "F": "Mi."
-        }
-    ],
-    "Mio.": [
-        {
-            "F": "Mio."
-        }
-    ],
-    "Mo.": [
-        {
-            "F": "Mo."
-        }
-    ],
-    "Mr.": [
-        {
-            "F": "Mr."
-        }
-    ],
-    "Mrd.": [
-        {
-            "F": "Mrd."
-        }
-    ],
-    "Mrz.": [
-        {
-            "F": "Mrz."
-        }
-    ],
-    "MwSt.": [
-        {
-            "F": "MwSt."
-        }
-    ],
-    "M\u00e4r.": [
-        {
-            "F": "M\u00e4r."
-        }
-    ],
-    "N.Y.": [
-        {
-            "F": "N.Y."
-        }
-    ],
-    "N.Y.C.": [
-        {
-            "F": "N.Y.C."
-        }
-    ],
-    "Nov.": [
-        {
-            "F": "Nov."
-        }
-    ],
-    "Nr.": [
-        {
-            "F": "Nr."
-        }
-    ],
-    "O.K.": [
-        {
-            "F": "O.K."
-        }
-    ],
-    "Okt.": [
-        {
-            "F": "Okt."
-        }
-    ],
-    "Orig.": [
-        {
-            "F": "Orig."
-        }
-    ],
-    "P.S.": [
-        {
-            "F": "P.S."
-        }
-    ],
-    "Pkt.": [
-        {
-            "F": "Pkt."
-        }
-    ],
-    "Prof.": [
-        {
-            "F": "Prof."
-        }
-    ],
-    "R.I.P.": [
-        {
-            "F": "R.I.P."
-        }
-    ],
-    "Red.": [
-        {
-            "F": "Red."
-        }
-    ],
-    "S'": [
-        {
-            "F": "S'",
-            "L": "sie"
-        }
-    ],
-    "Sa.": [
-        {
-            "F": "Sa."
-        }
-    ],
-    "Sep.": [
-        {
-            "F": "Sep."
-        }
-    ],
-    "Sept.": [
-        {
-            "F": "Sept."
-        }
-    ],
-    "So.": [
-        {
-            "F": "So."
-        }
-    ],
-    "St.": [
-        {
-            "F": "St."
-        }
-    ],
-    "Std.": [
-        {
-            "F": "Std."
-        }
-    ],
-    "Str.": [
-        {
-            "F": "Str."
-        }
-    ],
-    "Tel.": [
-        {
-            "F": "Tel."
-        }
-    ],
-    "Tsd.": [
-        {
-            "F": "Tsd."
-        }
-    ],
-    "U.S.": [
-        {
-            "F": "U.S."
-        }
-    ],
-    "U.S.A.": [
-        {
-            "F": "U.S.A."
-        }
-    ],
-    "U.S.S.": [
-        {
-            "F": "U.S.S."
-        }
-    ],
-    "Univ.": [
-        {
-            "F": "Univ."
-        }
-    ],
-    "V_V": [
-        {
-            "F": "V_V"
-        }
-    ],
-    "Vol.": [
-        {
-            "F": "Vol."
-        }
-    ],
-    "\\\")": [
-        {
-            "F": "\\\")"
-        }
-    ],
-    "\\n": [
-        {
-            "F": "\\n",
-            "L": "<nl>",
-            "pos": "SP"
-        }
-    ],
-    "\\t": [
-        {
-            "F": "\\t",
-            "L": "<tab>",
-            "pos": "SP"
-        }
-    ],
-    "^_^": [
-        {
-            "F": "^_^"
-        }
-    ],
-    "a.": [
-        {
-            "F": "a."
-        }
-    ],
-    "a.D.": [
-        {
-            "F": "a.D."
-        }
-    ],
-    "a.M.": [
-        {
-            "F": "a.M."
-        }
-    ],
-    "a.Z.": [
-        {
-            "F": "a.Z."
-        }
-    ],
-    "abzgl.": [
-        {
-            "F": "abzgl."
-        }
-    ],
-    "adv.": [
-        {
-            "F": "adv."
-        }
-    ],
-    "al.": [
-        {
-            "F": "al."
-        }
-    ],
-    "allg.": [
-        {
-            "F": "allg."
-        }
-    ],
-    "auf'm": [
-        {
-            "F": "auf",
-            "L": "auf"
-        },
-        {
-            "F": "'m",
-            "L": "dem"
-        }
-    ],
-    "b.": [
-        {
-            "F": "b."
-        }
-    ],
-    "betr.": [
-        {
-            "F": "betr."
-        }
-    ],
-    "biol.": [
-        {
-            "F": "biol."
-        }
-    ],
-    "bspw.": [
-        {
-            "F": "bspw."
-        }
-    ],
-    "bzgl.": [
-        {
-            "F": "bzgl."
-        }
-    ],
-    "bzw.": [
-        {
-            "F": "bzw."
-        }
-    ],
-    "c.": [
-        {
-            "F": "c."
-        }
-    ],
-    "ca.": [
-        {
-            "F": "ca."
-        }
-    ],
-    "co.": [
-        {
-            "F": "co."
-        }
-    ],
-    "d.": [
-        {
-            "F": "d."
-        }
-    ],
-    "d.h.": [
-        {
-            "F": "d.h."
-        }
-    ],
-    "dgl.": [
-        {
-            "F": "dgl."
-        }
-    ],
-    "du's": [
-        {
-            "F": "du",
-            "L": "du"
-        },
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "e.": [
-        {
-            "F": "e."
-        }
-    ],
-    "e.V.": [
-        {
-            "F": "e.V."
-        }
-    ],
-    "e.g.": [
-        {
-            "F": "e.g."
-        }
-    ],
-    "ebd.": [
-        {
-            "F": "ebd."
-        }
-    ],
-    "ehem.": [
-        {
-            "F": "ehem."
-        }
-    ],
-    "eigtl.": [
-        {
-            "F": "eigtl."
-        }
-    ],
-    "engl.": [
-        {
-            "F": "engl."
-        }
-    ],
-    "entspr.": [
-        {
-            "F": "entspr."
-        }
-    ],
-    "er's": [
-        {
-            "F": "er",
-            "L": "er"
-        },
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "erm.": [
-        {
-            "F": "erm."
-        }
-    ],
-    "etc.": [
-        {
-            "F": "etc."
-        }
-    ],
-    "ev.": [
-        {
-            "F": "ev."
-        }
-    ],
-    "evtl.": [
-        {
-            "F": "evtl."
-        }
-    ],
-    "f.": [
-        {
-            "F": "f."
-        }
-    ],
-    "frz.": [
-        {
-            "F": "frz."
-        }
-    ],
-    "g.": [
-        {
-            "F": "g."
-        }
-    ],
-    "geb.": [
-        {
-            "F": "geb."
-        }
-    ],
-    "gegr.": [
-        {
-            "F": "gegr."
-        }
-    ],
-    "gem.": [
-        {
-            "F": "gem."
-        }
-    ],
-    "ggf.": [
-        {
-            "F": "ggf."
-        }
-    ],
-    "ggfs.": [
-        {
-            "F": "ggfs."
-        }
-    ],
-    "gg\u00fc.": [
-        {
-            "F": "gg\u00fc."
-        }
-    ],
-    "h.": [
-        {
-            "F": "h."
-        }
-    ],
-    "h.c.": [
-        {
-            "F": "h.c."
-        }
-    ],
-    "hinter'm": [
-        {
-            "F": "hinter",
-            "L": "hinter"
-        },
-        {
-            "F": "'m",
-            "L": "dem"
-        }
-    ],
-    "hrsg.": [
-        {
-            "F": "hrsg."
-        }
-    ],
-    "i.": [
-        {
-            "F": "i."
-        }
-    ],
-    "i.A.": [
-        {
-            "F": "i.A."
-        }
-    ],
-    "i.G.": [
-        {
-            "F": "i.G."
-        }
-    ],
-    "i.O.": [
-        {
-            "F": "i.O."
-        }
-    ],
-    "i.Tr.": [
-        {
-            "F": "i.Tr."
-        }
-    ],
-    "i.V.": [
-        {
-            "F": "i.V."
-        }
-    ],
-    "i.d.R.": [
-        {
-            "F": "i.d.R."
-        }
-    ],
-    "i.e.": [
-        {
-            "F": "i.e."
-        }
-    ],
-    "ich's": [
-        {
-            "F": "ich",
-            "L": "ich"
-        },
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "ihr's": [
-        {
-            "F": "ihr",
-            "L": "ihr"
-        },
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "incl.": [
-        {
-            "F": "incl."
-        }
-    ],
-    "inkl.": [
-        {
-            "F": "inkl."
-        }
-    ],
-    "insb.": [
-        {
-            "F": "insb."
-        }
-    ],
-    "j.": [
-        {
-            "F": "j."
-        }
-    ],
-    "jr.": [
-        {
-            "F": "jr."
-        }
-    ],
-    "jun.": [
-        {
-            "F": "jun."
-        }
-    ],
-    "jur.": [
-        {
-            "F": "jur."
-        }
-    ],
-    "k.": [
-        {
-            "F": "k."
-        }
-    ],
-    "kath.": [
-        {
-            "F": "kath."
-        }
-    ],
-    "l.": [
-        {
-            "F": "l."
-        }
-    ],
-    "lat.": [
-        {
-            "F": "lat."
-        }
-    ],
-    "lt.": [
-        {
-            "F": "lt."
-        }
-    ],
-    "m.": [
-        {
-            "F": "m."
-        }
-    ],
-    "m.E.": [
-        {
-            "F": "m.E."
-        }
-    ],
-    "m.M.": [
-        {
-            "F": "m.M."
-        }
-    ],
-    "max.": [
-        {
-            "F": "max."
-        }
-    ],
-    "min.": [
-        {
-            "F": "min."
-        }
-    ],
-    "mind.": [
-        {
-            "F": "mind."
-        }
-    ],
-    "mtl.": [
-        {
-            "F": "mtl."
-        }
-    ],
-    "n.": [
-        {
-            "F": "n."
-        }
-    ],
-    "n.Chr.": [
-        {
-            "F": "n.Chr."
-        }
-    ],
-    "nat.": [
-        {
-            "F": "nat."
-        }
-    ],
-    "o.": [
-        {
-            "F": "o."
-        }
-    ],
-    "o.O": [
-        {
-            "F": "o.O"
-        }
-    ],
-    "o.a.": [
-        {
-            "F": "o.a."
-        }
-    ],
-    "o.g.": [
-        {
-            "F": "o.g."
-        }
-    ],
-    "o.k.": [
-        {
-            "F": "o.k."
-        }
-    ],
-    "o.\u00c4.": [
-        {
-            "F": "o.\u00c4."
-        }
-    ],
-    "o.\u00e4.": [
-        {
-            "F": "o.\u00e4."
-        }
-    ],
-    "o_O": [
-        {
-            "F": "o_O"
-        }
-    ],
-    "o_o": [
-        {
-            "F": "o_o"
-        }
-    ],
-    "orig.": [
-        {
-            "F": "orig."
-        }
-    ],
-    "p.": [
-        {
-            "F": "p."
-        }
-    ],
-    "p.a.": [
-        {
-            "F": "p.a."
-        }
-    ],
-    "p.s.": [
-        {
-            "F": "p.s."
-        }
-    ],
-    "pers.": [
-        {
-            "F": "pers."
-        }
-    ],
-    "phil.": [
-        {
-            "F": "phil."
-        }
-    ],
-    "q.": [
-        {
-            "F": "q."
-        }
-    ],
-    "q.e.d.": [
-        {
-            "F": "q.e.d."
-        }
-    ],
-    "r.": [
-        {
-            "F": "r."
-        }
-    ],
-    "rer.": [
-        {
-            "F": "rer."
-        }
-    ],
-    "r\u00f6m.": [
-        {
-            "F": "r\u00f6m."
-        }
-    ],
-    "s'": [
-        {
-            "F": "s'",
-            "L": "sie"
-        }
-    ],
-    "s.": [
-        {
-            "F": "s."
-        }
-    ],
-    "s.o.": [
-        {
-            "F": "s.o."
-        }
-    ],
-    "sen.": [
-        {
-            "F": "sen."
-        }
-    ],
-    "sie's": [
-        {
-            "F": "sie",
-            "L": "sie"
-        },
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "sog.": [
-        {
-            "F": "sog."
-        }
-    ],
-    "std.": [
-        {
-            "F": "std."
-        }
-    ],
-    "stellv.": [
-        {
-            "F": "stellv."
-        }
-    ],
-    "t.": [
-        {
-            "F": "t."
-        }
-    ],
-    "t\u00e4gl.": [
-        {
-            "F": "t\u00e4gl."
-        }
-    ],
-    "u.": [
-        {
-            "F": "u."
-        }
-    ],
-    "u.U.": [
-        {
-            "F": "u.U."
-        }
-    ],
-    "u.a.": [
-        {
-            "F": "u.a."
-        }
-    ],
-    "u.s.w.": [
-        {
-            "F": "u.s.w."
-        }
-    ],
-    "u.v.m.": [
-        {
-            "F": "u.v.m."
-        }
-    ],
-    "unter'm": [
-        {
-            "F": "unter",
-            "L": "unter"
-        },
-        {
-            "F": "'m",
-            "L": "dem"
-        }
-    ],
-    "usf.": [
-        {
-            "F": "usf."
-        }
-    ],
-    "usw.": [
-        {
-            "F": "usw."
-        }
-    ],
-    "uvm.": [
-        {
-            "F": "uvm."
-        }
-    ],
-    "v.": [
-        {
-            "F": "v."
-        }
-    ],
-    "v.Chr.": [
-        {
-            "F": "v.Chr."
-        }
-    ],
-    "v.a.": [
-        {
-            "F": "v.a."
-        }
-    ],
-    "v.l.n.r.": [
-        {
-            "F": "v.l.n.r."
-        }
-    ],
-    "vgl.": [
-        {
-            "F": "vgl."
-        }
-    ],
-    "vllt.": [
-        {
-            "F": "vllt."
-        }
-    ],
-    "vlt.": [
-        {
-            "F": "vlt."
-        }
-    ],
-    "vor'm": [
-        {
-            "F": "vor",
-            "L": "vor"
-        },
-        {
-            "F": "'m",
-            "L": "dem"
-        }
-    ],
-    "vs.": [
-        {
-            "F": "vs."
-        }
-    ],
-    "w.": [
-        {
-            "F": "w."
-        }
-    ],
-    "wir's": [
-        {
-            "F": "wir",
-            "L": "wir"
-        },
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "wiss.": [
-        {
-            "F": "wiss."
-        }
-    ],
-    "x.": [
-        {
-            "F": "x."
-        }
-    ],
-    "xD": [
-        {
-            "F": "xD"
-        }
-    ],
-    "xDD": [
-        {
-            "F": "xDD"
-        }
-    ],
-    "y.": [
-        {
-            "F": "y."
-        }
-    ],
-    "z.": [
-        {
-            "F": "z."
-        }
-    ],
-    "z.B.": [
-        {
-            "F": "z.B."
-        }
-    ],
-    "z.Bsp.": [
-        {
-            "F": "z.Bsp."
-        }
-    ],
-    "z.T.": [
-        {
-            "F": "z.T."
-        }
-    ],
-    "z.Z.": [
-        {
-            "F": "z.Z."
-        }
-    ],
-    "z.Zt.": [
-        {
-            "F": "z.Zt."
-        }
-    ],
-    "z.b.": [
-        {
-            "F": "z.b."
-        }
-    ],
-    "zzgl.": [
-        {
-            "F": "zzgl."
-        }
-    ],
-    "\u00e4.": [
-        {
-            "F": "\u00e4."
-        }
-    ],
-    "\u00f6.": [
-        {
-            "F": "\u00f6."
-        }
-    ],
-    "\u00f6sterr.": [
-        {
-            "F": "\u00f6sterr."
-        }
-    ],
-    "\u00fc.": [
-        {
-            "F": "\u00fc."
-        }
-    ],
-    "\u00fcber'm": [
-        {
-            "F": "\u00fcber",
-            "L": "\u00fcber"
-        },
-        {
-            "F": "'m",
-            "L": "dem"
-        }
-    ]
-}
+TOKENIZER_EXCEPTIONS = {}
 
 #TODO insert TAG_MAP for Dutch
 TAG_MAP = {
-"$(": {"pos": "PUNCT", "PunctType": "Brck"},
-"$,": {"pos": "PUNCT", "PunctType": "Comm"},
-"$.": {"pos": "PUNCT", "PunctType": "Peri"},
-"ADJA":	{"pos": "ADJ"},
-"ADJD":	{"pos": "ADJ", "Variant": "Short"},
-"ADV":	{"pos": "ADV"},
-"APPO":	{"pos": "ADP", "AdpType": "Post"},
-"APPR":	{"pos": "ADP", "AdpType": "Prep"},
-"APPRART":	{"pos": "ADP", "AdpType": "Prep", "PronType": "Art"},
-"APZR":	{"pos": "ADP", "AdpType": "Circ"},
-"ART":	{"pos": "DET", "PronType": "Art"},
-"CARD":	{"pos": "NUM", "NumType": "Card"},
-"FM":	{"pos": "X", "Foreign": "Yes"},
-"ITJ":	{"pos": "INTJ"},
-"KOKOM": {"pos": "CONJ", "ConjType": "Comp"},
-"KON": {"pos": "CONJ"},
-"KOUI":	{"pos": "SCONJ"},
-"KOUS":	{"pos": "SCONJ"},
-"NE": {"pos": "PROPN"},
-"NNE": {"pos": "PROPN"},
-"NN": {"pos": "NOUN"},
-"PAV": {"pos": "ADV", "PronType": "Dem"},
-"PROAV": {"pos": "ADV", "PronType": "Dem"},
-"PDAT":	{"pos": "DET", "PronType": "Dem"},
-"PDS": {"pos": "PRON", "PronType": "Dem"},
-"PIAT":	{"pos": "DET", "PronType": "Ind,Neg,Tot"},
-"PIDAT":	{"pos": "DET", "AdjType": "Pdt", "PronType": "Ind,Neg,Tot"},
-"PIS":	{"pos": "PRON", "PronType": "Ind,Neg,Tot"},
-"PPER":	{"pos": "PRON", "PronType": "Prs"},
-"PPOSAT":	{"pos": "DET", "Poss": "Yes", "PronType": "Prs"},
-"PPOSS":	{"pos": "PRON", "Poss": "Yes", "PronType": "Prs"},
-"PRELAT":	{"pos": "DET", "PronType": "Rel"},
-"PRELS":	{"pos": "PRON", "PronType": "Rel"},
-"PRF":	{"pos": "PRON", "PronType": "Prs", "Reflex": "Yes"},
-"PTKA":	{"pos": "PART"},
-"PTKANT":	{"pos": "PART", "PartType": "Res"},
-"PTKNEG":	{"pos": "PART", "Negative": "Neg"},
-"PTKVZ":	{"pos": "PART", "PartType": "Vbp"},
-"PTKZU":	{"pos": "PART", "PartType": "Inf"},
-"PWAT":	{"pos": "DET", "PronType": "Int"},
-"PWAV":	{"pos": "ADV", "PronType": "Int"},
-"PWS":	{"pos": "PRON", "PronType": "Int"},
-"TRUNC":	{"pos": "X", "Hyph": "Yes"},
-"VAFIN":	{"pos": "AUX", "Mood": "Ind", "VerbForm": "Fin"},
-"VAIMP":	{"pos": "AUX", "Mood": "Imp", "VerbForm": "Fin"},
-"VAINF":	{"pos": "AUX", "VerbForm": "Inf"},
-"VAPP":	{"pos": "AUX", "Aspect": "Perf", "VerbForm": "Part"},
-"VMFIN":	{"pos": "VERB", "Mood": "Ind", "VerbForm": "Fin", "VerbType": "Mod"},
-"VMINF":	{"pos": "VERB", "VerbForm": "Inf", "VerbType": "Mod"},
-"VMPP":	{"pos": "VERB", "Aspect": "Perf", "VerbForm": "Part", "VerbType": "Mod"},
-"VVFIN":	{"pos": "VERB", "Mood": "Ind", "VerbForm": "Fin"},
-"VVIMP":	{"pos": "VERB", "Mood": "Imp", "VerbForm": "Fin"},
-"VVINF":	{"pos": "VERB", "VerbForm": "Inf"},
-"VVIZU":	{"pos": "VERB", "VerbForm": "Inf"},
-"VVPP":	{"pos": "VERB", "Aspect": "Perf", "VerbForm": "Part"},
-"XY":	{"pos": "X"},
-"SP": {"pos": "SPACE"}
+    "VNW(pers,pron,nomin,red,3p,ev,masc)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,obl,vol,3,ev,masc)": {
+        "pos": "PRON"
+    },
+    "N(soort,ev,basis,gen)": {
+        "pos": "NOUN"
+    },
+    "WW(pv,tgw,mv)": {
+        "pos": "VERB"
+    },
+    "VNW(pers,pron,obl,vol,2v,ev)": {
+        "pos": "PRON"
+    },
+    "LID(onbep,stan,agr)": {
+        "pos": "DET"
+    },
+    "VNW(pers,pron,stan,nadr,2v,mv)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,pron,stan,vol,3o,ev)": {
+        "pos": "PRON"
+    },
+    "LID(bep,dial)": {
+        "pos": "DET"
+    },
+    "VNW(pers,pron,nomin,red,1,ev)": {
+        "pos": "PRON"
+    },
+    "WW(inf,nom,zonder,zonder-n)": {
+        "pos": "VERB"
+    },
+    "VNW(pr,pron,obl,vol,1,ev)": {
+        "pos": "PRON"
+    },
+    "SPEC(enof)": {
+        "pos": "X"
+    },
+    "VNW(onbep,det,stan,nom,met-e,mv-n)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,det,stan,nom,met-e,zonder-n)": {
+        "pos": "PRON"
+    },
+    "VNW(vb,det,stan,prenom,zonder,evon)": {
+        "pos": "PRON"
+    },
+    "VNW(bez,det,stan,vol,1,mv,prenom,zonder,evon)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,grad,stan,nom,met-e,zonder-n,sup)": {
+        "pos": "PRON"
+    },
+    "TW(hoofd,nom,mv-n,basis)": {
+        "pos": "NUM"
+    },
+    "VNW(onbep,pron,dial)": {
+        "pos": "PRON"
+    },
+    "VNW(aanw,det,stan,nom,met-e,mv-n)": {
+        "pos": "PRON"
+    },
+    "N(soort,ev,dim,onz,stan)": {
+        "pos": "NOUN"
+    },
+    "VNW(aanw,pron,gen,vol,3o,ev)": {
+        "pos": "PRON"
+    },
+    "VNW(bez,det,stan,vol,3,mv,prenom,zonder,agr)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,grad,stan,vrij,zonder,basis)": {
+        "pos": "PRON"
+    },
+    "VNW(bez,det,stan,vol,1,ev,prenom,zonder,agr)": {
+        "pos": "PRON"
+    },
+    "WW(pv,tgw,ev)": {
+        "pos": "VERB"
+    },
+    "ADJ(vrij,comp,zonder)": {
+        "pos": "ADJ"
+    },
+    "VZ(fin)": {
+        "pos": "ADP"
+    },
+    "VNW(onbep,grad,stan,prenom,met-e,agr,sup)": {
+        "pos": "PRON"
+    },
+    "WW(inf,vrij,zonder)": {
+        "pos": "VERB"
+    },
+    "ADJ(nom,basis,zonder,zonder-n)": {
+        "pos": "ADJ"
+    },
+    "VNW(pers,pron,obl,vol,3,getal,fem)": {
+        "pos": "PRON"
+    },
+    "VNW(refl,pron,obl,red,3,getal)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,grad,stan,prenom,zonder,agr,comp)": {
+        "pos": "PRON"
+    },
+    "VNW(recip,pron,gen,vol,persoon,mv)": {
+        "pos": "PRON"
+    },
+    "ADJ(prenom,basis,met-e,bijz)": {
+        "pos": "ADJ"
+    },
+    "N(soort,ev,basis,onz,stan)": {
+        "pos": "NOUN"
+    },
+    "VNW(bez,det,stan,vol,3,ev,prenom,zonder,agr)": {
+        "pos": "PRON"
+    },
+    "WW(pv,verl,ev)": {
+        "pos": "VERB"
+    },
+    "TW(rang,prenom,stan)": {
+        "pos": "ADJ"
+    },
+    "VNW(pr,pron,obl,vol,1,mv)": {
+        "pos": "PRON"
+    },
+    "ADJ(nom,sup,zonder,zonder-n)": {
+        "pos": "ADJ"
+    },
+    "VNW(pr,pron,obl,red,1,ev)": {
+        "pos": "PRON"
+    },
+    "VNW(aanw,det,dat,nom,met-e,zonder-n)": {
+        "pos": "PRON"
+    },
+    "WW(pv,conj,ev)": {
+        "pos": "VERB"
+    },
+    "SPEC(afk)": {
+        "pos": "X"
+    },
+    "TW(rang,nom,zonder-n)": {
+        "pos": "ADJ"
+    },
+    "VNW(onbep,det,gen,prenom,met-e,mv)": {
+        "pos": "PRON"
+    },
+    "VNW(vb,pron,gen,vol,3p,mv)": {
+        "pos": "PRON"
+    },
+    "VNW(betr,pron,stan,vol,3,ev)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,nomin,red,1,mv)": {
+        "pos": "PRON"
+    },
+    "VNW(vb,pron,stan,vol,3o,ev)": {
+        "pos": "PRON"
+    },
+    "WW(pv,verl,mv)": {
+        "pos": "VERB"
+    },
+    "TW(hoofd,prenom,stan)": {
+        "pos": "NUM"
+    },
+    "VNW(aanw,det,stan,prenom,met-e,rest)": {
+        "pos": "PRON"
+    },
+    "VNW(vb,det,stan,prenom,met-e,rest)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,nomin,vol,3p,mv)": {
+        "pos": "PRON"
+    },
+    "VNW(pr,pron,obl,vol,2,getal)": {
+        "pos": "PRON"
+    },
+    "ADJ(prenom,basis,zonder)": {
+        "pos": "ADJ"
+    },
+    "TSW()": {
+        "pos": "INTJ"
+    },
+    "VNW(betr,det,stan,nom,zonder,zonder-n)": {
+        "pos": "PRON"
+    },
+    "VZ(init)": {
+        "pos": "ADP"
+    },
+    "VNW(pers,pron,nomin,nadr,3v,ev,fem)": {
+        "pos": "PRON"
+    },
+    "ADJ(vrij,dim,zonder)": {
+        "pos": "ADJ"
+    },
+    "TW(hoofd,dial)": {
+        "pos": "NUM"
+    },
+    "VNW(onbep,grad,stan,prenom,met-e,agr,basis)": {
+        "pos": "PRON"
+    },
+    "TW(hoofd,nom,zonder-n,dim)": {
+        "pos": "NUM"
+    },
+    "ADJ(prenom,comp,zonder)": {
+        "pos": "ADJ"
+    },
+    "WW(od,prenom,met-e)": {
+        "pos": "VERB"
+    },
+    "VNW(bez,det,dial)": {
+        "pos": "PRON"
+    },
+    "VNW(bez,det,stan,red,3,ev,prenom,zonder,agr)": {
+        "pos": "PRON"
+    },
+    "VNW(aanw,det,stan,prenom,zonder,agr)": {
+        "pos": "PRON"
+    },
+    "N(soort,mv,basis)": {
+        "pos": "NOUN"
+    },
+    "VNW(onbep,pron,gen,vol,3p,ev)": {
+        "pos": "PRON"
+    },
+    "LID(onbep,dial)": {
+        "pos": "DET"
+    },
+    "VNW(bez,det,stan,vol,2v,ev,prenom,zonder,agr)": {
+        "pos": "PRON"
+    },
+    "N(soort,ev,basis,genus,stan)": {
+        "pos": "NOUN"
+    },
+    "VNW(aanw,det,dial)": {
+        "pos": "PRON"
+    },
+    "N(soort,ev,basis,dat)": {
+        "pos": "NOUN"
+    },
+    "VNW(onbep,det,stan,prenom,zonder,agr)": {
+        "pos": "PRON"
+    },
+    "LID(bep,gen,rest3)": {
+        "pos": "DET"
+    },
+    "TSW(dial)": {
+        "pos": "INTJ"
+    },
+    "ADJ(nom,basis,met-e,mv-n)": {
+        "pos": "ADJ"
+    },
+    "VNW(onbep,grad,stan,prenom,met-e,mv,basis)": {
+        "pos": "PRON"
+    },
+    "BW(dial)": {
+        "pos": "ADV"
+    },
+    "ADJ(nom,comp,met-e,mv-n)": {
+        "pos": "ADJ"
+    },
+    "LID(bep,stan,evon)": {
+        "pos": "DET"
+    },
+    "WW(vd,nom,met-e,mv-n)": {
+        "pos": "VERB"
+    },
+    "VNW(onbep,grad,stan,nom,zonder,zonder-n,sup)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,obl,nadr,3p,mv)": {
+        "pos": "PRON"
+    },
+    "WW(vd,prenom,met-e)": {
+        "pos": "VERB"
+    },
+    "VNW(bez,det,stan,vol,3m,ev,prenom,met-e,rest)": {
+        "pos": "PRON"
+    },
+    "VG(neven)": {
+        "pos": "CONJ"
+    },
+    "VNW(pers,pron,nomin,vol,2b,getal)": {
+        "pos": "PRON"
+    },
+    "WW(pv,verl,met-t)": {
+        "pos": "VERB"
+    },
+    "VNW(recip,pron,obl,vol,persoon,mv)": {
+        "pos": "PRON"
+    },
+    "ADJ(prenom,comp,met-e,stan)": {
+        "pos": "ADJ"
+    },
+    "VNW(onbep,grad,stan,prenom,met-e,agr,comp)": {
+        "pos": "PRON"
+    },
+    "ADJ(nom,comp,met-e,zonder-n,stan)": {
+        "pos": "ADJ"
+    },
+    "SPEC(deeleigen)": {
+        "pos": "X"
+    },
+    "VNW(vb,pron,stan,vol,3p,getal)": {
+        "pos": "PRON"
+    },
+    "ADJ(postnom,basis,zonder)": {
+        "pos": "ADJ"
+    },
+    "WW(od,nom,met-e,zonder-n)": {
+        "pos": "VERB"
+    },
+    "VNW(vrag,pron,dial)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,grad,stan,nom,met-e,zonder-n,basis)": {
+        "pos": "PRON"
+    },
+    "VNW(bez,det,stan,vol,2,getal,prenom,zonder,agr)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,det,dial)": {
+        "pos": "PRON"
+    },
+    "TW(rang,dial)": {
+        "pos": "ADJ"
+    },
+    "VNW(onbep,det,stan,prenom,zonder,evon)": {
+        "pos": "PRON"
+    },
+    "N(soort,dial)": {
+        "pos": "NOUN"
+    },
+    "VNW(excl,pron,stan,vol,3,getal)": {
+        "pos": "PRON"
+    },
+    "WW(vd,vrij,zonder)": {
+        "pos": "VERB"
+    },
+    "SPEC(vreemd)": {
+        "pos": "X"
+    },
+    "VNW(aanw,adv-pron,stan,red,3,getal)": {
+        "pos": "PRON"
+    },
+    "WW(vd,nom,met-e,zonder-n)": {
+        "pos": "VERB"
+    },
+    "VNW(aanw,adv-pron,obl,vol,3o,getal)": {
+        "pos": "PRON"
+    },
+    "VNW(aanw,det,stan,nom,met-e,zonder-n)": {
+        "pos": "PRON"
+    },
+    "ADJ(dial)": {
+        "pos": "ADJ"
+    },
+    "ADJ(vrij,sup,zonder)": {
+        "pos": "ADJ"
+    },
+    "ADJ(nom,sup,met-e,mv-n)": {
+        "pos": "ADJ"
+    },
+    "LID(bep,gen,evmo)": {
+        "pos": "DET"
+    },
+    "VNW(onbep,grad,stan,nom,met-e,mv-n,basis)": {
+        "pos": "PRON"
+    },
+    "VG(onder,dial)": {
+        "pos": "SCONJ"
+    },
+    "ADJ(vrij,basis,zonder)": {
+        "pos": "ADJ"
+    },
+    "ADJ(postnom,basis,met-s)": {
+        "pos": "ADJ"
+    },
+    "VNW(aanw,pron,stan,vol,3,getal)": {
+        "pos": "PRON"
+    },
+    "VG(onder)": {
+        "pos": "SCONJ"
+    },
+    "WW(od,prenom,zonder)": {
+        "pos": "VERB"
+    },
+    "VNW(pers,pron,nomin,red,3,ev,masc)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,grad,stan,vrij,zonder,comp)": {
+        "pos": "PRON"
+    },
+    "VNW(betr,pron,gen,vol,3o,getal)": {
+        "pos": "PRON"
+    },
+    "VNW(aanw,det,stan,vrij,zonder)": {
+        "pos": "PRON"
+    },
+    "LET()": {
+        "pos": "PUNCT"
+    },
+    "VNW(pers,pron,nomin,vol,1,ev)": {
+        "pos": "PRON"
+    },
+    "VNW(refl,pron,obl,nadr,3,getal)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,nomin,red,2,getal)": {
+        "pos": "PRON"
+    },
+    "N(soort,mv,dim)": {
+        "pos": "NOUN"
+    },
+    "VNW(pers,pron,stan,red,3,ev,fem)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,obl,nadr,3m,ev,masc)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,adv-pron,obl,vol,3o,getal)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,nomin,vol,2v,ev)": {
+        "pos": "PRON"
+    },
+    "ADJ(nom,basis,met-e,zonder-n,stan)": {
+        "pos": "ADJ"
+    },
+    "SPEC(symb)": {
+        "pos": "X"
+    },
+    "VNW(aanw,pron,gen,vol,3m,ev)": {
+        "pos": "PRON"
+    },
+    "VNW(refl,pron,dial)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,det,stan,prenom,met-e,evz)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,obl,red,3,ev,masc)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,det,stan,nom,zonder,zonder-n)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,det,stan,prenom,met-e,rest)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,det,stan,prenom,met-e,mv)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,nomin,red,2v,ev)": {
+        "pos": "PRON"
+    },
+    "ADJ(prenom,basis,met-e,stan)": {
+        "pos": "ADJ"
+    },
+    "VNW(bez,det,stan,red,1,ev,prenom,zonder,agr)": {
+        "pos": "PRON"
+    },
+    "SPEC(afgebr)": {
+        "pos": "X"
+    },
+    "VNW(onbep,pron,stan,vol,3p,ev)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,grad,stan,nom,met-e,mv-n,sup)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,det,stan,prenom,met-e,agr)": {
+        "pos": "PRON"
+    },
+    "WW(pv,tgw,met-t)": {
+        "pos": "VERB"
+    },
+    "VNW(aanw,det,stan,prenom,zonder,rest)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,stan,red,3,ev,onz)": {
+        "pos": "PRON"
+    },
+    "WW(vd,prenom,zonder)": {
+        "pos": "VERB"
+    },
+    "VNW(pers,pron,nomin,vol,1,mv)": {
+        "pos": "PRON"
+    },
+    "WW(od,nom,met-e,mv-n)": {
+        "pos": "VERB"
+    },
+    "VNW(aanw,pron,stan,vol,3o,ev)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,dial)": {
+        "pos": "PRON"
+    },
+    "VNW(pr,pron,obl,red,2v,getal)": {
+        "pos": "PRON"
+    },
+    "ADJ(nom,basis,zonder,mv-n)": {
+        "pos": "ADJ"
+    },
+    "VNW(onbep,det,stan,vrij,zonder)": {
+        "pos": "PRON"
+    },
+    "LID(bep,stan,rest)": {
+        "pos": "DET"
+    },
+    "VNW(pers,pron,nomin,vol,3v,ev,fem)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,nomin,vol,3,ev,masc)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,stan,red,3,mv)": {
+        "pos": "PRON"
+    },
+    "VNW(bez,det,stan,nadr,2v,mv,prenom,zonder,agr)": {
+        "pos": "PRON"
+    },
+    "ADJ(nom,sup,met-e,zonder-n,stan)": {
+        "pos": "ADJ"
+    },
+    "VNW(pers,pron,obl,vol,3p,mv)": {
+        "pos": "PRON"
+    },
+    "VNW(bez,det,stan,vol,1,mv,prenom,met-e,rest)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,grad,stan,vrij,zonder,sup)": {
+        "pos": "PRON"
+    },
+    "VNW(bez,det,stan,red,2v,ev,prenom,zonder,agr)": {
+        "pos": "PRON"
+    },
+    "TW(hoofd,vrij)": {
+        "pos": "NUM"
+    },
+    "VNW(onbep,grad,stan,prenom,zonder,agr,basis)": {
+        "pos": "PRON"
+    },
+    "VNW(aanw,det,stan,prenom,zonder,evon)": {
+        "pos": "PRON"
+    },
+    "VNW(onbep,adv-pron,gen,red,3,getal)": {
+        "pos": "PRON"
+    },
+    "VNW(pers,pron,nomin,vol,2,getal)": {
+        "pos": "PRON"
+    },
+    "VNW(pr,pron,obl,nadr,1,ev)": {
+        "pos": "PRON"
+    },
+    "VNW(pr,pron,obl,nadr,2v,getal)": {
+        "pos": "PRON"
+    },
+    "VNW(vb,det,stan,nom,met-e,zonder-n)": {
+        "pos": "PRON"
+    },
+    "VNW(betr,pron,stan,vol,persoon,getal)": {
+        "pos": "PRON"
+    },
+    "TW(hoofd,nom,zonder-n,basis)": {
+        "pos": "NUM"
+    },
+    "VNW(vb,pron,gen,vol,3m,ev)": {
+        "pos": "PRON"
+    },
+    "WW(inf,prenom,zonder)": {
+        "pos": "VERB"
+    },
+    "TW(rang,nom,mv-n)": {
+        "pos": "ADJ"
+    },
+    "SPEC(meta)": {
+        "pos": "X"
+    },
+    "LID(bep,dat,evmo)": {
+        "pos": "DET"
+    },
+    "N(soort,ev,basis,zijd,stan)": {
+        "pos": "NOUN"
+    },
+    "VNW(pers,pron,nomin,nadr,3m,ev,masc)": {
+        "pos": "PRON"
+    },
+    "WW(od,vrij,zonder)": {
+        "pos": "VERB"
+    },
+    "VNW(vb,adv-pron,obl,vol,3o,getal)": {
+        "pos": "PRON"
+    },
+    "ADJ(prenom,sup,zonder)": {
+        "pos": "ADJ"
+    },
+    "BW()": {
+        "pos": "ADV"
+    },
+    "VZ(versm)": {
+        "pos": "ADP"
+    },
+    "ADJ(prenom,sup,met-e,stan)": {
+        "pos": "ADJ"
+    }
 }
