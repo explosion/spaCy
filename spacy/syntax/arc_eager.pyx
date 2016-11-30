@@ -439,7 +439,7 @@ cdef class ArcEager(TransitionSystem):
                 if move_costs[move] == -1:
                     move_costs[move] = move_cost_funcs[move](stcls, &gold.c)
                 costs[i] = move_costs[move] + label_cost_funcs[move](stcls, &gold.c, label)
-                n_gold += costs[i] == 0
+                n_gold += costs[i] <= 0
             else:
                 is_valid[i] = False
                 costs[i] = 9000
@@ -456,8 +456,14 @@ cdef class ArcEager(TransitionSystem):
                     "before training and after parsing. Either pass make_projective=True "
                     "to the GoldParse class, or use PseudoProjectivity.preprocess_training_data")
             else:
+                print(gold.words)
+                print(gold.heads)
+                print(gold.labels)
                 raise ValueError(
                     "Could not find a gold-standard action to supervise the dependency "
                     "parser.\n"
-                    "The GoldParse was projective.")
+                    "The GoldParse was projective.\n"
+                    "The transition system has %d actions.\n" 
+                    "State at failure:\n"
+                    "%s" % (self.n_moves, stcls.print_state(gold.words)))
         assert n_gold >= 1

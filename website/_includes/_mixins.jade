@@ -90,6 +90,19 @@ mixin code(label, language)
             block
 
 
+//- CodePen embed
+    slug        - [string] ID of CodePen demo (taken from URL)
+    height      - [integer] height of demo embed iframe
+    default_tab - [string] code tab(s) visible on load (default: "result")
+
+mixin codepen(slug, height, default_tab)
+    figure.o-block(style="min-height: #{height}px")&attributes(attributes)
+        .codepen(data-height=height data-theme-id="26467" data-slug-hash=slug data-default-tab=(default_tab || "result") data-embed-version="2" data-user=SOCIAL.codepen)
+            +a("https://codepen.io/" + SOCIAL.codepen + "/" + slug) View on CodePen
+
+        script(async src="https://assets.codepen.io/assets/embed/ei.js")
+
+
 //- Images / figures
     url     - [string] url or path to image
     width   - [integer] image width in px, for better rendering (default: 500)

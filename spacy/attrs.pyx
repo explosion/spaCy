@@ -86,5 +86,48 @@ IDS = {
     "LANG": LANG,
 }
 
+
 # ATTR IDs, in order of the symbol
 NAMES = [key for key, value in sorted(IDS.items(), key=lambda item: item[1])]
+
+
+def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
+    '''Normalize a dictionary of attributes, converting them to ints.
+    
+    Arguments:
+        stringy_attrs (dict):
+            Dictionary keyed by attribute string names. Values can be ints or strings.
+
+        strings_map (StringStore):
+            Defaults to None. If provided, encodes string values into ints.
+
+    Returns:
+        inty_attrs (dict):
+            Attributes dictionary with keys and optionally values converted to
+            ints.
+    '''
+    inty_attrs = {}
+    if _do_deprecated:
+        if 'F' in stringy_attrs:
+            stringy_attrs["ORTH"] = stringy_attrs.pop("F")
+        if 'L' in stringy_attrs:
+            stringy_attrs["LEMMA"] = stringy_attrs.pop("L")
+        if 'pos' in stringy_attrs:
+            stringy_attrs["TAG"] = stringy_attrs.pop("pos")
+        if 'morph' in stringy_attrs:
+            morphs = stringy_attrs.pop('morph')
+        if 'number' in stringy_attrs:
+            stringy_attrs.pop('number')
+        if 'tenspect' in stringy_attrs:
+            stringy_attrs.pop('tenspect')
+        #    for name, value in morphs.items():
+        #        stringy_attrs[name] = value
+    for name, value in stringy_attrs.items():
+        if isinstance(name, int):
+            int_key = name
+        else:
+            int_key = IDS[name.upper()]
+        if strings_map is not None and isinstance(value, basestring):
+            value = strings_map[value]
+        inty_attrs[int_key] = value
+    return inty_attrs
