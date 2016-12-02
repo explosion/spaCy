@@ -179,6 +179,13 @@ cdef class Span:
                 self._vector_norm = sqrt(norm) if norm != 0 else 0
             return self._vector_norm
 
+    property sentiment:
+        def __get__(self):
+            if 'sentiment' in self.doc.user_span_hooks:
+                return self.doc.user_span_hooks['sentiment'](self)
+            else:
+                return sum([token.sentiment for token in self]) / len(self)
+
     property text:
         def __get__(self):
             text = self.text_with_ws
