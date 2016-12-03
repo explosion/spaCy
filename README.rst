@@ -246,7 +246,7 @@ Changelog
 
 **✨ API improvements**
 
-* Add ``Span.sentiment`` attribute
+* Add ``Span.sentiment`` attribute.
 * `#658 <https://github.com/explosion/spaCy/pull/658>`_: Add ``Span.noun_chunks`` iterator (thanks `@pokey <https://github.com/pokey>`_).
 * `#642 <https://github.com/explosion/spaCy/pull/642>`_: Let ``--data-path`` be specified when running download.py scripts (thanks `@ExplodingCabbage <https://github.com/ExplodingCabbage>`_).
 * `#638 <https://github.com/explosion/spaCy/pull/638>`_: Add German stopwords (thanks `@souravsingh <https://github.com/souravsingh>`_).
