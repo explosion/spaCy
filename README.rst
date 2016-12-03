@@ -6,7 +6,7 @@ Cython. spaCy is built on  the very latest research, but it isn't researchware.
 It was designed from day 1 to be used in real products. It's commercial 
 open-source software, released under the MIT license.
 
-💫 **Version 1.2 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
+💫 **Version 1.3 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: http://i.imgur.com/wFvLZyJ.png
     :target: https://travis-ci.org/explosion/spaCy
@@ -241,8 +241,38 @@ calling ``spacy.load()``, or by passing a ``path`` argument to the ``spacy.en.En
 Changelog
 =========
 
-2016-11-04 `v1.2.0 <https://github.com/explosion/spaCy/releases>`_: *Alpha tokenizers for Chinese, French, Spanish, Italian and Portuguese*
--------------------------------------------------------------------------------------------------------------------------------------------
+2016-12-03 `v1.3.0 <https://github.com/explosion/spaCy/releases>`_: *Improve API consistency*
+---------------------------------------------------------------------------------------------
+
+**✨ API improvements**
+
+* Add ``Span.sentiment`` attribute
+* `#658 <https://github.com/explosion/spaCy/pull/658>`_: Add ``Span.noun_chunks`` iterator (thanks `@pokey <https://github.com/pokey>`_).
+* `#642 <https://github.com/explosion/spaCy/pull/642>`_: Let ``--data-path`` be specified when running download.py scripts (thanks `@ExplodingCabbage <https://github.com/ExplodingCabbage>`_).
+* `#638 <https://github.com/explosion/spaCy/pull/638>`_: Add German stopwords (thanks `@souravsingh <https://github.com/souravsingh>`_).
+* `#614 <https://github.com/explosion/spaCy/pull/614>`_: Fix ``PhraseMatcher`` to work with new ``Matcher`` (thanks `@sadovnychyi <https://github.com/sadovnychyi>`_).
+
+**🔴 Bug fixes**
+
+* Fix issue `#605 <https://github.com/explosion/spaCy/issues/605>`_: ``accept`` argument to ``Matcher`` now rejects matches as expected.
+* Fix issue `#617 <https://github.com/explosion/spaCy/issues/617>`_: ``Vocab.load()`` now works with string paths, as well as ``Path`` objects.
+* Fix issue `#639 <https://github.com/explosion/spaCy/issues/639>`_: Stop words in ``Language`` class now used as expected.
+* Fix issues `#656 <https://github.com/explosion/spaCy/issues/656>`_, `#624 <https://github.com/explosion/spaCy/issues/624>`_: ``Tokenizer`` special-case rules now support arbitrary token attributes.
+
+
+**📖 Documentation and examples**
+
+* Add `"Customizing the tokenizer" <https://spacy.io/docs/usage/customizing-tokenizer>`_ workflow.
+* Add `"Training the tagger, parser and entity recognizer" <https://spacy.io/docs/usage/training>`_ workflow.
+* Add `"Entity recognition" <https://spacy.io/docs/usage/entity-recognition>`_ workflow.
+* Fix various typos and inconsistencies.
+
+**👥  Contributors**
+
+Thanks to `@pokey <https://github.com/pokey>`_, `@ExplodingCabbage <https://github.com/ExplodingCabbage>`_, `@souravsingh <https://github.com/souravsingh>`_, `@sadovnychyi <https://github.com/sadovnychyi>`_, `@manojsakhwar <https://github.com/manojsakhwar>`_, `@TiagoMRodrigues <https://github.com/TiagoMRodrigues>`_, `@savkov <https://github.com/savkov>`_, `@pspiegelhalter <https://github.com/pspiegelhalter>`_, `@chenb67 <https://github.com/chenb67>`_, `@kylepjohnson <https://github.com/kylepjohnson>`_, `@YanhaoYang <https://github.com/YanhaoYang>`_, `@tjrileywisc <https://github.com/tjrileywisc>`_, `@dechov <https://github.com/dechov>`_, `@wjt <https://github.com/wjt>`_, `@jsmootiv <https://github.com/jsmootiv>`_ and `@blarghmatey <https://github.com/blarghmatey>`_ for the pull requests!
+
+2016-11-04 `v1.2.0 <https://github.com/explosion/spaCy/releases/tag/v1.2.0>`_: *Alpha tokenizers for Chinese, French, Spanish, Italian and Portuguese*
+------------------------------------------------------------------------------------------------------------------------------------------------------
 
 **✨ Major features and improvements**
 
