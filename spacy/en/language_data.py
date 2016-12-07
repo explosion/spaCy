@@ -2014,7 +2014,7 @@ self_map = [
     "Wis.",
     "x.",
     "y.",
-    "z.",
+    "z."
 ]
 
 overlap = set(TOKENIZER_EXCEPTIONS.keys()).intersection(set(self_map))
