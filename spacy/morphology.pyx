@@ -8,8 +8,25 @@ except ImportError:
 
 from .parts_of_speech import IDS as POS_IDS
 from .parts_of_speech cimport ADJ, VERB, NOUN, PUNCT
-from .attrs cimport IS_SPACE
+from .attrs cimport POS, IS_SPACE
 from .lexeme cimport Lexeme
+
+
+def _normalize_props(props):
+    '''Transform deprecated string keys to correct names.'''
+    out = {}
+    for key, value in props.items():
+        if key == POS:
+            if hasattr(value, 'upper'):
+                value = value.upper()
+            if value in POS_IDS:
+                value = POS_IDS[value]
+            out[key] = value
+        elif key.lower() == 'pos':
+            out[POS] = POS_IDS[value.upper()]
+        else:
+            out[key] = value
+    return out
 
 
 cdef class Morphology:
@@ -21,13 +38,14 @@ cdef class Morphology:
         self.n_tags = len(tag_map) + 1
         self.tag_names = tuple(sorted(tag_map.keys()))
         self.reverse_index = {}
-        
+
         self.rich_tags = <RichTagC*>self.mem.alloc(self.n_tags, sizeof(RichTagC))
         for i, (tag_str, props) in enumerate(sorted(tag_map.items())):
+            props = _normalize_props(props)
             self.rich_tags[i].id = i
             self.rich_tags[i].name = self.strings[tag_str]
             self.rich_tags[i].morph = 0
-            self.rich_tags[i].pos = POS_IDS[props['pos'].upper()]
+            self.rich_tags[i].pos = props[POS]
             self.reverse_index[self.rich_tags[i].name] = i
         self._cache = PreshMapArray(self.n_tags)
 
@@ -57,7 +75,7 @@ cdef class Morphology:
             analysis.tag = self.rich_tags[tag_id]
             tag_str = self.strings[self.rich_tags[tag_id].name]
             analysis.lemma = self.lemmatize(analysis.tag.pos, token.lex.orth,
-                                            **self.tag_map.get(tag_str, {}))
+                                            self.tag_map.get(tag_str, {}))
             self._cache.set(tag_id, token.lex.orth, analysis)
         token.lemma = analysis.lemma
         token.pos = analysis.tag.pos
@@ -81,7 +99,7 @@ cdef class Morphology:
         cdef RichTagC rich_tag
         for tag_str, entries in exc.items():
             tag = self.strings[tag_str]
-            tag_id = self.reverse_index[tag] 
+            tag_id = self.reverse_index[tag]
             rich_tag = self.rich_tags[tag_id]
             for form_str, props in entries.items():
                 cached = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
@@ -97,7 +115,7 @@ cdef class Morphology:
                                                   self.tag_map.get(tag_str, {}))
                 self._cache.set(tag_id, orth, <void*>cached)
 
-    def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, **morphology):
+    def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, morphology):
         cdef unicode py_string = self.strings[orth]
         if self.lemmatizer is None:
             return self.strings[py_string.lower()]
@@ -105,7 +123,7 @@ cdef class Morphology:
             return self.strings[py_string.lower()]
         cdef set lemma_strings
         cdef unicode lemma_string
-        lemma_strings = self.lemmatizer(py_string, univ_pos, **morphology)
+        lemma_strings = self.lemmatizer(py_string, univ_pos, morphology)
         lemma_string = sorted(lemma_strings)[0]
         lemma = self.strings[lemma_string]
         return lemma

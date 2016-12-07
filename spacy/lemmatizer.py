@@ -34,7 +34,7 @@ class Lemmatizer(object):
         self.exc = exceptions
         self.rules = rules
 
-    def __call__(self, string, univ_pos, **morphology):
+    def __call__(self, string, univ_pos, morphology=None):
         if univ_pos == NOUN:
             univ_pos = 'noun'
         elif univ_pos == VERB:
@@ -44,16 +44,17 @@ class Lemmatizer(object):
         elif univ_pos == PUNCT:
             univ_pos = 'punct'
         # See Issue #435 for example of where this logic is requied.
-        if self.is_base_form(univ_pos, **morphology):
+        if self.is_base_form(univ_pos, morphology):
             return set([string.lower()])
         lemmas = lemmatize(string, self.index.get(univ_pos, {}),
                            self.exc.get(univ_pos, {}),
                            self.rules.get(univ_pos, []))
         return lemmas
 
-    def is_base_form(self, univ_pos, **morphology):
+    def is_base_form(self, univ_pos, morphology=None):
         '''Check whether we're dealing with an uninflected paradigm, so we can
         avoid lemmatization entirely.'''
+        morphology = {} if morphology is None else morphology
         others = [key for key in morphology if key not in ('number', 'pos', 'verbform')]
         if univ_pos == 'noun' and morphology.get('number') == 'sing' and not others:
             return True
@@ -62,17 +63,17 @@ class Lemmatizer(object):
         else:
             return False
 
-    def noun(self, string, **morphology):
-        return self(string, 'noun', **morphology)
+    def noun(self, string, morphology=None):
+        return self(string, 'noun', morphology)
 
-    def verb(self, string, **morphology):
-        return self(string, 'verb', **morphology)
+    def verb(self, string, morphology=None):
+        return self(string, 'verb', morphology)
 
-    def adj(self, string, **morphology):
-        return self(string, 'adj', **morphology)
+    def adj(self, string, morphology=None):
+        return self(string, 'adj', morphology)
 
-    def punct(self, string, **morphology):
-        return self(string, 'punct', **morphology)
+    def punct(self, string, morphology=None):
+        return self(string, 'punct', morphology)
 
 
 def lemmatize(string, index, exceptions, rules):

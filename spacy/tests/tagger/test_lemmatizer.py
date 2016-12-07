@@ -60,8 +60,8 @@ def test_base_form_dive(lemmatizer):
         return None
 
     do = lemmatizer.noun
-    assert do('dive', number='sing') == set(['dive'])
-    assert do('dive', number='plur') == set(['diva'])
+    assert do('dive', {'number': 'sing'}) == set(['dive'])
+    assert do('dive', {'number': 'plur'}) == set(['diva'])
 
 
 def test_base_form_saw(lemmatizer):
@@ -69,7 +69,7 @@ def test_base_form_saw(lemmatizer):
         return None
 
     do = lemmatizer.verb
-    assert do('saw', verbform='past') == set(['see'])
+    assert do('saw', {'verbform': 'past'}) == set(['see'])
 
 
 def test_smart_quotes(lemmatizer):
