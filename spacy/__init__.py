@@ -1,5 +1,6 @@
 import pathlib
 
+from spacy import hu
 from .util import set_lang_class, get_lang_class
 from .about import __version__
 
@@ -24,6 +25,7 @@ set_lang_class(es.Spanish.lang, es.Spanish)
 set_lang_class(pt.Portuguese.lang, pt.Portuguese)
 set_lang_class(fr.French.lang, fr.French)
 set_lang_class(it.Italian.lang, it.Italian)
+set_lang_class(hu.Hungarian.lang, hu.Hungarian)
 set_lang_class(zh.Chinese.lang, zh.Chinese)
 
 
