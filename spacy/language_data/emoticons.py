@@ -136,4 +136,4 @@ o.0
 """.split())
 
 
-__all__ = [ EMOTICONS ]
+__all__ = [ "EMOTICONS" ]
