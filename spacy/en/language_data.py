@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 import re
 from ..symbols import *
+from ..language_data import EMOTICONS
 
 
 PRON_LEMMA = "-PRON-"
@@ -2017,9 +2018,10 @@ self_map = [
     "z."
 ]
 
-overlap = set(TOKENIZER_EXCEPTIONS.keys()).intersection(set(self_map))
-assert not overlap, overlap
-TOKENIZER_EXCEPTIONS.update({orth: [{ORTH: orth}] for orth in self_map})
+for orths in [self_map, EMOTICONS]:
+    overlap = set(TOKENIZER_EXCEPTIONS.keys()).intersection(set(orths))
+    assert not overlap, overlap
+    TOKENIZER_EXCEPTIONS.update({orth: [{ORTH: orth}] for orth in orths})
 
 
 TOKENIZER_PREFIXES = r'''
