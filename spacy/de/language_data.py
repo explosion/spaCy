@@ -2,6 +2,73 @@
 from __future__ import unicode_literals
 import re
 
+from ..symbols import *
+from ..language_data import EMOTICONS
+
+
+PRON_LEMMA = "-PRON-"
+
+
+TAG_MAP = {
+    "$(":       {TAG: PUNCT, "PunctType": "brck"},
+    "$,":       {TAG: PUNCT, "PunctType": "comm"},
+    "$.":       {TAG: PUNCT, "PunctType": "peri"},
+    "ADJA":     {TAG: ADJ},
+    "ADJD":     {TAG: ADJ, "Variant": "short"},
+    "ADV":      {TAG: ADV},
+    "APPO":     {TAG: ADP, "AdpType": "post"},
+    "APPR":     {TAG: ADP, "AdpType": "prep"},
+    "APPRART":  {TAG: ADP, "AdpType": "prep", "PronType": "art"},
+    "APZR":     {TAG: ADP, "AdpType": "circ"},
+    "ART":      {TAG: DET, "PronType": "art"},
+    "CARD":     {TAG: NUM, "NumType": "card"},
+    "FM":       {TAG: X, "Foreign": "yes"},
+    "ITJ":      {TAG: "INTJ"},
+    "KOKOM":    {TAG: "CONJ", "ConjType": "comp"},
+    "KON":      {TAG: "CONJ"},
+    "KOUI":     {TAG: "SCONJ"},
+    "KOUS":     {TAG: "SCONJ"},
+    "NE":       {TAG: "PROPN"},
+    "NNE":      {TAG: "PROPN"},
+    "NN":       {TAG: "NOUN"},
+    "PAV":      {TAG: ADV, "PronType": "dem"},
+    "PROAV":    {TAG: ADV, "PronType": "dem"},
+    "PDAT":     {TAG: DET, "PronType": "dem"},
+    "PDS":      {TAG: PRON, "PronType": "dem"},
+    "PIAT":     {TAG: DET, "PronType": "ind|neg|tot"},
+    "PIDAT":    {TAG: DET, "AdjType": "pdt", "PronType": "ind|neg|tot"},
+    "PIS":      {TAG: PRON, "PronType": "ind|Neg|tot"},
+    "PPER":     {TAG: PRON, "PronType": "prs"},
+    "PPOSAT":   {TAG: DET, "Poss": "yes", "PronType": "prs"},
+    "PPOSS":    {TAG: PRON, "Poss": "yes", "PronType": "prs"},
+    "PRELAT":   {TAG: DET, "PronType": "rel"},
+    "PRELS":    {TAG: PRON, "PronType": "rel"},
+    "PRF":      {TAG: PRON, "PronType": "prs", "Reflex": "yes"},
+    "PTKA":     {TAG: PART},
+    "PTKANT":   {TAG: PART, "PartType": "res"},
+    "PTKNEG":   {TAG: PART, "Negative": "neg"},
+    "PTKVZ":    {TAG: PART, "PartType": "vbp"},
+    "PTKZU":    {TAG: PART, "PartType": "inf"},
+    "PWAT":     {TAG: DET, "PronType": "int"},
+    "PWAV":     {TAG: ADV, "PronType": "int"},
+    "PWS":      {TAG: PRON, "PronType": "int"},
+    "TRUNC":    {TAG: X, "Hyph": "yes"},
+    "VAFIN":    {TAG: AUX, "Mood": "ind", "VerbForm": "fin"},
+    "VAIMP":    {TAG: AUX, "Mood": "imp", "VerbForm": "fin"},
+    "VAINF":    {TAG: AUX, "VerbForm": "inf"},
+    "VAPP":     {TAG: AUX, "Aspect": "perf", "VerbForm": "part"},
+    "VMFIN":    {TAG: VERB, "Mood": "ind", "VerbForm": "fin", "VerbType": "mod"},
+    "VMINF":    {TAG: VERB, "VerbForm": "inf", "VerbType": "mod"},
+    "VMPP":     {TAG: VERB, "Aspect": "perf", "VerbForm": "part", "VerbType": "mod"},
+    "VVFIN":    {TAG: VERB, "Mood": "ind", "VerbForm": "fin"},
+    "VVIMP":    {TAG: VERB, "Mood": "imp", "VerbForm": "fin"},
+    "VVINF":    {TAG: VERB, "VerbForm": "inf"},
+    "VVIZU":    {TAG: VERB, "VerbForm": "inf"},
+    "VVPP":     {TAG: VERB, "Aspect": "perf", "VerbForm": "part"},
+    "XY":       {TAG: X},
+    "SP":       {TAG: SPACE}
+}
+
 
 STOP_WORDS = set("""
 
@@ -33,7 +100,8 @@ geht gekannt gekonnt gemacht gemocht gemusst genug gerade gern gesagt geschweige
 gewesen gewollt geworden gibt ging gleich gott gross groß grosse große grossen
 großen grosser großer grosses großes gut gute guter gutes
 
-habe haben habt hast hat hatte hätte hatten hätten heisst heißt her heute hier hin hinter hoch
+habe haben habt hast hat hatte hätte hatten hätten heisst heißt her heute hier
+hin hinter hoch
 
 ich ihm ihn ihnen ihr ihre ihrem ihrer ihres im immer in indem infolgedessen
 ins irgend ist
@@ -74,12 +142,637 @@ vierter viertes vom von vor
 wahr während währenddem währenddessen wann war wäre waren wart warum was wegen
 weil weit weiter weitere weiteren weiteres welche welchem welchen welcher
 welches wem wen wenig wenige weniger weniges wenigstens wenn wer werde werden
-werdet wessen wie wieder will willst wir wird wirklich wirst wo wohl wollen wollt wollte wollten worden wurde würde wurden würden
+werdet wessen wie wieder will willst wir wird wirklich wirst wo wohl wollen
+wollt wollte wollten worden wurde würde wurden würden
 
 zehn zehnte zehnten zehnter zehntes zeit zu zuerst zugleich zum zunächst zur
 zurück zusammen zwanzig zwar zwei zweite zweiten zweiter zweites zwischen
 
 """.split())
+
+
+TOKENIZER_EXCEPTIONS = {
+    "\\n": [
+        {ORTH: "\\n", LEMMA: "<nl>", TAG: "SP"}
+    ],
+
+    "\\t": [
+        {ORTH: "\\t", LEMMA: "<tab>", TAG: "SP"}
+    ],
+
+    "'S": [
+        {ORTH: "'S", LEMMA: PRON_LEMMA}
+    ],
+
+    "'n": [
+        {ORTH: "'n", LEMMA: "ein"}
+    ],
+
+    "'ne": [
+        {ORTH: "'ne", LEMMA: "eine"}
+    ],
+
+    "'nen": [
+        {ORTH: "'nen", LEMMA: "einen"}
+    ],
+
+    "'s": [
+        {ORTH: "'s", LEMMA: PRON_LEMMA}
+    ],
+
+    "Abb.": [
+        {ORTH: "Abb.", LEMMA: "Abbildung"}
+    ],
+
+    "Abk.": [
+        {ORTH: "Abk.", LEMMA: "Abkürzung"}
+    ],
+
+    "Abt.": [
+        {ORTH: "Abt.", LEMMA: "Abteilung"}
+    ],
+
+    "Apr.": [
+        {ORTH: "Apr.", LEMMA: "April"}
+    ],
+
+    "Aug.": [
+        {ORTH: "Aug.", LEMMA: "August"}
+    ],
+
+    "Bd.": [
+        {ORTH: "Bd.", LEMMA: "Band"}
+    ],
+
+    "Betr.": [
+        {ORTH: "Betr.", LEMMA: "Betreff"}
+    ],
+
+    "Bf.": [
+        {ORTH: "Bf.", LEMMA: "Bahnhof"}
+    ],
+
+    "Bhf.": [
+        {ORTH: "Bhf.", LEMMA: "Bahnhof"}
+    ],
+
+    "Bsp.": [
+        {ORTH: "Bsp.", LEMMA: "Beispiel"}
+    ],
+
+    "Dez.": [
+        {ORTH: "Dez.", LEMMA: "Dezember"}
+    ],
+
+    "Di.": [
+        {ORTH: "Di.", LEMMA: "Dienstag"}
+    ],
+
+    "Do.": [
+        {ORTH: "Do.", LEMMA: "Donnerstag"}
+    ],
+
+    "Fa.": [
+        {ORTH: "Fa.", LEMMA: "Firma"}
+    ],
+
+    "Fam.": [
+        {ORTH: "Fam.", LEMMA: "Familie"}
+    ],
+
+    "Feb.": [
+        {ORTH: "Feb.", LEMMA: "Februar"}
+    ],
+
+    "Fr.": [
+        {ORTH: "Fr.", LEMMA: "Frau"}
+    ],
+
+    "Frl.": [
+        {ORTH: "Frl.", LEMMA: "Fräulein"}
+    ],
+
+    "Hbf.": [
+        {ORTH: "Hbf.", LEMMA: "Hauptbahnhof"}
+    ],
+
+    "Hr.": [
+        {ORTH: "Hr.", LEMMA: "Herr"}
+    ],
+
+    "Hrn.": [
+        {ORTH: "Hrn.", LEMMA: "Herr"}
+    ],
+
+    "Jan.": [
+        {ORTH: "Jan.", LEMMA: "Januar"}
+    ],
+
+    "Jh.": [
+        {ORTH: "Jh.", LEMMA: "Jahrhundert"}
+    ],
+
+    "Jhd.": [
+        {ORTH: "Jhd.", LEMMA: "Jahrhundert"}
+    ],
+
+    "Jul.": [
+        {ORTH: "Jul.", LEMMA: "Juli"}
+    ],
+
+    "Jun.": [
+        {ORTH: "Jun.", LEMMA: "Juni"}
+    ],
+
+    "Mi.": [
+        {ORTH: "Mi.", LEMMA: "Mittwoch"}
+    ],
+
+    "Mio.": [
+        {ORTH: "Mio.", LEMMA: "Million"}
+    ],
+
+    "Mo.": [
+        {ORTH: "Mo.", LEMMA: "Montag"}
+    ],
+
+    "Mrd.": [
+        {ORTH: "Mrd.", LEMMA: "Milliarde"}
+    ],
+
+    "Mrz.": [
+        {ORTH: "Mrz.", LEMMA: "März"}
+    ],
+
+    "MwSt.": [
+        {ORTH: "MwSt.", LEMMA: "Mehrwertsteuer"}
+    ],
+
+    "Mär.": [
+        {ORTH: "Mär.", LEMMA: "März"}
+    ],
+
+    "Nov.": [
+        {ORTH: "Nov.", LEMMA: "November"}
+    ],
+
+    "Nr.": [
+        {ORTH: "Nr.", LEMMA: "Nummer"}
+    ],
+
+    "Okt.": [
+        {ORTH: "Okt.", LEMMA: "Oktober"}
+    ],
+
+    "Orig.": [
+        {ORTH: "Orig.", LEMMA: "Original"}
+    ],
+
+    "Pkt.": [
+        {ORTH: "Pkt.", LEMMA: "Punkt"}
+    ],
+
+    "Prof.": [
+        {ORTH: "Prof.", LEMMA: "Professor"}
+    ],
+
+    "Red.": [
+        {ORTH: "Red.", LEMMA: "Redaktion"}
+    ],
+
+    "S'": [
+        {ORTH: "S'", LEMMA: PRON_LEMMA}
+    ],
+
+    "Sa.": [
+        {ORTH: "Sa.", LEMMA: "Samstag"}
+    ],
+
+    "Sep.": [
+        {ORTH: "Sep.", LEMMA: "September"}
+    ],
+
+    "Sept.": [
+        {ORTH: "Sept.", LEMMA: "September"}
+    ],
+
+    "So.": [
+        {ORTH: "So.", LEMMA: "Sonntag"}
+    ],
+
+    "Std.": [
+        {ORTH: "Std.", LEMMA: "Stunde"}
+    ],
+
+    "Str.": [
+        {ORTH: "Str.", LEMMA: "Straße"}
+    ],
+
+    "Tel.": [
+        {ORTH: "Tel.", LEMMA: "Telefon"}
+    ],
+
+    "Tsd.": [
+        {ORTH: "Tsd.", LEMMA: "Tausend"}
+    ],
+
+    "Univ.": [
+        {ORTH: "Univ.", LEMMA: "Universität"}
+    ],
+
+    "abzgl.": [
+        {ORTH: "abzgl.", LEMMA: "abzüglich"}
+    ],
+
+    "allg.": [
+        {ORTH: "allg.", LEMMA: "allgemein"}
+    ],
+
+    "auf'm": [
+        {ORTH: "auf", LEMMA: "auf"},
+        {ORTH: "'m", LEMMA: PRON_LEMMA}
+    ],
+
+    "bspw.": [
+        {ORTH: "bspw.", LEMMA: "beispielsweise"}
+    ],
+
+    "bzgl.": [
+        {ORTH: "bzgl.", LEMMA: "bezüglich"}
+    ],
+
+    "bzw.": [
+        {ORTH: "bzw.", LEMMA: "beziehungsweise"}
+    ],
+
+    "d.h.": [
+        {ORTH: "d.h.", LEMMA: "das heißt"}
+    ],
+
+    "dgl.": [
+        {ORTH: "dgl.", LEMMA: "dergleichen"}
+    ],
+
+    "du's": [
+        {ORTH: "du", LEMMA: PRON_LEMMA},
+        {ORTH: "'s", LEMMA: PRON_LEMMA}
+    ],
+
+    "ebd.": [
+        {ORTH: "ebd.", LEMMA: "ebenda"}
+    ],
+
+    "eigtl.": [
+        {ORTH: "eigtl.", LEMMA: "eigentlich"}
+    ],
+
+    "engl.": [
+        {ORTH: "engl.", LEMMA: "englisch"}
+    ],
+
+    "er's": [
+        {ORTH: "er", LEMMA: PRON_LEMMA},
+        {ORTH: "'s", LEMMA: PRON_LEMMA}
+    ],
+
+    "evtl.": [
+        {ORTH: "evtl.", LEMMA: "eventuell"}
+    ],
+
+    "frz.": [
+        {ORTH: "frz.", LEMMA: "französisch"}
+    ],
+
+    "gegr.": [
+        {ORTH: "gegr.", LEMMA: "gegründet"}
+    ],
+
+    "ggf.": [
+        {ORTH: "ggf.", LEMMA: "gegebenenfalls"}
+    ],
+
+    "ggfs.": [
+        {ORTH: "ggfs.", LEMMA: "gegebenenfalls"}
+    ],
+
+    "ggü.": [
+        {ORTH: "ggü.", LEMMA: "gegenüber"}
+    ],
+
+    "hinter'm": [
+        {ORTH: "hinter", LEMMA: "hinter"},
+        {ORTH: "'m", LEMMA: PRON_LEMMA}
+    ],
+
+    "i.O.": [
+        {ORTH: "i.O.", LEMMA: "in Ordnung"}
+    ],
+
+    "i.d.R.": [
+        {ORTH: "i.d.R.", LEMMA: "in der Regel"}
+    ],
+
+    "ich's": [
+        {ORTH: "ich", LEMMA: PRON_LEMMA},
+        {ORTH: "'s", LEMMA: PRON_LEMMA}
+    ],
+
+    "ihr's": [
+        {ORTH: "ihr", LEMMA: PRON_LEMMA},
+        {ORTH: "'s", LEMMA: PRON_LEMMA}
+    ],
+
+    "incl.": [
+        {ORTH: "incl.", LEMMA: "inklusive"}
+    ],
+
+    "inkl.": [
+        {ORTH: "inkl.", LEMMA: "inklusive"}
+    ],
+
+    "insb.": [
+        {ORTH: "insb.", LEMMA: "insbesondere"}
+    ],
+
+    "kath.": [
+        {ORTH: "kath.", LEMMA: "katholisch"}
+    ],
+
+    "lt.": [
+        {ORTH: "lt.", LEMMA: "laut"}
+    ],
+
+    "max.": [
+        {ORTH: "max.", LEMMA: "maximal"}
+    ],
+
+    "min.": [
+        {ORTH: "min.", LEMMA: "minimal"}
+    ],
+
+    "mind.": [
+        {ORTH: "mind.", LEMMA: "mindestens"}
+    ],
+
+    "mtl.": [
+        {ORTH: "mtl.", LEMMA: "monatlich"}
+    ],
+
+    "n.Chr.": [
+        {ORTH: "n.Chr.", LEMMA: "nach Christus"}
+    ],
+
+    "orig.": [
+        {ORTH: "orig.", LEMMA: "original"}
+    ],
+
+    "röm.": [
+        {ORTH: "röm.", LEMMA: "römisch"}
+    ],
+
+    "s'": [
+        {ORTH: "s'", LEMMA: PRON_LEMMA}
+    ],
+
+    "s.o.": [
+        {ORTH: "s.o.", LEMMA: "siehe oben"}
+    ],
+
+    "sie's": [
+        {ORTH: "sie", LEMMA: PRON_LEMMA},
+        {ORTH: "'s", LEMMA: PRON_LEMMA}
+    ],
+
+    "sog.": [
+        {ORTH: "sog.", LEMMA: "so genannt"}
+    ],
+
+    "stellv.": [
+        {ORTH: "stellv.", LEMMA: "stellvertretend"}
+    ],
+
+    "tägl.": [
+        {ORTH: "tägl.", LEMMA: "täglich"}
+    ],
+
+    "u.U.": [
+        {ORTH: "u.U.", LEMMA: "unter Umständen"}
+    ],
+
+    "u.s.w.": [
+        {ORTH: "u.s.w.", LEMMA: "und so weiter"}
+    ],
+
+    "u.v.m.": [
+        {ORTH: "u.v.m.", LEMMA: "und vieles mehr"}
+    ],
+
+    "unter'm": [
+        {ORTH: "unter", LEMMA: "unter"},
+        {ORTH: "'m", LEMMA: PRON_LEMMA}
+    ],
+
+    "usf.": [
+        {ORTH: "usf.", LEMMA: "und so fort"}
+    ],
+
+    "usw.": [
+        {ORTH: "usw.", LEMMA: "und so weiter"}
+    ],
+
+    "uvm.": [
+        {ORTH: "uvm.", LEMMA: "und vieles mehr"}
+    ],
+
+    "v.Chr.": [
+        {ORTH: "v.Chr.", LEMMA: "vor Christus"}
+    ],
+
+    "v.a.": [
+        {ORTH: "v.a.", LEMMA: "vor allem"}
+    ],
+
+    "v.l.n.r.": [
+        {ORTH: "v.l.n.r.", LEMMA: "von links nach rechts"}
+    ],
+
+    "vgl.": [
+        {ORTH: "vgl.", LEMMA: "vergleiche"}
+    ],
+
+    "vllt.": [
+        {ORTH: "vllt.", LEMMA: "vielleicht"}
+    ],
+
+    "vlt.": [
+        {ORTH: "vlt.", LEMMA: "vielleicht"}
+    ],
+
+    "vor'm": [
+        {ORTH: "vor", LEMMA: "vor"},
+        {ORTH: "'m", LEMMA: PRON_LEMMA}
+    ],
+
+    "wir's": [
+        {ORTH: "wir", LEMMA: PRON_LEMMA},
+        {ORTH: "'s", LEMMA: PRON_LEMMA}
+    ],
+
+    "z.B.": [
+        {ORTH: "z.B.", LEMMA: "zum Beispiel"}
+    ],
+
+    "z.Bsp.": [
+        {ORTH: "z.Bsp.", LEMMA: "zum Beispiel"}
+    ],
+
+    "z.T.": [
+        {ORTH: "z.T.", LEMMA: "zum Teil"}
+    ],
+
+    "z.Z.": [
+        {ORTH: "z.Z.", LEMMA: "zur Zeit"}
+    ],
+
+    "z.Zt.": [
+        {ORTH: "z.Zt.", LEMMA: "zur Zeit"}
+    ],
+
+    "z.b.": [
+        {ORTH: "z.b.", LEMMA: "zum Beispiel"}
+    ],
+
+    "zzgl.": [
+        {ORTH: "zzgl.", LEMMA: "zuzüglich"}
+    ],
+
+    "österr.": [
+        {ORTH: "österr.", LEMMA: "österreichisch"}
+    ],
+
+    "über'm": [
+        {ORTH: "über", LEMMA: "über"},
+        {ORTH: "'m", LEMMA: PRON_LEMMA}
+    ]
+}
+
+
+self_map = [
+    "''",
+    "\\\")",
+    "<space>",
+    "a.",
+    "ä.",
+    "A.C.",
+    "a.D.",
+    "A.D.",
+    "A.G.",
+    "a.M.",
+    "a.Z.",
+    "Abs.",
+    "adv.",
+    "al.",
+    "b.",
+    "B.A.",
+    "B.Sc.",
+    "betr.",
+    "biol.",
+    "Biol.",
+    "c.",
+    "ca.",
+    "Chr.",
+    "Cie.",
+    "co.",
+    "Co.",
+    "d.",
+    "D.C.",
+    "Dipl.-Ing.",
+    "Dipl.",
+    "Dr.",
+    "e.",
+    "e.g.",
+    "e.V.",
+    "ehem.",
+    "entspr.",
+    "erm.",
+    "etc.",
+    "ev.",
+    "f.",
+    "g.",
+    "G.m.b.H.",
+    "geb.",
+    "Gebr.",
+    "gem.",
+    "h.",
+    "h.c.",
+    "Hg.",
+    "hrsg.",
+    "Hrsg.",
+    "i.",
+    "i.A.",
+    "i.e.",
+    "i.G.",
+    "i.Tr.",
+    "i.V.",
+    "Ing.",
+    "j.",
+    "jr.",
+    "Jr.",
+    "jun.",
+    "jur.",
+    "k.",
+    "K.O.",
+    "l.",
+    "L.A.",
+    "lat.",
+    "m.",
+    "M.A.",
+    "m.E.",
+    "m.M.",
+    "M.Sc.",
+    "Mr.",
+    "n.",
+    "N.Y.",
+    "N.Y.C.",
+    "nat.",
+    "ö."
+    "o.",
+    "o.a.",
+    "o.ä.",
+    "o.g.",
+    "o.k.",
+    "O.K.",
+    "p.",
+    "p.a.",
+    "p.s.",
+    "P.S.",
+    "pers.",
+    "phil.",
+    "q.",
+    "q.e.d.",
+    "r.",
+    "R.I.P.",
+    "rer.",
+    "s.",
+    "sen.",
+    "St.",
+    "std.",
+    "t.",
+    "u.",
+    "ü.",
+    "u.a.",
+    "U.S.",
+    "U.S.A.",
+    "U.S.S.",
+    "v.",
+    "Vol.",
+    "vs.",
+    "w.",
+    "wiss.",
+    "x.",
+    "y.",
+    "z.",
+]
 
 
 TOKENIZER_PREFIXES = r'''
@@ -200,1549 +893,3 @@ TOKENIZER_INFIXES = r'''
 (?<=[a-zöäüßA-ZÖÄÜ"])<(?=[a-zöäüßA-ZÖÄÜ])
 (?<=[a-zöäüßA-ZÖÄÜ"])=(?=[a-zöäüßA-ZÖÄÜ])
 '''.strip().split('\n')
-
-
-TOKENIZER_EXCEPTIONS = {
-    "''": [
-        {
-            "F": "''"
-        }
-    ],
-    "'S": [
-        {
-            "F": "'S",
-            "L": "es"
-        }
-    ],
-    "'n": [
-        {
-            "F": "'n",
-            "L": "ein"
-        }
-    ],
-    "'ne": [
-        {
-            "F": "'ne",
-            "L": "eine"
-        }
-    ],
-    "'nen": [
-        {
-            "F": "'nen",
-            "L": "einen"
-        }
-    ],
-    "'s": [
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "(:": [
-        {
-            "F": "(:"
-        }
-    ],
-    "(=": [
-        {
-            "F": "(="
-        }
-    ],
-    "(^_^)": [
-        {
-            "F": "(^_^)"
-        }
-    ],
-    "-_-": [
-        {
-            "F": "-_-"
-        }
-    ],
-    "-__-": [
-        {
-            "F": "-__-"
-        }
-    ],
-    ":')": [
-        {
-            "F": ":')"
-        }
-    ],
-    ":(": [
-        {
-            "F": ":("
-        }
-    ],
-    ":((": [
-        {
-            "F": ":(("
-        }
-    ],
-    ":(((": [
-        {
-            "F": ":((("
-        }
-    ],
-    ":)": [
-        {
-            "F": ":)"
-        }
-    ],
-    ":))": [
-        {
-            "F": ":))"
-        }
-    ],
-    ":-)": [
-        {
-            "F": ":-)"
-        }
-    ],
-    ":-/": [
-        {
-            "F": ":-/"
-        }
-    ],
-    ":-P": [
-        {
-            "F": ":-P"
-        }
-    ],
-    ":/": [
-        {
-            "F": ":/"
-        }
-    ],
-    ":0": [
-        {
-            "F": ":0"
-        }
-    ],
-    ":3": [
-        {
-            "F": ":3"
-        }
-    ],
-    ":>": [
-        {
-            "F": ":>"
-        }
-    ],
-    ":O": [
-        {
-            "F": ":O"
-        }
-    ],
-    ":P": [
-        {
-            "F": ":P"
-        }
-    ],
-    ":Y": [
-        {
-            "F": ":Y"
-        }
-    ],
-    ":]": [
-        {
-            "F": ":]"
-        }
-    ],
-    ":p": [
-        {
-            "F": ":p"
-        }
-    ],
-    ";(": [
-        {
-            "F": ";("
-        }
-    ],
-    ";)": [
-        {
-            "F": ";)"
-        }
-    ],
-    ";-)": [
-        {
-            "F": ";-)"
-        }
-    ],
-    ";-p": [
-        {
-            "F": ";-p"
-        }
-    ],
-    ";D": [
-        {
-            "F": ";D"
-        }
-    ],
-    ";p": [
-        {
-            "F": ";p"
-        }
-    ],
-    "<3": [
-        {
-            "F": "<3"
-        }
-    ],
-    "<33": [
-        {
-            "F": "<33"
-        }
-    ],
-    "<333": [
-        {
-            "F": "<333"
-        }
-    ],
-    "<space>": [
-        {
-            "F": "SP"
-        }
-    ],
-    "=)": [
-        {
-            "F": "=)"
-        }
-    ],
-    "=3": [
-        {
-            "F": "=3"
-        }
-    ],
-    "=D": [
-        {
-            "F": "=D"
-        }
-    ],
-    "=[[": [
-        {
-            "F": "=[["
-        }
-    ],
-    "=]": [
-        {
-            "F": "=]"
-        }
-    ],
-    "A.C.": [
-        {
-            "F": "A.C."
-        }
-    ],
-    "A.D.": [
-        {
-            "F": "A.D."
-        }
-    ],
-    "A.G.": [
-        {
-            "F": "A.G."
-        }
-    ],
-    "Abb.": [
-        {
-            "F": "Abb."
-        }
-    ],
-    "Abk.": [
-        {
-            "F": "Abk."
-        }
-    ],
-    "Abs.": [
-        {
-            "F": "Abs."
-        }
-    ],
-    "Abt.": [
-        {
-            "F": "Abt."
-        }
-    ],
-    "Apr.": [
-        {
-            "F": "Apr."
-        }
-    ],
-    "Aug.": [
-        {
-            "F": "Aug."
-        }
-    ],
-    "B.A.": [
-        {
-            "F": "B.A."
-        }
-    ],
-    "B.Sc.": [
-        {
-            "F": "B.Sc."
-        }
-    ],
-    "Bd.": [
-        {
-            "F": "Bd."
-        }
-    ],
-    "Betr.": [
-        {
-            "F": "Betr."
-        }
-    ],
-    "Bf.": [
-        {
-            "F": "Bf."
-        }
-    ],
-    "Bhf.": [
-        {
-            "F": "Bhf."
-        }
-    ],
-    "Biol.": [
-        {
-            "F": "Biol."
-        }
-    ],
-    "Bsp.": [
-        {
-            "F": "Bsp."
-        }
-    ],
-    "Chr.": [
-        {
-            "F": "Chr."
-        }
-    ],
-    "Cie.": [
-        {
-            "F": "Cie."
-        }
-    ],
-    "Co.": [
-        {
-            "F": "Co."
-        }
-    ],
-    "D.C.": [
-        {
-            "F": "D.C."
-        }
-    ],
-    "Dez.": [
-        {
-            "F": "Dez."
-        }
-    ],
-    "Di.": [
-        {
-            "F": "Di."
-        }
-    ],
-    "Dipl.": [
-        {
-            "F": "Dipl."
-        }
-    ],
-    "Dipl.-Ing.": [
-        {
-            "F": "Dipl.-Ing."
-        }
-    ],
-    "Do.": [
-        {
-            "F": "Do."
-        }
-    ],
-    "Dr.": [
-        {
-            "F": "Dr."
-        }
-    ],
-    "Fa.": [
-        {
-            "F": "Fa."
-        }
-    ],
-    "Fam.": [
-        {
-            "F": "Fam."
-        }
-    ],
-    "Feb.": [
-        {
-            "F": "Feb."
-        }
-    ],
-    "Fr.": [
-        {
-            "F": "Fr."
-        }
-    ],
-    "Frl.": [
-        {
-            "F": "Frl."
-        }
-    ],
-    "G.m.b.H.": [
-        {
-            "F": "G.m.b.H."
-        }
-    ],
-    "Gebr.": [
-        {
-            "F": "Gebr."
-        }
-    ],
-    "Hbf.": [
-        {
-            "F": "Hbf."
-        }
-    ],
-    "Hg.": [
-        {
-            "F": "Hg."
-        }
-    ],
-    "Hr.": [
-        {
-            "F": "Hr."
-        }
-    ],
-    "Hrgs.": [
-        {
-            "F": "Hrgs."
-        }
-    ],
-    "Hrn.": [
-        {
-            "F": "Hrn."
-        }
-    ],
-    "Hrsg.": [
-        {
-            "F": "Hrsg."
-        }
-    ],
-    "Ing.": [
-        {
-            "F": "Ing."
-        }
-    ],
-    "Jan.": [
-        {
-            "F": "Jan."
-        }
-    ],
-    "Jh.": [
-        {
-            "F": "Jh."
-        }
-    ],
-    "Jhd.": [
-        {
-            "F": "Jhd."
-        }
-    ],
-    "Jr.": [
-        {
-            "F": "Jr."
-        }
-    ],
-    "Jul.": [
-        {
-            "F": "Jul."
-        }
-    ],
-    "Jun.": [
-        {
-            "F": "Jun."
-        }
-    ],
-    "K.O.": [
-        {
-            "F": "K.O."
-        }
-    ],
-    "L.A.": [
-        {
-            "F": "L.A."
-        }
-    ],
-    "M.A.": [
-        {
-            "F": "M.A."
-        }
-    ],
-    "M.Sc.": [
-        {
-            "F": "M.Sc."
-        }
-    ],
-    "Mi.": [
-        {
-            "F": "Mi."
-        }
-    ],
-    "Mio.": [
-        {
-            "F": "Mio."
-        }
-    ],
-    "Mo.": [
-        {
-            "F": "Mo."
-        }
-    ],
-    "Mr.": [
-        {
-            "F": "Mr."
-        }
-    ],
-    "Mrd.": [
-        {
-            "F": "Mrd."
-        }
-    ],
-    "Mrz.": [
-        {
-            "F": "Mrz."
-        }
-    ],
-    "MwSt.": [
-        {
-            "F": "MwSt."
-        }
-    ],
-    "M\u00e4r.": [
-        {
-            "F": "M\u00e4r."
-        }
-    ],
-    "N.Y.": [
-        {
-            "F": "N.Y."
-        }
-    ],
-    "N.Y.C.": [
-        {
-            "F": "N.Y.C."
-        }
-    ],
-    "Nov.": [
-        {
-            "F": "Nov."
-        }
-    ],
-    "Nr.": [
-        {
-            "F": "Nr."
-        }
-    ],
-    "O.K.": [
-        {
-            "F": "O.K."
-        }
-    ],
-    "Okt.": [
-        {
-            "F": "Okt."
-        }
-    ],
-    "Orig.": [
-        {
-            "F": "Orig."
-        }
-    ],
-    "P.S.": [
-        {
-            "F": "P.S."
-        }
-    ],
-    "Pkt.": [
-        {
-            "F": "Pkt."
-        }
-    ],
-    "Prof.": [
-        {
-            "F": "Prof."
-        }
-    ],
-    "R.I.P.": [
-        {
-            "F": "R.I.P."
-        }
-    ],
-    "Red.": [
-        {
-            "F": "Red."
-        }
-    ],
-    "S'": [
-        {
-            "F": "S'",
-            "L": "sie"
-        }
-    ],
-    "Sa.": [
-        {
-            "F": "Sa."
-        }
-    ],
-    "Sep.": [
-        {
-            "F": "Sep."
-        }
-    ],
-    "Sept.": [
-        {
-            "F": "Sept."
-        }
-    ],
-    "So.": [
-        {
-            "F": "So."
-        }
-    ],
-    "St.": [
-        {
-            "F": "St."
-        }
-    ],
-    "Std.": [
-        {
-            "F": "Std."
-        }
-    ],
-    "Str.": [
-        {
-            "F": "Str."
-        }
-    ],
-    "Tel.": [
-        {
-            "F": "Tel."
-        }
-    ],
-    "Tsd.": [
-        {
-            "F": "Tsd."
-        }
-    ],
-    "U.S.": [
-        {
-            "F": "U.S."
-        }
-    ],
-    "U.S.A.": [
-        {
-            "F": "U.S.A."
-        }
-    ],
-    "U.S.S.": [
-        {
-            "F": "U.S.S."
-        }
-    ],
-    "Univ.": [
-        {
-            "F": "Univ."
-        }
-    ],
-    "V_V": [
-        {
-            "F": "V_V"
-        }
-    ],
-    "Vol.": [
-        {
-            "F": "Vol."
-        }
-    ],
-    "\\\")": [
-        {
-            "F": "\\\")"
-        }
-    ],
-    "\\n": [
-        {
-            "F": "\\n",
-            "L": "<nl>",
-            "pos": "SP"
-        }
-    ],
-    "\\t": [
-        {
-            "F": "\\t",
-            "L": "<tab>",
-            "pos": "SP"
-        }
-    ],
-    "^_^": [
-        {
-            "F": "^_^"
-        }
-    ],
-    "a.": [
-        {
-            "F": "a."
-        }
-    ],
-    "a.D.": [
-        {
-            "F": "a.D."
-        }
-    ],
-    "a.M.": [
-        {
-            "F": "a.M."
-        }
-    ],
-    "a.Z.": [
-        {
-            "F": "a.Z."
-        }
-    ],
-    "abzgl.": [
-        {
-            "F": "abzgl."
-        }
-    ],
-    "adv.": [
-        {
-            "F": "adv."
-        }
-    ],
-    "al.": [
-        {
-            "F": "al."
-        }
-    ],
-    "allg.": [
-        {
-            "F": "allg."
-        }
-    ],
-    "auf'm": [
-        {
-            "F": "auf",
-            "L": "auf"
-        },
-        {
-            "F": "'m",
-            "L": "dem"
-        }
-    ],
-    "b.": [
-        {
-            "F": "b."
-        }
-    ],
-    "betr.": [
-        {
-            "F": "betr."
-        }
-    ],
-    "biol.": [
-        {
-            "F": "biol."
-        }
-    ],
-    "bspw.": [
-        {
-            "F": "bspw."
-        }
-    ],
-    "bzgl.": [
-        {
-            "F": "bzgl."
-        }
-    ],
-    "bzw.": [
-        {
-            "F": "bzw."
-        }
-    ],
-    "c.": [
-        {
-            "F": "c."
-        }
-    ],
-    "ca.": [
-        {
-            "F": "ca."
-        }
-    ],
-    "co.": [
-        {
-            "F": "co."
-        }
-    ],
-    "d.": [
-        {
-            "F": "d."
-        }
-    ],
-    "d.h.": [
-        {
-            "F": "d.h."
-        }
-    ],
-    "dgl.": [
-        {
-            "F": "dgl."
-        }
-    ],
-    "du's": [
-        {
-            "F": "du",
-            "L": "du"
-        },
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "e.": [
-        {
-            "F": "e."
-        }
-    ],
-    "e.V.": [
-        {
-            "F": "e.V."
-        }
-    ],
-    "e.g.": [
-        {
-            "F": "e.g."
-        }
-    ],
-    "ebd.": [
-        {
-            "F": "ebd."
-        }
-    ],
-    "ehem.": [
-        {
-            "F": "ehem."
-        }
-    ],
-    "eigtl.": [
-        {
-            "F": "eigtl."
-        }
-    ],
-    "engl.": [
-        {
-            "F": "engl."
-        }
-    ],
-    "entspr.": [
-        {
-            "F": "entspr."
-        }
-    ],
-    "er's": [
-        {
-            "F": "er",
-            "L": "er"
-        },
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "erm.": [
-        {
-            "F": "erm."
-        }
-    ],
-    "etc.": [
-        {
-            "F": "etc."
-        }
-    ],
-    "ev.": [
-        {
-            "F": "ev."
-        }
-    ],
-    "evtl.": [
-        {
-            "F": "evtl."
-        }
-    ],
-    "f.": [
-        {
-            "F": "f."
-        }
-    ],
-    "frz.": [
-        {
-            "F": "frz."
-        }
-    ],
-    "g.": [
-        {
-            "F": "g."
-        }
-    ],
-    "geb.": [
-        {
-            "F": "geb."
-        }
-    ],
-    "gegr.": [
-        {
-            "F": "gegr."
-        }
-    ],
-    "gem.": [
-        {
-            "F": "gem."
-        }
-    ],
-    "ggf.": [
-        {
-            "F": "ggf."
-        }
-    ],
-    "ggfs.": [
-        {
-            "F": "ggfs."
-        }
-    ],
-    "gg\u00fc.": [
-        {
-            "F": "gg\u00fc."
-        }
-    ],
-    "h.": [
-        {
-            "F": "h."
-        }
-    ],
-    "h.c.": [
-        {
-            "F": "h.c."
-        }
-    ],
-    "hinter'm": [
-        {
-            "F": "hinter",
-            "L": "hinter"
-        },
-        {
-            "F": "'m",
-            "L": "dem"
-        }
-    ],
-    "hrsg.": [
-        {
-            "F": "hrsg."
-        }
-    ],
-    "i.": [
-        {
-            "F": "i."
-        }
-    ],
-    "i.A.": [
-        {
-            "F": "i.A."
-        }
-    ],
-    "i.G.": [
-        {
-            "F": "i.G."
-        }
-    ],
-    "i.O.": [
-        {
-            "F": "i.O."
-        }
-    ],
-    "i.Tr.": [
-        {
-            "F": "i.Tr."
-        }
-    ],
-    "i.V.": [
-        {
-            "F": "i.V."
-        }
-    ],
-    "i.d.R.": [
-        {
-            "F": "i.d.R."
-        }
-    ],
-    "i.e.": [
-        {
-            "F": "i.e."
-        }
-    ],
-    "ich's": [
-        {
-            "F": "ich",
-            "L": "ich"
-        },
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "ihr's": [
-        {
-            "F": "ihr",
-            "L": "ihr"
-        },
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "incl.": [
-        {
-            "F": "incl."
-        }
-    ],
-    "inkl.": [
-        {
-            "F": "inkl."
-        }
-    ],
-    "insb.": [
-        {
-            "F": "insb."
-        }
-    ],
-    "j.": [
-        {
-            "F": "j."
-        }
-    ],
-    "jr.": [
-        {
-            "F": "jr."
-        }
-    ],
-    "jun.": [
-        {
-            "F": "jun."
-        }
-    ],
-    "jur.": [
-        {
-            "F": "jur."
-        }
-    ],
-    "k.": [
-        {
-            "F": "k."
-        }
-    ],
-    "kath.": [
-        {
-            "F": "kath."
-        }
-    ],
-    "l.": [
-        {
-            "F": "l."
-        }
-    ],
-    "lat.": [
-        {
-            "F": "lat."
-        }
-    ],
-    "lt.": [
-        {
-            "F": "lt."
-        }
-    ],
-    "m.": [
-        {
-            "F": "m."
-        }
-    ],
-    "m.E.": [
-        {
-            "F": "m.E."
-        }
-    ],
-    "m.M.": [
-        {
-            "F": "m.M."
-        }
-    ],
-    "max.": [
-        {
-            "F": "max."
-        }
-    ],
-    "min.": [
-        {
-            "F": "min."
-        }
-    ],
-    "mind.": [
-        {
-            "F": "mind."
-        }
-    ],
-    "mtl.": [
-        {
-            "F": "mtl."
-        }
-    ],
-    "n.": [
-        {
-            "F": "n."
-        }
-    ],
-    "n.Chr.": [
-        {
-            "F": "n.Chr."
-        }
-    ],
-    "nat.": [
-        {
-            "F": "nat."
-        }
-    ],
-    "o.": [
-        {
-            "F": "o."
-        }
-    ],
-    "o.O": [
-        {
-            "F": "o.O"
-        }
-    ],
-    "o.a.": [
-        {
-            "F": "o.a."
-        }
-    ],
-    "o.g.": [
-        {
-            "F": "o.g."
-        }
-    ],
-    "o.k.": [
-        {
-            "F": "o.k."
-        }
-    ],
-    "o.\u00c4.": [
-        {
-            "F": "o.\u00c4."
-        }
-    ],
-    "o.\u00e4.": [
-        {
-            "F": "o.\u00e4."
-        }
-    ],
-    "o_O": [
-        {
-            "F": "o_O"
-        }
-    ],
-    "o_o": [
-        {
-            "F": "o_o"
-        }
-    ],
-    "orig.": [
-        {
-            "F": "orig."
-        }
-    ],
-    "p.": [
-        {
-            "F": "p."
-        }
-    ],
-    "p.a.": [
-        {
-            "F": "p.a."
-        }
-    ],
-    "p.s.": [
-        {
-            "F": "p.s."
-        }
-    ],
-    "pers.": [
-        {
-            "F": "pers."
-        }
-    ],
-    "phil.": [
-        {
-            "F": "phil."
-        }
-    ],
-    "q.": [
-        {
-            "F": "q."
-        }
-    ],
-    "q.e.d.": [
-        {
-            "F": "q.e.d."
-        }
-    ],
-    "r.": [
-        {
-            "F": "r."
-        }
-    ],
-    "rer.": [
-        {
-            "F": "rer."
-        }
-    ],
-    "r\u00f6m.": [
-        {
-            "F": "r\u00f6m."
-        }
-    ],
-    "s'": [
-        {
-            "F": "s'",
-            "L": "sie"
-        }
-    ],
-    "s.": [
-        {
-            "F": "s."
-        }
-    ],
-    "s.o.": [
-        {
-            "F": "s.o."
-        }
-    ],
-    "sen.": [
-        {
-            "F": "sen."
-        }
-    ],
-    "sie's": [
-        {
-            "F": "sie",
-            "L": "sie"
-        },
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "sog.": [
-        {
-            "F": "sog."
-        }
-    ],
-    "std.": [
-        {
-            "F": "std."
-        }
-    ],
-    "stellv.": [
-        {
-            "F": "stellv."
-        }
-    ],
-    "t.": [
-        {
-            "F": "t."
-        }
-    ],
-    "t\u00e4gl.": [
-        {
-            "F": "t\u00e4gl."
-        }
-    ],
-    "u.": [
-        {
-            "F": "u."
-        }
-    ],
-    "u.U.": [
-        {
-            "F": "u.U."
-        }
-    ],
-    "u.a.": [
-        {
-            "F": "u.a."
-        }
-    ],
-    "u.s.w.": [
-        {
-            "F": "u.s.w."
-        }
-    ],
-    "u.v.m.": [
-        {
-            "F": "u.v.m."
-        }
-    ],
-    "unter'm": [
-        {
-            "F": "unter",
-            "L": "unter"
-        },
-        {
-            "F": "'m",
-            "L": "dem"
-        }
-    ],
-    "usf.": [
-        {
-            "F": "usf."
-        }
-    ],
-    "usw.": [
-        {
-            "F": "usw."
-        }
-    ],
-    "uvm.": [
-        {
-            "F": "uvm."
-        }
-    ],
-    "v.": [
-        {
-            "F": "v."
-        }
-    ],
-    "v.Chr.": [
-        {
-            "F": "v.Chr."
-        }
-    ],
-    "v.a.": [
-        {
-            "F": "v.a."
-        }
-    ],
-    "v.l.n.r.": [
-        {
-            "F": "v.l.n.r."
-        }
-    ],
-    "vgl.": [
-        {
-            "F": "vgl."
-        }
-    ],
-    "vllt.": [
-        {
-            "F": "vllt."
-        }
-    ],
-    "vlt.": [
-        {
-            "F": "vlt."
-        }
-    ],
-    "vor'm": [
-        {
-            "F": "vor",
-            "L": "vor"
-        },
-        {
-            "F": "'m",
-            "L": "dem"
-        }
-    ],
-    "vs.": [
-        {
-            "F": "vs."
-        }
-    ],
-    "w.": [
-        {
-            "F": "w."
-        }
-    ],
-    "wir's": [
-        {
-            "F": "wir",
-            "L": "wir"
-        },
-        {
-            "F": "'s",
-            "L": "es"
-        }
-    ],
-    "wiss.": [
-        {
-            "F": "wiss."
-        }
-    ],
-    "x.": [
-        {
-            "F": "x."
-        }
-    ],
-    "xD": [
-        {
-            "F": "xD"
-        }
-    ],
-    "xDD": [
-        {
-            "F": "xDD"
-        }
-    ],
-    "y.": [
-        {
-            "F": "y."
-        }
-    ],
-    "z.": [
-        {
-            "F": "z."
-        }
-    ],
-    "z.B.": [
-        {
-            "F": "z.B."
-        }
-    ],
-    "z.Bsp.": [
-        {
-            "F": "z.Bsp."
-        }
-    ],
-    "z.T.": [
-        {
-            "F": "z.T."
-        }
-    ],
-    "z.Z.": [
-        {
-            "F": "z.Z."
-        }
-    ],
-    "z.Zt.": [
-        {
-            "F": "z.Zt."
-        }
-    ],
-    "z.b.": [
-        {
-            "F": "z.b."
-        }
-    ],
-    "zzgl.": [
-        {
-            "F": "zzgl."
-        }
-    ],
-    "\u00e4.": [
-        {
-            "F": "\u00e4."
-        }
-    ],
-    "\u00f6.": [
-        {
-            "F": "\u00f6."
-        }
-    ],
-    "\u00f6sterr.": [
-        {
-            "F": "\u00f6sterr."
-        }
-    ],
-    "\u00fc.": [
-        {
-            "F": "\u00fc."
-        }
-    ],
-    "\u00fcber'm": [
-        {
-            "F": "\u00fcber",
-            "L": "\u00fcber"
-        },
-        {
-            "F": "'m",
-            "L": "dem"
-        }
-    ]
-}
-
-
-TAG_MAP = {
-"$(": {"pos": "PUNCT", "PunctType": "Brck"},
-"$,": {"pos": "PUNCT", "PunctType": "Comm"},
-"$.": {"pos": "PUNCT", "PunctType": "Peri"},
-"ADJA":	{"pos": "ADJ"},
-"ADJD":	{"pos": "ADJ", "Variant": "Short"},
-"ADV":	{"pos": "ADV"},
-"APPO":	{"pos": "ADP", "AdpType": "Post"},
-"APPR":	{"pos": "ADP", "AdpType": "Prep"},
-"APPRART":	{"pos": "ADP", "AdpType": "Prep", "PronType": "Art"},
-"APZR":	{"pos": "ADP", "AdpType": "Circ"},
-"ART":	{"pos": "DET", "PronType": "Art"},
-"CARD":	{"pos": "NUM", "NumType": "Card"},
-"FM":	{"pos": "X", "Foreign": "Yes"},
-"ITJ":	{"pos": "INTJ"},
-"KOKOM": {"pos": "CONJ", "ConjType": "Comp"},
-"KON": {"pos": "CONJ"},
-"KOUI":	{"pos": "SCONJ"},
-"KOUS":	{"pos": "SCONJ"},
-"NE": {"pos": "PROPN"},
-"NNE": {"pos": "PROPN"},
-"NN": {"pos": "NOUN"},
-"PAV": {"pos": "ADV", "PronType": "Dem"},
-"PROAV": {"pos": "ADV", "PronType": "Dem"},
-"PDAT":	{"pos": "DET", "PronType": "Dem"},
-"PDS": {"pos": "PRON", "PronType": "Dem"},
-"PIAT":	{"pos": "DET", "PronType": "Ind,Neg,Tot"},
-"PIDAT":	{"pos": "DET", "AdjType": "Pdt", "PronType": "Ind,Neg,Tot"},
-"PIS":	{"pos": "PRON", "PronType": "Ind,Neg,Tot"},
-"PPER":	{"pos": "PRON", "PronType": "Prs"},
-"PPOSAT":	{"pos": "DET", "Poss": "Yes", "PronType": "Prs"},
-"PPOSS":	{"pos": "PRON", "Poss": "Yes", "PronType": "Prs"},
-"PRELAT":	{"pos": "DET", "PronType": "Rel"},
-"PRELS":	{"pos": "PRON", "PronType": "Rel"},
-"PRF":	{"pos": "PRON", "PronType": "Prs", "Reflex": "Yes"},
-"PTKA":	{"pos": "PART"},
-"PTKANT":	{"pos": "PART", "PartType": "Res"},
-"PTKNEG":	{"pos": "PART", "Negative": "Neg"},
-"PTKVZ":	{"pos": "PART", "PartType": "Vbp"},
-"PTKZU":	{"pos": "PART", "PartType": "Inf"},
-"PWAT":	{"pos": "DET", "PronType": "Int"},
-"PWAV":	{"pos": "ADV", "PronType": "Int"},
-"PWS":	{"pos": "PRON", "PronType": "Int"},
-"TRUNC":	{"pos": "X", "Hyph": "Yes"},
-"VAFIN":	{"pos": "AUX", "Mood": "Ind", "VerbForm": "Fin"},
-"VAIMP":	{"pos": "AUX", "Mood": "Imp", "VerbForm": "Fin"},
-"VAINF":	{"pos": "AUX", "VerbForm": "Inf"},
-"VAPP":	{"pos": "AUX", "Aspect": "Perf", "VerbForm": "Part"},
-"VMFIN":	{"pos": "VERB", "Mood": "Ind", "VerbForm": "Fin", "VerbType": "Mod"},
-"VMINF":	{"pos": "VERB", "VerbForm": "Inf", "VerbType": "Mod"},
-"VMPP":	{"pos": "VERB", "Aspect": "Perf", "VerbForm": "Part", "VerbType": "Mod"},
-"VVFIN":	{"pos": "VERB", "Mood": "Ind", "VerbForm": "Fin"},
-"VVIMP":	{"pos": "VERB", "Mood": "Imp", "VerbForm": "Fin"},
-"VVINF":	{"pos": "VERB", "VerbForm": "Inf"},
-"VVIZU":	{"pos": "VERB", "VerbForm": "Inf"},
-"VVPP":	{"pos": "VERB", "Aspect": "Perf", "VerbForm": "Part"},
-"XY":	{"pos": "X"},
-"SP": {"pos": "SPACE"}
-}
