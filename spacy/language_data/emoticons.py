@@ -1,8 +1,8 @@
 # encoding: utf8
 from __future__ import unicode_literals
 
-EMOTICONS = set("""
 
+EMOTICONS = set("""
 :)
 :-)
 :))
@@ -135,7 +135,6 @@ o.0
 ¯\(ツ)/¯
 (╯°□°）╯︵┻━┻
 ><(((*>
-
 """.split())
 
 
