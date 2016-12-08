@@ -1,6 +1,5 @@
 # encoding: utf8
 from __future__ import unicode_literals
-import re
 
 from ..symbols import *
 from ..language_data import TOKENIZER_PREFIXES
