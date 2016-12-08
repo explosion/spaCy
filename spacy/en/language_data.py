@@ -1901,46 +1901,247 @@ TOKENIZER_EXCEPTIONS = {
     "that's": [
         {ORTH: "that"},
         {ORTH: "'s"}
-    ]
+    ],
+
+    "'em": [
+        {ORTH: "'em", LEMMA: PRON_LEMMA}
+    ],
+
+    "ol'": [
+        {ORTH: "ol'", LEMMA: "old"}
+    ],
+
+    "Ak.": [
+        {ORTH: "Ak.", LEMMA: "Alaska"}
+    ],
+
+    "Ala.": [
+        {ORTH: "Ala.", LEMMA: "Alabama"}
+    ],
+
+    "Apr.": [
+        {ORTH: "Apr.", LEMMA: "April"}
+    ],
+
+    "Ariz.": [
+        {ORTH: "Ariz.", LEMMA: "Arizona"}
+    ],
+
+    "Ark.": [
+        {ORTH: "Ark.", LEMMA: "Arkansas"}
+    ],
+
+    "Aug.": [
+        {ORTH: "Aug.", LEMMA: "August"}
+    ],
+
+    "Calif.": [
+        {ORTH: "Calif.", LEMMA: "California"}
+    ],
+
+    "Colo.": [
+        {ORTH: "Colo.", LEMMA: "Colorado"}
+    ],
+
+    "Conn.": [
+        {ORTH: "Conn.", LEMMA: "Connecticut"}
+    ],
+
+    "Dec.": [
+        {ORTH: "Dec.", LEMMA: "December"}
+    ],
+
+    "Del.": [
+        {ORTH: "Del.", LEMMA: "Delaware"}
+    ],
+
+    "Feb.": [
+        {ORTH: "Feb.", LEMMA: "February"}
+    ],
+
+    "Fla.": [
+        {ORTH: "Fla.", LEMMA: "Florida"}
+    ],
+
+    "Ga.": [
+        {ORTH: "Ga.", LEMMA: "Georgia"}
+    ],
+
+    "Ia.": [
+        {ORTH: "Ia.", LEMMA: "Iowa"}
+    ],
+
+    "Id.": [
+        {ORTH: "Id.", LEMMA: "Idaho"}
+    ],
+
+    "Ill.": [
+        {ORTH: "Ill.", LEMMA: "Illinois"}
+    ],
+
+    "Ind.": [
+        {ORTH: "Ind.", LEMMA: "Indiana"}
+    ],
+
+    "Jan.": [
+        {ORTH: "Jan.", LEMMA: "January"}
+    ],
+
+    "Jul.": [
+        {ORTH: "Jul.", LEMMA: "July"}
+    ],
+
+    "Jun.": [
+        {ORTH: "Jun.", LEMMA: "June"}
+    ],
+
+    "Kan.": [
+        {ORTH: "Kan.", LEMMA: "Kansas"}
+    ],
+
+    "Kans.": [
+        {ORTH: "Kans.", LEMMA: "Kansas"}
+    ],
+
+    "Ky.": [
+        {ORTH: "Ky.", LEMMA: "Kentucky"}
+    ],
+
+    "La.": [
+        {ORTH: "La.", LEMMA: "Louisiana"}
+    ],
+
+    "Mar.": [
+        {ORTH: "Mar.", LEMMA: "March"}
+    ],
+
+    "Mass.": [
+        {ORTH: "Mass.", LEMMA: "Massachusetts"}
+    ],
+
+    "May.": [
+        {ORTH: "May.", LEMMA: "May"}
+    ],
+
+    "Mich.": [
+        {ORTH: "Mich.", LEMMA: "Michigan"}
+    ],
+
+    "Minn.": [
+        {ORTH: "Minn.", LEMMA: "Minnesota"}
+    ],
+
+    "Miss.": [
+        {ORTH: "Miss.", LEMMA: "Mississippi"}
+    ],
+
+    "N.C.": [
+        {ORTH: "N.C.", LEMMA: "North Carolina"}
+    ],
+
+    "N.D.": [
+        {ORTH: "N.D.", LEMMA: "North Dakota"}
+    ],
+
+    "N.H.": [
+        {ORTH: "N.H.", LEMMA: "New Hampshire"}
+    ],
+
+    "N.J.": [
+        {ORTH: "N.J.", LEMMA: "New Jersey"}
+    ],
+
+    "N.M.": [
+        {ORTH: "N.M.", LEMMA: "New Mexico"}
+    ],
+
+    "N.Y.": [
+        {ORTH: "N.Y.", LEMMA: "New York"}
+    ],
+
+    "Neb.": [
+        {ORTH: "Neb.", LEMMA: "Nebraska"}
+    ],
+
+    "Nebr.": [
+        {ORTH: "Nebr.", LEMMA: "Nebraska"}
+    ],
+
+    "Nev.": [
+        {ORTH: "Nev.", LEMMA: "Nevada"}
+    ],
+
+    "Nov.": [
+        {ORTH: "Nov.", LEMMA: "November"}
+    ],
+
+    "Oct.": [
+        {ORTH: "Oct.", LEMMA: "October"}
+    ],
+
+    "Okla.": [
+        {ORTH: "Okla.", LEMMA: "Oklahoma"}
+    ],
+
+    "Ore.": [
+        {ORTH: "Ore.", LEMMA: "Oregon"}
+    ],
+
+    "Pa.": [
+        {ORTH: "Pa.", LEMMA: "Pennsylvania"}
+    ],
+
+    "S.C.": [
+        {ORTH: "S.C.", LEMMA: "South Carolina"}
+    ],
+
+    "Sep.": [
+        {ORTH: "Sep.", LEMMA: "September"}
+    ],
+
+    "Sept.": [
+        {ORTH: "Sept.", LEMMA: "September"}
+    ],
+
+    "Tenn.": [
+        {ORTH: "Tenn.", LEMMA: "Tennessee"}
+    ],
+
+    "Va.": [
+        {ORTH: "Va.", LEMMA: "Virginia"}
+    ],
+
+    "Wash.": [
+        {ORTH: "Wash.", LEMMA: "Washington"}
+    ],
+
+    "Wis.": [
+        {ORTH: "Wis.", LEMMA: "Wisconsin"}
+    ],
 }
 
 
 self_map = [
     "''",
-    "'em",
-    "'ol'",
     "\")",
     "a.",
     "a.m.",
     "Adm.",
-    "Ala.",
-    "Apr.",
-    "Ariz.",
-    "Ark.",
-    "Aug.",
     "b.",
     "Bros.",
     "c.",
-    "Calif.",
     "co.",
     "Co.",
-    "Colo.",
-    "Conn.",
     "Corp.",
     "d.",
     "D.C.",
-    "Dec.",
-    "Del.",
     "Dr.",
     "e.",
     "e.g.",
     "E.g.",
     "E.G.",
     "f.",
-    "Feb.",
-    "Fla.",
     "g.",
-    "Ga.",
     "Gen.",
     "Gov.",
     "h.",
@@ -1948,53 +2149,24 @@ self_map = [
     "i.e.",
     "I.e.",
     "I.E.",
-    "Ill.",
     "Inc.",
-    "Ind.",
     "j.",
-    "Jan.",
     "Jr.",
-    "Jul.",
-    "Jun.",
     "k.",
-    "Kan.",
-    "Kans.",
-    "Ky.",
     "l.",
-    "La.",
     "Ltd.",
     "m.",
-    "Mar.",
-    "Mass.",
-    "May."
     "Md.",
     "Messrs.",
-    "Mich.",
-    "Minn.",
-    "Miss.",
     "Mo.",
     "Mont.",
     "Mr.",
     "Mrs.",
     "Ms.",
     "n.",
-    "N.C.",
-    "N.D.",
-    "N.H.",
-    "N.J.",
-    "N.M.",
-    "N.Y.",
-    "Neb.",
-    "Nebr.",
-    "Nev.",
-    "Nov.",
     "o.",
-    "Oct.",
-    "Okla.",
-    "Ore.",
     "p.",
     "p.m.",
-    "Pa.",
     "Ph.D.",
     "q.",
     "r.",
@@ -2002,18 +2174,12 @@ self_map = [
     "Rev.",
     "s.",
     "Sen.",
-    "Sep.",
-    "Sept.",
     "St.",
     "t.",
-    "Tenn.",
     "u.",
     "v.",
-    "Va.",
     "vs.",
     "w.",
-    "Wash.",
-    "Wis.",
     "x.",
     "y.",
     "z."
