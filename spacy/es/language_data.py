@@ -1,356 +1,414 @@
 # encoding: utf8
 from __future__ import unicode_literals
-import re
+
+from ..symbols import *
+from ..language_data import TOKENIZER_PREFIXES
+from ..language_data import TOKENIZER_SUFFIXES
+from ..language_data import TOKENIZER_INFIXES
 
 
-STOP_WORDS = set()
+def strings_to_exc(orths):
+    return {orth: [{ORTH: orth}] for orth in orths}
 
 
-TOKENIZER_PREFIXES = map(re.escape, r'''
-,
-"
-(
-[
-{
-*
-<
->
-$
-£
-„
-“
-'
-``
-`
-#
-US$
-C$
-A$
-a-
-‘
-....
-...
-‚
-»
-_
-§
-'''.strip().split('\n'))
-
-
-TOKENIZER_SUFFIXES = r'''
-,
-\"
-\)
-\]
-\}
-\*
-\!
-\?
-%
-\$
->
-:
-;
-'
-”
-“
-«
-_
-''
-'s
-'S
-’s
-’S
-’
-‘
-°
-€
-\.\.
-\.\.\.
-\.\.\.\.
-(?<=[a-zäöüßÖÄÜ)\]"'´«‘’%\)²“”])\.
-\-\-
-´
-(?<=[0-9])km²
-(?<=[0-9])m²
-(?<=[0-9])cm²
-(?<=[0-9])mm²
-(?<=[0-9])km³
-(?<=[0-9])m³
-(?<=[0-9])cm³
-(?<=[0-9])mm³
-(?<=[0-9])ha
-(?<=[0-9])km
-(?<=[0-9])m
-(?<=[0-9])cm
-(?<=[0-9])mm
-(?<=[0-9])µm
-(?<=[0-9])nm
-(?<=[0-9])yd
-(?<=[0-9])in
-(?<=[0-9])ft
-(?<=[0-9])kg
-(?<=[0-9])g
-(?<=[0-9])mg
-(?<=[0-9])µg
-(?<=[0-9])t
-(?<=[0-9])lb
-(?<=[0-9])oz
-(?<=[0-9])m/s
-(?<=[0-9])km/h
-(?<=[0-9])mph
-(?<=[0-9])°C
-(?<=[0-9])°K
-(?<=[0-9])°F
-(?<=[0-9])hPa
-(?<=[0-9])Pa
-(?<=[0-9])mbar
-(?<=[0-9])mb
-(?<=[0-9])T
-(?<=[0-9])G
-(?<=[0-9])M
-(?<=[0-9])K
-(?<=[0-9])kb
-'''.strip().split('\n')
-
-
-TOKENIZER_INFIXES = (r'''\.\.\.+ (?<=[a-z])\.(?=[A-Z]) (?<=[a-zA-Z])-(?=[a-zA-z]) '''
-                     r'''(?<=[a-zA-Z])--(?=[a-zA-z]) (?<=[0-9])-(?=[0-9]) '''
-                     r'''(?<=[A-Za-z]),(?=[A-Za-z])''').split()
-
-
-
-TOKENIZER_EXCEPTIONS = {
-    "vs.": [{"F": "vs."}],
-
-    "''": [{"F": "''"}],
-    "—": [{"F": "—", "L": "--", "pos": "$,"}],
-
-    "a.m.": [{"F": "a.m."}],
-    "p.m.": [{"F": "p.m."}],
-
-    "1a.m.": [{"F": "1"}, {"F": "a.m."}],
-    "2a.m.": [{"F": "2"}, {"F": "a.m."}],
-    "3a.m.": [{"F": "3"}, {"F": "a.m."}],
-    "4a.m.": [{"F": "4"}, {"F": "a.m."}],
-    "5a.m.": [{"F": "5"}, {"F": "a.m."}],
-    "6a.m.": [{"F": "6"}, {"F": "a.m."}],
-    "7a.m.": [{"F": "7"}, {"F": "a.m."}],
-    "8a.m.": [{"F": "8"}, {"F": "a.m."}],
-    "9a.m.": [{"F": "9"}, {"F": "a.m."}],
-    "10a.m.": [{"F": "10"}, {"F": "a.m."}],
-    "11a.m.": [{"F": "11"}, {"F": "a.m."}],
-    "12a.m.": [{"F": "12"}, {"F": "a.m."}],
-    "1am": [{"F": "1"}, {"F": "am", "L": "a.m."}],
-    "2am": [{"F": "2"}, {"F": "am", "L": "a.m."}],
-    "3am": [{"F": "3"}, {"F": "am", "L": "a.m."}],
-    "4am": [{"F": "4"}, {"F": "am", "L": "a.m."}],
-    "5am": [{"F": "5"}, {"F": "am", "L": "a.m."}],
-    "6am": [{"F": "6"}, {"F": "am", "L": "a.m."}],
-    "7am": [{"F": "7"}, {"F": "am", "L": "a.m."}],
-    "8am": [{"F": "8"}, {"F": "am", "L": "a.m."}],
-    "9am": [{"F": "9"}, {"F": "am", "L": "a.m."}],
-    "10am": [{"F": "10"}, {"F": "am", "L": "a.m."}],
-    "11am": [{"F": "11"}, {"F": "am", "L": "a.m."}],
-    "12am": [{"F": "12"}, {"F": "am", "L": "a.m."}],
-
-    "p.m.": [{"F": "p.m."}],
-    "1p.m.": [{"F": "1"}, {"F": "p.m."}],
-    "2p.m.": [{"F": "2"}, {"F": "p.m."}],
-    "3p.m.": [{"F": "3"}, {"F": "p.m."}],
-    "4p.m.": [{"F": "4"}, {"F": "p.m."}],
-    "5p.m.": [{"F": "5"}, {"F": "p.m."}],
-    "6p.m.": [{"F": "6"}, {"F": "p.m."}],
-    "7p.m.": [{"F": "7"}, {"F": "p.m."}],
-    "8p.m.": [{"F": "8"}, {"F": "p.m."}],
-    "9p.m.": [{"F": "9"}, {"F": "p.m."}],
-    "10p.m.": [{"F": "10"}, {"F": "p.m."}],
-    "11p.m.": [{"F": "11"}, {"F": "p.m."}],
-    "12p.m.": [{"F": "12"}, {"F": "p.m."}],
-    "1pm": [{"F": "1"}, {"F": "pm", "L": "p.m."}],
-    "2pm": [{"F": "2"}, {"F": "pm", "L": "p.m."}],
-    "3pm": [{"F": "3"}, {"F": "pm", "L": "p.m."}],
-    "4pm": [{"F": "4"}, {"F": "pm", "L": "p.m."}],
-    "5pm": [{"F": "5"}, {"F": "pm", "L": "p.m."}],
-    "6pm": [{"F": "6"}, {"F": "pm", "L": "p.m."}],
-    "7pm": [{"F": "7"}, {"F": "pm", "L": "p.m."}],
-    "8pm": [{"F": "8"}, {"F": "pm", "L": "p.m."}],
-    "9pm": [{"F": "9"}, {"F": "pm", "L": "p.m."}],
-    "10pm": [{"F": "10"}, {"F": "pm", "L": "p.m."}],
-    "11pm": [{"F": "11"}, {"F": "pm", "L": "p.m."}],
-    "12pm": [{"F": "12"}, {"F": "pm", "L": "p.m."}],
-
-    "Ala.": [{"F": "Ala."}],
-    "Ariz.": [{"F": "Ariz."}],
-    "Ark.": [{"F":  "Ark."}],
-    "Calif.": [{"F": "Calif."}],
-    "Colo.": [{"F": "Colo."}],
-    "Conn.": [{"F": "Conn."}],
-    "Del.": [{"F":  "Del."}],
-    "D.C.": [{"F": "D.C."}],
-    "Fla.": [{"F":  "Fla."}],
-    "Ga.": [{"F": "Ga."}],
-    "Ill.": [{"F": "Ill."}],
-    "Ind.": [{"F": "Ind."}],
-    "Kans.": [{"F": "Kans."}],
-    "Kan.": [{"F": "Kan."}],
-    "Ky.": [{"F": "Ky."}],
-    "La.": [{"F": "La."}],
-    "Md.": [{"F": "Md."}],
-    "Mass.": [{"F": "Mass."}],
-    "Mich.": [{"F": "Mich."}],
-    "Minn.": [{"F": "Minn."}],
-    "Miss.": [{"F": "Miss."}],
-    "Mo.": [{"F": "Mo."}],
-    "Mont.": [{"F": "Mont."}],
-    "Nebr.": [{"F": "Nebr."}],
-    "Neb.": [{"F": "Neb."}],
-    "Nev.": [{"F":  "Nev."}],
-    "N.H.": [{"F": "N.H."}],
-    "N.J.": [{"F": "N.J."}],
-    "N.M.": [{"F": "N.M."}],
-    "N.Y.": [{"F": "N.Y."}],
-    "N.C.": [{"F": "N.C."}],
-    "N.D.": [{"F": "N.D."}],
-    "Okla.": [{"F": "Okla."}],
-    "Ore.": [{"F": "Ore."}],
-    "Pa.": [{"F": "Pa."}],
-    "Tenn.": [{"F": "Tenn."}],
-    "Va.": [{"F": "Va."}],
-    "Wash.": [{"F": "Wash."}],
-    "Wis.": [{"F": "Wis."}],
-
-    ":)":  [{"F": ":)"}],
-    "<3":  [{"F": "<3"}],
-    ";)":  [{"F": ";)"}],
-    "(:":  [{"F": "(:"}],
-    ":(":  [{"F": ":("}],
-    "-_-": [{"F": "-_-"}],
-    "=)":  [{"F": "=)"}],
-    ":/":  [{"F": ":/"}],
-    ":>":  [{"F": ":>"}],
-    ";-)": [{"F": ";-)"}],
-    ":Y":  [{"F": ":Y"}],
-    ":P":  [{"F": ":P"}],
-    ":-P": [{"F": ":-P"}],
-    ":3":  [{"F": ":3"}],
-    "=3":  [{"F": "=3"}],
-    "xD":  [{"F": "xD"}],
-    "^_^": [{"F": "^_^"}],
-    "=]":  [{"F": "=]"}],
-    "=D":  [{"F": "=D"}],
-    "<333":    [{"F": "<333"}],
-    ":))": [{"F": ":))"}],
-    ":0":  [{"F": ":0"}],
-    "-__-":    [{"F": "-__-"}],
-    "xDD": [{"F": "xDD"}],
-    "o_o": [{"F": "o_o"}],
-    "o_O": [{"F": "o_O"}],
-    "V_V": [{"F": "V_V"}],
-    "=[[": [{"F": "=[["}],
-    "<33": [{"F": "<33"}],
-    ";p":  [{"F": ";p"}],
-    ";D":  [{"F": ";D"}],
-    ";-p": [{"F": ";-p"}],
-    ";(":  [{"F": ";("}],
-    ":p":  [{"F": ":p"}],
-    ":]":  [{"F": ":]"}],
-    ":O":  [{"F": ":O"}],
-    ":-/": [{"F": ":-/"}],
-    ":-)": [{"F": ":-)"}],
-    ":(((":    [{"F": ":((("}],
-    ":((": [{"F": ":(("}],
-    ":')": [{"F": ":')"}],
-    "(^_^)":   [{"F": "(^_^)"}],
-    "(=":  [{"F": "(="}],
-    "o.O": [{"F": "o.O"}],
-    "\")": [{"F": "\")"}],
-
-    "a.": [{"F": "a."}],
-    "b.": [{"F": "b."}],
-    "c.": [{"F": "c."}],
-    "d.": [{"F": "d."}],
-    "e.": [{"F": "e."}],
-    "f.": [{"F": "f."}],
-    "g.": [{"F": "g."}],
-    "h.": [{"F": "h."}],
-    "i.": [{"F": "i."}],
-    "j.": [{"F": "j."}],
-    "k.": [{"F": "k."}],
-    "l.": [{"F": "l."}],
-    "m.": [{"F": "m."}],
-    "n.": [{"F": "n."}],
-    "o.": [{"F": "o."}],
-    "p.": [{"F": "p."}],
-    "q.": [{"F": "q."}],
-    "r.": [{"F": "r."}],
-    "s.": [{"F": "s."}],
-    "t.": [{"F": "t."}],
-    "u.": [{"F": "u."}],
-    "v.": [{"F": "v."}],
-    "w.": [{"F": "w."}],
-    "x.": [{"F": "x."}],
-    "y.": [{"F": "y."}],
-    "z.": [{"F": "z."}],
-}
+PRON_LEMMA = "-PRON-"
 
 
 TAG_MAP = {
-"$(": {"pos": "PUNCT", "PunctType": "Brck"},
-"$,": {"pos": "PUNCT", "PunctType": "Comm"},
-"$.": {"pos": "PUNCT", "PunctType": "Peri"},
-"ADJA":	{"pos": "ADJ"},
-"ADJD":	{"pos": "ADJ", "Variant": "Short"},
-"ADV":	{"pos": "ADV"},
-"APPO":	{"pos": "ADP", "AdpType": "Post"},
-"APPR":	{"pos": "ADP", "AdpType": "Prep"},
-"APPRART":	{"pos": "ADP", "AdpType": "Prep", "PronType": "Art"},
-"APZR":	{"pos": "ADP", "AdpType": "Circ"},
-"ART":	{"pos": "DET", "PronType": "Art"},
-"CARD":	{"pos": "NUM", "NumType": "Card"},
-"FM":	{"pos": "X", "Foreign": "Yes"},
-"ITJ":	{"pos": "INTJ"},
-"KOKOM": {"pos": "CONJ", "ConjType": "Comp"},
-"KON": {"pos": "CONJ"},
-"KOUI":	{"pos": "SCONJ"},
-"KOUS":	{"pos": "SCONJ"},
-"NE": {"pos": "PROPN"},
-"NNE": {"pos": "PROPN"},
-"NN": {"pos": "NOUN"},
-"PAV": {"pos": "ADV", "PronType": "Dem"},
-"PROAV": {"pos": "ADV", "PronType": "Dem"},
-"PDAT":	{"pos": "DET", "PronType": "Dem"},
-"PDS": {"pos": "PRON", "PronType": "Dem"},
-"PIAT":	{"pos": "DET", "PronType": "Ind,Neg,Tot"},
-"PIDAT":	{"pos": "DET", "AdjType": "Pdt", "PronType": "Ind,Neg,Tot"},
-"PIS":	{"pos": "PRON", "PronType": "Ind,Neg,Tot"},
-"PPER":	{"pos": "PRON", "PronType": "Prs"},
-"PPOSAT":	{"pos": "DET", "Poss": "Yes", "PronType": "Prs"},
-"PPOSS":	{"pos": "PRON", "Poss": "Yes", "PronType": "Prs"},
-"PRELAT":	{"pos": "DET", "PronType": "Rel"},
-"PRELS":	{"pos": "PRON", "PronType": "Rel"},
-"PRF":	{"pos": "PRON", "PronType": "Prs", "Reflex": "Yes"},
-"PTKA":	{"pos": "PART"},
-"PTKANT":	{"pos": "PART", "PartType": "Res"},
-"PTKNEG":	{"pos": "PART", "Negative": "Neg"},
-"PTKVZ":	{"pos": "PART", "PartType": "Vbp"},
-"PTKZU":	{"pos": "PART", "PartType": "Inf"},
-"PWAT":	{"pos": "DET", "PronType": "Int"},
-"PWAV":	{"pos": "ADV", "PronType": "Int"},
-"PWS":	{"pos": "PRON", "PronType": "Int"},
-"TRUNC":	{"pos": "X", "Hyph": "Yes"},
-"VAFIN":	{"pos": "AUX", "Mood": "Ind", "VerbForm": "Fin"},
-"VAIMP":	{"pos": "AUX", "Mood": "Imp", "VerbForm": "Fin"},
-"VAINF":	{"pos": "AUX", "VerbForm": "Inf"},
-"VAPP":	{"pos": "AUX", "Aspect": "Perf", "VerbForm": "Part"},
-"VMFIN":	{"pos": "VERB", "Mood": "Ind", "VerbForm": "Fin", "VerbType": "Mod"},
-"VMINF":	{"pos": "VERB", "VerbForm": "Inf", "VerbType": "Mod"},
-"VMPP":	{"pos": "VERB", "Aspect": "Perf", "VerbForm": "Part", "VerbType": "Mod"},
-"VVFIN":	{"pos": "VERB", "Mood": "Ind", "VerbForm": "Fin"},
-"VVIMP":	{"pos": "VERB", "Mood": "Imp", "VerbForm": "Fin"},
-"VVINF":	{"pos": "VERB", "VerbForm": "Inf"},
-"VVIZU":	{"pos": "VERB", "VerbForm": "Inf"},
-"VVPP":	{"pos": "VERB", "Aspect": "Perf", "VerbForm": "Part"},
-"XY":	{"pos": "X"},
-"SP": {"pos": "SPACE"}
+
 }
+
+
+STOP_WORDS = set("""
+actualmente acuerdo adelante ademas además adrede afirmó agregó ahi ahora ahí
+al algo alguna algunas alguno algunos algún alli allí alrededor ambos ampleamos
+antano antaño ante anterior antes apenas aproximadamente aquel aquella aquellas
+aquello aquellos aqui aquél aquélla aquéllas aquéllos aquí arriba arribaabajo
+aseguró asi así atras aun aunque ayer añadió aún
+
+bajo bastante bien breve buen buena buenas bueno buenos
+
+cada casi cerca cierta ciertas cierto ciertos cinco claro comentó como con
+conmigo conocer conseguimos conseguir considera consideró consigo consigue
+consiguen consigues contigo contra cosas creo cual cuales cualquier cuando
+cuanta cuantas cuanto cuantos cuatro cuenta cuál cuáles cuándo cuánta cuántas
+cuánto cuántos cómo
+
+da dado dan dar de debajo debe deben debido decir dejó del delante demasiado
+demás dentro deprisa desde despacio despues después detras detrás dia dias dice
+dicen dicho dieron diferente diferentes dijeron dijo dio donde dos durante día
+días dónde
+
+ejemplo el ella ellas ello ellos embargo empleais emplean emplear empleas
+empleo en encima encuentra enfrente enseguida entonces entre era eramos eran
+eras eres es esa esas ese eso esos esta estaba estaban estado estados estais
+estamos estan estar estará estas este esto estos estoy estuvo está están ex
+excepto existe existen explicó expresó él ésa ésas ése ésos ésta éstas éste
+éstos
+
+fin final fue fuera fueron fui fuimos
+
+general gran grandes gueno
+
+ha haber habia habla hablan habrá había habían hace haceis hacemos hacen hacer
+hacerlo haces hacia haciendo hago han hasta hay haya he hecho hemos hicieron
+hizo horas hoy hubo
+
+igual incluso indicó informo informó intenta intentais intentamos intentan
+intentar intentas intento ir
+
+junto
+
+la lado largo las le lejos les llegó lleva llevar lo los luego lugar
+
+mal manera manifestó mas mayor me mediante medio mejor mencionó menos menudo mi
+mia mias mientras mio mios mis misma mismas mismo mismos modo momento mucha
+muchas mucho muchos muy más mí mía mías mío míos
+
+nada nadie ni ninguna ningunas ninguno ningunos ningún no nos nosotras nosotros
+nuestra nuestras nuestro nuestros nueva nuevas nuevo nuevos nunca
+
+ocho os otra otras otro otros
+
+pais para parece parte partir pasada pasado paìs peor pero pesar poca pocas
+poco pocos podeis podemos poder podria podriais podriamos podrian podrias podrá
+podrán podría podrían poner por porque posible primer primera primero primeros
+principalmente pronto propia propias propio propios proximo próximo próximos
+pudo pueda puede pueden puedo pues
+
+qeu que quedó queremos quien quienes quiere quiza quizas quizá quizás quién quiénes qué
+
+raras realizado realizar realizó repente respecto
+
+sabe sabeis sabemos saben saber sabes salvo se sea sean segun segunda segundo
+según seis ser sera será serán sería señaló si sido siempre siendo siete sigue
+siguiente sin sino sobre sois sola solamente solas solo solos somos son soy
+soyos su supuesto sus suya suyas suyo sé sí sólo
+
+tal tambien también tampoco tan tanto tarde te temprano tendrá tendrán teneis
+tenemos tener tenga tengo tenido tenía tercera ti tiempo tiene tienen toda
+todas todavia todavía todo todos total trabaja trabajais trabajamos trabajan
+trabajar trabajas trabajo tras trata través tres tu tus tuvo tuya tuyas tuyo
+tuyos tú
+
+ultimo un una unas uno unos usa usais usamos usan usar usas uso usted ustedes
+última últimas último últimos
+
+va vais valor vamos van varias varios vaya veces ver verdad verdadera verdadero
+vez vosotras vosotros voy vuestra vuestras vuestro vuestros
+
+ya yo
+""".split())
+
+
+TOKENIZER_EXCEPTIONS = {
+    "accidentarse": [
+        {ORTH: "accidentar", LEMMA: "accidentar", POS: AUX},
+        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "aceptarlo": [
+        {ORTH: "aceptar", LEMMA: "aceptar", POS: AUX},
+        {ORTH: "lo", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "acompañarla": [
+        {ORTH: "acompañar", LEMMA: "acompañar", POS: AUX},
+        {ORTH: "la", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "advertirle": [
+        {ORTH: "advertir", LEMMA: "advertir", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "al": [
+        {ORTH: "a", LEMMA: "a", POS: ADP},
+        {ORTH: "el", LEMMA: "el", POS: DET}
+    ],
+
+    "anunciarnos": [
+        {ORTH: "anunciar", LEMMA: "anunciar", POS: AUX},
+        {ORTH: "nos", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "asegurándole": [
+        {ORTH: "asegurando", LEMMA: "asegurar", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "considerarle": [
+        {ORTH: "considerar", LEMMA: "considerar", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "decirle": [
+        {ORTH: "decir", LEMMA: "decir", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "decirles": [
+        {ORTH: "decir", LEMMA: "decir", POS: AUX},
+        {ORTH: "les", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "decirte": [
+        {ORTH: "Decir", LEMMA: "decir", POS: AUX},
+        {ORTH: "te", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "dejarla": [
+        {ORTH: "dejar", LEMMA: "dejar", POS: AUX},
+        {ORTH: "la", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "dejarnos": [
+        {ORTH: "dejar", LEMMA: "dejar", POS: AUX},
+        {ORTH: "nos", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "dejándole": [
+        {ORTH: "dejando", LEMMA: "dejar", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "del": [
+        {ORTH: "de", LEMMA: "de", POS: ADP},
+        {ORTH: "el", LEMMA: "el", POS: DET}
+    ],
+
+    "demostrarles": [
+        {ORTH: "demostrar", LEMMA: "demostrar", POS: AUX},
+        {ORTH: "les", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "diciéndole": [
+        {ORTH: "diciendo", LEMMA: "decir", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "diciéndoles": [
+        {ORTH: "diciendo", LEMMA: "decir", POS: AUX},
+        {ORTH: "les", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "diferenciarse": [
+        {ORTH: "diferenciar", LEMMA: "diferenciar", POS: AUX},
+        {ORTH: "se", LEMMA: "él", POS: PRON}
+    ],
+
+    "divirtiéndome": [
+        {ORTH: "divirtiendo", LEMMA: "divertir", POS: AUX},
+        {ORTH: "me", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "ensanchándose": [
+        {ORTH: "ensanchando", LEMMA: "ensanchar", POS: AUX},
+        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "explicarles": [
+        {ORTH: "explicar", LEMMA: "explicar", POS: AUX},
+        {ORTH: "les", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "haberla": [
+        {ORTH: "haber", LEMMA: "haber", POS: AUX},
+        {ORTH: "la", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "haberlas": [
+        {ORTH: "haber", LEMMA: "haber", POS: AUX},
+        {ORTH: "las", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "haberlo": [
+        {ORTH: "haber", LEMMA: "haber", POS: AUX},
+        {ORTH: "lo", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "haberlos": [
+        {ORTH: "haber", LEMMA: "haber", POS: AUX},
+        {ORTH: "los", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "haberme": [
+        {ORTH: "haber", LEMMA: "haber", POS: AUX},
+        {ORTH: "me", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "haberse": [
+        {ORTH: "haber", LEMMA: "haber", POS: AUX},
+        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "hacerle": [
+        {ORTH: "hacer", LEMMA: "hacer", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "hacerles": [
+        {ORTH: "hacer", LEMMA: "hacer", POS: AUX},
+        {ORTH: "les", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "hallarse": [
+        {ORTH: "hallar", LEMMA: "hallar", POS: AUX},
+        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "imaginaros": [
+        {ORTH: "imaginar", LEMMA: "imaginar", POS: AUX},
+        {ORTH: "os", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "insinuarle": [
+        {ORTH: "insinuar", LEMMA: "insinuar", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "justificarla": [
+        {ORTH: "justificar", LEMMA: "justificar", POS: AUX},
+        {ORTH: "la", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "mantenerlas": [
+        {ORTH: "mantener", LEMMA: "mantener", POS: AUX},
+        {ORTH: "las", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "mantenerlos": [
+        {ORTH: "mantener", LEMMA: "mantener", POS: AUX},
+        {ORTH: "los", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "mantenerme": [
+        {ORTH: "mantener", LEMMA: "mantener", POS: AUX},
+        {ORTH: "me", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "pasarte": [
+        {ORTH: "pasar", LEMMA: "pasar", POS: AUX},
+        {ORTH: "te", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "pedirle": [
+        {ORTH: "pedir", LEMMA: "pedir", POS: AUX},
+        {ORTH: "le", LEMMA: "él", POS: PRON}
+    ],
+
+    "pel": [
+        {ORTH: "per", LEMMA: "per", POS: ADP},
+        {ORTH: "el", LEMMA: "el", POS: DET}
+    ],
+
+    "pidiéndonos": [
+        {ORTH: "pidiendo", LEMMA: "pedir", POS: AUX},
+        {ORTH: "nos", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "poderle": [
+        {ORTH: "poder", LEMMA: "poder", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "preguntarse": [
+        {ORTH: "preguntar", LEMMA: "preguntar", POS: AUX},
+        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "preguntándose": [
+        {ORTH: "preguntando", LEMMA: "preguntar", POS: AUX},
+        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "presentarla": [
+        {ORTH: "presentar", LEMMA: "presentar", POS: AUX},
+        {ORTH: "la", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "pudiéndolo": [
+        {ORTH: "pudiendo", LEMMA: "poder", POS: AUX},
+        {ORTH: "lo", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "pudiéndose": [
+        {ORTH: "pudiendo", LEMMA: "poder", POS: AUX},
+        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "quererle": [
+        {ORTH: "querer", LEMMA: "querer", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "rasgarse": [
+        {ORTH: "Rasgar", LEMMA: "rasgar", POS: AUX},
+        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "repetirlo": [
+        {ORTH: "repetir", LEMMA: "repetir", POS: AUX},
+        {ORTH: "lo", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "robarle": [
+        {ORTH: "robar", LEMMA: "robar", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "seguirlos": [
+        {ORTH: "seguir", LEMMA: "seguir", POS: AUX},
+        {ORTH: "los", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "serle": [
+        {ORTH: "ser", LEMMA: "ser", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "serlo": [
+        {ORTH: "ser", LEMMA: "ser", POS: AUX},
+        {ORTH: "lo", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "señalándole": [
+        {ORTH: "señalando", LEMMA: "señalar", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "suplicarle": [
+        {ORTH: "suplicar", LEMMA: "suplicar", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "tenerlos": [
+        {ORTH: "tener", LEMMA: "tener", POS: AUX},
+        {ORTH: "los", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "vengarse": [
+        {ORTH: "vengar", LEMMA: "vengar", POS: AUX},
+        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "verla": [
+        {ORTH: "ver", LEMMA: "ver", POS: AUX},
+        {ORTH: "la", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "verle": [
+        {ORTH: "ver", LEMMA: "ver", POS: AUX},
+        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    ],
+
+    "volverlo": [
+        {ORTH: "volver", LEMMA: "volver", POS: AUX},
+        {ORTH: "lo", LEMMA: PRON_LEMMA, POS: PRON}
+    ]
+}
+
+
+ORTH_ONLY = [
+
+]
