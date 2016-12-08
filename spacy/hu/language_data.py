@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 import os
 import re
 
+import six
+
 
 def _load_txt_data(*file_paths):
     for path in file_paths:
@@ -19,6 +21,8 @@ _ABBREVIATIONS_NYTUD_PATH = _MODULE_PATH + "/data/tokenizer/abbreviations_nytud-
 _STOPWORDS_PATH = _MODULE_PATH + "/data/stopwords.txt"
 
 STOP_WORDS = set(_load_txt_data(_STOPWORDS_PATH))
+
+HYPHENS = [six.unichr(cp) for cp in [173, 8211, 8212, 8213, 8722, 9472]]
 
 TOKENIZER_PREFIXES = map(re.escape, r'''
 ,
