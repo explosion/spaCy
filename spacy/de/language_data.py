@@ -71,7 +71,6 @@ TAG_MAP = {
 
 
 STOP_WORDS = set("""
-
 á a ab aber ach acht achte achten achter achtes ag alle allein allem allen
 aller allerdings alles allgemeinen als also am an andere anderen andern anders
 auch auf aus ausser außer ausserdem außerdem
@@ -147,7 +146,6 @@ wollt wollte wollten worden wurde würde wurden würden
 
 zehn zehnte zehnten zehnter zehntes zeit zu zuerst zugleich zum zunächst zur
 zurück zusammen zwanzig zwar zwei zweite zweiten zweiter zweites zwischen
-
 """.split())
 
 
