@@ -10,7 +10,6 @@ from ..util import update_exc
 from ..language_data import EMOTICONS
 from .language_data import ORTH_ONLY
 from .language_data import strings_to_exc
-from .language_data import get_time_exc
 
 
 TOKENIZER_EXCEPTIONS = dict(language_data.TOKENIZER_EXCEPTIONS)
@@ -23,7 +22,6 @@ STOP_WORDS = set(language_data.STOP_WORDS)
 
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(EMOTICONS))
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(ORTH_ONLY))
-update_exc(TOKENIZER_EXCEPTIONS, get_time_exc(range(1, 24 + 1)))
 
 
 class German(Language):
