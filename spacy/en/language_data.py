@@ -3,6 +3,9 @@ from __future__ import unicode_literals
 import re
 
 from ..symbols import *
+from ..language_data import TOKENIZER_PREFIXES
+from ..language_data import TOKENIZER_SUFFIXES
+from ..language_data import TOKENIZER_INFIXES
 
 
 def strings_to_exc(orths):
@@ -2212,72 +2215,3 @@ ORTH_ONLY = [
     "y.",
     "z."
 ]
-
-
-TOKENIZER_PREFIXES = r'''
-,
-"
-(
-[
-{
-*
-<
-$
-£
-“
-'
-``
-`
-#
-US$
-C$
-A$
-€
-a-
-‘
-....
-...
-…
-'''.strip().split('\n')
-
-
-TOKENIZER_SUFFIXES = r'''
-,
-\"
-\)
-\]
-\}
-\*
-\!
-\?
-%
-\$
->
-:
-;
-'
-”
-''
-'s
-'S
-’s
-’S
-’
-…
-\.\.
-\.\.\.
-\.\.\.\.
-(?<=[a-z0-9)\]”"'%\)])\.
-(?<=[0-9])km
-'''.strip().split('\n')
-
-
-TOKENIZER_INFIXES = r'''
-…
-\.\.\.+
-(?<=[a-z])\.(?=[A-Z])
-(?<=[a-zA-Z])-(?=[a-zA-z])
-(?<=[a-zA-Z])--(?=[a-zA-z])
-(?<=[0-9])-(?=[0-9])
-(?<=[A-Za-z]),(?=[A-Za-z])
-'''.strip().split('\n')
