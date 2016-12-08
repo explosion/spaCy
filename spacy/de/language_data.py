@@ -3,7 +3,21 @@ from __future__ import unicode_literals
 import re
 
 from ..symbols import *
-from ..language_data import EMOTICONS
+
+
+def strings_to_exc(orths):
+    return {orth: [{ORTH: orth}] for orth in orths}
+
+
+def get_time_exc(hours):
+    exc = {}
+    for hour in hours:
+        # currently only supporting formats like "10h", not "10 Uhr"
+        exc["%dh" % hour] = [
+            {ORTH: hour},
+            {ORTH: "h", LEMMA: "Uhr"}
+        ]
+    return exc
 
 
 PRON_LEMMA = "-PRON-"
@@ -655,7 +669,7 @@ TOKENIZER_EXCEPTIONS = {
 }
 
 
-self_map = [
+ORTH_ONLY = [
     "''",
     "\\\")",
     "<space>",

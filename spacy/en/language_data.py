@@ -3,7 +3,35 @@ from __future__ import unicode_literals
 import re
 
 from ..symbols import *
-from ..language_data import EMOTICONS
+
+
+def strings_to_exc(orths):
+    return {orth: [{ORTH: orth}] for orth in orths}
+
+
+def get_time_exc(hours):
+    exc = {}
+    for hour in hours:
+        exc["%da.m." % hour] = [
+            {ORTH: hour},
+            {ORTH: "a.m."}
+        ]
+
+        exc["%dp.m." % hour] = [
+            {ORTH: hour},
+            {ORTH: "p.m."}
+        ]
+
+        exc["%dam" % hour] = [
+            {ORTH: hour},
+            {ORTH: "am", LEMMA: "a.m."}
+        ]
+
+        exc["%dpm" % hour] = [
+            {ORTH: hour},
+            {ORTH: "pm", LEMMA: "p.m."}
+        ]
+    return exc
 
 
 PRON_LEMMA = "-PRON-"
@@ -2121,7 +2149,7 @@ TOKENIZER_EXCEPTIONS = {
 }
 
 
-self_map = [
+ORTH_ONLY = [
     "''",
     "\")",
     "a.",
@@ -2184,11 +2212,6 @@ self_map = [
     "y.",
     "z."
 ]
-
-for orths in [self_map, EMOTICONS]:
-    overlap = set(TOKENIZER_EXCEPTIONS.keys()).intersection(set(orths))
-    assert not overlap, overlap
-    TOKENIZER_EXCEPTIONS.update({orth: [{ORTH: orth}] for orth in orths})
 
 
 TOKENIZER_PREFIXES = r'''
