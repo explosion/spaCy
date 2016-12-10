@@ -1,0 +1,58 @@
+# TOKEN dots
+
+0. egyszeru szavak
+IN : N. kormányzósági
+IN : székhely.
+OUT: <s><w>N.</w><ws> </ws><w>kormányzósági</w><ws>
+OUT: </ws><w>székhely</w><c>.</c></s>
+
+
+1. szavak pontokkal
+
+1.1 mondatkozi verziok
+1.1.1 pottal kezdodo szavak
+IN : A .hu egy tld.
+OUT: <s><w>A</w><ws> </ws><w>.hu</w><ws> </ws><w>egy</w><ws> </ws><w>tld</w><c>.</c></s>
+1.1.2 pont a szo belsejeben
+IN : Az egy.ketto pelda.
+OUT: <s><w>Az</w><ws> </ws><w>egy.ketto</w><ws> </ws><w>pelda</w><c>.</c></s>
+1.1.3 pont a szo vegen
+IN : A pl. rovidites.
+OUT: <s><w>A</w><ws> </ws><w>pl.</w><ws> </ws><w>rovidites</w><c>.</c></s>
+1.1.4 pontozott szo
+IN : A S.M.A.R.T. szo.
+OUT: <s><w>A</w><ws> </ws><w>S.M.A.R.T.</w><ws> </ws><w>szo</w><c>.</c></s>
+
+1.2 mondatvegi verziok
+1.2.1 pottal kezdodo szavak
+IN : A .hu.
+OUT: <s><w>A</w><ws> </ws><w>.hu</w><c>.</c></s>
+1.2.2 pont a szo belsejeben
+IN : Az egy.ketto.
+OUT: <s><w>Az</w><ws> </ws><w>egy.ketto</w><c>.</c></s>
+1.2.3 pont a szo vegen
+#TODO: cf. Huntoken
+IN : A pl.
+OUT: <s><w>A</w><ws> </ws><w>pl.</w></s>
+1.2.4 pontozott szo
+#TODO: cf. Huntoken
+IN : A S.M.A.R.T.
+OUT: <s><w>A</w><ws> </ws><w>S.M.A.R.T.</w></s>
+
+
+2. tobb pont
+
+2.1 ketto vagy tobb pont utan uj szo
+IN : Egy..ket.
+OUT: <s><w>Egy</w><c>..</c><w>ket</w><c>.</c></s>
+IN : Valami... van.
+OUT: <s><w>Valami</w><c>...</c><ws> </ws><w>van</w><c>.</c></s>
+IN : Valami ...van...
+OUT: <s><w>Valami</w><ws> </ws><c>...</c><w>van</w><c>...</c></s>
+IN : Valami...
+OUT: <s><w>Valami</w><c>...</c></s>
+IN : Valami ...
+OUT: <s><w>Valami</w><ws> </ws><c>...</c></s>
+IN : Valami ... más.
+OUT: <s><w>Valami</w><ws> </ws><c>...</c><ws> </ws><w>más</w><c>.</c></s>
+

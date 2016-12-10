@@ -24,34 +24,7 @@ STOP_WORDS = set(_load_txt_data(_STOPWORDS_PATH))
 
 HYPHENS = [six.unichr(cp) for cp in [173, 8211, 8212, 8213, 8722, 9472]]
 
-TOKENIZER_PREFIXES = map(re.escape, r'''
-,
-"
-(
-[
-{
-*
-<
->
-$
-£
-„
-“
-'
-``
-`
-#
-US$
-C$
-A$
-‘
-....
-...
-‚
-»
-_
-§
-'''.strip().split('\n'))
+TOKENIZER_PREFIXES = r''', " ( [ { * < $ £ “ ' `` ` # US$ C$ A$ a- ‘ .... ...'''.split()
 
 TOKENIZER_SUFFIXES = r'''
 ,
@@ -125,11 +98,11 @@ _
 (?<=[0-9])kb
 '''.strip().split('\n')
 
-TOKENIZER_INFIXES = (r'''\.\.\.+ (?<=[a-z])\.(?=[A-Z]) (?<=[a-zA-Z])-(?=[a-zA-z]) '''
+TOKENIZER_INFIXES = (r'''\.\.+ (?<=[a-z])\.(?=[A-Z]) (?<=[a-zA-Z])-(?=[a-zA-z]) '''
                      r'''(?<=[a-zA-Z])--(?=[a-zA-z]) (?<=[0-9])-(?=[0-9]) '''
                      r'''(?<=[A-Za-z]),(?=[A-Za-z])''').split()
 
-ABBREVIATIONS = {abbrev: [{"F": abbrev}] for abbrev in
+ABBREVIATIONS = {abbrev: [{"ORTH": abbrev}] for abbrev in
                  _load_txt_data(_ABBREVIATIONS_ORIG_PATH, _ABBREVIATIONS_NYTUD_PATH)}
 
 TOKENIZER_EXCEPTIONS = {
