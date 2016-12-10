@@ -1,0 +1,22 @@
+# TOKEN quote
+
+mondatban
+IN : Az "Ime, hat"-ban irja.
+OUT: <s><w>Az</w><ws> </ws><c>"</c><w>Ime</w><c>,</c><ws> </ws><w>hat</w><c>"</c><w>-ban</w><ws> </ws><w>irja</w><c>.</c></s>
+
+mondat elejen
+IN : "Ime, hat"-ban irja.
+OUT: <s><c>"</c><w>Ime</w><c>,</c><ws> </ws><w>hat</w><c>"</c><w>-ban</w><ws> </ws><w>irja</w><c>.</c></s>
+
+mondat vegen
+IN : Az "Ime, hat".
+OUT: <s><w>Az</w><ws> </ws><c>"</c><w>Ime</w><c>,</c><ws> </ws><w>hat</w><c>"</c><c>.</c></s>
+
+magaban
+IN : Egy 24"-os monitor.
+OUT: <s><w>Egy</w><ws> </ws><w>24</w><c>"</c><w>-os</w><ws> </ws><w>monitor</w><c>.</c></s>
+
+aposztrof
+IN : A don't van.
+OUT: <s><w>A</w><ws> </ws><w>don't</w><ws> </ws><w>van</w><c>.</c></s>
+

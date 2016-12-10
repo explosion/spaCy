@@ -55,6 +55,9 @@ class TokenizerTestCase(object):
 
 
 _DOTS_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_dots.txt"))
+_HYPHEN_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_hyphen.txt"))
+_QUOTE_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_quote.txt"))
+ALL_TESTCASES = _DOTS_CASES + _HYPHEN_CASES
 
 
 @pytest.fixture(scope="session")
@@ -67,8 +70,8 @@ def hu_tokenizer(HU):
     return HU.tokenizer
 
 
-@pytest.mark.parametrize(("test_case"), _DOTS_CASES)
+@pytest.mark.parametrize(("test_case"), ALL_TESTCASES)
 def test_abbreviations(hu_tokenizer, test_case):
     tokens = hu_tokenizer(test_case.input)
     token_list = [token.orth_ for token in tokens if not token.is_space]
-    assert test_case.expected_tokens == token_list, "{} was erronously tokenized as {}".format(test_case, token_list)
+    assert test_case.expected_tokens == token_list#, "{} was erronously tokenized as {}".format(test_case, token_list)
