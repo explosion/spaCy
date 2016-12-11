@@ -371,7 +371,6 @@ IDS = {
     "ORDINAL": ORDINAL,
     "CARDINAL": CARDINAL,
 
-    "acl": acl,
     "acomp": acomp,
     "advcl": advcl,
     "advmod": advmod,
