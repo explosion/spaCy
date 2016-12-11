@@ -426,3 +426,9 @@ cpdef enum symbol_t:
 #IS_QUOTE
 #IS_LEFT_PUNCT
 #IS_RIGHT_PUNCT
+
+# These symbols are currently missing. However, if we add them currently,
+# we'll throw off the integer index and the model will have to be retrained.
+# We therefore wait until the next data version to add them.
+# acl
+
