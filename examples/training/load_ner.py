@@ -11,7 +11,7 @@ def load_model(model_dir):
     with (model_dir / 'vocab' / 'strings.json').open('r', encoding='utf8') as file_:
         nlp.vocab.strings.load(file_)
     nlp.vocab.load_lexemes(model_dir / 'vocab' / 'lexemes.bin')
-    ner = EntityRecognizer.load(pathlib.Path("ner"), nlp.vocab, require=True)
+    ner = EntityRecognizer.load(model_dir, nlp.vocab, require=True)
     return (nlp, ner)
 
 (nlp, ner) = load_model('ner')
