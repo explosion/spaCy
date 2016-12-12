@@ -69,7 +69,7 @@ def main(output_dir=None):
         print(word.text, word.tag_, word.pos_)
     if output_dir is not None:
         tagger.model.dump(str(output_dir / 'pos' / 'model'))
-        with (output_dir / 'vocab' / 'strings.json').open('wb') as file_:
+        with (output_dir / 'vocab' / 'strings.json').open('w') as file_:
             tagger.vocab.strings.dump(file_)
 
 
