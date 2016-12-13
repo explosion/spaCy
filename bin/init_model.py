@@ -151,10 +151,10 @@ def _read_senses(loc):
 def setup_vocab(lex_attr_getters, tag_map, src_dir, dst_dir):
     if not dst_dir.exists():
         dst_dir.mkdir()
-
+    print('Reading vocab from ', src_dir)
     vectors_src = src_dir / 'vectors.bz2'
     if vectors_src.exists():
-        write_binary_vectors(vectors_src.as_posix, (dst_dir / 'vec.bin').as_posix())
+        write_binary_vectors(vectors_src.as_posix(), (dst_dir / 'vec.bin').as_posix())
     else:
         print("Warning: Word vectors file not found")
     vocab = Vocab(lex_attr_getters=lex_attr_getters, tag_map=tag_map)
