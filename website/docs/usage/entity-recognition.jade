@@ -217,7 +217,7 @@ p
         ('I like London and Berlin.', [(7, 13, 'LOC'), (18, 24, 'LOC')])
     ]
 
-    nlp = spacy.load(entity=False, parser=False)
+    nlp = spacy.load('en', entity=False, parser=False)
     ner = EntityRecognizer(nlp.vocab, entity_types=['PERSON', 'LOC'])
 
     for itn in range(5):
