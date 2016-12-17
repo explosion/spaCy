@@ -2151,7 +2151,7 @@ TOKENIZER_EXCEPTIONS = {
 
     "Wis.": [
         {ORTH: "Wis.", LEMMA: "Wisconsin"}
-    ],
+    ]
 }
 
 
