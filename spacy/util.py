@@ -108,12 +108,6 @@ def compile_infix_regex(entries):
     return re.compile(expression)
 
 
-def update_exc(exc, additions):
-    overlap = set(exc.keys()).intersection(set(additions))
-    assert not overlap, overlap
-    exc.update(additions)
-
-
 def normalize_slice(length, start, stop, step=None):
     if not (step is None or step == 1):
         raise ValueError("Stepped slices not supported in Span objects."

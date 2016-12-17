@@ -10,8 +10,8 @@ from ..lemmatizer import Lemmatizer
 from ..vocab import Vocab
 from ..tokenizer import Tokenizer
 from ..attrs import LANG
-from ..util import update_exc
 
+from ..language_data import update_exc
 from ..language_data import EMOTICONS
 from .language_data import ORTH_ONLY
 from .language_data import strings_to_exc
