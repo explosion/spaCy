@@ -12,6 +12,7 @@ TAG_MAP = {
 
 }
 
+
 STOP_WORDS = set("""
 a à â abord absolument afin ah ai aie ailleurs ainsi ait allaient allo allons
 allô alors anterieur anterieure anterieures apres après as assez attendu au

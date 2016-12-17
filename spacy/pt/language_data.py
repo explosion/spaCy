@@ -12,6 +12,7 @@ TAG_MAP = {
 
 }
 
+
 STOP_WORDS = set("""
 à às acerca adeus agora ainda algmas algo algumas alguns ali além ambos ano
 anos antes ao aos apenas apoio apontar após aquela aquelas aquele aqueles aqui

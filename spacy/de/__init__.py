@@ -10,6 +10,7 @@ from . import language_data
 from ..language_data import update_exc
 from ..language_data import strings_to_exc
 from ..language_data import EMOTICONS
+
 from .language_data import ORTH_ONLY
 
 
