@@ -28,6 +28,7 @@ PACKAGES = [
     'spacy.fr',
     'spacy.it',
     'spacy.pt',
+    'spacy.nl',
     'spacy.serialize',
     'spacy.syntax',
     'spacy.munge',

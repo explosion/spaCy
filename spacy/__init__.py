@@ -10,6 +10,7 @@ from . import es
 from . import it
 from . import fr
 from . import pt
+from . import nl
 
 
 try:
@@ -25,6 +26,7 @@ set_lang_class(pt.Portuguese.lang, pt.Portuguese)
 set_lang_class(fr.French.lang, fr.French)
 set_lang_class(it.Italian.lang, it.Italian)
 set_lang_class(zh.Chinese.lang, zh.Chinese)
+set_lang_class(nl.Dutch.lang, nl.Dutch)
 
 
 def load(name, **overrides):
@@ -33,7 +35,7 @@ def load(name, **overrides):
     if target_name == 'en' and 'add_vectors' not in overrides:
         if 'vectors' in overrides:
             vec_path = util.match_best_version(overrides['vectors'], None, data_path)
-            if vec_path is None: 
+            if vec_path is None:
                 raise IOError(
                     'Could not load data pack %s from %s' % (overrides['vectors'], data_path))
 
