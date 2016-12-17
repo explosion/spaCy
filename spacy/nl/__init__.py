@@ -13,6 +13,7 @@ from ..language_data import EMOTICONS
 
 from .language_data import ORTH_ONLY
 
+
 TOKENIZER_EXCEPTIONS = dict(language_data.TOKENIZER_EXCEPTIONS)
 TOKENIZER_PREFIXES = tuple(language_data.TOKENIZER_PREFIXES)
 TOKENIZER_SUFFIXES = tuple(language_data.TOKENIZER_SUFFIXES)
