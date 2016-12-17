@@ -2156,7 +2156,7 @@ TOKENIZER_EXCEPTIONS = {
 
 
 ORTH_ONLY = [
-    "''",
+    "'",
     "\")",
     "a.",
     "a.m.",
