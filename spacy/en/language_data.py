@@ -1493,6 +1493,16 @@ TOKENIZER_EXCEPTIONS = {
         {ORTH: "ma"}
     ],
 
+    "gonna": [
+        {ORTH: "gon", LEMMA: "go"},
+        {ORTH: "na", LEMMA: "to"}
+    ],
+
+    "Gonna": [
+        {ORTH: "Gon", LEMMA: "go"},
+        {ORTH: "na", LEMMA: "to"}
+    ],
+
     "whats": [
         {ORTH: "what"},
         {ORTH: "s"}
