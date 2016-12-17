@@ -229,7 +229,7 @@ TOKENIZER_EXCEPTIONS = {
 
     "Who're": [
         {ORTH: "Who"},
-        {ORTH: "'re"}
+        {ORTH: "'re", LEMMA: "be"}
     ],
 
     "Ain't": [
@@ -376,7 +376,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Shan't": [
-        {ORTH: "Sha"},
+        {ORTH: "Sha", LEMMA: "shall"},
         {ORTH: "n't", LEMMA: "not", TAG: "RB"}
     ],
 
@@ -474,7 +474,7 @@ TOKENIZER_EXCEPTIONS = {
 
     "who're": [
         {ORTH: "who"},
-        {ORTH: "'re"}
+        {ORTH: "'re", LEMMA: "be"}
     ],
 
     "Whys": [
@@ -718,7 +718,7 @@ TOKENIZER_EXCEPTIONS = {
 
     "what're": [
         {ORTH: "what"},
-        {ORTH: "'re"}
+        {ORTH: "'re", LEMMA: "be"}
     ],
 
     "Wasn't": [
@@ -918,7 +918,7 @@ TOKENIZER_EXCEPTIONS = {
 
     "What're": [
         {ORTH: "What"},
-        {ORTH: "'re"}
+        {ORTH: "'re", LEMMA: "be"}
     ],
 
     "He'll": [
@@ -933,7 +933,7 @@ TOKENIZER_EXCEPTIONS = {
 
     "They're": [
         {ORTH: "They", LEMMA: PRON_LEMMA},
-        {ORTH: "'re"}
+        {ORTH: "'re", LEMMA: "be"}
     ],
 
     "shouldnt": [
@@ -997,7 +997,7 @@ TOKENIZER_EXCEPTIONS = {
 
     "they're": [
         {ORTH: "they", LEMMA: PRON_LEMMA},
-        {ORTH: "'re"}
+        {ORTH: "'re", LEMMA: "be"}
     ],
 
     "idve": [
@@ -1048,7 +1048,7 @@ TOKENIZER_EXCEPTIONS = {
 
     "You're": [
         {ORTH: "You", LEMMA: PRON_LEMMA},
-        {ORTH: "'re"}
+        {ORTH: "'re", LEMMA: "be"}
     ],
 
     "she'll": [
@@ -1083,13 +1083,13 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "won't": [
-        {ORTH: "wo"},
+        {ORTH: "wo", LEMMA: "will"},
         {ORTH: "n't", LEMMA: "not", TAG: "RB"}
     ],
 
     "We're": [
-        {ORTH: "We"},
-        {ORTH: "'re"}
+        {ORTH: "We", LEMMA: PRON_LEMMA},
+        {ORTH: "'re", LEMMA: "be"}
     ],
 
     "\u2018S": [
@@ -1348,7 +1348,7 @@ TOKENIZER_EXCEPTIONS = {
 
     "why're": [
         {ORTH: "why"},
-        {ORTH: "'re"}
+        {ORTH: "'re", LEMMA: "be"}
     ],
 
     "Doesnt": [
@@ -1393,7 +1393,7 @@ TOKENIZER_EXCEPTIONS = {
 
     "you're": [
         {ORTH: "you", LEMMA: PRON_LEMMA},
-        {ORTH: "'re"}
+        {ORTH: "'re", LEMMA: "be"}
     ],
 
     "They've": [
@@ -1457,7 +1457,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Won't": [
-        {ORTH: "Wo"},
+        {ORTH: "Wo", LEMMA: "will"},
         {ORTH: "n't", LEMMA: "not", TAG: "RB"}
     ],
 
@@ -1602,8 +1602,8 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "we're": [
-        {ORTH: "we"},
-        {ORTH: "'re"}
+        {ORTH: "we", LEMMA: PRON_LEMMA},
+        {ORTH: "'re", LEMMA: "be"}
     ],
 
     "Hadnt": [
@@ -1824,7 +1824,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "shan't": [
-        {ORTH: "sha"},
+        {ORTH: "sha", LEMMA: "shall"},
         {ORTH: "n't", LEMMA: "not", TAG: "RB"}
     ],
 
