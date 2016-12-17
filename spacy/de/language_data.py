@@ -655,7 +655,7 @@ TOKENIZER_EXCEPTIONS = {
 
 
 ORTH_ONLY = [
-    "''",
+    "'",
     "\\\")",
     "<space>",
     "a.",
