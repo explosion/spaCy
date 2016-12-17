@@ -87,8 +87,6 @@ TAG_MAP = {
     "ADD":      {POS: X},
     "NFP":      {POS: PUNCT},
     "GW":       {POS: X},
-    "AFX":      {POS: X},
-    "HYPH":     {POS: PUNCT},
     "XX":       {POS: X},
     "BES":      {POS: VERB},
     "HVS":      {POS: VERB}
