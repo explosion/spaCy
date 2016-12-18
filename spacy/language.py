@@ -53,7 +53,7 @@ class BaseDefaults(object):
         else:
             return Vocab.load(nlp.path, lex_attr_getters=cls.lex_attr_getters,
                              tag_map=cls.tag_map, lemmatizer=lemmatizer)
-    
+
     @classmethod
     def add_vectors(cls, nlp=None):
         if nlp is None or nlp.path is None:
@@ -150,9 +150,9 @@ class BaseDefaults(object):
     tag_map = {}
 
     tokenizer_exceptions = {}
-   
+
     parser_features = get_templates('parser')
-    
+
     entity_features = get_templates('ner')
 
     tagger_features = Tagger.feature_templates # TODO -- fix this
@@ -257,7 +257,7 @@ class Language(object):
             path = util.match_best_version(self.lang, '', util.get_data_path())
 
         self.path = path
- 
+
         self.vocab     = self.Defaults.create_vocab(self) \
                          if 'vocab' not in overrides \
                          else overrides['vocab']
@@ -299,7 +299,7 @@ class Language(object):
         """Apply the pipeline to some text.  The text can span multiple sentences,
         and can contain arbtrary whitespace.  Alignment into the original string
         is preserved.
-        
+
         Args:
             text (unicode): The text to be processed.
 
@@ -327,9 +327,9 @@ class Language(object):
 
     def pipe(self, texts, tag=True, parse=True, entity=True, n_threads=2, batch_size=1000):
         '''Process texts as a stream, and yield Doc objects in order.
-        
+
         Supports GIL-free multi-threading.
-        
+
         Arguments:
             texts (iterator)
             tag (bool)
@@ -352,7 +352,7 @@ class Language(object):
             path = self.path
         elif isinstance(path, basestring):
             path = pathlib.Path(path)
-        
+
         if self.tagger:
             self.tagger.model.end_training()
             self.tagger.model.dump(str(path / 'pos' / 'model'))
@@ -362,7 +362,7 @@ class Language(object):
         if self.entity:
             self.entity.model.end_training()
             self.entity.model.dump(str(path / 'ner' / 'model'))
-        
+
         strings_loc = path / 'vocab' / 'strings.json'
         with strings_loc.open('w', encoding='utf8') as file_:
             self.vocab.strings.dump(file_)
