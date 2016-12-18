@@ -83,6 +83,8 @@ cdef class Vocab:
         if tag_map is True and (path / 'vocab' / 'tag_map.json').exists():
             with (path / 'vocab' / 'tag_map.json').open('r', encoding='utf8') as file_:
                 tag_map = json.load(file_)
+        elif tag_map is True:
+            tag_map = None
         if lex_attr_getters is not None \
         and oov_prob is True \
         and (path / 'vocab' / 'oov_prob').exists():
