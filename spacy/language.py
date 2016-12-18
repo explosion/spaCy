@@ -39,7 +39,7 @@ class BaseDefaults(object):
         if nlp is None or nlp.path is None:
             return Lemmatizer({}, {}, {})
         else:
-            return Lemmatizer.load(nlp.path, rules=self.lemma_rules)
+            return Lemmatizer.load(nlp.path, rules=cls.lemma_rules)
 
     @classmethod
     def create_vocab(cls, nlp=None):
