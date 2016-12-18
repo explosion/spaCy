@@ -5,6 +5,7 @@ from ..symbols import *
 
 
 PRON_LEMMA = "-PRON-"
+ENT_ID = "ent_id"
 
 
 def update_exc(exc, additions):
