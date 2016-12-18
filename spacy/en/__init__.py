@@ -37,7 +37,9 @@ class English(Language):
 def _fix_deprecated_glove_vectors_loading(overrides):
     if 'data_dir' in overrides and 'path' not in overrides:
         raise ValueError("The argument 'data_dir' has been renamed to 'path'")
-    if overrides.get('path') is None:
+    if overrides.get('path') is False:
+        return overrides
+    if overrides.get('path') in (None, True):
         data_path = get_data_path()
     else:
         path = overrides['path']
