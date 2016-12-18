@@ -9,7 +9,7 @@ from .symbols import POS, NOUN, VERB, ADJ, PUNCT
 
 class Lemmatizer(object):
     @classmethod
-    def load(cls, path):
+    def load(cls, path, rules=None):
         index = {}
         exc = {}
         for pos in ['adj', 'noun', 'verb']:
@@ -25,8 +25,11 @@ class Lemmatizer(object):
                     exc[pos] = read_exc(file_)
             else:
                 exc[pos] = {}
-        with (path / 'vocab' / 'lemma_rules.json').open('r', encoding='utf8') as file_:
-            rules = json.load(file_)
+        if rules is None and (path / 'vocab' / 'lemma_rules.json').exists():
+            with (path / 'vocab' / 'lemma_rules.json').open('r', encoding='utf8') as file_:
+                rules = json.load(file_)
+        elif rules is None:
+            rules = {}
         return cls(index, exc, rules)
 
     def __init__(self, index, exceptions, rules):
