@@ -81,6 +81,7 @@ MOD_NAMES = [
     'spacy.syntax.ner',
     'spacy.symbols',
     'spacy.syntax.iterators']
+    # TODO: This is missing a lot of modules. Does it matter?
 
 
 COMPILE_OPTIONS =  {
