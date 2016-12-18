@@ -7,7 +7,7 @@ if [ "${VIA}" == "pypi" ]; then
     python -m spacy.de.download
 fi
 
-if [ "${VIA}" == "sdist" && "$TRAVIS_PULL_REQUEST" == "false" ]; then
+if [[ "${VIA}" == "sdist" && "${TRAVIS_PULL_REQUEST}" == "false" ]]; then
   rm -rf *
   pip uninstall spacy
   wget https://api.explosion.ai/build/spacy/sdist/$TRAVIS_COMMIT
