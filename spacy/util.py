@@ -52,7 +52,6 @@ def or_(val1, val2):
         return val2
 
 
-
 def match_best_version(target_name, target_version, path):
     path = path if not isinstance(path, basestring) else pathlib.Path(path)
     if not path.exists():

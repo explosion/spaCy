@@ -4,10 +4,11 @@ from libc.stdint cimport uint64_t
 
 from .structs cimport TokenC
 from .strings cimport StringStore
-from .typedefs cimport attr_t
+from .typedefs cimport attr_t, flags_t
 from .parts_of_speech cimport univ_pos_t
 
 from . cimport symbols
+
 
 cdef struct RichTagC:
     uint64_t morph
@@ -37,7 +38,7 @@ cdef class Morphology:
 
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1
     
-    cdef int assign_feature(self, uint64_t* morph, feature, value) except -1
+    cdef int assign_feature(self, uint64_t* morph, univ_morph_t feat_id, bint value) except -1
 
 
 cpdef enum univ_morph_t:
