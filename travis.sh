@@ -16,9 +16,11 @@ if [[ "${VIA}" == "sdist" && "${TRAVIS_PULL_REQUEST}" == "false" ]]; then
 fi
 
 
-#if [ "${VIA}" == "compile" ]; then
-#  pip install -r requirements.txt
-#  pip install -e .
+if [ "${VIA}" == "compile" ]; then
+  pip install -r requirements.txt
+  pip install -e .
+fi
+
 #  mkdir -p corpora/en
 #  cd corpora/en
 #  wget --no-check-certificate http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz
