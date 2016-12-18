@@ -46,4 +46,5 @@ def load(name, **overrides):
             overrides['add_vectors'] = lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
     path = util.match_best_version(target_name, target_version, data_path)
     cls = get_lang_class(target_name)
-    return cls(path=path, **overrides)
+    overrides['path'] = path
+    return cls(**overrides)
