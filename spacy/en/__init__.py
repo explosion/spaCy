@@ -4,6 +4,7 @@ from __future__ import unicode_literals, print_function
 from os import path
 
 from ..util import match_best_version
+from ..util import get_data_path
 from ..language import Language
 from ..lemmatizer import Lemmatizer
 from ..vocab import Vocab
@@ -37,10 +38,11 @@ def _fix_deprecated_glove_vectors_loading(overrides):
     if 'data_dir' in overrides and 'path' not in overrides:
         raise ValueError("The argument 'data_dir' has been renamed to 'path'")
     if overrides.get('path') is None:
-        return overrides
-    path = overrides['path']
-    if 'add_vectors' not in overrides:
+        data_path = get_data_path()
+    else:
+        path = overrides['path']
         data_path = path.parent
+    if 'add_vectors' not in overrides:
         if 'vectors' in overrides:
             vec_path = match_best_version(overrides['vectors'], None, data_path)
             if vec_path is None:
