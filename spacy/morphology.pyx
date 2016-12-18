@@ -1,3 +1,6 @@
+# cython: infer_types
+from __future__ import unicode_literals
+
 from os import path
 
 from libc.string cimport memset
@@ -13,7 +16,7 @@ from .parts_of_speech cimport ADJ, VERB, NOUN, PUNCT
 from .attrs cimport POS, IS_SPACE
 from .parts_of_speech import IDS as POS_IDS
 from .lexeme cimport Lexeme
-from .attrs import intify_attrs
+from .attrs import LEMMA, intify_attrs
 
 
 def _normalize_props(props):
@@ -106,9 +109,8 @@ cdef class Morphology:
         tag = self.strings[tag_str]
         tag_id = self.reverse_index[tag]
         orth = self.strings[orth_str]
-        rich_tag = self.rich_tags[tag_id]
+        cdef RichTagC rich_tag = self.rich_tags[tag_id]
         attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
-
         cached = <MorphAnalysisC*>self._cache.get(tag_id, orth)
         if cached is NULL:
             cached = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
@@ -121,8 +123,12 @@ cdef class Morphology:
             raise ValueError(msg)
 
         cached.tag = rich_tag
+        # TODO: Refactor this to take arbitrary attributes.
         for name_id, value_id in attrs.items():
-            self.assign_feature(&cached.tag.morph, name_id, value_id)
+            if name_id == LEMMA:
+                cached.lemma = value_id
+            else:
+                self.assign_feature(&cached.tag.morph, name_id, value_id)
         if cached.lemma == 0:
             cached.lemma = self.lemmatize(rich_tag.pos, orth,
                                           self.tag_map.get(tag_str, {}))
