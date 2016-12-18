@@ -40,4 +40,3 @@ def test_not_lemmatize_base_forms(vocab, lemmatizer):
     feed.tag_ = u'VB'
     assert feed.text == u'feed'
     assert feed.lemma_ == u'feed'
-
