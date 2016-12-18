@@ -8,9 +8,9 @@ import cloudpickle
 import tempfile
 
 from ... import util
-from ...en.language_data import TOKENIZER_PREFIXES as EN_TOKENIZER_PREFIXES
+from ...language_data import TOKENIZER_PREFIXES
 
-en_search_prefixes = util.compile_prefix_regex(EN_TOKENIZER_PREFIXES).search
+en_search_prefixes = util.compile_prefix_regex(TOKENIZER_PREFIXES).search
 
 # @pytest.mark.xfail
 # def test_pickle(en_tokenizer):
