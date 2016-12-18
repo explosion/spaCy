@@ -12,7 +12,7 @@ try:
 except ImportError:
     import json
 
-from .parts_of_speech cimport ADJ, VERB, NOUN, PUNCT
+from .parts_of_speech cimport ADJ, SPACE, VERB, NOUN, PUNCT
 from .attrs cimport POS, IS_SPACE
 from .parts_of_speech import IDS as POS_IDS
 from .lexeme cimport Lexeme
@@ -48,6 +48,9 @@ cdef class Morphology:
         self.reverse_index = {}
 
         self.rich_tags = <RichTagC*>self.mem.alloc(self.n_tags, sizeof(RichTagC))
+        # Add the 'SP' tag to the map, if it's not there already. See Issue #683.
+        if 'SP' not in tag_map:
+            tag_map['SP'] = {POS: SPACE}
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
             attrs = _normalize_props(attrs)
             attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
