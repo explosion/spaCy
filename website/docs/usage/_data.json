@@ -16,7 +16,8 @@
             "Word vectors": "word-vectors-similarities",
             "Deep learning": "deep-learning",
             "Custom tokenization": "customizing-tokenizer",
-            "Training": "training"
+            "Training": "training",
+            "Adding languages": "adding-languages"
         },
         "Examples": {
             "Tutorials": "tutorials",
@@ -86,6 +87,11 @@
     "pos-tagging": {
         "title": "Part-of-speech tagging",
         "next": "dependency-parse"
+    },
+
+    "adding-languages": {
+        "title": "Adding languages",
+        "next": "training"
     },
 
     "showcase": {
