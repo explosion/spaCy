@@ -4,7 +4,7 @@ import pathlib
 
 import ujson as json
 
-from .symbols import NOUN, VERB, ADJ, PUNCT
+from .symbols import POS, NOUN, VERB, ADJ, PUNCT
 
 
 class Lemmatizer(object):
@@ -55,7 +55,7 @@ class Lemmatizer(object):
         '''Check whether we're dealing with an uninflected paradigm, so we can
         avoid lemmatization entirely.'''
         morphology = {} if morphology is None else morphology
-        others = [key for key in morphology if key not in ('number', 'pos', 'verbform')]
+        others = [key for key in morphology if key not in (POS, 'number', 'pos', 'verbform')]
         if univ_pos == 'noun' and morphology.get('number') == 'sing' and not others:
             return True
         elif univ_pos == 'verb' and morphology.get('verbform') == 'inf' and not others:
