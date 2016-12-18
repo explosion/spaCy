@@ -8,6 +8,7 @@
             "Loading the pipeline": "language-processing-pipeline",
             "Processing text": "processing-text",
             "spaCy's data model": "data-model",
+            "POS tagging": "pos-tagging",
             "Using the parse": "dependency-parse",
             "Entity recognition": "entity-recognition",
             "Custom pipelines": "customizing-pipeline",
@@ -15,7 +16,8 @@
             "Word vectors": "word-vectors-similarities",
             "Deep learning": "deep-learning",
             "Custom tokenization": "customizing-tokenizer",
-            "Training": "training"
+            "Training": "training",
+            "Adding languages": "adding-languages"
         },
         "Examples": {
             "Tutorials": "tutorials",
@@ -82,6 +84,16 @@
         "title": "Training the tagger, parser and entity recognizer"
     },
 
+    "pos-tagging": {
+        "title": "Part-of-speech tagging",
+        "next": "dependency-parse"
+    },
+
+    "adding-languages": {
+        "title": "Adding languages",
+        "next": "training"
+    },
+
     "showcase": {
         "title": "Showcase",
 
@@ -105,6 +117,11 @@
                 "url": "https://github.com/avisingh599/visual-qa",
                 "author": "Avi Singh",
                 "description": "Keras-based LSTM/CNN models for Visual Question Answering."
+            },
+            "rasa_nlu": {
+                "url": "https://github.com/golastmile/rasa_nlu",
+                "author": "LASTMILE",
+                "description": "High level APIs for building your own language parser using existing NLP and ML libraries."
             }
         },
         "visualizations": {
@@ -169,6 +186,11 @@
             }
         },
         "research": {
+            "Distributional semantics for understanding spoken meal descriptions": {
+                "url": "https://www.semanticscholar.org/paper/Distributional-semantics-for-understanding-spoken-Korpusik-Huang/5f55c5535e80d3e5ed7f1f0b89531e32725faff5",
+                "author": "Mandy Korpusik et al. (2016)"
+            },
+
             "Refactoring the Genia Event Extraction Shared Task Toward a General Framework for IE-Driven KB Development": {
                 "url": "https://www.semanticscholar.org/paper/Refactoring-the-Genia-Event-Extraction-Shared-Task-Kim-Wang/06d94b64a7bd2d3433f57caddad5084435d6a91f",
                 "author": "Jin-Dong Kim et al. (2016)"

@@ -1,0 +1,463 @@
+//- 💫 DOCS > USAGE > ADDING LANGUAGES
+
+include ../../_includes/_mixins
+
+p
+    |  Adding full support for a language touches many different parts of the
+    |  spaCy library. This guide explains how to fit everything together, and
+    |  points you to the specific workflows for each component. Obviously,
+    |  there are lots of ways you can organise your code when you implement
+    |  your own #[+api("language") #[code Language]] class. This guide will
+    |  focus on how it's done within spaCy. For full language support, we'll
+    |  need to:
+
++list("numbers")
+    +item
+        |  Create a #[strong #[code Language] subclass] and
+        |  #[a(href="#language-subclass") implement it].
+
+    +item
+        |  Define custom #[strong language data], like a
+        |  #[a(href="#stop-words") stop list], #[a(href="#tag-map") tag map]
+        |  and #[a(href="#tokenizer-exceptions") tokenizer exceptions].
+
+    +item
+        |  #[strong Build the vocabulary] including
+        |  #[a(href="#word-probabilities") word probabilities],
+        |  #[a(href="#brown-clusters") Brown clusters] and
+        |  #[a(href="#word-vectors") word vectors].
+
+p
+    |  Once you have the tokenizer and vocabulary, you can
+    |  #[+a("/docs/usage/training") train the tagger, parser and entity recognizer].
+    |  For some languages, you may also want to develop a solution for
+    |  lemmatization and morphological analysis.
+
++h(2, "language-subclass") Creating a #[code Language] subclass
+
+p
+    |  Language-specific code and resources should be organised into a
+    |  subpackage of spaCy, named according to the language's
+    |  #[+a("https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes") ISO code].
+    |  For instance, code and resources specific to Spanish are placed into a
+    |  folder #[code spacy/es], which can be imported as #[code spacy.es].
+
+p
+    |  To get started, you can use our
+    |  #[+src(gh("spacy-dev-resources", "templates/new_language")) templates]
+    |  for the most important files. Here's what the class template looks like:
+
++code("__init__.py (excerpt)").
+    # Import language-specific data
+    from .language_data import *
+
+    class Xxxxx(Language):
+        lang = 'xx' # ISO code
+
+        class Defaults(Language.Defaults):
+            lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+            lex_attr_getters[LANG] = lambda text: 'xx'
+
+            # override defaults
+            tokenizer_exceptions = TOKENIZER_EXCEPTIONS
+            tag_map = TAG_MAP
+            stop_words = STOP_WORDS
+
+p Additionally, the new #[code Language] class needs to be registered in #[+src(gh("spaCy", "spacy/__init__.py")) spacy/__init__.py] using the #[code set_lang_class()] function, so that you can use #[code spacy.load()].
+
++code("spacy/__init__.py").
+    from . import en
+    from . import xx
+
+    set_lang_class(en.English.lang, en.English)
+    set_lang_class(xx.Xxxxx.lang, xx.Xxxxx)
+
+p You'll also need to list the new package in #[+src(gh("spaCy", "spacy/setup.py")) setup.py]:
+
++code("spacy/setup.py").
+    PACKAGES = [
+        'spacy',
+        'spacy.tokens',
+        'spacy.en',
+        'spacy.xx',
+        # ...
+    ]
+
++h(2, "language-data") Adding language data
+
+p
+    |  Every language is full of exceptions and special cases, especially
+    |  amongst the most common words. Some of these exceptions are shared
+    |  between multiple languages, while others are entirely idiosyncratic.
+    |  spaCy makes it easy to deal with these exceptions on a case-by-case
+    |  basis, by defining simple rules and exceptions. The exceptions data is
+    |  defined in Python the
+    |  #[+src(gh("spacy-dev-resources", "templates/new_language")) language data],
+    |  so that Python functions can be used to help you generalise and combine
+    |  the data as you require.
+
++h(3, "stop-words") Stop words
+
+p
+    |  A #[+a("https://en.wikipedia.org/wiki/Stop_words") "stop list"] is a
+    |  classic trick from the early days of information retrieval when search
+    |  was largely about keyword presence and absence. It is still sometimes
+    |  useful today to filter out common words from a bag-of-words model.
+
++aside("What does spaCy consider a stop word?")
+    |  There's no particularly principal logic behind what words should be
+    |  added to the stop list. Make a list that you think might be useful
+    |  to people and is likely to be unsurprising. As a rule of thumb, words
+    |  that are very rare are unlikely to be useful stop words.
+
+p
+    |  To improve readability, #[code STOP_WORDS] are separated by spaces and
+    |  newlines, and added as a multiline string:
+
++code("Example").
+    STOP_WORDS = set("""
+    a about above across after afterwards again against all almost alone along
+    already also although always am among amongst amount an and another any anyhow
+    anyone anything anyway anywhere are around as at
+
+    back be became because become becomes becoming been before beforehand behind
+    being below beside besides between beyond both bottom but by
+    """).split())
+
++h(3, "tag-map") Tag map
+
+p
+    |  Most treebanks define a custom part-of-speech tag scheme, striking a
+    |  balance between level of detail and ease of prediction.  While it's
+    |  useful to have custom tagging schemes, it's also useful to have a common
+    |  scheme, to which the more specific tags can be related. The tagger can
+    |  learn a tag scheme with any arbitrary symbols. However, you need to
+    |  define how those symbols map down to the
+    |  #[+a("http://universaldependencies.org/u/pos/all.html") Universal Dependencies tag set].
+    |  This is done by providing a tag map.
+
+p
+    |  The keys of the tag map should be #[strong strings in your tag set]. The
+    |  values should be a dictionary. The dictionary must have an entry POS
+    |  whose value is one of the
+    |  #[+a("http://universaldependencies.org/u/pos/all.html") Universal Dependencies]
+    |  tags. Optionally, you can also include morphological features or other
+    |  token attributes in the tag map as well. This allows you to do simple
+    |  #[+a("/docs/usage/pos-tagging#rule-based-morphology") rule-based morphological analysis].
+
++code("Example").
+    TAG_MAP = {
+        "NNS":  {POS: NOUN, "Number": "plur"},
+        "VBG":  {POS: VERB, "VerbForm": "part", "Tense": "pres", "Aspect": "prog"},
+        "DT":   {POS: DET}
+    }
+
++h(3, "tokenizer-exceptions") Tokenizer exceptions
+
+p
+    |  spaCy's #[+a("/docs/usage/customizing-tokenizer#how-tokenizer-works") tokenization algorithm]
+    |  lets you deal with whitespace-delimited chunks separately. This makes it
+    |  easy to define special-case rules, without worrying about how they
+    |  interact with the rest of the tokenizer. Whenever the key string is
+    |  matched, the special-case rule is applied, giving the defined sequence of
+    |  tokens. You can also attach attributes to the subtokens, covered by your
+    |  special case, such as the subtokens #[code LEMMA] or #[code TAG].
+
+p
+    |  Tokenizer exceptions can be added in the following format:
+
++code("language_data.py").
+    TOKENIZER_EXCEPTIONS = {
+        "don't": [
+            {ORTH: "do", LEMMA: "do"},
+            {ORTH: "n't", LEMMA: "not", TAG: "RB"}
+        ]
+    }
+
+p
+    |  Some exceptions, like certain abbreviations, will always be mapped to a
+    |  single token containing only an #[code ORTH] property. To make your data
+    |  less verbose, you can use the helper function #[code strings_to_exc()]
+    |  with a simple array of strings:
+
++code("Example").
+    from ..language_data import update_exc, strings_to_exc
+
+    ORTH_ONLY = ["a.", "b.", "c."]
+    converted = strings_to_exc(ORTH_ONLY)
+    # {"a.": [{ORTH: "a."}], "b.": [{ORTH: "b."}], "c.": [{ORTH: "c."}]}
+
+    update_exc(TOKENIZER_EXCEPTIONS, converted)
+
+p
+    |  Unambiguous abbreviations, like month names or locations in English,
+    |  should be added to #[code TOKENIZER_EXCEPTIONS] with a lemma assigned,
+    |  for example #[code {ORTH: "Jan.", LEMMA: "January"}].
+
++h(3, "custom-tokenizer-exceptions") Custom tokenizer exceptions
+
+p
+    |  For language-specific tokenizer exceptions, you can use the
+    |  #[code update_exc()] function to update the existing exceptions with a
+    |  custom dictionary. This is especially useful for exceptions that follow
+    |  a consistent pattern. Instead of adding each exception manually, you can
+    |  write a simple function that returns a dictionary of exceptions.
+
+p
+    |  For example, here's how exceptions for time formats like "1a.m." and
+    |  "1am" are generated in the English
+    |  #[+src(gh("spaCy", "spacy/en/language_data.py")) language_data.py]:
+
++code("language_data.py").
+    from ..language_data import update_exc
+
+    def get_time_exc(hours):
+        exc = {}
+        for hour in hours:
+            exc["%da.m." % hour] = [{ORTH: hour}, {ORTH: "a.m."}]
+            exc["%dp.m." % hour] = [{ORTH: hour}, {ORTH: "p.m."}]
+            exc["%dam" % hour]   = [{ORTH: hour}, {ORTH: "am", LEMMA: "a.m."}]
+            exc["%dpm" % hour]   = [{ORTH: hour}, {ORTH: "pm", LEMMA: "p.m."}]
+        return exc
+
+
+    TOKENIZER_EXCEPTIONS = dict(language_data.TOKENIZER_EXCEPTIONS)
+
+    hours = 12
+    update_exc(TOKENIZER_EXCEPTIONS, get_time_exc(range(1, hours + 1)))
+
++h(3, "utils") Shared utils
+
+p
+    |  The #[code spacy.language_data] package provides constants and functions
+    |  that can be imported and used across languages.
+
++aside("About spaCy's custom pronoun lemma")
+    |  Unlike verbs and common nouns, there's no clear base form of a personal
+    |  pronoun. Should the lemma of "me" be "I", or should we normalize person
+    |  as well, giving "it" — or maybe "he"? spaCy's solution is to introduce a
+    |  novel symbol, #[code.u-nowrap -PRON-], which is used as the lemma for
+    |  all personal pronouns.
+
++table(["Name", "Description"])
+    +row
+        +cell #[code PRON_LEMMA]
+        +cell
+            |  Special value for pronoun lemmas (#[code &quot;-PRON-&quot;]).
+
+    +row
+        +cell #[code ENT_ID]
+        +cell
+            | Special value for entity IDs (#[code "ent_id"])
+
+    +row
+        +cell #[code update_exc(exc, additions)]
+        +cell
+            |  Update an existing dictionary of exceptions #[code exc] with a
+            |  dictionary of #[code additions].
+
+    +row
+        +cell #[code strings_to_exc(orths)]
+        +cell
+            |  Convert an array of strings to a dictionary of exceptions of the
+            |  format #[code {"string": [{ORTH: "string"}]}].
+
+    +row
+        +cell #[code expand_exc(excs, search, replace)]
+        +cell
+            |  Search for a string #[code search] in a dictionary of exceptions
+            |  #[code excs] and if found, copy the entry and replace
+            |  #[code search] with #[code replace] in both the key and
+            |  #[code ORTH] value. Useful to provide exceptions containing
+            |  different versions of special unicode characters, like
+            |  #[code &apos;] and #[code ’].
+
+p
+    |  If you've written a custom function that seems like it might be useful
+    |  for several languages, consider adding it to
+    |  #[+src(gh("spaCy", "spacy/language_data/util.py")) language_data/util.py]
+    |  instead of the individual language module.
+
++h(3, "shared-data") Shared language data
+
+p
+    |  Because languages can vary in quite arbitrary ways, spaCy avoids
+    |  organising the language data into an explicit inheritance hierarchy.
+    |  Instead, reuseable functions and data are collected as atomic pieces in
+    |  the #[code spacy.language_data] package.
+
++aside-code("Example").
+    from ..language_data import update_exc, strings_to_exc
+    from ..language_data import EMOTICONS
+
+    # Add custom emoticons
+    EMOTICONS = EMOTICONS + ["8===D", ":~)"]
+
+    # Add emoticons to tokenizer exceptions
+    update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(EMOTICONS))
+
++table(["Name", "Description", "Source"])
+    +row
+        +cell #[code EMOTICONS]
+
+        +cell
+            |  Common unicode emoticons without whitespace.
+
+        +cell
+            +src(gh("spaCy", "spacy/language_data/emoticons.py")) emoticons.py
+
+    +row
+        +cell #[code TOKENIZER_PREFIXES]
+
+        +cell
+            |  Regular expressions to match left-attaching tokens and
+            |  punctuation, e.g. #[code $], #[code (], #[code &quot;]
+
+        +cell
+            +src(gh("spaCy", "spacy/language_data/punctuation.py")) punctuation.py
+
+    +row
+        +cell #[code TOKENIZER_SUFFIXES]
+
+        +cell
+            |  Regular expressions to match right-attaching tokens and
+            |  punctuation, e.g. #[code %], #[code &#41;], #[code &quot;]
+
+        +cell
+            +src(gh("spaCy", "spacy/language_data/punctuation.py")) punctuation.py
+
+    +row
+        +cell #[code TOKENIZER_INFIXES]
+
+        +cell
+            |  Regular expressions to match token separators, e.g. #[code -]
+
+        +cell
+            +src(gh("spaCy", "spacy/language_data/punctuation.py")) punctuation.py
+
+    +row
+        +cell #[code TAG_MAP]
+
+        +cell
+            |  A tag map keyed by the universal part-of-speech tags to
+            |  themselves with no morphological features.
+
+        +cell
+            +src(gh("spaCy", "spacy/language_data/tag_map.py")) tag_map.py
+
+    +row
+        +cell #[code ENTITY_RULES]
+
+        +cell
+            |  Patterns for named entities commonly missed by the statistical
+            | entity recognizer, for use in the rule matcher.
+
+        +cell
+            +src(gh("spaCy", "spacy/language_data/entity_rules.py")) entity_rules.py
+
+    +row
+        +cell #[code FALSE_POSITIVES]
+
+        +cell
+            |  Patterns for phrases commonly mistaken for named entities by the
+            |  statistical entity recognizer, to use in the rule matcher.
+
+        +cell
+            +src(gh("spaCy", "spacy/language_data/entity_rules.py")) entity_rules.py
+
+p
+    |  Individual languages can extend and override any of these expressions.
+    |  Often, when a new language is added, you'll find a pattern or symbol
+    |  that's missing. Even if this pattern or symbol isn't common in other
+    |  languages, it might be best to add it to the base expressions, unless it
+    |  has some conflicting interpretation. For instance, we don't expect to
+    |  see guillemot quotation symbols (#[code &raquo;] and #[code &laquo;]) in
+    |  English text. But if we do see them, we'd probably prefer the tokenizer
+    |  to split it off.
+
++h(2, "vocabulary") Building the vocabulary
+
+p
+    |  spaCy expects that common words will be cached in a
+    |  #[+api("vocab") #[code Vocab]] instance. The vocabulary caches lexical
+    |  features, and makes it easy to use information from unlabelled text
+    |  samples in your models. Specifically, you'll usually want to collect
+    |  word frequencies, and train two types of distributional similarity model:
+    |  Brown clusters, and word vectors. The Brown clusters are used as features
+    |  by linear models, while the word vectors are useful for lexical
+    |  similarity models and deep learning.
+
+p
+    |  Once you've collected the word frequencies, Brown clusters and word
+    |  vectors files, you can use the
+    |  #[+src(gh("spacy-dev-resources", "training/init.py")) init.py]
+    |  script from our
+    |  #[+a(gh("spacy-developer-resources")) developer resources] to create a
+    |  spaCy data directory:
+
++code(false, "bash").
+    python training/init.py xx your_data_directory/ my_data/word_freqs.txt my_data/clusters.txt my_data/word_vectors.bz2
+
++aside-code("your_data_directory", "yaml").
+    ├── vocab/
+    |   ├── lexemes.bin   # via nlp.vocab.dump(path)
+    |   ├── strings.json  # via nlp.vocab.strings.dump(file_)
+    |   └── oov_prob      # optional
+    ├── pos/              # optional
+    |   ├── model         # via nlp.tagger.model.dump(path)
+    |   └── config.json   # via Langage.train
+    ├── deps/             # optional
+    |   ├── model         # via nlp.parser.model.dump(path)
+    |   └── config.json   # via Langage.train
+    └── ner/              # optional
+        ├── model         # via nlp.entity.model.dump(path)
+        └── config.json   # via Langage.train
+
+p
+    |  This creates a spaCy data directory with a vocabulary model, ready to be
+    |  loaded. By default, the
+    |  #[+src(gh("spacy-dev-resources", "training/init.py")) init.py]
+    |  script expects to be able to find your language class using
+    |  #[code spacy.util.get_lang_class(lang_id)]. You can edit the script to
+    |  help it find your language class if necessary.
+
++h(3, "word-frequencies") Word frequencies
+
+p
+    |  The #[code init.py] script expects a tab-separated word frequencies file
+    |  with three columns: the number of times the word occurred in your language
+    |  sample, the number of distinct documents the word occurred in, and the
+    |  word itself.  You should make sure you use the spaCy tokenizer for your
+    |  language to segment the text for your word frequencies. This will ensure
+    |  that the frequencies refer to the same segmentation standards you'll be
+    |  using at run-time. For instance, spaCy's English tokenizer segments "can't"
+    |  into two tokens. If we segmented the text by whitespace to produce the
+    |  frequency counts, we'll have incorrect frequency counts for the tokens
+    |  "ca" and "n't".
+
++h(3, "brown-clusters") Training the Brown clusters
+
+p
+    |  spaCy's tagger, parser and entity recognizer are designed to use
+    |  distributional similarity features provided by the
+    |  #[+a("https://github.com/percyliang/brown-cluster") Brown clustering algorithm].
+    |  You should train a model with between 500 and 1000 clusters. A minimum
+    |  frequency threshold of 10 usually works well.
+
++h(3, "word-vectors") Training the word vectors
+
+p
+    |  #[+a("https://en.wikipedia.org/wiki/Word2vec") Word2vec] and related
+    |  algorithms let you train useful word similarity models from unlabelled
+    |  text. This is a key part of using
+    |  #[+a("/docs/usage/deep-learning") deep learning] for NLP with limited
+    |  labelled data. The vectors are also useful by themselves – they power
+    |  the #[code .similarity()] methods in spaCy. For best results, you should
+    |  pre-process the text with spaCy before training the Word2vec model. This
+    |  ensures your tokenization will match.
+
+p
+    | You can use our
+    |  #[+src(gh("spacy-dev-resources", "training/word_vectors.py")) word vectors training script],
+    |  which pre-processes the text with your language-specific tokenizer and
+    |  trains the model using #[+a("https://radimrehurek.com/gensim/") Gensim].
