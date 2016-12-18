@@ -11,6 +11,7 @@ from ..attrs import LANG
 
 from .language_data import *
 
+
 class English(Language):
     lang = 'en'
 
