@@ -19,6 +19,8 @@ from ..language_data import EMOTICONS
 from .language_data import ORTH_ONLY
 from .language_data import get_time_exc
 
+from .lemma_rules import LEMMA_RULES
+
 
 TOKENIZER_EXCEPTIONS = dict(language_data.TOKENIZER_EXCEPTIONS)
 TOKENIZER_PREFIXES = tuple(language_data.TOKENIZER_PREFIXES)
@@ -47,3 +49,4 @@ class English(Language):
         infixes = TOKENIZER_INFIXES
         tag_map = TAG_MAP
         stop_words = STOP_WORDS
+        lemma_rules = LEMMA_RULES

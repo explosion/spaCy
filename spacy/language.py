@@ -38,7 +38,7 @@ class BaseDefaults(object):
         if nlp is None or nlp.path is None:
             return Lemmatizer({}, {}, {})
         else:
-            return Lemmatizer.load(nlp.path)
+            return Lemmatizer.load(nlp.path, rules=self.lemma_rules)
 
     @classmethod
     def create_vocab(cls, nlp=None):
@@ -158,6 +158,8 @@ class BaseDefaults(object):
     tagger_features = Tagger.feature_templates # TODO -- fix this
 
     stop_words = set()
+
+    lemma_rules = {}
 
     lex_attr_getters = {
         attrs.LOWER: lambda string: string.lower(),
