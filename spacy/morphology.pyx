@@ -140,6 +140,7 @@ cdef class Morphology:
         lemma = self.strings[lemma_string]
         return lemma
 
+
 IDS = {
     "Animacy_anim": Animacy_anim,
     "Animacy_inam": Animacy_inam,
