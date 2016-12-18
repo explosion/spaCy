@@ -8,6 +8,7 @@
             "Loading the pipeline": "language-processing-pipeline",
             "Processing text": "processing-text",
             "spaCy's data model": "data-model",
+            "POS tagging": "pos-tagging",
             "Using the parse": "dependency-parse",
             "Entity recognition": "entity-recognition",
             "Custom pipelines": "customizing-pipeline",
@@ -80,6 +81,11 @@
 
     "training": {
         "title": "Training the tagger, parser and entity recognizer"
+    },
+
+    "pos-tagging": {
+        "title": "Part-of-speech tagging",
+        "next": "dependency-parse"
     },
 
     "showcase": {
