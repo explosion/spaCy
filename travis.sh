@@ -7,7 +7,7 @@ if [ "${VIA}" == "pypi" ]; then
     python -m spacy.de.download
 fi
 
-if [ "${VIA}" == "sdist" ]; then
+if [ "${VIA}" == "sdist" && "$TRAVIS_PULL_REQUEST" == "false" ]; then
   rm -rf *
   pip uninstall spacy
   wget https://api.explosion.ai/build/spacy/sdist/$TRAVIS_COMMIT
@@ -16,15 +16,15 @@ if [ "${VIA}" == "sdist" ]; then
 fi
 
 
-if [ "${VIA}" == "compile" ]; then
-  pip install -r requirements.txt
-  pip install -e .
-  mkdir -p corpora/en
-  cd corpora/en
-  wget --no-check-certificate http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz
-  tar -xzf WordNet-3.0.tar.gz
-  mv WordNet-3.0 wordnet
-  cd ../../
-  mkdir models/
-  python bin/init_model.py en lang_data/ corpora/ models/en
-fi
+#if [ "${VIA}" == "compile" ]; then
+#  pip install -r requirements.txt
+#  pip install -e .
+#  mkdir -p corpora/en
+#  cd corpora/en
+#  wget --no-check-certificate http://wordnetcode.princeton.edu/3.0/WordNet-3.0.tar.gz
+#  tar -xzf WordNet-3.0.tar.gz
+#  mv WordNet-3.0 wordnet
+#  cd ../../
+#  mkdir models/
+#  python bin/init_model.py en lang_data/ corpora/ models/en
+#fi
