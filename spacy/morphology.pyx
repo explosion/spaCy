@@ -9,10 +9,11 @@ try:
 except ImportError:
     import json
 
-from .parts_of_speech import IDS as POS_IDS
 from .parts_of_speech cimport ADJ, VERB, NOUN, PUNCT
 from .attrs cimport POS, IS_SPACE
+from .parts_of_speech import IDS as POS_IDS
 from .lexeme cimport Lexeme
+from .attrs import intify_attrs
 
 
 def _normalize_props(props):
@@ -32,6 +33,7 @@ def _normalize_props(props):
     return out
 
 
+
 cdef class Morphology:
     def __init__(self, StringStore string_store, tag_map, lemmatizer):
         self.mem = Pool()
@@ -43,12 +45,13 @@ cdef class Morphology:
         self.reverse_index = {}
 
         self.rich_tags = <RichTagC*>self.mem.alloc(self.n_tags, sizeof(RichTagC))
-        for i, (tag_str, props) in enumerate(sorted(tag_map.items())):
-            props = _normalize_props(props)
+        for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
+            attrs = _normalize_props(attrs)
+            attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
             self.rich_tags[i].id = i
             self.rich_tags[i].name = self.strings[tag_str]
             self.rich_tags[i].morph = 0
-            self.rich_tags[i].pos = props[POS]
+            self.rich_tags[i].pos = attrs[POS]
             self.reverse_index[self.rich_tags[i].name] = i
         self._cache = PreshMapArray(self.n_tags)
 
@@ -85,10 +88,14 @@ cdef class Morphology:
         token.tag = analysis.tag.name
         token.morph = analysis.tag.morph
 
-    cdef int assign_feature(self, uint64_t* morph, feature, value) except -1:
-        pass
+    cdef int assign_feature(self, uint64_t* flags, univ_morph_t flag_id, bint value) except -1:
+        cdef flags_t one = 1
+        if value:
+            flags[0] |= one << flag_id
+        else:
+            flags[0] &= ~(one << flag_id)
 
-    def add_special_case(self, unicode tag_str, unicode orth_str, props, force=False):
+    def add_special_case(self, unicode tag_str, unicode orth_str, attrs, force=False):
         '''Add a special-case rule to the morphological analyser. Tokens whose
         tag and orth match the rule will receive the specified properties.
 
@@ -100,13 +107,13 @@ cdef class Morphology:
         tag_id = self.reverse_index[tag]
         orth = self.strings[orth_str]
         rich_tag = self.rich_tags[tag_id]
-        props = _normalize_props(props)
+        attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
 
         cached = <MorphAnalysisC*>self._cache.get(tag_id, orth)
         if cached is NULL:
             cached = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
         elif force:
-            memset(cached, 0, sizeof(cached))
+            memset(cached, 0, sizeof(cached[0]))
         else:
             msg = ("Conflicting morphology exception for (%s, %s). Use force=True "
                    "to overwrite.")
@@ -114,8 +121,8 @@ cdef class Morphology:
             raise ValueError(msg)
 
         cached.tag = rich_tag
-        for name_str, value_str in props.items():
-            self.assign_feature(&cached.tag.morph, name_str, value_str)
+        for name_id, value_id in attrs.items():
+            self.assign_feature(&cached.tag.morph, name_id, value_id)
         if cached.lemma == 0:
             cached.lemma = self.lemmatize(rich_tag.pos, orth,
                                           self.tag_map.get(tag_str, {}))
@@ -124,8 +131,8 @@ cdef class Morphology:
     def load_morph_exceptions(self, dict exc):
         # Map (form, pos) to (lemma, rich tag)
         for tag_str, entries in exc.items():
-            for form_str, props in entries.items():
-                self.add_special_case(tag_str, form_str, props)
+            for form_str, attrs in entries.items():
+                self.add_special_case(tag_str, form_str, attrs)
 
     def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, morphology):
         cdef unicode py_string = self.strings[orth]
