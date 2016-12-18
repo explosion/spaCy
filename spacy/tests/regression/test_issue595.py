@@ -34,10 +34,9 @@ def vocab(lemmatizer, tag_map):
     return Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
 
 
-def test_not_lemmatize_base_forms(vocab, lemmatizer):
+def test_not_lemmatize_base_forms(vocab):
     doc = Doc(vocab, words=["Do", "n't", "feed", "the", "dog"])
     feed = doc[2]
     feed.tag_ = u'VB'
     assert feed.text == u'feed'
     assert feed.lemma_ == u'feed'
-
