@@ -52,5 +52,6 @@ def _fix_deprecated_glove_vectors_loading(overrides):
             vec_path = match_best_version('en_glove_cc_300_1m_vectors', None, data_path)
         if vec_path is not None:
             vec_path = vec_path / 'vocab' / 'vec.bin'
-    overrides['add_vectors'] = lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
+    if vec_path is not None:
+        overrides['add_vectors'] = lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
     return overrides
