@@ -1,4 +1,7 @@
 from os import path
+
+from libc.string cimport memset
+
 from .lemmatizer import Lemmatizer
 
 try:
@@ -85,35 +88,44 @@ cdef class Morphology:
     cdef int assign_feature(self, uint64_t* morph, feature, value) except -1:
         pass
 
+    def add_special_case(self, unicode tag_str, unicode orth_str, props, force=False):
+        '''Add a special-case rule to the morphological analyser. Tokens whose
+        tag and orth match the rule will receive the specified properties.
+
+        Arguments:
+            tag (unicode): The part-of-speech tag to key the exception.
+            orth (unicode): The word-form to key the exception.
+        '''
+        tag = self.strings[tag_str]
+        tag_id = self.reverse_index[tag]
+        orth = self.strings[orth_str]
+        rich_tag = self.rich_tags[tag_id]
+        props = _normalize_props(props)
+
+        cached = <MorphAnalysisC*>self._cache.get(tag_id, orth)
+        if cached is NULL:
+            cached = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
+        elif force:
+            memset(cached, 0, sizeof(cached))
+        else:
+            msg = ("Conflicting morphology exception for (%s, %s). Use force=True "
+                   "to overwrite.")
+            msg = msg % (tag_str, orth_str)
+            raise ValueError(msg)
+
+        cached.tag = rich_tag
+        for name_str, value_str in props.items():
+            self.assign_feature(&cached.tag.morph, name_str, value_str)
+        if cached.lemma == 0:
+            cached.lemma = self.lemmatize(rich_tag.pos, orth,
+                                          self.tag_map.get(tag_str, {}))
+        self._cache.set(tag_id, orth, <void*>cached)
+
     def load_morph_exceptions(self, dict exc):
         # Map (form, pos) to (lemma, rich tag)
-        cdef unicode pos_str
-        cdef unicode form_str
-        cdef unicode lemma_str
-        cdef dict entries
-        cdef dict props
-        cdef int lemma
-        cdef attr_t orth
-        cdef attr_t tag_id
-        cdef int pos
-        cdef RichTagC rich_tag
         for tag_str, entries in exc.items():
-            tag = self.strings[tag_str]
-            tag_id = self.reverse_index[tag]
-            rich_tag = self.rich_tags[tag_id]
             for form_str, props in entries.items():
-                cached = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
-                cached.tag = rich_tag
-                orth = self.strings[form_str]
-                for name_str, value_str in props.items():
-                    if name_str == 'L':
-                        cached.lemma = self.strings[value_str]
-                    else:
-                        self.assign_feature(&cached.tag.morph, name_str, value_str)
-                if cached.lemma == 0:
-                    cached.lemma = self.lemmatize(rich_tag.pos, orth,
-                                                  self.tag_map.get(tag_str, {}))
-                self._cache.set(tag_id, orth, <void*>cached)
+                self.add_special_case(tag_str, form_str, props)
 
     def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, morphology):
         cdef unicode py_string = self.strings[orth]
