@@ -21,6 +21,7 @@ from .matcher import Matcher
 from . import attrs
 from . import orth
 from . import util
+from . import language_data
 from .lemmatizer import Lemmatizer
 from .train import Trainer
 
@@ -140,14 +141,14 @@ class BaseDefaults(object):
         if nlp.entity:
             pipeline.append(nlp.entity)
         return pipeline
-    
-    prefixes = tuple()
 
-    suffixes = tuple()
+    prefixes = tuple(language_data.TOKENIZER_PREFIXES)
 
-    infixes = tuple()
- 
-    tag_map = {}
+    suffixes = tuple(language_data.TOKENIZER_SUFFIXES)
+
+    infixes = tuple(language_data.TOKENIZER_INFIXES)
+
+    tag_map = dict(language_data.TAG_MAP)
 
     tokenizer_exceptions = {}
 
