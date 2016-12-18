@@ -34,6 +34,8 @@ PACKAGES = [
     'spacy.syntax',
     'spacy.munge',
     'spacy.tests',
+    'spacy.tests.unit',
+    'spacy.tests.integration',
     'spacy.tests.matcher',
     'spacy.tests.morphology',
     'spacy.tests.munge',
