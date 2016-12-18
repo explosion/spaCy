@@ -6,7 +6,7 @@ Cython. spaCy is built on  the very latest research, but it isn't researchware.
 It was designed from day 1 to be used in real products. It's commercial 
 open-source software, released under the MIT license.
 
-💫 **Version 1.3 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
+💫 **Version 1.4 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: http://i.imgur.com/wFvLZyJ.png
     :target: https://travis-ci.org/explosion/spaCy
@@ -241,8 +241,45 @@ calling ``spacy.load()``, or by passing a ``path`` argument to the ``spacy.en.En
 Changelog
 =========
 
-2016-12-03 `v1.3.0 <https://github.com/explosion/spaCy/releases>`_: *Improve API consistency*
----------------------------------------------------------------------------------------------
+2016-12-18 `v1.4.0 <https://github.com/explosion/spaCy/releases>`_: *Improved language data and alpha Dutch support*
+--------------------------------------------------------------------------------------------------------------------
+
+**✨ Major features and improvements**
+
+* **NEW:** Alpha support for Dutch tokenization.
+* Reorganise and improve format for language data.
+* Add shared tag map, entity rules, emoticons and punctuation to language data.
+* Convert entity rules, morphological rules and lemmatization rules from JSON to Python.
+* Update language data for English, German, Spanish, French, Italian and Portuguese.
+
+**🔴 Bug fixes**
+
+* Fix issue `#649 <https://github.com/explosion/spaCy/issues/649>`_: Update and reorganise stop lists.
+* Fix issue `#672 <https://github.com/explosion/spaCy/issues/672>`_: Make ``token.ent_iob_`` return unicode.
+* Fix issue `#674 <https://github.com/explosion/spaCy/issues/674>`_: Add missing lemmas for contracted forms of "be" to ``TOKENIZER_EXCEPTIONS``.
+* Fix issue `#683 <https://github.com/explosion/spaCy/issues/683>`_ ``Morphology`` class now supplies tag map value for the special space tag if it's missing.
+* Fix issue `#684 <https://github.com/explosion/spaCy/issues/684>`_: Ensure ``spacy.en.English()`` loads the Glove vector data if available. Previously was inconsistent with behaviour of ``spacy.load('en')``.
+* Fix issue `#685 <https://github.com/explosion/spaCy/issues/685>`_: Expand ``TOKENIZER_EXCEPTIONS`` with unicode apostrophe (``’``).
+* Fix issue `#689 <https://github.com/explosion/spaCy/issues/689>`_: Correct typo in ``STOP_WORDS``.
+* Fix issue `#691 <https://github.com/explosion/spaCy/issues/691>`_: Add tokenizer exceptions for "gonna" and "Gonna".
+
+**⚠️  Backwards incompatibilities**
+
+No changes to the public, documented API, but the previously undocumented language data and model initialisation processes have been refactored and reorganised. If you were relying on the ``bin/init_model.py`` script, see the new `spaCy Developer Resources <https://github.com/explosion/spacy-dev-resources>`_ repo. Code that references internals of the ``spacy.en`` or ``spacy.de`` packages should also be reviewed before updating to this version.
+
+**📖 Documentation and examples**
+
+* **NEW:** `"Adding languages" <https://spacy.io/docs/usage/adding-languages>`_ workflow.
+* **NEW:** `"Part-of-speech tagging" <https://spacy.io/docs/usage/pos-tagging>`_ workflow.
+* **NEW:** `spaCy Developer Resources <https://github.com/explosion/spacy-dev-resources>`_ repo – scripts, tools and resources for developing spaCy.
+* Fix various typos and inconsistencies.
+
+**👥  Contributors**
+
+Thanks to `@dafnevk <https://github.com/dafnevk>`_, `@jvdzwaan <https://github.com/jvdzwaan>`_, `@RvanNieuwpoort <https://github.com/RvanNieuwpoort>`_, `@wrvhage <https://github.com/wrvhage>`_, `@jaspb <https://github.com/jaspb>`_, `@savvopoulos <https://github.com/savvopoulos>`_ and `@davedwards <https://github.com/davedwards>`_ for the pull requests!
+
+2016-12-03 `v1.3.0 <https://github.com/explosion/spaCy/releases/tag/v1.3.0>`_: *Improve API consistency*
+--------------------------------------------------------------------------------------------------------
 
 **✨ API improvements**
 
