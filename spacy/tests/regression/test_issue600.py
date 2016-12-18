@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from ...tokens import Doc
 from ...vocab import Vocab
+from ...attrs import POS
 
 
 def test_issue600():

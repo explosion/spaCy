@@ -120,8 +120,14 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
             stringy_attrs.pop('number')
         if 'tenspect' in stringy_attrs:
             stringy_attrs.pop('tenspect')
-        #    for name, value in morphs.items():
-        #        stringy_attrs[name] = value
+        morph_keys = [
+            'PunctType', 'PunctSide', 'Other', 'Degree', 'AdvType', 'Number',
+            'VerbForm', 'PronType', 'Aspect', 'Tense', 'PartType', 'Poss',
+            'Hyph', 'ConjType', 'NumType', 'Foreign', 'VerbType', 'NounType',
+            'Number', 'PronType', 'AdjType', 'Person']
+        for key in morph_keys:
+            if key in stringy_attrs:
+                stringy_attrs.pop(key)
     for name, value in stringy_attrs.items():
         if isinstance(name, int):
             int_key = name

@@ -21,6 +21,7 @@ from .matcher import Matcher
 from . import attrs
 from . import orth
 from . import util
+from . import language_data
 from .lemmatizer import Lemmatizer
 from .train import Trainer
 
@@ -38,7 +39,7 @@ class BaseDefaults(object):
         if nlp is None or nlp.path is None:
             return Lemmatizer({}, {}, {})
         else:
-            return Lemmatizer.load(nlp.path)
+            return Lemmatizer.load(nlp.path, rules=self.lemma_rules)
 
     @classmethod
     def create_vocab(cls, nlp=None):
@@ -53,7 +54,7 @@ class BaseDefaults(object):
         else:
             return Vocab.load(nlp.path, lex_attr_getters=cls.lex_attr_getters,
                              tag_map=cls.tag_map, lemmatizer=lemmatizer)
-    
+
     @classmethod
     def add_vectors(cls, nlp=None):
         if nlp is None or nlp.path is None:
@@ -140,24 +141,26 @@ class BaseDefaults(object):
         if nlp.entity:
             pipeline.append(nlp.entity)
         return pipeline
-    
-    prefixes = tuple()
 
-    suffixes = tuple()
+    prefixes = tuple(language_data.TOKENIZER_PREFIXES)
 
-    infixes = tuple()
- 
-    tag_map = {}
+    suffixes = tuple(language_data.TOKENIZER_SUFFIXES)
+
+    infixes = tuple(language_data.TOKENIZER_INFIXES)
+
+    tag_map = dict(language_data.TAG_MAP)
 
     tokenizer_exceptions = {}
-   
+
     parser_features = get_templates('parser')
-    
+
     entity_features = get_templates('ner')
 
     tagger_features = Tagger.feature_templates # TODO -- fix this
 
     stop_words = set()
+
+    lemma_rules = {}
 
     lex_attr_getters = {
         attrs.LOWER: lambda string: string.lower(),
@@ -257,7 +260,7 @@ class Language(object):
             path = util.match_best_version(self.lang, '', util.get_data_path())
 
         self.path = path
- 
+
         self.vocab     = self.Defaults.create_vocab(self) \
                          if 'vocab' not in overrides \
                          else overrides['vocab']
@@ -299,7 +302,7 @@ class Language(object):
         """Apply the pipeline to some text.  The text can span multiple sentences,
         and can contain arbtrary whitespace.  Alignment into the original string
         is preserved.
-        
+
         Args:
             text (unicode): The text to be processed.
 
@@ -327,9 +330,9 @@ class Language(object):
 
     def pipe(self, texts, tag=True, parse=True, entity=True, n_threads=2, batch_size=1000):
         '''Process texts as a stream, and yield Doc objects in order.
-        
+
         Supports GIL-free multi-threading.
-        
+
         Arguments:
             texts (iterator)
             tag (bool)
@@ -352,7 +355,7 @@ class Language(object):
             path = self.path
         elif isinstance(path, basestring):
             path = pathlib.Path(path)
-        
+
         if self.tagger:
             self.tagger.model.end_training()
             self.tagger.model.dump(str(path / 'pos' / 'model'))
@@ -362,7 +365,7 @@ class Language(object):
         if self.entity:
             self.entity.model.end_training()
             self.entity.model.dump(str(path / 'ner' / 'model'))
-        
+
         strings_loc = path / 'vocab' / 'strings.json'
         with strings_loc.open('w', encoding='utf8') as file_:
             self.vocab.strings.dump(file_)

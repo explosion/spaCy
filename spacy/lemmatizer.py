@@ -4,12 +4,12 @@ import pathlib
 
 import ujson as json
 
-from .symbols import NOUN, VERB, ADJ, PUNCT
+from .symbols import POS, NOUN, VERB, ADJ, PUNCT
 
 
 class Lemmatizer(object):
     @classmethod
-    def load(cls, path):
+    def load(cls, path, rules=None):
         index = {}
         exc = {}
         for pos in ['adj', 'noun', 'verb']:
@@ -25,8 +25,11 @@ class Lemmatizer(object):
                     exc[pos] = read_exc(file_)
             else:
                 exc[pos] = {}
-        with (path / 'vocab' / 'lemma_rules.json').open('r', encoding='utf8') as file_:
-            rules = json.load(file_)
+        if rules is None and (path / 'vocab' / 'lemma_rules.json').exists():
+            with (path / 'vocab' / 'lemma_rules.json').open('r', encoding='utf8') as file_:
+                rules = json.load(file_)
+        elif rules is None:
+            rules = {}
         return cls(index, exc, rules)
 
     def __init__(self, index, exceptions, rules):
@@ -55,7 +58,7 @@ class Lemmatizer(object):
         '''Check whether we're dealing with an uninflected paradigm, so we can
         avoid lemmatization entirely.'''
         morphology = {} if morphology is None else morphology
-        others = [key for key in morphology if key not in ('number', 'pos', 'verbform')]
+        others = [key for key in morphology if key not in (POS, 'number', 'pos', 'verbform')]
         if univ_pos == 'noun' and morphology.get('number') == 'sing' and not others:
             return True
         elif univ_pos == 'verb' and morphology.get('verbform') == 'inf' and not others:
