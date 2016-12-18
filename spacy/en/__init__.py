@@ -4,6 +4,7 @@ from __future__ import unicode_literals, print_function
 from os import path
 
 from ..util import match_best_version
+from ..util import get_data_path
 from ..language import Language
 from ..lemmatizer import Lemmatizer
 from ..vocab import Vocab
@@ -36,11 +37,14 @@ class English(Language):
 def _fix_deprecated_glove_vectors_loading(overrides):
     if 'data_dir' in overrides and 'path' not in overrides:
         raise ValueError("The argument 'data_dir' has been renamed to 'path'")
-    if overrides.get('path') is None:
+    if overrides.get('path') is False:
         return overrides
-    path = overrides['path']
-    if 'add_vectors' not in overrides:
+    if overrides.get('path') in (None, True):
+        data_path = get_data_path()
+    else:
+        path = overrides['path']
         data_path = path.parent
+    if 'add_vectors' not in overrides:
         if 'vectors' in overrides:
             vec_path = match_best_version(overrides['vectors'], None, data_path)
             if vec_path is None:
@@ -50,5 +54,6 @@ def _fix_deprecated_glove_vectors_loading(overrides):
             vec_path = match_best_version('en_glove_cc_300_1m_vectors', None, data_path)
         if vec_path is not None:
             vec_path = vec_path / 'vocab' / 'vec.bin'
-    overrides['add_vectors'] = lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
+    if vec_path is not None:
+        overrides['add_vectors'] = lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
     return overrides
