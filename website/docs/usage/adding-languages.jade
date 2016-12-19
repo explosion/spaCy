@@ -424,16 +424,22 @@ p
 +h(3, "word-frequencies") Word frequencies
 
 p
-    |  The #[code init.py] script expects a tab-separated word frequencies file
-    |  with three columns: the number of times the word occurred in your language
-    |  sample, the number of distinct documents the word occurred in, and the
-    |  word itself.  You should make sure you use the spaCy tokenizer for your
+    |  The #[+src(gh("spacy-dev-resources", "training/init.py")) init.py]
+    |  script expects a tab-separated word frequencies file with three columns:
+
++list("numbers")
+    +item The number of times the word occurred in your language sample.
+    +item The number of distinct documents the word occurred in.
+    +item The word itself.
+
+p
+    |  You should make sure you use the spaCy tokenizer for your
     |  language to segment the text for your word frequencies. This will ensure
     |  that the frequencies refer to the same segmentation standards you'll be
-    |  using at run-time. For instance, spaCy's English tokenizer segments "can't"
-    |  into two tokens. If we segmented the text by whitespace to produce the
-    |  frequency counts, we'll have incorrect frequency counts for the tokens
-    |  "ca" and "n't".
+    |  using at run-time. For instance, spaCy's English tokenizer segments
+    |  "can't" into two tokens. If we segmented the text by whitespace to
+    |  produce the frequency counts, we'll have incorrect frequency counts for
+    |  the tokens "ca" and "n't".
 
 +h(3, "brown-clusters") Training the Brown clusters
 
