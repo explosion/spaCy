@@ -50,6 +50,13 @@ p A "lemma" is the uninflected form of a word. In English, this means:
     +item #[strong Nouns]: The form like "dog", not "dogs"; like "child", not "children"
     +item #[strong Verbs]: The form like "write", not "writes", "writing", "wrote" or "written"
 
++aside("About spaCy's custom pronoun lemma")
+    |  Unlike verbs and common nouns, there's no clear base form of a personal
+    |  pronoun. Should the lemma of "me" be "I", or should we normalize person
+    |  as well, giving "it" — or maybe "he"? spaCy's solution is to introduce a
+    |  novel symbol, #[code.u-nowrap -PRON-], which is used as the lemma for
+    |  all personal pronouns.
+
 p
     |  The lemmatization data is taken from
     |  #[+a("https://wordnet.princeton.edu") WordNet]. However, we also add a
