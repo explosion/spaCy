@@ -29,6 +29,7 @@ PACKAGES = [
     'spacy.it',
     'spacy.pt',
     'spacy.nl',
+    'spacy.sv',
     'spacy.language_data',
     'spacy.serialize',
     'spacy.syntax',
@@ -95,7 +96,7 @@ LINK_OPTIONS = {
     'other' : []
 }
 
- 
+
 # I don't understand this very well yet. See Issue #267
 # Fingers crossed!
 #if os.environ.get('USE_OPENMP') == '1':
