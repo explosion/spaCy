@@ -1,6 +1,7 @@
 from __future__ import unicode_literals
 from spacy.attrs import HEAD
 from spacy.en import English
+from spacy.tokens.doc import Doc
 import numpy as np
 
 import pytest
@@ -49,3 +50,44 @@ def test_sent(doc):
     assert span.sent.text == 'This is a sentence.'
     span = doc[6:7]
     assert span.sent.root.left_edge.text == 'This'
+
+
+def test_default_sentiment(EN):
+    '''Test new span.sentiment property's default averaging behaviour'''
+    good = EN.vocab[u'good']
+    good.sentiment = 3.0
+    bad = EN.vocab[u'bad']
+    bad.sentiment = -2.0
+
+    doc = Doc(EN.vocab, [u'good', 'stuff', u'bad', u'stuff'])
+
+    good_stuff = doc[:2]
+    assert good_stuff.sentiment == 3.0 / 2
+
+    bad_stuff = doc[-2:]
+    assert bad_stuff.sentiment == -2. / 2
+
+    good_stuff_bad = doc[:-1]
+    assert good_stuff_bad.sentiment == (3.+-2) / 3.
+
+
+
+def test_override_sentiment(EN):
+    '''Test new span.sentiment property's default averaging behaviour'''
+    good = EN.vocab[u'good']
+    good.sentiment = 3.0
+    bad = EN.vocab[u'bad']
+    bad.sentiment = -2.0
+
+    doc = Doc(EN.vocab, [u'good', 'stuff', u'bad', u'stuff'])
+
+    doc.user_span_hooks['sentiment'] = lambda span: 10.0
+
+    good_stuff = doc[:2]
+    assert good_stuff.sentiment == 10.0
+
+    bad_stuff = doc[-2:]
+    assert bad_stuff.sentiment == 10.0
+
+    good_stuff_bad = doc[:-1]
+    assert good_stuff_bad.sentiment == 10.0

@@ -5,10 +5,7 @@ import pathlib
 from contextlib import contextmanager
 import shutil
 
-try:
-    import ujson as json
-except ImportError:
-    import json
+import ujson as json
 
 
 try:
@@ -24,6 +21,7 @@ from .matcher import Matcher
 from . import attrs
 from . import orth
 from . import util
+from . import language_data
 from .lemmatizer import Lemmatizer
 from .train import Trainer
 
@@ -31,6 +29,8 @@ from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD, PROB, LANG, IS_STOP
 from .syntax.parser import get_templates
 from .syntax.nonproj import PseudoProjectivity
 from .pipeline import DependencyParser, EntityRecognizer
+from .syntax.arc_eager import ArcEager
+from .syntax.ner import BiluoPushDown
 
 
 class BaseDefaults(object):
@@ -39,25 +39,30 @@ class BaseDefaults(object):
         if nlp is None or nlp.path is None:
             return Lemmatizer({}, {}, {})
         else:
-            return Lemmatizer.load(nlp.path)
+            return Lemmatizer.load(nlp.path, rules=cls.lemma_rules)
 
     @classmethod
     def create_vocab(cls, nlp=None):
         lemmatizer = cls.create_lemmatizer(nlp)
         if nlp is None or nlp.path is None:
-            return Vocab(lex_attr_getters=cls.lex_attr_getters, tag_map=cls.tag_map,
+            lex_attr_getters = dict(cls.lex_attr_getters)
+            # This is very messy, but it's the minimal working fix to Issue #639.
+            # This defaults stuff needs to be refactored (again)
+            lex_attr_getters[IS_STOP] = lambda string: string.lower() in cls.stop_words
+            return Vocab(lex_attr_getters=lex_attr_getters, tag_map=cls.tag_map,
                          lemmatizer=lemmatizer)
         else:
             return Vocab.load(nlp.path, lex_attr_getters=cls.lex_attr_getters,
                              tag_map=cls.tag_map, lemmatizer=lemmatizer)
-    
+
     @classmethod
     def add_vectors(cls, nlp=None):
         if nlp is None or nlp.path is None:
             return False
         else:
             vec_path = nlp.path / 'vocab' / 'vec.bin'
-            return lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
+            if vec_path.exists():
+                return lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
 
     @classmethod
     def create_tokenizer(cls, nlp=None):
@@ -75,7 +80,7 @@ class BaseDefaults(object):
         else:
             infix_finditer = None
         vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
-        return Tokenizer(nlp.vocab, rules=rules,
+        return Tokenizer(vocab, rules=rules,
                          prefix_search=prefix_search, suffix_search=suffix_search,
                          infix_finditer=infix_finditer)
 
@@ -91,26 +96,27 @@ class BaseDefaults(object):
             return Tagger.load(nlp.path / 'pos', nlp.vocab)
 
     @classmethod
-    def create_parser(cls, nlp=None):
+    def create_parser(cls, nlp=None, **cfg):
         if nlp is None:
-            return DependencyParser(cls.create_vocab(), features=cls.parser_features)
+            return DependencyParser(cls.create_vocab(), features=cls.parser_features,
+                                    **cfg)
         elif nlp.path is False:
-            return DependencyParser(nlp.vocab, features=cls.parser_features)
+            return DependencyParser(nlp.vocab, features=cls.parser_features, **cfg)
         elif nlp.path is None or not (nlp.path / 'deps').exists():
             return None
         else:
-            return DependencyParser.load(nlp.path / 'deps', nlp.vocab)
+            return DependencyParser.load(nlp.path / 'deps', nlp.vocab, **cfg)
 
     @classmethod
-    def create_entity(cls, nlp=None):
+    def create_entity(cls, nlp=None, **cfg):
         if nlp is None:
-            return EntityRecognizer(cls.create_vocab(), features=cls.entity_features)
+            return EntityRecognizer(cls.create_vocab(), features=cls.entity_features, **cfg)
         elif nlp.path is False:
-            return EntityRecognizer(nlp.vocab, features=cls.entity_features)
+            return EntityRecognizer(nlp.vocab, features=cls.entity_features, **cfg)
         elif nlp.path is None or not (nlp.path / 'ner').exists():
             return None
         else:
-            return EntityRecognizer.load(nlp.path / 'ner', nlp.vocab)
+            return EntityRecognizer.load(nlp.path / 'ner', nlp.vocab, **cfg)
 
     @classmethod
     def create_matcher(cls, nlp=None):
@@ -135,24 +141,26 @@ class BaseDefaults(object):
         if nlp.entity:
             pipeline.append(nlp.entity)
         return pipeline
-    
-    prefixes = tuple()
 
-    suffixes = tuple()
+    prefixes = tuple(language_data.TOKENIZER_PREFIXES)
 
-    infixes = tuple()
- 
-    tag_map = {}
+    suffixes = tuple(language_data.TOKENIZER_SUFFIXES)
+
+    infixes = tuple(language_data.TOKENIZER_INFIXES)
+
+    tag_map = dict(language_data.TAG_MAP)
 
     tokenizer_exceptions = {}
-   
+
     parser_features = get_templates('parser')
-    
+
     entity_features = get_templates('ner')
 
     tagger_features = Tagger.feature_templates # TODO -- fix this
 
     stop_words = set()
+
+    lemma_rules = {}
 
     lex_attr_getters = {
         attrs.LOWER: lambda string: string.lower(),
@@ -211,14 +219,14 @@ class Language(object):
             # preprocess training data here before ArcEager.get_labels() is called
             gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
 
-        parser_cfg['labels'] = ArcEager.get_labels(gold_tuples)
-        entity_cfg['labels'] = BiluoPushDown.get_labels(gold_tuples)
+        parser_cfg['actions'] = ArcEager.get_actions(gold_parses=gold_tuples)
+        entity_cfg['actions'] = BiluoPushDown.get_actions(gold_parses=gold_tuples)
 
-        with (dep_model_dir / 'config.json').open('wb') as file_:
+        with (dep_model_dir / 'config.json').open('w') as file_:
             json.dump(parser_cfg, file_)
-        with (ner_model_dir / 'config.json').open('wb') as file_:
+        with (ner_model_dir / 'config.json').open('w') as file_:
             json.dump(entity_cfg, file_)
-        with (pos_model_dir / 'config.json').open('wb') as file_:
+        with (pos_model_dir / 'config.json').open('w') as file_:
             json.dump(tagger_cfg, file_)
 
         self = cls(
@@ -233,19 +241,16 @@ class Language(object):
                 vectors=False,
                 pipeline=False)
 
-        self.defaults.parser_labels = parser_cfg['labels']
-        self.defaults.entity_labels = entity_cfg['labels']
-
-        self.vocab = self.defaults.Vocab()
-        self.tokenizer = self.defaults.Tokenizer(self.vocab)
-        self.tagger = self.defaults.Tagger(self.vocab, **tagger_cfg)
-        self.parser = self.defaults.Parser(self.vocab, **parser_cfg)
-        self.entity = self.defaults.Entity(self.vocab, **entity_cfg)
-        self.pipeline = self.defaults.Pipeline(self)
+        self.vocab = self.Defaults.create_vocab(self)
+        self.tokenizer = self.Defaults.create_tokenizer(self)
+        self.tagger = self.Defaults.create_tagger(self)
+        self.parser = self.Defaults.create_parser(self)
+        self.entity = self.Defaults.create_entity(self)
+        self.pipeline = self.Defaults.create_pipeline(self)
         yield Trainer(self, gold_tuples)
         self.end_training()
 
-    def __init__(self, path=True, **overrides):
+    def __init__(self, **overrides):
         if 'data_dir' in overrides and 'path' not in overrides:
             raise ValueError("The argument 'data_dir' has been renamed to 'path'")
         path = overrides.get('path', True)
@@ -255,14 +260,14 @@ class Language(object):
             path = util.match_best_version(self.lang, '', util.get_data_path())
 
         self.path = path
- 
+
         self.vocab     = self.Defaults.create_vocab(self) \
                          if 'vocab' not in overrides \
                          else overrides['vocab']
         add_vectors    = self.Defaults.add_vectors(self) \
                          if 'add_vectors' not in overrides \
                          else overrides['add_vectors']
-        if add_vectors:
+        if self.vocab and add_vectors:
             add_vectors(self.vocab)
         self.tokenizer = self.Defaults.create_tokenizer(self) \
                          if 'tokenizer' not in overrides \
@@ -297,7 +302,7 @@ class Language(object):
         """Apply the pipeline to some text.  The text can span multiple sentences,
         and can contain arbtrary whitespace.  Alignment into the original string
         is preserved.
-        
+
         Args:
             text (unicode): The text to be processed.
 
@@ -325,9 +330,9 @@ class Language(object):
 
     def pipe(self, texts, tag=True, parse=True, entity=True, n_threads=2, batch_size=1000):
         '''Process texts as a stream, and yield Doc objects in order.
-        
+
         Supports GIL-free multi-threading.
-        
+
         Arguments:
             texts (iterator)
             tag (bool)
@@ -350,7 +355,7 @@ class Language(object):
             path = self.path
         elif isinstance(path, basestring):
             path = pathlib.Path(path)
-        
+
         if self.tagger:
             self.tagger.model.end_training()
             self.tagger.model.dump(str(path / 'pos' / 'model'))
@@ -360,7 +365,7 @@ class Language(object):
         if self.entity:
             self.entity.model.end_training()
             self.entity.model.dump(str(path / 'ner' / 'model'))
-        
+
         strings_loc = path / 'vocab' / 'strings.json'
         with strings_loc.open('w', encoding='utf8') as file_:
             self.vocab.strings.dump(file_)
@@ -382,7 +387,7 @@ class Language(object):
         else:
             entity_iob_freqs = []
             entity_type_freqs = []
-        with (path / 'vocab' / 'serializer.json').open('wb') as file_:
+        with (path / 'vocab' / 'serializer.json').open('w') as file_:
             file_.write(
                 json.dumps([
                     (TAG, tagger_freqs),

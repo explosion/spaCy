@@ -12,7 +12,7 @@
         "COMPANY_URL": "https://explosion.ai",
         "DEMOS_URL": "https://demos.explosion.ai",
 
-        "SPACY_VERSION": "1.2",
+        "SPACY_VERSION": "1.4",
         "LATEST_NEWS": {
             "url": "https://explosion.ai/blog/spacy-user-survey",
             "title": "The results of the spaCy user survey"
@@ -21,7 +21,8 @@
         "SOCIAL": {
             "twitter": "spacy_io",
             "github": "explosion",
-            "reddit": "spacynlp"
+            "reddit": "spacynlp",
+            "codepen": "explosion"
         },
 
         "NAVIGATION": {
@@ -52,7 +53,7 @@
             }
         },
 
-        "V_CSS": "1.9",
+        "V_CSS": "1.10",
         "V_JS": "1.0",
         "DEFAULT_SYNTAX" : "python",
         "ANALYTICS": "UA-58931649-1",

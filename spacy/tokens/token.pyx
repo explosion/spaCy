@@ -1,3 +1,7 @@
+# encoding: utf8
+# cython: infer_types=True
+from __future__ import unicode_literals
+
 from libc.string cimport memcpy
 from cpython.mem cimport PyMem_Malloc, PyMem_Free
 # Compiler crashes on memory view coercion without this. Should report bug.

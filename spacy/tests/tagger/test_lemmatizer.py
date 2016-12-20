@@ -58,24 +58,24 @@ def test_noun_lemmas(lemmatizer):
 def test_base_form_dive(lemmatizer):
     if lemmatizer is None:
         return None
- 
+
     do = lemmatizer.noun
-    assert do('dive', number='sing') == set(['dive'])
-    assert do('dive', number='plur') == set(['diva'])
+    assert do('dive', {'number': 'sing'}) == set(['dive'])
+    assert do('dive', {'number': 'plur'}) == set(['diva'])
 
 
 def test_base_form_saw(lemmatizer):
     if lemmatizer is None:
         return None
- 
+
     do = lemmatizer.verb
-    assert do('saw', verbform='past') == set(['see'])
+    assert do('saw', {'verbform': 'past'}) == set(['see'])
 
 
 def test_smart_quotes(lemmatizer):
     if lemmatizer is None:
         return None
- 
+
     do = lemmatizer.punct
     assert do('“') == set(['"'])
     assert do('“') == set(['"'])
@@ -84,10 +84,10 @@ def test_smart_quotes(lemmatizer):
 def test_pickle_lemmatizer(lemmatizer):
     if lemmatizer is None:
         return None
- 
+
     file_ = io.BytesIO()
     pickle.dump(lemmatizer, file_)
 
     file_.seek(0)
-    
+
     loaded = pickle.load(file_)

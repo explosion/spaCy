@@ -28,6 +28,9 @@ PACKAGES = [
     'spacy.fr',
     'spacy.it',
     'spacy.pt',
+    'spacy.nl',
+    'spacy.sv',
+    'spacy.language_data',
     'spacy.serialize',
     'spacy.syntax',
     'spacy.munge',
@@ -77,6 +80,7 @@ MOD_NAMES = [
     'spacy.syntax.ner',
     'spacy.symbols',
     'spacy.syntax.iterators']
+    # TODO: This is missing a lot of modules. Does it matter?
 
 
 COMPILE_OPTIONS =  {
@@ -92,7 +96,7 @@ LINK_OPTIONS = {
     'other' : []
 }
 
- 
+
 # I don't understand this very well yet. See Issue #267
 # Fingers crossed!
 #if os.environ.get('USE_OPENMP') == '1':

@@ -38,12 +38,7 @@ p
 
 +h(2, "pos-tagging") Part-of-speech Tagging
 
-p
-    |  The part-of-speech tagger uses the
-    |  #[+a("https://catalog.ldc.upenn.edu/LDC2013T19") OntoNotes 5] version of
-    |  the Penn Treebank tag set. We also map the tags to the simpler Google
-    |  Universal POS Tag set. See
-    |  #[+src(gh("spaCy", "spacy/tagger.pyx")) tagger.pyx] for details.
+include _annotation/_pos-tags
 
 +h(2, "lemmatization") Lemmatization
 
@@ -55,6 +50,13 @@ p A "lemma" is the uninflected form of a word. In English, this means:
     +item #[strong Nouns]: The form like "dog", not "dogs"; like "child", not "children"
     +item #[strong Verbs]: The form like "write", not "writes", "writing", "wrote" or "written"
 
++aside("About spaCy's custom pronoun lemma")
+    |  Unlike verbs and common nouns, there's no clear base form of a personal
+    |  pronoun. Should the lemma of "me" be "I", or should we normalize person
+    |  as well, giving "it" — or maybe "he"? spaCy's solution is to introduce a
+    |  novel symbol, #[code.u-nowrap -PRON-], which is used as the lemma for
+    |  all personal pronouns.
+
 p
     |  The lemmatization data is taken from
     |  #[+a("https://wordnet.princeton.edu") WordNet]. However, we also add a
@@ -63,86 +65,17 @@ p
 
 +h(2, "dependency-parsing") Syntactic Dependency Parsing
 
-p
-    |  The parser is trained on data produced by the
-    |  #[+a("http://www.clearnlp.com") ClearNLP] converter. Details of the
-    |  annotation scheme can be found
-    |  #[+a("http://www.mathcs.emory.edu/~choi/doc/clear-dependency-2012.pdf") here].
++table(["Language", "Converter", "Scheme"])
+    +row
+        +cell English
+        +cell #[+a("http://www.clearnlp.com") ClearNLP]
+        +cell #[+a("http://www.mathcs.emory.edu/~choi/doc/clear-dependency-2012.pdf") CLEAR Style]
+
+    +row
+        +cell German
+        +cell #[+a("https://github.com/wbwseeker/tiger2dep") TIGER]
+        +cell #[+a("http://www.ims.uni-stuttgart.de/forschung/ressourcen/korpora/TIGERCorpus/annotation/index.html") TIGER]
 
 +h(2, "named-entities") Named Entity Recognition
 
-+table(["Entity Type", "Description"])
-    +row
-        +cell #[code PERSON]
-        +cell People, including fictional.
-
-    +row
-        +cell #[code NORP]
-        +cell Nationalities or religious or political groups.
-
-    +row
-        +cell #[code FAC]
-        +cell Facilities, such as buildings, airports, highways, bridges, etc.
-
-    +row
-        +cell #[code ORG]
-        +cell Companies, agencies, institutions, etc.
-
-    +row
-        +cell #[code GPE]
-        +cell Countries, cities, states.
-
-    +row
-        +cell #[code LOC]
-        +cell Non-GPE locations, mountain ranges, bodies of water.
-
-    +row
-        +cell #[code PRODUCT]
-        +cell Vehicles, weapons, foods, etc. (Not services)
-
-    +row
-        +cell #[code EVENT]
-        +cell Named hurricanes, battles, wars, sports events, etc.
-
-    +row
-        +cell #[code WORK_OF_ART]
-        +cell Titles of books, songs, etc.
-
-    +row
-        +cell #[code LAW]
-        +cell Named documents made into laws
-
-    +row
-        +cell #[code LANGUAGE]
-        +cell Any named language
-
-p The following values are also annotated in a style similar to names:
-
-+table(["Entity Type", "Description"])
-    +row
-        +cell #[code DATE]
-        +cell Absolute or relative dates or periods
-
-    +row
-        +cell #[code TIME]
-        +cell Times smaller than a day
-
-    +row
-        +cell #[code PERCENT]
-        +cell Percentage (including “%”)
-
-    +row
-        +cell #[code MONEY]
-        +cell Monetary values, including unit
-
-    +row
-        +cell #[code QUANTITY]
-        +cell Measurements, as of weight or distance
-
-    +row
-        +cell #[code ORDINAL]
-        +cell "first", "second"
-
-    +row
-        +cell #[code CARDINAL]
-        +cell Numerals that do not fall under another type
+include _annotation/_named-entities

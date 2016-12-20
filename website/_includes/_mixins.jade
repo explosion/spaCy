@@ -23,15 +23,17 @@ mixin a(url, trusted)
     a(href=url target="_blank" rel=!trusted ? "noopener nofollow" : false)&attributes(attributes)
         block
 
+
 //- Source link (with added icon for "code")
     url - [string] link href, can also be gh() function to generate GitHub link
           see _functions.jade for more info
 
 mixin src(url)
-    +a(url)
-        block
+    span.u-inline-block.u-nowrap
+        +a(url)
+            block
 
-    |   #[+icon("code", 16).u-color-subtle]
+        |   #[+icon("code", 16).u-color-subtle]
 
 
 //- API link (with added tag and automatically generated path)
@@ -88,6 +90,19 @@ mixin code(label, language)
 
         code.c-code-block__content
             block
+
+
+//- CodePen embed
+    slug        - [string] ID of CodePen demo (taken from URL)
+    height      - [integer] height of demo embed iframe
+    default_tab - [string] code tab(s) visible on load (default: "result")
+
+mixin codepen(slug, height, default_tab)
+    figure.o-block(style="min-height: #{height}px")&attributes(attributes)
+        .codepen(data-height=height data-theme-id="26467" data-slug-hash=slug data-default-tab=(default_tab || "result") data-embed-version="2" data-user=SOCIAL.codepen)
+            +a("https://codepen.io/" + SOCIAL.codepen + "/" + slug) View on CodePen
+
+        script(async src="https://assets.codepen.io/assets/embed/ei.js")
 
 
 //- Images / figures
