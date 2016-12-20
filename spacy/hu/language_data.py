@@ -24,7 +24,7 @@ STOP_WORDS = set(_load_txt_data(_STOPWORDS_PATH))
 
 HYPHENS = [six.unichr(cp) for cp in [173, 8211, 8212, 8213, 8722, 9472]]
 
-TOKENIZER_PREFIXES = r''', " ( [ { * < $ £ “ ' `` ` # US$ C$ A$ a- ‘ .... ...'''.split()
+TOKENIZER_PREFIXES = r'''+ , " ( [ { * < $ £ “ ' `` ` # US$ C$ A$ a- ‘ .... ...'''.split()
 
 TOKENIZER_SUFFIXES = r'''
 ,
@@ -53,10 +53,11 @@ _
 \.\.
 \.\.\.
 \.\.\.\.
-(?<=[a-züóőúéáűí)\]"'´«‘’%\)²“”-])\.
+(?<=[a-züóőúéáűí)\]"'´«‘’%\)²“”+-])\.
 (?<=[a-züóőúéáűí)])-e
 \-\-
 ´
+(?<=[0-9])\.
 (?<=[0-9])km²
 (?<=[0-9])m²
 (?<=[0-9])cm²
@@ -97,17 +98,17 @@ _
 (?<=[0-9])M
 (?<=[0-9])K
 (?<=[0-9])kb
+(?<=[0-9])\+
 '''.strip().split('\n')
 
 TOKENIZER_INFIXES = (r'''\.\.+ (?<=[a-züóőúéáűí])\.(?=[A-ZÜÓŐÚÉÁŰÍ]) (?<=[a-zA-ZüóőúéáűíÜÓŐÚÉÁŰÍ0-9])"(?=[\-a-zA-ZüóőúéáűíÜÓŐÚÉÁŰÍ]) '''
-                     r'''(?<=[a-zA-ZüóőúéáűíÜÓŐÚÉÁŰÍ])--(?=[a-zA-ZüóőúéáűíÜÓŐÚÉÁŰÍ]) (?<=[0-9])-(?=[0-9]) '''
+                     r'''(?<=[a-zA-ZüóőúéáűíÜÓŐÚÉÁŰÍ])--(?=[a-zA-ZüóőúéáűíÜÓŐÚÉÁŰÍ]) (?<=[0-9])[+\-\*/^](?=[0-9]) '''
                      r'''(?<=[a-zA-ZüóőúéáűíÜÓŐÚÉÁŰÍ]),(?=[a-zA-ZüóőúéáűíÜÓŐÚÉÁŰÍ])''').split()
 
 ABBREVIATIONS = {abbrev: [{"ORTH": abbrev}] for abbrev in
                  _load_txt_data(_ABBREVIATIONS_ORIG_PATH, _ABBREVIATIONS_NYTUD_PATH)}
 
 TOKENIZER_EXCEPTIONS = {
-    "\w*\(\w+\)\w*": [{"F": "???"}],
     "-e": [{"F": "-e"}],
 
     "vs.": [{"F": "vs."}],
