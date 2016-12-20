@@ -58,9 +58,11 @@ _DOTS_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_defaul
 _HYPHEN_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_hyphen.txt"))
 _QUOTE_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_quote.txt"))
 _NUMBER_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_numbers.txt"))
-ALL_TESTCASES = _DOTS_CASES + _HYPHEN_CASES + _QUOTE_CASES  + _NUMBER_CASES
-ALL_TESTCASES = _NUMBER_CASES
-# ALL_TESTCASES = [TokenizerTestCase("A 1:20:36.7.", "A 1:20:36.7.".split())]
+_MISC_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_misc.txt"))
+_IT_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_it.txt"))
+
+# TODO: Until this get fixed we cannot really test the urls: https://github.com/explosion/spaCy/issues/344
+ALL_TESTCASES = _DOTS_CASES + _HYPHEN_CASES + _QUOTE_CASES + _NUMBER_CASES + _MISC_CASES  # + _IT_CASES
 
 
 @pytest.fixture(scope="session")

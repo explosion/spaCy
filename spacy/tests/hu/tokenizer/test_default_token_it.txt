@@ -1,0 +1,233 @@
+# TOKEN it
+
+tartomanynevek
+IN : .edu, .hu.
+OUT: <s><w>.edu</w><c>,</c><ws> </ws><w>.hu</w><c>.</c></s>
+
+url-ek
+IN : red-stars.com.
+OUT: <s><w>red-stars.com</w><c>.</c></s>
+IN : www.valami.com.
+OUT: <s><w>www.valami.com</w><c>.</c></s>
+
+url-ek toldalekolva
+IN : www.valami.com-ról.
+OUT: <s><w>www.valami.com-ról</w><c>.</c></s>
+IN : www.valami.comról.
+OUT: <s><w>www.valami.comról</w><c>.</c></s>
+
+osszetettebb url-ek
+IN : A https://www.valami.com/index.html van.
+OUT: <s><w>A</w><ws> </ws><w>https://www.valami.com/index.html</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A http://142.42.1.1/ van.
+OUT: <s><w>A</w><ws> </ws><w>http://142.42.1.1/</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A http://142.42.1.1/.
+OUT: <s><w>A</w><ws> </ws><w>http://142.42.1.1/</w><c>.</c></s>
+IN : A http://example.com/.
+OUT: <s><w>A</w><ws> </ws><w>http://example.com/</w><c>.</c></s>
+IN : A http://example.com/ van.
+OUT: <s><w>A</w><ws> </ws><w>http://example.com/</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A http://foo.com/blah_(wikipedia)#cite-1.
+OUT: <s><w>A</w><ws> </ws><w>http://foo.com/blah_(wikipedia)#cite-1</w><c>.</c></s>
+IN : A http://foo.com/blah_(wikipedia)#cite-1 van.
+OUT: <s><w>A</w><ws> </ws><w>http://foo.com/blah_(wikipedia)#cite-1</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A http://foo.com/blah_(wikipedia).
+OUT: <s><w>A</w><ws> </ws><w>http://foo.com/blah_(wikipedia)</w><c>.</c></s>
+IN : A http://foo.com/blah_(wikipedia) van.
+OUT: <s><w>A</w><ws> </ws><w>http://foo.com/blah_(wikipedia)</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A http://www.example.com/wpstyle/?bar=baz&inga=42&quux.
+OUT: <s><w>A</w><ws> </ws><w>http://www.example.com/wpstyle/?bar=baz&inga=42&quux</w><c>.</c></s>
+IN : A http://www.example.com/wpstyle/?bar=baz&inga=42&quux van.
+OUT: <s><w>A</w><ws> </ws><w>http://www.example.com/wpstyle/?bar=baz&inga=42&quux</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A http://example.com:8080.
+OUT: <s><w>A</w><ws> </ws><w>http://example.com:8080</w><c>.</c></s>
+IN : A http://example.com:8080 van.
+OUT: <s><w>A</w><ws> </ws><w>http://example.com:8080</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A http://foo.bar/?q=Test%20URL-encoded%20stuff.
+OUT: <s><w>A</w><ws> </ws><w>http://foo.bar/?q=Test%20URL-encoded%20stuff</w><c>.</c></s>
+IN : A http://foo.bar/?q=Test%20URL-encoded%20stuff van.
+OUT: <s><w>A</w><ws> </ws><w>http://foo.bar/?q=Test%20URL-encoded%20stuff</w><ws> </ws><w>van</w><c>.</c></s>
+# url with more '='
+IN : A www.kereso.elte.hu/nev=kiss,jozsef%kar=jog%tagozat=nappali.
+OUT: <s><w>A</w><ws> </ws><w>www.kereso.elte.hu/nev=kiss,jozsef%kar=jog%tagozat=nappali</w><c>.</c></s>
+IN : A www.kereso.elte.hu/nev=kiss,jozsef%kar=jog%tagozat=nappali van.
+OUT: <s><w>A</w><ws> </ws><w>www.kereso.elte.hu/nev=kiss,jozsef%kar=jog%tagozat=nappali</w><ws> </ws><w>van</w><c>.</c></s>
+
+email
+IN : A foo.bar@baz.com van.
+OUT: <s><w>A</w><ws> </ws><w>foo.bar@baz.com</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A foo.bar@baz.com.
+OUT: <s><w>A</w><ws> </ws><w>foo.bar@baz.com</w><c>.</c></s>
+IN : A foo.bar@baz.com-nak van.
+OUT: <s><w>A</w><ws> </ws><w>foo.bar@baz.com-nak</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A foo.bar@baz.com-nak.
+OUT: <s><w>A</w><ws> </ws><w>foo.bar@baz.com-nak</w><c>.</c></s>
+IN : A foo.bar@baz.comnak van.
+OUT: <s><w>A</w><ws> </ws><w>foo.bar@baz.comnak</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A foo.bar@baz.comnak.
+OUT: <s><w>A</w><ws> </ws><w>foo.bar@baz.comnak</w><c>.</c></s>
+IN : A mailto:foo.bar@baz.com van.
+OUT: <s><w>A</w><ws> </ws><w>mailto:foo.bar@baz.com</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A mailto:foo.bar@baz.com.
+OUT: <s><w>A</w><ws> </ws><w>mailto:foo.bar@baz.com</w><c>.</c></s>
+IN : A mailto:foo.bar@baz.com-nak van.
+OUT: <s><w>A</w><ws> </ws><w>mailto:foo.bar@baz.com-nak</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A mailto:foo.bar@baz.com-nak.
+OUT: <s><w>A</w><ws> </ws><w>mailto:foo.bar@baz.com-nak</w><c>.</c></s>
+IN : A mailto:foo.bar@baz.comnak van.
+OUT: <s><w>A</w><ws> </ws><w>mailto:foo.bar@baz.comnak</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A mailto:foo.bar@baz.comnak.
+OUT: <s><w>A</w><ws> </ws><w>mailto:foo.bar@baz.comnak</w><c>.</c></s>
+
+windows halozati szolgaltatas (vagy mi)
+IN : Az ADMIN$ van.
+OUT: <s><w>Az</w><ws> </ws><w>ADMIN$</w><ws> </ws><w>van</w><c>.</c></s>
+IN : Az ADMIN$.
+OUT: <s><w>Az</w><ws> </ws><w>ADMIN$</w><c>.</c></s>
+IN : Az ADMIN$-nak van.
+OUT: <s><w>Az</w><ws> </ws><w>ADMIN$-nak</w><ws> </ws><w>van</w><c>.</c></s>
+IN : Az ADMIN$-nak.
+OUT: <s><w>Az</w><ws> </ws><w>ADMIN$-nak</w><c>.</c></s>
+
+legfelso tartomanynevek
+IN : A .edu, .hu vannak.
+OUT: <s><w>A</w><ws> </ws><w>.edu</w><c>,</c><ws> </ws><w>.hu</w><ws> </ws><w>vannak</w><c>.</c></s>
+IN : A .edu, .hu.
+OUT: <s><w>A</w><ws> </ws><w>.edu</w><c>,</c><ws> </ws><w>.hu</w><c>.</c></s>
+
+slash, backslash
+IN : A / van.
+OUT: <s><w>A</w><ws> </ws><c>/</c><ws> </ws><w>van</w><c>.</c></s>
+IN : A \ van.
+OUT: <s><w>A</w><ws> </ws><c>\</c><ws> </ws><w>van</w><c>.</c></s>
+
+windows path
+IN : C:, \ es c:\ van.
+OUT: <s><w>C:</w><c>,</c><ws> </ws><c>\</c><ws> </ws><w>es</w><ws> </ws><w>c:\</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A \\test\test$\TEST.xls van.
+OUT: <s><w>A</w><ws> </ws><w>\\test\test$\TEST.xls</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A \\server\share\folder\myfile.txt van.
+OUT: <s><w>A</w><ws> </ws><w>\\server\share\folder\myfile.txt</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A \\server\share\myfile.txt van.
+OUT: <s><w>A</w><ws> </ws><w>\\server\share\myfile.txt</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A \\123.123.123.123\share\folder\myfile.txt van.
+OUT: <s><w>A</w><ws> </ws><w>\\123.123.123.123\share\folder\myfile.txt</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A c:\folder\myfile.txt van.
+OUT: <s><w>A</w><ws> </ws><w>c:\folder\myfile.txt</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A c:\folder\myfile.txt-ben van.
+OUT: <s><w>A</w><ws> </ws><w>c:\folder\myfile.txt-ben</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A c:\folder\myfileWithoutExtension van.
+OUT: <s><w>A</w><ws> </ws><w>c:\folder\myfileWithoutExtension</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A c:\folder\myfile.txt.
+OUT: <s><w>A</w><ws> </ws><w>c:\folder\myfile.txt</w><c>.</c></s>
+IN : A c:\folder\myfile.txt-ben.
+OUT: <s><w>A</w><ws> </ws><w>c:\folder\myfile.txt-ben</w><c>.</c></s>
+
+unix path
+IN : A ./ van.
+OUT: <s><w>A</w><ws> </ws><w>./</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A ../ van.
+OUT: <s><w>A</w><ws> </ws><w>../</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A ./valami1/valami2/ van.
+OUT: <s><w>A</w><ws> </ws><w>./valami1/valami2/</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A /valami/valami.txt van.
+OUT: <s><w>A</w><ws> </ws><w>/valami/valami.txt</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A /valami/valami.txt-ben van.
+OUT: <s><w>A</w><ws> </ws><w>/valami/valami.txt-ben</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A /valami/valami.txt.
+OUT: <s><w>A</w><ws> </ws><w>/valami/valami.txt</w><c>.</c></s>
+IN : A /valami/valami.txt-ben.
+OUT: <s><w>A</w><ws> </ws><w>/valami/valami.txt-ben</w><c>.</c></s>
+
+Huntokenes tesztek vegyesen
+1.
+IN : A C:\DINNYE\MACSKA.JPG van.
+OUT: <s><w>A</w><ws> </ws><w>C:\DINNYE\MACSKA.JPG</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A C:\DINNYE\MACSKA.JPG-ben van.
+OUT: <s><w>A</w><ws> </ws><w>C:\DINNYE\MACSKA.JPG-ben</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A C:\DINNYE\MACSKA.JPG.
+OUT: <s><w>A</w><ws> </ws><w>C:\DINNYE\MACSKA.JPG</w><c>.</c></s>
+IN : A C:\DINNYE\MACSKA.JPG-ben.
+OUT: <s><w>A</w><ws> </ws><w>C:\DINNYE\MACSKA.JPG-ben</w><c>.</c></s>
+2.
+IN : A \\SZERVER\SZOLGALTATAS$ van.
+OUT: <s><w>A</w><ws> </ws><w>\\SZERVER\SZOLGALTATAS$</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A \\SZERVER\SZOLGALTATAS$-ben van.
+OUT: <s><w>A</w><ws> </ws><w>\\SZERVER\SZOLGALTATAS$-ben</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A \\SZERVER\SZOLGALTATAS$.
+OUT: <s><w>A</w><ws> </ws><w>\\SZERVER\SZOLGALTATAS$</w><c>.</c></s>
+IN : A \\SZERVER\SZOLGALTATAS$-ben.
+OUT: <s><w>A</w><ws> </ws><w>\\SZERVER\SZOLGALTATAS$-ben</w><c>.</c></s>
+3.
+IN : A /etc/.././home/ van.
+OUT: <s><w>A</w><ws> </ws><w>/etc/.././home/</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A /etc/.././home/-ben van.
+OUT: <s><w>A</w><ws> </ws><w>/etc/.././home/-ben</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A /etc/.././home/.
+OUT: <s><w>A</w><ws> </ws><w>/etc/.././home/</w><c>.</c></s>
+IN : A /etc/.././home/-ben.
+OUT: <s><w>A</w><ws> </ws><w>/etc/.././home/-ben</w><c>.</c></s>
+4.
+IN : A *.doc van.
+OUT: <s><w>A</w><ws> </ws><w>*.doc</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A *.doc-ben van.
+OUT: <s><w>A</w><ws> </ws><w>*.doc-ben</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A *.doc.
+OUT: <s><w>A</w><ws> </ws><w>*.doc</w><c>.</c></s>
+IN : A *.doc-ben.
+OUT: <s><w>A</w><ws> </ws><w>*.doc-ben</w><c>.</c></s>
+5.
+IN : A *.* van.
+OUT: <s><w>A</w><ws> </ws><w>*.*</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A *.*-ben van.
+OUT: <s><w>A</w><ws> </ws><w>*.*-ben</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A *.*.
+OUT: <s><w>A</w><ws> </ws><w>*.*</w><c>.</c></s>
+IN : A *.*-ben.
+OUT: <s><w>A</w><ws> </ws><w>*.*-ben</w><c>.</c></s>
+6.
+IN : A .bmp.zip van.
+OUT: <s><w>A</w><ws> </ws><w>.bmp.zip</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A .bmp.zip-ben van.
+OUT: <s><w>A</w><ws> </ws><w>.bmp.zip-ben</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A .bmp.zip.
+OUT: <s><w>A</w><ws> </ws><w>.bmp.zip</w><c>.</c></s>
+IN : A .bmp.zip-ben.
+OUT: <s><w>A</w><ws> </ws><w>.bmp.zip-ben</w><c>.</c></s>
+
+
+fajlnevek
+IN : A teszt.txt van.
+OUT: <s><w>A</w><ws> </ws><w>teszt.txt</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A teszt.txt-ben van.
+OUT: <s><w>A</w><ws> </ws><w>teszt.txt-ben</w><ws> </ws><w>van</w><c>.</c></s>
+IN : A teszt.txt.
+OUT: <s><w>A</w><ws> </ws><w>teszt.txt</w><c>.</c></s>
+IN : A teszt.txt-ben.
+OUT: <s><w>A</w><ws> </ws><w>teszt.txt-ben</w><c>.</c></s>
+IN : A .txt van.
+OUT: <s><w>A</w><ws> </ws><w>.txt</w><ws> </ws><w>van</w><c>.</c></s>
+
+
+    MINTA
+    IN : A  van.
+    OUT: <s><w>A</w><ws> </ws><w></w><ws> </ws><w>van</w><c>.</c></s>
+    IN : A -ben van.
+    OUT: <s><w>A</w><ws> </ws><w>-ben</w><ws> </ws><w>van</w><c>.</c></s>
+    IN : A .
+    OUT: <s><w>A</w><ws> </ws><w></w><c>.</c></s>
+    IN : A -ben.
+    OUT: <s><w>A</w><ws> </ws><w>-ben</w><c>.</c></s>
+
+
+
+
+
+
+
+
+
+
+
+
+

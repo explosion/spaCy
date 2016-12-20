@@ -1,0 +1,22 @@
+# TOKEN misc
+
+    TODO: html entities
+    IN : Moli&egrave;re-rol van.
+    OUT: <s><w>Moli&egrave;re-rol</w><ws> </ws><w>van</w><c>.</c></s>
+
+
+&-t tartalmazo nagybatus szavak
+IN : AT&T van.
+OUT: <s><w>AT&T</w><ws> </ws><w>van</w><c>.</c></s>
+
+
+    zarojeles mondatkozi valtozatok
+    IN : (La)kik-e van?
+    OUT: <s><w>(La)kik</w><w>-e</w><ws> </ws><w>van</w><c>?</c></s>
+    IN : L(a)kik-e van?
+    OUT: <s><w>L(a)kik</w><w>-e</w><ws> </ws><w>van</w><c>?</c></s>
+    IN : Lak(ik)-e van?
+    OUT: <s><w>Lak(ik)</w><w>-e</w><ws> </ws><w>van</w><c>?</c></s>
+
+
+
