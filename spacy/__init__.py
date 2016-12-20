@@ -11,6 +11,7 @@ from . import it
 from . import fr
 from . import pt
 from . import nl
+from . import sv
 
 
 try:
@@ -27,6 +28,7 @@ set_lang_class(fr.French.lang, fr.French)
 set_lang_class(it.Italian.lang, it.Italian)
 set_lang_class(zh.Chinese.lang, zh.Chinese)
 set_lang_class(nl.Dutch.lang, nl.Dutch)
+set_lang_class(sv.Swedish.lang, sv.Swedish)
 
 
 def load(name, **overrides):
