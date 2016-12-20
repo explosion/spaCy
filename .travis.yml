@@ -21,7 +21,7 @@ install:
 
 script:
   - "pip install pytest"
-  - if [[ "${VIA}" == "compile" ]]; then SPACY_DATA=models/en python -m pytest spacy; fi
+  - if [[ "${VIA}" == "compile" ]]; then python -m pytest spacy; fi
   - if [[ "${VIA}" == "pypi" ]]; then python -m pytest `python -c "import pathlib; import spacy; print(pathlib.Path(spacy.__file__).parent.resolve())"`; fi
   - if [[ "${VIA}" == "sdist" ]]; then python -m pytest `python -c "import pathlib; import spacy; print(pathlib.Path(spacy.__file__).parent.resolve())"`; fi
   
