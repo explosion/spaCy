@@ -28,8 +28,8 @@ from .tokens.doc cimport Doc
 cdef class Tokenizer:
     """Segment text, and create Doc objects with the discovered segment boundaries."""
     @classmethod
-    def load(cls, path, Vocab vocab, rules=None, rule_match = None, prefix_search=None, suffix_search=None,
-             infix_finditer=None):
+    def load(cls, path, Vocab vocab, rules=None, prefix_search=None, suffix_search=None,
+             infix_finditer=None, rule_match = None):
         '''Load a Tokenizer, reading unsupplied components from the path.
         
         Arguments:
@@ -69,7 +69,7 @@ cdef class Tokenizer:
             infix_finditer = util.compile_infix_regex(entries).finditer
         return cls(vocab, rules, rule_match, prefix_search, suffix_search, infix_finditer)
 
-    def __init__(self, Vocab vocab, rules, rule_match, prefix_search, suffix_search, infix_finditer):
+    def __init__(self, Vocab vocab, rules, prefix_search, suffix_search, infix_finditer, rule_match=None):
         '''Create a Tokenizer, to create Doc objects given unicode text.
         
         Arguments:
@@ -77,9 +77,6 @@ cdef class Tokenizer:
                 A storage container for lexical types.
             rules (dict):
                 Exceptions and special-cases for the tokenizer.
-            rule_match:
-                A function matching the signature of re.compile(string).match
-                to match special cases for the tokenizer.
             prefix_search:
                 A function matching the signature of re.compile(string).search
                 to match prefixes.
@@ -89,6 +86,9 @@ cdef class Tokenizer:
             infix_finditer:
                 A function matching the signature of re.compile(string).finditer
                 to find infixes.
+            rule_match:
+                A function matching the signature of re.compile(string).match
+                to match special cases for the tokenizer.
         '''
         self.mem = Pool()
         self._cache = PreshMap()
