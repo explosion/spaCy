@@ -53,7 +53,7 @@ cdef class Vocab:
     '''
     @classmethod
     def load(cls, path, lex_attr_getters=None, lemmatizer=True,
-             tag_map=True, serializer_freqs=True, oov_prob=True, **deprecated_kwargs): 
+             tag_map=True, serializer_freqs=True, oov_prob=True, **deprecated_kwargs):
         """
         Load the vocabulary from a path.
 
@@ -124,7 +124,7 @@ cdef class Vocab:
             Vocab: The newly constructed vocab object.
         '''
         util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
-        
+
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
         tag_map = tag_map if tag_map is not None else {}
         if lemmatizer in (None, True, False):
@@ -149,10 +149,10 @@ cdef class Vocab:
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.serializer_freqs = serializer_freqs
-        
+
         self.length = 1
         self._serializer = None
-    
+
     property serializer:
         # Having the serializer live here is super messy :(
         def __get__(self):
@@ -177,7 +177,7 @@ cdef class Vocab:
         vectors if necessary. The memory will be zeroed.
 
         Arguments:
-            new_size (int): The new size of the vectors. 
+            new_size (int): The new size of the vectors.
         '''
         cdef hash_t key
         cdef size_t addr
@@ -190,11 +190,11 @@ cdef class Vocab:
 
     def add_flag(self, flag_getter, int flag_id=-1):
         '''Set a new boolean flag to words in the vocabulary.
-        
+
         The flag_setter function will be called over the words currently in the
         vocab, and then applied to new words as they occur. You'll then be able
         to access the flag value on each token, using token.check_flag(flag_id).
-        
+
         See also:
             Lexeme.set_flag, Lexeme.check_flag, Token.set_flag, Token.check_flag.
 
@@ -204,7 +204,7 @@ cdef class Vocab:
 
             flag_id (int):
                 An integer between 1 and 63 (inclusive), specifying the bit at which the
-                flag will be stored. If -1, the lowest available bit will be 
+                flag will be stored. If -1, the lowest available bit will be
                 chosen.
 
         Returns:
@@ -322,7 +322,7 @@ cdef class Vocab:
         Arguments:
             id_or_string (int or unicode):
               The integer ID of a word, or its unicode string.
-              
+
               If an int >= Lexicon.size, IndexError is raised. If id_or_string
               is neither an int nor a unicode string, ValueError is raised.
 
@@ -349,7 +349,7 @@ cdef class Vocab:
             for attr_id, value in props.items():
                 Token.set_struct_attr(token, attr_id, value)
         return tokens
-    
+
     def dump(self, loc):
         """Save the lexemes binary data to the given location.
 
@@ -443,7 +443,7 @@ cdef class Vocab:
         cdef int32_t word_len
         cdef bytes word_str
         cdef char* chars
-        
+
         cdef Lexeme lexeme
         cdef CFile out_file = CFile(out_loc, 'wb')
         for lexeme in self:
@@ -460,7 +460,7 @@ cdef class Vocab:
         out_file.close()
 
     def load_vectors(self, file_):
-        """Load vectors from a text-based file.         
+        """Load vectors from a text-based file.
 
         Arguments:
             file_ (buffer): The file to read from. Entries should be separated by newlines,
