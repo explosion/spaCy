@@ -1,68 +1,216 @@
-import os
-import re
-
 import pytest
 
 from spacy.hu import Hungarian
 
-_MODULE_PATH = os.path.dirname(__file__)
+_DEFAULT_TESTS = [('N. kormányzósági\nszékhely.', ['N.', 'kormányzósági', 'székhely', '.']),
+                  ('A .hu egy tld.', ['A', '.hu', 'egy', 'tld', '.']),
+                  ('Az egy.ketto pelda.', ['Az', 'egy.ketto', 'pelda', '.']),
+                  ('A pl. rovidites.', ['A', 'pl.', 'rovidites', '.']),
+                  ('A S.M.A.R.T. szo.', ['A', 'S.M.A.R.T.', 'szo', '.']),
+                  ('A .hu.', ['A', '.hu', '.']),
+                  ('Az egy.ketto.', ['Az', 'egy.ketto', '.']),
+                  ('A pl.', ['A', 'pl.']),
+                  ('A S.M.A.R.T.', ['A', 'S.M.A.R.T.']),
+                  ('Egy..ket.', ['Egy', '..', 'ket', '.']),
+                  ('Valami... van.', ['Valami', '...', 'van', '.']),
+                  ('Valami ...van...', ['Valami', '...', 'van', '...']),
+                  ('Valami...', ['Valami', '...']),
+                  ('Valami ...', ['Valami', '...']),
+                  ('Valami ... más.', ['Valami', '...', 'más', '.'])]
 
+_HYPHEN_TESTS = [
+    ('Egy -nak, -jaiért, -magyar, bel- van.', ['Egy', '-nak', ',', '-jaiért', ',', '-magyar', ',', 'bel-', 'van', '.']),
+    ('Egy -nak.', ['Egy', '-nak', '.']),
+    ('Egy bel-.', ['Egy', 'bel-', '.']),
+    ('Dinnye-domb-.', ['Dinnye-domb-', '.']),
+    ('Ezen -e elcsatangolt.', ['Ezen', '-e', 'elcsatangolt', '.']),
+    ('Lakik-e', ['Lakik', '-e']),
+    ('Lakik-e?', ['Lakik', '-e', '?']),
+    ('Lakik-e.', ['Lakik', '-e', '.']),
+    ('Lakik-e...', ['Lakik', '-e', '...']),
+    ('Lakik-e... van.', ['Lakik', '-e', '...', 'van', '.']),
+    ('Lakik-e van?', ['Lakik', '-e', 'van', '?']),
+    ('Lakik-elem van?', ['Lakik-elem', 'van', '?']),
+    ('Van lakik-elem.', ['Van', 'lakik-elem', '.']),
+    ('A 7-es busz?', ['A', '7-es', 'busz', '?']),
+    ('A 7-es?', ['A', '7-es', '?']),
+    ('A 7-es.', ['A', '7-es', '.']),
+    ('Ez (lakik)-e?', ['Ez', '(', 'lakik', ')', '-e', '?']),
+    ('A %-sal.', ['A', '%-sal', '.']),
+    ('A CD-ROM-okrol.', ['A', 'CD-ROM-okrol', '.'])]
 
-class TokenizerTestCase(object):
-    INPUT_PREFIX = "IN :"
-    OUTPUT_PREFIX = "OUT:"
-    WORD_PATTERN = re.compile(r"<([wc])>([^<>]+)</\1>")
+_NUMBER_TESTS = [('A 2b van.', ['A', '2b', 'van', '.']),
+                 ('A 2b-ben van.', ['A', '2b-ben', 'van', '.']),
+                 ('A 2b.', ['A', '2b', '.']),
+                 ('A 2b-ben.', ['A', '2b-ben', '.']),
+                 ('A 3.b van.', ['A', '3.b', 'van', '.']),
+                 ('A 3.b-ben van.', ['A', '3.b-ben', 'van', '.']),
+                 ('A 3.b.', ['A', '3.b', '.']),
+                 ('A 3.b-ben.', ['A', '3.b-ben', '.']),
+                 ('A 1:20:36.7 van.', ['A', '1:20:36.7', 'van', '.']),
+                 ('A 1:20:36.7-ben van.', ['A', '1:20:36.7-ben', 'van', '.']),
+                 ('A 1:20:36.7-ben.', ['A', '1:20:36.7-ben', '.']),
+                 ('A 1:35 van.', ['A', '1:35', 'van', '.']),
+                 ('A 1:35-ben van.', ['A', '1:35-ben', 'van', '.']),
+                 ('A 1:35-ben.', ['A', '1:35-ben', '.']),
+                 ('A 1.35 van.', ['A', '1.35', 'van', '.']),
+                 ('A 1.35-ben van.', ['A', '1.35-ben', 'van', '.']),
+                 ('A 1.35-ben.', ['A', '1.35-ben', '.']),
+                 ('A 4:01,95 van.', ['A', '4:01,95', 'van', '.']),
+                 ('A 4:01,95-ben van.', ['A', '4:01,95-ben', 'van', '.']),
+                 ('A 4:01,95-ben.', ['A', '4:01,95-ben', '.']),
+                 ('A 10--12 van.', ['A', '10--12', 'van', '.']),
+                 ('A 10--12-ben van.', ['A', '10--12-ben', 'van', '.']),
+                 ('A 10--12-ben.', ['A', '10--12-ben', '.']),
+                 ('A 10‐12 van.', ['A', '10‐12', 'van', '.']),
+                 ('A 10‐12-ben van.', ['A', '10‐12-ben', 'van', '.']),
+                 ('A 10‐12-ben.', ['A', '10‐12-ben', '.']),
+                 ('A 10‑12 van.', ['A', '10‑12', 'van', '.']),
+                 ('A 10‑12-ben van.', ['A', '10‑12-ben', 'van', '.']),
+                 ('A 10‑12-ben.', ['A', '10‑12-ben', '.']),
+                 ('A 10‒12 van.', ['A', '10‒12', 'van', '.']),
+                 ('A 10‒12-ben van.', ['A', '10‒12-ben', 'van', '.']),
+                 ('A 10‒12-ben.', ['A', '10‒12-ben', '.']),
+                 ('A 10–12 van.', ['A', '10–12', 'van', '.']),
+                 ('A 10–12-ben van.', ['A', '10–12-ben', 'van', '.']),
+                 ('A 10–12-ben.', ['A', '10–12-ben', '.']),
+                 ('A 10—12 van.', ['A', '10—12', 'van', '.']),
+                 ('A 10—12-ben van.', ['A', '10—12-ben', 'van', '.']),
+                 ('A 10—12-ben.', ['A', '10—12-ben', '.']),
+                 ('A 10―12 van.', ['A', '10―12', 'van', '.']),
+                 ('A 10―12-ben van.', ['A', '10―12-ben', 'van', '.']),
+                 ('A 10―12-ben.', ['A', '10―12-ben', '.']),
+                 ('A -23,12 van.', ['A', '-23,12', 'van', '.']),
+                 ('A -23,12-ben van.', ['A', '-23,12-ben', 'van', '.']),
+                 ('A -23,12-ben.', ['A', '-23,12-ben', '.']),
+                 ('A 2+3 van.', ['A', '2', '+', '3', 'van', '.']),
+                 ('A 2 +3 van.', ['A', '2', '+', '3', 'van', '.']),
+                 ('A 2+ 3 van.', ['A', '2', '+', '3', 'van', '.']),
+                 ('A 2 + 3 van.', ['A', '2', '+', '3', 'van', '.']),
+                 ('A 2*3 van.', ['A', '2', '*', '3', 'van', '.']),
+                 ('A 2 *3 van.', ['A', '2', '*', '3', 'van', '.']),
+                 ('A 2* 3 van.', ['A', '2', '*', '3', 'van', '.']),
+                 ('A 2 * 3 van.', ['A', '2', '*', '3', 'van', '.']),
+                 ('A C++ van.', ['A', 'C++', 'van', '.']),
+                 ('A C++-ben van.', ['A', 'C++-ben', 'van', '.']),
+                 ('A C++.', ['A', 'C++', '.']),
+                 ('A C++-ben.', ['A', 'C++-ben', '.']),
+                 ('A 2003. I. 06. van.', ['A', '2003.', 'I.', '06.', 'van', '.']),
+                 ('A 2003. I. 06-ben van.', ['A', '2003.', 'I.', '06-ben', 'van', '.']),
+                 ('A 2003. I. 06.', ['A', '2003.', 'I.', '06.']),
+                 ('A 2003. I. 06-ben.', ['A', '2003.', 'I.', '06-ben', '.']),
+                 ('A 2003. 01. 06. van.', ['A', '2003.', '01.', '06.', 'van', '.']),
+                 ('A 2003. 01. 06-ben van.', ['A', '2003.', '01.', '06-ben', 'van', '.']),
+                 ('A 2003. 01. 06.', ['A', '2003.', '01.', '06.']),
+                 ('A 2003. 01. 06-ben.', ['A', '2003.', '01.', '06-ben', '.']),
+                 ('A IV. 12. van.', ['A', 'IV.', '12.', 'van', '.']),
+                 ('A IV. 12-ben van.', ['A', 'IV.', '12-ben', 'van', '.']),
+                 ('A IV. 12.', ['A', 'IV.', '12.']),
+                 ('A IV. 12-ben.', ['A', 'IV.', '12-ben', '.']),
+                 ('A 2003.01.06. van.', ['A', '2003.01.06.', 'van', '.']),
+                 ('A 2003.01.06-ben van.', ['A', '2003.01.06-ben', 'van', '.']),
+                 ('A 2003.01.06.', ['A', '2003.01.06.']),
+                 ('A 2003.01.06-ben.', ['A', '2003.01.06-ben', '.']),
+                 ('A IV.12. van.', ['A', 'IV.12.', 'van', '.']),
+                 ('A IV.12-ben van.', ['A', 'IV.12-ben', 'van', '.']),
+                 ('A IV.12.', ['A', 'IV.12.']),
+                 ('A IV.12-ben.', ['A', 'IV.12-ben', '.']),
+                 ('A 1.1.2. van.', ['A', '1.1.2.', 'van', '.']),
+                 ('A 1.1.2-ben van.', ['A', '1.1.2-ben', 'van', '.']),
+                 ('A 1.1.2.', ['A', '1.1.2.']),
+                 ('A 1.1.2-ben.', ['A', '1.1.2-ben', '.']),
+                 ('A 1,5--2,5 van.', ['A', '1,5--2,5', 'van', '.']),
+                 ('A 1,5--2,5-ben van.', ['A', '1,5--2,5-ben', 'van', '.']),
+                 ('A 1,5--2,5-ben.', ['A', '1,5--2,5-ben', '.']),
+                 ('A 3,14 van.', ['A', '3,14', 'van', '.']),
+                 ('A 3,14-ben van.', ['A', '3,14-ben', 'van', '.']),
+                 ('A 3,14-ben.', ['A', '3,14-ben', '.']),
+                 ('A 3.14 van.', ['A', '3.14', 'van', '.']),
+                 ('A 3.14-ben van.', ['A', '3.14-ben', 'van', '.']),
+                 ('A 3.14-ben.', ['A', '3.14-ben', '.']),
+                 ('A 15. van.', ['A', '15.', 'van', '.']),
+                 ('A 15-ben van.', ['A', '15-ben', 'van', '.']),
+                 ('A 15-ben.', ['A', '15-ben', '.']),
+                 ('A 15.-ben van.', ['A', '15.-ben', 'van', '.']),
+                 ('A 15.-ben.', ['A', '15.-ben', '.']),
+                 ('A 2002--2003. van.', ['A', '2002--2003.', 'van', '.']),
+                 ('A 2002--2003-ben van.', ['A', '2002--2003-ben', 'van', '.']),
+                 ('A 2002--2003-ben.', ['A', '2002--2003-ben', '.']),
+                 ('A -0,99% van.', ['A', '-0,99%', 'van', '.']),
+                 ('A -0,99%-ben van.', ['A', '-0,99%-ben', 'van', '.']),
+                 ('A -0,99%.', ['A', '-0,99%', '.']),
+                 ('A -0,99%-ben.', ['A', '-0,99%-ben', '.']),
+                 ('A 10--20% van.', ['A', '10--20%', 'van', '.']),
+                 ('A 10--20%-ben van.', ['A', '10--20%-ben', 'van', '.']),
+                 ('A 10--20%.', ['A', '10--20%', '.']),
+                 ('A 10--20%-ben.', ['A', '10--20%-ben', '.']),
+                 ('A 99§ van.', ['A', '99§', 'van', '.']),
+                 ('A 99§-ben van.', ['A', '99§-ben', 'van', '.']),
+                 ('A 99§-ben.', ['A', '99§-ben', '.']),
+                 ('A 10--20§ van.', ['A', '10--20§', 'van', '.']),
+                 ('A 10--20§-ben van.', ['A', '10--20§-ben', 'van', '.']),
+                 ('A 10--20§-ben.', ['A', '10--20§-ben', '.']),
+                 ('A 99° van.', ['A', '99°', 'van', '.']),
+                 ('A 99°-ben van.', ['A', '99°-ben', 'van', '.']),
+                 ('A 99°-ben.', ['A', '99°-ben', '.']),
+                 ('A 10--20° van.', ['A', '10--20°', 'van', '.']),
+                 ('A 10--20°-ben van.', ['A', '10--20°-ben', 'van', '.']),
+                 ('A 10--20°-ben.', ['A', '10--20°-ben', '.']),
+                 ('A °C van.', ['A', '°C', 'van', '.']),
+                 ('A °C-ben van.', ['A', '°C-ben', 'van', '.']),
+                 ('A °C.', ['A', '°C', '.']),
+                 ('A °C-ben.', ['A', '°C-ben', '.']),
+                 ('A 100°C van.', ['A', '100°C', 'van', '.']),
+                 ('A 100°C-ben van.', ['A', '100°C-ben', 'van', '.']),
+                 ('A 100°C.', ['A', '100°C', '.']),
+                 ('A 100°C-ben.', ['A', '100°C-ben', '.']),
+                 ('A 800x600 van.', ['A', '800x600', 'van', '.']),
+                 ('A 800x600-ben van.', ['A', '800x600-ben', 'van', '.']),
+                 ('A 800x600-ben.', ['A', '800x600-ben', '.']),
+                 ('A 1x2x3x4 van.', ['A', '1x2x3x4', 'van', '.']),
+                 ('A 1x2x3x4-ben van.', ['A', '1x2x3x4-ben', 'van', '.']),
+                 ('A 1x2x3x4-ben.', ['A', '1x2x3x4-ben', '.']),
+                 ('A 5/J van.', ['A', '5/J', 'van', '.']),
+                 ('A 5/J-ben van.', ['A', '5/J-ben', 'van', '.']),
+                 ('A 5/J-ben.', ['A', '5/J-ben', '.']),
+                 ('A 5/J. van.', ['A', '5/J.', 'van', '.']),
+                 ('A 5/J.-ben van.', ['A', '5/J.-ben', 'van', '.']),
+                 ('A 5/J.-ben.', ['A', '5/J.-ben', '.']),
+                 ('A III/1 van.', ['A', 'III/1', 'van', '.']),
+                 ('A III/1-ben van.', ['A', 'III/1-ben', 'van', '.']),
+                 ('A III/1-ben.', ['A', 'III/1-ben', '.']),
+                 ('A III/1. van.', ['A', 'III/1.', 'van', '.']),
+                 ('A III/1.-ben van.', ['A', 'III/1.-ben', 'van', '.']),
+                 ('A III/1.-ben.', ['A', 'III/1.-ben', '.']),
+                 ('A III/c van.', ['A', 'III/c', 'van', '.']),
+                 ('A III/c-ben van.', ['A', 'III/c-ben', 'van', '.']),
+                 ('A III/c.', ['A', 'III/c', '.']),
+                 ('A III/c-ben.', ['A', 'III/c-ben', '.']),
+                 ('A TU–154 van.', ['A', 'TU–154', 'van', '.']),
+                 ('A TU–154-ben van.', ['A', 'TU–154-ben', 'van', '.']),
+                 ('A TU–154-ben.', ['A', 'TU–154-ben', '.'])]
 
-    def __init__(self, input_str, expected_words):
-        self.input = input_str
-        self.expected_tokens = expected_words
+_QUTE_TESTS = [('Az "Ime, hat"-ban irja.', ['Az', '"', 'Ime', ',', 'hat', '"', '-ban', 'irja', '.']),
+               ('"Ime, hat"-ban irja.', ['"', 'Ime', ',', 'hat', '"', '-ban', 'irja', '.']),
+               ('Az "Ime, hat".', ['Az', '"', 'Ime', ',', 'hat', '"', '.']),
+               ('Egy 24"-os monitor.', ['Egy', '24', '"', '-os', 'monitor', '.']),
+               ("A don't van.", ['A', "don't", 'van', '.'])]
 
-    def __repr__(self):
-        return "TokenizerTestCase<input={}, words={}>".format(repr(self.input), self.expected_tokens)
-
-    def to_tuple(self):
-        return (self.input, self.expected_tokens)
-
-    @classmethod
-    def _parse_output_line(cls, line):
-        for match in cls.WORD_PATTERN.finditer(line):
-            yield match.group(2)
-
-    @classmethod
-    def read_from_file(cls, path):
-        with open(path) as f:
-            input_lines = []
-            output_words = []
-            last_type = None
-            for line in f:
-                if line.startswith(cls.INPUT_PREFIX):
-                    if last_type == TokenizerTestCase.OUTPUT_PREFIX and input_lines:
-                        yield TokenizerTestCase("\n".join(input_lines), output_words)
-                        input_lines = []
-                        output_words = []
-                    input_lines.append(line[len(cls.INPUT_PREFIX):].strip())
-                    last_type = TokenizerTestCase.INPUT_PREFIX
-                elif line.startswith(cls.OUTPUT_PREFIX):
-                    output_words.extend(list(cls._parse_output_line(line.strip())))
-                    last_type = TokenizerTestCase.OUTPUT_PREFIX
-                else:
-                    # Comments separate test cases
-                    if input_lines:
-                        yield TokenizerTestCase("\n".join(input_lines), output_words)
-                        input_lines = []
-                        output_words = []
-                    last_type = None
-
-
-_DOTS_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_dots.txt"))
-_HYPHEN_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_hyphen.txt"))
-_QUOTE_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_quote.txt"))
-_NUMBER_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_numbers.txt"))
-_MISC_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_misc.txt"))
-_IT_CASES = list(TokenizerTestCase.read_from_file(_MODULE_PATH + "/test_default_token_it.txt"))
-
-# TODO: Until this get fixed we cannot really test the urls: https://github.com/explosion/spaCy/issues/344
-ALL_TESTCASES = _DOTS_CASES + _HYPHEN_CASES + _QUOTE_CASES + _NUMBER_CASES + _MISC_CASES  # + _IT_CASES
+_DOT_TESTS = [('N. kormányzósági\nszékhely.', ['N.', 'kormányzósági', 'székhely', '.']),
+              ('A .hu egy tld.', ['A', '.hu', 'egy', 'tld', '.']),
+              ('Az egy.ketto pelda.', ['Az', 'egy.ketto', 'pelda', '.']),
+              ('A pl. rovidites.', ['A', 'pl.', 'rovidites', '.']),
+              ('A S.M.A.R.T. szo.', ['A', 'S.M.A.R.T.', 'szo', '.']),
+              ('A .hu.', ['A', '.hu', '.']),
+              ('Az egy.ketto.', ['Az', 'egy.ketto', '.']),
+              ('A pl.', ['A', 'pl.']),
+              ('A S.M.A.R.T.', ['A', 'S.M.A.R.T.']),
+              ('Egy..ket.', ['Egy', '..', 'ket', '.']),
+              ('Valami... van.', ['Valami', '...', 'van', '.']),
+              ('Valami ...van...', ['Valami', '...', 'van', '...']),
+              ('Valami...', ['Valami', '...']),
+              ('Valami ...', ['Valami', '...']),
+              ('Valami ... más.', ['Valami', '...', 'más', '.'])]
 
 
 @pytest.fixture(scope="session")
@@ -75,8 +223,9 @@ def hu_tokenizer(HU):
     return HU.tokenizer
 
 
-@pytest.mark.parametrize(("test_case"), ALL_TESTCASES)
-def test_testcases(hu_tokenizer, test_case):
-    tokens = hu_tokenizer(test_case.input)
+@pytest.mark.parametrize(("input", "expected_tokens"),
+                         _DEFAULT_TESTS + _HYPHEN_TESTS + _NUMBER_TESTS + _DOT_TESTS + _QUTE_TESTS)
+def test_testcases(hu_tokenizer, input, expected_tokens):
+    tokens = hu_tokenizer(input)
     token_list = [token.orth_ for token in tokens if not token.is_space]
-    assert test_case.expected_tokens == token_list  # , "{} was erronously tokenized as {}".format(test_case, token_list)
+    assert expected_tokens == token_list
