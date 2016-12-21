@@ -96,6 +96,8 @@ cdef class Vocab:
         if serializer_freqs is True and (path / 'vocab' / 'serializer.json').exists():
             with (path / 'vocab' / 'serializer.json').open('r', encoding='utf8') as file_:
                 serializer_freqs = json.load(file_)
+        else:
+            serializer_freqs = None
 
         cdef Vocab self = cls(lex_attr_getters=lex_attr_getters, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)
