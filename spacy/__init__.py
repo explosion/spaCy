@@ -1,6 +1,5 @@
 import pathlib
 
-from spacy import hu
 from .util import set_lang_class, get_lang_class
 from .about import __version__
 
@@ -9,6 +8,7 @@ from . import de
 from . import zh
 from . import es
 from . import it
+from . import hu
 from . import fr
 from . import pt
 from . import nl

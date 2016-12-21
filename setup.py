@@ -27,6 +27,7 @@ PACKAGES = [
     'spacy.es',
     'spacy.fr',
     'spacy.it',
+    'spacy.hu',
     'spacy.pt',
     'spacy.nl',
     'spacy.sv',
