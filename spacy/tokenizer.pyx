@@ -28,7 +28,7 @@ from .tokens.doc cimport Doc
 cdef class Tokenizer:
     """Segment text, and create Doc objects with the discovered segment boundaries."""
     @classmethod
-    def load(cls, path, Vocab vocab, rules=None, prefix_search=None, suffix_search=None,
+    def load(cls, path, Vocab vocab, rules=None, rule_match = None, prefix_search=None, suffix_search=None,
              infix_finditer=None):
         '''Load a Tokenizer, reading unsupplied components from the path.
         
@@ -39,6 +39,8 @@ cdef class Tokenizer:
                 A storage container for lexical types.
             rules (dict):
                 Exceptions and special-cases for the tokenizer.
+            rule_match:
+                Special case matcher. Signature of re.compile(string).match
             prefix_search:
                 Signature of re.compile(string).search
             suffix_search:
@@ -65,10 +67,9 @@ cdef class Tokenizer:
             with (path / 'tokenizer' / 'infix.txt').open() as file_:
                 entries = file_.read().split('\n')
             infix_finditer = util.compile_infix_regex(entries).finditer
-        return cls(vocab, rules, prefix_search, suffix_search, infix_finditer)
+        return cls(vocab, rules, rule_match, prefix_search, suffix_search, infix_finditer)
 
-
-    def __init__(self, Vocab vocab, rules, prefix_search, suffix_search, infix_finditer):
+    def __init__(self, Vocab vocab, rules, rule_match, prefix_search, suffix_search, infix_finditer):
         '''Create a Tokenizer, to create Doc objects given unicode text.
         
         Arguments:
@@ -76,6 +77,9 @@ cdef class Tokenizer:
                 A storage container for lexical types.
             rules (dict):
                 Exceptions and special-cases for the tokenizer.
+            rule_match:
+                A function matching the signature of re.compile(string).match
+                to match special cases for the tokenizer.
             prefix_search:
                 A function matching the signature of re.compile(string).search
                 to match prefixes.
@@ -89,6 +93,7 @@ cdef class Tokenizer:
         self.mem = Pool()
         self._cache = PreshMap()
         self._specials = PreshMap()
+        self.rule_match = rule_match
         self.prefix_search = prefix_search
         self.suffix_search = suffix_search
         self.infix_finditer = infix_finditer
@@ -100,8 +105,9 @@ cdef class Tokenizer:
     def __reduce__(self):
         args = (self.vocab,
                 self._rules,
-                self._prefix_re, 
-                self._suffix_re, 
+                self.rule_match,
+                self._prefix_re,
+                self._suffix_re,
                 self._infix_re)
 
         return (self.__class__, args, None, None)
@@ -202,9 +208,12 @@ cdef class Tokenizer:
         cdef vector[LexemeC*] suffixes
         cdef int orig_size
         orig_size = tokens.length
-        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes)
-        self._attach_tokens(tokens, span, &prefixes, &suffixes)
-        self._save_cached(&tokens.c[orig_size], orig_key, tokens.length - orig_size)
+        if self._match_rule(span):
+            tokens.push_back(self.vocab.get(tokens.mem, span), False)
+        else:
+            span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes)
+            self._attach_tokens(tokens, span, &prefixes, &suffixes)
+            self._save_cached(&tokens.c[orig_size], orig_key, tokens.length - orig_size)
 
     cdef unicode _split_affixes(self, Pool mem, unicode string,
                                 vector[const LexemeC*] *prefixes,
@@ -313,6 +322,18 @@ cdef class Tokenizer:
             lexemes[i] = tokens[i].lex
         cached.data.lexemes = <const LexemeC* const*>lexemes
         self._cache.set(key, cached)
+
+    cdef int _match_rule(self, unicode string):
+        """Check whether the given string matches any of the patterns.
+
+        string (unicode): The string to segment.
+
+        Returns (int or None): The length of the prefix if present, otherwise None.
+        """
+        if self.rule_match is None:
+            return 0
+        match = self.rule_match(string)
+        return (match.end() - match.start()) if match is not None else 0
 
     def find_infix(self, unicode string):
         """Find internal split points of the string, such as hyphens.
