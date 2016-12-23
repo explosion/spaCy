@@ -67,8 +67,8 @@ class BaseDefaults(object):
     @classmethod
     def create_tokenizer(cls, nlp=None):
         rules = cls.tokenizer_exceptions
-        if cls.exception_patterns:
-            rule_match = util.compile_rule_regex(cls.exception_patterns).match
+        if cls.token_match:
+            token_match = cls.token_match
         if cls.prefixes:
             prefix_search  = util.compile_prefix_regex(cls.prefixes).search
         else:
@@ -82,9 +82,9 @@ class BaseDefaults(object):
         else:
             infix_finditer = None
         vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
-        return Tokenizer(vocab, rules=rules, rule_match=rule_match,
+        return Tokenizer(vocab, rules=rules,
                          prefix_search=prefix_search, suffix_search=suffix_search,
-                         infix_finditer=infix_finditer)
+                         infix_finditer=infix_finditer, token_match=token_match)
 
     @classmethod
     def create_tagger(cls, nlp=None):
@@ -144,7 +144,7 @@ class BaseDefaults(object):
             pipeline.append(nlp.entity)
         return pipeline
 
-    exception_patterns = tuple(language_data.EXCEPTION_PATTERNS)
+    token_match = language_data.TOKEN_MATCH
 
     prefixes = tuple(language_data.TOKENIZER_PREFIXES)
 

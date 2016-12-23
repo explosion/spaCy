@@ -108,11 +108,6 @@ def compile_infix_regex(entries):
     return re.compile(expression)
 
 
-def compile_rule_regex(entries):
-    expression = '|'.join([piece for piece in entries if piece.strip()]) + '$'
-    return re.compile(expression)
-
-
 def normalize_slice(length, start, stop, step=None):
     if not (step is None or step == 1):
         raise ValueError("Stepped slices not supported in Span objects."
