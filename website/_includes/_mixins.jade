@@ -33,7 +33,7 @@ mixin src(url)
         +a(url)
             block
 
-        |   #[+icon("code", 16).u-color-subtle]
+        |   #[+icon("code", 16).o-icon--inline.u-color-subtle]
 
 
 //- API link (with added tag and automatically generated path)
@@ -43,7 +43,7 @@ mixin api(path)
     +a("/docs/api/" + path, true)(target="_self").u-no-border.u-inline-block
         block
 
-        |  #[+icon("book", 18).o-help-icon.u-color-subtle]
+        |  #[+icon("book", 18).o-icon--inline.u-help.u-color-subtle]
 
 
 //- Aside for text
