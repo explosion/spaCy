@@ -2,7 +2,8 @@
     "sidebar": {
         "Get started": {
             "Installation": "./",
-            "Lightning tour": "lightning-tour"
+            "Lightning tour": "lightning-tour",
+            "Resources": "resources"
         },
         "Workflows": {
             "Loading the pipeline": "language-processing-pipeline",
@@ -31,7 +32,12 @@
     },
 
     "lightning-tour": {
-        "title": "Lightning tour"
+        "title": "Lightning tour",
+        "next": "resources"
+    },
+
+    "resources": {
+        "title": "Resources"
     },
 
     "language-processing-pipeline": {
