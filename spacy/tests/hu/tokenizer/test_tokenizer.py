@@ -190,11 +190,11 @@ _NUMBER_TESTS = [('A 2b van.', ['A', '2b', 'van', '.']),
                  ('A TU–154-ben van.', ['A', 'TU–154-ben', 'van', '.']),
                  ('A TU–154-ben.', ['A', 'TU–154-ben', '.'])]
 
-_QUTE_TESTS = [('Az "Ime, hat"-ban irja.', ['Az', '"', 'Ime', ',', 'hat', '"', '-ban', 'irja', '.']),
-               ('"Ime, hat"-ban irja.', ['"', 'Ime', ',', 'hat', '"', '-ban', 'irja', '.']),
-               ('Az "Ime, hat".', ['Az', '"', 'Ime', ',', 'hat', '"', '.']),
-               ('Egy 24"-os monitor.', ['Egy', '24', '"', '-os', 'monitor', '.']),
-               ("A don't van.", ['A', "don't", 'van', '.'])]
+_QUOTE_TESTS = [('Az "Ime, hat"-ban irja.', ['Az', '"', 'Ime', ',', 'hat', '"', '-ban', 'irja', '.']),
+                ('"Ime, hat"-ban irja.', ['"', 'Ime', ',', 'hat', '"', '-ban', 'irja', '.']),
+                ('Az "Ime, hat".', ['Az', '"', 'Ime', ',', 'hat', '"', '.']),
+                ('Egy 24"-os monitor.', ['Egy', '24', '"', '-os', 'monitor', '.']),
+                ("A don't van.", ['A', "don't", 'van', '.'])]
 
 _DOT_TESTS = [('N. kormányzósági\nszékhely.', ['N.', 'kormányzósági', 'székhely', '.']),
               ('A .hu egy tld.', ['A', '.hu', 'egy', 'tld', '.']),
@@ -224,7 +224,7 @@ def hu_tokenizer(HU):
 
 
 @pytest.mark.parametrize(("input", "expected_tokens"),
-                         _DEFAULT_TESTS + _HYPHEN_TESTS + _NUMBER_TESTS + _DOT_TESTS + _QUTE_TESTS)
+                         _DEFAULT_TESTS + _HYPHEN_TESTS + _NUMBER_TESTS + _DOT_TESTS + _QUOTE_TESTS)
 def test_testcases(hu_tokenizer, input, expected_tokens):
     tokens = hu_tokenizer(input)
     token_list = [token.orth_ for token in tokens if not token.is_space]
