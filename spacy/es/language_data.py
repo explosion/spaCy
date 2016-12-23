@@ -41,12 +41,10 @@ def get_time_exc(hours):
 
 
 TOKENIZER_EXCEPTIONS = dict(TOKENIZER_EXCEPTIONS)
-update_exc(TOKENIZER_EXCEPTIONS, get_time_exc(range(1, 12 + 1)))
 STOP_WORDS = set(STOP_WORDS)
 
-
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(ORTH_ONLY))
+update_exc(TOKENIZER_EXCEPTIONS, get_time_exc(range(1, 12 + 1)))
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.EMOTICONS))
-
 
 __all__ = ["TOKENIZER_EXCEPTIONS", "STOP_WORDS"]
