@@ -1,3 +1,6 @@
+# encoding: utf8
+from __future__ import unicode_literals
+
 TOKENIZER_PREFIXES = r'''
 +
 '''.strip().split('\n')

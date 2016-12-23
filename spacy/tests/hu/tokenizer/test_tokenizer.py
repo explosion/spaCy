@@ -1,5 +1,7 @@
-import pytest
+# encoding: utf8
+from __future__ import unicode_literals
 
+import pytest
 from spacy.hu import Hungarian
 
 _DEFAULT_TESTS = [('N. kormányzósági\nszékhely.', ['N.', 'kormányzósági', 'székhely', '.']),
