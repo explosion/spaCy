@@ -18,7 +18,7 @@ main.o-main.o-main--sidebar.o-main--aside
                 - data = public.docs[SUBSECTION]._data[next]
 
                 .o-inline-list
-                    span #[strong.u-text-label Read next:] #[a(href=next).u-link=data.title]
+                    span #[strong.u-text-label Read next:] #[+a(next).u-link=data.title]
 
         +grid-col("half").u-text-right
             .o-inline-list
