@@ -12,7 +12,7 @@ writing. You can read more about our approach in our blog post, ["Rebuilding a W
 ```bash
 sudo npm install --global harp
 git clone https://github.com/explosion/spaCy
-cd website
+cd spaCy/website
 harp server
 ```
 
