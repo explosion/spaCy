@@ -8,6 +8,7 @@ from . import de
 from . import zh
 from . import es
 from . import it
+from . import hu
 from . import fr
 from . import pt
 from . import nl
@@ -26,6 +27,7 @@ set_lang_class(es.Spanish.lang, es.Spanish)
 set_lang_class(pt.Portuguese.lang, pt.Portuguese)
 set_lang_class(fr.French.lang, fr.French)
 set_lang_class(it.Italian.lang, it.Italian)
+set_lang_class(hu.Hungarian.lang, hu.Hungarian)
 set_lang_class(zh.Chinese.lang, zh.Chinese)
 set_lang_class(nl.Dutch.lang, nl.Dutch)
 set_lang_class(sv.Swedish.lang, sv.Swedish)
