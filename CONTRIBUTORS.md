@@ -4,6 +4,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 
 * Adam Bittlingmayer, [@bittlingmayer](https://github.com/bittlingmayer)
 * Andreas Grivas, [@andreasgrv](https://github.com/andreasgrv)
+* Bhargav Srinivasa, [@bhargavvader](https://github.com/bhargavvader)
 * Chris DuBois, [@chrisdubois](https://github.com/chrisdubois)
 * Christoph Schwienheer, [@chssch](https://github.com/chssch)
 * Dafne van Kuppevelt, [@dafnevk](https://github.com/dafnevk)
