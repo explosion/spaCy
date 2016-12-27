@@ -6,7 +6,7 @@ Cython. spaCy is built on  the very latest research, but it isn't researchware.
 It was designed from day 1 to be used in real products. It's commercial 
 open-source software, released under the MIT license.
 
-💫 **Version 1.4 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
+💫 **Version 1.5 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: http://i.imgur.com/wFvLZyJ.png
     :target: https://travis-ci.org/explosion/spaCy
@@ -241,8 +241,34 @@ calling ``spacy.load()``, or by passing a ``path`` argument to the ``spacy.en.En
 Changelog
 =========
 
-2016-12-18 `v1.4.0 <https://github.com/explosion/spaCy/releases>`_: *Improved language data and alpha Dutch support*
---------------------------------------------------------------------------------------------------------------------
+2016-12-27 `v1.5.0 <https://github.com/explosion/spaCy/releases>`_: *Alpha support for Swedish and Hungarian*
+-------------------------------------------------------------------------------------------------------------
+
+**✨ Major features and improvements**
+
+* **NEW:** Alpha support for Swedish tokenization.
+* **NEW:** Alpha support for Hungarian tokenization.
+* Update language data for Spanish tokenization.
+* Speed up tokenization when no data is preloaded by caching the first 10,000 vocabulary items seen.
+
+**🔴 Bug fixes**
+
+* List the ``language_data`` package in the ``setup.py``.
+* Fix missing ``vec_path`` declaration that was failing if ``add_vectors`` was set.
+* Allow ``Vocab`` to load without ``serializer_freqs``.
+
+**📖 Documentation and examples**
+
+* **NEW:** `spaCy Jupyter notebooks <https://github.com/explosion/spacy-notebooks>`_ repo: ongoing collection of easy-to-run spaCy examples and tutorials.
+* Fix issue `#657 <https://github.com/explosion/spaCy/issues/657>`_: Generalise dependency parsing `annotation specs <https://spacy.io/docs/api/annotation>`_ beyond English.
+* Fix various typos and inconsistencies.
+
+**👥  Contributors**
+
+Thanks to `@oroszgy <https://github.com/oroszgy>`_, `@magnusburton <https://github.com/magnusburton>`_, `@jmizgajski <https://github.com/jmizgajski>`_, `@aikramer2 <https://github.com/aikramer2>`_, `@fnorf <https://github.com/fnorf>`_ and `@bhargavvader <https://github.com/bhargavvader>`_ for the pull requests!
+
+2016-12-18 `v1.4.0 <https://github.com/explosion/spaCy/releases/tag/v1.4.0>`_: *Improved language data and alpha Dutch support*
+-------------------------------------------------------------------------------------------------------------------------------
 
 **✨ Major features and improvements**
 
