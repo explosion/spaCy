@@ -262,9 +262,9 @@ cdef class Vocab:
 
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL:
         cdef hash_t key
-        cdef bint is_oov = mem is not self.mem
-        if len(string) < 3:
+        if len(string) < 3 or self.length < 10000:
             mem = self.mem
+        cdef bint is_oov = mem is not self.mem
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
         lex.orth = self.strings[string]
         lex.length = len(string)
