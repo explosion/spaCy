@@ -50,6 +50,13 @@ p A "lemma" is the uninflected form of a word. In English, this means:
     +item #[strong Nouns]: The form like "dog", not "dogs"; like "child", not "children"
     +item #[strong Verbs]: The form like "write", not "writes", "writing", "wrote" or "written"
 
++aside("About spaCy's custom pronoun lemma")
+    |  Unlike verbs and common nouns, there's no clear base form of a personal
+    |  pronoun. Should the lemma of "me" be "I", or should we normalize person
+    |  as well, giving "it" — or maybe "he"? spaCy's solution is to introduce a
+    |  novel symbol, #[code.u-nowrap -PRON-], which is used as the lemma for
+    |  all personal pronouns.
+
 p
     |  The lemmatization data is taken from
     |  #[+a("https://wordnet.princeton.edu") WordNet]. However, we also add a
@@ -58,11 +65,16 @@ p
 
 +h(2, "dependency-parsing") Syntactic Dependency Parsing
 
-p
-    |  The parser is trained on data produced by the
-    |  #[+a("http://www.clearnlp.com") ClearNLP] converter. Details of the
-    |  annotation scheme can be found
-    |  #[+a("http://www.mathcs.emory.edu/~choi/doc/clear-dependency-2012.pdf") here].
++table(["Language", "Converter", "Scheme"])
+    +row
+        +cell English
+        +cell #[+a("http://www.clearnlp.com") ClearNLP]
+        +cell #[+a("http://www.mathcs.emory.edu/~choi/doc/clear-dependency-2012.pdf") CLEAR Style]
+
+    +row
+        +cell German
+        +cell #[+a("https://github.com/wbwseeker/tiger2dep") TIGER]
+        +cell #[+a("http://www.ims.uni-stuttgart.de/forschung/ressourcen/korpora/TIGERCorpus/annotation/index.html") TIGER]
 
 +h(2, "named-entities") Named Entity Recognition
 

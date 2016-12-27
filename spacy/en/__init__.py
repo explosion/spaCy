@@ -44,6 +44,7 @@ def _fix_deprecated_glove_vectors_loading(overrides):
     else:
         path = overrides['path']
         data_path = path.parent
+    vec_path = None
     if 'add_vectors' not in overrides:
         if 'vectors' in overrides:
             vec_path = match_best_version(overrides['vectors'], None, data_path)

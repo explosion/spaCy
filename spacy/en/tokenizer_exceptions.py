@@ -11,7 +11,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Theydve": [
-        {ORTH: "They", LEMMA: PRON_LEMMA},
+        {ORTH: "They", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -68,7 +68,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "itll": [
-        {ORTH: "it", LEMMA: PRON_LEMMA},
+        {ORTH: "it", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ll", LEMMA: "will", TAG: "MD"}
     ],
 
@@ -113,7 +113,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Idve": [
-        {ORTH: "I", LEMMA: PRON_LEMMA},
+        {ORTH: "I", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -124,23 +124,23 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Ive": [
-        {ORTH: "I", LEMMA: PRON_LEMMA},
+        {ORTH: "I", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
 
     "they'd": [
-        {ORTH: "they", LEMMA: PRON_LEMMA},
+        {ORTH: "they", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
     "Youdve": [
-        {ORTH: "You", LEMMA: PRON_LEMMA},
+        {ORTH: "You", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
 
     "theyve": [
-        {ORTH: "they", LEMMA: PRON_LEMMA},
+        {ORTH: "they", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
 
@@ -160,12 +160,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "I'm": [
-        {ORTH: "I", LEMMA: PRON_LEMMA},
+        {ORTH: "I", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'m", TAG: "VBP", "tenspect": 1, "number": 1, LEMMA: "be"}
     ],
 
     "She'd've": [
-        {ORTH: "She", LEMMA: PRON_LEMMA},
+        {ORTH: "She", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -191,7 +191,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "they've": [
-        {ORTH: "they", LEMMA: PRON_LEMMA},
+        {ORTH: "they", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
 
@@ -226,12 +226,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "i'll": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ll", LEMMA: "will", TAG: "MD"}
     ],
 
     "you'd": [
-        {ORTH: "you", LEMMA: PRON_LEMMA},
+        {ORTH: "you", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -287,7 +287,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "youll": [
-        {ORTH: "you", LEMMA: PRON_LEMMA},
+        {ORTH: "you", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ll", LEMMA: "will", TAG: "MD"}
     ],
 
@@ -307,7 +307,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Youre": [
-        {ORTH: "You", LEMMA: PRON_LEMMA},
+        {ORTH: "You", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "re", LEMMA: "be"}
     ],
 
@@ -369,7 +369,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "You'll": [
-        {ORTH: "You", LEMMA: PRON_LEMMA},
+        {ORTH: "You", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ll", LEMMA: "will", TAG: "MD"}
     ],
 
@@ -379,7 +379,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "i'd": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -394,7 +394,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "i'm": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'m", TAG: "VBP", "tenspect": 1, "number": 1, LEMMA: "be"}
     ],
 
@@ -425,7 +425,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Hes": [
-        {ORTH: "He", LEMMA: PRON_LEMMA},
+        {ORTH: "He", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "s"}
     ],
 
@@ -435,7 +435,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "It's": [
-        {ORTH: "It", LEMMA: PRON_LEMMA},
+        {ORTH: "It", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'s"}
     ],
 
@@ -445,7 +445,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Hed": [
-        {ORTH: "He", LEMMA: PRON_LEMMA},
+        {ORTH: "He", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -464,12 +464,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "It'd": [
-        {ORTH: "It", LEMMA: PRON_LEMMA},
+        {ORTH: "It", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
     "theydve": [
-        {ORTH: "they", LEMMA: PRON_LEMMA},
+        {ORTH: "they", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -489,7 +489,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "I've": [
-        {ORTH: "I", LEMMA: PRON_LEMMA},
+        {ORTH: "I", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
 
@@ -499,13 +499,13 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Itdve": [
-        {ORTH: "It", LEMMA: PRON_LEMMA},
+        {ORTH: "It", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
 
     "I'ma": [
-        {ORTH: "I", LEMMA: PRON_LEMMA},
+        {ORTH: "I", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ma"}
     ],
 
@@ -515,7 +515,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "They'd": [
-        {ORTH: "They", LEMMA: PRON_LEMMA},
+        {ORTH: "They", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -525,7 +525,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "You've": [
-        {ORTH: "You", LEMMA: PRON_LEMMA},
+        {ORTH: "You", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
 
@@ -546,7 +546,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "I'd've": [
-        {ORTH: "I", LEMMA: PRON_LEMMA},
+        {ORTH: "I", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -557,13 +557,13 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "it'd": [
-        {ORTH: "it", LEMMA: PRON_LEMMA},
+        {ORTH: "it", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
     "what're": [
         {ORTH: "what"},
-        {ORTH: "'re", LEMMA: "be"}
+        {ORTH: "'re", LEMMA: "be", NORM: "are"}
     ],
 
     "Wasn't": [
@@ -577,18 +577,18 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "he'd've": [
-        {ORTH: "he", LEMMA: PRON_LEMMA},
+        {ORTH: "he", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
 
     "She'd": [
-        {ORTH: "She", LEMMA: PRON_LEMMA},
+        {ORTH: "She", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
     "shedve": [
-        {ORTH: "she", LEMMA: PRON_LEMMA},
+        {ORTH: "she", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -599,12 +599,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "She's": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'s"}
     ],
 
     "i'd've": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -631,7 +631,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "you'd've": [
-        {ORTH: "you", LEMMA: PRON_LEMMA},
+        {ORTH: "you", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -647,7 +647,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Youd": [
-        {ORTH: "You", LEMMA: PRON_LEMMA},
+        {ORTH: "You", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -678,12 +678,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "ive": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
 
     "It'd've": [
-        {ORTH: "It", LEMMA: PRON_LEMMA},
+        {ORTH: "It", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -693,7 +693,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Itll": [
-        {ORTH: "It", LEMMA: PRON_LEMMA},
+        {ORTH: "It", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ll", LEMMA: "will", TAG: "MD"}
     ],
 
@@ -708,12 +708,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "im": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "m", TAG: "VBP", "tenspect": 1, "number": 1, LEMMA: "be"}
     ],
 
     "they'd've": [
-        {ORTH: "they", LEMMA: PRON_LEMMA},
+        {ORTH: "they", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -735,19 +735,19 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "youdve": [
-        {ORTH: "you", LEMMA: PRON_LEMMA},
+        {ORTH: "you", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
 
     "Shedve": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
 
     "theyd": [
-        {ORTH: "they", LEMMA: PRON_LEMMA},
+        {ORTH: "they", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -763,11 +763,11 @@ TOKENIZER_EXCEPTIONS = {
 
     "What're": [
         {ORTH: "What"},
-        {ORTH: "'re", LEMMA: "be"}
+        {ORTH: "'re", LEMMA: "be", NORM: "are"}
     ],
 
     "He'll": [
-        {ORTH: "He", LEMMA: PRON_LEMMA},
+        {ORTH: "He", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ll", LEMMA: "will", TAG: "MD"}
     ],
 
@@ -777,8 +777,8 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "They're": [
-        {ORTH: "They", LEMMA: PRON_LEMMA},
-        {ORTH: "'re", LEMMA: "be"}
+        {ORTH: "They", LEMMA: PRON_LEMMA, TAG: "PRP"},
+        {ORTH: "'re", LEMMA: "be", NORM: "are"}
     ],
 
     "shouldnt": [
@@ -796,7 +796,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "youve": [
-        {ORTH: "you", LEMMA: PRON_LEMMA},
+        {ORTH: "you", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
 
@@ -816,7 +816,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Youve": [
-        {ORTH: "You", LEMMA: PRON_LEMMA},
+        {ORTH: "You", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
 
@@ -841,12 +841,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "they're": [
-        {ORTH: "they", LEMMA: PRON_LEMMA},
-        {ORTH: "'re", LEMMA: "be"}
+        {ORTH: "they", LEMMA: PRON_LEMMA, TAG: "PRP"},
+        {ORTH: "'re", LEMMA: "be", NORM: "are"}
     ],
 
     "idve": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -857,8 +857,8 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "youre": [
-        {ORTH: "you", LEMMA: PRON_LEMMA},
-        {ORTH: "re"}
+        {ORTH: "you", LEMMA: PRON_LEMMA, TAG: "PRP"},
+        {ORTH: "re", LEMMA: "be", NORM: "are"}
     ],
 
     "Didn't": [
@@ -877,8 +877,8 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Im": [
-        {ORTH: "I", LEMMA: PRON_LEMMA},
-        {ORTH: "m", TAG: "VBP", "tenspect": 1, "number": 1, LEMMA: "be"}
+        {ORTH: "I", LEMMA: PRON_LEMMA, TAG: "PRP"},
+        {ORTH: "m", TAG: "VBP", "tenspect": 1, "number": 1, LEMMA: "be", NORM: "am"}
     ],
 
     "howd": [
@@ -887,22 +887,22 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "you've": [
-        {ORTH: "you", LEMMA: PRON_LEMMA},
+        {ORTH: "you", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
 
     "You're": [
-        {ORTH: "You", LEMMA: PRON_LEMMA},
-        {ORTH: "'re", LEMMA: "be"}
+        {ORTH: "You", LEMMA: PRON_LEMMA, TAG: "PRP"},
+        {ORTH: "'re", LEMMA: "be", NORM: "are"}
     ],
 
     "she'll": [
-        {ORTH: "she", LEMMA: PRON_LEMMA},
+        {ORTH: "she", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ll", LEMMA: "will", TAG: "MD"}
     ],
 
     "Theyll": [
-        {ORTH: "They", LEMMA: PRON_LEMMA},
+        {ORTH: "They", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ll", LEMMA: "will", TAG: "MD"}
     ],
 
@@ -912,12 +912,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "itd": [
-        {ORTH: "it", LEMMA: PRON_LEMMA},
+        {ORTH: "it", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"}
     ],
 
     "Hedve": [
-        {ORTH: "He", LEMMA: PRON_LEMMA},
+        {ORTH: "He", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -933,8 +933,8 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "We're": [
-        {ORTH: "We", LEMMA: PRON_LEMMA},
-        {ORTH: "'re", LEMMA: "be"}
+        {ORTH: "We", LEMMA: PRON_LEMMA, TAG: "PRP"},
+        {ORTH: "'re", LEMMA: "be", NORM: "are"}
     ],
 
     "\u2018S": [
@@ -951,7 +951,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "ima": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ma"}
     ],
 
@@ -961,7 +961,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "he's": [
-        {ORTH: "he", LEMMA: PRON_LEMMA},
+        {ORTH: "he", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'s"}
     ],
 
@@ -981,13 +981,13 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "hedve": [
-        {ORTH: "he", LEMMA: PRON_LEMMA},
+        {ORTH: "he", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
 
     "he'd": [
-        {ORTH: "he", LEMMA: PRON_LEMMA},
+        {ORTH: "he", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -1029,7 +1029,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "You'd've": [
-        {ORTH: "You", LEMMA: PRON_LEMMA},
+        {ORTH: "You", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -1072,12 +1072,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "wont": [
-        {ORTH: "wo"},
+        {ORTH: "wo", LEMMA: "will"},
         {ORTH: "nt", LEMMA: "not", TAG: "RB"}
     ],
 
     "she'd've": [
-        {ORTH: "she", LEMMA: PRON_LEMMA},
+        {ORTH: "she", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -1088,7 +1088,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "theyre": [
-        {ORTH: "they", LEMMA: PRON_LEMMA},
+        {ORTH: "they", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "re"}
     ],
 
@@ -1129,7 +1129,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "They'll": [
-        {ORTH: "They", LEMMA: PRON_LEMMA},
+        {ORTH: "They", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ll", LEMMA: "will", TAG: "MD"}
     ],
 
@@ -1139,7 +1139,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Wedve": [
-        {ORTH: "We"},
+        {ORTH: "We", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -1156,7 +1156,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "we'd": [
-        {ORTH: "we"},
+        {ORTH: "we", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -1193,7 +1193,7 @@ TOKENIZER_EXCEPTIONS = {
 
     "why're": [
         {ORTH: "why"},
-        {ORTH: "'re", LEMMA: "be"}
+        {ORTH: "'re", LEMMA: "be", NORM: "are"}
     ],
 
     "Doesnt": [
@@ -1207,12 +1207,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "they'll": [
-        {ORTH: "they", LEMMA: PRON_LEMMA},
+        {ORTH: "they", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ll", LEMMA: "will", TAG: "MD"}
     ],
 
     "I'd": [
-        {ORTH: "I", LEMMA: PRON_LEMMA},
+        {ORTH: "I", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -1237,12 +1237,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "you're": [
-        {ORTH: "you", LEMMA: PRON_LEMMA},
-        {ORTH: "'re", LEMMA: "be"}
+        {ORTH: "you", LEMMA: PRON_LEMMA, TAG: "PRP"},
+        {ORTH: "'re", LEMMA: "be", NORM: "are"}
     ],
 
     "They've": [
-        {ORTH: "They", LEMMA: PRON_LEMMA},
+        {ORTH: "They", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
 
@@ -1272,12 +1272,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "She'll": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "She", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ll", LEMMA: "will", TAG: "MD"}
     ],
 
     "You'd": [
-        {ORTH: "You", LEMMA: PRON_LEMMA},
+        {ORTH: "You", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -1297,8 +1297,8 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Theyre": [
-        {ORTH: "They", LEMMA: PRON_LEMMA},
-        {ORTH: "re"}
+        {ORTH: "They", LEMMA: PRON_LEMMA, TAG: "PRP"},
+        {ORTH: "re", LEMMA: "be", NORM: "are"}
     ],
 
     "Won't": [
@@ -1312,33 +1312,33 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "it's": [
-        {ORTH: "it", LEMMA: PRON_LEMMA},
+        {ORTH: "it", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'s"}
     ],
 
     "it'll": [
-        {ORTH: "it", LEMMA: PRON_LEMMA},
+        {ORTH: "it", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ll", LEMMA: "will", TAG: "MD"}
     ],
 
     "They'd've": [
-        {ORTH: "They", LEMMA: PRON_LEMMA},
+        {ORTH: "They", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
 
     "Ima": [
-        {ORTH: "I", LEMMA: PRON_LEMMA},
+        {ORTH: "I", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ma"}
     ],
 
     "gonna": [
-        {ORTH: "gon", LEMMA: "go"},
+        {ORTH: "gon", LEMMA: "go", NORM: "going"},
         {ORTH: "na", LEMMA: "to"}
     ],
 
     "Gonna": [
-        {ORTH: "Gon", LEMMA: "go"},
+        {ORTH: "Gon", LEMMA: "go", NORM: "going"},
         {ORTH: "na", LEMMA: "to"}
     ],
 
@@ -1359,7 +1359,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "youd": [
-        {ORTH: "you", LEMMA: PRON_LEMMA},
+        {ORTH: "you", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -1390,7 +1390,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "He'd've": [
-        {ORTH: "He", LEMMA: PRON_LEMMA},
+        {ORTH: "He", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -1427,17 +1427,17 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "hes": [
-        {ORTH: "he", LEMMA: PRON_LEMMA},
+        {ORTH: "he", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "s"}
     ],
 
     "he'll": [
-        {ORTH: "he", LEMMA: PRON_LEMMA},
+        {ORTH: "he", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ll", LEMMA: "will", TAG: "MD"}
     ],
 
     "hed": [
-        {ORTH: "he", LEMMA: PRON_LEMMA},
+        {ORTH: "he", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -1447,8 +1447,8 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "we're": [
-        {ORTH: "we", LEMMA: PRON_LEMMA},
-        {ORTH: "'re", LEMMA: "be"}
+        {ORTH: "we", LEMMA: PRON_LEMMA, TAG: "PRP"},
+        {ORTH: "'re", LEMMA: "be", NORM :"are"}
     ],
 
     "Hadnt": [
@@ -1457,12 +1457,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Shant": [
-        {ORTH: "Sha"},
+        {ORTH: "Sha", LEMMA: "shall"},
         {ORTH: "nt", LEMMA: "not", TAG: "RB"}
     ],
 
     "Theyve": [
-        {ORTH: "They", LEMMA: PRON_LEMMA},
+        {ORTH: "They", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
 
@@ -1477,7 +1477,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "i've": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
 
@@ -1487,7 +1487,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "i'ma": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ma"}
     ],
 
@@ -1502,7 +1502,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "shant": [
-        {ORTH: "sha"},
+        {ORTH: "sha", LEMMA: "shall"},
         {ORTH: "nt", LEMMA: "not", TAG: "RB"}
     ],
 
@@ -1513,7 +1513,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "I'll": [
-        {ORTH: "I", LEMMA: PRON_LEMMA},
+        {ORTH: "I", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ll", LEMMA: "will", TAG: "MD"}
     ],
 
@@ -1571,7 +1571,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "shes": [
-        {ORTH: "she", LEMMA: PRON_LEMMA},
+        {ORTH: "she", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "s"}
     ],
 
@@ -1586,12 +1586,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Hasnt": [
-        {ORTH: "Has"},
+        {ORTH: "Has", LEMMA: "have"},
         {ORTH: "nt", LEMMA: "not", TAG: "RB"}
     ],
 
     "He's": [
-        {ORTH: "He", LEMMA: PRON_LEMMA},
+        {ORTH: "He", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'s"}
     ],
 
@@ -1611,12 +1611,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "He'd": [
-        {ORTH: "He", LEMMA: PRON_LEMMA},
+        {ORTH: "He", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
     "Shes": [
-        {ORTH: "i", LEMMA: PRON_LEMMA},
+        {ORTH: "She", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "s"}
     ],
 
@@ -1626,7 +1626,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Youll": [
-        {ORTH: "You", LEMMA: PRON_LEMMA},
+        {ORTH: "You", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ll", LEMMA: "will", TAG: "MD"}
     ],
 
@@ -1636,18 +1636,18 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "theyll": [
-        {ORTH: "they", LEMMA: PRON_LEMMA},
+        {ORTH: "they", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "ll", LEMMA: "will", TAG: "MD"}
     ],
 
     "it'd've": [
-        {ORTH: "it", LEMMA: PRON_LEMMA},
+        {ORTH: "it", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"},
         {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
     ],
 
     "itdve": [
-        {ORTH: "it", LEMMA: PRON_LEMMA},
+        {ORTH: "it", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
@@ -1674,7 +1674,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Wont": [
-        {ORTH: "Wo"},
+        {ORTH: "Wo", LEMMA: "will"},
         {ORTH: "nt", LEMMA: "not", TAG: "RB"}
     ],
 
@@ -1691,7 +1691,7 @@ TOKENIZER_EXCEPTIONS = {
 
     "Whatre": [
         {ORTH: "What"},
-        {ORTH: "re"}
+        {ORTH: "re", LEMMA: "be", NORM: "are"}
     ],
 
     "'s": [
@@ -1719,12 +1719,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "It'll": [
-        {ORTH: "It", LEMMA: PRON_LEMMA},
+        {ORTH: "It", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ll", LEMMA: "will", TAG: "MD"}
     ],
 
     "We'd": [
-        {ORTH: "We"},
+        {ORTH: "We", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -1738,12 +1738,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Itd": [
-        {ORTH: "It", LEMMA: PRON_LEMMA},
+        {ORTH: "It", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"}
     ],
 
     "she'd": [
-        {ORTH: "she", LEMMA: PRON_LEMMA},
+        {ORTH: "she", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'d", LEMMA: "would", TAG: "MD"}
     ],
 
@@ -1758,17 +1758,17 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "you'll": [
-        {ORTH: "you", LEMMA: PRON_LEMMA},
+        {ORTH: "you", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'ll", LEMMA: "will", TAG: "MD"}
     ],
 
     "Theyd": [
-        {ORTH: "They", LEMMA: PRON_LEMMA},
+        {ORTH: "They", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"}
     ],
 
     "she's": [
-        {ORTH: "she", LEMMA: PRON_LEMMA},
+        {ORTH: "she", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'s"}
     ],
 
@@ -1783,7 +1783,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "'em": [
-        {ORTH: "'em", LEMMA: PRON_LEMMA}
+        {ORTH: "'em", LEMMA: PRON_LEMMA, NORM: "them"}
     ],
 
     "ol'": [

@@ -2,317 +2,138 @@
 from __future__ import unicode_literals
 
 from ..symbols import *
-from ..language_data import PRON_LEMMA
+from ..language_data import PRON_LEMMA, DET_LEMMA
 
 
 TOKENIZER_EXCEPTIONS = {
-    "accidentarse": [
-        {ORTH: "accidentar", LEMMA: "accidentar", POS: AUX},
-        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "aceptarlo": [
-        {ORTH: "aceptar", LEMMA: "aceptar", POS: AUX},
-        {ORTH: "lo", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "acompañarla": [
-        {ORTH: "acompañar", LEMMA: "acompañar", POS: AUX},
-        {ORTH: "la", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "advertirle": [
-        {ORTH: "advertir", LEMMA: "advertir", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
     "al": [
-        {ORTH: "a", LEMMA: "a", POS: ADP},
-        {ORTH: "el", LEMMA: "el", POS: DET}
+        {ORTH: "a", LEMMA: "a", TAG: ADP},
+        {ORTH: "el", LEMMA: "el", TAG: DET}
     ],
 
-    "anunciarnos": [
-        {ORTH: "anunciar", LEMMA: "anunciar", POS: AUX},
-        {ORTH: "nos", LEMMA: PRON_LEMMA, POS: PRON}
+    "consigo": [
+        {ORTH: "con", LEMMA: "con"},
+        {ORTH: "sigo", LEMMA: PRON_LEMMA, NORM: "sí"}
     ],
 
-    "asegurándole": [
-        {ORTH: "asegurando", LEMMA: "asegurar", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    "conmigo": [
+        {ORTH: "con", LEMMA: "con"},
+        {ORTH: "migo", LEMMA: PRON_LEMMA, NORM: "mí"}
     ],
 
-    "considerarle": [
-        {ORTH: "considerar", LEMMA: "considerar", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "decirle": [
-        {ORTH: "decir", LEMMA: "decir", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "decirles": [
-        {ORTH: "decir", LEMMA: "decir", POS: AUX},
-        {ORTH: "les", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "decirte": [
-        {ORTH: "Decir", LEMMA: "decir", POS: AUX},
-        {ORTH: "te", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "dejarla": [
-        {ORTH: "dejar", LEMMA: "dejar", POS: AUX},
-        {ORTH: "la", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "dejarnos": [
-        {ORTH: "dejar", LEMMA: "dejar", POS: AUX},
-        {ORTH: "nos", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "dejándole": [
-        {ORTH: "dejando", LEMMA: "dejar", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    "contigo": [
+        {ORTH: "con", LEMMA: "con"},
+        {ORTH: "tigo", LEMMA: PRON_LEMMA, NORM: "ti"}
     ],
 
     "del": [
-        {ORTH: "de", LEMMA: "de", POS: ADP},
-        {ORTH: "el", LEMMA: "el", POS: DET}
-    ],
-
-    "demostrarles": [
-        {ORTH: "demostrar", LEMMA: "demostrar", POS: AUX},
-        {ORTH: "les", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "diciéndole": [
-        {ORTH: "diciendo", LEMMA: "decir", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "diciéndoles": [
-        {ORTH: "diciendo", LEMMA: "decir", POS: AUX},
-        {ORTH: "les", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "diferenciarse": [
-        {ORTH: "diferenciar", LEMMA: "diferenciar", POS: AUX},
-        {ORTH: "se", LEMMA: "él", POS: PRON}
-    ],
-
-    "divirtiéndome": [
-        {ORTH: "divirtiendo", LEMMA: "divertir", POS: AUX},
-        {ORTH: "me", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "ensanchándose": [
-        {ORTH: "ensanchando", LEMMA: "ensanchar", POS: AUX},
-        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "explicarles": [
-        {ORTH: "explicar", LEMMA: "explicar", POS: AUX},
-        {ORTH: "les", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "haberla": [
-        {ORTH: "haber", LEMMA: "haber", POS: AUX},
-        {ORTH: "la", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "haberlas": [
-        {ORTH: "haber", LEMMA: "haber", POS: AUX},
-        {ORTH: "las", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "haberlo": [
-        {ORTH: "haber", LEMMA: "haber", POS: AUX},
-        {ORTH: "lo", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "haberlos": [
-        {ORTH: "haber", LEMMA: "haber", POS: AUX},
-        {ORTH: "los", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "haberme": [
-        {ORTH: "haber", LEMMA: "haber", POS: AUX},
-        {ORTH: "me", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "haberse": [
-        {ORTH: "haber", LEMMA: "haber", POS: AUX},
-        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "hacerle": [
-        {ORTH: "hacer", LEMMA: "hacer", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "hacerles": [
-        {ORTH: "hacer", LEMMA: "hacer", POS: AUX},
-        {ORTH: "les", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "hallarse": [
-        {ORTH: "hallar", LEMMA: "hallar", POS: AUX},
-        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "imaginaros": [
-        {ORTH: "imaginar", LEMMA: "imaginar", POS: AUX},
-        {ORTH: "os", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "insinuarle": [
-        {ORTH: "insinuar", LEMMA: "insinuar", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "justificarla": [
-        {ORTH: "justificar", LEMMA: "justificar", POS: AUX},
-        {ORTH: "la", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "mantenerlas": [
-        {ORTH: "mantener", LEMMA: "mantener", POS: AUX},
-        {ORTH: "las", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "mantenerlos": [
-        {ORTH: "mantener", LEMMA: "mantener", POS: AUX},
-        {ORTH: "los", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "mantenerme": [
-        {ORTH: "mantener", LEMMA: "mantener", POS: AUX},
-        {ORTH: "me", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "pasarte": [
-        {ORTH: "pasar", LEMMA: "pasar", POS: AUX},
-        {ORTH: "te", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "pedirle": [
-        {ORTH: "pedir", LEMMA: "pedir", POS: AUX},
-        {ORTH: "le", LEMMA: "él", POS: PRON}
+        {ORTH: "de", LEMMA: "de", TAG: ADP},
+        {ORTH: "l", LEMMA: "el", TAG: DET}
     ],
 
     "pel": [
-        {ORTH: "per", LEMMA: "per", POS: ADP},
-        {ORTH: "el", LEMMA: "el", POS: DET}
+        {ORTH: "pe", LEMMA: "per", TAG: ADP},
+        {ORTH: "l", LEMMA: "el", TAG: DET}
     ],
 
-    "pidiéndonos": [
-        {ORTH: "pidiendo", LEMMA: "pedir", POS: AUX},
-        {ORTH: "nos", LEMMA: PRON_LEMMA, POS: PRON}
+    "pal": [
+        {ORTH: "pa", LEMMA: "para"},
+        {ORTH: "l", LEMMA: DET_LEMMA, NORM: "el"}
     ],
 
-    "poderle": [
-        {ORTH: "poder", LEMMA: "poder", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    "pala": [
+        {ORTH: "pa", LEMMA: "para"},
+        {ORTH: "la", LEMMA: DET_LEMMA}
     ],
 
-    "preguntarse": [
-        {ORTH: "preguntar", LEMMA: "preguntar", POS: AUX},
-        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
+    "aprox.": [
+        {ORTH: "aprox.", LEMMA: "aproximadamente"}
     ],
 
-    "preguntándose": [
-        {ORTH: "preguntando", LEMMA: "preguntar", POS: AUX},
-        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
+    "dna.": [
+        {ORTH: "dna.", LEMMA: "docena"}
     ],
 
-    "presentarla": [
-        {ORTH: "presentar", LEMMA: "presentar", POS: AUX},
-        {ORTH: "la", LEMMA: PRON_LEMMA, POS: PRON}
+    "esq.": [
+        {ORTH: "esq.", LEMMA: "esquina"}
     ],
 
-    "pudiéndolo": [
-        {ORTH: "pudiendo", LEMMA: "poder", POS: AUX},
-        {ORTH: "lo", LEMMA: PRON_LEMMA, POS: PRON}
+    "pág.": [
+        {ORTH: "pág.", LEMMA: "página"}
     ],
 
-    "pudiéndose": [
-        {ORTH: "pudiendo", LEMMA: "poder", POS: AUX},
-        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
+    "p.ej.": [
+        {ORTH: "p.ej.", LEMMA: "por ejemplo"}
     ],
 
-    "quererle": [
-        {ORTH: "querer", LEMMA: "querer", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
+    "Ud.": [
+        {ORTH: "Ud.", LEMMA: PRON_LEMMA, NORM: "usted"}
     ],
 
-    "rasgarse": [
-        {ORTH: "Rasgar", LEMMA: "rasgar", POS: AUX},
-        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
+    "Vd.": [
+        {ORTH: "Vd.", LEMMA: PRON_LEMMA, NORM: "usted"}
     ],
 
-    "repetirlo": [
-        {ORTH: "repetir", LEMMA: "repetir", POS: AUX},
-        {ORTH: "lo", LEMMA: PRON_LEMMA, POS: PRON}
+    "Uds.": [
+        {ORTH: "Uds.", LEMMA: PRON_LEMMA, NORM: "ustedes"}
     ],
 
-    "robarle": [
-        {ORTH: "robar", LEMMA: "robar", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "seguirlos": [
-        {ORTH: "seguir", LEMMA: "seguir", POS: AUX},
-        {ORTH: "los", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "serle": [
-        {ORTH: "ser", LEMMA: "ser", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "serlo": [
-        {ORTH: "ser", LEMMA: "ser", POS: AUX},
-        {ORTH: "lo", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "señalándole": [
-        {ORTH: "señalando", LEMMA: "señalar", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "suplicarle": [
-        {ORTH: "suplicar", LEMMA: "suplicar", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "tenerlos": [
-        {ORTH: "tener", LEMMA: "tener", POS: AUX},
-        {ORTH: "los", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "vengarse": [
-        {ORTH: "vengar", LEMMA: "vengar", POS: AUX},
-        {ORTH: "se", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "verla": [
-        {ORTH: "ver", LEMMA: "ver", POS: AUX},
-        {ORTH: "la", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "verle": [
-        {ORTH: "ver", LEMMA: "ver", POS: AUX},
-        {ORTH: "le", LEMMA: PRON_LEMMA, POS: PRON}
-    ],
-
-    "volverlo": [
-        {ORTH: "volver", LEMMA: "volver", POS: AUX},
-        {ORTH: "lo", LEMMA: PRON_LEMMA, POS: PRON}
+    "Vds.": [
+        {ORTH: "Vds.", LEMMA: PRON_LEMMA, NORM: "ustedes"}
     ]
 }
 
 
 ORTH_ONLY = [
-
+    "a.",
+    "a.C.",
+    "a.J.C.",
+    "apdo.",
+    "Av.",
+    "Avda.",
+    "b.",
+    "c.",
+    "Cía.",
+    "d.",
+    "e.",
+    "etc.",
+    "f.",
+    "g.",
+    "Gob.",
+    "Gral.",
+    "h.",
+    "i.",
+    "Ing.",
+    "j.",
+    "J.C.",
+    "k.",
+    "l.",
+    "Lic.",
+    "m.",
+    "m.n.",
+    "n.",
+    "no.",
+    "núm.",
+    "o.",
+    "p.",
+    "P.D.",
+    "Prof.",
+    "Profa.",
+    "q.",
+    "q.e.p.d."
+    "r.",
+    "s.",
+    "S.A.",
+    "S.L.",
+    "s.s.s.",
+    "Sr.",
+    "Sra.",
+    "Srta.",
+    "t.",
+    "u.",
+    "v.",
+    "w.",
+    "x.",
+    "y.",
+    "z."
 ]

@@ -5,6 +5,7 @@ from ..symbols import *
 
 
 PRON_LEMMA = "-PRON-"
+DET_LEMMA = "-DET-"
 ENT_ID = "ent_id"
 
 

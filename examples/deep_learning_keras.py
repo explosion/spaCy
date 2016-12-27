@@ -111,10 +111,9 @@ def compile_lstm(embeddings, shape, settings):
             mask_zero=True
         )
     )
-    model.add(TimeDistributed(Dense(shape['nr_hidden'] * 2, bias=False)))
-    model.add(Dropout(settings['dropout']))
-    model.add(Bidirectional(LSTM(shape['nr_hidden'])))
-    model.add(Dropout(settings['dropout']))
+    model.add(TimeDistributed(Dense(shape['nr_hidden'], bias=False)))
+    model.add(Bidirectional(LSTM(shape['nr_hidden'], dropout_U=settings['dropout'],
+                                 dropout_W=settings['dropout'])))
     model.add(Dense(shape['nr_class'], activation='sigmoid'))
     model.compile(optimizer=Adam(lr=settings['lr']), loss='binary_crossentropy',
 		  metrics=['accuracy'])
@@ -195,7 +194,7 @@ def main(model_dir, train_dir, dev_dir,
         dev_labels = numpy.asarray(dev_labels, dtype='int32')
         lstm = train(train_texts, train_labels, dev_texts, dev_labels,
                      {'nr_hidden': nr_hidden, 'max_length': max_length, 'nr_class': 1},
-                     {'dropout': 0.5, 'lr': learn_rate},
+                     {'dropout': dropout, 'lr': learn_rate},
                      {},
                      nb_epoch=nb_epoch, batch_size=batch_size)
         weights = lstm.get_weights()
