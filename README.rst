@@ -79,7 +79,7 @@ Features
 See `facts, figures and benchmarks <https://spacy.io/docs/api/>`_.
 
 Top Performance
-==============
+===============
 
 * Fastest in the world: <50ms per document.  No faster system has ever been
   announced.
