@@ -16,12 +16,12 @@ URLS = [
 
 # Punctuation we want to check is split away before the URL
 PREFIXES = [
-    "(", '"', "...", ":", "<", ">", ")"
+    "(", '"', "...",  ">"
 ]
 
 # Punctuation we want to check is split away after the URL
 SUFFIXES = [
-    "(", '"', "...", ":", "<", ">"]
+    '"', ":", ">"]
 
 @pytest.mark.parametrize("text", URLS)
 def test_simple_url(en_tokenizer, text):
@@ -40,10 +40,10 @@ def test_prefixed_url(en_tokenizer, prefix, url):
     
 @pytest.mark.parametrize("suffix", SUFFIXES)
 @pytest.mark.parametrize("url", URLS)
-def test_prefixed_url(en_tokenizer, suffix, url):
+def test_suffixed_url(en_tokenizer, url, suffix):
     tokens = en_tokenizer(url + suffix)
-    assert tokens[1].text == suffix
     assert tokens[0].text == url
+    assert tokens[1].text == suffix
     assert len(tokens) == 2
     
 @pytest.mark.parametrize("prefix", PREFIXES)
