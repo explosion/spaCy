@@ -21,6 +21,7 @@ from ..parts_of_speech cimport univ_pos_t
 from ..lexeme cimport Lexeme
 from .span cimport Span
 from .token cimport Token
+from .printers import parse_tree
 from ..serialize.bits cimport BitArray
 from ..util import normalize_slice
 from ..syntax.iterators import CHUNKERS
@@ -648,6 +649,10 @@ cdef class Doc:
         self._py_tokens = [None] * self.length
         # Return the merged Python object
         return self[start]
+
+    def print_tree(self, light=False, flat=False):
+        """Returns the parse trees in the JSON (Dict) format."""
+        return parse_tree(self, light=light, flat=flat)
 
 
 cdef int token_by_start(const TokenC* tokens, int length, int start_char) except -2:

@@ -261,62 +261,6 @@ class Language(object):
                 proc(doc)
         return doc
 
-    def merge_ents(self, doc):
-        '''Helper: merge adjacent entities into single tokens; modifies the doc.'''
-        for ent in doc.ents:
-            ent.merge(ent.root.tag_, ent.text, ent.label_)
-        return doc
-
-    def format_POS(self, token, light=False, flat=False):
-        '''helper: form the POS output for a token'''
-        subtree = dict([
-            ("word", token.text),
-            ("lemma", token.lemma_),  # trigger
-            ("NE", token.ent_type_),  # trigger
-            ("POS_fine", token.tag_),
-            ("POS_coarse", token.pos_),
-            ("arc", token.dep_),
-            ("modifiers", [])
-        ])
-        if light:
-            subtree.pop("lemma")
-            subtree.pop("NE")
-        if flat:
-            subtree.pop("arc")
-            subtree.pop("modifiers")
-        return subtree
-
-    def POS_tree_(self, root, light=False):
-        '''Helper: generate a POS tree for a root token.
-        The doc must have merge_ents(doc) ran on it.
-        '''
-        subtree = self.format_POS(root, light=light)
-        for c in root.children:
-            subtree["modifiers"].append(self.POS_tree_(c))
-        return subtree
-
-    def parse_tree_(self, doc, light=False):
-        '''generate the POS tree for all sentences in a doc'''
-        self.merge_ents(doc)  # merge the entities into single tokens first
-        return [self.POS_tree_(sent.root, light=light) for sent in doc.sents]
-
-    def parse_tree(self, text, tag=True, parse=True, entity=True, light=False):
-        """Apply self.__call__ and use the resulting doc to construct a syntactic parse tree, similar to the one used in displaCy.
-
-        Args:
-            text (unicode): The text to be processed.
-
-        Returns:
-            [parse_trees (OrderedDicts)]:
-
-        >>> from spacy.en import English
-        >>> nlp = English()
-        >>> trees = nlp.parse_tree('Bob brought Alice the pizza. Alice ate the pizza.')
-        [{'modifiers': [{'modifiers': [], 'NE': 'PERSON', 'word': 'Bob', 'arc': 'nsubj', 'POS_coarse': 'PROPN', 'POS_fine': 'NNP', 'lemma': 'Bob'}, {'modifiers': [], 'NE': 'PERSON', 'word': 'Alice', 'arc': 'dobj', 'POS_coarse': 'PROPN', 'POS_fine': 'NNP', 'lemma': 'Alice'}, {'modifiers': [{'modifiers': [], 'NE': '', 'word': 'the', 'arc': 'det', 'POS_coarse': 'DET', 'POS_fine': 'DT', 'lemma': 'the'}], 'NE': '', 'word': 'pizza', 'arc': 'dobj', 'POS_coarse': 'NOUN', 'POS_fine': 'NN', 'lemma': 'pizza'}, {'modifiers': [], 'NE': '', 'word': '.', 'arc': 'punct', 'POS_coarse': 'PUNCT', 'POS_fine': '.', 'lemma': '.'}], 'NE': '', 'word': 'brought', 'arc': 'ROOT', 'POS_coarse': 'VERB', 'POS_fine': 'VBD', 'lemma': 'bring'}, {'modifiers': [{'modifiers': [], 'NE': 'PERSON', 'word': 'Alice', 'arc': 'nsubj', 'POS_coarse': 'PROPN', 'POS_fine': 'NNP', 'lemma': 'Alice'}, {'modifiers': [{'modifiers': [], 'NE': '', 'word': 'the', 'arc': 'det', 'POS_coarse': 'DET', 'POS_fine': 'DT', 'lemma': 'the'}], 'NE': '', 'word': 'pizza', 'arc': 'dobj', 'POS_coarse': 'NOUN', 'POS_fine': 'NN', 'lemma': 'pizza'}, {'modifiers': [], 'NE': '', 'word': '.', 'arc': 'punct', 'POS_coarse': 'PUNCT', 'POS_fine': '.', 'lemma': '.'}], 'NE': '', 'word': 'ate', 'arc': 'ROOT', 'POS_coarse': 'VERB', 'POS_fine': 'VBD', 'lemma': 'eat'}]
-        """
-        doc = self.__call__(text, tag=tag, parse=parse, entity=entity)
-        return self.parse_tree_(doc, light=light)
-
     def pipe(self, texts, tag=True, parse=True, entity=True, n_threads=2,
             batch_size=1000):
         skip = {self.tagger: not tag, self.parser: not parse, self.entity: not entity}
