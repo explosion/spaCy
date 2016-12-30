@@ -29,7 +29,7 @@ cdef class Tokenizer:
     """Segment text, and create Doc objects with the discovered segment boundaries."""
     @classmethod
     def load(cls, path, Vocab vocab, rules=None, prefix_search=None, suffix_search=None,
-             infix_finditer=None, token_match = None):
+             infix_finditer=None, token_match=None):
         '''Load a Tokenizer, reading unsupplied components from the path.
         
         Arguments:
