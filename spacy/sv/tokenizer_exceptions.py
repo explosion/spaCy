@@ -62,6 +62,12 @@ TOKENIZER_EXCEPTIONS = {
     ],
     "sön.": [
         {ORTH: "sön.", LEMMA: "söndag"}
+    ],
+    "sthlm": [
+        {ORTH: "sthlm", LEMMA: "Stockholm"}
+    ],
+    "gbg": [
+        {ORTH: "gbg", LEMMA: "Göteborg"}
     ]
 }
 
