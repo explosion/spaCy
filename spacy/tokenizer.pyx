@@ -207,12 +207,9 @@ cdef class Tokenizer:
         cdef vector[LexemeC*] suffixes
         cdef int orig_size
         orig_size = tokens.length
-        if self.token_match and self.token_match(span):
-            tokens.push_back(self.vocab.get(tokens.mem, span), False)
-        else:
-            span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes)
-            self._attach_tokens(tokens, span, &prefixes, &suffixes)
-            self._save_cached(&tokens.c[orig_size], orig_key, tokens.length - orig_size)
+        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes)
+        self._attach_tokens(tokens, span, &prefixes, &suffixes)
+        self._save_cached(&tokens.c[orig_size], orig_key, tokens.length - orig_size)
 
     cdef unicode _split_affixes(self, Pool mem, unicode string,
                                 vector[const LexemeC*] *prefixes,
@@ -224,6 +221,8 @@ cdef class Tokenizer:
         cdef unicode minus_suf
         cdef size_t last_size = 0
         while string and len(string) != last_size:
+            if self.token_match and self.token_match(string):
+                break
             last_size = len(string)
             pre_len = self.find_prefix(string)
             if pre_len != 0:
@@ -233,6 +232,8 @@ cdef class Tokenizer:
                 if minus_pre and self._specials.get(hash_string(minus_pre)) != NULL:
                     string = minus_pre
                     prefixes.push_back(self.vocab.get(mem, prefix))
+                    break
+                if self.token_match and self.token_match(string):
                     break
             suf_len = self.find_suffix(string)
             if suf_len != 0:
@@ -271,7 +272,11 @@ cdef class Tokenizer:
                 tokens.push_back(prefixes[0][i], False)
         if string:
             cache_hit = self._try_cache(hash_string(string), tokens)
-            if not cache_hit:
+            if cache_hit:
+                pass
+            elif self.token_match and self.token_match(string): 
+                tokens.push_back(self.vocab.get(tokens.mem, string), not suffixes.size())
+            else:
                 matches = self.find_infix(string)
                 if not matches:
                     tokens.push_back(self.vocab.get(tokens.mem, string), False)
