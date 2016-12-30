@@ -1,4 +1,5 @@
 # cython: profile=True
+# cython: infer_types=True
 from __future__ import unicode_literals
 
 from os import path
@@ -92,8 +93,8 @@ ctypedef TokenPatternC* TokenPatternC_ptr
 ctypedef pair[int, TokenPatternC_ptr] StateC
 
 
-cdef TokenPatternC* init_pattern(Pool mem, object token_specs, attr_t entity_id,
-                                 attr_t entity_type) except NULL:
+cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, attr_t label,
+                                 object token_specs) except NULL:
     pattern = <TokenPatternC*>mem.alloc(len(token_specs) + 1, sizeof(TokenPatternC))
     cdef int i
     for i, (quantifier, spec) in enumerate(token_specs):
@@ -108,7 +109,7 @@ cdef TokenPatternC* init_pattern(Pool mem, object token_specs, attr_t entity_id,
     pattern[i].attrs[0].attr = ID
     pattern[i].attrs[0].value = entity_id
     pattern[i].attrs[1].attr = ENT_TYPE
-    pattern[i].attrs[1].value = entity_type
+    pattern[i].attrs[1].value = label
     pattern[i].nr_attr = 0
     return pattern
 
@@ -141,7 +142,7 @@ def _convert_strings(token_specs, string_store):
     tokens = []
     op = ONE
     for spec in token_specs:
-        token = [] 
+        token = []
         ops = (ONE,)
         for attr, value in spec.items():
             if isinstance(attr, basestring) and attr.upper() == 'OP':
@@ -161,6 +162,284 @@ def _convert_strings(token_specs, string_store):
         for op in ops:
             tokens.append((op, token))
     return tokens
+
+
+cdef class Matcher:
+    '''Match sequences of tokens, based on pattern rules.'''
+    cdef Pool mem
+    cdef vector[TokenPatternC*] patterns
+    cdef readonly Vocab vocab
+    cdef public object _patterns
+    cdef public object _entities
+    cdef public object _callbacks
+    cdef public object _acceptors
+
+    @classmethod
+    def load(cls, path, vocab):
+        '''Load the matcher and patterns from a file path.
+
+        Arguments:
+            path (Path):
+                Path to a JSON-formatted patterns file.
+            vocab (Vocab):
+                The vocabulary that the documents to match over will refer to.
+        Returns:
+            Matcher: The newly constructed object.
+        '''
+        if (path / 'gazetteer.json').exists():
+            with (path / 'gazetteer.json').open('r', encoding='utf8') as file_:
+                patterns = json.load(file_)
+        else:
+            patterns = {}
+        return cls(vocab, patterns)
+
+    def __init__(self, vocab, patterns={}):
+        """Create the Matcher.
+
+        Arguments:
+            vocab (Vocab):
+                The vocabulary object, which must be shared with the documents
+                the matcher will operate on.
+            patterns (dict): Patterns to add to the matcher.
+        Returns:
+            The newly constructed object.
+        """
+        self._patterns = {}
+        self._entities = {}
+        self._acceptors = {}
+        self._callbacks = {}
+        self.vocab = vocab
+        self.mem = Pool()
+        for entity_key, (etype, attrs, specs) in sorted(patterns.items()):
+            self.add_entity(entity_key, attrs)
+            for spec in specs:
+                self.add_pattern(entity_key, spec, label=etype)
+
+    def __reduce__(self):
+        return (self.__class__, (self.vocab, self._patterns), None, None)
+
+    property n_patterns:
+        def __get__(self): return self.patterns.size()
+
+    def add_entity(self, entity_key, attrs=None, if_exists='raise',
+                   acceptor=None, on_match=None):
+        """Add an entity to the matcher.
+
+        Arguments:
+            entity_key (unicode or int):
+                An ID for the entity.
+            attrs:
+                Attributes to associate with the Matcher.
+            if_exists ('raise', 'ignore' or 'update'):
+                Controls what happens if the entity ID already exists. Defaults to 'raise'.
+            acceptor:
+                Callback function to filter matches of the entity.
+            on_match:
+                Callback function to act on matches of the entity.
+        Returns:
+            None
+        """
+        if if_exists not in ('raise', 'ignore', 'update'):
+            raise ValueError(
+                "Unexpected value for if_exists: %s.\n"
+                "Expected one of: ['raise', 'ignore', 'update']" % if_exists)
+        if attrs is None:
+            attrs = {}
+        entity_key = self.normalize_entity_key(entity_key)
+        if self.has_entity(entity_key):
+            if if_exists == 'raise':
+                raise KeyError(
+                    "Tried to add entity %s. Entity exists, and if_exists='raise'.\n"
+                    "Set if_exists='ignore' or if_exists='update', or check with "
+                    "matcher.has_entity()")
+            elif if_exists == 'ignore':
+                return
+        self._entities[entity_key] = dict(attrs)
+        self._patterns.setdefault(entity_key, [])
+        self._acceptors[entity_key] = acceptor
+        self._callbacks[entity_key] = on_match
+
+    def add_pattern(self, entity_key, token_specs, label=""):
+        """Add a pattern to the matcher.
+
+        Arguments:
+            entity_key (unicode or int):
+                An ID for the entity.
+            token_specs:
+                Description of the pattern to be matched.
+            label:
+                Label to assign to the matched pattern. Defaults to "".
+        Returns:
+            None
+        """
+        token_specs = list(token_specs)
+        if len(token_specs) == 0:
+            msg = ("Cannot add pattern for zero tokens to matcher.\n"
+                   "entity_key: {entity_key}\n"
+                   "label: {label}")
+            raise ValueError(msg.format(entity_key=entity_key, label=label))
+        entity_key = self.normalize_entity_key(entity_key)
+        if not self.has_entity(entity_key):
+            self.add_entity(entity_key)
+        if isinstance(label, basestring):
+            label = self.vocab.strings[label]
+        elif label is None:
+            label = 0
+        spec = _convert_strings(token_specs, self.vocab.strings)
+
+        self.patterns.push_back(init_pattern(self.mem, entity_key, label, spec))
+        self._patterns[entity_key].append((label, token_specs))
+
+    def add(self, entity_key, label, attrs, specs, acceptor=None, on_match=None):
+        self.add_entity(entity_key, attrs=attrs, if_exists='update',
+                        acceptor=acceptor, on_match=on_match)
+        for spec in specs:
+            self.add_pattern(entity_key, spec, label=label)
+
+    def normalize_entity_key(self, entity_key):
+        if isinstance(entity_key, basestring):
+            return self.vocab.strings[entity_key]
+        else:
+            return entity_key
+
+    def has_entity(self, entity_key):
+        """Check whether the matcher has an entity.
+
+        Arguments:
+            entity_key (string or int): The entity key to check.
+        Returns:
+            bool: Whether the matcher has the entity.
+        """
+        entity_key = self.normalize_entity_key(entity_key)
+        return entity_key in self._entities
+
+    def get_entity(self, entity_key):
+        """Retrieve the attributes stored for an entity.
+
+        Arguments:
+            entity_key (unicode or int): The entity to retrieve.
+        Returns:
+            The entity attributes if present, otherwise None.
+        """
+        entity_key = self.normalize_entity_key(entity_key)
+        if entity_key in self._entities:
+            return self._entities[entity_key]
+        else:
+            return None
+
+    def __call__(self, Doc doc, acceptor=None):
+        """Find all token sequences matching the supplied patterns on the Doc.
+
+        Arguments:
+            doc (Doc):
+                The document to match over.
+        Returns:
+            list
+            A list of (entity_key, label_id, start, end) tuples,
+            describing the matches. A match tuple describes a span doc[start:end].
+            The label_id and entity_key are both integers.
+        """
+        if acceptor is not None:
+            raise ValueError(
+                "acceptor keyword argument to Matcher deprecated. Specify acceptor "
+                "functions when you add patterns instead.")
+        cdef vector[StateC] partials
+        cdef int n_partials = 0
+        cdef int q = 0
+        cdef int i, token_i
+        cdef const TokenC* token
+        cdef StateC state
+        matches = []
+        for token_i in range(doc.length):
+            token = &doc.c[token_i]
+            q = 0
+            # Go over the open matches, extending or finalizing if able. Otherwise,
+            # we over-write them (q doesn't advance)
+            for state in partials:
+                action = get_action(state.second, token)
+                if action == PANIC:
+                    raise Exception("Error selecting action in matcher")
+                while action == ADVANCE_ZERO:
+                    state.second += 1
+                    action = get_action(state.second, token)
+                if action == REPEAT:
+                    # Leave the state in the queue, and advance to next slot
+                    # (i.e. we don't overwrite -- we want to greedily match more
+                    # pattern.
+                    q += 1
+                elif action == REJECT:
+                    pass
+                elif action == ADVANCE:
+                    partials[q] = state
+                    partials[q].second += 1
+                    q += 1
+                elif action == ACCEPT:
+                    # TODO: What to do about patterns starting with ZERO? Need to
+                    # adjust the start position.
+                    start = state.first
+                    end = token_i+1
+                    ent_id = state.second[1].attrs[0].value
+                    label = state.second[1].attrs[1].value
+                    acceptor = self._acceptors.get(ent_id)
+                    if acceptor is None:
+                        matches.append((ent_id, label, start, end))
+                    else:
+                        match = acceptor(doc, ent_id, label, start, end)
+                        if match:
+                            matches.append(match)
+            partials.resize(q)
+            # Check whether we open any new patterns on this token
+            for pattern in self.patterns:
+                action = get_action(pattern, token)
+                if action == PANIC:
+                    raise Exception("Error selecting action in matcher")
+                while action == ADVANCE_ZERO:
+                    pattern += 1
+                    action = get_action(pattern, token)
+                if action == REPEAT:
+                    state.first = token_i
+                    state.second = pattern
+                    partials.push_back(state)
+                elif action == ADVANCE:
+                    # TODO: What to do about patterns starting with ZERO? Need to
+                    # adjust the start position.
+                    state.first = token_i
+                    state.second = pattern + 1
+                    partials.push_back(state)
+                elif action == ACCEPT:
+                    start = token_i
+                    end = token_i+1
+                    ent_id = pattern[1].attrs[0].value
+                    label = pattern[1].attrs[1].value
+                    acceptor = self._acceptors.get(ent_id)
+                    if acceptor is None:
+                        matches.append((ent_id, label, start, end))
+                    else:
+                        match = acceptor(doc, ent_id, label, start, end)
+                        if match:
+                            matches.append(match)
+        for i, (ent_id, label, start, end) in enumerate(matches):
+            on_match = self._callbacks.get(ent_id)
+            if on_match is not None:
+                on_match(self, doc, i, matches)
+        return matches
+
+    def pipe(self, docs, batch_size=1000, n_threads=2):
+        """Match a stream of documents, yielding them in turn.
+
+        Arguments:
+            docs: A stream of documents.
+            batch_size (int):
+                The number of documents to accumulate into a working set.
+            n_threads (int):
+                The number of threads with which to work on the buffer in parallel,
+                if the Matcher implementation supports multi-threading.
+        Yields:
+            Doc Documents, in order.
+        """
+        for doc in docs:
+            self(doc)
+            yield doc
 
 
 def get_bilou(length):
@@ -189,118 +468,6 @@ def get_bilou(length):
         raise ValueError("Max length currently 10 for phrase matching")
 
 
-cdef class Matcher:
-    cdef Pool mem
-    cdef vector[TokenPatternC*] patterns
-    cdef readonly Vocab vocab
-    cdef public object _patterns
-    
-    @classmethod
-    def load(cls, path, vocab):
-        if (path / 'gazetteer.json').exists():
-            with (path / 'gazetteer.json').open() as file_:
-                patterns = json.load(file_)
-        else:
-            patterns = {}
-        return cls(vocab, patterns)
-
-    def __init__(self, vocab, patterns={}):
-        self._patterns = dict(patterns) # Make sure we own the object
-        self.vocab = vocab
-        self.mem = Pool()
-        self.vocab = vocab
-        for entity_key, (etype, attrs, specs) in sorted(self._patterns.items()):
-            self.add(entity_key, etype, attrs, specs)
-
-    def __reduce__(self):
-        return (self.__class__, (self.vocab, self._patterns), None, None)
-    
-    property n_patterns:
-        def __get__(self): return self.patterns.size()
-
-    def add(self, entity_key, etype, attrs, specs):
-        self._patterns[entity_key] = (etype, dict(attrs), list(specs))
-        if isinstance(entity_key, basestring):
-            entity_key = self.vocab.strings[entity_key]
-        if isinstance(etype, basestring):
-            etype = self.vocab.strings[etype]
-        elif etype is None:
-            etype = -1
-        # TODO: Do something more clever about multiple patterns for single
-        # entity
-        for spec in specs:
-            spec = _convert_strings(spec, self.vocab.strings)
-            self.patterns.push_back(init_pattern(self.mem, spec, entity_key, etype))
-
-    def __call__(self, Doc doc, acceptor=None):
-        cdef vector[StateC] partials
-        cdef int n_partials = 0
-        cdef int q = 0
-        cdef int i, token_i
-        cdef const TokenC* token
-        cdef StateC state
-        matches = []
-        for token_i in range(doc.length):
-            token = &doc.c[token_i]
-            q = 0
-            # Go over the open matches, extending or finalizing if able. Otherwise,
-            # we over-write them (q doesn't advance)
-            for state in partials:
-                action = get_action(state.second, token)
-                while action == ADVANCE_ZERO:
-                    state.second += 1
-                    action = get_action(state.second, token)
-                if action == REPEAT:
-                    # Leave the state in the queue, and advance to next slot
-                    # (i.e. we don't overwrite -- we want to greedily match more
-                    # pattern.
-                    q += 1
-                elif action == REJECT:
-                    pass
-                elif action == ADVANCE:
-                    partials[q].second += 1
-                    q += 1
-                elif action == ACCEPT:
-                    # TODO: What to do about patterns starting with ZERO? Need to
-                    # adjust the start position.
-                    start = state.first
-                    end = token_i+1
-                    ent_id = state.second[1].attrs[0].value
-                    label = state.second[1].attrs[1].value
-                    if acceptor is None or acceptor(doc, ent_id, label, start, end):
-                        matches.append((ent_id, label, start, end))
-            partials.resize(q)
-            # Check whether we open any new patterns on this token
-            for pattern in self.patterns:
-                action = get_action(pattern, token)
-                while action == ADVANCE_ZERO:
-                    pattern += 1
-                    action = get_action(pattern, token)
-                if action == REPEAT:
-                    state.first = token_i
-                    state.second = pattern
-                    partials.push_back(state)
-                elif action == ADVANCE:
-                    # TODO: What to do about patterns starting with ZERO? Need to
-                    # adjust the start position.
-                    state.first = token_i
-                    state.second = pattern + 1
-                    partials.push_back(state)
-                elif action == ACCEPT:
-                    start = token_i
-                    end = token_i+1
-                    ent_id = pattern[1].attrs[0].value
-                    label = pattern[1].attrs[1].value
-                    if acceptor is None or acceptor(doc, ent_id, label, start, end):
-                        matches.append((ent_id, label, start, end))
-        return matches
-
-    def pipe(self, docs, batch_size=1000, n_threads=2):
-        for doc in docs:
-            self(doc)
-            yield doc
-
-
 cdef class PhraseMatcher:
     cdef Pool mem
     cdef Vocab vocab
@@ -324,14 +491,14 @@ cdef class PhraseMatcher:
         abstract_patterns = []
         for length in range(1, max_length):
             abstract_patterns.append([{tag: True} for tag in get_bilou(length)])
-        self.matcher.add('Candidate', 'MWE', {}, abstract_patterns)
+        self.matcher.add('Candidate', 'MWE', {}, abstract_patterns, acceptor=self.accept_match)
 
     def add(self, Doc tokens):
         cdef int length = tokens.length
         assert length < self.max_length
         tags = get_bilou(length)
         assert len(tags) == length, length
-        
+
         cdef int i
         for i in range(self.max_length):
             self._phrase_key[i] = 0
@@ -344,7 +511,7 @@ cdef class PhraseMatcher:
 
     def __call__(self, Doc doc):
         matches = []
-        for label, start, end in self.matcher(doc, acceptor=self.accept_match):
+        for ent_id, label, start, end in self.matcher(doc):
             cand = doc[start : end]
             start = cand[0].idx
             end = cand[-1].idx + len(cand[-1])
@@ -358,7 +525,7 @@ cdef class PhraseMatcher:
             self(doc)
             yield doc
 
-    def accept_match(self, Doc doc, int label, int start, int end):
+    def accept_match(self, Doc doc, int ent_id, int label, int start, int end):
         assert (end - start) < self.max_length
         cdef int i, j
         for i in range(self.max_length):
@@ -367,6 +534,6 @@ cdef class PhraseMatcher:
             self._phrase_key[i] = doc.c[j].lex.orth
         cdef hash_t key = hash64(self._phrase_key, self.max_length * sizeof(attr_t), 0)
         if self.phrase_ids.get(key):
-            return True
+            return (ent_id, label, start, end)
         else:
             return False

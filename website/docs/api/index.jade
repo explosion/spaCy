@@ -1,0 +1,239 @@
+//- 💫 DOCS > API > FACTS & FIGURES
+
+include ../../_includes/_mixins
+
++h(2, "comparison") Feature comparison
+
+p
+    |  Here's a quick comparison of the functionalities offered by spaCy,
+    |  #[+a("https://github.com/tensorflow/models/tree/master/syntaxnet") SyntaxNet],
+    |  #[+a("http://www.nltk.org/py-modindex.html") NLTK] and
+    |  #[+a("http://stanfordnlp.github.io/CoreNLP/") CoreNLP].
+
++table([ "", "spaCy", "SyntaxNet", "NLTK", "CoreNLP"])
+    +row
+        +cell Easy installation
+        each icon in [ "pro", "con", "pro", "pro" ]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Python API
+        each icon in [ "pro", "con", "pro", "con" ]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Multi-language support
+        each icon in [ "con", "pro", "pro", "pro" ]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Tokenization
+        each icon in [ "pro", "pro", "pro", "pro" ]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Part-of-speech tagging
+        each icon in [ "pro", "pro", "pro", "pro" ]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Sentence segmentation
+        each icon in [ "pro", "pro", "pro", "pro" ]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Dependency parsing
+        each icon in [ "pro", "pro", "con", "pro" ]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Entity Recognition
+        each icon in [ "pro", "con", "pro", "pro" ]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Integrated word vectors
+        each icon in [ "pro", "con", "con", "con" ]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Sentiment analysis
+        each icon in [ "pro", "con", "pro", "pro" ]
+            +cell.u-text-center #[+procon(icon)]
+
+    +row
+        +cell Coreference resolution
+        each icon in [ "con", "con", "con", "pro" ]
+            +cell.u-text-center #[+procon(icon)]
+
++h(2, "benchmarks") Benchmarks
+
+p
+    |  Two peer-reviewed papers in 2015 confirm that spaCy offers the
+    |  #[strong fastest syntactic parser in the world] and that
+    |  #[strong its accuracy is within 1% of the best] available. The few
+    |  systems that are more accurate are 20&times; slower or more.
+
++aside("About the evaluation")
+    |  The first of the evaluations was published by #[strong Yahoo! Labs] and
+    |  #[strong Emory University], as part of a survey of current parsing
+    |  technologies #[+a("https://aclweb.org/anthology/P/P15/P15-1038.pdf") (Choi et al., 2015)].
+    |  Their results and subsequent discussions helped us develop a novel
+    |  psychologically-motivated technique to improve spaCy's accuracy, which
+    |  we published in joint work with Macquarie University
+    |  #[+a("https://aclweb.org/anthology/D/D15/D15-1162.pdf") (Honnibal and Johnson, 2015)].
+
++table([ "System", "Language", "Accuracy", "Speed (wps)"])
+    +row
+        each data in [ "spaCy", "Cython", "91.8", "13,963" ]
+            +cell #[strong=data]
+    +row
+        each data in [ "ClearNLP", "Java", "91.7", "10,271" ]
+            +cell=data
+
+    +row
+        each data in [ "CoreNLP", "Java", "89.6", "8,602"]
+            +cell=data
+
+    +row
+        each data in [ "MATE", "Java", "92.5", "550"]
+            +cell=data
+
+    +row
+        each data in [ "Turbo", "C++", "92.4", "349" ]
+            +cell=data
+
++h(3, "parse-accuracy") Parse accuracy
+
+p
+    |  In 2016, Google released their
+    |  #[+a("https://github.com/tensorflow/models/tree/master/syntaxnet") SyntaxNet]
+    |  library, setting a new state of the art for syntactic dependency parsing
+    |  accuracy. SyntaxNet's algorithm is very similar to spaCy's. The main
+    |  difference is that SyntaxNet uses a neural network while spaCy uses a
+    |  sparse linear model.
+
++aside("Methodology")
+    |  #[+a("http://arxiv.org/abs/1603.06042") Andor et al. (2016)] chose
+    |  slightly different experimental conditions from
+    |  #[+a("https://aclweb.org/anthology/P/P15/P15-1038.pdf") Choi et al. (2015)],
+    |  so the two accuracy tables here do not present directly comparable
+    |  figures. We have only evaluated spaCy in the "News" condition following
+    |  the SyntaxNet methodology. We don't yet have benchmark figures for the
+    |  "Web" and "Questions" conditions.
+
++table([ "System", "News", "Web", "Questions" ])
+    +row
+        +cell spaCy
+        each data in [ 92.8, "n/a", "n/a" ]
+            +cell=data
+
+    +row
+        +cell #[+a("https://github.com/tensorflow/models/tree/master/syntaxnet") Parsey McParseface]
+        each data in [ 94.15, 89.08, 94.77 ]
+            +cell=data
+
+    +row
+        +cell #[+a("http://www.cs.cmu.edu/~ark/TurboParser/") Martins et al. (2013)]
+        each data in [ 93.10, 88.23, 94.21 ]
+            +cell=data
+
+    +row
+        +cell #[+a("http://research.google.com/pubs/archive/38148.pdf") Zhang and McDonald (2014)]
+        each data in [ 93.32, 88.65, 93.37 ]
+            +cell=data
+
+    +row
+        +cell #[+a("http://static.googleusercontent.com/media/research.google.com/en//pubs/archive/43800.pdf") Weiss et al. (2015)]
+        each data in [ 93.91, 89.29, 94.17 ]
+            +cell=data
+
+    +row
+        +cell #[strong #[+a("http://arxiv.org/abs/1603.06042") Andor et al. (2016)]]
+        each data in [ 94.44, 90.17, 95.40 ]
+            +cell #[strong=data]
+
++h(3, "speed-comparison") Detailed speed comparison
+
+p
+    |  Here we compare the per-document processing time of various spaCy
+    |  functionalities against other NLP libraries. We show both absolute
+    |  timings (in ms) and relative performance (normalized to spaCy). Lower is
+    |  better.
+
++aside("Methodology")
+    |  #[strong Set up:] 100,000 plain-text documents were streamed from an
+    |  SQLite3 database, and processed with an NLP library, to one of three
+    |  levels of detail — tokenization, tagging, or parsing. The tasks are
+    |  additive: to parse the text you have to tokenize and tag it. The
+    |  pre-processing was not subtracted from the times — I report the time
+    |  required for the pipeline to complete. I report mean times per document,
+    |  in milliseconds.#[br]#[br]
+    |  #[strong Hardware]: Intel i7-3770 (2012)#[br]
+    |  #[strong Implementation]: #[+src(gh("spacy-benchmarks")) spacy-benchmarks]
+
++table
+    +row.u-text-label.u-text-center
+        th.c-table__head-cell
+        th.c-table__head-cell(colspan="3") Absolute (ms per doc)
+        th.c-table__head-cell(colspan="3") Relative (to spaCy)
+
+    +row
+        each column in ["System", "Tokenize", "Tag", "Parse", "Tokenize", "Tag", "Parse"]
+            th.c-table__head-cell.u-text-label=column
+
+    +row
+        +cell #[strong spaCy]
+        each data in [ "0.2ms", "1ms", "19ms"]
+            +cell #[strong=data]
+
+        each data in [ "1x", "1x", "1x" ]
+            +cell=data
+
+    +row
+        each data in [ "CoreNLP", "2ms", "10ms", "49ms", "10x", "10x", "2.6x"]
+            +cell=data
+    +row
+        each data in [ "ZPar", "1ms", "8ms", "850ms", "5x", "8x", "44.7x" ]
+            +cell=data
+    +row
+        each data in [ "NLTK", "4ms", "443ms", "n/a", "20x", "443x", "n/a" ]
+            +cell=data
+
++h(3, "ner") Named entity comparison
+
+p
+    |  #[+a("https://aclweb.org/anthology/W/W16/W16-2703.pdf") Jiang et al. (2016)]
+    |  present several detailed comparisons of the named entity recognition
+    |  models provided by spaCy, CoreNLP, NLTK and LingPipe. Here we show their
+    |  evaluation of person, location and organization accuracy on Wikipedia.
+
++aside("Methodology")
+    |  Making a meaningful comparison of different named entity recognition
+    |  systems is tricky.  Systems are often trained on different data, which
+    |  usually have slight differences in annotation style. For instance, some
+    |  corpora include titles as part of person names, while others don't.
+    |  These trivial differences in convention can distort comparisons
+    |  significantly. Jiang et al.'s #[em partial overlap] metric goes a long
+    |  way to solving this problem.
+
++table([ "System", "Precision", "Recall", "F-measure" ])
+    +row
+        +cell spaCy
+        each data in [ 0.7240, 0.6514, 0.6858 ]
+            +cell=data
+
+    +row
+        +cell #[strong CoreNLP]
+        each data in [ 0.7914, 0.7327, 0.7609 ]
+            +cell #[strong=data]
+
+    +row
+        +cell NLTK
+        each data in [ 0.5136, 0.6532, 0.5750 ]
+            +cell=data
+
+    +row
+        +cell LingPipe
+        each data in [ 0.5412, 0.5357, 0.5384 ]
+            +cell=data

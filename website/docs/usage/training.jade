@@ -1,0 +1,121 @@
+include ../../_includes/_mixins
+
+p
+    |  This tutorial describes how to train new statistical models for spaCy's
+    |  part-of-speech tagger, named entity recognizer and dependency parser.
+
+p
+    |  I'll start with some quick code examples, that describe how to train
+    |  each model. I'll then provide a bit of background about the algorithms,
+    |  and explain how the data and feature templates work.
+
++h(2, "train-pos-tagger") Training the part-of-speech tagger
+
++code.
+    from spacy.vocab import Vocab
+    from spacy.tagger import Tagger
+    from spacy.tokens import Doc
+    from spacy.gold import GoldParse
+
+
+    vocab = Vocab(tag_map={'N': {'pos': 'NOUN'}, 'V': {'pos': 'VERB'}})
+    tagger = Tagger(vocab)
+
+    doc = Doc(vocab, words=['I', 'like', 'stuff'])
+    gold = GoldParse(doc, tags=['N', 'V', 'N'])
+    tagger.update(doc, gold)
+
+    tagger.model.end_training()
+
+p
+    +button(gh("spaCy", "examples/training/train_tagger.py"), false, "secondary") Full example
+
++h(2, "train-entity") Training the named entity recognizer
+
++code.
+    from spacy.vocab import Vocab
+    from spacy.pipeline import EntityRecognizer
+    from spacy.tokens import Doc
+
+    vocab = Vocab()
+    entity = EntityRecognizer(vocab, entity_types=['PERSON', 'LOC'])
+
+    doc = Doc(vocab, words=['Who', 'is', 'Shaka', 'Khan', '?'])
+    entity.update(doc, ['O', 'O', 'B-PERSON', 'L-PERSON', 'O'])
+
+    entity.model.end_training()
+
+p
+    +button(gh("spaCy", "examples/training/train_ner.py"), false, "secondary") Full example
+
++h(2, "train-entity") Training the dependency parser
+
++code.
+    from spacy.vocab import Vocab
+    from spacy.pipeline import DependencyParser
+    from spacy.tokens import Doc
+
+    vocab = Vocab()
+    parser = DependencyParser(vocab, labels=['nsubj', 'compound', 'dobj', 'punct'])
+
+    doc = Doc(vocab, words=['Who', 'is', 'Shaka', 'Khan', '?'])
+    parser.update(doc, [(1, 'nsubj'), (1, 'ROOT'), (3, 'compound'), (1, 'dobj'),
+                        (1, 'punct')])
+
+    parser.model.end_training()
+
+p
+    +button(gh("spaCy", "examples/training/train_parser.py"), false, "secondary") Full example
+
++h(2, 'feature-templates') Customizing the feature extraction
+
+p
+    |  spaCy currently uses linear models for the tagger, parser and entity
+    |  recognizer, with weights learned using the
+    |  #[+a("https://explosion.ai/blog/part-of-speech-pos-tagger-in-python") Averaged Perceptron algorithm].
+
+p
+    |  Because it's a linear model, it's important for accuracy to build
+    |  conjunction features out of the atomic predictors. Let's say you have
+    |  two atomic predictors asking, "What is the part-of-speech of the
+    |  previous token?", and "What is the part-of-speech of the previous
+    |  previous token?". These ppredictors will introduce a number of features,
+    |  e.g. #[code Prev-pos=NN], #[code Prev-pos=VBZ], etc. A conjunction
+    |  template introduces features such as #[code Prev-pos=NN&Prev-pos=VBZ].
+
+p
+    |  The feature extraction proceeds in two passes. In the first pass, we
+    |  fill an array with the values of all of the atomic predictors. In the
+    |  second pass, we iterate over the feature templates, and fill a small
+    |  temporary array with the predictors that will be combined into a
+    |  conjunction feature. Finally, we hash this array into a 64-bit integer,
+    |  using the MurmurHash algorithm. You can see this at work in the
+    |  #[+a(gh("thinc", "thinc/linear/features.pyx", "94dbe06fd3c8f24d86ab0f5c7984e52dbfcdc6cb")) #[code thinc.linear.features]] module.
+
+p
+    |  It's very easy to change the feature templates, to create novel
+    |  combinations of the existing atomic predictors. There's currently no API
+    |  available to add new atomic predictors, though. You'll have to create a
+    |  subclass of the model, and write your own #[code set_featuresC] method.
+
+p
+    |  The feature templates are passed in using the #[code features] keyword
+    |  argument to the constructors of the #[+api("tagger") #[code Tagger]],
+    |  #[+api("dependencyparser") #[code DependencyParser]] and
+    |  #[+api("entityrecognizer") #[code EntityRecognizer]]:
+
++code.
+    from spacy.vocab import Vocab
+    from spacy.pipeline import Tagger
+    from spacy.tagger import P2_orth, P1_orth
+    from spacy.tagger import P2_cluster, P1_cluster, W_orth, N1_orth, N2_orth
+
+    vocab = Vocab(tag_map={'N': {'pos': 'NOUN'}, 'V': {'pos': 'VERB'}})
+    tagger = Tagger(vocab, features=[(P2_orth, P2_cluster), (P1_orth, P1_cluster),
+                                     (P2_orth,), (P1_orth,), (W_orth,),
+                                     (N1_orth,), (N2_orth,)])
+
+p
+    |  Custom feature templates can be passed to the #[code DependencyParser]
+    |  and #[code EntityRecognizer] as well, also using the #[code features]
+    |  keyword argument of the constructor.

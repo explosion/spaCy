@@ -1,40 +1,44 @@
-//- ----------------------------------
-//- 💫 COMPONENTS > SIDEBAR
-//- ----------------------------------
+//- 💫 CSS > COMPONENTS > SIDEBAR
+
+//- Sidebar container
 
 .c-sidebar
-    @include breakpoint(min, md)
-        flex: 0 0 $sidebar-width
-        margin-right: 6rem
-        margin-left: 4rem
-        padding-top: $nav-height
-        width: $sidebar-width
+    background: $color-subtle-light
+    overflow-y: auto
 
-        &.is-fixed .c-sidebar__body
-            @include position(fixed, top, left, $nav-height, 4rem)
-            @include size($sidebar-width, calc(100vh - #{$nav-height}))
-            overflow: auto
-            transition: none
+    @include breakpoint(min, md)
+        @include position(fixed, top, left, 0, 0)
+        @include size($sidebar-width, 100vh)
+        flex: 0 0 $sidebar-width
+        padding: calc(#{$nav-height} + 1.5rem) 0 2rem
+        z-index: 10
+        border-right: 1px solid $color-subtle
 
     @include breakpoint(max, sm)
         flex: 100%
         width: 100%
-
-        .c-sidebar__body
-            display: flex
-            flex-flow: row wrap
-            width: 100%
-
-            & > *
-                flex: 1 1 0
-                padding: 1rem
-                border-bottom: 1px solid $color-subtle
+        margin-top: $nav-height
+        display: flex
+        flex-flow: row wrap
+        width: 100%
 
 
-                &:not(:last-child)
-                    border-right: 1px solid $color-subtle
+//- Sidebar section
 
-.c-sidebar__body
+.c-sidebar__section
+    & > *
+        padding: 0 2rem
+
+    @include breakpoint(max, sm)
+        flex: 1 1 0
+        padding: 1.25rem 0
+        border-bottom: 1px solid $color-subtle
+        margin: 0
+
+        &:not(:last-child)
+            border-right: 1px solid $color-subtle
+
     .is-active
         font-weight: bold
         color: $color-theme
+        background: rgba($color-subtle, 0.4)

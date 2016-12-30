@@ -67,10 +67,6 @@ def get_templates(name):
                 pf.tree_shape + pf.trigrams)
 
 
-def ParserFactory(transition_system):
-    return lambda strings, dir_: Parser(strings, dir_, transition_system)
-
-
 cdef class ParserModel(AveragedPerceptron):
     cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil: 
         fill_context(eg.atoms, state)
@@ -78,38 +74,72 @@ cdef class ParserModel(AveragedPerceptron):
 
 
 cdef class Parser:
+    """Base class of the DependencyParser and EntityRecognizer."""
     @classmethod
-    def load(cls, path, Vocab vocab, moves_class):
+    def load(cls, path, Vocab vocab, TransitionSystem=None, require=False, **cfg):
+        """Load the statistical model from the supplied path.
+
+        Arguments:
+            path (Path):
+                The path to load from.
+            vocab (Vocab):
+                The vocabulary. Must be shared by the documents to be processed.
+            require (bool):
+                Whether to raise an error if the files are not found.
+        Returns (Parser):
+            The newly constructed object.
+        """
         with (path / 'config.json').open() as file_:
             cfg = json.load(file_)
-        moves = moves_class(vocab.strings, cfg['labels'])
-        templates = get_templates(cfg['features'])
-        model = ParserModel(templates)
+        # TODO: remove this shim when we don't have to support older data
+        if 'labels' in cfg and 'actions' not in cfg:
+            cfg['actions'] = cfg.pop('labels')
+        self = cls(vocab, TransitionSystem=TransitionSystem, model=None, **cfg)
         if (path / 'model').exists():
-            model.load(str(path / 'model'))
-        return cls(vocab, moves, model, **cfg)
+            self.model.load(str(path / 'model'))
+        elif require:
+            raise IOError(
+                "Required file %s/model not found when loading" % str(path))
+        return self
 
-    @classmethod
-    def blank(cls, Vocab vocab, moves_class, **cfg):
-        moves = moves_class(vocab.strings, cfg.get('labels', {}))
-        templates = cfg.get('features', tuple())
-        model = ParserModel(templates)
-        return cls(vocab, moves, model, **cfg)
+    def __init__(self, Vocab vocab, TransitionSystem=None, ParserModel model=None, **cfg):
+        """Create a Parser.
 
-
-    def __init__(self, Vocab vocab, transition_system, ParserModel model, **cfg):
-        self.moves = transition_system
-        self.model = model
+        Arguments:
+            vocab (Vocab):
+                The vocabulary object. Must be shared with documents to be processed.
+            model (thinc.linear.AveragedPerceptron):
+                The statistical model.
+        Returns (Parser):
+            The newly constructed object.
+        """
+        if TransitionSystem is None:
+            TransitionSystem = self.TransitionSystem
+        self.vocab = vocab
+        actions = TransitionSystem.get_actions(**cfg)
+        self.moves = TransitionSystem(vocab.strings, actions)
+        # TODO: Remove this when we no longer need to support old-style models
+        if isinstance(cfg.get('features'), basestring):
+            cfg['features'] = get_templates(cfg['features'])
+        elif 'features' not in cfg:
+            cfg['features'] = self.feature_templates
+        self.model = ParserModel(cfg['features'])
         self.cfg = cfg
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
     def __call__(self, Doc tokens):
-        cdef int nr_class = self.moves.n_moves
+        """Apply the entity recognizer, setting the annotations onto the Doc object.
+
+        Arguments:
+            doc (Doc): The document to be processed.
+        Returns:
+            None
+        """
         cdef int nr_feat = self.model.nr_feat
         with nogil:
-            status = self.parseC(tokens.c, tokens.length, nr_feat, nr_class)
+            status = self.parseC(tokens.c, tokens.length, nr_feat)
         # Check for KeyboardInterrupt etc. Untested
         PyErr_CheckSignals()
         if status != 0:
@@ -117,12 +147,21 @@ cdef class Parser:
         self.moves.finalize_doc(tokens)
 
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
+        """Process a stream of documents.
+
+        Arguments:
+            stream: The sequence of documents to process.
+            batch_size (int):
+                The number of documents to accumulate into a working set.
+            n_threads (int):
+                The number of threads with which to work on the buffer in parallel.
+        Yields (Doc): Documents, in order.
+        """
         cdef Pool mem = Pool()
         cdef TokenC** doc_ptr = <TokenC**>mem.alloc(batch_size, sizeof(TokenC*))
         cdef int* lengths = <int*>mem.alloc(batch_size, sizeof(int))
         cdef Doc doc
         cdef int i
-        cdef int nr_class = self.moves.n_moves
         cdef int nr_feat = self.model.nr_feat
         cdef int status
         queue = []
@@ -133,7 +172,7 @@ cdef class Parser:
             if len(queue) == batch_size:
                 with nogil:
                     for i in cython.parallel.prange(batch_size, num_threads=n_threads):
-                        status = self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
+                        status = self.parseC(doc_ptr[i], lengths[i], nr_feat)
                         if status != 0:
                             with gil:
                                 raise ParserStateError(queue[i])
@@ -145,7 +184,7 @@ cdef class Parser:
         batch_size = len(queue)
         with nogil:
             for i in cython.parallel.prange(batch_size, num_threads=n_threads):
-                status = self.parseC(doc_ptr[i], lengths[i], nr_feat, nr_class)
+                status = self.parseC(doc_ptr[i], lengths[i], nr_feat)
                 if status != 0:
                     with gil:
                         raise ParserStateError(queue[i])
@@ -154,7 +193,12 @@ cdef class Parser:
             self.moves.finalize_doc(doc)
             yield doc
 
-    cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) nogil:
+    cdef int parseC(self, TokenC* tokens, int length, int nr_feat) nogil:
+        state = new StateC(tokens, length)
+        # NB: This can change self.moves.n_moves!
+        self.moves.initialize_state(state)
+        nr_class = self.moves.n_moves
+
         cdef ExampleC eg
         eg.nr_feat = nr_feat
         eg.nr_atom = CONTEXT_SIZE
@@ -163,8 +207,6 @@ cdef class Parser:
         eg.atoms = <atom_t*>calloc(sizeof(atom_t), CONTEXT_SIZE)
         eg.scores = <weight_t*>calloc(sizeof(weight_t), nr_class)
         eg.is_valid = <int*>calloc(sizeof(int), nr_class)
-        state = new StateC(tokens, length)
-        self.moves.initialize_state(state)
         cdef int i
         while not state.is_final():
             self.model.set_featuresC(&eg, state)
@@ -191,7 +233,17 @@ cdef class Parser:
         free(eg.is_valid)
         return 0
   
-    def train(self, Doc tokens, GoldParse gold):
+    def update(self, Doc tokens, GoldParse gold):
+        """Update the statistical model.
+
+        Arguments:
+            doc (Doc):
+                The example document for the update.
+            gold (GoldParse):
+                The gold-standard annotations, to calculate the loss.
+        Returns (float):
+            The loss on this example.
+        """
         self.moves.preprocess_gold(gold)
         cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
         self.moves.initialize_state(stcls.c)
@@ -214,21 +266,37 @@ cdef class Parser:
             loss += eg.costs[eg.guess]
             eg.fill_scores(0, eg.nr_class)
             eg.fill_costs(0, eg.nr_class)
-            eg.fill_is_valid(0, eg.nr_class)
+            eg.fill_is_valid(1, eg.nr_class)
         return loss
 
     def step_through(self, Doc doc):
+        """Set up a stepwise state, to introspect and control the transition sequence.
+
+        Arguments:
+            doc (Doc): The document to step through.
+        Returns (StepwiseState):
+            A state object, to step through the annotation process.
+        """
         return StepwiseState(self, doc)
 
     def from_transition_sequence(self, Doc doc, sequence):
+        """Control the annotations on a document by specifying a transition sequence
+        to follow.
+
+        Arguments:
+            doc (Doc): The document to annotate.
+            sequence: A sequence of action names, as unicode strings.
+        Returns: None
+        """
         with self.step_through(doc) as stepwise:
             for transition in sequence:
                 stepwise.transition(transition)
 
     def add_label(self, label):
+        # Doesn't set label into serializer -- subclasses override it to do that.
         for action in self.moves.action_types:
             self.moves.add_action(action, label)
-
+                
 
 cdef class StepwiseState:
     cdef readonly StateClass stcls
@@ -283,7 +351,9 @@ cdef class StepwiseState:
         cdef Transition action = self.parser.moves.c[self.eg.guess]
         return self.parser.moves.move_name(action.move, action.label)
 
-    def transition(self, action_name):
+    def transition(self, action_name=None):
+        if action_name is None:
+            action_name = self.predict()
         moves = {'S': 0, 'D': 1, 'L': 2, 'R': 3}
         if action_name == '_':
             action_name = self.predict()
@@ -306,14 +376,14 @@ cdef class StepwiseState:
 
 
 class ParserStateError(ValueError):
-    def __repr__(self):
-        raise ValueError(
+    def __init__(self, doc):
+        ValueError.__init__(self,
             "Error analysing doc -- no valid actions available. This should "
             "never happen, so please report the error on the issue tracker. "
             "Here's the thread to do so --- reopen it if it's closed:\n"
             "https://github.com/spacy-io/spaCy/issues/429\n"
             "Please include the text that the parser failed on, which is:\n"
-            "%s" % repr(self.args[0].text))
+            "%s" % repr(doc.text))
 
 
 cdef int _arg_max_clas(const weight_t* scores, int move, const Transition* actions,

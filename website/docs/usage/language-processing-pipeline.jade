@@ -1,0 +1,128 @@
+//- 💫 DOCS > USAGE > PIPELINE
+
+include ../../_includes/_mixins
+
+p
+    |  The standard entry point into spaCy is the #[code spacy.load()]
+    |  function, which constructs a language processing pipeline. The standard
+    |  variable name for the language processing pipeline is #[code nlp], for
+    |  Natural Language Processing. The #[code nlp] variable is usually an
+    |  instance of class #[code spacy.language.Language]. For English, the
+    |  #[code spacy.en.English] class is the default.
+
+p
+    |  You'll use the nlp instance to produce #[+api("doc") #[code Doc]]
+    |  objects. You'll then use the #[code Doc] object to access linguistic
+    |  annotations to help you with whatever text processing task you're
+    |  trying to do.
+
++code.
+    import spacy                         # See "Installing spaCy"
+    nlp = spacy.load('en')               # You are here.
+    doc = nlp(u'Hello, spacy!')          # See "Using the pipeline"
+    print((w.text, w.pos_) for w in doc) # See "Doc, Span and Token"
+
++aside("Why do we have to preload?")
+    |  Loading the models takes ~200x longer than
+    |  processing a document. We therefore want to amortize the start-up cost
+    |  across multiple invocations. It's often best to wrap the pipeline as a
+    |  singleton. The library avoids doing that for you, because it's a
+    |  difficult design to back out of.
+
+p The #[code load] function takes the following positional arguments:
+
++table([ "Name", "Description" ])
+    +row
+        +cell #[code lang_id]
+        +cell
+            |  An ID that is resolved to a class or factory function by
+            |  #[code spacy.util.get_lang_class()]. Common values are
+            |  #[code 'en'] for the English pipeline, or #[code 'de'] for the
+            |  German pipeline. You can register your own factory function or
+            |  class with #[code spacy.util.set_lang_class()].
+
+p
+    |  All keyword arguments are passed forward to the pipeline factory. No
+    |  keyword arguments are required. The built-in factories (e.g.
+    |  #[code spacy.en.English], #[code spacy.de.German]), which are subclasses
+    |  of #[+api("language") #[code Language]], respond to the following
+    |  keyword arguments:
+
++table([ "Name", "Description"])
+    +row
+        +cell #[code path]
+        +cell
+            |  Where to load the data from. If None, the default data path is
+            |  fetched via #[code spacy.util.get_data_path()]. You can
+            |  configure this default using #[code spacy.util.set_data_path()].
+            |  The data path is expected to be either a string, or an object
+            |  responding to the #[code pathlib.Path] interface. If the path is
+            |  a string, it will be immediately transformed into a
+            |  #[code pathlib.Path] object. spaCy promises to never manipulate
+            |  or open file-system paths as strings. All access to the
+            |  file-system is done via the #[code pathlib.Path] interface.
+            |  spaCy also promises to never check the type of path objects.
+            |  This allows you to customize the loading behaviours in arbitrary
+            |  ways, by creating your own object that implements the
+            |  #[code pathlib.Path] interface.
+
+    +row
+        +cell #[code pipeline]
+        +cell
+            |  A sequence of functions that take the Doc object and modify it
+            |  in-place. See
+            |  #[+a("customizing-pipeline") Customizing the pipeline].
+
+    +row
+        +cell #[code create_pipeline]
+        +cell
+            |  Callback to construct the pipeline sequence. It should accept
+            |  the #[code nlp] instance as its only argument, and return a
+            |  sequence of functions that take the #[code Doc] object and
+            |  modify it in-place.
+            |  See #[+a("customizing-pipeline") Customizing the pipeline]. If
+            |  a value is supplied to the pipeline keyword argument, the
+            |  #[code create_pipeline] keyword argument is ignored.
+
+    +row
+        +cell #[code make_doc]
+        +cell A function that takes the input and returns a document object.
+
+    +row
+        +cell #[code create_make_doc]
+        +cell
+            |  Callback to construct the #[code make_doc] function. It should
+            |  accept the #[code nlp] instance as its only argument. To use the
+            |  built-in annotation processes, it should return an object of
+            |  type #[code Doc]. If a value is supplied to the #[code make_doc]
+            |  keyword argument, the #[code create_make_doc] keyword argument
+            |  is ignored.
+
+    +row
+        +cell #[vocab]
+        +cell Supply a pre-built Vocab instance, instead of constructing one.
+
+    +row
+        +cell #[code add_vectors]
+        +cell
+            |  Callback that installs word vectors into the Vocab instance. The
+            |  #[code add_vectors] callback should take a
+            |  #[+api("vocab") #[code Vocab]] instance as its only argument,
+            |  and set the word vectors and #[code vectors_length] in-place. See
+            |  #[+a("word-vectors-similarities") Word Vectors and Similarities].
+
+    +row
+        +cell #[code tagger]
+        +cell Supply a pre-built tagger, instead of creating one.
+
+    +row
+        +cell #[code parser]
+        +cell Supply a pre-built parser, instead of creating one.
+
+    +row
+        +cell #[code entity]
+        +cell Supply a pre-built entity recognizer, instead of creating one.
+
+    +row
+        +cell #[code matcher]
+        +cell Supply a pre-built matcher, instead of creating one.

@@ -51,11 +51,21 @@ cdef bint _entity_is_sunk(StateClass st, Transition* golds) nogil:
 
 cdef class BiluoPushDown(TransitionSystem):
     @classmethod
-    def get_labels(cls, gold_tuples):
-        move_labels = {MISSING: {'': True}, BEGIN: {}, IN: {}, LAST: {}, UNIT: {},
-                       OUT: {'': True}}
+    def get_actions(cls, **kwargs):
+        actions = kwargs.get('actions', 
+                    {
+                        MISSING: {'': True},
+                        BEGIN: {},
+                        IN: {},
+                        LAST: {},
+                        UNIT: {},
+                        OUT: {'': True}
+                    })
+        for entity_type in kwargs.get('entity_types', []):
+            for action in (BEGIN, IN, LAST, UNIT):
+                actions[action][entity_type] = True
         moves = ('M', 'B', 'I', 'L', 'U')
-        for raw_text, sents in gold_tuples:
+        for raw_text, sents in kwargs.get('gold_parses', []):
             for (ids, words, tags, heads, labels, biluo), _ in sents:
                 for i, ner_tag in enumerate(biluo):
                     if ner_tag != 'O' and ner_tag != '-':
@@ -63,8 +73,8 @@ cdef class BiluoPushDown(TransitionSystem):
                             raise ValueError(ner_tag)
                         _, label = ner_tag.split('-')
                         for move_str in ('B', 'I', 'L', 'U'):
-                            move_labels[moves.index(move_str)][label] = True
-        return move_labels
+                            actions[moves.index(move_str)][label] = True
+        return actions
 
     property action_types:
         def __get__(self):
@@ -147,6 +157,15 @@ cdef class BiluoPushDown(TransitionSystem):
         else:
             raise Exception(move)
         return t
+
+    cdef int initialize_state(self, StateC* st) nogil:
+        for i in range(st.length):
+            if st._sent[i].ent_type != 0:
+                with gil:
+                    self.add_action(BEGIN, st._sent[i].ent_type)
+                    self.add_action(IN, st._sent[i].ent_type)
+                    self.add_action(UNIT, st._sent[i].ent_type)
+                    self.add_action(LAST, st._sent[i].ent_type)
 
 
 cdef class Missing:

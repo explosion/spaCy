@@ -1,44 +1,68 @@
-//- ----------------------------------
-//- 💫 COMPONENTS > TABLES
-//- ----------------------------------
+//- 💫 CSS > COMPONENTS > TABLES
 
-// Shadows adapted from "CSS only Responsive Tables" by David Bushell
-// http://codepen.io/dbushell/pen/wGaamR
-
-//- Table Container
+//- Table container
 
 .c-table
     vertical-align: top
 
-    @include breakpoint(max, md)
+
+//- Table row
+
+.c-table__row
+    &:nth-child(odd)
+        background: rgba($color-subtle-light, 0.35)
+
+    &.c-table__row--foot
+        background: rgba($color-theme, 0.025)
+        border-top: 2px solid $color-theme
+
+        .c-table__cell:first-child
+            @extend .u-text-label
+            color: $color-theme
+
+
+//- Table cell
+
+.c-table__cell
+    padding: 1rem
+
+    &:not(:last-child)
+        border-right: 1px solid $color-subtle
+
+
+//- Table head cell
+
+.c-table__head-cell
+    font-weight: bold
+    color: $color-theme
+    background: $color-back
+    padding: 1rem 0.5rem
+    border-bottom: 2px solid $color-theme
+
+
+//- Responsive table
+//- Shadows adapted from "CSS only Responsive Tables" by David Bushell
+//- http://codepen.io/dbushell/pen/wGaamR
+
+@include breakpoint(max, md)
+    .c-table
         @include scroll-shadow-base($color-front)
         display: inline-block
         overflow-x: auto
         width: auto
         -webkit-overflow-scrolling: touch
 
-
-//- Table Cell
-
-.c-table__cell
-    padding: 1rem
-    border: 1px solid $color-subtle
-
-    &.c-table__cell--highlight
-        border: 2px solid $color-theme
-
-    @include breakpoint(max, md)
+    .c-table__cell,
+    .c-table__head-cell
         &:first-child
             @include scroll-shadow-cover(left, $color-back)
 
         &:last-child
             @include scroll-shadow-cover(right, $color-back)
 
+    .c-table__row--foot .c-table__cell
+        &:first-child
+            @include scroll-shadow-cover(left, lighten($color-subtle-light, 2))
 
-//- Table Head Cell
-
-.c-table__head-cell
-    background: $color-theme
-    color: $color-back
-    padding: 1rem
-    border: 1px solid $color-theme
+        &:last-child
+            @include scroll-shadow-cover(right, lighten($color-subtle-light, 2))

@@ -1,0 +1,14 @@
+//- 💫 DOCS > API > PHILOSOPHY
+
+include ../../_includes/_mixins
+
+p Every product needs to know why it exists. Here's what we're trying to with spaCy and why it's different from other NLP libraries.
+
++h(2) 1. No job too big.
+p Most programs get cheaper to run over time, but NLP programs often get more expensive. The data often grows faster than the hardware improves. For web-scale tasks, Moore's law can't save us — so if we want to read the web, we have to sweat performance.
+
++h(2) 2. Take a stand.
+p Most NLP toolkits position themselves as platforms, rather than libraries. They offer a pluggable architecture, and leave it to the user to arrange the components they offer into a useful system. This is fine for researchers, but for production users, this does too little. Components go out of date quickly, and configuring a good system takes very detailed knowledge. Compatibility problems can be extremely subtle. spaCy is therefore extremely opinionated. The API does not expose any algorithmic details. You're free to configure another pipeline, but the core library eliminates redundancy, and only offers one choice of each component.
+
++h(2) 3. Stay current.
+p There's often significant improvement in NLP models year-on-year. This has been especially true recently, given the success of deep learning models. With spaCy, you should be able to build things you couldn't build yesterday. To deliver on that promise, we need to be giving you the latest stuff.

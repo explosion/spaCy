@@ -1,0 +1,133 @@
+//- 💫 DOCS > API > ENTITYRECOGNIZER
+
+include ../../_includes/_mixins
+
+p Annotate named entities on #[code Doc] objects.
+
++h(2, "load") EntityRecognizer.load
+    +tag classmethod
+
+p Load the statistical model from the supplied path.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell #[code Path]
+        +cell The path to load from.
+
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell The vocabulary. Must be shared by the documents to be processed.
+
+    +row
+        +cell #[code require]
+        +cell bool
+        +cell Whether to raise an error if the files are not found.
+
+    +footrow
+        +cell return
+        +cell #[code EntityRecognizer]
+        +cell The newly constructed object.
+
++h(2, "init") EntityRecognizer.__init__
+    +tag method
+
+p Create an #[code EntityRecognizer].
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell The vocabulary. Must be shared with documents to be processed.
+
+    +row
+        +cell #[code model]
+        +cell #[thinc.linear.AveragedPerceptron]
+        +cell The statistical model.
+
+    +footrow
+        +cell return
+        +cell #[code EntityRecognizer]
+        +cell The newly constructed object.
+
++h(2, "call") EntityRecognizer.__call__
+    +tag method
+
+p Apply the entity recognizer, setting the NER tags onto the #[code Doc] object.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The document to be processed.
+
+    +footrow
+        +cell return
+        +cell #[code None]
+        +cell -
+
++h(2, "pipe") EntityRecognizer.pipe
+    +tag method
+
+p Process a stream of documents.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code stream]
+        +cell -
+        +cell The sequence of documents to process.
+
+    +row
+        +cell #[code batch_size]
+        +cell int
+        +cell The number of documents to accumulate into a working set.
+
+    +row
+        +cell #[code n_threads]
+        +cell int
+        +cell
+            |  The number of threads with which to work on the buffer in
+            |  parallel.
+
+    +footrow
+        +cell yield
+        +cell #[code Doc]
+        +cell Documents, in order.
+
++h(2, "update") EntityRecognizer.update
+    +tag method
+
+p Update the statistical model.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The example document for the update.
+
+    +row
+        +cell #[code gold]
+        +cell #[code GoldParse]
+        +cell The gold-standard annotations, to calculate the loss.
+
+    +footrow
+        +cell return
+        +cell int
+        +cell The loss on this example.
+
++h(2, "step_through") EntityRecognizer.step_through
+    +tag method
+
+p Set up a stepwise state, to introspect and control the transition sequence.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The document to step through.
+
+    +footrow
+        +cell return
+        +cell #[code StepwiseState]
+        +cell A state object, to step through the annotation process.

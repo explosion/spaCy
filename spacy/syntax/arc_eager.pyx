@@ -19,6 +19,7 @@ from cymem.cymem cimport Pool
 from .stateclass cimport StateClass
 from ._state cimport StateC, is_space_token
 from .nonproj import PseudoProjectivity
+from .nonproj import is_nonproj_tree
 
 
 DEF NON_MONOTONIC = True
@@ -279,20 +280,32 @@ cdef int _get_root(int word, const GoldParseC* gold) nogil:
 
 cdef class ArcEager(TransitionSystem):
     @classmethod
-    def get_labels(cls, gold_parses):
-        move_labels = {SHIFT: {'': True}, REDUCE: {'': True}, RIGHT: {},
-                       LEFT: {}, BREAK: {'ROOT': True}}
-        for raw_text, sents in gold_parses:
+    def get_actions(cls, **kwargs):
+        actions = kwargs.get('actions', 
+                    {
+                        SHIFT: {'': True},
+                        REDUCE: {'': True},
+                        RIGHT: {},
+                        LEFT: {},
+                        BREAK: {'ROOT': True}})
+        for label in kwargs.get('left_labels', []):
+            if label.upper() != 'ROOT':
+                actions[LEFT][label] = True
+        for label in kwargs.get('right_labels', []):
+            if label.upper() != 'ROOT':
+                actions[RIGHT][label] = True
+ 
+        for raw_text, sents in kwargs.get('gold_parses', []):
             for (ids, words, tags, heads, labels, iob), ctnts in sents:
                 for child, head, label in zip(ids, heads, labels):
                     if label.upper() == 'ROOT':
                         label = 'ROOT'
                     if label != 'ROOT':
                         if head < child:
-                            move_labels[RIGHT][label] = True
+                            actions[RIGHT][label] = True
                         elif head > child:
-                            move_labels[LEFT][label] = True
-        return move_labels
+                            actions[LEFT][label] = True
+        return actions
 
     property action_types:
         def __get__(self):
@@ -312,12 +325,6 @@ cdef class ArcEager(TransitionSystem):
                 # Count frequencies, for use in encoder
                 self.freqs[HEAD][gold.c.heads[i] - i] += 1
                 self.freqs[DEP][gold.c.labels[i]] += 1
-        for end, brackets in gold.brackets.items():
-            for start, label_strs in brackets.items():
-                gold.c.brackets[start][end] = 1
-                for label_str in label_strs:
-                    # Add the encoded label to the set
-                    gold.brackets[end][start].add(self.strings[label_str])
 
     cdef Transition lookup_transition(self, object name) except *:
         if '-' in name:
@@ -432,8 +439,31 @@ cdef class ArcEager(TransitionSystem):
                 if move_costs[move] == -1:
                     move_costs[move] = move_cost_funcs[move](stcls, &gold.c)
                 costs[i] = move_costs[move] + label_cost_funcs[move](stcls, &gold.c, label)
-                n_gold += costs[i] == 0
+                n_gold += costs[i] <= 0
             else:
                 is_valid[i] = False
                 costs[i] = 9000
+        if n_gold == 0:
+            # Check projectivity --- leading cause
+            if is_nonproj_tree(gold.heads):
+                raise ValueError(
+                    "Could not find a gold-standard action to supervise the dependency "
+                    "parser.\n"
+                    "Likely cause: the tree is non-projective (i.e. it has crossing "
+                    "arcs -- see spacy/syntax/nonproj.pyx for definitions)\n"
+                    "The ArcEager transition system only supports projective trees.\n"
+                    "To learn non-projective representations, transform the data "
+                    "before training and after parsing. Either pass make_projective=True "
+                    "to the GoldParse class, or use PseudoProjectivity.preprocess_training_data")
+            else:
+                print(gold.words)
+                print(gold.heads)
+                print(gold.labels)
+                raise ValueError(
+                    "Could not find a gold-standard action to supervise the dependency "
+                    "parser.\n"
+                    "The GoldParse was projective.\n"
+                    "The transition system has %d actions.\n" 
+                    "State at failure:\n"
+                    "%s" % (self.n_moves, stcls.print_state(gold.words)))
         assert n_gold >= 1

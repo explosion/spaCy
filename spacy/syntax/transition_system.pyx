@@ -1,3 +1,4 @@
+# cython: infer_types=True
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t
 from collections import defaultdict

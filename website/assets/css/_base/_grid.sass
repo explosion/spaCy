@@ -1,6 +1,4 @@
-//- ----------------------------------
-//- 💫 BASE > GRID
-//- ----------------------------------
+//- 💫 CSS > BASE > GRID
 
 //- Grid container
 
@@ -13,6 +11,10 @@
         align-items: stretch
         justify-content: space-between
 
+    &.o-grid--center
+        align-items: center
+        justify-content: center
+
 
 //- Grid column
 
@@ -22,7 +24,7 @@
     margin-top: $grid-gutter
     overflow: hidden
 
-    @include breakpoint(min, sm)
+    @include breakpoint(min, lg)
         display: flex
         flex: 0 0 100%
         flex-direction: column
@@ -34,7 +36,7 @@
                 flex: 0 0 $percentage
                 max-width: $percentage
 
-    @include breakpoint(max, xs)
+    @include breakpoint(max, md)
         flex: 0 0 100%
         flex-flow: column wrap
 

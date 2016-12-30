@@ -1,17 +1,30 @@
-//- ----------------------------------
 //- 💫 INCLUDES > FOOTER
-//- ----------------------------------
 
 include _mixins
 
-footer.o-footer.o-inline-list.u-pattern.u-text-center.u-text-label.u-text-strong
-    span &copy; #{new Date().getFullYear()} #[+a(COMPANY_URL, true)=COMPANY]
+footer.o-footer.u-text.u-border-dotted
+    +grid.o-content
+        each group, label in FOOTER
+            +grid-col("quarter")
+                ul
+                    li.u-text-label.u-color-subtle=label
 
-    +a(COMPANY_URL + "/legal", true) Legal / Imprint
-    a(href="mailto:#{EMAIL}") #[+icon("mail", 16)]
+                    each url, item in group
+                        li
+                            +a(url)=item
 
-    +a("https://twitter.com/" + SOCIAL.twitter)(aria-label="Twitter")
-        +icon("twitter", 20)
+        if SECTION != "docs"
+            +grid-col("quarter")
+                include _newsletter
 
-    +a("https://github.com/" + SOCIAL.github + "/spaCy")(aria-label="GitHub")
-        +icon("github", 20)
+    if SECTION == "docs"
+        .o-content.o-block.u-border-dotted
+            include _newsletter
+
+    .o-inline-list.u-text-center.u-text-tiny.u-color-subtle
+        span &copy; #{new Date().getFullYear()} #[+a(COMPANY_URL, true)=COMPANY]
+
+        +a(COMPANY_URL, true)
+            +svg("graphics", "explosion", 45).o-icon.u-color-theme.u-grayscale
+
+        +a(COMPANY_URL + "/legal", true) Legal / Imprint

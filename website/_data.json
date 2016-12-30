@@ -2,58 +2,39 @@
     "index": {
         "landing": true,
         "logos": [
-            [
-                ["chartbeat", "https://chartbeat.com"],
-                ["socrata", "https://www.socrata.com"],
-                ["chattermill", "https://chattermill.io"],
-                ["cytora", "http://www.cytora.com"],
-                ["signaln", "http://signaln.com"],
-                ["duedil", "https://www.duedil.com/"],
-                ["spyjack", "https://spyjack.io"]
-            ],
-            [
-                ["keyreply", "https://keyreply.com/"],
-                ["dato", "https://dato.com"],
-                ["kip", "http://kipthis.com"],
-                ["wonderflow", "http://www.wonderflow.co"],
-                ["foxtype", "https://foxtype.com"]
-            ],
-            [
-                ["synapsify", "http://www.gosynapsify.com"],
-                ["stitchfix", "https://www.stitchfix.com/"],
-                ["wayblazer", "http://wayblazer.com"]
-            ]
+            {
+                "quora": [ "https://www.quora.com", 150 ],
+                "chartbeat": [ "https://chartbeat.com", 200 ],
+                "duedil": [ "https://www.duedil.com", 150 ],
+                "stitchfix": [ "https://www.stitchfix.com", 190 ]
+            },
+            {
+                "wayblazer": [ "http://wayblazer.com", 200 ],
+                "indico": [ "https://indico.io", 150 ],
+                "chattermill": [ "https://chattermill.io", 175 ],
+                "turi": [ "https://turi.com", 150 ],
+                "kip": [ "http://kipthis.com", 70 ]
+            },
+            {
+                "socrata": [ "https://www.socrata.com", 150 ],
+                "cytora": [ "http://www.cytora.com", 125 ],
+                "signaln": [ "http://signaln.com", 150 ],
+                "wonderflow": [ "http://www.wonderflow.co", 200 ],
+                "synapsify": [ "http://www.gosynapsify.com", 150 ]
+            }
         ]
     },
 
-    "robots": {
+    "robots.txt": {
         "layout": false
     },
 
     "404": {
         "title": "404 Error",
-        "asides": false
+        "landing": true
     },
 
-    "styleguide": {
-        "title" : "Styleguide",
-        "asides": true,
-
-        "sidebar": {
-            "About": [
-                ["Introduction", "#section-introduction", "introduction"]
-            ],
-            "Design": [
-                ["Colors", "#section-colors", "colors"],
-                ["Logo", "#section-logo", "logo"],
-                ["Typography", "#section-typography", "typography"],
-                ["Grid", "#section-grid", "grid"],
-                ["Elements", "#section-elements", "elements"],
-                ["Components", "#section-components", "components"]
-            ],
-            "Code": [
-                ["Source", "#section-source", "source"]
-            ]
-        }
+    "announcement" : {
+        "title": "Important Announcement"
     }
 }

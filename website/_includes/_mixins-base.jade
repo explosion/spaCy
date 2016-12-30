@@ -1,0 +1,102 @@
+//- 💫 MIXINS > BASE
+
+//- Aside wrapper
+
+mixin aside-wrapper(label)
+    aside.c-aside
+        .c-aside__content(role="complementary")&attributes(attributes)
+            if label
+                h4.u-text-label.u-text-label--dark=label
+
+            block
+
+//- Date
+    input - [string] date in the format YYYY-MM-DD
+
+mixin date(input)
+    - var date = new Date(input)
+    - var months = [ 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December' ]
+
+    time(datetime=JSON.parse(JSON.stringify(date)))&attributes(attributes)=months[date.getMonth()] + ' ' + date.getDate() + ', ' + date.getFullYear()
+
+
+//- SVG from map
+
+mixin svg(file, name, width, height)
+    svg(aria-hidden="true" viewBox="0 0 #{width} #{height || width}" width=width height=(height || width))&attributes(attributes)
+        use(xlink:href="/assets/img/#{file}.svg##{name}")
+
+
+//- Icon
+
+mixin icon(name, size)
+    +svg("icons", "icon-" + name, size || 20).o-icon&attributes(attributes)
+
+
+//- Pro/Con/Neutral icon
+
+mixin procon(icon)
+    - colors = { pro: "green", con: "red" }
+    +icon(icon)(class="u-color-#{colors[icon] || 'subtle'}" aria-label=icon)&attributes(attributes)
+
+
+//- Headlines Helper Mixin
+
+mixin headline(level)
+    if level == 1
+        h1.u-heading-1&attributes(attributes)
+            block
+
+    else if level == 2
+        h2.u-heading-2&attributes(attributes)
+            block
+
+    else if level == 3
+        h3.u-heading-3&attributes(attributes)
+            block
+
+    else if level == 4
+        h4.u-heading-4&attributes(attributes)
+            block
+
+    else if level == 5
+        h5.u-heading-5&attributes(attributes)
+            block
+
+
+//- Permalink rendering
+
+mixin permalink(id)
+    if id
+        a.u-permalink(id=id href="##{id}")
+            +icon("anchor").u-permalink__icon
+            block
+
+    else
+        block
+
+
+//- Terminal-style code window
+
+mixin terminal(label)
+    .x-terminal
+        .x-terminal__icons: span
+        .u-padding-small.u-text-label.u-text-center=label
+
+        +code.x-terminal__code
+            block
+
+
+//- Logo
+
+mixin logo()
+    +svg("graphics", "spacy", 500).o-logo&attributes(attributes)
+
+
+//- Landing
+
+mixin landing-header()
+    header.c-landing
+        .c-landing__wrapper
+            .c-landing__content
+                block

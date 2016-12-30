@@ -2,6 +2,9 @@ from __future__ import unicode_literals
 import pytest
 
 from spacy.tokens import Doc
+import spacy.en
+from spacy.serialize.packer import Packer
+
 
 def equal(doc1, doc2):
     # tokens
@@ -84,3 +87,41 @@ def test_serialize_tokens_tags_parse_ner(EN):
 
     doc2 = Doc(EN.vocab).from_bytes(doc1.to_bytes())
     equal(doc1, doc2)
+
+
+def test_serialize_empty_doc():
+    vocab = spacy.en.English.Defaults.create_vocab()
+    doc = Doc(vocab)
+    packer = Packer(vocab, {})
+    b = packer.pack(doc)
+    assert b == b''
+    loaded = Doc(vocab).from_bytes(b)
+    assert len(loaded) == 0
+
+
+def test_serialize_after_adding_entity():
+    # Re issue #514
+    vocab = spacy.en.English.Defaults.create_vocab()
+    entity_recognizer = spacy.en.English.Defaults.create_entity()
+
+    doc = Doc(vocab, words=u'This is a sentence about pasta .'.split())
+    entity_recognizer.add_label('Food')
+    entity_recognizer(doc)
+
+    label_id = vocab.strings[u'Food']
+    doc.ents = [(label_id, 5,6)]
+
+    assert [(ent.label_, ent.text) for ent in doc.ents] == [(u'Food', u'pasta')]
+
+    byte_string = doc.to_bytes()
+
+
+@pytest.mark.models
+def test_serialize_after_adding_entity(EN):
+    EN.entity.add_label(u'Food')
+    doc = EN(u'This is a sentence about pasta.')
+    label_id = EN.vocab.strings[u'Food']
+    doc.ents = [(label_id, 5,6)]
+    byte_string = doc.to_bytes()
+    doc2 = Doc(EN.vocab).from_bytes(byte_string)
+    assert [(ent.label_, ent.text) for ent in doc2.ents] == [(u'Food', u'pasta')]

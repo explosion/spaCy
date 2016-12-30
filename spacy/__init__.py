@@ -1,10 +1,18 @@
 import pathlib
 
 from .util import set_lang_class, get_lang_class
+from .about import __version__
 
 from . import en
 from . import de
 from . import zh
+from . import es
+from . import it
+from . import hu
+from . import fr
+from . import pt
+from . import nl
+from . import sv
 
 
 try:
@@ -13,49 +21,22 @@ except NameError:
     basestring = str
 
 
-
 set_lang_class(en.English.lang, en.English)
 set_lang_class(de.German.lang, de.German)
+set_lang_class(es.Spanish.lang, es.Spanish)
+set_lang_class(pt.Portuguese.lang, pt.Portuguese)
+set_lang_class(fr.French.lang, fr.French)
+set_lang_class(it.Italian.lang, it.Italian)
+set_lang_class(hu.Hungarian.lang, hu.Hungarian)
 set_lang_class(zh.Chinese.lang, zh.Chinese)
+set_lang_class(nl.Dutch.lang, nl.Dutch)
+set_lang_class(sv.Swedish.lang, sv.Swedish)
 
 
-def blank(name, vocab=None, tokenizer=None, parser=None, tagger=None, entity=None,
-         matcher=None, serializer=None, vectors=None, pipeline=None):
+def load(name, **overrides):
     target_name, target_version = util.split_data_name(name)
+    data_path = overrides.get('path', util.get_data_path())
+    path = util.match_best_version(target_name, target_version, data_path)
     cls = get_lang_class(target_name)
-    return cls(
-        path,
-        vectors=vectors,
-        vocab=vocab,
-        tokenizer=tokenizer,
-        tagger=tagger,
-        parser=parser,
-        entity=entity,
-        matcher=matcher,
-        pipeline=pipeline,
-        serializer=serializer)
-
-
-def load(name, vocab=True, tokenizer=True, parser=True, tagger=True, entity=True,
-         matcher=True, serializer=True, vectors=True, pipeline=True, via=None):
-    if via is None:
-        via = util.get_data_path()
-
-    target_name, target_version = util.split_data_name(name)
-    path = util.match_best_version(target_name, target_version, via)
-
-    if isinstance(vectors, basestring):
-        vectors = util.match_best_version(vectors, None, via)
-    
-    cls = get_lang_class(target_name)
-    return cls(
-        path,
-        vectors=vectors,
-        vocab=vocab,
-        tokenizer=tokenizer,
-        tagger=tagger,
-        parser=parser,
-        entity=entity,
-        matcher=matcher,
-        pipeline=pipeline,
-        serializer=serializer)
+    overrides['path'] = path
+    return cls(**overrides)

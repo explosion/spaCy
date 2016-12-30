@@ -19,6 +19,7 @@ cdef class GoldParse:
 
     cdef int length
     cdef readonly int loss
+    cdef readonly list words
     cdef readonly list tags
     cdef readonly list heads
     cdef readonly list labels

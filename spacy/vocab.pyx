@@ -4,12 +4,13 @@ from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 from libc.string cimport memset
 from libc.stdint cimport int32_t
 from libc.stdint cimport uint64_t
+from libc.math cimport sqrt
 
+from pathlib import Path
 import bz2
-from os import path
 import io
 import math
-import json
+import ujson as json
 import tempfile
 
 from .lexeme cimport EMPTY_LEXEME
@@ -19,6 +20,8 @@ from .orth cimport word_shape
 from .typedefs cimport attr_t
 from .cfile cimport CFile
 from .lemmatizer import Lemmatizer
+from .attrs import intify_attrs
+from .tokens.token cimport Token
 
 from . import attrs
 from . import symbols
@@ -49,40 +52,81 @@ cdef class Vocab:
     '''A map container for a language's LexemeC structs.
     '''
     @classmethod
-    def load(cls, path, lex_attr_getters=None, vectors=True, lemmatizer=True,
-             tag_map=True, serializer_freqs=None, **deprecated_kwargs): 
-        util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
-        if tag_map is True and (path / 'vocab' / 'tag_map.json').exists():
-            with (path / 'vocab' / 'tag_map.json').open() as file_:
-                tag_map = json.load(file_)
+    def load(cls, path, lex_attr_getters=None, lemmatizer=True,
+             tag_map=True, serializer_freqs=True, oov_prob=True, **deprecated_kwargs):
+        """
+        Load the vocabulary from a path.
 
+        Arguments:
+            path (Path):
+                The path to load from.
+            lex_attr_getters (dict):
+                A dictionary mapping attribute IDs to functions to compute them.
+                Defaults to None.
+            lemmatizer (object):
+                A lemmatizer. Defaults to None.
+            tag_map (dict):
+                A dictionary mapping fine-grained tags to coarse-grained parts-of-speech,
+                and optionally morphological attributes.
+            oov_prob (float):
+                The default probability for out-of-vocabulary words.
+        Returns:
+            Vocab: The newly constructed vocab object.
+        """
+        if isinstance(path, basestring):
+            path = Path(path)
+        util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
+        if 'vectors' in deprecated_kwargs:
+            raise AttributeError(
+                "vectors argument to Vocab.load() deprecated. "
+                "Install vectors after loading.")
+        if tag_map is True and (path / 'vocab' / 'tag_map.json').exists():
+            with (path / 'vocab' / 'tag_map.json').open('r', encoding='utf8') as file_:
+                tag_map = json.load(file_)
+        elif tag_map is True:
+            tag_map = None
+        if lex_attr_getters is not None \
+        and oov_prob is True \
+        and (path / 'vocab' / 'oov_prob').exists():
+            with (path / 'vocab' / 'oov_prob').open('r', encoding='utf8') as file_:
+                oov_prob = float(file_.read())
+            lex_attr_getters[PROB] = lambda text: oov_prob
         if lemmatizer is True:
             lemmatizer = Lemmatizer.load(path)
         if serializer_freqs is True and (path / 'vocab' / 'serializer.json').exists():
-            with (path / 'vocab' / 'serializer.json').open() as file_:
+            with (path / 'vocab' / 'serializer.json').open('r', encoding='utf8') as file_:
                 serializer_freqs = json.load(file_)
+        else:
+            serializer_freqs = None
 
         cdef Vocab self = cls(lex_attr_getters=lex_attr_getters, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)
 
-        with (path / 'vocab' / 'strings.json').open() as file_:
+        with (path / 'vocab' / 'strings.json').open('r', encoding='utf8') as file_:
             self.strings.load(file_)
         self.load_lexemes(path / 'vocab' / 'lexemes.bin')
-
-        if vectors is True:
-            vec_path = path / 'vocab' / 'vec.bin'
-            if vec_path.exists():
-                vectors = lambda self_: self_.load_vectors_from_bin_loc(vec_path)
-            else:
-                vectors = lambda self_: 0
-        if vectors:
-            self.vectors_length = vectors(self)
         return self
 
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
             serializer_freqs=None, **deprecated_kwargs):
+        '''Create the vocabulary.
+
+        lex_attr_getters (dict):
+            A dictionary mapping attribute IDs to functions to compute them.
+            Defaults to None.
+        lemmatizer (object):
+            A lemmatizer. Defaults to None.
+        tag_map (dict):
+            A dictionary mapping fine-grained tags to coarse-grained parts-of-speech,
+            and optionally morphological attributes.
+        oov_prob (float):
+            The default probability for out-of-vocabulary words.
+
+        Returns:
+            Vocab: The newly constructed vocab object.
+        '''
         util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
-        
+
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
         tag_map = tag_map if tag_map is not None else {}
         if lemmatizer in (None, True, False):
@@ -107,14 +151,14 @@ cdef class Vocab:
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
         self.serializer_freqs = serializer_freqs
-        
+
         self.length = 1
         self._serializer = None
-    
+
     property serializer:
+        # Having the serializer live here is super messy :(
         def __get__(self):
             if self._serializer is None:
-                freqs = []
                 self._serializer = Packer(self, self.serializer_freqs)
             return self._serializer
 
@@ -128,6 +172,64 @@ cdef class Vocab:
     def __len__(self):
         """The current number of lexemes stored."""
         return self.length
+
+    def resize_vectors(self, int new_size):
+        '''
+        Set vectors_length to a new size, and allocate more memory for the Lexeme
+        vectors if necessary. The memory will be zeroed.
+
+        Arguments:
+            new_size (int): The new size of the vectors.
+        '''
+        cdef hash_t key
+        cdef size_t addr
+        if new_size > self.vectors_length:
+            for key, addr in self._by_hash.items():
+                lex = <LexemeC*>addr
+                lex.vector = <float*>self.mem.realloc(lex.vector,
+                                        new_size * sizeof(lex.vector[0]))
+        self.vectors_length = new_size
+
+    def add_flag(self, flag_getter, int flag_id=-1):
+        '''Set a new boolean flag to words in the vocabulary.
+
+        The flag_setter function will be called over the words currently in the
+        vocab, and then applied to new words as they occur. You'll then be able
+        to access the flag value on each token, using token.check_flag(flag_id).
+
+        See also:
+            Lexeme.set_flag, Lexeme.check_flag, Token.set_flag, Token.check_flag.
+
+        Arguments:
+            flag_getter:
+                A function f(unicode) -> bool, to get the flag value.
+
+            flag_id (int):
+                An integer between 1 and 63 (inclusive), specifying the bit at which the
+                flag will be stored. If -1, the lowest available bit will be
+                chosen.
+
+        Returns:
+            flag_id (int): The integer ID by which the flag value can be checked.
+        '''
+        if flag_id == -1:
+            for bit in range(1, 64):
+                if bit not in self.lex_attr_getters:
+                    flag_id = bit
+                    break
+            else:
+                raise ValueError(
+                    "Cannot find empty bit for new lexical flag. All bits between "
+                    "0 and 63 are occupied. You can replace one by specifying the "
+                    "flag_id explicitly, e.g. nlp.vocab.add_flag(your_func, flag_id=IS_ALPHA")
+        elif flag_id >= 64 or flag_id < 1:
+            raise ValueError(
+                "Invalid value for flag_id: %d. Flag IDs must be between "
+                "1 and 63 (inclusive)" % flag_id)
+        for lex in self:
+            lex.set_flag(flag_id, flag_getter(lex.orth_))
+        self.lex_attr_getters[flag_id] = flag_getter
+        return flag_id
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL:
         '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
@@ -162,9 +264,9 @@ cdef class Vocab:
 
     cdef const LexemeC* _new_lexeme(self, Pool mem, unicode string) except NULL:
         cdef hash_t key
-        cdef bint is_oov = mem is not self.mem
-        if len(string) < 3:
+        if len(string) < 3 or self.length < 10000:
             mem = self.mem
+        cdef bint is_oov = mem is not self.mem
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
         lex.orth = self.strings[string]
         lex.length = len(string)
@@ -177,7 +279,7 @@ cdef class Vocab:
                     value = self.strings[value]
                 if attr == PROB:
                     lex.prob = value
-                else:
+                elif value is not None:
                     Lexeme.set_struct_attr(lex, attr, value)
         if is_oov:
             lex.id = 0
@@ -193,11 +295,23 @@ cdef class Vocab:
         self.length += 1
 
     def __contains__(self, unicode string):
+        '''Check whether the string has an entry in the vocabulary.
+
+        Arguments:
+            string (unicode): The ID string.
+
+        Returns:
+            bool Whether the string has an entry in the vocabulary.
+        '''
         key = hash_string(string)
         lex = self._by_hash.get(key)
         return True if lex is not NULL else False
 
     def __iter__(self):
+        '''Iterate over the lexemes in the vocabulary.
+
+        Yields: Lexeme An entry in the vocabulary.
+        '''
         cdef attr_t orth
         cdef size_t addr
         for orth, addr in self._by_orth.items():
@@ -207,16 +321,15 @@ cdef class Vocab:
         '''Retrieve a lexeme, given an int ID or a unicode string.  If a previously
         unseen unicode string is given, a new lexeme is created and stored.
 
-        Args:
+        Arguments:
             id_or_string (int or unicode):
-              The integer ID of a word, or its unicode string.  If an int >= Lexicon.size,
-              IndexError is raised. If id_or_string is neither an int nor a unicode string,
-              ValueError is raised.
+              The integer ID of a word, or its unicode string.
+
+              If an int >= Lexicon.size, IndexError is raised. If id_or_string
+              is neither an int nor a unicode string, ValueError is raised.
 
         Returns:
-            lexeme (Lexeme):
-              An instance of the Lexeme Python class, with data copied on
-              instantiation.
+            lexeme (Lexeme): The lexeme indicated by the given ID.
         '''
         cdef attr_t orth
         if type(id_or_string) == unicode:
@@ -229,19 +342,22 @@ cdef class Vocab:
         cdef int i
         tokens = <TokenC*>self.mem.alloc(len(substrings) + 1, sizeof(TokenC))
         for i, props in enumerate(substrings):
+            props = intify_attrs(props, strings_map=self.strings, _do_deprecated=True)
             token = &tokens[i]
-            # Set the special tokens up to have morphology and lemmas if
-            # specified, otherwise use the part-of-speech tag (if specified)
-            token.lex = <LexemeC*>self.get(self.mem, props['F'])
-            if 'pos' in props:
-                self.morphology.assign_tag(token, props['pos'])
-            if 'L' in props:
-                tokens[i].lemma = self.strings[props['L']]
-            for feature, value in props.get('morph', {}).items():
-                self.morphology.assign_feature(&token.morph, feature, value)
+            # Set the special tokens up to have arbitrary attributes
+            token.lex = <LexemeC*>self.get_by_orth(self.mem, props[attrs.ORTH])
+            if attrs.TAG in props:
+                self.morphology.assign_tag(token, props[attrs.TAG])
+            for attr_id, value in props.items():
+                Token.set_struct_attr(token, attr_id, value)
         return tokens
-    
+
     def dump(self, loc):
+        """Save the lexemes binary data to the given location.
+
+        Arguments:
+            loc (Path): The path to save to.
+        """
         if hasattr(loc, 'as_posix'):
             loc = loc.as_posix()
         cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
@@ -270,6 +386,14 @@ cdef class Vocab:
         fp.close()
 
     def load_lexemes(self, loc):
+        '''Load the binary vocabulary data from the given location.
+
+        Arguments:
+            loc (Path): The path to load from.
+
+        Returns:
+            None
+        '''
         fp = CFile(loc, 'rb',
                 on_open_error=lambda: IOError('LexemeCs file not found at %s' % loc))
         cdef LexemeC* lexeme
@@ -310,11 +434,18 @@ cdef class Vocab:
         fp.close()
 
     def dump_vectors(self, out_loc):
+        '''Save the word vectors to a binary file.
+
+        Arguments:
+            loc (Path): The path to save to.
+        Returns:
+            None
+        '''
         cdef int32_t vec_len = self.vectors_length
         cdef int32_t word_len
         cdef bytes word_str
         cdef char* chars
-        
+
         cdef Lexeme lexeme
         cdef CFile out_file = CFile(out_loc, 'wb')
         for lexeme in self:
@@ -331,9 +462,21 @@ cdef class Vocab:
         out_file.close()
 
     def load_vectors(self, file_):
+        """Load vectors from a text-based file.
+
+        Arguments:
+            file_ (buffer): The file to read from. Entries should be separated by newlines,
+        and each entry should be whitespace delimited. The first value of the entry
+        should be the word string, and subsequent entries should be the values of the
+        vector.
+
+        Returns:
+            vec_len (int): The length of the vectors loaded.
+        """
         cdef LexemeC* lexeme
         cdef attr_t orth
         cdef int32_t vec_len = -1
+        cdef double norm = 0.0
         for line_num, line in enumerate(file_):
             pieces = line.split()
             word_str = pieces.pop(0)
@@ -344,13 +487,25 @@ cdef class Vocab:
                                                         vec_len, len(pieces))
             orth = self.strings[word_str]
             lexeme = <LexemeC*><void*>self.get_by_orth(self.mem, orth)
-            lexeme.vector = <float*>self.mem.alloc(self.vectors_length, sizeof(float))
-
+            lexeme.vector = <float*>self.mem.alloc(vec_len, sizeof(float))
             for i, val_str in enumerate(pieces):
                 lexeme.vector[i] = float(val_str)
+            norm = 0.0
+            for i in range(vec_len):
+                norm += lexeme.vector[i] * lexeme.vector[i]
+            lexeme.l2_norm = sqrt(norm)
+        self.vectors_length = vec_len
         return vec_len
 
     def load_vectors_from_bin_loc(self, loc):
+        """Load vectors from the location of a binary file.
+
+        Arguments:
+            loc (unicode): The path of the binary file to load from.
+
+        Returns:
+            vec_len (int): The length of the vectors loaded.
+        """
         cdef CFile file_ = CFile(loc, b'rb')
         cdef int32_t word_len
         cdef int32_t vec_len = 0
@@ -385,16 +540,19 @@ cdef class Vocab:
             line_num += 1
         cdef LexemeC* lex
         cdef size_t lex_addr
+        cdef double norm = 0.0
         cdef int i
         for orth, lex_addr in self._by_orth.items():
             lex = <LexemeC*>lex_addr
             if lex.lower < vectors.size():
                 lex.vector = vectors[lex.lower]
+                norm = 0.0
                 for i in range(vec_len):
-                    lex.l2_norm += (lex.vector[i] * lex.vector[i])
-                lex.l2_norm = math.sqrt(lex.l2_norm)
+                    norm += lex.vector[i] * lex.vector[i]
+                lex.l2_norm = sqrt(norm)
             else:
                 lex.vector = EMPTY_VEC
+        self.vectors_length = vec_len
         return vec_len
 
 

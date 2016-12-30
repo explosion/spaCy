@@ -1,4 +1,5 @@
 # cython: embedsignature=True
+from libc.math cimport sqrt
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
 from murmurhash.mrmr cimport hash64
@@ -35,6 +36,13 @@ cdef class Lexeme:
     tag).
     """
     def __init__(self, Vocab vocab, int orth):
+        """Create a Lexeme object.
+
+        Arguments:
+            vocab (Vocab): The parent vocabulary
+            orth (int): The orth id of the lexeme.
+        Returns (Lexeme): The newly constructd object.
+        """
         self.vocab = vocab
         self.orth = orth
         self.c = <LexemeC*><void*>vocab.get_by_orth(vocab.mem, orth)
@@ -72,12 +80,33 @@ cdef class Lexeme:
         return self.c.orth
 
     def set_flag(self, attr_id_t flag_id, bint value):
+        """Change the value of a boolean flag.
+
+        Arguments:
+            flag_id (int): The attribute ID of the flag to set.
+            value (bool): The new value of the flag.
+        """
         Lexeme.c_set_flag(self.c, flag_id, value)
     
     def check_flag(self, attr_id_t flag_id):
+        """Check the value of a boolean flag.
+
+        Arguments:
+            flag_id (int): The attribute ID of the flag to query.
+        Returns (bool): The value of the flag.
+        """
         return True if Lexeme.c_check_flag(self.c, flag_id) else False
 
     def similarity(self, other):
+        '''Compute a semantic similarity estimate. Defaults to cosine over vectors.
+
+        Arguments:
+            other:
+                The object to compare with. By default, accepts Doc, Span,
+                Token and Lexeme objects.
+        Returns:
+            score (float): A scalar similarity score. Higher is more similar.
+        '''
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
@@ -115,8 +144,11 @@ cdef class Lexeme:
         def __set__(self, vector):
             assert len(vector) == self.vocab.vectors_length
             cdef float value
+            cdef double norm = 0.0
             for i, value in enumerate(vector):
                 self.c.vector[i] = value
+                norm += value * value
+            self.c.l2_norm = sqrt(norm)
 
     property rank:
         def __get__(self):
@@ -124,7 +156,13 @@ cdef class Lexeme:
 
     property repvec:
         def __get__(self):
-            return self.vector
+            raise AttributeError("lex.repvec has been renamed to lex.vector")
+
+    property sentiment:
+        def __get__(self):
+            return self.c.sentiment
+        def __set__(self, float sentiment):
+            self.c.sentiment = sentiment
         
     property orth_:
         def __get__(self):

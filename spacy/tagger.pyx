@@ -15,6 +15,7 @@ from .tokens.doc cimport Doc
 from .attrs cimport TAG
 from .parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON
 from .parts_of_speech cimport VERB, X, PUNCT, EOL, SPACE
+from .gold cimport GoldParse
 
 from .attrs cimport *
 
@@ -101,60 +102,54 @@ cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
 
 
 cdef class Tagger:
-    """A part-of-speech tagger for English"""
+    """Annotate part-of-speech tags on Doc objects."""
     @classmethod
-    def default_templates(cls):
-        return (
-            (W_orth,),
-            (P1_lemma, P1_pos),
-            (P2_lemma, P2_pos),
-            (N1_orth,),
-            (N2_orth,),
+    def load(cls, path, vocab, require=False):
+        """Load the statistical model from the supplied path.
 
-            (W_suffix,),
-            (W_prefix,),
-
-            (P1_pos,),
-            (P2_pos,),
-            (P1_pos, P2_pos),
-            (P1_pos, W_orth),
-            (P1_suffix,),
-            (N1_suffix,),
-
-            (W_shape,),
-            (W_cluster,),
-            (N1_cluster,),
-            (N2_cluster,),
-            (P1_cluster,),
-            (P2_cluster,),
-
-            (W_flags,),
-            (N1_flags,),
-            (N2_flags,),
-            (P1_flags,),
-            (P2_flags,),
-        )
-
-    @classmethod
-    def blank(cls, vocab, templates):
-        model = TaggerModel(templates)
-        return cls(vocab, model)
-
-    @classmethod
-    def load(cls, path, vocab):
+        Arguments:
+            path (Path):
+                The path to load from.
+            vocab (Vocab):
+                The vocabulary. Must be shared by the documents to be processed.
+            require (bool):
+                Whether to raise an error if the files are not found.
+        Returns (Tagger):
+            The newly created object.
+        """
+        # TODO: Change this to expect config.json when we don't have to
+        # support old data.
         path = path if not isinstance(path, basestring) else pathlib.Path(path)
         if (path / 'templates.json').exists():
-            with (path / 'templates.json').open() as file_:
+            with (path / 'templates.json').open('r', encoding='utf8') as file_:
                 templates = json.load(file_)
+        elif require:
+            raise IOError(
+                "Required file %s/templates.json not found when loading Tagger" % str(path))
         else:
-            templates = cls.default_templates()
+            templates = cls.feature_templates
+        self = cls(vocab, model=None, feature_templates=templates)
 
-        model = TaggerModel(templates)
         if (path / 'model').exists():
-            model.load(str(path / 'model'))
-        return cls(vocab, model)
+            self.model.load(str(path / 'model'))
+        elif require:
+            raise IOError(
+                "Required file %s/model not found when loading Tagger" % str(path))
+        return self
 
-    def __init__(self, Vocab vocab, TaggerModel model):
+    def __init__(self, Vocab vocab, TaggerModel model=None, **cfg):
+        """Create a Tagger.
+
+        Arguments:
+            vocab (Vocab):
+                The vocabulary object. Must be shared with documents to be processed.
+            model (thinc.linear.AveragedPerceptron):
+                The statistical model.
+        Returns (Tagger):
+            The newly constructed object.
+        """
+        if model is None:
+            model = TaggerModel(cfg.get('features', self.feature_templates))
         self.vocab = vocab
         self.model = model
         # TODO: Move this to tag map
@@ -162,6 +157,7 @@ cdef class Tagger:
         for tag in self.tag_names:
             self.freqs[TAG][self.vocab.strings[tag]] = 1
         self.freqs[TAG][0] = 1
+        self.cfg = cfg
 
     @property
     def tag_names(self):
@@ -180,8 +176,10 @@ cdef class Tagger:
     def __call__(self, Doc tokens):
         """Apply the tagger, setting the POS tags onto the Doc object.
 
-        Args:
-            tokens (Doc): The tokens to be tagged.
+        Arguments:
+            doc (Doc): The tokens to be tagged.
+        Returns:
+            None
         """
         if tokens.length == 0:
             return 0
@@ -198,21 +196,44 @@ cdef class Tagger:
                 self.model.set_scoresC(eg.c.scores,
                     eg.c.features, eg.c.nr_feat)
                 guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
-                self.vocab.morphology.assign_tag(&tokens.c[i], guess)
+                self.vocab.morphology.assign_tag_id(&tokens.c[i], guess)
                 eg.fill_scores(0, eg.c.nr_class)
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
     def pipe(self, stream, batch_size=1000, n_threads=2):
+        """Tag a stream of documents.
+
+        Arguments:
+            stream: The sequence of documents to tag.
+            batch_size (int):
+                The number of documents to accumulate into a working set.
+            n_threads (int):
+                The number of threads with which to work on the buffer in parallel,
+                if the Matcher implementation supports multi-threading.
+        Yields:
+            Doc Documents, in order.
+        """
         for doc in stream:
             self(doc)
             yield doc
     
-    def train(self, Doc tokens, object gold_tag_strs):
+    def update(self, Doc tokens, GoldParse gold):
+        """Update the statistical model, with tags supplied for the given document.
+
+        Arguments:
+            doc (Doc):
+                The document to update on.
+            gold (GoldParse):
+                Manager for the gold-standard tags.
+        Returns (int):
+            Number of tags correct.
+        """
+        gold_tag_strs = gold.tags
         assert len(tokens) == len(gold_tag_strs)
         for tag in gold_tag_strs:
             if tag != None and tag not in self.tag_names:
-                msg = ("Unrecognized gold tag: %s. tag_map.json must contain all"
+                msg = ("Unrecognized gold tag: %s. tag_map.json must contain all "
                        "gold tags, to maintain coarse-grained mapping.")
                 raise ValueError(msg % tag)
         golds = [self.tag_names.index(g) if g is not None else -1 for g in gold_tag_strs]
@@ -229,7 +250,7 @@ cdef class Tagger:
                 eg.c.features, eg.c.nr_feat)
             self.model.updateC(&eg.c)
 
-            self.vocab.morphology.assign_tag(&tokens.c[i], eg.guess)
+            self.vocab.morphology.assign_tag_id(&tokens.c[i], eg.guess)
             
             correct += eg.cost == 0
             self.freqs[TAG][tokens.c[i].tag] += 1
@@ -238,3 +259,35 @@ cdef class Tagger:
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
         return correct
+
+
+    feature_templates = (
+        (W_orth,),
+        (P1_lemma, P1_pos),
+        (P2_lemma, P2_pos),
+        (N1_orth,),
+        (N2_orth,),
+
+        (W_suffix,),
+        (W_prefix,),
+
+        (P1_pos,),
+        (P2_pos,),
+        (P1_pos, P2_pos),
+        (P1_pos, W_orth),
+        (P1_suffix,),
+        (N1_suffix,),
+
+        (W_shape,),
+        (W_cluster,),
+        (N1_cluster,),
+        (N2_cluster,),
+        (P1_cluster,),
+        (P2_cluster,),
+
+        (W_flags,),
+        (N1_flags,),
+        (N2_flags,),
+        (P1_flags,),
+        (P2_flags,),
+    )

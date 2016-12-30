@@ -1,12 +1,12 @@
 cimport cython
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint32_t
+from libc.math cimport sqrt
 
 import numpy
 import numpy.linalg
 import struct
 cimport numpy as np
-import math
 import six
 import warnings
 
@@ -76,7 +76,7 @@ cdef class Doc:
         doc = Doc(nlp.vocab, orths_and_spaces=[(u'Some', True), (u'text', True)])
 
     """
-    def __init__(self, Vocab vocab, orths_and_spaces=None):
+    def __init__(self, Vocab vocab, words=None, spaces=None, orths_and_spaces=None):
         '''
         Create a Doc object.
 
@@ -90,11 +90,14 @@ cdef class Doc:
                 A Vocabulary object, which must match any models you want to 
                 use (e.g. tokenizer, parser, entity recognizer).
 
-            orths_and_spaces:
-                A list of tokens in the document as a sequence of 
-                `(orth_id, has_space)` tuples, where `orth_id` is an
-                integer and `has_space` is a boolean, indicating whether the
-                token has a trailing space.
+            words:
+                A list of unicode strings to add to the document as words. If None,
+                defaults to empty list.
+
+            spaces:
+                A list of boolean values, of the same length as words. True
+                means that the word is followed by a space, False means it is not.
+                If None, defaults to [True]*len(words)
         '''
         self.vocab = vocab
         size = 20
@@ -113,11 +116,27 @@ cdef class Doc:
         self.length = 0
         self.is_tagged = False
         self.is_parsed = False
+        self.sentiment = 0.0
+        self.user_hooks = {}
+        self.user_token_hooks = {}
+        self.user_span_hooks = {}
+        self.tensor = numpy.zeros((0,), dtype='float32')
+        self.user_data = {}
         self._py_tokens = []
         self._vector = None
         self.noun_chunks_iterator = CHUNKERS.get(self.vocab.lang)
         cdef unicode orth
         cdef bint has_space
+        if orths_and_spaces is None and words is not None:
+            if spaces is None:
+                spaces = [True] * len(words)
+            elif len(spaces) != len(words):
+                raise ValueError(
+                    "Arguments 'words' and 'spaces' should be sequences of the "
+                    "same length, or 'spaces' should be left default at None. "
+                    "spaces should be a sequence of booleans, with True meaning "
+                    "that the word owns a ' ' character following it.")
+            orths_and_spaces = zip(words, spaces)
         if orths_and_spaces is not None:
             for orth_space in orths_and_spaces:
                 if isinstance(orth_space, unicode):
@@ -133,6 +152,11 @@ cdef class Doc:
                 # must be created.
                 self.push_back(
                     <const LexemeC*>self.vocab.get(self.mem, orth), has_space)
+        # Tough to decide on policy for this. Is an empty doc tagged and parsed?
+        # There's no information we'd like to add to it, so I guess so?
+        if self.length == 0:
+            self.is_tagged = True
+            self.is_parsed = True
     
     def __getitem__(self, object i):
         '''
@@ -200,17 +224,46 @@ cdef class Doc:
     def __repr__(self):
         return self.__str__()
 
+    @property
+    def doc(self):
+        return self
+
     def similarity(self, other):
+        '''Make a semantic similarity estimate. The default estimate is cosine
+        similarity using an average of word vectors.
+
+        Arguments:
+            other (object): The object to compare with. By default, accepts Doc,
+                Span, Token and Lexeme objects.
+
+        Return:
+            score (float): A scalar similarity score. Higher is more similar.
+        '''
+        if 'similarity' in self.user_hooks:
+            return self.user_hooks['similarity'](self, other)
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     property has_vector:
+        '''
+        A boolean value indicating whether a word vector is associated with the object.
+        '''
         def __get__(self):
+            if 'has_vector' in self.user_hooks:
+                return self.user_hooks['has_vector'](self)
+ 
             return any(token.has_vector for token in self)
 
     property vector:
+        '''
+        A real-valued meaning representation. Defaults to an average of the token vectors.
+        
+        Type: numpy.ndarray[ndim=1, dtype='float32']
+        '''
         def __get__(self):
+            if 'vector' in self.user_hooks:
+                return self.user_hooks['vector'](self)
             if self._vector is None:
                 if len(self):
                     self._vector = sum(t.vector for t in self) / len(self)
@@ -223,12 +276,15 @@ cdef class Doc:
 
     property vector_norm:
         def __get__(self):
+            if 'vector_norm' in self.user_hooks:
+                return self.user_hooks['vector_norm'](self)
             cdef float value
+            cdef double norm = 0
             if self._vector_norm is None:
-                self._vector_norm = 1e-20
+                norm = 0.0
                 for value in self.vector:
-                    self._vector_norm += value * value
-                self._vector_norm = math.sqrt(self._vector_norm)
+                    norm += value * value
+                self._vector_norm = sqrt(norm) if norm != 0 else 0
             return self._vector_norm
         
         def __set__(self, value):
@@ -237,14 +293,16 @@ cdef class Doc:
     @property
     def string(self):
         return self.text
+    
+    property text:
+        '''A unicode representation of the document text.'''
+        def __get__(self):
+            return u''.join(t.text_with_ws for t in self)
 
-    @property
-    def text_with_ws(self):
-        return self.text
-
-    @property
-    def text(self):
-        return u''.join(t.text_with_ws for t in self)
+    property text_with_ws:
+        '''An alias of Doc.text, provided for duck-type compatibility with Span and Token.'''
+        def __get__(self):
+            return self.text
 
     property ents:
         '''
@@ -295,7 +353,10 @@ cdef class Doc:
             cdef int i
             for i in range(self.length):
                 self.c[i].ent_type = 0
-                self.c[i].ent_iob = 0
+                # At this point we don't know whether the NER has run over the 
+                # Doc. If the ent_iob is missing, leave it missing.
+                if self.c[i].ent_iob != 0:
+                    self.c[i].ent_iob = 2 # Means O. Non-O are set from ents.
             cdef attr_t ent_type
             cdef int start, end
             for ent_info in ents:
@@ -360,6 +421,9 @@ cdef class Doc:
             assert [s.root.orth_ for s in doc.sents] == ["is", "'s"]
         """
         def __get__(self):
+            if 'sents' in self.user_hooks:
+                return self.user_hooks['sents'](self)
+ 
             if not self.is_parsed:
                 raise ValueError(
                     "sentence boundary detection requires the dependency parse, which "
@@ -376,6 +440,10 @@ cdef class Doc:
                 yield Span(self, start, self.length)
 
     cdef int push_back(self, LexemeOrToken lex_or_tok, bint has_space) except -1:
+        if self.length == 0:
+            # Flip these to false when we see the first token.
+            self.is_tagged = False
+            self.is_parsed = False
         if self.length == self.max_length:
             self._realloc(self.length * 2)
         cdef TokenC* t = &self.c[self.length]
@@ -514,8 +582,7 @@ cdef class Doc:
             elif attr_id == TAG:
                 for i in range(length):
                     if values[i] != 0:
-                        self.vocab.morphology.assign_tag(&tokens[i],
-                            self.vocab.morphology.reverse_index[values[i]])
+                        self.vocab.morphology.assign_tag(&tokens[i], values[i])
             elif attr_id == POS:
                 for i in range(length):
                     tokens[i].pos = <univ_pos_t>values[i]
@@ -533,7 +600,6 @@ cdef class Doc:
         set_children_from_heads(self.c, self.length)
         self.is_parsed = bool(HEAD in attrs or DEP in attrs)
         self.is_tagged = bool(TAG in attrs or POS in attrs)
-
         return self
 
     def to_bytes(self):
@@ -577,9 +643,37 @@ cdef class Doc:
                 keep_reading = False
             yield n_bytes_str + data
 
-    def merge(self, int start_idx, int end_idx, unicode tag, unicode lemma,
-              unicode ent_type):
-        """Merge a multi-word expression into a single token."""
+    def merge(self, int start_idx, int end_idx, *args, **attributes):
+        """Retokenize the document, such that the span at doc.text[start_idx : end_idx]
+        is merged into a single token. If start_idx and end_idx do not mark start
+        and end token boundaries, the document remains unchanged.
+
+        Arguments:
+            start_idx (int): The character index of the start of the slice to merge.
+            end_idx (int): The character index after the end of the slice to merge.
+            **attributes:
+                Attributes to assign to the merged token. By default, attributes
+                are inherited from the syntactic root token of the span.
+        Returns:
+            token (Token):
+                The newly merged token, or None if the start and end indices did
+                not fall at token boundaries.
+
+        """
+        cdef unicode tag, lemma, ent_type
+        if len(args) == 3:
+            # TODO: Warn deprecation
+            tag, lemma, ent_type = args
+            attributes[TAG] = self.vocab.strings[tag]
+            attributes[LEMMA] = self.vocab.strings[lemma]
+            attributes[ENT_TYPE] = self.vocab.strings[ent_type]
+        elif args:
+            raise ValueError(
+                "Doc.merge received %d non-keyword arguments. "
+                "Expected either 3 arguments (deprecated), or 0 (use keyword arguments). "
+                "Arguments supplied:\n%s\n"
+                "Keyword arguments:%s\n" % (len(args), repr(args), repr(attributes)))
+ 
         cdef int start = token_by_start(self.c, self.length, start_idx)
         if start == -1:
             return None
@@ -588,8 +682,11 @@ cdef class Doc:
             return None
         # Currently we have the token index, we want the range-end index
         end += 1
-        
         cdef Span span = self[start:end]
+        tag = self.vocab.strings[attributes.get(TAG, span.root.tag)]
+        lemma = self.vocab.strings[attributes.get(LEMMA, span.root.lemma)]
+        ent_type = self.vocab.strings[attributes.get(ENT_TYPE, span.root.ent_type)]
+
         # Get LexemeC for newly merged token
         new_orth = ''.join([t.text_with_ws for t in span])
         if span[-1].whitespace_:

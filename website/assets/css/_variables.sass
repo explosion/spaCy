@@ -1,20 +1,20 @@
-//- ----------------------------------
-//- 💫 VARIABLES
-//- ----------------------------------
+//- 💫 CSS > VARIABLES
 
 // Settings and Sizes
 
 $type-base: 11px
 
-$nav-height: 55px
-$content-width: 800px
-$sidebar-width: 230px
-$aside-width: 300px
+$nav-height: 45px
+$content-width: 1250px
+$sidebar-width: 200px
+$aside-width: 30vw
 $aside-padding: 25px
 
-$logo-sizes: ( large: 500px, medium: 250px, small: 100px, tiny: 65px )
-$grid: ( third: 3, half: 2, two-thirds: 1.5 )
+$logo-width: 85px
+
+$grid: ( quarter: 4, third: 3, half: 2, two-thirds: 1.5, three-quarters: 1.33 )
 $breakpoints: ( sm: 768px, md: 992px, lg: 1200px )
+$headings: (1: 3, 2: 2.6, 3: 2, 4: 1.8, 5: 1.5)
 
 
 //  Fonts
@@ -25,13 +25,24 @@ $font-code: 'Source Code Pro', Consolas, 'Andale Mono', Menlo, Monaco, Courier, 
 
 // Colors
 
-$color-theme: #09a3d5
-$color-theme-dark: #008ebc
-$color-back: #fff
-$color-front: #222
+$colors: ( blue: #09a3d5, red: #d9515d )
 
-$color-subtle: #ddd
-$color-subtle-light: #f6f6f6
-$color-subtle-dark: #999
+$color-back: #fff !default
+$color-front: #1a1e23 !default
+$color-dark: lighten($color-front, 20) !default
 
-$syntax-highlighting: ( comment: #999, tag: #3ec930, number: #8130c9, selector: #09a3d5, operator: #e4514f, function: #09a3d5, keyword: #e4514f, regex: #f4c025 )
+$color-theme: map-get($colors, $theme)
+$color-theme-dark: darken(map-get($colors, $theme), 5)
+
+$color-subtle: #ddd !default
+$color-subtle-light: #f6f6f6 !default
+$color-subtle-dark: #949e9b !default
+
+$color-red: #d9515d
+$color-green: #3ec930
+$color-yellow: #f4c025
+
+$syntax-highlighting: ( comment: #949e9b, tag: #3ec930, number: #B084EB, selector: #FFB86C, operator: #FF2C6D, function: #09a3d5, keyword: #45A9F9, regex: #f4c025 )
+
+$pattern: $color-theme url("/assets/img/pattern_#{$theme}.jpg") center top repeat
+$pattern-overlay: transparent url("/assets/img/pattern_landing.jpg") center -138px no-repeat

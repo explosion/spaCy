@@ -32,10 +32,19 @@ cdef class Doc:
     cdef public object _vector
     cdef public object _vector_norm
 
+    cdef public np.ndarray tensor
+    cdef public object user_data
+
     cdef TokenC* c
 
     cdef public bint is_tagged
     cdef public bint is_parsed
+
+    cdef public float sentiment
+
+    cdef public dict user_hooks
+    cdef public dict user_token_hooks
+    cdef public dict user_span_hooks
 
     cdef public list _py_tokens
 

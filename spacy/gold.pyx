@@ -1,3 +1,5 @@
+from __future__ import unicode_literals, print_function
+
 import numpy
 import io
 import json
@@ -8,10 +10,7 @@ from os import path
 
 from libc.string cimport memset
 
-try:
-    import ujson as json
-except ImportError:
-    import json
+import ujson as json
 
 from .syntax import nonproj
 
@@ -20,6 +19,8 @@ def tags_to_entities(tags):
     entities = []
     start = None
     for i, tag in enumerate(tags):
+        if tag is None:
+            continue
         if tag.startswith('O'):
             # TODO: We shouldn't be getting these malformed inputs. Fix this.
             if start is not None:
@@ -41,6 +42,21 @@ def tags_to_entities(tags):
             raise Exception(tag)
     return entities
 
+
+def merge_sents(sents):
+    m_deps = [[], [], [], [], [], []]
+    m_brackets = []
+    i = 0
+    for (ids, words, tags, heads, labels, ner), brackets in sents:
+        m_deps[0].extend(id_ + i for id_ in ids)
+        m_deps[1].extend(words)
+        m_deps[2].extend(tags)
+        m_deps[3].extend(head + i for head in heads)
+        m_deps[4].extend(labels)
+        m_deps[5].extend(ner)
+        m_brackets.extend((b['first'] + i, b['last'] + i, b['label']) for b in brackets)
+        i += len(ids)
+    return [(m_deps, m_brackets)]
 
 
 def align(cand_words, gold_words):
@@ -128,12 +144,11 @@ def _min_edit_path(cand_words, gold_words):
 
 
 def read_json_file(loc, docs_filter=None):
-    print loc
     if path.isdir(loc):
         for filename in os.listdir(loc):
             yield from read_json_file(path.join(loc, filename))
     else:
-        with open(loc) as file_:
+        with io.open(loc, 'r', encoding='utf8') as file_:
             docs = json.load(file_)
         for doc in docs:
             if docs_filter is not None and not docs_filter(doc):
@@ -199,33 +214,75 @@ def _consume_ent(tags):
 
 
 cdef class GoldParse:
-    def __init__(self, tokens, annot_tuples, brackets=tuple(), make_projective=False):
+    """Collection for training annotations."""
+    @classmethod
+    def from_annot_tuples(cls, doc, annot_tuples, make_projective=False):
+        _, words, tags, heads, deps, entities = annot_tuples
+        return cls(doc, words=words, tags=tags, heads=heads, deps=deps, entities=entities,
+                   make_projective=make_projective)
+
+    def __init__(self, doc, annot_tuples=None, words=None, tags=None, heads=None,
+                 deps=None, entities=None, make_projective=False):
+        """Create a GoldParse.
+
+        Arguments:
+            doc (Doc):
+                The document the annotations refer to.
+            words:
+                A sequence of unicode word strings.
+            tags:
+                A sequence of strings, representing tag annotations.
+            heads:
+                A sequence of integers, representing syntactic head offsets.
+            deps:
+                A sequence of strings, representing the syntactic relation types.
+            entities:
+                A sequence of named entity annotations, either as BILUO tag strings,
+                or as (start_char, end_char, label) tuples, representing the entity
+                positions.
+        Returns (GoldParse): The newly constructed object.
+        """
+        if words is None:
+            words = [token.text for token in doc]
+        if tags is None:
+            tags = [None for _ in doc]
+        if heads is None:
+            heads = [token.i for token in doc]
+        if deps is None:
+            deps = [None for _ in doc]
+        if entities is None:
+            entities = ['-' for _ in doc]
+        elif len(entities) == 0:
+            entities = ['O' for _ in doc]
+        elif not isinstance(entities[0], basestring):
+            # Assume we have entities specified by character offset.
+            entities = biluo_tags_from_offsets(doc, entities)
+
         self.mem = Pool()
         self.loss = 0
-        self.length = len(tokens)
+        self.length = len(doc)
 
         # These are filled by the tagger/parser/entity recogniser
-        self.c.tags = <int*>self.mem.alloc(len(tokens), sizeof(int))
-        self.c.heads = <int*>self.mem.alloc(len(tokens), sizeof(int))
-        self.c.labels = <int*>self.mem.alloc(len(tokens), sizeof(int))
-        self.c.ner = <Transition*>self.mem.alloc(len(tokens), sizeof(Transition))
-        self.c.brackets = <int**>self.mem.alloc(len(tokens), sizeof(int*))
-        for i in range(len(tokens)):
-            self.c.brackets[i] = <int*>self.mem.alloc(len(tokens), sizeof(int))
+        self.c.tags = <int*>self.mem.alloc(len(doc), sizeof(int))
+        self.c.heads = <int*>self.mem.alloc(len(doc), sizeof(int))
+        self.c.labels = <int*>self.mem.alloc(len(doc), sizeof(int))
+        self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
 
-        self.tags = [None] * len(tokens)
-        self.heads = [None] * len(tokens)
-        self.labels = [''] * len(tokens)
-        self.ner = ['-'] * len(tokens)
+        self.words = [None] * len(doc)
+        self.tags = [None] * len(doc)
+        self.heads = [None] * len(doc)
+        self.labels = [''] * len(doc)
+        self.ner = ['-'] * len(doc)
 
-        self.cand_to_gold = align([t.orth_ for t in tokens], annot_tuples[1])
-        self.gold_to_cand = align(annot_tuples[1], [t.orth_ for t in tokens])
+        self.cand_to_gold = align([t.orth_ for t in doc], words)
+        self.gold_to_cand = align(words, [t.orth_ for t in doc])
 
+        annot_tuples = (range(len(words)), words, tags, heads, deps, entities)
         self.orig_annot = list(zip(*annot_tuples))
 
-        words = [w.orth_ for w in tokens]
         for i, gold_i in enumerate(self.cand_to_gold):
-            if words[i].isspace():
+            if doc[i].text.isspace():
+                self.words[i] = doc[i].text
                 self.tags[i] = 'SP'
                 self.heads[i] = None
                 self.labels[i] = None
@@ -233,44 +290,96 @@ cdef class GoldParse:
             if gold_i is None:
                 pass
             else:
-                self.tags[i] = annot_tuples[2][gold_i]
-                self.heads[i] = self.gold_to_cand[annot_tuples[3][gold_i]]
-                self.labels[i] = annot_tuples[4][gold_i]
-                self.ner[i] = annot_tuples[5][gold_i]
+                self.words[i] = words[gold_i]
+                self.tags[i] = tags[gold_i]
+                self.heads[i] = self.gold_to_cand[heads[gold_i]]
+                self.labels[i] = deps[gold_i]
+                self.ner[i] = entities[gold_i]
 
         cycle = nonproj.contains_cycle(self.heads)
         if cycle != None:
             raise Exception("Cycle found: %s" % cycle)
 
         if make_projective:
-            proj_heads,_ = nonproj.PseudoProjectivity.projectivize(self.heads,self.labels)
+            proj_heads,_ = nonproj.PseudoProjectivity.projectivize(self.heads, self.labels)
             self.heads = proj_heads
 
-        self.brackets = {}
-        for (gold_start, gold_end, label_str) in brackets:
-            start = self.gold_to_cand[gold_start]
-            end = self.gold_to_cand[gold_end]
-            if start is not None and end is not None:
-                self.brackets.setdefault(start, {}).setdefault(end, set())
-                self.brackets[end][start].add(label_str)
-
     def __len__(self):
+        """Get the number of gold-standard tokens.
+        
+        Returns (int): The number of gold-standard tokens.
+        """
         return self.length
 
     @property
     def is_projective(self):
+        """Whether the provided syntactic annotations form a projective dependency
+        tree."""
         return not nonproj.is_nonproj_tree(self.heads)
+
+
+def biluo_tags_from_offsets(doc, entities):
+    '''Encode labelled spans into per-token tags, using the Begin/In/Last/Unit/Out
+    scheme (biluo).
+
+    Arguments:
+        doc (Doc):
+            The document that the entity offsets refer to. The output tags will
+            refer to the token boundaries within the document.
+
+        entities (sequence):
+            A sequence of (start, end, label) triples. start and end should be
+            character-offset integers denoting the slice into the original string.
+    
+    Returns:
+        tags (list):
+            A list of unicode strings, describing the tags. Each tag string will
+            be of the form either "", "O" or "{action}-{label}", where action is one
+            of "B", "I", "L", "U". The string "-" is used where the entity
+            offsets don't align with the tokenization in the Doc object. The
+            training algorithm will view these as missing values. "O" denotes
+            a non-entity token. "B" denotes the beginning of a multi-token entity,
+            "I" the inside of an entity of three or more tokens, and "L" the end
+            of an entity of two or more tokens. "U" denotes a single-token entity.
+
+    Example:
+        text = 'I like London.'
+        entities = [(len('I like '), len('I like London'), 'LOC')]
+        doc = nlp.tokenizer(text)
+
+        tags = biluo_tags_from_offsets(doc, entities)
+        
+        assert tags == ['O', 'O', 'U-LOC', 'O']
+    '''
+    starts = {token.idx: token.i for token in doc}
+    ends = {token.idx+len(token): token.i for token in doc}
+    biluo = ['-' for _ in doc]
+    # Handle entity cases
+    for start_char, end_char, label in entities:
+        start_token = starts.get(start_char)
+        end_token = ends.get(end_char)
+        # Only interested if the tokenization is correct
+        if start_token is not None and end_token is not None:
+            if start_token == end_token:
+                biluo[start_token] = 'U-%s' % label
+            else:
+                biluo[start_token] = 'B-%s' % label
+                for i in range(start_token+1, end_token):
+                    biluo[i] = 'I-%s' % label
+                biluo[end_token] = 'L-%s' % label
+    # Now distinguish the O cases from ones where we miss the tokenization
+    entity_chars = set()
+    for start_char, end_char, label in entities:
+        for i in range(start_char, end_char):
+            entity_chars.add(i)
+    for token in doc:
+        for i in range(token.idx, token.idx+len(token)):
+            if i in entity_chars:
+                break
+        else:
+            biluo[token.i] = 'O'
+    return biluo
 
 
 def is_punct_label(label):
     return label == 'P' or label.lower() == 'punct'
-
-
-
-
-
-
-
-
-
-

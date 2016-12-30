@@ -2,28 +2,27 @@
     "index": {
         "title" : "Documentation",
 
-        "sidebar": {
-            "Quickstart": [
-                ["Getting started", "#getting-started", "getting-started"],
-                ["Usage Examples", "#examples", "examples"]
-            ],
-            "API": [
-                ["English", "#english", "english"],
-                ["Doc", "#doc", "doc"],
-                ["Token", "#token", "token"],
-                ["Span", "#span", "span"],
-                ["Lexeme", "#lexeme", "lexeme"],
-                ["Vocab", "#vocab", "vocab"],
-                ["StringStore", "#stringstore", "stringstore"]
-            ],
-            "More": [
-                ["Annotation Specs", "#annotation", "annotation"],
-                ["Tutorials", "#tutorials", "tutorials"]
-            ],
-            "Feedback": [
-                ["Suggest Edits", "https://github.com/spacy-io/spaCy/tree/master/website/docs"],
-                ["Github Issue Tracker", "https://github.com/spacy-io/spaCy/issues"]
-            ]
+        "sections": {
+            "Usage": {
+                "url": "/docs/usage",
+                "svg": "computer",
+                "description": "How to use spaCy and its features."
+            },
+            "API": {
+                "url": "/docs/api",
+                "svg": "brain",
+                "description": "The detailed reference for spaCy's API."
+            },
+            "Tutorials": {
+                "url": "/docs/usage/tutorials",
+                "svg": "eye",
+                "description": "End-to-end examples, with code you can modify and run."
+            },
+            "Showcase & Demos": {
+                "url": "/docs/usage/showcase",
+                "svg": "bubble",
+                "description": "Demos, libraries and products from the spaCy community."
+            }
         }
     }
 }

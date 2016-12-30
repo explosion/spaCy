@@ -1,0 +1,118 @@
+//- 💫 DOCS > USAGE > RESOURCES
+
+include ../../_includes/_mixins
+
+p Many of the associated tools and resources that we're developing alongside spaCy can be found in their own repositories.
+
++h(2, "developer") Developer tools
+
++table(["Name", "Description"])
+    +row
+        +cell
+            +src(gh("spacy-dev-resources")) spaCy Dev Resources
+
+        +cell
+            |  Scripts, tools and resources for developing spaCy, adding new
+            |  languages and training new models.
+
+    +row
+        +cell
+            +src("spacy-benchmarks") spaCy Benchmarks
+
+        +cell
+            |  Runtime performance comparison of spaCy against other NLP
+            |  libraries.
+
+    +row
+        +cell
+            +src(gh("spacy-services")) spaCy Services
+
+        +cell
+            |  REST microservices for spaCy demos and visualisers.
+
++h(2, "libraries") Libraries and projects
++table(["Name", "Description"])
+    +row
+        +cell
+            +src(gh("sense2vec")) sense2vec
+
+        +cell
+            |  Use spaCy to go beyond vanilla
+            |  #[+a("https://en.wikipedia.org/wiki/Word2vec") Word2vec].
+
++h(2, "utility") Utility libraries and dependencies
+
++table(["Name", "Description"])
+    +row
+        +cell
+            +src(gh("thinc")) Thinc
+
+        +cell
+            |  Super sparse multi-class machine learning with Cython.
+
+    +row
+        +cell
+            +src(gh("sputnik")) Sputnik
+
+        +cell
+            |  Data package manager library for spaCy.
+
+    +row
+        +cell
+            +src(gh("sputnik-server")) Sputnik Server
+
+        +cell
+            |  Index service for the Sputnik data package manager for spaCy.
+
+    +row
+        +cell
+            +src(gh("cymem")) Cymem
+
+        +cell
+            |  Gate Cython calls to malloc/free behind Python ref-counted
+            |  objects.
+
+    +row
+        +cell
+            +src(gh("preshed")) Preshed
+
+        +cell
+            |  Cython hash tables that assume keys are pre-hashed
+
+    +row
+        +cell
+            +src(gh("murmurhash")) MurmurHash
+
+        +cell
+            |  Cython bindings for
+            |  #[+a("https://en.wikipedia.org/wiki/MurmurHash") MurmurHash2].
+
++h(2, "visualizers") Visualisers and demos
+
++table(["Name", "Description"])
+    +row
+        +cell
+            +src(gh("displacy")) displaCy.js
+
+        +cell
+            |  A lightweight dependency visualisation library for the modern
+            |  web, built with JavaScript, CSS and SVG.
+            |  #[+a(DEMOS_URL + "/displacy") Demo here].
+
+    +row
+        +cell
+            +src(gh("displacy-ent")) displaCy#[sup ENT]
+
+        +cell
+            |  A lightweight and modern named entity visualisation library
+            |  built with JavaScript and CSS.
+            |  #[+a(DEMOS_URL + "/displacy-ent") Demo here].
+
+    +row
+        +cell
+            +src(gh("sense2vec-demo")) sense2vec Demo
+
+        +cell
+            |  Source of our Semantic Analysis of the Reddit Hivemind
+            |  #[+a(DEMOS_URL + "/sense2vec") demo] using
+            |  #[+a(gh("sense2vec")) sense2vec].

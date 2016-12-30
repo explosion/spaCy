@@ -1,0 +1,27 @@
+//- 💫 INCLUDES > DOCS PAGE TEMPLATE
+
+- sidebar_content = (SUBSECTION != "index") ? public.docs[SUBSECTION]._data.sidebar : public.docs._data.sidebar || FOOTER
+
+include _sidebar
+
+main.o-main.o-main--sidebar.o-main--aside
+    article.o-content
+        +h(1)=title
+            if tag
+                +tag=tag
+
+        !=yield
+
+    +grid.o-content.u-text
+        +grid-col("half")
+            if next && public.docs[SUBSECTION]._data[next]
+                - data = public.docs[SUBSECTION]._data[next]
+
+                .o-inline-list
+                    span #[strong.u-text-label Read next:] #[+a(next).u-link=data.title]
+
+        +grid-col("half").u-text-right
+            .o-inline-list
+                +button(gh("spacy", "website/" + current.path.join('/') + ".jade"), false, "secondary").u-text-tag Suggest edits #[+icon("code", 14)]
+
+    include _footer

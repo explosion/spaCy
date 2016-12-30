@@ -1,3 +1,5 @@
+cimport numpy as np
+
 from .doc cimport Doc
 
 

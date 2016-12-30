@@ -1,0 +1,259 @@
+//- 💫 DOCS > USAGE > SPACY'S DATA MODEL
+
+include ../../_includes/_mixins
+
+p After reading this page, you should be able to:
+
++list
+    +item Understand how spaCy's Doc, Span, Token and Lexeme object work
+    +item Start using spaCy's Cython API
+    +item Use spaCy more efficiently
+
++h(2, "design-considerations") Design considerations
+
++h(3, "no-job-too-big") No job too big
+
+p
+    |  When writing spaCy, one of my mottos was #[em no job too big]. I wanted
+    |  to make sure that if Google or Facebook were founded tomorrow, spaCy
+    |  would be the obvious choice for them. I wanted spaCy to be the obvious
+    |  choice for web-scale NLP. This meant sweating about performance, because
+    |  for web-scale tasks, Moore's law can't save you.
+
+p
+    |  Most computational work gets less expensive over time. If you wrote a
+    |  program to solve fluid dynamics in 2008, and you ran it again in 2014,
+    |  you would expect it to be cheaper. For NLP, it often doesn't work out
+    |  that way. The problem is that we're writing programs where the task is
+    |  something like "Process all  articles in the English Wikipedia". Sure,
+    |  compute prices dropped from $0.80 per hour to $0.20 per hour on AWS in
+    |  2008-2014. But the size of Wikipedia grew from 3GB to 11GB. Maybe the
+    |  job is a #[em little] cheaper in 2014 — but not by much.
+
++h(3, "annotation-layers") Multiple layers of annotation
+
+p
+    |  When I tell a certain sort of person that I'm a computational linguist,
+    |  this comic is often the first thing that comes to their mind:
+
++image("http://i.imgur.com/n3DTzqx.png", 450)
+    +image-caption &copy; #[+a("http://xkcd.com") xkcd]
+
+p
+    |  I've thought a lot about what this comic is really trying to say. It's
+    |  probably not talking about #[em data models] — but in that sense at
+    |  least, it really rings true.
+
+p
+    |  You'll often need to model a document as a sequence of sentences. Other
+    |  times you'll need to model it as a sequence of words. Sometimes you'll
+    |  care about paragraphs, other times you won't. Sometimes you'll care
+    |  about extracting quotes, which can cross paragraph boundaries. A quote
+    |  can also occur within a sentence. When we consider sentence structure,
+    |  things get even more complicated and contradictory. We have syntactic
+    |  trees, sequences of entities, sequences of phrases, sub-word units,
+    |  multi-word units...
+
+p
+    |  Different applications are going to need to query different,
+    |  overlapping, and often contradictory views of the document. They're
+    |  often going to need to query them jointly. You need to be able to get
+    |  the syntactic head of a named entity, or the sentiment of a paragraph.
+
++h(2, "solutions") Solutions
+
++h(3) Fat types, thin tokens
+
++h(3) Static model, dynamic views
+
+p
+    |  Different applications are going to need to query different,
+    |  overlapping, and often contradictory views of the document. For this
+    |  reason, I think it's a bad idea to have too much of the document
+    |  structure reflected in the data model. If you structure the data
+    |  according to the needs of one layer of annotation, you're going to need
+    |  to copy the data and transform it in order to use a different layer of
+    |  annotation. You'll soon have lots of copies, and no single source of
+    |  truth.
+
++h(3) Never go full stand-off
+
++h(3) Implementation
+
++h(3) Cython 101
+
++h(3) #[code cdef class Doc]
+
+p
+    |  Let's start at the top. Here's the memory layout of the
+    |  #[+api("doc") #[code Doc]] class, minus irrelevant details:
+
++code.
+    from cymem.cymem cimport Pool
+    from ..vocab cimport Vocab
+    from ..structs cimport TokenC
+
+    cdef class Doc:
+        cdef Pool mem
+        cdef Vocab vocab
+
+        cdef TokenC* c
+
+        cdef int length
+        cdef int max_length
+
+p
+    |  So, our #[code Doc] class is a wrapper around a TokenC* array — that's
+    |  where the actual document content is stored. Here's the #[code TokenC]
+    |  struct, in its entirety:
+
++h(3) #[code cdef struct TokenC]
+
++code.
+    cdef struct TokenC:
+        const LexemeC* lex
+        uint64_t morph
+        univ_pos_t pos
+        bint spacy
+        int tag
+        int idx
+        int lemma
+        int sense
+        int head
+        int dep
+        bint sent_start
+
+        uint32_t l_kids
+        uint32_t r_kids
+        uint32_t l_edge
+        uint32_t r_edge
+
+        int ent_iob
+        int ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
+        hash_t ent_id
+
+p
+    |  The token owns all of its linguistic annotations, and holds a const
+    |  pointer to a #[code LexemeC] struct. The #[code LexemeC] struct owns all
+    |  of the #[em vocabulary] data about the word — all the dictionary
+    |  definition stuff that we want to be shared by all instances of the type.
+    |  Here's the #[code LexemeC] struct, in its entirety:
+
++h(3) #[code cdef struct LexemeC]
+
++code.
+    cdef struct LexemeC:
+
+        int32_t id
+
+        int32_t orth     # Allows the string to be retrieved
+        int32_t length   # Length of the string
+
+        uint64_t flags   # These are the most useful parts.
+        int32_t cluster  # Distributional similarity cluster
+        float prob       # Probability
+        float sentiment  # Slot for sentiment
+
+        int32_t lang
+
+        int32_t lower    # These string views made sense
+        int32_t norm     # when NLP meant linear models.
+        int32_t shape    # Now they're less relevant, and
+        int32_t prefix   # will probably be revised.
+        int32_t suffix
+
+        float* vector # &lt;-- This was a design mistake, and will change.
+
++h(2, "dynamic-views") Dynamic views
+
++h(3) Text
+
+p
+    |  You might have noticed that in all of the structs above, there's not a
+    |  string to be found. The strings are all stored separately, in the
+    |  #[+api("stringstore") #[code StringStore]] class. The lexemes don't know
+    |  the strings — they only know their integer IDs. The document string is
+    |  never stored anywhere, either. Instead, it's reconstructed by iterating
+    |  over the tokens, which look up the #[code orth] attribute of their
+    |  underlying lexeme. Once we have the orth ID, we can fetch the string
+    |  from the vocabulary. Finally, each token knows whether a single
+    |  whitespace character (#[code ' ']) should be used to separate it from
+    |  the subsequent tokens. This allows us to preserve whitespace.
+
++code.
+    cdef print_text(Vocab vocab, const TokenC* tokens, int length):
+        for i in range(length):
+            word_string = vocab.strings[tokens.lex.orth]
+            if tokens.lex.spacy:
+                word_string += ' '
+            print(word_string)
+
+p
+    |  This is why you get whitespace tokens in spaCy — we need those tokens,
+    |  so that we can reconstruct the document string. I also think you should
+    |  have those tokens anyway. Most NLP libraries strip them, making it very
+    |  difficult to recover the paragraph information once you're at the token
+    |  level. You'll never have that sort of problem with spaCy — because
+    |  there's a single source of truth.
+
++h(3) #[code cdef class Token]
+
+p When you do...
+
++code.
+    doc[i]
+
+p
+    |  ...you get back an instance of class #[code spacy.tokens.token.Token].
+    |  This instance owns no data. Instead, it holds the information
+    |  #[code (doc, i)], and uses these to retrieve all information via the
+    |  parent container.
+
++h(3) #[code cdef class Span]
+
+p When you do...
+
++code.
+    doc[i : j]
+
+p
+    |  ...you get back an instance of class #[code spacy.tokens.span.Span].
+    |  #[code Span] instances are also returned by the #[code .sents],
+    |  #[code .ents] and #[code .noun_chunks] iterators of the #[code Doc]
+    |  object. A #[code Span] is a slice of tokens, with an optional label
+    |  attached. Its data model is:
+
++code.
+    cdef class Span:
+        cdef readonly Doc doc
+        cdef int start
+        cdef int end
+        cdef int start_char
+        cdef int end_char
+        cdef int label
+
+p
+    |  Once again, the #[code Span] owns almost no data. Instead, it refers
+    |  back to the parent #[code Doc] container.
+
+p
+    |  The #[code start] and #[code end] attributes refer to token positions,
+    |  while #[code start_char] and #[code end_char] record the character
+    |  positions of the span. By recording the character offsets, we can still
+    |  use the #[code Span] object if the tokenization of the document changes.
+
++h(3) #[code cdef class Lexeme]
+
+p When you do...
+
++code.
+    vocab[u'the']
+
+p
+    |  ...you get back an instance of class #[code spacy.lexeme.Lexeme]. The
+    |  #[code Lexeme]'s data model is:
+
++code.
+    cdef class Lexeme:
+        cdef LexemeC* c
+        cdef readonly Vocab vocab

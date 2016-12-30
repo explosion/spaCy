@@ -70,6 +70,15 @@ class Scorer(object):
     def ents_f(self):
         return self.ner.fscore * 100
 
+    @property
+    def scores(self):
+        return {
+            'uas': self.uas, 'las': self.las,
+            'ents_p': self.ents_p, 'ents_r': self.ents_r, 'ents_f': self.ents_f,
+            'tags_acc': self.tags_acc,
+            'token_acc': self.token_acc
+        }
+
     def score(self, tokens, gold, verbose=False, punct_labels=('p', 'punct')):
         assert len(tokens) == len(gold)
 
@@ -78,7 +87,7 @@ class Scorer(object):
         gold_ents = set(tags_to_entities([annot[-1] for annot in gold.orig_annot]))
         for id_, word, tag, head, dep, ner in gold.orig_annot:
             gold_tags.add((id_, tag))
-            if dep.lower() not in punct_labels:
+            if dep is not None and dep.lower() not in punct_labels:
                 gold_deps.add((id_, head, dep.lower()))
         cand_deps = set()
         cand_tags = set()

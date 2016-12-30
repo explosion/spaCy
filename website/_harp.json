@@ -1,10 +1,10 @@
 {
     "globals": {
-        "title": "spaCy.io",
+        "title": "spaCy",
         "description": "spaCy is a free open-source library featuring state-of-the-art speed and accuracy and a powerful Python API.",
 
         "SITENAME": "spaCy",
-        "SLOGAN": "Industrial-strength Natural Language Processing",
+        "SLOGAN": "Industrial-strength Natural Language Processing in Python",
         "SITE_URL": "https://spacy.io",
         "EMAIL": "contact@explosion.ai",
 
@@ -12,18 +12,56 @@
         "COMPANY_URL": "https://explosion.ai",
         "DEMOS_URL": "https://demos.explosion.ai",
 
+        "SPACY_VERSION": "1.5",
+        "LATEST_NEWS": {
+            "url": "https://explosion.ai/blog/spacy-user-survey",
+            "title": "The results of the spaCy user survey"
+        },
+
         "SOCIAL": {
             "twitter": "spacy_io",
             "github": "explosion",
-            "reddit": "spacynlp"
+            "reddit": "spacynlp",
+            "codepen": "explosion"
         },
 
-        "SCRIPTS" : [ "main", "prism" ],
+        "NAVIGATION": {
+            "Home": "/",
+            "Docs": "/docs",
+            "Demos": "/docs/usage/showcase",
+            "Blog": "https://explosion.ai/blog"
+        },
+
+        "FOOTER": {
+            "spaCy": {
+                "Usage": "/docs/usage",
+                "API Reference": "/docs/api",
+                "Tutorials": "/docs/usage/tutorials",
+                "Showcase": "/docs/usage/showcase"
+            },
+            "Support": {
+                "Issue Tracker": "https://github.com/explosion/spaCy/issues",
+                "StackOverflow": "http://stackoverflow.com/questions/tagged/spacy",
+                "Reddit usergroup": "https://www.reddit.com/r/spacynlp/",
+                "Gitter chat": "https://gitter.im/explosion/spaCy"
+            },
+            "Connect": {
+                "Twitter": "https://twitter.com/spacy_io",
+                "GitHub": "https://github.com/explosion/spaCy",
+                "Blog": "https://explosion.ai/blog",
+                "Contact": "mailto:contact@explosion.ai"
+            }
+        },
+
+        "V_CSS": "1.10",
+        "V_JS": "1.0",
         "DEFAULT_SYNTAX" : "python",
         "ANALYTICS": "UA-58931649-1",
+        "MAILCHIMP": {
+            "user": "spacy.us12",
+            "id": "83b0498b1e7fa3c91ce68c3f1",
+            "list": "89ad33e698"
+        }
 
-        "SPACY_VERSION": "0.101.0",
-        "SPACY_STARS": "2300",
-        "GITHUB": { "user": "explosion", "repo": "spacy" }
     }
 }
