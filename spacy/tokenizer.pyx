@@ -29,7 +29,7 @@ cdef class Tokenizer:
     """Segment text, and create Doc objects with the discovered segment boundaries."""
     @classmethod
     def load(cls, path, Vocab vocab, rules=None, prefix_search=None, suffix_search=None,
-             infix_finditer=None):
+             infix_finditer=None, token_match=None):
         '''Load a Tokenizer, reading unsupplied components from the path.
         
         Arguments:
@@ -39,6 +39,8 @@ cdef class Tokenizer:
                 A storage container for lexical types.
             rules (dict):
                 Exceptions and special-cases for the tokenizer.
+            token_match:
+                A boolean function matching strings that becomes tokens.
             prefix_search:
                 Signature of re.compile(string).search
             suffix_search:
@@ -65,10 +67,9 @@ cdef class Tokenizer:
             with (path / 'tokenizer' / 'infix.txt').open() as file_:
                 entries = file_.read().split('\n')
             infix_finditer = util.compile_infix_regex(entries).finditer
-        return cls(vocab, rules, prefix_search, suffix_search, infix_finditer)
+        return cls(vocab, rules, prefix_search, suffix_search, infix_finditer, token_match)
 
-
-    def __init__(self, Vocab vocab, rules, prefix_search, suffix_search, infix_finditer):
+    def __init__(self, Vocab vocab, rules, prefix_search, suffix_search, infix_finditer, token_match=None):
         '''Create a Tokenizer, to create Doc objects given unicode text.
         
         Arguments:
@@ -85,10 +86,13 @@ cdef class Tokenizer:
             infix_finditer:
                 A function matching the signature of re.compile(string).finditer
                 to find infixes.
+            token_match:
+                A boolean function matching strings that becomes tokens.
         '''
         self.mem = Pool()
         self._cache = PreshMap()
         self._specials = PreshMap()
+        self.token_match = token_match
         self.prefix_search = prefix_search
         self.suffix_search = suffix_search
         self.infix_finditer = infix_finditer
@@ -100,9 +104,10 @@ cdef class Tokenizer:
     def __reduce__(self):
         args = (self.vocab,
                 self._rules,
-                self._prefix_re, 
-                self._suffix_re, 
-                self._infix_re)
+                self._prefix_re,
+                self._suffix_re,
+                self._infix_re,
+                self.token_match)
 
         return (self.__class__, args, None, None)
     
@@ -202,9 +207,12 @@ cdef class Tokenizer:
         cdef vector[LexemeC*] suffixes
         cdef int orig_size
         orig_size = tokens.length
-        span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes)
-        self._attach_tokens(tokens, span, &prefixes, &suffixes)
-        self._save_cached(&tokens.c[orig_size], orig_key, tokens.length - orig_size)
+        if self.token_match and self.token_match(span):
+            tokens.push_back(self.vocab.get(tokens.mem, span), False)
+        else:
+            span = self._split_affixes(tokens.mem, span, &prefixes, &suffixes)
+            self._attach_tokens(tokens, span, &prefixes, &suffixes)
+            self._save_cached(&tokens.c[orig_size], orig_key, tokens.length - orig_size)
 
     cdef unicode _split_affixes(self, Pool mem, unicode string,
                                 vector[const LexemeC*] *prefixes,
