@@ -24,7 +24,7 @@ open-source software, released under the MIT license.
     :target: https://pypi.python.org/pypi/spacy
     :alt: pypi Version
 
-.. image:: https://badges.gitter.im/spaCy-users.png
+.. image:: https://badges.gitter.im/explosion.png
     :target: https://gitter.im/explosion/spaCy
     :alt: spaCy on Gitter
 
