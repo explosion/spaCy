@@ -141,7 +141,7 @@ p
             span.merge(label=label, tag='NNP' if label else span.root.tag_)
 
     matcher.add_entity('GoogleNow', on_match=merge_phrases)
-    matcher.add_pattern('GoogleNow', {ORTH: 'Google'}, {ORTH: 'Now'}])
+    matcher.add_pattern('GoogleNow', [{ORTH: 'Google'}, {ORTH: 'Now'}])
     doc = Doc(matcher.vocab, words=[u'Google', u'Now', u'is', u'being', u'rebranded'])
     matcher(doc)
     print([w.text for w in doc])
