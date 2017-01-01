@@ -22,7 +22,8 @@
             "twitter": "spacy_io",
             "github": "explosion",
             "reddit": "spacynlp",
-            "codepen": "explosion"
+            "codepen": "explosion",
+            "gitter": "explosion/spaCy"
         },
 
         "NAVIGATION": {
