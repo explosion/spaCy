@@ -30,7 +30,7 @@ mixin svg(file, name, width, height)
 //- Icon
 
 mixin icon(name, size)
-    +svg("icons", "icon-" + name, size || 20).o-icon&attributes(attributes)
+    +svg("icons", name, size || 20).o-icon&attributes(attributes)
 
 
 //- Pro/Con/Neutral icon
