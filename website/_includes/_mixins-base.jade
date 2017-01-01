@@ -98,6 +98,18 @@ mixin terminal(label)
             block
 
 
+//- Gitter chat button and widget
+    button - [string] text shown on button
+    label  - [string] title of chat window (default: same as button)
+
+mixin gitter(button, label)
+    aside.js-gitter.c-chat.is-collapsed(data-title=(label || button))
+
+    button.js-gitter-button.c-chat__button.u-text-small
+        +icon("chat").o-icon--inline
+        !=button
+
+
 //- Logo
 
 mixin logo()
