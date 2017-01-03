@@ -44,7 +44,7 @@ mixin icon(name, size)
     icon - [string] "pro", "con" or "neutral" (default: "neutral")
 
 mixin procon(icon)
-    - colors = { pro: "green", con: "red" }
+    - colors = { pro: "green", con: "red", neutral: "yellow" }
     +icon(icon)(class="u-color-#{colors[icon] || 'subtle'}" aria-label=icon)&attributes(attributes)
 
 
