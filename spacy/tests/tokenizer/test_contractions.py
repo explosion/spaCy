@@ -1,58 +1,73 @@
 from __future__ import unicode_literals
+from ...en import English
 import pytest
 
+@pytest.fixture
+def en_tokenizer():
+    return English.Defaults.create_tokenizer()
 
-def test_possess(en_tokenizer):
-    tokens = en_tokenizer("Mike's")
-    assert en_tokenizer.vocab.strings[tokens[0].orth] == "Mike"
-    assert en_tokenizer.vocab.strings[tokens[1].orth] == "'s"
+
+@pytest.mark.parametrize('inputs', [("Robin's", "Robin"), ("Alexis's", "Alexis")])
+def test_tokenizer_handles_poss_contraction(en_tokenizer, inputs):
+    text_poss, text = inputs
+    tokens = en_tokenizer(text_poss)
     assert len(tokens) == 2
+    assert tokens[0].text == text
+    assert tokens[1].text == "'s"
 
 
-def test_apostrophe(en_tokenizer):
-    tokens = en_tokenizer("schools'")
+@pytest.mark.parametrize('text', ["schools'", "Alexis'"])
+def test_tokenizer_splits_trailing_apos(en_tokenizer, text):
+    tokens = en_tokenizer(text)
     assert len(tokens) == 2
-    assert tokens[1].orth_ == "'"
-    assert tokens[0].orth_ == "schools"
+    assert tokens[0].text == text.split("'")[0]
+    assert tokens[1].text == "'"
 
 
-def test_LL(en_tokenizer):
-    tokens = en_tokenizer("we'll")
+@pytest.mark.parametrize('text', ["'em", "nothin'", "ol'"])
+def text_tokenizer_doesnt_split_apos_exc(en_tokenizer, text):
+    tokens = en_tokenizer(text)
+    assert len(tokens) == 1
+    assert tokens[0].text == text
+
+
+@pytest.mark.parametrize('text', ["we'll", "You'll", "there'll"])
+def test_tokenizer_handles_ll_contraction(en_tokenizer, text):
+    tokens = en_tokenizer(text)
     assert len(tokens) == 2
-    assert tokens[1].orth_ == "'ll"
+    assert tokens[0].text == text.split("'")[0]
+    assert tokens[1].text == "'ll"
     assert tokens[1].lemma_ == "will"
-    assert tokens[0].orth_ == "we"
 
 
-def test_aint(en_tokenizer):
-    tokens = en_tokenizer("ain't")
-    assert len(tokens) == 2
-    assert tokens[0].orth_ == "ai"
-    assert tokens[0].lemma_ == "be"
-    assert tokens[1].orth_ == "n't"
-    assert tokens[1].lemma_ == "not"
-
-def test_capitalized(en_tokenizer):
-    tokens = en_tokenizer("can't")
-    assert len(tokens) == 2
-    tokens = en_tokenizer("Can't")
-    assert len(tokens) == 2
-    tokens = en_tokenizer("Ain't")
-    assert len(tokens) == 2
-    assert tokens[0].orth_ == "Ai"
-    assert tokens[0].lemma_ == "be"
+@pytest.mark.parametrize('inputs', [("can't", "Can't"), ("ain't", "Ain't")])
+def test_tokenizer_handles_capitalization(en_tokenizer, inputs):
+    text_lower, text_title = inputs
+    tokens_lower = en_tokenizer(text_lower)
+    tokens_title = en_tokenizer(text_title)
+    assert tokens_title[0].text == tokens_lower[0].text.title()
+    assert tokens_lower[0].text == tokens_title[0].text.lower()
+    assert tokens_lower[1].text == tokens_title[1].text
 
 
-def test_punct(en_tokenizer):
-    tokens = en_tokenizer("We've")
+@pytest.mark.parametrize('pron', ["I", "You", "He", "She", "It", "We", "They"])
+def test_tokenizer_keeps_title_case(en_tokenizer, pron):
+    for contraction in ["'ll", "'d"]:
+        tokens = en_tokenizer(pron + contraction)
+        assert tokens[0].text == pron
+        assert tokens[1].text == contraction
+
+
+@pytest.mark.parametrize('exc', ["Ill", "ill", "Hell", "hell", "Well", "well"])
+def test_tokenizer_excludes_ambiguous(en_tokenizer, exc):
+    tokens = en_tokenizer(exc)
+    assert len(tokens) == 1
+
+
+@pytest.mark.parametrize('inputs', [("We've", "``We've"), ("couldn't", "couldn't)")])
+def test_tokenizer_splits_defined_punct(en_tokenizer, inputs):
+    wo_punct, w_punct = inputs
+    tokens = en_tokenizer(wo_punct)
     assert len(tokens) == 2
-    tokens = en_tokenizer("``We've")
+    tokens = en_tokenizer(w_punct)
     assert len(tokens) == 3
-
-
-@pytest.mark.xfail
-def test_therell(en_tokenizer):
-    tokens = en_tokenizer("there'll")
-    assert len(tokens) == 2
-    assert tokens[0].text == "there"
-    assert tokens[1].text == "there"
