@@ -1,15 +1,10 @@
 from __future__ import unicode_literals
-from ...en import English
+
 import pytest
 
-@pytest.fixture
-def en_tokenizer():
-    return English.Defaults.create_tokenizer()
 
-
-@pytest.mark.parametrize('inputs', [("Robin's", "Robin"), ("Alexis's", "Alexis")])
-def test_tokenizer_handles_poss_contraction(en_tokenizer, inputs):
-    text_poss, text = inputs
+@pytest.mark.parametrize('text_poss,text', [("Robin's", "Robin"), ("Alexis's", "Alexis")])
+def test_tokenizer_handles_poss_contraction(en_tokenizer, text_poss, text):
     tokens = en_tokenizer(text_poss)
     assert len(tokens) == 2
     assert tokens[0].text == text
@@ -40,9 +35,8 @@ def test_tokenizer_handles_ll_contraction(en_tokenizer, text):
     assert tokens[1].lemma_ == "will"
 
 
-@pytest.mark.parametrize('inputs', [("can't", "Can't"), ("ain't", "Ain't")])
-def test_tokenizer_handles_capitalization(en_tokenizer, inputs):
-    text_lower, text_title = inputs
+@pytest.mark.parametrize('text_lower,text_title', [("can't", "Can't"), ("ain't", "Ain't")])
+def test_tokenizer_handles_capitalization(en_tokenizer, text_lower, text_title):
     tokens_lower = en_tokenizer(text_lower)
     tokens_title = en_tokenizer(text_title)
     assert tokens_title[0].text == tokens_lower[0].text.title()
@@ -51,11 +45,11 @@ def test_tokenizer_handles_capitalization(en_tokenizer, inputs):
 
 
 @pytest.mark.parametrize('pron', ["I", "You", "He", "She", "It", "We", "They"])
-def test_tokenizer_keeps_title_case(en_tokenizer, pron):
-    for contraction in ["'ll", "'d"]:
-        tokens = en_tokenizer(pron + contraction)
-        assert tokens[0].text == pron
-        assert tokens[1].text == contraction
+@pytest.mark.parametrize('contraction', ["'ll", "'d"])
+def test_tokenizer_keeps_title_case(en_tokenizer, pron, contraction):
+    tokens = en_tokenizer(pron + contraction)
+    assert tokens[0].text == pron
+    assert tokens[1].text == contraction
 
 
 @pytest.mark.parametrize('exc', ["Ill", "ill", "Hell", "hell", "Well", "well"])
@@ -64,9 +58,8 @@ def test_tokenizer_excludes_ambiguous(en_tokenizer, exc):
     assert len(tokens) == 1
 
 
-@pytest.mark.parametrize('inputs', [("We've", "``We've"), ("couldn't", "couldn't)")])
-def test_tokenizer_splits_defined_punct(en_tokenizer, inputs):
-    wo_punct, w_punct = inputs
+@pytest.mark.parametrize('wo_punct,w_punct', [("We've", "``We've"), ("couldn't", "couldn't)")])
+def test_tokenizer_splits_defined_punct(en_tokenizer, wo_punct, w_punct):
     tokens = en_tokenizer(wo_punct)
     assert len(tokens) == 2
     tokens = en_tokenizer(w_punct)
