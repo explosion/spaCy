@@ -599,7 +599,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "She's": [
-        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
+        {ORTH: "She", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "'s"}
     ],
 
@@ -741,7 +741,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "Shedve": [
-        {ORTH: "i", LEMMA: PRON_LEMMA, TAG: "PRP"},
+        {ORTH: "She", LEMMA: PRON_LEMMA, TAG: "PRP"},
         {ORTH: "d", LEMMA: "would", TAG: "MD"},
         {ORTH: "ve", LEMMA: "have", TAG: "VB"}
     ],
