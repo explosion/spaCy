@@ -112,44 +112,44 @@ for pron in ["you", "we", "they"]:
 for word in ["who", "what", "when", "where", "why", "how", "there", "that"]:
     for orth in [word, word.title()]:
         EXC[orth + "'s"] = [
-            {ORTH: orth},
+            {ORTH: orth, LEMMA: word},
             {ORTH: "'s"}
         ]
 
         EXC[orth + "s"] = [
-            {ORTH: orth},
+            {ORTH: orth, LEMMA: word},
             {ORTH: "s"}
         ]
 
         EXC[orth + "'ll"] = [
-            {ORTH: orth},
+            {ORTH: orth, LEMMA: word},
             {ORTH: "'ll", LEMMA: "will", TAG: "MD"}
         ]
 
         EXC[orth + "ll"] = [
-            {ORTH: orth},
+            {ORTH: orth, LEMMA: word},
             {ORTH: "ll", LEMMA: "will", TAG: "MD"}
         ]
 
         EXC[orth + "'ll've"] = [
-            {ORTH: orth},
+            {ORTH: orth, LEMMA: word},
             {ORTH: "ll", LEMMA: "will", TAG: "MD"},
             {ORTH: "ve", LEMMA: "have", TAG: "VB"}
         ]
 
         EXC[orth + "llve"] = [
-            {ORTH: orth},
+            {ORTH: orth, LEMMA: word},
             {ORTH: "ll", LEMMA: "will", TAG: "MD"},
             {ORTH: "ve", LEMMA: "have", TAG: "VB"}
         ]
 
         EXC[orth + "'re"] = [
-            {ORTH: orth},
+            {ORTH: orth, LEMMA: word},
             {ORTH: "'re", LEMMA: "be", NORM: "are"}
         ]
 
         EXC[orth + "re"] = [
-            {ORTH: orth},
+            {ORTH: orth, LEMMA: word},
             {ORTH: "re", LEMMA: "be", NORM: "are"}
         ]
 
@@ -159,28 +159,28 @@ for word in ["who", "what", "when", "where", "why", "how", "there", "that"]:
         ]
 
         EXC[orth + "ve"] = [
-            {ORTH: orth},
+            {ORTH: orth, LEMMA: word},
             {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
         ]
 
         EXC[orth + "'d"] = [
-            {ORTH: orth},
+            {ORTH: orth, LEMMA: word},
             {ORTH: "'d"}
         ]
 
         EXC[orth + "d"] = [
-            {ORTH: orth},
+            {ORTH: orth, LEMMA: word},
             {ORTH: "d"}
         ]
 
         EXC[orth + "'d've"] = [
-            {ORTH: orth},
+            {ORTH: orth, LEMMA: word},
             {ORTH: "'d", LEMMA: "would", TAG: "MD"},
             {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
         ]
 
         EXC[orth + "dve"] = [
-            {ORTH: orth},
+            {ORTH: orth, LEMMA: word},
             {ORTH: "d", LEMMA: "would", TAG: "MD"},
             {ORTH: "ve", LEMMA: "have", TAG: "VB"}
         ]
