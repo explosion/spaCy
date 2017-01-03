@@ -1,7 +1,7 @@
 import pytest
-from spacy.en import English
+from ...en import English
 
 
-@pytest.fixture(scope="module")
-def en_tokenizer(EN):
-    return EN.tokenizer
+@pytest.fixture
+def en_tokenizer():
+    return English.Defaults.create_tokenizer()
