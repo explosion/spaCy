@@ -19,18 +19,18 @@ for pron in ["i"]:
             {ORTH: "'m", LEMMA: "be", TAG: "VBP", "tenspect": 1, "number": 1}
         ]
 
-        EXC[pron + "m"] = [
+        EXC[orth + "m"] = [
             {ORTH: pron, LEMMA: PRON_LEMMA, TAG: "PRP"},
             {ORTH: "m", LEMMA: "be", TAG: "VBP", "tenspect": 1, "number": 1 }
         ]
 
-        EXC[pron + "'ma"] = [
+        EXC[orth + "'ma"] = [
             {ORTH: pron, LEMMA: PRON_LEMMA, TAG: "PRP"},
             {ORTH: "'m", LEMMA: "be", NORM: "am"},
             {ORTH: "a", LEMMA: "going to", NORM: "gonna"}
         ]
 
-        EXC[pron + "ma"] = [
+        EXC[orth + "ma"] = [
             {ORTH: pron, LEMMA: PRON_LEMMA, TAG: "PRP"},
             {ORTH: "m", LEMMA: "be", NORM: "am"},
             {ORTH: "a", LEMMA: "going to", NORM: "gonna"}
