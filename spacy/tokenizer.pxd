@@ -16,6 +16,7 @@ cdef class Tokenizer:
     cdef PreshMap _specials
     cpdef readonly Vocab vocab
 
+    cdef public object token_match
     cdef public object prefix_search
     cdef public object suffix_search
     cdef public object infix_finditer
