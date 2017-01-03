@@ -2,61 +2,61 @@ from __future__ import unicode_literals
 
 import pytest
 
-def test_hyphen(en_tokenizer):
-    tokens = en_tokenizer('best-known')
+
+@pytest.mark.parametrize('text', ["best-known"])
+def test_tokenizer_splits_hyphens(en_tokenizer, text):
+    tokens = en_tokenizer(text)
     assert len(tokens) == 3
 
 
-def test_numeric_range(en_tokenizer):
-    tokens = en_tokenizer('0.1-13.5')
+@pytest.mark.parametrize('text', ["0.1-13.5", "0.0-0.1", "103.27-300"])
+def test_tokenizer_splits_numeric_range(en_tokenizer, text):
+    tokens = en_tokenizer(text)
     assert len(tokens) == 3
 
-def test_period(en_tokenizer):
-    tokens = en_tokenizer('best.Known')
+
+@pytest.mark.parametrize('text', ["best.Known", "Hello.World"])
+def test_tokenizer_splits_period(en_tokenizer, text):
+    tokens = en_tokenizer(text)
     assert len(tokens) == 3
-    tokens = en_tokenizer('zombo.com')
+
+
+@pytest.mark.parametrize('text', ["Hello,world", "one,two"])
+def test_tokenizer_splits_comma(en_tokenizer, text):
+    tokens = en_tokenizer(text)
+    assert len(tokens) == 3
+    assert tokens[0].text == text.split(",")[0]
+    assert tokens[1].text == ","
+    assert tokens[2].text == text.split(",")[1]
+
+
+@pytest.mark.parametrize('text', ["best...Known", "best...known"])
+def test_tokenizer_splits_ellipsis(en_tokenizer, text):
+    tokens = en_tokenizer(text)
+    assert len(tokens) == 3
+
+
+@pytest.mark.parametrize('text', ["google.com", "python.org", "spacy.io", "explosion.ai"])
+def test_tokenizer_keep_urls(en_tokenizer, text):
+    tokens = en_tokenizer(text)
     assert len(tokens) == 1
 
 
-def test_ellipsis(en_tokenizer):
-    tokens = en_tokenizer('best...Known')
-    assert len(tokens) == 3
-    tokens = en_tokenizer('best...known')
-    assert len(tokens) == 3
-
-def test_big_ellipsis(en_tokenizer):
-    '''Test regression identified in Issue #360'''
-    tokens = en_tokenizer(u'$45...............Asking')
-    assert len(tokens) > 2
-
-
-
-def test_email(en_tokenizer):
-    tokens = en_tokenizer('hello@example.com')
-    assert len(tokens) == 1
-    tokens = en_tokenizer('hi+there@gmail.it')
+@pytest.mark.parametrize('text', ["hello123@example.com", "hi+there@gmail.it", "matt@explosion.ai"])
+def test_tokenizer_keeps_email(en_tokenizer, text):
+    tokens = en_tokenizer(text)
     assert len(tokens) == 1
 
 
-def test_double_hyphen(en_tokenizer):
-    tokens = en_tokenizer(u'No decent--let alone well-bred--people.')
-    assert tokens[0].text == u'No'
-    assert tokens[1].text == u'decent'
-    assert tokens[2].text == u'--'
-    assert tokens[3].text == u'let'
-    assert tokens[4].text == u'alone'
-    assert tokens[5].text == u'well'
-    assert tokens[6].text == u'-'
-    # TODO: This points to a deeper issue with the tokenizer: it doesn't re-enter
-    # on infixes.
-    assert tokens[7].text == u'bred'
-    assert tokens[8].text == u'--'
-    assert tokens[9].text == u'people'
-
-
-def test_infix_comma(en_tokenizer):
-    # Re issue #326
-    tokens = en_tokenizer(u'Hello,world')
-    assert tokens[0].text == u'Hello'
-    assert tokens[1].text == u','
-    assert tokens[2].text == u'world'
+def test_tokenizer_splits_double_hyphen(en_tokenizer):
+    tokens = en_tokenizer("No decent--let alone well-bred--people.")
+    assert tokens[0].text == "No"
+    assert tokens[1].text == "decent"
+    assert tokens[2].text == "--"
+    assert tokens[3].text == "let"
+    assert tokens[4].text == "alone"
+    assert tokens[5].text == "well"
+    assert tokens[6].text == "-"
+    assert tokens[7].text == "bred"
+    assert tokens[8].text == "--"
+    assert tokens[9].text == "people"
