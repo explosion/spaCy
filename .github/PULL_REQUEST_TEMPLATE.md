@@ -12,6 +12,8 @@
 <!--- Include details of your testing environment, and the tests you ran too -->
 <!--- How were other areas of the code affected? -->
 
+## Screenshots (if appropriate):
+
 ## Types of changes
 <!--- What types of changes does your code introduce? Put an `x` in all applicable boxes.: -->
 - [ ] Bug fix (non-breaking change fixing an issue)
