@@ -1,8 +1,10 @@
 from __future__ import unicode_literals
+
 import pytest
 
 
-def test_tweebo_challenge(en_tokenizer):
+def test_tokenizer_handles_emoticons(en_tokenizer):
+    # Tweebo challenge (CMU)
     text = u""":o :/ :'( >:o (: :) >.< XD -__- o.O ;D :-) @_@ :P 8D :1 >:( :D =| ") :> ...."""
     tokens = en_tokenizer(text)
     assert tokens[0].orth_ == ":o"
@@ -29,7 +31,7 @@ def test_tweebo_challenge(en_tokenizer):
     assert tokens[21].orth_ == '....'
 
 
-def test_false_positive(en_tokenizer):
-    text = "example:)"
+@pytest.mark.parametrize('text,length', [("example:)", 3), ("108)", 2), ("XDN", 1)])
+def test_tokenizer_excludes_false_pos_emoticons(en_tokenizer, text, length):
     tokens = en_tokenizer(text)
-    assert len(tokens) == 3
+    assert len(tokens) == length
