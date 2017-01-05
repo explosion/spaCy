@@ -10,14 +10,19 @@ import pytest
 def test_tokenizer_handles_long_text(de_tokenizer):
     text = """Die Verwandlung
 
-Als Gregor Samsa eines Morgens aus unruhigen Träumen erwachte, fand er sich in seinem Bett zu einem ungeheueren Ungeziefer verwandelt.
+Als Gregor Samsa eines Morgens aus unruhigen Träumen erwachte, fand er sich in
+seinem Bett zu einem ungeheueren Ungeziefer verwandelt.
 
-Er lag auf seinem panzerartig harten Rücken und sah, wenn er den Kopf ein wenig hob, seinen gewölbten, braunen, von bogenförmigen Versteifungen geteilten Bauch, auf dessen Höhe sich die Bettdecke, zum gänzlichen Niedergleiten bereit, kaum noch erhalten konnte. Seine vielen, im Vergleich zu seinem sonstigen Umfang kläglich dünnen Beine flimmerten ihm hilflos vor den Augen.
+Er lag auf seinem panzerartig harten Rücken und sah, wenn er den Kopf ein wenig
+hob, seinen gewölbten, braunen, von bogenförmigen Versteifungen geteilten
+Bauch, auf dessen Höhe sich die Bettdecke, zum gänzlichen Niedergleiten bereit,
+kaum noch erhalten konnte. Seine vielen, im Vergleich zu seinem sonstigen
+Umfang kläglich dünnen Beine flimmerten ihm hilflos vor den Augen.
 
 »Was ist mit mir geschehen?«, dachte er."""
 
     tokens = de_tokenizer(text)
-    assert len(tokens) == 104
+    assert len(tokens) == 109
 
 
 @pytest.mark.parametrize('text,length', [
