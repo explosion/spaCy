@@ -149,3 +149,10 @@ def test_ie(en_tokenizer):
 #    text = 'But then the 6,000-year ice age came...'
 #    tokens = EN.tokenize(text)
 #    assert len(tokens) == 10
+def test_tokenizer_suspected_freeing_strings(en_tokenizer):
+    text1 = "Betty Botter bought a pound of butter."
+    text2 = "Betty also bought a pound of butter."
+    tokens1 = en_tokenizer(text1)
+    tokens2 = en_tokenizer(text2)
+    assert tokens1[0].text == "Betty"
+    assert tokens2[0].text == "Betty"
