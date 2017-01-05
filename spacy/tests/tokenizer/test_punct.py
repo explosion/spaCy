@@ -1,4 +1,7 @@
 # coding: utf-8
+"""Test that open, closed and paired punctuation is split off correctly."""
+
+
 from __future__ import unicode_literals
 
 import pytest

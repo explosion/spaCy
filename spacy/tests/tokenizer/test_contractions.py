@@ -1,4 +1,7 @@
 # coding: utf-8
+"""Test that tokens are created correctly for contractions."""
+
+
 from __future__ import unicode_literals
 
 import pytest
