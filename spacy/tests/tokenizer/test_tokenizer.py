@@ -157,14 +157,6 @@ def test_two_whitespace(en_tokenizer):
     assert repr(tokens.text_with_ws) == repr(orig_str)
 
 
-@pytest.mark.xfail
-def test_em_dash_infix(en_tokenizer):
-    # Re Issue #225
-    tokens = en_tokenizer('''Will this road take me to Puddleton?\u2014No, '''
-                          '''you'll have to walk there.\u2014Ariel.''')
-    assert tokens[6].text == 'Puddleton'
-    assert tokens[7].text == '?'
-    assert tokens[8].text == '\u2014'
 
 #def test_cnts7():
 #    text = 'But then the 6,000-year ice age came...'
