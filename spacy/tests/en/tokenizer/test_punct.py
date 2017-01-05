@@ -6,11 +6,12 @@ from __future__ import unicode_literals
 
 import pytest
 
-from ... import util
-from ...language_data import TOKENIZER_PREFIXES
+from ....util import compile_prefix_regex
+from ....language_data import TOKENIZER_PREFIXES
 
-en_search_prefixes = util.compile_prefix_regex(TOKENIZER_PREFIXES).search
 
+
+en_search_prefixes = compile_prefix_regex(TOKENIZER_PREFIXES).search
 
 PUNCT_OPEN = ['(', '[', '{', '*']
 PUNCT_CLOSE = [')', ']', '}', '*']

@@ -4,7 +4,7 @@ from os import path
 
 import pytest
 
-from spacy.util import utf8open
+from ....util import utf8open
 
 
 def test_tokenizer_handles_no_word(en_tokenizer):
