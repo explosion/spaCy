@@ -1,7 +1,10 @@
 # coding: utf-8
 from __future__ import unicode_literals
+from os import path
 
 import pytest
+
+from ...util import utf8open
 
 
 def test_tokenizer_handles_no_word(tokenizer):
@@ -13,27 +16,6 @@ def test_tokenizer_handles_no_word(tokenizer):
 def test_tokenizer_handles_single_word(tokenizer, text):
     tokens = tokenizer(text)
     assert tokens[0].text == text
-
-
-@pytest.mark.parametrize('text', ["lorem ipsum"])
-def test_tokenizer_handles_two_words(tokenizer, text):
-    tokens = tokenizer(text)
-    assert len(tokens) == 2
-    assert tokens[0].text != tokens[1].text
-
-
-@pytest.mark.parametrize('text', ["lorem  ipsum"])
-def test_tokenizer_splits_double_space(tokenizer, text):
-    tokens = tokenizer(text)
-    assert len(tokens) == 3
-    assert tokens[1].text == " "
-
-
-@pytest.mark.parametrize('text', ["lorem\nipsum"])
-def test_tokenizer_splits_newline(tokenizer, text):
-    tokens = tokenizer(text)
-    assert len(tokens) == 3
-    assert tokens[1].text == "\n"
 
 
 def test_tokenizer_handles_punct(tokenizer):
@@ -57,6 +39,18 @@ def test_tokenizer_handles_digits(tokenizer):
         assert tokens[3].text == "1984"
 
 
+@pytest.mark.parametrize('text', ["google.com", "python.org", "spacy.io", "explosion.ai"])
+def test_tokenizer_keep_urls(tokenizer, text):
+    tokens = tokenizer(text)
+    assert len(tokens) == 1
+
+
+@pytest.mark.parametrize('text', ["hello123@example.com", "hi+there@gmail.it", "matt@explosion.ai"])
+def test_tokenizer_keeps_email(tokenizer, text):
+    tokens = tokenizer(text)
+    assert len(tokens) == 1
+
+
 def test_tokenizer_handles_long_text(tokenizer):
     text = """Lorem ipsum dolor sit amet, consectetur adipiscing elit
 
@@ -69,6 +63,15 @@ Phasellus tincidunt, augue quis porta finibus, massa sapien consectetur augue, n
 
     tokens = tokenizer(text)
     assert len(tokens) > 5
+
+
+@pytest.mark.parametrize('file_name', ["sun.txt"])
+def test_tokenizer_handle_text_from_file(tokenizer, file_name):
+    loc = path.join(path.dirname(__file__), file_name)
+    text = utf8open(loc).read()
+    assert len(text) != 0
+    tokens = tokenizer(text)
+    assert len(tokens) > 100
 
 
 def test_tokenizer_suspected_freeing_strings(tokenizer):
