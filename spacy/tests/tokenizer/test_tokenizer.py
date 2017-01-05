@@ -3,67 +3,64 @@ from __future__ import unicode_literals
 from os import path
 
 import pytest
-import io
-import pickle
-import cloudpickle
-import tempfile
 
-from ... import util
-from ...language_data import TOKENIZER_PREFIXES
 from spacy.util import utf8open
 
-en_search_prefixes = util.compile_prefix_regex(TOKENIZER_PREFIXES).search
 
-# @pytest.mark.xfail
-# def test_pickle(en_tokenizer):
-#     file_ = io.BytesIO()
-#     cloudpickle.dump(en_tokenizer, file_)
-#     file_.seek(0)
-#     loaded = pickle.load(file_)
-#     assert loaded is not None
-
+def test_tokenizer_handles_no_word(en_tokenizer):
+    tokens = en_tokenizer("")
     assert len(tokens) == 0
 
 
-def test_single_word(en_tokenizer):
-    tokens = en_tokenizer(u'hello')
-    assert tokens[0].orth_ == 'hello'
+@pytest.mark.parametrize('text', ["hello"])
+def test_tokenizer_handles_single_word(en_tokenizer, text):
+    tokens = en_tokenizer(text)
+    assert tokens[0].text == text
 
 
-def test_two_words(en_tokenizer):
-    tokens = en_tokenizer('hello possums')
+@pytest.mark.parametrize('text', ["hello possums"])
+def test_tokenizer_handles_two_words(en_tokenizer, text):
+    tokens = en_tokenizer(text)
     assert len(tokens) == 2
-    assert tokens[0].orth_ != tokens[1].orth_
+    assert tokens[0].text != tokens[1].text
 
 
-def test_punct(en_tokenizer):
-    tokens = en_tokenizer('hello, possums.')
+def test_tokenizer_handles_punct(en_tokenizer):
+    text = "hello, possums."
+    tokens = en_tokenizer(text)
     assert len(tokens) == 4
-    assert tokens[0].orth_ == 'hello'
-    assert tokens[1].orth_ == ','
-    assert tokens[2].orth_ == 'possums'
-    assert tokens[1].orth_ != 'hello'
+    assert tokens[0].text == "hello"
+    assert tokens[1].text == ","
+    assert tokens[2].text == "possums"
+    assert tokens[1].text != "hello"
 
 
-def test_digits(en_tokenizer):
-    tokens = en_tokenizer('The year: 1984.')
+def test_tokenizer_handles_digits(en_tokenizer):
+    text = "The year: 1984."
+    tokens = en_tokenizer(text)
     assert len(tokens) == 5
-    assert tokens[0].orth == en_tokenizer.vocab['The'].orth
-    assert tokens[3].orth == en_tokenizer.vocab['1984'].orth
+    assert tokens[0].text == "The"
+    assert tokens[3].text == "1984"
 
 
-def test_contraction(en_tokenizer):
-    tokens = en_tokenizer("don't giggle")
+def test_tokenizer_handles_basic_contraction(en_tokenizer):
+    text = "don't giggle"
+    tokens = en_tokenizer(text)
     assert len(tokens) == 3
-    assert tokens[1].orth == en_tokenizer.vocab["n't"].orth
-    tokens = en_tokenizer("i said don't!")
+    assert tokens[1].text == "n't"
+    text = "i said don't!"
+    tokens = en_tokenizer(text)
     assert len(tokens) == 5
-    assert tokens[4].orth == en_tokenizer.vocab['!'].orth
+    assert tokens[4].text == "!"
 
+
+@pytest.mark.parametrize('text', ["`ain't", '''"isn't''', "can't!"])
+def test_tokenizer_handles_basic_contraction_punct(en_tokenizer, text):
+    tokens = en_tokenizer(text)
     assert len(tokens) == 3
 
 
-def test_sample(en_tokenizer):
+def test_tokenizer_handles_long_text(en_tokenizer):
     text = """Tributes pour in for late British Labour Party leader
 
 Tributes poured in from around the world Thursday
@@ -79,76 +76,29 @@ untimely death" of the rapier-tongued Scottish barrister and parliamentarian.
     assert len(tokens) > 5
 
 
-def test_cnts1(en_tokenizer):
-    text = u"""The U.S. Army likes Shock and Awe."""
 @pytest.mark.parametrize('file_name', ["sun.txt"])
 def test_tokenizer_handle_text_from_file(en_tokenizer, file_name):
     loc = path.join(path.dirname(__file__), file_name)
     text = utf8open(loc).read()
     assert len(text) != 0
     tokens = en_tokenizer(text)
-    assert len(tokens) == 8
+    assert len(tokens) > 100
 
 
-def test_cnts2(en_tokenizer):
-    text = u"""U.N. regulations are not a part of their concern."""
+@pytest.mark.parametrize('text,length', [
+    ("The U.S. Army likes Shock and Awe.", 8),
+    ("U.N. regulations are not a part of their concern.", 10),
+    ("“Isn't it?”", 6),
+    ("""Yes! "I'd rather have a walk", Ms. Comble sighed. """, 15),
+    ("""'Me too!', Mr. P. Delaware cried. """, 11),
+    ("They ran about 10km.", 6),
+    # ("But then the 6,000-year ice age came...", 10)
+    ])
+def test_tokenizer_handles_cnts(en_tokenizer, text, length):
     tokens = en_tokenizer(text)
-    assert len(tokens) == 10
+    assert len(tokens) == length
 
 
-def test_cnts3(en_tokenizer):
-    text = u"“Isn't it?”"
-    tokens = en_tokenizer(text)
-    words = [t.orth_ for t in tokens]
-    assert len(words) == 6
-
-
-def test_cnts4(en_tokenizer):
-    text = u"""Yes! "I'd rather have a walk", Ms. Comble sighed. """
-    tokens = en_tokenizer(text)
-    words = [t.orth_ for t in tokens]
-    assert len(words) == 15
-
-
-def test_cnts5(en_tokenizer):
-    text = """'Me too!', Mr. P. Delaware cried. """
-    tokens = en_tokenizer(text)
-    assert len(tokens) == 11
-
-
-@pytest.mark.xfail
-def test_mr(en_tokenizer):
-    text = """Today is Tuesday.Mr."""
-    tokens = en_tokenizer(text)
-    assert len(tokens) == 5
-    assert [w.orth_ for w in tokens] == ['Today', 'is', 'Tuesday', '.', 'Mr.']
-
-
-def test_cnts6(en_tokenizer):
-    text = u'They ran about 10km.'
-    tokens = en_tokenizer(text)
-    words = [t.orth_ for t in tokens]
-    assert len(words) == 6
-
-def test_bracket_period(en_tokenizer):
-    text = u'(And a 6a.m. run through Washington Park).'
-    tokens = en_tokenizer(text)
-    assert tokens[len(tokens) - 1].orth_ == u'.'
-
-
-def test_ie(en_tokenizer):
-    text = u"It's mediocre i.e. bad."
-    tokens = en_tokenizer(text)
-    assert len(tokens) == 6
-    assert tokens[3].orth_ == "i.e."
-
-
-
-
-#def test_cnts7():
-#    text = 'But then the 6,000-year ice age came...'
-#    tokens = EN.tokenize(text)
-#    assert len(tokens) == 10
 def test_tokenizer_suspected_freeing_strings(en_tokenizer):
     text1 = "Betty Botter bought a pound of butter."
     text2 = "Betty also bought a pound of butter."
