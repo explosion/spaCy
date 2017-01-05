@@ -7,7 +7,7 @@ from ..language_data import PRON_LEMMA
 
 EXC = {}
 
-EXCLUDE_EXC = ["Ill", "ill", "Hell", "hell", "Well", "well", "Whore", "whore"]
+EXCLUDE_EXC = ["Ill", "ill", "Its", "its", "Hell", "hell", "Well", "well", "Whore", "whore"]
 
 
 # Pronouns
@@ -49,16 +49,6 @@ for pron in ["i", "you", "he", "she", "it", "we", "they"]:
             {ORTH: "ll", LEMMA: "will", TAG: "MD"}
         ]
 
-        EXC[orth + "'ve"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
-            {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
-        ]
-
-        EXC[orth + "ve"] = [
-            {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
-            {ORTH: "ve", LEMMA: "have", TAG: "VB"}
-        ]
-
         EXC[orth + "'ll've"] = [
             {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
             {ORTH: "'ll", LEMMA: "will", TAG: "MD"},
@@ -94,6 +84,19 @@ for pron in ["i", "you", "he", "she", "it", "we", "they"]:
         ]
 
 
+for pron in ["i", "you", "we", "they"]:
+    for orth in [pron, pron.title()]:
+        EXC[orth + "'ve"] = [
+            {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
+            {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
+        ]
+
+        EXC[orth + "ve"] = [
+            {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
+            {ORTH: "ve", LEMMA: "have", TAG: "VB"}
+        ]
+
+
 for pron in ["you", "we", "they"]:
     for orth in [pron, pron.title()]:
         EXC[orth + "'re"] = [
@@ -105,6 +108,20 @@ for pron in ["you", "we", "they"]:
             {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
             {ORTH: "re", LEMMA: "be", NORM: "are"}
         ]
+
+
+for pron in ["he", "she", "it"]:
+    for orth in [pron, pron.title()]:
+        EXC[orth + "'s"] = [
+            {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
+            {ORTH: "'s"}
+        ]
+
+        EXC[orth + "s"] = [
+            {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
+            {ORTH: "s"}
+        ]
+
 
 
 # W-words, relative pronouns, prepositions etc.
