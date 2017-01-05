@@ -1,5 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
+from os import path
 
 import pytest
 import io
@@ -9,6 +10,7 @@ import tempfile
 
 from ... import util
 from ...language_data import TOKENIZER_PREFIXES
+from spacy.util import utf8open
 
 en_search_prefixes = util.compile_prefix_regex(TOKENIZER_PREFIXES).search
 
@@ -79,6 +81,11 @@ untimely death" of the rapier-tongued Scottish barrister and parliamentarian.
 
 def test_cnts1(en_tokenizer):
     text = u"""The U.S. Army likes Shock and Awe."""
+@pytest.mark.parametrize('file_name', ["sun.txt"])
+def test_tokenizer_handle_text_from_file(en_tokenizer, file_name):
+    loc = path.join(path.dirname(__file__), file_name)
+    text = utf8open(loc).read()
+    assert len(text) != 0
     tokens = en_tokenizer(text)
     assert len(tokens) == 8
 
