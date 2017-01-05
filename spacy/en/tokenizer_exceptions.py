@@ -637,7 +637,6 @@ for string in EXCLUDE_EXC:
 
 ORTH_ONLY = [
     "''",
-    "\")",
     "a.",
     "a.m.",
     "Adm.",
