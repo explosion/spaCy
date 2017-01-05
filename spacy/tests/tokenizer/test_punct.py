@@ -6,13 +6,19 @@ from __future__ import unicode_literals
 
 import pytest
 
+from ... import util
+from ...language_data import TOKENIZER_PREFIXES
+
+en_search_prefixes = util.compile_prefix_regex(TOKENIZER_PREFIXES).search
+
+
 PUNCT_OPEN = ['(', '[', '{', '*']
 PUNCT_CLOSE = [')', ']', '}', '*']
 PUNCT_PAIRED = [('(', ')'),  ('[', ']'), ('{', '}'), ('*', '*')]
 
 
 @pytest.mark.parametrize('text', ["(", "((", "<"])
-def test_tokenizer_only_punct(en_tokenizer, text):
+def test_tokenizer_handles_only_punct(en_tokenizer, text):
     tokens = en_tokenizer(text)
     assert len(tokens) == len(text)
 
@@ -111,3 +117,15 @@ def test_two_different(en_tokenizer, punct_open, punct_close, punct_open_add, pu
     assert tokens[2].text == text
     assert tokens[3].text == punct_close
     assert tokens[4].text == punct_close_add
+
+
+@pytest.mark.parametrize('text,punct', [("(can't", "(")])
+def test_tokenizer_splits_pre_punct_regex(text, punct):
+    match = en_search_prefixes(text)
+    assert match.group() == punct
+
+
+def test_tokenizer_splits_bracket_period(en_tokenizer):
+    text = "(And a 6a.m. run through Washington Park)."
+    tokens = en_tokenizer(text)
+    assert tokens[len(tokens) - 1].text == "."
