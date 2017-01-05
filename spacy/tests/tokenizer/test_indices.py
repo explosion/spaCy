@@ -1,3 +1,4 @@
+# coding: utf-8
 """Test that token.idx correctly computes index into the original string."""
 
 from __future__ import unicode_literals
