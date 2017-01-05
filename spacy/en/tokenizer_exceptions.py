@@ -212,9 +212,11 @@ for verb_data in [
     {ORTH: "does", LEMMA: "do"},
     {ORTH: "did", LEMMA: "do", TAG: "VBD"},
     {ORTH: "had", LEMMA: "have", TAG: "VBD"},
+    {ORTH: "may"},
     {ORTH: "might"},
     {ORTH: "must"},
     {ORTH: "need"},
+    {ORTH: "ought"},
     {ORTH: "sha", LEMMA: "shall"},
     {ORTH: "should"},
     {ORTH: "wo", LEMMA: "will"},
@@ -286,6 +288,201 @@ for verb_data in [
             dict(data),
             {ORTH: "nt", LEMMA: "not", TAG: "RB"}
         ]
+
+
+
+# Other contractions with trailing apostrophe
+
+for exc_data in [
+    {ORTH: "doin", LEMMA: "do", NORM: "doing"},
+    {ORTH: "goin", LEMMA: "go", NORM: "going"},
+    {ORTH: "nothin", LEMMA: "nothing"},
+    {ORTH: "nuthin", LEMMA: "nothing"},
+    {ORTH: "ol", LEMMA: "old"},
+    {ORTH: "somethin", LEMMA: "something"}
+]:
+    exc_data_tc = dict(exc_data)
+    exc_data_tc[ORTH] = exc_data_tc[ORTH].title()
+
+    for data in [exc_data, exc_data_tc]:
+        data_apos = dict(data)
+        data_apos[ORTH] = data_apos[ORTH] + "'"
+
+        EXC[data[ORTH]] = [
+            dict(data)
+        ]
+
+        EXC[data_apos[ORTH]] = [
+            dict(data_apos)
+        ]
+
+
+# Other contractions with leading apostrophe
+
+for exc_data in [
+    {ORTH: "cause", LEMMA: "because"},
+    {ORTH: "em", LEMMA: PRON_LEMMA, NORM: "them"},
+    {ORTH: "ll", LEMMA: "will"},
+    {ORTH: "nuff", LEMMA: "enough"}
+]:
+    exc_data_apos = dict(exc_data)
+    exc_data_apos[ORTH] = "'" + exc_data_apos[ORTH]
+
+    for data in [exc_data, exc_data_apos]:
+        EXC[data[ORTH]] = [
+            dict(data)
+        ]
+
+
+# Rest
+
+OTHER = {
+    " ": [
+        {ORTH: " ", TAG: "SP"}
+    ],
+
+    "\u00a0": [
+        {ORTH: "\u00a0", TAG: "SP", LEMMA: "  "}
+    ],
+
+    "'S": [
+        {ORTH: "'S", LEMMA: "'s"}
+    ],
+
+    "'s": [
+        {ORTH: "'s", LEMMA: "'s"}
+    ],
+
+    "'re": [
+        {ORTH: "'re", LEMMA: "be", NORM: "are"}
+    ],
+
+    "\u2018S": [
+        {ORTH: "\u2018S", LEMMA: "'s"}
+    ],
+
+    "\u2018s": [
+        {ORTH: "\u2018s", LEMMA: "'s"}
+    ],
+
+    "and/or": [
+        {ORTH: "and/or", LEMMA: "and/or", TAG: "CC"}
+    ],
+
+    "'Cause": [
+        {ORTH: "'Cause", LEMMA: "because"}
+    ],
+
+    "y'all": [
+        {ORTH: "y'", LEMMA: PRON_LEMMA, NORM: "you"},
+        {ORTH: "all"}
+    ],
+
+    "yall": [
+        {ORTH: "y", LEMMA: PRON_LEMMA, NORM: "you"},
+        {ORTH: "all"}
+    ],
+
+    "ma'am": [
+        {ORTH: "ma'am", LEMMA: "madam"}
+    ],
+
+    "Ma'am": [
+        {ORTH: "Ma'am", LEMMA: "madam"}
+    ],
+
+    "o'clock": [
+        {ORTH: "o'clock", LEMMA: "o'clock"}
+    ],
+
+    "O'clock": [
+        {ORTH: "O'clock", LEMMA: "o'clock"}
+    ],
+
+    "how'd'y": [
+        {ORTH: "how", LEMMA: "how"},
+        {ORTH: "'d", LEMMA: "do"},
+        {ORTH: "'y", LEMMA: PRON_LEMMA, NORM: "you"}
+    ],
+
+    "How'd'y": [
+        {ORTH: "How", LEMMA: "how"},
+        {ORTH: "'d", LEMMA: "do"},
+        {ORTH: "'y", LEMMA: PRON_LEMMA, NORM: "you"}
+    ],
+
+    "not've": [
+        {ORTH: "not", LEMMA: "not", TAG: "RB"},
+        {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
+    ],
+
+    "notve": [
+        {ORTH: "not", LEMMA: "not", TAG: "RB"},
+        {ORTH: "ve", LEMMA: "have", TAG: "VB"}
+    ],
+
+    "Not've": [
+        {ORTH: "Not", LEMMA: "not", TAG: "RB"},
+        {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
+    ],
+
+    "Notve": [
+        {ORTH: "Not", LEMMA: "not", TAG: "RB"},
+        {ORTH: "ve", LEMMA: "have", TAG: "VB"}
+    ],
+
+    "cannot": [
+        {ORTH: "can", LEMMA: "can", TAG: "MD"},
+        {ORTH: "not", LEMMA: "not", TAG: "RB"}
+    ],
+
+    "Cannot": [
+        {ORTH: "Can", LEMMA: "can", TAG: "MD"},
+        {ORTH: "not", LEMMA: "not", TAG: "RB"}
+    ],
+
+    "gonna": [
+        {ORTH: "gon", LEMMA: "go", NORM: "going"},
+        {ORTH: "na", LEMMA: "to"}
+    ],
+
+    "Gonna": [
+        {ORTH: "Gon", LEMMA: "go", NORM: "going"},
+        {ORTH: "na", LEMMA: "to"}
+    ],
+
+    "gotta": [
+        {ORTH: "got"},
+        {ORTH: "ta", LEMMA: "to"}
+    ],
+
+    "Gotta": [
+        {ORTH: "Got"},
+        {ORTH: "ta", LEMMA: "to"}
+    ],
+
+    "let's": [
+        {ORTH: "let"},
+        {ORTH: "'s", LEMMA: PRON_LEMMA, NORM: "us"}
+    ],
+
+    "Let's": [
+        {ORTH: "Let", LEMMA: "let"},
+        {ORTH: "'s", LEMMA: PRON_LEMMA, NORM: "us"}
+    ],
+
+    "\u2014": [
+        {ORTH: "\u2014", TAG: ":", LEMMA: "--"}
+    ],
+
+    "\n": [
+        {ORTH: "\n", TAG: "SP"}
+    ],
+
+    "\t": [
+        {ORTH: "\t", TAG: "SP"}
+    ]
+}
 
 
 # Abbreviations
@@ -520,6 +717,7 @@ for string in EXCLUDE_EXC:
 # Abbreviations with only one ORTH token
 
 ORTH_ONLY = [
+    "'d",
     "''",
     "a.",
     "a.m.",
