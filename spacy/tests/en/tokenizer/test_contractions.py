@@ -7,6 +7,23 @@ from __future__ import unicode_literals
 import pytest
 
 
+def test_tokenizer_handles_basic_contraction(en_tokenizer):
+    text = "don't giggle"
+    tokens = en_tokenizer(text)
+    assert len(tokens) == 3
+    assert tokens[1].text == "n't"
+    text = "i said don't!"
+    tokens = en_tokenizer(text)
+    assert len(tokens) == 5
+    assert tokens[4].text == "!"
+
+
+@pytest.mark.parametrize('text', ["`ain't", '''"isn't''', "can't!"])
+def test_tokenizer_handles_basic_contraction_punct(en_tokenizer, text):
+    tokens = en_tokenizer(text)
+    assert len(tokens) == 3
+
+
 @pytest.mark.parametrize('text_poss,text', [("Robin's", "Robin"), ("Alexis's", "Alexis")])
 def test_tokenizer_handles_poss_contraction(en_tokenizer, text_poss, text):
     tokens = en_tokenizer(text_poss)
