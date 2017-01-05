@@ -20,6 +20,12 @@ def test_tokenizer_splits_double_space(en_tokenizer, text):
     assert tokens[1].text == " "
 
 
+@pytest.mark.parametrize('text', ["two spaces after this  "])
+def test_tokenizer_handles_double_trainling_ws(en_tokenizer, text):
+    tokens = en_tokenizer(text)
+    assert repr(tokens.text_with_ws) == repr(text)
+
+
 @pytest.mark.parametrize('text', ["hello\npossums"])
 def test_tokenizer_splits_newline(en_tokenizer, text):
     tokens = en_tokenizer(text)

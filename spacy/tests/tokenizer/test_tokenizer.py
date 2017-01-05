@@ -143,11 +143,6 @@ def test_ie(en_tokenizer):
     assert tokens[3].orth_ == "i.e."
 
 
-def test_two_whitespace(en_tokenizer):
-    orig_str = u'there are 2 spaces after this  '
-    tokens = en_tokenizer(orig_str)
-    assert repr(tokens.text_with_ws) == repr(orig_str)
-
 
 
 #def test_cnts7():
