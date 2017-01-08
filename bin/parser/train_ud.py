@@ -71,6 +71,8 @@ def main(train_loc, dev_loc, model_dir, tag_map_loc):
     features = get_templates('basic')
     
     model_dir = pathlib.Path(model_dir)
+    if not (model_dir / 'deps').exists():
+        (model_dir / 'deps').mkdir()
     with (model_dir / 'deps' / 'config.json').open('w') as file_:
         json.dump({'pseudoprojective': True, 'labels': actions, 'features': features}, file_)
 
