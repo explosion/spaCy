@@ -1,3 +1,4 @@
+from .abbreviations import *
 from .emoticons import *
 from .punctuation import *
 from .tag_map import *
