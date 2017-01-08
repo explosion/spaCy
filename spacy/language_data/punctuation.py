@@ -92,6 +92,7 @@ TOKENIZER_SUFFIXES = (
         r'(?<=[0-9])(?:{c})'.format(c=CURRENCY),
         r'(?<=[0-9])(?:{u})'.format(u=UNITS),
         r'(?<=[0-9{al}{p}(?:{q})])\.'.format(al=ALPHA_LOWER, p=r'%²\-\)\]\+', q=QUOTES),
+        r'(?<=[{au}][{au}])\.'.format(au=ALPHA_UPPER),
         "'s", "'S", "’s", "’S"
     ]
 )
