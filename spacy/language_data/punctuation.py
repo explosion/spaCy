@@ -1,133 +1,114 @@
 # encoding: utf8
 from __future__ import unicode_literals
 
-
-TOKENIZER_PREFIXES = r'''
-,
-"
-(
-[
-{
-*
-<
->
-$
-£
-¡
-¿
-„
-“
-'
-``
-`
-#
-‘
-....
-...
-…
-‚
-»
-§
-US$
-C$
-A$
-a-
-'''.strip().split('\n')
+import re
 
 
-TOKENIZER_SUFFIXES = r'''
-,
-\"
-\)
-\]
-\}
-\*
-\!
-\?
-%
-\$
->
-:
-;
-'
-”
-“
-«
-_
-''
-'s
-'S
-’s
-’S
-’
-‘
-°
-€
-…
-\.\.
-\.\.\.
-\.\.\.\.
-(?<=[a-z0-9)\]”"'%\)])\.
-(?<=[a-zäöüßÖÄÜ)\]"'´«‘’%\)²“”])\.
-\-\-
-´
-(?<=[0-9])km²
-(?<=[0-9])m²
-(?<=[0-9])cm²
-(?<=[0-9])mm²
-(?<=[0-9])km³
-(?<=[0-9])m³
-(?<=[0-9])cm³
-(?<=[0-9])mm³
-(?<=[0-9])ha
-(?<=[0-9])km
-(?<=[0-9])m
-(?<=[0-9])cm
-(?<=[0-9])mm
-(?<=[0-9])µm
-(?<=[0-9])nm
-(?<=[0-9])yd
-(?<=[0-9])in
-(?<=[0-9])ft
-(?<=[0-9])kg
-(?<=[0-9])g
-(?<=[0-9])mg
-(?<=[0-9])µg
-(?<=[0-9])t
-(?<=[0-9])lb
-(?<=[0-9])oz
-(?<=[0-9])m/s
-(?<=[0-9])km/h
-(?<=[0-9])mph
-(?<=[0-9])°C
-(?<=[0-9])°K
-(?<=[0-9])°F
-(?<=[0-9])hPa
-(?<=[0-9])Pa
-(?<=[0-9])mbar
-(?<=[0-9])mb
-(?<=[0-9])T
-(?<=[0-9])G
-(?<=[0-9])M
-(?<=[0-9])K
-(?<=[0-9])kb
-'''.strip().split('\n')
+_ALPHA_LOWER = """
+a ä à á â ǎ æ ã å ā ă ą b c ç ć č ĉ ċ c̄ d ð ď e é è ê ë ė ȅ ȩ ẽ ę f g ĝ ğ h i ı
+î ï í ī ì ȉ ǐ į ĩ j k ķ l ł ļ m n ñ ń ň ņ o ö ó ò ő ô õ œ ø ō ő ǒ ơ p q r ř ŗ s
+ß ś š ş ŝ t ť u ú û ù ú ū ű ǔ ů ų ư v w ŵ x y ÿ ý ỳ ŷ ỹ z ź ž ż þ
+"""
 
 
-TOKENIZER_INFIXES = r'''
-…
-\.\.\.+
-(?<=[a-z])\.(?=[A-Z])
-(?<=[a-z])\.(?=[A-Z])
-(?<=[a-zA-Z])-(?=[a-zA-z])
-(?<=[a-zA-Z])--(?=[a-zA-z])
-(?<=[0-9])-(?=[0-9])
-(?<=[A-Za-z]),(?=[A-Za-z])
-(?<=[a-zöäüßA-ZÖÄÜ"]):(?=[a-zöäüßA-ZÖÄÜ])
-(?<=[a-zöäüßA-ZÖÄÜ"])>(?=[a-zöäüßA-ZÖÄÜ])
-(?<=[a-zöäüßA-ZÖÄÜ"])<(?=[a-zöäüßA-ZÖÄÜ])
-(?<=[a-zöäüßA-ZÖÄÜ"])=(?=[a-zöäüßA-ZÖÄÜ])
-'''.strip().split('\n')
+_ALPHA_UPPER = """
+A Ä À Á Â Ǎ Æ Ã Å Ā Ă Ą B C Ç Ć Č Ĉ Ċ C̄ D Ð Ď E É È Ê Ë Ė Ȅ Ȩ Ẽ Ę F G Ĝ Ğ H I İ
+Î Ï Í Ī Ì Ȉ Ǐ Į Ĩ J K Ķ L Ł Ļ M N Ñ Ń Ň Ņ O Ö Ó Ò Ő Ô Õ Œ Ø Ō Ő Ǒ Ơ P Q R Ř Ŗ S
+Ś Š Ş Ŝ T Ť U Ú Û Ù Ú Ū Ű Ǔ Ů Ų Ư V W Ŵ X Y Ÿ Ý Ỳ Ŷ Ỹ Z Ź Ž Ż Þ
+"""
+
+
+_UNITS = """
+km km² km³ m m² m³ dm dm² dm³ cm cm² cm³ mm mm² mm³ ha µm nm yd in ft kg g mg
+µg t lb oz m/s km/h kmh mph hPa Pa mbar mb MB kb KB gb GB tb
+TB T G M K
+"""
+
+
+_CURRENCY = r"""
+\$ £ € ¥ ฿ US\$ C\$ A\$
+"""
+
+
+_QUOTES = r"""
+' '' " ” “ `` ` ‘ ´ ‚ , „ » «
+"""
+
+
+_PUNCT = r"""
+… , : ; \! \? ¿ ¡ \( \) \[ \] \{ \} < > _ # \* &
+"""
+
+
+_HYPHENS = r"""
+- – — -- ---
+"""
+
+
+LIST_ELLIPSES = [
+    r'\.\.+',
+    "…"
+]
+
+
+LIST_CURRENCY = list(_CURRENCY.strip().split())
+LIST_QUOTES = list(_QUOTES.strip().split())
+LIST_PUNCT = list(_PUNCT.strip().split())
+LIST_HYPHENS = list(_HYPHENS.strip().split())
+
+
+ALPHA_LOWER = _ALPHA_LOWER.strip().replace(' ', '')
+ALPHA_UPPER = _ALPHA_UPPER.strip().replace(' ', '')
+ALPHA = ALPHA_LOWER + ALPHA_UPPER
+
+
+QUOTES = _QUOTES.strip().replace(' ', '|')
+CURRENCY = _CURRENCY.strip().replace(' ', '|')
+UNITS = _UNITS.strip().replace(' ', '|')
+HYPHENS = _HYPHENS.strip().replace(' ', '|')
+
+
+
+# Prefixes
+
+TOKENIZER_PREFIXES = (
+    ['§', '%', r'\+'] +
+    LIST_PUNCT +
+    LIST_ELLIPSES +
+    LIST_QUOTES +
+    LIST_CURRENCY
+)
+
+
+# Suffixes
+
+TOKENIZER_SUFFIXES = (
+    LIST_PUNCT +
+    LIST_ELLIPSES +
+    LIST_QUOTES +
+    [
+        r'(?<=[0-9])\+',
+        r'(?<=°[FfCcKk])\.',
+        r'(?<=[0-9])(?:{c})'.format(c=CURRENCY),
+        r'(?<=[0-9])(?:{u})'.format(u=UNITS),
+        r'(?<=[0-9{al}{p}(?:{q})])\.'.format(al=ALPHA_LOWER, p=r'%²\-\)\]\+', q=QUOTES),
+        "'s", "'S", "’s", "’S"
+    ]
+)
+
+
+# Infixes
+
+TOKENIZER_INFIXES = (
+    LIST_ELLIPSES +
+    [
+        r'(?<=[0-9])[+\-\*/^](?=[0-9])',
+        r'(?<=[{al}])\.(?=[{au}])'.format(al=ALPHA_LOWER, au=ALPHA_UPPER),
+        r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),
+        r'(?<=[{a}])(?:{h})(?=[{a}])'.format(a=ALPHA, h=HYPHENS),
+        r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=ALPHA)
+    ]
+)
 
 
 __all__ = ["TOKENIZER_PREFIXES", "TOKENIZER_SUFFIXES", "TOKENIZER_INFIXES"]
