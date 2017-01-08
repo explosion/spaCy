@@ -47,8 +47,7 @@ PACKAGES = [
     'spacy.tests.tokenizer',
     'spacy.tests.tokens',
     'spacy.tests.vectors',
-    'spacy.tests.vocab',
-    'spacy.tests.website']
+    'spacy.tests.vocab']
 
 
 MOD_NAMES = [
