@@ -33,7 +33,7 @@ def get_lang_class(name):
 
 
 def get_data_path():
-    return _data_path
+    return _data_path if _data_path.exists() else None
 
 
 def set_data_path(path):
@@ -54,7 +54,7 @@ def or_(val1, val2):
 
 def match_best_version(target_name, target_version, path):
     path = path if not isinstance(path, basestring) else pathlib.Path(path)
-    if not path.exists():
+    if path is None or not path.exists():
         return None
     matches = []
     for data_name in path.iterdir():
