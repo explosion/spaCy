@@ -6,7 +6,69 @@ from ..language_data import PRON_LEMMA
 
 
 TOKENIZER_EXCEPTIONS = {
-    
+    "jan.": [
+        {ORTH: "jan.", LEMMA: "januari"}
+    ],
+    "febr.": [
+        {ORTH: "febr.", LEMMA: "februari"}
+    ],
+    "feb.": [
+        {ORTH: "feb.", LEMMA: "februari"}
+    ],
+    "apr.": [
+        {ORTH: "apr.", LEMMA: "april"}
+    ],
+    "jun.": [
+        {ORTH: "jun.", LEMMA: "juni"}
+    ],
+    "jul.": [
+        {ORTH: "jul.", LEMMA: "juli"}
+    ],
+    "aug.": [
+        {ORTH: "aug.", LEMMA: "augusti"}
+    ],
+    "sept.": [
+        {ORTH: "sept.", LEMMA: "september"}
+    ],
+    "sep.": [
+        {ORTH: "sep.", LEMMA: "september"}
+    ],
+    "okt.": [
+        {ORTH: "okt.", LEMMA: "oktober"}
+    ],
+    "nov.": [
+        {ORTH: "nov.", LEMMA: "november"}
+    ],
+    "dec.": [
+        {ORTH: "dec.", LEMMA: "december"}
+    ],
+    "mån.": [
+        {ORTH: "mån.", LEMMA: "måndag"}
+    ],
+    "tis.": [
+        {ORTH: "tis.", LEMMA: "tisdag"}
+    ],
+    "ons.": [
+        {ORTH: "ons.", LEMMA: "onsdag"}
+    ],
+    "tors.": [
+        {ORTH: "tors.", LEMMA: "torsdag"}
+    ],
+    "fre.": [
+        {ORTH: "fre.", LEMMA: "fredag"}
+    ],
+    "lör.": [
+        {ORTH: "lör.", LEMMA: "lördag"}
+    ],
+    "sön.": [
+        {ORTH: "sön.", LEMMA: "söndag"}
+    ],
+    "sthlm": [
+        {ORTH: "sthlm", LEMMA: "Stockholm"}
+    ],
+    "gbg": [
+        {ORTH: "gbg", LEMMA: "Göteborg"}
+    ]
 }
 
 
