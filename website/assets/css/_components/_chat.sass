@@ -1,0 +1,100 @@
+//- 💫 CSS > COMPONENTS > CHAT
+
+.c-chat
+    @include position(fixed, top, left, 0, 60%)
+    bottom: 0
+    right: 0
+    display: flex
+    flex-flow: column nowrap
+    background: $color-back
+    transition: transform 0.3s cubic-bezier(0.16, 0.22, 0.22, 1.7)
+    box-shadow: -0.25rem 0 1rem 0 rgba($color-front, 0.25)
+    z-index: 100
+
+    @include breakpoint(min, md)
+        left: calc(100% - #{$aside-width} - #{$aside-padding})
+
+    @include breakpoint(max, sm)
+        left: 50%
+
+    @include breakpoint(max, xs)
+        left: 0
+
+    &.is-collapsed:not(.is-loading)
+        transform: translateX(110%)
+
+    &:before
+        @include position(absolute, top, left, 1rem, 2rem)
+        content: attr(data-title)
+        font: bold 1.4rem $font-code
+        text-transform: uppercase
+        color: $color-back
+
+    &:after
+        @include position(absolute, top, left, 0, 100%)
+        content: ""
+        z-index: -1
+        bottom: 0
+        right: -100%
+        background: $color-back
+
+    & > iframe
+        width: 100%
+        flex: 1 1 calc(100% - #{$nav-height})
+        border: 0
+
+    .gitter-chat-embed-loading-wrapper
+        @include position(absolute, top, left, 0, 0)
+        right: 0
+        bottom: 0
+        display: none
+        justify-content: center
+        align-items: center
+
+        .is-loading &
+            display: flex
+
+    .gitter-chat-embed-action-bar,
+    .gitter-chat-embed-action-bar-item
+        display: flex
+
+    .gitter-chat-embed-action-bar
+        align-items: center
+        justify-content: flex-end
+        background: $color-theme
+        padding: 0 1rem 0 2rem
+        flex: 0 0 $nav-height
+
+    .gitter-chat-embed-action-bar-item
+        @include size(40px)
+        padding: 0
+        opacity: 0.75
+        background-position: 50%
+        background-repeat: no-repeat
+        background-size: 22px 22px
+        border: 0
+        cursor: pointer
+        transition: all 0.2s ease
+
+        &:focus,
+        &:hover
+            opacity: 1
+
+        &.gitter-chat-embed-action-bar-item-pop-out
+            background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyMCIgaGVpZ2h0PSIyMCIgdmlld0JveD0iMCAwIDIwIDIwIj48cGF0aCBmaWxsPSIjZmZmIiBkPSJNMTYgMmgtOC4wMjFjLTEuMDk5IDAtMS45NzkgMC44OC0xLjk3OSAxLjk4djguMDIwYzAgMS4xIDAuOSAyIDIgMmg4YzEuMSAwIDItMC45IDItMnYtOGMwLTEuMS0wLjktMi0yLTJ6TTE2IDEyaC04di04aDh2OHpNNCAxMGgtMnY2YzAgMS4xIDAuOSAyIDIgMmg2di0yaC02di02eiI+PC9wYXRoPjwvc3ZnPg==)
+            margin-right: -4px
+
+        &.gitter-chat-embed-action-bar-item-collapse-chat
+            background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij48cGF0aCBmaWxsPSIjZmZmIiBkPSJNMTguOTg0IDYuNDIybC01LjU3OCA1LjU3OCA1LjU3OCA1LjU3OC0xLjQwNiAxLjQwNi01LjU3OC01LjU3OC01LjU3OCA1LjU3OC0xLjQwNi0xLjQwNiA1LjU3OC01LjU3OC01LjU3OC01LjU3OCAxLjQwNi0xLjQwNiA1LjU3OCA1LjU3OCA1LjU3OC01LjU3OHoiPjwvcGF0aD48L3N2Zz4=)
+
+.c-chat__button
+    @include position(fixed, bottom, right, 0, 2rem)
+    padding: 1rem 1.5rem
+    background: $color-front
+    color: $color-back
+    border-top-left-radius: 4px
+    border-top-right-radius: 4px
+    z-index: 20
+    border-color: $color-theme
+    border-style: solid
+    border-width: 1px 1px 0 1px

@@ -1,4 +1,6 @@
+# coding: utf-8
 """Test that token.idx correctly computes index into the original string."""
+
 
 from __future__ import unicode_literals
 
@@ -6,7 +8,7 @@ import pytest
 
 
 def test_simple_punct(en_tokenizer):
-    text = 'to walk, do foo'
+    text = "to walk, do foo"
     tokens = en_tokenizer(text)
     assert tokens[0].idx == 0
     assert tokens[1].idx == 3
@@ -16,7 +18,7 @@ def test_simple_punct(en_tokenizer):
 
 
 def test_complex_punct(en_tokenizer):
-    text = 'Tom (D., Ill.)!'
+    text = "Tom (D., Ill.)!"
     tokens = en_tokenizer(text)
     assert tokens[0].idx == 0
     assert len(tokens[0]) == 3

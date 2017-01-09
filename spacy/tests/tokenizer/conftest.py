@@ -1,7 +1,23 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
 import pytest
-from spacy.en import English
+
+from ...en import English
+from ...de import German
+from ...es import Spanish
+from ...it import Italian
+from ...fr import French
+from ...pt import Portuguese
+from ...nl import Dutch
+from ...sv import Swedish
+from ...hu import Hungarian
 
 
-@pytest.fixture(scope="module")
-def en_tokenizer(EN):
-    return EN.tokenizer
+LANGUAGES = [English, German, Spanish, Italian, French, Dutch, Swedish, Hungarian]
+
+
+@pytest.fixture(params=LANGUAGES)
+def tokenizer(request):
+    lang = request.param
+    return lang.Defaults.create_tokenizer()

@@ -1,0 +1,23 @@
+//- 💫 INCLUDES > SCRIPTS
+
+script(src="/assets/js/main.js?v#{V_JS}", type="text/javascript")
+script(src="/assets/js/prism.js", type="text/javascript")
+
+if SECTION == "docs"
+    script.
+        ((window.gitter = {}).chat = {}).options = {
+            useStyles: false,
+            activationElement: '.js-gitter-button',
+            targetElement: '.js-gitter',
+            room: '!{SOCIAL.gitter}'
+        };
+
+    script(src="https://sidecar.gitter.im/dist/sidecar.v1.js" async defer)
+
+if environment == "deploy"
+    script
+        | window.ga=window.ga||function(){
+        | (ga.q=ga.q||[]).push(arguments)}; ga.l=+new Date;
+        | ga('create', '#{ANALYTICS}', 'auto'); ga('send', 'pageview');
+
+    script(async src="https://www.google-analytics.com/analytics.js")

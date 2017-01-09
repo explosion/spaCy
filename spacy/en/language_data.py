@@ -37,14 +37,16 @@ def get_time_exc(hours):
     return exc
 
 
-TOKENIZER_EXCEPTIONS = dict(TOKENIZER_EXCEPTIONS)
 TAG_MAP = dict(TAG_MAP)
 STOP_WORDS = set(STOP_WORDS)
 
 
+TOKENIZER_EXCEPTIONS = dict(TOKENIZER_EXCEPTIONS)
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(ORTH_ONLY))
 update_exc(TOKENIZER_EXCEPTIONS, get_time_exc(range(1, 12 + 1)))
 update_exc(TOKENIZER_EXCEPTIONS, expand_exc(TOKENIZER_EXCEPTIONS, "'", "’"))
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.EMOTICONS))
+update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.ABBREVIATIONS))
+
 
 __all__ = ["TOKENIZER_EXCEPTIONS", "TAG_MAP", "STOP_WORDS", "LEMMA_RULES", "MORPH_RULES"]

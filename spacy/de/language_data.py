@@ -9,12 +9,13 @@ from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, ORTH_ONLY
 
 
-TOKENIZER_EXCEPTIONS = dict(TOKENIZER_EXCEPTIONS)
 TAG_MAP = dict(TAG_MAP)
 STOP_WORDS = set(STOP_WORDS)
 
 
+TOKENIZER_EXCEPTIONS = dict(TOKENIZER_EXCEPTIONS)
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(ORTH_ONLY))
+update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.ABBREVIATIONS))
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.EMOTICONS))
 
 

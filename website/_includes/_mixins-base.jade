@@ -1,6 +1,7 @@
 //- 💫 MIXINS > BASE
 
 //- Aside wrapper
+    label - [string] aside label
 
 mixin aside-wrapper(label)
     aside.c-aside
@@ -21,6 +22,10 @@ mixin date(input)
 
 
 //- SVG from map
+    file   - [string] SVG file name in /assets/img/
+    name   - [string] SVG symbol id
+    width  - [integer] width in px
+    height - [integer] height in px (default: same as width)
 
 mixin svg(file, name, width, height)
     svg(aria-hidden="true" viewBox="0 0 #{width} #{height || width}" width=width height=(height || width))&attributes(attributes)
@@ -28,19 +33,23 @@ mixin svg(file, name, width, height)
 
 
 //- Icon
+    name - [string] icon name, should be SVG symbol ID
+    size - [integer] icon width and height (default: 20)
 
 mixin icon(name, size)
-    +svg("icons", "icon-" + name, size || 20).o-icon&attributes(attributes)
+    +svg("icons", name, size || 20).o-icon&attributes(attributes)
 
 
 //- Pro/Con/Neutral icon
+    icon - [string] "pro", "con" or "neutral" (default: "neutral")
 
 mixin procon(icon)
-    - colors = { pro: "green", con: "red" }
+    - colors = { pro: "green", con: "red", neutral: "yellow" }
     +icon(icon)(class="u-color-#{colors[icon] || 'subtle'}" aria-label=icon)&attributes(attributes)
 
 
 //- Headlines Helper Mixin
+    level - [integer] 1, 2, 3, 4, or 5
 
 mixin headline(level)
     if level == 1
@@ -65,6 +74,7 @@ mixin headline(level)
 
 
 //- Permalink rendering
+    id - [string] permalink ID used for link anchor
 
 mixin permalink(id)
     if id
@@ -77,6 +87,7 @@ mixin permalink(id)
 
 
 //- Terminal-style code window
+    label - [string] title displayed in top bar of terminal window
 
 mixin terminal(label)
     .x-terminal
@@ -85,6 +96,18 @@ mixin terminal(label)
 
         +code.x-terminal__code
             block
+
+
+//- Gitter chat button and widget
+    button - [string] text shown on button
+    label  - [string] title of chat window (default: same as button)
+
+mixin gitter(button, label)
+    aside.js-gitter.c-chat.is-collapsed(data-title=(label || button))
+
+    button.js-gitter-button.c-chat__button.u-text-small
+        +icon("chat").o-icon--inline
+        !=button
 
 
 //- Logo

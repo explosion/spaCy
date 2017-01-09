@@ -111,7 +111,6 @@ Vcs.
 Vhr.
 X.Y.
 Zs.
-a.
 a.C.
 ac.
 adj.
@@ -126,7 +125,6 @@ ang.
 arch.
 at.
 aug.
-b.
 b.a.
 b.s.
 b.sc.
@@ -141,7 +139,6 @@ br.
 bsc.
 bt.
 btk.
-c.
 ca.
 cc.
 cca.
@@ -155,7 +152,6 @@ csc.
 csüt.
 cső.
 ctv.
-d.
 dbj.
 dd.
 ddr.
@@ -170,7 +166,6 @@ dolg.
 dr.
 du.
 dzs.
-e.
 ea.
 ed.
 eff.
@@ -186,7 +181,6 @@ etc.
 ev.
 ezr.
 eü.
-f.
 f.h.
 f.é.
 fam.
@@ -213,7 +207,6 @@ főig.
 főisk.
 főtörm.
 főv.
-g.
 gazd.
 gimn.
 gk.
@@ -225,7 +218,6 @@ gy.
 gyak.
 gyártm.
 gör.
-h.
 hads.
 hallg.
 hdm.
@@ -266,7 +258,6 @@ isk.
 ism.
 izr.
 iá.
-j.
 jan.
 jav.
 jegyz.
@@ -278,7 +269,6 @@ jr.
 jvb.
 júl.
 jún.
-k.
 karb.
 kat.
 kb.
@@ -313,7 +303,6 @@ közl.
 közp.
 közt.
 kü.
-l.
 lat.
 ld.
 legs.
@@ -324,7 +313,6 @@ lt.
 ltd.
 ltp.
 luth.
-m.
 m.a.
 m.s.
 m.sc.
@@ -359,7 +347,6 @@ műh.
 műsz.
 műv.
 művez.
-n.
 nagyker.
 nagys.
 nat.
@@ -372,7 +359,6 @@ ny.
 nyilv.
 nyrt.
 nyug.
-o.
 obj.
 okl.
 okt.
@@ -381,7 +367,6 @@ orsz.
 ort.
 ov.
 ovh.
-p.
 pf.
 pg.
 ph.d
@@ -404,8 +389,6 @@ pság.
 ptk.
 pu.
 pü.
-q.
-r.
 r.k.
 rac.
 rad.
@@ -420,7 +403,6 @@ rkt.
 rt.
 rtg.
 röv.
-s.
 s.b.
 s.k.
 sa.
@@ -450,7 +432,6 @@ szt.
 szubj.
 szöv.
 szül.
-t.
 tanm.
 tb.
 tbk.
@@ -476,13 +457,11 @@ tvr.
 ty.
 törv.
 tü.
-u.
 ua.
 ui.
 unit.
 uo.
 uv.
-v.
 vas.
 vb.
 vegy.
@@ -501,9 +480,6 @@ vv.
 vál.
 vízv.
 vö.
-w.
-y.
-z.
 zrt.
 zs.
 Ész.
@@ -520,7 +496,6 @@ zs.
 évf.
 í.
 ó.
-ö.
 össz.
 ötk.
 özv.
@@ -528,7 +503,6 @@ zs.
 úm.
 ún.
 út.
-ü.
 üag.
 üd.
 üdv.
@@ -544,6 +518,5 @@ zs.
 """.strip().split()
 
 OTHER_EXC = """
-''
 -e
 """.strip().split()
