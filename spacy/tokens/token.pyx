@@ -60,6 +60,25 @@ cdef class Token:
     def __repr__(self):
         return self.__str__()
 
+    def __richcmp__(self, other, int op):
+        # http://cython.readthedocs.io/en/latest/src/userguide/special_methods.html
+        my = self.idx
+        their = other.idx
+        if op == 0:
+            return my < their
+        elif op == 2:
+            return my == their
+        elif op == 4:
+            return my > their
+        elif op == 1:
+            return my <= their
+        elif op == 3:
+            return my != their
+        elif op == 5:
+            return my >= their
+        else:
+            raise ValueError(op)
+
     cpdef bint check_flag(self, attr_id_t flag_id) except -1:
         '''Check the value of a boolean flag.
         
