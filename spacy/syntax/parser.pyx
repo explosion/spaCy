@@ -255,10 +255,10 @@ cdef class Parser:
         cdef weight_t loss = 0
         cdef Transition action
         while not stcls.is_final():
-            self.model.set_featuresC(eg.c, stcls.c)
+            self.model.set_featuresC(&eg.c, stcls.c)
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
             self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
-            self.model.updateC(eg.c)
+            self.model.updateC(&eg.c)
             guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
 
             action = self.moves.c[eg.guess]
@@ -343,7 +343,7 @@ cdef class StepwiseState:
 
     def predict(self):
         self.eg.reset()
-        self.parser.model.set_featuresC(self.eg.c, self.stcls.c)
+        self.parser.model.set_featuresC(&self.eg.c, self.stcls.c)
         self.parser.moves.set_valid(self.eg.c.is_valid, self.stcls.c)
         self.parser.model.set_scoresC(self.eg.c.scores,
             self.eg.c.features, self.eg.c.nr_feat)
