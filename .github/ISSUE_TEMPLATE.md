@@ -8,7 +8,7 @@ http://stackoverflow.com/questions/tagged/spacy -->
 
 ## Your Environment
 <!-- Include details of your environment -->
-* **Operating System:** 
-* **Python Version Used:** 
-* **spaCy Version Used:** 
-* **Environment Information:** 
+* Operating System: 
+* Python Version Used: 
+* spaCy Version Used: 
+* Environment Information: 
