@@ -12,7 +12,7 @@ from . import util
 
 def download(lang, force=False, fail_on_exist=True, data_path=None):
     if not data_path:
-        data_path = util.get_data_path()
+        data_path = util.get_data_path(require_exists=False)
 
     # spaCy uses pathlib, and util.get_data_path returns a pathlib.Path object,
     # but sputnik (which we're using below) doesn't use pathlib and requires

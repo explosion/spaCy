@@ -32,8 +32,11 @@ def get_lang_class(name):
     return LANGUAGES[lang]
 
 
-def get_data_path():
-    return _data_path if _data_path.exists() else None
+def get_data_path(require_exists=True):
+    if not require_exists:
+        return _data_path
+    else:
+        return _data_path if _data_path.exists() else None
 
 
 def set_data_path(path):
