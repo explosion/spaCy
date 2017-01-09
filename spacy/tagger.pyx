@@ -192,7 +192,7 @@ cdef class Tagger:
                                   nr_feat=self.model.nr_feat)
         for i in range(tokens.length):
             if tokens.c[i].pos == 0:                
-                self.model.set_featuresC(&eg.c, tokens.c, i)
+                self.model.set_featuresC(eg.c, tokens.c, i)
                 self.model.set_scoresC(eg.c.scores,
                     eg.c.features, eg.c.nr_feat)
                 guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
@@ -244,11 +244,11 @@ cdef class Tagger:
             nr_class=self.vocab.morphology.n_tags,
             nr_feat=self.model.nr_feat)
         for i in range(tokens.length):
-            self.model.set_featuresC(&eg.c, tokens.c, i)
+            self.model.set_featuresC(eg.c, tokens.c, i)
             eg.costs = [ 1 if golds[i] not in (c, -1) else 0 for c in xrange(eg.nr_class) ]
             self.model.set_scoresC(eg.c.scores,
                 eg.c.features, eg.c.nr_feat)
-            self.model.updateC(&eg.c)
+            self.model.updateC(eg.c)
 
             self.vocab.morphology.assign_tag_id(&tokens.c[i], eg.guess)
             
