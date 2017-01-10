@@ -63,6 +63,63 @@ TOKENIZER_EXCEPTIONS = {
     "sön.": [
         {ORTH: "sön.", LEMMA: "söndag"}
     ],
+    "Jan.": [
+        {ORTH: "Jan.", LEMMA: "Januari"}
+    ],
+    "Febr.": [
+        {ORTH: "Febr.", LEMMA: "Februari"}
+    ],
+    "Feb.": [
+        {ORTH: "Feb.", LEMMA: "Februari"}
+    ],
+    "Apr.": [
+        {ORTH: "Apr.", LEMMA: "April"}
+    ],
+    "Jun.": [
+        {ORTH: "Jun.", LEMMA: "Juni"}
+    ],
+    "Jul.": [
+        {ORTH: "Jul.", LEMMA: "Juli"}
+    ],
+    "Aug.": [
+        {ORTH: "Aug.", LEMMA: "Augusti"}
+    ],
+    "Sept.": [
+        {ORTH: "Sept.", LEMMA: "September"}
+    ],
+    "Sep.": [
+        {ORTH: "Sep.", LEMMA: "September"}
+    ],
+    "Okt.": [
+        {ORTH: "Okt.", LEMMA: "Oktober"}
+    ],
+    "Nov.": [
+        {ORTH: "Nov.", LEMMA: "November"}
+    ],
+    "Dec.": [
+        {ORTH: "Dec.", LEMMA: "December"}
+    ],
+    "Mån.": [
+        {ORTH: "Mån.", LEMMA: "Måndag"}
+    ],
+    "Tis.": [
+        {ORTH: "Tis.", LEMMA: "Tisdag"}
+    ],
+    "Ons.": [
+        {ORTH: "Ons.", LEMMA: "Onsdag"}
+    ],
+    "Tors.": [
+        {ORTH: "Tors.", LEMMA: "Torsdag"}
+    ],
+    "Fre.": [
+        {ORTH: "Fre.", LEMMA: "Fredag"}
+    ],
+    "Lör.": [
+        {ORTH: "Lör.", LEMMA: "Lördag"}
+    ],
+    "Sön.": [
+        {ORTH: "Sön.", LEMMA: "Söndag"}
+    ],
     "sthlm": [
         {ORTH: "sthlm", LEMMA: "Stockholm"}
     ],
