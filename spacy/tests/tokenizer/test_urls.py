@@ -5,20 +5,17 @@ import pytest
 
 
 URLS = [
-    u"http://www.nytimes.com/2016/04/20/us/politics/new-york-primary-preview.html?hp&action=click&pgtype=Homepage&clickSource=story-heading&module=a-lede-package-region&region=top-news&WT.nav=top-news&_r=0",
-    u"www.google.com?q=google",
-    u"google.com",
-    u"www.red-stars.com",
-    pytest.mark.xfail(u"red-stars.com"),
-    u"http://foo.com/blah_(wikipedia)#cite-1",
-    u"http://www.example.com/wpstyle/?bar=baz&inga=42&quux",
-    u"mailto:foo.bar@baz.com",
-    u"mailto:foo-bar@baz-co.com"
+    "http://www.nytimes.com/2016/04/20/us/politics/new-york-primary-preview.html?hp&action=click&pgtype=Homepage&clickSource=story-heading&module=a-lede-package-region&region=top-news&WT.nav=top-news&_r=0",
+    "www.google.com?q=google",
+    "www.red-stars.com",
+    "http://foo.com/blah_(wikipedia)#cite-1",
+    "mailto:foo.bar@baz.com",
+    "mailto:foo-bar@baz-co.com"
 ]
 
 # Punctuation we want to check is split away before the URL
 PREFIXES = [
-    "(", '"', "...",  ">"
+    "(", '"', ">"
 ]
 
 # Punctuation we want to check is split away after the URL
