@@ -1,6 +1,8 @@
+# coding: utf-8
 from __future__ import unicode_literals
 
 import pytest
+
 
 URLS = [
     u"http://www.nytimes.com/2016/04/20/us/politics/new-york-primary-preview.html?hp&action=click&pgtype=Homepage&clickSource=story-heading&module=a-lede-package-region&region=top-news&WT.nav=top-news&_r=0",
