@@ -50,6 +50,15 @@ def test_tokenizer_handles_suffixed_url(tokenizer, url, suffix):
     assert tokens[1].text == suffix
 
 
+@pytest.mark.parametrize("url", URLS)
+def test_tokenizer_handles_simple_surround_url(tokenizer, url):
+    tokens = tokenizer("(" + url + ")")
+    assert len(tokens) == 3
+    assert tokens[0].text == "("
+    assert tokens[1].text == url
+    assert tokens[2].text == ")"
+
+
 @pytest.mark.parametrize("prefix", PREFIXES)
 @pytest.mark.parametrize("suffix", SUFFIXES)
 @pytest.mark.parametrize("url", URLS)
