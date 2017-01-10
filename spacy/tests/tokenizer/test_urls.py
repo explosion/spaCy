@@ -59,6 +59,7 @@ def test_tokenizer_handles_simple_surround_url(tokenizer, url):
     assert tokens[2].text == ")"
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("prefix", PREFIXES)
 @pytest.mark.parametrize("suffix", SUFFIXES)
 @pytest.mark.parametrize("url", URLS)
@@ -70,6 +71,7 @@ def test_tokenizer_handles_surround_url(tokenizer, prefix, suffix, url):
     assert tokens[2].text == suffix
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("prefix1", PREFIXES)
 @pytest.mark.parametrize("prefix2", PREFIXES)
 @pytest.mark.parametrize("url", URLS)
@@ -81,6 +83,7 @@ def test_tokenizer_handles_two_prefix_url(tokenizer, prefix1, prefix2, url):
     assert tokens[2].text == url
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("suffix1", SUFFIXES)
 @pytest.mark.parametrize("suffix2", SUFFIXES)
 @pytest.mark.parametrize("url", URLS)
