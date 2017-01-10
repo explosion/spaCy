@@ -36,18 +36,18 @@ def test_tokenizer_handles_simple_url(tokenizer, url):
 @pytest.mark.parametrize("url", URLS)
 def test_tokenizer_handles_prefixed_url(tokenizer, prefix, url):
     tokens = tokenizer(prefix + url)
+    assert len(tokens) == 2
     assert tokens[0].text == prefix
     assert tokens[1].text == url
-    assert len(tokens) == 2
 
 
 @pytest.mark.parametrize("suffix", SUFFIXES)
 @pytest.mark.parametrize("url", URLS)
 def test_tokenizer_handles_suffixed_url(tokenizer, url, suffix):
     tokens = tokenizer(url + suffix)
+    assert len(tokens) == 2
     assert tokens[0].text == url
     assert tokens[1].text == suffix
-    assert len(tokens) == 2
 
 
 @pytest.mark.parametrize("prefix", PREFIXES)
@@ -55,6 +55,7 @@ def test_tokenizer_handles_suffixed_url(tokenizer, url, suffix):
 @pytest.mark.parametrize("url", URLS)
 def test_tokenizer_handles_surround_url(tokenizer, prefix, suffix, url):
     tokens = tokenizer(prefix + url + suffix)
+    assert len(tokens) == 3
     assert tokens[0].text == prefix
     assert tokens[1].text == url
     assert tokens[2].text == suffix
@@ -65,10 +66,10 @@ def test_tokenizer_handles_surround_url(tokenizer, prefix, suffix, url):
 @pytest.mark.parametrize("url", URLS)
 def test_tokenizer_handles_two_prefix_url(tokenizer, prefix1, prefix2, url):
     tokens = tokenizer(prefix1 + prefix2 + url)
+    assert len(tokens) == 3
     assert tokens[0].text == prefix1
     assert tokens[1].text == prefix2
     assert tokens[2].text == url
-    assert len(tokens) == 3
 
 
 @pytest.mark.parametrize("suffix1", SUFFIXES)
@@ -76,7 +77,7 @@ def test_tokenizer_handles_two_prefix_url(tokenizer, prefix1, prefix2, url):
 @pytest.mark.parametrize("url", URLS)
 def test_tokenizer_handles_two_prefix_url(tokenizer, suffix1, suffix2, url):
     tokens = tokenizer(url + suffix1 + suffix2)
+    assert len(tokens) == 3
     assert tokens[0].text == url
     assert tokens[1].text == suffix1
     assert tokens[2].text == suffix2
-    assert len(tokens) == 3
