@@ -1,8 +1,10 @@
+# coding: utf-8
 from __future__ import unicode_literals
-import pytest
 
 import spacy
 from spacy.attrs import ORTH
+
+import pytest
 
 
 @pytest.mark.models
@@ -23,7 +25,7 @@ def test_issue429():
     doc = nlp.tokenizer('a b c')
     nlp.tagger(doc)
     nlp.matcher(doc)
-        
+
     for word in doc:
         print(word.text, word.ent_iob_, word.ent_type_)
     nlp.entity(doc)

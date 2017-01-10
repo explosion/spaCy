@@ -1,8 +1,11 @@
+# coding: utf-8
 from __future__ import unicode_literals
+
 from ...attrs import *
 from ...matcher import Matcher
 from ...tokens import Doc
 from ...en import English
+
 
 def test_overlapping_matches():
     vocab = English.Defaults.create_vocab()
@@ -29,6 +32,6 @@ def test_overlapping_matches():
             {ORTH: '='},
             {LIKE_NUM: True},
         ], label='b')
- 
+
     matches = matcher(doc)
     assert len(matches) == 2
