@@ -7,7 +7,7 @@ from ..util import get_doc
 import pytest
 
 
-def test_add_entities_set_ents_iob(en_vocab):
+def test_doc_add_entities_set_ents_iob(en_vocab):
     text = ["This", "is", "a", "lion"]
     doc = get_doc(en_vocab, text)
     ner = EntityRecognizer(en_vocab, features=[(2,), (3,)])

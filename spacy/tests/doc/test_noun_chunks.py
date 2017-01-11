@@ -9,7 +9,7 @@ from ..util import get_doc
 import numpy
 
 
-def test_noun_chunks_not_nested(en_tokenizer):
+def test_doc_noun_chunks_not_nested(en_tokenizer):
     text = "Peter has chronic command and control issues"
     heads = [1, 0, 4, 3, -1, -2, -5]
     deps = ['nsubj', 'ROOT', 'amod', 'nmod', 'cc', 'conj', 'dobj']

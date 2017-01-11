@@ -7,7 +7,7 @@ from ..util import get_doc
 import pytest
 
 
-def test_array_attr_of_token(en_tokenizer, en_vocab):
+def test_doc_array_attr_of_token(en_tokenizer, en_vocab):
     text = "An example sentence"
     tokens = en_tokenizer(text)
     example = tokens.vocab["example"]
@@ -17,7 +17,7 @@ def test_array_attr_of_token(en_tokenizer, en_vocab):
     assert feats_array[0][0] != feats_array[0][1]
 
 
-def test_array_tag(en_tokenizer):
+def test_doc_array_tag(en_tokenizer):
     text = "A nice sentence."
     tags = ['DET', 'ADJ', 'NOUN', 'PUNCT']
     tokens = en_tokenizer(text)
@@ -30,7 +30,7 @@ def test_array_tag(en_tokenizer):
     assert feats_array[3][1] == doc[3].pos
 
 
-def test_array_dep(en_tokenizer):
+def test_doc_array_dep(en_tokenizer):
     text = "A nice sentence."
     deps = ['det', 'amod', 'ROOT', 'punct']
     tokens = en_tokenizer(text)

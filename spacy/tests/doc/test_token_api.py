@@ -8,7 +8,7 @@ import pytest
 import numpy
 
 
-def test_token_api_strings(en_tokenizer):
+def test_doc_token_api_strings(en_tokenizer):
     text = "Give it back! He pleaded."
     tags = ['VERB', 'PRON', 'PART', 'PUNCT', 'PRON', 'VERB', 'PUNCT']
     heads = [0, -1, -2, -3, 1, 0, -1]
@@ -27,7 +27,7 @@ def test_token_api_strings(en_tokenizer):
     assert doc[0].dep_ == 'ROOT'
 
 
-def test_token_api_flags(en_tokenizer):
+def test_doc_token_api_flags(en_tokenizer):
     text = "Give it back! He pleaded."
     tokens = en_tokenizer(text)
     assert tokens[0].check_flag(IS_ALPHA)
@@ -41,7 +41,7 @@ def test_token_api_flags(en_tokenizer):
 
 
 @pytest.mark.parametrize('text', ["Give it back! He pleaded."])
-def test_token_api_prob_inherited_from_vocab(en_tokenizer, text):
+def test_doc_token_api_prob_inherited_from_vocab(en_tokenizer, text):
     word = text.split()[0]
     en_tokenizer.vocab[word].prob = -1
     tokens = en_tokenizer(text)
@@ -49,13 +49,13 @@ def test_token_api_prob_inherited_from_vocab(en_tokenizer, text):
 
 
 @pytest.mark.parametrize('text', ["one two"])
-def test_token_api_str_builtin(en_tokenizer, text):
+def test_doc_token_api_str_builtin(en_tokenizer, text):
     tokens = en_tokenizer(text)
     assert str(tokens[0]) == text.split(' ')[0]
     assert str(tokens[1]) == text.split(' ')[1]
 
 
-def test_token_api_is_properties(en_vocab):
+def test_doc_token_api_is_properties(en_vocab):
     text = ["Hi", ",", "my", "email", "is", "test@me.com"]
     doc = get_doc(en_vocab, text)
     assert doc[0].is_title
@@ -71,7 +71,7 @@ def test_token_api_is_properties(en_vocab):
 @pytest.mark.parametrize('text,vectors', [
     ("apples oranges ldskbjls", ["apples -1 -1 -1", "oranges -1 -1 0"])
 ])
-def test_token_api_vectors(en_tokenizer, text_file, text, vectors):
+def test_doc_token_api_vectors(en_tokenizer, text_file, text, vectors):
     text_file.write('\n'.join(vectors))
     text_file.seek(0)
     vector_length = en_tokenizer.vocab.load_vectors(text_file)
@@ -89,7 +89,7 @@ def test_token_api_vectors(en_tokenizer, text_file, text, vectors):
                 numpy.sqrt(numpy.dot(tokens[0].vector, tokens[0].vector)))
 
 
-def test_token_api_ancestors(en_tokenizer):
+def test_doc_token_api_ancestors(en_tokenizer):
     # the structure of this sentence depends on the English annotation scheme
     text = "Yesterday I saw a dog that barked loudly."
     heads = [2, 1, 0, 1, -2, 1, -2, -1, -6]
@@ -103,7 +103,7 @@ def test_token_api_ancestors(en_tokenizer):
     assert not doc[6].is_ancestor_of(doc[2])
 
 
-def test_token_api_head_setter(en_tokenizer):
+def test_doc_token_api_head_setter(en_tokenizer):
     # the structure of this sentence depends on the English annotation scheme
     text = "Yesterday I saw a dog that barked loudly."
     heads = [2, 1, 0, 1, -2, 1, -2, -1, -6]
