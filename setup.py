@@ -45,7 +45,7 @@ PACKAGES = [
     'spacy.tests.spans',
     'spacy.tests.tagger',
     'spacy.tests.tokenizer',
-    'spacy.tests.tokens',
+    'spacy.tests.doc',
     'spacy.tests.vectors',
     'spacy.tests.vocab']
 
