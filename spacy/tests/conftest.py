@@ -1,14 +1,64 @@
-import pytest
-import os
+# coding: utf-8
+from __future__ import unicode_literals
 
 from ..en import English
 from ..de import German
+from ..es import Spanish
+from ..it import Italian
+from ..fr import French
+from ..pt import Portuguese
+from ..nl import Dutch
+from ..sv import Swedish
+from ..hu import Hungarian
+from ..tokens import Doc
+from ..attrs import ORTH, TAG, HEAD, DEP
+
+from StringIO import StringIO
+import pytest
 
 
+LANGUAGES = [English, German, Spanish, Italian, French, Portuguese, Dutch,
+             Swedish, Hungarian]
+
+
+@pytest.fixture(params=LANGUAGES)
+def tokenizer(request):
+    lang = request.param
+    return lang.Defaults.create_tokenizer()
+
+
+@pytest.fixture
+def en_tokenizer():
+    return English.Defaults.create_tokenizer()
+
+
+@pytest.fixture
+def en_vocab():
+    return English.Defaults.create_vocab()
+
+
+@pytest.fixture
+def de_tokenizer():
+    return German.Defaults.create_tokenizer()
+
+
+@pytest.fixture
+def hu_tokenizer():
+    return Hungarian.Defaults.create_tokenizer()
+
+
+@pytest.fixture
+def text_file():
+    return StringIO()
+
+
+# deprecated, to be replaced with more specific instances
 @pytest.fixture(scope="session")
 def EN():
     return English()
 
+
+# deprecated, to be replaced with more specific instances
 @pytest.fixture(scope="session")
 def DE():
     return German()
