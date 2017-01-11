@@ -13,7 +13,7 @@ from ..hu import Hungarian
 from ..tokens import Doc
 from ..attrs import ORTH, TAG, HEAD, DEP
 
-from StringIO import StringIO
+from io import StringIO
 import pytest
 
 
