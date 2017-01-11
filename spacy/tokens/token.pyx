@@ -60,10 +60,10 @@ cdef class Token:
     def __repr__(self):
         return self.__str__()
 
-    def __richcmp__(self, other, int op):
+    def __richcmp__(self, Token other, int op):
         # http://cython.readthedocs.io/en/latest/src/userguide/special_methods.html
         my = self.idx
-        their = other.idx
+        their = other.idx if other is not None else None
         if op == 0:
             return my < their
         elif op == 2:
