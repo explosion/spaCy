@@ -1,5 +1,9 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
 from ...tokens import Doc
 from ...vocab import Vocab
+
 
 def test_issue599():
     doc = Doc(Vocab())

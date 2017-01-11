@@ -1,5 +1,7 @@
+# coding: utf-8
 from __future__ import unicode_literals
-import spacy 
+
+import spacy
 from spacy.attrs import ORTH
 
 
@@ -17,10 +19,10 @@ def merge_phrases(matcher, doc, i, matches):
 
 def test_entity_ID_assignment():
     nlp = spacy.en.English()
-    text = u"""The golf club is broken"""
+    text = """The golf club is broken"""
     doc = nlp(text)
 
-    golf_pattern =     [ 
+    golf_pattern =     [
             { ORTH: "golf"},
             { ORTH: "club"}
         ]

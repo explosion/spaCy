@@ -1,10 +1,12 @@
+# coding: utf-8
 from __future__ import unicode_literals
-import pytest
 
 from ...symbols import POS, VERB, VerbForm_inf
 from ...tokens import Doc
 from ...vocab import Vocab
 from ...lemmatizer import Lemmatizer
+
+import pytest
 
 
 @pytest.fixture
@@ -37,6 +39,6 @@ def vocab(lemmatizer, tag_map):
 def test_not_lemmatize_base_forms(vocab):
     doc = Doc(vocab, words=["Do", "n't", "feed", "the", "dog"])
     feed = doc[2]
-    feed.tag_ = u'VB'
-    assert feed.text == u'feed'
-    assert feed.lemma_ == u'feed'
+    feed.tag_ = 'VB'
+    assert feed.text == 'feed'
+    assert feed.lemma_ == 'feed'

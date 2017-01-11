@@ -1,4 +1,6 @@
+# coding: utf-8
 from __future__ import unicode_literals
+
 from ...en import English
 
 import pytest
@@ -10,5 +12,5 @@ def en_tokenizer():
 
 
 def test_big_ellipsis(en_tokenizer):
-    tokens = en_tokenizer(u'$45...............Asking')
+    tokens = en_tokenizer('$45...............Asking')
     assert len(tokens) > 2
