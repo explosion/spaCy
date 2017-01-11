@@ -305,7 +305,7 @@ cdef class Vocab:
         '''
         key = hash_string(string)
         lex = self._by_hash.get(key)
-        return True if lex is not NULL else False
+        return lex is not NULL
 
     def __iter__(self):
         '''Iterate over the lexemes in the vocabulary.
