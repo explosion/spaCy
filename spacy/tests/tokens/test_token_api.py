@@ -1,138 +1,157 @@
+# coding: utf-8
 from __future__ import unicode_literals
-from spacy.en import English
-from spacy.attrs import IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT
-from spacy.attrs import IS_SPACE, IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM
-from spacy.attrs import IS_STOP
+
+from ...attrs import IS_ALPHA, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_TITLE, IS_STOP
+from ..util import get_doc
 
 import pytest
 import numpy
 
 
-@pytest.mark.models
-def test_strings(EN):
-    tokens = EN(u'Give it back! He pleaded.')
-    token = tokens[0]
-    assert token.orth_ == 'Give'
-    assert token.text == 'Give'
-    assert token.text_with_ws == 'Give '
-    assert token.lower_ == 'give'
-    assert token.shape_ == 'Xxxx'
-    assert token.prefix_ == 'G'
-    assert token.suffix_ == 'ive'
-    assert token.lemma_ == 'give'
-    assert token.pos_ == 'VERB'
-    assert token.tag_ == 'VB'
-    assert token.dep_ == 'ROOT'
+def test_token_api_strings(en_tokenizer):
+    text = "Give it back! He pleaded."
+    tags = ['VERB', 'PRON', 'PART', 'PUNCT', 'PRON', 'VERB', 'PUNCT']
+    heads = [0, -1, -2, -3, 1, 0, -1]
+    deps = ['ROOT', 'dobj', 'prt', 'punct', 'nsubj', 'ROOT', 'punct']
+
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], tags, heads, deps)
+    assert doc[0].orth_ == 'Give'
+    assert doc[0].text == 'Give'
+    assert doc[0].text_with_ws == 'Give '
+    assert doc[0].lower_ == 'give'
+    assert doc[0].shape_ == 'Xxxx'
+    assert doc[0].prefix_ == 'G'
+    assert doc[0].suffix_ == 'ive'
+    assert doc[0].pos_ == 'VERB'
+    assert doc[0].dep_ == 'ROOT'
 
 
-def test_flags(EN):
-    tokens = EN(u'Give it back! He pleaded.')
-    token = tokens[0]
- 
-    assert token.check_flag(IS_ALPHA)
-    assert not token.check_flag(IS_DIGIT)
+def test_token_api_flags(en_tokenizer):
+    text = "Give it back! He pleaded."
+    tokens = en_tokenizer(text)
+    assert tokens[0].check_flag(IS_ALPHA)
+    assert not tokens[0].check_flag(IS_DIGIT)
+    assert tokens[0].check_flag(IS_TITLE)
+    assert tokens[1].check_flag(IS_LOWER)
+    assert tokens[3].check_flag(IS_PUNCT)
+    assert tokens[2].check_flag(IS_STOP)
+    assert not tokens[5].check_flag(IS_STOP)
     # TODO: Test more of these, esp. if a bug is found
 
 
-def test_single_token_string(EN):
-    tokens = EN(u'foobar')
-    assert tokens[0].text == 'foobar'
+@pytest.mark.parametrize('text', ["Give it back! He pleaded."])
+def test_token_api_prob_inherited_from_vocab(en_tokenizer, text):
+    word = text.split()[0]
+    en_tokenizer.vocab[word].prob = -1
+    tokens = en_tokenizer(text)
+    assert tokens[0].prob != 0
 
 
-def test_str_builtin(EN):
-    tokens = EN('one two')
-    assert str(tokens[0]) == u'one'
-    assert str(tokens[1]) == u'two'
+@pytest.mark.parametrize('text', ["one two"])
+def test_token_api_str_builtin(en_tokenizer, text):
+    tokens = en_tokenizer(text)
+    assert str(tokens[0]) == text.split(' ')[0]
+    assert str(tokens[1]) == text.split(' ')[1]
 
 
-@pytest.mark.models
-def test_is_properties(EN):
-    Hi, comma, my, email, is_, addr = EN(u'Hi, my email is test@me.com')
-    assert Hi.is_title
-    assert Hi.is_alpha
-    assert not Hi.is_digit
-    assert comma.is_punct
-    assert email.is_ascii
-    assert not email.like_url
-    assert is_.is_lower
-    assert addr.like_email
-    assert addr.is_oov
-    assert not Hi.is_oov
+def test_token_api_is_properties(en_vocab):
+    text = ["Hi", ",", "my", "email", "is", "test@me.com"]
+    doc = get_doc(en_vocab, text)
+    assert doc[0].is_title
+    assert doc[0].is_alpha
+    assert not doc[0].is_digit
+    assert doc[1].is_punct
+    assert doc[3].is_ascii
+    assert not doc[3].like_url
+    assert doc[4].is_lower
+    assert doc[5].like_email
 
-@pytest.mark.models
-def test_vectors(EN):
-    apples, oranges, oov = EN(u'apples oranges ldskbjlsdkbflzdfbl')
-    assert apples.has_vector
-    assert oranges.has_vector
-    assert not oov.has_vector
-    assert apples.similarity(oranges) > apples.similarity(oov)
-    assert apples.similarity(oranges) == oranges.similarity(apples)
-    assert sum(apples.vector) != sum(oranges.vector)
+
+@pytest.mark.parametrize('text,vectors', [
+    ("apples oranges ldskbjls", ["apples -1 -1 -1", "oranges -1 -1 0"])
+])
+def test_token_api_vectors(en_tokenizer, text_file, text, vectors):
+    text_file.write('\n'.join(vectors))
+    text_file.seek(0)
+    vector_length = en_tokenizer.vocab.load_vectors(text_file)
+    assert vector_length == 3
+
+    tokens = en_tokenizer(text)
+    assert tokens[0].has_vector
+    assert tokens[1].has_vector
+    assert not tokens[2].has_vector
+    assert tokens[0].similarity(tokens[1]) > tokens[0].similarity(tokens[2])
+    assert tokens[0].similarity(tokens[1]) == tokens[1].similarity(tokens[0])
+    assert sum(tokens[0].vector) != sum(tokens[1].vector)
     assert numpy.isclose(
-                apples.vector_norm,
-                numpy.sqrt(numpy.dot(apples.vector, apples.vector)))
-    
-@pytest.mark.models
-def test_ancestors(EN):
+                tokens[0].vector_norm,
+                numpy.sqrt(numpy.dot(tokens[0].vector, tokens[0].vector)))
+
+
+def test_token_api_ancestors(en_tokenizer):
     # the structure of this sentence depends on the English annotation scheme
-    tokens = EN(u'Yesterday I saw a dog that barked loudly.')
-    ancestors = [ t.orth_ for t in tokens[6].ancestors ]
-    assert ancestors == ['dog','saw']
-    ancestors = [ t.orth_ for t in tokens[1].ancestors ]
-    assert ancestors == ['saw']
-    ancestors = [ t.orth_ for t in tokens[2].ancestors ]
-    assert ancestors == []
+    text = "Yesterday I saw a dog that barked loudly."
+    heads = [2, 1, 0, 1, -2, 1, -2, -1, -6]
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    assert [t.text for t in doc[6].ancestors] == ["dog", "saw"]
+    assert [t.text for t in doc[1].ancestors] == ["saw"]
+    assert [t.text for t in doc[2].ancestors] == []
 
-    assert tokens[2].is_ancestor_of(tokens[7])
-    assert not tokens[6].is_ancestor_of(tokens[2])
+    assert doc[2].is_ancestor_of(doc[7])
+    assert not doc[6].is_ancestor_of(doc[2])
 
 
-@pytest.mark.models
-def test_head_setter(EN):
+def test_token_api_head_setter(en_tokenizer):
     # the structure of this sentence depends on the English annotation scheme
-    yesterday, i, saw, a, dog, that, barked, loudly, dot = EN(u'Yesterday I saw a dog that barked loudly.')
-    assert barked.n_lefts == 1
-    assert barked.n_rights == 1
-    assert barked.left_edge == that
-    assert barked.right_edge == loudly
+    text = "Yesterday I saw a dog that barked loudly."
+    heads = [2, 1, 0, 1, -2, 1, -2, -1, -6]
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
 
-    assert dog.n_lefts == 1
-    assert dog.n_rights == 1
-    assert dog.left_edge == a
-    assert dog.right_edge == loudly
-    
-    assert a.n_lefts == 0
-    assert a.n_rights == 0
-    assert a.left_edge == a
-    assert a.right_edge == a
+    assert doc[6].n_lefts == 1
+    assert doc[6].n_rights == 1
+    assert doc[6].left_edge.i == 5
+    assert doc[6].right_edge.i == 7
 
-    assert saw.left_edge == yesterday
-    assert saw.right_edge == dot
+    assert doc[4].n_lefts == 1
+    assert doc[4].n_rights == 1
+    assert doc[4].left_edge.i == 3
+    assert doc[4].right_edge.i == 7
 
-    barked.head = a
+    assert doc[3].n_lefts == 0
+    assert doc[3].n_rights == 0
+    assert doc[3].left_edge.i == 3
+    assert doc[3].right_edge.i == 3
 
-    assert barked.n_lefts == 1
-    assert barked.n_rights == 1
-    assert barked.left_edge == that
-    assert barked.right_edge == loudly
+    assert doc[2].left_edge.i == 0
+    assert doc[2].right_edge.i == 8
 
-    assert a.n_lefts == 0
-    assert a.n_rights == 1
-    assert a.left_edge == a
-    assert a.right_edge == loudly
+    doc[6].head = doc[3]
 
-    assert dog.n_lefts == 1
-    assert dog.n_rights == 0
-    assert dog.left_edge == a
-    assert dog.right_edge == loudly
+    assert doc[6].n_lefts == 1
+    assert doc[6].n_rights == 1
+    assert doc[6].left_edge.i == 5
+    assert doc[6].right_edge.i == 7
 
-    assert saw.left_edge == yesterday
-    assert saw.right_edge == dot
+    assert doc[3].n_lefts == 0
+    assert doc[3].n_rights == 1
+    assert doc[3].left_edge.i == 3
+    assert doc[3].right_edge.i == 7
 
-    yesterday.head = that
+    assert doc[4].n_lefts == 1
+    assert doc[4].n_rights == 0
+    assert doc[4].left_edge.i == 3
+    assert doc[4].right_edge.i == 7
 
-    assert that.left_edge == yesterday
-    assert barked.left_edge == yesterday
-    assert a.left_edge == yesterday
-    assert dog.left_edge == yesterday
-    assert saw.left_edge == yesterday
+    assert doc[2].left_edge.i == 0
+    assert doc[2].right_edge.i == 8
+
+    doc[0].head = doc[5]
+
+    assert doc[5].left_edge.i == 0
+    assert doc[6].left_edge.i == 0
+    assert doc[3].left_edge.i == 0
+    assert doc[4].left_edge.i == 0
+    assert doc[2].left_edge.i == 0
