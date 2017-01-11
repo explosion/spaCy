@@ -5,7 +5,7 @@ from ..tokens import Doc
 from ..attrs import ORTH, POS, HEAD, DEP
 
 
-def get_doc(vocab, words, tags=None, heads=None, deps=None):
+def get_doc(vocab, words=[], tags=None, heads=None, deps=None):
     """Create Doc object from given vocab, words and annotations."""
     tags = tags or [''] * len(words)
     heads = heads or [0] * len(words)
