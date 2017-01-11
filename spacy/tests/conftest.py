@@ -38,6 +38,11 @@ def en_vocab():
 
 
 @pytest.fixture
+def en_parser():
+    return English.Defaults.create_parser()
+
+
+@pytest.fixture
 def de_tokenizer():
     return German.Defaults.create_tokenizer()
 
