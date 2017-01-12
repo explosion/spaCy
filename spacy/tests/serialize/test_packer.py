@@ -1,55 +1,30 @@
+# coding: utf-8
 from __future__ import unicode_literals
 
-import re
+from ...attrs import TAG, DEP, HEAD
+from ...serialize.packer import Packer
+from ...serialize.bits import BitArray
+
+from ..util import get_doc
 
 import pytest
-import numpy
-
-from spacy.language import Language
-from spacy.en import English
-from spacy.vocab import Vocab
-from spacy.tokens.doc import Doc
-from spacy.tokenizer import Tokenizer
-from os import path
-import os
-
-from spacy import util
-from spacy.attrs import ORTH, SPACY, TAG, DEP, HEAD
-from spacy.serialize.packer import Packer
-
-from spacy.serialize.bits import BitArray
 
 
 @pytest.fixture
-def vocab():
-    path = os.environ.get('SPACY_DATA')
-    if path is None:
-        path = util.match_best_version('en', None, util.get_data_path())
-    else:
-        path = util.match_best_version('en', None, path)
-
-    vocab = English.Defaults.create_vocab()
-    lex = vocab['dog']
-    assert vocab[vocab.strings['dog']].orth_ == 'dog'
-    lex  = vocab['the']
-    lex = vocab['quick']
-    lex = vocab['jumped']
-    return vocab
+def text():
+    return "the dog jumped"
 
 
 @pytest.fixture
-def tokenizer(vocab):
-    null_re = re.compile(r'!!!!!!!!!')
-    tokenizer = Tokenizer(vocab, {}, null_re.search, null_re.search, null_re.finditer)
-    return tokenizer
+def text_b():
+    return b"the dog jumped"
 
 
-def test_char_packer(vocab):
-    packer = Packer(vocab, [])
+def test_serialize_char_packer(en_vocab, text_b):
+    packer = Packer(en_vocab, [])
     bits = BitArray()
     bits.seek(0)
-
-    byte_str = bytearray(b'the dog jumped')
+    byte_str = bytearray(text_b)
     packer.char_codec.encode(byte_str, bits)
     bits.seek(0)
     result = [b''] * len(byte_str)
@@ -57,79 +32,67 @@ def test_char_packer(vocab):
     assert bytearray(result) == byte_str
 
 
-def test_packer_unannotated(tokenizer):
-    packer = Packer(tokenizer.vocab, [])
-
-    msg = tokenizer(u'the dog jumped')
-
-    assert msg.string == 'the dog jumped'
-    
-
-    bits = packer.pack(msg)
-
+def test_serialize_packer_unannotated(en_tokenizer, text):
+    packer = Packer(en_tokenizer.vocab, [])
+    tokens = en_tokenizer(text)
+    assert tokens.text_with_ws == text
+    bits = packer.pack(tokens)
     result = packer.unpack(bits)
+    assert result.text_with_ws == text
 
-    assert result.string == 'the dog jumped'
 
-
-@pytest.mark.models
-def test_packer_annotated(tokenizer):
-    vocab = tokenizer.vocab
-    nn = vocab.strings['NN']
-    dt = vocab.strings['DT']
-    vbd = vocab.strings['VBD']
-    jj = vocab.strings['JJ']
-    det = vocab.strings['det']
-    nsubj = vocab.strings['nsubj']
-    adj = vocab.strings['adj']
-    root = vocab.strings['ROOT']
+def test_packer_annotated(en_vocab, text):
+    heads = [1, 1, 0]
+    deps = ['det', 'nsubj', 'ROOT']
+    tags = ['DT', 'NN', 'VBD']
 
     attr_freqs = [
-        (TAG, [(nn, 0.1), (dt, 0.2), (jj, 0.01), (vbd, 0.05)]),
-        (DEP, {det: 0.2, nsubj: 0.1, adj: 0.05, root: 0.1}.items()),
+        (TAG, [(en_vocab.strings['NN'], 0.1),
+               (en_vocab.strings['DT'], 0.2),
+               (en_vocab.strings['JJ'], 0.01),
+               (en_vocab.strings['VBD'], 0.05)]),
+        (DEP, {en_vocab.strings['det']: 0.2,
+               en_vocab.strings['nsubj']: 0.1,
+               en_vocab.strings['adj']: 0.05,
+               en_vocab.strings['ROOT']: 0.1}.items()),
         (HEAD, {0: 0.05, 1: 0.2, -1: 0.2, -2: 0.1, 2: 0.1}.items())
     ]
 
-    packer = Packer(vocab, attr_freqs)
+    packer = Packer(en_vocab, attr_freqs)
+    doc = get_doc(en_vocab, [t for t in text.split()], tags=tags, deps=deps, heads=heads)
 
-    msg = tokenizer(u'the dog jumped')
+    # assert doc.text_with_ws == text
+    assert [t.tag_ for t in doc] == tags
+    assert [t.dep_ for t in doc] == deps
+    assert [(t.head.i-t.i) for t in doc] == heads
 
-    msg.from_array(
-        [TAG, DEP, HEAD],
-        numpy.array([
-            [dt, det, 1],
-            [nn, nsubj, 1],
-            [vbd, root, 0]
-        ], dtype=numpy.int32))
-
-    assert msg.string == 'the dog jumped'
-    assert [t.tag_ for t in msg] == ['DT', 'NN', 'VBD']
-    assert [t.dep_ for t in msg] == ['det', 'nsubj', 'ROOT']
-    assert [(t.head.i - t.i) for t in msg] == [1, 1, 0]
-
-    bits = packer.pack(msg)
+    bits = packer.pack(doc)
     result = packer.unpack(bits)
 
-    assert result.string == 'the dog jumped'
-    assert [t.tag_ for t in result] == ['DT', 'NN', 'VBD']
-    assert [t.dep_ for t in result] == ['det', 'nsubj', 'ROOT']
-    assert [(t.head.i - t.i) for t in result] == [1, 1, 0]
+    # assert result.text_with_ws == text
+    assert [t.tag_ for t in result] == tags
+    assert [t.dep_ for t in result] == deps
+    assert [(t.head.i-t.i) for t in result] == heads
 
 
-def test_packer_bad_chars(tokenizer):
-    string = u'naja gut, is eher bl\xf6d und nicht mit reddit.com/digg.com vergleichbar; vielleicht auf dem weg dahin'
-    packer = Packer(tokenizer.vocab, [])
+def test_packer_bad_chars(en_tokenizer):
+    text = "naja gut, is eher bl\xf6d und nicht mit reddit.com/digg.com vergleichbar; vielleicht auf dem weg dahin"
+    packer = Packer(en_tokenizer.vocab, [])
 
-    doc = tokenizer(string)
+    doc = en_tokenizer(text)
     bits = packer.pack(doc)
     result = packer.unpack(bits)
     assert result.string == doc.string
 
 
 @pytest.mark.models
-def test_packer_bad_chars(EN):
-    string = u'naja gut, is eher bl\xf6d und nicht mit reddit.com/digg.com vergleichbar; vielleicht auf dem weg dahin'
-    doc = EN(string)
+def test_packer_bad_chars_tags(EN):
+    text = "naja gut, is eher bl\xf6d und nicht mit reddit.com/digg.com vergleichbar; vielleicht auf dem weg dahin"
+    tags = ['JJ', 'NN', ',', 'VBZ', 'DT', 'NN', 'JJ', 'NN', 'NN',
+            'ADD', 'NN', ':', 'NN', 'NN', 'NN', 'NN', 'NN']
+
+    tokens = EN.tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], tags=tags)
     byte_string = doc.to_bytes()
-    result = Doc(EN.vocab).from_bytes(byte_string)
+    result = get_doc(tokens.vocab).from_bytes(byte_string)
     assert [t.tag_ for t in result] == [t.tag_ for t in doc]
