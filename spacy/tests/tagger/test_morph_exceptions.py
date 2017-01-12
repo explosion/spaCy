@@ -6,7 +6,7 @@ from ..util import get_doc
 import pytest
 
 
-def test_load_exc(en_tokenizer):
+def test_tagger_load_morph_exc(en_tokenizer):
     text = "I like his style."
     tags = ['PRP', 'VBP', 'PRP$', 'NN', '.']
     morph_exc = {'PRP$': {'his': {'L': '-PRP-', 'person': 3, 'case': 2}}}
