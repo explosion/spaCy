@@ -1,14 +1,16 @@
-from spacy.en import English
+# coding: utf-8
+from __future__ import unicode_literals
+
 import six
 import pytest
 
 
 @pytest.mark.models
 def test_tag_names(EN):
-    tokens = EN(u'I ate pizzas with anchovies.', parse=False, tag=True)
-    pizza = tokens[2]
-    assert type(pizza.pos) == int
-    assert isinstance(pizza.pos_, six.text_type)
-    assert type(pizza.dep) == int
-    assert isinstance(pizza.dep_, six.text_type)
-    assert pizza.tag_ == u'NNS'
+    text = "I ate pizzas with anchovies."
+    doc = EN(text, parse=False, tag=True)
+    assert type(doc[2].pos) == int
+    assert isinstance(doc[2].pos_, six.text_type)
+    assert type(doc[2].dep) == int
+    assert isinstance(doc[2].dep_, six.text_type)
+    assert doc[2].tag_ == u'NNS'
