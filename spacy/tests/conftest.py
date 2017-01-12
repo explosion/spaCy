@@ -13,8 +13,11 @@ from ..hu import Hungarian
 from ..tokens import Doc
 from ..strings import StringStore
 from ..attrs import ORTH, TAG, HEAD, DEP
+from ..util import match_best_version, get_data_path
 
 from io import StringIO
+from pathlib import Path
+import os
 import pytest
 
 
@@ -66,6 +69,14 @@ def en_entityrecognizer():
 @pytest.fixture
 def text_file():
     return StringIO()
+
+
+@pytest.fixture
+def path():
+    if 'SPACY_DATA' in os.environ:
+        return Path(os.environ['SPACY_DATA'])
+    else:
+        return match_best_version('en', None, get_data_path())
 
 
 # only used for tests that require loading the models
