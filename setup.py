@@ -42,6 +42,7 @@ PACKAGES = [
     'spacy.tests.parser',
     'spacy.tests.serialize',
     'spacy.tests.spans',
+    'spacy.tests.stringstore',
     'spacy.tests.tagger',
     'spacy.tests.tokenizer',
     'spacy.tests.doc',
