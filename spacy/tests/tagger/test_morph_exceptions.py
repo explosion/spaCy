@@ -1,23 +1,17 @@
+# coding: utf-8
 from __future__ import unicode_literals
-from spacy.en import English
+
+from ..util import get_doc
 
 import pytest
 
-from spacy.en import English
 
-@pytest.fixture
-def morph_exc():
-    return {
-            'PRP$': {'his': {'L': '-PRP-', 'person': 3, 'case': 2}},
-           }
-
-
-@pytest.mark.models
-def test_load_exc(morph_exc):
-    # Do this local as we want to modify it
-    nlp =  English()
-    nlp.vocab.morphology.load_morph_exceptions(morph_exc)
-    tokens = nlp('I like his style.', tag=True, parse=False)
-    his = tokens[2]
-    assert his.tag_ == 'PRP$'
-    assert his.lemma_ == '-PRP-'
+def test_load_exc(en_tokenizer):
+    text = "I like his style."
+    tags = ['PRP', 'VBP', 'PRP$', 'NN', '.']
+    morph_exc = {'PRP$': {'his': {'L': '-PRP-', 'person': 3, 'case': 2}}}
+    en_tokenizer.vocab.morphology.load_morph_exceptions(morph_exc)
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], tags=tags)
+    assert doc[2].tag_ == 'PRP$'
+    assert doc[2].lemma_ == '-PRP-'
