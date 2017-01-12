@@ -4,6 +4,8 @@ from __future__ import unicode_literals
 from ..tokens import Doc
 from ..attrs import ORTH, POS, HEAD, DEP
 
+import numpy
+
 
 def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None):
     """Create Doc object from given vocab, words and annotations."""
@@ -36,3 +38,8 @@ def apply_transition_sequence(parser, doc, sequence):
     with parser.step_through(doc) as stepwise:
         for transition in sequence:
             stepwise.transition(transition)
+
+
+def get_cosine(vec1, vec2):
+    """Get cosine for two given vectors"""
+    return numpy.dot(vec1, vec2) / (numpy.linalg.norm(vec1) * numpy.linalg.norm(vec2))
