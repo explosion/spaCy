@@ -103,7 +103,7 @@ TOKENIZER_SUFFIXES = (
 TOKENIZER_INFIXES = (
     LIST_ELLIPSES +
     [
-        r'(?<=[0-9])[+\-\*/^](?=[0-9])',
+        r'(?<=[0-9])[+\-\*^](?=[0-9-])',
         r'(?<=[{al}])\.(?=[{au}])'.format(al=ALPHA_LOWER, au=ALPHA_UPPER),
         r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),
         r'(?<=[{a}])(?:{h})(?=[{a}])'.format(a=ALPHA, h=HYPHENS),
