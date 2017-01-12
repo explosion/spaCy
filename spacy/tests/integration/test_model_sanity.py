@@ -1,4 +1,5 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
+
 import pytest
 import numpy
 
@@ -47,7 +48,7 @@ class TestModelSanity:
 
     def test_vectors(self, example):
         # if vectors are available, they should differ on different words
-        # this isn't a perfect test since this could in principle fail 
+        # this isn't a perfect test since this could in principle fail
         # in a sane model as well,
         # but that's very unlikely and a good indicator if something is wrong
         vector0 = example[0].vector
@@ -58,9 +59,9 @@ class TestModelSanity:
         assert not numpy.array_equal(vector1,vector2)
 
     def test_probs(self, example):
-        # if frequencies/probabilities are okay, they should differ for 
+        # if frequencies/probabilities are okay, they should differ for
         # different words
-        # this isn't a perfect test since this could in principle fail 
+        # this isn't a perfect test since this could in principle fail
         # in a sane model as well,
         # but that's very unlikely and a good indicator if something is wrong
         prob0 = example[0].prob
