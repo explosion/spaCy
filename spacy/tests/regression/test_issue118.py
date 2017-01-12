@@ -1,7 +1,4 @@
 # coding: utf-8
-"""Test a bug that arose from having overlapping matches"""
-
-
 from __future__ import unicode_literals
 
 from ...matcher import Matcher
@@ -25,6 +22,7 @@ def doc(en_tokenizer):
 
 @pytest.mark.parametrize('pattern', [pattern1, pattern2])
 def test_issue118(doc, pattern):
+    """Test a bug that arose from having overlapping matches"""
     ORG = doc.vocab.strings['ORG']
     matcher = Matcher(doc.vocab, {'BostonCeltics': ('ORG', {}, pattern)})
 
@@ -41,6 +39,7 @@ def test_issue118(doc, pattern):
 
 @pytest.mark.parametrize('pattern', [pattern3, pattern4])
 def test_issue118_prefix_reorder(doc, pattern):
+    """Test a bug that arose from having overlapping matches"""
     ORG = doc.vocab.strings['ORG']
     matcher = Matcher(doc.vocab, {'BostonCeltics': ('ORG', {}, pattern)})
 

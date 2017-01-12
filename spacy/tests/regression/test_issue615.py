@@ -19,7 +19,7 @@ def test_issue615(en_tokenizer):
             span.merge('NNP' if label else span.root.tag_, span.text, doc.vocab.strings[label])
 
     text = "The golf club is broken"
-    pattern = [{ ORTH: "golf"}, { ORTH: "club"}]
+    pattern = [{ORTH: "golf"}, {ORTH: "club"}]
     label = "Sport_Equipment"
 
     doc = en_tokenizer(text)

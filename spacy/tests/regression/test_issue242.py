@@ -9,7 +9,6 @@ import pytest
 
 def test_issue242(en_tokenizer):
     """Test overlapping multi-word phrases."""
-
     text = "There are different food safety standards in different countries."
     patterns = [[{LOWER: 'food'}, {LOWER: 'safety'}],
                 [{LOWER: 'safety'}, {LOWER: 'standards'}]]
