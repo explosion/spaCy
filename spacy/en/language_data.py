@@ -34,7 +34,6 @@ def get_time_exc(hours):
             {ORTH: hour},
             {ORTH: "pm", LEMMA: "p.m."}
         ]
-    print(exc)
     return exc
 
 
