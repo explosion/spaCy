@@ -59,6 +59,11 @@ def stringstore():
 
 
 @pytest.fixture
+def en_entityrecognizer():
+     return English.Defaults.create_entity()
+
+
+@pytest.fixture
 def text_file():
     return StringIO()
 
