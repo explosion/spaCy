@@ -12,6 +12,7 @@ from ..sv import Swedish
 from ..hu import Hungarian
 from ..tokens import Doc
 from ..strings import StringStore
+from ..lemmatizer import Lemmatizer
 from ..attrs import ORTH, TAG, HEAD, DEP
 from ..util import match_best_version, get_data_path
 
@@ -64,6 +65,14 @@ def stringstore():
 @pytest.fixture
 def en_entityrecognizer():
      return English.Defaults.create_entity()
+
+
+@pytest.fixture
+def lemmatizer(path):
+    if path is not None:
+        return Lemmatizer.load(path)
+    else:
+        return None
 
 
 @pytest.fixture
