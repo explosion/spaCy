@@ -91,3 +91,12 @@ def test_pickle_lemmatizer(lemmatizer):
     file_.seek(0)
 
     loaded = pickle.load(file_)
+
+
+@pytest.mark.models
+def test_lemma_assignment(EN):
+    tokens = u'Bananas in pyjamas are geese .'.split(' ')
+    doc = EN.tokenizer.tokens_from_list(tokens)
+    assert all( t.lemma_ == u'' for t in doc )
+    EN.tagger(doc)
+    assert all( t.lemma_ != u'' for t in doc )
