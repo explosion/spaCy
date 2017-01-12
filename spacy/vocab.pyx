@@ -479,7 +479,7 @@ cdef class Vocab:
         cdef double norm = 0.0
         for line_num, line in enumerate(file_):
             pieces = line.split()
-            word_str = pieces.pop(0)
+            word_str = " " if line.startswith(" ") else pieces.pop(0)
             if vec_len == -1:
                 vec_len = len(pieces)
             elif vec_len != len(pieces):
