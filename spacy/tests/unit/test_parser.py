@@ -1,11 +1,10 @@
-# -*- coding: utf-8 -*-
-
+# coding: utf-8
 from __future__ import unicode_literals
 
 import pytest
 import numpy
 
-from spacy.attrs import HEAD, DEP
+from ...attrs import HEAD, DEP
 
 
 @pytest.mark.models

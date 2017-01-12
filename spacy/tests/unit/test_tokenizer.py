@@ -1,9 +1,11 @@
+# coding: utf-8
 from __future__ import unicode_literals
-import pytest
-import re
 
 from ...vocab import Vocab
 from ...tokenizer import Tokenizer
+
+import re
+import pytest
 
 
 @pytest.fixture
