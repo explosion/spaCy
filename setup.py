@@ -40,7 +40,6 @@ PACKAGES = [
     'spacy.tests.morphology',
     'spacy.tests.munge',
     'spacy.tests.parser',
-    'spacy.tests.print',
     'spacy.tests.serialize',
     'spacy.tests.spans',
     'spacy.tests.tagger',
