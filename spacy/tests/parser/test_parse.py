@@ -27,6 +27,55 @@ def test_parser_parse_one_word_sentence(en_tokenizer, en_parser, text):
     assert doc[0].dep != 0
 
 
+def test_parser_initial(en_tokenizer, en_parser):
+    text = "I ate the pizza with anchovies."
+    heads = [1, 0, 1, -2, -3, -1, -5]
+    transition = ['L-nsubj', 'S', 'L-det']
+
+    tokens = en_tokenizer(text)
+    apply_transition_sequence(en_parser, tokens, transition)
+
+    assert tokens[0].head.i == 1
+    assert tokens[1].head.i == 1
+    assert tokens[2].head.i == 3
+    assert tokens[3].head.i == 3
+
+
+def test_parser_parse_subtrees(en_tokenizer, en_parser):
+    text = "The four wheels on the bus turned quickly"
+    heads = [2, 1, 4, -1, 1, -2, 0, -1]
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+
+    assert len(list(doc[2].lefts)) == 2
+    assert len(list(doc[2].rights)) == 1
+    assert len(list(doc[2].children)) == 3
+    assert len(list(doc[5].lefts)) == 1
+    assert len(list(doc[5].rights)) == 0
+    assert len(list(doc[5].children)) == 1
+    assert len(list(doc[2].subtree)) == 6
+
+
+def test_parser_merge_pp(en_tokenizer):
+    text = "A phrase with another phrase occurs"
+    heads = [1, 4, -1, 1, -2, 0]
+    deps = ['det', 'nsubj', 'prep', 'det', 'pobj', 'ROOT']
+    tags = ['DT', 'NN', 'IN', 'DT', 'NN', 'VBZ']
+
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], deps=deps, heads=heads)
+    for token in doc:
+        token.tag_ = tags[token.i]
+    nps = [(np[0].idx, np[-1].idx + len(np[-1]), np.lemma_) for np in doc.noun_chunks]
+
+    for start, end, lemma in nps:
+        doc.merge(start, end, label='NP', lemma=lemma)
+    assert doc[0].text == 'A phrase'
+    assert doc[1].text == 'with'
+    assert doc[2].text == 'another phrase'
+    assert doc[3].text == 'occurs'
+
+
 def test_parser_arc_eager_finalize_state(en_tokenizer, en_parser):
     text = "a b c d e"
 
