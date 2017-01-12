@@ -1,5 +1,6 @@
-# -*- coding: utf-8 -*-
+# coding: utf-8
 from __future__ import unicode_literals
+
 import os
 import io
 import pickle
@@ -94,7 +95,7 @@ def test_pickle_lemmatizer(lemmatizer):
 
 
 @pytest.mark.models
-def test_lemma_assignment(EN):
+def test_tagger_lemma_assignment(EN):
     tokens = u'Bananas in pyjamas are geese .'.split(' ')
     doc = EN.tokenizer.tokens_from_list(tokens)
     assert all( t.lemma_ == u'' for t in doc )
