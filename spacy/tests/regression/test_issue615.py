@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 from ...matcher import Matcher
 from ...attrs import ORTH
-from ..util import get_doc
 
 
 def test_issue615(en_tokenizer):
@@ -23,9 +22,7 @@ def test_issue615(en_tokenizer):
     pattern = [{ ORTH: "golf"}, { ORTH: "club"}]
     label = "Sport_Equipment"
 
-    tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens])
-
+    doc = en_tokenizer(text)
     matcher = Matcher(doc.vocab)
     matcher.add_entity(label, on_match=merge_phrases)
     matcher.add_pattern(label, pattern, label=label)
