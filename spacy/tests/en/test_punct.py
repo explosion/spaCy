@@ -6,8 +6,8 @@ from __future__ import unicode_literals
 
 import pytest
 
-from ....util import compile_prefix_regex
-from ....language_data import TOKENIZER_PREFIXES
+from ...util import compile_prefix_regex
+from ...language_data import TOKENIZER_PREFIXES
 
 
 
