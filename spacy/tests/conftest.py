@@ -68,13 +68,13 @@ def text_file():
     return StringIO()
 
 
-# deprecated, to be replaced with more specific instances
+# only used for tests that require loading the models
+# in all other cases, use specific instances
 @pytest.fixture(scope="session")
 def EN():
     return English()
 
 
-# deprecated, to be replaced with more specific instances
 @pytest.fixture(scope="session")
 def DE():
     return German()
