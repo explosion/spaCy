@@ -15,25 +15,26 @@ from .morph_rules import MORPH_RULES
 def get_time_exc(hours):
     exc = {}
     for hour in hours:
-        exc["%da.m." % hour] = [
+        exc["%sa.m." % hour] = [
             {ORTH: hour},
             {ORTH: "a.m."}
         ]
 
-        exc["%dp.m." % hour] = [
+        exc["%sp.m." % hour] = [
             {ORTH: hour},
             {ORTH: "p.m."}
         ]
 
-        exc["%dam" % hour] = [
+        exc["%sam" % hour] = [
             {ORTH: hour},
             {ORTH: "am", LEMMA: "a.m."}
         ]
 
-        exc["%dpm" % hour] = [
+        exc["%spm" % hour] = [
             {ORTH: hour},
             {ORTH: "pm", LEMMA: "p.m."}
         ]
+    print(exc)
     return exc
 
 
@@ -43,7 +44,8 @@ STOP_WORDS = set(STOP_WORDS)
 
 TOKENIZER_EXCEPTIONS = dict(TOKENIZER_EXCEPTIONS)
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(ORTH_ONLY))
-update_exc(TOKENIZER_EXCEPTIONS, get_time_exc(range(1, 12 + 1)))
+update_exc(TOKENIZER_EXCEPTIONS, get_time_exc(
+    ['%d' % hour for hour in range(1, 12 + 1)]))
 update_exc(TOKENIZER_EXCEPTIONS, expand_exc(TOKENIZER_EXCEPTIONS, "'", "’"))
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.EMOTICONS))
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.ABBREVIATIONS))

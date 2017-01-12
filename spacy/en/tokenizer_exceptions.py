@@ -20,18 +20,18 @@ for pron in ["i"]:
         ]
 
         EXC[orth + "m"] = [
-            {ORTH: pron, LEMMA: PRON_LEMMA, TAG: "PRP"},
+            {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
             {ORTH: "m", LEMMA: "be", TAG: "VBP", "tenspect": 1, "number": 1 }
         ]
 
         EXC[orth + "'ma"] = [
-            {ORTH: pron, LEMMA: PRON_LEMMA, TAG: "PRP"},
+            {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
             {ORTH: "'m", LEMMA: "be", NORM: "am"},
             {ORTH: "a", LEMMA: "going to", NORM: "gonna"}
         ]
 
         EXC[orth + "ma"] = [
-            {ORTH: pron, LEMMA: PRON_LEMMA, TAG: "PRP"},
+            {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
             {ORTH: "m", LEMMA: "be", NORM: "am"},
             {ORTH: "a", LEMMA: "going to", NORM: "gonna"}
         ]
@@ -150,8 +150,8 @@ for word in ["who", "what", "when", "where", "why", "how", "there", "that"]:
 
         EXC[orth + "'ll've"] = [
             {ORTH: orth, LEMMA: word},
-            {ORTH: "ll", LEMMA: "will", TAG: "MD"},
-            {ORTH: "ve", LEMMA: "have", TAG: "VB"}
+            {ORTH: "'ll", LEMMA: "will", TAG: "MD"},
+            {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
         ]
 
         EXC[orth + "llve"] = [
@@ -237,11 +237,13 @@ for verb_data in [
         ]
 
         EXC[data[ORTH] + "n't've"] = [
+            dict(data),
             {ORTH: "n't", LEMMA: "not", TAG: "RB"},
             {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
         ]
 
         EXC[data[ORTH] + "ntve"] = [
+            dict(data),
             {ORTH: "nt", LEMMA: "not", TAG: "RB"},
             {ORTH: "ve", LEMMA: "have", TAG: "VB"}
         ]
