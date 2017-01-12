@@ -52,9 +52,11 @@ def de_tokenizer():
 def hu_tokenizer():
     return Hungarian.Defaults.create_tokenizer()
 
+
 @pytest.fixture
 def stringstore():
     return StringStore()
+
 
 @pytest.fixture
 def text_file():
