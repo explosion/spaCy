@@ -10,12 +10,12 @@ import numpy
 
 def test_doc_token_api_strings(en_tokenizer):
     text = "Give it back! He pleaded."
-    tags = ['VERB', 'PRON', 'PART', 'PUNCT', 'PRON', 'VERB', 'PUNCT']
+    pos = ['VERB', 'PRON', 'PART', 'PUNCT', 'PRON', 'VERB', 'PUNCT']
     heads = [0, -1, -2, -3, 1, 0, -1]
     deps = ['ROOT', 'dobj', 'prt', 'punct', 'nsubj', 'ROOT', 'punct']
 
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], tags, heads, deps)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], pos=pos, heads=heads, deps=deps)
     assert doc[0].orth_ == 'Give'
     assert doc[0].text == 'Give'
     assert doc[0].text_with_ws == 'Give '

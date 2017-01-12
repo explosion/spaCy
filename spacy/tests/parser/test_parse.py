@@ -63,9 +63,7 @@ def test_parser_merge_pp(en_tokenizer):
     tags = ['DT', 'NN', 'IN', 'DT', 'NN', 'VBZ']
 
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], deps=deps, heads=heads)
-    for token in doc:
-        token.tag_ = tags[token.i]
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], deps=deps, heads=heads, tags=tags)
     nps = [(np[0].idx, np[-1].idx + len(np[-1]), np.lemma_) for np in doc.noun_chunks]
 
     for start, end, lemma in nps:

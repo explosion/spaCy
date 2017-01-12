@@ -5,19 +5,22 @@ from ..tokens import Doc
 from ..attrs import ORTH, POS, HEAD, DEP
 
 
-def get_doc(vocab, words=[], tags=None, heads=None, deps=None):
+def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None):
     """Create Doc object from given vocab, words and annotations."""
-    tags = tags or [''] * len(words)
+    pos = pos or [''] * len(words)
     heads = heads or [0] * len(words)
     deps = deps or [''] * len(words)
 
     doc = Doc(vocab, words=words)
     attrs = doc.to_array([POS, HEAD, DEP])
-    for i, (tag, head, dep) in enumerate(zip(tags, heads, deps)):
-        attrs[i, 0] = doc.vocab.strings[tag]
+    for i, (p, head, dep) in enumerate(zip(pos, heads, deps)):
+        attrs[i, 0] = doc.vocab.strings[p]
         attrs[i, 1] = head
         attrs[i, 2] = doc.vocab.strings[dep]
     doc.from_array([POS, HEAD, DEP], attrs)
+    if tags:
+        for token in doc:
+            token.tag_ = tags[token.i]
     return doc
 
 

@@ -19,9 +19,9 @@ def test_doc_array_attr_of_token(en_tokenizer, en_vocab):
 
 def test_doc_array_tag(en_tokenizer):
     text = "A nice sentence."
-    tags = ['DET', 'ADJ', 'NOUN', 'PUNCT']
+    pos = ['DET', 'ADJ', 'NOUN', 'PUNCT']
     tokens = en_tokenizer(text)
-    doc = get_doc(tokens.vocab, [t.text for t in tokens], tags=tags)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], pos=pos)
     assert doc[0].pos != doc[1].pos != doc[2].pos != doc[3].pos
     feats_array = doc.to_array((ORTH, POS))
     assert feats_array[0][1] == doc[0].pos
