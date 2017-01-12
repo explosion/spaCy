@@ -1,12 +1,14 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
 import numpy
+import pytest
 
-import spacy.en
 
-
-def test_add_vector():
-    vocab = spacy.en.English.Defaults.create_vocab()
-    vocab.resize_vectors(10)
-    lex = vocab[u'Hello']
+@pytest.mark.parametrize('text', ["Hello"])
+def test_vocab_add_vector(en_vocab, text):
+    en_vocab.resize_vectors(10)
+    lex = en_vocab[text]
     lex.vector = numpy.ndarray((10,), dtype='float32')
-    lex = vocab[u'Hello']
+    lex = en_vocab[text]
     assert lex.vector.shape == (10,)
