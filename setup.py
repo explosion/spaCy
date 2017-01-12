@@ -37,7 +37,6 @@ PACKAGES = [
     'spacy.munge',
     'spacy.tests',
     'spacy.tests.matcher',
-    'spacy.tests.morphology',
     'spacy.tests.munge',
     'spacy.tests.parser',
     'spacy.tests.serialize',

@@ -92,22 +92,3 @@ def test_phrase_matcher():
     matcher = PhraseMatcher(vocab, [Doc(vocab, words='Google Now'.split())])
     doc = Doc(vocab, words=['I', 'like', 'Google', 'Now', 'best'])
     assert len(matcher(doc)) == 1
-
-
-#@pytest.mark.models
-#def test_match_preserved(EN):
-#    patterns = {
-#        'JS': ['PRODUCT', {}, [[{'ORTH': 'JavaScript'}]]],
-#        'GoogleNow':  ['PRODUCT', {}, [[{'ORTH': 'Google'}, {'ORTH': 'Now'}]]],
-#        'Java':       ['PRODUCT', {}, [[{'LOWER': 'java'}]]],
-#    }
-#    matcher = Matcher(EN.vocab, patterns)
-#    doc = EN.tokenizer('I like java.')
-#    EN.tagger(doc)
-#    assert len(doc.ents) == 0
-#    doc = EN.tokenizer('I like java.')
-#    doc.ents += tuple(matcher(doc))
-#    assert len(doc.ents) == 1
-#    EN.tagger(doc)
-#    EN.entity(doc)
-#    assert len(doc.ents) == 1
