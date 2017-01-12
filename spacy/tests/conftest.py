@@ -11,6 +11,7 @@ from ..nl import Dutch
 from ..sv import Swedish
 from ..hu import Hungarian
 from ..tokens import Doc
+from ..strings import StringStore
 from ..attrs import ORTH, TAG, HEAD, DEP
 
 from io import StringIO
@@ -51,6 +52,9 @@ def de_tokenizer():
 def hu_tokenizer():
     return Hungarian.Defaults.create_tokenizer()
 
+@pytest.fixture
+def stringstore():
+    return StringStore()
 
 @pytest.fixture
 def text_file():
