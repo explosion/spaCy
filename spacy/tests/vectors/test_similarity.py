@@ -1,7 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..util import get_doc, get_cosine
+from ..util import get_doc, get_cosine, add_vecs_to_vocab
 
 import numpy
 import pytest
@@ -9,22 +9,16 @@ import pytest
 
 @pytest.fixture
 def vectors():
-    return ("apple", [1, 2, 3], "orange", [-1, -2, -3])
+    return [("apple", [1, 2, 3]), ("orange", [-1, -2, -3])]
 
 
 @pytest.fixture()
 def vocab(en_vocab, vectors):
-    word1, vec1, word2, vec2 = vectors
-    en_vocab.resize_vectors(3)
-    lex1 = en_vocab[word1]
-    lex2 = en_vocab[word2]
-    lex1.vector = vec1
-    lex2.vector = vec2
-    return en_vocab
+    return add_vecs_to_vocab(en_vocab, vectors)
 
 
 def test_vectors_similarity_LL(vocab, vectors):
-    word1, vec1, word2, vec2 = vectors
+    [(word1, vec1), (word2, vec2)] = vectors
     lex1 = vocab[word1]
     lex2 = vocab[word2]
     assert lex1.has_vector
@@ -37,7 +31,7 @@ def test_vectors_similarity_LL(vocab, vectors):
 
 
 def test_vectors_similarity_TT(vocab, vectors):
-    word1, vec1, word2, vec2 = vectors
+    [(word1, vec1), (word2, vec2)] = vectors
     doc = get_doc(vocab, words=[word1, word2])
     assert doc[0].has_vector
     assert doc[1].has_vector
@@ -49,18 +43,18 @@ def test_vectors_similarity_TT(vocab, vectors):
 
 
 def test_vectors_similarity_TD(vocab, vectors):
-    word1, vec1, word2, vec2 = vectors
+    [(word1, vec1), (word2, vec2)] = vectors
     doc = get_doc(vocab, words=[word1, word2])
     assert doc.similarity(doc[0]) == doc[0].similarity(doc)
 
 
 def test_vectors_similarity_DS(vocab, vectors):
-    word1, vec1, word2, vec2 = vectors
+    [(word1, vec1), (word2, vec2)] = vectors
     doc = get_doc(vocab, words=[word1, word2])
     assert doc.similarity(doc[:2]) == doc[:2].similarity(doc)
 
 
 def test_vectors_similarity_TS(vocab, vectors):
-    word1, vec1, word2, vec2 = vectors
+    [(word1, vec1), (word2, vec2)] = vectors
     doc = get_doc(vocab, words=[word1, word2])
     assert doc[:2].similarity(doc[0]) == doc[0].similarity(doc[:2])
