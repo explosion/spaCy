@@ -111,7 +111,7 @@ Our new test setup comes with a few handy utility functions that can be imported
 
 ### Constructing a `Doc` object manually with `get_doc()`
 
-Loading the models is expensive and not necessary if you're not actually testing the model performance. If all you needs ia a `Doc` object with annotations like heads, POS tags or the dependency parse, you can use `get_doc()` to construct it manually.
+Loading the models is expensive and not necessary if you're not actually testing the model performance. If all you need ia a `Doc` object with annotations like heads, POS tags or the dependency parse, you can use `get_doc()` to construct it manually.
 
 ```python
 def test_doc_token_api_strings(en_tokenizer):
@@ -168,4 +168,4 @@ print [token.dep_ for token in doc]
 
 There's still a long way to go to finally reach **100% test coverage** – and we'd appreciate your help! 🙌 You can open an issue on our [issue tracker](https://github.com/explosion/spaCy/issues) and label it `tests`, or make a [pull request](https://github.com/explosion/spaCy/pulls) to this repository.
 
-For more information on contributing to spaCy in general, check out our [contribution guidelines](https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md).
+📖 **For more information on contributing to spaCy in general, check out our [contribution guidelines](https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md).**
