@@ -40,6 +40,16 @@ def apply_transition_sequence(parser, doc, sequence):
             stepwise.transition(transition)
 
 
+def add_vecs_to_vocab(vocab, vectors):
+    """Add list of vector tuples to given vocab. All vectors need to have the
+    same length. Format: [("text", [1, 2, 3])]"""
+    length = len(vectors[0][1])
+    vocab.resize_vectors(length)
+    for word, vec in vectors:
+        vocab[word].vector = vec
+    return vocab
+
+
 def get_cosine(vec1, vec2):
     """Get cosine for two given vectors"""
     return numpy.dot(vec1, vec2) / (numpy.linalg.norm(vec1) * numpy.linalg.norm(vec2))
