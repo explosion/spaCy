@@ -16,7 +16,7 @@ from ..lemmatizer import Lemmatizer
 from ..attrs import ORTH, TAG, HEAD, DEP
 from ..util import match_best_version, get_data_path
 
-from io import StringIO
+from io import StringIO, BytesIO
 from pathlib import Path
 import os
 import pytest
@@ -78,6 +78,10 @@ def lemmatizer(path):
 @pytest.fixture
 def text_file():
     return StringIO()
+
+@pytest.fixture
+def text_file_b():
+    return BytesIO()
 
 
 @pytest.fixture
