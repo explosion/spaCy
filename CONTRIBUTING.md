@@ -7,10 +7,11 @@ Following the v1.0 release, it's time to welcome more contributors into the spaC
 ## Table of contents
 1. [Issues and bug reports](#issues-and-bug-reports)
 2. [Contributing to the code base](#contributing-to-the-code-base)
-3. [Updating the website](#updating-the-website)
-4. [Submitting a tutorial](#submitting-a-tutorial)
-5. [Submitting a project to the showcase](#submitting-a-project-to-the-showcase)
-6. [Code of conduct](#code-of-conduct)
+3. [Adding tests](#adding-tests)
+4. [Updating the website](#updating-the-website)
+5. [Submitting a tutorial](#submitting-a-tutorial)
+6. [Submitting a project to the showcase](#submitting-a-project-to-the-showcase)
+7. [Code of conduct](#code-of-conduct)
 
 ## Issues and bug reports
 
@@ -67,11 +68,19 @@ example_user would create the file `.github/contributors/example_user.md`.
 
 ### Fixing bugs
 
-When fixing a bug, first create an [issue](https://github.com/explosion/spaCy/issues) if one does not already exist. The description text can be very short – we don't want to make this too bureaucratic. Next, create a test file named `test_issue[ISSUE NUMBER].py` in the [`spacy/tests/regression`](spacy/tests/regression) folder.
+When fixing a bug, first create an [issue](https://github.com/explosion/spaCy/issues) if one does not already exist. The description text can be very short – we don't want to make this too bureaucratic. Next, create a test file named `test_issue[ISSUE NUMBER].py` in the [`spacy/tests/regression`](spacy/tests/regression) folder. For more information on how to add tests, check out the [tests README](tests/README.md).
 
-Test for the bug you're fixing, and make sure the test fails. If the test requires the models to be loaded, mark it with the `pytest.mark.models` decorator.
+Test for the bug you're fixing, and make sure the test fails. Next, add and commit your test file referencing the issue number in the commit message. Finally, fix the bug, make sure your test passes and reference the issue in your commit message.
 
-Next, add and commit your test file referencing the issue number in the commit message. Finally, fix the bug, make sure your test passes and reference the issue in your commit message.
+## Adding tests
+
+spaCy uses [pytest](http://doc.pytest.org/) framework for testing. For more info on this, see the [pytest documentation](http://docs.pytest.org/en/latest/contents.html). Tests for spaCy modules and classes live in their own directories of the same name. For example, tests for the `Tokenizer` can be found in [`/tests/tokenizer`](tests/tokenizer). To be interpreted and run, all test files and test functions need to be prefixed with `test_`.
+
+When adding tests, make sure to use descriptive names, keep the code short and concise and only test for one behaviour at a time. Try to `parametrize` test cases wherever possible, use our pre-defined fixtures for spaCy components and avoid unnecessary imports.
+
+Extensive tests that take a long time should be marked with `@pytest.mark.slow`. Tests that require the model to be loaded should be marked with `@pytest.mark.models`. Loading the models is expensive and not necessary if you're not actually testing the model performance. If all you needs ia a `Doc` object with annotations like heads, POS tags or the dependency parse, you can use the `get_doc()` utility function to construct it manually.
+
+For more guidelines and information on how to add tests, check out the [tests README](tests/README.md).
 
 
 ## Updating the website
