@@ -6,6 +6,7 @@ from ...lemmatizer import read_index, read_exc
 import pytest
 
 
+@pytest.mark.models
 @pytest.mark.parametrize('text,lemmas', [("aardwolves", ["aardwolf"]),
                                          ("aardwolf", ["aardwolf"]),
                                          ("planets", ["planet"]),
@@ -17,6 +18,7 @@ def test_tagger_lemmatizer_noun_lemmas(lemmatizer, text, lemmas):
     assert lemmatizer.noun(text) == set(lemmas)
 
 
+@pytest.mark.models
 def test_tagger_lemmatizer_base_forms(lemmatizer):
     if lemmatizer is None:
         return None
@@ -24,12 +26,14 @@ def test_tagger_lemmatizer_base_forms(lemmatizer):
     assert lemmatizer.noun('dive', {'number': 'plur'}) == set(['diva'])
 
 
+@pytest.mark.models
 def test_tagger_lemmatizer_base_form_verb(lemmatizer):
     if lemmatizer is None:
         return None
     assert lemmatizer.verb('saw', {'verbform': 'past'}) == set(['see'])
 
 
+@pytest.mark.models
 def test_tagger_lemmatizer_punct(lemmatizer):
     if lemmatizer is None:
         return None
@@ -37,6 +41,7 @@ def test_tagger_lemmatizer_punct(lemmatizer):
     assert lemmatizer.punct('“') == set(['"'])
 
 
+@pytest.mark.models
 def test_tagger_lemmatizer_read_index(path):
     if path is not None:
         with (path / 'wordnet' / 'index.noun').open() as file_:
@@ -46,6 +51,7 @@ def test_tagger_lemmatizer_read_index(path):
         assert 'plant' in index
 
 
+@pytest.mark.models
 @pytest.mark.parametrize('text,lemma', [("was", "be")])
 def test_tagger_lemmatizer_read_exc(path, text, lemma):
     if path is not None:
