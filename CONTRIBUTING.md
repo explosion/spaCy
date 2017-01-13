@@ -68,7 +68,7 @@ example_user would create the file `.github/contributors/example_user.md`.
 
 ### Fixing bugs
 
-When fixing a bug, first create an [issue](https://github.com/explosion/spaCy/issues) if one does not already exist. The description text can be very short – we don't want to make this too bureaucratic. Next, create a test file named `test_issue[ISSUE NUMBER].py` in the [`spacy/tests/regression`](spacy/tests/regression) folder. For more information on how to add tests, check out the [tests README](tests/README.md).
+When fixing a bug, first create an [issue](https://github.com/explosion/spaCy/issues) if one does not already exist. The description text can be very short – we don't want to make this too bureaucratic. Next, create a test file named `test_issue[ISSUE NUMBER].py` in the [`spacy/tests/regression`](spacy/tests/regression) folder. **For more information on how to add tests, check out the [tests README](tests/README.md).**
 
 Test for the bug you're fixing, and make sure the test fails. Next, add and commit your test file referencing the issue number in the commit message. Finally, fix the bug, make sure your test passes and reference the issue in your commit message.
 
@@ -80,7 +80,7 @@ When adding tests, make sure to use descriptive names, keep the code short and c
 
 Extensive tests that take a long time should be marked with `@pytest.mark.slow`. Tests that require the model to be loaded should be marked with `@pytest.mark.models`. Loading the models is expensive and not necessary if you're not actually testing the model performance. If all you needs ia a `Doc` object with annotations like heads, POS tags or the dependency parse, you can use the `get_doc()` utility function to construct it manually.
 
-For more guidelines and information on how to add tests, check out the [tests README](tests/README.md).
+**For more guidelines and information on how to add tests, check out the [tests README](tests/README.md).**
 
 
 ## Updating the website
@@ -96,7 +96,7 @@ harp server
 
 The docs can always use another example or more detail, and they should always be up to date and not misleading. To quickly find the correct file to edit, simply click on the "Suggest edits" button at the bottom of a page.
 
-To make it easy to add content components, we use a [collection of custom mixins](_includes/_mixins.jade), like `+table`, `+list` or `+code`. For more info and troubleshooting guides, check out the [website README](website).
+To make it easy to add content components, we use a [collection of custom mixins](_includes/_mixins.jade), like `+table`, `+list` or `+code`. **For more info and troubleshooting guides, check out the [website README](website).**
 
 ### Resources to get you started
 
