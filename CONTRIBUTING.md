@@ -33,6 +33,7 @@ We use the following system to tag our issues:
 | [`install`](https://github.com/explosion/spaCy/labels/install) | Installation problems |
 | [`performance`](https://github.com/explosion/spaCy/labels/performance) | Accuracy, speed and memory use problems |
 | [`tests`](https://github.com/explosion/spaCy/labels/tests) | Missing or incorrect [tests](spacy/tests) |
+| [`examples`](https://github.com/explosion/spaCy/labels/examples) | Issues related to the [examples](spacy/examples) |
 | [`english`](https://github.com/explosion/spaCy/labels/english), [`german`](https://github.com/explosion/spaCy/labels/german) | Issues related to the specific languages, models and data |
 | [`linux`](https://github.com/explosion/spaCy/labels/linux), [`osx`](https://github.com/explosion/spaCy/labels/osx), [`windows`](https://github.com/explosion/spaCy/labels/windows) | Issues related to the specific operating systems |
 | [`pip`](https://github.com/explosion/spaCy/labels/pip), [`conda`](https://github.com/explosion/spaCy/labels/conda) | Issues related to the specific package managers |
