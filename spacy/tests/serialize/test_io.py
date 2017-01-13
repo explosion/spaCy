@@ -1,58 +1,48 @@
+# coding: utf-8
+from __future__ import unicode_literals
+
+from ...tokens import Doc
+from ..util import get_doc
+
 import pytest
 
-from spacy.serialize.packer import Packer
-from spacy.attrs import ORTH, SPACY
-from spacy.tokens import Doc
-import math
-import tempfile
-import shutil
-import os
+
+def test_serialize_io_read_write(en_vocab, text_file_b):
+    text1 = ["This", "is", "a", "simple", "test", ".", "With", "a", "couple", "of", "sentences", "."]
+    text2 = ["This", "is", "another", "test", "document", "."]
+
+    doc1 = get_doc(en_vocab, text1)
+    doc2 = get_doc(en_vocab, text2)
+    text_file_b.write(doc1.to_bytes())
+    text_file_b.write(doc2.to_bytes())
+    text_file_b.seek(0)
+    bytes1, bytes2 = Doc.read_bytes(text_file_b)
+    result1 = get_doc(en_vocab).from_bytes(bytes1)
+    result2 = get_doc(en_vocab).from_bytes(bytes2)
+    assert result1.text_with_ws == doc1.text_with_ws
+    assert result2.text_with_ws == doc2.text_with_ws
 
 
-@pytest.mark.models
-def test_read_write(EN):
-    doc1 = EN(u'This is a simple test. With a couple of sentences.')
-    doc2 = EN(u'This is another test document.')
+def test_serialize_io_left_right(en_vocab):
+    text = ["This", "is", "a", "simple", "test", ".", "With", "a",  "couple", "of", "sentences", "."]
+    doc = get_doc(en_vocab, text)
+    result = Doc(en_vocab).from_bytes(doc.to_bytes())
 
-    try:
-        tmp_dir = tempfile.mkdtemp()
-        with open(os.path.join(tmp_dir, 'spacy_docs.bin'), 'wb') as file_:
-            file_.write(doc1.to_bytes())
-            file_.write(doc2.to_bytes())
-
-        with open(os.path.join(tmp_dir, 'spacy_docs.bin'), 'rb') as file_:
-            bytes1, bytes2 = Doc.read_bytes(file_)
-            r1 = Doc(EN.vocab).from_bytes(bytes1)
-            r2 = Doc(EN.vocab).from_bytes(bytes2)
-
-        assert r1.string == doc1.string
-        assert r2.string == doc2.string
-    finally:
-        shutil.rmtree(tmp_dir)
-
-
-@pytest.mark.models
-def test_left_right(EN):
-    orig = EN(u'This is a simple test. With a couple of sentences.')
-    result = Doc(orig.vocab).from_bytes(orig.to_bytes())
-
-    for word in result:
-        assert word.head.i == orig[word.i].head.i
-        if word.head is not word:
-            assert word.i in [w.i for w in word.head.children]
-        for child in word.lefts:
-            assert child.head.i == word.i
-        for child in word.rights:
-            assert child.head.i == word.i
+    for token in result:
+        assert token.head.i == doc[token.i].head.i
+        if token.head is not token:
+            assert token.i in [w.i for w in token.head.children]
+        for child in token.lefts:
+            assert child.head.i == token.i
+        for child in token.rights:
+            assert child.head.i == token.i
 
 
 @pytest.mark.models
 def test_lemmas(EN):
-    orig = EN(u'The geese are flying')
-    result = Doc(orig.vocab).from_bytes(orig.to_bytes())
-    the, geese, are, flying = result
-    assert geese.lemma_ == 'goose'
-    assert are.lemma_ == 'be'
-    assert flying.lemma_ == 'fly'
-
- 
+    text = "The geese are flying"
+    doc = EN(text)
+    result = Doc(doc.vocab).from_bytes(doc.to_bytes())
+    assert result[1].lemma_ == 'goose'
+    assert result[2].lemma_ == 'be'
+    assert result[3].lemma_ == 'fly'
