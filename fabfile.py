@@ -10,13 +10,14 @@ from pathlib import Path
 
 
 PWD = path.dirname(__file__)
-VENV_DIR = path.join(PWD, '.env')
+ENV = os.environ["VENV_DIR"] if 'VENV_DIR' in os.environ else '.env'
+VENV_DIR = path.join(PWD, ENV)
 
 
 def env(lang="python2.7"):
-    if file_exists('.env'):
-        local('rm -rf .env')
-    local('virtualenv -p %s .env' % lang)
+    if file_exists(VENV_DIR):
+        local('rm -rf {env}'.format(env=VENV_DIR))
+    local('virtualenv -p {lang} {env}'.format(lang=lang, env=VENV_DIR))
 
 
 def install():
