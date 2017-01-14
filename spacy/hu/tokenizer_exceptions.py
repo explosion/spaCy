@@ -63,7 +63,6 @@ EU.
 F.
 Fla.
 Folyt.
-Ford.
 Fpk.
 Főszerk.
 G.
@@ -184,7 +183,6 @@ Ty.
 Tyr.
 U.
 Ui.
-User.
 Ut.
 V.
 VB.
@@ -261,7 +259,6 @@ ea.
 ed.
 eff.
 egyh.
-el.
 ell.
 elv.
 elvt.
@@ -349,7 +346,7 @@ io.
 ip.
 ir.
 irod.
-is.
+irod.
 isk.
 ism.
 izr.
@@ -604,7 +601,6 @@ zs.
 ált.
 ápr.
 ásv.
-át.
 é.
 ék.
 ény.

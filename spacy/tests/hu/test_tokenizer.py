@@ -36,6 +36,7 @@ HYPHEN_TESTS = [
     ('Lakik-e... van.', ['Lakik', '-e', '...', 'van', '.']),
     ('Lakik-e van?', ['Lakik', '-e', 'van', '?']),
     ('Lakik-elem van?', ['Lakik-elem', 'van', '?']),
+    ('Az életbiztosításáról- egy.', ['Az', 'életbiztosításáról-', 'egy', '.']),
     ('Van lakik-elem.', ['Van', 'lakik-elem', '.']),
     ('A 7-es busz?', ['A', '7-es', 'busz', '?']),
     ('A 7-es?', ['A', '7-es', '?']),
@@ -218,7 +219,7 @@ QUOTE_TESTS = [
     ('"Ime, hat"-ban irja.', ['"', 'Ime', ',', 'hat', '"', '-ban', 'irja', '.']),
     ('Az "Ime, hat".', ['Az', '"', 'Ime', ',', 'hat', '"', '.']),
     ('Egy 24"-os monitor.', ['Egy', '24"-os', 'monitor', '.']),
-    # ("A don't van.", ['A', "don't", 'van', '.'])
+    ("A McDonald's van.", ['A', "McDonald's", 'van', '.'])
 ]
 
 DOT_TESTS = [

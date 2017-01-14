@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from ..language_data.punctuation import ALPHA_LOWER, LIST_ELLIPSES, QUOTES, ALPHA_UPPER, LIST_QUOTES, UNITS, \
-    CURRENCY, LIST_PUNCT, ALPHA
+    CURRENCY, LIST_PUNCT, ALPHA, _QUOTES
 
 CURRENCY_SYMBOLS = r"\$ ¢ £ € ¥ ฿"
 
@@ -35,7 +35,7 @@ TOKENIZER_INFIXES = (
         r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=ALPHA),
         r'(?<=[{a}])--(?=[{a}])'.format(a=ALPHA),
         r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),
-        r'(?<=[{a}])(({q})|[\)\]\(\[])(?=[\-{a}])'.format(a=ALPHA, q=QUOTES),
+        r'(?<=[{a}])([{q}\)\]\(\[])(?=[\-{a}])'.format(a=ALPHA, q=_QUOTES.replace("'", "").strip().replace(" ", "")),
     ]
 )
 __all__ = ["TOKENIZER_PREFIXES", "TOKENIZER_SUFFIXES", "TOKENIZER_INFIXES"]
