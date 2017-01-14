@@ -147,7 +147,7 @@ NUMBER_TESTS = [
     ('A 15.-ben.', ['A', '15.-ben', '.']),
     ('A 2002--2003. van.', ['A', '2002--2003.', 'van', '.']),
     ('A 2002--2003-ben van.', ['A', '2002--2003-ben', 'van', '.']),
-    ('A 2002--2003-ben.', ['A', '2002--2003-ben', '.']),
+    ('A 2002-2003-ben.', ['A', '2002-2003-ben', '.']),
     ('A +0,99% van.', ['A', '+0,99%', 'van', '.']),
     ('A -0,99% van.', ['A', '-0,99%', 'van', '.']),
     ('A -0,99%-ben van.', ['A', '-0,99%-ben', 'van', '.']),
@@ -217,7 +217,7 @@ QUOTE_TESTS = [
     ('Az "Ime, hat"-ban irja.', ['Az', '"', 'Ime', ',', 'hat', '"', '-ban', 'irja', '.']),
     ('"Ime, hat"-ban irja.', ['"', 'Ime', ',', 'hat', '"', '-ban', 'irja', '.']),
     ('Az "Ime, hat".', ['Az', '"', 'Ime', ',', 'hat', '"', '.']),
-    ('Egy 24"-os monitor.', ['Egy', '24', '"', '-os', 'monitor', '.']),
+    ('Egy 24"-os monitor.', ['Egy', '24"-os', 'monitor', '.']),
     # ("A don't van.", ['A', "don't", 'van', '.'])
 ]
 
@@ -241,11 +241,14 @@ DOT_TESTS = [
 
 WIKI_TESTS = [
     ('!"', ['!', '"']),
+    ('lány"a', ['lány', '"', 'a']),
+    ('lány"a', ['lány', '"', 'a']),
     ('!"-lel', ['!', '"', '-lel']),
     ('""-sorozat ', ['"', '"', '-sorozat']),
     ('"(Köszönöm', ['"', '(', 'Köszönöm']),
     ('(törvénykönyv)-ben ', ['(', 'törvénykönyv', ')', '-ben']),
     ('"(...)"–sokkal ', ['"', '(', '...', ')', '"', '–sokkal']),
+    ('cérium(IV)-oxid', ['cérium', '(', 'IV', ')', '-oxid'])
 ]
 
 TESTCASES = DEFAULT_TESTS + DOT_TESTS + QUOTE_TESTS + NUMBER_TESTS + HYPHEN_TESTS + WIKI_TESTS
