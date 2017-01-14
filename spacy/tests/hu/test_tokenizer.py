@@ -29,7 +29,7 @@ HYPHEN_TESTS = [
     ('Dinnye-domb-.', ['Dinnye-domb-', '.']),
     ('Ezen -e elcsatangolt.', ['Ezen', '-e', 'elcsatangolt', '.']),
     ('Lakik-e', ['Lakik', '-e']),
-    ('A--B', ['A', '--' 'B']),
+    ('A--B', ['A', '--', 'B']),
     ('Lakik-e?', ['Lakik', '-e', '?']),
     ('Lakik-e.', ['Lakik', '-e', '.']),
     ('Lakik-e...', ['Lakik', '-e', '...']),
@@ -42,6 +42,7 @@ HYPHEN_TESTS = [
     ('A 7-es.', ['A', '7-es', '.']),
     ('Ez (lakik)-e?', ['Ez', '(', 'lakik', ')', '-e', '?']),
     ('A %-sal.', ['A', '%-sal', '.']),
+    ('A $-sal.', ['A', '$-sal', '.']),
     ('A CD-ROM-okrol.', ['A', 'CD-ROM-okrol', '.'])
 ]
 
@@ -206,7 +207,7 @@ NUMBER_TESTS = [
     ('A 5$-ban', ['A', '5$-ban']),
     ('A 5$.', ['A', '5', '$', '.']),
     ('A 5$', ['A', '5', '$']),
-    ('A $5', ['A', '$', '5']),
+    ('A $5', ['A', '$5']),
     ('A 5km/h', ['A', '5', 'km/h']),
     ('A 75%+1-100%-ig', ['A', '75%+1-100%-ig']),
     ('A 5km/h.', ['A', '5', 'km/h', '.']),
@@ -247,7 +248,8 @@ WIKI_TESTS = [
     ('"(...)"–sokkal ', ['"', '(', '...', ')', '"', '–sokkal']),
 ]
 
-TESTCASES = DEFAULT_TESTS + DOT_TESTS + QUOTE_TESTS + NUMBER_TESTS  # + HYPHEN_TESTS  # + WIKI_TESTS
+TESTCASES = DEFAULT_TESTS + DOT_TESTS + QUOTE_TESTS + NUMBER_TESTS + HYPHEN_TESTS  # + WIKI_TESTS
+
 
 @pytest.mark.parametrize('text,expected_tokens', TESTCASES)
 def test_tokenizer_handles_testcases(hu_tokenizer, text, expected_tokens):

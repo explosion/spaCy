@@ -58,7 +58,7 @@ LIST_HYPHENS = list(_HYPHENS.strip().split())
 
 
 ALPHA_LOWER = _ALPHA_LOWER.strip().replace(' ', '').replace('\n', '')
-ALPHA_UPPER = _ALPHA_UPPER.strip().replace(' ', '').replace(' ', '')
+ALPHA_UPPER = _ALPHA_UPPER.strip().replace(' ', '').replace('\n', '')
 ALPHA = ALPHA_LOWER + ALPHA_UPPER
 
 

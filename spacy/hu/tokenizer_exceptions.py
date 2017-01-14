@@ -539,13 +539,13 @@ OTHER_EXC = """
 ORD_NUM_OR_DATE = "([A-Z0-9]+[./-])*(\d+\.?)"
 _NUM = "[+\-]?\d+([,.]\d+)*"
 _OPS = "[=<>+\-\*/^()÷%²]"
-_SUFFIES = "-[{a}]+".format(a=ALPHA_LOWER)
+_SUFFIXES = "-[{a}]+".format(a=ALPHA_LOWER)
 NUMERIC_EXP = "({n})(({o})({n}))*[%]?".format(n=_NUM, o=_OPS)
 TIME_EXP = "\d+(:\d+)*(\.\d+)?"
 
 NUMS = "(({ne})|({t})|({on})|({c}))({s})?".format(
     ne=NUMERIC_EXP, t=TIME_EXP, on=ORD_NUM_OR_DATE,
-    c=CURRENCY, s=_SUFFIES
+    c=CURRENCY, s=_SUFFIXES
 )
 
 TOKEN_MATCH = re.compile("^({u})|({n})$".format(u=_URL_PATTERN, n=NUMS)).match
