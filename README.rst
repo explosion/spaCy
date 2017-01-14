@@ -26,7 +26,7 @@ released under the MIT license.
     :target: https://pypi.python.org/pypi/spacy
     :alt: pypi Version
 
-.. image:: https://badges.gitter.im/explosion.png
+.. image:: https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-09a3d5.svg
     :target: https://gitter.im/explosion/spaCy
     :alt: spaCy on Gitter
 
