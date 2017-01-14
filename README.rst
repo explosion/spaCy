@@ -10,10 +10,6 @@ released under the MIT license.
 
 💫 **Version 1.5 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
-.. image:: http://i.imgur.com/wFvLZyJ.png
-    :target: https://travis-ci.org/explosion/spaCy
-    :alt: spaCy on Travis CI
-    
 .. image:: https://travis-ci.org/explosion/spaCy.svg?branch=master
     :target: https://travis-ci.org/explosion/spaCy
     :alt: Build Status
