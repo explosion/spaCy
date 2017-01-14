@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import re
 
 from spacy.language_data.punctuation import ALPHA_LOWER, CURRENCY
-from ..language_data.tokenizer_exceptions import URL_PATTERN
+from ..language_data.tokenizer_exceptions import _URL_PATTERN
 
 ABBREVIATIONS = """
 AkH.
@@ -548,4 +548,4 @@ NUMS = "(({ne})|({t})|({on})|({c}))({s})?".format(
     c=CURRENCY, s=_SUFFIES
 )
 
-TOKEN_MATCH = re.compile("^({u})|({n})$".format(u=URL_PATTERN, n=NUMS)).match
+TOKEN_MATCH = re.compile("^({u})|({n})$".format(u=_URL_PATTERN, n=NUMS)).match
