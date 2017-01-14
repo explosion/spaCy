@@ -85,8 +85,8 @@ def test_doc_token_api_vectors(en_tokenizer, text_file, text, vectors):
     assert tokens[0].similarity(tokens[1]) == tokens[1].similarity(tokens[0])
     assert sum(tokens[0].vector) != sum(tokens[1].vector)
     assert numpy.isclose(
-                tokens[0].vector_norm,
-                numpy.sqrt(numpy.dot(tokens[0].vector, tokens[0].vector)))
+        tokens[0].vector_norm,
+        numpy.sqrt(numpy.dot(tokens[0].vector, tokens[0].vector)))
 
 
 def test_doc_token_api_ancestors(en_tokenizer):
