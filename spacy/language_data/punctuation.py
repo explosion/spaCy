@@ -57,14 +57,14 @@ LIST_PUNCT = list(_PUNCT.strip().split())
 LIST_HYPHENS = list(_HYPHENS.strip().split())
 
 
-ALPHA_LOWER = _ALPHA_LOWER.strip().replace(' ', '')
-ALPHA_UPPER = _ALPHA_UPPER.strip().replace(' ', '')
+ALPHA_LOWER = _ALPHA_LOWER.strip().replace(' ', '').replace('\n', '')
+ALPHA_UPPER = _ALPHA_UPPER.strip().replace(' ', '').replace(' ', '')
 ALPHA = ALPHA_LOWER + ALPHA_UPPER
 
 
 QUOTES = _QUOTES.strip().replace(' ', '|')
 CURRENCY = _CURRENCY.strip().replace(' ', '|')
-UNITS = _UNITS.strip().replace(' ', '|')
+UNITS = _UNITS.strip().replace(' ', '|').replace('\n', '|')
 HYPHENS = _HYPHENS.strip().replace(' ', '|')
 
 

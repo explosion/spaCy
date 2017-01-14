@@ -1,6 +1,11 @@
 # encoding: utf8
 from __future__ import unicode_literals
 
+import re
+
+from spacy.language_data.punctuation import ALPHA_LOWER, CURRENCY
+from ..language_data.tokenizer_exceptions import URL_PATTERN
+
 ABBREVIATIONS = """
 AkH.
 Aö.
@@ -107,6 +112,7 @@ Tel.
 Ty.
 Tyr.
 Ui.
+Ut.
 Vcs.
 Vhr.
 X.Y.
@@ -212,6 +218,7 @@ gimn.
 gk.
 gkv.
 gondn.
+Gr.
 gr.
 grav.
 gy.
@@ -237,6 +244,7 @@ ht.
 htb.
 hv.
 hőm.
+ie.
 i.e.
 i.sz.
 id.
@@ -271,6 +279,7 @@ júl.
 jún.
 karb.
 kat.
+kath.
 kb.
 kcs.
 kd.
@@ -286,6 +295,7 @@ kk.
 kkt.
 klin.
 kp.
+Kr.
 krt.
 kt.
 ktsg.
@@ -357,6 +367,7 @@ nov.
 nu.
 ny.
 nyilv.
+Nyrt.
 nyrt.
 nyug.
 obj.
@@ -409,6 +420,7 @@ sa.
 sel.
 sgt.
 sm.
+St.
 st.
 stat.
 stb.
@@ -478,8 +490,11 @@ vs.
 vsz.
 vv.
 vál.
+várm.
+Várm.
 vízv.
 vö.
+Zrt.
 zrt.
 zs.
 Ész.
@@ -502,6 +517,7 @@ zs.
 ú.
 úm.
 ún.
+ú.n.
 út.
 üag.
 üd.
@@ -510,7 +526,6 @@ zs.
 ümk.
 ütk.
 üv.
-ő.
 ű.
 őrgy.
 őrpk.
@@ -520,3 +535,17 @@ zs.
 OTHER_EXC = """
 -e
 """.strip().split()
+
+ORD_NUM_OR_DATE = "([A-Z0-9]+[./-])*(\d+\.?)"
+_NUM = "[+\-]?\d+([,.]\d+)*"
+_OPS = "[=<>+\-\*/^()÷%²]"
+_SUFFIES = "-[{a}]+".format(a=ALPHA_LOWER)
+NUMERIC_EXP = "\(?({n})(({o})({n}))*[)%]?".format(n=_NUM, o=_OPS)
+TIME_EXP = "\d+(:\d+)*(\.\d+)?"
+
+NUMS = "(({ne})|({t})|({on})|({c}))({s})?".format(
+    ne=NUMERIC_EXP, t=TIME_EXP, on=ORD_NUM_OR_DATE,
+    c=CURRENCY, s=_SUFFIES
+)
+
+TOKEN_MATCH = re.compile("^({u})|({n})$".format(u=URL_PATTERN, n=NUMS)).match
