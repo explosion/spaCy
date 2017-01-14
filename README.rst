@@ -29,6 +29,10 @@ released under the MIT license.
 .. image:: https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-09a3d5.svg
     :target: https://gitter.im/explosion/spaCy
     :alt: spaCy on Gitter
+    
+.. image:: https://img.shields.io/twitter/follow/spacy_io.svg?style=social&label=Follow   
+    :target: https://twitter.com/spacy_io
+    :alt: spaCy on Twitter
 
 📖 Documentation
 ================
