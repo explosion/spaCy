@@ -248,7 +248,7 @@ WIKI_TESTS = [
     ('"(...)"–sokkal ', ['"', '(', '...', ')', '"', '–sokkal']),
 ]
 
-TESTCASES = DEFAULT_TESTS + DOT_TESTS + QUOTE_TESTS + NUMBER_TESTS + HYPHEN_TESTS  # + WIKI_TESTS
+TESTCASES = DEFAULT_TESTS + DOT_TESTS + QUOTE_TESTS + NUMBER_TESTS + HYPHEN_TESTS + WIKI_TESTS
 
 
 @pytest.mark.parametrize('text,expected_tokens', TESTCASES)

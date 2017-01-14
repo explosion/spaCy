@@ -35,8 +35,7 @@ TOKENIZER_INFIXES = (
         r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=ALPHA),
         r'(?<=[{a}])--(?=[{a}])'.format(a=ALPHA),
         r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),
-        r'(?<=[0-9{a}])({q})(?=[\-{a}])'.format(a=ALPHA, q=QUOTES),
+        r'(?<=[0-9{a}])(({q})|[\)\]])(?=\-[{a}])'.format(a=ALPHA, q=QUOTES),
     ]
 )
-
 __all__ = ["TOKENIZER_PREFIXES", "TOKENIZER_SUFFIXES", "TOKENIZER_INFIXES"]
