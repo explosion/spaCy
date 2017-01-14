@@ -56,7 +56,7 @@ def test_tokenizer_keep_urls(tokenizer, text):
     assert len(tokens) == 1
 ```
 
-This will run the test once for each `text` value. Even if you're only testing  one example, it's usually best to specify it as a parameter. This will later make it easier for people to quickly add additional test cases without having to modify the test.
+This will run the test once for each `text` value. Even if you're only testing  one example, it's usually best to specify it as a parameter. This will later make it easier for others to quickly add additional test cases without having to modify the test.
 
 You can also specify parameters as tuples to test with multiple values per test:
 
@@ -88,7 +88,7 @@ These are the main fixtures that are currently available:
 | `hu_tokenizer` | Creates a Hungarian `Tokenizer` object. |
 | `en_vocab` | Creates an English `Vocab` object. |
 | `en_entityrecognizer` | Creates an English `EntityRecognizer` object. |
-| `lemmatizer` | Creates a `Lemmatizer` object from the installed language data (`None` if no language data is found).
+| `lemmatizer` | Creates a `Lemmatizer` object from the installed language data (`None` if no data is found).
 | `EN` | Creates an instance of `English`. Only use for tests that require the models. |
 | `DE` | Creates an instance of `German`. Only use for tests that require the models. |
 | `text_file` | Creates an instance of `StringIO` to simulate reading from and writing to files. |
@@ -128,8 +128,6 @@ def test_doc_token_api_strings(en_tokenizer):
     assert doc[0].dep_ == 'ROOT'
 ```
 
-If you're tokenizing before creating a `Doc`, make sure to use the tokenizer's vocab. Otherwise, you can also use the `en_vocab` fixture.
-
 You can construct a `Doc` with the following arguments:
 
 | Argument | Description |
@@ -139,14 +137,14 @@ You can construct a `Doc` with the following arguments:
 | `heads` | List of heads as integers. |
 | `pos` | List of POS tags as text values. |
 | `tag` | List of tag names as text values. |
-| `dep` | List of dependencies, as text values. |
-| `ents` | List of entity tuples with `ent_id`, `label`, `start`, `end` (for example `('Stewart Lee', 'PERSON', 0, 2)`). The `label` will be looked up in `doc.vocab.strings[label]`. |
+| `dep` | List of dependencies as text values. |
+| `ents` | List of entity tuples with `ent_id`, `label`, `start`, `end` (for example `('Stewart Lee', 'PERSON', 0, 2)`). The `label` will be looked up in `vocab.strings[label]`. |
 
 Here's how to quickly get these values from within spaCy:
 
 ```python
 doc = nlp(u'Some text here')
-print [token.head.i - token.i for token in doc]
+print [token.head.i-token.i for token in doc]
 print [token.tag_ for token in doc]
 print [token.pos_ for token in doc]
 print [token.dep_ for token in doc]
