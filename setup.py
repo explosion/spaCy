@@ -234,7 +234,7 @@ def setup_package():
                 'murmurhash>=0.26,<0.27',
                 'cymem>=1.30,<1.32',
                 'preshed>=0.46.0,<0.47.0',
-                'thinc>=5.0.0,<5.1.0',
+                'thinc>=6.2.0,<6.3.0',
                 'plac',
                 'six',
                 'cloudpickle',
