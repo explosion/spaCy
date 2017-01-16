@@ -2,7 +2,7 @@
 
 # spaCy tests
 
-spaCy uses [pytest](http://doc.pytest.org/) framework for testing. For more info on this, see the [pytest documentation](http://docs.pytest.org/en/latest/contents.html).
+spaCy uses the [pytest](http://doc.pytest.org/) framework for testing. For more info on this, see the [pytest documentation](http://docs.pytest.org/en/latest/contents.html).
 
 Tests for spaCy modules and classes live in their own directories of the same name. For example, tests for the `Tokenizer` can be found in [`/tests/tokenizer`](tokenizer). All test modules (i.e. directories) also need to be listed in spaCy's [`setup.py`](../setup.py). To be interpreted and run, all test files and test functions need to be prefixed with `test_`.
 
