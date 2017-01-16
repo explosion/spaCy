@@ -8,7 +8,7 @@ English and German,  as well as tokenization for Chinese, Spanish, Italian, Fren
 Portuguese, Dutch, Swedish and Hungarian. It's commercial  open-source software, 
 released under the MIT license.
 
-💫 **Version 1.5 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
+💫 **Version 1.6 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: https://travis-ci.org/explosion/spaCy.svg?branch=master
     :target: https://travis-ci.org/explosion/spaCy
@@ -243,8 +243,40 @@ calling ``spacy.load()``, or by passing a ``path`` argument to the ``spacy.en.En
 Changelog
 =========
 
-2016-12-27 `v1.5.0 <https://github.com/explosion/spaCy/releases>`_: *Alpha support for Swedish and Hungarian*
--------------------------------------------------------------------------------------------------------------
+2017-01-16 `v1.6.0 <https://github.com/explosion/spaCy/releases/>`_: *Improvements to tokenizer and tests*
+----------------------------------------------------------------------------------------------------------
+
+**✨ Major features and improvements**
+
+* Updated token exception handling mechanism to allow the usage of arbitrary functions as token exception matchers.
+* Improve how tokenizer exceptions for English contractions and punctuations are generated.
+* Update language data for Hungarian and Swedish tokenization.
+* Update to use `Thinc v6 <https://github.com/explosion/thinc/>`_ to prepare for `spaCy v2.0 <https://github.com/explosion/spaCy/projects/3>`_.
+
+**🔴 Bug fixes**
+
+* Fix issue `#326 <https://github.com/explosion/spaCy/issues/326>`_: Tokenizer is now more consistent and handles abbreviations correctly.
+* Fix issue `#344 <https://github.com/explosion/spaCy/issues/344>`_: Tokenizer now handles URLs correctly.
+* Fix issue `#483 <https://github.com/explosion/spaCy/issues/483>`_: Period after two or more uppercase letters is split off in tokenizer exceptions.
+* Fix issue `#631 <https://github.com/explosion/spaCy/issues/631>`_: Add ``richcmp`` method to ``Token``.
+* Fix issue `#718 <https://github.com/explosion/spaCy/issues/718>`_: Contractions with ``She`` are now handled correctly.
+* Fix issue `#736 <https://github.com/explosion/spaCy/issues/736>`_: Times are now tokenized with correct string values.
+* Fix issue `#743 <https://github.com/explosion/spaCy/issues/743>`_: ``Token`` is now hashable.
+* Fix issue `#744 <https://github.com/explosion/spaCy/issues/744>`_: ``were`` and ``Were`` are now excluded correctly  from contractions.
+
+**📋 Tests**
+
+* Modernise and reorganise all tests and remove model dependencies where possible.
+* Improve test speed to ~20s for basic tests (from previously >80s) and ~100s including models (from previously >200s).
+* Add fixtures for spaCy components and test utilities, e.g. to create ``Doc`` object manually.
+* Add `documentation for tests <https://github.com/explosion/spaCy/tree/master/spacy/tests>`_ to explain conventions and organisation.
+
+**👥  Contributors**
+
+Thanks to `@oroszgy <https://github.com/oroszgy>`_, `@magnusburton <https://github.com/magnusburton>`_, `@guyrosin <https://github.com/guyrosin>`_ and `@danielhers <https://github.com/danielhers>`_ for the pull requests!
+
+2016-12-27 `v1.5.0 <https://github.com/explosion/spaCy/releases/tag/v1.5.0>`_: *Alpha support for Swedish and Hungarian*
+------------------------------------------------------------------------------------------------------------------------
 
 **✨ Major features and improvements**
 
