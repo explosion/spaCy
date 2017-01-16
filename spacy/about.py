@@ -4,7 +4,7 @@
 # https://github.com/pypa/warehouse/blob/master/warehouse/__about__.py
 
 __title__ = 'spacy'
-__version__ = '1.5.1'
+__version__ = '1.5.2'
 __summary__ = 'Industrial-strength NLP'
 __uri__ = 'https://spacy.io'
 __author__ = 'Matthew Honnibal'
