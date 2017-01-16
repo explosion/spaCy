@@ -31,7 +31,7 @@ def test_doc_api_getitem(en_tokenizer):
         tokens[len(tokens)]
 
     def to_str(span):
-       return '/'.join(token.text for token in span)
+        return '/'.join(token.text for token in span)
 
     span = tokens[1:1]
     assert not to_str(span)
@@ -193,7 +193,7 @@ def test_doc_api_runtime_error(en_tokenizer):
 
 
 def test_doc_api_right_edge(en_tokenizer):
-    # Test for bug occurring from Unshift action, causing incorrect right edge
+    """Test for bug occurring from Unshift action, causing incorrect right edge"""
     text = "I have proposed to myself, for the sake of such as live under the government of the Romans, to translate those books into the Greek tongue."
     heads = [2, 1, 0, -1, -1, -3, 15, 1, -2, -1, 1, -3, -1, -1, 1, -2, -1, 1,
              -2, -7, 1, -19, 1, -2, -3, 2, 1, -3, -26]
@@ -202,7 +202,8 @@ def test_doc_api_right_edge(en_tokenizer):
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
     assert doc[6].text == 'for'
     subtree = [w.text for w in doc[6].subtree]
-    assert subtree == ['for' , 'the', 'sake', 'of', 'such', 'as', 'live', 'under', 'the', 'government', 'of', 'the', 'Romans', ',']
+    assert subtree == ['for', 'the', 'sake', 'of', 'such', 'as',
+                       'live', 'under', 'the', 'government', 'of', 'the', 'Romans', ',']
     assert doc[6].right_edge.text == ','
 
 

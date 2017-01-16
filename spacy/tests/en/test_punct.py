@@ -10,9 +10,6 @@ from ...util import compile_prefix_regex
 from ...language_data import TOKENIZER_PREFIXES
 
 
-
-en_search_prefixes = compile_prefix_regex(TOKENIZER_PREFIXES).search
-
 PUNCT_OPEN = ['(', '[', '{', '*']
 PUNCT_CLOSE = [')', ']', '}', '*']
 PUNCT_PAIRED = [('(', ')'),  ('[', ']'), ('{', '}'), ('*', '*')]
@@ -99,7 +96,8 @@ def test_tokenizer_splits_double_end_quote(en_tokenizer, text):
 
 @pytest.mark.parametrize('punct_open,punct_close', PUNCT_PAIRED)
 @pytest.mark.parametrize('text', ["Hello"])
-def test_tokenizer_splits_open_close_punct(en_tokenizer, punct_open, punct_close, text):
+def test_tokenizer_splits_open_close_punct(en_tokenizer, punct_open,
+                                           punct_close, text):
     tokens = en_tokenizer(punct_open + text + punct_close)
     assert len(tokens) == 3
     assert tokens[0].text == punct_open
@@ -108,20 +106,22 @@ def test_tokenizer_splits_open_close_punct(en_tokenizer, punct_open, punct_close
 
 
 @pytest.mark.parametrize('punct_open,punct_close', PUNCT_PAIRED)
-@pytest.mark.parametrize('punct_open_add,punct_close_add', [("`", "'")])
+@pytest.mark.parametrize('punct_open2,punct_close2', [("`", "'")])
 @pytest.mark.parametrize('text', ["Hello"])
-def test_two_different(en_tokenizer, punct_open, punct_close, punct_open_add, punct_close_add, text):
-    tokens = en_tokenizer(punct_open_add + punct_open + text + punct_close + punct_close_add)
+def test_tokenizer_two_diff_punct(en_tokenizer, punct_open, punct_close,
+                                  punct_open2, punct_close2, text):
+    tokens = en_tokenizer(punct_open2 + punct_open + text + punct_close + punct_close2)
     assert len(tokens) == 5
-    assert tokens[0].text == punct_open_add
+    assert tokens[0].text == punct_open2
     assert tokens[1].text == punct_open
     assert tokens[2].text == text
     assert tokens[3].text == punct_close
-    assert tokens[4].text == punct_close_add
+    assert tokens[4].text == punct_close2
 
 
 @pytest.mark.parametrize('text,punct', [("(can't", "(")])
 def test_tokenizer_splits_pre_punct_regex(text, punct):
+    en_search_prefixes = compile_prefix_regex(TOKENIZER_PREFIXES).search
     match = en_search_prefixes(text)
     assert match.group() == punct
 

@@ -4,7 +4,8 @@ from __future__ import unicode_literals
 from ...vocab import Vocab
 
 
-def test_load_vocab_with_string():
+def test_issue617():
+    """Test loading Vocab with string"""
     try:
         vocab = Vocab.load('/tmp/vocab')
     except IOError:

@@ -57,14 +57,14 @@ LIST_PUNCT = list(_PUNCT.strip().split())
 LIST_HYPHENS = list(_HYPHENS.strip().split())
 
 
-ALPHA_LOWER = _ALPHA_LOWER.strip().replace(' ', '')
-ALPHA_UPPER = _ALPHA_UPPER.strip().replace(' ', '')
+ALPHA_LOWER = _ALPHA_LOWER.strip().replace(' ', '').replace('\n', '')
+ALPHA_UPPER = _ALPHA_UPPER.strip().replace(' ', '').replace('\n', '')
 ALPHA = ALPHA_LOWER + ALPHA_UPPER
 
 
 QUOTES = _QUOTES.strip().replace(' ', '|')
 CURRENCY = _CURRENCY.strip().replace(' ', '|')
-UNITS = _UNITS.strip().replace(' ', '|')
+UNITS = _UNITS.strip().replace(' ', '|').replace('\n', '|')
 HYPHENS = _HYPHENS.strip().replace(' ', '|')
 
 
@@ -103,7 +103,7 @@ TOKENIZER_SUFFIXES = (
 TOKENIZER_INFIXES = (
     LIST_ELLIPSES +
     [
-        r'(?<=[0-9])[+\-\*/^](?=[0-9])',
+        r'(?<=[0-9])[+\-\*^](?=[0-9-])',
         r'(?<=[{al}])\.(?=[{au}])'.format(al=ALPHA_LOWER, au=ALPHA_UPPER),
         r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),
         r'(?<=[{a}])(?:{h})(?=[{a}])'.format(a=ALPHA, h=HYPHENS),

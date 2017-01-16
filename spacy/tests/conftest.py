@@ -12,9 +12,13 @@ from ..sv import Swedish
 from ..hu import Hungarian
 from ..tokens import Doc
 from ..strings import StringStore
+from ..lemmatizer import Lemmatizer
 from ..attrs import ORTH, TAG, HEAD, DEP
+from ..util import match_best_version, get_data_path
 
-from io import StringIO
+from io import StringIO, BytesIO
+from pathlib import Path
+import os
 import pytest
 
 
@@ -52,22 +56,49 @@ def de_tokenizer():
 def hu_tokenizer():
     return Hungarian.Defaults.create_tokenizer()
 
+
 @pytest.fixture
 def stringstore():
     return StringStore()
+
+
+@pytest.fixture
+def en_entityrecognizer():
+     return English.Defaults.create_entity()
+
+
+@pytest.fixture
+def lemmatizer(path):
+    if path is not None:
+        return Lemmatizer.load(path)
+    else:
+        return None
+
 
 @pytest.fixture
 def text_file():
     return StringIO()
 
+@pytest.fixture
+def text_file_b():
+    return BytesIO()
 
-# deprecated, to be replaced with more specific instances
+
+@pytest.fixture
+def path():
+    if 'SPACY_DATA' in os.environ:
+        return Path(os.environ['SPACY_DATA'])
+    else:
+        return match_best_version('en', None, get_data_path())
+
+
+# only used for tests that require loading the models
+# in all other cases, use specific instances
 @pytest.fixture(scope="session")
 def EN():
     return English()
 
 
-# deprecated, to be replaced with more specific instances
 @pytest.fixture(scope="session")
 def DE():
     return German()

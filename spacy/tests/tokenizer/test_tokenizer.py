@@ -1,10 +1,12 @@
 # coding: utf-8
 from __future__ import unicode_literals
-from os import path
 
-import pytest
-
+from ...vocab import Vocab
+from ...tokenizer import Tokenizer
 from ...util import utf8open
+
+from os import path
+import pytest
 
 
 def test_tokenizer_handles_no_word(tokenizer):
@@ -81,3 +83,25 @@ def test_tokenizer_suspected_freeing_strings(tokenizer):
     tokens2 = tokenizer(text2)
     assert tokens1[0].text == "Lorem"
     assert tokens2[0].text == "Lorem"
+
+
+@pytest.mark.parametrize('text,tokens', [
+    ("lorem", [{'orth': 'lo'}, {'orth': 'rem'}])])
+def test_tokenizer_add_special_case(tokenizer, text, tokens):
+    tokenizer.add_special_case(text, tokens)
+    doc = tokenizer(text)
+    assert doc[0].text == tokens[0]['orth']
+    assert doc[1].text == tokens[1]['orth']
+
+
+@pytest.mark.parametrize('text,tokens', [
+    ("lorem", [{'orth': 'lo', 'tag': 'NN'}, {'orth': 'rem'}])])
+def test_tokenizer_add_special_case_tag(text, tokens):
+    vocab = Vocab(tag_map={'NN': {'pos': 'NOUN'}})
+    tokenizer = Tokenizer(vocab, {}, None, None, None)
+    tokenizer.add_special_case(text, tokens)
+    doc = tokenizer(text)
+    assert doc[0].text == tokens[0]['orth']
+    assert doc[0].tag_ == tokens[0]['tag']
+    assert doc[0].pos_ == 'NOUN'
+    assert doc[1].text == tokens[1]['orth']

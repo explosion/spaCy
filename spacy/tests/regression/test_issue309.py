@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from ..util import get_doc
 
 
-def test_sbd_empty_string(en_tokenizer):
+def test_issue309(en_tokenizer):
     """Test Issue #309: SBD fails on empty string"""
     tokens = en_tokenizer(" ")
     doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=[0], deps=['ROOT'])
