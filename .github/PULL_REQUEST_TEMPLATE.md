@@ -10,7 +10,7 @@
 - [ ] **Bug fix** (non-breaking change fixing an issue)
 - [ ] **New feature** (non-breaking change adding functionality to spaCy)
 - [ ] **Breaking change** (fix or feature causing change to spaCy's existing functionality)
-- [ ] **Documentation** (Addition to documentation of spaCy)
+- [ ] **Documentation** (addition to documentation of spaCy)
 
 ## Checklist:
 <!--- Go over all the following points, and put an `x` in all applicable boxes.: -->
