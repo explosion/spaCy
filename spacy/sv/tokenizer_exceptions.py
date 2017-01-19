@@ -4,6 +4,26 @@ from __future__ import unicode_literals
 from ..symbols import *
 from ..language_data import PRON_LEMMA
 
+# Verbs
+
+for verb_data in [
+    {ORTH: "driver"},
+    {ORTH: "kör"},
+    {ORTH: "hörr", LEMMA: "hör"},
+    {ORTH: "fattar"},
+    {ORTH: "hajar", LEMMA: "förstår"},
+    {ORTH: "lever"},
+    {ORTH: "serr", LEMMA: "ser"},
+    {ORTH: "fixar"}
+]:
+    verb_data_tc = dict(verb_data)
+    verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
+
+    for data in [verb_data, verb_data_tc]:
+        EXC[data[ORTH] + "u"] = [
+            dict(data),
+            {ORTH: "u", LEMMA: PRON_LEMMA, NORM: "du"}
+        ]
 
 TOKENIZER_EXCEPTIONS = {
     "jan.": [
