@@ -108,11 +108,12 @@ cpdef bint like_url(unicode string):
 
 
 # TODO: This should live in the language.orth
-NUM_WORDS = set('zero one two three four five six seven eight nine ten'
-                'eleven twelve thirteen fourteen fifteen sixteen seventeen'
-                'eighteen nineteen twenty thirty forty fifty sixty seventy'
-                'eighty ninety hundred thousand million billion trillion'
-                'quadrillion gajillion bazillion'.split())
+NUM_WORDS = set('''
+zero one two three four five six seven eight nine ten eleven twelve thirteen
+fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty
+sixty seventy eighty ninety hundred thousand million billion trillion
+quadrillion gajillion bazillion
+'''.split())
 cpdef bint like_number(unicode string):
     string = string.replace(',', '')
     string = string.replace('.', '')
