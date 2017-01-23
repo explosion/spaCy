@@ -27,8 +27,7 @@ try:
 except ImportError:
     import json
 
-from libc.stdio cimport FILE, fopen, fwrite, fclose
-from posix.fcntl cimport open, O_RDONLY, O_RDWR
+cimport posix.fcntl
 from posix.unistd cimport close, read, off_t
 cdef extern from "sys/mman.h":
     void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset)
@@ -38,6 +37,9 @@ cdef extern from "sys/mman.h":
         PROT_WRITE
         MAP_SHARED
         MAP_PRIVATE
+
+cdef extern from "string.h":
+    size_t strlen(const char *s)
 
 cdef extern from "sys/stat.h":
     cdef struct stat:
@@ -102,6 +104,143 @@ cdef void init_vs_str(vector_section *v, uint64_t off, uint64_t len):
     v.vs_off = off
     v.vs_len = len
     
+
+
+cdef class VectorMap:
+    '''Provide key-based access into the VectorStore. Keys are unicode strings.'''
+    def __init__(self, nr_dim):
+        self.data = VectorStore(nr_dim)
+        self.strings = StringStore()
+#        self.freqs = PreshMap()
+
+    @property
+    def nr_dim(self):
+        return self.data.nr_dim
+
+    def __len__(self):
+        '''Number of entries in the map.
+
+        Returns: length int >= 0
+        '''
+        return self.data.vectors.size()
+
+    # def __contains__(self, unicode string):
+    #     '''Check whether the VectorMap has a given key.
+
+    #     Returns: has_key bool
+    #     '''
+    #     cdef uint64_t hashed = hash_string(string)
+    #     return bool(self.strings[hashed])
+
+    def __getitem__(self, unicode key):
+        '''Retrieve a vector tuple from the vector map, or
+        raise KeyError if the key is not found.
+
+        Arguments:
+            key unicode
+
+        Returns:
+            tuple[int, float32[:self.nr_dim]]
+        '''
+        i = self.strings[key]
+        return self.data[i]
+
+    def __setitem__(self, unicode key, value):
+        '''Assign a (frequency, vector) tuple to the vector map.
+
+        Arguments:
+            key unicode
+            value tuple[int, float32[:self.nr_dim]]
+        Returns:
+            None
+        '''
+        # TODO: Handle case where we're over-writing an existing entry.
+        cdef float[:] vector
+        vector = value
+        idx = self.strings[key]
+        assert self.data.vectors.size() == idx
+        self.data.add(vector)
+
+    def __iter__(self):
+        '''Iterate over the keys in the map, in order of insertion.
+
+        Generates:
+            key unicode
+        '''
+        yield from self.strings
+
+    def keys(self):
+        '''Iterate over the keys in the map, in order of insertion.
+
+        Generates:
+            key unicode
+        '''
+        yield from self.strings
+
+    def values(self):
+        '''Iterate over the values in the map, in order of insertion.
+
+        Generates:
+            vector float32[:self.nr_dim]
+        '''
+        for key, value in self.items():
+            yield value
+
+    def items(self):
+        '''Iterate over the items in the map, in order of insertion.
+
+        Generates:
+            (key, (freq,vector)): tuple[int, float32[:self.nr_dim]]
+        '''
+        for i, string in enumerate(self.strings):
+            yield string, self.data[i]
+
+    def most_similar(self, float[:] vector, int n=10):
+        '''Find the keys of the N most similar entries, given a vector.
+
+        Arguments:
+            vector float[:]
+            n int default=10
+
+        Returns:
+            list[unicode] length<=n
+        '''
+        indices, scores = self.data.most_similar(vector, n)
+        return [self.strings[idx] for idx in indices], scores
+
+    def add(self, unicode string, int freq, float[:] vector):
+        '''Insert a vector into the map by value. Makes a copy of the vector.
+        '''
+        idx = self.strings[string]
+        assert self.data.vectors.size() == idx
+        self.data.add(vector)
+
+    # def save(self, data_dir):
+    #     '''Serialize to a directory.
+
+    #     * data_dir/strings.json --- The keys, in insertion order.
+    #     * data_dir/freqs.json --- The frequencies.
+    #     * data_dir/vectors.bin --- The vectors.
+    #     '''
+    #     with open(path.join(data_dir, 'strings.json'), 'w') as file_:
+    #         self.strings.dump(file_)
+    #     self.data.save(path.join(data_dir, 'vectors.bin'))
+    #     freqs = []
+    #     cdef uint64_t hashed
+    #     for string in self.strings:
+    #         hashed = hash_string(string)
+    #         freq = self.freqs[hashed]
+    #         if not freq:
+    #             continue
+    #         freqs.append([string, freq])
+    #     with open(path.join(data_dir, 'freqs.json'), 'w') as file_:
+    #         json.dump(freqs, file_)
+
+    def load(self, loc):
+        '''Load from a binary file:
+        * loc --- The binary with the vectors and strings.
+        '''
+        self.data.load(loc, self.strings)
 
 cdef class VectorStore:
     '''Maintain an array of float* pointers for word vectors, which the
@@ -178,7 +317,7 @@ cdef class VectorStore:
     #     cdef int32_t nr_dims = self.nr_dim
     #     map_size = vec_count*nr_dims*sizeof(float) + sizeof(*vh)
     #     truncate(loc, map_size)
-    #     fd = open(loc, O_RDWR)
+    #     fd = posix.fcntl.open(loc, posix.fcntl.O_RDWR)
     #     vh = <_VectorHeader*>mmap(NULL, map_size, PROT_READ|PROT_WRITE, MAP_SHARED, fd, 0)
     #     norms = &(<float*>vh)[1]
     #     vec = &norms[vec_count]
@@ -192,7 +331,7 @@ cdef class VectorStore:
     #     close(fd)
     #     munmap(<void *>vh, map_size)
 
-    def load(self, loc):
+    def load(self, loc, strings):
         cdef int fd
         cdef uint32_t nr_dims, vec_count
         cdef float *norms
@@ -200,9 +339,10 @@ cdef class VectorStore:
         cdef vector_header *vh
         cdef vector_section *vs
         cdef stat sb
-        fd = open(loc, O_RDONLY)
+        fd = posix.fcntl.open(loc, posix.fcntl.O_RDONLY)
         fstat(fd, &sb)
         vh = <vector_header*>mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd, 0)
+        close(fd) # mmap maintains a reference
         # assume mat / norms / strings for now 
         # first fetch mats
         vs = <vector_section*>&vh[1]
@@ -216,10 +356,14 @@ cdef class VectorStore:
         vs = <vector_section*>&vs[1]
         strings = <char *>(<uint64_t>vh + vs.vs_off)
         cdef float[:] cv
+        cdef bytes py_string
         for i in range(vec_count):
             cv = <float[:nr_dims]>&vec[nr_dims*i]
             self.add(cv, norms[i])
-        close(fd) # mmap maintains a reference
+            py_string = strings
+            strings.intern_unicode(py_string)
+            strings += strlen(strings) + 1
+
 
 cdef void linear_similarity(int* indices, float* scores, float* tmp,
         int nr_out, const float* query, int nr_dim,

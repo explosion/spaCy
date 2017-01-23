@@ -6,13 +6,6 @@ from murmurhash.mrmr cimport hash64
 from cymem.cymem cimport Pool
 
 
-#cdef class VectorMap:
-#    cdef readonly Pool mem
-#    cdef readonly VectorStore data
-#    cdef readonly StringStore strings
- #   cdef readonly PreshMap freqs
- 
-
 cdef class VectorStore:
     cdef readonly Pool mem
     cdef readonly PreshMap cache
@@ -20,6 +13,12 @@ cdef class VectorStore:
     cdef vector[float] norms
     cdef vector[float] _similarities
     cdef readonly int nr_dim
+
+cdef class VectorMap:
+    cdef readonly Pool mem
+    cdef readonly VectorStore data
+    cdef readonly StringStore strings
+    cdef readonly PreshMap freqs
  
 
 cdef float get_l2_norm(const float* vec, int n) nogil
