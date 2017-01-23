@@ -1,7 +1,7 @@
 # encoding: utf8
 from __future__ import unicode_literals, print_function
 
-from spacy.hu.tokenizer_exceptions import TOKEN_MATCH
+from .tokenizer_exceptions import TOKEN_MATCH
 from .language_data import *
 from ..attrs import LANG
 from ..language import Language
