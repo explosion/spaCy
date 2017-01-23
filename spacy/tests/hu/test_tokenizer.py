@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import pytest
 
-
 DEFAULT_TESTS = [
     ('N. kormányzósági\nszékhely.', ['N.', 'kormányzósági', 'székhely', '.']),
     ('A .hu egy tld.', ['A', '.hu', 'egy', 'tld', '.']),
@@ -24,23 +23,27 @@ DEFAULT_TESTS = [
 
 HYPHEN_TESTS = [
     ('Egy -nak, -jaiért, -magyar, bel- van.', ['Egy', '-nak', ',', '-jaiért', ',', '-magyar', ',', 'bel-', 'van', '.']),
+    ('Szabolcs-Szatmár-Bereg megye', ['Szabolcs-Szatmár-Bereg', 'megye']),
     ('Egy -nak.', ['Egy', '-nak', '.']),
     ('Egy bel-.', ['Egy', 'bel-', '.']),
     ('Dinnye-domb-.', ['Dinnye-domb-', '.']),
     ('Ezen -e elcsatangolt.', ['Ezen', '-e', 'elcsatangolt', '.']),
     ('Lakik-e', ['Lakik', '-e']),
+    ('A--B', ['A', '--', 'B']),
     ('Lakik-e?', ['Lakik', '-e', '?']),
     ('Lakik-e.', ['Lakik', '-e', '.']),
     ('Lakik-e...', ['Lakik', '-e', '...']),
     ('Lakik-e... van.', ['Lakik', '-e', '...', 'van', '.']),
     ('Lakik-e van?', ['Lakik', '-e', 'van', '?']),
     ('Lakik-elem van?', ['Lakik-elem', 'van', '?']),
+    ('Az életbiztosításáról- egy.', ['Az', 'életbiztosításáról-', 'egy', '.']),
     ('Van lakik-elem.', ['Van', 'lakik-elem', '.']),
     ('A 7-es busz?', ['A', '7-es', 'busz', '?']),
     ('A 7-es?', ['A', '7-es', '?']),
     ('A 7-es.', ['A', '7-es', '.']),
     ('Ez (lakik)-e?', ['Ez', '(', 'lakik', ')', '-e', '?']),
     ('A %-sal.', ['A', '%-sal', '.']),
+    ('A $-sal.', ['A', '$-sal', '.']),
     ('A CD-ROM-okrol.', ['A', 'CD-ROM-okrol', '.'])
 ]
 
@@ -89,11 +92,15 @@ NUMBER_TESTS = [
     ('A -23,12 van.', ['A', '-23,12', 'van', '.']),
     ('A -23,12-ben van.', ['A', '-23,12-ben', 'van', '.']),
     ('A -23,12-ben.', ['A', '-23,12-ben', '.']),
-    ('A 2+3 van.', ['A', '2', '+', '3', 'van', '.']),
-    ('A 2 +3 van.', ['A', '2', '+', '3', 'van', '.']),
+    ('A 2+3 van.', ['A', '2+3', 'van', '.']),
+    ('A 2<3 van.', ['A', '2<3', 'van', '.']),
+    ('A 2=3 van.', ['A', '2=3', 'van', '.']),
+    ('A 2÷3 van.', ['A', '2÷3', 'van', '.']),
+    ('A 1=(2÷3)-2/5 van.', ['A', '1=(2÷3)-2/5', 'van', '.']),
+    ('A 2 +3 van.', ['A', '2', '+3', 'van', '.']),
     ('A 2+ 3 van.', ['A', '2', '+', '3', 'van', '.']),
     ('A 2 + 3 van.', ['A', '2', '+', '3', 'van', '.']),
-    ('A 2*3 van.', ['A', '2', '*', '3', 'van', '.']),
+    ('A 2*3 van.', ['A', '2*3', 'van', '.']),
     ('A 2 *3 van.', ['A', '2', '*', '3', 'van', '.']),
     ('A 2* 3 van.', ['A', '2', '*', '3', 'van', '.']),
     ('A 2 * 3 van.', ['A', '2', '*', '3', 'van', '.']),
@@ -141,7 +148,8 @@ NUMBER_TESTS = [
     ('A 15.-ben.', ['A', '15.-ben', '.']),
     ('A 2002--2003. van.', ['A', '2002--2003.', 'van', '.']),
     ('A 2002--2003-ben van.', ['A', '2002--2003-ben', 'van', '.']),
-    ('A 2002--2003-ben.', ['A', '2002--2003-ben', '.']),
+    ('A 2002-2003-ben.', ['A', '2002-2003-ben', '.']),
+    ('A +0,99% van.', ['A', '+0,99%', 'van', '.']),
     ('A -0,99% van.', ['A', '-0,99%', 'van', '.']),
     ('A -0,99%-ben van.', ['A', '-0,99%-ben', 'van', '.']),
     ('A -0,99%.', ['A', '-0,99%', '.']),
@@ -194,23 +202,33 @@ NUMBER_TESTS = [
     ('A III/c-ben.', ['A', 'III/c-ben', '.']),
     ('A TU–154 van.', ['A', 'TU–154', 'van', '.']),
     ('A TU–154-ben van.', ['A', 'TU–154-ben', 'van', '.']),
-    ('A TU–154-ben.', ['A', 'TU–154-ben', '.'])
+    ('A TU–154-ben.', ['A', 'TU–154-ben', '.']),
+    ('A 5cm³', ['A', '5', 'cm³']),
+    ('A 5 $-ban', ['A', '5', '$-ban']),
+    ('A 5$-ban', ['A', '5$-ban']),
+    ('A 5$.', ['A', '5', '$', '.']),
+    ('A 5$', ['A', '5', '$']),
+    ('A $5', ['A', '$5']),
+    ('A 5km/h', ['A', '5', 'km/h']),
+    ('A 75%+1-100%-ig', ['A', '75%+1-100%-ig']),
+    ('A 5km/h.', ['A', '5', 'km/h', '.']),
+    ('3434/1992. évi elszámolás', ['3434/1992.', 'évi', 'elszámolás']),
 ]
 
 QUOTE_TESTS = [
     ('Az "Ime, hat"-ban irja.', ['Az', '"', 'Ime', ',', 'hat', '"', '-ban', 'irja', '.']),
     ('"Ime, hat"-ban irja.', ['"', 'Ime', ',', 'hat', '"', '-ban', 'irja', '.']),
     ('Az "Ime, hat".', ['Az', '"', 'Ime', ',', 'hat', '"', '.']),
-    ('Egy 24"-os monitor.', ['Egy', '24', '"', '-os', 'monitor', '.']),
-    ("A don't van.", ['A', "don't", 'van', '.'])
+    ('Egy 24"-os monitor.', ['Egy', '24"-os', 'monitor', '.']),
+    ("A McDonald's van.", ['A', "McDonald's", 'van', '.'])
 ]
 
 DOT_TESTS = [
     ('N. kormányzósági\nszékhely.', ['N.', 'kormányzósági', 'székhely', '.']),
     ('A .hu egy tld.', ['A', '.hu', 'egy', 'tld', '.']),
     ('Az egy.ketto pelda.', ['Az', 'egy.ketto', 'pelda', '.']),
-    ('A pl. rovidites.', ['A', 'pl.', 'rovidites', '.']),
-    ('A S.M.A.R.T. szo.', ['A', 'S.M.A.R.T.', 'szo', '.']),
+    ('A pl. rövidítés.', ['A', 'pl.', 'rövidítés', '.']),
+    ('A S.M.A.R.T. szó.', ['A', 'S.M.A.R.T.', 'szó', '.']),
     ('A .hu.', ['A', '.hu', '.']),
     ('Az egy.ketto.', ['Az', 'egy.ketto', '.']),
     ('A pl.', ['A', 'pl.']),
@@ -223,8 +241,19 @@ DOT_TESTS = [
     ('Valami ... más.', ['Valami', '...', 'más', '.'])
 ]
 
+WIKI_TESTS = [
+    ('!"', ['!', '"']),
+    ('lány"a', ['lány', '"', 'a']),
+    ('lány"a', ['lány', '"', 'a']),
+    ('!"-lel', ['!', '"', '-lel']),
+    ('""-sorozat ', ['"', '"', '-sorozat']),
+    ('"(Köszönöm', ['"', '(', 'Köszönöm']),
+    ('(törvénykönyv)-ben ', ['(', 'törvénykönyv', ')', '-ben']),
+    ('"(...)"–sokkal ', ['"', '(', '...', ')', '"', '–sokkal']),
+    ('cérium(IV)-oxid', ['cérium', '(', 'IV', ')', '-oxid'])
+]
 
-TESTCASES = DEFAULT_TESTS + DOT_TESTS + QUOTE_TESTS # + NUMBER_TESTS + HYPHEN_TESTS
+TESTCASES = DEFAULT_TESTS + DOT_TESTS + QUOTE_TESTS + NUMBER_TESTS + HYPHEN_TESTS + WIKI_TESTS
 
 
 @pytest.mark.parametrize('text,expected_tokens', TESTCASES)

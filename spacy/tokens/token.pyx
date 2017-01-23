@@ -42,6 +42,9 @@ cdef class Token:
         self.c = &self.doc.c[offset]
         self.i = offset
 
+    def __hash__(self):
+        return hash((self.doc, self.i))
+
     def __len__(self):
         '''Number of unicode characters in token.text'''
         return self.c.lex.length

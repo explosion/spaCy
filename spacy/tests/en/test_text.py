@@ -29,8 +29,7 @@ untimely death" of the rapier-tongued Scottish barrister and parliamentarian.
     ("""Yes! "I'd rather have a walk", Ms. Comble sighed. """, 15),
     ("""'Me too!', Mr. P. Delaware cried. """, 11),
     ("They ran about 10km.", 6),
-    # ("But then the 6,000-year ice age came...", 10)
-    ])
+    pytest.mark.xfail(("But then the 6,000-year ice age came...", 10))])
 def test_tokenizer_handles_cnts(en_tokenizer, text, length):
     tokens = en_tokenizer(text)
     assert len(tokens) == length
