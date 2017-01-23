@@ -64,6 +64,8 @@ cdef extern from "glove2bin.h":
         uint8_t  vs_precision
         uint32_t vs_dims[3]
     enum:
+        VH_GLOVE_VERSION
+        VH_MAGIC
         VH_TYPE_GLOVE
         VH_TYPE_CLUSTER
         VH_TYPE_DOC
@@ -343,6 +345,13 @@ cdef class VectorStore:
         fstat(fd, &sb)
         vh = <vector_header*>mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd, 0)
         close(fd) # mmap maintains a reference
+
+        # XXX eventually do something more graceful here
+        if vh.vh_magic != VH_MAGIC:
+            raise IOError("invalid file type")
+        if vh.vh_version != VH_GLOVE_VERSION:
+            raise IOError("version mismatch")
+
         # assume mat / norms / strings for now 
         # first fetch mats
         vs = <vector_section*>&vh[1]
