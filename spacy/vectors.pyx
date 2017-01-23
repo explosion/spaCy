@@ -410,8 +410,8 @@ cdef float dotp(const float *v1, const float *v2, int n) nogil:
         dot += tmp0 + tmp1
 
     rem = (n%4) + 1
-    for i in range(rem, n):
-        dot += v1[i] * v2[i]
+    for j in range(rem):
+        dot += v1[i+j] * v2[i+j]
     return dot
         
 cdef float get_l2_norm(const float* vec, int n) nogil:
