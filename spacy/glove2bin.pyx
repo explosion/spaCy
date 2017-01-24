@@ -86,6 +86,7 @@ def glove2bin(iloc, oloc):
         raise IOError("failed to open output file")
     f = open(iloc)
     vh = <vector_header*>mmap(NULL, filesize, PROT_READ|PROT_WRITE, MAP_SHARED, ofd, 0)
+    close(ofd)
     init_vh(vh)
     vs = <vector_section*>&vh[1]
     init_vs_mat(vs, "GloVe vectors", PAGE_SIZE, vec_len*linecount*sizeof(float), VS_FLOAT32, linecount, vec_len);
@@ -126,3 +127,4 @@ def glove2bin(iloc, oloc):
         off = i*vec_len
         for j in xrange(vec_len):
             vector[off + j] = <float>id2glove[i][j]
+    munmap(vh, filesize)
