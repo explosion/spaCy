@@ -7,6 +7,7 @@ from ..language import Language
 from ..attrs import LANG
 
 from .language_data import *
+from .punctuation import TOKENIZER_INFIXES
 
 
 class French(Language):
@@ -18,3 +19,4 @@ class French(Language):
 
         tokenizer_exceptions = TOKENIZER_EXCEPTIONS
         stop_words = STOP_WORDS
+        infixes = tuple(TOKENIZER_INFIXES)
