@@ -13,7 +13,8 @@ try:
 except NameError:
     basestring = str
 
-
+from .vectors import VectorStore, VectorMap
+from .txtvec2bin import vec2bin
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .tagger import Tagger
