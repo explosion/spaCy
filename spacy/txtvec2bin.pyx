@@ -1,4 +1,5 @@
 import numpy as np
+from ctypes import c_char_p
 
 from posix.unistd cimport close, read, off_t
 cimport posix.fcntl
@@ -103,7 +104,7 @@ cdef vector_header *vec_load_setup(iloc):
 def vec2bin(iloc, oloc):
     word_len_total, linecount = word_len_count(iloc)
     vec_len = dim_count(iloc)
-    id2word = np.empty( (linecount), dtype=str)
+    id2word = np.empty( (linecount), dtype=object)
     id2glove = np.empty( (linecount, vec_len), dtype=np.float64)
     id2norm =  np.empty( (linecount), dtype=np.float64)
     # demarshal text 
@@ -147,7 +148,10 @@ def vec2bin(iloc, oloc):
     for i in xrange(linecount):
         # copy ith word and advance dst pointer
         # past its terminating null
-        ptr = <char *>id2word[i]
+        ptr = c_char_p(id2word[i]).value
+        print "string ", id2word[i]
+        print "len of string ", len(id2word[i])
+        print "len of ptr ", strlen(ptr)
         strcpy(wordptr, ptr)
         wordptr += strlen(ptr) + 1
 
