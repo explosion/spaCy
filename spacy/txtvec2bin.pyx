@@ -149,9 +149,6 @@ def vec2bin(iloc, oloc):
         # copy ith word and advance dst pointer
         # past its terminating null
         ptr = c_char_p(id2word[i]).value
-        print "string ", id2word[i]
-        print "len of string ", len(id2word[i])
-        print "len of ptr ", strlen(ptr)
         strcpy(wordptr, ptr)
         wordptr += strlen(ptr) + 1
 
