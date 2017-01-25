@@ -24,6 +24,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Maxim Samsonov, [@maxirmx](https://github.com/maxirmx)
 * Oleg Zd, [@olegzd](https://github.com/olegzd)
 * Pokey Rule, [@pokey](https://github.com/pokey)
+* Raphaël Bournhonesque, [@raphael0202](https://github.com/raphael0202)
 * Rob van Nieuwpoort, [@RvanNieuwpoort](https://github.com/RvanNieuwpoort)
 * Sam Bozek, [@sambozek](https://github.com/sambozek)
 * Sasho Savkov [@savkov](https://github.com/savkov)

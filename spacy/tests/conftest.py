@@ -53,6 +53,11 @@ def de_tokenizer():
 
 
 @pytest.fixture
+def fr_tokenizer():
+    return French.Defaults.create_tokenizer()
+
+
+@pytest.fixture
 def hu_tokenizer():
     return Hungarian.Defaults.create_tokenizer()
 
