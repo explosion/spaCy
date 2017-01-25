@@ -19,10 +19,3 @@ cdef class VectorMap:
     cdef readonly VectorStore data
     cdef readonly StringStore strings
     cdef readonly PreshMap freqs
- 
-
-cdef float get_l2_norm(const float* vec, int n) nogil
-
-cdef float dotp(const float* v1, const float *v2, int n) nogil
-
-cdef float cosine_similarity(const float* v1, const float* v2, int n) nogil

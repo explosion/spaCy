@@ -29,84 +29,13 @@ except ImportError:
 
 cimport posix.fcntl
 from posix.unistd cimport close, read, off_t
-cdef extern from "sys/mman.h":
-    void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset)
-    int munmap(void *addr, size_t length)
-    enum:
-        PROT_READ
-        PROT_WRITE
-        MAP_SHARED
-        MAP_PRIVATE
-
 cdef extern from "string.h":
     size_t strlen(const char *s)
 
-cdef extern from "sys/stat.h":
-    cdef struct stat:
-        off_t st_size
-    int fstat(int fildes, stat *buf)
-
 ctypedef pair[float, int] Entry
 ctypedef priority_queue[Entry] Queue
-ctypedef float (*do_similarity_t)(const float* v1, const float* v2,
-        int nr_dim) nogil
 
-cdef extern from "glove2bin.h":
-    cdef struct vector_header:
-        uint64_t vh_magic
-        uint16_t vh_version
-        uint16_t vh_type
-        uint16_t vh_nsections
-    cdef struct vector_section:
-        uint64_t vs_off
-        uint64_t vs_len
-        uint8_t  vs_type
-        uint8_t  vs_precision
-        uint32_t vs_dims[3]
-    enum:
-        VH_GLOVE_VERSION
-        VH_MAGIC
-        VH_TYPE_GLOVE
-        VH_TYPE_CLUSTER
-        VH_TYPE_DOC
-        VS_FLOAT8
-        VS_FLOAT16
-        VS_FLOAT32
-        VS_FLOAT64
-        VS_VECTOR
-        VS_MATRIX
-        VS_STRING
-
-cdef struct _CachedResult:
-    int* indices
-    float* scores
-    int n
-
-cdef void init_vh(vector_header *v):
-    v.vh_magic =  0xF00EBEEFCAFEBABE
-    v.vh_version = 1
-    v.vh_type = VH_TYPE_DOC
-    v.vh_nsections = 2
-
-cdef void init_vs_mat(vector_section *v, uint64_t off, uint64_t len, uint32_t m, uint32_t n):
-    v.vs_off = off
-    v.vs_len = len
-    v.vs_type = VS_MATRIX
-    v.vs_dims[0] = m
-    v.vs_dims[1] = n
- 
-cdef void init_vs_vec(vector_section *v, uint64_t off, uint64_t len, uint32_t m):
-    v.vs_off = off
-    v.vs_len = len
-    v.vs_type = VS_VECTOR
-    v.vs_dims[0] = m
-
-cdef void init_vs_str(vector_section *v, uint64_t off, uint64_t len):
-    v.vs_type = VS_STRING
-    v.vs_off = off
-    v.vs_len = len
-    
-
+from txtvec2bin cimport vector_section, vector_header, vec_load_setup
 
 cdef class VectorMap:
     '''Provide key-based access into the VectorStore. Keys are unicode strings.'''
@@ -126,13 +55,13 @@ cdef class VectorMap:
         '''
         return self.data.vectors.size()
 
-    # def __contains__(self, unicode string):
-    #     '''Check whether the VectorMap has a given key.
+    def __contains__(self, unicode string):
+        '''Check whether the VectorMap has a given key.
 
-    #     Returns: has_key bool
-    #     '''
-    #     cdef uint64_t hashed = hash_string(string)
-    #     return bool(self.strings[hashed])
+        Returns: has_key bool
+        '''
+        cdef uint64_t hashed = hash_string(string)
+        return bool(self.strings[hashed])
 
     def __getitem__(self, unicode key):
         '''Retrieve a vector tuple from the vector map, or
@@ -142,7 +71,7 @@ cdef class VectorMap:
             key unicode
 
         Returns:
-            tuple[int, float32[:self.nr_dim]]
+            float32[:self.nr_dim]
         '''
         i = self.strings[key]
         return self.data[i]
@@ -152,7 +81,7 @@ cdef class VectorMap:
 
         Arguments:
             key unicode
-            value tuple[int, float32[:self.nr_dim]]
+            value float32[:self.nr_dim]
         Returns:
             None
         '''
@@ -192,23 +121,10 @@ cdef class VectorMap:
         '''Iterate over the items in the map, in order of insertion.
 
         Generates:
-            (key, (freq,vector)): tuple[int, float32[:self.nr_dim]]
+            (key, vector): tuple[string, float32[:self.nr_dim]]
         '''
         for i, string in enumerate(self.strings):
             yield string, self.data[i]
-
-    def most_similar(self, float[:] vector, int n=10):
-        '''Find the keys of the N most similar entries, given a vector.
-
-        Arguments:
-            vector float[:]
-            n int default=10
-
-        Returns:
-            list[unicode] length<=n
-        '''
-        indices, scores = self.data.most_similar(vector, n)
-        return [self.strings[idx] for idx in indices], scores
 
     def add(self, unicode string, int freq, float[:] vector):
         '''Insert a vector into the map by value. Makes a copy of the vector.
@@ -267,50 +183,6 @@ cdef class VectorStore:
         self.norms.push_back(norm)
         self.vectors.push_back(<float *>vec)
 
-    def similarity(self, float[:] v1, float[:] v2):
-        '''Measure the similarity between two vectors, using cosine.
-        
-        Arguments:
-            v1 float[:]
-            v2 float[:]
-
-        Returns:
-            similarity_score -1<float<=1
-        '''
-        return cosine_similarity(&v1[0], &v2[0], len(v1))
-
-    def most_similar(self, float[:] query, int n):
-        cdef int[:] indices = np.ndarray(shape=(n,), dtype='int32')
-        cdef float[:] scores = np.ndarray(shape=(n,), dtype='float32')
-        cdef uint64_t cache_key = hash64(&query[0], sizeof(query[0]) * n, 0)
-        cached_result = <_CachedResult*>self.cache.get(cache_key)
-        if cached_result is not NULL and cached_result.n == n:
-            memcpy(&indices[0], cached_result.indices, sizeof(indices[0]) * n)
-            memcpy(&scores[0], cached_result.scores, sizeof(scores[0]) * n)
-        else:
-            # This shouldn't happen. But handle it if it does
-            if cached_result is not NULL:
-                if cached_result.indices is not NULL:
-                    self.mem.free(cached_result.indices)
-                if cached_result.scores is not NULL:
-                    self.mem.free(cached_result.scores)
-                self.mem.free(cached_result)
-            self._similarities.resize(self.vectors.size())
-            linear_similarity(&indices[0], &scores[0], &self._similarities[0],
-                n, &query[0], self.nr_dim,
-                &self.vectors[0], self.vectors.size(), 
-                cosine_similarity)
-            cached_result = <_CachedResult*>self.mem.alloc(sizeof(_CachedResult), 1)
-            cached_result.n = n
-            cached_result.indices = <int*>self.mem.alloc(
-                sizeof(cached_result.indices[0]), n)
-            cached_result.scores = <float*>self.mem.alloc(
-                sizeof(cached_result.scores[0]), n)
-            self.cache.set(cache_key, cached_result)
-            memcpy(cached_result.indices, &indices[0], sizeof(indices[0]) * n)
-            memcpy(cached_result.scores, &scores[0], sizeof(scores[0]) * n)
-        return indices, scores
-
     # def save(self, loc):
     #     cdef int fd
     #     cdef uint32_t map_size, row, off
@@ -340,19 +212,9 @@ cdef class VectorStore:
         cdef float *vec
         cdef vector_header *vh
         cdef vector_section *vs
-        cdef stat sb
-        fd = posix.fcntl.open(loc, posix.fcntl.O_RDONLY)
-        fstat(fd, &sb)
-        vh = <vector_header*>mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, fd, 0)
-        close(fd) # mmap maintains a reference
-
-        # XXX eventually do something more graceful here
-        if vh.vh_magic != VH_MAGIC:
-            raise IOError("invalid file type")
-        if vh.vh_version != VH_GLOVE_VERSION:
-            raise IOError("version mismatch")
-
-        # assume mat / norms / strings for now 
+        vh = vec_load_setup(loc)
+        # assume mat / norms / strings for
+        # first cut
         # first fetch mats
         vs = <vector_section*>&vh[1]
         vec = <float *>(<uint64_t>vh + vs.vs_off)
@@ -372,63 +234,3 @@ cdef class VectorStore:
             py_string = strings
             strings.intern_unicode(py_string)
             strings += strlen(strings) + 1
-
-
-cdef void linear_similarity(int* indices, float* scores, float* tmp,
-        int nr_out, const float* query, int nr_dim,
-        const float* const* vectors, int nr_vector,
-        do_similarity_t get_similarity) nogil:
-    # Initialize the partially sorted heap
-    cdef int i
-    cdef float score
-    for i in cython.parallel.prange(nr_vector, nogil=True):
-        tmp[i] = get_similarity(query, vectors[i], nr_dim)
-    cdef priority_queue[pair[float, int]] queue
-    cdef float cutoff = 0
-    for i in range(nr_vector):
-        score = tmp[i]
-        if score > cutoff:
-            queue.push(pair[float, int](-score, i))
-            cutoff = -queue.top().first
-            if queue.size() > nr_out:
-                queue.pop()
-    # Fill the outputs
-    i = 0
-    while i < nr_out and not queue.empty(): 
-        entry = queue.top()
-        scores[nr_out-(i+1)] = -entry.first
-        indices[nr_out-(i+1)] = entry.second
-        queue.pop()
-        i += 1
-
-cdef float dotp(const float *v1, const float *v2, int n) nogil:
-    dot = dot0 = dot1 = dot2 = dot3 = tmp0 = tmp1 = 0.0
-    # note that there is guaranteed to be a vectorized
-    # dot product implementation that we should really
-    # be using to give us 4-8x speed up here - but at
-    # the very least we can let the compiler try by 
-    # doing 4 at a time
-    for idx in range(n/4):
-        i = idx*4
-        dot0 = v1[i] * v2[i]
-        dot1 = v1[i+1] * v2[i+1]
-        dot2 = v1[i+2] * v2[i+2]
-        dot3 = v1[i+3] * v2[i+3]
-        tmp0 = dot0 + dot1
-        tmp1 = dot2 + dot3
-        dot += tmp0 + tmp1
-
-    rem = (n%4) + 1
-    for j in range(rem):
-        dot += v1[i+j] * v2[i+j]
-    return dot
-        
-cdef float get_l2_norm(const float* vec, int n) nogil:
-    cdef double norm = 0.0
-    norm = dotp(vec, vec, n)
-    return sqrt(norm)
-
-
-cdef float cosine_similarity(const float* v1, const float* v2,
-        int n) nogil:
-    return dotp(v1, v2, n)
