@@ -26,7 +26,7 @@ cdef void init_vh(vector_header *v, int type, int nsections):
     v.vh_type = type
     v.vh_nsections = nsections
 
-cdef void init_vs_mat(vector_section *v, char *name, uint64_t off, uint64_t len, uint32_t m, uint8_t precision, uint32_t n):
+cdef void init_vs_mat(vector_section *v, char *name, uint64_t off, uint64_t len, uint8_t precision, uint32_t m, uint32_t n):
     v.vs_off = off
     v.vs_len = len
     v.vs_type = VS_MATRIX
@@ -55,8 +55,9 @@ cdef uint64_t PAGE_ALIGN(uint64_t addr):
 def dim_count(loc):
     with open(loc) as f:
 # XXX handle space as the vector in question
+        count = 0
         for line in f:
-            count = len(line.split(' '))
+            count = len(line.split(' ')) - 1
             break;
     return count
 
@@ -73,9 +74,8 @@ def word_len_count(loc):
 
 cdef vector_header *vec_save_setup(char *oloc, uint32_t filesize, int type, int nsections):
     cdef int ofd
-    of = open(oloc, "rw+")
-    of.truncate(filesize)
-    of.close()
+    with open(oloc, "w+") as f:
+        f.truncate(filesize)
     ofd = posix.fcntl.open(oloc, posix.fcntl.O_RDWR|posix.fcntl.O_CREAT, 0644)
     if ofd == -1:
         raise IOError("failed to open output file")
@@ -102,8 +102,9 @@ cdef vector_header *vec_load_setup(iloc):
 
 def vec2bin(iloc, oloc):
     word_len_total, linecount = word_len_count(iloc)
+    vec_len = dim_count(iloc)
     id2word = np.empty( (linecount), dtype=str)
-    id2glove = np.empty( (linecount, 300), dtype=np.float64)
+    id2glove = np.empty( (linecount, vec_len), dtype=np.float64)
     id2norm =  np.empty( (linecount), dtype=np.float64)
     # demarshal text 
     with open(iloc) as f:
@@ -118,7 +119,6 @@ def vec2bin(iloc, oloc):
             id2glove[i] /= id2norm[i]
             i+= 1
 
-    vec_len = dim_count(iloc)
     # header + matrix
     filesize = PAGE_SIZE + PAGE_ALIGN(linecount*vec_len*sizeof(float))
     # vector norms
