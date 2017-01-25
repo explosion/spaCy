@@ -31,3 +31,7 @@ cdef struct vector_section:
     uint8_t  vs_precision
     uint16_t vs_pad
     uint32_t vs_dims[3]
+
+
+cdef vector_header *vec_save_setup(char *oloc, uint32_t filesize, int type, int nsections)
+cdef vector_header *vec_load_setup(iloc)
