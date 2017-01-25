@@ -178,11 +178,6 @@ cdef class VectorStore:
         cv = <float[:self.nr_dim]>ptr
         return numpy.asarray(cv)
 
-    def add(self, float[:] vec, float norm):
-        assert len(vec) == self.nr_dim
-        self.norms.push_back(norm)
-        self.vectors.push_back(<float *>vec)
-
     # def save(self, loc):
     #     cdef int fd
     #     cdef uint32_t map_size, row, off
@@ -226,11 +221,13 @@ cdef class VectorStore:
         # then strings
         vs = <vector_section*>&vs[1]
         strings = <char *>(<uint64_t>vh + vs.vs_off)
-        cdef float[:] cv
         cdef bytes py_string
         for i in range(vec_count):
-            cv = <float[:nr_dims]>&vec[nr_dims*i]
-            self.add(cv, norms[i])
+            # we can't pass the float pointer to python
+            # and then recover the float * again, so
+            # we just store directly here without add()
+            self.norms.push_back(norms[i])
+            self.vectors.push_back(&vec[nr_dims*i])
             py_string = strings
             strings.intern_unicode(py_string)
             strings += strlen(strings) + 1
