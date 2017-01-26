@@ -46,6 +46,7 @@ cdef class Lexeme:
         self.vocab = vocab
         self.orth = orth
         self.c = <LexemeC*><void*>vocab.get_by_orth(vocab.mem, orth)
+        self.c.idx = -1
         assert self.c.orth == orth
 
     def __richcmp__(self, other, int op):
@@ -114,18 +115,31 @@ cdef class Lexeme:
     property has_vector:
         def __get__(self):
             cdef int i
+            assert self.c.idx != -1
+            _, v = self.vocab.vector_map[self.c.idx]
             for i in range(self.vocab.vectors_length):
-                if self.c.vector[i] != 0:
+                if v[i] != 0:
                     return True
             else:
                 return False
 
+    property idx:
+        def __get__(self):
+            assert self.c.idx != -1
+            n, _ = self.vocab.vector_map[self.c.idx]
+            return n
+
+        def __set__(self, unsigned int value):
+            self.c.idx = value
+
+
     property vector_norm:
         def __get__(self):
-            return self.c.l2_norm
+            return self.c.idx
 
         def __set__(self, float value):
-            self.c.l2_norm = value
+            # no-op
+            a = value
 
     property vector:
         def __get__(self):
@@ -137,18 +151,13 @@ cdef class Lexeme:
                     "\npython -m spacy.%s.download all\n"
                     "to install the data." % self.vocab.lang
                 )
- 
-            vector_view = <float[:length,]>self.c.vector
-            return numpy.asarray(vector_view)
+            assert self.c.idx != -1
+            _, v = self.vocab.vector_map[self.c.idx]
+            return v
 
         def __set__(self, vector):
             assert len(vector) == self.vocab.vectors_length
-            cdef float value
-            cdef double norm = 0.0
-            for i, value in enumerate(vector):
-                self.c.vector[i] = value
-                norm += value * value
-            self.c.l2_norm = sqrt(norm)
+            self.c.idx = self.vocab.vector_map.add(vector)
 
     property rank:
         def __get__(self):
