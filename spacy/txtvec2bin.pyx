@@ -101,9 +101,13 @@ cdef vector_header *vec_load_setup(iloc):
     vs = <vector_section*>&vh[1]
     return vh
 
-def vec2bin(iloc, oloc):
+def vec2bin(iloc, oloc, nlines):
     word_len_total, linecount = word_len_count(iloc)
     vec_len = dim_count(iloc)
+    if nlines > linecount:
+        print "%d vectors requested only %d available"%(nlines, linecount)
+    else:
+        linecount = nlines
     id2word = np.empty( (linecount), dtype=object)
     id2glove = np.empty( (linecount, vec_len), dtype=np.float64)
     id2norm =  np.empty( (linecount), dtype=np.float64)
