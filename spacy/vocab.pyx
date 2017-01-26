@@ -32,6 +32,8 @@ from .attrs cimport PROB, LANG
 from . import deprecated
 from . import util
 
+from .vectors import VectorMap
+
 
 try:
     import copy_reg
@@ -137,6 +139,7 @@ cdef class Vocab:
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
         self.strings = StringStore()
+        self.vector_map = VectorMap()
         # Load strings in a special order, so that we have an onset number for
         # the vocabulary. This way, when words are added in order, the orth ID
         # is the frequency rank of the word, plus a certain offset. The structural
@@ -494,7 +497,7 @@ cdef class Vocab:
             for i in range(vec_len):
                 norm += lexeme.vector[i] * lexeme.vector[i]
             lexeme.l2_norm = sqrt(norm)
-        self.vectors_length = vec_len
+        self.vectors_length = self.vector_map.vectors_length
         return vec_len
 
     def load_vectors_from_bin_loc(self, loc):
@@ -506,55 +509,18 @@ cdef class Vocab:
         Returns:
             vec_len (int): The length of the vectors loaded.
         """
-        cdef CFile file_ = CFile(loc, b'rb')
-        cdef int32_t word_len
-        cdef int32_t vec_len = 0
-        cdef int32_t prev_vec_len = 0
-        cdef float* vec
-        cdef Address mem
-        cdef attr_t string_id
-        cdef bytes py_word
-        cdef vector[float*] vectors
-        cdef int line_num = 0
-        cdef Pool tmp_mem = Pool()
-        while True:
-            try:
-                file_.read_into(&word_len, sizeof(word_len), 1)
-            except IOError:
-                break
-            file_.read_into(&vec_len, sizeof(vec_len), 1)
-            if prev_vec_len != 0 and vec_len != prev_vec_len:
-                raise VectorReadError.mismatched_sizes(loc, line_num,
-                                                       vec_len, prev_vec_len)
-            if 0 >= vec_len >= MAX_VEC_SIZE:
-                raise VectorReadError.bad_size(loc, vec_len)
-
-            chars = <char*>file_.alloc_read(tmp_mem, word_len, sizeof(char))
-            vec = <float*>file_.alloc_read(self.mem, vec_len, sizeof(float))
-
-            string_id = self.strings[chars[:word_len]]
-            while string_id >= vectors.size():
-                vectors.push_back(EMPTY_VEC)
-            assert vec != NULL
-            vectors[string_id] = vec
-            line_num += 1
+        self.vector_map.load(loc)
         cdef LexemeC* lex
         cdef size_t lex_addr
-        cdef double norm = 0.0
-        cdef int i
         for orth, lex_addr in self._by_orth.items():
             lex = <LexemeC*>lex_addr
-            if lex.lower < vectors.size():
-                lex.vector = vectors[lex.lower]
-                norm = 0.0
-                for i in range(vec_len):
-                    norm += lex.vector[i] * lex.vector[i]
-                lex.l2_norm = sqrt(norm)
+            # NB: Honnibal  - not all glove vectors are lower case
+            if lex.lower in self.vector_map:
+                lex.idx = self.vector_map.idx(lex.lower)
             else:
-                lex.vector = EMPTY_VEC
-        self.vectors_length = vec_len
-        return vec_len
-
+                lex.idx = 0
+        self.vectors_length = self.vector_map.vectors_length
+        return self.vectors_length
 
 def write_binary_vectors(in_loc, out_loc):
     cdef CFile out_file = CFile(out_loc, 'wb')
