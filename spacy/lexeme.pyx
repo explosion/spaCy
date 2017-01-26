@@ -135,7 +135,9 @@ cdef class Lexeme:
 
     property vector_norm:
         def __get__(self):
-            return self.c.idx
+            assert self.c.idx != -1
+            n, _ = self.vocab.vector_map[self.c.idx]
+            return n
 
         def __set__(self, float value):
             # no-op
