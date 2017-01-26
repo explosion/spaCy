@@ -39,10 +39,9 @@ from txtvec2bin cimport vector_section, vector_header, vec_load_setup
 
 cdef class VectorMap:
     '''Provide key-based access into the VectorStore. Keys are unicode strings.'''
-    def __init__(self, nr_dim):
-        self.data = VectorStore(nr_dim)
+    def __init__(self):
+        self.data = VectorStore()
         self.strings = StringStore()
-#        self.freqs = PreshMap()
 
     @property
     def nr_dim(self):
@@ -71,10 +70,21 @@ cdef class VectorMap:
             key unicode
 
         Returns:
-            float32[:self.nr_dim]
+            (norm, vector): tuple[float32, float32[:self.nr_dim]]
         '''
         i = self.strings[key]
         return self.data[i]
+
+    def idx(self, unicode key):
+        '''Retrieve the vector index
+
+        Arguments:
+            key unicode
+
+        Returns:
+            int
+        '''
+        return self.strings[key]
 
     def __setitem__(self, unicode key, value):
         '''Assign a (frequency, vector) tuple to the vector map.
@@ -126,12 +136,13 @@ cdef class VectorMap:
         for i, string in enumerate(self.strings):
             yield string, self.data[i]
 
-    def add(self, unicode string, int freq, float[:] vector):
+    def add(self, unicode string, float[:] vector):
         '''Insert a vector into the map by value. Makes a copy of the vector.
         '''
         idx = self.strings[string]
         assert self.data.vectors.size() == idx
         self.data.add(vector)
+        return idx
 
     # def save(self, data_dir):
     #     '''Serialize to a directory.
@@ -165,18 +176,17 @@ cdef class VectorStore:
     table may or may not own. Keys and frequencies sold separately --- 
     we're just a dumb vector of data, that knows how to run linear-scan
     similarity queries.'''
-    def __init__(self, int nr_dim):
+    def __init__(self):
         self.mem = Pool()
-        self.nr_dim = nr_dim
+        self.vector_length = self.nr_dim = -1 # => unset 
         zeros = <float *>self.mem.alloc(self.nr_dim, sizeof(float))
         self.vectors.push_back(zeros)
         self.norms.push_back(0)
-        self.cache = PreshMap(100000)
 
     def __getitem__(self, int i):
         cdef float* ptr = self.vectors.at(i)
         cv = <float[:self.nr_dim]>ptr
-        return numpy.asarray(cv)
+        return (self.norms[i], numpy.asarray(cv))
 
     # def save(self, loc):
     #     cdef int fd
@@ -215,6 +225,10 @@ cdef class VectorStore:
         vec = <float *>(<uint64_t>vh + vs.vs_off)
         vec_count = vs.vs_dims[0]
         nr_dims = vs.vs_dims[1]
+        if self.nr_dims == -1:
+            self.vector_length = self.nr_dims = nr_dims
+        elif self.nr_dims != nr_dims:
+            raise IOError("dimension mismatch in input")
         # then norms
         vs = <vector_section*>&vs[1]
         norms = <float *>(<uint64_t>vh + vs.vs_off)
