@@ -307,6 +307,11 @@
                 "url": "http://iamaaditya.github.io/2016/04/visual_question_answering_demo_notebook",
                 "author": "Aaditya Prakash",
                 "tags": ["vqa", "keras"]
+            },
+            "Extracting time suggestions from emails with spaCy": {
+                "url": "https://medium.com/redsift-outbox/what-time-cc9ce0c2aed2",
+                "author": "Chris Savvopoulos",
+                "tags": ["ner"]
             }
         },
 
