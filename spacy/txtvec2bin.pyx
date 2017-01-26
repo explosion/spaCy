@@ -123,6 +123,8 @@ def vec2bin(iloc, oloc, nlines):
             id2norm[i] = np.linalg.norm(id2glove[i])
             id2glove[i] /= id2norm[i]
             i+= 1
+            if i == linecount:
+                break
 
     # header + matrix
     filesize = PAGE_SIZE + PAGE_ALIGN(linecount*vec_len*sizeof(float))
