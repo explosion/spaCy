@@ -33,6 +33,7 @@ cdef class Vocab:
     cdef public object data_dir
     cdef public object lex_attr_getters
     cdef public object serializer_freqs
+    cdef public object vector_map
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL
     cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL
