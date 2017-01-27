@@ -26,6 +26,9 @@ p
     |  #[+api("tokenizer") #[code Tokenizer]] instance:
 
 +code.
+    import spacy
+    from spacy.symbols import ORTH, LEMMA, POS
+
     nlp = spacy.load('en')
     assert [w.text for w in nlp(u'gimme that')] == [u'gimme', u'that']
     nlp.tokenizer.add_special_case(u'gimme',
@@ -37,7 +40,7 @@ p
             {
                 ORTH: u'me'}])
     assert [w.text for w in nlp(u'gimme that')] == [u'gim', u'me', u'that']
-    assert [w.lemma_ for w in nlp(u'gimme that')] == [u'give', u'-PRON-', u'that']
+    assert [w.lemma_ for w in nlp(u'gimme that')] == [u'give', u'me', u'that']
 
 p
     |  The special case doesn't have to match an entire whitespace-delimited
@@ -52,9 +55,9 @@ p
     |  The special case rules have precedence over the punctuation splitting:
 
 +code.
-    nlp.tokenizer.add_special_case(u"...gimme...?",
+    nlp.tokenizer.add_special_case(u'...gimme...?',
         [{
-            ORTH: u'...gimme...?", LEMMA: "give", TAG: "VB"}])
+            ORTH: u'...gimme...?', LEMMA: u'give', TAG: u'VB'}])
     assert len(nlp(u'...gimme...?')) == 1
 
 p

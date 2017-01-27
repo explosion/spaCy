@@ -7,7 +7,7 @@ from ..language_data import PRON_LEMMA
 
 EXC = {}
 
-EXCLUDE_EXC = ["Ill", "ill", "Its", "its", "Hell", "hell", "were", "Were", "Well", "well", "Whore", "whore"]
+EXCLUDE_EXC = ["Ill", "ill", "Its", "its", "Hell", "hell", "Shell", "shell", "were", "Were", "Well", "well", "Whore", "whore"]
 
 
 # Pronouns

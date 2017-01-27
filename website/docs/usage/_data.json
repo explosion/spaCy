@@ -232,7 +232,7 @@
             "NLP with spaCy in 10 lines of code": {
                 "url": "https://github.com/cytora/pycon-nlp-in-10-lines",
                 "author": "Andraz Hribernik et al. (Cytora)",
-                "tags": [ "jupyter" ]
+                "tags": ["jupyter"]
             },
             "Intro to NLP with spaCy": {
                 "url": "https://nicschrading.com/project/Intro-to-NLP-with-spaCy/",
@@ -241,7 +241,7 @@
             "NLP with spaCy and IPython Notebook": {
                 "url": "http://blog.sharepointexperience.com/2016/01/nlp-and-sharepoint-part-1/",
                 "author": "Dustin Miller (SharePoint)",
-                "tags": [ "jupyter" ]
+                "tags": ["jupyter"]
             },
             "Getting Started with spaCy": {
                 "url": "http://textminingonline.com/getting-started-with-spacy",
@@ -254,7 +254,7 @@
             "NLP (almost) From Scratch - POS Network with spaCy": {
                 "url": "http://sujitpal.blogspot.de/2016/07/nlp-almost-from-scratch-implementing.html",
                 "author": "Sujit Pal",
-                "tags": [ "gensim", "keras" ]
+                "tags": ["gensim", "keras"]
             },
             "NLP tasks with various libraries": {
                 "url": "http://clarkgrubb.com/nlp",
@@ -270,44 +270,48 @@
             "Modern NLP in Python – What you can learn about food by analyzing a million Yelp reviews": {
                 "url": "http://nbviewer.jupyter.org/github/skipgram/modern-nlp-in-python/blob/master/executable/Modern_NLP_in_Python.ipynb",
                 "author": "Patrick Harrison (S&P Global)",
-                "tags": [ "jupyter", "gensim" ]
+                "tags": ["jupyter", "gensim"]
             },
-
             "Deep Learning with custom pipelines and Keras": {
                 "url": "https://explosion.ai/blog/spacy-deep-learning-keras",
                 "author": "Matthew Honnibal",
-                "tags": [ "keras", "sentiment" ]
+                "tags": ["keras", "sentiment"]
             },
             "A decomposable attention model for Natural Language Inference": {
                 "url": "https://github.com/explosion/spaCy/tree/master/examples/keras_parikh_entailment",
                 "author": "Matthew Honnibal",
-                "tags": [ "keras", "similarity" ]
+                "tags": ["keras", "similarity"]
             },
 
             "Using the German model": {
                 "url": "https://explosion.ai/blog/german-model",
                 "author": "Wolfgang Seeker",
-                "tags": [ "multi-lingual" ]
+                "tags": ["multi-lingual"]
             },
             "Sense2vec with spaCy and Gensim": {
                 "url": "https://explosion.ai/blog/sense2vec-with-spacy",
                 "author": "Matthew Honnibal",
-                "tags": [ "big data", "gensim" ]
+                "tags": ["big data", "gensim"]
             },
             "Building your bot's brain with Node.js and spaCy": {
                 "url": "https://explosion.ai/blog/chatbot-node-js-spacy",
                 "author": "Wah Loon Keng",
-                "tags": [ "bots", "node.js" ]
+                "tags": ["bots", "node.js"]
             },
             "An intent classifier with spaCy": {
                 "url": "http://blog.themusio.com/2016/07/18/musios-intent-classifier-2/",
                 "author": "Musio",
-                "tags": [ "bots", "keras" ]
+                "tags": ["bots", "keras"]
             },
             "Visual Question Answering with spaCy": {
                 "url": "http://iamaaditya.github.io/2016/04/visual_question_answering_demo_notebook",
                 "author": "Aaditya Prakash",
-                "tags": [ "vqa", "keras" ]
+                "tags": ["vqa", "keras"]
+            },
+            "Extracting time suggestions from emails with spaCy": {
+                "url": "https://medium.com/redsift-outbox/what-time-cc9ce0c2aed2",
+                "author": "Chris Savvopoulos",
+                "tags": ["ner"]
             }
         },
 
@@ -315,22 +319,22 @@
             "Information extraction": {
                 "url": "https://github.com/explosion/spaCy/blob/master/examples/information_extraction.py",
                 "author": "Matthew Honnibal",
-                "tags": [ "snippet" ]
+                "tags": ["snippet"]
             },
             "Neural bag of words": {
                 "url": "https://github.com/explosion/spaCy/blob/master/examples/nn_text_class.py",
                 "author": "Matthew Honnibal",
-                "tags": [ "sentiment" ]
+                "tags": ["sentiment"]
             },
             "Part-of-speech tagging": {
                 "url": "https://github.com/explosion/spaCy/blob/master/examples/pos_tag.py",
                 "author": "Matthew Honnibal",
-                "tags": [ "pos" ]
+                "tags": ["pos"]
             },
             "Parallel parse": {
                 "url": "https://github.com/explosion/spaCy/blob/master/examples/parallel_parse.py",
                 "author": "Matthew Honnibal",
-                "tags": [ "big data" ]
+                "tags": ["big data"]
             },
             "Inventory count": {
                 "url": "https://github.com/explosion/spaCy/tree/master/examples/inventory_count",
@@ -339,7 +343,7 @@
             "Multi-word matches": {
                 "url": "https://github.com/explosion/spaCy/blob/master/examples/multi_word_matches.py",
                 "author": "Matthew Honnibal",
-                "tags": [ "matcher", "out of date" ]
+                "tags": ["matcher", "out of date"]
             }
         }
     }

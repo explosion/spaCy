@@ -54,7 +54,7 @@ released under the MIT license.
 | **Usage questions**       | `StackOverflow <http://stackoverflow.com/questions/tagged/spacy>`_, `Reddit usergroup                      | 
 |                           | <https://www.reddit.com/r/spacynlp>`_, `Gitter chat <https://gitter.im/explosion/spaCy>`_                  |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| **General discussion**    |  `Reddit usergroup <https://www.reddit.com/r/spacynlp>`_,                                                  |
+| **General discussion**    | `Reddit usergroup <https://www.reddit.com/r/spacynlp>`_,                                                   |
 |                           | `Gitter chat <https://gitter.im/explosion/spaCy>`_                                                         |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
 | **Commercial support**    |  contact@explosion.ai                                                                                      |

@@ -5,10 +5,10 @@
 
 __title__ = 'spacy'
 __version__ = '1.6.0'
-__summary__ = 'Industrial-strength NLP'
+__summary__ = 'Industrial-strength Natural Language Processing (NLP) with Python and Cython'
 __uri__ = 'https://spacy.io'
 __author__ = 'Matthew Honnibal'
-__email__ = 'matt@spacy.io'
+__email__ = 'matt@explosion.ai'
 __license__ = 'MIT'
 __models__ = {
     'en': 'en>=1.1.0,<1.2.0',

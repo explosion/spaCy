@@ -1,6 +1,7 @@
 from __future__ import print_function
 
 import sys
+import shutil
 
 import sputnik
 from sputnik.package_list import (PackageNotFoundException,
