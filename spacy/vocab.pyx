@@ -497,7 +497,7 @@ cdef class Vocab:
             for i in range(vec_len):
                 norm += lexeme.vector[i] * lexeme.vector[i]
             lexeme.l2_norm = sqrt(norm)
-        self.vectors_length = self.vector_map.vectors_length
+        self.vectors_length = self.vector_map.nr_dim
         return vec_len
 
     def load_vectors_from_bin_loc(self, loc):

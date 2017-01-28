@@ -9,7 +9,9 @@ from cython.view cimport array as cvarray
 cimport numpy as np
 np.import_array()
 
-
+import array
+import vectors
+import numpy as np
 
 from libc.string cimport memset
 
@@ -132,7 +134,6 @@ cdef class Lexeme:
         def __set__(self, unsigned int value):
             self.c.idx = value
 
-
     property vector_norm:
         def __get__(self):
             assert self.c.idx != -1
@@ -159,7 +160,7 @@ cdef class Lexeme:
 
         def __set__(self, vector):
             assert len(vector) == self.vocab.vectors_length
-            self.c.idx = self.vocab.vector_map.add(vector)
+            self.c.idx = self.vocab.vector_map.add(self.orth_, array.array('f', vector))
 
     property rank:
         def __get__(self):
