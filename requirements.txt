@@ -7,6 +7,6 @@ thinc>=6.2.0,<6.3.0
 murmurhash>=0.26,<0.27
 plac<0.9.3
 six
-ujson
+ujson>=1.35
 cloudpickle
 sputnik>=0.9.2,<0.10.0
