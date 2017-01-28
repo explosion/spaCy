@@ -187,10 +187,7 @@ cdef class Vocab:
         cdef hash_t key
         cdef size_t addr
         if new_size > self.vectors_length:
-            for key, addr in self._by_hash.items():
-                lex = <LexemeC*>addr
-                lex.vector = <float*>self.mem.realloc(lex.vector,
-                                        new_size * sizeof(lex.vector[0]))
+            self.vector_map.resize(new_size)
         self.vectors_length = new_size
 
     def add_flag(self, flag_getter, int flag_id=-1):
