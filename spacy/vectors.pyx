@@ -71,8 +71,10 @@ cdef class VectorMap:
         Returns:
             (norm, vector): tuple[float32, float32[:self.nr_dim]]
         '''
-        i = self.strings[key]
-        return self.data[i]
+        idx = self.strings[key]
+        if idx == self.data.vectors.size():
+            self.add_empty(key, self.nr_dim)
+        return self.data[idx]
 
     def __setitem__(self, unicode key, value):
         '''Assign a (frequency, vector) tuple to the vector map.
@@ -84,12 +86,10 @@ cdef class VectorMap:
             None
         '''
         # TODO: Handle case where we're over-writing an existing entry.
-        if key not in self.strings:
-            idx = self.strings[key]
-            assert self.data.vectors.size() == idx
+        idx = self.strings[key]
+        if self.data.vectors.size() == idx:
             self.data.add(value)
         else:
-            idx = self.strings[key]
             self.data.set(idx, value)
 
     def __iter__(self):
