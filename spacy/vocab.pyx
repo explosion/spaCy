@@ -34,6 +34,7 @@ from . import util
 
 from .vectors import VectorMap
 
+import numpy as np
 
 try:
     import copy_reg
@@ -47,7 +48,6 @@ DEF MAX_VEC_SIZE = 100000
 cdef float[MAX_VEC_SIZE] EMPTY_VEC
 memset(EMPTY_VEC, 0, sizeof(EMPTY_VEC))
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
-EMPTY_LEXEME.vector = EMPTY_VEC
 
 
 cdef class Vocab:
@@ -271,7 +271,6 @@ cdef class Vocab:
         lex.orth = self.strings[string]
         lex.length = len(string)
         lex.id = self.length
-        lex.vector = <float*>mem.alloc(self.vectors_length, sizeof(float))
         if self.lex_attr_getters is not None:
             for attr, func in self.lex_attr_getters.items():
                 value = func(string)
@@ -286,6 +285,7 @@ cdef class Vocab:
         else:
             key = hash_string(string)
             self._add_lex_to_vocab(key, lex)
+
         assert lex != NULL, string
         return lex
 
@@ -424,7 +424,6 @@ cdef class Vocab:
             fp.read_into(&lexeme.l2_norm, 1, sizeof(lexeme.l2_norm))
             fp.read_into(&lexeme.lang, 1, sizeof(lexeme.lang))
 
-            lexeme.vector = EMPTY_VEC
             py_str = self.strings[lexeme.orth]
             key = hash_string(py_str)
             self._by_hash.set(key, lexeme)
@@ -448,18 +447,22 @@ cdef class Vocab:
 
         cdef Lexeme lexeme
         cdef CFile out_file = CFile(out_loc, 'wb')
+        cdef float *fvec  = <float*>self.mem.alloc(vec_len, sizeof(float))
         for lexeme in self:
             word_str = lexeme.orth_.encode('utf8')
-            vec = lexeme.c.vector
+            vec = self.vector_map[lexeme.orth_]
             word_len = len(word_str)
 
             out_file.write_from(&word_len, 1, sizeof(word_len))
             out_file.write_from(&vec_len, 1, sizeof(vec_len))
 
+            for i, value in vec:
+                fvec[i] = vec
             chars = <char*>word_str
             out_file.write_from(chars, word_len, sizeof(char))
-            out_file.write_from(vec, vec_len, sizeof(float))
+            out_file.write_from(fvec, vec_len, sizeof(float))
         out_file.close()
+        self.mem.free(fvec)
 
     def load_vectors(self, file_):
         """Load vectors from a text-based file.
@@ -476,24 +479,21 @@ cdef class Vocab:
         cdef LexemeC* lexeme
         cdef attr_t orth
         cdef int32_t vec_len = -1
-        cdef double norm = 0.0
         for line_num, line in enumerate(file_):
             pieces = line.split()
             word_str = " " if line.startswith(" ") else pieces.pop(0)
             if vec_len == -1:
                 vec_len = len(pieces)
+                vec = np.empty( (vec_len), dtype=np.float32)
             elif vec_len != len(pieces):
                 raise VectorReadError.mismatched_sizes(file_, line_num,
                                                         vec_len, len(pieces))
             orth = self.strings[word_str]
             lexeme = <LexemeC*><void*>self.get_by_orth(self.mem, orth)
-            lexeme.vector = <float*>self.mem.alloc(vec_len, sizeof(float))
             for i, val_str in enumerate(pieces):
-                lexeme.vector[i] = float(val_str)
-            norm = 0.0
-            for i in range(vec_len):
-                norm += lexeme.vector[i] * lexeme.vector[i]
-            lexeme.l2_norm = sqrt(norm)
+                vec[i] = float(val_str)
+            self.vector_map[word_str] = vec
+
         self.vectors_length = self.vector_map.nr_dim
         return vec_len
 
@@ -511,7 +511,7 @@ cdef class Vocab:
         cdef size_t lex_addr
         for orth, lex_addr in self._by_orth.items():
             lex = <LexemeC*>lex_addr
-            # NB: Honnibal  - not all glove vectors are lower case
+            # NB: not all glove vectors are lower case :-/
             if lex.lower in self.vector_map:
                 lex.idx = self.vector_map.idx(lex.lower)
             else:
