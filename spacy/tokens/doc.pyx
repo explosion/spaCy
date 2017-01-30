@@ -585,9 +585,6 @@ cdef class Doc:
             elif attr_id == POS:
                 for i in range(length):
                     tokens[i].pos = <univ_pos_t>values[i]
-            elif attr_id == TAG:
-                for i in range(length):
-                    tokens[i].tag = <univ_pos_t>values[i]
             elif attr_id == DEP:
                 for i in range(length):
                     tokens[i].dep = values[i]
