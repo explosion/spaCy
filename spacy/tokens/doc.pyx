@@ -269,11 +269,11 @@ cdef class Doc:
                     for t in self:
                         v += t.vector
                     v /= len(self)
-                    if np.sum(v) != 0:
-                        self._vector_norm = np.linalg.norm(v)
-                        v /= self._vector_norm
-                    else:
-                        self._vector_norm = 0
+                    norm = 0
+                    if len([value for i, value in enumerate(v) if value != 0]) != 0:
+                        norm = np.linalg.norm(v)
+                        v /= norm
+                    self._vector_norm = norm
                     self._vector = v
                 else:
                     return np.zeros((self.vocab.vectors_length,), dtype='float32')

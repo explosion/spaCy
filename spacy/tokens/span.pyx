@@ -169,7 +169,7 @@ cdef class Span:
                 for t in self:
                     v += t.vector
                 v /= len(self)
-                if sum(v) != 0:
+                if len([value for i, value in enumerate(v) if value != 0]) != 0:
                     self._vector_norm = np.linalg.norm(v)
                     v /= self._vector_norm
                 else:
