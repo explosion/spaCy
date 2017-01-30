@@ -113,8 +113,12 @@ cdef class Token:
             score (float): A scalar similarity score. Higher is more similar.
         '''
         if 'similarity' in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks['similarity'](self)
-        return numpy.dot(self.vector, other.vector)
+            return self.doc.user_token_hooks['similarity'](self)
+        v, ov = self.vector, other.vector
+        n, on = self.vector_norm, other.vector_norm
+        if n == 0 or on == 0:
+            return 0
+        return numpy.dot(v, ov)
 
     property lex_id:
         def __get__(self):
