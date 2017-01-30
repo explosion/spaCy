@@ -1,8 +1,8 @@
 import numpy as np
 from ctypes import c_char_p
 
+import os
 from posix.unistd cimport close, read, off_t
-cimport posix.fcntl
 cdef extern from "sys/mman.h":
     void *mmap(void *addr, size_t len, int prot, int flags, int fd, off_t offset)
     int munmap(void *addr, size_t length)
@@ -77,7 +77,7 @@ cdef vector_header *vec_save_setup(char *oloc, uint32_t filesize, int type, int 
     cdef int ofd
     with open(oloc, "w+") as f:
         f.truncate(filesize)
-    ofd = posix.fcntl.open(oloc, posix.fcntl.O_RDWR|posix.fcntl.O_CREAT, 0644)
+    ofd = os.open(oloc, os.O_RDWR|os.O_CREAT, 0644)
     if ofd == -1:
         raise IOError("failed to open output file")
     vh = <vector_header*>mmap(NULL, filesize, PROT_READ|PROT_WRITE, MAP_SHARED, ofd, 0)
@@ -88,11 +88,12 @@ cdef vector_header *vec_save_setup(char *oloc, uint32_t filesize, int type, int 
 cdef vector_header *vec_load_setup(iloc):
     cdef int ifd
     cdef stat sb
-    ifd = posix.fcntl.open(iloc, posix.fcntl.O_RDONLY)
+    ifd = os.open(iloc, os.O_RDONLY)
     if ifd == -1:
         raise IOError("failed to open input file")
     fstat(ifd, &sb)
     vh = <vector_header*>mmap(NULL, sb.st_size, PROT_READ, MAP_SHARED, ifd, 0)
+    assert vh != <vector_header*>-1
     close(ifd)
     if vh.vh_magic != VH_MAGIC:
         raise IOError("invalid file type")
