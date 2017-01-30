@@ -511,12 +511,12 @@ cdef class Vocab:
         cdef size_t lex_addr
         for orth, lex_addr in self._by_orth.items():
             lex = <LexemeC*>lex_addr
-            # NB: not all glove vectors are lower case :-/
-            if lex.lower in self.vector_map:
-                lex.idx = self.vector_map.idx(lex.lower)
-            else:
-                lex.idx = 0
-        self.vectors_length = self.vector_map.vectors_length
+            if self.vocab.strings[lex.orth] not in self.vector_map:
+                # will trigger the creation of an empty
+                # vector
+                strlow = self.vocab.strings[lex.lower]
+                v = self.vector_map[strlow]
+        self.vectors_length = self.vector_map.nr_dim
         return self.vectors_length
 
 def write_binary_vectors(in_loc, out_loc):
