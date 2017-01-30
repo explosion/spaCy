@@ -76,7 +76,7 @@ cdef class VectorMap:
             self.add_empty(key, self.nr_dim)
         return self.data[idx]
 
-    def __setitem__(self, unicode key, value):
+    def __setitem__(self, unicode key, float[:] value):
         '''Assign a (frequency, vector) tuple to the vector map.
 
         Arguments:
@@ -85,7 +85,6 @@ cdef class VectorMap:
         Returns:
             None
         '''
-        # TODO: Handle case where we're over-writing an existing entry.
         idx = self.strings[key]
         if self.data.vectors.size() == idx:
             self.data.add(value)
@@ -205,13 +204,16 @@ cdef class VectorStore:
             self.nr_dim = len(vector)
         else:
             assert self.nr_dim == len(vector)
-            
+        v = np.asarray(vector)
+        norm = 0
+        if len([value for i, value in enumerate(v) if value != 0]) != 0:
+            norm = np.linalg.norm(vector)
+            v /= norm
         cdef float *newvec  = <float *>self.mem.alloc(self.nr_dim, sizeof(float))
         for i in xrange(self.nr_dim):
-            newvec[i] = vector[i]
-            print "vector[%d]=%f newvec[%d]=%f "%(i,vector[i], i,newvec[i])
+            newvec[i] = v[i]
         self.vectors.push_back(newvec);
-        self.norms.push_back(np.linalg.norm(vector))
+        self.norms.push_back(norm)
 
     def add_empty(self, int size):
         if self.nr_dim == -1:
@@ -219,6 +221,8 @@ cdef class VectorStore:
         else:
             assert self.nr_dim == size
         cdef float *newvec  = <float *>self.mem.alloc(self.nr_dim, sizeof(float))
+        for i in xrange(self.nr_dim):
+            newvec[i] = 0.0
         self.vectors.push_back(newvec);
         self.norms.push_back(0)
 
@@ -241,9 +245,15 @@ cdef class VectorStore:
 #            print "cv[%d] = %f"%(j, cv[j])
         return (self.norms[i], cv)
 
-    def set(self, int i, float[:] vec):
+    def set(self, int i, float[:] vector):
         cdef float* ptr = self.vectors.at(i)
-        for j, value in enumerate(vec):
+        v = np.asarray(vector)
+        norm = 0
+        if len([value for i, value in enumerate(v) if value != 0]) != 0:
+            norm = np.linalg.norm(vector)
+            v /= norm
+        self.norms[i] = norm
+        for j, value in enumerate(v):
             ptr[j] = value
 
     # def save(self, loc):
