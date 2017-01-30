@@ -110,9 +110,10 @@ cdef class Lexeme:
             score (float): A scalar similarity score. Higher is more similar.
         '''
         n0, v0 = self.vocab.vector_map[self.orth_]
-        n1, v1 = other.vector_norm, other.vector
+        v1 = other.vector
+        n1 = other.vector_norm
         if n0 == 0 or n1 == 0:
-            return 0.0
+            return 0
         return numpy.dot(v0, v1)
 
     property has_vector:
