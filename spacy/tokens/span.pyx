@@ -114,9 +114,11 @@ cdef class Span:
         '''
         if 'similarity' in self.doc.user_span_hooks:
             self.doc.user_span_hooks['similarity'](self, other)
+        # this will update the norm as a side effect
+        v, ov = self.vector, other.vector
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
             return 0.0
-        return np.dot(self.vector, other.vector)
+        return np.dot(v, ov)
 
     cpdef int _recalculate_indices(self) except -1:
         if self.end > self.doc.length \
@@ -169,11 +171,11 @@ cdef class Span:
                 for t in self:
                     v += t.vector
                 v /= len(self)
+                norm = 0
                 if len([value for i, value in enumerate(v) if value != 0]) != 0:
-                    self._vector_norm = np.linalg.norm(v)
-                    v /= self._vector_norm
-                else:
-                    self._vector_norm = 0
+                    norm = np.linalg.norm(v)
+                    v /= norm
+                self._vector_norm = norm
                 self._vector = v
             return self._vector
 
@@ -181,13 +183,10 @@ cdef class Span:
         def __get__(self):
             if 'vector_norm' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['vector'](self)
-            cdef float value
-            cdef double norm = 0
             if self._vector_norm is None:
-                norm = 0
-                for value in self.vector:
-                    norm += value * value
-                self._vector_norm = sqrt(norm) if norm != 0 else 0
+                v = self.vector
+                if len([value for i, value in enumerate(v) if value != 0]) != 0:
+                    return 0
             return self._vector_norm
 
     property sentiment:
