@@ -284,7 +284,8 @@ cdef class Doc:
             if 'vector_norm' in self.user_hooks:
                 return self.user_hooks['vector_norm'](self)
             if self._vector_norm is None:
-                return 0
+                v = self.vector
+                assert self._vector_norm is not None
             return self._vector_norm
 
     @property
