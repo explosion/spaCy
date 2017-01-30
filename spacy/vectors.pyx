@@ -104,7 +104,6 @@ cdef class VectorMap:
         '''
         if string not in self.strings:
             idx = self.strings[string]
- #           print "data.vectors.size %d idx %d string %s"%(self.data.vectors.size(), idx, string)
             if self.data.vectors.size() != idx:
                 raise IOError("oops") 
             self.data.add(vector)
@@ -117,7 +116,6 @@ cdef class VectorMap:
         '''Insert a vector into the map by value. Makes a copy of the vector.
         '''
         idx = self.strings[string]
-#        print "data.vectors.size %d idx %d string %s"%(self.data.vectors.size(), idx, string)
         if self.data.vectors.size() != idx:
             raise IOError("oops") 
         self.data.add_empty(size)
@@ -240,9 +238,6 @@ cdef class VectorStore:
     def __getitem__(self, int i):
         cdef float* ptr = self.vectors.at(i)
         cv = <float[:self.nr_dim]>ptr
-#        print "getitem(%d)"%(i)
-#        for j in xrange(self.nr_dim):
-#            print "cv[%d] = %f"%(j, cv[j])
         return (self.norms[i], cv)
 
     def set(self, int i, float[:] vector):
