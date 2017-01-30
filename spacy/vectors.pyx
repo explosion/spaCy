@@ -238,7 +238,7 @@ cdef class VectorStore:
     def __getitem__(self, int i):
         cdef float* ptr = self.vectors.at(i)
         cv = <float[:self.nr_dim]>ptr
-        return (self.norms[i], cv)
+        return (self.norms[i], np.asarray(cv))
 
     def set(self, int i, float[:] vector):
         cdef float* ptr = self.vectors.at(i)
