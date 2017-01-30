@@ -48,7 +48,6 @@ cdef class Lexeme:
         self.vocab = vocab
         self.orth = orth
         self.c = <LexemeC*><void*>vocab.get_by_orth(vocab.mem, orth)
-        self.c.idx = -1
         assert self.c.orth == orth
 
     def __richcmp__(self, other, int op):
@@ -110,39 +109,26 @@ cdef class Lexeme:
         Returns:
             score (float): A scalar similarity score. Higher is more similar.
         '''
-        if self.vector_norm == 0 or other.vector_norm == 0:
+        n0, v0 = self.vocab.vector_map[self.orth_]
+        n1, v1 = other.vector_norm, other.vector
+        if n0 == 0 or n1 == 0:
             return 0.0
-        return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+        return numpy.dot(v0, v1)
 
     property has_vector:
         def __get__(self):
             cdef int i
-            assert self.c.idx != -1
-            _, v = self.vocab.vector_map[self.c.idx]
+            _, v = self.vocab.vector_map[self.orth_]
             for i in range(self.vocab.vectors_length):
                 if v[i] != 0:
                     return True
             else:
                 return False
 
-    property idx:
-        def __get__(self):
-            assert self.c.idx != -1
-            n, _ = self.vocab.vector_map[self.c.idx]
-            return n
-
-        def __set__(self, unsigned int value):
-            self.c.idx = value
-
     property vector_norm:
         def __get__(self):
-            assert self.c.idx != -1
-            n, _ = self.vocab.vector_map[self.c.idx]
+            n, _ = self.vocab.vector_map[self.orth_]
             return n
-
-        def __set__(self, float value):
-            # no-op
-            a = value
 
     property vector:
         def __get__(self):
@@ -150,17 +136,18 @@ cdef class Lexeme:
             if length == 0:
                 raise ValueError(
                     "Word vectors set to length 0. This may be because the "
-                    "data is not installed. If you haven't already, run"
-                    "\npython -m spacy.%s.download all\n"
-                    "to install the data." % self.vocab.lang
+                     "data is not installed. If you haven't already, run"
+                     "\npython -m spacy.%s.download all\n"
+                     "to install the data." % self.vocab.lang
                 )
-            assert self.c.idx != -1
-            _, v = self.vocab.vector_map[self.c.idx]
+            str = self.vocab.strings[self.c.orth]
+            _, v = self.vocab.vector_map[str]
             return v
 
         def __set__(self, vector):
             assert len(vector) == self.vocab.vectors_length
-            self.c.idx = self.vocab.vector_map.add(self.orth_, array.array('f', vector))
+            str = self.vocab.strings[self.c.orth]
+            self.vocab.vector_map[str] = np.asarray(vector, dtype=np.float32)
 
     property rank:
         def __get__(self):
