@@ -10,7 +10,6 @@ cdef struct LexemeC:
     attr_t lang
 
     attr_t id
-    attr_t idx
     attr_t length
 
     attr_t orth
