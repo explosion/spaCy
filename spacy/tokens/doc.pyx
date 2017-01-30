@@ -3,12 +3,13 @@ from libc.string cimport memcpy, memset
 from libc.stdint cimport uint32_t
 from libc.math cimport sqrt
 
-import numpy
+import numpy as np
 import numpy.linalg
 import struct
 cimport numpy as np
 import six
 import warnings
+
 
 from ..lexeme cimport Lexeme
 from ..lexeme cimport EMPTY_LEXEME
@@ -119,7 +120,7 @@ cdef class Doc:
         self.user_hooks = {}
         self.user_token_hooks = {}
         self.user_span_hooks = {}
-        self.tensor = numpy.zeros((0,), dtype='float32')
+        self.tensor = np.zeros((0,), dtype='float32')
         self.user_data = {}
         self._py_tokens = []
         self._vector = None
@@ -240,9 +241,8 @@ cdef class Doc:
         '''
         if 'similarity' in self.user_hooks:
             return self.user_hooks['similarity'](self, other)
-        if self.vector_norm == 0 or other.vector_norm == 0:
-            return 0.0
-        return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+        v, ov = self.vector, other.vector
+        return np.dot(v, ov) 
 
     property has_vector:
         '''
@@ -265,29 +265,27 @@ cdef class Doc:
                 return self.user_hooks['vector'](self)
             if self._vector is None:
                 if len(self):
-                    self._vector = sum(t.vector for t in self) / len(self)
+                    v = np.zeros((self.vocab.vectors_length,), dtype='float32')
+                    for t in self:
+                        v += t.vector
+                    v /= len(self)
+                    if np.sum(v) != 0:
+                        self._vector_norm = np.linalg.norm(v)
+                        v /= self._vector_norm
+                    else:
+                        self._vector_norm = 0
+                    self._vector = v
                 else:
-                    return numpy.zeros((self.vocab.vectors_length,), dtype='float32')
+                    return np.zeros((self.vocab.vectors_length,), dtype='float32')
             return self._vector
-
-        def __set__(self, value):
-            self._vector = value
 
     property vector_norm:
         def __get__(self):
             if 'vector_norm' in self.user_hooks:
                 return self.user_hooks['vector_norm'](self)
-            cdef float value
-            cdef double norm = 0
             if self._vector_norm is None:
-                norm = 0.0
-                for value in self.vector:
-                    norm += value * value
-                self._vector_norm = sqrt(norm) if norm != 0 else 0
+                return 0
             return self._vector_norm
-        
-        def __set__(self, value):
-            self._vector_norm = value 
 
     @property
     def string(self):
@@ -488,8 +486,8 @@ cdef class Doc:
         cdef np.ndarray[attr_t, ndim=2] output
         # Make an array from the attributes --- otherwise our inner loop is Python
         # dict iteration.
-        cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.int32)
-        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.int32)
+        cdef np.ndarray[attr_t, ndim=1] attr_ids = np.asarray(py_attr_ids, dtype=np.int32)
+        output = np.ndarray(shape=(self.length, len(attr_ids)), dtype=np.int32)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
                 output[i, j] = get_token_attr(&self.c[i], feature)

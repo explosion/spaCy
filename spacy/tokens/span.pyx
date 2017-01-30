@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 from collections import defaultdict
-import numpy
+import numpy as np
 import numpy.linalg
 cimport numpy as np
 from libc.math cimport sqrt
@@ -116,7 +116,7 @@ cdef class Span:
             self.doc.user_span_hooks['similarity'](self, other)
         if self.vector_norm == 0.0 or other.vector_norm == 0.0:
             return 0.0
-        return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+        return np.dot(self.vector, other.vector)
 
     cpdef int _recalculate_indices(self) except -1:
         if self.end > self.doc.length \
@@ -162,8 +162,19 @@ cdef class Span:
         def __get__(self):
             if 'vector' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['vector'](self)
+            vec_len = len(np.asarray(self[0].vector))
+
             if self._vector is None:
-                self._vector = sum(t.vector for t in self) / len(self)
+                v = np.zeros((vec_len,), dtype='float32')
+                for t in self:
+                    v += t.vector
+                v /= len(self)
+                if sum(v) != 0:
+                    self._vector_norm = np.linalg.norm(v)
+                    v /= self._vector_norm
+                else:
+                    self._vector_norm = 0
+                self._vector = v
             return self._vector
 
     property vector_norm:
