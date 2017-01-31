@@ -500,7 +500,8 @@ cdef class Doc:
         by the values of the given attribute ID.
 
         Example:
-            from spacy.en import English, attrs
+            from spacy.en import English
+            from spacy import attrs
             nlp = English()
             tokens = nlp(u'apple apple orange banana')
             tokens.count_by(attrs.ORTH)
