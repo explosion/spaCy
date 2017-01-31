@@ -1,33 +1,40 @@
 from keras.models import model_from_json
 import numpy
 import numpy.random
+import json
+from spacy.tokens.span import Span
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 
 class KerasSimilarityShim(object):
     @classmethod
-    def load(cls, path, nlp, get_features=None):
+    def load(cls, path, nlp, get_features=None, max_length=100):
         if get_features is None:
-            get_features = doc2ids
+            get_features = get_word_ids
         with (path / 'config.json').open() as file_:
-            config = json.load(file_)
-        model = model_from_json(config['model'])
+            model = model_from_json(file_.read())
         with (path / 'model').open('rb') as file_:
             weights = pickle.load(file_)
         embeddings = get_embeddings(nlp.vocab)
         model.set_weights([embeddings] + weights)
-        return cls(model, get_features=get_features)
+        return cls(model, get_features=get_features, max_length=max_length)
 
-    def __init__(self, model, get_features=None):
+    def __init__(self, model, get_features=None, max_length=100):
         self.model = model
         self.get_features = get_features
+        self.max_length = max_length
 
     def __call__(self, doc):
         doc.user_hooks['similarity'] = self.predict
         doc.user_span_hooks['similarity'] = self.predict
-    
+
     def predict(self, doc1, doc2):
-        x1 = self.get_features(doc1)
-        x2 = self.get_features(doc2)
+        x1 = self.get_features([doc1], max_length=self.max_length, tree_truncate=True)
+        x2 = self.get_features([doc2], max_length=self.max_length, tree_truncate=True)
         scores = self.model.predict([x1, x2])
         return scores[0]
 
@@ -45,7 +52,10 @@ def get_word_ids(docs, rnn_encode=False, tree_truncate=False, max_length=100, nr
     Xs = numpy.zeros((len(docs), max_length), dtype='int32')
     for i, doc in enumerate(docs):
         if tree_truncate:
-            queue = [sent.root for sent in doc.sents]
+            if isinstance(doc, Span):
+                queue = [doc.root]
+            else:
+                queue = [sent.root for sent in doc.sents]
         else:
             queue = list(doc)
         words = []
@@ -71,7 +81,9 @@ def get_word_ids(docs, rnn_encode=False, tree_truncate=False, max_length=100, nr
 
 
 def create_similarity_pipeline(nlp):
-    return [SimilarityModel.load(
-                nlp.path / 'similarity',
-                nlp,
-                feature_extracter=get_features)]
+    return [
+        nlp.tagger,
+        nlp.entity,
+        nlp.parser,
+        KerasSimilarityShim.load(nlp.path / 'similarity', nlp, max_length=10)
+    ]
