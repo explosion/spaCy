@@ -1,6 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
+import pytest
 
 @pytest.mark.xfail
 @pytest.mark.parametrize('text', ["This is a string ", "This is a string\u0020"])
