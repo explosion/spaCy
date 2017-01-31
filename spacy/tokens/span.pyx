@@ -167,10 +167,7 @@ cdef class Span:
             vec_len = len(np.asarray(self[0].vector))
 
             if self._vector is None:
-                v = np.zeros((vec_len,), dtype='float32')
-                for t in self:
-                    v += t.vector
-                v /= len(self)
+                v =  sum(t.vector for t in self) / len(self)
                 norm = 0
                 if len([value for i, value in enumerate(v) if value != 0]) != 0:
                     norm = np.linalg.norm(v)

@@ -265,10 +265,7 @@ cdef class Doc:
                 return self.user_hooks['vector'](self)
             if self._vector is None:
                 if len(self):
-                    v = np.zeros((self.vocab.vectors_length,), dtype='float32')
-                    for t in self:
-                        v += t.vector
-                    v /= len(self)
+                    v =  sum(t.vector for t in self) / len(self)
                     norm = 0
                     if len([value for i, value in enumerate(v) if value != 0]) != 0:
                         norm = np.linalg.norm(v)
