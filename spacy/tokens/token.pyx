@@ -477,11 +477,10 @@ cdef class Token:
             if 'conjuncts' in self.doc.user_token_hooks:
                 yield from self.doc.user_token_hooks['conjuncts'](self)
             else:
-                if self.dep_ != 'conj':
-                    for word in self.rights:
-                        if word.dep_ == 'conj':
-                            yield word
-                            yield from word.conjuncts
+                for word in self.rights:
+                    if word.dep_ == 'conj':
+                        yield word
+                            
 
     property ent_type:
         def __get__(self):
