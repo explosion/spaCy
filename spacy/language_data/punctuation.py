@@ -106,7 +106,7 @@ TOKENIZER_INFIXES = (
         r'(?<=[0-9])[+\-\*^](?=[0-9-])',
         r'(?<=[{al}])\.(?=[{au}])'.format(al=ALPHA_LOWER, au=ALPHA_UPPER),
         r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),
-        r'(?<=[{a}])(?:{h})(?=[{a}])'.format(a=ALPHA, h=HYPHENS),
+        r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(a=ALPHA, h=HYPHENS),
         r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=ALPHA)
     ]
 )
