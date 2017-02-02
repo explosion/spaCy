@@ -72,7 +72,7 @@ HYPHENS = _HYPHENS.strip().replace(' ', '|')
 # Prefixes
 
 TOKENIZER_PREFIXES = (
-    ['§', '%', r'\+'] +
+    ['§', '%', '=', r'\+'] +
     LIST_PUNCT +
     LIST_ELLIPSES +
     LIST_QUOTES +
