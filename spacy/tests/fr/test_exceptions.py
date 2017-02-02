@@ -28,3 +28,11 @@ def test_tokenizer_handles_exc_in_text(fr_tokenizer):
     assert tokens[6].text == "janv."
     assert tokens[6].lemma_ == "janvier"
     assert tokens[8].text == "prud’hommes"
+
+
+def test_tokenizer_handles_exc_in_text_2(fr_tokenizer):
+    text = "Cette après-midi, je suis allé dans un restaurant italo-mexicain."
+    tokens = fr_tokenizer(text)
+    assert len(tokens) == 11
+    assert tokens[1].text == "après-midi"
+    assert tokens[9].text == "italo-mexicain"
