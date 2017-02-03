@@ -41,6 +41,43 @@ ABBREVIATIONS = {
     "déc.": [
         {LEMMA: "décembre", ORTH: "déc."}
     ],
+    "av.": [
+        {LEMMA: "avant", ORTH: "av."}
+    ],
+    "apr.": [
+        {LEMMA: "après", ORTH: "apr."}
+    ],
+    "J.-C.": [
+        {LEMMA: "jésus", ORTH: "J."},
+        {LEMMA: "christ", ORTH: "-C."}
+    ],
+    "Dr.": [
+        {LEMMA: "docteur", ORTH: "Dr."}
+    ],
+    "M.": [
+        {LEMMA: "monsieur", ORTH: "M."}
+    ],
+    "Mr.": [
+        {LEMMA: "monsieur", ORTH: "Mr."}
+    ],
+    "Mme.": [
+        {LEMMA: "madame", ORTH: "Mme."}
+    ],
+    "Mlle.": [
+        {LEMMA: "mademoiselle", ORTH: "Mlle."}
+    ],
+    "n°": [
+        {LEMMA: "numéro", ORTH: "n°"}
+    ],
+    "d°": [
+        {LEMMA: "degrés", ORTH: "d°"}
+    ],
+    "St.": [
+        {LEMMA: "saint", ORTH: "St."}
+    ],
+    "Ste.": [
+        {LEMMA: "sainte", ORTH: "Ste."}
+    ]
 }
 
 
@@ -52,7 +89,8 @@ INFIXES_EXCEPTIONS_BASE = ["aujourd'hui",
                            "prud'hommales",
                            "prud'homie", "prud'homies",
                            "prud'hommesque", "prud'hommesques",
-                           "prud'hommesquement"]
+                           "prud'hommesquement",
+                           "c'est-à-dire", "quelqu'un", "rendez-vous"]
 
 INFIXES_EXCEPTIONS = []
 for elision_char in ELISION:
