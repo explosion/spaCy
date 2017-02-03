@@ -28,6 +28,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Rob van Nieuwpoort, [@RvanNieuwpoort](https://github.com/RvanNieuwpoort)
 * Sam Bozek, [@sambozek](https://github.com/sambozek)
 * Sasho Savkov [@savkov](https://github.com/savkov)
+* Thomas Tanon, [@Tpt](https://github.com/Tpt)
 * Tiago Rodrigues, [@TiagoMRodrigues](https://github.com/TiagoMRodrigues)
 * Vsevolod Solovyov, [@vsolovyov](https://github.com/vsolovyov)
 * Wah Loon Keng, [@kengz](https://github.com/kengz)
