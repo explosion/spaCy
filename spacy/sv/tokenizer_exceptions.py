@@ -107,7 +107,6 @@ ORTH_ONLY = [
     "p.g.a.",
     "ref.",
     "resp.",
-    "s.",
     "s.a.s.",
     "s.k.",
     "st.",
