@@ -5,8 +5,8 @@ spaCy is a library for advanced natural language processing in Python and
 Cython. spaCy is built on  the very latest research, but it isn't researchware.  
 It was designed from day one to be used in real products. spaCy currently supports 
 English and German,  as well as tokenization for Chinese, Spanish, Italian, French, 
-Portuguese, Dutch, Swedish and Hungarian. It's commercial  open-source software, 
-released under the MIT license.
+Portuguese, Dutch, Swedish, Finnish and Hungarian. It's commercial  open-source 
+software, released under the MIT license.
 
 💫 **Version 1.6 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
