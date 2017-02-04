@@ -31,6 +31,7 @@ PACKAGES = [
     'spacy.pt',
     'spacy.nl',
     'spacy.sv',
+    'spacy.fi',
     'spacy.language_data',
     'spacy.serialize',
     'spacy.syntax',
