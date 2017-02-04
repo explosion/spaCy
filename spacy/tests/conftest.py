@@ -69,6 +69,11 @@ def fi_tokenizer():
 
 
 @pytest.fixture
+def sv_tokenizer():
+    return Swedish.Defaults.create_tokenizer()
+
+
+@pytest.fixture
 def stringstore():
     return StringStore()
 
