@@ -22,6 +22,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Mark Amery, [@ExplodingCabbage](https://github.com/ExplodingCabbage)
 * Matthew Honnibal, [@honnibal](https://github.com/honnibal)
 * Maxim Samsonov, [@maxirmx](https://github.com/maxirmx)
+* Michael Wallin, [@wallinm1](https://github.com/wallinm1)
 * Oleg Zd, [@olegzd](https://github.com/olegzd)
 * Pokey Rule, [@pokey](https://github.com/pokey)
 * Raphaël Bournhonesque, [@raphael0202](https://github.com/raphael0202)
