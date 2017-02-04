@@ -1,6 +1,10 @@
 spaCy: Industrial-strength NLP
 ******************************
 
+.. image:: https://badges.gitter.im/explosion/spaCy.svg
+   :alt: Join the chat at https://gitter.im/explosion/spaCy
+   :target: https://gitter.im/explosion/spaCy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge&utm_content=badge
+
 spaCy is a library for advanced natural language processing in Python and 
 Cython. spaCy is built on  the very latest research, but it isn't researchware.  
 It was designed from day one to be used in real products. spaCy currently supports 
