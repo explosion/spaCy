@@ -4,6 +4,9 @@ from __future__ import unicode_literals
 from ..symbols import *
 from ..language_data import PRON_LEMMA
 
+
+EXC = {}
+
 # Verbs
 
 for verb_data in [
@@ -25,7 +28,8 @@ for verb_data in [
             {ORTH: "u", LEMMA: PRON_LEMMA, NORM: "du"}
         ]
 
-TOKENIZER_EXCEPTIONS = {
+
+ABBREVIATIONS = {
     "jan.": [
         {ORTH: "jan.", LEMMA: "januari"}
     ],
@@ -147,6 +151,10 @@ TOKENIZER_EXCEPTIONS = {
         {ORTH: "gbg", LEMMA: "Göteborg"}
     ]
 }
+
+
+TOKENIZER_EXCEPTIONS = dict(EXC)
+TOKENIZER_EXCEPTIONS.update(ABBREVIATIONS)
 
 
 ORTH_ONLY = [
