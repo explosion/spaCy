@@ -18,7 +18,7 @@
         scrollY = newScrollY
 
         if(scrollUp && !(isNaN(scrollY) || scrollY <= vh)) nav.classList.add(fixedClass)
-        else if(!scrollUp || (isNaN(scrollY) || scrollY <= vh/2)) nav.classList.remove(fixedClass)
+        else if (!scrollUp || (isNaN(scrollY) || scrollY <= vh/2)) nav.classList.remove(fixedClass)
     }
 
     window.addEventListener('scroll', () => requestAnimationFrame(updateNav))
