@@ -14,6 +14,8 @@ def test_tokenizer_infix_exceptions(fr_tokenizer, text):
 
 @pytest.mark.parametrize('text,lemma', [("janv.", "janvier"),
                                         ("juill.", "juillet"),
+                                        ("Dr.", "docteur"),
+                                        ("av.", "avant"),
                                         ("sept.", "septembre")])
 def test_tokenizer_handles_abbr(fr_tokenizer, text, lemma):
     tokens = fr_tokenizer(text)
