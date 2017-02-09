@@ -75,15 +75,49 @@ def get_tokenizer_exceptions():
         "déc.": [
             {LEMMA: "décembre", ORTH: "déc."}
         ],
+        "apr.": [
+            {LEMMA: "après", ORTH: "apr."}
+        ],
+        "J.-C.": [
+            {LEMMA: "Jésus", ORTH: "J."},
+            {LEMMA: "Christ", ORTH: "-C."}
+        ],
+        "Dr.": [
+            {LEMMA: "docteur", ORTH: "Dr."}
+        ],
+        "M.": [
+            {LEMMA: "monsieur", ORTH: "M."}
+        ],
+        "Mr.": [
+            {LEMMA: "monsieur", ORTH: "Mr."}
+        ],
+        "Mme.": [
+            {LEMMA: "madame", ORTH: "Mme."}
+        ],
+        "Mlle.": [
+            {LEMMA: "mademoiselle", ORTH: "Mlle."}
+        ],
+        "n°": [
+            {LEMMA: "numéro", ORTH: "n°"}
+        ],
+        "d°": [
+            {LEMMA: "degrés", ORTH: "d°"}
+        ],
+        "St.": [
+            {LEMMA: "saint", ORTH: "St."}
+        ],
+        "Ste.": [
+            {LEMMA: "sainte", ORTH: "Ste."}
+        ]
     }
 
     ABBREVIATIONS_2 = [
-        "Dr.",
         "etc.",
     ]
 
     VERBS = {}
-    for verb, verb_lemma in (("a", "avoir"), ("est", "être"), ("semble", "sembler"), ("indique", "indiquer"),
+    for verb, verb_lemma in (("a", "avoir"), ("est", "être"),
+                             ("semble", "sembler"), ("indique", "indiquer"),
                              ("moque", "moquer"), ("passe", "passer")):
         for pronoun in ("elle", "il", "on"):
             token = "{}-t-{}".format(verb, pronoun)
@@ -98,7 +132,8 @@ def get_tokenizer_exceptions():
         {LEMMA: 'ce', ORTH: '-ce'}
     ]
 
-    for pre, pre_lemma in (("qu'", "que"), ("Qu'", "Que"), ("n'", "ne"), ("N'", "Ne")):
+    for pre, pre_lemma in (("qu'", "que"), ("Qu'", "Que"), ("n'", "ne"),
+                           ("N'", "Ne")):
         VERBS['{}est-ce'.format(pre)] = [
             {LEMMA: pre_lemma, ORTH: pre},
             {LEMMA: 'être', ORTH: "est"},
