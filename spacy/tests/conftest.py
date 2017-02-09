@@ -53,7 +53,7 @@ def de_tokenizer():
     return German.Defaults.create_tokenizer()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def fr_tokenizer():
     return French.Defaults.create_tokenizer()
 
