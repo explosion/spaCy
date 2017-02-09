@@ -10,6 +10,7 @@ from ..pt import Portuguese
 from ..nl import Dutch
 from ..sv import Swedish
 from ..hu import Hungarian
+from ..fi import Finnish
 from ..tokens import Doc
 from ..strings import StringStore
 from ..lemmatizer import Lemmatizer
@@ -23,7 +24,7 @@ import pytest
 
 
 LANGUAGES = [English, German, Spanish, Italian, French, Portuguese, Dutch,
-             Swedish, Hungarian]
+             Swedish, Hungarian, Finnish]
 
 
 @pytest.fixture(params=LANGUAGES)
@@ -60,6 +61,16 @@ def fr_tokenizer():
 @pytest.fixture
 def hu_tokenizer():
     return Hungarian.Defaults.create_tokenizer()
+
+
+@pytest.fixture
+def fi_tokenizer():
+    return Finnish.Defaults.create_tokenizer()
+
+
+@pytest.fixture
+def sv_tokenizer():
+    return Swedish.Defaults.create_tokenizer()
 
 
 @pytest.fixture

@@ -19,7 +19,7 @@ First, [do a quick search](https://github.com/issues?q=+is%3Aissue+user%3Aexplos
 
 If you're looking for help with your code, consider posting a question on [StackOverflow](http://stackoverflow.com/questions/tagged/spacy) instead. If you tag it `spacy` and `python`, more people will see it and hopefully be able to help.
 
-When opening an issue, use a descriptive title and include your environment (operating system, Python version, spaCy version). Our [issue template](https://github.com/explosion/spaCy/issues/new) helps you remember the most important details to include.
+When opening an issue, use a descriptive title and include your environment (operating system, Python version, spaCy version). Our [issue template](https://github.com/explosion/spaCy/issues/new) helps you remember the most important details to include. **Pro tip:** If you need to share long blocks of code or logs, you can wrap them in `<details>` and `</details>`. This [collapses the content](https://developer.mozilla.org/en/docs/Web/HTML/Element/details) so it only becomes visible on click, making the issue easier to read and follow.
 
 If you've discovered a bug, you can also submit a [regression test](#fixing-bugs) straight away. When you're opening an issue to report the bug, simply refer to your pull request in the issue body.
 

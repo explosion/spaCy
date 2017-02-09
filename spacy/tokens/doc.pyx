@@ -500,7 +500,8 @@ cdef class Doc:
         by the values of the given attribute ID.
 
         Example:
-            from spacy.en import English, attrs
+            from spacy.en import English
+            from spacy import attrs
             nlp = English()
             tokens = nlp(u'apple apple orange banana')
             tokens.count_by(attrs.ORTH)
@@ -585,9 +586,6 @@ cdef class Doc:
             elif attr_id == POS:
                 for i in range(length):
                     tokens[i].pos = <univ_pos_t>values[i]
-            elif attr_id == TAG:
-                for i in range(length):
-                    tokens[i].tag = <univ_pos_t>values[i]
             elif attr_id == DEP:
                 for i in range(length):
                     tokens[i].dep = values[i]

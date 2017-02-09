@@ -12,6 +12,8 @@ from keras.models import Sequential, Model, model_from_json
 from keras.regularizers import l2
 from keras.optimizers import Adam
 from keras.layers.normalization import BatchNormalization
+from keras.layers.pooling import GlobalAveragePooling1D, GlobalMaxPooling1D
+from keras.layers import Merge
 
 
 def build_model(vectors, shape, settings):
@@ -29,11 +31,11 @@ def build_model(vectors, shape, settings):
     align = _SoftAlignment(max_length, nr_hidden)
     compare = _Comparison(max_length, nr_hidden, dropout=settings['dropout'])
     entail = _Entailment(nr_hidden, nr_class, dropout=settings['dropout'])
-    
+
     # Declare the model as a computational graph.
     sent1 = embed(ids1) # Shape: (i, n)
     sent2 = embed(ids2) # Shape: (j, n)
-    
+
     if settings['gru_encode']:
         sent1 = encode(sent1)
         sent2 = encode(sent2)
@@ -42,12 +44,12 @@ def build_model(vectors, shape, settings):
 
     align1 = align(sent2, attention)
     align2 = align(sent1, attention, transpose=True)
-    
+
     feats1 = compare(sent1, align1)
     feats2 = compare(sent2, align2)
-    
+
     scores = entail(feats1, feats2)
-    
+
     # Now that we have the input/output, we can construct the Model object...
     model = Model(input=[ids1, ids2], output=[scores])
 
@@ -93,7 +95,7 @@ class _StaticEmbedding(object):
         def get_output_shape(shapes):
             print(shapes)
             return shapes[0]
-        mod_sent = self.mod_ids(sentence) 
+        mod_sent = self.mod_ids(sentence)
         tuning = self.tune(mod_sent)
         #tuning = merge([tuning, mod_sent],
         #    mode=lambda AB: AB[0] * (K.clip(K.cast(AB[1], 'float32'), 0, 1)),
@@ -129,7 +131,7 @@ class _Attention(object):
         self.model.add(Dense(nr_hidden, name='attend2',
             init='he_normal', W_regularizer=l2(L2), activation='relu'))
         self.model = TimeDistributed(self.model)
-    
+
     def __call__(self, sent1, sent2):
         def _outer(AB):
             att_ji = K.batch_dot(AB[1], K.permute_dimensions(AB[0], (0, 2, 1)))
@@ -158,7 +160,7 @@ class _SoftAlignment(object):
             return K.batch_dot(sm_att, mat)
         return merge([attention, sentence], mode=_normalize_attention,
                       output_shape=(self.max_length, self.nr_hidden)) # Shape: (i, n)
- 
+
 
 class _Comparison(object):
     def __init__(self, words, nr_hidden, L2=0.0, dropout=0.0):
@@ -176,10 +178,12 @@ class _Comparison(object):
 
     def __call__(self, sent, align, **kwargs):
         result = self.model(merge([sent, align], mode='concat')) # Shape: (i, n)
-        result = _GlobalSumPooling1D()(result, mask=self.words)
-        result = BatchNormalization()(result)
+        avged = GlobalAveragePooling1D()(result, mask=self.words)
+        maxed = GlobalMaxPooling1D()(result, mask=self.words)
+        merged = merge([avged, maxed])
+        result = BatchNormalization()(merged)
         return result
- 
+
 
 class _Entailment(object):
     def __init__(self, nr_hidden, nr_out, dropout=0.0, L2=0.0):
@@ -251,7 +255,7 @@ def test_fit_model():
     shape = (10, 16, 3)
     settings = {'lr': 0.001, 'dropout': 0.2, 'gru_encode':True}
     model = build_model(vectors, shape, settings)
-    
+
     train_X = _generate_X(20, shape[0], vectors.shape[1])
     train_Y = _generate_Y(20, shape[2])
     dev_X = _generate_X(15, shape[0], vectors.shape[1])
@@ -259,8 +263,6 @@ def test_fit_model():
 
     model.fit(train_X, train_Y, validation_data=(dev_X, dev_Y), nb_epoch=5,
               batch_size=4)
-
-
 
 
 __all__ = [build_model]

@@ -54,7 +54,7 @@ p
     doc = nlp(u'London is a big city in the United Kingdom.')
     doc.ents = []
     assert doc[0].ent_type_ == ''
-    doc.ents = [Span(0, 1, label='GPE')]
+    doc.ents = [Span(doc, 0, 1, label=doc.vocab.strings['GPE'])]
     assert doc[0].ent_type_ == 'GPE'
     doc.ents = []
     doc.ents = [(u'LondonCity', u'GPE', 0, 1)]
