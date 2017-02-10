@@ -164,11 +164,11 @@ def get_tokenizer_exceptions():
 HYPHEN_PREFIX = [
     'a[ée]ro', 'abat', 'a[fg]ro', 'after', 'am[ée]ricano', 'anglo', 'anti', 'apr[èe]s', 'arabo', 'arcs?', 'archi',
     'arrières?', 'avant', 'auto',
-    'banc', 'bas(ses?)?', 'bec?', 'best', 'bio?', 'bien', 'blanc', 'bo[îi]te', 'bois', 'bou(c|rg)', 'b[êe]ta',
-    'cache', 'cap(ello)?', 'champ', 'chapelle', 'ch[âa]teau', 'cha(ud|t)e?s?', 'chou', 'chromo', 'claire?s?',
-    'co(de|ca)?', 'compte', 'contre', 'cordon', 'coupe?', 'court', 'crash', 'crise', 'croche', 'cross', 'cyber',
+    'banc', 'bas(?:ses?)?', 'bec?', 'best', 'bio?', 'bien', 'blanc', 'bo[îi]te', 'bois', 'bou(?:c|rg)', 'b[êe]ta',
+    'cache', 'cap(?:ello)?', 'champ', 'chapelle', 'ch[âa]teau', 'cha(?:ud|t)e?s?', 'chou', 'chromo', 'claire?s?',
+    'co(?:de|ca)?', 'compte', 'contre', 'cordon', 'coupe?', 'court', 'crash', 'crise', 'croche', 'cross', 'cyber',
     'côte',
-    'demi', 'di(sney)?', 'd[ée]s?', 'double', 'dys',
+    'demi', 'di(?:sney)?', 'd[ée]s?', 'double', 'dys',
     'entre', 'est', 'ethno', 'extra', 'extrême', '[ée]co',
     'fil', 'fort', 'franco?s?',
     'gallo', 'gardes?', 'gastro', 'grande?', 'gratte', 'gr[ée]co', 'gros', 'g[ée]o',
@@ -176,17 +176,17 @@ HYPHEN_PREFIX = [
     'indo', 'infra', 'inter', 'intra', 'islamo', 'italo',
     'jean',
     'labio', 'latino', 'live', 'lot', 'louis',
-    'm[ai]cro', 'mesnil', 'mi(ni)?', 'mono', 'mont?s?', 'moyen', 'multi', 'm[ée]cano', 'm[ée]dico', 'm[ée]do', 'm[ée]ta',
+    'm[ai]cro', 'mesnil', 'mi(?:ni)?', 'mono', 'mont?s?', 'moyen', 'multi', 'm[ée]cano', 'm[ée]dico', 'm[ée]do', 'm[ée]ta',
     'mots?',
     'noix', 'non', 'nord', 'notre', 'n[ée]o',
     'ouest', 'outre', 'ouvre',
     'passe', 'perce', 'pharmaco', 'ph[oy]to', 'pique', 'poissons?', 'ponce', 'pont', 'po[rs]t',
-    'primo', 'pro(cès|to)?', 'pare', 'petite?', 'porte', 'pré', 'prêchi', 'pseudo', 'pêle', 'péri', 'puy',
+    'primo', 'pro(?:cès|to)?', 'pare', 'petite?', 'porte', 'pré', 'prêchi', 'pseudo', 'pêle', 'péri', 'puy',
     'quasi',
     'recourt', 'rythmo', 'r[ée]', 'r[ée]tro',
     'sans', 'sainte?s?', 'semi', 'social', 'sous', 'su[bdr]', 'super',
-    'tire', 'thermo', 'tiers', 'trans', 'tr(i|ou)', 't[ée]l[ée]',
-    'vi[cd]e', 'vid[ée]o', 'vie(ux|illes?)', 'vill(e|eneuve|ers|ette|iers|y)',
+    'tire', 'thermo', 'tiers', 'trans', 'tr(?:i|ou)', 't[ée]l[ée]',
+    'vi[cd]e', 'vid[ée]o', 'vie(?:ux|illes?)', 'vill(?:e|eneuve|ers|ette|iers|y)',
     'ultra',
     'à',
     '[ée]lectro', '[ée]qui'
@@ -212,7 +212,7 @@ REGULAR_EXP += ["^{prefix}[{elision}][{alpha}][{alpha}{elision}{hyphen}\-]*$".fo
 
 REGULAR_EXP.append(_URL_PATTERN)
 
-TOKEN_MATCH = re.compile('|'.join('({})'.format(m) for m in REGULAR_EXP), re.IGNORECASE).match
+TOKEN_MATCH = re.compile('|'.join('(?:{})'.format(m) for m in REGULAR_EXP), re.IGNORECASE).match
 
 TOKENIZER_EXCEPTIONS = get_tokenizer_exceptions()
 
