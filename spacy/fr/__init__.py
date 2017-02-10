@@ -6,7 +6,6 @@ from ..attrs import LANG
 
 from .language_data import *
 from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
-from .tokenizer_exceptions import get_tokenizer_exceptions, TOKEN_MATCH
 
 
 class FrenchDefaults(BaseDefaults):
@@ -20,7 +19,7 @@ class FrenchDefaults(BaseDefaults):
 
     @classmethod
     def create_tokenizer(cls, nlp=None):
-        cls.tokenizer_exceptions = get_tokenizer_exceptions()
+        cls.tokenizer_exceptions = TOKENIZER_EXCEPTIONS
         return super(FrenchDefaults, cls).create_tokenizer(nlp)
 
 
