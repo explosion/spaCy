@@ -13,7 +13,6 @@ try:
 except NameError:
     basestring = str
 
-
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .tagger import Tagger
@@ -32,6 +31,8 @@ from .pipeline import DependencyParser, EntityRecognizer
 from .syntax.arc_eager import ArcEager
 from .syntax.ner import BiluoPushDown
 
+from .vectors import VectorStore, VectorMap
+from .txtvec2bin import vec2bin
 
 class BaseDefaults(object):
     @classmethod

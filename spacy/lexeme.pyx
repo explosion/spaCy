@@ -9,7 +9,9 @@ from cython.view cimport array as cvarray
 cimport numpy as np
 np.import_array()
 
-
+import array
+import vectors
+import numpy as np
 
 from libc.string cimport memset
 
@@ -107,25 +109,27 @@ cdef class Lexeme:
         Returns:
             score (float): A scalar similarity score. Higher is more similar.
         '''
-        if self.vector_norm == 0 or other.vector_norm == 0:
-            return 0.0
-        return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+        n0, v0 = self.vocab.vector_map[self.orth_]
+        v1 = other.vector
+        n1 = other.vector_norm
+        if n0 == 0 or n1 == 0:
+            return 0
+        return numpy.dot(v0, v1)
 
     property has_vector:
         def __get__(self):
             cdef int i
+            _, v = self.vocab.vector_map[self.orth_]
             for i in range(self.vocab.vectors_length):
-                if self.c.vector[i] != 0:
+                if v[i] != 0:
                     return True
             else:
                 return False
 
     property vector_norm:
         def __get__(self):
-            return self.c.l2_norm
-
-        def __set__(self, float value):
-            self.c.l2_norm = value
+            n, _ = self.vocab.vector_map[self.orth_]
+            return n
 
     property vector:
         def __get__(self):
@@ -133,22 +137,18 @@ cdef class Lexeme:
             if length == 0:
                 raise ValueError(
                     "Word vectors set to length 0. This may be because the "
-                    "data is not installed. If you haven't already, run"
-                    "\npython -m spacy.%s.download all\n"
-                    "to install the data." % self.vocab.lang
+                     "data is not installed. If you haven't already, run"
+                     "\npython -m spacy.%s.download all\n"
+                     "to install the data." % self.vocab.lang
                 )
- 
-            vector_view = <float[:length,]>self.c.vector
-            return numpy.asarray(vector_view)
+            str = self.vocab.strings[self.c.orth]
+            _, v = self.vocab.vector_map[str]
+            return v
 
         def __set__(self, vector):
             assert len(vector) == self.vocab.vectors_length
-            cdef float value
-            cdef double norm = 0.0
-            for i, value in enumerate(vector):
-                self.c.vector[i] = value
-                norm += value * value
-            self.c.l2_norm = sqrt(norm)
+            str = self.vocab.strings[self.c.orth]
+            self.vocab.vector_map[str] = np.asarray(vector, dtype=np.float32)
 
     property rank:
         def __get__(self):

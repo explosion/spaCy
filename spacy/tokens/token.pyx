@@ -113,10 +113,12 @@ cdef class Token:
             score (float): A scalar similarity score. Higher is more similar.
         '''
         if 'similarity' in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks['similarity'](self)
-        if self.vector_norm == 0 or other.vector_norm == 0:
-            return 0.0
-        return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
+            return self.doc.user_token_hooks['similarity'](self)
+        v, ov = self.vector, other.vector
+        n, on = self.vector_norm, other.vector_norm
+        if n == 0 or on == 0:
+            return 0
+        return numpy.dot(v, ov)
 
     property lex_id:
         def __get__(self):
@@ -215,9 +217,10 @@ cdef class Token:
         def __get__(self):
             if 'has_vector' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['has_vector'](self)
-            cdef int i
+            str = self.vocab.strings[self.c.lex.orth]
+            _, vec = self.vocab.vector_map[str]
             for i in range(self.vocab.vectors_length):
-                if self.c.lex.vector[i] != 0:
+                if vec[i] != 0:
                     return True
             else:
                 return False
@@ -239,8 +242,10 @@ cdef class Token:
                     "\npython -m spacy.%s.download all\n"
                     "to install the data." % self.vocab.lang
                 )
-            vector_view = <float[:length,]>self.c.lex.vector
-            return numpy.asarray(vector_view)
+            str = self.vocab.strings[self.c.lex.orth]
+            _, vec = self.vocab.vector_map[str]
+
+            return vec
 
     property repvec:
         def __get__(self):
@@ -253,7 +258,9 @@ cdef class Token:
         def __get__(self):
             if 'vector_norm' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['vector_norm'](self)
-            return self.c.lex.l2_norm
+            str = self.vocab.strings[self.c.lex.orth]
+            n, _ = self.vocab.vector_map[str]
+            return n
 
     property n_lefts:
         def __get__(self):
