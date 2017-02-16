@@ -472,7 +472,7 @@ cdef class Vocab:
         cdef int32_t vec_len = -1
         cdef double norm = 0.0
 
-        whitespace_pattern = re.compile(r'\s')
+        whitespace_pattern = re.compile(r'\s', re.UNICODE)
 
         for line_num, line in enumerate(file_):
             pieces = line.split()
