@@ -1,17 +1,22 @@
 from __future__ import unicode_literals
 
+from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 from libc.string cimport memset
 from libc.stdint cimport int32_t
+from libc.stdint cimport uint64_t
 from libc.math cimport sqrt
 
 from pathlib import Path
 import bz2
+import io
+import math
 import ujson as json
-import re
+import tempfile
 
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
 from .strings cimport hash_string
+from .orth cimport word_shape
 from .typedefs cimport attr_t
 from .cfile cimport CFile
 from .lemmatizer import Lemmatizer
@@ -24,6 +29,7 @@ from . import symbols
 from cymem.cymem cimport Address
 from .serialize.packer cimport Packer
 from .attrs cimport PROB, LANG
+from . import deprecated
 from . import util
 
 
@@ -471,12 +477,9 @@ cdef class Vocab:
         cdef attr_t orth
         cdef int32_t vec_len = -1
         cdef double norm = 0.0
-
-        whitespace_pattern = re.compile(r'\s')
-
         for line_num, line in enumerate(file_):
             pieces = line.split()
-            word_str = " " if whitespace_pattern.match(line) else pieces.pop(0)
+            word_str = " " if line.startswith(" ") else pieces.pop(0)
             if vec_len == -1:
                 vec_len = len(pieces)
             elif vec_len != len(pieces):
