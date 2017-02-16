@@ -1,5 +1,6 @@
 # coding: utf-8
 
+from __future__ import unicode_literals
 from io import StringIO
 
 word2vec_str = """, -0.046107 -0.035951 -0.560418
