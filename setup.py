@@ -144,7 +144,7 @@ def generate_cython(root, source):
     print('Cythonizing sources')
     p = subprocess.call([sys.executable,
                          os.path.join(root, 'bin', 'cythonize.py'),
-                         source], shell=True, env=os.environ)
+                         source], env=os.environ)
     if p != 0:
         raise RuntimeError('Running cythonize failed')
 

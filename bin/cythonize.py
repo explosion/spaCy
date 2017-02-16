@@ -56,7 +56,7 @@ def process_pyx(fromfile, tofile):
     try:
         try:
             r = subprocess.call(['cython'] + flags + ['-o', tofile, fromfile],
-                                shell=True, env=os.environ) # See Issue #791
+                                env=os.environ) # See Issue #791
             if r != 0:
                 raise Exception('Cython failed')
         except OSError:
