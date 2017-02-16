@@ -12,6 +12,7 @@ import io
 import math
 import ujson as json
 import tempfile
+import re
 
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
@@ -477,9 +478,12 @@ cdef class Vocab:
         cdef attr_t orth
         cdef int32_t vec_len = -1
         cdef double norm = 0.0
+
+        whitespace_pattern = re.compile(r'\s')
+
         for line_num, line in enumerate(file_):
             pieces = line.split()
-            word_str = " " if line.startswith(" ") else pieces.pop(0)
+            word_str = " " if whitespace_pattern.match(line) else pieces.pop(0)
             if vec_len == -1:
                 vec_len = len(pieces)
             elif vec_len != len(pieces):
