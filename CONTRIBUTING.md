@@ -40,7 +40,7 @@ We use the following system to tag our issues:
 | [`pip`](https://github.com/explosion/spaCy/labels/pip), [`conda`](https://github.com/explosion/spaCy/labels/conda) | Issues related to the specific package managers |
 | [`duplicate`](https://github.com/explosion/spaCy/labels/duplicate) | Duplicates, i.e. issues that have been reported before |
 | [`help wanted`](https://github.com/explosion/spaCy/labels/help%20wanted) | Requests for contributions |
-
+| [`help wanted (easy)`](https://github.com/explosion/spaCy/labels/help%20wanted%20%28easy%29) | Requests for contributions suitable for begginners |
 
 ## Contributing to the code base
 
