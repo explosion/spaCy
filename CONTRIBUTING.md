@@ -39,6 +39,7 @@ We use the following system to tag our issues:
 | [`linux`](https://github.com/explosion/spaCy/labels/linux), [`osx`](https://github.com/explosion/spaCy/labels/osx), [`windows`](https://github.com/explosion/spaCy/labels/windows) | Issues related to the specific operating systems |
 | [`pip`](https://github.com/explosion/spaCy/labels/pip), [`conda`](https://github.com/explosion/spaCy/labels/conda) | Issues related to the specific package managers |
 | [`duplicate`](https://github.com/explosion/spaCy/labels/duplicate) | Duplicates, i.e. issues that have been reported before |
+| [`meta`](https://github.com/explosion/spaCy/labels/duplicate) | Meta topics, e.g. repo organisation and issue management |
 | [`help wanted`](https://github.com/explosion/spaCy/labels/help%20wanted) | Requests for contributions |
 | [`help wanted (easy)`](https://github.com/explosion/spaCy/labels/help%20wanted%20%28easy%29) | Requests for contributions suitable for begginners |
 
