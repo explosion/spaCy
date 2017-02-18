@@ -25,7 +25,7 @@ If you've discovered a bug, you can also submit a [regression test](#fixing-bugs
 
 ### Issue labels
 
-We use the following system to tag our issues:
+To distinguish issues that are opened by us, the maintainers, we usually add a 💫 to the title. We also use the following system to tag our issues:
 
 | Issue label | Description |
 | --- | --- |
