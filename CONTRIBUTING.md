@@ -45,13 +45,11 @@ To distinguish issues that are opened by us, the maintainers, we usually add a ð
 
 ## Contributing to the code base
 
-Coming soon.
-
+You don't have to be an NLP expert or Python pro to contribute, and we're happy to help you get started. If you're new to spaCy, a good place to start is the [`help wanted (easy)`](https://github.com/explosion/spaCy/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted+%28easy%29%22) label, which we use to tag bugs and feature requests that are easy and self-contained. If you've decided to take on one of these problems and you're making good progress, don't forget to add a quick comment to the issue. You can also use the issue to ask questions, or share your work in progress.
 
 ### Conventions for Python
 
 Coming soon.
-
 
 ### Conventions for Cython
 
