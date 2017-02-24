@@ -25,7 +25,7 @@ If you've discovered a bug, you can also submit a [regression test](#fixing-bugs
 
 ### Issue labels
 
-We use the following system to tag our issues:
+To distinguish issues that are opened by us, the maintainers, we usually add a 💫 to the title. We also use the following system to tag our issues:
 
 | Issue label | Description |
 | --- | --- |
@@ -39,18 +39,17 @@ We use the following system to tag our issues:
 | [`linux`](https://github.com/explosion/spaCy/labels/linux), [`osx`](https://github.com/explosion/spaCy/labels/osx), [`windows`](https://github.com/explosion/spaCy/labels/windows) | Issues related to the specific operating systems |
 | [`pip`](https://github.com/explosion/spaCy/labels/pip), [`conda`](https://github.com/explosion/spaCy/labels/conda) | Issues related to the specific package managers |
 | [`duplicate`](https://github.com/explosion/spaCy/labels/duplicate) | Duplicates, i.e. issues that have been reported before |
+| [`meta`](https://github.com/explosion/spaCy/labels/meta) | Meta topics, e.g. repo organisation and issue management |
 | [`help wanted`](https://github.com/explosion/spaCy/labels/help%20wanted) | Requests for contributions |
 | [`help wanted (easy)`](https://github.com/explosion/spaCy/labels/help%20wanted%20%28easy%29) | Requests for contributions suitable for begginners |
 
 ## Contributing to the code base
 
-Coming soon.
-
+You don't have to be an NLP expert or Python pro to contribute, and we're happy to help you get started. If you're new to spaCy, a good place to start is the [`help wanted (easy)`](https://github.com/explosion/spaCy/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted+%28easy%29%22) label, which we use to tag bugs and feature requests that are easy and self-contained. If you've decided to take on one of these problems and you're making good progress, don't forget to add a quick comment to the issue. You can also use the issue to ask questions, or share your work in progress.
 
 ### Conventions for Python
 
 Coming soon.
-
 
 ### Conventions for Cython
 
