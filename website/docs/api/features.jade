@@ -1,0 +1,138 @@
+//- 💫 DOCS > API > LINEAR MOEL FEATURES
+
+include ../../_includes/_mixins
+
+p
+    |  There are two popular strategies for putting together machine learning
+    |  models for NLP: sparse linear models, and neural networks. To solve NLP
+    |  problems with linear models, feature templates need to be assembled that
+    |  combine multiple atomic predictors. This page documents the atomic
+    |  predictors used in the spaCy 1.0 #[+api("parser") #[code Parser]],
+    |  #[+api("tagger") #[code Tagger]] and
+    |  #[+api("entityrecognizer") #[code EntityRecognizer]].
+
+p
+    |  To understand the scheme, recall that spaCy's #[code Parser] and
+    |  #[code EntityRecognizer] are implemented as push-down automata. They
+    |  maintain a "stack" that holds the current entity, and a "buffer"
+    |  consisting of the words to be processed.
+
+p
+    |  Each state consists of the words on the stack (if any), which consistute
+    |  the current entity being constructed. We also have the current word, and
+    |  the two subsequent words. Finally, we also have the entities previously
+    |  built.
+
+p
+    |  This gives us a number of tokens to ask questions about, to make the
+    |  features. About each of these tokens, we can ask about a number of
+    |  different properties. Each feature identifier asks about a specific
+    |  property of a specific token of the context.
+
++h(2, "tokens") Context tokens
+
++table([ "ID", "Description" ])
+    +row
+        +cell #[code S0]
+        +cell
+            |  The first word on the stack, i.e. the token most recently added
+            |  to the current entity.
+
+    +row
+        +cell #[code S1]
+        +cell The second word on the stack, i.e. the second most recently added.
+
+    +row
+        +cell #[code S2]
+        +cell The third word on the stack, i.e. the third most recently added.
+
+    +row
+        +cell #[code N0]
+        +cell The first word of the buffer, i.e. the current word being tagged.
+
+    +row
+        +cell #[code N1]
+        +cell The second word of the buffer.
+
+    +row
+        +cell #[code N2]
+        +cell The third word of the buffer.
+
+    +row
+        +cell #[code P1]
+        +cell The word immediately before #[code N0].
+
+    +row
+        +cell #[code P2]
+        +cell The second word before #[code N0].
+
+    +row
+        +cell #[code E0]
+        +cell The first word of the previously constructed entity.
+
+    +row
+        +cell #[code E1]
+        +cell The first word of the second previously constructed entity.
+
+p About each of these tokens, we can ask:
+
++table([ "ID", "Attribute", "Description" ])
+    +row
+        +cell #[code N0w]
+        +cell #[code token.orth]
+        +cell The word form.
+
+    +row
+        +cell #[code N0W]
+        +cell #[code token.lemma]
+        +cell The word's lemma.
+
+    +row
+        +cell #[code N0p]
+        +cell #[code token.tag]
+        +cell The word's (full) POS tag.
+
+    +row
+        +cell #[code N0c]
+        +cell #[code token.cluster]
+        +cell The word's (full) Brown cluster.
+
+    +row
+        +cell #[code N0c4]
+        +cell -
+        +cell First four digit prefix of the word's Brown cluster.
+
+    +row
+        +cell #[code N0c6]
+        +cell -
+        +cell First six digit prefix of the word's Brown cluster.
+
+    +row
+        +cell #[code N0L]
+        +cell -
+        +cell The word's dependency label. Not used as a feature in the NER.
+
+    +row
+        +cell #[code N0_prefix]
+        +cell #[code token.prefix]
+        +cell The first three characters of the word.
+
+    +row
+        +cell #[code N0_suffix]
+        +cell #[code token.suffix]
+        +cell The last three characters of the word.
+
+    +row
+        +cell #[code N0_shape]
+        +cell #[code token.shape]
+        +cell The word's shape, i.e. is it alphabetic, numeric, etc.
+
+    +row
+        +cell #[code N0_ne_iob]
+        +cell #[code token.ent_iob]
+        +cell The Inside/Outside/Begin code of the word's NER tag.
+
+    +row
+        +cell #[code N0_ne_type]
+        +cell #[code token.ent_type]
+        +cell The word's NER type.

@@ -21,7 +21,8 @@
             "GoldParse": "goldparse"
         },
         "Other": {
-            "Annotation Specs": "annotation"
+            "Annotation Specs": "annotation",
+            "Feature Scheme": "features"
         }
     },
 
@@ -111,5 +112,9 @@
 
     "annotation": {
         "title": "Annotation Specifications"
+    },
+
+    "features": {
+        "title": "Linear Model Feature Scheme"
     }
 }
