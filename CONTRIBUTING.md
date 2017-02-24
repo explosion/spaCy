@@ -91,7 +91,7 @@ Our [website and docs](https://spacy.io) are implemented in [Jade/Pug](https://w
 ```bash
 sudo npm install --global harp
 git clone https://github.com/explosion/spaCy
-cd website
+cd spaCy/website
 harp server
 ```
 
