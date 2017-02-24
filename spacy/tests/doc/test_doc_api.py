@@ -186,9 +186,6 @@ def test_doc_api_runtime_error(en_tokenizer):
         if len(np) > 1:
             nps.append((np.start_char, np.end_char, np.root.tag_, np.text, np.root.ent_type_))
     for np in nps:
-        print(np)
-        for word in doc:
-            print(word.idx, word.text, word.head.i, word.head.text)
         doc.merge(*np)
 
 
