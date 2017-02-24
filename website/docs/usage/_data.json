@@ -189,6 +189,12 @@
                 "url": "https://books.google.de/books?id=vbQlDQAAQBAJ",
                 "author": "Andreas C. Müller and Sarah Guido (O'Reilly, 2016)",
                 "description": "Andreas is a lead developer of Scikit-Learn, and Sarah is a lead data scientist at Mashable. We're proud to get a mention."
+            },
+
+            "Text Analytics with Python: A Practical Real-World Approach to Gaining Actionable Insights from your Data": {
+                "url": "https://www.amazon.com/Text-Analytics-Python-Real-World-Actionable/dp/148422387X",
+                "author": "Dipanjan Sarkar (Apress / Springer, 2016)",
+                "description": "Derive useful insights from your data using Python. Learn the techniques related to natural language processing and text analytics, and gain the skills to know which technique is best suited to solve a particular problem."
             }
         },
         "research": {
@@ -312,6 +318,12 @@
                 "url": "https://medium.com/redsift-outbox/what-time-cc9ce0c2aed2",
                 "author": "Chris Savvopoulos",
                 "tags": ["ner"]
+            },
+
+            "Advanced text analysis with spaCy and Scikit-Learn": {
+                "url": "https://github.com/JonathanReeve/advanced-text-analysis-workshop-2017/blob/master/advanced-text-analysis.ipynb",
+                "author": "Jonathan Reeve",
+                "tags": ["jupyter", "scikit-learn"]
             }
         },
 
