@@ -105,3 +105,21 @@ def test_matcher_match_zero_plus(matcher):
     matcher.add('Quote', '', {}, [pattern])
     doc = get_doc(matcher.vocab, words)
     assert len(matcher(doc)) == 1
+
+def test_matcher_match_one_plus(matcher):
+    control = Matcher(matcher.vocab)
+    control.add_pattern('BasicPhilippe',
+            [{'ORTH': 'Philippe'}], label=321)
+
+    doc = get_doc(control.vocab, ['Philippe', 'Philippe'])
+
+    m = control(doc)
+    assert len(m) == 2
+    matcher.add_pattern('KleenePhilippe',
+        [
+            {'ORTH': 'Philippe', 'OP': '1'},
+            {'ORTH': 'Philippe', 'OP': '+'}], label=321)
+    m = matcher(doc)
+    assert len(m) == 1
+
+
