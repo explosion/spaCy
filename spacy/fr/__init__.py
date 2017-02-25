@@ -19,7 +19,7 @@ class FrenchDefaults(BaseDefaults):
 
     @classmethod
     def create_tokenizer(cls, nlp=None):
-        cls.tokenizer_exceptions = TOKENIZER_EXCEPTIONS
+        cls.tokenizer_exceptions = get_tokenizer_exceptions()
         return super(FrenchDefaults, cls).create_tokenizer(nlp)
 
 
