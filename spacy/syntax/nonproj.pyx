@@ -8,7 +8,7 @@ from spacy.attrs import DEP, HEAD
 def ancestors(tokenid, heads):
     # returns all words going from the word up the path to the root
     # the path to root cannot be longer than the number of words in the sentence
-    # this function ends after at most len(heads) steps 
+    # this function ends after at most len(heads) steps
     # because it would otherwise loop indefinitely on cycles
     head = tokenid
     cnt = 0
@@ -180,7 +180,7 @@ class PseudoProjectivity:
             next_queue = []
             for qtoken in queue:
                 for child in qtoken.children:
-                    if child.is_space: continue                        
+                    if child.is_space: continue
                     if child == token: continue
                     if child.dep_ == headlabel:
                         return child

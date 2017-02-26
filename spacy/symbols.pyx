@@ -91,6 +91,7 @@ IDS = {
     "ADV": ADV,
     "AUX": AUX,
     "CONJ": CONJ,
+    "CCONJ": CCONJ, # U20
     "DET": DET,
     "INTJ": INTJ,
     "NOUN": NOUN,
@@ -108,11 +109,14 @@ IDS = {
 
     "Animacy_anim": Animacy_anim,
     "Animacy_inam": Animacy_inam,
+    "Animacy_hum": Animacy_hum, # U20
     "Aspect_freq": Aspect_freq,
     "Aspect_imp": Aspect_imp,
     "Aspect_mod": Aspect_mod,
     "Aspect_none": Aspect_none,
     "Aspect_perf": Aspect_perf,
+    "Aspect_iter": Aspect_iter, # U20
+    "Aspect_hab": Aspect_hab, # U20
     "Case_abe": Case_abe,
     "Case_abl": Case_abl,
     "Case_abs": Case_abs,
@@ -121,10 +125,12 @@ IDS = {
     "Case_all": Case_all,
     "Case_cau": Case_cau,
     "Case_com": Case_com,
+    "Case_cmp": Case_cmp, # U20
     "Case_dat": Case_dat,
     "Case_del": Case_del,
     "Case_dis": Case_dis,
     "Case_ela": Case_ela,
+    "Case_equ": Case_equ, # U20
     "Case_ess": Case_ess,
     "Case_gen": Case_gen,
     "Case_ill": Case_ill,
@@ -143,7 +149,9 @@ IDS = {
     "Definite_two": Definite_two,
     "Definite_def": Definite_def,
     "Definite_red": Definite_red,
+    "Definite_cons": Definite_cons, # U20
     "Definite_ind": Definite_ind,
+    "Definite_spec": Definite_spec, # U20
     "Degree_cmp": Degree_cmp,
     "Degree_comp": Degree_comp,
     "Degree_none": Degree_none,
@@ -152,6 +160,8 @@ IDS = {
     "Degree_abs": Degree_abs,
     "Degree_com": Degree_com,
     "Degree_dim ": Degree_dim, # du
+    "Degree_equ": Degree_equ, # U20
+    "Evident_nfh": Evident_nfh, # U20
     "Gender_com": Gender_com,
     "Gender_fem": Gender_fem,
     "Gender_masc": Gender_masc,
@@ -163,16 +173,21 @@ IDS = {
     "Mood_pot": Mood_pot,
     "Mood_sub": Mood_sub,
     "Mood_opt": Mood_opt,
+    "Mood_prp": Mood_prp, # U20
+    "Mood_adm": Mood_adm, # U20
     "Negative_neg": Negative_neg,
     "Negative_pos": Negative_pos,
     "Negative_yes": Negative_yes,
+    "Polarity_neg": Polarity_neg, # U20
+    "Polarity_pos": Polarity_pos, # U20
     "Number_com": Number_com,
     "Number_dual": Number_dual,
     "Number_none": Number_none,
     "Number_plur": Number_plur,
     "Number_sing": Number_sing,
     "Number_ptan ": Number_ptan, # bg
-    "Number_count ": Number_count, # bg
+    "Number_count ": Number_count, # bg, U20
+    "Number_tri": Number_tri, # U20
     "NumType_card": NumType_card,
     "NumType_dist": NumType_dist,
     "NumType_frac": NumType_frac,
@@ -198,7 +213,8 @@ IDS = {
     "PronType_rel": PronType_rel,
     "PronType_tot": PronType_tot,
     "PronType_clit": PronType_clit,
-    "PronType_exc ": PronType_exc, # es, ca, it, fa,
+    "PronType_exc": PronType_exc, # es, ca, it, fa, U20
+    "PronType_emp": PronType_emp, # U20
     "Reflex_yes": Reflex_yes,
     "Tense_fut": Tense_fut,
     "Tense_imp": Tense_imp,
@@ -214,12 +230,17 @@ IDS = {
     "VerbForm_partPres": VerbForm_partPres,
     "VerbForm_sup": VerbForm_sup,
     "VerbForm_trans": VerbForm_trans,
+    "VerbForm_conv": VerbForm_conv, # U20
     "VerbForm_gdv ": VerbForm_gdv, # la,
+    "VerbForm_vnoun": VerbForm_vnoun, # U20
     "Voice_act": Voice_act,
     "Voice_cau": Voice_cau,
     "Voice_pass": Voice_pass,
-    "Voice_mid ": Voice_mid, # gkc,
+    "Voice_mid ": Voice_mid, # gkc, U20
     "Voice_int ": Voice_int, # hb,
+    "Voice_antip": Voice_antip, # U20
+    "Voice_dir": Voice_dir, # U20
+    "Voice_inv": Voice_inv, # U20
     "Abbr_yes ": Abbr_yes, # cz, fi, sl, U,
     "AdpType_prep ": AdpType_prep, # cz, U,
     "AdpType_post ": AdpType_post, # U,
@@ -285,6 +306,10 @@ IDS = {
     "Number_psee_plur ": Number_psee_plur, # U,
     "Number_psor_sing ": Number_psor_sing, # cz, fi, sl, U,
     "Number_psor_plur ": Number_psor_plur, # cz, fi, sl, U,
+    "Number_pauc": Number_pauc, # U20
+    "Number_grpa": Number_grpa, # U20
+    "Number_grpl": Number_grpl, # U20
+    "Number_inv": Number_inv, # U20
     "NumForm_digit ": NumForm_digit, # cz, sl, U,
     "NumForm_roman ": NumForm_roman, # cz, sl, U,
     "NumForm_word ": NumForm_word, # cz, sl, U,
@@ -312,6 +337,8 @@ IDS = {
     "Person_psor_one ": Person_psor_one, # fi, U,
     "Person_psor_two ": Person_psor_two, # fi, U,
     "Person_psor_three ": Person_psor_three, # fi, U,
+    "Person_zero ": Person_zero, # U20
+    "Person_four ": Person_four, # U20
     "Polite_inf ": Polite_inf, # bq, U,
     "Polite_pol ": Polite_pol, # bq, U,
     "Polite_abs_inf ": Polite_abs_inf, # bq, U,
@@ -320,6 +347,10 @@ IDS = {
     "Polite_erg_pol ": Polite_erg_pol, # bq, U,
     "Polite_dat_inf ": Polite_dat_inf, # bq, U,
     "Polite_dat_pol ": Polite_dat_pol, # bq, U,
+    "Polite_infm ": Polite_infm, # U20
+    "Polite_form ": Polite_form, # U20
+    "Polite_form_elev ": Polite_form_elev, # U20
+    "Polite_form_humb ": Polite_form_humb, # U20
     "Prefix_yes ": Prefix_yes, # U,
     "PrepCase_npr ": PrepCase_npr, # cz,
     "PrepCase_pre ": PrepCase_pre, # U,
@@ -384,6 +415,7 @@ IDS = {
     "ccomp": ccomp,
     "complm": complm,
     "conj": conj,
+    "cop": cop, # U20
     "csubj": csubj,
     "csubjpass": csubjpass,
     "dep": dep,
@@ -406,6 +438,8 @@ IDS = {
     "num": num,
     "number": number,
     "oprd": oprd,
+    "obj": obj, # U20
+    "obl": obl, # U20
     "parataxis": parataxis,
     "partmod": partmod,
     "pcomp": pcomp,
