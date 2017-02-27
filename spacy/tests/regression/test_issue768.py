@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from ...language import Language
 from ...attrs import LANG
-from ...fr.language_data import TOKENIZER_EXCEPTIONS, STOP_WORDS
+from ...fr.language_data import get_tokenizer_exceptions, STOP_WORDS
 from ...language_data.punctuation import TOKENIZER_INFIXES, ALPHA
 
 import pytest
@@ -20,7 +20,7 @@ def fr_tokenizer_w_infix():
         class Defaults(Language.Defaults):
             lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
             lex_attr_getters[LANG] = lambda text: 'fr'
-            tokenizer_exceptions = TOKENIZER_EXCEPTIONS
+            tokenizer_exceptions = get_tokenizer_exceptions()
             stop_words = STOP_WORDS
             infixes = TOKENIZER_INFIXES + [SPLIT_INFIX]
 
