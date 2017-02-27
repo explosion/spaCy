@@ -212,6 +212,4 @@ REGULAR_EXP.append(_URL_PATTERN)
 
 TOKEN_MATCH = re.compile('|'.join('(?:{})'.format(m) for m in REGULAR_EXP), re.IGNORECASE).match
 
-#TOKENIZER_EXCEPTIONS = get_tokenizer_exceptions()
-
 __all__ = ["get_tokenizer_exceptions", "TOKEN_MATCH"]
