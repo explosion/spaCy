@@ -16,3 +16,7 @@ class Bengali(Language):
 
         tokenizer_exceptions = TOKENIZER_EXCEPTIONS
         stop_words = STOP_WORDS
+
+        prefixes = tuple(TOKENIZER_PREFIXES)
+        suffixes = tuple(TOKENIZER_SUFFIXES)
+        infixes = tuple(TOKENIZER_INFIXES)
