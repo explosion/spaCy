@@ -10,23 +10,27 @@ software, released under the MIT license.
 
 💫 **Version 1.6 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
-.. image:: https://travis-ci.org/explosion/spaCy.svg?branch=master
+.. image:: https://img.shields.io/travis/explosion/spaCy.svg?style=flat-square
     :target: https://travis-ci.org/explosion/spaCy
     :alt: Build Status
     
-.. image:: https://img.shields.io/github/release/explosion/spacy.svg
+.. image:: https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square
     :target: https://github.com/explosion/spaCy/releases   
     :alt: Current Release Version
     
-.. image:: https://img.shields.io/pypi/v/spacy.svg   
+.. image:: https://anaconda.org/conda-forge/spacy/badges/version.svg
+    :target: https://anaconda.org/conda-forge/spacy
+    :alt: conda Version
+    
+.. image:: https://img.shields.io/pypi/v/spacy.svg?style=flat-square
     :target: https://pypi.python.org/pypi/spacy
     :alt: pypi Version
 
-.. image:: https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-09a3d5.svg
+.. image:: https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-09a3d5.svg?style=flat-square
     :target: https://gitter.im/explosion/spaCy
     :alt: spaCy on Gitter
     
-.. image:: https://img.shields.io/twitter/follow/spacy_io.svg?style=social&label=Follow   
+.. image:: https://img.shields.io/twitter/follow/spacy_io.svg?style=social&label=Follow
     :target: https://twitter.com/spacy_io
     :alt: spaCy on Twitter
 
@@ -119,6 +123,21 @@ avoid modifying system state:
 Python packaging is awkward at the best of times, and it's particularly tricky with
 C extensions, built via Cython, requiring large data files. So, please report issues
 as you encounter them.
+
+conda
+-----
+
+If you're using conda, you can install spaCy via ``conda-forge``:
+
+.. code:: bash
+
+    conda config --add channels conda-forge
+    conda install spacy
+    
+For the feedstock including the build recipe and configuration,
+check out `this repository <https://github.com/conda-forge/spacy-feedstock>`_.
+Thanks to our great community, we've finally re-added conda support — improvements
+and pull requests to the recipe and setup are always appreciated.
 
 Install model
 =============
