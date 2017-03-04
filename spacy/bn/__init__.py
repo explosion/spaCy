@@ -15,7 +15,9 @@ class Bengali(Language):
         lex_attr_getters[LANG] = lambda text: 'bn'
 
         tokenizer_exceptions = TOKENIZER_EXCEPTIONS
+        tag_map = TAG_MAP
         stop_words = STOP_WORDS
+        lemma_rules = LEMMA_RULES
 
         prefixes = tuple(TOKENIZER_PREFIXES)
         suffixes = tuple(TOKENIZER_SUFFIXES)
