@@ -11,6 +11,7 @@ from ..nl import Dutch
 from ..sv import Swedish
 from ..hu import Hungarian
 from ..fi import Finnish
+from ..bn import Bengali
 from ..tokens import Doc
 from ..strings import StringStore
 from ..lemmatizer import Lemmatizer
@@ -24,7 +25,7 @@ import pytest
 
 
 LANGUAGES = [English, German, Spanish, Italian, French, Portuguese, Dutch,
-             Swedish, Hungarian, Finnish]
+             Swedish, Hungarian, Finnish, Bengali]
 
 
 @pytest.fixture(params=LANGUAGES)
@@ -71,6 +72,11 @@ def fi_tokenizer():
 @pytest.fixture
 def sv_tokenizer():
     return Swedish.Defaults.create_tokenizer()
+
+
+@pytest.fixture
+def bn_tokenizer():
+    return Bengali.Defaults.create_tokenizer()
 
 
 @pytest.fixture
