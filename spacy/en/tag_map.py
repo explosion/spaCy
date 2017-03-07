@@ -16,7 +16,7 @@ TAG_MAP = {
     "$":        {POS: SYM, "Other": {"SymType": "currency"}},
     "#":        {POS: SYM, "Other": {"SymType": "numbersign"}},
     "AFX":      {POS: ADJ,  "Hyph": "yes"},
-    "CC":       {POS: CONJ, "ConjType": "coor"},
+    "CC":       {POS: CCONJ, "ConjType": "coor"},
     "CD":       {POS: NUM, "NumType": "card"},
     "DT":       {POS: DET},
     "EX":       {POS: ADV, "AdvType": "ex"},
