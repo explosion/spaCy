@@ -20,6 +20,7 @@ def test_pickle_string_store():
     assert len(sstore) == len(unpickled)
 
 
+@pytest.mark.xfail
 def test_pickle_vocab():
     vocab = Vocab(lex_attr_getters={int(NORM): lambda string: string[:-1]})
     dog = vocab[u'dog']
