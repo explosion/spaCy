@@ -41,7 +41,7 @@ TAG_MAP = {
     "PRF":      {POS: PRON, "PronType": "prs", "Reflex": "yes"},
     "PTKA":     {POS: PART},
     "PTKANT":   {POS: PART, "PartType": "res"},
-    "PTKNEG":   {POS: PART, "Negative": "yes"},
+    "PTKNEG":   {POS: PART, "Polarity": "Neg"},
     "PTKVZ":    {POS: PART, "PartType": "vbp"},
     "PTKZU":    {POS: PART, "PartType": "inf"},
     "PWAT":     {POS: DET, "PronType": "int"},
