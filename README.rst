@@ -18,14 +18,14 @@ software, released under the MIT license.
     :target: https://github.com/explosion/spaCy/releases   
     :alt: Current Release Version
     
+.. image:: https://img.shields.io/pypi/v/spacy.svg?style=flat-square
+    :target: https://pypi.python.org/pypi/spacy
+    :alt: pypi Version
+    
 .. image:: https://anaconda.org/conda-forge/spacy/badges/version.svg
     :target: https://anaconda.org/conda-forge/spacy
     :alt: conda Version
     
-.. image:: https://img.shields.io/pypi/v/spacy.svg?style=flat-square
-    :target: https://pypi.python.org/pypi/spacy
-    :alt: pypi Version
-
 .. image:: https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-09a3d5.svg?style=flat-square
     :target: https://gitter.im/explosion/spaCy
     :alt: spaCy on Gitter
