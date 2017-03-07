@@ -57,7 +57,7 @@ cdef class StringCFile:
         self.size = len(data)
         self.data = <unsigned char*>self.mem.alloc(1, self._capacity)
         for i in range(len(data)):
-            self.data[i] = data
+            self.data[i] = data[i]
 
     def close(self):
         self.is_open = False
@@ -69,13 +69,12 @@ cdef class StringCFile:
         memcpy(dest, self.data, elem_size * number)
         self.data += elem_size * number
 
-    cdef int write_from(self, void* src, size_t number, size_t elem_size) except -1:
+    cdef int write_from(self, void* src, size_t elem_size, size_t number) except -1:
         write_size = number * elem_size
         if (self.size + write_size) >= self._capacity:
             self._capacity = (self.size + write_size) * 2
             self.data = <unsigned char*>self.mem.realloc(self.data, self._capacity)
-        memcpy(self.data, src, elem_size * number)
-        self.data += write_size
+        memcpy(&self.data[self.size], src, elem_size * number)
         self.size += write_size
 
     cdef void* alloc_read(self, Pool mem, size_t number, size_t elem_size) except *:
