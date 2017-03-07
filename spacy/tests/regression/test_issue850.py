@@ -29,6 +29,7 @@ def test_basic_case():
     assert start == 0
     assert end == 4
 
+
 @pytest.mark.xfail
 def test_issue850():
     '''The problem here is that the variable-length pattern matches the
