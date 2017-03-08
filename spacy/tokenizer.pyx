@@ -163,7 +163,6 @@ cdef class Tokenizer:
                     start = i
                 in_ws = not in_ws
             i += 1
-        i += 1
         if start < i:
             span = string[start:]
             key = hash_string(span)
