@@ -241,7 +241,8 @@ def setup_package():
                 'cloudpickle',
                 'pathlib',
                 'sputnik>=0.9.2,<0.10.0',
-                'ujson>=1.35'],
+                'ujson>=1.35',
+                'dill>=0.2,<0.3'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',
