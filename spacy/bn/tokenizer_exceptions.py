@@ -31,6 +31,10 @@ ABBREVIATIONS = {
         {ORTH: "কি.মি", LEMMA: "কিলোমিটার"},
         {ORTH: "কি.মি.", LEMMA: "কিলোমিটার"},
     ],
+    "সে.মি": [
+        {ORTH: "সে.মি", LEMMA: "সেন্টিমিটার"},
+        {ORTH: "সে.মি.", LEMMA: "সেন্টিমিটার"},
+    ],
 }
 
 TOKENIZER_EXCEPTIONS.update(ABBREVIATIONS)
