@@ -66,8 +66,8 @@ def score_model(scorer, nlp, raw_text, annot_tuples, verbose=False):
 
 def train(Language, train_data, dev_data, model_dir, tagger_cfg, parser_cfg, entity_cfg,
         n_iter=15, seed=0, gold_preproc=False, n_sents=0, corruption_level=0):
-    print("Itn.\tP.Loss\tUAS\tNER F.\tTag %\tToken %")
-    format_str = '{:d}\t{:d}\t{uas:.3f}\t{ents_f:.3f}\t{tags_acc:.3f}\t{token_acc:.3f}'
+    print("Itn.\tP.Loss\tN feats\tUAS\tNER F.\tTag %\tToken %")
+    format_str = '{:d}\t{:d}\t{:d}\t{uas:.3f}\t{ents_f:.3f}\t{tags_acc:.3f}\t{token_acc:.3f}'
     with Language.train(model_dir, train_data,
             tagger_cfg, parser_cfg, entity_cfg) as trainer:
         loss = 0
@@ -76,7 +76,8 @@ def train(Language, train_data, dev_data, model_dir, tagger_cfg, parser_cfg, ent
             for doc, gold in epoch:
                 trainer.update(doc, gold)
             dev_scores = trainer.evaluate(dev_data, gold_preproc=gold_preproc)
-            print(format_str.format(itn, loss, **dev_scores.scores))
+            print(format_str.format(itn, loss,
+                trainer.nlp.parser.model.nr_active_feat, **dev_scores.scores))
 
 
 def evaluate(Language, gold_tuples, model_dir, gold_preproc=False, verbose=False,
@@ -160,6 +161,7 @@ def main(language, train_loc, dev_loc, model_dir, n_sents=0, n_iter=15, out_loc=
     if not eval_only:
         gold_train = list(read_json_file(train_loc))
         gold_dev = list(read_json_file(dev_loc))
+        gold_train = gold_train[:n_sents]
         train(lang, gold_train, gold_dev, model_dir, tagger_cfg, parser_cfg, entity_cfg,
               n_sents=n_sents, gold_preproc=gold_preproc, corruption_level=corruption_level,
               n_iter=n_iter)
