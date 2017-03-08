@@ -10,7 +10,7 @@ software, released under the MIT license.
 
 💫 **Version 1.6 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
-.. image:: https://img.shields.io/travis/explosion/spaCy.svg?style=flat-square
+.. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square
     :target: https://travis-ci.org/explosion/spaCy
     :alt: Build Status
     
