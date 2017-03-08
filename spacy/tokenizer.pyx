@@ -275,7 +275,10 @@ cdef class Tokenizer:
             if cache_hit:
                 pass
             elif self.token_match and self.token_match(string): 
-                tokens.push_back(self.vocab.get(tokens.mem, string), not suffixes.size())
+                # We're always saying 'no' to spaces here -- the caller will
+                # fix up the outermost one, with reference to the original.
+                # See Issue #859
+                tokens.push_back(self.vocab.get(tokens.mem, string), False)
             else:
                 matches = self.find_infix(string)
                 if not matches:
