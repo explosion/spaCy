@@ -210,7 +210,7 @@ details.
 
     # make sure you are using recent pip/virtualenv versions
     python -m pip install -U pip virtualenv
-    git clone #{gh("spaCy")}
+    git clone https://github.com/explosion/spaCy
     cd spaCy
 
     virtualenv .env
