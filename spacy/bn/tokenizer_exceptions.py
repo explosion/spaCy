@@ -35,6 +35,9 @@ ABBREVIATIONS = {
         {ORTH: "সে.মি", LEMMA: "সেন্টিমিটার"},
         {ORTH: "সে.মি.", LEMMA: "সেন্টিমিটার"},
     ],
+    "মি.লি.": [
+        {ORTH: "মি.লি.", LEMMA: "মিলিলিটার"},
+    ]
 }
 
 TOKENIZER_EXCEPTIONS.update(ABBREVIATIONS)
