@@ -66,7 +66,9 @@ p
     # Check whether the model was successfully installed
     python -c "import spacy; spacy.load('en'); print('OK')"
 
-p The download command fetches about 1 GB of data which it installs within the #[code spacy] package directory.
+p
+    |  The download command fetches about 1 GB of data which it
+    |  installs within the #[code spacy] package directory.
 
 +h(3, "custom-location") Download model to custom location
 
@@ -144,7 +146,7 @@ p
 
     +row
         +cell #[code fab clean]
-        +cell Remove compiled objects including the generated C++.
+        +cell Remove compiled objects, including the generated C++.
 
     +row
         +cell #[code fab test]
@@ -153,7 +155,7 @@ p
 p
     |  All commands assume that your #[code virtualenv] is located in a
     |  directory #[code .env]. If you're using a different directory, you can
-    |  change it via environment the variable #[code VENV_DIR], for example:
+    |  change it via the environment variable #[code VENV_DIR], for example:
 
 +code(false, "bash").
     VENV_DIR=".custom-env" fab clean make
