@@ -138,7 +138,9 @@ p
 
 +code.
     import spacy
+    import random
     from spacy.gold import GoldParse
+    from spacy.language import EntityRecognizer
 
     train_data = [
         ('Who is Chaka Khan?', [(7, 17, 'PERSON')]),

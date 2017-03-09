@@ -1,35 +1,35 @@
 spaCy: Industrial-strength NLP
 ******************************
 
-spaCy is a library for advanced natural language processing in Python and 
-Cython. spaCy is built on  the very latest research, but it isn't researchware.  
-It was designed from day one to be used in real products. spaCy currently supports 
-English and German,  as well as tokenization for Chinese, Spanish, Italian, French, 
+spaCy is a library for advanced natural language processing in Python and
+Cython. spaCy is built on  the very latest research, but it isn't researchware.
+It was designed from day one to be used in real products. spaCy currently supports
+English and German,  as well as tokenization for Chinese, Spanish, Italian, French,
 Portuguese, Dutch, Swedish, Finnish, Hungarian and Bengali. It's commercial  open-source
 software, released under the MIT license.
 
 💫 **Version 1.6 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
-.. image:: https://img.shields.io/travis/explosion/spaCy.svg?style=flat-square
+.. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square
     :target: https://travis-ci.org/explosion/spaCy
     :alt: Build Status
-    
+
 .. image:: https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square
-    :target: https://github.com/explosion/spaCy/releases   
+    :target: https://github.com/explosion/spaCy/releases
     :alt: Current Release Version
-    
-.. image:: https://anaconda.org/conda-forge/spacy/badges/version.svg
-    :target: https://anaconda.org/conda-forge/spacy
-    :alt: conda Version
-    
+
 .. image:: https://img.shields.io/pypi/v/spacy.svg?style=flat-square
     :target: https://pypi.python.org/pypi/spacy
     :alt: pypi Version
 
+.. image:: https://anaconda.org/conda-forge/spacy/badges/version.svg
+    :target: https://anaconda.org/conda-forge/spacy
+    :alt: conda Version
+
 .. image:: https://img.shields.io/badge/gitter-join%20chat%20%E2%86%92-09a3d5.svg?style=flat-square
     :target: https://gitter.im/explosion/spaCy
     :alt: spaCy on Gitter
-    
+
 .. image:: https://img.shields.io/twitter/follow/spacy_io.svg?style=social&label=Follow
     :target: https://twitter.com/spacy_io
     :alt: spaCy on Twitter
@@ -55,7 +55,7 @@ software, released under the MIT license.
 +---------------------------+------------------------------------------------------------------------------------------------------------+
 | **Bug reports**           | `GitHub Issue tracker <https://github.com/explosion/spaCy/issues>`_                                        |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
-| **Usage questions**       | `StackOverflow <http://stackoverflow.com/questions/tagged/spacy>`_, `Reddit usergroup                      | 
+| **Usage questions**       | `StackOverflow <http://stackoverflow.com/questions/tagged/spacy>`_, `Reddit usergroup                      |
 |                           | <https://www.reddit.com/r/spacynlp>`_, `Gitter chat <https://gitter.im/explosion/spaCy>`_                  |
 +---------------------------+------------------------------------------------------------------------------------------------------------+
 | **General discussion**    | `Reddit usergroup <https://www.reddit.com/r/spacynlp>`_,                                                   |
@@ -104,100 +104,143 @@ Supports
 Install spaCy
 =============
 
-spaCy is compatible with 64-bit CPython 2.6+/3.3+ and runs on Unix/Linux, OS X 
-and Windows. Source packages are available via 
-`pip <https://pypi.python.org/pypi/spacy>`_. Please make sure that
-you have a working build enviroment set up. See notes on Ubuntu, macOS/OS X and Windows
-for details.
+spaCy is compatible with **64-bit CPython 2.6+/3.3+** and runs on **Unix/Linux**,
+**macOS/OS X** and **Windows**. The latest spaCy releases are available over
+`pip <https://pypi.python.org/pypi/spacy>`_ (source packages only) and
+`conda <https://anaconda.org/conda-forge/spacy>`_. Installation requires a working
+build environment. See notes on Ubuntu, macOS/OS X and Windows for details.
 
 pip
 ---
 
-When using pip it is generally recommended to install packages in a virtualenv to
-avoid modifying system state:
+Using pip, spaCy releases are currently only available as source packages.
 
 .. code:: bash
 
-    pip install spacy
+    pip install -U spacy
 
-Python packaging is awkward at the best of times, and it's particularly tricky with
-C extensions, built via Cython, requiring large data files. So, please report issues
-as you encounter them.
+When using pip it is generally recommended to install packages in a ``virtualenv``
+to avoid modifying system state:
+
+.. code:: bash
+
+    virtualenv .env
+    source .env/bin/activate
+    pip install spacy
 
 conda
 -----
 
-If you're using conda, you can install spaCy via ``conda-forge``:
+Thanks to our great community, we've finally re-added conda support. You can now
+install spaCy via ``conda-forge``:
 
 .. code:: bash
 
     conda config --add channels conda-forge
     conda install spacy
-    
+
 For the feedstock including the build recipe and configuration,
 check out `this repository <https://github.com/conda-forge/spacy-feedstock>`_.
-Thanks to our great community, we've finally re-added conda support — improvements
-and pull requests to the recipe and setup are always appreciated.
+Improvements and pull requests to the recipe and setup are always appreciated.
 
-Install model
-=============
+Download models
+===============
 
-After installation you need to download a language model. Currently only models for 
-English and German, named ``en`` and ``de``, are available.
+After installation you need to download a language model. Models for English
+(``en``) and German (``de``) are available.
 
 .. code:: bash
 
     python -m spacy.en.download all
     python -m spacy.de.download all
 
-The download command fetches about 1 GB of data which it installs 
+The download command fetches about 1 GB of data which it installs
 within the ``spacy`` package directory.
 
-Upgrading spaCy
-===============
-
-To upgrade spaCy to the latest release:
-
-pip
----
-
-.. code:: bash
-
-    pip install -U spacy
-
-Sometimes new releases require a new language model. Then you will have to upgrade to 
-a new model, too. You can also force re-downloading and installing a new language model:
+Sometimes new releases require a new language model. Then you will have to
+upgrade to a new model, too. You can also force re-downloading and installing a
+new language model:
 
 .. code:: bash
 
     python -m spacy.en.download --force
 
+Download model to custom location
+---------------------------------
+
+You can specify where ``spacy.en.download`` and ``spacy.de.download`` download
+the language model to using the ``--data-path`` or ``-d`` argument:
+
+.. code:: bash
+
+    python -m spacy.en.download all --data-path /some/dir
+
+If you choose to download to a custom location, you will need to tell spaCy where to load the model
+from in order to use it. You can do this either by calling ``spacy.util.set_data_path()`` before
+calling ``spacy.load()``, or by passing a ``path`` argument to the ``spacy.en.English`` or
+``spacy.de.German`` constructors.
+
+Download models manually
+------------------------
+
+As of v1.6, the models and word vectors are also available as direct downloads
+from GitHub, attached to the `releases <https://github.com/explosion/spacy/releases>`_
+as ``.tar.gz`` archives.
+
+To install the models manually, first find the default data path. You can use
+``spacy.util.get_data_path()`` to find the directory where spaCy will look for
+its models, or change the default data path with ``spacy.util.set_data_path()``.
+Then simply unpack the archive and place the contained folder in that directory.
+You can now load the models via ``spacy.load()``.
+
 Compile from source
 ===================
 
-The other way to install spaCy is to clone its GitHub repository and build it from 
+The other way to install spaCy is to clone its
+`GitHub repository <https://github.com/explosion/spaCy>`_ and build it from
 source. That is the common way if you want to make changes to the code base.
-
-You'll need to make sure that you have a development enviroment consisting of a 
-Python distribution including header files, a compiler, pip, virtualenv and git 
-installed. The compiler part is the trickiest. How to do that depends on your 
-system. See notes on Ubuntu, OS X and Windows for details.
+You'll need to make sure that you have a development enviroment consisting of a
+Python distribution including header files, a compiler,
+`pip <https://pip.pypa.io/en/latest/installing/>`__, `virtualenv <https://virtualenv.pypa.io/>`_
+and `git <https://git-scm.com>`_ installed. The compiler part is the trickiest.
+How to do that depends on your system. See notes on Ubuntu, OS X and Windows for
+details.
 
 .. code:: bash
 
     # make sure you are using recent pip/virtualenv versions
     python -m pip install -U pip virtualenv
-
-    #  find git install instructions at https://git-scm.com/downloads
-    git clone https://github.com/explosion/spaCy.git
-
+    git clone https://github.com/explosion/spaCy
     cd spaCy
-    virtualenv .env && source .env/bin/activate
+
+    virtualenv .env
+    source .env/bin/activate
     pip install -r requirements.txt
     pip install -e .
-    
-Compared to regular install via pip `requirements.txt <requirements.txt>`_ 
-additionally installs developer dependencies such as cython.
+
+Compared to regular install via pip `requirements.txt <requirements.txt>`_
+additionally installs developer dependencies such as Cython.
+
+Instead of the above verbose commands, you can also use the following
+`Fabric <http://www.fabfile.org/>`_ commands:
+
++---------------+--------------------------------------------------------------+
+| ``fab env``   | Create ``virtualenv`` and delete previous one, if it exists. |
++---------------+--------------------------------------------------------------+
+| ``fab make``  | Compile the source.                                          |
++---------------+--------------------------------------------------------------+
+| ``fab clean`` | Remove compiled objects, including the generated C++.        |
++---------------+--------------------------------------------------------------+
+| ``fab test``  | Run basic tests, aborting after first failure.               |
++---------------+--------------------------------------------------------------+
+
+All commands assume that your ``virtualenv`` is located in a directory ``.env``.
+If you're using a different directory, you can change it via the environment
+variable ``VENV_DIR``, for example:
+
+.. code:: bash
+
+    VENV_DIR=".custom-env" fab clean make
 
 Ubuntu
 ------
@@ -211,53 +254,37 @@ Install system-level dependencies via ``apt-get``:
 macOS / OS X
 ------------
 
-Install a recent version of `XCode <https://developer.apple.com/xcode/>`_, 
-including the so-called "Command Line Tools". macOS and OS X ship with Python 
+Install a recent version of `XCode <https://developer.apple.com/xcode/>`_,
+including the so-called "Command Line Tools". macOS and OS X ship with Python
 and git preinstalled.
 
 Windows
 -------
 
 Install a version of `Visual Studio Express <https://www.visualstudio.com/vs/visual-studio-express/>`_
-or higher that matches the version that was used to compile your Python 
-interpreter. For official distributions these are VS 2008 (Python 2.7), 
+or higher that matches the version that was used to compile your Python
+interpreter. For official distributions these are VS 2008 (Python 2.7),
 VS 2010 (Python 3.4) and VS 2015 (Python 3.5).
 
 Run tests
 =========
 
-spaCy comes with an extensive test suite. First, find out where spaCy is 
-installed:
+spaCy comes with an `extensive test suite <spacy/tests>`_. First, find out where
+spaCy is installed:
 
 .. code:: bash
-    
+
     python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
 
-Then run ``pytest`` on that directory. The flags ``--vectors``, ``--slow`` 
+Then run ``pytest`` on that directory. The flags ``--vectors``, ``--slow``
 and ``--model`` are optional and enable additional tests:
 
 .. code:: bash
-    
+
     # make sure you are using recent pytest version
     python -m pip install -U pytest
 
     python -m pytest <spacy-directory> --vectors --model --slow
-
-Download model to custom location
-=================================
-
-You can specify where ``spacy.en.download`` and ``spacy.de.download`` download the language model
-to using the ``--data-path`` or ``-d`` argument:
-
-.. code:: bash
-    
-    python -m spacy.en.download all --data-path /some/dir
-
-
-If you choose to download to a custom location, you will need to tell spaCy where to load the model
-from in order to use it. You can do this either by calling ``spacy.util.set_data_path()`` before
-calling ``spacy.load()``, or by passing a ``path`` argument to the ``spacy.en.English`` or
-``spacy.de.German`` constructors.
 
 Changelog
 =========
@@ -473,10 +500,10 @@ Thanks to `@daylen <https://github.com/daylen>`_, `@RahulKulhari <https://github
 2016-05-05 `v0.100.7 <https://github.com/explosion/spaCy/releases/tag/0.100.7>`_: *German!*
 -------------------------------------------------------------------------------------------
 
-spaCy finally supports another language, in addition to English. We're lucky 
-to have Wolfgang Seeker on the team, and the new German model is just the 
-beginning. Now that there are multiple languages, you should consider loading 
-spaCy via the ``load()`` function. This function also makes it easier to load extra 
+spaCy finally supports another language, in addition to English. We're lucky
+to have Wolfgang Seeker on the team, and the new German model is just the
+beginning. Now that there are multiple languages, you should consider loading
+spaCy via the ``load()`` function. This function also makes it easier to load extra
 word vector data for English:
 
 .. code:: python
@@ -484,25 +511,25 @@ word vector data for English:
     import spacy
     en_nlp = spacy.load('en', vectors='en_glove_cc_300_1m_vectors')
     de_nlp = spacy.load('de')
-    
-To support use of the load function, there are also two new helper functions: 
-``spacy.get_lang_class`` and ``spacy.set_lang_class``. Once the German model is 
+
+To support use of the load function, there are also two new helper functions:
+``spacy.get_lang_class`` and ``spacy.set_lang_class``. Once the German model is
 loaded, you can use it just like the English model:
 
 .. code:: python
 
     doc = nlp(u'''Wikipedia ist ein Projekt zum Aufbau einer Enzyklopädie aus freien Inhalten, zu dem du mit deinem Wissen beitragen kannst. Seit Mai 2001 sind 1.936.257 Artikel in deutscher Sprache entstanden.''')
-    
+
     for sent in doc.sents:
         print(sent.root.text, sent.root.n_lefts, sent.root.n_rights)
-    
+
     # (u'ist', 1, 2)
     # (u'sind', 1, 3)
-    
-The German model provides tokenization, POS tagging, sentence boundary detection, 
-syntactic dependency parsing, recognition of organisation, location and person 
-entities, and word vector representations trained on a mix of open subtitles and 
-Wikipedia data. It doesn't yet provide lemmatisation or morphological analysis, 
+
+The German model provides tokenization, POS tagging, sentence boundary detection,
+syntactic dependency parsing, recognition of organisation, location and person
+entities, and word vector representations trained on a mix of open subtitles and
+Wikipedia data. It doesn't yet provide lemmatisation or morphological analysis,
 and it doesn't yet recognise numeric entities such as numbers and dates.
 
 **Bugfixes**
@@ -518,7 +545,7 @@ and it doesn't yet recognise numeric entities such as numbers and dates.
 2016-03-08 `v0.100.6 <https://github.com/explosion/spaCy/releases/tag/0.100.6>`_: *Add support for GloVe vectors*
 -----------------------------------------------------------------------------------------------------------------
 
-This release offers improved support for replacing the word vectors used by spaCy. 
+This release offers improved support for replacing the word vectors used by spaCy.
 To install Stanford's GloVe vectors, trained on the Common Crawl, just run:
 
 .. code:: bash
@@ -527,8 +554,8 @@ To install Stanford's GloVe vectors, trained on the Common Crawl, just run:
 
 To reduce memory usage and loading time, we've trimmed the vocabulary down to 1m entries.
 
-This release also integrates all the code necessary for German parsing. A German model 
-will be released shortly. To assist in multi-lingual processing, we've added a ``load()`` 
+This release also integrates all the code necessary for German parsing. A German model
+will be released shortly. To assist in multi-lingual processing, we've added a ``load()``
 function. To load the English model with the GloVe vectors:
 
 .. code:: python

@@ -31,7 +31,7 @@ def test_tokenizer_handles_punct(tokenizer):
 
 
 def test_tokenizer_handles_digits(tokenizer):
-    exceptions = ["hu"]
+    exceptions = ["hu", "bn"]
     text = "Lorem ipsum: 1984."
     tokens = tokenizer(text)
 

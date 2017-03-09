@@ -5,15 +5,45 @@ include ../../_includes/_mixins
 p
     |  spaCy is compatible with #[strong 64-bit CPython 2.6+&#8725;3.3+] and
     |  runs on #[strong Unix/Linux], #[strong macOS/OS X] and
-    |  #[strong Windows]. The latest spaCy releases are currently only
-    |  available as source packages over
-    |  #[+a("https://pypi.python.org/pypi/spacy") pip]. Installation requires a
-    |  working build environment. See notes on
+    |  #[strong Windows]. The latest spaCy releases are
+    |  available over #[+a("https://pypi.python.org/pypi/spacy") pip] (source
+    |  packages only) and #[+a("https://anaconda.org/conda-forge/spacy") conda].
+    |  Installation requires a working build environment. See notes on
     |  #[a(href="#source-ubuntu") Ubuntu], #[a(href="#source-osx") macOS/OS X]
     |  and #[a(href="#source-windows") Windows] for details.
 
++h(2, "pip") pip
+
+p Using pip, spaCy releases are currently only available as source packages.
+
 +code(false, "bash").
     pip install -U spacy
+
+p
+    |  When using pip it is generally recommended to install packages in a
+    |  #[code virtualenv] to avoid modifying system state:
+
++code(false, "bash").
+    virtualenv .env
+    source .env/bin/activate
+    pip install spacy
+
++h(2, "conda") conda
+
+p
+    |  Thanks to our great community, we've finally re-added conda support. You
+    |  can now install spaCy via #[code conda-forge]:
+
++code(false, "bash").
+    conda config --add channels conda-forge
+    conda install spacy
+
+p
+    |  For the feedstock including the build recipe and configuration, check out
+    |  #[+a("https://github.com/conda-forge/spacy-feedstock") this repository].
+    |  Improvements and pull requests to the recipe and setup are always appreciated.
+
++h(2, "models") Download models
 
 p
     |  After installation you need to download a language model. Models for
@@ -36,24 +66,99 @@ p
     # Check whether the model was successfully installed
     python -c "import spacy; spacy.load('en'); print('OK')"
 
-p The download command fetches about 1 GB of data which it installs within the #[code spacy] package directory.
+p
+    |  The download command fetches about 1 GB of data which it
+    |  installs within the #[code spacy] package directory.
+
++h(3, "custom-location") Download model to custom location
+
+p
+    |   You can specify where #[code spacy.en.download] and
+    |  #[code spacy.de.download] download the language model to using the
+    |  #[code --data-path] or #[code -d] argument:
+
++code(false, "bash").
+    python -m spacy.en.download all --data-path /some/dir
+
+p
+    |  If you choose to download to a custom location, you will need to tell
+    |  spaCy where to load the model from in order to use it. You can do this
+    |  either by calling #[code spacy.util.set_data_path()] before calling
+    |  #[code spacy.load()], or by passing a #[code path] argument to the
+    |  #[code spacy.en.English] or #[code spacy.de.German] constructors.
+
++h(3, "models-manual") Download models manually
+
+p
+    |  As of v1.6, the models and word vectors are also available as direct
+    |  downloads from GitHub, attached to the #[+a(gh("spaCy") + "/releases") releases] as #[code .tar.gz] archives.
+
+p
+    |  To install the models manually, first find the default data path. You can
+    |  use #[code spacy.util.get_data_path()] to find the directory where spaCy
+    |  will look for its models, or change the default data path with
+    |  #[code spacy.util.set_data_path()]. Then simply unpack the archive and
+    |  place the contained folder in that directory. You can now load the models
+    |  via #[code spacy.load()].
 
 +h(2, "source") Compile from source
 
 p
     |  The other way to install spaCy is to clone its
     |  #[+a(gh("spaCy")) GitHub repository] and build it from source. That is
-    |  the common way if you want to make changes to the code base.
-
-p
-    |  You'll need to make sure that you have a development enviroment
-    |  consisting of a Python distribution including header files, a compiler,
+    |  the common way if you want to make changes to the code base. You'll need to
+    |  make sure that you have a development enviroment consisting of a Python
+    |  distribution including header files, a compiler,
     |  #[+a("https://pip.pypa.io/en/latest/installing/") pip],
     |  #[+a("https://virtualenv.pypa.io/") virtualenv] and
     |  #[+a("https://git-scm.com") git] installed. The compiler part is the
     |  trickiest. How to do that depends on your system. See notes on
     |  #[a(href="#source-ubuntu") Ubuntu], #[a(href="#source-osx") OS X] and
     |  #[a(href="#source-windows") Windows] for details.
+
++code(false, "bash").
+    # make sure you are using recent pip/virtualenv versions
+    python -m pip install -U pip virtualenv
+    git clone #{gh("spaCy")}
+    cd spaCy
+
+    virtualenv .env
+    source .env/bin/activate
+    pip install -r requirements.txt
+    pip install -e .
+
+p
+    |  Compared to regular install via pip, #[+a(gh("spaCy", "requirements.txt")) requirements.txt]
+    |  additionally installs developer dependencies such as Cython.
+
+p
+    |  Instead of the above verbose commands, you can also use the following
+    |  #[+a("http://www.fabfile.org/") Fabric] commands:
+
++table(["Command", "Description"])
+    +row
+        +cell #[code fab env]
+        +cell Create #[code virtualenv] and delete previous one, if it exists.
+
+    +row
+        +cell #[code fab make]
+        +cell Compile the source.
+
+    +row
+        +cell #[code fab clean]
+        +cell Remove compiled objects, including the generated C++.
+
+    +row
+        +cell #[code fab test]
+        +cell Run basic tests, aborting after first failure.
+
+p
+    |  All commands assume that your #[code virtualenv] is located in a
+    |  directory #[code .env]. If you're using a different directory, you can
+    |  change it via the environment variable #[code VENV_DIR], for example:
+
++code(false, "bash").
+    VENV_DIR=".custom-env" fab clean make
 
 +h(3, "source-ubuntu") Ubuntu
 
@@ -67,12 +172,8 @@ p Install system-level dependencies via #[code apt-get]:
 p
     |  Install a recent version of #[+a("https://developer.apple.com/xcode/") XCode],
     |  including the so-called "Command Line Tools". macOS and OS X ship with
-    |  Python and git preinstalled.
-
-p
-    |  To compile spaCy with multi-threading support on macOS / OS X,
-    |  #[+a("https://github.com/explosion/spaCy/issues/267") see here].
-
+    |  Python and git preinstalled. To compile spaCy with multi-threading support
+    |  on macOS / OS X, #[+a("https://github.com/explosion/spaCy/issues/267") see here].
 
 +h(3, "source-windows") Windows
 
@@ -98,8 +199,8 @@ p
 +h(2, "tests") Run tests
 
 p
-    |  spaCy comes with an extensive test suite. First, find out where spaCy is
-    |  installed:
+    |  spaCy comes with an #[+a(gh("spacy", "spacy/tests")) extensive test suite].
+    |  First, find out where spaCy is installed:
 
 +code(false, "bash").
     python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
@@ -114,20 +215,3 @@ p
     python -m pip install -U pytest
 
     python -m pytest &lt;spacy-directory&gt; --vectors --model --slow
-
-+h(2, "custom-location") Download model to custom location
-
-p
-    |   You can specify where #[code spacy.en.download] and
-    |  #[code spacy.de.download] download the language model to using the
-    |  #[code --data-path] or #[code -d] argument:
-
-+code(false, "bash").
-    python -m spacy.en.download all --data-path /some/dir
-
-p
-    |  If you choose to download to a custom location, you will need to tell
-    |  spaCy where to load the model from in order to use it. You can do this
-    |  either by calling #[code spacy.util.set_data_path()] before calling
-    |  #[code spacy.load()], or by passing a #[code path] argument to the
-    |  #[code spacy.en.English] or #[code spacy.de.German] constructors.
