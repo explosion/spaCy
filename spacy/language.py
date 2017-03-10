@@ -265,7 +265,7 @@ class Language(object):
         self.entity = self.Defaults.create_entity(self)
         self.pipeline = self.Defaults.create_pipeline(self)
         yield Trainer(self, gold_tuples)
-        self.end_training()
+        self.end_training(path=path)
 
     def __init__(self, **overrides):
         if 'data_dir' in overrides and 'path' not in overrides:
