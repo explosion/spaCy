@@ -27,7 +27,10 @@ from thinc.linalg cimport VecVec
 from thinc.structs cimport SparseArrayC
 from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
+
 from thinc.structs cimport FeatureC
+from thinc.structs cimport ExampleC
+from thinc.extra.eg cimport Example
 
 from util import Config
 
@@ -68,9 +71,43 @@ def get_templates(name):
 
 
 cdef class ParserModel(AveragedPerceptron):
-    cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil:
-        fill_context(eg.atoms, state)
-        eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
+    cdef int set_featuresC(self, atom_t* context, FeatureC* features,
+            const StateC* state) nogil:
+        fill_context(context, state)
+        nr_feat = self.extracter.set_features(features, context)
+        return nr_feat
+
+    def update(self, Example eg):
+        '''Does regression on negative cost. Sort of cute?'''
+        self.time += 1
+        cdef weight_t loss = 0.0
+        best = arg_max_if_gold(eg.c.scores, eg.c.costs, eg.c.nr_class)
+        for clas in range(eg.c.nr_class):
+            if not eg.c.is_valid[clas]:
+                continue
+            if eg.c.scores[clas] < eg.c.scores[best]:
+                continue
+            loss += (-eg.c.costs[clas] - eg.c.scores[clas]) ** 2
+            d_loss = -2 * (-eg.c.costs[clas] - eg.c.scores[clas])
+            for feat in eg.c.features[:eg.c.nr_feat]:
+                self.update_weight_ftrl(feat.key, clas, feat.value * d_loss)
+        return int(loss)
+
+    def update_from_history(self, TransitionSystem moves, Doc doc, history, weight_t grad):
+        cdef Pool mem = Pool()
+        features = <FeatureC*>mem.alloc(self.nr_feat, sizeof(FeatureC))
+
+        cdef StateClass stcls = StateClass.init(doc.c, doc.length)
+        moves.initialize_state(stcls.c)
+
+        cdef class_t clas
+        self.time += 1
+        cdef atom_t[CONTEXT_SIZE] atoms
+        for clas in history:
+            nr_feat = self.set_featuresC(atoms, features, stcls.c)
+            for feat in features[:nr_feat]:
+                self.update_weight(feat.key, clas, feat.value * grad)
+            moves.c[clas].do(stcls.c, moves.c[clas].label)
 
 
 cdef class Parser:
@@ -141,7 +178,7 @@ cdef class Parser:
         """
         cdef int nr_feat = self.model.nr_feat
         with nogil:
-            status = self.parseC(tokens.c, tokens.length, nr_feat)
+            status = self.parseC(tokens.c, tokens.length, nr_feat, self.moves.n_moves)
         # Check for KeyboardInterrupt etc. Untested
         PyErr_CheckSignals()
         if status != 0:
@@ -174,7 +211,7 @@ cdef class Parser:
             if len(queue) == batch_size:
                 with nogil:
                     for i in cython.parallel.prange(batch_size, num_threads=n_threads):
-                        status = self.parseC(doc_ptr[i], lengths[i], nr_feat)
+                        status = self.parseC(doc_ptr[i], lengths[i], nr_feat, self.moves.n_moves)
                         if status != 0:
                             with gil:
                                 raise ParserStateError(queue[i])
@@ -186,7 +223,7 @@ cdef class Parser:
         batch_size = len(queue)
         with nogil:
             for i in cython.parallel.prange(batch_size, num_threads=n_threads):
-                status = self.parseC(doc_ptr[i], lengths[i], nr_feat)
+                status = self.parseC(doc_ptr[i], lengths[i], nr_feat, self.moves.n_moves)
                 if status != 0:
                     with gil:
                         raise ParserStateError(queue[i])
@@ -195,11 +232,10 @@ cdef class Parser:
             self.moves.finalize_doc(doc)
             yield doc
 
-    cdef int parseC(self, TokenC* tokens, int length, int nr_feat) nogil:
+    cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) with gil:
         state = new StateC(tokens, length)
         # NB: This can change self.moves.n_moves!
         self.moves.initialize_state(state)
-        nr_class = self.moves.n_moves
 
         cdef ExampleC eg
         eg.nr_feat = nr_feat
@@ -211,7 +247,7 @@ cdef class Parser:
         eg.is_valid = <int*>calloc(sizeof(int), nr_class)
         cdef int i
         while not state.is_final():
-            self.model.set_featuresC(&eg, state)
+            eg.nr_feat = self.model.set_featuresC(eg.atoms, eg.features, state)
             self.moves.set_valid(eg.is_valid, state)
             self.model.set_scoresC(eg.scores, eg.features, eg.nr_feat)
 
@@ -257,16 +293,17 @@ cdef class Parser:
         cdef weight_t loss = 0
         cdef Transition action
         while not stcls.is_final():
-            self.model.set_featuresC(&eg.c, stcls.c)
+            eg.c.nr_feat = self.model.set_featuresC(eg.c.atoms, eg.c.features,
+                                                    stcls.c)
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
             self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
-            self.model.time += 1
             guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
             if eg.c.costs[guess] > 0:
-                best = arg_max_if_gold(eg.c.scores, eg.c.costs, eg.c.nr_class)
-                for feat in eg.c.features[:eg.c.nr_feat]:
-                    self.model.update_weight_ftrl(feat.key, best, -feat.value * eg.c.costs[guess])
-                    self.model.update_weight_ftrl(feat.key, guess, feat.value * eg.c.costs[guess])
+                self.model.update(eg)
+                #best = arg_max_if_gold(eg.c.scores, eg.c.costs, eg.c.nr_class)
+                #for feat in eg.c.features[:eg.c.nr_feat]:
+                #    self.model.update_weight_ftrl(feat.key, best, -feat.value * eg.c.costs[guess])
+                #    self.model.update_weight_ftrl(feat.key, guess, feat.value * eg.c.costs[guess])
 
             action = self.moves.c[guess]
             action.do(stcls.c, action.label)
@@ -350,7 +387,8 @@ cdef class StepwiseState:
 
     def predict(self):
         self.eg.reset()
-        self.parser.model.set_featuresC(&self.eg.c, self.stcls.c)
+        self.eg.c.nr_feat = self.parser.model.set_featuresC(self.eg.c.atoms, self.eg.c.features,
+                                                            self.stcls.c)
         self.parser.moves.set_valid(self.eg.c.is_valid, self.stcls.c)
         self.parser.model.set_scoresC(self.eg.c.scores,
             self.eg.c.features, self.eg.c.nr_feat)

@@ -1,6 +1,6 @@
 from thinc.linear.avgtron cimport AveragedPerceptron
-from thinc.extra.eg cimport Example
-from thinc.structs cimport ExampleC
+from thinc.typedefs cimport atom_t
+from thinc.structs cimport FeatureC
 
 from .stateclass cimport StateClass
 from .arc_eager cimport TransitionSystem
@@ -11,7 +11,8 @@ from ._state cimport StateC
 
 
 cdef class ParserModel(AveragedPerceptron):
-    cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil
+    cdef int set_featuresC(self, atom_t* context, FeatureC* features,
+                            const StateC* state) nogil
 
 
 cdef class Parser:
@@ -20,4 +21,4 @@ cdef class Parser:
     cdef readonly TransitionSystem moves
     cdef readonly object cfg
 
-    cdef int parseC(self, TokenC* tokens, int length, int nr_feat) nogil
+    cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) with gil
