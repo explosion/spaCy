@@ -3,7 +3,7 @@ from __future__ import unicode_literals, absolute_import
 
 cimport cython
 from libc.string cimport memcpy
-from libc.stdint cimport uint64_t
+from libc.stdint cimport uint64_t, uint32_t
 
 from murmurhash.mrmr cimport hash64, hash32
 
@@ -12,22 +12,19 @@ from preshed.maps cimport map_iter, key_t
 from .typedefs cimport hash_t
 from libc.stdint cimport uint32_t
 
-try:
-    import ujson as json
-except ImportError:
-    import json
+import ujson
 
 
 cpdef hash_t hash_string(unicode string) except 0:
     chars = string.encode('utf8')
-    return _hash_utf8(chars, len(chars))
+    return hash_utf8(chars, len(chars))
 
 
-cdef hash_t _hash_utf8(char* utf8_string, int length):
+cdef hash_t hash_utf8(char* utf8_string, int length) nogil:
     return hash64(utf8_string, length, 1)
 
 
-cdef uint32_t _hash32_utf8(char* utf8_string, int length):
+cdef uint32_t hash32_utf8(char* utf8_string, int length) nogil:
     return hash32(utf8_string, length, 1)
 
 
@@ -48,11 +45,11 @@ cdef unicode _decode(const Utf8Str* string):
         return string.p[i:length + i].decode('utf8')
 
 
-cdef Utf8Str _allocate(Pool mem, const unsigned char* chars, int length) except *:
+cdef Utf8Str _allocate(Pool mem, const unsigned char* chars, uint32_t length) except *:
     cdef int n_length_bytes
     cdef int i
     cdef Utf8Str string
-    assert length != 0
+    cdef uint32_t ulength = length
     if length < sizeof(string.s):
         string.s[0] = <unsigned char>length
         memcpy(&string.s[1], chars, length)
@@ -97,6 +94,14 @@ cdef class StringStore:
     property size:
         def __get__(self):
             return self.size -1
+
+    def __reduce__(self):
+        # TODO: OOV words, for the is_frozen stuff?
+        if self.is_frozen:
+            raise NotImplementedError(
+                "Currently missing support for pickling StringStore when "
+                "is_frozen=True")
+        return (StringStore, (list(self),))
 
     def __len__(self):
         """The number of strings in the store.
@@ -149,7 +154,7 @@ cdef class StringStore:
                 # pretty bad.
                 # We could also get unlucky here, and hash into a value that
                 # collides with the 'real' strings. 
-                return _hash32_utf8(byte_string, len(byte_string))
+                return hash32_utf8(byte_string, len(byte_string))
             else:
                 return utf8str - self.c
 
@@ -200,7 +205,7 @@ cdef class StringStore:
     cdef const Utf8Str* _intern_utf8(self, char* utf8_string, int length):
         # TODO: This function's API/behaviour is an unholy mess...
         # 0 means missing, but we don't bother offsetting the index.
-        cdef hash_t key = _hash_utf8(utf8_string, length)
+        cdef hash_t key = hash_utf8(utf8_string, length)
         cdef Utf8Str* value = <Utf8Str*>self._map.get(key)
         if value is not NULL:
             return value
@@ -209,7 +214,7 @@ cdef class StringStore:
             return value
         if self.is_frozen:
             # OOV store uses 32 bit hashes. Pretty ugly :(
-            key32 = _hash32_utf8(utf8_string, length)
+            key32 = hash32_utf8(utf8_string, length)
             # Important: Make the OOV store own the memory. That way it's trivial
             # to flush them all.
             value = <Utf8Str*>self._oov.mem.alloc(1, sizeof(Utf8Str))
@@ -232,7 +237,7 @@ cdef class StringStore:
         Returns:
             None
         """
-        string_data = json.dumps(list(self))
+        string_data = ujson.dumps(list(self))
         if not isinstance(string_data, unicode):
             string_data = string_data.decode('utf8')
         # TODO: OOV?
@@ -246,7 +251,7 @@ cdef class StringStore:
         Returns:
             None
         """
-        strings = json.load(file_)
+        strings = ujson.load(file_)
         if strings == ['']:
             return None
         cdef unicode string
@@ -271,7 +276,7 @@ cdef class StringStore:
             # Find array index with pointer arithmetic
             offset = ((<Utf8Str*>value) - self.c)
             keys[offset] = key
-        
+
         self._resize_at *= 2
         cdef size_t new_size = self._resize_at * sizeof(Utf8Str)
         self.c = <Utf8Str*>self.mem.realloc(self.c, new_size)

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, print_function
 
 from os import path
+from pathlib import Path
 
 from ..util import match_best_version
 from ..util import get_data_path
@@ -12,6 +13,11 @@ from ..tokenizer import Tokenizer
 from ..attrs import LANG
 
 from .language_data import *
+
+try:
+    basestring
+except NameError:
+    basestring = str
 
 
 class English(Language):
@@ -43,14 +49,15 @@ def _fix_deprecated_glove_vectors_loading(overrides):
         data_path = get_data_path()
     else:
         path = overrides['path']
+        if isinstance(path, basestring):
+            path = Path(path)
         data_path = path.parent
     vec_path = None
     if 'add_vectors' not in overrides:
         if 'vectors' in overrides:
             vec_path = match_best_version(overrides['vectors'], None, data_path)
             if vec_path is None:
-                raise IOError(
-                    'Could not load data pack %s from %s' % (overrides['vectors'], data_path))
+                return overrides
         else:
             vec_path = match_best_version('en_glove_cc_300_1m_vectors', None, data_path)
         if vec_path is not None:

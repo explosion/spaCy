@@ -13,13 +13,13 @@ from thinc.linalg cimport VecVec
 from .typedefs cimport attr_t
 from .tokens.doc cimport Doc
 from .attrs cimport TAG
-from .parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CONJ, DET, NOUN, NUM, PRON
+from .parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CCONJ, DET, NOUN, NUM, PRON
 from .parts_of_speech cimport VERB, X, PUNCT, EOL, SPACE
 from .gold cimport GoldParse
 
 from .attrs cimport *
 
- 
+
 cpdef enum:
     P2_orth
     P2_cluster
@@ -71,7 +71,7 @@ cpdef enum:
 
 cdef class TaggerModel(AveragedPerceptron):
     cdef void set_featuresC(self, ExampleC* eg, const TokenC* tokens, int i) except *:
-        
+
         _fill_from_token(&eg.atoms[P2_orth], &tokens[i-2])
         _fill_from_token(&eg.atoms[P1_orth], &tokens[i-1])
         _fill_from_token(&eg.atoms[W_orth], &tokens[i])
@@ -152,6 +152,7 @@ cdef class Tagger:
             model = TaggerModel(cfg.get('features', self.feature_templates))
         self.vocab = vocab
         self.model = model
+        self.model.l1_penalty = 0.0
         # TODO: Move this to tag map
         self.freqs = {TAG: defaultdict(int)}
         for tag in self.tag_names:
@@ -191,7 +192,7 @@ cdef class Tagger:
                                   nr_class=self.vocab.morphology.n_tags,
                                   nr_feat=self.model.nr_feat)
         for i in range(tokens.length):
-            if tokens.c[i].pos == 0:                
+            if tokens.c[i].pos == 0:
                 self.model.set_featuresC(&eg.c, tokens.c, i)
                 self.model.set_scoresC(eg.c.scores,
                     eg.c.features, eg.c.nr_feat)
@@ -217,7 +218,7 @@ cdef class Tagger:
         for doc in stream:
             self(doc)
             yield doc
-    
+
     def update(self, Doc tokens, GoldParse gold):
         """Update the statistical model, with tags supplied for the given document.
 
@@ -251,7 +252,7 @@ cdef class Tagger:
             self.model.updateC(&eg.c)
 
             self.vocab.morphology.assign_tag_id(&tokens.c[i], eg.guess)
-            
+
             correct += eg.cost == 0
             self.freqs[TAG][tokens.c[i].tag] += 1
             eg.fill_scores(0, eg.c.nr_class)
