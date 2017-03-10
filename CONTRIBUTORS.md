@@ -9,6 +9,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Chris DuBois, [@chrisdubois](https://github.com/chrisdubois)
 * Christoph Schwienheer, [@chssch](https://github.com/chssch)
 * Dafne van Kuppevelt, [@dafnevk](https://github.com/dafnevk)
+* Daniel Rapp, [@rappdw](https://github.com/rappdw)
 * Dmytro Sadovnychyi, [@sadovnychyi](https://github.com/sadovnychyi)
 * György Orosz, [@oroszgy](https://github.com/oroszgy)
 * Henning Peters, [@henningpeters](https://github.com/henningpeters)
