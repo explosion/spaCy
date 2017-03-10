@@ -152,6 +152,7 @@ cdef class Tagger:
             model = TaggerModel(cfg.get('features', self.feature_templates))
         self.vocab = vocab
         self.model = model
+        self.model.l1_penalty = 0.0
         # TODO: Move this to tag map
         self.freqs = {TAG: defaultdict(int)}
         for tag in self.tag_names:
