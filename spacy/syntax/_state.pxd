@@ -40,7 +40,9 @@ cdef cppclass StateC:
             this._ents[i].end = -1
             this._sent[i].l_edge = i
             this._sent[i].r_edge = i
-        for i in range(length, length + (PADDING * 2)):
+        for i in range(PADDING):
+            this._sent[i].lex = &EMPTY_LEXEME
+        for i in range(length, PADDING):
             this._sent[i].lex = &EMPTY_LEXEME
         this._sent += PADDING
         this._ents += PADDING
@@ -59,8 +61,6 @@ cdef cppclass StateC:
         for i in range(length):
             this._sent[i] = sent[i]
             this._buffer[i] = i
-        for i in range(length, length + 5):
-            this._sent[i].lex = &EMPTY_LEXEME
 
     __dealloc__():
         cdef int PADDING = 5
