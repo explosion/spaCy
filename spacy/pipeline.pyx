@@ -11,7 +11,7 @@ from .syntax.parser import get_templates as get_feature_templates
 from .attrs import DEP, ENT_TYPE
 
 
-cdef class EntityRecognizer(BeamParser):
+cdef class EntityRecognizer(Parser):
     """Annotate named entities on Doc objects."""
     TransitionSystem = BiluoPushDown
 
