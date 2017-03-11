@@ -366,6 +366,7 @@ cdef class Vocab:
         cdef size_t st
         cdef size_t addr
         cdef hash_t key
+        cdef LexemeC* lexeme = NULL
         for key, addr in self._by_hash.items():
             lexeme = <LexemeC*>addr
             fp.write_from(&lexeme.orth, sizeof(lexeme.orth), 1)
@@ -398,10 +399,10 @@ cdef class Vocab:
         '''
         fp = CFile(loc, 'rb',
                 on_open_error=lambda: IOError('LexemeCs file not found at %s' % loc))
-        cdef LexemeC* lexeme
+        cdef LexemeC* lexeme = NULL
         cdef hash_t key
         cdef unicode py_str
-        cdef attr_t orth
+        cdef attr_t orth = 0
         assert sizeof(orth) == sizeof(lexeme.orth)
         i = 0
         while True:
@@ -438,10 +439,10 @@ cdef class Vocab:
     def _deserialize_lexemes(self, CFile fp):
         '''Load the binary vocabulary data from the given CFile.
         '''
-        cdef LexemeC* lexeme
+        cdef LexemeC* lexeme = NULL
         cdef hash_t key
         cdef unicode py_str
-        cdef attr_t orth
+        cdef attr_t orth = 0
         assert sizeof(orth) == sizeof(lexeme.orth)
         i = 0
         cdef int todo = fp.size
