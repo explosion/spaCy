@@ -70,8 +70,16 @@ cpdef enum:
 
 
 cdef class TaggerModel(AveragedPerceptron):
-    cdef void set_featuresC(self, ExampleC* eg, const TokenC* tokens, int i) except *:
+    def update(self, Example eg):
+        self.time += 1
+        guess = eg.guess
+        best = VecVec.arg_max_if_zero(eg.c.scores, eg.c.costs, eg.c.nr_class)
+        if guess != best:
+            for feat in eg.c.features[:eg.c.nr_feat]:
+                self.update_weight_ftrl(feat.key, best, -feat.value)
+                self.update_weight_ftrl(feat.key, guess, feat.value)
 
+    cdef void set_featuresC(self, ExampleC* eg, const TokenC* tokens, int i) except *:
         _fill_from_token(&eg.atoms[P2_orth], &tokens[i-2])
         _fill_from_token(&eg.atoms[P1_orth], &tokens[i-1])
         _fill_from_token(&eg.atoms[W_orth], &tokens[i])
@@ -149,7 +157,8 @@ cdef class Tagger:
             The newly constructed object.
         """
         if model is None:
-            model = TaggerModel(cfg.get('features', self.feature_templates))
+            model = TaggerModel(cfg.get('features', self.feature_templates),
+                                L1=0.0)
         self.vocab = vocab
         self.model = model
         self.model.l1_penalty = 0.0
@@ -249,7 +258,7 @@ cdef class Tagger:
             eg.costs = [ 1 if golds[i] not in (c, -1) else 0 for c in xrange(eg.nr_class) ]
             self.model.set_scoresC(eg.c.scores,
                 eg.c.features, eg.c.nr_feat)
-            self.model.updateC(&eg.c)
+            self.model.update(eg)
 
             self.vocab.morphology.assign_tag_id(&tokens.c[i], eg.guess)
 
