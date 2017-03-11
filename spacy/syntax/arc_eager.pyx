@@ -2,6 +2,7 @@
 # cython: cdivision=True
 # cython: infer_types=True
 from __future__ import unicode_literals
+from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 
 import ctypes
 import os
@@ -293,7 +294,23 @@ cdef int _get_root(int word, const GoldParseC* gold) nogil:
         return word
 
 
+cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
+    cdef StateClass st = StateClass.init(<const TokenC*>tokens, length)
+    # Ensure sent_start is set to 0 throughout
+    for i in range(st.c.length):
+        st.c._sent[i].sent_start = False
+        st.c._sent[i].l_edge = i
+        st.c._sent[i].r_edge = i
+    st.fast_forward()
+    Py_INCREF(st)
+    return <void*>st
+
+
 cdef class ArcEager(TransitionSystem):
+    def __init__(self, *args, **kwargs):
+        TransitionSystem.__init__(self, *args, **kwargs)
+        self.init_beam_state = _init_state
+
     @classmethod
     def get_actions(cls, **kwargs):
         actions = kwargs.get('actions',

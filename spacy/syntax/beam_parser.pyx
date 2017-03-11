@@ -83,7 +83,7 @@ cdef class BeamParser(Parser):
 
     cdef int _parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) except -1:
         cdef Beam beam = Beam(self.moves.n_moves, self.beam_width, min_density=self.beam_density)
-        beam.initialize(_init_state, length, tokens)
+        beam.initialize(self.moves.init_beam_state, length, tokens)
         beam.check_done(_check_final_state, NULL)
         if beam.is_done:
             _cleanup(beam)
@@ -99,14 +99,17 @@ cdef class BeamParser(Parser):
     def update(self, Doc tokens, GoldParse gold_parse, itn=0):
         self.moves.preprocess_gold(gold_parse)
         cdef Beam pred = Beam(self.moves.n_moves, self.beam_width)
-        pred.initialize(_init_state, tokens.length, tokens.c)
+        pred.initialize(self.moves.init_beam_state, tokens.length, tokens.c)
         pred.check_done(_check_final_state, NULL)
+        # Hack for NER
+        for i in range(pred.size):
+            stcls = <StateClass>pred.at(i)
+            self.moves.initialize_state(stcls.c)
 
         cdef Beam gold = Beam(self.moves.n_moves, self.beam_width, min_density=0.0)
-        gold.initialize(_init_state, tokens.length, tokens.c)
+        gold.initialize(self.moves.init_beam_state, tokens.length, tokens.c)
         gold.check_done(_check_final_state, NULL)
         violn = MaxViolation()
-        itn = 0
         while not pred.is_done and not gold.is_done:
             # We search separately here, to allow for ambiguity in the gold parse.
             self._advance_beam(pred, gold_parse, False)
@@ -114,7 +117,6 @@ cdef class BeamParser(Parser):
             violn.check_crf(pred, gold)
             if pred.loss > 0 and pred.min_score > (gold.score + self.model.time):
                 break
-            itn += 1
         else:
             # The non-monotonic oracle makes it difficult to ensure final costs are
             # correct. Therefore do final correction
@@ -124,8 +126,10 @@ cdef class BeamParser(Parser):
                 elif pred._states[i].loss == 0.0:
                     pred._states[i].loss = 1.0
             violn.check_crf(pred, gold)
-        assert pred.size >= 1
-        assert gold.size >= 1
+        if pred.size < 1:
+            raise Exception("No candidates", tokens.length)
+        if gold.size < 1:
+            raise Exception("No gold", tokens.length)
         if pred.loss == 0:
             self.model.update_from_histories(self.moves, tokens, [(0.0, [])])
         elif True:
@@ -164,17 +168,29 @@ cdef class BeamParser(Parser):
                     self.moves.set_valid(beam.is_valid[i], stcls.c)
                     self.model.set_scoresC(beam.scores[i], features, nr_feat)
         if gold is not None:
+            n_gold = 0
+            lines = []
             for i in range(beam.size):
                 stcls = <StateClass>beam.at(i)
                 if not stcls.c.is_final():
                     self.moves.set_costs(beam.is_valid[i], beam.costs[i], stcls, gold)
                     if follow_gold:
                         for j in range(self.moves.n_moves):
-                            beam.is_valid[i][j] *= beam.costs[i][j] <= 0
+                            if beam.costs[i][j] >= 1:
+                                beam.is_valid[i][j] = 0
+                                lines.append((stcls.B(0), stcls.B(1),
+                                    stcls.B_(0).ent_iob, stcls.B_(1).ent_iob,
+                                    stcls.B_(1).sent_start,
+                                    j,
+                                    beam.is_valid[i][j], 'set invalid',
+                                    beam.costs[i][j], self.moves.c[j].move, self.moves.c[j].label))
+                            n_gold += 1 if beam.is_valid[i][j] else 0
+            if follow_gold and n_gold == 0:
+                raise Exception("No gold")
         if follow_gold:
             beam.advance(_transition_state, NULL, <void*>self.moves.c)
         else:
-            beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
+            beam.advance(_transition_state, NULL, <void*>self.moves.c)
         beam.check_done(_check_final_state, NULL)
 
 
@@ -185,19 +201,6 @@ cdef int _transition_state(void* _dest, void* _src, class_t clas, void* _moves) 
     moves = <const Transition*>_moves
     dest.clone(src)
     moves[clas].do(dest.c, moves[clas].label)
-
-
-cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
-    cdef StateClass st = StateClass.init(<const TokenC*>tokens, length)
-    # Ensure sent_start is set to 0 throughout
-    # Ensure sent_start is set to 0 throughout
-    for i in range(st.c.length):
-        st.c._sent[i].sent_start = False
-        st.c._sent[i].l_edge = i
-        st.c._sent[i].r_edge = i
-    st.fast_forward()
-    Py_INCREF(st)
-    return <void*>st
 
 
 cdef int _check_final_state(void* _state, void* extra_args) except -1:

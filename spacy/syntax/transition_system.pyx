@@ -6,6 +6,7 @@ from collections import defaultdict
 from ..structs cimport TokenC
 from .stateclass cimport StateClass
 from ..attrs cimport TAG, HEAD, DEP, ENT_TYPE, ENT_IOB
+from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 
 
 cdef weight_t MIN_SCORE = -90000
@@ -15,19 +16,27 @@ class OracleError(Exception):
     pass
 
 
+cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
+    cdef StateClass st = StateClass.init(<const TokenC*>tokens, length)
+    # Ensure sent_start is set to 0 throughout
+    for i in range(st.c.length):
+        st.c._sent[i].sent_start = False
+    Py_INCREF(st)
+    return <void*>st
+
+
 cdef class TransitionSystem:
     def __init__(self, StringStore string_table, dict labels_by_action, _freqs=None):
         self.mem = Pool()
         self.strings = string_table
         self.n_moves = 0
         self._size = 100
-        
+
         self.c = <Transition*>self.mem.alloc(self._size, sizeof(Transition))
-        
+
         for action, label_strs in sorted(labels_by_action.items()):
             for label_str in sorted(label_strs):
                 self.add_action(int(action), label_str)
-        
         self.root_label = self.strings['ROOT']
         self.freqs = {} if _freqs is None else _freqs
         for attr in (TAG, HEAD, DEP, ENT_TYPE, ENT_IOB):
@@ -37,6 +46,7 @@ cdef class TransitionSystem:
         for i in range(10024):
             self.freqs[HEAD][i] = 1
             self.freqs[HEAD][-i] = 1
+        self.init_beam_state = _init_state
 
     def __reduce__(self):
         labels_by_action = {}
@@ -96,7 +106,7 @@ cdef class TransitionSystem:
         if self.n_moves >= self._size:
             self._size *= 2
             self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
-        
+
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label)
         self.n_moves += 1
         return 1
