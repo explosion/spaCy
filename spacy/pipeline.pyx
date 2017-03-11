@@ -1,4 +1,5 @@
 from .syntax.parser cimport Parser
+from .syntax.beam_parser cimport BeamParser
 from .syntax.ner cimport BiluoPushDown
 from .syntax.arc_eager cimport ArcEager
 from .vocab cimport Vocab
@@ -10,10 +11,10 @@ from .syntax.parser import get_templates as get_feature_templates
 from .attrs import DEP, ENT_TYPE
 
 
-cdef class EntityRecognizer(Parser):
+cdef class EntityRecognizer(BeamParser):
     """Annotate named entities on Doc objects."""
     TransitionSystem = BiluoPushDown
-    
+
     feature_templates = get_feature_templates('ner')
 
     def add_label(self, label):
@@ -28,7 +29,7 @@ cdef class EntityRecognizer(Parser):
         self.vocab._serializer = None
 
 
-cdef class DependencyParser(Parser):
+cdef class DependencyParser(BeamParser):
     TransitionSystem = ArcEager
 
     feature_templates = get_feature_templates('basic')
