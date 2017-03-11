@@ -41,7 +41,7 @@ To distinguish issues that are opened by us, the maintainers, we usually add a ð
 | [`duplicate`](https://github.com/explosion/spaCy/labels/duplicate) | Duplicates, i.e. issues that have been reported before |
 | [`meta`](https://github.com/explosion/spaCy/labels/meta) | Meta topics, e.g. repo organisation and issue management |
 | [`help wanted`](https://github.com/explosion/spaCy/labels/help%20wanted) | Requests for contributions |
-| [`help wanted (easy)`](https://github.com/explosion/spaCy/labels/help%20wanted%20%28easy%29) | Requests for contributions suitable for begginners |
+| [`help wanted (easy)`](https://github.com/explosion/spaCy/labels/help%20wanted%20%28easy%29) | Requests for contributions suitable for beginners |
 
 ## Contributing to the code base
 
