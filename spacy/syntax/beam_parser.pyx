@@ -126,14 +126,15 @@ cdef class BeamParser(Parser):
             violn.check_crf(pred, gold)
         assert pred.size >= 1
         assert gold.size >= 1
-        #_check_train_integrity(pred, gold, gold_parse, self.moves)
-        histories = zip(violn.p_probs, violn.p_hist) + zip(violn.g_probs, violn.g_hist)
-        min_grad = 0.001 ** (itn+1)
-        histories = [(grad, hist) for grad, hist in histories if abs(grad) >= min_grad]
-        random.shuffle(histories)
-        for grad, hist in histories:
-            assert not math.isnan(grad) and not math.isinf(grad), hist
-            self.model.update_from_history(self.moves, tokens, hist, grad)
+        if pred.loss == 0:
+            self.model.update_from_histories(self.moves, tokens, [(0.0, [])])
+        elif True:
+            #_check_train_integrity(pred, gold, gold_parse, self.moves)
+            histories = zip(violn.p_probs, violn.p_hist) + zip(violn.g_probs, violn.g_hist)
+            self.model.update_from_histories(self.moves, tokens, histories, min_grad=0.001**(itn+1))
+        else:
+            self.model.update_from_histories(self.moves, tokens,
+                [(1.0, violn.p_hist[0]), (-1.0, violn.g_hist[0])])
         _cleanup(pred)
         _cleanup(gold)
         return pred.loss
@@ -173,7 +174,7 @@ cdef class BeamParser(Parser):
         if follow_gold:
             beam.advance(_transition_state, NULL, <void*>self.moves.c)
         else:
-            beam.advance(_transition_state, NULL, <void*>self.moves.c)
+            beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
         beam.check_done(_check_final_state, NULL)
 
 

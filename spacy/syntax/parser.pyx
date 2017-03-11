@@ -12,7 +12,9 @@ from cpython.exc cimport PyErr_CheckSignals
 from libc.stdint cimport uint32_t, uint64_t
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport malloc, calloc, free
+
 import os.path
+from collections import Counter
 from os import path
 import shutil
 import json
@@ -80,34 +82,46 @@ cdef class ParserModel(AveragedPerceptron):
     def update(self, Example eg):
         '''Does regression on negative cost. Sort of cute?'''
         self.time += 1
-        cdef weight_t loss = 0.0
         best = arg_max_if_gold(eg.c.scores, eg.c.costs, eg.c.nr_class)
-        for clas in range(eg.c.nr_class):
-            if not eg.c.is_valid[clas]:
-                continue
-            if eg.c.scores[clas] < eg.c.scores[best]:
-                continue
+        guess = eg.guess
+        cdef weight_t loss = 0.0
+        if guess == best:
+            return loss
+        for clas in [guess, best]:
             loss += (-eg.c.costs[clas] - eg.c.scores[clas]) ** 2
-            d_loss = -2 * (-eg.c.costs[clas] - eg.c.scores[clas])
+            d_loss = eg.c.scores[clas] - -eg.c.costs[clas]
             for feat in eg.c.features[:eg.c.nr_feat]:
                 self.update_weight_ftrl(feat.key, clas, feat.value * d_loss)
-        return int(loss)
+        return loss
 
-    def update_from_history(self, TransitionSystem moves, Doc doc, history, weight_t grad):
+    def update_from_histories(self, TransitionSystem moves, Doc doc, histories, weight_t min_grad=0.0):
         cdef Pool mem = Pool()
         features = <FeatureC*>mem.alloc(self.nr_feat, sizeof(FeatureC))
 
-        cdef StateClass stcls = StateClass.init(doc.c, doc.length)
-        moves.initialize_state(stcls.c)
+        cdef StateClass stcls
 
         cdef class_t clas
         self.time += 1
         cdef atom_t[CONTEXT_SIZE] atoms
-        for clas in history:
-            nr_feat = self.set_featuresC(atoms, features, stcls.c)
-            for feat in features[:nr_feat]:
-                self.update_weight(feat.key, clas, feat.value * grad)
-            moves.c[clas].do(stcls.c, moves.c[clas].label)
+        histories = [(grad, hist) for grad, hist in histories if abs(grad) >= min_grad and hist]
+        if not histories:
+            return None
+        gradient = [Counter() for _ in range(max([max(h)+1 for _, h in histories]))]
+        for d_loss, history in histories:
+            stcls = StateClass.init(doc.c, doc.length)
+            moves.initialize_state(stcls.c)
+            for clas in history:
+                nr_feat = self.set_featuresC(atoms, features, stcls.c)
+                clas_grad = gradient[clas]
+                for feat in features[:nr_feat]:
+                    clas_grad[feat.key] += d_loss * feat.value
+                moves.c[clas].do(stcls.c, moves.c[clas].label)
+        cdef feat_t key
+        cdef weight_t d_feat
+        for clas, clas_grad in enumerate(gradient):
+            for key, d_feat in clas_grad.items():
+                if d_feat != 0:
+                    self.update_weight_ftrl(key, clas, d_feat)
 
 
 cdef class Parser:
@@ -161,7 +175,8 @@ cdef class Parser:
         elif 'features' not in cfg:
             cfg['features'] = self.feature_templates
         self.model = ParserModel(cfg['features'])
-        self.model.l1_penalty = cfg.get('L1', 0.0)
+        self.model.l1_penalty = cfg.get('L1', 1e-8)
+        self.model.learn_rate = cfg.get('learn_rate', 0.001)
 
         self.cfg = cfg
 
@@ -298,12 +313,7 @@ cdef class Parser:
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
             self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
             guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
-            if eg.c.costs[guess] > 0:
-                self.model.update(eg)
-                #best = arg_max_if_gold(eg.c.scores, eg.c.costs, eg.c.nr_class)
-                #for feat in eg.c.features[:eg.c.nr_feat]:
-                #    self.model.update_weight_ftrl(feat.key, best, -feat.value * eg.c.costs[guess])
-                #    self.model.update_weight_ftrl(feat.key, guess, feat.value * eg.c.costs[guess])
+            self.model.update(eg)
 
             action = self.moves.c[guess]
             action.do(stcls.c, action.label)
