@@ -79,7 +79,7 @@ cdef class ParserModel(AveragedPerceptron):
         nr_feat = self.extracter.set_features(features, context)
         return nr_feat
 
-    def update(self, Example eg):
+    def update(self, Example eg, itn=0):
         '''Does regression on negative cost. Sort of cute?'''
         self.time += 1
         best = arg_max_if_gold(eg.c.scores, eg.c.costs, eg.c.nr_class)
@@ -286,7 +286,7 @@ cdef class Parser:
         free(eg.is_valid)
         return 0
 
-    def update(self, Doc tokens, GoldParse gold):
+    def update(self, Doc tokens, GoldParse gold, itn=0):
         """Update the statistical model.
 
         Arguments:
