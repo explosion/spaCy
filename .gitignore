@@ -105,3 +105,8 @@ website/package.json
 website/announcement.jade
 website/www/
 website/.gitignore
+
+# Personal (Eric)
+venv
+venv/*
+.gitignore
