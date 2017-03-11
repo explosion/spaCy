@@ -228,7 +228,7 @@ cdef class Tagger:
             self(doc)
             yield doc
 
-    def update(self, Doc tokens, GoldParse gold):
+    def update(self, Doc tokens, GoldParse gold, itn=0):
         """Update the statistical model, with tags supplied for the given document.
 
         Arguments:
