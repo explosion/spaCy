@@ -106,7 +106,6 @@ website/announcement.jade
 website/www/
 website/.gitignore
 
-# Personal (Eric)
+# Python virtualenv
 venv
 venv/*
-.gitignore
