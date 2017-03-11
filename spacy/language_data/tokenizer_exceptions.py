@@ -45,6 +45,6 @@ _URL_PATTERN = (
     r"$"
 ).strip()
 
-TOKEN_MATCH = re.compile(_URL_PATTERN).match
+TOKEN_MATCH = re.compile(_URL_PATTERN, re.UNICODE).match
 
 __all__ = ['TOKEN_MATCH']
