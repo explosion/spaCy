@@ -235,7 +235,7 @@ def setup_package():
                 'numpy>=1.7',
                 'murmurhash>=0.26,<0.27',
                 'cymem>=1.30,<1.32',
-                'preshed>=0.46.0,<0.47.0',
+                'preshed>=1.0.0,<2.0.0',
                 'thinc>=6.2.0,<6.3.0',
                 'plac<0.9.3',
                 'six',
