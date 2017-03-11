@@ -9,5 +9,5 @@ cdef class EntityRecognizer(BeamParser):
     pass
 
 
-cdef class DependencyParser(BeamParser):
+cdef class DependencyParser(Parser):
     pass

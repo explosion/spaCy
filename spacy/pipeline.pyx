@@ -29,7 +29,7 @@ cdef class EntityRecognizer(BeamParser):
         self.vocab._serializer = None
 
 
-cdef class DependencyParser(BeamParser):
+cdef class DependencyParser(Parser):
     TransitionSystem = ArcEager
 
     feature_templates = get_feature_templates('basic')
