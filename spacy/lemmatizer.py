@@ -4,32 +4,16 @@ import pathlib
 
 import ujson as json
 
+from .en.lemmatizer import INDEX, EXC, RULES
 from .symbols import POS, NOUN, VERB, ADJ, PUNCT
 
 
 class Lemmatizer(object):
     @classmethod
     def load(cls, path, rules=None):
-        index = {}
-        exc = {}
-        for pos in ['adj', 'noun', 'verb']:
-            pos_index_path = path / 'wordnet' / 'index.{pos}'.format(pos=pos)
-            if pos_index_path.exists():
-                with pos_index_path.open() as file_:
-                    index[pos] = read_index(file_)
-            else:
-                index[pos] = set()
-            pos_exc_path = path / 'wordnet' / '{pos}.exc'.format(pos=pos)
-            if pos_exc_path.exists():
-                with pos_exc_path.open() as file_:
-                    exc[pos] = read_exc(file_)
-            else:
-                exc[pos] = {}
-        if rules is None and (path / 'vocab' / 'lemma_rules.json').exists():
-            with (path / 'vocab' / 'lemma_rules.json').open('r', encoding='utf8') as file_:
-                rules = json.load(file_)
-        elif rules is None:
-            rules = {}
+        index = dict(INDEX)
+        exc = dict(EXC)
+        rules = dict(RULES)
         return cls(index, exc, rules)
 
     def __init__(self, index, exceptions, rules):
@@ -94,25 +78,3 @@ def lemmatize(string, index, exceptions, rules):
     if not forms:
         forms.append(string)
     return set(forms)
-
-
-def read_index(fileobj):
-    index = set()
-    for line in fileobj:
-        if line.startswith(' '):
-            continue
-        pieces = line.split()
-        word = pieces[0]
-        if word.count('_') == 0:
-            index.add(word)
-    return index
-
-
-def read_exc(fileobj):
-    exceptions = {}
-    for line in fileobj:
-        if line.startswith(' '):
-            continue
-        pieces = line.split()
-        exceptions[pieces[0]] = tuple(pieces[1:])
-    return exceptions
