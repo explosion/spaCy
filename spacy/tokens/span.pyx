@@ -118,17 +118,6 @@ cdef class Span:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
-    def mapStr(self, fn, *argv, **kargs):
-      '''Perform a function on the string representation of each token in this span.
-      
-      Arguments:
-          fn (function): First argument will always be string of a token. Additional arguments
-          will be defined according to *argv and **kargs passed to this mapStr() method.
-          *argv (unpacked tuple): Arguments to be passed to fn
-          **kargs (unpacked dict): Arguments to be passed to fn
-      '''
-      return ''.join([fn(t.string, *argv, **kargs) for t in self]).strip()
-
     cpdef int _recalculate_indices(self) except -1:
         if self.end > self.doc.length \
         or self.doc.c[self.start].idx != self.start_char \
