@@ -1,4 +1,4 @@
-# encoding: utf8
+# coding: utf8
 from __future__ import unicode_literals
 
 from spacy.language_data import strings_to_exc, update_exc

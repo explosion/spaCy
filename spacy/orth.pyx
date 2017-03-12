@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# coding: utf8
 # cython: infer_types=True
 from __future__ import unicode_literals
 import unicodedata

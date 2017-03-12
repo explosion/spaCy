@@ -1,4 +1,4 @@
-# encoding: utf8
+# coding: utf8
 from __future__ import unicode_literals
 
 # Source: উচ্চতর বাংলা ব্যাকরণ ও রচনা - অধ্যাপক নিরঞ্জন অধিকারী ও অধ্যাপক ড. সফিউদ্দিন আহমদ
