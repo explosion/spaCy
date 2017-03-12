@@ -337,6 +337,23 @@ for exc_data in [
         ]
 
 
+# Times
+
+for h in range(1, 12 + 1):
+    hour = str(h)
+
+    for period in ["a.m.", "am"]:
+        EXC[hour + period] = [
+            {ORTH: hour},
+            {ORTH: period, LEMMA: "a.m."}
+        ]
+    for period in ["p.m.", "pm"]:
+        EXC[hour + period] = [
+            {ORTH: hour},
+            {ORTH: period, LEMMA: "p.m."}
+        ]
+
+
 # Rest
 
 OTHER = {

@@ -12,39 +12,12 @@ from .lemma_rules import LEMMA_RULES
 from .morph_rules import MORPH_RULES
 
 
-def get_time_exc(hours):
-    exc = {}
-    for hour in hours:
-        exc["%sa.m." % hour] = [
-            {ORTH: hour},
-            {ORTH: "a.m."}
-        ]
-
-        exc["%sp.m." % hour] = [
-            {ORTH: hour},
-            {ORTH: "p.m."}
-        ]
-
-        exc["%sam" % hour] = [
-            {ORTH: hour},
-            {ORTH: "am", LEMMA: "a.m."}
-        ]
-
-        exc["%spm" % hour] = [
-            {ORTH: hour},
-            {ORTH: "pm", LEMMA: "p.m."}
-        ]
-    return exc
-
-
 TAG_MAP = dict(TAG_MAP)
 STOP_WORDS = set(STOP_WORDS)
 
 
 TOKENIZER_EXCEPTIONS = dict(TOKENIZER_EXCEPTIONS)
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(ORTH_ONLY))
-update_exc(TOKENIZER_EXCEPTIONS, get_time_exc(
-    ['%d' % hour for hour in range(1, 12 + 1)]))
 update_exc(TOKENIZER_EXCEPTIONS, expand_exc(TOKENIZER_EXCEPTIONS, "'", "’"))
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.EMOTICONS))
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.ABBREVIATIONS))
