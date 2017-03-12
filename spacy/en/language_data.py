@@ -8,7 +8,6 @@ from ..symbols import ORTH, LEMMA
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, ORTH_ONLY
-from .lemma_rules import LEMMA_RULES
 from .morph_rules import MORPH_RULES
 
 
@@ -23,4 +22,4 @@ update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.EMOTICONS))
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.ABBREVIATIONS))
 
 
-__all__ = ["TOKENIZER_EXCEPTIONS", "TAG_MAP", "STOP_WORDS", "LEMMA_RULES", "MORPH_RULES"]
+__all__ = ["TOKENIZER_EXCEPTIONS", "TAG_MAP", "STOP_WORDS", "MORPH_RULES"]
