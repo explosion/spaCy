@@ -6,7 +6,7 @@ from ..language_data import update_exc, strings_to_exc, expand_exc
 from ..symbols import ORTH, LEMMA
 
 from .tag_map import TAG_MAP
-from .stop_words import STOP_WORDS
+from .word_sets import STOP_WORDS, NUM_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, ORTH_ONLY
 from .morph_rules import MORPH_RULES
 
