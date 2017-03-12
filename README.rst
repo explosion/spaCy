@@ -227,15 +227,12 @@ additionally installs developer dependencies such as Cython.
 Instead of the above verbose commands, you can also use the following
 `Fabric <http://www.fabfile.org/>`_ commands:
 
-+---------------+--------------------------------------------------------------+
-| ``fab env``   | Create ``virtualenv`` and delete previous one, if it exists. |
-+---------------+--------------------------------------------------------------+
-| ``fab make``  | Compile the source.                                          |
-+---------------+--------------------------------------------------------------+
-| ``fab clean`` | Remove compiled objects, including the generated C++.        |
-+---------------+--------------------------------------------------------------+
-| ``fab test``  | Run basic tests, aborting after first failure.               |
-+---------------+--------------------------------------------------------------+
+============= ===
+``fab env``   Create ``virtualenv`` and delete previous one, if it exists.
+``fab make``  Compile the source.
+``fab clean`` Remove compiled objects, including the generated C++.
+``fab test``  Run basic tests, aborting after first failure.
+============= ===
 
 All commands assume that your ``virtualenv`` is located in a directory ``.env``.
 If you're using a different directory, you can change it via the environment
