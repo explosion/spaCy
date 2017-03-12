@@ -37,32 +37,34 @@ software, released under the MIT license.
 📖 Documentation
 ================
 
-+--------------------------------------------------------------------------------+---------------------------------------------------------+
-| `Usage Workflows <https://spacy.io/docs/usage/>`_                              | How to use spaCy and its features.                      |
-+--------------------------------------------------------------------------------+---------------------------------------------------------+
-| `API Reference <https://spacy.io/docs/api/>`_                                  | The detailed reference for spaCy's API.                 |
-+--------------------------------------------------------------------------------+---------------------------------------------------------+
-| `Tutorials <https://spacy.io/docs/usage/tutorials>`_                           | End-to-end examples, with code you can modify and run.  |
-+--------------------------------------------------------------------------------+---------------------------------------------------------+
-| `Showcase & Demos <https://spacy.io/docs/usage/showcase>`_                     | Demos, libraries and products from the spaCy community. |
-+--------------------------------------------------------------------------------+---------------------------------------------------------+
-| `Contribute <https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md>`_ | How to contribute to the spaCy project and code base.   |
-+--------------------------------------------------------------------------------+---------------------------------------------------------+
+=================== ===
+`Usage Workflows`_  How to use spaCy and its features.
+`API Reference`_    The detailed reference for spaCy's API.
+`Tutorials`_        End-to-end examples, with code you can modify and run.
+`Showcase & Demos`_ Demos, libraries and products from the spaCy community.
+`Contribute`_       How to contribute to the spaCy project and code base.
+=================== ===
+
+.. _Usage Workflows: https://spacy.io/docs/usage/
+.. _API Reference: https://spacy.io/docs/api/
+.. _Tutorials: https://spacy.io/docs/usage/tutorials
+.. _Showcase & Demos: https://spacy.io/docs/usage/showcase
+.. _Contribute: https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md
 
 💬 Where to ask questions
 ==========================
 
-+---------------------------+------------------------------------------------------------------------------------------------------------+
-| **Bug reports**           | `GitHub Issue tracker <https://github.com/explosion/spaCy/issues>`_                                        |
-+---------------------------+------------------------------------------------------------------------------------------------------------+
-| **Usage questions**       | `StackOverflow <http://stackoverflow.com/questions/tagged/spacy>`_, `Reddit usergroup                      |
-|                           | <https://www.reddit.com/r/spacynlp>`_, `Gitter chat <https://gitter.im/explosion/spaCy>`_                  |
-+---------------------------+------------------------------------------------------------------------------------------------------------+
-| **General discussion**    | `Reddit usergroup <https://www.reddit.com/r/spacynlp>`_,                                                   |
-|                           | `Gitter chat <https://gitter.im/explosion/spaCy>`_                                                         |
-+---------------------------+------------------------------------------------------------------------------------------------------------+
-| **Commercial support**    |  contact@explosion.ai                                                                                      |
-+---------------------------+------------------------------------------------------------------------------------------------------------+
+====================== ===
+**Bug reports**        `GitHub issue tracker`_
+**Usage questions**    `StackOverflow`_, `Gitter chat`_, `Reddit user group`_
+**General discussion** `Gitter chat`_, `Reddit user group`_
+**Commercial support** contact@explosion.ai
+====================== ===
+
+.. _GitHub issue tracker: https://github.com/explosion/spaCy/issues
+.. _StackOverflow: http://stackoverflow.com/questions/tagged/spacy
+.. _Gitter chat: https://gitter.im/explosion/spaCy
+.. _Reddit user group: https://www.reddit.com/r/spacynlp
 
 Features
 ========
@@ -85,7 +87,7 @@ Features
 See `facts, figures and benchmarks <https://spacy.io/docs/api/>`_.
 
 Top Performance
-===============
+---------------
 
 * Fastest in the world: <50ms per document.  No faster system has ever been
   announced.
@@ -94,21 +96,22 @@ Top Performance
   accurate systems are an order of magnitude slower or more.
 
 Supports
-========
+--------
 
-* CPython 2.6, 2.7, 3.3, 3.4, 3.5 (only 64 bit)
-* macOS / OS X
-* Linux
-* Windows (Cygwin, MinGW, Visual Studio)
+==================== ===
+**Operating system** macOS / OS X, Linux, Windows (Cygwin, MinGW, Visual Studio)
+**Python version**   CPython 2.6, 2.7, 3.3, 3.4, 3.5. Only 64 bit.
+**Package managers** `pip`_ (source packages only), `conda`_ (via ``conda-forge``)
+==================== ===
+
+.. _pip: https://pypi.python.org/pypi/spacy
+.. _conda: https://anaconda.org/conda-forge/spacy
 
 Install spaCy
 =============
 
-spaCy is compatible with **64-bit CPython 2.6+/3.3+** and runs on **Unix/Linux**,
-**macOS/OS X** and **Windows**. The latest spaCy releases are available over
-`pip <https://pypi.python.org/pypi/spacy>`_ (source packages only) and
-`conda <https://anaconda.org/conda-forge/spacy>`_. Installation requires a working
-build environment. See notes on Ubuntu, macOS/OS X and Windows for details.
+Installation requires a working build environment. See notes on Ubuntu,
+macOS/OS X and Windows for details.
 
 pip
 ---
