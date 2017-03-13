@@ -1,3 +1,5 @@
+# cython: profile=True
+# cython: infer_types=True
 from __future__ import unicode_literals, print_function
 
 import numpy
