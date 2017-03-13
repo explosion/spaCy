@@ -13,5 +13,4 @@ def test_issue636(EN, text):
     doc1 = EN(text)
     doc2 = Doc(EN.vocab)
     doc2.from_bytes(doc1.to_bytes())
-    print([t.lemma_ for t in doc1], [t.lemma_ for t in doc2])
     assert [t.lemma_ for t in doc1] == [t.lemma_ for t in doc2]
