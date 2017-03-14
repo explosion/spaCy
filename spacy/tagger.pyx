@@ -16,9 +16,8 @@ from thinc.extra.eg cimport Example
 from thinc.structs cimport ExampleC
 from thinc.linear.avgtron cimport AveragedPerceptron
 from thinc.linalg cimport Vec, VecVec
-from thinc.linear.linear import LinearModel
 from thinc.structs cimport FeatureC
-from thinc.neural.optimizers import Adam
+from thinc.neural.optimizers import Adam, SGD
 from thinc.neural.ops import NumpyOps
 
 from .typedefs cimport attr_t
@@ -80,69 +79,16 @@ cpdef enum:
     N_CONTEXT_FIELDS
 
 
-cdef class TaggerModel:
-    def __init__(self, int nr_tag, templates):
-        self.extracter = ConjunctionExtracter(templates)
-        self.model = LinearModel(nr_tag)
-
-    def begin_update(self, atom_t[:, ::1] contexts, drop=0.):
-        cdef vector[uint64_t]* keys = new vector[uint64_t]()
-        cdef vector[float]* values = new vector[float]()
-        cdef vector[int64_t]* lengths = new vector[int64_t]()
-        features = new vector[FeatureC](self.extracter.nr_templ)
-        features.resize(self.extracter.nr_templ)
-        cdef FeatureC feat
-        cdef int i, j
-        for i in range(contexts.shape[0]):
-            nr_feat = self.extracter.set_features(features.data(), &contexts[i, 0])
-            for j in range(nr_feat):
-                keys.push_back(features.at(j).key)
-                values.push_back(features.at(j).value)
-            lengths.push_back(nr_feat)
-        cdef np.ndarray[uint64_t, ndim=1] py_keys
-        cdef np.ndarray[float, ndim=1] py_values
-        cdef np.ndarray[long, ndim=1] py_lengths
-        py_keys = vector_uint64_2numpy(keys)
-        py_values = vector_float_2numpy(values)
-        py_lengths = vector_long_2numpy(lengths)
-        instance = (py_keys, py_values, py_lengths)
-        del keys
-        del values
-        del lengths
-        del features
-        return self.model.begin_update(instance, drop=drop)
-
-    def end_training(self, *args, **kwargs):
-        pass
-
-    def dump(self, *args, **kwargs):
-        pass
-
-
-cdef np.ndarray[uint64_t, ndim=1] vector_uint64_2numpy(vector[uint64_t]* vec):
-    cdef np.ndarray[uint64_t, ndim=1, mode="c"] arr = np.zeros(vec.size(), dtype='uint64')
-    memcpy(arr.data, vec.data(), sizeof(uint64_t) * vec.size())
-    return arr
-
-
-cdef np.ndarray[long, ndim=1] vector_long_2numpy(vector[int64_t]* vec):
-    cdef np.ndarray[long, ndim=1, mode="c"] arr = np.zeros(vec.size(), dtype='int64')
-    memcpy(arr.data, vec.data(), sizeof(int64_t) * vec.size())
-    return arr
-
-
-cdef np.ndarray[float, ndim=1] vector_float_2numpy(vector[float]* vec):
-    cdef np.ndarray[float, ndim=1, mode="c"] arr = np.zeros(vec.size(), dtype='float32')
-    memcpy(arr.data, vec.data(), sizeof(float) * vec.size())
-    return arr
-
-
-cdef void fill_context(atom_t* context, const TokenC* tokens, int i) nogil:
-    _fill_from_token(&context[P2_orth], &tokens[i-2])
-    _fill_from_token(&context[P1_orth], &tokens[i-1])
-    _fill_from_token(&context[W_orth], &tokens[i])
-    _fill_from_token(&context[N1_orth], &tokens[i+1])
-    _fill_from_token(&context[N2_orth], &tokens[i+2])
+cdef class TaggerModel(LinearModel):
+    cdef int set_featuresC(self, FeatureC* features, atom_t* context,
+            const TokenC* tokens, int i) nogil:
+        _fill_from_token(&context[P2_orth], &tokens[i-2])
+        _fill_from_token(&context[P1_orth], &tokens[i-1])
+        _fill_from_token(&context[W_orth], &tokens[i])
+        _fill_from_token(&context[N1_orth], &tokens[i+1])
+        _fill_from_token(&context[N2_orth], &tokens[i+2])
+        nr_feat = self.extracter.set_features(features, context)
+        return nr_feat
 
 
 cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
@@ -213,8 +159,10 @@ cdef class Tagger:
             The newly constructed object.
         """
         if model is None:
+            print("Create tagger")
             model = TaggerModel(vocab.morphology.n_tags,
-                        cfg.get('features', self.feature_templates))
+                        cfg.get('features', self.feature_templates),
+                        learn_rate=0.01, size=2**18)
         self.vocab = vocab
         self.model = model
         # TODO: Move this to tag map
@@ -223,7 +171,7 @@ cdef class Tagger:
             self.freqs[TAG][self.vocab.strings[tag]] = 1
         self.freqs[TAG][0] = 1
         self.cfg = cfg
-        self.optimizer = Adam(NumpyOps(), 0.001)
+        self.optimizer = SGD(NumpyOps(), 0.001, momentum=0.9)
 
     @property
     def tag_names(self):
@@ -250,20 +198,22 @@ cdef class Tagger:
         if tokens.length == 0:
             return 0
 
-        cdef atom_t[1][N_CONTEXT_FIELDS] c_context
-        memset(c_context, 0, sizeof(c_context))
-        cdef atom_t[:, ::1] context = c_context
-        cdef float[:, ::1] scores
+        cdef atom_t[N_CONTEXT_FIELDS] context
 
         cdef int nr_class = self.vocab.morphology.n_tags
+        cdef Pool mem = Pool()
+        scores = <weight_t*>mem.alloc(nr_class, sizeof(weight_t))
+        features = <FeatureC*>mem.alloc(self.model.nr_feat, sizeof(FeatureC))
         for i in range(tokens.length):
             if tokens.c[i].pos == 0:
-                fill_context(&context[0, 0], tokens.c, i)
-                scores, _ = self.model.begin_update(context)
-
-                guess = Vec.arg_max(&scores[0, 0], nr_class)
+                nr_feat = self.model.set_featuresC(features, context, tokens.c, i)
+                self.model.set_scoresC(scores,
+                    features, nr_feat)
+                guess = Vec.arg_max(scores, nr_class)
                 self.vocab.morphology.assign_tag_id(&tokens.c[i], guess)
-                memset(&scores[0, 0], 0, sizeof(float) * scores.size)
+                memset(scores, 0, sizeof(weight_t) * nr_class)
+                memset(features, 0, sizeof(FeatureC) * nr_feat)
+                memset(context, 0, sizeof(N_CONTEXT_FIELDS))
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
 
@@ -295,7 +245,6 @@ cdef class Tagger:
         Returns (int):
             Number of tags correct.
         """
-        cdef int nr_class = self.vocab.morphology.n_tags
         gold_tag_strs = gold.tags
         assert len(tokens) == len(gold_tag_strs)
         for tag in gold_tag_strs:
@@ -303,27 +252,47 @@ cdef class Tagger:
                 msg = ("Unrecognized gold tag: %s. tag_map.json must contain all "
                        "gold tags, to maintain coarse-grained mapping.")
                 raise ValueError(msg % tag)
-        golds = [self.tag_names.index(g) if g is not None else -1 for g in gold_tag_strs]
+        cdef Pool mem = Pool()
+        golds = <int*>mem.alloc(sizeof(int), len(gold_tag_strs))
+        for i, g in enumerate(gold_tag_strs):
+            golds[i] = self.tag_names.index(g) if g is not None else -1
+
+        cdef atom_t[N_CONTEXT_FIELDS] context
+        cdef int nr_class = self.model.nr_class
+        costs = <weight_t*>mem.alloc(sizeof(weight_t), nr_class)
+        features = <FeatureC*>mem.alloc(sizeof(FeatureC), self.model.nr_feat)
+        scores = <weight_t*>mem.alloc(sizeof(weight_t), nr_class)
+        d_scores = <weight_t*>mem.alloc(sizeof(weight_t), nr_class)
+
         cdef int correct = 0
-
-        cdef atom_t[:, ::1] context = np.zeros((1, N_CONTEXT_FIELDS), dtype='uint64')
-        cdef float[:, ::1] scores
-
         for i in range(tokens.length):
-            fill_context(&context[0, 0], tokens.c, i)
-            scores, finish_update = self.model.begin_update(context)
-            guess = Vec.arg_max(&scores[0, 0], nr_class)
-            self.vocab.morphology.assign_tag_id(&tokens.c[i], guess)
+            nr_feat = self.model.set_featuresC(features, context, tokens.c, i)
+            self.model.set_scoresC(scores,
+                features, nr_feat)
 
             if golds[i] != -1:
-                scores[0, golds[i]] -= 1 
-                finish_update(scores, lambda *args, **kwargs: None)
+                for j in range(nr_class):
+                    costs[j] = 1
+                costs[golds[i]] = 0
+            self.model.log_lossC(d_scores, scores, costs)
+            self.model.set_gradientC(d_scores, features, nr_feat)
 
-            if (golds[i] in (guess, -1)):
-                correct += 1
+            guess = Vec.arg_max(scores, nr_class)
+            #print(tokens[i].text, golds[i], guess, [features[i].key for i in range(nr_feat)])
+
+            self.vocab.morphology.assign_tag_id(&tokens.c[i], guess)
+
             self.freqs[TAG][tokens.c[i].tag] += 1
-        self.optimizer(self.model.model.weights, self.model.model.d_weights,
-            key=self.model.model.id)
+            correct += costs[guess] == 0
+
+            memset(features, 0, sizeof(FeatureC) * nr_feat)
+            memset(costs, 0, sizeof(weight_t) * nr_class)
+            memset(scores, 0, sizeof(weight_t) * nr_class)
+            memset(d_scores, 0, sizeof(weight_t) * nr_class)
+ 
+        #if itn % 10 == 0:
+        #    self.optimizer(self.model.weights.ravel(), self.model.d_weights.ravel(),
+        #                   key=1)
         tokens.is_tagged = True
         tokens._py_tokens = [None] * tokens.length
         return correct

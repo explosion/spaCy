@@ -14,6 +14,7 @@ class Trainer(object):
         self.nlp = nlp
         self.gold_tuples = gold_tuples
         self.nr_epoch = 0
+        self.nr_itn = 0
 
     def epochs(self, nr_epoch, augment_data=None, gold_preproc=False):
         cached_golds = {}
@@ -36,6 +37,7 @@ class Trainer(object):
                     golds = self.make_golds(docs, paragraph_tuples)
                 for doc, gold in zip(docs, golds):
                     yield doc, gold
+                    self.nr_itn += 1
 
         indices = list(range(len(self.gold_tuples)))
         for itn in range(nr_epoch):
@@ -46,7 +48,7 @@ class Trainer(object):
     def update(self, doc, gold):
         for process in self.nlp.pipeline:
             if hasattr(process, 'update'):
-                loss = process.update(doc, gold, itn=self.nr_epoch)
+                loss = process.update(doc, gold, itn=self.nr_itn)
             process(doc)
         return doc
 

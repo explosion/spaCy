@@ -1,15 +1,14 @@
-from thinc.linear.avgtron cimport AveragedPerceptron
-from thinc.extra.eg cimport Example
-from thinc.structs cimport ExampleC
-from thinc.linear.features cimport ConjunctionExtracter
-
 from .structs cimport TokenC
 from .vocab cimport Vocab
+from ._ml cimport LinearModel
+from thinc.structs cimport FeatureC
+from thinc.typedefs cimport atom_t
 
 
-cdef class TaggerModel:
-    cdef ConjunctionExtracter extracter
-    cdef object model
+cdef class TaggerModel(LinearModel):
+    cdef int set_featuresC(self, FeatureC* features, atom_t* context,
+            const TokenC* tokens, int i) nogil
+ 
 
 
 cdef class Tagger:

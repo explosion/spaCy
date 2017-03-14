@@ -70,7 +70,7 @@ cdef weight_t push_cost(StateClass stcls, const GoldParseC* gold, int target) no
 cdef weight_t pop_cost(StateClass stcls, const GoldParseC* gold, int target) nogil:
     cdef weight_t cost = 0
     cdef int i, B_i
-    for i in range(stcls.buffer_length()):
+    for i in range(min(30, stcls.buffer_length())):
         B_i = stcls.B(i)
         cost += gold.heads[B_i] == target
         cost += gold.heads[target] == B_i
@@ -268,10 +268,12 @@ cdef class Break:
         cdef int i, j, S_i, B_i
         for i in range(s.stack_depth()):
             S_i = s.S(i)
-            for j in range(s.buffer_length()):
+            for j in range(min(30, s.buffer_length())):
                 B_i = s.B(j)
                 cost += gold.heads[S_i] == B_i
                 cost += gold.heads[B_i] == S_i
+                if cost != 0:
+                    break
         # Check for sentence boundary --- if it's here, we can't have any deps
         # between stack and buffer, so rest of action is irrelevant.
         s0_root = _get_root(s.S(0), gold)
@@ -462,7 +464,7 @@ cdef class ArcEager(TransitionSystem):
         cdef int* labels = gold.c.labels
         cdef int* heads = gold.c.heads
 
-        n_gold = 0
+        cdef int n_gold = 0
         for i in range(self.n_moves):
             if self.c[i].is_valid(stcls.c, self.c[i].label):
                 is_valid[i] = True

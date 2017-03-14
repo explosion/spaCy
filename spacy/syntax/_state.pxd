@@ -304,11 +304,13 @@ cdef cppclass StateC:
             this._break = this._b_i
 
     void clone(const StateC* src) nogil:
-        memcpy(this._sent, src._sent, this.length * sizeof(TokenC))
-        memcpy(this._stack, src._stack, this.length * sizeof(int))
-        memcpy(this._buffer, src._buffer, this.length * sizeof(int))
-        memcpy(this._ents, src._ents, this.length * sizeof(Entity))
-        memcpy(this.shifted, src.shifted, this.length * sizeof(this.shifted[0]))
+        # This is still quadratic, but make it a it faster.
+        # Not carefully reviewed for accuracy yet.
+        memcpy(this._sent, src._sent, this.B(1) * sizeof(TokenC))
+        memcpy(this._stack, src._stack, this._s_i * sizeof(int))
+        memcpy(this._buffer, src._buffer, this._b_i * sizeof(int))
+        memcpy(this._ents, src._ents, this._e_i * sizeof(Entity))
+        memcpy(this.shifted, src.shifted, this.B(2) * sizeof(this.shifted[0]))
         this.length = src.length
         this._b_i = src._b_i
         this._s_i = src._s_i

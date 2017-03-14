@@ -56,6 +56,7 @@ MOD_NAMES = [
     'spacy.lexeme',
     'spacy.vocab',
     'spacy.attrs',
+    'spacy._ml',
     'spacy.morphology',
     'spacy.tagger',
     'spacy.pipeline',
