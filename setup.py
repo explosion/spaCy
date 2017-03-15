@@ -240,7 +240,6 @@ def setup_package():
                 'plac<0.9.3',
                 'six',
                 'pathlib',
-                'sputnik>=0.9.2,<0.10.0',
                 'ujson>=1.35',
                 'dill>=0.2,<0.3',
                 'requests>=2.13.0,<3.0.0'],
