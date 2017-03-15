@@ -87,8 +87,8 @@ cdef class ParserModel(AveragedPerceptron):
         if guess == best or best == -1:
             return 0.0
         for feat in eg.c.features[:eg.c.nr_feat]:
-            self.update_weight(feat.key, guess, feat.value * eg.c.costs[guess])
-            self.update_weight(feat.key, best, -feat.value * eg.c.costs[guess])
+            self.update_weight_ftrl(feat.key, guess, feat.value * eg.c.costs[guess])
+            self.update_weight_ftrl(feat.key, best, -feat.value * eg.c.costs[guess])
         #for clas in [guess, best]:
         #    loss += (-eg.c.costs[clas] - eg.c.scores[clas]) ** 2
         #    d_loss = eg.c.scores[clas] - -eg.c.costs[clas]
