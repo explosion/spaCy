@@ -78,11 +78,13 @@ cdef class BeamParser(Parser):
         self.beam_density = kwargs.get('beam_density', BEAM_DENSITY)
         Parser.__init__(self, *args, **kwargs)
 
-    cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) with gil:
-        self._parseC(tokens, length, nr_feat, nr_class)
+    cdef int parseC(self, TokenC* tokens, int length, int nr_feat) nogil:
+        with gil:
+            self._parseC(tokens, length, nr_feat, self.moves.n_moves)
 
     cdef int _parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) except -1:
         cdef Beam beam = Beam(self.moves.n_moves, self.beam_width, min_density=self.beam_density)
+        # TODO: How do we handle new labels here? This increases nr_class
         beam.initialize(self.moves.init_beam_state, length, tokens)
         beam.check_done(_check_final_state, NULL)
         if beam.is_done:
@@ -190,7 +192,7 @@ cdef class BeamParser(Parser):
         if follow_gold:
             beam.advance(_transition_state, NULL, <void*>self.moves.c)
         else:
-            beam.advance(_transition_state, NULL, <void*>self.moves.c)
+            beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
         beam.check_done(_check_final_state, NULL)
 
 
@@ -254,11 +256,13 @@ def is_gold(StateClass state, GoldParse gold, StringStore strings):
     predicted = set()
     truth = set()
     for i in range(gold.length):
+        if gold.cand_to_gold[i] is None:
+            continue
         if state.safe_get(i).dep:
             predicted.add((i, state.H(i), strings[state.safe_get(i).dep]))
         else:
             predicted.add((i, state.H(i), 'ROOT'))
-        id_, word, tag, head, dep, ner = gold.orig_annot[i]
+        id_, word, tag, head, dep, ner = gold.orig_annot[gold.cand_to_gold[i]]
         truth.add((id_, head, dep))
     return truth == predicted
 
