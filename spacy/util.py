@@ -6,9 +6,9 @@ import json
 import re
 import os.path
 import pathlib
-
 import six
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
+
 
 try:
     basestring
@@ -72,20 +72,6 @@ def match_best_version(target_name, target_version, path):
 
 def split_data_name(name):
     return name.split('-', 1) if '-' in name else (name, '')
-
-
-def constraint_match(constraint_string, version):
-    # From http://github.com/spacy-io/sputnik
-    if not constraint_string:
-        return True
-
-    constraints = [c.strip() for c in constraint_string.split(',') if c.strip()]
-
-    for c in constraints:
-        if not re.match(r'[><=][=]?\d+(\.\d+)*', c):
-            raise ValueError('invalid constraint: %s' % c)
-
-    return all(semver.match(version, c) for c in constraints)
 
 
 def read_regex(path):
