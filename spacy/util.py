@@ -1,5 +1,5 @@
 # coding: utf8
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 import os
 import io
 import json
@@ -7,6 +7,8 @@ import re
 import os.path
 import pathlib
 import six
+import textwrap
+
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 
@@ -130,3 +132,30 @@ def check_renamed_kwargs(renamed, kwargs):
     for old, new in renamed.items():
         if old in kwargs:
             raise TypeError("Keyword argument %s now renamed to %s" % (old, new))
+
+
+def print_msg(*text, **kwargs):
+    """Print formatted message. Each positional argument is rendered as newline-
+    separated paragraph. If kwarg 'title' exist, title is printed above the text
+    and highlighted (using ANSI escape sequences manually to avoid unnecessary
+    dependency)."""
+
+    message = '\n\n'.join([_wrap_text(t) for t in text])
+    tpl_msg = '\n{msg}\n'
+    tpl_title = '\n\033[93m{msg}\033[0m'
+
+    if 'title' in kwargs and kwargs['title']:
+        title = _wrap_text(kwargs['title'])
+        print(tpl_title.format(msg=title))
+    print(tpl_msg.format(msg=message))
+
+
+def _wrap_text(text):
+    """Wrap text at given width using textwrap module. Indent should consist of
+    spaces. Its length is deducted from wrap width to ensure exact wrapping."""
+
+    wrap_max = 80
+    indent = '    '
+    wrap_width = wrap_max - len(indent)
+    return textwrap.fill(text, width=wrap_width, initial_indent=indent,
+                               subsequent_indent=indent)
