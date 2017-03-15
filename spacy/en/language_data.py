@@ -9,6 +9,9 @@ from .tag_map import TAG_MAP
 from .word_sets import STOP_WORDS, NUM_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, ORTH_ONLY
 from .morph_rules import MORPH_RULES
+from .lemmatizer import RULES as LEMMA_RULES
+from .lemmatizer import INDEX as LEMMA_INDEX
+from .lemmatizer import EXC as LEMMA_EXC
 
 
 TAG_MAP = dict(TAG_MAP)
@@ -22,4 +25,5 @@ update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.EMOTICONS))
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.ABBREVIATIONS))
 
 
-__all__ = ["TOKENIZER_EXCEPTIONS", "TAG_MAP", "STOP_WORDS", "MORPH_RULES"]
+__all__ = ["TOKENIZER_EXCEPTIONS", "TAG_MAP", "STOP_WORDS", "MORPH_RULES",
+           "LEMMA_RULES", "LEMMA_INDEX", "LEMMA_EXC"]

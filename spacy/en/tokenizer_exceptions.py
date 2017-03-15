@@ -770,5 +770,5 @@ ORTH_ONLY = [
     "Rev.",
     "Sen.",
     "St.",
-    "vs."
+    "vs.",
 ]

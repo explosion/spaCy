@@ -31,6 +31,7 @@ class English(Language):
         tag_map = TAG_MAP
         stop_words = STOP_WORDS
 
+        morph_rules = dict(MORPH_RULES)
         lemma_rules = dict(LEMMA_RULES)
         lemma_index = dict(LEMMA_INDEX)
         lemma_exc = dict(LEMMA_EXC)
