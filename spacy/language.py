@@ -51,11 +51,15 @@ class BaseDefaults(object):
             # This is very messy, but it's the minimal working fix to Issue #639.
             # This defaults stuff needs to be refactored (again)
             lex_attr_getters[IS_STOP] = lambda string: string.lower() in cls.stop_words
-            return Vocab(lex_attr_getters=lex_attr_getters, tag_map=cls.tag_map,
+            vocab = Vocab(lex_attr_getters=lex_attr_getters, tag_map=cls.tag_map,
                          lemmatizer=lemmatizer)
         else:
-            return Vocab.load(nlp.path, lex_attr_getters=cls.lex_attr_getters,
+            vocab = Vocab.load(nlp.path, lex_attr_getters=cls.lex_attr_getters,
                              tag_map=cls.tag_map, lemmatizer=lemmatizer)
+        for tag_str, exc in cls.morph_rules.items():
+            for orth_str, attrs in exc.items():
+                vocab.morphology.add_special_case(tag_str, orth_str, attrs)
+        return vocab
 
     @classmethod
     def add_vectors(cls, nlp=None):
@@ -169,6 +173,7 @@ class BaseDefaults(object):
     lemma_rules = {}
     lemma_exc = {}
     lemma_index = {}
+    morph_rules = {}
 
     lex_attr_getters = {
         attrs.LOWER: lambda string: string.lower(),
