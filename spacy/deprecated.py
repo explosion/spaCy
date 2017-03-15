@@ -14,7 +14,6 @@ def read_lang_data(package):
     return tokenization, prefix, suffix, infix
 
 
-
 def align_tokens(ref, indices): # Deprecated, surely?
     start = 0
     queue = list(indices)
