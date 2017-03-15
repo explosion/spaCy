@@ -242,7 +242,8 @@ def setup_package():
                 'pathlib',
                 'sputnik>=0.9.2,<0.10.0',
                 'ujson>=1.35',
-                'dill>=0.2,<0.3'],
+                'dill>=0.2,<0.3',
+                'requests>=2.13.0,<3.0.0'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',
