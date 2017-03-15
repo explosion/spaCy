@@ -1,3 +1,4 @@
+# cython: profile=True
 from __future__ import unicode_literals, print_function
 
 import numpy
@@ -90,9 +91,9 @@ def _min_edit_path(cand_words, gold_words):
     # TODO: Fix this --- just do it properly, make the full edit matrix and
     # then walk back over it...
     # Preprocess inputs
-    cand_words = [punct_re.sub('', w) for w in cand_words] 
-    gold_words = [punct_re.sub('', w) for w in gold_words] 
-    
+    cand_words = [punct_re.sub('', w) for w in cand_words]
+    gold_words = [punct_re.sub('', w) for w in gold_words]
+
     if cand_words == gold_words:
         return 0, ''.join(['M' for _ in gold_words])
     mem = Pool()
@@ -132,7 +133,7 @@ def _min_edit_path(cand_words, gold_words):
             else:
                 best_cost = d_cost
                 best_hist = previous_row[j + 1] + 'D'
-            
+
             current_row.append(best_hist)
             curr_costs[j+1] = best_cost
         previous_row = current_row
@@ -306,7 +307,7 @@ cdef class GoldParse:
 
     def __len__(self):
         """Get the number of gold-standard tokens.
-        
+
         Returns (int): The number of gold-standard tokens.
         """
         return self.length
@@ -330,7 +331,7 @@ def biluo_tags_from_offsets(doc, entities):
         entities (sequence):
             A sequence of (start, end, label) triples. start and end should be
             character-offset integers denoting the slice into the original string.
-    
+
     Returns:
         tags (list):
             A list of unicode strings, describing the tags. Each tag string will
@@ -348,7 +349,7 @@ def biluo_tags_from_offsets(doc, entities):
         doc = nlp.tokenizer(text)
 
         tags = biluo_tags_from_offsets(doc, entities)
-        
+
         assert tags == ['O', 'O', 'U-LOC', 'O']
     '''
     starts = {token.idx: token.i for token in doc}
