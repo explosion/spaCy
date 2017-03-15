@@ -1,7 +1,6 @@
 # coding: utf8
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
 
-from os import path
 from ..language import Language
 from ..lemmatizer import Lemmatizer
 from ..vocab import Vocab
@@ -10,6 +9,7 @@ from ..attrs import LANG
 from ..deprecated import fix_glove_vectors_loading
 
 from .language_data import *
+
 
 try:
     basestring
