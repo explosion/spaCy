@@ -33,6 +33,7 @@ from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD, PROB, LANG, IS_STOP
 from .syntax.parser import get_templates
 from .syntax.nonproj import PseudoProjectivity
 from .pipeline import DependencyParser, EntityRecognizer
+from .pipeline import BeamDependencyParser, BeamEntityRecognizer
 from .syntax.arc_eager import ArcEager
 from .syntax.ner import BiluoPushDown
 
@@ -40,10 +41,7 @@ from .syntax.ner import BiluoPushDown
 class BaseDefaults(object):
     @classmethod
     def create_lemmatizer(cls, nlp=None):
-        if nlp is None or nlp.path is None:
-            return Lemmatizer({}, {}, {})
-        else:
-            return Lemmatizer.load(nlp.path, rules=cls.lemma_rules)
+        return Lemmatizer(cls.lemma_index, cls.lemma_exc, cls.lemma_rules)
 
     @classmethod
     def create_vocab(cls, nlp=None):
@@ -169,6 +167,8 @@ class BaseDefaults(object):
     stop_words = set()
 
     lemma_rules = {}
+    lemma_exc = {}
+    lemma_index = {}
 
     lex_attr_getters = {
         attrs.LOWER: lambda string: string.lower(),

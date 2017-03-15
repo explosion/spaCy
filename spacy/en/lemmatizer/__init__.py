@@ -21,7 +21,7 @@ EXC = {
     "adj": ADJECTIVES_IRREG,
     "adv": ADVERBS_IRREG,
     "noun": NOUNS_IRREG,
-    "verbs": VERBS_IRREG
+    "verb": VERBS_IRREG
 }
 
 

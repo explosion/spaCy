@@ -31,6 +31,10 @@ class English(Language):
         tag_map = TAG_MAP
         stop_words = STOP_WORDS
 
+        lemma_rules = dict(LEMMA_RULES)
+        lemma_index = dict(LEMMA_INDEX)
+        lemma_exc = dict(LEMMA_EXC)
+
 
     def __init__(self, **overrides):
         # Make a special-case hack for loading the GloVe vectors, to support
