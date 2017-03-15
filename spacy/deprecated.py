@@ -3,6 +3,7 @@ from sputnik.package_list import (PackageNotFoundException,
                                   CompatiblePackageNotFoundException)
 
 import sputnik
+from pathlib import Path
 from . import about
 
 
@@ -30,6 +31,7 @@ def get_package_by_name(name=None, via=None):
                            (lang.__module__))
 
 
+from . import util
 
 
 def read_lang_data(package):
@@ -79,4 +81,31 @@ def detokenize(token_rules, words): # Deprecated?
     return positions
 
 
+def fix_glove_vectors_loading(overrides):
+    """Special-case hack for loading the GloVe vectors, to support deprecated
+    <1.0 stuff. Phase this out once the data is fixed."""
 
+    if 'data_dir' in overrides and 'path' not in overrides:
+        raise ValueError("The argument 'data_dir' has been renamed to 'path'")
+    if overrides.get('path') is False:
+        return overrides
+    if overrides.get('path') in (None, True):
+        data_path = util.get_data_path()
+    else:
+        path = overrides['path']
+        if isinstance(path, basestring):
+            path = Path(path)
+        data_path = path.parent
+    vec_path = None
+    if 'add_vectors' not in overrides:
+        if 'vectors' in overrides:
+            vec_path = util.match_best_version(overrides['vectors'], None, data_path)
+            if vec_path is None:
+                return overrides
+        else:
+            vec_path = util.match_best_version('en_glove_cc_300_1m_vectors', None, data_path)
+        if vec_path is not None:
+            vec_path = vec_path / 'vocab' / 'vec.bin'
+    if vec_path is not None:
+        overrides['add_vectors'] = lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
+    return overrides
