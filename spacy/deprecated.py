@@ -1,36 +1,5 @@
-from sputnik.dir_package import DirPackage
-from sputnik.package_list import (PackageNotFoundException,
-                                  CompatiblePackageNotFoundException)
-
-import sputnik
 from pathlib import Path
 from . import about
-
-
-def get_package(data_dir):
-    if not isinstance(data_dir, six.string_types):
-        raise RuntimeError('data_dir must be a string')
-    return DirPackage(data_dir)
-
-
-def get_package_by_name(name=None, via=None):
-    if name is None:
-        return
-    lang = get_lang_class(name)
-    try:
-        return sputnik.package(about.__title__, about.__version__,
-            name, data_path=via)
-    except PackageNotFoundException as e:
-        raise RuntimeError("Model '%s' not installed. Please run 'python -m "
-                           "%s.download' to install latest compatible "
-                           "model." % (name, lang.__module__))
-    except CompatiblePackageNotFoundException as e:
-        raise RuntimeError("Installed model is not compatible with spaCy "
-                           "version. Please run 'python -m %s.download "
-                           "--force' to install latest compatible model." %
-                           (lang.__module__))
-
-
 from . import util
 
 
