@@ -1,6 +1,7 @@
 from pathlib import Path
 from . import about
 from . import util
+from .download import download
 
 
 def read_lang_data(package):
@@ -77,3 +78,27 @@ def fix_glove_vectors_loading(overrides):
     if vec_path is not None:
         overrides['add_vectors'] = lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
     return overrides
+
+
+class ModelDownload():
+    """Replace download modules within en and de with deprecation warning and
+    download default language model (using shortcut). Use classmethods to allow
+    importing ModelDownload as download and calling download.en() etc."""
+
+    @classmethod
+    def load(self, lang):
+        util.print_msg(
+            "The spacy.{l}.download command is now deprecated. Please use "
+            "spacy.download [model name or shortcut] instead. For more "
+            "info and available models, see the documentation: {d}. "
+            "Downloading default '{l}' model now...".format(d=about.__docs__, l=lang),
+            title="Warning: deprecated command")
+        download(lang)
+
+    @classmethod
+    def en(cls, *args, **kwargs):
+        cls.load('en')
+
+    @classmethod
+    def de(cls, *args, **kwargs):
+        cls.load('de')
