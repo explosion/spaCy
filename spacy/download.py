@@ -14,6 +14,8 @@ from . import util
     direct=("Force direct download", "flag", "d", bool)
 )
 def download(model=None, direct=False):
+    """Download compatible model from default download path using pip."""
+
     check_error_depr(model)
 
     if direct:
