@@ -1,4 +1,9 @@
-from .util import set_lang_class, get_lang_class
+# coding: utf8
+from __future__ import unicode_literals, print_function
+
+import json
+from pathlib import Path
+from .util import set_lang_class, get_lang_class, parse_package_meta
 
 from . import en
 from . import de
@@ -12,12 +17,6 @@ from . import nl
 from . import sv
 from . import fi
 from . import bn
-
-
-try:
-    basestring
-except NameError:
-    basestring = str
 
 
 set_lang_class(en.English.lang, en.English)
@@ -34,11 +33,11 @@ set_lang_class(fi.Finnish.lang, fi.Finnish)
 set_lang_class(bn.Bengali.lang, bn.Bengali)
 
 
-
 def load(name, **overrides):
-    target_name, target_version = util.split_data_name(name)
     data_path = overrides.get('path', util.get_data_path())
-    path = util.match_best_version(target_name, target_version, data_path)
-    cls = get_lang_class(target_name)
-    overrides['path'] = path
+    meta = parse_package_meta(data_path, name)
+    lang = meta['lang'] if meta and 'lang' in meta else 'en'
+    cls = get_lang_class(lang)
+    overrides['meta'] = meta
+    overrides['path'] = Path(data_path / name)
     return cls(**overrides)
