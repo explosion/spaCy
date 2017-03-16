@@ -5,6 +5,7 @@ import pip
 import plac
 import requests
 from os import path
+from .link import link
 from . import about
 from . import util
 
@@ -21,11 +22,11 @@ def download(model=None, direct=False):
     if direct:
         download_model('{m}/{m}.tar.gz'.format(m=model))
     else:
-        model = about.__shortcuts__[model] if model in about.__shortcuts__ else model
+        model_name = about.__shortcuts__[model] if model in about.__shortcuts__ else model
         compatibility = get_compatibility()
-        version = get_version(model, compatibility)
-        download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model, v=version))
-
+        version = get_version(model_name, compatibility)
+        download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model_name, v=version))
+        link(model_name, model, force=True)
 
 def get_compatibility():
     version = about.__version__
