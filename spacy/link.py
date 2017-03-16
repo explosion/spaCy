@@ -45,7 +45,7 @@ def symlink(model_path, link_name, force):
             util.sys_exit(
                 "To overwrite an existing link, use the --force flag.",
                 title="Link {l} already exists".format(l=link_name))
-
+    model_path = os.path.abspath(model_path)
     os.symlink(model_path, link_path)
     util.print_msg(
         "{a} --> {b}".format(a=model_path, b=link_path),
