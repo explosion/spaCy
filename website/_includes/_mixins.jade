@@ -67,6 +67,17 @@ mixin aside-code(label, language)
             block
 
 
+//- Infobox
+    label - [string] infobox title (optional or false for no title)
+
+mixin infobox(label)
+    aside.o-box.o-block.u-text-small
+        if label
+            h3.u-text-label.u-color-theme=label
+
+        block
+
+
 //- Link button
     url      - [string] link href
     trusted  - [boolean] if not set / false, rel="noopener nofollow" is added
