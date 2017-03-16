@@ -49,12 +49,12 @@ p
         +cell Vocab, syntax, entities, word vectors #[+tag default]
 
 p
-    |  Models are now available as #[code .tar.gz] archives #[+a(MODELS_URL) from GitHub],
+    |  Models are now available as #[code .tar.gz] archives #[+a(gh("spacy-models")) from GitHub],
     |  attached to individual releases. They can be downloaded and loaded manually,
     |  or using spaCy's #[code download] and #[code link] commands. All models
     |  follow the naming convention of #[code [language]_[type]_[genre]_[size]].
 
-+button(MODELS_URL + "/releases", true, "primary") View models
++button(gh("spacy-models") + "/releases", true, "primary") View models
 
 +h(2, "download") Downloading models
 
@@ -109,12 +109,12 @@ p
     | To download a model directly using #[+a("https://pypi.python.org/pypi/pip") pip],
     |  simply point #[code pip install] to the URL or local path of the archive
     |  file. To find the direct link to a model, head over to the
-    |  #[+a(MODELS_URL + "/releases") model releases], right click on the archive
+    |  #[+a(gh("spacy-models") + "/releases") model releases], right click on the archive
     |  link and copy it to your clipboard.
 
 +code(false, "bash").
     # with external URL
-    pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_md-1.2.0/en_core_web_md-1.2.0.tar.gz
+    pip install #{gh("spacy-models")}/releases/download/en_core_web_md-1.2.0/en_core_web_md-1.2.0.tar.gz
 
     # with local file
     pip install /Users/you/en_core_web_md-1.2.0.tar.gz
@@ -130,7 +130,7 @@ p
 p
     |  In some cases, you might prefer downloading the data manually, for
     |  example to place it into a custom directory. You can download the model
-    |  via your browser from the #[+a(MODELS_URL) latest releases], or configure
+    |  via your browser from the #[+a(gh("spacy-models")) latest releases], or configure
     |  your own download script using the URL of the archive file. The archive
     |  consists of a model directory that contains another directory with the
     |  model data.
@@ -169,10 +169,10 @@ p
     |  flag will overwrite any existing links.
 
 +code("Examples", "bash").
-    # Create link en_default for model en_core_web_md
+    # set up shortcut link to load package en_core_web as "en_default"
     python -m spacy.link en_core_web_md en_default
 
-    # Create link my_amazing_model for model data in local directory
+    # set up shortcut link to load local model as "my_amazing_model"
     python -m spacy.link /Users/you/model my_amazing_model
 
 +h(3, "usage-loading") Loading models
