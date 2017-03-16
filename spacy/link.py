@@ -55,8 +55,6 @@ def symlink(model_path, link_name, force):
 
 def get_meta(package_path, package):
     meta = util.parse_package_meta(package_path, package)
-    if not meta:
-        util.sys_exit()
     return meta
 
 
