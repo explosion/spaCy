@@ -47,7 +47,8 @@ class Trainer(object):
         for process in self.nlp.pipeline:
             if hasattr(process, 'update'):
                 loss = process.update(doc, gold, itn=self.nr_epoch)
-            process(doc)
+            else:
+                process(doc)
         return doc
 
     def evaluate(self, dev_sents, gold_preproc=False):
