@@ -6,6 +6,7 @@ import json
 import re
 import os.path
 import pathlib
+import sys
 
 import six
 import textwrap
@@ -173,3 +174,13 @@ def _wrap_text(text):
     wrap_width = wrap_max - len(indent)
     return textwrap.fill(text, width=wrap_width, initial_indent=indent,
                                subsequent_indent=indent)
+
+
+def sys_exit(*messages, **kwargs):
+    """Performs SystemExit. For modules used from the command line, like
+    download and link. To print message, use the same arguments as for
+    print_msg()."""
+
+    if messages:
+        print_msg(*messages, **kwargs)
+    sys.exit(0)

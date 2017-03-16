@@ -3,7 +3,6 @@ from __future__ import unicode_literals
 
 import io
 import os
-import sys
 import pip
 import site
 import plac
@@ -32,8 +31,9 @@ def link(origin, link_name, force=False):
 
 def symlink(model_path, link_name, force):
     if not os.path.isdir(model_path):
-        exit("The data should be located in {p}".format(p=model_path),
-                title="Can't locate model data")
+        util.sys_exit(
+            "The data should be located in {p}".format(p=model_path),
+            title="Can't locate model data")
 
     data_path = str(util.get_data_path())
     link_path = os.path.join(os.path.abspath(__file__ + '/../../'), data_path, link_name)
@@ -42,18 +42,21 @@ def symlink(model_path, link_name, force):
         if force:
             os.unlink(link_path)
         else:
-            exit("To overwrite an existing link, use the --force flag.",
-                 title="Link {l} already exists".format(l=link_name))
+            util.sys_exit(
+                "To overwrite an existing link, use the --force flag.",
+                title="Link {l} already exists".format(l=link_name))
 
     os.symlink(model_path, link_path)
-    util.print_msg("{a} --> {b}".format(a=model_path, b=link_path),
-                   "You can now load the model via spacy.load('{l}').".format(l=link_name),
-                   title="Linking successful")
+    util.print_msg(
+        "{a} --> {b}".format(a=model_path, b=link_path),
+        "You can now load the model via spacy.load('{l}').".format(l=link_name),
+        title="Linking successful")
+
 
 def get_meta(package_path, package):
     meta = util.parse_package_meta(package_path, package)
     if not meta:
-        exit()
+        util.sys_exit()
     return meta
 
 
@@ -63,12 +66,6 @@ def is_package(origin):
         if package.project_name.replace('-', '_') == origin:
             return True
     return False
-
-
-def exit(*messages, **kwargs):
-    if messages:
-        util.print_msg(*messages, **kwargs)
-    sys.exit(0)
 
 
 if __name__ == '__main__':
