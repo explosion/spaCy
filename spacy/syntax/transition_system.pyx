@@ -18,9 +18,6 @@ class OracleError(Exception):
 
 cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
     cdef StateClass st = StateClass.init(<const TokenC*>tokens, length)
-    # Ensure sent_start is set to 0 throughout
-    for i in range(st.c.length):
-        st.c._sent[i].sent_start = False
     Py_INCREF(st)
     return <void*>st
 
