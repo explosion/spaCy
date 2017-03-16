@@ -106,7 +106,7 @@ cdef class BiluoPushDown(TransitionSystem):
                 self.freqs[ENT_TYPE][0] += 1
 
     cdef Transition lookup_transition(self, object name) except *:
-        if name == '-':
+        if name == '-' or name == None:
             move_str = 'M'
             label = 0
         elif '-' in name:

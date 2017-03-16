@@ -272,8 +272,8 @@ cdef class GoldParse:
         self.words = [None] * len(doc)
         self.tags = [None] * len(doc)
         self.heads = [None] * len(doc)
-        self.labels = [''] * len(doc)
-        self.ner = ['-'] * len(doc)
+        self.labels = [None] * len(doc)
+        self.ner = [None] * len(doc)
 
         self.cand_to_gold = align([t.orth_ for t in doc], words)
         self.gold_to_cand = align(words, [t.orth_ for t in doc])
