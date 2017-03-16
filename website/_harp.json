@@ -13,7 +13,7 @@
         "DEMOS_URL": "https://demos.explosion.ai",
         "MODELS_URL": "https://github.com/spacy-models",
 
-        "SPACY_VERSION": "1.6",
+        "SPACY_VERSION": "1.7",
         "LATEST_NEWS": {
             "url": "https://explosion.ai/blog/deep-learning-formula-nlp",
             "title": "The new deep learning formula for state-of-the-art NLP models"
