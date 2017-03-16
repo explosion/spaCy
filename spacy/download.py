@@ -28,6 +28,7 @@ def download(model=None, direct=False):
         download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model_name, v=version))
         link(model_name, model, force=True)
 
+
 def get_compatibility():
     version = about.__version__
     r = requests.get(about.__compatibility__)
