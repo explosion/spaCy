@@ -149,6 +149,18 @@ def check_renamed_kwargs(renamed, kwargs):
             raise TypeError("Keyword argument %s now renamed to %s" % (old, new))
 
 
+def parse_package_meta(package_path, package):
+    location = os.path.join(str(package_path), package, 'meta.json')
+    if not os.path.isfile(location):
+        print_msg("'{p}' doesn't seem to be a valid model package.".format(p=package),
+             title="No meta.json found")
+    else:
+        with io.open(location, encoding='utf8') as f:
+            meta = json.load(f)
+            return meta
+    return False
+
+
 def print_msg(*text, **kwargs):
     """Print formatted message. Each positional argument is rendered as newline-
     separated paragraph. If kwarg 'title' exist, title is printed above the text
