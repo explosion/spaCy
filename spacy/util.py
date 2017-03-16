@@ -173,7 +173,8 @@ def _wrap_text(text):
     indent = '    '
     wrap_width = wrap_max - len(indent)
     return textwrap.fill(text, width=wrap_width, initial_indent=indent,
-                               subsequent_indent=indent)
+                               subsequent_indent=indent, break_long_words=False,
+                               break_on_hyphens=False)
 
 
 def sys_exit(*messages, **kwargs):
