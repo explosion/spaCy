@@ -4,6 +4,12 @@ from . import util
 from .download import download
 
 
+try:
+    basestring
+except NameError:
+    basestring = str
+
+
 def read_lang_data(package):
     tokenization = package.load_json(('tokenizer', 'specials.json'))
     with package.open(('tokenizer', 'prefix.txt'), default=None) as file_:
