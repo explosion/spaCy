@@ -105,3 +105,7 @@ website/package.json
 website/announcement.jade
 website/www/
 website/.gitignore
+
+# Python virtualenv
+venv
+venv/*
