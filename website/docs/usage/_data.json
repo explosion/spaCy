@@ -2,6 +2,7 @@
     "sidebar": {
         "Get started": {
             "Installation": "./",
+            "Models": "models",
             "Lightning tour": "lightning-tour",
             "Resources": "resources"
         },
@@ -28,6 +29,11 @@
 
     "index": {
         "title": "Install spaCy",
+        "next": "models"
+    },
+
+    "models": {
+        "title": "Models",
         "next": "lightning-tour"
     },
 
