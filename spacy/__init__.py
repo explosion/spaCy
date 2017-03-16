@@ -41,3 +41,8 @@ def load(name, **overrides):
     overrides['meta'] = meta
     overrides['path'] = Path(data_path / name)
     return cls(**overrides)
+
+
+def info(name):
+    meta = parse_package_meta(util.get_data_path(), name)
+    print(json.dumps(meta, indent=2))
