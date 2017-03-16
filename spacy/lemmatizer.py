@@ -6,6 +6,7 @@ import ujson as json
 
 from .en.lemmatizer import INDEX, EXC, RULES
 from .symbols import POS, NOUN, VERB, ADJ, PUNCT
+from .symbols import VerbForm_inf, VerbForm_none
 
 
 class Lemmatizer(object):
@@ -43,9 +44,12 @@ class Lemmatizer(object):
         avoid lemmatization entirely.'''
         morphology = {} if morphology is None else morphology
         others = [key for key in morphology if key not in (POS, 'number', 'pos', 'verbform')]
+        true_morph_key = morphology.get('morph', 0)
         if univ_pos == 'noun' and morphology.get('number') == 'sing' and not others:
             return True
         elif univ_pos == 'verb' and morphology.get('verbform') == 'inf' and not others:
+            return True
+        elif true_morph_key in (VerbForm_inf, VerbForm_none):
             return True
         else:
             return False
@@ -80,4 +84,6 @@ def lemmatize(string, index, exceptions, rules):
                 oov_forms.append(form)
     if not forms:
         forms.extend(oov_forms)
+    if not forms:
+        forms.append(string)
     return set(forms)
