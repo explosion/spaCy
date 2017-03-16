@@ -52,7 +52,7 @@ from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from ._state cimport StateC
 
-
+USE_FTRL = False
 DEBUG = False
 def set_debug(val):
     global DEBUG
@@ -86,14 +86,14 @@ cdef class ParserModel(AveragedPerceptron):
         guess = eg.guess
         if guess == best or best == -1:
             return 0.0
-        for feat in eg.c.features[:eg.c.nr_feat]:
-            self.update_weight_ftrl(feat.key, guess, feat.value * eg.c.costs[guess])
-            self.update_weight_ftrl(feat.key, best, -feat.value * eg.c.costs[guess])
-        #for clas in [guess, best]:
-        #    loss += (-eg.c.costs[clas] - eg.c.scores[clas]) ** 2
-        #    d_loss = eg.c.scores[clas] - -eg.c.costs[clas]
-        #    for feat in eg.c.features[:eg.c.nr_feat]:
-        #        self.update_weight_ftrl(feat.key, clas, feat.value * d_loss)
+        if USE_FTRL:
+            for feat in eg.c.features[:eg.c.nr_feat]:
+                self.update_weight_ftrl(feat.key, guess, feat.value * eg.c.costs[guess])
+                self.update_weight_ftrl(feat.key, best, -feat.value * eg.c.costs[guess])
+        else:
+            for feat in eg.c.features[:eg.c.nr_feat]:
+                self.update_weight(feat.key, guess, feat.value * eg.c.costs[guess])
+                self.update_weight(feat.key, best, -feat.value * eg.c.costs[guess])
         return eg.c.costs[guess]
 
     def update_from_histories(self, TransitionSystem moves, Doc doc, histories, weight_t min_grad=0.0):
@@ -324,6 +324,8 @@ cdef class Parser:
             eg.fill_scores(0, eg.c.nr_class)
             eg.fill_costs(0, eg.c.nr_class)
             eg.fill_is_valid(1, eg.c.nr_class)
+
+        self.moves.finalize_state(stcls.c)
         return loss
 
     def step_through(self, Doc doc):
