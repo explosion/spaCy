@@ -11,7 +11,6 @@
         "COMPANY": "Explosion AI",
         "COMPANY_URL": "https://explosion.ai",
         "DEMOS_URL": "https://demos.explosion.ai",
-        "MODELS_URL": "https://github.com/spacy-models",
 
         "SPACY_VERSION": "1.7",
         "LATEST_NEWS": {
