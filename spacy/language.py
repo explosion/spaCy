@@ -276,6 +276,7 @@ class Language(object):
         if path is True:
             path = util.match_best_version(self.lang, '', util.get_data_path())
 
+        self.meta = overrides.get('meta', {})
         self.path = path
 
         self.vocab     = self.Defaults.create_vocab(self) \
