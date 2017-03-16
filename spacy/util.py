@@ -149,15 +149,16 @@ def check_renamed_kwargs(renamed, kwargs):
             raise TypeError("Keyword argument %s now renamed to %s" % (old, new))
 
 
-def parse_package_meta(package_path, package, on_error=False):
+def parse_package_meta(package_path, package, require=True):
     location = os.path.join(str(package_path), package, 'meta.json')
-    if not os.path.isfile(location) and on_error:
-        on_error()
-    else:
+    if os.path.isfile(location):
         with io.open(location, encoding='utf8') as f:
             meta = json.load(f)
             return meta
-    return False
+    elif require:
+        raise IOError("Could not read meta.json from %s" % location)
+    else:
+        return None
 
 
 def print_msg(*text, **kwargs):

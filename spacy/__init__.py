@@ -35,14 +35,16 @@ set_lang_class(bn.Bengali.lang, bn.Bengali)
 
 def load(name, **overrides):
     data_path = overrides.get('path', util.get_data_path())
-    meta = parse_package_meta(data_path, name)
-    lang = meta['lang'] if meta and 'lang' in meta else 'en'
+    meta = parse_package_meta(data_path, name, require=False)
+    lang = meta['lang'] if meta and 'lang' in meta else name
     cls = get_lang_class(lang)
     overrides['meta'] = meta
-    overrides['path'] = Path(data_path / name)
+    model_path = Path(data_path) / name
+    if model_path.exists():
+        overrides['path'] = model_path
     return cls(**overrides)
 
 
 def info(name):
-    meta = parse_package_meta(util.get_data_path(), name)
+    meta = parse_package_meta(util.get_data_path(), name, require=True)
     print(json.dumps(meta, indent=2))
