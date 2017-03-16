@@ -365,6 +365,14 @@ cdef class Span:
         def __get__(self):
             return ' '.join([t.lemma_ for t in self]).strip()
 
+    property upper_:
+        def __get__(self):
+            return ''.join([t.string.upper() for t in self]).strip()
+
+    property lower_:
+        def __get__(self):
+            return ''.join([t.string.lower() for t in self]).strip()
+
     property string:
         def __get__(self):
             return ''.join([t.string for t in self])
