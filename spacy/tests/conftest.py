@@ -90,7 +90,7 @@ def en_entityrecognizer():
 
 @pytest.fixture
 def lemmatizer():
-    return English.Defaults.ceate_lemmatizer()
+    return English.Defaults.create_lemmatizer()
 
 
 @pytest.fixture
