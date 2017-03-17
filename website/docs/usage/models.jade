@@ -50,7 +50,7 @@ p
 
     +row
         +cell #[code de_core_news_md]
-        +cell 637 MB
+        +cell 1 GB
         +cell Vocab, syntax, entities, word vectors #[+tag default]
 
 p
@@ -73,8 +73,10 @@ p
         python -m spacy.de.download all
         python -m spacy.en.download glove
 
-    | The old models are now available as Python packages, meaning that you can
-    |  also choose to #[+a("#usage-import") import them] as modules.
+    |  The old models are also #[+a(gh("spacy") + "/tree/v1.6.0") attached to the v1.6.0 release].
+    |  To download and install them manually, unpack the archive, drop the
+    |  contained directory into #[code spacy/data] and load the model via
+    |  #[code spacy.load('en')] or #[code spacy.load('de')].
 
 p
     |  The easiest way to download a model is via spaCy's #[code download]
@@ -215,8 +217,6 @@ p
 
     nlp = en_core_web_md.load()
     doc = nlp(u'This is a sentence.')
-
-p This should also work for older models in previous versions of spaCy.
 
 +h(2, "own-models") Using your own models
 
