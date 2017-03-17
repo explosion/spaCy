@@ -2,6 +2,7 @@ from pathlib import Path
 from . import about
 from . import util
 from .download import download
+from .link import link
 
 
 try:
@@ -84,6 +85,35 @@ def fix_glove_vectors_loading(overrides):
     if vec_path is not None:
         overrides['add_vectors'] = lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
     return overrides
+
+
+def resolve_model_name(name):
+    """If spaCy is loaded with 'de', check if symlink already exists. If
+    not, user have upgraded from older version and have old models installed.
+    Check if old model directory exists and if so, return that instead and create
+    shortcut link. If English model is found and no shortcut exists, raise error
+    and tell user to install new model.
+    """
+
+    if name == 'en' or name == 'de':
+        versions = ['1.0.0', '1.1.0']
+        data_path = Path(util.get_data_path())
+        model_path = data_path / name
+        v_model_paths = [data_path / Path(name + '-' + v) for v in versions]
+
+        if not model_path.exists(): # no shortcut found
+            for v_path in v_model_paths:
+                if v_path.exists(): # versioned model directory found
+                    if name == 'de':
+                        link(v_path, name)
+                        return name
+                    else:
+                        raise ValueError(
+                            "Found English model at {p}. This model is not "
+                            "compatible with the current version. See "
+                            "https://spacy.io/docs/usage/models to download the "
+                            "new model.".format(p=v_path))
+    return name
 
 
 class ModelDownload():

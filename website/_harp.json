@@ -12,10 +12,10 @@
         "COMPANY_URL": "https://explosion.ai",
         "DEMOS_URL": "https://demos.explosion.ai",
 
-        "SPACY_VERSION": "1.6",
+        "SPACY_VERSION": "1.7",
         "LATEST_NEWS": {
-            "url": "https://explosion.ai/blog/deep-learning-formula-nlp",
-            "title": "The new deep learning formula for state-of-the-art NLP models"
+            "url": "/docs/usage/models",
+            "title": "Downloading and installing models as packages"
         },
 
         "SOCIAL": {
@@ -54,8 +54,8 @@
             }
         },
 
-        "V_CSS": "1.15",
-        "V_JS": "1.1",
+        "V_CSS": "1.2",
+        "V_JS": "1.2",
         "DEFAULT_SYNTAX": "python",
         "ANALYTICS": "UA-58931649-1",
         "MAILCHIMP": {
