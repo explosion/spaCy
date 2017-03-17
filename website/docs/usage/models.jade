@@ -27,18 +27,23 @@ p
 
 +table(["Name", "Size", "Description"])
     +row
-        +cell #[code en_core_web_md]
-        +cell 340 MB
-        +cell Vocab, syntax, entities, word vectors
-
-    +row
         +cell #[code en_core_web_sm]
-        +cell 52 MB
+        +cell 50 MB
         +cell Vocab, syntax, entities, word vectors #[+tag default]
 
     +row
+        +cell #[code en_core_web_md]
+        +cell 1 GB
+        +cell Vocab, syntax, entities, word vectors
+
+    +row
+        +cell #[code en_depent_web_md]
+        +cell 328 MB
+        +cell Vocab, syntax, entities
+
+    +row
         +cell #[code en_vectors_glove_md]
-        +cell 693 MB
+        +cell 727 MB
         +cell
             |  #[+a("http://nlp.stanford.edu/projects/glove/") GloVe] Common
             |  Crawl vectors
@@ -146,8 +151,8 @@ p
 
 p
     |  You can place the model data directory anywhere on your local file system.
-    |  To use it with spaCy, simply create a #[+a("#usage") shortcut link] for
-    |  the directory and assign it a name.
+    |  To use it with spaCy, simply assign it a name by creating a
+    |  #[+a("#usage") shortcut link] for the data directory.
 
 +h(2, "usage") Using models with spaCy
 
