@@ -8,7 +8,7 @@ English and German,  as well as tokenization for Chinese, Spanish, Italian, Fren
 Portuguese, Dutch, Swedish, Finnish, Hungarian and Bengali. It's commercial  open-source
 software, released under the MIT license.
 
-💫 **Version 1.7 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
+💫 **Version 1.6 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square
     :target: https://travis-ci.org/explosion/spaCy
@@ -149,76 +149,52 @@ Improvements and pull requests to the recipe and setup are always appreciated.
 Download models
 ===============
 
-As of v1.7.0, models for spaCy can be installed as **Python packages**.
-This means that they're a component of your application, just like any
-other module. They're versioned and can be defined as a dependency in your
-``requirements.txt``. Models can be installed from a download URL or
-a local directory, manually or via pip. Their data can be located anywhere on
-your file system. To make a model available to spaCy, all you need to do is
-create a "shortcut link", an internal alias that tells spaCy where to find the
-data files for a specific model name.
-
-======================= ===
-`spaCy Models`_         Available models, latest releases and direct download.
-`Models Documentation`_ Detailed usage instructions.
-======================= ===
-
-.. _spaCy Models: https://github.com/explosion/spacy-models/releases/
-.. _Models Documentation: https://spacy.io/docs/usage/models
+After installation you need to download a language model. Models for English
+(``en``) and German (``de``) are available.
 
 .. code:: bash
 
-    # out-of-the-box: download best-matching default model
-    python -m spacy.download en
+    python -m spacy.en.download all
+    python -m spacy.de.download all
 
-    # download best-matching version of specific model for your spaCy installation
-    python -m spacy.download en_core_web_md
+The download command fetches about 1 GB of data which it installs
+within the ``spacy`` package directory.
 
-    # pip install .tar.gz archive from path or URL
-    pip install /Users/you/en_core_web_md-1.2.0.tar.gz
-    pip install https://github.com/explosion/spacy-models/releases/download/en_core_web_md-1.2.0/en_core_web_md-1.2.0.tar.gz
+Sometimes new releases require a new language model. Then you will have to
+upgrade to a new model, too. You can also force re-downloading and installing a
+new language model:
 
-    # set up shortcut link to load installed package as "en_default"
-    python -m spacy.link en_core_web_md en_default
+.. code:: bash
 
-    # set up shortcut link to load local model as "my_amazing_model"
-    python -m spacy.link /Users/you/data my_amazing_model
+    python -m spacy.en.download --force
 
-Loading and using models
+Download model to custom location
+---------------------------------
+
+You can specify where ``spacy.en.download`` and ``spacy.de.download`` download
+the language model to using the ``--data-path`` or ``-d`` argument:
+
+.. code:: bash
+
+    python -m spacy.en.download all --data-path /some/dir
+
+If you choose to download to a custom location, you will need to tell spaCy where to load the model
+from in order to use it. You can do this either by calling ``spacy.util.set_data_path()`` before
+calling ``spacy.load()``, or by passing a ``path`` argument to the ``spacy.en.English`` or
+``spacy.de.German`` constructors.
+
+Download models manually
 ------------------------
 
-To load a model, use ``spacy.load()`` with the model's shortcut link:
+As of v1.6, the models and word vectors are also available as direct downloads
+from GitHub, attached to the `releases <https://github.com/explosion/spacy/releases>`_
+as ``.tar.gz`` archives.
 
-.. code:: python
-
-    import spacy
-    nlp = spacy.load('en_default')
-    doc = nlp(u'This is a sentence.')
-
-If you've installed a model via pip, you can also ``import`` it directly and
-then call its ``load()`` method with no arguments. This should also work for
-older models in previous versions of spaCy.
-
-.. code:: python
-
-    import spacy
-    import en_core_web_md
-
-    nlp = en_core_web_md.load()
-    doc = nlp(u'This is a sentence.')
-
-📖 **For more info and examples, check out the** `models documentation <https://spacy.io/docs/usage/models>`_.
-
-Support for older versions
---------------------------
-
-If you're using an older version (v1.6.0 or below), you can still download and
-install the old models from within spaCy using ``python -m spacy.en.download all``
-or ``python -m spacy.de.download all``. The ``.tar.gz`` archives are also
-`attached to the v1.6.0 release <https://github.com/explosion/spaCy/tree/v1.6.0>`_.
-To download and install the models manually, unpack the archive, drop the
-contained directory into ``spacy/data`` and load the model via ``spacy.load('en')``
-or ``spacy.load('de')``.
+To install the models manually, first find the default data path. You can use
+``spacy.util.get_data_path()`` to find the directory where spaCy will look for
+its models, or change the default data path with ``spacy.util.set_data_path()``.
+Then simply unpack the archive and place the contained folder in that directory.
+You can now load the models via ``spacy.load()``.
 
 Compile from source
 ===================
@@ -311,12 +287,11 @@ and ``--model`` are optional and enable additional tests:
     python -m pytest <spacy-directory> --vectors --model --slow
 
 🛠 Changelog
-============
+===========
 
 =========== ============== ===========
 Version     Date           Description
 =========== ============== ===========
-`v1.7.0`_   ``2017-03-17`` New 50 MB model, better downloads and lots of bug fixes
 `v1.6.0`_   ``2017-01-16`` Improvements to tokenizer and tests
 `v1.5.0`_   ``2016-12-27`` Alpha support for Swedish and Hungarian
 `v1.4.0`_   ``2016-12-18`` Improved language data and alpha Dutch support
@@ -342,7 +317,6 @@ Version     Date           Description
 `v0.93`_    ``2015-09-22`` Bug fixes to word vectors
 =========== ============== ===========
 
-.. _v1.7.0: https://github.com/explosion/spaCy/releases/tag/v1.7.0
 .. _v1.6.0: https://github.com/explosion/spaCy/releases/tag/v1.6.0
 .. _v1.5.0: https://github.com/explosion/spaCy/releases/tag/v1.5.0
 .. _v1.4.0: https://github.com/explosion/spaCy/releases/tag/v1.4.0
