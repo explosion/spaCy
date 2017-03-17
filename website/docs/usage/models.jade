@@ -13,6 +13,11 @@ p
     |  internal alias that tells spaCy where to find the data files for a specific
     |  model name.
 
++infobox("Important note")
+    |  Due to improvements in the English lemmatizer in v1.7.0, you need to download the
+    |  new English model. The German model is still compatible and will be
+    |  recognised and linked automatically.
+
 +aside-code("Quickstart").
     # Install spaCy and download English model
     pip install spacy
@@ -50,7 +55,7 @@ p
 
     +row
         +cell #[code de_core_news_md]
-        +cell 1 GB
+        +cell 645 MB
         +cell Vocab, syntax, entities, word vectors #[+tag default]
 
 p
@@ -184,7 +189,8 @@ p
 
 +h(3, "usage-loading") Loading models
 
-p To load a model, use #[code spacy.load()] with the model's shortcut link:
+p
+    |  To load a model, use #[code spacy.load()] with the model's shortcut link.
 
 +code.
     import spacy
