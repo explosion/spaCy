@@ -98,16 +98,16 @@ cdef class Vocab:
         else:
             serializer_freqs = None
 
-        cdef Vocab self = cls(lex_attr_getters=lex_attr_getters, tag_map=tag_map,
-                              lemmatizer=lemmatizer, serializer_freqs=serializer_freqs)
-
         with (path / 'vocab' / 'strings.json').open('r', encoding='utf8') as file_:
-            self.strings.load(file_)
+            strings_list = json.load(file_)
+        cdef Vocab self = cls(lex_attr_getters=lex_attr_getters, tag_map=tag_map,
+                              lemmatizer=lemmatizer, serializer_freqs=serializer_freqs,
+                              strings=strings_list)
         self.load_lexemes(path / 'vocab' / 'lexemes.bin')
         return self
 
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-            serializer_freqs=None, **deprecated_kwargs):
+            serializer_freqs=None, strings=tuple(), **deprecated_kwargs):
         '''Create the vocabulary.
 
         lex_attr_getters (dict):
@@ -136,6 +136,9 @@ cdef class Vocab:
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
         self.strings = StringStore()
+        if strings:
+            for string in strings:
+                self.strings[string]
         # Load strings in a special order, so that we have an onset number for
         # the vocabulary. This way, when words are added in order, the orth ID
         # is the frequency rank of the word, plus a certain offset. The structural
