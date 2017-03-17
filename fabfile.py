@@ -1,22 +1,20 @@
-from __future__ import print_function
+# coding: utf-8
+from __future__ import unicode_literals, print_function
 
 from fabric.api import local, lcd, env, settings, prefix
-from os.path import exists as file_exists
 from fabtools.python import virtualenv
-from os import path
-import os
-import shutil
-from pathlib import Path
+from os import path, environ
 
 
 PWD = path.dirname(__file__)
-VENV_DIR = path.join(PWD, '.env')
+ENV = environ['VENV_DIR'] if 'VENV_DIR' in environ else '.env'
+VENV_DIR = path.join(PWD, ENV)
 
 
-def env(lang="python2.7"):
-    if file_exists('.env'):
-        local('rm -rf .env')
-    local('virtualenv -p %s .env' % lang)
+def env(lang='python2.7'):
+    if path.exists(VENV_DIR):
+        local('rm -rf {env}'.format(env=VENV_DIR))
+    local('virtualenv -p {lang} {env}'.format(lang=lang, env=VENV_DIR))
 
 
 def install():

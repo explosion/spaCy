@@ -5,7 +5,7 @@ import pathlib
 from contextlib import contextmanager
 import shutil
 
-import ujson as json
+import ujson
 
 
 try:
@@ -13,6 +13,10 @@ try:
 except NameError:
     basestring = str
 
+try:
+    unicode
+except NameError:
+    unicode = str
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -29,6 +33,7 @@ from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD, PROB, LANG, IS_STOP
 from .syntax.parser import get_templates
 from .syntax.nonproj import PseudoProjectivity
 from .pipeline import DependencyParser, EntityRecognizer
+from .pipeline import BeamDependencyParser, BeamEntityRecognizer
 from .syntax.arc_eager import ArcEager
 from .syntax.ner import BiluoPushDown
 
@@ -36,10 +41,7 @@ from .syntax.ner import BiluoPushDown
 class BaseDefaults(object):
     @classmethod
     def create_lemmatizer(cls, nlp=None):
-        if nlp is None or nlp.path is None:
-            return Lemmatizer({}, {}, {})
-        else:
-            return Lemmatizer.load(nlp.path, rules=cls.lemma_rules)
+        return Lemmatizer(cls.lemma_index, cls.lemma_exc, cls.lemma_rules)
 
     @classmethod
     def create_vocab(cls, nlp=None):
@@ -49,11 +51,15 @@ class BaseDefaults(object):
             # This is very messy, but it's the minimal working fix to Issue #639.
             # This defaults stuff needs to be refactored (again)
             lex_attr_getters[IS_STOP] = lambda string: string.lower() in cls.stop_words
-            return Vocab(lex_attr_getters=lex_attr_getters, tag_map=cls.tag_map,
+            vocab = Vocab(lex_attr_getters=lex_attr_getters, tag_map=cls.tag_map,
                          lemmatizer=lemmatizer)
         else:
-            return Vocab.load(nlp.path, lex_attr_getters=cls.lex_attr_getters,
+            vocab = Vocab.load(nlp.path, lex_attr_getters=cls.lex_attr_getters,
                              tag_map=cls.tag_map, lemmatizer=lemmatizer)
+        for tag_str, exc in cls.morph_rules.items():
+            for orth_str, attrs in exc.items():
+                vocab.morphology.add_special_case(tag_str, orth_str, attrs)
+        return vocab
 
     @classmethod
     def add_vectors(cls, nlp=None):
@@ -165,6 +171,9 @@ class BaseDefaults(object):
     stop_words = set()
 
     lemma_rules = {}
+    lemma_exc = {}
+    lemma_index = {}
+    morph_rules = {}
 
     lex_attr_getters = {
         attrs.LOWER: lambda string: string.lower(),
@@ -226,12 +235,21 @@ class Language(object):
         parser_cfg['actions'] = ArcEager.get_actions(gold_parses=gold_tuples)
         entity_cfg['actions'] = BiluoPushDown.get_actions(gold_parses=gold_tuples)
 
-        with (dep_model_dir / 'config.json').open('w') as file_:
-            json.dump(parser_cfg, file_)
-        with (ner_model_dir / 'config.json').open('w') as file_:
-            json.dump(entity_cfg, file_)
-        with (pos_model_dir / 'config.json').open('w') as file_:
-            json.dump(tagger_cfg, file_)
+        with (dep_model_dir / 'config.json').open('wb') as file_:
+            data = ujson.dumps(parser_cfg)
+            if isinstance(data, unicode):
+                data = data.encode('utf8')
+            file_.write(data)
+        with (ner_model_dir / 'config.json').open('wb') as file_:
+            data = ujson.dumps(entity_cfg)
+            if isinstance(data, unicode):
+                data = data.encode('utf8')
+            file_.write(data)
+        with (pos_model_dir / 'config.json').open('wb') as file_:
+            data = ujson.dumps(tagger_cfg)
+            if isinstance(data, unicode):
+                data = data.encode('utf8')
+            file_.write(data)
 
         self = cls(
                 path=path,
@@ -252,7 +270,7 @@ class Language(object):
         self.entity = self.Defaults.create_entity(self)
         self.pipeline = self.Defaults.create_pipeline(self)
         yield Trainer(self, gold_tuples)
-        self.end_training()
+        self.end_training(path=path)
 
     def __init__(self, **overrides):
         if 'data_dir' in overrides and 'path' not in overrides:
@@ -263,6 +281,7 @@ class Language(object):
         if path is True:
             path = util.match_best_version(self.lang, '', util.get_data_path())
 
+        self.meta = overrides.get('meta', {})
         self.path = path
 
         self.vocab     = self.Defaults.create_vocab(self) \
@@ -391,12 +410,14 @@ class Language(object):
         else:
             entity_iob_freqs = []
             entity_type_freqs = []
-        with (path / 'vocab' / 'serializer.json').open('w') as file_:
-            file_.write(
-                json.dumps([
-                    (TAG, tagger_freqs),
-                    (DEP, dep_freqs),
-                    (ENT_IOB, entity_iob_freqs),
-                    (ENT_TYPE, entity_type_freqs),
-                    (HEAD, head_freqs)
-                ]))
+        with (path / 'vocab' / 'serializer.json').open('wb') as file_:
+            data = ujson.dumps([
+                        (TAG, tagger_freqs),
+                        (DEP, dep_freqs),
+                        (ENT_IOB, entity_iob_freqs),
+                        (ENT_TYPE, entity_type_freqs),
+                        (HEAD, head_freqs)
+                    ])
+            if isinstance(data, unicode):
+                data = data.encode('utf8')
+            file_.write(data)

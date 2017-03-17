@@ -1,4 +1,4 @@
-# encoding: utf8
+# coding: utf8
 # cython: infer_types=True
 from __future__ import unicode_literals
 
@@ -20,7 +20,7 @@ from .. import parts_of_speech
 from ..attrs cimport LEMMA
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport POS, LEMMA, TAG, DEP
-from ..parts_of_speech cimport CONJ, PUNCT
+from ..parts_of_speech cimport CCONJ, PUNCT
 
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_BRACKET
@@ -42,6 +42,9 @@ cdef class Token:
         self.c = &self.doc.c[offset]
         self.i = offset
 
+    def __hash__(self):
+        return hash((self.doc, self.i))
+
     def __len__(self):
         '''Number of unicode characters in token.text'''
         return self.c.lex.length
@@ -60,10 +63,10 @@ cdef class Token:
     def __repr__(self):
         return self.__str__()
 
-    def __richcmp__(self, other, int op):
+    def __richcmp__(self, Token other, int op):
         # http://cython.readthedocs.io/en/latest/src/userguide/special_methods.html
         my = self.idx
-        their = other.idx
+        their = other.idx if other is not None else None
         if op == 0:
             return my < their
         elif op == 2:
@@ -81,7 +84,7 @@ cdef class Token:
 
     cpdef bint check_flag(self, attr_id_t flag_id) except -1:
         '''Check the value of a boolean flag.
-        
+
         Arguments:
             flag_id (int): The ID of the flag attribute.
         Returns:
@@ -222,7 +225,7 @@ cdef class Token:
     property vector:
         '''
         A real-valued meaning representation.
-        
+
         Type: numpy.ndarray[ndim=1, dtype='float32']
         '''
         def __get__(self):
@@ -340,7 +343,7 @@ cdef class Token:
         '''
         def __get__(self):
             cdef const TokenC* head_ptr = self.c
-            # guard against infinite loop, no token can have 
+            # guard against infinite loop, no token can have
             # more ancestors than tokens in the tree
             cdef int i = 0
             while head_ptr.head != 0 and i < self.doc.length:
@@ -367,7 +370,7 @@ cdef class Token:
 
     property head:
         '''The syntactic parent, or "governor", of this token.
-        
+
         Returns: Token
         '''
         def __get__(self):
@@ -387,7 +390,7 @@ cdef class Token:
 
             # is the new head a descendant of the old head
             cdef bint is_desc = old_head.is_ancestor_of(new_head)
-            
+
             cdef int new_edge
             cdef Token anc, child
 
@@ -417,7 +420,7 @@ cdef class Token:
                         if anc.c.l_edge <= new_edge:
                             break
                         anc.c.l_edge = new_edge
-            
+
             elif self.c.head < 0: # right dependent
                 old_head.c.r_kids -= 1
                 # do the same thing as for l_edge
@@ -432,7 +435,7 @@ cdef class Token:
                             if child.c.r_edge > new_edge:
                                 new_edge = child.c.r_edge
                         old_head.c.r_edge = new_edge
-                    
+
                     for anc in old_head.ancestors:
                         if anc.c.r_edge >= new_edge:
                             break
@@ -595,19 +598,19 @@ cdef class Token:
     property is_punct:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_PUNCT)
 
-    property is_space: 
+    property is_space:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_SPACE)
-    
-    property is_bracket: 
+
+    property is_bracket:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_BRACKET)
 
-    property is_quote: 
+    property is_quote:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_QUOTE)
 
-    property is_left_punct: 
+    property is_left_punct:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_LEFT_PUNCT)
 
-    property is_right_punct: 
+    property is_right_punct:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_RIGHT_PUNCT)
 
     property like_url:

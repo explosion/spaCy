@@ -138,7 +138,7 @@ cdef int get_action(const TokenPatternC* pattern, const TokenC* token) nogil:
 def _convert_strings(token_specs, string_store):
     # Support 'syntactic sugar' operator '+', as combination of ONE, ZERO_PLUS
     operators = {'!': (ZERO,), '*': (ZERO_PLUS,), '+': (ONE, ZERO_PLUS),
-                 '?': (ZERO_ONE,)}
+            '?': (ZERO_ONE,), '1': (ONE,)}
     tokens = []
     op = ONE
     for spec in token_specs:
@@ -150,7 +150,7 @@ def _convert_strings(token_specs, string_store):
                     ops = operators[value]
                 else:
                     raise KeyError(
-                        "Unknown operator. Options: %s" % ', '.join(operators.keys()))
+                        "Unknown operator '%s'. Options: %s" % (value, ', '.join(operators.keys())))
             if isinstance(attr, basestring):
                 attr = attrs.IDS.get(attr.upper())
             if isinstance(value, basestring):
@@ -411,6 +411,22 @@ cdef class Matcher:
                     end = token_i+1
                     ent_id = pattern[1].attrs[0].value
                     label = pattern[1].attrs[1].value
+                    acceptor = self._acceptors.get(ent_id)
+                    if acceptor is None:
+                        matches.append((ent_id, label, start, end))
+                    else:
+                        match = acceptor(doc, ent_id, label, start, end)
+                        if match:
+                            matches.append(match)
+        # Look for open patterns that are actually satisfied
+        for state in partials:
+            while state.second.quantifier in (ZERO, ZERO_PLUS):
+                state.second += 1
+                if state.second.nr_attr == 0:
+                    start = state.first
+                    end = len(doc)
+                    ent_id = state.second.attrs[0].value
+                    label = state.second.attrs[0].value
                     acceptor = self._acceptors.get(ent_id)
                     if acceptor is None:
                         matches.append((ent_id, label, start, end))

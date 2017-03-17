@@ -102,6 +102,10 @@ coverage.xml
 # Website
 website/_deploy.sh
 website/package.json
-website/blog/announcement.jade
+website/announcement.jade
 website/www/
 website/.gitignore
+
+# Python virtualenv
+venv
+venv/*

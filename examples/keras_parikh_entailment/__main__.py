@@ -12,17 +12,23 @@ from spacy_hook import create_similarity_pipeline
 
 from keras_decomposable_attention import build_model
 
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
-def train(model_dir, train_loc, dev_loc, shape, settings):
+
+def train(train_loc, dev_loc, shape, settings):
     train_texts1, train_texts2, train_labels = read_snli(train_loc)
     dev_texts1, dev_texts2, dev_labels = read_snli(dev_loc)
-    
+
     print("Loading spaCy")
     nlp = spacy.load('en')
+    assert nlp.path is not None
     print("Compiling network")
     model = build_model(get_embeddings(nlp.vocab), shape, settings)
     print("Processing texts...")
-    Xs = []    
+    Xs = []
     for texts in (train_texts1, train_texts2, dev_texts1, dev_texts2):
         Xs.append(get_word_ids(list(nlp.pipe(texts, n_threads=20, batch_size=20000)),
                          max_length=shape[0],
@@ -36,35 +42,41 @@ def train(model_dir, train_loc, dev_loc, shape, settings):
         validation_data=([dev_X1, dev_X2], dev_labels),
         nb_epoch=settings['nr_epoch'],
         batch_size=settings['batch_size'])
+    if not (nlp.path / 'similarity').exists():
+        (nlp.path / 'similarity').mkdir()
+    print("Saving to", nlp.path / 'similarity')
+    weights = model.get_weights()
+    with (nlp.path / 'similarity' / 'model').open('wb') as file_:
+        pickle.dump(weights[1:], file_)
+    with (nlp.path / 'similarity' / 'config.json').open('wb') as file_:
+        file_.write(model.to_json())
 
 
 def evaluate(model_dir, dev_loc):
-    nlp = spacy.load('en', path=model_dir,
-            tagger=False, parser=False, entity=False, matcher=False,
+    dev_texts1, dev_texts2, dev_labels = read_snli(dev_loc)
+    nlp = spacy.load('en',
             create_pipeline=create_similarity_pipeline)
-    n = 0
-    correct = 0
-    for (text1, text2), label in zip(dev_texts, dev_labels):
+    total = 0.
+    correct = 0.
+    for text1, text2, label in zip(dev_texts1, dev_texts2, dev_labels):
         doc1 = nlp(text1)
         doc2 = nlp(text2)
         sim = doc1.similarity(doc2)
-        if bool(sim >= 0.5) == label:
+        if sim.argmax() == label.argmax():
             correct += 1
-        n += 1
+        total += 1
     return correct, total
 
 
-def demo(model_dir):
-    nlp = spacy.load('en', path=model_dir,
-            tagger=False, parser=False, entity=False, matcher=False,
+def demo():
+    nlp = spacy.load('en',
             create_pipeline=create_similarity_pipeline)
-    doc1 = nlp(u'Worst fries ever! Greasy and horrible...')
-    doc2 = nlp(u'The milkshakes are good. The fries are bad.')
-    print('doc1.similarity(doc2)', doc1.similarity(doc2))
-    sent1a, sent1b = doc1.sents
-    print('sent1a.similarity(sent1b)', sent1a.similarity(sent1b))
-    print('sent1a.similarity(doc2)', sent1a.similarity(doc2))
-    print('sent1b.similarity(doc2)', sent1b.similarity(doc2))
+    doc1 = nlp(u'What were the best crime fiction books in 2016?')
+    doc2 = nlp(
+        u'What should I read that was published last year? I like crime stories.')
+    print(doc1)
+    print(doc2)
+    print("Similarity", doc1.similarity(doc2))
 
 
 LABELS = {'entailment': 0, 'contradiction': 1, 'neutral': 2}
@@ -86,7 +98,6 @@ def read_snli(path):
 
 @plac.annotations(
     mode=("Mode to execute", "positional", None, str, ["train", "evaluate", "demo"]),
-    model_dir=("Path to spaCy model directory", "positional", None, Path),
     train_loc=("Path to training data", "positional", None, Path),
     dev_loc=("Path to development data", "positional", None, Path),
     max_length=("Length to truncate sentences", "option", "L", int),
@@ -98,7 +109,7 @@ def read_snli(path):
     tree_truncate=("Truncate sentences by tree distance", "flag", "T", bool),
     gru_encode=("Encode sentences with bidirectional GRU", "flag", "E", bool),
 )
-def main(mode, model_dir, train_loc, dev_loc,
+def main(mode, train_loc, dev_loc,
         tree_truncate=False,
         gru_encode=False,
         max_length=100,
@@ -117,11 +128,12 @@ def main(mode, model_dir, train_loc, dev_loc,
         'gru_encode': gru_encode
     }
     if mode == 'train':
-        train(model_dir, train_loc, dev_loc, shape, settings)
+        train(train_loc, dev_loc, shape, settings)
     elif mode == 'evaluate':
-        evaluate(model_dir, dev_loc)
+        correct, total = evaluate(dev_loc)
+        print(correct, '/', total, correct / total)
     else:
-        demo(model_dir)
+        demo()
 
 if __name__ == '__main__':
     plac.call(main)

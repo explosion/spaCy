@@ -31,21 +31,21 @@ PACKAGES = [
     'spacy.pt',
     'spacy.nl',
     'spacy.sv',
+    'spacy.fi',
+    'spacy.bn',
     'spacy.language_data',
     'spacy.serialize',
     'spacy.syntax',
     'spacy.munge',
     'spacy.tests',
     'spacy.tests.matcher',
-    'spacy.tests.morphology',
-    'spacy.tests.munge',
     'spacy.tests.parser',
-    'spacy.tests.print',
     'spacy.tests.serialize',
     'spacy.tests.spans',
+    'spacy.tests.stringstore',
     'spacy.tests.tagger',
     'spacy.tests.tokenizer',
-    'spacy.tests.tokens',
+    'spacy.tests.doc',
     'spacy.tests.vectors',
     'spacy.tests.vocab']
 
@@ -63,6 +63,7 @@ MOD_NAMES = [
     'spacy.syntax._state',
     'spacy.tokenizer',
     'spacy.syntax.parser',
+    'spacy.syntax.beam_parser',
     'spacy.syntax.nonproj',
     'spacy.syntax.transition_system',
     'spacy.syntax.arc_eager',
@@ -145,7 +146,7 @@ def generate_cython(root, source):
     print('Cythonizing sources')
     p = subprocess.call([sys.executable,
                          os.path.join(root, 'bin', 'cythonize.py'),
-                         source])
+                         source], env=os.environ)
     if p != 0:
         raise RuntimeError('Running cythonize failed')
 
@@ -234,14 +235,14 @@ def setup_package():
                 'numpy>=1.7',
                 'murmurhash>=0.26,<0.27',
                 'cymem>=1.30,<1.32',
-                'preshed>=0.46.0,<0.47.0',
-                'thinc>=5.0.0,<5.1.0',
-                'plac',
+                'preshed>=1.0.0,<2.0.0',
+                'thinc>=6.5.0,<6.6.0',
+                'plac<0.9.3',
                 'six',
-                'cloudpickle',
                 'pathlib',
-                'sputnik>=0.9.2,<0.10.0',
-                'ujson>=1.35'],
+                'ujson>=1.35',
+                'dill>=0.2,<0.3',
+                'requests>=2.13.0,<3.0.0'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',

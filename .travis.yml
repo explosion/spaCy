@@ -6,7 +6,7 @@ group: edge
 
 python:
    - "2.7"
-   - "3.5"
+   - "3.6"
 
 os:
   - linux
@@ -14,7 +14,8 @@ os:
 env:
   - VIA=compile LC_ALL=en_US.ascii 
   - VIA=compile
-  - VIA=sdist
+
+#  - VIA=sdist
 
 install:
   - "./travis.sh"
@@ -22,8 +23,8 @@ install:
 script:
   - "pip install pytest"
   - if [[ "${VIA}" == "compile" ]]; then python -m pytest spacy; fi
-  - if [[ "${VIA}" == "pypi" ]]; then python -m pytest `python -c "import pathlib; import spacy; print(pathlib.Path(spacy.__file__).parent.resolve())"`; fi
-  - if [[ "${VIA}" == "sdist" ]]; then python -m pytest `python -c "import pathlib; import spacy; print(pathlib.Path(spacy.__file__).parent.resolve())"`; fi
+  - if [[ "${VIA}" == "pypi" ]]; then python -m pytest `python -c "import os.path; import spacy; print(os.path.abspath(ospath.dirname(spacy.__file__)))"`; fi
+  - if [[ "${VIA}" == "sdist" ]]; then python -m pytest `python -c "import os.path; import spacy; print(os.path.abspath(os.path.dirname(spacy.__file__)))"`; fi
   
 notifications:
   slack:

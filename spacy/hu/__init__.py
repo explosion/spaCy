@@ -1,6 +1,7 @@
-# encoding: utf8
+# coding: utf8
 from __future__ import unicode_literals, print_function
 
+from .tokenizer_exceptions import TOKEN_MATCH
 from .language_data import *
 from ..attrs import LANG
 from ..language import Language
@@ -21,3 +22,5 @@ class Hungarian(Language):
         infixes = tuple(TOKENIZER_INFIXES)
 
         stop_words = set(STOP_WORDS)
+
+        token_match = TOKEN_MATCH

@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# coding: utf8
 # cython: infer_types=True
 from __future__ import unicode_literals
 import unicodedata
@@ -108,11 +108,12 @@ cpdef bint like_url(unicode string):
 
 
 # TODO: This should live in the language.orth
-NUM_WORDS = set('zero one two three four five six seven eight nine ten'
-                'eleven twelve thirteen fourteen fifteen sixteen seventeen'
-                'eighteen nineteen twenty thirty forty fifty sixty seventy'
-                'eighty ninety hundred thousand million billion trillion'
-                'quadrillion gajillion bazillion'.split())
+NUM_WORDS = set('''
+zero one two three four five six seven eight nine ten eleven twelve thirteen
+fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty
+sixty seventy eighty ninety hundred thousand million billion trillion
+quadrillion gajillion bazillion
+'''.split())
 cpdef bint like_number(unicode string):
     string = string.replace(',', '')
     string = string.replace('.', '')
@@ -158,27 +159,3 @@ cpdef unicode word_shape(unicode string):
         if seq < 4:
             shape.append(shape_char)
     return ''.join(shape)
-
-
-# Exceptions --- do not convert these
-_uk_us_except = set([
-    'our',
-    'ours',
-    'four',
-    'fours',
-    'your',
-    'yours',
-    'hour',
-    'hours',
-    'course',
-    'rise',
-])
-def uk_to_usa(unicode string):
-    if not string.islower():
-        return string
-    if string in _uk_us_except:
-        return string
-    our = re.compile(r'ours?$')
-    string = our.sub('or', string)
-
-    return string

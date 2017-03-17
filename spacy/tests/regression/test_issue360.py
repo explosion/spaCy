@@ -1,14 +1,10 @@
+# coding: utf-8
 from __future__ import unicode_literals
-from ...en import English
 
 import pytest
 
 
-@pytest.fixture
-def en_tokenizer():
-    return English.Defaults.create_tokenizer()
-
-
-def test_big_ellipsis(en_tokenizer):
-    tokens = en_tokenizer(u'$45...............Asking')
+def test_issue360(en_tokenizer):
+    """Test tokenization of big ellipsis"""
+    tokens = en_tokenizer('$45...............Asking')
     assert len(tokens) > 2

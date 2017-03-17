@@ -1,10 +1,13 @@
-import pytest
+# coding: utf-8
+from __future__ import unicode_literals
 
 from ...vocab import Vocab
-from ...tokens import Doc
+from ..util import get_doc
+
+import pytest
 
 
 def test_issue589():
     vocab = Vocab()
     vocab.strings.set_frozen(True)
-    doc = Doc(vocab, words=[u'whata'])
+    doc = get_doc(vocab, ['whata'])

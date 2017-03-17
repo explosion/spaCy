@@ -1,46 +1,81 @@
-from __future__ import print_function
+# coding: utf8
+from __future__ import unicode_literals
 
-import sys
-
-import sputnik
-from sputnik.package_list import (PackageNotFoundException,
-                                  CompatiblePackageNotFoundException)
-
+import pip
+import plac
+import requests
+from os import path
+from .link import link
 from . import about
 from . import util
 
 
-def download(lang, force=False, fail_on_exist=True, data_path=None):
-    if not data_path:
-        data_path = util.get_data_path(require_exists=False)
+@plac.annotations(
+    model=("Model to download", "positional", None, str),
+    direct=("Force direct download", "flag", "d", bool)
+)
+def download(model=None, direct=False):
+    """Download compatible model from default download path using pip."""
 
-    # spaCy uses pathlib, and util.get_data_path returns a pathlib.Path object,
-    # but sputnik (which we're using below) doesn't use pathlib and requires
-    # its data_path parameters to be strings, so we coerce the data_path to a
-    # str here.
-    data_path = str(data_path)
+    check_error_depr(model)
 
-    try:
-        pkg = sputnik.package(about.__title__, about.__version__,
-                        about.__models__.get(lang, lang), data_path)
-        if force:
-            shutil.rmtree(pkg.path)
-        elif fail_on_exist:
-            print("Model already installed. Please run 'python -m "
-                  "spacy.%s.download --force' to reinstall." % lang, file=sys.stderr)
-            sys.exit(0)
-    except (PackageNotFoundException, CompatiblePackageNotFoundException):
-        pass
+    if direct:
+        download_model('{m}/{m}.tar.gz'.format(m=model))
+    else:
+        model_name = about.__shortcuts__[model] if model in about.__shortcuts__ else model
+        compatibility = get_compatibility()
+        version = get_version(model_name, compatibility)
+        download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model_name, v=version))
+        link(model_name, model, force=True)
 
-    package = sputnik.install(about.__title__, about.__version__,
-                              about.__models__.get(lang, lang), data_path)
+def get_compatibility():
+    version = about.__version__
+    r = requests.get(about.__compatibility__)
+    if r.status_code != 200:
+        util.sys_exit(
+            "Couldn't fetch compatibility table. Please find the right model for "
+            "your spaCy installation (v{v}), and download it manually:".format(v=version),
+            "python -m spacy.download [full model name + version] --direct",
+            title="Server error ({c})".format(c=r.status_code))
 
-    try:
-        sputnik.package(about.__title__, about.__version__,
-                        about.__models__.get(lang, lang), data_path)
-    except (PackageNotFoundException, CompatiblePackageNotFoundException):
-        print("Model failed to install. Please run 'python -m "
-              "spacy.%s.download --force'." % lang, file=sys.stderr)
-        sys.exit(1)
+    comp = r.json()['spacy']
+    if version not in comp:
+        util.sys_exit(
+            "No compatible models found for v{v} of spaCy.".format(v=version),
+            title="Compatibility error")
+    else:
+        return comp[version]
 
-    print("Model successfully installed to %s" % data_path, file=sys.stderr)
+
+def get_version(model, comp):
+    if model not in comp:
+        util.sys_exit(
+            "No compatible model found for "
+            "{m} (spaCy v{v}).".format(m=model, v=about.__version__),
+            title="Compatibility error")
+    return comp[model][0]
+
+
+def download_model(filename):
+    util.print_msg("Downloading {f}".format(f=filename))
+    download_url = path.join(about.__download_url__, filename)
+    pip.main(['install', download_url])
+
+
+def check_error_depr(model):
+    if not model:
+        util.sys_exit(
+            "python -m spacy.download [name or shortcut]",
+            title="Missing model name or shortcut")
+
+    if model == 'all':
+        util.sys_exit(
+            "As of v1.7.0, the download all command is deprecated. Please "
+            "download the models individually via spacy.download [model name] "
+            "or pip install. For more info on this, see the documentation: "
+            "{d}".format(d=about.__docs__),
+            title="Deprecated command")
+
+
+if __name__ == '__main__':
+    plac.call(download)

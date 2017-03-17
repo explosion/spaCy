@@ -54,10 +54,10 @@ p
     doc = nlp(u'London is a big city in the United Kingdom.')
     doc.ents = []
     assert doc[0].ent_type_ == ''
-    doc.ents = [Span(0, 1, label='GPE')]
+    doc.ents = [Span(doc, 0, 1, label=doc.vocab.strings['GPE'])]
     assert doc[0].ent_type_ == 'GPE'
     doc.ents = []
-    doc.ents = [(u'LondonCity', u'GPE', 0, 1)]
+    doc.ents = [(u'LondonCity', doc.vocab.strings['GPE']), 0, 1)]
 
 p
     |  The value you assign should be a sequence, the values of which
@@ -138,7 +138,9 @@ p
 
 +code.
     import spacy
+    import random
     from spacy.gold import GoldParse
+    from spacy.language import EntityRecognizer
 
     train_data = [
         ('Who is Chaka Khan?', [(7, 17, 'PERSON')]),

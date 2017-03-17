@@ -1,4 +1,4 @@
-# encoding: utf8
+# coding: utf8
 from __future__ import unicode_literals
 
 import re
@@ -57,14 +57,14 @@ LIST_PUNCT = list(_PUNCT.strip().split())
 LIST_HYPHENS = list(_HYPHENS.strip().split())
 
 
-ALPHA_LOWER = _ALPHA_LOWER.strip().replace(' ', '')
-ALPHA_UPPER = _ALPHA_UPPER.strip().replace(' ', '')
+ALPHA_LOWER = _ALPHA_LOWER.strip().replace(' ', '').replace('\n', '')
+ALPHA_UPPER = _ALPHA_UPPER.strip().replace(' ', '').replace('\n', '')
 ALPHA = ALPHA_LOWER + ALPHA_UPPER
 
 
 QUOTES = _QUOTES.strip().replace(' ', '|')
 CURRENCY = _CURRENCY.strip().replace(' ', '|')
-UNITS = _UNITS.strip().replace(' ', '|')
+UNITS = _UNITS.strip().replace(' ', '|').replace('\n', '|')
 HYPHENS = _HYPHENS.strip().replace(' ', '|')
 
 
@@ -72,7 +72,7 @@ HYPHENS = _HYPHENS.strip().replace(' ', '|')
 # Prefixes
 
 TOKENIZER_PREFIXES = (
-    ['§', '%', r'\+'] +
+    ['§', '%', '=', r'\+'] +
     LIST_PUNCT +
     LIST_ELLIPSES +
     LIST_QUOTES +
@@ -103,10 +103,10 @@ TOKENIZER_SUFFIXES = (
 TOKENIZER_INFIXES = (
     LIST_ELLIPSES +
     [
-        r'(?<=[0-9])[+\-\*/^](?=[0-9])',
+        r'(?<=[0-9])[+\-\*^](?=[0-9-])',
         r'(?<=[{al}])\.(?=[{au}])'.format(al=ALPHA_LOWER, au=ALPHA_UPPER),
         r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),
-        r'(?<=[{a}])(?:{h})(?=[{a}])'.format(a=ALPHA, h=HYPHENS),
+        r'(?<=[{a}])[?";:=,.]*(?:{h})(?=[{a}])'.format(a=ALPHA, h=HYPHENS),
         r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=ALPHA)
     ]
 )

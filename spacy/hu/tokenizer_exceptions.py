@@ -1,9 +1,17 @@
-# encoding: utf8
+# coding: utf8
 from __future__ import unicode_literals
 
+import re
+
+from spacy.language_data.punctuation import ALPHA_LOWER, CURRENCY
+from ..language_data.tokenizer_exceptions import _URL_PATTERN
+
 ABBREVIATIONS = """
+A.
+AG.
 AkH.
 Aö.
+B.
 B.CS.
 B.S.
 B.Sc.
@@ -13,57 +21,103 @@ BEK.
 BSC.
 BSc.
 BTK.
+Bat.
 Be.
 Bek.
 Bfok.
 Bk.
 Bp.
+Bros.
+Bt.
 Btk.
 Btke.
 Btét.
+C.
 CSC.
 Cal.
+Cg.
+Cgf.
+Cgt.
+Cia.
 Co.
 Colo.
 Comp.
 Copr.
+Corp.
+Cos.
 Cs.
 Csc.
 Csop.
+Cstv.
 Ctv.
+Ctvr.
 D.
 DR.
 Dipl.
 Dr.
 Dsz.
 Dzs.
+E.
+EK.
+EU.
+F.
 Fla.
+Folyt.
+Fpk.
 Főszerk.
+G.
+GK.
 GM.
+Gfv.
+Gmk.
+Gr.
+Group.
+Gt.
 Gy.
+H.
 HKsz.
 Hmvh.
+I.
+Ifj.
+Inc.
 Inform.
+Int.
+J.
+Jr.
+Jv.
+K.
 K.m.f.
+KB.
 KER.
 KFT.
 KRT.
+Kb.
 Ker.
 Kft.
+Kg.
+Kht.
+Kkt.
 Kong.
 Korm.
 Kr.
 Kr.e.
 Kr.u.
 Krt.
+L.
+LB.
+Llc.
+Ltd.
+M.
 M.A.
 M.S.
 M.SC.
 M.Sc.
 MA.
+MH.
 MSC.
 MSc.
 Mass.
+Max.
 Mlle.
 Mme.
 Mo.
@@ -71,45 +125,77 @@ Mr.
 Mrs.
 Ms.
 Mt.
+N.
 N.N.
 NB.
 NBr.
 Nat.
+No.
 Nr.
 Ny.
 Nyh.
 Nyr.
+Nyrt.
+O.
+OJ.
 Op.
+P.
 P.H.
 P.S.
 PH.D.
 PHD.
 PROF.
+Pf.
 Ph.D
 PhD.
+Pk.
+Pl.
+Plc.
 Pp.
 Proc.
 Prof.
 Ptk.
+R.
+RT.
 Rer.
+Rt.
+S.
 S.B.
 SZOLG.
 Salg.
+Sch.
+Spa.
 St.
 Sz.
+SzRt.
+Szerk.
 Szfv.
 Szjt.
 Szolg.
 Szt.
 Sztv.
+Szvt.
+Számv.
+T.
 TEL.
 Tel.
 Ty.
 Tyr.
+U.
 Ui.
+Ut.
+V.
+VB.
 Vcs.
 Vhr.
+Vht.
+Várm.
+W.
+X.
 X.Y.
+Y.
+Z.
+Zrt.
 Zs.
 a.C.
 ac.
@@ -119,11 +205,13 @@ ag.
 agit.
 alez.
 alk.
+all.
 altbgy.
 an.
 ang.
 arch.
 at.
+atc.
 aug.
 b.a.
 b.s.
@@ -161,6 +249,7 @@ dikt.
 dipl.
 dj.
 dk.
+dl.
 dny.
 dolg.
 dr.
@@ -184,6 +273,7 @@ eü.
 f.h.
 f.é.
 fam.
+fb.
 febr.
 fej.
 felv.
@@ -211,6 +301,7 @@ gazd.
 gimn.
 gk.
 gkv.
+gmk.
 gondn.
 gr.
 grav.
@@ -240,6 +331,7 @@ hőm.
 i.e.
 i.sz.
 id.
+ie.
 ifj.
 ig.
 igh.
@@ -254,6 +346,7 @@ io.
 ip.
 ir.
 irod.
+irod.
 isk.
 ism.
 izr.
@@ -261,6 +354,7 @@ iá.
 jan.
 jav.
 jegyz.
+jgmk.
 jjv.
 jkv.
 jogh.
@@ -271,6 +365,7 @@ júl.
 jún.
 karb.
 kat.
+kath.
 kb.
 kcs.
 kd.
@@ -285,6 +380,8 @@ kiv.
 kk.
 kkt.
 klin.
+km.
+korm.
 kp.
 krt.
 kt.
@@ -318,6 +415,7 @@ m.s.
 m.sc.
 ma.
 mat.
+max.
 mb.
 med.
 megh.
@@ -353,6 +451,7 @@ nat.
 nb.
 neg.
 nk.
+no.
 nov.
 nu.
 ny.
@@ -362,6 +461,7 @@ nyug.
 obj.
 okl.
 okt.
+old.
 olv.
 orsz.
 ort.
@@ -372,6 +472,8 @@ pg.
 ph.d
 ph.d.
 phd.
+phil.
+pjt.
 pk.
 pl.
 plb.
@@ -406,6 +508,7 @@ röv.
 s.b.
 s.k.
 sa.
+sb.
 sel.
 sgt.
 sm.
@@ -413,6 +516,7 @@ st.
 stat.
 stb.
 strat.
+stud.
 sz.
 szakm.
 szaksz.
@@ -467,6 +571,7 @@ vb.
 vegy.
 vh.
 vhol.
+vhr.
 vill.
 vizsg.
 vk.
@@ -478,13 +583,20 @@ vs.
 vsz.
 vv.
 vál.
+várm.
 vízv.
 vö.
 zrt.
 zs.
+Á.
+Áe.
+Áht.
+É.
+Épt.
 Ész.
 Új-Z.
 ÚjZ.
+Ún.
 á.
 ált.
 ápr.
@@ -500,6 +612,7 @@ zs.
 ötk.
 özv.
 ú.
+ú.n.
 úm.
 ún.
 út.
@@ -510,7 +623,6 @@ zs.
 ümk.
 ütk.
 üv.
-ő.
 ű.
 őrgy.
 őrpk.
@@ -520,3 +632,17 @@ zs.
 OTHER_EXC = """
 -e
 """.strip().split()
+
+ORD_NUM_OR_DATE = "([A-Z0-9]+[./-])*(\d+\.?)"
+_NUM = "[+\-]?\d+([,.]\d+)*"
+_OPS = "[=<>+\-\*/^()÷%²]"
+_SUFFIXES = "-[{a}]+".format(a=ALPHA_LOWER)
+NUMERIC_EXP = "({n})(({o})({n}))*[%]?".format(n=_NUM, o=_OPS)
+TIME_EXP = "\d+(:\d+)*(\.\d+)?"
+
+NUMS = "(({ne})|({t})|({on})|({c}))({s})?".format(
+    ne=NUMERIC_EXP, t=TIME_EXP, on=ORD_NUM_OR_DATE,
+    c=CURRENCY, s=_SUFFIXES
+)
+
+TOKEN_MATCH = re.compile("^({u})|({n})$".format(u=_URL_PATTERN, n=NUMS)).match

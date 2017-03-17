@@ -1,10 +1,12 @@
 # coding: utf-8
 from __future__ import unicode_literals
-from os import path
 
-import pytest
-
+from ...vocab import Vocab
+from ...tokenizer import Tokenizer
 from ...util import utf8open
+
+from os import path
+import pytest
 
 
 def test_tokenizer_handles_no_word(tokenizer):
@@ -29,7 +31,7 @@ def test_tokenizer_handles_punct(tokenizer):
 
 
 def test_tokenizer_handles_digits(tokenizer):
-    exceptions = ["hu"]
+    exceptions = ["hu", "bn"]
     text = "Lorem ipsum: 1984."
     tokens = tokenizer(text)
 
@@ -39,10 +41,16 @@ def test_tokenizer_handles_digits(tokenizer):
         assert tokens[3].text == "1984"
 
 
-@pytest.mark.parametrize('text', ["google.com", "python.org", "spacy.io", "explosion.ai"])
+@pytest.mark.parametrize('text', ["google.com", "python.org", "spacy.io", "explosion.ai", "http://www.google.com"])
 def test_tokenizer_keep_urls(tokenizer, text):
     tokens = tokenizer(text)
     assert len(tokens) == 1
+
+
+@pytest.mark.parametrize('text', ["NASDAQ:GOOG"])
+def test_tokenizer_colons(tokenizer, text):
+    tokens = tokenizer(text)
+    assert len(tokens) == 3
 
 
 @pytest.mark.parametrize('text', ["hello123@example.com", "hi+there@gmail.it", "matt@explosion.ai"])
@@ -67,7 +75,7 @@ Phasellus tincidunt, augue quis porta finibus, massa sapien consectetur augue, n
 
 @pytest.mark.parametrize('file_name', ["sun.txt"])
 def test_tokenizer_handle_text_from_file(tokenizer, file_name):
-    loc = path.join(path.dirname(__file__), '..', file_name)
+    loc = path.join(path.dirname(__file__), file_name)
     text = utf8open(loc).read()
     assert len(text) != 0
     tokens = tokenizer(text)
@@ -81,3 +89,25 @@ def test_tokenizer_suspected_freeing_strings(tokenizer):
     tokens2 = tokenizer(text2)
     assert tokens1[0].text == "Lorem"
     assert tokens2[0].text == "Lorem"
+
+
+@pytest.mark.parametrize('text,tokens', [
+    ("lorem", [{'orth': 'lo'}, {'orth': 'rem'}])])
+def test_tokenizer_add_special_case(tokenizer, text, tokens):
+    tokenizer.add_special_case(text, tokens)
+    doc = tokenizer(text)
+    assert doc[0].text == tokens[0]['orth']
+    assert doc[1].text == tokens[1]['orth']
+
+
+@pytest.mark.parametrize('text,tokens', [
+    ("lorem", [{'orth': 'lo', 'tag': 'NN'}, {'orth': 'rem'}])])
+def test_tokenizer_add_special_case_tag(text, tokens):
+    vocab = Vocab(tag_map={'NN': {'pos': 'NOUN'}})
+    tokenizer = Tokenizer(vocab, {}, None, None, None)
+    tokenizer.add_special_case(text, tokens)
+    doc = tokenizer(text)
+    assert doc[0].text == tokens[0]['orth']
+    assert doc[0].tag_ == tokens[0]['tag']
+    assert doc[0].pos_ == 'NOUN'
+    assert doc[1].text == tokens[1]['orth']

@@ -1,4 +1,4 @@
-# encoding: utf8
+# coding: utf8
 from __future__ import unicode_literals
 
 from ..symbols import *
@@ -7,7 +7,8 @@ from ..language_data import PRON_LEMMA
 
 EXC = {}
 
-EXCLUDE_EXC = ["Ill", "ill", "Its", "its", "Hell", "hell", "Well", "well", "Whore", "whore"]
+EXCLUDE_EXC = ["Ill", "ill", "Its", "its", "Hell", "hell", "Shell", "shell",
+               "Shed", "shed", "were", "Were", "Well", "well", "Whore", "whore"]
 
 
 # Pronouns
@@ -20,18 +21,18 @@ for pron in ["i"]:
         ]
 
         EXC[orth + "m"] = [
-            {ORTH: pron, LEMMA: PRON_LEMMA, TAG: "PRP"},
+            {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
             {ORTH: "m", LEMMA: "be", TAG: "VBP", "tenspect": 1, "number": 1 }
         ]
 
         EXC[orth + "'ma"] = [
-            {ORTH: pron, LEMMA: PRON_LEMMA, TAG: "PRP"},
+            {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
             {ORTH: "'m", LEMMA: "be", NORM: "am"},
             {ORTH: "a", LEMMA: "going to", NORM: "gonna"}
         ]
 
         EXC[orth + "ma"] = [
-            {ORTH: pron, LEMMA: PRON_LEMMA, TAG: "PRP"},
+            {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
             {ORTH: "m", LEMMA: "be", NORM: "am"},
             {ORTH: "a", LEMMA: "going to", NORM: "gonna"}
         ]
@@ -150,8 +151,8 @@ for word in ["who", "what", "when", "where", "why", "how", "there", "that"]:
 
         EXC[orth + "'ll've"] = [
             {ORTH: orth, LEMMA: word},
-            {ORTH: "ll", LEMMA: "will", TAG: "MD"},
-            {ORTH: "ve", LEMMA: "have", TAG: "VB"}
+            {ORTH: "'ll", LEMMA: "will", TAG: "MD"},
+            {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
         ]
 
         EXC[orth + "llve"] = [
@@ -237,11 +238,13 @@ for verb_data in [
         ]
 
         EXC[data[ORTH] + "n't've"] = [
+            dict(data),
             {ORTH: "n't", LEMMA: "not", TAG: "RB"},
             {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
         ]
 
         EXC[data[ORTH] + "ntve"] = [
+            dict(data),
             {ORTH: "nt", LEMMA: "not", TAG: "RB"},
             {ORTH: "ve", LEMMA: "have", TAG: "VB"}
         ]
@@ -331,6 +334,23 @@ for exc_data in [
     for data in [exc_data, exc_data_apos]:
         EXC[data[ORTH]] = [
             dict(data)
+        ]
+
+
+# Times
+
+for h in range(1, 12 + 1):
+    hour = str(h)
+
+    for period in ["a.m.", "am"]:
+        EXC[hour + period] = [
+            {ORTH: hour},
+            {ORTH: period, LEMMA: "a.m."}
+        ]
+    for period in ["p.m.", "pm"]:
+        EXC[hour + period] = [
+            {ORTH: hour},
+            {ORTH: period, LEMMA: "p.m."}
         ]
 
 
@@ -750,5 +770,5 @@ ORTH_ONLY = [
     "Rev.",
     "Sen.",
     "St.",
-    "vs."
+    "vs.",
 ]

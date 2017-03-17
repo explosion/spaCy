@@ -52,7 +52,7 @@ cdef bint _entity_is_sunk(StateClass st, Transition* golds) nogil:
 cdef class BiluoPushDown(TransitionSystem):
     @classmethod
     def get_actions(cls, **kwargs):
-        actions = kwargs.get('actions', 
+        actions = kwargs.get('actions',
                     {
                         MISSING: {'': True},
                         BEGIN: {},
@@ -106,7 +106,7 @@ cdef class BiluoPushDown(TransitionSystem):
                 self.freqs[ENT_TYPE][0] += 1
 
     cdef Transition lookup_transition(self, object name) except *:
-        if name == '-':
+        if name == '-' or name == None:
             move_str = 'M'
             label = 0
         elif '-' in name:
@@ -159,6 +159,7 @@ cdef class BiluoPushDown(TransitionSystem):
         return t
 
     cdef int initialize_state(self, StateC* st) nogil:
+        # This is especially necessary when we use limited training data.
         for i in range(st.length):
             if st._sent[i].ent_type != 0:
                 with gil:
@@ -248,7 +249,7 @@ cdef class In:
         elif st.B_(1).sent_start:
             return False
         return st.entity_is_open() and label != 0 and st.E_(0).ent_type == label
-    
+
     @staticmethod
     cdef int transition(StateC* st, int label) nogil:
         st.set_ent_tag(st.B(0), 1, label)
@@ -262,7 +263,7 @@ cdef class In:
         cdef int g_act = gold.ner[s.B(0)].move
         cdef int g_tag = gold.ner[s.B(0)].label
         cdef bint is_sunk = _entity_is_sunk(s, gold.ner)
-        
+
         if g_act == MISSING:
             return 0
         elif g_act == BEGIN:
@@ -304,7 +305,7 @@ cdef class Last:
 
         cdef int g_act = gold.ner[s.B(0)].move
         cdef int g_tag = gold.ner[s.B(0)].label
-        
+
         if g_act == MISSING:
             return 0
         elif g_act == BEGIN:
@@ -381,7 +382,7 @@ cdef class Out:
         st.set_ent_tag(st.B(0), 2, 0)
         st.push()
         st.pop()
-    
+
     @staticmethod
     cdef weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
         cdef int g_act = gold.ner[s.B(0)].move
@@ -406,7 +407,7 @@ cdef class Out:
             return 1
         else:
             return 1
-    
+
 
 class OracleError(Exception):
     pass

@@ -19,21 +19,6 @@ p spaCy currently supports the following languages and capabilities:
         each icon in [ "pro", "pro", "con", "pro", "pro", "pro", "pro", "con" ]
             +cell.u-text-center #[+procon(icon)]
 
-    +row
-        +cell Chinese #[code zh]
-        each icon in [ "pro", "con", "con", "con", "con", "con", "con", "con" ]
-            +cell.u-text-center #[+procon(icon)]
-
-    +row
-        +cell Spanish #[code es]
-        each icon in [ "pro", "con", "con", "con", "con", "con", "con", "con" ]
-            +cell.u-text-center #[+procon(icon)]
-
-p
-    |  Chinese tokenization requires the
-    |  #[+a("https://github.com/fxsjy/jieba") Jieba] library. Statistical
-    |  models are coming soon.
-
 
 +h(2, "alpha-support") Alpha support
 
@@ -42,8 +27,13 @@ p
     |  the existing language data and extending the tokenization patterns.
 
 +table([ "Language", "Source" ])
-    each language, code in { it: "Italian", fr: "French", pt: "Portuguese", nl: "Dutch", sv: "Swedish", hu: "Hungarian" }
+    each language, code in { zh: "Chinese", es: "Spanish", it: "Italian", fr: "French", pt: "Portuguese", nl: "Dutch", sv: "Swedish", fi: "Finnish", hu: "Hungarian", bn: "Bengali" }
         +row
             +cell #{language} #[code=code]
             +cell
                 +src(gh("spaCy", "spacy/" + code)) spacy/#{code}
+
+p
+    |  Chinese tokenization requires the
+    |  #[+a("https://github.com/fxsjy/jieba") Jieba] library. Statistical
+    |  models are coming soon.

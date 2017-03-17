@@ -1,24 +1,24 @@
 from __future__ import unicode_literals
 
-from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
 from libc.string cimport memset
 from libc.stdint cimport int32_t
-from libc.stdint cimport uint64_t
 from libc.math cimport sqrt
 
 from pathlib import Path
 import bz2
-import io
-import math
 import ujson as json
-import tempfile
+import re
+
+try:
+    import cPickle as pickle
+except ImportError:
+    import pickle
 
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
 from .strings cimport hash_string
-from .orth cimport word_shape
 from .typedefs cimport attr_t
-from .cfile cimport CFile
+from .cfile cimport CFile, StringCFile
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs
 from .tokens.token cimport Token
@@ -29,7 +29,6 @@ from . import symbols
 from cymem.cymem cimport Address
 from .serialize.packer cimport Packer
 from .attrs cimport PROB, LANG
-from . import deprecated
 from . import util
 
 
@@ -305,7 +304,7 @@ cdef class Vocab:
         '''
         key = hash_string(string)
         lex = self._by_hash.get(key)
-        return True if lex is not NULL else False
+        return lex is not NULL
 
     def __iter__(self):
         '''Iterate over the lexemes in the vocabulary.
@@ -352,20 +351,22 @@ cdef class Vocab:
                 Token.set_struct_attr(token, attr_id, value)
         return tokens
 
-    def dump(self, loc):
-        """Save the lexemes binary data to the given location.
+    def dump(self, loc=None):
+        """Save the lexemes binary data to the given location, or
+        return a byte-string with the data if loc is None.
 
         Arguments:
-            loc (Path): The path to save to.
+            loc (Path or None): The path to save to, or None.
         """
-        if hasattr(loc, 'as_posix'):
-            loc = loc.as_posix()
-        cdef bytes bytes_loc = loc.encode('utf8') if type(loc) == unicode else loc
-
-        cdef CFile fp = CFile(bytes_loc, 'wb')
+        cdef CFile fp
+        if loc is None:
+            fp = StringCFile('wb')
+        else:
+            fp = CFile(loc, 'wb')
         cdef size_t st
         cdef size_t addr
         cdef hash_t key
+        cdef LexemeC* lexeme = NULL
         for key, addr in self._by_hash.items():
             lexeme = <LexemeC*>addr
             fp.write_from(&lexeme.orth, sizeof(lexeme.orth), 1)
@@ -384,6 +385,8 @@ cdef class Vocab:
             fp.write_from(&lexeme.l2_norm, sizeof(lexeme.l2_norm), 1)
             fp.write_from(&lexeme.lang, sizeof(lexeme.lang), 1)
         fp.close()
+        if loc is None:
+            return fp.string_data()
 
     def load_lexemes(self, loc):
         '''Load the binary vocabulary data from the given location.
@@ -396,10 +399,10 @@ cdef class Vocab:
         '''
         fp = CFile(loc, 'rb',
                 on_open_error=lambda: IOError('LexemeCs file not found at %s' % loc))
-        cdef LexemeC* lexeme
+        cdef LexemeC* lexeme = NULL
         cdef hash_t key
         cdef unicode py_str
-        cdef attr_t orth
+        cdef attr_t orth = 0
         assert sizeof(orth) == sizeof(lexeme.orth)
         i = 0
         while True:
@@ -407,6 +410,60 @@ cdef class Vocab:
                 fp.read_into(&orth, 1, sizeof(orth))
             except IOError:
                 break
+            lexeme = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
+            # Copy data from the file into the lexeme
+            fp.read_into(&lexeme.flags, 1, sizeof(lexeme.flags))
+            fp.read_into(&lexeme.id, 1, sizeof(lexeme.id))
+            fp.read_into(&lexeme.length, 1, sizeof(lexeme.length))
+            fp.read_into(&lexeme.orth, 1, sizeof(lexeme.orth))
+            fp.read_into(&lexeme.lower, 1, sizeof(lexeme.lower))
+            fp.read_into(&lexeme.norm, 1, sizeof(lexeme.norm))
+            fp.read_into(&lexeme.shape, 1, sizeof(lexeme.shape))
+            fp.read_into(&lexeme.prefix, 1, sizeof(lexeme.prefix))
+            fp.read_into(&lexeme.suffix, 1, sizeof(lexeme.suffix))
+            fp.read_into(&lexeme.cluster, 1, sizeof(lexeme.cluster))
+            fp.read_into(&lexeme.prob, 1, sizeof(lexeme.prob))
+            fp.read_into(&lexeme.sentiment, 1, sizeof(lexeme.sentiment))
+            fp.read_into(&lexeme.l2_norm, 1, sizeof(lexeme.l2_norm))
+            fp.read_into(&lexeme.lang, 1, sizeof(lexeme.lang))
+
+            lexeme.vector = EMPTY_VEC
+            py_str = self.strings[lexeme.orth]
+            key = hash_string(py_str)
+            self._by_hash.set(key, lexeme)
+            self._by_orth.set(lexeme.orth, lexeme)
+            self.length += 1
+            i += 1
+        fp.close()
+
+    def _deserialize_lexemes(self, CFile fp):
+        '''Load the binary vocabulary data from the given CFile.
+        '''
+        cdef LexemeC* lexeme = NULL
+        cdef hash_t key
+        cdef unicode py_str
+        cdef attr_t orth = 0
+        assert sizeof(orth) == sizeof(lexeme.orth)
+        i = 0
+        cdef int todo = fp.size
+        cdef int lex_size = sizeof(lexeme.flags)
+        lex_size += sizeof(lexeme.id)
+        lex_size += sizeof(lexeme.length)
+        lex_size += sizeof(lexeme.orth)
+        lex_size += sizeof(lexeme.lower)
+        lex_size += sizeof(lexeme.norm)
+        lex_size += sizeof(lexeme.shape)
+        lex_size += sizeof(lexeme.prefix)
+        lex_size += sizeof(lexeme.suffix)
+        lex_size += sizeof(lexeme.cluster)
+        lex_size += sizeof(lexeme.prob)
+        lex_size += sizeof(lexeme.sentiment)
+        lex_size += sizeof(lexeme.l2_norm)
+        lex_size += sizeof(lexeme.lang)
+        while True:
+            if todo < lex_size:
+                break
+            todo -= lex_size
             lexeme = <LexemeC*>self.mem.alloc(sizeof(LexemeC), 1)
             # Copy data from the file into the lexeme
             fp.read_into(&lexeme.flags, 1, sizeof(lexeme.flags))
@@ -477,9 +534,12 @@ cdef class Vocab:
         cdef attr_t orth
         cdef int32_t vec_len = -1
         cdef double norm = 0.0
+
+        whitespace_pattern = re.compile(r'\s', re.UNICODE)
+
         for line_num, line in enumerate(file_):
             pieces = line.split()
-            word_str = pieces.pop(0)
+            word_str = " " if whitespace_pattern.match(line) else pieces.pop(0)
             if vec_len == -1:
                 vec_len = len(pieces)
             elif vec_len != len(pieces):
@@ -556,6 +616,42 @@ cdef class Vocab:
                 lex.vector = EMPTY_VEC
         self.vectors_length = vec_len
         return vec_len
+
+
+def pickle_vocab(vocab):
+    sstore = vocab.strings
+    morph = vocab.morphology
+    length = vocab.length
+    serializer = vocab._serializer
+    data_dir = vocab.data_dir
+    lex_attr_getters = vocab.lex_attr_getters
+
+    lexemes_data = vocab.dump()
+    vectors_length = vocab.vectors_length
+
+    return (unpickle_vocab,
+        (sstore, morph, serializer, data_dir, lex_attr_getters,
+            lexemes_data, length, vectors_length))
+
+
+def unpickle_vocab(sstore, morphology, serializer, data_dir,
+        lex_attr_getters, bytes lexemes_data, int length, int vectors_length):
+    cdef Vocab vocab = Vocab()
+    vocab.length = length
+    vocab.vectors_length = vectors_length
+    vocab.strings = sstore
+    cdef CFile fp = StringCFile('r', data=lexemes_data)
+    vocab.morphology = morphology
+    vocab._serializer = serializer
+    vocab.data_dir = data_dir
+    vocab.lex_attr_getters = lex_attr_getters
+    vocab._deserialize_lexemes(fp)
+    vocab.length = length
+    vocab.vectors_length = vectors_length
+    return vocab
+
+
+copy_reg.pickle(Vocab, pickle_vocab, unpickle_vocab)
 
 
 def write_binary_vectors(in_loc, out_loc):

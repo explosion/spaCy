@@ -1,19 +1,22 @@
+# coding: utf-8
 from __future__ import unicode_literals
-from spacy.attrs import HEAD
-from spacy.en import English
-from spacy.tokens.doc import Doc
-import numpy as np
+
+from ..util import get_doc
 
 import pytest
 
 
 @pytest.fixture
-def doc(EN):
-    return EN('This is a sentence. This is another sentence. And a third.')
+def doc(en_tokenizer):
+    text = "This is a sentence. This is another sentence. And a third."
+    heads = [1, 0, 1, -2, -3, 1, 0, 1, -2, -3, 0, 1, -2, -1]
+    deps = ['nsubj', 'ROOT', 'det', 'attr', 'punct', 'nsubj', 'ROOT', 'det',
+            'attr', 'punct', 'ROOT', 'det', 'npadvmod', 'punct']
+    tokens = en_tokenizer(text)
+    return get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
 
 
-@pytest.mark.models
-def test_sent_spans(doc):
+def test_spans_sent_spans(doc):
     sents = list(doc.sents)
     assert sents[0].start == 0
     assert sents[0].end == 5
@@ -21,73 +24,56 @@ def test_sent_spans(doc):
     assert sum(len(sent) for sent in sents) == len(doc)
 
 
-@pytest.mark.models
-def test_root(doc):
-    np = doc[2:4]
-    assert len(np) == 2
-    assert np.orth_ == 'a sentence'
-    assert np.root.orth_ == 'sentence'
-    assert np.root.head.orth_ == 'is'
+def test_spans_root(doc):
+    span = doc[2:4]
+    assert len(span) == 2
+    assert span.text == 'a sentence'
+    assert span.root.text == 'sentence'
+    assert span.root.head.text == 'is'
+
+def test_spans_string_fn(doc):
+    span = doc[0:4]
+    assert len(span) == 4
+    assert span.text == 'This is a sentence'
+    assert span.upper_ == 'THIS IS A SENTENCE'
+    assert span.lower_ == 'this is a sentence'
+
+def test_spans_root2(en_tokenizer):
+    text = "through North and South Carolina"
+    heads = [0, 3, -1, -2, -4]
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    assert doc[-2:].root.text == 'Carolina'
 
 
-def test_root2(EN):
-    text = 'through North and South Carolina'
-    doc = EN(text)
-    heads = np.asarray([[0, 3, -1, -2, -4]], dtype='int32')
-    doc.from_array([HEAD], heads.T)
-    south_carolina = doc[-2:]
-    assert south_carolina.root.text == 'Carolina'
-
-
-def test_sent(doc):
-    '''Test new span.sent property'''
-    #return EN('This is a sentence. This is another sentence. And a third.')
-    heads = np.asarray([[1, 0, -1, -1, -1, 1, 0, -1, -1, -1, 2, 1, 0, -1]], dtype='int32')
-    doc.from_array([HEAD], heads.T)
+def test_spans_span_sent(doc):
+    """Test span.sent property"""
     assert len(list(doc.sents))
-    span = doc[:2]
-    assert span.sent.root.text == 'is'
-    assert span.sent.text == 'This is a sentence.'
-    span = doc[6:7]
-    assert span.sent.root.left_edge.text == 'This'
+    assert doc[:2].sent.root.text == 'is'
+    assert doc[:2].sent.text == 'This is a sentence .'
+    assert doc[6:7].sent.root.left_edge.text == 'This'
 
 
-def test_default_sentiment(EN):
-    '''Test new span.sentiment property's default averaging behaviour'''
-    good = EN.vocab[u'good']
-    good.sentiment = 3.0
-    bad = EN.vocab[u'bad']
-    bad.sentiment = -2.0
-
-    doc = Doc(EN.vocab, [u'good', 'stuff', u'bad', u'stuff'])
-
-    good_stuff = doc[:2]
-    assert good_stuff.sentiment == 3.0 / 2
-
-    bad_stuff = doc[-2:]
-    assert bad_stuff.sentiment == -2. / 2
-
-    good_stuff_bad = doc[:-1]
-    assert good_stuff_bad.sentiment == (3.+-2) / 3.
+def test_spans_default_sentiment(en_tokenizer):
+    """Test span.sentiment property's default averaging behaviour"""
+    text = "good stuff bad stuff"
+    tokens = en_tokenizer(text)
+    tokens.vocab[tokens[0].text].sentiment = 3.0
+    tokens.vocab[tokens[2].text].sentiment = -2.0
+    doc = get_doc(tokens.vocab, [t.text for t in tokens])
+    assert doc[:2].sentiment == 3.0 / 2
+    assert doc[-2:].sentiment == -2. / 2
+    assert doc[:-1].sentiment == (3.+-2) / 3.
 
 
-
-def test_override_sentiment(EN):
-    '''Test new span.sentiment property's default averaging behaviour'''
-    good = EN.vocab[u'good']
-    good.sentiment = 3.0
-    bad = EN.vocab[u'bad']
-    bad.sentiment = -2.0
-
-    doc = Doc(EN.vocab, [u'good', 'stuff', u'bad', u'stuff'])
-
+def test_spans_override_sentiment(en_tokenizer):
+    """Test span.sentiment property's default averaging behaviour"""
+    text = "good stuff bad stuff"
+    tokens = en_tokenizer(text)
+    tokens.vocab[tokens[0].text].sentiment = 3.0
+    tokens.vocab[tokens[2].text].sentiment = -2.0
+    doc = get_doc(tokens.vocab, [t.text for t in tokens])
     doc.user_span_hooks['sentiment'] = lambda span: 10.0
-
-    good_stuff = doc[:2]
-    assert good_stuff.sentiment == 10.0
-
-    bad_stuff = doc[-2:]
-    assert bad_stuff.sentiment == 10.0
-
-    good_stuff_bad = doc[:-1]
-    assert good_stuff_bad.sentiment == 10.0
+    assert doc[:2].sentiment == 10.0
+    assert doc[-2:].sentiment == 10.0
+    assert doc[:-1].sentiment == 10.0

@@ -1,90 +1,75 @@
+# coding: utf-8
 from __future__ import unicode_literals
 
+from ...tokens.doc import Doc
+from ...attrs import HEAD
+from ..util import get_doc, apply_transition_sequence
+
 import pytest
-import numpy
-from spacy.attrs import HEAD
-
-def make_doc(EN, sentstr):
-	sent = sentstr.split(' ')
-	doc = EN.tokenizer.tokens_from_list(sent)
-	EN.tagger(doc)
-	return doc
 
 
-@pytest.mark.models
-def test_space_attachment(EN):
-    sentence = 'This is a test.\nTo ensure  spaces are attached well.'
-    doc = EN(sentence)
+def test_parser_space_attachment(en_tokenizer):
+    text = "This is a test.\nTo ensure  spaces are attached well."
+    heads = [1, 0, 1, -2, -3, -1, 1, 4, -1, 2, 1, 0, -1, -2]
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
 
     for sent in doc.sents:
         if len(sent) == 1:
             assert not sent[-1].is_space
 
 
-@pytest.mark.models
-def test_sentence_space(EN):
-    text = ('''I look forward to using Thingamajig.  I've been told it will '''
-            '''make my life easier...''')
-    doc = EN(text)
+def test_parser_sentence_space(en_tokenizer):
+    text = "I look forward to using Thingamajig.  I've been told it will make my life easier..."
+    heads = [1, 0, -1, -2, -1, -1, -5, -1, 3, 2, 1, 0, 2, 1, -3, 1, 1, -3, -7]
+    deps = ['nsubj', 'ROOT', 'advmod', 'prep', 'pcomp', 'dobj', 'punct', '',
+            'nsubjpass', 'aux', 'auxpass', 'ROOT', 'nsubj', 'aux', 'ccomp',
+            'poss', 'nsubj', 'ccomp', 'punct']
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads, deps=deps)
     assert len(list(doc.sents)) == 2
 
 
-@pytest.mark.models
-def test_space_attachment_leading_space(EN):
-	# leading space token
-	doc = make_doc(EN, '\t \n This is a sentence .')
-	assert doc[0].is_space
-	assert doc[1].is_space
-	assert doc[2].orth_ == 'This'
-	with EN.parser.step_through(doc) as stepwise:
-		pass
-	assert doc[0].head.i == 2
-	assert doc[1].head.i == 2
-	assert stepwise.stack == set([2])
+def test_parser_space_attachment_leading(en_tokenizer, en_parser):
+    text = "\t \n This is a sentence ."
+    heads = [1, 1, 0, 1, -2, -3]
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, text.split(' '), heads=heads)
+    assert doc[0].is_space
+    assert doc[1].is_space
+    assert doc[2].text == 'This'
+    with en_parser.step_through(doc) as stepwise:
+        pass
+    assert doc[0].head.i == 2
+    assert doc[1].head.i == 2
+    assert stepwise.stack == set([2])
 
 
-@pytest.mark.models
-def test_space_attachment_intermediate_and_trailing_space(EN):
-	# intermediate and trailing space tokens
-	doc = make_doc(EN, 'This is \t a \t\n \n sentence . \n\n \n')
-	assert doc[2].is_space
-	assert doc[4].is_space
-	assert doc[5].is_space
-	assert doc[8].is_space
-	assert doc[9].is_space
-	with EN.parser.step_through(doc) as stepwise:
-		stepwise.transition('L-nsubj')
-		stepwise.transition('S')
-		stepwise.transition('L-det')
-		stepwise.transition('R-attr')
-		stepwise.transition('D')
-		stepwise.transition('R-punct')
-	assert stepwise.stack == set([])
-	for tok in doc:
-		assert tok.dep != 0 or tok.is_space
-	assert [ tok.head.i for tok in doc ] == [1,1,1,6,3,3,1,1,7,7]
+def test_parser_space_attachment_intermediate_trailing(en_tokenizer, en_parser):
+    text = "This is \t a \t\n \n sentence . \n\n \n"
+    heads = [1, 0, -1, 2, -1, -4, -5, -1]
+    transition = ['L-nsubj', 'S', 'L-det', 'R-attr', 'D', 'R-punct']
+    tokens = en_tokenizer(text)
+    doc = get_doc(tokens.vocab, text.split(' '), heads=heads)
+    assert doc[2].is_space
+    assert doc[4].is_space
+    assert doc[5].is_space
+    assert doc[8].is_space
+    assert doc[9].is_space
+
+    apply_transition_sequence(en_parser, doc, transition)
+    for token in doc:
+        assert token.dep != 0 or token.is_space
+    assert [token.head.i for token in doc] == [1, 1, 1, 6, 3, 3, 1, 1, 7, 7]
 
 
-@pytest.mark.models
-def test_space_attachment_one_space_sentence(EN):
-	# one space token sentence
-	doc = make_doc(EN, '\n')
-	assert len(doc) == 1
-	with EN.parser.step_through(doc) as _:
-		pass
-	assert doc[0].is_space
-	assert doc[0].head.i == 0
-
-
-@pytest.mark.models
-def test_space_attachment_only_space_sentence(EN):
-	# space-exclusive sentence
-	doc = make_doc(EN, '\n \t \n\n \t')
-	assert len(doc) == 4
-	for tok in doc:
-		assert tok.is_space
-	with EN.parser.step_through(doc) as _:
-		pass
-	# all tokens are attached to the last one
-	for tok in doc:
-		assert tok.head.i == 3
+@pytest.mark.parametrize('text,length', [(['\n'], 1),
+                                         (['\n', '\t', '\n\n', '\t'], 4)])
+def test_parser_space_attachment_space(en_tokenizer, en_parser, text, length):
+    doc = Doc(en_parser.vocab, words=text)
+    assert len(doc) == length
+    with en_parser.step_through(doc) as _:
+        pass
+    assert doc[0].is_space
+    for token in doc:
+        assert token.head.i == length-1

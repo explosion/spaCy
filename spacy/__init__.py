@@ -1,7 +1,9 @@
-import pathlib
+# coding: utf8
+from __future__ import unicode_literals, print_function
 
-from .util import set_lang_class, get_lang_class
-from .about import __version__
+import json
+from pathlib import Path
+from .util import set_lang_class, get_lang_class, parse_package_meta
 
 from . import en
 from . import de
@@ -13,12 +15,8 @@ from . import fr
 from . import pt
 from . import nl
 from . import sv
-
-
-try:
-    basestring
-except NameError:
-    basestring = str
+from . import fi
+from . import bn
 
 
 set_lang_class(en.English.lang, en.English)
@@ -31,12 +29,22 @@ set_lang_class(hu.Hungarian.lang, hu.Hungarian)
 set_lang_class(zh.Chinese.lang, zh.Chinese)
 set_lang_class(nl.Dutch.lang, nl.Dutch)
 set_lang_class(sv.Swedish.lang, sv.Swedish)
+set_lang_class(fi.Finnish.lang, fi.Finnish)
+set_lang_class(bn.Bengali.lang, bn.Bengali)
 
 
 def load(name, **overrides):
-    target_name, target_version = util.split_data_name(name)
     data_path = overrides.get('path', util.get_data_path())
-    path = util.match_best_version(target_name, target_version, data_path)
-    cls = get_lang_class(target_name)
-    overrides['path'] = path
+    meta = parse_package_meta(data_path, name, require=False)
+    lang = meta['lang'] if meta and 'lang' in meta else name
+    cls = get_lang_class(lang)
+    overrides['meta'] = meta
+    model_path = Path(data_path) / name
+    if model_path.exists():
+        overrides['path'] = model_path
     return cls(**overrides)
+
+
+def info(name):
+    meta = parse_package_meta(util.get_data_path(), name, require=True)
+    print(json.dumps(meta, indent=2))

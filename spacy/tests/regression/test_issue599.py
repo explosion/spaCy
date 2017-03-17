@@ -1,11 +1,13 @@
-from ...tokens import Doc
-from ...vocab import Vocab
+# coding: utf-8
+from __future__ import unicode_literals
 
-def test_issue599():
-    doc = Doc(Vocab())
+from ..util import get_doc
+
+
+def test_issue599(en_vocab):
+    doc = get_doc(en_vocab)
     doc.is_tagged = True
     doc.is_parsed = True
-    bytes_ = doc.to_bytes()
-    doc2 = Doc(doc.vocab)
-    doc2.from_bytes(bytes_)
+    doc2 = get_doc(doc.vocab)
+    doc2.from_bytes(doc.to_bytes())
     assert doc2.is_parsed

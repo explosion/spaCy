@@ -1,16 +1,16 @@
 # inspired from:
-
 # https://python-packaging-user-guide.readthedocs.org/en/latest/single_source_version/
 # https://github.com/pypa/warehouse/blob/master/warehouse/__about__.py
 
 __title__ = 'spacy'
-__version__ = '1.5.0'
-__summary__ = 'Industrial-strength NLP'
+__version__ = '1.7.0'
+__summary__ = 'Industrial-strength Natural Language Processing (NLP) with Python and Cython'
 __uri__ = 'https://spacy.io'
 __author__ = 'Matthew Honnibal'
-__email__ = 'matt@spacy.io'
+__email__ = 'matt@explosion.ai'
 __license__ = 'MIT'
-__models__ = {
-    'en': 'en>=1.1.0,<1.2.0',
-    'de': 'de>=1.0.0,<1.1.0',
-}
+
+__docs__ = 'https://spacy.io/docs/usage'
+__download_url__ = 'https://github.com/explosion/spacy-models/releases/download'
+__compatibility__ = 'https://raw.githubusercontent.com/explosion/spacy-models/master/compatibility.json?token=ANAt54fi5zcUtnwGhMLw2klWwcAyHkZGks5Y0nw1wA%3D%3D'
+__shortcuts__ = {'en': 'en_core_web_sm', 'de': 'de_core_web_md', 'vectors': 'en_vectors_glove_md'}

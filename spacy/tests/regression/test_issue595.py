@@ -1,42 +1,24 @@
+# coding: utf-8
 from __future__ import unicode_literals
-import pytest
 
 from ...symbols import POS, VERB, VerbForm_inf
-from ...tokens import Doc
 from ...vocab import Vocab
 from ...lemmatizer import Lemmatizer
+from ..util import get_doc
+
+import pytest
 
 
-@pytest.fixture
-def index():
-    return {'verb': {}}
+def test_issue595():
+    """Test lemmatization of base forms"""
+    words = ["Do", "n't", "feed", "the", "dog"]
+    tag_map = {'VB': {POS: VERB, 'morph': VerbForm_inf}}
+    rules = {"verb": [["ed", "e"]]}
 
-@pytest.fixture
-def exceptions():
-    return {'verb': {}}
+    lemmatizer = Lemmatizer({'verb': {}}, {'verb': {}}, rules)
+    vocab = Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
+    doc = get_doc(vocab, words)
 
-@pytest.fixture
-def rules():
-    return {"verb": [["ed", "e"]]}
-
-@pytest.fixture
-def lemmatizer(index, exceptions, rules):
-    return Lemmatizer(index, exceptions, rules)
-
-
-@pytest.fixture
-def tag_map():
-    return {'VB': {POS: VERB, 'morph': VerbForm_inf}}
-
-
-@pytest.fixture
-def vocab(lemmatizer, tag_map):
-    return Vocab(lemmatizer=lemmatizer, tag_map=tag_map)
-
-
-def test_not_lemmatize_base_forms(vocab):
-    doc = Doc(vocab, words=["Do", "n't", "feed", "the", "dog"])
-    feed = doc[2]
-    feed.tag_ = u'VB'
-    assert feed.text == u'feed'
-    assert feed.lemma_ == u'feed'
+    doc[2].tag_ = 'VB'
+    assert doc[2].text == 'feed'
+    assert doc[2].lemma_ == 'feed'

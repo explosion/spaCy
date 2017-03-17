@@ -1,4 +1,4 @@
-# encoding: utf8
+# coding: utf8
 from __future__ import unicode_literals
 
 from ..symbols import *
@@ -19,6 +19,7 @@ TAG_MAP = {
     "AUX":      {POS: AUX},
     "X":        {POS: X},
     "CONJ":     {POS: CONJ},
+    "CCONJ":    {POS: CCONJ}, # U20
     "ADJ":      {POS: ADJ},
     "VERB":     {POS: VERB},
     "PART":     {POS: PART}

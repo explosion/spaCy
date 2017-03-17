@@ -28,6 +28,7 @@ ctypedef weight_t (*label_cost_func_t)(StateClass state, const GoldParseC* gold,
 
 ctypedef int (*do_func_t)(StateC* state, int label) nogil
 
+ctypedef void* (*init_state_t)(Pool mem, int length, void* tokens) except NULL
 
 cdef class TransitionSystem:
     cdef Pool mem
@@ -37,6 +38,7 @@ cdef class TransitionSystem:
     cdef int _size
     cdef public int root_label
     cdef public freqs
+    cdef init_state_t init_beam_state
 
     cdef int initialize_state(self, StateC* state) nogil
     cdef int finalize_state(self, StateC* state) nogil

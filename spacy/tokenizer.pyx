@@ -163,7 +163,6 @@ cdef class Tokenizer:
                     start = i
                 in_ws = not in_ws
             i += 1
-        i += 1
         if start < i:
             span = string[start:]
             key = hash_string(span)
@@ -275,7 +274,10 @@ cdef class Tokenizer:
             if cache_hit:
                 pass
             elif self.token_match and self.token_match(string): 
-                tokens.push_back(self.vocab.get(tokens.mem, string), not suffixes.size())
+                # We're always saying 'no' to spaces here -- the caller will
+                # fix up the outermost one, with reference to the original.
+                # See Issue #859
+                tokens.push_back(self.vocab.get(tokens.mem, string), False)
             else:
                 matches = self.find_infix(string)
                 if not matches:
@@ -289,21 +291,18 @@ cdef class Tokenizer:
                         infix_end = match.end()
                         if infix_start == start:
                             continue
-                        if infix_start == infix_end:
-                            msg = ("Tokenizer found a zero-width 'infix' token.\n"
-                                   "If you're using a built-in tokenizer, please\n"
-                                   "report this bug. If you're using a tokenizer\n"
-                                   "you developed, check your TOKENIZER_INFIXES\n"
-                                   "tuple.\n"
-                                   "String being matched: {string}\n"
-                                   "Language: {lang}")
-                            raise ValueError(msg.format(string=string, lang=self.vocab.lang))
 
                         span = string[start:infix_start]
                         tokens.push_back(self.vocab.get(tokens.mem, span), False)
-                    
-                        infix_span = string[infix_start:infix_end]
-                        tokens.push_back(self.vocab.get(tokens.mem, infix_span), False)
+
+                        if infix_start != infix_end:
+                            # If infix_start != infix_end, it means the infix
+                            # token is non-empty. Empty infix tokens are useful
+                            # for tokenization in some languages (see
+                            # https://github.com/explosion/spaCy/issues/768)
+                            infix_span = string[infix_start:infix_end]
+                            tokens.push_back(self.vocab.get(tokens.mem, infix_span), False)
+
                         start = infix_end
                     span = string[start:]
                     tokens.push_back(self.vocab.get(tokens.mem, span), False)
