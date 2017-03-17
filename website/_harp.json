@@ -14,8 +14,8 @@
 
         "SPACY_VERSION": "1.7",
         "LATEST_NEWS": {
-            "url": "https://explosion.ai/blog/deep-learning-formula-nlp",
-            "title": "The new deep learning formula for state-of-the-art NLP models"
+            "url": "/docs/usage/models",
+            "title": "Downloading and installing models as packages"
         },
 
         "SOCIAL": {
