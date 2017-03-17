@@ -89,7 +89,7 @@ def en_entityrecognizer():
 
 
 @pytest.fixture
-def lemmatizer(path):
+def lemmatizer():
     return English.Defaults.ceate_lemmatizer()
 
 
