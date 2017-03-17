@@ -18,15 +18,18 @@ def link(origin, link_name, force=False):
     """Create a symlink for models within the spacy/data directory. Accepts
     either the name of a pip package, or the local path to the model data
     directory. Linking models allows loading them via spacy.load(link_name)."""
-
     if is_package(origin):
-        package_path = site.getsitepackages()[0]
-        meta = get_meta(package_path, origin)
-        data_dir = origin + '-' + meta['version']
-        model_path = os.path.join(package_path, origin, data_dir)
-        symlink(model_path, link_name, force)
+        link_package(origin, link_name)
     else:
         symlink(origin, link_name, force)
+
+
+def link_package(origin, link_name, force=False):
+    package_path = site.getsitepackages()[0]
+    meta = get_meta(package_path, origin)
+    data_dir = origin + '-' + meta['version']
+    model_path = os.path.join(package_path, origin, data_dir)
+    symlink(model_path, link_name, force)
 
 
 def symlink(model_path, link_name, force):

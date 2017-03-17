@@ -5,7 +5,7 @@ import pip
 import plac
 import requests
 from os import path
-from .link import link
+from .link import link, link_package
 from . import about
 from . import util
 
@@ -26,7 +26,7 @@ def download(model=None, direct=False):
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
         download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model_name, v=version))
-        link(model_name, model, force=True)
+        link_package(model_name, model, force=True)
 
 
 def get_compatibility():
