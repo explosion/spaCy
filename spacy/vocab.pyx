@@ -596,6 +596,8 @@ cdef class Vocab:
             vec = <float*>file_.alloc_read(self.mem, vec_len, sizeof(float))
 
             string_id = self.strings[chars[:word_len]]
+            # Insert words into vocab to add vector.
+            self.get_by_orth(self.mem, string_id)
             while string_id >= vectors.size():
                 vectors.push_back(EMPTY_VEC)
             assert vec != NULL
