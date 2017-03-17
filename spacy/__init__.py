@@ -4,6 +4,7 @@ from __future__ import unicode_literals, print_function
 import json
 from pathlib import Path
 from .util import set_lang_class, get_lang_class, parse_package_meta
+from .deprecated import resolve_model_name
 
 from . import en
 from . import de
@@ -35,11 +36,12 @@ set_lang_class(bn.Bengali.lang, bn.Bengali)
 
 def load(name, **overrides):
     data_path = overrides.get('path', util.get_data_path())
-    meta = parse_package_meta(data_path, name)
+    model_name = resolve_model_name(name)
+    meta = parse_package_meta(data_path, model_name)
     lang = meta['lang'] if meta and 'lang' in meta else 'en'
     cls = get_lang_class(lang)
     overrides['meta'] = meta
-    overrides['path'] = Path(data_path / name)
+    overrides['path'] = Path(data_path / model_name)
     return cls(**overrides)
 
 
