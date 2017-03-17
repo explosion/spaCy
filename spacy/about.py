@@ -12,5 +12,5 @@ __license__ = 'MIT'
 
 __docs__ = 'https://spacy.io/docs/usage'
 __download_url__ = 'https://github.com/explosion/spacy-models/releases/download'
-__compatibility__ = 'https://raw.githubusercontent.com/explosion/spacy-models/master/compatibility.json?token=ANAt54fi5zcUtnwGhMLw2klWwcAyHkZGks5Y0nw1wA%3D%3D'
+__compatibility__ = 'https://raw.githubusercontent.com/explosion/spacy-models/master/compatibility.json'
 __shortcuts__ = {'en': 'en_core_web_sm', 'de': 'de_core_web_md', 'vectors': 'en_vectors_glove_md'}
