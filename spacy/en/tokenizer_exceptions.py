@@ -107,7 +107,7 @@ for pron in ["you", "we", "they"]:
 
         EXC[orth + "re"] = [
             {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
-            {ORTH: "re", LEMMA: "be", NORM: "are"}
+            {ORTH: "re", LEMMA: "be", NORM: "are", TAG: "VBZ"}
         ]
 
 

@@ -4,9 +4,11 @@ from __future__ import unicode_literals
 import pytest
 
 
-@pytest.mark.xfail
 @pytest.mark.models
-@pytest.mark.parametrize('text1,text2', [("You're happy", "You are happy")])
+@pytest.mark.parametrize('text1,text2',
+    [("You're happy", "You are happy"),
+     ("I'm happy", "I am happy"),
+     ("he's happy", "he's happy")])
 def test_issue717(EN, text1, text2):
     """Test that contractions are assigned the correct lemma."""
     doc1 = EN(text1)
