@@ -5,6 +5,7 @@ import json
 from pathlib import Path
 from .util import set_lang_class, get_lang_class, parse_package_meta
 from .deprecated import resolve_model_name
+from .info import info
 
 from . import en
 from . import de
@@ -48,6 +49,5 @@ def load(name, **overrides):
     return cls(**overrides)
 
 
-def info(name):
-    meta = parse_package_meta(util.get_data_path(), name, require=True)
-    print(json.dumps(meta, indent=2))
+def info(name, markdown):
+    info(name, markdown)
