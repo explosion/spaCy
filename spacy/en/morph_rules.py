@@ -68,3 +68,8 @@ MORPH_RULES = {
         "were":         {LEMMA: "be", "VerbForm": "Fin", "Tense": "Past", "Number": "Plur"}
     }
 }
+
+
+for tag, rules in MORPH_RULES.items():
+    for key, attrs in dict(rules).items():
+        rules[key.title()] = attrs

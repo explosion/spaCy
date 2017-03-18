@@ -4,9 +4,8 @@ from __future__ import unicode_literals
 import pytest
 
 
-@pytest.mark.xfail
 @pytest.mark.models
-@pytest.mark.parametrize('text', ["He is the man.", "They are the men."])
+@pytest.mark.parametrize('text', ["He is the man", "he is the man"])
 def test_issue686(EN, text):
     """Test that pronoun lemmas are assigned correctly."""
     tokens = EN(text)
