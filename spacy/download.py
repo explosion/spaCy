@@ -4,8 +4,8 @@ from __future__ import unicode_literals
 import pip
 import plac
 import requests
-from os import path
-from .link import link, link_package
+import os
+from .link import link_package
 from . import about
 from . import util
 
@@ -59,7 +59,7 @@ def get_version(model, comp):
 
 def download_model(filename):
     util.print_msg("Downloading {f}".format(f=filename))
-    download_url = path.join(about.__download_url__, filename)
+    download_url = os.path.join(about.__download_url__, filename)
     pip.main(['install', download_url])
 
 
