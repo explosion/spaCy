@@ -4,6 +4,9 @@ from __future__ import unicode_literals
 import pip
 import requests
 import os
+import subprocess
+import sys
+
 from .link import link_package
 from .. import about
 from .. import util
@@ -52,8 +55,9 @@ def get_version(model, comp):
 
 def download_model(filename):
     util.print_msg("Downloading {f}".format(f=filename))
-    download_url = os.path.join(about.__download_url__, filename)
-    pip.main(['install', download_url])
+    download_url = about.__download_url__ + '/' + filename
+    subprocess.call([sys.executable, '-m', 'pip', 'install', download_url],
+        env=os.environ.copy())
 
 
 def check_error_depr(model):
