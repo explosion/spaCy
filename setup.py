@@ -20,6 +20,7 @@ PACKAGE_DATA = {'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']}
 
 PACKAGES = [
     'spacy',
+    'spacy.cli',
     'spacy.tokens',
     'spacy.en',
     'spacy.de',
