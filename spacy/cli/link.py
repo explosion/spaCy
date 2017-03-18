@@ -1,8 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import io
-import os
 import pip
 from pathlib import Path
 from distutils.sysconfig import get_python_lib
@@ -10,6 +8,7 @@ from .. import util
 
 
 def link(origin, link_name, force=False):
+    print("Linking", origin, link_name)
     if is_package(origin):
         link_package(origin, link_name, force)
     else:
@@ -30,20 +29,18 @@ def symlink(model_path, link_name, force):
             "The data should be located in {p}".format(p=model_path),
             title="Can't locate model data")
 
-    data_path = str(util.get_data_path())
-    link_path = Path(__file__).parent.parent / data_path / link_name
+    link_path = util.get_data_path() / link_name
 
-    if Path(link_path).exists():
-        if force:
-            os.unlink(str(link_path))
-        else:
-            util.sys_exit(
-                "To overwrite an existing link, use the --force flag.",
-                title="Link {l} already exists".format(l=link_name))
+    if link_path.exists() and not force:
+        util.sys_exit(
+            "To overwrite an existing link, use the --force flag.",
+            title="Link {l} already exists".format(l=link_name))
+    elif link_path.exists():
+        link_path.unlink()
 
-    os.symlink(str(model_path), str(link_path))
+    link_path.symlink_to(model_path)
     util.print_msg(
-        "{a} --> {b}".format(a=str(model_path), b=str(link_path)),
+        "{a} --> {b}".format(a=model_path.as_posix(), b=link_path.as_posix()),
         "You can now load the model via spacy.load('{l}').".format(l=link_name),
         title="Linking successful")
 
