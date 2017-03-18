@@ -10,12 +10,6 @@ def test_download_fetch_compatibility():
     assert type(compatibility) == dict
 
 
-@pytest.mark.slow
-@pytest.mark.parametrize('model', ['en_core_web_md-1.2.0'])
-def test_download_direct_download(model):
-    download(model, direct=True)
-
-
 @pytest.mark.parametrize('model', ['en_core_web_md'])
 def test_download_get_matching_version_succeeds(model):
     comp = { model: ['1.7.0', '0.100.0'] }
