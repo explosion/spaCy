@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import pytest
 
 
-@pytest.mark.xfail
 @pytest.mark.models
 @pytest.mark.parametrize('text,i', [("Jane's got a new car", 1),
                                     ("Jane thinks that's a nice car", 3)])
