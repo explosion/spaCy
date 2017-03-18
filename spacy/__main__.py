@@ -1,5 +1,8 @@
 # coding: utf8
-from __future__ import unicode_literals, print_function
+# 
+from __future__ import print_function
+# NB! This breaks in plac on Python 2!!
+#from __future__ import unicode_literals,
 
 import plac
 from spacy.cli import download as cli_download
