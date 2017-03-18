@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import pytest
 
 
-@pytest.mark.xfail
 @pytest.mark.models
 @pytest.mark.parametrize('text', ["s..."])
 def test_issue719(EN, text):
