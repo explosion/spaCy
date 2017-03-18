@@ -5,20 +5,11 @@ import io
 import os
 import pip
 import site
-import plac
 from pathlib import Path
-from . import util
+from .. import util
 
 
-@plac.annotations(
-    origin=("Package name or path to model", "positional", None, str),
-    link_name=("Name of link", "positional", None, str),
-    force=("Force overwriting existing link", "flag", "f", bool)
-)
 def link(origin, link_name, force=False):
-    """Create a symlink for models within the spacy/data directory. Accepts
-    either the name of a pip package, or the local path to the model data
-    directory. Linking models allows loading them via spacy.load(link_name)."""
     if is_package(origin):
         link_package(origin, link_name, force)
     else:
@@ -68,7 +59,3 @@ def is_package(origin):
         if package.project_name.replace('-', '_') == origin:
             return True
     return False
-
-
-if __name__ == '__main__':
-    plac.call(link)

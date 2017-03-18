@@ -1,8 +1,8 @@
 from pathlib import Path
 from . import about
 from . import util
-from .download import download
-from .link import link
+from .cli import download
+from .cli import link
 
 
 try:

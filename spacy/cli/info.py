@@ -1,25 +1,14 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import plac
 import platform
 import sys
 from pathlib import Path
-from . import about
-from . import util
-
-
-@plac.annotations(
-    model=("Model to download", "positional", None, str),
-    markdown=("Generate Markdown for GitHub issues", "flag", "md", str)
-)
-def main(model=None, markdown=False):
-    info(model, markdown)
+from .. import about
+from .. import util
 
 
 def info(model=None, markdown=False):
-    """Print info about spaCy installation and models for debugging."""
-
     if model:
         data = util.parse_package_meta(util.get_data_path(), model, require=True)
         model_path = Path(__file__).parent / util.get_data_path() / model
@@ -48,7 +37,7 @@ def print_info(data, title, markdown):
 def get_spacy_data():
     return {
         'spaCy version': about.__version__,
-        'Location': str(Path(__file__).parent),
+        'Location': str(Path(__file__).parent.parent),
         'Platform': platform.platform(),
         'Python version': platform.python_version(),
         'Installed models': ', '.join(list_models())
@@ -58,7 +47,3 @@ def get_spacy_data():
 def list_models():
     data_path = util.get_data_path()
     return [f.parts[-1] for f in data_path.iterdir() if f.is_dir()]
-
-
-if __name__ == '__main__':
-    plac.call(main)

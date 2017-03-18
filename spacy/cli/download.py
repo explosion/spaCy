@@ -2,21 +2,14 @@
 from __future__ import unicode_literals
 
 import pip
-import plac
 import requests
 import os
 from .link import link_package
-from . import about
-from . import util
+from .. import about
+from .. import util
 
 
-@plac.annotations(
-    model=("Model to download", "positional", None, str),
-    direct=("Force direct download", "flag", "d", bool)
-)
 def download(model=None, direct=False):
-    """Download compatible model from default download path using pip."""
-
     check_error_depr(model)
 
     if direct:
@@ -76,7 +69,3 @@ def check_error_depr(model):
             "or pip install. For more info on this, see the documentation: "
             "{d}".format(d=about.__docs__),
             title="Deprecated command")
-
-
-if __name__ == '__main__':
-    plac.call(download)

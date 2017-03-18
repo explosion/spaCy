@@ -1,7 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ..download import download, get_compatibility, get_version, check_error_depr
+from ..cli.download import download, get_compatibility, get_version, check_error_depr
 import pytest
 
 
