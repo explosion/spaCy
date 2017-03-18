@@ -161,6 +161,50 @@ def parse_package_meta(package_path, package, require=True):
         return None
 
 
+def print_table(data, **kwargs):
+    """Print data in table format. Can either take a list of tuples or a
+    dictionary, which will be converted to a list of tuples."""
+
+    if type(data) == dict:
+        data = list(data.items())
+
+    tpl_msg = '\n{msg}\n'
+    tpl_title = '\n    \033[93m{msg}\033[0m'
+    tpl_row ="    {:<15}" * len(data[0])
+    table = '\n'.join([tpl_row.format(l, v) for l, v in data])
+
+    if 'title' in kwargs and kwargs['title']:
+        print(tpl_title.format(msg=kwargs['title']))
+
+    print(tpl_msg.format(msg=table))
+
+
+def print_markdown(data, **kwargs):
+    """Print listed data in GitHub-flavoured Markdown format so it can be
+    copy-pasted into issues. Can either take a list of tuples or a dictionary,
+    which will be converted to a list of tuples."""
+
+    def excl_value(value):
+        # don't print value if it contains absolute path of directory
+        # (i.e. personal info that shouldn't need to be shared)
+        # other conditions can be included here if necessary
+        if str(pathlib.Path(__file__).parent) in value:
+            return True
+
+    if type(data) == dict:
+        data = list(data.items())
+
+    tpl_msg = "\n{msg}\n"
+    tpl_title = "\n## {msg}"
+    tpl_row = "* **{l}:** {v}"
+    markdown = '\n'.join([tpl_row.format(l=l, v=v) for l, v in data if not excl_value(v)])
+
+    if 'title' in kwargs and kwargs['title']:
+        print(tpl_title.format(msg=kwargs['title']))
+
+    print(tpl_msg.format(msg=markdown))
+
+
 def print_msg(*text, **kwargs):
     """Print formatted message. Each positional argument is rendered as newline-
     separated paragraph. If kwarg 'title' exist, title is printed above the text
