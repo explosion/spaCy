@@ -8,7 +8,6 @@ from .. import util
 
 
 def link(origin, link_name, force=False):
-    print("Linking", origin, link_name)
     if is_package(origin):
         link_package(origin, link_name, force)
     else:
