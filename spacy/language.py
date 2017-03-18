@@ -279,7 +279,7 @@ class Language(object):
         if isinstance(path, basestring):
             path = pathlib.Path(path)
         if path is True:
-            path = util.match_best_version(self.lang, '', util.get_data_path())
+            path = util.get_data_path() / self.lang
 
         self.meta = overrides.get('meta', {})
         self.path = path
