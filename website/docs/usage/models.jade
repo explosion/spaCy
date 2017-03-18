@@ -21,7 +21,7 @@ p
 +aside-code("Quickstart").
     # Install spaCy and download English model
     pip install spacy
-    python -m spacy.download en
+    python -m spacy download en
 
     # Usage in Python
     import spacy
@@ -90,14 +90,14 @@ p
 
 +code(false, "bash").
     # out-of-the-box: download best-matching default model
-    python -m spacy.download en
-    python -m spacy.download de
+    python -m spacy download en
+    python -m spacy download de
 
     # download best-matching version of specific model for your spaCy installation
-    python -m spacy.download en_core_web_md
+    python -m spacy download en_core_web_md
 
     # download exact model version (doesn't create shortcut link)
-    python -m spacy.download en_core_web_md-1.2.0 --direct
+    python -m spacy download en_core_web_md-1.2.0 --direct
 
 p
     |  The download command will #[+a("#download-pip") install the model] via
@@ -108,7 +108,7 @@ p
 
 +code(false, "bash").
     pip install spacy
-    python -m spacy.download en
+    python -m spacy download en
 
 +code.
     import spacy
@@ -172,7 +172,7 @@ p
     |  load them by name.
 
 +code(false, "bash").
-    python -m spacy.link [package name or path] [shortcut] [--force]
+    python -m spacy link [package name or path] [shortcut] [--force]
 
 p
     |  The first argument is the package name (if the model was installed via
@@ -182,10 +182,10 @@ p
 
 +code("Examples", "bash").
     # set up shortcut link to load installed package as "en_default"
-    python -m spacy.link en_core_web_md en_default
+    python -m spacy link en_core_web_md en_default
 
     # set up shortcut link to load local model as "my_amazing_model"
-    python -m spacy.link /Users/you/model my_amazing_model
+    python -m spacy link /Users/you/model my_amazing_model
 
 +h(3, "usage-loading") Loading models
 
@@ -198,14 +198,18 @@ p
     doc = nlp(u'This is a sentence.')
 
 p
-    |  You can also use the #[code info()] method to print a model's meta data
+    |  You can also use the #[info] command or #[code info()] method to print a model's meta data
     |  before loading it. Each #[code Language] object returned by #[code spacy.load()]
-    |  also exposes the model's meta data as the attribute #[code meta]:
+    |  also exposes the model's meta data as the attribute #[code meta].
+
++code(false, "bash").
+    python -m spacy info en
+    # model meta data
 
 +code.
     import spacy
     spacy.info('en_default')
-    # JSON-formatted model meta data
+    # model meta data
 
     nlp = spacy.load('en_default')
     print(nlp.meta['version'])
