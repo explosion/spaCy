@@ -5,7 +5,6 @@ from ..cli.download import download, get_compatibility, get_version, check_error
 import pytest
 
 
-@pytest.mark.slow
 def test_download_fetch_compatibility():
     compatibility = get_compatibility()
     assert type(compatibility) == dict
