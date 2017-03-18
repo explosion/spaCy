@@ -2,8 +2,8 @@
 from __future__ import unicode_literals
 
 import platform
-import sys
 from pathlib import Path
+
 from .. import about
 from .. import util
 
