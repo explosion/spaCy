@@ -237,7 +237,7 @@ def setup_package():
                 'cymem>=1.30,<1.32',
                 'preshed>=1.0.0,<2.0.0',
                 'thinc>=6.5.0,<6.6.0',
-                'plac<0.9.3',
+                'plac<1.0.0,>=0.9.6',
                 'six',
                 'pathlib',
                 'ujson>=1.35',
