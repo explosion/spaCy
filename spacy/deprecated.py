@@ -125,7 +125,7 @@ class ModelDownload():
     def load(self, lang):
         util.print_msg(
             "The spacy.{l}.download command is now deprecated. Please use "
-            "spacy.download [model name or shortcut] instead. For more "
+            "python -m spacy download [model name or shortcut] instead. For more "
             "info and available models, see the documentation: {d}. "
             "Downloading default '{l}' model now...".format(d=about.__docs__, l=lang),
             title="Warning: deprecated command")
