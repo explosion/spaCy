@@ -4,8 +4,8 @@ from __future__ import unicode_literals
 import io
 import os
 import pip
-import site
 from pathlib import Path
+from distutils.sysconfig import get_python_lib
 from .. import util
 
 
@@ -17,7 +17,7 @@ def link(origin, link_name, force=False):
 
 
 def link_package(origin, link_name, force=False):
-    package_path = site.getsitepackages()[0]
+    package_path = get_python_lib()
     meta = get_meta(package_path, origin)
     data_dir = origin + '-' + meta['version']
     model_path = Path(package_path) / origin / data_dir
