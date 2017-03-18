@@ -20,6 +20,8 @@ from . import sv
 from . import fi
 from . import bn
 
+from .about import *
+
 
 set_lang_class(en.English.lang, en.English)
 set_lang_class(de.German.lang, de.German)
