@@ -25,7 +25,7 @@ def link_package(origin, link_name, force=False):
 
 
 def symlink(model_path, link_name, force):
-    if not model_path.exists():
+    if not Path(model_path).exists():
         util.sys_exit(
             "The data should be located in {p}".format(p=model_path),
             title="Can't locate model data")
@@ -33,7 +33,7 @@ def symlink(model_path, link_name, force):
     data_path = str(util.get_data_path())
     link_path = Path(__file__).parent.parent / data_path / link_name
 
-    if link_path.exists():
+    if Path(link_path).exists():
         if force:
             os.unlink(str(link_path))
         else:
