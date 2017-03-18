@@ -1,0 +1,105 @@
+//- 💫 DOCS > USAGE > COMMAND LINE INTERFACE
+
+include ../../_includes/_mixins
+
+p
+    |  As of v1.7.0, spaCy comes with new command line helpers to download and
+    |  link models and show useful debugging information. For a list of available
+    |  commands, type #[code python -m spacy --help].
+
++aside("Why python -m?")
+    |  The problem with a global entry point is that it's resolved by looking up
+    |  entries in your #[code PATH] environment variable. This can give you
+    |  unexpected results, especially when using #[code virtualenv]. For
+    |  instance, you may have spaCy installed on your system but not in your
+    |  current environment. The command will then execute the wrong
+    |  spaCy installation. #[code python -m] prevents fallbacks to system modules
+    |  and makes sure the correct version of spaCy is used.
+
++h(2, "download") Download
+
+p
+    |  Download #[+a("/docs/usage/models") models] for spaCy. The downloader finds the
+    |  best-matching compatible version, uses pip to download the model as a
+    |  package and automatically creates a
+    |  #[+a("/docs/usage/models#usage") shortcut link] to load the model by name.
+    |  Direct downloads don't perform any compatibility checks and require the
+    |  model name to be specified with its version (e.g., #[code en_core_web_sm-1.2.0]).
+
++code.
+    python -m spacy download [model] [--direct]
+
++table(["Argument", "Type", "Description"])
+    +row
+        +cell #[code model]
+        +cell positional
+        +cell Model name or shortcut (#[code en], #[code de], #[code vectors]).
+
+    +row
+        +cell #[code --direct], #[code -d]
+        +cell flag
+        +cell Force direct download of exact model version.
+
+    +row
+        +cell #[code --help], #[code -h]
+        +cell flag
+        +cell Show help message and available arguments.
+
+
++h(2, "link") Link
+
+p
+    |  Create a #[+a("/docs/usage/models#usage") shortcut link] for a model,
+    |  either a Python package or a local directory. This will let you load
+    |  models from any location via #[code spacy.load()].
+
++code.
+    python -m spacy link [origin] [link_name] [--force]
+
++table(["Argument", "Type", "Description"])
+    +row
+        +cell #[code origin]
+        +cell positional
+        +cell Model name if package, or path to local directory.
+
+    +row
+        +cell #[code link_name]
+        +cell positional
+        +cell Name of the shortcut link to create.
+
+    +row
+        +cell #[code --force], #[code -f]
+        +cell flag
+        +cell Force overwriting of existing link.
+
+    +row
+        +cell #[code --help], #[code -h]
+        +cell flag
+        +cell Show help message and available arguments.
+
++h(2, "info") Info
+
+p
+    |  Print information about your spaCy installation, models and local setup,
+    |  and generate #[+a("https://en.wikipedia.org/wiki/Markdown") Markdown]-formatted
+    |  markup to copy-paste into #[+a(gh("spacy") + "/issues") GitHub issues].
+
++code.
+    python -m spacy info [--markdown]
+    python -m spacy info [model] [--markdown]
+
++table(["Argument", "Type", "Description"])
+    +row
+        +cell #[code model]
+        +cell positional
+        +cell Shortcut link of model #[strong (optional)].
+
+    +row
+        +cell #[code --markdown], #[code -md]
+        +cell flag
+        +cell Print information as Markdown.
+
+    +row
+        +cell #[code --help], #[code -h]
+        +cell flag
+        +cell Show help message and available arguments.

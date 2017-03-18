@@ -4,6 +4,7 @@
             "Installation": "./",
             "Models": "models",
             "Lightning tour": "lightning-tour",
+            "Command line": "cli",
             "Resources": "resources"
         },
         "Workflows": {
@@ -39,6 +40,11 @@
 
     "lightning-tour": {
         "title": "Lightning tour",
+        "next": "cli"
+    },
+
+    "cli": {
+        "title": "Command Line Interface",
         "next": "resources"
     },
 
