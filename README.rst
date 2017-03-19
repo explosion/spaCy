@@ -316,7 +316,8 @@ and ``--model`` are optional and enable additional tests:
 =========== ============== ===========
 Version     Date           Description
 =========== ============== ===========
-`v1.7.0`_   ``2017-03-17`` New 50 MB model, CLI, better downloads and lots of bug fixes
+`v1.7.1`_   ``2017-03-19`` Fix data download for system installation
+`v1.7.0`_   ``2017-03-18`` New 50 MB model, CLI, better downloads and lots of bug fixes
 `v1.6.0`_   ``2017-01-16`` Improvements to tokenizer and tests
 `v1.5.0`_   ``2016-12-27`` Alpha support for Swedish and Hungarian
 `v1.4.0`_   ``2016-12-18`` Improved language data and alpha Dutch support
@@ -342,6 +343,7 @@ Version     Date           Description
 `v0.93`_    ``2015-09-22`` Bug fixes to word vectors
 =========== ============== ===========
 
+.. _v1.7.1: https://github.com/explosion/spaCy/releases/tag/v1.7.1
 .. _v1.7.0: https://github.com/explosion/spaCy/releases/tag/v1.7.0
 .. _v1.6.0: https://github.com/explosion/spaCy/releases/tag/v1.6.0
 .. _v1.5.0: https://github.com/explosion/spaCy/releases/tag/v1.5.0
