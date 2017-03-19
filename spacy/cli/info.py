@@ -45,5 +45,9 @@ def get_spacy_data():
 
 
 def list_models():
+    # exclude common cache directories – this means models called "cache" etc.
+    # won't show up in list, but it seems worth it
+    exclude = ['cache', 'pycache', '__pycache__']
     data_path = util.get_data_path()
-    return [f.parts[-1] for f in data_path.iterdir() if f.is_dir()]
+    models = [f.parts[-1] for f in data_path.iterdir() if f.is_dir()]
+    return [m for m in models if m not in exclude]
