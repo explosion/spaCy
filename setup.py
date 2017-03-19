@@ -261,6 +261,7 @@ def setup_package():
                 'Programming Language :: Python :: 3.3',
                 'Programming Language :: Python :: 3.4',
                 'Programming Language :: Python :: 3.5',
+                'Programming Language :: Python :: 3.6',
                 'Topic :: Scientific/Engineering'],
             cmdclass = {
                 'build_ext': build_ext_subclass},
