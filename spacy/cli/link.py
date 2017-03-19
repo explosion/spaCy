@@ -28,6 +28,7 @@ def link_package(package_name, link_name, force=False):
 
 
 def symlink(model_path, link_name, force):
+    model_path = Path(model_path)
     if not Path(model_path).exists():
         util.sys_exit(
             "The data should be located in {p}".format(p=model_path),
