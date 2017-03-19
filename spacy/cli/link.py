@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import pip
 from pathlib import Path
-from distutils.sysconfig import get_python_lib
+import importlib
 from .. import util
 
 
@@ -14,11 +14,16 @@ def link(origin, link_name, force=False):
         symlink(origin, link_name, force)
 
 
-def link_package(origin, link_name, force=False):
-    package_path = get_python_lib()
-    meta = get_meta(package_path, origin)
-    data_dir = origin + '-' + meta['version']
-    model_path = Path(package_path) / origin / data_dir
+def link_package(package_name, link_name, force=False):
+    # Here we're importing the module just to find it. This is worryingly
+    # indirect, but it's otherwise very difficult to find the package.
+    # Python's installation and import rules are very complicated.
+    pkg = importlib.import_module(package_name)
+    package_path = Path(pkg.__file__).parent.parent
+
+    meta = get_meta(package_path, package_name)
+    model_name = package_name + '-' + meta['version']
+    model_path = package_path / package_name / model_name
     symlink(model_path, link_name, force)
 
 
