@@ -14,9 +14,12 @@ p
     |  model name.
 
 +infobox("Important note")
-    |  Due to improvements in the English lemmatizer in v1.7.0, you need to download the
-    |  new English model. The German model is still compatible and will be
-    |  recognised and linked automatically.
+    |  Due to improvements in the English lemmatizer in v1.7.0, you need to
+    |  #[strong download the new English models]. The German model is still
+    |  compatible. If you've trained statistical models that use spaCy's
+    |  annotations, you should #[strong retrain your models after updating spaCy].
+    |  If you don't retrain your models, you may suffer train/test skew, which
+    |  might decrease your accuracy.
 
 +aside-code("Quickstart").
     # Install spaCy and download English model
