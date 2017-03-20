@@ -23,9 +23,9 @@ When opening an issue, use a descriptive title and include your environment (ope
 
 ### Tips
 
-1. **Getting info about your spaCy installation and environment**: If you're using spaCy v1.7+, you can use the command line interface to print details and even format them as Markdown to copy-paste into GitHub issues: `python -m spacy info --markdown`.
+* **Getting info about your spaCy installation and environment**: If you're using spaCy v1.7+, you can use the command line interface to print details and even format them as Markdown to copy-paste into GitHub issues: `python -m spacy info --markdown`.
 
-2. **Sharing long blocks of code or logs**: If you need to include long code, logs or tracebacks, you can wrap them in `<details>` and `</details>`. This [collapses the content](https://developer.mozilla.org/en/docs/Web/HTML/Element/details) so it only becomes visible on click, making the issue easier to read and follow.
+* **Sharing long blocks of code or logs**: If you need to include long code, logs or tracebacks, you can wrap them in `<details>` and `</details>`. This [collapses the content](https://developer.mozilla.org/en/docs/Web/HTML/Element/details) so it only becomes visible on click, making the issue easier to read and follow.
 
 ### Issue labels
 
