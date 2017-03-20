@@ -168,6 +168,17 @@ def parse_package_meta(package_path, package, require=True):
         return None
 
 
+def get_raw_input(description, default=False):
+    """Get user input via raw_input / input and return input value. Takes a
+    description for the prompt, and an optional default value that's displayed
+    with the prompt."""
+
+    additional = ' (default: {d})'.format(d=default) if default else ''
+    prompt = '    {d}{a}: '.format(d=description, a=additional)
+    user_input = raw_input(prompt)
+    return user_input
+
+
 def print_table(data, **kwargs):
     """Print data in table format. Can either take a list of tuples or a
     dictionary, which will be converted to a list of tuples."""
