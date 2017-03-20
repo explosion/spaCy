@@ -56,7 +56,8 @@ def get_version(model, comp):
 def download_model(filename):
     util.print_msg("Downloading {f}".format(f=filename))
     download_url = about.__download_url__ + '/' + filename
-    subprocess.call([sys.executable, '-m', 'pip', 'install', download_url],
+    subprocess.call([sys.executable, '-m',
+        'pip', 'install', '--no-cache-dir', download_url],
         env=os.environ.copy())
 
 
