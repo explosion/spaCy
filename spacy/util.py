@@ -13,6 +13,7 @@ import textwrap
 
 from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
+
 try:
     basestring
 except NameError:
