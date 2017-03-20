@@ -67,7 +67,7 @@ class CLI(object):
         """
         Generate Python package for model data, including meta and required
         installation files. A new directory will be created in the specified
-        output directory.
+        output directory, and model data will be copied over.
         """
 
         cli_package(input_dir, output_dir)
