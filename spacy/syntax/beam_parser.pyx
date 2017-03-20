@@ -70,7 +70,7 @@ def get_templates(name):
 
 
 cdef int BEAM_WIDTH = 16
-cdef weight_t BEAM_DENSITY = 0.01
+cdef weight_t BEAM_DENSITY = 0.001
 
 cdef class BeamParser(Parser):
     def __init__(self, *args, **kwargs):
@@ -136,7 +136,8 @@ cdef class BeamParser(Parser):
             self.model.update_from_histories(self.moves, tokens, [(0.0, [])])
         elif True:
             #_check_train_integrity(pred, gold, gold_parse, self.moves)
-            histories = zip(violn.p_probs, violn.p_hist) + zip(violn.g_probs, violn.g_hist)
+            histories = list(zip(violn.p_probs, violn.p_hist)) + \
+                        list(zip(violn.g_probs, violn.g_hist))
             self.model.update_from_histories(self.moves, tokens, histories, min_grad=0.001**(itn+1))
         else:
             self.model.update_from_histories(self.moves, tokens,
