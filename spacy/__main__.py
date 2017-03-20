@@ -7,12 +7,13 @@ import plac
 from spacy.cli import download as cli_download
 from spacy.cli import link as cli_link
 from spacy.cli import info as cli_info
+from spacy.cli import package as cli_package
 
 
 class CLI(object):
     """Command-line interface for spaCy"""
 
-    commands = ('download', 'link', 'info')
+    commands = ('download', 'link', 'info', 'package')
 
     @plac.annotations(
         model=("model to download (shortcut or model name)", "positional", None, str),
@@ -56,6 +57,20 @@ class CLI(object):
         """
 
         cli_info(model, markdown)
+
+
+    @plac.annotations(
+        input_dir=("directory with model data", "positional", None, str),
+        output_dir=("output directory", "positional", None, str)
+    )
+    def package(self, input_dir, output_dir):
+        """
+        Generate Python package for model data, including meta and required
+        installation files. A new directory will be created in the specified
+        output directory.
+        """
+
+        cli_package(input_dir, output_dir)
 
 
     def __missing__(self, name):
