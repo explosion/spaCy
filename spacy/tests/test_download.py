@@ -5,11 +5,6 @@ from ..cli.download import download, get_compatibility, get_version, check_error
 import pytest
 
 
-def test_download_fetch_compatibility():
-    compatibility = get_compatibility()
-    assert type(compatibility) == dict
-
-
 @pytest.mark.parametrize('model', ['en_core_web_md'])
 def test_download_get_matching_version_succeeds(model):
     comp = { model: ['1.7.0', '0.100.0'] }
