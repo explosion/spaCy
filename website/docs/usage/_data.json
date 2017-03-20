@@ -2,7 +2,9 @@
     "sidebar": {
         "Get started": {
             "Installation": "./",
+            "Models": "models",
             "Lightning tour": "lightning-tour",
+            "Command line": "cli",
             "Resources": "resources"
         },
         "Workflows": {
@@ -28,11 +30,21 @@
 
     "index": {
         "title": "Install spaCy",
+        "next": "models"
+    },
+
+    "models": {
+        "title": "Models",
         "next": "lightning-tour"
     },
 
     "lightning-tour": {
         "title": "Lightning tour",
+        "next": "cli"
+    },
+
+    "cli": {
+        "title": "Command Line Interface",
         "next": "resources"
     },
 
@@ -104,6 +116,11 @@
         "title": "Showcase",
 
         "libraries": {
+            "spacy_api": {
+                "url": "https://github.com/kootenpv/spacy_api",
+                "author": "Pascal van Kooten",
+                "description": "Server/client to load models in a separate, dedicated process."
+            },
             "spacy-nlp": {
                 "url": "https://github.com/kengz/spacy-nlp",
                 "author": "Wah Loon Keng",

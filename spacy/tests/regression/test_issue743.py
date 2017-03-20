@@ -1,3 +1,4 @@
+# coding: utf8
 from __future__ import unicode_literals
 from ...vocab import Vocab
 from ...tokens.doc import Doc

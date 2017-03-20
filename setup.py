@@ -20,6 +20,8 @@ PACKAGE_DATA = {'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']}
 
 PACKAGES = [
     'spacy',
+    'spacy.data',
+    'spacy.cli',
     'spacy.tokens',
     'spacy.en',
     'spacy.de',
@@ -33,6 +35,7 @@ PACKAGES = [
     'spacy.sv',
     'spacy.fi',
     'spacy.bn',
+    'spacy.en.lemmatizer',
     'spacy.language_data',
     'spacy.serialize',
     'spacy.syntax',
@@ -237,12 +240,12 @@ def setup_package():
                 'cymem>=1.30,<1.32',
                 'preshed>=1.0.0,<2.0.0',
                 'thinc>=6.5.0,<6.6.0',
-                'plac<0.9.3',
+                'plac<1.0.0,>=0.9.6',
                 'six',
                 'pathlib',
-                'sputnik>=0.9.2,<0.10.0',
                 'ujson>=1.35',
-                'dill>=0.2,<0.3'],
+                'dill>=0.2,<0.3',
+                'requests>=2.13.0,<3.0.0'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',
@@ -258,6 +261,7 @@ def setup_package():
                 'Programming Language :: Python :: 3.3',
                 'Programming Language :: Python :: 3.4',
                 'Programming Language :: Python :: 3.5',
+                'Programming Language :: Python :: 3.6',
                 'Topic :: Scientific/Engineering'],
             cmdclass = {
                 'build_ext': build_ext_subclass},

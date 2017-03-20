@@ -1,0 +1,292 @@
+//- 💫 DOCS > USAGE > MODELS
+
+include ../../_includes/_mixins
+
+p
+    |  As of v1.7.0, models for spaCy can be installed as #[strong Python packages].
+    |  This means that they're a component of your application, just like any
+    |  other module. They're versioned and can be defined as a dependency in your
+    |  #[code requirements.txt]. Models can be installed from a download URL or
+    |  a local directory, manually or via #[+a("https://pypi.python.org/pypi/pip") pip].
+    |  Their data can be located anywhere on your file system. To make a model
+    |  available to spaCy, all you need to do is create a "shortcut link", an
+    |  internal alias that tells spaCy where to find the data files for a specific
+    |  model name.
+
++infobox("Important note")
+    |  Due to improvements in the English lemmatizer in v1.7.0, you need to
+    |  #[strong download the new English models]. The German model is still
+    |  compatible. If you've trained statistical models that use spaCy's
+    |  annotations, you should #[strong retrain your models after updating spaCy].
+    |  If you don't retrain your models, you may suffer train/test skew, which
+    |  might decrease your accuracy.
+
++aside-code("Quickstart").
+    # Install spaCy and download English model
+    pip install spacy
+    python -m spacy download en
+
+    # Usage in Python
+    import spacy
+    nlp = spacy.load('en')
+    doc = nlp(u'This is a sentence.')
+
++h(2, "available") Available models
+
++table(["Name", "Size", "Description"])
+    +row
+        +cell #[code en_core_web_sm]
+        +cell 50 MB
+        +cell Vocab, syntax, entities, word vectors #[+tag default]
+
+    +row
+        +cell #[code en_core_web_md]
+        +cell 1 GB
+        +cell Vocab, syntax, entities, word vectors
+
+    +row
+        +cell #[code en_depent_web_md]
+        +cell 328 MB
+        +cell Vocab, syntax, entities
+
+    +row
+        +cell #[code en_vectors_glove_md]
+        +cell 727 MB
+        +cell
+            |  #[+a("http://nlp.stanford.edu/projects/glove/") GloVe] Common
+            |  Crawl vectors
+
+    +row
+        +cell #[code de_core_news_md]
+        +cell 645 MB
+        +cell Vocab, syntax, entities, word vectors #[+tag default]
+
+p
+    |  Models are now available as #[code .tar.gz] archives #[+a(gh("spacy-models")) from GitHub],
+    |  attached to individual releases. They can be downloaded and loaded manually,
+    |  or using spaCy's #[code download] and #[code link] commands. All models
+    |  follow the naming convention of #[code [language]_[type]_[genre]_[size]].
+
++button(gh("spacy-models") + "/releases", true, "primary") View models
+
++h(2, "download") Downloading models
+
++aside("Downloading models in spaCy < v1.7")
+    |  In older versions of spaCy, you can still use the old download commands.
+    |  This will download and install the models into the #[code spacy/data]
+    |  directory.
+
+    +code.o-no-block.
+        python -m spacy.en.download all
+        python -m spacy.de.download all
+        python -m spacy.en.download glove
+
+    |  The old models are also #[+a(gh("spacy") + "/tree/v1.6.0") attached to the v1.6.0 release].
+    |  To download and install them manually, unpack the archive, drop the
+    |  contained directory into #[code spacy/data] and load the model via
+    |  #[code spacy.load('en')] or #[code spacy.load('de')].
+
+p
+    |  The easiest way to download a model is via spaCy's #[code download]
+    |  command. It takes care of finding the best-matching model compatible with
+    |  your spaCy installation.
+
++code(false, "bash").
+    # out-of-the-box: download best-matching default model
+    python -m spacy download en
+    python -m spacy download de
+
+    # download best-matching version of specific model for your spaCy installation
+    python -m spacy download en_core_web_md
+
+    # download exact model version (doesn't create shortcut link)
+    python -m spacy download en_core_web_md-1.2.0 --direct
+
+p
+    |  The download command will #[+a("#download-pip") install the model] via
+    |  pip, place the package in your #[code site-packages] directory and create
+    |  a #[+a("#usage") shortcut link] that lets you load the model by name. The
+    |  shortcut link will be the same as the model name used in
+    |  #[code spacy.download].
+
++code(false, "bash").
+    pip install spacy
+    python -m spacy download en
+
++code.
+    import spacy
+    nlp = spacy.load('en')
+    doc = nlp(u'This is a sentence.')
+
++h(3, "download-pip") Installation via pip
+
+p
+    | To download a model directly using #[+a("https://pypi.python.org/pypi/pip") pip],
+    |  simply point #[code pip install] to the URL or local path of the archive
+    |  file. To find the direct link to a model, head over to the
+    |  #[+a(gh("spacy-models") + "/releases") model releases], right click on the archive
+    |  link and copy it to your clipboard.
+
++code(false, "bash").
+    # with external URL
+    pip install #{gh("spacy-models")}/releases/download/en_core_web_md-1.2.0/en_core_web_md-1.2.0.tar.gz
+
+    # with local file
+    pip install /Users/you/en_core_web_md-1.2.0.tar.gz
+
+p
+    |  By default, this will install the model into your #[code site-packages]
+    |  directory. You can then create a #[+a("#usage") shortcut link] for your
+    |  model to load it via #[code spacy.load()], or #[+a("usage-import") import it]
+    |  as a Python module.
+
++h(3, "download-manual") Manual download and installation
+
+p
+    |  In some cases, you might prefer downloading the data manually, for
+    |  example to place it into a custom directory. You can download the model
+    |  via your browser from the #[+a(gh("spacy-models")) latest releases], or configure
+    |  your own download script using the URL of the archive file. The archive
+    |  consists of a model directory that contains another directory with the
+    |  model data.
+
++code("Directory structure", "yaml").
+    └── en_core_web_md-1.2.0.tar.gz       # downloaded archive
+        ├── meta.json                     # model meta data
+        ├── setup.py                      # setup file for pip installation
+        └── en_core_web_md                # model directory
+            ├── __init__.py               # init for pip installation
+            ├── meta.json                 # model meta data
+            └── en_core_web_md-1.2.0      # model data
+
+p
+    |  You can place the model data directory anywhere on your local file system.
+    |  To use it with spaCy, simply assign it a name by creating a
+    |  #[+a("#usage") shortcut link] for the data directory.
+
++h(2, "usage") Using models with spaCy
+
+p
+    |  While previous versions of spaCy required you to maintain a data directory
+    |  containing the models for each installation, you can now choose how and
+    |  where you want to keep your data files. To load the models conveniently
+    |  from within spaCy, you can use the #[code spacy.link] command to create a
+    |  symlink. This lets you set up custom shortcut links for models so you can
+    |  load them by name.
+
++code(false, "bash").
+    python -m spacy link [package name or path] [shortcut] [--force]
+
+p
+    |  The first argument is the package name (if the model was installed via
+    |  pip), or a local path to the the data directory. The second argument is
+    |  the internal name you want to use for the model. Setting the #[code --force]
+    |  flag will overwrite any existing links.
+
++code("Examples", "bash").
+    # set up shortcut link to load installed package as "en_default"
+    python -m spacy link en_core_web_md en_default
+
+    # set up shortcut link to load local model as "my_amazing_model"
+    python -m spacy link /Users/you/model my_amazing_model
+
++h(3, "usage-loading") Loading models
+
+p
+    |  To load a model, use #[code spacy.load()] with the model's shortcut link.
+
++code.
+    import spacy
+    nlp = spacy.load('en_default')
+    doc = nlp(u'This is a sentence.')
+
+p
+    |  You can also use the #[info] command or #[code info()] method to print a model's meta data
+    |  before loading it. Each #[code Language] object returned by #[code spacy.load()]
+    |  also exposes the model's meta data as the attribute #[code meta].
+
++code(false, "bash").
+    python -m spacy info en
+    # model meta data
+
++code.
+    import spacy
+    spacy.info('en_default')
+    # model meta data
+
+    nlp = spacy.load('en_default')
+    print(nlp.meta['version'])
+    # 1.2.0
+
++h(3, "usage-import") Importing models as modules
+
+p
+    |  If you've installed a model via pip, you can also #[code import] it
+    |  directly and then call its #[code load()] method with no arguments:
+
++code.
+    import spacy
+    import en_core_web_md
+
+    nlp = en_core_web_md.load()
+    doc = nlp(u'This is a sentence.')
+
++h(2, "own-models") Using your own models
+
+p
+    |  If you've trained your own model, for example for
+    |  #[+a("/docs/usage/adding-languages") additional languages], you can
+    |  create a shortuct link for it by pointing #[code spacy.link] to the
+    |  model's data directory. To allow your model to be downloaded and
+    |  installed via pip, you'll also need to generate a package for it.
+
++infobox("Important note")
+    |  The model packages are #[strong not suitable] for the public
+    |  #[+a("https://pypi.python.org") pypi.python.org] directory, which is not
+    |  designed for binary data and files over 50 MB. However, if your company
+    |  is running an internal installation of pypi, publishing your models on
+    |  there can be a convenient solution to share them with your team.
+
+p The model directory should look like this:
+
++code("Directory structure", "yaml").
+    └── /
+        ├── MANIFEST.in                   # to include meta.json
+        ├── meta.json                     # model meta data
+        ├── setup.py                      # setup file for pip installation
+        └── en_core_web_md                # model directory
+            ├── __init__.py               # init for pip installation
+            └── en_core_web_md-1.2.0      # model data
+
+p
+    |  You can find templates for all files in our
+    |  #[+a(gh("spacy-dev-resouces", "templates/model")) spaCy dev resources].
+    |  Unless you want to customise installation and loading, the only file
+    |  you'll need to modify is #[code meta.json], which includes the model's
+    |  meta data. It will later be copied into the package and data directory.
+
++code("meta.json", "json").
+    {
+        "name": "core_web_md",
+        "lang": "en",
+        "version": "1.2.0",
+        "spacy_version": "1.7.0",
+        "description": "English model for spaCy",
+        "author": "Explosion AI",
+        "email": "contact@explosion.ai",
+        "license": "MIT"
+    }
+
+p
+    |  Keep in mind that the directories need to be named according to the
+    |  naming conventions. The #[code lang] setting is also used to create the
+    |  respective #[code Language] class in spaCy, which will later be returned
+    |  by the model's #[code load()] method.
+
+p
+    |  To generate the package, run the following command from within the
+    |  directory. This will create a #[code .tar.gz] archive in a directory
+    |  #[code /dist].
+
++code(false, "bash").
+    python setup.py sdist

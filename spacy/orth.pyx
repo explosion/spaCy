@@ -1,4 +1,4 @@
-# -*- coding: utf8 -*-
+# coding: utf8
 # cython: infer_types=True
 from __future__ import unicode_literals
 import unicodedata
@@ -159,27 +159,3 @@ cpdef unicode word_shape(unicode string):
         if seq < 4:
             shape.append(shape_char)
     return ''.join(shape)
-
-
-# Exceptions --- do not convert these
-_uk_us_except = set([
-    'our',
-    'ours',
-    'four',
-    'fours',
-    'your',
-    'yours',
-    'hour',
-    'hours',
-    'course',
-    'rise',
-])
-def uk_to_usa(unicode string):
-    if not string.islower():
-        return string
-    if string in _uk_us_except:
-        return string
-    our = re.compile(r'ours?$')
-    string = our.sub('or', string)
-
-    return string

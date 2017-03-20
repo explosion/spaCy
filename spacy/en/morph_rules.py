@@ -1,4 +1,4 @@
-# encoding: utf8
+# coding: utf8
 from __future__ import unicode_literals
 
 from ..symbols import *
@@ -54,10 +54,13 @@ MORPH_RULES = {
         "am":           {LEMMA: "be", "VerbForm": "Fin", "Person": "One", "Tense": "Pres", "Mood": "Ind"},
         "are":          {LEMMA: "be", "VerbForm": "Fin", "Person": "Two", "Tense": "Pres", "Mood": "Ind"},
         "is":           {LEMMA: "be", "VerbForm": "Fin", "Person": "Three", "Tense": "Pres", "Mood": "Ind"},
+        "'re":          {LEMMA: "be", "VerbForm": "Fin", "Person": "Two", "Tense": "Pres", "Mood": "Ind"},
+        "'s":           {LEMMA: "be", "VerbForm": "Fin", "Person": "Three", "Tense": "Pres", "Mood": "Ind"},
     },
 
     "VBP": {
-        "are":          {LEMMA: "be", "VerbForm": "Fin", "Tense": "Pres", "Mood": "Ind"}
+        "are":          {LEMMA: "be", "VerbForm": "Fin", "Tense": "Pres", "Mood": "Ind"},
+        "'re":          {LEMMA: "be", "VerbForm": "Fin", "Tense": "Pres", "Mood": "Ind"}
     },
 
     "VBD": {
@@ -65,3 +68,8 @@ MORPH_RULES = {
         "were":         {LEMMA: "be", "VerbForm": "Fin", "Tense": "Past", "Number": "Plur"}
     }
 }
+
+
+for tag, rules in MORPH_RULES.items():
+    for key, attrs in dict(rules).items():
+        rules[key.title()] = attrs

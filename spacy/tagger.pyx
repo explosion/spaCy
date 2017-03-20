@@ -76,8 +76,8 @@ cdef class TaggerModel(AveragedPerceptron):
         best = VecVec.arg_max_if_zero(eg.c.scores, eg.c.costs, eg.c.nr_class)
         if guess != best:
             for feat in eg.c.features[:eg.c.nr_feat]:
-                self.update_weight_ftrl(feat.key, best, -feat.value)
-                self.update_weight_ftrl(feat.key, guess, feat.value)
+                self.update_weight(feat.key, best, -feat.value)
+                self.update_weight(feat.key, guess, feat.value)
 
     cdef void set_featuresC(self, ExampleC* eg, const TokenC* tokens, int i) except *:
         _fill_from_token(&eg.atoms[P2_orth], &tokens[i-2])

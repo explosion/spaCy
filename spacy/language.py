@@ -33,6 +33,7 @@ from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD, PROB, LANG, IS_STOP
 from .syntax.parser import get_templates
 from .syntax.nonproj import PseudoProjectivity
 from .pipeline import DependencyParser, EntityRecognizer
+from .pipeline import BeamDependencyParser, BeamEntityRecognizer
 from .syntax.arc_eager import ArcEager
 from .syntax.ner import BiluoPushDown
 
@@ -40,10 +41,7 @@ from .syntax.ner import BiluoPushDown
 class BaseDefaults(object):
     @classmethod
     def create_lemmatizer(cls, nlp=None):
-        if nlp is None or nlp.path is None:
-            return Lemmatizer({}, {}, {})
-        else:
-            return Lemmatizer.load(nlp.path, rules=cls.lemma_rules)
+        return Lemmatizer(cls.lemma_index, cls.lemma_exc, cls.lemma_rules)
 
     @classmethod
     def create_vocab(cls, nlp=None):
@@ -53,11 +51,15 @@ class BaseDefaults(object):
             # This is very messy, but it's the minimal working fix to Issue #639.
             # This defaults stuff needs to be refactored (again)
             lex_attr_getters[IS_STOP] = lambda string: string.lower() in cls.stop_words
-            return Vocab(lex_attr_getters=lex_attr_getters, tag_map=cls.tag_map,
+            vocab = Vocab(lex_attr_getters=lex_attr_getters, tag_map=cls.tag_map,
                          lemmatizer=lemmatizer)
         else:
-            return Vocab.load(nlp.path, lex_attr_getters=cls.lex_attr_getters,
+            vocab = Vocab.load(nlp.path, lex_attr_getters=cls.lex_attr_getters,
                              tag_map=cls.tag_map, lemmatizer=lemmatizer)
+        for tag_str, exc in cls.morph_rules.items():
+            for orth_str, attrs in exc.items():
+                vocab.morphology.add_special_case(tag_str, orth_str, attrs)
+        return vocab
 
     @classmethod
     def add_vectors(cls, nlp=None):
@@ -169,6 +171,9 @@ class BaseDefaults(object):
     stop_words = set()
 
     lemma_rules = {}
+    lemma_exc = {}
+    lemma_index = {}
+    morph_rules = {}
 
     lex_attr_getters = {
         attrs.LOWER: lambda string: string.lower(),
@@ -274,8 +279,9 @@ class Language(object):
         if isinstance(path, basestring):
             path = pathlib.Path(path)
         if path is True:
-            path = util.match_best_version(self.lang, '', util.get_data_path())
+            path = util.get_data_path() / self.lang
 
+        self.meta = overrides.get('meta', {})
         self.path = path
 
         self.vocab     = self.Defaults.create_vocab(self) \

@@ -16,7 +16,6 @@ from ..tokens import Doc
 from ..strings import StringStore
 from ..lemmatizer import Lemmatizer
 from ..attrs import ORTH, TAG, HEAD, DEP
-from ..util import match_best_version, get_data_path
 
 from io import StringIO, BytesIO
 from pathlib import Path
@@ -90,11 +89,8 @@ def en_entityrecognizer():
 
 
 @pytest.fixture
-def lemmatizer(path):
-    if path is not None:
-        return Lemmatizer.load(path)
-    else:
-        return None
+def lemmatizer():
+    return English.Defaults.create_lemmatizer()
 
 
 @pytest.fixture
@@ -104,14 +100,6 @@ def text_file():
 @pytest.fixture
 def text_file_b():
     return BytesIO()
-
-
-@pytest.fixture
-def path():
-    if 'SPACY_DATA' in os.environ:
-        return Path(os.environ['SPACY_DATA'])
-    else:
-        return match_best_version('en', None, get_data_path())
 
 
 # only used for tests that require loading the models

@@ -1,4 +1,4 @@
-# encoding: utf8
+# coding: utf8
 from __future__ import unicode_literals
 
 # Source https://github.com/stopwords-iso/stopwords-fi/blob/master/stopwords-fi.txt

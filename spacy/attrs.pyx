@@ -124,7 +124,10 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
             'PunctType', 'PunctSide', 'Other', 'Degree', 'AdvType', 'Number',
             'VerbForm', 'PronType', 'Aspect', 'Tense', 'PartType', 'Poss',
             'Hyph', 'ConjType', 'NumType', 'Foreign', 'VerbType', 'NounType',
-            'Number', 'PronType', 'AdjType', 'Person', 'Variant', 'AdpType',
+            'Gender', 'Mood', 'Negative', 'Tense', 'Voice', 'Abbr',
+            'Derivation', 'Echo', 'Foreign', 'NameType', 'NounType', 'NumForm',
+            'NumValue', 'PartType', 'Polite', 'StyleVariant',
+            'PronType', 'AdjType', 'Person', 'Variant', 'AdpType',
             'Reflex', 'Negative', 'Mood', 'Aspect', 'Case',
             'Polarity', # U20
         ]

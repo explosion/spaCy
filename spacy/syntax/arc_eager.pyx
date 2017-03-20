@@ -272,6 +272,8 @@ cdef class Break:
                 B_i = s.B(j)
                 cost += gold.heads[S_i] == B_i
                 cost += gold.heads[B_i] == S_i
+                if cost != 0:
+                    return cost
         # Check for sentence boundary --- if it's here, we can't have any deps
         # between stack and buffer, so rest of action is irrelevant.
         s0_root = _get_root(s.S(0), gold)

@@ -52,7 +52,7 @@ from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from ._state cimport StateC
 
-
+USE_FTRL = False
 DEBUG = False
 def set_debug(val):
     global DEBUG
@@ -84,15 +84,17 @@ cdef class ParserModel(AveragedPerceptron):
         self.time += 1
         best = arg_max_if_gold(eg.c.scores, eg.c.costs, eg.c.nr_class)
         guess = eg.guess
-        cdef weight_t loss = 0.0
-        if guess == best:
-            return loss
-        for clas in [guess, best]:
-            loss += (-eg.c.costs[clas] - eg.c.scores[clas]) ** 2
-            d_loss = eg.c.scores[clas] - -eg.c.costs[clas]
+        if guess == best or best == -1:
+            return 0.0
+        if USE_FTRL:
             for feat in eg.c.features[:eg.c.nr_feat]:
-                self.update_weight_ftrl(feat.key, clas, feat.value * d_loss)
-        return loss
+                self.update_weight_ftrl(feat.key, guess, feat.value * eg.c.costs[guess])
+                self.update_weight_ftrl(feat.key, best, -feat.value * eg.c.costs[guess])
+        else:
+            for feat in eg.c.features[:eg.c.nr_feat]:
+                self.update_weight(feat.key, guess, feat.value * eg.c.costs[guess])
+                self.update_weight(feat.key, best, -feat.value * eg.c.costs[guess])
+        return eg.c.costs[guess]
 
     def update_from_histories(self, TransitionSystem moves, Doc doc, histories, weight_t min_grad=0.0):
         cdef Pool mem = Pool()
@@ -175,7 +177,7 @@ cdef class Parser:
         elif 'features' not in cfg:
             cfg['features'] = self.feature_templates
         self.model = ParserModel(cfg['features'])
-        self.model.l1_penalty = cfg.get('L1', 1e-8)
+        self.model.l1_penalty = cfg.get('L1', 0.0)
         self.model.learn_rate = cfg.get('learn_rate', 0.001)
 
         self.cfg = cfg
@@ -193,7 +195,7 @@ cdef class Parser:
         """
         cdef int nr_feat = self.model.nr_feat
         with nogil:
-            status = self.parseC(tokens.c, tokens.length, nr_feat, self.moves.n_moves)
+            status = self.parseC(tokens.c, tokens.length, nr_feat)
         # Check for KeyboardInterrupt etc. Untested
         PyErr_CheckSignals()
         if status != 0:
@@ -226,7 +228,7 @@ cdef class Parser:
             if len(queue) == batch_size:
                 with nogil:
                     for i in cython.parallel.prange(batch_size, num_threads=n_threads):
-                        status = self.parseC(doc_ptr[i], lengths[i], nr_feat, self.moves.n_moves)
+                        status = self.parseC(doc_ptr[i], lengths[i], nr_feat)
                         if status != 0:
                             with gil:
                                 raise ParserStateError(queue[i])
@@ -238,7 +240,7 @@ cdef class Parser:
         batch_size = len(queue)
         with nogil:
             for i in cython.parallel.prange(batch_size, num_threads=n_threads):
-                status = self.parseC(doc_ptr[i], lengths[i], nr_feat, self.moves.n_moves)
+                status = self.parseC(doc_ptr[i], lengths[i], nr_feat)
                 if status != 0:
                     with gil:
                         raise ParserStateError(queue[i])
@@ -247,10 +249,11 @@ cdef class Parser:
             self.moves.finalize_doc(doc)
             yield doc
 
-    cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) with gil:
+    cdef int parseC(self, TokenC* tokens, int length, int nr_feat) nogil:
         state = new StateC(tokens, length)
         # NB: This can change self.moves.n_moves!
         self.moves.initialize_state(state)
+        nr_class = self.moves.n_moves
 
         cdef ExampleC eg
         eg.nr_feat = nr_feat
@@ -267,10 +270,10 @@ cdef class Parser:
             self.model.set_scoresC(eg.scores, eg.features, eg.nr_feat)
 
             guess = VecVec.arg_max_if_true(eg.scores, eg.is_valid, eg.nr_class)
+            if guess < 0:
+                return 1
 
             action = self.moves.c[guess]
-            if not eg.is_valid[guess]:
-                return 1
 
             action.do(state, action.label)
             memset(eg.scores, 0, sizeof(eg.scores[0]) * eg.nr_class)
@@ -321,6 +324,8 @@ cdef class Parser:
             eg.fill_scores(0, eg.c.nr_class)
             eg.fill_costs(0, eg.c.nr_class)
             eg.fill_is_valid(1, eg.c.nr_class)
+
+        self.moves.finalize_state(stcls.c)
         return loss
 
     def step_through(self, Doc doc):

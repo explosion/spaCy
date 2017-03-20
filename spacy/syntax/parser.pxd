@@ -21,4 +21,4 @@ cdef class Parser:
     cdef readonly TransitionSystem moves
     cdef readonly object cfg
 
-    cdef int parseC(self, TokenC* tokens, int length, int nr_feat, int nr_class) with gil
+    cdef int parseC(self, TokenC* tokens, int length, int nr_feat) nogil
