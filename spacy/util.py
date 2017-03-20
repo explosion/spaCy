@@ -20,6 +20,12 @@ except NameError:
     basestring = str
 
 
+try:
+    raw_input
+except NameError: # Python 3
+    raw_input = input
+
+
 LANGUAGES = {}
 _data_path = pathlib.Path(__file__).parent / 'data'
 
