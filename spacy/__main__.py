@@ -62,7 +62,7 @@ class CLI(object):
     @plac.annotations(
         input_dir=("directory with model data", "positional", None, str),
         output_dir=("output directory", "positional", None, str),
-        force=("force overwriting of existing output directory", "flag", "f", bool)
+        force=("force overwriting of existing folder in output directory", "flag", "f", bool)
     )
     def package(self, input_dir, output_dir, force=False):
         """
