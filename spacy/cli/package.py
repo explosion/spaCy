@@ -30,7 +30,7 @@ def package(input_dir, output_dir, force):
     util.print_msg(
         main_path.as_posix(),
         "To build the package, run python setup.py sdist in that directory.",
-        title="Successfully reated package {p}".format(p=model_name_v))
+        title="Successfully created package {p}".format(p=model_name_v))
 
 
 def check_dirs(input_path, output_path):
