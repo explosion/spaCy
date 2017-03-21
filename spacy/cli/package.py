@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 import json
-from shutil import copytree
+import shutil
 from pathlib import Path
 
 from .. import about
@@ -21,7 +21,7 @@ def package(input_dir, output_dir, force):
     package_path = main_path / model_name
 
     Path.mkdir(package_path, parents=True)
-    copytree(input_path, package_path / model_name_v)
+    shutil.copytree(input_path, package_path / model_name_v)
     create_file(main_path / 'meta.json', json.dumps(meta, indent=2))
     create_file(main_path / 'setup.py', TEMPLATE_SETUP.strip())
     create_file(main_path / 'MANIFEST.in', TEMPLATE_MANIFEST.strip())
