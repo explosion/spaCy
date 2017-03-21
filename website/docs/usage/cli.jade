@@ -111,11 +111,9 @@ p
     |  Generate a #[+a("/docs/usage/models#own-models") model Python package]
     |  from an existing model data directory. All data files are copied over,
     |  and the meta data can be entered directly from the command line. While
-    |  this feature is still experimental, the templates for the
-    |  #[+src(gh("spacy-dev-resources", "templates/model/setup.py")) setup.py] and
-    |  #[+src(gh("spacy-dev-resources", "templates/model/en_morel_name/__init__.py")) __init__.py]
-    |  are downloaded from GitHub. This means you need to be connected to the
-    |  internet to use this command.
+    |  this feature is still experimental, the required file templates are
+    |  downloaded from #[+src(gh("spacy-dev-resources", "templates/model")) GitHub].
+    |  This means you need to be connected to the internet to use this command.
 
 +code(false, "bash").
     python -m spacy package [input_dir] [output_dir] [--force]
