@@ -129,7 +129,7 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
         random.shuffle(train_sents)
         scorer = score_model(vocab, tagger, parser, read_conllx(dev_loc))
         print('%d:\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.tags_acc))
-    nlp = Language(vocab=vocab, tagger=tagger, parser=parser)
+    nlp = LangClass(vocab=vocab, tagger=tagger, parser=parser)
     nlp.end_training(model_dir)
     scorer = score_model(vocab, tagger, parser, read_conllx(dev_loc))
     print('%d:\t%.3f\t%.3f\t%.3f' % (itn, scorer.uas, scorer.las, scorer.tags_acc))
