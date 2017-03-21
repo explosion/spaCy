@@ -26,7 +26,7 @@ def package(input_dir, output_dir, force):
     package_path = main_path / model_name
 
     create_dirs(package_path, force)
-    shutil.copytree(input_path, (package_path / model_name_v).as_posix())
+    shutil.copytree(input_path.as_posix(), (package_path / model_name_v).as_posix())
     create_file(main_path / 'meta.json', json.dumps(meta, indent=2))
     create_file(main_path / 'setup.py', template_setup)
     create_file(main_path / 'MANIFEST.in', template_manifest)
