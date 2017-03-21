@@ -32,8 +32,8 @@ class CLI(object):
 
     @plac.annotations(
         origin=("package name or local path to model", "positional", None, str),
-        link_name=("Name of shortuct link to create", "positional", None, str),
-        force=("Force overwriting of existing link", "flag", "f", bool)
+        link_name=("name of shortuct link to create", "positional", None, str),
+        force=("force overwriting of existing link", "flag", "f", bool)
     )
     def link(self, origin, link_name, force=False):
         """
