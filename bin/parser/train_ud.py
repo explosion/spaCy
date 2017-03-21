@@ -1,18 +1,13 @@
 from __future__ import unicode_literals
 import plac
 import json
-from os import path
-import shutil
-import os
 import random
-import io
 import pathlib
 
 from spacy.tokens import Doc
 from spacy.syntax.nonproj import PseudoProjectivity
 from spacy.language import Language
 from spacy.gold import GoldParse
-from spacy.vocab import Vocab
 from spacy.tagger import Tagger
 from spacy.pipeline import DependencyParser, BeamDependencyParser
 from spacy.syntax.parser import get_templates
@@ -21,7 +16,6 @@ from spacy.scorer import Scorer
 from spacy.language_data.tag_map import TAG_MAP as DEFAULT_TAG_MAP
 import spacy.attrs
 import io
-
 
 
 def read_conllx(loc, n=0):
@@ -35,7 +29,8 @@ def read_conllx(loc, n=0):
                 lines.pop(0)
             tokens = []
             for line in lines:
-                id_, word, lemma, pos, tag, morph, head, dep, _1, _2 = line.split()
+                id_, word, lemma, pos, tag, morph, head, dep, _1, \
+                _2 = line.split('\t')
                 if '-' in id_ or '.' in id_:
                     continue
                 try:
@@ -134,7 +129,7 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
         random.shuffle(train_sents)
         scorer = score_model(vocab, tagger, parser, read_conllx(dev_loc))
         print('%d:\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.tags_acc))
-    nlp = Language(vocab=vocab, tagger=tagger, parser=parser)
+    nlp = LangClass(vocab=vocab, tagger=tagger, parser=parser)
     nlp.end_training(model_dir)
     scorer = score_model(vocab, tagger, parser, read_conllx(dev_loc))
     print('%d:\t%.3f\t%.3f\t%.3f' % (itn, scorer.uas, scorer.las, scorer.tags_acc))
