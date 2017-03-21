@@ -70,7 +70,7 @@ def generate_meta():
                 ('author', 'Author', False),
                 ('email', 'Author email', False),
                 ('url', 'Author website', False),
-                ('license', 'License', 'MIT')]
+                ('license', 'License', 'CC BY-NC 3.0')]
 
     util.print_msg("Enter the package settings for your model.", title="Generating meta.json")
 
