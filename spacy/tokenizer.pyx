@@ -1,13 +1,10 @@
 # cython: embedsignature=True
 from __future__ import unicode_literals
 
-import re
 import pathlib
 
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
-from cpython cimport Py_UNICODE_ISSPACE
-
 
 try:
     import ujson as json

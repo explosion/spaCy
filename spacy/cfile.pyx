@@ -1,4 +1,4 @@
-from libc.stdio cimport fopen, fclose, fread, fwrite, FILE
+from libc.stdio cimport fopen, fclose, fread, fwrite
 from libc.string cimport memcpy
 
 
