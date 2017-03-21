@@ -61,16 +61,17 @@ class CLI(object):
 
     @plac.annotations(
         input_dir=("directory with model data", "positional", None, str),
-        output_dir=("output directory", "positional", None, str)
+        output_dir=("output directory", "positional", None, str),
+        force=("force overwriting of existing output directory", "flag", "f", bool)
     )
-    def package(self, input_dir, output_dir):
+    def package(self, input_dir, output_dir, force=False):
         """
         Generate Python package for model data, including meta and required
         installation files. A new directory will be created in the specified
         output directory, and model data will be copied over.
         """
 
-        cli_package(input_dir, output_dir)
+        cli_package(input_dir, output_dir, force)
 
 
     def __missing__(self, name):

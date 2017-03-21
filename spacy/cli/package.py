@@ -9,7 +9,7 @@ from .. import about
 from .. import util
 
 
-def package(input_dir, output_dir):
+def package(input_dir, output_dir, force):
     input_path = Path(input_dir)
     output_path = Path(output_dir)
     check_dirs(input_path, output_path)
