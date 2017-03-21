@@ -20,7 +20,7 @@ def package(input_dir, output_dir, force):
     main_path = output_path / model_name_v
     package_path = main_path / model_name
 
-    Path.mkdir(package_path, parents=True)
+    create_dirs(package_path, force)
     shutil.copytree(input_path, package_path / model_name_v)
     create_file(main_path / 'meta.json', json.dumps(meta, indent=2))
     create_file(main_path / 'setup.py', TEMPLATE_SETUP.strip())
@@ -38,6 +38,17 @@ def check_dirs(input_path, output_path):
         util.sys_exit(input_path.as_poisx(), title="Model directory not found")
     if not output_path.exists():
         util.sys_exit(output_path.as_posix(), title="Output directory not found")
+
+
+def create_dirs(package_path, force):
+    if package_path.exists():
+        if force:
+            shutil.rmtree(package_path)
+        else:
+            util.sys_exit(package_path.as_posix(),
+                "Please delete the directory and try again.",
+                title="Package directory already exists")
+    Path.mkdir(package_path, parents=True)
 
 
 def create_file(file_path, contents):
