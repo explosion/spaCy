@@ -16,8 +16,8 @@ def package(input_dir, output_dir, force):
     check_dirs(input_path, output_path)
 
     template_setup = get_template('setup.py')
+    template_manifest = get_template('MANIFEST.in')
     template_init = get_template('en_model_name/__init__.py')
-    template_manifest = 'include meta.json'
     meta = generate_meta()
 
     model_name = meta['lang'] + '_' + meta['name']
