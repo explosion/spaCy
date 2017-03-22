@@ -2,7 +2,6 @@ from .syntax.parser cimport Parser
 from .syntax.beam_parser cimport BeamParser
 from .syntax.ner cimport BiluoPushDown
 from .syntax.arc_eager cimport ArcEager
-from .vocab cimport Vocab
 from .tagger import Tagger
 
 # TODO: The disorganization here is pretty embarrassing. At least it's only

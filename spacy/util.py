@@ -8,10 +8,7 @@ import os.path
 import pathlib
 import sys
 
-import six
 import textwrap
-
-from .attrs import TAG, HEAD, DEP, ENT_IOB, ENT_TYPE
 
 
 try:
