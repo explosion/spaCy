@@ -1,5 +1,4 @@
 # coding: utf8
-# 
 from __future__ import print_function
 # NB! This breaks in plac on Python 2!!
 #from __future__ import unicode_literals,
@@ -8,12 +7,13 @@ import plac
 from spacy.cli import download as cli_download
 from spacy.cli import link as cli_link
 from spacy.cli import info as cli_info
+from spacy.cli import package as cli_package
 
 
 class CLI(object):
     """Command-line interface for spaCy"""
 
-    commands = ('download', 'link', 'info')
+    commands = ('download', 'link', 'info', 'package')
 
     @plac.annotations(
         model=("model to download (shortcut or model name)", "positional", None, str),
@@ -32,8 +32,8 @@ class CLI(object):
 
     @plac.annotations(
         origin=("package name or local path to model", "positional", None, str),
-        link_name=("Name of shortuct link to create", "positional", None, str),
-        force=("Force overwriting of existing link", "flag", "f", bool)
+        link_name=("name of shortuct link to create", "positional", None, str),
+        force=("force overwriting of existing link", "flag", "f", bool)
     )
     def link(self, origin, link_name, force=False):
         """
@@ -57,6 +57,21 @@ class CLI(object):
         """
 
         cli_info(model, markdown)
+
+
+    @plac.annotations(
+        input_dir=("directory with model data", "positional", None, str),
+        output_dir=("output directory", "positional", None, str),
+        force=("force overwriting of existing folder in output directory", "flag", "f", bool)
+    )
+    def package(self, input_dir, output_dir, force=False):
+        """
+        Generate Python package for model data, including meta and required
+        installation files. A new directory will be created in the specified
+        output directory, and model data will be copied over.
+        """
+
+        cli_package(input_dir, output_dir, force)
 
 
     def __missing__(self, name):

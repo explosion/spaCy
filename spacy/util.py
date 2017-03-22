@@ -10,10 +10,17 @@ import sys
 
 import textwrap
 
+
 try:
     basestring
 except NameError:
     basestring = str
+
+
+try:
+    raw_input
+except NameError: # Python 3
+    raw_input = input
 
 
 LANGUAGES = {}
@@ -156,6 +163,17 @@ def parse_package_meta(package_path, package, require=True):
         raise IOError("Could not read meta.json from %s" % location)
     else:
         return None
+
+
+def get_raw_input(description, default=False):
+    """Get user input via raw_input / input and return input value. Takes a
+    description for the prompt, and an optional default value that's displayed
+    with the prompt."""
+
+    additional = ' (default: {d})'.format(d=default) if default else ''
+    prompt = '    {d}{a}: '.format(d=description, a=additional)
+    user_input = raw_input(prompt)
+    return user_input
 
 
 def print_table(data, **kwargs):

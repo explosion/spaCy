@@ -103,3 +103,38 @@ p
         +cell #[code --help], #[code -h]
         +cell flag
         +cell Show help message and available arguments.
+
++h(2, "package") Package
+    +tag experimental
+
+p
+    |  Generate a #[+a("/docs/usage/models#own-models") model Python package]
+    |  from an existing model data directory. All data files are copied over,
+    |  and the meta data can be entered directly from the command line. While
+    |  this feature is still experimental, the required file templates are
+    |  downloaded from #[+src(gh("spacy-dev-resources", "templates/model")) GitHub].
+    |  This means you need to be connected to the internet to use this command.
+
++code(false, "bash").
+    python -m spacy package [input_dir] [output_dir] [--force]
+
++table(["Argument", "Type", "Description"])
+    +row
+        +cell #[code input_dir]
+        +cell positional
+        +cell Path to directory containing model data.
+
+    +row
+        +cell #[code output_dir]
+        +cell positional
+        +cell Directory to create package folder in.
+
+    +row
+        +cell #[code --force], #[code -f]
+        +cell flag
+        +cell Force overwriting of existing folder in output directory.
+
+    +row
+        +cell #[code --help], #[code -h]
+        +cell flag
+        +cell Show help message and available arguments.
