@@ -49,7 +49,3 @@ def load(name, **overrides):
         overrides['path'] = model_path
 
     return cls(**overrides)
-
-
-def info(name, markdown):
-    info(name, markdown)
