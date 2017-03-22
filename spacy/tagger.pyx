@@ -1,20 +1,16 @@
 import json
 import pathlib
 from collections import defaultdict
-from libc.string cimport memset
 
 from cymem.cymem cimport Pool
-from thinc.typedefs cimport atom_t, weight_t
+from thinc.typedefs cimport atom_t
 from thinc.extra.eg cimport Example
 from thinc.structs cimport ExampleC
 from thinc.linear.avgtron cimport AveragedPerceptron
 from thinc.linalg cimport VecVec
 
-from .typedefs cimport attr_t
 from .tokens.doc cimport Doc
 from .attrs cimport TAG
-from .parts_of_speech cimport NO_TAG, ADJ, ADV, ADP, CCONJ, DET, NOUN, NUM, PRON
-from .parts_of_speech cimport VERB, X, PUNCT, EOL, SPACE
 from .gold cimport GoldParse
 
 from .attrs cimport *
