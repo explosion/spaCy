@@ -193,9 +193,6 @@ TOKENIZER_EXCEPTIONS = {
     "vm.": [
         {ORTH: "vm.", LEMMA: "viimeksi mainittu"}
     ],
-    "siht.": [
-        {ORTH: "siht.", LEMMA: "sihteeri"}
-    ],
     "srk.": [
         {ORTH: "srk.", LEMMA: "seurakunta"}
     ]
