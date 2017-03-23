@@ -1,11 +1,7 @@
 # cython: infer_types
 from __future__ import unicode_literals
 
-from os import path
-
 from libc.string cimport memset
-
-from .lemmatizer import Lemmatizer
 
 try:
     import ujson as json

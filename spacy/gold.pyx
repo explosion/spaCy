@@ -1,15 +1,11 @@
 # cython: profile=True
 from __future__ import unicode_literals, print_function
 
-import numpy
 import io
 import json
-import random
 import re
 import os
 from os import path
-
-from libc.string cimport memset
 
 import ujson as json
 

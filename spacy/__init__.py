@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from .util import set_lang_class, get_lang_class, parse_package_meta
 from .deprecated import resolve_model_name
-from .cli.info import info
+from .cli import info
 
 from . import en
 from . import de
@@ -49,7 +49,3 @@ def load(name, **overrides):
         overrides['path'] = model_path
 
     return cls(**overrides)
-
-
-def info(name, markdown):
-    info(name, markdown)

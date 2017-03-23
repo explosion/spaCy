@@ -2,13 +2,10 @@
 # cython: infer_types=True
 from __future__ import unicode_literals
 
-from os import path
-
 from .typedefs cimport attr_t
 from .typedefs cimport hash_t
 from .attrs cimport attr_id_t
-from .structs cimport TokenC, LexemeC
-from .lexeme cimport Lexeme
+from .structs cimport TokenC
 
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
@@ -17,7 +14,7 @@ from libcpp.pair cimport pair
 from murmurhash.mrmr cimport hash64
 from libc.stdint cimport int32_t
 
-from .attrs cimport ID, LENGTH, ENT_TYPE, ORTH, NORM, LEMMA, LOWER, SHAPE
+from .attrs cimport ID, ENT_TYPE
 from . import attrs
 from .tokens.doc cimport get_token_attr
 from .tokens.doc cimport Doc
