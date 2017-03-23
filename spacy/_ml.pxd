@@ -1,9 +1,10 @@
 from thinc.linear.features cimport ConjunctionExtracter
 from thinc.typedefs cimport atom_t, weight_t
 from thinc.structs cimport FeatureC
-from libc.stdint cimport uint32_t
+from libc.stdint cimport uint32_t, uint64_t
 cimport numpy as np
 from cymem.cymem cimport Pool
+from libcpp.vector cimport vector
 
 
 cdef class LinearModel:
@@ -14,6 +15,7 @@ cdef class LinearModel:
     cdef Pool mem
     cdef weight_t* W
     cdef weight_t* d_W
+    cdef vector[uint64_t]* _indices
 
     cdef void hinge_lossC(self, weight_t* d_scores,
             const weight_t* scores, const weight_t* costs) nogil

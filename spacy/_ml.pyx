@@ -15,6 +15,9 @@ cimport numpy as np
 import numpy
 np.import_array()
 
+from thinc.neural.optimizers import Adam
+from thinc.neural.ops import NumpyOps
+
 
 cdef class LinearModel:
     def __init__(self, int nr_class, templates, weight_t learn_rate=0.001,
@@ -28,6 +31,10 @@ cdef class LinearModel:
                                            sizeof(weight_t))
         self.d_W = <weight_t*>self.mem.alloc(self.nr_weight * self.nr_class,
                                            sizeof(weight_t))
+        self._indices = new vector[uint64_t]()
+
+    def __dealloc__(self):
+        del self._indices
 
     cdef void hinge_lossC(self, weight_t* d_scores,
             const weight_t* scores, const weight_t* costs) nogil:
@@ -129,12 +136,19 @@ cdef class LinearModel:
         # Sort them, to improve memory access pattern
         libcpp.algorithm.sort(indices.begin(), indices.end())
         for idx in indices:
-            W = &self.W[idx * nr_class]
+            d_W = &self.d_W[idx * nr_class]
             for clas in range(nr_class):
                 if d_scores[clas] < 0:
-                    W[clas] -= self.learn_rate * max(-10., d_scores[clas])
+                    d_W[clas] += max(-10., d_scores[clas])
                 else:
-                    W[clas] -= self.learn_rate * min(10., d_scores[clas])
+                    d_W[clas] += min(10., d_scores[clas])
+
+    def finish_update(self, optimizer):
+        cdef np.npy_intp[1] shape
+        shape[0] = self.nr_weight * self.nr_class
+        W_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT, self.W)
+        dW_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT, self.d_W)
+        optimizer(W_arr, dW_arr, key=1)
 
     @property
     def nr_active_feat(self):
