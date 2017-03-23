@@ -8,12 +8,14 @@ from spacy.cli import download as cli_download
 from spacy.cli import link as cli_link
 from spacy.cli import info as cli_info
 from spacy.cli import package as cli_package
+from spacy.cli import train as cli_train
+from spacy.cli import train_config as cli_train_config
 
 
 class CLI(object):
     """Command-line interface for spaCy"""
 
-    commands = ('download', 'link', 'info', 'package')
+    commands = ('download', 'link', 'info', 'package', 'train', 'train_config')
 
     @plac.annotations(
         model=("model to download (shortcut or model name)", "positional", None, str),
@@ -61,7 +63,7 @@ class CLI(object):
 
     @plac.annotations(
         input_dir=("directory with model data", "positional", None, str),
-        output_dir=("output directory", "positional", None, str),
+        output_dir=("output parent directory", "positional", None, str),
         force=("force overwriting of existing folder in output directory", "flag", "f", bool)
     )
     def package(self, input_dir, output_dir, force=False):
@@ -72,6 +74,32 @@ class CLI(object):
         """
 
         cli_package(input_dir, output_dir, force)
+
+
+    @plac.annotations(
+        lang=("language", "positional", None, str),
+        output_dir=("output directory", "positional", None, str),
+        train_data=("training data", "positional", None, str),
+        dev_data=("development data", "positional", None, str),
+        n_iter=("number of iterations", "flag", "n", int),
+        tagger=("train tagger", "flag", "t", bool),
+        parser=("train parser", "flag", "p", bool),
+        ner=("train NER", "flag", "n", bool)
+    )
+    def train(self, lang, output_dir, train_data, dev_data, n_iter=15, tagger=True,
+              parser=True, ner=True):
+        """Train a model."""
+
+        cli_train(output_dir, train_data, dev_data, tagger, parser, ner)
+
+
+    @plac.annotations(
+        config=("config", "positional", None, str),
+    )
+    def train_config(self, config):
+        """Train a model from config file."""
+
+        cli_train_config(config)
 
 
     def __missing__(self, name):
