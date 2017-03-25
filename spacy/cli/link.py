@@ -5,7 +5,6 @@ import pip
 from pathlib import Path
 import importlib
 from .. import util
-import sys
 
 
 def link(origin, link_name, force=False):
@@ -44,10 +43,11 @@ def symlink(model_path, link_name, force):
     elif link_path.exists():
         link_path.unlink()
 
-    if sys.version.startswith('2.') and sys.platform.startswith('win'):
+    # Add workaround for Python 2 on Windows (see issue #909)
+    if util.is_python2() and util.is_windows():
         import subprocess
-        subprocess.call(['mklink','/d',str(link_path), str(model_path)], 
-                        shell=True)
+        command = ['mklink', '/d', link_path.as_posix(), model_path.as_posix()]
+        subprocess.call(command, shell=True)
     else:
         link_path.symlink_to(model_path)
 
