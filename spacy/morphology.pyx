@@ -25,6 +25,8 @@ def _normalize_props(props):
             if value in POS_IDS:
                 value = POS_IDS[value]
             out[key] = value
+        elif isinstance(key, int):
+            out[key] = value
         elif key.lower() == 'pos':
             out[POS] = POS_IDS[value.upper()]
         else:
@@ -45,13 +47,13 @@ cdef class Morphology:
         self.rich_tags = <RichTagC*>self.mem.alloc(self.n_tags, sizeof(RichTagC))
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
             attrs = _normalize_props(attrs)
+            self.tag_map[tag_str] = dict(attrs)
             attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
             self.rich_tags[i].id = i
             self.rich_tags[i].name = self.strings[tag_str]
             self.rich_tags[i].morph = 0
             self.rich_tags[i].pos = attrs[POS]
             self.reverse_index[self.rich_tags[i].name] = i
-            self.tag_map[tag_str] = attrs
         self._cache = PreshMapArray(self.n_tags)
 
     def __reduce__(self):
@@ -79,6 +81,7 @@ cdef class Morphology:
         if analysis is NULL:
             analysis = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
             tag_str = self.strings[self.rich_tags[tag_id].name]
+            analysis.tag = rich_tag
             analysis.lemma = self.lemmatize(analysis.tag.pos, token.lex.orth,
                                             self.tag_map.get(tag_str, {}))
             self._cache.set(tag_id, token.lex.orth, analysis)
