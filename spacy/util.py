@@ -153,6 +153,16 @@ def check_renamed_kwargs(renamed, kwargs):
             raise TypeError("Keyword argument %s now renamed to %s" % (old, new))
 
 
+def is_windows():
+    """Check if user is on Windows."""
+    return sys.platform.startswith('win')
+
+
+def is_python2():
+    """Check if Python 2 is used."""
+    return sys.version.startswith('2.')
+
+
 def parse_package_meta(package_path, package, require=True):
     location = os.path.join(str(package_path), package, 'meta.json')
     if os.path.isfile(location):
