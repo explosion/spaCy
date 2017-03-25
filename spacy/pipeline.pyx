@@ -19,6 +19,9 @@ cdef class EntityRecognizer(Parser):
     def add_label(self, label):
         for action in self.moves.action_types:
             self.moves.add_action(action, label)
+            if 'actions' in self.cfg:
+                self.cfg['actions'].setdefault(action,
+                                        {}).setdefault(label, True)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
         for attr, freqs in self.vocab.serializer_freqs:
@@ -37,6 +40,9 @@ cdef class BeamEntityRecognizer(BeamParser):
     def add_label(self, label):
         for action in self.moves.action_types:
             self.moves.add_action(action, label)
+            if 'actions' in self.cfg:
+                self.cfg['actions'].setdefault(action,
+                                        {}).setdefault(label, True)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
         for attr, freqs in self.vocab.serializer_freqs:
@@ -54,6 +60,9 @@ cdef class DependencyParser(Parser):
     def add_label(self, label):
         for action in self.moves.action_types:
             self.moves.add_action(action, label)
+            if 'actions' in self.cfg:
+                self.cfg['actions'].setdefault(action,
+                                        {}).setdefault(label, True)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
         for attr, freqs in self.vocab.serializer_freqs:
@@ -71,6 +80,9 @@ cdef class BeamDependencyParser(BeamParser):
     def add_label(self, label):
         for action in self.moves.action_types:
             self.moves.add_action(action, label)
+            if 'actions' in self.cfg:
+                self.cfg['actions'].setdefault(action,
+                                        {}).setdefault(label, True)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
         for attr, freqs in self.vocab.serializer_freqs:
