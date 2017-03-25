@@ -13,7 +13,7 @@ cpdef enum symbol_t:
     LIKE_EMAIL
     IS_STOP
     IS_OOV
-    
+
     FLAG14 = 14
     FLAG15
     FLAG16
@@ -90,6 +90,7 @@ cpdef enum symbol_t:
     ADV
     AUX
     CONJ
+    CCONJ # U20
     DET
     INTJ
     NOUN
@@ -107,11 +108,14 @@ cpdef enum symbol_t:
 
     Animacy_anim
     Animacy_inam
+    Animacy_hum # U20
     Aspect_freq
     Aspect_imp
     Aspect_mod
     Aspect_none
     Aspect_perf
+    Aspect_iter # U20
+    Aspect_hab # U20
     Case_abe
     Case_abl
     Case_abs
@@ -120,10 +124,12 @@ cpdef enum symbol_t:
     Case_all
     Case_cau
     Case_com
+    Case_cmp # U20
     Case_dat
     Case_del
     Case_dis
     Case_ela
+    Case_equ # U20
     Case_ess
     Case_gen
     Case_ill
@@ -142,7 +148,9 @@ cpdef enum symbol_t:
     Definite_two
     Definite_def
     Definite_red
+    Definite_cons # U20
     Definite_ind
+    Definite_spec # U20
     Degree_cmp
     Degree_comp
     Degree_none
@@ -151,6 +159,8 @@ cpdef enum symbol_t:
     Degree_abs
     Degree_com
     Degree_dim # du
+    Degree_equ # U20
+    Evident_nfh # U20
     Gender_com
     Gender_fem
     Gender_masc
@@ -162,16 +172,21 @@ cpdef enum symbol_t:
     Mood_pot
     Mood_sub
     Mood_opt
+    Mood_prp # U20
+    Mood_adm # U20
     Negative_neg
     Negative_pos
     Negative_yes
+    Polarity_neg # U20
+    Polarity_pos # U20
     Number_com
     Number_dual
     Number_none
     Number_plur
     Number_sing
     Number_ptan # bg
-    Number_count # bg
+    Number_count # bg, U20
+    Number_tri # U20
     NumType_card
     NumType_dist
     NumType_frac
@@ -197,7 +212,8 @@ cpdef enum symbol_t:
     PronType_rel
     PronType_tot
     PronType_clit
-    PronType_exc # es, ca, it, fa
+    PronType_exc # es, ca, it, fa, U20
+    PronType_emp # U20
     Reflex_yes
     Tense_fut
     Tense_imp
@@ -213,12 +229,17 @@ cpdef enum symbol_t:
     VerbForm_partPres
     VerbForm_sup
     VerbForm_trans
+    VerbForm_conv # U20
     VerbForm_gdv # la
+    VerbForm_vnoun # U20
     Voice_act
     Voice_cau
     Voice_pass
-    Voice_mid # gkc
+    Voice_mid # gkc, U20
     Voice_int # hb
+    Voice_antip # U20
+    Voice_dir # U20
+    Voice_inv # U20
     Abbr_yes # cz, fi, sl, U
     AdpType_prep # cz, U
     AdpType_post # U
@@ -284,6 +305,10 @@ cpdef enum symbol_t:
     Number_psee_plur # U
     Number_psor_sing # cz, fi, sl, U
     Number_psor_plur # cz, fi, sl, U
+    Number_pauc # U20
+    Number_grpa # U20
+    Number_grpl # U20
+    Number_inv # U20
     NumForm_digit # cz, sl, U
     NumForm_roman # cz, sl, U
     NumForm_word # cz, sl, U
@@ -311,6 +336,8 @@ cpdef enum symbol_t:
     Person_psor_one # fi, U
     Person_psor_two # fi, U
     Person_psor_three # fi, U
+    Person_zero # U20
+    Person_four # U20
     Polite_inf # bq, U
     Polite_pol # bq, U
     Polite_abs_inf # bq, U
@@ -319,6 +346,10 @@ cpdef enum symbol_t:
     Polite_erg_pol # bq, U
     Polite_dat_inf # bq, U
     Polite_dat_pol # bq, U
+    Polite_infm # U20
+    Polite_form # U20
+    Polite_form_elev # U20
+    Polite_form_humb # U20
     Prefix_yes # U
     PrepCase_npr # cz
     PrepCase_pre # U
@@ -383,6 +414,7 @@ cpdef enum symbol_t:
     ccomp
     complm
     conj
+    cop # U20
     csubj
     csubjpass
     dep
@@ -405,6 +437,8 @@ cpdef enum symbol_t:
     num
     number
     oprd
+    obj # U20
+    obl # U20
     parataxis
     partmod
     pcomp

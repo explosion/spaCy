@@ -1,13 +1,10 @@
 # cython: embedsignature=True
 from __future__ import unicode_literals
 
-import re
 import pathlib
 
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
-from cpython cimport Py_UNICODE_ISSPACE
-
 
 try:
     import ujson as json
@@ -163,7 +160,6 @@ cdef class Tokenizer:
                     start = i
                 in_ws = not in_ws
             i += 1
-        i += 1
         if start < i:
             span = string[start:]
             key = hash_string(span)
@@ -275,7 +271,10 @@ cdef class Tokenizer:
             if cache_hit:
                 pass
             elif self.token_match and self.token_match(string): 
-                tokens.push_back(self.vocab.get(tokens.mem, string), not suffixes.size())
+                # We're always saying 'no' to spaces here -- the caller will
+                # fix up the outermost one, with reference to the original.
+                # See Issue #859
+                tokens.push_back(self.vocab.get(tokens.mem, string), False)
             else:
                 matches = self.find_infix(string)
                 if not matches:

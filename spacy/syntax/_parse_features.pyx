@@ -33,7 +33,6 @@ cdef inline void fill_token(atom_t* context, const TokenC* token) nogil:
         context[9] = 0
         context[10] = 0
         context[11] = 0
-        context[12] = 0
     else:
         context[0] = token.lex.orth
         context[1] = token.lemma

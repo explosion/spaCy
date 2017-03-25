@@ -1,6 +1,9 @@
 from libc.string cimport memcpy, memset
 from libc.stdlib cimport malloc, calloc, free
-from libc.stdint cimport uint32_t
+from libc.stdint cimport uint32_t, uint64_t
+
+from murmurhash.mrmr cimport hash64
+
 from ..vocab cimport EMPTY_LEXEME
 from ..structs cimport TokenC, Entity
 from ..lexeme cimport Lexeme
@@ -37,7 +40,7 @@ cdef cppclass StateC:
             this._ents[i].end = -1
             this._sent[i].l_edge = i
             this._sent[i].r_edge = i
-        for i in range(length, length + (PADDING * 2)):
+        for i in range(PADDING):
             this._sent[i].lex = &EMPTY_LEXEME
         this._sent += PADDING
         this._ents += PADDING
@@ -56,7 +59,7 @@ cdef cppclass StateC:
         for i in range(length):
             this._sent[i] = sent[i]
             this._buffer[i] = i
-        for i in range(length, length + 5):
+        for i in range(length, length+PADDING):
             this._sent[i].lex = &EMPTY_LEXEME
 
     __dealloc__():
@@ -138,7 +141,7 @@ cdef cppclass StateC:
             else:
                 ptr += 1
         return -1
-    
+
     int R(int i, int idx) nogil const:
         if idx < 1:
             return -1
@@ -201,6 +204,21 @@ cdef cppclass StateC:
         else:
             return this.length - this._b_i
 
+    uint64_t hash() nogil const:
+        cdef TokenC[11] sig
+        sig[0] = this.S_(2)[0]
+        sig[1] = this.S_(1)[0]
+        sig[2] = this.R_(this.S(1), 1)[0]
+        sig[3] = this.L_(this.S(0), 1)[0]
+        sig[4] = this.L_(this.S(0), 2)[0]
+        sig[5] = this.S_(0)[0]
+        sig[6] = this.R_(this.S(0), 2)[0]
+        sig[7] = this.R_(this.S(0), 1)[0]
+        sig[8] = this.B_(0)[0]
+        sig[9] = this.E_(0)[0]
+        sig[10] = this.E_(1)[0]
+        return hash64(sig, sizeof(sig), this._s_i)
+
     void push() nogil:
         if this.B(0) != -1:
             this._stack[this._s_i] = this.B(0)
@@ -212,7 +230,7 @@ cdef cppclass StateC:
     void pop() nogil:
         if this._s_i >= 1:
             this._s_i -= 1
-    
+
     void unshift() nogil:
         this._b_i -= 1
         this._buffer[this._b_i] = this.S(0)
@@ -281,7 +299,7 @@ cdef cppclass StateC:
             this._sent[i].ent_type = ent_type
 
     void set_break(int i) nogil:
-        if 0 <= i < this.length: 
+        if 0 <= i < this.length:
             this._sent[i].sent_start = True
             this._break = this._b_i
 
@@ -290,6 +308,8 @@ cdef cppclass StateC:
         memcpy(this._stack, src._stack, this.length * sizeof(int))
         memcpy(this._buffer, src._buffer, this.length * sizeof(int))
         memcpy(this._ents, src._ents, this.length * sizeof(Entity))
+        memcpy(this.shifted, src.shifted, this.length * sizeof(this.shifted[0]))
+        this.length = src.length
         this._b_i = src._b_i
         this._s_i = src._s_i
         this._e_i = src._e_i

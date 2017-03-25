@@ -16,7 +16,7 @@ from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport attr_id_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
-from ..parts_of_speech cimport CONJ, PUNCT, NOUN
+from ..parts_of_speech cimport CCONJ, PUNCT, NOUN
 from ..parts_of_speech cimport univ_pos_t
 from ..lexeme cimport Lexeme
 from .span cimport Span
@@ -59,13 +59,13 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
 
 cdef class Doc:
     """
-    A sequence of `Token` objects. Access sentences and named entities, 
-    export annotations to numpy arrays, losslessly serialize to compressed 
+    A sequence of `Token` objects. Access sentences and named entities,
+    export annotations to numpy arrays, losslessly serialize to compressed
     binary strings.
 
     Aside: Internals
-        The `Doc` object holds an array of `TokenC` structs. 
-        The Python-level `Token` and `Span` objects are views of this 
+        The `Doc` object holds an array of `TokenC` structs.
+        The Python-level `Token` and `Span` objects are views of this
         array, i.e. they don't own the data themselves.
 
     Code: Construction 1
@@ -80,13 +80,13 @@ cdef class Doc:
         Create a Doc object.
 
         Aside: Implementation
-            This method of constructing a `Doc` object is usually only used 
-            for deserialization. Standard usage is to construct the document via 
+            This method of constructing a `Doc` object is usually only used
+            for deserialization. Standard usage is to construct the document via
             a call to the language object.
 
         Arguments:
             vocab:
-                A Vocabulary object, which must match any models you want to 
+                A Vocabulary object, which must match any models you want to
                 use (e.g. tokenizer, parser, entity recognizer).
 
             words:
@@ -156,19 +156,19 @@ cdef class Doc:
         if self.length == 0:
             self.is_tagged = True
             self.is_parsed = True
-    
+
     def __getitem__(self, object i):
         '''
         doc[i]
-            Get the Token object at position i, where i is an integer. 
-            Negative indexing is supported, and follows the usual Python 
+            Get the Token object at position i, where i is an integer.
+            Negative indexing is supported, and follows the usual Python
             semantics, i.e. doc[-2] is doc[len(doc) - 2].
         doc[start : end]]
             Get a `Span` object, starting at position `start`
             and ending at position `end`, where `start` and
             `end` are token indices. For instance,
-            `doc[2:5]` produces a span consisting of 
-            tokens 2, 3 and 4. Stepped slices (e.g. `doc[start : end : step]`) 
+            `doc[2:5]` produces a span consisting of
+            tokens 2, 3 and 4. Stepped slices (e.g. `doc[start : end : step]`)
             are not supported, as `Span` objects must be contiguous (cannot have gaps).
             You can use negative indices and open-ended ranges, which have their
             normal Python semantics.
@@ -188,11 +188,11 @@ cdef class Doc:
     def __iter__(self):
         '''
         for token in doc
-            Iterate over `Token`  objects, from which the annotations can 
-            be easily accessed. This is the main way of accessing Token 
-            objects, which are the main way annotations are accessed from 
-            Python. If faster-than-Python speeds are required, you can 
-            instead access the annotations as a numpy array, or access the 
+            Iterate over `Token`  objects, from which the annotations can
+            be easily accessed. This is the main way of accessing Token
+            objects, which are the main way annotations are accessed from
+            Python. If faster-than-Python speeds are required, you can
+            instead access the annotations as a numpy array, or access the
             underlying C data directly from Cython.
         '''
         cdef int i
@@ -251,13 +251,13 @@ cdef class Doc:
         def __get__(self):
             if 'has_vector' in self.user_hooks:
                 return self.user_hooks['has_vector'](self)
- 
+
             return any(token.has_vector for token in self)
 
     property vector:
         '''
         A real-valued meaning representation. Defaults to an average of the token vectors.
-        
+
         Type: numpy.ndarray[ndim=1, dtype='float32']
         '''
         def __get__(self):
@@ -285,14 +285,14 @@ cdef class Doc:
                     norm += value * value
                 self._vector_norm = sqrt(norm) if norm != 0 else 0
             return self._vector_norm
-        
+
         def __set__(self, value):
-            self._vector_norm = value 
+            self._vector_norm = value
 
     @property
     def string(self):
         return self.text
-    
+
     property text:
         '''A unicode representation of the document text.'''
         def __get__(self):
@@ -306,7 +306,7 @@ cdef class Doc:
     property ents:
         '''
         Yields named-entity `Span` objects, if the entity recognizer
-        has been applied to the document. Iterate over the span to get 
+        has been applied to the document. Iterate over the span to get
         individual Token objects, or access the label:
 
         Example:
@@ -352,7 +352,7 @@ cdef class Doc:
             cdef int i
             for i in range(self.length):
                 self.c[i].ent_type = 0
-                # At this point we don't know whether the NER has run over the 
+                # At this point we don't know whether the NER has run over the
                 # Doc. If the ent_iob is missing, leave it missing.
                 if self.c[i].ent_iob != 0:
                     self.c[i].ent_iob = 2 # Means O. Non-O are set from ents.
@@ -384,9 +384,9 @@ cdef class Doc:
     property noun_chunks:
         '''
         Yields base noun-phrase #[code Span] objects, if the document
-        has been syntactically parsed. A base noun phrase, or 
-        'NP chunk', is a noun phrase that does not permit other NPs to 
-        be nested within it – so no NP-level coordination, no prepositional 
+        has been syntactically parsed. A base noun phrase, or
+        'NP chunk', is a noun phrase that does not permit other NPs to
+        be nested within it – so no NP-level coordination, no prepositional
         phrases, and no relative clauses. For example:
         '''
         def __get__(self):
@@ -422,7 +422,7 @@ cdef class Doc:
         def __get__(self):
             if 'sents' in self.user_hooks:
                 return self.user_hooks['sents'](self)
- 
+
             if not self.is_parsed:
                 raise ValueError(
                     "sentence boundary detection requires the dependency parse, which "
@@ -465,8 +465,8 @@ cdef class Doc:
     @cython.boundscheck(False)
     cpdef np.ndarray to_array(self, object py_attr_ids):
         """
-        Given a list of M attribute IDs, export the tokens to a numpy 
-        `ndarray` of shape (N, M), where `N` is the length 
+        Given a list of M attribute IDs, export the tokens to a numpy
+        `ndarray` of shape (N, M), where `N` is the length
         of the document. The values will be 32-bit integers.
 
         Example:
@@ -474,7 +474,7 @@ cdef class Doc:
             doc = nlp(text)
             # All strings mapped to integers, for easy export to numpy
             np_array = doc.to_array([attrs.LOWER, attrs.POS, attrs.ENT_TYPE, attrs.IS_ALPHA])
-                
+
         Arguments:
             attr_ids (list[int]): A list of attribute ID ints.
 
@@ -520,7 +520,7 @@ cdef class Doc:
         cdef int i
         cdef attr_t attr
         cdef size_t count
-        
+
         if counts is None:
             counts = PreshCounter()
             output_dict = True
@@ -570,7 +570,7 @@ cdef class Doc:
         cdef TokenC* tokens = self.c
         cdef int length = len(array)
         cdef attr_t[:] values
-        for col, attr_id in enumerate(attrs): 
+        for col, attr_id in enumerate(attrs):
             values = array[:, col]
             if attr_id == HEAD:
                 for i in range(length):
@@ -612,11 +612,11 @@ cdef class Doc:
         '''Deserialize, loading from bytes.'''
         self.vocab.serializer.unpack_into(data[4:], self)
         return self
-    
+
     @staticmethod
     def read_bytes(file_):
         '''
-        A static method, used to read serialized #[code Doc] objects from 
+        A static method, used to read serialized #[code Doc] objects from
         a file. For example:
 
         Example:
@@ -673,7 +673,7 @@ cdef class Doc:
                 "Expected either 3 arguments (deprecated), or 0 (use keyword arguments). "
                 "Arguments supplied:\n%s\n"
                 "Keyword arguments:%s\n" % (len(args), repr(args), repr(attributes)))
- 
+
         cdef int start = token_by_start(self.c, self.length, start_idx)
         if start == -1:
             return None
@@ -784,7 +784,7 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
             if child.l_edge < head.l_edge:
                 head.l_edge = child.l_edge
             head.l_kids += 1
-        
+
     # Set right edges --- same as above, but iterate in reverse
     for i in range(length-1, -1, -1):
         child = &tokens[i]
@@ -798,4 +798,4 @@ cdef int set_children_from_heads(TokenC* tokens, int length) except -1:
     for i in range(length):
         if tokens[i].head == 0 and tokens[i].dep != 0:
             tokens[tokens[i].l_edge].sent_start = True
-            
+

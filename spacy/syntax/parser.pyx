@@ -12,7 +12,9 @@ from cpython.exc cimport PyErr_CheckSignals
 from libc.stdint cimport uint32_t, uint64_t
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport malloc, calloc, free
+
 import os.path
+from collections import Counter
 from os import path
 import shutil
 import json
@@ -27,7 +29,10 @@ from thinc.linalg cimport VecVec
 from thinc.structs cimport SparseArrayC
 from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
+
 from thinc.structs cimport FeatureC
+from thinc.structs cimport ExampleC
+from thinc.extra.eg cimport Example
 
 from util import Config
 
@@ -47,7 +52,7 @@ from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from ._state cimport StateC
 
-
+USE_FTRL = False
 DEBUG = False
 def set_debug(val):
     global DEBUG
@@ -68,9 +73,57 @@ def get_templates(name):
 
 
 cdef class ParserModel(AveragedPerceptron):
-    cdef void set_featuresC(self, ExampleC* eg, const StateC* state) nogil: 
-        fill_context(eg.atoms, state)
-        eg.nr_feat = self.extracter.set_features(eg.features, eg.atoms)
+    cdef int set_featuresC(self, atom_t* context, FeatureC* features,
+            const StateC* state) nogil:
+        fill_context(context, state)
+        nr_feat = self.extracter.set_features(features, context)
+        return nr_feat
+
+    def update(self, Example eg, itn=0):
+        '''Does regression on negative cost. Sort of cute?'''
+        self.time += 1
+        best = arg_max_if_gold(eg.c.scores, eg.c.costs, eg.c.nr_class)
+        guess = eg.guess
+        if guess == best or best == -1:
+            return 0.0
+        if USE_FTRL:
+            for feat in eg.c.features[:eg.c.nr_feat]:
+                self.update_weight_ftrl(feat.key, guess, feat.value * eg.c.costs[guess])
+                self.update_weight_ftrl(feat.key, best, -feat.value * eg.c.costs[guess])
+        else:
+            for feat in eg.c.features[:eg.c.nr_feat]:
+                self.update_weight(feat.key, guess, feat.value * eg.c.costs[guess])
+                self.update_weight(feat.key, best, -feat.value * eg.c.costs[guess])
+        return eg.c.costs[guess]
+
+    def update_from_histories(self, TransitionSystem moves, Doc doc, histories, weight_t min_grad=0.0):
+        cdef Pool mem = Pool()
+        features = <FeatureC*>mem.alloc(self.nr_feat, sizeof(FeatureC))
+
+        cdef StateClass stcls
+
+        cdef class_t clas
+        self.time += 1
+        cdef atom_t[CONTEXT_SIZE] atoms
+        histories = [(grad, hist) for grad, hist in histories if abs(grad) >= min_grad and hist]
+        if not histories:
+            return None
+        gradient = [Counter() for _ in range(max([max(h)+1 for _, h in histories]))]
+        for d_loss, history in histories:
+            stcls = StateClass.init(doc.c, doc.length)
+            moves.initialize_state(stcls.c)
+            for clas in history:
+                nr_feat = self.set_featuresC(atoms, features, stcls.c)
+                clas_grad = gradient[clas]
+                for feat in features[:nr_feat]:
+                    clas_grad[feat.key] += d_loss * feat.value
+                moves.c[clas].do(stcls.c, moves.c[clas].label)
+        cdef feat_t key
+        cdef weight_t d_feat
+        for clas, clas_grad in enumerate(gradient):
+            for key, d_feat in clas_grad.items():
+                if d_feat != 0:
+                    self.update_weight_ftrl(key, clas, d_feat)
 
 
 cdef class Parser:
@@ -124,6 +177,9 @@ cdef class Parser:
         elif 'features' not in cfg:
             cfg['features'] = self.feature_templates
         self.model = ParserModel(cfg['features'])
+        self.model.l1_penalty = cfg.get('L1', 0.0)
+        self.model.learn_rate = cfg.get('learn_rate', 0.001)
+
         self.cfg = cfg
 
     def __reduce__(self):
@@ -209,15 +265,15 @@ cdef class Parser:
         eg.is_valid = <int*>calloc(sizeof(int), nr_class)
         cdef int i
         while not state.is_final():
-            self.model.set_featuresC(&eg, state)
+            eg.nr_feat = self.model.set_featuresC(eg.atoms, eg.features, state)
             self.moves.set_valid(eg.is_valid, state)
             self.model.set_scoresC(eg.scores, eg.features, eg.nr_feat)
 
             guess = VecVec.arg_max_if_true(eg.scores, eg.is_valid, eg.nr_class)
+            if guess < 0:
+                return 1
 
             action = self.moves.c[guess]
-            if not eg.is_valid[guess]:
-                return 1
 
             action.do(state, action.label)
             memset(eg.scores, 0, sizeof(eg.scores[0]) * eg.nr_class)
@@ -232,8 +288,8 @@ cdef class Parser:
         free(eg.scores)
         free(eg.is_valid)
         return 0
-  
-    def update(self, Doc tokens, GoldParse gold):
+
+    def update(self, Doc tokens, GoldParse gold, itn=0):
         """Update the statistical model.
 
         Arguments:
@@ -255,18 +311,21 @@ cdef class Parser:
         cdef weight_t loss = 0
         cdef Transition action
         while not stcls.is_final():
-            self.model.set_featuresC(&eg.c, stcls.c)
+            eg.c.nr_feat = self.model.set_featuresC(eg.c.atoms, eg.c.features,
+                                                    stcls.c)
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
             self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
-            self.model.updateC(&eg.c)
             guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
+            self.model.update(eg)
 
-            action = self.moves.c[eg.guess]
+            action = self.moves.c[guess]
             action.do(stcls.c, action.label)
-            loss += eg.costs[eg.guess]
-            eg.fill_scores(0, eg.nr_class)
-            eg.fill_costs(0, eg.nr_class)
-            eg.fill_is_valid(1, eg.nr_class)
+            loss += eg.costs[guess]
+            eg.fill_scores(0, eg.c.nr_class)
+            eg.fill_costs(0, eg.c.nr_class)
+            eg.fill_is_valid(1, eg.c.nr_class)
+
+        self.moves.finalize_state(stcls.c)
         return loss
 
     def step_through(self, Doc doc):
@@ -296,7 +355,7 @@ cdef class Parser:
         # Doesn't set label into serializer -- subclasses override it to do that.
         for action in self.moves.action_types:
             self.moves.add_action(action, label)
-                
+
 
 cdef class StepwiseState:
     cdef readonly StateClass stcls
@@ -343,7 +402,8 @@ cdef class StepwiseState:
 
     def predict(self):
         self.eg.reset()
-        self.parser.model.set_featuresC(&self.eg.c, self.stcls.c)
+        self.eg.c.nr_feat = self.parser.model.set_featuresC(self.eg.c.atoms, self.eg.c.features,
+                                                            self.stcls.c)
         self.parser.moves.set_valid(self.eg.c.is_valid, self.stcls.c)
         self.parser.model.set_scoresC(self.eg.c.scores,
             self.eg.c.features, self.eg.c.nr_feat)
@@ -384,6 +444,14 @@ class ParserStateError(ValueError):
             "https://github.com/spacy-io/spaCy/issues/429\n"
             "Please include the text that the parser failed on, which is:\n"
             "%s" % repr(doc.text))
+
+cdef int arg_max_if_gold(const weight_t* scores, const weight_t* costs, int n) nogil:
+    cdef int best = -1
+    for i in range(n):
+        if costs[i] <= 0:
+            if best == -1 or scores[i] > scores[best]:
+                best = i
+    return best
 
 
 cdef int _arg_max_clas(const weight_t* scores, int move, const Transition* actions,

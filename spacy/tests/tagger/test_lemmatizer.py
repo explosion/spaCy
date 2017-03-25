@@ -1,8 +1,6 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...lemmatizer import read_index, read_exc
-
 import pytest
 
 
@@ -39,25 +37,6 @@ def test_tagger_lemmatizer_punct(lemmatizer):
         return None
     assert lemmatizer.punct('“') == set(['"'])
     assert lemmatizer.punct('“') == set(['"'])
-
-
-@pytest.mark.models
-def test_tagger_lemmatizer_read_index(path):
-    if path is not None:
-        with (path / 'wordnet' / 'index.noun').open() as file_:
-            index = read_index(file_)
-        assert 'man' in index
-        assert 'plantes' not in index
-        assert 'plant' in index
-
-
-@pytest.mark.models
-@pytest.mark.parametrize('text,lemma', [("was", "be")])
-def test_tagger_lemmatizer_read_exc(path, text, lemma):
-    if path is not None:
-        with (path / 'wordnet' / 'verb.exc').open() as file_:
-            exc = read_exc(file_)
-        assert exc[text] == (lemma,)
 
 
 @pytest.mark.models

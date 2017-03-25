@@ -11,12 +11,13 @@ from ..nl import Dutch
 from ..sv import Swedish
 from ..hu import Hungarian
 from ..fi import Finnish
+from ..bn import Bengali
 from ..he import Hebrew
+
 from ..tokens import Doc
 from ..strings import StringStore
 from ..lemmatizer import Lemmatizer
 from ..attrs import ORTH, TAG, HEAD, DEP
-from ..util import match_best_version, get_data_path
 
 from io import StringIO, BytesIO
 from pathlib import Path
@@ -25,7 +26,7 @@ import pytest
 
 
 LANGUAGES = [English, German, Spanish, Italian, French, Portuguese, Dutch,
-             Swedish, Hungarian, Finnish]
+             Swedish, Hungarian, Finnish, Bengali]
 
 
 @pytest.fixture(params=LANGUAGES)
@@ -75,6 +76,11 @@ def sv_tokenizer():
 
 
 @pytest.fixture
+def bn_tokenizer():
+    return Bengali.Defaults.create_tokenizer()
+
+  
+@pytest.fixture  
 def he_tokenizer():
     return Hebrew.Defaults.create_tokenizer()
 
@@ -90,11 +96,8 @@ def en_entityrecognizer():
 
 
 @pytest.fixture
-def lemmatizer(path):
-    if path is not None:
-        return Lemmatizer.load(path)
-    else:
-        return None
+def lemmatizer():
+    return English.Defaults.create_lemmatizer()
 
 
 @pytest.fixture
@@ -104,14 +107,6 @@ def text_file():
 @pytest.fixture
 def text_file_b():
     return BytesIO()
-
-
-@pytest.fixture
-def path():
-    if 'SPACY_DATA' in os.environ:
-        return Path(os.environ['SPACY_DATA'])
-    else:
-        return match_best_version('en', None, get_data_path())
 
 
 # only used for tests that require loading the models

@@ -1,4 +1,4 @@
-# encoding: utf8
+# coding: utf8
 from __future__ import unicode_literals
 
 from ..symbols import *
@@ -192,9 +192,6 @@ TOKENIZER_EXCEPTIONS = {
     ],
     "vm.": [
         {ORTH: "vm.", LEMMA: "viimeksi mainittu"}
-    ],
-    "siht.": [
-        {ORTH: "siht.", LEMMA: "sihteeri"}
     ],
     "srk.": [
         {ORTH: "srk.", LEMMA: "seurakunta"}

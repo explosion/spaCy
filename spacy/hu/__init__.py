@@ -1,4 +1,4 @@
-# encoding: utf8
+# coding: utf8
 from __future__ import unicode_literals, print_function
 
 from .tokenizer_exceptions import TOKEN_MATCH

@@ -1,4 +1,4 @@
-# encoding: utf8
+# coding: utf8
 from __future__ import unicode_literals
 
 from ..symbols import *
@@ -7,7 +7,8 @@ from ..language_data import PRON_LEMMA
 
 EXC = {}
 
-EXCLUDE_EXC = ["Ill", "ill", "Its", "its", "Hell", "hell", "Shell", "shell", "Shed", "shed", "were", "Were", "Well", "well", "Whore", "whore"]
+EXCLUDE_EXC = ["Ill", "ill", "Its", "its", "Hell", "hell", "Shell", "shell",
+               "Shed", "shed", "were", "Were", "Well", "well", "Whore", "whore"]
 
 
 # Pronouns
@@ -106,7 +107,7 @@ for pron in ["you", "we", "they"]:
 
         EXC[orth + "re"] = [
             {ORTH: orth, LEMMA: PRON_LEMMA, TAG: "PRP"},
-            {ORTH: "re", LEMMA: "be", NORM: "are"}
+            {ORTH: "re", LEMMA: "be", NORM: "are", TAG: "VBZ"}
         ]
 
 
@@ -333,6 +334,23 @@ for exc_data in [
     for data in [exc_data, exc_data_apos]:
         EXC[data[ORTH]] = [
             dict(data)
+        ]
+
+
+# Times
+
+for h in range(1, 12 + 1):
+    hour = str(h)
+
+    for period in ["a.m.", "am"]:
+        EXC[hour + period] = [
+            {ORTH: hour},
+            {ORTH: period, LEMMA: "a.m."}
+        ]
+    for period in ["p.m.", "pm"]:
+        EXC[hour + period] = [
+            {ORTH: hour},
+            {ORTH: period, LEMMA: "p.m."}
         ]
 
 
@@ -752,5 +770,5 @@ ORTH_ONLY = [
     "Rev.",
     "Sen.",
     "St.",
-    "vs."
+    "vs.",
 ]

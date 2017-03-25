@@ -1,11 +1,7 @@
 # cython: infer_types
 from __future__ import unicode_literals
 
-from os import path
-
 from libc.string cimport memset
-
-from .lemmatizer import Lemmatizer
 
 try:
     import ujson as json
@@ -192,6 +188,7 @@ IDS = {
     "Definite_two": Definite_two,
     "Definite_def": Definite_def,
     "Definite_red": Definite_red,
+    "Definite_cons": Definite_cons, # U20
     "Definite_ind": Definite_ind,
     "Degree_cmp": Degree_cmp,
     "Degree_comp": Degree_comp,
@@ -215,6 +212,8 @@ IDS = {
     "Negative_neg": Negative_neg,
     "Negative_pos": Negative_pos,
     "Negative_yes": Negative_yes,
+    "Polarity_neg": Polarity_neg, # U20
+    "Polarity_pos": Polarity_pos, # U20
     "Number_com": Number_com,
     "Number_dual": Number_dual,
     "Number_none": Number_none,
@@ -263,6 +262,7 @@ IDS = {
     "VerbForm_partPres": VerbForm_partPres,
     "VerbForm_sup": VerbForm_sup,
     "VerbForm_trans": VerbForm_trans,
+    "VerbForm_conv": VerbForm_conv, # U20
     "VerbForm_gdv ": VerbForm_gdv, # la,
     "Voice_act": Voice_act,
     "Voice_cau": Voice_cau,
