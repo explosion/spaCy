@@ -7,6 +7,8 @@ import ujson as json
 from .en.lemmatizer import INDEX, EXC, RULES
 from .symbols import POS, NOUN, VERB, ADJ, PUNCT
 from .symbols import VerbForm_inf, VerbForm_none
+from .symbols import Number_sing
+from .symbols import Degree_pos
 
 
 class Lemmatizer(object):
@@ -42,6 +44,7 @@ class Lemmatizer(object):
     def is_base_form(self, univ_pos, morphology=None):
         '''Check whether we're dealing with an uninflected paradigm, so we can
         avoid lemmatization entirely.'''
+        print("Is base form?", univ_pos, morphology)
         morphology = {} if morphology is None else morphology
         others = [key for key in morphology if key not in (POS, 'number', 'pos', 'verbform')]
         true_morph_key = morphology.get('morph', 0)
@@ -49,7 +52,10 @@ class Lemmatizer(object):
             return True
         elif univ_pos == 'verb' and morphology.get('verbform') == 'inf' and not others:
             return True
-        elif true_morph_key in (VerbForm_inf, VerbForm_none):
+        elif univ_pos == 'adj' and morphology.get('Degree') == 'pos':
+            return True
+        elif true_morph_key in \
+            (VerbForm_inf, VerbForm_none, Number_sing, Degree_pos):
             return True
         else:
             return False
