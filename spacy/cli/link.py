@@ -5,6 +5,7 @@ import pip
 from pathlib import Path
 import importlib
 from .. import util
+import sys
 
 
 def link(origin, link_name, force=False):
@@ -43,7 +44,13 @@ def symlink(model_path, link_name, force):
     elif link_path.exists():
         link_path.unlink()
 
-    link_path.symlink_to(model_path)
+    if sys.version.startswith('2.') and sys.platform.startswith('win'):
+        import subprocess
+        subprocess.call(['mklink','/d',str(link_path), str(model_path)], 
+                        shell=True)
+    else:
+        link_path.symlink_to(model_path)
+
     util.print_msg(
         "{a} --> {b}".format(a=model_path.as_posix(), b=link_path.as_posix()),
         "You can now load the model via spacy.load('{l}').".format(l=link_name),
