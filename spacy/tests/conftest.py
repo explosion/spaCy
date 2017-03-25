@@ -12,6 +12,8 @@ from ..sv import Swedish
 from ..hu import Hungarian
 from ..fi import Finnish
 from ..bn import Bengali
+from ..he import Hebrew
+
 from ..tokens import Doc
 from ..strings import StringStore
 from ..lemmatizer import Lemmatizer
@@ -76,6 +78,11 @@ def sv_tokenizer():
 @pytest.fixture
 def bn_tokenizer():
     return Bengali.Defaults.create_tokenizer()
+
+  
+@pytest.fixture  
+def he_tokenizer():
+    return Hebrew.Defaults.create_tokenizer()
 
 
 @pytest.fixture
