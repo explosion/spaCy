@@ -9,7 +9,6 @@ from spacy.cli import link as cli_link
 from spacy.cli import info as cli_info
 from spacy.cli import package as cli_package
 from spacy.cli import train as cli_train
-from spacy.cli import train_config as cli_train_config
 
 
 class CLI(object):
@@ -95,17 +94,6 @@ class CLI(object):
 
         cli_train(lang, output_dir, train_data, dev_data, n_iter, not no_tagger,
                   not no_parser, not no_ner, parser_L1)
-
-
-    @plac.annotations(
-        config=("config", "positional", None, str),
-    )
-    def train_config(self, config):
-        """
-        Train a model from config file.
-        """
-
-        cli_train_config(config)
 
 
     def __missing__(self, name):
