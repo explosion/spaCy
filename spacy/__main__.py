@@ -91,7 +91,6 @@ class CLI(object):
               parser_L1=0.0,
               no_tagger=False, no_parser=False, no_ner=False):
         """Train a model."""
-
         cli_train(lang, output_dir, train_data, dev_data, n_iter,
                   not no_tagger, not no_parser, not no_ner,
                   parser_L1)

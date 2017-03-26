@@ -26,15 +26,19 @@
 
 *:not(.c-code-block) > code
     font: normal 600 0.8em/#{1} $font-code
-    background: $color-subtle-light
+    background: rgba($color-front, 0.05)
+    box-shadow: 1px 1px 0 rgba($color-front, 0.1)
+    text-shadow: 1px 1px 0 rgba($color-back, 0.5)
     color: $color-front
     padding: 0.1em 0.5em
     margin: 0
     border-radius: 1px
+    box-decoration-break: clone
 
     .c-aside__content &
         background: lighten($color-front, 10)
         color: $color-back
+        text-shadow: none
 
 
 //- Syntax Highlighting
