@@ -47,7 +47,6 @@ class Lemmatizer(object):
         morphology = {} if morphology is None else morphology
         others = [key for key in morphology if key not in (POS, 'number', 'pos', 'verbform')]
         true_morph_key = morphology.get('morph', 0)
-        print(univ_pos, morphology)
         if univ_pos == 'noun' and morphology.get('Number') == 'sing':
             return True
         elif univ_pos == 'verb' and morphology.get('VerbForm') == 'inf':
