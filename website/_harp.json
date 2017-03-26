@@ -28,7 +28,8 @@
 
         "NAVIGATION": {
             "Home": "/",
-            "Docs": "/docs",
+            "Usage": "/docs/usage",
+            "API": "/docs/api",
             "Demos": "/docs/usage/showcase",
             "Blog": "https://explosion.ai/blog"
         },
