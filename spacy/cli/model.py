@@ -7,7 +7,7 @@ from ast import literal_eval
 from pathlib import Path
 from preshed.counter import PreshCounter
 
-from ..vocab import Vocab, write_binary_vectors
+from ..vocab import write_binary_vectors
 from .. import util
 
 
