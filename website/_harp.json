@@ -63,7 +63,16 @@
             "user": "spacy.us12",
             "id": "83b0498b1e7fa3c91ce68c3f1",
             "list": "89ad33e698"
+        },
+        "BADGES": {
+            "pipy": {
+                "badge": "https://img.shields.io/pypi/v/spacy.svg?style=flat-square",
+                "link": "https://pypi.python.org/pypi/spacy"
+            },
+            "conda": {
+                "badge": "https://anaconda.org/conda-forge/spacy/badges/version.svg",
+                "link": "https://anaconda.org/conda-forge/spacy"
+            }
         }
-
     }
 }

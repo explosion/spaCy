@@ -110,6 +110,17 @@ mixin gitter(button, label)
         !=button
 
 
+//- Badge
+    name - [string] "pipy" or "conda"
+
+mixin badge(name)
+    - site = BADGES[name]
+
+    if site
+        +a(site.link).u-padding-small
+            img(src=site.badge alt="{name} version" height="20")
+
+
 //- Logo
 
 mixin logo()
