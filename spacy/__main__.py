@@ -14,7 +14,7 @@ from spacy.cli import train as cli_train
 class CLI(object):
     """Command-line interface for spaCy"""
 
-    commands = ('download', 'link', 'info', 'package', 'train', 'train_config')
+    commands = ('download', 'link', 'info', 'package', 'train')
 
     @plac.annotations(
         model=("model to download (shortcut or model name)", "positional", None, str),
