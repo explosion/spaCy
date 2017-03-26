@@ -143,7 +143,8 @@ p
     +tag experimental
 
 p
-    |  Train a model. Expects data in spaCy's JSON format.
+    |  Train a model. Expects data in spaCy's
+    |  #[+a("/docs/api/annotation#json-input") JSON format].
 
 +code(false, "bash").
     python -m spacy train [lang] [output_dir] [train_data] [dev_data] [--n_iter] [--parser_L1] [--no_tagger] [--no_parser] [--no_ner]
