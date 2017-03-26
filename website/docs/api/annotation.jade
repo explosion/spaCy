@@ -79,3 +79,33 @@ p
 +h(2, "named-entities") Named Entity Recognition
 
 include _annotation/_named-entities
+
++h(2, "json-input") JSON input format for training
+
+p
+    |  spaCy takes training data in the following format:
+
++code("Example structure").
+    doc: {
+        id: string,
+        paragraphs: [{
+            raw: string,
+            sents: [int],
+            tokens: [{
+                start: int,
+                tag: string,
+                head: int,
+                dep: string
+            }],
+            ner: [{
+                start: int,
+                end: int,
+                label: string
+            }],
+            brackets: [{
+                start: int,
+                end: int,
+                label: string
+            }]
+        }]
+    }
