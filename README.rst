@@ -40,6 +40,7 @@ open-source software, released under the MIT license.
 =================== ===
 `Usage Workflows`_  How to use spaCy and its features.
 `API Reference`_    The detailed reference for spaCy's API.
+`Troubleshooting`_  Common problems and solutions for beginners.
 `Tutorials`_        End-to-end examples, with code you can modify and run.
 `Showcase & Demos`_ Demos, libraries and products from the spaCy community.
 `Contribute`_       How to contribute to the spaCy project and code base.
@@ -47,6 +48,7 @@ open-source software, released under the MIT license.
 
 .. _Usage Workflows: https://spacy.io/docs/usage/
 .. _API Reference: https://spacy.io/docs/api/
+.. _Troubleshooting: https://spacy.io/docs/usage/troubleshooting
 .. _Tutorials: https://spacy.io/docs/usage/tutorials
 .. _Showcase & Demos: https://spacy.io/docs/usage/showcase
 .. _Contribute: https://github.com/explosion/spaCy/blob/master/CONTRIBUTING.md
