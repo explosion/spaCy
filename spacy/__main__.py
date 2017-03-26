@@ -93,9 +93,8 @@ class CLI(object):
         Train a model. Expects data in spaCy's JSON format.
         """
 
-        cli_train(lang, output_dir, train_data, dev_data, n_iter,
-                  not no_tagger, not no_parser, not no_ner,
-                  parser_L1)
+        cli_train(lang, output_dir, train_data, dev_data, n_iter, not no_tagger,
+                  not no_parser, not no_ner, parser_L1)
 
 
     @plac.annotations(
