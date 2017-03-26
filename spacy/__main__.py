@@ -109,7 +109,8 @@ class CLI(object):
 
 
     def __missing__(self, name):
-        print("\n   Command %r does not exist\n" % name)
+        print("\n   Command %r does not exist."
+              "\n   Use the --help flag for a list of available commands.\n" % name)
 
 
 if __name__ == '__main__':
