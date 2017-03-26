@@ -278,7 +278,8 @@ class Language(object):
             path = pathlib.Path(path)
         if path is True:
             path = util.get_data_path() / self.lang
-
+            if not path.exists() and 'path' not in overrides:
+                path = None
         self.meta = overrides.get('meta', {})
         self.path = path
 
