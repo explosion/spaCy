@@ -5,6 +5,7 @@
             "Models": "models",
             "Lightning tour": "lightning-tour",
             "Command line": "cli",
+            "Troubleshooting": "troubleshooting",
             "Resources": "resources"
         },
         "Workflows": {
@@ -45,6 +46,11 @@
 
     "cli": {
         "title": "Command Line Interface",
+        "next": "troubleshooting"
+    },
+
+    "troubleshooting": {
+        "title": "Troubleshooting",
         "next": "resources"
     },
 

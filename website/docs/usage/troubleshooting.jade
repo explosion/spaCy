@@ -1,0 +1,163 @@
+//- 💫 DOCS > USAGE > TROUBLESHOOTING
+
+include ../../_includes/_mixins
+
+p
+    |  This section collects some of the most common errors you may come
+    |  across when installing, loading and using spaCy, as well as their solutions.
+
++aside("Help us improve this guide")
+    |  Did you come across a problem like the ones listed here and want to
+    |  share the solution? You can find the "Suggest edits" button at the
+    |  bottom of this page that points you to the source. We always
+    |  appreciate #[+a(gh("spaCy") + "/pulls") pull requests]!
+
++h(2, "install-loading") Installation and loading
+
++h(3, "compatible-model") No compatible model found
+
++code(false, "text").
+    No compatible model found for [lang] (spaCy v#{SPACY_VERSION}).
+
+p
+    |  This usually means that the model you're trying to download does not
+    |  exist, or isn't available for your version of spaCy.
+
++infobox("Solutions")
+    |  Check the #[+a(gh("spacy-models", "compatibility.json")) compatibility table]
+    |  to see which models are available for your spaCy version. If you're using
+    |  an old version, consider upgrading to the latest release. Note that while
+    |  spaCy supports tokenization for
+    |  #[+a("/docs/api/language-models/#alpha-support") a variety of languages],
+    |  not all of them come with statistical models. To only use the tokenizer,
+    |  import the language's #[code Language] class instead, for example
+    |  #[code from spacy.fr import French].
+
+
++h(3, "symlink-privilege") Symbolic link privilege not held
+
++code(false, "text").
+    OSError: symbolic link privilege not held
+
+p
+    |  To create #[+a("/docs/usage/models/#usage") shortcut links] that let you
+    |  load models by name, spaCy creates a symbolic link in the
+    |  #[code spacy/data] directory. This means your user needs permission to do
+    |  this. The above error mostly occurs when doing a system-wide installation,
+    |  which will create the symlinks in a system directory.
+
++infobox("Solutions")
+    |  Run the #[code download] or #[code link] command as administrator,
+    |  or use a #[code virtualenv] to install spaCy in a user directory, instead
+    |  of doing a system-wide installation.
+
+
++h(3, "import-error") Import error
+
++code(false, "text").
+    Import Error: No module named spacy
+
+p
+    |  This error means that the spaCy module can't be located on your system, or in
+    |  your environment.
+
++infobox("Solutions")
+    |  Make sure you have spaCy installed. If you're using a #[code virtualenv],
+    |  make sure it's activated and check that spaCy is installed in that
+    |  environment – otherwise, you're trying to load a system installation. You
+    |  can also run #[code which python] to find out where your Python
+    |  executable is located.
+
++h(3, "import-error-models") Import error: models
+
++code(false, "text").
+    ImportError: No module named 'en_core_web_sm'
+
+p
+    |  As of spaCy v1.7, all models can be installed as Python packages. This means
+    |  that they'll become importable modules of your application. When creating
+    |  #[+a("/docs/usage/models/#usage") shortcut links], spaCy will also try
+    |  to import the model to load its meta data. If this fails, it's usually a
+    |  sign that the package is not installed in the current environment.
+
++infobox("Solutions")
+    |  Run #[code pip list] or #[code pip freeze] to check which model packages
+    |  you have installed, and install the
+    |  #[+a("/docs/usage/models#available") correct models] if necessary. If you're
+    |  importing a model manually at the top of a file, make sure to use the name
+    |  of the package, not the shortcut link you've created.
+
++h(3, "vocab-strings") File not found: vocab/strings.json
+
++code(false, "text").
+    FileNotFoundError: No such file or directory: [...]/vocab/strings.json
+
+p
+    |  This error may occur when using #[code spacy.load()] to load
+    |  a language model – either because you haven't set up a
+    |  #[+a("/docs/usage/models/#usage") shortcut link] for it, or because it
+    |  doesn't actually exist.
+
++infobox("Solutions")
+    |  Set up a #[+a("/docs/usage/models/#usage") shortcut link] for the model
+    |  you want to load. This can either be an installed model package, or a
+    |  local directory containing the model data. If you want to use one of the
+    |  #[+a("/docs/api/language-models/#alpha-support") alpha tokenizers] for
+    |  languages that don't yet have a statistical model, you should import its
+    |  #[code Language] class instead, for example
+    |  #[code from spacy.fr import French].
+
++h(3, "command-not-found") Command not found
+
++code(false, "text").
+    command not found: spacy
+
+p
+    |  This error may occur when running the #[code spacy] command from the
+    |  command line. spaCy does not currently add an entry to our #[code PATH]
+    |  environment variable, as  this can lead to unexpected results, especially
+    |  when using #[code virtualenv]. Instead, commands need to be prefixed with
+    |  #[code python -m].
+
++infobox("Solution")
+    |  Run the command with #[code python -m], for example
+    |  #[code python -m spacy download en]. For more info on this, see the
+    |  #[+a("/docs/usage/cli") CLI documentation].
+
++h(2, "usage") Using spaCy
+
++h(3, "pos-lemma-number") POS tag or lemma is returned as number
+
++code.
+    doc = nlp(u'This is text.')
+    print([word.pos for word in doc])
+    # [88, 98, 90, 95]
+
+p
+    |  Like many NLP libraries, spaCy encodes all strings to integers. This
+    |  reduces memory usage and improves efficiency. The integer mapping also
+    |  makes it easy to interoperate with numpy. To access the string
+    |  representation instead of the integer ID, add an underscore #[code _]
+    |  after the attribute.
+
++infobox("Solutions")
+    |  Use #[code pos_] or #[code lemma_] instead. See the
+    |  #[+api("token#attributes") #[code Token] attributes] for a list of available
+    |  attributes and their string representations.
+
+
++h(3, "pron-lemma") Pronoun lemma is returned as #[code -PRON-]
+
++code.
+    doc = nlp(u'They are')
+    print(doc[0].lemma_)
+    # -PRON-
+
+p
+    |  This is in fact expected behaviour and not a bug.
+    |  Unlike verbs and common nouns, there's no clear base form of a personal
+    |  pronoun. Should the lemma of "me" be "I", or should we normalize person
+    |  as well, giving "it" — or maybe "he"? spaCy's solution is to introduce a
+    |  novel symbol, #[code -PRON-], which is used as the lemma for
+    |  all personal pronouns. For more info on this, see the
+    |  #[+api("annotation#lemmatization") annotation specs] on lemmatization.
