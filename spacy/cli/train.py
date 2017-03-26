@@ -13,7 +13,8 @@ from ..gold import read_json_file as read_gold_json
 from .. import util
 
 
-def train(language, output_dir, train_data, dev_data, n_iter, tagger, parser, ner):
+def train(language, output_dir, train_data, dev_data, n_iter, tagger, parser, ner,
+          parser_L1):
     output_path = Path(output_dir)
     train_path = Path(train_data)
     dev_path = Path(dev_data)
@@ -22,6 +23,7 @@ def train(language, output_dir, train_data, dev_data, n_iter, tagger, parser, ne
     lang = util.get_lang_class(language)
     parser_cfg = {
         'pseudoprojective': True,
+        'L1': parser_L1,
         'n_iter': n_iter,
         'lang': language,
         'features': lang.Defaults.parser_features}
