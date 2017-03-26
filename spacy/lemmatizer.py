@@ -4,7 +4,6 @@ import pathlib
 
 import ujson as json
 
-from .en.lemmatizer import INDEX, EXC, RULES
 from .symbols import POS, NOUN, VERB, ADJ, PUNCT
 from .symbols import VerbForm_inf, VerbForm_none
 from .symbols import Number_sing
@@ -13,11 +12,8 @@ from .symbols import Degree_pos
 
 class Lemmatizer(object):
     @classmethod
-    def load(cls, path, rules=None):
-        index = dict(INDEX)
-        exc = dict(EXC)
-        rules = dict(RULES)
-        return cls(index, exc, rules)
+    def load(cls, path, index=None, exc=None, rules=None):
+        return cls(index or {}, exc or {}, rules or {})
 
     def __init__(self, index, exceptions, rules):
         self.index = index
@@ -47,7 +43,6 @@ class Lemmatizer(object):
         morphology = {} if morphology is None else morphology
         others = [key for key in morphology if key not in (POS, 'number', 'pos', 'verbform')]
         true_morph_key = morphology.get('morph', 0)
-        print(univ_pos, morphology)
         if univ_pos == 'noun' and morphology.get('Number') == 'sing':
             return True
         elif univ_pos == 'verb' and morphology.get('VerbForm') == 'inf':
