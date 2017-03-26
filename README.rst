@@ -102,7 +102,7 @@ Supports
 
 ==================== ===
 **Operating system** macOS / OS X, Linux, Windows (Cygwin, MinGW, Visual Studio)
-**Python version**   CPython 2.6, 2.7, 3.3, 3.4, 3.5. Only 64 bit.
+**Python version**   CPython 2.6, 2.7, 3.3+. Only 64 bit.
 **Package managers** `pip`_ (source packages only), `conda`_ (via ``conda-forge``)
 ==================== ===
 
