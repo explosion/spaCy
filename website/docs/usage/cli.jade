@@ -138,3 +138,63 @@ p
         +cell #[code --help], #[code -h]
         +cell flag
         +cell Show help message and available arguments.
+
++h(2, "train") Train
+    +tag experimental
+
+p
+    |  Train a model. Expects data in spaCy's JSON format.
+
++code(false, "bash").
+    python -m spacy train [lang] [output_dir] [train_data] [dev_data] [--n_iter] [--parser_L1] [--no_tagger] [--no_parser] [--no_ner]
+
++table(["Argument", "Type", "Description"])
+    +row
+        +cell #[code lang]
+        +cell positional
+        +cell Model language.
+
+    +row
+        +cell #[code output_dir]
+        +cell positional
+        +cell Directory to store model in.
+
+    +row
+        +cell #[code train_data]
+        +cell positional
+        +cell Location of JSON-formatted training data.
+
+    +row
+        +cell #[code dev_data]
+        +cell positional
+        +cell Location of JSON-formatted dev data (optional).
+
+    +row
+        +cell #[code --n_iter], #[code -n]
+        +cell option
+        +cell Number of iterations (default: #[code 15]).
+
+    +row
+        +cell #[code --parser_L1], #[code -L]
+        +cell option
+        +cell L1 regularization penalty for parser (default: #[code 0.0]).
+
+    +row
+        +cell #[code --no_tagger], #[code -T]
+        +cell flag
+        +cell Don't train tagger.
+
+    +row
+        +cell #[code --no_parser], #[code -P]
+        +cell flag
+        +cell Don't train parser.
+
+    +row
+        +cell #[code --no_ner], #[code -N]
+        +cell flag
+        +cell Don't train NER.
+
+    +row
+        +cell #[code --help], #[code -h]
+        +cell flag
+        +cell Show help message and available arguments.

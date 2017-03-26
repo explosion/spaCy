@@ -77,20 +77,22 @@ class CLI(object):
 
 
     @plac.annotations(
-        lang=("language", "positional", None, str),
-        output_dir=("output directory", "positional", None, str),
-        train_data=("training data", "positional", None, str),
-        dev_data=("development data", "positional", None, str),
+        lang=("model language", "positional", None, str),
+        output_dir=("output directory to store model in", "positional", None, str),
+        train_data=("location of JSON-formatted training data", "positional", None, str),
+        dev_data=("location of JSON-formatted development data (optional)", "positional", None, str),
         n_iter=("number of iterations", "option", "n", int),
         parser_L1=("L1 regularization penalty for parser", "option", "L", float),
         no_tagger=("Don't train tagger", "flag", "T", bool),
         no_parser=("Don't train parser", "flag", "P", bool),
         no_ner=("Don't train NER", "flag", "N", bool)
     )
-    def train(self, lang, output_dir, train_data, dev_data, n_iter=15,
-              parser_L1=0.0,
-              no_tagger=False, no_parser=False, no_ner=False):
-        """Train a model."""
+    def train(self, lang, output_dir, train_data, dev_data=None, n_iter=15,
+              parser_L1=0.0, no_tagger=False, no_parser=False, no_ner=False):
+        """
+        Train a model. Expects data in spaCy's JSON format.
+        """
+
         cli_train(lang, output_dir, train_data, dev_data, n_iter,
                   not no_tagger, not no_parser, not no_ner,
                   parser_L1)
@@ -100,7 +102,9 @@ class CLI(object):
         config=("config", "positional", None, str),
     )
     def train_config(self, config):
-        """Train a model from config file."""
+        """
+        Train a model from config file.
+        """
 
         cli_train_config(config)
 
