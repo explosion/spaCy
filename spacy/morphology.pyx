@@ -25,6 +25,8 @@ def _normalize_props(props):
             if value in POS_IDS:
                 value = POS_IDS[value]
             out[key] = value
+        elif isinstance(key, int):
+            out[key] = value
         elif key.lower() == 'pos':
             out[POS] = POS_IDS[value.upper()]
         else:
@@ -32,12 +34,11 @@ def _normalize_props(props):
     return out
 
 
-
 cdef class Morphology:
     def __init__(self, StringStore string_store, tag_map, lemmatizer):
         self.mem = Pool()
         self.strings = string_store
-        self.tag_map = tag_map
+        self.tag_map = {}
         self.lemmatizer = lemmatizer
         self.n_tags = len(tag_map) + 1
         self.tag_names = tuple(sorted(tag_map.keys()))
@@ -46,6 +47,7 @@ cdef class Morphology:
         self.rich_tags = <RichTagC*>self.mem.alloc(self.n_tags, sizeof(RichTagC))
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
             attrs = _normalize_props(attrs)
+            self.tag_map[tag_str] = dict(attrs)
             attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
             self.rich_tags[i].id = i
             self.rich_tags[i].name = self.strings[tag_str]
@@ -74,11 +76,12 @@ cdef class Morphology:
         # Related to Issue #220
         if Lexeme.c_check_flag(token.lex, IS_SPACE):
             tag_id = self.reverse_index[self.strings['SP']]
+        rich_tag = self.rich_tags[tag_id]
         analysis = <MorphAnalysisC*>self._cache.get(tag_id, token.lex.orth)
         if analysis is NULL:
             analysis = <MorphAnalysisC*>self.mem.alloc(1, sizeof(MorphAnalysisC))
-            analysis.tag = self.rich_tags[tag_id]
             tag_str = self.strings[self.rich_tags[tag_id].name]
+            analysis.tag = rich_tag
             analysis.lemma = self.lemmatize(analysis.tag.pos, token.lex.orth,
                                             self.tag_map.get(tag_str, {}))
             self._cache.set(tag_id, token.lex.orth, analysis)
@@ -126,8 +129,7 @@ cdef class Morphology:
             else:
                 self.assign_feature(&cached.tag.morph, name_id, value_id)
         if cached.lemma == 0:
-            cached.lemma = self.lemmatize(rich_tag.pos, orth,
-                                          self.tag_map.get(tag_str, {}))
+            cached.lemma = self.lemmatize(rich_tag.pos, orth, attrs)
         self._cache.set(tag_id, orth, <void*>cached)
 
     def load_morph_exceptions(self, dict exc):

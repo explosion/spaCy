@@ -12,7 +12,7 @@ import pytest
 def test_issue595():
     """Test lemmatization of base forms"""
     words = ["Do", "n't", "feed", "the", "dog"]
-    tag_map = {'VB': {POS: VERB, 'morph': VerbForm_inf}}
+    tag_map = {'VB': {POS: VERB, VerbForm_inf: True}}
     rules = {"verb": [["ed", "e"]]}
 
     lemmatizer = Lemmatizer({'verb': {}}, {'verb': {}}, rules)

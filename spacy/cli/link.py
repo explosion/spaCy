@@ -43,7 +43,14 @@ def symlink(model_path, link_name, force):
     elif link_path.exists():
         link_path.unlink()
 
-    link_path.symlink_to(model_path)
+    # Add workaround for Python 2 on Windows (see issue #909)
+    if util.is_python2() and util.is_windows():
+        import subprocess
+        command = ['mklink', '/d', link_path.as_posix(), model_path.as_posix()]
+        subprocess.call(command, shell=True)
+    else:
+        link_path.symlink_to(model_path)
+
     util.print_msg(
         "{a} --> {b}".format(a=model_path.as_posix(), b=link_path.as_posix()),
         "You can now load the model via spacy.load('{l}').".format(l=link_name),
