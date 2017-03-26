@@ -93,7 +93,7 @@ def evaluate(Language, gold_tuples, output_path):
 def check_dirs(output_path, train_path, dev_path):
     if not output_path.exists():
         util.sys_exit(output_path.as_posix(), title="Output directory not found")
-    if not train_path.exists() or not train_path.is_file():
+    if not train_path.exists():
         util.sys_exit(train_path.as_posix(), title="Training data not found")
     if dev_path and not dev_path.exists():
         util.sys_exit(dev_path.as_posix(), title="Development data not found")
