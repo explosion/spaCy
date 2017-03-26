@@ -84,9 +84,9 @@ class CLI(object):
         n_iter=("number of iterations", "flag", "n", int),
         tagger=("train tagger", "flag", "t", bool),
         parser=("train parser", "flag", "p", bool),
-        ner=("train NER", "flag", "n", bool)
+        ner=("train NER", "flag", "e", bool)
     )
-    def train(self, lang, output_dir, train_data, dev_data, n_iter=15, tagger=True,
+    def train(self, lang, output_dir, train_data, dev_data=None, n_iter=15, tagger=True,
               parser=True, ner=True):
         """Train a model."""
 
