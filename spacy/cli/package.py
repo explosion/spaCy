@@ -58,7 +58,7 @@ def create_dirs(package_path, force):
 
 def create_file(file_path, contents):
     file_path.touch()
-    file_path.open('w').write(contents, encoding='utf-8')
+    file_path.open('w', encoding='utf-8').write(contents)
 
 
 def generate_meta():
