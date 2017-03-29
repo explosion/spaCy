@@ -19,6 +19,7 @@ from . import nl
 from . import sv
 from . import fi
 from . import bn
+from . import he
 
 from .about import *
 
@@ -35,6 +36,7 @@ set_lang_class(nl.Dutch.lang, nl.Dutch)
 set_lang_class(sv.Swedish.lang, sv.Swedish)
 set_lang_class(fi.Finnish.lang, fi.Finnish)
 set_lang_class(bn.Bengali.lang, bn.Bengali)
+set_lang_class(he.Hebrew.lang, he.Hebrew)
 
 
 def load(name, **overrides):
