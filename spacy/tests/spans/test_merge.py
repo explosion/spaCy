@@ -19,6 +19,15 @@ def test_spans_merge_tokens(en_tokenizer):
     assert doc[0].text == 'Los Angeles'
     assert doc[0].head.text == 'start'
 
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=heads)
+    assert len(doc) == 4
+    assert doc[0].head.text == 'Angeles'
+    assert doc[1].head.text == 'start'
+    doc.merge(0, len('Los Angeles'), tag='NNP', lemma='Los Angeles', label='GPE')
+    assert len(doc) == 3
+    assert doc[0].text == 'Los Angeles'
+    assert doc[0].head.text == 'start'
+    assert doc[0].ent_type_ == 'GPE'
 
 def test_spans_merge_heads(en_tokenizer):
     text = "I found a pilates class near work."

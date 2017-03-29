@@ -667,6 +667,13 @@ cdef class Doc:
             attributes[TAG] = self.vocab.strings[tag]
             attributes[LEMMA] = self.vocab.strings[lemma]
             attributes[ENT_TYPE] = self.vocab.strings[ent_type]
+        elif not args:
+            if "label" in attributes and ENT_TYPE not in attributes:
+                if type(attributes["label"]) == int:
+                    attributes[ENT_TYPE] = attributes["label"]
+                else:
+                    attributes[ENT_TYPE] = self.vocab.strings[attributes["label"]]
+
         elif args:
             raise ValueError(
                 "Doc.merge received %d non-keyword arguments. "
