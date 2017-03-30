@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 
 STOP_WORDS = set("""
-à às acerca adeus agora ainda algmas algo algumas alguns ali além ambos ano
+à às acerca adeus agora ainda algo algumas alguns ali além ambos ano
 anos antes ao aos apenas apoio apontar após aquela aquelas aquele aqueles aqui
 aquilo area área as assim através atrás até aí
 
@@ -27,7 +27,7 @@ geral grande grandes grupo
 
 hoje horas há
 
-iniciar inicio ir irá isso ista iste isto já
+iniciar inicio ir irá isso ista isto já
 
 lado ligado local logo longe lugar lá
 
@@ -47,7 +47,9 @@ possível pouca pouco povo primeira primeiro promeiro próprio próximo puderam
 pôde põe põem
 
 qual qualquer quando quanto quarta quarto quatro que quem quer quero questão
-quieto quinta quinto quinze quê relação
+quieto quinta quinto quinze quê
+
+relação
 
 sabe saber se segunda segundo sei seis sem sempre ser seria sete seu seus sexta
 sexto sim sistema sob sobre sois somente somos sou sua suas são sétima sétimo
