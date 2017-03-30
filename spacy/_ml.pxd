@@ -12,10 +12,13 @@ cdef class LinearModel:
     cdef readonly int nr_class
     cdef readonly uint32_t nr_weight
     cdef public weight_t learn_rate
+    cdef public weight_t momentum
     cdef Pool mem
+    cdef weight_t time
     cdef weight_t* W
-    cdef weight_t* d_W
-    cdef vector[uint64_t]* _indices
+    cdef weight_t* mom
+    cdef weight_t* averages
+    cdef weight_t* last_upd
 
     cdef void hinge_lossC(self, weight_t* d_scores,
             const weight_t* scores, const weight_t* costs) nogil

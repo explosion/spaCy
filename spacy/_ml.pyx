@@ -20,21 +20,23 @@ from thinc.neural.ops import NumpyOps
 
 
 cdef class LinearModel:
-    def __init__(self, int nr_class, templates, weight_t learn_rate=0.001,
-            size=2**18):
+    def __init__(self, int nr_class, templates,
+            weight_t momentum=0.9, weight_t learn_rate=0.001, size=2**18):
         self.extracter = ConjunctionExtracter(templates)
         self.nr_weight = size
         self.nr_class = nr_class
         self.learn_rate = learn_rate
+        self.momentum = momentum
         self.mem = Pool()
+        self.time = 0
         self.W = <weight_t*>self.mem.alloc(self.nr_weight * self.nr_class,
                                            sizeof(weight_t))
-        self.d_W = <weight_t*>self.mem.alloc(self.nr_weight * self.nr_class,
+        self.mom = <weight_t*>self.mem.alloc(self.nr_weight * self.nr_class,
                                            sizeof(weight_t))
-        self._indices = new vector[uint64_t]()
-
-    def __dealloc__(self):
-        del self._indices
+        self.averages = <weight_t*>self.mem.alloc(self.nr_weight * self.nr_class,
+                                           sizeof(weight_t))
+        self.last_upd = <weight_t*>self.mem.alloc(self.nr_weight * self.nr_class,
+                                           sizeof(weight_t))
 
     cdef void hinge_lossC(self, weight_t* d_scores,
             const weight_t* scores, const weight_t* costs) nogil:
@@ -97,8 +99,8 @@ cdef class LinearModel:
 
     cdef void set_scoresC(self, weight_t* scores,
             const FeatureC* features, int nr_feat) nogil:
-        cdef uint64_t nr_weight = self.nr_weight
         cdef int nr_class = self.nr_class
+        cdef uint64_t nr_weight = self.nr_weight * nr_class - nr_class
         cdef vector[uint64_t] indices
         # Collect all feature indices
         cdef uint32_t[2] hashed
@@ -114,16 +116,23 @@ cdef class LinearModel:
         # Sort them, to improve memory access pattern
         libcpp.algorithm.sort(indices.begin(), indices.end())
         for idx in indices:
-            W = &self.W[idx * nr_class]
+            W = &self.W[idx]
             for clas in range(nr_class):
                 scores[clas] += W[clas]
 
     cdef void set_gradientC(self, const weight_t* d_scores, const FeatureC*
             features, int nr_feat) nogil:
-        cdef uint64_t nr_weight = self.nr_weight
+        self.time += 1
         cdef int nr_class = self.nr_class
+        cdef weight_t abs_grad = 0
+        for i in range(nr_class):
+            abs_grad += d_scores[i] if d_scores[i] > 0 else -d_scores[i]
+        if abs_grad < 0.1:
+            return
+        cdef uint64_t nr_weight = self.nr_weight * nr_class - nr_class
         cdef vector[uint64_t] indices
         # Collect all feature indices
+        indices.reserve(nr_feat * 2)
         cdef uint32_t[2] hashed
         cdef uint64_t hash2
         for feat in features[:nr_feat]:
@@ -136,19 +145,24 @@ cdef class LinearModel:
         # Sort them, to improve memory access pattern
         libcpp.algorithm.sort(indices.begin(), indices.end())
         for idx in indices:
-            d_W = &self.d_W[idx * nr_class]
-            for clas in range(nr_class):
-                if d_scores[clas] < 0:
-                    d_W[clas] += max(-10., d_scores[clas])
-                else:
-                    d_W[clas] += min(10., d_scores[clas])
+            #avg = &self.averages[idx]
+            #last_upd = &self.last_upd[idx]
+            W = &self.W[idx]
+            #mom = &self.mom[idx]
+            for i in range(nr_class):
+                if d_scores[i] == 0:
+                    continue
+                d = d_scores[i]
+                W[i] -= self.learn_rate * d
+                #unchanged = self.time - last_upd[i]
+                #avg[i] += unchanged * W[i]
+                #mom[i] *= self.momentum ** unchanged
+                #mom[i] += self.learn_rate * d
+                #W[i] -= mom[i]
+                #last_upd[i] = self.time
 
     def finish_update(self, optimizer):
-        cdef np.npy_intp[1] shape
-        shape[0] = self.nr_weight * self.nr_class
-        W_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT, self.W)
-        dW_arr = np.PyArray_SimpleNewFromData(1, shape, np.NPY_FLOAT, self.d_W)
-        optimizer(W_arr, dW_arr, key=1)
+        pass
 
     @property
     def nr_active_feat(self):
@@ -159,7 +173,13 @@ cdef class LinearModel:
         return self.extracter.nr_templ
 
     def end_training(self, *args, **kwargs):
-        pass
+        # Average weights
+        for i in range(self.nr_weight * self.nr_class):  
+            unchanged = self.time - self.last_upd[i]
+            self.averages[i] += self.W[i] * unchanged
+            self.W[i], self.averages[i] = self.averages[i], self.W[i]
+            self.W[i] /= self.time
+            self.last_upd[i] = self.time
 
     def dump(self, *args, **kwargs):
         pass
