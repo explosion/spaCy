@@ -27,7 +27,7 @@ geral grande grandes grupo
 
 hoje horas há
 
-iniciar inicio ir irá isso ista isto já
+iniciar inicio ir irá isso isto já
 
 lado ligado local logo longe lugar lá
 
