@@ -161,6 +161,13 @@ def _convert_strings(token_specs, string_store):
     return tokens
 
 
+def merge_phrase(matcher, doc, i, matches):
+    '''Callback to merge a phrase on match'''
+    ent_id, label, start, end = matches[i]
+    span = doc[start : end] 
+    span.merge(ent_type=label, ent_id=ent_id)
+
+
 cdef class Matcher:
     '''Match sequences of tokens, based on pattern rules.'''
     cdef Pool mem
