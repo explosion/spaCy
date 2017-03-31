@@ -46,7 +46,7 @@ def symlink(model_path, link_name, force):
     # Add workaround for Python 2 on Windows (see issue #909)
     if util.is_python2() and util.is_windows():
         import subprocess
-        command = ['mklink', '/d', link_path.as_posix(), model_path.as_posix()]
+        command = ['mklink', '/d', link_path, model_path]
         subprocess.call(command, shell=True)
     else:
         link_path.symlink_to(model_path)
