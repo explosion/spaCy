@@ -257,6 +257,7 @@ cdef class Parser:
     cdef int parseC(self, TokenC* tokens, int length, int nr_feat) nogil:
         state = new StateC(tokens, length)
         # NB: This can change self.moves.n_moves!
+        # I think this causes memory errors if called by .pipe()
         self.moves.initialize_state(state)
         nr_class = self.moves.n_moves
 
