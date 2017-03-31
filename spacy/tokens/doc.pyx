@@ -697,7 +697,7 @@ cdef class Doc:
         lemma = self.vocab.strings[attributes.get(LEMMA, span.root.lemma)]
         ent_type = self.vocab.strings[attributes.get(ENT_TYPE, span.root.ent_type)]
         ent_id = attributes.get('ent_id', span.root.ent_id)
-        if not isinstance(ent_id, int):
+        if isinstance(ent_id, basestring):
             ent_id = self.vocab.strings[ent_id]
 
         # Get LexemeC for newly merged token
