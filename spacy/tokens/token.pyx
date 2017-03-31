@@ -506,21 +506,15 @@ cdef class Token:
             return self.c.ent_id
 
         def __set__(self, hash_t key):
-            # TODO
-            raise NotImplementedError(
-                "Can't yet set ent_id from Token. Vote for this feature on the issue "
-                "tracker: http://github.com/spacy-io/spaCy")
+            self.c.ent_id = key
 
     property ent_id_:
         '''A (string) entity ID. Usually assigned by patterns in the Matcher.'''
         def __get__(self):
             return self.vocab.strings[self.c.ent_id]
 
-        def __set__(self, hash_t key):
-            # TODO
-            raise NotImplementedError(
-                "Can't yet set ent_id_ from Token. Vote for this feature on the issue "
-                "tracker: http://github.com/spacy-io/spaCy")
+        def __set__(self, name):
+            self.c.ent_id = self.vocab.strings[name]
 
     property whitespace_:
         def __get__(self):
