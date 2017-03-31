@@ -14,4 +14,4 @@ def test_issue758():
     nlp.matcher.add('splash', 'my_entity', {},
                     [[{LEMMA: 'splash'}, {LEMMA: 'on'}]],
                     on_match=merge_phrase)
-    doc = nlp('splash On')
+    doc = nlp('splash On', parse=False)
