@@ -394,7 +394,7 @@ cdef class Doc:
                 raise ValueError(
                     "noun_chunks requires the dependency parse, which "
                     "requires data to be installed. If you haven't done so, run: "
-                    "\npython -m spacy.%s.download all\n"
+                    "\npython -m spacy download %s\n"
                     "to install the data" % self.vocab.lang)
             # Accumulate the result before beginning to iterate over it. This prevents
             # the tokenisation from being changed out from under us during the iteration.
@@ -427,7 +427,7 @@ cdef class Doc:
                 raise ValueError(
                     "sentence boundary detection requires the dependency parse, which "
                     "requires data to be installed. If you haven't done so, run: "
-                    "\npython -m spacy.%s.download all\n"
+                    "\npython -m spacy download %s\n"
                     "to install the data" % self.vocab.lang)
             cdef int i
             start = 0
