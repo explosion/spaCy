@@ -128,13 +128,13 @@ cdef class Span:
             end = token_by_end(self.doc.c, self.doc.length, self.end_char)
             if end == -1:
                 raise IndexError("Error calculating span: Can't find end")
-            
+
             self.start = start
             self.end = end + 1
 
     property sent:
         '''The sentence span that this span is a part of.
-        
+
         Returns:
             Span The sentence this is part of.
         '''
@@ -157,7 +157,7 @@ cdef class Span:
             if 'has_vector' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['has_vector'](self)
             return any(token.has_vector for token in self)
-    
+
     property vector:
         def __get__(self):
             if 'vector' in self.doc.user_span_hooks:
@@ -200,9 +200,9 @@ cdef class Span:
     property noun_chunks:
         '''
         Yields base noun-phrase #[code Span] objects, if the document
-        has been syntactically parsed. A base noun phrase, or 
-        'NP chunk', is a noun phrase that does not permit other NPs to 
-        be nested within it – so no NP-level coordination, no prepositional 
+        has been syntactically parsed. A base noun phrase, or
+        'NP chunk', is a noun phrase that does not permit other NPs to
+        be nested within it – so no NP-level coordination, no prepositional
         phrases, and no relative clauses. For example:
         '''
         def __get__(self):
@@ -227,19 +227,19 @@ cdef class Span:
 
         Returns:
             Token: The root token.
-        
+
         i.e. has the
         shortest path to the root of the sentence (or is the root itself).
 
         If multiple words are equally high in the tree, the first word is taken.
-        
+
         For example:
-        
+
         >>> toks = nlp(u'I like New York in Autumn.')
 
         Let's name the indices --- easier than writing "toks[4]" etc.
 
-        >>> i, like, new, york, in_, autumn, dot = range(len(toks)) 
+        >>> i, like, new, york, in_, autumn, dot = range(len(toks))
 
         The head of 'new' is 'York', and the head of 'York' is 'like'
 
@@ -301,10 +301,10 @@ cdef class Span:
                 return self.doc[self.start]
             else:
                 return self.doc[root]
-    
+
     property lefts:
         """Tokens that are to the left of the span, whose head is within the Span.
-        
+
         Yields: Token A left-child of a token of the span.
         """
         def __get__(self):
@@ -315,7 +315,7 @@ cdef class Span:
 
     property rights:
         """Tokens that are to the right of the Span, whose head is within the Span.
-        
+
         Yields: Token A right-child of a token of the span.
         """
         def __get__(self):
