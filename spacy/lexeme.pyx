@@ -87,7 +87,7 @@ cdef class Lexeme:
             value (bool): The new value of the flag.
         """
         Lexeme.c_set_flag(self.c, flag_id, value)
-    
+
     def check_flag(self, attr_id_t flag_id):
         """Check the value of a boolean flag.
 
@@ -137,7 +137,7 @@ cdef class Lexeme:
                     "\npython -m spacy.%s.download all\n"
                     "to install the data." % self.vocab.lang
                 )
- 
+
             vector_view = <float[:length,]>self.c.vector
             return numpy.asarray(vector_view)
 
@@ -163,7 +163,7 @@ cdef class Lexeme:
             return self.c.sentiment
         def __set__(self, float sentiment):
             self.c.sentiment = sentiment
-        
+
     property orth_:
         def __get__(self):
             return self.vocab.strings[self.c.orth]
@@ -171,7 +171,7 @@ cdef class Lexeme:
     property lower:
         def __get__(self): return self.c.lower
         def __set__(self, int x): self.c.lower = x
-    
+
     property norm:
         def __get__(self): return self.c.norm
         def __set__(self, int x): self.c.norm = x
@@ -187,11 +187,11 @@ cdef class Lexeme:
     property suffix:
         def __get__(self): return self.c.suffix
         def __set__(self, int x): self.c.suffix = x
-    
+
     property cluster:
         def __get__(self): return self.c.cluster
         def __set__(self, int x): self.c.cluster = x
- 
+
     property lang:
         def __get__(self): return self.c.lang
         def __set__(self, int x): self.c.lang = x
@@ -203,11 +203,11 @@ cdef class Lexeme:
     property lower_:
         def __get__(self): return self.vocab.strings[self.c.lower]
         def __set__(self, unicode x): self.c.lower = self.vocab.strings[x]
- 
+
     property norm_:
         def __get__(self): return self.vocab.strings[self.c.norm]
         def __set__(self, unicode x): self.c.norm = self.vocab.strings[x]
-    
+
     property shape_:
         def __get__(self): return self.vocab.strings[self.c.shape]
         def __set__(self, unicode x): self.c.shape = self.vocab.strings[x]
@@ -239,7 +239,7 @@ cdef class Lexeme:
     property is_alpha:
         def __get__(self): return Lexeme.c_check_flag(self.c, IS_ALPHA)
         def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_ALPHA, x)
-    
+
     property is_ascii:
         def __get__(self): return Lexeme.c_check_flag(self.c, IS_ASCII)
         def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_ASCII, x)
@@ -260,23 +260,23 @@ cdef class Lexeme:
         def __get__(self): return Lexeme.c_check_flag(self.c, IS_PUNCT)
         def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_PUNCT, x)
 
-    property is_space: 
+    property is_space:
         def __get__(self): return Lexeme.c_check_flag(self.c, IS_SPACE)
         def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_SPACE, x)
 
-    property is_bracket: 
+    property is_bracket:
         def __get__(self): return Lexeme.c_check_flag(self.c, IS_BRACKET)
         def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_BRACKET, x)
 
-    property is_quote: 
+    property is_quote:
         def __get__(self): return Lexeme.c_check_flag(self.c, IS_QUOTE)
         def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_QUOTE, x)
 
-    property is_left_punct: 
+    property is_left_punct:
         def __get__(self): return Lexeme.c_check_flag(self.c, IS_LEFT_PUNCT)
         def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_LEFT_PUNCT, x)
 
-    property is_right_punct: 
+    property is_right_punct:
         def __get__(self): return Lexeme.c_check_flag(self.c, IS_RIGHT_PUNCT)
         def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_RIGHT_PUNCT, x)
 
@@ -284,7 +284,7 @@ cdef class Lexeme:
     property like_url:
         def __get__(self): return Lexeme.c_check_flag(self.c, LIKE_URL)
         def __set__(self, bint x): Lexeme.c_set_flag(self.c, LIKE_URL, x)
-    
+
     property like_num:
         def __get__(self): return Lexeme.c_check_flag(self.c, LIKE_NUM)
         def __set__(self, bint x): Lexeme.c_set_flag(self.c, LIKE_NUM, x)
