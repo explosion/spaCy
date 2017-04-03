@@ -151,6 +151,11 @@
                 "url": "https://github.com/golastmile/rasa_nlu",
                 "author": "LASTMILE",
                 "description": "High level APIs for building your own language parser using existing NLP and ML libraries."
+            },
+            "spacyr": {
+                "url": "https://github.com/kbenoit/spacyr",
+                "author": "Kenneth Benoit",
+                "description": "An R wrapper for spaCy."
             }
         },
         "visualizations": {
