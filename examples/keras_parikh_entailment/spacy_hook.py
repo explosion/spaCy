@@ -80,10 +80,10 @@ def get_word_ids(docs, rnn_encode=False, tree_truncate=False, max_length=100, nr
     return Xs
 
 
-def create_similarity_pipeline(nlp):
+def create_similarity_pipeline(nlp, max_length=100):
     return [
         nlp.tagger,
         nlp.entity,
         nlp.parser,
-        KerasSimilarityShim.load(nlp.path / 'similarity', nlp, max_length=10)
+        KerasSimilarityShim.load(nlp.path / 'similarity', nlp, max_length)
     ]
