@@ -49,6 +49,10 @@ def en_vocab():
 def en_parser():
     return English.Defaults.create_parser()
 
+@pytest.fixture
+def es_tokenizer():
+    return Spanish.Defaults.create_tokenizer()
+
 
 @pytest.fixture
 def de_tokenizer():
@@ -79,8 +83,8 @@ def sv_tokenizer():
 def bn_tokenizer():
     return Bengali.Defaults.create_tokenizer()
 
-  
-@pytest.fixture  
+
+@pytest.fixture
 def he_tokenizer():
     return Hebrew.Defaults.create_tokenizer()
 
