@@ -9,12 +9,13 @@ from spacy.cli import link as cli_link
 from spacy.cli import info as cli_info
 from spacy.cli import package as cli_package
 from spacy.cli import train as cli_train
+from spacy.cli import model as cli_model
 
 
 class CLI(object):
     """Command-line interface for spaCy"""
 
-    commands = ('download', 'link', 'info', 'package', 'train')
+    commands = ('download', 'link', 'info', 'package', 'train', 'model')
 
     @plac.annotations(
         model=("model to download (shortcut or model name)", "positional", None, str),
@@ -94,6 +95,20 @@ class CLI(object):
 
         cli_train(lang, output_dir, train_data, dev_data, n_iter, not no_tagger,
                   not no_parser, not no_ner, parser_L1)
+
+    @plac.annotations(
+        lang=("model language", "positional", None, str),
+        model_dir=("output directory to store model in", "positional", None, str),
+        freqs_data=("tab-separated frequencies file", "positional", None, str),
+        clusters_data=("Brown clusters file", "positional", None, str),
+        vectors_data=("word vectors file", "positional", None, str)
+    )
+    def model(self, lang, model_dir, freqs_data, clusters_data=None, vectors_data=None):
+        """
+        Initialize a new model and its data directory.
+        """
+
+        cli_model(lang, model_dir, freqs_data, clusters_data, vectors_data)
 
 
     def __missing__(self, name):
