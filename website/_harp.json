@@ -14,8 +14,8 @@
 
         "SPACY_VERSION": "1.7",
         "LATEST_NEWS": {
-            "url": "/docs/usage/models",
-            "title": "Downloading and installing models as packages"
+            "url": "https://survey.spacy.io/",
+            "title": "Take the spaCy user survey and help us improve the library!"
         },
 
         "SOCIAL": {
