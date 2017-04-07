@@ -5,8 +5,6 @@ from ...matcher import merge_phrase
 import pytest
 
 
-
-
 @pytest.mark.models
 def test_issue758():
     '''Test parser transition bug after label added.'''
