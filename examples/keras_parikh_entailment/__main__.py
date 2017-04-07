@@ -52,7 +52,7 @@ def train(train_loc, dev_loc, shape, settings):
         file_.write(model.to_json())
 
 
-def evaluate(model_dir, dev_loc):
+def evaluate(dev_loc):
     dev_texts1, dev_texts2, dev_labels = read_snli(dev_loc)
     nlp = spacy.load('en',
             create_pipeline=create_similarity_pipeline)

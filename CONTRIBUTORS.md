@@ -12,6 +12,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Christoph Schwienheer, [@chssch](https://github.com/chssch)
 * Dafne van Kuppevelt, [@dafnevk](https://github.com/dafnevk)
 * Daniel Rapp, [@rappdw](https://github.com/rappdw)
+* Daniel Vila Suero, [@dvsrepo](https://github.com/dvsrepo)
 * Dmytro Sadovnychyi, [@sadovnychyi](https://github.com/sadovnychyi)
 * Eric Zhao, [@ericzhao28](https://github.com/ericzhao28)
 * Greg Baker, [@solresol](https://github.com/solresol)

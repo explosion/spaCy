@@ -1,6 +1,8 @@
 from __future__ import unicode_literals
 
-import re
+# The use of this module turns out to be important, to avoid pathological
+# back-tracking. See Issue #957
+import regex
 
 # URL validation regex courtesy of: https://mathiasbynens.be/demo/url-regex
 # A few minor mods to this regex to account for use cases represented in test_urls
@@ -23,6 +25,8 @@ _URL_PATTERN = (
     # excludes reserved space >= 224.0.0.0
     # excludes network & broadcast addresses
     # (first & last IP address of each class)
+    # MH: Do we really need this? Seems excessive, and seems to have caused
+    # Issue #957
     r"(?:[1-9]\d?|1\d\d|2[01]\d|22[0-3])"
     r"(?:\.(?:1?\d{1,2}|2[0-4]\d|25[0-5])){2}"
     r"(?:\.(?:[1-9]\d?|1\d\d|2[0-4]\d|25[0-4]))"
@@ -45,6 +49,6 @@ _URL_PATTERN = (
     r"$"
 ).strip()
 
-TOKEN_MATCH = re.compile(_URL_PATTERN, re.UNICODE).match
+TOKEN_MATCH = regex.compile(_URL_PATTERN, regex.UNICODE).match
 
 __all__ = ['TOKEN_MATCH']
