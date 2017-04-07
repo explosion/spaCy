@@ -137,6 +137,20 @@ p
     |  #[code python -m spacy download en]. For more info on this, see the
     |  #[+a("/docs/usage/cli") CLI documentation].
 
++h(3, "module-load") 'module' object has no attribute 'load'
+
++code(false, "text").
+    AttributeError: 'module' object has no attribute 'load'
+
+p
+    |  While this could technically have many causes, including spaCy being
+    |  broken, the most likely one is that your script's file or directory name
+    |  is "shadowing" the module – e.g. your file is called #[code spacy.py],
+    |  or a directory you're importing from is called #[code spacy].
+
++infobox("Solution")
+    |  When using spaCy, never call anything else #[code spacy].
+
 +h(2, "usage") Using spaCy
 
 +h(3, "pos-lemma-number") POS tag or lemma is returned as number

@@ -1,7 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals, division, print_function
 
-
 import json
 from pathlib import Path
 
