@@ -21,7 +21,7 @@ install:
   - "./travis.sh"
 
 script:
-  - "pip install pytest"
+  - "pip install pytest pytest-timeout"
   - if [[ "${VIA}" == "compile" ]]; then python -m pytest --tb=native spacy; fi
   - if [[ "${VIA}" == "pypi" ]]; then python -m pytest --tb=native `python -c "import os.path; import spacy; print(os.path.abspath(ospath.dirname(spacy.__file__)))"`; fi
   - if [[ "${VIA}" == "sdist" ]]; then python -m pytest --tb=native `python -c "import os.path; import spacy; print(os.path.abspath(os.path.dirname(spacy.__file__)))"`; fi
