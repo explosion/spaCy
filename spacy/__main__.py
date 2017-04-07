@@ -10,12 +10,13 @@ from spacy.cli import info as cli_info
 from spacy.cli import package as cli_package
 from spacy.cli import train as cli_train
 from spacy.cli import model as cli_model
+from spacy.cli import convert as cli_convert
 
 
 class CLI(object):
     """Command-line interface for spaCy"""
 
-    commands = ('download', 'link', 'info', 'package', 'train', 'model')
+    commands = ('download', 'link', 'info', 'package', 'train', 'model', 'convert')
 
     @plac.annotations(
         model=("model to download (shortcut or model name)", "positional", None, str),
@@ -109,6 +110,20 @@ class CLI(object):
         """
 
         cli_model(lang, model_dir, freqs_data, clusters_data, vectors_data)
+
+    @plac.annotations(
+        input_file=("input file", "positional", None, str),
+        output_dir=("output directory for converted file", "positional", None, str),
+        n_sents=("Number of sentences per doc", "option", "n", float),
+        morphology=("Enable appending morphology to tags", "flag", "m", bool)
+    )
+    def convert(self, input_file, output_dir, n_sents=10, morphology=False):
+        """
+        Convert files into JSON format for use with train command and other
+        experiment management functions.
+        """
+
+        cli_convert(input_file, output_dir, n_sents, morphology)
 
 
     def __missing__(self, name):
