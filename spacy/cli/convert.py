@@ -22,7 +22,6 @@ def convert(input_file, output_dir, *args):
     output_path = Path(output_dir)
     check_dirs(input_path, output_path)
     file_ext = input_path.suffix
-
     if file_ext in CONVERTERS:
         CONVERTERS[file_ext](input_path, output_path, *args)
     else:
