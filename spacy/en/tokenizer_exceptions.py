@@ -213,15 +213,15 @@ for verb_data in [
     {ORTH: "does", LEMMA: "do"},
     {ORTH: "did", LEMMA: "do", TAG: "VBD"},
     {ORTH: "had", LEMMA: "have", TAG: "VBD"},
-    {ORTH: "may"},
-    {ORTH: "might"},
-    {ORTH: "must"},
+    {ORTH: "may", TAG: "MD"},
+    {ORTH: "might", TAG: "MD"},
+    {ORTH: "must", TAG: "MD"},
     {ORTH: "need"},
     {ORTH: "ought"},
-    {ORTH: "sha", LEMMA: "shall"},
-    {ORTH: "should"},
-    {ORTH: "wo", LEMMA: "will"},
-    {ORTH: "would"}
+    {ORTH: "sha", LEMMA: "shall", TAG: "MD"},
+    {ORTH: "should", TAG: "MD"},
+    {ORTH: "wo", LEMMA: "will", TAG: "MD"},
+    {ORTH: "would", TAG: "MD"}
 ]:
     verb_data_tc = dict(verb_data)
     verb_data_tc[ORTH] = verb_data_tc[ORTH].title()

@@ -144,6 +144,7 @@ class BaseDefaults(object):
             pipeline.append(nlp.tagger)
         if nlp.parser:
             pipeline.append(nlp.parser)
+            pipeline.append(PseudoProjectivity.deprojectivize)
         if nlp.entity:
             pipeline.append(nlp.entity)
         return pipeline
