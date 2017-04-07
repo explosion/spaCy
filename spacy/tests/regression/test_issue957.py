@@ -1,8 +1,10 @@
+from __future__ import unicode_literals
+
 import pytest
 from ... import load as load_spacy
 
 
-def test_issue913(en_tokenizer):
+def test_issue957(en_tokenizer):
     '''Test that spaCy doesn't hang on many periods.'''
     string = '0'
     for i in range(1, 100):
