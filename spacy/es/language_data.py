@@ -5,6 +5,7 @@ from .. import language_data as base
 from ..language_data import update_exc, strings_to_exc
 from ..symbols import ORTH, LEMMA
 
+from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, ORTH_ONLY
 
@@ -39,7 +40,7 @@ def get_time_exc(hours):
         ]
     return exc
 
-
+TAG_MAP = dict(TAG_MAP)
 STOP_WORDS = set(STOP_WORDS)
 
 
@@ -51,4 +52,4 @@ update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.EMOTICONS))
 update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(base.ABBREVIATIONS))
 
 
-__all__ = ["TOKENIZER_EXCEPTIONS", "STOP_WORDS"]
+__all__ = ["TOKENIZER_EXCEPTIONS", "TAG_MAP", "STOP_WORDS"]
