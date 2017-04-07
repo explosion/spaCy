@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-import re
+import regex
 
 # URL validation regex courtesy of: https://mathiasbynens.be/demo/url-regex
 # A few minor mods to this regex to account for use cases represented in test_urls
@@ -45,6 +45,6 @@ _URL_PATTERN = (
     r"$"
 ).strip()
 
-TOKEN_MATCH = re.compile(_URL_PATTERN, re.UNICODE).match
+TOKEN_MATCH = regex.compile(_URL_PATTERN, regex.UNICODE).match
 
 __all__ = ['TOKEN_MATCH']
