@@ -119,6 +119,5 @@ class CLI(object):
 if __name__ == '__main__':
     import plac
     import sys
-    cli = CLI()
     sys.argv[0] = 'spacy'
     plac.Interpreter.call(CLI)
