@@ -5,7 +5,7 @@ spaCy is a library for advanced natural language processing in Python and
 Cython. spaCy is built on  the very latest research, but it isn't researchware.
 It was designed from day one to be used in real products. spaCy currently supports
 English and German,  as well as tokenization for Chinese, Spanish, Italian, French,
-Portuguese, Dutch, Swedish, Finnish, Hungarian, Bengali and Hebrew. It's commercial 
+Portuguese, Dutch, Swedish, Finnish, Hungarian, Bengali and Hebrew. It's commercial
 open-source software, released under the MIT license.
 
 💫 **Version 1.7 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
@@ -318,6 +318,7 @@ and ``--model`` are optional and enable additional tests:
 =========== ============== ===========
 Version     Date           Description
 =========== ============== ===========
+`v1.7.4`_   ``2017-04-07`` Bug fixes and new CLI commands
 `v1.7.3`_   ``2017-03-26`` Alpha support for Hebrew, new CLI commands and bug fixes
 `v1.7.2`_   ``2017-03-20`` Small fixes to beam parser and model linking
 `v1.7.1`_   ``2017-03-19`` Fix data download for system installation
@@ -347,6 +348,7 @@ Version     Date           Description
 `v0.93`_    ``2015-09-22`` Bug fixes to word vectors
 =========== ============== ===========
 
+.. _v1.7.4: https://github.com/explosion/spaCy/releases/tag/v1.7.4
 .. _v1.7.3: https://github.com/explosion/spaCy/releases/tag/v1.7.3
 .. _v1.7.2: https://github.com/explosion/spaCy/releases/tag/v1.7.2
 .. _v1.7.1: https://github.com/explosion/spaCy/releases/tag/v1.7.1
