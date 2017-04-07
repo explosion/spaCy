@@ -53,8 +53,8 @@ URLS_SHOULD_MATCH = [
     "http://➡.ws/䨹",
     "http://مثال.إختبار",
     "http://例子.测试",
+    "http://उदाहरण.परीक्षा",
 
-    pytest.mark.xfail("http://उदाहरण.परीक्षा"),
     pytest.mark.xfail("http://foo.com/blah_blah_(wikipedia)"),
     pytest.mark.xfail("http://foo.com/blah_blah_(wikipedia)_(again)"),
 ]
