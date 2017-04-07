@@ -11,9 +11,11 @@ def english_noun_chunks(obj):
     conj = doc.vocab.strings['conj']
     np_label = doc.vocab.strings['NP']
     for i, word in enumerate(obj):
-        if word.pos in (NOUN, PROPN, PRON) and word.dep in np_deps:
+        if word.pos not in (NOUN, PROPN, PRON):
+            continue
+        if word.dep in np_deps:
             yield word.left_edge.i, word.i+1, np_label
-        elif word.pos == NOUN and word.dep == conj:
+        elif word.dep == conj:
             head = word.head
             while head.dep == conj and head.head.i < head.i:
                 head = head.head

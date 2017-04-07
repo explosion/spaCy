@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 import pytest
 
 
-@pytest.mark.xfail
 @pytest.mark.models
 def test_issue693(EN):
     """Test that doc.noun_chunks parses the complete sentence."""
@@ -15,5 +14,7 @@ def test_issue693(EN):
     doc2 = EN(text2)
     chunks1 = [chunk for chunk in doc1.noun_chunks]
     chunks2 = [chunk for chunk in doc2.noun_chunks]
+    for word in doc1:
+        print(word.text, word.dep_, word.head.text)
     assert len(chunks1) == 2
     assert len(chunks2) == 2
