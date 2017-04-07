@@ -78,7 +78,7 @@ You can run the `keras_parikh_entailment/` directory as a script, which executes
 [`keras_parikh_entailment/__main__.py`](__main__.py). The first thing you'll want to do is train the model:
 
 ```bash
-python keras_parikh_entailment/ train <your_model_dir> <train_directory> <dev_directory>
+python keras_parikh_entailment/ train <train_directory> <dev_directory>
 ```
 
 Training takes about 300 epochs for full accuracy, and I haven't rerun the full

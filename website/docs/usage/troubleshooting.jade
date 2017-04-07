@@ -33,7 +33,6 @@ p
     |  import the language's #[code Language] class instead, for example
     |  #[code from spacy.fr import French].
 
-
 +h(3, "symlink-privilege") Symbolic link privilege not held
 
 +code(false, "text").
@@ -51,6 +50,20 @@ p
     |  or use a #[code virtualenv] to install spaCy in a user directory, instead
     |  of doing a system-wide installation.
 
++h(3, "no-cache-dir") No such option: --no-cache-dir
+
++code(false, "text").
+    no such option: --no-cache-dir
+
+p
+    |  The #[code download] command uses pip to install the models and sets the
+    |  #[code --no-cache-dir] flag to prevent it from requiring too much memory.
+    |  #[+a("https://pip.pypa.io/en/stable/reference/pip_install/#caching") This setting]
+    |  requires pip v6.0 or newer.
+
++infobox("Solution")
+    |  Run #[code pip install -U pip] to upgrade to the latest version of pip.
+    |  To see which version you have installed, run #[code pip --version].
 
 +h(3, "import-error") Import error
 
