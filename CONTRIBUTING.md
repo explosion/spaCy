@@ -7,11 +7,12 @@ Following the v1.0 release, it's time to welcome more contributors into the spaC
 ## Table of contents
 1. [Issues and bug reports](#issues-and-bug-reports)
 2. [Contributing to the code base](#contributing-to-the-code-base)
-3. [Adding tests](#adding-tests)
-4. [Updating the website](#updating-the-website)
-5. [Submitting a tutorial](#submitting-a-tutorial)
-6. [Submitting a project to the showcase](#submitting-a-project-to-the-showcase)
-7. [Code of conduct](#code-of-conduct)
+3. [Code conventions](#code-conventions)
+4. [Adding tests](#adding-tests)
+5. [Updating the website](#updating-the-website)
+6. [Submitting a tutorial](#submitting-a-tutorial)
+7. [Submitting a project to the showcase](#submitting-a-project-to-the-showcase)
+8. [Code of conduct](#code-of-conduct)
 
 ## Issues and bug reports
 
@@ -62,11 +63,29 @@ Every library has a different inclusion philosophy — a policy of what should b
 
 * **Do you need the feature to get basic things done?** We do want spaCy to be at least somewhat self-contained. If we keep needing some feature in our recipes, that does provide some argument for bringing it "in house".
 
-### Code Conventions
+### Developer resources
+
+The [spaCy developer resources](https://github.com/explosion/spacy-dev-resources) repo contains useful scripts, tools and templates  for developing spaCy, adding new languages and training new models. If you've written a script that might help others, feel free to contribute it to that repository.
+
+### Contributor agreement
+
+If you've made a substantial contribution to spaCy, you should fill in the [spaCy contributor agreement](.github/CONTRIBUTOR_AGREEMENT.md) to ensure that your contribution can be used across the project. If you agree to be bound by the terms of the agreement, fill in the [template]((.github/CONTRIBUTOR_AGREEMENT.md)) and include it with your pull request, or sumit it separately to [`.github/contributors/`](/.github/contributors). The name of the file should be your GitHub username, with the extension `.md`. For example, the user
+example_user would create the file `.github/contributors/example_user.md`.
+
+
+### Fixing bugs
+
+When fixing a bug, first create an [issue](https://github.com/explosion/spaCy/issues) if one does not already exist. The description text can be very short – we don't want to make this too bureaucratic. 
+
+Next, create a test file named `test_issue[ISSUE NUMBER].py` in the [`spacy/tests/regression`](spacy/tests/regression) folder. Test for the bug you're fixing, and make sure the test fails. Next, add and commit your test file referencing the issue number in the commit message. Finally, fix the bug, make sure your test passes and reference the issue in your commit message.
+
+📖 **For more information on how to add tests, check out the [tests README](spacy/tests/README.md).**
+
+## Code conventions
 
 Code should loosely follow [pep8](https://www.python.org/dev/peps/pep-0008/). Regular line length is **80 characters**, with some tolerance for lines up to 90 characters if the alternative would be worse — for instance, if your list comprehension comes to 82 characters, it's better not to split it over two lines.
 
-#### Python conventions
+### Python conventions
 
 All Python code must be written in an **intersection of Python 2 and Python 3**. This is easy in Cython, but somewhat ugly in Python. We could use some extra utilities for this. Please pay particular attention to code that serialises json objects.
 
@@ -76,7 +95,7 @@ At the time of writing (v1.7), spaCy's serialization and deserialization functio
 
 Although spaCy uses a lot of classes, inheritance is viewed with some suspicion — it's seen as a mechanism of last resort. You should discuss plans to extend the class hierarchy before implementing.
 
-#### Cython conventions
+### Cython conventions
 
 spaCy's core data structures are implemented as [Cython](http://cython.org/) `cdef` classes. Memory is managed through the `cymem.cymem.Pool` class, which allows you to allocate memory which will be freed when the `Pool` object is garbage collected. This means you usually don't have to worry about freeing memory. You just have to decide which Python object owns the memory, and make it own the `Pool`. When that object goes out of scope, the memory will be freed. You do have to take care that no pointers outlive the object that owns them — but this is generally quite easy.
 
@@ -95,7 +114,7 @@ cdef void get_pointers(np.ndarray[int, mode='c'] numpy_array, vector[int] cpp_ve
 
 Both C arrays and C++ vectors reassure the compiler that no Python operations are possible on your variable. This is a big advantage: it lets the Cython compiler raise many more errors for you.
 
-When getting a pointer from a numpy array or memoryview, take care that the data is actually stored in C-contiguous order --- otherwise you'll get a pointer to nonsense. The type-declarations in the code above should generate runtime errors if buffers with incorrect memory layouts are passed in.
+When getting a pointer from a numpy array or memoryview, take care that the data is actually stored in C-contiguous order — otherwise you'll get a pointer to nonsense. The type-declarations in the code above should generate runtime errors if buffers with incorrect memory layouts are passed in.
 
 To iterate over the array, the following style is preferred:
 
@@ -115,23 +134,13 @@ Finally, if you're new to Cython, you should expect to find the first steps a bi
 
 Working in Cython is very rewarding once you're over the initial learning curve. As with C and C++, the first way you write something in Cython will often be the performance-optimal approach. In contrast, Python optimisation generally requires a lot of experimentation. Is it faster to have an `if item in my_dict` check, or to use `.get()`? What about `try`/`except`? Does this numpy operation create a copy? There's no way to guess the answers to these questions, and you'll usually be dissatisfied with your results — so there's no way to know when to stop this process. In the worst case, you'll make a mess that invites the next reader to try their luck too. This is like one of those [volcanic gas-traps](http://www.wemjournal.org/article/S1080-6032%2809%2970088-2/abstract), where the rescuers keep passing out from low oxygen, causing another rescuer to follow — only to succumb themselves. In short, just say no to optimizing your Python. If it's not fast enough the first time, just switch to Cython.
 
-### Developer resources
+### Resources to get you started
 
-The [spaCy developer resources](https://github.com/explosion/spacy-dev-resources) repo contains useful scripts, tools and templates  for developing spaCy, adding new languages and training new models. If you've written a script that might help others, feel free to contribute it to that repository.
+* [PEP 8 Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/) (python.org)
+* [Official Cython documentation](http://docs.cython.org/en/latest/) (cython.org)
+* [Writing C in Cython](https://explosion.ai/blog/writing-c-in-cython) (explosion.ai)
+* [Multi-threading spaCy’s parser and named entity recogniser](https://explosion.ai/blog/multithreading-with-cython) (explosion.ai)
 
-### Contributor agreement
-
-If you've made a substantial contribution to spaCy, you should fill in the [spaCy contributor agreement](.github/CONTRIBUTOR_AGREEMENT.md) to ensure that your contribution can be used across the project. If you agree to be bound by the terms of the agreement, fill in the [template]((.github/CONTRIBUTOR_AGREEMENT.md)) and include it with your pull request, or sumit it separately to [`.github/contributors/`](/.github/contributors). The name of the file should be your GitHub username, with the extension `.md`. For example, the user
-example_user would create the file `.github/contributors/example_user.md`.
-
-
-### Fixing bugs
-
-When fixing a bug, first create an [issue](https://github.com/explosion/spaCy/issues) if one does not already exist. The description text can be very short – we don't want to make this too bureaucratic. 
-
-Next, create a test file named `test_issue[ISSUE NUMBER].py` in the [`spacy/tests/regression`](spacy/tests/regression) folder. Test for the bug you're fixing, and make sure the test fails. Next, add and commit your test file referencing the issue number in the commit message. Finally, fix the bug, make sure your test passes and reference the issue in your commit message.
-
-📖 **For more information on how to add tests, check out the [tests README](spacy/tests/README.md).**
 
 ## Adding tests
 
