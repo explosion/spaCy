@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from . import util
 from .deprecated import resolve_model_name
 from .cli.info import info
+<<<<<<< HEAD
 
 
 from . import en, de, zh, es, it, hu, fr, pt, nl, sv, fi, bn, he, nb
@@ -29,6 +30,7 @@ from . import nl
 from . import sv
 from . import fi
 from . import bn
+from . import he
 from . import nb
 
 from .about import *
@@ -47,7 +49,8 @@ set_lang_class(sv.Swedish.lang, sv.Swedish)
 set_lang_class(fi.Finnish.lang, fi.Finnish)
 set_lang_class(bn.Bengali.lang, bn.Bengali)
 set_lang_class(nb.Norwegian.lang, nb.Norwegian)
->>>>>>> more norwegian
+set_lang_class(he.Hebrew.lang, he.Hebrew)
+set_lang_class(nb.Norwegian.lang, nb.Norwegian)
 
 
 def load(name, **overrides):
