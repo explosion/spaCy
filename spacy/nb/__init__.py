@@ -12,14 +12,14 @@ from .language_data import *
 
 
 # create Language subclass
-class NorwegianBokmal(Language):
+class Norwegian(Language):
     lang = 'nb' # ISO code
 
 	class Defaults(Language.Defaults):
-        lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-        lex_attr_getters[LANG] = lambda text: 'nb'
+        	lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+       		lex_attr_getters[LANG] = lambda text: 'nb'
         
-        # override defaults
-        tokenizer_exceptions = TOKENIZER_EXCEPTIONS
-        #tag_map = TAG_MAP
-        stop_words = STOP_WORDS
+	        # override defaults
+        	tokenizer_exceptions = TOKENIZER_EXCEPTIONS
+	        #tag_map = TAG_MAP
+        	stop_words = STOP_WORDS
