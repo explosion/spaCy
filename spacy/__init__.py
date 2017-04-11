@@ -48,7 +48,6 @@ set_lang_class(nl.Dutch.lang, nl.Dutch)
 set_lang_class(sv.Swedish.lang, sv.Swedish)
 set_lang_class(fi.Finnish.lang, fi.Finnish)
 set_lang_class(bn.Bengali.lang, bn.Bengali)
-set_lang_class(nb.Norwegian.lang, nb.Norwegian)
 set_lang_class(he.Hebrew.lang, he.Hebrew)
 set_lang_class(nb.Norwegian.lang, nb.Norwegian)
 
