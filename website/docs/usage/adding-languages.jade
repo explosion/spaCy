@@ -398,11 +398,12 @@ p
     |  vectors files, you can use the
     |  #[+src(gh("spacy-dev-resources", "training/init.py")) init.py]
     |  script from our
-    |  #[+a(gh("spacy-dev-resources")) developer resources] to create a
-    |  spaCy data directory:
+    |  #[+a(gh("spacy-dev-resources")) developer resources], or use the new
+    |  #[+a("/docs/usage/cli#model") #[code model] command] to create a data
+    |  directory:
 
 +code(false, "bash").
-    python training/init.py xx your_data_directory/ my_data/word_freqs.txt my_data/clusters.txt my_data/word_vectors.bz2
+    python -m spacy model [lang] [model_dir] [freqs_data] [clusters_data] [vectors_data]
 
 +aside-code("your_data_directory", "yaml").
     ├── vocab/
@@ -421,17 +422,14 @@ p
 
 p
     |  This creates a spaCy data directory with a vocabulary model, ready to be
-    |  loaded. By default, the
-    |  #[+src(gh("spacy-dev-resources", "training/init.py")) init.py]
-    |  script expects to be able to find your language class using
-    |  #[code spacy.util.get_lang_class(lang_id)]. You can edit the script to
-    |  help it find your language class if necessary.
+    |  loaded. By default, the command expects to be able to find your language
+    |  class using #[code spacy.util.get_lang_class(lang_id)].
 
 +h(3, "word-frequencies") Word frequencies
 
 p
-    |  The #[+src(gh("spacy-dev-resources", "training/init.py")) init.py]
-    |  script expects a tab-separated word frequencies file with three columns:
+    |  The #[+a("/docs/usage/cli#model") #[code model] command] expects a
+    |  tab-separated word frequencies file with three columns:
 
 +list("numbers")
     +item The number of times the word occurred in your language sample.
