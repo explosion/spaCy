@@ -8,6 +8,8 @@ English and German,  as well as tokenization for Chinese, Spanish, Italian, Fren
 Portuguese, Dutch, Swedish, Finnish, Hungarian, Bengali and Hebrew. It's commercial
 open-source software, released under the MIT license.
 
+📊 **Help us improve the library!** `Take the spaCy user survey <https://survey.spacy.io>`_.
+
 💫 **Version 1.7 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square

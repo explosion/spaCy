@@ -6,9 +6,15 @@ import shutil
 import requests
 from pathlib import Path
 
+import six
+
 from .. import about
 from .. import util
 
+if six.PY2:
+    json_dumps = lambda data: json.dumps(data, indent=2).decode("utf8")
+elif six.PY3:
+    json_dumps = lambda data: json.dumps(data, indent=2)
 
 def package(input_dir, output_dir, force):
     input_path = Path(input_dir)
@@ -27,7 +33,7 @@ def package(input_dir, output_dir, force):
 
     create_dirs(package_path, force)
     shutil.copytree(input_path.as_posix(), (package_path / model_name_v).as_posix())
-    create_file(main_path / 'meta.json', json.dumps(meta, indent=2))
+    create_file(main_path / 'meta.json', json_dumps(meta))
     create_file(main_path / 'setup.py', template_setup)
     create_file(main_path / 'MANIFEST.in', template_manifest)
     create_file(package_path / '__init__.py', template_init)

@@ -18,3 +18,11 @@
 .c-landing__title
     color: $color-back
     text-align: center
+
+.c-landing__badge
+    transform: rotate(7deg)
+    display: block
+    text-align: center
+
+    @include breakpoint(min, md)
+        @include position(absolute, top, right, 16rem, 6rem)

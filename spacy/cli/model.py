@@ -95,7 +95,7 @@ def read_clusters(clusters_path):
     return clusters
 
 
-def populate_vocab(vocab, clusters, probs, oov_probs):
+def populate_vocab(vocab, clusters, probs, oov_prob):
     # Ensure probs has entries for all words seen during clustering.
     for word in clusters:
         if word not in probs:
