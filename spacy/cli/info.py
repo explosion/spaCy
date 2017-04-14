@@ -49,5 +49,6 @@ def list_models():
     # won't show up in list, but it seems worth it
     exclude = ['cache', 'pycache', '__pycache__']
     data_path = util.get_data_path()
-    models = [f.parts[-1] for f in data_path.iterdir() if f.is_dir()]
-    return [m for m in models if m not in exclude]
+    if data_path:
+        models = [f.parts[-1] for f in data_path.iterdir() if f.is_dir()]
+        return [m for m in models if m not in exclude]
