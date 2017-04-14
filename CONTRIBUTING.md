@@ -7,11 +7,12 @@ Following the v1.0 release, it's time to welcome more contributors into the spaC
 ## Table of contents
 1. [Issues and bug reports](#issues-and-bug-reports)
 2. [Contributing to the code base](#contributing-to-the-code-base)
-3. [Adding tests](#adding-tests)
-4. [Updating the website](#updating-the-website)
-5. [Submitting a tutorial](#submitting-a-tutorial)
-6. [Submitting a project to the showcase](#submitting-a-project-to-the-showcase)
-7. [Code of conduct](#code-of-conduct)
+3. [Code conventions](#code-conventions)
+4. [Adding tests](#adding-tests)
+5. [Updating the website](#updating-the-website)
+6. [Submitting a tutorial](#submitting-a-tutorial)
+7. [Submitting a project to the showcase](#submitting-a-project-to-the-showcase)
+8. [Code of conduct](#code-of-conduct)
 
 ## Issues and bug reports
 
@@ -50,13 +51,17 @@ To distinguish issues that are opened by us, the maintainers, we usually add a �
 
 You don't have to be an NLP expert or Python pro to contribute, and we're happy to help you get started. If you're new to spaCy, a good place to start is the [`help wanted (easy)`](https://github.com/explosion/spaCy/issues?q=is%3Aissue+is%3Aopen+label%3A%22help+wanted+%28easy%29%22) label, which we use to tag bugs and feature requests that are easy and self-contained. If you've decided to take on one of these problems and you're making good progress, don't forget to add a quick comment to the issue. You can also use the issue to ask questions, or share your work in progress.
 
-### Conventions for Python
+### What belongs in spaCy?
 
-Coming soon.
+Every library has a different inclusion philosophy — a policy of what should be shipped in the core library, and what could be provided in other packages. Our philosophy is to prefer a smaller core library. We generally ask the following questions:
 
-### Conventions for Cython
+* **What would this feature look like if implemented in a separate package?** Some features would be very difficult to implement externally. For instance, anything that requires a change to the `Token` class really needs to be implemented within spaCy, because there's no convenient way to make spaCy return custom `Token` objects. In contrast, a library of word alignment functions could easily live as a separate package that depended on spaCy — there's little difference between writing `import word_aligner` and `import spacy.word_aligner`.
 
-Coming soon.
+* **Would the feature be easier to implement if it relied on "heavy" dependencies spaCy doesn't currently require?** Python has a very rich ecosystem. Libraries like Sci-Kit Learn, Scipy, Gensim, Keras etc. do lots of useful things — but we don't want to have them as dependencies. If the feature requires functionality in one of these libraries, it's probably better to break it out into a different package.
+
+* **Is the feature orthogonal to the current spaCy functionality, or overlapping?** spaCy strongly prefers to avoid having 6 different ways of doing the same thing. As better techniques are developed, we prefer to drop support for "the old way". However, it's rare that one approach *entirely* dominates another. It's very common that there's still a use-case for the "obsolete" approach. For instance, [WordNet](https://wordnet.princeton.edu/) is still very useful — but word vectors are better for most use-cases, and the two approaches to lexical semantics do a lot of the same things. spaCy therefore only supports word vectors, and support for WordNet is currently left for other packages.
+
+* **Do you need the feature to get basic things done?** We do want spaCy to be at least somewhat self-contained. If we keep needing some feature in our recipes, that does provide some argument for bringing it "in house".
 
 ### Developer resources
 
@@ -75,6 +80,67 @@ When fixing a bug, first create an [issue](https://github.com/explosion/spaCy/is
 Next, create a test file named `test_issue[ISSUE NUMBER].py` in the [`spacy/tests/regression`](spacy/tests/regression) folder. Test for the bug you're fixing, and make sure the test fails. Next, add and commit your test file referencing the issue number in the commit message. Finally, fix the bug, make sure your test passes and reference the issue in your commit message.
 
 📖 **For more information on how to add tests, check out the [tests README](spacy/tests/README.md).**
+
+## Code conventions
+
+Code should loosely follow [pep8](https://www.python.org/dev/peps/pep-0008/). Regular line length is **80 characters**, with some tolerance for lines up to 90 characters if the alternative would be worse — for instance, if your list comprehension comes to 82 characters, it's better not to split it over two lines.
+
+### Python conventions
+
+All Python code must be written in an **intersection of Python 2 and Python 3**. This is easy in Cython, but somewhat ugly in Python. We could use some extra utilities for this. Please pay particular attention to code that serialises json objects.
+
+Code that interacts with the file-system should accept objects that follow the `pathlib.Path` API, without assuming that the object inherits from `pathlib.Path`. If the function is user-facing and takes a path as an argument, it should check whether the path is provided as a string. Strings should be converted to `pathlib.Path` objects.
+
+At the time of writing (v1.7), spaCy's serialization and deserialization functions are inconsistent about accepting paths vs accepting file-like objects. The correct answer is "file-like objects" — that's what we want going forward, as it makes the library io-agnostic. Working on buffers makes the code more general, easier to test, and compatible with Python 3's asynchronous IO.
+
+Although spaCy uses a lot of classes, inheritance is viewed with some suspicion — it's seen as a mechanism of last resort. You should discuss plans to extend the class hierarchy before implementing.
+
+### Cython conventions
+
+spaCy's core data structures are implemented as [Cython](http://cython.org/) `cdef` classes. Memory is managed through the `cymem.cymem.Pool` class, which allows you to allocate memory which will be freed when the `Pool` object is garbage collected. This means you usually don't have to worry about freeing memory. You just have to decide which Python object owns the memory, and make it own the `Pool`. When that object goes out of scope, the memory will be freed. You do have to take care that no pointers outlive the object that owns them — but this is generally quite easy.
+
+All Cython modules should have the `# cython: infer_types=True` compiler directive at the top of the file. This makes the code much cleaner, as it avoids the need for many type declarations. If possible, you should prefer to declare your functions `nogil`, even if you don't especially care about multi-threading. The reason is that `nogil` functions help the Cython compiler reason about your code quite a lot — you're telling the compiler that no Python dynamics are possible. This lets many errors be raised, and ensures your function will run at C speed.
+
+Cython gives you many choices of sequences: you could have a Python list, a numpy array, a memory view, a C++ vector, or a pointer. Pointers are preferred, because they are fastest, have the most explicit semantics, and let the compiler check your code more strictly. C++ vectors are also great — but you should only use them internally in functions. It's less friendly to accept a vector as an argument, because that asks the user to do much more work.
+
+Here's how to get a pointer from a numpy array, memory view or vector:
+
+```cython
+cdef void get_pointers(np.ndarray[int, mode='c'] numpy_array, vector[int] cpp_vector, int[::1] memory_view) nogil:
+    pointer1 = <int*>numpy_array.data
+    pointer2 = cpp_vector.data()
+    pointer3 = &memory_view[0]
+```
+
+Both C arrays and C++ vectors reassure the compiler that no Python operations are possible on your variable. This is a big advantage: it lets the Cython compiler raise many more errors for you.
+
+When getting a pointer from a numpy array or memoryview, take care that the data is actually stored in C-contiguous order — otherwise you'll get a pointer to nonsense. The type-declarations in the code above should generate runtime errors if buffers with incorrect memory layouts are passed in.
+
+To iterate over the array, the following style is preferred:
+
+```cython
+cdef int c_total(const int* int_array, int length) nogil:
+    total = 0
+    for item in int_array[:length]:
+        total += item
+    return total
+```
+
+If this is confusing, consider that the compiler couldn't deal with `for item in int_array:` — there's no length attached to a raw pointer, so how could we figure out where to stop? The length is provided in the slice notation as a solution to this. Note that we don't have to declare the type of `item` in the code above -- the compiler can easily infer it. This gives us tidy code that looks quite like Python, but is exactly as fast as C — because we've made sure the compilation to C is trivial.
+
+Your functions cannot be declared `nogil` if they need to create Python objects or call Python functions. This is perfectly okay — you shouldn't torture your code just to get `nogil` functions. However, if your function isn't `nogil`, you should compile your module with `cython -a --cplus my_module.pyx` and open the resulting `my_module.html` file in a browser. This will let you see how Cython is compiling your code. Calls into the Python run-time will be in bright yellow. This lets you easily see whether Cython is able to correctly type your code, or whether there are unexpected problems.
+
+Finally, if you're new to Cython, you should expect to find the first steps a bit frustrating. It's a very large language, since it's essentially a superset of Python and C++, with additional complexity and syntax from numpy. The [documentation](http://docs.cython.org/en/latest/) isn't great, and there are many "traps for new players". Help is available on [Gitter](https://gitter.im/explosion/spaCy).
+
+Working in Cython is very rewarding once you're over the initial learning curve. As with C and C++, the first way you write something in Cython will often be the performance-optimal approach. In contrast, Python optimisation generally requires a lot of experimentation. Is it faster to have an `if item in my_dict` check, or to use `.get()`? What about `try`/`except`? Does this numpy operation create a copy? There's no way to guess the answers to these questions, and you'll usually be dissatisfied with your results — so there's no way to know when to stop this process. In the worst case, you'll make a mess that invites the next reader to try their luck too. This is like one of those [volcanic gas-traps](http://www.wemjournal.org/article/S1080-6032%2809%2970088-2/abstract), where the rescuers keep passing out from low oxygen, causing another rescuer to follow — only to succumb themselves. In short, just say no to optimizing your Python. If it's not fast enough the first time, just switch to Cython.
+
+### Resources to get you started
+
+* [PEP 8 Style Guide for Python Code](https://www.python.org/dev/peps/pep-0008/) (python.org)
+* [Official Cython documentation](http://docs.cython.org/en/latest/) (cython.org)
+* [Writing C in Cython](https://explosion.ai/blog/writing-c-in-cython) (explosion.ai)
+* [Multi-threading spaCy’s parser and named entity recogniser](https://explosion.ai/blog/multithreading-with-cython) (explosion.ai)
+
 
 ## Adding tests
 

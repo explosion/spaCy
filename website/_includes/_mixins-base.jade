@@ -134,3 +134,8 @@ mixin landing-header()
         .c-landing__wrapper
             .c-landing__content
                 block
+
+
+mixin landing-badge(url, graphic, alt, size)
+    +a(url)(aria-label=alt title=alt).c-landing__badge
+        +svg("graphics", graphic, size || 225)

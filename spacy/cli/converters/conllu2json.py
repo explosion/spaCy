@@ -1,5 +1,5 @@
 # coding: utf8
-from __future__ import unicode_literals, division, print_function
+from __future__ import unicode_literals
 
 import json
 from ...gold import read_json_file, merge_sents

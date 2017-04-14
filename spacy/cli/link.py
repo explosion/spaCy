@@ -46,8 +46,18 @@ def symlink(model_path, link_name, force):
     # Add workaround for Python 2 on Windows (see issue #909)
     if util.is_python2() and util.is_windows():
         import subprocess
-        command = ['mklink', '/d', link_path, model_path]
-        subprocess.call(command, shell=True)
+        command = ['mklink', '/d', unicode(link_path), unicode(model_path)]
+        try:
+            subprocess.call(command, shell=True)
+        except:
+            # This is quite dirty, but just making sure other Windows-specific
+            # errors are caught so users at least see a proper error message.
+            util.sys_exit(
+                "Creating a symlink in spacy/data failed. You can still import "
+                "the model as a Python package and call its load() method, or "
+                "create the symlink manually:",
+                "{a} --> {b}".format(a=unicode(model_path), b=unicode(link_path)),
+                title="Error: Couldn't link model to '{l}'".format(l=link_name))
     else:
         link_path.symlink_to(model_path)
 
