@@ -17,17 +17,13 @@ cdef class EntityRecognizer(Parser):
     feature_templates = get_feature_templates('ner')
 
     def add_label(self, label):
-        for action in self.moves.action_types:
-            self.moves.add_action(action, label)
-            if 'actions' in self.cfg:
-                self.cfg['actions'].setdefault(action,
-                                        {}).setdefault(label, True)
+        Parser.add_label(self, label)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
+        # Set label into serializer. Super hacky :(
         for attr, freqs in self.vocab.serializer_freqs:
             if attr == ENT_TYPE and label not in freqs:
                 freqs.append([label, 1])
-        # Super hacky :(
         self.vocab._serializer = None
 
 
@@ -36,19 +32,15 @@ cdef class BeamEntityRecognizer(BeamParser):
     TransitionSystem = BiluoPushDown
 
     feature_templates = get_feature_templates('ner')
-
+    
     def add_label(self, label):
-        for action in self.moves.action_types:
-            self.moves.add_action(action, label)
-            if 'actions' in self.cfg:
-                self.cfg['actions'].setdefault(action,
-                                        {}).setdefault(label, True)
+        Parser.add_label(self, label)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
+        # Set label into serializer. Super hacky :(
         for attr, freqs in self.vocab.serializer_freqs:
             if attr == ENT_TYPE and label not in freqs:
                 freqs.append([label, 1])
-        # Super hacky :(
         self.vocab._serializer = None
 
 
@@ -58,11 +50,7 @@ cdef class DependencyParser(Parser):
     feature_templates = get_feature_templates('basic')
 
     def add_label(self, label):
-        for action in self.moves.action_types:
-            self.moves.add_action(action, label)
-            if 'actions' in self.cfg:
-                self.cfg['actions'].setdefault(action,
-                                        {}).setdefault(label, True)
+        Parser.add_label(self, label)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
         for attr, freqs in self.vocab.serializer_freqs:
@@ -78,11 +66,7 @@ cdef class BeamDependencyParser(BeamParser):
     feature_templates = get_feature_templates('basic')
 
     def add_label(self, label):
-        for action in self.moves.action_types:
-            self.moves.add_action(action, label)
-            if 'actions' in self.cfg:
-                self.cfg['actions'].setdefault(action,
-                                        {}).setdefault(label, True)
+        Parser.add_label(self, label)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
         for attr, freqs in self.vocab.serializer_freqs:

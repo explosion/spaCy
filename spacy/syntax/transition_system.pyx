@@ -32,7 +32,7 @@ cdef class TransitionSystem:
         self.c = <Transition*>self.mem.alloc(self._size, sizeof(Transition))
 
         for action, label_strs in sorted(labels_by_action.items()):
-            for label_str in sorted(label_strs):
+            for label_str in label_strs:
                 self.add_action(int(action), label_str)
         self.root_label = self.strings['ROOT']
         self.freqs = {} if _freqs is None else _freqs
@@ -105,5 +105,6 @@ cdef class TransitionSystem:
             self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
 
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label)
+        print("Add action", action, self.strings[label], self.n_moves)
         self.n_moves += 1
         return 1

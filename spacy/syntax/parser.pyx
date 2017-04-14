@@ -52,7 +52,7 @@ from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from ._state cimport StateC
 
-USE_FTRL = True
+USE_FTRL = False
 DEBUG = False
 def set_debug(val):
     global DEBUG
@@ -152,6 +152,13 @@ cdef class Parser:
         # TODO: remove this shim when we don't have to support older data
         if 'labels' in cfg and 'actions' not in cfg:
             cfg['actions'] = cfg.pop('labels')
+        # TODO: remove this shim when we don't have to support older data
+        for action_name, labels in dict(cfg['actions']).items():
+            # We need this to be sorted
+            if isinstance(labels, dict):
+                labels = list(sorted(labels.keys()))
+            cfg['actions'][action_name] = labels
+        print(cfg['actions'])
         self = cls(vocab, TransitionSystem=TransitionSystem, model=None, **cfg)
         if (path / 'model').exists():
             self.model.load(str(path / 'model'))
@@ -362,6 +369,10 @@ cdef class Parser:
         # Doesn't set label into serializer -- subclasses override it to do that.
         for action in self.moves.action_types:
             self.moves.add_action(action, label)
+            if 'actions' in self.cfg:
+                # Important that the labels be stored as a list! We need the
+                # order, or the model goes out of synch
+                self.cfg['actions'].setdefault(str(action), []).append(label)
 
 
 cdef class StepwiseState:
