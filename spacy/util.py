@@ -116,7 +116,7 @@ def check_renamed_kwargs(renamed, kwargs):
 def parse_package_meta(package_path, package, require=True):
     location = package_path / package / 'meta.json'
     if location.is_file():
-        with io.open(location, encoding='utf8') as f:
+        with location.open('r', encoding='utf8') as f:
             meta = ujson.load(f)
             return meta
     elif require:
