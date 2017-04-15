@@ -1,27 +1,13 @@
 # coding: utf8
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
 
-import json
 from pathlib import Path
+
 from .util import set_lang_class, get_lang_class, parse_package_meta
 from .deprecated import resolve_model_name
 from .cli import info
 
-from . import en
-from . import de
-from . import zh
-from . import es
-from . import it
-from . import hu
-from . import fr
-from . import pt
-from . import nl
-from . import sv
-from . import fi
-from . import bn
-from . import he
-
-from .about import *
+from . import en, de, zh, es, it, hu, fr, pt, nl, sv, fi, bn, he
 
 
 set_lang_class(en.English.lang, en.English)

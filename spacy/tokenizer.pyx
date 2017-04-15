@@ -1,7 +1,7 @@
 # cython: embedsignature=True
+# coding: utf8
 from __future__ import unicode_literals
 
-import pathlib
 
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
@@ -111,7 +111,7 @@ cdef class Tokenizer:
                 self.token_match)
 
         return (self.__class__, args, None, None)
-    
+
     cpdef Doc tokens_from_list(self, list strings):
         return Doc(self.vocab, words=strings)
         #raise NotImplementedError(
@@ -276,7 +276,7 @@ cdef class Tokenizer:
             cache_hit = self._try_cache(hash_string(string), tokens)
             if cache_hit:
                 pass
-            elif self.token_match and self.token_match(string): 
+            elif self.token_match and self.token_match(string):
                 # We're always saying 'no' to spaces here -- the caller will
                 # fix up the outermost one, with reference to the original.
                 # See Issue #859
@@ -377,7 +377,7 @@ cdef class Tokenizer:
         """
         for chunk, substrings in sorted(special_cases.items()):
             self.add_special_case(chunk, substrings)
-    
+
     def add_special_case(self, unicode string, substrings):
         """
         Add a special-case tokenization rule.

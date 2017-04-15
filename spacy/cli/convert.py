@@ -1,7 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import io
 from pathlib import Path
 
 from .converters import conllu2json

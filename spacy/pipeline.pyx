@@ -1,3 +1,6 @@
+# coding: utf8
+from __future__ import unicode_literals
+
 from .syntax.parser cimport Parser
 from .syntax.beam_parser cimport BeamParser
 from .syntax.ner cimport BiluoPushDown
@@ -36,7 +39,7 @@ cdef class BeamEntityRecognizer(BeamParser):
     TransitionSystem = BiluoPushDown
 
     feature_templates = get_feature_templates('ner')
-    
+
     def add_label(self, label):
         Parser.add_label(self, label)
         if isinstance(label, basestring):

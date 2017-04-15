@@ -1,12 +1,11 @@
 # cython: infer_types=True
+# coding: utf8
 from __future__ import unicode_literals, absolute_import
 
 cimport cython
 from libc.string cimport memcpy
 from libc.stdint cimport uint64_t, uint32_t
-
 from murmurhash.mrmr cimport hash64, hash32
-
 from preshed.maps cimport map_iter, key_t
 
 from .typedefs cimport hash_t
@@ -154,11 +153,11 @@ cdef class StringStore:
                 raise TypeError(type(string_or_id))
             utf8str = self._intern_utf8(byte_string, len(byte_string))
             if utf8str is NULL:
-                # TODO: We need to use 32 bit here, for compatibility with the 
+                # TODO: We need to use 32 bit here, for compatibility with the
                 # vocabulary values. This makes birthday paradox probabilities
                 # pretty bad.
                 # We could also get unlucky here, and hash into a value that
-                # collides with the 'real' strings. 
+                # collides with the 'real' strings.
                 return hash32_utf8(byte_string, len(byte_string))
             else:
                 return utf8str - self.c

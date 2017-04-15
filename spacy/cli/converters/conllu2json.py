@@ -2,7 +2,6 @@
 from __future__ import unicode_literals
 
 import json
-from ...gold import read_json_file, merge_sents
 from ... import util
 
 

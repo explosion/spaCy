@@ -1,13 +1,11 @@
 # cython: profile=True
+# coding: utf8
 from __future__ import unicode_literals, print_function
 
 import io
-import json
 import re
-import os
-from os import path
-
-import ujson as json
+import ujson
+from pathlib import Path
 
 from .syntax import nonproj
 
@@ -303,7 +301,8 @@ cdef class GoldParse:
             self.heads = proj_heads
 
     def __len__(self):
-        """Get the number of gold-standard tokens.
+        """
+        Get the number of gold-standard tokens.
 
         Returns (int): The number of gold-standard tokens.
         """

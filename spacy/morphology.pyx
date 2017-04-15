@@ -1,12 +1,8 @@
 # cython: infer_types
+# coding: utf8
 from __future__ import unicode_literals
 
 from libc.string cimport memset
-
-try:
-    import ujson as json
-except ImportError:
-    import json
 
 from .parts_of_speech cimport ADJ, VERB, NOUN, PUNCT
 from .attrs cimport POS, IS_SPACE

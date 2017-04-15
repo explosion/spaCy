@@ -1,5 +1,7 @@
 import json
-import pathlib
+# coding: utf8
+from __future__ import unicode_literals
+
 from collections import defaultdict
 
 from cymem.cymem cimport Pool
@@ -12,7 +14,6 @@ from thinc.linalg cimport VecVec
 from .tokens.doc cimport Doc
 from .attrs cimport TAG
 from .gold cimport GoldParse
-
 from .attrs cimport *
 
 

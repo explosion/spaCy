@@ -1,13 +1,8 @@
-from __future__ import unicode_literals, print_function
-import codecs
-import pathlib
-
-import ujson as json
+# coding: utf8
+from __future__ import unicode_literals
 
 from .symbols import POS, NOUN, VERB, ADJ, PUNCT
-from .symbols import VerbForm_inf, VerbForm_none
-from .symbols import Number_sing
-from .symbols import Degree_pos
+from .symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
 
 
 class Lemmatizer(object):

@@ -1,11 +1,10 @@
 # coding: utf8
 from __future__ import unicode_literals, print_function
-import os
+
 import io
 import json
 import re
-import os.path
-import pathlib
+from pathlib import Path
 import sys
 import textwrap
 
@@ -23,7 +22,7 @@ except NameError: # Python 3
 
 
 LANGUAGES = {}
-_data_path = pathlib.Path(__file__).parent / 'data'
+_data_path = Path(__file__).parent / 'data'
 
 
 def set_lang_class(name, cls):
@@ -163,8 +162,8 @@ def is_python2():
 
 
 def parse_package_meta(package_path, package, require=True):
-    location = os.path.join(str(package_path), package, 'meta.json')
-    if os.path.isfile(location):
+    location = package_path / package / 'meta.json'
+    if location.is_file():
         with io.open(location, encoding='utf8') as f:
             meta = json.load(f)
             return meta
@@ -209,10 +208,9 @@ def print_markdown(data, **kwargs):
     which will be converted to a list of tuples."""
 
     def excl_value(value):
-        # don't print value if it contains absolute path of directory
-        # (i.e. personal info that shouldn't need to be shared)
-        # other conditions can be included here if necessary
-        if str(pathlib.Path(__file__).parent) in value:
+        # don't print value if it contains absolute path of directory (i.e.
+        # personal info). Other conditions can be included here if necessary.
+        if unicode_(Path(__file__).parent) in value:
             return True
 
     if type(data) == dict:

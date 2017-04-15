@@ -1,4 +1,7 @@
 # cython: embedsignature=True
+# coding: utf8
+from __future__ import unicode_literals, print_function
+
 from libc.math cimport sqrt
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
@@ -9,14 +12,11 @@ from cython.view cimport array as cvarray
 cimport numpy as np
 np.import_array()
 
-
-
 from libc.string cimport memset
+import numpy
 
 from .orth cimport word_shape
 from .typedefs cimport attr_t, flags_t
-import numpy
-
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from .attrs cimport IS_BRACKET

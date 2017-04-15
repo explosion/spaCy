@@ -1,10 +1,6 @@
+# coding: utf8
 from __future__ import unicode_literals
 
-from libc.string cimport memset
-from libc.stdint cimport int32_t
-from libc.math cimport sqrt
-
-from pathlib import Path
 import bz2
 import ujson as json
 import re
@@ -14,28 +10,28 @@ try:
 except ImportError:
     import pickle
 
+from libc.string cimport memset
+from libc.stdint cimport int32_t
+from libc.math cimport sqrt
+from cymem.cymem cimport Address
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
 from .strings cimport hash_string
 from .typedefs cimport attr_t
 from .cfile cimport CFile, StringCFile
-from .lemmatizer import Lemmatizer
-from .attrs import intify_attrs
 from .tokens.token cimport Token
-
-from . import attrs
-from . import symbols
-
-from cymem.cymem cimport Address
 from .serialize.packer cimport Packer
 from .attrs cimport PROB, LANG
-from . import util
-
 
 try:
     import copy_reg
 except ImportError:
     import copyreg as copy_reg
+from .lemmatizer import Lemmatizer
+from .attrs import intify_attrs
+from . import util
+from . import attrs
+from . import symbols
 
 
 DEF MAX_VEC_SIZE = 100000

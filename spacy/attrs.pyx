@@ -1,3 +1,7 @@
+# coding: utf8
+from __future__ import unicode_literals
+
+
 IDS = {
     "": NULL_ATTR,
     "IS_ALPHA": IS_ALPHA,

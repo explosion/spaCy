@@ -1,9 +1,7 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
-import pathlib
+# coding: utf8
+from __future__ import absolute_import, unicode_literals
 from contextlib import contextmanager
 import shutil
-
 import ujson
 
 
@@ -21,19 +19,18 @@ from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .tagger import Tagger
 from .matcher import Matcher
-from . import attrs
-from . import orth
-from . import util
-from . import language_data
 from .lemmatizer import Lemmatizer
 from .train import Trainer
-
-from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD, PROB, LANG, IS_STOP
 from .syntax.parser import get_templates
 from .syntax.nonproj import PseudoProjectivity
 from .pipeline import DependencyParser, EntityRecognizer
 from .syntax.arc_eager import ArcEager
 from .syntax.ner import BiluoPushDown
+from .attrs import IS_STOP
+from . import attrs
+from . import orth
+from . import util
+from . import language_data
 
 
 class BaseDefaults(object):
@@ -150,25 +147,15 @@ class BaseDefaults(object):
         return pipeline
 
     token_match = language_data.TOKEN_MATCH
-
     prefixes = tuple(language_data.TOKENIZER_PREFIXES)
-
     suffixes = tuple(language_data.TOKENIZER_SUFFIXES)
-
     infixes = tuple(language_data.TOKENIZER_INFIXES)
-
     tag_map = dict(language_data.TAG_MAP)
-
     tokenizer_exceptions = {}
-
     parser_features = get_templates('parser')
-
     entity_features = get_templates('ner')
-
     tagger_features = Tagger.feature_templates # TODO -- fix this
-
     stop_words = set()
-
     lemma_rules = {}
     lemma_exc = {}
     lemma_index = {}
@@ -313,7 +300,8 @@ class Language(object):
             self.pipeline = [self.tagger, self.parser, self.matcher, self.entity]
 
     def __call__(self, text, tag=True, parse=True, entity=True):
-        """Apply the pipeline to some text.  The text can span multiple sentences,
+        """
+        Apply the pipeline to some text.  The text can span multiple sentences,
         and can contain arbtrary whitespace.  Alignment into the original string
         is preserved.
 
@@ -373,7 +361,7 @@ class Language(object):
         }
 
         self.setup_directory(path, **configs)
-        
+
         strings_loc = path / 'vocab' / 'strings.json'
         with strings_loc.open('w', encoding='utf8') as file_:
             self.vocab.strings.dump(file_)
@@ -397,4 +385,3 @@ class Language(object):
         # to taking nlp.path
         if path is not None:
             self.save_to_directory(path)
-

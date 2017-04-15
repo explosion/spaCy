@@ -1,11 +1,10 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
+# coding: utf8
+from __future__ import absolute_import, unicode_literals
 
 import random
 import tqdm
-from .gold import GoldParse
+from .gold import GoldParse, merge_sents
 from .scorer import Scorer
-from .gold import merge_sents
 
 
 class Trainer(object):

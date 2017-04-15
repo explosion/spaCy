@@ -5,8 +5,6 @@ import json
 from pathlib import Path
 
 from ..scorer import Scorer
-from ..tagger import Tagger
-from ..syntax.parser import Parser
 from ..gold import GoldParse, merge_sents
 from ..gold import read_json_file as read_gold_json
 from .. import util
@@ -60,7 +58,6 @@ def train_model(Language, train_data, dev_data, output_path, tagger_cfg, parser_
     print("Itn.\tN weight\tN feats\tUAS\tNER F.\tTag %\tToken %")
 
     with Language.train(output_path, train_data, tagger_cfg, parser_cfg, entity_cfg) as trainer:
-        loss = 0
         for itn, epoch in enumerate(trainer.epochs(n_iter, augment_data=None)):
             for doc, gold in epoch:
                 trainer.update(doc, gold)
