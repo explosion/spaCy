@@ -55,39 +55,6 @@ def or_(val1, val2):
         return val2
 
 
-def match_best_version(target_name, target_version, path):
-    path = path if not isinstance(path, basestring) else pathlib.Path(path)
-    if path is None or not path.exists():
-        return None
-    matches = []
-    for data_name in path.iterdir():
-        name, version = split_data_name(data_name.parts[-1])
-        if name == target_name and constraint_match(target_version, version):
-            matches.append((tuple(float(v) for v in version.split('.')), data_name))
-    if matches:
-        return pathlib.Path(max(matches)[1])
-    else:
-        return None
-
-
-def split_data_name(name):
-    return name.split('-', 1) if '-' in name else (name, '')
-
-
-def constraint_match(constraint_string, version):
-    # From http://github.com/spacy-io/sputnik
-    if not constraint_string:
-        return True
-
-    constraints = [c.strip() for c in constraint_string.split(',') if c.strip()]
-
-    for c in constraints:
-        if not re.match(r'[><=][=]?\d+(\.\d+)*', c):
-            raise ValueError('invalid constraint: %s' % c)
-
-    return all(semver.match(version, c) for c in constraints)
-
-
 def read_regex(path):
     path = ensure_path(path)
     with path.open() as file_:
