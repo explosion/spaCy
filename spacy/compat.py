@@ -39,12 +39,11 @@ elif is_python3:
 
 
 def symlink_to(orig, dest):
-    if is_python3:
-        orig.symlink_to(dest)
-
-    elif is_python2:
+    if is_python2 and is_windows:
         import subprocess
         subprocess.call(['mklink', '/d', unicode(orig), unicode(dest)], shell=True)
+    else:
+        orig.symlink_to(dest)
 
 
 def is_config(python2=None, python3=None, windows=None, linux=None, osx=None):
