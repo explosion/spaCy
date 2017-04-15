@@ -48,10 +48,8 @@ cdef class Tokenizer:
             infix_finditer:
                 Signature of re.compile(string).finditer
         Returns Tokenizer
-        if isinstance(path, basestring):
-            path = pathlib.Path(path)
-
         """
+        path = util.ensure_path(path)
         if rules is None:
             with (path / 'tokenizer' / 'specials.json').open('r', encoding='utf8') as file_:
                 rules = json.load(file_)

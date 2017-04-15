@@ -6,12 +6,6 @@ from .cli import download
 from .cli import link
 
 
-try:
-    basestring
-except NameError:
-    basestring = str
-
-
 def read_lang_data(package):
     tokenization = package.load_json(('tokenizer', 'specials.json'))
     with package.open(('tokenizer', 'prefix.txt'), default=None) as file_:
@@ -73,9 +67,7 @@ def fix_glove_vectors_loading(overrides):
     if overrides.get('path') in (None, True):
         data_path = util.get_data_path()
     else:
-        path = overrides['path']
-        if isinstance(path, basestring):
-            path = Path(path)
+        path = util.ensure_path(overrides['path'])
         data_path = path.parent
     vec_path = None
     if 'add_vectors' not in overrides:

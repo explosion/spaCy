@@ -15,6 +15,7 @@ from .tokens.doc cimport Doc
 from .attrs cimport TAG
 from .gold cimport GoldParse
 from .attrs cimport *
+from . import util
 
 
 cpdef enum:
@@ -127,7 +128,7 @@ cdef class Tagger:
         """
         # TODO: Change this to expect config.json when we don't have to
         # support old data.
-        path = path if not isinstance(path, basestring) else pathlib.Path(path)
+        path = util.ensure_path(path)
         if (path / 'templates.json').exists():
             with (path / 'templates.json').open('r', encoding='utf8') as file_:
                 templates = json.load(file_)

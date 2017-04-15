@@ -8,17 +8,7 @@ from pathlib import Path
 import sys
 import textwrap
 
-
-try:
-    basestring
-except NameError:
-    basestring = str
-
-
-try:
-    raw_input
-except NameError: # Python 3
-    raw_input = input
+from .compat import basestring_, unicode_, input_
 
 
 LANGUAGES = {}
@@ -46,9 +36,14 @@ def get_data_path(require_exists=True):
 
 def set_data_path(path):
     global _data_path
-    if isinstance(path, basestring):
-        path = pathlib.Path(path)
-    _data_path = path
+    _data_path = ensure_path(path)
+
+
+def ensure_path(path):
+    if isinstance(path, basestring_):
+        return Path(path)
+    else:
+        return path
 
 
 def or_(val1, val2):
@@ -94,7 +89,7 @@ def constraint_match(constraint_string, version):
 
 
 def read_regex(path):
-    path = path if not isinstance(path, basestring) else pathlib.Path(path)
+    path = ensure_path(path)
     with path.open() as file_:
         entries = file_.read().split('\n')
     expression = '|'.join(['^' + re.escape(piece) for piece in entries if piece.strip()])
@@ -151,16 +146,6 @@ def check_renamed_kwargs(renamed, kwargs):
             raise TypeError("Keyword argument %s now renamed to %s" % (old, new))
 
 
-def is_windows():
-    """Check if user is on Windows."""
-    return sys.platform.startswith('win')
-
-
-def is_python2():
-    """Check if Python 2 is used."""
-    return sys.version.startswith('2.')
-
-
 def parse_package_meta(package_path, package, require=True):
     location = package_path / package / 'meta.json'
     if location.is_file():
@@ -180,7 +165,7 @@ def get_raw_input(description, default=False):
 
     additional = ' (default: {d})'.format(d=default) if default else ''
     prompt = '    {d}{a}: '.format(d=description, a=additional)
-    user_input = raw_input(prompt)
+    user_input = input_(prompt)
     return user_input
 
 

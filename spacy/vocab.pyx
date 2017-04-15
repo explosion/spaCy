@@ -5,11 +5,6 @@ import bz2
 import ujson as json
 import re
 
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
 from libc.string cimport memset
 from libc.stdint cimport int32_t
 from libc.math cimport sqrt
@@ -23,10 +18,7 @@ from .tokens.token cimport Token
 from .serialize.packer cimport Packer
 from .attrs cimport PROB, LANG
 
-try:
-    import copy_reg
-except ImportError:
-    import copyreg as copy_reg
+from .compat import copy_reg, pickle
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs
 from . import util
@@ -69,8 +61,7 @@ cdef class Vocab:
         Returns:
             Vocab: The newly constructed vocab object.
         """
-        if isinstance(path, basestring):
-            path = Path(path)
+        path = util.ensure_path(path)
         util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
         if 'vectors' in deprecated_kwargs:
             raise AttributeError(

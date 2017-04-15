@@ -4,17 +4,6 @@ from contextlib import contextmanager
 import shutil
 import ujson
 
-
-try:
-    basestring
-except NameError:
-    basestring = str
-
-try:
-    unicode
-except NameError:
-    unicode = str
-
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .tagger import Tagger
@@ -26,6 +15,7 @@ from .syntax.nonproj import PseudoProjectivity
 from .pipeline import DependencyParser, EntityRecognizer
 from .syntax.arc_eager import ArcEager
 from .syntax.ner import BiluoPushDown
+from .compat import unicode_
 from .attrs import IS_STOP
 from . import attrs
 from . import orth
@@ -205,7 +195,7 @@ class Language(object):
             directory.mkdir()
             with (directory / 'config.json').open('wb') as file_:
                 data = ujson.dumps(config, indent=2)
-                if isinstance(data, unicode):
+                if isinstance(data, unicode_):
                     data = data.encode('utf8')
                 file_.write(data)
         if not (path / 'vocab').exists():
@@ -252,9 +242,7 @@ class Language(object):
     def __init__(self, **overrides):
         if 'data_dir' in overrides and 'path' not in overrides:
             raise ValueError("The argument 'data_dir' has been renamed to 'path'")
-        path = overrides.get('path', True)
-        if isinstance(path, basestring):
-            path = pathlib.Path(path)
+        path = util.ensure_path(overrides.get('path', True))
         if path is True:
             path = util.get_data_path() / self.lang
             if not path.exists() and 'path' not in overrides:
