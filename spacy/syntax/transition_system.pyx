@@ -1,4 +1,8 @@
 # cython: infer_types=True
+# coding: utf-8
+from __future__ import unicode_literals
+
+from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t
 from collections import defaultdict
@@ -6,7 +10,6 @@ from collections import defaultdict
 from ..structs cimport TokenC
 from .stateclass cimport StateClass
 from ..attrs cimport TAG, HEAD, DEP, ENT_TYPE, ENT_IOB
-from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 
 
 cdef weight_t MIN_SCORE = -90000

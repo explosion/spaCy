@@ -1,29 +1,26 @@
 # cython: profile=True
 # cython: cdivision=True
 # cython: infer_types=True
+# coding: utf-8
 from __future__ import unicode_literals
+
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
-
 import ctypes
-import os
+from libc.stdint cimport uint32_t
+from libc.string cimport memcpy
+from cymem.cymem cimport Pool
 
-from ..structs cimport TokenC
-
+from .stateclass cimport StateClass
+from ._state cimport StateC, is_space_token
+from .nonproj import PseudoProjectivity
+from .nonproj import is_nonproj_tree
 from .transition_system cimport do_func_t, get_cost_func_t
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse
 from ..gold cimport GoldParseC
 from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE, IS_SPACE
 from ..lexeme cimport Lexeme
-
-from libc.stdint cimport uint32_t
-from libc.string cimport memcpy
-
-from cymem.cymem cimport Pool
-from .stateclass cimport StateClass
-from ._state cimport StateC, is_space_token
-from .nonproj import PseudoProjectivity
-from .nonproj import is_nonproj_tree
+from ..structs cimport TokenC
 
 
 DEF NON_MONOTONIC = True

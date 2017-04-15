@@ -1,5 +1,5 @@
-# coding: utf8
 # cython: infer_types=True
+# coding: utf8
 from __future__ import unicode_literals
 
 from libc.string cimport memcpy
@@ -8,20 +8,15 @@ from cpython.mem cimport PyMem_Malloc, PyMem_Free
 from cython.view cimport array as cvarray
 cimport numpy as np
 np.import_array()
-
 import numpy
-import six
-
 
 from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
 from .. import parts_of_speech
-
 from ..attrs cimport LEMMA
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport POS, LEMMA, TAG, DEP
 from ..parts_of_speech cimport CCONJ, PUNCT
-
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from ..attrs cimport IS_BRACKET
 from ..attrs cimport IS_QUOTE
@@ -29,12 +24,13 @@ from ..attrs cimport IS_LEFT_PUNCT
 from ..attrs cimport IS_RIGHT_PUNCT
 from ..attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from ..attrs cimport IS_OOV
-
 from ..lexeme cimport Lexeme
+from ..compat import is_config
 
 
 cdef class Token:
-    """An individual token --- i.e. a word, punctuation symbol, whitespace, etc.
+    """
+    An individual token --- i.e. a word, punctuation symbol, whitespace, etc.
     """
     def __cinit__(self, Vocab vocab, Doc doc, int offset):
         self.vocab = vocab
@@ -46,7 +42,9 @@ cdef class Token:
         return hash((self.doc, self.i))
 
     def __len__(self):
-        '''Number of unicode characters in token.text'''
+        """
+        Number of unicode characters in token.text.
+        """
         return self.c.lex.length
 
     def __unicode__(self):
@@ -56,7 +54,7 @@ cdef class Token:
         return self.text.encode('utf8')
 
     def __str__(self):
-        if six.PY3:
+        if is_config(python3=True):
             return self.__unicode__()
         return self.__bytes__()
 
@@ -83,27 +81,30 @@ cdef class Token:
             raise ValueError(op)
 
     cpdef bint check_flag(self, attr_id_t flag_id) except -1:
-        '''Check the value of a boolean flag.
+        """
+        Check the value of a boolean flag.
 
         Arguments:
             flag_id (int): The ID of the flag attribute.
         Returns:
             is_set (bool): Whether the flag is set.
-        '''
+        """
         return Lexeme.c_check_flag(self.c.lex, flag_id)
 
     def nbor(self, int i=1):
-        '''Get a neighboring token.
+        """
+        Get a neighboring token.
 
         Arguments:
             i (int): The relative position of the token to get. Defaults to 1.
         Returns:
             neighbor (Token): The token at position self.doc[self.i+i]
-        '''
+        """
         return self.doc[self.i+i]
 
     def similarity(self, other):
-        '''Compute a semantic similarity estimate. Defaults to cosine over vectors.
+        """
+        Compute a semantic similarity estimate. Defaults to cosine over vectors.
 
         Arguments:
             other:
@@ -111,7 +112,7 @@ cdef class Token:
                 Token and Lexeme objects.
         Returns:
             score (float): A scalar similarity score. Higher is more similar.
-        '''
+        """
         if 'similarity' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['similarity'](self)
         if self.vector_norm == 0 or other.vector_norm == 0:
@@ -209,9 +210,9 @@ cdef class Token:
             self.c.dep = label
 
     property has_vector:
-        '''
+        """
         A boolean value indicating whether a word vector is associated with the object.
-        '''
+        """
         def __get__(self):
             if 'has_vector' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['has_vector'](self)
@@ -223,11 +224,11 @@ cdef class Token:
                 return False
 
     property vector:
-        '''
+        """
         A real-valued meaning representation.
 
         Type: numpy.ndarray[ndim=1, dtype='float32']
-        '''
+        """
         def __get__(self):
             if 'vector' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['vector'](self)
@@ -245,6 +246,7 @@ cdef class Token:
     property repvec:
         def __get__(self):
             raise AttributeError("repvec was renamed to vector in v0.100")
+
     property has_repvec:
         def __get__(self):
             raise AttributeError("has_repvec was renamed to has_vector in v0.100")
@@ -265,7 +267,8 @@ cdef class Token:
 
     property lefts:
         def __get__(self):
-            """The leftward immediate children of the word, in the syntactic
+            """
+            The leftward immediate children of the word, in the syntactic
             dependency parse.
             """
             cdef int nr_iter = 0
@@ -282,8 +285,10 @@ cdef class Token:
 
     property rights:
         def __get__(self):
-            """The rightward immediate children of the word, in the syntactic
-            dependency parse."""
+            """
+            The rightward immediate children of the word, in the syntactic
+            dependency parse.
+            """
             cdef const TokenC* ptr = self.c + (self.c.r_edge - self.i)
             tokens = []
             cdef int nr_iter = 0
@@ -300,19 +305,21 @@ cdef class Token:
                 yield t
 
     property children:
-        '''A sequence of the token's immediate syntactic children.
+        """
+        A sequence of the token's immediate syntactic children.
 
         Yields: Token A child token such that child.head==self
-        '''
+        """
         def __get__(self):
             yield from self.lefts
             yield from self.rights
 
     property subtree:
-        '''A sequence of all the token's syntactic descendents.
+        """
+        A sequence of all the token's syntactic descendents.
 
         Yields: Token A descendent token such that self.is_ancestor(descendent)
-        '''
+        """
         def __get__(self):
             for word in self.lefts:
                 yield from word.subtree
@@ -321,26 +328,29 @@ cdef class Token:
                 yield from word.subtree
 
     property left_edge:
-        '''The leftmost token of this token's syntactic descendents.
+        """
+        The leftmost token of this token's syntactic descendents.
 
         Returns: Token The first token such that self.is_ancestor(token)
-        '''
+        """
         def __get__(self):
             return self.doc[self.c.l_edge]
 
     property right_edge:
-        '''The rightmost token of this token's syntactic descendents.
+        """
+        The rightmost token of this token's syntactic descendents.
 
         Returns: Token The last token such that self.is_ancestor(token)
-        '''
+        """
         def __get__(self):
             return self.doc[self.c.r_edge]
 
     property ancestors:
-        '''A sequence of this token's syntactic ancestors.
+        """
+        A sequence of this token's syntactic ancestors.
 
         Yields: Token A sequence of ancestor tokens such that ancestor.is_ancestor(self)
-        '''
+        """
         def __get__(self):
             cdef const TokenC* head_ptr = self.c
             # guard against infinite loop, no token can have
@@ -356,25 +366,29 @@ cdef class Token:
         return self.is_ancestor(descendant)
 
     def is_ancestor(self, descendant):
-        '''Check whether this token is a parent, grandparent, etc. of another
+        """
+        Check whether this token is a parent, grandparent, etc. of another
         in the dependency tree.
 
         Arguments:
             descendant (Token): Another token.
         Returns:
             is_ancestor (bool): Whether this token is the ancestor of the descendant.
-        '''
+        """
         if self.doc is not descendant.doc:
             return False
         return any( ancestor.i == self.i for ancestor in descendant.ancestors )
 
     property head:
-        '''The syntactic parent, or "governor", of this token.
+        """
+        The syntactic parent, or "governor", of this token.
 
         Returns: Token
-        '''
+        """
         def __get__(self):
-            """The token predicted by the parser to be the head of the current token."""
+            """
+            The token predicted by the parser to be the head of the current token.
+            """
             return self.doc[self.i + self.c.head]
         def __set__(self, Token new_head):
             # this function sets the head of self to new_head
@@ -467,10 +481,11 @@ cdef class Token:
             self.c.head = rel_newhead_i
 
     property conjuncts:
-        '''A sequence of coordinated tokens, including the token itself.
+        """
+        A sequence of coordinated tokens, including the token itself.
 
         Yields: Token A coordinated token
-        '''
+        """
         def __get__(self):
             """Get a list of conjoined words."""
             cdef Token word
@@ -501,7 +516,9 @@ cdef class Token:
             return iob_strings[self.c.ent_iob]
 
     property ent_id:
-        '''An (integer) entity ID. Usually assigned by patterns in the Matcher.'''
+        """
+        An (integer) entity ID. Usually assigned by patterns in the Matcher.
+        """
         def __get__(self):
             return self.c.ent_id
 
@@ -509,7 +526,9 @@ cdef class Token:
             self.c.ent_id = key
 
     property ent_id_:
-        '''A (string) entity ID. Usually assigned by patterns in the Matcher.'''
+        """
+        A (string) entity ID. Usually assigned by patterns in the Matcher.
+        """
         def __get__(self):
             return self.vocab.strings[self.c.ent_id]
 

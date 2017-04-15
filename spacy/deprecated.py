@@ -1,3 +1,6 @@
+# coding: utf8
+from __future__ import unicode_literals
+
 from pathlib import Path
 
 from . import about

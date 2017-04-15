@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 import six
 import sys
-import json
+import ujson
 
 try:
     import cPickle as pickle
@@ -28,14 +28,14 @@ if is_python2:
     unicode_ = unicode
     basestring_ = basestring
     input_ = raw_input
-    json_dumps = lambda data: json.dumps(data, indent=2).decode('utf8')
+    json_dumps = lambda data: ujson.dumps(data, indent=2).decode('utf8')
 
 elif is_python3:
     bytes_ = bytes
     unicode_ = str
     basestring_ = str
     input_ = input
-    json_dumps = lambda data: json.dumps(data, indent=2)
+    json_dumps = lambda data: ujson.dumps(data, indent=2)
 
 
 def symlink_to(orig, dest):

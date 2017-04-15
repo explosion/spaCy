@@ -1,9 +1,14 @@
-from spacy.parts_of_speech cimport NOUN, PROPN, PRON
+# coding: utf-8
+from __future__ import unicode_literals
+
+from ..parts_of_speech cimport NOUN, PROPN, PRON
 
 
 def english_noun_chunks(obj):
-    '''Detect base noun phrases from a dependency parse.
-    Works on both Doc and Span.'''
+    """
+    Detect base noun phrases from a dependency parse.
+    Works on both Doc and Span.
+    """
     labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj',
               'attr', 'ROOT', 'root']
     doc = obj.doc # Ensure works on both Doc and Span.

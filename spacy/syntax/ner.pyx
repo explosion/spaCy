@@ -1,17 +1,16 @@
+# coding: utf-8
 from __future__ import unicode_literals
 
-from .transition_system cimport Transition
-from .transition_system cimport do_func_t
-
-from ..structs cimport TokenC, Entity
-
 from thinc.typedefs cimport weight_t
-from ..gold cimport GoldParseC
-from ..gold cimport GoldParse
-from ..attrs cimport ENT_TYPE, ENT_IOB
 
 from .stateclass cimport StateClass
 from ._state cimport StateC
+from .transition_system cimport Transition
+from .transition_system cimport do_func_t
+from ..structs cimport TokenC, Entity
+from ..gold cimport GoldParseC
+from ..gold cimport GoldParse
+from ..attrs cimport ENT_TYPE, ENT_IOB
 
 
 cdef enum:
