@@ -2,16 +2,10 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import ujson
 
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
-
-try:
-    import ujson as json
-except ImportError:
-    import json
-
-
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 
@@ -52,7 +46,7 @@ cdef class Tokenizer:
         path = util.ensure_path(path)
         if rules is None:
             with (path / 'tokenizer' / 'specials.json').open('r', encoding='utf8') as file_:
-                rules = json.load(file_)
+                rules = ujson.load(file_)
         if prefix_search in (None, True):
             with (path / 'tokenizer' / 'prefix.txt').open() as file_:
                 entries = file_.read().split('\n')

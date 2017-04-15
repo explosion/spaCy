@@ -2,7 +2,7 @@
 from __future__ import unicode_literals, print_function
 
 import io
-import json
+import ujson
 import re
 from pathlib import Path
 import sys
@@ -117,7 +117,7 @@ def parse_package_meta(package_path, package, require=True):
     location = package_path / package / 'meta.json'
     if location.is_file():
         with io.open(location, encoding='utf8') as f:
-            meta = json.load(f)
+            meta = ujson.load(f)
             return meta
     elif require:
         raise IOError("Could not read meta.json from %s" % location)

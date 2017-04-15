@@ -145,7 +145,7 @@ def read_json_file(loc, docs_filter=None):
             yield from read_json_file(loc / filename)
     else:
         with io.open(loc, 'r', encoding='utf8') as file_:
-            docs = json.load(file_)
+            docs = ujson.load(file_)
         for doc in docs:
             if docs_filter is not None and not docs_filter(doc):
                 continue

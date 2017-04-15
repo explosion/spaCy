@@ -3,6 +3,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import ujson
+
 from .typedefs cimport attr_t
 from .typedefs cimport hash_t
 from .attrs cimport attr_id_t
@@ -51,12 +53,6 @@ from .attrs import FLAG38 as L7_ENT
 from .attrs import FLAG37 as L8_ENT
 from .attrs import FLAG36 as L9_ENT
 from .attrs import FLAG35 as L10_ENT
-
-
-try:
-    import ujson as json
-except ImportError:
-    import json
 
 
 cpdef enum quantifier_t:
@@ -194,7 +190,7 @@ cdef class Matcher:
         """
         if (path / 'gazetteer.json').exists():
             with (path / 'gazetteer.json').open('r', encoding='utf8') as file_:
-                patterns = json.load(file_)
+                patterns = ujson.load(file_)
         else:
             patterns = {}
         return cls(vocab, patterns)

@@ -1,7 +1,7 @@
-import json
 # coding: utf8
 from __future__ import unicode_literals
 
+import ujson
 from collections import defaultdict
 
 from cymem.cymem cimport Pool
@@ -131,7 +131,7 @@ cdef class Tagger:
         path = util.ensure_path(path)
         if (path / 'templates.json').exists():
             with (path / 'templates.json').open('r', encoding='utf8') as file_:
-                templates = json.load(file_)
+                templates = ujson.load(file_)
         elif require:
             raise IOError(
                 "Required file %s/templates.json not found when loading Tagger" % str(path))

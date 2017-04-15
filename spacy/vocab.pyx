@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 import bz2
-import ujson as json
+import ujson
 import re
 
 from libc.string cimport memset
@@ -69,7 +69,7 @@ cdef class Vocab:
                 "Install vectors after loading.")
         if tag_map is True and (path / 'vocab' / 'tag_map.json').exists():
             with (path / 'vocab' / 'tag_map.json').open('r', encoding='utf8') as file_:
-                tag_map = json.load(file_)
+                tag_map = ujson.load(file_)
         elif tag_map is True:
             tag_map = None
         if lex_attr_getters is not None \
@@ -82,12 +82,12 @@ cdef class Vocab:
             lemmatizer = Lemmatizer.load(path)
         if serializer_freqs is True and (path / 'vocab' / 'serializer.json').exists():
             with (path / 'vocab' / 'serializer.json').open('r', encoding='utf8') as file_:
-                serializer_freqs = json.load(file_)
+                serializer_freqs = ujson.load(file_)
         else:
             serializer_freqs = None
 
         with (path / 'vocab' / 'strings.json').open('r', encoding='utf8') as file_:
-            strings_list = json.load(file_)
+            strings_list = ujson.load(file_)
         cdef Vocab self = cls(lex_attr_getters=lex_attr_getters, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs,
                               strings=strings_list)
