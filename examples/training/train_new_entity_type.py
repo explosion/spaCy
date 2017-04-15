@@ -29,8 +29,8 @@ def train_ner(nlp, train_data, output_dir):
             doc = nlp.make_doc(raw_text)
             nlp.tagger(doc)
             loss = nlp.entity.update(doc, gold)
+    nlp.end_training()
     nlp.save_to_directory(output_dir)
-    #nlp.end_training(output_dir)
 
 
 def main(model_name, output_directory=None):
