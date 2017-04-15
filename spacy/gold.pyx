@@ -139,9 +139,10 @@ def _min_edit_path(cand_words, gold_words):
 
 
 def read_json_file(loc, docs_filter=None):
-    if path.isdir(loc):
-        for filename in os.listdir(loc):
-            yield from read_json_file(path.join(loc, filename))
+    loc = Path(loc)
+    if loc.is_dir():
+        for filename in loc.iterdir():
+            yield from read_json_file(loc / filename)
     else:
         with io.open(loc, 'r', encoding='utf8') as file_:
             docs = json.load(file_)
