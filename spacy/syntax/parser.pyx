@@ -151,7 +151,6 @@ cdef class Parser:
             if isinstance(labels, dict):
                 labels = list(sorted(labels.keys()))
             cfg['actions'][action_name] = labels
-        print(cfg['actions'])
         self = cls(vocab, TransitionSystem=TransitionSystem, model=None, **cfg)
         if (path / 'model').exists():
             self.model.load(str(path / 'model'))
@@ -187,6 +186,11 @@ cdef class Parser:
         self.model.learn_rate = cfg.get('learn_rate', 0.001)
 
         self.cfg = cfg
+        # TODO: This is a pretty hacky fix to the problem of adding more
+        # labels. The issue is they come in out of order, if labels are
+        # added during training
+        for label in cfg.get('extra_labels', []):
+            self.add_label(label)
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
