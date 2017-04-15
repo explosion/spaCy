@@ -383,7 +383,7 @@ cdef class StepwiseState:
     def __init__(self, Parser parser, Doc doc, GoldParse gold=None):
         self.parser = parser
         self.doc = doc
-        if gold:
+        if gold is not None:
             self.gold = gold
         else:
             self.gold = GoldParse(doc)
@@ -427,6 +427,8 @@ cdef class StepwiseState:
         """
         Find the action-costs for the current state.
         """
+        if not self.gold:
+            raise ValueError("Can't set costs: No GoldParse provided")
         self.parser.moves.set_costs(self.eg.c.is_valid, self.eg.c.costs,
                 self.stcls, self.gold)
         costs = {}
