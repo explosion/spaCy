@@ -108,6 +108,5 @@ cdef class TransitionSystem:
             self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
 
         self.c[self.n_moves] = self.init_transition(self.n_moves, action, label)
-        print("Add action", action, self.strings[label], self.n_moves)
         self.n_moves += 1
         return 1
