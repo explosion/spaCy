@@ -16,7 +16,9 @@ from .attrs import LEMMA, intify_attrs
 
 
 def _normalize_props(props):
-    '''Transform deprecated string keys to correct names.'''
+    """
+    Transform deprecated string keys to correct names.
+    """
     out = {}
     for key, value in props.items():
         if key == POS:
@@ -98,13 +100,14 @@ cdef class Morphology:
             flags[0] &= ~(one << flag_id)
 
     def add_special_case(self, unicode tag_str, unicode orth_str, attrs, force=False):
-        '''Add a special-case rule to the morphological analyser. Tokens whose
+        """
+        Add a special-case rule to the morphological analyser. Tokens whose
         tag and orth match the rule will receive the specified properties.
 
         Arguments:
             tag (unicode): The part-of-speech tag to key the exception.
             orth (unicode): The word-form to key the exception.
-        '''
+        """
         tag = self.strings[tag_str]
         tag_id = self.reverse_index[tag]
         orth = self.strings[orth_str]

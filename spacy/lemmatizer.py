@@ -38,8 +38,10 @@ class Lemmatizer(object):
         return lemmas
 
     def is_base_form(self, univ_pos, morphology=None):
-        '''Check whether we're dealing with an uninflected paradigm, so we can
-        avoid lemmatization entirely.'''
+        """
+        Check whether we're dealing with an uninflected paradigm, so we can
+        avoid lemmatization entirely.
+        """
         morphology = {} if morphology is None else morphology
         others = [key for key in morphology if key not in (POS, 'number', 'pos', 'verbform')]
         true_morph_key = morphology.get('morph', 0)

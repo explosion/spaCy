@@ -202,9 +202,10 @@ class BaseDefaults(object):
 
 
 class Language(object):
-    '''A text-processing pipeline. Usually you'll load this once per process, and
+    """
+    A text-processing pipeline. Usually you'll load this once per process, and
     pass the instance around your program.
-    '''
+    """
     Defaults = BaseDefaults
     lang = None
 
@@ -342,7 +343,8 @@ class Language(object):
         return doc
 
     def pipe(self, texts, tag=True, parse=True, entity=True, n_threads=2, batch_size=1000):
-        '''Process texts as a stream, and yield Doc objects in order.
+        """
+        Process texts as a stream, and yield Doc objects in order.
 
         Supports GIL-free multi-threading.
 
@@ -351,7 +353,7 @@ class Language(object):
             tag (bool)
             parse (bool)
             entity (bool)
-        '''
+        """
         skip = {self.tagger: not tag, self.parser: not parse, self.entity: not entity}
         stream = (self.make_doc(text) for text in texts)
         for proc in self.pipeline:

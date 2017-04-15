@@ -73,13 +73,16 @@ cdef Utf8Str _allocate(Pool mem, const unsigned char* chars, uint32_t length) ex
 
 
 cdef class StringStore:
-    '''Map strings to and from integer IDs.'''
+    """
+    Map strings to and from integer IDs.
+    """
     def __init__(self, strings=None, freeze=False):
-        '''Create the StringStore.
+        """
+        Create the StringStore.
 
         Arguments:
             strings: A sequence of unicode strings to add to the store.
-        '''
+        """
         self.mem = Pool()
         self._map = PreshMap()
         self._oov = PreshMap()
@@ -104,7 +107,8 @@ cdef class StringStore:
         return (StringStore, (list(self),))
 
     def __len__(self):
-        """The number of strings in the store.
+        """
+        The number of strings in the store.
 
         Returns:
             int The number of strings in the store.
@@ -112,8 +116,9 @@ cdef class StringStore:
         return self.size-1
 
     def __getitem__(self, object string_or_id):
-        """Retrieve a string from a given integer ID, or vice versa.
-        
+        """
+        Retrieve a string from a given integer ID, or vice versa.
+
         Arguments:
             string_or_id (bytes or unicode or int):
                 The value to encode.
@@ -159,7 +164,8 @@ cdef class StringStore:
                 return utf8str - self.c
 
     def __contains__(self, unicode string not None):
-        """Check whether a string is in the store.
+        """
+        Check whether a string is in the store.
 
         Arguments:
             string (unicode): The string to check.
@@ -172,7 +178,8 @@ cdef class StringStore:
         return self._map.get(key) is not NULL
 
     def __iter__(self):
-        """Iterate over the strings in the store, in order.
+        """
+        Iterate over the strings in the store, in order.
 
         Yields: unicode A string in the store.
         """
@@ -230,7 +237,8 @@ cdef class StringStore:
         return &self.c[self.size-1]
 
     def dump(self, file_):
-        """Save the strings to a JSON file.
+        """
+        Save the strings to a JSON file.
 
         Arguments:
             file_ (buffer): The file to save the strings.
@@ -244,7 +252,8 @@ cdef class StringStore:
         file_.write(string_data)
 
     def load(self, file_):
-        """Load the strings from a JSON file.
+        """
+        Load the strings from a JSON file.
 
         Arguments:
             file_ (buffer): The file from which to load the strings.

@@ -7,7 +7,8 @@ from ... import util
 
 
 def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
-    """Convert conllu files into JSON format for use with train cli.
+    """
+    Convert conllu files into JSON format for use with train cli.
     use_morphology parameter enables appending morphology to tags, which is
     useful for languages such as Spanish, where UD tags are not so rich.
     """

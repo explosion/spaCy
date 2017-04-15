@@ -106,10 +106,13 @@ cdef inline void _fill_from_token(atom_t* context, const TokenC* t) nogil:
 
 
 cdef class Tagger:
-    """Annotate part-of-speech tags on Doc objects."""
+    """
+    Annotate part-of-speech tags on Doc objects.
+    """
     @classmethod
     def load(cls, path, vocab, require=False):
-        """Load the statistical model from the supplied path.
+        """
+        Load the statistical model from the supplied path.
 
         Arguments:
             path (Path):
@@ -142,7 +145,8 @@ cdef class Tagger:
         return self
 
     def __init__(self, Vocab vocab, TaggerModel model=None, **cfg):
-        """Create a Tagger.
+        """
+        Create a Tagger.
 
         Arguments:
             vocab (Vocab):
@@ -180,7 +184,8 @@ cdef class Tagger:
         tokens._py_tokens = [None] * tokens.length
 
     def __call__(self, Doc tokens):
-        """Apply the tagger, setting the POS tags onto the Doc object.
+        """
+        Apply the tagger, setting the POS tags onto the Doc object.
 
         Arguments:
             doc (Doc): The tokens to be tagged.
@@ -208,7 +213,8 @@ cdef class Tagger:
         tokens._py_tokens = [None] * tokens.length
 
     def pipe(self, stream, batch_size=1000, n_threads=2):
-        """Tag a stream of documents.
+        """
+        Tag a stream of documents.
 
         Arguments:
             stream: The sequence of documents to tag.
@@ -225,7 +231,8 @@ cdef class Tagger:
             yield doc
 
     def update(self, Doc tokens, GoldParse gold, itn=0):
-        """Update the statistical model, with tags supplied for the given document.
+        """
+        Update the statistical model, with tags supplied for the given document.
 
         Arguments:
             doc (Doc):

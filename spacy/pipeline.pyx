@@ -11,7 +11,9 @@ from .attrs import DEP, ENT_TYPE
 
 
 cdef class EntityRecognizer(Parser):
-    """Annotate named entities on Doc objects."""
+    """
+    Annotate named entities on Doc objects.
+    """
     TransitionSystem = BiluoPushDown
 
     feature_templates = get_feature_templates('ner')
@@ -28,7 +30,9 @@ cdef class EntityRecognizer(Parser):
 
 
 cdef class BeamEntityRecognizer(BeamParser):
-    """Annotate named entities on Doc objects."""
+    """
+    Annotate named entities on Doc objects.
+    """
     TransitionSystem = BiluoPushDown
 
     feature_templates = get_feature_templates('ner')

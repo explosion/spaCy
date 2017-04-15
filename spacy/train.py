@@ -9,7 +9,9 @@ from .gold import merge_sents
 
 
 class Trainer(object):
-    '''Manage training of an NLP pipeline.'''
+    """
+    Manage training of an NLP pipeline.
+    """
     def __init__(self, nlp, gold_tuples):
         self.nlp = nlp
         self.gold_tuples = gold_tuples

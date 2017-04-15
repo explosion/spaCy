@@ -220,7 +220,8 @@ cdef class GoldParse:
 
     def __init__(self, doc, annot_tuples=None, words=None, tags=None, heads=None,
                  deps=None, entities=None, make_projective=False):
-        """Create a GoldParse.
+        """
+        Create a GoldParse.
 
         Arguments:
             doc (Doc):
@@ -310,13 +311,16 @@ cdef class GoldParse:
 
     @property
     def is_projective(self):
-        """Whether the provided syntactic annotations form a projective dependency
-        tree."""
+        """
+        Whether the provided syntactic annotations form a projective dependency
+        tree.
+        """
         return not nonproj.is_nonproj_tree(self.heads)
 
 
 def biluo_tags_from_offsets(doc, entities):
-    '''Encode labelled spans into per-token tags, using the Begin/In/Last/Unit/Out
+    """
+    Encode labelled spans into per-token tags, using the Begin/In/Last/Unit/Out
     scheme (biluo).
 
     Arguments:
@@ -347,7 +351,7 @@ def biluo_tags_from_offsets(doc, entities):
         tags = biluo_tags_from_offsets(doc, entities)
 
         assert tags == ['O', 'O', 'U-LOC', 'O']
-    '''
+    """
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx+len(token): token.i for token in doc}
     biluo = ['-' for _ in doc]

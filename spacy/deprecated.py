@@ -36,7 +36,8 @@ def align_tokens(ref, indices): # Deprecated, surely?
 
 
 def detokenize(token_rules, words): # Deprecated?
-    """To align with treebanks, return a list of "chunks", where a chunk is a
+    """
+    To align with treebanks, return a list of "chunks", where a chunk is a
     sequence of tokens that are separated by whitespace in actual strings. Each
     chunk should be a tuple of token indices, e.g.
 
@@ -57,10 +58,13 @@ def detokenize(token_rules, words): # Deprecated?
     return positions
 
 
-def fix_glove_vectors_loading(overrides):
-    """Special-case hack for loading the GloVe vectors, to support deprecated
-    <1.0 stuff. Phase this out once the data is fixed."""
 
+
+def fix_glove_vectors_loading(overrides):
+    """
+    Special-case hack for loading the GloVe vectors, to support deprecated
+    <1.0 stuff. Phase this out once the data is fixed.
+    """
     if 'data_dir' in overrides and 'path' not in overrides:
         raise ValueError("The argument 'data_dir' has been renamed to 'path'")
     if overrides.get('path') is False:
@@ -88,13 +92,13 @@ def fix_glove_vectors_loading(overrides):
 
 
 def resolve_model_name(name):
-    """If spaCy is loaded with 'de', check if symlink already exists. If
+    """
+    If spaCy is loaded with 'de', check if symlink already exists. If
     not, user have upgraded from older version and have old models installed.
     Check if old model directory exists and if so, return that instead and create
     shortcut link. If English model is found and no shortcut exists, raise error
     and tell user to install new model.
     """
-
     if name == 'en' or name == 'de':
         versions = ['1.0.0', '1.1.0']
         data_path = Path(util.get_data_path())
@@ -117,9 +121,11 @@ def resolve_model_name(name):
 
 
 class ModelDownload():
-    """Replace download modules within en and de with deprecation warning and
+    """
+    Replace download modules within en and de with deprecation warning and
     download default language model (using shortcut). Use classmethods to allow
-    importing ModelDownload as download and calling download.en() etc."""
+    importing ModelDownload as download and calling download.en() etc.
+    """
 
     @classmethod
     def load(self, lang):

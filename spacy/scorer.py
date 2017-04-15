@@ -6,7 +6,9 @@ from .gold import tags_to_entities
 
 
 class PRFScore(object):
-    """A precision / recall / F score"""
+    """
+    A precision / recall / F score
+    """
     def __init__(self):
         self.tp = 0
         self.fp = 0
