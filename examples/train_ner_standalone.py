@@ -1,3 +1,4 @@
+#!/usr/bin/env python
 '''Example of training a named entity recognition system from scratch using spaCy
 
 This example is written to be self-contained and reasonably transparent.
@@ -30,6 +31,8 @@ from spacy.attrs import *
 from spacy.gold import GoldParse
 from spacy.gold import _iob_to_biluo as iob_to_biluo
 from spacy.scorer import Scorer
+
+from deepsense import neptune
 
 try:
     unicode
@@ -81,7 +84,7 @@ def load_vocab(path):
 def init_ner_model(vocab, features=None):
     if features is None:
         features = tuple(EntityRecognizer.feature_templates)
-    return BeamEntityRecognizer(vocab, features=features)
+    return EntityRecognizer(vocab, features=features)
 
 
 def save_ner_model(model, path):
@@ -99,7 +102,7 @@ def save_ner_model(model, path):
 
 
 def load_ner_model(vocab, path):
-    return BeamEntityRecognizer.load(path, vocab)
+    return EntityRecognizer.load(path, vocab)
 
 
 class Pipeline(object):
@@ -110,18 +113,21 @@ class Pipeline(object):
             raise IOError("Cannot load pipeline from %s\nDoes not exist" % path)
         if not path.is_dir():
             raise IOError("Cannot load pipeline from %s\nNot a directory" % path)
-        vocab = load_vocab(path / 'vocab')
+        vocab = load_vocab(path)
         tokenizer = Tokenizer(vocab, {}, None, None, None)
         ner_model = load_ner_model(vocab, path / 'ner')
         return cls(vocab, tokenizer, ner_model)
 
-    def __init__(self, vocab=None, tokenizer=None, ner_model=None):
+    def __init__(self, vocab=None, tokenizer=None, entity=None):
         if vocab is None:
-            self.vocab = init_vocab()
+            vocab = init_vocab()
         if tokenizer is None:
             tokenizer = Tokenizer(vocab, {}, None, None, None)
-        if ner_model is None:
-            self.entity = init_ner_model(self.vocab)
+        if entity is None:
+            entity = init_ner_model(self.vocab)
+        self.vocab = vocab
+        self.tokenizer = tokenizer
+        self.entity = entity
         self.pipeline = [self.entity]
 
     def __call__(self, input_):
@@ -173,7 +179,25 @@ class Pipeline(object):
         save_ner_model(self.entity, path / 'ner')
 
 
-def train(nlp, train_examples, dev_examples, nr_epoch=5):
+def train(nlp, train_examples, dev_examples, ctx, nr_epoch=5):
+    channels = {}
+    channels['loss'] = ctx.job.create_channel(
+                        name='loss',
+                        channel_type=neptune.ChannelType.NUMERIC)
+ 
+    channels['f'] = ctx.job.create_channel(
+                        name='F-Measure',
+                        channel_type=neptune.ChannelType.NUMERIC)
+    channels['p'] = ctx.job.create_channel(
+                        name='Precision',
+                        channel_type=neptune.ChannelType.NUMERIC)
+    channels['r'] = ctx.job.create_channel(
+                        name='Recall',
+                        channel_type=neptune.ChannelType.NUMERIC)
+    channels['log'] = ctx.job.create_channel(
+                        name='logs',
+                        channel_type=neptune.ChannelType.TEXT)
+
     next_epoch = train_examples
     print("Iter", "Loss", "P", "R", "F")
     for i in range(nr_epoch):
@@ -186,14 +210,25 @@ def train(nlp, train_examples, dev_examples, nr_epoch=5):
                 next_epoch.append((input_, annot))
         random.shuffle(next_epoch)
         scores = nlp.evaluate(dev_examples)
-        precision = '%.2f' % scores['ents_p']
-        recall = '%.2f' % scores['ents_r']
-        f_measure = '%.2f' % scores['ents_f']
-        print(i, int(loss), precision, recall, f_measure)
+        report_scores(channels, i, loss, scores)
     nlp.average_weights()
     scores = nlp.evaluate(dev_examples)
-    print("After averaging")
-    print(scores['ents_p'], scores['ents_r'], scores['ents_f'])
+    report_scores(channels, i+1, loss, scores)
+
+
+def report_scores(channels, i, loss, scores):
+    precision = '%.2f' % scores['ents_p']
+    recall = '%.2f' % scores['ents_r']
+    f_measure = '%.2f' % scores['ents_f']
+    print('%d %s %s %s' % (int(loss), precision, recall, f_measure))
+    channels['log'].send(x=i, y='%d %s %s %s' % (int(loss), precision, recall,
+                                                  f_measure))
+    channels['f'].send(x=i, y=scores['ents_f'])
+    channels['p'].send(x=i, y=scores['ents_p'])
+    channels['r'].send(x=i, y=scores['ents_r'])
+    channels['loss'].send(x=i, y=loss)
+
+
 
 
 def read_examples(path):
@@ -221,15 +256,22 @@ def read_examples(path):
     train_loc=("Path to your training data", "positional", None, Path),
     dev_loc=("Path to your development data", "positional", None, Path),
 )
-def main(model_dir, train_loc, dev_loc, nr_epoch=10):
+def main(model_dir=Path('/home/matt/repos/spaCy/spacy/data/de-1.0.0'),
+        train_loc=None, dev_loc=None, nr_epoch=30):
+    ctx = neptune.Context()
+
+    train_loc = Path(ctx.params.train_loc)
+    dev_loc = Path(ctx.params.dev_loc)
+    model_dir = model_dir.resolve()
+    
     train_examples = read_examples(train_loc)
     dev_examples = read_examples(dev_loc)
-    nlp = Pipeline()
+    nlp = Pipeline.load(model_dir)
 
-    train(nlp, train_examples, list(dev_examples), nr_epoch)
+    train(nlp, train_examples, list(dev_examples), ctx, nr_epoch)
 
     nlp.save(model_dir)
 
 
 if __name__ == '__main__':
-    plac.call(main)
+    main()
