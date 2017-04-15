@@ -21,7 +21,6 @@ def link_package(package_name, link_name, force=False):
     # Python's installation and import rules are very complicated.
     pkg = importlib.import_module(package_name)
     package_path = Path(pkg.__file__).parent.parent
-
     meta = get_meta(package_path, package_name)
     model_name = package_name + '-' + meta['version']
     model_path = package_path / package_name / model_name

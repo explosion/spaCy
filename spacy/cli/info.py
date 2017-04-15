@@ -18,7 +18,6 @@ def info(model=None, markdown=False):
         else:
             data['source'] = str(model_path)
         print_info(data, "model " + model, markdown)
-
     else:
         data = get_spacy_data()
         print_info(data, "spaCy", markdown)
@@ -26,10 +25,8 @@ def info(model=None, markdown=False):
 
 def print_info(data, title, markdown):
     title = "Info about {title}".format(title=title)
-
     if markdown:
         util.print_markdown(data, title=title)
-
     else:
         util.print_table(data, title=title)
 
