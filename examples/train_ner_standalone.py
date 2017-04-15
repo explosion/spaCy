@@ -32,8 +32,6 @@ from spacy.gold import GoldParse
 from spacy.gold import _iob_to_biluo as iob_to_biluo
 from spacy.scorer import Scorer
 
-from deepsense import neptune
-
 try:
     unicode
 except NameError:
@@ -180,24 +178,6 @@ class Pipeline(object):
 
 
 def train(nlp, train_examples, dev_examples, ctx, nr_epoch=5):
-    channels = {}
-    channels['loss'] = ctx.job.create_channel(
-                        name='loss',
-                        channel_type=neptune.ChannelType.NUMERIC)
- 
-    channels['f'] = ctx.job.create_channel(
-                        name='F-Measure',
-                        channel_type=neptune.ChannelType.NUMERIC)
-    channels['p'] = ctx.job.create_channel(
-                        name='Precision',
-                        channel_type=neptune.ChannelType.NUMERIC)
-    channels['r'] = ctx.job.create_channel(
-                        name='Recall',
-                        channel_type=neptune.ChannelType.NUMERIC)
-    channels['log'] = ctx.job.create_channel(
-                        name='logs',
-                        channel_type=neptune.ChannelType.TEXT)
-
     next_epoch = train_examples
     print("Iter", "Loss", "P", "R", "F")
     for i in range(nr_epoch):
@@ -210,25 +190,17 @@ def train(nlp, train_examples, dev_examples, ctx, nr_epoch=5):
                 next_epoch.append((input_, annot))
         random.shuffle(next_epoch)
         scores = nlp.evaluate(dev_examples)
-        report_scores(channels, i, loss, scores)
+        report_scores(i, loss, scores)
     nlp.average_weights()
     scores = nlp.evaluate(dev_examples)
     report_scores(channels, i+1, loss, scores)
 
 
-def report_scores(channels, i, loss, scores):
+def report_scores(i, loss, scores):
     precision = '%.2f' % scores['ents_p']
     recall = '%.2f' % scores['ents_r']
     f_measure = '%.2f' % scores['ents_f']
     print('%d %s %s %s' % (int(loss), precision, recall, f_measure))
-    channels['log'].send(x=i, y='%d %s %s %s' % (int(loss), precision, recall,
-                                                  f_measure))
-    channels['f'].send(x=i, y=scores['ents_f'])
-    channels['p'].send(x=i, y=scores['ents_p'])
-    channels['r'].send(x=i, y=scores['ents_r'])
-    channels['loss'].send(x=i, y=loss)
-
-
 
 
 def read_examples(path):
@@ -258,11 +230,6 @@ def read_examples(path):
 )
 def main(model_dir=Path('/home/matt/repos/spaCy/spacy/data/de-1.0.0'),
         train_loc=None, dev_loc=None, nr_epoch=30):
-    ctx = neptune.Context()
-
-    train_loc = Path(ctx.params.train_loc)
-    dev_loc = Path(ctx.params.dev_loc)
-    model_dir = model_dir.resolve()
     
     train_examples = read_examples(train_loc)
     dev_examples = read_examples(dev_loc)
