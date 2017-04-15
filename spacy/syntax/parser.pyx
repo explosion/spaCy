@@ -366,11 +366,11 @@ cdef class Parser:
     def add_label(self, label):
         # Doesn't set label into serializer -- subclasses override it to do that.
         for action in self.moves.action_types:
-            self.moves.add_action(action, label)
-            if 'actions' in self.cfg:
+            added = self.moves.add_action(action, label)
+            if added:
                 # Important that the labels be stored as a list! We need the
                 # order, or the model goes out of synch
-                self.cfg['actions'].setdefault(str(action), []).append(label)
+                self.cfg.setdefault('extra_labels', []).append(label)
 
 
 cdef class StepwiseState:
@@ -385,11 +385,11 @@ cdef class StepwiseState:
         self.doc = doc
         if gold is not None:
             self.gold = gold
+            self.parser.moves.preprocess_gold(self.gold)
         else:
             self.gold = GoldParse(doc)
         self.stcls = StateClass.init(doc.c, doc.length)
         self.parser.moves.initialize_state(self.stcls.c)
-        self.parser.moves.preprocess_gold(gold)
         self.eg = Example(
             nr_class=self.parser.moves.n_moves,
             nr_atom=CONTEXT_SIZE,
