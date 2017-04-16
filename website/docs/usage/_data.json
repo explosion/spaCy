@@ -22,6 +22,7 @@
             "Custom tokenization": "customizing-tokenizer",
             "Training": "training",
             "Adding languages": "adding-languages"
+            "Training NER": "training-ner",
         },
         "Examples": {
             "Tutorials": "tutorials",
@@ -106,6 +107,10 @@
 
     "training": {
         "title": "Training the tagger, parser and entity recognizer"
+    "training-ner": {
+        "title": "Training the Named Entity Recognizer",
+        "next": "saving-loading"
+    },
     },
 
     "pos-tagging": {
