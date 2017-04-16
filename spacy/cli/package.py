@@ -60,7 +60,8 @@ def create_dirs(package_path, force):
             shutil.rmtree(unicode_(package_path))
         else:
             util.sys_exit(unicode_(package_path),
-                "Please delete the directory and try again.",
+                "Please delete the directory and try again, or use the --force "
+                "flag to overwrite existing directories.",
                 title="Package directory already exists")
     Path.mkdir(package_path, parents=True)
 
