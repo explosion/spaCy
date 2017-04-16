@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import platform
 from pathlib import Path
 
+from ..compat import unicode_
 from .. import about
 from .. import util
 
@@ -13,10 +14,10 @@ def info(model=None, markdown=False):
         data = util.parse_package_meta(util.get_data_path(), model, require=True)
         model_path = Path(__file__).parent / util.get_data_path() / model
         if model_path.resolve() != model_path:
-            data['link'] = str(model_path)
-            data['source'] = str(model_path.resolve())
+            data['link'] = unicode_(model_path)
+            data['source'] = unicode_(model_path.resolve())
         else:
-            data['source'] = str(model_path)
+            data['source'] = unicode_(model_path)
         print_info(data, "model " + model, markdown)
     else:
         data = get_spacy_data()
@@ -34,7 +35,7 @@ def print_info(data, title, markdown):
 def get_spacy_data():
     return {
         'spaCy version': about.__version__,
-        'Location': str(Path(__file__).parent.parent),
+        'Location': unicode_(Path(__file__).parent.parent),
         'Platform': platform.platform(),
         'Python version': platform.python_version(),
         'Installed models': ', '.join(list_models())
