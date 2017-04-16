@@ -20,9 +20,11 @@ def set_lang_class(name, cls):
 
 
 def get_lang_class(name):
+    if name in LANGUAGES:
+        return LANGUAGES[name]
     lang = re.split('[^a-zA-Z0-9]', name, 1)[0]
     if lang not in LANGUAGES:
-        raise RuntimeError('Language not supported: %s' % lang)
+        raise RuntimeError('Language not supported: %s' % name)
     return LANGUAGES[lang]
 
 
