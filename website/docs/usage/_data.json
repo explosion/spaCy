@@ -23,6 +23,7 @@
             "Training": "training",
             "Adding languages": "adding-languages"
             "Training NER": "training-ner",
+            "Saving & loading": "saving-loading"
         },
         "Examples": {
             "Tutorials": "tutorials",
@@ -111,6 +112,9 @@
         "title": "Training the Named Entity Recognizer",
         "next": "saving-loading"
     },
+
+    "saving-loading": {
+        "title": "Saving and loading models"
     },
 
     "pos-tagging": {
