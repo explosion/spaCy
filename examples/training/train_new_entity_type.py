@@ -1,22 +1,45 @@
+#!/usr/bin/env python
+"""
+Example of training an additional entity type
+
+This script shows how to add a new entity type to an existing pre-trained NER
+model. To keep the example short and simple, only four sentences are provided
+as examples. In practice, you'll need many more — a few hundred would be a
+good start. You will also likely need to mix in examples of other entity
+types, which might be obtained by running the entity recognizer over unlabelled
+sentences, and adding their annotations to the training set.
+
+The actual training is performed by looping over the examples, and calling
+`nlp.entity.update()`. The `update()` method steps through the words of the
+input. At each word, it makes a prediction. It then consults the annotations
+provided on the GoldParse instance, to see whether it was right. If it was
+wrong, it adjusts its weights so that the correct action will score higher
+next time.
+
+After training your model, you can save it to a directory. We recommend
+wrapping models as Python packages, for ease of deployment.
+
+For more details, see the documentation:
+* Training the Named Entity Recognizer: https://spacy.io/docs/usage/train-ner
+* Saving and loading models: https://spacy.io/docs/usage/saving-loading
+
+Developed for: spaCy 1.7.6
+Last tested for: spaCy 1.7.6
+"""
+# coding: utf8
 from __future__ import unicode_literals, print_function
-import json
-import pathlib
+
 import random
+from pathlib import Path
 
 import spacy
 from spacy.pipeline import EntityRecognizer
 from spacy.gold import GoldParse
 from spacy.tagger import Tagger
 
- 
-try:
-    unicode
-except:
-    unicode = str
-
 
 def train_ner(nlp, train_data, output_dir):
-    # Add new words to vocab.
+    # Add new words to vocab
     for raw_text, _ in train_data:
         doc = nlp.make_doc(raw_text)
         for word in doc:
@@ -30,11 +53,14 @@ def train_ner(nlp, train_data, output_dir):
             nlp.tagger(doc)
             loss = nlp.entity.update(doc, gold)
     nlp.end_training()
-    nlp.save_to_directory(output_dir)
+    if output_dir:
+        nlp.save_to_directory(output_dir)
 
 
 def main(model_name, output_directory=None):
     nlp = spacy.load(model_name)
+    if output_directory is not None:
+        output_directory = Path(output_directory)
 
     train_data = [
         (
@@ -55,18 +81,18 @@ def main(model_name, output_directory=None):
         )
     ]
     nlp.entity.add_label('ANIMAL')
-    if output_directory is not None:
-        output_directory = pathlib.Path(output_directory)
     ner = train_ner(nlp, train_data, output_directory)
 
+    # Test that the entity is recognized
     doc = nlp('Do you like horses?')
     for ent in doc.ents:
         print(ent.label_, ent.text)
-    nlp2 = spacy.load('en', path=output_directory)
-    nlp2.entity.add_label('ANIMAL')
-    doc2 = nlp2('Do you like horses?')
-    for ent in doc2.ents:
-        print(ent.label_, ent.text)
+    if output_directory:
+        nlp2 = spacy.load('en', path=output_directory)
+        nlp2.entity.add_label('ANIMAL')
+        doc2 = nlp2('Do you like horses?')
+        for ent in doc2.ents:
+            print(ent.label_, ent.text)
 
 
 if __name__ == '__main__':

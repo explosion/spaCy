@@ -204,15 +204,18 @@ class Language(object):
     @classmethod
     @contextmanager
     def train(cls, path, gold_tuples, **configs):
-        if parser_cfg['pseudoprojective']:
+        parser_cfg = configs.get('deps', {})
+        if parser_cfg.get('pseudoprojective'):
             # preprocess training data here before ArcEager.get_labels() is called
             gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
 
         for subdir in ('deps', 'ner', 'pos'):
             if subdir not in configs:
                 configs[subdir] = {}
-        configs['deps']['actions'] = ArcEager.get_actions(gold_parses=gold_tuples)
-        configs['ner']['actions'] = BiluoPushDown.get_actions(gold_parses=gold_tuples)
+        if parser_cfg:
+            configs['deps']['actions'] = ArcEager.get_actions(gold_parses=gold_tuples)
+        if 'ner' in configs:
+            configs['ner']['actions'] = BiluoPushDown.get_actions(gold_parses=gold_tuples)
 
         cls.setup_directory(path, **configs)
 
@@ -236,8 +239,7 @@ class Language(object):
         self.pipeline = self.Defaults.create_pipeline(self)
         yield Trainer(self, gold_tuples)
         self.end_training()
-        self.save_to_directory(path, deps=self.parser.cfg, ner=self.entity.cfg,
-                               pos=self.tagger.cfg)
+        self.save_to_directory(path)
 
     def __init__(self, **overrides):
         if 'data_dir' in overrides and 'path' not in overrides:

@@ -1,7 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals, print_function
 
-import io
 import ujson
 import re
 from pathlib import Path
@@ -21,9 +20,11 @@ def set_lang_class(name, cls):
 
 
 def get_lang_class(name):
+    if name in LANGUAGES:
+        return LANGUAGES[name]
     lang = re.split('[^a-zA-Z0-9]', name, 1)[0]
     if lang not in LANGUAGES:
-        raise RuntimeError('Language not supported: %s' % lang)
+        raise RuntimeError('Language not supported: %s' % name)
     return LANGUAGES[lang]
 
 
@@ -44,15 +45,6 @@ def ensure_path(path):
         return Path(path)
     else:
         return path
-
-
-def or_(val1, val2):
-    if val1 is not None:
-        return val1
-    elif callable(val2):
-        return val2()
-    else:
-        return val2
 
 
 def read_regex(path):
@@ -103,22 +95,28 @@ def normalize_slice(length, start, stop, step=None):
     return start, stop
 
 
-def utf8open(loc, mode='r'):
-    return io.open(loc, mode, encoding='utf8')
-
-
 def check_renamed_kwargs(renamed, kwargs):
     for old, new in renamed.items():
         if old in kwargs:
             raise TypeError("Keyword argument %s now renamed to %s" % (old, new))
 
 
+def read_json(location):
+    with location.open('r', encoding='utf8') as f:
+        return ujson.load(f)
+
+
 def parse_package_meta(package_path, package, require=True):
+    """
+    Check if a meta.json exists in a package and return its contents as a
+    dictionary. If require is set to True, raise an error if no meta.json found.
+    """
+    # TODO: Allow passing in full model path and only require one argument
+    # instead of path and package name. This lets us avoid passing in an awkward
+    # empty string in spacy.load() if user supplies full model path.
     location = package_path / package / 'meta.json'
     if location.is_file():
-        with location.open('r', encoding='utf8') as f:
-            meta = ujson.load(f)
-            return meta
+        return read_json(location)
     elif require:
         raise IOError("Could not read meta.json from %s" % location)
     else:
@@ -126,10 +124,11 @@ def parse_package_meta(package_path, package, require=True):
 
 
 def get_raw_input(description, default=False):
-    """Get user input via raw_input / input and return input value. Takes a
+    """
+    Get user input via raw_input / input and return input value. Takes a
     description for the prompt, and an optional default value that's displayed
-    with the prompt."""
-
+    with the prompt.
+    """
     additional = ' (default: {d})'.format(d=default) if default else ''
     prompt = '    {d}{a}: '.format(d=description, a=additional)
     user_input = input_(prompt)
@@ -137,9 +136,10 @@ def get_raw_input(description, default=False):
 
 
 def print_table(data, **kwargs):
-    """Print data in table format. Can either take a list of tuples or a
-    dictionary, which will be converted to a list of tuples."""
-
+    """
+    Print data in table format. Can either take a list of tuples or a
+    dictionary, which will be converted to a list of tuples.
+    """
     if type(data) == dict:
         data = list(data.items())
 
@@ -155,10 +155,11 @@ def print_table(data, **kwargs):
 
 
 def print_markdown(data, **kwargs):
-    """Print listed data in GitHub-flavoured Markdown format so it can be
+    """
+    Print listed data in GitHub-flavoured Markdown format so it can be
     copy-pasted into issues. Can either take a list of tuples or a dictionary,
-    which will be converted to a list of tuples."""
-
+    which will be converted to a list of tuples.
+    """
     def excl_value(value):
         # don't print value if it contains absolute path of directory (i.e.
         # personal info). Other conditions can be included here if necessary.
@@ -175,16 +176,16 @@ def print_markdown(data, **kwargs):
 
     if 'title' in kwargs and kwargs['title']:
         print(tpl_title.format(msg=kwargs['title']))
-
     print(tpl_msg.format(msg=markdown))
 
 
 def print_msg(*text, **kwargs):
-    """Print formatted message. Each positional argument is rendered as newline-
+    """
+    Print formatted message. Each positional argument is rendered as newline-
     separated paragraph. If kwarg 'title' exist, title is printed above the text
     and highlighted (using ANSI escape sequences manually to avoid unnecessary
-    dependency)."""
-
+    dependency).
+    """
     message = '\n\n'.join([_wrap_text(t) for t in text])
     tpl_msg = '\n{msg}\n'
     tpl_title = '\n\033[93m{msg}\033[0m'
@@ -196,9 +197,10 @@ def print_msg(*text, **kwargs):
 
 
 def _wrap_text(text):
-    """Wrap text at given width using textwrap module. Indent should consist of
-    spaces. Its length is deducted from wrap width to ensure exact wrapping."""
-
+    """
+    Wrap text at given width using textwrap module. Indent should consist of
+    spaces. Its length is deducted from wrap width to ensure exact wrapping.
+    """
     wrap_max = 80
     indent = '    '
     wrap_width = wrap_max - len(indent)
@@ -208,10 +210,11 @@ def _wrap_text(text):
 
 
 def sys_exit(*messages, **kwargs):
-    """Performs SystemExit. For modules used from the command line, like
+    """
+    Performs SystemExit. For modules used from the command line, like
     download and link. To print message, use the same arguments as for
-    print_msg()."""
-
+    print_msg().
+    """
     if messages:
         print_msg(*messages, **kwargs)
     sys.exit(0)
