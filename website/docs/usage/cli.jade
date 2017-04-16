@@ -249,14 +249,16 @@ p
 
 p
     |  Generate a #[+a("/docs/usage/models#own-models") model Python package]
-    |  from an existing model data directory. All data files are copied over,
-    |  and the meta data can be entered directly from the command line. While
-    |  this feature is still experimental, the required file templates are
-    |  downloaded from #[+src(gh("spacy-dev-resources", "templates/model")) GitHub].
-    |  This means you need to be connected to the internet to use this command.
+    |  from an existing model data directory. All data files are copied over.
+    |  If the path to a meta.json is supplied, or a meta.json is found in the
+    |  input directory, this file is used. Otherwise, the data can be entered
+    |  directly from the command line. While this feature is still experimental,
+    |  the required file templates are downloaded from
+    |  #[+src(gh("spacy-dev-resources", "templates/model")) GitHub]. This means
+    |  you need to be connected to the internet to use this command.
 
 +code(false, "bash").
-    python -m spacy package [input_dir] [output_dir] [--force]
+    python -m spacy package [input_dir] [output_dir] [--meta] [--force]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -268,6 +270,11 @@ p
         +cell #[code output_dir]
         +cell positional
         +cell Directory to create package folder in.
+
+    +row
+        +cell #[code meta]
+        +cell option
+        +cell Path to meta.json file (optional).
 
     +row
         +cell #[code --force], #[code -f]
