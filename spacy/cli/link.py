@@ -48,7 +48,7 @@ def symlink(model_path, link_name, force):
     except:
         # This is quite dirty, but just making sure other errors are caught so
         # users at least see a proper message.
-        util.sys_exit(
+        util.print_msg(
             "Creating a symlink in spacy/data failed. Make sure you have the "
             "required permissions and try re-running the command as admin, or "
             "use a virtualenv to install spaCy in a user directory, instead of "
@@ -57,6 +57,7 @@ def symlink(model_path, link_name, force):
             "load() method, or create the symlink manually:",
             "{a} --> {b}".format(a=unicode_(model_path), b=unicode_(link_path)),
             title="Error: Couldn't link model to '{l}'".format(l=link_name))
+        raise
 
     util.print_msg(
         "{a} --> {b}".format(a=model_path.as_posix(), b=link_path.as_posix()),
