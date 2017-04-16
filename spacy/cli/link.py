@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import pip
 from pathlib import Path
 import importlib
+from ..compat import unicode_, symlink_to
 from .. import util
 
 
@@ -20,7 +21,6 @@ def link_package(package_name, link_name, force=False):
     # Python's installation and import rules are very complicated.
     pkg = importlib.import_module(package_name)
     package_path = Path(pkg.__file__).parent.parent
-
     meta = get_meta(package_path, package_name)
     model_name = package_name + '-' + meta['version']
     model_path = package_path / package_name / model_name
@@ -43,23 +43,17 @@ def symlink(model_path, link_name, force):
     elif link_path.exists():
         link_path.unlink()
 
-    # Add workaround for Python 2 on Windows (see issue #909)
-    if util.is_python2() and util.is_windows():
-        import subprocess
-        command = ['mklink', '/d', unicode(link_path), unicode(model_path)]
-        try:
-            subprocess.call(command, shell=True)
-        except:
-            # This is quite dirty, but just making sure other Windows-specific
-            # errors are caught so users at least see a proper error message.
-            util.sys_exit(
-                "Creating a symlink in spacy/data failed. You can still import "
-                "the model as a Python package and call its load() method, or "
-                "create the symlink manually:",
-                "{a} --> {b}".format(a=unicode(model_path), b=unicode(link_path)),
-                title="Error: Couldn't link model to '{l}'".format(l=link_name))
-    else:
-        link_path.symlink_to(model_path)
+    try:
+        symlink_to(link_path, model_path)
+    except:
+        # This is quite dirty, but just making sure other errors are caught so
+        # users at least see a proper message.
+        util.sys_exit(
+            "Creating a symlink in spacy/data failed. You can still import "
+            "the model as a Python package and call its load() method, or "
+            "create the symlink manually:",
+            "{a} --> {b}".format(a=unicode_(model_path), b=unicode_(link_path)),
+            title="Error: Couldn't link model to '{l}'".format(l=link_name))
 
     util.print_msg(
         "{a} --> {b}".format(a=model_path.as_posix(), b=link_path.as_posix()),

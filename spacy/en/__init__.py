@@ -11,12 +11,6 @@ from ..deprecated import fix_glove_vectors_loading
 from .language_data import *
 
 
-try:
-    basestring
-except NameError:
-    basestring = str
-
-
 class English(Language):
     lang = 'en'
 

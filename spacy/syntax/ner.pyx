@@ -1,17 +1,16 @@
+# coding: utf-8
 from __future__ import unicode_literals
 
-from .transition_system cimport Transition
-from .transition_system cimport do_func_t
-
-from ..structs cimport TokenC, Entity
-
 from thinc.typedefs cimport weight_t
-from ..gold cimport GoldParseC
-from ..gold cimport GoldParse
-from ..attrs cimport ENT_TYPE, ENT_IOB
 
 from .stateclass cimport StateClass
 from ._state cimport StateC
+from .transition_system cimport Transition
+from .transition_system cimport do_func_t
+from ..structs cimport TokenC, Entity
+from ..gold cimport GoldParseC
+from ..gold cimport GoldParse
+from ..attrs cimport ENT_TYPE, ENT_IOB
 
 
 cdef enum:
@@ -21,6 +20,7 @@ cdef enum:
     LAST
     UNIT
     OUT
+    ISNT
     N_MOVES
 
 
@@ -31,6 +31,7 @@ MOVE_NAMES[IN] = 'I'
 MOVE_NAMES[LAST] = 'L'
 MOVE_NAMES[UNIT] = 'U'
 MOVE_NAMES[OUT] = 'O'
+MOVE_NAMES[ISNT] = 'x'
 
 
 cdef do_func_t[N_MOVES] do_funcs
@@ -54,16 +55,20 @@ cdef class BiluoPushDown(TransitionSystem):
     def get_actions(cls, **kwargs):
         actions = kwargs.get('actions',
                     {
-                        MISSING: {'': True},
-                        BEGIN: {},
-                        IN: {},
-                        LAST: {},
-                        UNIT: {},
-                        OUT: {'': True}
+                        MISSING: [''],
+                        BEGIN: [],
+                        IN: [],
+                        LAST: [],
+                        UNIT: [],
+                        OUT: ['']
                     })
+        seen_entities = set()
         for entity_type in kwargs.get('entity_types', []):
+            if entity_type in seen_entities:
+                continue
+            seen_entities.add(entity_type)
             for action in (BEGIN, IN, LAST, UNIT):
-                actions[action][entity_type] = True
+                actions[action].append(entity_type)
         moves = ('M', 'B', 'I', 'L', 'U')
         for raw_text, sents in kwargs.get('gold_parses', []):
             for (ids, words, tags, heads, labels, biluo), _ in sents:
@@ -72,8 +77,10 @@ cdef class BiluoPushDown(TransitionSystem):
                         if ner_tag.count('-') != 1:
                             raise ValueError(ner_tag)
                         _, label = ner_tag.split('-')
-                        for move_str in ('B', 'I', 'L', 'U'):
-                            actions[moves.index(move_str)][label] = True
+                        if label not in seen_entities:
+                            seen_entities.add(label)
+                            for move_str in ('B', 'I', 'L', 'U'):
+                                actions[moves.index(move_str)].append(label)
         return actions
 
     property action_types:
@@ -111,11 +118,17 @@ cdef class BiluoPushDown(TransitionSystem):
             label = 0
         elif '-' in name:
             move_str, label_str = name.split('-', 1)
+            # Hacky way to denote 'not this entity'
+            if label_str.startswith('!'):
+                label_str = label_str[1:]
+                move_str = 'x'
             label = self.strings[label_str]
         else:
             move_str = name
             label = 0
         move = MOVE_NAMES.index(move_str)
+        if move == ISNT:
+            return Transition(clas=0, move=ISNT, label=label, score=0)
         for i in range(self.n_moves):
             if self.c[i].move == move and self.c[i].label == label:
                 return self.c[i]
@@ -225,6 +238,9 @@ cdef class Begin:
         elif g_act == BEGIN:
             # B, Gold B --> Label match
             return label != g_tag
+        # Support partial supervision in the form of "not this label"
+        elif g_act == ISNT:
+            return label == g_tag
         else:
             # B, Gold I --> False (P)
             # B, Gold L --> False (P)
@@ -359,6 +375,9 @@ cdef class Unit:
         elif g_act == UNIT:
             # U, Gold U --> True iff tag match
             return label != g_tag
+        # Support partial supervision in the form of "not this label"
+        elif g_act == ISNT:
+            return label == g_tag
         else:
             # U, Gold B --> False
             # U, Gold I --> False
@@ -388,7 +407,7 @@ cdef class Out:
         cdef int g_act = gold.ner[s.B(0)].move
         cdef int g_tag = gold.ner[s.B(0)].label
 
-        if g_act == MISSING:
+        if g_act == MISSING or g_act == ISNT:
             return 0
         elif g_act == BEGIN:
             # O, Gold B --> False

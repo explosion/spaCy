@@ -1,3 +1,7 @@
+# coding: utf8
+from __future__ import unicode_literals
+
+
 IDS = {
     "": NULL_ATTR,
     "IS_ALPHA": IS_ALPHA,
@@ -92,7 +96,8 @@ NAMES = [key for key, value in sorted(IDS.items(), key=lambda item: item[1])]
 
 
 def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
-    '''Normalize a dictionary of attributes, converting them to ints.
+    """
+    Normalize a dictionary of attributes, converting them to ints.
 
     Arguments:
         stringy_attrs (dict):
@@ -105,7 +110,7 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
         inty_attrs (dict):
             Attributes dictionary with keys and optionally values converted to
             ints.
-    '''
+    """
     inty_attrs = {}
     if _do_deprecated:
         if 'F' in stringy_attrs:

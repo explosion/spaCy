@@ -1,29 +1,18 @@
 # coding: utf8
 from __future__ import unicode_literals, print_function
-import os
+
 import io
-import json
+import ujson
 import re
-import os.path
-import pathlib
+from pathlib import Path
 import sys
 import textwrap
 
-
-try:
-    basestring
-except NameError:
-    basestring = str
-
-
-try:
-    raw_input
-except NameError: # Python 3
-    raw_input = input
+from .compat import basestring_, unicode_, input_
 
 
 LANGUAGES = {}
-_data_path = pathlib.Path(__file__).parent / 'data'
+_data_path = Path(__file__).parent / 'data'
 
 
 def set_lang_class(name, cls):
@@ -47,9 +36,14 @@ def get_data_path(require_exists=True):
 
 def set_data_path(path):
     global _data_path
-    if isinstance(path, basestring):
-        path = pathlib.Path(path)
-    _data_path = path
+    _data_path = ensure_path(path)
+
+
+def ensure_path(path):
+    if isinstance(path, basestring_):
+        return Path(path)
+    else:
+        return path
 
 
 def or_(val1, val2):
@@ -61,41 +55,8 @@ def or_(val1, val2):
         return val2
 
 
-def match_best_version(target_name, target_version, path):
-    path = path if not isinstance(path, basestring) else pathlib.Path(path)
-    if path is None or not path.exists():
-        return None
-    matches = []
-    for data_name in path.iterdir():
-        name, version = split_data_name(data_name.parts[-1])
-        if name == target_name and constraint_match(target_version, version):
-            matches.append((tuple(float(v) for v in version.split('.')), data_name))
-    if matches:
-        return pathlib.Path(max(matches)[1])
-    else:
-        return None
-
-
-def split_data_name(name):
-    return name.split('-', 1) if '-' in name else (name, '')
-
-
-def constraint_match(constraint_string, version):
-    # From http://github.com/spacy-io/sputnik
-    if not constraint_string:
-        return True
-
-    constraints = [c.strip() for c in constraint_string.split(',') if c.strip()]
-
-    for c in constraints:
-        if not re.match(r'[><=][=]?\d+(\.\d+)*', c):
-            raise ValueError('invalid constraint: %s' % c)
-
-    return all(semver.match(version, c) for c in constraints)
-
-
 def read_regex(path):
-    path = path if not isinstance(path, basestring) else pathlib.Path(path)
+    path = ensure_path(path)
     with path.open() as file_:
         entries = file_.read().split('\n')
     expression = '|'.join(['^' + re.escape(piece) for piece in entries if piece.strip()])
@@ -152,21 +113,11 @@ def check_renamed_kwargs(renamed, kwargs):
             raise TypeError("Keyword argument %s now renamed to %s" % (old, new))
 
 
-def is_windows():
-    """Check if user is on Windows."""
-    return sys.platform.startswith('win')
-
-
-def is_python2():
-    """Check if Python 2 is used."""
-    return sys.version.startswith('2.')
-
-
 def parse_package_meta(package_path, package, require=True):
-    location = os.path.join(str(package_path), package, 'meta.json')
-    if os.path.isfile(location):
-        with io.open(location, encoding='utf8') as f:
-            meta = json.load(f)
+    location = package_path / package / 'meta.json'
+    if location.is_file():
+        with location.open('r', encoding='utf8') as f:
+            meta = ujson.load(f)
             return meta
     elif require:
         raise IOError("Could not read meta.json from %s" % location)
@@ -181,7 +132,7 @@ def get_raw_input(description, default=False):
 
     additional = ' (default: {d})'.format(d=default) if default else ''
     prompt = '    {d}{a}: '.format(d=description, a=additional)
-    user_input = raw_input(prompt)
+    user_input = input_(prompt)
     return user_input
 
 
@@ -209,10 +160,9 @@ def print_markdown(data, **kwargs):
     which will be converted to a list of tuples."""
 
     def excl_value(value):
-        # don't print value if it contains absolute path of directory
-        # (i.e. personal info that shouldn't need to be shared)
-        # other conditions can be included here if necessary
-        if str(pathlib.Path(__file__).parent) in value:
+        # don't print value if it contains absolute path of directory (i.e.
+        # personal info). Other conditions can be included here if necessary.
+        if unicode_(Path(__file__).parent) in value:
             return True
 
     if type(data) == dict:

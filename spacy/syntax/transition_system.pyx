@@ -1,4 +1,8 @@
 # cython: infer_types=True
+# coding: utf-8
+from __future__ import unicode_literals
+
+from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t
 from collections import defaultdict
@@ -6,7 +10,6 @@ from collections import defaultdict
 from ..structs cimport TokenC
 from .stateclass cimport StateClass
 from ..attrs cimport TAG, HEAD, DEP, ENT_TYPE, ENT_IOB
-from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 
 
 cdef weight_t MIN_SCORE = -90000
@@ -32,7 +35,7 @@ cdef class TransitionSystem:
         self.c = <Transition*>self.mem.alloc(self._size, sizeof(Transition))
 
         for action, label_strs in sorted(labels_by_action.items()):
-            for label_str in sorted(label_strs):
+            for label_str in label_strs:
                 self.add_action(int(action), label_str)
         self.root_label = self.strings['ROOT']
         self.freqs = {} if _freqs is None else _freqs

@@ -1,50 +1,34 @@
+"""
+MALT-style dependency parser
+"""
 # cython: profile=True
 # cython: experimental_cpp_class_def=True
 # cython: cdivision=True
 # cython: infer_types=True
-"""
-MALT-style dependency parser
-"""
-from __future__ import unicode_literals
+# coding: utf-8
+
+from __future__ import unicode_literals, print_function
 cimport cython
 
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
-
 from libc.stdint cimport uint32_t, uint64_t
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport rand
 from libc.math cimport log, exp, isnan, isinf
-import random
-import os.path
-from os import path
-import shutil
-import json
-import math
-
 from cymem.cymem cimport Pool, Address
 from murmurhash.mrmr cimport real_hash64 as hash64
 from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
-
-
-from util import Config
-
 from thinc.linear.features cimport ConjunctionExtracter
 from thinc.structs cimport FeatureC, ExampleC
-
-from thinc.extra.search cimport Beam
-from thinc.extra.search cimport MaxViolation
+from thinc.extra.search cimport Beam, MaxViolation
 from thinc.extra.eg cimport Example
 from thinc.extra.mb cimport Minibatch
 
 from ..structs cimport TokenC
-
 from ..tokens.doc cimport Doc
 from ..strings cimport StringStore
-
 from .transition_system cimport TransitionSystem, Transition
-
 from ..gold cimport GoldParse
-
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
@@ -266,4 +250,3 @@ def is_gold(StateClass state, GoldParse gold, StringStore strings):
         id_, word, tag, head, dep, ner = gold.orig_annot[gold.cand_to_gold[i]]
         truth.add((id_, head, dep))
     return truth == predicted
-

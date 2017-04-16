@@ -1,12 +1,13 @@
-from __future__ import division
-from __future__ import print_function
-from __future__ import unicode_literals
+# coding: utf8
+from __future__ import division, print_function, unicode_literals
 
 from .gold import tags_to_entities
 
 
 class PRFScore(object):
-    """A precision / recall / F score"""
+    """
+    A precision / recall / F score
+    """
     def __init__(self):
         self.tp = 0
         self.fp = 0

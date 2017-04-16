@@ -1,13 +1,8 @@
-from __future__ import unicode_literals, print_function
-import codecs
-import pathlib
-
-import ujson as json
+# coding: utf8
+from __future__ import unicode_literals
 
 from .symbols import POS, NOUN, VERB, ADJ, PUNCT
-from .symbols import VerbForm_inf, VerbForm_none
-from .symbols import Number_sing
-from .symbols import Degree_pos
+from .symbols import VerbForm_inf, VerbForm_none, Number_sing, Degree_pos
 
 
 class Lemmatizer(object):
@@ -38,8 +33,10 @@ class Lemmatizer(object):
         return lemmas
 
     def is_base_form(self, univ_pos, morphology=None):
-        '''Check whether we're dealing with an uninflected paradigm, so we can
-        avoid lemmatization entirely.'''
+        """
+        Check whether we're dealing with an uninflected paradigm, so we can
+        avoid lemmatization entirely.
+        """
         morphology = {} if morphology is None else morphology
         others = [key for key in morphology if key not in (POS, 'number', 'pos', 'verbform')]
         true_morph_key = morphology.get('morph', 0)

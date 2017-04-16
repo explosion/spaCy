@@ -1,58 +1,46 @@
-# cython: infer_types=True
 """
 MALT-style dependency parser
 """
+# coding: utf-8
+# cython: infer_types=True
 from __future__ import unicode_literals
+
+from collections import Counter
+import ujson
+
 cimport cython
 cimport cython.parallel
 
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals
-
 from libc.stdint cimport uint32_t, uint64_t
 from libc.string cimport memset, memcpy
 from libc.stdlib cimport malloc, calloc, free
-
-import os.path
-from collections import Counter
-from os import path
-import shutil
-import json
-import sys
-from .nonproj import PseudoProjectivity
-
-from cymem.cymem cimport Pool, Address
-from murmurhash.mrmr cimport hash64
 from thinc.typedefs cimport weight_t, class_t, feat_t, atom_t, hash_t
 from thinc.linear.avgtron cimport AveragedPerceptron
 from thinc.linalg cimport VecVec
-from thinc.structs cimport SparseArrayC
+from thinc.structs cimport SparseArrayC, FeatureC, ExampleC
+from thinc.extra.eg cimport Example
+from cymem.cymem cimport Pool, Address
+from murmurhash.mrmr cimport hash64
 from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
-
-from thinc.structs cimport FeatureC
-from thinc.structs cimport ExampleC
-from thinc.extra.eg cimport Example
-
-from util import Config
-
-from ..structs cimport TokenC
-
-from ..tokens.doc cimport Doc
-from ..strings cimport StringStore
-
-from .transition_system import OracleError
-from .transition_system cimport TransitionSystem, Transition
-
-from ..gold cimport GoldParse
 
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from ._state cimport StateC
+from .nonproj import PseudoProjectivity
+from .transition_system import OracleError
+from .transition_system cimport TransitionSystem, Transition
+from ..structs cimport TokenC
+from ..tokens.doc cimport Doc
+from ..strings cimport StringStore
+from ..gold cimport GoldParse
 
-USE_FTRL = True
+
+USE_FTRL = False
 DEBUG = False
 def set_debug(val):
     global DEBUG
@@ -80,7 +68,9 @@ cdef class ParserModel(AveragedPerceptron):
         return nr_feat
 
     def update(self, Example eg, itn=0):
-        '''Does regression on negative cost. Sort of cute?'''
+        """
+        Does regression on negative cost. Sort of cute?
+        """
         self.time += 1
         cdef int best = arg_max_if_gold(eg.c.scores, eg.c.costs, eg.c.nr_class)
         cdef int guess = eg.guess
@@ -132,10 +122,13 @@ cdef class ParserModel(AveragedPerceptron):
 
 
 cdef class Parser:
-    """Base class of the DependencyParser and EntityRecognizer."""
+    """
+    Base class of the DependencyParser and EntityRecognizer.
+    """
     @classmethod
     def load(cls, path, Vocab vocab, TransitionSystem=None, require=False, **cfg):
-        """Load the statistical model from the supplied path.
+        """
+        Load the statistical model from the supplied path.
 
         Arguments:
             path (Path):
@@ -148,10 +141,16 @@ cdef class Parser:
             The newly constructed object.
         """
         with (path / 'config.json').open() as file_:
-            cfg = json.load(file_)
+            cfg = ujson.load(file_)
         # TODO: remove this shim when we don't have to support older data
         if 'labels' in cfg and 'actions' not in cfg:
             cfg['actions'] = cfg.pop('labels')
+        # TODO: remove this shim when we don't have to support older data
+        for action_name, labels in dict(cfg['actions']).items():
+            # We need this to be sorted
+            if isinstance(labels, dict):
+                labels = list(sorted(labels.keys()))
+            cfg['actions'][action_name] = labels
         self = cls(vocab, TransitionSystem=TransitionSystem, model=None, **cfg)
         if (path / 'model').exists():
             self.model.load(str(path / 'model'))
@@ -161,7 +160,8 @@ cdef class Parser:
         return self
 
     def __init__(self, Vocab vocab, TransitionSystem=None, ParserModel model=None, **cfg):
-        """Create a Parser.
+        """
+        Create a Parser.
 
         Arguments:
             vocab (Vocab):
@@ -186,12 +186,18 @@ cdef class Parser:
         self.model.learn_rate = cfg.get('learn_rate', 0.001)
 
         self.cfg = cfg
+        # TODO: This is a pretty hacky fix to the problem of adding more
+        # labels. The issue is they come in out of order, if labels are
+        # added during training
+        for label in cfg.get('extra_labels', []):
+            self.add_label(label)
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
     def __call__(self, Doc tokens):
-        """Apply the entity recognizer, setting the annotations onto the Doc object.
+        """
+        Apply the entity recognizer, setting the annotations onto the Doc object.
 
         Arguments:
             doc (Doc): The document to be processed.
@@ -208,7 +214,8 @@ cdef class Parser:
         self.moves.finalize_doc(tokens)
 
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
-        """Process a stream of documents.
+        """
+        Process a stream of documents.
 
         Arguments:
             stream: The sequence of documents to process.
@@ -296,7 +303,8 @@ cdef class Parser:
         return 0
 
     def update(self, Doc tokens, GoldParse gold, itn=0):
-        """Update the statistical model.
+        """
+        Update the statistical model.
 
         Arguments:
             doc (Doc):
@@ -334,15 +342,17 @@ cdef class Parser:
         self.moves.finalize_state(stcls.c)
         return loss
 
-    def step_through(self, Doc doc):
-        """Set up a stepwise state, to introspect and control the transition sequence.
+    def step_through(self, Doc doc, GoldParse gold=None):
+        """
+        Set up a stepwise state, to introspect and control the transition sequence.
 
         Arguments:
             doc (Doc): The document to step through.
+            gold (GoldParse): Optional gold parse
         Returns (StepwiseState):
             A state object, to step through the annotation process.
         """
-        return StepwiseState(self, doc)
+        return StepwiseState(self, doc, gold=gold)
 
     def from_transition_sequence(self, Doc doc, sequence):
         """Control the annotations on a document by specifying a transition sequence
@@ -360,18 +370,28 @@ cdef class Parser:
     def add_label(self, label):
         # Doesn't set label into serializer -- subclasses override it to do that.
         for action in self.moves.action_types:
-            self.moves.add_action(action, label)
+            added = self.moves.add_action(action, label)
+            if added:
+                # Important that the labels be stored as a list! We need the
+                # order, or the model goes out of synch
+                self.cfg.setdefault('extra_labels', []).append(label)
 
 
 cdef class StepwiseState:
     cdef readonly StateClass stcls
     cdef readonly Example eg
     cdef readonly Doc doc
+    cdef readonly GoldParse gold
     cdef readonly Parser parser
 
-    def __init__(self, Parser parser, Doc doc):
+    def __init__(self, Parser parser, Doc doc, GoldParse gold=None):
         self.parser = parser
         self.doc = doc
+        if gold is not None:
+            self.gold = gold
+            self.parser.moves.preprocess_gold(self.gold)
+        else:
+            self.gold = GoldParse(doc)
         self.stcls = StateClass.init(doc.c, doc.length)
         self.parser.moves.initialize_state(self.stcls.c)
         self.eg = Example(
@@ -405,6 +425,24 @@ cdef class StepwiseState:
     def deps(self):
         return [self.doc.vocab.strings[self.stcls.c._sent[i].dep]
                 for i in range(self.stcls.c.length)]
+
+    @property
+    def costs(self):
+        """
+        Find the action-costs for the current state.
+        """
+        if not self.gold:
+            raise ValueError("Can't set costs: No GoldParse provided")
+        self.parser.moves.set_costs(self.eg.c.is_valid, self.eg.c.costs,
+                self.stcls, self.gold)
+        costs = {}
+        for i in range(self.parser.moves.n_moves):
+            if not self.eg.c.is_valid[i]:
+                continue
+            transition = self.parser.moves.c[i]
+            name = self.parser.moves.move_name(transition.move, transition.label)
+            costs[name] = self.eg.c.costs[i]
+        return costs
 
     def predict(self):
         self.eg.reset()

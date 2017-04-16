@@ -14,8 +14,9 @@ from spacy.cli import convert as cli_convert
 
 
 class CLI(object):
-    """Command-line interface for spaCy"""
-
+    """
+    Command-line interface for spaCy
+    """
     commands = ('download', 'link', 'info', 'package', 'train', 'model', 'convert')
 
     @plac.annotations(
@@ -29,7 +30,6 @@ class CLI(object):
         can be shortcut, model name or, if --direct flag is set, full model name
         with version.
         """
-
         cli_download(model, direct)
 
 
@@ -44,7 +44,6 @@ class CLI(object):
         either the name of a pip package, or the local path to the model data
         directory. Linking models allows loading them via spacy.load(link_name).
         """
-
         cli_link(origin, link_name, force)
 
 
@@ -58,7 +57,6 @@ class CLI(object):
         speficied as an argument, print model information. Flag --markdown
         prints details in Markdown for easy copy-pasting to GitHub issues.
         """
-
         cli_info(model, markdown)
 
 
@@ -73,7 +71,6 @@ class CLI(object):
         installation files. A new directory will be created in the specified
         output directory, and model data will be copied over.
         """
-
         cli_package(input_dir, output_dir, force)
 
 
@@ -93,7 +90,6 @@ class CLI(object):
         """
         Train a model. Expects data in spaCy's JSON format.
         """
-
         cli_train(lang, output_dir, train_data, dev_data, n_iter, not no_tagger,
                   not no_parser, not no_ner, parser_L1)
 
@@ -108,7 +104,6 @@ class CLI(object):
         """
         Initialize a new model and its data directory.
         """
-
         cli_model(lang, model_dir, freqs_data, clusters_data, vectors_data)
 
     @plac.annotations(
@@ -122,7 +117,6 @@ class CLI(object):
         Convert files into JSON format for use with train command and other
         experiment management functions.
         """
-
         cli_convert(input_file, output_dir, n_sents, morphology)
 
 

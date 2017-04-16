@@ -1,20 +1,13 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import json
 import shutil
 import requests
 from pathlib import Path
 
-import six
-
-from .. import about
+from ..compat import unicode_, json_dumps
 from .. import util
 
-if six.PY2:
-    json_dumps = lambda data: json.dumps(data, indent=2).decode("utf8")
-elif six.PY3:
-    json_dumps = lambda data: json.dumps(data, indent=2)
 
 def package(input_dir, output_dir, force):
     input_path = Path(input_dir)
@@ -32,31 +25,31 @@ def package(input_dir, output_dir, force):
     package_path = main_path / model_name
 
     create_dirs(package_path, force)
-    shutil.copytree(input_path.as_posix(), (package_path / model_name_v).as_posix())
+    shutil.copytree(unicode_(input_path), unicode_(package_path / model_name_v))
     create_file(main_path / 'meta.json', json_dumps(meta))
     create_file(main_path / 'setup.py', template_setup)
     create_file(main_path / 'MANIFEST.in', template_manifest)
     create_file(package_path / '__init__.py', template_init)
 
     util.print_msg(
-        main_path.as_posix(),
+        unicode_(main_path),
         "To build the package, run `python setup.py sdist` in that directory.",
         title="Successfully created package {p}".format(p=model_name_v))
 
 
 def check_dirs(input_path, output_path):
     if not input_path.exists():
-        util.sys_exit(input_path.as_poisx(), title="Model directory not found")
+        util.sys_exit(unicode_(input_path.as_poisx), title="Model directory not found")
     if not output_path.exists():
-        util.sys_exit(output_path.as_posix(), title="Output directory not found")
+        util.sys_exit(unicode_(output_path), title="Output directory not found")
 
 
 def create_dirs(package_path, force):
     if package_path.exists():
         if force:
-            shutil.rmtree(package_path.as_posix())
+            shutil.rmtree(unicode_(package_path.as_posix))
         else:
-            util.sys_exit(package_path.as_posix(),
+            util.sys_exit(unicode_(package_path.as_posix),
                 "Please delete the directory and try again.",
                 title="Package directory already exists")
     Path.mkdir(package_path, parents=True)
