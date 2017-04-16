@@ -40,7 +40,7 @@ from ..strings cimport StringStore
 from ..gold cimport GoldParse
 
 
-USE_FTRL = False
+USE_FTRL = True
 DEBUG = False
 def set_debug(val):
     global DEBUG
