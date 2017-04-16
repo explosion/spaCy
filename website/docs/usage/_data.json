@@ -365,6 +365,18 @@
         },
 
         "code": {
+            "Training a new entity type": {
+                "url": "https://github.com/explosion/spaCy/blob/master/examples/training/train_new_entity_type.py",
+                "author": "Matthew Honnibal",
+                "tags": ["ner", "training"]
+            },
+
+            "Training an NER system from scratch": {
+                "url": "https://github.com/explosion/spaCy/blob/master/examples/training/train_ner_standalone.py",
+                "author": "Matthew Honnibal",
+                "tags": ["ner", "training"]
+            },
+
             "Information extraction": {
                 "url": "https://github.com/explosion/spaCy/blob/master/examples/information_extraction.py",
                 "author": "Matthew Honnibal",
