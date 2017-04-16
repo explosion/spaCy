@@ -103,10 +103,6 @@ def normalize_slice(length, start, stop, step=None):
     return start, stop
 
 
-def utf8open(loc, mode='r'):
-    return io.open(loc, mode, encoding='utf8')
-
-
 def check_renamed_kwargs(renamed, kwargs):
     for old, new in renamed.items():
         if old in kwargs:
