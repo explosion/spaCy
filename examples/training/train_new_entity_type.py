@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Example of training and additional entity type
+Example of training an additional entity type
 
 This script shows how to add a new entity type to an existing pre-trained NER
 model. To keep the example short and simple, only four sentences are provided
