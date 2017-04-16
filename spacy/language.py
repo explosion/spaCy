@@ -188,6 +188,9 @@ class Language(object):
 
     @classmethod
     def setup_directory(cls, path, **configs):
+        """
+        Initialise a model directory.
+        """
         for name, config in configs.items():
             directory = path / name
             if directory.exists():
@@ -295,7 +298,7 @@ class Language(object):
         and can contain arbtrary whitespace.  Alignment into the original string
         is preserved.
 
-        Args:
+        Argsuments:
             text (unicode): The text to be processed.
 
         Returns:
@@ -344,6 +347,12 @@ class Language(object):
             yield doc
 
     def save_to_directory(self, path):
+        """
+        Save the Vocab, StringStore and pipeline to a directory.
+
+        Arguments:
+            path (string or pathlib path): Path to save the model.
+        """
         configs = {
             'pos': self.tagger.cfg if self.tagger else {},
             'deps': self.parser.cfg if self.parser else {},
