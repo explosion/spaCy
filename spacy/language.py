@@ -242,6 +242,15 @@ class Language(object):
         self.save_to_directory(path)
 
     def __init__(self, **overrides):
+        """
+        Create or load the pipeline.
+
+        Arguments:
+            **overrides: Keyword arguments indicating which defaults to override.
+
+        Returns:
+            Language: The newly constructed object.
+        """
         if 'data_dir' in overrides and 'path' not in overrides:
             raise ValueError("The argument 'data_dir' has been renamed to 'path'")
         path = util.ensure_path(overrides.get('path', True))
