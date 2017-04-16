@@ -45,15 +45,6 @@ def ensure_path(path):
         return path
 
 
-def or_(val1, val2):
-    if val1 is not None:
-        return val1
-    elif callable(val2):
-        return val2()
-    else:
-        return val2
-
-
 def read_regex(path):
     path = ensure_path(path)
     with path.open() as file_:
