@@ -20,8 +20,8 @@
             "Word vectors": "word-vectors-similarities",
             "Deep learning": "deep-learning",
             "Custom tokenization": "customizing-tokenizer",
+            "Adding languages": "adding-languages",
             "Training": "training",
-            "Adding languages": "adding-languages"
             "Training NER": "training-ner",
             "Saving & loading": "saving-loading"
         },
@@ -103,11 +103,14 @@
 
     "customizing-tokenizer": {
         "title": "Customizing the tokenizer",
-        "next": "training"
+        "next": "adding-languages"
     },
 
     "training": {
-        "title": "Training the tagger, parser and entity recognizer"
+        "title": "Training spaCy's statistical models",
+        "next": "saving-loading"
+    },
+
     "training-ner": {
         "title": "Training the Named Entity Recognizer",
         "next": "saving-loading"
