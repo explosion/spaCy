@@ -350,6 +350,7 @@ class Language(object):
             'ner': self.entity.cfg if self.entity else {},
         }
 
+        path = util.ensure_path(path)
         self.setup_directory(path, **configs)
 
         strings_loc = path / 'vocab' / 'strings.json'
