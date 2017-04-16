@@ -26,6 +26,7 @@ def package(input_dir, output_dir, meta_path, force):
     else:
         meta = generate_meta()
 
+    validate_meta(meta, ['lang', 'name', 'version'])
     model_name = meta['lang'] + '_' + meta['name']
     model_name_v = model_name + '-' + meta['version']
     main_path = output_path / model_name_v
@@ -87,6 +88,14 @@ def generate_meta():
         response = util.get_raw_input(desc, default)
         meta[setting] = default if response == '' and default else response
     return meta
+
+
+def validate_meta(meta, keys):
+    for key in keys:
+        if key not in meta or meta[key] == '':
+            util.sys_exit(
+                "This setting is required to build your package.",
+                title='No "{k}" setting found in meta.json'.format(k=key))
 
 
 def get_template(filepath):
