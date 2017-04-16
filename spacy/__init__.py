@@ -30,6 +30,7 @@ def load(name, **overrides):
     else:
         model_path = util.ensure_path(overrides['path'])
         data_path = model_path.parent
+        model_name = ''
     meta = util.parse_package_meta(data_path, model_name, require=False)
     lang = meta['lang'] if meta and 'lang' in meta else name
     cls = util.get_lang_class(lang)
