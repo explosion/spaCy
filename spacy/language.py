@@ -2,7 +2,6 @@
 from __future__ import absolute_import, unicode_literals
 from contextlib import contextmanager
 import shutil
-import ujson
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -15,7 +14,7 @@ from .syntax.nonproj import PseudoProjectivity
 from .pipeline import DependencyParser, EntityRecognizer
 from .syntax.arc_eager import ArcEager
 from .syntax.ner import BiluoPushDown
-from .compat import unicode_
+from .compat import json_dumps
 from .attrs import IS_STOP
 from . import attrs
 from . import orth
@@ -197,9 +196,7 @@ class Language(object):
                 shutil.rmtree(str(directory))
             directory.mkdir()
             with (directory / 'config.json').open('wb') as file_:
-                data = ujson.dumps(config, indent=2)
-                if isinstance(data, unicode_):
-                    data = data.encode('utf8')
+                data = json_dumps(config)
                 file_.write(data)
         if not (path / 'vocab').exists():
             (path / 'vocab').mkdir()
