@@ -23,9 +23,10 @@ def load(name, **overrides):
         model_name = resolve_model_name(name)
         model_path = data_path / model_name
         if not model_path.exists():
+            lang_name = util.get_lang_class(name).lang
             model_path = None
             util.print_msg(
-                "Only loading the '{}' tokenizer.".format(name),
+                "Only loading the '{}' tokenizer.".format(lang_name),
                 title="Warning: no model found for '{}'".format(name))
     else:
         model_path = util.ensure_path(overrides['path'])
