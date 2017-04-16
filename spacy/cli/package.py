@@ -47,9 +47,9 @@ def check_dirs(input_path, output_path):
 def create_dirs(package_path, force):
     if package_path.exists():
         if force:
-            shutil.rmtree(unicode_(package_path.as_posix))
+            shutil.rmtree(unicode_(package_path))
         else:
-            util.sys_exit(unicode_(package_path.as_posix),
+            util.sys_exit(unicode_(package_path),
                 "Please delete the directory and try again.",
                 title="Package directory already exists")
     Path.mkdir(package_path, parents=True)
