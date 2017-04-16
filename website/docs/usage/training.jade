@@ -1,13 +1,10 @@
 include ../../_includes/_mixins
 
 p
-    |  This tutorial describes how to train new statistical models for spaCy's
+    |  This workflow describes how to train new statistical models for spaCy's
     |  part-of-speech tagger, named entity recognizer and dependency parser.
-
-p
-    |  I'll start with some quick code examples, that describe how to train
-    |  each model. I'll then provide a bit of background about the algorithms,
-    |  and explain how the data and feature templates work.
+    |  Once the model is trained, you can then
+    |  #[+a("/docs/usage/saving-loading") save and load] it.
 
 +h(2, "train-pos-tagger") Training the part-of-speech tagger
 
@@ -48,7 +45,21 @@ p
 p
     +button(gh("spaCy", "examples/training/train_ner.py"), false, "secondary") Full example
 
-+h(2, "train-entity") Training the dependency parser
++h(2, "extend-entity") Extending the named entity recognizer
+
+p
+    |  All #[+a("/docs/usage/models") spaCy models] support online learning, so
+    |  you can update a pre-trained model with new examples. You can even add
+    |  new classes to an existing model, to recognise a new entity type,
+    |  part-of-speech, or syntactic relation. Updating an existing model is
+    |  particularly useful as a "quick and dirty solution", if you have only a
+    |  few corrections or annotations.
+
+p.o-inline-list
+    +button(gh("spaCy", "examples/training/train_new_entity_type.py"), true, "secondary") Full example
+    +button("/docs/usage/training-ner", false, "secondary") Usage Workflow
+
++h(2, "train-dependency") Training the dependency parser
 
 +code.
     from spacy.vocab import Vocab
@@ -67,7 +78,7 @@ p
 p
     +button(gh("spaCy", "examples/training/train_parser.py"), false, "secondary") Full example
 
-+h(2, 'feature-templates') Customizing the feature extraction
++h(2, "feature-templates") Customizing the feature extraction
 
 p
     |  spaCy currently uses linear models for the tagger, parser and entity

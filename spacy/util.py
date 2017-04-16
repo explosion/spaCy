@@ -1,7 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals, print_function
 
-import io
 import ujson
 import re
 from pathlib import Path
@@ -44,15 +43,6 @@ def ensure_path(path):
         return Path(path)
     else:
         return path
-
-
-def or_(val1, val2):
-    if val1 is not None:
-        return val1
-    elif callable(val2):
-        return val2()
-    else:
-        return val2
 
 
 def read_regex(path):
@@ -101,10 +91,6 @@ def normalize_slice(length, start, stop, step=None):
 
     assert 0 <= start <= stop <= length
     return start, stop
-
-
-def utf8open(loc, mode='r'):
-    return io.open(loc, mode, encoding='utf8')
 
 
 def check_renamed_kwargs(renamed, kwargs):
