@@ -129,10 +129,11 @@ def parse_package_meta(package_path, package, require=True):
 
 
 def get_raw_input(description, default=False):
-    """Get user input via raw_input / input and return input value. Takes a
+    """
+    Get user input via raw_input / input and return input value. Takes a
     description for the prompt, and an optional default value that's displayed
-    with the prompt."""
-
+    with the prompt.
+    """
     additional = ' (default: {d})'.format(d=default) if default else ''
     prompt = '    {d}{a}: '.format(d=description, a=additional)
     user_input = input_(prompt)
@@ -140,9 +141,10 @@ def get_raw_input(description, default=False):
 
 
 def print_table(data, **kwargs):
-    """Print data in table format. Can either take a list of tuples or a
-    dictionary, which will be converted to a list of tuples."""
-
+    """
+    Print data in table format. Can either take a list of tuples or a
+    dictionary, which will be converted to a list of tuples.
+    """
     if type(data) == dict:
         data = list(data.items())
 
@@ -158,10 +160,11 @@ def print_table(data, **kwargs):
 
 
 def print_markdown(data, **kwargs):
-    """Print listed data in GitHub-flavoured Markdown format so it can be
+    """
+    Print listed data in GitHub-flavoured Markdown format so it can be
     copy-pasted into issues. Can either take a list of tuples or a dictionary,
-    which will be converted to a list of tuples."""
-
+    which will be converted to a list of tuples.
+    """
     def excl_value(value):
         # don't print value if it contains absolute path of directory (i.e.
         # personal info). Other conditions can be included here if necessary.
@@ -178,16 +181,16 @@ def print_markdown(data, **kwargs):
 
     if 'title' in kwargs and kwargs['title']:
         print(tpl_title.format(msg=kwargs['title']))
-
     print(tpl_msg.format(msg=markdown))
 
 
 def print_msg(*text, **kwargs):
-    """Print formatted message. Each positional argument is rendered as newline-
+    """
+    Print formatted message. Each positional argument is rendered as newline-
     separated paragraph. If kwarg 'title' exist, title is printed above the text
     and highlighted (using ANSI escape sequences manually to avoid unnecessary
-    dependency)."""
-
+    dependency).
+    """
     message = '\n\n'.join([_wrap_text(t) for t in text])
     tpl_msg = '\n{msg}\n'
     tpl_title = '\n\033[93m{msg}\033[0m'
@@ -199,9 +202,10 @@ def print_msg(*text, **kwargs):
 
 
 def _wrap_text(text):
-    """Wrap text at given width using textwrap module. Indent should consist of
-    spaces. Its length is deducted from wrap width to ensure exact wrapping."""
-
+    """
+    Wrap text at given width using textwrap module. Indent should consist of
+    spaces. Its length is deducted from wrap width to ensure exact wrapping.
+    """
     wrap_max = 80
     indent = '    '
     wrap_width = wrap_max - len(indent)
@@ -211,10 +215,11 @@ def _wrap_text(text):
 
 
 def sys_exit(*messages, **kwargs):
-    """Performs SystemExit. For modules used from the command line, like
+    """
+    Performs SystemExit. For modules used from the command line, like
     download and link. To print message, use the same arguments as for
-    print_msg()."""
-
+    print_msg().
+    """
     if messages:
         print_msg(*messages, **kwargs)
     sys.exit(0)
