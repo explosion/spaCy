@@ -192,6 +192,8 @@ cdef class Token:
     property lemma:
         def __get__(self):
             return self.c.lemma
+        def __set__(self, int lemma):
+            self.c.lemma = lemma
 
     property pos:
         def __get__(self):
@@ -570,6 +572,8 @@ cdef class Token:
     property lemma_:
         def __get__(self):
             return self.vocab.strings[self.c.lemma]
+        def __set__(self, unicode lemma_):
+            self.c.lemma = self.vocab.strings[lemma_]
 
     property pos_:
         def __get__(self):
