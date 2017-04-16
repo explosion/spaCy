@@ -10,7 +10,7 @@ open-source software, released under the MIT license.
 
 📊 **Help us improve the library!** `Take the spaCy user survey <https://survey.spacy.io>`_.
 
-💫 **Version 1.7 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
+💫 **Version 1.8 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square
     :target: https://travis-ci.org/explosion/spaCy
