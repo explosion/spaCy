@@ -1,7 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals, print_function
 
-import io
 import ujson
 import re
 from pathlib import Path
