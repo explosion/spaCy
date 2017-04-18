@@ -1,7 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals, print_function
 
-import io
 import ujson
 import re
 from pathlib import Path
@@ -21,9 +20,11 @@ def set_lang_class(name, cls):
 
 
 def get_lang_class(name):
+    if name in LANGUAGES:
+        return LANGUAGES[name]
     lang = re.split('[^a-zA-Z0-9]', name, 1)[0]
     if lang not in LANGUAGES:
-        raise RuntimeError('Language not supported: %s' % lang)
+        raise RuntimeError('Language not supported: %s' % name)
     return LANGUAGES[lang]
 
 
@@ -44,15 +45,6 @@ def ensure_path(path):
         return Path(path)
     else:
         return path
-
-
-def or_(val1, val2):
-    if val1 is not None:
-        return val1
-    elif callable(val2):
-        return val2()
-    else:
-        return val2
 
 
 def read_regex(path):
@@ -103,10 +95,6 @@ def normalize_slice(length, start, stop, step=None):
     return start, stop
 
 
-def utf8open(loc, mode='r'):
-    return io.open(loc, mode, encoding='utf8')
-
-
 def check_renamed_kwargs(renamed, kwargs):
     for old, new in renamed.items():
         if old in kwargs:
@@ -119,6 +107,13 @@ def read_json(location):
 
 
 def parse_package_meta(package_path, package, require=True):
+    """
+    Check if a meta.json exists in a package and return its contents as a
+    dictionary. If require is set to True, raise an error if no meta.json found.
+    """
+    # TODO: Allow passing in full model path and only require one argument
+    # instead of path and package name. This lets us avoid passing in an awkward
+    # empty string in spacy.load() if user supplies full model path.
     location = package_path / package / 'meta.json'
     if location.is_file():
         return read_json(location)

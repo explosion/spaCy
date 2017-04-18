@@ -1,0 +1,109 @@
+include ../../_includes/_mixins
+
+p
+    |  After training your model, you'll usually want to save its state, and load
+    |  it back later. You can do this with the
+    |  #[+api("language#save_to_directory") #[code Language.save_to_directory()]]
+    |  method:
+
++code.
+    nlp.save_to_directory('/home/me/data/en_example_model')
+
+p
+    |  The directory will be created if it doesn't exist, and the whole pipeline
+    |  will be written out. To make the model more convenient to deploy, we
+    |  recommend wrapping it as a Python package.
+
++h(2, "generating") Generating a model package
+
++infobox("Important note")
+    |  The model packages are #[strong not suitable] for the public
+    |  #[+a("https://pypi.python.org") pypi.python.org] directory, which is not
+    |  designed for binary data and files over 50 MB. However, if your company
+    |  is running an internal installation of pypi, publishing your models on
+    |  there can be a convenient solution to share them with your team.
+
+p
+    |  spaCy comes with a handy CLI command that will create all required files,
+    |  and walk you through generating the meta data. You can also create the
+    |  meta.json manually and place it in the model data directory, or supply a
+    |  path to it using the #[code --meta] flag. For more info on this, see the
+    |  #[+a("/docs/usage/cli/#package") #[code package] command] documentation.
+
++aside-code("meta.json", "json").
+    {
+        "name": "example_model",
+        "lang": "en",
+        "version": "1.0.0",
+        "spacy_version": "&gt;=1.7.0,&lt;2.0.0",
+        "description": "Example model for spaCy",
+        "author": "You",
+        "email": "you@example.com",
+        "license": "CC BY-SA 3.0"
+    }
+
++code(false, "bash").
+    python -m spacy package /home/me/data/en_example_model /home/me/my_models
+
+p This command will create a model package directory that should look like this:
+
++code("Directory structure", "yaml").
+    └── /
+        ├── MANIFEST.in                   # to include meta.json
+        ├── meta.json                     # model meta data
+        ├── setup.py                      # setup file for pip installation
+        └── en_example_model              # model directory
+            ├── __init__.py               # init for pip installation
+            └── en_example_model-1.0.0    # model data
+
+p
+    |  You can also find templates for all files in our
+    |  #[+a(gh("spacy-dev-resouces", "templates/model")) spaCy dev resources].
+    |  If you're creating the package manually, keep in mind that the directories
+    |  need to be named according to the naming conventions of
+    |  #[code [language]_[type]] and #[code [language]_[type]-[version]]. The
+    |  #[code lang] setting in the meta.json is also used to create the
+    |  respective #[code Language] class in spaCy, which will later be returned
+    |  by the model's #[code load()] method.
+
++h(2, "building") Building a model package
+
+p
+    |  To build the package, run the following command from within the
+    |  directory. This will create a #[code .tar.gz] archive in a directory
+    |  #[code /dist].
+
++code(false, "bash").
+    python setup.py sdist
+
+p
+    |  For more information on building Python packages, see the
+    |  #[+a("https://setuptools.readthedocs.io/en/latest/") Python Setuptools documentation].
+
+
++h(2, "loading") Loading a model package
+
+p
+    |  Model packages can be installed by pointing pip to the model's
+    |  #[code .tar.gz] archive:
+
++code(false, "bash").
+    pip install /path/to/en_example_model-1.0.0.tar.gz
+
+p You'll then be able to load the model as follows:
+
++code.
+    import en_example_model
+    nlp = en_example_model.load()
+
+p
+    |  To load the model via #[code spacy.load()], you can also
+    |  create a #[+a("/docs/usage/models#usage") shortcut link] that maps the
+    |  package name to a custom model name of your choice:
+
++code(false, "bash").
+    python -m spacy link en_example_model example
+
++code.
+    import spacy
+    nlp = spacy.load('example')

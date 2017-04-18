@@ -16,6 +16,7 @@ def test_tagger_lemmatizer_noun_lemmas(lemmatizer, text, lemmas):
     assert lemmatizer.noun(text) == set(lemmas)
 
 
+@pytest.mark.xfail
 @pytest.mark.models
 def test_tagger_lemmatizer_base_forms(lemmatizer):
     if lemmatizer is None:

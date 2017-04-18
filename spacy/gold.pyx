@@ -5,9 +5,9 @@ from __future__ import unicode_literals, print_function
 import io
 import re
 import ujson
-from pathlib import Path
 
 from .syntax import nonproj
+from .util import ensure_path
 
 
 def tags_to_entities(tags):
@@ -139,12 +139,12 @@ def _min_edit_path(cand_words, gold_words):
 
 
 def read_json_file(loc, docs_filter=None):
-    loc = Path(loc)
+    loc = ensure_path(loc)
     if loc.is_dir():
         for filename in loc.iterdir():
             yield from read_json_file(loc / filename)
     else:
-        with io.open(loc, 'r', encoding='utf8') as file_:
+        with loc.open('r', encoding='utf8') as file_:
             docs = ujson.load(file_)
         for doc in docs:
             if docs_filter is not None and not docs_filter(doc):

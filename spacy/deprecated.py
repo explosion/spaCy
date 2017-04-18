@@ -107,7 +107,7 @@ def fix_glove_vectors_loading(overrides):
 def resolve_model_name(name):
     """
     If spaCy is loaded with 'de', check if symlink already exists. If
-    not, user have upgraded from older version and have old models installed.
+    not, user may have upgraded from older version and have old models installed.
     Check if old model directory exists and if so, return that instead and create
     shortcut link. If English model is found and no shortcut exists, raise error
     and tell user to install new model.

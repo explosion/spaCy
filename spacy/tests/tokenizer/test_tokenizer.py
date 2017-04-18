@@ -3,9 +3,8 @@ from __future__ import unicode_literals
 
 from ...vocab import Vocab
 from ...tokenizer import Tokenizer
-from ...util import utf8open
+from ... import util
 
-from os import path
 import pytest
 
 
@@ -75,8 +74,8 @@ Phasellus tincidunt, augue quis porta finibus, massa sapien consectetur augue, n
 
 @pytest.mark.parametrize('file_name', ["sun.txt"])
 def test_tokenizer_handle_text_from_file(tokenizer, file_name):
-    loc = path.join(path.dirname(__file__), file_name)
-    text = utf8open(loc).read()
+    loc = util.ensure_path(__file__).parent / file_name
+    text = loc.open('r', encoding='utf8').read()
     assert len(text) != 0
     tokens = tokenizer(text)
     assert len(tokens) > 100
