@@ -14,7 +14,7 @@ VENV_DIR = path.join(PWD, ENV)
 def env(lang='python2.7'):
     if path.exists(VENV_DIR):
         local('rm -rf {env}'.format(env=VENV_DIR))
-    local('virtualenv -p {lang} {env}'.format(lang=lang, env=VENV_DIR))
+    local('python -m virtualenv -p {lang} {env}'.format(lang=lang, env=VENV_DIR))
 
 
 def install():

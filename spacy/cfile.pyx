@@ -1,3 +1,6 @@
+# coding: utf8
+from __future__ import unicode_literals
+
 from libc.stdio cimport fopen, fclose, fread, fwrite
 from libc.string cimport memcpy
 

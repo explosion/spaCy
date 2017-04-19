@@ -1,15 +1,18 @@
+# coding: utf8
+from __future__ import unicode_literals
+
 cimport cython
+cimport numpy as np
+import numpy
+import numpy.linalg
+import struct
+
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint32_t
 from libc.math cimport sqrt
 
-import numpy
-import numpy.linalg
-import struct
-cimport numpy as np
-import six
-import warnings
-
+from .span cimport Span
+from .token cimport Token
 from ..lexeme cimport Lexeme
 from ..lexeme cimport EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
@@ -19,11 +22,10 @@ from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN
 from ..parts_of_speech cimport univ_pos_t
 from ..lexeme cimport Lexeme
-from .span cimport Span
-from .token cimport Token
 from ..serialize.bits cimport BitArray
 from ..util import normalize_slice
 from ..syntax.iterators import CHUNKERS
+from ..compat import is_config
 
 
 DEF PADDING = 5
@@ -76,7 +78,7 @@ cdef class Doc:
 
     """
     def __init__(self, Vocab vocab, words=None, spaces=None, orths_and_spaces=None):
-        '''
+        """
         Create a Doc object.
 
         Aside: Implementation
@@ -97,7 +99,7 @@ cdef class Doc:
                 A list of boolean values, of the same length as words. True
                 means that the word is followed by a space, False means it is not.
                 If None, defaults to [True]*len(words)
-        '''
+        """
         self.vocab = vocab
         size = 20
         self.mem = Pool()
@@ -158,7 +160,7 @@ cdef class Doc:
             self.is_parsed = True
 
     def __getitem__(self, object i):
-        '''
+        """
         doc[i]
             Get the Token object at position i, where i is an integer.
             Negative indexing is supported, and follows the usual Python
@@ -172,7 +174,7 @@ cdef class Doc:
             are not supported, as `Span` objects must be contiguous (cannot have gaps).
             You can use negative indices and open-ended ranges, which have their
             normal Python semantics.
-        '''
+        """
         if isinstance(i, slice):
             start, stop = normalize_slice(len(self), i.start, i.stop, i.step)
             return Span(self, start, stop, label=0)
@@ -186,7 +188,7 @@ cdef class Doc:
             return Token.cinit(self.vocab, &self.c[i], i, self)
 
     def __iter__(self):
-        '''
+        """
         for token in doc
             Iterate over `Token`  objects, from which the annotations can
             be easily accessed. This is the main way of accessing Token
@@ -194,7 +196,7 @@ cdef class Doc:
             Python. If faster-than-Python speeds are required, you can
             instead access the annotations as a numpy array, or access the
             underlying C data directly from Cython.
-        '''
+        """
         cdef int i
         for i in range(self.length):
             if self._py_tokens[i] is not None:
@@ -203,10 +205,10 @@ cdef class Doc:
                 yield Token.cinit(self.vocab, &self.c[i], i, self)
 
     def __len__(self):
-        '''
+        """
         len(doc)
             The number of tokens in the document.
-        '''
+        """
         return self.length
 
     def __unicode__(self):
@@ -216,7 +218,7 @@ cdef class Doc:
         return u''.join([t.text_with_ws for t in self]).encode('utf-8')
 
     def __str__(self):
-        if six.PY3:
+        if is_config(python3=True):
             return self.__unicode__()
         return self.__bytes__()
 
@@ -228,7 +230,8 @@ cdef class Doc:
         return self
 
     def similarity(self, other):
-        '''Make a semantic similarity estimate. The default estimate is cosine
+        """
+        Make a semantic similarity estimate. The default estimate is cosine
         similarity using an average of word vectors.
 
         Arguments:
@@ -237,7 +240,7 @@ cdef class Doc:
 
         Return:
             score (float): A scalar similarity score. Higher is more similar.
-        '''
+        """
         if 'similarity' in self.user_hooks:
             return self.user_hooks['similarity'](self, other)
         if self.vector_norm == 0 or other.vector_norm == 0:
@@ -245,9 +248,9 @@ cdef class Doc:
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     property has_vector:
-        '''
+        """
         A boolean value indicating whether a word vector is associated with the object.
-        '''
+        """
         def __get__(self):
             if 'has_vector' in self.user_hooks:
                 return self.user_hooks['has_vector'](self)
@@ -255,11 +258,11 @@ cdef class Doc:
             return any(token.has_vector for token in self)
 
     property vector:
-        '''
+        """
         A real-valued meaning representation. Defaults to an average of the token vectors.
 
         Type: numpy.ndarray[ndim=1, dtype='float32']
-        '''
+        """
         def __get__(self):
             if 'vector' in self.user_hooks:
                 return self.user_hooks['vector'](self)
@@ -294,17 +297,21 @@ cdef class Doc:
         return self.text
 
     property text:
-        '''A unicode representation of the document text.'''
+        """
+        A unicode representation of the document text.
+        """
         def __get__(self):
             return u''.join(t.text_with_ws for t in self)
 
     property text_with_ws:
-        '''An alias of Doc.text, provided for duck-type compatibility with Span and Token.'''
+        """
+        An alias of Doc.text, provided for duck-type compatibility with Span and Token.
+        """
         def __get__(self):
             return self.text
 
     property ents:
-        '''
+        """
         Yields named-entity `Span` objects, if the entity recognizer
         has been applied to the document. Iterate over the span to get
         individual Token objects, or access the label:
@@ -318,7 +325,7 @@ cdef class Doc:
             assert ents[0].label_ == 'PERSON'
             assert ents[0].orth_ == 'Best'
             assert ents[0].text == 'Mr. Best'
-        '''
+        """
         def __get__(self):
             cdef int i
             cdef const TokenC* token
@@ -382,13 +389,13 @@ cdef class Doc:
                     self.c[start].ent_iob = 3
 
     property noun_chunks:
-        '''
+        """
         Yields base noun-phrase #[code Span] objects, if the document
         has been syntactically parsed. A base noun phrase, or
         'NP chunk', is a noun phrase that does not permit other NPs to
         be nested within it – so no NP-level coordination, no prepositional
-        phrases, and no relative clauses. For example:
-        '''
+        phrases, and no relative clauses.
+        """
         def __get__(self):
             if not self.is_parsed:
                 raise ValueError(
@@ -496,7 +503,8 @@ cdef class Doc:
         return output
 
     def count_by(self, attr_id_t attr_id, exclude=None, PreshCounter counts=None):
-        """Produce a dict of {attribute (int): count (ints)} frequencies, keyed
+        """
+        Produce a dict of {attribute (int): count (ints)} frequencies, keyed
         by the values of the given attribute ID.
 
         Example:
@@ -563,8 +571,9 @@ cdef class Doc:
             self.c[i] = parsed[i]
 
     def from_array(self, attrs, array):
-        '''Write to a `Doc` object, from an `(M, N)` array of attributes.
-        '''
+        """
+        Write to a `Doc` object, from an `(M, N)` array of attributes.
+        """
         cdef int i, col
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.c
@@ -603,19 +612,23 @@ cdef class Doc:
         return self
 
     def to_bytes(self):
-        '''Serialize, producing a byte string.'''
+        """
+        Serialize, producing a byte string.
+        """
         byte_string = self.vocab.serializer.pack(self)
         cdef uint32_t length = len(byte_string)
         return struct.pack('I', length) + byte_string
 
     def from_bytes(self, data):
-        '''Deserialize, loading from bytes.'''
+        """
+        Deserialize, loading from bytes.
+        """
         self.vocab.serializer.unpack_into(data[4:], self)
         return self
 
     @staticmethod
     def read_bytes(file_):
-        '''
+        """
         A static method, used to read serialized #[code Doc] objects from
         a file. For example:
 
@@ -630,7 +643,7 @@ cdef class Doc:
                 for byte_string in Doc.read_bytes(file_):
                     docs.append(Doc(nlp.vocab).from_bytes(byte_string))
             assert len(docs) == 2
-        '''
+        """
         keep_reading = True
         while keep_reading:
             try:
@@ -644,7 +657,8 @@ cdef class Doc:
             yield n_bytes_str + data
 
     def merge(self, int start_idx, int end_idx, *args, **attributes):
-        """Retokenize the document, such that the span at doc.text[start_idx : end_idx]
+        """
+        Retokenize the document, such that the span at doc.text[start_idx : end_idx]
         is merged into a single token. If start_idx and end_idx do not mark start
         and end token boundaries, the document remains unchanged.
 
@@ -658,7 +672,6 @@ cdef class Doc:
             token (Token):
                 The newly merged token, or None if the start and end indices did
                 not fall at token boundaries.
-
         """
         cdef unicode tag, lemma, ent_type
         if len(args) == 3:

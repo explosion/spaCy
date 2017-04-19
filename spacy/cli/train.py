@@ -2,11 +2,9 @@
 from __future__ import unicode_literals, division, print_function
 
 import json
-from pathlib import Path
 
+from ..util import ensure_path
 from ..scorer import Scorer
-from ..tagger import Tagger
-from ..syntax.parser import Parser
 from ..gold import GoldParse, merge_sents
 from ..gold import read_json_file as read_gold_json
 from .. import util
@@ -14,9 +12,9 @@ from .. import util
 
 def train(language, output_dir, train_data, dev_data, n_iter, tagger, parser, ner,
           parser_L1):
-    output_path = Path(output_dir)
-    train_path = Path(train_data)
-    dev_path = Path(dev_data)
+    output_path = ensure_path(output_dir)
+    train_path = ensure_path(train_data)
+    dev_path = ensure_path(dev_data)
     check_dirs(output_path, train_path, dev_path)
 
     lang = util.get_lang_class(language)
@@ -45,7 +43,7 @@ def train(language, output_dir, train_data, dev_data, n_iter, tagger, parser, ne
 
 
 def train_config(config):
-    config_path = Path(config)
+    config_path = ensure_path(config)
     if not config_path.is_file():
         util.sys_exit(config_path.as_posix(), title="Config file not found")
     config = json.load(config_path)
@@ -59,8 +57,8 @@ def train_model(Language, train_data, dev_data, output_path, tagger_cfg, parser_
                 entity_cfg, n_iter):
     print("Itn.\tN weight\tN feats\tUAS\tNER F.\tTag %\tToken %")
 
-    with Language.train(output_path, train_data, tagger_cfg, parser_cfg, entity_cfg) as trainer:
-        loss = 0
+    with Language.train(output_path, train_data,
+                        pos=tagger_cfg, deps=parser_cfg, ner=entity_cfg) as trainer:
         for itn, epoch in enumerate(trainer.epochs(n_iter, augment_data=None)):
             for doc, gold in epoch:
                 trainer.update(doc, gold)

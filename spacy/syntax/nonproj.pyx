@@ -1,8 +1,9 @@
+# coding: utf-8
 from __future__ import unicode_literals
 from copy import copy
 
 from ..tokens.doc cimport Doc
-from spacy.attrs import DEP, HEAD
+from ..attrs import DEP, HEAD
 
 
 def ancestors(tokenid, heads):
@@ -201,5 +202,3 @@ class PseudoProjectivity:
                 filtered_sents.append(((ids,words,tags,heads,filtered_labels,iob), ctnts))
             filtered.append((raw_text, filtered_sents))
         return filtered
-
-

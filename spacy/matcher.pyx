@@ -1,6 +1,9 @@
 # cython: profile=True
 # cython: infer_types=True
+# coding: utf8
 from __future__ import unicode_literals
+
+import ujson
 
 from .typedefs cimport attr_t
 from .typedefs cimport hash_t
@@ -50,12 +53,6 @@ from .attrs import FLAG38 as L7_ENT
 from .attrs import FLAG37 as L8_ENT
 from .attrs import FLAG36 as L9_ENT
 from .attrs import FLAG35 as L10_ENT
-
-
-try:
-    import ujson as json
-except ImportError:
-    import json
 
 
 cpdef enum quantifier_t:
@@ -164,7 +161,7 @@ def _convert_strings(token_specs, string_store):
 def merge_phrase(matcher, doc, i, matches):
     '''Callback to merge a phrase on match'''
     ent_id, label, start, end = matches[i]
-    span = doc[start : end] 
+    span = doc[start : end]
     span.merge(ent_type=label, ent_id=ent_id)
 
 
@@ -180,7 +177,8 @@ cdef class Matcher:
 
     @classmethod
     def load(cls, path, vocab):
-        '''Load the matcher and patterns from a file path.
+        """
+        Load the matcher and patterns from a file path.
 
         Arguments:
             path (Path):
@@ -189,16 +187,17 @@ cdef class Matcher:
                 The vocabulary that the documents to match over will refer to.
         Returns:
             Matcher: The newly constructed object.
-        '''
+        """
         if (path / 'gazetteer.json').exists():
             with (path / 'gazetteer.json').open('r', encoding='utf8') as file_:
-                patterns = json.load(file_)
+                patterns = ujson.load(file_)
         else:
             patterns = {}
         return cls(vocab, patterns)
 
     def __init__(self, vocab, patterns={}):
-        """Create the Matcher.
+        """
+        Create the Matcher.
 
         Arguments:
             vocab (Vocab):
@@ -227,7 +226,8 @@ cdef class Matcher:
 
     def add_entity(self, entity_key, attrs=None, if_exists='raise',
                    acceptor=None, on_match=None):
-        """Add an entity to the matcher.
+        """
+        Add an entity to the matcher.
 
         Arguments:
             entity_key (unicode or int):
@@ -264,7 +264,8 @@ cdef class Matcher:
         self._callbacks[entity_key] = on_match
 
     def add_pattern(self, entity_key, token_specs, label=""):
-        """Add a pattern to the matcher.
+        """
+        Add a pattern to the matcher.
 
         Arguments:
             entity_key (unicode or int):
@@ -307,7 +308,8 @@ cdef class Matcher:
             return entity_key
 
     def has_entity(self, entity_key):
-        """Check whether the matcher has an entity.
+        """
+        Check whether the matcher has an entity.
 
         Arguments:
             entity_key (string or int): The entity key to check.
@@ -318,7 +320,8 @@ cdef class Matcher:
         return entity_key in self._entities
 
     def get_entity(self, entity_key):
-        """Retrieve the attributes stored for an entity.
+        """
+        Retrieve the attributes stored for an entity.
 
         Arguments:
             entity_key (unicode or int): The entity to retrieve.
@@ -332,7 +335,8 @@ cdef class Matcher:
             return None
 
     def __call__(self, Doc doc, acceptor=None):
-        """Find all token sequences matching the supplied patterns on the Doc.
+        """
+        Find all token sequences matching the supplied patterns on the Doc.
 
         Arguments:
             doc (Doc):
@@ -445,7 +449,8 @@ cdef class Matcher:
         return matches
 
     def pipe(self, docs, batch_size=1000, n_threads=2):
-        """Match a stream of documents, yielding them in turn.
+        """
+        Match a stream of documents, yielding them in turn.
 
         Arguments:
             docs: A stream of documents.

@@ -1,41 +1,29 @@
+# coding: utf8
 from __future__ import unicode_literals
+
+import bz2
+import ujson
+import re
 
 from libc.string cimport memset
 from libc.stdint cimport int32_t
 from libc.math cimport sqrt
-
-from pathlib import Path
-import bz2
-import ujson as json
-import re
-
-try:
-    import cPickle as pickle
-except ImportError:
-    import pickle
-
+from cymem.cymem cimport Address
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
 from .strings cimport hash_string
 from .typedefs cimport attr_t
 from .cfile cimport CFile, StringCFile
-from .lemmatizer import Lemmatizer
-from .attrs import intify_attrs
 from .tokens.token cimport Token
-
-from . import attrs
-from . import symbols
-
-from cymem.cymem cimport Address
 from .serialize.packer cimport Packer
 from .attrs cimport PROB, LANG
+
+from .compat import copy_reg, pickle
+from .lemmatizer import Lemmatizer
+from .attrs import intify_attrs
 from . import util
-
-
-try:
-    import copy_reg
-except ImportError:
-    import copyreg as copy_reg
+from . import attrs
+from . import symbols
 
 
 DEF MAX_VEC_SIZE = 100000
@@ -48,8 +36,9 @@ EMPTY_LEXEME.vector = EMPTY_VEC
 
 
 cdef class Vocab:
-    '''A map container for a language's LexemeC structs.
-    '''
+    """
+    A map container for a language's LexemeC structs.
+    """
     @classmethod
     def load(cls, path, lex_attr_getters=None, lemmatizer=True,
              tag_map=True, serializer_freqs=True, oov_prob=True, **deprecated_kwargs):
@@ -72,8 +61,7 @@ cdef class Vocab:
         Returns:
             Vocab: The newly constructed vocab object.
         """
-        if isinstance(path, basestring):
-            path = Path(path)
+        path = util.ensure_path(path)
         util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
         if 'vectors' in deprecated_kwargs:
             raise AttributeError(
@@ -81,7 +69,7 @@ cdef class Vocab:
                 "Install vectors after loading.")
         if tag_map is True and (path / 'vocab' / 'tag_map.json').exists():
             with (path / 'vocab' / 'tag_map.json').open('r', encoding='utf8') as file_:
-                tag_map = json.load(file_)
+                tag_map = ujson.load(file_)
         elif tag_map is True:
             tag_map = None
         if lex_attr_getters is not None \
@@ -94,12 +82,12 @@ cdef class Vocab:
             lemmatizer = Lemmatizer.load(path)
         if serializer_freqs is True and (path / 'vocab' / 'serializer.json').exists():
             with (path / 'vocab' / 'serializer.json').open('r', encoding='utf8') as file_:
-                serializer_freqs = json.load(file_)
+                serializer_freqs = ujson.load(file_)
         else:
             serializer_freqs = None
 
         with (path / 'vocab' / 'strings.json').open('r', encoding='utf8') as file_:
-            strings_list = json.load(file_)
+            strings_list = ujson.load(file_)
         cdef Vocab self = cls(lex_attr_getters=lex_attr_getters, tag_map=tag_map,
                               lemmatizer=lemmatizer, serializer_freqs=serializer_freqs,
                               strings=strings_list)
@@ -108,7 +96,8 @@ cdef class Vocab:
 
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
             serializer_freqs=None, strings=tuple(), **deprecated_kwargs):
-        '''Create the vocabulary.
+        """
+        Create the vocabulary.
 
         lex_attr_getters (dict):
             A dictionary mapping attribute IDs to functions to compute them.
@@ -123,7 +112,7 @@ cdef class Vocab:
 
         Returns:
             Vocab: The newly constructed vocab object.
-        '''
+        """
         util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
 
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
@@ -172,17 +161,19 @@ cdef class Vocab:
             return langfunc('_') if langfunc else ''
 
     def __len__(self):
-        """The current number of lexemes stored."""
+        """
+        The current number of lexemes stored.
+        """
         return self.length
 
     def resize_vectors(self, int new_size):
-        '''
+        """
         Set vectors_length to a new size, and allocate more memory for the Lexeme
         vectors if necessary. The memory will be zeroed.
 
         Arguments:
             new_size (int): The new size of the vectors.
-        '''
+        """
         cdef hash_t key
         cdef size_t addr
         if new_size > self.vectors_length:
@@ -193,7 +184,8 @@ cdef class Vocab:
         self.vectors_length = new_size
 
     def add_flag(self, flag_getter, int flag_id=-1):
-        '''Set a new boolean flag to words in the vocabulary.
+        """
+        Set a new boolean flag to words in the vocabulary.
 
         The flag_setter function will be called over the words currently in the
         vocab, and then applied to new words as they occur. You'll then be able
@@ -213,7 +205,7 @@ cdef class Vocab:
 
         Returns:
             flag_id (int): The integer ID by which the flag value can be checked.
-        '''
+        """
         if flag_id == -1:
             for bit in range(1, 64):
                 if bit not in self.lex_attr_getters:
@@ -234,9 +226,11 @@ cdef class Vocab:
         return flag_id
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL:
-        '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
+        """
+        Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
         if necessary, using memory acquired from the given pool.  If the pool
-        is the lexicon's own memory, the lexeme is saved in the lexicon.'''
+        is the lexicon's own memory, the lexeme is saved in the lexicon.
+        """
         if string == u'':
             return &EMPTY_LEXEME
         cdef LexemeC* lex
@@ -252,9 +246,11 @@ cdef class Vocab:
             return self._new_lexeme(mem, string)
 
     cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL:
-        '''Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
+        """
+        Get a pointer to a LexemeC from the lexicon, creating a new Lexeme
         if necessary, using memory acquired from the given pool.  If the pool
-        is the lexicon's own memory, the lexeme is saved in the lexicon.'''
+        is the lexicon's own memory, the lexeme is saved in the lexicon.
+        """
         if orth == 0:
             return &EMPTY_LEXEME
         cdef LexemeC* lex
@@ -297,30 +293,33 @@ cdef class Vocab:
         self.length += 1
 
     def __contains__(self, unicode string):
-        '''Check whether the string has an entry in the vocabulary.
+        """
+        Check whether the string has an entry in the vocabulary.
 
         Arguments:
             string (unicode): The ID string.
 
         Returns:
             bool Whether the string has an entry in the vocabulary.
-        '''
+        """
         key = hash_string(string)
         lex = self._by_hash.get(key)
         return lex is not NULL
 
     def __iter__(self):
-        '''Iterate over the lexemes in the vocabulary.
+        """
+        Iterate over the lexemes in the vocabulary.
 
         Yields: Lexeme An entry in the vocabulary.
-        '''
+        """
         cdef attr_t orth
         cdef size_t addr
         for orth, addr in self._by_orth.items():
             yield Lexeme(self, orth)
 
     def __getitem__(self,  id_or_string):
-        '''Retrieve a lexeme, given an int ID or a unicode string.  If a previously
+        """
+        Retrieve a lexeme, given an int ID or a unicode string.  If a previously
         unseen unicode string is given, a new lexeme is created and stored.
 
         Arguments:
@@ -332,7 +331,7 @@ cdef class Vocab:
 
         Returns:
             lexeme (Lexeme): The lexeme indicated by the given ID.
-        '''
+        """
         cdef attr_t orth
         if type(id_or_string) == unicode:
             orth = self.strings[id_or_string]
@@ -355,7 +354,8 @@ cdef class Vocab:
         return tokens
 
     def dump(self, loc=None):
-        """Save the lexemes binary data to the given location, or
+        """
+        Save the lexemes binary data to the given location, or
         return a byte-string with the data if loc is None.
 
         Arguments:
@@ -392,14 +392,15 @@ cdef class Vocab:
             return fp.string_data()
 
     def load_lexemes(self, loc):
-        '''Load the binary vocabulary data from the given location.
+        """
+        Load the binary vocabulary data from the given location.
 
         Arguments:
             loc (Path): The path to load from.
 
         Returns:
             None
-        '''
+        """
         fp = CFile(loc, 'rb',
                 on_open_error=lambda: IOError('LexemeCs file not found at %s' % loc))
         cdef LexemeC* lexeme = NULL
@@ -440,8 +441,9 @@ cdef class Vocab:
         fp.close()
 
     def _deserialize_lexemes(self, CFile fp):
-        '''Load the binary vocabulary data from the given CFile.
-        '''
+        """
+        Load the binary vocabulary data from the given CFile.
+        """
         cdef LexemeC* lexeme = NULL
         cdef hash_t key
         cdef unicode py_str
@@ -494,13 +496,14 @@ cdef class Vocab:
         fp.close()
 
     def dump_vectors(self, out_loc):
-        '''Save the word vectors to a binary file.
+        """
+        Save the word vectors to a binary file.
 
         Arguments:
             loc (Path): The path to save to.
         Returns:
             None
-        '''
+        """
         cdef int32_t vec_len = self.vectors_length
         cdef int32_t word_len
         cdef bytes word_str
@@ -522,7 +525,8 @@ cdef class Vocab:
         out_file.close()
 
     def load_vectors(self, file_):
-        """Load vectors from a text-based file.
+        """
+        Load vectors from a text-based file.
 
         Arguments:
             file_ (buffer): The file to read from. Entries should be separated by newlines,
@@ -561,7 +565,8 @@ cdef class Vocab:
         return vec_len
 
     def load_vectors_from_bin_loc(self, loc):
-        """Load vectors from the location of a binary file.
+        """
+        Load vectors from the location of a binary file.
 
         Arguments:
             loc (unicode): The path of the binary file to load from.

@@ -1,39 +1,25 @@
-from __future__ import absolute_import
-from __future__ import unicode_literals
-import pathlib
+# coding: utf8
+from __future__ import absolute_import, unicode_literals
 from contextlib import contextmanager
 import shutil
-
-import ujson
-
-
-try:
-    basestring
-except NameError:
-    basestring = str
-
-try:
-    unicode
-except NameError:
-    unicode = str
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .tagger import Tagger
 from .matcher import Matcher
-from . import attrs
-from . import orth
-from . import util
-from . import language_data
 from .lemmatizer import Lemmatizer
 from .train import Trainer
-
-from .attrs import TAG, DEP, ENT_IOB, ENT_TYPE, HEAD, PROB, LANG, IS_STOP
 from .syntax.parser import get_templates
 from .syntax.nonproj import PseudoProjectivity
 from .pipeline import DependencyParser, EntityRecognizer
 from .syntax.arc_eager import ArcEager
 from .syntax.ner import BiluoPushDown
+from .compat import json_dumps
+from .attrs import IS_STOP
+from . import attrs
+from . import orth
+from . import util
+from . import language_data
 
 
 class BaseDefaults(object):
@@ -150,25 +136,15 @@ class BaseDefaults(object):
         return pipeline
 
     token_match = language_data.TOKEN_MATCH
-
     prefixes = tuple(language_data.TOKENIZER_PREFIXES)
-
     suffixes = tuple(language_data.TOKENIZER_SUFFIXES)
-
     infixes = tuple(language_data.TOKENIZER_INFIXES)
-
     tag_map = dict(language_data.TAG_MAP)
-
     tokenizer_exceptions = {}
-
     parser_features = get_templates('parser')
-
     entity_features = get_templates('ner')
-
     tagger_features = Tagger.feature_templates # TODO -- fix this
-
     stop_words = set()
-
     lemma_rules = {}
     lemma_exc = {}
     lemma_index = {}
@@ -202,53 +178,46 @@ class BaseDefaults(object):
 
 
 class Language(object):
-    '''A text-processing pipeline. Usually you'll load this once per process, and
+    """
+    A text-processing pipeline. Usually you'll load this once per process, and
     pass the instance around your program.
-    '''
+    """
     Defaults = BaseDefaults
     lang = None
 
     @classmethod
-    @contextmanager
-    def train(cls, path, gold_tuples, *configs):
-        if isinstance(path, basestring):
-            path = pathlib.Path(path)
-        tagger_cfg, parser_cfg, entity_cfg = configs
-        dep_model_dir = path / 'deps'
-        ner_model_dir = path / 'ner'
-        pos_model_dir = path / 'pos'
-        if dep_model_dir.exists():
-            shutil.rmtree(str(dep_model_dir))
-        if ner_model_dir.exists():
-            shutil.rmtree(str(ner_model_dir))
-        if pos_model_dir.exists():
-            shutil.rmtree(str(pos_model_dir))
-        dep_model_dir.mkdir()
-        ner_model_dir.mkdir()
-        pos_model_dir.mkdir()
+    def setup_directory(cls, path, **configs):
+        """
+        Initialise a model directory.
+        """
+        for name, config in configs.items():
+            directory = path / name
+            if directory.exists():
+                shutil.rmtree(str(directory))
+            directory.mkdir()
+            with (directory / 'config.json').open('wb') as file_:
+                data = json_dumps(config)
+                file_.write(data)
+        if not (path / 'vocab').exists():
+            (path / 'vocab').mkdir()
 
-        if parser_cfg['pseudoprojective']:
+    @classmethod
+    @contextmanager
+    def train(cls, path, gold_tuples, **configs):
+        parser_cfg = configs.get('deps', {})
+        if parser_cfg.get('pseudoprojective'):
             # preprocess training data here before ArcEager.get_labels() is called
             gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
 
-        parser_cfg['actions'] = ArcEager.get_actions(gold_parses=gold_tuples)
-        entity_cfg['actions'] = BiluoPushDown.get_actions(gold_parses=gold_tuples)
+        for subdir in ('deps', 'ner', 'pos'):
+            if subdir not in configs:
+                configs[subdir] = {}
+        if parser_cfg:
+            configs['deps']['actions'] = ArcEager.get_actions(gold_parses=gold_tuples)
+        if 'ner' in configs:
+            configs['ner']['actions'] = BiluoPushDown.get_actions(gold_parses=gold_tuples)
 
-        with (dep_model_dir / 'config.json').open('wb') as file_:
-            data = ujson.dumps(parser_cfg)
-            if isinstance(data, unicode):
-                data = data.encode('utf8')
-            file_.write(data)
-        with (ner_model_dir / 'config.json').open('wb') as file_:
-            data = ujson.dumps(entity_cfg)
-            if isinstance(data, unicode):
-                data = data.encode('utf8')
-            file_.write(data)
-        with (pos_model_dir / 'config.json').open('wb') as file_:
-            data = ujson.dumps(tagger_cfg)
-            if isinstance(data, unicode):
-                data = data.encode('utf8')
-            file_.write(data)
+        cls.setup_directory(path, **configs)
 
         self = cls(
                 path=path,
@@ -269,14 +238,22 @@ class Language(object):
         self.entity = self.Defaults.create_entity(self)
         self.pipeline = self.Defaults.create_pipeline(self)
         yield Trainer(self, gold_tuples)
-        self.end_training(path=path)
+        self.end_training()
+        self.save_to_directory(path)
 
     def __init__(self, **overrides):
+        """
+        Create or load the pipeline.
+
+        Arguments:
+            **overrides: Keyword arguments indicating which defaults to override.
+
+        Returns:
+            Language: The newly constructed object.
+        """
         if 'data_dir' in overrides and 'path' not in overrides:
             raise ValueError("The argument 'data_dir' has been renamed to 'path'")
-        path = overrides.get('path', True)
-        if isinstance(path, basestring):
-            path = pathlib.Path(path)
+        path = util.ensure_path(overrides.get('path', True))
         if path is True:
             path = util.get_data_path() / self.lang
             if not path.exists() and 'path' not in overrides:
@@ -322,11 +299,12 @@ class Language(object):
             self.pipeline = [self.tagger, self.parser, self.matcher, self.entity]
 
     def __call__(self, text, tag=True, parse=True, entity=True):
-        """Apply the pipeline to some text.  The text can span multiple sentences,
+        """
+        Apply the pipeline to some text.  The text can span multiple sentences,
         and can contain arbtrary whitespace.  Alignment into the original string
         is preserved.
 
-        Args:
+        Argsuments:
             text (unicode): The text to be processed.
 
         Returns:
@@ -352,7 +330,8 @@ class Language(object):
         return doc
 
     def pipe(self, texts, tag=True, parse=True, entity=True, n_threads=2, batch_size=1000):
-        '''Process texts as a stream, and yield Doc objects in order.
+        """
+        Process texts as a stream, and yield Doc objects in order.
 
         Supports GIL-free multi-threading.
 
@@ -361,7 +340,7 @@ class Language(object):
             tag (bool)
             parse (bool)
             entity (bool)
-        '''
+        """
         skip = {self.tagger: not tag, self.parser: not parse, self.entity: not entity}
         stream = (self.make_doc(text) for text in texts)
         for proc in self.pipeline:
@@ -373,51 +352,42 @@ class Language(object):
         for doc in stream:
             yield doc
 
-    def end_training(self, path=None):
-        if path is None:
-            path = self.path
-        elif isinstance(path, basestring):
-            path = pathlib.Path(path)
+    def save_to_directory(self, path):
+        """
+        Save the Vocab, StringStore and pipeline to a directory.
 
-        if self.tagger:
-            self.tagger.model.end_training()
-            self.tagger.model.dump(str(path / 'pos' / 'model'))
-        if self.parser:
-            self.parser.model.end_training()
-            self.parser.model.dump(str(path / 'deps' / 'model'))
-        if self.entity:
-            self.entity.model.end_training()
-            self.entity.model.dump(str(path / 'ner' / 'model'))
+        Arguments:
+            path (string or pathlib path): Path to save the model.
+        """
+        configs = {
+            'pos': self.tagger.cfg if self.tagger else {},
+            'deps': self.parser.cfg if self.parser else {},
+            'ner': self.entity.cfg if self.entity else {},
+        }
+
+        path = util.ensure_path(path)
+        self.setup_directory(path, **configs)
 
         strings_loc = path / 'vocab' / 'strings.json'
         with strings_loc.open('w', encoding='utf8') as file_:
             self.vocab.strings.dump(file_)
         self.vocab.dump(path / 'vocab' / 'lexemes.bin')
-
+        # TODO: Word vectors?
         if self.tagger:
-            tagger_freqs = list(self.tagger.freqs[TAG].items())
-        else:
-            tagger_freqs = []
+            self.tagger.model.dump(str(path / 'pos' / 'model'))
         if self.parser:
-            dep_freqs = list(self.parser.moves.freqs[DEP].items())
-            head_freqs = list(self.parser.moves.freqs[HEAD].items())
-        else:
-            dep_freqs = []
-            head_freqs = []
+            self.parser.model.dump(str(path / 'deps' / 'model'))
         if self.entity:
-            entity_iob_freqs = list(self.entity.moves.freqs[ENT_IOB].items())
-            entity_type_freqs = list(self.entity.moves.freqs[ENT_TYPE].items())
-        else:
-            entity_iob_freqs = []
-            entity_type_freqs = []
-        with (path / 'vocab' / 'serializer.json').open('wb') as file_:
-            data = ujson.dumps([
-                        (TAG, tagger_freqs),
-                        (DEP, dep_freqs),
-                        (ENT_IOB, entity_iob_freqs),
-                        (ENT_TYPE, entity_type_freqs),
-                        (HEAD, head_freqs)
-                    ])
-            if isinstance(data, unicode):
-                data = data.encode('utf8')
-            file_.write(data)
+            self.entity.model.dump(str(path / 'ner' / 'model'))
+
+    def end_training(self, path=None):
+        if self.tagger:
+            self.tagger.model.end_training()
+        if self.parser:
+            self.parser.model.end_training()
+        if self.entity:
+            self.entity.model.end_training()
+        # NB: This is slightly different from before --- we no longer default
+        # to taking nlp.path
+        if path is not None:
+            self.save_to_directory(path)

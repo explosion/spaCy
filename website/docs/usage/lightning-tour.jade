@@ -137,7 +137,7 @@ p
         return word.ent_type != 0
 
     def count_parent_verb_by_person(docs):
-        counts = defaultdict(defaultdict(int))
+        counts = defaultdict(lambda: defaultdict(int))
         for doc in docs:
             for ent in doc.ents:
                 if ent.label_ == 'PERSON' and ent.root.head.pos == VERB:

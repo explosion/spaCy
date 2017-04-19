@@ -1,4 +1,7 @@
 # cython: embedsignature=True
+# coding: utf8
+from __future__ import unicode_literals, print_function
+
 from libc.math cimport sqrt
 from cpython.ref cimport Py_INCREF
 from cymem.cymem cimport Pool
@@ -9,14 +12,11 @@ from cython.view cimport array as cvarray
 cimport numpy as np
 np.import_array()
 
-
-
 from libc.string cimport memset
+import numpy
 
 from .orth cimport word_shape
 from .typedefs cimport attr_t, flags_t
-import numpy
-
 from .attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
 from .attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from .attrs cimport IS_BRACKET
@@ -30,13 +30,15 @@ memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
 
 
 cdef class Lexeme:
-    """An entry in the vocabulary.  A Lexeme has no string context --- it's a
+    """
+    An entry in the vocabulary.  A Lexeme has no string context --- it's a
     word-type, as opposed to a word token.  It therefore has no part-of-speech
     tag, dependency parse, or lemma (lemmatization depends on the part-of-speech
     tag).
     """
     def __init__(self, Vocab vocab, int orth):
-        """Create a Lexeme object.
+        """
+        Create a Lexeme object.
 
         Arguments:
             vocab (Vocab): The parent vocabulary
@@ -80,7 +82,8 @@ cdef class Lexeme:
         return self.c.orth
 
     def set_flag(self, attr_id_t flag_id, bint value):
-        """Change the value of a boolean flag.
+        """
+        Change the value of a boolean flag.
 
         Arguments:
             flag_id (int): The attribute ID of the flag to set.
@@ -89,7 +92,8 @@ cdef class Lexeme:
         Lexeme.c_set_flag(self.c, flag_id, value)
 
     def check_flag(self, attr_id_t flag_id):
-        """Check the value of a boolean flag.
+        """
+        Check the value of a boolean flag.
 
         Arguments:
             flag_id (int): The attribute ID of the flag to query.
@@ -98,7 +102,8 @@ cdef class Lexeme:
         return True if Lexeme.c_check_flag(self.c, flag_id) else False
 
     def similarity(self, other):
-        '''Compute a semantic similarity estimate. Defaults to cosine over vectors.
+        """
+        Compute a semantic similarity estimate. Defaults to cosine over vectors.
 
         Arguments:
             other:
@@ -106,7 +111,7 @@ cdef class Lexeme:
                 Token and Lexeme objects.
         Returns:
             score (float): A scalar similarity score. Higher is more similar.
-        '''
+        """
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)

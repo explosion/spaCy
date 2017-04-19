@@ -1,17 +1,11 @@
 # cython: embedsignature=True
+# coding: utf8
 from __future__ import unicode_literals
 
-import pathlib
+import ujson
 
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
-
-try:
-    import ujson as json
-except ImportError:
-    import json
-
-
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
 
@@ -23,12 +17,15 @@ from .tokens.doc cimport Doc
 
 
 cdef class Tokenizer:
-    """Segment text, and create Doc objects with the discovered segment boundaries."""
+    """
+    Segment text, and create Doc objects with the discovered segment boundaries.
+    """
     @classmethod
     def load(cls, path, Vocab vocab, rules=None, prefix_search=None, suffix_search=None,
              infix_finditer=None, token_match=None):
-        '''Load a Tokenizer, reading unsupplied components from the path.
-        
+        """
+        Load a Tokenizer, reading unsupplied components from the path.
+
         Arguments:
             path (Path):
                 The path to load from.
@@ -45,13 +42,11 @@ cdef class Tokenizer:
             infix_finditer:
                 Signature of re.compile(string).finditer
         Returns Tokenizer
-        '''
-        if isinstance(path, basestring):
-            path = pathlib.Path(path)
-
+        """
+        path = util.ensure_path(path)
         if rules is None:
             with (path / 'tokenizer' / 'specials.json').open('r', encoding='utf8') as file_:
-                rules = json.load(file_)
+                rules = ujson.load(file_)
         if prefix_search in (None, True):
             with (path / 'tokenizer' / 'prefix.txt').open() as file_:
                 entries = file_.read().split('\n')
@@ -67,8 +62,9 @@ cdef class Tokenizer:
         return cls(vocab, rules, prefix_search, suffix_search, infix_finditer, token_match)
 
     def __init__(self, Vocab vocab, rules, prefix_search, suffix_search, infix_finditer, token_match=None):
-        '''Create a Tokenizer, to create Doc objects given unicode text.
-        
+        """
+        Create a Tokenizer, to create Doc objects given unicode text.
+
         Arguments:
             vocab (Vocab):
                 A storage container for lexical types.
@@ -85,7 +81,7 @@ cdef class Tokenizer:
                 to find infixes.
             token_match:
                 A boolean function matching strings that becomes tokens.
-        '''
+        """
         self.mem = Pool()
         self._cache = PreshMap()
         self._specials = PreshMap()
@@ -107,7 +103,7 @@ cdef class Tokenizer:
                 self.token_match)
 
         return (self.__class__, args, None, None)
-    
+
     cpdef Doc tokens_from_list(self, list strings):
         return Doc(self.vocab, words=strings)
         #raise NotImplementedError(
@@ -117,7 +113,8 @@ cdef class Tokenizer:
 
     @cython.boundscheck(False)
     def __call__(self, unicode string):
-        """Tokenize a string.
+        """
+        Tokenize a string.
 
         Arguments:
             string (unicode): The string to tokenize.
@@ -170,7 +167,8 @@ cdef class Tokenizer:
         return tokens
 
     def pipe(self, texts, batch_size=1000, n_threads=2):
-        """Tokenize a stream of texts.
+        """
+        Tokenize a stream of texts.
 
         Arguments:
             texts: A sequence of unicode texts.
@@ -270,7 +268,7 @@ cdef class Tokenizer:
             cache_hit = self._try_cache(hash_string(string), tokens)
             if cache_hit:
                 pass
-            elif self.token_match and self.token_match(string): 
+            elif self.token_match and self.token_match(string):
                 # We're always saying 'no' to spaces here -- the caller will
                 # fix up the outermost one, with reference to the original.
                 # See Issue #859
@@ -324,7 +322,8 @@ cdef class Tokenizer:
         self._cache.set(key, cached)
 
     def find_infix(self, unicode string):
-        """Find internal split points of the string, such as hyphens.
+        """
+        Find internal split points of the string, such as hyphens.
 
         string (unicode): The string to segment.
 
@@ -337,7 +336,8 @@ cdef class Tokenizer:
         return list(self.infix_finditer(string))
 
     def find_prefix(self, unicode string):
-        """Find the length of a prefix that should be segmented from the string,
+        """
+        Find the length of a prefix that should be segmented from the string,
         or None if no prefix rules match.
 
         Arguments:
@@ -350,7 +350,8 @@ cdef class Tokenizer:
         return (match.end() - match.start()) if match is not None else 0
 
     def find_suffix(self, unicode string):
-        """Find the length of a suffix that should be segmented from the string,
+        """
+        Find the length of a suffix that should be segmented from the string,
         or None if no suffix rules match.
 
         Arguments:
@@ -363,13 +364,15 @@ cdef class Tokenizer:
         return (match.end() - match.start()) if match is not None else 0
 
     def _load_special_tokenization(self, special_cases):
-        '''Add special-case tokenization rules.
-        '''
+        """
+        Add special-case tokenization rules.
+        """
         for chunk, substrings in sorted(special_cases.items()):
             self.add_special_case(chunk, substrings)
-    
+
     def add_special_case(self, unicode string, substrings):
-        '''Add a special-case tokenization rule.
+        """
+        Add a special-case tokenization rule.
 
         Arguments:
             string (unicode): The string to specially tokenize.
@@ -378,7 +381,7 @@ cdef class Tokenizer:
                 attributes. The ORTH fields of the attributes must exactly match
                 the string when they are concatenated.
         Returns None
-        '''
+        """
         substrings = list(substrings)
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
         cached.length = len(substrings)

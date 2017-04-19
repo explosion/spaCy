@@ -1,0 +1,174 @@
+include ../../_includes/_mixins
+
+p
+    |  All #[+a("/docs/usage/models") spaCy models] support online learning, so
+    |  you can update a pre-trained model with new examples. You can even add
+    |  new classes to an existing model, to recognise a new entity type,
+    |  part-of-speech, or syntactic relation. Updating an existing model is
+    |  particularly useful as a "quick and dirty solution", if you have only a
+    |  few corrections or annotations.
+
++h(2, "improving-accuracy") Improving accuracy on existing entity types
+
+p
+    |  To update the model, you first need to create an instance of
+    |  #[+api("goldparse") #[code spacy.gold.GoldParse]], with the entity labels
+    |  you want to learn. You will then pass this instance to the
+    |  #[+api("entityrecognizer#update") #[code EntityRecognizer.update()]]
+    |  method. For example:
+
++code.
+    import spacy
+    from spacy.gold import GoldParse
+
+    nlp = spacy.load('en')
+    doc = nlp.make_doc(u'Facebook released React in 2014')
+    gold = GoldParse(doc, entities=['U-ORG', 'O', 'U-TECHNOLOGY', 'O', 'U-DATE'])
+    nlp.entity.update(doc, gold)
+
+p
+    |  You'll usually need to provide many examples to meaningfully improve the
+    |  system — a few hundred is a good start, although more is better. You
+    |  should avoid iterating over the same few examples multiple times, or the
+    |  model is likely to "forget" how to annotate other examples. If you
+    |  iterate over the same few examples, you're effectively changing the loss
+    |  function. The optimizer will find a way to minimize the loss on your
+    |  examples, without regard for the consequences on the examples it's no
+    |  longer paying attention to.
+
+p
+    |  One way to avoid this "catastrophic forgetting" problem is to "remind"
+    |  the model of other examples by augmenting your annotations with sentences
+    |  annotated with entities automatically recognised by the original model.
+    |  Ultimately, this is an empirical process: you'll need to
+    |  #[strong experiment on your own data] to find a solution that works best
+    |  for you.
+
++h(2, "adding") Adding a new entity type
+
+p
+    |  You can add new entity types to an existing model. Let's say we want to
+    |  recognise the category #[code TECHNOLOGY]. The new category will include
+    |  programming languages, frameworks and platforms. First, we need to
+    |  register the new entity type:
+
++code.
+    nlp.entity.add_label('TECHNOLOGY')
+
+p
+    |  Next, iterate over your examples, calling #[code entity.update()]. As
+    |  above, we want to avoid iterating over only a small number of sentences.
+    |  A useful compromise is to run the model over a number of plain-text
+    |  sentences, and pass the entities to #[code GoldParse], as "true"
+    |  annotations. This encourages the optimizer to find a solution that
+    |  predicts the new category with minimal difference from the previous
+    |  output.
+
++h(2, "saving-loading") Saving and loading
+
+p
+    |  After training our model, you'll usually want to save its state, and load
+    |  it back later. You can do this with the #[code Language.save_to_directory()]
+    |  method:
+
++code.
+    nlp.save_to_directory('/home/me/data/en_technology')
+
+p
+    |  To make the model more convenient to deploy, we recommend wrapping it as
+    |  a Python package, so that you can install it via pip and load it as a
+    |  module. spaCy comes with a handy #[+a("/docs/usage/cli#package") CLI command]
+    |  to create all required files and directories.
+
++code(false, "bash").
+    python -m spacy package /home/me/data/en_technology /home/me/my_models
+
+p
+    |  To build the package and create a #[code .tar.gz] archive, run
+    |  #[code python setup.py sdist] from within its directory.
+
++infobox("Saving and loading models")
+    |  For more information and a detailed guide on how to package your model,
+    |  see the documentation on
+    |  #[+a("/docs/usage/saving-loading") saving and loading models].
+
+p
+    |  After you've generated and installed the package, you'll be able to
+    |  load the model as follows:
+
++code.
+    import en_technology
+    nlp = en_technology.load()
+
++h(2, "example") Example: Adding and training an #[code ANIMAL] entity
+
+p
+    |  This script shows how to add a new entity type to an existing pre-trained
+    |  NER model. To keep the example short and simple, only four sentences are
+    |  provided as examples. In practice, you'll need many more —
+    |  #[strong a few hundred] would be a good start. You will also likely need
+    |  to mix in #[strong examples of other entity types], which might be
+    |  obtained by running the entity recognizer over unlabelled sentences, and
+    |  adding their annotations to the training set.
+
+p
+    |  For the full, runnable script of this example, see
+    |  #[+src(gh("spacy", "examples/training/train_new_entity_type.py")) train_new_entity_type.py].
+
++code("Training the entity recognizer").
+    import spacy
+    from spacy.pipeline import EntityRecognizer
+    from spacy.gold import GoldParse
+    from spacy.tagger import Tagger
+    import random
+
+    model_name = 'en'
+    entity_label = 'ANIMAL'
+    output_directory = '/path/to/model'
+    train_data = [
+        ("Horses are too tall and they pretend to care about your feelings",
+        [(0, 6, 'ANIMAL')]),
+        ("horses are too tall and they pretend to care about your feelings",
+        [(0, 6, 'ANIMAL')]),
+        ("horses pretend to care about your feelings",
+        [(0, 6, 'ANIMAL')]),
+        ("they pretend to care about your feelings, those horses",
+        [(48, 54, 'ANIMAL')])
+    ]
+
+    nlp = spacy.load(model_name)
+    nlp.entity.add_label(entity_label)
+    ner = train_ner(nlp, train_data, output_directory)
+
+    def train_ner(nlp, train_data, output_dir):
+        # Add new words to vocab
+        for raw_text, _ in train_data:
+            doc = nlp.make_doc(raw_text)
+            for word in doc:
+                _ = nlp.vocab[word.orth]
+
+        for itn in range(20):
+            random.shuffle(train_data)
+            for raw_text, entity_offsets in train_data:
+                gold = GoldParse(doc, entities=entity_offsets)
+                doc = nlp.make_doc(raw_text)
+                nlp.tagger(doc)
+                loss = nlp.entity.update(doc, gold)
+        nlp.end_training()
+        nlp.save_to_directory(output_dir)
+
+p
+    +button(gh("spaCy", "examples/training/train_new_entity_type.py"), false, "secondary") Full example
+
+p
+    |  The actual training is performed by looping over the examples, and
+    |  calling #[code nlp.entity.update()]. The #[code update()] method steps
+    |  through the words of the input. At each word, it makes a prediction. It
+    |  then consults the annotations provided on the #[code GoldParse] instance,
+    |  to see whether it was right. If it was wrong, it adjusts its weights so
+    |  that the correct action will score higher next time.
+
+p
+    |  After training your model, you can
+    |  #[+a("/docs/usage/saving-loading") save it to a directory]. We recommend wrapping
+    |  models as Python packages, for ease of deployment.

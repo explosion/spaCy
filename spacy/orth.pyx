@@ -1,6 +1,7 @@
-# coding: utf8
 # cython: infer_types=True
+# coding: utf8
 from __future__ import unicode_literals
+
 import unicodedata
 import re
 

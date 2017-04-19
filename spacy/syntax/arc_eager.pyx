@@ -1,29 +1,26 @@
 # cython: profile=True
 # cython: cdivision=True
 # cython: infer_types=True
+# coding: utf-8
 from __future__ import unicode_literals
+
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
-
 import ctypes
-import os
+from libc.stdint cimport uint32_t
+from libc.string cimport memcpy
+from cymem.cymem cimport Pool
 
-from ..structs cimport TokenC
-
+from .stateclass cimport StateClass
+from ._state cimport StateC, is_space_token
+from .nonproj import PseudoProjectivity
+from .nonproj import is_nonproj_tree
 from .transition_system cimport do_func_t, get_cost_func_t
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse
 from ..gold cimport GoldParseC
 from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE, IS_SPACE
 from ..lexeme cimport Lexeme
-
-from libc.stdint cimport uint32_t
-from libc.string cimport memcpy
-
-from cymem.cymem cimport Pool
-from .stateclass cimport StateClass
-from ._state cimport StateC, is_space_token
-from .nonproj import PseudoProjectivity
-from .nonproj import is_nonproj_tree
+from ..structs cimport TokenC
 
 
 DEF NON_MONOTONIC = True
@@ -317,17 +314,20 @@ cdef class ArcEager(TransitionSystem):
     def get_actions(cls, **kwargs):
         actions = kwargs.get('actions',
                     {
-                        SHIFT: {'': True},
-                        REDUCE: {'': True},
-                        RIGHT: {},
-                        LEFT: {},
-                        BREAK: {'ROOT': True}})
+                        SHIFT: [''],
+                        REDUCE: [''],
+                        RIGHT: [],
+                        LEFT: [],
+                        BREAK: ['ROOT']})
+        seen_actions = set()
         for label in kwargs.get('left_labels', []):
             if label.upper() != 'ROOT':
-                actions[LEFT][label] = True
+                if (LEFT, label) not in seen_actions:
+                    actions[LEFT].append(label)
         for label in kwargs.get('right_labels', []):
             if label.upper() != 'ROOT':
-                actions[RIGHT][label] = True
+                if (RIGHT, label) not in seen_actions:
+                    actions[RIGHT].append(label)
 
         for raw_text, sents in kwargs.get('gold_parses', []):
             for (ids, words, tags, heads, labels, iob), ctnts in sents:
@@ -336,9 +336,11 @@ cdef class ArcEager(TransitionSystem):
                         label = 'ROOT'
                     if label != 'ROOT':
                         if head < child:
-                            actions[RIGHT][label] = True
+                            if (RIGHT, label) not in seen_actions:
+                                actions[RIGHT].append(label)
                         elif head > child:
-                            actions[LEFT][label] = True
+                            if (LEFT, label) not in seen_actions:
+                                actions[LEFT].append(label)
         return actions
 
     property action_types:
