@@ -16,6 +16,8 @@ A Ä À Á Â Ǎ Æ Ã Å Ā Ă Ą B C Ç Ć Č Ĉ Ċ C̄ D Ð Ď E É È Ê Ë 
 Î Ï Í Ī Ì Ȉ Ǐ Į Ĩ J K Ķ L Ł Ļ M N Ñ Ń Ň Ņ O Ö Ó Ò Ő Ô Õ Œ Ø Ō Ő Ǒ Ơ P Q R Ř Ŗ S
 Ś Š Ş Ŝ T Ť U Ú Û Ù Ú Ū Ű Ǔ Ů Ų Ư V W Ŵ X Y Ÿ Ý Ỳ Ŷ Ỹ Z Ź Ž Ż Þ
 """
+import regex as re
+re.DEFAULT_VERSION = re.VERSION1
 
 
 _UNITS = """

@@ -13,7 +13,7 @@ from ..symbols import *
 
 import os
 import io
-import re
+import regex as re
 
 
 def get_exceptions():
