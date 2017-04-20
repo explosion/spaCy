@@ -6,6 +6,7 @@ import math
 from ast import literal_eval
 from pathlib import Path
 from preshed.counter import PreshCounter
+import ftfy
 
 from ..vocab import write_binary_vectors
 from .. import util
@@ -41,7 +42,7 @@ def create_model(model_path, vectors_path, vocab, oov_prob):
     with oov_path.open('w') as f:
         f.write('%f' % oov_prob)
     if vectors_path:
-        vectors_dest = model_path / 'vec.bin'
+        vectors_dest = vocab_path / 'vec.bin'
         write_binary_vectors(vectors_path.as_posix(), vectors_dest.as_posix())
 
 
@@ -76,6 +77,7 @@ def read_clusters(clusters_path):
         for line in f:
             try:
                 cluster, word, freq = line.split()
+                word = ftfy.fix_text(word)
             except ValueError:
                 continue
             # If the clusterer has only seen the word a few times, its
