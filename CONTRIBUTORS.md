@@ -6,6 +6,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Andreas Grivas, [@andreasgrv](https://github.com/andreasgrv)
 * Andrew Poliakov, [@pavlin99th](https://github.com/pavlin99th)
 * Aniruddha Adhikary [@aniruddha-adhikary](https://github.com/aniruddha-adhikary)
+* Ben Eyal, [@beneyal](https://github.com/beneyal)
 * Bhargav Srinivasa, [@bhargavvader](https://github.com/bhargavvader)
 * Bruno P. Kinoshita, [@kinow](https://github.com/kinow)
 * Chris DuBois, [@chrisdubois](https://github.com/chrisdubois)
