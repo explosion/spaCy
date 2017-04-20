@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import re
+import regex as re
 
 from spacy.language_data.punctuation import ALPHA_LOWER, CURRENCY
 from ..language_data.tokenizer_exceptions import _URL_PATTERN

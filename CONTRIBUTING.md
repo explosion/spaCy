@@ -87,13 +87,24 @@ Code should loosely follow [pep8](https://www.python.org/dev/peps/pep-0008/). Re
 
 ### Python conventions
 
-All Python code must be written in an **intersection of Python 2 and Python 3**. This is easy in Cython, but somewhat ugly in Python. We could use some extra utilities for this. Please pay particular attention to code that serialises json objects.
+All Python code must be written in an **intersection of Python 2 and Python 3**. This is easy in Cython, but somewhat ugly in Python. Logic that deals with Python or platform compatibility should only live in [`spacy.compat`](spacy/compat.py). To distinguish them from the builtin functions, replacement functions are suffixed with an undersocre, for example `unicode_`. If you need to access the user's version or platform information, for example to show more specific error messages, you can use the `is_config()` helper function.
+
+```python
+from .compat import unicode_, json_dumps, is_config
+
+compatible_unicode = unicode_('hello world')
+compatible_json = json_dumps({'key': 'value'})
+if is_config(windows=True, python2=True):
+    print("You are using Python 2 on Windows.")
+```
 
 Code that interacts with the file-system should accept objects that follow the `pathlib.Path` API, without assuming that the object inherits from `pathlib.Path`. If the function is user-facing and takes a path as an argument, it should check whether the path is provided as a string. Strings should be converted to `pathlib.Path` objects.
 
 At the time of writing (v1.7), spaCy's serialization and deserialization functions are inconsistent about accepting paths vs accepting file-like objects. The correct answer is "file-like objects" — that's what we want going forward, as it makes the library io-agnostic. Working on buffers makes the code more general, easier to test, and compatible with Python 3's asynchronous IO.
 
 Although spaCy uses a lot of classes, inheritance is viewed with some suspicion — it's seen as a mechanism of last resort. You should discuss plans to extend the class hierarchy before implementing.
+
+We have a number of conventions around variable naming that are still being documented, and aren't 100% strict. A general policy is that instances of the class `Doc` should by default be called `doc`, `Token` `token`, `Lexeme` `lex`, `Vocab` `vocab` and `Language` `nlp`. You should avoid naming variables that are of other types these names. For instance, don't name a text string `doc` — you should usually call this `text`. Two general code style preferences further help with naming. First, lean away from introducing temporary variables, as these clutter your namespace. This is one reason why comprehension expressions are often preferred. Second, keep your functions shortish, so that can work in a smaller scope. Of course, this is a question of trade-offs.
 
 ### Cython conventions
 
@@ -126,7 +137,7 @@ cdef int c_total(const int* int_array, int length) nogil:
     return total
 ```
 
-If this is confusing, consider that the compiler couldn't deal with `for item in int_array:` — there's no length attached to a raw pointer, so how could we figure out where to stop? The length is provided in the slice notation as a solution to this. Note that we don't have to declare the type of `item` in the code above -- the compiler can easily infer it. This gives us tidy code that looks quite like Python, but is exactly as fast as C — because we've made sure the compilation to C is trivial.
+If this is confusing, consider that the compiler couldn't deal with `for item in int_array:` — there's no length attached to a raw pointer, so how could we figure out where to stop? The length is provided in the slice notation as a solution to this. Note that we don't have to declare the type of `item` in the code above — the compiler can easily infer it. This gives us tidy code that looks quite like Python, but is exactly as fast as C — because we've made sure the compilation to C is trivial.
 
 Your functions cannot be declared `nogil` if they need to create Python objects or call Python functions. This is perfectly okay — you shouldn't torture your code just to get `nogil` functions. However, if your function isn't `nogil`, you should compile your module with `cython -a --cplus my_module.pyx` and open the resulting `my_module.html` file in a browser. This will let you see how Cython is compiling your code. Calls into the Python run-time will be in bright yellow. This lets you easily see whether Cython is able to correctly type your code, or whether there are unexpected problems.
 

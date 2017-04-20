@@ -2,7 +2,7 @@
 from __future__ import unicode_literals, print_function
 
 import ujson
-import re
+import regex as re
 from pathlib import Path
 import sys
 import textwrap

@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import six
+import ftfy
 import sys
 import ujson
 
@@ -36,6 +37,9 @@ elif is_python3:
     basestring_ = str
     input_ = input
     json_dumps = lambda data: ujson.dumps(data, indent=2)
+
+
+fix_text = lambda text: ftfy.fix_text(text)
 
 
 def symlink_to(orig, dest):

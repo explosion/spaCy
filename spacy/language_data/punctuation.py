@@ -1,21 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import re
-
-
-_ALPHA_LOWER = """
-a ä à á â ǎ æ ã å ā ă ą b c ç ć č ĉ ċ c̄ d ð ď e é è ê ë ė ȅ ȩ ẽ ę f g ĝ ğ h i ı
-î ï í ī ì ȉ ǐ į ĩ j k ķ l ł ļ m n ñ ń ň ņ o ö ó ò ő ô õ œ ø ō ő ǒ ơ p q r ř ŗ s
-ß ś š ş ŝ t ť u ú û ù ú ū ű ǔ ů ų ư v w ŵ x y ÿ ý ỳ ŷ ỹ z ź ž ż þ
-"""
-
-
-_ALPHA_UPPER = """
-A Ä À Á Â Ǎ Æ Ã Å Ā Ă Ą B C Ç Ć Č Ĉ Ċ C̄ D Ð Ď E É È Ê Ë Ė Ȅ Ȩ Ẽ Ę F G Ĝ Ğ H I İ
-Î Ï Í Ī Ì Ȉ Ǐ Į Ĩ J K Ķ L Ł Ļ M N Ñ Ń Ň Ņ O Ö Ó Ò Ő Ô Õ Œ Ø Ō Ő Ǒ Ơ P Q R Ř Ŗ S
-Ś Š Ş Ŝ T Ť U Ú Û Ù Ú Ū Ű Ǔ Ů Ų Ư V W Ŵ X Y Ÿ Ý Ỳ Ŷ Ỹ Z Ź Ž Ż Þ
-"""
+import regex as re
+re.DEFAULT_VERSION = re.VERSION1
 
 
 _UNITS = """
@@ -57,9 +44,16 @@ LIST_PUNCT = list(_PUNCT.strip().split())
 LIST_HYPHENS = list(_HYPHENS.strip().split())
 
 
-ALPHA_LOWER = _ALPHA_LOWER.strip().replace(' ', '').replace('\n', '')
-ALPHA_UPPER = _ALPHA_UPPER.strip().replace(' ', '').replace('\n', '')
-ALPHA = ALPHA_LOWER + ALPHA_UPPER
+BENGALI = r'[\p{L}&&\p{Bengali}]'
+HEBREW = r'[\p{L}&&\p{Hebrew}]'
+LATIN_LOWER = r'[\p{Ll}&&\p{Latin}]'
+LATIN_UPPER = r'[\p{Lu}&&\p{Latin}]'
+LATIN = r'[[\p{Ll}||\p{Lu}]&&\p{Latin}]'
+
+
+ALPHA_LOWER = '[{}]'.format('||'.join([BENGALI, HEBREW, LATIN_LOWER]))
+ALPHA_UPPER = '[{}]'.format('||'.join([BENGALI, HEBREW, LATIN_UPPER]))
+ALPHA = '[{}]'.format('||'.join([BENGALI, HEBREW, LATIN]))
 
 
 QUOTES = _QUOTES.strip().replace(' ', '|')
