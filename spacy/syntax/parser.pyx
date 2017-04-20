@@ -174,13 +174,14 @@ cdef class Parser:
         if TransitionSystem is None:
             TransitionSystem = self.TransitionSystem
         self.vocab = vocab
-        actions = TransitionSystem.get_actions(**cfg)
-        self.moves = TransitionSystem(vocab.strings, actions)
+        cfg['actions'] = TransitionSystem.get_actions(**cfg)
+        self.moves = TransitionSystem(vocab.strings, cfg['actions'])
         # TODO: Remove this when we no longer need to support old-style models
         if isinstance(cfg.get('features'), basestring):
             cfg['features'] = get_templates(cfg['features'])
         elif 'features' not in cfg:
             cfg['features'] = self.feature_templates
+
         self.model = ParserModel(cfg['features'])
         self.model.l1_penalty = cfg.get('L1', 0.0)
         self.model.learn_rate = cfg.get('learn_rate', 0.001)
