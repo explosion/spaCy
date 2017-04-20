@@ -249,7 +249,7 @@ def setup_package():
                 'dill>=0.2,<0.3',
                 'requests>=2.13.0,<3.0.0',
                 'regex==2017.4.5',
-                'ftfy == 4.4.2'],
+                'ftfy>=4.4.2,<5.0.0'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',
