@@ -6,9 +6,9 @@ import math
 from ast import literal_eval
 from pathlib import Path
 from preshed.counter import PreshCounter
-import ftfy
 
 from ..vocab import write_binary_vectors
+from ..compat import fix_text
 from .. import util
 
 
@@ -77,7 +77,7 @@ def read_clusters(clusters_path):
         for line in f:
             try:
                 cluster, word, freq = line.split()
-                word = ftfy.fix_text(word)
+                word = fix_text(word)
             except ValueError:
                 continue
             # If the clusterer has only seen the word a few times, its
