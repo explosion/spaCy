@@ -177,7 +177,7 @@ p
                 prefix_search=prefix_re.search,
                 suffix_search=suffix_re.search)
 
-    nlp = spacy.load('en', tokenizer=create_make_doc)
+    nlp = spacy.load('en', tokenizer=create_tokenizer)
 
 p
     |  If you need to subclass the tokenizer instead, the relevant methods to
