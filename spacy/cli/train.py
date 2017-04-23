@@ -2,6 +2,7 @@
 from __future__ import unicode_literals, division, print_function
 
 import json
+from collections import defaultdict
 
 from ..util import ensure_path
 from ..scorer import Scorer
@@ -62,7 +63,7 @@ def train_model(Language, train_data, dev_data, output_path, tagger_cfg, parser_
         for itn, epoch in enumerate(trainer.epochs(n_iter, augment_data=None)):
             for doc, gold in epoch:
                 trainer.update(doc, gold)
-            dev_scores = trainer.evaluate(dev_data).scores if dev_data else {}
+            dev_scores = trainer.evaluate(dev_data).scores if dev_data else defaultdict(float)
             print_progress(itn, trainer.nlp.parser.model.nr_weight,
                            trainer.nlp.parser.model.nr_active_feat,
                            **dev_scores)
