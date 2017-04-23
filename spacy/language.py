@@ -366,6 +366,8 @@ class Language(object):
         }
 
         path = util.ensure_path(path)
+        if not path.exists():
+            path.mkdir()
         self.setup_directory(path, **configs)
 
         strings_loc = path / 'vocab' / 'strings.json'
