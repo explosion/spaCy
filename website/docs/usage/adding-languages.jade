@@ -98,6 +98,17 @@ p
     |  so that Python functions can be used to help you generalise and combine
     |  the data as you require.
 
++infobox("For languages with non-latin characters")
+    |  In order for the tokenizer to split suffixes, prefixes and infixes, spaCy
+    |  needs to know the language's character set. If the language you're adding
+    |  uses non-latin characters, you might need to add the required character
+    |  classes to the global
+    |  #[+src(gh("spacy", "spacy/language_data/punctuation.py")) punctuation.py].
+    |  spaCy uses the #[+a("https://pypi.python.org/pypi/regex/") #[code regex] library]
+    |  to keep this simple and readable. If the language requires very specific
+    |  punctuation rules, you should consider overwriting the default regular
+    |  expressions with your own in the language's #[code Defaults].
+
 +h(3, "stop-words") Stop words
 
 p

@@ -62,10 +62,10 @@ def train_model(Language, train_data, dev_data, output_path, tagger_cfg, parser_
         for itn, epoch in enumerate(trainer.epochs(n_iter, augment_data=None)):
             for doc, gold in epoch:
                 trainer.update(doc, gold)
-            dev_scores = trainer.evaluate(dev_data) if dev_data else []
+            dev_scores = trainer.evaluate(dev_data).scores if dev_data else {}
             print_progress(itn, trainer.nlp.parser.model.nr_weight,
                            trainer.nlp.parser.model.nr_active_feat,
-                           **dev_scores.scores)
+                           **dev_scores)
 
 
 def evaluate(Language, gold_tuples, output_path):
