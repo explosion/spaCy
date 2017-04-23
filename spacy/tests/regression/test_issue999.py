@@ -56,6 +56,7 @@ def test_issue999(train_data):
     for _, offsets in train_data:
         for start, end, ent_type in offsets:
             nlp.entity.add_label(ent_type)
+    nlp.entity.model.learn_rate = 0.001
     for itn in range(100):
         random.shuffle(train_data)
         for raw_text, entity_offsets in train_data:
@@ -74,4 +75,5 @@ def test_issue999(train_data):
                 assert ents[(start, end)] == label
                 break
         else:
-            raise Exception(ents)
+            if entity_offsets:
+                raise Exception(ents)
