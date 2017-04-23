@@ -146,7 +146,7 @@ cdef class Parser:
         if 'labels' in cfg and 'actions' not in cfg:
             cfg['actions'] = cfg.pop('labels')
         # TODO: remove this shim when we don't have to support older data
-        for action_name, labels in dict(cfg['actions']).items():
+        for action_name, labels in dict(cfg.get('actions', {})).items():
             # We need this to be sorted
             if isinstance(labels, dict):
                 labels = list(sorted(labels.keys()))
