@@ -56,7 +56,7 @@ def test_issue999(train_data):
     for _, offsets in train_data:
         for start, end, ent_type in offsets:
             nlp.entity.add_label(ent_type)
-    for itn in range(10):
+    for itn in range(100):
         random.shuffle(train_data)
         for raw_text, entity_offsets in train_data:
             doc = nlp.make_doc(raw_text)
