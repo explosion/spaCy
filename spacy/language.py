@@ -195,7 +195,7 @@ class Language(object):
             if directory.exists():
                 shutil.rmtree(str(directory))
             directory.mkdir()
-            with (directory / 'config.json').open('wb') as file_:
+            with (directory / 'config.json').open('w') as file_:
                 data = json_dumps(config)
                 file_.write(data)
         if not (path / 'vocab').exists():
