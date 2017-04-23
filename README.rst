@@ -320,6 +320,7 @@ and ``--model`` are optional and enable additional tests:
 =========== ============== ===========
 Version     Date           Description
 =========== ============== ===========
+`v1.8.1`_   ``2017-04-23`` Saving, loading and training bug fixes
 `v1.8.0`_   ``2017-04-16`` Better NER training, saving and loading
 `v1.7.5`_   ``2017-04-07`` Bug fixes and new CLI commands
 `v1.7.3`_   ``2017-03-26`` Alpha support for Hebrew, new CLI commands and bug fixes
@@ -351,6 +352,7 @@ Version     Date           Description
 `v0.93`_    ``2015-09-22`` Bug fixes to word vectors
 =========== ============== ===========
 
+.. _v1.8.1: https://github.com/explosion/spaCy/releases/tag/v1.8.1
 .. _v1.8.0: https://github.com/explosion/spaCy/releases/tag/v1.8.0
 .. _v1.7.5: https://github.com/explosion/spaCy/releases/tag/v1.7.5
 .. _v1.7.3: https://github.com/explosion/spaCy/releases/tag/v1.7.3
