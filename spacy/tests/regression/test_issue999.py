@@ -70,6 +70,8 @@ def test_issue999(train_data):
         doc = nlp2(raw_text)
         ents = {(ent.start_char, ent.end_char): ent.label_ for ent in doc.ents}
         for start, end, label in entity_offsets:
-            if (start, end) not in ents:
-                print(ents)
-            assert ents[(start, end)] == label
+            if (start, end) in ents:
+                assert ents[(start, end)] == label
+                break
+        else:
+            raise Exception(ents)
