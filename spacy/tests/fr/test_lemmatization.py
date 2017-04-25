@@ -29,3 +29,13 @@ def test_tokenizer_verb_noun(fr_tokenizer):
     assert len(tokens) == 11
     assert tokens[1].lemma_ == "valider"
     assert tokens[3].lemma_ == "notes"
+
+
+@pytest.mark.xfail
+def test_tokenizer_verb_noun_insensitive(fr_tokenizer):
+    # This one is tricky because notes is a NOUN and can be a VERB
+    text = "Les Costaricaines et les costaricains sont jolies"
+    tokens = fr_tokenizer(text)
+    assert len(tokens) == 11
+    assert tokens[1].lemma_ == "costaricain"
+    assert tokens[4].lemma_ == "costaricain"

@@ -19,6 +19,7 @@ class FrenchDefaults(BaseDefaults):
     token_match = TOKEN_MATCH
 
 
+
     @classmethod
     def create_tokenizer(cls, nlp=None):
         cls.tokenizer_exceptions = get_tokenizer_exceptions()
