@@ -27,9 +27,10 @@ p
         |  #[a(href="#brown-clusters") Brown clusters] and
         |  #[a(href="#word-vectors") word vectors].
 
+    +item
+        |  #[strong Set up] a #[a(href="#model-directory") model direcory] and #[strong train] the #[a(href="#train-tagger-parser") tagger and parser].
+
 p
-    |  Once you have the tokenizer and vocabulary, you can
-    |  #[+a("/docs/usage/training") train the tagger, parser and entity recognizer].
     |  For some languages, you may also want to develop a solution for
     |  lemmatization and morphological analysis.
 
@@ -406,12 +407,111 @@ p
     |  by linear models, while the word vectors are useful for lexical
     |  similarity models and deep learning.
 
++h(3, "word-frequencies") Word frequencies
+
+p
+    |  To generate the word frequencies from a large, raw corpus, you can use the
+    |  #[+src(gh("spacy-dev-resources", "training/word_freqs.py")) word_freqs.py]
+    |  script from the spaCy developer resources. Note that your corpus should
+    |  not be preprocessed (i.e. you need punctuation for example). The
+    |  #[+a("/docs/usage/cli#model") #[code model] command] expects a
+    |  tab-separated word frequencies file with three columns:
+
++list("numbers")
+    +item The number of times the word occurred in your language sample.
+    +item The number of distinct documents the word occurred in.
+    +item The word itself.
+
+p
+    |  An example word frequencies file could look like this:
+
++code("es_word_freqs.txt", "text").
+    6361109	111	Aunque
+    23598543	111	aunque
+    10097056	111	claro
+    193454	111	aro
+    7711123	111	viene
+    12812323	111	mal
+    23414636	111	momento
+    2014580	111	felicidad
+    233865	111	repleto
+    15527	111	eto
+    235565	111	deliciosos
+    17259079	111	buena
+    71155	111	Anímate
+    37705	111	anímate
+    33155	111	cuéntanos
+    2389171	111	cuál
+    961576	111	típico
+
+p
+    |  You should make sure you use the spaCy tokenizer for your
+    |  language to segment the text for your word frequencies. This will ensure
+    |  that the frequencies refer to the same segmentation standards you'll be
+    |  using at run-time. For instance, spaCy's English tokenizer segments
+    |  "can't" into two tokens. If we segmented the text by whitespace to
+    |  produce the frequency counts, we'll have incorrect frequency counts for
+    |  the tokens "ca" and "n't".
+
++h(3, "brown-clusters") Training the Brown clusters
+
+p
+    |  spaCy's tagger, parser and entity recognizer are designed to use
+    |  distributional similarity features provided by the
+    |  #[+a("https://github.com/percyliang/brown-cluster") Brown clustering algorithm].
+    |  You should train a model with between 500 and 1000 clusters. A minimum
+    |  frequency threshold of 10 usually works well.
+
+p
+    |  An example clusters file could look like this:
+
++code("es_clusters.data", "text").
+    0000	Vestigial	1
+    0000	Vesturland	1
+    0000	Veyreau	1
+    0000	Veynes	1
+    0000	Vexilografía	1
+    0000	Vetrigne	1
+    0000	Vetónica	1
+    0000	Asunden	1
+    0000	Villalambrús	1
+    0000	Vichuquén	1
+    0000	Vichtis	1
+    0000	Vichigasta	1
+    0000	VAAH	1
+    0000	Viciebsk	1
+    0000	Vicovaro	1
+    0000	Villardeveyo	1
+    0000	Vidala	1
+    0000	Videoguard	1
+    0000	Vedás	1
+    0000	Videocomunicado	1
+    0000	VideoCrypt	1
+
++h(3, "word-vectors") Training the word vectors
+
+p
+    |  #[+a("https://en.wikipedia.org/wiki/Word2vec") Word2vec] and related
+    |  algorithms let you train useful word similarity models from unlabelled
+    |  text. This is a key part of using
+    |  #[+a("/docs/usage/deep-learning") deep learning] for NLP with limited
+    |  labelled data. The vectors are also useful by themselves – they power
+    |  the #[code .similarity()] methods in spaCy. For best results, you should
+    |  pre-process the text with spaCy before training the Word2vec model. This
+    |  ensures your tokenization will match.
+
+p
+    | You can use our
+    |  #[+src(gh("spacy-dev-resources", "training/word_vectors.py")) word vectors training script],
+    |  which pre-processes the text with your language-specific tokenizer and
+    |  trains the model using #[+a("https://radimrehurek.com/gensim/") Gensim].
+    |  The #[code vectors.bin] file should consist of one word and vector per line.
+
++h(2, "model-directory") Setting up a model directory
+
 p
     |  Once you've collected the word frequencies, Brown clusters and word
     |  vectors files, you can use the
-    |  #[+src(gh("spacy-dev-resources", "training/init.py")) init.py]
-    |  script from our
-    |  #[+a(gh("spacy-dev-resources")) developer resources], or use the new
     |  #[+a("/docs/usage/cli#model") #[code model] command] to create a data
     |  directory:
 
@@ -438,49 +538,20 @@ p
     |  loaded. By default, the command expects to be able to find your language
     |  class using #[code spacy.util.get_lang_class(lang_id)].
 
-+h(3, "word-frequencies") Word frequencies
+
++h(2, "train-tagger-parser") Training the tagger and parser
 
 p
-    |  The #[+a("/docs/usage/cli#model") #[code model] command] expects a
-    |  tab-separated word frequencies file with three columns:
-
-+list("numbers")
-    +item The number of times the word occurred in your language sample.
-    +item The number of distinct documents the word occurred in.
-    +item The word itself.
+    |  You can now train the model using a corpus for your language annotated
+    |  with #[+a("http://universaldependencies.org/") Universal Dependencies].
+    |  If your corpus uses the connlu format, you can use the
+    |  #[+a("/docs/usage/cli#convert") #[code convert] command] to convert it to
+    |  spaCy's #[+a("/docs/api/annotation#json-input") JSON format] for training.
 
 p
-    |  You should make sure you use the spaCy tokenizer for your
-    |  language to segment the text for your word frequencies. This will ensure
-    |  that the frequencies refer to the same segmentation standards you'll be
-    |  using at run-time. For instance, spaCy's English tokenizer segments
-    |  "can't" into two tokens. If we segmented the text by whitespace to
-    |  produce the frequency counts, we'll have incorrect frequency counts for
-    |  the tokens "ca" and "n't".
+    |  Once you have your UD corpus transformed into JSON, you can train your
+    |  model use the using spaCy's
+    |  #[+a("/docs/usage/cli#train") #[code train] command]:
 
-+h(3, "brown-clusters") Training the Brown clusters
-
-p
-    |  spaCy's tagger, parser and entity recognizer are designed to use
-    |  distributional similarity features provided by the
-    |  #[+a("https://github.com/percyliang/brown-cluster") Brown clustering algorithm].
-    |  You should train a model with between 500 and 1000 clusters. A minimum
-    |  frequency threshold of 10 usually works well.
-
-+h(3, "word-vectors") Training the word vectors
-
-p
-    |  #[+a("https://en.wikipedia.org/wiki/Word2vec") Word2vec] and related
-    |  algorithms let you train useful word similarity models from unlabelled
-    |  text. This is a key part of using
-    |  #[+a("/docs/usage/deep-learning") deep learning] for NLP with limited
-    |  labelled data. The vectors are also useful by themselves – they power
-    |  the #[code .similarity()] methods in spaCy. For best results, you should
-    |  pre-process the text with spaCy before training the Word2vec model. This
-    |  ensures your tokenization will match.
-
-p
-    | You can use our
-    |  #[+src(gh("spacy-dev-resources", "training/word_vectors.py")) word vectors training script],
-    |  which pre-processes the text with your language-specific tokenizer and
-    |  trains the model using #[+a("https://radimrehurek.com/gensim/") Gensim].
++code(false, "bash").
+    python -m spacy train [lang] [output_dir] [train_data] [dev_data] [--n_iter] [--parser_L1] [--no_tagger] [--no_parser] [--no_ner]
