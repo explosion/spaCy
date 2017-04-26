@@ -198,8 +198,8 @@ mixin table(head)
 
 //- Table row (only used within +table)
 
-mixin row()
-    tr.c-table__row&attributes(attributes)
+mixin row(...style)
+    tr.c-table__row(class=prefixArgs(style, "c-table__row"))&attributes(attributes)
         block
 
 
