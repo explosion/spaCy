@@ -4,7 +4,6 @@ from __future__ import unicode_literals
 from . import util
 from .deprecated import resolve_model_name
 from .cli.info import info
-<<<<<<< HEAD
 
 
 from . import en, de, zh, es, it, hu, fr, pt, nl, sv, fi, bn, he, nb
@@ -17,39 +16,6 @@ _languages = (en.English, de.German, es.Spanish, pt.Portuguese, fr.French,
 
 for _lang in _languages:
     util.set_lang_class(_lang.lang, _lang)
-
-from . import en
-from . import de
-from . import zh
-from . import es
-from . import it
-from . import hu
-from . import fr
-from . import pt
-from . import nl
-from . import sv
-from . import fi
-from . import bn
-from . import he
-from . import nb
-
-from .about import *
-
-
-set_lang_class(en.English.lang, en.English)
-set_lang_class(de.German.lang, de.German)
-set_lang_class(es.Spanish.lang, es.Spanish)
-set_lang_class(pt.Portuguese.lang, pt.Portuguese)
-set_lang_class(fr.French.lang, fr.French)
-set_lang_class(it.Italian.lang, it.Italian)
-set_lang_class(hu.Hungarian.lang, hu.Hungarian)
-set_lang_class(zh.Chinese.lang, zh.Chinese)
-set_lang_class(nl.Dutch.lang, nl.Dutch)
-set_lang_class(sv.Swedish.lang, sv.Swedish)
-set_lang_class(fi.Finnish.lang, fi.Finnish)
-set_lang_class(bn.Bengali.lang, bn.Bengali)
-set_lang_class(he.Hebrew.lang, he.Hebrew)
-set_lang_class(nb.Norwegian.lang, nb.Norwegian)
 
 
 def load(name, **overrides):
@@ -73,7 +39,3 @@ def load(name, **overrides):
     overrides['meta'] = meta
     overrides['path'] = model_path
     return cls(**overrides)
-
-
-def info(name, markdown):
-    info(name, markdown)
