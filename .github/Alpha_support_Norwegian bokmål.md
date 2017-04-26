@@ -16,5 +16,5 @@ Added alpha support for Norwegian bokmål.
 <!--- Go over all the following points, and put an `x` in all applicable boxes.: -->
 - [ ] My change requires a change to spaCy's documentation.
 - [ ] I have updated the documentation accordingly.
-- [ ] I have added tests to cover my changes.
-- [ ] All new and existing tests passed.
+- [x] I have added tests to cover my changes.
+- [x] All new and existing tests passed.
