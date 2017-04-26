@@ -4,8 +4,6 @@ from __future__ import unicode_literals
 from . import util
 from .deprecated import resolve_model_name
 from .cli.info import info
-<<<<<<< HEAD
-
 
 from . import en, de, zh, es, it, hu, fr, pt, nl, sv, fi, bn, he, nb
 
