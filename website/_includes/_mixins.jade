@@ -283,3 +283,21 @@ mixin card-item(title, details)
         if details.author
             br
             span.u-text-small.u-color-subtle by #{details.author}
+
+
+//- Model row for models table
+
+mixin model-row(name, lang, procon, size, license, default_model, divider)
+    - var licenses = { "CC BY-SA": "https://creativecommons.org/licenses/by-sa/3.0/", "CC BY-NC": "https://creativecommons.org/licenses/by-nc/3.0/" }
+
+    +row(divider ? "divider": null)
+        +cell #[code=name]
+            if default_model
+                |  #[span.u-color-theme(title="default model") #[+icon("star", 16)]]
+        +cell=lang
+        each icon in procon
+            +cell.u-text-center #[+procon(icon ? "pro" : "con")]
+        +cell.u-text-right=size
+        +cell
+            if license in licenses
+                +a(licenses[license])=license
