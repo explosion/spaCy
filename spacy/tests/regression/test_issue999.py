@@ -1,5 +1,4 @@
 from __future__ import unicode_literals
-import json
 import os
 import random
 import contextlib
@@ -12,7 +11,7 @@ from pathlib import Path
 import pathlib
 from ...gold import GoldParse
 from ...pipeline import EntityRecognizer
-from ...en import English
+from ...language import Language
 
 try:
     unicode
@@ -51,8 +50,8 @@ def test_issue999(train_data):
     2) There's no way to set the learning rate for the weight update, so we
         end up out-of-scale, causing it to learn too fast.
     '''
-    nlp = English(entity=False)
-    nlp.entity = EntityRecognizer(nlp.vocab, features=English.Defaults.entity_features)
+    nlp = Language(path=None, entity=False, tagger=False, parser=False)
+    nlp.entity = EntityRecognizer(nlp.vocab, features=Language.Defaults.entity_features)
     for _, offsets in train_data:
         for start, end, ent_type in offsets:
             nlp.entity.add_label(ent_type)
@@ -65,7 +64,7 @@ def test_issue999(train_data):
             loss = nlp.entity.update(doc, gold)
 
     with temp_save_model(nlp) as model_dir:
-        nlp2 = English(path=model_dir)
+        nlp2 = Language(path=model_dir)
 
     for raw_text, entity_offsets in train_data:
         doc = nlp2(raw_text)
