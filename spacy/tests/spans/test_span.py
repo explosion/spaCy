@@ -77,3 +77,15 @@ def test_spans_override_sentiment(en_tokenizer):
     assert doc[:2].sentiment == 10.0
     assert doc[-2:].sentiment == 10.0
     assert doc[:-1].sentiment == 10.0
+
+
+def test_spans_are_hashable(en_tokenizer):
+    """Test spans can be hashed."""
+    text = "good stuff bad stuff"
+    tokens = en_tokenizer(text)
+    span1 = tokens[:2]
+    span2 = tokens[2:4]
+    assert hash(span1) != hash(span2)
+    span3 = tokens[0:2]
+    assert hash(span3) == hash(span1)
+ 
