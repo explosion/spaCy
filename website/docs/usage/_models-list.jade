@@ -1,0 +1,27 @@
+//- 💫 DOCS > USAGE > MODELS LIST
+
+include ../../_includes/_mixins
+
+p
+    |  Model differences are mostly statistical. In general, we do expect larger
+    |  models to be "better" and more accurate overall. Ultimately, it depends on
+    |  your use case and requirements, and we recommend starting with the default
+    |  models (marked with a star below).
+
++aside
+    |  Models are now available as #[code .tar.gz] archives #[+a(gh("spacy-models")) from GitHub],
+    |  attached to individual releases. They can be downloaded and loaded manually,
+    |  or using spaCy's #[code download] and #[code link] commands. All models
+    |  follow the naming convention of #[code [language]_[type]_[genre]_[size]].
+    | #[br]#[br]
+
+    +button(gh("spacy-models"), true, "primary").u-text-tag
+        |  View model releases
+
++table(["Name", "Language", "Voc", "Dep", "Ent", "Vec", "Size", "License"])
+    +model-row("en_core_web_sm", "English", [1, 1, 1, 1], "50 MB", "CC BY-SA", true)
+    +model-row("en_core_web_md", "English", [1, 1, 1, 1], "1 GB", "CC BY-SA")
+    +model-row("en_depent_web_md", "English", [1, 1, 1, 0], "328 MB", "CC BY-SA")
+    +model-row("en_vectors_glove_md", "English", [0, 0, 0, 1], "727 MB", "CC BY-SA")
+    +model-row("de_core_news_md", "German", [1, 1, 1, 1], "645 MB", "CC BY-SA", true, true)
+    +model-row("fr_depvec_web_lg", "French", [1, 1, 0, 1], "1.33 GB", "CC BY-NC", true, true)
