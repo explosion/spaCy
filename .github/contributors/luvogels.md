@@ -98,9 +98,9 @@ mark both statements:
 
 | Field                          | Entry                |
 |------------------------------- | -------------------- |
-| Name                           | Shuvanon Razik       |
+| Name                           | Leif Uwe Vogelsang   |
 | Company name (if applicable)   |                      |
 | Title or role (if applicable)  |                      |
-| Date                           | 3/12/2017            |
-| GitHub username                | shuvanon             |
+| Date                           | 4/27/2017            |
+| GitHub username                | luvogels             |
 | Website (optional)             |                      |
