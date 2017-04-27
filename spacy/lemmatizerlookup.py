@@ -10,12 +10,10 @@ class Lemmatizer(Lemmatizer):
         return cls(lookup or {})
 
     def __init__(self, lookup):
-        print("Mon lemmatizer")
         self.lookup = lookup
 
     def __call__(self, string, univ_pos, morphology=None):
-        print("call")
         try:
-            return self.lookup[string]
+            return set([self.lookup[string]])
         except:
-            return string
+            return set([string])
