@@ -45,6 +45,8 @@ def test_tokenizer_handles_title(fr_tokenizer):
     assert len(tokens) == 6
     assert tokens[0].text == "N'"
     assert tokens[0].lemma_ == "ne"
+    assert tokens[1].text == "est"
+    assert tokens[1].lemma_ == "être"
     assert tokens[2].text == "-ce"
     assert tokens[2].lemma_ == "ce"
 

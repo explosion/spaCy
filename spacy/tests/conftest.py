@@ -124,6 +124,10 @@ def EN():
 def DE():
     return German()
 
+@pytest.fixture(scope="session")
+def FR():
+    return French()
+
 
 def pytest_addoption(parser):
     parser.addoption("--models", action="store_true",

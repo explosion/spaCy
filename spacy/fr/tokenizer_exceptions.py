@@ -137,7 +137,7 @@ def get_tokenizer_exceptions():
     for pre, pre_lemma in (("qu'", "que"), ("n'", "ne")):
         for orth in [pre,pre.title()]:
             VERBS['{}est-ce'.format(orth)] = [
-                {LEMMA: pre_lemma, ORTH: orth},
+                {LEMMA: pre_lemma, ORTH: orth, TAG: "ADV"},
                 {LEMMA: 'être', ORTH: "est", TAG: "VERB"},
                 {LEMMA: 'ce', ORTH: '-ce'}
             ]
