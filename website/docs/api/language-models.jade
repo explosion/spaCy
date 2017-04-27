@@ -7,6 +7,7 @@ p spaCy currently supports the following languages and capabilities:
 +aside-code("Download language models", "bash").
     python -m spacy download en
     python -m spacy download de
+    python -m spacy download fr
 
 +table([ "Language", "Token", "SBD", "Lemma", "POS", "NER", "Dep", "Vector", "Sentiment"])
     +row
@@ -19,6 +20,14 @@ p spaCy currently supports the following languages and capabilities:
         each icon in [ "pro", "pro", "con", "pro", "pro", "pro", "pro", "con" ]
             +cell.u-text-center #[+procon(icon)]
 
+    +row
+        +cell French #[code fr]
+        each icon in [ "pro", "pro", "con", "pro", "con", "pro", "pro", "con" ]
+            +cell.u-text-center #[+procon(icon)]
+
++h(2, "available") Available models
+
+include ../usage/_models-list
 
 +h(2, "alpha-support") Alpha support
 
@@ -27,7 +36,7 @@ p
     |  the existing language data and extending the tokenization patterns.
 
 +table([ "Language", "Source" ])
-    each language, code in { zh: "Chinese", es: "Spanish", it: "Italian", fr: "French", pt: "Portuguese", nl: "Dutch", sv: "Swedish", fi: "Finnish", hu: "Hungarian", bn: "Bengali", he: "Hebrew" }
+    each language, code in { zh: "Chinese", es: "Spanish", it: "Italian", pt: "Portuguese", nl: "Dutch", sv: "Swedish", fi: "Finnish", nb: "Norwegian Bokmål", hu: "Hungarian", bn: "Bengali", he: "Hebrew" }
         +row
             +cell #{language} #[code=code]
             +cell
