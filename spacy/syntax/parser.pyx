@@ -11,6 +11,8 @@ import ujson
 cimport cython
 cimport cython.parallel
 
+import numpy.random
+
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals
 from libc.stdint cimport uint32_t, uint64_t
@@ -303,7 +305,7 @@ cdef class Parser:
         free(eg.is_valid)
         return 0
 
-    def update(self, Doc tokens, GoldParse gold, itn=0):
+    def update(self, Doc tokens, GoldParse gold, itn=0, double drop=0.0):
         """
         Update the statistical model.
 
@@ -325,9 +327,11 @@ cdef class Parser:
                 nr_feat=self.model.nr_feat)
         cdef weight_t loss = 0
         cdef Transition action
+        cdef double dropout_rate = self.cfg.get('dropout', drop)
         while not stcls.is_final():
             eg.c.nr_feat = self.model.set_featuresC(eg.c.atoms, eg.c.features,
                                                     stcls.c)
+            dropout(eg.c.features, eg.c.nr_feat, dropout_rate)
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
             self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
             guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
@@ -376,6 +380,18 @@ cdef class Parser:
                 # Important that the labels be stored as a list! We need the
                 # order, or the model goes out of synch
                 self.cfg.setdefault('extra_labels', []).append(label)
+
+
+cdef int dropout(FeatureC* feats, int nr_feat, float prob) except -1:
+    if prob <= 0 or prob >= 1.:
+        return 0
+    cdef double[::1] py_probs = numpy.random.uniform(0., 1., nr_feat)
+    cdef double* probs = &py_probs[0]
+    for i in range(nr_feat):
+        if probs[i] >= prob:
+            feats[i].value /= prob
+        else:
+            feats[i].value = 0.
 
 
 cdef class StepwiseState:
