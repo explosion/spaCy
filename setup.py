@@ -36,6 +36,7 @@ PACKAGES = [
     'spacy.fi',
     'spacy.bn',
     'spacy.he',
+    'spacy.nb',    
     'spacy.en.lemmatizer',
     'spacy.cli.converters',
     'spacy.language_data',
