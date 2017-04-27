@@ -195,7 +195,7 @@ class Language(object):
             if directory.exists():
                 shutil.rmtree(str(directory))
             directory.mkdir()
-            with (directory / 'config.json').open('wb') as file_:
+            with (directory / 'config.json').open('w') as file_:
                 data = json_dumps(config)
                 file_.write(data)
         if not (path / 'vocab').exists():
@@ -366,6 +366,8 @@ class Language(object):
         }
 
         path = util.ensure_path(path)
+        if not path.exists():
+            path.mkdir()
         self.setup_directory(path, **configs)
 
         strings_loc = path / 'vocab' / 'strings.json'

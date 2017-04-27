@@ -40,7 +40,7 @@ To distinguish issues that are opened by us, the maintainers, we usually add a ð
 | [`performance`](https://github.com/explosion/spaCy/labels/performance) | Accuracy, speed and memory use problems |
 | [`tests`](https://github.com/explosion/spaCy/labels/tests) | Missing or incorrect [tests](spacy/tests) |
 | [`docs`](https://github.com/explosion/spaCy/labels/docs), [`examples`](https://github.com/explosion/spaCy/labels/examples) | Issues related to the [documentation](https://spacy.io/docs) and [examples](spacy/examples) |
-| [`models`](https://github.com/explosion/spaCy/labels/models), [`english`](https://github.com/explosion/spaCy/labels/english), [`german`](https://github.com/explosion/spaCy/labels/german) | Issues related to the specific [models](https://github.com/explosion/spacy-models), languages and data |
+| [`models`](https://github.com/explosion/spaCy/labels/models), `language / [name]` | Issues related to the specific [models](https://github.com/explosion/spacy-models), languages and data |
 | [`linux`](https://github.com/explosion/spaCy/labels/linux), [`osx`](https://github.com/explosion/spaCy/labels/osx), [`windows`](https://github.com/explosion/spaCy/labels/windows) | Issues related to the specific operating systems |
 | [`pip`](https://github.com/explosion/spaCy/labels/pip), [`conda`](https://github.com/explosion/spaCy/labels/conda) | Issues related to the specific package managers |
 | [`duplicate`](https://github.com/explosion/spaCy/labels/duplicate) | Duplicates, i.e. issues that have been reported before |

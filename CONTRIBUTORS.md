@@ -29,6 +29,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Juan Miguel Cejuela, [@juanmirocks](https://github.com/juanmirocks)
 * Kendrick Tan, [@kendricktan](https://github.com/kendricktan)
 * Kyle P. Johnson, [@kylepjohnson](https://github.com/kylepjohnson)
+* Leif Uwe Vogelsang, [@luvogels](https://github.com/luvogels)
 * Liling Tan, [@alvations](https://github.com/alvations)
 * Magnus Burton, [@magnusburton](https://github.com/magnusburton)
 * Mark Amery, [@ExplodingCabbage](https://github.com/ExplodingCabbage)

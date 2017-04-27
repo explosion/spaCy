@@ -23,6 +23,8 @@ is_windows = sys.platform.startswith('win')
 is_linux = sys.platform.startswith('linux')
 is_osx = sys.platform == 'darwin'
 
+fix_text = ftfy.fix_text
+
 
 if is_python2:
     bytes_ = str
@@ -37,9 +39,6 @@ elif is_python3:
     basestring_ = str
     input_ = input
     json_dumps = lambda data: ujson.dumps(data, indent=2)
-
-
-fix_text = lambda text: ftfy.fix_text(text)
 
 
 def symlink_to(orig, dest):

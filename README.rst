@@ -4,9 +4,9 @@ spaCy: Industrial-strength NLP
 spaCy is a library for advanced natural language processing in Python and
 Cython. spaCy is built on  the very latest research, but it isn't researchware.
 It was designed from day one to be used in real products. spaCy currently supports
-English and German,  as well as tokenization for Chinese, Spanish, Italian, French,
-Portuguese, Dutch, Swedish, Finnish, Hungarian, Bengali and Hebrew. It's commercial
-open-source software, released under the MIT license.
+English, German and French, as well as tokenization for Chinese, Spanish, Italian,
+Portuguese, Dutch, Swedish, Finnish, Norwegian, Hungarian, Bengali and Hebrew. It's 
+commercial open-source software, released under the MIT license.
 
 📊 **Help us improve the library!** `Take the spaCy user survey <https://survey.spacy.io>`_.
 
@@ -320,6 +320,8 @@ and ``--model`` are optional and enable additional tests:
 =========== ============== ===========
 Version     Date           Description
 =========== ============== ===========
+`v1.8.2`_   ``2017-04-26`` French model and small improvements
+`v1.8.1`_   ``2017-04-23`` Saving, loading and training bug fixes
 `v1.8.0`_   ``2017-04-16`` Better NER training, saving and loading
 `v1.7.5`_   ``2017-04-07`` Bug fixes and new CLI commands
 `v1.7.3`_   ``2017-03-26`` Alpha support for Hebrew, new CLI commands and bug fixes
@@ -351,6 +353,8 @@ Version     Date           Description
 `v0.93`_    ``2015-09-22`` Bug fixes to word vectors
 =========== ============== ===========
 
+.. _v1.8.2: https://github.com/explosion/spaCy/releases/tag/v1.8.2
+.. _v1.8.1: https://github.com/explosion/spaCy/releases/tag/v1.8.1
 .. _v1.8.0: https://github.com/explosion/spaCy/releases/tag/v1.8.0
 .. _v1.7.5: https://github.com/explosion/spaCy/releases/tag/v1.7.5
 .. _v1.7.3: https://github.com/explosion/spaCy/releases/tag/v1.7.3

@@ -66,6 +66,10 @@ cdef class Span:
         elif op == 5:
             return self.start_char >= other.start_char
 
+    def __hash__(self):
+        return hash((self.doc, self.label, self.start_char, self.end_char))
+
+
     def __len__(self):
         self._recalculate_indices()
         if self.end < self.start:

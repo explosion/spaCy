@@ -10,15 +10,22 @@ def english_noun_chunks(obj):
     Works on both Doc and Span.
     """
     labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj',
-              'attr', 'ROOT', 'root']
+              'attr', 'ROOT']
     doc = obj.doc # Ensure works on both Doc and Span.
     np_deps = [doc.vocab.strings[label] for label in labels]
     conj = doc.vocab.strings['conj']
     np_label = doc.vocab.strings['NP']
+    seen = set()
     for i, word in enumerate(obj):
         if word.pos not in (NOUN, PROPN, PRON):
             continue
+        # Prevent nested chunks from being produced
+        if word.i in seen:
+            continue
         if word.dep in np_deps:
+            if any(w.i in seen for w in word.subtree):
+                continue
+            seen.update(j for j in range(word.left_edge.i, word.i+1))
             yield word.left_edge.i, word.i+1, np_label
         elif word.dep == conj:
             head = word.head
@@ -26,6 +33,9 @@ def english_noun_chunks(obj):
                 head = head.head
             # If the head is an NP, and we're coordinated to it, we're an NP
             if head.dep in np_deps:
+                if any(w.i in seen for w in word.subtree):
+                    continue
+                seen.update(j for j in range(word.left_edge.i, word.i+1))
                 yield word.left_edge.i, word.i+1, np_label
 
 
