@@ -117,26 +117,30 @@ def get_tokenizer_exceptions():
     for verb, verb_lemma in (("a", "avoir"), ("est", "être"),
                              ("semble", "sembler"), ("indique", "indiquer"),
                              ("moque", "moquer"), ("passe", "passer")):
-        for pronoun in ("elle", "il", "on"):
-            token = "{}-t-{}".format(verb, pronoun)
+        for orth in [verb,verb.title()]:
+            for pronoun in ("elle", "il", "on"):
+                token = "{}-t-{}".format(orth, pronoun)
+                VERBS[token] = [
+                    {LEMMA: verb_lemma, ORTH: orth, TAG: "VERB"},
+                    {LEMMA: "t", ORTH: "-t"},
+                    {LEMMA: pronoun, ORTH: "-" + pronoun}
+                ]
+
+    for verb, verb_lemma in [("est","être")]:
+        for orth in [verb,verb.title()]:
+            token = "{}-ce".format(orth)
             VERBS[token] = [
-                {LEMMA: verb_lemma, ORTH: verb},
-                {LEMMA: "t", ORTH: "-t"},
-                {LEMMA: pronoun, ORTH: "-" + pronoun}
+                {LEMMA: verb_lemma, ORTH: orth, TAG: "VERB"},
+                {LEMMA: 'ce', ORTH: '-ce'}
             ]
 
-    VERBS['est-ce'] = [
-        {LEMMA: 'être', ORTH: "est"},
-        {LEMMA: 'ce', ORTH: '-ce'}
-    ]
-
-    for pre, pre_lemma in (("qu'", "que"), ("Qu'", "Que"), ("n'", "ne"),
-                           ("N'", "Ne")):
-        VERBS['{}est-ce'.format(pre)] = [
-            {LEMMA: pre_lemma, ORTH: pre},
-            {LEMMA: 'être', ORTH: "est"},
-            {LEMMA: 'ce', ORTH: '-ce'}
-        ]
+    for pre, pre_lemma in (("qu'", "que"), ("n'", "ne")):
+        for orth in [pre,pre.title()]:
+            VERBS['{}est-ce'.format(orth)] = [
+                {LEMMA: pre_lemma, ORTH: orth},
+                {LEMMA: 'être', ORTH: "est", TAG: "VERB"},
+                {LEMMA: 'ce', ORTH: '-ce'}
+            ]
 
     HYPHEN = ['-', '‐']
 
