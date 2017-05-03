@@ -21,3 +21,5 @@ class Japanese(Language):
                               "https://github.com/mocobeta/janome")
         words = [x.surface for x in Tokenizer().tokenize(text)]
         return Doc(self.vocab, words=words, spaces=[False]*len(words))
+
+EXPORT = Japanese
