@@ -4,7 +4,8 @@ from __future__ import unicode_literals, print_function
 from ..language import Language
 from ..attrs import LANG
 from .language_data import *
-
+from ..lemmatizerlookup import Lemmatizer
+from .lemmatization import LOOK_UP
 
 class Swedish(Language):
     lang = 'sv'
@@ -15,6 +16,10 @@ class Swedish(Language):
 
         tokenizer_exceptions = TOKENIZER_EXCEPTIONS
         stop_words = STOP_WORDS
+
+        @classmethod
+        def create_lemmatizer(cls, nlp=None):
+            return Lemmatizer(LOOK_UP)
 
 
 EXPORT = Swedish
