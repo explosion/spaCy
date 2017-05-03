@@ -24,3 +24,6 @@ class Hungarian(Language):
         stop_words = set(STOP_WORDS)
 
         token_match = TOKEN_MATCH
+
+
+EXPORT = Hungarian

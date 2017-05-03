@@ -32,3 +32,6 @@ class French(Language):
     lang = 'fr'
 
     Defaults = FrenchDefaults
+
+
+EXPORT = French

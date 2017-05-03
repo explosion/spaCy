@@ -3,18 +3,13 @@ from __future__ import unicode_literals
 
 from . import util
 from .deprecated import resolve_model_name
+import importlib
 from .cli.info import info
 
-from . import en, de, zh, es, it, hu, fr, pt, nl, sv, fi, bn, he, nb
 
-
-_languages = (en.English, de.German, es.Spanish, pt.Portuguese, fr.French,
-             it.Italian, hu.Hungarian, zh.Chinese, nl.Dutch, sv.Swedish,
-             fi.Finnish, bn.Bengali, he.Hebrew, nb.Norwegian)
-
-
-for _lang in _languages:
-    util.set_lang_class(_lang.lang, _lang)
+_languages_name = set(["en", "de", "es", "pt", "fr",
+             "it", "hu", "zh", "nl", "sv",
+             "fi", "bn", "he", "nb"])
 
 
 def load(name, **overrides):
@@ -34,7 +29,7 @@ def load(name, **overrides):
         model_name = ''
     meta = util.parse_package_meta(data_path, model_name, require=False)
     lang = meta['lang'] if meta and 'lang' in meta else name
-    cls = util.get_lang_class(lang)
+    cls = importlib.import_module("."+lang, "spacy")
     overrides['meta'] = meta
     overrides['path'] = model_path
-    return cls(**overrides)
+    return cls.EXPORT(**overrides)

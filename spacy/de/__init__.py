@@ -20,3 +20,6 @@ class German(Language):
         tokenizer_exceptions = TOKENIZER_EXCEPTIONS
         tag_map = TAG_MAP
         stop_words = STOP_WORDS
+
+
+EXPORT = German
