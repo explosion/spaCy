@@ -5,12 +5,12 @@ from . import util
 from .deprecated import resolve_model_name
 from .cli.info import info
 
-from . import en, de, zh, es, it, hu, fr, pt, nl, sv, fi, bn, he, nb
+from . import en, de, zh, es, it, hu, fr, pt, nl, sv, fi, bn, he, nb, ja
 
 
 _languages = (en.English, de.German, es.Spanish, pt.Portuguese, fr.French,
              it.Italian, hu.Hungarian, zh.Chinese, nl.Dutch, sv.Swedish,
-             fi.Finnish, bn.Bengali, he.Hebrew, nb.Norwegian)
+             fi.Finnish, bn.Bengali, he.Hebrew, nb.Norwegian, ja.Japanese)
 
 
 for _lang in _languages:
