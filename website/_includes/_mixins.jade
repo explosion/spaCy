@@ -285,7 +285,7 @@ mixin card-item(title, details)
             span.u-text-small.u-color-subtle by #{details.author}
 
 
-//- Model row for models table
+//- Table row for models table
 
 mixin model-row(name, lang, procon, size, license, default_model, divider)
     - var licenses = { "CC BY-SA": "https://creativecommons.org/licenses/by-sa/3.0/", "CC BY-NC": "https://creativecommons.org/licenses/by-nc/3.0/" }
@@ -301,3 +301,21 @@ mixin model-row(name, lang, procon, size, license, default_model, divider)
         +cell
             if license in licenses
                 +a(licenses[license])=license
+
+
+//- Table rows for annotation specs
+
+mixin pos-row(tag, pos, morph, desc)
+    +row
+        +cell #[code=tag]
+        +cell #[code=pos]
+        +cell
+            each m in morph.split(" ")
+                if m
+                    |  #[code=m]
+        +cell.u-text-small=desc
+
+mixin dep-row(label, desc)
+    +row
+        +cell #[code=label]
+        +cell=desc
