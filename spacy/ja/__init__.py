@@ -17,6 +17,7 @@ class Japanese(Language):
         try:
             from janome.tokenizer import Tokenizer
         except ImportError:
-            raise ImportError("The Japanese tokenizer requires the Janome library: https://github.com/mocobeta/janome")
+            raise ImportError("The Japanese tokenizer requires the Janome library: "
+                              "https://github.com/mocobeta/janome")
         words = [x.surface for x in Tokenizer().tokenize(text)]
         return Doc(self.vocab, words=words, spaces=[False]*len(words))
