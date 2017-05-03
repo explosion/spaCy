@@ -8,53 +8,13 @@ import contextlib
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
 from distutils import ccompiler, msvccompiler
-
-try:
-    from setuptools import Extension, setup
-except ImportError:
-    from distutils.core import Extension, setup
+from setuptools import Extension, setup, find_packages
 
 
 PACKAGE_DATA = {'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']}
 
 
-PACKAGES = [
-    'spacy',
-    'spacy.data',
-    'spacy.cli',
-    'spacy.tokens',
-    'spacy.en',
-    'spacy.de',
-    'spacy.zh',
-    'spacy.es',
-    'spacy.fr',
-    'spacy.it',
-    'spacy.hu',
-    'spacy.pt',
-    'spacy.nl',
-    'spacy.sv',
-    'spacy.fi',
-    'spacy.bn',
-    'spacy.he',
-    'spacy.nb',
-    'spacy.ja',
-    'spacy.en.lemmatizer',
-    'spacy.cli.converters',
-    'spacy.language_data',
-    'spacy.serialize',
-    'spacy.syntax',
-    'spacy.munge',
-    'spacy.tests',
-    'spacy.tests.matcher',
-    'spacy.tests.parser',
-    'spacy.tests.serialize',
-    'spacy.tests.spans',
-    'spacy.tests.stringstore',
-    'spacy.tests.tagger',
-    'spacy.tests.tokenizer',
-    'spacy.tests.doc',
-    'spacy.tests.vectors',
-    'spacy.tests.vocab']
+PACKAGES = find_packages()
 
 
 MOD_NAMES = [
