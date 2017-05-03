@@ -52,4 +52,5 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Willem van Hage, [@wrvhage](https://github.com/wrvhage)
 * Wolfgang Seeker, [@wbwseeker](https://github.com/wbwseeker)
 * Yanhao Yang, [@YanhaoYang](https://github.com/YanhaoYang)
+* Yasuaki Uechi, [@uetchy](https://github.com/uetchy)
 * Yubing Dong, [@tomtung](https://github.com/tomtung)
