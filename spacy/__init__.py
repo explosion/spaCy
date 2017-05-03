@@ -29,7 +29,8 @@ def load(name, **overrides):
         model_name = ''
     meta = util.parse_package_meta(data_path, model_name, require=False)
     lang = meta['lang'] if meta and 'lang' in meta else name
-    cls = importlib.import_module("."+lang, "spacy")
+    module = importlib.import_module("."+lang, "spacy")
+    cls = module.EXPORT
     overrides['meta'] = meta
     overrides['path'] = model_path
-    return cls.EXPORT(**overrides)
+    return cls(**overrides)
