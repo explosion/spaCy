@@ -35,14 +35,15 @@ p
     |  Work has started on the following languages. You can help by improving
     |  the existing language data and extending the tokenization patterns.
 
++aside("Dependencies")
+    |  Some language tokenizers require external dependencies. To use #[strong Chinese],
+    |  you need to have #[+a("https://github.com/fxsjy/jieba") Jieba] installed.
+    |  The #[strong Japanese] tokenizer requires
+    |  #[+a("https://github.com/mocobeta/janome") Janome].
+
 +table([ "Language", "Source" ])
-    each language, code in { zh: "Chinese", es: "Spanish", it: "Italian", pt: "Portuguese", nl: "Dutch", sv: "Swedish", fi: "Finnish", nb: "Norwegian Bokmål", hu: "Hungarian", bn: "Bengali", he: "Hebrew" }
+    each language, code in { es: "Spanish", it: "Italian", pt: "Portuguese", nl: "Dutch", sv: "Swedish", fi: "Finnish", nb: "Norwegian Bokmål", hu: "Hungarian", bn: "Bengali", he: "Hebrew", zh: "Chinese", ja: "Japanese" }
         +row
             +cell #{language} #[code=code]
             +cell
                 +src(gh("spaCy", "spacy/" + code)) spacy/#{code}
-
-p
-    |  Chinese tokenization requires the
-    |  #[+a("https://github.com/fxsjy/jieba") Jieba] library. Statistical
-    |  models are coming soon.

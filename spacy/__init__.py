@@ -9,7 +9,7 @@ from .cli.info import info
 
 _languages_name = set(["en", "de", "es", "pt", "fr",
              "it", "hu", "zh", "nl", "sv",
-             "fi", "bn", "he", "nb"])
+             "fi", "bn", "he", "nb", "ja"])
 
 
 def load(name, **overrides):
