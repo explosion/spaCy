@@ -49,78 +49,67 @@ def set_debug(val):
     DEBUG = val
 
 
-def get_templates(name):
-    pf = _parse_features
-    if name == 'ner':
-        return pf.ner
-    elif name == 'debug':
-        return pf.unigrams
-    elif name.startswith('embed'):
-        return (pf.words, pf.tags, pf.labels)
-    else:
-        return (pf.unigrams + pf.s0_n0 + pf.s1_n0 + pf.s1_s0 + pf.s0_n1 + pf.n0_n1 + \
-                pf.tree_shape + pf.trigrams)
+@layerize
+def get_context_tokens(states, drop=0.):
+    for state in states:
+        context[i, 0] = state.B(0)
+        context[i, 1] = state.S(0)
+        context[i, 2] = state.S(1)
+        context[i, 3] = state.L(state.S(0), 1)
+        context[i, 4] = state.L(state.S(0), 2)
+        context[i, 5] = state.R(state.S(0), 1)
+        context[i, 6] = state.R(state.S(0), 2)
+    return (context, states), None
 
 
-cdef class ParserModel(AveragedPerceptron):
-    cdef int set_featuresC(self, atom_t* context, FeatureC* features,
-            const StateC* state) nogil:
-        fill_context(context, state)
-        nr_feat = self.extracter.set_features(features, context)
-        return nr_feat
+def extract_features(attrs):
+    def forward(contexts_states, drop=0.):
+        contexts, states = contexts_states
+        for i, state in enumerate(states):
+            for j, tok_i in enumerate(contexts[i]):
+                token = state.get_token(tok_i)
+                for k, attr in enumerate(attrs):
+                    output[i, j, k] = getattr(token, attr)
+        return output, None
+    return layerize(forward)
 
-    def update(self, Example eg, itn=0):
-        """
-        Does regression on negative cost. Sort of cute?
-        """
-        self.time += 1
-        cdef int best = arg_max_if_gold(eg.c.scores, eg.c.costs, eg.c.nr_class)
-        cdef int guess = eg.guess
-        if guess == best or best == -1:
-            return 0.0
-        cdef FeatureC feat
-        cdef int clas
-        cdef weight_t gradient
-        if USE_FTRL:
-            for feat in eg.c.features[:eg.c.nr_feat]:
-                for clas in range(eg.c.nr_class):
-                    if eg.c.is_valid[clas] and eg.c.scores[clas] >= eg.c.scores[best]:
-                        gradient = eg.c.scores[clas] + eg.c.costs[clas]
-                        self.update_weight_ftrl(feat.key, clas, feat.value * gradient)
-        else:
-            for feat in eg.c.features[:eg.c.nr_feat]:
-                self.update_weight(feat.key, guess, feat.value * eg.c.costs[guess])
-                self.update_weight(feat.key, best, -feat.value * eg.c.costs[guess])
-        return eg.c.costs[guess]
 
-    def update_from_histories(self, TransitionSystem moves, Doc doc, histories, weight_t min_grad=0.0):
-        cdef Pool mem = Pool()
-        features = <FeatureC*>mem.alloc(self.nr_feat, sizeof(FeatureC))
+def build_tok2vec(lang, width, depth, embed_size):
+    cols = [LEX_ID, PREFIX, SUFFIX, SHAPE]
+    static = StaticVectors('en', width, column=cols.index(LEX_ID))
+    prefix = HashEmbed(width, embed_size, column=cols.index(PREFIX))
+    suffix = HashEmbed(width, embed_size, column=cols.index(SUFFIX))
+    shape = HashEmbed(width, embed_size, column=cols.index(SHAPE))
+    with Model.overload_operaters('>>': chain, '|': concatenate, '+': add):
+        tok2vec = (
+            extract_features(cols)
+            >> (static | prefix | suffix | shape)
+            >> (ExtractWindow(nW=1) >> Maxout(width)) ** depth
+        )
+    return tok2vec
 
-        cdef StateClass stcls
 
-        cdef class_t clas
-        self.time += 1
-        cdef atom_t[CONTEXT_SIZE] atoms
-        histories = [(grad, hist) for grad, hist in histories if abs(grad) >= min_grad and hist]
-        if not histories:
-            return None
-        gradient = [Counter() for _ in range(max([max(h)+1 for _, h in histories]))]
-        for d_loss, history in histories:
-            stcls = StateClass.init(doc.c, doc.length)
-            moves.initialize_state(stcls.c)
-            for clas in history:
-                nr_feat = self.set_featuresC(atoms, features, stcls.c)
-                clas_grad = gradient[clas]
-                for feat in features[:nr_feat]:
-                    clas_grad[feat.key] += d_loss * feat.value
-                moves.c[clas].do(stcls.c, moves.c[clas].label)
-        cdef feat_t key
-        cdef weight_t d_feat
-        for clas, clas_grad in enumerate(gradient):
-            for key, d_feat in clas_grad.items():
-                if d_feat != 0:
-                    self.update_weight_ftrl(key, clas, d_feat)
+def build_parse2vec(width, embed_size):
+    cols = [TAG, DEP]
+    tag_vector = HashEmbed(width, 1000, column=cols.index(TAG))
+    dep_vector = HashEmbed(width, 1000, column=cols.index(DEP))
+    with Model.overload_operaters('>>': chain):
+        model = (
+            extract_features([TAG, DEP])
+            >> (tag_vector | dep_vector)
+        )
+    return model
+ 
+
+def build_model(get_contexts, tok2vec, parse2vec, width, depth, nr_class):
+    with Model.overload_operaters('>>': chain):
+        model = (
+            get_contexts
+            >> (tok2vec | parse2vec)
+            >> Maxout(width) ** depth
+            >> Softmax(nr_class)
+        )
+    return model
 
 
 cdef class Parser:
@@ -144,15 +133,6 @@ cdef class Parser:
         """
         with (path / 'config.json').open() as file_:
             cfg = ujson.load(file_)
-        # TODO: remove this shim when we don't have to support older data
-        if 'labels' in cfg and 'actions' not in cfg:
-            cfg['actions'] = cfg.pop('labels')
-        # TODO: remove this shim when we don't have to support older data
-        for action_name, labels in dict(cfg.get('actions', {})).items():
-            # We need this to be sorted
-            if isinstance(labels, dict):
-                labels = list(sorted(labels.keys()))
-            cfg['actions'][action_name] = labels
         self = cls(vocab, TransitionSystem=TransitionSystem, model=None, **cfg)
         if (path / 'model').exists():
             self.model.load(str(path / 'model'))
@@ -161,14 +141,14 @@ cdef class Parser:
                 "Required file %s/model not found when loading" % str(path))
         return self
 
-    def __init__(self, Vocab vocab, TransitionSystem=None, ParserModel model=None, **cfg):
+    def __init__(self, Vocab vocab, TransitionSystem=None, model=None, **cfg):
         """
         Create a Parser.
 
         Arguments:
             vocab (Vocab):
                 The vocabulary object. Must be shared with documents to be processed.
-            model (thinc.linear.AveragedPerceptron):
+            model (thinc Model):
                 The statistical model.
         Returns (Parser):
             The newly constructed object.
@@ -178,43 +158,39 @@ cdef class Parser:
         self.vocab = vocab
         cfg['actions'] = TransitionSystem.get_actions(**cfg)
         self.moves = TransitionSystem(vocab.strings, cfg['actions'])
-        # TODO: Remove this when we no longer need to support old-style models
-        if isinstance(cfg.get('features'), basestring):
-            cfg['features'] = get_templates(cfg['features'])
-        elif 'features' not in cfg:
-            cfg['features'] = self.feature_templates
-
-        self.model = ParserModel(cfg['features'])
-        self.model.l1_penalty = cfg.get('L1', 0.0)
-        self.model.learn_rate = cfg.get('learn_rate', 0.001)
-
+        if model is None:
+            model = self.build_model(**cfg)
+        self.model = model
         self.cfg = cfg
-        # TODO: This is a pretty hacky fix to the problem of adding more
-        # labels. The issue is they come in out of order, if labels are
-        # added during training
-        for label in cfg.get('extra_labels', []):
-            self.add_label(label)
-
+    
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
     def __call__(self, Doc tokens):
         """
-        Apply the entity recognizer, setting the annotations onto the Doc object.
+        Apply the parser or entity recognizer, setting the annotations onto the Doc object.
 
         Arguments:
             doc (Doc): The document to be processed.
         Returns:
             None
         """
-        cdef int nr_feat = self.model.nr_feat
-        with nogil:
-            status = self.parseC(tokens.c, tokens.length, nr_feat)
-        # Check for KeyboardInterrupt etc. Untested
-        PyErr_CheckSignals()
-        if status != 0:
-            raise ParserStateError(tokens)
+        self.parse_batch([tokens])
         self.moves.finalize_doc(tokens)
+
+    def parse_batch(self, docs):
+        states = self._init_states(docs)
+        todo = list(states)
+        nr_class = self.moves.n_moves
+        while todo:
+            scores = self.model.predict(todo)
+            self._validate_batch(is_valid, scores, states)
+            for state, guess in zip(todo, scores.argmax(axis=1)):
+                action = self.moves.c[guess]
+                action.do(state, action.label)
+            todo = [state for state in todo if not state.is_final()]
+        for state, doc in zip(states, docs):
+            self.moves.finalize_state(state, doc)
 
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
         """
@@ -229,7 +205,6 @@ cdef class Parser:
         Yields (Doc): Documents, in order.
         """
         cdef Pool mem = Pool()
-        cdef TokenC** doc_ptr = <TokenC**>mem.alloc(batch_size, sizeof(TokenC*))
         cdef int* lengths = <int*>mem.alloc(batch_size, sizeof(int))
         cdef Doc doc
         cdef int i
@@ -241,111 +216,71 @@ cdef class Parser:
             lengths[len(queue)] = doc.length
             queue.append(doc)
             if len(queue) == batch_size:
-                with nogil:
-                    for i in cython.parallel.prange(batch_size, num_threads=n_threads):
-                        status = self.parseC(doc_ptr[i], lengths[i], nr_feat)
-                        if status != 0:
-                            with gil:
-                                raise ParserStateError(queue[i])
-                PyErr_CheckSignals()
+                self.parse_batch(queue)
                 for doc in queue:
                     self.moves.finalize_doc(doc)
                     yield doc
                 queue = []
-        batch_size = len(queue)
-        with nogil:
-            for i in cython.parallel.prange(batch_size, num_threads=n_threads):
-                status = self.parseC(doc_ptr[i], lengths[i], nr_feat)
-                if status != 0:
-                    with gil:
-                        raise ParserStateError(queue[i])
-        PyErr_CheckSignals()
-        for doc in queue:
-            self.moves.finalize_doc(doc)
-            yield doc
+        if queue:
+            self.parse_batch(queue)
+            for doc in queue:
+                self.moves.finalize_doc(doc)
+                yield doc
 
-    cdef int parseC(self, TokenC* tokens, int length, int nr_feat) nogil:
-        state = new StateC(tokens, length)
-        # NB: This can change self.moves.n_moves!
-        # I think this causes memory errors if called by .pipe()
-        self.moves.initialize_state(state)
+    def update(self, docs, golds, drop=0., sgd=None):
+        if isinstance(docs, Doc) and isinstance(golds, GoldParse):
+            return self.update([docs], [golds], drop=drop)
+        states = self._init_states(docs)
         nr_class = self.moves.n_moves
-
-        cdef ExampleC eg
-        eg.nr_feat = nr_feat
-        eg.nr_atom = CONTEXT_SIZE
-        eg.nr_class = nr_class
-        eg.features = <FeatureC*>calloc(sizeof(FeatureC), nr_feat)
-        eg.atoms = <atom_t*>calloc(sizeof(atom_t), CONTEXT_SIZE)
-        eg.scores = <weight_t*>calloc(sizeof(weight_t), nr_class)
-        eg.is_valid = <int*>calloc(sizeof(int), nr_class)
-        cdef int i
-        while not state.is_final():
-            eg.nr_feat = self.model.set_featuresC(eg.atoms, eg.features, state)
-            self.moves.set_valid(eg.is_valid, state)
-            self.model.set_scoresC(eg.scores, eg.features, eg.nr_feat)
-
-            guess = VecVec.arg_max_if_true(eg.scores, eg.is_valid, eg.nr_class)
-            if guess < 0:
-                return 1
-
-            action = self.moves.c[guess]
-
-            action.do(state, action.label)
-            memset(eg.scores, 0, sizeof(eg.scores[0]) * eg.nr_class)
-            for i in range(eg.nr_class):
-                eg.is_valid[i] = 1
-        self.moves.finalize_state(state)
-        for i in range(length):
-            tokens[i] = state._sent[i]
-        del state
-        free(eg.features)
-        free(eg.atoms)
-        free(eg.scores)
-        free(eg.is_valid)
+        while states:
+            scores, finish_update = self.model.begin_update(states, drop=drop)
+            self._validate_batch(is_valid, scores, states)
+            for i, state in enumerate(states):
+                self.moves.set_costs(costs[i], is_valid, state, golds[i])
+            
+            self._transition_batch(states, scores)
+            self._set_gradient(gradients, scores, costs)
+            finish_update(gradients, sgd=sgd)
+            gradients.fill(0)
+            
+            states = [state for state in states if not state.is_final()]
+            gradients = gradients[:len(states)]
+            costs = costs[:len(states)]
         return 0
 
-    def update(self, Doc tokens, GoldParse gold, itn=0, double drop=0.0):
-        """
-        Update the statistical model.
+    def _validate_batch(self, is_valid, scores, states):
+        for i, state in enumerate(states):
+            self.moves.set_valid(is_valid, state)
+            for j in range(self.moves.n_moves):
+                if not is_valid[j]:
+                    scores[i, j] = 0
 
-        Arguments:
-            doc (Doc):
-                The example document for the update.
-            gold (GoldParse):
-                The gold-standard annotations, to calculate the loss.
-        Returns (float):
-            The loss on this example.
-        """
-        self.moves.preprocess_gold(gold)
-        cdef StateClass stcls = StateClass.init(tokens.c, tokens.length)
-        self.moves.initialize_state(stcls.c)
-        cdef Pool mem = Pool()
-        cdef Example eg = Example(
-                nr_class=self.moves.n_moves,
-                nr_atom=CONTEXT_SIZE,
-                nr_feat=self.model.nr_feat)
-        cdef weight_t loss = 0
-        cdef Transition action
-        cdef double dropout_rate = self.cfg.get('dropout', drop)
-        while not stcls.is_final():
-            eg.c.nr_feat = self.model.set_featuresC(eg.c.atoms, eg.c.features,
-                                                    stcls.c)
-            dropout(eg.c.features, eg.c.nr_feat, dropout_rate)
-            self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
-            self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
-            guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
-            self.model.update(eg)
-
+    def _transition_batch(self, states, scores):
+        for state, guess in zip(states, scores.argmax(axis=1)):
             action = self.moves.c[guess]
-            action.do(stcls.c, action.label)
-            loss += eg.costs[guess]
-            eg.fill_scores(0, eg.c.nr_class)
-            eg.fill_costs(0, eg.c.nr_class)
-            eg.fill_is_valid(1, eg.c.nr_class)
+            action.do(state, action.label)
 
-        self.moves.finalize_state(stcls.c)
-        return loss
+    def _init_states(self, docs):
+        states = []
+        cdef Doc doc
+        for i, doc in enumerate(docs):
+            state = StateClass.init(doc)
+            self.moves.initialize_state(state)
+        return states
+
+    def _set_gradient(self, gradients, scores, costs):
+        """Do multi-label log loss"""
+        cdef double Z, gZ, max_, g_max
+        maxes = scores.max(axis=1)
+        g_maxes = (scores * costs <= 0).max(axis=1)
+        exps = (scores-maxes).exp()
+        g_exps = (g_scores-g_maxes).exp()
+
+        Zs = exps.sum(axis=1)
+        gZs = g_exps.sum(axis=1)
+        logprob = exps / Zs
+        g_logprob = g_exps / gZs
+        gradients[:] = logprob - g_logprob
 
     def step_through(self, Doc doc, GoldParse gold=None):
         """
