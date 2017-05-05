@@ -49,67 +49,8 @@ def set_debug(val):
     DEBUG = val
 
 
-@layerize
-def get_context_tokens(states, drop=0.):
-    for state in states:
-        context[i, 0] = state.B(0)
-        context[i, 1] = state.S(0)
-        context[i, 2] = state.S(1)
-        context[i, 3] = state.L(state.S(0), 1)
-        context[i, 4] = state.L(state.S(0), 2)
-        context[i, 5] = state.R(state.S(0), 1)
-        context[i, 6] = state.R(state.S(0), 2)
-    return (context, states), None
-
-
-def extract_features(attrs):
-    def forward(contexts_states, drop=0.):
-        contexts, states = contexts_states
-        for i, state in enumerate(states):
-            for j, tok_i in enumerate(contexts[i]):
-                token = state.get_token(tok_i)
-                for k, attr in enumerate(attrs):
-                    output[i, j, k] = getattr(token, attr)
-        return output, None
-    return layerize(forward)
-
-
-def build_tok2vec(lang, width, depth, embed_size):
-    cols = [LEX_ID, PREFIX, SUFFIX, SHAPE]
-    static = StaticVectors('en', width, column=cols.index(LEX_ID))
-    prefix = HashEmbed(width, embed_size, column=cols.index(PREFIX))
-    suffix = HashEmbed(width, embed_size, column=cols.index(SUFFIX))
-    shape = HashEmbed(width, embed_size, column=cols.index(SHAPE))
-    with Model.overload_operaters('>>': chain, '|': concatenate, '+': add):
-        tok2vec = (
-            extract_features(cols)
-            >> (static | prefix | suffix | shape)
-            >> (ExtractWindow(nW=1) >> Maxout(width)) ** depth
-        )
-    return tok2vec
-
-
-def build_parse2vec(width, embed_size):
-    cols = [TAG, DEP]
-    tag_vector = HashEmbed(width, 1000, column=cols.index(TAG))
-    dep_vector = HashEmbed(width, 1000, column=cols.index(DEP))
-    with Model.overload_operaters('>>': chain):
-        model = (
-            extract_features([TAG, DEP])
-            >> (tag_vector | dep_vector)
-        )
-    return model
- 
-
-def build_model(get_contexts, tok2vec, parse2vec, width, depth, nr_class):
-    with Model.overload_operaters('>>': chain):
-        model = (
-            get_contexts
-            >> (tok2vec | parse2vec)
-            >> Maxout(width) ** depth
-            >> Softmax(nr_class)
-        )
-    return model
+def get_templates(*args, **kwargs):
+    return []
 
 
 cdef class Parser:
@@ -162,7 +103,7 @@ cdef class Parser:
             model = self.build_model(**cfg)
         self.model = model
         self.cfg = cfg
-    
+
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
@@ -180,17 +121,21 @@ cdef class Parser:
 
     def parse_batch(self, docs):
         states = self._init_states(docs)
-        todo = list(states)
         nr_class = self.moves.n_moves
+        cdef StateClass state
+        cdef int guess
+        is_valid = self.model.ops.allocate((len(docs), nr_class), dtype='i')
+        todo = list(states)
         while todo:
             scores = self.model.predict(todo)
-            self._validate_batch(is_valid, scores, states)
+            self._validate_batch(is_valid, states)
+            scores *= is_valid
             for state, guess in zip(todo, scores.argmax(axis=1)):
                 action = self.moves.c[guess]
-                action.do(state, action.label)
+                action.do(state.c, action.label)
             todo = [state for state in todo if not state.is_final()]
         for state, doc in zip(states, docs):
-            self.moves.finalize_state(state, doc)
+            self.moves.finalize_state(state.c)
 
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
         """
@@ -212,8 +157,6 @@ cdef class Parser:
         cdef int status
         queue = []
         for doc in stream:
-            doc_ptr[len(queue)] = doc.c
-            lengths[len(queue)] = doc.length
             queue.append(doc)
             if len(queue) == batch_size:
                 self.parse_batch(queue)
@@ -231,48 +174,76 @@ cdef class Parser:
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             return self.update([docs], [golds], drop=drop)
         states = self._init_states(docs)
+        d_tokens = [self.model.ops.allocate(d.tensor.shape) for d in docs]
         nr_class = self.moves.n_moves
+        costs = self.model.ops.allocate((len(docs), nr_class), dtype='f')
+        is_valid = self.model.ops.allocate((len(docs), nr_class), dtype='i')
+
+        todo = zip(states, golds, d_tokens)
         while states:
+            states, golds, d_tokens = zip(*todo)
             scores, finish_update = self.model.begin_update(states, drop=drop)
-            self._validate_batch(is_valid, scores, states)
-            for i, state in enumerate(states):
-                self.moves.set_costs(costs[i], is_valid, state, golds[i])
-            
-            self._transition_batch(states, scores)
+ 
+            self._cost_batch(is_valid, costs, states, golds)
+            scores *= is_valid
             self._set_gradient(gradients, scores, costs)
-            finish_update(gradients, sgd=sgd)
+
+            token_ids, batch_token_grads = finish_update(gradients, sgd=sgd)
+            for i, tok_i in enumerate(token_ids):
+                d_tokens[tok_i] += batch_token_grads[i]
+
+            self._transition_batch(states, scores)
+
+            # Get unfinished states (and their matching gold and token gradients)
+            todo = zip(states, golds, d_tokens)
+            todo = filter(todo, lambda sp: sp[0].is_final)
+
+            gradients = gradients[:len(todo)]
+            costs = costs[:len(todo)]
+            is_valid = is_valid[:len(todo)]
+
             gradients.fill(0)
-            
-            states = [state for state in states if not state.is_final()]
-            gradients = gradients[:len(states)]
-            costs = costs[:len(states)]
+            costs.fill(0)
+            is_valid.fill(1)
         return 0
-
-    def _validate_batch(self, is_valid, scores, states):
-        for i, state in enumerate(states):
-            self.moves.set_valid(is_valid, state)
-            for j in range(self.moves.n_moves):
-                if not is_valid[j]:
-                    scores[i, j] = 0
-
-    def _transition_batch(self, states, scores):
-        for state, guess in zip(states, scores.argmax(axis=1)):
-            action = self.moves.c[guess]
-            action.do(state, action.label)
 
     def _init_states(self, docs):
         states = []
         cdef Doc doc
+        cdef StateClass state
         for i, doc in enumerate(docs):
-            state = StateClass.init(doc)
-            self.moves.initialize_state(state)
+            state = StateClass(doc)
+            self.moves.initialize_state(state.c)
+            states.append(state)
         return states
+
+    def _validate_batch(self, int[:, ::1] is_valid, states):
+        cdef StateClass state
+        cdef int i
+        for i, state in enumerate(states):
+            self.moves.set_valid(&is_valid[i, 0], state.c)
+    
+    def _cost_batch(self, weight_t[:, ::1] costs, int[:, ::1] is_valid,
+            states, golds):
+        cdef int i
+        cdef StateClass state
+        cdef GoldParse gold
+        for i, (state, gold) in enumerate(zip(states, golds)):
+            self.moves.set_costs(&is_valid[i, 0], &costs[i, 0], state, gold)
+
+    def _transition_batch(self, states, scores):
+        cdef StateClass state
+        cdef int guess
+        for state, guess in zip(states, scores.argmax(axis=1)):
+            action = self.moves.c[guess]
+            action.do(state.c, action.label)
 
     def _set_gradient(self, gradients, scores, costs):
         """Do multi-label log loss"""
         cdef double Z, gZ, max_, g_max
+        g_scores = scores * (costs <= 0)
         maxes = scores.max(axis=1)
-        g_maxes = (scores * costs <= 0).max(axis=1)
+        g_maxes = g_scores.max(axis=1)
         exps = (scores-maxes).exp()
         g_exps = (g_scores-g_maxes).exp()
 
@@ -398,11 +369,11 @@ cdef class StepwiseState:
 
     def predict(self):
         self.eg.reset()
-        self.eg.c.nr_feat = self.parser.model.set_featuresC(self.eg.c.atoms, self.eg.c.features,
-                                                            self.stcls.c)
+        #self.eg.c.nr_feat = self.parser.model.set_featuresC(self.eg.c.atoms, self.eg.c.features,
+        #                                                    self.stcls.c)
         self.parser.moves.set_valid(self.eg.c.is_valid, self.stcls.c)
-        self.parser.model.set_scoresC(self.eg.c.scores,
-            self.eg.c.features, self.eg.c.nr_feat)
+        #self.parser.model.set_scoresC(self.eg.c.scores,
+        #    self.eg.c.features, self.eg.c.nr_feat)
 
         cdef Transition action = self.parser.moves.c[self.eg.guess]
         return self.parser.moves.move_name(action.move, action.label)
