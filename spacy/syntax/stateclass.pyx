@@ -34,7 +34,7 @@ cdef class StateClass:
     def token_vector_lenth(self):
         return self.doc.tensor.shape[1]
 
-    def is_final(self):
+    def py_is_final(self):
         return self.c.is_final()
 
     def print_state(self, words):
@@ -47,31 +47,38 @@ cdef class StateClass:
         return ' '.join((third, second, top, '|', n0, n1))
 
     def nr_context_tokens(self, int nF, int nB, int nS, int nL, int nR):
-        return 1+nF+nB+nS + nL + (nS * nL) + (nS * nR)
+        return 3
+        #return 1+nF+nB+nS + nL + (nS * nL) + (nS * nR)
 
     def set_context_tokens(self, int[:] output, nF=1, nB=0, nS=2,
             nL=2, nR=2):
         output[0] = self.B(0)
         output[1] = self.S(0)
         output[2] = self.S(1)
-        output[3] = self.L(self.S(0), 1)
-        output[4] = self.L(self.S(0), 2)
-        output[5] = self.R(self.S(0), 1)
-        output[6] = self.R(self.S(0), 2)
-        output[7] = self.L(self.S(1), 1)
-        output[8] = self.L(self.S(1), 2)
-        output[9] = self.R(self.S(1), 1)
-        output[10] = self.R(self.S(1), 2)
+        #output[3] = self.L(self.S(0), 1)
+        #output[4] = self.L(self.S(0), 2)
+        #output[5] = self.R(self.S(0), 1)
+        #output[6] = self.R(self.S(0), 2)
+        #output[7] = self.L(self.S(1), 1)
+        #output[8] = self.L(self.S(1), 2)
+        #output[9] = self.R(self.S(1), 1)
+        #output[10] = self.R(self.S(1), 2)
 
     def set_attributes(self, uint64_t[:, :] vals, int[:] tokens, int[:] names):
         cdef int i, j, tok_i
         for i in range(tokens.shape[0]):
             tok_i = tokens[i]
-            token = &self.c._sent[tok_i]
-            for j in range(names.shape[0]):
-                vals[i, j] = Token.get_struct_attr(token, <attr_id_t>names[j])
+            if tok_i >= 0:
+                token = &self.c._sent[tok_i]
+                for j in range(names.shape[0]):
+                    vals[i, j] = Token.get_struct_attr(token, <attr_id_t>names[j])
+            else:
+                vals[i] = 0
 
     def set_token_vectors(self, float[:, :] tokvecs,
             float[:, :] all_tokvecs, int[:] indices):
         for i in range(indices.shape[0]):
-            tokvecs[i] = all_tokvecs[indices[i]]
+            if indices[i] >= 0:
+                tokvecs[i] = all_tokvecs[indices[i]]
+            else:
+                tokvecs[i] = 0

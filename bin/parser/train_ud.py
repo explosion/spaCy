@@ -1,4 +1,4 @@
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 import plac
 import json
 import random
@@ -9,7 +9,7 @@ from spacy.syntax.nonproj import PseudoProjectivity
 from spacy.language import Language
 from spacy.gold import GoldParse
 from spacy.tagger import Tagger
-from spacy.pipeline import DependencyParser, BeamDependencyParser
+from spacy.pipeline import DependencyParser, TokenVectorEncoder
 from spacy.syntax.parser import get_templates
 from spacy.syntax.arc_eager import ArcEager
 from spacy.scorer import Scorer
@@ -36,10 +36,10 @@ def read_conllx(loc, n=0):
                 try:
                     id_ = int(id_) - 1
                     head = (int(head) - 1) if head != '0' else id_
-                    dep = 'ROOT' if dep == 'root' else dep
-                    tokens.append((id_, word, tag, head, dep, 'O'))
+                    dep = 'ROOT' if dep == 'root' else 'unlabelled'
+                    # Hack for efficiency
+                    tokens.append((id_, word, pos+'__'+morph, head, dep, 'O'))
                 except:
-                    print(line)
                     raise
             tuples = [list(t) for t in zip(*tokens)]
             yield (None, [[tuples, []]])
@@ -48,17 +48,35 @@ def read_conllx(loc, n=0):
                 break
 
 
-def score_model(vocab, tagger, parser, gold_docs, verbose=False):
+def score_model(vocab, encoder, tagger, parser, Xs, ys, verbose=False):
     scorer = Scorer()
-    for _, gold_doc in gold_docs:
-        for (ids, words, tags, heads, deps, entities), _ in gold_doc:
-            doc = Doc(vocab, words=words)
-            tagger(doc)
-            parser(doc)
-            PseudoProjectivity.deprojectivize(doc)
-            gold = GoldParse(doc, tags=tags, heads=heads, deps=deps)
-            scorer.score(doc, gold, verbose=verbose)
+    correct = 0.
+    total = 0.
+    for doc, gold in zip(Xs, ys):
+        doc = Doc(vocab, words=[w.text for w in doc])
+        encoder(doc)
+        tagger(doc)
+        parser(doc)
+        PseudoProjectivity.deprojectivize(doc)
+        scorer.score(doc, gold, verbose=verbose)
+        for token, tag in zip(doc, gold.tags):
+            univ_guess, _ = token.tag_.split('_', 1)
+            univ_truth, _ = tag.split('_', 1)
+            correct += univ_guess == univ_truth
+            total += 1
     return scorer
+
+
+def organize_data(vocab, train_sents):
+    Xs = []
+    ys = []
+    for _, doc_sents in train_sents:
+        for (ids, words, tags, heads, deps, ner), _ in doc_sents:
+            doc = Doc(vocab, words=words)
+            gold = GoldParse(doc, tags=tags, heads=heads, deps=deps)
+            Xs.append(doc)
+            ys.append(gold)
+    return Xs, ys
 
 
 def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
@@ -114,21 +132,37 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
                 for tag in tags:
                     assert tag in vocab.morphology.tag_map, repr(tag)
     tagger = Tagger(vocab)
+    encoder = TokenVectorEncoder(vocab)
     parser = DependencyParser(vocab, actions=actions, features=features, L1=0.0)
 
-    for itn in range(30):
-        loss = 0.
-        for _, doc_sents in train_sents:
-            for (ids, words, tags, heads, deps, ner), _ in doc_sents:
-                doc = Doc(vocab, words=words)
-                gold = GoldParse(doc, tags=tags, heads=heads, deps=deps)
-                tagger(doc)
-                loss += parser.update(doc, gold, itn=itn)
-                doc = Doc(vocab, words=words)
+    
+    Xs, ys = organize_data(vocab, train_sents)
+    Xs = Xs[:1]
+    ys = ys[:1]
+    with encoder.model.begin_training(Xs[:100], ys[:100]) as (trainer, optimizer):
+        docs = list(Xs)
+        for doc in docs:
+            encoder(doc)
+        parser.begin_training(docs, ys)
+        nn_loss = [0.]
+        def track_progress():
+            scorer = score_model(vocab, encoder, tagger, parser, Xs, ys)
+            itn = len(nn_loss)
+            print('%d:\t%.3f\t%.3f\t%.3f' % (itn, nn_loss[-1], scorer.uas, scorer.tags_acc))
+            nn_loss.append(0.)
+        trainer.each_epoch.append(track_progress)
+        trainer.batch_size = 1
+        trainer.nb_epoch = 100
+        for docs, golds in trainer.iterate(Xs, ys, progress_bar=False):
+            docs = [Doc(vocab, words=[w.text for w in doc]) for doc in docs]
+            tokvecs, upd_tokvecs = encoder.begin_update(docs)
+            for doc, tokvec in zip(docs, tokvecs):
+                doc.tensor = tokvec
+            for doc, gold in zip(docs, golds):
                 tagger.update(doc, gold)
-        random.shuffle(train_sents)
-        scorer = score_model(vocab, tagger, parser, read_conllx(dev_loc))
-        print('%d:\t%.3f\t%.3f\t%.3f' % (itn, loss, scorer.uas, scorer.tags_acc))
+            d_tokvecs, loss = parser.update(docs, golds, sgd=optimizer)
+            upd_tokvecs(d_tokvecs, sgd=optimizer)
+            nn_loss[-1] += loss
     nlp = LangClass(vocab=vocab, tagger=tagger, parser=parser)
     nlp.end_training(model_dir)
     scorer = score_model(vocab, tagger, parser, read_conllx(dev_loc))
