@@ -5,7 +5,7 @@ from thinc.neural._classes.hash_embed import HashEmbed
 from thinc.neural._classes.convolution import ExtractWindow
 from thinc.neural._classes.static_vectors import StaticVectors
 
-from .attrs import ID, PREFIX, SUFFIX, SHAPE, TAG, DEP
+from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP
 
 
 def get_col(idx):
@@ -147,19 +147,20 @@ def flatten(seqs, drop=0.):
 
 
 def build_tok2vec(lang, width, depth=2, embed_size=1000):
-    cols = [ID, PREFIX, SUFFIX, SHAPE]
+    cols = [ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone}):
         #static = get_col(cols.index(ID))     >> StaticVectors(lang, width)
-        lower = get_col(cols.index(ID))     >> HashEmbed(width, embed_size)
+        lower = get_col(cols.index(LOWER))     >> HashEmbed(width, embed_size)
         prefix = get_col(cols.index(PREFIX)) >> HashEmbed(width, embed_size)
         suffix = get_col(cols.index(SUFFIX)) >> HashEmbed(width, embed_size)
         shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size)
+        tag = get_col(cols.index(TAG))   >> HashEmbed(width, embed_size)
         tok2vec = (
             doc2feats(cols)
             >> with_flatten(
                 #(static | prefix | suffix | shape)
-                (lower | prefix | suffix | shape)
-                >> Maxout(width, width*4)
+                (lower | prefix | suffix | shape | tag)
+                >> Maxout(width, width*5)
                 >> (ExtractWindow(nW=1) >> Maxout(width, width*3))
                 >> (ExtractWindow(nW=1) >> Maxout(width, width*3))
             )

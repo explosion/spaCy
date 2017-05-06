@@ -137,8 +137,8 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
 
     
     Xs, ys = organize_data(vocab, train_sents)
-    Xs = Xs[:1]
-    ys = ys[:1]
+    Xs = Xs[:10]
+    ys = ys[:10]
     with encoder.model.begin_training(Xs[:100], ys[:100]) as (trainer, optimizer):
         docs = list(Xs)
         for doc in docs:
@@ -151,8 +151,8 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
             print('%d:\t%.3f\t%.3f\t%.3f' % (itn, nn_loss[-1], scorer.uas, scorer.tags_acc))
             nn_loss.append(0.)
         trainer.each_epoch.append(track_progress)
-        trainer.batch_size = 1
-        trainer.nb_epoch = 100
+        trainer.batch_size = 2
+        trainer.nb_epoch = 10000
         for docs, golds in trainer.iterate(Xs, ys, progress_bar=False):
             docs = [Doc(vocab, words=[w.text for w in doc]) for doc in docs]
             tokvecs, upd_tokvecs = encoder.begin_update(docs)

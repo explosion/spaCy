@@ -113,7 +113,7 @@ cdef class Parser:
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
-    def build_model(self, width=8, nr_vector=1000, nF=1, nB=1, nS=1, nL=1, nR=1, **_):
+    def build_model(self, width=32, nr_vector=1000, nF=1, nB=1, nS=1, nL=1, nR=1, **_):
         state2vec = build_debug_state2vec(width, nr_vector, nF, nB, nL, nR)
         model = build_debug_model(state2vec, width, 2, self.moves.n_moves)
         return model
@@ -197,7 +197,7 @@ cdef class Parser:
         attr_names = self.model.ops.allocate((2,), dtype='i')
         attr_names[0] = TAG
         attr_names[1] = DEP
-        
+
         features = self._get_features(states, tokvecs, attr_names)
         self.model.begin_training(features)
 
@@ -214,11 +214,12 @@ cdef class Parser:
         output = list(d_tokens)
         todo = zip(states, tokvecs, golds, d_tokens)
         assert len(states) == len(todo)
-        loss = 0.
+        losses = []
         while todo:
             states, tokvecs, golds, d_tokens = zip(*todo)
             scores, finish_update = self._begin_update(states, tokvecs)
-            token_ids, batch_token_grads = finish_update(golds, sgd=sgd)
+            token_ids, batch_token_grads = finish_update(golds, sgd=sgd, losses=losses,
+                                                         force_gold=False)
             for i, tok_i in enumerate(token_ids):
                 d_tokens[i][tok_i] += batch_token_grads[i]
 
@@ -226,7 +227,7 @@ cdef class Parser:
 
             # Get unfinished states (and their matching gold and token gradients)
             todo = filter(lambda sp: not sp[0].py_is_final(), todo)
-        return output, loss
+        return output, sum(losses)
 
     def _begin_update(self, states, tokvecs, drop=0.):
         nr_class = self.moves.n_moves
@@ -240,14 +241,17 @@ cdef class Parser:
         self._validate_batch(is_valid, states)
         softmaxed = self.model.ops.softmax(scores)
         softmaxed *= is_valid
-        softmaxed /= softmaxed.sum(axis=1)
-        print('Scores', softmaxed[0])
-        def backward(golds, sgd=None):
+        softmaxed /= softmaxed.sum(axis=1).reshape((softmaxed.shape[0], 1))
+        def backward(golds, sgd=None, losses=[], force_gold=False):
+            nonlocal softmaxed
             costs = self.model.ops.allocate((len(states), nr_class), dtype='f')
             d_scores = self.model.ops.allocate((len(states), nr_class), dtype='f')
 
             self._cost_batch(costs, is_valid, states, golds)
             self._set_gradient(d_scores, scores, is_valid, costs)
+            losses.append(numpy.abs(d_scores).sum())
+            if force_gold:
+                softmaxed *= costs <= 0
             return finish_update(d_scores, sgd=sgd)
         return softmaxed, backward
 
@@ -298,17 +302,16 @@ cdef class Parser:
     def _set_gradient(self, gradients, scores, is_valid, costs):
         """Do multi-label log loss"""
         cdef double Z, gZ, max_, g_max
+        n = gradients.shape[0]
         scores = scores * is_valid
         g_scores = scores * is_valid * (costs <= 0.)
-        exps = numpy.exp(scores - scores.max(axis=1))
+        exps = numpy.exp(scores - scores.max(axis=1).reshape((n, 1)))
         exps *= is_valid
-        g_exps = numpy.exp(g_scores - g_scores.max(axis=1))
+        g_exps = numpy.exp(g_scores - g_scores.max(axis=1).reshape((n, 1)))
         g_exps *= costs <= 0.
         g_exps *= is_valid
-        gradients[:] = exps / exps.sum(axis=1)
-        gradients -= g_exps / g_exps.sum(axis=1)
-        print('Gradient', gradients[0])
-        print('Costs', costs[0])
+        gradients[:] = exps / exps.sum(axis=1).reshape((n, 1))
+        gradients -= g_exps / g_exps.sum(axis=1).reshape((n, 1))
 
     def step_through(self, Doc doc, GoldParse gold=None):
         """
