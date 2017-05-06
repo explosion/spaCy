@@ -45,6 +45,7 @@ from ..gold cimport GoldParse
 from ..attrs cimport TAG, DEP
 
 from .._ml import build_parser_state2vec, build_model
+from .._ml import build_state2vec, build_model
 from .._ml import build_debug_state2vec, build_debug_model
 
 
@@ -114,8 +115,10 @@ cdef class Parser:
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
     def build_model(self, width=64, nr_vector=1000, nF=1, nB=1, nS=1, nL=1, nR=1, **_):
-        state2vec = build_debug_state2vec(width, nr_vector, nF, nB, nL, nR)
-        model = build_debug_model(state2vec, width, 2, self.moves.n_moves)
+        nr_context_tokens = StateClass.nr_context_tokens(nF, nB, nS, nL, nR)
+        state2vec = build_state2vec(nr_context_tokens, width, nr_vector)
+        #state2vec = build_debug_state2vec(width, nr_vector)
+        model = build_debug_model(state2vec, width*2, 2, self.moves.n_moves)
         return model
 
     def __call__(self, Doc tokens):
@@ -220,8 +223,10 @@ cdef class Parser:
             scores, finish_update = self._begin_update(states, tokvecs)
             token_ids, batch_token_grads = finish_update(golds, sgd=sgd, losses=losses,
                                                          force_gold=False)
-            for i, tok_i in enumerate(token_ids):
-                d_tokens[i][tok_i] += batch_token_grads[i]
+            for i, tok_ids in enumerate(token_ids):
+                for j, tok_i in enumerate(tok_ids):
+                    if tok_i >= 0:
+                        d_tokens[i][tok_i] += batch_token_grads[i, j]
 
             self._transition_batch(states, scores)
 
@@ -237,6 +242,8 @@ cdef class Parser:
 
         features = self._get_features(states, tokvecs, attr_names)
         scores, finish_update = self.model.begin_update(features, drop=drop)
+        assert scores.shape[0] == len(states), (len(states), scores.shape)
+        assert len(scores.shape) == 2
         is_valid = self.model.ops.allocate((len(states), nr_class), dtype='i')
         self._validate_batch(is_valid, states)
         softmaxed = self.model.ops.softmax(scores)
@@ -283,7 +290,7 @@ cdef class Parser:
         cdef int i
         for i, state in enumerate(states):
             self.moves.set_valid(&is_valid[i, 0], state.c)
-    
+
     def _cost_batch(self, weight_t[:, ::1] costs, int[:, ::1] is_valid,
             states, golds):
         cdef int i

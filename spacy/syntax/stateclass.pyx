@@ -46,7 +46,8 @@ cdef class StateClass:
         n1 = words[self.B(1)]
         return ' '.join((third, second, top, '|', n0, n1))
 
-    def nr_context_tokens(self, int nF, int nB, int nS, int nL, int nR):
+    @classmethod
+    def nr_context_tokens(cls, int nF, int nB, int nS, int nL, int nR):
         return 4
 
     def set_context_tokens(self, int[:] output, nF=1, nB=0, nS=2,

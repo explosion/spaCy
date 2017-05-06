@@ -150,7 +150,7 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
             print('%d:\t%.3f\t%.3f\t%.3f' % (itn, nn_loss[-1], scorer.uas, scorer.tags_acc))
             nn_loss.append(0.)
         trainer.each_epoch.append(track_progress)
-        trainer.batch_size = 2
+        trainer.batch_size = 6
         trainer.nb_epoch = 10000
         for docs, golds in trainer.iterate(Xs, ys, progress_bar=False):
             docs = [Doc(vocab, words=[w.text for w in doc]) for doc in docs]

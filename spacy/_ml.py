@@ -1,4 +1,4 @@
-from thinc.api import layerize, chain, clone, concatenate, with_flatten
+from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
 from thinc.neural import Model, Maxout, Softmax, Affine
 from thinc.neural._classes.hash_embed import HashEmbed
 
@@ -11,8 +11,13 @@ from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP
 
 def get_col(idx):
     def forward(X, drop=0.):
+        assert len(X.shape) <= 3
         output = Model.ops.xp.ascontiguousarray(X[:, idx])
-        return output, None
+        def backward(y, sgd=None):
+            dX = Model.ops.allocate(X.shape)
+            dX[:, idx] += y
+            return dX
+        return output, backward
     return layerize(forward)
 
 
@@ -37,12 +42,11 @@ def build_debug_model(state2vec, width, depth, nr_class):
     return model
 
 
-
 def build_debug_state2vec(width, nr_vector=1000, nF=1, nB=0, nS=1, nL=2, nR=2):
     ops = Model.ops
     def forward(tokens_attrs_vectors, drop=0.):
         tokens, attr_vals, tokvecs = tokens_attrs_vectors
-        
+
         orig_tokvecs_shape = tokvecs.shape
         tokvecs = tokvecs.reshape((tokvecs.shape[0], tokvecs.shape[1] *
                                    tokvecs.shape[2]))
@@ -55,6 +59,34 @@ def build_debug_state2vec(width, nr_vector=1000, nF=1, nB=0, nS=1, nL=2, nR=2):
         return vector, backward
     model = layerize(forward)
     return model
+
+
+def build_state2vec(nr_context_tokens, width, nr_vector=1000):
+    ops = Model.ops
+    with Model.define_operators({'|': concatenate, '+': add, '>>': chain}):
+
+        hiddens = [get_col(i) >> Affine(width) for i in range(nr_context_tokens)]
+        model = (
+            get_token_vectors
+            >> add(*hiddens)
+            >> Maxout(width)
+        )
+    return model
+
+
+def print_shape(prefix):
+    def forward(X, drop=0.):
+        return X, lambda dX, **kwargs: dX
+    return layerize(forward)
+    
+
+@layerize
+def get_token_vectors(tokens_attrs_vectors, drop=0.):
+    ops = Model.ops
+    tokens, attrs, vectors = tokens_attrs_vectors
+    def backward(d_output, sgd=None):
+        return (tokens, d_output)
+    return vectors, backward
 
 
 def build_parser_state2vec(width, nr_vector=1000, nF=1, nB=0, nS=1, nL=2, nR=2):
@@ -161,7 +193,7 @@ def build_tok2vec(lang, width, depth=2, embed_size=1000):
             >> with_flatten(
                 #(static | prefix | suffix | shape)
                 (lower | prefix | suffix | shape | tag)
-                >> BatchNorm(Maxout(width, width*5), nO=width)
+                >> Maxout(width, width*5)
                 #>> (ExtractWindow(nW=1) >> Maxout(width, width*3))
                 #>> (ExtractWindow(nW=1) >> Maxout(width, width*3))
             )
