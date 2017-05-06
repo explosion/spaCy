@@ -161,8 +161,8 @@ def build_tok2vec(lang, width, depth=2, embed_size=1000):
                 #(static | prefix | suffix | shape)
                 (lower | prefix | suffix | shape | tag)
                 >> Maxout(width, width*5)
-                >> (ExtractWindow(nW=1) >> Maxout(width, width*3))
-                >> (ExtractWindow(nW=1) >> Maxout(width, width*3))
+                #>> (ExtractWindow(nW=1) >> Maxout(width, width*3))
+                #>> (ExtractWindow(nW=1) >> Maxout(width, width*3))
             )
         )
     return tok2vec

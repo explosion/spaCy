@@ -135,10 +135,9 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
     encoder = TokenVectorEncoder(vocab)
     parser = DependencyParser(vocab, actions=actions, features=features, L1=0.0)
 
-    
     Xs, ys = organize_data(vocab, train_sents)
-    Xs = Xs[:10]
-    ys = ys[:10]
+    Xs = Xs[:100]
+    ys = ys[:100]
     with encoder.model.begin_training(Xs[:100], ys[:100]) as (trainer, optimizer):
         docs = list(Xs)
         for doc in docs:
