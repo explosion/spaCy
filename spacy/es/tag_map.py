@@ -304,5 +304,24 @@ TAG_MAP = {
     "VERB__VerbForm=Ger": {"morph": "VerbForm=Ger", "pos": "VERB"},
     "VERB__VerbForm=Inf": {"morph": "VerbForm=Inf", "pos": "VERB"},
     "X___": {"morph": "_", "pos": "X"},
-    "SP": {"morph": "_", "pos": "SPACE"}
+    "SP": {"morph": "_", "pos": "SPACE"},
+    "ADV":      {POS: ADV},
+    "NOUN":     {POS: NOUN},
+    "ADP":      {POS: ADP},
+    "PRON":     {POS: PRON},
+    "SCONJ":    {POS: SCONJ},
+    "PROPN":    {POS: PROPN},
+    "DET":      {POS: DET},
+    "SYM":      {POS: SYM},
+    "INTJ":     {POS: INTJ},
+    "PUNCT":    {POS: PUNCT},
+    "NUM":      {POS: NUM},
+    "AUX":      {POS: AUX},
+    "X":        {POS: X},
+    "CONJ":     {POS: CONJ},
+    "CCONJ":    {POS: CCONJ}, # U20
+    "ADJ":      {POS: ADJ},
+    "VERB":     {POS: VERB},
+    "PART":     {POS: PART},
+    "_":     {POS: PUNCT}
 }

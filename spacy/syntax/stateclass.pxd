@@ -1,6 +1,7 @@
 from libc.string cimport memcpy, memset
 
 from cymem.cymem cimport Pool
+cimport cython
 
 from ..structs cimport TokenC, Entity
 
@@ -8,7 +9,7 @@ from ..vocab cimport EMPTY_LEXEME
 from ._state cimport StateC
 
 
-
+@cython.final
 cdef class StateClass:
     cdef Pool mem
     cdef StateC* c

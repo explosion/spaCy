@@ -40,6 +40,9 @@ from ..structs cimport TokenC
 from ..tokens.doc cimport Doc
 from ..strings cimport StringStore
 from ..gold cimport GoldParse
+from ..attrs cimport TAG, DEP
+
+from .._ml import build_parser_state2vec, build_model
 
 
 USE_FTRL = True
@@ -107,6 +110,11 @@ cdef class Parser:
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
+    def build_model(self, width=8, nr_vector=1000, nF=1, nB=1, nS=1, nL=1, nR=1, **_):
+        state2vec = build_parser_state2vec(width, nr_vector, nF, nB, nL, nR)
+        model = build_model(state2vec, width, 2, self.moves.n_moves)
+        return model
+
     def __call__(self, Doc tokens):
         """
         Apply the parser or entity recognizer, setting the annotations onto the Doc object.
@@ -118,25 +126,7 @@ cdef class Parser:
         """
         self.parse_batch([tokens])
         self.moves.finalize_doc(tokens)
-
-    def parse_batch(self, docs):
-        states = self._init_states(docs)
-        nr_class = self.moves.n_moves
-        cdef StateClass state
-        cdef int guess
-        is_valid = self.model.ops.allocate((len(docs), nr_class), dtype='i')
-        todo = list(states)
-        while todo:
-            scores = self.model.predict(todo)
-            self._validate_batch(is_valid, states)
-            scores *= is_valid
-            for state, guess in zip(todo, scores.argmax(axis=1)):
-                action = self.moves.c[guess]
-                action.do(state.c, action.label)
-            todo = [state for state in todo if not state.is_final()]
-        for state, doc in zip(states, docs):
-            self.moves.finalize_state(state.c)
-
+    
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
         """
         Process a stream of documents.
@@ -170,53 +160,106 @@ cdef class Parser:
                 self.moves.finalize_doc(doc)
                 yield doc
 
+    def parse_batch(self, docs):
+        states = self._init_states(docs)
+        nr_class = self.moves.n_moves
+        cdef Doc doc
+        cdef StateClass state
+        cdef int guess
+        is_valid = self.model.ops.allocate((len(docs), nr_class), dtype='i')
+        tokvecs = [d.tensor for d in docs]
+        attr_names = self.model.ops.allocate((2,), dtype='i')
+        attr_names[0] = TAG
+        attr_names[1] = DEP
+        all_states = list(states)
+        todo = zip(states, tokvecs)
+        while todo:
+            states, tokvecs = zip(*todo)
+            features = self._get_features(states, tokvecs, attr_names)
+            scores = self.model.predict(features)
+            self._validate_batch(is_valid, states)
+            scores *= is_valid
+            for state, guess in zip(states, scores.argmax(axis=1)):
+                action = self.moves.c[guess]
+                action.do(state.c, action.label)
+            todo = filter(lambda sp: not sp[0].is_final(), todo)
+        for state, doc in zip(all_states, docs):
+            self.moves.finalize_state(state.c)
+            for i in range(doc.length):
+                doc.c[i] = state.c._sent[i]
+
+
     def update(self, docs, golds, drop=0., sgd=None):
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             return self.update([docs], [golds], drop=drop)
+        for gold in golds:
+            self.moves.preprocess_gold(gold)
         states = self._init_states(docs)
+        tokvecs = [d.tensor for d in docs]
         d_tokens = [self.model.ops.allocate(d.tensor.shape) for d in docs]
         nr_class = self.moves.n_moves
         costs = self.model.ops.allocate((len(docs), nr_class), dtype='f')
+        gradients = self.model.ops.allocate((len(docs), nr_class), dtype='f')
         is_valid = self.model.ops.allocate((len(docs), nr_class), dtype='i')
+        attr_names = self.model.ops.allocate((2,), dtype='i')
+        attr_names[0] = TAG
+        attr_names[1] = DEP
+        output = list(d_tokens)
+        todo = zip(states, tokvecs, golds, d_tokens)
+        assert len(states) == len(todo)
+        loss = 0.
+        while todo:
+            states, tokvecs, golds, d_tokens = zip(*todo)
+            features = self._get_features(states, tokvecs, attr_names)
 
-        todo = zip(states, golds, d_tokens)
-        while states:
-            states, golds, d_tokens = zip(*todo)
-            scores, finish_update = self.model.begin_update(states, drop=drop)
- 
-            self._cost_batch(is_valid, costs, states, golds)
+            scores, finish_update = self.model.begin_update(features, drop=drop)
+            assert scores.shape == (len(states), self.moves.n_moves), (len(states), scores.shape)
+
+            self._cost_batch(costs, is_valid, states, golds)
             scores *= is_valid
             self._set_gradient(gradients, scores, costs)
+            loss += numpy.abs(gradients).sum() / gradients.shape[0]
 
             token_ids, batch_token_grads = finish_update(gradients, sgd=sgd)
             for i, tok_i in enumerate(token_ids):
-                d_tokens[tok_i] += batch_token_grads[i]
+                d_tokens[i][tok_i] += batch_token_grads[i]
 
             self._transition_batch(states, scores)
 
             # Get unfinished states (and their matching gold and token gradients)
-            todo = zip(states, golds, d_tokens)
-            todo = filter(todo, lambda sp: sp[0].is_final)
-
-            gradients = gradients[:len(todo)]
+            todo = filter(lambda sp: not sp[0].is_final(), todo)
             costs = costs[:len(todo)]
             is_valid = is_valid[:len(todo)]
+            gradients = gradients[:len(todo)]
 
             gradients.fill(0)
             costs.fill(0)
             is_valid.fill(1)
-        return 0
+        return output, loss
 
     def _init_states(self, docs):
         states = []
         cdef Doc doc
         cdef StateClass state
         for i, doc in enumerate(docs):
-            state = StateClass(doc)
+            state = StateClass.init(doc.c, doc.length)
             self.moves.initialize_state(state.c)
             states.append(state)
         return states
 
+    def _get_features(self, states, all_tokvecs, attr_names,
+            nF=1, nB=0, nS=2, nL=2, nR=2):
+        n_tokens = states[0].nr_context_tokens(nF, nB, nS, nL, nR)
+        vector_length = all_tokvecs[0].shape[1]
+        tokens = self.model.ops.allocate((len(states), n_tokens), dtype='int32')
+        features = self.model.ops.allocate((len(states), n_tokens, attr_names.shape[0]), dtype='uint64')
+        tokvecs = self.model.ops.allocate((len(states), n_tokens, vector_length), dtype='f')
+        for i, state in enumerate(states):
+            state.set_context_tokens(tokens[i], nF, nB, nS, nL, nR)
+            state.set_attributes(features[i], tokens[i], attr_names)
+            state.set_token_vectors(tokvecs[i], all_tokvecs[i], tokens[i])
+        return (tokens, features, tokvecs)
+ 
     def _validate_batch(self, int[:, ::1] is_valid, states):
         cdef StateClass state
         cdef int i
@@ -242,13 +285,13 @@ cdef class Parser:
         """Do multi-label log loss"""
         cdef double Z, gZ, max_, g_max
         g_scores = scores * (costs <= 0)
-        maxes = scores.max(axis=1)
-        g_maxes = g_scores.max(axis=1)
-        exps = (scores-maxes).exp()
-        g_exps = (g_scores-g_maxes).exp()
+        maxes = scores.max(axis=1).reshape((scores.shape[0], 1))
+        g_maxes = g_scores.max(axis=1).reshape((g_scores.shape[0], 1))
+        exps = numpy.exp((scores-maxes))
+        g_exps = numpy.exp(g_scores-g_maxes)
 
-        Zs = exps.sum(axis=1)
-        gZs = g_exps.sum(axis=1)
+        Zs = exps.sum(axis=1).reshape((exps.shape[0], 1))
+        gZs = g_exps.sum(axis=1).reshape((g_exps.shape[0], 1))
         logprob = exps / Zs
         g_logprob = g_exps / gZs
         gradients[:] = logprob - g_logprob
