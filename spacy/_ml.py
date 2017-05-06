@@ -4,6 +4,7 @@ from thinc.neural._classes.hash_embed import HashEmbed
 
 from thinc.neural._classes.convolution import ExtractWindow
 from thinc.neural._classes.static_vectors import StaticVectors
+from thinc.neural._classes.batchnorm import BatchNorm
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP
 
@@ -160,7 +161,7 @@ def build_tok2vec(lang, width, depth=2, embed_size=1000):
             >> with_flatten(
                 #(static | prefix | suffix | shape)
                 (lower | prefix | suffix | shape | tag)
-                >> Maxout(width, width*5)
+                >> BatchNorm(Maxout(width, width*5), nO=width)
                 #>> (ExtractWindow(nW=1) >> Maxout(width, width*3))
                 #>> (ExtractWindow(nW=1) >> Maxout(width, width*3))
             )

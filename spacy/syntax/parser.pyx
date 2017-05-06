@@ -113,7 +113,7 @@ cdef class Parser:
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
-    def build_model(self, width=32, nr_vector=1000, nF=1, nB=1, nS=1, nL=1, nR=1, **_):
+    def build_model(self, width=64, nr_vector=1000, nF=1, nB=1, nS=1, nL=1, nR=1, **_):
         state2vec = build_debug_state2vec(width, nr_vector, nF, nB, nL, nR)
         model = build_debug_model(state2vec, width, 2, self.moves.n_moves)
         return model

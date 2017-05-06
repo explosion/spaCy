@@ -47,7 +47,7 @@ cdef class StateClass:
         return ' '.join((third, second, top, '|', n0, n1))
 
     def nr_context_tokens(self, int nF, int nB, int nS, int nL, int nR):
-        return 8
+        return 4
 
     def set_context_tokens(self, int[:] output, nF=1, nB=0, nS=2,
             nL=2, nR=2):
@@ -55,10 +55,10 @@ cdef class StateClass:
         output[1] = self.B(1)
         output[2] = self.S(0)
         output[3] = self.S(1)
-        output[4] = self.L(self.S(0), 1)
-        output[5] = self.L(self.S(0), 2)
-        output[6] = self.R(self.S(0), 1)
-        output[7] = self.R(self.S(0), 2)
+        #output[4] = self.L(self.S(0), 1)
+        #output[5] = self.L(self.S(0), 2)
+        #output[6] = self.R(self.S(0), 1)
+        #output[7] = self.R(self.S(0), 2)
         #output[7] = self.L(self.S(1), 1)
         #output[8] = self.L(self.S(1), 2)
         #output[9] = self.R(self.S(1), 1)
