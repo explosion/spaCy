@@ -7,7 +7,8 @@ from ..language import Language
 from ..attrs import LANG
 
 from .language_data import *
-
+from ..lemmatizerlookup import Lemmatizer
+from .lemmatization import LOOK_UP
 
 class Spanish(Language):
     lang = 'es'
@@ -19,3 +20,7 @@ class Spanish(Language):
         tokenizer_exceptions = TOKENIZER_EXCEPTIONS
         tag_map = TAG_MAP
         stop_words = STOP_WORDS
+
+
+
+EXPORT = Spanish

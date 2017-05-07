@@ -22,3 +22,5 @@ class Bengali(Language):
         prefixes = tuple(TOKENIZER_PREFIXES)
         suffixes = tuple(TOKENIZER_SUFFIXES)
         infixes = tuple(TOKENIZER_INFIXES)
+
+EXPORT = Bengali

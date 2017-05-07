@@ -9,3 +9,6 @@ class Chinese(Language):
         import jieba
         words = list(jieba.cut(text, cut_all=True))
         return Doc(self.vocab, words=words, spaces=[False]*len(words))
+
+
+EXPORT = Chinese
