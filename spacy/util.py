@@ -189,12 +189,14 @@ def print_markdown(data, title=None):
     print('\n{}\n'.format('\n'.join(markdown)))
 
 
-def prints(*texts, title=None, exits=False):
+def prints(*texts, **kwargs title=None, exits=False):
     """
     Print formatted message. Each positional argument is rendered as newline-
     separated paragraph. An optional highlighted title is printed above the text
     (using ANSI escape sequences manually to avoid unnecessary dependency).
     """
+    exits = kwargs.get('exits', False)
+    title = kwargs.get('title', None)
     title = '\033[93m{}\033[0m\n'.format(_wrap(title)) if title else ''
     message = '\n\n'.join([_wrap(text) for text in texts])
     print('\n{}{}\n'.format(title, message))
