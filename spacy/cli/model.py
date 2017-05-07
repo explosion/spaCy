@@ -4,21 +4,25 @@ from __future__ import unicode_literals
 import gzip
 import math
 from ast import literal_eval
-from pathlib import Path
 from preshed.counter import PreshCounter
 
 from ..vocab import write_binary_vectors
-from ..compat import fix_text
+from ..compat import fix_text, path2str
+from ..util import prints
 from .. import util
 
 
 def model(lang, model_dir, freqs_data, clusters_data, vectors_data):
-    model_path = Path(model_dir)
-    freqs_path = Path(freqs_data)
-    clusters_path = Path(clusters_data) if clusters_data else None
-    vectors_path = Path(vectors_data) if vectors_data else None
-
-    check_dirs(freqs_path, clusters_path, vectors_path)
+    model_path = util.ensure_path(model_dir)
+    freqs_path = util.ensure_path(freqs_data)
+    clusters_path = util.ensure_path(clusters_data)
+    vectors_path = util.ensure_path(vectors_data)
+    if not freqs_path.is_file():
+        prints(freqs_path, title="No frequencies file found", exits=True)
+    if clusters_path and not clusters_path.is_file():
+        prints(clusters_path, title="No Brown clusters file found", exits=True)
+    if vectors_path and not vectors_path.is_file():
+        prints(vectors_path, title="No word vectors file found", exits=True)
     vocab = util.get_lang_class(lang).Defaults.create_vocab()
     probs, oov_prob = read_probs(freqs_path)
     clusters = read_clusters(clusters_path) if clusters_path else {}
@@ -36,14 +40,14 @@ def create_model(model_path, vectors_path, vocab, oov_prob):
         model_path.mkdir()
     if not vocab_path.exists():
         vocab_path.mkdir()
-    vocab.dump(lexemes_path.as_posix())
+    vocab.dump(path2str(lexemes_path))
     with strings_path.open('w') as f:
         vocab.strings.dump(f)
     with oov_path.open('w') as f:
         f.write('%f' % oov_prob)
     if vectors_path:
         vectors_dest = vocab_path / 'vec.bin'
-        write_binary_vectors(vectors_path.as_posix(), vectors_dest.as_posix())
+        write_binary_vectors(path2str(vectors_path), path2str(vectors_dest))
 
 
 def read_probs(freqs_path, max_length=100, min_doc_freq=5, min_freq=200):
@@ -115,17 +119,8 @@ def populate_vocab(vocab, clusters, probs, oov_prob):
 
 
 def check_unzip(file_path):
-    file_path_str = file_path.as_posix()
+    file_path_str = path2str(file_path)
     if file_path_str.endswith('gz'):
         return gzip.open(file_path_str)
     else:
         return file_path.open()
-
-
-def check_dirs(freqs_data, clusters_data, vectors_data):
-    if not freqs_data.is_file():
-        util.sys_exit(freqs_data.as_posix(), title="No frequencies file found")
-    if clusters_data and not clusters_data.is_file():
-        util.sys_exit(clusters_data.as_posix(), title="No Brown clusters file found")
-    if vectors_data and not vectors_data.is_file():
-        util.sys_exit(vectors_data.as_posix(), title="No word vectors file found")

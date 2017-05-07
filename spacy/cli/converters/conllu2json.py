@@ -1,9 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import json
-from ...compat import json_dumps
-from ... import util
+from ...compat import json_dumps, path2str
+from ...util import prints
 
 
 def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
@@ -32,8 +31,8 @@ def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
     output_file = output_path / output_filename
     with output_file.open('w', encoding='utf-8') as f:
         f.write(json_dumps(docs))
-    util.print_msg("Created {} documents".format(len(docs)),
-                   title="Generated output file {}".format(output_file))
+    prints("Created %d documents" % len(docs),
+           title="Generated output file %s" % path2str(output_file))
 
 
 def read_conllx(input_path, use_morphology=False, n=0):

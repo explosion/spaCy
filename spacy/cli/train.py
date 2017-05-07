@@ -4,19 +4,24 @@ from __future__ import unicode_literals, division, print_function
 import json
 from collections import defaultdict
 
-from ..util import ensure_path
 from ..scorer import Scorer
 from ..gold import GoldParse, merge_sents
 from ..gold import read_json_file as read_gold_json
+from ..util import prints
 from .. import util
 
 
 def train(language, output_dir, train_data, dev_data, n_iter, tagger, parser, ner,
           parser_L1):
-    output_path = ensure_path(output_dir)
-    train_path = ensure_path(train_data)
-    dev_path = ensure_path(dev_data)
-    check_dirs(output_path, train_path, dev_path)
+    output_path = util.ensure_path(output_dir)
+    train_path = util.ensure_path(train_data)
+    dev_path = util.ensure_path(dev_data)
+    if not output_path.exists():
+        prints(output_path, title="Output directory not found", exits=True)
+    if not train_path.exists():
+        prints(train_path, title="Training data not found", exits=True)
+    if dev_path and not dev_path.exists():
+        prints(dev_path, title="Development data not found", exits=True)
 
     lang = util.get_lang_class(language)
     parser_cfg = {
@@ -44,14 +49,13 @@ def train(language, output_dir, train_data, dev_data, n_iter, tagger, parser, ne
 
 
 def train_config(config):
-    config_path = ensure_path(config)
+    config_path = util.ensure_path(config)
     if not config_path.is_file():
-        util.sys_exit(config_path.as_posix(), title="Config file not found")
+        prints(config_path, title="Config file not found", exits=True)
     config = json.load(config_path)
     for setting in []:
         if setting not in config.keys():
-            util.sys_exit("{s} not found in config file.".format(s=setting),
-                          title="Missing setting")
+            prints("%s not found in config file." % setting, title="Missing setting")
 
 
 def train_model(Language, train_data, dev_data, output_path, tagger_cfg, parser_cfg,
@@ -88,16 +92,8 @@ def evaluate(Language, gold_tuples, output_path):
     return scorer
 
 
-def check_dirs(output_path, train_path, dev_path):
-    if not output_path.exists():
-        util.sys_exit(output_path.as_posix(), title="Output directory not found")
-    if not train_path.exists():
-        util.sys_exit(train_path.as_posix(), title="Training data not found")
-    if dev_path and not dev_path.exists():
-        util.sys_exit(dev_path.as_posix(), title="Development data not found")
-
-
 def print_progress(itn, nr_weight, nr_active_feat, **scores):
+    # TODO: Fix!
     tpl = '{:d}\t{:d}\t{:d}\t{uas:.3f}\t{ents_f:.3f}\t{tags_acc:.3f}\t{token_acc:.3f}'
     print(tpl.format(itn, nr_weight, nr_active_feat, **scores))
 

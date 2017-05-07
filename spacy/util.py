@@ -9,7 +9,7 @@ from pathlib import Path
 import sys
 import textwrap
 
-from .compat import basestring_, unicode_, input_
+from .compat import path2str, basestring_, input_
 
 
 LANGUAGES = {}
@@ -151,95 +151,66 @@ def parse_package_meta(package_path, package, require=True):
 def get_raw_input(description, default=False):
     """
     Get user input via raw_input / input and return input value. Takes a
-    description for the prompt, and an optional default value that's displayed
-    with the prompt.
+    description, and an optional default value to display with the prompt.
     """
-    additional = ' (default: {d})'.format(d=default) if default else ''
-    prompt = '    {d}{a}: '.format(d=description, a=additional)
+    additional = ' (default: %s)' % default if default else ''
+    prompt = '    %s%s: ' % (description, additional)
     user_input = input_(prompt)
     return user_input
 
 
-def print_table(data, **kwargs):
+def print_table(data, title=None):
     """
     Print data in table format. Can either take a list of tuples or a
     dictionary, which will be converted to a list of tuples.
     """
     if type(data) == dict:
         data = list(data.items())
-
-    tpl_msg = '\n{msg}\n'
-    tpl_title = '\n    \033[93m{msg}\033[0m'
-    tpl_row ="    {:<15}" * len(data[0])
+    tpl_row = '    {:<15}' * len(data[0])
     table = '\n'.join([tpl_row.format(l, v) for l, v in data])
-
-    if 'title' in kwargs and kwargs['title']:
-        print(tpl_title.format(msg=kwargs['title']))
-
-    print(tpl_msg.format(msg=table))
+    if title:
+        print('\n    \033[93m{}\033[0m'.format(title))
+    print('\n{}\n'.format(table))
 
 
-def print_markdown(data, **kwargs):
+def print_markdown(data, title=None):
     """
     Print listed data in GitHub-flavoured Markdown format so it can be
-    copy-pasted into issues. Can either take a list of tuples or a dictionary,
-    which will be converted to a list of tuples.
+    copy-pasted into issues. Can either take a list of tuples or a dictionary.
     """
     def excl_value(value):
-        # don't print value if it contains absolute path of directory (i.e.
-        # personal info). Other conditions can be included here if necessary.
-        if unicode_(Path(__file__).parent) in value:
-            return True
+        return Path(value).exists() # contains path (personal info)
 
     if type(data) == dict:
         data = list(data.items())
-
-    tpl_msg = "\n{msg}\n"
-    tpl_title = "\n## {msg}"
-    tpl_row = "* **{l}:** {v}"
-    markdown = '\n'.join([tpl_row.format(l=l, v=v) for l, v in data if not excl_value(v)])
-
-    if 'title' in kwargs and kwargs['title']:
-        print(tpl_title.format(msg=kwargs['title']))
-    print(tpl_msg.format(msg=markdown))
+    markdown = ["* **{}:** {}".format(l, v) for l, v in data if not excl_value(v)]
+    if title:
+        print("\n## {}".format(title))
+    print('\n{}\n'.format('\n'.join(markdown)))
 
 
-def print_msg(*text, **kwargs):
+def prints(*texts, title=None, exits=False):
     """
     Print formatted message. Each positional argument is rendered as newline-
-    separated paragraph. If kwarg 'title' exist, title is printed above the text
-    and highlighted (using ANSI escape sequences manually to avoid unnecessary
-    dependency).
+    separated paragraph. An optional highlighted title is printed above the text
+    (using ANSI escape sequences manually to avoid unnecessary dependency).
     """
-    message = '\n\n'.join([_wrap_text(t) for t in text])
-    tpl_msg = '\n{msg}\n'
-    tpl_title = '\n\033[93m{msg}\033[0m'
-
-    if 'title' in kwargs and kwargs['title']:
-        title = _wrap_text(kwargs['title'])
-        print(tpl_title.format(msg=title))
-    print(tpl_msg.format(msg=message))
+    title = '\033[93m{}\033[0m\n'.format(_wrap(title)) if title else ''
+    message = '\n\n'.join([_wrap(text) for text in texts])
+    print('\n{}{}\n'.format(title, message))
+    if exits:
+        sys.exit(0)
 
 
-def _wrap_text(text):
+def _wrap(text, wrap_max=80, indent=4):
     """
     Wrap text at given width using textwrap module. Indent should consist of
     spaces. Its length is deducted from wrap width to ensure exact wrapping.
     """
-    wrap_max = 80
-    indent = '    '
+    indent = indent * ' '
     wrap_width = wrap_max - len(indent)
+    if isinstance(text, Path):
+        text = path2str(text)
     return textwrap.fill(text, width=wrap_width, initial_indent=indent,
-                               subsequent_indent=indent, break_long_words=False,
-                               break_on_hyphens=False)
-
-
-def sys_exit(*messages, **kwargs):
-    """
-    Performs SystemExit. For modules used from the command line, like
-    download and link. To print message, use the same arguments as for
-    print_msg().
-    """
-    if messages:
-        print_msg(*messages, **kwargs)
-    sys.exit(0)
+                         subsequent_indent=indent, break_long_words=False,
+                         break_on_hyphens=False)

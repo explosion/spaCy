@@ -5,6 +5,8 @@ from pathlib import Path
 
 from . import about
 from . import util
+from .util import prints
+from .compat import path2str
 from .cli import download
 from .cli import link
 
@@ -114,9 +116,9 @@ def resolve_model_name(name):
     """
     if name == 'en' or name == 'de':
         versions = ['1.0.0', '1.1.0']
-        data_path = Path(util.get_data_path())
+        data_path = util.get_data_path()
         model_path = data_path / name
-        v_model_paths = [data_path / Path(name + '-' + v) for v in versions]
+        v_model_paths = [data_path / '%s-%s' % (name, v) for v in versions]
 
         if not model_path.exists(): # no shortcut found
             for v_path in v_model_paths:
@@ -126,10 +128,10 @@ def resolve_model_name(name):
                         return name
                     else:
                         raise ValueError(
-                            "Found English model at {p}. This model is not "
+                            "Found English model at %s. This model is not "
                             "compatible with the current version. See "
                             "https://spacy.io/docs/usage/models to download the "
-                            "new model.".format(p=v_path))
+                            "new model." % path2str(v_path))
     return name
 
 
@@ -142,12 +144,11 @@ class ModelDownload():
 
     @classmethod
     def load(self, lang):
-        util.print_msg(
-            "The spacy.{l}.download command is now deprecated. Please use "
-            "python -m spacy download [model name or shortcut] instead. For more "
-            "info and available models, see the documentation: {d}. "
-            "Downloading default '{l}' model now...".format(d=about.__docs__, l=lang),
-            title="Warning: deprecated command")
+        prints("The spacy.%s.download command is now deprecated. Please use "
+               "python -m spacy download [model name or shortcut] instead. For "
+               "more info, see the docs: %s." % (lang, about.__docs__),
+               "Downloading default '%s' model now..." % lang,
+               title="Warning: deprecated command")
         download(lang)
 
     @classmethod

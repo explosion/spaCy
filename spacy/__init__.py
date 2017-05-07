@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from . import util
+from .util import prints
 from .deprecated import resolve_model_name
 from .cli.info import info
 from .glossary import explain
@@ -26,9 +27,8 @@ def load(name, **overrides):
         if not model_path.exists():
             lang_name = util.get_lang_class(name).lang
             model_path = None
-            util.print_msg(
-                "Only loading the '{}' tokenizer.".format(lang_name),
-                title="Warning: no model found for '{}'".format(name))
+            prints("Only loading the '%s' tokenizer." % lang_name,
+                   title="Warning: no model found for '%s'" % name)
     else:
         model_path = util.ensure_path(overrides['path'])
         data_path = model_path.parent
