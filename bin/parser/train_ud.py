@@ -82,6 +82,7 @@ def organize_data(vocab, train_sents):
 def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
     LangClass = spacy.util.get_lang_class(lang_name)
     train_sents = list(read_conllx(train_loc))
+    dev_sents = list(read_conllx(dev_loc))
     train_sents = PseudoProjectivity.preprocess_training_data(train_sents)
 
     actions = ArcEager.get_actions(gold_parses=train_sents)
@@ -136,6 +137,7 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
     parser = DependencyParser(vocab, actions=actions, features=features, L1=0.0)
 
     Xs, ys = organize_data(vocab, train_sents)
+    dev_Xs, dev_ys = organize_data(vocab, dev_sents)
     Xs = Xs[:100]
     ys = ys[:100]
     with encoder.model.begin_training(Xs[:100], ys[:100]) as (trainer, optimizer):
@@ -145,13 +147,13 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
         parser.begin_training(docs, ys)
         nn_loss = [0.]
         def track_progress():
-            scorer = score_model(vocab, encoder, tagger, parser, Xs, ys)
+            scorer = score_model(vocab, encoder, tagger, parser, dev_Xs, dev_ys)
             itn = len(nn_loss)
             print('%d:\t%.3f\t%.3f\t%.3f' % (itn, nn_loss[-1], scorer.uas, scorer.tags_acc))
             nn_loss.append(0.)
         trainer.each_epoch.append(track_progress)
-        trainer.batch_size = 6
-        trainer.nb_epoch = 10000
+        trainer.batch_size = 12
+        trainer.nb_epoch = 2
         for docs, golds in trainer.iterate(Xs, ys, progress_bar=False):
             docs = [Doc(vocab, words=[w.text for w in doc]) for doc in docs]
             tokvecs, upd_tokvecs = encoder.begin_update(docs)
@@ -163,10 +165,20 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
             upd_tokvecs(d_tokvecs, sgd=optimizer)
             nn_loss[-1] += loss
     nlp = LangClass(vocab=vocab, tagger=tagger, parser=parser)
-    nlp.end_training(model_dir)
-    scorer = score_model(vocab, tagger, parser, read_conllx(dev_loc))
-    print('%d:\t%.3f\t%.3f\t%.3f' % (itn, scorer.uas, scorer.las, scorer.tags_acc))
+    #nlp.end_training(model_dir)
+    #scorer = score_model(vocab, tagger, parser, read_conllx(dev_loc))
+    #print('%d:\t%.3f\t%.3f\t%.3f' % (itn, scorer.uas, scorer.las, scorer.tags_acc))
 
 
 if __name__ == '__main__':
+    import cProfile
+    import pstats
+    if 0:
+        plac.call(main)
+    else:
+        cProfile.runctx("plac.call(main)", globals(), locals(), "Profile.prof")
+    s = pstats.Stats("Profile.prof")
+    s.strip_dirs().sort_stats("time").print_stats()
+
+ 
     plac.call(main)
