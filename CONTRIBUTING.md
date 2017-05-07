@@ -43,6 +43,7 @@ To distinguish issues that are opened by us, the maintainers, we usually add a �
 | [`models`](https://github.com/explosion/spaCy/labels/models), `language / [name]` | Issues related to the specific [models](https://github.com/explosion/spacy-models), languages and data |
 | [`linux`](https://github.com/explosion/spaCy/labels/linux), [`osx`](https://github.com/explosion/spaCy/labels/osx), [`windows`](https://github.com/explosion/spaCy/labels/windows) | Issues related to the specific operating systems |
 | [`pip`](https://github.com/explosion/spaCy/labels/pip), [`conda`](https://github.com/explosion/spaCy/labels/conda) | Issues related to the specific package managers |
+| [`wip`](https://github.com/explosion/spaCy/labels/wip) | Work in progress |
 | [`duplicate`](https://github.com/explosion/spaCy/labels/duplicate) | Duplicates, i.e. issues that have been reported before |
 | [`meta`](https://github.com/explosion/spaCy/labels/meta) | Meta topics, e.g. repo organisation and issue management |
 | [`help wanted`](https://github.com/explosion/spaCy/labels/help%20wanted), [`help wanted (easy)`](https://github.com/explosion/spaCy/labels/help%20wanted%20%28easy%29) | Requests for contributions |
@@ -75,7 +76,7 @@ example_user would create the file `.github/contributors/example_user.md`.
 
 ### Fixing bugs
 
-When fixing a bug, first create an [issue](https://github.com/explosion/spaCy/issues) if one does not already exist. The description text can be very short – we don't want to make this too bureaucratic. 
+When fixing a bug, first create an [issue](https://github.com/explosion/spaCy/issues) if one does not already exist. The description text can be very short – we don't want to make this too bureaucratic.
 
 Next, create a test file named `test_issue[ISSUE NUMBER].py` in the [`spacy/tests/regression`](spacy/tests/regression) folder. Test for the bug you're fixing, and make sure the test fails. Next, add and commit your test file referencing the issue number in the commit message. Finally, fix the bug, make sure your test passes and reference the issue in your commit message.
 
@@ -177,7 +178,7 @@ harp server
 
 The docs can always use another example or more detail, and they should always be up to date and not misleading. To quickly find the correct file to edit, simply click on the "Suggest edits" button at the bottom of a page.
 
-To make it easy to add content components, we use a [collection of custom mixins](_includes/_mixins.jade), like `+table`, `+list` or `+code`. 
+To make it easy to add content components, we use a [collection of custom mixins](_includes/_mixins.jade), like `+table`, `+list` or `+code`.
 
 📖 **For more info and troubleshooting guides, check out the [website README](website).**
 
