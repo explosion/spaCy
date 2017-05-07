@@ -32,6 +32,7 @@ if is_python2:
     basestring_ = basestring
     input_ = raw_input
     json_dumps = lambda data: ujson.dumps(data, indent=2).decode('utf8')
+    path2str = lambda path: str(path).decode('utf8')
 
 elif is_python3:
     bytes_ = bytes
@@ -39,12 +40,13 @@ elif is_python3:
     basestring_ = str
     input_ = input
     json_dumps = lambda data: ujson.dumps(data, indent=2)
+    path2str = lambda path: str(path)
 
 
 def symlink_to(orig, dest):
     if is_python2 and is_windows:
         import subprocess
-        subprocess.call(['mklink', '/d', unicode(orig), unicode(dest)], shell=True)
+        subprocess.call(['mklink', '/d', path2str(orig), path2str(dest)], shell=True)
     else:
         orig.symlink_to(dest)
 
