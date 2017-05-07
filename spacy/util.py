@@ -2,6 +2,8 @@
 from __future__ import unicode_literals, print_function
 
 import ujson
+import pip
+import importlib
 import regex as re
 from pathlib import Path
 import sys
@@ -104,6 +106,29 @@ def check_renamed_kwargs(renamed, kwargs):
 def read_json(location):
     with location.open('r', encoding='utf8') as f:
         return ujson.load(f)
+
+
+def is_package(origin):
+    """
+    Check if string maps to a package installed via pip.
+    """
+    packages = pip.get_installed_distributions()
+    for package in packages:
+        if package.project_name.replace('-', '_') == origin:
+            return True
+    return False
+
+
+
+def get_model_package_path(package_name):
+    # Here we're importing the module just to find it. This is worryingly
+    # indirect, but it's otherwise very difficult to find the package.
+    # Python's installation and import rules are very complicated.
+    pkg = importlib.import_module(package_name)
+    package_path = Path(pkg.__file__).parent.parent
+    meta = parse_package_meta(package_path, package_name)
+    model_name = '%s-%s' % (package_name, meta['version'])
+    return package_path / package_name / model_name
 
 
 def parse_package_meta(package_path, package, require=True):
