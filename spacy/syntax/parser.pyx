@@ -132,7 +132,7 @@ cdef class Parser:
         """
         self.parse_batch([tokens])
         self.moves.finalize_doc(tokens)
-    
+
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
         """
         Process a stream of documents.
@@ -175,6 +175,7 @@ cdef class Parser:
         tokvecs = [d.tensor for d in docs]
         all_states = list(states)
         todo = zip(states, tokvecs)
+        i = 0
         while todo:
             states, tokvecs = zip(*todo)
             scores, _ = self._begin_update(states, tokvecs)
@@ -182,6 +183,9 @@ cdef class Parser:
                 action = self.moves.c[guess]
                 action.do(state.c, action.label)
             todo = filter(lambda sp: not sp[0].py_is_final(), todo)
+            i += 1
+            if i >= 10000:
+                break
         for state, doc in zip(all_states, docs):
             self.moves.finalize_state(state.c)
             for i in range(doc.length):
@@ -218,6 +222,7 @@ cdef class Parser:
         todo = zip(states, tokvecs, golds, d_tokens)
         assert len(states) == len(todo)
         losses = []
+        i = 0
         while todo:
             states, tokvecs, golds, d_tokens = zip(*todo)
             scores, finish_update = self._begin_update(states, tokvecs)
@@ -232,6 +237,9 @@ cdef class Parser:
 
             # Get unfinished states (and their matching gold and token gradients)
             todo = filter(lambda sp: not sp[0].py_is_final(), todo)
+            i += 1
+            if i >= 10000:
+                break
         return output, sum(losses)
 
     def _begin_update(self, states, tokvecs, drop=0.):
@@ -284,7 +292,7 @@ cdef class Parser:
             state.set_attributes(features[i], tokens[i], attr_names)
             state.set_token_vectors(tokvecs[i], all_tokvecs[i], tokens[i])
         return (tokens, features, tokvecs)
- 
+
     def _validate_batch(self, int[:, ::1] is_valid, states):
         cdef StateClass state
         cdef int i

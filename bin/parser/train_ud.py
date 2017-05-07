@@ -16,6 +16,15 @@ from spacy.scorer import Scorer
 from spacy.language_data.tag_map import TAG_MAP as DEFAULT_TAG_MAP
 import spacy.attrs
 import io
+from thinc.neural.ops import CupyOps
+from thinc.neural import Model
+
+try:
+    import cupy
+    print("Using GPU")
+    Model.ops = CupyOps()
+except ImportError:
+    pass
 
 
 def read_conllx(loc, n=0):
@@ -137,10 +146,10 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
 
     Xs, ys = organize_data(vocab, train_sents)
     dev_Xs, dev_ys = organize_data(vocab, dev_sents)
-    Xs = Xs[:500]
-    ys = ys[:500]
-    dev_Xs = dev_Xs[:100]
-    dev_ys = dev_ys[:100]
+    Xs = Xs
+    ys = ys
+    dev_Xs = dev_Xs[:1000]
+    dev_ys = dev_ys[:1000]
     with encoder.model.begin_training(Xs[:100], ys[:100]) as (trainer, optimizer):
         docs = list(Xs)
         for doc in docs:
@@ -154,9 +163,9 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
             print('%d:\t%.3f\t%.3f\t%.3f' % (itn, nn_loss[-1], scorer.uas, scorer.tags_acc))
             nn_loss.append(0.)
         trainer.each_epoch.append(track_progress)
-        trainer.batch_size = 6
-        trainer.nb_epoch = 10000
-        for docs, golds in trainer.iterate(Xs, ys, progress_bar=False):
+        trainer.batch_size = 12
+        trainer.nb_epoch = 10
+        for docs, golds in trainer.iterate(Xs, ys):
             docs = [Doc(vocab, words=[w.text for w in doc]) for doc in docs]
             tokvecs, upd_tokvecs = encoder.begin_update(docs)
             for doc, tokvec in zip(docs, tokvecs):
@@ -165,7 +174,7 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
                 tagger.update(doc, gold)
             d_tokvecs, loss = parser.update(docs, golds, sgd=optimizer)
             upd_tokvecs(d_tokvecs, sgd=optimizer)
-            encoder.update(docs, golds, optimizer)
+            encoder.update(docs, golds, sgd=optimizer)
             nn_loss[-1] += loss
     nlp = LangClass(vocab=vocab, tagger=tagger, parser=parser)
     nlp.end_training(model_dir)
