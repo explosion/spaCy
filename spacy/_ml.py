@@ -1,5 +1,5 @@
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
-from thinc.neural import Model, Maxout, Softmax, Affine
+from thinc.neural import Model, ReLu, Maxout, Softmax, Affine
 from thinc.neural._classes.hash_embed import HashEmbed
 
 from thinc.neural._classes.convolution import ExtractWindow
@@ -37,6 +37,7 @@ def build_debug_model(state2vec, width, depth, nr_class):
     with Model.define_operators({'>>': chain, '**': clone}):
         model = (
             state2vec
+            #>> Maxout(width)
             >> Maxout(nr_class)
         )
     return model
@@ -64,8 +65,9 @@ def build_debug_state2vec(width, nr_vector=1000, nF=1, nB=0, nS=1, nL=2, nR=2):
 def build_state2vec(nr_context_tokens, width, nr_vector=1000):
     ops = Model.ops
     with Model.define_operators({'|': concatenate, '+': add, '>>': chain}):
-        hiddens = [get_col(i) >> Maxout(width) for i in range(nr_context_tokens)]
-        model = get_token_vectors >> add(*hiddens)
+        #hiddens = [get_col(i) >> Maxout(width) for i in range(nr_context_tokens)]
+        features = [get_col(i) for i in range(nr_context_tokens)]
+        model = get_token_vectors >> concatenate(*features) >> ReLu(width)
     return model
 
 
