@@ -51,47 +51,6 @@ def doc2feats(cols):
     model = layerize(forward)
     return model
 
-
-def build_feature_precomputer(model, feat_maps):
-    '''Allow a model to be "primed" by pre-computing input features in bulk.
-
-    This is used for the parser, where we want to take a batch of documents,
-    and compute vectors for each (token, position) pair. These vectors can then
-    be reused, especially for beam-search.
-
-    Let's say we're using 12 features for each state, e.g. word at start of
-    buffer, three words on stack, their children, etc. In the normal arc-eager
-    system, a document of length N is processed in 2*N states. This means we'll
-    create 2*N*12 feature vectors --- but if we pre-compute, we only need
-    N*12 vector computations. The saving for beam-search is much better:
-    if we have a beam of k, we'll normally make 2*N*12*K computations -- 
-    so we can save the factor k. This also gives a nice CPU/GPU division:
-    we can do all our hard maths up front, packed into large multiplications,
-    and do the hard-to-program parsing on the CPU.
-    '''
-    def precompute(input_vectors):
-        cached, backprops = zip(*[lyr.begin_update(input_vectors)
-                                for lyr in feat_maps)
-        def forward(batch_token_ids, drop=0.):
-            output = ops.allocate((batch_size, output_width))
-            # i: batch index
-            # j: position index (i.e. N0, S0, etc
-            # tok_i: Index of the token within its document
-            for i, token_ids in enumerate(batch_token_ids):
-                for j, tok_i in enumerate(token_ids):
-                    output[i] += cached[j][tok_i]
-            def backward(d_vector, sgd=None):
-                d_inputs = ops.allocate((batch_size, n_feat, vec_width))
-                for i, token_ids in enumerate(batch_token_ids):
-                    for j in range(len(token_ids)):
-                        d_inputs[i][j] = backprops[j](d_vector, sgd)
-                # Return the IDs, so caller can associate to correct token
-                return (batch_token_ids, d_inputs)
-            return vector, backward
-        return chain(layerize(forward), model)
-    return precompute
-
-
 def print_shape(prefix):
     def forward(X, drop=0.):
         return X, lambda dX, **kwargs: dX
@@ -114,3 +73,47 @@ def flatten(seqs, drop=0.):
         return d_X
     X = ops.xp.concatenate([ops.asarray(seq) for seq in seqs])
     return X, finish_update
+
+
+
+#def build_feature_precomputer(model, feat_maps):
+#    '''Allow a model to be "primed" by pre-computing input features in bulk.
+#
+#    This is used for the parser, where we want to take a batch of documents,
+#    and compute vectors for each (token, position) pair. These vectors can then
+#    be reused, especially for beam-search.
+#
+#    Let's say we're using 12 features for each state, e.g. word at start of
+#    buffer, three words on stack, their children, etc. In the normal arc-eager
+#    system, a document of length N is processed in 2*N states. This means we'll
+#    create 2*N*12 feature vectors --- but if we pre-compute, we only need
+#    N*12 vector computations. The saving for beam-search is much better:
+#    if we have a beam of k, we'll normally make 2*N*12*K computations -- 
+#    so we can save the factor k. This also gives a nice CPU/GPU division:
+#    we can do all our hard maths up front, packed into large multiplications,
+#    and do the hard-to-program parsing on the CPU.
+#    '''
+#    def precompute(input_vectors):
+#        cached, backprops = zip(*[lyr.begin_update(input_vectors)
+#                                for lyr in feat_maps)
+#        def forward(batch_token_ids, drop=0.):
+#            output = ops.allocate((batch_size, output_width))
+#            # i: batch index
+#            # j: position index (i.e. N0, S0, etc
+#            # tok_i: Index of the token within its document
+#            for i, token_ids in enumerate(batch_token_ids):
+#                for j, tok_i in enumerate(token_ids):
+#                    output[i] += cached[j][tok_i]
+#            def backward(d_vector, sgd=None):
+#                d_inputs = ops.allocate((batch_size, n_feat, vec_width))
+#                for i, token_ids in enumerate(batch_token_ids):
+#                    for j in range(len(token_ids)):
+#                        d_inputs[i][j] = backprops[j](d_vector, sgd)
+#                # Return the IDs, so caller can associate to correct token
+#                return (batch_token_ids, d_inputs)
+#            return vector, backward
+#        return chain(layerize(forward), model)
+#    return precompute
+#
+#
+

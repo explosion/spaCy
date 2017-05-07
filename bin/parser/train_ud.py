@@ -144,7 +144,6 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
         docs = list(Xs)
         for doc in docs:
             encoder(doc)
-        parser.begin_training(docs, ys)
         nn_loss = [0.]
         def track_progress():
             scorer = score_model(vocab, encoder, tagger, parser, dev_Xs, dev_ys)
@@ -153,7 +152,7 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
             nn_loss.append(0.)
         trainer.each_epoch.append(track_progress)
         trainer.batch_size = 12
-        trainer.nb_epoch = 2
+        trainer.nb_epoch = 20
         for docs, golds in trainer.iterate(Xs, ys, progress_bar=False):
             docs = [Doc(vocab, words=[w.text for w in doc]) for doc in docs]
             tokvecs, upd_tokvecs = encoder.begin_update(docs)
@@ -161,9 +160,9 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
                 doc.tensor = tokvec
             for doc, gold in zip(docs, golds):
                 tagger.update(doc, gold)
-            d_tokvecs, loss = parser.update(docs, golds, sgd=optimizer)
+            d_tokvecs = parser.update(docs, golds, sgd=optimizer)
             upd_tokvecs(d_tokvecs, sgd=optimizer)
-            nn_loss[-1] += loss
+            #nn_loss[-1] += loss
     nlp = LangClass(vocab=vocab, tagger=tagger, parser=parser)
     #nlp.end_training(model_dir)
     #scorer = score_model(vocab, tagger, parser, read_conllx(dev_loc))
@@ -173,7 +172,7 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
 if __name__ == '__main__':
     import cProfile
     import pstats
-    if 0:
+    if 1:
         plac.call(main)
     else:
         cProfile.runctx("plac.call(main)", globals(), locals(), "Profile.prof")
