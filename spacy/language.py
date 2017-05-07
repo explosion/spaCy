@@ -2,7 +2,6 @@
 from __future__ import absolute_import, unicode_literals
 from contextlib import contextmanager
 import shutil
-import ujson
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -15,7 +14,7 @@ from .syntax.nonproj import PseudoProjectivity
 from .pipeline import DependencyParser, EntityRecognizer
 from .syntax.arc_eager import ArcEager
 from .syntax.ner import BiluoPushDown
-from .compat import unicode_
+from .compat import json_dumps
 from .attrs import IS_STOP
 from . import attrs
 from . import orth
@@ -188,15 +187,16 @@ class Language(object):
 
     @classmethod
     def setup_directory(cls, path, **configs):
+        """
+        Initialise a model directory.
+        """
         for name, config in configs.items():
             directory = path / name
             if directory.exists():
                 shutil.rmtree(str(directory))
             directory.mkdir()
-            with (directory / 'config.json').open('wb') as file_:
-                data = ujson.dumps(config, indent=2)
-                if isinstance(data, unicode_):
-                    data = data.encode('utf8')
+            with (directory / 'config.json').open('w') as file_:
+                data = json_dumps(config)
                 file_.write(data)
         if not (path / 'vocab').exists():
             (path / 'vocab').mkdir()
@@ -242,6 +242,15 @@ class Language(object):
         self.save_to_directory(path)
 
     def __init__(self, **overrides):
+        """
+        Create or load the pipeline.
+
+        Arguments:
+            **overrides: Keyword arguments indicating which defaults to override.
+
+        Returns:
+            Language: The newly constructed object.
+        """
         if 'data_dir' in overrides and 'path' not in overrides:
             raise ValueError("The argument 'data_dir' has been renamed to 'path'")
         path = util.ensure_path(overrides.get('path', True))
@@ -295,7 +304,7 @@ class Language(object):
         and can contain arbtrary whitespace.  Alignment into the original string
         is preserved.
 
-        Args:
+        Argsuments:
             text (unicode): The text to be processed.
 
         Returns:
@@ -344,12 +353,21 @@ class Language(object):
             yield doc
 
     def save_to_directory(self, path):
+        """
+        Save the Vocab, StringStore and pipeline to a directory.
+
+        Arguments:
+            path (string or pathlib path): Path to save the model.
+        """
         configs = {
             'pos': self.tagger.cfg if self.tagger else {},
             'deps': self.parser.cfg if self.parser else {},
             'ner': self.entity.cfg if self.entity else {},
         }
 
+        path = util.ensure_path(path)
+        if not path.exists():
+            path.mkdir()
         self.setup_directory(path, **configs)
 
         strings_loc = path / 'vocab' / 'strings.json'

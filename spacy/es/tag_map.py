@@ -304,4 +304,5 @@ TAG_MAP = {
     "VERB__VerbForm=Ger": {"morph": "VerbForm=Ger", "pos": "VERB"},
     "VERB__VerbForm=Inf": {"morph": "VerbForm=Inf", "pos": "VERB"},
     "X___": {"morph": "_", "pos": "X"},
+    "SP": {"morph": "_", "pos": "SPACE"}
 }

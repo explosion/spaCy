@@ -11,6 +11,8 @@ import ujson
 cimport cython
 cimport cython.parallel
 
+import numpy.random
+
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals
 from libc.stdint cimport uint32_t, uint64_t
@@ -146,7 +148,7 @@ cdef class Parser:
         if 'labels' in cfg and 'actions' not in cfg:
             cfg['actions'] = cfg.pop('labels')
         # TODO: remove this shim when we don't have to support older data
-        for action_name, labels in dict(cfg['actions']).items():
+        for action_name, labels in dict(cfg.get('actions', {})).items():
             # We need this to be sorted
             if isinstance(labels, dict):
                 labels = list(sorted(labels.keys()))
@@ -174,13 +176,14 @@ cdef class Parser:
         if TransitionSystem is None:
             TransitionSystem = self.TransitionSystem
         self.vocab = vocab
-        actions = TransitionSystem.get_actions(**cfg)
-        self.moves = TransitionSystem(vocab.strings, actions)
+        cfg['actions'] = TransitionSystem.get_actions(**cfg)
+        self.moves = TransitionSystem(vocab.strings, cfg['actions'])
         # TODO: Remove this when we no longer need to support old-style models
         if isinstance(cfg.get('features'), basestring):
             cfg['features'] = get_templates(cfg['features'])
         elif 'features' not in cfg:
             cfg['features'] = self.feature_templates
+
         self.model = ParserModel(cfg['features'])
         self.model.l1_penalty = cfg.get('L1', 0.0)
         self.model.learn_rate = cfg.get('learn_rate', 0.001)
@@ -302,7 +305,7 @@ cdef class Parser:
         free(eg.is_valid)
         return 0
 
-    def update(self, Doc tokens, GoldParse gold, itn=0):
+    def update(self, Doc tokens, GoldParse gold, itn=0, double drop=0.0):
         """
         Update the statistical model.
 
@@ -324,9 +327,11 @@ cdef class Parser:
                 nr_feat=self.model.nr_feat)
         cdef weight_t loss = 0
         cdef Transition action
+        cdef double dropout_rate = self.cfg.get('dropout', drop)
         while not stcls.is_final():
             eg.c.nr_feat = self.model.set_featuresC(eg.c.atoms, eg.c.features,
                                                     stcls.c)
+            dropout(eg.c.features, eg.c.nr_feat, dropout_rate)
             self.moves.set_costs(eg.c.is_valid, eg.c.costs, stcls, gold)
             self.model.set_scoresC(eg.c.scores, eg.c.features, eg.c.nr_feat)
             guess = VecVec.arg_max_if_true(eg.c.scores, eg.c.is_valid, eg.c.nr_class)
@@ -375,6 +380,18 @@ cdef class Parser:
                 # Important that the labels be stored as a list! We need the
                 # order, or the model goes out of synch
                 self.cfg.setdefault('extra_labels', []).append(label)
+
+
+cdef int dropout(FeatureC* feats, int nr_feat, float prob) except -1:
+    if prob <= 0 or prob >= 1.:
+        return 0
+    cdef double[::1] py_probs = numpy.random.uniform(0., 1., nr_feat)
+    cdef double* probs = &py_probs[0]
+    for i in range(nr_feat):
+        if probs[i] >= prob:
+            feats[i].value /= prob
+        else:
+            feats[i].value = 0.
 
 
 cdef class StepwiseState:

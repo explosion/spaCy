@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 import json
+from ...compat import json_dumps
 from ... import util
 
 
@@ -29,7 +30,8 @@ def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
 
     output_filename = input_path.parts[-1].replace(".conllu", ".json")
     output_file = output_path / output_filename
-    json.dump(docs, output_file.open('w', encoding='utf-8'), indent=2)
+    with output_file.open('w', encoding='utf-8') as f:
+        f.write(json_dumps(docs))
     util.print_msg("Created {} documents".format(len(docs)),
                    title="Generated output file {}".format(output_file))
 

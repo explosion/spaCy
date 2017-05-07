@@ -256,9 +256,9 @@ def test_fit_model():
     settings = {'lr': 0.001, 'dropout': 0.2, 'gru_encode':True}
     model = build_model(vectors, shape, settings)
 
-    train_X = _generate_X(20, shape[0], vectors.shape[1])
+    train_X = _generate_X(20, shape[0], vectors.shape[0])
     train_Y = _generate_Y(20, shape[2])
-    dev_X = _generate_X(15, shape[0], vectors.shape[1])
+    dev_X = _generate_X(15, shape[0], vectors.shape[0])
     dev_Y = _generate_Y(15, shape[2])
 
     model.fit(train_X, train_Y, validation_data=(dev_X, dev_Y), nb_epoch=5,

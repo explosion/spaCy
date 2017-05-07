@@ -2,7 +2,8 @@ include ../../_includes/_mixins
 
 p
     |  After training your model, you'll usually want to save its state, and load
-    |  it back later. You can do this with the #[code Language.save_to_directory()]
+    |  it back later. You can do this with the
+    |  #[+api("language#save_to_directory") #[code Language.save_to_directory()]]
     |  method:
 
 +code.
@@ -23,7 +24,7 @@ p
     |  there can be a convenient solution to share them with your team.
 
 p
-    |  spaCy comes with a handy  CLI command that will create all required files,
+    |  spaCy comes with a handy CLI command that will create all required files,
     |  and walk you through generating the meta data. You can also create the
     |  meta.json manually and place it in the model data directory, or supply a
     |  path to it using the #[code --meta] flag. For more info on this, see the
@@ -60,7 +61,7 @@ p
     |  #[+a(gh("spacy-dev-resouces", "templates/model")) spaCy dev resources].
     |  If you're creating the package manually, keep in mind that the directories
     |  need to be named according to the naming conventions of
-    |  #[code [language]_[type]] and #[code [language]_[type]-[version]]. The
+    |  #[code [language]_[name]] and #[code [language]_[name]-[version]]. The
     |  #[code lang] setting in the meta.json is also used to create the
     |  respective #[code Language] class in spaCy, which will later be returned
     |  by the model's #[code load()] method.

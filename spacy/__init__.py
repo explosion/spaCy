@@ -3,14 +3,15 @@ from __future__ import unicode_literals
 
 from . import util
 from .deprecated import resolve_model_name
-from .cli import info
+from .cli.info import info
+from .glossary import explain
 
-from . import en, de, zh, es, it, hu, fr, pt, nl, sv, fi, bn, he
+from . import en, de, zh, es, it, hu, fr, pt, nl, sv, fi, bn, he, nb, ja
 
 
 _languages = (en.English, de.German, es.Spanish, pt.Portuguese, fr.French,
              it.Italian, hu.Hungarian, zh.Chinese, nl.Dutch, sv.Swedish,
-             fi.Finnish, bn.Bengali, he.Hebrew)
+             fi.Finnish, bn.Bengali, he.Hebrew, nb.Norwegian, ja.Japanese)
 
 
 for _lang in _languages:

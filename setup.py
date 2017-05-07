@@ -8,51 +8,13 @@ import contextlib
 from distutils.command.build_ext import build_ext
 from distutils.sysconfig import get_python_inc
 from distutils import ccompiler, msvccompiler
-
-try:
-    from setuptools import Extension, setup
-except ImportError:
-    from distutils.core import Extension, setup
+from setuptools import Extension, setup, find_packages
 
 
 PACKAGE_DATA = {'': ['*.pyx', '*.pxd', '*.txt', '*.tokens']}
 
 
-PACKAGES = [
-    'spacy',
-    'spacy.data',
-    'spacy.cli',
-    'spacy.tokens',
-    'spacy.en',
-    'spacy.de',
-    'spacy.zh',
-    'spacy.es',
-    'spacy.fr',
-    'spacy.it',
-    'spacy.hu',
-    'spacy.pt',
-    'spacy.nl',
-    'spacy.sv',
-    'spacy.fi',
-    'spacy.bn',
-    'spacy.he',
-    'spacy.en.lemmatizer',
-    'spacy.cli.converters',
-    'spacy.language_data',
-    'spacy.serialize',
-    'spacy.syntax',
-    'spacy.munge',
-    'spacy.tests',
-    'spacy.tests.matcher',
-    'spacy.tests.parser',
-    'spacy.tests.serialize',
-    'spacy.tests.spans',
-    'spacy.tests.stringstore',
-    'spacy.tests.tagger',
-    'spacy.tests.tokenizer',
-    'spacy.tests.doc',
-    'spacy.tests.vectors',
-    'spacy.tests.vocab']
+PACKAGES = find_packages()
 
 
 MOD_NAMES = [
@@ -105,15 +67,6 @@ LINK_OPTIONS = {
 
 # I don't understand this very well yet. See Issue #267
 # Fingers crossed!
-#if os.environ.get('USE_OPENMP') == '1':
-#    compile_options['msvc'].append('/openmp')
-#
-#
-#if not sys.platform.startswith('darwin'):
-#    compile_options['other'].append('-fopenmp')
-#    link_options['other'].append('-fopenmp')
-#
-
 USE_OPENMP_DEFAULT = '1' if sys.platform != 'darwin' else None
 if os.environ.get('USE_OPENMP', USE_OPENMP_DEFAULT) == '1':
     if sys.platform == 'darwin':
@@ -128,6 +81,7 @@ if os.environ.get('USE_OPENMP', USE_OPENMP_DEFAULT) == '1':
     else:
         COMPILE_OPTIONS['other'].append('-fopenmp')
         LINK_OPTIONS['other'].append('-fopenmp')
+
 
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
@@ -248,7 +202,8 @@ def setup_package():
                 'ujson>=1.35',
                 'dill>=0.2,<0.3',
                 'requests>=2.13.0,<3.0.0',
-                'regex==2017.4.5'],
+                'regex==2017.4.5',
+                'ftfy>=4.4.2,<5.0.0'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',
