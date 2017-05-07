@@ -201,7 +201,7 @@ cdef class Parser:
         costs = self.model.ops.allocate((len(docs), nr_class), dtype='f')
         gradients = self.model.ops.allocate((len(docs), nr_class), dtype='f')
         is_valid = self.model.ops.allocate((len(docs), nr_class), dtype='i')
-        attr_names = self.model.ops.allocate((2,), dtype='i')
+        attr_names = numpy.zeros((2,), dtype='i')
         attr_names[0] = TAG
         attr_names[1] = DEP
 
@@ -228,10 +228,14 @@ cdef class Parser:
             scores, finish_update = self._begin_update(states, tokvecs)
             token_ids, batch_token_grads = finish_update(golds, sgd=sgd, losses=losses,
                                                          force_gold=False)
-            for i, tok_ids in enumerate(token_ids):
-                for j, tok_i in enumerate(tok_ids):
-                    if tok_i >= 0:
-                        d_tokens[i][tok_i] += batch_token_grads[i, j]
+            if hasattr(self.model.ops.xp, 'scatter_add'):
+                for i, tok_ids in enumerate(token_ids):
+                    self.model.ops.xp.scatter_add(d_tokens[i],
+                        tok_ids, batch_token_grads[i])
+            else:
+                for i, tok_ids in enumerate(token_ids):
+                    self.model.ops.xp.add.at(d_tokens[i],
+                        tok_ids, batch_token_grads[i])
 
             self._transition_batch(states, scores)
 
@@ -244,7 +248,7 @@ cdef class Parser:
 
     def _begin_update(self, states, tokvecs, drop=0.):
         nr_class = self.moves.n_moves
-        attr_names = self.model.ops.allocate((2,), dtype='i')
+        attr_names = numpy.zeros((2,), dtype='i')
         attr_names[0] = TAG
         attr_names[1] = DEP
 
@@ -284,28 +288,38 @@ cdef class Parser:
             nF=1, nB=0, nS=2, nL=2, nR=2):
         n_tokens = states[0].nr_context_tokens(nF, nB, nS, nL, nR)
         vector_length = all_tokvecs[0].shape[1]
-        tokens = self.model.ops.allocate((len(states), n_tokens), dtype='int32')
-        features = self.model.ops.allocate((len(states), n_tokens, attr_names.shape[0]), dtype='uint64')
+        cpu_tokens = numpy.zeros((len(states), n_tokens), dtype='int32')
+        features = numpy.zeros((len(states), n_tokens, attr_names.shape[0]), dtype='uint64')
         tokvecs = self.model.ops.allocate((len(states), n_tokens, vector_length), dtype='f')
         for i, state in enumerate(states):
-            state.set_context_tokens(tokens[i], nF, nB, nS, nL, nR)
-            state.set_attributes(features[i], tokens[i], attr_names)
-            state.set_token_vectors(tokvecs[i], all_tokvecs[i], tokens[i])
-        return (tokens, features, tokvecs)
+            state.set_context_tokens(cpu_tokens[i], nF, nB, nS, nL, nR)
+            #state.set_attributes(features[i], tokens[i], attr_names)
+        gpu_tokens = self.model.ops.xp.array(cpu_tokens)
+        for i in range(len(states)):
+            tokvecs[i] = all_tokvecs[i][gpu_tokens[i]]
+        tokvecs *= (gpu_tokens >= 0).reshape((gpu_tokens.shape[0], gpu_tokens.shape[1], 1))
+        return (gpu_tokens, self.model.ops.asarray(features), tokvecs)
 
-    def _validate_batch(self, int[:, ::1] is_valid, states):
+    def _validate_batch(self, is_valid, states):
         cdef StateClass state
         cdef int i
+        cdef int[:, :] is_valid_cpu = is_valid.get()
         for i, state in enumerate(states):
-            self.moves.set_valid(&is_valid[i, 0], state.c)
+            self.moves.set_valid(&is_valid_cpu[i, 0], state.c)
+        is_valid.set(numpy.asarray(is_valid_cpu))
 
-    def _cost_batch(self, weight_t[:, ::1] costs, int[:, ::1] is_valid,
+    def _cost_batch(self, costs, is_valid,
             states, golds):
         cdef int i
         cdef StateClass state
         cdef GoldParse gold
+        cdef int[:, :] is_valid_cpu = is_valid.get()
+        cdef weight_t[:, :] costs_cpu = costs.get()
+
         for i, (state, gold) in enumerate(zip(states, golds)):
-            self.moves.set_costs(&is_valid[i, 0], &costs[i, 0], state, gold)
+            self.moves.set_costs(&is_valid_cpu[i, 0], &costs_cpu[i, 0], state, gold)
+        is_valid.set(numpy.asarray(is_valid_cpu))
+        costs.set(numpy.asarray(costs_cpu))
 
     def _transition_batch(self, states, scores):
         cdef StateClass state

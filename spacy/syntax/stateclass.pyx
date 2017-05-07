@@ -76,8 +76,8 @@ cdef class StateClass:
             else:
                 vals[i] = 0
 
-    def set_token_vectors(self, float[:, :] tokvecs,
-            float[:, :] all_tokvecs, int[:] indices):
+    def set_token_vectors(self, tokvecs,
+            all_tokvecs, int[:] indices):
         for i in range(indices.shape[0]):
             if indices[i] >= 0:
                 tokvecs[i] = all_tokvecs[indices[i]]

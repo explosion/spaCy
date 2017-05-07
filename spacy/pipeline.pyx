@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from thinc.api import chain, layerize, with_getitem
 from thinc.neural import Model, Softmax
+import numpy
 
 from .syntax.parser cimport Parser
 #from .syntax.beam_parser cimport BeamParser
@@ -39,16 +40,15 @@ class TokenVectorEncoder(object):
     def update(self, docs, golds, drop=0., sgd=None):
         scores, finish_update = self.tagger.begin_update(docs, drop=drop)
         losses = scores.copy()
-        loss = 0.0
         idx = 0
         for i, gold in enumerate(golds):
+            ids = numpy.zeros((len(gold),), dtype='i')
+            start = idx
             for j, tag in enumerate(gold.tags):
-                tag_id = docs[0].vocab.morphology.tag_names.index(tag)
-                losses[idx, tag_id] -= 1.0
-                loss += 1-scores[idx, tag_id]
+                ids[j] = docs[0].vocab.morphology.tag_names.index(tag)
                 idx += 1
+            self.tagger.ops.xp.scatter_add(losses[start:idx], ids, -1.0)
         finish_update(losses, sgd)
-        return loss
 
 
 cdef class EntityRecognizer(Parser):

@@ -26,6 +26,15 @@ try:
 except ImportError:
     pass
 
+from thinc.neural import Model
+
+
+try:
+    import cupy
+    from thinc.neural.ops import CupyOps
+except:
+    cupy = None
+
 
 def read_conllx(loc, n=0):
     with io.open(loc, 'r', encoding='utf8') as file_:
@@ -88,6 +97,8 @@ def organize_data(vocab, train_sents):
 
 
 def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
+    if cupy is not None:
+        Model.ops = CupyOps()
     LangClass = spacy.util.get_lang_class(lang_name)
     train_sents = list(read_conllx(train_loc))
     dev_sents = list(read_conllx(dev_loc))
@@ -163,7 +174,7 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
             print('%d:\t%.3f\t%.3f\t%.3f' % (itn, nn_loss[-1], scorer.uas, scorer.tags_acc))
             nn_loss.append(0.)
         trainer.each_epoch.append(track_progress)
-        trainer.batch_size = 12
+        trainer.batch_size = 24
         trainer.nb_epoch = 10
         for docs, golds in trainer.iterate(Xs, ys):
             docs = [Doc(vocab, words=[w.text for w in doc]) for doc in docs]
