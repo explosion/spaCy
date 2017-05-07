@@ -67,15 +67,6 @@ LINK_OPTIONS = {
 
 # I don't understand this very well yet. See Issue #267
 # Fingers crossed!
-#if os.environ.get('USE_OPENMP') == '1':
-#    compile_options['msvc'].append('/openmp')
-#
-#
-#if not sys.platform.startswith('darwin'):
-#    compile_options['other'].append('-fopenmp')
-#    link_options['other'].append('-fopenmp')
-#
-
 USE_OPENMP_DEFAULT = '1' if sys.platform != 'darwin' else None
 if os.environ.get('USE_OPENMP', USE_OPENMP_DEFAULT) == '1':
     if sys.platform == 'darwin':
@@ -90,6 +81,7 @@ if os.environ.get('USE_OPENMP', USE_OPENMP_DEFAULT) == '1':
     else:
         COMPILE_OPTIONS['other'].append('-fopenmp')
         LINK_OPTIONS['other'].append('-fopenmp')
+
 
 # By subclassing build_extensions we have the actual compiler that will be used which is really known only after finalize_options
 # http://stackoverflow.com/questions/724664/python-distutils-how-to-get-a-compiler-that-is-going-to-be-used
