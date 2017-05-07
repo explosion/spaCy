@@ -28,6 +28,8 @@ from murmurhash.mrmr cimport hash64
 from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
 
+from thinc.api import layerize
+
 from numpy import exp
 
 from . import _parse_features
@@ -55,40 +57,45 @@ def set_debug(val):
 
 
 def get_greedy_model_for_batch(tokvecs, TransitionSystem moves, feat_maps, upper_model):
-    is_valid = model.ops.allocate((len(docs), system.n_moves), dtype='i')
-    costs = model.ops.allocate((len(docs), system.n_moves), dtype='f')
-    token_ids = model.ops.allocate((len(docs), StateClass.nr_context_tokens()),
-                                    dtype='uint64')
-    cached, backprops = zip(*[lyr.begin_update(tokvecs) for lyr in feat_maps)
+    cdef int[:, :] is_valid_
+    cdef float[:, :] costs_
+    cdef int[:, :] token_ids
+    is_valid = upper_model.ops.allocate((len(tokvecs), moves.n_moves), dtype='i')
+    costs = upper_model.ops.allocate((len(tokvecs), moves.n_moves), dtype='f')
+    token_ids = upper_model.ops.allocate((len(tokvecs), StateClass.nr_context_tokens()),
+                                         dtype='uint64')
+    cached, backprops = zip(*[lyr.begin_update(tokvecs) for lyr in feat_maps])
+    is_valid_ = is_valid
+    costs_ = costs
 
     def forward(states, drop=0.):
-        nonlocal is_valid, costs, token_ids, features
+        nonlocal is_valid, costs, token_ids, moves
         is_valid = is_valid[:len(states)]
         costs = costs[:len(states)]
         token_ids = token_ids[:len(states)]
         is_valid = is_valid[:len(states)]
-        for state in states:
-            state.set_context_tokens(&token_ids[i])
-            moves.set_valid(&is_valid[i], state.c)
+        cdef StateClass state
+        for i, state in enumerate(states):
+            state.set_context_tokens(token_ids[i])
+            moves.set_valid(&is_valid_[i, 0], state.c)
 
         features = cached[token_ids].sum(axis=1)
 
         scores, bp_scores = upper_model.begin_update(features, drop=drop)
-        softmaxed = model.ops.softmax(scores)
+        softmaxed = upper_model.ops.softmax(scores)
         # Renormalize for invalid actions
         softmaxed *= is_valid
         softmaxed /= softmaxed.sum(axis=1).reshape((softmaxed.shape[0], 1))
 
         def backward(golds, sgd=None):
-            nonlocal costs_, is_valid_, moves_
-            cdef TransitionSystem moves = moves_
-            cdef int[:, :] is_valid
-            cdef float[:, :] costs
+            nonlocal costs_, is_valid_, moves
             for i, (state, gold) in enumerate(zip(states, golds)):
-                moves.set_costs(&costs[i], &is_valid[i],
+                moves.set_costs(&is_valid_[i, 0], &costs_[i, 0],
                     state, gold)
-            set_log_loss(model.ops, d_scores,
-                scores, is_valid, costs)
+            d_scores = scores.copy()
+            d_scores.fill(0)
+            set_log_loss(upper_model.ops, d_scores,
+                scores, is_valid_, costs_)
             d_tokens = bp_scores(d_scores, sgd)
             return d_tokens
 
@@ -117,6 +124,17 @@ def transition_batch(TransitionSystem moves, states, scores):
     for state, guess in zip(states, scores.argmax(axis=1)):
         action = moves.c[guess]
         action.do(state.c, action.label)
+
+
+def init_states(TransitionSystem moves, docs):
+    states = []
+    cdef Doc doc
+    cdef StateClass state
+    for i, doc in enumerate(docs):
+        state = StateClass.init(doc.c, doc.length)
+        moves.initialize_state(state.c)
+        states.append(state)
+    return states
 
 
 cdef class Parser:
@@ -176,7 +194,8 @@ cdef class Parser:
     def build_model(self, width=32, nr_vector=1000, nF=1, nB=1, nS=1, nL=1, nR=1, **_):
         nr_context_tokens = StateClass.nr_context_tokens(nF, nB, nS, nL, nR)
         self.model = build_model(width*2, 2, self.moves.n_moves)
-        self.feature_maps = build_feature_maps(nr_context_tokens, width, nr_vector))
+        # TODO
+        self.feature_maps = [] #build_feature_maps(nr_context_tokens, width, nr_vector)
 
     def __call__(self, Doc tokens):
         """
@@ -248,6 +267,7 @@ cdef class Parser:
 
         model = get_greedy_model_for_batch([d.tensor for d in docs],
                     self.moves, self.model, self.feat_maps)
+        states = init_states(self.moves, docs)
 
         d_tokens = [self.model.ops.allocate(d.tensor.shape) for d in docs]
         output = list(d_tokens)
@@ -261,7 +281,7 @@ cdef class Parser:
             transition_batch(self.moves, states)
             # Get unfinished states (and their matching gold and token gradients)
             todo = filter(lambda sp: not sp[0].py_is_final(), todo)
-        return output, sum(losses)
+        return output
 
     def begin_training(self, docs, golds):
         for gold in golds:
@@ -335,31 +355,6 @@ def _begin_update(self, model, states, tokvecs, drop=0.):
             softmaxed *= costs <= 0
         return finish_update(d_scores, sgd=sgd)
     return softmaxed, backward
-
-def _init_states(self, docs):
-    states = []
-    cdef Doc doc
-    cdef StateClass state
-    for i, doc in enumerate(docs):
-        state = StateClass.init(doc.c, doc.length)
-        self.moves.initialize_state(state.c)
-        states.append(state)
-    return states
-
-def _validate_batch(self, int[:, ::1] is_valid, states):
-    cdef StateClass state
-    cdef int i
-    for i, state in enumerate(states):
-        self.moves.set_valid(&is_valid[i, 0], state.c)
-
-def _cost_batch(self, weight_t[:, ::1] costs, int[:, ::1] is_valid,
-        states, golds):
-    cdef int i
-    cdef StateClass state
-    cdef GoldParse gold
-    for i, (state, gold) in enumerate(zip(states, golds)):
-        self.moves.set_costs(&is_valid[i, 0], &costs[i, 0], state, gold)
-
 
 
 def _get_features(self, states, all_tokvecs, attr_names,
