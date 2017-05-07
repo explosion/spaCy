@@ -7,74 +7,7 @@ from . import about
 from . import util
 from .util import prints
 from .compat import path2str
-from .cli import download
-from .cli import link
-
-
-def read_lang_data(package):
-    tokenization = package.load_json(('tokenizer', 'specials.json'))
-    with package.open(('tokenizer', 'prefix.txt'), default=None) as file_:
-        prefix = read_prefix(file_) if file_ is not None else None
-    with package.open(('tokenizer', 'suffix.txt'), default=None) as file_:
-        suffix = read_suffix(file_) if file_ is not None else None
-    with package.open(('tokenizer', 'infix.txt'), default=None) as file_:
-        infix = read_infix(file_) if file_ is not None else None
-    return tokenization, prefix, suffix, infix
-
-
-def align_tokens(ref, indices): # Deprecated, surely?
-    start = 0
-    queue = list(indices)
-    for token in ref:
-        end = start + len(token)
-        emit = []
-        while queue and queue[0][1] <= end:
-            emit.append(queue.pop(0))
-        yield token, emit
-        start = end
-    assert not queue
-
-
-def detokenize(token_rules, words): # Deprecated?
-    """
-    To align with treebanks, return a list of "chunks", where a chunk is a
-    sequence of tokens that are separated by whitespace in actual strings. Each
-    chunk should be a tuple of token indices, e.g.
-
-    >>> detokenize(["ca<SEP>n't", '<SEP>!'], ["I", "ca", "n't", "!"])
-    [(0,), (1, 2, 3)]
-    """
-    string = ' '.join(words)
-    for subtoks in token_rules:
-        # Algorithmically this is dumb, but writing a little list-based match
-        # machine? Ain't nobody got time for that.
-        string = string.replace(subtoks.replace('<SEP>', ' '), subtoks)
-    positions = []
-    i = 0
-    for chunk in string.split():
-        subtoks = chunk.split('<SEP>')
-        positions.append(tuple(range(i, i+len(subtoks))))
-        i += len(subtoks)
-    return positions
-
-
-def match_best_version(target_name, target_version, path):
-    path = util.ensure_path(path)
-    if path is None or not path.exists():
-        return None
-    matches = []
-    for data_name in path.iterdir():
-        name, version = split_data_name(data_name.parts[-1])
-        if name == target_name:
-            matches.append((tuple(float(v) for v in version.split('.')), data_name))
-    if matches:
-        return Path(max(matches)[1])
-    else:
-        return None
-
-
-def split_data_name(name):
-    return name.split('-', 1) if '-' in name else (name, '')
+from .cli import download, link
 
 
 def fix_glove_vectors_loading(overrides):
@@ -104,6 +37,24 @@ def fix_glove_vectors_loading(overrides):
     if vec_path is not None:
         overrides['add_vectors'] = lambda vocab: vocab.load_vectors_from_bin_loc(vec_path)
     return overrides
+
+
+def match_best_version(target_name, target_version, path):
+    def split_data_name(name):
+        return name.split('-', 1) if '-' in name else (name, '')
+
+    path = util.ensure_path(path)
+    if path is None or not path.exists():
+        return None
+    matches = []
+    for data_name in path.iterdir():
+        name, version = split_data_name(data_name.parts[-1])
+        if name == target_name:
+            matches.append((tuple(float(v) for v in version.split('.')), data_name))
+    if matches:
+        return Path(max(matches)[1])
+    else:
+        return None
 
 
 def resolve_model_name(name):
