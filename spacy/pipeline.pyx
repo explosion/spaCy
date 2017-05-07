@@ -9,7 +9,7 @@ from .syntax.parser cimport Parser
 from .syntax.ner cimport BiluoPushDown
 from .syntax.arc_eager cimport ArcEager
 from .tagger import Tagger
-from ._ml import build_tok2vec
+from ._ml import build_tok2vec, flatten
 
 # TODO: The disorganization here is pretty embarrassing. At least it's only
 # internals.
@@ -24,7 +24,8 @@ class TokenVectorEncoder(object):
         self.model = build_tok2vec(vocab.lang, 64, **cfg)
         self.tagger = chain(
                         self.model,
-                        Softmax(self.vocab.morphology.n_tags))
+                        flatten,
+                        Softmax(self.vocab.morphology.n_tags, 64))
 
     def __call__(self, doc):
         doc.tensor = self.model([doc])[0]

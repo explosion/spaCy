@@ -36,8 +36,7 @@ def read_conllx(loc, n=0):
                 try:
                     id_ = int(id_) - 1
                     head = (int(head) - 1) if head != '0' else id_
-                    dep = 'ROOT' if dep == 'root' else 'unlabelled'
-                    # Hack for efficiency
+                    dep = 'ROOT' if dep == 'root' else dep #'unlabelled'
                     tokens.append((id_, word, pos+'__'+morph, head, dep, 'O'))
                 except:
                     raise
@@ -82,6 +81,7 @@ def organize_data(vocab, train_sents):
 def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
     LangClass = spacy.util.get_lang_class(lang_name)
     train_sents = list(read_conllx(train_loc))
+    dev_sents = list(read_conllx(dev_loc))
     train_sents = PseudoProjectivity.preprocess_training_data(train_sents)
 
     actions = ArcEager.get_actions(gold_parses=train_sents)
@@ -136,8 +136,11 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
     parser = DependencyParser(vocab, actions=actions, features=features, L1=0.0)
 
     Xs, ys = organize_data(vocab, train_sents)
-    Xs = Xs[:100]
-    ys = ys[:100]
+    dev_Xs, dev_ys = organize_data(vocab, dev_sents)
+    Xs = Xs[:500]
+    ys = ys[:500]
+    dev_Xs = dev_Xs[:100]
+    dev_ys = dev_ys[:100]
     with encoder.model.begin_training(Xs[:100], ys[:100]) as (trainer, optimizer):
         docs = list(Xs)
         for doc in docs:
@@ -145,7 +148,8 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
         parser.begin_training(docs, ys)
         nn_loss = [0.]
         def track_progress():
-            scorer = score_model(vocab, encoder, tagger, parser, Xs, ys)
+            with encoder.tagger.use_params(optimizer.averages):
+                scorer = score_model(vocab, encoder, tagger, parser, dev_Xs, dev_ys)
             itn = len(nn_loss)
             print('%d:\t%.3f\t%.3f\t%.3f' % (itn, nn_loss[-1], scorer.uas, scorer.tags_acc))
             nn_loss.append(0.)
@@ -161,6 +165,7 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
                 tagger.update(doc, gold)
             d_tokvecs, loss = parser.update(docs, golds, sgd=optimizer)
             upd_tokvecs(d_tokvecs, sgd=optimizer)
+            encoder.update(docs, golds, optimizer)
             nn_loss[-1] += loss
     nlp = LangClass(vocab=vocab, tagger=tagger, parser=parser)
     nlp.end_training(model_dir)

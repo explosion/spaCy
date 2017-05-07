@@ -5,6 +5,7 @@ from thinc.neural._classes.hash_embed import HashEmbed
 from thinc.neural._classes.convolution import ExtractWindow
 from thinc.neural._classes.static_vectors import StaticVectors
 from thinc.neural._classes.batchnorm import BatchNorm
+from thinc.neural._classes.resnet import Residual
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP
 
@@ -36,8 +37,7 @@ def build_debug_model(state2vec, width, depth, nr_class):
     with Model.define_operators({'>>': chain, '**': clone}):
         model = (
             state2vec
-            >> Maxout(width)
-            >> Affine(nr_class)
+            >> Maxout(nr_class)
         )
     return model
 
@@ -64,13 +64,8 @@ def build_debug_state2vec(width, nr_vector=1000, nF=1, nB=0, nS=1, nL=2, nR=2):
 def build_state2vec(nr_context_tokens, width, nr_vector=1000):
     ops = Model.ops
     with Model.define_operators({'|': concatenate, '+': add, '>>': chain}):
-
-        hiddens = [get_col(i) >> Affine(width) for i in range(nr_context_tokens)]
-        model = (
-            get_token_vectors
-            >> add(*hiddens)
-            >> Maxout(width)
-        )
+        hiddens = [get_col(i) >> Maxout(width) for i in range(nr_context_tokens)]
+        model = get_token_vectors >> add(*hiddens)
     return model
 
 
@@ -78,7 +73,7 @@ def print_shape(prefix):
     def forward(X, drop=0.):
         return X, lambda dX, **kwargs: dX
     return layerize(forward)
-    
+
 
 @layerize
 def get_token_vectors(tokens_attrs_vectors, drop=0.):
@@ -173,9 +168,10 @@ def _reshape(layer):
 @layerize
 def flatten(seqs, drop=0.):
     ops = Model.ops
+    lengths = [len(seq) for seq in seqs]
     def finish_update(d_X, sgd=None):
-        return d_X
-    X = ops.xp.concatenate([ops.asarray(seq) for seq in seqs])
+        return ops.unflatten(d_X, lengths)
+    X = ops.xp.vstack(seqs)
     return X, finish_update
 
 
@@ -194,8 +190,9 @@ def build_tok2vec(lang, width, depth=2, embed_size=1000):
                 #(static | prefix | suffix | shape)
                 (lower | prefix | suffix | shape | tag)
                 >> Maxout(width, width*5)
-                #>> (ExtractWindow(nW=1) >> Maxout(width, width*3))
-                #>> (ExtractWindow(nW=1) >> Maxout(width, width*3))
+                >> Residual((ExtractWindow(nW=1) >> Maxout(width, width*3)))
+                >> Residual((ExtractWindow(nW=1) >> Maxout(width, width*3)))
+                >> Residual((ExtractWindow(nW=1) >> Maxout(width, width*3)))
             )
         )
     return tok2vec
