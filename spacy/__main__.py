@@ -24,7 +24,7 @@ class CLI(object):
         direct=("force direct download. Needs model name with version and won't "
                 "perform compatibility check", "flag", "d", bool)
     )
-    def download(self, model=None, direct=False):
+    def download(self, model, direct=False):
         """
         Download compatible model from default download path using pip. Model
         can be shortcut, model name or, if --direct flag is set, full model name
