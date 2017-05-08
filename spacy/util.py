@@ -169,7 +169,6 @@ def is_package(origin):
     return False
 
 
-
 def get_model_package_path(package_name):
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
