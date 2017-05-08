@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 
-BASE_EXCEPTIONS = [
+FR_BASE_EXCEPTIONS = [
 "0-day",
 "0-days",
 "1000Base-T",

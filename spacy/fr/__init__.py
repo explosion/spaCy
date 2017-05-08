@@ -1,37 +1,34 @@
 # coding: utf8
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
 
-from ..language import Language, BaseDefaults
-from ..attrs import LANG
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
+from .punctuation import TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
+from .stop_words import STOP_WORDS
+from .lemmatizer import LOOKUP
 
-from .language_data import *
-from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
+from ..language_data import BASE_EXCEPTIONS
+from ..language import Language
 from ..lemmatizerlookup import Lemmatizer
-from .lemmatization import LOOK_UP
-
-class FrenchDefaults(BaseDefaults):
-    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-    lex_attr_getters[LANG] = lambda text: 'fr'
-
-    stop_words = STOP_WORDS
-    infixes = tuple(TOKENIZER_INFIXES)
-    suffixes = tuple(TOKENIZER_SUFFIXES)
-    token_match = TOKEN_MATCH
-
-    @classmethod
-    def create_tokenizer(cls, nlp=None):
-        cls.tokenizer_exceptions = get_tokenizer_exceptions()
-        return super(FrenchDefaults, cls).create_tokenizer(nlp)
-
-    @classmethod
-    def create_lemmatizer(cls, nlp=None):
-        return Lemmatizer(LOOK_UP)
+from ..attrs import LANG
+from ..util import update_exc
 
 
 class French(Language):
     lang = 'fr'
 
-    Defaults = FrenchDefaults
+    class Defaults(Language.Defaults):
+        lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+        lex_attr_getters[LANG] = lambda text: 'fr'
+
+        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+        stop_words = set(STOP_WORDS)
+        infixes = tuple(TOKENIZER_INFIXES)
+        suffixes = tuple(TOKENIZER_SUFFIXES)
+        token_match = TOKEN_MATCH
+
+        @classmethod
+        def create_lemmatizer(cls, nlp=None):
+            return Lemmatizer(LOOKUP)
 
 
-EXPORT = French
+__all__ = ['French']
