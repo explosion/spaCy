@@ -353,62 +353,6 @@ cdef class Parser:
                 self.cfg.setdefault('extra_labels', []).append(label)
 
 
-def _begin_update(self, model, states, tokvecs, drop=0.):
-    nr_class = self.moves.n_moves
-    attr_names = self.model.ops.allocate((2,), dtype='i')
-    attr_names[0] = TAG
-    attr_names[1] = DEP
-
-    features = self._get_features(states, tokvecs, attr_names)
-    scores, finish_update = self.model.begin_update(features, drop=drop)
-    assert scores.shape[0] == len(states), (len(states), scores.shape)
-    assert len(scores.shape) == 2
-    is_valid = self.model.ops.allocate((len(states), nr_class), dtype='i')
-    self._validate_batch(is_valid, states)
-    softmaxed = self.model.ops.softmax(scores)
-    softmaxed *= is_valid
-    softmaxed /= softmaxed.sum(axis=1).reshape((softmaxed.shape[0], 1))
-    def backward(golds, sgd=None, losses=[], force_gold=False):
-        nonlocal softmaxed
-        costs = self.model.ops.allocate((len(states), nr_class), dtype='f')
-        d_scores = self.model.ops.allocate((len(states), nr_class), dtype='f')
-
-        self._cost_batch(costs, is_valid, states, golds)
-        self._set_gradient(d_scores, scores, is_valid, costs)
-        losses.append(numpy.abs(d_scores).sum())
-        if force_gold:
-            softmaxed *= costs <= 0
-        return finish_update(d_scores, sgd=sgd)
-    return softmaxed, backward
-
-
-def _get_features(self, states, all_tokvecs, attr_names,
-        nF=1, nB=0, nS=2, nL=2, nR=2):
-    n_tokens = states[0].nr_context_tokens(nF, nB, nS, nL, nR)
-    vector_length = all_tokvecs[0].shape[1]
-    tokens = self.model.ops.allocate((len(states), n_tokens), dtype='int32')
-    features = self.model.ops.allocate((len(states), n_tokens, attr_names.shape[0]), dtype='uint64')
-    tokvecs = self.model.ops.allocate((len(states), n_tokens, vector_length), dtype='f')
-    for i, state in enumerate(states):
-        state.set_context_tokens(tokens[i], nF, nB, nS, nL, nR)
-        state.set_attributes(features[i], tokens[i], attr_names)
-        state.set_token_vectors(tokvecs[i], all_tokvecs[i], tokens[i])
-    return (tokens, features, tokvecs)
-
-
-
-cdef int dropout(FeatureC* feats, int nr_feat, float prob) except -1:
-    if prob <= 0 or prob >= 1.:
-        return 0
-    cdef double[::1] py_probs = numpy.random.uniform(0., 1., nr_feat)
-    cdef double* probs = &py_probs[0]
-    for i in range(nr_feat):
-        if probs[i] >= prob:
-            feats[i].value /= prob
-        else:
-            feats[i].value = 0.
-
-
 cdef class StepwiseState:
     cdef readonly StateClass stcls
     cdef readonly Example eg
@@ -520,23 +464,3 @@ class ParserStateError(ValueError):
             "https://github.com/spacy-io/spaCy/issues/429\n"
             "Please include the text that the parser failed on, which is:\n"
             "%s" % repr(doc.text))
-
-cdef int arg_max_if_gold(const weight_t* scores, const weight_t* costs, int n) nogil:
-    cdef int best = -1
-    for i in range(n):
-        if costs[i] <= 0:
-            if best == -1 or scores[i] > scores[best]:
-                best = i
-    return best
-
-
-cdef int _arg_max_clas(const weight_t* scores, int move, const Transition* actions,
-                       int nr_class) except -1:
-    cdef weight_t score = 0
-    cdef int mode = -1
-    cdef int i
-    for i in range(nr_class):
-        if actions[i].move == move and (mode == -1 or scores[i] >= score):
-            mode = i
-            score = scores[i]
-    return mode
