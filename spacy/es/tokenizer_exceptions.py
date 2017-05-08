@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from ..symbols import ORTH, LEMMA, TAG, NORM, ADP, DET
-from ..deprecated import PRON_LEMMA, DET_LEMMA
+from ..deprecated import PRON_LEMMA
 
 
 _exc = {
@@ -32,11 +32,11 @@ _exc = {
 
     "pal": [
         {ORTH: "pa", LEMMA: "para"},
-        {ORTH: "l", LEMMA: DET_LEMMA, NORM: "el"}],
+        {ORTH: "l", LEMMA: "el"}],
 
     "pala": [
         {ORTH: "pa", LEMMA: "para"},
-        {ORTH: "la", LEMMA: DET_LEMMA}]
+        {ORTH: "la"}]
 }
 
 

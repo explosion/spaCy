@@ -7,7 +7,6 @@ from .cli import download
 
 
 PRON_LEMMA = "-PRON-"
-DET_LEMMA = "-DET-"
 
 
 def depr_model_download(lang):

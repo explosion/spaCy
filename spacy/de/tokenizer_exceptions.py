@@ -2,13 +2,13 @@
 from __future__ import unicode_literals
 
 from ..symbols import ORTH, LEMMA, TAG, NORM
-from ..deprecated import PRON_LEMMA, DET_LEMMA
+from ..deprecated import PRON_LEMMA
 
 
 _exc = {
     "auf'm": [
         {ORTH: "auf", LEMMA: "auf"},
-        {ORTH: "'m", LEMMA: DET_LEMMA, NORM: "dem" }],
+        {ORTH: "'m", LEMMA: "der", NORM: "dem" }],
 
     "du's": [
         {ORTH: "du", LEMMA: PRON_LEMMA, TAG: "PPER"},
@@ -20,7 +20,7 @@ _exc = {
 
     "hinter'm": [
         {ORTH: "hinter", LEMMA: "hinter"},
-        {ORTH: "'m", LEMMA: DET_LEMMA, NORM: "dem"}],
+        {ORTH: "'m", LEMMA: "der", NORM: "dem"}],
 
     "ich's": [
         {ORTH: "ich", LEMMA: PRON_LEMMA, TAG: "PPER"},
@@ -36,11 +36,11 @@ _exc = {
 
     "unter'm": [
         {ORTH: "unter", LEMMA: "unter"},
-        {ORTH: "'m", LEMMA: DET_LEMMA, NORM: "dem"}],
+        {ORTH: "'m", LEMMA: "der", NORM: "dem"}],
 
     "vor'm": [
         {ORTH: "vor", LEMMA: "vor"},
-        {ORTH: "'m", LEMMA: DET_LEMMA, NORM: "dem"}],
+        {ORTH: "'m", LEMMA: "der", NORM: "dem"}],
 
     "wir's": [
         {ORTH: "wir", LEMMA: PRON_LEMMA, TAG: "PPER"},
@@ -48,7 +48,7 @@ _exc = {
 
     "über'm": [
         {ORTH: "über", LEMMA: "über"},
-        {ORTH: "'m", LEMMA: DET_LEMMA, NORM: "dem"}]
+        {ORTH: "'m", LEMMA: "der", NORM: "dem"}]
 }
 
 
@@ -57,12 +57,10 @@ for exc_data in [
     {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER"},
     {ORTH: "S'", LEMMA: PRON_LEMMA, TAG: "PPER"},
     {ORTH: "s'", LEMMA: PRON_LEMMA, TAG: "PPER"},
-    {ORTH: "'n", LEMMA: DET_LEMMA, NORM: "ein"},
-    {ORTH: "'ne", LEMMA: DET_LEMMA, NORM: "eine"},
-    {ORTH: "'nen", LEMMA: DET_LEMMA, NORM: "einen"},
-    {ORTH: "'nem", LEMMA: DET_LEMMA, NORM: "einem"},
-    {ORTH: "'s", LEMMA: PRON_LEMMA, TAG: "PPER"},
-
+    {ORTH: "'n", LEMMA: "ein", NORM: "ein"},
+    {ORTH: "'ne", LEMMA: "eine", NORM: "eine"},
+    {ORTH: "'nen", LEMMA: "ein", NORM: "einen"},
+    {ORTH: "'nem", LEMMA: "ein", NORM: "einem"},
     {ORTH: "Abb.", LEMMA: "Abbildung"},
     {ORTH: "Abk.", LEMMA: "Abkürzung"},
     {ORTH: "Abt.", LEMMA: "Abteilung"},

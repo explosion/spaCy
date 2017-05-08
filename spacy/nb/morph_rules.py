@@ -51,17 +51,17 @@ MORPH_RULES = {
     },
 
     "VBZ": {
-        "er":           {LEMMA: "be", "VerbForm": "Fin", "Person": "One", "Tense": "Pres", "Mood": "Ind"},
-        "er":           {LEMMA: "be", "VerbForm": "Fin", "Person": "Two", "Tense": "Pres", "Mood": "Ind"},
-        "er":           {LEMMA: "be", "VerbForm": "Fin", "Person": "Three", "Tense": "Pres", "Mood": "Ind"},
+        "er":           {"VerbForm": "Fin", "Person": "One", "Tense": "Pres", "Mood": "Ind"},
+        "er":           {"VerbForm": "Fin", "Person": "Two", "Tense": "Pres", "Mood": "Ind"},
+        "er":           {"VerbForm": "Fin", "Person": "Three", "Tense": "Pres", "Mood": "Ind"},
     },
 
     "VBP": {
-        "er":          {LEMMA: "be", "VerbForm": "Fin", "Tense": "Pres", "Mood": "Ind"}
+        "er":          {"VerbForm": "Fin", "Tense": "Pres", "Mood": "Ind"}
     },
 
     "VBD": {
-        "var":          {LEMMA: "be", "VerbForm": "Fin", "Tense": "Past", "Number": "Sing"},
-        "vært":         {LEMMA: "be", "VerbForm": "Fin", "Tense": "Past", "Number": "Plur"}
+        "var":          {"VerbForm": "Fin", "Tense": "Past", "Number": "Sing"},
+        "vært":         {"VerbForm": "Fin", "Tense": "Past", "Number": "Plur"}
     }
 }
