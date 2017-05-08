@@ -145,7 +145,8 @@ def read_json(location):
 def resolve_load_name(name, **overrides):
     if overrides.get('path') not in (None, False, True):
         name = overrides.get('path')
-        prints("To load a model from a path, you can now use the first argument.",
+        prints("To load a model from a path, you can now use the first argument. "
+               "The model meta is used to load the required Language class.",
                "OLD: spacy.load('en', path='/some/path')", "NEW: spacy.load('/some/path')",
                title="Warning: deprecated argument 'path'")
     return name
