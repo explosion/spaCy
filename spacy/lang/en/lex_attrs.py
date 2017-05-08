@@ -2,22 +2,31 @@
 from __future__ import unicode_literals
 
 
-# Number words
-
-NUM_WORDS = set("""
-zero one two three four five six seven eight nine ten eleven twelve thirteen
-fourteen fifteen sixteen seventeen eighteen nineteen twenty thirty forty fifty
-sixty seventy eighty ninety hundred thousand million billion trillion
-quadrillion gajillion bazillion
-""".split())
+from ...attrs import LIKE_NUM
 
 
-# Ordinal words
+_num_words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
+              'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen',
+              'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty',
+              'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety',
+              'hundred', 'thousand', 'million', 'billion', 'trillion', 'quadrillion',
+              'gajillion', 'bazillion']
 
-ORDINAL_WORDS = set("""
-first second third fourth fifth sixth seventh eigth ninth tenth eleventh twelveth
-thirteenth fourteenth fifteenth sixteenth sventeenth eighteenth nineteenth
-twentieth  thirtieth fortieth fiftieth sixtieth seventieth eightieth ninetieth
-hundreth thousandth millionth billionth trillionth quadrillionth gajillionth
-bazillionth
-""".split())
+
+def like_num(text):
+    text = text.replace(',', '')
+    text = text.replace('.', '')
+    if text.isdigit():
+        return True
+    if text.count('/') == 1:
+        num, denom = text.split('/')
+        if num.isdigit() and denom.isdigit():
+            return True
+    if text in _num_words:
+        return True
+    return False
+
+
+LEX_ATTRS = {
+    LIKE_NUM: like_num
+}
