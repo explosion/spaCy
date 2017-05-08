@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from ..symbols import ORTH, ENT_TYPE, LOWER
 
+
 ENT_ID = "ent_id"
 
 
