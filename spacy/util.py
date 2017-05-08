@@ -189,7 +189,7 @@ def print_markdown(data, title=None):
     print('\n{}\n'.format('\n'.join(markdown)))
 
 
-def prints(*texts, **kwargs title=None, exits=False):
+def prints(*texts, **kwargs):
     """
     Print formatted message. Each positional argument is rendered as newline-
     separated paragraph. An optional highlighted title is printed above the text
