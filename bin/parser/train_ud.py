@@ -138,8 +138,8 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
 
     Xs, ys = organize_data(vocab, train_sents)
     dev_Xs, dev_ys = organize_data(vocab, dev_sents)
-    Xs = Xs[:100]
-    ys = ys[:100]
+    Xs = Xs[:1000]
+    ys = ys[:1000]
     with encoder.model.begin_training(Xs[:100], ys[:100]) as (trainer, optimizer):
         docs = list(Xs)
         for doc in docs:

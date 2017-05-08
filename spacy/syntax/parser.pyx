@@ -32,7 +32,7 @@ from preshed.maps cimport map_get
 from thinc.api import layerize, chain
 from thinc.neural import Model, Maxout
 
-from .._ml import get_col
+from .._ml import PrecomputableAffine
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
@@ -58,21 +58,24 @@ def set_debug(val):
     DEBUG = val
 
 
-def get_greedy_model_for_batch(tokvecs, TransitionSystem moves, upper_model, feat_maps):
+def get_greedy_model_for_batch(tokvecs, TransitionSystem moves, upper_model, lower_model):
     cdef int[:, :] is_valid_
     cdef float[:, :] costs_
     lengths = [len(t) for t in tokvecs]
     tokvecs = upper_model.ops.flatten(tokvecs)
     is_valid = upper_model.ops.allocate((len(tokvecs), moves.n_moves), dtype='i')
     costs = upper_model.ops.allocate((len(tokvecs), moves.n_moves), dtype='f')
-    token_ids = upper_model.ops.allocate((len(tokvecs), len(feat_maps)), dtype='i')
-    cached, backprops = zip(*[lyr.begin_update(tokvecs) for lyr in feat_maps])
+    token_ids = upper_model.ops.allocate((len(tokvecs), lower_model.nF), dtype='i')
+
+    cached, bp_features = lower_model.begin_update(tokvecs, drop=0.)
+
     is_valid_ = is_valid
     costs_ = costs
 
     def forward(states_offsets, drop=0.):
         nonlocal is_valid, costs, token_ids, moves
         states, offsets = states_offsets
+        assert len(states) != 0
         is_valid = is_valid[:len(states)]
         costs = costs[:len(states)]
         token_ids = token_ids[:len(states)]
@@ -90,12 +93,17 @@ def get_greedy_model_for_batch(tokvecs, TransitionSystem moves, upper_model, fea
         for i in range(len(states)):
             for j, tok_i in enumerate(adjusted_ids[i]):
                 if tok_i >= 0:
-                    features[i] += cached[j][tok_i]
+                    features[i] += cached[tok_i, j]
 
         scores, bp_scores = upper_model.begin_update(features, drop=drop)
+        scores = upper_model.ops.relu(scores)
         softmaxed = upper_model.ops.softmax(scores)
         # Renormalize for invalid actions
         softmaxed *= is_valid
+        totals = softmaxed.sum(axis=1)
+        for total in totals:
+            assert total > 0, (totals, scores, softmaxed)
+            assert total <= 1.1, totals
         softmaxed /= softmaxed.sum(axis=1).reshape((softmaxed.shape[0], 1))
 
         def backward(golds, sgd=None):
@@ -108,7 +116,9 @@ def get_greedy_model_for_batch(tokvecs, TransitionSystem moves, upper_model, fea
             d_scores.fill(0)
             set_log_loss(upper_model.ops, d_scores,
                 scores, is_valid, costs)
-            d_tokens = bp_scores(d_scores, sgd)
+            upper_model.ops.backprop_relu(d_scores, scores, inplace=True)
+            d_features = bp_scores(d_scores, sgd)
+            d_tokens = bp_features((d_features, adjusted_ids), sgd)
             return (token_ids, d_tokens)
 
         return softmaxed, backward
@@ -211,11 +221,9 @@ cdef class Parser:
     def build_model(self, width=64, nr_vector=1000, nF=1, nB=1, nS=1, nL=1, nR=1, **_):
         nr_context_tokens = StateClass.nr_context_tokens(nF, nB, nS, nL, nR)
 
-        model = chain(Maxout(width, width), Maxout(self.moves.n_moves, width))
-        # TODO
-        feature_maps = [Maxout(width, width)
-                        for i in range(nr_context_tokens)]
-        return model, feature_maps
+        upper = chain(Maxout(width, width), Maxout(self.moves.n_moves, width))
+        lower = PrecomputableAffine(width, nF=nr_context_tokens, nI=width)
+        return upper, lower
 
     def __call__(self, Doc tokens):
         """

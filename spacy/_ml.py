@@ -5,8 +5,60 @@ from thinc.neural._classes.hash_embed import HashEmbed
 from thinc.neural._classes.convolution import ExtractWindow
 from thinc.neural._classes.static_vectors import StaticVectors
 from thinc.neural._classes.batchnorm import BatchNorm
-
+from thinc import describe
+from thinc.describe import Dimension, Synapses, Biases, Gradient
+from thinc.neural._classes.affine import _set_dimensions_if_needed
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP
+
+import numpy
+
+
+@describe.on_data(_set_dimensions_if_needed)
+@describe.attributes(
+    nI=Dimension("Input size"),
+    nF=Dimension("Number of features"),
+    nO=Dimension("Output size"),
+    W=Synapses("Weights matrix",
+        lambda obj: (obj.nO, obj.nF, obj.nI),
+        lambda W, ops: ops.xavier_uniform_init(W)),
+    b=Biases("Bias vector",
+        lambda obj: (obj.nO,)),
+    d_W=Gradient("W"),
+    d_b=Gradient("b")
+)
+class PrecomputableAffine(Model):
+    def __init__(self, nO=None, nI=None, nF=None, **kwargs):
+        Model.__init__(self, **kwargs)
+        self.nO = nO
+        self.nI = nI
+        self.nF = nF
+
+    def begin_update(self, X, drop=0.):
+        # X: (b, i)
+        # Xf: (b, f, i)
+        # dY: (b, o)
+        # dYf: (b, f, o)
+        #Yf = numpy.einsum('bi,ofi->bfo', X, self.W)
+        Yf = self.ops.xp.tensordot(
+                X, self.W, axes=[[1], [2]]).transpose((0, 2, 1))
+        Yf += self.b
+        def backward(dY_ids, sgd=None):
+            dY, ids = dY_ids
+            Xf = X[ids]
+
+            #dW = numpy.einsum('bo,bfi->ofi', dY, Xf)
+            dW = self.ops.xp.tensordot(dY, Xf, axes=[[0], [0]])
+            db = dY.sum(axis=0)
+            #dXf = numpy.einsum('bo,ofi->bfi', dY, self.W)
+            dXf = self.ops.xp.tensordot(dY, self.W, axes=[[1], [0]])
+
+            self.d_W += dW
+            self.d_b += db
+
+            if sgd is not None:
+                sgd(self._mem.weights, self._mem.gradient, key=self.id)
+            return dXf
+        return Yf, backward
 
 
 def get_col(idx):
