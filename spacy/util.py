@@ -9,7 +9,8 @@ from pathlib import Path
 import sys
 import textwrap
 
-from .compat import path2str, basestring_, input_
+from .symbols import ORTH
+from .compat import path2str, basestring_, input_, unicode_
 
 
 LANGUAGES = {}
@@ -75,6 +76,39 @@ def compile_suffix_regex(entries):
 def compile_infix_regex(entries):
     expression = '|'.join([piece for piece in entries if piece.strip()])
     return re.compile(expression)
+
+
+def update_exc(base_exceptions, *addition_dicts):
+    exc = dict(base_exceptions)
+    for additions in addition_dicts:
+        for orth, token_attrs in additions.items():
+            if not all(isinstance(attr[ORTH], unicode_) for attr in token_attrs):
+                msg = "Invalid value for ORTH in exception: key='%s', orths='%s'"
+                raise ValueError(msg % (orth, token_attrs))
+            described_orth = ''.join(attr[ORTH] for attr in token_attrs)
+            if orth != described_orth:
+                # TODO: Better error
+                msg = "Invalid tokenizer exception: key='%s', orths='%s'"
+                raise ValueError(msg % (orth, described_orth))
+        # overlap = set(exc.keys()).intersection(set(additions))
+        # assert not overlap, overlap
+        exc.update(additions)
+    expand_exc(exc, "'", "’")
+    return exc
+
+
+def expand_exc(excs, search, replace):
+    def _fix_token(token, search, replace):
+        fixed = dict(token)
+        fixed[ORTH] = fixed[ORTH].replace(search, replace)
+        return fixed
+    updates = {}
+    for token_string, tokens in excs.items():
+        if search in token_string:
+            new_key = token_string.replace(search, replace)
+            new_value = [_fix_token(t, search, replace) for t in tokens]
+            updates[new_key] = new_value
+    return updates
 
 
 def normalize_slice(length, start, stop, step=None):
