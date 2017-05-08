@@ -5,188 +5,33 @@ from ..symbols import ORTH, ENT_TYPE, LOWER
 
 
 ENT_ID = "ent_id"
+ENTITY_RULES = []
 
 
-ENTITY_RULES = [
-    {
-        ENT_ID: "Reddit",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{LOWER: "reddit"}]
-        ]
-    },
-
-    {
-        ENT_ID: "Linux",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{LOWER: "linux"}]
-        ]
-    },
-
-    {
-        ENT_ID: "Haskell",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{LOWER: "haskell"}],
-        ]
-    },
-
-    {
-        ENT_ID: "HaskellCurry",
-        "attrs": {ENT_TYPE: "PERSON"},
-        "patterns": [
-            [{LOWER: "haskell"}, {LOWER: "curry"}]
-        ]
-    },
-
-    {
-        ENT_ID: "Javascript",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{LOWER: "javascript"}],
-        ]
-    },
-
-    {
-        ENT_ID: "CSS",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{LOWER: "css"}],
-            [{LOWER: "css3"}],
-        ]
-    },
-
-    {
-        ENT_ID: "HTML",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{LOWER: "html"}],
-            [{LOWER: "html5"}],
-        ]
-    },
-
-    {
-        ENT_ID: "Python",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{ORTH: "Python"}]
-        ]
-    },
-
-    {
-        ENT_ID: "Ruby",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{ORTH: "Ruby"}]
-        ]
-    },
-
-    {
-        ENT_ID: "spaCy",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{LOWER: "spacy"}]
-        ]
-    },
-
-    {
-        ENT_ID: "displaCy",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{LOWER: "displacy"}]
-        ]
-    },
-
-    {
-        ENT_ID: "Digg",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{LOWER: "digg"}]
-        ]
-    },
-
-    {
-        ENT_ID: "FoxNews",
-        "attrs": {ENT_TYPE: "ORG"},
-        "patterns": [
-            [{LOWER: "foxnews"}],
-            [{LOWER: "fox"}, {LOWER: "news"}]
-        ]
-    },
-
-    {
-        ENT_ID: "Google",
-        "attrs": {ENT_TYPE: "ORG"},
-        "patterns": [
-            [{LOWER: "google"}]
-        ]
-    },
-
-    {
-        ENT_ID: "Mac",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{LOWER: "mac"}]
-        ]
-    },
-
-    {
-        ENT_ID: "Wikipedia",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{LOWER: "wikipedia"}]
-        ]
-    },
-
-    {
-        ENT_ID: "Windows",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{ORTH: "Windows"}]
-        ]
-    },
-
-    {
-        ENT_ID: "Dell",
-        "attrs": {ENT_TYPE: "ORG"},
-        "patterns": [
-            [{LOWER: "dell"}]
-        ]
-    },
-
-    {
-        ENT_ID: "Facebook",
-        "attrs": {ENT_TYPE: "ORG"},
-        "patterns": [
-            [{LOWER: "facebook"}]
-        ]
-    },
-
-    {
-        ENT_ID: "Blizzard",
-        "attrs": {ENT_TYPE: "ORG"},
-        "patterns": [
-            [{ORTH: "Blizzard"}]
-        ]
-    },
-
-    {
-        ENT_ID: "Ubuntu",
-        "attrs": {ENT_TYPE: "ORG"},
-        "patterns": [
-            [{ORTH: "Ubuntu"}]
-        ]
-    },
-
-    {
-        ENT_ID: "YouTube",
-        "attrs": {ENT_TYPE: "PRODUCT"},
-        "patterns": [
-            [{LOWER: "youtube"}]
-        ]
-    }
-]
+for name, tag, patterns in [
+    ("Reddit", "PRODUCT", [[{LOWER: "reddit"}]]),
+    ("Linux", "PRODUCT", [[{LOWER: "linux"}]]),
+    ("Haskell", "PRODUCT", [[{LOWER: "haskell"}]]),
+    ("HaskellCurry", "PERSON", [[{LOWER: "haskell"}, {LOWER: "curry"}]]),
+    ("Javascript", "PRODUCT", [[{LOWER: "javascript"}]]),
+    ("CSS", "PRODUCT", [[{LOWER: "css"}], [{LOWER: "css3"}]]),
+    ("HTML", "PRODUCT", [[{LOWER: "html"}], [{LOWER: "html5"}]]),
+    ("Python", "PRODUCT", [[{ORTH: "Python"}]]),
+    ("Ruby", "PRODUCT", [[{ORTH: "Ruby"}]]),
+    ("spaCy", "PRODUCT", [[{LOWER: "spacy"}]]),
+    ("displaCy", "PRODUCT", [[{LOWER: "displacy"}]]),
+    ("Digg", "PRODUCT", [[{LOWER: "digg"}]]),
+    ("FoxNews", "ORG", [[{LOWER: "foxnews"}], [{LOWER: "fox"}, {LOWER: "news"}]]),
+    ("Google", "ORG", [[{LOWER: "google"}]]),
+    ("Mac", "PRODUCT", [[{LOWER: "mac"}]]),
+    ("Wikipedia", "PRODUCT", [[{LOWER: "wikipedia"}]]),
+    ("Windows", "PRODUCT", [[{LOWER: "windows"}]]),
+    ("Dell", "ORG", [[{LOWER: "dell"}]]),
+    ("Facebook", "ORG", [[{LOWER: "facebook"}]]),
+    ("Blizzard", "ORG", [[{LOWER: "blizzard"}]]),
+    ("Ubuntu", "ORG", [[{LOWER: "ubuntu"}]]),
+    ("YouTube", "PRODUCT", [[{LOWER: "youtube"}]]),]:
+    ENTITY_RULES.append({ENT_ID: name, 'attrs': {ENT_TYPE: tag}, 'patterns': patterns})
 
 
 FALSE_POSITIVES = [
