@@ -28,8 +28,11 @@ from murmurhash.mrmr cimport hash64
 from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
 
-from numpy import exp
 
+from thinc.api import layerize, chain
+from thinc.neural import Model, Maxout
+
+from .._ml import PrecomputableAffine, PrecomputableMaxouts
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
@@ -44,10 +47,9 @@ from ..strings cimport StringStore
 from ..gold cimport GoldParse
 from ..attrs cimport TAG, DEP
 
-from .._ml import build_parser_state2vec, build_model
-from .._ml import build_state2vec, build_model
-from .._ml import build_debug_state2vec, build_debug_model
 
+def get_templates(*args, **kwargs):
+    return []
 
 USE_FTRL = True
 DEBUG = False
@@ -56,8 +58,109 @@ def set_debug(val):
     DEBUG = val
 
 
-def get_templates(*args, **kwargs):
-    return []
+def get_greedy_model_for_batch(tokvecs, TransitionSystem moves, upper_model, lower_model):
+    cdef int[:, :] is_valid_
+    cdef float[:, :] costs_
+    lengths = [len(t) for t in tokvecs]
+    tokvecs = upper_model.ops.flatten(tokvecs)
+    is_valid = upper_model.ops.allocate((len(tokvecs), moves.n_moves), dtype='i')
+    costs = upper_model.ops.allocate((len(tokvecs), moves.n_moves), dtype='f')
+    token_ids = upper_model.ops.allocate((len(tokvecs), lower_model.nF), dtype='i')
+
+    cached, bp_features = lower_model.begin_update(tokvecs, drop=0.)
+
+    is_valid_ = is_valid
+    costs_ = costs
+
+    def forward(states_offsets, drop=0.):
+        nonlocal is_valid, costs, token_ids, moves
+        states, offsets = states_offsets
+        assert len(states) != 0
+        is_valid = is_valid[:len(states)]
+        costs = costs[:len(states)]
+        token_ids = token_ids[:len(states)]
+        is_valid = is_valid[:len(states)]
+        cdef StateClass state
+        cdef int i
+        for i, (offset, state) in enumerate(zip(offsets, states)):
+            state.set_context_tokens(token_ids[i])
+            moves.set_valid(&is_valid_[i, 0], state.c)
+        adjusted_ids = token_ids.copy()
+        for i, offset in enumerate(offsets):
+            adjusted_ids[i] *= token_ids[i] >= 0
+            adjusted_ids[i] += offset
+        features = upper_model.ops.allocate((len(states), lower_model.nO), dtype='f')
+        for i in range(len(states)):
+            for j, tok_i in enumerate(adjusted_ids[i]):
+                if tok_i >= 0:
+                    features[i] += cached[j, tok_i]
+
+        scores, bp_scores = upper_model.begin_update(features, drop=drop)
+        scores = upper_model.ops.relu(scores)
+        softmaxed = upper_model.ops.softmax(scores)
+        # Renormalize for invalid actions
+        softmaxed *= is_valid
+        totals = softmaxed.sum(axis=1)
+        for total in totals:
+            assert total > 0, (totals, scores, softmaxed)
+            assert total <= 1.1, totals
+        softmaxed /= softmaxed.sum(axis=1).reshape((softmaxed.shape[0], 1))
+
+        def backward(golds, sgd=None):
+            nonlocal costs_, is_valid_, moves
+            cdef int i
+            for i, (state, gold) in enumerate(zip(states, golds)):
+                moves.set_costs(&is_valid_[i, 0], &costs_[i, 0],
+                    state, gold)
+            d_scores = scores.copy()
+            d_scores.fill(0)
+            set_log_loss(upper_model.ops, d_scores,
+                scores, is_valid, costs)
+            upper_model.ops.backprop_relu(d_scores, scores, inplace=True)
+            d_features = bp_scores(d_scores, sgd)
+            d_tokens = bp_features((d_features, adjusted_ids), sgd)
+            return (token_ids, d_tokens)
+
+        return softmaxed, backward
+
+    return layerize(forward)
+
+
+def set_log_loss(ops, gradients, scores, is_valid, costs):
+    """Do multi-label log loss"""
+    n = gradients.shape[0]
+    scores = scores * is_valid
+    g_scores = scores * is_valid * (costs <= 0.)
+    exps = ops.xp.exp(scores - scores.max(axis=1).reshape((n, 1)))
+    exps *= is_valid
+    g_exps = ops.xp.exp(g_scores - g_scores.max(axis=1).reshape((n, 1)))
+    g_exps *= costs <= 0.
+    g_exps *= is_valid
+    gradients[:] = exps / exps.sum(axis=1).reshape((n, 1))
+    gradients -= g_exps / g_exps.sum(axis=1).reshape((n, 1))
+
+
+def transition_batch(TransitionSystem moves, states, scores):
+    cdef StateClass state
+    cdef int guess
+    for state, guess in zip(states, scores.argmax(axis=1)):
+        action = moves.c[guess]
+        action.do(state.c, action.label)
+
+
+def init_states(TransitionSystem moves, docs):
+    cdef Doc doc
+    cdef StateClass state
+    offsets = []
+    states = []
+    offset = 0
+    for i, doc in enumerate(docs):
+        state = StateClass.init(doc.c, doc.length)
+        moves.initialize_state(state.c)
+        states.append(state)
+        offsets.append(offset)
+        offset += len(doc)
+    return states, offsets
 
 
 cdef class Parser:
@@ -107,8 +210,9 @@ cdef class Parser:
         cfg['actions'] = TransitionSystem.get_actions(**cfg)
         self.moves = TransitionSystem(vocab.strings, cfg['actions'])
         if model is None:
-            model = self.build_model(**cfg)
-        self.model = model
+            self.model, self.feature_maps = self.build_model(**cfg)
+        else:
+            self.model, self.feature_maps = model
         self.cfg = cfg
 
     def __reduce__(self):
@@ -116,10 +220,10 @@ cdef class Parser:
 
     def build_model(self, width=128, nr_vector=1000, nF=1, nB=1, nS=1, nL=1, nR=1, **_):
         nr_context_tokens = StateClass.nr_context_tokens(nF, nB, nS, nL, nR)
-        state2vec = build_state2vec(nr_context_tokens, width, nr_vector)
-        #state2vec = build_debug_state2vec(width, nr_vector)
-        model = build_debug_model(state2vec, width*2, 2, self.moves.n_moves)
-        return model
+
+        upper = chain(Maxout(width, width), Maxout(self.moves.n_moves, width))
+        lower = PrecomputableMaxouts(width, nF=nr_context_tokens, nI=width*2)
+        return upper, lower
 
     def __call__(self, Doc tokens):
         """
@@ -131,7 +235,6 @@ cdef class Parser:
             None
         """
         self.parse_batch([tokens])
-        self.moves.finalize_doc(tokens)
 
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
         """
@@ -167,169 +270,53 @@ cdef class Parser:
                 yield doc
 
     def parse_batch(self, docs):
-        states = self._init_states(docs)
-        nr_class = self.moves.n_moves
         cdef Doc doc
         cdef StateClass state
-        cdef int guess
-        tokvecs = [d.tensor for d in docs]
+        model = get_greedy_model_for_batch([d.tensor for d in docs],
+                    self.moves, self.model, self.feature_maps)
+        states, offsets = init_states(self.moves, docs)
         all_states = list(states)
-        todo = zip(states, tokvecs)
+        todo = list(zip(states, offsets))
         while todo:
             todo = filter(lambda sp: not sp[0].py_is_final(), todo)
             if not todo:
                 break
-            states, tokvecs = zip(*todo)
-            scores, _ = self._begin_update(states, tokvecs)
-            self._transition_batch(states, docs, scores)
+            states, offsets = zip(*todo)
+            scores = model((states, offsets))
+            transition_batch(self.moves, states, scores)
+            todo = [st for st in todo if not st[0].py_is_final()]
         for state, doc in zip(all_states, docs):
             self.moves.finalize_state(state.c)
             for i in range(doc.length):
                 doc.c[i] = state.c._sent[i]
-
-    def begin_training(self, docs, golds):
-        for gold in golds:
-            self.moves.preprocess_gold(gold)
-        states = self._init_states(docs)
-        tokvecs = [d.tensor for d in docs]
-        d_tokens = [self.model.ops.allocate(d.tensor.shape) for d in docs]
-        nr_class = self.moves.n_moves
-        costs = self.model.ops.allocate((len(docs), nr_class), dtype='f')
-        gradients = self.model.ops.allocate((len(docs), nr_class), dtype='f')
-        is_valid = self.model.ops.allocate((len(docs), nr_class), dtype='i')
-        attr_names = numpy.zeros((2,), dtype='i')
-        attr_names[0] = TAG
-        attr_names[1] = DEP
-
-        features = self._get_features(states, tokvecs, attr_names)
-        self.model.begin_training(features)
+        for doc in docs:
+            self.moves.finalize_doc(doc)
 
     def update(self, docs, golds, drop=0., sgd=None):
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             return self.update([docs], [golds], drop=drop)
         for gold in golds:
             self.moves.preprocess_gold(gold)
-        states = self._init_states(docs)
-        tokvecs = [d.tensor for d in docs]
+
+        model = get_greedy_model_for_batch([d.tensor for d in docs],
+                    self.moves, self.model, self.feature_maps)
+        states, offsets = init_states(self.moves, docs)
+
         d_tokens = [self.model.ops.allocate(d.tensor.shape) for d in docs]
-        nr_class = self.moves.n_moves
         output = list(d_tokens)
-        todo = zip(states, tokvecs, golds, d_tokens)
-        assert len(states) == len(todo)
-        losses = []
+        todo = zip(states, offsets, golds, d_tokens)
         while todo:
             # Get unfinished states (and their matching gold and token gradients)
             todo = filter(lambda sp: not sp[0].py_is_final(), todo)
             if not todo:
                 break
-            states, tokvecs, golds, d_tokens = zip(*todo)
-            scores, finish_update = self._begin_update(states, tokvecs)
-            token_ids, batch_token_grads = finish_update(golds, sgd=sgd, losses=losses,
-                                                         force_gold=False)
-            batch_token_grads *= (token_ids >= 0).reshape((token_ids.shape[0], token_ids.shape[1], 1))
-            token_ids *= token_ids >= 0
-            if hasattr(self.model.ops.xp, 'scatter_add'):
-                for i, tok_ids in enumerate(token_ids):
-                    self.model.ops.xp.scatter_add(d_tokens[i],
-                        tok_ids, batch_token_grads[i])
-            else:
-                for i, tok_ids in enumerate(token_ids):
-                    self.model.ops.xp.add.at(d_tokens[i],
-                        tok_ids, batch_token_grads[i])
-            self._transition_batch(states, docs, scores)
-        return output, sum(losses)
-
-    def _begin_update(self, states, tokvecs, drop=0.):
-        nr_class = self.moves.n_moves
-        attr_names = numpy.zeros((2,), dtype='i')
-        attr_names[0] = TAG
-        attr_names[1] = DEP
-
-        features = self._get_features(states, tokvecs, attr_names)
-        scores, finish_update = self.model.begin_update(features, drop=drop)
-        assert scores.shape[0] == len(states), (len(states), scores.shape)
-        assert len(scores.shape) == 2
-        is_valid = self.model.ops.allocate((len(states), nr_class), dtype='i')
-        self._validate_batch(is_valid, states)
-        softmaxed = self.model.ops.softmax(scores)
-        softmaxed *= is_valid
-        softmaxed /= softmaxed.sum(axis=1).reshape((softmaxed.shape[0], 1))
-        def backward(golds, sgd=None, losses=[], force_gold=False):
-            nonlocal softmaxed
-            costs = self.model.ops.allocate((len(states), nr_class), dtype='f')
-            d_scores = self.model.ops.allocate((len(states), nr_class), dtype='f')
-
-            self._cost_batch(costs, is_valid, states, golds)
-            self._set_gradient(d_scores, scores, is_valid, costs)
-            losses.append(self.model.ops.xp.abs(d_scores).sum())
-            if force_gold:
-                softmaxed *= costs <= 0
-            return finish_update(d_scores, sgd=sgd)
-        return softmaxed, backward
-
-    def _init_states(self, docs):
-        states = []
-        cdef Doc doc
-        cdef StateClass state
-        for i, doc in enumerate(docs):
-            state = StateClass.init(doc.c, doc.length)
-            self.moves.initialize_state(state.c)
-            states.append(state)
-        return states
-
-    def _get_features(self, states, all_tokvecs, attr_names,
-            nF=1, nB=0, nS=2, nL=2, nR=2):
-        n_tokens = states[0].nr_context_tokens(nF, nB, nS, nL, nR)
-        vector_length = all_tokvecs[0].shape[1]
-        cpu_tokens = numpy.zeros((len(states), n_tokens), dtype='int32')
-        features = numpy.zeros((len(states), n_tokens, attr_names.shape[0]), dtype='uint64')
-        tokvecs = self.model.ops.allocate((len(states), n_tokens, vector_length), dtype='f')
-        for i, state in enumerate(states):
-            state.set_context_tokens(cpu_tokens[i], nF, nB, nS, nL, nR)
-        for i in range(len(states)):
-            for j, tok_i in enumerate(cpu_tokens[i]):
-                if tok_i >= 0:
-                    tokvecs[i, j] = all_tokvecs[i][tok_i]
-        return (cpu_tokens, self.model.ops.asarray(features), tokvecs)
-
-    def _validate_batch(self, int[:, ::1] is_valid, states):
-        cdef StateClass state
-        cdef int i
-        for i, state in enumerate(states):
-            self.moves.set_valid(&is_valid[i, 0], state.c)
-
-    def _cost_batch(self, float[:, ::1] costs, int[:, ::1] is_valid,
-            states, golds):
-        cdef int i
-        cdef StateClass state
-        cdef GoldParse gold
-        for i, (state, gold) in enumerate(zip(states, golds)):
-            self.moves.set_costs(&is_valid[i, 0], &costs[i, 0], state, gold)
-
-    def _transition_batch(self, states, docs, scores):
-        cdef StateClass state
-        cdef int guess
-        for state, doc, guess in zip(states, docs, scores.argmax(axis=1)):
-            action = self.moves.c[guess]
-            orths = [t.lex.orth for t in state.c._sent[:state.c.length]]
-            words = [doc.vocab.strings[w] for w in orths]
-            if not action.is_valid(state.c, action.label):
-                ValueError("Invalid action", scores)
-            action.do(state.c, action.label)
-
-    def _set_gradient(self, gradients, scores, is_valid, costs):
-        """Do multi-label log loss"""
-        cdef double Z, gZ, max_, g_max
-        n = gradients.shape[0]
-        scores = scores * is_valid
-        g_scores = scores * is_valid * (costs <= 0.)
-        exps = self.model.ops.xp.exp(scores - scores.max(axis=1).reshape((n, 1)))
-        exps *= is_valid
-        g_exps = self.model.ops.xp.exp(g_scores - g_scores.max(axis=1).reshape((n, 1)))
-        g_exps *= costs <= 0.
-        g_exps *= is_valid
-        gradients[:] = exps / exps.sum(axis=1).reshape((n, 1))
-        gradients -= g_exps / g_exps.sum(axis=1).reshape((n, 1))
+            states, offsets, golds, d_tokens = zip(*todo)
+            scores, finish_update = model.begin_update((states, offsets))
+            (token_ids, d_state_features) = finish_update(golds, sgd=sgd)
+            for i, token_ids in enumerate(token_ids):
+                d_tokens[i][token_ids] += d_state_features[i]
+            transition_batch(self.moves, states, scores)
+        return output
 
     def step_through(self, Doc doc, GoldParse gold=None):
         """
@@ -364,6 +351,50 @@ cdef class Parser:
                 # Important that the labels be stored as a list! We need the
                 # order, or the model goes out of synch
                 self.cfg.setdefault('extra_labels', []).append(label)
+
+
+def _begin_update(self, model, states, tokvecs, drop=0.):
+    nr_class = self.moves.n_moves
+    attr_names = self.model.ops.allocate((2,), dtype='i')
+    attr_names[0] = TAG
+    attr_names[1] = DEP
+
+    features = self._get_features(states, tokvecs, attr_names)
+    scores, finish_update = self.model.begin_update(features, drop=drop)
+    assert scores.shape[0] == len(states), (len(states), scores.shape)
+    assert len(scores.shape) == 2
+    is_valid = self.model.ops.allocate((len(states), nr_class), dtype='i')
+    self._validate_batch(is_valid, states)
+    softmaxed = self.model.ops.softmax(scores)
+    softmaxed *= is_valid
+    softmaxed /= softmaxed.sum(axis=1).reshape((softmaxed.shape[0], 1))
+    def backward(golds, sgd=None, losses=[], force_gold=False):
+        nonlocal softmaxed
+        costs = self.model.ops.allocate((len(states), nr_class), dtype='f')
+        d_scores = self.model.ops.allocate((len(states), nr_class), dtype='f')
+
+        self._cost_batch(costs, is_valid, states, golds)
+        self._set_gradient(d_scores, scores, is_valid, costs)
+        losses.append(numpy.abs(d_scores).sum())
+        if force_gold:
+            softmaxed *= costs <= 0
+        return finish_update(d_scores, sgd=sgd)
+    return softmaxed, backward
+
+
+def _get_features(self, states, all_tokvecs, attr_names,
+        nF=1, nB=0, nS=2, nL=2, nR=2):
+    n_tokens = states[0].nr_context_tokens(nF, nB, nS, nL, nR)
+    vector_length = all_tokvecs[0].shape[1]
+    tokens = self.model.ops.allocate((len(states), n_tokens), dtype='int32')
+    features = self.model.ops.allocate((len(states), n_tokens, attr_names.shape[0]), dtype='uint64')
+    tokvecs = self.model.ops.allocate((len(states), n_tokens, vector_length), dtype='f')
+    for i, state in enumerate(states):
+        state.set_context_tokens(tokens[i], nF, nB, nS, nL, nR)
+        state.set_attributes(features[i], tokens[i], attr_names)
+        state.set_token_vectors(tokvecs[i], all_tokvecs[i], tokens[i])
+    return (tokens, features, tokvecs)
+
 
 
 cdef int dropout(FeatureC* feats, int nr_feat, float prob) except -1:

@@ -23,7 +23,7 @@ class TokenVectorEncoder(object):
     '''Assign position-sensitive vectors to tokens, using a CNN or RNN.'''
     def __init__(self, vocab, **cfg):
         self.vocab = vocab
-        self.model = build_tok2vec(vocab.lang, 64, **cfg)
+        self.model = build_tok2vec(vocab.lang, **cfg)
         self.tagger = chain(
                         self.model,
                         flatten,
