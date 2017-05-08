@@ -1,28 +1,26 @@
-# encoding: utf8
-from __future__ import unicode_literals, print_function
+# coding: utf8
+from __future__ import unicode_literals
 
-from os import path
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
+from .stop_words import STOP_WORDS
+from .morph_rules import MORPH_RULES
 
+from ..language_data import BASE_EXCEPTIONS
 from ..language import Language
 from ..attrs import LANG
+from ..util import update_exc
 
 
-# Import language-specific data
-from .language_data import *
-
-
-# create Language subclass
 class Norwegian(Language):
-    lang = 'nb' # ISO code
+    lang = 'nb'
 
     class Defaults(Language.Defaults):
         lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
         lex_attr_getters[LANG] = lambda text: 'nb'
-        
-        # override defaults
-        tokenizer_exceptions = TOKENIZER_EXCEPTIONS
-        #tag_map = TAG_MAP
-        stop_words = STOP_WORDS
+
+        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+        stop_words = set(STOP_WORDS)
+        morph_rules = dict(MORPH_RULES)
 
 
-EXPORT = Norwegian
+__all__ = ['Norwegian']

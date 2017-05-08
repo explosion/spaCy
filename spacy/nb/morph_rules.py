@@ -1,18 +1,18 @@
 # encoding: utf8
-# norwegian bokmål
 from __future__ import unicode_literals
- 
-from ..symbols import *
-from ..language_data import PRON_LEMMA
- 
+
+from ..symbols import LEMMA
+from ..deprecated import PRON_LEMMA
+
+
 # Used the table of pronouns at https://no.wiktionary.org/wiki/Tillegg:Pronomen_i_norsk
- 
+
 MORPH_RULES = {
     "PRP": {
         "jeg":          {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "One", "Number": "Sing", "Case": "Nom"},
         "meg":          {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "One", "Number": "Sing", "Case": "Acc"},
         "du":           {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "Two", "Number": "Sing", "Case": "Nom"},
-        "deg":          {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "Two", "Number": "Sing", "Case": "Acc"},        
+        "deg":          {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "Two", "Number": "Sing", "Case": "Acc"},
         "han":          {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Masc", "Case": "Nom"},
         "ham":          {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Masc", "Case": "Acc"},
         "han":          {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "Three", "Number": "Sing", "Gender": "Masc", "Case": "Acc"},
@@ -27,7 +27,7 @@ MORPH_RULES = {
         "de":           {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "Three", "Number": "Plur", "Case": "Nom"},
         "dem":          {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "Three", "Number": "Plur", "Case": "Acc"},
         "seg":          {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "Three", "Number": "Plur", "Reflex": "Yes"},
-         
+
         "min":          {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "One", "Number": "Sing", "Poss": "Yes", "Gender": "Masc"},
         "mi":           {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "One", "Number": "Sing", "Poss": "Yes", "Gender": "Fem"},
         "mitt":         {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "One", "Number": "Sing", "Poss": "Yes", "Gender": "Neu"},
@@ -49,17 +49,17 @@ MORPH_RULES = {
         "sitt":         {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "One", "Number": "Sing", "Poss": "Yes", "Gender":"Neu", "Reflex":"Yes"},
         "sine":         {LEMMA: PRON_LEMMA, "PronType": "Prs", "Person": "One", "Number": "Plur", "Poss": "Yes", "Reflex":"Yes"},
     },
- 
+
     "VBZ": {
         "er":           {LEMMA: "be", "VerbForm": "Fin", "Person": "One", "Tense": "Pres", "Mood": "Ind"},
         "er":           {LEMMA: "be", "VerbForm": "Fin", "Person": "Two", "Tense": "Pres", "Mood": "Ind"},
         "er":           {LEMMA: "be", "VerbForm": "Fin", "Person": "Three", "Tense": "Pres", "Mood": "Ind"},
     },
- 
+
     "VBP": {
         "er":          {LEMMA: "be", "VerbForm": "Fin", "Tense": "Pres", "Mood": "Ind"}
     },
- 
+
     "VBD": {
         "var":          {LEMMA: "be", "VerbForm": "Fin", "Tense": "Past", "Number": "Sing"},
         "vært":         {LEMMA: "be", "VerbForm": "Fin", "Tense": "Past", "Number": "Plur"}
