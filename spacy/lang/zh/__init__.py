@@ -1,8 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..language import Language
-from ..tokens import Doc
+from ...language import Language
+from ...tokens import Doc
 
 
 class Chinese(Language):

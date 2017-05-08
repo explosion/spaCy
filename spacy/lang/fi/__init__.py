@@ -4,10 +4,10 @@ from __future__ import unicode_literals
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 
-from ..language_data import BASE_EXCEPTIONS
-from ..language import Language
-from ..attrs import LANG
-from ..util import update_exc
+from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from ...language import Language
+from ...attrs import LANG
+from ...util import update_exc
 
 
 class Finnish(Language):

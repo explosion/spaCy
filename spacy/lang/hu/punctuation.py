@@ -1,9 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..language_data.punctuation import ALPHA_LOWER, LIST_ELLIPSES, QUOTES
-from ..language_data.punctuation import ALPHA_UPPER, LIST_QUOTES, UNITS
-from ..language_data.punctuation import CURRENCY, LIST_PUNCT, ALPHA, _QUOTES
 
 
 _currency_symbols = r"\$ ¢ £ € ¥ ฿"
@@ -38,3 +35,6 @@ TOKENIZER_INFIXES = (
         r'(?<=[{a}])--(?=[{a}])'.format(a=ALPHA),
         r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),
         r'(?<=[{a}])([{q}\)\]\(\[])(?=[\-{a}])'.format(a=ALPHA, q=_QUOTES.replace("'", "").strip().replace(" ", ""))])
+from ..char_classes import TOKENIZER_INFIXES, LIST_PUNCT LIST_ELLIPSES
+from ..char_classes import LIST_QUOTES, CURRENCY, QUOTES, UNITS
+from ..char_classes import ALPHA, ALPHA_LOWER, ALPHA_UPPER

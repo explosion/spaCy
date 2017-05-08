@@ -3,12 +3,12 @@ from __future__ import unicode_literals
 
 import regex as re
 
-from .punctuation import ELISION, HYPHENS
 from ._tokenizer_exceptions_list import FR_BASE_EXCEPTIONS
-from ..symbols import ORTH, LEMMA, TAG, NORM
-from ..deprecated import PRON_LEMMA
-from ..language_data.tokenizer_exceptions import _URL_PATTERN
-from ..language_data.punctuation import ALPHA_LOWER
+from .punctuation import ELISION, HYPHENS
+from ..tokenizer_exceptions import URL_PATTERN
+from ..char_classes import ALPHA_LOWER
+from ...symbols import ORTH, LEMMA, TAG, NORM
+from ...deprecated import PRON_LEMMA
 
 
 def upper_first_letter(text):

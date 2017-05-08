@@ -1,9 +1,9 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..language_data.punctuation import ALPHA, TOKENIZER_INFIXES, LIST_PUNCT
-from ..language_data.punctuation import LIST_ELLIPSES, LIST_QUOTES, CURRENCY
-from ..language_data.punctuation import UNITS, ALPHA_LOWER, QUOTES, ALPHA_UPPER
+from ..char_classes import TOKENIZER_INFIXES, LIST_PUNCT LIST_ELLIPSES
+from ..char_classes import LIST_QUOTES, CURRENCY, QUOTES, UNITS
+from ..char_classes import ALPHA, ALPHA_LOWER, ALPHA_UPPER
 
 
 ELISION = " ' ’ ".strip().replace(' ', '').replace('\n', '')

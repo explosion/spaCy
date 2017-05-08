@@ -1,7 +1,7 @@
 # coding=utf-8
 from __future__ import unicode_literals
 
-from ..symbols import *
+from ...symbols import ORTH, LEMMA
 
 TOKENIZER_EXCEPTIONS = {}
 

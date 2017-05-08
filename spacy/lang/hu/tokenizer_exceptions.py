@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 
 import regex as re
 
-from ..symbols import ORTH
-from ..language_data.punctuation import ALPHA_LOWER, CURRENCY
-from ..language_data.tokenizer_exceptions import _URL_PATTERN
+from ..punctuation import ALPHA_LOWER, CURRENCY
+from ..tokenizer_exceptions import URL_PATTERN
+from ...symbols import ORTH
+
 
 
 _exc = {}

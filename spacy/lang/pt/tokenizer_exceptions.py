@@ -1,8 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..symbols import ORTH, LEMMA, NORM
-from ..deprecated import PRON_LEMMA
+from ...symbols import ORTH, LEMMA, NORM
+from ...deprecated import PRON_LEMMA
 
 
 _exc = {

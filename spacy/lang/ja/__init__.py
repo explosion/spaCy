@@ -1,9 +1,9 @@
 # encoding: utf8
 from __future__ import unicode_literals, print_function
 
-from ..language import Language
-from ..attrs import LANG
-from ..tokens import Doc
+from ...language import Language
+from ...attrs import LANG
+from ...tokens import Doc
 
 
 class Japanese(Language):
