@@ -1,3 +1,5 @@
+# coding: utf8
+from __future__ import unicode_literals
 
 from .lookup import LOOKUP
 from ._adjectives import ADJECTIVES
