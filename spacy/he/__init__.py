@@ -1,10 +1,12 @@
-# encoding: utf8
-from __future__ import unicode_literals, print_function
+# coding: utf8
+from __future__ import unicode_literals
 
+from .stop_words import STOP_WORDS
+
+from ..language_data import BASE_EXCEPTIONS
 from ..language import Language
 from ..attrs import LANG
-
-from .language_data import *
+from ..util import update_exc
 
 
 class Hebrew(Language):
@@ -14,8 +16,8 @@ class Hebrew(Language):
         lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
         lex_attr_getters[LANG] = lambda text: 'he'
 
-        tokenizer_exceptions = TOKENIZER_EXCEPTIONS
-        stop_words = STOP_WORDS
+        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
+        stop_words = set(STOP_WORDS)
 
 
-EXPORT = Hebrew
+__all__ = ['Hebrew']
