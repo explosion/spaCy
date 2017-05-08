@@ -1,7 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..symbols import *
+from ..symbols import POS, ADV, NOUN, ADP, PRON, SCONJ, PROPN, DET, SYM, INTJ
+from ..symbols import PUNCT, NUM, AUX, X, CONJ, ADJ, VERB, PART, SPACE
 
 
 TAG_MAP = {
