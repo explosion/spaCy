@@ -103,7 +103,7 @@ for elision_char in ELISION:
 _infixes_exc += [upper_first_letter(word) for word in _infixes_exc]
 _infixes_exc = list(set(_infixes_exc))
 
-for exc_data in _infixes_exc:
+for orth in _infixes_exc:
     _exc[orth] = [{ORTH: orth}]
 
 
