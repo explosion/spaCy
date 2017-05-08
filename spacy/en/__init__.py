@@ -1,14 +1,16 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..language import Language
-from ..lemmatizer import Lemmatizer
-from ..vocab import Vocab
-from ..tokenizer import Tokenizer
-from ..attrs import LANG
-from ..deprecated import fix_glove_vectors_loading
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
+from .tag_map import TAG_MAP
+from .stop_words import STOP_WORDS
+from .morph_rules import MORPH_RULES
+from .lemmatizer import LEMMA_RULES, LEMMA_INDEX, LEMMA_EXC
 
-from .language_data import *
+from ..language_data import BASE_EXCEPTIONS
+from ..language import Language
+from ..attrs import LANG
+from ..util import update_exc
 
 
 class English(Language):
@@ -18,20 +20,13 @@ class English(Language):
         lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
         lex_attr_getters[LANG] = lambda text: 'en'
 
-        tokenizer_exceptions = TOKENIZER_EXCEPTIONS
-        tag_map = TAG_MAP
-        stop_words = STOP_WORDS
-
+        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+        tag_map = dict(TAG_MAP)
+        stop_words = set(STOP_WORDS)
         morph_rules = dict(MORPH_RULES)
         lemma_rules = dict(LEMMA_RULES)
         lemma_index = dict(LEMMA_INDEX)
         lemma_exc = dict(LEMMA_EXC)
 
 
-    def __init__(self, **overrides):
-        # Special-case hack for loading the GloVe vectors, to support <1.0
-        overrides = fix_glove_vectors_loading(overrides)
-        Language.__init__(self, **overrides)
-
-
-EXPORT = English
+__all__ = ['English']
