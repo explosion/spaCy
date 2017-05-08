@@ -218,11 +218,11 @@ cdef class Parser:
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
-    def build_model(self, width=128, nr_vector=1000, nF=1, nB=1, nS=1, nL=1, nR=1, **_):
+    def build_model(self, width=64, nr_vector=1000, nF=1, nB=1, nS=1, nL=1, nR=1, **_):
         nr_context_tokens = StateClass.nr_context_tokens(nF, nB, nS, nL, nR)
 
         upper = chain(Maxout(width, width), Maxout(self.moves.n_moves, width))
-        lower = PrecomputableMaxouts(width, nF=nr_context_tokens, nI=width*2)
+        lower = PrecomputableMaxouts(width, nF=nr_context_tokens, nI=width)
         return upper, lower
 
     def __call__(self, Doc tokens):
