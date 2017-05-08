@@ -1,11 +1,12 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..symbols import *
-from ..language_data import PRON_LEMMA
+from ..symbols import ORTH, LEMMA, TAG, NORM
+from ..deprecated import PRON_LEMMA
 
 
-EXC = {}
+_exc = {}
+
 
 # Verbs
 
@@ -17,188 +18,66 @@ for verb_data in [
     {ORTH: "hajar", LEMMA: "förstår"},
     {ORTH: "lever"},
     {ORTH: "serr", LEMMA: "ser"},
-    {ORTH: "fixar"}
-]:
+    {ORTH: "fixar"}]:
     verb_data_tc = dict(verb_data)
     verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
-
     for data in [verb_data, verb_data_tc]:
-        EXC[data[ORTH] + "u"] = [
+        _exc[data[ORTH] + "u"] = [
             dict(data),
-            {ORTH: "u", LEMMA: PRON_LEMMA, NORM: "du"}
-        ]
+            {ORTH: "u", LEMMA: PRON_LEMMA, NORM: "du"}]
 
 
-ABBREVIATIONS = {
-    "jan.": [
-        {ORTH: "jan.", LEMMA: "januari"}
-    ],
-    "febr.": [
-        {ORTH: "febr.", LEMMA: "februari"}
-    ],
-    "feb.": [
-        {ORTH: "feb.", LEMMA: "februari"}
-    ],
-    "apr.": [
-        {ORTH: "apr.", LEMMA: "april"}
-    ],
-    "jun.": [
-        {ORTH: "jun.", LEMMA: "juni"}
-    ],
-    "jul.": [
-        {ORTH: "jul.", LEMMA: "juli"}
-    ],
-    "aug.": [
-        {ORTH: "aug.", LEMMA: "augusti"}
-    ],
-    "sept.": [
-        {ORTH: "sept.", LEMMA: "september"}
-    ],
-    "sep.": [
-        {ORTH: "sep.", LEMMA: "september"}
-    ],
-    "okt.": [
-        {ORTH: "okt.", LEMMA: "oktober"}
-    ],
-    "nov.": [
-        {ORTH: "nov.", LEMMA: "november"}
-    ],
-    "dec.": [
-        {ORTH: "dec.", LEMMA: "december"}
-    ],
-    "mån.": [
-        {ORTH: "mån.", LEMMA: "måndag"}
-    ],
-    "tis.": [
-        {ORTH: "tis.", LEMMA: "tisdag"}
-    ],
-    "ons.": [
-        {ORTH: "ons.", LEMMA: "onsdag"}
-    ],
-    "tors.": [
-        {ORTH: "tors.", LEMMA: "torsdag"}
-    ],
-    "fre.": [
-        {ORTH: "fre.", LEMMA: "fredag"}
-    ],
-    "lör.": [
-        {ORTH: "lör.", LEMMA: "lördag"}
-    ],
-    "sön.": [
-        {ORTH: "sön.", LEMMA: "söndag"}
-    ],
-    "Jan.": [
-        {ORTH: "Jan.", LEMMA: "Januari"}
-    ],
-    "Febr.": [
-        {ORTH: "Febr.", LEMMA: "Februari"}
-    ],
-    "Feb.": [
-        {ORTH: "Feb.", LEMMA: "Februari"}
-    ],
-    "Apr.": [
-        {ORTH: "Apr.", LEMMA: "April"}
-    ],
-    "Jun.": [
-        {ORTH: "Jun.", LEMMA: "Juni"}
-    ],
-    "Jul.": [
-        {ORTH: "Jul.", LEMMA: "Juli"}
-    ],
-    "Aug.": [
-        {ORTH: "Aug.", LEMMA: "Augusti"}
-    ],
-    "Sept.": [
-        {ORTH: "Sept.", LEMMA: "September"}
-    ],
-    "Sep.": [
-        {ORTH: "Sep.", LEMMA: "September"}
-    ],
-    "Okt.": [
-        {ORTH: "Okt.", LEMMA: "Oktober"}
-    ],
-    "Nov.": [
-        {ORTH: "Nov.", LEMMA: "November"}
-    ],
-    "Dec.": [
-        {ORTH: "Dec.", LEMMA: "December"}
-    ],
-    "Mån.": [
-        {ORTH: "Mån.", LEMMA: "Måndag"}
-    ],
-    "Tis.": [
-        {ORTH: "Tis.", LEMMA: "Tisdag"}
-    ],
-    "Ons.": [
-        {ORTH: "Ons.", LEMMA: "Onsdag"}
-    ],
-    "Tors.": [
-        {ORTH: "Tors.", LEMMA: "Torsdag"}
-    ],
-    "Fre.": [
-        {ORTH: "Fre.", LEMMA: "Fredag"}
-    ],
-    "Lör.": [
-        {ORTH: "Lör.", LEMMA: "Lördag"}
-    ],
-    "Sön.": [
-        {ORTH: "Sön.", LEMMA: "Söndag"}
-    ],
-    "sthlm": [
-        {ORTH: "sthlm", LEMMA: "Stockholm"}
-    ],
-    "gbg": [
-        {ORTH: "gbg", LEMMA: "Göteborg"}
-    ]
-}
+for exc_data in [
+    {ORTH: "jan.", LEMMA: "januari"},
+    {ORTH: "febr.", LEMMA: "februari"},
+    {ORTH: "feb.", LEMMA: "februari"},
+    {ORTH: "apr.", LEMMA: "april"},
+    {ORTH: "jun.", LEMMA: "juni"},
+    {ORTH: "jul.", LEMMA: "juli"},
+    {ORTH: "aug.", LEMMA: "augusti"},
+    {ORTH: "sept.", LEMMA: "september"},
+    {ORTH: "sep.", LEMMA: "september"},
+    {ORTH: "okt.", LEMMA: "oktober"},
+    {ORTH: "nov.", LEMMA: "november"},
+    {ORTH: "dec.", LEMMA: "december"},
+    {ORTH: "mån.", LEMMA: "måndag"},
+    {ORTH: "tis.", LEMMA: "tisdag"},
+    {ORTH: "ons.", LEMMA: "onsdag"},
+    {ORTH: "tors.", LEMMA: "torsdag"},
+    {ORTH: "fre.", LEMMA: "fredag"},
+    {ORTH: "lör.", LEMMA: "lördag"},
+    {ORTH: "sön.", LEMMA: "söndag"},
+    {ORTH: "Jan.", LEMMA: "Januari"},
+    {ORTH: "Febr.", LEMMA: "Februari"},
+    {ORTH: "Feb.", LEMMA: "Februari"},
+    {ORTH: "Apr.", LEMMA: "April"},
+    {ORTH: "Jun.", LEMMA: "Juni"},
+    {ORTH: "Jul.", LEMMA: "Juli"},
+    {ORTH: "Aug.", LEMMA: "Augusti"},
+    {ORTH: "Sept.", LEMMA: "September"},
+    {ORTH: "Sep.", LEMMA: "September"},
+    {ORTH: "Okt.", LEMMA: "Oktober"},
+    {ORTH: "Nov.", LEMMA: "November"},
+    {ORTH: "Dec.", LEMMA: "December"},
+    {ORTH: "Mån.", LEMMA: "Måndag"},
+    {ORTH: "Tis.", LEMMA: "Tisdag"},
+    {ORTH: "Ons.", LEMMA: "Onsdag"},
+    {ORTH: "Tors.", LEMMA: "Torsdag"},
+    {ORTH: "Fre.", LEMMA: "Fredag"},
+    {ORTH: "Lör.", LEMMA: "Lördag"},
+    {ORTH: "Sön.", LEMMA: "Söndag"},
+    {ORTH: "sthlm", LEMMA: "Stockholm"},
+    {ORTH: "gbg", LEMMA: "Göteborg"}]:
+    _exc[exc_data[ORTH]] = [dict(exc_data)]
 
 
-TOKENIZER_EXCEPTIONS = dict(EXC)
-TOKENIZER_EXCEPTIONS.update(ABBREVIATIONS)
+for orth in [
+    "ang.", "anm.", "bil.", "bl.a.", "dvs.", "e.Kr.", "el.", "e.d.", "eng.",
+    "etc.", "exkl.", "f.d.", "fid.", "f.Kr.", "forts.", "fr.o.m.", "f.ö.",
+    "förf.", "inkl.", "jur.", "kl.", "kr.", "lat.", "m.a.o.", "max.", "m.fl.",
+    "min.", "m.m.", "obs.", "o.d.", "osv.", "p.g.a.", "ref.", "resp.", "s.a.s.",
+    "s.k.", "st.", "s:t", "t.ex.", "t.o.m.", "ung.", "äv.", "övers."]:
+    _exc[orth] = [{ORTH: orth}]
 
 
-ORTH_ONLY = [
-    "ang.",
-    "anm.",
-    "bil.",
-    "bl.a.",
-    "dvs.",
-    "e.Kr.",
-    "el.",
-    "e.d.",
-    "eng.",
-    "etc.",
-    "exkl.",
-    "f.d.",
-    "fid.",
-    "f.Kr.",
-    "forts.",
-    "fr.o.m.",
-    "f.ö.",
-    "förf.",
-    "inkl.",
-    "jur.",
-    "kl.",
-    "kr.",
-    "lat.",
-    "m.a.o.",
-    "max.",
-    "m.fl.",
-    "min.",
-    "m.m.",
-    "obs.",
-    "o.d.",
-    "osv.",
-    "p.g.a.",
-    "ref.",
-    "resp.",
-    "s.a.s.",
-    "s.k.",
-    "st.",
-    "s:t",
-    "t.ex.",
-    "t.o.m.",
-    "ung.",
-    "äv.",
-    "övers."
-]
+TOKENIZER_EXCEPTIONS = dict(_exc)

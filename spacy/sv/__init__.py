@@ -1,11 +1,17 @@
 # coding: utf8
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
 
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
+from .stop_words import STOP_WORDS
+from .morph_rules import MORPH_RULES
+from .lemmatizer import LEMMA_RULES, LOOKUP
+
+from ..language_data import BASE_EXCEPTIONS
 from ..language import Language
-from ..attrs import LANG
-from .language_data import *
 from ..lemmatizerlookup import Lemmatizer
-from .lemmatization import LOOK_UP
+from ..attrs import LANG
+from ..util import update_exc
+
 
 class Swedish(Language):
     lang = 'sv'
@@ -14,12 +20,13 @@ class Swedish(Language):
         lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
         lex_attr_getters[LANG] = lambda text: 'sv'
 
-        tokenizer_exceptions = TOKENIZER_EXCEPTIONS
-        stop_words = STOP_WORDS
+        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+        stop_words = set(STOP_WORDS)
+        morph_rules = dict(MORPH_RULES)
 
         @classmethod
         def create_lemmatizer(cls, nlp=None):
-            return Lemmatizer(LOOK_UP)
+            return Lemmatizer(LOOKUP)
 
 
-EXPORT = Swedish
+__all__ = ['Swedish']
