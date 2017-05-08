@@ -89,7 +89,7 @@ def get_greedy_model_for_batch(tokvecs, TransitionSystem moves, upper_model, low
         for i, offset in enumerate(offsets):
             adjusted_ids[i] *= token_ids[i] >= 0
             adjusted_ids[i] += offset
-        features = upper_model.ops.allocate((len(states), 64), dtype='f')
+        features = upper_model.ops.allocate((len(states), lower_model.nO), dtype='f')
         for i in range(len(states)):
             for j, tok_i in enumerate(adjusted_ids[i]):
                 if tok_i >= 0:
@@ -222,7 +222,7 @@ cdef class Parser:
         nr_context_tokens = StateClass.nr_context_tokens(nF, nB, nS, nL, nR)
 
         upper = chain(Maxout(width, width), Maxout(self.moves.n_moves, width))
-        lower = PrecomputableMaxouts(width, nF=nr_context_tokens, nI=width)
+        lower = PrecomputableMaxouts(width, nF=nr_context_tokens, nI=width*2)
         return upper, lower
 
     def __call__(self, Doc tokens):

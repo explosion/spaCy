@@ -93,7 +93,10 @@ class PrecomputableMaxouts(Model):
         # W: (f, o, p, i)
         # b: (o, p)
 
-        Yfp = numpy.einsum('bi,fopi->fbop', X, self.W)
+        # Yfp = numpy.einsum('bi,fopi->fbop', X, self.W)
+        Yfp = self.ops.xp.tensordot(X, self.W,
+                axes=[[1], [3]]).transpose((1, 0, 2, 3))
+        Yfp = self.ops.xp.ascontiguousarray(Yfp)
         Yfp += self.b
         Yf = self.ops.allocate((self.nF, X.shape[0], self.nO))
         which = self.ops.allocate((self.nF, X.shape[0], self.nO), dtype='i')
@@ -106,8 +109,11 @@ class PrecomputableMaxouts(Model):
             for i in range(self.nF):
                 dYp += self.ops.backprop_maxout(dY, which[i], self.nP)
 
-            dXf = numpy.einsum('bop,fopi->bfi', dYp, self.W)
-            dW = numpy.einsum('bop,bfi->fopi', dYp, Xf)
+            #dXf = numpy.einsum('bop,fopi->bfi', dYp, self.W)
+            dXf = self.ops.xp.tensordot(dYp, self.W, axes=[[1,2], [1,2]])
+            #dW = numpy.einsum('bfi,bop->fopi', Xf, dYp)
+            dW = self.ops.xp.tensordot(Xf, dYp, axes=[[0], [0]])
+            dW = dW.transpose((0, 2, 3, 1))
             db = dYp.sum(axis=0)
 
             self.d_W += dW
