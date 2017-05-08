@@ -12,7 +12,7 @@ from pathlib import Path
 import pathlib
 from ...gold import GoldParse
 from ...pipeline import EntityRecognizer
-from ...en import English
+from ...lang.en import English
 
 try:
     unicode

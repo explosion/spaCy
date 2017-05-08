@@ -3,9 +3,10 @@ from __future__ import unicode_literals
 
 from ...language import Language
 from ...attrs import LANG
-from ...fr.stop_words import STOP_WORDS
-from ...fr.tokenizer_exceptions import TOKENIZER_EXCEPTIONS
-from ...language_data.punctuation import TOKENIZER_INFIXES, ALPHA
+from ...lang.fr.stop_words import STOP_WORDS
+from ...lang.fr.tokenizer_exceptions import TOKENIZER_EXCEPTIONS
+from ...lang.punctuation import TOKENIZER_INFIXES
+from ...lang.char_classes import ALPHA
 from ...util import update_exc
 
 import pytest
