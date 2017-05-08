@@ -71,11 +71,11 @@ def like_url(text):
     if text[0] == '.' or text[-1] == '.':
         return False
     for i in range(len(text)):
-        if string[i] == '.':
+        if text[i] == '.':
             break
     else:
         return False
-    tld = string.rsplit('.', 1)[1].split(':', 1)[0]
+    tld = text.rsplit('.', 1)[1].split(':', 1)[0]
     if tld.endswith('/'):
         return True
     if tld.isalpha() and tld in _tlds:
@@ -119,14 +119,14 @@ LEX_ATTRS = {
     attrs.CLUSTER: lambda string: 0,
     attrs.IS_ALPHA: lambda string: string.isalpha(),
     attrs.IS_DIGIT: lambda string: string.isdigit(),
+    attrs.LIKE_NUM: lambda string: string.isdigit(), # overwritten by lang
     attrs.IS_LOWER: lambda string: string.islower(),
     attrs.IS_SPACE: lambda string: string.isspace(),
     attrs.IS_TITLE: lambda string: string.istitle(),
     attrs.IS_UPPER: lambda string: string.isupper(),
-    attrs.LIKE_EMAIL: lambda string: _like_email(string)
+    attrs.LIKE_EMAIL: lambda string: _like_email(string),
     attrs.IS_STOP: lambda string: False,
     attrs.IS_OOV: lambda string: True,
-    attrs.LIKE_NUM: lambda string: False,
     attrs.IS_PUNCT: is_punct,
     attrs.IS_ASCII: is_ascii,
     attrs.SHAPE: word_shape,
