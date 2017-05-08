@@ -14,8 +14,7 @@ _num_words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
 
 
 def like_num(text):
-    text = text.replace(',', '')
-    text = text.replace('.', '')
+    text = text.replace(',', '').replace('.', '')
     if text.isdigit():
         return True
     if text.count('/') == 1:
