@@ -149,6 +149,11 @@
                 "author": "Johannes Gontrum",
                 "description": "spaCy accessed by a REST API, wrapped in a Docker container."
             },
+            "spacy-nlp-zeromq": {
+                "url": "https://github.com/pasupulaphani/spacy-nlp-docker",
+                "author": "Phaninder Pasupula",
+                "description": "SpaCy with zeromq bindings docker."
+            },
             "textacy": {
                 "url": "https://github.com/chartbeat-labs/textacy",
                 "author": " Burton DeWilde (Chartbeat)",
