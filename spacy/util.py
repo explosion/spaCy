@@ -31,6 +31,11 @@ def get_lang_class(name):
     return LANGUAGES[lang]
 
 
+def load_lang_class(lang, depth='.'):
+    module = importlib.import_module('.lang.%s' % lang, 'spacy')
+    return getattr(module, module.__all__[0])
+
+
 def get_data_path(require_exists=True):
     if not require_exists:
         return _data_path
