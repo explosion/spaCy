@@ -19,8 +19,7 @@ from .attrs import IS_STOP
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
-from . import attrs
-from . import orth
+from .lang.lex_attrs import LEX_ATTRS
 from . import util
 
 
@@ -151,32 +150,7 @@ class BaseDefaults(object):
     lemma_exc = {}
     lemma_index = {}
     morph_rules = {}
-
-    lex_attr_getters = {
-        attrs.LOWER: lambda string: string.lower(),
-        attrs.NORM: lambda string: string,
-        attrs.SHAPE: orth.word_shape,
-        attrs.PREFIX: lambda string: string[0],
-        attrs.SUFFIX: lambda string: string[-3:],
-        attrs.CLUSTER: lambda string: 0,
-        attrs.IS_ALPHA: orth.is_alpha,
-        attrs.IS_ASCII: orth.is_ascii,
-        attrs.IS_DIGIT: lambda string: string.isdigit(),
-        attrs.IS_LOWER: orth.is_lower,
-        attrs.IS_PUNCT: orth.is_punct,
-        attrs.IS_SPACE: lambda string: string.isspace(),
-        attrs.IS_TITLE: orth.is_title,
-        attrs.IS_UPPER: orth.is_upper,
-        attrs.IS_BRACKET: orth.is_bracket,
-        attrs.IS_QUOTE: orth.is_quote,
-        attrs.IS_LEFT_PUNCT: orth.is_left_punct,
-        attrs.IS_RIGHT_PUNCT: orth.is_right_punct,
-        attrs.LIKE_URL: orth.like_url,
-        attrs.LIKE_NUM: orth.like_number,
-        attrs.LIKE_EMAIL: orth.like_email,
-        attrs.IS_STOP: lambda string: False,
-        attrs.IS_OOV: lambda string: True
-    }
+    lex_attr_getters = LEX_ATTRS
 
 
 class Language(object):
