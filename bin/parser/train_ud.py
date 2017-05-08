@@ -133,7 +133,7 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
                 for tag in tags:
                     assert tag in vocab.morphology.tag_map, repr(tag)
     tagger = Tagger(vocab)
-    encoder = TokenVectorEncoder(vocab)
+    encoder = TokenVectorEncoder(vocab, width=128)
     parser = DependencyParser(vocab, actions=actions, features=features, L1=0.0)
 
     Xs, ys = organize_data(vocab, train_sents)
