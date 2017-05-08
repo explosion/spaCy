@@ -104,6 +104,3 @@ TOKENIZER_INFIXES = (
         r'(?<=[{a}"])[:<>=/](?=[{a}])'.format(a=ALPHA)
     ]
 )
-
-
-__all__ = ["TOKENIZER_PREFIXES", "TOKENIZER_SUFFIXES", "TOKENIZER_INFIXES"]
