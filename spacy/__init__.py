@@ -10,8 +10,7 @@ from . import util
 
 
 def load(name, **overrides):
-    if overrides.get('path') not in (None, False, True):
-        name = overrides.get('path')
+    name = util.resolve_load_name(name, **overrides)
     model_path = util.resolve_model_path(name)
     meta = util.parse_package_meta(model_path)
     if 'lang' not in meta:

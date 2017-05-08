@@ -142,6 +142,15 @@ def read_json(location):
         return ujson.load(f)
 
 
+def resolve_load_name(name, **overrides):
+    if overrides.get('path') not in (None, False, True):
+        name = overrides.get('path')
+        prints("To load a model from a path, you can now use the first argument.",
+               "OLD: spacy.load('en', path='/some/path')", "NEW: spacy.load('/some/path')",
+               title="Warning: deprecated argument 'path'")
+    return name
+
+
 def resolve_model_path(name):
     data_path = get_data_path()
     if not data_path or not data_path.exists():
