@@ -1,7 +1,8 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..symbols import *
+from ..symbols import POS, PUNCT, ADJ, CONJ, SCONJ, NUM, DET, ADV, ADP, X, VERB
+from ..symbols import CCONJ, NOUN, PROPN, PART, INTJ, SPACE, PRON, AUX, SYM
 
 
 TAG_MAP = {
@@ -55,4 +56,22 @@ TAG_MAP = {
     "WP$":      {POS: ADJ, "Poss": "yes", "PronType": "int|rel"},
     "WRB":      {POS: ADV, "PronType": "int|rel"},
     "SP":       {POS: SPACE},
+    "ADV":      {POS: ADV},
+    "NOUN":     {POS: NOUN},
+    "ADP":      {POS: ADP},
+    "PRON":     {POS: PRON},
+    "SCONJ":    {POS: SCONJ},
+    "PROPN":    {POS: PROPN},
+    "DET":      {POS: DET},
+    "SYM":      {POS: SYM},
+    "INTJ":     {POS: INTJ},
+    "PUNCT":    {POS: PUNCT},
+    "NUM":      {POS: NUM},
+    "AUX":      {POS: AUX},
+    "X":        {POS: X},
+    "CONJ":     {POS: CONJ},
+    "CCONJ":    {POS: CCONJ},
+    "ADJ":      {POS: ADJ},
+    "VERB":     {POS: VERB},
+    "PART":     {POS: PART},
 }

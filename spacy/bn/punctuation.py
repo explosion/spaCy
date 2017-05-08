@@ -1,8 +1,10 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..language_data.punctuation import ALPHA_LOWER, LIST_ELLIPSES, QUOTES, ALPHA_UPPER, LIST_QUOTES, UNITS, \
-    CURRENCY, LIST_PUNCT, ALPHA, _QUOTES
+from ..language_data.punctuation import ALPHA_LOWER, LIST_ELLIPSES, QUOTES
+from ..language_data.punctuation import ALPHA_UPPER, LIST_QUOTES, UNITS
+from ..language_data.punctuation import CURRENCY, LIST_PUNCT, ALPHA, _QUOTES
+
 
 CURRENCY_SYMBOLS = r"\$ ¢ £ € ¥ ฿ ৳"
 
@@ -42,4 +44,3 @@ TOKENIZER_INFIXES = (
         r'(?<=[{a}])([{q}\)\]\(\[])(?=[\-{a}])'.format(a=ALPHA, q=_QUOTES.replace("'", "").strip().replace(" ", "")),
     ]
 )
-__all__ = ["TOKENIZER_PREFIXES", "TOKENIZER_SUFFIXES", "TOKENIZER_INFIXES"]

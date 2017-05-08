@@ -1,8 +1,9 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..language_data import PRON_LEMMA
-from ..symbols import *
+from ..symbols import LEMMA
+from ..deprecated import PRON_LEMMA
+
 
 MORPH_RULES = {
     "PRP":  {
@@ -51,5 +52,5 @@ MORPH_RULES = {
                     'Case': 'Nom'},
         'তাদের':   {LEMMA:  PRON_LEMMA, 'Number': 'Plur', 'Person': 'Three', 'PronType': 'Prs', 'Poss': 'Yes',
                     'Case': 'Nom'},
-    },
+    }
 }
