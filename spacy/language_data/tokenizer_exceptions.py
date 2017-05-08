@@ -1,8 +1,12 @@
+# coding: utf8
 from __future__ import unicode_literals
 
 # The use of this module turns out to be important, to avoid pathological
 # back-tracking. See Issue #957
 import regex
+
+from ..symbols import ORTH, POS, LEMMA, SPACE, PUNCT
+
 
 # URL validation regex courtesy of: https://mathiasbynens.be/demo/url-regex
 # A few minor mods to this regex to account for use cases represented in test_urls
@@ -51,4 +55,159 @@ _URL_PATTERN = (
 
 TOKEN_MATCH = regex.compile(_URL_PATTERN, regex.UNICODE).match
 
-__all__ = ['TOKEN_MATCH']
+
+
+BASE_EXCEPTIONS = {}
+
+
+for exc_data in [
+    {ORTH: " ", POS: SPACE},
+    {ORTH: "\t", POS: SPACE},
+    {ORTH: "\\t", POS: SPACE},
+    {ORTH: "\n", POS: SPACE},
+    {ORTH: "\\n", POS: SPACE},
+    {ORTH: "\u2014", POS: PUNCT, LEMMA: "--"},
+    {ORTH: "\u00a0", POS: SPACE, LEMMA: "  "}]:
+    BASE_EXCEPTIONS[exc_data[ORTH]] = [dict(exc_data)]
+
+
+for orth in [
+    "'", "\\\")", "<space>", "''", "C++", "a.", "b.", "c.", "d.", "e.", "f.",
+    "g.", "h.", "i.", "j.", "k.", "l.", "m.", "n.", "o.", "p.", "q.", "r.",
+    "s.", "t.", "u.", "v.", "w.", "x.", "y.", "z.", "ä.", "ö.", "ü."]:
+    BASE_EXCEPTIONS[orth] = [{ORTH: orth}]
+
+
+emoticons = set("""
+:)
+:-)
+:))
+:-))
+:)))
+:-)))
+(:
+(-:
+=)
+(=
+")
+:]
+:-]
+[:
+[-:
+:o)
+(o:
+:}
+:-}
+8)
+8-)
+(-8
+;)
+;-)
+(;
+(-;
+:(
+:-(
+:((
+:-((
+:(((
+:-(((
+):
+)-:
+=(
+>:(
+:')
+:'-)
+:'(
+:'-(
+:/
+:-/
+=/
+=|
+:|
+:-|
+:1
+:P
+:-P
+:p
+:-p
+:O
+:-O
+:o
+:-o
+:0
+:-0
+:()
+>:o
+:*
+:-*
+:3
+:-3
+=3
+:>
+:->
+:X
+:-X
+:x
+:-x
+:D
+:-D
+;D
+;-D
+=D
+xD
+XD
+xDD
+XDD
+8D
+8-D
+
+^_^
+^__^
+^___^
+>.<
+>.>
+<.<
+._.
+;_;
+-_-
+-__-
+v.v
+V.V
+v_v
+V_V
+o_o
+o_O
+O_o
+O_O
+0_o
+o_0
+0_0
+o.O
+O.o
+O.O
+o.o
+0.0
+o.0
+0.o
+@_@
+<3
+<33
+<333
+</3
+(^_^)
+(-_-)
+(._.)
+(>_<)
+(*_*)
+(¬_¬)
+ಠ_ಠ
+ಠ︵ಠ
+(ಠ_ಠ)
+¯\(ツ)/¯
+(╯°□°）╯︵┻━┻
+><(((*>
+""".split())
+
+
+for orth in emoticons:
+    BASE_EXCEPTIONS[orth] = [{ORTH: orth}]
