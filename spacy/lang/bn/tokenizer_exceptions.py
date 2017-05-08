@@ -3,45 +3,24 @@ from __future__ import unicode_literals
 
 from ...symbols import ORTH, LEMMA
 
-TOKENIZER_EXCEPTIONS = {}
 
-ABBREVIATIONS = {
-    "ডঃ": [
-        {ORTH: "ডঃ", LEMMA: "ডক্টর"},
-    ],
-    "ডাঃ": [
-        {ORTH: "ডাঃ", LEMMA: "ডাক্তার"},
-    ],
-    "ড.": [
-        {ORTH: "ড.", LEMMA: "ডক্টর"},
-    ],
-    "ডা.": [
-        {ORTH: "ডা.", LEMMA: "ডাক্তার"},
-    ],
-    "মোঃ": [
-        {ORTH: "মোঃ", LEMMA: "মোহাম্মদ"},
-    ],
-    "মো.": [
-        {ORTH: "মো.", LEMMA: "মোহাম্মদ"},
-    ],
-    "সে.": [
-        {ORTH: "সে.", LEMMA: "সেলসিয়াস"},
-    ],
-    "কি.মি.": [
-        {ORTH: "কি.মি.", LEMMA: "কিলোমিটার"},
-    ],
-    "কি.মি": [
-            {ORTH: "কি.মি", LEMMA: "কিলোমিটার"},
-    ],
-    "সে.মি.": [
-        {ORTH: "সে.মি.", LEMMA: "সেন্টিমিটার"},
-    ],
-    "সে.মি": [
-            {ORTH: "সে.মি", LEMMA: "সেন্টিমিটার"},
-    ],
-    "মি.লি.": [
-        {ORTH: "মি.লি.", LEMMA: "মিলিলিটার"},
-    ]
-}
+_exc = {}
 
-TOKENIZER_EXCEPTIONS.update(ABBREVIATIONS)
+
+for exc_data in [
+    {ORTH: "ডঃ", LEMMA: "ডক্টর"},
+    {ORTH: "ডাঃ", LEMMA: "ডাক্তার"},
+    {ORTH: "ড.", LEMMA: "ডক্টর"},
+    {ORTH: "ডা.", LEMMA: "ডাক্তার"},
+    {ORTH: "মোঃ", LEMMA: "মোহাম্মদ"},
+    {ORTH: "মো.", LEMMA: "মোহাম্মদ"},
+    {ORTH: "সে.", LEMMA: "সেলসিয়াস"},
+    {ORTH: "কি.মি.", LEMMA: "কিলোমিটার"},
+    {ORTH: "কি.মি", LEMMA: "কিলোমিটার"},
+    {ORTH: "সে.মি.", LEMMA: "সেন্টিমিটার"},
+    {ORTH: "সে.মি", LEMMA: "সেন্টিমিটার"},
+    {ORTH: "মি.লি.", LEMMA: "মিলিলিটার"}]:
+    _exc[exc_data[ORTH]] = [dict(exc_data)]
+
+
+TOKENIZER_EXCEPTIONS = dict(_exc)
