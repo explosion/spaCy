@@ -32,7 +32,7 @@ from preshed.maps cimport map_get
 from thinc.api import layerize, chain
 from thinc.neural import Model, Maxout
 
-from .._ml import PrecomputableAffine
+from .._ml import PrecomputableAffine, PrecomputableMaxouts
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
@@ -93,7 +93,7 @@ def get_greedy_model_for_batch(tokvecs, TransitionSystem moves, upper_model, low
         for i in range(len(states)):
             for j, tok_i in enumerate(adjusted_ids[i]):
                 if tok_i >= 0:
-                    features[i] += cached[tok_i, j]
+                    features[i] += cached[j, tok_i]
 
         scores, bp_scores = upper_model.begin_update(features, drop=drop)
         scores = upper_model.ops.relu(scores)
@@ -222,7 +222,7 @@ cdef class Parser:
         nr_context_tokens = StateClass.nr_context_tokens(nF, nB, nS, nL, nR)
 
         upper = chain(Maxout(width, width), Maxout(self.moves.n_moves, width))
-        lower = PrecomputableAffine(width, nF=nr_context_tokens, nI=width)
+        lower = PrecomputableMaxouts(width, nF=nr_context_tokens, nI=width)
         return upper, lower
 
     def __call__(self, Doc tokens):
