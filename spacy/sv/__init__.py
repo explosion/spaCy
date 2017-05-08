@@ -22,7 +22,6 @@ class Swedish(Language):
 
         tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
         stop_words = set(STOP_WORDS)
-        morph_rules = dict(MORPH_RULES)
 
         @classmethod
         def create_lemmatizer(cls, nlp=None):
