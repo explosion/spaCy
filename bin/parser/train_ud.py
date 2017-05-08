@@ -21,12 +21,6 @@ from thinc.neural import Model
 from spacy.es import Spanish
 from spacy.attrs import POS
 
-try:
-    import cupy
-    print("Using GPU")
-    Model.ops = CupyOps()
-except ImportError:
-    pass
 
 from thinc.neural import Model
 
@@ -103,8 +97,6 @@ def organize_data(vocab, train_sents):
 
 
 def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
-    if cupy is not None:
-        Model.ops = CupyOps()
     LangClass = spacy.util.get_lang_class(lang_name)
     train_sents = list(read_conllx(train_loc))
     dev_sents = list(read_conllx(dev_loc))
@@ -184,10 +176,9 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
             tokvecs, upd_tokvecs = encoder.begin_update(docs)
             for doc, tokvec in zip(docs, tokvecs):
                 doc.tensor = tokvec
-            d_tokvecs, loss = parser.update(docs, golds, sgd=optimizer)
+            d_tokvecs = parser.update(docs, golds, sgd=optimizer)
             upd_tokvecs(d_tokvecs, sgd=optimizer)
             encoder.update(docs, golds, sgd=optimizer)
-            nn_loss[-1] += loss
     nlp = LangClass(vocab=vocab, parser=parser)
     scorer = score_model(vocab, encoder, parser, read_conllx(dev_loc))
     print('%d:\t%.3f\t%.3f\t%.3f' % (itn, scorer.uas, scorer.las, scorer.tags_acc))
