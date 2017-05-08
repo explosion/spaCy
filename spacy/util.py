@@ -55,6 +55,68 @@ def ensure_path(path):
         return path
 
 
+def resolve_load_name(name, **overrides):
+    if overrides.get('path') not in (None, False, True):
+        name = overrides.get('path')
+        prints("To load a model from a path, you can now use the first argument. "
+               "The model meta is used to load the required Language class.",
+               "OLD: spacy.load('en', path='/some/path')", "NEW: spacy.load('/some/path')",
+               title="Warning: deprecated argument 'path'")
+    return name
+
+
+def resolve_model_path(name):
+    data_path = get_data_path()
+    if not data_path or not data_path.exists():
+        raise IOError("Can't find spaCy data path: %s" % path2str(data_path))
+    if isinstance(name, basestring_):
+        if (data_path / name).exists(): # in data dir or shortcut link
+            return (data_path / name)
+        if is_package(name): # installed as a package
+            return get_model_package_path(name)
+        if Path(name).exists(): # path to model
+            return Path(name)
+    elif hasattr(name, 'exists'): # Path or Path-like object
+        return name
+    raise IOError("Can't find model '%s'" % name)
+
+
+def is_package(origin):
+    """
+    Check if string maps to a package installed via pip.
+    """
+    packages = pip.get_installed_distributions()
+    for package in packages:
+        if package.project_name.replace('-', '_') == origin:
+            return True
+    return False
+
+
+def get_model_package_path(package_name):
+    # Here we're importing the module just to find it. This is worryingly
+    # indirect, but it's otherwise very difficult to find the package.
+    # Python's installation and import rules are very complicated.
+    pkg = importlib.import_module(package_name)
+    package_path = Path(pkg.__file__).parent.parent
+    meta = parse_package_meta(package_path / package_name)
+    model_name = '%s-%s' % (package_name, meta['version'])
+    return package_path / package_name / model_name
+
+
+def parse_package_meta(package_path, require=True):
+    """
+    Check if a meta.json exists in a package and return its contents as a
+    dictionary. If require is set to True, raise an error if no meta.json found.
+    """
+    location = package_path / 'meta.json'
+    if location.is_file():
+        return read_json(location)
+    elif require:
+        raise IOError("Could not read meta.json from %s" % location)
+    else:
+        return None
+
+
 def read_regex(path):
     path = ensure_path(path)
     with path.open() as file_:
@@ -145,68 +207,6 @@ def check_renamed_kwargs(renamed, kwargs):
 def read_json(location):
     with location.open('r', encoding='utf8') as f:
         return ujson.load(f)
-
-
-def resolve_load_name(name, **overrides):
-    if overrides.get('path') not in (None, False, True):
-        name = overrides.get('path')
-        prints("To load a model from a path, you can now use the first argument. "
-               "The model meta is used to load the required Language class.",
-               "OLD: spacy.load('en', path='/some/path')", "NEW: spacy.load('/some/path')",
-               title="Warning: deprecated argument 'path'")
-    return name
-
-
-def resolve_model_path(name):
-    data_path = get_data_path()
-    if not data_path or not data_path.exists():
-        raise IOError("Can't find spaCy data path: %s" % path2str(data_path))
-    if isinstance(name, basestring_):
-        if (data_path / name).exists(): # in data dir or shortcut link
-            return (data_path / name)
-        if is_package(name): # installed as a package
-            return get_model_package_path(name)
-        if Path(name).exists(): # path to model
-            return Path(name)
-    elif hasattr(name, 'exists'): # Path or Path-like object
-        return name
-    raise IOError("Can't find model '%s'" % name)
-
-
-def is_package(origin):
-    """
-    Check if string maps to a package installed via pip.
-    """
-    packages = pip.get_installed_distributions()
-    for package in packages:
-        if package.project_name.replace('-', '_') == origin:
-            return True
-    return False
-
-
-def get_model_package_path(package_name):
-    # Here we're importing the module just to find it. This is worryingly
-    # indirect, but it's otherwise very difficult to find the package.
-    # Python's installation and import rules are very complicated.
-    pkg = importlib.import_module(package_name)
-    package_path = Path(pkg.__file__).parent.parent
-    meta = parse_package_meta(package_path / package_name)
-    model_name = '%s-%s' % (package_name, meta['version'])
-    return package_path / package_name / model_name
-
-
-def parse_package_meta(package_path, require=True):
-    """
-    Check if a meta.json exists in a package and return its contents as a
-    dictionary. If require is set to True, raise an error if no meta.json found.
-    """
-    location = package_path / 'meta.json'
-    if location.is_file():
-        return read_json(location)
-    elif require:
-        raise IOError("Could not read meta.json from %s" % location)
-    else:
-        return None
 
 
 def get_raw_input(description, default=False):
