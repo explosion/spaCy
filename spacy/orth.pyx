@@ -3,7 +3,7 @@
 from __future__ import unicode_literals
 
 import unicodedata
-import re
+import regex as re
 
 
 # Binary string features

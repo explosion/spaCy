@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 # The use of this module turns out to be important, to avoid pathological
 # back-tracking. See Issue #957
-import regex
+import regex as re
 
 from ..symbols import ORTH, POS, LEMMA, SPACE, PUNCT
 
@@ -53,7 +53,7 @@ URL_PATTERN = (
     r"$"
 ).strip()
 
-TOKEN_MATCH = regex.compile(URL_PATTERN, regex.UNICODE).match
+TOKEN_MATCH = re.compile(URL_PATTERN, re.UNICODE).match
 
 
 
