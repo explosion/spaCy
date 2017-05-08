@@ -1,8 +1,9 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from ..symbols import *
-from .util import ENT_ID
+from ..symbols import ORTH, ENT_TYPE, LOWER
+
+ENT_ID = "ent_id"
 
 
 ENTITY_RULES = [
@@ -201,6 +202,3 @@ FALSE_POSITIVES = [
     [{ORTH: "Yea"}],
     [{ORTH: "Bah"}]
 ]
-
-
-__all__ = ["ENTITY_RULES", "FALSE_POSITIVES"]

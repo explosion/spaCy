@@ -42,6 +42,8 @@ def fix_glove_vectors_loading(overrides):
 def match_best_version(target_name, target_version, path):
     def split_data_name(name):
         return name.split('-', 1) if '-' in name else (name, '')
+PRON_LEMMA = "-PRON-"
+DET_LEMMA = "-DET-"
 
     path = util.ensure_path(path)
     if path is None or not path.exists():
