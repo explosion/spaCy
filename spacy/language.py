@@ -16,10 +16,12 @@ from .syntax.arc_eager import ArcEager
 from .syntax.ner import BiluoPushDown
 from .compat import json_dumps
 from .attrs import IS_STOP
+from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
+from .lang.tokenizer_exceptions import TOKEN_MATCH
+from .lang.tag_map import TAG_MAP
 from . import attrs
 from . import orth
 from . import util
-from . import language_data
 
 
 class BaseDefaults(object):
@@ -135,11 +137,11 @@ class BaseDefaults(object):
             pipeline.append(nlp.entity)
         return pipeline
 
-    token_match = language_data.TOKEN_MATCH
-    prefixes = tuple(language_data.TOKENIZER_PREFIXES)
-    suffixes = tuple(language_data.TOKENIZER_SUFFIXES)
-    infixes = tuple(language_data.TOKENIZER_INFIXES)
-    tag_map = dict(language_data.TAG_MAP)
+    token_match = TOKEN_MATCH
+    prefixes = tuple(TOKENIZER_PREFIXES)
+    suffixes = tuple(TOKENIZER_SUFFIXES)
+    infixes = tuple(TOKENIZER_INFIXES)
+    tag_map = dict(TAG_MAP)
     tokenizer_exceptions = {}
     parser_features = get_templates('parser')
     entity_features = get_templates('ner')
