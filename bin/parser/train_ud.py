@@ -55,7 +55,9 @@ def read_conllx(loc, n=0):
                     id_ = int(id_) - 1
                     head = (int(head) - 1) if head != '0' else id_
                     dep = 'ROOT' if dep == 'root' else dep #'unlabelled'
-                    tokens.append((id_, word, pos+'__'+morph, head, dep, 'O'))
+                    tag = pos+'__'+dep+'__'+morph
+                    Spanish.Defaults.tag_map[tag] = {POS: pos}
+                    tokens.append((id_, word, tag, head, dep, 'O'))
                 except:
                     raise
             tuples = [list(t) for t in zip(*tokens)]
@@ -65,19 +67,21 @@ def read_conllx(loc, n=0):
                 break
 
 
-def score_model(vocab, encoder, tagger, parser, Xs, ys, verbose=False):
+def score_model(vocab, encoder, parser, Xs, ys, verbose=False):
     scorer = Scorer()
     correct = 0.
     total = 0.
     for doc, gold in zip(Xs, ys):
         doc = Doc(vocab, words=[w.text for w in doc])
         encoder(doc)
-        tagger(doc)
         parser(doc)
         PseudoProjectivity.deprojectivize(doc)
         scorer.score(doc, gold, verbose=verbose)
         for token, tag in zip(doc, gold.tags):
-            univ_guess, _ = token.tag_.split('_', 1)
+            if '_' in token.tag_:
+                univ_guess, _ = token.tag_.split('_', 1)
+            else:
+                univ_guess = ''
             univ_truth, _ = tag.split('_', 1)
             correct += univ_guess == univ_truth
             total += 1
