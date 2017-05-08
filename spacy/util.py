@@ -142,20 +142,17 @@ def get_model_package_path(package_name):
     # Python's installation and import rules are very complicated.
     pkg = importlib.import_module(package_name)
     package_path = Path(pkg.__file__).parent.parent
-    meta = parse_package_meta(package_path, package_name)
+    meta = parse_package_meta(package_path / package_name)
     model_name = '%s-%s' % (package_name, meta['version'])
     return package_path / package_name / model_name
 
 
-def parse_package_meta(package_path, package, require=True):
+def parse_package_meta(package_path, require=True):
     """
     Check if a meta.json exists in a package and return its contents as a
     dictionary. If require is set to True, raise an error if no meta.json found.
     """
-    # TODO: Allow passing in full model path and only require one argument
-    # instead of path and package name. This lets us avoid passing in an awkward
-    # empty string in spacy.load() if user supplies full model path.
-    location = package_path / package / 'meta.json'
+    location = package_path / 'meta.json'
     if location.is_file():
         return read_json(location)
     elif require:

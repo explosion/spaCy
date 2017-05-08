@@ -12,7 +12,7 @@ from .. import util
 def info(model=None, markdown=False):
     if model:
         data_path = util.get_data_path()
-        data = util.parse_package_meta(data_path, model, require=True)
+        data = util.parse_package_meta(data_path / model, require=True)
         model_path = Path(__file__).parent / data_path / model
         if model_path.resolve() != model_path:
             data['link'] = path2str(model_path)
