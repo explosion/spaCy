@@ -154,17 +154,17 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
                 _ = vocab[tag]
             if vocab.morphology.tag_map:
                 for tag in tags:
-                    assert tag in vocab.morphology.tag_map, repr(tag)
+                    vocab.morphology.tag_map[tag] = {POS: tag.split('__', 1)[0]}
     tagger = Tagger(vocab)
     encoder = TokenVectorEncoder(vocab)
     parser = DependencyParser(vocab, actions=actions, features=features, L1=0.0)
 
     Xs, ys = organize_data(vocab, train_sents)
     dev_Xs, dev_ys = organize_data(vocab, dev_sents)
-    Xs = Xs
-    ys = ys
-    dev_Xs = dev_Xs[:1000]
-    dev_ys = dev_ys[:1000]
+    #Xs = Xs[:1000]
+    #ys = ys[:1000]
+    #dev_Xs = dev_Xs[:1000]
+    #dev_ys = dev_ys[:1000]
     with encoder.model.begin_training(Xs[:100], ys[:100]) as (trainer, optimizer):
         docs = list(Xs)
         for doc in docs:
@@ -173,26 +173,26 @@ def main(lang_name, train_loc, dev_loc, model_dir, clusters_loc=None):
         nn_loss = [0.]
         def track_progress():
             with encoder.tagger.use_params(optimizer.averages):
-                scorer = score_model(vocab, encoder, tagger, parser, dev_Xs, dev_ys)
+                with parser.model.use_params(optimizer.averages):
+                    scorer = score_model(vocab, encoder, parser, dev_Xs, dev_ys)
             itn = len(nn_loss)
             print('%d:\t%.3f\t%.3f\t%.3f' % (itn, nn_loss[-1], scorer.uas, scorer.tags_acc))
             nn_loss.append(0.)
+        track_progress()
         trainer.each_epoch.append(track_progress)
         trainer.batch_size = 24
-        trainer.nb_epoch = 10
-        for docs, golds in trainer.iterate(Xs, ys):
+        trainer.nb_epoch = 40
+        for docs, golds in trainer.iterate(Xs, ys, progress_bar=True):
             docs = [Doc(vocab, words=[w.text for w in doc]) for doc in docs]
             tokvecs, upd_tokvecs = encoder.begin_update(docs)
             for doc, tokvec in zip(docs, tokvecs):
                 doc.tensor = tokvec
-            for doc, gold in zip(docs, golds):
-                tagger.update(doc, gold)
             d_tokvecs, loss = parser.update(docs, golds, sgd=optimizer)
             upd_tokvecs(d_tokvecs, sgd=optimizer)
             encoder.update(docs, golds, sgd=optimizer)
             nn_loss[-1] += loss
     nlp = LangClass(vocab=vocab, tagger=tagger, parser=parser)
-    nlp.end_training(model_dir)
+    #nlp.end_training(model_dir)
     scorer = score_model(vocab, tagger, parser, read_conllx(dev_loc))
     print('%d:\t%.3f\t%.3f\t%.3f' % (itn, scorer.uas, scorer.las, scorer.tags_acc))
 
