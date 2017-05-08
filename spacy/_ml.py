@@ -185,13 +185,12 @@ def build_tok2vec(lang, width, depth=2, embed_size=1000):
         prefix = get_col(cols.index(PREFIX)) >> HashEmbed(width, embed_size)
         suffix = get_col(cols.index(SUFFIX)) >> HashEmbed(width, embed_size)
         shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size)
-        tag = get_col(cols.index(TAG))   >> HashEmbed(width, embed_size)
         tok2vec = (
             doc2feats(cols)
             >> with_flatten(
                 #(static | prefix | suffix | shape)
-                (lower | prefix | suffix | shape | tag)
-                >> Maxout(width, width*5)
+                (lower | prefix | suffix | shape)
+                >> Maxout(width, width*4)
                 >> Residual((ExtractWindow(nW=1) >> Maxout(width, width*3)))
                 >> Residual((ExtractWindow(nW=1) >> Maxout(width, width*3)))
                 >> Residual((ExtractWindow(nW=1) >> Maxout(width, width*3)))
