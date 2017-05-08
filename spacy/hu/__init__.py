@@ -1,34 +1,35 @@
 # coding: utf8
-from __future__ import unicode_literals, print_function
+from __future__ import unicode_literals
 
-from .tokenizer_exceptions import TOKEN_MATCH
-from .language_data import *
-from ..attrs import LANG
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
+from .punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
+from .stop_words import STOP_WORDS
+from .lemmatizer import LOOKUP
+
+from ..language_data import BASE_EXCEPTIONS
 from ..language import Language
 from ..lemmatizerlookup import Lemmatizer
-from .lemmatization import LOOK_UP
+from ..attrs import LANG
+from ..util import update_exc
+
 
 class Hungarian(Language):
     lang = 'hu'
 
     class Defaults(Language.Defaults):
-        tokenizer_exceptions = dict(TOKENIZER_EXCEPTIONS)
         lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
         lex_attr_getters[LANG] = lambda text: 'hu'
 
-        prefixes = tuple(TOKENIZER_PREFIXES)
-
-        suffixes = tuple(TOKENIZER_SUFFIXES)
-
-        infixes = tuple(TOKENIZER_INFIXES)
-
+        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
         stop_words = set(STOP_WORDS)
-
+        prefixes = tuple(TOKENIZER_PREFIXES)
+        suffixes = tuple(TOKENIZER_SUFFIXES)
+        infixes = tuple(TOKENIZER_INFIXES)
         token_match = TOKEN_MATCH
 
         @classmethod
         def create_lemmatizer(cls, nlp=None):
-            return Lemmatizer(LOOK_UP)
+            return Lemmatizer(LOOKUP)
 
 
-EXPORT = Hungarian
+__all__ = ['Hungarian']
