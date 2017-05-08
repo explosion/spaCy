@@ -279,14 +279,13 @@ for exc_data in [
 # Times
 
 for h in range(1, 12 + 1):
-    hour = str(h)
     for period in ["a.m.", "am"]:
-        _exc[hour+period] = [
-            {ORTH: hour},
+        _exc["%d%s" % (h, period)] = [
+            {ORTH: "%d" % h},
             {ORTH: period, LEMMA: "a.m."}]
     for period in ["p.m.", "pm"]:
-        _exc[hour+period] = [
-            {ORTH: hour},
+        _exc["%d%s" % (h, period)] = [
+            {ORTH: "%d" % h},
             {ORTH: period, LEMMA: "p.m."}]
 
 
