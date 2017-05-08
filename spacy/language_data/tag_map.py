@@ -19,7 +19,7 @@ TAG_MAP = {
     "AUX":      {POS: AUX},
     "X":        {POS: X},
     "CONJ":     {POS: CONJ},
-    "CCONJ":    {POS: CCONJ}, # U20
+    "CCONJ":    {POS: CCONJ},
     "ADJ":      {POS: ADJ},
     "VERB":     {POS: VERB},
     "PART":     {POS: PART},
