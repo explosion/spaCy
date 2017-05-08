@@ -86,26 +86,14 @@ def resolve_model_name(name):
     return name
 
 
-class ModelDownload():
+def depr_model_download(lang):
     """
     Replace download modules within en and de with deprecation warning and
-    download default language model (using shortcut). Use classmethods to allow
-    importing ModelDownload as download and calling download.en() etc.
+    download default language model (using shortcut).
     """
-
-    @classmethod
-    def load(self, lang):
-        prints("The spacy.%s.download command is now deprecated. Please use "
-               "python -m spacy download [model name or shortcut] instead. For "
-               "more info, see the docs: %s." % (lang, about.__docs__),
-               "Downloading default '%s' model now..." % lang,
-               title="Warning: deprecated command")
-        download(lang)
-
-    @classmethod
-    def en(cls, *args, **kwargs):
-        cls.load('en')
-
-    @classmethod
-    def de(cls, *args, **kwargs):
-        cls.load('de')
+    prints("The spacy.%s.download command is now deprecated. Please use "
+           "python -m spacy download [model name or shortcut] instead. For "
+           "more info, see the docs: %s." % (lang, about.__docs__),
+           "Downloading default '%s' model now..." % lang,
+           title="Warning: deprecated command")
+    download(lang)
