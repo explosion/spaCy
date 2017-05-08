@@ -36,7 +36,6 @@ MOD_NAMES = [
     'spacy.syntax.arc_eager',
     'spacy.syntax._parse_features',
     'spacy.gold',
-    'spacy.orth',
     'spacy.tokens.doc',
     'spacy.tokens.span',
     'spacy.tokens.token',
@@ -48,7 +47,6 @@ MOD_NAMES = [
     'spacy.syntax.ner',
     'spacy.symbols',
     'spacy.syntax.iterators']
-    # TODO: This is missing a lot of modules. Does it matter?
 
 
 COMPILE_OPTIONS =  {
