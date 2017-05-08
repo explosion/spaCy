@@ -96,4 +96,4 @@ _nums = "(({ne})|({t})|({on})|({c}))({s})?".format(
 
 
 TOKENIZER_EXCEPTIONS = dict(_exc)
-TOKEN_MATCH = re.compile("^({u})|({n})$".format(u=_URL_PATTERN, n=_nums)).match
+TOKEN_MATCH = re.compile("^({u})|({n})$".format(u=URL_PATTERN, n=_nums)).match

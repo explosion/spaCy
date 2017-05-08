@@ -144,7 +144,7 @@ _regular_exp += ["^{prefix}[{hyphen}][{alpha}][{alpha}{elision}{other_hyphen}\-]
 _regular_exp += ["^{prefix}[{elision}][{alpha}][{alpha}{elision}{hyphen}\-]*$".format(
                  prefix=p, elision=HYPHENS, hyphen=_other_hyphens, alpha=ALPHA_LOWER)
                  for p in _elision_prefix]
-_regular_exp.append(_URL_PATTERN)
+_regular_exp.append(URL_PATTERN)
 
 
 TOKENIZER_EXCEPTIONS = dict(_exc)

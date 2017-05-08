@@ -10,7 +10,7 @@ from ..symbols import ORTH, POS, LEMMA, SPACE, PUNCT
 
 # URL validation regex courtesy of: https://mathiasbynens.be/demo/url-regex
 # A few minor mods to this regex to account for use cases represented in test_urls
-_URL_PATTERN = (
+URL_PATTERN = (
     r"^"
     # in order to support the prefix tokenization (see prefix test cases in test_urls).
     r"(?=[\w])"
@@ -53,7 +53,7 @@ _URL_PATTERN = (
     r"$"
 ).strip()
 
-TOKEN_MATCH = regex.compile(_URL_PATTERN, regex.UNICODE).match
+TOKEN_MATCH = regex.compile(URL_PATTERN, regex.UNICODE).match
 
 
 
