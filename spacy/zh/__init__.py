@@ -1,14 +1,21 @@
+# coding: utf8
+from __future__ import unicode_literals
+
 from ..language import Language
 from ..tokens import Doc
 
 
 class Chinese(Language):
-    lang = u'zh'
+    lang = 'zh'
 
     def make_doc(self, text):
-        import jieba
+        try:
+            from jieba
+        except ImportError:
+            raise ImportError("The Chinese tokenizer requires the Jieba library: "
+                              "https://github.com/fxsjy/jieba")
         words = list(jieba.cut(text, cut_all=True))
         return Doc(self.vocab, words=words, spaces=[False]*len(words))
 
 
-EXPORT = Chinese
+__all__ = ['Chinese']
