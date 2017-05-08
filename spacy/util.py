@@ -108,6 +108,22 @@ def read_json(location):
         return ujson.load(f)
 
 
+def resolve_model_path(name):
+    data_path = get_data_path()
+    if not data_path or not data_path.exists():
+        raise IOError("Can't find spaCy data path: %s" % path2str(data_path))
+    if isinstance(name, basestring_):
+        if (data_path / name).exists(): # in data dir or shortcut link
+            return (data_path / name)
+        if is_package(name): # installed as a package
+            return get_model_package_path(name)
+        if Path(name).exists(): # path to model
+            return Path(name)
+    elif hasattr(name, 'exists'): # Path or Path-like object
+        return name
+    raise IOError("Can't find model '%s'" % name)
+
+
 def is_package(origin):
     """
     Check if string maps to a package installed via pip.
