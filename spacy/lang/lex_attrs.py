@@ -41,6 +41,20 @@ def is_ascii(text):
     return True
 
 
+def like_num(text):
+    # can be overwritten by lang with list of number words
+    text = text.replace(',', '').replace('.', '')
+    if text.isdigit():
+        return True
+    if text.count('/') == 1:
+        num, denom = text.split('/')
+        if num.isdigit() and denom.isdigit():
+            return True
+    return False
+
+
+
+
 def is_bracket(text):
     brackets = ('(',')','[',']','{','}','<','>')
     return text in brackets
@@ -119,7 +133,6 @@ LEX_ATTRS = {
     attrs.CLUSTER: lambda string: 0,
     attrs.IS_ALPHA: lambda string: string.isalpha(),
     attrs.IS_DIGIT: lambda string: string.isdigit(),
-    attrs.LIKE_NUM: lambda string: string.isdigit(), # overwritten by lang
     attrs.IS_LOWER: lambda string: string.islower(),
     attrs.IS_SPACE: lambda string: string.isspace(),
     attrs.IS_TITLE: lambda string: string.istitle(),
@@ -127,6 +140,7 @@ LEX_ATTRS = {
     attrs.LIKE_EMAIL: lambda string: _like_email(string),
     attrs.IS_STOP: lambda string: False,
     attrs.IS_OOV: lambda string: True,
+    attrs.LIKE_NUM: like_num,
     attrs.IS_PUNCT: is_punct,
     attrs.IS_ASCII: is_ascii,
     attrs.SHAPE: word_shape,
