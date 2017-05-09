@@ -33,3 +33,14 @@ untimely death" of the rapier-tongued Scottish barrister and parliamentarian.
 def test_tokenizer_handles_cnts(en_tokenizer, text, length):
     tokens = en_tokenizer(text)
     assert len(tokens) == length
+
+
+
+@pytest.mark.parametrize('text,match', [
+    ('10', True), ('1', True), ('10,000', True), ('10,00', True),
+    ('999.0', True), ('one', True), ('two', True), ('billion', True),
+    ('dog', False), (',', False), ('1/2', True)])
+def test_lex_attrs_like_number(en_tokenizer, text, match):
+    tokens = en_tokenizer(text)
+    assert len(tokens) == 1
+    assert tokens[0].like_num == match
