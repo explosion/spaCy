@@ -25,11 +25,6 @@ cdef class EntityRecognizer(Parser):
         Parser.add_label(self, label)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
-        # Set label into serializer. Super hacky :(
-        for attr, freqs in self.vocab.serializer_freqs:
-            if attr == ENT_TYPE and label not in freqs:
-                freqs.append([label, 1])
-        self.vocab._serializer = None
 
 
 cdef class BeamEntityRecognizer(BeamParser):
@@ -44,11 +39,6 @@ cdef class BeamEntityRecognizer(BeamParser):
         Parser.add_label(self, label)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
-        # Set label into serializer. Super hacky :(
-        for attr, freqs in self.vocab.serializer_freqs:
-            if attr == ENT_TYPE and label not in freqs:
-                freqs.append([label, 1])
-        self.vocab._serializer = None
 
 
 cdef class DependencyParser(Parser):
@@ -60,11 +50,6 @@ cdef class DependencyParser(Parser):
         Parser.add_label(self, label)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
-        for attr, freqs in self.vocab.serializer_freqs:
-            if attr == DEP and label not in freqs:
-                freqs.append([label, 1])
-        # Super hacky :(
-        self.vocab._serializer = None
 
 
 cdef class BeamDependencyParser(BeamParser):
@@ -76,11 +61,6 @@ cdef class BeamDependencyParser(BeamParser):
         Parser.add_label(self, label)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
-        for attr, freqs in self.vocab.serializer_freqs:
-            if attr == DEP and label not in freqs:
-                freqs.append([label, 1])
-        # Super hacky :(
-        self.vocab._serializer = None
 
 
 __all__ = [Tagger, DependencyParser, EntityRecognizer, BeamDependencyParser, BeamEntityRecognizer]
