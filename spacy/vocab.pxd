@@ -29,10 +29,8 @@ cdef class Vocab:
     cpdef readonly StringStore strings
     cpdef readonly Morphology morphology
     cdef readonly int length
-    cdef public object _serializer
     cdef public object data_dir
     cdef public object lex_attr_getters
-    cdef public object serializer_freqs
 
     cdef const LexemeC* get(self, Pool mem, unicode string) except NULL
     cdef const LexemeC* get_by_orth(self, Pool mem, attr_t orth) except NULL

@@ -22,7 +22,6 @@ from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN
 from ..parts_of_speech cimport univ_pos_t
 from ..lexeme cimport Lexeme
-from ..serialize.bits cimport BitArray
 from ..util import normalize_slice
 from ..syntax.iterators import CHUNKERS
 from ..compat import is_config
@@ -80,11 +79,6 @@ cdef class Doc:
     def __init__(self, Vocab vocab, words=None, spaces=None, orths_and_spaces=None):
         """
         Create a Doc object.
-
-        Aside: Implementation
-            This method of constructing a `Doc` object is usually only used
-            for deserialization. Standard usage is to construct the document via
-            a call to the language object.
 
         Arguments:
             vocab:
@@ -615,46 +609,13 @@ cdef class Doc:
         """
         Serialize, producing a byte string.
         """
-        byte_string = self.vocab.serializer.pack(self)
-        cdef uint32_t length = len(byte_string)
-        return struct.pack('I', length) + byte_string
+        raise NotImplementedError
 
     def from_bytes(self, data):
         """
         Deserialize, loading from bytes.
         """
-        self.vocab.serializer.unpack_into(data[4:], self)
-        return self
-
-    @staticmethod
-    def read_bytes(file_):
-        """
-        A static method, used to read serialized #[code Doc] objects from
-        a file. For example:
-
-        Example:
-            from spacy.tokens.doc import Doc
-            loc = 'test_serialize.bin'
-            with open(loc, 'wb') as file_:
-                file_.write(nlp(u'This is a document.').to_bytes())
-                file_.write(nlp(u'This is another.').to_bytes())
-            docs = []
-            with open(loc, 'rb') as file_:
-                for byte_string in Doc.read_bytes(file_):
-                    docs.append(Doc(nlp.vocab).from_bytes(byte_string))
-            assert len(docs) == 2
-        """
-        keep_reading = True
-        while keep_reading:
-            try:
-                n_bytes_str = file_.read(4)
-                if len(n_bytes_str) < 4:
-                    break
-                n_bytes = struct.unpack('I', n_bytes_str)[0]
-                data = file_.read(n_bytes)
-            except StopIteration:
-                keep_reading = False
-            yield n_bytes_str + data
+        raise NotImplementedError
 
     def merge(self, int start_idx, int end_idx, *args, **attributes):
         """

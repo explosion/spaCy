@@ -15,7 +15,6 @@ from .strings cimport hash_string
 from .typedefs cimport attr_t
 from .cfile cimport CFile, StringCFile
 from .tokens.token cimport Token
-from .serialize.packer cimport Packer
 from .attrs cimport PROB, LANG
 
 from .compat import copy_reg, pickle
@@ -41,7 +40,7 @@ cdef class Vocab:
     """
     @classmethod
     def load(cls, path, lex_attr_getters=None, lemmatizer=True,
-             tag_map=True, serializer_freqs=True, oov_prob=True, **deprecated_kwargs):
+             tag_map=True, oov_prob=True, **deprecated_kwargs):
         """
         Load the vocabulary from a path.
 
@@ -80,22 +79,17 @@ cdef class Vocab:
             lex_attr_getters[PROB] = lambda text: oov_prob
         if lemmatizer is True:
             lemmatizer = Lemmatizer.load(path)
-        if serializer_freqs is True and (path / 'vocab' / 'serializer.json').exists():
-            with (path / 'vocab' / 'serializer.json').open('r', encoding='utf8') as file_:
-                serializer_freqs = ujson.load(file_)
-        else:
-            serializer_freqs = None
 
         with (path / 'vocab' / 'strings.json').open('r', encoding='utf8') as file_:
             strings_list = ujson.load(file_)
         cdef Vocab self = cls(lex_attr_getters=lex_attr_getters, tag_map=tag_map,
-                              lemmatizer=lemmatizer, serializer_freqs=serializer_freqs,
+                              lemmatizer=lemmatizer,
                               strings=strings_list)
         self.load_lexemes(path / 'vocab' / 'lexemes.bin')
         return self
 
     def __init__(self, lex_attr_getters=None, tag_map=None, lemmatizer=None,
-            serializer_freqs=None, strings=tuple(), **deprecated_kwargs):
+            strings=tuple(), **deprecated_kwargs):
         """
         Create the vocabulary.
 
@@ -119,7 +113,6 @@ cdef class Vocab:
         tag_map = tag_map if tag_map is not None else {}
         if lemmatizer in (None, True, False):
             lemmatizer = Lemmatizer({}, {}, {})
-        serializer_freqs = serializer_freqs if serializer_freqs is not None else {}
 
         self.mem = Pool()
         self._by_hash = PreshMap()
@@ -141,17 +134,8 @@ cdef class Vocab:
                 _ = self.strings[name]
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
-        self.serializer_freqs = serializer_freqs
 
         self.length = 1
-        self._serializer = None
-
-    property serializer:
-        # Having the serializer live here is super messy :(
-        def __get__(self):
-            if self._serializer is None:
-                self._serializer = Packer(self, self.serializer_freqs)
-            return self._serializer
 
     property lang:
         def __get__(self):
@@ -630,7 +614,6 @@ def pickle_vocab(vocab):
     sstore = vocab.strings
     morph = vocab.morphology
     length = vocab.length
-    serializer = vocab._serializer
     data_dir = vocab.data_dir
     lex_attr_getters = vocab.lex_attr_getters
 
@@ -638,11 +621,11 @@ def pickle_vocab(vocab):
     vectors_length = vocab.vectors_length
 
     return (unpickle_vocab,
-        (sstore, morph, serializer, data_dir, lex_attr_getters,
+        (sstore, morph, data_dir, lex_attr_getters,
             lexemes_data, length, vectors_length))
 
 
-def unpickle_vocab(sstore, morphology, serializer, data_dir,
+def unpickle_vocab(sstore, morphology, data_dir,
         lex_attr_getters, bytes lexemes_data, int length, int vectors_length):
     cdef Vocab vocab = Vocab()
     vocab.length = length
@@ -650,7 +633,6 @@ def unpickle_vocab(sstore, morphology, serializer, data_dir,
     vocab.strings = sstore
     cdef CFile fp = StringCFile('r', data=lexemes_data)
     vocab.morphology = morphology
-    vocab._serializer = serializer
     vocab.data_dir = data_dir
     vocab.lex_attr_getters = lex_attr_getters
     vocab._deserialize_lexemes(fp)

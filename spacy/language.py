@@ -203,7 +203,6 @@ class Language(object):
                 parser=False,
                 entity=False,
                 matcher=False,
-                serializer=False,
                 vectors=False,
                 pipeline=False)
 
