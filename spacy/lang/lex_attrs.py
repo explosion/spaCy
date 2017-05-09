@@ -30,10 +30,6 @@ def is_punct(text):
     return True
 
 
-def is_space(text):
-    return text.isspace()
-
-
 def is_ascii(text):
     for char in text:
         if ord(char) >= 128:
@@ -51,8 +47,6 @@ def like_num(text):
         if num.isdigit() and denom.isdigit():
             return True
     return False
-
-
 
 
 def is_bracket(text):
