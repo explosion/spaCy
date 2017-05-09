@@ -69,6 +69,10 @@ def is_right_punct(text):
     return text in right_punct
 
 
+def like_email(text):
+    return bool(_like_email(text))
+
+
 def like_url(text):
     # We're looking for things that function in text like URLs. So, valid URL
     # or not, anything they say http:// is going to be good.
@@ -131,9 +135,9 @@ LEX_ATTRS = {
     attrs.IS_SPACE: lambda string: string.isspace(),
     attrs.IS_TITLE: lambda string: string.istitle(),
     attrs.IS_UPPER: lambda string: string.isupper(),
-    attrs.LIKE_EMAIL: lambda string: _like_email(string),
     attrs.IS_STOP: lambda string: False,
     attrs.IS_OOV: lambda string: True,
+    attrs.LIKE_EMAIL: like_email,
     attrs.LIKE_NUM: like_num,
     attrs.IS_PUNCT: is_punct,
     attrs.IS_ASCII: is_ascii,
