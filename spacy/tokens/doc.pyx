@@ -6,6 +6,7 @@ cimport numpy as np
 import numpy
 import numpy.linalg
 import struct
+import dill
 
 from libc.string cimport memcpy, memset
 from libc.stdint cimport uint32_t
@@ -18,7 +19,7 @@ from ..lexeme cimport EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport attr_id_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
-from ..attrs cimport POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
+from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN
 from ..parts_of_speech cimport univ_pos_t
 from ..lexeme cimport Lexeme
@@ -609,13 +610,44 @@ cdef class Doc:
         """
         Serialize, producing a byte string.
         """
-        raise NotImplementedError
+        return dill.dumps(
+            (self.text,
+            self.to_array([LENGTH,SPACY,TAG,LEMMA,HEAD,DEP,ENT_IOB,ENT_TYPE]),
+            self.sentiment,
+            self.tensor,
+            self.noun_chunks_iterator,
+            self.user_data,
+            (self.user_hooks, self.user_token_hooks, self.user_span_hooks)),
+            protocol=-1)
 
     def from_bytes(self, data):
         """
         Deserialize, loading from bytes.
         """
-        raise NotImplementedError
+        if self.length != 0:
+            raise ValueError("Cannot load into non-empty Doc")
+        cdef int[:, :] attrs
+        cdef int i, start, end, has_space
+        fields = dill.loads(data)
+        text, attrs = fields[:2]
+        self.sentiment, self.tensor = fields[2:4]
+        self.noun_chunks_iterator, self.user_data = fields[4:6]
+        self.user_hooks, self.user_token_hooks, self.user_span_hooks = fields[6]
+
+        start = 0
+        cdef const LexemeC* lex
+        cdef unicode orth_
+        for i in range(attrs.shape[0]):
+            end = start + attrs[i, 0]
+            has_space = attrs[i, 1]
+            orth_ = text[start:end]
+            lex = self.vocab.get(self.mem, orth_)
+            self.push_back(lex, has_space)
+ 
+            start = end + has_space
+        self.from_array(attrs[:, 2:],
+            [TAG,LEMMA,HEAD,DEP,ENT_IOB,ENT_TYPE])
+
 
     def merge(self, int start_idx, int end_idx, *args, **attributes):
         """
