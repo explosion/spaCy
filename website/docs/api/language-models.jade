@@ -29,21 +29,32 @@ p spaCy currently supports the following languages and capabilities:
 
 include ../usage/_models-list
 
-+h(2, "alpha-support") Alpha support
++h(2, "alpha-support") Alpha tokenization support
 
 p
-    |  Work has started on the following languages. You can help by improving
-    |  the existing language data and extending the tokenization patterns.
+    |  Work has started on the following languages. You can help by
+    |  #[+a("/docs/usage/adding-languages#language-data") improving the existing language data]
+    |  and extending the tokenization patterns.
 
-+aside("Dependencies")
++aside("Usage note")
+    |  Note that the alpha languages don't yet come with a language model. In
+    |  order to use them, you have to import them directly:
+
+    +code.o-no-block.
+        from spacy.lang.fi import Finnish
+        nlp = Finnish()
+        doc = nlp(u'Ilmatyynyalukseni on täynnä ankeriaita')
+
++infobox("Dependencies")
     |  Some language tokenizers require external dependencies. To use #[strong Chinese],
     |  you need to have #[+a("https://github.com/fxsjy/jieba") Jieba] installed.
     |  The #[strong Japanese] tokenizer requires
     |  #[+a("https://github.com/mocobeta/janome") Janome].
 
-+table([ "Language", "Source" ])
-    each language, code in { es: "Spanish", it: "Italian", pt: "Portuguese", nl: "Dutch", sv: "Swedish", fi: "Finnish", nb: "Norwegian Bokmål", hu: "Hungarian", bn: "Bengali", he: "Hebrew", zh: "Chinese", ja: "Japanese" }
++table([ "Language", "Code", "Source" ])
+    each language, code in { es: "Spanish", it: "Italian", pt: "Portuguese", nl: "Dutch", sv: "Swedish", fi: "Finnish", nb: "Norwegian Bokmål", da: "Danish", hu: "Hungarian", pl: "Polish", bn: "Bengali", he: "Hebrew", zh: "Chinese", ja: "Japanese" }
         +row
-            +cell #{language} #[code=code]
+            +cell #{language}
+            +cell #[code=code]
             +cell
-                +src(gh("spaCy", "spacy/" + code)) spacy/#{code}
+                +src(gh("spaCy", "spacy/lang/" + code)) lang/#{code}
