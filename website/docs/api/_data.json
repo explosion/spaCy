@@ -2,7 +2,7 @@
     "sidebar": {
         "Introduction": {
             "Facts & Figures": "./",
-            "Language models": "language-models",
+            "Languages": "language-models",
             "Philosophy": "philosophy"
         },
         "Classes": {
