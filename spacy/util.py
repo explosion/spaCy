@@ -31,7 +31,7 @@ def get_lang_class(name):
     return LANGUAGES[lang]
 
 
-def load_lang_class(lang, depth='.'):
+def load_lang_class(lang):
     module = importlib.import_module('.lang.%s' % lang, 'spacy')
     return getattr(module, module.__all__[0])
 
