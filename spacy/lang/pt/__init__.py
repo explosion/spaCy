@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
+from .lex_attrs import LEX_ATTRS
 from .lemmatizer import LOOKUP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
@@ -18,6 +19,7 @@ class Portuguese(Language):
     class Defaults(Language.Defaults):
         lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
         lex_attr_getters[LANG] = lambda text: 'pt'
+        lex_attr_getters.update(LEX_ATTRS)
 
         tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
         stop_words = set(STOP_WORDS)
