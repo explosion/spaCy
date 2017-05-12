@@ -1,17 +1,23 @@
-"""
-MALT-style dependency parser
-"""
-# coding: utf-8
 # cython: infer_types=True
+# cython: profile=True
+# coding: utf-8
 from __future__ import unicode_literals
 
 from collections import Counter
 import ujson
 
+from chainer.functions.activation.softmax import Softmax as ChainerSoftmax
+
+from cupy.cuda.stream import Stream
+import cupy
+
+from libc.math cimport exp
 cimport cython
 cimport cython.parallel
+import cytoolz
 
 import numpy.random
+cimport numpy as np
 
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals
@@ -28,11 +34,11 @@ from murmurhash.mrmr cimport hash64
 from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
 
-
 from thinc.api import layerize, chain
-from thinc.neural import Model, Maxout
+from thinc.neural import Affine, Model, Maxout
+from thinc.neural.ops import NumpyOps
 
-from .._ml import PrecomputableAffine, PrecomputableMaxouts
+from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
@@ -58,94 +64,133 @@ def set_debug(val):
     DEBUG = val
 
 
-def get_greedy_model_for_batch(tokvecs, TransitionSystem moves, upper_model, lower_model):
-    cdef int[:, :] is_valid_
-    cdef float[:, :] costs_
-    lengths = [len(t) for t in tokvecs]
-    tokvecs = upper_model.ops.flatten(tokvecs)
-    is_valid = upper_model.ops.allocate((len(tokvecs), moves.n_moves), dtype='i')
-    costs = upper_model.ops.allocate((len(tokvecs), moves.n_moves), dtype='f')
-    token_ids = upper_model.ops.allocate((len(tokvecs), lower_model.nF), dtype='i')
+def get_greedy_model_for_batch(batch_size, tokvecs, lower_model, cuda_stream=None):
+    '''Allow a model to be "primed" by pre-computing input features in bulk.
 
-    cached, bp_features = lower_model.begin_update(tokvecs, drop=0.)
+    This is used for the parser, where we want to take a batch of documents,
+    and compute vectors for each (token, position) pair. These vectors can then
+    be reused, especially for beam-search.
 
-    is_valid_ = is_valid
-    costs_ = costs
+    Let's say we're using 12 features for each state, e.g. word at start of
+    buffer, three words on stack, their children, etc. In the normal arc-eager
+    system, a document of length N is processed in 2*N states. This means we'll
+    create 2*N*12 feature vectors --- but if we pre-compute, we only need
+    N*12 vector computations. The saving for beam-search is much better:
+    if we have a beam of k, we'll normally make 2*N*12*K computations --
+    so we can save the factor k. This also gives a nice CPU/GPU division:
+    we can do all our hard maths up front, packed into large multiplications,
+    and do the hard-to-program parsing on the CPU.
+    '''
+    gpu_cached, bp_features = lower_model.begin_update(tokvecs, drop=0.)
+    cdef np.ndarray cached
+    if not isinstance(gpu_cached, numpy.ndarray):
+        cached = gpu_cached.get(stream=cuda_stream)
+    else:
+        cached = gpu_cached
+    nF = gpu_cached.shape[1]
+    nP = gpu_cached.shape[3]
+    ops = lower_model.ops
+    features = numpy.zeros((batch_size, cached.shape[2], nP), dtype='f')
+    synchronized = False
 
-    def forward(states_offsets, drop=0.):
-        nonlocal is_valid, costs, token_ids, moves
-        states, offsets = states_offsets
-        assert len(states) != 0
-        is_valid = is_valid[:len(states)]
-        costs = costs[:len(states)]
-        token_ids = token_ids[:len(states)]
-        is_valid = is_valid[:len(states)]
-        cdef StateClass state
-        cdef int i
-        for i, (offset, state) in enumerate(zip(offsets, states)):
-            state.set_context_tokens(token_ids[i])
-            moves.set_valid(&is_valid_[i, 0], state.c)
-        adjusted_ids = token_ids.copy()
-        for i, offset in enumerate(offsets):
-            adjusted_ids[i] *= token_ids[i] >= 0
-            adjusted_ids[i] += offset
-        features = upper_model.ops.allocate((len(states), lower_model.nO), dtype='f')
-        for i in range(len(states)):
-            for j, tok_i in enumerate(adjusted_ids[i]):
-                if tok_i >= 0:
-                    features[i] += cached[j, tok_i]
+    def forward(token_ids, drop=0.):
+        nonlocal synchronized
+        if not synchronized and cuda_stream is not None:
+            cuda_stream.synchronize()
+            synchronized = True
+        # This is tricky, but:
+        # - Input to forward on CPU
+        # - Output from forward on CPU
+        # - Input to backward on GPU!
+        # - Output from backward on GPU
+        nonlocal features
+        features = features[:len(token_ids)]
+        features.fill(0)
+        cdef float[:, :, ::1] feats = features
+        cdef int[:, ::1] ids = token_ids
+        _sum_features(<float*>&feats[0,0,0],
+            <float*>cached.data, &ids[0,0],
+            token_ids.shape[0], nF, cached.shape[2]*nP)
 
-        scores, bp_scores = upper_model.begin_update(features, drop=drop)
-        scores = upper_model.ops.relu(scores)
-        softmaxed = upper_model.ops.softmax(scores)
-        # Renormalize for invalid actions
-        softmaxed *= is_valid
-        totals = softmaxed.sum(axis=1)
-        for total in totals:
-            assert total > 0, (totals, scores, softmaxed)
-            assert total <= 1.1, totals
-        softmaxed /= softmaxed.sum(axis=1).reshape((softmaxed.shape[0], 1))
+        if nP >= 2:
+            best, which = ops.maxout(features)
+        else:
+            best = features.reshape((features.shape[0], features.shape[1]))
+            which = None
 
-        def backward(golds, sgd=None):
-            nonlocal costs_, is_valid_, moves
-            cdef int i
-            for i, (state, gold) in enumerate(zip(states, golds)):
-                moves.set_costs(&is_valid_[i, 0], &costs_[i, 0],
-                    state, gold)
-            d_scores = scores.copy()
-            d_scores.fill(0)
-            set_log_loss(upper_model.ops, d_scores,
-                scores, is_valid, costs)
-            upper_model.ops.backprop_relu(d_scores, scores, inplace=True)
-            d_features = bp_scores(d_scores, sgd)
-            d_tokens = bp_features((d_features, adjusted_ids), sgd)
-            return (token_ids, d_tokens)
+        def backward(d_best, sgd=None):
+            # This will usually be on GPU
+            if isinstance(d_best, numpy.ndarray):
+                d_best = ops.xp.array(d_best)
+            if nP >= 2:
+                d_features = ops.backprop_maxout(d_best, which, nP)
+            else:
+                d_features = d_best.reshape((d_best.shape[0], d_best.shape[1], 1))
+            d_tokens = bp_features((d_features, token_ids), sgd)
+            return d_tokens
 
-        return softmaxed, backward
+        return best, backward
 
-    return layerize(forward)
-
-
-def set_log_loss(ops, gradients, scores, is_valid, costs):
-    """Do multi-label log loss"""
-    n = gradients.shape[0]
-    scores = scores * is_valid
-    g_scores = scores * is_valid * (costs <= 0.)
-    exps = ops.xp.exp(scores - scores.max(axis=1).reshape((n, 1)))
-    exps *= is_valid
-    g_exps = ops.xp.exp(g_scores - g_scores.max(axis=1).reshape((n, 1)))
-    g_exps *= costs <= 0.
-    g_exps *= is_valid
-    gradients[:] = exps / exps.sum(axis=1).reshape((n, 1))
-    gradients -= g_exps / g_exps.sum(axis=1).reshape((n, 1))
+    return forward
 
 
-def transition_batch(TransitionSystem moves, states, scores):
+cdef void _sum_features(float* output,
+        const float* cached, const int* token_ids, int B, int F, int O) nogil:
+    cdef int idx, b, f, i
+    cdef const float* feature
+    for b in range(B):
+        for f in range(F):
+            if token_ids[f] < 0:
+                continue
+            idx = token_ids[f] * F * O + f*O
+            feature = &cached[idx]
+            for i in range(O):
+                output[i] += feature[i]
+        output += O
+        token_ids += F
+
+
+def get_batch_loss(TransitionSystem moves, states, golds, float[:, ::1] scores):
     cdef StateClass state
-    cdef int guess
-    for state, guess in zip(states, scores.argmax(axis=1)):
-        action = moves.c[guess]
-        action.do(state.c, action.label)
+    cdef GoldParse gold
+    cdef Pool mem = Pool()
+    cdef int i
+    is_valid = <int*>mem.alloc(moves.n_moves, sizeof(int))
+    costs = <float*>mem.alloc(moves.n_moves, sizeof(float))
+    cdef np.ndarray d_scores = numpy.zeros((len(states), moves.n_moves), dtype='f')
+    c_d_scores = <float*>d_scores.data
+    for i, (state, gold) in enumerate(zip(states, golds)):
+        memset(is_valid, 0, moves.n_moves * sizeof(int))
+        memset(costs, 0, moves.n_moves * sizeof(float))
+        moves.set_costs(is_valid, costs, state, gold)
+        cpu_log_loss(c_d_scores, costs, is_valid, &scores[i, 0], d_scores.shape[1])
+        c_d_scores += d_scores.shape[1]
+    return d_scores
+
+
+cdef void cpu_log_loss(float* d_scores,
+        const float* costs, const int* is_valid, const float* scores,
+        int O) nogil:
+    """Do multi-label log loss"""
+    cdef double max_, gmax, Z, gZ
+    best = arg_max_if_gold(scores, costs, is_valid, O)
+    guess = arg_max_if_valid(scores, is_valid, O)
+    Z = 1e-10
+    gZ = 1e-10
+    max_ = scores[guess]
+    gmax = scores[best]
+    for i in range(O):
+        if is_valid[i]:
+            Z += exp(scores[i] - max_)
+            if costs[i] <= 0:
+                gZ += exp(scores[i] - gmax)
+    for i in range(O):
+        if not is_valid[i]:
+            d_scores[i] = 0.
+        elif costs[i] <= 0:
+            d_scores[i] = (exp(scores[i]-max_) / Z) - (exp(scores[i]-gmax)/gZ)
+        else:
+            d_scores[i] = exp(scores[i]-max_) / Z
 
 
 def init_states(TransitionSystem moves, docs):
@@ -161,6 +206,18 @@ def init_states(TransitionSystem moves, docs):
         offsets.append(offset)
         offset += len(doc)
     return states, offsets
+
+
+def extract_token_ids(states, offsets=None, nF=1, nB=0, nS=2, nL=0, nR=0):
+    cdef StateClass state
+    cdef int n_tokens = states[0].nr_context_tokens(nF, nB, nS, nL, nR)
+    ids = numpy.zeros((len(states), n_tokens), dtype='i')
+    if offsets is None:
+        offsets = [0] * len(states)
+    for i, (state, offset) in enumerate(zip(states, offsets)):
+        state.set_context_tokens(ids[i], nF, nB, nS, nL, nR)
+        ids[i] += (ids[i] >= 0) * offset
+    return ids
 
 
 cdef class Parser:
@@ -218,11 +275,19 @@ cdef class Parser:
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
-    def build_model(self, width=64, nr_vector=1000, nF=1, nB=1, nS=1, nL=1, nR=1, **_):
+    def build_model(self,
+            hidden_width=128, token_vector_width=96, nr_vector=1000,
+            nF=1, nB=1, nS=1, nL=1, nR=1, **cfg):
         nr_context_tokens = StateClass.nr_context_tokens(nF, nB, nS, nL, nR)
-
-        upper = chain(Maxout(width, width), Maxout(self.moves.n_moves, width))
-        lower = PrecomputableMaxouts(width, nF=nr_context_tokens, nI=width)
+        with Model.use_device('cpu'):
+            upper = chain(
+                        Maxout(token_vector_width),
+                        zero_init(Affine(self.moves.n_moves, token_vector_width)))
+        assert isinstance(upper.ops, NumpyOps)
+        lower = PrecomputableMaxouts(token_vector_width, nF=nr_context_tokens, nI=token_vector_width,
+                                     pieces=cfg.get('maxout_pieces', 1))
+        upper.begin_training(upper.ops.allocate((500, token_vector_width)))
+        lower.begin_training(lower.ops.allocate((500, token_vector_width)))
         return upper, lower
 
     def __call__(self, Doc tokens):
@@ -248,12 +313,6 @@ cdef class Parser:
                 The number of threads with which to work on the buffer in parallel.
         Yields (Doc): Documents, in order.
         """
-        cdef Pool mem = Pool()
-        cdef int* lengths = <int*>mem.alloc(batch_size, sizeof(int))
-        cdef Doc doc
-        cdef int i
-        cdef int nr_feat = self.model.nr_feat
-        cdef int status
         queue = []
         for doc in stream:
             queue.append(doc)
@@ -269,54 +328,110 @@ cdef class Parser:
                 self.moves.finalize_doc(doc)
                 yield doc
 
-    def parse_batch(self, docs):
-        cdef Doc doc
-        cdef StateClass state
-        model = get_greedy_model_for_batch([d.tensor for d in docs],
-                    self.moves, self.model, self.feature_maps)
+    def parse_batch(self, docs_tokvecs):
+        cdef:
+            int nC
+            Doc doc
+            StateClass state
+            np.ndarray py_scores
+            int[500] is_valid # Hacks for now
+
+        cuda_stream = Stream()
+        docs, tokvecs = docs_tokvecs
+        lower_model = get_greedy_model_for_batch(len(docs), tokvecs, self.feature_maps,
+                                                 cuda_stream)
+        upper_model = self.model
+
         states, offsets = init_states(self.moves, docs)
         all_states = list(states)
-        todo = list(zip(states, offsets))
+        todo = [st for st in zip(states, offsets) if not st[0].py_is_final()]
+
         while todo:
-            todo = filter(lambda sp: not sp[0].py_is_final(), todo)
-            if not todo:
-                break
             states, offsets = zip(*todo)
-            scores = model((states, offsets))
-            transition_batch(self.moves, states, scores)
+            token_ids = extract_token_ids(states, offsets=offsets)
+
+            py_scores = upper_model(lower_model(token_ids)[0])
+            scores = <float*>py_scores.data
+            nC = py_scores.shape[1]
+            for state, offset in zip(states, offsets):
+                self.moves.set_valid(is_valid, state.c)
+                guess = arg_max_if_valid(scores, is_valid, nC)
+                action = self.moves.c[guess]
+                action.do(state.c, action.label)
+                scores += nC
             todo = [st for st in todo if not st[0].py_is_final()]
+
         for state, doc in zip(all_states, docs):
             self.moves.finalize_state(state.c)
             for i in range(doc.length):
                 doc.c[i] = state.c._sent[i]
-        for doc in docs:
             self.moves.finalize_doc(doc)
 
-    def update(self, docs, golds, drop=0., sgd=None):
+    def update(self, docs_tokvecs, golds, drop=0., sgd=None):
+        cdef:
+            int nC
+            int[500] is_valid # Hack for now
+            Doc doc
+            StateClass state
+            np.ndarray scores
+
+        docs, tokvecs = docs_tokvecs
+        cuda_stream = Stream()
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
-            return self.update([docs], [golds], drop=drop)
+            return self.update(([docs], tokvecs), [golds], drop=drop)
         for gold in golds:
             self.moves.preprocess_gold(gold)
 
-        model = get_greedy_model_for_batch([d.tensor for d in docs],
-                    self.moves, self.model, self.feature_maps)
         states, offsets = init_states(self.moves, docs)
 
-        d_tokens = [self.model.ops.allocate(d.tensor.shape) for d in docs]
-        output = list(d_tokens)
-        todo = zip(states, offsets, golds, d_tokens)
+        todo = zip(states, offsets, golds)
+        todo = filter(lambda sp: not sp[0].py_is_final(), todo)
+
+        lower_model = get_greedy_model_for_batch(len(todo),
+                        tokvecs, self.feature_maps, cuda_stream=cuda_stream)
+        upper_model = self.model
+        d_tokens = self.feature_maps.ops.allocate(tokvecs.shape)
+        backprops = []
+        n_tokens = tokvecs.shape[0]
+        nF = self.feature_maps.nF
         while todo:
-            # Get unfinished states (and their matching gold and token gradients)
+            states, offsets, golds = zip(*todo)
+
+            token_ids = extract_token_ids(states, offsets=offsets)
+            lower, bp_lower = lower_model(token_ids)
+            scores, bp_scores = upper_model.begin_update(lower)
+
+            d_scores = get_batch_loss(self.moves, states, golds, scores)
+            d_lower = bp_scores(d_scores, sgd=sgd)
+
+            gpu_tok_ids = cupy.ndarray(token_ids.shape, dtype='i')
+            gpu_d_lower = cupy.ndarray(d_lower.shape, dtype='f')
+            gpu_tok_ids.set(token_ids, stream=cuda_stream)
+            gpu_d_lower.set(d_lower, stream=cuda_stream)
+            backprops.append((gpu_tok_ids, gpu_d_lower, bp_lower))
+
+            c_scores = <float*>scores.data
+            for state in states:
+                self.moves.set_valid(is_valid, state.c)
+                guess = arg_max_if_valid(c_scores, is_valid, scores.shape[1])
+                action = self.moves.c[guess]
+                action.do(state.c, action.label)
+                c_scores += scores.shape[1]
+
             todo = filter(lambda sp: not sp[0].py_is_final(), todo)
-            if not todo:
-                break
-            states, offsets, golds, d_tokens = zip(*todo)
-            scores, finish_update = model.begin_update((states, offsets))
-            (token_ids, d_state_features) = finish_update(golds, sgd=sgd)
-            for i, token_ids in enumerate(token_ids):
-                d_tokens[i][token_ids] += d_state_features[i]
-            transition_batch(self.moves, states, scores)
-        return output
+        # This tells CUDA to block --- so we know our copies are complete.
+        cuda_stream.synchronize()
+        for token_ids, d_lower, bp_lower in backprops:
+            d_state_features = bp_lower(d_lower, sgd=sgd)
+            active_feats = token_ids * (token_ids >= 0)
+            active_feats = active_feats.reshape((token_ids.shape[0], token_ids.shape[1], 1))
+            if hasattr(self.feature_maps.ops.xp, 'scatter_add'):
+                self.feature_maps.ops.xp.scatter_add(d_tokens,
+                    token_ids, d_state_features * active_feats)
+            else:
+                self.model.ops.xp.add.at(d_tokens,
+                    token_ids, d_state_features * active_feats)
+        return d_tokens
 
     def step_through(self, Doc doc, GoldParse gold=None):
         """
@@ -464,3 +579,39 @@ class ParserStateError(ValueError):
             "https://github.com/spacy-io/spaCy/issues/429\n"
             "Please include the text that the parser failed on, which is:\n"
             "%s" % repr(doc.text))
+
+
+cdef int arg_max_if_gold(const weight_t* scores, const weight_t* costs, const int* is_valid, int n) nogil:
+    # Find minimum cost
+    cdef float cost = 1
+    for i in range(n):
+        if is_valid[i] and costs[i] < cost:
+            cost = costs[i]
+    # Now find best-scoring with that cost
+    cdef int best = -1
+    for i in range(n):
+        if costs[i] <= cost and is_valid[i]:
+            if best == -1 or scores[i] > scores[best]:
+                best = i
+    return best
+
+
+cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) nogil:
+    cdef int best = -1
+    for i in range(n):
+        if is_valid[i] >= 1:
+            if best == -1 or scores[i] > scores[best]:
+                best = i
+    return best
+
+
+cdef int _arg_max_clas(const weight_t* scores, int move, const Transition* actions,
+                       int nr_class) except -1:
+    cdef weight_t score = 0
+    cdef int mode = -1
+    cdef int i
+    for i in range(nr_class):
+        if actions[i].move == move and (mode == -1 or scores[i] >= score):
+            mode = i
+            score = scores[i]
+    return mode
