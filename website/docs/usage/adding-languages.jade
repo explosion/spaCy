@@ -41,7 +41,8 @@ p
     |  subpackage of spaCy, named according to the language's
     |  #[+a("https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes") ISO code].
     |  For instance, code and resources specific to Spanish are placed into a
-    |  folder #[code spacy/es], which can be imported as #[code spacy.es].
+    |  directory #[code spacy/lang/es], which can be imported as
+    |  #[code spacy.lang.es].
 
 p
     |  To get started, you can use our
@@ -49,42 +50,42 @@ p
     |  for the most important files. Here's what the class template looks like:
 
 +code("__init__.py (excerpt)").
-    # Import language-specific data
-    from .language_data import *
+    # import language-specific data
+    from .stop_words import STOP_WORDS
+    from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
+    from .lex_attrs import LEX_ATTRS
+
+    from ..tokenizer_exceptions import BASE_EXCEPTIONS
+    from ...language import Language
+    from ...attrs import LANG
+    from ...util import update_exc
 
     class Xxxxx(Language):
-        lang = 'xx' # ISO code
+        lang = 'xx' # language ISO code
 
+        # override defaults
         class Defaults(Language.Defaults):
             lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-            lex_attr_getters[LANG] = lambda text: 'xx'
+            lex_attr_getters[LANG] = lambda text: 'xx' # language ISO code
 
-            # override defaults
-            tokenizer_exceptions = TOKENIZER_EXCEPTIONS
-            tag_map = TAG_MAP
-            stop_words = STOP_WORDS
+            # optional: replace flags with custom functions, e.g. like_num()
+            lex_attr_getters.update(LEX_ATTRS)
 
-p
-    |  Additionally, the new #[code Language] class needs to be added to the
-    |  list of available languages in #[+src(gh("spaCy", "spacy/__init__.py")) __init__.py].
-    |  The languages are then registered using the #[code set_lang_class()] function.
+            # merge base exceptions and custom tokenizer exceptions
+            tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+            stop_words = set(STOP_WORDS)
 
-+code("spacy/__init__.py").
-    from . import en
-    from . import xx
+    # set default export – this allows the language class to be lazy-loaded
+    __all__ = ['Xxxxx']
 
-    _languages = (en.English, ..., xx.Xxxxx)
-
-p You'll also need to list the new package in #[+src(gh("spaCy", "spacy/setup.py")) setup.py]:
-
-+code("spacy/setup.py").
-    PACKAGES = [
-        'spacy',
-        'spacy.tokens',
-        'spacy.en',
-        'spacy.xx',
-        # ...
-    ]
++aside("Why lazy-loading?")
+    |  Some languages contain large volumes of custom data, like lemmatizer
+    |  loopup tables, or complex regular expression that are expensive to
+    |  compute. As of spaCy v2.0, #[code Language] classes are not imported on
+    |  initialisation and are only loaded when you import them directly, or load
+    |  a model that requires a language to be loaded. To lazy-load languages in
+    |  your application, you can use the #[code util.load_lang_class()] helper
+    |  function with the two-letter language code as its argument.
 
 +h(2, "language-data") Adding language data
 
@@ -104,11 +105,69 @@ p
     |  needs to know the language's character set. If the language you're adding
     |  uses non-latin characters, you might need to add the required character
     |  classes to the global
-    |  #[+src(gh("spacy", "spacy/language_data/punctuation.py")) punctuation.py].
+    |  #[+src(gh("spacy", "spacy/lang/punctuation.py")) punctuation.py].
     |  spaCy uses the #[+a("https://pypi.python.org/pypi/regex/") #[code regex] library]
     |  to keep this simple and readable. If the language requires very specific
     |  punctuation rules, you should consider overwriting the default regular
     |  expressions with your own in the language's #[code Defaults].
+
+p
+    |  Here's an overview of the individual components that can be included
+    |  in the language data. For more details on them, see the sections below.
+
++table(["File name", "Variables", "Description"])
+    +row
+        +cell #[+src(gh()) stop_words.py]
+        +cell #[code STOP_WORDS] (set)
+        +cell
+            |  List of most common words. Matching tokens will return #[code True]
+            |  for #[code is_stop].
+
+    +row
+        +cell #[+src(gh()) tokenizer_exceptions.py]
+        +cell #[code TOKENIZER_EXCEPTIONS] (dict), #[code TOKEN_MATCH] (regex)
+        +cell
+            |  Special-case rules for the tokenizer, for example, contractions
+            |  and abbreviations containing punctuation.
+
+    +row
+        +cell #[+src(gh()) punctuation.py]
+        +cell
+            |  #[code TOKENIZER_PREFIXES], #[code TOKENIZER_SUFFIXES],
+            |  #[code TOKENIZER_INFIXES] (dicts)
+        +cell Regular expressions for splitting tokens, e.g. on punctuation.
+
+    +row
+        +cell #[+src(gh()) lex_attrs.py]
+        +cell #[code LEX_ATTRS] (dict)
+        +cell
+            |  Functions for setting lexical attributes on tokens, e.g.
+            |  #[code is_punct] or #[code like_num].
+
+    +row
+        +cell #[+src(gh()) tag_map.py]
+        +cell #[code TAG_MAP] (dict)
+        +cell
+            |  Dictionary mapping strings in your tag set to
+            |  #[+a("http://universaldependencies.org/u/pos/all.html") Universal Dependencies]
+            |  tags.
+
+    +row
+        +cell #[+src(gh()) morph_rules.py]
+        +cell #[code MORPH_RULES] (dict)
+        +cell
+
+    +row
+        +cell #[+src(gh()) lemmatizer.py]
+        +cell #[code LOOKUP] (dict)
+        +cell
+            |  Lookup-based lemmatization table. If more lemmatizer data is
+            |  available, it should live in #[code /lemmatizer/lookup.py].
+
+    +row
+        +cell /lemmatizer
+        +cell #[code LEMMA_RULES], #[code LEMMA_INDEX], #[code LEMMA_EXC] (dicts)
+        +cell Lemmatization rules, keyed by part of speech.
 
 +h(3, "stop-words") Stop words
 
@@ -116,7 +175,9 @@ p
     |  A #[+a("https://en.wikipedia.org/wiki/Stop_words") "stop list"] is a
     |  classic trick from the early days of information retrieval when search
     |  was largely about keyword presence and absence. It is still sometimes
-    |  useful today to filter out common words from a bag-of-words model.
+    |  useful today to filter out common words from a bag-of-words model. To
+    |  improve readability, #[code STOP_WORDS] are separated by spaces and
+    |  newlines, and added as a multiline string.
 
 +aside("What does spaCy consider a stop word?")
     |  There's no particularly principal logic behind what words should be
@@ -124,19 +185,174 @@ p
     |  to people and is likely to be unsurprising. As a rule of thumb, words
     |  that are very rare are unlikely to be useful stop words.
 
-p
-    |  To improve readability, #[code STOP_WORDS] are separated by spaces and
-    |  newlines, and added as a multiline string:
-
 +code("Example").
-    STOP_WORDS = set("""
+    STOP_WORDS = set(&quot;&quot;&quot;
     a about above across after afterwards again against all almost alone along
     already also although always am among amongst amount an and another any anyhow
     anyone anything anyway anywhere are around as at
 
     back be became because become becomes becoming been before beforehand behind
     being below beside besides between beyond both bottom but by
-    """).split())
+    &quot;&quot;&quot;).split())
+
++h(3, "tokenizer-exceptions") Tokenizer exceptions
+
+p
+    |  spaCy's #[+a("/docs/usage/customizing-tokenizer#how-tokenizer-works") tokenization algorithm]
+    |  lets you deal with whitespace-delimited chunks separately. This makes it
+    |  easy to define special-case rules, without worrying about how they
+    |  interact with the rest of the tokenizer. Whenever the key string is
+    |  matched, the special-case rule is applied, giving the defined sequence of
+    |  tokens. You can also attach attributes to the subtokens, covered by your
+    |  special case, such as the subtokens #[code LEMMA] or #[code TAG].
+
+p
+    |  Tokenizer exceptions can be added in the following format:
+
++code("language_data.py").
+    TOKENIZER_EXCEPTIONS = {
+        "don't": [
+            {ORTH: "do", LEMMA: "do"},
+            {ORTH: "n't", LEMMA: "not", TAG: "RB"}]
+    }
+
++infobox("Important note")
+    |  If an exception consists of more than one token, the #[code ORTH] values
+    |  combined always need to #[strong match the original string]. The way the
+    |  original string is split up can be pretty arbitrary sometimes – for
+    |  example "gonna" is split into "gon" (lemma "go") nad "na" (lemma "to").
+    |  Because of how the tokenizer works, it's currently not possible to split
+    |  single-letter strings into multiple tokens.
+
+p
+    |  Unambiguous abbreviations, like month names or locations in English,
+    |  should be added to exceptions with a lemma assigned, for example
+    |  #[code {ORTH: "Jan.", LEMMA: "January"}]. Since the exceptions are
+    |  added in Python, you can use custom logic to generate them more
+    |  efficiently and make your data less verbose. How you do this ultimately
+    |  depends on the language. Here's an example of how exceptions for time
+    |  formats like "1a.m." and "1am" are generated in the English
+    |  #[+src(gh("spaCy", "spacy/en/lang/tokenizer_exceptions.py")) tokenizer_exceptions.py]:
+
++code("tokenizer_exceptions.py (excerpt)").
+    # use short, internal variable for readability
+    _exc = {}
+
+    for h in range(1, 12 + 1):
+        for period in ["a.m.", "am"]:
+            # always keep an eye on string interpolation!
+            _exc["%d%s" % (h, period)] = [
+                {ORTH: "%d" % h},
+                {ORTH: period, LEMMA: "a.m."}]
+        for period in ["p.m.", "pm"]:
+            _exc["%d%s" % (h, period)] = [
+                {ORTH: "%d" % h},
+                {ORTH: period, LEMMA: "p.m."}]
+
+    # only declare this at the bottom
+    TOKENIZER_EXCEPTIONS = dict(_exc)
+
+p
+    |  When adding the tokenizer exceptions to the #[code Defaults], you can use
+    |  the #[code update_exc()] helper function to merge them with the global
+    |  base  exceptions (including one-letter abbreviations and emoticons).
+    |  The function performs a basic check to make sure exceptions are
+    |  provided in the correct format. It can take any number of exceptions
+    |  dicts as its arguments, and will update and overwrite the exception in
+    |  this order. For example, if your language's tokenizer exceptions include
+    |  a custom tokenization pattern for "a.", it will overwrite the base
+    |  exceptions with the language's custom one.
+
++code("Example").
+    from ...util import update_exc
+
+    BASE_EXCEPTIONS =  {"a.": [{ORTH: "a."}], ":)": [{ORTH: ":)"}]}
+    TOKENIZER_EXCEPTIONS = {"a.": [{ORTH: "a.", LEMMA: "all"}]}
+
+    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    # {"a.": [{ORTH: "a.", LEMMA: "all"}], ":)": [{ORTH: ":)"}]}
+
+//-+aside("About spaCy's custom pronoun lemma")
+    |  Unlike verbs and common nouns, there's no clear base form of a personal
+    |  pronoun. Should the lemma of "me" be "I", or should we normalize person
+    |  as well, giving "it" — or maybe "he"? spaCy's solution is to introduce a
+    |  novel symbol, #[code.u-nowrap -PRON-], which is used as the lemma for
+    |  all personal pronouns.
+
++h(3, "shared-data") Shared language data
+
+p
+    |  Because languages can vary in quite arbitrary ways, spaCy avoids
+    |  organising the language data into an explicit inheritance hierarchy.
+    |  Instead, reuseable functions and data are collected as atomic pieces in
+    |  the root of the #[+src(gh("spaCy", "lang")) spacy.lang] package.
+
+p
+    |  Often, when a new language is added, you'll find a pattern or symbol
+    |  that's missing. Even if this pattern or symbol isn't common in other
+    |  languages, it might be best to add it to the base expressions, unless it
+    |  has some conflicting interpretation. For instance, we don't expect to
+    |  see guillemot quotation symbols (#[code &raquo;] and #[code &laquo;]) in
+    |  English text. But if we do see them, we'd probably prefer the tokenizer
+    |  to split it off.
+
++h(3, "lex-attrs") Lexical attributes
+
+p
+    |  spaCy provides a range of #[+api("token#attributes") #[code Token] attributes]
+    |  that return useful information on that token – for example, whether it's
+    |  uppercase or lowercase, a left or right punctuation mark, or whether it
+    |  resembles a number or email address. Most of these functions, like
+    |  #[code is_lower] or #[code like_url] should be language-independent.
+    |  Others, like #[code like_num] (which includes both digits and number
+    |  words), requires some customisation.
+
++aside("Best practices")
+    |  Keep in mind that those functions are only intended to be  an approximation.
+    |  It's always better to prioritise simplicity and performance over covering
+    |  very specific edge cases.#[br]#[br]
+    |  English number words are pretty simple, because even large numbers
+    |  consist of individual tokens, and we can get away with splitting and
+    |  matching strings against a list. In other languages, like German, "two
+    |  hundred and thirty-four" is one word, and thus one token. Here, it's best
+    |  to match a string against a list of number word fragments (instead of a
+    |  technically almost infinite list of possible number words).
+
+p
+    |  Here's an example from the English
+    |  #[+src(gh("spaCy", "spacy/en/lang/lex_attrs.py")) lex_attrs.py]:
+
++code("lex_attrs.py").
+    _num_words = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven',
+                  'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen',
+                  'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty',
+                  'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety',
+                  'hundred', 'thousand', 'million', 'billion', 'trillion', 'quadrillion',
+                  'gajillion', 'bazillion']
+
+    def like_num(text):
+        text = text.replace(',', '').replace('.', '')
+        if text.isdigit():
+            return True
+        if text.count('/') == 1:
+            num, denom = text.split('/')
+            if num.isdigit() and denom.isdigit():
+                return True
+        if text in _num_words:
+            return True
+        return False
+
+    LEX_ATTRS = {
+        LIKE_NUM: like_num
+    }
+
+p
+    |  By updating the default lexical attributes with a custom #[code LEX_ATTRS]
+    |  dictionary in the language's defaults via
+    |  #[code lex_attr_getters.update(LEX_ATTRS)], only the new custom functions
+    |  are overwritten.
+
++h(3, "lemmatizer") Lemmatizer
 
 +h(3, "tag-map") Tag map
 
@@ -160,240 +376,15 @@ p
     |  #[+a("/docs/usage/pos-tagging#rule-based-morphology") rule-based morphological analysis].
 
 +code("Example").
+    from ..symbols import POS, NOUN, VERB, DET
+
     TAG_MAP = {
         "NNS":  {POS: NOUN, "Number": "plur"},
         "VBG":  {POS: VERB, "VerbForm": "part", "Tense": "pres", "Aspect": "prog"},
         "DT":   {POS: DET}
     }
 
-+h(3, "tokenizer-exceptions") Tokenizer exceptions
-
-p
-    |  spaCy's #[+a("/docs/usage/customizing-tokenizer#how-tokenizer-works") tokenization algorithm]
-    |  lets you deal with whitespace-delimited chunks separately. This makes it
-    |  easy to define special-case rules, without worrying about how they
-    |  interact with the rest of the tokenizer. Whenever the key string is
-    |  matched, the special-case rule is applied, giving the defined sequence of
-    |  tokens. You can also attach attributes to the subtokens, covered by your
-    |  special case, such as the subtokens #[code LEMMA] or #[code TAG].
-
-p
-    |  Tokenizer exceptions can be added in the following format:
-
-+code("language_data.py").
-    TOKENIZER_EXCEPTIONS = {
-        "don't": [
-            {ORTH: "do", LEMMA: "do"},
-            {ORTH: "n't", LEMMA: "not", TAG: "RB"}
-        ]
-    }
-
-p
-    |  Some exceptions, like certain abbreviations, will always be mapped to a
-    |  single token containing only an #[code ORTH] property. To make your data
-    |  less verbose, you can use the helper function #[code strings_to_exc()]
-    |  with a simple array of strings:
-
-+code("Example").
-    from ..language_data import update_exc, strings_to_exc
-
-    ORTH_ONLY = ["a.", "b.", "c."]
-    converted = strings_to_exc(ORTH_ONLY)
-    # {"a.": [{ORTH: "a."}], "b.": [{ORTH: "b."}], "c.": [{ORTH: "c."}]}
-
-    update_exc(TOKENIZER_EXCEPTIONS, converted)
-
-p
-    |  Unambiguous abbreviations, like month names or locations in English,
-    |  should be added to #[code TOKENIZER_EXCEPTIONS] with a lemma assigned,
-    |  for example #[code {ORTH: "Jan.", LEMMA: "January"}].
-
-+h(3, "custom-tokenizer-exceptions") Custom tokenizer exceptions
-
-p
-    |  For language-specific tokenizer exceptions, you can use the
-    |  #[code update_exc()] function to update the existing exceptions with a
-    |  custom dictionary. This is especially useful for exceptions that follow
-    |  a consistent pattern. Instead of adding each exception manually, you can
-    |  write a simple function that returns a dictionary of exceptions.
-
-p
-    |  For example, here's how exceptions for time formats like "1a.m." and
-    |  "1am" are generated in the English
-    |  #[+src(gh("spaCy", "spacy/en/language_data.py")) language_data.py]:
-
-+code("language_data.py").
-    from ..language_data import update_exc
-
-    def get_time_exc(hours):
-        exc = {}
-        for hour in hours:
-            exc["%da.m." % hour] = [{ORTH: hour}, {ORTH: "a.m."}]
-            exc["%dp.m." % hour] = [{ORTH: hour}, {ORTH: "p.m."}]
-            exc["%dam" % hour]   = [{ORTH: hour}, {ORTH: "am", LEMMA: "a.m."}]
-            exc["%dpm" % hour]   = [{ORTH: hour}, {ORTH: "pm", LEMMA: "p.m."}]
-        return exc
-
-
-    TOKENIZER_EXCEPTIONS = dict(language_data.TOKENIZER_EXCEPTIONS)
-
-    hours = 12
-    update_exc(TOKENIZER_EXCEPTIONS, get_time_exc(range(1, hours + 1)))
-
-+h(3, "utils") Shared utils
-
-p
-    |  The #[code spacy.language_data] package provides constants and functions
-    |  that can be imported and used across languages.
-
-+aside("About spaCy's custom pronoun lemma")
-    |  Unlike verbs and common nouns, there's no clear base form of a personal
-    |  pronoun. Should the lemma of "me" be "I", or should we normalize person
-    |  as well, giving "it" — or maybe "he"? spaCy's solution is to introduce a
-    |  novel symbol, #[code.u-nowrap -PRON-], which is used as the lemma for
-    |  all personal pronouns.
-
-+table(["Name", "Description"])
-    +row
-        +cell #[code PRON_LEMMA]
-        +cell
-            |  Special value for pronoun lemmas (#[code &quot;-PRON-&quot;]).
-
-    +row
-        +cell #[code DET_LEMMA]
-        +cell
-            |  Special value for determiner lemmas, used in languages with
-            |  inflected determiners (#[code &quot;-DET-&quot;]).
-
-    +row
-        +cell #[code ENT_ID]
-        +cell
-            | Special value for entity IDs (#[code "ent_id"])
-
-    +row
-        +cell #[code update_exc(exc, additions)]
-        +cell
-            |  Update an existing dictionary of exceptions #[code exc] with a
-            |  dictionary of #[code additions].
-
-    +row
-        +cell #[code strings_to_exc(orths)]
-        +cell
-            |  Convert an array of strings to a dictionary of exceptions of the
-            |  format #[code {"string": [{ORTH: "string"}]}].
-
-    +row
-        +cell #[code expand_exc(excs, search, replace)]
-        +cell
-            |  Search for a string #[code search] in a dictionary of exceptions
-            |  #[code excs] and if found, copy the entry and replace
-            |  #[code search] with #[code replace] in both the key and
-            |  #[code ORTH] value. Useful to provide exceptions containing
-            |  different versions of special unicode characters, like
-            |  #[code &apos;] and #[code ’].
-
-p
-    |  If you've written a custom function that seems like it might be useful
-    |  for several languages, consider adding it to
-    |  #[+src(gh("spaCy", "spacy/language_data/util.py")) language_data/util.py]
-    |  instead of the individual language module.
-
-+h(3, "shared-data") Shared language data
-
-p
-    |  Because languages can vary in quite arbitrary ways, spaCy avoids
-    |  organising the language data into an explicit inheritance hierarchy.
-    |  Instead, reuseable functions and data are collected as atomic pieces in
-    |  the #[code spacy.language_data] package.
-
-+aside-code("Example").
-    from ..language_data import update_exc, strings_to_exc
-    from ..language_data import EMOTICONS
-
-    # Add custom emoticons
-    EMOTICONS = EMOTICONS + ["8===D", ":~)"]
-
-    # Add emoticons to tokenizer exceptions
-    update_exc(TOKENIZER_EXCEPTIONS, strings_to_exc(EMOTICONS))
-
-+table(["Name", "Description", "Source"])
-    +row
-        +cell #[code EMOTICONS]
-
-        +cell
-            |  Common unicode emoticons without whitespace.
-
-        +cell
-            +src(gh("spaCy", "spacy/language_data/emoticons.py")) emoticons.py
-
-    +row
-        +cell #[code TOKENIZER_PREFIXES]
-
-        +cell
-            |  Regular expressions to match left-attaching tokens and
-            |  punctuation, e.g. #[code $], #[code (], #[code &quot;]
-
-        +cell
-            +src(gh("spaCy", "spacy/language_data/punctuation.py")) punctuation.py
-
-    +row
-        +cell #[code TOKENIZER_SUFFIXES]
-
-        +cell
-            |  Regular expressions to match right-attaching tokens and
-            |  punctuation, e.g. #[code %], #[code &#41;], #[code &quot;]
-
-        +cell
-            +src(gh("spaCy", "spacy/language_data/punctuation.py")) punctuation.py
-
-    +row
-        +cell #[code TOKENIZER_INFIXES]
-
-        +cell
-            |  Regular expressions to match token separators, e.g. #[code -]
-
-        +cell
-            +src(gh("spaCy", "spacy/language_data/punctuation.py")) punctuation.py
-
-    +row
-        +cell #[code TAG_MAP]
-
-        +cell
-            |  A tag map keyed by the universal part-of-speech tags to
-            |  themselves with no morphological features.
-
-        +cell
-            +src(gh("spaCy", "spacy/language_data/tag_map.py")) tag_map.py
-
-    +row
-        +cell #[code ENTITY_RULES]
-
-        +cell
-            |  Patterns for named entities commonly missed by the statistical
-            | entity recognizer, for use in the rule matcher.
-
-        +cell
-            +src(gh("spaCy", "spacy/language_data/entity_rules.py")) entity_rules.py
-
-    +row
-        +cell #[code FALSE_POSITIVES]
-
-        +cell
-            |  Patterns for phrases commonly mistaken for named entities by the
-            |  statistical entity recognizer, to use in the rule matcher.
-
-        +cell
-            +src(gh("spaCy", "spacy/language_data/entity_rules.py")) entity_rules.py
-
-p
-    |  Individual languages can extend and override any of these expressions.
-    |  Often, when a new language is added, you'll find a pattern or symbol
-    |  that's missing. Even if this pattern or symbol isn't common in other
-    |  languages, it might be best to add it to the base expressions, unless it
-    |  has some conflicting interpretation. For instance, we don't expect to
-    |  see guillemot quotation symbols (#[code &raquo;] and #[code &laquo;]) in
-    |  English text. But if we do see them, we'd probably prefer the tokenizer
-    |  to split it off.
++h(3, "morph-rules") Morph rules
 
 +h(2, "vocabulary") Building the vocabulary
 
@@ -544,8 +535,8 @@ p
 p
     |  You can now train the model using a corpus for your language annotated
     |  with #[+a("http://universaldependencies.org/") Universal Dependencies].
-    |  If your corpus uses the 
-    |  #[+a("http://universaldependencies.org/docs/format.html") CoNLL-U] format, 
+    |  If your corpus uses the
+    |  #[+a("http://universaldependencies.org/docs/format.html") CoNLL-U] format,
     |  i.e. files with the extension #[code .conllu], you can use the
     |  #[+a("/docs/usage/cli#convert") #[code convert] command] to convert it to
     |  spaCy's #[+a("/docs/api/annotation#json-input") JSON format] for training.
