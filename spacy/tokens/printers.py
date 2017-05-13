@@ -32,8 +32,8 @@ def format_POS(token, light, flat):
         subtree.pop("modifiers")
     return subtree
 
-def POS_tree(root, light, flat):
 
+def POS_tree(root, light=False, flat=False):
     """
     Helper: generate a POS tree for a root token. The doc must have
     merge_ents(doc) ran on it.
