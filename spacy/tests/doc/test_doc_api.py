@@ -215,3 +215,16 @@ def test_doc_api_has_vector(en_tokenizer, text_file, text, vectors):
 
     doc = en_tokenizer(text)
     assert doc.has_vector
+
+
+def test_parse_tree(EN):
+    text = 'I like New York in Autumn.'
+    EN = English(parser=False)
+    doc = EN(text, tag=True)
+    doc.from_array([HEAD], numpy.asarray([[1, 0, 1, -2, -3, -1, -5]], dtype='int32').T)
+    # full method parse_tree(text) is a trivial composition
+    trees = doc.print_tree()
+    assert len(trees) > 0
+    tree = trees[0]
+    assert all(k in list(tree.keys()) for k in ['word', 'lemma', 'NE', 'POS_fine', 'POS_coarse', 'arc', 'modifiers'])
+    assert tree['word'] == 'like' # check root is correct
