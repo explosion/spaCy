@@ -12,14 +12,11 @@ p
     |  need to:
 
 +list("numbers")
-    +item
-        |  Create a #[strong #[code Language] subclass] and
-        |  #[a(href="#language-subclass") implement it].
-
+    +item Create a #[strong #[code Language] subclass].
     +item
         |  Define custom #[strong language data], like a
-        |  #[a(href="#stop-words") stop list], #[a(href="#tag-map") tag map]
-        |  and #[a(href="#tokenizer-exceptions") tokenizer exceptions].
+        |  #[a(href="#stop-words") stop list] and
+        |  #[a(href="#tokenizer-exceptions") tokenizer exceptions].
 
     +item
         |  #[strong Build the vocabulary] including
@@ -28,7 +25,8 @@ p
         |  #[a(href="#word-vectors") word vectors].
 
     +item
-        |  #[strong Set up] a #[a(href="#model-directory") model direcory] and #[strong train] the #[a(href="#train-tagger-parser") tagger and parser].
+        |  #[strong Set up] a #[a(href="#model-directory") model direcory] and
+        |  #[strong train] the #[a(href="#train-tagger-parser") tagger and parser].
 
 p
     |  For some languages, you may also want to develop a solution for
@@ -100,20 +98,12 @@ p
     |  so that Python functions can be used to help you generalise and combine
     |  the data as you require.
 
-+infobox("For languages with non-latin characters")
-    |  In order for the tokenizer to split suffixes, prefixes and infixes, spaCy
-    |  needs to know the language's character set. If the language you're adding
-    |  uses non-latin characters, you might need to add the required character
-    |  classes to the global
-    |  #[+src(gh("spacy", "spacy/lang/punctuation.py")) punctuation.py].
-    |  spaCy uses the #[+a("https://pypi.python.org/pypi/regex/") #[code regex] library]
-    |  to keep this simple and readable. If the language requires very specific
-    |  punctuation rules, you should consider overwriting the default regular
-    |  expressions with your own in the language's #[code Defaults].
-
 p
     |  Here's an overview of the individual components that can be included
     |  in the language data. For more details on them, see the sections below.
+
++image
+    include ../../assets/img/docs/language_data.svg
 
 +table(["File name", "Variables", "Description"])
     +row
@@ -168,6 +158,17 @@ p
         +cell /lemmatizer
         +cell #[code LEMMA_RULES], #[code LEMMA_INDEX], #[code LEMMA_EXC] (dicts)
         +cell Lemmatization rules, keyed by part of speech.
+
++infobox("For languages with non-latin characters")
+    |  In order for the tokenizer to split suffixes, prefixes and infixes, spaCy
+    |  needs to know the language's character set. If the language you're adding
+    |  uses non-latin characters, you might need to add the required character
+    |  classes to the global
+    |  #[+src(gh("spacy", "spacy/lang/punctuation.py")) punctuation.py].
+    |  spaCy uses the #[+a("https://pypi.python.org/pypi/regex/") #[code regex] library]
+    |  to keep this simple and readable. If the language requires very specific
+    |  punctuation rules, you should consider overwriting the default regular
+    |  expressions with your own in the language's #[code Defaults].
 
 +h(3, "stop-words") Stop words
 
