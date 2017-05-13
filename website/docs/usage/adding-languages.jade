@@ -12,21 +12,19 @@ p
     |  need to:
 
 +list("numbers")
-    +item Create a #[strong #[code Language] subclass].
     +item
-        |  Define custom #[strong language data], like a
-        |  #[a(href="#stop-words") stop list] and
-        |  #[a(href="#tokenizer-exceptions") tokenizer exceptions].
-
+        |  Create a #[strong #[code Language] subclass].
     +item
-        |  #[strong Build the vocabulary] including
-        |  #[a(href="#word-frequencies") word frequencies],
-        |  #[a(href="#brown-clusters") Brown clusters] and
-        |  #[a(href="#word-vectors") word vectors].
-
+        |  Define custom #[strong language data], like a stop list and tokenizer
+        |  exceptions.
     +item
-        |  #[strong Set up] a #[a(href="#model-directory") model direcory] and
-        |  #[strong train] the #[a(href="#train-tagger-parser") tagger and parser].
+        |  #[strong Test] the new language tokenizer.
+    +item
+        |  #[strong Build the vocabulary], including word frequencies, Brown
+        |  clusters and word vectors.
+    +item
+        |  Set up a #[strong model direcory] and #[strong train] the tagger and
+        |  parser.
 
 p
     |  For some languages, you may also want to develop a solution for
