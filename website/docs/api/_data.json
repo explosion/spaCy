@@ -21,6 +21,7 @@
             "GoldParse": "goldparse"
         },
         "Other": {
+            "Utility Functions": "util",
             "Annotation Specs": "annotation",
             "Feature Scheme": "features"
         }
@@ -108,6 +109,10 @@
     "goldparse": {
         "title": "GoldParse",
         "tag": "class"
+    },
+
+    "util": {
+        "title": "Utility Functions"
     },
 
     "annotation": {

@@ -1,0 +1,227 @@
+//- 💫 DOCS > API > ANNOTATION SPECS
+
+include ../../_includes/_mixins
+
+p
+    |  spaCy comes with a small collection of utility functions located in
+    |  #[+src(gh("spaCy", "spacy/util.py")) spacy/util.py].
+
++infobox("Important note")
+    |  Because utility functions are mostly intended for
+    |  #[strong internal use within spaCy], their behaviour may change with
+    |  future releases. The functions documented on this page should be safe
+    |  to use and we'll try to ensure backwards compatibility. However, we
+    |  recommend having additional tests in place if your application depends on
+    |  any of spaCy's utilities.
+
++h(2, "get_data_path") get_data_path
+    +tag function
+
+p
+    |  Get path to the data directory where spaCy looks for models. Defaults to
+    |  #[code spacy/data].
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code require_exists]
+        +cell bool
+        +cell Only return path if it exists, otherwise return #[code None].
+
+    +footrow
+        +cell return
+        +cell #[code Path] / #[code None]
+        +cell Data path or #[code None].
+
++h(2, "set_data_path") set_data_path
+    +tag function
+
+p
+    |  Set custom path to the data directory where spaCy looks for models.
+
++aside-code("Example").
+    util.set_data_path('/custom/path')
+    util.get_data_path()
+    # PosixPath('/custom/path')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell Path to new data directory.
+
++h(2, "load_lang_class") load_lang_class
+    +tag function
+
+p
+    |  Import and load a #[code Language] class. Allows lazy-loading
+    |  #[+a("/docs/usage/adding-languages") language data] and importing
+    |  languages using the two-letter language code.
+
++aside-code("Example").
+    for lang_id in ['en', 'de']:
+        lang_class = util.load_lang_class(lang_id)
+        lang = lang_class()
+        tokenizer = lang.Defaults.create_tokenizer()
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code lang]
+        +cell unicode
+        +cell Two-letter language code, e.g. #[code 'en'].
+
+    +footrow
+        +cell return
+        +cell #[code Language]
+        +cell Language class.
+
++h(2, "resolve_model_path") resolve_model_path
+    +tag function
+
+p Resolve a model name or string to a model path.
+
++aside-code("Example").
+    model_path = util.resolve_model_path('en')
+    model_path = util.resolve_model_path('/path/to/en')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Package name, shortcut link or model path.
+
+    +footrow
+        +cell return
+        +cell #[code Path]
+        +cell Path to model data directory.
+
++h(2, "is_package") is_package
+    +tag function
+
+p
+    |  Check if string maps to a package installed via pip. Mainly used to
+    |  validate #[+a("/docs/usage/models") model packages].
+
++aside-code("Example").
+    util.is_package('en_core_web_sm') # True
+    util.is_package('xyz') # False
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode
+        +cell Name of package.
+
+    +footrow
+        +cell return
+        +cell #[code bool]
+        +cell #[code True] if installed package, #[code False] if not.
+
++h(2, "get_model_package_path") get_model_package_path
+    +tag function
+
+p
+    |  Get path to a #[+a("/docs/usage/models") model package] installed via pip.
+    |  Currently imports the package to find it and parse its meta data.
+
++aside-code("Example").
+    util.get_model_package_path('en_core_web_sm')
+    # /usr/lib/python3.6/site-packages/en_core_web_sm/en_core_web_sm-1.2.0
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code package_name]
+        +cell unicode
+        +cell Name of installed package.
+
+    +footrow
+        +cell return
+        +cell #[code Path]
+        +cell Path to model data directory.
+
++h(2, "parse_package_meta") parse_package_meta
+    +tag function
+
+p
+    |  Check if a #[code meta.json] exists in a model package and return its
+    |  contents.
+
++aside-code("Example").
+    if util.is_package('en_core_web_sm'):
+        path = util.get_model_package_path('en_core_web_sm')
+        meta = util.parse_package_meta(path, require=True)
+        # {'name': 'core_web_sm', 'lang': 'en', ...}
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code package_path]
+        +cell #[code Path]
+        +cell Path to model package directory.
+
+    +row
+        +cell #[code require]
+        +cell #[code bool]
+        +cell If #[code True], raise error if no #[code meta.json] is found.
+
+    +footrow
+        +cell return
+        +cell dict / #[code None]
+        +cell Model meta data or #[code None].
+
++h(2, "update_exc") update_exc
+    +tag function
+
+p
+    |  Update, validate and overwrite
+    |  #[+a("/docs/usage/adding-languages#tokenizer-exceptions") tokenizer exceptions].
+    |  Used to combine global  exceptions with custom, language-specific
+    |  exceptions. Will raise an error if key doesn't match #[code ORTH] values.
+
++aside-code("Example").
+    BASE =  {"a.": [{ORTH: "a."}], ":)": [{ORTH: ":)"}]}
+    NEW = {"a.": [{ORTH: "a.", LEMMA: "all"}]}
+    exceptions = util.update_exc(BASE, NEW)
+    # {"a.": [{ORTH: "a.", LEMMA: "all"}], ":)": [{ORTH: ":)"}]}
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code base_exceptions]
+        +cell dict
+        +cell Base tokenizer exceptions.
+
+    +row
+        +cell #[code *addition_dicts]
+        +cell dicts
+        +cell Exception dictionaries to add to the base exceptions, in order.
+
+    +footrow
+        +cell return
+        +cell dict
+        +cell Combined tokenizer exceptions.
+
+
++h(2, "prints") prints
+    +tag function
+
+p
+    |  Print a formatted, text-wrapped message with optional title. If a text
+    |  argument is a #[code Path], it's converted to a string. Should only
+    |  be used for interactive components like the #[+a("/docs/usage/cli") CLI].
+
++aside-code("Example").
+    data_path = Path('/some/path')
+    if not path.exists():
+        util.prints("Can't find the path.", data_path,
+                    title="Error", exits=True)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code *texts]
+        +cell unicode
+        +cell Texts to print. Each argument is rendered as paragraph.
+
+    +row
+        +cell #[code **kwargs]
+        +cell -
+        +cell
+            |  #[code title] is rendered as coloured headline. #[code exits=True]
+            |  performs system exit after printing.
