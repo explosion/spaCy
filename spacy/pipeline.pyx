@@ -10,6 +10,7 @@ cimport numpy as np
 
 from .tokens.doc cimport Doc
 from .syntax.parser cimport Parser
+from .syntax.parser import get_templates as get_feature_templates
 #from .syntax.beam_parser cimport BeamParser
 from .syntax.ner cimport BiluoPushDown
 from .syntax.arc_eager cimport ArcEager
@@ -113,6 +114,7 @@ cdef class EntityRecognizer(Parser):
     Annotate named entities on Doc objects.
     """
     TransitionSystem = BiluoPushDown
+    feature_templates = get_feature_templates('ner')
 
     def add_label(self, label):
         Parser.add_label(self, label)
@@ -141,6 +143,7 @@ cdef class EntityRecognizer(Parser):
 
 cdef class DependencyParser(Parser):
     TransitionSystem = ArcEager
+    feature_templates = get_feature_templates('basic')
 
     def add_label(self, label):
         Parser.add_label(self, label)
