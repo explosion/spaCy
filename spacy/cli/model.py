@@ -98,10 +98,6 @@ def read_clusters(clusters_path):
 
 
 def populate_vocab(vocab, clusters, probs, oov_prob):
-    # Ensure probs has entries for all words seen during clustering.
-    for word in clusters:
-        if word not in probs:
-            probs[word] = oov_prob
     for word, prob in reversed(sorted(list(probs.items()), key=lambda item: item[1])):
         lexeme = vocab[word]
         lexeme.prob = prob
