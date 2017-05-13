@@ -6,9 +6,6 @@ from __future__ import unicode_literals, print_function
 from collections import Counter
 import ujson
 
-from cupy.cuda.stream import Stream
-import cupy
-
 from libc.math cimport exp
 cimport cython
 cimport cython.parallel
@@ -36,7 +33,9 @@ from thinc.api import layerize, chain
 from thinc.neural import BatchNorm, Model, Affine, ELU, ReLu, Maxout
 from thinc.neural.ops import NumpyOps
 
+from ..util import get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
+
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
@@ -380,7 +379,7 @@ cdef class Parser:
             np.ndarray py_scores
             int[500] is_valid # Hacks for now
 
-        cuda_stream = Stream()
+        cuda_stream = get_cuda_stream()
         docs, tokvecs = docs_tokvecs
         lower_model = get_greedy_model_for_batch(len(docs), tokvecs, self.feature_maps,
                                                  cuda_stream)
@@ -419,7 +418,7 @@ cdef class Parser:
             np.ndarray scores
 
         docs, tokvecs = docs_tokvecs
-        cuda_stream = Stream()
+        cuda_stream = get_cuda_stream()
         lower_model = get_greedy_model_for_batch(len(docs),
                         tokvecs, self.feature_maps, cuda_stream=cuda_stream,
                         drop=drop)
@@ -445,6 +444,7 @@ cdef class Parser:
         loss = 0.
         total = 1e-4
         follow_gold = False
+        cupy = self.feature_maps.ops.xp
         while len(todo) >= 4:
             states, offsets, golds = zip(*todo)
 

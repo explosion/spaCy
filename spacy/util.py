@@ -47,6 +47,16 @@ def ensure_path(path):
         return path
 
 
+def get_cuda_stream(require=False):
+    # TODO: Error and tell to install chainer if not found
+    # Requires GPU
+    try:
+        from cupy.cuda.stream import Stream
+    except ImportError:
+        return None
+    return Stream()
+
+
 def read_regex(path):
     path = ensure_path(path)
     with path.open() as file_:
