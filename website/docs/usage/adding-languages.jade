@@ -206,6 +206,14 @@ p
     being below beside besides between beyond both bottom but by
     &quot;&quot;&quot;).split())
 
++infobox("Important note")
+    |  When adding stop words from an online source, always #[strong include the link]
+    |  in a comment. Make sure to #[strong proofread] and double-check the words
+    |  carefully. A lot of the lists available online have been passed around
+    |  for years and often contain mistakes, like unicode errors or random words
+    |  that have once been added for a specific use case, but don't actually
+    |  qualify.
+
 +h(3, "tokenizer-exceptions") Tokenizer exceptions
 
 p
@@ -262,6 +270,15 @@ p
 
     # only declare this at the bottom
     TOKENIZER_EXCEPTIONS = dict(_exc)
+
++aside("Generating tokenizer exceptions")
+    |  Keep in mind that generating exceptions only makes sense if there's a
+    |  clearly defined and #[strong finite number] of them, like common
+    |  contractions in English. This is not always the case – in Spanish for
+    |  instance, infinitive or imperative reflexive verbs and pronouns are one
+    |  token (e.g. "vestirme"). In cases like this, spaCy shouldn't be
+    |  generating exceptions for #[em all verbs]. Instead, this will be handled
+    |  at a later stage during lemmatization.
 
 p
     |  When adding the tokenizer exceptions to the #[code Defaults], you can use
@@ -379,6 +396,8 @@ p
     }
 
 +h(3, "morph-rules") Morph rules
+
++h(2, "testing") Testing the new language tokenizer
 
 +h(2, "vocabulary") Building the vocabulary
 
