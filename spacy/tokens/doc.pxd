@@ -32,7 +32,7 @@ cdef class Doc:
     cdef public object _vector
     cdef public object _vector_norm
 
-    cdef public np.ndarray tensor
+    cdef public object tensor
     cdef public object user_data
 
     cdef TokenC* c

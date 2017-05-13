@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 
+
 TAG_MAP = {
     "ADJ___": {"morph": "_", "pos": "ADJ"},
     "ADJ__AdpType=Prep": {"morph": "AdpType=Prep", "pos": "ADJ"},
@@ -302,5 +303,5 @@ TAG_MAP = {
     "VERB__VerbForm=Ger": {"morph": "VerbForm=Ger", "pos": "VERB"},
     "VERB__VerbForm=Inf": {"morph": "VerbForm=Inf", "pos": "VERB"},
     "X___": {"morph": "_", "pos": "X"},
-    "SP": {"morph": "_", "pos": "SPACE"}
+    "SP": {"morph": "_", "pos": "SPACE"},
 }
