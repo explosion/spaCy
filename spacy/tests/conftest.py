@@ -12,8 +12,8 @@ from pathlib import Path
 import pytest
 
 
-_languages = ['bn', 'de', 'en', 'es', 'fi', 'fr', 'he', 'hu', 'it', 'nb', 'nl',
-              'pt', 'sv']
+_languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'he', 'hu', 'it', 'nb',
+              'nl', 'pl', 'pt', 'sv']
 
 
 @pytest.fixture(params=_languages)
