@@ -1,12 +1,10 @@
 # cython: infer_types=True
 # cython: profile=True
 # coding: utf-8
-from __future__ import unicode_literals
+from __future__ import unicode_literals, print_function
 
 from collections import Counter
 import ujson
-
-from chainer.functions.activation.softmax import Softmax as ChainerSoftmax
 
 from cupy.cuda.stream import Stream
 import cupy
