@@ -152,7 +152,7 @@
             "spacy-nlp-zeromq": {
                 "url": "https://github.com/pasupulaphani/spacy-nlp-docker",
                 "author": "Phaninder Pasupula",
-                "description": "SpaCy with zeromq bindings docker."
+                "description": "Docker image exposing spaCy with ZeroMQ bindings."
             },
             "textacy": {
                 "url": "https://github.com/chartbeat-labs/textacy",
