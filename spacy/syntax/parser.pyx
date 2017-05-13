@@ -182,15 +182,37 @@ cdef void cpu_log_loss(float* d_scores,
     for i in range(O):
         if is_valid[i]:
             Z += exp(scores[i] - max_)
-            if costs[i] <= 0:
+            if costs[i] <= costs[best]:
                 gZ += exp(scores[i] - gmax)
     for i in range(O):
         if not is_valid[i]:
             d_scores[i] = 0.
-        elif costs[i] <= 0:
+        elif costs[i] <= costs[best]:
             d_scores[i] = (exp(scores[i]-max_) / Z) - (exp(scores[i]-gmax)/gZ)
         else:
             d_scores[i] = exp(scores[i]-max_) / Z
+
+
+cdef void cpu_regression_loss(float* d_scores,
+        const float* costs, const int* is_valid, const float* scores,
+        int O) nogil:
+    cdef float eps = 2.
+    best = arg_max_if_gold(scores, costs, is_valid, O)
+    for i in range(O):
+        if not is_valid[i]:
+            d_scores[i] = 0.
+        elif scores[i] < scores[best]:
+            d_scores[i] = 0.
+        else:
+            # I doubt this is correct?
+            # Looking for something like Huber loss
+            diff = scores[i] - -costs[i]
+            if diff > eps:
+                d_scores[i] = eps
+            elif diff < -eps:
+                d_scores[i] = -eps
+            else:
+                d_scores[i] = diff
 
 
 def init_states(TransitionSystem moves, docs):
