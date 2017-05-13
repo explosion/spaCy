@@ -28,7 +28,6 @@ from ..lexeme cimport Lexeme
 from .span cimport Span
 from .token cimport Token
 from .printers import parse_tree
-from ..serialize.bits cimport BitArray
 from ..util import normalize_slice
 from ..syntax.iterators import CHUNKERS
 from ..compat import is_config
