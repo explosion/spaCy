@@ -1,13 +1,20 @@
 from copy import deepcopy
+# coding: utf8
+from __future__ import unicode_literals
 
 def merge_ents(doc):
-    '''Helper: merge adjacent entities into single tokens; modifies the doc.'''
+    """
+    Helper: merge adjacent entities into single tokens; modifies the doc.
+    """
     for ent in doc.ents:
         ent.merge(ent.root.tag_, ent.text, ent.label_)
     return doc
 
+
 def format_POS(token, light, flat):
-    '''helper: form the POS output for a token'''
+    """
+    Helper: form the POS output for a token.
+    """
     subtree = dict([
         ("word", token.text),
         ("lemma", token.lemma_),  # trigger
@@ -26,16 +33,21 @@ def format_POS(token, light, flat):
     return subtree
 
 def POS_tree(root, light, flat):
-    '''Helper: generate a POS tree for a root token.
-    The doc must have merge_ents(doc) ran on it.
-    '''
+
+    """
+    Helper: generate a POS tree for a root token. The doc must have
+    merge_ents(doc) ran on it.
+    """
     subtree = format_POS(root, light=light, flat=flat)
     for c in root.children:
         subtree["modifiers"].append(POS_tree(c))
     return subtree
 
+
 def parse_tree(doc, light=False, flat=False):
-    """Makes a copy of the doc, then construct a syntactic parse tree, similar to the one used in displaCy. Generates the POS tree for all sentences in a doc
+    """
+    Makes a copy of the doc, then construct a syntactic parse tree, similar to
+    the one used in displaCy. Generates the POS tree for all sentences in a doc.
 
     Args:
         doc: The doc for parsing.
