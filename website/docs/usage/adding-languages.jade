@@ -133,6 +133,18 @@ p
             |  #[code is_punct] or #[code like_num].
 
     +row
+        +cell #[+src(gh("spacy-dev-resources", "templates/new_language/lemmatizer.py")) lemmatizer.py]
+        +cell #[code LOOKUP] (dict)
+        +cell
+            |  Lookup-based lemmatization table. If more lemmatizer data is
+            |  available, it should live in #[code /lemmatizer/lookup.py].
+
+    +row
+        +cell /lemmatizer
+        +cell #[code LEMMA_RULES], #[code LEMMA_INDEX], #[code LEMMA_EXC] (dicts)
+        +cell Lemmatization rules, keyed by part of speech.
+
+    +row
         +cell #[+src(gh("spacy-dev-resources", "templates/new_language/tag_map.py")) tag_map.py]
         +cell #[code TAG_MAP] (dict)
         +cell
@@ -144,18 +156,6 @@ p
         +cell #[+src(gh()) morph_rules.py]
         +cell #[code MORPH_RULES] (dict)
         +cell Exception rules for morphological analysis of irregular words.
-
-    +row
-        +cell #[+src(gh("spacy-dev-resources", "templates/new_language/lemmatizer.py")) lemmatizer.py]
-        +cell #[code LOOKUP] (dict)
-        +cell
-            |  Lookup-based lemmatization table. If more lemmatizer data is
-            |  available, it should live in #[code /lemmatizer/lookup.py].
-
-    +row
-        +cell /lemmatizer
-        +cell #[code LEMMA_RULES], #[code LEMMA_INDEX], #[code LEMMA_EXC] (dicts)
-        +cell Lemmatization rules, keyed by part of speech.
 
 +aside("Should I ever update the global data?")
     |  Reuseable language data is collected as atomic pieces in the root of the
