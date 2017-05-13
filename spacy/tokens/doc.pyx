@@ -16,20 +16,17 @@ from libc.math cimport sqrt
 
 from .span cimport Span
 from .token cimport Token
-from ..lexeme cimport Lexeme
-from ..lexeme cimport EMPTY_LEXEME
+from .span cimport Span
+from .token cimport Token
+from .printers import parse_tree
+from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport attr_id_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
-from ..parts_of_speech cimport CCONJ, PUNCT, NOUN
-from ..parts_of_speech cimport univ_pos_t
-from ..lexeme cimport Lexeme
-from .span cimport Span
-from .token cimport Token
-from .printers import parse_tree
-from ..util import normalize_slice
+from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 from ..syntax.iterators import CHUNKERS
+from ..util import normalize_slice
 from ..compat import is_config
 
 

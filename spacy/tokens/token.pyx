@@ -13,18 +13,11 @@ import numpy
 from ..typedefs cimport hash_t
 from ..lexeme cimport Lexeme
 from .. import parts_of_speech
-from ..attrs cimport LEMMA
-from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
-from ..attrs cimport POS, LEMMA, TAG, DEP
-from ..parts_of_speech cimport CCONJ, PUNCT
 from ..attrs cimport IS_ALPHA, IS_ASCII, IS_DIGIT, IS_LOWER, IS_PUNCT, IS_SPACE
-from ..attrs cimport IS_BRACKET
-from ..attrs cimport IS_QUOTE
-from ..attrs cimport IS_LEFT_PUNCT
-from ..attrs cimport IS_RIGHT_PUNCT
+from ..attrs cimport IS_BRACKET, IS_QUOTE, IS_LEFT_PUNCT, IS_RIGHT_PUNCT, IS_OOV
 from ..attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
-from ..attrs cimport IS_OOV
-from ..lexeme cimport Lexeme
+from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
+from ..attrs cimport LEMMA, POS, TAG, DEP
 from ..compat import is_config
 
 

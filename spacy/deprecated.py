@@ -1,9 +1,9 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-from . import about
 from .util import prints
 from .cli import download
+from . import about
 
 
 PRON_LEMMA = "-PRON-"
