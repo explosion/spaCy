@@ -146,7 +146,7 @@ class ModelDownload():
             "The spacy.{l}.download command is now deprecated. Please use "
             "python -m spacy download [model name or shortcut] instead. For more "
             "info and available models, see the documentation: {d}. "
-            "Downloading default '{l}' model now...".format(d=about.__docs__, l=lang),
+            "Downloading default '{l}' model now...".format(d=about.__docs_models__, l=lang),
             title="Warning: deprecated command")
         download(lang)
 
