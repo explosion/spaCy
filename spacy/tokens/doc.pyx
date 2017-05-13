@@ -638,7 +638,7 @@ cdef class Doc:
             orth_ = text[start:end]
             lex = self.vocab.get(self.mem, orth_)
             self.push_back(lex, has_space)
- 
+
             start = end + has_space
         self.from_array([TAG,LEMMA,HEAD,DEP,ENT_IOB,ENT_TYPE],
             attrs[:, 2:])
