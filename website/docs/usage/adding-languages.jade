@@ -159,12 +159,22 @@ p
         +cell #[code LEMMA_RULES], #[code LEMMA_INDEX], #[code LEMMA_EXC] (dicts)
         +cell Lemmatization rules, keyed by part of speech.
 
++aside("Should I ever update the global data?")
+    |  Reuseable language data is collected as atomic pieces in the root of the
+    |  #[+src(gh("spaCy", "lang")) spacy.lang] package. Often, when a new
+    |  language is added, you'll find a pattern or symbol that's missing. Even
+    |  if it isn't common in other languages, it might be best to add it to the
+    |  shared language data, unless it has some conflicting interpretation. For
+    |  instance, we don't expect to see guillemot quotation symbols
+    |  (#[code &raquo;] and #[code &laquo;]) in English text. But if we do see
+    |  them, we'd probably prefer the tokenizer to split them off.
+
 +infobox("For languages with non-latin characters")
     |  In order for the tokenizer to split suffixes, prefixes and infixes, spaCy
     |  needs to know the language's character set. If the language you're adding
     |  uses non-latin characters, you might need to add the required character
     |  classes to the global
-    |  #[+src(gh("spacy", "spacy/lang/punctuation.py")) punctuation.py].
+    |  #[+src(gh("spacy", "spacy/lang/char_classes.py")) char_classes.py].
     |  spaCy uses the #[+a("https://pypi.python.org/pypi/regex/") #[code regex] library]
     |  to keep this simple and readable. If the language requires very specific
     |  punctuation rules, you should consider overwriting the default regular
@@ -210,7 +220,7 @@ p
 p
     |  Tokenizer exceptions can be added in the following format:
 
-+code("language_data.py").
++code("tokenizer_exceptions.py (excerpt)").
     TOKENIZER_EXCEPTIONS = {
         "don't": [
             {ORTH: "do", LEMMA: "do"},
@@ -279,23 +289,6 @@ p
     |  as well, giving "it" — or maybe "he"? spaCy's solution is to introduce a
     |  novel symbol, #[code.u-nowrap -PRON-], which is used as the lemma for
     |  all personal pronouns.
-
-+h(3, "shared-data") Shared language data
-
-p
-    |  Because languages can vary in quite arbitrary ways, spaCy avoids
-    |  organising the language data into an explicit inheritance hierarchy.
-    |  Instead, reuseable functions and data are collected as atomic pieces in
-    |  the root of the #[+src(gh("spaCy", "lang")) spacy.lang] package.
-
-p
-    |  Often, when a new language is added, you'll find a pattern or symbol
-    |  that's missing. Even if this pattern or symbol isn't common in other
-    |  languages, it might be best to add it to the base expressions, unless it
-    |  has some conflicting interpretation. For instance, we don't expect to
-    |  see guillemot quotation symbols (#[code &raquo;] and #[code &laquo;]) in
-    |  English text. But if we do see them, we'd probably prefer the tokenizer
-    |  to split it off.
 
 +h(3, "lex-attrs") Lexical attributes
 
