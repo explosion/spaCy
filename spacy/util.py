@@ -150,7 +150,7 @@ def update_exc(base_exceptions, *addition_dicts):
         # overlap = set(exc.keys()).intersection(set(additions))
         # assert not overlap, overlap
         exc.update(additions)
-    expand_exc(exc, "'", "’")
+    exc = expand_exc(exc, "'", "’")
     return exc
 
 
@@ -159,13 +159,13 @@ def expand_exc(excs, search, replace):
         fixed = dict(token)
         fixed[ORTH] = fixed[ORTH].replace(search, replace)
         return fixed
-    updates = {}
+    new_excs = dict(excs)
     for token_string, tokens in excs.items():
         if search in token_string:
             new_key = token_string.replace(search, replace)
             new_value = [_fix_token(t, search, replace) for t in tokens]
-            updates[new_key] = new_value
-    return updates
+            new_excs[new_key] = new_value
+    return new_excs
 
 
 def normalize_slice(length, start, stop, step=None):
