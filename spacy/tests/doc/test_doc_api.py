@@ -219,7 +219,6 @@ def test_doc_api_has_vector(en_tokenizer, text_file, text, vectors):
 
 def test_parse_tree(EN):
     text = 'I like New York in Autumn.'
-    EN = English(parser=False)
     doc = EN(text, tag=True)
     doc.from_array([HEAD], numpy.asarray([[1, 0, 1, -2, -3, -1, -5]], dtype='int32').T)
     # full method parse_tree(text) is a trivial composition
