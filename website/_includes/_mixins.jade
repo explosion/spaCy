@@ -126,13 +126,13 @@ mixin codepen(slug, height, default_tab)
 
 mixin image(url, width, caption, alt)
     figure.o-block&attributes(attributes)
-        img(src=url alt=(alt || caption) width="#{width || 500}")
+        if url
+            img(src=url alt=(alt || caption) width="#{width || 500}")
 
         if caption
             +image-caption=caption
 
-        else
-            block
+        block
 
 //- Image caption
 
