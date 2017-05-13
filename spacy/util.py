@@ -17,30 +17,30 @@ LANGUAGES = {}
 _data_path = Path(__file__).parent / 'data'
 
 
-def set_lang_class(name, cls):
+def get_lang_class(lang):
+    """Import and load a Language class.
+
+    lang (unicode): Two-letter language code, e.g. 'en'.
+    RETURNS (Language): Language class.
+    """
     global LANGUAGES
-    LANGUAGES[name] = cls
-
-
-def get_lang_class(name):
-    if name in LANGUAGES:
-        return LANGUAGES[name]
-    lang = re.split('[^a-zA-Z0-9]', name, 1)[0]
-    if lang not in LANGUAGES:
-        raise RuntimeError('Language not supported: %s' % name)
+    if not lang in LANGUAGES:
+        try:
+            module = importlib.import_module('.lang.%s' % lang, 'spacy')
+        except ImportError:
+            raise ImportError("Can't import language %s from spacy.lang." %lang)
+        LANGUAGES[lang] = getattr(module, module.__all__[0])
     return LANGUAGES[lang]
 
 
-def load_lang_class(lang):
-    """Import and load a Language class.
+def set_lang_class(name, cls):
+    """Set a custom Language class name that can be loaded via get_lang_class.
 
-    Args:
-        lang (unicode): Two-letter language code, e.g. 'en'.
-    Returns:
-        Language: Language class.
+    name (unicode): Name of Language class.
+    cls (Language): Language class.
     """
-    module = importlib.import_module('.lang.%s' % lang, 'spacy')
-    return getattr(module, module.__all__[0])
+    global LANGUAGES
+    LANGUAGES[name] = cls
 
 
 def get_data_path(require_exists=True):
