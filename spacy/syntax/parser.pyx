@@ -33,7 +33,7 @@ from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
 
 from thinc.api import layerize, chain
-from thinc.neural import Affine, Model, Maxout
+from thinc.neural import BatchNorm, Model, Affine, ELU, ReLu, Maxout
 from thinc.neural.ops import NumpyOps
 
 from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
@@ -62,7 +62,8 @@ def set_debug(val):
     DEBUG = val
 
 
-def get_greedy_model_for_batch(batch_size, tokvecs, lower_model, cuda_stream=None):
+def get_greedy_model_for_batch(batch_size, tokvecs, lower_model, cuda_stream=None,
+                               drop=0.):
     '''Allow a model to be "primed" by pre-computing input features in bulk.
 
     This is used for the parser, where we want to take a batch of documents,
@@ -79,16 +80,17 @@ def get_greedy_model_for_batch(batch_size, tokvecs, lower_model, cuda_stream=Non
     we can do all our hard maths up front, packed into large multiplications,
     and do the hard-to-program parsing on the CPU.
     '''
-    gpu_cached, bp_features = lower_model.begin_update(tokvecs, drop=0.)
+    gpu_cached, bp_features = lower_model.begin_update(tokvecs, drop=drop)
     cdef np.ndarray cached
     if not isinstance(gpu_cached, numpy.ndarray):
         cached = gpu_cached.get(stream=cuda_stream)
     else:
         cached = gpu_cached
     nF = gpu_cached.shape[1]
+    nO = gpu_cached.shape[2]
     nP = gpu_cached.shape[3]
     ops = lower_model.ops
-    features = numpy.zeros((batch_size, cached.shape[2], nP), dtype='f')
+    features = numpy.zeros((batch_size, nO, nP), dtype='f')
     synchronized = False
 
     def forward(token_ids, drop=0.):
@@ -108,7 +110,7 @@ def get_greedy_model_for_batch(batch_size, tokvecs, lower_model, cuda_stream=Non
         cdef int[:, ::1] ids = token_ids
         _sum_features(<float*>&feats[0,0,0],
             <float*>cached.data, &ids[0,0],
-            token_ids.shape[0], nF, cached.shape[2]*nP)
+            token_ids.shape[0], nF, nO*nP)
 
         if nP >= 2:
             best, which = ops.maxout(features)
@@ -155,13 +157,16 @@ def get_batch_loss(TransitionSystem moves, states, golds, float[:, ::1] scores):
     cdef int i
     is_valid = <int*>mem.alloc(moves.n_moves, sizeof(int))
     costs = <float*>mem.alloc(moves.n_moves, sizeof(float))
-    cdef np.ndarray d_scores = numpy.zeros((len(states), moves.n_moves), dtype='f')
+    cdef np.ndarray d_scores = numpy.zeros((len(states), moves.n_moves), dtype='f',
+                                           order='c')
     c_d_scores = <float*>d_scores.data
     for i, (state, gold) in enumerate(zip(states, golds)):
         memset(is_valid, 0, moves.n_moves * sizeof(int))
         memset(costs, 0, moves.n_moves * sizeof(float))
         moves.set_costs(is_valid, costs, state, gold)
         cpu_log_loss(c_d_scores, costs, is_valid, &scores[i, 0], d_scores.shape[1])
+        #cpu_regression_loss(c_d_scores,
+        #    costs, is_valid, &scores[i, 0], d_scores.shape[1])
         c_d_scores += d_scores.shape[1]
     return d_scores
 
@@ -231,13 +236,31 @@ def init_states(TransitionSystem moves, docs):
 def extract_token_ids(states, offsets=None, nF=1, nB=0, nS=2, nL=0, nR=0):
     cdef StateClass state
     cdef int n_tokens = states[0].nr_context_tokens(nF, nB, nS, nL, nR)
-    ids = numpy.zeros((len(states), n_tokens), dtype='i')
+    ids = numpy.zeros((len(states), n_tokens), dtype='i', order='c')
     if offsets is None:
         offsets = [0] * len(states)
     for i, (state, offset) in enumerate(zip(states, offsets)):
         state.set_context_tokens(ids[i], nF, nB, nS, nL, nR)
         ids[i] += (ids[i] >= 0) * offset
     return ids
+
+
+_n_iter = 0
+@layerize
+def print_mean_variance(X, drop=0.):
+    global _n_iter
+    _n_iter += 1
+    fwd_iter = _n_iter
+    means = X.mean(axis=0)
+    variance = X.var(axis=0)
+    print(fwd_iter, "M", ', '.join(('%.2f' % m) for m in means))
+    print(fwd_iter, "V", ', '.join(('%.2f' % m) for m in variance))
+    def backward(dX, sgd=None):
+        means = dX.mean(axis=0)
+        variance = dX.var(axis=0)
+        print(fwd_iter, "dM", ', '.join(('%.2f' % m) for m in means))
+        print(fwd_iter, "dV", ', '.join(('%.2f' % m) for m in variance))
+    return X, backward
 
 
 cdef class Parser:
@@ -301,13 +324,14 @@ cdef class Parser:
         nr_context_tokens = StateClass.nr_context_tokens(nF, nB, nS, nL, nR)
         with Model.use_device('cpu'):
             upper = chain(
-                        Maxout(token_vector_width),
-                        zero_init(Affine(self.moves.n_moves, token_vector_width)))
+                        Maxout(hidden_width, hidden_width),
+                        #print_mean_variance,
+                        zero_init(Affine(self.moves.n_moves, hidden_width)))
         assert isinstance(upper.ops, NumpyOps)
-        lower = PrecomputableMaxouts(token_vector_width, nF=nr_context_tokens, nI=token_vector_width,
+        lower = PrecomputableMaxouts(hidden_width, nF=nr_context_tokens, nI=token_vector_width,
                                      pieces=cfg.get('maxout_pieces', 1))
-        upper.begin_training(upper.ops.allocate((500, token_vector_width)))
         lower.begin_training(lower.ops.allocate((500, token_vector_width)))
+        upper.begin_training(upper.ops.allocate((500, hidden_width)))
         return upper, lower
 
     def __call__(self, Doc tokens):
@@ -390,13 +414,15 @@ cdef class Parser:
     def update(self, docs_tokvecs, golds, drop=0., sgd=None):
         cdef:
             int nC
-            int[500] is_valid # Hack for now
             Doc doc
             StateClass state
             np.ndarray scores
 
         docs, tokvecs = docs_tokvecs
         cuda_stream = Stream()
+        lower_model = get_greedy_model_for_batch(len(docs),
+                        tokvecs, self.feature_maps, cuda_stream=cuda_stream,
+                        drop=drop)
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             return self.update(([docs], tokvecs), [golds], drop=drop)
         for gold in golds:
@@ -407,33 +433,47 @@ cdef class Parser:
         todo = zip(states, offsets, golds)
         todo = filter(lambda sp: not sp[0].py_is_final(), todo)
 
-        lower_model = get_greedy_model_for_batch(len(todo),
-                        tokvecs, self.feature_maps, cuda_stream=cuda_stream)
+        cdef Pool mem = Pool()
+        is_valid = <int*>mem.alloc(len(states) * self.moves.n_moves, sizeof(int))
+        costs = <float*>mem.alloc(len(states) * self.moves.n_moves, sizeof(float))
+
         upper_model = self.model
         d_tokens = self.feature_maps.ops.allocate(tokvecs.shape)
         backprops = []
         n_tokens = tokvecs.shape[0]
         nF = self.feature_maps.nF
-        while todo:
+        loss = 0.
+        total = 1e-4
+        follow_gold = False
+        while len(todo) >= 4:
             states, offsets, golds = zip(*todo)
 
             token_ids = extract_token_ids(states, offsets=offsets)
-            lower, bp_lower = lower_model(token_ids)
-            scores, bp_scores = upper_model.begin_update(lower)
+            lower, bp_lower = lower_model(token_ids, drop=drop)
+            scores, bp_scores = upper_model.begin_update(lower, drop=drop)
 
             d_scores = get_batch_loss(self.moves, states, golds, scores)
+            loss += numpy.abs(d_scores).sum()
+            total += d_scores.shape[0]
             d_lower = bp_scores(d_scores, sgd=sgd)
 
-            gpu_tok_ids = cupy.ndarray(token_ids.shape, dtype='i')
-            gpu_d_lower = cupy.ndarray(d_lower.shape, dtype='f')
-            gpu_tok_ids.set(token_ids, stream=cuda_stream)
-            gpu_d_lower.set(d_lower, stream=cuda_stream)
-            backprops.append((gpu_tok_ids, gpu_d_lower, bp_lower))
+            if isinstance(tokvecs, cupy.ndarray):
+                gpu_tok_ids = cupy.ndarray(token_ids.shape, dtype='i', order='C')
+                gpu_d_lower = cupy.ndarray(d_lower.shape, dtype='f', order='C')
+                gpu_tok_ids.set(token_ids, stream=cuda_stream)
+                gpu_d_lower.set(d_lower, stream=cuda_stream)
+                backprops.append((gpu_tok_ids, gpu_d_lower, bp_lower))
+            else:
+                backprops.append((token_ids, d_lower, bp_lower))
 
             c_scores = <float*>scores.data
-            for state in states:
-                self.moves.set_valid(is_valid, state.c)
-                guess = arg_max_if_valid(c_scores, is_valid, scores.shape[1])
+            for state, gold in zip(states, golds):
+                if follow_gold:
+                    self.moves.set_costs(is_valid, costs, state, gold)
+                    guess = arg_max_if_gold(c_scores, costs, is_valid, scores.shape[1])
+                else:
+                    self.moves.set_valid(is_valid, state.c)
+                    guess = arg_max_if_valid(c_scores, is_valid, scores.shape[1])
                 action = self.moves.c[guess]
                 action.do(state.c, action.label)
                 c_scores += scores.shape[1]
@@ -451,7 +491,7 @@ cdef class Parser:
             else:
                 self.model.ops.xp.add.at(d_tokens,
                     token_ids, d_state_features * active_feats)
-        return d_tokens
+        return d_tokens, loss / total
 
     def step_through(self, Doc doc, GoldParse gold=None):
         """
