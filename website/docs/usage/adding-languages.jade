@@ -105,35 +105,35 @@ p
 
 +table(["File name", "Variables", "Description"])
     +row
-        +cell #[+src(gh()) stop_words.py]
+        +cell #[+src(gh("spacy-dev-resources", "templates/new_language/stop_words.py")) stop_words.py]
         +cell #[code STOP_WORDS] (set)
         +cell
             |  List of most common words. Matching tokens will return #[code True]
             |  for #[code is_stop].
 
     +row
-        +cell #[+src(gh()) tokenizer_exceptions.py]
+        +cell #[+src(gh("spacy-dev-resources", "templates/new_language/tokenizer_exceptions.py")) tokenizer_exceptions.py]
         +cell #[code TOKENIZER_EXCEPTIONS] (dict), #[code TOKEN_MATCH] (regex)
         +cell
             |  Special-case rules for the tokenizer, for example, contractions
             |  and abbreviations containing punctuation.
 
     +row
-        +cell #[+src(gh()) punctuation.py]
+        +cell #[+src(gh("spaCy", "spacy/lang/punctuation.py")) punctuation.py]
         +cell
             |  #[code TOKENIZER_PREFIXES], #[code TOKENIZER_SUFFIXES],
             |  #[code TOKENIZER_INFIXES] (dicts)
         +cell Regular expressions for splitting tokens, e.g. on punctuation.
 
     +row
-        +cell #[+src(gh()) lex_attrs.py]
+        +cell #[+src(gh("spacy-dev-resources", "templates/new_language/lex_attrs.py")) lex_attrs.py]
         +cell #[code LEX_ATTRS] (dict)
         +cell
             |  Functions for setting lexical attributes on tokens, e.g.
             |  #[code is_punct] or #[code like_num].
 
     +row
-        +cell #[+src(gh()) tag_map.py]
+        +cell #[+src(gh("spacy-dev-resources", "templates/new_language/tag_map.py")) tag_map.py]
         +cell #[code TAG_MAP] (dict)
         +cell
             |  Dictionary mapping strings in your tag set to
@@ -143,10 +143,10 @@ p
     +row
         +cell #[+src(gh()) morph_rules.py]
         +cell #[code MORPH_RULES] (dict)
-        +cell
+        +cell Exception rules for morphological analysis of irregular words.
 
     +row
-        +cell #[+src(gh()) lemmatizer.py]
+        +cell #[+src(gh("spacy-dev-resources", "templates/new_language/lemmatizer.py")) lemmatizer.py]
         +cell #[code LOOKUP] (dict)
         +cell
             |  Lookup-based lemmatization table. If more lemmatizer data is
@@ -189,7 +189,7 @@ p
     |  newlines, and added as a multiline string.
 
 +aside("What does spaCy consider a stop word?")
-    |  There's no particularly principal logic behind what words should be
+    |  There's no particularly principled logic behind what words should be
     |  added to the stop list. Make a list that you think might be useful
     |  to people and is likely to be unsurprising. As a rule of thumb, words
     |  that are very rare are unlikely to be useful stop words.
@@ -362,6 +362,47 @@ p
     |  are overwritten.
 
 +h(3, "lemmatizer") Lemmatizer
+
+p
+    |  As of v2.0, spaCy supports simple lookup-based lemmatization. This is
+    |  usually the quickest and easiest way to get started. The data is stored
+    |  in a dictionary mapping a string to its lemma. To determine a token's
+    |  lemma, spaCy simply looks it up in the table. Here's an example from
+    |  the Spanish language data:
+
++code("lang/es/lemmatizer.py (excerpt)").
+    LOOKUP = {
+        "aba": "abar",
+        "ababa": "abar",
+        "ababais": "abar",
+        "ababan": "abar",
+        "ababanes": "ababán",
+        "ababas": "abar",
+        "ababoles": "ababol",
+        "ababábites": "ababábite"
+    }
+
++aside("Where can I find lemmatizer data?")
+
+p
+    |  To add a lookup lemmatizer to your language, import the #[code LOOKUP]
+    |  table and #[code Lemmatizer], and create a new classmethod:
+
+
++code("__init__py (excerpt)").
+    # other imports here, plus lookup table and lookup lemmatizer
+    from .lemmatizer import LOOKUP
+    from ...lemmatizerlookup import Lemmatizer
+
+    class Xxxxx(Language):
+        lang = 'xx'
+
+        class Defaults(Language.Defaults):
+            # other language defaults here
+
+            @classmethod
+            def create_lemmatizer(cls, nlp=None):
+                return Lemmatizer(LOOKUP)
 
 +h(3, "tag-map") Tag map
 
