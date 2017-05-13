@@ -16,7 +16,8 @@ def depr_model_download(lang):
     """
     prints("The spacy.%s.download command is now deprecated. Please use "
            "python -m spacy download [model name or shortcut] instead. For "
-           "more info, see the docs: %s." % (lang, about.__docs__),
+           "more info, see the documentation:" % lang,
+           about.__docs_models__,
            "Downloading default '%s' model now..." % lang,
            title="Warning: deprecated command")
     download(lang)

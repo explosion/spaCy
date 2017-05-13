@@ -10,7 +10,7 @@ __author__ = 'Matthew Honnibal'
 __email__ = 'matt@explosion.ai'
 __license__ = 'MIT'
 
-__docs__ = 'https://spacy.io/docs/usage'
+__docs_models__ = 'https://spacy.io/docs/usage/models'
 __download_url__ = 'https://github.com/explosion/spacy-models/releases/download'
 __compatibility__ = 'https://raw.githubusercontent.com/explosion/spacy-models/master/compatibility.json'
 __shortcuts__ = 'https://raw.githubusercontent.com/explosion/spacy-models/master/shortcuts.json'

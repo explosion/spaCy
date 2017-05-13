@@ -19,6 +19,7 @@ from ..attrs cimport IS_TITLE, IS_UPPER, LIKE_URL, LIKE_NUM, LIKE_EMAIL, IS_STOP
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport LEMMA, POS, TAG, DEP
 from ..compat import is_config
+from .. import about
 
 
 cdef class Token:
@@ -230,10 +231,10 @@ cdef class Token:
             cdef int length = self.vocab.vectors_length
             if length == 0:
                 raise ValueError(
-                    "Word vectors set to length 0. This may be because the "
-                    "data is not installed. If you haven't already, run"
-                    "\npython -m spacy download %s\n"
-                    "to install the data." % self.vocab.lang
+                    "Word vectors set to length 0. This may be because you "
+                    "don't have a model installed or loaded, or because your "
+                    "model doesn't include word vectors. For more info, see "
+                    "the documentation: \n%s\n" % about.__docs_models__
                 )
             vector_view = <float[:length,]>self.c.lex.vector
             return numpy.asarray(vector_view)

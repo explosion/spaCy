@@ -23,6 +23,7 @@ from .attrs cimport IS_QUOTE
 from .attrs cimport IS_LEFT_PUNCT
 from .attrs cimport IS_RIGHT_PUNCT
 from .attrs cimport IS_OOV
+from . import about
 
 
 memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
@@ -136,10 +137,10 @@ cdef class Lexeme:
             cdef int length = self.vocab.vectors_length
             if length == 0:
                 raise ValueError(
-                    "Word vectors set to length 0. This may be because the "
-                    "data is not installed. If you haven't already, run"
-                    "\npython -m spacy download %s\n"
-                    "to install the data." % self.vocab.lang
+                    "Word vectors set to length 0. This may be because you "
+                    "don't have a model installed or loaded, or because your "
+                    "model doesn't include word vectors. For more info, see "
+                    "the documentation: \n%s\n" % about.__docs_models__
                 )
 
             vector_view = <float[:length,]>self.c.vector
