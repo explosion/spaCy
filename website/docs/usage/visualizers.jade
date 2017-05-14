@@ -1,0 +1,226 @@
+//- 💫 DOCS > USAGE > VISUALIZERS
+
+include ../../_includes/_mixins
+
+p
+    |  As of v2.0, our popular visualizers, #[+a(DEMOS_URL + "/displacy") displaCy]
+    |  and #[+a(DEMOS_URL + "displacy-ent") displaCy #[sup ENT]] are finally an
+    |  official part of the library. Visualizing a dependency parse or named
+    |  entities in a text is not only a fun NLP demo – it can also be incredibly
+    |  helpful in speeding up development and debugging your code and training
+    |  process. Instead of printing a list of dependency labels or entity spans,
+    |  you can simply pass your #[code Doc] objects to #[code displacy] and view
+    |  the visualizations in your browser, or export them as HTML files or
+    |  vector graphics. displaCy also comes with a #[+a("#jupyter") Jupyter hook]
+    |  that returns the markup in a format ready to be rendered in a notebook.
+
++aside("What about the old visualizers?")
+    |  Our JavaScript-based visualizers #[+src(gh("displacy")) displacy.js] and
+    |  #[+src(gh("displacy-ent")) displacy-ent.js] will still be available on
+    |  GitHub. If you're looking to implement web-based visualizations, we
+    |  generally recommend using those instead of spaCy's built-in
+    |  #[code displacy] module. It'll allow your application to perform all
+    |  rendering on the client and only rely on the server for the text
+    |  processing. The generated markup is also more compatible with modern web
+    |  standards.
+
++h(2, "getting-started") Getting started
+
+p
+    |  The quickest way visualize  #[code Doc] is to use
+    |  #[+api("displacy#serve") #[code displacy.serve]]. This will spin up a
+    |  simple web server and let you view the result straight from your browser.
+    |  displaCy can either take a single #[code Doc] or a list of #[code Doc]
+    |  objects as its first argument. This lets you construct them however you
+    |  like – using any model or modifications you like.
+
++h(3, "dep") Visualizing the dependency parse
+
++code("Dependency example").
+    import spacy
+    from spacy import displacy
+
+    nlp = spacy.load('en')
+    doc = nlp(u'This is a sentence.')
+    displacy.serve(doc, style='dep')
+
++codepen("f0e85b64d469d6617251d8241716d55f", 370)
+
+p
+    |  The argument #[code options] lets you specify a dictionary of settings
+    |  to customise the layout, for example:
+
++table(["Name", "Type", "Description", "Default"])
+    +row
+        +cell #[code compact]
+        +cell bool
+        +cell "Compact mode" with square arrows that takes up less space.
+        +cell #[code False]
+
+    +row
+        +cell #[code color]
+        +cell unicode
+        +cell Text color (HEX, RGB or color names).
+        +cell #[code '#000000']
+
+    +row
+        +cell #[code bg]
+        +cell unicode
+        +cell Background color (HEX, RGB or color names).
+        +cell #[code '#ffffff']
+
+    +row
+        +cell #[code font]
+        +cell unicode
+        +cell Font name or font family for all text.
+        +cell #[code 'Arial']
+
+p
+    |  For a list of all available options, see the
+    |  #[+api("displacy#options") #[code displacy] API documentation].
+
++aside-code("Options example").
+    options = {'compact': True, 'bg': '&#35;09a3d5',
+               'color': 'white', 'font': 'Source Sans Pro'}
+    displacy.serve(doc, style='dep', options=options)
+
++codepen("39c02c893a84794353de77a605d817fd", 360)
+
++h(3, "ent") Visualizing the entity recognizer
+
++code("Named Entity example").
+    import spacy
+    from spacy import displacy
+
+    text = """But Google is starting from behind. The company made a late push
+    into hardware, and Apple’s Siri, available on iPhones, and Amazon’s Alexa
+    software, which runs on its Echo and Dot devices, have clear leads in
+    consumer adoption."""
+
+    nlp = spacy.load('custom_ner_model')
+    doc = nlp(text)
+    displacy.serve(doc, style='ent')
+
++codepen("a73f8b68f9af3157855962b283b364e4", 345)
+
+p The entity visualizer lets you customise the following #[code options]:
+
++table(["Name", "Type", "Description", "Default"])
+    +row
+        +cell #[code ents]
+        +cell list
+        +cell
+            |  Entity types to highlight (#[code None] for all types).
+        +cell #[code None]
+
+    +row
+        +cell #[code colors]
+        +cell dict
+        +cell
+            |  Color overrides. Entity types in lowercase should be mapped to
+            |  color names or values.
+        +cell #[code {}]
+
+p
+    |  If you specify a list of #[code ents], only those entity types will be
+    |  rendered – for example, you can choose to display #[code PERSON] entities.
+    |  Internally, the visualizer knows nothing about available entity types and
+    |  will render whichever spans and labels it receives. This makes it
+    |  especially easy to work with custom entity types. By default, displaCy
+    |  comes with colours for all
+    |  #[+a("/docs/api/annotation#named-entities") entity types supported by spaCy].
+    |  If you're using custom entity types, you can use the #[code colors]
+    |  setting to add your own colours for them.
+
++aside-code("Options example").
+    colors = {'ORG': 'linear-gradient(90deg, #aa9cfc, #fc9ce7)'}
+    options = {'ents': ['ORG'], 'colors': colors}
+    displacy.serve(doc, style='ent', options=options)
+
++codepen("f42ec690762b6f007022a7acd6d0c7d4", 300)
+
+p
+    |  The above example uses a little trick: Since the color values are added
+    |  as the #[code background] style attribute, you can use any
+    |  #[+a("https://tympanus.net/codrops/css_reference/background/") valid background value]
+    |  or shorthand — including gradients and even images!
+
++h(2, "render") Rendering visualizations
+
+p
+    |  If you don't need the web server and just want to generate the markup
+    |  – for example, to export it to a file or serve it in a custom
+    |  way – you can use #[+api("displacy#render") #[code displacy.render]]
+    |  instead. It works the same, but returns a string containing the markup.
+
++code("Example").
+    import spacy
+    from spacy import displacy
+
+    nlp = spacy.load('en')
+    doc1 = nlp(u'This is a sentence.')
+    doc2 = nlp(u'This is another sentence.')
+    html = displacy.render([doc1, doc2], style='dep', page=True)
+
+p
+    |  #[code page=True] renders the markup wrapped as a full HTML page.
+    |  For minified and more compact HTML markup, you can set #[code minify=True].
+    |  If you're rendering a dependency parse, you can also export it as an
+    |  #[code .svg] file.
+
++aside("What's SVG?")
+    |  Unlike other image formats, the SVG (Scalable Vector Graphics) uses XML
+    |  markup that's easy to manipulate
+    |  #[+a("https://www.smashingmagazine.com/2014/11/styling-and-animating-svgs-with-css/") using CSS] or
+    |  #[+a("https://css-tricks.com/smil-is-dead-long-live-smil-a-guide-to-alternatives-to-smil-features/") JavaScript].
+    |  Essentially, SVG lets you design with code, which makes it a perfect fit
+    |  for visualizing dependency trees. SVGs can be embedded online in an
+    |  #[code &lt;img&gt;] tag, or inlined in an HTML document. They're also
+    |  pretty easy to #[+a("https://convertio.co/image-converter/") convert].
+
++code.
+    svg = displacy.render(doc, style='dep')
+    output_path = Path('/images/sentence.svg')
+    output_path.open('w', encoding='utf-8').write(svg)
+
++infobox("Important note")
+    |  Since each visualization is generated as a separate SVG, exporting
+    |  #[code .svg] files only works if you're rendering #[strong one single doc]
+    |  at a time. (This makes sense – after all, each visualization should be
+    |  a standalone graphic.) So instead of rendering all #[code Doc]s at one,
+    |  loop over them and export them separately.
+
++h(2, "jupyter") Using displaCy in Jupyter notebooks
+
+p
+    |  If you're working with a #[+a("https://jupyter.org") Jupyter] notebook,
+    |  you can use displaCy's "Jupyter mode" to return markup that can be
+    |  rendered in a cell.
+
++code("Jupyter Example").
+    # don't forget to install a model, e.g.: python -m spacy download en
+    import spacy
+    from spacy import displacy
+
+    doc = nlp(u'Rats are various medium-sized, long-tailed rodents.')
+    displacy.render(doc, style='dep', jupyter=True)
+
+    doc2 = nlp(LONG_NEWS_ARTICLE)
+    displacy.render(doc2, style='ent', jupyter=True)
+
++image("/assets/img/docs/displacy_jupyter.jpg", 700)
+
+p
+    |  Internally, displaCy imports #[code display] and #[code HTML] from
+    |  #[code IPython.core.display] and returns a Jupyter HTML object. If you
+    |  were doing it manually, it'd look like this:
+
++code.
+    from IPython.core.display import display, HTML
+
+    html = displacy.render(doc, style='dep')
+    return display(HTML(html))
+
++h(2, "examples") Usage examples
+
+

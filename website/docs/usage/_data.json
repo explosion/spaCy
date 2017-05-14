@@ -4,8 +4,9 @@
             "Installation": "./",
             "Models": "models",
             "Lightning tour": "lightning-tour",
+            "Visualizers": "visualizers",
             "Command line": "cli",
-            "Troubleshooting": "troubleshooting",
+            "Troubleshooting": "troubleshooting"
         },
         "Workflows": {
             "Loading the pipeline": "language-processing-pipeline",
@@ -42,6 +43,11 @@
 
     "lightning-tour": {
         "title": "Lightning tour",
+        "next": "visualizers"
+    },
+
+    "visualizers": {
+        "title": "Visualizers",
         "next": "cli"
     },
 
