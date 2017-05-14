@@ -2,8 +2,11 @@
 from __future__ import unicode_literals
 
 
+# setting explicit height and max-width: none on the SVG is required for
+# Jupyter to render it properly in a cell
+
 TPL_DEP_SVG = """
-<svg xmlns="http://www.w3.org/2000/svg" id="{id}" class="displacy" width="{width}" height="{height}" style="color: {color}; background: {bg}; font-family: {font}">{content}</svg>
+<svg xmlns="http://www.w3.org/2000/svg" id="{id}" class="displacy" width="{width}" height="{height}" style="max-width: none; height: {height}px; color: {color}; background: {bg}; font-family: {font}">{content}</svg>
 """
 
 

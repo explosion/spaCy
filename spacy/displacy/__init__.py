@@ -28,8 +28,12 @@ def render(docs, style='dep', page=False, minify=False, jupyter=False, options={
     elif style is 'ent':
         renderer = EntityRenderer(options=options)
         parsed = [parse_ents(doc, options) for doc in docs]
-    _html['parsed'] = renderer.render(parsed, page=page, minify=minify)
-    return _html['parsed']
+    _html['parsed'] = renderer.render(parsed, page=page, minify=minify).strip()
+    html = _html['parsed']
+    if jupyter: # return HTML rendered by IPython display()
+        from IPython.core.display import display, HTML
+        return display(HTML(html))
+    return html
 
 
 def serve(docs, style='dep', page=True, minify=False, options={}, port=5000):
