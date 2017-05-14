@@ -338,3 +338,13 @@ def _wrap(text, wrap_max=80, indent=4):
     return textwrap.fill(text, width=wrap_width, initial_indent=indent,
                          subsequent_indent=indent, break_long_words=False,
                          break_on_hyphens=False)
+
+
+def minify_html(html):
+    """Perform a template-specific, rudimentary HTML minification for displaCy.
+    Disclaimer: NOT a general-purpose solution, only removes indentation/newlines.
+
+    html (unicode): Markup to minify.
+    RETURNS (unicode): "Minified" HTML.
+    """
+    return html.strip().replace('    ', '').replace('\n', '')
