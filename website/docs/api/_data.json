@@ -21,6 +21,7 @@
             "GoldParse": "goldparse"
         },
         "Other": {
+            "displaCy": "displacy",
             "Utility Functions": "util",
             "Annotation Specs": "annotation",
             "Feature Scheme": "features"
@@ -109,6 +110,11 @@
     "goldparse": {
         "title": "GoldParse",
         "tag": "class"
+    },
+
+    "displacy": {
+        "title": "displaCy",
+        "tag": "module"
     },
 
     "util": {
