@@ -18,7 +18,7 @@ def render(docs, style='dep', page=False, minify=False, jupyter=False, options={
     minify (bool): Minify HTML markup.
     jupyter (bool): Experimental, use Jupyter's display() to output markup.
     options (dict): Visualiser-specific options, e.g. colors.
-    RETURNS: Rendered HTML markup.
+    RETURNS (unicode): Rendered HTML markup.
     """
     if isinstance(docs, Doc):
         docs = [docs]

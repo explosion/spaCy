@@ -190,6 +190,7 @@ class EntityRenderer(object):
 
         text (unicode): Original text.
         spans (list): Individual entity spans and their start, end and label.
+        title (unicode or None): Document title set in Doc.user_data['title'].
         """
         markup = ''
         offset = 0
