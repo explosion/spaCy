@@ -6,7 +6,6 @@
             "Lightning tour": "lightning-tour",
             "Command line": "cli",
             "Troubleshooting": "troubleshooting",
-            "Resources": "resources"
         },
         "Workflows": {
             "Loading the pipeline": "language-processing-pipeline",
