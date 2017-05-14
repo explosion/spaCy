@@ -105,17 +105,36 @@ p
     |  consistent state.
 
 
-+h(2, "displacy") The displaCy #[sup ENT] visualizer
++h(2, "displacy") Visualizing named entities
 
 p
     |  The #[+a(DEMOS_URL + "/displacy-ent/") displaCy #[sup ENT] visualizer]
     |  lets you explore an entity recognition model's behaviour interactively.
     |  If you're training a model, it's very useful to run the visualization
-    |  server yourself. To help you do that, we've open-sourced both the
-    |  #[+a(gh("spacy-services")) back-end service] and the
-    |  #[+a(gh("displacy-ent")) front-end client].
+    |  yourself. To help you do that, spaCy v2.0+ comes with a visualization
+    |  module. Simply pass a #[code Doc] or a list of #[code Doc] objects to
+    |  displaCy and run #[+api("displacy#serve") #[code displacy.serve]] to
+    |  run the web server, or #[+api("displacy#render") #[code displacy.render]]
+    |  to generate the raw markup.
 
-+codepen("ALxpQO", 450)
+p
+    |  For more details and examples, see the
+    |  #[+a("/docs/usage/visualizers") usage workflow on visualizing spaCy].
+
++code("Named Entity example").
+    import spacy
+    from spacy import displacy
+
+    text = """But Google is starting from behind. The company made a late push
+    into hardware, and Apple’s Siri, available on iPhones, and Amazon’s Alexa
+    software, which runs on its Echo and Dot devices, have clear leads in
+    consumer adoption."""
+
+    nlp = spacy.load('custom_ner_model')
+    doc = nlp(text)
+    displacy.serve(doc, style='ent')
+
++codepen("a73f8b68f9af3157855962b283b364e4", 345)
 
 +h(2, "entity-types") Built-in entity types
 
