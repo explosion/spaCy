@@ -156,12 +156,12 @@ class EntityRenderer(object):
 
         options (dict): Visualiser-specific options (colors, ents)
         """
-        colors = {'org': '#7aecec', 'product': '#bfeeb7', 'gpe': '#feca74',
-                  'loc': '#ff9561', 'person': '#9886fc', 'norp': '#c887fb',
-                  'facility': '#9cc9cc', 'event': '#ffeb80', 'language': '#ff8197',
-                  'work_of_art': '#f0d0ff', 'date': '#bfe1d9', 'time': '#bfe1d9',
-                  'money': '#e4e7d2', 'quantity': '#e4e7d2', 'ordinal': '#e4e7d2',
-                  'cardinal': '#e4e7d2', 'percent': '#e4e7d2'}
+        colors = {'ORG': '#7aecec', 'PRODUCT': '#bfeeb7', 'GPE': '#feca74',
+                  'LOC': '#ff9561', 'PERSON': '#aa9cfc', 'NORP': '#c887fb',
+                  'FACILITY': '#9cc9cc', 'EVENT': '#ffeb80', 'LANGUAGE': '#ff8197',
+                  'WORK_OF_ART': '#f0d0ff', 'DATE': '#bfe1d9', 'TIME': '#bfe1d9',
+                  'MONEY': '#e4e7d2', 'QUANTITY': '#e4e7d2', 'ORDINAL': '#e4e7d2',
+                  'CARDINAL': '#e4e7d2', 'PERCENT': '#e4e7d2'}
         colors.update(options.get('colors', {}))
         self.default_color = '#ddd'
         self.colors = colors
@@ -204,8 +204,8 @@ class EntityRenderer(object):
                 markup += fragment
                 if len(fragments) > 1 and i != len(fragments)-1:
                     markup += '</br>'
-            if self.ents is None or label.lower() in self.ents:
-                color = self.colors.get(label.lower(), self.default_color)
+            if self.ents is None or label.upper() in self.ents:
+                color = self.colors.get(label.upper(), self.default_color)
                 markup += TPL_ENT.format(label=label, text=entity, bg=color)
             else:
                 markup += entity
