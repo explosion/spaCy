@@ -195,7 +195,7 @@ p
 p
     |  If you're working with a #[+a("https://jupyter.org") Jupyter] notebook,
     |  you can use displaCy's "Jupyter mode" to return markup that can be
-    |  rendered in a cell.
+    |  rendered in a cell straight away.
 
 +code("Jupyter Example").
     # don't forget to install a model, e.g.: python -m spacy download en
@@ -208,7 +208,7 @@ p
     doc2 = nlp(LONG_NEWS_ARTICLE)
     displacy.render(doc2, style='ent', jupyter=True)
 
-+image("/assets/img/docs/displacy_jupyter.jpg", 700)
++image("/assets/img/docs/displacy_jupyter.jpg", 700, false, "Example of using the displaCy dependency and named entity visualizer in a Jupyter notebook")
 
 p
     |  Internally, displaCy imports #[code display] and #[code HTML] from
