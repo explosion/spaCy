@@ -80,7 +80,7 @@ p
     |  compute. As of spaCy v2.0, #[code Language] classes are not imported on
     |  initialisation and are only loaded when you import them directly, or load
     |  a model that requires a language to be loaded. To lazy-load languages in
-    |  your application, you can use the #[code util.load_lang_class()] helper
+    |  your application, you can use the #[code util.get_lang_class()] helper
     |  function with the two-letter language code as its argument.
 
 +h(2, "language-data") Adding language data
@@ -486,7 +486,7 @@ p
     |  #[+src(gh("spaCy", "spacy/tests/lang")) tests/lang] in a directory named
     |  after the language ID. You'll also need to create a fixture for your
     |  tokenizer in the #[+src(gh("spaCy", "spacy/tests/conftest.py")) conftest.py].
-    |  Always use the #[code load_lang_class()] helper function within the fixture,
+    |  Always use the #[code get_lang_class()] helper function within the fixture,
     |  instead of importing the class at the top of the file. This will load the
     |  language data only when it's needed. (Otherwise, #[em all data] would be
     |  loaded every time you run a test.)
@@ -494,7 +494,7 @@ p
 +code.
     @pytest.fixture
     def en_tokenizer():
-        return util.load_lang_class('en').Defaults.create_tokenizer()
+        return util.get_lang_class('en').Defaults.create_tokenizer()
 
 p
     |  When adding test cases, always

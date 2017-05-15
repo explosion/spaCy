@@ -49,7 +49,7 @@ p
         +cell unicode or #[code Path]
         +cell Path to new data directory.
 
-+h(2, "load_lang_class") load_lang_class
++h(2, "get_lang_class") get_lang_class
     +tag function
 
 p
@@ -59,7 +59,7 @@ p
 
 +aside-code("Example").
     for lang_id in ['en', 'de']:
-        lang_class = util.load_lang_class(lang_id)
+        lang_class = util.get_lang_class(lang_id)
         lang = lang_class()
         tokenizer = lang.Defaults.create_tokenizer()
 

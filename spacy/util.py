@@ -25,39 +25,37 @@ try:
 except ImportError:
     cupy = None
 
-def set_lang_class(name, cls):
+def get_lang_class(lang):
+    """Import and load a Language class.
+
+    lang (unicode): Two-letter language code, e.g. 'en'.
+    RETURNS (Language): Language class.
+    """
     global LANGUAGES
-    LANGUAGES[name] = cls
-
-
-def get_lang_class(name):
-    if name in LANGUAGES:
-        return LANGUAGES[name]
-    lang = re.split('[^a-zA-Z0-9]', name, 1)[0]
-    if lang not in LANGUAGES:
-        raise RuntimeError('Language not supported: %s' % name)
+    if not lang in LANGUAGES:
+        try:
+            module = importlib.import_module('.lang.%s' % lang, 'spacy')
+        except ImportError:
+            raise ImportError("Can't import language %s from spacy.lang." %lang)
+        LANGUAGES[lang] = getattr(module, module.__all__[0])
     return LANGUAGES[lang]
 
 
-def load_lang_class(lang):
-    """Import and load a Language class.
+def set_lang_class(name, cls):
+    """Set a custom Language class name that can be loaded via get_lang_class.
 
-    Args:
-        lang (unicode): Two-letter language code, e.g. 'en'.
-    Returns:
-        Language: Language class.
+    name (unicode): Name of Language class.
+    cls (Language): Language class.
     """
-    module = importlib.import_module('.lang.%s' % lang, 'spacy')
-    return getattr(module, module.__all__[0])
+    global LANGUAGES
+    LANGUAGES[name] = cls
 
 
 def get_data_path(require_exists=True):
     """Get path to spaCy data directory.
 
-    Args:
-        require_exists (bool): Only return path if it exists, otherwise None.
-    Returns:
-        Path or None: Data path or None.
+    require_exists (bool): Only return path if it exists, otherwise None.
+    RETURNS (Path or None): Data path or None.
     """
     if not require_exists:
         return _data_path
@@ -68,14 +66,18 @@ def get_data_path(require_exists=True):
 def set_data_path(path):
     """Set path to spaCy data directory.
 
-    Args:
-        path (unicode or Path): Path to new data directory.
+    path (unicode or Path): Path to new data directory.
     """
     global _data_path
     _data_path = ensure_path(path)
 
 
 def ensure_path(path):
+    """Ensure string is converted to a Path.
+
+    path: Anything. If string, it's converted to Path.
+    RETURNS: Path or original argument.
+    """
     if isinstance(path, basestring_):
         return Path(path)
     else:
@@ -85,10 +87,8 @@ def ensure_path(path):
 def resolve_model_path(name):
     """Resolve a model name or string to a model path.
 
-    Args:
-        name (unicode): Package name, shortcut link or model path.
-    Returns:
-        Path: Path to model data directory.
+    name (unicode): Package name, shortcut link or model path.
+    RETURNS (Path): Path to model data directory.
     """
     data_path = get_data_path()
     if not data_path or not data_path.exists():
@@ -108,11 +108,8 @@ def resolve_model_path(name):
 def is_package(name):
     """Check if string maps to a package installed via pip.
 
-    Args:
-        name (unicode): Name of package.
-    Returns:
-        bool: True if installed package, False if not.
-
+    name (unicode): Name of package.
+    RETURNS (bool): True if installed package, False if not.
     """
     packages = pip.get_installed_distributions()
     for package in packages:
@@ -124,10 +121,8 @@ def is_package(name):
 def get_model_package_path(package_name):
     """Get path to a model package installed via pip.
 
-    Args:
-        package_name (unicode): Name of installed package.
-    Returns:
-        Path: Path to model data directory.
+    package_name (unicode): Name of installed package.
+    RETURNS (Path): Path to model data directory.
     """
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
@@ -142,11 +137,9 @@ def get_model_package_path(package_name):
 def parse_package_meta(package_path, require=True):
     """Check if a meta.json exists in a package and return its contents.
 
-    Args:
-        package_path (Path): Path to model package directory.
-        require (bool): If True, raise error if no meta.json is found.
-    Returns:
-        dict or None: Model meta.json data or None.
+    package_path (Path): Path to model package directory.
+    require (bool): If True, raise error if no meta.json is found.
+    RETURNS (dict or None): Model meta.json data or None.
     """
     location = package_path / 'meta.json'
     if location.is_file():
@@ -201,11 +194,9 @@ def compile_infix_regex(entries):
 def update_exc(base_exceptions, *addition_dicts):
     """Update and validate tokenizer exceptions. Will overwrite exceptions.
 
-    Args:
-        base_exceptions (dict): Base exceptions.
-        *addition_dicts (dict): Exceptions to add to the base dict, in order.
-    Returns:
-        dict: Combined tokenizer exceptions.
+    base_exceptions (dict): Base exceptions.
+    *addition_dicts (dict): Exceptions to add to the base dict, in order.
+    RETURNS (dict): Combined tokenizer exceptions.
     """
     exc = dict(base_exceptions)
     for additions in addition_dicts:
@@ -229,12 +220,10 @@ def expand_exc(excs, search, replace):
     """Find string in tokenizer exceptions, duplicate entry and replace string.
     For example, to add additional versions with typographic apostrophes.
 
-    Args:
-        excs (dict): Tokenizer exceptions.
-        search (unicode): String to find and replace.
-        replace (unicode): Replacement.
-    Returns:
-        dict:
+    excs (dict): Tokenizer exceptions.
+    search (unicode): String to find and replace.
+    replace (unicode): Replacement.
+    RETURNS (dict): Combined tokenizer exceptions.
     """
     def _fix_token(token, search, replace):
         fixed = dict(token)
@@ -278,10 +267,8 @@ def check_renamed_kwargs(renamed, kwargs):
 def read_json(location):
     """Open and load JSON from file.
 
-    Args:
-        location (Path): Path to JSON file.
-    Returns:
-        dict: Loaded JSON content.
+    location (Path): Path to JSON file.
+    RETURNS (dict): Loaded JSON content.
     """
     with location.open('r', encoding='utf8') as f:
         return ujson.load(f)
@@ -290,11 +277,9 @@ def read_json(location):
 def get_raw_input(description, default=False):
     """Get user input from the command line via raw_input / input.
 
-    Args:
-        description (unicode): Text to display before prompt.
-        default (unicode or False/None): Default value to display with prompt.
-    Returns:
-        unicode: User input.
+    description (unicode): Text to display before prompt.
+    default (unicode or False/None): Default value to display with prompt.
+    RETURNS (unicode): User input.
     """
     additional = ' (default: %s)' % default if default else ''
     prompt = '    %s%s: ' % (description, additional)
@@ -305,9 +290,8 @@ def get_raw_input(description, default=False):
 def print_table(data, title=None):
     """Print data in table format.
 
-    Args:
-        data (dict or list of tuples): Label/value pairs.
-        title (unicode or None): Title, will be printed above.
+    data (dict or list of tuples): Label/value pairs.
+    title (unicode or None): Title, will be printed above.
     """
     if isinstance(data, dict):
         data = list(data.items())
@@ -321,9 +305,8 @@ def print_table(data, title=None):
 def print_markdown(data, title=None):
     """Print data in GitHub-flavoured Markdown format for issues etc.
 
-    Args:
-        data (dict or list of tuples): Label/value pairs.
-        title (unicode or None): Title, will be rendered as headline 2.
+    data (dict or list of tuples): Label/value pairs.
+    title (unicode or None): Title, will be rendered as headline 2.
     """
     def excl_value(value):
         return Path(value).exists() # contains path (personal info)
@@ -339,10 +322,8 @@ def print_markdown(data, title=None):
 def prints(*texts, **kwargs):
     """Print formatted message (manual ANSI escape sequences to avoid dependency)
 
-    Args:
-        *texts (unicode): Texts to print. Each argument is rendered as paragraph.
-        **kwargs: 'title' is rendered as coloured headline. 'exits'=True performs
-                  system exit after printing.
+    *texts (unicode): Texts to print. Each argument is rendered as paragraph.
+    **kwargs: 'title' becomes coloured headline. 'exits'=True performs sys exit.
     """
     exits = kwargs.get('exits', False)
     title = kwargs.get('title', None)
@@ -356,12 +337,10 @@ def prints(*texts, **kwargs):
 def _wrap(text, wrap_max=80, indent=4):
     """Wrap text at given width using textwrap module.
 
-    Args:
-        text (unicode): Text to wrap. If it's a Path, it's converted to string.
-        wrap_max (int): Maximum line length (indent is deducted).
-        indent (int): Number of spaces for indentation.
-    Returns:
-        unicode: Wrapped text.
+    text (unicode): Text to wrap. If it's a Path, it's converted to string.
+    wrap_max (int): Maximum line length (indent is deducted).
+    indent (int): Number of spaces for indentation.
+    RETURNS (unicode): Wrapped text.
     """
     indent = indent * ' '
     wrap_width = wrap_max - len(indent)
@@ -370,3 +349,13 @@ def _wrap(text, wrap_max=80, indent=4):
     return textwrap.fill(text, width=wrap_width, initial_indent=indent,
                          subsequent_indent=indent, break_long_words=False,
                          break_on_hyphens=False)
+
+
+def minify_html(html):
+    """Perform a template-specific, rudimentary HTML minification for displaCy.
+    Disclaimer: NOT a general-purpose solution, only removes indentation/newlines.
+
+    html (unicode): Markup to minify.
+    RETURNS (unicode): "Minified" HTML.
+    """
+    return html.strip().replace('    ', '').replace('\n', '')

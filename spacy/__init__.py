@@ -16,7 +16,7 @@ def load(name, **overrides):
     meta = util.parse_package_meta(model_path)
     if 'lang' not in meta:
         raise IOError('No language setting found in model meta.')
-    cls = util.load_lang_class(meta['lang'])
+    cls = util.get_lang_class(meta['lang'])
     overrides['meta'] = meta
     overrides['path'] = model_path
     return cls(**overrides)
