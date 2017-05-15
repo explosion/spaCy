@@ -99,5 +99,5 @@ def parse_ents(doc, options={}):
     """
     ents = [{'start': ent.start_char, 'end': ent.end_char, 'label': ent.label_}
              for ent in doc.ents]
-    title = doc.user_data.get('title', None)
+    title = doc.user_data.get('title', None) if hasattr(doc, 'user_data') else None
     return {'text': doc.text, 'ents': ents, 'title': title}
