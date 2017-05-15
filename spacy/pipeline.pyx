@@ -27,40 +27,26 @@ from thinc.neural._classes.resnet import Residual
 from thinc.neural._classes.batchnorm import BatchNorm as BN
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP
-from ._ml import flatten, get_col, doc2feats
+from ._ml import Tok2Vec, flatten, get_col, doc2feats
 
 
 
 class TokenVectorEncoder(object):
     '''Assign position-sensitive vectors to tokens, using a CNN or RNN.'''
-    def __init__(self, vocab, token_vector_width, **cfg):
+
+    @classmethod
+    def Model(cls, width=128, embed_size=5000, **cfg):
+        return Tok2Vec(width, embed_size, preprocess=False)
+
+    def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.doc2feats = doc2feats()
-        self.model = self.build_model(vocab.lang, token_vector_width, **cfg)
-        self.tagger = chain(
-                        self.model,
-                        Softmax(self.vocab.morphology.n_tags,
-                                token_vector_width))
-
-    def build_model(self, lang, width, embed_size=5000, **cfg):
-        cols = self.doc2feats.cols
-        with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
-            lower = get_col(cols.index(LOWER))   >> (HashEmbed(width, embed_size)
-                                                     +HashEmbed(width, embed_size))
-            prefix = get_col(cols.index(PREFIX)) >> HashEmbed(width, embed_size//2)
-            suffix = get_col(cols.index(SUFFIX)) >> HashEmbed(width, embed_size//2)
-            shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size//2)
-
-            tok2vec = (
-                flatten
-                >> (lower | prefix | suffix | shape )
-                >> Maxout(width, pieces=3)
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-            )
-        return tok2vec
+        self.model = self.Model() if model is True else model
+        if self.model not in (None, False):
+            self.tagger = chain(
+                            self.model,
+                            Softmax(self.vocab.morphology.n_tags,
+                                    self.model.nO))
 
     def pipe(self, docs):
         docs = list(docs)

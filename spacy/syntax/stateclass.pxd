@@ -9,15 +9,22 @@ from ..vocab cimport EMPTY_LEXEME
 from ._state cimport StateC
 
 
-@cython.final
 cdef class StateClass:
     cdef Pool mem
     cdef StateC* c
 
     @staticmethod
     cdef inline StateClass init(const TokenC* sent, int length):
-        cdef StateClass self = StateClass(length)
+        cdef StateClass self = StateClass()
         self.c = new StateC(sent, length)
+        return self
+
+    @staticmethod
+    cdef inline StateClass init_offset(const TokenC* sent, int length, int
+                                       offset):
+        cdef StateClass self = StateClass()
+        self.c = new StateC(sent, length)
+        self.c.offset = offset
         return self
 
     cdef inline int S(self, int i) nogil:
@@ -68,9 +75,6 @@ cdef class StateClass:
     cdef inline bint at_break(self) nogil:
         return self.c.at_break()
 
-    cdef inline bint is_final(self) nogil:
-        return self.c.is_final()
-
     cdef inline bint has_head(self, int i) nogil:
         return self.c.has_head(i)
 
@@ -97,22 +101,22 @@ cdef class StateClass:
 
     cdef inline void pop(self) nogil:
         self.c.pop()
-    
+
     cdef inline void unshift(self) nogil:
         self.c.unshift()
 
     cdef inline void add_arc(self, int head, int child, int label) nogil:
         self.c.add_arc(head, child, label)
-    
+
     cdef inline void del_arc(self, int head, int child) nogil:
         self.c.del_arc(head, child)
 
     cdef inline void open_ent(self, int label) nogil:
         self.c.open_ent(label)
-    
+
     cdef inline void close_ent(self) nogil:
         self.c.close_ent()
-    
+
     cdef inline void set_ent_tag(self, int i, int ent_iob, int ent_type) nogil:
         self.c.set_ent_tag(i, ent_iob, ent_type)
 

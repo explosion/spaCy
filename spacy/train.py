@@ -3,6 +3,10 @@ from __future__ import absolute_import, unicode_literals
 
 import random
 import tqdm
+
+from thinc.neural.optimizers import Adam
+from thinc.neural.ops import NumpyOps, CupyOps
+
 from .gold import GoldParse, merge_sents
 from .scorer import Scorer
 
@@ -44,10 +48,12 @@ class Trainer(object):
             yield _epoch(indices)
             self.nr_epoch += 1
 
-    def update(self, doc, gold):
+    def update(self, docs, golds, drop=0.):
         for process in self.nlp.pipeline:
             if hasattr(process, 'update'):
-                loss = process.update(doc, gold, itn=self.nr_epoch)
+                loss = process.update(doc, gold, sgd=self.sgd, drop=drop,
+                                      itn=self.nr_epoch)
+                self.sgd.finish_update()
             else:
                 process(doc)
         return doc

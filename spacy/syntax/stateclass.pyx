@@ -12,12 +12,16 @@ from ..symbols cimport punct
 from ..attrs cimport IS_SPACE
 from ..attrs cimport attr_id_t
 from ..tokens.token cimport Token
+from ..tokens.doc cimport Doc
 
 
 cdef class StateClass:
-    def __init__(self, int length):
+    def __init__(self, Doc doc=None, int offset=0):
         cdef Pool mem = Pool()
         self.mem = mem
+        if doc is not None:
+            self.c = new StateC(doc.c, doc.length)
+            self.c.offset = offset
 
     def __dealloc__(self):
         del self.c
@@ -34,7 +38,7 @@ cdef class StateClass:
     def token_vector_lenth(self):
         return self.doc.tensor.shape[1]
 
-    def py_is_final(self):
+    def is_final(self):
         return self.c.is_final()
 
     def print_state(self, words):
@@ -47,11 +51,10 @@ cdef class StateClass:
         return ' '.join((third, second, top, '|', n0, n1))
 
     @classmethod
-    def nr_context_tokens(cls, int nF, int nB, int nS, int nL, int nR):
+    def nr_context_tokens(cls):
         return 13
 
-    def set_context_tokens(self, int[:] output, nF=1, nB=0, nS=2,
-            nL=2, nR=2):
+    def set_context_tokens(self, int[::1] output):
         output[0] = self.B(0)
         output[1] = self.B(1)
         output[2] = self.S(0)
@@ -67,21 +70,6 @@ cdef class StateClass:
         output[11] = self.R(self.S(1), 1)
         output[12] = self.R(self.S(1), 2)
 
-    def set_attributes(self, uint64_t[:, :] vals, int[:] tokens, int[:] names):
-        cdef int i, j, tok_i
-        for i in range(tokens.shape[0]):
-            tok_i = tokens[i]
-            if tok_i >= 0:
-                token = &self.c._sent[tok_i]
-                for j in range(names.shape[0]):
-                    vals[i, j] = Token.get_struct_attr(token, <attr_id_t>names[j])
-            else:
-                vals[i] = 0
-
-    def set_token_vectors(self, tokvecs,
-            all_tokvecs, int[:] indices):
-        for i in range(indices.shape[0]):
-            if indices[i] >= 0:
-                tokvecs[i] = all_tokvecs[indices[i]]
-            else:
-                tokvecs[i] = 0
+        for i in range(13):
+            if output[i] != -1:
+                output[i] += self.c.offset

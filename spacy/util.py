@@ -15,7 +15,15 @@ from .compat import path2str, basestring_, input_, unicode_
 
 LANGUAGES = {}
 _data_path = Path(__file__).parent / 'data'
+try:
+    from cupy.cuda.stream import Stream as CudaStream
+except ImportError:
+    CudaStream = None
 
+try:
+    import cupy
+except ImportError:
+    cupy = None
 
 def set_lang_class(name, cls):
     global LANGUAGES
@@ -152,11 +160,14 @@ def parse_package_meta(package_path, require=True):
 def get_cuda_stream(require=False):
     # TODO: Error and tell to install chainer if not found
     # Requires GPU
-    try:
-        from cupy.cuda.stream import Stream
-    except ImportError:
-        return None
-    return Stream()
+    return CudaStream() if CudaStream is not None else None
+
+
+def get_async(stream, numpy_array):
+    if cupy is None:
+        return numpy_array
+    else:
+        return cupy.array(numpy_array, stream=stream)
 
 
 def read_regex(path):

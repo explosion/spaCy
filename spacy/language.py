@@ -247,6 +247,7 @@ class Language(object):
         self.tokenizer = self.Defaults.create_tokenizer(self) \
                          if 'tokenizer' not in overrides \
                          else overrides['tokenizer']
+ 
         self.tagger    = self.Defaults.create_tagger(self) \
                          if 'tagger' not in overrides \
                          else overrides['tagger']

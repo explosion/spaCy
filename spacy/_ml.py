@@ -118,6 +118,29 @@ class PrecomputableMaxouts(Model):
             return dXf
         return Yfp, backward
 
+def Tok2Vec(width, embed_size, preprocess=None):
+    cols = [LOWER, PREFIX, SUFFIX, SHAPE]
+    with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
+        lower = get_col(cols.index(LOWER))   >> HashEmbed(width, embed_size)
+        prefix = get_col(cols.index(PREFIX)) >> HashEmbed(width, embed_size//2)
+        suffix = get_col(cols.index(SUFFIX)) >> HashEmbed(width, embed_size//2)
+        shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size//2)
+
+        tok2vec = (
+            flatten
+            >> (lower | prefix | suffix | shape )
+            >> Maxout(width, width*4, pieces=3)
+            >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+            >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+            >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+            >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+        )
+        if preprocess is not None:
+            tok2vec = preprocess >> tok2vec
+        # Work around thinc API limitations :(. TODO: Revise in Thinc 7
+        tok2vec.nO = width
+    return tok2vec
+
 
 def get_col(idx):
     def forward(X, drop=0.):
@@ -125,7 +148,6 @@ def get_col(idx):
             ops = NumpyOps()
         else:
             ops = CupyOps()
-        assert len(X.shape) <= 3
         output = ops.xp.ascontiguousarray(X[:, idx])
         def backward(y, sgd=None):
             dX = ops.allocate(X.shape)
@@ -171,8 +193,10 @@ def get_token_vectors(tokens_attrs_vectors, drop=0.):
 def flatten(seqs, drop=0.):
     if isinstance(seqs[0], numpy.ndarray):
         ops = NumpyOps()
-    else:
+    elif hasattr(CupyOps.xp, 'ndarray') and isinstance(seqs[0], CupyOps.xp.ndarray):
         ops = CupyOps()
+    else:
+        raise ValueError("Unable to flatten sequence of type %s" % type(seqs[0]))
     lengths = [len(seq) for seq in seqs]
     def finish_update(d_X, sgd=None):
         return ops.unflatten(d_X, lengths)

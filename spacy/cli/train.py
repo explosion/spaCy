@@ -64,10 +64,15 @@ def train_model(Language, train_data, dev_data, output_path, tagger_cfg, parser_
 
     with Language.train(output_path, train_data,
                         pos=tagger_cfg, deps=parser_cfg, ner=entity_cfg) as trainer:
+
         for itn, epoch in enumerate(trainer.epochs(n_iter, augment_data=None)):
-            for doc, gold in epoch:
-                trainer.update(doc, gold)
-            dev_scores = trainer.evaluate(dev_data).scores if dev_data else defaultdict(float)
+            for docs, golds in partition_all(12, epoch):
+                trainer.update(docs, golds)
+
+            if dev_data:
+                dev_scores = trainer.evaluate(dev_data).scores
+            else:
+                defaultdict(float)
             print_progress(itn, trainer.nlp.parser.model.nr_weight,
                            trainer.nlp.parser.model.nr_active_feat,
                            **dev_scores)

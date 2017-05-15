@@ -23,6 +23,7 @@ cdef cppclass StateC:
     Entity* _ents
     TokenC _empty_token
     int length
+    int offset
     int _s_i
     int _b_i
     int _e_i

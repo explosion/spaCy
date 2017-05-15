@@ -58,6 +58,17 @@ cdef class TransitionSystem:
                 (self.strings, labels_by_action, self.freqs),
                 None, None)
 
+    def init_batch(self, docs):
+        cdef StateClass state
+        states = []
+        offset = 0
+        for doc in docs:
+            state = StateClass(doc, offset=offset)
+            self.initialize_state(state.c)
+            states.append(state)
+            offset += len(doc)
+        return states
+
     cdef int initialize_state(self, StateC* state) nogil:
         pass
 
