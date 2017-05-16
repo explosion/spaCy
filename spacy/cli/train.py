@@ -41,8 +41,7 @@ def train(language, output_dir, train_data, dev_data, n_iter, tagger, parser, ne
     gold_train = list(read_gold_json(train_path))
     gold_dev = list(read_gold_json(dev_path)) if dev_path else None
 
-    train_model(lang, gold_train, gold_dev, output_path, tagger_cfg, parser_cfg,
-                entity_cfg, n_iter)
+    train_model(lang, gold_train, gold_dev, output_path, n_iter)
     if gold_dev:
         scorer = evaluate(lang, gold_dev, output_path)
         print_results(scorer)
@@ -58,24 +57,30 @@ def train_config(config):
             prints("%s not found in config file." % setting, title="Missing setting")
 
 
-def train_model(Language, train_data, dev_data, output_path, tagger_cfg, parser_cfg,
-                entity_cfg, n_iter):
+def train_model(Language, train_data, dev_data, output_path, n_iter, **cfg):
     print("Itn.\tN weight\tN feats\tUAS\tNER F.\tTag %\tToken %")
 
-    with Language.train(output_path, train_data,
-                        pos=tagger_cfg, deps=parser_cfg, ner=entity_cfg) as trainer:
+    nlp = Language(pipeline=['tensor', 'dependencies', 'entities'])
 
-        for itn, epoch in enumerate(trainer.epochs(n_iter, augment_data=None)):
-            for docs, golds in partition_all(12, epoch):
-                trainer.update(docs, golds)
+    # TODO: Get spaCy using Thinc's trainer and optimizer
+    with nlp.begin_training(train_data, **cfg) as (trainer, optimizer):
+        for itn, epoch in enumerate(trainer.epochs(n_iter)):
+            losses = defaultdict(float)
+            for docs, golds in epoch:
+                grads = {}
+                def get_grads(W, dW, key=None):
+                    grads[key] = (W, dW)
 
+                for proc in nlp.pipeline:
+                    loss = proc.update(docs, golds, drop=0.0, sgd=get_grads)
+                    losses[proc.name] += loss
+                for key, (W, dW) in grads.items():
+                    optimizer(W, dW, key=key)
             if dev_data:
                 dev_scores = trainer.evaluate(dev_data).scores
             else:
                 defaultdict(float)
-            print_progress(itn, trainer.nlp.parser.model.nr_weight,
-                           trainer.nlp.parser.model.nr_active_feat,
-                           **dev_scores)
+            print_progress(itn, losses['dep'], **dev_scores)
 
 
 def evaluate(Language, gold_tuples, output_path):

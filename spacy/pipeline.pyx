@@ -9,7 +9,8 @@ import numpy
 cimport numpy as np
 
 from .tokens.doc cimport Doc
-from .syntax.parser cimport Parser
+from .syntax.parser cimport Parser as LinearParser
+from .syntax.nn_parser cimport Parser as NeuralParser
 from .syntax.parser import get_templates as get_feature_templates
 from .syntax.beam_parser cimport BeamParser
 from .syntax.ner cimport BiluoPushDown
@@ -30,13 +31,13 @@ from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP
 from ._ml import Tok2Vec, flatten, get_col, doc2feats
 
 
-
 class TokenVectorEncoder(object):
     '''Assign position-sensitive vectors to tokens, using a CNN or RNN.'''
+    name = 'tok2vec'
 
     @classmethod
     def Model(cls, width=128, embed_size=5000, **cfg):
-        return Tok2Vec(width, embed_size, preprocess=False)
+        return Tok2Vec(width, embed_size, preprocess=doc2feats())
 
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
@@ -76,10 +77,11 @@ class TokenVectorEncoder(object):
                 doc.vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
                 idx += 1
 
-    def update(self, docs_feats, golds, drop=0., sgd=None):
+    def update(self, docs, golds, drop=0., sgd=None):
+        return 0.0
         cdef int i, j, idx
         cdef GoldParse gold
-        docs, feats = docs_feats
+        feats = self.doc2feats(docs)
         scores, finish_update = self.tagger.begin_update(feats, drop=drop)
 
         tag_index = {tag: i for i, tag in enumerate(docs[0].vocab.morphology.tag_names)}
@@ -95,7 +97,7 @@ class TokenVectorEncoder(object):
         finish_update(d_scores, sgd)
 
 
-cdef class EntityRecognizer(Parser):
+cdef class EntityRecognizer(LinearParser):
     """
     Annotate named entities on Doc objects.
     """
@@ -104,7 +106,7 @@ cdef class EntityRecognizer(Parser):
     feature_templates = get_feature_templates('ner')
 
     def add_label(self, label):
-        Parser.add_label(self, label)
+        LinearParser.add_label(self, label)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
 
@@ -118,19 +120,29 @@ cdef class BeamEntityRecognizer(BeamParser):
     feature_templates = get_feature_templates('ner')
 
     def add_label(self, label):
-        Parser.add_label(self, label)
+        LinearParser.add_label(self, label)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
 
 
-cdef class DependencyParser(Parser):
+cdef class DependencyParser(LinearParser):
     TransitionSystem = ArcEager
     feature_templates = get_feature_templates('basic')
 
     def add_label(self, label):
-        Parser.add_label(self, label)
+        LinearParser.add_label(self, label)
         if isinstance(label, basestring):
             label = self.vocab.strings[label]
+
+
+cdef class NeuralDependencyParser(NeuralParser):
+    name = 'parser'
+    TransitionSystem = ArcEager
+
+
+cdef class NeuralEntityRecognizer(NeuralParser):
+    name = 'entity'
+    TransitionSystem = BiluoPushDown
 
 
 cdef class BeamDependencyParser(BeamParser):

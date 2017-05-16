@@ -135,7 +135,7 @@ def Tok2Vec(width, embed_size, preprocess=None):
             >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
             >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
         )
-        if preprocess is not None:
+        if preprocess not in (False, None):
             tok2vec = preprocess >> tok2vec
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.nO = width

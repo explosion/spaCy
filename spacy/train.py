@@ -3,12 +3,14 @@ from __future__ import absolute_import, unicode_literals
 
 import random
 import tqdm
+from cytoolz import partition_all
 
 from thinc.neural.optimizers import Adam
 from thinc.neural.ops import NumpyOps, CupyOps
 
 from .gold import GoldParse, merge_sents
 from .scorer import Scorer
+from .tokens.doc import Doc
 
 
 class Trainer(object):
@@ -19,6 +21,7 @@ class Trainer(object):
         self.nlp = nlp
         self.gold_tuples = gold_tuples
         self.nr_epoch = 0
+        self.optimizer = Adam(NumpyOps(), 0.001)
 
     def epochs(self, nr_epoch, augment_data=None, gold_preproc=False):
         cached_golds = {}
@@ -75,9 +78,9 @@ class Trainer(object):
 
     def make_docs(self, raw_text, paragraph_tuples):
         if raw_text is not None:
-            return [self.nlp.tokenizer(raw_text)]
+            return [self.nlp.make_doc(raw_text)]
         else:
-            return [self.nlp.tokenizer.tokens_from_list(sent_tuples[0][1])
+            return [Doc(self.nlp.vocab, words=sent_tuples[0][1])
                     for sent_tuples in paragraph_tuples]
 
     def make_golds(self, docs, paragraph_tuples):

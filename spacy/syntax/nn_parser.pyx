@@ -238,11 +238,7 @@ cdef class Parser:
         upper.begin_training(upper.ops.allocate((500, hidden_width)))
         return tok2vec, lower, upper
 
-    @classmethod
-    def Moves(cls):
-        return TransitionSystem()
-
-    def __init__(self, Vocab vocab, moves=True, model=True, **cfg):
+    def __init__(self, Vocab vocab, model=True, **cfg):
         """
         Create a Parser.
 
@@ -262,9 +258,13 @@ cdef class Parser:
                 Arbitrary configuration parameters. Set to the .cfg attribute
         """
         self.vocab = vocab
-        self.moves = self.Moves(self.vocab) if moves is True else moves
-        self.model = self.Model(self.moves.n_moves) if model is True else model
+        self.moves = self.TransitionSystem(self.vocab.strings, {})
         self.cfg = cfg
+        if 'actions' in self.cfg:
+            for action, labels in self.cfg.get('actions', {}).items():
+                for label in labels:
+                    self.moves.add_action(action, label)
+        self.model = model
 
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model, self.cfg), None, None)
@@ -439,6 +439,17 @@ cdef class Parser:
                 # Important that the labels be stored as a list! We need the
                 # order, or the model goes out of synch
                 self.cfg.setdefault('extra_labels', []).append(label)
+
+    def begin_training(self, gold_tuples, **cfg):
+        if 'model' in cfg:
+            self.model = cfg['model']
+        actions = self.moves.get_actions(gold_parses=gold_tuples)
+        for action, labels in actions.items():
+            for label in labels:
+                self.moves.add_action(action, label)
+        if self.model is True:
+            tok2vec = cfg['pipeline'][0].model
+            self.model = self.Model(self.moves.n_moves, tok2vec=tok2vec, **cfg)
 
 
 class ParserStateError(ValueError):
