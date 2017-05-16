@@ -1,3 +1,5 @@
+# coding: utf8
+from __future__ import unicode_literals
 from thinc.neural import Model
 from mock import Mock
 import pytest
