@@ -217,10 +217,7 @@ cdef class Parser:
     Base class of the DependencyParser and EntityRecognizer.
     """
     @classmethod
-    def Model(cls, nr_class, tok2vec=None, hidden_width=128, **cfg):
-        if tok2vec is None:
-            tok2vec = Tok2Vec(hidden_width, 5000, preprocess=doc2feats())
-        token_vector_width = tok2vec.nO
+    def Model(cls, nr_class, token_vector_width=128, hidden_width=128, **cfg):
         nr_context_tokens = StateClass.nr_context_tokens()
         lower = PrecomputableMaxouts(hidden_width,
                     nF=nr_context_tokens,
@@ -236,9 +233,9 @@ cdef class Parser:
         # Used to set input dimensions in network.
         lower.begin_training(lower.ops.allocate((500, token_vector_width)))
         upper.begin_training(upper.ops.allocate((500, hidden_width)))
-        return tok2vec, lower, upper
+        return lower, upper
 
-    def __init__(self, Vocab vocab, model=True, **cfg):
+    def __init__(self, Vocab vocab, moves=True, model=True, **cfg):
         """
         Create a Parser.
 
@@ -258,7 +255,10 @@ cdef class Parser:
                 Arbitrary configuration parameters. Set to the .cfg attribute
         """
         self.vocab = vocab
-        self.moves = self.TransitionSystem(self.vocab.strings, {})
+        if moves is True:
+            self.moves = self.TransitionSystem(self.vocab.strings, {})
+        else:
+            self.moves = moves
         self.cfg = cfg
         if 'actions' in self.cfg:
             for action, labels in self.cfg.get('actions', {}).items():
@@ -269,7 +269,7 @@ cdef class Parser:
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model, self.cfg), None, None)
 
-    def __call__(self, Doc tokens):
+    def __call__(self, Doc tokens, state=None):
         """
         Apply the parser or entity recognizer, setting the annotations onto the Doc object.
 
@@ -278,7 +278,8 @@ cdef class Parser:
         Returns:
             None
         """
-        self.parse_batch([tokens])
+        self.parse_batch([tokens], state['tokvecs'])
+        return state
 
     def pipe(self, stream, int batch_size=1000, int n_threads=2):
         """
@@ -295,20 +296,19 @@ cdef class Parser:
         cdef StateClass state
         cdef Doc doc
         queue = []
-        for docs in cytoolz.partition_all(batch_size, stream):
-            docs = list(docs)
-            states = self.parse_batch(docs)
-            for state, doc in zip(states, docs):
+        for batch in cytoolz.partition_all(batch_size, stream):
+            docs, tokvecs = zip(*batch)
+            states = self.parse_batch(docs, tokvecs)
+            for doc, state in zip(docs, states):
                 self.moves.finalize_state(state.c)
                 for i in range(doc.length):
                     doc.c[i] = state.c._sent[i]
                 self.moves.finalize_doc(doc)
                 yield doc
 
-    def parse_batch(self, docs):
+    def parse_batch(self, docs, tokvecs):
         cuda_stream = get_cuda_stream()
 
-        tokvecs = self.model[0](docs)
         states = self.moves.init_batch(docs)
         state2vec, vec2scores = self.get_batch_model(len(states), tokvecs,
                                                      cuda_stream, 0.0)
@@ -322,15 +322,21 @@ cdef class Parser:
             todo = [st for st in states if not st.is_final()]
         self.finish_batch(states, docs)
 
-    def update(self, docs, golds, drop=0., sgd=None):
+    def update(self, docs, golds, state=None, drop=0., sgd=None):
+        assert state is not None
+        assert 'tokvecs' in state
+        assert 'bp_tokvecs' in state
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
-            return self.update([docs], [golds], drop=drop, sgd=sgd)
+            docs = [docs]
+            golds = [golds]
 
         cuda_stream = get_cuda_stream()
         for gold in golds:
             self.moves.preprocess_gold(gold)
 
-        tokvecs, bp_tokvecs = self.model[0].begin_update(docs, drop=drop)
+        tokvecs = state['tokvecs']
+        bp_tokvecs = state['bp_tokvecs']
+
         states = self.moves.init_batch(docs)
         state2vec, vec2scores = self.get_batch_model(len(states), tokvecs, cuda_stream,
                                                       drop)
@@ -377,12 +383,14 @@ cdef class Parser:
                 xp.add.at(d_tokvecs,
                     token_ids, d_state_features * active_feats)
         bp_tokvecs(d_tokvecs, sgd)
-        return loss
+        state['parser_loss'] = loss
+        return state
 
     def get_batch_model(self, batch_size, tokvecs, stream, dropout):
+        lower, upper = self.model
         state2vec = precompute_hiddens(batch_size, tokvecs,
-                        self.model[1], stream, drop=dropout)
-        return state2vec, self.model[-1]
+                        lower, stream, drop=dropout)
+        return state2vec, upper
 
     def get_token_ids(self, states):
         cdef StateClass state
@@ -448,8 +456,7 @@ cdef class Parser:
             for label in labels:
                 self.moves.add_action(action, label)
         if self.model is True:
-            tok2vec = cfg['pipeline'][0].model
-            self.model = self.Model(self.moves.n_moves, tok2vec=tok2vec, **cfg)
+            self.model = self.Model(self.moves.n_moves, **cfg)
 
 
 class ParserStateError(ValueError):

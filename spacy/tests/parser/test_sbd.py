@@ -18,6 +18,7 @@ def test_parser_sbd_single_punct(en_tokenizer, text, punct):
     assert sum(len(sent) for sent in doc.sents) == len(doc)
 
 
+@pytest.mark.xfail
 def test_parser_sentence_breaks(en_tokenizer, en_parser):
     text = "This is a sentence . This is another one ."
     heads = [1, 0, 1, -2, -3, 1, 0, 1, -2, -3]
@@ -39,6 +40,7 @@ def test_parser_sentence_breaks(en_tokenizer, en_parser):
 # Currently, there's no way of setting the serializer data for the parser
 # without loading the models, so we can't remove the model dependency here yet.
 
+@pytest.mark.xfail
 @pytest.mark.models
 def test_parser_sbd_serialization_projective(EN):
     """Test that before and after serialization, the sentence boundaries are

@@ -1,20 +1,16 @@
 # coding: utf8
 from __future__ import absolute_import, unicode_literals
 from contextlib import contextmanager
-import shutil
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .tagger import Tagger
-from .matcher import Matcher
 from .lemmatizer import Lemmatizer
 from .train import Trainer
 from .syntax.parser import get_templates
 from .syntax.nonproj import PseudoProjectivity
-from .pipeline import DependencyParser, NeuralDependencyParser, EntityRecognizer
-from .pipeline import TokenVectorEncoder, NeuralEntityRecognizer
-from .syntax.arc_eager import ArcEager
-from .syntax.ner import BiluoPushDown
+from .pipeline import NeuralDependencyParser, EntityRecognizer
+from .pipeline import TokenVectorEncoder, NeuralTagger, NeuralEntityRecognizer
 from .compat import json_dumps
 from .attrs import IS_STOP
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
@@ -58,19 +54,40 @@ class BaseDefaults(object):
                          infix_finditer=infix_finditer, token_match=token_match)
 
     @classmethod
+    def create_tagger(cls, nlp=None, **cfg):
+        if nlp is None:
+            return NeuralTagger(cls.create_vocab(nlp), **cfg)
+        else:
+            return NeuralTagger(nlp.vocab, **cfg)
+
+    @classmethod
+    def create_parser(cls, nlp=None, **cfg):
+        if nlp is None:
+            return NeuralDependencyParser(cls.create_vocab(nlp), **cfg)
+        else:
+            return NeuralDependencyParser(nlp.vocab, **cfg)
+
+    @classmethod
+    def create_entity(cls, nlp=None, **cfg):
+        if nlp is None:
+            return NeuralEntityRecognizer(cls.create_vocab(nlp), **cfg)
+        else:
+            return NeuralEntityRecognizer(nlp.vocab, **cfg)
+
+    @classmethod
     def create_pipeline(cls, nlp=None):
         meta = nlp.meta if nlp is not None else {}
         # Resolve strings, like "cnn", "lstm", etc
         pipeline = []
         for entry in cls.pipeline:
             factory = cls.Defaults.factories[entry]
-            pipeline.append(factory(self, **meta.get(entry, {})))
+            pipeline.append(factory(nlp, **meta.get(entry, {})))
         return pipeline
 
     factories = {
         'make_doc': create_tokenizer,
-        'tensor': lambda nlp, **cfg: TokenVectorEncoder(nlp.vocab, **cfg),
-        'tags': lambda nlp, **cfg: Tagger(nlp.vocab, **cfg),
+        'token_vectors': lambda nlp, **cfg: TokenVectorEncoder(nlp.vocab, **cfg),
+        'tags': lambda nlp, **cfg: NeuralTagger(nlp.vocab, **cfg),
         'dependencies': lambda nlp, **cfg: NeuralDependencyParser(nlp.vocab, **cfg),
         'entities': lambda nlp, **cfg: NeuralEntityRecognizer(nlp.vocab, **cfg),
     }
@@ -123,14 +140,15 @@ class Language(object):
         else:
             self.pipeline = []
 
-    def __call__(self, text, **disabled):
+    def __call__(self, text, state=None, **disabled):
         """
         Apply the pipeline to some text.  The text can span multiple sentences,
         and can contain arbtrary whitespace.  Alignment into the original string
         is preserved.
 
-        Argsuments:
+        Args:
             text (unicode): The text to be processed.
+            state: Arbitrary
 
         Returns:
             doc (Doc): A container for accessing the annotations.
@@ -145,10 +163,28 @@ class Language(object):
         doc = self.make_doc(text)
         for proc in self.pipeline:
             name = getattr(proc, 'name', None)
-            if name in disabled and not disabled[named]:
+            if name in disabled and not disabled[name]:
                 continue
-            proc(doc)
+            state = proc(doc, state=state)
         return doc
+
+    def update(self, docs, golds, state=None, drop=0., sgd=None):
+        grads = {}
+        def get_grads(W, dW, key=None):
+            grads[key] = (W, dW)
+        state = {} if state is None else state
+        for process in self.pipeline:
+            if hasattr(process, 'update'):
+                state = process.update(docs, golds,
+                            state=state,
+                            drop=drop,
+                            sgd=sgd)
+            else:
+                process(docs, state=state)
+        if sgd is not None:
+            for key, (W, dW) in grads.items():
+                sgd(W, dW, key=key)
+        return state
 
     @contextmanager
     def begin_training(self, gold_tuples, **cfg):
@@ -172,17 +208,17 @@ class Language(object):
             parse (bool)
             entity (bool)
         """
-        stream = (self.make_doc(text) for text in texts)
+        stream = ((self.make_doc(text), None) for text in texts)
         for proc in self.pipeline:
             name = getattr(proc, 'name', None)
-            if name in disabled and not disabled[named]:
+            if name in disabled and not disabled[name]:
                 continue
 
             if hasattr(proc, 'pipe'):
                 stream = proc.pipe(stream, n_threads=n_threads, batch_size=batch_size)
             else:
-                stream = (proc(item) for item in stream)
-        for doc in stream:
+                stream = (proc(doc, state) for doc, state in stream)
+        for doc, state in stream:
             yield doc
 
     def to_disk(self, path):

@@ -3,6 +3,7 @@ from __future__ import unicode_literals, division, print_function
 
 import json
 from collections import defaultdict
+import cytoolz
 
 from ..scorer import Scorer
 from ..gold import GoldParse, merge_sents
@@ -38,8 +39,10 @@ def train(language, output_dir, train_data, dev_data, n_iter, tagger, parser, ne
         'n_iter': n_iter,
         'lang': language,
         'features': lang.Defaults.tagger_features}
-    gold_train = list(read_gold_json(train_path))
+    gold_train = list(read_gold_json(train_path))[:100]
     gold_dev = list(read_gold_json(dev_path)) if dev_path else None
+
+    gold_dev = gold_dev[:100]
 
     train_model(lang, gold_train, gold_dev, output_path, n_iter)
     if gold_dev:
@@ -58,29 +61,22 @@ def train_config(config):
 
 
 def train_model(Language, train_data, dev_data, output_path, n_iter, **cfg):
-    print("Itn.\tN weight\tN feats\tUAS\tNER F.\tTag %\tToken %")
+    print("Itn.\tDep. Loss\tUAS\tNER F.\tTag %\tToken %")
 
-    nlp = Language(pipeline=['tensor', 'dependencies', 'entities'])
+    nlp = Language(pipeline=['token_vectors', 'tags', 'dependencies', 'entities'])
 
     # TODO: Get spaCy using Thinc's trainer and optimizer
     with nlp.begin_training(train_data, **cfg) as (trainer, optimizer):
         for itn, epoch in enumerate(trainer.epochs(n_iter)):
             losses = defaultdict(float)
             for docs, golds in epoch:
-                grads = {}
-                def get_grads(W, dW, key=None):
-                    grads[key] = (W, dW)
-
-                for proc in nlp.pipeline:
-                    loss = proc.update(docs, golds, drop=0.0, sgd=get_grads)
-                    losses[proc.name] += loss
-                for key, (W, dW) in grads.items():
-                    optimizer(W, dW, key=key)
+                state = nlp.update(docs, golds, drop=0., sgd=optimizer)
+                losses['dep_loss'] += state.get('parser_loss', 0.0)
             if dev_data:
                 dev_scores = trainer.evaluate(dev_data).scores
             else:
-                defaultdict(float)
-            print_progress(itn, losses['dep'], **dev_scores)
+                dev_scores = defaultdict(float)
+            print_progress(itn, losses, dev_scores)
 
 
 def evaluate(Language, gold_tuples, output_path):
@@ -102,10 +98,15 @@ def evaluate(Language, gold_tuples, output_path):
     return scorer
 
 
-def print_progress(itn, nr_weight, nr_active_feat, **scores):
+def print_progress(itn, losses, dev_scores):
     # TODO: Fix!
-    tpl = '{:d}\t{:d}\t{:d}\t{uas:.3f}\t{ents_f:.3f}\t{tags_acc:.3f}\t{token_acc:.3f}'
-    print(tpl.format(itn, nr_weight, nr_active_feat, **scores))
+    scores = {}
+    for col in ['dep_loss', 'uas', 'tags_acc', 'token_acc', 'ents_f']:
+        scores[col] = 0.0
+    scores.update(losses)
+    scores.update(dev_scores)
+    tpl = '{:d}\t{dep_loss:.3f}\t{uas:.3f}\t{ents_f:.3f}\t{tags_acc:.3f}\t{token_acc:.3f}'
+    print(tpl.format(itn, **scores))
 
 
 def print_results(scorer):

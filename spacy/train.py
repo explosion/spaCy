@@ -8,6 +8,7 @@ from cytoolz import partition_all
 from thinc.neural.optimizers import Adam
 from thinc.neural.ops import NumpyOps, CupyOps
 
+from .syntax.nonproj import PseudoProjectivity
 from .gold import GoldParse, merge_sents
 from .scorer import Scorer
 from .tokens.doc import Doc
@@ -19,7 +20,7 @@ class Trainer(object):
     """
     def __init__(self, nlp, gold_tuples):
         self.nlp = nlp
-        self.gold_tuples = gold_tuples
+        self.gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
         self.nr_epoch = 0
         self.optimizer = Adam(NumpyOps(), 0.001)
 
@@ -42,24 +43,13 @@ class Trainer(object):
                     raw_text, paragraph_tuples = augment_data(raw_text, paragraph_tuples)
                     docs = self.make_docs(raw_text, paragraph_tuples)
                     golds = self.make_golds(docs, paragraph_tuples)
-                for doc, gold in zip(docs, golds):
-                    yield doc, gold
+                yield docs, golds
 
         indices = list(range(len(self.gold_tuples)))
         for itn in range(nr_epoch):
             random.shuffle(indices)
             yield _epoch(indices)
             self.nr_epoch += 1
-
-    def update(self, docs, golds, drop=0.):
-        for process in self.nlp.pipeline:
-            if hasattr(process, 'update'):
-                loss = process.update(doc, gold, sgd=self.sgd, drop=drop,
-                                      itn=self.nr_epoch)
-                self.sgd.finish_update()
-            else:
-                process(doc)
-        return doc
 
     def evaluate(self, dev_sents, gold_preproc=False):
         scorer = Scorer()
@@ -71,8 +61,10 @@ class Trainer(object):
             docs = self.make_docs(raw_text, paragraph_tuples)
             golds = self.make_golds(docs, paragraph_tuples)
             for doc, gold in zip(docs, golds):
+                state = {}
                 for process in self.nlp.pipeline:
-                    process(doc)
+                    assert state is not None, process.name
+                    state = process(doc, state=state)
                 scorer.score(doc, gold)
         return scorer
 

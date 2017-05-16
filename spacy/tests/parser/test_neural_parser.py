@@ -34,7 +34,7 @@ def parser(vocab, arc_eager):
 
 @pytest.fixture
 def model(arc_eager, tok2vec):
-    return Parser.Model(arc_eager.n_moves, tok2vec)
+    return Parser.Model(arc_eager.n_moves, token_vector_width=tok2vec.nO)
 
 @pytest.fixture
 def doc(vocab):
@@ -47,24 +47,32 @@ def test_can_init_nn_parser(parser):
     assert parser.model is None
 
 
-def test_build_model(parser, tok2vec):
-    parser.model = Parser.Model(parser.moves.n_moves, tok2vec)
+def test_build_model(parser):
+    parser.model = Parser.Model(parser.moves.n_moves)
     assert parser.model is not None
 
 
-def test_predict_doc(parser, model, doc):
+def test_predict_doc(parser, tok2vec, model, doc):
+    state = {}
+    state['tokvecs'] = tok2vec([doc])
     parser.model = model
-    parser(doc)
+    parser(doc, state=state)
 
 
-def test_update_doc(parser, model, doc, gold):
+def test_update_doc(parser, tok2vec, model, doc, gold):
     parser.model = model
-    loss1 = parser.update(doc, gold)
+    tokvecs, bp_tokvecs = tok2vec.begin_update([doc])
+    state = {'tokvecs': tokvecs, 'bp_tokvecs': bp_tokvecs}
+    state = parser.update(doc, gold, state=state)
+    loss1 = state['parser_loss']
     assert loss1 > 0
-    loss2 = parser.update(doc, gold)
+    state = parser.update(doc, gold, state=state)
+    loss2 = state['parser_loss']
     assert loss2 == loss1
     def optimize(weights, gradient, key=None):
         weights -= 0.001 * gradient
-    loss3 = parser.update(doc, gold, sgd=optimize)
-    loss4 = parser.update(doc, gold, sgd=optimize)
+    state = parser.update(doc, gold, sgd=optimize, state=state)
+    loss3 = state['parser_loss']
+    state = parser.update(doc, gold, sgd=optimize, state=state)
+    lossr = state['parser_loss']
     assert loss3 < loss2
