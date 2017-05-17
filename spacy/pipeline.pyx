@@ -48,7 +48,7 @@ class TokenVectorEncoder(object):
         self.vocab = vocab
         self.doc2feats = doc2feats()
         self.model = self.Model() if model is True else model
-    
+
     def __call__(self, docs, state=None):
         if isinstance(docs, Doc):
             docs = [docs]
@@ -137,8 +137,11 @@ class NeuralTagger(object):
             self.model.nI = tokvecs.shape[1]
 
         tag_scores, bp_tag_scores = self.model.begin_update(tokvecs, drop=drop)
+
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
         d_tokvecs = bp_tag_scores(d_tag_scores, sgd)
+
+        bp_tokvecs(d_tokvecs, sgd=sgd)
 
         state['tag_scores'] = tag_scores
         state['bp_tag_scores'] = bp_tag_scores
