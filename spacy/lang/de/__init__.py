@@ -5,6 +5,7 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .tag_map import TAG_MAP
 from .stop_words import STOP_WORDS
 from .lemmatizer import LOOKUP
+from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
@@ -23,6 +24,7 @@ class German(Language):
         tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
         tag_map = dict(TAG_MAP)
         stop_words = set(STOP_WORDS)
+        syntax_iterators = dict(SYNTAX_ITERATORS)
 
         @classmethod
         def create_lemmatizer(cls, nlp=None):
