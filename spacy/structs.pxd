@@ -28,6 +28,24 @@ cdef struct LexemeC:
     float l2_norm
 
 
+cdef struct SerializedLexemeC:
+    unsigned char[4*13 + 8] data
+    #    sizeof(flags_t)  # flags
+    #    + sizeof(attr_t) # lang
+    #    + sizeof(attr_t) # id
+    #    + sizeof(attr_t) # length
+    #    + sizeof(attr_t) # orth
+    #    + sizeof(attr_t) # lower
+    #    + sizeof(attr_t) # norm
+    #    + sizeof(attr_t) # shape
+    #    + sizeof(attr_t) # prefix
+    #    + sizeof(attr_t) # suffix
+    #    + sizeof(attr_t) # cluster
+    #    + sizeof(float)  # prob
+    #    + sizeof(float)  # cluster
+    #    + sizeof(float) # l2_norm
+
+
 cdef struct Entity:
     hash_t id
     int start

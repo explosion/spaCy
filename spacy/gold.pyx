@@ -138,14 +138,16 @@ def _min_edit_path(cand_words, gold_words):
     return prev_costs[n_gold], previous_row[-1]
 
 
-def read_json_file(loc, docs_filter=None):
+def read_json_file(loc, docs_filter=None, make_supertags=False, limit=None):
     loc = ensure_path(loc)
     if loc.is_dir():
         for filename in loc.iterdir():
-            yield from read_json_file(loc / filename)
+            yield from read_json_file(loc / filename, limit=limit)
     else:
         with loc.open('r', encoding='utf8') as file_:
             docs = ujson.load(file_)
+        if limit is not None:
+            docs = docs[:limit]
         for doc in docs:
             if docs_filter is not None and not docs_filter(doc):
                 continue
@@ -169,11 +171,13 @@ def read_json_file(loc, docs_filter=None):
                         if labels[-1].lower() == 'root':
                             labels[-1] = 'ROOT'
                         ner.append(token.get('ner', '-'))
-                    sents.append((
-                        (ids, words, tags, heads, labels, ner),
-                        sent.get('brackets', [])))
+                        if make_supertags:
+                            tags[-1] = '-'.join((tags[-1], labels[-1], ner[-1]))
+                    sents.append([
+                        [ids, words, tags, heads, labels, ner],
+                        sent.get('brackets', [])])
                 if sents:
-                    yield (paragraph.get('raw', None), sents)
+                    yield [paragraph.get('raw', None), sents]
 
 
 def _iob_to_biluo(tags):

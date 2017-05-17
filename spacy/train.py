@@ -20,14 +20,16 @@ class Trainer(object):
     """
     def __init__(self, nlp, gold_tuples):
         self.nlp = nlp
-        self.gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
         self.nr_epoch = 0
         self.optimizer = Adam(NumpyOps(), 0.001)
+        self.gold_tuples = gold_tuples
 
     def epochs(self, nr_epoch, augment_data=None, gold_preproc=False):
         cached_golds = {}
         def _epoch(indices):
-            for i in tqdm.tqdm(indices):
+            all_docs = []
+            all_golds = []
+            for i in indices:
                 raw_text, paragraph_tuples = self.gold_tuples[i]
                 if gold_preproc:
                     raw_text = None
@@ -43,7 +45,11 @@ class Trainer(object):
                     raw_text, paragraph_tuples = augment_data(raw_text, paragraph_tuples)
                     docs = self.make_docs(raw_text, paragraph_tuples)
                     golds = self.make_golds(docs, paragraph_tuples)
-                yield docs, golds
+                all_docs.extend(docs)
+                all_golds.extend(golds)
+            for batch in tqdm.tqdm(partition_all(12, zip(all_docs, all_golds))):
+                X, y = zip(*batch)
+                yield X, y
 
         indices = list(range(len(self.gold_tuples)))
         for itn in range(nr_epoch):

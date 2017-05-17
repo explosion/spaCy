@@ -3,9 +3,11 @@ from cymem.cymem cimport Pool
 
 cdef class CFile:
     cdef FILE* fp
-    cdef bint is_open
+    cdef unsigned char* data
+    cdef int is_open
     cdef Pool mem
     cdef int size # For compatibility with subclass
+    cdef int i # For compatibility with subclass
     cdef int _capacity # For compatibility with subclass
 
     cdef int read_into(self, void* dest, size_t number, size_t elem_size) except -1
@@ -16,8 +18,13 @@ cdef class CFile:
 
 
 
-cdef class StringCFile(CFile):
+cdef class StringCFile:
     cdef unsigned char* data
+    cdef int is_open
+    cdef Pool mem
+    cdef int size # For compatibility with subclass
+    cdef int i # For compatibility with subclass
+    cdef int _capacity # For compatibility with subclass
  
     cdef int read_into(self, void* dest, size_t number, size_t elem_size) except -1
 

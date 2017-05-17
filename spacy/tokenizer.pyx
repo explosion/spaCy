@@ -97,11 +97,10 @@ cdef class Tokenizer:
     def __reduce__(self):
         args = (self.vocab,
                 self._rules,
-                self._prefix_re,
-                self._suffix_re,
-                self._infix_re,
+                self.prefix_search,
+                self.suffix_search,
+                self.infix_finditer,
                 self.token_match)
-
         return (self.__class__, args, None, None)
 
     cpdef Doc tokens_from_list(self, list strings):

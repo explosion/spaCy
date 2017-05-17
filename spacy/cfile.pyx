@@ -53,31 +53,43 @@ cdef class CFile:
 
 
 cdef class StringCFile:
-    def __init__(self, mode, bytes data=b'', on_open_error=None):
+    def __init__(self, bytes data, mode, on_open_error=None):
         self.mem = Pool()
-        self.is_open = 'w' in mode
+        self.is_open = 1 if 'w' in mode else 0
         self._capacity = max(len(data), 8)
         self.size = len(data)
+        self.i = 0
         self.data = <unsigned char*>self.mem.alloc(1, self._capacity)
         for i in range(len(data)):
             self.data[i] = data[i]
+
+    def __dealloc__(self):
+        # Important to override this -- or
+        # we try to close a non-existant file pointer!
+        pass
 
     def close(self):
         self.is_open = False
 
     def string_data(self):
-        return (self.data-self.size)[:self.size]
+        cdef bytes byte_string = b'\0' * (self.size)
+        bytes_ptr = <char*>byte_string
+        for i in range(self.size):
+            bytes_ptr[i] = self.data[i]
+        print(byte_string)
+        return byte_string
 
     cdef int read_into(self, void* dest, size_t number, size_t elem_size) except -1:
-        memcpy(dest, self.data, elem_size * number)
-        self.data += elem_size * number
+        if self.i+(number * elem_size) < self.size:
+            memcpy(dest, &self.data[self.i], elem_size * number)
+            self.i += elem_size * number
 
     cdef int write_from(self, void* src, size_t elem_size, size_t number) except -1:
         write_size = number * elem_size
         if (self.size + write_size) >= self._capacity:
             self._capacity = (self.size + write_size) * 2
             self.data = <unsigned char*>self.mem.realloc(self.data, self._capacity)
-        memcpy(&self.data[self.size], src, elem_size * number)
+        memcpy(&self.data[self.size], src, write_size)
         self.size += write_size
 
     cdef void* alloc_read(self, Pool mem, size_t number, size_t elem_size) except *:

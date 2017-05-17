@@ -26,10 +26,14 @@ from .syntax.beam_parser cimport BeamParser
 from .syntax.ner cimport BiluoPushDown
 from .syntax.arc_eager cimport ArcEager
 from .tagger import Tagger
+from .syntax.stateclass cimport StateClass
 from .gold cimport GoldParse
+from .morphology cimport Morphology
+from .vocab cimport Vocab
 
-from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP
+from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
 from ._ml import Tok2Vec, flatten, get_col, doc2feats
+from .parts_of_speech import X
 
 
 class TokenVectorEncoder(object):
@@ -50,7 +54,7 @@ class TokenVectorEncoder(object):
             docs = [docs]
         tokvecs = self.predict(docs)
         self.set_annotations(docs, tokvecs)
-        state = {} if state is not None else state
+        state = {} if state is None else state
         state['tokvecs'] = tokvecs
         return state
 
@@ -58,7 +62,6 @@ class TokenVectorEncoder(object):
         raise NotImplementedError
  
     def predict(self, docs):
-        cdef Doc doc
         feats = self.doc2feats(docs)
         tokvecs = self.model(feats)
         return tokvecs
@@ -68,7 +71,7 @@ class TokenVectorEncoder(object):
         for doc in docs:
             doc.tensor = tokvecs[start : start + len(doc)]
             start += len(doc)
-   
+
     def update(self, docs, golds, state=None,
                drop=0., sgd=None):
         if isinstance(docs, Doc):
@@ -88,9 +91,9 @@ class TokenVectorEncoder(object):
 
 class NeuralTagger(object):
     name = 'nn_tagger'
-    def __init__(self, vocab):
+    def __init__(self, vocab, model=True):
         self.vocab = vocab
-        self.model = Softmax(self.vocab.morphology.n_tags)
+        self.model = model
 
     def __call__(self, doc, state=None):
         assert state is not None
@@ -132,7 +135,7 @@ class NeuralTagger(object):
         bp_tokvecs = state['bp_tokvecs']
         if self.model.nI is None:
             self.model.nI = tokvecs.shape[1]
- 
+
         tag_scores, bp_tag_scores = self.model.begin_update(tokvecs, drop=drop)
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
         d_tokvecs = bp_tag_scores(d_tag_scores, sgd)
@@ -141,7 +144,7 @@ class NeuralTagger(object):
         state['bp_tag_scores'] = bp_tag_scores
         state['d_tag_scores'] = d_tag_scores
         state['tag_loss'] = loss
-        
+
         if 'd_tokvecs' in state:
             state['d_tokvecs'] += d_tokvecs
         else:
@@ -160,6 +163,22 @@ class NeuralTagger(object):
         correct = self.model.ops.xp.array(correct)
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
         return (d_scores**2).sum(), d_scores
+
+    def begin_training(self, gold_tuples, pipeline=None):
+        # Populate tag map, if anything's missing.
+        tag_map = dict(self.vocab.morphology.tag_map)
+        for raw_text, annots_brackets in gold_tuples:
+            for annots, brackets in annots_brackets:
+                ids, words, tags, heads, deps, ents = annots
+                for tag in tags:
+                    if tag not in tag_map:
+                        tag_map[tag] = {POS: X}
+
+        cdef Vocab vocab = self.vocab
+        vocab.morphology = Morphology(self.vocab.strings, tag_map,
+                                           self.vocab.morphology.lemmatizer)
+        self.model = Softmax(self.vocab.morphology.n_tags)
+
 
 
 cdef class EntityRecognizer(LinearParser):
@@ -208,6 +227,28 @@ cdef class NeuralDependencyParser(NeuralParser):
 cdef class NeuralEntityRecognizer(NeuralParser):
     name = 'entity'
     TransitionSystem = BiluoPushDown
+
+    nr_feature = 6
+
+    def get_token_ids(self, states):
+        cdef StateClass state
+        cdef int n_tokens = 6
+        ids = numpy.zeros((len(states), n_tokens), dtype='i', order='c')
+        for i, state in enumerate(states):
+            ids[i, 0] = state.c.B(0)-1
+            ids[i, 1] = state.c.B(0)
+            ids[i, 2] = state.c.B(1)
+            ids[i, 3] = state.c.E(0)
+            ids[i, 4] = state.c.E(0)-1
+            ids[i, 5] = state.c.E(0)+1
+            for j in range(6):
+                if ids[i, j] >= state.c.length:
+                    ids[i, j] = -1
+                if ids[i, j] != -1:
+                    ids[i, j] += state.c.offset
+        return ids
+
+
 
 
 cdef class BeamDependencyParser(BeamParser):

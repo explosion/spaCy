@@ -116,6 +116,29 @@ cdef class Lexeme:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
+    def to_bytes(self):
+        lex_data = Lexeme.c_to_bytes(self.c)
+        start = <const char*>&self.c.flags
+        end = <const char*>&self.c.l2_norm + sizeof(self.c.l2_norm)
+        assert (end-start) == sizeof(lex_data.data), (end-start, sizeof(lex_data.data))
+        byte_string = b'\0' * sizeof(lex_data.data)
+        byte_chars = <char*>byte_string
+        for i in range(sizeof(lex_data.data)):
+            byte_chars[i] = lex_data.data[i]
+        assert len(byte_string) == sizeof(lex_data.data), (len(byte_string),
+                sizeof(lex_data.data))
+        return byte_string
+
+    def from_bytes(self, bytes byte_string):
+        # This method doesn't really have a use-case --- wrote it for testing.
+        # Possibly delete? It puts the Lexeme out of synch with the vocab.
+        cdef SerializedLexemeC lex_data
+        assert len(byte_string) == sizeof(lex_data.data)
+        for i in range(len(byte_string)):
+            lex_data.data[i] = byte_string[i]
+        Lexeme.c_from_bytes(self.c, lex_data)
+        self.orth = self.c.orth
+
     property has_vector:
         def __get__(self):
             cdef int i

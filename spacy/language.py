@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import absolute_import, unicode_literals
 from contextlib import contextmanager
+import dill
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -188,10 +189,18 @@ class Language(object):
 
     @contextmanager
     def begin_training(self, gold_tuples, **cfg):
+        # Populate vocab
+        for _, annots_brackets in gold_tuples:
+            for annots, _ in annots_brackets:
+                for word in annots[1]:
+                    _ = self.vocab[word]
+        # Handle crossing dependencies
+        gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
         contexts = []
         for proc in self.pipeline:
             if hasattr(proc, 'begin_training'):
-                context = proc.begin_training(gold_tuples, pipeline=self.pipeline)
+                context = proc.begin_training(gold_tuples,
+                                              pipeline=self.pipeline)
                 contexts.append(context)
         trainer = Trainer(self, gold_tuples, **cfg)
         yield trainer, trainer.optimizer
@@ -221,15 +230,72 @@ class Language(object):
         for doc, state in stream:
             yield doc
 
-    def to_disk(self, path):
-        raise NotImplemented
+    def to_disk(self, path, **exclude):
+        """Save the current state to a directory.
 
-    def from_disk(self, path):
-        raise NotImplemented
+        Args:
+            path: A path to a directory, which will be created if it doesn't
+                    exist. Paths may be either strings or pathlib.Path-like
+                    objects.
+            **exclude: Prevent named attributes from being saved.
+        """
+        path = util.ensure_path(path)
+        if not path.exists():
+            path.mkdir()
+        if not path.is_dir():
+            raise IOError("Output path must be a directory")
+        props = {}
+        for name, value in self.__dict__.items():
+            if name in exclude:
+                continue
+            if hasattr(value, 'to_disk'):
+                value.to_disk(path / name)
+            else:
+                props[name] = value
+        with (path / 'props.pickle').open('wb') as file_:
+            dill.dump(props, file_)
 
-    def to_bytes(self, path):
-        raise NotImplemented
+    def from_disk(self, path, **exclude):
+        """Load the current state from a directory.
 
-    def from_bytes(self, path):
-        raise NotImplemented
+        Args:
+            path: A path to a directory. Paths may be either strings or
+                pathlib.Path-like objects.
+            **exclude: Prevent named attributes from being saved.
+        """
+        path = util.ensure_path(path)
+        for name in path.iterdir():
+            if name not in exclude and hasattr(self, str(name)):
+                getattr(self, name).from_disk(path / name)
+        with (path / 'props.pickle').open('rb') as file_:
+            bytes_data = file_.read()
+        self.from_bytes(bytes_data, **exclude)
+        return self
+
+    def to_bytes(self, **exclude):
+        """Serialize the current state to a binary string.
+
+        Args:
+            path: A path to a directory. Paths may be either strings or
+                pathlib.Path-like objects.
+            **exclude: Prevent named attributes from being serialized.
+        """
+        props = dict(self.__dict__)
+        for key in exclude:
+            if key in props:
+                props.pop(key)
+        return dill.dumps(props, -1)
+
+    def from_bytes(self, bytes_data, **exclude):
+        """Load state from a binary string.
+
+        Args:
+            bytes_data (bytes): The data to load from.
+            **exclude: Prevent named attributes from being loaded.
+        """
+        props = dill.loads(bytes_data)
+        for key, value in props.items():
+            if key not in exclude:
+                setattr(self, key, value)
+        return self
 

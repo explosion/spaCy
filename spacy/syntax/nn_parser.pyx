@@ -12,6 +12,7 @@ from libc.math cimport exp
 cimport cython
 cimport cython.parallel
 import cytoolz
+import dill
 
 import numpy.random
 cimport numpy as np
@@ -35,6 +36,7 @@ from thinc.api import layerize, chain
 from thinc.neural import Model, Affine, ELU, ReLu, Maxout
 from thinc.neural.ops import NumpyOps
 
+from .. import util
 from ..util import get_async, get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
 from .._ml import Tok2Vec, doc2feats
@@ -218,9 +220,8 @@ cdef class Parser:
     """
     @classmethod
     def Model(cls, nr_class, token_vector_width=128, hidden_width=128, **cfg):
-        nr_context_tokens = StateClass.nr_context_tokens()
         lower = PrecomputableMaxouts(hidden_width,
-                    nF=nr_context_tokens,
+                    nF=cls.nr_feature,
                     nI=token_vector_width,
                     pieces=cfg.get('maxout_pieces', 1))
 
@@ -267,7 +268,7 @@ cdef class Parser:
         self.model = model
 
     def __reduce__(self):
-        return (Parser, (self.vocab, self.moves, self.model, self.cfg), None, None)
+        return (Parser, (self.vocab, self.moves, self.model), None, None)
 
     def __call__(self, Doc tokens, state=None):
         """
@@ -392,9 +393,11 @@ cdef class Parser:
                         lower, stream, drop=dropout)
         return state2vec, upper
 
+    nr_feature = 13
+
     def get_token_ids(self, states):
         cdef StateClass state
-        cdef int n_tokens = states[0].nr_context_tokens()
+        cdef int n_tokens = self.nr_feature
         ids = numpy.zeros((len(states), n_tokens), dtype='i', order='c')
         for i, state in enumerate(states):
             state.set_context_tokens(ids[i])
@@ -457,6 +460,22 @@ cdef class Parser:
                 self.moves.add_action(action, label)
         if self.model is True:
             self.model = self.Model(self.moves.n_moves, **cfg)
+
+    def to_disk(self, path):
+        path = util.ensure_path(path)
+        with (path / 'model.bin').open('wb') as file_:
+            dill.dump(self.model, file_)
+
+    def from_disk(self, path):
+        path = util.ensure_path(path)
+        with (path / 'model.bin').open('wb') as file_:
+            self.model = dill.load(file_)
+
+    def to_bytes(self):
+        pass
+
+    def from_bytes(self, data):
+        pass
 
 
 class ParserStateError(ValueError):
