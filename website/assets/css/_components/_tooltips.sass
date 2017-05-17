@@ -1,0 +1,29 @@
+//- 💫 CSS > COMPONENTS > TOOLTIPS
+
+[data-tooltip]
+    position: relative
+
+    @include breakpoint(min, sm)
+        &:before
+            @include position(absolute, top, left, 125%, 50%)
+            display: inline-block
+            content: attr(data-tooltip)
+            background: $color-front
+            border-radius: 2px
+            color: $color-back
+            font-family: inherit
+            font-size: 1.3rem
+            line-height: 1.25
+            opacity: 0
+            padding: 0.5em 0.75em
+            transform: translateX(-50%) translateY(-2px)
+            transition: opacity 0.1s ease-out, transform 0.1s ease-out
+            visibility: hidden
+            min-width: 200px
+            max-width: 300px
+            z-index: 200
+
+        &:hover:before
+            opacity: 1
+            transform: translateX(-50%) translateY(0)
+            visibility: visible
