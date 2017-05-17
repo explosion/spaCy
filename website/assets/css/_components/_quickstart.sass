@@ -1,0 +1,90 @@
+//- 💫 CSS > COMPONENTS > QUICKSTART
+
+.c-quickstart
+    border: 1px solid $color-subtle
+    border-radius: 2px
+    display: none
+    background: $color-subtle-light
+
+    &:not([style]) + .c-quickstart__info
+        display: none
+
+.c-quickstart__content
+    padding: 2rem 3rem
+
+.c-quickstart__input
+    @include size(0)
+    opacity: 0
+    position: absolute
+    left: -9999px
+
+.c-quickstart__label
+    cursor: pointer
+    background: $color-back
+    border: 1px solid $color-subtle
+    border-radius: 2px
+    display: inline-block
+    padding: 0.75rem 1.25rem
+    margin: 0 0.5rem 0.5rem 0
+    font-weight: bold
+
+    &:hover
+        background: lighten($color-theme-light, 5)
+
+    .c-quickstart__input:focus + &
+        border: 1px solid $color-theme
+
+    .c-quickstart__input--radio:checked + &
+        color: $color-back
+        border-color: $color-theme
+        background: $color-theme
+
+    .c-quickstart__input--check + &:before
+        content: ""
+        background: $color-back
+        display: inline-block
+        width: 20px
+        height: 20px
+        border: 1px solid $color-subtle
+        vertical-align: middle
+        margin-right: 1rem
+        cursor: pointer
+        border-radius: 50%
+
+    .c-quickstart__input--check:checked + &:before
+        background: $color-theme url(data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0Ij4gICAgPHBhdGggZmlsbD0iI2ZmZiIgZD0iTTkgMTYuMTcybDEwLjU5NC0xMC41OTQgMS40MDYgMS40MDYtMTIgMTItNS41NzgtNS41NzggMS40MDYtMS40MDZ6Ii8+PC9zdmc+)
+        background-size: contain
+        border-color: $color-theme
+
+.c-quickstart__label__meta
+    font-weight: normal
+    color: $color-subtle-dark
+
+.c-quickstart__group
+    @include breakpoint(min, md)
+        display: flex
+        flex-flow: row nowrap
+
+    &:not(:last-child)
+        margin-bottom: 1rem
+
+.c-quickstart__fields
+    flex: 100%
+
+.c-quickstart__legend
+    color: $color-subtle-dark
+    margin-right: 2rem
+    padding-top: 0.75rem
+    flex: 1 1 35%
+    font-weight: bold
+
+.c-quickstart__line
+    display: block
+
+    &:before
+        color: $color-theme
+        margin-right: 1em
+        content: "$"
+
+.c-quickstart__code
+    font-size: 1.6rem

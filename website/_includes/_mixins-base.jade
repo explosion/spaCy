@@ -121,6 +121,47 @@ mixin badge(name)
             img(src=site.badge alt="{name} version" height="20")
 
 
+//- Quickstart widget
+    quickstart.js with manual markup, inspired by PyTorch's "Getting started"
+    groups - [object] option groups, uses global variable QUICKSTART
+    headline - [string] optional text to be rendered as widget headline
+
+mixin quickstart(groups, headline)
+    .c-quickstart.o-block-small#qs
+        .c-quickstart__content
+            if headline
+                +h(2)=headline
+            for group in groups
+                .c-quickstart__group.u-text-small(data-qs-group=group.id)
+                    .c-quickstart__legend=group.title
+                    .c-quickstart__fields
+                        for option in group.options
+                            input.c-quickstart__input(class="c-quickstart__input--" + (group.multiple ? "check" : "radio") type=group.multiple ? "checkbox" : "radio" name=group.id id=option.id value=option.id checked=option.checked)
+                            label.c-quickstart__label(for=option.id)=option.title
+                                if option.meta
+                                    |  #[span.c-quickstart__label__meta (#{option.meta})]
+                                if option.help
+                                    |  #[+help(option.help).c-quickstart__label__meta]
+
+        pre.c-code-block
+            code.c-code-block__content.c-quickstart__code(data-qs-results="")
+                block
+
+    .c-quickstart__info.u-text-tiny.o-block.u-text-right
+        |  Like this widget? Check out #[+a("https://github.com/ines/quickstart").u-link quickstart.js]!
+
+
+//- Quickstart code item
+    data [object] - Rendering conditions (keyed by option group ID, value: option)
+
+mixin qs(data)
+    - args = {}
+    for value, setting in data
+        - args['data-qs-' + setting] = value
+    span.c-quickstart__line&attributes(args)
+        block
+
+
 //- Logo
 
 mixin logo()

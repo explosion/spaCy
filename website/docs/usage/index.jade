@@ -12,6 +12,39 @@ p
     |  #[a(href="#source-ubuntu") Ubuntu], #[a(href="#source-osx") macOS/OS X]
     |  and #[a(href="#source-windows") Windows] for details.
 
++quickstart(QUICKSTART, "Quickstart")
+    +qs({config: 'venv', python: 2}) python -m pip install -U virtualenv
+    +qs({config: 'venv', python: 3}) python -m pip install -U venv
+    +qs({config: 'venv', python: 2}) virtualenv .env
+    +qs({config: 'venv', python: 3}) venv .env
+    +qs({config: 'venv', os: 'mac'}) source .env/bin/activate
+    +qs({config: 'venv', os: 'linux'}) source .env/bin/activate
+    +qs({config: 'venv', os: 'windows'}) .env\Scripts\activate
+
+    +qs({package: 'pip'}) pip install -U spacy
+
+    +qs({package: 'conda'}) conda config --add channels conda-forge
+    +qs({package: 'conda'}) conda install spacy
+
+    +qs({package: 'source'}) git clone https://github.com/explosion/spaCy
+    +qs({package: 'source'}) cd spaCy
+    +qs({package: 'source'}) pip install -r requirements.txt
+    +qs({package: 'source'}) pip install -e .
+
+    +qs({model: 'en'}) python -m spacy download en
+    +qs({model: 'de'}) python -m spacy download de
+    +qs({model: 'fr'}) python -m spacy download fr
+
++h(2, "installation") Installation instructions
+
++h(3, "pip") pip
+    +badge("pipy")
+
+p Using pip, spaCy releases are currently only available as source packages.
+
++code(false, "bash").
+    pip install -U spacy
+
 +aside("Download models")
     |  After installation you need to download a language model. For more info
     |  and available models, see the #[+a("/docs/usage/models") docs on models].
@@ -22,14 +55,6 @@ p
         &gt;&gt;&gt; import spacy
         &gt;&gt;&gt; nlp = spacy.load('en')
 
-+h(2, "pip") pip
-    +badge("pipy")
-
-p Using pip, spaCy releases are currently only available as source packages.
-
-+code(false, "bash").
-    pip install -U spacy
-
 p
     |  When using pip it is generally recommended to install packages in a
     |  #[code virtualenv] to avoid modifying system state:
@@ -39,7 +64,7 @@ p
     source .env/bin/activate
     pip install spacy
 
-+h(2, "conda") conda
++h(3, "conda") conda
     +badge("conda")
 
 p
