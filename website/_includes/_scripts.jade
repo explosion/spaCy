@@ -4,6 +4,10 @@ script(src="/assets/js/main.js?v#{V_JS}")
 script(src="/assets/js/prism.js")
 
 if SECTION == "docs"
+    if quickstart
+        script(src="/assets/js/quickstart.js")
+        script var qs = new Quickstart("#qs")
+
     script.
         ((window.gitter = {}).chat = {}).options = {
             useStyles: false,

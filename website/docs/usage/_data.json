@@ -34,7 +34,8 @@
 
     "index": {
         "title": "Install spaCy",
-        "next": "models"
+        "next": "models",
+        "quickstart": true
     },
 
     "v2": {

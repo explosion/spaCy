@@ -12,15 +12,29 @@ p
     |  #[a(href="#source-ubuntu") Ubuntu], #[a(href="#source-osx") macOS/OS X]
     |  and #[a(href="#source-windows") Windows] for details.
 
-+aside("Download models")
-    |  After installation you need to download a language model. For more info
-    |  and available models, see the #[+a("/docs/usage/models") docs on models].
++quickstart(QUICKSTART, "Quickstart")
+    +qs({config: 'venv', python: 2}) python -m pip install -U virtualenv
+    +qs({config: 'venv', python: 3}) python -m pip install -U venv
+    +qs({config: 'venv', python: 2}) virtualenv .env
+    +qs({config: 'venv', python: 3}) venv .env
+    +qs({config: 'venv', os: 'mac'}) source .env/bin/activate
+    +qs({config: 'venv', os: 'linux'}) source .env/bin/activate
+    +qs({config: 'venv', os: 'windows'}) .env\Scripts\activate
 
-    +code.o-no-block.
-        python -m spacy download en
+    +qs({package: 'pip'}) pip install -U spacy
 
-        &gt;&gt;&gt; import spacy
-        &gt;&gt;&gt; nlp = spacy.load('en')
+    +qs({package: 'conda'}) conda config --add channels conda-forge
+    +qs({package: 'conda'}) conda install spacy
+
+    +qs({package: 'source'}) git clone https://github.com/explosion/spaCy
+    +qs({package: 'source'}) cd spaCy
+    +qs({package: 'source'}) pip install -r requirements.txt
+    +qs({package: 'source'}) pip install -e .
+
+    +qs({model: 'en'}) python -m spacy download en
+    +qs({model: 'de'}) python -m spacy download de
+    +qs({model: 'fr'}) python -m spacy download fr
+
 
 +h(2, "pip") pip
     +badge("pipy")
