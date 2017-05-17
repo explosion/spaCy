@@ -47,7 +47,7 @@ class Trainer(object):
                     golds = self.make_golds(docs, paragraph_tuples)
                 all_docs.extend(docs)
                 all_golds.extend(golds)
-            for batch in tqdm.tqdm(partition_all(12, zip(all_docs, all_golds))):
+            for batch in partition_all(12, zip(tqdm.tqdm(all_docs), all_golds)):
                 X, y = zip(*batch)
                 yield X, y
 
