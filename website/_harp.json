@@ -29,7 +29,7 @@
         "NAVIGATION": {
             "Home": "/",
             "Usage": "/docs/usage",
-            "API": "/docs/api",
+            "Reference": "/docs/api",
             "Demos": "/docs/usage/showcase",
             "Blog": "https://explosion.ai/blog"
         },
