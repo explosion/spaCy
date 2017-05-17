@@ -54,7 +54,7 @@ def read_conllx(input_path, use_morphology=False, n=0):
                     id_ = int(id_) - 1
                     head = (int(head) - 1) if head != '0' else id_
                     dep = 'ROOT' if dep == 'root' else dep
-                    tag = pos+'__'+morph  if use_morphology else pos
+                    tag = tag+'__'+morph  if use_morphology else tag
                     tokens.append((id_, word, tag, head, dep, 'O'))
                 except:
                     print(line)
