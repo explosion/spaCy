@@ -153,6 +153,24 @@ p
     |  #[+a("https://tympanus.net/codrops/css_reference/background/") valid background value]
     |  or shorthand — including gradients and even images!
 
++h(3, "ent-titles") Adding titles to documents
+
+p
+    |  Rendering several large documents on one page can easily become confusing.
+    |  To add a headline to each visualization, you can add a #[code title] to
+    |  its #[code user_data]. User data is never touched or modified by spaCy.
+
++code.
+    doc = nlp(u'This is a sentence about Google.')
+    doc.user_data['title'] = 'This is a title'
+    displacy.serve(doc, style='ent')
+
+p
+    |  This feature is espeically handy if you're using displaCy to compare
+    |  performance at different stages of a process, e.g. during training. Here
+    |  you could use the title for a brief description of the text example and
+    |  the number of iterations.
+
 +h(2, "render") Rendering visualizations
 
 p
@@ -232,6 +250,25 @@ p
 
 +h(2, "examples") Usage examples
 
++h(3, "examples-export-svg") Export SVG graphics of dependency parses
+
++code("Example").
+    import spacy
+    from spacy import displacy
+    from pathlib import Path
+
+    nlp = spacy.load('en')
+    sentences = ["This is an example.", "This is another one."]
+    for sent in sentences:
+        doc = nlp(sentence)
+        svg = displacy.render(doc, style='dep')
+        file_name = '-'.join([w.text for w in doc if not w.is_punct]) + '.svg'
+        output_path = Path('/images/' + file_name)
+        output_path.open('w', encoding='utf-8').write(svg)
+
+p
+    |  The above code will generate the dependency visualizations and them to
+    |  two files, #[code This-is-an-example.svg] and #[code This-is-another-one.svg].
 
 +h(2, "manual-usage") Rendering data manually
 

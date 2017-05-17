@@ -7,6 +7,7 @@ from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .morph_rules import MORPH_RULES
 from .lemmatizer import LEMMA_RULES, LEMMA_INDEX, LEMMA_EXC
+from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ...language import Language
@@ -29,6 +30,7 @@ class English(Language):
         lemma_rules = dict(LEMMA_RULES)
         lemma_index = dict(LEMMA_INDEX)
         lemma_exc = dict(LEMMA_EXC)
+        sytax_iterators = dict(SYNTAX_ITERATORS)
 
 
 __all__ = ['English']
