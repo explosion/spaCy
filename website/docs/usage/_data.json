@@ -5,7 +5,6 @@
             "Models": "models",
             "Lightning tour": "lightning-tour",
             "Visualizers": "visualizers",
-            "Command line": "cli",
             "Troubleshooting": "troubleshooting"
         },
         "Workflows": {
@@ -47,13 +46,7 @@
     },
 
     "visualizers": {
-        "title": "Visualizers",
-        "next": "cli"
-    },
-
-    "cli": {
-        "title": "Command Line Interface",
-        "next": "troubleshooting"
+        "title": "Visualizers"
     },
 
     "troubleshooting": {

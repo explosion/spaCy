@@ -21,6 +21,7 @@
             "GoldParse": "goldparse"
         },
         "Other": {
+            "Command line": "cli",
             "displaCy": "displacy",
             "Utility Functions": "util",
             "Annotation Specs": "annotation",
@@ -110,6 +111,11 @@
     "goldparse": {
         "title": "GoldParse",
         "tag": "class"
+    },
+
+    "cli": {
+        "title": "Command Line Interface",
+        "next": "displacy"
     },
 
     "displacy": {
