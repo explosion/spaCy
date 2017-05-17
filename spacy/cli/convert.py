@@ -12,7 +12,8 @@ from ..util import prints
 # from /converters.
 
 CONVERTERS = {
-    '.conllu': conllu2json
+    '.conllu': conllu2json,
+    '.conll': conllu2json
 }
 
 

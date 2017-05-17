@@ -28,6 +28,7 @@ def conllu2json(input_path, output_path, n_sents=10, use_morphology=False):
             sentences = []
 
     output_filename = input_path.parts[-1].replace(".conllu", ".json")
+    output_filename = input_path.parts[-1].replace(".conll", ".json")
     output_file = output_path / output_filename
     with output_file.open('w', encoding='utf-8') as f:
         f.write(json_dumps(docs))
@@ -46,8 +47,8 @@ def read_conllx(input_path, use_morphology=False, n=0):
             tokens = []
             for line in lines:
 
-                id_, word, lemma, pos, tag, morph, head, dep, _1, \
-                _2 = line.split('\t')
+                parts = line.split('\t')
+                id_, word, lemma, pos, tag, morph, head, dep, _1, _2 = parts
                 if '-' in id_ or '.' in id_:
                     continue
                 try:
