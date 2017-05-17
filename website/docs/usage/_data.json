@@ -5,9 +5,11 @@
             "Models": "models",
             "Lightning tour": "lightning-tour",
             "Visualizers": "visualizers",
-            "Troubleshooting": "troubleshooting"
+            "Troubleshooting": "troubleshooting",
+            "What's new in v2.0": "v2"
         },
         "Workflows": {
+            "spaCy 101": "spacy-101",
             "Loading the pipeline": "language-processing-pipeline",
             "Processing text": "processing-text",
             "spaCy's data model": "data-model",
@@ -35,6 +37,10 @@
         "next": "models"
     },
 
+    "v2": {
+        "title": "What's new in v2.0"
+    },
+
     "models": {
         "title": "Models",
         "next": "lightning-tour"
@@ -42,7 +48,7 @@
 
     "lightning-tour": {
         "title": "Lightning tour",
-        "next": "visualizers"
+        "next": "spacy-101"
     },
 
     "visualizers": {
@@ -56,6 +62,10 @@
 
     "resources": {
         "title": "Resources"
+    },
+
+    "spacy-101": {
+        "title": "spaCy 101"
     },
 
     "language-processing-pipeline": {
