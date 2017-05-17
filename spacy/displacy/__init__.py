@@ -22,12 +22,14 @@ def render(docs, style='dep', page=False, minify=False, jupyter=False, options={
     """
     if isinstance(docs, Doc):
         docs = [docs]
-    if style is 'dep':
+    if style == 'dep':
         renderer = DependencyRenderer(options=options)
         parsed = [parse_deps(doc, options) for doc in docs]
-    elif style is 'ent':
+    elif style == 'ent':
         renderer = EntityRenderer(options=options)
         parsed = [parse_ents(doc, options) for doc in docs]
+    else:
+        raise ValueError("Unknown style: %s" % style)
     _html['parsed'] = renderer.render(parsed, page=page, minify=minify).strip()
     html = _html['parsed']
     if jupyter: # return HTML rendered by IPython display()
