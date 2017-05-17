@@ -47,6 +47,14 @@ mixin api(path)
         |  #[+icon("book", 18).o-icon--inline.u-color-subtle]
 
 
+//- Help icon with tooltip
+    tooltip - [string] Tooltip text
+
+mixin help(tooltip)
+    span(data-tooltip=tooltip)&attributes(attributes)
+        +icon("help", 16).i-icon--inline
+
+
 //- Aside for text
     label - [string] aside title (optional)
 
