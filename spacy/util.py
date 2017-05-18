@@ -168,15 +168,20 @@ def get_async(stream, numpy_array):
 
 
 def env_opt(name, default=None):
-    type_convert = type(default)
-    if name in os.environ:
-        print("Get from env", name, os.environ[name])
-        return type_convert(os.environ[name])
-    elif 'SPACY_' + name.upper() in os.environ:
-        print("Get from env", name, os.environ['SPACY_' + name.upper()])
-        return type_convert(os.environ['SPACY_' + name.upper()])
+    if type(default) is float:
+        type_convert = float
     else:
-        print("Default", name, default)
+        type_convert = int
+    if 'SPACY_' + name.upper() in os.environ:
+        value = type_convert(os.environ['SPACY_' + name.upper()])
+        print(name, "=", repr(value), "via", "$SPACY_" + name.upper())
+        return value
+    elif name in os.environ:
+        value = type_convert(os.environ[name])
+        print(name, "=", repr(value), "via", '$' + name)
+        return value
+    else:
+        print(name, '=', repr(default), "by default")
         return default
 
 
