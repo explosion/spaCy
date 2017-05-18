@@ -16,6 +16,17 @@ try:
 except ImportError:
     import copyreg as copy_reg
 
+try:
+    from cupy.cuda.stream import Stream as CudaStream
+except ImportError:
+    CudaStream = None
+
+try:
+    import cupy
+except ImportError:
+    cupy = None
+
+
 pickle = pickle
 copy_reg = copy_reg
 CudaStream = CudaStream

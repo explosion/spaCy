@@ -10,20 +10,12 @@ import sys
 import textwrap
 
 from .symbols import ORTH
-from .compat import path2str, basestring_, input_, unicode_
+from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
 
 
 LANGUAGES = {}
 _data_path = Path(__file__).parent / 'data'
-try:
-    from cupy.cuda.stream import Stream as CudaStream
-except ImportError:
-    CudaStream = None
 
-try:
-    import cupy
-except ImportError:
-    cupy = None
 
 def get_lang_class(lang):
     """Import and load a Language class.
