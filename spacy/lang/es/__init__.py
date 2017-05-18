@@ -13,20 +13,22 @@ from ...attrs import LANG
 from ...util import update_exc
 
 
+class SpanishDefaults(Language.Defaults):
+    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+    lex_attr_getters[LANG] = lambda text: 'es'
+
+    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tag_map = dict(TAG_MAP)
+    stop_words = set(STOP_WORDS)
+
+    @classmethod
+    def create_lemmatizer(cls, nlp=None):
+        return Lemmatizer(LOOKUP)
+
+
 class Spanish(Language):
     lang = 'es'
 
-    class Defaults(Language.Defaults):
-        lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-        lex_attr_getters[LANG] = lambda text: 'es'
-
-        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-        tag_map = dict(TAG_MAP)
-        stop_words = set(STOP_WORDS)
-
-        @classmethod
-        def create_lemmatizer(cls, nlp=None):
-            return Lemmatizer(LOOKUP)
-
+    Defaults = SpanishDefaults
 
 __all__ = ['Spanish']
