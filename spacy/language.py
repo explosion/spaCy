@@ -220,13 +220,19 @@ class Language(object):
 
     @contextmanager
     def use_params(self, params, **cfg):
-        contexts = [pipe.model.use_params(params) for pipe
-                    in self.pipeline if hasattr(pipe, 'model')
-                    and hasattr(pipe.model, 'use_params')]
+        contexts = [pipe.use_params(params) for pipe
+                    in self.pipeline if hasattr(pipe, 'use_params')]
+        # TODO: Having trouble with contextlib
+        # Workaround: these aren't actually context managers atm.
+        for context in contexts:
+            try:
+                next(context)
+            except StopIteration:
+                pass
         yield
         for context in contexts:
             try:
-                next(context.gen)
+                next(context)
             except StopIteration:
                 pass
 
@@ -242,7 +248,8 @@ class Language(object):
             parse (bool)
             entity (bool)
         """
-        stream = ((self.make_doc(text), None) for text in texts)
+        #stream = ((self.make_doc(text), None) for text in texts)
+        stream = ((doc, {}) for doc in texts)
         for proc in self.pipeline:
             name = getattr(proc, 'name', None)
             if name in disabled and not disabled[name]:

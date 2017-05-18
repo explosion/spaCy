@@ -7,6 +7,7 @@ from __future__ import unicode_literals, print_function
 
 from collections import Counter
 import ujson
+import contextlib
 
 from libc.math cimport exp
 cimport cython
@@ -297,18 +298,15 @@ cdef class Parser:
                 The number of threads with which to work on the buffer in parallel.
         Yields (Doc): Documents, in order.
         """
-        cdef StateClass state
+        cdef StateClass parse_state
         cdef Doc doc
         queue = []
         for batch in cytoolz.partition_all(batch_size, stream):
-            docs, tokvecs = zip(*batch)
-            states = self.parse_batch(docs, tokvecs)
-            for doc, state in zip(docs, states):
-                self.moves.finalize_state(state.c)
-                for i in range(doc.length):
-                    doc.c[i] = state.c._sent[i]
-                self.moves.finalize_doc(doc)
-                yield doc
+            batch = list(batch)
+            docs, states = zip(*batch)
+            parse_states = self.parse_batch(docs, states[0]['tokvecs'])
+            self.set_annotations(docs, parse_states)
+            yield from zip(docs, states)
 
     def parse_batch(self, docs, tokvecs):
         cuda_stream = get_cuda_stream()
@@ -324,7 +322,7 @@ cdef class Parser:
             scores = vec2scores(vectors)
             self.transition_batch(states, scores)
             todo = [st for st in states if not st.is_final()]
-        self.finish_batch(states, docs)
+        return states
 
     def update(self, docs, golds, state=None, drop=0., sgd=None):
         assert state is not None
@@ -437,7 +435,7 @@ cdef class Parser:
             c_d_scores += d_scores.shape[1]
         return d_scores
 
-    def finish_batch(self, states, docs):
+    def set_annotations(self, docs, states):
         cdef StateClass state
         cdef Doc doc
         for state, doc in zip(states, docs):
@@ -464,6 +462,12 @@ cdef class Parser:
                 self.moves.add_action(action, label)
         if self.model is True:
             self.model = self.Model(self.moves.n_moves, **cfg)
+
+    def use_params(self, params):
+        # Can't decorate cdef class :(. Workaround.
+        with self.model[0].use_params(params):
+            with self.model[1].use_params(params):
+                yield
 
     def to_disk(self, path):
         path = util.ensure_path(path)
