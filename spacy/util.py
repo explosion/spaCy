@@ -11,20 +11,12 @@ import sys
 import textwrap
 
 from .symbols import ORTH
-from .compat import path2str, basestring_, input_, unicode_
+from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
 
 
 LANGUAGES = {}
 _data_path = Path(__file__).parent / 'data'
-try:
-    from cupy.cuda.stream import Stream as CudaStream
-except ImportError:
-    CudaStream = None
 
-try:
-    import cupy
-except ImportError:
-    cupy = None
 
 def get_lang_class(lang):
     """Import and load a Language class.
@@ -149,6 +141,20 @@ def parse_package_meta(package_path, require=True):
         raise IOError("Could not read meta.json from %s" % location)
     else:
         return None
+
+
+def is_in_jupyter():
+    """Check if user is in a Jupyter notebook. Mainly used for displaCy.
+
+    RETURNS (bool): True if in Jupyter, False if not.
+    """
+    try:
+        cfg = get_ipython().config
+        if cfg['IPKernelApp']['parent_appname'] == 'ipython-notebook':
+            return True
+    except NameError:
+        return False
+    return False
 
 
 def get_cuda_stream(require=False):

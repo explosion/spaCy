@@ -16,14 +16,28 @@ try:
 except ImportError:
     import copyreg as copy_reg
 
+try:
+    from cupy.cuda.stream import Stream as CudaStream
+except ImportError:
+    CudaStream = None
+
+try:
+    import cupy
+except ImportError:
+    cupy = None
+
+
+pickle = pickle
+copy_reg = copy_reg
+CudaStream = CudaStream
+cupy = cupy
+fix_text = ftfy.fix_text
 
 is_python2 = six.PY2
 is_python3 = six.PY3
 is_windows = sys.platform.startswith('win')
 is_linux = sys.platform.startswith('linux')
 is_osx = sys.platform == 'darwin'
-
-fix_text = ftfy.fix_text
 
 
 if is_python2:

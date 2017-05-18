@@ -10,7 +10,10 @@
     padding: 2rem 3rem
 
 .c-quickstart__input
-    display: none
+    @include size(0)
+    opacity: 0
+    position: absolute
+    left: -9999px
 
 .c-quickstart__label
     cursor: pointer
@@ -25,6 +28,9 @@
     &:hover
         background: lighten($color-theme-light, 5)
 
+    .c-quickstart__input:focus + &
+        border: 1px solid $color-theme
+
     .c-quickstart__input--radio:checked + &
         color: $color-back
         border-color: $color-theme
@@ -36,8 +42,6 @@
         display: inline-block
         width: 20px
         height: 20px
-        position: relative
-        bottom: 0.2rem
         border: 1px solid $color-subtle
         vertical-align: middle
         margin-right: 1rem
