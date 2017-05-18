@@ -271,7 +271,7 @@ p Construct a #[code Token] object.
         +cell The index of the token within the document.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Token]
         +cell The newly constructed object.
 
@@ -282,7 +282,7 @@ p Get the number of unicode characters in the token.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell int
         +cell The number of unicode characters in the token.
 
@@ -299,7 +299,7 @@ p Check the value of a boolean flag.
         +cell The attribute ID of the flag to check.
 
     +footrow
-        +cell return
+        +cell returns
         +cell bool
         +cell Whether the flag is set.
 
@@ -315,7 +315,7 @@ p Get a neighboring token.
         +cell The relative position of the token to get. Defaults to #[code 1].
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Token]
         +cell The token at position #[code self.doc[self.i+i]]
 
@@ -333,7 +333,7 @@ p Compute a semantic similarity estimate. Defaults to cosine over vectors.
             |  #[code Span], #[code Token] and #[code Lexeme] objects.
 
     +footrow
-        +cell return
+        +cell returns
         +cell float
         +cell A scalar similarity score. Higher is more similar.
 
@@ -351,7 +351,7 @@ p
         +cell Another token.
 
     +footrow
-        +cell return
+        +cell returns
         +cell bool
         +cell Whether this token is the ancestor of the descendant.
 
@@ -363,7 +363,7 @@ p A real-valued meaning representation.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
         +cell A 1D numpy array representing the token's semantics.
 
@@ -376,7 +376,7 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell bool
         +cell Whether the token has a vector data attached.
 
@@ -387,7 +387,7 @@ p The syntactic parent, or "governor", of this token.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Token]
         +cell The head.
 
@@ -398,7 +398,7 @@ p A sequence of coordinated tokens, including the token itself.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Token]
         +cell A coordinated token.
 
@@ -409,7 +409,7 @@ p A sequence of the token's immediate syntactic children.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Token]
         +cell A child token such that #[code child.head==self].
 
@@ -420,7 +420,7 @@ p A sequence of all the token's syntactic descendents.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Token]
         +cell A descendant token such that #[code self.is_ancestor(descendant)].
 
@@ -431,7 +431,7 @@ p The leftmost token of this token's syntactic descendants.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Token]
         +cell The first token such that #[code self.is_ancestor(token)].
 
@@ -442,7 +442,7 @@ p The rightmost token of this token's syntactic descendents.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Token]
         +cell The last token such that #[code self.is_ancestor(token)].
 
@@ -453,7 +453,7 @@ p The rightmost token of this token's syntactic descendants.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Token]
         +cell
             |  A sequence of ancestor tokens such that

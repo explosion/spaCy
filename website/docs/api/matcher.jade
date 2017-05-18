@@ -21,7 +21,7 @@ p Load the matcher and patterns from a file path.
         +cell The vocabulary that the documents to match over will refer to.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Matcher]
         +cell The newly constructed object.
 
@@ -44,7 +44,7 @@ p Create the Matcher.
         +cell Patterns to add to the matcher.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Matcher]
         +cell The newly constructed object.
 
@@ -60,7 +60,7 @@ p Find all token sequences matching the supplied patterns on the Doc.
         +cell The document to match over.
 
     +footrow
-        +cell return
+        +cell returns
         +cell list
         +cell
             |  A list of#[code (entity_key, label_id,  start, end)] tuples,
@@ -93,7 +93,7 @@ p Match a stream of documents, yielding them in turn.
             |  multi-threading.
 
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Doc]
         +cell Documents, in order.
 
@@ -132,7 +132,7 @@ p Add an entity to the matcher.
         +cell Callback function to act on matches of the entity.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code None]
         +cell -
 
@@ -158,7 +158,7 @@ p Add a pattern to the matcher.
         +cell Label to assign to the matched pattern. Defaults to #[code ""].
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code None]
         +cell -
 
@@ -174,6 +174,6 @@ p Check whether the matcher has an entity.
         +cell The entity key to check.
 
     +footrow
-        +cell return
+        +cell returns
         +cell bool
         +cell Whether the matcher has the entity.

@@ -89,7 +89,7 @@ p Create a Span object from the #[code slice doc[start : end]].
         +cell A meaning representation of the span.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Span]
         +cell The newly constructed object.
 
@@ -105,7 +105,7 @@ p Get a #[code Token] object.
         +cell The index of the token within the span.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Token]
         +cell The token at #[code span[i]].
 
@@ -118,7 +118,7 @@ p Get a #[code Span] object.
         +cell The slice of the span to get.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Span]
         +cell The span at #[code span[start : end]].
 
@@ -129,7 +129,7 @@ p Iterate over #[code Token] objects.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Token]
         +cell A #[code Token] object.
 
@@ -140,7 +140,7 @@ p Get the number of tokens in the span.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell int
         +cell The number of tokens in the span.
 
@@ -160,7 +160,7 @@ p
             |  #[code Span], #[code Token] and #[code Lexeme] objects.
 
     +footrow
-        +cell return
+        +cell returns
         +cell float
         +cell A scalar similarity score. Higher is more similar.
 
@@ -178,7 +178,7 @@ p Retokenize the document, such that the span is merged into a single token.
             |  are inherited from the syntactic root token of the span.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Token]
         +cell The newly merged token.
 
@@ -189,7 +189,7 @@ p A unicode representation of the span text.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell unicode
         +cell The original verbatim text of the span.
 
@@ -202,7 +202,7 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell unicode
         +cell The text content of the span (with trailing whitespace).
 
@@ -213,7 +213,7 @@ p The sentence span that this span is a part of.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Span]
         +cell The sentence this is part of.
 
@@ -226,7 +226,7 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Token]
         +cell The root token.
 
@@ -237,7 +237,7 @@ p Tokens that are to the left of the span, whose head is within the span.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Token]
         +cell A left-child of a token of the span.
 
@@ -248,7 +248,7 @@ p Tokens that are to the right of the span, whose head is within the span.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Token]
         +cell A right-child of a token of the span.
 
@@ -259,6 +259,6 @@ p Tokens that descend from tokens in the span, but fall outside it.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Token]
         +cell A descendant of a token within the span.

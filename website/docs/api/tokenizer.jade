@@ -79,7 +79,7 @@ p Load a #[code Tokenizer], reading unsupplied components from the path.
             |  #[code re.compile(string).finditer] to find infixes.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Tokenizer]
         +cell The newly constructed object.
 
@@ -121,7 +121,7 @@ p Create a #[code Tokenizer], to create #[code Doc] objects given unicode text.
             |  #[code re.compile(string).finditer] to find infixes.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Tokenizer]
         +cell The newly constructed object.
 
@@ -137,7 +137,7 @@ p Tokenize a string.
         +cell The string to tokenize.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Doc]
         +cell A container for linguistic annotations.
 
@@ -165,7 +165,7 @@ p Tokenize a stream of texts.
             |  multi-threading. The default tokenizer is single-threaded.
 
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Doc]
         +cell A sequence of Doc objects, in order.
 
@@ -181,7 +181,7 @@ p Find internal split points of the string.
         +cell The string to split.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code List[re.MatchObject]]
         +cell
             |  A list of objects that have #[code .start()] and #[code .end()]
@@ -202,7 +202,7 @@ p
         +cell The string to segment.
 
     +footrow
-        +cell return
+        +cell returns
         +cell int / #[code None]
         +cell The length of the prefix if present, otherwise #[code None].
 
@@ -220,7 +220,7 @@ p
         +cell The string to segment.
 
     +footrow
-        +cell return
+        +cell returns
         +cell int / #[code None]
         +cell The length of the suffix if present, otherwise #[code None].
 
@@ -244,6 +244,6 @@ p Add a special-case tokenization rule.
             |  exactly match the string when they are concatenated.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code None]
         +cell -

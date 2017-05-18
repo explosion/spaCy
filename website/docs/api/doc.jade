@@ -48,7 +48,7 @@ p
             |  specified. Defaults to a sequence of #[code True].
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Doc]
         +cell The newly constructed object.
 
@@ -74,7 +74,7 @@ p
         +cell The index of the token.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Token]
         +cell The token at #[code doc[i]].
 
@@ -97,7 +97,7 @@ p
         +cell The slice of the document to get.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Span]
         +cell The span at #[code doc[start : end]].
 
@@ -122,7 +122,7 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Token]
         +cell A #[code Token] object.
 
@@ -137,7 +137,7 @@ p Get the number of tokens in the document.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell int
         +cell The number of tokens in the document.
 
@@ -164,7 +164,7 @@ p
             |  #[code Span], #[code Token] and #[code Lexeme] objects.
 
     +footrow
-        +cell return
+        +cell returns
         +cell float
         +cell A scalar similarity score. Higher is more similar.
 
@@ -191,7 +191,7 @@ p
         +cell The attribute ID
 
     +footrow
-        +cell return
+        +cell returns
         +cell dict
         +cell A dictionary mapping attributes to integer counts.
 
@@ -216,7 +216,7 @@ p
         +cell A list of attribute ID ints.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code numpy.ndarray[ndim=2, dtype='int32']]
         +cell
             |  The exported attributes as a 2D numpy array, with one row per
@@ -249,7 +249,7 @@ p
         +cell The attribute values to load.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Doc]
         +cell Itself.
 
@@ -264,7 +264,7 @@ p Serialize, i.e. export the document contents to a binary string.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell bytes
         +cell
             |  A losslessly serialized copy of the #[code Doc], including all
@@ -290,7 +290,7 @@ p Deserialize, i.e. import the document contents from a binary string.
         +cell The string to load from.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Doc]
         +cell Itself.
 
@@ -329,7 +329,7 @@ p
             |  the span.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Token]
         +cell
             |  The newly merged token, or #[code None] if the start and end
@@ -364,7 +364,7 @@ p
         +cell Don't include arcs or modifiers.
 
     +footrow
-        +cell return
+        +cell returns
         +cell dict
         +cell Parse tree as dict.
 
@@ -380,7 +380,7 @@ p A unicode representation of the document text.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell unicode
         +cell The original verbatim text of the document.
 
@@ -393,7 +393,7 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell unicode
         +cell The original verbatim text of the document.
 
@@ -415,7 +415,7 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Span]
         +cell Entities in the document.
 
@@ -438,7 +438,7 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Span]
         +cell Noun chunks in the document.
 
@@ -460,7 +460,7 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Span]
         +cell Sentences in the document.
 
@@ -478,7 +478,7 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell bool
         +cell Whether the document has a vector data attached.
 
@@ -497,7 +497,7 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
         +cell A 1D numpy array representing the document's semantics.
 
@@ -510,7 +510,7 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell float
         +cell The L2 norm of the vector representation.
 

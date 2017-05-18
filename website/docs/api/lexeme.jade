@@ -157,7 +157,7 @@ p Create a #[code Lexeme] object.
         +cell The orth id of the lexeme.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Lexeme]
         +cell The newly constructed object.
 
@@ -178,7 +178,7 @@ p Change the value of a boolean flag.
         +cell The new value of the flag.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code None]
         +cell -
 
@@ -194,7 +194,7 @@ p Check the value of a boolean flag.
         +cell The attribute ID of the flag to query.
 
     +footrow
-        +cell return
+        +cell returns
         +cell bool
         +cell The value of the flag.
 
@@ -212,7 +212,7 @@ p Compute a semantic similarity estimate. Defaults to cosine over vectors.
             |  #[code Span], #[code Token] and #[code Lexeme] objects.
 
     +footrow
-        +cell return
+        +cell returns
         +cell float
         +cell A scalar similarity score. Higher is more similar.
 
@@ -223,7 +223,7 @@ p A real-valued meaning representation.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
         +cell A real-valued meaning representation.
 
@@ -234,6 +234,6 @@ p A boolean value indicating whether a word vector is associated with the object
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell bool
         +cell Whether a word vector is associated with the object.

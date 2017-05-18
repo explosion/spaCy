@@ -26,7 +26,7 @@ p Load the statistical model from the supplied path.
         +cell Whether to raise an error if the files are not found.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code EntityRecognizer]
         +cell The newly constructed object.
 
@@ -47,7 +47,7 @@ p Create an #[code EntityRecognizer].
         +cell The statistical model.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code EntityRecognizer]
         +cell The newly constructed object.
 
@@ -63,7 +63,7 @@ p Apply the entity recognizer, setting the NER tags onto the #[code Doc] object.
         +cell The document to be processed.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code None]
         +cell -
 
@@ -91,7 +91,7 @@ p Process a stream of documents.
             |  parallel.
 
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Doc]
         +cell Documents, in order.
 
@@ -112,7 +112,7 @@ p Update the statistical model.
         +cell The gold-standard annotations, to calculate the loss.
 
     +footrow
-        +cell return
+        +cell returns
         +cell int
         +cell The loss on this example.
 
@@ -128,6 +128,6 @@ p Set up a stepwise state, to introspect and control the transition sequence.
         +cell The document to step through.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code StepwiseState]
         +cell A state object, to step through the annotation process.

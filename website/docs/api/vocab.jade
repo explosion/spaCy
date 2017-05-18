@@ -56,7 +56,7 @@ p Load the vocabulary from a path.
         +cell The default probability for out-of-vocabulary words.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Vocab]
         +cell The newly constructed object.
 
@@ -91,7 +91,7 @@ p Create the vocabulary.
         +cell The default probability for out-of-vocabulary words.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Vocab]
         +cell The newly constructed object.
 
@@ -102,7 +102,7 @@ p Get the number of lexemes in the vocabulary.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell int
         +cell The number of lexems in the vocabulary.
 
@@ -120,7 +120,7 @@ p
         +cell The integer ID of a word, or its unicode string.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Lexeme]
         +cell The lexeme indicated by the given ID.
 
@@ -131,7 +131,7 @@ p Iterate over the lexemes in the vocabulary.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Lexeme]
         +cell An entry in the vocabulary.
 
@@ -147,7 +147,7 @@ p Check whether the string has an entry in the vocabulary.
         +cell The ID string.
 
     +footrow
-        +cell return
+        +cell returns
         +cell bool
         +cell Whether the string has an entry in the vocabulary.
 
@@ -165,7 +165,7 @@ p
         +cell The new size of the vectors.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code None]
         +cell -
 
@@ -189,7 +189,7 @@ p Set a new boolean flag to words in the vocabulary.
             |  available bit will be chosen.
 
     +footrow
-        +cell return
+        +cell returns
         +cell int
         +cell The integer ID by which the flag value can be checked.
 
@@ -205,7 +205,7 @@ p Save the lexemes binary data to the given location.
         +cell The path to load from.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code None]
         +cell -
 
@@ -221,7 +221,7 @@ p
         +cell Path to load the lexemes.bin file from.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code None]
         +cell -
 
@@ -237,7 +237,7 @@ p Save the word vectors to a binary file.
         +cell The path to save to.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code None]
         +cell -
 
@@ -257,7 +257,7 @@ p Load vectors from a text-based file.
             |  should be the values of the vector.
 
     +footrow
-        +cell return
+        +cell returns
         +cell int
         +cell The length of the vectors loaded.
 
@@ -273,6 +273,6 @@ p Load vectors from the location of a binary file.
         +cell The path of the binary file to load from.
 
     +footrow
-        +cell return
+        +cell returns
         +cell int
         +cell The length of the vectors loaded.
