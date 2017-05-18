@@ -71,7 +71,8 @@ class Trainer(object):
             self.nr_epoch += 1
 
     def evaluate(self, dev_sents, gold_preproc=False):
-        scorer = Scorer()
+        all_docs = []
+        all_golds = []
         for raw_text, paragraph_tuples in dev_sents:
             if gold_preproc:
                 raw_text = None
@@ -79,12 +80,11 @@ class Trainer(object):
                 paragraph_tuples = merge_sents(paragraph_tuples)
             docs = self.make_docs(raw_text, paragraph_tuples)
             golds = self.make_golds(docs, paragraph_tuples)
-            for doc, gold in zip(docs, golds):
-                state = {}
-                for process in self.nlp.pipeline:
-                    assert state is not None, process.name
-                    state = process(doc, state=state)
-                scorer.score(doc, gold)
+            all_docs.extend(docs)
+            all_golds.extend(golds)
+        scorer = Scorer()
+        for doc, gold in zip(self.nlp.pipe(all_docs), all_golds):
+            scorer.score(doc, gold)
         return scorer
 
     def make_docs(self, raw_text, paragraph_tuples):
