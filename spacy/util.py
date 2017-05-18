@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals, print_function
 
+import os
 import ujson
 import pip
 import importlib
@@ -160,7 +161,23 @@ def get_async(stream, numpy_array):
     if cupy is None:
         return numpy_array
     else:
-        return cupy.array(numpy_array, stream=stream)
+        array = cupy.ndarray(numpy_array.shape, order='C',
+                           dtype=numpy_array.dtype)
+        array.set(numpy_array, stream=stream)
+        return array
+
+
+def env_opt(name, default=None):
+    type_convert = type(default)
+    if name in os.environ:
+        print("Get from env", name, os.environ[name])
+        return type_convert(os.environ[name])
+    elif 'SPACY_' + name.upper() in os.environ:
+        print("Get from env", name, os.environ['SPACY_' + name.upper()])
+        return type_convert(os.environ['SPACY_' + name.upper()])
+    else:
+        print("Default", name, default)
+        return default
 
 
 def read_regex(path):

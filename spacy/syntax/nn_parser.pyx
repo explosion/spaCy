@@ -134,7 +134,7 @@ cdef class precompute_hiddens:
             <float*>hiddens.data, &ids[0,0],
             token_ids.shape[0], self.nF, self.nO*self.nP)
 
-        output, bp_output = self._apply_nonlinearity(state_vector) 
+        output, bp_output = self._apply_nonlinearity(state_vector)
 
         def backward(d_output, sgd=None):
             # This will usually be on GPU
@@ -220,10 +220,13 @@ cdef class Parser:
     """
     @classmethod
     def Model(cls, nr_class, token_vector_width=128, hidden_width=128, **cfg):
+        token_vector_width = util.env_opt('token_vector_width', token_vector_width)
+        hidden_width = util.env_opt('hidden_width', hidden_width)
+        maxout_pieces = util.env_opt('parser_maxout_pieces', 1)
         lower = PrecomputableMaxouts(hidden_width,
                     nF=cls.nr_feature,
                     nI=token_vector_width,
-                    pieces=cfg.get('maxout_pieces', 1))
+                    pieces=maxout_pieces)
 
         with Model.use_device('cpu'):
             upper = chain(
@@ -346,7 +349,8 @@ cdef class Parser:
 
         backprops = []
         cdef float loss = 0.
-        while todo:
+        cutoff = max(1, len(todo) // 10)
+        while len(todo) >= cutoff:
             states, golds = zip(*todo)
 
             token_ids = self.get_token_ids(states)
@@ -398,7 +402,7 @@ cdef class Parser:
     def get_token_ids(self, states):
         cdef StateClass state
         cdef int n_tokens = self.nr_feature
-        ids = numpy.zeros((len(states), n_tokens), dtype='i', order='c')
+        ids = numpy.zeros((len(states), n_tokens), dtype='i', order='C')
         for i, state in enumerate(states):
             state.set_context_tokens(ids[i])
         return ids

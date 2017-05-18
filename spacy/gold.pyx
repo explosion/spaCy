@@ -8,6 +8,7 @@ import ujson
 
 from .syntax import nonproj
 from .util import ensure_path
+from . import util
 
 
 def tags_to_entities(tags):
@@ -138,7 +139,8 @@ def _min_edit_path(cand_words, gold_words):
     return prev_costs[n_gold], previous_row[-1]
 
 
-def read_json_file(loc, docs_filter=None, make_supertags=False, limit=None):
+def read_json_file(loc, docs_filter=None, make_supertags=True, limit=None):
+    make_supertags = util.env_opt('make_supertags', make_supertags)
     loc = ensure_path(loc)
     if loc.is_dir():
         for filename in loc.iterdir():
