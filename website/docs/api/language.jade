@@ -2,7 +2,305 @@
 
 include ../../_includes/_mixins
 
-p A text processing pipeline.
+p
+    |  A text-processing pipeline. Usually you'll load this once per process,
+    |  and pass the instance around your application.
+
++h(2, "init") Language.__init__
+    +tag method
+
+p Initialise a #[code Language] object.
+
++aside-code("Example").
+    from spacy.language import Language
+    nlp = Language(pipeline=['token_vectors', 'tags',
+                             'dependencies'])
+
+    from spacy.lang.en import English
+    nlp = English()
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell
+            |  A #[code Vocab] object. If #[code True], a vocab is created via
+            |  #[code Language.Defaults.create_vocab].
+
+    +row
+        +cell #[code make_doc]
+        +cell function
+        +cell
+            |  A function that takes text and returns a #[code Doc] object.
+            |  Usually a #[code Tokenizer].
+
+    +row
+        +cell #[code pipeline]
+        +cell list
+        +cell
+            |  A list of annotation processes or IDs of annotation, processes,
+            |  e.g. a #[code Tagger] object, or #[code 'tagger']. IDs are looked
+            |  up in #[code Language.Defaults.factories].
+
+    +row
+        +cell #[code meta]
+        +cell dict
+        +cell
+            |  Custom meta data for the #[code Language] class. Is written to by
+            |  models to add model meta data.
+
+    +footrow
+        +cell return
+        +cell #[code Language]
+        +cell The newly constructed object.
+
++h(2, "call") Language.__call__
+    +tag method
+
+p
+    |  Apply the pipeline to some text. The text can span multiple sentences,
+    |  and can contain arbtrary whitespace. Alignment into the original string
+    |  is preserved.
+
++aside-code("Example").
+    tokens = nlp('An example sentence. Another example sentence.')
+    tokens[0].text, tokens[0].head.tag_
+    # ('An', 'NN')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code text]
+        +cell unicode
+        +cell The text to be processed.
+
+    +row
+        +cell #[code **disabled]
+        +cell -
+        +cell Elements of the pipeline that should not be run.
+
+    +footrow
+        +cell return
+        +cell #[code Doc]
+        +cell A container for accessing the annotations.
+
++h(2, "update") Language.update
+    +tag method
+
+p Update the models in the pipeline.
+
++aside-code("Example").
+    with nlp.begin_training(gold, use_gpu=True) as (trainer, optimizer):
+        for epoch in trainer.epochs(gold):
+            for docs, golds in epoch:
+                state = nlp.update(docs, golds, sgd=optimizer)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code docs]
+        +cell iterable
+        +cell A batch of #[code Doc] objects.
+
+    +row
+        +cell #[code golds]
+        +cell iterable
+        +cell A batch of #[code GoldParse] objects.
+
+    +row
+        +cell #[code drop]
+        +cell float
+        +cell The dropout rate.
+
+    +row
+        +cell #[code sgd]
+        +cell function
+        +cell An optimizer.
+
+    +footrow
+        +cell return
+        +cell dict
+        +cell Results from the update.
+
++h(2, "begin_training") Language.begin_training
+    +tag contextmanager
+
+p
+    |  Allocate models, pre-process training data and acquire a trainer and
+    |  optimizer. Used as a contextmanager.
+
++aside-code("Example").
+    with nlp.begin_training(gold, use_gpu=True) as (trainer, optimizer):
+        for epoch in trainer.epochs(gold):
+            for docs, golds in epoch:
+                state = nlp.update(docs, golds, sgd=optimizer)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code gold_tuples]
+        +cell iterable
+        +cell Gold-standard training data.
+
+    +row
+        +cell #[code **cfg]
+        +cell -
+        +cell Config parameters.
+
+    +footrow
+        +cell yield
+        +cell tuple
+        +cell A trainer and an optimizer.
+
++h(2, "use_params") Language.use_params
+    +tag contextmanager
+    +tag method
+
+p
+    |  Replace weights of models in the pipeline with those provided in the
+    |  params dictionary. Can be used as a contextmanager, in which case, models
+    |  go back to their original weights after the block.
+
++aside-code("Example").
+    with nlp.use_params(optimizer.averages):
+        nlp.to_disk('/tmp/checkpoint')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code params]
+        +cell dict
+        +cell A dictionary of parameters keyed by model ID.
+
+    +row
+        +cell #[code **cfg]
+        +cell -
+        +cell Config parameters.
+
++h(2, "pipe") Language.pipe
+    +tag method
+
+p
+    |  Process texts as a stream, and yield #[code Doc] objects in order.
+    |  Supports GIL-free multi-threading.
+
++aside-code("Example").
+    texts = [u'One document.', u'...', u'Lots of documents']
+    for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
+        assert doc.is_parsed
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code texts]
+        +cell -
+        +cell A sequence of unicode objects.
+
+    +row
+        +cell #[code n_threads]
+        +cell int
+        +cell
+            |  The number of worker threads to use. If #[code -1], OpenMP will
+            |  decide how many to use at run time. Default is #[code 2].
+
+    +row
+        +cell #[code batch_size]
+        +cell int
+        +cell The number of texts to buffer.
+
+    +footrow
+        +cell yield
+        +cell #[code Doc]
+        +cell Documents in the order of the original text.
+
++h(2, "to_disk") Language.to_disk
+    +tag method
+
+p Save the current state to a directory.
+
++aside-code("Example").
+    nlp.to_disk('/path/to/models')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory, which will be created if it doesn't exist.
+            |  Paths may be either strings or #[code Path]-like objects.
+
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being saved.
+
++h(2, "from_disk") Language.from_disk
+    +tag method
+
+p Loads state from a directory. Modifies the object in place and returns it.
+
++aside-code("Example").
+    from spacy.language import Language
+    nlp = Language().from_disk('/path/to/models')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory. Paths may be either strings or
+            |  #[code Path]-like objects.
+
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being loaded.
+
+    +footrow
+        +cell return
+        +cell #[code Language]
+        +cell The modified #[code Language] object.
+
++h(2, "to_bytes") Language.to_bytes
+    +tag method
+
+p Serialize the current state to a binary string.
+
++aside-code("Example").
+    nlp_bytes = nlp.to_bytes()
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being serialized.
+
+    +footrow
+        +cell return
+        +cell bytes
+        +cell The serialized form of the #[code Language] object.
+
++h(2, "from_bytes") Language.from_bytes
+    +tag method
+
+p Load state from a binary string.
+
++aside-code("Example").
+    fron spacy.lang.en import English
+    nlp_bytes = nlp.to_bytes()
+    nlp2 = English()
+    nlp2.from_bytes(nlp_bytes)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code bytes_data]
+        +cell bytes
+        +cell The data to load from.
+
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being loaded.
+
+    +footrow
+        +cell return
+        +cell bytes
+        +cell The serialized form of the #[code Language] object.
 
 +h(2, "attributes") Attributes
 
@@ -46,109 +344,3 @@ p A text processing pipeline.
         +cell #[code pipeline]
         +cell -
         +cell Sequence of annotation functions.
-
-
-+h(2, "init") Language.__init__
-    +tag method
-
-p Create or load the pipeline.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code **overrides]
-        +cell -
-        +cell Keyword arguments indicating which defaults to override.
-
-    +footrow
-        +cell return
-        +cell #[code Language]
-        +cell The newly constructed object.
-
-+h(2, "call") Language.__call__
-    +tag method
-
-p Apply the pipeline to a single text.
-
-+aside-code("Example").
-    from spacy.en import English
-    nlp = English()
-    doc = nlp('An example sentence. Another example sentence.')
-    doc[0].orth_, doc[0].head.tag_
-    # ('An', 'NN')
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code text]
-        +cell unicode
-        +cell The text to be processed.
-
-    +row
-        +cell #[code tag]
-        +cell bool
-        +cell Whether to apply the part-of-speech tagger.
-
-    +row
-        +cell #[code parse]
-        +cell bool
-        +cell Whether to apply the syntactic dependency parser.
-
-    +row
-        +cell #[code entity]
-        +cell bool
-        +cell Whether to apply the named entity recognizer.
-
-    +footrow
-        +cell return
-        +cell #[code Doc]
-        +cell A container for accessing the linguistic annotations.
-
-+h(2, "pipe") Language.pipe
-    +tag method
-
-p
-    |  Process texts as a stream, and yield #[code Doc] objects in order.
-    |  Supports GIL-free multi-threading.
-
-+aside-code("Example").
-    texts = [u'One document.', u'...', u'Lots of documents']
-    for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
-        assert doc.is_parsed
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code texts]
-        +cell -
-        +cell A sequence of unicode objects.
-
-    +row
-        +cell #[code n_threads]
-        +cell int
-        +cell
-            |  The number of worker threads to use. If #[code -1], OpenMP will
-            |  decide how many to use at run time. Default is #[code 2].
-
-    +row
-        +cell #[code batch_size]
-        +cell int
-        +cell The number of texts to buffer.
-
-    +footrow
-        +cell yield
-        +cell #[code Doc]
-        +cell Containers for accessing the linguistic annotations.
-
-+h(2, "save_to_directory") Language.save_to_directory
-    +tag method
-
-p Save the #[code Vocab], #[code StringStore] and pipeline to a directory.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code path]
-        +cell string or pathlib path
-        +cell Path to save the model.
-
-    +footrow
-        +cell return
-        +cell #[code None]
-        +cell -

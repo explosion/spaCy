@@ -115,14 +115,26 @@ class BaseDefaults(object):
 
 
 class Language(object):
-    """
-    A text-processing pipeline. Usually you'll load this once per process, and
-    pass the instance around your program.
+    """A text-processing pipeline. Usually you'll load this once per process,
+    and pass the instance around your application.
     """
     Defaults = BaseDefaults
     lang = None
 
     def __init__(self, vocab=True, make_doc=True, pipeline=None, meta={}):
+        """Initialise a Language object.
+
+        vocab (Vocab): A `Vocab` object. If `True`, a vocab is created via
+            `Language.Defaults.create_vocab`.
+        make_doc (function): A function that takes text and returns a `Doc`
+            object. Usually a `Tokenizer`.
+        pipeline (list): A list of annotation processes or IDs of annotation,
+            processes, e.g. a `Tagger` object, or `'tagger'`. IDs are looked
+            up in `Language.Defaults.factories`.
+        meta (dict): Custom meta data for the Language class. Is written to by
+            models to add model meta data.
+        RETURNS (Language): The newly constructed object.
+        """
         self.meta = dict(meta)
 
         if vocab is True:
@@ -146,23 +158,17 @@ class Language(object):
             self.pipeline = []
 
     def __call__(self, text, state=None, **disabled):
-        """
-        Apply the pipeline to some text.  The text can span multiple sentences,
-        and can contain arbtrary whitespace.  Alignment into the original string
+        """Apply the pipeline to some text. The text can span multiple sentences,
+        and can contain arbtrary whitespace. Alignment into the original string
         is preserved.
 
-        Args:
-            text (unicode): The text to be processed.
-            state: Arbitrary
+        text (unicode): The text to be processed.
+        **disabled: Elements of the pipeline that should not be run.
+        RETURNS (Doc): A container for accessing the annotations.
 
-        Returns:
-            doc (Doc): A container for accessing the annotations.
-
-        Example:
-            >>> from spacy.en import English
-            >>> nlp = English()
+        EXAMPLE:
             >>> tokens = nlp('An example sentence. Another example sentence.')
-            >>> tokens[0].orth_, tokens[0].head.tag_
+            >>> tokens[0].text, tokens[0].head.tag_
             ('An', 'NN')
         """
         doc = self.make_doc(text)
@@ -174,16 +180,28 @@ class Language(object):
         return doc
 
     def update(self, docs, golds, state=None, drop=0., sgd=None):
+        """Update the models in the pipeline.
+
+        docs (iterable): A batch of `Doc` objects.
+        golds (iterable): A batch of `GoldParse` objects.
+        drop (float): The droput rate.
+        sgd (function): An optimizer.
+        RETURNS (dict): Results from the update.
+
+        EXAMPLE:
+            >>> with nlp.begin_training(gold, use_gpu=True) as (trainer, optimizer):
+            >>>    for epoch in trainer.epochs(gold):
+            >>>        for docs, golds in epoch:
+            >>>            state = nlp.update(docs, golds, sgd=optimizer)
+        """
         grads = {}
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
         state = {} if state is None else state
         for process in self.pipeline:
             if hasattr(process, 'update'):
-                state = process.update(docs, golds,
-                            state=state,
-                            drop=drop,
-                            sgd=get_grads)
+                state = process.update(docs, golds, state=state, drop=drop,
+                                                    sgd=get_grads)
             else:
                 process(docs, state=state)
         if sgd is not None:
@@ -198,6 +216,19 @@ class Language(object):
 
     @contextmanager
     def begin_training(self, gold_tuples, **cfg):
+        """Allocate models, pre-process training data and acquire a trainer and
+        optimizer. Used as a contextmanager.
+
+        gold_tuples (iterable): Gold-standard training data.
+        **cfg: Config parameters.
+        YIELDS (tuple): A trainer and an optimizer.
+
+        EXAMPLE:
+            >>> with nlp.begin_training(gold, use_gpu=True) as (trainer, optimizer):
+            >>>    for epoch in trainer.epochs(gold):
+            >>>        for docs, golds in epoch:
+            >>>            state = nlp.update(docs, golds, sgd=optimizer)
+        """
         # Populate vocab
         for _, annots_brackets in gold_tuples:
             for annots, _ in annots_brackets:
@@ -220,6 +251,17 @@ class Language(object):
 
     @contextmanager
     def use_params(self, params, **cfg):
+        """Replace weights of models in the pipeline with those provided in the
+        params dictionary. Can be used as a contextmanager, in which case,
+        models go back to their original weights after the block.
+
+        params (dict): A dictionary of parameters keyed by model ID.
+        **cfg: Config parameters.
+
+        EXAMPLE:
+            >>> with nlp.use_params(optimizer.averages):
+            >>>     nlp.to_disk('/tmp/checkpoint')
+        """
         contexts = [pipe.use_params(params) for pipe
                     in self.pipeline if hasattr(pipe, 'use_params')]
         # TODO: Having trouble with contextlib
@@ -237,16 +279,20 @@ class Language(object):
                 pass
 
     def pipe(self, texts, n_threads=2, batch_size=1000, **disabled):
-        """
-        Process texts as a stream, and yield Doc objects in order.
+        """Process texts as a stream, and yield `Doc` objects in order. Supports
+        GIL-free multi-threading.
 
-        Supports GIL-free multi-threading.
+        texts (iterator): A sequence of texts to process.
+        n_threads (int): The number of worker threads to use. If -1, OpenMP will
+            decide how many to use at run time. Default is 2.
+        batch_size (int): The number of texts to buffer.
+        **disabled: Pipeline components to exclude.
+        YIELDS (Doc): Documents in the order of the original text.
 
-        Arguments:
-            texts (iterator)
-            tag (bool)
-            parse (bool)
-            entity (bool)
+        EXAMPLE:
+            >>> texts = [u'One document.', u'...', u'Lots of documents']
+            >>>     for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
+            >>>         assert doc.is_parsed
         """
         #stream = ((self.make_doc(text), None) for text in texts)
         stream = ((doc, {}) for doc in texts)
@@ -254,7 +300,6 @@ class Language(object):
             name = getattr(proc, 'name', None)
             if name in disabled and not disabled[name]:
                 continue
-
             if hasattr(proc, 'pipe'):
                 stream = proc.pipe(stream, n_threads=n_threads, batch_size=batch_size)
             else:
@@ -265,11 +310,12 @@ class Language(object):
     def to_disk(self, path, **exclude):
         """Save the current state to a directory.
 
-        Args:
-            path: A path to a directory, which will be created if it doesn't
-                    exist. Paths may be either strings or pathlib.Path-like
-                    objects.
-            **exclude: Prevent named attributes from being saved.
+        path (unicode or Path): A path to a directory, which will be created if
+            it doesn't exist. Paths may be either strings or `Path`-like objects.
+        **exclude: Named attributes to prevent from being saved.
+
+        EXAMPLE:
+            >>> nlp.to_disk('/path/to/models')
         """
         path = util.ensure_path(path)
         if not path.exists():
@@ -288,12 +334,17 @@ class Language(object):
             dill.dump(props, file_)
 
     def from_disk(self, path, **exclude):
-        """Load the current state from a directory.
+        """Loads state from a directory. Modifies the object in place and
+        returns it.
 
-        Args:
-            path: A path to a directory. Paths may be either strings or
-                pathlib.Path-like objects.
-            **exclude: Prevent named attributes from being saved.
+        path (unicode or Path): A path to a directory. Paths may be either
+            strings or `Path`-like objects.
+        **exclude: Named attributes to prevent from being loaded.
+        RETURNS (Language): The modified `Language` object.
+
+        EXAMPLE:
+            >>> from spacy.language import Language
+            >>> nlp = Language().from_disk('/path/to/models')
         """
         path = util.ensure_path(path)
         for name in path.iterdir():
@@ -307,10 +358,8 @@ class Language(object):
     def to_bytes(self, **exclude):
         """Serialize the current state to a binary string.
 
-        Args:
-            path: A path to a directory. Paths may be either strings or
-                pathlib.Path-like objects.
-            **exclude: Prevent named attributes from being serialized.
+        **exclude: Named attributes to prevent from being serialized.
+        RETURNS (bytes): The serialized form of the `Language` object.
         """
         props = dict(self.__dict__)
         for key in exclude:
@@ -321,9 +370,9 @@ class Language(object):
     def from_bytes(self, bytes_data, **exclude):
         """Load state from a binary string.
 
-        Args:
-            bytes_data (bytes): The data to load from.
-            **exclude: Prevent named attributes from being loaded.
+        bytes_data (bytes): The data to load from.
+        **exclude: Named attributes to prevent from being loaded.
+        RETURNS (Language): The `Language` object.
         """
         props = dill.loads(bytes_data)
         for key, value in props.items():
