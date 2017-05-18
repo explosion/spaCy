@@ -142,6 +142,20 @@ def parse_package_meta(package_path, require=True):
         return None
 
 
+def is_in_jupyter():
+    """Check if user is in a Jupyter notebook. Mainly used for displaCy.
+
+    RETURNS (bool): True if in Jupyter, False if not.
+    """
+    try:
+        cfg = get_ipython().config
+        if cfg['IPKernelApp']['parent_appname'] == 'ipython-notebook':
+            return True
+    except NameError:
+        return False
+    return False
+
+
 def get_cuda_stream(require=False):
     # TODO: Error and tell to install chainer if not found
     # Requires GPU

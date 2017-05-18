@@ -3,13 +3,14 @@ from __future__ import unicode_literals
 
 from .render import DependencyRenderer, EntityRenderer
 from ..tokens import Doc
-from ..util import prints
+from ..util import prints, is_in_jupyter
 
 
 _html = {}
+IS_JUPYTER = is_in_jupyter()
 
 
-def render(docs, style='dep', page=False, minify=False, jupyter=False, options={}):
+def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER, options={}):
     """Render displaCy visualisation.
 
     docs (list or Doc): Document(s) to visualise.
