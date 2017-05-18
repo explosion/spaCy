@@ -431,8 +431,7 @@ cdef class Doc:
         """
         def __get__(self):
             if 'sents' in self.user_hooks:
-                for sent in self.user_hooks['sents'](self):
-                    yield sent
+                yield from self.user_hooks['sents'](self)
                 return
 
             if not self.is_parsed:
