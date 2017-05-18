@@ -150,6 +150,10 @@ cdef class Doc:
     def __getitem__(self, object i):
         """Get a `Token` or `Span` object.
 
+        i (int or tuple) The index of the token, or the slice of the document to get.
+        RETURNS (Token or Span): The token at `doc[i]]`, or the span at
+            `doc[start : end]`.
+
         EXAMPLE:
             >>> doc[i]
             Get the `Token` object at position `i`, where `i` is an integer.
