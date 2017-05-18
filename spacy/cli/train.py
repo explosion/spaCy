@@ -65,7 +65,7 @@ def train_config(config):
 def train_model(Language, train_data, dev_data, output_path, n_iter, **cfg):
     print("Itn.\tDep. Loss\tUAS\tNER F.\tTag %\tToken %")
 
-    nlp = Language(pipeline=['token_vectors', 'tags']) #, 'dependencies'])
+    nlp = Language(pipeline=['token_vectors', 'tags', 'dependencies'])
     dropout = util.env_opt('dropout', 0.0)
     # TODO: Get spaCy using Thinc's trainer and optimizer
     with nlp.begin_training(train_data, **cfg) as (trainer, optimizer):
@@ -75,7 +75,7 @@ def train_model(Language, train_data, dev_data, output_path, n_iter, **cfg):
             for i, (docs, golds) in enumerate(epoch):
                 state = nlp.update(docs, golds, drop=dropout, sgd=optimizer)
                 losses['dep_loss'] += state.get('parser_loss', 0.0)
-                losses['tag_loss'] += state.get('tagger_loss', 0.0)
+                losses['tag_loss'] += state.get('tag_loss', 0.0)
                 to_render.insert(0, nlp(docs[-1].text))
                 to_render[0].user_data['title'] = "Batch %d" % i
                 with Path('/tmp/entities.html').open('w') as file_:
@@ -98,30 +98,35 @@ def train_model(Language, train_data, dev_data, output_path, n_iter, **cfg):
 def evaluate(Language, gold_tuples, path):
     with (path / 'model.bin').open('rb') as file_:
         nlp = dill.load(file_)
+    # TODO:
+    # 1. This code is duplicate with spacy.train.Trainer.evaluate
+    # 2. There's currently a semantic difference between pipe and
+    #    not pipe! It matters whether we batch the inputs. Must fix!
+    all_docs = []
+    all_golds = []
+    for raw_text, paragraph_tuples in dev_sents:
+        if gold_preproc:
+            raw_text = None
+        else:
+            paragraph_tuples = merge_sents(paragraph_tuples)
+        docs = self.make_docs(raw_text, paragraph_tuples)
+        golds = self.make_golds(docs, paragraph_tuples)
+        all_docs.extend(docs)
+        all_golds.extend(golds)
     scorer = Scorer()
-    for raw_text, sents in gold_tuples:
-        sents = merge_sents(sents)
-        for annot_tuples, brackets in sents:
-            if raw_text is None:
-                tokens = Doc(nlp.vocab, words=annot_tuples[1])
-                state = None
-                for proc in nlp.pipeline:
-                    state = proc(tokens, state=state)
-            else:
-                tokens = nlp(raw_text)
-            gold = GoldParse.from_annot_tuples(tokens, annot_tuples)
-            scorer.score(tokens, gold)
+    for doc, gold in zip(self.nlp.pipe(all_docs), all_golds):
+        scorer.score(doc, gold)
     return scorer
 
 
 def print_progress(itn, losses, dev_scores):
     # TODO: Fix!
     scores = {}
-    for col in ['dep_loss', 'uas', 'tags_acc', 'token_acc', 'ents_f']:
+    for col in ['dep_loss', 'tag_loss', 'uas', 'tags_acc', 'token_acc', 'ents_f']:
         scores[col] = 0.0
     scores.update(losses)
     scores.update(dev_scores)
-    tpl = '{:d}\t{dep_loss:.3f}\t{uas:.3f}\t{ents_f:.3f}\t{tags_acc:.3f}\t{token_acc:.3f}'
+    tpl = '{:d}\t{dep_loss:.3f}\t{tag_loss:.3f}\t{uas:.3f}\t{ents_f:.3f}\t{tags_acc:.3f}\t{token_acc:.3f}'
     print(tpl.format(itn, **scores))
 
 
