@@ -119,7 +119,7 @@ cdef class precompute_hiddens:
         if not self._is_synchronized \
         and self._cuda_stream is not None:
             self._cuda_stream.synchronize()
-            self._synchronized = True
+            self._is_synchronized = True
         # This is tricky, but (assuming GPU available);
         # - Input to forward on CPU
         # - Output from forward on CPU
