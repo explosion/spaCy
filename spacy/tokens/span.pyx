@@ -66,6 +66,10 @@ cdef class Span:
         return hash((self.doc, self.label, self.start_char, self.end_char))
 
     def __len__(self):
+        """Get the number of tokens in the span.
+
+        RETURNS (int): The number of tokens in the span.
+        """
         self._recalculate_indices()
         if self.end < self.start:
             return 0
@@ -77,6 +81,16 @@ cdef class Span:
         return self.text.encode('utf-8')
 
     def __getitem__(self, object i):
+        """Get a `Token` or a `Span` object
+
+        i (int or tuple): The index of the token within the span, or slice of
+            the span to get.
+        RETURNS (Token or Span): The token at `span[i]`.
+
+        EXAMPLE:
+            >>> span[0]
+            >>> span[1:3]
+        """
         self._recalculate_indices()
         if isinstance(i, slice):
             start, end = normalize_slice(len(self), i.start, i.stop, i.step)
@@ -88,12 +102,17 @@ cdef class Span:
                 return self.doc[self.start + i]
 
     def __iter__(self):
+        """Iterate over `Token` objects.
+
+        YIELDS (Token): A `Token` object.
+        """
         self._recalculate_indices()
         for i in range(self.start, self.end):
             yield self.doc[i]
 
     def merge(self, *args, **attributes):
-        """Retokenize the document, such that the span is merged into a single token.
+        """Retokenize the document, such that the span is merged into a single
+        token.
 
         **attributes: Attributes to assign to the merged token. By default,
             attributes are inherited from the syntactic root token of the span.
@@ -241,15 +260,15 @@ cdef class Span:
 
             The head of 'new' is 'York', and the head of "York" is "like"
 
-            >>> toks[new].head.orth_
+            >>> toks[new].head.text
             'York'
-            >>> toks[york].head.orth_
+            >>> toks[york].head.text
             'like'
 
             Create a span for "New York". Its root is "York".
 
             >>> new_york = toks[new:york+1]
-            >>> new_york.root.orth_
+            >>> new_york.root.text
             'York'
 
             Here's a more complicated case, raised by issue #214:
@@ -370,7 +389,10 @@ cdef class Span:
             return ''.join([t.string for t in self]).strip()
 
     property lemma_:
-        # TODO: docstring
+        """The span's lemma.
+
+        RETURNS (unicode): The span's lemma.
+        """
         def __get__(self):
             return ' '.join([t.lemma_ for t in self]).strip()
 
@@ -390,7 +412,10 @@ cdef class Span:
             return ''.join([t.string for t in self])
 
     property label_:
-        # TODO: docstring
+        """The span's label.
+
+        RETURNS (unicode): The span's label.
+        """
         def __get__(self):
             return self.doc.vocab.strings[self.label]
 
