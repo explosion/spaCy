@@ -121,7 +121,7 @@ class PrecomputableMaxouts(Model):
         return Yfp, backward
 
 def Tok2Vec(width, embed_size, preprocess=None):
-    cols = [LOWER, PREFIX, SUFFIX, SHAPE]
+    cols = [ID, LOWER, PREFIX, SUFFIX, SHAPE]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
         lower = get_col(cols.index(LOWER))   >> HashEmbed(width, embed_size)
         prefix = get_col(cols.index(PREFIX)) >> HashEmbed(width, embed_size//2)
@@ -150,7 +150,7 @@ def get_col(idx):
             ops = NumpyOps()
         else:
             ops = CupyOps()
-        output = ops.xp.ascontiguousarray(X[:, idx])
+        output = ops.xp.ascontiguousarray(X[:, idx], dtype=X.dtype)
         def backward(y, sgd=None):
             dX = ops.allocate(X.shape)
             dX[:, idx] += y
@@ -173,9 +173,10 @@ def doc2feats(cols=None):
         for doc in docs:
             if 'cached_feats' not in doc.user_data:
                 doc.user_data['cached_feats'] = model.ops.asarray(
-                                                doc.to_array(cols),
-                                                dtype='uint64')
+                                                    doc.to_array(cols),
+                                                    dtype='uint64')
             feats.append(doc.user_data['cached_feats'])
+            assert feats[-1].dtype == 'uint64'
         return feats, None
     model = layerize(forward)
     model.cols = cols
