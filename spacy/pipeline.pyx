@@ -8,6 +8,7 @@ from thinc.neural import Model, Softmax
 import numpy
 cimport numpy as np
 import cytoolz
+import util
 
 from thinc.api import add, layerize, chain, clone, concatenate
 from thinc.neural import Model, Maxout, Softmax, Affine
@@ -42,12 +43,14 @@ class TokenVectorEncoder(object):
 
     @classmethod
     def Model(cls, width=128, embed_size=5000, **cfg):
+        width = util.env_opt('token_vector_width', width)
+        embed_size = util.env_opt('embed_size', embed_size)
         return Tok2Vec(width, embed_size, preprocess=None)
 
     def __init__(self, vocab, model=True, **cfg):
         self.vocab = vocab
         self.doc2feats = doc2feats()
-        self.model = self.Model() if model is True else model
+        self.model = model
 
     def __call__(self, docs, state=None):
         if isinstance(docs, Doc):
@@ -60,7 +63,7 @@ class TokenVectorEncoder(object):
 
     def pipe(self, docs, **kwargs):
         raise NotImplementedError
- 
+
     def predict(self, docs):
         feats = self.doc2feats(docs)
         tokvecs = self.model(feats)
@@ -87,6 +90,11 @@ class TokenVectorEncoder(object):
 
     def get_loss(self, docs, golds, scores):
         raise NotImplementedError
+
+    def begin_training(self, gold_tuples, pipeline=None):
+        self.doc2feats = doc2feats()
+        if self.model is True:
+            self.model = self.Model()
 
 
 class NeuralTagger(object):
@@ -117,15 +125,17 @@ class NeuralTagger(object):
             guesses = guesses.get()
         return guesses
 
-    def set_annotations(self, docs, tag_ids):
+    def set_annotations(self, docs, batch_tag_ids):
         if isinstance(docs, Doc):
             docs = [docs]
         cdef Doc doc
         cdef int idx = 0
+        cdef int i, j
+        cdef Vocab vocab = self.vocab
         for i, doc in enumerate(docs):
-            tag_ids = tag_ids[idx:idx+len(doc)]
-            for j, tag_id in enumerate(tag_ids):
-                doc.vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
+            doc_tag_ids = batch_tag_ids[idx:idx+len(doc)]
+            for j, tag_id in enumerate(doc_tag_ids):
+                vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
                 idx += 1
 
     def update(self, docs, golds, state=None, drop=0., sgd=None):
@@ -139,25 +149,19 @@ class NeuralTagger(object):
         tag_scores, bp_tag_scores = self.model.begin_update(tokvecs, drop=drop)
 
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
-        d_tokvecs = bp_tag_scores(d_tag_scores, sgd)
+
+        d_tokvecs = bp_tag_scores(d_tag_scores, sgd=sgd)
 
         bp_tokvecs(d_tokvecs, sgd=sgd)
 
         state['tag_scores'] = tag_scores
-        state['bp_tag_scores'] = bp_tag_scores
-        state['d_tag_scores'] = d_tag_scores
         state['tag_loss'] = loss
-
-        if 'd_tokvecs' in state:
-            state['d_tokvecs'] += d_tokvecs
-        else:
-            state['d_tokvecs'] = d_tokvecs
         return state
 
     def get_loss(self, docs, golds, scores):
-        tag_index = {tag: i for i, tag in enumerate(docs[0].vocab.morphology.tag_names)}
+        tag_index = {tag: i for i, tag in enumerate(self.vocab.morphology.tag_names)}
 
-        idx = 0
+        cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype='i')
         for gold in golds:
             for tag in gold.tags:
@@ -165,10 +169,11 @@ class NeuralTagger(object):
                 idx += 1
         correct = self.model.ops.xp.array(correct)
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
-        return (d_scores**2).sum(), d_scores
+        loss = (d_scores**2).sum()
+        d_scores = self.model.ops.asarray(d_scores)
+        return loss, d_scores
 
     def begin_training(self, gold_tuples, pipeline=None):
-        # Populate tag map, if anything's missing.
         tag_map = dict(self.vocab.morphology.tag_map)
         for raw_text, annots_brackets in gold_tuples:
             for annots, brackets in annots_brackets:
@@ -176,12 +181,10 @@ class NeuralTagger(object):
                 for tag in tags:
                     if tag not in tag_map:
                         tag_map[tag] = {POS: X}
-
         cdef Vocab vocab = self.vocab
-        vocab.morphology = Morphology(self.vocab.strings, tag_map,
-                                           self.vocab.morphology.lemmatizer)
+        vocab.morphology = Morphology(vocab.strings, tag_map,
+                                      vocab.morphology.lemmatizer)
         self.model = Softmax(self.vocab.morphology.n_tags)
-
 
 
 cdef class EntityRecognizer(LinearParser):
