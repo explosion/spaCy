@@ -5,15 +5,15 @@ from ..symbols import *
 
 TOKENIZER_EXCEPTIONS = {
     ".i.": [
-        {ORTH: ".i.", LEMMA: "eadhon"},
+        {ORTH: ".i.", LEMMA: "eadhon"}
     ],
 
     "lch.": [
-        {ORTH: "lch.", LEMMA: "leathanach"},
+        {ORTH: "lch.", LEMMA: "leathanach"}
     ],
 
     "lgh.": [
-        {ORTH: "lgh.", LEMMA: "leathanaigh"},
+        {ORTH: "lgh.", LEMMA: "leathanaigh"}
     ],
 
     "m.sh.": [
