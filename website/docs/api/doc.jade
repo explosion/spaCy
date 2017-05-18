@@ -501,6 +501,19 @@ p
         +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
         +cell A 1D numpy array representing the document's semantics.
 
++h(2, "vector_norm") Doc.vector_norm
+    +tag property
+    +tag requires model
+
+p
+    |  The L2 norm of the document's vector representation.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell return
+        +cell float
+        +cell The L2 norm of the vector representation.
+
 +h(2, "attributes") Attributes
 
 +table(["Name", "Type", "Description"])
@@ -513,6 +526,11 @@ p
         +cell #[code vocab]
         +cell #[code Vocab]
         +cell The store of lexical types.
+
+    +row
+        +cell #[code tensor]
+        +cell object
+        +cell Container for dense vector representations.
 
     +row
         +cell #[code user_data]

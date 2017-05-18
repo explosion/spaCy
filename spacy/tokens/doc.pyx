@@ -267,7 +267,10 @@ cdef class Doc:
             self._vector = value
 
     property vector_norm:
-        # TODO: docstrings / docs
+        """The L2 norm of the document's vector representation.
+
+        RETURNS (float): The L2 norm of the vector representation.
+        """
         def __get__(self):
             if 'vector_norm' in self.user_hooks:
                 return self.user_hooks['vector_norm'](self)
