@@ -6,12 +6,13 @@ from .deprecated import resolve_model_name
 from .cli.info import info
 from .glossary import explain
 
-from . import en, de, zh, es, it, hu, fr, pt, nl, sv, fi, bn, he, nb, ja
+from . import en, de, zh, es, it, hu, fr, pt, nl, sv, fi, bn, he, nb, ja, ga
 
 
 _languages = (en.English, de.German, es.Spanish, pt.Portuguese, fr.French,
              it.Italian, hu.Hungarian, zh.Chinese, nl.Dutch, sv.Swedish,
-             fi.Finnish, bn.Bengali, he.Hebrew, nb.Norwegian, ja.Japanese)
+             fi.Finnish, bn.Bengali, he.Hebrew, nb.Norwegian, ja.Japanese,
+             ga.Irish)
 
 
 for _lang in _languages:
