@@ -79,10 +79,9 @@ p Find all token sequences matching the supplied patterns on the #[code Doc].
         +cell returns
         +cell list
         +cell
-            |  A list of#[code (entity_key, label_id,  start, end)] tuples,
-            |  describing the matches. A match tuple describes a
-            |  #[code span doc[start:end]]. The #[code label_id] and
-            |  #[code entity_key] are both integers.
+            |  A list of #[code (match_id, start, end)] tuples, describing the
+            |  matches. A match tuple describes a span #[code doc[start:end]].
+            |  The #[code match_id] is the ID of the added match pattern.
 
 +h(2, "pipe") Matcher.pipe
     +tag method
@@ -119,7 +118,7 @@ p Match a stream of documents, yielding them in turn.
 p
     |  Add one or more patterns to the matcher, along with a callback function
     |  to handle the matches. The callback function will receive the arguments
-    |  #[code matcher], #[code doc], #[code id] and #[code matches].
+    |  #[code matcher], #[code doc], #[code i] and #[code matches].
 
 +aside-code("Example").
     from spacy.matcher import Matcher
@@ -153,4 +152,4 @@ p
         +cell function
         +cell
             |  Callback function to act on matches. Takes the arguments
-            |  #[code matcher], #[code doc], #[code id] and #[code matches].
+            |  #[code matcher], #[code doc], #[code i] and #[code matches].
