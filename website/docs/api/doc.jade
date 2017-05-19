@@ -142,7 +142,7 @@ p Get the number of tokens in the document.
 
 +h(2, "similarity") Doc.similarity
     +tag method
-    +tag requires model: vectors
+    +tag-model("vectors")
 
 p
     |  Make a semantic similarity estimate. The default estimate is cosine
@@ -336,7 +336,7 @@ p
 
 +h(2, "print_tree") Doc.print_tree
     +tag method
-    +tag requires model: parse
+    +tag-model("parse")
 
 p
     |  Returns the parse trees in JSON (dict) format. Especially useful for
@@ -391,7 +391,7 @@ p
 
 +h(2, "noun_chunks") Doc.noun_chunks
     +tag property
-    +tag requires model: parse
+    +tag-model("parse")
 
 p
     |  Iterate over the base noun phrases in the document. Yields base
@@ -414,7 +414,7 @@ p
 
 +h(2, "sents") Doc.sents
     +tag property
-    +tag requires model: parse
+    +tag-model("parse")
 
 p
     |  Iterate over the sentences in the document. Sentence spans have no label.
@@ -436,7 +436,7 @@ p
 
 +h(2, "has_vector") Doc.has_vector
     +tag property
-    +tag requires model: vectors
+    +tag-model("vectors")
 
 p
     |  A boolean value indicating whether a word vector is associated with the
@@ -454,7 +454,7 @@ p
 
 +h(2, "vector") Doc.vector
     +tag property
-    +tag requires model: vectors
+    +tag-model("vectors")
 
 p
     |  A real-valued meaning representation. Defaults to an average of the
@@ -473,7 +473,7 @@ p
 
 +h(2, "vector_norm") Doc.vector_norm
     +tag property
-    +tag requires model: vectors
+    +tag-model("vectors")
 
 p
     |  The L2 norm of the document's vector representation.

@@ -75,7 +75,7 @@ p Check the value of a boolean flag.
 
 +h(2, "similarity") Token.similarity
     +tag method
-    +tag requires model: vectors
+    +tag-model("vectors")
 
 p Compute a semantic similarity estimate. Defaults to cosine over vectors.
 
@@ -121,7 +121,7 @@ p Get a neighboring token.
 
 +h(2, "is_ancestor") Token.is_ancestor
     +tag method
-    +tag requires model: parse
+    +tag-model("parse")
 
 p
     |  Check whether this token is a parent, grandparent, etc. of another
@@ -146,7 +146,7 @@ p
 
 +h(2, "ancestors") Token.ancestors
     +tag property
-    +tag requires model: parse
+    +tag-model("parse")
 
 p The rightmost token of this token's syntactic descendants.
 
@@ -167,7 +167,7 @@ p The rightmost token of this token's syntactic descendants.
 
 +h(2, "conjuncts") Token.conjuncts
     +tag property
-    +tag requires model: parse
+    +tag-model("parse")
 
 p A sequence of coordinated tokens, including the token itself.
 
@@ -184,7 +184,7 @@ p A sequence of coordinated tokens, including the token itself.
 
 +h(2, "children") Token.children
     +tag property
-    +tag requires model: parse
+    +tag-model("parse")
 
 p A sequence of the token's immediate syntactic children.
 
@@ -201,7 +201,7 @@ p A sequence of the token's immediate syntactic children.
 
 +h(2, "subtree") Token.subtree
     +tag property
-    +tag requires model: parse
+    +tag-model("parse")
 
 p A sequence of all the token's syntactic descendents.
 
@@ -218,7 +218,7 @@ p A sequence of all the token's syntactic descendents.
 
 +h(2, "has_vector") Token.has_vector
     +tag property
-    +tag requires model: vectors
+    +tag-model("vectors")
 
 p
     |  A boolean value indicating whether a word vector is associated with the
@@ -237,7 +237,7 @@ p
 
 +h(2, "vector") Token.vector
     +tag property
-    +tag requires model: vectors
+    +tag-model("vectors")
 
 p
     |  A real-valued meaning representation.
@@ -256,7 +256,7 @@ p
 
 +h(2, "vector_norm") Span.vector_norm
     +tag property
-    +tag requires model: vectors
+    +tag-model("vectors")
 
 p
     |  The L2 norm of the token's vector representation.

@@ -118,7 +118,7 @@ p Get the number of tokens in the span.
 
 +h(2, "similarity") Span.similarity
     +tag method
-    +tag requires model: vectors
+    +tag-model("vectors")
 
 p
     |  Make a semantic similarity estimate. The default estimate is cosine
@@ -165,7 +165,7 @@ p Retokenize the document, such that the span is merged into a single token.
 
 +h(2, "root") Span.root
     +tag property
-    +tag requires model: parse
+    +tag-model("parse")
 
 p
     |  The token within the span that's highest in the parse tree. If there's a
@@ -187,7 +187,7 @@ p
 
 +h(2, "lefts") Span.lefts
     +tag property
-    +tag requires model: parse
+    +tag-model("parse")
 
 p Tokens that are to the left of the span, whose head is within the span.
 
@@ -204,7 +204,7 @@ p Tokens that are to the left of the span, whose head is within the span.
 
 +h(2, "rights") Span.rights
     +tag property
-    +tag requires model: parse
+    +tag-model("parse")
 
 p Tokens that are to the right of the span, whose head is within the span.
 
@@ -221,7 +221,7 @@ p Tokens that are to the right of the span, whose head is within the span.
 
 +h(2, "subtree") Span.subtree
     +tag property
-    +tag requires model: parse
+    +tag-model("parse")
 
 p Tokens that descend from tokens in the span, but fall outside it.
 
@@ -238,7 +238,7 @@ p Tokens that descend from tokens in the span, but fall outside it.
 
 +h(2, "has_vector") Span.has_vector
     +tag property
-    +tag requires model: vectors
+    +tag-model("vectors")
 
 p
     |  A boolean value indicating whether a word vector is associated with the
@@ -256,7 +256,7 @@ p
 
 +h(2, "vector") Span.vector
     +tag property
-    +tag requires model: vectors
+    +tag-model("vectors")
 
 p
     |  A real-valued meaning representation. Defaults to an average of the
@@ -275,7 +275,7 @@ p
 
 +h(2, "vector_norm") Span.vector_norm
     +tag property
-    +tag requires model: vectors
+    +tag-model("vectors")
 
 p
     |  The L2 norm of the span's vector representation.
