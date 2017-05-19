@@ -8,6 +8,19 @@ TOKENIZER_EXCEPTIONS = {
         {ORTH: "'gus", LEMMA: "agus", NORM: "agus"}
     ],
 
+    "'ach": [
+        {ORTH: "'ach", LEMMA: "gach", NORM: "gach"}
+    ],
+
+    "'acha'n": [
+        {ORTH: "'ach", LEMMA: "gach", NORM: "gach"},
+        {ORTH: "a'n", LEMMA: "aon", NORM: "aon"}
+    ],
+
+    "ao'": [
+        {ORTH: "ao'", LEMMA: "aon", NORM: "aon"}
+    ],
+
     "'niar": [
         {ORTH: "'niar", LEMMA: "aniar", NORM: "aniar"}
     ],
@@ -22,6 +35,26 @@ TOKENIZER_EXCEPTIONS = {
 
     "'nocht": [
         {ORTH: "'nocht", LEMMA: "anocht", NORM: "anocht"}
+    ],
+
+    "dem'": [
+        {ORTH: "de", LEMMA: "de", NORM: "de"},
+        {ORTH: "m'", LEMMA: "mo", NORM: "mo"}
+    ],
+
+    "ded'": [
+        {ORTH: "de", LEMMA: "de", NORM: "de"},
+        {ORTH: "d'", LEMMA: "mo", NORM: "do"}
+    ],
+
+    "lem'": [
+        {ORTH: "le", LEMMA: "le", NORM: "le"},
+        {ORTH: "m'", LEMMA: "mo", NORM: "mo"}
+    ],
+
+    "led'": [
+        {ORTH: "le", LEMMA: "le", NORM: "le"},
+        {ORTH: "d'", LEMMA: "mo", NORM: "do"}
     ],
 
     "a.C.n.": [
@@ -93,6 +126,11 @@ TOKENIZER_EXCEPTIONS = {
 
     "Meith.": [
         {ORTH: "Meith.", LEMMA: "Meitheamh"}
+    ],
+
+    "M.F.": [
+        {ORTH: "M.", LEMMA: "Meán"},
+        {ORTH: "F.", LEMMA: "Fómhar"}
     ],
 
     "M.Fómh.": [
