@@ -4,31 +4,26 @@ include ../../_includes/_mixins
 
 p Match sequences of tokens, based on pattern rules.
 
-+h(2, "load") Matcher.load
-    +tag classmethod
-
-p Load the matcher and patterns from a file path.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code path]
-        +cell #[code Path]
-        +cell Path to a JSON-formatted patterns file.
-
-    +row
-        +cell #[code vocab]
-        +cell #[code Vocab]
-        +cell The vocabulary that the documents to match over will refer to.
-
-    +footrow
-        +cell returns
-        +cell #[code Matcher]
-        +cell The newly constructed object.
++infobox("⚠️ Deprecation note")
+    |  As of spaCy 2.0, #[code Matcher.add_pattern] and #[code Matcher.add_entity]
+    |  are deprecated and have been replaced with a simpler
+    |  #[+api("matcher#add") #[code Matcher.add]] that lets you add a list of
+    |  patterns and a callback for a given match ID.
+    |  #[code Matcher.load] (not useful, as it didn't allow specifying callbacks),
+    |  #[code Matcher.has_entity] and #[code Matcher.get_entity] (now redundant)
+    |  have been removed.
 
 +h(2, "init") Matcher.__init__
     +tag method
 
-p Create the Matcher.
+p Create the rule-based #[code Matcher].
+
++aside-code("Example").
+    from spacy.matcher import Matcher
+    from spacy.attrs import LOWER
+
+    patterns = {"HelloWorld": [{LOWER: "hello"}, {LOWER: "world"}]}
+    matcher = Matcher(nlp.vocab)
 
 +table(["Name", "Type", "Description"])
     +row
@@ -41,7 +36,7 @@ p Create the Matcher.
     +row
         +cell #[code patterns]
         +cell dict
-        +cell Patterns to add to the matcher.
+        +cell Patterns to add to the matcher, keyed by ID.
 
     +footrow
         +cell returns
@@ -51,7 +46,28 @@ p Create the Matcher.
 +h(2, "call") Matcher.__call__
     +tag method
 
-p Find all token sequences matching the supplied patterns on the Doc.
+p Find all token sequences matching the supplied patterns on the #[code Doc].
+
++aside-code("Example").
+    from spacy.matcher import Matcher
+    from spacy.attrs import LOWER
+
+    matcher = Matcher(nlp.vocab)
+    pattern = [{LOWER: "hello"}, {LOWER: "world"}]
+    matcher.add_pattern("HelloWorld", pattern, on_match=None)
+    doc = nlp(u'hello world!')
+    matches = matcher(doc)
+
++infobox("Important note")
+    |  By default, the matcher #[strong does not perform any action] on matches,
+    |  like tagging matched phrases with entity types. Instead, actions need to
+    |  be specified when #[strong adding patterns or entities], by
+    |  passing in a callback function as the #[code on_match] argument on
+    |  #[+api("matcher#add") #[code add]]. This allows you to define custom
+    |  actions per pattern within the same matcher. For example, you might only
+    |  want to merge some entity types, and set custom flags for other matched
+    |  patterns. For more details and examples, see the usage workflow on
+    |  #[+a("/docs/usage/rule-based-matching") rule-based matching].
 
 +table(["Name", "Type", "Description"])
     +row
@@ -76,7 +92,7 @@ p Match a stream of documents, yielding them in turn.
 +table(["Name", "Type", "Description"])
     +row
         +cell #[code docs]
-        +cell -
+        +cell iterable
         +cell A stream of documents.
 
     +row
@@ -97,83 +113,44 @@ p Match a stream of documents, yielding them in turn.
         +cell #[code Doc]
         +cell Documents, in order.
 
-+h(2, "add_entity") Matcher.add_entity
++h(2, "add_pattern") Matcher.add
     +tag method
 
-p Add an entity to the matcher.
+p
+    |  Add one or more patterns to the matcher, along with a callback function
+    |  to handle the matches. The callback function will receive the arguments
+    |  #[code matcher], #[code doc], #[code id] and #[code matches].
+
++aside-code("Example").
+    from spacy.matcher import Matcher
+    from spacy.attrs import LOWER, ORTH
+
+    def on_match(matcher, doc, id, matches):
+        print('Matched!', matches)
+
+    matcher = Matcher(nlp.vocab)
+    matcher.add('HelloWorld', [{LOWER: "hello"}, {LOWER: "world"}], on_match=on_match)
+    matcher.add('GoogleMaps', [{ORTH: "Google"}, {ORTH: "Maps"}], on_match=on_match)
+
+    doc = nlp(u'HELLO WORLD on Google Maps.')
+    matches = matcher(doc)
 
 +table(["Name", "Type", "Description"])
     +row
-        +cell #[code entity_key]
-        +cell unicode / int
-        +cell An ID for the entity.
-
-    +row
-        +cell #[code attrs]
-        +cell -
-        +cell Attributes to associate with the Matcher.
-
-    +row
-        +cell #[code if_exists]
+        +cell #[code match_id]
         +cell unicode
-        +cell
-            |  #[code 'raise'], #[code 'ignore'] or #[code 'update']. Controls
-            |  what happens if the entity ID already exists. Defaults to
-            |  #[code 'raise'].
+        +cell An ID for the thing you're matching.
 
     +row
-        +cell #[code acceptor]
-        +cell -
-        +cell Callback function to filter matches of the entity.
+        +cell #[code *patterns]
+        +cell list
+        +cell
+            |  Match pattern. A pattern consists of a list of dicts, where each
+            |  dict describes a token.
 
     +row
         +cell #[code on_match]
-        +cell -
-        +cell Callback function to act on matches of the entity.
-
-    +footrow
-        +cell returns
-        +cell #[code None]
-        +cell -
-
-+h(2, "add_pattern") Matcher.add_pattern
-    +tag method
-
-p Add a pattern to the matcher.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code entity_key]
-        +cell unicode / int
-        +cell An ID for the entity.
-
-    +row
-        +cell #[code token_specs]
-        +cell -
-        +cell Description of the pattern to be matched.
-
-    +row
-        +cell #[code label]
-        +cell unicode / int
-        +cell Label to assign to the matched pattern. Defaults to #[code ""].
-
-    +footrow
-        +cell returns
-        +cell #[code None]
-        +cell -
-
-+h(2, "has_entity") Matcher.has_entity
-    +tag method
-
-p Check whether the matcher has an entity.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code entity_key]
-        +cell unicode / int
-        +cell The entity key to check.
-
-    +footrow
-        +cell returns
-        +cell bool
-        +cell Whether the matcher has the entity.
+        +cell function
+        +cell
+            |  Callback function to act on matches. Takes the arguments
+            |  #[code matcher], #[code doc], #[code id] and #[code matches].
