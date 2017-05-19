@@ -86,17 +86,17 @@ class CLI(object):
         use_gpu=("Use GPU", "flag", "g", bool),
         no_tagger=("Don't train tagger", "flag", "T", bool),
         no_parser=("Don't train parser", "flag", "P", bool),
-        no_ner=("Don't train NER", "flag", "N", bool)
+        no_entities=("Don't train NER", "flag", "N", bool)
     )
     def train(self, lang, output_dir, train_data, dev_data=None, n_iter=15,
               nsents=0, parser_L1=0.0, use_gpu=False,
-              no_tagger=False, no_parser=False, no_ner=False):
+              no_tagger=False, no_parser=False, no_entities=False):
         """
         Train a model. Expects data in spaCy's JSON format.
         """
         nsents = nsents or None
         cli_train(lang, output_dir, train_data, dev_data, n_iter, nsents,
-                  use_gpu, not no_tagger, not no_parser, not no_ner, parser_L1)
+                  use_gpu, no_tagger, no_parser, no_entities, parser_L1)
 
     @plac.annotations(
         lang=("model language", "positional", None, str),
