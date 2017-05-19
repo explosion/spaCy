@@ -229,8 +229,6 @@ cdef class Parser:
                     nI=token_vector_width,
                     pieces=maxout_pieces)
 
-        lower = rebatch(1024, lower)
-
         with Model.use_device('cpu'):
             upper = chain(
                         Maxout(hidden_width),
@@ -342,8 +340,7 @@ cdef class Parser:
 
         backprops = []
         cdef float loss = 0.
-        cutoff = max(1, len(todo) // 10)
-        while len(todo) >= cutoff:
+        while todo:
             states, golds = zip(*todo)
 
             token_ids = self.get_token_ids(states)
