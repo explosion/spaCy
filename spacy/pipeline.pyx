@@ -33,7 +33,7 @@ from .morphology cimport Morphology
 from .vocab cimport Vocab
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
-from ._ml import Tok2Vec, flatten, get_col, doc2feats
+from ._ml import rebatch, Tok2Vec, flatten, get_col, doc2feats
 from .parts_of_speech import X
 
 
@@ -57,18 +57,12 @@ class TokenVectorEncoder(object):
             docs = [docs]
         tokvecs = self.predict(docs)
         self.set_annotations(docs, tokvecs)
-        state = {} if state is None else state
-        state['tokvecs'] = tokvecs
-        return state
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
-        for batch in cytoolz.partition_all(batch_size, stream):
-            docs, states = zip(*batch)
+        for docs in cytoolz.partition_all(batch_size, stream):
             tokvecs = self.predict(docs)
             self.set_annotations(docs, tokvecs)
-            for state in states:
-                state['tokvecs'] = tokvecs
-            yield from zip(docs, states)
+            yield from docs
 
     def predict(self, docs):
         feats = self.doc2feats(docs)
@@ -81,18 +75,12 @@ class TokenVectorEncoder(object):
             doc.tensor = tokvecs[start : start + len(doc)]
             start += len(doc)
 
-    def update(self, docs, golds, state=None,
-               drop=0., sgd=None):
+    def begin_update(self, docs, drop=0.):
         if isinstance(docs, Doc):
             docs = [docs]
-            golds = [golds]
-        state = {} if state is None else state
         feats = self.doc2feats(docs)
         tokvecs, bp_tokvecs = self.model.begin_update(feats, drop=drop)
-        state['feats'] = feats
-        state['tokvecs'] = tokvecs
-        state['bp_tokvecs'] = bp_tokvecs
-        return state
+        return tokvecs, bp_tokvecs
 
     def get_loss(self, docs, golds, scores):
         raise NotImplementedError
@@ -113,22 +101,16 @@ class NeuralTagger(object):
         self.vocab = vocab
         self.model = model
 
-    def __call__(self, doc, state=None):
-        assert state is not None
-        assert 'tokvecs' in state
-        tokvecs = state['tokvecs']
-        tags = self.predict(tokvecs)
+    def __call__(self, doc):
+        tags = self.predict(doc.tensor)
         self.set_annotations([doc], tags)
-        return state
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
-        for batch in cytoolz.partition_all(batch_size, stream):
-            docs, states = zip(*batch)
-            tag_ids = self.predict(states[0]['tokvecs'])
+        for docs in cytoolz.partition_all(batch_size, stream):
+            tokvecs = self.model.ops.flatten([d.tensor for d in docs])
+            tag_ids = self.predict(tokvecs)
             self.set_annotations(docs, tag_ids)
-            for state in states:
-                state['tag_ids'] = tag_ids
-            yield from zip(docs, states)
+            yield from docs
 
     def predict(self, tokvecs):
         scores = self.model(tokvecs)
@@ -150,11 +132,9 @@ class NeuralTagger(object):
                 vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
                 idx += 1
 
-    def update(self, docs, golds, state=None, drop=0., sgd=None):
-        state = {} if state is None else state
+    def update(self, docs_tokvecs, golds, drop=0., sgd=None):
+        docs, tokvecs = docs_tokvecs
 
-        tokvecs = state['tokvecs']
-        bp_tokvecs = state['bp_tokvecs']
         if self.model.nI is None:
             self.model.nI = tokvecs.shape[1]
 
@@ -163,20 +143,20 @@ class NeuralTagger(object):
 
         d_tokvecs = bp_tag_scores(d_tag_scores, sgd=sgd)
 
-        bp_tokvecs(d_tokvecs, sgd=sgd)
-
-        state['tag_scores'] = tag_scores
-        state['tag_loss'] = loss
-        return state
+        return d_tokvecs
 
     def get_loss(self, docs, golds, scores):
         tag_index = {tag: i for i, tag in enumerate(self.vocab.morphology.tag_names)}
 
         cdef int idx = 0
         correct = numpy.zeros((scores.shape[0],), dtype='i')
+        guesses = scores.argmax(axis=1)
         for gold in golds:
             for tag in gold.tags:
-                correct[idx] = tag_index[tag]
+                if tag is None:
+                    correct[idx] = guesses[idx]
+                else:
+                    correct[idx] = tag_index[tag]
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype='i')
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
@@ -198,13 +178,14 @@ class NeuralTagger(object):
         cdef Vocab vocab = self.vocab
         vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                       vocab.morphology.lemmatizer)
-        self.model = Softmax(self.vocab.morphology.n_tags)
-        print("Tagging", self.model.nO, "tags")
+        token_vector_width = pipeline[0].model.nO
+        self.model = rebatch(1024, Softmax(self.vocab.morphology.n_tags,
+                                          token_vector_width))
+        #self.model = Softmax(self.vocab.morphology.n_tags)
 
     def use_params(self, params):
         with self.model.use_params(params):
             yield
-
 
 
 cdef class EntityRecognizer(LinearParser):
@@ -273,8 +254,6 @@ cdef class NeuralEntityRecognizer(NeuralParser):
                 if ids[i, j] != -1:
                     ids[i, j] += state.c.offset
         return ids
-
-
 
 
 cdef class BeamDependencyParser(BeamParser):

@@ -35,12 +35,12 @@ from preshed.maps cimport map_get
 
 from thinc.api import layerize, chain
 from thinc.neural import Model, Affine, ELU, ReLu, Maxout
-from thinc.neural.ops import NumpyOps
+from thinc.neural.ops import NumpyOps, CupyOps
 
 from .. import util
 from ..util import get_async, get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
-from .._ml import Tok2Vec, doc2feats
+from .._ml import Tok2Vec, doc2feats, rebatch
 
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
@@ -229,6 +229,8 @@ cdef class Parser:
                     nI=token_vector_width,
                     pieces=maxout_pieces)
 
+        lower = rebatch(1024, lower)
+
         with Model.use_device('cpu'):
             upper = chain(
                         Maxout(hidden_width),
@@ -274,7 +276,7 @@ cdef class Parser:
     def __reduce__(self):
         return (Parser, (self.vocab, self.moves, self.model), None, None)
 
-    def __call__(self, Doc tokens, state=None):
+    def __call__(self, Doc doc):
         """
         Apply the parser or entity recognizer, setting the annotations onto the Doc object.
 
@@ -283,10 +285,9 @@ cdef class Parser:
         Returns:
             None
         """
-        self.parse_batch([tokens], state['tokvecs'])
-        return state
+        self.parse_batch([doc], doc.tensor)
 
-    def pipe(self, stream, int batch_size=1000, int n_threads=2):
+    def pipe(self, docs, int batch_size=1000, int n_threads=2):
         """
         Process a stream of documents.
 
@@ -301,12 +302,11 @@ cdef class Parser:
         cdef StateClass parse_state
         cdef Doc doc
         queue = []
-        for batch in cytoolz.partition_all(batch_size, stream):
-            batch = list(batch)
-            docs, states = zip(*batch)
-            parse_states = self.parse_batch(docs, states[0]['tokvecs'])
+        for docs in cytoolz.partition_all(batch_size, docs):
+            tokvecs = self.model[0].ops.flatten([d.tensor for d in docs])
+            parse_states = self.parse_batch(docs, tokvecs)
             self.set_annotations(docs, parse_states)
-            yield from zip(docs, states)
+            yield from docs
 
     def parse_batch(self, docs, tokvecs):
         cuda_stream = get_cuda_stream()
@@ -324,10 +324,8 @@ cdef class Parser:
             todo = [st for st in states if not st.is_final()]
         return states
 
-    def update(self, docs, golds, state=None, drop=0., sgd=None):
-        assert state is not None
-        assert 'tokvecs' in state
-        assert 'bp_tokvecs' in state
+    def update(self, docs_tokvecs, golds, drop=0., sgd=None):
+        docs, tokvecs = docs_tokvecs
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
@@ -335,9 +333,6 @@ cdef class Parser:
         cuda_stream = get_cuda_stream()
         for gold in golds:
             self.moves.preprocess_gold(gold)
-
-        tokvecs = state['tokvecs']
-        bp_tokvecs = state['bp_tokvecs']
 
         states = self.moves.init_batch(docs)
         state2vec, vec2scores = self.get_batch_model(len(states), tokvecs, cuda_stream,
@@ -357,17 +352,17 @@ cdef class Parser:
 
             d_scores = self.get_batch_loss(states, golds, scores)
             d_vector = bp_scores(d_scores, sgd=sgd)
-            loss += (d_scores**2).sum()
 
-            if not isinstance(tokvecs, state2vec.ops.xp.ndarray):
-                backprops.append((token_ids, d_vector, bp_vector))
-            else:
+            if isinstance(self.model[0].ops, CupyOps) \
+            and not isinstance(token_ids, state2vec.ops.xp.ndarray):
                 # Move token_ids and d_vector to CPU, asynchronously
                 backprops.append((
                     get_async(cuda_stream, token_ids),
                     get_async(cuda_stream, d_vector),
                     bp_vector
                 ))
+            else:
+                backprops.append((token_ids, d_vector, bp_vector))
             self.transition_batch(states, scores)
             todo = [st for st in todo if not st[0].is_final()]
         # Tells CUDA to block, so our async copies complete.
@@ -385,9 +380,7 @@ cdef class Parser:
             else:
                 xp.add.at(d_tokvecs,
                     token_ids, d_state_features * active_feats)
-        bp_tokvecs(d_tokvecs, sgd)
-        state['parser_loss'] = loss
-        return state
+        return d_tokvecs
 
     def get_batch_model(self, batch_size, tokvecs, stream, dropout):
         lower, upper = self.model
@@ -445,7 +438,6 @@ cdef class Parser:
             self.moves.finalize_doc(doc)
 
     def add_label(self, label):
-        # Doesn't set label into serializer -- subclasses override it to do that.
         for action in self.moves.action_types:
             added = self.moves.add_action(action, label)
             if added:
