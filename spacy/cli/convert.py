@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from pathlib import Path
 
-from .converters import conllu2json
+from .converters import conllu2json, iob2json
 from ..util import prints
 
 
@@ -13,7 +13,8 @@ from ..util import prints
 
 CONVERTERS = {
     '.conllu': conllu2json,
-    '.conll': conllu2json
+    '.conll': conllu2json,
+    '.iob': iob2json
 }
 
 
