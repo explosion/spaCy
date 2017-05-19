@@ -315,11 +315,11 @@ cdef class Parser:
 
         todo = [st for st in states if not st.is_final()]
         while todo:
-            token_ids = self.get_token_ids(states)
+            token_ids = self.get_token_ids(todo)
             vectors = state2vec(token_ids)
             scores = vec2scores(vectors)
-            self.transition_batch(states, scores)
-            todo = [st for st in states if not st.is_final()]
+            self.transition_batch(todo, scores)
+            todo = [st for st in todo if not st.is_final()]
         return states
 
     def update(self, docs_tokvecs, golds, drop=0., sgd=None):
@@ -469,10 +469,10 @@ cdef class Parser:
             self.model = dill.load(file_)
 
     def to_bytes(self):
-        pass
+        dill.dumps(self.model)
 
     def from_bytes(self, data):
-        pass
+        self.model = dill.loads(data)
 
 
 class ParserStateError(ValueError):
