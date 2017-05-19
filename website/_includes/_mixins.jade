@@ -164,6 +164,16 @@ mixin tag()
         block
 
 
+//- "Requires model" tag with tooltip and list of capabilities
+    ...capabs - [string] Required model capabilities, e.g. "vectors".
+
+mixin tag-model(...capabs)
+    - var intro = "To use this functionality, spaCy needs a model to be installed"
+    - var ext = capabs ? " that supports the following capabilities: " + capabs.join(', ') : ""
+    +tag Requires model
+    +help(intro + ext + ".").u-color-theme
+
+
 //- List
     type  - [string] "numbers", "letters", "roman" (bulleted list if none set)
     start - [integer] start number
