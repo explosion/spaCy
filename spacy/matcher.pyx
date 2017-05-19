@@ -401,6 +401,7 @@ cdef class Matcher:
             on_match = self._callbacks.get(ent_id)
             if on_match is not None:
                 on_match(self, doc, i, matches)
+        # TODO: only return (match_id, start, end)
         return matches
 
     def pipe(self, docs, batch_size=1000, n_threads=2):
