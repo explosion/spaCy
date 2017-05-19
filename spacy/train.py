@@ -43,12 +43,14 @@ class Trainer(object):
                 else:
                     paragraph_tuples = merge_sents(paragraph_tuples)
                 if augment_data is None:
-                    if i not in cached_docs:
-                        cached_docs[i] = self.make_docs(raw_text, paragraph_tuples)
-                    docs = cached_docs[i]
-                    if i not in cached_golds:
-                        cached_golds[i] = self.make_golds(docs, paragraph_tuples)
-                    golds = cached_golds[i]
+                    docs = self.make_docs(raw_text, paragraph_tuples)
+                    golds = self.make_golds(docs, paragraph_tuples)
+                    #if i not in cached_docs:
+                    #    cached_docs[i] = self.make_docs(raw_text, paragraph_tuples)
+                    #docs = cached_docs[i]
+                    #if i not in cached_golds:
+                    #    cached_golds[i] = self.make_golds(docs, paragraph_tuples)
+                    #golds = cached_golds[i]
                 else:
                     raw_text, paragraph_tuples = augment_data(raw_text, paragraph_tuples)
                     docs = self.make_docs(raw_text, paragraph_tuples)
@@ -83,7 +85,7 @@ class Trainer(object):
             all_docs.extend(docs)
             all_golds.extend(golds)
         scorer = Scorer()
-        for doc, gold in zip(self.nlp.pipe(all_docs), all_golds):
+        for doc, gold in zip(self.nlp.pipe(all_docs, batch_size=16), all_golds):
             scorer.score(doc, gold)
         return scorer
 
