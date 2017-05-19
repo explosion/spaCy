@@ -8,6 +8,22 @@ TOKENIZER_EXCEPTIONS = {
         {ORTH: "'gus", LEMMA: "agus", NORM: "agus"}
     ],
 
+    "'niar": [
+        {ORTH: "'niar", LEMMA: "aniar", NORM: "aniar"}
+    ],
+
+    "'níos": [
+        {ORTH: "'níos", LEMMA: "aníos", NORM: "aníos"}
+    ],
+
+    "'ndiu": [
+        {ORTH: "'ndiu", LEMMA: "inniu", NORM: "inniu"}
+    ],
+
+    "'nocht": [
+        {ORTH: "'nocht", LEMMA: "anocht", NORM: "anocht"}
+    ],
+
     "a.C.n.": [
         {ORTH: "a.", LEMMA: "ante"},
         {ORTH: "C.", LEMMA: "Christum"},
