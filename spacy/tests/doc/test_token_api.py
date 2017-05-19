@@ -99,8 +99,8 @@ def test_doc_token_api_ancestors(en_tokenizer):
     assert [t.text for t in doc[1].ancestors] == ["saw"]
     assert [t.text for t in doc[2].ancestors] == []
 
-    assert doc[2].is_ancestor_of(doc[7])
-    assert not doc[6].is_ancestor_of(doc[2])
+    assert doc[2].is_ancestor(doc[7])
+    assert not doc[6].is_ancestor(doc[2])
 
 
 def test_doc_token_api_head_setter(en_tokenizer):

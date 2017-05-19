@@ -407,7 +407,7 @@ cdef class Token:
             cdef int rel_newhead_i = new_head.i - self.i
 
             # is the new head a descendant of the old head
-            cdef bint is_desc = old_head.is_ancestor_of(new_head)
+            cdef bint is_desc = old_head.is_ancestor(new_head)
 
             cdef int new_edge
             cdef Token anc, child
