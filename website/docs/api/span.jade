@@ -12,8 +12,7 @@ p Create a Span object from the #[code slice doc[start : end]].
 +aside-code("Example").
     doc = nlp(u'Give it back! He pleaded.')
     span = doc[1:4]
-    print([token.text for token in span])
-    # ['it', 'back', '!']
+    assert [t.text for t in span] ==  [u'it', u'back', u'!']
 
 +table(["Name", "Type", "Description"])
     +row
@@ -93,8 +92,7 @@ p Iterate over #[code Token] objects.
 +aside-code("Example").
     doc = nlp(u'Give it back! He pleaded.')
     span = doc[1:4]
-    print([token.text for token in span])
-    # ['it', 'back', '!']
+    assert [t.text for t in span] == ['it', 'back', '!']
 
 +table(["Name", "Type", "Description"])
     +footrow
@@ -120,16 +118,18 @@ p Get the number of tokens in the span.
 
 +h(2, "similarity") Span.similarity
     +tag method
-    +tag requires model
+    +tag requires model: vectors
 
 p
     |  Make a semantic similarity estimate. The default estimate is cosine
     |  similarity using an average of word vectors.
 
 +aside-code("Example").
-    apples, and, oranges = nlp(u'apples and oranges')
-    apples_oranges = apples.similarity(oranges)
-    oranges_apples = oranges.similarity(apples)
+    doc = nlp(u'green apples and red oranges')
+    green_apples = doc[:2]
+    red_oranges = doc[3:]
+    apples_oranges = green_apples.similarity(red_oranges)
+    oranges_apples = red_oranges.similarity(green_apples)
     assert apples_oranges == oranges_apples
 
 +table(["Name", "Type", "Description"])
@@ -165,17 +165,18 @@ p Retokenize the document, such that the span is merged into a single token.
 
 +h(2, "root") Span.root
     +tag property
+    +tag requires model: parse
 
 p
     |  The token within the span that's highest in the parse tree. If there's a
     |  tie, the earlist is prefered.
 
 +aside-code("Example").
-    tokens = nlp(u'I like New York in Autumn.')
-    i, like, new, york, in_, autumn, dot = range(len(tokens))
-    assert tokens[new].head.text == 'York'
-    assert tokens[york].head.text == 'like'
-    new_york = tokens[new&#58;york+1]
+    doc = nlp(u'I like New York in Autumn.')
+    i, like, new, york, in_, autumn, dot = range(len(doc))
+    assert doc[new].head.text == 'York'
+    assert doc[york].head.text == 'like'
+    new_york = doc[new&#58;york+1]
     assert new_york.root.text == 'York'
 
 +table(["Name", "Type", "Description"])
@@ -186,8 +187,14 @@ p
 
 +h(2, "lefts") Span.lefts
     +tag property
+    +tag requires model: parse
 
 p Tokens that are to the left of the span, whose head is within the span.
+
++aside-code("Example").
+    doc = nlp(u'I like New York in Autumn.')
+    lefts = [t.text for t in doc[3:7].lefts]
+    assert lefts == [u'New']
 
 +table(["Name", "Type", "Description"])
     +footrow
@@ -197,8 +204,14 @@ p Tokens that are to the left of the span, whose head is within the span.
 
 +h(2, "rights") Span.rights
     +tag property
+    +tag requires model: parse
 
 p Tokens that are to the right of the span, whose head is within the span.
+
++aside-code("Example").
+    doc = nlp(u'I like New York in Autumn.')
+    rights = [t.text for t in doc[2:4].rights]
+    assert rights == [u'in']
 
 +table(["Name", "Type", "Description"])
     +footrow
@@ -208,8 +221,14 @@ p Tokens that are to the right of the span, whose head is within the span.
 
 +h(2, "subtree") Span.subtree
     +tag property
+    +tag requires model: parse
 
 p Tokens that descend from tokens in the span, but fall outside it.
+
++aside-code("Example").
+    doc = nlp(u'Give it back! He pleaded.')
+    subtree = [t.text for t in doc[:3].subtree]
+    assert subtree == [u'Give', u'it', u'back', u'!']
 
 +table(["Name", "Type", "Description"])
     +footrow
@@ -219,15 +238,15 @@ p Tokens that descend from tokens in the span, but fall outside it.
 
 +h(2, "has_vector") Span.has_vector
     +tag property
-    +tag requires model
+    +tag requires model: vectors
 
 p
     |  A boolean value indicating whether a word vector is associated with the
     |  object.
 
 +aside-code("Example").
-    apple = nlp(u'apple')
-    assert apple.has_vector
+    doc = nlp(u'I like apples')
+    assert doc[1:].has_vector
 
 +table(["Name", "Type", "Description"])
     +footrow
@@ -237,16 +256,16 @@ p
 
 +h(2, "vector") Span.vector
     +tag property
-    +tag requires model
+    +tag requires model: vectors
 
 p
     |  A real-valued meaning representation. Defaults to an average of the
     |  token vectors.
 
 +aside-code("Example").
-    apple = nlp(u'apple')
-    (apple.vector.dtype, apple.vector.shape)
-    # (dtype('float32'), (300,))
+    doc = nlp(u'I like apples')
+    assert doc[1:].vector.dtype == 'float32'
+    assert doc[1:].vector.shape == (300,)
 
 +table(["Name", "Type", "Description"])
     +footrow
@@ -256,10 +275,16 @@ p
 
 +h(2, "vector_norm") Span.vector_norm
     +tag property
-    +tag requires model
+    +tag requires model: vectors
 
 p
     |  The L2 norm of the span's vector representation.
+
++aside-code("Example").
+    doc = nlp(u'I like apples')
+    doc[1:].vector_norm # 4.800883928527915
+    doc[2:].vector_norm # 6.895897646384268
+    assert doc[1:].vector_norm != doc[2:].vector_norm
 
 +table(["Name", "Type", "Description"])
     +footrow

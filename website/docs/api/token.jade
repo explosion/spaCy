@@ -12,6 +12,7 @@ p Construct a #[code Token] object.
 +aside-code("Example").
     doc = nlp(u'Give it back! He pleaded.')
     token = doc[0]
+    assert token.text == u'Give'
 
 +table(["Name", "Type", "Description"])
     +row
@@ -59,8 +60,7 @@ p Check the value of a boolean flag.
     from spacy.attrs import IS_TITLE
     doc = nlp(u'Give it back! He pleaded.')
     token = doc[0]
-    token.check_flag(IS_TITLE)
-    # True
+    assert token.check_flag(IS_TITLE) == True
 
 +table(["Name", "Type", "Description"])
     +row
@@ -73,35 +73,14 @@ p Check the value of a boolean flag.
         +cell bool
         +cell Whether the flag is set.
 
-+h(2, "nbor") Token.nbor
-    +tag method
-
-p Get a neighboring token.
-
-+aside-code("Example").
-    doc = nlp(u'Give it back! He pleaded.')
-    token = doc[0]
-    token.nbor()
-    # it
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code i]
-        +cell int
-        +cell The relative position of the token to get. Defaults to #[code 1].
-
-    +footrow
-        +cell returns
-        +cell #[code Token]
-        +cell The token at position #[code self.doc[self.i+i]].
-
 +h(2, "similarity") Token.similarity
     +tag method
+    +tag requires model: vectors
 
 p Compute a semantic similarity estimate. Defaults to cosine over vectors.
 
 +aside-code("Example").
-    apples, and, oranges = nlp(u'apples and oranges')
+    apples, _, oranges = nlp(u'apples and oranges')
     apples_oranges = apples.similarity(oranges)
     oranges_apples = oranges.similarity(apples)
     assert apples_oranges == oranges_apples
@@ -119,12 +98,40 @@ p Compute a semantic similarity estimate. Defaults to cosine over vectors.
         +cell float
         +cell A scalar similarity score. Higher is more similar.
 
++h(2, "nbor") Token.nbor
+    +tag method
+
+p Get a neighboring token.
+
++aside-code("Example").
+    doc = nlp(u'Give it back! He pleaded.')
+    give_nbor = doc[0].nbor()
+    assert give_nbor.text == u'it'
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code i]
+        +cell int
+        +cell The relative position of the token to get. Defaults to #[code 1].
+
+    +footrow
+        +cell returns
+        +cell #[code Token]
+        +cell The token at position #[code self.doc[self.i+i]].
+
 +h(2, "is_ancestor") Token.is_ancestor
     +tag method
+    +tag requires model: parse
 
 p
     |  Check whether this token is a parent, grandparent, etc. of another
     |  in the dependency tree.
+
++aside-code("Example").
+    doc = nlp(u'Give it back! He pleaded.')
+    give = doc[0]
+    it = doc[1]
+    assert give.is_ancestor(it)
 
 +table(["Name", "Type", "Description"])
     +row
@@ -137,59 +144,37 @@ p
         +cell bool
         +cell Whether this token is the ancestor of the descendant.
 
-+h(2, "has_vector") Token.has_vector
++h(2, "ancestors") Token.ancestors
     +tag property
-    +tag requires model
+    +tag requires model: parse
 
-p
-    |  A boolean value indicating whether a word vector is associated with the
-    |  token.
+p The rightmost token of this token's syntactic descendants.
 
 +aside-code("Example").
-    apple = nlp(u'apple')
-    assert apple.has_vector
+    doc = nlp(u'Give it back! He pleaded.')
+    it_ancestors = doc[1].ancestors
+    assert [t.text for t in it_ancestors] == [u'Give']
+    he_ancestors = doc[4].ancestors
+    assert [t.text for t in he_ancestors] == [u'pleaded']
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell returns
-        +cell bool
-        +cell Whether the token has a vector data attached.
-
-+h(2, "vector") Token.vector
-    +tag property
-    +tag requires model
-
-p
-    |  A real-valued meaning representation.
-
-+aside-code("Example").
-    apple = nlp(u'apple')
-    (apple.vector.dtype, apple.vector.shape)
-    # (dtype('float32'), (300,))
-
-+table(["Name", "Type", "Description"])
-    +footrow
-        +cell returns
-        +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
-        +cell A 1D numpy array representing the token's semantics.
-
-+h(2, "vector_norm") Span.vector_norm
-    +tag property
-    +tag requires model
-
-p
-    |  The L2 norm of the token's vector representation.
-
-+table(["Name", "Type", "Description"])
-    +footrow
-        +cell returns
-        +cell float
-        +cell The L2 norm of the vector representation.
+        +cell yields
+        +cell #[code Token]
+        +cell
+            |  A sequence of ancestor tokens such that
+            |  #[code ancestor.is_ancestor(self)].
 
 +h(2, "conjuncts") Token.conjuncts
     +tag property
+    +tag requires model: parse
 
 p A sequence of coordinated tokens, including the token itself.
+
++aside-code("Example").
+    doc = nlp(u'I like apples and oranges')
+    apples_conjuncts = doc[2].conjuncts
+    assert [t.text for t in apples_conjuncts] == [u'oranges']
 
 +table(["Name", "Type", "Description"])
     +footrow
@@ -199,8 +184,14 @@ p A sequence of coordinated tokens, including the token itself.
 
 +h(2, "children") Token.children
     +tag property
+    +tag requires model: parse
 
 p A sequence of the token's immediate syntactic children.
+
++aside-code("Example").
+    doc = nlp(u'Give it back! He pleaded.')
+    give_children = doc[0].children
+    assert [t.text for t in give_children] == [u'it', u'back', u'!']
 
 +table(["Name", "Type", "Description"])
     +footrow
@@ -210,8 +201,14 @@ p A sequence of the token's immediate syntactic children.
 
 +h(2, "subtree") Token.subtree
     +tag property
+    +tag requires model: parse
 
 p A sequence of all the token's syntactic descendents.
+
++aside-code("Example").
+    doc = nlp(u'Give it back! He pleaded.')
+    give_subtree = doc[0].subtree
+    assert [t.text for t in give_subtree] == [u'Give', u'it', u'back', u'!']
 
 +table(["Name", "Type", "Description"])
     +footrow
@@ -219,18 +216,64 @@ p A sequence of all the token's syntactic descendents.
         +cell #[code Token]
         +cell A descendant token such that #[code self.is_ancestor(descendant)].
 
-+h(2, "ancestors") Token.ancestors
++h(2, "has_vector") Token.has_vector
     +tag property
+    +tag requires model: vectors
 
-p The rightmost token of this token's syntactic descendants.
+p
+    |  A boolean value indicating whether a word vector is associated with the
+    |  token.
+
++aside-code("Example").
+    doc = nlp(u'I like apples')
+    apples = doc[2]
+    assert apples.has_vector
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yields
-        +cell #[code Token]
-        +cell
-            |  A sequence of ancestor tokens such that
-            |  #[code ancestor.is_ancestor(self)].
+        +cell returns
+        +cell bool
+        +cell Whether the token has a vector data attached.
+
++h(2, "vector") Token.vector
+    +tag property
+    +tag requires model: vectors
+
+p
+    |  A real-valued meaning representation.
+
++aside-code("Example").
+    doc = nlp(u'I like apples')
+    apples = doc[2]
+    assert apples.vector.dtype == 'float32'
+    assert apples.vector.shape == (300,)
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell returns
+        +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
+        +cell A 1D numpy array representing the token's semantics.
+
++h(2, "vector_norm") Span.vector_norm
+    +tag property
+    +tag requires model: vectors
+
+p
+    |  The L2 norm of the token's vector representation.
+
++aside-code("Example").
+    doc = nlp(u'I like apples and pasta')
+    apples = doc[2]
+    pasta = doc[4]
+    apples.vector_norm # 6.89589786529541
+    pasta.vector_norm # 7.759851932525635
+    assert apples.vector_norm != pasta.vector_norm
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell returns
+        +cell float
+        +cell The L2 norm of the vector representation.
 
 +h(2, "attributes") Attributes
 

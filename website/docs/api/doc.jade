@@ -109,9 +109,8 @@ p
     |  easily accessed.
 
 +aside-code("Example").
-    doc = nlp(u'Give it back! He pleaded.')
-    for token in doc:
-        print(token.text, token.tag_)
+    doc = nlp(u'Give it back')
+    assert [t.text for t in doc] == [u'Give', u'it', u'back']
 
 p
     |  This is the main way of accessing #[+api("token") #[code Token]] objects,
@@ -143,7 +142,7 @@ p Get the number of tokens in the document.
 
 +h(2, "similarity") Doc.similarity
     +tag method
-    +tag requires model
+    +tag requires model: vectors
 
 p
     |  Make a semantic similarity estimate. The default estimate is cosine
@@ -178,11 +177,10 @@ p
     |  of the given attribute ID.
 
 +aside-code("Example").
-    from spacy import attrs
+    from spacy.attrs import ORTH
     doc = nlp(u'apple apple orange banana')
-    tokens.count_by(attrs.ORTH)
-    # {12800L: 1, 11880L: 2, 7561L: 1}
-    tokens.to_array([attrs.ORTH])
+    assert doc.count_by(ORTH) == {7024L: 1, 119552L: 1, 2087L: 2}
+    doc.to_array([attrs.ORTH])
     # array([[11880], [11880], [7561], [12800]])
 
 +table(["Name", "Type", "Description"])
@@ -237,6 +235,7 @@ p
     np_array = doc.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
     doc2 = Doc(doc.vocab)
     doc2.from_array([LOWER, POS, ENT_TYPE, IS_ALPHA], np_array)
+    assert doc.text == doc2.text
 
 +table(["Name", "Type", "Description"])
     +row
@@ -307,8 +306,7 @@ p
 +aside-code("Example").
     doc = nlp(u'Los Angeles start.')
     doc.merge(0, len('Los Angeles'), 'NNP', 'Los Angeles', 'GPE')
-    print([token.text for token in doc])
-    # ['Los Angeles', 'start', '.']
+    assert [t.text for t in doc] == [u'Los Angeles', u'start', u'.']
 
 +table(["Name", "Type", "Description"])
     +row
@@ -338,7 +336,7 @@ p
 
 +h(2, "print_tree") Doc.print_tree
     +tag method
-    +tag requires model
+    +tag requires model: parse
 
 p
     |  Returns the parse trees in JSON (dict) format. Especially useful for
@@ -371,7 +369,7 @@ p
 
 +h(2, "ents") Doc.ents
     +tag property
-    +tag requires model
+    +tag requires model: NER
 
 p
     |  Iterate over the entities in the document. Yields named-entity
@@ -393,7 +391,7 @@ p
 
 +h(2, "noun_chunks") Doc.noun_chunks
     +tag property
-    +tag requires model
+    +tag requires model: parse
 
 p
     |  Iterate over the base noun phrases in the document. Yields base
@@ -416,7 +414,7 @@ p
 
 +h(2, "sents") Doc.sents
     +tag property
-    +tag requires model
+    +tag requires model: parse
 
 p
     |  Iterate over the sentences in the document. Sentence spans have no label.
@@ -438,7 +436,7 @@ p
 
 +h(2, "has_vector") Doc.has_vector
     +tag property
-    +tag requires model
+    +tag requires model: vectors
 
 p
     |  A boolean value indicating whether a word vector is associated with the
@@ -456,7 +454,7 @@ p
 
 +h(2, "vector") Doc.vector
     +tag property
-    +tag requires model
+    +tag requires model: vectors
 
 p
     |  A real-valued meaning representation. Defaults to an average of the
@@ -464,8 +462,8 @@ p
 
 +aside-code("Example").
     apples = nlp(u'I like apples')
-    (apples.vector.dtype, apples.vector.shape)
-    # (dtype('float32'), (300,))
+    assert doc.vector.dtype == 'float32'
+    assert doc.vector.shape == (300,)
 
 +table(["Name", "Type", "Description"])
     +footrow
@@ -475,10 +473,17 @@ p
 
 +h(2, "vector_norm") Doc.vector_norm
     +tag property
-    +tag requires model
+    +tag requires model: vectors
 
 p
     |  The L2 norm of the document's vector representation.
+
++aside-code("Example").
+    doc1 = nlp(u'I like apples')
+    doc2 = nlp(u'I like oranges')
+    doc1.vector_norm # 4.54232424414368
+    doc2.vector_norm # 3.304373298575751
+    assert doc1.vector_norm != doc2.vector_norm
 
 +table(["Name", "Type", "Description"])
     +footrow
