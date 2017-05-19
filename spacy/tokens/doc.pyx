@@ -201,6 +201,8 @@ cdef class Doc:
     def __len__(self):
         """The number of tokens in the document.
 
+        RETURNS (int): The number of tokens in the document.
+
         EXAMPLE:
             >>> len(doc)
         """

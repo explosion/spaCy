@@ -150,7 +150,8 @@ p
     |  similarity using an average of word vectors.
 
 +aside-code("Example").
-    apples, and, oranges = nlp(u'apples and oranges')
+    apples = nlp(u'I like apples')
+    oranges = nlp(u'I like oranges')
     apples_oranges = apples.similarity(oranges)
     oranges_apples = oranges.similarity(apples)
     assert apples_oranges == oranges_apples
@@ -368,35 +369,6 @@ p
         +cell dict
         +cell Parse tree as dict.
 
-+h(2, "text") Doc.text
-    +tag property
-
-p A unicode representation of the document text.
-
-+aside-code("Example").
-    text = u'Give it back! He pleaded.'
-    doc = nlp(text)
-    assert doc.text == text
-
-+table(["Name", "Type", "Description"])
-    +footrow
-        +cell returns
-        +cell unicode
-        +cell The original verbatim text of the document.
-
-+h(2, "text_with_ws") Doc.text_with_ws
-    +tag property
-
-p
-    |  An alias of #[code Doc.text], provided for duck-type compatibility with
-    |  #[code Span] and #[code Token].
-
-+table(["Name", "Type", "Description"])
-    +footrow
-        +cell returns
-        +cell unicode
-        +cell The original verbatim text of the document.
-
 +h(2, "ents") Doc.ents
     +tag property
     +tag requires model
@@ -473,8 +445,8 @@ p
     |  object.
 
 +aside-code("Example").
-    apple = nlp(u'apple')
-    assert apple.has_vector
+    doc = nlp(u'I like apples')
+    assert doc.has_vector
 
 +table(["Name", "Type", "Description"])
     +footrow
@@ -491,8 +463,8 @@ p
     |  token vectors.
 
 +aside-code("Example").
-    apple = nlp(u'apple')
-    (apple.vector.dtype, apple.vector.shape)
+    apples = nlp(u'I like apples')
+    (apples.vector.dtype, apples.vector.shape)
     # (dtype('float32'), (300,))
 
 +table(["Name", "Type", "Description"])
@@ -517,6 +489,18 @@ p
 +h(2, "attributes") Attributes
 
 +table(["Name", "Type", "Description"])
+    +row
+        +cell #[code text]
+        +cell unicode
+        +cell A unicode representation of the document text.
+
+    +row
+        +cell #[code text_with_ws]
+        +cell unicode
+        +cell
+            |  An alias of #[code Doc.text], provided for duck-type compatibility
+            |  with #[code Span] and #[code Token].
+
     +row
         +cell #[code mem]
         +cell #[code Pool]
