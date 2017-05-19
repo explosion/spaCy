@@ -117,6 +117,10 @@ class BaseDefaults(object):
 class Language(object):
     """A text-processing pipeline. Usually you'll load this once per process,
     and pass the instance around your application.
+
+    Defaults (class): Settings, data and factory methods for creating the `nlp`
+        object and processing pipeline.
+    lang (unicode): Two-letter language ID, i.e. ISO code.
     """
     Defaults = BaseDefaults
     lang = None
@@ -379,4 +383,3 @@ class Language(object):
             if key not in exclude:
                 setattr(self, key, value)
         return self
-
