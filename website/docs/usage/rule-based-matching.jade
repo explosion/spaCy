@@ -4,58 +4,186 @@ include ../../_includes/_mixins
 
 p
     |  spaCy features a rule-matching engine that operates over tokens, similar
-    |  to regular expressions. The rules can refer to token annotations and
-    |  flags, and matches support callbacks to accept, modify and/or act on the
-    |  match. The rule matcher also allows you to associate patterns with
-    |  entity IDs, to allow some basic entity linking or disambiguation.
+    |  to regular expressions. The rules can refer to token annotations (e.g.
+    |  the token #[code text] or #[code tag_], and flags (e.g. #[code IS_PUNCT]).
+    |  The rule matcher also lets you pass in a custom callback
+    |  to act on matches – for example, to merge entities and apply custom labels.
+    |  You can also associate patterns with entity IDs, to allow some basic
+    |  entity linking or disambiguation.
 
-p Here's a minimal example. We first add a pattern that specifies three tokens:
++aside("What about \"real\" regular expressions?")
 
-+list("numbers")
-    +item A token whose lower-case form matches "hello"
-    +item A token whose #[code is_punct] flag is set to #[code True]
-    +item A token whose lower-case form matches "world"
++h(2, "adding-patterns") Adding patterns
 
 p
-    |  Once we've added the pattern, we can use the #[code matcher] as a
-    |  callable, to receive a list of #[code (ent_id, start, end)] tuples.
-    |  Note that #[code LOWER] and #[code IS_PUNCT] are data attributes
-    |  of #[code spacy.attrs].
+    |  Let's say we want to enable spaCy to find a combination of three tokens:
+
++list("numbers")
+    +item
+        |  A token whose #[strong lower-case form matches "hello"], e.g. "Hello"
+        |  or "HELLO".
+    +item
+        |  A token whose #[strong #[code is_punct] flag is set to #[code True]],
+        |  i.e. any punctuation.
+    +item
+        |  A token whose #[strong lower-case form matches "world"], e.g. "World"
+        |  or "WORLD".
 
 +code.
-    from spacy.matcher import Matcher
-    matcher = Matcher(nlp.vocab)
-    matcher.add_pattern("HelloWorld", [{LOWER: "hello"}, {IS_PUNCT: True}, {LOWER: "world"}])
+    [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}]
 
-    doc = nlp(u'Hello, world!')
+p
+    |  First, we initialise the #[code Matcher] with a vocab. The matcher must
+    |  always share the same vocab with the documents it will operate on. We
+    |  can now call #[+api("matcher#add") #[code matcher.add()]] with an ID and
+    |  our custom pattern:
+
++code.
+    import spacy
+    from spacy.matcher import Matcher
+    from spacy.attrs import LOWER, IS_PUNCT # don't forget to import the attrs!
+
+    nlp = spacy.load('en')
+    matcher = Matcher(nlp.vocab)
+    matcher.add_pattern('HelloWorld', [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}])
+
+    doc = nlp(u'Hello, world! Hello world!')
     matches = matcher(doc)
 
 p
-    |  The returned matches include the ID, to let you associate the matches
-    |  with the patterns. You can also group multiple patterns together, which
-    |  is useful when you have a knowledge base of entities you want to match,
-    |  and you want to write multiple patterns for each entity.
-
-+h(2, "entities-patterns") Entities and patterns
+    |  The matcher returns a list of #[code (match_id, start, end)] tuples – in
+    |  this case, #[code [('HelloWorld', 0, 2)]], which maps to the span
+    |  #[code doc[0:2]] of our original document. Optionally, we could also
+    |  choose to add more than one pattern, for example to also match sequences
+    |  without punctuation between "hello" and "world":
 
 +code.
-    matcher.add_entity(
-        "GoogleNow", # Entity ID -- Helps you act on the match.
-        {"ent_type": "PRODUCT", "wiki_en": "Google_Now"}, # Arbitrary attributes (optional)
-    )
+    matcher.add_pattern('HelloWorld', [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}],
+                                      [{LOWER: 'hello'}, {LOWER: 'world'}])
 
-    matcher.add_pattern(
-        "GoogleNow", # Entity ID -- Created if doesn't exist.
-        [ # The pattern is a list of *Token Specifiers*.
-            { # This Token Specifier matches tokens whose orth field is "Google"
-              ORTH: "Google"
-            },
-            { # This Token Specifier matches tokens whose orth field is "Now"
-              ORTH: "Now"
-            }
-        ],
-        label=None # Can associate a label to the pattern-match, to handle it better.
-    )
+p
+    |  By default, the matcher will only return the matches and
+    |  #[strong not do anything else], like merge entities or assign labels.
+    |  This is all up to you and can be defined individually for each pattern,
+    |  by passing in a callback function as the #[code on_match] argument on
+    |  #[code add()]. This is useful, because it lets you write entirely custom
+    |  and #[strong pattern-specific logic]. For example, you might want to
+    |  merge #[em some] patterns into one token, while adding entity labels for
+    |  other pattern types. You shouldn't have to create different matchers for
+    |  each of those processes.
+
++h(2, "on_match") Adding #[code on_match] rules
+
+p
+    |  To move on to a more realistic example, let's say you're working with a
+    |  large corpus of blog articles, and you want to match all mentions of
+    |  "Google I/O" (which spaCy tokenizes as #[code ['Google', 'I', '/', 'O']]).
+    |  To be safe, you only match on the uppercase versions, in case someone has
+    |  written it as "Google i/o". You also add a second pattern with an added
+    |  #[code {IS_DIGIT: True}] token – this will make sure you also match on
+    |  "Google I/O 2017". If this pattern matches, spaCy should execute your
+    |  custom callback function #[code add_event_ent].
+
++code.
+    import spacy
+    from spacy.matcher import Matcher
+    from spacy.attrs import ORTH, UPPER, LOWER, IS_DIGIT
+
+    nlp = spacy.load('en')
+    matcher = Matcher(nlp.vocab)
+
+    matcher.add_pattern('GoogleIO', [{ORTH: 'Google'}, {UPPER: 'I'}, {ORTH: '/'}, {UPPER: 'O'}],
+                                    [{ORTH: 'Google'}, {UPPER: 'I'}, {ORTH: '/'}, {UPPER: 'O'}, {IS_DIGIT: True}],
+                                    on_match=add_event_ent)
+
+    # Get the ID of the 'EVENT' entity type. This is required to set an entity.
+    EVENT = nlp.vocab.strings['EVENT']
+
+    def add_event_ent(matcher, doc, i, matches):
+        # Get the current match and create tuple of entity label, start and end.
+        # Append entity to the doc's entity. (Don't overwrite doc.ents, in case
+        # it already has other entities!)
+        match_id, start, end = matches[i]
+        doc.ents += ((EVENT, start, end),)
+
+p
+    |  In addition to mentions of "Google I/O", your data also contains some
+    |  annoying pre-processing artefacts, like leftover HTML line breaks
+    |  (e.g. #[code &lt;br&gt;] or #[code &lt;BR/&gt;]). While you're at it,
+    |  you want to merge those into one token and flag them, to make sure you
+    |  can easily ignore them later. So you add a second pattern and pass in a
+    |  function #[code merge_and_flag]:
+
++code.
+    matcher.add_pattern('BAD_HTML', [{ORTH: '&lt;'}, {LOWER: 'br'}, {ORTH: '&gt;'}],
+                                    [{ORTH: '&lt;'}, {LOWER: 'br/'}, {ORTH: '&gt;'}]
+                                    on_match=merge_and_flag)
+
+    # Add a new custom flag to the vocab, which is always False by default.
+    # BAD_HTML will be the flag ID, which we can use to set it to True on the span.
+    BAD_HTML_FLAG = doc.vocab.add_flag(lambda text: False)
+
+    def merge_and_flag(matcher, doc, i, matches):
+        match_id, start, end = matches[i]
+        span = doc[start : end]
+        span.merge(is_stop=True) # merge (and mark it as a stop word, just in case)
+        span.set_flag(BAD_HTML_FLAG, True) # set BAD_HTML_FLAG
+
++aside("Tip: Visualizing matches")
+    |  When working with entities, you can use the #[+api("displacy") displaCy]
+    |  in your callback function to quickly generate a NER visualization
+    |  from your updated #[code Doc], to export as an HTML file:
+
+    +code.o-no-block.
+        from spacy import displacy
+        html = displacy.render(doc, style='ent', page=True,
+                               options={'ents': ['EVENT']})
+
+    |  For more info and examples, see the usage workflow on
+    |  #[+a("/docs/usage/visualizers") visualizing spaCy].
+
+p
+    |  We can now call the matcher on our documents. The patterns will be
+    |  matched in the order they occur in the text.
+
++code.
+    doc = nlp(LOTS_OF_TEXT)
+    matcher(doc)
+
++h(3, "on_match-callback") The callback function
+
+p
+    |  The matcher will first collect all matches over the document. It will
+    |  then iterate over the matches, lookup the callback for the entity ID
+    |  that was matched, and invoke it. When the callback is invoked, it is
+    |  passed four arguments: the matcher itself, the document, the position of
+    |  the current match, and the total list of matches. This allows you to
+    |  write callbacks that consider the entire set of matched phrases, so that
+    |  you can resolve overlaps and other conflicts in whatever way you prefer.
+
++table(["Argument", "Type", "Description"])
+    +row
+        +cell #[code matcher]
+        +cell #[code Matcher]
+        +cell The matcher instance.
+
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell The document the matcher was used on.
+
+    +row
+        +cell #[code i]
+        +cell int
+        +cell Index of the current match (#[code matches[i]]).
+
+    +row
+        +cell #[code matches]
+        +cell list
+        +cell
+            |  A list of #[code (match_id, start, end)] tuples, describing the
+            |  matches. A match tuple describes a span #[code doc[start:end]].
+            |  The #[code match_id] is the ID of the added match pattern.
 
 +h(2, "quantifiers") Using quantifiers
 
@@ -82,78 +210,4 @@ p
 
 p
     |  There are no nested or scoped quantifiers. You can build those
-    |  behaviours with acceptors and
-    |  #[+api("matcher#add_entity") #[code on_match]] callbacks.
-
-+h(2, "acceptor-functions") Acceptor functions
-
-p
-    |  The #[code acceptor] keyword of #[code matcher.add_entity()] allows you to
-    |  pass a function to reject or modify matches. The function you pass should
-    |  take five arguments: #[code doc], #[code ent_id], #[code label], #[code start],
-    |  and #[code end].  You can return a falsey value to reject the match, or
-    |  return a 4-tuple #[code (ent_id, label, start, end)].
-
-+code.
-    from spacy.tokens.doc import Doc
-    def trim_title(doc, ent_id, label, start, end):
-        if doc[start].check_flag(IS_TITLE_TERM):
-            return (ent_id, label, start+1, end)
-        else:
-            return (ent_id, label, start, end)
-    titles = set(title.lower() for title in [u'Mr.', 'Dr.', 'Ms.', u'Admiral'])
-    IS_TITLE_TERM = matcher.vocab.add_flag(lambda string: string.lower() in titles)
-    matcher.add_entity('PersonName', acceptor=trim_title)
-    matcher.add_pattern('PersonName', [{LOWER: 'mr.'}, {LOWER: 'cruise'}])
-    matcher.add_pattern('PersonName', [{LOWER: 'dr.'}, {LOWER: 'seuss'}])
-    doc = Doc(matcher.vocab, words=[u'Mr.', u'Cruise', u'likes', 'Dr.', u'Seuss'])
-    for ent_id, label, start, end in matcher(doc):
-        print(doc[start:end].text)
-        # Cruise
-        # Seuss
-
-p
-    |  Passing an #[code acceptor] function allows you to match patterns with
-    |  arbitrary logic that can't easily be expressed by a finite-state machine.
-    |  You can look at the entirety of the
-    |  matched phrase, and its context in the document, and decide to move
-    |  the boundaries or reject the match entirely.
-
-+h(2, "callback-functions") Callback functions
-
-p
-    |  In spaCy &lt;1.0, the #[code Matcher] automatically tagged matched phrases
-    |  with entity types. Since spaCy 1.0, the matcher no longer acts on matches
-    |  automatically. By default, the match list is returned for the user to action.
-    |  However, it's often more convenient to register the required actions as a
-    |  callback. You can do this by passing a function to the #[code on_match]
-    |  keyword argument of #[code matcher.add_entity].
-
-+aside-code("Example").
-    def merge_phrases(matcher, doc, i, matches):
-        '''
-        Merge a phrase. We have to be careful here because we'll change the token indices.
-        To avoid problems, merge all the phrases once we're called on the last match.
-        '''
-        if i != len(matches)-1:
-            return None
-        # Get Span objects
-        spans = [(ent_id, label, doc[start : end]) for ent_id, label, start, end in matches]
-        for ent_id, label, span in spans:
-            span.merge(label=label, tag='NNP' if label else span.root.tag_)
-
-    matcher.add_entity('GoogleNow', on_match=merge_phrases)
-    matcher.add_pattern('GoogleNow', [{ORTH: 'Google'}, {ORTH: 'Now'}])
-    doc = Doc(matcher.vocab, words=[u'Google', u'Now', u'is', u'being', u'rebranded'])
-    matcher(doc)
-    print([w.text for w in doc])
-    # [u'Google Now', u'is', u'being', u'rebranded']
-
-p
-    |  The matcher will first collect all matches over the document. It will
-    |  then iterate over the matches, look-up the callback for the entity ID
-    |  that was matched, and invoke it. When the callback is invoked, it is
-    |  passed four arguments: the matcher itself, the document, the position of
-    |  the current match, and the total list of matches. This allows you to
-    |  write callbacks that consider the entire set of matched phrases, so that
-    |  you can resolve overlaps and other conflicts in whatever way you prefer.
+    |  behaviours with #[code on_match] callbacks.
