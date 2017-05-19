@@ -4,6 +4,44 @@ from __future__ import unicode_literals
 from ..symbols import *
 
 TOKENIZER_EXCEPTIONS = {
+    "'gus": [
+        {ORTH: "'gus", LEMMA: "agus", NORM: "agus"}
+    ],
+
+    "a.C.n.": [
+        {ORTH: "a.", LEMMA: "ante"},
+        {ORTH: "C.", LEMMA: "Christum"},
+        {ORTH: "n.", LEMMA: "natum"},
+    ]
+
+    "Aib.": [
+        {ORTH: "Aib.", LEMMA: "Aibreán"}
+    ],
+
+    "Ath.": [
+        {ORTH: "Ath.", LEMMA: "athair"}
+    ],
+
+    "Beal.": [
+        {ORTH: "Beal.", LEMMA: "Bealtaine"}
+    ],
+
+    "Co.": [
+        {ORTH: "Co.", LEMMA: "contae"}
+    ],
+
+    "Ean.": [
+        {ORTH: "Ean.", LEMMA: "Eanáir"}
+    ],
+
+    "Feab.": [
+        {ORTH: "Feab.", LEMMA: "Feabhra"}
+    ],
+
+    "gCo.": [
+        {ORTH: "gCo.", LEMMA: "contae"}
+    ],
+
     ".i.": [
         {ORTH: ".i.", LEMMA: "eadhon"}
     ],
@@ -12,13 +50,71 @@ TOKENIZER_EXCEPTIONS = {
         {ORTH: "lch.", LEMMA: "leathanach"}
     ],
 
+    "Lch.": [
+        {ORTH: "Lch.", LEMMA: "leathanach"}
+    ],
+
     "lgh.": [
-        {ORTH: "lgh.", LEMMA: "leathanaigh"}
+        {ORTH: "lgh.", LEMMA: "leathanach"}
+    ],
+
+    "Lgh.": [
+        {ORTH: "Lgh.", LEMMA: "leathanach"}
+    ],
+
+    "Lún.": [
+        {ORTH: "Lún.", LEMMA: "Lúnasa"}
     ],
 
     "m.sh.": [
         {ORTH: "m.", LEMMA: "mar"},
-        {ORTH: "sh.", LEMMA: "shampla"}
+        {ORTH: "sh.", LEMMA: "sampla"}
+    ],
+
+    "Már.": [
+        {ORTH: "Már.", LEMMA: "Márta"}
+    ],
+
+    "Meith.": [
+        {ORTH: "Meith.", LEMMA: "Meitheamh"}
+    ],
+
+    "M.Fómh.": [
+        {ORTH: "M.", LEMMA: "Meán"},
+        {ORTH: "Fómh.", LEMMA: "Fómhar"}
+    ],
+
+    "Noll.": [
+        {ORTH: "Noll.", LEMMA: "Nollaig"}
+    ],
+
+    "R.C.": [
+        {ORTH: "Rr.", LEMMA: "roimh"},
+        {ORTH: "C.", LEMMA: "Críost"}
+    ]
+
+    "r.Ch.": [
+        {ORTH: "r.", LEMMA: "roimh"},
+        {ORTH: "Ch.", LEMMA: "Críost"}
+    ]
+
+    "r.Chr.": [
+        {ORTH: "r.", LEMMA: "roimh"},
+        {ORTH: "Chr.", LEMMA: "Críost"}
+    ]
+
+    "R.Ch.": [
+        {ORTH: "R.", LEMMA: "roimh"},
+        {ORTH: "Ch.", LEMMA: "Críost"}
+    ]
+
+    "R.Chr.": [
+        {ORTH: "R.", LEMMA: "roimh"},
+        {ORTH: "Chr.", LEMMA: "Críost"}
+    ]
+
+    "Samh.": [
+        {ORTH: "Samh.", LEMMA: "Samhain"}
     ],
 
     "⁊rl.": [
@@ -30,5 +126,33 @@ TOKENIZER_EXCEPTIONS = {
         {ORTH: "s", LEMMA: "agus"},
         {ORTH: "rl.", LEMMA: "araile"}
     ]
+
+    "tAth.": [
+        {ORTH: "tAth.", LEMMA: "athair"}
+    ],
+
+    "tUas.": [
+        {ORTH: "tUas.", LEMMA: "Uasal"}
+    ],
+
+    "teo.": [
+        {ORTH: "teo.", LEMMA: "teoranta"}
+    ],
+
+    "Teo.": [
+        {ORTH: "Teo.", LEMMA: "teoranta"}
+    ],
+
+    "Uas.": [
+        {ORTH: "Uas.", LEMMA: "Uasal"}
+    ],
+
+    "uimh.": [
+        {ORTH: "uimh.", LEMMA: "uimhir"}
+    ],
+
+    "Uimh.": [
+        {ORTH: "Uimh.", LEMMA: "uimhir"}
+    ],
 
 }
