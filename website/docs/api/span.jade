@@ -127,9 +127,7 @@ p
     |  similarity using an average of word vectors.
 
 +aside-code("Example").
-    doc = nlp(u'apples and oranges')
-    apples = doc[0]
-    oranges = doc[1]
+    apples, and, oranges = nlp(u'apples and oranges')
     apples_oranges = apples.similarity(oranges)
     oranges_apples = oranges.similarity(apples)
     assert apples_oranges == oranges_apples
@@ -164,49 +162,6 @@ p Retokenize the document, such that the span is merged into a single token.
         +cell returns
         +cell #[code Token]
         +cell The newly merged token.
-
-+h(2, "text") Span.text
-    +tag property
-
-+aside-code("Example").
-    doc = nlp('Give it back! He pleaded.')
-    assert doc[1:4].text == 'it back!'
-
-p A unicode representation of the span text.
-
-+table(["Name", "Type", "Description"])
-    +footrow
-        +cell returns
-        +cell unicode
-        +cell The original verbatim text of the span.
-
-+h(2, "text_with_ws") Span.text_with_ws
-    +tag property
-
-+aside-code("Example").
-    doc = nlp('Give it back! He pleaded.')
-    assert doc[1:4].text_with_ws == 'it back! '
-
-p
-    |  The text content of the span with a trailing whitespace character if the
-    |  last token has one.
-
-+table(["Name", "Type", "Description"])
-    +footrow
-        +cell returns
-        +cell unicode
-        +cell The text content of the span (with trailing whitespace).
-
-+h(2, "sent") Span.sent
-    +tag property
-
-p The sentence span that this span is a part of.
-
-+table(["Name", "Type", "Description"])
-    +footrow
-        +cell returns
-        +cell #[code Span]
-        +cell The sentence this is part of.
 
 +h(2, "root") Span.root
     +tag property
@@ -262,6 +217,56 @@ p Tokens that descend from tokens in the span, but fall outside it.
         +cell #[code Token]
         +cell A descendant of a token within the span.
 
++h(2, "has_vector") Span.has_vector
+    +tag property
+    +tag requires model
+
+p
+    |  A boolean value indicating whether a word vector is associated with the
+    |  object.
+
++aside-code("Example").
+    apple = nlp(u'apple')
+    assert apple.has_vector
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell returns
+        +cell bool
+        +cell Whether the span has a vector data attached.
+
++h(2, "vector") Span.vector
+    +tag property
+    +tag requires model
+
+p
+    |  A real-valued meaning representation. Defaults to an average of the
+    |  token vectors.
+
++aside-code("Example").
+    apple = nlp(u'apple')
+    (apple.vector.dtype, apple.vector.shape)
+    # (dtype('float32'), (300,))
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell returns
+        +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
+        +cell A 1D numpy array representing the span's semantics.
+
++h(2, "vector_norm") Span.vector_norm
+    +tag property
+    +tag requires model
+
+p
+    |  The L2 norm of the span's vector representation.
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell returns
+        +cell float
+        +cell The L2 norm of the vector representation.
+
 +h(2, "attributes") Attributes
 
 +table(["Name", "Type", "Description"])
@@ -269,6 +274,11 @@ p Tokens that descend from tokens in the span, but fall outside it.
         +cell #[code doc]
         +cell #[code Doc]
         +cell The parent document.
+
+    +row
+        +cell #[code sent]
+        +cell #[code Span]
+        +cell The sentence span that this span is a part of.
 
     +row
         +cell #[code start]
@@ -289,6 +299,18 @@ p Tokens that descend from tokens in the span, but fall outside it.
         +cell #[code end_char]
         +cell int
         +cell The character offset for the end of the span.
+
+    +row
+        +cell #[code text]
+        +cell unicode
+        +cell A unicode representation of the span text.
+
+    +row
+        +cell #[code text_with_ws]
+        +cell unicode
+        +cell
+            |  The text content of the span with a trailing whitespace character
+            |  if the last token has one.
 
     +row
         +cell #[code label]

@@ -121,7 +121,7 @@ cdef class Span:
         return self.doc.merge(self.start_char, self.end_char, *args, **attributes)
 
     def similarity(self, other):
-        """ Make a semantic similarity estimate. The default estimate is cosine
+        """Make a semantic similarity estimate. The default estimate is cosine
         similarity using an average of word vectors.
 
         other (object): The object to compare with. By default, accepts `Doc`,
@@ -168,14 +168,23 @@ cdef class Span:
             return self.doc[root.l_edge : root.r_edge + 1]
 
     property has_vector:
-        # TODO: docstring
+        """A boolean value indicating whether a word vector is associated with
+        the object.
+
+        RETURNS (bool): Whether a word vector is associated with the object.
+        """
         def __get__(self):
             if 'has_vector' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['has_vector'](self)
             return any(token.has_vector for token in self)
 
     property vector:
-        # TODO: docstring
+        """A real-valued meaning representation. Defaults to an average of the
+        token vectors.
+
+        RETURNS (numpy.ndarray[ndim=1, dtype='float32']): A 1D numpy array
+            representing the span's semantics.
+        """
         def __get__(self):
             if 'vector' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['vector'](self)
@@ -184,7 +193,10 @@ cdef class Span:
             return self._vector
 
     property vector_norm:
-        # TODO: docstring
+        """The L2 norm of the document's vector representation.
+
+        RETURNS (float): The L2 norm of the vector representation.
+        """
         def __get__(self):
             if 'vector_norm' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['vector'](self)
@@ -206,7 +218,10 @@ cdef class Span:
                 return sum([token.sentiment for token in self]) / len(self)
 
     property text:
-        # TODO: docstring
+        """A unicode representation of the span text.
+
+        RETURNS (unicode): The original verbatim text of the span.
+        """
         def __get__(self):
             text = self.text_with_ws
             if self[-1].whitespace_:
@@ -214,7 +229,11 @@ cdef class Span:
             return text
 
     property text_with_ws:
-        # TODO: docstring
+        """The text content of the span with a trailing whitespace character if
+        the last token has one.
+
+        RETURNS (unicode): The text content of the span (with trailing whitespace).
+        """
         def __get__(self):
             return u''.join([t.text_with_ws for t in self])
 
