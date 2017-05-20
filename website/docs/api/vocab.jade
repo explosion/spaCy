@@ -7,59 +7,6 @@ p
     |  #[code Vocab] instance also provides access to the #[code StringStore],
     |  and owns underlying C-data that is shared between #[code Doc] objects.
 
-+h(2, "attributes") Attributes
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code strings]
-        +cell #[code StringStore]
-        +cell A table managing the string-to-int mapping.
-
-    +row
-        +cell #[code vectors_length]
-        +cell int
-        +cell The dimensionality of the word vectors, if present.
-
-+h(2, "load") Vocab.load
-    +tag classmethod
-
-p Load the vocabulary from a path.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code path]
-        +cell #[code Path]
-        +cell The path to load from.
-
-    +row
-        +cell #[code lex_attr_getters]
-        +cell dict
-        +cell
-            |  A dictionary mapping attribute IDs to functions to compute them.
-            |  Defaults to #[code None].
-
-    +row
-        +cell #[code lemmatizer]
-        +cell -
-        +cell A lemmatizer. Defaults to #[code None].
-
-    +row
-        +cell #[code tag_map]
-        +cell dict
-        +cell
-            |  A dictionary mapping fine-grained tags to coarse-grained
-            |  parts-of-speech, and optionally morphological attributes.
-
-    +row
-        +cell #[code oov_prob]
-        +cell float
-        +cell The default probability for out-of-vocabulary words.
-
-    +footrow
-        +cell returns
-        +cell #[code Vocab]
-        +cell The newly constructed object.
-
 +h(2, "init") Vocab.__init__
     +tag method
 
@@ -74,11 +21,6 @@ p Create the vocabulary.
             |  Defaults to #[code None].
 
     +row
-        +cell #[code lemmatizer]
-        +cell -
-        +cell A lemmatizer. Defaults to #[code None].
-
-    +row
         +cell #[code tag_map]
         +cell dict
         +cell
@@ -86,9 +28,16 @@ p Create the vocabulary.
             |  parts-of-speech, and optionally morphological attributes.
 
     +row
-        +cell #[code oov_prob]
-        +cell float
-        +cell The default probability for out-of-vocabulary words.
+        +cell #[code lemmatizer]
+        +cell object
+        +cell A lemmatizer. Defaults to #[code None].
+
+    +row
+        +cell #[code strings]
+        +cell #[code StringStore]
+        +cell
+            |  A #[code StringStore] that maps strings to integers, and vice
+            |  versa.
 
     +footrow
         +cell returns
@@ -98,7 +47,11 @@ p Create the vocabulary.
 +h(2, "len") Vocab.__len__
     +tag method
 
-p Get the number of lexemes in the vocabulary.
+p Get the current number of lexemes in the vocabulary.
+
++aside-code("Example").
+    doc = nlp(u'This is a sentence.')
+    assert len(nlp.vocab) > 0
 
 +table(["Name", "Type", "Description"])
     +footrow
@@ -112,6 +65,10 @@ p Get the number of lexemes in the vocabulary.
 p
     |  Retrieve a lexeme, given an int ID or a unicode string. If a previously
     |  unseen unicode string is given, a new lexeme is created and stored.
+
++aside-code("Example").
+    apple = nlp.vocab.strings['apple']
+    assert nlp.vocab[apple] == nlp.vocab[u'apple']
 
 +table(["Name", "Type", "Description"])
     +row
@@ -129,6 +86,9 @@ p
 
 p Iterate over the lexemes in the vocabulary.
 
++aside-code("Example").
+    stop_words = (lex for lex in nlp.vocab if lex.is_stop)
+
 +table(["Name", "Type", "Description"])
     +footrow
         +cell yields
@@ -138,7 +98,16 @@ p Iterate over the lexemes in the vocabulary.
 +h(2, "contains") Vocab.__contains__
     +tag method
 
-p Check whether the string has an entry in the vocabulary.
+p
+    |  Check whether the string has an entry in the vocabulary. To get the ID
+    |  for a given string, you need to look it up in
+    |  #[+api("vocab#attributes") #[code vocab.strings]].
+
++aside-code("Example").
+    apple = nlp.vocab.strings['apple']
+    oov = nlp.vocab.strings['dskfodkfos']
+    assert apple in nlp.vocab
+    assert oov not in nlp.vocab
 
 +table(["Name", "Type", "Description"])
     +row
@@ -151,28 +120,23 @@ p Check whether the string has an entry in the vocabulary.
         +cell bool
         +cell Whether the string has an entry in the vocabulary.
 
-+h(2, "resize_vectors") Vocab.resize_vectors
-    +tag method
-
-p
-    |  Set #[code vectors_length] to a new size, and allocate more memory for
-    |  the #[code Lexeme] vectors if necessary. The memory will be zeroed.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code new_size]
-        +cell int
-        +cell The new size of the vectors.
-
-    +footrow
-        +cell returns
-        +cell #[code None]
-        +cell -
-
 +h(2, "add_flag") Vocab.add_flag
     +tag method
 
-p Set a new boolean flag to words in the vocabulary.
+p
+    |  Set a new boolean flag to words in the vocabulary. The #[code flag_getter]
+    |  function will be called over the words currently in the vocab, and then
+    |  applied to new words as they occur. You'll then be able to access the flag
+    |  value on each token, using #[code token.check_flag(flag_id)].
+
++aside-code("Example").
+    def is_my_product(text):
+        products = [u'spaCy', u'Thinc', u'displaCy']
+        return text in products
+
+    MY_PRODUCT = nlp.vocab.add_flag(is_my_product)
+    doc = nlp(u'I like spaCy')
+    assert doc[2].check_flag(MY_PRODUCT) == True
 
 +table(["Name", "Type", "Description"])
     +row
@@ -193,86 +157,124 @@ p Set a new boolean flag to words in the vocabulary.
         +cell int
         +cell The integer ID by which the flag value can be checked.
 
-+h(2, "dump") Vocab.dump
++h(2, "resize_vectors") Vocab.resize_vectors
     +tag method
-
-p Save the lexemes binary data to the given location.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code loc]
-        +cell #[code Path]
-        +cell The path to load from.
-
-    +footrow
-        +cell returns
-        +cell #[code None]
-        +cell -
-
-+h(2, "load_lexemes") Vocab.load_lexemes
-    +tag method
+    +tag-model("vectors")
 
 p
+    |  Set #[code vectors_length] to a new size, and allocate more memory for
+    |  the #[code Lexeme] vectors if necessary. The memory will be zeroed.
 
 +table(["Name", "Type", "Description"])
     +row
-        +cell #[code loc]
-        +cell unicode
-        +cell Path to load the lexemes.bin file from.
+        +cell #[code new_size]
+        +cell int
+        +cell The new size of the vectors.
 
     +footrow
         +cell returns
         +cell #[code None]
         +cell -
 
-+h(2, "dump_vectors") Vocab.dump_vectors
++h(2, "to_disk") Vocab.to_disk
     +tag method
 
-p Save the word vectors to a binary file.
+p Save the current state to a directory.
+
++aside-code("Example").
+    nlp.vocab.to_disk('/path/to/vocab')
 
 +table(["Name", "Type", "Description"])
     +row
-        +cell #[code loc]
-        +cell #[code Path]
-        +cell The path to save to.
-
-    +footrow
-        +cell returns
-        +cell #[code None]
-        +cell -
-
-+h(2, "load_vectors") Vocab.load_vectors
-    +tag method
-
-p Load vectors from a text-based file.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code file_]
-        +cell buffer
+        +cell #[code path]
+        +cell unicode or #[code Path]
         +cell
-            |  The file to read from. Entries should be separated by newlines,
-            |  and each entry should be whitespace delimited. The first value
-            |  of the entry should be the word string, and subsequent entries
-            |  should be the values of the vector.
+            |  A path to a directory, which will be created if it doesn't exist.
+            |  Paths may be either strings or #[code Path]-like objects.
 
-    +footrow
-        +cell returns
-        +cell int
-        +cell The length of the vectors loaded.
-
-+h(2, "load_vectors_from_bin_loc") Vocab.load_vectors_from_bin_loc
++h(2, "from_disk") Vocab.from_disk
     +tag method
 
-p Load vectors from the location of a binary file.
+p Loads state from a directory. Modifies the object in place and returns it.
+
++aside-code("Example").
+    from spacy.vocab import Vocab
+    vocab = Vocab().from_disk('/path/to/vocab')
 
 +table(["Name", "Type", "Description"])
     +row
-        +cell #[code loc]
-        +cell unicode
-        +cell The path of the binary file to load from.
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory. Paths may be either strings or
+            |  #[code Path]-like objects.
 
     +footrow
         +cell returns
+        +cell #[code Vocab]
+        +cell The modified #[code Vocab] object.
+
++h(2, "to_bytes") Vocab.to_bytes
+    +tag method
+
+p Serialize the current state to a binary string.
+
++aside-code("Example").
+    vocab_bytes = nlp.vocab.to_bytes()
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being serialized.
+
+    +footrow
+        +cell returns
+        +cell bytes
+        +cell The serialized form of the #[code Vocab] object.
+
++h(2, "from_bytes") Vocab.from_bytes
+    +tag method
+
+p Load state from a binary string.
+
++aside-code("Example").
+    fron spacy.vocab import Vocab
+    vocab_bytes = nlp.vocab.to_bytes()
+    vocab = Vocab()
+    vocab.from_bytes(vocab_bytes)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code bytes_data]
+        +cell bytes
+        +cell The data to load from.
+
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being loaded.
+
+    +footrow
+        +cell returns
+        +cell bytes
+        +cell The serialized form of the #[code Vocab] object.
+
++h(2, "attributes") Attributes
+
++aside-code("Example").
+    apple_id = nlp.vocab.strings['apple']
+    assert type(apple_id) == int
+    PERSON = nlp.vocab.strings['PERSON']
+    assert type(PERSON) == int
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code strings]
+        +cell #[code StringStore]
+        +cell A table managing the string-to-int mapping.
+
+    +row
+        +cell #[code vectors_length]
         +cell int
-        +cell The length of the vectors loaded.
+        +cell The dimensionality of the word vectors, if present.
