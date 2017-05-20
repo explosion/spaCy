@@ -237,9 +237,10 @@ cdef class NeuralEntityRecognizer(NeuralParser):
 
     nr_feature = 6
 
-    def set_token_ids(self, ids, states):
+    def get_token_ids(self, states):
         cdef StateClass state
         cdef int n_tokens = 6
+        ids = numpy.zeros((len(states), n_tokens), dtype='i', order='c')
         for i, state in enumerate(states):
             ids[i, 0] = state.c.B(0)-1
             ids[i, 1] = state.c.B(0)
@@ -252,7 +253,7 @@ cdef class NeuralEntityRecognizer(NeuralParser):
                     ids[i, j] = -1
                 if ids[i, j] != -1:
                     ids[i, j] += state.c.offset
-        ids[i+1:ids.shape[0]] = -1
+        return ids
 
 
 cdef class BeamDependencyParser(BeamParser):

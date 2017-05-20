@@ -303,9 +303,7 @@ cdef class Parser:
 
         todo = [st for st in states if not st.is_final()]
         while todo:
-            token_ids = numpy.zeros((len(todo), self.nr_feature),
-                                    dtype='i', order='C')
-            self.set_token_ids(token_ids, todo)
+            token_ids = self.get_token_ids(todo)
             vectors = state2vec(token_ids)
             scores = vec2scores(vectors)
             self.transition_batch(todo, scores)
@@ -329,53 +327,44 @@ cdef class Parser:
         todo = [(s, g) for s, g in zip(states, golds) if not s.is_final()]
 
         backprops = []
-        cdef int max_steps = max(len(doc)*3 for doc in docs)
-        # Allocate one buffer for the token_ids and d_vectors
-        # This will make it quicker to copy back to GPU
-        token_ids = numpy.zeros((max_steps, len(todo), self.nr_feature),
-                                dtype='i', order='C')
-        d_vectors = numpy.zeros((max_steps, len(todo), self.model[0].nO),
-                                dtype='f', order='C')
         cdef float loss = 0.
-        cdef int nr_step = 0
-        while len(todo) >= 4 and nr_step < max_steps:
+        while todo:
             states, golds = zip(*todo)
 
-            self.set_token_ids(token_ids[nr_step], states)
-            length = len(todo)
-            vector, bp_vector = state2vec.begin_update(token_ids[nr_step, :length],
-                                                       drop=drop)
+            token_ids = self.get_token_ids(states)
+            vector, bp_vector = state2vec.begin_update(token_ids, drop=drop)
             scores, bp_scores = vec2scores.begin_update(vector, drop=drop)
 
             d_scores = self.get_batch_loss(states, golds, scores)
-            d_vectors[nr_step, :length] = bp_scores(d_scores, sgd=sgd)
+            d_vector = bp_scores(d_scores, sgd=sgd)
 
-            backprops.append((length, bp_vector))
+            if isinstance(self.model[0].ops, CupyOps) \
+            and not isinstance(token_ids, state2vec.ops.xp.ndarray):
+                # Move token_ids and d_vector to CPU, asynchronously
+                backprops.append((
+                    get_async(cuda_stream, token_ids),
+                    get_async(cuda_stream, d_vector),
+                    bp_vector
+                ))
+            else:
+                backprops.append((token_ids, d_vector, bp_vector))
             self.transition_batch(states, scores)
             todo = [st for st in todo if not st[0].is_final()]
-            nr_step += 1
-
-        d_tokvecs = state2vec.ops.allocate(tokvecs.shape)
-        if type(token_ids) != type(d_tokvecs):
-            token_ids = get_async(cuda_stream, token_ids)
-            d_vectors = get_async(cuda_stream, d_vectors)
+        # Tells CUDA to block, so our async copies complete.
         if cuda_stream is not None:
-            # Tells CUDA to block, so our async copies complete.
             cuda_stream.synchronize()
+        d_tokvecs = state2vec.ops.allocate(tokvecs.shape)
         xp = state2vec.ops.xp # Handle for numpy/cupy
-        for i, (length, bp_vector) in enumerate(backprops):
-            d_vector = d_vectors[i, :length]
+        for token_ids, d_vector, bp_vector in backprops:
             d_state_features = bp_vector(d_vector, sgd=sgd)
-            step_token_ids = token_ids[i, :length]
-            active_feats = step_token_ids * (step_token_ids >= 0)
-            active_feats = active_feats.reshape((active_feats.shape[0],
-                                  active_feats.shape[1], 1))
+            active_feats = token_ids * (token_ids >= 0)
+            active_feats = active_feats.reshape((token_ids.shape[0], token_ids.shape[1], 1))
             if hasattr(xp, 'scatter_add'):
                 xp.scatter_add(d_tokvecs,
-                    step_token_ids, d_state_features)
+                    token_ids, d_state_features * active_feats)
             else:
                 xp.add.at(d_tokvecs,
-                    step_token_ids, d_state_features * active_feats)
+                    token_ids, d_state_features * active_feats)
         return d_tokvecs
 
     def get_batch_model(self, batch_size, tokvecs, stream, dropout):
@@ -386,11 +375,13 @@ cdef class Parser:
 
     nr_feature = 13
 
-    def set_token_ids(self, token_ids, states):
+    def get_token_ids(self, states):
         cdef StateClass state
+        cdef int n_tokens = self.nr_feature
+        ids = numpy.zeros((len(states), n_tokens), dtype='i', order='C')
         for i, state in enumerate(states):
-            state.set_context_tokens(token_ids[i])
-        token_ids[i+1:token_ids.shape[0]] = -1
+            state.set_context_tokens(ids[i])
+        return ids
 
     def transition_batch(self, states, float[:, ::1] scores):
         cdef StateClass state
