@@ -80,6 +80,7 @@
             }
         ],
 
+        "ALPHA": true,
         "V_CSS": "1.6",
         "V_JS": "1.2",
         "DEFAULT_SYNTAX": "python",
