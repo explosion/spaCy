@@ -45,7 +45,7 @@ p
 
     nlp = spacy.load('en')
     matcher = Matcher(nlp.vocab)
-    matcher.add_pattern('HelloWorld', [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}])
+    matcher.add('HelloWorld', [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}])
 
     doc = nlp(u'Hello, world! Hello world!')
     matches = matcher(doc)
@@ -58,8 +58,8 @@ p
     |  without punctuation between "hello" and "world":
 
 +code.
-    matcher.add_pattern('HelloWorld', [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}],
-                                      [{LOWER: 'hello'}, {LOWER: 'world'}])
+    matcher.add('HelloWorld', [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}],
+                              [{LOWER: 'hello'}, {LOWER: 'world'}])
 
 p
     |  By default, the matcher will only return the matches and
@@ -81,7 +81,7 @@ p
     |  To be safe, you only match on the uppercase versions, in case someone has
     |  written it as "Google i/o". You also add a second pattern with an added
     |  #[code {IS_DIGIT: True}] token – this will make sure you also match on
-    |  "Google I/O 2017". If this pattern matches, spaCy should execute your
+    |  "Google I/O 2017". If your pattern matches, spaCy should execute your
     |  custom callback function #[code add_event_ent].
 
 +code.
@@ -92,17 +92,16 @@ p
     nlp = spacy.load('en')
     matcher = Matcher(nlp.vocab)
 
-    matcher.add_pattern('GoogleIO', [{ORTH: 'Google'}, {UPPER: 'I'}, {ORTH: '/'}, {UPPER: 'O'}],
-                                    [{ORTH: 'Google'}, {UPPER: 'I'}, {ORTH: '/'}, {UPPER: 'O'}, {IS_DIGIT: True}],
-                                    on_match=add_event_ent)
+    matcher.add('GoogleIO', [{ORTH: 'Google'}, {UPPER: 'I'}, {ORTH: '/'}, {UPPER: 'O'}],
+                            [{ORTH: 'Google'}, {UPPER: 'I'}, {ORTH: '/'}, {UPPER: 'O'}, {IS_DIGIT: True}],
+                            on_match=add_event_ent)
 
     # Get the ID of the 'EVENT' entity type. This is required to set an entity.
     EVENT = nlp.vocab.strings['EVENT']
 
     def add_event_ent(matcher, doc, i, matches):
         # Get the current match and create tuple of entity label, start and end.
-        # Append entity to the doc's entity. (Don't overwrite doc.ents, in case
-        # it already has other entities!)
+        # Append entity to the doc's entity. (Don't overwrite doc.ents!)
         match_id, start, end = matches[i]
         doc.ents += ((EVENT, start, end),)
 
@@ -115,12 +114,12 @@ p
     |  function #[code merge_and_flag]:
 
 +code.
-    matcher.add_pattern('BAD_HTML', [{ORTH: '&lt;'}, {LOWER: 'br'}, {ORTH: '&gt;'}],
-                                    [{ORTH: '&lt;'}, {LOWER: 'br/'}, {ORTH: '&gt;'}]
-                                    on_match=merge_and_flag)
+    matcher.add('BAD_HTML', [{ORTH: '&lt;'}, {LOWER: 'br'}, {ORTH: '&gt;'}],
+                            [{ORTH: '&lt;'}, {LOWER: 'br/'}, {ORTH: '&gt;'}]
+                            on_match=merge_and_flag)
 
     # Add a new custom flag to the vocab, which is always False by default.
-    # BAD_HTML will be the flag ID, which we can use to set it to True on the span.
+    # BAD_HTML_FLAG will be the flag ID, which we can use to set it to True on the span.
     BAD_HTML_FLAG = doc.vocab.add_flag(lambda text: False)
 
     def merge_and_flag(matcher, doc, i, matches):
