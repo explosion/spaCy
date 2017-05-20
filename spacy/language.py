@@ -179,10 +179,10 @@ class Language(object):
         tok2vec = self.pipeline[0]
         feats = tok2vec.doc2feats(docs)
         for proc in self.pipeline[1:]:
-            tokvecs, bp_tokvecs = tok2vec.model.begin_update(feats, drop=drop)
             grads = {}
-            d_tokvecs = proc.update((docs, tokvecs), golds, sgd=get_grads, drop=drop)
-            bp_tokvecs(d_tokvecs, sgd=get_grads)
+            tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
+            d_tokvecses = proc.update((docs, tokvecses), golds, sgd=get_grads, drop=drop)
+            bp_tokvecses(d_tokvecses, sgd=get_grads)
             if sgd is not None:
                 for key, (W, dW) in grads.items():
                     # TODO: Unhack this when thinc improves

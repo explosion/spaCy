@@ -10,7 +10,7 @@ cimport numpy as np
 import cytoolz
 import util
 
-from thinc.api import add, layerize, chain, clone, concatenate
+from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
 from thinc.neural import Model, Maxout, Softmax, Affine
 from thinc.neural._classes.hash_embed import HashEmbed
 from thinc.neural.util import to_categorical
@@ -52,16 +52,16 @@ class TokenVectorEncoder(object):
         self.doc2feats = doc2feats()
         self.model = model
 
-    def __call__(self, docs, state=None):
+    def __call__(self, docs):
         if isinstance(docs, Doc):
             docs = [docs]
-        tokvecs = self.predict(docs)
-        self.set_annotations(docs, tokvecs)
+        tokvecses = self.predict(docs)
+        self.set_annotations(docs, tokvecses)
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in cytoolz.partition_all(batch_size, stream):
-            tokvecs = self.predict(docs)
-            self.set_annotations(docs, tokvecs)
+            tokvecses = self.predict(docs)
+            self.set_annotations(docs, tokvecses)
             yield from docs
 
     def predict(self, docs):
@@ -69,11 +69,9 @@ class TokenVectorEncoder(object):
         tokvecs = self.model(feats)
         return tokvecs
 
-    def set_annotations(self, docs, tokvecs):
-        start = 0
-        for doc in docs:
-            doc.tensor = tokvecs[start : start + len(doc)]
-            start += len(doc)
+    def set_annotations(self, docs, tokvecses):
+        for doc, tokvecs in zip(docs, tokvecses):
+            doc.tensor = tokvecs
 
     def begin_update(self, docs, drop=0.):
         if isinstance(docs, Doc):
@@ -136,7 +134,7 @@ class NeuralTagger(object):
         docs, tokvecs = docs_tokvecs
 
         if self.model.nI is None:
-            self.model.nI = tokvecs.shape[1]
+            self.model.nI = tokvecs[0].shape[1]
 
         tag_scores, bp_tag_scores = self.model.begin_update(tokvecs, drop=drop)
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
@@ -146,6 +144,7 @@ class NeuralTagger(object):
         return d_tokvecs
 
     def get_loss(self, docs, golds, scores):
+        scores = self.model.ops.flatten(scores)
         tag_index = {tag: i for i, tag in enumerate(self.vocab.morphology.tag_names)}
 
         cdef int idx = 0
@@ -161,7 +160,7 @@ class NeuralTagger(object):
         correct = self.model.ops.xp.array(correct, dtype='i')
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
         loss = (d_scores**2).sum()
-        d_scores = self.model.ops.asarray(d_scores, dtype='f')
+        d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
 
     def begin_training(self, gold_tuples, pipeline=None):
@@ -179,9 +178,8 @@ class NeuralTagger(object):
         vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                       vocab.morphology.lemmatizer)
         token_vector_width = pipeline[0].model.nO
-        self.model = rebatch(1024, Softmax(self.vocab.morphology.n_tags,
-                                          token_vector_width))
-        #self.model = Softmax(self.vocab.morphology.n_tags)
+        self.model = with_flatten(
+            Softmax(self.vocab.morphology.n_tags, token_vector_width))
 
     def use_params(self, params):
         with self.model.use_params(params):

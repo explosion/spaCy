@@ -134,13 +134,14 @@ def Tok2Vec(width, embed_size, preprocess=None):
         shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size//2)
 
         tok2vec = (
-            flatten
-            >> (lower | prefix | suffix | shape )
-            >> Maxout(width, width*4, pieces=3)
-            >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-            >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-            >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-            >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+            with_flatten(
+                (lower | prefix | suffix | shape )
+                >> Maxout(width, width*4, pieces=3)
+                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3)),
+            pad=4, ndim=5)
         )
         if preprocess not in (False, None):
             tok2vec = preprocess >> tok2vec

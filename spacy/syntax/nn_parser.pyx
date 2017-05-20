@@ -311,7 +311,8 @@ cdef class Parser:
         return states
 
     def update(self, docs_tokvecs, golds, drop=0., sgd=None):
-        docs, tokvecs = docs_tokvecs
+        docs, tokvec_lists = docs_tokvecs
+        tokvecs = self.model[0].ops.flatten(tokvec_lists)
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
@@ -324,7 +325,8 @@ cdef class Parser:
         state2vec, vec2scores = self.get_batch_model(len(states), tokvecs, cuda_stream,
                                                       drop)
 
-        todo = [(s, g) for s, g in zip(states, golds) if not s.is_final()]
+        todo = [(s, g) for (s, g) in zip(states, golds)
+                if not s.is_final()]
 
         backprops = []
         cdef float loss = 0.
@@ -365,7 +367,7 @@ cdef class Parser:
             else:
                 xp.add.at(d_tokvecs,
                     token_ids, d_state_features * active_feats)
-        return d_tokvecs
+        return self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
 
     def get_batch_model(self, batch_size, tokvecs, stream, dropout):
         lower, upper = self.model
