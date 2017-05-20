@@ -262,7 +262,7 @@ cdef class Token:
             return numpy.asarray(vector_view)
 
     property vector_norm:
-        """The L2 norm of the document's vector representation.
+        """The L2 norm of the token's vector representation.
 
         RETURNS (float): The L2 norm of the vector representation.
         """
