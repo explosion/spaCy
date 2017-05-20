@@ -2,7 +2,154 @@
 
 include ../../_includes/_mixins
 
-p An entry in the vocabulary.
+p
+    |  An entry in the vocabulary. A #[code Lexeme] has no string context – it's
+    |  a word-type, as opposed to a word token. It therefore has no
+    |  part-of-speech tag, dependency parse, or lemma (if lemmatization depends
+    |  on the part-of-speech tag).
+
++h(2, "init") Lexeme.__init__
+    +tag method
+
+p Create a #[code Lexeme] object.
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell The parent vocabulary.
+
+    +row
+        +cell #[code orth]
+        +cell int
+        +cell The orth id of the lexeme.
+
+    +footrow
+        +cell returns
+        +cell #[code Lexeme]
+        +cell The newly constructed object.
+
++h(2, "set_flag") Lexeme.set_flag
+    +tag method
+
+p Change the value of a boolean flag.
+
++aside-code("Example").
+    COOL_FLAG = nlp.vocab.add_flag(lambda text: False)
+    nlp.vocab[u'spaCy'].set_flag(COOL_FLAG, True)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code flag_id]
+        +cell int
+        +cell The attribute ID of the flag to set.
+
+    +row
+        +cell #[code value]
+        +cell bool
+        +cell The new value of the flag.
+
++h(2, "check_flag") Lexeme.check_flag
+    +tag method
+
+p Check the value of a boolean flag.
+
++aside-code("Example").
+    is_my_library = lambda text: text in ['spaCy', 'Thinc']
+    MY_LIBRARY = nlp.vocab.add_flag(is_my_library)
+    assert nlp.vocab[u'spaCy'].check_flag(MY_LIBRARY) == True
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code flag_id]
+        +cell int
+        +cell The attribute ID of the flag to query.
+
+    +footrow
+        +cell returns
+        +cell bool
+        +cell The value of the flag.
+
++h(2, "similarity") Lexeme.similarity
+    +tag method
+    +tag-model("vectors")
+
+p Compute a semantic similarity estimate. Defaults to cosine over vectors.
+
++aside-code("Example").
+    apple = nlp.vocab[u'apple']
+    orange = nlp.vocab[u'orange']
+    apple_orange = apple.similarity(orange)
+    orange_apple = orange.similarity(apple)
+    assert apple_orange == orange_apple
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell other
+        +cell -
+        +cell
+            |  The object to compare with. By default, accepts #[code Doc],
+            |  #[code Span], #[code Token] and #[code Lexeme] objects.
+
+    +footrow
+        +cell returns
+        +cell float
+        +cell A scalar similarity score. Higher is more similar.
+
+
++h(2, "has_vector") Lexeme.has_vector
+    +tag property
+    +tag-model("vectors")
+
+p
+    |  A boolean value indicating whether a word vector is associated with the
+    |  lexeme.
+
++aside-code("Example").
+    apple = nlp.vocab[u'apple']
+    assert apple.has_vector
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell returns
+        +cell bool
+        +cell Whether the lexeme has a vector data attached.
+
++h(2, "vector") Lexeme.vector
+    +tag property
+    +tag-model("vectors")
+
+p A real-valued meaning representation.
+
++aside-code("Example").
+    apple = nlp.vocab[u'apple']
+    assert apple.vector.dtype == 'float32'
+    assert apple.vector.shape == (300,)
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell returns
+        +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
+        +cell A 1D numpy array representing the lexeme's semantics.
+
++h(2, "vector_norm") Lexeme.vector_norm
+    +tag property
+    +tag-model("vectors")
+
+p The L2 norm of the lexeme's vector representation.
+
++aside-code("Example").
+    apple = nlp.vocab[u'apple']
+    pasta = nlp.vocab[u'pasta']
+    apple.vector_norm # 7.1346845626831055
+    pasta.vector_norm # 7.759851932525635
+    assert apple.vector_norm != pasta.vector_norm
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell returns
+        +cell float
+        +cell The L2 norm of the vector representation.
 
 +h(2, "attributes") Attributes
 
@@ -11,6 +158,16 @@ p An entry in the vocabulary.
         +cell #[code vocab]
         +cell #[code Vocab]
         +cell
+
+    +row
+        +cell #[code text]
+        +cell unicode
+        +cell Verbatim text content.
+
+    +row
+        +cell #[code lex_id]
+        +cell int
+        +cell ID of the lexeme's lexical type.
 
     +row
         +cell #[code lower]
@@ -124,116 +281,9 @@ p An entry in the vocabulary.
     +row
         +cell #[code prob]
         +cell float
-        +cell Smoothed log probability estimate of token's type.
+        +cell Smoothed log probability estimate of lexeme's type.
 
     +row
         +cell #[code sentiment]
         +cell float
-        +cell A scalar value indicating the positivity or negativity of the token.
-    +row
-        +cell #[code lex_id]
-        +cell int
-        +cell ID of the token's lexical type.
-
-    +row
-        +cell #[code text]
-        +cell unicode
-        +cell Verbatim text content.
-
-+h(2, "init") Lexeme.__init__
-    +tag method
-
-p Create a #[code Lexeme] object.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code vocab]
-        +cell #[code Vocab]
-        +cell The parent vocabulary.
-
-    +row
-        +cell #[code orth]
-        +cell int
-        +cell The orth id of the lexeme.
-
-    +footrow
-        +cell returns
-        +cell #[code Lexeme]
-        +cell The newly constructed object.
-
-+h(2, "set_flag") Lexeme.set_flag
-    +tag method
-
-p Change the value of a boolean flag.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code flag_id]
-        +cell int
-        +cell The attribute ID of the flag to set.
-
-    +row
-        +cell #[code value]
-        +cell bool
-        +cell The new value of the flag.
-
-    +footrow
-        +cell returns
-        +cell #[code None]
-        +cell -
-
-+h(2, "check_flag") Lexeme.check_flag
-    +tag method
-
-p Check the value of a boolean flag.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code flag_id]
-        +cell int
-        +cell The attribute ID of the flag to query.
-
-    +footrow
-        +cell returns
-        +cell bool
-        +cell The value of the flag.
-
-+h(2, "similarity") Lexeme.similarity
-    +tag method
-
-p Compute a semantic similarity estimate. Defaults to cosine over vectors.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code other]
-        +cell -
-        +cell
-            |  The object to compare with. By default, accepts #[code Doc],
-            |  #[code Span], #[code Token] and #[code Lexeme] objects.
-
-    +footrow
-        +cell returns
-        +cell float
-        +cell A scalar similarity score. Higher is more similar.
-
-+h(2, "vector") Lexeme.vector
-    +tag property
-
-p A real-valued meaning representation.
-
-+table(["Name", "Type", "Description"])
-    +footrow
-        +cell returns
-        +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
-        +cell A real-valued meaning representation.
-
-+h(2, "has_vector") Lexeme.has_vector
-    +tag property
-
-p A boolean value indicating whether a word vector is associated with the object.
-
-+table(["Name", "Type", "Description"])
-    +footrow
-        +cell returns
-        +cell bool
-        +cell Whether a word vector is associated with the object.
+        +cell A scalar value indicating the positivity or negativity of the lexeme.
