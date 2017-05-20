@@ -116,8 +116,9 @@ p Match a stream of documents, yielding them in turn.
     +tag method
 
 p
-    |  Add one or more patterns to the matcher, along with a callback function
-    |  to handle the matches. The callback function will receive the arguments
+    |  Add a rule to the matcher, consisting of an ID key, one or more patterns, and
+    |  a callback function to act on the matches.
+    |  The callback function will receive the arguments
     |  #[code matcher], #[code doc], #[code i] and #[code matches].
 
 +aside-code("Example").
