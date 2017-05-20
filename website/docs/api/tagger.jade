@@ -4,32 +4,6 @@ include ../../_includes/_mixins
 
 p Annotate part-of-speech tags on #[code Doc] objects.
 
-+h(2, "load") Tagger.load
-    +tag classmethod
-
-p Load the statistical model from the supplied path.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code path]
-        +cell #[code Path]
-        +cell The path to load from.
-
-    +row
-        +cell #[code vocab]
-        +cell #[code Vocab]
-        +cell The vocabulary. Must be shared by the documents to be processed.
-
-    +row
-        +cell #[code require]
-        +cell bool
-        +cell Whether to raise an error if the files are not found.
-
-    +footrow
-        +cell returns
-        +cell #[code Tagger]
-        +cell The newly constructed object.
-
 +h(2, "init") Tagger.__init__
     +tag method
 

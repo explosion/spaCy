@@ -6,83 +6,6 @@ p
     |  Segment text, and create #[code Doc] objects with the discovered segment
     |  boundaries.
 
-+h(2, "attributes") Attributes
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code vocab]
-        +cell #[code Vocab]
-        +cell The vocab object of the parent #[code Doc].
-
-    +row
-        +cell #[code prefix_search]
-        +cell -
-        +cell
-            |  A function to find segment boundaries from the start of a
-            |  string. Returns the length of the segment, or #[code None].
-
-    +row
-        +cell #[code suffix_search]
-        +cell -
-        +cell
-            |  A function to find segment boundaries from the end of a string.
-            |  Returns the length of the segment, or #[code None].
-
-    +row
-        +cell #[code infix_finditer]
-        +cell -
-        +cell
-            |  A function to find internal segment separators, e.g. hyphens.
-            |  Returns a (possibly empty) list of #[code re.MatchObject]
-            |  objects.
-
-+h(2, "load") Tokenizer.load
-    +tag classmethod
-
-p Load a #[code Tokenizer], reading unsupplied components from the path.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code path]
-        +cell #[code Path]
-        +cell The path to load from.
-
-    +row
-        +cell #[code vocab]
-        +cell #[code Vocab]
-        +cell A storage container for lexical types.
-
-    +row
-        +cell #[code rules]
-        +cell dict
-        +cell Exceptions and special-cases for the tokenizer.
-
-    +row
-        +cell #[code prefix_search]
-        +cell callable
-        +cell
-            |  A function matching the signature of
-            |  #[code re.compile(string).search] to match prefixes.
-
-    +row
-        +cell #[code suffix_search]
-        +cell callable
-        +cell
-            |  A function matching the signature of
-            |  #[code re.compile(string).search] to match suffixes.
-
-    +row
-        +cell #[code infix_finditer]
-        +cell callable
-        +cell
-            |  A function matching the signature of
-            |  #[code re.compile(string).finditer] to find infixes.
-
-    +footrow
-        +cell returns
-        +cell #[code Tokenizer]
-        +cell The newly constructed object.
-
 +h(2, "init") Tokenizer.__init__
     +tag method
 
@@ -247,3 +170,33 @@ p Add a special-case tokenization rule.
         +cell returns
         +cell #[code None]
         +cell -
+
++h(2, "attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell The vocab object of the parent #[code Doc].
+
+    +row
+        +cell #[code prefix_search]
+        +cell -
+        +cell
+            |  A function to find segment boundaries from the start of a
+            |  string. Returns the length of the segment, or #[code None].
+
+    +row
+        +cell #[code suffix_search]
+        +cell -
+        +cell
+            |  A function to find segment boundaries from the end of a string.
+            |  Returns the length of the segment, or #[code None].
+
+    +row
+        +cell #[code infix_finditer]
+        +cell -
+        +cell
+            |  A function to find internal segment separators, e.g. hyphens.
+            |  Returns a (possibly empty) list of #[code re.MatchObject]
+            |  objects.

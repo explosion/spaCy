@@ -4,39 +4,6 @@ include ../../_includes/_mixins
 
 p Collection for training annotations.
 
-+h(2, "attributes") Attributes
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code tags]
-        +cell list
-        +cell The part-of-speech tag annotations.
-
-    +row
-        +cell #[code heads]
-        +cell list
-        +cell The syntactic head annotations.
-
-    +row
-        +cell #[code labels]
-        +cell list
-        +cell The syntactic relation-type annotations.
-
-    +row
-        +cell #[code ents]
-        +cell list
-        +cell The named entity annotations.
-
-    +row
-        +cell #[code cand_to_gold]
-        +cell list
-        +cell The alignment from candidate tokenization to gold tokenization.
-
-    +row
-        +cell #[code gold_to_cand]
-        +cell list
-        +cell The alignment from gold tokenization to candidate tokenization.
-
 +h(2, "init") GoldParse.__init__
     +tag method
 
@@ -101,3 +68,37 @@ p
         +cell returns
         +cell bool
         +cell Whether annotations form projective tree.
+
+
++h(2, "attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code tags]
+        +cell list
+        +cell The part-of-speech tag annotations.
+
+    +row
+        +cell #[code heads]
+        +cell list
+        +cell The syntactic head annotations.
+
+    +row
+        +cell #[code labels]
+        +cell list
+        +cell The syntactic relation-type annotations.
+
+    +row
+        +cell #[code ents]
+        +cell list
+        +cell The named entity annotations.
+
+    +row
+        +cell #[code cand_to_gold]
+        +cell list
+        +cell The alignment from candidate tokenization to gold tokenization.
+
+    +row
+        +cell #[code gold_to_cand]
+        +cell list
+        +cell The alignment from gold tokenization to candidate tokenization.
