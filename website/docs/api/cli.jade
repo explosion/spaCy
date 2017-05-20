@@ -10,11 +10,11 @@ p
 +aside("Why python -m?")
     |  The problem with a global entry point is that it's resolved by looking up
     |  entries in your #[code PATH] environment variable. This can give you
-    |  unexpected results, especially when using #[code virtualenv]. For
-    |  instance, you may have spaCy installed on your system but not in your
-    |  current environment. The command will then execute the wrong
-    |  spaCy installation. #[code python -m] prevents fallbacks to system modules
-    |  and makes sure the correct version of spaCy is used.
+    |  unexpected results, like executing the wrong spaCy installation
+    |  (especially when using #[code virtualenv]). #[code python -m] prevents
+    |  fallbacks to system modules and makes sure the correct spaCy version is
+    |  used. If you hate typing it every time, we recommend creating an
+    |  #[code alias] instead.
 
 +h(2, "download") Download
 
@@ -51,7 +51,8 @@ p
 p
     |  Create a #[+a("/docs/usage/models#usage") shortcut link] for a model,
     |  either a Python package or a local directory. This will let you load
-    |  models from any location via #[code spacy.load()].
+    |  models from any location using a custom name via
+    |  #[+api("spacy#load") #[code spacy.load()]].
 
 +code(false, "bash").
     python -m spacy link [origin] [link_name] [--force]
@@ -114,7 +115,7 @@ p
     |  the input file. Currently only supports #[code .conllu].
 
 +code(false, "bash").
-    python -m spacy convert [input_file] [output_dir] [--n_sents] [--morphology]
+    python -m spacy convert [input_file] [output_dir] [--n-sents] [--morphology]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -128,7 +129,7 @@ p
         +cell Output directory for converted JSON file.
 
     +row
-        +cell #[code --n_sents], #[code -n]
+        +cell #[code --n-sents], #[code -n]
         +cell option
         +cell Number of sentences per document.
 
@@ -191,7 +192,7 @@ p
     |  #[+a("/docs/api/annotation#json-input") JSON format].
 
 +code(false, "bash").
-    python -m spacy train [lang] [output_dir] [train_data] [dev_data] [--n_iter] [--parser_L1] [--no_tagger] [--no_parser] [--no_ner]
+    python -m spacy train [lang] [output_dir] [train_data] [dev_data] [--n-iter] [--parser-L1] [--no-tagger] [--no-parser] [--no-ner]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -215,27 +216,37 @@ p
         +cell Location of JSON-formatted dev data (optional).
 
     +row
-        +cell #[code --n_iter], #[code -n]
+        +cell #[code --n-iter], #[code -n]
         +cell option
         +cell Number of iterations (default: #[code 15]).
 
     +row
-        +cell #[code --parser_L1], #[code -L]
+        +cell #[code --nsents]
+        +cell option
+        +cell Number of sentences (default: #[code 0]).
+
+    +row
+        +cell #[code --parser-L1], #[code -L]
         +cell option
         +cell L1 regularization penalty for parser (default: #[code 0.0]).
 
     +row
-        +cell #[code --no_tagger], #[code -T]
+        +cell #[code --use-gpu], #[code -g]
+        +cell flag
+        +cell Use GPU.
+
+    +row
+        +cell #[code --no-tagger], #[code -T]
         +cell flag
         +cell Don't train tagger.
 
     +row
-        +cell #[code --no_parser], #[code -P]
+        +cell #[code --no-parser], #[code -P]
         +cell flag
         +cell Don't train parser.
 
     +row
-        +cell #[code --no_ner], #[code -N]
+        +cell #[code --no-ner], #[code -N]
         +cell flag
         +cell Don't train NER.
 
