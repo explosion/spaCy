@@ -169,7 +169,7 @@ mixin tag()
 
 mixin tag-model(...capabs)
     - var intro = "To use this functionality, spaCy needs a model to be installed"
-    - var ext = capabs ? " that supports the following capabilities: " + capabs.join(', ') : ""
+    - var ext = capabs.length ? " that supports the following capabilities: " + capabs.join(', ') : ""
     +tag Requires model
     +help(intro + ext + ".").u-color-theme
 
