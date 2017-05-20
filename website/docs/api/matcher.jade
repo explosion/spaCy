@@ -54,7 +54,7 @@ p Find all token sequences matching the supplied patterns on the #[code Doc].
 
     matcher = Matcher(nlp.vocab)
     pattern = [{LOWER: "hello"}, {LOWER: "world"}]
-    matcher.add_pattern("HelloWorld", pattern, on_match=None)
+    matcher.add("HelloWorld", on_match=None, pattern)
     doc = nlp(u'hello world!')
     matches = matcher(doc)
 
@@ -88,6 +88,12 @@ p Find all token sequences matching the supplied patterns on the #[code Doc].
 
 p Match a stream of documents, yielding them in turn.
 
++aside-code("Example").
+    from spacy.matcher import Matcher
+    matcher = Matcher(nlp.vocab)
+    for doc in matcher.pipe(texts, batch_size=50, n_threads=4):
+        pass
+
 +table(["Name", "Type", "Description"])
     +row
         +cell #[code docs]
@@ -112,14 +118,60 @@ p Match a stream of documents, yielding them in turn.
         +cell #[code Doc]
         +cell Documents, in order.
 
-+h(2, "add_pattern") Matcher.add
++h(2, "len") Matcher.__len__
+    +tag method
+
+p Get the number of rules added to the matcher.
+
++aside-code("Example").
+    from spacy.matcher import Matcher
+    from spacy.attrs import ORTH
+
+    matcher = Matcher(nlp.vocab)
+    assert len(matcher) == 0
+    matcher.add('rule', None, [{ORTH: 'rule'}])
+    assert len(matcher) == 1
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell returns
+        +cell int
+        +cell The number of rules.
+
++h(2, "contains") Matcher.__contains__
+    +tag method
+
+p Check whether the matcher contains rules for a match ID.
+
++aside-code("Example").
+    from spacy.matcher import Matcher
+    from spacy.attrs import ORTH
+
+    matcher = Matcher(nlp.vocab)
+    assert 'rule' in matcher == False
+    matcher.add('rule', None, [{ORTH: 'rule'}])
+    assert 'rule' in matcher == True
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code key]
+        +cell unicode
+        +cell The match ID.
+    +footrow
+        +cell returns
+        +cell int
+        +cell Whether the matcher contains rules for this match ID.
+
++h(2, "add") Matcher.add
     +tag method
 
 p
     |  Add a rule to the matcher, consisting of an ID key, one or more patterns, and
-    |  a callback function to act on the matches.
-    |  The callback function will receive the arguments
-    |  #[code matcher], #[code doc], #[code i] and #[code matches].
+    |  a callback function to act on the matches. The callback function will
+    |  receive the arguments #[code matcher], #[code doc], #[code i] and
+    |  #[code matches]. If a pattern already exists for the given ID, the
+    |  patterns will be extended. An #[code on_match] callback will be
+    |  overwritten.
 
 +aside-code("Example").
     from spacy.matcher import Matcher
@@ -131,7 +183,6 @@ p
     matcher = Matcher(nlp.vocab)
     matcher.add('HelloWorld', on_match, [{LOWER: "hello"}, {LOWER: "world"}])
     matcher.add('GoogleMaps', on_match, [{ORTH: "Google"}, {ORTH: "Maps"}])
-
     doc = nlp(u'HELLO WORLD on Google Maps.')
     matches = matcher(doc)
 
@@ -143,7 +194,7 @@ p
 
     +row
         +cell #[code on_match]
-        +cell function
+        +cell function or #[code None]
         +cell
             |  Callback function to act on matches. Takes the arguments
             |  #[code matcher], #[code doc], #[code i] and #[code matches].
@@ -154,3 +205,26 @@ p
         +cell
             |  Match pattern. A pattern consists of a list of dicts, where each
             |  dict describes a token.
+
++h(2, "remove") Matcher.remove
+    +tag method
+
+p
+    |  Remove a rule from the matcher. A #[code KeyError] is raised if the match
+    |  ID does not exist.
+
++aside-code("Example").
+    from spacy.matcher import Matcher
+    from spacy.attrs import ORTH
+
+    matcher = Matcher(nlp.vocab)
+    matcher.add('rule', None, [{ORTH: 'rule'}])
+    assert 'rule' in matcher == True
+    matcher.remove('rule')
+    assert 'rule' in matcher == False
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code key]
+        +cell unicode
+        +cell The ID of the match rule.

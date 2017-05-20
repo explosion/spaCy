@@ -199,9 +199,18 @@ cdef class Matcher:
         return (self.__class__, (self.vocab, self._patterns), None, None)
 
     def __len__(self):
+        """Get the number of rules added to the matcher.
+
+        RETURNS (int): The number of rules.
+        """
         return len(self._patterns)
 
     def __contains__(self, key):
+        """Check whether the matcher contains rules for a match ID.
+
+        key (unicode): The match ID.
+        RETURNS (bool): Whether the matcher contains rules for this match ID.
+        """
         return len(self._patterns)
 
     def add(self, key, on_match, *patterns):
@@ -209,9 +218,9 @@ cdef class Matcher:
         A match-rule consists of: an ID key, an on_match callback, and one or
         more patterns. If the key exists, the patterns are appended to the
         previous ones, and the previous on_match callback is replaced. The
-        `on_match` callback will receive the arguments `(matcher, doc, i, matches)`.
-        Note that if no `on_match` callback is specified, the document will not
-        be modified. A pattern consists of one or more `token_specs`, where a
+        `on_match` callback will receive the arguments `(matcher, doc, i,
+        matches)`. You can also set `on_match` to `None` to not perform any
+        actions. A pattern consists of one or more `token_specs`, where a
         `token_spec` is a dictionary mapping attribute IDs to values. Token
         descriptors can also include quantifiers. There are currently important
         known problems with the quantifiers – see the docs.
@@ -231,8 +240,10 @@ cdef class Matcher:
             self._patterns[key].append(specs)
 
     def remove(self, key):
-        """Remove a rule from the matcher.
-        A KeyError is raised if the key does not exist.
+        """Remove a rule from the matcher. A KeyError is raised if the key does
+        not exist.
+
+        key (unicode): The ID of the match rule.
         """
         key = self._normalize_key(key)
         self._patterns.pop(key)
