@@ -63,9 +63,8 @@ p
     |  is preserved.
 
 +aside-code("Example").
-    tokens = nlp('An example sentence. Another example sentence.')
-    tokens[0].text, tokens[0].head.tag_
-    # ('An', 'NN')
+    doc = nlp(u'An example sentence. Another sentence.')
+    assert (doc[0].text, doc[0].head.tag_) == ('An', 'NN')
 
 +table(["Name", "Type", "Description"])
     +row

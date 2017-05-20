@@ -36,7 +36,9 @@ p
     |  First, we initialise the #[code Matcher] with a vocab. The matcher must
     |  always share the same vocab with the documents it will operate on. We
     |  can now call #[+api("matcher#add") #[code matcher.add()]] with an ID and
-    |  our custom pattern:
+    |  our custom pattern. The second argument lets you pass in an optional
+    |  callback function to invoke on a successful match. For now, we set it
+    |  to #[code None].
 
 +code.
     import spacy
@@ -45,7 +47,9 @@ p
 
     nlp = spacy.load('en')
     matcher = Matcher(nlp.vocab)
-    matcher.add('HelloWorld', [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}])
+    # add match ID "HelloWorld" with no callback and one pattern
+    matcher.add('HelloWorld', on_match=None,
+                [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}])
 
     doc = nlp(u'Hello, world! Hello world!')
     matches = matcher(doc)
@@ -58,8 +62,9 @@ p
     |  without punctuation between "hello" and "world":
 
 +code.
-    matcher.add('HelloWorld', [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}],
-                              [{LOWER: 'hello'}, {LOWER: 'world'}])
+    matcher.add('HelloWorld', on_match=None,
+                [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}],
+                [{LOWER: 'hello'}, {LOWER: 'world'}])
 
 p
     |  By default, the matcher will only return the matches and
@@ -92,9 +97,9 @@ p
     nlp = spacy.load('en')
     matcher = Matcher(nlp.vocab)
 
-    matcher.add('GoogleIO', [{ORTH: 'Google'}, {UPPER: 'I'}, {ORTH: '/'}, {UPPER: 'O'}],
-                            [{ORTH: 'Google'}, {UPPER: 'I'}, {ORTH: '/'}, {UPPER: 'O'}, {IS_DIGIT: True}],
-                            on_match=add_event_ent)
+    matcher.add('GoogleIO', on_match=add_event_ent,
+                [{ORTH: 'Google'}, {UPPER: 'I'}, {ORTH: '/'}, {UPPER: 'O'}],
+                [{ORTH: 'Google'}, {UPPER: 'I'}, {ORTH: '/'}, {UPPER: 'O'}, {IS_DIGIT: True}])
 
     # Get the ID of the 'EVENT' entity type. This is required to set an entity.
     EVENT = nlp.vocab.strings['EVENT']
@@ -114,9 +119,9 @@ p
     |  function #[code merge_and_flag]:
 
 +code.
-    matcher.add('BAD_HTML', [{ORTH: '&lt;'}, {LOWER: 'br'}, {ORTH: '&gt;'}],
-                            [{ORTH: '&lt;'}, {LOWER: 'br/'}, {ORTH: '&gt;'}]
-                            on_match=merge_and_flag)
+    matcher.add('BAD_HTML', on_match=merge_and_flag,
+                [{ORTH: '&lt;'}, {LOWER: 'br'}, {ORTH: '&gt;'}],
+                [{ORTH: '&lt;'}, {LOWER: 'br/'}, {ORTH: '&gt;'}])
 
     # Add a new custom flag to the vocab, which is always False by default.
     # BAD_HTML_FLAG will be the flag ID, which we can use to set it to True on the span.

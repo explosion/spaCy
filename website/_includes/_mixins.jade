@@ -41,7 +41,7 @@ mixin src(url)
     path - [string] path to API docs page relative to /docs/api/
 
 mixin api(path)
-    +a("/docs/api/" + path, true)(target="_self").u-no-border.u-inline-block
+    +a("/docs/api/" + path, true)(target="_self").u-no-border.u-inline-block.u-nowrap
         block
 
         |  #[+icon("book", 18).o-icon--inline.u-color-theme]

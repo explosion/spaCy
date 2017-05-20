@@ -1,0 +1,93 @@
+//- 💫 DOCS > API > SPACY
+
+include ../../_includes/_mixins
+
++h(2, "load") spacy.load
+    +tag function
+
+p
+    |  Load a model via its #[+a("/docs/usage/models#usage") shortcut link],
+    |  the name of an installed
+    |  #[+a("/docs/usage/saving-loading#generating") model package], a unicode
+    |  path or a #[code Path]-like object. spaCy will try resolving the load
+    |  argument in this order. The #[code Language] class to initialise will be
+    |  determined based on the model's settings.
+
++aside-code("Example").
+    nlp = spacy.load('en') # shortcut link
+    nlp = spacy.load('en_core_web_sm') # package
+    nlp = spacy.load('/path/to/en') # unicode path
+    nlp = spacy.load(Path('/path/to/en')) # pathlib Path
+
++infobox("⚠️ Deprecation note")
+    |  As of spaCy 2.0, the #[code path] keyword argument is deprecated. spaCy
+    |  will also raise an error if no model could be loaded and never just
+    |  return an empty #[code Language] object. If you need a blank language,
+    |  you need to import it explicitly: #[code from spacy.lang.en import English].
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code name]
+        +cell unicode or #[code Path]
+        +cell Model to load, i.e. shortcut link, package name or path.
+
+    +footrow
+        +cell returns
+        +cell #[code Language]
+        +cell A #[code Language] object with the loaded model.
+
++h(2, "info") spacy.info
+    +tag function
+
+p
+    |  The same as the #[+api("cli#info") #[code info] command]. Pretty-print
+    |  information about your installation, models and local setup from within
+    |  spaCy. To get the model meta data as a dictionary instead, you can
+    |  use the #[code meta] attribute on your #[code nlp] object with a
+    |  loaded model, e.g. #[code nlp['meta']].
+
++aside-code("Example").
+    spacy.info()
+    spacy.info('en')
+    spacy.info('de', markdown=True)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code model]
+        +cell unicode
+        +cell A model, i.e. shortcut link, package name or path (optional).
+
+    +row
+        +cell #[code markdown]
+        +cell bool
+        +cell Print information as Markdown.
+
+
++h(2, "explain") spacy.explain
+    +tag function
+
+p
+    |  Get a description for a given POS tag, dependency label or entity type.
+    |  For a list of available terms, see
+    |  #[+src(gh("spacy", "spacy/glossary.py")) glossary.py].
+
++aside-code("Example").
+    spacy.explain('NORP')
+    # Nationalities or religious or political groups
+
+    doc = nlp(u'Hello world')
+    for word in doc:
+        print(word.text, word.tag_, spacy.explain(word.tag_))
+    # Hello UH interjection
+    # world NN noun, singular or mass
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code term]
+        +cell unicode
+        +cell Term to explain.
+
+    +footrow
+        +cell returns
+        +cell unicode
+        +cell The explanation, or #[code None] if not found in the glossary.
