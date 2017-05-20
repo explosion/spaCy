@@ -15,22 +15,25 @@ from ...attrs import LANG
 from ...util import update_exc
 
 
+class EnglishDefaults(Language.Defaults):
+    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+    lex_attr_getters[LANG] = lambda text: 'en'
+    lex_attr_getters.update(LEX_ATTRS)
+
+    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tag_map = dict(TAG_MAP)
+    stop_words = set(STOP_WORDS)
+    morph_rules = dict(MORPH_RULES)
+    lemma_rules = dict(LEMMA_RULES)
+    lemma_index = dict(LEMMA_INDEX)
+    lemma_exc = dict(LEMMA_EXC)
+    sytax_iterators = dict(SYNTAX_ITERATORS)
+
+
 class English(Language):
     lang = 'en'
 
-    class Defaults(Language.Defaults):
-        lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-        lex_attr_getters[LANG] = lambda text: 'en'
-        lex_attr_getters.update(LEX_ATTRS)
-
-        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-        tag_map = dict(TAG_MAP)
-        stop_words = set(STOP_WORDS)
-        morph_rules = dict(MORPH_RULES)
-        lemma_rules = dict(LEMMA_RULES)
-        lemma_index = dict(LEMMA_INDEX)
-        lemma_exc = dict(LEMMA_EXC)
-        sytax_iterators = dict(SYNTAX_ITERATORS)
+    Defaults = EnglishDefaults
 
 
-__all__ = ['English']
+__all__ = ['English', 'EnglishDefaults']
