@@ -9,15 +9,17 @@ from ...attrs import LANG
 from ...util import update_exc
 
 
+class PolishDefaults(Language.Defaults):
+    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+    lex_attr_getters[LANG] = lambda text: 'pl'
+
+    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
+    stop_words = set(STOP_WORDS)
+
+
 class Polish(Language):
     lang = 'pl'
-
-    class Defaults(Language.Defaults):
-        lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-        lex_attr_getters[LANG] = lambda text: 'pl'
-
-        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
-        stop_words = set(STOP_WORDS)
+    Defaults = PolishDefaults
 
 
 __all__ = ['Polish']

@@ -10,15 +10,17 @@ from ...attrs import LANG
 from ...util import update_exc
 
 
+class FinnishDefaults(Language.Defaults):
+    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+    lex_attr_getters[LANG] = lambda text: 'fi'
+
+    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    stop_words = set(STOP_WORDS)
+
+
 class Finnish(Language):
     lang = 'fi'
-
-    class Defaults(Language.Defaults):
-        lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-        lex_attr_getters[LANG] = lambda text: 'fi'
-
-        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-        stop_words = set(STOP_WORDS)
+    Defaults = FinnishDefaults
 
 
 __all__ = ['Finnish']

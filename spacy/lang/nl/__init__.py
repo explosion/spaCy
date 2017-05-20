@@ -9,16 +9,17 @@ from ...attrs import LANG
 from ...util import update_exc
 
 
+class DutchDefaults(Language.Defaults):
+    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+    lex_attr_getters[LANG] = lambda text: 'nl'
+
+    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
+    stop_words = set(STOP_WORDS)
+
 
 class Dutch(Language):
     lang = 'nl'
-
-    class Defaults(Language.Defaults):
-        lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-        lex_attr_getters[LANG] = lambda text: 'nl'
-
-        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS)
-        stop_words = set(STOP_WORDS)
+    Defaults = DutchDefaults
 
 
 __all__ = ['Dutch']
