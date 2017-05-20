@@ -167,6 +167,26 @@ p
         +cell dict / #[code None]
         +cell Model meta data or #[code None].
 
++h(2, "is_in_jupyter") util.is_in_jupyter
+    +tag function
+
+p
+    |  Check if user is running spaCy from a #[+a("https://jupyter.org") Jupyter]
+    |  notebook by detecting the IPython kernel. Mainly used for the
+    |  #[+api("displacy") #[code displacy]] visualizer.
+
++aside-code("Example").
+    html = '&lt;h1&gt;Hello world!&lt;/h1&gt;'
+    if util.is_in_jupyter():
+        from IPython.core.display import display, HTML
+        return display(HTML(html))
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell returns
+        +cell bool
+        +cell #[code True] if in Jupyter, #[code False] if not.
+
 +h(2, "update_exc") util.update_exc
     +tag function
 

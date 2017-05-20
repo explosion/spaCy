@@ -144,7 +144,8 @@ def parse_package_meta(package_path, require=True):
 
 
 def is_in_jupyter():
-    """Check if user is in a Jupyter notebook. Mainly used for displaCy.
+    """Check if user is running spaCy from a Jupyter notebook by detecting the
+    IPython kernel. Mainly used for the displaCy visualizer.
 
     RETURNS (bool): True if in Jupyter, False if not.
     """
