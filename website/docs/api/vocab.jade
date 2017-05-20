@@ -157,25 +157,6 @@ p
         +cell int
         +cell The integer ID by which the flag value can be checked.
 
-+h(2, "resize_vectors") Vocab.resize_vectors
-    +tag method
-    +tag-model("vectors")
-
-p
-    |  Set #[code vectors_length] to a new size, and allocate more memory for
-    |  the #[code Lexeme] vectors if necessary. The memory will be zeroed.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code new_size]
-        +cell int
-        +cell The new size of the vectors.
-
-    +footrow
-        +cell returns
-        +cell #[code None]
-        +cell -
-
 +h(2, "to_disk") Vocab.to_disk
     +tag method
 
@@ -273,8 +254,3 @@ p Load state from a binary string.
         +cell #[code strings]
         +cell #[code StringStore]
         +cell A table managing the string-to-int mapping.
-
-    +row
-        +cell #[code vectors_length]
-        +cell int
-        +cell The dimensionality of the word vectors, if present.
