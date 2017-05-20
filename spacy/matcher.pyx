@@ -206,21 +206,15 @@ cdef class Matcher:
 
     def add(self, key, on_match, *patterns):
         """Add a match-rule to the matcher.
-
-        A match-rule consists of: an ID key, an on_match callback,
-        and one or more patterns. If the key exists, the patterns
-        are appended to the previous ones, and the previous on_match
-        callback is replaced.
-
-        The on_match callback will receive the arguments
-        (matcher, doc, i, matches). Note that if no `on_match`
-        callback is specified, the document will not be modified.
-
-        A pattern consists of one or more token_specs,
-        where a token_spec is a dictionary mapping
-        attribute IDs to values. Token descriptors can also
-        include quantifiers. There are currently important
-        known problems with the quantifiers --- see the docs.
+        A match-rule consists of: an ID key, an on_match callback, and one or
+        more patterns. If the key exists, the patterns are appended to the
+        previous ones, and the previous on_match callback is replaced. The
+        `on_match` callback will receive the arguments `(matcher, doc, i, matches)`.
+        Note that if no `on_match` callback is specified, the document will not
+        be modified. A pattern consists of one or more `token_specs`, where a
+        `token_spec` is a dictionary mapping attribute IDs to values. Token
+        descriptors can also include quantifiers. There are currently important
+        known problems with the quantifiers – see the docs.
         """
         for pattern in patterns:
             if len(pattern) == 0:
@@ -238,7 +232,6 @@ cdef class Matcher:
 
     def remove(self, key):
         """Remove a rule from the matcher.
-
         A KeyError is raised if the key does not exist.
         """
         key = self._normalize_key(key)
