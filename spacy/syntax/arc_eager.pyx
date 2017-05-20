@@ -358,9 +358,6 @@ cdef class ArcEager(TransitionSystem):
                     label = 'ROOT'
                 gold.c.heads[i] = gold.heads[i]
                 gold.c.labels[i] = self.strings[label]
-                # Count frequencies, for use in encoder
-                self.freqs[HEAD][gold.c.heads[i] - i] += 1
-                self.freqs[DEP][gold.c.labels[i]] += 1
 
     cdef Transition lookup_transition(self, object name) except *:
         if '-' in name:

@@ -98,19 +98,6 @@ cdef class BiluoPushDown(TransitionSystem):
     cdef int preprocess_gold(self, GoldParse gold) except -1:
         for i in range(gold.length):
             gold.c.ner[i] = self.lookup_transition(gold.ner[i])
-            # Count frequencies, for use in encoder
-            if gold.c.ner[i].move in (BEGIN, UNIT):
-                self.freqs[ENT_IOB][3] += 1
-                self.freqs[ENT_TYPE][gold.c.ner[i].label] += 1
-            elif gold.c.ner[i].move in (IN, LAST):
-                self.freqs[ENT_IOB][2] += 1
-                self.freqs[ENT_TYPE][0] += 1
-            elif gold.c.ner[i].move == OUT:
-                self.freqs[ENT_IOB][1] += 1
-                self.freqs[ENT_TYPE][0] += 1
-            else:
-                self.freqs[ENT_IOB][1] += 1
-                self.freqs[ENT_TYPE][0] += 1
 
     cdef Transition lookup_transition(self, object name) except *:
         if name == '-' or name == None:

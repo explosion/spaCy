@@ -26,7 +26,7 @@ cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
 
 
 cdef class TransitionSystem:
-    def __init__(self, StringStore string_table, dict labels_by_action, _freqs=None):
+    def __init__(self, StringStore string_table, dict labels_by_action):
         self.mem = Pool()
         self.strings = string_table
         self.n_moves = 0
@@ -38,14 +38,6 @@ cdef class TransitionSystem:
             for label_str in label_strs:
                 self.add_action(int(action), label_str)
         self.root_label = self.strings['ROOT']
-        self.freqs = {} if _freqs is None else _freqs
-        for attr in (TAG, HEAD, DEP, ENT_TYPE, ENT_IOB):
-            self.freqs[attr] = defaultdict(int)
-            self.freqs[attr][0] = 1
-        # Ensure we've seen heads. Need an official dependency length limit...
-        for i in range(10024):
-            self.freqs[HEAD][i] = 1
-            self.freqs[HEAD][-i] = 1
         self.init_beam_state = _init_state
 
     def __reduce__(self):
@@ -55,7 +47,7 @@ cdef class TransitionSystem:
             label_str = self.strings[trans.label]
             labels_by_action.setdefault(trans.move, []).append(label_str)
         return (self.__class__,
-                (self.strings, labels_by_action, self.freqs),
+                (self.strings, labels_by_action),
                 None, None)
 
     def init_batch(self, docs):
