@@ -268,7 +268,7 @@ cdef class Matcher:
         return key in self._patterns
 
     def get(self, key, default=None):
-        """Retrieve the pattern stored for an entity.
+        """Retrieve the pattern stored for a key.
 
         key (unicode or int): The key to retrieve.
         RETURNS (tuple): The rule, as an (on_match, patterns) tuple.

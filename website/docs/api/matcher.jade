@@ -8,10 +8,10 @@ p Match sequences of tokens, based on pattern rules.
     |  As of spaCy 2.0, #[code Matcher.add_pattern] and #[code Matcher.add_entity]
     |  are deprecated and have been replaced with a simpler
     |  #[+api("matcher#add") #[code Matcher.add]] that lets you add a list of
-    |  patterns and a callback for a given match ID.
+    |  patterns and a callback for a given match ID. #[code Matcher.get_entity]
+    |  is now called #[+api("matcher#get") #[code matcher.get]].
     |  #[code Matcher.load] (not useful, as it didn't allow specifying callbacks),
-    |  #[code Matcher.has_entity] and #[code Matcher.get_entity] (now redundant)
-    |  have been removed.
+    |  and #[code Matcher.has_entity] (now redundant) have been removed.
 
 +h(2, "init") Matcher.__init__
     +tag method
@@ -218,3 +218,28 @@ p
         +cell #[code key]
         +cell unicode
         +cell The ID of the match rule.
+
++h(2, "get") Matcher.get
+    +tag method
+
+p
+    |  Retrieve the pattern stored for a key. Returns the rule as an
+    |  #[code (on_match, patterns)] tuple containing the callback and available
+    |  patterns.
+
++aside-code("Example").
+    pattern = [{ORTH: 'test'}]
+    matcher.add('Rule', None, pattern)
+    (on_match, patterns) = matcher.get('Rule')
+    assert patterns = [pattern]
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code key]
+        +cell unicode
+        +cell The ID of the match rule.
+
+    +footrow
+        +cell returns
+        +cell tuple
+        +cell The rule, as an #[code (on_match, patterns)] tuple.

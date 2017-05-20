@@ -98,6 +98,8 @@ p
     matcher.add('HelloWorld', on_match=None,
                 [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}],
                 [{LOWER: 'hello'}, {LOWER: 'world'}])
+    assert len(matcher) == 1
+    assert 'HelloWorld' in matcher
 
 p
     |  Patterns can now be added to the matcher by calling
@@ -197,12 +199,12 @@ p
         +cell #[+api("matcher#add") #[code Matcher.add]]
 
     +row
-        +cell #[code Matcher.has_entity]
-        +cell #[+api("matcher#contains") #[code Matcher.__contains__]]
+        +cell #[code Matcher.get_entity]
+        +cell #[+api("matcher#get") #[code Matcher.get]]
 
     +row
-        +cell #[code Matcher.get_entity]
-        +cell -
+        +cell #[code Matcher.has_entity]
+        +cell #[+api("matcher#contains") #[code Matcher.__contains__]]
 
     +row
         +cell #[code Doc.read_bytes]
