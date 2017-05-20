@@ -2,9 +2,216 @@
 
 include ../../_includes/_mixins
 
+p
+    |  We also re-wrote a large part of the documentation and usage workflows,
+    |  and added more examples.
 
 +h(2, "features") New features
 
++h(3, "features-displacy") displaCy visualizer with Jupyter support
+
++aside-code("Example").
+    from spacy import displacy
+    doc = nlp(u'This is a sentence about Facebook.')
+    displacy.serve(doc, style='dep') # run the web server
+    html = displacy.render(doc, style='ent') # generate HTML
+
+p
+    |  Our popular dependency and named entity visualizers are now an official
+    |  part of the spaCy library! displaCy can run a simple web server, or
+    |  generate raw HTML markup or SVG files to be exported. You can pass in one
+    |  or more docs, and customise the style. displaCy also auto-detects whether
+    |  you're running #[+a("https://jupyter.org") Jupyter] and will render the
+    |  visualizations in your notebook.
+
++infobox
+    |  #[strong API:] #[+api("displacy") #[code displacy]]
+    |  #[strong Usage:] #[+a("/docs/usage/visualizers") Visualizing spaCy]
+
++h(3, "features-loading") Loading
+
++aside-code("Example").
+    nlp = spacy.load('en') # shortcut link
+    nlp = spacy.load('en_core_web_sm') # package
+    nlp = spacy.load('/path/to/en') # unicode path
+    nlp = spacy.load(Path('/path/to/en')) # pathlib Path
+
+p
+    |  The improved #[code spacy.load] makes loading models easier and more
+    |  transparent. You can load a model by supplying its
+    |  #[+a("/docs/usage/models#usage") shortcut link], the name of an installed
+    |  #[+a("/docs/usage/saving-loading#generating") model package], a unicode
+    |  path or a #[code Path]-like object. spaCy will try resolving the load
+    |  argument in this order. The #[code path] keyword argument is now deprecated.
+
+p
+    |  The #[code Language] class to initialise will be determined based on the
+    |  model's settings. If no model is found, spaCy will let you know and won't
+    |  just return an empty #[code Language] object anymore. If you want a blank
+    |  language, you can always import the class directly, e.g.
+    |  #[code from spacy.lang.en import English].
+
++infobox
+    |  #[strong API:] #[+api("spacy#load") #[code spacy.load]]
+    |  #[strong Usage:] #[+a("/docs/usage/saving-loading") Saving and loading]
+
++h(3, "features-language") Improved language data and processing pipelines
+
++aside-code("Example").
+    from spacy.language import Language
+    nlp = Language(pipeline=['token_vectors', 'tags',
+                             'dependencies'])
+
++infobox
+    |  #[strong API:] #[+api("language") #[code Language]]
+    |  #[strong Usage:] #[+a("/docs/usage/adding-languages") Adding languages]
+
++h(3, "features-lemmatizer") Simple lookup-based lemmatization
+
++aside-code("Example").
+    LOOKUP = {
+        "aba": "abar",
+        "ababa": "abar",
+        "ababais": "abar",
+        "ababan": "abar",
+        "ababanes": "ababán"
+    }
+
+p
+    |  spaCy now supports simple lookup-based lemmatization. The data is stored
+    |  in a dictionary mapping a string to its lemma. To determine a token's
+    |  lemma, spaCy simply looks it up in the table. The lookup lemmatizer can
+    |  be imported from #[code spacy.lemmatizerlookup]. It's initialised with
+    |  the lookup table, and should be returned by the #[code create_lemmatizer]
+    |  classmethod of the language's defaults.
+
++infobox
+    |  #[strong API:] #[+api("language") #[code Language]]
+    |  #[strong Usage:] #[+a("/docs/usage/adding-languages") Adding languages]
+
++h(3, "features-matcher") Revised matcher API
+
++aside-code("Example").
+    from spacy.matcher import Matcher
+    from spacy.attrs import LOWER, IS_PUNCT
+    matcher = Matcher(nlp.vocab)
+    matcher.add('HelloWorld', on_match=None,
+                [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}],
+                [{LOWER: 'hello'}, {LOWER: 'world'}])
+
+p
+    |  Patterns can now be added to the matcher by calling
+    |  #[+api("matcher-add") #[code matcher.add()]] with a match ID, an optional
+    |  callback function to be invoked on each match, and one or more patterns.
+    |  This allows you to write powerful, pattern-specific logic using only one
+    |  matcher. For example, you might only want to merge some entity types,
+    |  and set custom flags for other matched patterns.
+
++infobox
+    |  #[strong API:] #[+api("matcher") #[code Matcher]]
+    |  #[strong Usage:] #[+a("/docs/usage/rule-based-matching") Rule-based matching]
+
++h(3, "features-serializer") Serialization
+
++infobox
+    |  #[strong API:] #[+api("serializer") #[code Serializer]]
+    |  #[strong Usage:] #[+a("/docs/usage/saving-loading") Saving and loading]
+
++h(3, "features-models") Neural network models for English, German, French and Spanish
+
++infobox
+    |  #[strong Details:] #[+src(gh("spacy-models")) spacy-models]
+    |  #[strong Usage:] #[+a("/docs/usage/models") Models]
+
 +h(2, "incompat") Backwards incompatibilities
+
++table(["Old", "New"])
+    +row
+        +cell #[code Language.save_to_directory]
+        +cell #[+api("language#to_disk") #[code Language.to_disk]]
+
+    +row
+        +cell #[code Tokenizer.load]
+        +cell
+            |  #[+api("tokenizer#from_disk") #[code Tokenizer.from_disk]]
+            |  #[+api("tokenizer#from_bytes") #[code Tokenizer.from_bytes]]
+
+    +row
+        +cell #[code Tagger.load]
+        +cell
+            |  #[+api("tagger#from_disk") #[code Tagger.from_disk]]
+            |  #[+api("tagger#from_bytes") #[code Tagger.from_bytes]]
+
+    +row
+        +cell #[code DependencyParser.load]
+        +cell
+            |  #[+api("dependencyparser#from_disk") #[code DependencyParser.from_disk]]
+            |  #[+api("dependencyparser#from_bytes") #[code DependencyParser.from_bytes]]
+
+    +row
+        +cell #[code EntityRecognizer.load]
+        +cell
+            |  #[+api("entityrecognizer#from_disk") #[code EntityRecognizer.from_disk]]
+            |  #[+api("entityrecognizer#from_bytes") #[code EntityRecognizer.from_bytes]]
+
+    +row
+        +cell
+            |  #[code Vocab.load]
+            |  #[code Vocab.load_lexemes]
+            |  #[code Vocab.load_vectors]
+            |  #[code Vocab.load_vectors_from_bin_loc]
+        +cell
+            |  #[+api("vocab#from_disk") #[code Vocab.from_disk]]
+            |  #[+api("vocab#from_bytes") #[code Vocab.from_bytes]]
+
+    +row
+        +cell
+            |  #[code Vocab.dump]
+            |  #[code Vocab.dump_vectors]
+        +cell
+            |  #[+api("vocab#to_disk") #[code Vocab.to_disk]]
+            |  #[+api("vocab#to_bytes") #[code Vocab.to_bytes]]
+
+    +row
+        +cell
+            |  #[code StringStore.load]
+        +cell
+            |  #[+api("stringstore#from_disk") #[code StringStore.from_disk]]
+            |  #[+api("stringstore#from_bytes") #[code StringStore.from_bytes]]
+
+    +row
+        +cell
+            |  #[code StringStore.dump]
+        +cell
+            |  #[+api("stringstore#to_disk") #[code StringStore.to_disk]]
+            |  #[+api("stringstore#to_bytes") #[code StringStore.to_bytes]]
+
+    +row
+        +cell #[code Matcher.load]
+        +cell -
+
+    +row
+        +cell
+            |  #[code Matcher.add_pattern]
+            |  #[code Matcher.add_entity]
+        +cell #[+api("matcher#add") #[code Matcher.add]]
+
+    +row
+        +cell #[code Matcher.has_entity]
+        +cell -
+
+    +row
+        +cell #[code Matcher.get_entity]
+        +cell -
+
+    +row
+        +cell #[code Doc.read_bytes]
+        +cell
+
+    +row
+        +cell #[code Token.is_ancestor_of]
+        +cell #[+api("token#is_ancestor") #[code Token.is_ancestor]]
+
+
 
 +h(2, "migrating") Migrating from spaCy 1.x
