@@ -128,8 +128,8 @@ p
         print('Matched!', matches)
 
     matcher = Matcher(nlp.vocab)
-    matcher.add('HelloWorld', [{LOWER: "hello"}, {LOWER: "world"}], on_match=on_match)
-    matcher.add('GoogleMaps', [{ORTH: "Google"}, {ORTH: "Maps"}], on_match=on_match)
+    matcher.add('HelloWorld', on_match, [{LOWER: "hello"}, {LOWER: "world"}])
+    matcher.add('GoogleMaps', on_match, [{ORTH: "Google"}, {ORTH: "Maps"}])
 
     doc = nlp(u'HELLO WORLD on Google Maps.')
     matches = matcher(doc)
@@ -141,15 +141,15 @@ p
         +cell An ID for the thing you're matching.
 
     +row
-        +cell #[code *patterns]
-        +cell list
-        +cell
-            |  Match pattern. A pattern consists of a list of dicts, where each
-            |  dict describes a token.
-
-    +row
         +cell #[code on_match]
         +cell function
         +cell
             |  Callback function to act on matches. Takes the arguments
             |  #[code matcher], #[code doc], #[code i] and #[code matches].
+
+    +row
+        +cell #[code *patterns]
+        +cell list
+        +cell
+            |  Match pattern. A pattern consists of a list of dicts, where each
+            |  dict describes a token.
