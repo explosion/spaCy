@@ -2,8 +2,13 @@
     "sidebar": {
         "Introduction": {
             "Facts & Figures": "./",
-            "Languages": "language-models",
-            "Philosophy": "philosophy"
+            "Languages": "language-models"
+        },
+        "Top-level": {
+            "spacy": "spacy",
+            "displacy": "displacy",
+            "Utility Functions": "util",
+            "Command line": "cli"
         },
         "Classes": {
             "Doc": "doc",
@@ -21,9 +26,6 @@
             "GoldParse": "goldparse"
         },
         "Other": {
-            "Command line": "cli",
-            "displaCy": "displacy",
-            "Utility Functions": "util",
             "Annotation Specs": "annotation",
             "Feature Scheme": "features"
         }
@@ -41,6 +43,26 @@
 
     "philosophy": {
         "title": "Philosophy"
+    },
+
+    "spacy": {
+        "title": "spaCy top-level functions",
+        "next": "displacy"
+    },
+
+    "displacy": {
+        "title": "displaCy",
+        "tag": "module",
+        "next": "util"
+    },
+
+    "util": {
+        "title": "Utility Functions",
+        "next": "cli"
+    },
+
+    "cli": {
+        "title": "Command Line Interface"
     },
 
     "language": {
@@ -111,20 +133,6 @@
     "goldparse": {
         "title": "GoldParse",
         "tag": "class"
-    },
-
-    "cli": {
-        "title": "Command Line Interface",
-        "next": "displacy"
-    },
-
-    "displacy": {
-        "title": "displaCy",
-        "tag": "module"
-    },
-
-    "util": {
-        "title": "Utility Functions"
     },
 
     "annotation": {
