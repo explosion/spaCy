@@ -23,7 +23,8 @@ p
     |  As of spaCy 2.0, the #[code path] keyword argument is deprecated. spaCy
     |  will also raise an error if no model could be loaded and never just
     |  return an empty #[code Language] object. If you need a blank language,
-    |  you need to import it explicitly: #[code from spacy.lang.en import English].
+    |  you need to import it explicitly (#[code from spacy.lang.en import English])
+    |  or use #[+api("util#get_lang_class") #[code util.get_lang_class]].
 
 +table(["Name", "Type", "Description"])
     +row
