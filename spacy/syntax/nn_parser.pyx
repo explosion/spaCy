@@ -84,7 +84,7 @@ cdef class precompute_hiddens:
     we can do all our hard maths up front, packed into large multiplications,
     and do the hard-to-program parsing on the CPU.
     '''
-    cdef int nF, nO, nP
+    cdef int nF, nO
     cdef bint _is_synchronized
     cdef public object ops
     cdef np.ndarray _features
@@ -104,9 +104,8 @@ cdef class precompute_hiddens:
             cached = gpu_cached
         self.nF = cached.shape[1]
         self.nO = cached.shape[2]
-        self.nP = cached.shape[3]
         self.ops = lower_model.ops
-        self._features = numpy.zeros((batch_size, self.nO, self.nP), dtype='f')
+        self._features = numpy.zeros((batch_size, self.nO), dtype='f')
         self._is_synchronized = False
         self._cuda_stream = cuda_stream
         self._cached = cached
@@ -133,24 +132,15 @@ cdef class precompute_hiddens:
         cdef int[:, ::1] ids = token_ids
         self._sum_features(<float*>state_vector.data,
             <float*>hiddens.data, &ids[0,0],
-            token_ids.shape[0], self.nF, self.nO*self.nP)
+            token_ids.shape[0], self.nF, self.nO)
 
-        output, bp_output = self._apply_nonlinearity(state_vector)
-
-        def backward(d_output, sgd=None):
+        def backward(d_state_vector, sgd=None):
             # This will usually be on GPU
-            if isinstance(d_output, numpy.ndarray):
-                d_output = self.ops.xp.array(d_output)
-            d_state_vector = bp_output(d_output, sgd)
+            if isinstance(d_state_vector, numpy.ndarray):
+                d_state_vector = self.ops.xp.array(d_state_vector)
             d_tokens = bp_hiddens((d_state_vector, token_ids), sgd)
             return d_tokens
-        return output, backward
-
-    def _apply_nonlinearity(self, X):
-        if self.nP < 2:
-            return X.reshape(X.shape[:2]), lambda dX, sgd=None: dX.reshape(X.shape)
-        best, which = self.ops.maxout(X)
-        return best, lambda dX, sgd=None: self.ops.backprop_maxout(dX, which, self.nP)
+        return state_vector, backward
 
     cdef void _sum_features(self, float* output,
             const float* cached, const int* token_ids, int B, int F, int O) nogil:
@@ -223,11 +213,9 @@ cdef class Parser:
     def Model(cls, nr_class, token_vector_width=128, hidden_width=128, **cfg):
         token_vector_width = util.env_opt('token_vector_width', token_vector_width)
         hidden_width = util.env_opt('hidden_width', hidden_width)
-        maxout_pieces = util.env_opt('parser_maxout_pieces', 1)
-        lower = PrecomputableMaxouts(hidden_width,
+        lower = PrecomputableAffine(hidden_width,
                     nF=cls.nr_feature,
-                    nI=token_vector_width,
-                    pieces=maxout_pieces)
+                    nI=token_vector_width)
 
         with Model.use_device('cpu'):
             upper = chain(
