@@ -121,15 +121,15 @@ p Match a stream of documents, yielding them in turn.
 +h(2, "len") Matcher.__len__
     +tag method
 
-p Get the number of rules added to the matcher.
+p
+    |  Get the number of rules added to the matcher. Note that this only returns
+    |  the number of rules (identical with the number of IDs), not the number
+    |  of individual patterns.
 
 +aside-code("Example").
-    from spacy.matcher import Matcher
-    from spacy.attrs import ORTH
-
     matcher = Matcher(nlp.vocab)
     assert len(matcher) == 0
-    matcher.add('rule', None, [{ORTH: 'rule'}])
+    matcher.add('Rule', None, [{ORTH: 'test'}])
     assert len(matcher) == 1
 
 +table(["Name", "Type", "Description"])
@@ -144,13 +144,10 @@ p Get the number of rules added to the matcher.
 p Check whether the matcher contains rules for a match ID.
 
 +aside-code("Example").
-    from spacy.matcher import Matcher
-    from spacy.attrs import ORTH
-
     matcher = Matcher(nlp.vocab)
-    assert 'rule' in matcher == False
-    matcher.add('rule', None, [{ORTH: 'rule'}])
-    assert 'rule' in matcher == True
+    assert 'Rule' in matcher == False
+    matcher.add('Rule', None, [{ORTH: 'test'}])
+    assert 'Rule' in matcher == True
 
 +table(["Name", "Type", "Description"])
     +row
@@ -174,9 +171,6 @@ p
     |  overwritten.
 
 +aside-code("Example").
-    from spacy.matcher import Matcher
-    from spacy.attrs import LOWER, ORTH
-
     def on_match(matcher, doc, id, matches):
         print('Matched!', matches)
 
@@ -214,14 +208,10 @@ p
     |  ID does not exist.
 
 +aside-code("Example").
-    from spacy.matcher import Matcher
-    from spacy.attrs import ORTH
-
-    matcher = Matcher(nlp.vocab)
-    matcher.add('rule', None, [{ORTH: 'rule'}])
-    assert 'rule' in matcher == True
-    matcher.remove('rule')
-    assert 'rule' in matcher == False
+    matcher.add('Rule', None, [{ORTH: 'test'}])
+    assert 'Rule' in matcher == True
+    matcher.remove('Rule')
+    assert 'Rule' in matcher == False
 
 +table(["Name", "Type", "Description"])
     +row

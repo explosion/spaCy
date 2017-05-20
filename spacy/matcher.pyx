@@ -199,7 +199,9 @@ cdef class Matcher:
         return (self.__class__, (self.vocab, self._patterns), None, None)
 
     def __len__(self):
-        """Get the number of rules added to the matcher.
+        """Get the number of rules added to the matcher. Note that this only
+        returns the number of rules (identical with the number of IDs), not the
+        number of individual patterns.
 
         RETURNS (int): The number of rules.
         """
