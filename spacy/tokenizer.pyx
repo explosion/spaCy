@@ -18,49 +18,6 @@ from .tokens.doc cimport Doc
 
 cdef class Tokenizer:
     """
-    Segment text, and create Doc objects with the discovered segment boundaries.
-    """
-    @classmethod
-    def load(cls, path, Vocab vocab, rules=None, prefix_search=None, suffix_search=None,
-             infix_finditer=None, token_match=None):
-        """
-        Load a Tokenizer, reading unsupplied components from the path.
-
-        Arguments:
-            path (Path):
-                The path to load from.
-            vocab (Vocab):
-                A storage container for lexical types.
-            rules (dict):
-                Exceptions and special-cases for the tokenizer.
-            token_match:
-                A boolean function matching strings that becomes tokens.
-            prefix_search:
-                Signature of re.compile(string).search
-            suffix_search:
-                Signature of re.compile(string).search
-            infix_finditer:
-                Signature of re.compile(string).finditer
-        Returns Tokenizer
-        """
-        path = util.ensure_path(path)
-        if rules is None:
-            with (path / 'tokenizer' / 'specials.json').open('r', encoding='utf8') as file_:
-                rules = ujson.load(file_)
-        if prefix_search in (None, True):
-            with (path / 'tokenizer' / 'prefix.txt').open() as file_:
-                entries = file_.read().split('\n')
-            prefix_search = util.compile_prefix_regex(entries).search
-        if suffix_search in (None, True):
-            with (path / 'tokenizer' / 'suffix.txt').open() as file_:
-                entries = file_.read().split('\n')
-            suffix_search = util.compile_suffix_regex(entries).search
-        if infix_finditer in (None, True):
-            with (path / 'tokenizer' / 'infix.txt').open() as file_:
-                entries = file_.read().split('\n')
-            infix_finditer = util.compile_infix_regex(entries).finditer
-        return cls(vocab, rules, prefix_search, suffix_search, infix_finditer, token_match)
-
     def __init__(self, Vocab vocab, rules, prefix_search, suffix_search, infix_finditer, token_match=None):
         """
         Create a Tokenizer, to create Doc objects given unicode text.
