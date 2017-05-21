@@ -6,18 +6,19 @@ from collections import defaultdict
 import cytoolz
 from pathlib import Path
 import dill
+import tqdm
 
 from ..tokens.doc import Doc
 from ..scorer import Scorer
 from ..gold import GoldParse, merge_sents
-from ..gold import read_json_file as read_gold_json
+from ..gold import GoldCorpus
 from ..util import prints
 from .. import util
 from .. import displacy
 
 
-def train(language, output_dir, train_data, dev_data, n_iter, n_sents,
-          use_gpu, no_tagger, no_parser, no_entities, parser_L1):
+def train(lang_id, output_dir, train_data, dev_data, n_iter, n_sents,
+          use_gpu, no_tagger, no_parser, no_entities):
     output_path = util.ensure_path(output_dir)
     train_path = util.ensure_path(train_data)
     dev_path = util.ensure_path(dev_data)
@@ -28,70 +29,32 @@ def train(language, output_dir, train_data, dev_data, n_iter, n_sents,
     if dev_path and not dev_path.exists():
         prints(dev_path, title="Development data not found", exits=True)
 
-    lang = util.get_lang_class(language)
-    parser_cfg = {
-        'pseudoprojective': True,
-        'L1': parser_L1,
-        'n_iter': n_iter,
-        'lang': language,
-        'features': lang.Defaults.parser_features}
-    entity_cfg = {
-        'n_iter': n_iter,
-        'lang': language,
-        'features': lang.Defaults.entity_features}
-    tagger_cfg = {
-        'n_iter': n_iter,
-        'lang': language,
-        'features': lang.Defaults.tagger_features}
-    gold_train = list(read_gold_json(train_path, limit=n_sents))
-    gold_dev = list(read_gold_json(dev_path, limit=n_sents))
-
-    train_model(lang, gold_train, gold_dev, output_path, n_iter,
-                no_tagger=no_tagger, no_parser=no_parser, no_entities=no_entities,
-                use_gpu=use_gpu)
-    if gold_dev:
-        scorer = evaluate(lang, gold_dev, output_path)
-        print_results(scorer)
-
-
-def train_config(config):
-    config_path = util.ensure_path(config)
-    if not config_path.is_file():
-        prints(config_path, title="Config file not found", exits=True)
-    config = json.load(config_path)
-    for setting in []:
-        if setting not in config.keys():
-            prints("%s not found in config file." % setting, title="Missing setting")
-
-
-def train_model(Language, train_data, dev_data, output_path, n_iter, **cfg):
-    print("Itn.\tDep. Loss\tUAS\tNER F.\tTag %\tToken %")
+    lang_class = util.get_lang_class(lang_id)
 
     pipeline = ['token_vectors', 'tags', 'dependencies', 'entities']
-    if cfg.get('no_tagger') and 'tags' in pipeline:
-        pipeline.remove('tags')
-    if cfg.get('no_parser') and 'dependencies' in pipeline:
-        pipeline.remove('dependencies')
-    if cfg.get('no_entities') and 'entities' in pipeline:
-        pipeline.remove('entities')
-    print(pipeline)
-    nlp = Language(pipeline=pipeline)
+    if no_tagger and 'tags' in pipeline: pipeline.remove('tags')
+    if no_parser and 'dependencies' in pipeline: pipeline.remove('dependencies')
+    if no_entities and 'entities' in pipeline: pipeline.remove('entities')
+
+    nlp = lang_class(pipeline=pipeline)
+    corpus = GoldCorpus(train_path, dev_path)
+
     dropout = util.env_opt('dropout', 0.0)
-    # TODO: Get spaCy using Thinc's trainer and optimizer
-    with nlp.begin_training(train_data, **cfg) as (trainer, optimizer):
-        for itn, epoch in enumerate(trainer.epochs(n_iter, gold_preproc=False)):
-            losses = defaultdict(float)
-            for i, (docs, golds) in enumerate(epoch):
+
+    optimizer = nlp.begin_training(lambda: corpus.train_tuples, use_gpu=use_gpu)
+    n_train_docs = corpus.count_train()
+    print("Itn.\tDep. Loss\tUAS\tNER F.\tTag %\tToken %")
+    for i in range(n_iter):
+        with tqdm.tqdm(total=n_train_docs) as pbar:
+            train_docs = corpus.train_docs(nlp, shuffle=i)
+            for batch in cytoolz.partition_all(20, train_docs):
+                docs, golds = zip(*batch)
+                docs = list(docs)
+                golds = list(golds)
                 nlp.update(docs, golds, drop=dropout, sgd=optimizer)
-                for doc in docs:
-                    doc.tensor = None
-                    doc._py_tokens = []
-            if dev_data:
-                with nlp.use_params(optimizer.averages):
-                    dev_scores = trainer.evaluate(dev_data, gold_preproc=False).scores
-            else:
-                dev_scores = defaultdict(float)
-            print_progress(itn, losses, dev_scores)
+                pbar.update(len(docs))
+        scorer = nlp.evaluate(corpus.dev_docs(nlp))
+        print_progress(i, {}, scorer.scores)
     with (output_path / 'model.bin').open('wb') as file_:
         dill.dump(nlp, file_, -1)
 

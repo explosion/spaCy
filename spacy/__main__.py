@@ -129,9 +129,31 @@ class CLI(object):
         print("\n   Command %r does not exist."
               "\n   Use the --help flag for a list of available commands.\n" % name)
 
+@plac.annotations(
+    lang=("model language", "positional", None, str),
+    output_dir=("output directory to store model in", "positional", None, str),
+    train_data=("location of JSON-formatted training data", "positional", None, str),
+    dev_data=("location of JSON-formatted development data (optional)", "positional", None, str),
+    n_iter=("number of iterations", "option", "n", int),
+    nsents=("number of sentences", "option", None, int),
+    use_gpu=("Use GPU", "flag", "g", bool),
+    no_tagger=("Don't train tagger", "flag", "T", bool),
+    no_parser=("Don't train parser", "flag", "P", bool),
+    no_entities=("Don't train NER", "flag", "N", bool)
+)
+def train(self, lang, output_dir, train_data, dev_data=None, n_iter=15,
+          nsents=0, use_gpu=False,
+          no_tagger=False, no_parser=False, no_entities=False):
+    """
+    Train a model. Expects data in spaCy's JSON format.
+    """
+    nsents = nsents or None
+    cli_train(lang, output_dir, train_data, dev_data, n_iter, nsents,
+              use_gpu, no_tagger, no_parser, no_entities)
+
 
 if __name__ == '__main__':
     import plac
     import sys
-    sys.argv[0] = 'spacy'
-    plac.Interpreter.call(CLI)
+    if sys.argv[1] == 'train':
+        plac.call(train)

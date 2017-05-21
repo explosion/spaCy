@@ -6,12 +6,12 @@ import dill
 import numpy
 from thinc.neural import Model
 from thinc.neural.ops import NumpyOps, CupyOps
+from thinc.neural.optimizers import Adam
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
 from .tagger import Tagger
 from .lemmatizer import Lemmatizer
-from .train import Trainer
 from .syntax.parser import get_templates
 from .syntax.nonproj import PseudoProjectivity
 from .pipeline import NeuralDependencyParser, EntityRecognizer
@@ -23,6 +23,7 @@ from .lang.tokenizer_exceptions import TOKEN_MATCH
 from .lang.tag_map import TAG_MAP
 from .lang.lex_attrs import LEX_ATTRS
 from . import util
+from .scorer import Scorer
 
 
 class BaseDefaults(object):
@@ -181,8 +182,8 @@ class Language(object):
         for proc in self.pipeline[1:]:
             grads = {}
             tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
-            d_tokvecses = proc.update((docs, tokvecses), golds, sgd=get_grads, drop=drop)
-            bp_tokvecses(d_tokvecses, sgd=get_grads)
+            d_tokvecses = proc.update((docs, tokvecses), golds, sgd=sgd, drop=drop)
+            bp_tokvecses(d_tokvecses, sgd=sgd)
             if sgd is not None:
                 for key, (W, dW) in grads.items():
                     # TODO: Unhack this when thinc improves
@@ -191,16 +192,24 @@ class Language(object):
                     else:
                         sgd.ops = CupyOps()
                     sgd(W, dW, key=key)
+                for key in list(grads.keys()):
+                    grads.pop(key)
+        for doc in docs:
+            doc.tensor = None
 
-    @contextmanager
-    def begin_training(self, gold_tuples, **cfg):
+    def preprocess_gold(self, docs_golds):
+        for proc in self.pipeline:
+            if hasattr(proc, 'preprocess_gold'):
+                docs_golds = proc.preprocess_gold(docs_golds)
+        for doc, gold in docs_golds:
+            yield doc, gold
+
+    def begin_training(self, get_gold_tuples, **cfg):
         # Populate vocab
-        for _, annots_brackets in gold_tuples:
+        for _, annots_brackets in get_gold_tuples():
             for annots, _ in annots_brackets:
                 for word in annots[1]:
                     _ = self.vocab[word]
-        # Handle crossing dependencies
-        gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
         contexts = []
         if cfg.get('use_gpu'):
             Model.ops = CupyOps()
@@ -208,11 +217,18 @@ class Language(object):
             print("Use GPU")
         for proc in self.pipeline:
             if hasattr(proc, 'begin_training'):
-                context = proc.begin_training(gold_tuples,
+                context = proc.begin_training(get_gold_tuples(),
                                               pipeline=self.pipeline)
                 contexts.append(context)
-        trainer = Trainer(self, gold_tuples, **cfg)
-        yield trainer, trainer.optimizer
+        optimizer = Adam(Model.ops, 0.001)
+        return optimizer
+
+    def evaluate(self, docs_golds):
+        docs, golds = zip(*docs_golds)
+        scorer = Scorer()
+        for doc, gold in zip(self.pipe(docs), golds):
+            scorer.score(doc, gold)
+        return scorer
 
     @contextmanager
     def use_params(self, params, **cfg):
