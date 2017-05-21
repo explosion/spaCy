@@ -297,7 +297,7 @@ cdef class Vocab:
         """
         raise NotImplementedError()
 
-    def from_bytes(self, bytest_data, **exclude):
+    def from_bytes(self, bytes_data, **exclude):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
