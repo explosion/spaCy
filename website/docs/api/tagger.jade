@@ -4,32 +4,6 @@ include ../../_includes/_mixins
 
 p Annotate part-of-speech tags on #[code Doc] objects.
 
-+h(2, "load") Tagger.load
-    +tag classmethod
-
-p Load the statistical model from the supplied path.
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code path]
-        +cell #[code Path]
-        +cell The path to load from.
-
-    +row
-        +cell #[code vocab]
-        +cell #[code Vocab]
-        +cell The vocabulary. Must be shared by the documents to be processed.
-
-    +row
-        +cell #[code require]
-        +cell bool
-        +cell Whether to raise an error if the files are not found.
-
-    +footrow
-        +cell return
-        +cell #[code Tagger]
-        +cell The newly constructed object.
-
 +h(2, "init") Tagger.__init__
     +tag method
 
@@ -47,7 +21,7 @@ p Create a #[code Tagger].
         +cell The statistical model.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Tagger]
         +cell The newly constructed object.
 
@@ -63,7 +37,7 @@ p Apply the tagger, setting the POS tags onto the #[code Doc] object.
         +cell The tokens to be tagged.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code None]
         +cell -
 
@@ -91,7 +65,7 @@ p Tag a stream of documents.
             |  parallel.
 
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Doc]
         +cell Documents, in order.
 
@@ -112,6 +86,6 @@ p Update the statistical model, with tags supplied for the given document.
         +cell Manager for the gold-standard tags.
 
     +footrow
-        +cell return
+        +cell returns
         +cell int
         +cell Number of tags predicted correctly.

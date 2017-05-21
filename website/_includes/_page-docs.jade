@@ -10,6 +10,14 @@ main.o-main.o-main--sidebar.o-main--aside
             if tag
                 +tag=tag
 
+        if ALPHA
+            +infobox("⚠️ You are viewing the spaCy v2.0 alpha docs")
+                |  This page is part of the alpha documentation for spaCy v2.0
+                |  and does not reflect the state of the latest stable release.
+                |  #[+a("#") See here] for more information on how to install
+                |  and test the new version. To read the official docs for
+                |  v1.x, #[+a("https://spacy.io/docs") go here].
+
         !=yield
 
     +grid.o-content.u-text

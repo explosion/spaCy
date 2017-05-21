@@ -13,19 +13,21 @@ from ...attrs import LANG
 from ...util import update_exc
 
 
+class SwedishDefaults(Language.Defaults):
+    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+    lex_attr_getters[LANG] = lambda text: 'sv'
+
+    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    stop_words = set(STOP_WORDS)
+
+    @classmethod
+    def create_lemmatizer(cls, nlp=None):
+        return Lemmatizer(LOOKUP)
+
+
 class Swedish(Language):
     lang = 'sv'
-
-    class Defaults(Language.Defaults):
-        lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-        lex_attr_getters[LANG] = lambda text: 'sv'
-
-        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-        stop_words = set(STOP_WORDS)
-
-        @classmethod
-        def create_lemmatizer(cls, nlp=None):
-            return Lemmatizer(LOOKUP)
+    Defaults = SwedishDefaults
 
 
 __all__ = ['Swedish']

@@ -306,25 +306,17 @@ cdef class GoldParse:
 
     def __init__(self, doc, annot_tuples=None, words=None, tags=None, heads=None,
                  deps=None, entities=None, make_projective=False):
-        """
-        Create a GoldParse.
+        """Create a GoldParse.
 
-        Arguments:
-            doc (Doc):
-                The document the annotations refer to.
-            words:
-                A sequence of unicode word strings.
-            tags:
-                A sequence of strings, representing tag annotations.
-            heads:
-                A sequence of integers, representing syntactic head offsets.
-            deps:
-                A sequence of strings, representing the syntactic relation types.
-            entities:
-                A sequence of named entity annotations, either as BILUO tag strings,
-                or as (start_char, end_char, label) tuples, representing the entity
-                positions.
-        Returns (GoldParse): The newly constructed object.
+        doc (Doc): The document the annotations refer to.
+        words (iterable): A sequence of unicode word strings.
+        tags (iterable): A sequence of strings, representing tag annotations.
+        heads (iterable): A sequence of integers, representing syntactic head offsets.
+        deps (iterable): A sequence of strings, representing the syntactic relation types.
+        entities (iterable): A sequence of named entity annotations, either as
+            BILUO tag strings, or as `(start_char, end_char, label)` tuples,
+            representing the entity positions.
+        RETURNS (GoldParse): The newly constructed object.
         """
         if words is None:
             words = [token.text for token in doc]
@@ -389,55 +381,45 @@ cdef class GoldParse:
             self.heads = proj_heads
 
     def __len__(self):
-        """
-        Get the number of gold-standard tokens.
+        """Get the number of gold-standard tokens.
 
-        Returns (int): The number of gold-standard tokens.
+        RETURNS (int): The number of gold-standard tokens.
         """
         return self.length
 
     @property
     def is_projective(self):
-        """
-        Whether the provided syntactic annotations form a projective dependency
-        tree.
+        """Whether the provided syntactic annotations form a projective
+        dependency tree.
         """
         return not nonproj.is_nonproj_tree(self.heads)
 
 
 def biluo_tags_from_offsets(doc, entities):
-    """
-    Encode labelled spans into per-token tags, using the Begin/In/Last/Unit/Out
-    scheme (biluo).
+    """Encode labelled spans into per-token tags, using the Begin/In/Last/Unit/Out
+    scheme (BILUO).
 
-    Arguments:
-        doc (Doc):
-            The document that the entity offsets refer to. The output tags will
-            refer to the token boundaries within the document.
+    doc (Doc): The document that the entity offsets refer to. The output tags
+        will refer to the token boundaries within the document.
+    entities (iterable): A sequence of `(start, end, label)` triples. `start` and
+        `end` should be character-offset integers denoting the slice into the
+        original string.
 
-        entities (sequence):
-            A sequence of (start, end, label) triples. start and end should be
-            character-offset integers denoting the slice into the original string.
+    RETURNS (list): A list of unicode strings, describing the tags. Each tag
+        string will be of the form either "", "O" or "{action}-{label}", where
+        action is one of "B", "I", "L", "U". The string "-" is used where the
+        entity offsets don't align with the tokenization in the `Doc` object. The
+        training algorithm will view these as missing values. "O" denotes a
+        non-entity token. "B" denotes the beginning of a multi-token entity,
+        "I" the inside of an entity of three or more tokens, and "L" the end
+        of an entity of two or more tokens. "U" denotes a single-token entity.
 
-    Returns:
-        tags (list):
-            A list of unicode strings, describing the tags. Each tag string will
-            be of the form either "", "O" or "{action}-{label}", where action is one
-            of "B", "I", "L", "U". The string "-" is used where the entity
-            offsets don't align with the tokenization in the Doc object. The
-            training algorithm will view these as missing values. "O" denotes
-            a non-entity token. "B" denotes the beginning of a multi-token entity,
-            "I" the inside of an entity of three or more tokens, and "L" the end
-            of an entity of two or more tokens. "U" denotes a single-token entity.
-
-    Example:
-        text = 'I like London.'
-        entities = [(len('I like '), len('I like London'), 'LOC')]
-        doc = nlp.tokenizer(text)
-
-        tags = biluo_tags_from_offsets(doc, entities)
-
-        assert tags == ['O', 'O', 'U-LOC', 'O']
+    EXAMPLE:
+        >>> text = 'I like London.'
+        >>> entities = [(len('I like '), len('I like London'), 'LOC')]
+        >>> doc = nlp.tokenizer(text)
+        >>> tags = biluo_tags_from_offsets(doc, entities)
+        >>> assert tags == ['O', 'O', 'U-LOC', 'O']
     """
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx+len(token): token.i for token in doc}

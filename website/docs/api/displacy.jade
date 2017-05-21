@@ -8,7 +8,7 @@ p
     |  #[+a("/docs/usage/visualizers") visualizing spaCy].
 
 
-+h(2, "serve") serve
++h(2, "serve") displacy.serve
     +tag method
 
 p
@@ -60,7 +60,7 @@ p
         +cell Port to serve visualization.
         +cell #[code 5000]
 
-+h(2, "render") render
++h(2, "render") displacy.render
     +tag method
 
 p Render a dependency parse tree or named entity visualization.
@@ -112,7 +112,7 @@ p Render a dependency parse tree or named entity visualization.
         +cell #[code {}]
 
     +footrow
-        +cell return
+        +cell returns
         +cell unicode
         +cell Rendered HTML markup.
         +cell
@@ -218,7 +218,7 @@ p
         +cell #[code colors]
         +cell dict
         +cell
-            |  Color overrides. Entity types in lowercase should be mapped to
+            |  Color overrides. Entity types in uppercase should be mapped to
             |  color names or values.
         +cell #[code {}]
 

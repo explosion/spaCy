@@ -14,21 +14,23 @@ from ...attrs import LANG
 from ...util import update_exc
 
 
+class GermanDefaults(Language.Defaults):
+    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+    lex_attr_getters[LANG] = lambda text: 'de'
+
+    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tag_map = dict(TAG_MAP)
+    stop_words = set(STOP_WORDS)
+    syntax_iterators = dict(SYNTAX_ITERATORS)
+
+    @classmethod
+    def create_lemmatizer(cls, nlp=None):
+        return Lemmatizer(LOOKUP)
+
+
 class German(Language):
     lang = 'de'
-
-    class Defaults(Language.Defaults):
-        lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-        lex_attr_getters[LANG] = lambda text: 'de'
-
-        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-        tag_map = dict(TAG_MAP)
-        stop_words = set(STOP_WORDS)
-        syntax_iterators = dict(SYNTAX_ITERATORS)
-
-        @classmethod
-        def create_lemmatizer(cls, nlp=None):
-            return Lemmatizer(LOOKUP)
+    Defaults = GermanDefaults
 
 
 __all__ = ['German']

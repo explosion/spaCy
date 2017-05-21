@@ -30,19 +30,16 @@ memset(&EMPTY_LEXEME, 0, sizeof(LexemeC))
 
 
 cdef class Lexeme:
-    """
-    An entry in the vocabulary.  A Lexeme has no string context --- it's a
+    """An entry in the vocabulary. A `Lexeme` has no string context – it's a
     word-type, as opposed to a word token.  It therefore has no part-of-speech
     tag, dependency parse, or lemma (lemmatization depends on the part-of-speech
     tag).
     """
     def __init__(self, Vocab vocab, int orth):
-        """
-        Create a Lexeme object.
+        """Create a Lexeme object.
 
-        Arguments:
-            vocab (Vocab): The parent vocabulary
-            orth (int): The orth id of the lexeme.
+        vocab (Vocab): The parent vocabulary
+        orth (int): The orth id of the lexeme.
         Returns (Lexeme): The newly constructd object.
         """
         self.vocab = vocab
@@ -82,35 +79,28 @@ cdef class Lexeme:
         return self.c.orth
 
     def set_flag(self, attr_id_t flag_id, bint value):
-        """
-        Change the value of a boolean flag.
+        """Change the value of a boolean flag.
 
-        Arguments:
-            flag_id (int): The attribute ID of the flag to set.
-            value (bool): The new value of the flag.
+        flag_id (int): The attribute ID of the flag to set.
+        value (bool): The new value of the flag.
         """
         Lexeme.c_set_flag(self.c, flag_id, value)
 
     def check_flag(self, attr_id_t flag_id):
-        """
-        Check the value of a boolean flag.
+        """Check the value of a boolean flag.
 
-        Arguments:
-            flag_id (int): The attribute ID of the flag to query.
-        Returns (bool): The value of the flag.
+        flag_id (int): The attribute ID of the flag to query.
+        RETURNS (bool): The value of the flag.
         """
         return True if Lexeme.c_check_flag(self.c, flag_id) else False
 
     def similarity(self, other):
-        """
-        Compute a semantic similarity estimate. Defaults to cosine over vectors.
+        """Compute a semantic similarity estimate. Defaults to cosine over
+        vectors.
 
-        Arguments:
-            other:
-                The object to compare with. By default, accepts Doc, Span,
-                Token and Lexeme objects.
-        Returns:
-            score (float): A scalar similarity score. Higher is more similar.
+        other (object): The object to compare with. By default, accepts `Doc`,
+            `Span`, `Token` and `Lexeme` objects.
+        RETURNS (float): A scalar similarity score. Higher is more similar.
         """
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
@@ -140,6 +130,11 @@ cdef class Lexeme:
         self.orth = self.c.orth
 
     property has_vector:
+        """A boolean value indicating whether a word vector is associated with
+        the object.
+
+        RETURNS (bool): Whether a word vector is associated with the object.
+        """
         def __get__(self):
             cdef int i
             for i in range(self.vocab.vectors_length):
@@ -149,6 +144,10 @@ cdef class Lexeme:
                 return False
 
     property vector_norm:
+        """The L2 norm of the lexeme's vector representation.
+
+        RETURNS (float): The L2 norm of the vector representation.
+        """
         def __get__(self):
             return self.c.l2_norm
 
@@ -156,6 +155,11 @@ cdef class Lexeme:
             self.c.l2_norm = value
 
     property vector:
+        """A real-valued meaning representation.
+
+        RETURNS (numpy.ndarray[ndim=1, dtype='float32']): A 1D numpy array
+            representing the lexeme's semantics.
+        """
         def __get__(self):
             cdef int length = self.vocab.vectors_length
             if length == 0:
@@ -195,6 +199,14 @@ cdef class Lexeme:
     property orth_:
         def __get__(self):
             return self.vocab.strings[self.c.orth]
+
+    property text:
+        """A unicode representation of the token text.
+
+        RETURNS (unicode): The original verbatim text of the token.
+        """
+        def __get__(self):
+            return self.orth_
 
     property lower:
         def __get__(self): return self.c.lower

@@ -34,17 +34,17 @@ mixin src(url)
         +a(url)
             block
 
-        |   #[+icon("code", 16).o-icon--inline.u-color-subtle]
+        |   #[+icon("code", 16).o-icon--inline.u-color-theme]
 
 
 //- API link (with added tag and automatically generated path)
     path - [string] path to API docs page relative to /docs/api/
 
 mixin api(path)
-    +a("/docs/api/" + path, true)(target="_self").u-no-border.u-inline-block
+    +a("/docs/api/" + path, true)(target="_self").u-no-border.u-inline-block.u-nowrap
         block
 
-        |  #[+icon("book", 18).o-icon--inline.u-color-subtle]
+        |  #[+icon("book", 18).o-icon--inline.u-color-theme]
 
 
 //- Help icon with tooltip
@@ -104,13 +104,29 @@ mixin button(url, trusted, ...style)
     language - [string] language for syntax highlighting (default: "python")
                supports basic relevant languages available for PrismJS
 
-mixin code(label, language)
-    pre.c-code-block.o-block(class="lang-#{(language || DEFAULT_SYNTAX)}")&attributes(attributes)
+mixin code(label, language, icon)
+    pre.c-code-block.o-block(class="lang-#{(language || DEFAULT_SYNTAX)}" class=icon ? "c-code-block--has-icon" : "")&attributes(attributes)
         if label
             h4.u-text-label.u-text-label--dark=label
 
+        if icon
+            - var classes = {'accept': 'u-color-green', 'reject': 'u-color-red'}
+            .c-code-block__icon(class=classes[icon] || "")
+                +icon(icon, 18)
+
         code.c-code-block__content
             block
+
+
+//- Code blocks to display old/new versions
+
+mixin code-old()
+    +code(false, false, "reject").o-block-small
+        block
+
+mixin code-new()
+    +code(false, false, "accept").o-block-small
+        block
 
 
 //- CodePen embed
@@ -162,6 +178,16 @@ mixin label()
 mixin tag()
     span.u-text-tag.u-text-tag--spaced(aria-hidden="true")
         block
+
+
+//- "Requires model" tag with tooltip and list of capabilities
+    ...capabs - [string] Required model capabilities, e.g. "vectors".
+
+mixin tag-model(...capabs)
+    - var intro = "To use this functionality, spaCy needs a model to be installed"
+    - var ext = capabs.length ? " that supports the following capabilities: " + capabs.join(', ') : ""
+    +tag Requires model
+    +help(intro + ext + ".").u-color-theme
 
 
 //- List

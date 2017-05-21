@@ -13,23 +13,25 @@ from ...attrs import LANG
 from ...util import update_exc
 
 
+class HungarianDefaults(Language.Defaults):
+    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+    lex_attr_getters[LANG] = lambda text: 'hu'
+
+    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    stop_words = set(STOP_WORDS)
+    prefixes = tuple(TOKENIZER_PREFIXES)
+    suffixes = tuple(TOKENIZER_SUFFIXES)
+    infixes = tuple(TOKENIZER_INFIXES)
+    token_match = TOKEN_MATCH
+
+    @classmethod
+    def create_lemmatizer(cls, nlp=None):
+        return Lemmatizer(LOOKUP)
+
+
 class Hungarian(Language):
     lang = 'hu'
-
-    class Defaults(Language.Defaults):
-        lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-        lex_attr_getters[LANG] = lambda text: 'hu'
-
-        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-        stop_words = set(STOP_WORDS)
-        prefixes = tuple(TOKENIZER_PREFIXES)
-        suffixes = tuple(TOKENIZER_SUFFIXES)
-        infixes = tuple(TOKENIZER_INFIXES)
-        token_match = TOKEN_MATCH
-
-        @classmethod
-        def create_lemmatizer(cls, nlp=None):
-            return Lemmatizer(LOOKUP)
+    Defaults = HungarianDefaults
 
 
 __all__ = ['Hungarian']

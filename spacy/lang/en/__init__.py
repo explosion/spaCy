@@ -32,7 +32,6 @@ class EnglishDefaults(Language.Defaults):
 
 class English(Language):
     lang = 'en'
-
     Defaults = EnglishDefaults
 
 

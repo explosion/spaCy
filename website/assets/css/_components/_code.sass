@@ -13,6 +13,17 @@
     white-space: pre
     direction: ltr
 
+    &.c-code-block--has-icon
+        padding: 0
+        display: flex
+
+.c-code-block__icon
+    padding: 0 0 0 1rem
+    display: flex
+    justify-content: center
+    align-items: center
+    border-left: 6px solid
+
 
 //- Code block content
 
@@ -26,8 +37,8 @@
 
 *:not(.c-code-block) > code
     font: normal 600 0.8em/#{1} $font-code
-    background: rgba($color-front, 0.05)
-    box-shadow: 1px 1px 0 rgba($color-front, 0.1)
+    background: darken($color-theme-light, 5)
+    box-shadow: 1px 1px 0 rgba($color-front, 0.05)
     text-shadow: 1px 1px 0 rgba($color-back, 0.5)
     color: $color-front
     padding: 0.1em 0.5em

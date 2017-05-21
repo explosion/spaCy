@@ -11,15 +11,14 @@ from .. import util
 
 def info(model=None, markdown=False):
     if model:
-        data_path = util.get_data_path()
-        data = util.parse_package_meta(data_path / model, require=True)
-        model_path = Path(__file__).parent / data_path / model
+        model_path = util.resolve_model_path(model)
+        meta = util.parse_package_meta(model_path)
         if model_path.resolve() != model_path:
-            data['link'] = path2str(model_path)
-            data['source'] = path2str(model_path.resolve())
+            meta['link'] = path2str(model_path)
+            meta['source'] = path2str(model_path.resolve())
         else:
-            data['source'] = path2str(model_path)
-        print_info(data, 'model %s' % model, markdown)
+            meta['source'] = path2str(model_path)
+        print_info(meta, 'model %s' % model, markdown)
     else:
         data = {'spaCy version': about.__version__,
                 'Location': path2str(Path(__file__).parent.parent),

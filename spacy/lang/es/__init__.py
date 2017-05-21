@@ -28,7 +28,7 @@ class SpanishDefaults(Language.Defaults):
 
 class Spanish(Language):
     lang = 'es'
-
     Defaults = SpanishDefaults
+
 
 __all__ = ['Spanish']

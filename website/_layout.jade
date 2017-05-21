@@ -35,7 +35,10 @@ html(lang="en")
     link(rel="shortcut icon" href="/assets/img/favicon.ico")
     link(rel="icon" type="image/x-icon" href="/assets/img/favicon.ico")
 
-    if SUBSECTION == "usage"
+    if ALPHA && SECTION == "docs"
+        link(href="/assets/css/style_green.css?v#{V_CSS}" rel="stylesheet")
+
+    else if SUBSECTION == "usage"
         link(href="/assets/css/style_red.css?v#{V_CSS}" rel="stylesheet")
 
     else

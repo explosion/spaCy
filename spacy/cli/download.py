@@ -20,7 +20,17 @@ def download(model, direct=False):
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
         download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model_name, v=version))
-        link(model_name, model, force=True)
+        try:
+            link(model_name, model, force=True)
+        except:
+            # Dirty, but since spacy.download and the auto-linking is mostly
+            # a convenience wrapper, it's best to show a success message and
+            # loading instructions, even if linking fails.
+            prints("Creating a shortcut link for 'en' didn't work (maybe you "
+                   "don't have admin permissions?), but you can still load "
+                   "the model via its full package name:",
+                   "nlp = spacy.load('%s')" % model_name,
+                   title="Download successful")
 
 
 def get_json(url, desc):

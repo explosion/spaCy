@@ -87,7 +87,7 @@ ctypedef TokenPatternC* TokenPatternC_ptr
 ctypedef pair[int, TokenPatternC_ptr] StateC
 
 
-cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, attr_t label,
+cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id,
                                  object token_specs) except NULL:
     pattern = <TokenPatternC*>mem.alloc(len(token_specs) + 1, sizeof(TokenPatternC))
     cdef int i
@@ -99,13 +99,19 @@ cdef TokenPatternC* init_pattern(Pool mem, attr_t entity_id, attr_t label,
             pattern[i].attrs[j].attr = attr
             pattern[i].attrs[j].value = value
     i = len(token_specs)
-    pattern[i].attrs = <AttrValueC*>mem.alloc(3, sizeof(AttrValueC))
+    pattern[i].attrs = <AttrValueC*>mem.alloc(2, sizeof(AttrValueC))
     pattern[i].attrs[0].attr = ID
     pattern[i].attrs[0].value = entity_id
-    pattern[i].attrs[1].attr = ENT_TYPE
-    pattern[i].attrs[1].value = label
     pattern[i].nr_attr = 0
     return pattern
+
+
+cdef attr_t get_pattern_key(const TokenPatternC* pattern) except 0:
+    while pattern.nr_attr != 0:
+        pattern += 1
+    id_attr = pattern[0].attrs[0]
+    assert id_attr.attr == ID
+    return id_attr.value
 
 
 cdef int get_action(const TokenPatternC* pattern, const TokenC* token) nogil:
@@ -159,14 +165,14 @@ def _convert_strings(token_specs, string_store):
 
 
 def merge_phrase(matcher, doc, i, matches):
-    '''Callback to merge a phrase on match'''
+    """Callback to merge a phrase on match."""
     ent_id, label, start, end = matches[i]
     span = doc[start : end]
     span.merge(ent_type=label, ent_id=ent_id)
 
 
 cdef class Matcher:
-    '''Match sequences of tokens, based on pattern rules.'''
+    """Match sequences of tokens, based on pattern rules."""
     cdef Pool mem
     cdef vector[TokenPatternC*] patterns
     cdef readonly Vocab vocab
@@ -175,37 +181,12 @@ cdef class Matcher:
     cdef public object _callbacks
     cdef public object _acceptors
 
-    @classmethod
-    def load(cls, path, vocab):
-        """
-        Load the matcher and patterns from a file path.
+    def __init__(self, vocab):
+        """Create the Matcher.
 
-        Arguments:
-            path (Path):
-                Path to a JSON-formatted patterns file.
-            vocab (Vocab):
-                The vocabulary that the documents to match over will refer to.
-        Returns:
-            Matcher: The newly constructed object.
-        """
-        if (path / 'gazetteer.json').exists():
-            with (path / 'gazetteer.json').open('r', encoding='utf8') as file_:
-                patterns = ujson.load(file_)
-        else:
-            patterns = {}
-        return cls(vocab, patterns)
-
-    def __init__(self, vocab, patterns={}):
-        """
-        Create the Matcher.
-
-        Arguments:
-            vocab (Vocab):
-                The vocabulary object, which must be shared with the documents
-                the matcher will operate on.
-            patterns (dict): Patterns to add to the matcher.
-        Returns:
-            The newly constructed object.
+        vocab (Vocab): The vocabulary object, which must be shared with the
+            documents the matcher will operate on.
+        RETURNS (Matcher): The newly constructed object.
         """
         self._patterns = {}
         self._entities = {}
@@ -213,144 +194,111 @@ cdef class Matcher:
         self._callbacks = {}
         self.vocab = vocab
         self.mem = Pool()
-        for entity_key, (etype, attrs, specs) in sorted(patterns.items()):
-            self.add_entity(entity_key, attrs)
-            for spec in specs:
-                self.add_pattern(entity_key, spec, label=etype)
 
     def __reduce__(self):
         return (self.__class__, (self.vocab, self._patterns), None, None)
 
-    property n_patterns:
-        def __get__(self): return self.patterns.size()
+    def __len__(self):
+        """Get the number of rules added to the matcher. Note that this only
+        returns the number of rules (identical with the number of IDs), not the
+        number of individual patterns.
 
-    def add_entity(self, entity_key, attrs=None, if_exists='raise',
-                   acceptor=None, on_match=None):
+        RETURNS (int): The number of rules.
         """
-        Add an entity to the matcher.
+        return len(self._patterns)
 
-        Arguments:
-            entity_key (unicode or int):
-                An ID for the entity.
-            attrs:
-                Attributes to associate with the Matcher.
-            if_exists ('raise', 'ignore' or 'update'):
-                Controls what happens if the entity ID already exists. Defaults to 'raise'.
-            acceptor:
-                Callback function to filter matches of the entity.
-            on_match:
-                Callback function to act on matches of the entity.
-        Returns:
-            None
+    def __contains__(self, key):
+        """Check whether the matcher contains rules for a match ID.
+
+        key (unicode): The match ID.
+        RETURNS (bool): Whether the matcher contains rules for this match ID.
         """
-        if if_exists not in ('raise', 'ignore', 'update'):
-            raise ValueError(
-                "Unexpected value for if_exists: %s.\n"
-                "Expected one of: ['raise', 'ignore', 'update']" % if_exists)
-        if attrs is None:
-            attrs = {}
-        entity_key = self.normalize_entity_key(entity_key)
-        if self.has_entity(entity_key):
-            if if_exists == 'raise':
-                raise KeyError(
-                    "Tried to add entity %s. Entity exists, and if_exists='raise'.\n"
-                    "Set if_exists='ignore' or if_exists='update', or check with "
-                    "matcher.has_entity()")
-            elif if_exists == 'ignore':
-                return
-        self._entities[entity_key] = dict(attrs)
-        self._patterns.setdefault(entity_key, [])
-        self._acceptors[entity_key] = acceptor
-        self._callbacks[entity_key] = on_match
+        return len(self._patterns)
 
-    def add_pattern(self, entity_key, token_specs, label=""):
+    def add(self, key, on_match, *patterns):
+        """Add a match-rule to the matcher.
+        A match-rule consists of: an ID key, an on_match callback, and one or
+        more patterns. If the key exists, the patterns are appended to the
+        previous ones, and the previous on_match callback is replaced. The
+        `on_match` callback will receive the arguments `(matcher, doc, i,
+        matches)`. You can also set `on_match` to `None` to not perform any
+        actions. A pattern consists of one or more `token_specs`, where a
+        `token_spec` is a dictionary mapping attribute IDs to values. Token
+        descriptors can also include quantifiers. There are currently important
+        known problems with the quantifiers – see the docs.
         """
-        Add a pattern to the matcher.
+        for pattern in patterns:
+            if len(pattern) == 0:
+                msg = ("Cannot add pattern for zero tokens to matcher.\n"
+                       "key: {key}\n")
+                raise ValueError(msg.format(key=key))
+        key = self._normalize_key(key)
+        self._patterns.setdefault(key, [])
+        self._callbacks[key] = on_match
 
-        Arguments:
-            entity_key (unicode or int):
-                An ID for the entity.
-            token_specs:
-                Description of the pattern to be matched.
-            label:
-                Label to assign to the matched pattern. Defaults to "".
-        Returns:
-            None
+        for pattern in patterns:
+            specs = _convert_strings(pattern, self.vocab.strings)
+            self.patterns.push_back(init_pattern(self.mem, key, specs))
+            self._patterns[key].append(specs)
+
+    def remove(self, key):
+        """Remove a rule from the matcher. A KeyError is raised if the key does
+        not exist.
+
+        key (unicode): The ID of the match rule.
         """
-        token_specs = list(token_specs)
-        if len(token_specs) == 0:
-            msg = ("Cannot add pattern for zero tokens to matcher.\n"
-                   "entity_key: {entity_key}\n"
-                   "label: {label}")
-            raise ValueError(msg.format(entity_key=entity_key, label=label))
-        entity_key = self.normalize_entity_key(entity_key)
-        if not self.has_entity(entity_key):
-            self.add_entity(entity_key)
-        if isinstance(label, basestring):
-            label = self.vocab.strings[label]
-        elif label is None:
-            label = 0
-        spec = _convert_strings(token_specs, self.vocab.strings)
+        key = self._normalize_key(key)
+        self._patterns.pop(key)
+        self._callbacks.pop(key)
+        cdef int i = 0
+        while i < self.patterns.size():
+            pattern_key = get_pattern_key(self.patterns.at(i))
+            if pattern_key == key:
+                self.patterns.erase(self.patterns.begin()+i)
+            else:
+                i += 1
 
-        self.patterns.push_back(init_pattern(self.mem, entity_key, label, spec))
-        self._patterns[entity_key].append((label, token_specs))
+    def has_key(self, key):
+        """Check whether the matcher has a rule with a given key.
 
-    def add(self, entity_key, label, attrs, specs, acceptor=None, on_match=None):
-        self.add_entity(entity_key, attrs=attrs, if_exists='update',
-                        acceptor=acceptor, on_match=on_match)
-        for spec in specs:
-            self.add_pattern(entity_key, spec, label=label)
-
-    def normalize_entity_key(self, entity_key):
-        if isinstance(entity_key, basestring):
-            return self.vocab.strings[entity_key]
-        else:
-            return entity_key
-
-    def has_entity(self, entity_key):
+        key (string or int): The key to check.
+        RETURNS (bool): Whether the matcher has the rule.
         """
-        Check whether the matcher has an entity.
+        key = self._normalize_key(key)
+        return key in self._patterns
 
-        Arguments:
-            entity_key (string or int): The entity key to check.
-        Returns:
-            bool: Whether the matcher has the entity.
-        """
-        entity_key = self.normalize_entity_key(entity_key)
-        return entity_key in self._entities
+    def get(self, key, default=None):
+        """Retrieve the pattern stored for a key.
 
-    def get_entity(self, entity_key):
+        key (unicode or int): The key to retrieve.
+        RETURNS (tuple): The rule, as an (on_match, patterns) tuple.
         """
-        Retrieve the attributes stored for an entity.
+        key = self._normalize_key(key)
+        if key not in self._patterns:
+            return default
+        return (self._callbacks[key], self._patterns[key])
 
-        Arguments:
-            entity_key (unicode or int): The entity to retrieve.
-        Returns:
-            The entity attributes if present, otherwise None.
-        """
-        entity_key = self.normalize_entity_key(entity_key)
-        if entity_key in self._entities:
-            return self._entities[entity_key]
-        else:
-            return None
+    def pipe(self, docs, batch_size=1000, n_threads=2):
+        """Match a stream of documents, yielding them in turn.
 
-    def __call__(self, Doc doc, acceptor=None):
+        docs (iterable): A stream of documents.
+        batch_size (int): The number of documents to accumulate into a working set.
+        n_threads (int): The number of threads with which to work on the buffer
+            in parallel, if the `Matcher` implementation supports multi-threading.
+        YIELDS (Doc): Documents, in order.
         """
-        Find all token sequences matching the supplied patterns on the Doc.
+        for doc in docs:
+            self(doc)
+            yield doc
 
-        Arguments:
-            doc (Doc):
-                The document to match over.
-        Returns:
-            list
-            A list of (entity_key, label_id, start, end) tuples,
-            describing the matches. A match tuple describes a span doc[start:end].
-            The label_id and entity_key are both integers.
+    def __call__(self, Doc doc):
+        """Find all token sequences matching the supplied patterns on the `Doc`.
+
+        doc (Doc): The document to match over.
+        RETURNS (list): A list of `(key, label_id, start, end)` tuples,
+            describing the matches. A match tuple describes a span
+            `doc[start:end]`. The `label_id` and `key` are both integers.
         """
-        if acceptor is not None:
-            raise ValueError(
-                "acceptor keyword argument to Matcher deprecated. Specify acceptor "
-                "functions when you add patterns instead.")
         cdef vector[StateC] partials
         cdef int n_partials = 0
         cdef int q = 0
@@ -388,13 +336,7 @@ cdef class Matcher:
                     end = token_i+1
                     ent_id = state.second[1].attrs[0].value
                     label = state.second[1].attrs[1].value
-                    acceptor = self._acceptors.get(ent_id)
-                    if acceptor is None:
-                        matches.append((ent_id, label, start, end))
-                    else:
-                        match = acceptor(doc, ent_id, label, start, end)
-                        if match:
-                            matches.append(match)
+                    matches.append((ent_id, start, end))
             partials.resize(q)
             # Check whether we open any new patterns on this token
             for pattern in self.patterns:
@@ -419,13 +361,7 @@ cdef class Matcher:
                     end = token_i+1
                     ent_id = pattern[1].attrs[0].value
                     label = pattern[1].attrs[1].value
-                    acceptor = self._acceptors.get(ent_id)
-                    if acceptor is None:
-                        matches.append((ent_id, label, start, end))
-                    else:
-                        match = acceptor(doc, ent_id, label, start, end)
-                        if match:
-                            matches.append(match)
+                    matches.append((ent_id, start, end))
         # Look for open patterns that are actually satisfied
         for state in partials:
             while state.second.quantifier in (ZERO, ZERO_PLUS):
@@ -435,36 +371,19 @@ cdef class Matcher:
                     end = len(doc)
                     ent_id = state.second.attrs[0].value
                     label = state.second.attrs[0].value
-                    acceptor = self._acceptors.get(ent_id)
-                    if acceptor is None:
-                        matches.append((ent_id, label, start, end))
-                    else:
-                        match = acceptor(doc, ent_id, label, start, end)
-                        if match:
-                            matches.append(match)
+                    matches.append((ent_id, start, end))
         for i, (ent_id, label, start, end) in enumerate(matches):
             on_match = self._callbacks.get(ent_id)
             if on_match is not None:
                 on_match(self, doc, i, matches)
+        # TODO: only return (match_id, start, end)
         return matches
 
-    def pipe(self, docs, batch_size=1000, n_threads=2):
-        """
-        Match a stream of documents, yielding them in turn.
-
-        Arguments:
-            docs: A stream of documents.
-            batch_size (int):
-                The number of documents to accumulate into a working set.
-            n_threads (int):
-                The number of threads with which to work on the buffer in parallel,
-                if the Matcher implementation supports multi-threading.
-        Yields:
-            Doc Documents, in order.
-        """
-        for doc in docs:
-            self(doc)
-            yield doc
+    def _normalize_key(self, key):
+        if isinstance(key, basestring):
+            return self.vocab.strings[key]
+        else:
+            return key
 
 
 def get_bilou(length):

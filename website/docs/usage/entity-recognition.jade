@@ -141,11 +141,11 @@ p
 include ../api/_annotation/_named-entities
 
 +aside("Install")
-    |  The #[+api("load") spacy.load()] function configures a pipeline that
+    |  The #[+api("load") #[code spacy.load()]] function configures a pipeline that
     |  includes all of the available annotators for the given ID. In the example
     |  above, the #[code 'en'] ID tells spaCy to load the default English
     |  pipeline. If you have installed the data with
-    |  #[code python -m spacy.en.download] this will include the entity
+    |  #[code python -m spacy download en], this will include the entity
     |  recognition model.
 
 +h(2, "updating") Training and updating

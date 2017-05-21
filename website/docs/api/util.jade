@@ -14,7 +14,7 @@ p
     |  recommend having additional tests in place if your application depends on
     |  any of spaCy's utilities.
 
-+h(2, "get_data_path") get_data_path
++h(2, "get_data_path") util.get_data_path
     +tag function
 
 p
@@ -28,11 +28,11 @@ p
         +cell Only return path if it exists, otherwise return #[code None].
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Path] / #[code None]
         +cell Data path or #[code None].
 
-+h(2, "set_data_path") set_data_path
++h(2, "set_data_path") util.set_data_path
     +tag function
 
 p
@@ -49,7 +49,7 @@ p
         +cell unicode or #[code Path]
         +cell Path to new data directory.
 
-+h(2, "get_lang_class") get_lang_class
++h(2, "get_lang_class") util.get_lang_class
     +tag function
 
 p
@@ -70,11 +70,11 @@ p
         +cell Two-letter language code, e.g. #[code 'en'].
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Language]
         +cell Language class.
 
-+h(2, "resolve_model_path") resolve_model_path
++h(2, "resolve_model_path") util.resolve_model_path
     +tag function
 
 p Resolve a model name or string to a model path.
@@ -90,11 +90,11 @@ p Resolve a model name or string to a model path.
         +cell Package name, shortcut link or model path.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Path]
         +cell Path to model data directory.
 
-+h(2, "is_package") is_package
++h(2, "is_package") util.is_package
     +tag function
 
 p
@@ -112,11 +112,11 @@ p
         +cell Name of package.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code bool]
         +cell #[code True] if installed package, #[code False] if not.
 
-+h(2, "get_model_package_path") get_model_package_path
++h(2, "get_model_package_path") util.get_model_package_path
     +tag function
 
 p
@@ -134,11 +134,11 @@ p
         +cell Name of installed package.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Path]
         +cell Path to model data directory.
 
-+h(2, "parse_package_meta") parse_package_meta
++h(2, "parse_package_meta") util.parse_package_meta
     +tag function
 
 p
@@ -163,11 +163,31 @@ p
         +cell If #[code True], raise error if no #[code meta.json] is found.
 
     +footrow
-        +cell return
+        +cell returns
         +cell dict / #[code None]
         +cell Model meta data or #[code None].
 
-+h(2, "update_exc") update_exc
++h(2, "is_in_jupyter") util.is_in_jupyter
+    +tag function
+
+p
+    |  Check if user is running spaCy from a #[+a("https://jupyter.org") Jupyter]
+    |  notebook by detecting the IPython kernel. Mainly used for the
+    |  #[+api("displacy") #[code displacy]] visualizer.
+
++aside-code("Example").
+    html = '&lt;h1&gt;Hello world!&lt;/h1&gt;'
+    if util.is_in_jupyter():
+        from IPython.core.display import display, HTML
+        return display(HTML(html))
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell returns
+        +cell bool
+        +cell #[code True] if in Jupyter, #[code False] if not.
+
++h(2, "update_exc") util.update_exc
     +tag function
 
 p
@@ -194,12 +214,12 @@ p
         +cell Exception dictionaries to add to the base exceptions, in order.
 
     +footrow
-        +cell return
+        +cell returns
         +cell dict
         +cell Combined tokenizer exceptions.
 
 
-+h(2, "prints") prints
++h(2, "prints") util.prints
     +tag function
 
 p
