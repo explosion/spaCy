@@ -270,9 +270,7 @@ class NeuralTagger(object):
 
 
 cdef class EntityRecognizer(LinearParser):
-    """
-    Annotate named entities on Doc objects.
-    """
+    """Annotate named entities on Doc objects."""
     TransitionSystem = BiluoPushDown
 
     feature_templates = get_feature_templates('ner')
@@ -284,9 +282,7 @@ cdef class EntityRecognizer(LinearParser):
 
 
 cdef class BeamEntityRecognizer(BeamParser):
-    """
-    Annotate named entities on Doc objects.
-    """
+    """Annotate named entities on Doc objects."""
     TransitionSystem = BiluoPushDown
 
     feature_templates = get_feature_templates('ner')
@@ -335,8 +331,6 @@ cdef class NeuralEntityRecognizer(NeuralParser):
                 if ids[i, j] != -1:
                     ids[i, j] += state.c.offset
         return ids
-
-
 
 
 cdef class BeamDependencyParser(BeamParser):
