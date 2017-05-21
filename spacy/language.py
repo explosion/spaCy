@@ -182,8 +182,8 @@ class Language(object):
         for proc in self.pipeline[1:]:
             grads = {}
             tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
-            d_tokvecses = proc.update((docs, tokvecses), golds, sgd=sgd, drop=drop)
-            bp_tokvecses(d_tokvecses, sgd=sgd)
+            d_tokvecses = proc.update((docs, tokvecses), golds, sgd=get_grads, drop=drop)
+            bp_tokvecses(d_tokvecses, sgd=get_grads)
             if sgd is not None:
                 for key, (W, dW) in grads.items():
                     # TODO: Unhack this when thinc improves
@@ -228,6 +228,7 @@ class Language(object):
         scorer = Scorer()
         for doc, gold in zip(self.pipe(docs), golds):
             scorer.score(doc, gold)
+            doc.tensor = None
         return scorer
 
     @contextmanager

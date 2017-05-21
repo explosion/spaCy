@@ -148,7 +148,7 @@ class GoldCorpus(object):
         self.train_path = util.ensure_path(train_path)
         self.dev_path = util.ensure_path(dev_path)
         self.train_locs = self.walk_corpus(self.train_path)
-        self.dev_locs = self.walk_corpus(self.train_path)
+        self.dev_locs = self.walk_corpus(self.dev_path)
 
     @property
     def train_tuples(self):
@@ -173,7 +173,7 @@ class GoldCorpus(object):
             random.shuffle(self.train_locs)
         gold_docs = self.iter_gold_docs(nlp, self.train_tuples)
         if shuffle:
-            gold_docs = util.itershuffle(gold_docs, bufsize=shuffle*5000)
+            gold_docs = util.itershuffle(gold_docs, bufsize=shuffle*1000)
         yield from gold_docs
 
     def dev_docs(self, nlp):
