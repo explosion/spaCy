@@ -45,6 +45,16 @@ p
         +cell flag
         +cell Show help message and available arguments.
 
++infobox("Important note")
+    |  The #[code download] command is mostly intended as a convenient,
+    |  interactive wrapper – it performs compatibility checks and prints
+    |  detailed messages in case things go wrong. It's #[strong not recommended]
+    |  to use this command as part of an automated process. If you know which
+    |  model your project needs, you should consider a
+    |  #[+a("/docs/usage/models#download-pip") direct download via pip], or
+    |  uploading the model to a local PyPi installation and fetching it straight
+    |  from there. This will also allow you to add it as a versioned package
+    |  dependency to your project.
 
 +h(2, "link") Link
 
