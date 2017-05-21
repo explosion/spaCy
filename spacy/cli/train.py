@@ -53,7 +53,8 @@ def train(lang_id, output_dir, train_data, dev_data, n_iter, n_sents,
                 golds = list(golds)
                 nlp.update(docs, golds, drop=dropout, sgd=optimizer)
                 pbar.update(len(docs))
-        scorer = nlp.evaluate(corpus.dev_docs(nlp))
+        with nlp.use_params(optimizer.averages):
+            scorer = nlp.evaluate(corpus.dev_docs(nlp))
         print_progress(i, {}, scorer.scores)
     with (output_path / 'model.bin').open('wb') as file_:
         dill.dump(nlp, file_, -1)
