@@ -7,6 +7,7 @@ from thinc.neural._classes.convolution import ExtractWindow
 from thinc.neural._classes.static_vectors import StaticVectors
 from thinc.neural._classes.batchnorm import BatchNorm
 from thinc.neural._classes.resnet import Residual
+from thinc.neural import ReLu
 from thinc import describe
 from thinc.describe import Dimension, Synapses, Biases, Gradient
 from thinc.neural._classes.affine import _set_dimensions_if_needed
