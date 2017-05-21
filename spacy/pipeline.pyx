@@ -105,16 +105,19 @@ class NeuralTagger(object):
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in cytoolz.partition_all(batch_size, stream):
-            tokvecs = self.model.ops.flatten([d.tensor for d in docs])
+            tokvecs = [d.tensor for d in docs]
             tag_ids = self.predict(tokvecs)
             self.set_annotations(docs, tag_ids)
             yield from docs
 
     def predict(self, tokvecs):
         scores = self.model(tokvecs)
+        scores = self.model.ops.flatten(scores)
         guesses = scores.argmax(axis=1)
         if not isinstance(guesses, numpy.ndarray):
             guesses = guesses.get()
+        guesses = self.model.ops.unflatten(guesses,
+                    [tv.shape[0] for tv in tokvecs])
         return guesses
 
     def set_annotations(self, docs, batch_tag_ids):
@@ -122,10 +125,9 @@ class NeuralTagger(object):
             docs = [docs]
         cdef Doc doc
         cdef int idx = 0
-        cdef int i, j, tag_id
         cdef Vocab vocab = self.vocab
         for i, doc in enumerate(docs):
-            doc_tag_ids = batch_tag_ids[idx:idx+len(doc)]
+            doc_tag_ids = batch_tag_ids[i]
             for j, tag_id in enumerate(doc_tag_ids):
                 vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
                 idx += 1
