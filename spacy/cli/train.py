@@ -46,7 +46,7 @@ def train(lang_id, output_dir, train_data, dev_data, n_iter, n_sents,
     print("Itn.\tDep. Loss\tUAS\tNER F.\tTag %\tToken %")
     for i in range(n_iter):
         with tqdm.tqdm(total=n_train_docs) as pbar:
-            train_docs = corpus.train_docs(nlp, shuffle=i)
+            train_docs = corpus.train_docs(nlp, shuffle=i, projectivize=True)
             for batch in cytoolz.partition_all(20, train_docs):
                 docs, golds = zip(*batch)
                 docs = list(docs)
