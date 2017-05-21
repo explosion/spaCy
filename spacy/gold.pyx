@@ -5,10 +5,12 @@ from __future__ import unicode_literals, print_function
 import io
 import re
 import ujson
+import random
 
 from .syntax import nonproj
 from .util import ensure_path
 from . import util
+from .tokens import Doc
 
 
 def tags_to_entities(tags):
@@ -139,8 +141,89 @@ def _min_edit_path(cand_words, gold_words):
     return prev_costs[n_gold], previous_row[-1]
 
 
-def read_json_file(loc, docs_filter=None, make_supertags=True, limit=None):
-    make_supertags = util.env_opt('make_supertags', make_supertags)
+class GoldCorpus(object):
+    '''An annotated corpus, using the JSON file format. Manages
+    annotations for tagging, dependency parsing, NER.'''
+    def __init__(self, train_path, dev_path):
+        self.train_path = util.ensure_path(train_path)
+        self.dev_path = util.ensure_path(dev_path)
+        self.train_locs = self.walk_corpus(self.train_path)
+        self.dev_locs = self.walk_corpus(self.train_path)
+
+    @property
+    def train_tuples(self):
+        for loc in self.train_locs:
+            gold_tuples = read_json_file(loc)
+            yield from gold_tuples
+
+    @property
+    def dev_tuples(self):
+        for loc in self.dev_locs:
+            gold_tuples = read_json_file(loc)
+            yield from gold_tuples
+
+    def count_train(self):
+        n = 0
+        for _ in self.train_tuples:
+            n += 1
+        return n
+
+    def train_docs(self, nlp, shuffle=0):
+        if shuffle:
+            random.shuffle(self.train_locs)
+        gold_docs = self.iter_gold_docs(nlp, self.train_tuples)
+        if shuffle:
+            gold_docs = util.itershuffle(gold_docs, bufsize=shuffle*5000)
+        yield from gold_docs
+
+    def dev_docs(self, nlp):
+        yield from self.iter_gold_docs(nlp, self.dev_tuples)
+
+    @classmethod
+    def iter_gold_docs(cls, nlp, tuples):
+        for raw_text, paragraph_tuples in tuples:
+            docs = cls._make_docs(nlp, raw_text, paragraph_tuples)
+            golds = cls._make_golds(docs, paragraph_tuples)
+            for doc, gold in zip(docs, golds):
+                yield doc, gold
+
+    @classmethod
+    def _make_docs(cls, nlp, raw_text, paragraph_tuples):
+        if raw_text is not None:
+            return [nlp.make_doc(raw_text)]
+        else:
+            return [
+                Doc(nlp.vocab, words=sent_tuples[0][1])
+                for sent_tuples in paragraph_tuples]
+
+    @classmethod
+    def _make_golds(cls, docs, paragraph_tuples):
+        if len(docs) == 1:
+            return [GoldParse.from_annot_tuples(docs[0], sent_tuples[0])
+                    for sent_tuples in paragraph_tuples]
+        else:
+            return [GoldParse.from_annot_tuples(doc, sent_tuples[0])
+                    for doc, sent_tuples in zip(docs, paragraph_tuples)]
+
+    @staticmethod
+    def walk_corpus(path):
+        locs = []
+        paths = [path]
+        seen = set()
+        for path in paths:
+            if str(path) in seen:
+                continue
+            seen.add(str(path))
+            if path.parts[-1].startswith('.'):
+                continue
+            elif path.is_dir():
+                paths.extend(path.iterdir())
+            elif path.parts[-1].endswith('.json'):
+                locs.append(path)
+        return locs
+
+
+def read_json_file(loc, docs_filter=None, limit=None):
     loc = ensure_path(loc)
     if loc.is_dir():
         for filename in loc.iterdir():
@@ -173,8 +256,6 @@ def read_json_file(loc, docs_filter=None, make_supertags=True, limit=None):
                         if labels[-1].lower() == 'root':
                             labels[-1] = 'ROOT'
                         ner.append(token.get('ner', '-'))
-                        if make_supertags:
-                            tags[-1] = '-'.join((tags[-1], labels[-1], ner[-1]))
                     sents.append([
                         [ids, words, tags, heads, labels, ner],
                         sent.get('brackets', [])])
