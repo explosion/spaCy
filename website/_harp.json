@@ -80,6 +80,36 @@
             }
         ],
 
+        "QUICKSTART_MODELS": [
+            { "id": "lang", "title": "Language", "options": [
+                { "id": "en", "title": "English", "checked": true },
+                { "id": "de", "title": "German" },
+                { "id": "fr", "title": "French" }]
+            },
+            { "id": "load", "title": "Loading style", "options": [
+                { "id": "spacy", "title": "Use spacy.load()", "checked": true, "help": "Use spaCy's built-in loader to load the model by name." },
+                {  "id": "module", "title": "Import as module", "help": "Import the model explicitly as a Python module." }]
+            },
+            { "id": "config", "title": "Options", "multiple": true, "options": [
+                { "id": "example", "title": "Show usage example" }]
+            }
+        ],
+
+        "MODELS": {
+            "en": [
+                { "id": "en_core_web_sm", "lang": "English", "feats": [1, 1, 1, 1], "size": "50 MB", "license": "CC BY-SA", "def": true },
+                { "id": "en_core_web_md", "lang": "English", "feats": [1, 1, 1, 1], "size": "1 GB", "license": "CC BY-SA" },
+                { "id": "en_depent_web_md", "lang": "English", "feats": [1, 1, 1, 0], "size": "328 MB", "license": "CC BY-SA" },
+                { "id": "en_vectors_glove_md", "lang": "English", "feats": [1, 0, 0, 1], "size": "727 MB", "license": "CC BY-SA" }
+            ],
+            "de": [
+                { "id": "de_core_news_md", "lang": "German", "feats": [1, 1, 1, 1], "size": "645 MB", "license": "CC BY-SA" }
+            ],
+            "fr": [
+                { "id": "fr_depvec_web_lg", "lang": "French", "feats": [1, 1, 0, 1], "size": "1.33 GB", "license": "CC BY-NC" }
+            ]
+        },
+
         "ALPHA": true,
         "V_CSS": "1.6",
         "V_JS": "1.2",

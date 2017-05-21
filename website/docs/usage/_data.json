@@ -44,7 +44,8 @@
 
     "models": {
         "title": "Models",
-        "next": "lightning-tour"
+        "next": "lightning-tour",
+        "quickstart": true
     },
 
     "lightning-tour": {

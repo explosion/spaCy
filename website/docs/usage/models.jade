@@ -8,28 +8,26 @@ p
     |  other module. They're versioned and can be defined as a dependency in your
     |  #[code requirements.txt]. Models can be installed from a download URL or
     |  a local directory, manually or via #[+a("https://pypi.python.org/pypi/pip") pip].
-    |  Their data can be located anywhere on your file system. To make a model
-    |  available to spaCy, all you need to do is create a "shortcut link", an
-    |  internal alias that tells spaCy where to find the data files for a specific
-    |  model name.
+    |  Their data can be located anywhere on your file system.
 
-+aside-code("Quickstart").
-    # Install spaCy and download English model
-    pip install spacy
-    python -m spacy download en
++aside("Important note")
+    |  If you're upgrading to spaCy v1.7.x or v2.x, you need to
+    |  #[strong download the new models]. If you've trained statistical models
+    |  that use spaCy's annotations, you should #[strong retrain your models]
+    |  after updating spaCy. If you don't retrain, you may suffer train/test
+    |  skew, which might decrease your accuracy.
 
-    # Usage in Python
-    import spacy
-    nlp = spacy.load('en')
-    doc = nlp(u'This is a sentence.')
-
-+infobox("Important note")
-    |  Due to improvements in the English lemmatizer in v1.7.0, you need to
-    |  #[strong download the new English models]. The German model is still
-    |  compatible. If you've trained statistical models that use spaCy's
-    |  annotations, you should #[strong retrain your models after updating spaCy].
-    |  If you don't retrain your models, you may suffer train/test skew, which
-    |  might decrease your accuracy.
++quickstart(QUICKSTART_MODELS, "Quickstart", "Install a default model, get the code to load it from within spaCy and an example to test it. For more options, see the section on available models below.")
+    - var examples = {en: "This is a sentence.", de: "Dies ist ein Satz.", fr: "C'est une phrase."}
+    for models, lang in MODELS
+        - var package = (models.length == 1) ? models[0] : models.find(function(m) { return m.def })
+        +qs({lang: lang}) python -m spacy download #{lang}
+        +qs({lang: lang}, "divider")
+        +qs({lang: lang, load: "module"}, "python") import #{package.id}
+        +qs({lang: lang, load: "module"}, "python") nlp = #{package.id}.load()
+        +qs({lang: lang, load: "spacy"}, "python") nlp = spacy.load('#{lang}')
+        +qs({lang: lang, config: "example"}, "python") doc = nlp(u"#{examples[lang]}")
+        +qs({lang: lang, config: "example"}, "python") print([(w.text, w.pos_) for w in doc])
 
 +h(2, "available") Available models
 
@@ -53,15 +51,14 @@ include _models-list
     |  #[code spacy.load('en')] or #[code spacy.load('de')].
 
 p
-    |  The easiest way to download a model is via spaCy's #[code download]
-    |  command. It takes care of finding the best-matching model compatible with
-    |  your spaCy installation.
+    |  The easiest way to download a model is via spaCy's
+    |  #[+api("cli#download") #[code download]] command. It takes care of
+    |  finding the best-matching model compatible with your spaCy installation.
 
+- var models = Object.keys(MODELS).map(function(lang) { return "python -m spacy download " + lang })
 +code(false, "bash").
     # out-of-the-box: download best-matching default model
-    python -m spacy download en
-    python -m spacy download de
-    python -m spacy download fr
+    #{Object.keys(MODELS).map(function(l) {return "python -m spacy download " + l}).join('\n')}
 
     # download best-matching version of specific model for your spaCy installation
     python -m spacy download en_core_web_md
@@ -72,8 +69,8 @@ p
 p
     |  The download command will #[+a("#download-pip") install the model] via
     |  pip, place the package in your #[code site-packages] directory and create
-    |  a #[+a("#usage") shortcut link] that lets you load the model by name. The
-    |  shortcut link will be the same as the model name used in
+    |  a #[+a("#usage") shortcut link] that lets you load the model by a custom
+    |  name. The shortcut link will be the same as the model name used in
     |  #[code spacy.download].
 
 +code(false, "bash").
@@ -103,9 +100,9 @@ p
 
 p
     |  By default, this will install the model into your #[code site-packages]
-    |  directory. You can then create a #[+a("#usage") shortcut link] for your
-    |  model to load it via #[code spacy.load()], or #[+a("usage-import") import it]
-    |  as a Python module.
+    |  directory. You can then use #[code spacy.load()] to load it via its
+    |  package name, create a #[+a("#usage-link") shortcut link] to assign it a
+    |  custom name, or #[+a("usage-import") import it] explicitly as a module.
 
 +h(3, "download-manual") Manual download and installation
 
@@ -134,12 +131,38 @@ p
 +h(2, "usage") Using models with spaCy
 
 p
+    |  To load a model, use #[+api("spacy#load") #[code spacy.load()]] with the
+    |  model's shortcut link, package name or a path to the data directory:
+
++code.
+    import spacy
+    nlp = spacy.load('en')              # load model with shortcut link "en"
+    nlp = spacy.load('en_core_web_sm')  # load model package "en_core_web_sm"
+    nlp = spacy.load('/path/to/model')  # load model from a directory
+
+    doc = nlp(u'This is a sentence.')
+
++aside("Tip: Preview model info")
+    |  You can use the #[+api("cli#info") #[code info]] command or
+    |  #[+api("spacy#info") #[code spacy.info()]] method to print a model's meta data
+    |  before loading it. Each #[code Language] object with a loaded model also
+    |  exposes the model's meta data as the attribute #[code meta]. For example,
+    |  #[code nlp.meta['version']] will return the model's version.
+
++h(3, "usage-link") Using custom shortcut links
+
+p
     |  While previous versions of spaCy required you to maintain a data directory
-    |  containing the models for each installation, you can now choose how and
-    |  where you want to keep your data files. To load the models conveniently
-    |  from within spaCy, you can use the #[code spacy.link] command to create a
-    |  symlink. This lets you set up custom shortcut links for models so you can
-    |  load them by name.
+    |  containing the models for each installation, you can now choose
+    |  #[strong how and where you want to keep your data]. For example, you could
+    |  download all models manually and put them into a local directory.
+    |  Whenever your spaCy projects need a models, you create a shortcut link to
+    |  tell spaCy to load it from there. This means you'll never end up with
+    |  duplicate data.
+
+p
+    |  The #[+api("cli#link") #[code link]] command will create a symlink
+    |  in the #[code spacy/data] directory.
 
 +code(false, "bash").
     python -m spacy link [package name or path] [shortcut] [--force]
@@ -157,33 +180,13 @@ p
     # set up shortcut link to load local model as "my_amazing_model"
     python -m spacy link /Users/you/model my_amazing_model
 
-+h(3, "usage-loading") Loading models
-
-p
-    |  To load a model, use #[code spacy.load()] with the model's shortcut link.
-
-+code.
-    import spacy
-    nlp = spacy.load('en_default')
-    doc = nlp(u'This is a sentence.')
-
-p
-    |  You can also use the #[info] command or #[code info()] method to print a model's meta data
-    |  before loading it. Each #[code Language] object returned by #[code spacy.load()]
-    |  also exposes the model's meta data as the attribute #[code meta].
-
-+code(false, "bash").
-    python -m spacy info en
-    # model meta data
-
-+code.
-    import spacy
-    spacy.info('en_default')
-    # model meta data
-
-    nlp = spacy.load('en_default')
-    print(nlp.meta['version'])
-    # 1.2.0
++infobox("Important note")
+    |  In order to create a symlink, your user needs the required permissions.
+    |  If you've installed spaCy to a system directory and don't have admin
+    |  privileges, the #[code spacy link] command may fail. The easiest solution
+    |  is to re-run the command as admin, or use a #[code virtualenv]. For more
+    |  info on this, see the
+    |  #[+a("/docs/usage/troubleshooting#symlink-privilege") troubleshooting guide].
 
 +h(3, "usage-import") Importing models as modules
 
@@ -204,9 +207,9 @@ p
     |  If you've trained your own model, for example for
     |  #[+a("/docs/usage/adding-languages") additional languages] or
     |  #[+a("/docs/usage/train-ner") custom named entities], you can save its
-    |  state using the #[code Language.save_to_directory()] method. To make the
-    |  model more convenient to deploy, we recommend wrapping it as a Python
-    |  package.
+    |  state using the #[+api("language#to_disk") #[code Language.to_disk()]]
+    |  method. To make the model more convenient to deploy, we recommend
+    |  wrapping it as a Python package.
 
 +infobox("Saving and loading models")
     |  For more information and a detailed guide on how to package your model,
