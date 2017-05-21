@@ -17,27 +17,27 @@ p Create a GoldParse.
 
     +row
         +cell #[code words]
-        +cell -
+        +cell iterable
         +cell A sequence of unicode word strings.
 
     +row
         +cell #[code tags]
-        +cell -
+        +cell iterable
         +cell A sequence of strings, representing tag annotations.
 
     +row
         +cell #[code heads]
-        +cell -
+        +cell iterable
         +cell A sequence of integers, representing syntactic head offsets.
 
     +row
         +cell #[code deps]
-        +cell -
+        +cell iterable
         +cell A sequence of strings, representing the syntactic relation types.
 
     +row
         +cell #[code entities]
-        +cell -
+        +cell iterable
         +cell A sequence of named entity annotations, either as BILUO tag strings, or as #[code (start_char, end_char, label)] tuples, representing the entity positions.
 
     +footrow
@@ -102,3 +102,58 @@ p
         +cell #[code gold_to_cand]
         +cell list
         +cell The alignment from gold tokenization to candidate tokenization.
+
+
++h(2, "util") Utilities
+
++h(3, "biluo_tags_from_offsets") gold.biluo_tags_from_offsets
+    +tag function
+
+p
+    |  Encode labelled spans into per-token tags, using the
+    |  #[+a("/docs/api/annotation#biluo") BILUO scheme] (Begin/In/Last/Unit/Out).
+
+p
+    |  Returns a list of unicode strings, describing the tags. Each tag string
+    |  will be of the form either #[code ""], #[code "O"] or
+    |  #[code "{action}-{label}"], where action is one of #[code "B"],
+    |  #[code "I"], #[code "L"], #[code "U"]. The string #[code &quot;-&quot;]
+    |  is used where the entity offsets don't align with the tokenization in the
+    |  #[code Doc] object. The training algorithm will view these as missing
+    |  values. #[code O] denotes a non-entity token. #[code B] denotes the
+    |  beginning of a multi-token entity, #[code I] the inside of an entity
+    |  of three or more tokens, and #[code L] the end of an entity of two or
+    |  more tokens. #[code U] denotes a single-token entity.
+
++aside-code("Example").
+    from spacy.gold import biluo_tags_from_offsets
+    text = 'I like London.'
+    entities = [(len('I like '), len('I like London'), 'LOC')]
+    doc = tokenizer(text)
+    tags = biluo_tags_from_offsets(doc, entities)
+    assert tags == ['O', 'O', 'U-LOC', 'O']
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code doc]
+        +cell #[code Doc]
+        +cell
+            |  The document that the entity offsets refer to. The output tags
+            |  will refer to the token boundaries within the document.
+
+    +row
+        +cell #[code entities]
+        +cell iterable
+        +cell
+            |  A sequence of #[code (start, end, label)] triples. #[code start]
+            |  and #[code end] should be character-offset integers denoting the
+            |  slice into the original string.
+
+    +footrow
+        +cell returns
+        +cell list
+        +cell
+            |  Unicode strings, describing the
+            |  #[+a("/docs/api/annotation#biluo") BILUO] tags.
+
+
