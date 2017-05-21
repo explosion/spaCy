@@ -11,8 +11,6 @@ from preshed.maps cimport map_iter, key_t
 from .typedefs cimport hash_t
 from libc.stdint cimport uint32_t
 
-import ujson
-
 
 cpdef hash_t hash_string(unicode string) except 0:
     chars = string.encode('utf8')
@@ -72,15 +70,12 @@ cdef Utf8Str _allocate(Pool mem, const unsigned char* chars, uint32_t length) ex
 
 
 cdef class StringStore:
-    """
-    Map strings to and from integer IDs.
-    """
+    """Map strings to and from integer IDs."""
     def __init__(self, strings=None, freeze=False):
-        """
-        Create the StringStore.
+        """Create the StringStore.
 
-        Arguments:
-            strings: A sequence of unicode strings to add to the store.
+        strings (iterable): A sequence of unicode strings to add to the store.
+        RETURNS (StringStore): The newly constructed object.
         """
         self.mem = Pool()
         self._map = PreshMap()
@@ -106,23 +101,17 @@ cdef class StringStore:
         return (StringStore, (list(self),))
 
     def __len__(self):
-        """
-        The number of strings in the store.
+        """The number of strings in the store.
 
-        Returns:
-            int The number of strings in the store.
+        RETURNS (int): The number of strings in the store.
         """
         return self.size-1
 
     def __getitem__(self, object string_or_id):
-        """
-        Retrieve a string from a given integer ID, or vice versa.
+        """Retrieve a string from a given integer ID, or vice versa.
 
-        Arguments:
-            string_or_id (bytes or unicode or int):
-                The value to encode.
-        Returns:
-            unicode or int: The value to retrieved.
+        string_or_id (bytes or unicode or int): The value to encode.
+        Returns (unicode or int): The value to be retrieved.
         """
         if isinstance(string_or_id, basestring) and len(string_or_id) == 0:
             return 0
@@ -163,13 +152,10 @@ cdef class StringStore:
                 return utf8str - self.c
 
     def __contains__(self, unicode string not None):
-        """
-        Check whether a string is in the store.
+        """Check whether a string is in the store.
 
-        Arguments:
-            string (unicode): The string to check.
-        Returns bool:
-            Whether the store contains the string.
+        string (unicode): The string to check.
+        RETURNS (bool): Whether the store contains the string.
         """
         if len(string) == 0:
             return True
@@ -177,10 +163,9 @@ cdef class StringStore:
         return self._map.get(key) is not NULL
 
     def __iter__(self):
-        """
-        Iterate over the strings in the store, in order.
+        """Iterate over the strings in the store, in order.
 
-        Yields: unicode A string in the store.
+        YIELDS (unicode): A string in the store.
         """
         cdef int i
         for i in range(self.size):
@@ -194,6 +179,41 @@ cdef class StringStore:
             py_string = _decode(string)
             strings.append(py_string)
         return (StringStore, (strings,), None, None, None)
+
+    def to_disk(self, path):
+        """Save the current state to a directory.
+
+        path (unicode or Path): A path to a directory, which will be created if
+            it doesn't exist. Paths may be either strings or `Path`-like objects.
+        """
+        raise NotImplementedError()
+
+    def from_disk(self, path):
+        """Loads state from a directory. Modifies the object in place and
+        returns it.
+
+        path (unicode or Path): A path to a directory. Paths may be either
+            strings or `Path`-like objects.
+        RETURNS (StringStore): The modified `StringStore` object.
+        """
+        raise NotImplementedError()
+
+    def to_bytes(self, **exclude):
+        """Serialize the current state to a binary string.
+
+        **exclude: Named attributes to prevent from being serialized.
+        RETURNS (bytes): The serialized form of the `StringStore` object.
+        """
+        raise NotImplementedError()
+
+    def from_bytes(self, bytes_data, **exclude):
+        """Load state from a binary string.
+
+        bytes_data (bytes): The data to load from.
+        **exclude: Named attributes to prevent from being loaded.
+        RETURNS (StringStore): The `StringStore` object.
+        """
+        raise NotImplementedError()
 
     def set_frozen(self, bint is_frozen):
         # TODO
@@ -234,40 +254,6 @@ cdef class StringStore:
         self._map.set(key, <void*>&self.c[self.size])
         self.size += 1
         return &self.c[self.size-1]
-
-    def dump(self, file_):
-        """
-        Save the strings to a JSON file.
-
-        Arguments:
-            file_ (buffer): The file to save the strings.
-        Returns:
-            None
-        """
-        string_data = ujson.dumps(list(self))
-        if not isinstance(string_data, unicode):
-            string_data = string_data.decode('utf8')
-        # TODO: OOV?
-        file_.write(string_data)
-
-    def load(self, file_):
-        """
-        Load the strings from a JSON file.
-
-        Arguments:
-            file_ (buffer): The file from which to load the strings.
-        Returns:
-            None
-        """
-        strings = ujson.load(file_)
-        if strings == ['']:
-            return None
-        cdef unicode string
-        for string in strings:
-            # explicit None/len check instead of simple truth testing
-            # (bug in Cython <= 0.23.4)
-            if string is not None and len(string):
-                self.intern_unicode(string)
 
     def _realloc(self):
         # We want to map straight to pointers, but they'll be invalidated if
