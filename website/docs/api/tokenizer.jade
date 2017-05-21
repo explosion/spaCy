@@ -11,6 +11,15 @@ p
 
 p Create a #[code Tokenizer], to create #[code Doc] objects given unicode text.
 
++aside-code("Example").
+    # Construction 1
+    from spacy.tokenizer import Tokenizer
+    tokenizer = Tokenizer(nlp.vocab)
+
+    # Construction 2
+    from spacy.lang.en import English
+    tokenizer = English().Defaults.create_tokenizer(nlp)
+
 +table(["Name", "Type", "Description"])
     +row
         +cell #[code vocab]
@@ -43,6 +52,11 @@ p Create a #[code Tokenizer], to create #[code Doc] objects given unicode text.
             |  A function matching the signature of
             |  #[code re.compile(string).finditer] to find infixes.
 
+    +row
+        +cell #[code token_match]
+        +cell callable
+        +cell A boolean function matching strings to be recognised as tokens.
+
     +footrow
         +cell returns
         +cell #[code Tokenizer]
@@ -52,6 +66,10 @@ p Create a #[code Tokenizer], to create #[code Doc] objects given unicode text.
     +tag method
 
 p Tokenize a string.
+
++aside-code("Example").
+    tokens = tokenizer(u'This is a sentence')
+    assert len(tokens) == 4
 
 +table(["Name", "Type", "Description"])
     +row
@@ -68,6 +86,11 @@ p Tokenize a string.
     +tag method
 
 p Tokenize a stream of texts.
+
++aside-code("Example").
+    texts = [u'One document.', u'...', u'Lots of documents']
+    for doc in tokenizer.pipe(texts, batch_size=50):
+        pass
 
 +table(["Name", "Type", "Description"])
     +row
@@ -105,11 +128,11 @@ p Find internal split points of the string.
 
     +footrow
         +cell returns
-        +cell #[code List[re.MatchObject]]
+        +cell list
         +cell
-            |  A list of objects that have #[code .start()] and #[code .end()]
-            |  methods, denoting the placement of internal segment separators,
-            |  e.g. hyphens.
+            |  A list of #[code re.MatchObject] objects that have #[code .start()]
+            |  and #[code .end()] methods, denoting the placement of internal
+            |  segment separators, e.g. hyphens.
 
 +h(2, "find_prefix") Tokenizer.find_prefix
     +tag method
@@ -126,7 +149,7 @@ p
 
     +footrow
         +cell returns
-        +cell int / #[code None]
+        +cell int
         +cell The length of the prefix if present, otherwise #[code None].
 
 +h(2, "find_suffix") Tokenizer.find_suffix
@@ -150,7 +173,16 @@ p
 +h(2, "add_special_case") Tokenizer.add_special_case
     +tag method
 
-p Add a special-case tokenization rule.
+p
+    |  Add a special-case tokenization rule. This mechanism is also used to add
+    |  custom tokenizer exceptions to the language data. See the usage workflow
+    |  on #[+a("/docs/usage/adding-languages#tokenizer-exceptions") adding languages]
+    |  for more details and examples.
+
++aside-code("Example").
+    from spacy.attrs import ORTH, LEMMA
+    case = [{"don't": [{ORTH: "do"}, {ORTH: "n't", LEMMA: "not"}]}]
+    tokenizer.add_special_case(case)
 
 +table(["Name", "Type", "Description"])
     +row
@@ -160,16 +192,98 @@ p Add a special-case tokenization rule.
 
     +row
         +cell #[code token_attrs]
-        +cell -
+        +cell iterable
         +cell
             |  A sequence of dicts, where each dict describes a token and its
             |  attributes. The #[code ORTH] fields of the attributes must
             |  exactly match the string when they are concatenated.
 
+
++h(2, "to_disk") Tokenizer.to_disk
+    +tag method
+
+p Save the current state to a directory.
+
++aside-code("Example").
+    tokenizer.to_disk('/path/to/tokenizer')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory, which will be created if it doesn't exist.
+            |  Paths may be either strings or #[code Path]-like objects.
+
++h(2, "from_disk") Tokenizer.from_disk
+    +tag method
+
+p Loads state from a directory. Modifies the object in place and returns it.
+
++aside-code("Example").
+    from spacy.tokenizer import Tokenizer
+    tokenizer = Tokenizer(nlp.vocab)
+    tokenizer = tokenizer.from_disk('/path/to/tokenizer')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory. Paths may be either strings or
+            |  #[code Path]-like objects.
+
     +footrow
         +cell returns
-        +cell #[code None]
+        +cell #[code Tokenizer]
+        +cell The modified #[code Tokenizer] object.
+
++h(2, "to_bytes") Tokenizer.to_bytes
+    +tag method
+
+p Serialize the current state to a binary string.
+
++aside-code("Example").
+    tokenizer_bytes = tokenizer.to_bytes()
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code **exclude]
         +cell -
+        +cell Named attributes to prevent from being serialized.
+
+    +footrow
+        +cell returns
+        +cell bytes
+        +cell The serialized form of the #[code Tokenizer] object.
+
++h(2, "from_bytes") Tokenizer.from_bytes
+    +tag method
+
+p Load state from a binary string.
+
++aside-code("Example").
+    fron spacy.tokenizer import Tokenizer
+    tokenizer_bytes = tokenizer.to_bytes()
+    new_tokenizer = Tokenizer(nlp.vocab)
+    new_tokenizer.from_bytes(tokenizer_bytes)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code bytes_data]
+        +cell bytes
+        +cell The data to load from.
+
+    +row
+        +cell #[code **exclude]
+        +cell -
+        +cell Named attributes to prevent from being loaded.
+
+    +footrow
+        +cell returns
+        +cell #[code Tokenizer]
+        +cell The #[code Tokenizer] object.
+
 
 +h(2, "attributes") Attributes
 

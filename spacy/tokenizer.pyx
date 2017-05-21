@@ -2,8 +2,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-import ujson
-
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from cymem.cymem cimport Pool
@@ -12,32 +10,31 @@ from preshed.maps cimport PreshMap
 from .strings cimport hash_string
 cimport cython
 
-from . import util
 from .tokens.doc cimport Doc
 
 
 cdef class Tokenizer:
+    """Segment text, and create Doc objects with the discovered segment
+    boundaries.
     """
     def __init__(self, Vocab vocab, rules, prefix_search, suffix_search, infix_finditer, token_match=None):
-        """
-        Create a Tokenizer, to create Doc objects given unicode text.
+        """Create a `Tokenizer`, to create `Doc` objects given unicode text.
 
-        Arguments:
-            vocab (Vocab):
-                A storage container for lexical types.
-            rules (dict):
-                Exceptions and special-cases for the tokenizer.
-            prefix_search:
-                A function matching the signature of re.compile(string).search
-                to match prefixes.
-            suffix_search:
-                A function matching the signature of re.compile(string).search
-                to match suffixes.
-            infix_finditer:
-                A function matching the signature of re.compile(string).finditer
-                to find infixes.
-            token_match:
-                A boolean function matching strings that becomes tokens.
+        vocab (Vocab): A storage container for lexical types.
+        rules (dict): Exceptions and special-cases for the tokenizer.
+        prefix_search (callable): A function matching the signature of
+            `re.compile(string).search` to match prefixes.
+        suffix_search (callable): A function matching the signature of
+            `re.compile(string).search` to match suffixes.
+        `infix_finditer` (callable): A function matching the signature of
+            `re.compile(string).finditer` to find infixes.
+        token_match (callable): A boolean function matching strings to be
+            recognised as tokens.
+        RETURNS (Tokenizer): The newly constructed object.
+
+        EXAMPLE:
+            >>> tokenizer = Tokenizer(nlp.vocab)
+            >>> tokenizer = English().Defaults.create_tokenizer(nlp)
         """
         self.mem = Pool()
         self._cache = PreshMap()
@@ -69,13 +66,10 @@ cdef class Tokenizer:
 
     @cython.boundscheck(False)
     def __call__(self, unicode string):
-        """
-        Tokenize a string.
+        """Tokenize a string.
 
-        Arguments:
-            string (unicode): The string to tokenize.
-        Returns:
-            Doc A container for linguistic annotations.
+        string (unicode): The string to tokenize.
+        RETURNS (Doc): A container for linguistic annotations.
         """
         if len(string) >= (2 ** 30):
             raise ValueError(
@@ -123,18 +117,13 @@ cdef class Tokenizer:
         return tokens
 
     def pipe(self, texts, batch_size=1000, n_threads=2):
-        """
-        Tokenize a stream of texts.
+        """Tokenize a stream of texts.
 
-        Arguments:
-            texts: A sequence of unicode texts.
-            batch_size (int):
-                The number of texts to accumulate in an internal buffer.
-            n_threads (int):
-                The number of threads to use, if the implementation supports
-                multi-threading. The default tokenizer is single-threaded.
-        Yields:
-            Doc A sequence of Doc objects, in order.
+        texts: A sequence of unicode texts.
+        batch_size (int): The number of texts to accumulate in an internal buffer.
+        n_threads (int): The number of threads to use, if the implementation
+            supports multi-threading. The default tokenizer is single-threaded.
+        YIELDS (Doc): A sequence of Doc objects, in order.
         """
         for text in texts:
             yield self(text)
@@ -278,27 +267,23 @@ cdef class Tokenizer:
         self._cache.set(key, cached)
 
     def find_infix(self, unicode string):
-        """
-        Find internal split points of the string, such as hyphens.
+        """Find internal split points of the string, such as hyphens.
 
         string (unicode): The string to segment.
-
-        Returns List[re.MatchObject]
-            A list of objects that have .start() and .end() methods, denoting the
-            placement of internal segment separators, e.g. hyphens.
+        RETURNS (list): A list of `re.MatchObject` objects that have `.start()`
+            and `.end()` methods, denoting the placement of internal segment
+            separators, e.g. hyphens.
         """
         if self.infix_finditer is None:
             return 0
         return list(self.infix_finditer(string))
 
     def find_prefix(self, unicode string):
-        """
-        Find the length of a prefix that should be segmented from the string,
+        """Find the length of a prefix that should be segmented from the string,
         or None if no prefix rules match.
 
-        Arguments:
-            string (unicode): The string to segment.
-        Returns (int or None): The length of the prefix if present, otherwise None.
+        string (unicode): The string to segment.
+        RETURNS (int): The length of the prefix if present, otherwise `None`.
         """
         if self.prefix_search is None:
             return 0
@@ -306,13 +291,11 @@ cdef class Tokenizer:
         return (match.end() - match.start()) if match is not None else 0
 
     def find_suffix(self, unicode string):
-        """
-        Find the length of a suffix that should be segmented from the string,
+        """Find the length of a suffix that should be segmented from the string,
         or None if no suffix rules match.
 
-        Arguments:
-            string (unicode): The string to segment.
-        Returns (int or None): The length of the suffix if present, otherwise None.
+        string (unicode): The string to segment.
+        Returns (int): The length of the suffix if present, otherwise `None`.
         """
         if self.suffix_search is None:
             return 0
@@ -320,23 +303,17 @@ cdef class Tokenizer:
         return (match.end() - match.start()) if match is not None else 0
 
     def _load_special_tokenization(self, special_cases):
-        """
-        Add special-case tokenization rules.
-        """
+        """Add special-case tokenization rules."""
         for chunk, substrings in sorted(special_cases.items()):
             self.add_special_case(chunk, substrings)
 
     def add_special_case(self, unicode string, substrings):
-        """
-        Add a special-case tokenization rule.
+        """Add a special-case tokenization rule.
 
-        Arguments:
-            string (unicode): The string to specially tokenize.
-            token_attrs:
-                A sequence of dicts, where each dict describes a token and its
-                attributes. The ORTH fields of the attributes must exactly match
-                the string when they are concatenated.
-        Returns None
+        string (unicode): The string to specially tokenize.
+        token_attrs (iterable): A sequence of dicts, where each dict describes
+            a token and its attributes. The `ORTH` fields of the attributes must
+            exactly match the string when they are concatenated.
         """
         substrings = list(substrings)
         cached = <_Cached*>self.mem.alloc(1, sizeof(_Cached))
@@ -347,3 +324,38 @@ cdef class Tokenizer:
         self._specials.set(key, cached)
         self._cache.set(key, cached)
         self._rules[string] = substrings
+
+    def to_disk(self, path):
+        """Save the current state to a directory.
+
+        path (unicode or Path): A path to a directory, which will be created if
+            it doesn't exist. Paths may be either strings or `Path`-like objects.
+        """
+        raise NotImplementedError()
+
+    def from_disk(self, path):
+        """Loads state from a directory. Modifies the object in place and
+        returns it.
+
+        path (unicode or Path): A path to a directory. Paths may be either
+            strings or `Path`-like objects.
+        RETURNS (Tokenizer): The modified `Tokenizer` object.
+        """
+        raise NotImplementedError()
+
+    def to_bytes(self, **exclude):
+        """Serialize the current state to a binary string.
+
+        **exclude: Named attributes to prevent from being serialized.
+        RETURNS (bytes): The serialized form of the `Tokenizer` object.
+        """
+        raise NotImplementedError()
+
+    def from_bytes(self, bytes_data, **exclude):
+        """Load state from a binary string.
+
+        bytes_data (bytes): The data to load from.
+        **exclude: Named attributes to prevent from being loaded.
+        RETURNS (Tokenizer): The `Tokenizer` object.
+        """
+        raise NotImplementedError()
