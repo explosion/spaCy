@@ -91,14 +91,18 @@ mixin permalink(id)
     groups - [object] option groups, uses global variable QUICKSTART
     headline - [string] optional text to be rendered as widget headline
 
-mixin quickstart(groups, headline)
-    .c-quickstart.o-block#qs
+mixin quickstart(groups, headline, description)
+    .c-quickstart.o-block-small#qs
         .c-quickstart__content
             if headline
                 +h(2)=headline
+            if description
+                p=description
             for group in groups
                 .c-quickstart__group.u-text-small(data-qs-group=group.id)
                     .c-quickstart__legend=group.title
+                        if group.help
+                            |  #[+help(group.help)]
                     .c-quickstart__fields
                         for option in group.options
                             input.c-quickstart__input(class="c-quickstart__input--" + (group.multiple ? "check" : "radio") type=group.multiple ? "checkbox" : "radio" name=group.id id=option.id value=option.id checked=option.checked)
@@ -106,7 +110,7 @@ mixin quickstart(groups, headline)
                                 if option.meta
                                     |  #[span.c-quickstart__label__meta (#{option.meta})]
                                 if option.help
-                                    |  #[+help(option.help).c-quickstart__label__meta]
+                                    |  #[+help(option.help)]
 
         pre.c-code-block
             code.c-code-block__content.c-quickstart__code(data-qs-results="")
@@ -119,11 +123,11 @@ mixin quickstart(groups, headline)
 //- Quickstart code item
     data [object] - Rendering conditions (keyed by option group ID, value: option)
 
-mixin qs(data)
+mixin qs(data, style)
     - args = {}
     for value, setting in data
         - args['data-qs-' + setting] = value
-    span.c-quickstart__line&attributes(args)
+    span.c-quickstart__line(class="c-quickstart__line--#{style || 'bash'}")&attributes(args)
         block
 
 
