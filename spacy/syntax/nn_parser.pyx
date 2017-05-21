@@ -330,7 +330,7 @@ cdef class Parser:
 
         backprops = []
         cdef float loss = 0.
-        while todo:
+        while len(todo) >= 3:
             states, golds = zip(*todo)
 
             token_ids = self.get_token_ids(states)
@@ -445,8 +445,6 @@ cdef class Parser:
 
     def preprocess_gold(self, docs_golds):
         for doc, gold in docs_golds:
-            gold.heads, gold.labels = PseudoProjectivity.projectivize(
-                                        gold.heads, gold.labels)
             yield doc, gold
 
     def use_params(self, params):

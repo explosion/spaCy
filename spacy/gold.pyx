@@ -168,10 +168,14 @@ class GoldCorpus(object):
             n += 1
         return n
 
-    def train_docs(self, nlp, shuffle=0, gold_preproc=True):
+    def train_docs(self, nlp, shuffle=0, gold_preproc=True,
+                   projectivize=False):
         if shuffle:
             random.shuffle(self.train_locs)
-        gold_docs = self.iter_gold_docs(nlp, self.train_tuples, gold_preproc)
+        if projectivize:
+            train_tuples = nonproj.PseudoProjectivity.preprocess_training_data(
+                               self.train_tuples)
+        gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc)
         if shuffle:
             gold_docs = util.itershuffle(gold_docs, bufsize=shuffle*1000)
         gold_docs = nlp.preprocess_gold(gold_docs)
@@ -184,7 +188,6 @@ class GoldCorpus(object):
 
     @classmethod
     def iter_gold_docs(cls, nlp, tuples, gold_preproc=True):
-        tuples = nonproj.PseudoProjectivity.preprocess_training_data(tuples)
         for raw_text, paragraph_tuples in tuples:
             docs = cls._make_docs(nlp, raw_text, paragraph_tuples,
                                   gold_preproc)
@@ -233,7 +236,7 @@ class GoldCorpus(object):
         return locs
 
 
-def read_json_file(loc, docs_filter=None, limit=None):
+def read_json_file(loc, docs_filter=None, limit=1000):
     loc = ensure_path(loc)
     if loc.is_dir():
         for filename in loc.iterdir():
