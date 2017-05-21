@@ -16,6 +16,7 @@ from .syntax.parser import get_templates
 from .syntax.nonproj import PseudoProjectivity
 from .pipeline import NeuralDependencyParser, EntityRecognizer
 from .pipeline import TokenVectorEncoder, NeuralTagger, NeuralEntityRecognizer
+from .pipeline import NeuralLabeller
 from .compat import json_dumps
 from .attrs import IS_STOP
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
@@ -230,7 +231,7 @@ class Language(object):
         for doc, gold in docs_golds:
             yield doc, gold
 
-    def begin_training(self, gold_tuples, **cfg):
+    def begin_training(self, get_gold_tuples, **cfg):
         """Allocate models, pre-process training data and acquire a trainer and
         optimizer. Used as a contextmanager.
 
@@ -244,6 +245,7 @@ class Language(object):
             >>>        for docs, golds in epoch:
             >>>            state = nlp.update(docs, golds, sgd=optimizer)
         """
+        self.pipeline.append(NeuralLabeller(self.vocab))
         # Populate vocab
         for _, annots_brackets in get_gold_tuples():
             for annots, _ in annots_brackets:

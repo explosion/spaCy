@@ -31,6 +31,7 @@ from .syntax.stateclass cimport StateClass
 from .gold cimport GoldParse
 from .morphology cimport Morphology
 from .vocab cimport Vocab
+from .syntax.nonproj import PseudoProjectivity
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
 from ._ml import rebatch, Tok2Vec, flatten, get_col, doc2feats
@@ -148,6 +149,7 @@ class TokenVectorEncoder(object):
         if self.model is True:
             self.model = self.Model()
 
+
     def use_params(self, params):
         """Replace weights of models in the pipeline with those provided in the
         params dictionary.
@@ -251,6 +253,46 @@ class NeuralTagger(object):
     def use_params(self, params):
         with self.model.use_params(params):
             yield
+
+class NeuralLabeller(NeuralTagger):
+    name = 'nn_labeller'
+    def __init__(self, vocab, model=True):
+        self.vocab = vocab
+        self.model = model
+        self.labels = {}
+
+    def set_annotations(self, docs, dep_ids):
+        pass
+
+    def begin_training(self, gold_tuples, pipeline=None):
+        gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
+        for raw_text, annots_brackets in gold_tuples:
+            for annots, brackets in annots_brackets:
+                ids, words, tags, heads, deps, ents = annots
+                for dep in deps:
+                    if dep not in self.labels:
+                        self.labels[dep] = len(self.labels)
+        token_vector_width = pipeline[0].model.nO
+        self.model = with_flatten(
+            Softmax(len(self.labels), token_vector_width))
+
+    def get_loss(self, docs, golds, scores):
+        scores = self.model.ops.flatten(scores)
+        cdef int idx = 0
+        correct = numpy.zeros((scores.shape[0],), dtype='i')
+        guesses = scores.argmax(axis=1)
+        for gold in golds:
+            for tag in gold.labels:
+                if tag is None:
+                    correct[idx] = guesses[idx]
+                else:
+                    correct[idx] = self.labels[tag]
+                idx += 1
+        correct = self.model.ops.xp.array(correct, dtype='i')
+        d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
+        loss = (d_scores**2).sum()
+        d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
+        return float(loss), d_scores
 
 
 cdef class EntityRecognizer(LinearParser):
