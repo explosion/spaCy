@@ -120,19 +120,13 @@ class PseudoProjectivity:
         # reattach arcs with decorated labels (following HEAD scheme)
         # for each decorated arc X||Y, search top-down, left-to-right,
         # breadth-first until hitting a Y then make this the new head
-        #parse = tokens.to_array([HEAD, DEP])
         for token in tokens:
             if cls.is_decorated(token.dep_):
                 newlabel,headlabel = cls.decompose(token.dep_)
                 newhead = cls._find_new_head(token,headlabel)
                 token.head = newhead
                 token.dep_ = newlabel
-
-                # tokens.attach(token,newhead,newlabel)
-                #parse[token.i,1] = tokens.vocab.strings[newlabel]
-                #parse[token.i,0] = newhead.i - token.i
-        #tokens.from_array([HEAD, DEP],parse)
-
+        return tokens
 
     @classmethod
     def _decorate(cls, heads, proj_heads, labels):
