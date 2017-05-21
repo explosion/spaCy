@@ -435,12 +435,19 @@ cdef class Parser:
     def begin_training(self, gold_tuples, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
+        gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
         actions = self.moves.get_actions(gold_parses=gold_tuples)
         for action, labels in actions.items():
             for label in labels:
                 self.moves.add_action(action, label)
         if self.model is True:
             self.model = self.Model(self.moves.n_moves, **cfg)
+
+    def preprocess_gold(self, docs_golds):
+        for doc, gold in docs_golds:
+            gold.heads, gold.labels = PseudoProjectivity.projectivize(
+                                        gold.heads, gold.labels)
+            yield doc, gold
 
     def use_params(self, params):
         # Can't decorate cdef class :(. Workaround.
