@@ -130,7 +130,7 @@ class Language(object):
 
         vocab (Vocab): A `Vocab` object. If `True`, a vocab is created via
             `Language.Defaults.create_vocab`.
-        make_doc (function): A function that takes text and returns a `Doc`
+        make_doc (callable): A function that takes text and returns a `Doc`
             object. Usually a `Tokenizer`.
         pipeline (list): A list of annotation processes or IDs of annotation,
             processes, e.g. a `Tagger` object, or `'tagger'`. IDs are looked
@@ -189,7 +189,7 @@ class Language(object):
         docs (iterable): A batch of `Doc` objects.
         golds (iterable): A batch of `GoldParse` objects.
         drop (float): The droput rate.
-        sgd (function): An optimizer.
+        sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
 
         EXAMPLE:

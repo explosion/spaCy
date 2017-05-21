@@ -130,7 +130,7 @@ class TokenVectorEncoder(object):
         docs (iterable): A batch of `Doc` objects.
         golds (iterable): A batch of `GoldParse` objects.
         drop (float): The droput rate.
-        sgd (function): An optimizer.
+        sgd (callable): An optimizer.
         RETURNS (dict): Results from the update.
         """
         if isinstance(docs, Doc):

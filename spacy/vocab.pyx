@@ -106,7 +106,7 @@ cdef class Vocab:
         See also: `Lexeme.set_flag`, `Lexeme.check_flag`, `Token.set_flag`,
         `Token.check_flag`.
 
-        flag_getter (function): A function `f(unicode) -> bool`, to get the flag
+        flag_getter (callable): A function `f(unicode) -> bool`, to get the flag
             value.
         flag_id (int): An integer between 1 and 63 (inclusive), specifying
             the bit at which the flag will be stored. If -1, the lowest
