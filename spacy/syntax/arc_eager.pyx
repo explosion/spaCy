@@ -324,10 +324,12 @@ cdef class ArcEager(TransitionSystem):
             if label.upper() != 'ROOT':
                 if (LEFT, label) not in seen_actions:
                     actions[LEFT].append(label)
+                    seen_actions.add((LEFT, label))
         for label in kwargs.get('right_labels', []):
             if label.upper() != 'ROOT':
                 if (RIGHT, label) not in seen_actions:
                     actions[RIGHT].append(label)
+                    seen_actions.add((RIGHT, label))
 
         for raw_text, sents in kwargs.get('gold_parses', []):
             for (ids, words, tags, heads, labels, iob), ctnts in sents:
@@ -338,9 +340,11 @@ cdef class ArcEager(TransitionSystem):
                         if head < child:
                             if (RIGHT, label) not in seen_actions:
                                 actions[RIGHT].append(label)
+                                seen_actions.add((RIGHT, label))
                         elif head > child:
                             if (LEFT, label) not in seen_actions:
                                 actions[LEFT].append(label)
+                                seen_actions.add((LEFT, label))
         return actions
 
     property action_types:
