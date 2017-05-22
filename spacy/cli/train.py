@@ -53,17 +53,18 @@ def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
     if no_entities and 'entities' in pipeline: pipeline.remove('entities')
 
     nlp = lang_class(pipeline=pipeline)
-    corpus = GoldCorpus(train_path, dev_path)
+    corpus = GoldCorpus(train_path, dev_path, limit=n_sents)
 
     dropout = util.env_opt('dropout', 0.0)
     dropout_decay = util.env_opt('dropout_decay', 0.0)
+    orig_dropout = dropout
 
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, use_gpu=use_gpu)
     n_train_docs = corpus.count_train()
     batch_size = float(util.env_opt('min_batch_size', 4))
     max_batch_size = util.env_opt('max_batch_size', 64)
     batch_accel = util.env_opt('batch_accel', 1.001)
-    print("Itn.\tDep. Loss\tUAS\tNER F.\tTag %\tToken %")
+    print("Itn.\tDep. Loss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
     for i in range(n_iter):
         with tqdm.tqdm(total=n_train_docs) as pbar:
             train_docs = corpus.train_docs(nlp, shuffle=i, projectivize=True)
@@ -77,8 +78,8 @@ def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                 pbar.update(len(docs))
                 idx += len(docs)
                 batch_size *= batch_accel
-                batch_size = min(int(batch_size), max_batch_size)
-                dropout = linear_decay(dropout, dropout_decay, i*n_train_docs+idx)
+                batch_size = min(batch_size, max_batch_size)
+                dropout = linear_decay(orig_dropout, dropout_decay, i*n_train_docs+idx)
         with nlp.use_params(optimizer.averages):
             scorer = nlp.evaluate(corpus.dev_docs(nlp))
         print_progress(i, {}, scorer.scores)
@@ -97,38 +98,24 @@ def _render_parses(i, to_render):
         file_.write(html)
 
 
-def evaluate(Language, gold_tuples, path):
-    with (path / 'model.bin').open('rb') as file_:
-        nlp = dill.load(file_)
-    # TODO:
-    # 1. This code is duplicate with spacy.train.Trainer.evaluate
-    # 2. There's currently a semantic difference between pipe and
-    #    not pipe! It matters whether we batch the inputs. Must fix!
-    all_docs = []
-    all_golds = []
-    for raw_text, paragraph_tuples in dev_sents:
-        if gold_preproc:
-            raw_text = None
-        else:
-            paragraph_tuples = merge_sents(paragraph_tuples)
-        docs = self.make_docs(raw_text, paragraph_tuples)
-        golds = self.make_golds(docs, paragraph_tuples)
-        all_docs.extend(docs)
-        all_golds.extend(golds)
-    scorer = Scorer()
-    for doc, gold in zip(self.nlp.pipe(all_docs), all_golds):
-        scorer.score(doc, gold)
-    return scorer
-
-
 def print_progress(itn, losses, dev_scores):
     # TODO: Fix!
     scores = {}
-    for col in ['dep_loss', 'tag_loss', 'uas', 'tags_acc', 'token_acc', 'ents_f']:
+    for col in ['dep_loss', 'tag_loss', 'uas', 'tags_acc', 'token_acc',
+                'ents_p', 'ents_r', 'ents_f']:
         scores[col] = 0.0
     scores.update(losses)
     scores.update(dev_scores)
-    tpl = '{:d}\t{dep_loss:.3f}\t{tag_loss:.3f}\t{uas:.3f}\t{ents_f:.3f}\t{tags_acc:.3f}\t{token_acc:.3f}'
+    tpl = '\t'.join((
+        '{:d}',
+        '{dep_loss:.3f}',
+        '{tag_loss:.3f}',
+        '{uas:.3f}',
+        '{ents_p:.3f}',
+        '{ents_r:.3f}',
+        '{ents_f:.3f}',
+        '{tags_acc:.3f}',
+        '{token_acc:.3f}'))
     print(tpl.format(itn, **scores))
 
 
