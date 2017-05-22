@@ -113,7 +113,6 @@ def projectivize(heads, labels):
     return proj_heads, deco_labels
 
 
-@classmethod
 def deprojectivize(tokens):
     # reattach arcs with decorated labels (following HEAD scheme)
     # for each decorated arc X||Y, search top-down, left-to-right,
