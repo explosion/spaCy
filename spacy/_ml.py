@@ -136,7 +136,8 @@ def Tok2Vec(width, embed_size, preprocess=None):
 
         tok2vec = (
             with_flatten(
-                (lower | prefix | suffix | shape )
+                asarray(Model.ops, dtype='uint64')
+                >> (lower | prefix | suffix | shape )
                 >> Maxout(width, width*4, pieces=3)
                 >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
                 >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
@@ -149,6 +150,12 @@ def Tok2Vec(width, embed_size, preprocess=None):
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.nO = width
     return tok2vec
+
+
+def asarray(ops, dtype):
+    def forward(X, drop=0.):
+        return ops.asarray(X, dtype=dtype), None
+    return layerize(forward)
 
 
 def foreach(layer):
@@ -234,9 +241,7 @@ def doc2feats(cols=None):
     def forward(docs, drop=0.):
         feats = []
         for doc in docs:
-            feats.append(
-                model.ops.asarray(doc.to_array(cols),
-                                  dtype='uint64'))
+            feats.append(doc.to_array(cols))
         return feats, None
     model = layerize(forward)
     model.cols = cols
