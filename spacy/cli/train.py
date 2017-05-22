@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals, division, print_function
 
+import plac
 import json
 from collections import defaultdict
 import cytoolz
@@ -18,19 +19,33 @@ from .. import util
 from .. import displacy
 
 
-def train(lang_id, output_dir, train_data, dev_data, n_iter, n_sents,
+@plac.annotations(
+    lang=("model language", "positional", None, str),
+    output_dir=("output directory to store model in", "positional", None, str),
+    train_data=("location of JSON-formatted training data", "positional", None, str),
+    dev_data=("location of JSON-formatted development data (optional)", "positional", None, str),
+    n_iter=("number of iterations", "option", "n", int),
+    n_sents=("number of sentences", "option", "ns", int),
+    use_gpu=("Use GPU", "flag", "G", bool),
+    no_tagger=("Don't train tagger", "flag", "T", bool),
+    no_parser=("Don't train parser", "flag", "P", bool),
+    no_entities=("Don't train NER", "flag", "N", bool)
+)
+def train(lang, output_dir, train_data, dev_data, n_iter, n_sents,
           use_gpu, no_tagger, no_parser, no_entities):
+    """Train a model. Expects data in spaCy's JSON format."""
+    n_sents = n_sents or None
     output_path = util.ensure_path(output_dir)
     train_path = util.ensure_path(train_data)
     dev_path = util.ensure_path(dev_data)
     if not output_path.exists():
-        prints(output_path, title="Output directory not found", exits=True)
+        prints(output_path, title="Output directory not found", exits=1)
     if not train_path.exists():
-        prints(train_path, title="Training data not found", exits=True)
+        prints(train_path, title="Training data not found", exits=1)
     if dev_path and not dev_path.exists():
-        prints(dev_path, title="Development data not found", exits=True)
+        prints(dev_path, title="Development data not found", exits=1)
 
-    lang_class = util.get_lang_class(lang_id)
+    lang_class = util.get_lang_class(lang)
 
     pipeline = ['token_vectors', 'tags', 'dependencies', 'entities']
     if no_tagger and 'tags' in pipeline: pipeline.remove('tags')

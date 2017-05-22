@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import plac
 import requests
 import os
 import subprocess
@@ -11,7 +12,16 @@ from ..util import prints
 from .. import about
 
 
+@plac.annotations(
+    model=("model to download (shortcut or model name)", "positional", None, str),
+    direct=("force direct download. Needs model name with version and won't "
+            "perform compatibility check", "flag", "d", bool)
+)
 def download(model, direct=False):
+    """Download compatible model from default download path using pip. Model
+    can be shortcut, model name or, if --direct flag is set, full model name
+    with version.
+    """
     if direct:
         download_model('{m}/{m}.tar.gz'.format(m=model))
     else:
@@ -38,7 +48,7 @@ def get_json(url, desc):
     if r.status_code != 200:
         prints("Couldn't fetch %s. Please find a model for your spaCy installation "
                "(v%s), and download it manually." % (desc, about.__version__),
-               about.__docs_models__, title="Server error (%d)" % r.status_code, exits=True)
+               about.__docs_models__, title="Server error (%d)" % r.status_code, exits=1)
     return r.json()
 
 
@@ -48,7 +58,7 @@ def get_compatibility():
     comp = comp_table['spacy']
     if version not in comp:
         prints("No compatible models found for v%s of spaCy." % version,
-               title="Compatibility error", exits=True)
+               title="Compatibility error", exits=1)
     return comp[version]
 
 
@@ -56,7 +66,7 @@ def get_version(model, comp):
     if model not in comp:
         version = about.__version__
         prints("No compatible model found for '%s' (spaCy v%s)." % (model, version),
-               title="Compatibility error", exits=True)
+               title="Compatibility error", exits=1)
     return comp[model][0]
 
 
