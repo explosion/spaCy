@@ -69,10 +69,8 @@ def test_stringstore_massive_strings(stringstore):
 
 
 @pytest.mark.parametrize('text', ["qqqqq"])
-def test_stringstore_dump_load(stringstore, text_file, text):
+def test_stringstore_to_bytes(stringstore, text):
     store = stringstore[text]
-    stringstore.dump(text_file)
-    text_file.seek(0)
-    new_stringstore = StringStore()
-    new_stringstore.load(text_file)
+    serialized = stringstore.to_bytes()
+    new_stringstore = StringStore().from_bytes(serialized)
     assert new_stringstore[store] == text
