@@ -101,6 +101,9 @@ p
     |  directory. You can then use #[code spacy.load()] to load it via its
     |  package name, create a #[+a("#usage-link") shortcut link] to assign it a
     |  custom name, or #[+a("usage-import") import it] explicitly as a module.
+    |  If you need to download models as part of an automated process, we
+    |  recommend using pip with a direct link, instead of relying on spaCy's
+    |  #[+api("cli#download") #[code download]] command.
 
 +h(3, "download-manual") Manual download and installation
 
@@ -162,6 +165,14 @@ p
     |  The #[+api("cli#link") #[code link]] command will create a symlink
     |  in the #[code spacy/data] directory.
 
++aside("Why does spaCy use symlinks?")
+    |  Symlinks were originally introduced to maintain backwards compatibility,
+    |  as older versions expected model data to live within #[code spacy/data].
+    |  However, we decided to keep using them in v2.0 instead of opting for
+    |  a config file. There'll always be a need for assigning and saving custom
+    |  model names or IDs. And your system already comes with a native solution
+    |  to mapping unicode aliases to file paths: symbolic links.
+
 +code(false, "bash").
     python -m spacy link [package name or path] [shortcut] [--force]
 
@@ -179,7 +190,7 @@ p
     python -m spacy link /Users/you/model my_amazing_model
 
 +infobox("Important note")
-    |  In order to create a symlink, your user needs the required permissions.
+    |  In order to create a symlink, your user needs the #[strong required permissions].
     |  If you've installed spaCy to a system directory and don't have admin
     |  privileges, the #[code spacy link] command may fail. The easiest solution
     |  is to re-run the command as admin, or use a #[code virtualenv]. For more
@@ -189,15 +200,25 @@ p
 +h(3, "usage-import") Importing models as modules
 
 p
-    |  If you've installed a model via pip, you can also #[code import] it
-    |  directly and then call its #[code load()] method with no arguments:
+    |  If you've installed a model via spaCy's downloader, or directly via pip,
+    |  you can also #[code import] it and then call its #[code load()] method
+    |  with no arguments:
 
 +code.
-    import spacy
     import en_core_web_md
 
     nlp = en_core_web_md.load()
     doc = nlp(u'This is a sentence.')
+
+p
+    |  How you choose to load your models ultimately depends on personal
+    |  preference. However, #[strong for larger code bases], we usually recommend
+    |  native imports, as this will make it easier to integrate models with your
+    |  existing build process, continuous integration workflow and testing
+    |  framework. It'll also prevent you from ever trying to load a model that
+    |  is not installed, as your code will raise an #[code ImportError]
+    |  immediately, instead of failing somewhere down the line when calling
+    |  #[code spacy.load()].
 
 +h(2, "own-models") Using your own models
 
