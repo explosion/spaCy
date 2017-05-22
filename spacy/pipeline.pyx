@@ -283,7 +283,7 @@ class NeuralLabeller(NeuralTagger):
         guesses = scores.argmax(axis=1)
         for gold in golds:
             for tag in gold.labels:
-                if tag is None:
+                if tag is None or tag not in self.labels:
                     correct[idx] = guesses[idx]
                 else:
                     correct[idx] = self.labels[tag]
