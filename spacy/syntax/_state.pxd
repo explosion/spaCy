@@ -71,6 +71,36 @@ cdef cppclass StateC:
         free(this._stack - PADDING)
         free(this.shifted - PADDING)
 
+    void set_context_tokens(int* ids, int n) nogil:
+        if n == 13:
+            ids[0] = this.B(0)
+            ids[1] = this.B(1)
+            ids[2] = this.S(0)
+            ids[3] = this.S(1)
+            ids[4] = this.S(2)
+            ids[5] = this.L(this.S(0), 1)
+            ids[6] = this.L(this.S(0), 2)
+            ids[6] = this.R(this.S(0), 1)
+            ids[7] = this.L(this.B(0), 1)
+            ids[8] = this.R(this.S(0), 2)
+            ids[9] = this.L(this.S(1), 1)
+            ids[10] = this.L(this.S(1), 2)
+            ids[11] = this.R(this.S(1), 1)
+            ids[12] = this.R(this.S(1), 2)
+        elif n == 6:
+            ids[0] = this.B(0)-1
+            ids[1] = this.B(0)
+            ids[2] = this.B(1)
+            ids[3] = this.E(0)
+            ids[4] = this.E(0)-1
+            ids[5] = this.E(0)+1
+        else:
+            # TODO error =/
+            pass
+        for i in range(n):
+            if ids[i] >= 0:
+                ids[i] += this.offset
+
     int S(int i) nogil const:
         if i >= this._s_i:
             return -1

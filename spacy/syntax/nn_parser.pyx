@@ -18,6 +18,7 @@ import dill
 import numpy.random
 cimport numpy as np
 
+from libcpp.vector cimport vector
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals
 from libc.stdint cimport uint32_t, uint64_t
@@ -33,7 +34,7 @@ from murmurhash.mrmr cimport hash64
 from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
 
-from thinc.api import layerize, chain
+from thinc.api import layerize, chain, noop, clone
 from thinc.neural import Model, Affine, ELU, ReLu, Maxout
 from thinc.neural.ops import NumpyOps, CupyOps
 
@@ -111,27 +112,30 @@ cdef class precompute_hiddens:
         self._cached = cached
         self._bp_hiddens = bp_features
 
+    cdef const float* get_feat_weights(self) except NULL:
+        if not self._is_synchronized \
+        and self._cuda_stream is not None:
+            self._cuda_stream.synchronize()
+            self._is_synchronized = True
+        return <float*>self._cached.data
+
     def __call__(self, X):
         return self.begin_update(X)[0]
 
     def begin_update(self, token_ids, drop=0.):
         self._features.fill(0)
-        if not self._is_synchronized \
-        and self._cuda_stream is not None:
-            self._cuda_stream.synchronize()
-            self._is_synchronized = True
         # This is tricky, but (assuming GPU available);
         # - Input to forward on CPU
         # - Output from forward on CPU
         # - Input to backward on GPU!
         # - Output from backward on GPU
         cdef np.ndarray state_vector = self._features[:len(token_ids)]
-        cdef np.ndarray hiddens = self._cached
         bp_hiddens = self._bp_hiddens
 
+        feat_weights = self.get_feat_weights()
         cdef int[:, ::1] ids = token_ids
-        self._sum_features(<float*>state_vector.data,
-            <float*>hiddens.data, &ids[0,0],
+        sum_state_features(<float*>state_vector.data,
+            feat_weights, &ids[0,0],
             token_ids.shape[0], self.nF, self.nO)
 
         def backward(d_state_vector, sgd=None):
@@ -142,20 +146,20 @@ cdef class precompute_hiddens:
             return d_tokens
         return state_vector, backward
 
-    cdef void _sum_features(self, float* output,
-            const float* cached, const int* token_ids, int B, int F, int O) nogil:
-        cdef int idx, b, f, i
-        cdef const float* feature
-        for b in range(B):
-            for f in range(F):
-                if token_ids[f] < 0:
-                    continue
-                idx = token_ids[f] * F * O + f*O
-                feature = &cached[idx]
-                for i in range(O):
-                    output[i] += feature[i]
-            output += O
-            token_ids += F
+cdef void sum_state_features(float* output,
+        const float* cached, const int* token_ids, int B, int F, int O) nogil:
+    cdef int idx, b, f, i
+    cdef const float* feature
+    for b in range(B):
+        for f in range(F):
+            if token_ids[f] < 0:
+                continue
+            idx = token_ids[f] * F * O + f*O
+            feature = &cached[idx]
+            for i in range(O):
+                output[i] += feature[i]
+        output += O
+        token_ids += F
 
 
 cdef void cpu_log_loss(float* d_scores,
@@ -210,18 +214,22 @@ cdef class Parser:
     Base class of the DependencyParser and EntityRecognizer.
     """
     @classmethod
-    def Model(cls, nr_class, token_vector_width=128, hidden_width=128, **cfg):
+    def Model(cls, nr_class, token_vector_width=128, hidden_width=128, depth=1, **cfg):
+        depth = util.env_opt('parser_hidden_depth', depth)
         token_vector_width = util.env_opt('token_vector_width', token_vector_width)
         hidden_width = util.env_opt('hidden_width', hidden_width)
-        lower = PrecomputableAffine(hidden_width,
+        lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
                     nF=cls.nr_feature,
                     nI=token_vector_width)
 
         with Model.use_device('cpu'):
-            upper = chain(
-                        Maxout(hidden_width),
-                        zero_init(Affine(nr_class))
-                    )
+            if depth == 0:
+                upper = chain()
+            else:
+                upper = chain(
+                    clone(Maxout(hidden_width), (depth-1)),
+                    zero_init(Affine(nr_class))
+                )
         # TODO: This is an unfortunate hack atm!
         # Used to set input dimensions in network.
         lower.begin_training(lower.ops.allocate((500, token_vector_width)))
@@ -271,7 +279,8 @@ cdef class Parser:
         Returns:
             None
         """
-        self.parse_batch([doc], doc.tensor)
+        states = self.parse_batch([doc], doc.tensor)
+        self.set_annotations(doc, states[0])
 
     def pipe(self, docs, int batch_size=1000, int n_threads=2):
         """
@@ -289,26 +298,70 @@ cdef class Parser:
         cdef Doc doc
         queue = []
         for docs in cytoolz.partition_all(batch_size, docs):
-            tokvecs = self.model[0].ops.flatten([d.tensor for d in docs])
+            docs = list(docs)
+            tokvecs = [d.tensor for d in docs]
             parse_states = self.parse_batch(docs, tokvecs)
             self.set_annotations(docs, parse_states)
             yield from docs
 
-    def parse_batch(self, docs, tokvecs):
-        cuda_stream = get_cuda_stream()
+    def parse_batch(self, docs, tokvecses):
+        cdef:
+            precompute_hiddens state2vec
+            StateClass state
+            Pool mem
+            const float* feat_weights
+            StateC* st
+            vector[StateC*] next_step, this_step
+            int nr_class, nr_feat, nr_dim, nr_state
+        if isinstance(docs, Doc):
+            docs = [docs]
 
-        states = self.moves.init_batch(docs)
-        state2vec, vec2scores = self.get_batch_model(len(states), tokvecs,
+        tokvecs = self.model[0].ops.flatten(tokvecses)
+
+        nr_state = len(docs)
+        nr_class = self.moves.n_moves
+        nr_dim = tokvecs.shape[1]
+        nr_feat = self.nr_feature
+
+        cuda_stream = get_cuda_stream()
+        state2vec, vec2scores = self.get_batch_model(nr_state, tokvecs,
                                                      cuda_stream, 0.0)
 
-        todo = [st for st in states if not st.is_final()]
-        while todo:
-            token_ids = self.get_token_ids(todo)
-            vectors = state2vec(token_ids)
-            scores = vec2scores(vectors)
-            self.transition_batch(todo, scores)
-            todo = [st for st in todo if not st.is_final()]
+        states = self.moves.init_batch(docs)
+        for state in states:
+            if not state.c.is_final():
+                next_step.push_back(state.c)
+
+        feat_weights = state2vec.get_feat_weights()
+        cdef int i
+        while not next_step.empty():
+            for i in cython.parallel.prange(next_step.size(), num_threads=4, nogil=True):
+                self._parse_step(next_step[i], feat_weights, nr_class, nr_feat)
+            this_step, next_step = next_step, this_step
+            next_step.clear()
+            for st in this_step:
+                if not st.is_final():
+                    next_step.push_back(st)
         return states
+
+    cdef void _parse_step(self, StateC* state,
+            const float* feat_weights,
+            int nr_class, int nr_feat) nogil:
+        token_ids = <int*>calloc(nr_feat, sizeof(int))
+        scores = <float*>calloc(nr_class, sizeof(float))
+        is_valid = <int*>calloc(nr_class, sizeof(int))
+
+        state.set_context_tokens(token_ids, nr_feat)
+        sum_state_features(scores,
+            feat_weights, token_ids, 1, nr_feat, nr_class)
+        self.moves.set_valid(is_valid, state)
+        guess = arg_max_if_valid(scores, is_valid, nr_class)
+        action = self.moves.c[guess]
+        action.do(state, action.label)
+
+        free(is_valid)
+        free(scores)
+        free(token_ids)
 
     def update(self, docs_tokvecs, golds, drop=0., sgd=None):
         docs, tokvec_lists = docs_tokvecs
@@ -379,9 +432,12 @@ cdef class Parser:
     def get_token_ids(self, states):
         cdef StateClass state
         cdef int n_tokens = self.nr_feature
-        ids = numpy.zeros((len(states), n_tokens), dtype='i', order='C')
+        cdef np.ndarray ids = numpy.zeros((len(states), n_tokens),
+                                          dtype='i', order='C')
+        c_ids = <int*>ids.data
         for i, state in enumerate(states):
-            state.set_context_tokens(ids[i])
+            state.c.set_context_tokens(c_ids, n_tokens)
+            c_ids += ids.shape[1]
         return ids
 
     def transition_batch(self, states, float[:, ::1] scores):
