@@ -31,8 +31,8 @@ from .. import displacy
     no_parser=("Don't train parser", "flag", "P", bool),
     no_entities=("Don't train NER", "flag", "N", bool)
 )
-def train(lang, output_dir, train_data, dev_data, n_iter, n_sents,
-          use_gpu, no_tagger, no_parser, no_entities):
+def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
+          use_gpu=False, no_tagger=False, no_parser=False, no_entities=False):
     """Train a model. Expects data in spaCy's JSON format."""
     n_sents = n_sents or None
     output_path = util.ensure_path(output_dir)
