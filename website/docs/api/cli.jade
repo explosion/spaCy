@@ -5,16 +5,23 @@ include ../../_includes/_mixins
 p
     |  As of v1.7.0, spaCy comes with new command line helpers to download and
     |  link models and show useful debugging information. For a list of available
-    |  commands, type #[code python -m spacy --help].
+    |  commands, type #[code python -m spacy]. To make the command even more
+    |  convenient, we recommend
+    |  #[+a("https://askubuntu.com/questions/17536/how-do-i-create-a-permanent-bash-alias/17537#17537") creating an alias]
+    |  mapping #[code python -m spacy] to #[code spacy].
 
 +aside("Why python -m?")
     |  The problem with a global entry point is that it's resolved by looking up
     |  entries in your #[code PATH] environment variable. This can give you
-    |  unexpected results, like executing the wrong spaCy installation
-    |  (especially when using #[code virtualenv]). #[code python -m] prevents
-    |  fallbacks to system modules and makes sure the correct spaCy version is
-    |  used. If you hate typing it every time, we recommend creating an
-    |  #[code alias] instead.
+    |  unexpected results, like executing the wrong spaCy installation.
+    |  #[code python -m] prevents fallbacks to system modules.
+
++infobox("⚠️ Deprecation note")
+    |  As of spaCy 2.0, the #[code model] command to initialise a model data
+    |  directory is deprecated. The command was only necessary because previous
+    |  versions of spaCy expected a model directory to already be set up. This
+    |  has since been changed, so you can use the #[+api("cli#train") #[code train]]
+    |  command straight away.
 
 +h(2, "download") Download
 
@@ -45,7 +52,7 @@ p
         +cell flag
         +cell Show help message and available arguments.
 
-+infobox("Important note")
++aside("Downloading best practices")
     |  The #[code download] command is mostly intended as a convenient,
     |  interactive wrapper – it performs compatibility checks and prints
     |  detailed messages in case things go wrong. It's #[strong not recommended]
@@ -116,7 +123,6 @@ p
         +cell Show help message and available arguments.
 
 +h(2, "convert") Convert
-    +tag experimental
 
 p
     |  Convert files into spaCy's #[+a("/docs/api/annotation#json-input") JSON format]
@@ -153,49 +159,7 @@ p
         +cell flag
         +cell Show help message and available arguments.
 
-+h(2, "model") Model
-    +tag experimental
-
-p
-    |  Initialise a new model and its data directory. For more info on this, see
-    |  the documentation on #[+a("/docs/usage/adding-languages") adding languages].
-
-+code(false, "bash").
-    python -m spacy model [lang] [model_dir] [freqs_data] [clusters_data] [vectors_data]
-
-+table(["Argument", "Type", "Description"])
-    +row
-        +cell #[code lang]
-        +cell positional
-        +cell Model language.
-
-    +row
-        +cell #[code model_dir]
-        +cell positional
-        +cell Output directory to store the model in.
-
-    +row
-        +cell #[code freqs_data]
-        +cell positional
-        +cell Tab-separated frequencies file.
-
-    +row
-        +cell #[code clusters_data]
-        +cell positional
-        +cell Brown custers file (optional).
-
-    +row
-        +cell #[code vectors_data]
-        +cell positional
-        +cell Word vectors file (optional).
-
-    +row
-        +cell #[code --help], #[code -h]
-        +cell flag
-        +cell Show help message and available arguments.
-
 +h(2, "train") Train
-    +tag experimental
 
 p
     |  Train a model. Expects data in spaCy's
@@ -231,7 +195,7 @@ p
         +cell Number of iterations (default: #[code 15]).
 
     +row
-        +cell #[code --nsents]
+        +cell #[code --n_sents], #[code -ns]
         +cell option
         +cell Number of sentences (default: #[code 0]).
 
@@ -241,7 +205,7 @@ p
         +cell L1 regularization penalty for parser (default: #[code 0.0]).
 
     +row
-        +cell #[code --use-gpu], #[code -g]
+        +cell #[code --use-gpu], #[code -G]
         +cell flag
         +cell Use GPU.
 
@@ -266,17 +230,16 @@ p
         +cell Show help message and available arguments.
 
 +h(2, "package") Package
-    +tag experimental
 
 p
     |  Generate a #[+a("/docs/usage/saving-loading#generating") model Python package]
     |  from an existing model data directory. All data files are copied over.
     |  If the path to a meta.json is supplied, or a meta.json is found in the
     |  input directory, this file is used. Otherwise, the data can be entered
-    |  directly from the command line. While this feature is still experimental,
-    |  the required file templates are downloaded from
-    |  #[+src(gh("spacy-dev-resources", "templates/model")) GitHub]. This means
-    |  you need to be connected to the internet to use this command.
+    |  directly from the command line. The required file templates are downloaded
+    |  from #[+src(gh("spacy-dev-resources", "templates/model")) GitHub] to make
+    |  sure you're always using the latest versions. This means you need to be
+    |  connected to the internet to use this command.
 
 +code(false, "bash").
     python -m spacy package [input_dir] [output_dir] [--meta] [--force]
