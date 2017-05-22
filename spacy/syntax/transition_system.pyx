@@ -70,7 +70,7 @@ cdef class TransitionSystem:
     def finalize_doc(self, doc):
         pass
 
-    cdef int preprocess_gold(self, GoldParse gold) except -1:
+    def preprocess_gold(self, GoldParse gold):
         raise NotImplementedError
 
     cdef Transition lookup_transition(self, object name) except *:

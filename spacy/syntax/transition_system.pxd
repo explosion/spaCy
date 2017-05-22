@@ -43,8 +43,6 @@ cdef class TransitionSystem:
     cdef int initialize_state(self, StateC* state) nogil
     cdef int finalize_state(self, StateC* state) nogil
 
-    cdef int preprocess_gold(self, GoldParse gold) except -1
-
     cdef Transition lookup_transition(self, object name) except *
 
     cdef Transition init_transition(self, int clas, int move, int label) except *

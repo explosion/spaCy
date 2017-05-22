@@ -350,7 +350,9 @@ cdef class ArcEager(TransitionSystem):
         def __get__(self):
             return (SHIFT, REDUCE, LEFT, RIGHT, BREAK)
 
-    cdef int preprocess_gold(self, GoldParse gold) except -1:
+    def preprocess_gold(self, GoldParse gold):
+        if all([h is None for h in gold.heads]):
+            return None
         for i in range(gold.length):
             if gold.heads[i] is None: # Missing values
                 gold.c.heads[i] = i
@@ -361,6 +363,7 @@ cdef class ArcEager(TransitionSystem):
                     label = 'ROOT'
                 gold.c.heads[i] = gold.heads[i]
                 gold.c.labels[i] = self.strings[label]
+        return gold
 
     cdef Transition lookup_transition(self, object name) except *:
         if '-' in name:

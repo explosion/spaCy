@@ -95,9 +95,12 @@ cdef class BiluoPushDown(TransitionSystem):
         else:
             return MOVE_NAMES[move] + '-' + self.strings[label]
 
-    cdef int preprocess_gold(self, GoldParse gold) except -1:
+    def preprocess_gold(self, GoldParse gold):
+        if all([tag == '-' for tag in gold.ner]):
+            return None
         for i in range(gold.length):
             gold.c.ner[i] = self.lookup_transition(gold.ner[i])
+        return gold
 
     cdef Transition lookup_transition(self, object name) except *:
         if name == '-' or name == None:

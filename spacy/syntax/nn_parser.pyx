@@ -318,15 +318,14 @@ cdef class Parser:
             golds = [golds]
 
         cuda_stream = get_cuda_stream()
-        for gold in golds:
-            self.moves.preprocess_gold(gold)
+        golds = [self.moves.preprocess_gold(g) for g in golds]
 
         states = self.moves.init_batch(docs)
         state2vec, vec2scores = self.get_batch_model(len(states), tokvecs, cuda_stream,
                                                       drop)
 
         todo = [(s, g) for (s, g) in zip(states, golds)
-                if not s.is_final()]
+                if not s.is_final() and g is not None]
 
         backprops = []
         cdef float loss = 0.
