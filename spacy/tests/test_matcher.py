@@ -73,8 +73,6 @@ def test_matcher_phrase_matcher(en_vocab):
     assert len(matcher(doc)) == 1
 
 
-# TODO; Not sure what's wrong here. Possible bug?
-@pytest.mark.xfail
 def test_matcher_match_zero(matcher):
     words1 = 'He said , " some words " ...'.split()
     words2 = 'He said , " some three words " ...'.split()
@@ -88,40 +86,33 @@ def test_matcher_match_zero(matcher):
                 {'IS_PUNCT': True},
                 {'ORTH': '"'}]
 
-    matcher.add('Quote', pattern1)
+    matcher.add('Quote', None, pattern1)
     doc = get_doc(matcher.vocab, words1)
     assert len(matcher(doc)) == 1
 
     doc = get_doc(matcher.vocab, words2)
     assert len(matcher(doc)) == 0
-    matcher.add('Quote', pattern2)
+    matcher.add('Quote', None, pattern2)
     assert len(matcher(doc)) == 0
 
 
-# TODO; Not sure what's wrong here. Possible bug?
-@pytest.mark.xfail
 def test_matcher_match_zero_plus(matcher):
     words = 'He said , " some words " ...'.split()
     pattern = [{'ORTH': '"'},
                {'OP': '*', 'IS_PUNCT': False},
                {'ORTH': '"'}]
-    matcher.add('Quote', [pattern])
+    matcher.add('Quote', None, pattern)
     doc = get_doc(matcher.vocab, words)
     assert len(matcher(doc)) == 1
 
-# TODO; Not sure what's wrong here. Possible bug?
-@pytest.mark.xfail
+
 def test_matcher_match_one_plus(matcher):
     control = Matcher(matcher.vocab)
     control.add('BasicPhilippe', None, [{'ORTH': 'Philippe'}])
-
     doc = get_doc(control.vocab, ['Philippe', 'Philippe'])
-
     m = control(doc)
     assert len(m) == 2
-    matcher.add('KleenePhilippe',
-        [
-            {'ORTH': 'Philippe', 'OP': '1'},
-            {'ORTH': 'Philippe', 'OP': '+'}])
+    matcher.add('KleenePhilippe', None, [{'ORTH': 'Philippe', 'OP': '1'},
+                                         {'ORTH': 'Philippe', 'OP': '+'}])
     m = matcher(doc)
     assert len(m) == 1
