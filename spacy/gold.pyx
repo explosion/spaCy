@@ -173,12 +173,11 @@ class GoldCorpus(object):
         if shuffle:
             random.shuffle(self.train_locs)
         if projectivize:
-            train_tuples = nonproj.PseudoProjectivity.preprocess_training_data(
+            train_tuples = nonproj.preprocess_training_data(
                                self.train_tuples)
-        gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc)
         if shuffle:
-            gold_docs = util.itershuffle(gold_docs, bufsize=shuffle*1000)
-        gold_docs = nlp.preprocess_gold(gold_docs)
+            random.shuffle(train_tuples)
+        gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc)
         yield from gold_docs
 
     def dev_docs(self, nlp):
@@ -236,7 +235,7 @@ class GoldCorpus(object):
         return locs
 
 
-def read_json_file(loc, docs_filter=None, limit=1000):
+def read_json_file(loc, docs_filter=None, limit=None):
     loc = ensure_path(loc)
     if loc.is_dir():
         for filename in loc.iterdir():
@@ -390,7 +389,7 @@ cdef class GoldParse:
             raise Exception("Cycle found: %s" % cycle)
 
         if make_projective:
-            proj_heads,_ = nonproj.PseudoProjectivity.projectivize(self.heads, self.labels)
+            proj_heads,_ = nonproj.projectivize(self.heads, self.labels)
             self.heads = proj_heads
 
     def __len__(self):

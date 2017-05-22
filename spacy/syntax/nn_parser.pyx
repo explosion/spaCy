@@ -47,7 +47,7 @@ from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from ._state cimport StateC
-from .nonproj import PseudoProjectivity
+from . import nonproj
 from .transition_system import OracleError
 from .transition_system cimport TransitionSystem, Transition
 from ..structs cimport TokenC
@@ -435,7 +435,7 @@ cdef class Parser:
     def begin_training(self, gold_tuples, **cfg):
         if 'model' in cfg:
             self.model = cfg['model']
-        gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
+        gold_tuples = nonproj.preprocess_training_data(gold_tuples)
         actions = self.moves.get_actions(gold_parses=gold_tuples)
         for action, labels in actions.items():
             for label in labels:
