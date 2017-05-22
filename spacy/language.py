@@ -13,7 +13,7 @@ from .vocab import Vocab
 from .tagger import Tagger
 from .lemmatizer import Lemmatizer
 from .syntax.parser import get_templates
-from .syntax.import nonproj
+from .syntax import nonproj
 from .pipeline import NeuralDependencyParser, EntityRecognizer
 from .pipeline import TokenVectorEncoder, NeuralTagger, NeuralEntityRecognizer
 from .pipeline import NeuralLabeller
