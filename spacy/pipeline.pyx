@@ -354,7 +354,7 @@ cdef class NeuralEntityRecognizer(NeuralParser):
             for j in range(6):
                 if ids[i, j] >= state.c.length:
                     ids[i, j] = -1
-                if ids[i, j] != -1:
+                if ids[i, j] >= 0:
                     ids[i, j] += state.c.offset
         return ids
 
