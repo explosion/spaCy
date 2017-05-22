@@ -31,7 +31,7 @@ from .syntax.stateclass cimport StateClass
 from .gold cimport GoldParse
 from .morphology cimport Morphology
 from .vocab cimport Vocab
-from .syntax.nonproj import PseudoProjectivity
+from .syntax import nonproj
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
 from ._ml import rebatch, Tok2Vec, flatten, get_col, doc2feats
@@ -265,7 +265,7 @@ class NeuralLabeller(NeuralTagger):
         pass
 
     def begin_training(self, gold_tuples, pipeline=None):
-        gold_tuples = PseudoProjectivity.preprocess_training_data(gold_tuples)
+        gold_tuples = nonproj.preprocess_training_data(gold_tuples)
         for raw_text, annots_brackets in gold_tuples:
             for annots, brackets in annots_brackets:
                 ids, words, tags, heads, deps, ents = annots

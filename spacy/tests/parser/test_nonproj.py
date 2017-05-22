@@ -2,7 +2,8 @@
 from __future__ import unicode_literals
 
 from ...syntax.nonproj import ancestors, contains_cycle, is_nonproj_arc
-from ...syntax.nonproj import is_nonproj_tree, PseudoProjectivity
+from ...syntax.nonproj import is_nonproj_tree
+from ...syntax import nonproj
 from ...attrs import DEP, HEAD
 from ..util import get_doc
 
@@ -75,7 +76,7 @@ def test_parser_pseudoprojectivity(en_tokenizer):
         tokens = en_tokenizer('whatever ' * len(proj_heads))
         rel_proj_heads = [head-i for i, head in enumerate(proj_heads)]
         doc = get_doc(tokens.vocab, [t.text for t in tokens], deps=deco_labels, heads=rel_proj_heads)
-        PseudoProjectivity.deprojectivize(doc)
+        nonproj.deprojectivize(doc)
         return [t.head.i for t in doc], [token.dep_ for token in doc]
 
     tree = [1, 2, 2]
@@ -85,18 +86,18 @@ def test_parser_pseudoprojectivity(en_tokenizer):
     labels = ['det', 'nsubj', 'root', 'det', 'dobj', 'aux', 'nsubj', 'acl', 'punct']
     labels2 = ['advmod', 'root', 'det', 'nsubj', 'advmod', 'det', 'dobj', 'det', 'nmod', 'aux', 'nmod', 'advmod', 'det', 'amod', 'punct']
 
-    assert(PseudoProjectivity.decompose('X||Y') == ('X','Y'))
-    assert(PseudoProjectivity.decompose('X') == ('X',''))
-    assert(PseudoProjectivity.is_decorated('X||Y') == True)
-    assert(PseudoProjectivity.is_decorated('X') == False)
+    assert(nonproj.decompose('X||Y') == ('X','Y'))
+    assert(nonproj.decompose('X') == ('X',''))
+    assert(nonproj.is_decorated('X||Y') == True)
+    assert(nonproj.is_decorated('X') == False)
 
-    PseudoProjectivity._lift(0, tree)
+    nonproj._lift(0, tree)
     assert(tree == [2, 2, 2])
 
-    assert(PseudoProjectivity._get_smallest_nonproj_arc(nonproj_tree) == 7)
-    assert(PseudoProjectivity._get_smallest_nonproj_arc(nonproj_tree2) == 10)
+    assert(nonproj._get_smallest_nonproj_arc(nonproj_tree) == 7)
+    assert(nonproj._get_smallest_nonproj_arc(nonproj_tree2) == 10)
 
-    proj_heads, deco_labels = PseudoProjectivity.projectivize(nonproj_tree, labels)
+    proj_heads, deco_labels = nonproj.projectivize(nonproj_tree, labels)
     assert(proj_heads == [1, 2, 2, 4, 5, 2, 7, 5, 2])
     assert(deco_labels == ['det', 'nsubj', 'root', 'det', 'dobj', 'aux',
                            'nsubj', 'acl||dobj', 'punct'])
@@ -105,7 +106,7 @@ def test_parser_pseudoprojectivity(en_tokenizer):
     assert(deproj_heads == nonproj_tree)
     assert(undeco_labels == labels)
 
-    proj_heads, deco_labels = PseudoProjectivity.projectivize(nonproj_tree2, labels2)
+    proj_heads, deco_labels = nonproj.projectivize(nonproj_tree2, labels2)
     assert(proj_heads == [1, 1, 3, 1, 5, 6, 9, 8, 6, 1, 9, 12, 13, 10, 1])
     assert(deco_labels == ['advmod||aux', 'root', 'det', 'nsubj', 'advmod',
                            'det', 'dobj', 'det', 'nmod', 'aux', 'nmod||dobj',
