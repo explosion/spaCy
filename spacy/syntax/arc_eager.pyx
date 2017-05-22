@@ -12,7 +12,6 @@ from cymem.cymem cimport Pool
 
 from .stateclass cimport StateClass
 from ._state cimport StateC, is_space_token
-from .nonproj import PseudoProjectivity
 from .nonproj import is_nonproj_tree
 from .transition_system cimport do_func_t, get_cost_func_t
 from .transition_system cimport move_cost_func_t, label_cost_func_t
