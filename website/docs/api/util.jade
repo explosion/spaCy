@@ -231,7 +231,7 @@ p
     data_path = Path('/some/path')
     if not path.exists():
         util.prints("Can't find the path.", data_path,
-                    title="Error", exits=True)
+                    title="Error", exits=1)
 
 +table(["Name", "Type", "Description"])
     +row
@@ -243,5 +243,6 @@ p
         +cell #[code **kwargs]
         +cell -
         +cell
-            |  #[code title] is rendered as coloured headline. #[code exits=True]
-            |  performs system exit after printing.
+            |  #[code title] is rendered as coloured headline. #[code exits]
+            |  performs system exit after printing, using the value of the
+            |  argument as the exit code, e.g. #[code exits=1].
