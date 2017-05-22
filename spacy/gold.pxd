@@ -18,15 +18,15 @@ cdef class GoldParse:
     cdef GoldParseC c
 
     cdef int length
-    cdef readonly int loss
-    cdef readonly list words
-    cdef readonly list tags
-    cdef readonly list heads
-    cdef readonly list labels
-    cdef readonly dict orths
-    cdef readonly list ner
-    cdef readonly list ents
-    cdef readonly dict brackets
+    cdef public int loss
+    cdef public list words
+    cdef public list tags
+    cdef public list heads
+    cdef public list labels
+    cdef public dict orths
+    cdef public list ner
+    cdef public list ents
+    cdef public dict brackets
 
     cdef readonly list cand_to_gold
     cdef readonly list gold_to_cand
