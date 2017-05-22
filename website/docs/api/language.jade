@@ -82,6 +82,41 @@ p
         +cell #[code Doc]
         +cell A container for accessing the annotations.
 
++h(2, "pipe") Language.pipe
+    +tag method
+
+p
+    |  Process texts as a stream, and yield #[code Doc] objects in order.
+    |  Supports GIL-free multi-threading.
+
++aside-code("Example").
+    texts = [u'One document.', u'...', u'Lots of documents']
+    for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
+        assert doc.is_parsed
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code texts]
+        +cell -
+        +cell A sequence of unicode objects.
+
+    +row
+        +cell #[code n_threads]
+        +cell int
+        +cell
+            |  The number of worker threads to use. If #[code -1], OpenMP will
+            |  decide how many to use at run time. Default is #[code 2].
+
+    +row
+        +cell #[code batch_size]
+        +cell int
+        +cell The number of texts to buffer.
+
+    +footrow
+        +cell yields
+        +cell #[code Doc]
+        +cell Documents in the order of the original text.
+
 +h(2, "update") Language.update
     +tag method
 
@@ -172,40 +207,23 @@ p
         +cell -
         +cell Config parameters.
 
-+h(2, "pipe") Language.pipe
-    +tag method
++h(2, "preprocess_gold") Language.preprocess_gold
 
 p
-    |  Process texts as a stream, and yield #[code Doc] objects in order.
-    |  Supports GIL-free multi-threading.
+    |  Can be called before training to pre-process gold data. By default, it
+    |  handles nonprojectivity and adds missing tags to the tag map.
 
-+aside-code("Example").
-    texts = [u'One document.', u'...', u'Lots of documents']
-    for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
-        assert doc.is_parsed
 
 +table(["Name", "Type", "Description"])
     +row
-        +cell #[code texts]
-        +cell -
-        +cell A sequence of unicode objects.
-
-    +row
-        +cell #[code n_threads]
-        +cell int
-        +cell
-            |  The number of worker threads to use. If #[code -1], OpenMP will
-            |  decide how many to use at run time. Default is #[code 2].
-
-    +row
-        +cell #[code batch_size]
-        +cell int
-        +cell The number of texts to buffer.
+        +cell #[code docs_golds]
+        +cell iterable
+        +cell Tuples of #[code Doc] and #[code GoldParse] objects.
 
     +footrow
         +cell yields
-        +cell #[code Doc]
-        +cell Documents in the order of the original text.
+        +cell tuple
+        +cell Tuples of #[code Doc] and #[code GoldParse] objects.
 
 +h(2, "to_disk") Language.to_disk
     +tag method

@@ -236,6 +236,12 @@ class Language(object):
             doc.tensor = None
 
     def preprocess_gold(self, docs_golds):
+        """Can be called before training to pre-process gold data. By default,
+        it handles nonprojectivity and adds missing tags to the tag map.
+
+        docs_golds (iterable): Tuples of `Doc` and `GoldParse` objects.
+        YIELDS (tuple): Tuples of preprocessed `Doc` and `GoldParse` objects.
+        """
         for proc in self.pipeline:
             if hasattr(proc, 'preprocess_gold'):
                 docs_golds = proc.preprocess_gold(docs_golds)
