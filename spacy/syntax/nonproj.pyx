@@ -97,7 +97,6 @@ def preprocess_training_data(gold_tuples, label_freq_cutoff=30):
     return preprocessed
 
 
-@classmethod
 def projectivize(heads, labels):
     # use the algorithm by Nivre & Nilsson 2005
     # assumes heads to be a proper tree, i.e. connected and cycle-free
