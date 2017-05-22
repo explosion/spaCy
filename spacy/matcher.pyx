@@ -372,7 +372,7 @@ cdef class Matcher:
                     ent_id = state.second.attrs[0].value
                     label = state.second.attrs[0].value
                     matches.append((ent_id, start, end))
-        for i, (ent_id, label, start, end) in enumerate(matches):
+        for i, (ent_id, start, end) in enumerate(matches):
             on_match = self._callbacks.get(ent_id)
             if on_match is not None:
                 on_match(self, doc, i, matches)

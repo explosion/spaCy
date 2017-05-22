@@ -7,7 +7,9 @@ from ..util import get_doc
 
 import pytest
 
+# TODO: These can probably be deleted
 
+@pytest.mark.xfail
 @pytest.mark.parametrize('words,entity', [
     (["Test", "Entity"], "TestEntity")])
 def test_matcher_add_empty_entity(en_vocab, words, entity):
@@ -18,6 +20,7 @@ def test_matcher_add_empty_entity(en_vocab, words, entity):
     assert matcher(doc) == []
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize('entity1,entity2,attrs', [
     ("TestEntity", "TestEntity2", {"Hello": "World"})])
 def test_matcher_get_entity_attrs(en_vocab, entity1, entity2, attrs):
@@ -29,6 +32,7 @@ def test_matcher_get_entity_attrs(en_vocab, entity1, entity2, attrs):
     assert matcher.get_entity(entity1) == {}
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize('words,entity,attrs',
     [(["Test", "Entity"], "TestEntity", {"Hello": "World"})])
 def test_matcher_get_entity_via_match(en_vocab, words, entity, attrs):
