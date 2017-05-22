@@ -380,13 +380,13 @@ def prints(*texts, **kwargs):
     *texts (unicode): Texts to print. Each argument is rendered as paragraph.
     **kwargs: 'title' becomes coloured headline. 'exits'=True performs sys exit.
     """
-    exits = kwargs.get('exits', False)
+    exits = kwargs.get('exits', None)
     title = kwargs.get('title', None)
     title = '\033[93m{}\033[0m\n'.format(_wrap(title)) if title else ''
     message = '\n\n'.join([_wrap(text) for text in texts])
     print('\n{}{}\n'.format(title, message))
-    if exits:
-        sys.exit(0)
+    if exits is not None:
+        sys.exit(exits)
 
 
 def _wrap(text, wrap_max=80, indent=4):

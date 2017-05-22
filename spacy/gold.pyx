@@ -142,9 +142,14 @@ def _min_edit_path(cand_words, gold_words):
 
 
 class GoldCorpus(object):
-    '''An annotated corpus, using the JSON file format. Manages
-    annotations for tagging, dependency parsing, NER.'''
+    """An annotated corpus, using the JSON file format. Manages
+    annotations for tagging, dependency parsing and NER."""
     def __init__(self, train_path, dev_path):
+        """Create a GoldCorpus.
+
+        train_path (unicode or Path): File or directory of training data.
+        dev_path (unicode or Path): File or directory of development data.
+        """
         self.train_path = util.ensure_path(train_path)
         self.dev_path = util.ensure_path(dev_path)
         self.train_locs = self.walk_corpus(self.train_path)

@@ -1,24 +1,35 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import plac
 from pathlib import Path
+
 from ..compat import symlink_to, path2str
 from ..util import prints
 from .. import util
 
 
+@plac.annotations(
+    origin=("package name or local path to model", "positional", None, str),
+    link_name=("name of shortuct link to create", "positional", None, str),
+    force=("force overwriting of existing link", "flag", "f", bool)
+)
 def link(origin, link_name, force=False):
+    """Create a symlink for models within the spacy/data directory. Accepts
+    either the name of a pip package, or the local path to the model data
+    directory. Linking models allows loading them via spacy.load(link_name).
+    """
     if util.is_package(origin):
         model_path = util.get_model_package_path(origin)
     else:
         model_path = Path(origin)
     if not model_path.exists():
         prints("The data should be located in %s" % path2str(model_path),
-               title="Can't locate model data", exits=True)
+               title="Can't locate model data", exits=1)
     link_path = util.get_data_path() / link_name
     if link_path.exists() and not force:
         prints("To overwrite an existing link, use the --force flag.",
-               title="Link %s already exists" % link_name, exits=True)
+               title="Link %s already exists" % link_name, exits=1)
     elif link_path.exists():
         link_path.unlink()
     try:

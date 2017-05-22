@@ -23,7 +23,8 @@
             "Lexeme": "lexeme",
             "Vocab": "vocab",
             "StringStore": "stringstore",
-            "GoldParse": "goldparse"
+            "GoldParse": "goldparse",
+            "GoldCorpus": "goldcorpus"
         },
         "Other": {
             "Annotation Specs": "annotation",
@@ -132,6 +133,11 @@
 
     "goldparse": {
         "title": "GoldParse",
+        "tag": "class"
+    },
+
+    "goldcorpus": {
+        "title": "GoldCorpus",
         "tag": "class"
     },
 
