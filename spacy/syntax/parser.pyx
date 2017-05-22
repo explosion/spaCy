@@ -33,7 +33,6 @@ from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from ._state cimport StateC
-from .nonproj import PseudoProjectivity
 from .transition_system import OracleError
 from .transition_system cimport TransitionSystem, Transition
 from ..structs cimport TokenC
