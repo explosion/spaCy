@@ -70,29 +70,6 @@ def package(input_dir, output_dir, meta=None, force=False):
 
 
 @plac.annotations(
-    lang=("model language", "positional", None, str),
-    output_dir=("output directory to store model in", "positional", None, str),
-    train_data=("location of JSON-formatted training data", "positional", None, str),
-    dev_data=("location of JSON-formatted development data (optional)", "positional", None, str),
-    n_iter=("number of iterations", "option", "n", int),
-    nsents=("number of sentences", "option", None, int),
-    parser_L1=("L1 regularization penalty for parser", "option", "L", float),
-    use_gpu=("Use GPU", "flag", "g", bool),
-    no_tagger=("Don't train tagger", "flag", "T", bool),
-    no_parser=("Don't train parser", "flag", "P", bool),
-    no_entities=("Don't train NER", "flag", "N", bool)
-)
-def train(lang, output_dir, train_data, dev_data=None, n_iter=15,
-          nsents=0, parser_L1=0.0, use_gpu=False,
-          no_tagger=False, no_parser=False, no_entities=False):
-    """
-    Train a model. Expects data in spaCy's JSON format.
-    """
-    nsents = nsents or None
-    cli_train(lang, output_dir, train_data, dev_data, n_iter, nsents,
-              use_gpu, no_tagger, no_parser, no_entities, parser_L1)
-
-@plac.annotations(
     input_file=("input file", "positional", None, str),
     output_dir=("output directory for converted file", "positional", None, str),
     n_sents=("Number of sentences per doc", "option", "n", float),
@@ -105,19 +82,6 @@ def convert(input_file, output_dir, n_sents=10, morphology=False):
     """
     cli_convert(input_file, output_dir, n_sents, morphology)
 
-@plac.annotations(
-    lang=("model language", "positional", None, str),
-    model_dir=("output directory to store model in", "positional", None, str),
-    freqs_data=("tab-separated frequencies file", "positional", None, str),
-    clusters_data=("Brown clusters file", "positional", None, str),
-    vectors_data=("word vectors file", "positional", None, str)
-)
-def model(lang, model_dir, freqs_data, clusters_data=None, vectors_data=None):
-    """
-    Initialize a new model and its data directory.
-    """
-    cli_model(lang, model_dir, freqs_data, clusters_data, vectors_data)
-
 
 @plac.annotations(
     lang=("model language", "positional", None, str),
@@ -131,13 +95,12 @@ def model(lang, model_dir, freqs_data, clusters_data=None, vectors_data=None):
     no_parser=("Don't train parser", "flag", "P", bool),
     no_entities=("Don't train NER", "flag", "N", bool)
 )
-def train(self, lang, output_dir, train_data, dev_data=None, n_iter=15,
+def train(lang, output_dir, train_data, dev_data=None, n_iter=15,
           nsents=0, use_gpu=False,
           no_tagger=False, no_parser=False, no_entities=False):
     """
     Train a model. Expects data in spaCy's JSON format.
     """
-    print(train_data, dev_data)
     nsents = nsents or None
     cli_train(lang, output_dir, train_data, dev_data, n_iter, nsents,
               use_gpu, no_tagger, no_parser, no_entities)
@@ -146,7 +109,21 @@ def train(self, lang, output_dir, train_data, dev_data=None, n_iter=15,
 if __name__ == '__main__':
     import plac
     import sys
-    if sys.argv[1] == 'train':
-        plac.call(train)
-    if sys.argv[1] == 'convert':
-        plac.call(convert)
+    commands = {
+        'train': train,
+        'convert': convert,
+        'download': download,
+        'link': link,
+        'info': info,
+        'package': package,
+    }
+    if len(sys.argv) == 1:
+        print("Available commands: %s" % ', '.join(sorted(commands)))
+        sys.exit(1)
+    command = sys.argv.pop(1)
+    sys.argv[0] = 'spacy %s' % command
+    if command in commands:
+        plac.call(commands[command])
+    else:
+        print("Unknown command: %s. Available: %s" % (command, ', '.join(commands)))
+        sys.exit(1)
