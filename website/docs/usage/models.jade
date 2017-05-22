@@ -47,9 +47,7 @@ include _models-list
 
     |  The old models are also #[+a(gh("spacy") + "/tree/v1.6.0") attached to the v1.6.0 release].
     |  To download and install them manually, unpack the archive, drop the
-    |  contained directory into #[code spacy/data] and load the model via
-    |  #[code spacy.load('en')] or #[code spacy.load('de')].
-
+    |  contained directory into #[code spacy/data].
 p
     |  The easiest way to download a model is via spaCy's
     |  #[+api("cli#download") #[code download]] command. It takes care of
@@ -142,7 +140,7 @@ p
 
     doc = nlp(u'This is a sentence.')
 
-+aside("Tip: Preview model info")
++infobox("Tip: Preview model info")
     |  You can use the #[+api("cli#info") #[code info]] command or
     |  #[+api("spacy#info") #[code spacy.info()]] method to print a model's meta data
     |  before loading it. Each #[code Language] object with a loaded model also

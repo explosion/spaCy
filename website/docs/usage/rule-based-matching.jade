@@ -30,7 +30,7 @@ p
         |  or "WORLD".
 
 +code.
-    [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}]
+    [{'LOWER': 'hello'}, {'IS_PUNCT': True}, {'LOWER': 'world'}]
 
 p
     |  First, we initialise the #[code Matcher] with a vocab. The matcher must
@@ -43,13 +43,12 @@ p
 +code.
     import spacy
     from spacy.matcher import Matcher
-    from spacy.attrs import LOWER, IS_PUNCT # don't forget to import the attrs!
 
     nlp = spacy.load('en')
     matcher = Matcher(nlp.vocab)
     # add match ID "HelloWorld" with no callback and one pattern
     matcher.add('HelloWorld', on_match=None,
-                [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}])
+                [{'LOWER': 'hello'}, {'IS_PUNCT': True}, {'LOWER': 'world'}])
 
     doc = nlp(u'Hello, world! Hello world!')
     matches = matcher(doc)
@@ -63,8 +62,8 @@ p
 
 +code.
     matcher.add('HelloWorld', on_match=None,
-                [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}],
-                [{LOWER: 'hello'}, {LOWER: 'world'}])
+                [{'LOWER': 'hello'}, {'IS_PUNCT': True}, {'LOWER': 'world'}],
+                [{'LOWER': 'hello'}, {'LOWER': 'world'}])
 
 p
     |  By default, the matcher will only return the matches and
@@ -92,14 +91,13 @@ p
 +code.
     import spacy
     from spacy.matcher import Matcher
-    from spacy.attrs import ORTH, UPPER, LOWER, IS_DIGIT
 
     nlp = spacy.load('en')
     matcher = Matcher(nlp.vocab)
 
     matcher.add('GoogleIO', on_match=add_event_ent,
-                [{ORTH: 'Google'}, {UPPER: 'I'}, {ORTH: '/'}, {UPPER: 'O'}],
-                [{ORTH: 'Google'}, {UPPER: 'I'}, {ORTH: '/'}, {UPPER: 'O'}, {IS_DIGIT: True}])
+                [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}],
+                [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}, {'IS_DIGIT': True}])
 
     # Get the ID of the 'EVENT' entity type. This is required to set an entity.
     EVENT = nlp.vocab.strings['EVENT']
@@ -120,8 +118,8 @@ p
 
 +code.
     matcher.add('BAD_HTML', on_match=merge_and_flag,
-                [{ORTH: '&lt;'}, {LOWER: 'br'}, {ORTH: '&gt;'}],
-                [{ORTH: '&lt;'}, {LOWER: 'br/'}, {ORTH: '&gt;'}])
+                [{'ORTH': '&lt;'}, {'LOWER': 'br'}, {'ORTH': '&gt;'}],
+                [{'ORTH': '&lt;'}, {'LOWER': 'br/'}, {'ORTH': '&gt;'}])
 
     # Add a new custom flag to the vocab, which is always False by default.
     # BAD_HTML_FLAG will be the flag ID, which we can use to set it to True on the span.
