@@ -3,11 +3,11 @@ include ../../_includes/_mixins
 p
     |  After training your model, you'll usually want to save its state, and load
     |  it back later. You can do this with the
-    |  #[+api("language#save_to_directory") #[code Language.save_to_directory()]]
+    |  #[+api("language#to_disk") #[code Language.to_disk()]]
     |  method:
 
 +code.
-    nlp.save_to_directory('/home/me/data/en_example_model')
+    nlp.to_disk('/home/me/data/en_example_model')
 
 p
     |  The directory will be created if it doesn't exist, and the whole pipeline
