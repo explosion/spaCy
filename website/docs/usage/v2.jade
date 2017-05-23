@@ -242,6 +242,79 @@ p
         +cell #[code Token.is_ancestor_of]
         +cell #[+api("token#is_ancestor") #[code Token.is_ancestor]]
 
++h(2, "migrating") Migrating from spaCy 1.x
 
++list
+    +item Saving, loading and serialization.
+    +item Processing pipelines and language data.
+    +item Adding patterns and callbacks to the matcher.
+    +item Models trained with spaCy 1.x.
+
++infobox("Some tips")
+    |  Before migrating, we strongly recommend writing a few
+    |  #[strong simple tests] specific to how you're using spaCy in your
+    |  application. This makes it easier to check whether your code requires
+    |  changes, and if so, which parts are affected.
+    |  (By the way, feel free contribute your tests to
+    |  #[+src(gh("spaCy", "spacy/tests")) our test suite] – this will also ensure
+    |  we never accidentally introduce a bug in a workflow that's
+    |  important to you.) If you've trained your own models, keep in mind that
+    |  your train and runtime inputs must match. This means you'll have to
+    |  #[strong retrain your models] with spaCy v2.0 to make them compatible.
+
+
++h(3, "migrating-saving-loading") Saving, loading and serialization
 
 +h(2, "migrating") Migrating from spaCy 1.x
+p
+    |  Double-check all calls to #[code spacy.load()] and make sure they don't
+    |  use the #[code path] keyword argument.
+
++code-new nlp = spacy.load('/model')
++code-old nlp = spacy.load('en', path='/model')
+
+p
+    |  Review all other code that writes state to disk or bytes.
+    |  All containers, now share the same, consistent API for saving and
+    |  loading. Replace saving with #[code to_disk()] or #[code to_bytes()], and
+    |  loading with #[code from_disk()] and #[code from_bytes()].
+
++code-new.
+    nlp.to_disk('/model')
+    nlp.vocab.to_disk('/vocab')
+
++code-old.
+    nlp.save_to_directory('/model')
+    nlp.vocab.dump('/vocab')
+
++h(3, "migrating-languages") Processing pipelines and language data
+
+p
+    |  If you're importing language data or #[code Language] classes, make sure
+    |  to change your import statements to import from #[code spacy.lang]. If
+    |  you've added your own custom language, it needs to be moved to
+    |  #[code spacy/lang/xx].
+
++code-new from spacy.lang.en import English
++code-old from spacy.en import English
+
+p
+    |  All components, e.g. tokenizer exceptions, are now responsible for
+    |  compiling their data in the correct format. The language_data.py files
+    |  have been removed
+
++h(3, "migrating-matcher") Adding patterns and callbacks to the matcher
+
+p
+    |  If you're using the matcher, you can now add patterns in one step. This
+    |  should be easy to update – simply merge the ID, callback and patterns
+    |  into one call to #[+api("matcher#add") #[code matcher.add]].
+
++code-new.
+    matcher.add('GoogleNow', merge_phrases, [{ORTH: 'Google'}, {ORTH: 'Now'}])
+
++code-old.
+    matcher.add_entity('GoogleNow', on_match=merge_phrases)
+    matcher.add_pattern('GoogleNow', [{ORTH: 'Google'}, {ORTH: 'Now'}])
+
++h(3, "migrating-models") Trained models
