@@ -103,7 +103,7 @@ p Get a #[code Token] object.
     doc = nlp(u'Give it back! He pleaded.')
     assert doc[0].text == 'Give'
     assert doc[-1].text == '.'
-    span = doc[1:1]
+    span = doc[1:3]
     assert span.text == 'it back'
 
 +table(["Name", "Type", "Description"])
