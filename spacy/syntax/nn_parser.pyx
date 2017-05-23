@@ -29,6 +29,7 @@ from thinc.linear.avgtron cimport AveragedPerceptron
 from thinc.linalg cimport VecVec
 from thinc.structs cimport SparseArrayC, FeatureC, ExampleC
 from thinc.extra.eg cimport Example
+
 from cymem.cymem cimport Pool, Address
 from murmurhash.mrmr cimport hash64
 from preshed.maps cimport MapStruct
@@ -37,6 +38,7 @@ from preshed.maps cimport map_get
 from thinc.api import layerize, chain, noop, clone
 from thinc.neural import Model, Affine, ELU, ReLu, Maxout
 from thinc.neural.ops import NumpyOps, CupyOps
+from thinc.neural.util import get_array_module
 
 from .. import util
 from ..util import get_async, get_cuda_stream
@@ -381,6 +383,7 @@ cdef class Parser:
                 if not s.is_final() and g is not None]
 
         backprops = []
+        d_tokvecs = state2vec.ops.allocate(tokvecs.shape)
         cdef float loss = 0.
         while len(todo) >= 3:
             states, golds = zip(*todo)
@@ -404,22 +407,30 @@ cdef class Parser:
                 backprops.append((token_ids, d_vector, bp_vector))
             self.transition_batch(states, scores)
             todo = [st for st in todo if not st[0].is_final()]
+            if len(backprops) >= 50:
+                self._make_updates(d_tokvecs,
+                    backprops, sgd, cuda_stream)
+                backprops = []
+        if backprops:
+            self._make_updates(d_tokvecs,
+                backprops, sgd, cuda_stream)
+        return self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
+
+    def _make_updates(self, d_tokvecs, backprops, sgd, cuda_stream=None):
         # Tells CUDA to block, so our async copies complete.
         if cuda_stream is not None:
             cuda_stream.synchronize()
-        d_tokvecs = state2vec.ops.allocate(tokvecs.shape)
-        xp = state2vec.ops.xp # Handle for numpy/cupy
-        for token_ids, d_vector, bp_vector in backprops:
+        xp = get_array_module(d_tokvecs)
+        for ids, d_vector, bp_vector in backprops:
             d_state_features = bp_vector(d_vector, sgd=sgd)
-            active_feats = token_ids * (token_ids >= 0)
-            active_feats = active_feats.reshape((token_ids.shape[0], token_ids.shape[1], 1))
+            active_feats = ids * (ids >= 0)
+            active_feats = active_feats.reshape((ids.shape[0], ids.shape[1], 1))
             if hasattr(xp, 'scatter_add'):
                 xp.scatter_add(d_tokvecs,
-                    token_ids, d_state_features * active_feats)
+                    ids, d_state_features * active_feats)
             else:
                 xp.add.at(d_tokvecs,
-                    token_ids, d_state_features * active_feats)
-        return self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
+                    ids, d_state_features * active_feats)
 
     def get_batch_model(self, batch_size, tokvecs, stream, dropout):
         lower, upper = self.model
