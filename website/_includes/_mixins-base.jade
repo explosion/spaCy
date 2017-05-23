@@ -42,10 +42,11 @@ mixin icon(name, size)
 
 //- Pro/Con/Neutral icon
     icon - [string] "pro", "con" or "neutral" (default: "neutral")
+    size - [integer] icon size (optional)
 
-mixin procon(icon)
+mixin procon(icon, size)
     - colors = { pro: "green", con: "red", neutral: "yellow" }
-    +icon(icon)(class="u-color-#{colors[icon] || 'subtle'}" aria-label=icon)&attributes(attributes)
+    +icon(icon, size)(class="u-color-#{colors[icon] || 'subtle'}" aria-label=icon)&attributes(attributes)
 
 
 //- Headlines Helper Mixin
