@@ -436,6 +436,8 @@ p
 
 +h(3, "morph-rules") Morph rules
 
+//- TODO: write morph rules section
+
 +h(2, "testing") Testing the new language tokenizer
 
 p
@@ -626,37 +628,20 @@ p
     |  trains the model using #[+a("https://radimrehurek.com/gensim/") Gensim].
     |  The #[code vectors.bin] file should consist of one word and vector per line.
 
-+h(2, "model-directory") Setting up a model directory
-
-p
-    |  Once you've collected the word frequencies, Brown clusters and word
-    |  vectors files, you can use the
-    |  #[+a("/docs/usage/cli#model") #[code model] command] to create a data
-    |  directory:
-
-+code(false, "bash").
-    python -m spacy model [lang] [model_dir] [freqs_data] [clusters_data] [vectors_data]
-
 +aside-code("your_data_directory", "yaml").
     ├── vocab/
-    |   ├── lexemes.bin   # via nlp.vocab.dump(path)
-    |   ├── strings.json  # via nlp.vocab.strings.dump(file_)
-    |   └── oov_prob      # optional
-    ├── pos/              # optional
-    |   ├── model         # via nlp.tagger.model.dump(path)
-    |   └── config.json   # via Langage.train
-    ├── deps/             # optional
-    |   ├── model         # via nlp.parser.model.dump(path)
-    |   └── config.json   # via Langage.train
-    └── ner/              # optional
-        ├── model         # via nlp.entity.model.dump(path)
-        └── config.json   # via Langage.train
-
-p
-    |  This creates a spaCy data directory with a vocabulary model, ready to be
-    |  loaded. By default, the command expects to be able to find your language
-    |  class using #[code spacy.util.get_lang_class(lang_id)].
-
+    |   ├── lexemes.bin
+    |   ├── strings.json
+    |   └── oov_prob
+    ├── pos/
+    |   ├── model
+    |   └── config.json
+    ├── deps/
+    |   ├── model
+    |   └── config.json
+    └── ner/
+        ├── model
+        └── config.json
 
 +h(2, "train-tagger-parser") Training the tagger and parser
 
