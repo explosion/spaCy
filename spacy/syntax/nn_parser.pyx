@@ -155,7 +155,9 @@ cdef class precompute_hiddens:
     def _nonlinearity(self, state_vector):
         if self.nP == 1:
             return state_vector, None
-        best, which = self.ops.maxout(state_vector, self.nP)
+        state_vector = state_vector.reshape(
+            (state_vector.shape[0], state_vector.shape[1]//self.nP, self.nP))
+        best, which = self.ops.maxout(state_vector)
         def backprop(d_best, sgd=None):
             return self.ops.backprop_maxout(d_best, which, self.nP)
         return best, backprop
@@ -334,7 +336,7 @@ cdef class Parser:
             const float* feat_weights
             StateC* st
             vector[StateC*] next_step, this_step
-            int nr_class, nr_feat, nr_dim, nr_state
+            int nr_class, nr_feat, nr_piece, nr_dim, nr_state
         if isinstance(docs, Doc):
             docs = [docs]
 
@@ -348,6 +350,7 @@ cdef class Parser:
         cuda_stream = get_cuda_stream()
         state2vec, vec2scores = self.get_batch_model(nr_state, tokvecs,
                                                      cuda_stream, 0.0)
+        nr_piece = state2vec.nP
 
         states = self.moves.init_batch(docs)
         for state in states:
@@ -361,20 +364,27 @@ cdef class Parser:
         cdef np.ndarray scores
         c_token_ids = <int*>token_ids.data
         c_is_valid = <int*>is_valid.data
+        cdef int has_hidden = hasattr(vec2scores, 'W')
         while not next_step.empty():
-            for i in range(next_step.size()):
-                st = next_step[i]
-                st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
-                self.moves.set_valid(&c_is_valid[i*nr_class], st)
-            vectors = state2vec.begin_update(token_ids[:next_step.size()])
-            scores = vec2scores(vectors)[0]
-            c_scores = <float*>scores.data
-            for i in range(next_step.size()):
-                st = next_step[i]
-                guess = arg_max_if_valid(
-                    &c_scores[i*nr_class], &c_is_valid[i*nr_class], nr_class)
-                action = self.moves.c[guess]
-                action.do(st, action.label)
+            if not has_hidden:
+                for i in cython.parallel.prange(
+                        next_step.size(), num_threads=6, nogil=True):
+                    self._parse_step(next_step[i],
+                        feat_weights, nr_class, nr_feat, nr_piece)
+            else:
+                for i in range(next_step.size()):
+                    st = next_step[i]
+                    st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
+                    self.moves.set_valid(&c_is_valid[i*nr_class], st)
+                vectors = state2vec(token_ids[:next_step.size()])
+                scores = vec2scores(vectors)
+                c_scores = <float*>scores.data
+                for i in range(next_step.size()):
+                    st = next_step[i]
+                    guess = arg_max_if_valid(
+                        &c_scores[i*nr_class], &c_is_valid[i*nr_class], nr_class)
+                    action = self.moves.c[guess]
+                    action.do(st, action.label)
             this_step, next_step = next_step, this_step
             next_step.clear()
             for st in this_step:
@@ -384,19 +394,19 @@ cdef class Parser:
 
     cdef void _parse_step(self, StateC* state,
             const float* feat_weights,
-            int nr_class, int nr_feat) nogil:
+            int nr_class, int nr_feat, int nr_piece) nogil:
         '''This only works with no hidden layers -- fast but inaccurate'''
         #for i in cython.parallel.prange(next_step.size(), num_threads=4, nogil=True):
         #    self._parse_step(next_step[i], feat_weights, nr_class, nr_feat)
         token_ids = <int*>calloc(nr_feat, sizeof(int))
-        scores = <float*>calloc(nr_class, sizeof(float))
+        scores = <float*>calloc(nr_class * nr_piece, sizeof(float))
         is_valid = <int*>calloc(nr_class, sizeof(int))
 
         state.set_context_tokens(token_ids, nr_feat)
         sum_state_features(scores,
-            feat_weights, token_ids, 1, nr_feat, nr_class)
+            feat_weights, token_ids, 1, nr_feat, nr_class * nr_piece)
         self.moves.set_valid(is_valid, state)
-        guess = arg_max_if_valid(scores, is_valid, nr_class)
+        guess = arg_maxout_if_valid(scores, is_valid, nr_class, nr_piece)
         action = self.moves.c[guess]
         action.do(state, action.label)
 
@@ -607,6 +617,19 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
         if is_valid[i] >= 1:
             if best == -1 or scores[i] > scores[best]:
                 best = i
+    return best
+
+
+cdef int arg_maxout_if_valid(const weight_t* scores, const int* is_valid,
+                             int n, int nP) nogil:
+    cdef int best = -1
+    cdef float best_score = 0
+    for i in range(n):
+        if is_valid[i] >= 1:
+            for j in range(nP):
+                if best == -1 or scores[i*nP+j] > best_score:
+                    best = i
+                    best_score = scores[i*nP+j]
     return best
 
 
