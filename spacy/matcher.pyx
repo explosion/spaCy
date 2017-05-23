@@ -215,7 +215,7 @@ cdef class Matcher:
         """
         return len(self._patterns)
 
-    def add(self, key, *patterns, **kwargs):
+    def add(self, key, on_match, *patterns):
         """Add a match-rule to the matcher.
         A match-rule consists of: an ID key, an on_match callback, and one or
         more patterns. If the key exists, the patterns are appended to the
@@ -227,7 +227,6 @@ cdef class Matcher:
         descriptors can also include quantifiers. There are currently important
         known problems with the quantifiers – see the docs.
         """
-        on_match = kwargs.get('on_match', None)
         for pattern in patterns:
             if len(pattern) == 0:
                 msg = ("Cannot add pattern for zero tokens to matcher.\n"

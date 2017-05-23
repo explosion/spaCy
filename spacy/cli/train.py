@@ -9,7 +9,6 @@ from pathlib import Path
 import dill
 import tqdm
 from thinc.neural.optimizers import linear_decay
-from timeit import default_timer as timer
 
 from ..tokens.doc import Doc
 from ..scorer import Scorer
@@ -82,13 +81,8 @@ def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                 batch_size = min(batch_size, max_batch_size)
                 dropout = linear_decay(orig_dropout, dropout_decay, i*n_train_docs+idx)
         with nlp.use_params(optimizer.averages):
-            start = timer()
             scorer = nlp.evaluate(corpus.dev_docs(nlp))
-            end = timer()
-            n_words = scorer.tokens.tp + scorer.tokens.fn
-            assert n_words != 0
-            wps = n_words / (end-start)
-        print_progress(i, {}, scorer.scores, wps=wps)
+        print_progress(i, {}, scorer.scores)
     with (output_path / 'model.bin').open('wb') as file_:
         with nlp.use_params(optimizer.averages):
             dill.dump(nlp, file_, -1)
@@ -104,14 +98,14 @@ def _render_parses(i, to_render):
         file_.write(html)
 
 
-def print_progress(itn, losses, dev_scores, wps=0.0):
+def print_progress(itn, losses, dev_scores):
+    # TODO: Fix!
     scores = {}
     for col in ['dep_loss', 'tag_loss', 'uas', 'tags_acc', 'token_acc',
-                'ents_p', 'ents_r', 'ents_f', 'wps']:
+                'ents_p', 'ents_r', 'ents_f']:
         scores[col] = 0.0
     scores.update(losses)
     scores.update(dev_scores)
-    scores[wps] = wps
     tpl = '\t'.join((
         '{:d}',
         '{dep_loss:.3f}',
@@ -121,8 +115,7 @@ def print_progress(itn, losses, dev_scores, wps=0.0):
         '{ents_r:.3f}',
         '{ents_f:.3f}',
         '{tags_acc:.3f}',
-        '{token_acc:.3f}',
-        '{wps:.1f}'))
+        '{token_acc:.3f}'))
     print(tpl.format(itn, **scores))
 
 

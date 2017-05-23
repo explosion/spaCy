@@ -17,9 +17,8 @@ def test_issue429(EN):
 
     doc = EN('a')
     matcher = Matcher(EN.vocab)
-    matcher.add('TEST', [{'ORTH': 'a'}], on_match=merge_phrases)
-    doc = EN.make_doc('a b c')
-
+    matcher.add('TEST', on_match=merge_phrases, [{'ORTH': 'a'}])
+    doc = EN.tokenizer('a b c')
     EN.tagger(doc)
     matcher(doc)
     EN.entity(doc)

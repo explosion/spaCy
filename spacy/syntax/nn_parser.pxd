@@ -15,7 +15,7 @@ cdef class Parser:
     cdef readonly object cfg
 
     cdef void _parse_step(self, StateC* state,
-            int* token_ids, float* scores, int* is_valid,
-            const float* feat_weights, int nr_class, int nr_feat) nogil
+            const float* feat_weights,
+            int nr_class, int nr_feat) nogil
 
     #cdef int parseC(self, TokenC* tokens, int length, int nr_feat) nogil
