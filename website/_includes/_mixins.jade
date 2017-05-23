@@ -103,9 +103,11 @@ mixin button(url, trusted, ...style)
     label    - [string] aside title (optional or false for no label)
     language - [string] language for syntax highlighting (default: "python")
                supports basic relevant languages available for PrismJS
+    icon     - [string] icon to display next to code block, mostly used for old/new
+    height   - [integer] optional height to clip code block to
 
-mixin code(label, language, icon)
-    pre.c-code-block.o-block(class="lang-#{(language || DEFAULT_SYNTAX)}" class=icon ? "c-code-block--has-icon" : "")&attributes(attributes)
+mixin code(label, language, icon, height)
+    pre.c-code-block.o-block(class="lang-#{(language || DEFAULT_SYNTAX)}" class=icon ? "c-code-block--has-icon" : "" style=height ? "height: #{height}px" : "")&attributes(attributes)
         if label
             h4.u-text-label.u-text-label--dark=label
 
