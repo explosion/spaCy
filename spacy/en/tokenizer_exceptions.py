@@ -178,7 +178,7 @@ for word in ["who", "what", "when", "where", "why", "how", "there", "that"]:
 
         EXC[orth + "ve"] = [
             {ORTH: orth, LEMMA: word},
-            {ORTH: "'ve", LEMMA: "have", TAG: "VB"}
+            {ORTH: "ve", LEMMA: "have", TAG: "VB"}
         ]
 
         EXC[orth + "'d"] = [
