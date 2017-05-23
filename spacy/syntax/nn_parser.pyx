@@ -337,7 +337,7 @@ cdef class Parser:
         feat_weights = state2vec.get_feat_weights()
         cdef int i
         cdef np.ndarray token_ids = numpy.zeros((nr_state, nr_feat), dtype='i')
-        cdef np.ndarray is_valid = numpy.zeros((nr_state, nr_feat), dtype='i')
+        cdef np.ndarray is_valid = numpy.zeros((nr_state, nr_class), dtype='i')
         cdef np.ndarray scores
         c_token_ids = <int*>token_ids.data
         c_is_valid = <int*>is_valid.data
@@ -347,7 +347,7 @@ cdef class Parser:
                 st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
                 self.moves.set_valid(&c_is_valid[i*nr_class], st)
             vectors = state2vec.begin_update(token_ids[:next_step.size()])
-            scores = vec2scores(vectors)
+            scores = vec2scores(vectors)[0]
             c_scores = <float*>scores.data
             for i in range(next_step.size()):
                 st = next_step[i]
