@@ -2,6 +2,54 @@
 
 include ../../_includes/_mixins
 
++h(2, "annotations") Linguistic annotations
+
+p
+    |  spaCy provides a variety of linguistic annotations to give you insights
+    |  into a text's grammatical structure. This includes the word types,
+    |  i.e. the parts of speech, and how the words are related to each other.
+    |  For example, if you're analysing text, it makes a #[em huge] difference
+    |  whether a noun is the subject of a sentence, or the object – or whether
+    |  "google" is used as a verb, or refers to the website or company in a
+    |  specific context.
+
+p
+    |  Once you've downloaded and installed a #[+a("/docs/usage/models") model],
+    |  you can load it via #[+api("spacy#load") #[code spacy.load()]]. This will
+    |  return a #[code Language] object contaning all components and data needed
+    |  to process text. We usually call it #[code nlp]. Calling the #[code nlp]
+    |  object on a string of text will return a processed #[code Doc]:
+
++code.
+    import spacy
+
+    nlp = spacy.load('en')
+    doc = nlp(u'Apple is looking at buying U.K. startup for $1 billion')
+
++h(3, "annotations-token") Tokenization
+
+include _spacy-101/_tokenization
+
+
++h(3, "annotations-pos-deps") Part-of-speech tags and dependencies
+    +tag-model("dependency parse")
+
+include _spacy-101/_pos-deps
+
++h(3, "annotations-ner") Named Entities
+    +tag-model("named entities")
+
+include _spacy-101/_named-entities
+
++h(2, "vectors-similarity") Word vectors and similarity
+    +tag-model("vectors")
+
+include _spacy-101/_similarity
+
+include _spacy-101/_word-vectors
+
++h(2, "pipelines") Pipelines
+
 +h(2, "architecture") Architecture
 
 +image
