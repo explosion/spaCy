@@ -55,7 +55,23 @@ p
     |  #[strong API:] #[+api("spacy#load") #[code spacy.load]]
     |  #[strong Usage:] #[+a("/docs/usage/saving-loading") Saving and loading]
 
-+h(3, "features-language") Improved language data and processing pipelines
++h(3, "features-language") Improved language data and lazy loading
+
+p
+    |  Language-specfic data now lives in its own submodule, #[code spacy.lang].
+    |  Languages are lazy-loaded, i.e. only loaded when you import a
+    |  #[code Language] class, or load a model that initialises one. This allows
+    |  languages to contain more custom data, e.g. lemmatizer lookup tables, or
+    |  complex regular expressions. The language data has also been tidied up
+    |  and simplified. It's now also possible to overwrite the functions that
+    |  compute lexical attributes like #[code like_num], and supply
+    |  language-specific syntax iterators, e.g. to determine noun chunks.
+
++infobox
+    |  #[strong Code:] #[+src(gh("spaCy", "spacy/lang")) spacy/lang]
+    |  #[strong Usage:] #[+a("/docs/usage/adding-languages") Adding languages]
+
++h(3, "features-pipelines") Improved processing pipelines
 
 +aside-code("Example").
     from spacy.language import Language
@@ -64,7 +80,7 @@ p
 
 +infobox
     |  #[strong API:] #[+api("language") #[code Language]]
-    |  #[strong Usage:] #[+a("/docs/usage/adding-languages") Adding languages]
+    |  #[strong Usage:] #[+a("/docs/usage/processing-text") Processing text]
 
 +h(3, "features-lemmatizer") Simple lookup-based lemmatization
 
@@ -95,7 +111,7 @@ p
     from spacy.matcher import Matcher
     from spacy.attrs import LOWER, IS_PUNCT
     matcher = Matcher(nlp.vocab)
-    matcher.add('HelloWorld', on_match=None,
+    matcher.add('HelloWorld', None,
                 [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}],
                 [{LOWER: 'hello'}, {LOWER: 'world'}])
     assert len(matcher) == 1
@@ -128,6 +144,18 @@ p
 +h(2, "incompat") Backwards incompatibilities
 
 +table(["Old", "New"])
+    +row
+        +cell
+            |  #[code spacy.en]
+            |  #[code spacy.xx]
+        +cell
+            |  #[code spacy.lang.en]
+            |  #[code spacy.lang.xx]
+
+    +row
+        +cell #[code spacy.orth]
+        +cell #[code spacy.lang.xx.lex_attrs]
+
     +row
         +cell #[code Language.save_to_directory]
         +cell #[+api("language#to_disk") #[code Language.to_disk]]
