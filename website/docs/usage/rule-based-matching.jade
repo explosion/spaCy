@@ -47,8 +47,8 @@ p
     nlp = spacy.load('en')
     matcher = Matcher(nlp.vocab)
     # add match ID "HelloWorld" with no callback and one pattern
-    matcher.add('HelloWorld', on_match=None,
-                [{'LOWER': 'hello'}, {'IS_PUNCT': True}, {'LOWER': 'world'}])
+    pattern = [{'LOWER': 'hello'}, {'IS_PUNCT': True}, {'LOWER': 'world'}]
+    matcher.add('HelloWorld', None, pattern)
 
     doc = nlp(u'Hello, world! Hello world!')
     matches = matcher(doc)
@@ -61,7 +61,7 @@ p
     |  without punctuation between "hello" and "world":
 
 +code.
-    matcher.add('HelloWorld', on_match=None,
+    matcher.add('HelloWorld', None,
                 [{'LOWER': 'hello'}, {'IS_PUNCT': True}, {'LOWER': 'world'}],
                 [{'LOWER': 'hello'}, {'LOWER': 'world'}])
 
@@ -104,7 +104,7 @@ p
         match_id, start, end = matches[i]
         doc.ents += ((EVENT, start, end),)
 
-    matcher.add('GoogleIO', on_match=add_event_ent,
+    matcher.add('GoogleIO', add_event_ent,
                 [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}],
                 [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}, {'IS_DIGIT': True}])
 
@@ -127,7 +127,7 @@ p
         span.merge(is_stop=True) # merge (and mark it as a stop word, just in case)
         span.set_flag(BAD_HTML_FLAG, True) # set BAD_HTML_FLAG
 
-    matcher.add('BAD_HTML', on_match=merge_and_flag,
+    matcher.add('BAD_HTML', merge_and_flag,
                 [{'ORTH': '&lt;'}, {'LOWER': 'br'}, {'ORTH': '&gt;'}],
                 [{'ORTH': '&lt;'}, {'LOWER': 'br/'}, {'ORTH': '&gt;'}])
 

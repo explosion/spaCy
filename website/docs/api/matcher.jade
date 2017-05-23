@@ -52,7 +52,7 @@ p Find all token sequences matching the supplied patterns on the #[code Doc].
 
     matcher = Matcher(nlp.vocab)
     pattern = [{'LOWER': "hello"}, {'LOWER': "world"}]
-    matcher.add("HelloWorld", on_match=None, pattern)
+    matcher.add("HelloWorld", None, pattern)
     doc = nlp(u'hello world!')
     matches = matcher(doc)
 
