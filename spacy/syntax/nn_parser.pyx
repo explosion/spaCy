@@ -19,6 +19,7 @@ import numpy.random
 cimport numpy as np
 
 from libcpp.vector cimport vector
+from libcpp.pair cimport pair
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cpython.exc cimport PyErr_CheckSignals
 from libc.stdint cimport uint32_t, uint64_t
@@ -66,6 +67,9 @@ DEBUG = False
 def set_debug(val):
     global DEBUG
     DEBUG = val
+
+
+ctypedef pair[int, StateC*] step_t
 
 
 cdef class precompute_hiddens:
@@ -118,6 +122,9 @@ cdef class precompute_hiddens:
             self._cuda_stream.synchronize()
             self._is_synchronized = True
         return <float*>self._cached.data
+
+    def get_bp_hiddens(self):
+        return self._bp_hiddens
 
     def __call__(self, X):
         return self.begin_update(X)[0]
@@ -308,7 +315,6 @@ cdef class Parser:
         cdef:
             precompute_hiddens state2vec
             StateClass state
-            Pool mem
             const float* feat_weights
             StateC* st
             vector[StateC*] next_step, this_step
@@ -336,7 +342,14 @@ cdef class Parser:
         cdef int i
         while not next_step.empty():
             for i in cython.parallel.prange(next_step.size(), num_threads=4, nogil=True):
-                self._parse_step(next_step[i], feat_weights, nr_class, nr_feat)
+                token_ids = <int*>calloc(nr_feat, sizeof(int))
+                scores = <float*>calloc(nr_class, sizeof(float))
+                is_valid = <int*>calloc(nr_class, sizeof(int))
+                self._parse_step(next_step[i], token_ids, scores, is_valid,
+                                 feat_weights, nr_class, nr_feat)
+                free(is_valid)
+                free(scores)
+                free(token_ids)
             this_step, next_step = next_step, this_step
             next_step.clear()
             for st in this_step:
@@ -345,12 +358,8 @@ cdef class Parser:
         return states
 
     cdef void _parse_step(self, StateC* state,
-            const float* feat_weights,
-            int nr_class, int nr_feat) nogil:
-        token_ids = <int*>calloc(nr_feat, sizeof(int))
-        scores = <float*>calloc(nr_class, sizeof(float))
-        is_valid = <int*>calloc(nr_class, sizeof(int))
-
+            int* token_ids, float* scores, int* is_valid,
+            const float* feat_weights, int nr_class, int nr_feat) nogil:
         state.set_context_tokens(token_ids, nr_feat)
         sum_state_features(scores,
             feat_weights, token_ids, 1, nr_feat, nr_class)
@@ -359,66 +368,90 @@ cdef class Parser:
         action = self.moves.c[guess]
         action.do(state, action.label)
 
-        free(is_valid)
-        free(scores)
-        free(token_ids)
-
     def update(self, docs_tokvecs, golds, drop=0., sgd=None):
+        cdef:
+            precompute_hiddens state2vec
+            StateClass state
+            const float* feat_weights
+            StateC* st
+            vector[step_t] next_step, this_step
+            cdef int[:, ::1] is_valid, token_ids
+            cdef float[:, ::1] scores, d_scores, costs
+            int nr_state, nr_feat, nr_class
+
         docs, tokvec_lists = docs_tokvecs
-        tokvecs = self.model[0].ops.flatten(tokvec_lists)
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
+        assert len(docs) == len(golds) == len(tokvec_lists)
 
+        nr_state = len(docs)
+        nr_feat = self.nr_feature
+        nr_class = self.moves.n_moves
+
+        token_ids = numpy.zeros((nr_state, nr_feat), dtype='i')
+        is_valid = numpy.zeros((nr_state, nr_class), dtype='i')
+        scores = numpy.zeros((nr_state, nr_class), dtype='f')
+        d_scores = numpy.zeros((nr_state, nr_class), dtype='f')
+        costs = numpy.zeros((nr_state, nr_class), dtype='f')
+
+        tokvecs = self.model[0].ops.flatten(tokvec_lists)
         cuda_stream = get_cuda_stream()
+        state2vec, vec2scores = self.get_batch_model(nr_state, tokvecs,
+                                                     cuda_stream, drop)
+
         golds = [self.moves.preprocess_gold(g) for g in golds]
-
         states = self.moves.init_batch(docs)
-        state2vec, vec2scores = self.get_batch_model(len(states), tokvecs, cuda_stream,
-                                                      drop)
+        cdef step_t step
+        cdef int i
+        for i, state in enumerate(states):
+            if not state.c.is_final():
+                step.first = i
+                step.second = state.c
+                next_step.push_back(step)
+                self.moves.set_costs(&is_valid[i, 0], &costs[i, 0], state, golds[i])
 
-        todo = [(s, g) for (s, g) in zip(states, golds)
-                if not s.is_final() and g is not None]
-
+        feat_weights = state2vec.get_feat_weights()
+        bp_hiddens = state2vec.get_bp_hiddens()
+        d_tokvecs = self.model[0].ops.allocate(tokvecs.shape)
         backprops = []
-        cdef float loss = 0.
-        while len(todo) >= 3:
-            states, golds = zip(*todo)
 
-            token_ids = self.get_token_ids(states)
-            vector, bp_vector = state2vec.begin_update(token_ids, drop=drop)
-            scores, bp_scores = vec2scores.begin_update(vector, drop=drop)
+        while next_step.size():
+            # Allocate these each step, so copy an be async
+            np_token_ids = numpy.zeros((nr_state, nr_feat), dtype='i')
+            np_d_scores = numpy.zeros((nr_state, nr_class), dtype='f')
+            token_ids = np_token_ids
+            d_scores = np_d_scores
+            for step in next_step:
+                i = step.first
+                st = step.second
+                self._parse_step(st, &token_ids[i, 0],
+                    &scores[i, 0], &is_valid[i, 0],
+                    feat_weights, nr_class, nr_feat)
+                cpu_log_loss(&d_scores[i, 0],
+                    &costs[i, 0], &is_valid[i, 0], &scores[i, 0], nr_class)
+            backprops.append((
+                get_async(cuda_stream, np_token_ids),
+                get_async(cuda_stream, np_d_scores)))
+            this_step, next_step = next_step, this_step
+            next_step.clear()
+            for step in this_step:
+                i = step.first
+                st = step.second
+                if not st.is_final():
+                    next_step.push_back(step)
+                    self.moves.set_costs(&is_valid[i, 0], &costs[i, 0],
+                                         states[i], golds[i])
+        cuda_stream.synchronize()
+        for gpu_token_ids, gpu_d_scores in backprops:
+            d_features = bp_hiddens((gpu_d_scores, gpu_token_ids), sgd)
+            d_features *= (gpu_token_ids >= 0).reshape((nr_state, nr_feat, 1))
 
-            d_scores = self.get_batch_loss(states, golds, scores)
-            d_vector = bp_scores(d_scores, sgd=sgd)
-
-            if isinstance(self.model[0].ops, CupyOps) \
-            and not isinstance(token_ids, state2vec.ops.xp.ndarray):
-                # Move token_ids and d_vector to CPU, asynchronously
-                backprops.append((
-                    get_async(cuda_stream, token_ids),
-                    get_async(cuda_stream, d_vector),
-                    bp_vector
-                ))
-            else:
-                backprops.append((token_ids, d_vector, bp_vector))
-            self.transition_batch(states, scores)
-            todo = [st for st in todo if not st[0].is_final()]
-        # Tells CUDA to block, so our async copies complete.
-        if cuda_stream is not None:
-            cuda_stream.synchronize()
-        d_tokvecs = state2vec.ops.allocate(tokvecs.shape)
-        xp = state2vec.ops.xp # Handle for numpy/cupy
-        for token_ids, d_vector, bp_vector in backprops:
-            d_state_features = bp_vector(d_vector, sgd=sgd)
-            active_feats = token_ids * (token_ids >= 0)
-            active_feats = active_feats.reshape((token_ids.shape[0], token_ids.shape[1], 1))
+            xp = self.model[0].ops.xp
             if hasattr(xp, 'scatter_add'):
-                xp.scatter_add(d_tokvecs,
-                    token_ids, d_state_features * active_feats)
+                xp.scatter_add(d_tokvecs, gpu_token_ids, d_features)
             else:
-                xp.add.at(d_tokvecs,
-                    token_ids, d_state_features * active_feats)
+                xp.add.at(d_tokvecs, gpu_token_ids, d_features)
         return self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
 
     def get_batch_model(self, batch_size, tokvecs, stream, dropout):

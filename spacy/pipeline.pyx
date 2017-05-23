@@ -167,7 +167,7 @@ class NeuralTagger(object):
         self.model = model
 
     def __call__(self, doc):
-        tags = self.predict(doc.tensor)
+        tags = self.predict([doc.tensor])
         self.set_annotations([doc], tags)
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
@@ -339,24 +339,6 @@ cdef class NeuralEntityRecognizer(NeuralParser):
     TransitionSystem = BiluoPushDown
 
     nr_feature = 6
-
-    def get_token_ids(self, states):
-        cdef StateClass state
-        cdef int n_tokens = 6
-        ids = numpy.zeros((len(states), n_tokens), dtype='i', order='c')
-        for i, state in enumerate(states):
-            ids[i, 0] = state.c.B(0)-1
-            ids[i, 1] = state.c.B(0)
-            ids[i, 2] = state.c.B(1)
-            ids[i, 3] = state.c.E(0)
-            ids[i, 4] = state.c.E(0)-1
-            ids[i, 5] = state.c.E(0)+1
-            for j in range(6):
-                if ids[i, j] >= state.c.length:
-                    ids[i, j] = -1
-                if ids[i, j] >= 0:
-                    ids[i, j] += state.c.offset
-        return ids
 
 
 cdef class BeamDependencyParser(BeamParser):

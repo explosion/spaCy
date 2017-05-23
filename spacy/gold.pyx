@@ -144,7 +144,7 @@ def _min_edit_path(cand_words, gold_words):
 class GoldCorpus(object):
     """An annotated corpus, using the JSON file format. Manages
     annotations for tagging, dependency parsing and NER."""
-    def __init__(self, train_path, dev_path, limit=None):
+    def __init__(self, train_path, dev_path, gold_preproc=True, limit=None):
         """Create a GoldCorpus.
 
         train_path (unicode or Path): File or directory of training data.
@@ -184,7 +184,7 @@ class GoldCorpus(object):
             n += 1
         return n
 
-    def train_docs(self, nlp, shuffle=0, gold_preproc=True,
+    def train_docs(self, nlp, shuffle=0, gold_preproc=False,
                    projectivize=False):
         train_tuples = self.train_tuples
         if projectivize:
@@ -195,7 +195,7 @@ class GoldCorpus(object):
         gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc)
         yield from gold_docs
 
-    def dev_docs(self, nlp, gold_preproc=True):
+    def dev_docs(self, nlp, gold_preproc=False):
         gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc)
         gold_docs = nlp.preprocess_gold(gold_docs)
         yield from gold_docs
@@ -203,6 +203,11 @@ class GoldCorpus(object):
     @classmethod
     def iter_gold_docs(cls, nlp, tuples, gold_preproc):
         for raw_text, paragraph_tuples in tuples:
+            if gold_preproc:
+                raw_text = None
+            else:
+                paragraph_tuples = merge_sents(paragraph_tuples)
+
             docs = cls._make_docs(nlp, raw_text, paragraph_tuples,
                                   gold_preproc)
             golds = cls._make_golds(docs, paragraph_tuples)
@@ -211,15 +216,11 @@ class GoldCorpus(object):
 
     @classmethod
     def _make_docs(cls, nlp, raw_text, paragraph_tuples, gold_preproc):
-        if gold_preproc:
-            return [Doc(nlp.vocab, words=sent_tuples[0][1])
-                for sent_tuples in paragraph_tuples]
-        elif raw_text is not None:
+        if raw_text is not None:
             return [nlp.make_doc(raw_text)]
         else:
-            docs = [Doc(nlp.vocab, words=sent_tuples[0][1])
+            return [Doc(nlp.vocab, words=sent_tuples[0][1])
                 for sent_tuples in paragraph_tuples]
-            return merge_sents(docs)
 
     @classmethod
     def _make_golds(cls, docs, paragraph_tuples):
