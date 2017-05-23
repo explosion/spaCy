@@ -562,16 +562,6 @@ cdef class Doc:
         for i in range(self.length):
             self.c[i] = parsed[i]
 
-<<<<<<< HEAD
-    def from_array(self, attrs, int[:, :] array):
-        """Load attributes from a numpy array. Write to a `Doc` object, from an
-        `(M, N)` array of attributes.
-
-        attrs (ints): A list of attribute ID ints.
-        array (numpy.ndarray[ndim=2, dtype='int32']) The attribute values to load.
-        RETURNS (Doc): Itself.
-        """
-=======
     def from_array(self, attrs, array):
         if SENT_START in attrs and HEAD in attrs:
             raise ValueError(
@@ -582,7 +572,6 @@ cdef class Doc:
                 "potentially override the sentence boundaries set by SENT_START.\n"
                 "See https://github.com/spacy-io/spaCy/issues/235 for details and "
                 "workarounds, and to propose solutions.")
->>>>>>> 45ad8684... * Add SENT_START attribute
         cdef int i, col
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.c
