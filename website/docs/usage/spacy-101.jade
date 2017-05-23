@@ -2,6 +2,61 @@
 
 include ../../_includes/_mixins
 
++h(2, "features") Features
+
++aside
+    |  If one of spaCy's functionalities #[strong needs a model], it means that
+    |  you need to have one our the available
+    |  #[+a("/docs/usage/models") statistical models] installed. Models are used
+    |  to #[strong predict] linguistic annotations – for example, if a word is
+    |  a verb or a noun.
+
++table(["Name", "Description", "Needs model"])
+    +row
+        +cell #[strong Tokenization]
+        +cell
+        +cell #[+procon("con")]
+
+    +row
+        +cell #[strong Part-of-speech Tagging]
+        +cell
+        +cell #[+procon("pro")]
+
+    +row
+        +cell #[strong Dependency Parsing]
+        +cell
+        +cell #[+procon("pro")]
+
+    +row
+        +cell #[strong Sentence Boundary Detection]
+        +cell
+        +cell #[+procon("pro")]
+
+    +row
+        +cell #[strong Named Entity Recongition] (NER)
+        +cell
+        +cell #[+procon("pro")]
+
+    +row
+        +cell #[strong Rule-based Matching]
+        +cell
+        +cell #[+procon("con")]
+
+    +row
+        +cell #[strong Similarity]
+        +cell
+        +cell #[+procon("pro")]
+
+    +row
+        +cell #[strong Training]
+        +cell
+        +cell #[+procon("neutral")]
+
+    +row
+        +cell #[strong Serialization]
+        +cell
+        +cell #[+procon("neutral")]
+
 +h(2, "annotations") Linguistic annotations
 
 p
