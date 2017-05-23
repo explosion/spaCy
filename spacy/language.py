@@ -334,7 +334,7 @@ class Language(object):
             >>>     for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
             >>>         assert doc.is_parsed
         """
-        #docs = (self.make_doc(text) for text in texts)
+        docs = (self.make_doc(text) for text in texts)
         docs = texts
         for proc in self.pipeline:
             name = getattr(proc, 'name', None)
