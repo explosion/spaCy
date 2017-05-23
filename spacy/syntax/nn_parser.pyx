@@ -87,7 +87,7 @@ cdef class precompute_hiddens:
     we can do all our hard maths up front, packed into large multiplications,
     and do the hard-to-program parsing on the CPU.
     '''
-    cdef int nF, nO
+    cdef int nF, nO, nP
     cdef bint _is_synchronized
     cdef public object ops
     cdef np.ndarray _features
@@ -107,8 +107,9 @@ cdef class precompute_hiddens:
             cached = gpu_cached
         self.nF = cached.shape[1]
         self.nO = cached.shape[2]
+        self.nP = getattr(lower_model, 'nP', 1)
         self.ops = lower_model.ops
-        self._features = numpy.zeros((batch_size, self.nO), dtype='f')
+        self._features = numpy.zeros((batch_size, self.nO*self.nP), dtype='f')
         self._is_synchronized = False
         self._cuda_stream = cuda_stream
         self._cached = cached
@@ -138,15 +139,27 @@ cdef class precompute_hiddens:
         cdef int[:, ::1] ids = token_ids
         sum_state_features(<float*>state_vector.data,
             feat_weights, &ids[0,0],
-            token_ids.shape[0], self.nF, self.nO)
+            token_ids.shape[0], self.nF, self.nO*self.nP)
+        state_vector, bp_nonlinearity = self._nonlinearity(state_vector)
 
         def backward(d_state_vector, sgd=None):
+            if bp_nonlinearity is not None:
+                d_state_vector = bp_nonlinearity(d_state_vector, sgd)
             # This will usually be on GPU
             if isinstance(d_state_vector, numpy.ndarray):
                 d_state_vector = self.ops.xp.array(d_state_vector)
             d_tokens = bp_hiddens((d_state_vector, token_ids), sgd)
             return d_tokens
         return state_vector, backward
+
+    def _nonlinearity(self, state_vector):
+        if self.nP == 1:
+            return state_vector, None
+        best, which = self.ops.maxout(state_vector, self.nP)
+        def backprop(d_best, sgd=None):
+            return self.ops.backprop_maxout(d_best, which, self.nP)
+        return best, backprop
+
 
 cdef void sum_state_features(float* output,
         const float* cached, const int* token_ids, int B, int F, int O) nogil:
@@ -220,9 +233,16 @@ cdef class Parser:
         depth = util.env_opt('parser_hidden_depth', depth)
         token_vector_width = util.env_opt('token_vector_width', token_vector_width)
         hidden_width = util.env_opt('hidden_width', hidden_width)
-        lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
-                    nF=cls.nr_feature,
-                    nI=token_vector_width)
+        parser_maxout_pieces = util.env_opt('parser_maxout_pieces', 2)
+        if parser_maxout_pieces == 1:
+            lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
+                        nF=cls.nr_feature,
+                        nI=token_vector_width)
+        else:
+            lower = PrecomputableMaxouts(hidden_width if depth >= 1 else nr_class,
+                        nF=cls.nr_feature,
+                        nP=parser_maxout_pieces,
+                        nI=token_vector_width)
 
         with Model.use_device('cpu'):
             if depth == 0:
