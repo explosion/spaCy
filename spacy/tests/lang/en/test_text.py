@@ -35,7 +35,6 @@ def test_tokenizer_handles_cnts(en_tokenizer, text, length):
     assert len(tokens) == length
 
 
-
 @pytest.mark.parametrize('text,match', [
     ('10', True), ('1', True), ('10,000', True), ('10,00', True),
     ('999.0', True), ('one', True), ('two', True), ('billion', True),
