@@ -24,6 +24,23 @@ p
     en_doc = en_nlp(u'Hello, world. Here are two sentences.')
     de_doc = de_nlp(u'ich bin ein Berliner.')
 
++h(2, "displacy-dep") Visualize a dependency parse in your browser
+
++code.
+    from spacy import displacy
+
+    doc = nlp(u'This is a sentence.')
+    displacy.serve(doc, style='dep')
+
++h(2, "displacy-ent") Visualize named entities in your browser
+
++code.
+    from spacy import displacy
+
+    doc = nlp(u'When Sebastian Thrun started working on self-driving cars at '
+              u'Google in 2007, few people outside of the company took him seriously.')
+    displacy.serve(doc, style='ent')
+
 +h(2, "multi-threaded") Multi-threaded generator
 
 +code.
