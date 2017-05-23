@@ -87,7 +87,7 @@ cdef class precompute_hiddens:
     we can do all our hard maths up front, packed into large multiplications,
     and do the hard-to-program parsing on the CPU.
     '''
-    cdef int nF, nO
+    cdef int nF, nO, nP
     cdef bint _is_synchronized
     cdef public object ops
     cdef np.ndarray _features
@@ -107,8 +107,9 @@ cdef class precompute_hiddens:
             cached = gpu_cached
         self.nF = cached.shape[1]
         self.nO = cached.shape[2]
+        self.nP = getattr(lower_model, 'nP', 1)
         self.ops = lower_model.ops
-        self._features = numpy.zeros((batch_size, self.nO), dtype='f')
+        self._features = numpy.zeros((batch_size, self.nO*self.nP), dtype='f')
         self._is_synchronized = False
         self._cuda_stream = cuda_stream
         self._cached = cached
@@ -138,15 +139,29 @@ cdef class precompute_hiddens:
         cdef int[:, ::1] ids = token_ids
         sum_state_features(<float*>state_vector.data,
             feat_weights, &ids[0,0],
-            token_ids.shape[0], self.nF, self.nO)
+            token_ids.shape[0], self.nF, self.nO*self.nP)
+        state_vector, bp_nonlinearity = self._nonlinearity(state_vector)
 
         def backward(d_state_vector, sgd=None):
+            if bp_nonlinearity is not None:
+                d_state_vector = bp_nonlinearity(d_state_vector, sgd)
             # This will usually be on GPU
             if isinstance(d_state_vector, numpy.ndarray):
                 d_state_vector = self.ops.xp.array(d_state_vector)
             d_tokens = bp_hiddens((d_state_vector, token_ids), sgd)
             return d_tokens
         return state_vector, backward
+
+    def _nonlinearity(self, state_vector):
+        if self.nP == 1:
+            return state_vector, None
+        state_vector = state_vector.reshape(
+            (state_vector.shape[0], state_vector.shape[1]//self.nP, self.nP))
+        best, which = self.ops.maxout(state_vector)
+        def backprop(d_best, sgd=None):
+            return self.ops.backprop_maxout(d_best, which, self.nP)
+        return best, backprop
+
 
 cdef void sum_state_features(float* output,
         const float* cached, const int* token_ids, int B, int F, int O) nogil:
@@ -220,9 +235,16 @@ cdef class Parser:
         depth = util.env_opt('parser_hidden_depth', depth)
         token_vector_width = util.env_opt('token_vector_width', token_vector_width)
         hidden_width = util.env_opt('hidden_width', hidden_width)
-        lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
-                    nF=cls.nr_feature,
-                    nI=token_vector_width)
+        parser_maxout_pieces = util.env_opt('parser_maxout_pieces', 2)
+        if parser_maxout_pieces == 1:
+            lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
+                        nF=cls.nr_feature,
+                        nI=token_vector_width)
+        else:
+            lower = PrecomputableMaxouts(hidden_width if depth >= 1 else nr_class,
+                        nF=cls.nr_feature,
+                        nP=parser_maxout_pieces,
+                        nI=token_vector_width)
 
         with Model.use_device('cpu'):
             if depth == 0:
@@ -314,7 +336,7 @@ cdef class Parser:
             const float* feat_weights
             StateC* st
             vector[StateC*] next_step, this_step
-            int nr_class, nr_feat, nr_dim, nr_state
+            int nr_class, nr_feat, nr_piece, nr_dim, nr_state
         if isinstance(docs, Doc):
             docs = [docs]
 
@@ -328,6 +350,7 @@ cdef class Parser:
         cuda_stream = get_cuda_stream()
         state2vec, vec2scores = self.get_batch_model(nr_state, tokvecs,
                                                      cuda_stream, 0.0)
+        nr_piece = state2vec.nP
 
         states = self.moves.init_batch(docs)
         for state in states:
@@ -336,9 +359,32 @@ cdef class Parser:
 
         feat_weights = state2vec.get_feat_weights()
         cdef int i
+        cdef np.ndarray token_ids = numpy.zeros((nr_state, nr_feat), dtype='i')
+        cdef np.ndarray is_valid = numpy.zeros((nr_state, nr_class), dtype='i')
+        cdef np.ndarray scores
+        c_token_ids = <int*>token_ids.data
+        c_is_valid = <int*>is_valid.data
+        cdef int has_hidden = hasattr(vec2scores, 'W')
         while not next_step.empty():
-            for i in cython.parallel.prange(next_step.size(), num_threads=4, nogil=True):
-                self._parse_step(next_step[i], feat_weights, nr_class, nr_feat)
+            if not has_hidden:
+                for i in cython.parallel.prange(
+                        next_step.size(), num_threads=6, nogil=True):
+                    self._parse_step(next_step[i],
+                        feat_weights, nr_class, nr_feat, nr_piece)
+            else:
+                for i in range(next_step.size()):
+                    st = next_step[i]
+                    st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
+                    self.moves.set_valid(&c_is_valid[i*nr_class], st)
+                vectors = state2vec(token_ids[:next_step.size()])
+                scores = vec2scores(vectors)
+                c_scores = <float*>scores.data
+                for i in range(next_step.size()):
+                    st = next_step[i]
+                    guess = arg_max_if_valid(
+                        &c_scores[i*nr_class], &c_is_valid[i*nr_class], nr_class)
+                    action = self.moves.c[guess]
+                    action.do(st, action.label)
             this_step, next_step = next_step, this_step
             next_step.clear()
             for st in this_step:
@@ -348,16 +394,19 @@ cdef class Parser:
 
     cdef void _parse_step(self, StateC* state,
             const float* feat_weights,
-            int nr_class, int nr_feat) nogil:
+            int nr_class, int nr_feat, int nr_piece) nogil:
+        '''This only works with no hidden layers -- fast but inaccurate'''
+        #for i in cython.parallel.prange(next_step.size(), num_threads=4, nogil=True):
+        #    self._parse_step(next_step[i], feat_weights, nr_class, nr_feat)
         token_ids = <int*>calloc(nr_feat, sizeof(int))
-        scores = <float*>calloc(nr_class, sizeof(float))
+        scores = <float*>calloc(nr_class * nr_piece, sizeof(float))
         is_valid = <int*>calloc(nr_class, sizeof(int))
 
         state.set_context_tokens(token_ids, nr_feat)
         sum_state_features(scores,
-            feat_weights, token_ids, 1, nr_feat, nr_class)
+            feat_weights, token_ids, 1, nr_feat, nr_class * nr_piece)
         self.moves.set_valid(is_valid, state)
-        guess = arg_max_if_valid(scores, is_valid, nr_class)
+        guess = arg_maxout_if_valid(scores, is_valid, nr_class, nr_piece)
         action = self.moves.c[guess]
         action.do(state, action.label)
 
@@ -568,6 +617,19 @@ cdef int arg_max_if_valid(const weight_t* scores, const int* is_valid, int n) no
         if is_valid[i] >= 1:
             if best == -1 or scores[i] > scores[best]:
                 best = i
+    return best
+
+
+cdef int arg_maxout_if_valid(const weight_t* scores, const int* is_valid,
+                             int n, int nP) nogil:
+    cdef int best = -1
+    cdef float best_score = 0
+    for i in range(n):
+        if is_valid[i] >= 1:
+            for j in range(nP):
+                if best == -1 or scores[i*nP+j] > best_score:
+                    best = i
+                    best_score = scores[i*nP+j]
     return best
 
 
