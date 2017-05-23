@@ -352,7 +352,22 @@ mixin pos-row(tag, pos, morph, desc)
                     |  #[code=m]
         +cell.u-text-small=desc
 
+
 mixin dep-row(label, desc)
     +row
         +cell #[code=label]
         +cell=desc
+
+
+//- Table rows for linguistic annotations
+    annots [array] - array of cell content
+    style [array] array of 1 (display as code) or 0 (display as text)
+
+mixin annotation-row(annots, style)
+    +row
+        for cell, i in annots
+            if style && style[i]
+                - cell = (typeof(cell) != 'boolean') ? cell : cell ? 'True' : 'False'
+                +cell #[code=cell]
+            else
+                +cell=cell
