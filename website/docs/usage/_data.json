@@ -3,13 +3,13 @@
         "Get started": {
             "Installation": "./",
             "Models": "models",
+            "spaCy 101": "spacy-101",
             "Lightning tour": "lightning-tour",
             "Visualizers": "visualizers",
             "Troubleshooting": "troubleshooting",
             "What's new in v2.0": "v2"
         },
         "Workflows": {
-            "spaCy 101": "spacy-101",
             "Loading the pipeline": "language-processing-pipeline",
             "Processing text": "processing-text",
             "spaCy's data model": "data-model",
@@ -44,13 +44,18 @@
 
     "models": {
         "title": "Models",
-        "next": "lightning-tour",
+        "next": "spacy-101",
         "quickstart": true
+    },
+
+    "spacy-101": {
+        "title": "spaCy 101",
+        "next": "lightning-tour"
     },
 
     "lightning-tour": {
         "title": "Lightning tour",
-        "next": "spacy-101"
+        "next": "visualizers"
     },
 
     "visualizers": {
@@ -64,10 +69,6 @@
 
     "resources": {
         "title": "Resources"
-    },
-
-    "spacy-101": {
-        "title": "spaCy 101"
     },
 
     "language-processing-pipeline": {
@@ -95,7 +96,7 @@
     },
 
     "entity-recognition": {
-        "title": "Entity recognition",
+        "title": "Named Entity Recognition",
         "next": "rule-based-matching"
     },
 
