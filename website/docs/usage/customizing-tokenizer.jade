@@ -11,18 +11,56 @@ p
     |  #[code spaces] booleans, which allow you to maintain alignment of the
     |  tokens into the original string.
 
-+aside("See Also")
-    |  If you haven't read up on spaCy's #[+a("data-model") data model] yet,
-    |  you should probably have a look. The main point to keep in mind is that
-    |  spaCy's #[code Doc] doesn't copy or refer to the original string. The
-    |  string is reconstructed from the tokens when required.
++aside("spaCy's data model")
+    |  The main point to keep in mind is that spaCy's #[code Doc] doesn't
+    |  copy or refer to the original string. The string is reconstructed from
+    |  the tokens when required.
 
++h(2, "101") Tokenizer 101
+
+include _spacy-101/_tokenization
+
+
++h(3, "101-data") Tokenizer data
+
+p
+    |  #[strong Global] and #[strong language-specific] tokenizer data is
+    |  supplied via the language data in #[+src(gh("spaCy", "spacy/lang")) spacy/lang].
+    |  The tokenizer exceptions define special cases like "don't" in English,
+    |  which needs to be split into two tokens: #[code {ORTH: "do"}] and
+    |  #[code {ORTH: "n't", LEMMA: "not"}]. The prefixes, suffixes and infixes
+    |  mosty define punctuation rules – for example, when to split off periods
+    |  (at the end of a sentence), and when to leave token containing periods
+    |  intact (abbreviations like "U.S.").
+
++image
+    include ../../assets/img/docs/language_data.svg
+    .u-text-right
+        +button("/assets/img/docs/language_data.svg", false, "secondary").u-text-tag View large graphic
+
++infobox
+    |  For more details on the language-specific data, see the
+    |  usage workflow on #[+a("/docs/usage/adding-languages") adding languages].
 
 +h(2, "special-cases") Adding special case tokenization rules
 
 p
     |  Most domains have at least some idiosyncracies that require custom
-    |  tokenization rules. Here's how to add a special case rule to an existing
+    |  tokenization rules. This could be very certain expressions, or
+    |  abbreviations only used in this specific field.
+
++aside("Language data vs. custom tokenization")
+    |  Tokenization rules that are specific to one language, but can be
+    |  #[strong generalised across that language] should ideally live in the
+    |  language data in #[+src(gh("spaCy", "spacy/lang")) spacy/lang] – we
+    |  always appreciate pull requests! Anything that's specific to a domain or
+    |  text type – like financial trading abbreviations, or Bavarian youth slang
+    |  – should be added as a special case rule to your tokenizer instance. If
+    |  you're dealing with a lot of customisations, it might make sense to create
+    |  an entirely custom subclass.
+
+p
+    |  Here's how to add a special case rule to an existing
     |  #[+api("tokenizer") #[code Tokenizer]] instance:
 
 +code.
@@ -30,15 +68,12 @@ p
     from spacy.symbols import ORTH, LEMMA, POS
 
     nlp = spacy.load('en')
-    assert [w.text for w in nlp(u'gimme that')] == [u'gimme', u'that']
-    nlp.tokenizer.add_special_case(u'gimme',
-        [
-            {
-                ORTH: u'gim',
-                LEMMA: u'give',
-                POS: u'VERB'},
-            {
-                ORTH: u'me'}])
+    doc = nlp(u'gimme that') # phrase to tokenize
+    assert [w.text for w in doc] == [u'gimme', u'that'] # current tokenization
+
+    # add special case rule
+    special_case = [{ORTH: u'gim', LEMMA: u'give', POS: u'VERB'}, {ORTH: u'me'}]
+    nlp.tokenizer.add_special_case(u'gimme', special_case)
     assert [w.text for w in nlp(u'gimme that')] == [u'gim', u'me', u'that']
     assert [w.lemma_ for w in nlp(u'gimme that')] == [u'give', u'me', u'that']
 
@@ -55,9 +90,8 @@ p
     |  The special case rules have precedence over the punctuation splitting:
 
 +code.
-    nlp.tokenizer.add_special_case(u'...gimme...?',
-        [{
-            ORTH: u'...gimme...?', LEMMA: u'give', TAG: u'VB'}])
+    special_case = [{ORTH: u'...gimme...?', LEMMA: u'give', TAG: u'VB'}]
+    nlp.tokenizer.add_special_case(u'...gimme...?', special_case)
     assert len(nlp(u'...gimme...?')) == 1
 
 p
@@ -137,8 +171,8 @@ p
 +h(2, "native-tokenizers") Customizing spaCy's Tokenizer class
 
 p
-    |  Let's imagine you wanted to create a tokenizer for a new language. There
-    |  are four things you would need to define:
+    |  Let's imagine you wanted to create a tokenizer for a new language or
+    |  specific domain. There are four things you would need to define:
 
 +list("numbers")
     +item
@@ -170,14 +204,14 @@ p
     import re
     from spacy.tokenizer import Tokenizer
 
-    prefix_re = re.compile(r'''[\[\(&quot;']''')
-    suffix_re = re.compile(r'''[\]\)&quot;']''')
-    def create_tokenizer(nlp):
-        return Tokenizer(nlp.vocab,
-                prefix_search=prefix_re.search,
-                suffix_search=suffix_re.search)
+    prefix_re = re.compile(r'''[\[\(&quot;&apos;]''')
+    suffix_re = re.compile(r'''[\]\)&quot;&apos;]''')
 
-    nlp = spacy.load('en', tokenizer=create_make_doc)
+    def create_tokenizer(nlp):
+        return Tokenizer(nlp.vocab, prefix_search=prefix_re.search,
+                                    suffix_search=suffix_re.search)
+
+    nlp = spacy.load('en', tokenizer=create_tokenizer)
 
 p
     |  If you need to subclass the tokenizer instead, the relevant methods to
@@ -191,8 +225,6 @@ p
     |  you're creating the pipeline:
 
 +code.
-    import spacy
-
     nlp = spacy.load('en', make_doc=my_tokenizer)
 
 p
