@@ -54,12 +54,14 @@ def test_build_model(parser):
     assert parser.model is not None
 
 
+@pytest.mark.xfail
 def test_predict_doc(parser, tok2vec, model, doc):
     doc.tensor = tok2vec([doc])
     parser.model = model
     parser(doc)
 
 
+@pytest.mark.xfail
 def test_update_doc(parser, tok2vec, model, doc, gold):
     parser.model = model
     tokvecs, bp_tokvecs = tok2vec.begin_update([doc])
