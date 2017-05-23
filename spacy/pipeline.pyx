@@ -43,7 +43,7 @@ class TokenVectorEncoder(object):
     name = 'tok2vec'
 
     @classmethod
-    def Model(cls, width=128, embed_size=5000, **cfg):
+    def Model(cls, width=128, embed_size=7500, **cfg):
         """Create a new statistical model for the class.
 
         width (int): Output size of the model.
