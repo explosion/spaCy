@@ -20,13 +20,13 @@ p
 
 +list("numbers")
     +item
-        |  A token whose #[strong lower-case form matches "hello"], e.g. "Hello"
+        |  A token whose #[strong lowercase form matches "hello"], e.g. "Hello"
         |  or "HELLO".
     +item
         |  A token whose #[strong #[code is_punct] flag is set to #[code True]],
         |  i.e. any punctuation.
     +item
-        |  A token whose #[strong lower-case form matches "world"], e.g. "World"
+        |  A token whose #[strong lowercase form matches "world"], e.g. "World"
         |  or "WORLD".
 
 +code.
@@ -95,10 +95,6 @@ p
     nlp = spacy.load('en')
     matcher = Matcher(nlp.vocab)
 
-    matcher.add('GoogleIO', on_match=add_event_ent,
-                [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}],
-                [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}, {'IS_DIGIT': True}])
-
     # Get the ID of the 'EVENT' entity type. This is required to set an entity.
     EVENT = nlp.vocab.strings['EVENT']
 
@@ -107,6 +103,10 @@ p
         # Append entity to the doc's entity. (Don't overwrite doc.ents!)
         match_id, start, end = matches[i]
         doc.ents += ((EVENT, start, end),)
+
+    matcher.add('GoogleIO', on_match=add_event_ent,
+                [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}],
+                [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}, {'IS_DIGIT': True}])
 
 p
     |  In addition to mentions of "Google I/O", your data also contains some
@@ -117,10 +117,6 @@ p
     |  function #[code merge_and_flag]:
 
 +code.
-    matcher.add('BAD_HTML', on_match=merge_and_flag,
-                [{'ORTH': '&lt;'}, {'LOWER': 'br'}, {'ORTH': '&gt;'}],
-                [{'ORTH': '&lt;'}, {'LOWER': 'br/'}, {'ORTH': '&gt;'}])
-
     # Add a new custom flag to the vocab, which is always False by default.
     # BAD_HTML_FLAG will be the flag ID, which we can use to set it to True on the span.
     BAD_HTML_FLAG = doc.vocab.add_flag(lambda text: False)
@@ -130,6 +126,10 @@ p
         span = doc[start : end]
         span.merge(is_stop=True) # merge (and mark it as a stop word, just in case)
         span.set_flag(BAD_HTML_FLAG, True) # set BAD_HTML_FLAG
+
+    matcher.add('BAD_HTML', on_match=merge_and_flag,
+                [{'ORTH': '&lt;'}, {'LOWER': 'br'}, {'ORTH': '&gt;'}],
+                [{'ORTH': '&lt;'}, {'LOWER': 'br/'}, {'ORTH': '&gt;'}])
 
 +aside("Tip: Visualizing matches")
     |  When working with entities, you can use #[+api("displacy") displaCy]
@@ -146,18 +146,16 @@ p
 
 p
     |  We can now call the matcher on our documents. The patterns will be
-    |  matched in the order they occur in the text.
+    |  matched in the order they occur in the text. The matcher will then
+    |  iterate over the matches, look up the callback for the match ID
+    |  that was matched, and invoke it.
 
 +code.
     doc = nlp(LOTS_OF_TEXT)
     matcher(doc)
 
-+h(3, "on_match-callback") The callback function
-
 p
-    |  The matcher will first collect all matches over the document. It will
-    |  then iterate over the matches, lookup the callback for the entity ID
-    |  that was matched, and invoke it. When the callback is invoked, it is
+    |  When the callback is invoked, it is
     |  passed four arguments: the matcher itself, the document, the position of
     |  the current match, and the total list of matches. This allows you to
     |  write callbacks that consider the entire set of matched phrases, so that
@@ -185,11 +183,24 @@ p
         +cell
             |  A list of #[code (match_id, start, end)] tuples, describing the
             |  matches. A match tuple describes a span #[code doc[start:end]].
-            |  The #[code match_id] is the ID of the added match pattern.
 
-+h(2, "quantifiers") Using quantifiers
++h(2, "quantifiers") Using operators and quantifiers
 
-+table([ "Name", "Description", "Example"])
+p
+    |  The matcher also lets you use quantifiers, specified as the #[code 'OP']
+    |  key. Quantifiers let you define sequences of tokens to be mached, e.g.
+    |  one or more punctuation marks, or specify optional tokens. Note that there
+    |  are no nested or scoped quantifiers – instead, you can build those
+    |  behaviours with #[code on_match] callbacks.
+
++aside("Problems with quantifiers")
+    |  Using quantifiers may lead to unexpected results when matching
+    |  variable-length patterns, for example if the next token would also be
+    |  matched by the previous token. This problem should be resolved in a future
+    |  release. For more information, see
+    |  #[+a(gh("spaCy") + "/issues/864") this issue].
+
++table([ "OP", "Description", "Example"])
     +row
         +cell #[code !]
         +cell match exactly 0 times
@@ -210,6 +221,103 @@ p
         +cell match 0 or 1 times
         +cell optional, max one
 
++h(3, "quantifiers-example1") Quantifiers example: Using linguistic annotations
+
 p
-    |  There are no nested or scoped quantifiers. You can build those
-    |  behaviours with #[code on_match] callbacks.
+    |  Let's say you're analysing user comments and you want to find out what
+    |  people are saying about Facebook. You want to start off by finding
+    |  adjectives following "Facebook is" or "Facebook was". This is obviously
+    |  a very rudimentary solution, but it'll be fast, and a great way get an
+    |  idea for what's in your data. Your pattern could look like this:
+
++code.
+    [{'LOWER': 'facebook'}, {'LEMMA': 'be'}, {'POS': 'ADV', 'OP': '*'}, {'POS': 'ADJ'}]
+
+p
+    |  This translates to a token whose lowercase form matches "facebook"
+    |  (like Facebook, facebook or FACEBOOK), followed by a token with the lemma
+    |  "be" (for example, is, was, or 's), followed by an #[strong optional] adverb,
+    |  followed by an adjective. Using the linguistic annotations here is
+    |  especially useful, because you can tell spaCy to match "Facebook's
+    |  annoying", but #[strong not] "Facebook's annoying ads". The optional
+    |  adverb makes sure you won't miss adjectives with intensifiers, like
+    |  "pretty awful" or "very nice".
+
+p
+    |  To get a quick overview of the results, you could collect all sentences
+    |  containing a match and render them with the
+    |  #[+a("/docs/usage/visualizers") displaCy visualizer].
+    |  In the callback function, you'll have access to the #[code start] and
+    |  #[code end] of each match, as well as the parent #[code Doc]. This lets
+    |  you determine the sentence containing the match,
+    |  #[code doc[start : end].sent], and calculate the start and end of the
+    |  matched span within the sentence. Using displaCy in
+    |  #[+a("/docs/usage/visualizers#manual-usage") "manual" mode] lets you
+    |  pass in a list of dictionaries containing the text and entities to render.
+
++code.
+    from spacy import displacy
+    from spacy.matcher import Matcher
+
+    nlp = spacy.load('en')
+    matcher = Matcher(nlp.vocab)
+    matched_sents = [] # collect data of matched sentences to be visualized
+
+    def collect_sents(matcher, doc, i, matches):
+        match_id, start, end = matches[i]
+        span = doc[start : end] # matched span
+        sent = span.sent # sentence containing matched span
+        # append mock entity for match in displaCy style to matched_sents
+        # get the match span by ofsetting the start and end of the span with the
+        # start and end of the sentence in the doc
+        match_ents = [{'start': span.start-sent.start, 'end': span.end-sent.start,
+                       'label': 'MATCH'}]
+        matched_sents.append({'text': sent.text, 'ents': match_ents })
+
+    pattern = [{'LOWER': 'facebook'}, {'LEMMA': 'be'}, {'POS': 'ADV', 'OP': '*'},
+               {'POS': 'ADJ'}]
+    matcher.add('FacebookIs', collect_sents, pattern) # add pattern
+    matches = matcher(nlp(LOTS_OF_TEXT)) # match on your text
+
+    # serve visualization of sentences containing match with displaCy
+    # set manual=True to make displaCy render straight from a dictionary
+    displacy.serve(matched_sents, style='ent', manual=True)
+
+
++h(3, "quantifiers-example2") Quantifiers example: Phone numbers
+
+p
+    |  Phone numbers can have many different formats and matching them is often
+    |  tricky. During tokenization, spaCy will leave sequences of numbers intact
+    |  and only split on whitespace and punctuation. This means that your match
+    |  pattern will have to look out for number sequences of a certain length,
+    |  surrounded by specific punctuation – depending on the
+    |  #[+a("https://en.wikipedia.org/wiki/National_conventions_for_writing_telephone_numbers") national conventions].
+
+p
+    |  The #[code IS_DIGIT] flag is not very helpful here, because it doesn't
+    |  tell us anything about the length. However, you can use the #[code SHAPE]
+    |  flag, with each #[code d] representing a digit:
+
++code.
+    [{'ORTH': '('}, {'SHAPE': 'ddd'}, {'ORTH': ')'}, {'SHAPE': 'dddd'},
+     {'ORTH': '-', 'OP': '?'}, {'SHAPE': 'dddd'}]
+
+p
+    |  This will match phone numbers of the format #[strong (123) 4567 8901] or
+    |  #[strong (123) 4567-8901]. To also match formats like #[strong (123) 456 789],
+    |  you can add a second pattern using #[code 'ddd'] in place of #[code 'dddd'].
+    |  By hard-coding some values, you can match only certain, country-specific
+    |  numbers. For example, here's a pattern to match the most common formats of
+    |  #[+a("https://en.wikipedia.org/wiki/National_conventions_for_writing_telephone_numbers#Germany") international German numbers]:
+
++code.
+    [{'ORTH': '+'}, {'ORTH': '49'}, {'ORTH': '(', 'OP': '?'}, {'SHAPE': 'dddd'},
+     {'ORTH': ')', 'OP': '?'}, {'SHAPE': 'dddddd'}]
+
+p
+    |  Depending on the formats your application needs to match, creating an
+    |  extensive set of rules like this is often better than training a model.
+    |  It'll produce more predictable results, is much easier to modify and
+    |  extend, and doesn't require any training data – only a set of
+    |  test cases.

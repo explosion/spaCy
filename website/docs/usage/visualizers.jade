@@ -287,24 +287,17 @@ p
     |  #[+a("http://www.nltk.org") NLTK] or
     |  #[+a("https://github.com/tensorflow/models/tree/master/syntaxnet") SyntaxNet].
     |  Simply convert the dependency parse or recognised entities to displaCy's
-    |  format and import #[code DependencyRenderer] or #[code EntityRenderer]
-    |  from #[code spacy.displacy.render]. A renderer class can be is initialised
-    |  with a dictionary of options. To generate the visualization markup, call
-    |  the renderer's #[code render()] method on a list of dictionaries (one
-    |  per visualization).
-
+    |  format and set #[code manual=True] on either #[code render()] or
+    |  #[code serve()].
 
 +aside-code("Example").
-    from spacy.displacy.render import EntityRenderer
-
     ex = [{'text': 'But Google is starting from behind.',
            'ents': [{'start': 4, 'end': 10, 'label': 'ORG'}],
            'title': None}]
-    renderer = EntityRenderer()
-    html = renderer.render(ex)
+    html = displacy.render(ex, style='ent', manual=True)
 
-+code("DependencyRenderer input").
-    [{
++code("DEP input").
+    {
         'words': [
             {'text': 'This', 'tag': 'DT'},
             {'text': 'is', 'tag': 'VBZ'},
@@ -314,11 +307,10 @@ p
             {'start': 0, 'end': 1, 'label': 'nsubj', 'dir': 'left'},
             {'start': 2, 'end': 3, 'label': 'det', 'dir': 'left'},
             {'start': 1, 'end': 3, 'label': 'attr', 'dir': 'right'}]
-    }]
+    }
 
-+code("EntityRenderer input").
-    [{
++code("ENT input").
+    {
         'text': 'But Google is starting from behind.',
         'ents': [{'start': 4, 'end': 10, 'label': 'ORG'}],
         'title': None
-    }]

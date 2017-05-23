@@ -175,7 +175,7 @@ class EntityRenderer(object):
         minify (bool): Minify HTML markup.
         RETURNS (unicode): Rendered HTML markup.
         """
-        rendered = [self.render_ents(p['text'], p['ents'], p['title']) for p in parsed]
+        rendered = [self.render_ents(p['text'], p['ents'], p.get('title', None)) for p in parsed]
         if page:
             docs = ''.join([TPL_FIGURE.format(content=doc) for doc in rendered])
             markup = TPL_PAGE.format(content=docs)
