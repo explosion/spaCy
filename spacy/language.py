@@ -209,29 +209,17 @@ class Language(object):
             >>>        for docs, golds in epoch:
             >>>            state = nlp.update(docs, golds, sgd=optimizer)
         """
-
-        grads = {}
-        def get_grads(W, dW, key=None):
-            grads[key] = (W, dW)
         tok2vec = self.pipeline[0]
         feats = tok2vec.doc2feats(docs)
         for proc in self.pipeline[1:]:
             if not hasattr(proc, 'update'):
                 continue
-            grads = {}
             tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
-            d_tokvecses = proc.update((docs, tokvecses), golds, sgd=get_grads, drop=drop)
-            bp_tokvecses(d_tokvecses, sgd=get_grads)
-            if sgd is not None:
-                for key, (W, dW) in grads.items():
-                    # TODO: Unhack this when thinc improves
-                    if isinstance(W, numpy.ndarray):
-                        sgd.ops = NumpyOps()
-                    else:
-                        sgd.ops = CupyOps()
-                    sgd(W, dW, key=key)
-                for key in list(grads.keys()):
-                    grads.pop(key)
+            d_tokvecses = proc.update((docs, tokvecses), golds, sgd=sgd, drop=drop)
+            bp_tokvecses(d_tokvecses, sgd=sgd)
+        # Clear the tensor variable, to free GPU memory.
+        # If we don't do this, the memory leak gets pretty
+        # bad, because we may be holding part of a batch.
         for doc in docs:
             doc.tensor = None
 
