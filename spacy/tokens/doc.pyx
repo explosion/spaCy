@@ -598,6 +598,24 @@ cdef class Doc:
         self.is_tagged = bool(TAG in attrs or POS in attrs)
         return self
 
+    def to_disk(self, path):
+        """Save the current state to a directory.
+
+        path (unicode or Path): A path to a directory, which will be created if
+            it doesn't exist. Paths may be either strings or `Path`-like objects.
+        """
+        raise NotImplementedError()
+
+    def from_disk(self, path):
+        """Loads state from a directory. Modifies the object in place and
+        returns it.
+
+        path (unicode or Path): A path to a directory. Paths may be either
+            strings or `Path`-like objects.
+        RETURNS (Doc): The modified `Doc` object.
+        """
+        raise NotImplementedError()
+
     def to_bytes(self):
         """Serialize, i.e. export the document contents to a binary string.
 
