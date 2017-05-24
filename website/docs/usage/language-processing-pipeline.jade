@@ -350,8 +350,8 @@ p
         |  a model, or initialising a Language class via
         |  #[+api("language-from_disk") #[code from_disk]].
     +code-new.
-        nlp = spacy.load('en', disable=['parser'])
+        nlp = spacy.load('en', disable=['tagger', 'ner'])
         doc = nlp(u"I don't want parsed", disable=['parser'])
     +code-old.
-        nlp = spacy.load('en', parser=False)
+        nlp = spacy.load('en', tagger=False, entity=False)
         doc = nlp(u"I don't want parsed", parse=False)

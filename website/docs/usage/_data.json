@@ -15,7 +15,7 @@
             "Custom tokenization": "customizing-tokenizer",
             "Rule-based matching": "rule-based-matching",
             "Adding languages": "adding-languages",
-            "NLP pipelines": "language-processing-pipeline",
+            "Processing pipelines": "language-processing-pipeline",
             "Deep learning": "deep-learning",
             "Production use": "production-use",
             "Training": "training",
@@ -48,16 +48,11 @@
 
     "lightning-tour": {
         "title": "Lightning tour",
-        "next": "visualizers"
+        "next": "v2"
     },
 
     "visualizers": {
         "title": "Visualizers"
-    },
-
-    "troubleshooting": {
-        "title": "Troubleshooting",
-        "next": "resources"
     },
 
     "v2": {
@@ -113,7 +108,6 @@
         "title": "Production use",
         "next": "training"
     },
-
 
     "training": {
         "title": "Training spaCy's statistical models",
