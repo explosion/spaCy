@@ -15,9 +15,9 @@
             "Custom tokenization": "customizing-tokenizer",
             "Rule-based matching": "rule-based-matching",
             "Adding languages": "adding-languages",
-            "Processing text": "processing-text",
             "NLP pipelines": "language-processing-pipeline",
             "Deep learning": "deep-learning",
+            "Production use": "production-use",
             "Training": "training",
             "Training NER": "training-ner",
             "Saving & loading": "saving-loading",
@@ -99,11 +99,6 @@
         "next": "training"
     },
 
-    "processing-text": {
-        "title": "Processing text",
-        "next": "language-processing-pipeline"
-    },
-
     "language-processing-pipeline": {
         "title": "Language processing pipelines",
         "next": "deep-learning"
@@ -111,8 +106,14 @@
 
     "deep-learning": {
         "title": "Hooking a deep learning model into spaCy",
+        "next": "production use"
+    },
+
+    "production-use": {
+        "title": "Production use",
         "next": "training"
     },
+
 
     "training": {
         "title": "Training spaCy's statistical models",
