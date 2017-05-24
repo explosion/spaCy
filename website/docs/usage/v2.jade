@@ -260,12 +260,16 @@ p
 
 +h(3, "migrating-saving-loading") Saving, loading and serialization
 
-+h(2, "migrating") Migrating from spaCy 1.x
 p
     |  Double-check all calls to #[code spacy.load()] and make sure they don't
-    |  use the #[code path] keyword argument.
+    |  use the #[code path] keyword argument. If you're only loading in binary
+    |  data and not a model package that can construct its own #[code Language]
+    |  class and pipeline, you should now use the
+    |  #[+api("language#from_disk") #[code Language.from_disk()]] method.
 
-+code-new nlp = spacy.load('/model')
++code-new.
+    nlp = spacy.load('/model')
+    nlp = English().from_disk('/model/data')
 +code-old nlp = spacy.load('en', path='/model')
 
 p
@@ -288,15 +292,26 @@ p
     |  If you're importing language data or #[code Language] classes, make sure
     |  to change your import statements to import from #[code spacy.lang]. If
     |  you've added your own custom language, it needs to be moved to
-    |  #[code spacy/lang/xx].
+    |  #[code spacy/lang/xx] and adjusted accordingly.
 
 +code-new from spacy.lang.en import English
 +code-old from spacy.en import English
 
 p
-    |  All components, e.g. tokenizer exceptions, are now responsible for
-    |  compiling their data in the correct format. The language_data.py files
-    |  have been removed
+    |  If you've been using custom pipeline components, check out the new
+    |  guide on #[+a("/docs/usage/language-processing-pipelines") processing pipelines].
+    |  Appending functions to the pipeline still works – but you might be able
+    |  to make this more convenient by registering "component factories".
+    |  Components of the processing pipeline can now be disabled by passing a
+    |  list of their names to the #[code disable] keyword argument on loading
+    |  or processing.
+
++code-new.
+    nlp = spacy.load('en', disable=['tagger', 'ner'])
+    doc = nlp(u"I don't want parsed", disable=['parser'])
++code-old.
+    nlp = spacy.load('en', tagger=False, entity=False)
+    doc = nlp(u"I don't want parsed", parse=False)
 
 +h(3, "migrating-matcher") Adding patterns and callbacks to the matcher
 
