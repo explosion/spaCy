@@ -105,7 +105,7 @@
     },
 
     "language-processing-pipeline": {
-        "title": "Natural language processing pipelines",
+        "title": "Language processing pipelines",
         "next": "deep-learning"
     },
 

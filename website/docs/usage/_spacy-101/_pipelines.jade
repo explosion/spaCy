@@ -1,0 +1,44 @@
+//- 💫 DOCS > USAGE > SPACY 101 > PIPELINES
+
+p
+    |  When you call #[code nlp] on a text, spaCy first tokenizes the text to
+    |  produce a #[code Doc] object. The #[code Doc] is the processed in several
+    |  different steps – this is also referred to as the
+    |  #[strong processing pipeline]. The pipeline used by our
+    |  #[+a("/docs/usage/models") default models] consists of a
+    |  vectorizer, a tagger, a parser and an entity recognizer. Each pipeline
+    |  component returns the processed #[code Doc], which is then passed on to
+    |  the next component.
+
++image
+    include ../../../assets/img/docs/pipeline.svg
+    .u-text-right
+        +button("/assets/img/docs/pipeline.svg", false, "secondary").u-text-tag View large graphic
+
++table(["Name", "Component", "Creates"])
+    +row
+        +cell tokenizer
+        +cell #[+api("tokenizer") #[code Tokenizer]]
+        +cell #[code Doc]
+
+    +row("divider")
+        +cell vectorizer
+        +cell #[code Vectorizer]
+        +cell #[code Doc.tensor]
+
+    +row
+        +cell tagger
+        +cell #[+api("tagger") #[code Tagger]]
+        +cell #[code Doc[i].tag]
+
+    +row
+        +cell parser
+        +cell #[+api("dependencyparser") #[code DependencyParser]]
+        +cell
+            |  #[code Doc[i].head], #[code Doc[i].dep], #[code Doc.sents],
+            |  #[code Doc.noun_chunks]
+
+    +row
+        +cell ner
+        +cell #[+api("entityrecognizer") #[code EntityRecognizer]]
+        +cell #[code Doc.ents], #[code Doc[i].ent_iob], #[code Doc[i].ent_type]
