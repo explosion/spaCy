@@ -10,14 +10,19 @@ p
     doc = nlp(u'Hello, world! A three sentence document.\nWith new lines...')
 
 p
-    |  The library should perform equally well with short or long documents.
+    |  The library should perform equally well with #[strong short or long documents].
     |  All algorithms are linear-time in the length of the string, and once the
     |  data is loaded, there's no significant start-up cost to consider. This
     |  means that you don't have to strategically merge or split your text —
     |  you should feel free to feed in either single tweets or whole novels.
 
 p
-    |  If you run #[code nlp = spacy.load('en')], the #[code nlp] object will
+    |  If you run #[+api("spacy#load") #[code spacy.load('en')]], spaCy will
+    |  load the #[+a("/docs/usage/models") model] associated with the name
+    |  #[code 'en']. Each model is a Python package containing an
+    |  #[+src(gh("spacy-dev-resources", "templates/model/en_model_name/__init__.py"))__init__.py]
+
+the #[code nlp] object will
     |  be an instance of #[code spacy.en.English]. This means that when you run
     |  #[code doc = nlp(text)], you're executing
     |  #[code spacy.en.English.__call__], which is implemented on its parent

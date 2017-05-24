@@ -125,7 +125,7 @@
     },
 
     "saving-loading": {
-        "title": "Saving and loading models"
+        "title": "Saving, loading and data serialization"
     },
 
     "showcase": {

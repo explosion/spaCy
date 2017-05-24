@@ -538,8 +538,8 @@ p
     |  #[+src(gh("spacy-dev-resources", "training/word_freqs.py")) word_freqs.py]
     |  script from the spaCy developer resources. Note that your corpus should
     |  not be preprocessed (i.e. you need punctuation for example). The
-    |  #[+a("/docs/api/cli#model") #[code model]] command expects a
-    |  tab-separated word frequencies file with three columns:
+    |  #[+api("cli#model") #[code model]] command expects a tab-separated word
+    |  frequencies file with three columns:
 
 +list("numbers")
     +item The number of times the word occurred in your language sample.
@@ -654,13 +654,12 @@ p
     |  If your corpus uses the
     |  #[+a("http://universaldependencies.org/docs/format.html") CoNLL-U] format,
     |  i.e. files with the extension #[code .conllu], you can use the
-    |  #[+a("/docs/api/cli#convert") #[code convert]] command to convert it to
-    |  spaCy's #[+a("/docs/api/annotation#json-input") JSON format] for training.
+    |  #[+api("cli#convert") #[code convert]] command to convert it to spaCy's
+    |  #[+a("/docs/api/annotation#json-input") JSON format] for training.
 
 p
     |  Once you have your UD corpus transformed into JSON, you can train your
-    |  model use the using spaCy's
-    |  #[+a("/docs/api/cli#train") #[code train]] command:
+    |  model use the using spaCy's #[+api("cli#train") #[code train]] command:
 
 +code(false, "bash").
     python -m spacy train [lang] [output_dir] [train_data] [dev_data] [--n_iter] [--parser_L1] [--no_tagger] [--no_parser] [--no_ner]
