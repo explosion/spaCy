@@ -6,18 +6,20 @@ p
     |  spaCy features a fast and accurate syntactic dependency parser, and has
     |  a rich API for navigating the tree. The parser also powers the sentence
     |  boundary detection, and lets you iterate over base noun phrases, or
-    |  "chunks".
-
-p
-    |  You can check whether a #[+api("doc") #[code Doc]] object has been
-    |  parsed with the #[code doc.is_parsed] attribute, which returns a boolean
-    |  value. If this attribute is #[code False], the default sentence iterator
-    |  will raise an exception.
+    |  "chunks". You can check whether a #[+api("doc") #[code Doc]] object has
+    |  been parsed with the #[code doc.is_parsed] attribute, which returns a
+    |  boolean value. If this attribute is #[code False], the default sentence
+    |  iterator will raise an exception.
 
 +h(2, "noun-chunks") Noun chunks
     +tag-model("dependency parse")
 
-p Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque enim ante, pretium a orci eget, varius dignissim augue. Nam eu dictum mauris, id tincidunt nisi. Integer commodo pellentesque tincidunt. Nam at turpis finibus tortor gravida sodales tincidunt sit amet est. Nullam euismod arcu in tortor auctor.
+p
+    |  Noun chunks are "base noun phrases" – flat phrases that have a noun as
+    |  their head. You can think of noun chunks as a noun plus the words describing
+    |  the noun – for example, "the lavish green grass" or "the world’s largest
+    |  tech fund". To get the noun chunks in a document, simply iterate over
+    |  #[+api("doc#noun_chunks") #[code Doc.noun_chunks]].
 
 +code("Example").
     nlp = spacy.load('en')
@@ -28,9 +30,10 @@ p Lorem ipsum dolor sit amet, consectetur adipiscing elit. Quisque enim ante, pr
 
 +aside
     |  #[strong Text:] The original noun chunk text.#[br]
-    |  #[strong Root text:] ...#[br]
-    |  #[strong Root dep:] ...#[br]
-    |  #[strong Root head text:] ...#[br]
+    |  #[strong Root text:] The original text of the word connecting the noun
+    |  chunk to the rest of the parse.#[br]
+    |  #[strong Root dep:] Dependcy relation connecting the root to its head.#[br]
+    |  #[strong Root head text:] The text of the root token's head.#[br]
 
 +table(["Text", "root.text", "root.dep_", "root.head.text"])
     - var style = [0, 0, 1, 0]
@@ -59,7 +62,7 @@ p
     |  #[strong Dep]: The syntactic relation connecting child to head.#[br]
     |  #[strong Head text]: The original text of the token head.#[br]
     |  #[strong Head POS]: The part-of-speech tag of the token head.#[br]
-    |  #[strong Children]: ...
+    |  #[strong Children]: The immediate syntactic dependents of the token.
 
 +table(["Text", "Dep", "Head text", "Head POS", "Children"])
     - var style = [0, 1, 0, 1, 0]
@@ -204,20 +207,31 @@ p
 +h(2, "disabling") Disabling the parser
 
 p
-    |  The parser is loaded and enabled by default. If you don't need any of
-    |  the syntactic information, you should disable the parser. Disabling the
-    |  parser will make spaCy load and run much faster. Here's how to prevent
-    |  the parser from being loaded:
+    |  In the #[+a("/docs/usage/models/available") default models], the parser
+    |  is loaded and enabled as part of the
+    |  #[+a("docs/usage/language-processing-pipelines") standard processing pipeline].
+    |  If you don't need any of the syntactic information, you should disable
+    |  the parser. Disabling the parser will make spaCy load and run much faster.
+    |  If you want to load the parser, but need to disable it for specific
+    |  documents, you can also control its use on the #[code nlp] object.
 
 +code.
-    nlp = spacy.load('en', parser=False)
+    nlp = spacy.load('en', disable=['parser'])
+    nlp = English().from_disk('/model', disable=['parser'])
+    doc = nlp(u"I don't want parsed", disable=['parser'])
 
-p
-    |  If you need to load the parser, but need to disable it for specific
-    |  documents, you can control its use with the #[code parse] keyword
-    |  argument:
-
-+code.
-    nlp = spacy.load('en')
-    doc1 = nlp(u'Text I do want parsed.')
-    doc2 = nlp(u"Text I don't want parsed", parse=False)
++infobox("Important note: disabling pipeline components")
+    .o-block
+        |  Since spaCy v2.0 comes with better support for customising the
+        |  processing pipeline components, the #[code parser] keyword argument
+        |  has been replaced with #[code disable], which takes a list of
+        |  #[+a("/docs/usage/language-processing-pipeline") pipeline component names].
+        |  This lets you disable both default and custom components when loading
+        |  a model, or initialising a Language class via
+        |  #[+api("language-from_disk") #[code from_disk]].
+    +code-new.
+        nlp = spacy.load('en', disable=['parser'])
+        doc = nlp(u"I don't want parsed", disable=['parser'])
+    +code-old.
+        nlp = spacy.load('en', parser=False)
+        doc = nlp(u"I don't want parsed", parse=False)
