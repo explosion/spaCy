@@ -6,40 +6,138 @@ p
     |  The following examples and code snippets give you an overview of spaCy's
     |  functionality and its usage.
 
-+h(2, "models") Install and load models
++h(2, "models") Install models and process text
 
 +code(false, "bash").
     python -m spacy download en
+    python -m spacy download de
 
 +code.
     import spacy
     nlp = spacy.load('en')
+    doc = nlp(u'Hello, world. Here are two sentences.')
 
-+h(2, "examples-resources") Load resources and process text
+    nlp_de = spacy.load('de')
+    doc_de = nlp_de(u'Ich bin ein Berliner.')
+
++infobox
+    |  #[strong API:] #[+api("spacy#load") #[code spacy.load()]]
+    |  #[strong Usage:] #[+a("/docs/usage/models") Models],
+    |  #[+a("/docs/usage/spacy-101") spaCy 101]
+
++h(2, "examples-tokens-sentences") Get tokens, noun chunks & sentences
+    +tag-model("dependency parse")
+
++code.
+    doc = nlp(u"Peach emoji is where it has always been. Peach is the superior "
+              u"emoji. It's outranking eggplant 🍑 ")
+
+    assert doc[0].text == u'Peach'
+    assert doc[1].text == u'emoji'
+    assert doc[-1].text == u'🍑'
+    assert doc[17:19] == u'outranking eggplant'
+    assert doc.noun_chunks[0].text == u'Peach emoji'
+
+    sentences = list(doc.sents)
+    assert len(sentences) == 3
+    assert sentences[0].text == u'Peach is the superior emoji.'
+
++infobox
+    |  #[strong API:] #[+api("doc") #[code Doc]], #[+api("token") #[code Token]]
+    |  #[strong Usage:] #[+a("/docs/usage/spacy-101") spaCy 101]
+
++h(2, "examples-pos-tags") Get part-of-speech tags and flags
+    +tag-model("tagger")
+
++code.
+    doc = nlp(u'Apple is looking at buying U.K. startup for $1 billion')
+    apple = doc[0]
+    assert [apple.pos_, apple.pos] == [u'PROPN', 94]
+    assert [apple.tag_, apple.tag] == [u'NNP', 475]
+    assert [apple.shape_, apple.shape] == [u'Xxxxx', 684]
+    assert apple.is_alpha == True
+    assert apple.is_punct == False
+
+    billion = doc[10]
+    assert billion.is_digit == False
+    assert billion.like_num == True
+    assert billion.like_email == False
+
++infobox
+    |  #[strong API:] #[+api("token") #[code Token]]
+    |  #[strong Usage:] #[+a("/docs/usage/pos-tagging") Part-of-speech tagging]
+
++h(2, "examples-integer-ids") Use integer IDs for any string
+
++code.
+    hello_id = nlp.vocab.strings['Hello']
+    hello_str = nlp.vocab.strings[hello_id]
+    assert token.text  == hello_id  == 3125
+    assert token.text == hello_str == 'Hello'
+
++h(2, "examples-entities") Recongnise and update named entities
+    +tag-model("NER")
+
++code.
+    doc = nlp(u'San Francisco considers banning sidewalk delivery robots')
+    ents = [(e.text, e.start_char, e.end_char, e.label_) for e in doc.ents]
+    assert ents == [(u'San Francisco', 0, 13, u'GPE')]
+
+    from spacy.tokens import Span
+    doc = nlp(u'Netflix is hiring a new VP of global policy')
+    doc.ents = [Span(doc, 0, 1, label=doc.vocab.strings[u'ORG'])]
+    ents = [(e.start_char, e.end_char, e.label_) for ent in doc.ents]
+    assert ents == [(0, 7, u'ORG')]
+
++infobox
+    |  #[strong Usage:] #[+a("/docs/usage/entity-recognition") Named entity recognition]
+
++h(2, "displacy") Visualize a dependency parse and named entities in your browser
+    +tag-model("dependency parse", "NER")
+
++code.
+    from spacy import displacy
+
+    doc_dep = nlp(u'This is a sentence.')
+    displacy.serve(doc_dep, style='dep')
+
+    doc_ent = nlp(u'When Sebastian Thrun started working on self-driving cars at '
+                  u'Google in 2007, few people outside of the company took him seriously.')
+    displacy.serve(doc_ent, style='ent')
+
++infobox
+    |  #[strong API:] #[+api("displacy") #[code displacy]]
+    |  #[strong Usage:] #[+a("/docs/usage/visualizers") Visualizers]
+
++h(2, "examples-word-vectors") Word vectors
+    +tag-model("word vectors")
+
++code.
+    doc = nlp(u"Apple and banana are similar. Pasta and hippo aren't.")
+    apple = doc[0]
+    banana = doc[2]
+    pasta = doc[6]
+    hippo = doc[8]
+    assert apple.similarity(banana) > pasta.similarity(hippo)
+
++infobox
+    |  #[strong Usage:] #[+a("/docs/usage/word-vectors-similarities") Word vectors and similarity]
+
++h(2, "examples-serialization") Simple and efficient serialization
 
 +code.
     import spacy
-    en_nlp = spacy.load('en')
-    de_nlp = spacy.load('de')
-    en_doc = en_nlp(u'Hello, world. Here are two sentences.')
-    de_doc = de_nlp(u'ich bin ein Berliner.')
+    from spacy.tokens.doc import Doc
 
-+h(2, "displacy-dep") Visualize a dependency parse in your browser
+    nlp = spacy.load('en')
+    moby_dick = open('moby_dick.txt', 'r')
+    doc = nlp(moby_dick)
+    doc.to_disk('/moby_dick.bin')
 
-+code.
-    from spacy import displacy
+    new_doc = Doc().from_disk('/moby_dick.bin')
 
-    doc = nlp(u'This is a sentence.')
-    displacy.serve(doc, style='dep')
-
-+h(2, "displacy-ent") Visualize named entities in your browser
-
-+code.
-    from spacy import displacy
-
-    doc = nlp(u'When Sebastian Thrun started working on self-driving cars at '
-              u'Google in 2007, few people outside of the company took him seriously.')
-    displacy.serve(doc, style='ent')
++infobox
+    |  #[strong Usage:] #[+a("/docs/usage/saving-loading") Saving and loading]
 
 +h(2, "multi-threaded") Multi-threaded generator
 
@@ -52,37 +150,25 @@ p
         if i == 100:
             break
 
-+h(2, "examples-tokens-sentences") Get tokens and sentences
++infobox
+    |  #[strong API:] #[+api("doc") #[code Doc]]
+    |  #[strong Usage:] #[+a("/docs/usage/production-usage") Production usage]
+
++h(2, "examples-dependencies") Get syntactic dependencies
+    +tag-model("dependency parse")
 
 +code.
-    token = doc[0]
-    sentence = next(doc.sents)
-    assert token is sentence[0]
-    assert sentence.text == 'Hello, world.'
+    def dependency_labels_to_root(token):
+        """Walk up the syntactic tree, collecting the arc labels."""
+        dep_labels = []
+        while token.head is not token:
+            dep_labels.append(token.dep)
+            token = token.head
+        return dep_labels
 
-+h(2, "examples-integer-ids") Use integer IDs for any string
-
-+code.
-    hello_id = nlp.vocab.strings['Hello']
-    hello_str = nlp.vocab.strings[hello_id]
-
-    assert token.orth  == hello_id  == 3125
-    assert token.orth_ == hello_str == 'Hello'
-
-+h(2, "examples-string-views-flags") Get and set string views and flags
-
-+code.
-    assert token.shape_ == 'Xxxxx'
-    for lexeme in nlp.vocab:
-        if lexeme.is_alpha:
-            lexeme.shape_ = 'W'
-        elif lexeme.is_digit:
-            lexeme.shape_ = 'D'
-        elif lexeme.is_punct:
-            lexeme.shape_ = 'P'
-        else:
-            lexeme.shape_ = 'M'
-    assert token.shape_ == 'W'
++infobox
+    |  #[strong API:] #[+api("token") #[code Token]]
+    |  #[strong Usage:] #[+a("/docs/usage/dependency-parse") Using the dependency parse]
 
 +h(2, "examples-numpy-arrays") Export to numpy arrays
 
@@ -96,70 +182,6 @@ p
     assert doc[1].orth == doc_array[1, 0]
     assert doc[0].like_url == doc_array[0, 1]
     assert list(doc_array[:, 1]) == [t.like_url for t in doc]
-
-+h(2, "examples-word-vectors") Word vectors
-
-+code.
-    doc = nlp("Apples and oranges are similar. Boots and hippos aren't.")
-
-    apples = doc[0]
-    oranges = doc[2]
-    boots = doc[6]
-    hippos = doc[8]
-
-    assert apples.similarity(oranges) > boots.similarity(hippos)
-
-+h(2, "examples-pos-tags") Part-of-speech tags
-
-+code.
-    from spacy.parts_of_speech import ADV
-
-    def is_adverb(token):
-        return token.pos == spacy.parts_of_speech.ADV
-
-    # These are data-specific, so no constants are provided. You have to look
-    # up the IDs from the StringStore.
-    NNS = nlp.vocab.strings['NNS']
-    NNPS = nlp.vocab.strings['NNPS']
-    def is_plural_noun(token):
-        return token.tag == NNS or token.tag == NNPS
-
-    def print_coarse_pos(token):
-        print(token.pos_)
-
-    def print_fine_pos(token):
-        print(token.tag_)
-
-+h(2, "examples-dependencies") Syntactic dependencies
-
-+code.
-    def dependency_labels_to_root(token):
-        '''Walk up the syntactic tree, collecting the arc labels.'''
-        dep_labels = []
-        while token.head is not token:
-            dep_labels.append(token.dep)
-            token = token.head
-        return dep_labels
-
-+h(2, "examples-entities") Named entities
-
-+code.
-    def iter_products(docs):
-        for doc in docs:
-            for ent in doc.ents:
-                if ent.label_ == 'PRODUCT':
-                    yield ent
-
-    def word_is_in_entity(word):
-        return word.ent_type != 0
-
-    def count_parent_verb_by_person(docs):
-        counts = defaultdict(lambda: defaultdict(int))
-        for doc in docs:
-            for ent in doc.ents:
-                if ent.label_ == 'PERSON' and ent.root.head.pos == VERB:
-                    counts[ent.orth_][ent.root.head.lemma_] += 1
-        return counts
 
 +h(2, "examples-inline") Calculate inline mark-up on original string
 
@@ -187,17 +209,3 @@ p
         string = string.replace('\n', '')
         string = string.replace('\t', '    ')
         return string
-
-+h(2, "examples-binary") Efficient binary serialization
-
-+code.
-    import spacy
-    from spacy.tokens.doc import Doc
-
-    byte_string = doc.to_bytes()
-    open('moby_dick.bin', 'wb').write(byte_string)
-
-    nlp = spacy.load('en')
-    for byte_string in Doc.read_bytes(open('moby_dick.bin', 'rb')):
-       doc = Doc(nlp.vocab)
-       doc.from_bytes(byte_string)
