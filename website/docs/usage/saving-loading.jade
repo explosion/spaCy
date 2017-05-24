@@ -10,6 +10,13 @@ include _spacy-101/_serialization
     |  overview of the changes, see #[+a("/docs/usage/v2#incompat") this table]
     |  and the notes on #[+a("/docs/usage/v2#migrating-saving-loading") migrating].
 
++h(3, "example-doc") Example: Saving and loading a document
+
+p
+    |  For simplicity, let's assume you've
+    |  #[+a("/docs/usage/entity-recognition#setting") added custom entities] to
+    |  a #[code Doc], either manually, or by using a
+    |  #[+a("/docs/usage/rule-based-matching#on_match") match pattern]. You can
     |  save it locally by calling #[+api("doc#to_disk") #[code Doc.to_disk()]],
     |  and load it again via #[+api("doc#from_disk") #[code Doc.from_disk()]].
     |  This will overwrite the existing object and return it.
@@ -99,53 +106,108 @@ p
     |  If you're creating the package manually, keep in mind that the directories
     |  need to be named according to the naming conventions of
     |  #[code lang_name] and #[code lang_name-version].
-    |  #[code lang] setting in the meta.json is also used to create the
-    |  respective #[code Language] class in spaCy, which will later be returned
-    |  by the model's #[code load()] method.
+
++h(3, "models-custom") Customising the model setup
 
 p
-    |  To #[strong build the package], run the following command from within the
-    |  directory. This will create a #[code .tar.gz] archive in a directory
-    |  #[code /dist]. For more information on building Python packages, see the
-    |  #[+a("https://setuptools.readthedocs.io/en/latest/") Python Setuptools documentation].
+    |  The meta.json includes a #[code setup] key that lets you customise how
+    |  the model should be initialised and loaded. You can define the language
+    |  data to be loaded and the
+    |  #[+a("/docs/usage/language-processing-pipeline") processing pipeline] to
+    |  execute.
 
++table(["Setting", "Type", "Description"])
+    +row
+        +cell #[code lang]
+        +cell unicode
+        +cell ID of the language class to initialise.
+
+    +row
+        +cell #[code pipeline]
+        +cell list
+        +cell
+            |  A list of strings mapping to the IDs of pipeline factories to
+            |  apply in that order. If not set, spaCy's
+            |  #[+a("/docs/usage/language-processing/pipelines") default pipeline]
+            |  will be used.
+
+p
+    |  The #[code load()] method that comes with our model package
+    |  templates will take care of putting all this together and returning a
+    |  #[code Language] object with the loaded pipeline and data. If your model
+    |  requires custom pipeline components, you should
+    |  #[strong ship then with your model] and register their
+    |  #[+a("/docs/usage/language-processing-pipeline#creating-factory") factories]
+    |  via  #[+api("spacy#set_factory") #[code set_factory()]].
+
++aside-code("Factory example").
+    def my_factory(vocab):
+        # load some state
+        def my_component(doc):
+            # process the doc
+            return doc
+        return my_component
+
++code.
+    spacy.set_factory('custom_component', custom_component_factory)
+
++infobox("Custom models with pipeline components")
+    |  For more details and an example of how to package a sentiment model
+    |  with a custom pipeline component, see the usage workflow on
+    |  #[+a("/docs/usage/language-processing-pipeline#example2") language processing pipelines].
+
++h(3, "models-building") Building the model package
+
+p
+    |  To build the package, run the following command from within the
+    |  directory. For more information on building Python packages, see the
+    |  docs on Python's
+    |  #[+a("https://setuptools.readthedocs.io/en/latest/") Setuptools].
 
 +code(false, "bash").
     python setup.py sdist
+
+p
+    |  This will create a #[code .tar.gz] archive in a directory #[code /dist].
+    |  The model can be installed by pointing pip to the path of the archive:
+
++code(false, "bash").
+    pip install /path/to/en_example_model-1.0.0.tar.gz
+
+p
+    |  You can then load the model via its name, #[code en_example_model], or
+    |  import it directly as a module and then call its #[code load()] method.
 
 +h(2, "loading") Loading a custom model package
 
 p
     |  To load a model from a data directory, you can use
-    |  #[+api("spacy#load") #[code spacy.load()]] with the local path:
+    |  #[+api("spacy#load") #[code spacy.load()]] with the local path. This will
+    |  look for a meta.json in the directory and use the #[code setup] details
+    |  to initialise a #[code Language] class with a processing pipeline and
+    |  load in the model data.
 
 +code.
     nlp = spacy.load('/path/to/model')
 
 p
-    |  If you have generated a model package, you can also install it by
-    |  pointing pip to the model's #[code .tar.gz] archive – this is pretty
-    |  much exactly what spaCy's #[+api("cli#download") #[code download]]
-    |  command does under the hood.
-
-+code(false, "bash").
-    pip install /path/to/en_example_model-1.0.0.tar.gz
-
-+aside-code("Custom model names", "bash").
-    # optional: assign custom name to model
-    python -m spacy link en_example_model my_cool_model
-
-p
-    |  You'll then be able to load the model via spaCy's loader, or by importing
-    |  it as a module. For larger code bases, we usually recommend native
-    |  imports, as this will make it easier to integrate models with your
-    |  existing build process, continuous integration workflow and testing
-    |  framework.
+    |  If you want to #[strong load only the binary data], you'll have to create
+    |  a #[code Language] class and call
+    |  #[+api("language#from_disk") #[code from_disk]] instead.
 
 +code.
-    # option 1: import model as module
-    import en_example_model
-    nlp = en_example_model.load()
+    from spacy.lang.en import English
+    nlp = English().from_disk('/path/to/data')
 
-    # option 2: use spacy.load()
-    nlp = spacy.load('en_example_model')
++infobox("Important note: Loading data in v2.x")
+    .o-block
+        |  In spaCy 1.x, the distinction between #[code spacy.load()] and the
+        |  #[code Language] class constructor was quite unclear. You could call
+        |  #[code spacy.load()] when no model was present, and it would silently
+        |  return an empty object. Likewise, you could pass a path to
+        |  #[code English], even if the mode required a different language.
+        |  spaCy v2.0 solves this with a clear distinction between setting up
+        |  the instance and loading the data.
+
+    +code-new nlp = English.from_disk('/path/to/data')
+    +code-old nlp = spacy.load('en', path='/path/to/data')
