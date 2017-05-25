@@ -276,7 +276,15 @@ class Language(object):
                 context = proc.begin_training(get_gold_tuples(),
                                               pipeline=self.pipeline)
                 contexts.append(context)
-        optimizer = Adam(Model.ops, 0.001)
+        learn_rate = util.env_opt('learn_rate', 0.001)
+        beta1 = util.env_opt('optimizer_B1', 0.9)
+        beta2 = util.env_opt('optimizer_B2', 0.999)
+        eps = util.env_opt('optimizer_eps', 1e-08)
+        L2 = util.env_opt('L2_penalty', 1e-6)
+        max_grad_norm = util.env_opt('grad_norm_clip', 1.)
+        optimizer = Adam(Model.ops, learn_rate, L2=L2, beta1=beta1,
+                         beta2=beta2, eps=eps)
+        optimizer.max_grad_norm = max_grad_norm
         return optimizer
 
     def evaluate(self, docs_golds):
