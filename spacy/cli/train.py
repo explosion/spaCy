@@ -57,9 +57,9 @@ def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
     # starts high and decays sharply, to force the optimizer to explore.
     # Batch size starts at 1 and grows, so that we make updates quickly
     # at the beginning of training.
-    dropout_rates = util.decaying(util.env_opt('dropout_from', 0.0),
-                                  util.env_opt('dropout_to', 0.0),
-                                  util.env_opt('dropout_decay', 0.0))
+    dropout_rates = util.decaying(util.env_opt('dropout_from', 0.5),
+                                  util.env_opt('dropout_to', 0.2),
+                                  util.env_opt('dropout_decay', 1e-4))
     batch_sizes = util.compounding(util.env_opt('batch_from', 1),
                                    util.env_opt('batch_to', 64),
                                    util.env_opt('batch_compound', 1.001))
@@ -72,7 +72,7 @@ def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
 
     print("Itn.\tDep. Loss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
     for i in range(n_iter):
-        with tqdm.tqdm(total=corpus.count_train()) as pbar:
+        with tqdm.tqdm(total=corpus.count_train(), leave=False) as pbar:
             train_docs = corpus.train_docs(nlp, projectivize=True,
                                            gold_preproc=False, shuffle=i)
             losses = {}
