@@ -270,7 +270,6 @@ class Language(object):
         if cfg.get('use_gpu'):
             Model.ops = CupyOps()
             Model.Ops = CupyOps
-            print("Use GPU")
         for proc in self.pipeline:
             if hasattr(proc, 'begin_training'):
                 context = proc.begin_training(get_gold_tuples(),
