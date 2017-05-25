@@ -209,5 +209,5 @@ p
         |  spaCy v2.0 solves this with a clear distinction between setting up
         |  the instance and loading the data.
 
-    +code-new nlp = English.from_disk('/path/to/data')
+    +code-new nlp = English().from_disk('/path/to/data')
     +code-old nlp = spacy.load('en', path='/path/to/data')

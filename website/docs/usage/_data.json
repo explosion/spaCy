@@ -7,7 +7,7 @@
             "Lightning tour": "lightning-tour",
             "What's new in v2.0": "v2"
         },
-        "Workflows": {
+        "Guides": {
             "POS tagging": "pos-tagging",
             "Using the parse": "dependency-parse",
             "Entity recognition": "entity-recognition",

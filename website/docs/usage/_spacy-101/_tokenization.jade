@@ -2,11 +2,11 @@
 
 p
     |  During processing, spaCy first #[strong tokenizes] the text, i.e.
-    |  segments it into words, punctuation and so on. For example, punctuation
-    |  at the end of a sentence should be split off – whereas "U.K." should
-    |  remain one token. This is done by applying rules specific to each
-    |  language. Each #[code Doc] consists of individual tokens, and we can
-    |  simply iterate over them:
+    |  segments it into words, punctuation and so on. This is done by applying
+    |  rules specific to each language. For example, punctuation at the end of a
+    |  sentence should be split off – whereas "U.K." should remain one token.
+    |  Each #[code Doc] consists of individual tokens, and we can simply iterate
+    |  over them:
 
 +code.
     for token in doc:

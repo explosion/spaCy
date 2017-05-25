@@ -180,8 +180,8 @@ p
 p
     |  If you don't need the web server and just want to generate the markup
     |  – for example, to export it to a file or serve it in a custom
-    |  way – you can use #[+api("displacy#render") #[code displacy.render]]
-    |  instead. It works the same, but returns a string containing the markup.
+    |  way – you can use #[+api("displacy#render") #[code displacy.render]].
+    |  It works the same way, but returns a string containing the markup.
 
 +code("Example").
     import spacy
@@ -220,10 +220,32 @@ p
     |  a standalone graphic.) So instead of rendering all #[code Doc]s at one,
     |  loop over them and export them separately.
 
+
++h(3, "examples-export-svg") Example: Export SVG graphics of dependency parses
+
++code("Example").
+    import spacy
+    from spacy import displacy
+    from pathlib import Path
+
+    nlp = spacy.load('en')
+    sentences = ["This is an example.", "This is another one."]
+    for sent in sentences:
+        doc = nlp(sentence)
+        svg = displacy.render(doc, style='dep')
+        file_name = '-'.join([w.text for w in doc if not w.is_punct]) + '.svg'
+        output_path = Path('/images/' + file_name)
+        output_path.open('w', encoding='utf-8').write(svg)
+
+p
+    |  The above code will generate the dependency visualizations and them to
+    |  two files, #[code This-is-an-example.svg] and #[code This-is-another-one.svg].
+
+
 +h(2, "jupyter") Using displaCy in Jupyter notebooks
 
 p
-    |  displaCy is able to detect whether you're within a
+    |  displaCy is able to detect whether you're working in a
     |  #[+a("https://jupyter.org") Jupyter] notebook, and will return markup
     |  that can be rendered in a cell straight away. When you export your
     |  notebook, the visualizations will be included as HTML.
@@ -256,28 +278,6 @@ p
 
     html = displacy.render(doc, style='dep')
     return display(HTML(html))
-
-+h(2, "examples") Usage examples
-
-+h(3, "examples-export-svg") Export SVG graphics of dependency parses
-
-+code("Example").
-    import spacy
-    from spacy import displacy
-    from pathlib import Path
-
-    nlp = spacy.load('en')
-    sentences = ["This is an example.", "This is another one."]
-    for sent in sentences:
-        doc = nlp(sentence)
-        svg = displacy.render(doc, style='dep')
-        file_name = '-'.join([w.text for w in doc if not w.is_punct]) + '.svg'
-        output_path = Path('/images/' + file_name)
-        output_path.open('w', encoding='utf-8').write(svg)
-
-p
-    |  The above code will generate the dependency visualizations and them to
-    |  two files, #[code This-is-an-example.svg] and #[code This-is-another-one.svg].
 
 +h(2, "manual-usage") Rendering data manually
 

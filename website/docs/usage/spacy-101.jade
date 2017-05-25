@@ -81,6 +81,12 @@ p
     nlp = spacy.load('en')
     doc = nlp(u'Apple is looking at buying U.K. startup for $1 billion')
 
+p
+    |  Even though a #[code Doc] is processed – e.g. split into individual words
+    |  and annotated – it still holds #[strong all information of the original text],
+    |  like whitespace characters. This way, you'll never lose any information
+    |  when processing text with spaCy.
+
 +h(3, "annotations-token") Tokenization
 
 include _spacy-101/_tokenization
