@@ -24,6 +24,7 @@ from ..typedefs cimport attr_t, flags_t
 from ..attrs cimport attr_id_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
+from ..attrs cimport SENT_START
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
 from ..syntax.iterators import CHUNKERS
 from ..util import normalize_slice
@@ -52,6 +53,8 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.dep
     elif feat_name == HEAD:
         return token.head
+    elif feat_name == SENT_START:
+        return token.sent_start
     elif feat_name == SPACY:
         return token.spacy
     elif feat_name == ENT_IOB:
@@ -559,14 +562,16 @@ cdef class Doc:
         for i in range(self.length):
             self.c[i] = parsed[i]
 
-    def from_array(self, attrs, int[:, :] array):
-        """Load attributes from a numpy array. Write to a `Doc` object, from an
-        `(M, N)` array of attributes.
-
-        attrs (ints): A list of attribute ID ints.
-        array (numpy.ndarray[ndim=2, dtype='int32']) The attribute values to load.
-        RETURNS (Doc): Itself.
-        """
+    def from_array(self, attrs, array):
+        if SENT_START in attrs and HEAD in attrs:
+            raise ValueError(
+                "Conflicting attributes specified in doc.from_array():\n"
+                "(HEAD, SENT_START)\n"
+                "The HEAD attribute currently sets sentence boundaries implicitly,\n"
+                "based on the tree structure. This means the HEAD attribute would "
+                "potentially override the sentence boundaries set by SENT_START.\n"
+                "See https://github.com/spacy-io/spaCy/issues/235 for details and "
+                "workarounds, and to propose solutions.")
         cdef int i, col
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.c
@@ -592,6 +597,24 @@ cdef class Doc:
         self.is_parsed = bool(HEAD in attrs or DEP in attrs)
         self.is_tagged = bool(TAG in attrs or POS in attrs)
         return self
+
+    def to_disk(self, path):
+        """Save the current state to a directory.
+
+        path (unicode or Path): A path to a directory, which will be created if
+            it doesn't exist. Paths may be either strings or `Path`-like objects.
+        """
+        raise NotImplementedError()
+
+    def from_disk(self, path):
+        """Loads state from a directory. Modifies the object in place and
+        returns it.
+
+        path (unicode or Path): A path to a directory. Paths may be either
+            strings or `Path`-like objects.
+        RETURNS (Doc): The modified `Doc` object.
+        """
+        raise NotImplementedError()
 
     def to_bytes(self):
         """Serialize, i.e. export the document contents to a binary string.

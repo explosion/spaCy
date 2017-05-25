@@ -2,9 +2,210 @@
 
 include ../../_includes/_mixins
 
++h(2, "features") Features
+
++aside
+    |  If one of spaCy's functionalities #[strong needs a model], it means that
+    |  you need to have one our the available
+    |  #[+a("/docs/usage/models") statistical models] installed. Models are used
+    |  to #[strong predict] linguistic annotations – for example, if a word is
+    |  a verb or a noun.
+
++table(["Name", "Description", "Needs model"])
+    +row
+        +cell #[strong Tokenization]
+        +cell
+        +cell #[+procon("con")]
+
+    +row
+        +cell #[strong Part-of-speech Tagging]
+        +cell
+        +cell #[+procon("pro")]
+
+    +row
+        +cell #[strong Dependency Parsing]
+        +cell
+        +cell #[+procon("pro")]
+
+    +row
+        +cell #[strong Sentence Boundary Detection]
+        +cell
+        +cell #[+procon("pro")]
+
+    +row
+        +cell #[strong Named Entity Recongition] (NER)
+        +cell
+        +cell #[+procon("pro")]
+
+    +row
+        +cell #[strong Rule-based Matching]
+        +cell
+        +cell #[+procon("con")]
+
+    +row
+        +cell #[strong Similarity]
+        +cell
+        +cell #[+procon("pro")]
+
+    +row
+        +cell #[strong Training]
+        +cell
+        +cell #[+procon("neutral")]
+
+    +row
+        +cell #[strong Serialization]
+        +cell
+        +cell #[+procon("neutral")]
+
++h(2, "annotations") Linguistic annotations
+
+p
+    |  spaCy provides a variety of linguistic annotations to give you insights
+    |  into a text's grammatical structure. This includes the word types,
+    |  i.e. the parts of speech, and how the words are related to each other.
+    |  For example, if you're analysing text, it makes a #[em huge] difference
+    |  whether a noun is the subject of a sentence, or the object – or whether
+    |  "google" is used as a verb, or refers to the website or company in a
+    |  specific context.
+
+p
+    |  Once you've downloaded and installed a #[+a("/docs/usage/models") model],
+    |  you can load it via #[+api("spacy#load") #[code spacy.load()]]. This will
+    |  return a #[code Language] object contaning all components and data needed
+    |  to process text. We usually call it #[code nlp]. Calling the #[code nlp]
+    |  object on a string of text will return a processed #[code Doc]:
+
++code.
+    import spacy
+
+    nlp = spacy.load('en')
+    doc = nlp(u'Apple is looking at buying U.K. startup for $1 billion')
+
+p
+    |  Even though a #[code Doc] is processed – e.g. split into individual words
+    |  and annotated – it still holds #[strong all information of the original text],
+    |  like whitespace characters. This way, you'll never lose any information
+    |  when processing text with spaCy.
+
++h(3, "annotations-token") Tokenization
+
+include _spacy-101/_tokenization
+
+
++h(3, "annotations-pos-deps") Part-of-speech tags and dependencies
+    +tag-model("dependency parse")
+
+include _spacy-101/_pos-deps
+
++h(3, "annotations-ner") Named Entities
+    +tag-model("named entities")
+
+include _spacy-101/_named-entities
+
++h(2, "vectors-similarity") Word vectors and similarity
+    +tag-model("vectors")
+
+include _spacy-101/_similarity
+
+include _spacy-101/_word-vectors
+
++h(2, "pipelines") Pipelines
+
+include _spacy-101/_pipelines
+
++h(2, "serialization") Serialization
+
+include _spacy-101/_serialization
+
++h(2, "training") Training
+
+include _spacy-101/_training
+
 +h(2, "architecture") Architecture
 
 +image
     include ../../assets/img/docs/architecture.svg
     .u-text-right
         +button("/assets/img/docs/architecture.svg", false, "secondary").u-text-tag View large graphic
+
++table(["Name", "Description"])
+    +row
+        +cell #[+api("language") #[code Language]]
+        +cell
+            |  A text-processing pipeline. Usually you'll load this once per
+            |  process as #[code nlp] and pass the instance around your application.
+
+    +row
+        +cell #[+api("doc") #[code Doc]]
+        +cell A container for accessing linguistic annotations.
+
+    +row
+        +cell #[+api("span") #[code Span]]
+        +cell A slice from a #[code Doc] object.
+
+    +row
+        +cell #[+api("token") #[code Token]]
+        +cell
+            |  An individual token — i.e. a word, punctuation symbol, whitespace,
+            |  etc.
+
+    +row
+        +cell #[+api("lexeme") #[code Lexeme]]
+        +cell
+            |  An entry in the vocabulary. It's a word type with no context, as
+            |  opposed to a word token. It therefore has no part-of-speech tag,
+            |  dependency parse etc.
+
+    +row
+        +cell #[+api("vocab") #[code Vocab]]
+        +cell
+            |  A lookup table for the vocabulary that allows you to access
+            |  #[code Lexeme] objects.
+
+    +row
+        +cell #[code Morphology]
+        +cell
+
+    +row
+        +cell #[+api("stringstore") #[code StringStore]]
+        +cell Map strings to and from integer IDs.
+
+    +row
+        +row
+        +cell #[+api("tokenizer") #[code Tokenizer]]
+        +cell
+            |  Segment text, and create #[code Doc] objects with the discovered
+            |  segment boundaries.
+
+    +row
+        +cell #[+api("tagger") #[code Tagger]]
+        +cell Annotate part-of-speech tags on #[code Doc] objects.
+
+    +row
+        +cell #[+api("dependencyparser") #[code DependencyParser]]
+        +cell Annotate syntactic dependencies on #[code Doc] objects.
+
+    +row
+        +cell #[+api("entityrecognizer") #[code EntityRecognizer]]
+        +cell
+            |  Annotate named entities, e.g. persons or products, on #[code Doc]
+            |  objects.
+
+    +row
+        +cell #[+api("matcher") #[code Matcher]]
+        +cell
+            |  Match sequences of tokens, based on pattern rules, similar to
+            |  regular expressions.
+
++h(3, "architecture-other") Other
+
++table(["Name", "Description"])
+    +row
+        +cell #[+api("goldparse") #[code GoldParse]]
+        +cell Collection for training annotations.
+
+    +row
+        +cell #[+api("goldcorpus") #[code GoldCorpus]]
+        +cell
+            |  An annotated corpus, using the JSON file format. Manages
+            |  annotations for tagging, dependency parsing and NER.

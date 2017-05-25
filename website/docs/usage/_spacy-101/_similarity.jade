@@ -1,0 +1,44 @@
+//- 💫 DOCS > USAGE > SPACY 101 > SIMILARITY
+
+p
+    |  spaCy is able to compare two objects, and make a prediction of
+    |  #[strong how similar they are]. Predicting similarity is useful for
+    |  building recommendation systems or flagging duplicates. For example, you
+    |  can suggest a user content that's similar to what they're currently
+    |  looking at, or label a support ticket as a duplicate, if it's very
+    |  similar to an already existing one.
+
+p
+    |  Each #[code Doc], #[code Span] and #[code Token] comes with a
+    |  #[+api("token#similarity") #[code .similarity()]] method that lets you
+    |  compare it with another object, and determine the similarity. Of course
+    |  similarity is always subjective – whether "dog" and "cat" are similar
+    |  really depends on how you're looking at it. spaCy's similarity model
+    |  usually assumes a pretty general-purpose definition of similarity.
+
++code.
+    tokens = nlp(u'dog cat banana')
+
+    for token1 in tokens:
+        for token2 in tokens:
+            print(token1.similarity(token2))
+
++aside
+    |  #[strong #[+procon("neutral", 16)] similarity:] identical#[br]
+    |  #[strong #[+procon("pro", 16)] similarity:] similar (higher is more similar) #[br]
+    |  #[strong #[+procon("con", 16)] similarity:] dissimilar (lower is less similar)
+
++table(["", "dog", "cat", "banana"])
+    each cells, label in {"dog": [1.00, 0.80, 0.24], "cat": [0.80, 1.00, 0.28], "banana": [0.24, 0.28, 1.00]}
+        +row
+            +cell.u-text-label.u-color-theme=label
+            for cell in cells
+                +cell #[code=cell.toFixed(2)]
+                    |  #[+procon(cell < 0.5 ? "con" : cell != 1 ? "pro" : "neutral")]
+
+p
+    |  In this case, the model's predictions are pretty on point. A dog is very
+    |  similar to a cat, whereas a banana is not very similar to either of them.
+    |  Identical tokens are obviously 100% similar to each other (just not always
+    |  exactly #[code 1.0], because of vector math and floating point
+    |  imprecisions).

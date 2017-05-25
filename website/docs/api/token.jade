@@ -338,8 +338,10 @@ p The L2 norm of the token's vector representation.
         +cell #[code ent_iob]
         +cell int
         +cell
-            |  IOB code of named entity tag.
-            |  #[code 1="I", 2="O", 3="B"]. #[code 0] means no tag is assigned.
+            |  IOB code of named entity tag. #[code "B"]
+            |  means the token begins an entity, #[code "I"] means it is inside
+            |  an entity, #[code "O"] means it is outside an entity, and
+            |  #[code ""] means no entity tag is set.
 
     +row
         +cell #[code ent_iob_]

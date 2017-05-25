@@ -155,3 +155,15 @@ def test_doc_token_api_head_setter(en_tokenizer):
     assert doc[3].left_edge.i == 0
     assert doc[4].left_edge.i == 0
     assert doc[2].left_edge.i == 0
+
+
+def test_sent_start(en_tokenizer):
+    doc = en_tokenizer(u'This is a sentence. This is another.')
+    assert not doc[0].sent_start
+    assert not doc[5].sent_start
+    doc[5].sent_start = True
+    assert doc[5].sent_start
+    assert not doc[0].sent_start
+    doc.is_parsed = True
+    assert len(list(doc.sents)) == 2
+

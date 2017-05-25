@@ -27,8 +27,7 @@
             "GoldCorpus": "goldcorpus"
         },
         "Other": {
-            "Annotation Specs": "annotation",
-            "Feature Scheme": "features"
+            "Annotation Specs": "annotation"
         }
     },
 
@@ -143,9 +142,5 @@
 
     "annotation": {
         "title": "Annotation Specifications"
-    },
-
-    "features": {
-        "title": "Linear Model Feature Scheme"
     }
 }
