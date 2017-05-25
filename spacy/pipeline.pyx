@@ -119,7 +119,7 @@ class TokenVectorEncoder(object):
             assert tokvecs.shape[0] == len(doc)
             doc.tensor = tokvecs
 
-    def update(self, docs, golds, state=None, drop=0., sgd=None):
+    def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
         """Update the model.
 
         docs (iterable): A batch of `Doc` objects.
@@ -199,7 +199,7 @@ class NeuralTagger(object):
                 vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
                 idx += 1
 
-    def update(self, docs_tokvecs, golds, drop=0., sgd=None):
+    def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
         docs, tokvecs = docs_tokvecs
 
         if self.model.nI is None:
@@ -248,7 +248,8 @@ class NeuralTagger(object):
                                       vocab.morphology.lemmatizer)
         token_vector_width = pipeline[0].model.nO
         self.model = with_flatten(
-            Softmax(self.vocab.morphology.n_tags, token_vector_width))
+            chain(Maxout(token_vector_width, token_vector_width),
+                  Softmax(self.vocab.morphology.n_tags, token_vector_width)))
 
     def use_params(self, params):
         with self.model.use_params(params):
@@ -274,7 +275,8 @@ class NeuralLabeller(NeuralTagger):
                         self.labels[dep] = len(self.labels)
         token_vector_width = pipeline[0].model.nO
         self.model = with_flatten(
-            Softmax(len(self.labels), token_vector_width))
+            chain(Maxout(token_vector_width, token_vector_width),
+                  Softmax(len(self.labels), token_vector_width)))
 
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
