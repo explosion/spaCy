@@ -101,15 +101,15 @@ p
     doc_dep = nlp(u'This is a sentence.')
     displacy.serve(doc_dep, style='dep')
 
-    doc_ent = nlp(u'When Sebastian Thrun started working on self-driving cars at '
-                  u'Google in 2007, few people outside of the company took him seriously.')
+    doc_ent = nlp(u'When Sebastian Thrun started working on self-driving cars at Google '
+                  u'in 2007, few people outside of the company took him seriously.')
     displacy.serve(doc_ent, style='ent')
 
 +infobox
     |  #[strong API:] #[+api("displacy") #[code displacy]]
     |  #[strong Usage:] #[+a("/docs/usage/visualizers") Visualizers]
 
-+h(2, "examples-word-vectors") Word vectors
++h(2, "examples-word-vectors") Get word vectors and similarity
     +tag-model("word vectors")
 
 +code.
@@ -119,6 +119,7 @@ p
     pasta = doc[6]
     hippo = doc[8]
     assert apple.similarity(banana) > pasta.similarity(hippo)
+    assert apple.has_vector, banana.has_vector, pasta.has_vector, hippo.has_vector
 
 +infobox
     |  #[strong Usage:] #[+a("/docs/usage/word-vectors-similarities") Word vectors and similarity]
@@ -138,6 +139,23 @@ p
 
 +infobox
     |  #[strong Usage:] #[+a("/docs/usage/saving-loading") Saving and loading]
+
++h(2, "rule-matcher") Match text with token rules
+
++code.
+    import spacy
+    from spacy.matcher import Matcher
+
+    nlp = spacy.load('en')
+    matcher = Matcher(nlp.vocab)
+    # match "Google I/O" or "Google i/o"
+    pattern = [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}]
+    matcher.add('GoogleIO', None, pattern)
+    matches = nlp(LOTS_OF TEXT)
+
++infobox
+    |  #[strong API:] #[+api("matcher") #[code Matcher]]
+    |  #[strong Usage:] #[+a("/docs/usage/rule-based-matching") Rule-based matching]
 
 +h(2, "multi-threaded") Multi-threaded generator
 
@@ -183,28 +201,24 @@ p
     assert doc[0].like_url == doc_array[0, 1]
     assert list(doc_array[:, 1]) == [t.like_url for t in doc]
 
-+h(2, "examples-inline") Calculate inline mark-up on original string
++h(2, "examples-inline") Calculate inline markup on original string
 
 +code.
     def put_spans_around_tokens(doc, get_classes):
-        '''Given some function to compute class names, put each token in a
-        span element, with the appropriate classes computed.
-
-        All whitespace is preserved, outside of the spans. (Yes, I know HTML
-        won't display it. But the point is no information is lost, so you can
-        calculate what you need, e.g. <br /> tags, <p> tags, etc.)
-        '''
+        """Given some function to compute class names, put each token in a
+        span element, with the appropriate classes computed. All whitespace is
+        preserved, outside of the spans. (Of course, HTML won't display more than
+        one whitespace character it – but the point is, no information is lost
+        and you can calculate what you need, e.g. &lt;br /&gt;, &lt;p&gt; etc.)
+        """
         output = []
-        template = '<span classes="{classes}">{word}</span>{space}'
+        html = '&lt;span class="{classes}"&gt;{word}&lt;/span&gt;{space}'
         for token in doc:
             if token.is_space:
-                output.append(token.orth_)
+                output.append(token.text)
             else:
-                output.append(
-                  template.format(
-                    classes=' '.join(get_classes(token)),
-                    word=token.orth_,
-                    space=token.whitespace_))
+                classes = ' '.join(get_classes(token))
+                output.append(html.format(classes=classes, word=token.text, space=token.whitespace_))
         string = ''.join(output)
         string = string.replace('\n', '')
         string = string.replace('\t', '    ')
