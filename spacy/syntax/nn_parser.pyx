@@ -429,18 +429,14 @@ cdef class Parser:
 
         states, golds = self._init_gold_batch(docs, golds)
         max_length = min([len(doc) for doc in docs])
-        #golds = [self.moves.preprocess_gold(g) for g in golds]
-        #states = self.moves.init_batch(docs)
         state2vec, vec2scores = self.get_batch_model(len(states), tokvecs, cuda_stream,
                                                       0.0)
-
         todo = [(s, g) for (s, g) in zip(states, golds)
                 if not s.is_final() and g is not None]
 
         backprops = []
         d_tokvecs = state2vec.ops.allocate(tokvecs.shape)
         cdef float loss = 0.
-        #while len(todo and len(todo) >= len(states):
         while todo:
             states, golds = zip(*todo)
 
@@ -483,34 +479,33 @@ cdef class Parser:
         long_doc[:N], and another representing long_doc[N:]."""
         cdef StateClass state
         lengths = [len(doc) for doc in docs]
-        # Cap to min length
         min_length = min(lengths)
         offset = 0
         states = []
         extra_golds = []
-        cdef np.ndarray py_costs = numpy.zeros((self.moves.n_moves,), dtype='f')
-        cdef np.ndarray py_is_valid = numpy.zeros((self.moves.n_moves,), dtype='i')
-        costs = <float*>py_costs.data
-        is_valid = <int*>py_is_valid.data
+        cdef Pool mem = Pool()
+        costs = <float*>mem.alloc(self.moves.n_moves, sizeof(float))
+        is_valid = <int*>mem.alloc(self.moves.n_moves, sizeof(int))
         for doc, gold in zip(docs, golds):
             gold = self.moves.preprocess_gold(gold)
             state = StateClass(doc, offset=offset)
             self.moves.initialize_state(state.c)
-            states.append(state)
-            extra_golds.append(gold)
+            if not state.is_final():
+                states.append(state)
+                extra_golds.append(gold)
             start = min(min_length, len(doc))
             while start < len(doc):
                 length = min(min_length, len(doc)-start)
                 state = StateClass(doc, offset=offset)
                 self.moves.initialize_state(state.c)
                 while state.B(0) < start and not state.is_final():
-                    py_is_valid.fill(0)
-                    py_costs.fill(0)
                     self.moves.set_costs(is_valid, costs, state, gold)
                     for i in range(self.moves.n_moves):
                         if is_valid[i] and costs[i] <= 0:
                             self.moves.c[i].do(state.c, self.moves.c[i].label)
                             break
+                    else:
+                        raise ValueError("Could not find gold move")
                 start += length
                 if not state.is_final():
                     states.append(state)
