@@ -86,10 +86,10 @@ class PrecomputableAffine(Model):
     d_b=Gradient("b")
 )
 class PrecomputableMaxouts(Model):
-    def __init__(self, nO=None, nI=None, nF=None, pieces=3, **kwargs):
+    def __init__(self, nO=None, nI=None, nF=None, nP=3, **kwargs):
         Model.__init__(self, **kwargs)
         self.nO = nO
-        self.nP = pieces
+        self.nP = nP
         self.nI = nI
         self.nF = nF
 
