@@ -68,14 +68,16 @@ def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
     print("Itn.\tDep. Loss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
     for i in range(n_iter):
         with tqdm.tqdm(total=n_train_docs) as pbar:
-            train_docs = corpus.train_docs(nlp, shuffle=i, projectivize=True)
+            train_docs = corpus.train_docs(nlp, shuffle=i, projectivize=True,
+                                           gold_preproc=False)
+            losses = {}
             idx = 0
             while idx < n_train_docs:
                 batch = list(cytoolz.take(int(batch_size), train_docs))
                 if not batch:
                     break
                 docs, golds = zip(*batch)
-                nlp.update(docs, golds, drop=dropout, sgd=optimizer)
+                nlp.update(docs, golds, drop=dropout, sgd=optimizer, losses=losses)
                 pbar.update(len(docs))
                 idx += len(docs)
                 batch_size *= batch_accel
@@ -83,12 +85,12 @@ def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                 dropout = linear_decay(orig_dropout, dropout_decay, i*n_train_docs+idx)
         with nlp.use_params(optimizer.averages):
             start = timer()
-            scorer = nlp.evaluate(corpus.dev_docs(nlp))
+            scorer = nlp.evaluate(corpus.dev_docs(nlp, gold_preproc=False))
             end = timer()
             n_words = scorer.tokens.tp + scorer.tokens.fn
             assert n_words != 0
             wps = n_words / (end-start)
-        print_progress(i, {}, scorer.scores, wps=wps)
+        print_progress(i, losses, scorer.scores, wps=wps)
     with (output_path / 'model.bin').open('wb') as file_:
         with nlp.use_params(optimizer.averages):
             dill.dump(nlp, file_, -1)
@@ -109,9 +111,10 @@ def print_progress(itn, losses, dev_scores, wps=0.0):
     for col in ['dep_loss', 'tag_loss', 'uas', 'tags_acc', 'token_acc',
                 'ents_p', 'ents_r', 'ents_f', 'wps']:
         scores[col] = 0.0
-    scores.update(losses)
+    scores['dep_loss'] = losses.get('parser', 0.0)
+    scores['tag_loss'] = losses.get('tagger', 0.0)
     scores.update(dev_scores)
-    scores[wps] = wps
+    scores['wps'] = wps
     tpl = '\t'.join((
         '{:d}',
         '{dep_loss:.3f}',
