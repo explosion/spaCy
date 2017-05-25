@@ -326,7 +326,7 @@ def compounding(start, stop, compound):
       >>> assert next(sizes) == 1.5 * 1.5
     '''
     def clip(value):
-        return max(value, stop) if (start>stop) else min(value, start)
+        return max(value, stop) if (start>stop) else min(value, stop)
     curr = float(start)
     while True:
         yield clip(curr)
@@ -336,7 +336,7 @@ def compounding(start, stop, compound):
 def decaying(start, stop, decay):
     '''Yield an infinite series of linearly decaying values.'''
     def clip(value):
-        return max(value, stop) if (start>stop) else min(value, start)
+        return max(value, stop) if (start>stop) else min(value, stop)
     nr_upd = 1.
     while True:
         yield clip(start * 1./(1. + decay * nr_upd))
