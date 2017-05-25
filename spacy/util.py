@@ -313,6 +313,36 @@ def normalize_slice(length, start, stop, step=None):
     return start, stop
 
 
+def compounding(start, stop, compound):
+    '''Yield an infinite series of compounding values. Each time the
+    generator is called, a value is produced by multiplying the previous
+    value by the compound rate.
+
+    EXAMPLE
+
+      >>> sizes = compounding(1., 10., 1.5)
+      >>> assert next(sizes) == 1.
+      >>> assert next(sizes) == 1 * 1.5
+      >>> assert next(sizes) == 1.5 * 1.5
+    '''
+    def clip(value):
+        return max(value, stop) if (start>stop) else min(value, start)
+    curr = float(start)
+    while True:
+        yield clip(curr)
+        curr *= compound
+
+
+def decaying(start, stop, decay):
+    '''Yield an infinite series of linearly decaying values.'''
+    def clip(value):
+        return max(value, stop) if (start>stop) else min(value, start)
+    nr_upd = 1.
+    while True:
+        yield clip(start * 1./(1. + decay * nr_upd))
+        nr_upd += 1
+
+
 def check_renamed_kwargs(renamed, kwargs):
     for old, new in renamed.items():
         if old in kwargs:
