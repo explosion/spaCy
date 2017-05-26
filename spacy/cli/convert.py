@@ -25,7 +25,7 @@ CONVERTERS = {
     n_sents=("Number of sentences per doc", "option", "n", float),
     morphology=("Enable appending morphology to tags", "flag", "m", bool)
 )
-def convert(input_file, output_dir, n_sents, morphology):
+def convert(_, input_file, output_dir, n_sents, morphology):
     """Convert files into JSON format for use with train command and other
     experiment management functions.
     """
@@ -39,4 +39,4 @@ def convert(input_file, output_dir, n_sents, morphology):
     if not file_ext in CONVERTERS:
         prints("Can't find converter for %s" % input_path.parts[-1],
                title="Unknown format", exits=1)
-    CONVERTERS[file_ext](input_path, output_path, *args)
+    CONVERTERS[file_ext](input_path, output_path, n_sents, morphology)
