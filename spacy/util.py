@@ -174,6 +174,7 @@ def get_async(stream, numpy_array):
         array.set(numpy_array, stream=stream)
         return array
 
+
 def itershuffle(iterable, bufsize=1000):
     """Shuffle an iterator. This works by holding `bufsize` items back
     and yielding them sometime later. Obviously, this is not unbiased --
