@@ -118,6 +118,7 @@ p Match a stream of documents, yielding them in turn.
 
 +h(2, "len") Matcher.__len__
     +tag method
+    +tag-new(2)
 
 p
     |  Get the number of rules added to the matcher. Note that this only returns
@@ -138,6 +139,7 @@ p
 
 +h(2, "contains") Matcher.__contains__
     +tag method
+    +tag-new(2)
 
 p Check whether the matcher contains rules for a match ID.
 
@@ -159,6 +161,7 @@ p Check whether the matcher contains rules for a match ID.
 
 +h(2, "add") Matcher.add
     +tag method
+    +tag-new(2)
 
 p
     |  Add a rule to the matcher, consisting of an ID key, one or more patterns, and
@@ -200,6 +203,7 @@ p
 
 +h(2, "remove") Matcher.remove
     +tag method
+    +tag-new(2)
 
 p
     |  Remove a rule from the matcher. A #[code KeyError] is raised if the match
@@ -219,6 +223,7 @@ p
 
 +h(2, "get") Matcher.get
     +tag method
+    +tag-new(2)
 
 p
     |  Retrieve the pattern stored for a key. Returns the rule as an
