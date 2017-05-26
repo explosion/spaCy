@@ -95,8 +95,15 @@ cdef class BiluoPushDown(TransitionSystem):
         else:
             return MOVE_NAMES[move] + '-' + self.strings[label]
 
+    def has_gold(self, GoldParse gold, start=0, end=None):
+        end = end or len(gold.ner)
+        if all([tag == '-' for tag in gold.ner[start:end]]):
+            return False
+        else:
+            return True
+
     def preprocess_gold(self, GoldParse gold):
-        if all([tag == '-' for tag in gold.ner]):
+        if not self.has_gold(gold):
             return None
         for i in range(gold.length):
             gold.c.ner[i] = self.lookup_transition(gold.ner[i])

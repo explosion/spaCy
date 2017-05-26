@@ -345,6 +345,7 @@ cdef cppclass StateC:
         this._s_i = src._s_i
         this._e_i = src._e_i
         this._break = src._break
+        this.offset = src.offset
 
     void fast_forward() nogil:
         # space token attachement policy:
