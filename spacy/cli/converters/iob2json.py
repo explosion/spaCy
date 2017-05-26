@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from ...compat import json_dumps, path2str
 from ...util import prints
+from ...gold import iob_to_biluo
 
 
 def iob2json(input_path, output_path, n_sents=10, *a, **k):
@@ -29,9 +30,10 @@ def read_iob(file_):
             continue
         tokens = [t.rsplit('|', 2) for t in line.split()]
         words, pos, iob = zip(*tokens)
+        biluo = iob_to_biluo(iob)
         sentences.append([
             {'orth': w, 'tag': p, 'ner': ent}
-            for (w, p, ent) in zip(words, pos, iob)
+            for (w, p, ent) in zip(words, pos, biluo)
         ])
     sentences = [{'tokens': sent} for sent in sentences]
     paragraphs = [{'sentences': [sent]} for sent in sentences]
