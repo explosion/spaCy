@@ -35,7 +35,7 @@ p
     assert doc[0].text == u'Peach'
     assert doc[1].text == u'emoji'
     assert doc[-1].text == u'🍑'
-    assert doc[17:19] == u'outranking eggplant'
+    assert doc[17:19].text == u'outranking eggplant'
     assert doc.noun_chunks[0].text == u'Peach emoji'
 
     sentences = list(doc.sents)

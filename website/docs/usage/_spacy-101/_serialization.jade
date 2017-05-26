@@ -34,7 +34,35 @@ p
     +annotation-row(["to_disk", "-", "nlp.to_disk('/path')"], style)
     +annotation-row(["from_disk", "object", "nlp.from_disk('/path')"], style)
 
+p
+    |  For example, if you've processed a very large document, you can use
+    |  #[+api("doc#to_disk") #[code Doc.to_disk]] to save it to a file on your
+    |  local machine. This will save the document and its tokens, as well as
+    |  the vocabulary associated with the #[code Doc].
+
++aside("Why saving the vocab?")
+    |  Saving the vocabulary with the #[code Doc] is important, because the
+    |  #[code Vocab] holds the context-independent information about the words,
+    |  tags and labels, and their #[strong integer IDs]. If the #[code Vocab]
+    |  wasn't saved with the #[code Doc], spaCy wouldn't know how to resolve
+    |  those IDs – for example, the word text or the dependency labels. You
+    |  might be saving #[code 446] for "whale", but in a different vocabulary,
+    |  this ID could map to "VERB". Similarly, if your document was processed by
+    |  a German model, its vocab will include the specific
+    |  #[+a("/docs/api/annotation#dependency-parsing-german") German dependency labels].
+
 +code.
     moby_dick = open('moby_dick.txt', 'r') # open a large document
     doc = nlp(moby_dick) # process it
     doc.to_disk('/moby_dick.bin') # save the processed Doc
+
+p
+    |  If you need it again later, you can load it back into an empty #[code Doc]
+    |  with an empty #[code Vocab] by calling
+    |  #[+api("doc#from_disk") #[code from_disk()]]:
+
++code.
+    from spacy.tokens import Doc # to create empty Doc
+    from spacy.vocab import Vocab # to create empty Vocab
+
+    doc = Doc(Vocab()).from_disk('/moby_dick.bin') # load processed Doc

@@ -322,8 +322,9 @@ p
     |  If you don't need a particular component of the pipeline – for
     |  example, the tagger or the parser, you can disable loading it. This can
     |  sometimes make a big difference and improve loading speed. Disabled
-    |  component names can be provided to #[code spacy.load], #[code from_disk]
-    |  or the #[code nlp] object itself as a list:
+    |  component names can be provided to #[+api("spacy#load") #[code spacy.load]],
+    |  #[+api("language#from_disk") #[code Language.from_disk]] or the
+    |  #[code nlp] object itself as a list:
 
 +code.
     nlp = spacy.load('en', disable['parser', 'tagger'])
