@@ -119,7 +119,7 @@ p Save the current state to a directory.
             |  A path to a directory, which will be created if it doesn't exist.
             |  Paths may be either strings or #[code Path]-like objects.
 
-+h(2, "from_disk") Tokenizer.from_disk
++h(2, "from_disk") StringStore.from_disk
     +tag method
     +tag-new(2)
 
@@ -139,10 +139,10 @@ p Loads state from a directory. Modifies the object in place and returns it.
 
     +footrow
         +cell returns
-        +cell #[code Tokenizer]
-        +cell The modified #[code Tokenizer] object.
+        +cell #[code StringStore]
+        +cell The modified #[code StringStore] object.
 
-+h(2, "to_bytes") Tokenizer.to_bytes
++h(2, "to_bytes") StringStore.to_bytes
     +tag method
 
 p Serialize the current state to a binary string.
@@ -159,9 +159,9 @@ p Serialize the current state to a binary string.
     +footrow
         +cell returns
         +cell bytes
-        +cell The serialized form of the #[code Tokenizer] object.
+        +cell The serialized form of the #[code StringStore] object.
 
-+h(2, "from_bytes") Tokenizer.from_bytes
++h(2, "from_bytes") StringStore.from_bytes
     +tag method
 
 p Load state from a binary string.
