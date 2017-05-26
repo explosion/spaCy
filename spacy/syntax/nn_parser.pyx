@@ -427,8 +427,7 @@ cdef class Parser:
 
         cuda_stream = get_cuda_stream()
 
-        states, golds = self._init_gold_batch(docs, golds)
-        max_length = min([len(doc) for doc in docs])
+        states, golds, max_length = self._init_gold_batch(docs, golds)
         state2vec, vec2scores = self.get_batch_model(len(states), tokvecs, cuda_stream,
                                                       0.0)
         todo = [(s, g) for (s, g) in zip(states, golds)
@@ -472,46 +471,36 @@ cdef class Parser:
             backprops, sgd, cuda_stream)
         return self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
 
-    def _init_gold_batch(self, docs, golds):
+    def _init_gold_batch(self, whole_docs, whole_golds):
         """Make a square batch, of length equal to the shortest doc. A long
         doc will get multiple states. Let's say we have a doc of length 2*N,
         where N is the shortest doc. We'll make two states, one representing
         long_doc[:N], and another representing long_doc[N:]."""
-        cdef StateClass state
-        lengths = [len(doc) for doc in docs]
-        min_length = min(lengths)
-        offset = 0
+        cdef:
+            StateClass state
+            Transition action
+        whole_states = self.moves.init_batch(whole_docs)
+        max_length = max(5, min(20, min([len(doc) for doc in whole_docs])))
         states = []
-        extra_golds = []
-        cdef Pool mem = Pool()
-        costs = <float*>mem.alloc(self.moves.n_moves, sizeof(float))
-        is_valid = <int*>mem.alloc(self.moves.n_moves, sizeof(int))
-        for doc, gold in zip(docs, golds):
+        golds = []
+        for doc, state, gold in zip(whole_docs, whole_states, whole_golds):
             gold = self.moves.preprocess_gold(gold)
-            state = StateClass(doc, offset=offset)
-            self.moves.initialize_state(state.c)
-            if not state.is_final():
-                states.append(state)
-                extra_golds.append(gold)
-            start = min(min_length, len(doc))
+            if gold is None:
+                continue
+            oracle_actions = self.moves.get_oracle_sequence(doc, gold)
+            start = 0
             while start < len(doc):
-                length = min(min_length, len(doc)-start)
-                state = StateClass(doc, offset=offset)
-                self.moves.initialize_state(state.c)
+                state = state.copy()
                 while state.B(0) < start and not state.is_final():
-                    self.moves.set_costs(is_valid, costs, state, gold)
-                    for i in range(self.moves.n_moves):
-                        if is_valid[i] and costs[i] <= 0:
-                            self.moves.c[i].do(state.c, self.moves.c[i].label)
-                            break
-                    else:
-                        raise ValueError("Could not find gold move")
-                start += length
-                if not state.is_final():
+                    action = self.moves.c[oracle_actions.pop(0)]
+                    action.do(state.c, action.label)
+                has_gold = self.moves.has_gold(gold, start=start,
+                                               end=start+max_length)
+                if not state.is_final() and has_gold:
                     states.append(state)
-                    extra_golds.append(gold)
-            offset += len(doc)
-        return states, extra_golds
+                    golds.append(gold)
+                start += min(max_length, len(doc)-start)
+        return states, golds, max_length
 
     def _make_updates(self, d_tokvecs, backprops, sgd, cuda_stream=None):
         # Tells CUDA to block, so our async copies complete.

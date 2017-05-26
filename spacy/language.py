@@ -223,8 +223,7 @@ class Language(object):
             tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
             d_tokvecses = proc.update((docs, tokvecses), golds,
                                       drop=drop, sgd=get_grads, losses=losses)
-            bp_tokvecses(d_tokvecses, sgd=get_grads)
-            break
+            bp_tokvecses(d_tokvecses, sgd=sgd)
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)
         # Clear the tensor variable, to free GPU memory.
