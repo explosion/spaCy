@@ -37,7 +37,8 @@ mixin svg(file, name, width, height)
     size - [integer] icon width and height (default: 20)
 
 mixin icon(name, size)
-    +svg("icons", name, size || 20).o-icon&attributes(attributes)
+    - var size = size || 20
+    +svg("icons", name, size).o-icon(style="min-width: #{size}px")&attributes(attributes)
 
 
 //- Pro/Con/Neutral icon
