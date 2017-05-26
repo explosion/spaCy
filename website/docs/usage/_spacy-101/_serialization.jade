@@ -22,10 +22,10 @@ p
     |  untrusted sources.
 
 p
-    |  All container classes and pipeline components, i.e.
-    for cls in ["Doc", "Language", "Tokenizer", "Tagger", "DependencyParser", "EntityRecognizer", "Vocab", "StringStore"]
-        |  #[+api(cls.toLowerCase()) #[code=cls]],
-    |  have the following methods available:
+    |  All container classes, i.e. #[+api("language") #[code Language]],
+    |  #[+api("doc") #[code Doc]], #[+api("vocab") #[code Vocab]] and
+    |  #[+api("stringstore") #[code StringStore]] have the following methods
+    |  available:
 
 +table(["Method", "Returns", "Example"])
     - style = [1, 0, 1]
