@@ -24,7 +24,8 @@
             "Vocab": "vocab",
             "StringStore": "stringstore",
             "GoldParse": "goldparse",
-            "GoldCorpus": "goldcorpus"
+            "GoldCorpus": "goldcorpus",
+            "Binder": "binder"
         },
         "Other": {
             "Annotation Specs": "annotation"
@@ -47,62 +48,74 @@
 
     "spacy": {
         "title": "spaCy top-level functions",
+        "source": "spacy/__init__.py",
         "next": "displacy"
     },
 
     "displacy": {
         "title": "displaCy",
         "tag": "module",
+        "source": "spacy/displacy",
         "next": "util"
     },
 
     "util": {
         "title": "Utility Functions",
+        "source": "spacy/util.py",
         "next": "cli"
     },
 
     "cli": {
-        "title": "Command Line Interface"
+        "title": "Command Line Interface",
+        "source": "spacy/cli"
     },
 
     "language": {
         "title": "Language",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/language.py"
     },
 
     "doc": {
         "title": "Doc",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/tokens/doc.pyx"
     },
 
     "token": {
         "title": "Token",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/tokens/token.pyx"
     },
 
     "span": {
         "title": "Span",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/tokens/span.pyx"
     },
 
     "lexeme": {
         "title": "Lexeme",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/lexeme.pyx"
     },
 
     "vocab": {
         "title": "Vocab",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/vocab.pyx"
     },
 
     "stringstore": {
         "title": "StringStore",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/strings.pyx"
     },
 
     "matcher": {
         "title": "Matcher",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/matcher.pyx"
     },
 
     "dependenyparser": {
@@ -122,7 +135,8 @@
 
     "tokenizer": {
         "title": "Tokenizer",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/tokenizer.pyx"
     },
 
     "tagger": {
@@ -132,11 +146,18 @@
 
     "goldparse": {
         "title": "GoldParse",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/gold.pyx"
     },
 
     "goldcorpus": {
         "title": "GoldCorpus",
+        "tag": "class",
+        "source": "spacy/gold.pyx"
+    },
+
+    "binder": {
+        "title": "Binder",
         "tag": "class"
     },
 

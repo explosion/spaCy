@@ -178,7 +178,7 @@ mixin label()
 //- Tag
 
 mixin tag()
-    span.u-text-tag.u-text-tag--spaced(aria-hidden="true")
+    span.u-text-tag.u-text-tag--spaced(aria-hidden="true")&attributes(attributes)
         block
 
 
@@ -190,6 +190,17 @@ mixin tag-model(...capabs)
     - var ext = capabs.length ? " that supports the following capabilities: " + capabs.join(', ') : ""
     +tag Requires model
     +help(intro + ext + ".").u-color-theme
+
+
+//- "New" tag to label features new in a specific version
+    By using a separate mixin with a version ID, it becomes easy to quickly
+    enable/disable tags without having to modify the markup in the docs.
+    version - [string or integer] version number, without "v" prefix
+
+mixin tag-new(version)
+    - var version = (typeof version == 'number') ? version.toFixed(1) : version
+    +tag(data-tooltip="This feature is new and was introduced in spaCy v#{version}.")
+        | v#{version}
 
 
 //- List

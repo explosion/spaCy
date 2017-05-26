@@ -173,13 +173,13 @@ class Language(object):
                 flat_list.append(pipe)
         self.pipeline = flat_list
 
-    def __call__(self, text, **disabled):
+    def __call__(self, text, disable=[]):
         """'Apply the pipeline to some text. The text can span multiple sentences,
         and can contain arbtrary whitespace. Alignment into the original string
         is preserved.
 
         text (unicode): The text to be processed.
-        **disabled: Elements of the pipeline that should not be run.
+        disable (list): Names of the pipeline components to disable.
         RETURNS (Doc): A container for accessing the annotations.
 
         EXAMPLE:
@@ -190,7 +190,7 @@ class Language(object):
         doc = self.make_doc(text)
         for proc in self.pipeline:
             name = getattr(proc, 'name', None)
-            if name in disabled and not disabled[name]:
+            if name in disable:
                 continue
             proc(doc)
         return doc
@@ -322,7 +322,7 @@ class Language(object):
             except StopIteration:
                 pass
 
-    def pipe(self, texts, n_threads=2, batch_size=1000, **disabled):
+    def pipe(self, texts, n_threads=2, batch_size=1000, disable=[]):
         """Process texts as a stream, and yield `Doc` objects in order. Supports
         GIL-free multi-threading.
 
@@ -330,7 +330,7 @@ class Language(object):
         n_threads (int): The number of worker threads to use. If -1, OpenMP will
             decide how many to use at run time. Default is 2.
         batch_size (int): The number of texts to buffer.
-        **disabled: Pipeline components to exclude.
+        disable (list): Names of the pipeline components to disable.
         YIELDS (Doc): Documents in the order of the original text.
 
         EXAMPLE:
@@ -342,7 +342,7 @@ class Language(object):
         docs = texts
         for proc in self.pipeline:
             name = getattr(proc, 'name', None)
-            if name in disabled and not disabled[name]:
+            if name in disable:
                 continue
             if hasattr(proc, 'pipe'):
                 docs = proc.pipe(docs, n_threads=n_threads, batch_size=batch_size)
@@ -352,12 +352,14 @@ class Language(object):
         for doc in docs:
             yield doc
 
-    def to_disk(self, path, **exclude):
-        """Save the current state to a directory.
+    def to_disk(self, path, disable=[]):
+        """Save the current state to a directory.  If a model is loaded, this
+        will include the model.
 
         path (unicode or Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or `Path`-like objects.
-        **exclude: Named attributes to prevent from being saved.
+        disable (list): Nameds of pipeline components to disable and prevent
+            from being saved.
 
         EXAMPLE:
             >>> nlp.to_disk('/path/to/models')
@@ -369,7 +371,7 @@ class Language(object):
             raise IOError("Output path must be a directory")
         props = {}
         for name, value in self.__dict__.items():
-            if name in exclude:
+            if name in disable:
                 continue
             if hasattr(value, 'to_disk'):
                 value.to_disk(path / name)
@@ -378,13 +380,14 @@ class Language(object):
         with (path / 'props.pickle').open('wb') as file_:
             dill.dump(props, file_)
 
-    def from_disk(self, path, **exclude):
+    def from_disk(self, path, disable=[]):
         """Loads state from a directory. Modifies the object in place and
-        returns it.
+        returns it. If the saved `Language` object contains a model, the
+        model will be loaded.
 
         path (unicode or Path): A path to a directory. Paths may be either
             strings or `Path`-like objects.
-        **exclude: Named attributes to prevent from being loaded.
+        disable (list): Names of the pipeline components to disable.
         RETURNS (Language): The modified `Language` object.
 
         EXAMPLE:
@@ -393,35 +396,36 @@ class Language(object):
         """
         path = util.ensure_path(path)
         for name in path.iterdir():
-            if name not in exclude and hasattr(self, str(name)):
+            if name not in disable and hasattr(self, str(name)):
                 getattr(self, name).from_disk(path / name)
         with (path / 'props.pickle').open('rb') as file_:
             bytes_data = file_.read()
-        self.from_bytes(bytes_data, **exclude)
+        self.from_bytes(bytes_data, disable)
         return self
 
-    def to_bytes(self, **exclude):
+    def to_bytes(self, disable=[]):
         """Serialize the current state to a binary string.
 
-        **exclude: Named attributes to prevent from being serialized.
+        disable (list): Nameds of pipeline components to disable and prevent
+            from being serialized.
         RETURNS (bytes): The serialized form of the `Language` object.
         """
         props = dict(self.__dict__)
-        for key in exclude:
+        for key in disable:
             if key in props:
                 props.pop(key)
         return dill.dumps(props, -1)
 
-    def from_bytes(self, bytes_data, **exclude):
+    def from_bytes(self, bytes_data, disable=[]):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
-        **exclude: Named attributes to prevent from being loaded.
+        disable (list): Names of the pipeline components to disable.
         RETURNS (Language): The `Language` object.
         """
         props = dill.loads(bytes_data)
         for key, value in props.items():
-            if key not in exclude:
+            if key not in disable:
                 setattr(self, key, value)
         return self
 

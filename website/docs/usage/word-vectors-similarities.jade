@@ -23,41 +23,20 @@ p
 include _spacy-101/_similarity
 include _spacy-101/_word-vectors
 
-
 +h(2, "custom") Customising word vectors
+
++under-construction
 
 p
     |  By default, #[+api("token#vector") #[code Token.vector]] returns the
     |  vector for its underlying #[+api("lexeme") #[code Lexeme]], while
     |  #[+api("doc#vector") #[code Doc.vector]] and
     |  #[+api("span#vector") #[code Span.vector]] return an average of the
-    |  vectors of their tokens.
-
-p
-    |  You can customize these
+    |  vectors of their tokens. You can customize these
     |  behaviours by modifying the #[code doc.user_hooks],
     |  #[code doc.user_span_hooks] and #[code doc.user_token_hooks]
     |  dictionaries.
 
-+code("Example").
-    # TODO
-
-p
-    |  You can load new word vectors from a file-like buffer using the
-    |  #[code vocab.load_vectors()] method. The file should be a
-    |  whitespace-delimited text file, where the word is in the first column,
-    |  and subsequent columns provide the vector data.  For faster loading, you
-    |  can use the #[code vocab.vectors_from_bin_loc()] method, which accepts a
-    |  path to a binary file written by #[code vocab.dump_vectors()].
-
-+code("Example").
-    # TODO
-
-p
-    |  You can also load vectors from memory by writing to the
-    |  #[+api("lexeme#vector") #[code Lexeme.vector]] property. If the vectors
-    |  you are writing are of different dimensionality
-    |  from the ones currently loaded, you should first call
-    |  #[code vocab.resize_vectors(new_size)].
-
 +h(2, "similarity") Similarity
+
++under-construction

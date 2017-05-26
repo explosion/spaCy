@@ -80,7 +80,7 @@
     },
 
     "customizing-tokenizer": {
-        "title": "Customizing the tokenizer",
+        "title": "Customising the tokenizer",
         "next": "rule-based-matching"
     },
 

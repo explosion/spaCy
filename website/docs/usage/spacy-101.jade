@@ -4,6 +4,8 @@ include ../../_includes/_mixins
 
 +h(2, "features") Features
 
++under-construction
+
 +aside
     |  If one of spaCy's functionalities #[strong needs a model], it means that
     |  you need to have one our the available
@@ -91,16 +93,34 @@ p
 
 include _spacy-101/_tokenization
 
++infobox
+    |  To learn more about how spaCy's tokenizer and its rules work in detail,
+    |  how to #[strong customise] it and how to #[strong add your own tokenizer]
+    |  to a processing pipeline, see the usage guide on
+    |  #[+a("/docs/usage/customizing-tokenizer") customising the tokenizer].
 
 +h(3, "annotations-pos-deps") Part-of-speech tags and dependencies
     +tag-model("dependency parse")
 
 include _spacy-101/_pos-deps
 
++infobox
+    |  To learn more about #[strong part-of-speech tagging] and rule-based
+    |  morphology, and how to #[strong navigate and use the parse tree]
+    |  effectively, see the usage guides on
+    |  #[+a("/docs/usage/pos-tagging") part-of-speech tagging] and
+    |  #[+a("/docs/usage/dependency-parse") using the dependency parse].
+
 +h(3, "annotations-ner") Named Entities
     +tag-model("named entities")
 
 include _spacy-101/_named-entities
+
++infobox
+    |  To learn more about entity recognition in spaCy, how to
+    |  #[strong add your own entities] to a document and how to train and update
+    |  the entity predictions of a model, see the usage guide on
+    |  #[+a("/docs/usage/entity-recognition") named entity recognition].
 
 +h(2, "vectors-similarity") Word vectors and similarity
     +tag-model("vectors")
@@ -109,19 +129,42 @@ include _spacy-101/_similarity
 
 include _spacy-101/_word-vectors
 
++infobox
+    |  To learn more about word vectors, how to #[strong customise them] and
+    |  how to load #[strong your own vectors] into spaCy, see the usage
+    |  guide on
+    |  #[+a("/docs/usage/word-vectors-similarities") using word vectors and semantic similarities].
+
 +h(2, "pipelines") Pipelines
 
 include _spacy-101/_pipelines
 
++infobox
+    |  To learn more about #[strong how processing pipelines work] in detail,
+    |  how to enable and disable their components, and how to
+    |  #[strong create your own], see the usage guide on
+    |  #[+a("/docs/usage/language-processing-pipeline") language processing pipelines].
+
++h(2, "vocab-stringstore") Vocab, lexemes and the string store
+
+include _spacy-101/_vocab-stringstore
+
 +h(2, "serialization") Serialization
 
 include _spacy-101/_serialization
+
++infobox
+    |  To learn more about #[strong serialization] and how to
+    |  #[strong save and load your own models], see the usage guide on
+    |  #[+a("/docs/usage/saving-loading") saving, loading and data serialization].
 
 +h(2, "training") Training
 
 include _spacy-101/_training
 
 +h(2, "architecture") Architecture
+
++under-construction
 
 +image
     include ../../assets/img/docs/architecture.svg

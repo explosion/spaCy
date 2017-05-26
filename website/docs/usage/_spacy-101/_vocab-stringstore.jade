@@ -1,0 +1,92 @@
+//- 💫 DOCS > USAGE > SPACY 101 > VOCAB & STRINGSTORE
+
+p
+    |  Whenever possible, spaCy tries to store data in a vocabulary, the
+    |  #[+api("vocab") #[code Vocab]], that will be
+    |  #[strong shared by multiple documents]. To save memory, spaCy also
+    |  encodes all strings to #[strong integer IDs] – in this case for example,
+    |  "coffee" has the ID #[code 3672]. Entity labels like "ORG" and
+    |  part-of-speech tags like "VERB" are also encoded. Internally, spaCy
+    |  only "speaks" in integer IDs.
+
++aside
+    |  #[strong Token]: A word, punctuation mark etc. #[em in context], including
+    |  its attributes, tags and dependencies.#[br]
+    |  #[strong Lexeme]: A "word type" with no context. Includes the word shape
+    |  and flags, e.g. if it's lowercase, a digit or punctuation.#[br]
+    |  #[strong Doc]: A processed container of tokens in context.#[br]
+    |  #[strong Vocab]: The collection of lexemes.#[br]
+    |  #[strong StringStore]: The dictionary mapping integer IDs to strings, for
+    |  example #[code 3672] &rarr; "coffee".
+
++image
+    include ../../../assets/img/docs/vocab_stringstore.svg
+    .u-text-right
+        +button("/assets/img/docs/vocab_stringstore.svg", false, "secondary").u-text-tag View large graphic
+
+p
+    |  If you process lots of documents containing the word "coffee" in all
+    |  kinds of different contexts, storing the exact string "coffee" every time
+    |  would take up way too much space. So instead, spaCy assigns it an ID
+    |  and stores it in the #[+api("stringstore") #[code StringStore]]. You can
+    |  think of the #[code StringStore] as a
+    |  #[strong lookup table that works in both directions] – you can look up a
+    |  string to get its ID, or an ID to get its string:
+
++code.
+    doc = nlp(u'I like coffee')
+    assert doc.vocab.strings[u'coffee'] == 3572
+    assert doc.vocab.strings[3572] == u'coffee'
+
+p
+    |  Now that all strings are encoded, the entries in the vocabulary
+    |  #[strong don&apos;t need to include the word text] themselves. Instead,
+    |  they can look it up in the #[code StringStore] via its integer ID. Each
+    |  entry in the vocabulary, also called #[+api("lexeme") #[code Lexeme]],
+    |  contains the #[strong context-independent] information about a word.
+    |  For example, no matter if "love" is used as a verb or a noun in some
+    |  context, its spelling and whether it consists of alphabetic characters
+    |  won't ever change.
+
++code.
+    for word in doc:
+        lexeme = doc.vocab[word.text]
+        print(lexeme.text, lexeme.orth, lexeme.shape_, lexeme.prefix_, lexeme.suffix_,
+              lexeme.is_alpha, lexeme.is_digit, lexeme.is_title, lexeme.lang_)
+
++aside
+    |  #[strong Text]: The original text of the lexeme.#[br]
+    |  #[strong Orth]: The integer ID of the lexeme.#[br]
+    |  #[strong Shape]: The abstract word shape of the lexeme.#[br]
+    |  #[strong Prefix]: By default, the first letter of the word string.#[br]
+    |  #[strong Suffix]: By default, the last three letters of the word string.#[br]
+    |  #[strong is alpha]: Does the lexeme consist of alphabetic characters?#[br]
+    |  #[strong is digit]: Does the lexeme consist of digits?#[br]
+    |  #[strong is title]: Does the lexeme consist of alphabetic characters?#[br]
+    |  #[strong Lang]: The language of the parent vocabulary.
+
++table(["text", "orth", "shape", "prefix", "suffix", "is_alpha", "is_digit", "is_title", "lang"])
+    - var style = [0, 1, 1, 0, 0, 1, 1, 1, 0]
+    +annotation-row(["I", 508, "X", "I", "I", true, false, true, "en"], style)
+    +annotation-row(["love", 949, "xxxx", "l", "ove", true, false, false, "en"], style)
+    +annotation-row(["coffee", 3572, "xxxx", "c", "ffe", true, false, false, "en"], style)
+
+p
+    |  The specific entries in the voabulary and their IDs don't really matter –
+    |  #[strong as long as they match]. That's why you always need to make sure
+    |  all objects you create have access to the same vocabulary. If they don't,
+    |  the IDs won't match and spaCy will either produce very confusing results,
+    |  or fail alltogether.
+
++code.
+    from spacy.tokens import Doc
+    from spacy.vocab import Vocab
+
+    doc = nlp(u'I like coffee') # original Doc
+    new_doc = Doc(Vocab(), words=['I', 'like', 'coffee']) # new Doc with empty Vocab
+    assert doc.vocab.strings[u'coffee'] == 3572 # ID in vocab of Doc
+    assert new_doc.vocab.strings[u'coffee'] == 446 # ID in vocab of new Doc
+
+p
+    |  Even though both #[code Doc] objects contain the same words, the internal
+    |  integer IDs are very different.

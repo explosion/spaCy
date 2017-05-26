@@ -50,9 +50,10 @@ p
 
 p
     |  spay's serialization API has been made consistent across classes and
-    |  objects. All container classes and pipeline components now have a
-    |  #[code to_bytes()], #[code from_bytes()], #[code to_disk()] and
-    |  #[code from_disk()] method that supports the Pickle protocol.
+    |  objects. All container classes, i.e. #[code Language], #[code Doc],
+    |  #[code Vocab] and #[code StringStore] now have a #[code to_bytes()],
+    |  #[code from_bytes()], #[code to_disk()] and #[code from_disk()] method
+    |  that supports the Pickle protocol.
 
 p
     |  The improved #[code spacy.load] makes loading models easier and more

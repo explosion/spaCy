@@ -255,6 +255,7 @@ p
 
 +h(2, "to_disk") Doc.to_disk
     +tag method
+    +tag-new(2)
 
 p Save the current state to a directory.
 
@@ -271,12 +272,14 @@ p Save the current state to a directory.
 
 +h(2, "from_disk") Doc.from_disk
     +tag method
+    +tag-new(2)
 
 p Loads state from a directory. Modifies the object in place and returns it.
 
 +aside-code("Example").
     from spacy.tokens import Doc
-    doc = Doc().from_disk('/path/to/doc')
+    from spacy.vocab import Vocab
+    doc = Doc(Vocab()).from_disk('/path/to/doc')
 
 +table(["Name", "Type", "Description"])
     +row

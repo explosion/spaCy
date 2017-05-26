@@ -166,7 +166,7 @@ p
     |  #[+a("/docs/api/annotation#json-input") JSON format].
 
 +code(false, "bash").
-    python -m spacy train [lang] [output_dir] [train_data] [dev_data] [--n-iter] [--parser-L1] [--no-tagger] [--no-parser] [--no-ner]
+    python -m spacy train [lang] [output_dir] [train_data] [dev_data] [--n-iter] [--n-sents] [--use-gpu] [--no-tagger] [--no-parser] [--no-entities]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -192,17 +192,12 @@ p
     +row
         +cell #[code --n-iter], #[code -n]
         +cell option
-        +cell Number of iterations (default: #[code 15]).
+        +cell Number of iterations (default: #[code 20]).
 
     +row
-        +cell #[code --n_sents], #[code -ns]
+        +cell #[code --n-sents], #[code -ns]
         +cell option
         +cell Number of sentences (default: #[code 0]).
-
-    +row
-        +cell #[code --parser-L1], #[code -L]
-        +cell option
-        +cell L1 regularization penalty for parser (default: #[code 0.0]).
 
     +row
         +cell #[code --use-gpu], #[code -G]
@@ -220,7 +215,7 @@ p
         +cell Don't train parser.
 
     +row
-        +cell #[code --no-ner], #[code -N]
+        +cell #[code --no-entities], #[code -N]
         +cell flag
         +cell Don't train NER.
 
@@ -228,6 +223,106 @@ p
         +cell #[code --help], #[code -h]
         +cell flag
         +cell Show help message and available arguments.
+
++h(3, "train-hyperparams") Environment variables for hyperparameters
+
+p
+    |  spaCy lets you set hyperparameters for training via environment variables.
+    |  This is useful, because it keeps the command simple and allows you to
+    |  #[+a("https://askubuntu.com/questions/17536/how-do-i-create-a-permanent-bash-alias/17537#17537") create an alias]
+    |  for your custom #[code train] command while still being able to easily
+    |  tweak the hyperparameters. For example:
+
++code(false, "bash").
+    parser_hidden_depth=2 parser_maxout_pieces=1 train-parser
+
++under-construction
+
++table(["Name", "Description", "Default"])
+    +row
+        +cell #[code dropout_from]
+        +cell
+        +cell #[code 0.2]
+
+    +row
+        +cell #[code dropout_to]
+        +cell
+        +cell #[code 0.2]
+
+    +row
+        +cell #[code dropout_decay]
+        +cell
+        +cell #[code 0.0]
+
+    +row
+        +cell #[code batch_from]
+        +cell
+        +cell #[code 1]
+
+    +row
+        +cell #[code batch_to]
+        +cell
+        +cell #[code 64]
+
+    +row
+        +cell #[code batch_compound]
+        +cell
+        +cell #[code 1.001]
+
+    +row
+        +cell #[code token_vector_width]
+        +cell
+        +cell #[code 128]
+
+    +row
+        +cell #[code embed_size]
+        +cell
+        +cell #[code 7500]
+
+    +row
+        +cell #[code parser_maxout_pieces]
+        +cell
+        +cell #[code 2]
+
+    +row
+        +cell #[code parser_hidden_depth]
+        +cell
+        +cell #[code 1]
+
+    +row
+        +cell #[code hidden_width]
+        +cell
+        +cell #[code 128]
+
+    +row
+        +cell #[code learn_rate]
+        +cell
+        +cell #[code 0.001]
+
+    +row
+        +cell #[code optimizer_B1]
+        +cell
+        +cell #[code 0.9]
+
+    +row
+        +cell #[code optimizer_B2]
+        +cell
+        +cell #[code 0.999]
+
+    +row
+        +cell #[code optimizer_eps]
+        +cell
+        +cell #[code 1e-08]
+
+    +row
+        +cell #[code L2_penalty]
+        +cell
+        +cell #[code 1e-06]
+
+    +row
+        +cell #[code grad_norm_clip]
+        +cell
+        +cell #[code 1.0]
 
 +h(2, "package") Package
 

@@ -107,7 +107,6 @@ p
     .u-text-right
         +button("/assets/img/docs/language_data.svg", false, "secondary").u-text-tag View large graphic
 
-
 +table(["File name", "Variables", "Description"])
     +row
         +cell #[+src(gh("spacy-dev-resources", "templates/new_language/stop_words.py")) stop_words.py]
@@ -439,7 +438,7 @@ p
 
 +h(3, "morph-rules") Morph rules
 
-//- TODO: write morph rules section
++under-construction
 
 +h(2, "testing") Testing the new language tokenizer
 
@@ -631,7 +630,7 @@ p
     |  trains the model using #[+a("https://radimrehurek.com/gensim/") Gensim].
     |  The #[code vectors.bin] file should consist of one word and vector per line.
 
-+aside-code("your_data_directory", "yaml").
+//-+aside-code("your_data_directory", "yaml").
     ├── vocab/
     |   ├── lexemes.bin
     |   ├── strings.json
@@ -662,4 +661,4 @@ p
     |  model use the using spaCy's #[+api("cli#train") #[code train]] command:
 
 +code(false, "bash").
-    python -m spacy train [lang] [output_dir] [train_data] [dev_data] [--n_iter] [--parser_L1] [--no_tagger] [--no_parser] [--no_ner]
+    python -m spacy train [lang] [output_dir] [train_data] [dev_data] [--n-iter] [--n-sents] [--use-gpu] [--no-tagger] [--no-parser] [--no-entities]

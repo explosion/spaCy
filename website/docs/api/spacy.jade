@@ -20,12 +20,7 @@ p
     nlp = spacy.load('/path/to/en') # unicode path
     nlp = spacy.load(Path('/path/to/en')) # pathlib Path
 
-+infobox("⚠️ Deprecation note")
-    |  As of spaCy 2.0, the #[code path] keyword argument is deprecated. spaCy
-    |  will also raise an error if no model could be loaded and never just
-    |  return an empty #[code Language] object. If you need a blank language,
-    |  you need to import it explicitly (#[code from spacy.lang.en import English])
-    |  or use #[+api("util#get_lang_class") #[code util.get_lang_class]].
+    nlp = spacy.load('en', disable['parser', 'tagger'])
 
 +table(["Name", "Type", "Description"])
     +row
@@ -34,14 +29,27 @@ p
         +cell Model to load, i.e. shortcut link, package name or path.
 
     +row
-        +cell #[code **overrides]
-        +cell -
-        +cell Override or disable components.
+        +cell #[code disable]
+        +cell list
+        +cell
+            |  Names of pipeline components to
+            |  #[+a("/docs/usage/language-processing-pipeline#disabling") disable].
 
     +footrow
         +cell returns
         +cell #[code Language]
         +cell A #[code Language] object with the loaded model.
+
++infobox("⚠️ Deprecation note")
+    .o-block
+        |  As of spaCy 2.0, the #[code path] keyword argument is deprecated. spaCy
+        |  will also raise an error if no model could be loaded and never just
+        |  return an empty #[code Language] object. If you need a blank language,
+        |  you need to import it explicitly (#[code from spacy.lang.en import English])
+        |  or use #[+api("util#get_lang_class") #[code util.get_lang_class]].
+
+    +code-new nlp = spacy.load('/model')
+    +code-old nlp = spacy.load('en', path='/model')
 
 +h(2, "info") spacy.info
     +tag function
@@ -98,3 +106,37 @@ p
         +cell returns
         +cell unicode
         +cell The explanation, or #[code None] if not found in the glossary.
+
++h(2, "set_factory") spacy.set_factory
+    +tag function
+    +tag-new(2)
+
+p
+    |  Set a factory that returns a custom
+    |  #[+a("/docs/usage/language-processing-pipeline") processing pipeline]
+    |  component. Factories are useful for creating stateful components, especially ones which depend on shared data.
+
++aside-code("Example").
+    def my_factory(vocab):
+        def my_component(doc):
+            return doc
+        return my_component
+
+    spacy.set_factory('my_factory', my_factory)
+    nlp = Language(pipeline=['my_factory'])
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code factory_id]
+        +cell unicode
+        +cell
+            |  Unique name of factory. If added to a new pipeline, spaCy will
+            |  look up the factory for this ID and use it to create the
+            |  component.
+
+    +row
+        +cell #[code factory]
+        +cell callable
+        +cell
+            |  Callable that takes a #[code Vocab] object and returns a pipeline
+            |  component.

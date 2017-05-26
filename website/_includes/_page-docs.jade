@@ -6,9 +6,17 @@ include _sidebar
 
 main.o-main.o-main--sidebar.o-main--aside
     article.o-content
-        +h(1)=title
-            if tag
-                +tag=tag
+        +grid.o-no-block
+            +grid-col(source ? "two-thirds" : "full")
+                +h(1)=title
+                    if tag
+                        +tag=tag
+
+            if source
+                +grid-col("third").u-text-right
+                    .o-inline-list
+                        +button(gh("spacy", source), false, "secondary").u-text-tag Source #[+icon("code", 14)]
+
 
         if ALPHA
             +infobox("⚠️ You are viewing the spaCy v2.0 alpha docs")
