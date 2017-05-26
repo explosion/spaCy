@@ -57,9 +57,9 @@ def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
     # starts high and decays sharply, to force the optimizer to explore.
     # Batch size starts at 1 and grows, so that we make updates quickly
     # at the beginning of training.
-    dropout_rates = util.decaying(util.env_opt('dropout_from', 0.5),
+    dropout_rates = util.decaying(util.env_opt('dropout_from', 0.2),
                                   util.env_opt('dropout_to', 0.2),
-                                  util.env_opt('dropout_decay', 1e-4))
+                                  util.env_opt('dropout_decay', 0.0))
     batch_sizes = util.compounding(util.env_opt('batch_from', 1),
                                    util.env_opt('batch_to', 64),
                                    util.env_opt('batch_compound', 1.001))
@@ -71,23 +71,30 @@ def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, use_gpu=use_gpu)
 
     print("Itn.\tDep. Loss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
-    for i in range(n_iter):
-        with tqdm.tqdm(total=corpus.count_train(), leave=False) as pbar:
-            train_docs = corpus.train_docs(nlp, projectivize=True,
-                                           gold_preproc=False, shuffle=i)
-            losses = {}
-            for batch in minibatch(train_docs, size=batch_sizes):
-                docs, golds = zip(*batch)
-                nlp.update(docs, golds, sgd=optimizer,
-                           drop=next(dropout_rates), losses=losses)
-                pbar.update(len(docs))
+    try:
+        for i in range(n_iter):
+            with tqdm.tqdm(total=corpus.count_train(), leave=False) as pbar:
+                train_docs = corpus.train_docs(nlp, projectivize=True,
+                                               gold_preproc=False, max_length=1000)
+                losses = {}
+                for batch in minibatch(train_docs, size=batch_sizes):
+                    docs, golds = zip(*batch)
+                    nlp.update(docs, golds, sgd=optimizer,
+                               drop=next(dropout_rates), losses=losses)
+                    pbar.update(len(docs))
 
-        with nlp.use_params(optimizer.averages):
-            scorer = nlp.evaluate(corpus.dev_docs(nlp, gold_preproc=False))
-        print_progress(i, losses, scorer.scores)
-    with (output_path / 'model.bin').open('wb') as file_:
-        with nlp.use_params(optimizer.averages):
-            dill.dump(nlp, file_, -1)
+            with nlp.use_params(optimizer.averages):
+                scorer = nlp.evaluate(corpus.dev_docs(nlp, gold_preproc=False))
+                with (output_path / ('model%d.pickle' % i)).open('wb') as file_:
+                    dill.dump(nlp, file_, -1)
+
+
+            print_progress(i, losses, scorer.scores)
+    finally:
+        print("Saving model...")
+        with (output_path / 'model-final.pickle').open('wb') as file_:
+            with nlp.use_params(optimizer.averages):
+                dill.dump(nlp, file_, -1)
 
 
 def _render_parses(i, to_render):
