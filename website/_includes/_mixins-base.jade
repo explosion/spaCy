@@ -186,3 +186,14 @@ mixin landing-header()
 mixin landing-badge(url, graphic, alt, size)
     +a(url)(aria-label=alt title=alt).c-landing__badge
         +svg("graphics", graphic, size || 225)
+
+
+//- Under construction (temporary)
+    Marks sections that still need to be completed for the v2.0 release.
+
+mixin under-construction()
+    +infobox("🚧 Under construction")
+        |  This section is still being written and will be updated for the v2.0
+        |  release. Is there anything that you think should definitely mentioned or
+        |  explained here? Any examples you'd like to see? #[strong Let us know]
+        |  on the #[+a(gh("spacy") + "/issues") v2.0 alpha thread] on GitHub!
