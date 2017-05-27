@@ -9,6 +9,7 @@ import ctypes
 from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
 from cymem.cymem cimport Pool
+from collections import OrderedDict
 
 from .stateclass cimport StateClass
 from ._state cimport StateC, is_space_token
@@ -312,12 +313,13 @@ cdef class ArcEager(TransitionSystem):
     @classmethod
     def get_actions(cls, **kwargs):
         actions = kwargs.get('actions',
-                    {
-                        SHIFT: [''],
-                        REDUCE: [''],
-                        RIGHT: [],
-                        LEFT: [],
-                        BREAK: ['ROOT']})
+                    OrderedDict((
+                        (SHIFT, ['']),
+                        (REDUCE, ['']),
+                        (RIGHT, []),
+                        (LEFT, []),
+                        (BREAK, ['ROOT'])
+                    )))
         seen_actions = set()
         for label in kwargs.get('left_labels', []):
             if label.upper() != 'ROOT':
