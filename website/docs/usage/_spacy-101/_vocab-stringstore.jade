@@ -89,4 +89,6 @@ p
 
 p
     |  Even though both #[code Doc] objects contain the same words, the internal
-    |  integer IDs are very different.
+    |  integer IDs are very different. The same applies for all other strings,
+    |  like the annotation scheme. To avoid mismatched IDs, spaCy will always
+    |  export the vocab if you save a #[code Doc] or #[code nlp] object.
