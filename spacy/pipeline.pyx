@@ -335,12 +335,19 @@ cdef class NeuralDependencyParser(NeuralParser):
     name = 'parser'
     TransitionSystem = ArcEager
 
+    def __reduce__(self):
+        return (NeuralDependencyParser, (self.vocab, self.moves, self.model), None, None)
+
 
 cdef class NeuralEntityRecognizer(NeuralParser):
     name = 'entity'
     TransitionSystem = BiluoPushDown
 
     nr_feature = 6
+
+    def __reduce__(self):
+        return (NeuralEntityRecognizer, (self.vocab, self.moves, self.model), None, None)
+
 
 
 cdef class BeamDependencyParser(BeamParser):
