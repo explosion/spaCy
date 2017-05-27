@@ -19,19 +19,17 @@ p
 
 p
     |  When you load a model, spaCy first consults the model's
-    |  #[+a("/docs/usage/saving-loading#models-generating") meta.json] for its
-    |  #[code setup] details. This typically includes the ID of a language class,
+    |  #[+a("/docs/usage/saving-loading#models-generating") meta.json]. The
+    |  meta typically includes the model details, the ID of a language class,
     |  and an optional list of pipeline components. spaCy then does the
     |  following:
 
 +aside-code("meta.json (excerpt)", "json").
     {
         "name": "example_model",
+        "lang": "en"
         "description": "Example model for spaCy",
-        "setup": {
-            "lang": "en",
-            "pipeline": ["token_vectors", "tagger"]
-        }
+        "pipeline": ["token_vectors", "tagger"]
     }
 
 +list("numbers")
@@ -287,17 +285,15 @@ p
 
 p
     |  In the model package's meta.json, specify the language class and pipeline
-    |  IDs in #[code setup]:
+    |  IDs:
 
 +code("meta.json (excerpt)", "json").
     {
-        "name": "my_sentiment_model",
+        "name": "sentiment_model",
+        "lang": "en",
         "version": "1.0.0",
         "spacy_version": "&gt;=2.0.0,&lt;3.0.0",
-        "setup": {
-            "lang": "en",
-            "pipeline": ["vectorizer", "sentiment"]
-        }
+        "pipeline": ["vectorizer", "sentiment"]
     }
 
 p
@@ -307,7 +303,7 @@ p
     |  by your custom #[code "sentiment"] factory.
 
 +code.
-    nlp = spacy.load('my_sentiment_model')
+    nlp = spacy.load('en_sentiment_model')
     doc = nlp(u'I love pizza')
     assert doc.sentiment
 
