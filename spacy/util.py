@@ -177,10 +177,13 @@ def get_async(stream, numpy_array):
 
 def itershuffle(iterable, bufsize=1000):
     """Shuffle an iterator. This works by holding `bufsize` items back
-    and yielding them sometime later. Obviously, this is not unbiased --
+    and yielding them sometime later. Obviously, this is not unbiased –
     but should be good enough for batching. Larger bufsize means less bias.
-
     From https://gist.github.com/andres-erbsen/1307752
+
+    iterable (iterable): Iterator to shuffle.
+    bufsize (int): Items to hold back.
+    YIELDS (iterable): The shuffled iterator.
     """
     iterable = iter(iterable)
     buf = []
@@ -315,17 +318,16 @@ def normalize_slice(length, start, stop, step=None):
 
 
 def compounding(start, stop, compound):
-    '''Yield an infinite series of compounding values. Each time the
+    """Yield an infinite series of compounding values. Each time the
     generator is called, a value is produced by multiplying the previous
     value by the compound rate.
 
-    EXAMPLE
-
+    EXAMPLE:
       >>> sizes = compounding(1., 10., 1.5)
       >>> assert next(sizes) == 1.
       >>> assert next(sizes) == 1 * 1.5
       >>> assert next(sizes) == 1.5 * 1.5
-    '''
+    """
     def clip(value):
         return max(value, stop) if (start>stop) else min(value, stop)
     curr = float(start)
@@ -335,19 +337,13 @@ def compounding(start, stop, compound):
 
 
 def decaying(start, stop, decay):
-    '''Yield an infinite series of linearly decaying values.'''
+    """Yield an infinite series of linearly decaying values."""
     def clip(value):
         return max(value, stop) if (start>stop) else min(value, stop)
     nr_upd = 1.
     while True:
         yield clip(start * 1./(1. + decay * nr_upd))
         nr_upd += 1
-
-
-def check_renamed_kwargs(renamed, kwargs):
-    for old, new in renamed.items():
-        if old in kwargs:
-            raise TypeError("Keyword argument %s now renamed to %s" % (old, new))
 
 
 def read_json(location):
