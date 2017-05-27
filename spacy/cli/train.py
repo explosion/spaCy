@@ -32,9 +32,11 @@ from .. import displacy
     no_parser=("Don't train parser", "flag", "P", bool),
     no_entities=("Don't train NER", "flag", "N", bool)
 )
-def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
+def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
           use_gpu=False, no_tagger=False, no_parser=False, no_entities=False):
-    """Train a model. Expects data in spaCy's JSON format."""
+    """
+    Train a model. Expects data in spaCy's JSON format.
+    """
     n_sents = n_sents or None
     output_path = util.ensure_path(output_dir)
     train_path = util.ensure_path(train_data)
@@ -84,11 +86,11 @@ def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                     pbar.update(len(docs))
 
             with nlp.use_params(optimizer.averages):
-                scorer = nlp.evaluate(corpus.dev_docs(nlp, gold_preproc=False))
                 with (output_path / ('model%d.pickle' % i)).open('wb') as file_:
                     dill.dump(nlp, file_, -1)
-
-
+                with (output_path / ('model%d.pickle' % i)).open('rb') as file_:
+                    nlp_loaded = dill.load(file_)
+                scorer = nlp_loaded.evaluate(corpus.dev_docs(nlp_loaded, gold_preproc=False))
             print_progress(i, losses, scorer.scores)
     finally:
         print("Saving model...")

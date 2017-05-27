@@ -11,8 +11,13 @@ p
     |  the name of an installed
     |  #[+a("/docs/usage/saving-loading#generating") model package], a unicode
     |  path or a #[code Path]-like object. spaCy will try resolving the load
-    |  argument in this order. The #[code Language] class to initialise will be
-    |  determined based on the model's settings.
+    |  argument in this order. If a model is loaded from a shortcut link or
+    |  package name, spaCy will assume it's a Python package and import it and
+    |  call the model's own #[code load()] method. If a model is loaded from a
+    |  path, spaCy will assume it's a data directory, read the language and
+    |  pipeline settings off the meta.json and initialise the #[code Language]
+    |  class. The data will be loaded in via
+    |  #[+api("language#from_disk") #[code Language.from_disk()]].
 
 +aside-code("Example").
     nlp = spacy.load('en') # shortcut link
@@ -20,7 +25,7 @@ p
     nlp = spacy.load('/path/to/en') # unicode path
     nlp = spacy.load(Path('/path/to/en')) # pathlib Path
 
-    nlp = spacy.load('en', disable['parser', 'tagger'])
+    nlp = spacy.load('en', disable=['parser', 'tagger'])
 
 +table(["Name", "Type", "Description"])
     +row

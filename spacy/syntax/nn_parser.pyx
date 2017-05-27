@@ -527,6 +527,14 @@ cdef class Parser:
                 xp.add.at(d_tokvecs,
                     ids, d_state_features * active_feats)
 
+    @property
+    def move_names(self):
+        names = []
+        for i in range(self.moves.n_moves):
+            name = self.moves.move_name(self.moves.c[i].move, self.moves.c[i].label)
+            names.append(name)
+        return names
+
     def get_batch_model(self, batch_size, tokvecs, stream, dropout):
         lower, upper = self.model
         state2vec = precompute_hiddens(batch_size, tokvecs,

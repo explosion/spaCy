@@ -158,7 +158,8 @@
 
     "binder": {
         "title": "Binder",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/tokens/binder.pyx"
     },
 
     "annotation": {

@@ -74,16 +74,14 @@ p
 +aside-code("meta.json", "json").
     {
         "name": "example_model",
+        "lang": "en",
         "version": "1.0.0",
         "spacy_version": "&gt;=2.0.0,&lt;3.0.0",
         "description": "Example model for spaCy",
         "author": "You",
         "email": "you@example.com",
         "license": "CC BY-SA 3.0",
-        "setup": {
-            "lang": "en",
-            "pipeline": ["token_vectors", "tagger"]
-        }
+        "pipeline": ["token_vectors", "tagger"]
     }
 
 +code(false, "bash").
@@ -110,9 +108,9 @@ p
 +h(3, "models-custom") Customising the model setup
 
 p
-    |  The meta.json includes a #[code setup] key that lets you customise how
-    |  the model should be initialised and loaded. You can define the language
-    |  data to be loaded and the
+    |  The meta.json includes the model details, like name, requirements and
+    |  license, and lets you customise how the model should be initialised and
+    |  loaded. You can define the language data to be loaded and the
     |  #[+a("/docs/usage/language-processing-pipeline") processing pipeline] to
     |  execute.
 
@@ -183,9 +181,9 @@ p
 p
     |  To load a model from a data directory, you can use
     |  #[+api("spacy#load") #[code spacy.load()]] with the local path. This will
-    |  look for a meta.json in the directory and use the #[code setup] details
-    |  to initialise a #[code Language] class with a processing pipeline and
-    |  load in the model data.
+    |  look for a meta.json in the directory and use the #[code lang] and
+    |  #[code pipeline] settings to initialise a #[code Language] class with a
+    |  processing pipeline and load in the model data.
 
 +code.
     nlp = spacy.load('/path/to/model')

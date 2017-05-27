@@ -20,18 +20,17 @@ p
     nlp = Language(pipeline=['my_factory', mycomponent])
 
 p
-    |  It's now much easier to customise the pipeline with your own components.
-    |  Components are functions that receive a #[code Doc] object, modify and
-    |  return it. If your component is stateful, you'll want to create a new one
-    |  for each pipeline. You can do that by defining and registering a factory
-    |  which receives the shared #[code Vocab] object and returns a component.
-
-p
-    |  spaCy's default components – the vectorizer, tagger, parser and entity
-    |  recognizer, can be added to your pipeline by using their string IDs.
-    |  This way, you won't have to worry about finding and implementing them –
-    |  to use the default tagger, simply add #[code "tagger"] to the pipeline,
+    |  It's now much easier to #[strong customise the pipeline] with your own
+    |  components, functions that receive a #[code Doc] object, modify and
+    |  return it. If your component is stateful, you can define and register a
+    |  factory which receives the shared #[code Vocab] object and returns a
+    |  component. spaCy's default components can be added to your pipeline by
+    |  using their string IDs. This way, you won't have to worry about finding
+    |  and implementing them – simply add #[code "tagger"] to the pipeline,
     |  and spaCy will know what to do.
+
++image
+    include ../../assets/img/docs/pipeline.svg
 
 +infobox
     |  #[strong API:] #[+api("language") #[code Language]]
@@ -96,11 +95,10 @@ p
     |  #[code Language] class, or load a model that initialises one. This allows
     |  languages to contain more custom data, e.g. lemmatizer lookup tables, or
     |  complex regular expressions. The language data has also been tidied up
-    |  and simplified. It's now also possible to overwrite the functions that
-    |  compute lexical attributes like #[code like_num], and supply
-    |  language-specific syntax iterators, e.g. to determine noun chunks. spaCy
-    |  now also supports simple lookup-based lemmatization. The data is stored
-    |  in a dictionary mapping a string to its lemma.
+    |  and simplified. spaCy now also supports simple lookup-based lemmatization.
+
++image
+    include ../../assets/img/docs/language_data.svg
 
 +infobox
     |  #[strong API:] #[+api("language") #[code Language]]
@@ -111,13 +109,10 @@ p
 
 +aside-code("Example").
     from spacy.matcher import Matcher
-    from spacy.attrs import LOWER, IS_PUNCT
     matcher = Matcher(nlp.vocab)
-    matcher.add('HelloWorld', None,
-                [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}],
-                [{LOWER: 'hello'}, {LOWER: 'world'}])
+    matcher.add('HEARTS', None, [{'ORTH': '❤️', 'OP': '+'}])
     assert len(matcher) == 1
-    assert 'HelloWorld' in matcher
+    assert 'HEARTS' in matcher
 
 p
     |  Patterns can now be added to the matcher by calling
@@ -157,28 +152,8 @@ p
         +cell #[+api("language#to_disk") #[code Language.to_disk]]
 
     +row
-        +cell #[code Tokenizer.load]
-        +cell
-            |  #[+api("tokenizer#from_disk") #[code Tokenizer.from_disk]]
-            |  #[+api("tokenizer#from_bytes") #[code Tokenizer.from_bytes]]
-
-    +row
-        +cell #[code Tagger.load]
-        +cell
-            |  #[+api("tagger#from_disk") #[code Tagger.from_disk]]
-            |  #[+api("tagger#from_bytes") #[code Tagger.from_bytes]]
-
-    +row
-        +cell #[code DependencyParser.load]
-        +cell
-            |  #[+api("dependencyparser#from_disk") #[code DependencyParser.from_disk]]
-            |  #[+api("dependencyparser#from_bytes") #[code DependencyParser.from_bytes]]
-
-    +row
-        +cell #[code EntityRecognizer.load]
-        +cell
-            |  #[+api("entityrecognizer#from_disk") #[code EntityRecognizer.from_disk]]
-            |  #[+api("entityrecognizer#from_bytes") #[code EntityRecognizer.from_bytes]]
+        +cell #[code Language.create_make_doc]
+        +cell #[+api("language#attributes") #[code Language.tokenizer]]
 
     +row
         +cell
@@ -213,6 +188,28 @@ p
             |  #[+api("stringstore#to_bytes") #[code StringStore.to_bytes]]
 
     +row
+        +cell #[code Tokenizer.load]
+        +cell -
+
+    +row
+        +cell #[code Tagger.load]
+        +cell
+            |  #[+api("tagger#from_disk") #[code Tagger.from_disk]]
+            |  #[+api("tagger#from_bytes") #[code Tagger.from_bytes]]
+
+    +row
+        +cell #[code DependencyParser.load]
+        +cell
+            |  #[+api("dependencyparser#from_disk") #[code DependencyParser.from_disk]]
+            |  #[+api("dependencyparser#from_bytes") #[code DependencyParser.from_bytes]]
+
+    +row
+        +cell #[code EntityRecognizer.load]
+        +cell
+            |  #[+api("entityrecognizer#from_disk") #[code EntityRecognizer.from_disk]]
+            |  #[+api("entityrecognizer#from_bytes") #[code EntityRecognizer.from_bytes]]
+
+    +row
         +cell #[code Matcher.load]
         +cell -
 
@@ -232,7 +229,7 @@ p
 
     +row
         +cell #[code Doc.read_bytes]
-        +cell
+        +cell #[+api("binder") #[code Binder]]
 
     +row
         +cell #[code Token.is_ancestor_of]
