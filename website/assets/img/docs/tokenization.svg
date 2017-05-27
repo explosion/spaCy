@@ -1,7 +1,7 @@
 <svg class="o-svg" xmlns="http://www.w3.org/2000/svg" width="600" height="380" viewBox="-20 -10 550 400">
     <style>
-        .svg__tokenization__text { fill: #1a1e23; font: 18px "Source Sans Pro" }
-        .svg__tokenization__text-small { fill: #fff; font: 600 13px "Source Code Pro" }
+        .svg__tokenization__text { fill: #1a1e23; font: 18px "Source Sans Pro", Tahoma, Helvetica, Arial, sans-serif }
+        .svg__tokenization__text-small { fill: #fff; font: 600 13px "Source Code Pro", Monaco, "Courier New", monospace }
     </style>
     <path fill="none" stroke="#c00" stroke-width="2" stroke-miterlimit="10" d="M71 39v12H16v11M71 39v12h20v11"/>
     <path fill="#f8cecc" stroke="#c00" stroke-width="2" d="M1 1h140v38.2H1z"/>

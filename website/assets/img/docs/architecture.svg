@@ -1,9 +1,9 @@
 <svg class="o-svg" xmlns="http://www.w3.org/2000/svg" viewBox="-1 -1 907 737" width="906" height="746">
     <style>
-        .svg__architecture__text-large { fill: #1a1e23; font: 20px "Source Sans Pro" }
-        .svg__architecture__text-medium { fill: #1a1e23; font: 17px "Source Sans Pro" }
-        .svg__architecture__text-small { fill: #1a1e23; font: bold 14px "Source Sans Pro" }
-        .svg__architecture__text-code {  fill: #1a1e23; font: 600 12px "Source Code Pro" }
+        .svg__architecture__text-large { fill: #1a1e23; font: 20px "Source Sans Pro", Tahoma, Helvetica, Arial, sans-serif }
+        .svg__architecture__text-medium { fill: #1a1e23; font: 17px "Source Sans Pro", Tahoma, Helvetica, Arial, sans-serif }
+        .svg__architecture__text-small { fill: #1a1e23; font: bold 14px "Source Sans Pro", Tahoma, Helvetica, Arial, sans-serif }
+        .svg__architecture__text-code {  fill: #1a1e23; font: 600 12px "Source Code Pro", Monaco, "Courier New", monospace }
     </style>
     <ellipse cx="404" cy="203" fill="#dae8fc" stroke="#09a3d5" stroke-width="2" rx="74.8" ry="49.8"/>
     <text class="svg__architecture__text-large" transform="translate(362.5 206.5)" width="81" height="40">Language</text>
