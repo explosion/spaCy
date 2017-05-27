@@ -215,7 +215,9 @@ class Language(object):
         grads = {}
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
-        for proc in self.pipeline[1:]:
+        pipes = list(self.pipeline[1:])
+        random.shuffle(pipes)
+        for proc in pipes:
             if not hasattr(proc, 'update'):
                 continue
             tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
