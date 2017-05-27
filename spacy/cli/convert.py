@@ -39,4 +39,4 @@ def convert(_, input_file, output_dir, n_sents, morphology):
         prints("Can't find converter for %s" % input_path.parts[-1],
                title="Unknown format", exits=1)
     CONVERTERS[file_ext](input_path, output_path,
-            n_sents=n_sents, morphology=morphology)
+            n_sents=n_sents, use_morphology=morphology)
