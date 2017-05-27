@@ -18,8 +18,9 @@ from .. import about
     meta=("path to meta.json", "option", "m", str),
     force=("force overwriting of existing folder in output directory", "flag", "f", bool)
 )
-def package(input_dir, output_dir, meta, force):
-    """Generate Python package for model data, including meta and required
+def package(cmd, input_dir, output_dir, meta=None, force=False):
+    """
+    Generate Python package for model data, including meta and required
     installation files. A new directory will be created in the specified
     output directory, and model data will be copied over.
     """
