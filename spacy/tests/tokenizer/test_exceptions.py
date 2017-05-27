@@ -1,7 +1,4 @@
 # coding: utf-8
-"""Test that tokenizer exceptions and emoticons are handled correctly."""
-
-
 from __future__ import unicode_literals
 
 import pytest
@@ -39,3 +36,12 @@ def test_tokenizer_handles_emoticons(tokenizer):
 def test_tokenizer_excludes_false_pos_emoticons(tokenizer, text, length):
     tokens = tokenizer(text)
     assert len(tokens) == length
+
+
+@pytest.mark.parametrize('text,length', [('can you still dunk?🍕🍔😵LOL', 8),
+                                         ('i💙you', 3), ('🤘🤘yay!', 4)])
+def test_tokenizer_handles_emoji(tokenizer, text, length):
+    exceptions = ["hu"]
+    tokens = tokenizer(text)
+    if tokens[0].lang_ not in exceptions:
+        assert len(tokens) == length
