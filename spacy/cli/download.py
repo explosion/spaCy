@@ -17,8 +17,9 @@ from .. import about
     direct=("force direct download. Needs model name with version and won't "
             "perform compatibility check", "flag", "d", bool)
 )
-def download(model, direct=False):
-    """Download compatible model from default download path using pip. Model
+def download(cmd, model, direct=False):
+    """
+    Download compatible model from default download path using pip. Model
     can be shortcut, model name or, if --direct flag is set, full model name
     with version.
     """
@@ -31,7 +32,7 @@ def download(model, direct=False):
         version = get_version(model_name, compatibility)
         download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model_name, v=version))
         try:
-            link(model_name, model, force=True)
+            link(None, model_name, model, force=True)
         except:
             # Dirty, but since spacy.download and the auto-linking is mostly
             # a convenience wrapper, it's best to show a success message and

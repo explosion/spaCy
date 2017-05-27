@@ -432,6 +432,8 @@ cdef class Parser:
                                                       0.0)
         todo = [(s, g) for (s, g) in zip(states, golds)
                 if not s.is_final() and g is not None]
+        if not todo:
+            return None
 
         backprops = []
         d_tokvecs = state2vec.ops.allocate(tokvecs.shape)

@@ -129,13 +129,14 @@ p
 +code.
     import spacy
     from spacy.tokens.doc import Doc
+    from spacy.vocab import Vocab
 
     nlp = spacy.load('en')
     moby_dick = open('moby_dick.txt', 'r')
     doc = nlp(moby_dick)
     doc.to_disk('/moby_dick.bin')
 
-    new_doc = Doc().from_disk('/moby_dick.bin')
+    new_doc = Doc(Vocab()).from_disk('/moby_dick.bin')
 
 +infobox
     |  #[strong Usage:] #[+a("/docs/usage/saving-loading") Saving and loading]
@@ -148,9 +149,14 @@ p
 
     nlp = spacy.load('en')
     matcher = Matcher(nlp.vocab)
-    # match "Google I/O" or "Google i/o"
-    pattern = [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}]
-    matcher.add('GoogleIO', None, pattern)
+
+    def set_sentiment(matcher, doc, i, matches):
+        doc.sentiment += 0.1
+
+    pattern1 = [{'ORTH': 'Google'}, {'UPPER': 'I'}, {'ORTH': '/'}, {'UPPER': 'O'}]
+    pattern2 = [[{'ORTH': emoji, 'OP': '+'}] for emoji in ['😀', '😂', '🤣', '😍']]
+    matcher.add('GoogleIO', None, pattern1) # match "Google I/O" or "Google i/o"
+    matcher.add('HAPPY', set_sentiment, pattern2) # match one or more happy emoji
     matches = nlp(LOTS_OF TEXT)
 
 +infobox

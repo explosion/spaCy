@@ -32,9 +32,11 @@ from .. import displacy
     no_parser=("Don't train parser", "flag", "P", bool),
     no_entities=("Don't train NER", "flag", "N", bool)
 )
-def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
+def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
           use_gpu=False, no_tagger=False, no_parser=False, no_entities=False):
-    """Train a model. Expects data in spaCy's JSON format."""
+    """
+    Train a model. Expects data in spaCy's JSON format.
+    """
     n_sents = n_sents or None
     output_path = util.ensure_path(output_dir)
     train_path = util.ensure_path(train_data)
@@ -70,12 +72,12 @@ def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
 
     optimizer = nlp.begin_training(lambda: corpus.train_tuples, use_gpu=use_gpu)
 
-    print("Itn.\tDep. Loss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
+    print("Itn.\tLoss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
     try:
         for i in range(n_iter):
             with tqdm.tqdm(total=corpus.count_train(), leave=False) as pbar:
                 train_docs = corpus.train_docs(nlp, projectivize=True,
-                                               gold_preproc=False, max_length=1000)
+                                               gold_preproc=False, max_length=0)
                 losses = {}
                 for batch in minibatch(train_docs, size=batch_sizes):
                     docs, golds = zip(*batch)

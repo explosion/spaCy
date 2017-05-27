@@ -18,8 +18,9 @@ from .. import about
     meta=("path to meta.json", "option", "m", str),
     force=("force overwriting of existing folder in output directory", "flag", "f", bool)
 )
-def package(input_dir, output_dir, meta, force):
-    """Generate Python package for model data, including meta and required
+def package(cmd, input_dir, output_dir, meta=None, force=False):
+    """
+    Generate Python package for model data, including meta and required
     installation files. A new directory will be created in the specified
     output directory, and model data will be copied over.
     """
@@ -42,7 +43,7 @@ def package(input_dir, output_dir, meta, force):
         meta = util.read_json(meta_path)
     else:
         meta = generate_meta()
-    validate_meta(meta, ['lang', 'name', 'version'])
+    meta = validate_meta(meta, ['lang', 'name', 'version'])
 
     model_name = meta['lang'] + '_' + meta['name']
     model_name_v = model_name + '-' + meta['version']
@@ -85,13 +86,24 @@ def generate_meta():
                 ('email', 'Author email', False),
                 ('url', 'Author website', False),
                 ('license', 'License', 'CC BY-NC 3.0')]
-
     prints("Enter the package settings for your model.", title="Generating meta.json")
     meta = {}
     for setting, desc, default in settings:
         response = util.get_raw_input(desc, default)
         meta[setting] = default if response == '' and default else response
+    meta['pipeline'] = generate_pipeline()
     return meta
+
+
+def generate_pipeline():
+    prints("If set to 'True', the default pipeline is used. If set to 'False', "
+           "the pipeline will be disabled. Components should be specified as a "
+           "comma-separated list of component names, e.g. vectorizer, tagger, "
+           "parser, ner. For more information, see the docs on processing pipelines.",
+           title="Enter your model's pipeline components")
+    pipeline = util.get_raw_input("Pipeline components", True)
+    replace = {'True': True, 'False': False}
+    return replace[pipeline] if pipeline in replace else pipeline.split(', ')
 
 
 def validate_meta(meta, keys):
@@ -99,6 +111,7 @@ def validate_meta(meta, keys):
         if key not in meta or meta[key] == '':
             prints("This setting is required to build your package.",
                    title='No "%s" setting found in meta.json' % key, exits=1)
+    return meta
 
 
 def get_template(filepath):

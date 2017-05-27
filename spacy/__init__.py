@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import importlib
 
 from .compat import basestring_
-from .cli.info import info
+from .cli.info import info as cli_info
 from .glossary import explain
 from .deprecated import resolve_load_name
 from . import util
@@ -20,3 +20,7 @@ def load(name, **overrides):
     overrides['meta'] = meta
     overrides['path'] = model_path
     return cls(**overrides)
+
+
+def info(model=None, markdown=False):
+    return cli_info(None, model, markdown)
