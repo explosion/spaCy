@@ -228,6 +228,7 @@ class NeuralTagger(object):
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype='i')
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
+        d_scores /= d_scores.shape[0]
         loss = (d_scores**2).sum()
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
@@ -292,6 +293,7 @@ class NeuralLabeller(NeuralTagger):
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype='i')
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
+        d_scores /= d_scores.shape[0]
         loss = (d_scores**2).sum()
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores

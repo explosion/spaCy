@@ -450,7 +450,7 @@ cdef class Parser:
             scores, bp_scores = vec2scores.begin_update(vector, drop=drop)
 
             d_scores = self.get_batch_loss(states, golds, scores)
-            d_vector = bp_scores(d_scores, sgd=sgd)
+            d_vector = bp_scores(d_scores / d_scores.shape[0], sgd=sgd)
             if drop != 0:
                 d_vector *= mask
 
