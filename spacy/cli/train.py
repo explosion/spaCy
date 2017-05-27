@@ -84,11 +84,11 @@ def train(_, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                     pbar.update(len(docs))
 
             with nlp.use_params(optimizer.averages):
-                scorer = nlp.evaluate(corpus.dev_docs(nlp, gold_preproc=False))
                 with (output_path / ('model%d.pickle' % i)).open('wb') as file_:
                     dill.dump(nlp, file_, -1)
-
-
+                with (output_path / ('model%d.pickle' % i)).open('rb') as file_:
+                    nlp_loaded = dill.load(file_)
+                scorer = nlp_loaded.evaluate(corpus.dev_docs(nlp_loaded, gold_preproc=False))
             print_progress(i, losses, scorer.scores)
     finally:
         print("Saving model...")
