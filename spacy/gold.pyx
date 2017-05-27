@@ -306,7 +306,7 @@ def read_json_file(loc, docs_filter=None, limit=None):
                     yield [paragraph.get('raw', None), sents]
 
 
-def _iob_to_biluo(tags):
+def iob_to_biluo(tags):
     out = []
     curr_label = None
     tags = list(tags)

@@ -7,7 +7,6 @@ from pathlib import Path
 from .converters import conllu2json, iob2json
 from ..util import prints
 
-
 # Converters are matched by file extension. To add a converter, add a new entry
 # to this dict with the file extension mapped to the converter function imported
 # from /converters.
@@ -39,4 +38,5 @@ def convert(_, input_file, output_dir, n_sents, morphology):
     if not file_ext in CONVERTERS:
         prints("Can't find converter for %s" % input_path.parts[-1],
                title="Unknown format", exits=1)
-    CONVERTERS[file_ext](input_path, output_path, n_sents, morphology)
+    CONVERTERS[file_ext](input_path, output_path,
+            n_sents=n_sents, morphology=morphology)
