@@ -335,17 +335,18 @@ cdef cppclass StateC:
             this._break = this._b_i
 
     void clone(const StateC* src) nogil:
+        this.length = src.length
         memcpy(this._sent, src._sent, this.length * sizeof(TokenC))
         memcpy(this._stack, src._stack, this.length * sizeof(int))
         memcpy(this._buffer, src._buffer, this.length * sizeof(int))
         memcpy(this._ents, src._ents, this.length * sizeof(Entity))
         memcpy(this.shifted, src.shifted, this.length * sizeof(this.shifted[0]))
-        this.length = src.length
         this._b_i = src._b_i
         this._s_i = src._s_i
         this._e_i = src._e_i
         this._break = src._break
         this.offset = src.offset
+        this._empty_token = src._empty_token
 
     void fast_forward() nogil:
         # space token attachement policy:
