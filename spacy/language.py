@@ -212,18 +212,17 @@ class Language(object):
         """
         tok2vec = self.pipeline[0]
         feats = tok2vec.doc2feats(docs)
-        procs = list(self.pipeline[1:])
-        random.shuffle(procs)
         grads = {}
         def get_grads(W, dW, key=None):
             grads[key] = (W, dW)
-        for proc in procs:
+        for proc in self.pipeline[1:]:
             if not hasattr(proc, 'update'):
                 continue
             tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
             d_tokvecses = proc.update((docs, tokvecses), golds,
                                       drop=drop, sgd=get_grads, losses=losses)
-            bp_tokvecses(d_tokvecses, sgd=sgd)
+            if d_tokvecses is not None:
+                bp_tokvecses(d_tokvecses, sgd=sgd)
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)
         # Clear the tensor variable, to free GPU memory.
