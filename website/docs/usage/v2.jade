@@ -168,10 +168,17 @@ p
     python -m spacy download es # default Spanish model
     python -m spacy download xx_ent_web_md # multi-language NER
 
+p
+    |  spaCy v2.0 comes with new and improved neural network models for English,
+    |  German, French and Spanish, as well as a multi-language named entity
+    |  recognition model trained on Wikipedia. #[strong GPU usage] is now
+    |  supported via #[+a("http://chainer.org") Chainer]'s CuPy module.
+
 +infobox
-    |  #[strong Details:] #[+src(gh("spacy-models")) spacy-models]
-    |  #[+a("/docs/api/language-models") Languages]
-    |  #[strong Usage:] #[+a("/docs/usage/models") Models]
+    |  #[strong Details:] #[+a("/docs/api/language-models") Languages],
+    |  #[+src(gh("spacy-models")) spacy-models]
+    |  #[strong Usage:] #[+a("/docs/usage/models") Models],
+    |  #[+a("/docs/usage#gpu") Using spaCy with GPU]
 
 +h(2, "incompat") Backwards incompatibilities
 

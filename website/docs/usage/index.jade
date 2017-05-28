@@ -21,10 +21,15 @@ p
     +qs({config: 'venv', os: 'linux'}) source .env/bin/activate
     +qs({config: 'venv', os: 'windows'}) .env\Scripts\activate
 
-    +qs({package: 'pip'}) pip install -U spacy
+    +qs({config: 'gpu', os: 'mac'}) export CUDA_HOME=/usr/local/cuda-8.0
+    +qs({config: 'gpu', os: 'mac'}) export PATH=$PATH:$CUDA_HOME/bin
+    +qs({config: 'gpu', os: 'linux'}) export CUDA_HOME=/usr/local/cuda-8.0
+    +qs({config: 'gpu', os: 'linux'}) export PATH=$PATH:$CUDA_HOME/bin
+    +qs({config: 'gpu', package: 'pip'}) pip install -U chainer
+    +qs({config: 'gpu', package: 'conda'}) conda install -c anaconda chainer
 
-    +qs({package: 'conda'}) conda config --add channels conda-forge
-    +qs({package: 'conda'}) conda install spacy
+    +qs({package: 'pip'}) pip install -U spacy
+    +qs({package: 'conda'}) conda install -c conda-forge spacy
 
     +qs({package: 'source'}) git clone https://github.com/explosion/spaCy
     +qs({package: 'source'}) cd spaCy
@@ -79,6 +84,39 @@ p
     |  For the feedstock including the build recipe and configuration, check out
     |  #[+a("https://github.com/conda-forge/spacy-feedstock") this repository].
     |  Improvements and pull requests to the recipe and setup are always appreciated.
+
++h(2, "gpu") Run spaCy with GPU
+
+p
+    |  As of v2.0, spaCy's comes with neural network models that are implemented
+    |  in our machine learning library, #[+a(gh("thinc")) Thinc]. For GPU
+    |  support, we've been grateful to use the work of
+    |  #[+a("http://chainer.org") Chainer]'s CuPy module, which provides
+    |  a NumPy-compatible interface for GPU arrays.
+
++aside("Why is this so complicated?")
+    |  Installing Chainer when no GPU is available currently causes an
+    |  error. We therefore do not specify Chainer as a dependency. However,
+    |  CuPy will be split out into
+    |  #[+a("https://www.slideshare.net/beam2d/chainer-v2-alpha/7") its own package]
+    |  in Chainer v2.0. We'll have a smoother installation process for this
+    |  in an upcoming version.
+
+p
+    |  First, install follows the normal CUDA installation procedure. Next, set
+    |  your environment variables so that the installation will be able to find
+    |  CUDA. Next, install Chainer, and check that CuPy can be imported
+    |  correctly. Finally, install spaCy.
+
++code(false, "bash").
+   export CUDA_HOME=/usr/local/cuda-8.0 # Or wherever your CUDA is
+   export PATH=$PATH:$CUDA_HOME/bin
+
+   pip install chainer
+   python -c "import cupy; assert cupy" # Check it installed
+
+   pip install spacy
+   python -c "import thinc.neural.gpu_ops" # Check the GPU ops were built
 
 +h(2, "source") Compile from source
 
