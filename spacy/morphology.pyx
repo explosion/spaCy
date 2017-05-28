@@ -149,7 +149,7 @@ cdef class Morphology:
         cdef unicode lemma_string
         lemma_strings = self.lemmatizer(py_string, univ_pos, morphology)
         lemma_string = sorted(lemma_strings)[0]
-        lemma = self.strings[lemma_string]
+        lemma = self.strings.add(lemma_string)
         return lemma
 
 

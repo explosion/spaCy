@@ -202,11 +202,11 @@ cdef class Token:
     property lemma:
         """Base form of the word, with no inflectional suffixes.
 
-        RETURNS (int): Token lemma.
+        RETURNS (uint64): Token lemma.
         """
         def __get__(self):
             return self.c.lemma
-        def __set__(self, int lemma):
+        def __set__(self, attr_t lemma):
             self.c.lemma = lemma
 
     property pos:
@@ -216,13 +216,13 @@ cdef class Token:
     property tag:
         def __get__(self):
             return self.c.tag
-        def __set__(self, int tag):
+        def __set__(self, attr_t tag):
             self.vocab.morphology.assign_tag(self.c, tag)
 
     property dep:
         def __get__(self):
             return self.c.dep
-        def __set__(self, int label):
+        def __set__(self, attr_t label):
             self.c.dep = label
 
     property has_vector:
@@ -503,16 +503,18 @@ cdef class Token:
     property ent_type:
         """Named entity type.
 
-        RETURNS (int): Named entity type.
+        RETURNS (uint64): Named entity type.
         """
         def __get__(self):
             return self.c.ent_type
+        def __set__(self, ent_type):
+            self.c.ent_type = ent_type
 
     property ent_iob:
         """IOB code of named entity tag. `1="I", 2="O", 3="B"`. 0 means no tag
         is assigned.
 
-        RETURNS (int): IOB code of named entity tag.
+        RETURNS (uint64): IOB code of named entity tag.
         """
         def __get__(self):
             return self.c.ent_iob
@@ -524,6 +526,8 @@ cdef class Token:
         """
         def __get__(self):
             return self.vocab.strings[self.c.ent_type]
+        def __set__(self, ent_type):
+            self.c.ent_type = self.vocab.strings.add(ent_type)
 
     property ent_iob_:
         """IOB code of named entity tag. "B" means the token begins an entity,
@@ -540,7 +544,7 @@ cdef class Token:
         """ID of the entity the token is an instance of, if any. Usually
         assigned by patterns in the Matcher.
 
-        RETURNS (int): ID of the entity.
+        RETURNS (uint64): ID of the entity.
         """
         def __get__(self):
             return self.c.ent_id
@@ -558,7 +562,7 @@ cdef class Token:
             return self.vocab.strings[self.c.ent_id]
 
         def __set__(self, name):
-            self.c.ent_id = self.vocab.strings[name]
+            self.c.ent_id = self.vocab.strings.add(name)
 
     property whitespace_:
         def __get__(self):
@@ -600,7 +604,7 @@ cdef class Token:
         def __get__(self):
             return self.vocab.strings[self.c.lemma]
         def __set__(self, unicode lemma_):
-            self.c.lemma = self.vocab.strings[lemma_]
+            self.c.lemma = self.vocab.strings.add(lemma_)
 
     property pos_:
         def __get__(self):
@@ -610,13 +614,13 @@ cdef class Token:
         def __get__(self):
             return self.vocab.strings[self.c.tag]
         def __set__(self, tag):
-            self.tag = self.vocab.strings[tag]
+            self.tag = self.vocab.strings.add(tag)
 
     property dep_:
         def __get__(self):
             return self.vocab.strings[self.c.dep]
         def __set__(self, unicode label):
-            self.c.dep = self.vocab.strings[label]
+            self.c.dep = self.vocab.strings.add(label)
 
     property is_oov:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_OOV)

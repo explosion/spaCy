@@ -15,7 +15,9 @@ def test_issue615(en_tokenizer):
         # Get Span objects
         spans = [(ent_id, ent_id, doc[start : end]) for ent_id, start, end in matches]
         for ent_id, label, span in spans:
-            span.merge('NNP' if label else span.root.tag_, span.text, doc.vocab.strings[label])
+            span.merge(tag='NNP' if label else span.root.tag_, lemma=span.text,
+                label=label)
+            doc.ents = doc.ents + ((label, span.start, span.end),)
 
     text = "The golf club is broken"
     pattern = [{'ORTH': "golf"}, {'ORTH': "club"}]
@@ -25,6 +27,7 @@ def test_issue615(en_tokenizer):
     matcher = Matcher(doc.vocab)
     matcher.add(label, merge_phrases, pattern)
     match = matcher(doc)
+    print(match)
     entities = list(doc.ents)
 
     assert entities != [] #assertion 1

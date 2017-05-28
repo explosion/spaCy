@@ -10,8 +10,11 @@ import numpy
 def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None):
     """Create Doc object from given vocab, words and annotations."""
     pos = pos or [''] * len(words)
+    tags = tags or [''] * len(words)
     heads = heads or [0] * len(words)
     deps = deps or [''] * len(words)
+    for value in (deps+tags+pos):
+        vocab.strings.add(value)
 
     doc = Doc(vocab, words=words)
     attrs = doc.to_array([POS, HEAD, DEP])

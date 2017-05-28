@@ -55,7 +55,7 @@ cdef class Vocab:
         self.strings = StringStore()
         if strings:
             for string in strings:
-                self.strings[string]
+                self.strings.add(string)
         # Load strings in a special order, so that we have an onset number for
         # the vocabulary. This way, when words are added in order, the orth ID
         # is the frequency rank of the word, plus a certain offset. The structural
@@ -165,7 +165,7 @@ cdef class Vocab:
             mem = self.mem
         cdef bint is_oov = mem is not self.mem
         lex = <LexemeC*>mem.alloc(sizeof(LexemeC), 1)
-        lex.orth = self.strings[string]
+        lex.orth = self.strings.add(string)
         lex.length = len(string)
         lex.id = self.length
         if self.lex_attr_getters is not None:

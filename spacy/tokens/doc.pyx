@@ -697,6 +697,10 @@ cdef class Doc:
                 "Arguments supplied:\n%s\n"
                 "Keyword arguments:%s\n" % (len(args), repr(args), repr(attributes)))
 
+        # More deprecated attribute handling =/
+        if 'label' in attributes:
+            attributes['ent_type'] = attributes.pop('label')
+
         attributes = intify_attrs(attributes, strings_map=self.vocab.strings)
 
         cdef int start = token_by_start(self.c, self.length, start_idx)
