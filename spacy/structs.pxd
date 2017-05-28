@@ -5,8 +5,6 @@ from .parts_of_speech cimport univ_pos_t
 
 
 cdef struct LexemeC:
-    float* vector
-
     flags_t flags
 
     attr_t lang
