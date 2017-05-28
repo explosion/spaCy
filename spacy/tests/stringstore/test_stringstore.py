@@ -28,7 +28,7 @@ def test_stringstore_retrieve_id(stringstore, text):
     assert len(stringstore) == 1
     assert stringstore[key] == text.decode('utf8')
     with pytest.raises(KeyError):
-        stringstore[2]
+        stringstore[20000]
 
 
 @pytest.mark.parametrize('text1,text2', [(b'0123456789', b'A')])
