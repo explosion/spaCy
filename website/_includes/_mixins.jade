@@ -113,7 +113,7 @@ mixin code(label, language, icon, height)
 
         if icon
             - var classes = {'accept': 'u-color-green', 'reject': 'u-color-red'}
-            .c-code-block__icon(class=classes[icon] || "")
+            .c-code-block__icon(class=classes[icon] || "" class=classes[icon] ? "c-code-block__icon--border" : "")
                 +icon(icon, 18)
 
         code.c-code-block__content
