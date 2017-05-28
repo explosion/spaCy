@@ -9,10 +9,9 @@ nav.c-nav.u-text.js-nav(class=landing ? "c-nav--theme" : null)
         .u-text-label.u-padding-small.u-hidden-xs=SUBSECTION
 
     ul.c-nav__menu
-        if ALPHA
-            - var NAVIGATION = { "Usage": "/docs/usage", "Reference": "/docs/api" }
+        - var NAV = ALPHA ? { "Usage": "/docs/usage", "Reference": "/docs/api" } : NAVIGATION
 
-        each url, item in NAVIGATION
+        each url, item in NAV
             li.c-nav__menu__item(class=(url == "/") ? "u-hidden-xs" : null)
                 +a(url)=item
 
