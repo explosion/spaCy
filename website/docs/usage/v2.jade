@@ -57,8 +57,9 @@ p
     assert doc.vocab.strings[u'coffee'] == 3197928453018144401L
     assert doc.vocab.strings[3197928453018144401L] == u'coffee'
 
-    doc.vocab.strings.add(u'beer')
-    assert doc.vocab.strings[u'beer'] == 3073001599257881079L
+    beer_hash = doc.vocab.strings.add(u'beer')
+    assert doc.vocab.strings[u'beer'] == beer_hash
+    assert doc.vocab.strings[beer_hash] == u'beer'
 
 p
     |  The #[+api("stringstore") #[code StringStore]] now resolves all strings

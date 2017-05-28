@@ -113,9 +113,11 @@ p Add a string to the #[code StringStore].
 
 +aside-code("Example").
     stringstore = StringStore([u'apple', u'orange'])
-    stringstore.add(u'banana')
+    banana_hash = stringstore.add(u'banana')
     assert len(stringstore) == 3
-    assert stringstore[u'banana'] == 2525716904149915114L
+    assert banana_hash == 2525716904149915114L
+    assert stringstore[banana_hash] == u'banana'
+    assert stringstore[u'banana'] == banana_hash
 
 +table(["Name", "Type", "Description"])
     +row

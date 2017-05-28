@@ -52,15 +52,15 @@ p
     assert ent_san == [u'San', u'B', u'GPE']
     assert ent_francisco == [u'Francisco', u'I', u'GPE']
 
-+table(["Text", "ent_iob", "ent_iob_", "ent_type", "ent_type_", "Description"])
++table(["Text", "ent_iob", "ent_iob_", "ent_type_", "Description"])
     - var style = [0, 1, 1, 1, 1, 0]
-    +annotation-row(["San", 3, "B", 381, "GPE", "beginning of an entity"], style)
-    +annotation-row(["Francisco", 1, "I", 381, "GPE", "inside an entity"], style)
-    +annotation-row(["considers", 2, "O", 0, '""', "outside an entity"], style)
-    +annotation-row(["banning", 2, "O", 0, '""', "outside an entity"], style)
-    +annotation-row(["sidewalk", 2, "O", 0, '""', "outside an entity"], style)
-    +annotation-row(["delivery", 2, "O", 0, '""', "outside an entity"], style)
-    +annotation-row(["robots", 2, "O", 0, '""', "outside an entity"], style)
+    +annotation-row(["San", 3, "B", "GPE", "beginning of an entity"], style)
+    +annotation-row(["Francisco", 1, "I", "GPE", "inside an entity"], style)
+    +annotation-row(["considers", 2, "O", '""', "outside an entity"], style)
+    +annotation-row(["banning", 2, "O", '""', "outside an entity"], style)
+    +annotation-row(["sidewalk", 2, "O", '""', "outside an entity"], style)
+    +annotation-row(["delivery", 2, "O", '""', "outside an entity"], style)
+    +annotation-row(["robots", 2, "O", '""', "outside an entity"], style)
 
 +h(2, "setting") Setting entity annotations
 
@@ -148,6 +148,8 @@ include ../api/_annotation/_named-entities
 
 +h(2, "updating") Training and updating
 
++under-construction
+
 p
     |  To provide training examples to the entity recogniser, you'll first need
     |  to create an instance of the #[+api("goldparse") #[code GoldParse]] class.
@@ -173,7 +175,6 @@ p
 
             nlp.tagger(doc)
             ner.update(doc, gold)
-    ner.model.end_training()
 
 p
     |  If a character offset in your entity annotations don't fall on a token
