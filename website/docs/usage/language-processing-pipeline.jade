@@ -10,7 +10,7 @@ include _spacy-101/_pipelines
 
 p
     |  spaCy makes it very easy to create your own pipelines consisting of
-    |  reusable components – this includes spaCy's default vectorizer, tagger,
+    |  reusable components – this includes spaCy's default tensorizer, tagger,
     |  parser and entity regcognizer, but also your own custom processing
     |  functions. A pipeline component can be added to an already existing
     |  #[code nlp] object, specified when initialising a #[code Language] class,
@@ -56,7 +56,7 @@ p
 
 p
     | ... the model tells spaCy to use the pipeline
-    |  #[code ["vectorizer", "tagger", "parser", "ner"]]. spaCy will then look
+    |  #[code ["tensorizer", "tagger", "parser", "ner"]]. spaCy will then look
     |  up each string in its internal factories registry and initialise the
     |  individual components. It'll then load #[code spacy.lang.en.English],
     |  pass it the path to the model's data directory, and return it for you
@@ -230,7 +230,7 @@ p
 p
     |  Let's say you have trained your own document sentiment model on English
     |  text. After tokenization, you want spaCy to first execute the
-    |  #[strong default vectorizer], followed by a custom
+    |  #[strong default tensorizer], followed by a custom
     |  #[strong sentiment component] that adds a #[code .sentiment]
     |  property to the #[code Doc], containing your model's sentiment precition.
 
@@ -293,13 +293,13 @@ p
         "lang": "en",
         "version": "1.0.0",
         "spacy_version": "&gt;=2.0.0,&lt;3.0.0",
-        "pipeline": ["vectorizer", "sentiment"]
+        "pipeline": ["tensorizer", "sentiment"]
     }
 
 p
     |  When you load your new model, spaCy will call the model's #[code load()]
     |  method. This will return a #[code Language] object with a pipeline
-    |  containing the default vectorizer, and the sentiment component returned
+    |  containing the default tensorizer, and the sentiment component returned
     |  by your custom #[code "sentiment"] factory.
 
 +code.
@@ -324,7 +324,7 @@ p
 
 +code.
     nlp = spacy.load('en', disable['parser', 'tagger'])
-    nlp = English().from_disk('/model', disable=['vectorizer', 'ner'])
+    nlp = English().from_disk('/model', disable=['tensorizer', 'ner'])
     doc = nlp(u"I don't want parsed", disable=['parser'])
 
 p

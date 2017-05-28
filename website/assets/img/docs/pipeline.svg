@@ -18,7 +18,7 @@
     <path fill="#f8cecc" stroke="#b85450" stroke-width="2" stroke-miterlimit="10" d="M176 58h103.3L296 88l-16.8 30H176l16.8-30z"/>
     <text class="svg__pipeline__text-small" dy="0.75em" dx="-0.25em" width="58" height="14" transform="translate(206.5 80.5)">tokenizer</text>
     <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M314 58h103.3L434 88l-16.8 30H314l16.8-30z"/>
-    <text class="svg__pipeline__text-small" dy="0.75em" dx="-0.25em" width="62" height="14" transform="translate(342.5 80.5)">vectorizer</text>
+    <text class="svg__pipeline__text-small" dy="0.75em" dx="-0.25em" width="62" height="14" transform="translate(342.5 80.5)">tensorizer</text>
     <path fill="none" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M296.5 88.2h24.7"/>
     <path fill="#999" stroke="#999" stroke-width="2" stroke-miterlimit="10" d="M327.2 88.2l-8 4 2-4-2-4z"/>
     <path fill="#ffe6cc" stroke="#d79b00" stroke-width="2" stroke-miterlimit="10" d="M416 58h103.3L536 88l-16.8 30H416l16.8-30z"/>
