@@ -687,7 +687,7 @@ cdef class Doc:
                 if isinstance(attributes["label"], int):
                     attributes[ENT_TYPE] = attributes["label"]
                 else:
-                    attributes[ENT_TYPE] = self.vocab.strings[attributes["label"])
+                    attributes[ENT_TYPE] = self.vocab.strings[attributes["label"]]
             if 'ent_type' in attributes:
                 attributes[ENT_TYPE] = attributes['ent_type']
         elif args:
