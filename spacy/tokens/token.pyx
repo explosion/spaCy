@@ -234,12 +234,7 @@ cdef class Token:
         def __get__(self):
             if 'has_vector' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['has_vector'](self)
-            cdef int i
-            for i in range(self.vocab.vectors_length):
-                if self.c.lex.vector[i] != 0:
-                    return True
-            else:
-                return False
+            return self.vocab.has_vector(self.lex.c.orth)
 
     property vector:
         """A real-valued meaning representation.
@@ -250,16 +245,7 @@ cdef class Token:
         def __get__(self):
             if 'vector' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['vector'](self)
-            cdef int length = self.vocab.vectors_length
-            if length == 0:
-                raise ValueError(
-                    "Word vectors set to length 0. This may be because you "
-                    "don't have a model installed or loaded, or because your "
-                    "model doesn't include word vectors. For more info, see "
-                    "the documentation: \n%s\n" % about.__docs_models__
-                )
-            vector_view = <float[:length,]>self.c.lex.vector
-            return numpy.asarray(vector_view)
+            return self.vocab.get_vector(self.c.lex.orth)
 
     property vector_norm:
         """The L2 norm of the token's vector representation.
@@ -269,7 +255,8 @@ cdef class Token:
         def __get__(self):
             if 'vector_norm' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['vector_norm'](self)
-            return self.c.lex.l2_norm
+            vector = self.vector 
+            return numpy.sqrt((vector ** 2).sum())
 
     property n_lefts:
         def __get__(self):
