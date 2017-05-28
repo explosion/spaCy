@@ -20,7 +20,7 @@ p
     |  The standard way to access entity annotations is the
     |  #[+api("doc#ents") #[code doc.ents]] property, which produces a sequence
     |  of #[+api("span") #[code Span]] objects. The entity type is accessible
-    |  either as an integer ID or as a string, using the attributes
+    |  either as a hash value or as a string, using the attributes
     |  #[code ent.label] and #[code ent.label_]. The #[code Span] object acts
     |  as a sequence of tokens, so you can iterate over the entity or index into
     |  it. You can also get the text form of the whole entity, as though it were
@@ -78,7 +78,7 @@ p
     doc = nlp(u'Netflix is hiring a new VP of global policy')
     # the model didn't recognise any entities :(
 
-    ORG = doc.vocab.strings[u'ORG'] # get integer ID of entity label
+    ORG = doc.vocab.strings[u'ORG'] # get hash value of entity label
     netflix_ent = Span(doc, 0, 1, label=ORG) # create a Span for the new entity
     doc.ents = [netflix_ent]
 

@@ -397,13 +397,15 @@ p The L2 norm of the token's vector representation.
     +row
         +cell #[code shape_]
         +cell unicode
+        +cell
             |  Transform of the tokens's string, to show orthographic features.
             |  For example, "Xxxx" or "dd".
 
     +row
         +cell #[code prefix]
         +cell int
-        +cell Integer ID of a length-N substring from the start of the
+        +cell
+            |  Hash value of a length-N substring from the start of the
             |  token. Defaults to #[code N=1].
 
     +row
@@ -417,7 +419,8 @@ p The L2 norm of the token's vector representation.
         +cell #[code suffix]
         +cell int
         +cell
-            |  Length-N substring from the end of the token. Defaults to #[code N=3].
+            |  Hash value of a length-N substring from the end of the token.
+            |  Defaults to #[code N=3].
 
     +row
         +cell #[code suffix_]

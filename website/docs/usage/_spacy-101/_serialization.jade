@@ -43,7 +43,7 @@ p
 +aside("Why saving the vocab?")
     |  Saving the vocabulary with the #[code Doc] is important, because the
     |  #[code Vocab] holds the context-independent information about the words,
-    |  tags and labels, and their #[strong integer IDs]. If the #[code Vocab]
+    |  tags and labels, and their #[strong hash values]. If the #[code Vocab]
     |  wasn't saved with the #[code Doc], spaCy wouldn't know how to resolve
     |  those IDs – for example, the word text or the dependency labels. You
     |  might be saving #[code 446] for "whale", but in a different vocabulary,
