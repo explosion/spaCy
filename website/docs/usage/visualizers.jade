@@ -58,6 +58,11 @@ p
     |  The argument #[code options] lets you specify a dictionary of settings
     |  to customise the layout, for example:
 
++aside("Important note")
+    |  There's currently a known issue with the #[code compact] mode for long
+    |  sentences with arrow spacing. If the spacing is larger than the arc
+    |  itself, it'll cause the arc and its label to flip.
+
 +table(["Name", "Type", "Description", "Default"])
     +row
         +cell #[code compact]
@@ -330,11 +335,12 @@ p
     |  It's certainly possible to just have your server return the markup.
     |  But outputting raw, unsanitised HTML is risky and makes your app vulnerable to
     |  #[+a("https://en.wikipedia.org/wiki/Cross-site_scripting") cross-site scripting]
-    |  (XSS). All your user needs to do is find a way to make spaCy return one
-    |  token #[code &lt;script src="malicious-code.js"&gt;&lt;script&gt;].
-    |  Instead of relying on the server to render and sanitize HTML, you
-    |  can do this on the client in JavaScript. displaCy.js creates
-    |  the markup as DOM nodes and will never insert raw HTML.
+    |  (XSS). All your user needs to do is find a way to make spaCy return text
+    |  like #[code &lt;script src="malicious-code.js"&gt;&lt;script&gt;], which
+    |  is pretty easy in NER mode. Instead of relying on the server to render
+    |  and sanitise HTML, you can do this on the client in JavaScript.
+    |  displaCy.js creates the markup as DOM nodes and will never insert raw
+    |  HTML.
 
 p
     |  The #[code parse_deps] function takes a #[code Doc] object and returns

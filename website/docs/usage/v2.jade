@@ -8,6 +8,20 @@ p
 
 +h(2, "features") New features
 
+p
+    |  This section contains an overview of the most important
+    |  #[strong new features and improvements]. The #[+a("/docs/api") API docs]
+    |  include additional  deprecation notes. New methods and functions that
+    |  were introduced in this version are marked with a #[+tag-new(2)] tag.
+
+p
+    |  To help you make the most of v2.0, we also
+    |  #[strong re-wrote almost all of the usage guides and API docs], and added
+    |  more real-world examples. If you're new to spaCy, or just want to brush
+    |  up on some NLP basics and the details of the library, check out
+    |  the #[+a("/docs/usage/spacy-101") spaCy 101 guide] that explains the most
+    |  important concepts with examples and illustrations.
+
 +h(3, "features-pipelines") Improved processing pipelines
 
 +aside-code("Example").
@@ -97,9 +111,6 @@ p
     |  complex regular expressions. The language data has also been tidied up
     |  and simplified. spaCy now also supports simple lookup-based lemmatization.
 
-+image
-    include ../../assets/img/docs/language_data.svg
-
 +infobox
     |  #[strong API:] #[+api("language") #[code Language]]
     |  #[strong Code:] #[+src(gh("spaCy", "spacy/lang")) spacy/lang]
@@ -126,10 +137,18 @@ p
     |  #[strong API:] #[+api("matcher") #[code Matcher]]
     |  #[strong Usage:] #[+a("/docs/usage/rule-based-matching") Rule-based matching]
 
-+h(3, "features-models") Neural network models for English, German, French and Spanish
++h(3, "features-models") Neural network models for English, German, French, Spanish and multi-language NER
+
++aside-code("Example", "bash").
+    python -m spacy download en # default English model
+    python -m spacy download de # default German model
+    python -m spacy download fr # default French model
+    python -m spacy download es # default Spanish model
+    python -m spacy download xx_ent_web_md # multi-language NER
 
 +infobox
     |  #[strong Details:] #[+src(gh("spacy-models")) spacy-models]
+    |  #[+a("/docs/api/language-models") Languages]
     |  #[strong Usage:] #[+a("/docs/usage/models") Models]
 
 +h(2, "incompat") Backwards incompatibilities
@@ -146,6 +165,10 @@ p
     +row
         +cell #[code spacy.orth]
         +cell #[code spacy.lang.xx.lex_attrs]
+
+    +row
+        +cell #[code cli.model]
+        +cell -
 
     +row
         +cell #[code Language.save_to_directory]

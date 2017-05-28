@@ -16,59 +16,67 @@ include ../../_includes/_mixins
 +table(["Name", "Description", "Needs model"])
     +row
         +cell #[strong Tokenization]
-        +cell
+        +cell Segmenting text into words, punctuations marks etc.
         +cell #[+procon("con")]
 
     +row
-        +cell #[strong Part-of-speech Tagging]
-        +cell
+        +cell #[strong Part-of-speech] (POS) #[strong Tagging]
+        +cell Assigning word types to tokens, like verb or noun.
         +cell #[+procon("pro")]
 
     +row
         +cell #[strong Dependency Parsing]
         +cell
+            |  Assigning syntactic dependency labels, i.e. the relations between
+            |  individual tokens.
         +cell #[+procon("pro")]
 
     +row
-        +cell #[strong Sentence Boundary Detection]
-        +cell
+        +cell #[strong Sentence Boundary Detection] (SBD)
+        +cell Finding and segmenting individual sentences.
         +cell #[+procon("pro")]
 
     +row
         +cell #[strong Named Entity Recongition] (NER)
         +cell
+            |  Labelling named "real-world" objects, like persons, companies or
+            |  locations.
         +cell #[+procon("pro")]
 
     +row
         +cell #[strong Rule-based Matching]
         +cell
+            |  Finding sequences of tokens based on their texts and linguistic
+            |  annotations, similar to regular expressions.
         +cell #[+procon("con")]
 
     +row
         +cell #[strong Similarity]
         +cell
+            |  Comparing words, text spans and documents and how similar they
+            |  are to each other.
         +cell #[+procon("pro")]
 
     +row
         +cell #[strong Training]
-        +cell
+        +cell Updating and improving a statistical model's predictions.
         +cell #[+procon("neutral")]
 
     +row
         +cell #[strong Serialization]
-        +cell
+        +cell Saving objects to files or byte strings.
         +cell #[+procon("neutral")]
 
 +h(2, "annotations") Linguistic annotations
 
 p
-    |  spaCy provides a variety of linguistic annotations to give you insights
-    |  into a text's grammatical structure. This includes the word types,
-    |  i.e. the parts of speech, and how the words are related to each other.
-    |  For example, if you're analysing text, it makes a huge difference
-    |  whether a noun is the subject of a sentence, or the object – or whether
-    |  "google" is used as a verb, or refers to the website or company in a
-    |  specific context.
+    |  spaCy provides a variety of linguistic annotations to give you
+    |  #[strong insights into a text&apos;s grammatical structure]. This includes the
+    |  word types, like the parts of speech, and how the words are related to
+    |  each other. For example, if you're analysing text, it makes a huge
+    |  difference whether a noun is the subject of a sentence, or the object –
+    |  or whether "google" is used as a verb, or refers to the website or
+    |  company in a specific context.
 
 p
     |  Once you've downloaded and installed a #[+a("/docs/usage/models") model],
@@ -224,6 +232,15 @@ include _spacy-101/_training
             |  segment boundaries.
 
     +row
+        +cell #[+api("matcher") #[code Matcher]]
+        +cell
+            |  Match sequences of tokens, based on pattern rules, similar to
+            |  regular expressions.
+
++h(3, "architecture-pipeline") Pipeline components
+
++table(["Name", "Description"])
+    +row
         +cell #[+api("tagger") #[code Tagger]]
         +cell Annotate part-of-speech tags on #[code Doc] objects.
 
@@ -237,15 +254,13 @@ include _spacy-101/_training
             |  Annotate named entities, e.g. persons or products, on #[code Doc]
             |  objects.
 
-    +row
-        +cell #[+api("matcher") #[code Matcher]]
-        +cell
-            |  Match sequences of tokens, based on pattern rules, similar to
-            |  regular expressions.
-
-+h(3, "architecture-other") Other
++h(3, "architecture-other") Other classes
 
 +table(["Name", "Description"])
+    +row
+        +cell #[+api("binder") #[code Binder]]
+        +cell
+
     +row
         +cell #[+api("goldparse") #[code GoldParse]]
         +cell Collection for training annotations.
