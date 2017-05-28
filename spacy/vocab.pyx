@@ -66,7 +66,7 @@ cdef class Vocab:
         # Need to rethink this.
         for name in symbols.NAMES + list(sorted(tag_map.keys())):
             if name:
-                _ = self.strings[name]
+                self.strings.add(name)
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
 

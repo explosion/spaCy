@@ -11,6 +11,9 @@ from libc.stdint cimport uint32_t
 import ujson
 import dill
 
+from .symbols import IDS as SYMBOLS_BY_STR
+from .symbols import NAMES as SYMBOLS_BY_INT
+
 from .typedefs cimport hash_t
 from . import util
 
@@ -98,6 +101,8 @@ cdef class StringStore:
             return 0
         elif string_or_id == 0:
             return u''
+        elif string_or_id in SYMBOLS_BY_STR:
+            return SYMBOLS_BY_STR[string_or_id]
 
         cdef hash_t key
 
@@ -108,6 +113,8 @@ cdef class StringStore:
             key = hash_utf8(string_or_id, len(string_or_id))
             return key
         else:
+            if string_or_id < len(SYMBOLS_BY_INT):
+                return SYMBOLS_BY_INT[string_or_id]
             key = string_or_id
             utf8str = <Utf8Str*>self._map.get(key)
             if utf8str is NULL:
@@ -117,9 +124,13 @@ cdef class StringStore:
 
     def add(self, string):
         if isinstance(string, unicode):
+            if string in SYMBOLS_BY_STR:
+                return SYMBOLS_BY_STR[string]
             key = hash_string(string)
             self.intern_unicode(string)
         elif isinstance(string, bytes):
+            if string in SYMBOLS_BY_STR:
+                return SYMBOLS_BY_STR[string]
             key = hash_utf8(string, len(string))
             self._intern_utf8(string, len(string))
         else:
@@ -134,7 +145,7 @@ cdef class StringStore:
         """
         return self.keys.size()
 
-    def __contains__(self, unicode string not None):
+    def __contains__(self, string not None):
         """Check whether a string is in the store.
 
         string (unicode): The string to check.
@@ -142,7 +153,11 @@ cdef class StringStore:
         """
         if len(string) == 0:
             return True
-        cdef hash_t key = hash_string(string)
+        if string in SYMBOLS_BY_STR:
+            return True
+        if isinstance(string, unicode):
+            string = string.encode('utf8')
+        cdef hash_t key = hash_utf8(string, len(string))
         return self._map.get(key) is not NULL
 
     def __iter__(self):
