@@ -54,8 +54,8 @@ p
 
 +aside-code("Example").
     doc = nlp(u'I love coffee')
-    assert doc.vocab.strings[u'coffee'] == 3197928453018144401L
-    assert doc.vocab.strings[3197928453018144401L] == u'coffee'
+    assert doc.vocab.strings[u'coffee'] == 3197928453018144401
+    assert doc.vocab.strings[3197928453018144401] == u'coffee'
 
     beer_hash = doc.vocab.strings.add(u'beer')
     assert doc.vocab.strings[u'beer'] == beer_hash
@@ -343,8 +343,8 @@ p
 
 +code-new.
     nlp.vocab.strings.add(u'coffee')
-    nlp.vocab.strings[u'coffee']       # 3197928453018144401L
-    other_nlp.vocab.strings[u'coffee'] # 3197928453018144401L
+    nlp.vocab.strings[u'coffee']       # 3197928453018144401
+    other_nlp.vocab.strings[u'coffee'] # 3197928453018144401
 
 +code-old.
     nlp.vocab.strings[u'coffee']       # 3672
