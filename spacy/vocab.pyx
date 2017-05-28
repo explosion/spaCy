@@ -275,9 +275,9 @@ cdef class Vocab:
         path = util.ensure_path(path)
         if not path.exists():
             path.mkdir()
-        strings_loc = path / 'strings.json'
-        with strings_loc.open('w', encoding='utf8') as file_:
-            self.strings.dump(file_)
+        self.strings.to_disk(path / 'strings.json')
+        with (path / 'lexemes.bin').open('wb') as file_:
+            file_.write(self.lexemes_to_bytes())
 
     def from_disk(self, path):
         """Loads state from a directory. Modifies the object in place and
@@ -288,11 +288,10 @@ cdef class Vocab:
         RETURNS (Vocab): The modified `Vocab` object.
         """
         path = util.ensure_path(path)
-        with (path / 'vocab' / 'strings.json').open('r', encoding='utf8') as file_:
-            strings_list = ujson.load(file_)
-        for string in strings_list:
-            self.strings.add(string)
-        self.load_lexemes(path / 'lexemes.bin')
+        self.strings.from_disk(path / 'strings.json')
+        with (path / 'lexemes.bin').open('rb') as file_:
+            self.lexemes_from_bytes(file_.read())
+        return self
 
     def to_bytes(self, **exclude):
         """Serialize the current state to a binary string.
@@ -300,7 +299,12 @@ cdef class Vocab:
         **exclude: Named attributes to prevent from being serialized.
         RETURNS (bytes): The serialized form of the `Vocab` object.
         """
-        raise NotImplementedError()
+        data = {}
+        if 'strings' not in exclude:
+            data['strings'] = self.strings.to_bytes()
+        if 'lexemes' not in exclude:
+            data['lexemes'] = self.lexemes_to_bytes
+        return ujson.dumps(data)
 
     def from_bytes(self, bytes_data, **exclude):
         """Load state from a binary string.
@@ -309,9 +313,14 @@ cdef class Vocab:
         **exclude: Named attributes to prevent from being loaded.
         RETURNS (Vocab): The `Vocab` object.
         """
-        raise NotImplementedError()
+        data = ujson.loads(bytes_data)
+        if 'strings' not in exclude:
+            self.strings.from_bytes(data['strings'])
+        if 'lexemes' not in exclude:
+            self.lexemes_from_bytes(data['lexemes'])
+        return self
 
-    def lexemes_to_bytes(self, **exclude):
+    def lexemes_to_bytes(self):
         cdef hash_t key
         cdef size_t addr
         cdef LexemeC* lexeme = NULL
