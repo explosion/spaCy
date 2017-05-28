@@ -305,8 +305,9 @@ cdef class Parser:
         Returns:
             None
         """
-        states = self.parse_batch([doc], doc.tensor)
-        self.set_annotations(doc, states[0])
+        states = self.parse_batch([doc], [doc.tensor])
+        self.set_annotations([doc], states)
+        return doc
 
     def pipe(self, docs, int batch_size=1000, int n_threads=2):
         """

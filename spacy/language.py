@@ -192,7 +192,7 @@ class Language(object):
             name = getattr(proc, 'name', None)
             if name in disable:
                 continue
-            proc(doc)
+            doc = proc(doc)
         return doc
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):

@@ -73,17 +73,16 @@ class TokenVectorEncoder(object):
         self.doc2feats = doc2feats()
         self.model = model
 
-    def __call__(self, docs):
+    def __call__(self, doc):
         """Add context-sensitive vectors to a `Doc`, e.g. from a CNN or LSTM
         model. Vectors are set to the `Doc.tensor` attribute.
 
         docs (Doc or iterable): One or more documents to add vectors to.
         RETURNS (dict or None): Intermediate computations.
         """
-        if isinstance(docs, Doc):
-            docs = [docs]
-        tokvecses = self.predict(docs)
-        self.set_annotations(docs, tokvecses)
+        tokvecses = self.predict([doc])
+        self.set_annotations([doc], tokvecses)
+        return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         """Process `Doc` objects as a stream.
@@ -169,6 +168,7 @@ class NeuralTagger(object):
     def __call__(self, doc):
         tags = self.predict([doc.tensor])
         self.set_annotations([doc], tags)
+        return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in cytoolz.partition_all(batch_size, stream):
