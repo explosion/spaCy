@@ -123,6 +123,7 @@ cdef class BiluoPushDown(TransitionSystem):
         return gold
 
     cdef Transition lookup_transition(self, object name) except *:
+        cdef attr_t label
         if name == '-' or name == None:
             move_str = 'M'
             label = 0
@@ -241,7 +242,7 @@ cdef class Begin:
     @staticmethod
     cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
         cdef int g_act = gold.ner[s.B(0)].move
-        cdef int g_tag = gold.ner[s.B(0)].label
+        cdef attr_t g_tag = gold.ner[s.B(0)].label
 
         if g_act == MISSING:
             return 0

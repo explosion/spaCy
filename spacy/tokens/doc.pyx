@@ -336,7 +336,7 @@ cdef class Doc:
             cdef int i
             cdef const TokenC* token
             cdef int start = -1
-            cdef int label = 0
+            cdef attr_t label = 0
             output = []
             for i in range(self.length):
                 token = &self.c[i]

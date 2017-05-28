@@ -10,6 +10,7 @@ from collections import defaultdict, OrderedDict
 from ..structs cimport TokenC
 from .stateclass cimport StateClass
 from ..attrs cimport TAG, HEAD, DEP, ENT_TYPE, ENT_IOB
+from ..typedefs cimport attr_t
 
 
 cdef weight_t MIN_SCORE = -90000
@@ -37,7 +38,7 @@ cdef class TransitionSystem:
         for action, label_strs in labels_by_action.items():
             for label_str in label_strs:
                 self.add_action(int(action), label_str)
-        self.root_label = self.strings['ROOT']
+        self.root_label = self.strings.add('ROOT')
         self.init_beam_state = _init_state
 
     def __reduce__(self):
@@ -125,24 +126,30 @@ cdef class TransitionSystem:
         if n_gold <= 0:
             print(gold.words)
             print(gold.ner)
+            print([gold.c.ner[i].clas for i in range(gold.length)])
+            print([gold.c.ner[i].move for i in range(gold.length)])
+            print([gold.c.ner[i].label for i in range(gold.length)])
+            print("Self labels", [self.c[i].label for i in range(self.n_moves)])
             raise ValueError(
                 "Could not find a gold-standard action to supervise "
                 "the entity recognizer\n"
-                "The transition system has %d actions.\n"
-                "%s" % (self.n_moves))
+                "The transition system has %d actions." % (self.n_moves))
 
-    def add_action(self, int action, label):
-        if not isinstance(label, int):
-            label = self.strings[label]
+    def add_action(self, int action, label_name):
+        cdef attr_t label_id
+        if not isinstance(label_name, int):
+            label_id = self.strings.add(label_name)
+        else:
+            label_id = label_name
         # Check we're not creating a move we already have, so that this is
         # idempotent
         for trans in self.c[:self.n_moves]:
-            if trans.move == action and trans.label == label:
+            if trans.move == action and trans.label == label_id:
                 return 0
         if self.n_moves >= self._size:
             self._size *= 2
             self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
-
-        self.c[self.n_moves] = self.init_transition(self.n_moves, action, label)
+        self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
+        assert self.c[self.n_moves].label == label_id
         self.n_moves += 1
         return 1

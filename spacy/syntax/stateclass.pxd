@@ -4,6 +4,7 @@ from cymem.cymem cimport Pool
 cimport cython
 
 from ..structs cimport TokenC, Entity
+from ..typedefs cimport attr_t
 
 from ..vocab cimport EMPTY_LEXEME
 from ._state cimport StateC
@@ -105,19 +106,19 @@ cdef class StateClass:
     cdef inline void unshift(self) nogil:
         self.c.unshift()
 
-    cdef inline void add_arc(self, int head, int child, int label) nogil:
+    cdef inline void add_arc(self, int head, int child, attr_t label) nogil:
         self.c.add_arc(head, child, label)
 
     cdef inline void del_arc(self, int head, int child) nogil:
         self.c.del_arc(head, child)
 
-    cdef inline void open_ent(self, int label) nogil:
+    cdef inline void open_ent(self, attr_t label) nogil:
         self.c.open_ent(label)
 
     cdef inline void close_ent(self) nogil:
         self.c.close_ent()
 
-    cdef inline void set_ent_tag(self, int i, int ent_iob, int ent_type) nogil:
+    cdef inline void set_ent_tag(self, int i, int ent_iob, attr_t ent_type) nogil:
         self.c.set_ent_tag(i, ent_iob, ent_type)
 
     cdef inline void set_break(self, int i) nogil:

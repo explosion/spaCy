@@ -9,6 +9,7 @@ from ..structs cimport TokenC, Entity
 from ..lexeme cimport Lexeme
 from ..symbols cimport punct
 from ..attrs cimport IS_SPACE
+from ..typedefs cimport attr_t
 
 
 cdef inline bint is_space_token(const TokenC* token) nogil:
@@ -268,7 +269,7 @@ cdef cppclass StateC:
         this._s_i -= 1
         this.shifted[this.B(0)] = True
 
-    void add_arc(int head, int child, int label) nogil:
+    void add_arc(int head, int child, attr_t label) nogil:
         if this.has_head(child):
             this.del_arc(this.H(child), child)
 
@@ -312,7 +313,7 @@ cdef cppclass StateC:
             h.l_edge = this.L_(h_i, 2).l_edge if h.l_kids >= 2 else h_i
             h.l_kids -= 1
 
-    void open_ent(int label) nogil:
+    void open_ent(attr_t label) nogil:
         this._ents[this._e_i].start = this.B(0)
         this._ents[this._e_i].label = label
         this._ents[this._e_i].end = -1
@@ -324,7 +325,7 @@ cdef cppclass StateC:
         this._ents[this._e_i-1].end = this.B(0)+1
         this._sent[this.B(0)].ent_iob = 1
 
-    void set_ent_tag(int i, int ent_iob, int ent_type) nogil:
+    void set_ent_tag(int i, int ent_iob, attr_t ent_type) nogil:
         if 0 <= i < this.length:
             this._sent[i].ent_iob = ent_iob
             this._sent[i].ent_type = ent_type

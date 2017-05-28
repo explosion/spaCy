@@ -43,6 +43,7 @@ cdef class Span:
             self.end_char = self.doc[end - 1].idx + len(self.doc[end - 1])
         else:
             self.end_char = 0
+        assert label in doc.vocab.strings, label
         self.label = label
         self._vector = vector
         self._vector_norm = vector_norm
@@ -256,6 +257,7 @@ cdef class Span:
             # The tricky thing here is that Span accepts its tokenisation changing,
             # so it's okay once we have the Span objects. See Issue #375
             spans = []
+            cdef attr_t label
             for start, end, label in self.doc.noun_chunks_iterator(self):
                 spans.append(Span(self, start, end, label=label))
             for span in spans:

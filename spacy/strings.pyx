@@ -112,9 +112,9 @@ cdef class StringStore:
         elif isinstance(string_or_id, bytes):
             key = hash_utf8(string_or_id, len(string_or_id))
             return key
+        elif string_or_id < len(SYMBOLS_BY_INT):
+            return SYMBOLS_BY_INT[string_or_id]
         else:
-            if string_or_id < len(SYMBOLS_BY_INT):
-                return SYMBOLS_BY_INT[string_or_id]
             key = string_or_id
             utf8str = <Utf8Str*>self._map.get(key)
             if utf8str is NULL:
@@ -151,14 +151,24 @@ cdef class StringStore:
         string (unicode): The string to check.
         RETURNS (bool): Whether the store contains the string.
         """
-        if len(string) == 0:
+        cdef hash_t key
+        if isinstance(string, int) or isinstance(string, long):
+            if string == 0:
+                return True
+            key = string
+        elif len(string) == 0:
             return True
-        if string in SYMBOLS_BY_STR:
+        elif string in SYMBOLS_BY_STR:
             return True
-        if isinstance(string, unicode):
+        elif isinstance(string, unicode):
+            key = hash_string(string)
+        else:
             string = string.encode('utf8')
-        cdef hash_t key = hash_utf8(string, len(string))
-        return self._map.get(key) is not NULL
+            key = hash_utf8(string, len(string))
+        if key < len(SYMBOLS_BY_INT):
+            return True
+        else:
+            return self._map.get(key) is not NULL
 
     def __iter__(self):
         """Iterate over the strings in the store, in order.
