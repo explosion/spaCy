@@ -172,7 +172,7 @@ cdef class Vocab:
             for attr, func in self.lex_attr_getters.items():
                 value = func(string)
                 if isinstance(value, unicode):
-                    value = self.strings[value]
+                    value = self.strings.add(value)
                 if attr == PROB:
                     lex.prob = value
                 elif value is not None:
@@ -227,7 +227,7 @@ cdef class Vocab:
         """
         cdef attr_t orth
         if type(id_or_string) == unicode:
-            orth = self.strings[id_or_string]
+            orth = self.strings.add(id_or_string)
         else:
             orth = id_or_string
         return Lexeme(self, orth)
@@ -291,7 +291,7 @@ cdef class Vocab:
         with (path / 'vocab' / 'strings.json').open('r', encoding='utf8') as file_:
             strings_list = ujson.load(file_)
         for string in strings_list:
-            self.strings[string]
+            self.strings.add(string)
         self.load_lexemes(path / 'lexemes.bin')
 
     def to_bytes(self, **exclude):
