@@ -26,6 +26,7 @@ p
     +qs({config: 'gpu', os: 'linux'}) export CUDA_HOME=/usr/local/cuda-8.0
     +qs({config: 'gpu', os: 'linux'}) export PATH=$PATH:$CUDA_HOME/bin
     +qs({config: 'gpu', package: 'pip'}) pip install -U chainer
+    +qs({config: 'gpu', package: 'source'}) pip install -U chainer
     +qs({config: 'gpu', package: 'conda'}) conda install -c anaconda chainer
 
     +qs({package: 'pip'}) pip install -U spacy
