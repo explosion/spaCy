@@ -56,15 +56,7 @@ cdef class Vocab:
         if strings:
             for string in strings:
                 self.strings.add(string)
-        # Load strings in a special order, so that we have an onset number for
-        # the vocabulary. This way, when words are added in order, the orth ID
-        # is the frequency rank of the word, plus a certain offset. The structural
-        # strings are loaded first, because the vocab is open-class, and these
-        # symbols are closed class.
-        # TODO: Actually this has turned out to be a pain in the ass...
-        # It means the data is invalidated when we add a symbol :(
-        # Need to rethink this.
-        for name in symbols.NAMES + list(sorted(tag_map.keys())):
+        for name in tag_map.keys():
             if name:
                 self.strings.add(name)
         self.lex_attr_getters = lex_attr_getters

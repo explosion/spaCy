@@ -408,6 +408,18 @@ def get_raw_input(description, default=False):
     return user_input
 
 
+def to_bytes(unserialized, exclude):
+    serialized = {}
+    for key, value in unserialized.items():
+        if key in exclude:
+            continue
+        elif hasattr(value, 'to_bytes'):
+            serialized[key] = value.to_bytes()
+        else:
+            serialized[key] = ujson.dumps(value)
+    return ujson.dumps(serialized)
+
+
 def print_table(data, title=None):
     """Print data in table format.
 

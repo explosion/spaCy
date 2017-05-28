@@ -1,3 +1,4 @@
+import ujson
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
 from thinc.neural import Model, Maxout, Softmax, Affine
 from thinc.neural._classes.hash_embed import HashEmbed
@@ -15,8 +16,46 @@ from thinc.neural._classes.affine import _set_dimensions_if_needed
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP
 from .tokens.doc import Doc
 
+import dill
 import numpy
+import io
 
+
+def model_to_bytes(model):
+    weights = []
+    metas = []
+    queue = [model]
+    i = 0
+    for layer in queue:
+        if hasattr(layer, '_mem'):
+            weights.append(layer._mem.weights)
+            metas.append(layer._mem._offsets)
+            i += 1
+        if hasattr(layer, '_layers'):
+            queue.extend(layer._layers)
+    data = {'metas': metas, 'weights': weights}
+    # TODO: Replace the pickle here with something else
+    return dill.dumps(data)
+
+
+def model_from_bytes(model, bytes_data):
+    # TODO: Replace the pickle here with something else
+    data = dill.loads(bytes_data)
+    metas = data['metas']
+    weights = data['weights']
+    queue = [model]
+    i = 0
+    for layer in queue:
+        if hasattr(layer, '_mem'):
+            params = weights[i]
+            flat_mem = layer._mem._mem.ravel()
+            flat_params = params.ravel()
+            flat_mem[:flat_params.size] = flat_params
+            layer._mem._offsets.update(metas[i])
+            i += 1
+        if hasattr(layer, '_layers'):
+            queue.extend(layer._layers)
+ 
 
 def _init_for_precomputed(W, ops):
     if (W**2).sum() != 0.:

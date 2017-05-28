@@ -9,6 +9,7 @@ import numpy
 cimport numpy as np
 import cytoolz
 import util
+import ujson
 
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
 from thinc.neural import Model, Maxout, Softmax, Affine
@@ -35,6 +36,7 @@ from .syntax import nonproj
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
 from ._ml import rebatch, Tok2Vec, flatten, get_col, doc2feats
+from ._ml import model_to_bytes, model_from_bytes
 from .parts_of_speech import X
 
 
@@ -148,7 +150,6 @@ class TokenVectorEncoder(object):
         if self.model is True:
             self.model = self.Model()
 
-
     def use_params(self, params):
         """Replace weights of models in the pipeline with those provided in the
         params dictionary.
@@ -157,6 +158,39 @@ class TokenVectorEncoder(object):
         """
         with self.model.use_params(params):
             yield
+
+    def to_bytes(self, **exclude):
+        data = {
+            'model': self.model,
+            'vocab': self.vocab
+        }
+        return util.to_bytes(data, exclude)
+
+    def from_bytes(self, bytes_data, **exclude):
+        data = ujson.loads(bytes_data)
+        if 'model' not in exclude:
+            util.model_from_bytes(self.model, data['model'])
+        if 'vocab' not in exclude:
+            self.vocab.from_bytes(data['vocab'])
+        return self
+
+    def to_disk(self, path, **exclude):
+        path = util.ensure_path(path)
+        if not path.exists():
+            path.mkdir()
+        if 'vocab' not in exclude:
+            self.vocab.to_disk(path / 'vocab')
+        if 'model' not in exclude:
+            with (path / 'model.bin').open('wb') as file_:
+                file_.write(util.model_to_bytes(self.model))
+
+    def from_disk(self, path, **exclude):
+        path = util.ensure_path(path)
+        if 'vocab' not in exclude:
+            self.vocab.from_disk(path / 'vocab')
+        if 'model.bin' not in exclude:
+            with (path / 'model.bin').open('rb') as file_:
+                util.model_from_bytes(self.model, file_.read())
 
 
 class NeuralTagger(object):
