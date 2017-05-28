@@ -136,12 +136,7 @@ cdef class Lexeme:
         RETURNS (bool): Whether a word vector is associated with the object.
         """
         def __get__(self):
-            cdef int i
-            for i in range(self.vocab.vectors_length):
-                if self.c.vector[i] != 0:
-                    return True
-            else:
-                return False
+            return self.vocab.has_vector(self.c.orth)
 
     property vector_norm:
         """The L2 norm of the lexeme's vector representation.
@@ -149,10 +144,8 @@ cdef class Lexeme:
         RETURNS (float): The L2 norm of the vector representation.
         """
         def __get__(self):
-            return self.c.l2_norm
-
-        def __set__(self, float value):
-            self.c.l2_norm = value
+            vector = self.vector
+            return numpy.sqrt((vector**2).sum())
 
     property vector:
         """A real-valued meaning representation.
@@ -169,26 +162,15 @@ cdef class Lexeme:
                     "model doesn't include word vectors. For more info, see "
                     "the documentation: \n%s\n" % about.__docs_models__
                 )
-
-            vector_view = <float[:length,]>self.c.vector
-            return numpy.asarray(vector_view)
+            return self.vocab.get_vector(self.c.orth)
 
         def __set__(self, vector):
             assert len(vector) == self.vocab.vectors_length
-            cdef float value
-            cdef double norm = 0.0
-            for i, value in enumerate(vector):
-                self.c.vector[i] = value
-                norm += value * value
-            self.c.l2_norm = sqrt(norm)
+            self.vocab.set_vector(self.c.orth, vector)
 
     property rank:
         def __get__(self):
             return self.c.id
-
-    property repvec:
-        def __get__(self):
-            raise AttributeError("lex.repvec has been renamed to lex.vector")
 
     property sentiment:
         def __get__(self):
@@ -319,7 +301,6 @@ cdef class Lexeme:
     property is_right_punct:
         def __get__(self): return Lexeme.c_check_flag(self.c, IS_RIGHT_PUNCT)
         def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_RIGHT_PUNCT, x)
-
 
     property like_url:
         def __get__(self): return Lexeme.c_check_flag(self.c, LIKE_URL)
