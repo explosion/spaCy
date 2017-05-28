@@ -294,9 +294,7 @@ cdef int _get_root(int word, const GoldParseC* gold) nogil:
 
 cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
     cdef StateClass st = StateClass.init(<const TokenC*>tokens, length)
-    # Ensure sent_start is set to 0 throughout
     for i in range(st.c.length):
-        st.c._sent[i].sent_start = False
         st.c._sent[i].l_edge = i
         st.c._sent[i].r_edge = i
     st.fast_forward()
@@ -417,9 +415,7 @@ cdef class ArcEager(TransitionSystem):
         return t
 
     cdef int initialize_state(self, StateC* st) nogil:
-        # Ensure sent_start is set to 0 throughout
         for i in range(st.length):
-            st._sent[i].sent_start = False
             st._sent[i].l_edge = i
             st._sent[i].r_edge = i
         st.fast_forward()
