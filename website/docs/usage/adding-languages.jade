@@ -82,7 +82,8 @@ p
     |  compute. As of spaCy v2.0, #[code Language] classes are not imported on
     |  initialisation and are only loaded when you import them directly, or load
     |  a model that requires a language to be loaded. To lazy-load languages in
-    |  your application, you can use the #[code util.get_lang_class()] helper
+    |  your application, you can use the
+    |  #[+api("util#get_lang_class") #[code util.get_lang_class()]] helper
     |  function with the two-letter language code as its argument.
 
 +h(2, "language-data") Adding language data
@@ -284,14 +285,14 @@ p
 
 p
     |  When adding the tokenizer exceptions to the #[code Defaults], you can use
-    |  the #[code update_exc()] helper function to merge them with the global
-    |  base  exceptions (including one-letter abbreviations and emoticons).
-    |  The function performs a basic check to make sure exceptions are
-    |  provided in the correct format. It can take any number of exceptions
-    |  dicts as its arguments, and will update and overwrite the exception in
-    |  this order. For example, if your language's tokenizer exceptions include
-    |  a custom tokenization pattern for "a.", it will overwrite the base
-    |  exceptions with the language's custom one.
+    |  the #[+api("util#update_exc") #[code update_exc()]] helper function to merge
+    |  them with the global base  exceptions (including one-letter abbreviations
+    |  and emoticons). The function performs a basic check to make sure
+    |  exceptions are provided in the correct format. It can take any number of
+    |  exceptions dicts as its arguments, and will update and overwrite the
+    |  exception in this order. For example, if your language's tokenizer
+    |  exceptions include a custom tokenization pattern for "a.", it will
+    |  overwrite the base exceptions with the language's custom one.
 
 +code("Example").
     from ...util import update_exc

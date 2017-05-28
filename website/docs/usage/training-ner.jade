@@ -120,7 +120,6 @@ p
                 doc = nlp.make_doc(raw_text)
                 nlp.tagger(doc)
                 loss = nlp.entity.update(doc, gold)
-        nlp.end_training()
         nlp.save_to_directory(output_dir)
 
 p

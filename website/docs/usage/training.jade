@@ -26,8 +26,6 @@ include _spacy-101/_training
     gold = GoldParse(doc, tags=['N', 'V', 'N'])
     tagger.update(doc, gold)
 
-    tagger.model.end_training()
-
 p
     +button(gh("spaCy", "examples/training/train_tagger.py"), false, "secondary") Full example
 
@@ -43,8 +41,6 @@ p
 
     doc = Doc(vocab, words=['Who', 'is', 'Shaka', 'Khan', '?'])
     entity.update(doc, ['O', 'O', 'B-PERSON', 'L-PERSON', 'O'])
-
-    entity.model.end_training()
 
 p
     +button(gh("spaCy", "examples/training/train_ner.py"), false, "secondary") Full example
@@ -76,8 +72,6 @@ p.o-inline-list
     doc = Doc(vocab, words=['Who', 'is', 'Shaka', 'Khan', '?'])
     parser.update(doc, [(1, 'nsubj'), (1, 'ROOT'), (3, 'compound'), (1, 'dobj'),
                         (1, 'punct')])
-
-    parser.model.end_training()
 
 p
     +button(gh("spaCy", "examples/training/train_parser.py"), false, "secondary") Full example
