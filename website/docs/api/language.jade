@@ -73,14 +73,25 @@ p
         +cell The text to be processed.
 
     +row
-        +cell #[code **disabled]
-        +cell -
-        +cell Elements of the pipeline that should not be run.
+        +cell #[code disable]
+        +cell list
+        +cell
+            |  Names of pipeline components to
+            |  #[+a("/docs/usage/language-processing-pipeline#disabling") disable].
 
     +footrow
         +cell returns
         +cell #[code Doc]
         +cell A container for accessing the annotations.
+
++infobox("⚠️ Deprecation note")
+    .o-block
+        |  Pipeline components to prevent from being loaded can now be added as
+        |  a list to #[code disable], instead of specifying one keyword argument
+        |  per component.
+
+    +code-new doc = nlp(u"I don't want parsed", disable=['parser'])
+    +code-old doc = nlp(u"I don't want parsed", parse=False)
 
 +h(2, "pipe") Language.pipe
     +tag method
@@ -111,6 +122,13 @@ p
         +cell #[code batch_size]
         +cell int
         +cell The number of texts to buffer.
+
+    +row
+        +cell #[code disable]
+        +cell list
+        +cell
+            |  Names of pipeline components to
+            |  #[+a("/docs/usage/language-processing-pipeline#disabling") disable].
 
     +footrow
         +cell yields
@@ -227,8 +245,11 @@ p
 
 +h(2, "to_disk") Language.to_disk
     +tag method
+    +tag-new(2)
 
-p Save the current state to a directory.
+p
+    |  Save the current state to a directory. If a model is loaded, this will
+    |  #[strong include the model].
 
 +aside-code("Example").
     nlp.to_disk('/path/to/models')
@@ -242,14 +263,21 @@ p Save the current state to a directory.
             |  Paths may be either strings or #[code Path]-like objects.
 
     +row
-        +cell #[code **exclude]
-        +cell -
-        +cell Named attributes to prevent from being saved.
+        +cell #[code disable]
+        +cell list
+        +cell
+            |  Names of pipeline components to
+            |  #[+a("/docs/usage/language-processing-pipeline#disabling") disable]
+            |  and prevent from being saved.
 
 +h(2, "from_disk") Language.from_disk
     +tag method
+    +tag-new(2)
 
-p Loads state from a directory. Modifies the object in place and returns it.
+p
+    |  Loads state from a directory. Modifies the object in place and returns
+    |  it. If the saved #[code Language] object contains a model, the
+    |  #[strong model will be loaded].
 
 +aside-code("Example").
     from spacy.language import Language
@@ -264,14 +292,27 @@ p Loads state from a directory. Modifies the object in place and returns it.
             |  #[code Path]-like objects.
 
     +row
-        +cell #[code **exclude]
-        +cell -
-        +cell Named attributes to prevent from being loaded.
+        +cell #[code disable]
+        +cell list
+        +cell
+            |  Names of pipeline components to
+            |  #[+a("/docs/usage/language-processing-pipeline#disabling") disable].
 
     +footrow
         +cell returns
         +cell #[code Language]
         +cell The modified #[code Language] object.
+
++infobox("⚠️ Deprecation note")
+    .o-block
+        |  As of spaCy v2.0, the #[code save_to_directory] method has been
+        |  renamed to #[code to_disk], to improve consistency across classes.
+        |  Pipeline components to prevent from being loaded can now be added as
+        |  a list to #[code disable], instead of specifying one keyword argument
+        |  per component.
+
+    +code-new nlp = English().from_disk(disable=['tagger', 'ner'])
+    +code-old nlp = spacy.load('en', tagger=False, entity=False)
 
 +h(2, "to_bytes") Language.to_bytes
     +tag method
@@ -283,9 +324,12 @@ p Serialize the current state to a binary string.
 
 +table(["Name", "Type", "Description"])
     +row
-        +cell #[code **exclude]
-        +cell -
-        +cell Named attributes to prevent from being serialized.
+        +cell #[code disable]
+        +cell list
+        +cell
+            |  Names of pipeline components to
+            |  #[+a("/docs/usage/language-processing-pipeline#disabling") disable]
+            |  and prevent from being serialized.
 
     +footrow
         +cell returns
@@ -310,14 +354,25 @@ p Load state from a binary string.
         +cell The data to load from.
 
     +row
-        +cell #[code **exclude]
-        +cell -
-        +cell Named attributes to prevent from being loaded.
+        +cell #[code disable]
+        +cell list
+        +cell
+            |  Names of pipeline components to
+            |  #[+a("/docs/usage/language-processing-pipeline#disabling") disable].
 
     +footrow
         +cell returns
         +cell #[code Language]
         +cell The #[code Language] object.
+
++infobox("⚠️ Deprecation note")
+    .o-block
+        |  Pipeline components to prevent from being loaded can now be added as
+        |  a list to #[code disable], instead of specifying one keyword argument
+        |  per component.
+
+    +code-new nlp = English().from_bytes(bytes, disable=['tagger', 'ner'])
+    +code-old nlp = English().from_bytes('en', tagger=False, entity=False)
 
 +h(2, "attributes") Attributes
 
@@ -326,6 +381,11 @@ p Load state from a binary string.
         +cell #[code vocab]
         +cell #[code Vocab]
         +cell A container for the lexical types.
+
+    +row
+        +cell #[code tokenizer]
+        +cell #[code Tokenizer]
+        +cell The tokenizer.
 
     +row
         +cell #[code make_doc]

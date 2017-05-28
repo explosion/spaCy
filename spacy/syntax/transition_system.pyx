@@ -5,7 +5,7 @@ from __future__ import unicode_literals
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
 
 from ..structs cimport TokenC
 from .stateclass cimport StateClass
@@ -26,7 +26,7 @@ cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
 
 
 cdef class TransitionSystem:
-    def __init__(self, StringStore string_table, dict labels_by_action):
+    def __init__(self, StringStore string_table, labels_by_action):
         self.mem = Pool()
         self.strings = string_table
         self.n_moves = 0
@@ -34,14 +34,14 @@ cdef class TransitionSystem:
 
         self.c = <Transition*>self.mem.alloc(self._size, sizeof(Transition))
 
-        for action, label_strs in sorted(labels_by_action.items()):
+        for action, label_strs in labels_by_action.items():
             for label_str in label_strs:
                 self.add_action(int(action), label_str)
         self.root_label = self.strings['ROOT']
         self.init_beam_state = _init_state
 
     def __reduce__(self):
-        labels_by_action = {}
+        labels_by_action = OrderedDict()
         cdef Transition t
         for trans in self.c[:self.n_moves]:
             label_str = self.strings[trans.label]
@@ -60,6 +60,29 @@ cdef class TransitionSystem:
             states.append(state)
             offset += len(doc)
         return states
+
+    def get_oracle_sequence(self, doc, GoldParse gold):
+        cdef Pool mem = Pool()
+        costs = <float*>mem.alloc(self.n_moves, sizeof(float))
+        is_valid = <int*>mem.alloc(self.n_moves, sizeof(int))
+
+        cdef StateClass state = StateClass(doc, offset=0)
+        self.initialize_state(state.c)
+        history = []
+        while not state.is_final():
+            self.set_costs(is_valid, costs, state, gold)
+            for i in range(self.n_moves):
+                if is_valid[i] and costs[i] <= 0:
+                    action = self.c[i]
+                    history.append(i)
+                    action.do(state.c, action.label)
+                    break
+            else:
+                print(gold.words)
+                print(gold.ner)
+                print(history)
+                raise ValueError("Could not find gold move")
+        return history
 
     cdef int initialize_state(self, StateC* state) nogil:
         pass
@@ -92,11 +115,21 @@ cdef class TransitionSystem:
                        StateClass stcls, GoldParse gold) except -1:
         cdef int i
         self.set_valid(is_valid, stcls.c)
+        cdef int n_gold = 0
         for i in range(self.n_moves):
             if is_valid[i]:
                 costs[i] = self.c[i].get_cost(stcls, &gold.c, self.c[i].label)
+                n_gold += costs[i] <= 0
             else:
                 costs[i] = 9000
+        if n_gold <= 0:
+            print(gold.words)
+            print(gold.ner)
+            raise ValueError(
+                "Could not find a gold-standard action to supervise "
+                "the entity recognizer\n"
+                "The transition system has %d actions.\n"
+                "%s" % (self.n_moves))
 
     def add_action(self, int action, label):
         if not isinstance(label, int):

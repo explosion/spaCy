@@ -6,7 +6,8 @@ import dill
 import numpy
 from thinc.neural import Model
 from thinc.neural.ops import NumpyOps, CupyOps
-from thinc.neural.optimizers import Adam
+from thinc.neural.optimizers import Adam, SGD
+import random
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -172,13 +173,13 @@ class Language(object):
                 flat_list.append(pipe)
         self.pipeline = flat_list
 
-    def __call__(self, text, **disabled):
+    def __call__(self, text, disable=[]):
         """'Apply the pipeline to some text. The text can span multiple sentences,
         and can contain arbtrary whitespace. Alignment into the original string
         is preserved.
 
         text (unicode): The text to be processed.
-        **disabled: Elements of the pipeline that should not be run.
+        disable (list): Names of the pipeline components to disable.
         RETURNS (Doc): A container for accessing the annotations.
 
         EXAMPLE:
@@ -189,12 +190,12 @@ class Language(object):
         doc = self.make_doc(text)
         for proc in self.pipeline:
             name = getattr(proc, 'name', None)
-            if name in disabled and not disabled[name]:
+            if name in disable:
                 continue
             proc(doc)
         return doc
 
-    def update(self, docs, golds, drop=0., sgd=None):
+    def update(self, docs, golds, drop=0., sgd=None, losses=None):
         """Update the models in the pipeline.
 
         docs (iterable): A batch of `Doc` objects.
@@ -211,12 +212,21 @@ class Language(object):
         """
         tok2vec = self.pipeline[0]
         feats = tok2vec.doc2feats(docs)
-        for proc in self.pipeline[1:]:
+        grads = {}
+        def get_grads(W, dW, key=None):
+            grads[key] = (W, dW)
+        pipes = list(self.pipeline[1:])
+        random.shuffle(pipes)
+        for proc in pipes:
             if not hasattr(proc, 'update'):
                 continue
             tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
-            d_tokvecses = proc.update((docs, tokvecses), golds, sgd=sgd, drop=drop)
-            bp_tokvecses(d_tokvecses, sgd=sgd)
+            d_tokvecses = proc.update((docs, tokvecses), golds,
+                                      drop=drop, sgd=get_grads, losses=losses)
+            if d_tokvecses is not None:
+                bp_tokvecses(d_tokvecses, sgd=sgd)
+        for key, (W, dW) in grads.items():
+            sgd(W, dW, key=key)
         # Clear the tensor variable, to free GPU memory.
         # If we don't do this, the memory leak gets pretty
         # bad, because we may be holding part of a batch.
@@ -260,13 +270,20 @@ class Language(object):
         if cfg.get('use_gpu'):
             Model.ops = CupyOps()
             Model.Ops = CupyOps
-            print("Use GPU")
         for proc in self.pipeline:
             if hasattr(proc, 'begin_training'):
                 context = proc.begin_training(get_gold_tuples(),
                                               pipeline=self.pipeline)
                 contexts.append(context)
-        optimizer = Adam(Model.ops, 0.001)
+        learn_rate = util.env_opt('learn_rate', 0.001)
+        beta1 = util.env_opt('optimizer_B1', 0.9)
+        beta2 = util.env_opt('optimizer_B2', 0.999)
+        eps = util.env_opt('optimizer_eps', 1e-08)
+        L2 = util.env_opt('L2_penalty', 1e-6)
+        max_grad_norm = util.env_opt('grad_norm_clip', 1.)
+        optimizer = Adam(Model.ops, learn_rate, L2=L2, beta1=beta1,
+                         beta2=beta2, eps=eps)
+        optimizer.max_grad_norm = max_grad_norm
         return optimizer
 
     def evaluate(self, docs_golds):
@@ -306,7 +323,7 @@ class Language(object):
             except StopIteration:
                 pass
 
-    def pipe(self, texts, n_threads=2, batch_size=1000, **disabled):
+    def pipe(self, texts, n_threads=2, batch_size=1000, disable=[]):
         """Process texts as a stream, and yield `Doc` objects in order. Supports
         GIL-free multi-threading.
 
@@ -314,7 +331,7 @@ class Language(object):
         n_threads (int): The number of worker threads to use. If -1, OpenMP will
             decide how many to use at run time. Default is 2.
         batch_size (int): The number of texts to buffer.
-        **disabled: Pipeline components to exclude.
+        disable (list): Names of the pipeline components to disable.
         YIELDS (Doc): Documents in the order of the original text.
 
         EXAMPLE:
@@ -326,7 +343,7 @@ class Language(object):
         docs = texts
         for proc in self.pipeline:
             name = getattr(proc, 'name', None)
-            if name in disabled and not disabled[name]:
+            if name in disable:
                 continue
             if hasattr(proc, 'pipe'):
                 docs = proc.pipe(docs, n_threads=n_threads, batch_size=batch_size)
@@ -336,12 +353,14 @@ class Language(object):
         for doc in docs:
             yield doc
 
-    def to_disk(self, path, **exclude):
-        """Save the current state to a directory.
+    def to_disk(self, path, disable=[]):
+        """Save the current state to a directory.  If a model is loaded, this
+        will include the model.
 
         path (unicode or Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or `Path`-like objects.
-        **exclude: Named attributes to prevent from being saved.
+        disable (list): Nameds of pipeline components to disable and prevent
+            from being saved.
 
         EXAMPLE:
             >>> nlp.to_disk('/path/to/models')
@@ -353,7 +372,7 @@ class Language(object):
             raise IOError("Output path must be a directory")
         props = {}
         for name, value in self.__dict__.items():
-            if name in exclude:
+            if name in disable:
                 continue
             if hasattr(value, 'to_disk'):
                 value.to_disk(path / name)
@@ -362,13 +381,14 @@ class Language(object):
         with (path / 'props.pickle').open('wb') as file_:
             dill.dump(props, file_)
 
-    def from_disk(self, path, **exclude):
+    def from_disk(self, path, disable=[]):
         """Loads state from a directory. Modifies the object in place and
-        returns it.
+        returns it. If the saved `Language` object contains a model, the
+        model will be loaded.
 
         path (unicode or Path): A path to a directory. Paths may be either
             strings or `Path`-like objects.
-        **exclude: Named attributes to prevent from being loaded.
+        disable (list): Names of the pipeline components to disable.
         RETURNS (Language): The modified `Language` object.
 
         EXAMPLE:
@@ -377,35 +397,36 @@ class Language(object):
         """
         path = util.ensure_path(path)
         for name in path.iterdir():
-            if name not in exclude and hasattr(self, str(name)):
+            if name not in disable and hasattr(self, str(name)):
                 getattr(self, name).from_disk(path / name)
         with (path / 'props.pickle').open('rb') as file_:
             bytes_data = file_.read()
-        self.from_bytes(bytes_data, **exclude)
+        self.from_bytes(bytes_data, disable)
         return self
 
-    def to_bytes(self, **exclude):
+    def to_bytes(self, disable=[]):
         """Serialize the current state to a binary string.
 
-        **exclude: Named attributes to prevent from being serialized.
+        disable (list): Nameds of pipeline components to disable and prevent
+            from being serialized.
         RETURNS (bytes): The serialized form of the `Language` object.
         """
         props = dict(self.__dict__)
-        for key in exclude:
+        for key in disable:
             if key in props:
                 props.pop(key)
         return dill.dumps(props, -1)
 
-    def from_bytes(self, bytes_data, **exclude):
+    def from_bytes(self, bytes_data, disable=[]):
         """Load state from a binary string.
 
         bytes_data (bytes): The data to load from.
-        **exclude: Named attributes to prevent from being loaded.
+        disable (list): Names of the pipeline components to disable.
         RETURNS (Language): The `Language` object.
         """
         props = dill.loads(bytes_data)
         for key, value in props.items():
-            if key not in exclude:
+            if key not in disable:
                 setattr(self, key, value)
         return self
 

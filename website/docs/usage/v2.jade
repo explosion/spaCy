@@ -8,6 +8,65 @@ p
 
 +h(2, "features") New features
 
++h(3, "features-pipelines") Improved processing pipelines
+
++aside-code("Example").
+    # Modify an existing pipeline
+    nlp = spacy.load('en')
+    nlp.pipeline.append(my_component)
+
+    # Register a factory to create a component
+    spacy.set_factory('my_factory', my_factory)
+    nlp = Language(pipeline=['my_factory', mycomponent])
+
+p
+    |  It's now much easier to #[strong customise the pipeline] with your own
+    |  components, functions that receive a #[code Doc] object, modify and
+    |  return it. If your component is stateful, you can define and register a
+    |  factory which receives the shared #[code Vocab] object and returns a
+    |  component. spaCy's default components can be added to your pipeline by
+    |  using their string IDs. This way, you won't have to worry about finding
+    |  and implementing them – simply add #[code "tagger"] to the pipeline,
+    |  and spaCy will know what to do.
+
++image
+    include ../../assets/img/docs/pipeline.svg
+
++infobox
+    |  #[strong API:] #[+api("language") #[code Language]]
+    |  #[strong Usage:] #[+a("/docs/usage/language-processing-pipeline") Processing text]
+
++h(3, "features-serializer") Saving, loading and serialization
+
++aside-code("Example").
+    nlp = spacy.load('en') # shortcut link
+    nlp = spacy.load('en_core_web_sm') # package
+    nlp = spacy.load('/path/to/en') # unicode path
+    nlp = spacy.load(Path('/path/to/en')) # pathlib Path
+
+    nlp.to_disk('/path/to/nlp')
+    nlp = English().from_disk('/path/to/nlp')
+
+p
+    |  spay's serialization API has been made consistent across classes and
+    |  objects. All container classes, i.e. #[code Language], #[code Doc],
+    |  #[code Vocab] and #[code StringStore] now have a #[code to_bytes()],
+    |  #[code from_bytes()], #[code to_disk()] and #[code from_disk()] method
+    |  that supports the Pickle protocol.
+
+p
+    |  The improved #[code spacy.load] makes loading models easier and more
+    |  transparent. You can load a model by supplying its
+    |  #[+a("/docs/usage/models#usage") shortcut link], the name of an installed
+    |  #[+a("/docs/usage/saving-loading#generating") model package] or a path.
+    |  The #[code Language] class to initialise will be determined based on the
+    |  model's settings. For a blank language, you can import the class directly,
+    |  e.g. #[code from spacy.lang.en import English].
+
++infobox
+    |  #[strong API:] #[+api("spacy#load") #[code spacy.load]], #[+api("binder") #[code Binder]]
+    |  #[strong Usage:] #[+a("/docs/usage/saving-loading") Saving and loading]
+
 +h(3, "features-displacy") displaCy visualizer with Jupyter support
 
 +aside-code("Example").
@@ -28,78 +87,32 @@ p
     |  #[strong API:] #[+api("displacy") #[code displacy]]
     |  #[strong Usage:] #[+a("/docs/usage/visualizers") Visualizing spaCy]
 
-+h(3, "features-loading") Loading
-
-+aside-code("Example").
-    nlp = spacy.load('en') # shortcut link
-    nlp = spacy.load('en_core_web_sm') # package
-    nlp = spacy.load('/path/to/en') # unicode path
-    nlp = spacy.load(Path('/path/to/en')) # pathlib Path
++h(3, "features-language") Improved language data and lazy loading
 
 p
-    |  The improved #[code spacy.load] makes loading models easier and more
-    |  transparent. You can load a model by supplying its
-    |  #[+a("/docs/usage/models#usage") shortcut link], the name of an installed
-    |  #[+a("/docs/usage/saving-loading#generating") model package], a unicode
-    |  path or a #[code Path]-like object. spaCy will try resolving the load
-    |  argument in this order. The #[code path] keyword argument is now deprecated.
+    |  Language-specfic data now lives in its own submodule, #[code spacy.lang].
+    |  Languages are lazy-loaded, i.e. only loaded when you import a
+    |  #[code Language] class, or load a model that initialises one. This allows
+    |  languages to contain more custom data, e.g. lemmatizer lookup tables, or
+    |  complex regular expressions. The language data has also been tidied up
+    |  and simplified. spaCy now also supports simple lookup-based lemmatization.
 
-p
-    |  The #[code Language] class to initialise will be determined based on the
-    |  model's settings. If no model is found, spaCy will let you know and won't
-    |  just return an empty #[code Language] object anymore. If you want a blank
-    |  language, you can always import the class directly, e.g.
-    |  #[code from spacy.lang.en import English].
-
-+infobox
-    |  #[strong API:] #[+api("spacy#load") #[code spacy.load]]
-    |  #[strong Usage:] #[+a("/docs/usage/saving-loading") Saving and loading]
-
-+h(3, "features-language") Improved language data and processing pipelines
-
-+aside-code("Example").
-    from spacy.language import Language
-    nlp = Language(pipeline=['token_vectors', 'tags',
-                             'dependencies'])
++image
+    include ../../assets/img/docs/language_data.svg
 
 +infobox
     |  #[strong API:] #[+api("language") #[code Language]]
-    |  #[strong Usage:] #[+a("/docs/usage/adding-languages") Adding languages]
-
-+h(3, "features-lemmatizer") Simple lookup-based lemmatization
-
-+aside-code("Example").
-    LOOKUP = {
-        "aba": "abar",
-        "ababa": "abar",
-        "ababais": "abar",
-        "ababan": "abar",
-        "ababanes": "ababán"
-    }
-
-p
-    |  spaCy now supports simple lookup-based lemmatization. The data is stored
-    |  in a dictionary mapping a string to its lemma. To determine a token's
-    |  lemma, spaCy simply looks it up in the table. The lookup lemmatizer can
-    |  be imported from #[code spacy.lemmatizerlookup]. It's initialised with
-    |  the lookup table, and should be returned by the #[code create_lemmatizer]
-    |  classmethod of the language's defaults.
-
-+infobox
-    |  #[strong API:] #[+api("language") #[code Language]]
+    |  #[strong Code:] #[+src(gh("spaCy", "spacy/lang")) spacy/lang]
     |  #[strong Usage:] #[+a("/docs/usage/adding-languages") Adding languages]
 
 +h(3, "features-matcher") Revised matcher API
 
 +aside-code("Example").
     from spacy.matcher import Matcher
-    from spacy.attrs import LOWER, IS_PUNCT
     matcher = Matcher(nlp.vocab)
-    matcher.add('HelloWorld', on_match=None,
-                [{LOWER: 'hello'}, {IS_PUNCT: True}, {LOWER: 'world'}],
-                [{LOWER: 'hello'}, {LOWER: 'world'}])
+    matcher.add('HEARTS', None, [{'ORTH': '❤️', 'OP': '+'}])
     assert len(matcher) == 1
-    assert 'HelloWorld' in matcher
+    assert 'HEARTS' in matcher
 
 p
     |  Patterns can now be added to the matcher by calling
@@ -113,12 +126,6 @@ p
     |  #[strong API:] #[+api("matcher") #[code Matcher]]
     |  #[strong Usage:] #[+a("/docs/usage/rule-based-matching") Rule-based matching]
 
-+h(3, "features-serializer") Serialization
-
-+infobox
-    |  #[strong API:] #[+api("serializer") #[code Serializer]]
-    |  #[strong Usage:] #[+a("/docs/usage/saving-loading") Saving and loading]
-
 +h(3, "features-models") Neural network models for English, German, French and Spanish
 
 +infobox
@@ -129,32 +136,24 @@ p
 
 +table(["Old", "New"])
     +row
+        +cell
+            |  #[code spacy.en]
+            |  #[code spacy.xx]
+        +cell
+            |  #[code spacy.lang.en]
+            |  #[code spacy.lang.xx]
+
+    +row
+        +cell #[code spacy.orth]
+        +cell #[code spacy.lang.xx.lex_attrs]
+
+    +row
         +cell #[code Language.save_to_directory]
         +cell #[+api("language#to_disk") #[code Language.to_disk]]
 
     +row
-        +cell #[code Tokenizer.load]
-        +cell
-            |  #[+api("tokenizer#from_disk") #[code Tokenizer.from_disk]]
-            |  #[+api("tokenizer#from_bytes") #[code Tokenizer.from_bytes]]
-
-    +row
-        +cell #[code Tagger.load]
-        +cell
-            |  #[+api("tagger#from_disk") #[code Tagger.from_disk]]
-            |  #[+api("tagger#from_bytes") #[code Tagger.from_bytes]]
-
-    +row
-        +cell #[code DependencyParser.load]
-        +cell
-            |  #[+api("dependencyparser#from_disk") #[code DependencyParser.from_disk]]
-            |  #[+api("dependencyparser#from_bytes") #[code DependencyParser.from_bytes]]
-
-    +row
-        +cell #[code EntityRecognizer.load]
-        +cell
-            |  #[+api("entityrecognizer#from_disk") #[code EntityRecognizer.from_disk]]
-            |  #[+api("entityrecognizer#from_bytes") #[code EntityRecognizer.from_bytes]]
+        +cell #[code Language.create_make_doc]
+        +cell #[+api("language#attributes") #[code Language.tokenizer]]
 
     +row
         +cell
@@ -189,6 +188,28 @@ p
             |  #[+api("stringstore#to_bytes") #[code StringStore.to_bytes]]
 
     +row
+        +cell #[code Tokenizer.load]
+        +cell -
+
+    +row
+        +cell #[code Tagger.load]
+        +cell
+            |  #[+api("tagger#from_disk") #[code Tagger.from_disk]]
+            |  #[+api("tagger#from_bytes") #[code Tagger.from_bytes]]
+
+    +row
+        +cell #[code DependencyParser.load]
+        +cell
+            |  #[+api("dependencyparser#from_disk") #[code DependencyParser.from_disk]]
+            |  #[+api("dependencyparser#from_bytes") #[code DependencyParser.from_bytes]]
+
+    +row
+        +cell #[code EntityRecognizer.load]
+        +cell
+            |  #[+api("entityrecognizer#from_disk") #[code EntityRecognizer.from_disk]]
+            |  #[+api("entityrecognizer#from_bytes") #[code EntityRecognizer.from_bytes]]
+
+    +row
         +cell #[code Matcher.load]
         +cell -
 
@@ -208,12 +229,100 @@ p
 
     +row
         +cell #[code Doc.read_bytes]
-        +cell
+        +cell #[+api("binder") #[code Binder]]
 
     +row
         +cell #[code Token.is_ancestor_of]
         +cell #[+api("token#is_ancestor") #[code Token.is_ancestor]]
 
-
-
 +h(2, "migrating") Migrating from spaCy 1.x
+
++list
+    +item Saving, loading and serialization.
+    +item Processing pipelines and language data.
+    +item Adding patterns and callbacks to the matcher.
+    +item Models trained with spaCy 1.x.
+
++infobox("Some tips")
+    |  Before migrating, we strongly recommend writing a few
+    |  #[strong simple tests] specific to how you're using spaCy in your
+    |  application. This makes it easier to check whether your code requires
+    |  changes, and if so, which parts are affected.
+    |  (By the way, feel free contribute your tests to
+    |  #[+src(gh("spaCy", "spacy/tests")) our test suite] – this will also ensure
+    |  we never accidentally introduce a bug in a workflow that's
+    |  important to you.) If you've trained your own models, keep in mind that
+    |  your train and runtime inputs must match. This means you'll have to
+    |  #[strong retrain your models] with spaCy v2.0 to make them compatible.
+
+
++h(3, "migrating-saving-loading") Saving, loading and serialization
+
+p
+    |  Double-check all calls to #[code spacy.load()] and make sure they don't
+    |  use the #[code path] keyword argument. If you're only loading in binary
+    |  data and not a model package that can construct its own #[code Language]
+    |  class and pipeline, you should now use the
+    |  #[+api("language#from_disk") #[code Language.from_disk()]] method.
+
++code-new.
+    nlp = spacy.load('/model')
+    nlp = English().from_disk('/model/data')
++code-old nlp = spacy.load('en', path='/model')
+
+p
+    |  Review all other code that writes state to disk or bytes.
+    |  All containers, now share the same, consistent API for saving and
+    |  loading. Replace saving with #[code to_disk()] or #[code to_bytes()], and
+    |  loading with #[code from_disk()] and #[code from_bytes()].
+
++code-new.
+    nlp.to_disk('/model')
+    nlp.vocab.to_disk('/vocab')
+
++code-old.
+    nlp.save_to_directory('/model')
+    nlp.vocab.dump('/vocab')
+
++h(3, "migrating-languages") Processing pipelines and language data
+
+p
+    |  If you're importing language data or #[code Language] classes, make sure
+    |  to change your import statements to import from #[code spacy.lang]. If
+    |  you've added your own custom language, it needs to be moved to
+    |  #[code spacy/lang/xx] and adjusted accordingly.
+
++code-new from spacy.lang.en import English
++code-old from spacy.en import English
+
+p
+    |  If you've been using custom pipeline components, check out the new
+    |  guide on #[+a("/docs/usage/language-processing-pipelines") processing pipelines].
+    |  Appending functions to the pipeline still works – but you might be able
+    |  to make this more convenient by registering "component factories".
+    |  Components of the processing pipeline can now be disabled by passing a
+    |  list of their names to the #[code disable] keyword argument on loading
+    |  or processing.
+
++code-new.
+    nlp = spacy.load('en', disable=['tagger', 'ner'])
+    doc = nlp(u"I don't want parsed", disable=['parser'])
++code-old.
+    nlp = spacy.load('en', tagger=False, entity=False)
+    doc = nlp(u"I don't want parsed", parse=False)
+
++h(3, "migrating-matcher") Adding patterns and callbacks to the matcher
+
+p
+    |  If you're using the matcher, you can now add patterns in one step. This
+    |  should be easy to update – simply merge the ID, callback and patterns
+    |  into one call to #[+api("matcher#add") #[code matcher.add]].
+
++code-new.
+    matcher.add('GoogleNow', merge_phrases, [{ORTH: 'Google'}, {ORTH: 'Now'}])
+
++code-old.
+    matcher.add_entity('GoogleNow', on_match=merge_phrases)
+    matcher.add_pattern('GoogleNow', [{ORTH: 'Google'}, {ORTH: 'Now'}])
+
++h(3, "migrating-models") Trained models

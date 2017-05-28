@@ -249,11 +249,13 @@ cdef class Parser:
         with Model.use_device('cpu'):
             if depth == 0:
                 upper = chain()
+                upper.is_noop = True
             else:
                 upper = chain(
                     clone(Maxout(hidden_width), (depth-1)),
-                    zero_init(Affine(nr_class))
+                    zero_init(Affine(nr_class, drop_factor=0.0))
                 )
+                upper.is_noop = False
         # TODO: This is an unfortunate hack atm!
         # Used to set input dimensions in network.
         lower.begin_training(lower.ops.allocate((500, token_vector_width)))
@@ -364,7 +366,7 @@ cdef class Parser:
         cdef np.ndarray scores
         c_token_ids = <int*>token_ids.data
         c_is_valid = <int*>is_valid.data
-        cdef int has_hidden = hasattr(vec2scores, 'W')
+        cdef int has_hidden = not getattr(vec2scores, 'is_noop', False)
         while not next_step.empty():
             if not has_hidden:
                 for i in cython.parallel.prange(
@@ -414,7 +416,9 @@ cdef class Parser:
         free(scores)
         free(token_ids)
 
-    def update(self, docs_tokvecs, golds, drop=0., sgd=None):
+    def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
+        if losses is not None and self.name not in losses:
+            losses[self.name] = 0.
         docs, tokvec_lists = docs_tokvecs
         tokvecs = self.model[0].ops.flatten(tokvec_lists)
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
@@ -422,27 +426,33 @@ cdef class Parser:
             golds = [golds]
 
         cuda_stream = get_cuda_stream()
-        golds = [self.moves.preprocess_gold(g) for g in golds]
 
-        states = self.moves.init_batch(docs)
+        states, golds, max_steps = self._init_gold_batch(docs, golds)
         state2vec, vec2scores = self.get_batch_model(len(states), tokvecs, cuda_stream,
-                                                      drop)
-
+                                                      0.0)
         todo = [(s, g) for (s, g) in zip(states, golds)
                 if not s.is_final() and g is not None]
+        if not todo:
+            return None
 
         backprops = []
         d_tokvecs = state2vec.ops.allocate(tokvecs.shape)
         cdef float loss = 0.
-        while len(todo) >= 3:
+        n_steps = 0
+        while todo:
             states, golds = zip(*todo)
 
             token_ids = self.get_token_ids(states)
-            vector, bp_vector = state2vec.begin_update(token_ids, drop=drop)
+            vector, bp_vector = state2vec.begin_update(token_ids, drop=0.0)
+            if drop != 0:
+                mask = vec2scores.ops.get_dropout_mask(vector.shape, drop)
+                vector *= mask
             scores, bp_scores = vec2scores.begin_update(vector, drop=drop)
 
             d_scores = self.get_batch_loss(states, golds, scores)
-            d_vector = bp_scores(d_scores, sgd=sgd)
+            d_vector = bp_scores(d_scores / d_scores.shape[0], sgd=sgd)
+            if drop != 0:
+                d_vector *= mask
 
             if isinstance(self.model[0].ops, CupyOps) \
             and not isinstance(token_ids, state2vec.ops.xp.ndarray):
@@ -456,14 +466,50 @@ cdef class Parser:
                 backprops.append((token_ids, d_vector, bp_vector))
             self.transition_batch(states, scores)
             todo = [st for st in todo if not st[0].is_final()]
-            if len(backprops) >= 50:
-                self._make_updates(d_tokvecs,
-                    backprops, sgd, cuda_stream)
-                backprops = []
-        if backprops:
-            self._make_updates(d_tokvecs,
-                backprops, sgd, cuda_stream)
+            if losses is not None:
+                losses[self.name] += (d_scores**2).sum()
+            n_steps += 1
+            if n_steps >= max_steps:
+                break
+        self._make_updates(d_tokvecs,
+            backprops, sgd, cuda_stream)
         return self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
+
+    def _init_gold_batch(self, whole_docs, whole_golds):
+        """Make a square batch, of length equal to the shortest doc. A long
+        doc will get multiple states. Let's say we have a doc of length 2*N,
+        where N is the shortest doc. We'll make two states, one representing
+        long_doc[:N], and another representing long_doc[N:]."""
+        cdef:
+            StateClass state
+            Transition action
+        whole_states = self.moves.init_batch(whole_docs)
+        max_length = max(5, min(50, min([len(doc) for doc in whole_docs])))
+        max_moves = 0
+        states = []
+        golds = []
+        for doc, state, gold in zip(whole_docs, whole_states, whole_golds):
+            gold = self.moves.preprocess_gold(gold)
+            if gold is None:
+                continue
+            oracle_actions = self.moves.get_oracle_sequence(doc, gold)
+            start = 0
+            while start < len(doc):
+                state = state.copy()
+                n_moves = 0
+                while state.B(0) < start and not state.is_final():
+                    action = self.moves.c[oracle_actions.pop(0)]
+                    action.do(state.c, action.label)
+                    n_moves += 1
+                has_gold = self.moves.has_gold(gold, start=start,
+                                               end=start+max_length)
+                if not state.is_final() and has_gold:
+                    states.append(state)
+                    golds.append(gold)
+                    max_moves = max(max_moves, n_moves)
+                start += min(max_length, len(doc)-start)
+            max_moves = max(max_moves, len(oracle_actions))
+        return states, golds, max_moves
 
     def _make_updates(self, d_tokvecs, backprops, sgd, cuda_stream=None):
         # Tells CUDA to block, so our async copies complete.
@@ -480,6 +526,14 @@ cdef class Parser:
             else:
                 xp.add.at(d_tokvecs,
                     ids, d_state_features * active_feats)
+
+    @property
+    def move_names(self):
+        names = []
+        for i in range(self.moves.n_moves):
+            name = self.moves.move_name(self.moves.c[i].move, self.moves.c[i].label)
+            names.append(name)
+        return names
 
     def get_batch_model(self, batch_size, tokvecs, stream, dropout):
         lower, upper = self.model

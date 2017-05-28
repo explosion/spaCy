@@ -5,13 +5,14 @@ include ../../_includes/_mixins
 p Match sequences of tokens, based on pattern rules.
 
 +infobox("⚠️ Deprecation note")
-    |  As of spaCy 2.0, #[code Matcher.add_pattern] and #[code Matcher.add_entity]
-    |  are deprecated and have been replaced with a simpler
-    |  #[+api("matcher#add") #[code Matcher.add]] that lets you add a list of
-    |  patterns and a callback for a given match ID. #[code Matcher.get_entity]
-    |  is now called #[+api("matcher#get") #[code matcher.get]].
-    |  #[code Matcher.load] (not useful, as it didn't allow specifying callbacks),
-    |  and #[code Matcher.has_entity] (now redundant) have been removed.
+    .o-block
+        |  As of spaCy 2.0, #[code Matcher.add_pattern] and #[code Matcher.add_entity]
+        |  are deprecated and have been replaced with a simpler
+        |  #[+api("matcher#add") #[code Matcher.add]] that lets you add a list of
+        |  patterns and a callback for a given match ID. #[code Matcher.get_entity]
+        |  is now called #[+api("matcher#get") #[code matcher.get]].
+        |  #[code Matcher.load] (not useful, as it didn't allow specifying callbacks),
+        |  and #[code Matcher.has_entity] (now redundant) have been removed.
 
 +h(2, "init") Matcher.__init__
     +tag method
@@ -56,17 +57,6 @@ p Find all token sequences matching the supplied patterns on the #[code Doc].
     doc = nlp(u'hello world!')
     matches = matcher(doc)
 
-+infobox("Important note")
-    |  By default, the matcher #[strong does not perform any action] on matches,
-    |  like tagging matched phrases with entity types. Instead, actions need to
-    |  be specified when #[strong adding patterns or entities], by
-    |  passing in a callback function as the #[code on_match] argument on
-    |  #[+api("matcher#add") #[code add]]. This allows you to define custom
-    |  actions per pattern within the same matcher. For example, you might only
-    |  want to merge some entity types, and set custom flags for other matched
-    |  patterns. For more details and examples, see the usage workflow on
-    |  #[+a("/docs/usage/rule-based-matching") rule-based matching].
-
 +table(["Name", "Type", "Description"])
     +row
         +cell #[code doc]
@@ -80,6 +70,17 @@ p Find all token sequences matching the supplied patterns on the #[code Doc].
             |  A list of #[code (match_id, start, end)] tuples, describing the
             |  matches. A match tuple describes a span #[code doc[start:end]].
             |  The #[code match_id] is the ID of the added match pattern.
+
++infobox("Important note")
+    |  By default, the matcher #[strong does not perform any action] on matches,
+    |  like tagging matched phrases with entity types. Instead, actions need to
+    |  be specified when #[strong adding patterns or entities], by
+    |  passing in a callback function as the #[code on_match] argument on
+    |  #[+api("matcher#add") #[code add]]. This allows you to define custom
+    |  actions per pattern within the same matcher. For example, you might only
+    |  want to merge some entity types, and set custom flags for other matched
+    |  patterns. For more details and examples, see the usage workflow on
+    |  #[+a("/docs/usage/rule-based-matching") rule-based matching].
 
 +h(2, "pipe") Matcher.pipe
     +tag method
@@ -118,6 +119,7 @@ p Match a stream of documents, yielding them in turn.
 
 +h(2, "len") Matcher.__len__
     +tag method
+    +tag-new(2)
 
 p
     |  Get the number of rules added to the matcher. Note that this only returns
@@ -138,6 +140,7 @@ p
 
 +h(2, "contains") Matcher.__contains__
     +tag method
+    +tag-new(2)
 
 p Check whether the matcher contains rules for a match ID.
 
@@ -159,6 +162,7 @@ p Check whether the matcher contains rules for a match ID.
 
 +h(2, "add") Matcher.add
     +tag method
+    +tag-new(2)
 
 p
     |  Add a rule to the matcher, consisting of an ID key, one or more patterns, and
@@ -198,8 +202,23 @@ p
             |  Match pattern. A pattern consists of a list of dicts, where each
             |  dict describes a token.
 
++infobox("⚠️ Deprecation note")
+    .o-block
+        |  As of spaCy 2.0, #[code Matcher.add_pattern] and #[code Matcher.add_entity]
+        |  are deprecated and have been replaced with a simpler
+        |  #[+api("matcher#add") #[code Matcher.add]] that lets you add a list of
+        |  patterns and a callback for a given match ID.
+
+    +code-new.
+        matcher.add('GoogleNow', merge_phrases, [{ORTH: 'Google'}, {ORTH: 'Now'}])
+
+    +code-old.
+        matcher.add_entity('GoogleNow', on_match=merge_phrases)
+        matcher.add_pattern('GoogleNow', [{ORTH: 'Google'}, {ORTH: 'Now'}])
+
 +h(2, "remove") Matcher.remove
     +tag method
+    +tag-new(2)
 
 p
     |  Remove a rule from the matcher. A #[code KeyError] is raised if the match
@@ -219,6 +238,7 @@ p
 
 +h(2, "get") Matcher.get
     +tag method
+    +tag-new(2)
 
 p
     |  Retrieve the pattern stored for a key. Returns the rule as an

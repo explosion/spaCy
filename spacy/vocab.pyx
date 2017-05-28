@@ -44,8 +44,6 @@ cdef class Vocab:
             vice versa.
         RETURNS (Vocab): The newly constructed vocab object.
         """
-        util.check_renamed_kwargs({'get_lex_attr': 'lex_attr_getters'}, deprecated_kwargs)
-
         lex_attr_getters = lex_attr_getters if lex_attr_getters is not None else {}
         tag_map = tag_map if tag_map is not None else {}
         if lemmatizer in (None, True, False):

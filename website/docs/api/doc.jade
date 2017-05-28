@@ -253,6 +253,47 @@ p
         +cell #[code Doc]
         +cell Itself.
 
++h(2, "to_disk") Doc.to_disk
+    +tag method
+    +tag-new(2)
+
+p Save the current state to a directory.
+
++aside-code("Example").
+    doc.to_disk('/path/to/doc')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory, which will be created if it doesn't exist.
+            |  Paths may be either strings or #[code Path]-like objects.
+
++h(2, "from_disk") Doc.from_disk
+    +tag method
+    +tag-new(2)
+
+p Loads state from a directory. Modifies the object in place and returns it.
+
++aside-code("Example").
+    from spacy.tokens import Doc
+    from spacy.vocab import Vocab
+    doc = Doc(Vocab()).from_disk('/path/to/doc')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory. Paths may be either strings or
+            |  #[code Path]-like objects.
+
+    +footrow
+        +cell returns
+        +cell #[code Doc]
+        +cell The modified #[code Doc] object.
+
 +h(2, "to_bytes") Doc.to_bytes
     +tag method
 

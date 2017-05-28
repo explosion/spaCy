@@ -78,25 +78,84 @@ def ensure_path(path):
         return path
 
 
-def resolve_model_path(name):
-    """Resolve a model name or string to a model path.
+def load_model(name):
+    """Load a model from a shortcut link, package or data path.
 
     name (unicode): Package name, shortcut link or model path.
-    RETURNS (Path): Path to model data directory.
+    RETURNS (Language): `Language` class with the loaded model.
     """
     data_path = get_data_path()
     if not data_path or not data_path.exists():
         raise IOError("Can't find spaCy data path: %s" % path2str(data_path))
     if isinstance(name, basestring_):
-        if (data_path / name).exists(): # in data dir or shortcut link
-            return (data_path / name)
-        if is_package(name): # installed as a package
-            return get_model_package_path(name)
-        if Path(name).exists(): # path to model
-            return Path(name)
-    elif hasattr(name, 'exists'): # Path or Path-like object
-        return name
+        if (data_path / name).exists(): # in data dir or shortcut
+            return load_model_from_path(data_path / name)
+        if is_package(name): # installed as package
+            return load_model_from_pkg(name)
+        if Path(name).exists(): # path to model data directory
+            return load_data_from_path(Path(name))
+    elif hasattr(name, 'exists'): # Path or Path-like to model data
+        return load_data_from_path(name)
     raise IOError("Can't find model '%s'" % name)
+
+
+def load_model_from_init_py(init_file):
+    """Helper function to use in the `load()` method of a model package's
+    __init__.py.
+
+    init_file (unicode): Path to model's __init__.py, i.e. `__file__`.
+    RETURNS (Language): `Language` class with loaded model.
+    """
+    model_path = Path(init_file).parent
+    return load_data_from_path(model_path, package=True)
+
+
+def load_model_from_path(model_path):
+    """Import and load a model package from its file path.
+
+    path (unicode or Path): Path to package directory.
+    RETURNS (Language): `Language` class with loaded model.
+    """
+    model_path = ensure_path(model_path)
+    spec = importlib.util.spec_from_file_location('model', model_path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.load()
+
+
+def load_model_from_pkg(name):
+    """Import and load a model package.
+
+    name (unicode): Name of model package installed via pip.
+    RETURNS (Language): `Language` class with loaded model.
+    """
+    module = importlib.import_module(name)
+    return module.load()
+
+
+def load_data_from_path(model_path, package=False):
+    """Initialie a `Language` class with a loaded model from a model data path.
+
+    model_path (unicode or Path): Path to model data directory.
+    package (bool): Does the path point to the parent package directory?
+    RETURNS (Language): `Language` class with loaded model.
+    """
+    model_path = ensure_path(model_path)
+    meta_path = model_path / 'meta.json'
+    if not meta_path.is_file():
+        raise IOError("Could not read meta.json from %s" % location)
+    meta = read_json(location)
+    for setting in ['lang', 'name', 'version']:
+        if setting not in meta:
+            raise IOError('No %s setting found in model meta.json' % setting)
+    if package:
+        model_data_path = '%s_%s-%s' % (meta['lang'], meta['name'], meta['version'])
+        model_path = model_path / model_data_path
+    if not model_path.exists():
+        raise ValueError("Can't find model directory: %s" % path2str(model_path))
+    cls = get_lang_class(meta['lang'])
+    nlp = cls(pipeline=meta.get('pipeline', True))
+    return nlp.from_disk(model_path)
 
 
 def is_package(name):
@@ -112,36 +171,16 @@ def is_package(name):
     return False
 
 
-def get_model_package_path(package_name):
-    """Get path to a model package installed via pip.
+def get_package_path(name):
+    """Get the path to an installed package.
 
-    package_name (unicode): Name of installed package.
-    RETURNS (Path): Path to model data directory.
+    name (unicode): Package name.
+    RETURNS (Path): Path to installed package.
     """
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
-    # Python's installation and import rules are very complicated.
     pkg = importlib.import_module(package_name)
-    package_path = Path(pkg.__file__).parent.parent
-    meta = parse_package_meta(package_path / package_name)
-    model_name = '%s-%s' % (package_name, meta['version'])
-    return package_path / package_name / model_name
-
-
-def parse_package_meta(package_path, require=True):
-    """Check if a meta.json exists in a package and return its contents.
-
-    package_path (Path): Path to model package directory.
-    require (bool): If True, raise error if no meta.json is found.
-    RETURNS (dict or None): Model meta.json data or None.
-    """
-    location = package_path / 'meta.json'
-    if location.is_file():
-        return read_json(location)
-    elif require:
-        raise IOError("Could not read meta.json from %s" % location)
-    else:
-        return None
+    return Path(pkg.__file__).parent
 
 
 def is_in_jupyter():
@@ -174,12 +213,16 @@ def get_async(stream, numpy_array):
         array.set(numpy_array, stream=stream)
         return array
 
+
 def itershuffle(iterable, bufsize=1000):
     """Shuffle an iterator. This works by holding `bufsize` items back
-    and yielding them sometime later. Obviously, this is not unbiased --
+    and yielding them sometime later. Obviously, this is not unbiased –
     but should be good enough for batching. Larger bufsize means less bias.
-
     From https://gist.github.com/andres-erbsen/1307752
+
+    iterable (iterable): Iterator to shuffle.
+    bufsize (int): Items to hold back.
+    YIELDS (iterable): The shuffled iterator.
     """
     iterable = iter(iterable)
     buf = []
@@ -313,10 +356,33 @@ def normalize_slice(length, start, stop, step=None):
     return start, stop
 
 
-def check_renamed_kwargs(renamed, kwargs):
-    for old, new in renamed.items():
-        if old in kwargs:
-            raise TypeError("Keyword argument %s now renamed to %s" % (old, new))
+def compounding(start, stop, compound):
+    """Yield an infinite series of compounding values. Each time the
+    generator is called, a value is produced by multiplying the previous
+    value by the compound rate.
+
+    EXAMPLE:
+      >>> sizes = compounding(1., 10., 1.5)
+      >>> assert next(sizes) == 1.
+      >>> assert next(sizes) == 1 * 1.5
+      >>> assert next(sizes) == 1.5 * 1.5
+    """
+    def clip(value):
+        return max(value, stop) if (start>stop) else min(value, stop)
+    curr = float(start)
+    while True:
+        yield clip(curr)
+        curr *= compound
+
+
+def decaying(start, stop, decay):
+    """Yield an infinite series of linearly decaying values."""
+    def clip(value):
+        return max(value, stop) if (start>stop) else min(value, stop)
+    nr_upd = 1.
+    while True:
+        yield clip(start * 1./(1. + decay * nr_upd))
+        nr_upd += 1
 
 
 def read_json(location):

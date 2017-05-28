@@ -9,6 +9,7 @@ import ctypes
 from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
 from cymem.cymem cimport Pool
+from collections import OrderedDict
 
 from .stateclass cimport StateClass
 from ._state cimport StateC, is_space_token
@@ -310,12 +311,13 @@ cdef class ArcEager(TransitionSystem):
     @classmethod
     def get_actions(cls, **kwargs):
         actions = kwargs.get('actions',
-                    {
-                        SHIFT: [''],
-                        REDUCE: [''],
-                        RIGHT: [],
-                        LEFT: [],
-                        BREAK: ['ROOT']})
+                    OrderedDict((
+                        (SHIFT, ['']),
+                        (REDUCE, ['']),
+                        (RIGHT, []),
+                        (LEFT, []),
+                        (BREAK, ['ROOT'])
+                    )))
         seen_actions = set()
         for label in kwargs.get('left_labels', []):
             if label.upper() != 'ROOT':
@@ -348,8 +350,15 @@ cdef class ArcEager(TransitionSystem):
         def __get__(self):
             return (SHIFT, REDUCE, LEFT, RIGHT, BREAK)
 
+    def has_gold(self, GoldParse gold, start=0, end=None):
+        end = end or len(gold.heads)
+        if all([tag is None for tag in gold.heads[start:end]]):
+            return False
+        else:
+            return True
+
     def preprocess_gold(self, GoldParse gold):
-        if all([h is None for h in gold.heads]):
+        if not self.has_gold(gold):
             return None
         for i in range(gold.length):
             if gold.heads[i] is None: # Missing values

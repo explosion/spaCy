@@ -43,7 +43,7 @@ class TokenVectorEncoder(object):
     name = 'tok2vec'
 
     @classmethod
-    def Model(cls, width=128, embed_size=5000, **cfg):
+    def Model(cls, width=128, embed_size=7500, **cfg):
         """Create a new statistical model for the class.
 
         width (int): Output size of the model.
@@ -119,7 +119,7 @@ class TokenVectorEncoder(object):
             assert tokvecs.shape[0] == len(doc)
             doc.tensor = tokvecs
 
-    def update(self, docs, golds, state=None, drop=0., sgd=None):
+    def update(self, docs, golds, state=None, drop=0., sgd=None, losses=None):
         """Update the model.
 
         docs (iterable): A batch of `Doc` objects.
@@ -199,7 +199,7 @@ class NeuralTagger(object):
                 vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
                 idx += 1
 
-    def update(self, docs_tokvecs, golds, drop=0., sgd=None):
+    def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
         docs, tokvecs = docs_tokvecs
 
         if self.model.nI is None:
@@ -228,6 +228,7 @@ class NeuralTagger(object):
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype='i')
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
+        d_scores /= d_scores.shape[0]
         loss = (d_scores**2).sum()
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
@@ -248,7 +249,8 @@ class NeuralTagger(object):
                                       vocab.morphology.lemmatizer)
         token_vector_width = pipeline[0].model.nO
         self.model = with_flatten(
-            Softmax(self.vocab.morphology.n_tags, token_vector_width))
+            chain(Maxout(token_vector_width, token_vector_width),
+                  Softmax(self.vocab.morphology.n_tags, token_vector_width)))
 
     def use_params(self, params):
         with self.model.use_params(params):
@@ -274,7 +276,8 @@ class NeuralLabeller(NeuralTagger):
                         self.labels[dep] = len(self.labels)
         token_vector_width = pipeline[0].model.nO
         self.model = with_flatten(
-            Softmax(len(self.labels), token_vector_width))
+            chain(Maxout(token_vector_width, token_vector_width),
+                  Softmax(len(self.labels), token_vector_width)))
 
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
@@ -290,6 +293,7 @@ class NeuralLabeller(NeuralTagger):
                 idx += 1
         correct = self.model.ops.xp.array(correct, dtype='i')
         d_scores = scores - to_categorical(correct, nb_classes=scores.shape[1])
+        d_scores /= d_scores.shape[0]
         loss = (d_scores**2).sum()
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
@@ -333,12 +337,19 @@ cdef class NeuralDependencyParser(NeuralParser):
     name = 'parser'
     TransitionSystem = ArcEager
 
+    def __reduce__(self):
+        return (NeuralDependencyParser, (self.vocab, self.moves, self.model), None, None)
+
 
 cdef class NeuralEntityRecognizer(NeuralParser):
     name = 'entity'
     TransitionSystem = BiluoPushDown
 
     nr_feature = 6
+
+    def __reduce__(self):
+        return (NeuralEntityRecognizer, (self.vocab, self.moves, self.model), None, None)
+
 
 
 cdef class BeamDependencyParser(BeamParser):

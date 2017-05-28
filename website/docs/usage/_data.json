@@ -3,28 +3,25 @@
         "Get started": {
             "Installation": "./",
             "Models": "models",
+            "spaCy 101": "spacy-101",
             "Lightning tour": "lightning-tour",
-            "Visualizers": "visualizers",
-            "Troubleshooting": "troubleshooting",
             "What's new in v2.0": "v2"
         },
-        "Workflows": {
-            "spaCy 101": "spacy-101",
-            "Loading the pipeline": "language-processing-pipeline",
-            "Processing text": "processing-text",
-            "spaCy's data model": "data-model",
+        "Guides": {
             "POS tagging": "pos-tagging",
             "Using the parse": "dependency-parse",
             "Entity recognition": "entity-recognition",
-            "Custom pipelines": "customizing-pipeline",
-            "Rule-based matching": "rule-based-matching",
             "Word vectors": "word-vectors-similarities",
-            "Deep learning": "deep-learning",
             "Custom tokenization": "customizing-tokenizer",
+            "Rule-based matching": "rule-based-matching",
             "Adding languages": "adding-languages",
+            "Processing pipelines": "language-processing-pipeline",
+            "Deep learning": "deep-learning",
+            "Production use": "production-use",
             "Training": "training",
             "Training NER": "training-ner",
-            "Saving & loading": "saving-loading"
+            "Saving & loading": "saving-loading",
+            "Visualizers": "visualizers"
         },
         "Examples": {
             "Tutorials": "tutorials",
@@ -38,55 +35,33 @@
         "quickstart": true
     },
 
-    "v2": {
-        "title": "What's new in v2.0"
-    },
-
     "models": {
         "title": "Models",
-        "next": "lightning-tour",
+        "next": "spacy-101",
         "quickstart": true
+    },
+
+    "spacy-101": {
+        "title": "spaCy 101",
+        "next": "lightning-tour"
     },
 
     "lightning-tour": {
         "title": "Lightning tour",
-        "next": "spacy-101"
+        "next": "v2"
     },
 
     "visualizers": {
         "title": "Visualizers"
     },
 
-    "troubleshooting": {
-        "title": "Troubleshooting",
-        "next": "resources"
+    "v2": {
+        "title": "What's new in v2.0"
     },
 
-    "resources": {
-        "title": "Resources"
-    },
-
-    "spacy-101": {
-        "title": "spaCy 101"
-    },
-
-    "language-processing-pipeline": {
-        "title": "Loading a language processing pipeline",
-        "next": "processing-text"
-    },
-
-    "customizing-pipeline": {
-        "title": "Customizing the pipeline",
-        "next": "customizing-tokenizer"
-    },
-
-    "processing-text": {
-        "title": "Processing text",
-        "next": "data-model"
-    },
-
-    "data-model": {
-        "title": "Understanding spaCy's data model"
+    "pos-tagging": {
+        "title": "Part-of-speech tagging",
+        "next": "dependency-parse"
     },
 
     "dependency-parse": {
@@ -95,25 +70,43 @@
     },
 
     "entity-recognition": {
-        "title": "Entity recognition",
+        "title": "Named Entity Recognition",
+        "next": "training-ner"
+    },
+
+    "word-vectors-similarities": {
+        "title": "Using word vectors and semantic similarities",
+        "next": "customizing-tokenizer"
+    },
+
+    "customizing-tokenizer": {
+        "title": "Customising the tokenizer",
         "next": "rule-based-matching"
     },
 
     "rule-based-matching": {
-        "title": "Rule-based matching"
+        "title": "Rule-based matching",
+        "next": "adding-languages"
     },
 
-    "word-vectors-similarities": {
-        "title": "Using word vectors and semantic similarities"
+    "adding-languages": {
+        "title": "Adding languages",
+        "next": "training"
+    },
+
+    "language-processing-pipeline": {
+        "title": "Language processing pipelines",
+        "next": "deep-learning"
     },
 
     "deep-learning": {
-        "title": "Hooking a deep learning model into spaCy"
+        "title": "Hooking a deep learning model into spaCy",
+        "next": "production use"
     },
 
-    "customizing-tokenizer": {
-        "title": "Customizing the tokenizer",
-        "next": "adding-languages"
+    "production-use": {
+        "title": "Production use",
+        "next": "training"
     },
 
     "training": {
@@ -127,17 +120,7 @@
     },
 
     "saving-loading": {
-        "title": "Saving and loading models"
-    },
-
-    "pos-tagging": {
-        "title": "Part-of-speech tagging",
-        "next": "dependency-parse"
-    },
-
-    "adding-languages": {
-        "title": "Adding languages",
-        "next": "training"
+        "title": "Saving, loading and data serialization"
     },
 
     "showcase": {

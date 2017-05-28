@@ -14,14 +14,20 @@ from .. import util
     model=("optional: shortcut link of model", "positional", None, str),
     markdown=("generate Markdown for GitHub issues", "flag", "md", str)
 )
-def info(model=None, markdown=False):
+def info(cmd, model=None, markdown=False):
     """Print info about spaCy installation. If a model shortcut link is
     speficied as an argument, print model information. Flag --markdown
     prints details in Markdown for easy copy-pasting to GitHub issues.
     """
     if model:
-        model_path = util.resolve_model_path(model)
-        meta = util.parse_package_meta(model_path)
+        if util.is_package(model):
+            model_path = util.get_package_path(model)
+        else:
+            model_path = util.get_data_path() / model
+        meta_path = model_path / 'meta.json'
+        if not meta_path.is_file():
+            prints(meta_path, title="Can't find model meta.json", exits=1)
+        meta = read_json(meta_path)
         if model_path.resolve() != model_path:
             meta['link'] = path2str(model_path)
             meta['source'] = path2str(model_path.resolve())

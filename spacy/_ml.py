@@ -19,6 +19,8 @@ import numpy
 
 
 def _init_for_precomputed(W, ops):
+    if (W**2).sum() != 0.:
+        return
     reshaped = W.reshape((W.shape[1], W.shape[0] * W.shape[2]))
     ops.xavier_uniform_init(reshaped)
     W[:] = reshaped.reshape(W.shape)
@@ -86,10 +88,10 @@ class PrecomputableAffine(Model):
     d_b=Gradient("b")
 )
 class PrecomputableMaxouts(Model):
-    def __init__(self, nO=None, nI=None, nF=None, pieces=3, **kwargs):
+    def __init__(self, nO=None, nI=None, nF=None, nP=3, **kwargs):
         Model.__init__(self, **kwargs)
         self.nO = nO
-        self.nP = pieces
+        self.nP = nP
         self.nI = nI
         self.nF = nF
 
@@ -246,6 +248,7 @@ def doc2feats(cols=None):
     model = layerize(forward)
     model.cols = cols
     return model
+
 
 def print_shape(prefix):
     def forward(X, drop=0.):

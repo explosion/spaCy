@@ -6,6 +6,7 @@ import io
 import re
 import ujson
 import random
+import cytoolz
 
 from .syntax import nonproj
 from .util import ensure_path
@@ -141,6 +142,19 @@ def _min_edit_path(cand_words, gold_words):
     return prev_costs[n_gold], previous_row[-1]
 
 
+def minibatch(items, size=8):
+    '''Iterate over batches of items. `size` may be an iterator,
+    so that batch-size can vary on each step.
+    '''
+    items = iter(items)
+    while True:
+        batch_size = next(size) #if hasattr(size, '__next__') else size
+        batch = list(cytoolz.take(int(batch_size), items))
+        if len(batch) == 0:
+            break
+        yield list(batch)
+
+
 class GoldCorpus(object):
     """An annotated corpus, using the JSON file format. Manages
     annotations for tagging, dependency parsing and NER."""
@@ -184,15 +198,15 @@ class GoldCorpus(object):
             n += 1
         return n
 
-    def train_docs(self, nlp, shuffle=0, gold_preproc=False,
-                   projectivize=False):
+    def train_docs(self, nlp, gold_preproc=False,
+                   projectivize=False, max_length=None):
         train_tuples = self.train_tuples
         if projectivize:
             train_tuples = nonproj.preprocess_training_data(
                                self.train_tuples)
-        if shuffle:
-            random.shuffle(train_tuples)
-        gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc)
+        random.shuffle(train_tuples)
+        gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
+                                        max_length=max_length)
         yield from gold_docs
 
     def dev_docs(self, nlp, gold_preproc=False):
@@ -201,7 +215,7 @@ class GoldCorpus(object):
         yield from gold_docs
 
     @classmethod
-    def iter_gold_docs(cls, nlp, tuples, gold_preproc):
+    def iter_gold_docs(cls, nlp, tuples, gold_preproc, max_length=None):
         for raw_text, paragraph_tuples in tuples:
             if gold_preproc:
                 raw_text = None
@@ -212,7 +226,8 @@ class GoldCorpus(object):
                                   gold_preproc)
             golds = cls._make_golds(docs, paragraph_tuples)
             for doc, gold in zip(docs, golds):
-                yield doc, gold
+                if not max_length or len(doc) < max_length:
+                    yield doc, gold
 
     @classmethod
     def _make_docs(cls, nlp, raw_text, paragraph_tuples, gold_preproc):
@@ -291,7 +306,7 @@ def read_json_file(loc, docs_filter=None, limit=None):
                     yield [paragraph.get('raw', None), sents]
 
 
-def _iob_to_biluo(tags):
+def iob_to_biluo(tags):
     out = []
     curr_label = None
     tags = list(tags)
@@ -396,7 +411,10 @@ cdef class GoldParse:
             else:
                 self.words[i] = words[gold_i]
                 self.tags[i] = tags[gold_i]
-                self.heads[i] = self.gold_to_cand[heads[gold_i]]
+                if heads[gold_i] is None:
+                    self.heads[i] = None
+                else:
+                    self.heads[i] = self.gold_to_cand[heads[gold_i]]
                 self.labels[i] = deps[gold_i]
                 self.ner[i] = entities[gold_i]
 

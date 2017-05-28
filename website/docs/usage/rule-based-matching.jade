@@ -11,7 +11,7 @@ p
     |  You can also associate patterns with entity IDs, to allow some basic
     |  entity linking or disambiguation.
 
-+aside("What about \"real\" regular expressions?")
+//-+aside("What about \"real\" regular expressions?")
 
 +h(2, "adding-patterns") Adding patterns
 
@@ -119,7 +119,7 @@ p
 +code.
     # Add a new custom flag to the vocab, which is always False by default.
     # BAD_HTML_FLAG will be the flag ID, which we can use to set it to True on the span.
-    BAD_HTML_FLAG = doc.vocab.add_flag(lambda text: False)
+    BAD_HTML_FLAG = nlp.vocab.add_flag(lambda text: False)
 
     def merge_and_flag(matcher, doc, i, matches):
         match_id, start, end = matches[i]
@@ -221,7 +221,7 @@ p
         +cell match 0 or 1 times
         +cell optional, max one
 
-+h(3, "quantifiers-example1") Quantifiers example: Using linguistic annotations
++h(2, "example1") Example: Using linguistic annotations
 
 p
     |  Let's say you're analysing user comments and you want to find out what
@@ -283,7 +283,7 @@ p
     # set manual=True to make displaCy render straight from a dictionary
     displacy.serve(matched_sents, style='ent', manual=True)
 
-+h(3, "quantifiers-example2") Quantifiers example: Phone numbers
++h(2, "example2") Example: Phone numbers
 
 p
     |  Phone numbers can have many different formats and matching them is often
@@ -320,3 +320,114 @@ p
     |  It'll produce more predictable results, is much easier to modify and
     |  extend, and doesn't require any training data – only a set of
     |  test cases.
+
++h(2, "example3") Example: Hashtags and emoji on social media
+
+p
+    |  Social media posts, especially tweets, can be difficult to work with.
+    |  They're very short and often contain various emoji and hashtags. By only
+    |  looking at the plain text, you'll lose a lot of valuable semantic
+    |  information.
+
+p
+    |  Let's say you've extracted a large sample of social media posts on a
+    |  specific topic, for example posts mentioning a brand name or product.
+    |  As the first step of your data exploration, you want to filter out posts
+    |  containing certain emoji and use them to assign a general sentiment
+    |  score, based on whether the expressed emotion is positive or negative,
+    |  e.g. #[span.o-icon.o-icon--inline 😀] or #[span.o-icon.o-icon--inline 😞].
+    |  You also want to find, merge and label hashtags like
+    |  #[code #MondayMotivation], to be able to ignore or analyse them later.
+
++aside("Note on sentiment analysis")
+    |  Ultimately, sentiment analysis is not always #[em that] easy. In
+    |  addition to the emoji, you'll also want to take specific words into
+    |  account and check the #[code subtree] for intensifiers like "very", to
+    |  increase the sentiment score. At some point, you might also want to train
+    |  a sentiment model. However, the approach described in this example is
+    |  very useful for #[strong bootstrapping rules to collect training data].
+    |  It's also an incredibly fast way to gather first insights into your data
+    |  – with about 1 million tweets, you'd be looking at a processing time of
+    |  #[strong under 1 minute].
+
+p
+    |  By default, spaCy's tokenizer will split emoji into separate tokens. This
+    |  means that you can create a pattern for one or more emoji tokens. In this
+    |  case, a sequence of identical emoji should be treated as one instance.
+    |  Valid hashtags usually consist of a #[code #], plus a sequence of
+    |  ASCII characters with no whitespace, making them easy to match as well.
+
++code.
+    from spacy.lang.en import English
+    from spacy.matcher import Matcher
+
+    nlp = English() # we only want the tokenizer, so no need to load a model
+    matcher = Matcher(nlp.vocab)
+
+    pos_emoji = [u'😀', u'😃', u'😂', u'🤣', u'😊', u'😍'] # positive emoji
+    neg_emoji = [u'😞', u'😠', u'😩', u'😢', u'😭', u'😒'] # negative emoji
+
+    # add patterns to match one or more emoji tokens
+    pos_patterns = [[{'ORTH': emoji, 'OP': '+'}] for emoji in pos_emoji]
+    neg_patterns = [[{'ORTH': emoji, 'OP': '+'}] for emoji in neg_emoji]
+
+    matcher.add('HAPPY', label_sentiment, *pos_patterns) # add positive pattern
+    matcher.add('SAD', label_sentiment, *neg_patterns) # add negative pattern
+
+    # add pattern to merge valid hashtag, i.e. '#' plus any ASCII token
+    matcher.add('HASHTAG', merge_hashtag, [{'ORTH': '#'}, {'IS_ASCII': True}])
+
+p
+    |  Because the #[code on_match] callback receives the ID of each match, you
+    |  can use the same function to handle the sentiment assignment for both
+    |  the positive and negative pattern. To keep it simple, we'll either add
+    |  or subtract #[code 0.1] points – this way, the score will also reflect
+    |  combinations of emoji, even positive #[em and] negative ones.
+
+p
+    |  With a library like
+    |  #[+a("https://github.com/bcongdon/python-emojipedia") Emojipedia],
+    |  we can also retrieve a short description for each emoji – for example,
+    |  #[span.o-icon.o-icon--inline 😍]'s official title is "Smiling Face With
+    |  Heart-Eyes". Assigning it to the merged token's norm will make it
+    |  available as #[code token.norm_].
+
++code.
+    from emojipedia import Emojipedia # installation: pip install emojipedia
+
+    def label_sentiment(matcher, doc, i, matches):
+        match_id, start, end = matches[i]
+        if match_id is 'HAPPY':
+            doc.sentiment += 0.1 # add 0.1 for positive sentiment
+        elif match_id is 'SAD':
+            doc.sentiment -= 0.1 # subtract 0.1 for negative sentiment
+        span = doc[start : end]
+        emoji = Emojipedia.search(span[0].text) # get data for emoji
+        span.merge(norm=emoji.title) # merge span and set NORM to emoji title
+
+p
+    |  To label the hashtags, we first need to add a new custom flag.
+    |  #[code IS_HASHTAG] will be the flag's ID, which you can use to assign it
+    |  to the hashtag's span, and check its value via a token's
+    |  #[+api("token#check_flag") #[code code check_flag()]] method. On each
+    |  match, we merge the hashtag and assign the flag.
+
++code.
+    # Add a new custom flag to the vocab, which is always False by default
+    IS_HASHTAG = nlp.vocab.add_flag(lambda text: False)
+
+    def merge_hashtag(matcher, doc, i, matches):
+        match_id, start, end = matches[i]
+        span = doc[start : end]
+        span.merge() # merge hashtag
+        span.set_flag(IS_HASHTAG, True) # set IS_HASHTAG to True
+
+p
+    |  To process a stream of social media posts, we can use
+    |  #[+api("language#pipe") #[code Language.pipe()]], which will return a
+    |  stream of #[code Doc] objects that we can pass to
+    |  #[+api("matcher#pipe") #[code Matcher.pipe()]].
+
++code.
+    docs = nlp.pipe(LOTS_OF_TWEETS)
+    matches = matcher.pipe(docs)
