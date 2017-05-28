@@ -150,6 +150,6 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
         else:
             int_key = IDS[name.upper()]
         if strings_map is not None and isinstance(value, basestring):
-            value = strings_map[value]
+            value = strings_map.add(value)
         inty_attrs[int_key] = value
     return inty_attrs

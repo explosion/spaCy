@@ -35,7 +35,7 @@ cdef class Lexeme:
     @staticmethod
     cdef inline void c_from_bytes(LexemeC* lex, SerializedLexemeC lex_data) nogil:
         buff = <unsigned char*>&lex.flags
-        end = <unsigned char*>&lex.l2_norm + sizeof(lex.l2_norm)
+        end = <unsigned char*>&lex.sentiment + sizeof(lex.sentiment)
         for i in range(sizeof(lex_data.data)):
             buff[i] = lex_data.data[i]
 

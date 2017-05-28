@@ -48,7 +48,7 @@ cdef class Morphology:
             self.tag_map[tag_str] = dict(attrs)
             attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
             self.rich_tags[i].id = i
-            self.rich_tags[i].name = self.strings[tag_str]
+            self.rich_tags[i].name = self.strings.add(tag_str)
             self.rich_tags[i].morph = 0
             self.rich_tags[i].pos = attrs[POS]
             self.reverse_index[self.rich_tags[i].name] = i
@@ -59,10 +59,12 @@ cdef class Morphology:
 
     cdef int assign_tag(self, TokenC* token, tag) except -1:
         if isinstance(tag, basestring):
-            tag_id = self.reverse_index[self.strings[tag]]
-        else:
+            tag = self.strings.add(tag)
+        if tag in self.reverse_index:
             tag_id = self.reverse_index[tag]
-        self.assign_tag_id(token, tag_id)
+            self.assign_tag_id(token, tag_id)
+        else:
+            token.tag = tag
 
     cdef int assign_tag_id(self, TokenC* token, int tag_id) except -1:
         if tag_id >= self.n_tags:
@@ -73,7 +75,7 @@ cdef class Morphology:
         # the statistical model fails.
         # Related to Issue #220
         if Lexeme.c_check_flag(token.lex, IS_SPACE):
-            tag_id = self.reverse_index[self.strings['SP']]
+            tag_id = self.reverse_index[self.strings.add('SP')]
         rich_tag = self.rich_tags[tag_id]
         analysis = <MorphAnalysisC*>self._cache.get(tag_id, token.lex.orth)
         if analysis is NULL:
@@ -104,7 +106,7 @@ cdef class Morphology:
             tag (unicode): The part-of-speech tag to key the exception.
             orth (unicode): The word-form to key the exception.
         """
-        tag = self.strings[tag_str]
+        tag = self.strings.add(tag_str)
         tag_id = self.reverse_index[tag]
         orth = self.strings[orth_str]
         cdef RichTagC rich_tag = self.rich_tags[tag_id]
@@ -140,9 +142,9 @@ cdef class Morphology:
     def lemmatize(self, const univ_pos_t univ_pos, attr_t orth, morphology):
         cdef unicode py_string = self.strings[orth]
         if self.lemmatizer is None:
-            return self.strings[py_string.lower()]
+            return self.strings.add(py_string.lower())
         if univ_pos not in (NOUN, VERB, ADJ, PUNCT):
-            return self.strings[py_string.lower()]
+            return self.strings.add(py_string.lower())
         cdef set lemma_strings
         cdef unicode lemma_string
         lemma_strings = self.lemmatizer(py_string, univ_pos, morphology)

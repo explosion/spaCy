@@ -1,13 +1,14 @@
 from cymem.cymem cimport Pool
 
 from .structs cimport TokenC
+from .typedefs cimport attr_t
 from .syntax.transition_system cimport Transition
 
 
 cdef struct GoldParseC:
     int* tags
     int* heads
-    int* labels
+    attr_t* labels
     int** brackets
     Transition* ner
 

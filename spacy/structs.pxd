@@ -23,7 +23,6 @@ cdef struct LexemeC:
 
     float prob
     float sentiment
-    float l2_norm
 
 
 cdef struct SerializedLexemeC:
@@ -48,7 +47,7 @@ cdef struct Entity:
     hash_t id
     int start
     int end
-    int label
+    attr_t label
 
 
 cdef struct TokenC:
@@ -56,10 +55,10 @@ cdef struct TokenC:
     uint64_t morph
     univ_pos_t pos
     bint spacy
-    int tag
+    attr_t tag
     int idx
     attr_t lemma
-    int sense
+    attr_t sense
     int head
     attr_t dep
     bint sent_start
@@ -70,5 +69,5 @@ cdef struct TokenC:
     uint32_t r_edge
 
     int ent_iob
-    int ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
+    attr_t ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
     hash_t ent_id

@@ -99,7 +99,7 @@ cdef bint arc_is_gold(const GoldParseC* gold, int head, int child) nogil:
         return False
 
 
-cdef bint label_is_gold(const GoldParseC* gold, int head, int child, int label) nogil:
+cdef bint label_is_gold(const GoldParseC* gold, int head, int child, attr_t label) nogil:
     if gold.labels[child] == -1:
         return True
     elif label == -1:
@@ -116,16 +116,16 @@ cdef bint _is_gold_root(const GoldParseC* gold, int word) nogil:
 
 cdef class Shift:
     @staticmethod
-    cdef bint is_valid(const StateC* st, int label) nogil:
+    cdef bint is_valid(const StateC* st, attr_t label) nogil:
         return st.buffer_length() >= 2 and not st.shifted[st.B(0)] and not st.B_(0).sent_start
 
     @staticmethod
-    cdef int transition(StateC* st, int label) nogil:
+    cdef int transition(StateC* st, attr_t label) nogil:
         st.push()
         st.fast_forward()
 
     @staticmethod
-    cdef weight_t cost(StateClass st, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass st, const GoldParseC* gold, attr_t label) nogil:
         return Shift.move_cost(st, gold) + Shift.label_cost(st, gold, label)
 
     @staticmethod
@@ -133,17 +133,17 @@ cdef class Shift:
         return push_cost(s, gold, s.B(0))
 
     @staticmethod
-    cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
         return 0
 
 
 cdef class Reduce:
     @staticmethod
-    cdef bint is_valid(const StateC* st, int label) nogil:
+    cdef bint is_valid(const StateC* st, attr_t label) nogil:
         return st.stack_depth() >= 2
 
     @staticmethod
-    cdef int transition(StateC* st, int label) nogil:
+    cdef int transition(StateC* st, attr_t label) nogil:
         if st.has_head(st.S(0)):
             st.pop()
         else:
@@ -151,7 +151,7 @@ cdef class Reduce:
         st.fast_forward()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
         return Reduce.move_cost(s, gold) + Reduce.label_cost(s, gold, label)
 
     @staticmethod
@@ -170,23 +170,23 @@ cdef class Reduce:
         return cost
 
     @staticmethod
-    cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
         return 0
 
 
 cdef class LeftArc:
     @staticmethod
-    cdef bint is_valid(const StateC* st, int label) nogil:
+    cdef bint is_valid(const StateC* st, attr_t label) nogil:
         return not st.B_(0).sent_start
 
     @staticmethod
-    cdef int transition(StateC* st, int label) nogil:
+    cdef int transition(StateC* st, attr_t label) nogil:
         st.add_arc(st.B(0), st.S(0), label)
         st.pop()
         st.fast_forward()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
         return LeftArc.move_cost(s, gold) + LeftArc.label_cost(s, gold, label)
 
     @staticmethod
@@ -204,23 +204,23 @@ cdef class LeftArc:
             return cost + pop_cost(s, gold, s.S(0)) + arc_cost(s, gold, s.B(0), s.S(0))
 
     @staticmethod
-    cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
         return arc_is_gold(gold, s.B(0), s.S(0)) and not label_is_gold(gold, s.B(0), s.S(0), label)
 
 
 cdef class RightArc:
     @staticmethod
-    cdef bint is_valid(const StateC* st, int label) nogil:
+    cdef bint is_valid(const StateC* st, attr_t label) nogil:
         return not st.B_(0).sent_start
 
     @staticmethod
-    cdef int transition(StateC* st, int label) nogil:
+    cdef int transition(StateC* st, attr_t label) nogil:
         st.add_arc(st.S(0), st.B(0), label)
         st.push()
         st.fast_forward()
 
     @staticmethod
-    cdef inline weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef inline weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
         return RightArc.move_cost(s, gold) + RightArc.label_cost(s, gold, label)
 
     @staticmethod
@@ -233,13 +233,13 @@ cdef class RightArc:
             return push_cost(s, gold, s.B(0)) + arc_cost(s, gold, s.S(0), s.B(0))
 
     @staticmethod
-    cdef weight_t label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t label_cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
         return arc_is_gold(gold, s.S(0), s.B(0)) and not label_is_gold(gold, s.S(0), s.B(0), label)
 
 
 cdef class Break:
     @staticmethod
-    cdef bint is_valid(const StateC* st, int label) nogil:
+    cdef bint is_valid(const StateC* st, attr_t label) nogil:
         cdef int i
         if not USE_BREAK:
             return False
@@ -251,12 +251,12 @@ cdef class Break:
             return True
 
     @staticmethod
-    cdef int transition(StateC* st, int label) nogil:
+    cdef int transition(StateC* st, attr_t label) nogil:
         st.set_break(st.B_(0).l_edge)
         st.fast_forward()
 
     @staticmethod
-    cdef weight_t cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef weight_t cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
         return Break.move_cost(s, gold) + Break.label_cost(s, gold, label)
 
     @staticmethod
@@ -281,7 +281,7 @@ cdef class Break:
             return cost + 1
 
     @staticmethod
-    cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, int label) nogil:
+    cdef inline weight_t label_cost(StateClass s, const GoldParseC* gold, attr_t label) nogil:
         return 0
 
 cdef int _get_root(int word, const GoldParseC* gold) nogil:
@@ -369,7 +369,7 @@ cdef class ArcEager(TransitionSystem):
                 if label.upper() == 'ROOT':
                     label = 'ROOT'
                 gold.c.heads[i] = gold.heads[i]
-                gold.c.labels[i] = self.strings[label]
+                gold.c.labels[i] = self.strings.add(label)
         return gold
 
     cdef Transition lookup_transition(self, object name) except *:
@@ -384,14 +384,14 @@ cdef class ArcEager(TransitionSystem):
             if self.c[i].move == move and self.c[i].label == label:
                 return self.c[i]
 
-    def move_name(self, int move, int label):
+    def move_name(self, int move, attr_t label):
         label_str = self.strings[label]
         if label_str:
             return MOVE_NAMES[move] + '-' + label_str
         else:
             return MOVE_NAMES[move]
 
-    cdef Transition init_transition(self, int clas, int move, int label) except *:
+    cdef Transition init_transition(self, int clas, int move, attr_t label) except *:
         # TODO: Apparent Cython bug here when we try to use the Transition()
         # constructor with the function pointers
         cdef Transition t
@@ -469,7 +469,7 @@ cdef class ArcEager(TransitionSystem):
         label_cost_funcs[RIGHT] = RightArc.label_cost
         label_cost_funcs[BREAK] = Break.label_cost
 
-        cdef int* labels = gold.c.labels
+        cdef attr_t* labels = gold.c.labels
         cdef int* heads = gold.c.heads
 
         n_gold = 0

@@ -204,6 +204,7 @@ def test_doc_api_right_edge(en_tokenizer):
     assert doc[6].right_edge.text == ','
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize('text,vectors', [
     ("apple orange pear", ["apple -1 -1 -1", "orange -1 -1 0", "pear -1 0 -1"])
 ])
