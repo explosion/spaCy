@@ -27,7 +27,7 @@ cdef struct LexemeC:
 
 
 cdef struct SerializedLexemeC:
-    unsigned char[4*13 + 8] data
+    unsigned char[8 + 8*10 + 4 + 4] data
     #    sizeof(flags_t)  # flags
     #    + sizeof(attr_t) # lang
     #    + sizeof(attr_t) # id
@@ -58,10 +58,10 @@ cdef struct TokenC:
     bint spacy
     int tag
     int idx
-    int lemma
+    attr_t lemma
     int sense
     int head
-    int dep
+    attr_t dep
     bint sent_start
 
     uint32_t l_kids

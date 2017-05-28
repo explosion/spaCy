@@ -35,11 +35,11 @@ cdef class Lexeme:
     tag, dependency parse, or lemma (lemmatization depends on the part-of-speech
     tag).
     """
-    def __init__(self, Vocab vocab, int orth):
+    def __init__(self, Vocab vocab, attr_t orth):
         """Create a Lexeme object.
 
         vocab (Vocab): The parent vocabulary
-        orth (int): The orth id of the lexeme.
+        orth (uint64): The orth id of the lexeme.
         Returns (Lexeme): The newly constructd object.
         """
         self.vocab = vocab
@@ -51,7 +51,7 @@ cdef class Lexeme:
         if isinstance(other, Lexeme):
             a = self.orth
             b = other.orth
-        elif isinstance(other, int):
+        elif isinstance(other, long):
             a = self.orth
             b = other
         elif isinstance(other, str):
@@ -109,7 +109,7 @@ cdef class Lexeme:
     def to_bytes(self):
         lex_data = Lexeme.c_to_bytes(self.c)
         start = <const char*>&self.c.flags
-        end = <const char*>&self.c.l2_norm + sizeof(self.c.l2_norm)
+        end = <const char*>&self.c.sentiment + sizeof(self.c.sentiment)
         assert (end-start) == sizeof(lex_data.data), (end-start, sizeof(lex_data.data))
         byte_string = b'\0' * sizeof(lex_data.data)
         byte_chars = <char*>byte_string
@@ -192,31 +192,31 @@ cdef class Lexeme:
 
     property lower:
         def __get__(self): return self.c.lower
-        def __set__(self, int x): self.c.lower = x
+        def __set__(self, attr_t x): self.c.lower = x
 
     property norm:
         def __get__(self): return self.c.norm
-        def __set__(self, int x): self.c.norm = x
+        def __set__(self, attr_t x): self.c.norm = x
 
     property shape:
         def __get__(self): return self.c.shape
-        def __set__(self, int x): self.c.shape = x
+        def __set__(self, attr_t x): self.c.shape = x
 
     property prefix:
         def __get__(self): return self.c.prefix
-        def __set__(self, int x): self.c.prefix = x
+        def __set__(self, attr_t x): self.c.prefix = x
 
     property suffix:
         def __get__(self): return self.c.suffix
-        def __set__(self, int x): self.c.suffix = x
+        def __set__(self, attr_t x): self.c.suffix = x
 
     property cluster:
         def __get__(self): return self.c.cluster
-        def __set__(self, int x): self.c.cluster = x
+        def __set__(self, attr_t x): self.c.cluster = x
 
     property lang:
         def __get__(self): return self.c.lang
-        def __set__(self, int x): self.c.lang = x
+        def __set__(self, attr_t x): self.c.lang = x
 
     property prob:
         def __get__(self): return self.c.prob
@@ -252,7 +252,7 @@ cdef class Lexeme:
 
     property is_oov:
         def __get__(self): return Lexeme.c_check_flag(self.c, IS_OOV)
-        def __set__(self, bint x): Lexeme.c_set_flag(self.c, IS_OOV, x)
+        def __set__(self, attr_t x): Lexeme.c_set_flag(self.c, IS_OOV, x)
 
     property is_stop:
         def __get__(self): return Lexeme.c_check_flag(self.c, IS_STOP)
