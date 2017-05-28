@@ -50,6 +50,28 @@ p
     |  #[strong API:] #[+api("language") #[code Language]]
     |  #[strong Usage:] #[+a("/docs/usage/language-processing-pipeline") Processing text]
 
++h(3, "features-hash-ids") Hash values instead of integer IDs
+
++aside-code("Example").
+    doc = nlp(u'I love coffee')
+    assert doc.vocab.strings[u'coffee'] == 3197928453018144401L
+    assert doc.vocab.strings[3197928453018144401L] == u'coffee'
+
+    doc.vocab.strings.add(u'beer')
+    assert doc.vocab.strings[u'beer'] == 3073001599257881079L
+
+p
+    |  The #[+api("stringstore") #[code StringStore]] now resolves all strings
+    |  to hash values instead of integer IDs. This means that the string-to-int
+    |  mapping #[strong no longer depends on the vocabulary state], making a lot
+    |  of workflows much simpler, especially during training. Unlike integer IDs
+    |  in spaCy v1.x, hash values will #[strong always match] – even across
+    |  models. Strings can now be added explicitly using the new #[+api("stringstore#add") #[code Stringstore.add]] method.
+
++infobox
+    |  #[strong API:] #[+api("stringstore") #[code StringStore]]
+    |  #[strong Usage:] #[+a("/docs/usage/spacy-101#vocab") Vocab, hashes and lexemes 101]
+
 +h(3, "features-serializer") Saving, loading and serialization
 
 +aside-code("Example").
@@ -306,6 +328,17 @@ p
 +code-old.
     nlp.save_to_directory('/model')
     nlp.vocab.dump('/vocab')
+
++h(3, "migrating-strings") Strings and hash values
+
++code-new.
+    nlp.vocab.strings.add(u'coffee')
+    nlp.vocab.strings[u'coffee']       # 3197928453018144401L
+    other_nlp.vocab.strings[u'coffee'] # 3197928453018144401L
+
++code-old.
+    nlp.vocab.strings[u'coffee']       # 3672
+    other_nlp.vocab.strings[u'coffee'] # 40259
 
 +h(3, "migrating-languages") Processing pipelines and language data
 

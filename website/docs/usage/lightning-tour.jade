@@ -68,13 +68,19 @@ p
     |  #[strong API:] #[+api("token") #[code Token]]
     |  #[strong Usage:] #[+a("/docs/usage/pos-tagging") Part-of-speech tagging]
 
-+h(2, "examples-integer-ids") Use integer IDs for any string
++h(2, "examples-hashes") Use hash values for any string
 
 +code.
-    hello_id = nlp.vocab.strings['Hello']
-    hello_str = nlp.vocab.strings[hello_id]
-    assert token.text  == hello_id  == 3125
-    assert token.text == hello_str == 'Hello'
+    doc = nlp(u'I love coffee')
+    coffee_hash = nlp.vocab.strings[u'coffee'] # 3197928453018144401L
+    coffee_text = nlp.vocab.strings[coffee_hash] # 'coffee'
+
+    assert doc[2].orth == coffee_hash == 3197928453018144401L
+    assert doc[2].text == coffee_text == u'coffee'
+
+    doc.vocab.strings.add(u'beer')
+    beer_hash = doc.vocab.strings[u'beer'] # 3073001599257881079L
+    beer_text = doc.vocab.strings[beer_hash] # 'beer'
 
 +h(2, "examples-entities") Recongnise and update named entities
     +tag-model("NER")

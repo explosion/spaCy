@@ -74,9 +74,9 @@ cdef Utf8Str* _allocate(Pool mem, const unsigned char* chars, uint32_t length) e
         assert string.s[0] >= sizeof(string.s) or string.s[0] == 0, string.s[0]
         return string
 
- 
+
 cdef class StringStore:
-    """Lookup strings by 64-bit hash"""
+    """Look up strings by 64-bit hashes."""
     def __init__(self, strings=None, freeze=False):
         """Create the StringStore.
 
@@ -92,9 +92,9 @@ cdef class StringStore:
                 self.add(string)
 
     def __getitem__(self, object string_or_id):
-        """Retrieve a string from a given hash ID, or vice versa.
+        """Retrieve a string from a given hash, or vice versa.
 
-        string_or_id (bytes or unicode or uint64): The value to encode.
+        string_or_id (bytes, unicode or uint64): The value to encode.
         Returns (unicode or uint64): The value to be retrieved.
         """
         if isinstance(string_or_id, basestring) and len(string_or_id) == 0:
@@ -123,6 +123,11 @@ cdef class StringStore:
                 return decode_Utf8Str(utf8str)
 
     def add(self, string):
+        """Add a string to the StringStore.
+
+        string (unicode): The string to add.
+        RETURNS (uint64): The string's hash value.
+        """
         if isinstance(string, unicode):
             if string in SYMBOLS_BY_STR:
                 return SYMBOLS_BY_STR[string]
