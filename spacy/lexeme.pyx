@@ -224,27 +224,27 @@ cdef class Lexeme:
 
     property lower_:
         def __get__(self): return self.vocab.strings[self.c.lower]
-        def __set__(self, unicode x): self.c.lower = self.vocab.strings[x]
+        def __set__(self, unicode x): self.c.lower = self.vocab.strings.add(x)
 
     property norm_:
         def __get__(self): return self.vocab.strings[self.c.norm]
-        def __set__(self, unicode x): self.c.norm = self.vocab.strings[x]
+        def __set__(self, unicode x): self.c.norm = self.vocab.strings.add(x)
 
     property shape_:
         def __get__(self): return self.vocab.strings[self.c.shape]
-        def __set__(self, unicode x): self.c.shape = self.vocab.strings[x]
+        def __set__(self, unicode x): self.c.shape = self.vocab.strings.add(x)
 
     property prefix_:
         def __get__(self): return self.vocab.strings[self.c.prefix]
-        def __set__(self, unicode x): self.c.prefix = self.vocab.strings[x]
+        def __set__(self, unicode x): self.c.prefix = self.vocab.strings.add(x)
 
     property suffix_:
         def __get__(self): return self.vocab.strings[self.c.suffix]
-        def __set__(self, unicode x): self.c.suffix = self.vocab.strings[x]
+        def __set__(self, unicode x): self.c.suffix = self.vocab.strings.add(x)
 
     property lang_:
         def __get__(self): return self.vocab.strings[self.c.lang]
-        def __set__(self, unicode x): self.c.lang = self.vocab.strings[x]
+        def __set__(self, unicode x): self.c.lang = self.vocab.strings.add(x)
 
     property flags:
         def __get__(self): return self.c.flags
