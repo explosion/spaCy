@@ -12,9 +12,9 @@ def english_noun_chunks(obj):
     labels = ['nsubj', 'dobj', 'nsubjpass', 'pcomp', 'pobj',
               'attr', 'ROOT']
     doc = obj.doc # Ensure works on both Doc and Span.
-    np_deps = [doc.vocab.strings[label] for label in labels]
-    conj = doc.vocab.strings['conj']
-    np_label = doc.vocab.strings['NP']
+    np_deps = [doc.vocab.strings.add(label) for label in labels]
+    conj = doc.vocab.strings.add('conj')
+    np_label = doc.vocab.strings.add('NP')
     seen = set()
     for i, word in enumerate(obj):
         if word.pos not in (NOUN, PROPN, PRON):
