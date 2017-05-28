@@ -6,7 +6,7 @@ p
     |  different steps – this is also referred to as the
     |  #[strong processing pipeline]. The pipeline used by the
     |  #[+a("/docs/usage/models") default models] consists of a
-    |  vectorizer, a tagger, a parser and an entity recognizer. Each pipeline
+    |  tensorizer, a tagger, a parser and an entity recognizer. Each pipeline
     |  component returns the processed #[code Doc], which is then passed on to
     |  the next component.
 
@@ -21,21 +21,24 @@ p
     |  #[strong Creates:] Objects, attributes and properties modified and set by
     |  the component.
 
-+table(["Name", "Component", "Creates"])
++table(["Name", "Component", "Creates", "Description"])
     +row
         +cell tokenizer
         +cell #[+api("tokenizer") #[code Tokenizer]]
         +cell #[code Doc]
+        +cell Segment text into tokens.
 
     +row("divider")
-        +cell vectorizer
-        +cell #[code Vectorizer]
+        +cell tensorizer
+        +cell #[code TokenVectorEncoder]
         +cell #[code Doc.tensor]
+        +cell Create feature representation tensor for #[code Doc].
 
     +row
         +cell tagger
         +cell #[+api("tagger") #[code Tagger]]
         +cell #[code Doc[i].tag]
+        +cell Assign part-of-speech tags.
 
     +row
         +cell parser
@@ -43,11 +46,13 @@ p
         +cell
             |  #[code Doc[i].head], #[code Doc[i].dep], #[code Doc.sents],
             |  #[code Doc.noun_chunks]
+        +cell Assign dependency labels.
 
     +row
         +cell ner
         +cell #[+api("entityrecognizer") #[code EntityRecognizer]]
         +cell #[code Doc.ents], #[code Doc[i].ent_iob], #[code Doc[i].ent_type]
+        +cell Detect and label named entities.
 
 p
     |  The processing pipeline always #[strong depends on the statistical model]
@@ -57,4 +62,4 @@ p
     |  in its meta data, as a simple list containing the component names:
 
 +code(false, "json").
-    "pipeline": ["vectorizer", "tagger", "parser", "ner"]
+    "pipeline": ["tensorizer", "tagger", "parser", "ner"]
