@@ -21,14 +21,14 @@ from .. import about
 
 cdef class Span:
     """A slice from a Doc object."""
-    def __cinit__(self, Doc doc, int start, int end, int label=0, vector=None,
+    def __cinit__(self, Doc doc, int start, int end, attr_t label=0, vector=None,
                   vector_norm=None):
         """Create a `Span` object from the slice `doc[start : end]`.
 
         doc (Doc): The parent document.
         start (int): The index of the first token of the span.
         end (int): The index of the first token after the span.
-        label (int): A label to attach to the Span, e.g. for named entities.
+        label (uint64): A label to attach to the Span, e.g. for named entities.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of the span.
         RETURNS (Span): The newly constructed object.
         """
@@ -377,7 +377,7 @@ cdef class Span:
     property ent_id:
         """An (integer) entity ID. Usually assigned by patterns in the `Matcher`.
 
-        RETURNS (int): The entity ID.
+        RETURNS (uint64): The entity ID.
         """
         def __get__(self):
             return self.root.ent_id

@@ -35,4 +35,4 @@ class English(Language):
     Defaults = EnglishDefaults
 
 
-__all__ = ['English', 'EnglishDefaults']
+__all__ = ['English']

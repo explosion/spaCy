@@ -384,7 +384,7 @@ cdef class GoldParse:
         # These are filled by the tagger/parser/entity recogniser
         self.c.tags = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.heads = <int*>self.mem.alloc(len(doc), sizeof(int))
-        self.c.labels = <int*>self.mem.alloc(len(doc), sizeof(int))
+        self.c.labels = <attr_t*>self.mem.alloc(len(doc), sizeof(attr_t))
         self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
 
         self.words = [None] * len(doc)

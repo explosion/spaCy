@@ -1,8 +1,8 @@
 <svg class="o-svg" xmlns="http://www.w3.org/2000/svg" width="931" height="456" viewBox="-1 -1 932 480" preserveAspectRatio="xMinYMin meet">
     <style>
-        .svg__langdata__text-large { fill: #1a1e23; font: 20px "Source Sans Pro" }
-        .svg__langdata__text-small { fill: #1a1e23; font: bold 16px "Source Sans Pro" }
-        .svg__langdata__text-tiny { fill: #1a1e23; font: bold 16px "Source Sans Pro" }
+        .svg__langdata__text-large { fill: #1a1e23; font: 20px "Source Sans Pro", Tahoma, Helvetica, Arial, sans-serif }
+        .svg__langdata__text-small { fill: #1a1e23; font: bold 16px "Source Sans Pro", Tahoma, Helvetica, Arial, sans-serif }
+        .svg__langdata__text-tiny { fill: #1a1e23; font: bold 16px "Source Sans Pro", Tahoma, Helvetica, Arial, sans-serif }
     </style>
     <path fill="none" stroke="#b85450" stroke-width="3" stroke-miterlimit="10" d="M610 404h-69.8" stroke-dasharray="1 6" stroke-linecap="round"/>
     <path fill="#b85450" stroke="#b85450" stroke-width="2" stroke-miterlimit="10" d="M534.2 404l8-4-2 4 2 4z"/>

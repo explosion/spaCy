@@ -5,8 +5,6 @@ from .parts_of_speech cimport univ_pos_t
 
 
 cdef struct LexemeC:
-    float* vector
-
     flags_t flags
 
     attr_t lang
@@ -25,11 +23,10 @@ cdef struct LexemeC:
 
     float prob
     float sentiment
-    float l2_norm
 
 
 cdef struct SerializedLexemeC:
-    unsigned char[4*13 + 8] data
+    unsigned char[8 + 8*10 + 4 + 4] data
     #    sizeof(flags_t)  # flags
     #    + sizeof(attr_t) # lang
     #    + sizeof(attr_t) # id
@@ -50,7 +47,7 @@ cdef struct Entity:
     hash_t id
     int start
     int end
-    int label
+    attr_t label
 
 
 cdef struct TokenC:
@@ -58,12 +55,12 @@ cdef struct TokenC:
     uint64_t morph
     univ_pos_t pos
     bint spacy
-    int tag
+    attr_t tag
     int idx
-    int lemma
-    int sense
+    attr_t lemma
+    attr_t sense
     int head
-    int dep
+    attr_t dep
     bint sent_start
 
     uint32_t l_kids
@@ -72,5 +69,5 @@ cdef struct TokenC:
     uint32_t r_edge
 
     int ent_iob
-    int ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
+    attr_t ent_type # TODO: Is there a better way to do this? Multiple sources of truth..
     hash_t ent_id

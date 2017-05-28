@@ -1,8 +1,8 @@
 <svg class="o-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 923 200" width="923" height="200">
     <style>
-        .svg__pipeline__text { fill: #1a1e23; font: 20px "Source Sans Pro" }
-        .svg__pipeline__text-small { fill: #1a1e23; font: bold 18px "Source Sans Pro" }
-        .svg__pipeline__text-code {  fill: #1a1e23; font: 600 16px "Source Code Pro" }
+        .svg__pipeline__text { fill: #1a1e23; font: 20px "Source Sans Pro", Tahoma, Helvetica, Arial, sans-serif }
+        .svg__pipeline__text-small { fill: #1a1e23; font: bold 18px "Source Sans Pro", Tahoma, Helvetica, Arial, sans-serif }
+        .svg__pipeline__text-code { fill: #1a1e23; font: 600 16px "Source Code Pro", Monaco, "Courier New", monospace }
     </style>
     <rect width="601" height="127" x="159" y="21" fill="none" stroke="#09a3d5" stroke-width="3" rx="19.1" stroke-dasharray="3 6" ry="19.1"/>
     <path fill="#e1d5e7" stroke="#9673a6" stroke-width="2" d="M801 55h120v60H801z"/>

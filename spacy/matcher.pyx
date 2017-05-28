@@ -154,7 +154,7 @@ def _convert_strings(token_specs, string_store):
             if isinstance(attr, basestring):
                 attr = attrs.IDS.get(attr.upper())
             if isinstance(value, basestring):
-                value = string_store[value]
+                value = string_store.add(value)
             if isinstance(value, bool):
                 value = int(value)
             if attr is not None:
@@ -381,7 +381,7 @@ cdef class Matcher:
 
     def _normalize_key(self, key):
         if isinstance(key, basestring):
-            return self.vocab.strings[key]
+            return self.vocab.strings.add(key)
         else:
             return key
 
@@ -469,7 +469,7 @@ cdef class PhraseMatcher:
             self(doc)
             yield doc
 
-    def accept_match(self, Doc doc, int ent_id, int label, int start, int end):
+    def accept_match(self, Doc doc, attr_t ent_id, attr_t label, int start, int end):
         assert (end - start) < self.max_length
         cdef int i, j
         for i in range(self.max_length):

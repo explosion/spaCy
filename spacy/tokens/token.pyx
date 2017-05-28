@@ -202,11 +202,11 @@ cdef class Token:
     property lemma:
         """Base form of the word, with no inflectional suffixes.
 
-        RETURNS (int): Token lemma.
+        RETURNS (uint64): Token lemma.
         """
         def __get__(self):
             return self.c.lemma
-        def __set__(self, int lemma):
+        def __set__(self, attr_t lemma):
             self.c.lemma = lemma
 
     property pos:
@@ -216,13 +216,13 @@ cdef class Token:
     property tag:
         def __get__(self):
             return self.c.tag
-        def __set__(self, int tag):
+        def __set__(self, attr_t tag):
             self.vocab.morphology.assign_tag(self.c, tag)
 
     property dep:
         def __get__(self):
             return self.c.dep
-        def __set__(self, int label):
+        def __set__(self, attr_t label):
             self.c.dep = label
 
     property has_vector:
@@ -234,12 +234,7 @@ cdef class Token:
         def __get__(self):
             if 'has_vector' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['has_vector'](self)
-            cdef int i
-            for i in range(self.vocab.vectors_length):
-                if self.c.lex.vector[i] != 0:
-                    return True
-            else:
-                return False
+            return self.vocab.has_vector(self.lex.c.orth)
 
     property vector:
         """A real-valued meaning representation.
@@ -250,16 +245,7 @@ cdef class Token:
         def __get__(self):
             if 'vector' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['vector'](self)
-            cdef int length = self.vocab.vectors_length
-            if length == 0:
-                raise ValueError(
-                    "Word vectors set to length 0. This may be because you "
-                    "don't have a model installed or loaded, or because your "
-                    "model doesn't include word vectors. For more info, see "
-                    "the documentation: \n%s\n" % about.__docs_models__
-                )
-            vector_view = <float[:length,]>self.c.lex.vector
-            return numpy.asarray(vector_view)
+            return self.vocab.get_vector(self.c.lex.orth)
 
     property vector_norm:
         """The L2 norm of the token's vector representation.
@@ -269,7 +255,8 @@ cdef class Token:
         def __get__(self):
             if 'vector_norm' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['vector_norm'](self)
-            return self.c.lex.l2_norm
+            vector = self.vector 
+            return numpy.sqrt((vector ** 2).sum())
 
     property n_lefts:
         def __get__(self):
@@ -516,16 +503,18 @@ cdef class Token:
     property ent_type:
         """Named entity type.
 
-        RETURNS (int): Named entity type.
+        RETURNS (uint64): Named entity type.
         """
         def __get__(self):
             return self.c.ent_type
+        def __set__(self, ent_type):
+            self.c.ent_type = ent_type
 
     property ent_iob:
         """IOB code of named entity tag. `1="I", 2="O", 3="B"`. 0 means no tag
         is assigned.
 
-        RETURNS (int): IOB code of named entity tag.
+        RETURNS (uint64): IOB code of named entity tag.
         """
         def __get__(self):
             return self.c.ent_iob
@@ -537,6 +526,8 @@ cdef class Token:
         """
         def __get__(self):
             return self.vocab.strings[self.c.ent_type]
+        def __set__(self, ent_type):
+            self.c.ent_type = self.vocab.strings.add(ent_type)
 
     property ent_iob_:
         """IOB code of named entity tag. "B" means the token begins an entity,
@@ -553,7 +544,7 @@ cdef class Token:
         """ID of the entity the token is an instance of, if any. Usually
         assigned by patterns in the Matcher.
 
-        RETURNS (int): ID of the entity.
+        RETURNS (uint64): ID of the entity.
         """
         def __get__(self):
             return self.c.ent_id
@@ -571,7 +562,7 @@ cdef class Token:
             return self.vocab.strings[self.c.ent_id]
 
         def __set__(self, name):
-            self.c.ent_id = self.vocab.strings[name]
+            self.c.ent_id = self.vocab.strings.add(name)
 
     property whitespace_:
         def __get__(self):
@@ -613,7 +604,7 @@ cdef class Token:
         def __get__(self):
             return self.vocab.strings[self.c.lemma]
         def __set__(self, unicode lemma_):
-            self.c.lemma = self.vocab.strings[lemma_]
+            self.c.lemma = self.vocab.strings.add(lemma_)
 
     property pos_:
         def __get__(self):
@@ -623,13 +614,13 @@ cdef class Token:
         def __get__(self):
             return self.vocab.strings[self.c.tag]
         def __set__(self, tag):
-            self.tag = self.vocab.strings[tag]
+            self.tag = self.vocab.strings.add(tag)
 
     property dep_:
         def __get__(self):
             return self.vocab.strings[self.c.dep]
         def __set__(self, unicode label):
-            self.c.dep = self.vocab.strings[label]
+            self.c.dep = self.vocab.strings.add(label)
 
     property is_oov:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_OOV)

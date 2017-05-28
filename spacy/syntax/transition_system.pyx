@@ -99,7 +99,7 @@ cdef class TransitionSystem:
     cdef Transition lookup_transition(self, object name) except *:
         raise NotImplementedError
 
-    cdef Transition init_transition(self, int clas, int move, int label) except *:
+    cdef Transition init_transition(self, int clas, int move, attr_t label) except *:
         raise NotImplementedError
 
     def is_valid(self, StateClass stcls, move_name):

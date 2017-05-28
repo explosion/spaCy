@@ -11,7 +11,6 @@ import struct
 import dill
 
 from libc.string cimport memcpy, memset
-from libc.stdint cimport uint32_t
 from libc.math cimport sqrt
 
 from .span cimport Span
@@ -21,6 +20,7 @@ from .token cimport Token
 from .printers import parse_tree
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
+from ..attrs import intify_attrs
 from ..attrs cimport attr_id_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
@@ -494,8 +494,8 @@ cdef class Doc:
         cdef np.ndarray[attr_t, ndim=2] output
         # Make an array from the attributes --- otherwise our inner loop is Python
         # dict iteration.
-        cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.int32)
-        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.int32)
+        cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
+        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.uint64)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
                 output[i, j] = get_token_attr(&self.c[i], feature)
@@ -640,7 +640,7 @@ cdef class Doc:
         """
         if self.length != 0:
             raise ValueError("Cannot load into non-empty Doc")
-        cdef int[:, :] attrs
+        cdef attr_t[:, :] attrs
         cdef int i, start, end, has_space
         fields = dill.loads(data)
         text, attrs = fields[:2]
@@ -679,17 +679,15 @@ cdef class Doc:
         if len(args) == 3:
             # TODO: Warn deprecation
             tag, lemma, ent_type = args
-            attributes[TAG] = self.vocab.strings[tag]
-            attributes[LEMMA] = self.vocab.strings[lemma]
-            attributes[ENT_TYPE] = self.vocab.strings[ent_type]
+            attributes[TAG] = tag
+            attributes[LEMMA] = lemma
+            attributes[ENT_TYPE] = ent_type
         elif not args:
-            # TODO: This code makes little sense overall. We're still
-            # ignoring most of the attributes?
             if "label" in attributes and 'ent_type' not in attributes:
                 if type(attributes["label"]) == int:
                     attributes[ENT_TYPE] = attributes["label"]
                 else:
-                    attributes[ENT_TYPE] = self.vocab.strings[attributes["label"]]
+                    attributes[ENT_TYPE] = self.vocab.strings.add(attributes["label"])
             if 'ent_type' in attributes:
                 attributes[ENT_TYPE] = attributes['ent_type']
         elif args:
@@ -698,6 +696,12 @@ cdef class Doc:
                 "Expected either 3 arguments (deprecated), or 0 (use keyword arguments). "
                 "Arguments supplied:\n%s\n"
                 "Keyword arguments:%s\n" % (len(args), repr(args), repr(attributes)))
+
+        # More deprecated attribute handling =/
+        if 'label' in attributes:
+            attributes['ent_type'] = attributes.pop('label')
+
+        attributes = intify_attrs(attributes, strings_map=self.vocab.strings)
 
         cdef int start = token_by_start(self.c, self.length, start_idx)
         if start == -1:
@@ -708,13 +712,6 @@ cdef class Doc:
         # Currently we have the token index, we want the range-end index
         end += 1
         cdef Span span = self[start:end]
-        tag = self.vocab.strings[attributes.get(TAG, span.root.tag)]
-        lemma = self.vocab.strings[attributes.get(LEMMA, span.root.lemma)]
-        ent_type = self.vocab.strings[attributes.get(ENT_TYPE, span.root.ent_type)]
-        ent_id = attributes.get('ent_id', span.root.ent_id)
-        if isinstance(ent_id, basestring):
-            ent_id = self.vocab.strings[ent_id]
-
         # Get LexemeC for newly merged token
         new_orth = ''.join([t.text_with_ws for t in span])
         if span[-1].whitespace_:
@@ -723,18 +720,11 @@ cdef class Doc:
         # House the new merged token where it starts
         cdef TokenC* token = &self.c[start]
         token.spacy = self.c[end-1].spacy
-        if tag in self.vocab.morphology.tag_map:
-            self.vocab.morphology.assign_tag(token, tag)
-        else:
-            token.tag = self.vocab.strings[tag]
-        token.lemma = self.vocab.strings[lemma]
-        if ent_type == 'O':
-            token.ent_iob = 2
-            token.ent_type = 0
-        else:
-            token.ent_iob = 3
-            token.ent_type = self.vocab.strings[ent_type]
-        token.ent_id = ent_id
+        for attr_name, attr_value in attributes.items():
+            if attr_name == TAG:
+                self.vocab.morphology.assign_tag(token, attr_value) 
+            else:
+                Token.set_struct_attr(token, attr_name, attr_value)
         # Begin by setting all the head indices to absolute token positions
         # This is easier to work with for now than the offsets
         # Before thinking of something simpler, beware the case where a dependency

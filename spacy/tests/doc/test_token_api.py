@@ -68,6 +68,7 @@ def test_doc_token_api_is_properties(en_vocab):
     assert doc[5].like_email
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize('text,vectors', [
     ("apples oranges ldskbjls", ["apples -1 -1 -1", "oranges -1 -1 0"])
 ])
