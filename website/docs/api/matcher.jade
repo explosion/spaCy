@@ -5,14 +5,13 @@ include ../../_includes/_mixins
 p Match sequences of tokens, based on pattern rules.
 
 +infobox("⚠️ Deprecation note")
-    .o-block
-        |  As of spaCy 2.0, #[code Matcher.add_pattern] and #[code Matcher.add_entity]
-        |  are deprecated and have been replaced with a simpler
-        |  #[+api("matcher#add") #[code Matcher.add]] that lets you add a list of
-        |  patterns and a callback for a given match ID. #[code Matcher.get_entity]
-        |  is now called #[+api("matcher#get") #[code matcher.get]].
-        |  #[code Matcher.load] (not useful, as it didn't allow specifying callbacks),
-        |  and #[code Matcher.has_entity] (now redundant) have been removed.
+    |  As of spaCy 2.0, #[code Matcher.add_pattern] and #[code Matcher.add_entity]
+    |  are deprecated and have been replaced with a simpler
+    |  #[+api("matcher#add") #[code Matcher.add]] that lets you add a list of
+    |  patterns and a callback for a given match ID. #[code Matcher.get_entity]
+    |  is now called #[+api("matcher#get") #[code matcher.get]].
+    |  #[code Matcher.load] (not useful, as it didn't allow specifying callbacks),
+    |  and #[code Matcher.has_entity] (now redundant) have been removed.
 
 +h(2, "init") Matcher.__init__
     +tag method
@@ -146,9 +145,9 @@ p Check whether the matcher contains rules for a match ID.
 
 +aside-code("Example").
     matcher = Matcher(nlp.vocab)
-    assert 'Rule' in matcher == False
+    assert 'Rule' not in matcher
     matcher.add('Rule', None, [{'ORTH': 'test'}])
-    assert 'Rule' in matcher == True
+    assert 'Rule' in matcher
 
 +table(["Name", "Type", "Description"])
     +row
@@ -226,9 +225,9 @@ p
 
 +aside-code("Example").
     matcher.add('Rule', None, [{'ORTH': 'test'}])
-    assert 'Rule' in matcher == True
+    assert 'Rule' in matcher
     matcher.remove('Rule')
-    assert 'Rule' in matcher == False
+    assert 'Rule' not in matcher
 
 +table(["Name", "Type", "Description"])
     +row
@@ -248,8 +247,7 @@ p
 +aside-code("Example").
     pattern = [{'ORTH': 'test'}]
     matcher.add('Rule', None, pattern)
-    (on_match, patterns) = matcher.get('Rule')
-    assert patterns = [pattern]
+    on_match, patterns = matcher.get('Rule')
 
 +table(["Name", "Type", "Description"])
     +row
