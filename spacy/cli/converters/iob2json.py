@@ -12,7 +12,7 @@ def iob2json(input_path, output_path, n_sents=10, *a, **k):
     """
     # TODO: This isn't complete yet -- need to map from IOB to
     # BILUO
-    with input_path.open() as file_:
+    with input_path.open('r', encoding='utf8') as file_:
         docs = read_iob(file_)
 
     output_filename = input_path.parts[-1].replace(".iob", ".json")
@@ -28,8 +28,12 @@ def read_iob(file_):
     for line in file_:
         if not line.strip():
             continue
-        tokens = [t.rsplit('|', 2) for t in line.split()]
-        words, pos, iob = zip(*tokens)
+        tokens = [t.split('|') for t in line.split()]
+        if len(tokens[0]) == 3:
+            words, pos, iob = zip(*tokens)
+        else:
+            words, iob = zip(*tokens)
+            pos = ['-'] * len(words)
         biluo = iob_to_biluo(iob)
         sentences.append([
             {'orth': w, 'tag': p, 'ner': ent}
