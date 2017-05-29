@@ -166,6 +166,8 @@ class TokenVectorEncoder(object):
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
+        if self.model is True:
+            self.model = self.Model()
         deserialize = OrderedDict((
             ('model', lambda b: util.model_from_bytes(self.model, b)),
             ('vocab', lambda b: self.vocab.from_bytes(b))
@@ -278,9 +280,14 @@ class NeuralTagger(object):
         vocab.morphology = Morphology(vocab.strings, new_tag_map,
                                       vocab.morphology.lemmatizer)
         token_vector_width = pipeline[0].model.nO
-        self.model = with_flatten(
+        if self.model is True:
+            self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
+
+    @classmethod
+    def Model(cls, n_tags, token_vector_width):
+        return with_flatten(
             chain(Maxout(token_vector_width, token_vector_width),
-                  Softmax(self.vocab.morphology.n_tags, token_vector_width)))
+                  Softmax(n_tags, token_vector_width)))
 
     def use_params(self, params):
         with self.model.use_params(params):
@@ -294,11 +301,16 @@ class NeuralTagger(object):
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
+        def load_model(b):
+            if self.model is True:
+                token_vector_width = util.env_opt('token_vector_width', 128)
+                self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
+                util.model_from_bytes(self.model, b)
         deserialize = {
-            'model': lambda b: util.model_from_bytes(self.model, b),
-            'vocab': lambda b: self.vocab.from_bytes(b)
+            'vocab': lambda b: self.vocab.from_bytes(b),
+            'model': lambda b: load_model(b)
         }
-        util.from_bytes(deserialize, exclude)
+        util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
     def to_disk(self, path, **exclude):
@@ -336,9 +348,14 @@ class NeuralLabeller(NeuralTagger):
                     if dep not in self.labels:
                         self.labels[dep] = len(self.labels)
         token_vector_width = pipeline[0].model.nO
-        self.model = with_flatten(
+        if self.model is True:
+            self.model = self.Model(len(self.labels), token_vector_width)
+
+    @classmethod
+    def Model(cls, n_tags, token_vector_width):
+        return with_flatten(
             chain(Maxout(token_vector_width, token_vector_width),
-                  Softmax(len(self.labels), token_vector_width)))
+                  Softmax(n_tags, token_vector_width)))
 
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
@@ -410,7 +427,6 @@ cdef class NeuralEntityRecognizer(NeuralParser):
 
     def __reduce__(self):
         return (NeuralEntityRecognizer, (self.vocab, self.moves, self.model), None, None)
-
 
 
 cdef class BeamDependencyParser(BeamParser):
