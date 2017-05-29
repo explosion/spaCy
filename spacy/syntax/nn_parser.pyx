@@ -631,37 +631,53 @@ cdef class Parser:
             with self.model[1].use_params(params):
                 yield
 
-    def to_disk(self, path):
-        path = util.ensure_path(path)
-        with (path / 'model.bin').open('wb') as file_:
-            dill.dump(self.model, file_)
+    def to_disk(self, path, **exclude):
+        serializers = {
+            'model': lambda p: p.open('wb').write(
+                util.model_to_bytes(self.model)),
+            'vocab': lambda p: self.vocab.to_disk(p),
+            'moves': lambda p: self.moves.to_disk(p, strings=False),
+            'cfg': lambda p: ujson.dumps(p.open('w'), self.cfg)
+        }
+        util.to_disk(path, serializers, exclude)
 
-    def from_disk(self, path):
-        path = util.ensure_path(path)
-        with (path / 'model.bin').open('wb') as file_:
-            self.model = dill.load(file_)
+    def from_disk(self, path, **exclude):
+        deserializers = {
+            'vocab': lambda p: self.vocab.from_disk(p),
+            'moves': lambda p: self.moves.from_disk(p, strings=False),
+            'cfg': lambda p: self.cfg.update(ujson.load((path/'cfg.json').open())),
+            'model': lambda p: None
+        }
+        util.from_disk(path, deserializers, exclude)
+        if 'model' not in exclude:
+            path = util.ensure_path(path)
+            if self.model is True:
+                self.model = self.Model(**self.cfg)
+            util.model_from_disk(self.model, path / 'model')
+        return self
 
     def to_bytes(self, **exclude):
-        serialize = {
+        serializers = {
             'model': lambda: util.model_to_bytes(self.model),
             'vocab': lambda: self.vocab.to_bytes(),
-            'moves': lambda: self.moves.to_bytes(),
+            'moves': lambda: self.moves.to_bytes(vocab=False),
             'cfg': lambda: ujson.dumps(self.cfg)
         }
-        return util.to_bytes(serialize, exclude)
+        return util.to_bytes(serializers, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
-        deserialize = {
+        deserializers = {
             'vocab': lambda b: self.vocab.from_bytes(b),
             'moves': lambda b: self.moves.from_bytes(b),
             'cfg': lambda b: self.cfg.update(ujson.loads(b)),
             'model': lambda b: None
         }
-        msg = util.from_bytes(deserialize, exclude)
+        msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
             if self.model is True:
-                self.model = self.Model(**msg['cfg'])
-            util.model_from_disk(self.model, msg['model'])
+                print(msg['cfg'])
+                self.model = self.Model(self.moves.n_moves)
+            util.model_from_bytes(self.model, msg['model'])
         return self
 
 

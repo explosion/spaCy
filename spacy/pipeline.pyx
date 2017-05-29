@@ -35,7 +35,6 @@ from .syntax import nonproj
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
 from ._ml import rebatch, Tok2Vec, flatten, get_col, doc2feats
-from ._ml import model_to_bytes, model_from_bytes
 from .parts_of_speech import X
 
 
@@ -160,36 +159,33 @@ class TokenVectorEncoder(object):
 
     def to_bytes(self, **exclude):
         serialize = {
-            'model': lambda: model_to_bytes(self.model),
+            'model': lambda: util.model_to_bytes(self.model),
             'vocab': lambda: self.vocab.to_bytes()
         }
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
         deserialize = {
-            'model': lambda b: model_from_bytes(self.model, b),
+            'model': lambda b: util.model_from_bytes(self.model, b),
             'vocab': lambda b: self.vocab.from_bytes(b)
         }
         util.from_bytes(deserialize, exclude)
         return self
 
     def to_disk(self, path, **exclude):
-        path = util.ensure_path(path)
-        if not path.exists():
-            path.mkdir()
-        if 'vocab' not in exclude:
-            self.vocab.to_disk(path / 'vocab')
-        if 'model' not in exclude:
-            with (path / 'model.bin').open('wb') as file_:
-                file_.write(util.model_to_bytes(self.model))
+        serialize = {
+            'model': lambda p: p.open('w').write(util.model_to_bytes(self.model)),
+            'vocab': lambda p: self.vocab.to_disk(p)
+        }
+        util.to_disk(path, serialize, exclude)
 
     def from_disk(self, path, **exclude):
-        path = util.ensure_path(path)
-        if 'vocab' not in exclude:
-            self.vocab.from_disk(path / 'vocab')
-        if 'model.bin' not in exclude:
-            with (path / 'model.bin').open('rb') as file_:
-                util.model_from_bytes(self.model, file_.read())
+        deserialize = {
+            'model': lambda p: util.model_from_bytes(self.model, p.open('rb').read()),
+            'vocab': lambda p: self.vocab.from_disk(p)
+        }
+        util.from_disk(path, deserialize, exclude)
+        return self
 
 
 class NeuralTagger(object):
@@ -291,19 +287,33 @@ class NeuralTagger(object):
 
     def to_bytes(self, **exclude):
         serialize = {
-            'model': lambda: model_to_bytes(self.model),
+            'model': lambda: util.model_to_bytes(self.model),
             'vocab': lambda: self.vocab.to_bytes()
         }
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
         deserialize = {
-            'model': lambda b: model_from_bytes(self.model, b),
+            'model': lambda b: util.model_from_bytes(self.model, b),
             'vocab': lambda b: self.vocab.from_bytes(b)
         }
         util.from_bytes(deserialize, exclude)
         return self
 
+    def to_disk(self, path, **exclude):
+        serialize = {
+            'model': lambda p: p.open('w').write(util.model_to_bytes(self.model)),
+            'vocab': lambda p: self.vocab.to_disk(p)
+        }
+        util.to_disk(path, serialize, exclude)
+
+    def from_disk(self, path, **exclude):
+        deserialize = {
+            'model': lambda p: util.model_from_bytes(self.model, p.open('rb').read()),
+            'vocab': lambda p: self.vocab.from_disk(p)
+        }
+        util.from_disk(path, deserialize, exclude)
+        return self
 
 
 class NeuralLabeller(NeuralTagger):

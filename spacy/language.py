@@ -366,20 +366,22 @@ class Language(object):
             >>> nlp.to_disk('/path/to/models')
         """
         path = util.ensure_path(path)
-        if not path.exists():
-            path.mkdir()
-        if not path.is_dir():
-            raise IOError("Output path must be a directory")
-        props = {}
-        for name, value in self.__dict__.items():
-            if name in disable:
-                continue
-            if hasattr(value, 'to_disk'):
-                value.to_disk(path / name)
-            else:
-                props[name] = value
-        with (path / 'props.pickle').open('wb') as file_:
-            dill.dump(props, file_)
+        with path.open('wb') as file_:
+            file_.write(self.to_bytes(disable))
+        #serializers = {
+        #    'vocab': lambda p: self.vocab.to_disk(p),
+        #    'tokenizer': lambda p: self.tokenizer.to_disk(p, vocab=False),
+        #    'meta.json': lambda p: ujson.dump(p.open('w'), self.meta)
+        #}
+        #for proc in self.pipeline:
+        #    if not hasattr(proc, 'name'):
+        #        continue
+        #    if proc.name in disable:
+        #        continue
+        #    if not hasattr(proc, 'to_disk'):
+        #        continue
+        #    serializers[proc.name] = lambda p: proc.to_disk(p, vocab=False)
+        #util.to_disk(serializers, path)
 
     def from_disk(self, path, disable=[]):
         """Loads state from a directory. Modifies the object in place and
@@ -396,13 +398,24 @@ class Language(object):
             >>> nlp = Language().from_disk('/path/to/models')
         """
         path = util.ensure_path(path)
-        for name in path.iterdir():
-            if name not in disable and hasattr(self, str(name)):
-                getattr(self, name).from_disk(path / name)
-        with (path / 'props.pickle').open('rb') as file_:
+        with path.open('rb') as file_:
             bytes_data = file_.read()
-        self.from_bytes(bytes_data, disable)
-        return self
+        return self.from_bytes(bytes_data, disable)
+        #deserializers = {
+        #    'vocab': lambda p: self.vocab.from_disk(p),
+        #    'tokenizer': lambda p: self.tokenizer.from_disk(p, vocab=False),
+        #    'meta.json': lambda p: ujson.dump(p.open('w'), self.meta)
+        #}
+        #for proc in self.pipeline:
+        #    if not hasattr(proc, 'name'):
+        #        continue
+        #    if proc.name in disable:
+        #        continue
+        #    if not hasattr(proc, 'to_disk'):
+        #        continue
+        #    deserializers[proc.name] = lambda p: proc.from_disk(p, vocab=False)
+        #util.from_disk(deserializers, path)
+        #return self
 
     def to_bytes(self, disable=[]):
         """Serialize the current state to a binary string.
@@ -411,11 +424,20 @@ class Language(object):
             from being serialized.
         RETURNS (bytes): The serialized form of the `Language` object.
         """
-        props = dict(self.__dict__)
-        for key in disable:
-            if key in props:
-                props.pop(key)
-        return dill.dumps(props, -1)
+        serializers = {
+            'vocab': lambda: self.vocab.to_bytes(),
+            'tokenizer': lambda: self.tokenizer.to_bytes(vocab=False),
+            'meta': lambda: ujson.dumps(self.meta)
+        }
+        for proc in self.pipeline:
+            if not hasattr(proc, 'name'):
+                continue
+            if proc.name in disable:
+                continue
+            if not hasattr(proc, 'to_bytes'):
+                continue
+            serializers[proc.name] = lambda: proc.to_bytes(p, vocab=False)
+        return util.to_bytes(serializers)
 
     def from_bytes(self, bytes_data, disable=[]):
         """Load state from a binary string.
@@ -424,11 +446,22 @@ class Language(object):
         disable (list): Names of the pipeline components to disable.
         RETURNS (Language): The `Language` object.
         """
-        props = dill.loads(bytes_data)
-        for key, value in props.items():
-            if key not in disable:
-                setattr(self, key, value)
+        deserializers = {
+            'vocab': lambda b: self.vocab.from_bytes(b),
+            'tokenizer': lambda b: self.tokenizer.from_bytes(b, vocab=False),
+            'meta': lambda b: self.meta.update(ujson.loads(b))
+        }
+        for proc in self.pipeline:
+            if not hasattr(proc, 'name'):
+                continue
+            if proc.name in disable:
+                continue
+            if not hasattr(proc, 'to_disk'):
+                continue
+            deserializers[proc.name] = lambda b: proc.from_bytes(b, vocab=False)
+        util.from_bytes(deserializers, bytes_data)
         return self
+
 
 def _pipe(func, docs):
     for doc in docs:

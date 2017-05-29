@@ -6,7 +6,9 @@ from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t
 from collections import defaultdict, OrderedDict
+import ujson
 
+from .. import util
 from ..structs cimport TokenC
 from .stateclass cimport StateClass
 from ..attrs cimport TAG, HEAD, DEP, ENT_TYPE, ENT_IOB
@@ -153,3 +155,48 @@ cdef class TransitionSystem:
         assert self.c[self.n_moves].label == label_id
         self.n_moves += 1
         return 1
+
+    def to_disk(self, path, **exclude):
+        actions = list(self.move_names)
+        deserializers = {
+            'actions': lambda p: ujson.dump(p.open('w'), actions),
+            'strings': lambda p: self.strings.to_disk(p)
+        }
+        util.to_disk(path, deserializers, exclude)
+
+    def from_disk(self, path, **exclude):
+        actions = []
+        deserializers = {
+            'strings': lambda p: self.strings.from_disk(p),
+            'actions': lambda p: actions.extend(ujson.load(p.open()))
+        }
+        util.from_disk(path, deserializers, exclude)
+        for move, label in actions:
+            self.add_action(move, label)
+        return self
+
+    def to_bytes(self, **exclude):
+        transitions = []
+        for trans in self.c[:self.n_moves]:
+            transitions.append({
+                'clas': trans.clas,
+                'move': trans.move,
+                'label': self.strings[trans.label],
+                'name': self.move_name(trans.move, trans.label)
+            })
+        serializers = {
+            'transitions': lambda: ujson.dumps(transitions),
+            'strings': lambda: self.strings.to_bytes()
+        }
+        return util.to_bytes(serializers, exclude)
+
+    def from_bytes(self, bytes_data, **exclude):
+        transitions = []
+        deserializers = {
+            'transitions': lambda b: transitions.extend(ujson.loads(b)),
+            'strings': lambda b: self.strings.from_bytes(b)
+        }
+        msg = util.from_bytes(bytes_data, deserializers, exclude)
+        for trans in transitions:
+            self.add_action(trans['move'], trans['label'])
+        return self
