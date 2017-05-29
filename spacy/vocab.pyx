@@ -9,6 +9,7 @@ from libc.string cimport memset, memcpy
 from libc.stdint cimport int32_t
 from libc.math cimport sqrt
 from cymem.cymem cimport Address
+from collections import OrderedDict
 from .lexeme cimport EMPTY_LEXEME
 from .lexeme cimport Lexeme
 from .strings cimport hash_string
@@ -304,10 +305,10 @@ cdef class Vocab:
         **exclude: Named attributes to prevent from being loaded.
         RETURNS (Vocab): The `Vocab` object.
         """
-        setters = {
-            'strings': lambda b: self.strings.from_bytes(b),
-            'lexemes': lambda b: self.lexemes_from_bytes(b)
-        }
+        setters = OrderedDict((
+            ('strings', lambda b: self.strings.from_bytes(b)),
+            ('lexemes', lambda b: self.lexemes_from_bytes(b))
+        ))
         return util.from_bytes(bytes_data, setters, exclude)
 
     def lexemes_to_bytes(self):
