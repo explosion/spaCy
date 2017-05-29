@@ -2,9 +2,16 @@
 
 include ../../_includes/_mixins
 
++aside("Help us improve the docs")
+    |  Did you spot a mistake or come across explanations that
+    |  are unclear? We always appreciate improvement
+    |  #[+a(gh("spaCy") + "/issues") suggestions] or
+    |  #[+a(gh("spaCy") + "/pulls") pull requests]. You can find a "Suggest
+    |  edits" link at the bottom of each page that points you to the source.
+
 +h(2, "whats-spacy") What's spaCy?
 
-+grid
++grid.o-no-block
     +grid-col("half")
 
     +grid-col("half")
@@ -52,8 +59,8 @@ p
     +row
         +cell #[strong Dependency Parsing]
         +cell
-            |  Assigning syntactic dependency labels, i.e. the relations between
-            |  individual tokens.
+            |  Assigning syntactic dependency labels, describing the relations
+            |  between individual tokens, like subject or object.
         +cell #[+procon("pro")]
 
     +row
@@ -374,6 +381,8 @@ p
     |  on GitHub, which we use to tag bugs and feature requests that are easy
     |  and self-contained. We also appreciate contributions to the docs – whether
     |  it's fixing a typo, improving an example or adding additional explanations.
+    |  You'll find a "Suggest edits" link at the bottom of each page that points
+    |  you to the source.
 
 p
     |  Another way of getting involved is to help us improve the
