@@ -87,7 +87,7 @@ p
 
 +aside-code("Example").
     nlp = util.load_model('en')
-    nlp = util.load_model('en_core_web_sm')
+    nlp = util.load_model('en_core_web_sm', disable=['ner'])
     nlp = util.load_model('/path/to/data')
 
 +table(["Name", "Type", "Description"])
@@ -95,6 +95,11 @@ p
         +cell #[code name]
         +cell unicode
         +cell Package name, shortcut link or model path.
+
+    +row
+        +cell #[code **overrides]
+        +cell -
+        +cell Specific overrides, like pipeline components to disable.
 
     +footrow
         +cell returns
@@ -112,8 +117,8 @@ p
 +aside-code("Example").
     from spacy.util import load_model_from_init_py
 
-    def load():
-        return load_model_from_init_py(__file__)
+    def load(**overrides):
+        return load_model_from_init_py(__file__, **overrides)
 
 +table(["Name", "Type", "Description"])
     +row
@@ -121,10 +126,36 @@ p
         +cell unicode
         +cell Path to model's __init__.py, i.e. #[code __file__].
 
+    +row
+        +cell #[code **overrides]
+        +cell -
+        +cell Specific overrides, like pipeline components to disable.
+
     +footrow
         +cell returns
         +cell #[code Language]
         +cell #[code Language] class with the loaded model.
+
++h(2, "get_model_meta") util.get_model_meta
+    +tag function
+    +tag-new(2)
+
+p
+    |  Get a model's meta.json from a directory path and validate its contents.
+
++aside-code("Example").
+    meta = util.get_model_meta('/path/to/model')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell Path to model directory.
+
+    +footrow
+        +cell returns
+        +cell dict
+        +cell The model's meta data.
 
 +h(2, "is_package") util.is_package
     +tag function
