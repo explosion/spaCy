@@ -108,12 +108,12 @@ def load_model(name, **overrides):
             model_path = Path(name)
             meta = get_package_meta(model_path)
             cls = get_lang_class(meta['lang'])
-            nlp = cls(pipeline=meta.get('pipeline', True))
+            nlp = cls(pipeline=meta.get('pipeline', True), meta=meta)
             return nlp.from_disk(model_path, **overrides)
     elif hasattr(name, 'exists'): # Path or Path-like to model data
         meta = get_package_meta(name)
         cls = get_lang_class(meta['lang'])
-        nlp = cls(pipeline=meta.get('pipeline', True))
+        nlp = cls(pipeline=meta.get('pipeline', True), meta=meta)
         return nlp.from_disk(name, **overrides)
     raise IOError("Can't find model '%s'" % name)
 
@@ -133,7 +133,7 @@ def load_model_from_init_py(init_file, **overrides):
     if not model_path.exists():
         raise ValueError("Can't find model directory: %s" % path2str(data_path))
     cls = get_lang_class(meta['lang'])
-    nlp = cls(pipeline=meta.get('pipeline', True))
+    nlp = cls(pipeline=meta.get('pipeline', True), meta=meta)
     return nlp.from_disk(data_path, **overrides)
 
 
@@ -461,7 +461,7 @@ def model_from_bytes(model, bytes_data):
             i += 1
         if hasattr(layer, '_layers'):
             queue.extend(layer._layers)
- 
+
 
 def print_table(data, title=None):
     """Print data in table format.
