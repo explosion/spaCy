@@ -291,12 +291,11 @@ cdef class Vocab:
         **exclude: Named attributes to prevent from being serialized.
         RETURNS (bytes): The serialized form of the `Vocab` object.
         """
-        data = {}
-        if 'strings' not in exclude:
-            data['strings'] = self.strings.to_bytes()
-        if 'lexemes' not in exclude:
-            data['lexemes'] = self.lexemes_to_bytes
-        return ujson.dumps(data)
+        getters = {
+            'strings': lambda: self.strings.to_bytes(),
+            'lexemes': lambda: self.lexemes_to_bytes()
+        }
+        return util.to_bytes(getters, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
         """Load state from a binary string.
@@ -305,12 +304,11 @@ cdef class Vocab:
         **exclude: Named attributes to prevent from being loaded.
         RETURNS (Vocab): The `Vocab` object.
         """
-        data = ujson.loads(bytes_data)
-        if 'strings' not in exclude:
-            self.strings.from_bytes(data['strings'])
-        if 'lexemes' not in exclude:
-            self.lexemes_from_bytes(data['lexemes'])
-        return self
+        setters = {
+            'strings': lambda b: self.strings.from_bytes(b),
+            'lexemes': lambda b: self.lexemes_from_bytes(b)
+        }
+        return util.from_bytes(bytes_data, setters, exclude)
 
     def lexemes_to_bytes(self):
         cdef hash_t key

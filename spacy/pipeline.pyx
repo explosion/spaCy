@@ -9,7 +9,6 @@ import numpy
 cimport numpy as np
 import cytoolz
 import util
-import ujson
 
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
 from thinc.neural import Model, Maxout, Softmax, Affine
@@ -160,18 +159,18 @@ class TokenVectorEncoder(object):
             yield
 
     def to_bytes(self, **exclude):
-        data = {
-            'model': self.model,
-            'vocab': self.vocab
+        serialize = {
+            'model': lambda: model_to_bytes(self.model),
+            'vocab': lambda: self.vocab.to_bytes()
         }
-        return util.to_bytes(data, exclude)
+        return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
-        data = ujson.loads(bytes_data)
-        if 'model' not in exclude:
-            util.model_from_bytes(self.model, data['model'])
-        if 'vocab' not in exclude:
-            self.vocab.from_bytes(data['vocab'])
+        deserialize = {
+            'model': lambda b: model_from_bytes(self.model, b),
+            'vocab': lambda b: self.vocab.from_bytes(b)
+        }
+        util.from_bytes(deserialize, exclude)
         return self
 
     def to_disk(self, path, **exclude):
@@ -289,6 +288,23 @@ class NeuralTagger(object):
     def use_params(self, params):
         with self.model.use_params(params):
             yield
+
+    def to_bytes(self, **exclude):
+        serialize = {
+            'model': lambda: model_to_bytes(self.model),
+            'vocab': lambda: self.vocab.to_bytes()
+        }
+        return util.to_bytes(serialize, exclude)
+
+    def from_bytes(self, bytes_data, **exclude):
+        deserialize = {
+            'model': lambda b: model_from_bytes(self.model, b),
+            'vocab': lambda b: self.vocab.from_bytes(b)
+        }
+        util.from_bytes(deserialize, exclude)
+        return self
+
+
 
 class NeuralLabeller(NeuralTagger):
     name = 'nn_labeller'

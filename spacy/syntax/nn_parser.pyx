@@ -260,7 +260,14 @@ cdef class Parser:
         # Used to set input dimensions in network.
         lower.begin_training(lower.ops.allocate((500, token_vector_width)))
         upper.begin_training(upper.ops.allocate((500, hidden_width)))
-        return lower, upper
+        cfg = {
+            'nr_class': nr_class,
+            'depth': depth,
+            'token_vector_width': token_vector_width,
+            'hidden_width': hidden_width,
+            'maxout_pieces': parser_maxout_pieces
+        }
+        return (lower, upper), cfg
 
     def __init__(self, Vocab vocab, moves=True, model=True, **cfg):
         """
@@ -611,7 +618,8 @@ cdef class Parser:
             for label in labels:
                 self.moves.add_action(action, label)
         if self.model is True:
-            self.model = self.Model(self.moves.n_moves, **cfg)
+            self.model, cfg = self.Model(self.moves.n_moves, **cfg)
+            self.cfg.update(cfg)
 
     def preprocess_gold(self, docs_golds):
         for doc, gold in docs_golds:
@@ -633,11 +641,28 @@ cdef class Parser:
         with (path / 'model.bin').open('wb') as file_:
             self.model = dill.load(file_)
 
-    def to_bytes(self):
-        dill.dumps(self.model)
+    def to_bytes(self, **exclude):
+        serialize = {
+            'model': lambda: util.model_to_bytes(self.model),
+            'vocab': lambda: self.vocab.to_bytes(),
+            'moves': lambda: self.moves.to_bytes(),
+            'cfg': lambda: ujson.dumps(self.cfg)
+        }
+        return util.to_bytes(serialize, exclude)
 
-    def from_bytes(self, data):
-        self.model = dill.loads(data)
+    def from_bytes(self, bytes_data, **exclude):
+        deserialize = {
+            'vocab': lambda b: self.vocab.from_bytes(b),
+            'moves': lambda b: self.moves.from_bytes(b),
+            'cfg': lambda b: self.cfg.update(ujson.loads(b)),
+            'model': lambda b: None
+        }
+        msg = util.from_bytes(deserialize, exclude)
+        if 'model' not in exclude:
+            if self.model is True:
+                self.model = self.Model(**msg['cfg'])
+            util.model_from_disk(self.model, msg['model'])
+        return self
 
 
 class ParserStateError(ValueError):
