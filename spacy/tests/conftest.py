@@ -129,8 +129,18 @@ def pytest_addoption(parser):
     parser.addoption("--slow", action="store_true",
         help="include slow tests")
 
+    for lang in _languages + ['all']:
+        parser.addoption("--%s" % lang, action="store_true", help="Use %s models" % lang)
+
 
 def pytest_runtest_setup(item):
     for opt in ['models', 'vectors', 'slow']:
         if opt in item.keywords and not item.config.getoption("--%s" % opt):
             pytest.skip("need --%s option to run" % opt)
+
+    # Check if test is marked with models and has arguments set, i.e. specific
+    # language. If so, skip test if flag not set.
+    if item.get_marker('models'):
+        for arg in item.get_marker('models').args:
+            if not item.config.getoption("--%s" % arg) and not item.config.getoption("--all"):
+                pytest.skip()
