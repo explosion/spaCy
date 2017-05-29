@@ -294,10 +294,10 @@ class NeuralTagger(object):
             yield
 
     def to_bytes(self, **exclude):
-        serialize = {
-            'model': lambda: util.model_to_bytes(self.model),
-            'vocab': lambda: self.vocab.to_bytes()
-        }
+        serialize = OrderedDict((
+            ('model', lambda: util.model_to_bytes(self.model)),
+            ('vocab', lambda: self.vocab.to_bytes())
+        ))
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
@@ -306,10 +306,10 @@ class NeuralTagger(object):
                 token_vector_width = util.env_opt('token_vector_width', 128)
                 self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
                 util.model_from_bytes(self.model, b)
-        deserialize = {
-            'vocab': lambda b: self.vocab.from_bytes(b),
-            'model': lambda b: load_model(b)
-        }
+        deserialize = OrderedDict((
+            ('vocab', lambda b: self.vocab.from_bytes(b)),
+            ('model', lambda b: load_model(b)),
+        ))
         util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
