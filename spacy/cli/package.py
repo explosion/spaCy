@@ -36,7 +36,7 @@ def package(cmd, input_dir, output_dir, meta=None, force=False):
 
     template_setup = get_template('setup.py')
     template_manifest = get_template('MANIFEST.in')
-    template_init = get_template('en_model_name/__init__.py')
+    template_init = get_template('xx_model_name/__init__.py')
     meta_path = meta_path or input_path / 'meta.json'
     if meta_path.is_file():
         prints(meta_path, title="Reading meta.json from file")
