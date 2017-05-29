@@ -10,6 +10,7 @@ from pathlib import Path
 import sys
 import textwrap
 import random
+import numpy
 
 import msgpack
 import msgpack_numpy
