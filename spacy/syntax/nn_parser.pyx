@@ -652,8 +652,9 @@ cdef class Parser:
         if 'model' not in exclude:
             path = util.ensure_path(path)
             if self.model is True:
-                self.model = self.Model(**self.cfg)
+                self.model, cfg = self.Model(**self.cfg)
             util.model_from_disk(self.model, path / 'model')
+            self.cfg.update(cfg)
         return self
 
     def to_bytes(self, **exclude):
@@ -675,9 +676,9 @@ cdef class Parser:
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
             if self.model is True:
-                print(msg['cfg'])
-                self.model = self.Model(self.moves.n_moves)
+                self.model, cfg = self.Model(self.moves.n_moves)
             util.model_from_bytes(self.model, msg['model'])
+            self.cfg.update(cfg)
         return self
 
 

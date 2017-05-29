@@ -437,7 +437,7 @@ class Language(object):
             if not hasattr(proc, 'to_bytes'):
                 continue
             serializers[proc.name] = lambda: proc.to_bytes(p, vocab=False)
-        return util.to_bytes(serializers)
+        return util.to_bytes(serializers, {})
 
     def from_bytes(self, bytes_data, disable=[]):
         """Load state from a binary string.
@@ -459,7 +459,7 @@ class Language(object):
             if not hasattr(proc, 'to_disk'):
                 continue
             deserializers[proc.name] = lambda b: proc.from_bytes(b, vocab=False)
-        util.from_bytes(deserializers, bytes_data)
+        util.from_bytes(deserializers, bytes_data, {})
         return self
 
 
