@@ -436,7 +436,7 @@ class Language(object):
                 continue
             if not hasattr(proc, 'to_bytes'):
                 continue
-            serializers[proc.name] = lambda: proc.to_bytes(p, vocab=False)
+            serializers[proc.name] = lambda: proc.to_bytes(vocab=False)
         return util.to_bytes(serializers, {})
 
     def from_bytes(self, bytes_data, disable=[]):
