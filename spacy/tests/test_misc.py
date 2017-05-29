@@ -52,7 +52,7 @@ def test_multi_model_load_missing_dims():
     assert model2._layers[0].b[0, 0] == 1
     assert model2._layers[1].b[0, 0] == 2
 
-@pytest.mark.parametrize('package', ['thinc'])
+@pytest.mark.parametrize('package', ['numpy'])
 def test_util_is_package(package):
     """Test that an installed package via pip is recognised by util.is_package."""
     assert util.is_package(package)
