@@ -85,10 +85,11 @@ def ensure_path(path):
         return path
 
 
-def load_model(name):
+def load_model(name, **overrides):
     """Load a model from a shortcut link, package or data path.
 
     name (unicode): Package name, shortcut link or model path.
+    **overrides: Specific overrides, like pipeline components to disable.
     RETURNS (Language): `Language` class with the loaded model.
     """
     data_path = get_data_path()
@@ -96,73 +97,63 @@ def load_model(name):
         raise IOError("Can't find spaCy data path: %s" % path2str(data_path))
     if isinstance(name, basestring_):
         if (data_path / name).exists(): # in data dir or shortcut
-            return load_model_from_path(data_path / name)
+            spec = importlib.util.spec_from_file_location('model', data_path / name)
+            cls = importlib.util.module_from_spec(spec)
+            spec.loader.exec_module(cls)
+            return cls.load(**overrides)
         if is_package(name): # installed as package
-            return load_model_from_pkg(name)
+            cls = importlib.import_module(name)
+            return cls.load(**overrides)
         if Path(name).exists(): # path to model data directory
-            return load_data_from_path(Path(name))
+            model_path = Path(name)
+            meta = get_package_meta(model_path)
+            cls = get_lang_class(meta['lang'])
+            nlp = cls(pipeline=meta.get('pipeline', True))
+            return nlp.from_disk(model_path, **overrides)
     elif hasattr(name, 'exists'): # Path or Path-like to model data
-        return load_data_from_path(name)
+        meta = get_package_meta(name)
+        cls = get_lang_class(meta['lang'])
+        nlp = cls(pipeline=meta.get('pipeline', True))
+        return nlp.from_disk(name, **overrides)
     raise IOError("Can't find model '%s'" % name)
 
 
-def load_model_from_init_py(init_file):
+def load_model_from_init_py(init_file, **overrides):
     """Helper function to use in the `load()` method of a model package's
     __init__.py.
 
     init_file (unicode): Path to model's __init__.py, i.e. `__file__`.
+    **overrides: Specific overrides, like pipeline components to disable.
     RETURNS (Language): `Language` class with loaded model.
     """
     model_path = Path(init_file).parent
-    return load_data_from_path(model_path, package=True)
+    meta = get_model_meta(model_path)
+    data_dir = '%s_%s-%s' % (meta['lang'], meta['name'], meta['version'])
+    data_path = model_path / data_dir
+    if not model_path.exists():
+        raise ValueError("Can't find model directory: %s" % path2str(data_path))
+    cls = get_lang_class(meta['lang'])
+    nlp = cls(pipeline=meta.get('pipeline', True))
+    return nlp.from_disk(data_path, **overrides)
 
 
-def load_model_from_path(model_path):
-    """Import and load a model package from its file path.
+def get_model_meta(path):
+    """Get model meta.json from a directory path and validate its contents.
 
-    path (unicode or Path): Path to package directory.
-    RETURNS (Language): `Language` class with loaded model.
+    path (unicode or Path): Path to model directory.
+    RETURNS (dict): The model's meta data.
     """
-    model_path = ensure_path(model_path)
-    spec = importlib.util.spec_from_file_location('model', model_path)
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module.load()
-
-
-def load_model_from_pkg(name):
-    """Import and load a model package.
-
-    name (unicode): Name of model package installed via pip.
-    RETURNS (Language): `Language` class with loaded model.
-    """
-    module = importlib.import_module(name)
-    return module.load()
-
-
-def load_data_from_path(model_path, package=False):
-    """Initialie a `Language` class with a loaded model from a model data path.
-
-    model_path (unicode or Path): Path to model data directory.
-    package (bool): Does the path point to the parent package directory?
-    RETURNS (Language): `Language` class with loaded model.
-    """
-    model_path = ensure_path(model_path)
+    model_path = ensure_path(path)
+    if not model_path.exists():
+        raise ValueError("Can't find model directory: %s" % path2str(model_path))
     meta_path = model_path / 'meta.json'
     if not meta_path.is_file():
-        raise IOError("Could not read meta.json from %s" % location)
-    meta = read_json(location)
+        raise IOError("Could not read meta.json from %s" % meta_path)
+    meta = read_json(meta_path)
     for setting in ['lang', 'name', 'version']:
         if setting not in meta:
             raise IOError('No %s setting found in model meta.json' % setting)
-    if package:
-        model_data_path = '%s_%s-%s' % (meta['lang'], meta['name'], meta['version'])
-        model_path = model_path / model_data_path
-    if not model_path.exists():
-        raise ValueError("Can't find model directory: %s" % path2str(model_path))
-    cls = get_lang_class(meta['lang'])
-    nlp = cls(pipeline=meta.get('pipeline', True))
-    return nlp.from_disk(model_path)
+    return meta
 
 
 def is_package(name):

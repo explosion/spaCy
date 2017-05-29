@@ -187,13 +187,13 @@ p
     |  #[+a("/docs/usage/saving-loading#models-generating") model package] with
     |  a custom pipeline.
 
-+h(2, "example1") Example: Custom sentence segmentation logic
-
 +aside("Real-world examples")
     |  To see real-world examples of pipeline factories and components in action,
     |  you can have a look at the source of spaCy's built-in components, e.g.
-    |  the #[+src(gh("spacy")) tagger], #[+src(gh("spacy")) parser] or
-    |  #[+src(gh("spacy")) entity recognizer].
+    |  the #[+api("tagger") #[code Tagger]], #[+api("parser") #[code Parser]] or
+    |  #[+api("entityrecognizer") #[code EntityRecongnizer]].
+
++h(2, "example1") Example: Custom sentence segmentation logic
 
 p
     |  Let's say you want to implement custom logic to improve spaCy's sentence
@@ -318,8 +318,8 @@ p
     |  If you don't need a particular component of the pipeline – for
     |  example, the tagger or the parser, you can disable loading it. This can
     |  sometimes make a big difference and improve loading speed. Disabled
-    |  component names can be provided to #[+api("spacy#load") #[code spacy.load]],
-    |  #[+api("language#from_disk") #[code Language.from_disk]] or the
+    |  component names can be provided to #[+api("spacy#load") #[code spacy.load()]],
+    |  #[+api("language#from_disk") #[code Language.from_disk()]] or the
     |  #[code nlp] object itself as a list:
 
 +code.

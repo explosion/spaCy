@@ -9,7 +9,7 @@ from . import util
 
 def load(name, **overrides):
     name = resolve_load_name(name, **overrides)
-    return util.load_model(name)
+    return util.load_model(name, **overrides)
 
 
 def info(model=None, markdown=False):

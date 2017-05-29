@@ -107,8 +107,9 @@ p
     assert doc.vocab.strings[3197928453018144401] == u'coffee' # 👍
 
 p
-    |  If the vocabulary doesn't contain a hash for "coffee", spaCy will
-    |  throw an error. So you either need to add it manually, or initialise the
-    |  new #[code Doc] with the shared vocabulary. To prevent this problem,
-    |  spaCy will also export the #[code Vocab] when you save a
-    |  #[code Doc] or #[code nlp] object.
+    |  If the vocabulary doesn't contain a string for #[code 3197928453018144401],
+    |  spaCy will raise an error. You can re-add "coffee" manually, but this
+    |  only works if you actually #[em know] that the document contains that
+    |  word. To prevent this problem, spaCy will also export the #[code Vocab]
+    |  when you save a #[code Doc] or #[code nlp] object. This will give you
+    |  the object and its encoded annotations, plus they "key" to decode it.
