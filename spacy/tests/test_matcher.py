@@ -34,6 +34,7 @@ def test_matcher_from_api_docs(en_vocab):
     assert len(patterns[0])
 
 
+@pytest.mark.xfail
 def test_matcher_from_usage_docs(en_vocab):
     text = "Wow 😀 This is really cool! 😂 😂"
     doc = get_doc(en_vocab, words=text.split(' '))
