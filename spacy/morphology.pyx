@@ -44,8 +44,8 @@ cdef class Morphology:
 
         self.rich_tags = <RichTagC*>self.mem.alloc(self.n_tags, sizeof(RichTagC))
         for i, (tag_str, attrs) in enumerate(sorted(tag_map.items())):
-            attrs = _normalize_props(attrs)
             self.tag_map[tag_str] = dict(attrs)
+            attrs = _normalize_props(attrs)
             attrs = intify_attrs(attrs, self.strings, _do_deprecated=True)
             self.rich_tags[i].id = i
             self.rich_tags[i].name = self.strings.add(tag_str)
