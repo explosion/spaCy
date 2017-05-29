@@ -38,6 +38,11 @@ p
     assert doc.vocab.strings[u'coffee'] == 3197928453018144401
     assert doc.vocab.strings[3197928453018144401] == u'coffee'
 
++aside("What does 'L' at the end of a hash mean?")
+    |  If you return a hash value in the #[strong Python 2 interpreter], it'll
+    |  show up as #[code 3197928453018144401L]. The #[code L] just means "long
+    |  integer" – it's #[strong not] actually a part of the hash value.
+
 p
     |  Now that all strings are encoded, the entries in the vocabulary
     |  #[strong don&apos;t need to include the word text] themselves. Instead,
