@@ -14,6 +14,7 @@ import random
 import msgpack
 import msgpack_numpy
 msgpack_numpy.patch()
+import ujson
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_

@@ -8,6 +8,7 @@ from thinc.neural import Model
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.optimizers import Adam, SGD
 import random
+import ujson
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
