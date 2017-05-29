@@ -439,7 +439,7 @@ class Language(object):
                 continue
             if not hasattr(proc, 'to_bytes'):
                 continue
-            serializers[i] = lambda: proc.to_bytes(vocab=False)
+            serializers[i] = lambda proc=proc: proc.to_bytes(vocab=False)
         return util.to_bytes(serializers, {})
 
     def from_bytes(self, bytes_data, disable=[]):
@@ -459,8 +459,8 @@ class Language(object):
                 continue
             if not hasattr(proc, 'from_bytes'):
                 continue
-            deserializers[i] = lambda b: proc.from_bytes(b, vocab=False)
-        util.from_bytes(bytes_data, deserializers, {})
+            deserializers[i] = lambda b, proc=proc: proc.from_bytes(b, vocab=False)
+        msg = util.from_bytes(bytes_data, deserializers, {})
         return self
 
 
