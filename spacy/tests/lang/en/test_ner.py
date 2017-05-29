@@ -5,8 +5,8 @@ from spacy.attrs import LOWER
 from spacy.matcher import Matcher
 
 
-@pytest.mark.models
-def test_simple_types(EN):
+@pytest.mark.models('en')
+def test_en_ner_simple_types(EN):
     tokens = EN(u'Mr. Best flew to New York on Saturday morning.')
     ents = list(tokens.ents)
     assert ents[0].start == 1
@@ -17,8 +17,8 @@ def test_simple_types(EN):
     assert ents[1].label_ == 'GPE'
 
 
-@pytest.mark.models
-def test_consistency_bug(EN):
+@pytest.mark.models('en')
+def test_en_ner_consistency_bug(EN):
     '''Test an arbitrary sequence-consistency bug encountered during speed test'''
     tokens = EN(u'Where rap essentially went mainstream, illustrated by seminal Public Enemy, Beastie Boys and L.L. Cool J. tracks.')
     tokens = EN(u'''Charity and other short-term aid have buoyed them so far, and a tax-relief bill working its way through Congress would help. But the September 11 Victim Compensation Fund, enacted by Congress to discourage people from filing lawsuits, will determine the shape of their lives for years to come.\n\n''', entity=False)
@@ -26,8 +26,8 @@ def test_consistency_bug(EN):
     EN.entity(tokens)
 
 
-@pytest.mark.models
-def test_unit_end_gazetteer(EN):
+@pytest.mark.models('en')
+def test_en_ner_unit_end_gazetteer(EN):
     '''Test a bug in the interaction between the NER model and the gazetteer'''
     matcher = Matcher(EN.vocab)
     matcher.add('MemberNames', None, [{LOWER: 'cal'}], [{LOWER: 'cal'}, {LOWER: 'henderson'}])
@@ -38,6 +38,3 @@ def test_unit_end_gazetteer(EN):
         doc.ents += tuple(ents)
         EN.entity(doc)
         assert list(doc.ents)[0].text == 'cal'
-
-
-

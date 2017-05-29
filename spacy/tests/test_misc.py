@@ -20,6 +20,7 @@ def test_util_ensure_path_succeeds(text):
     assert isinstance(path, Path)
 
 
+@pytest.mark.models
 def test_simple_model_roundtrip_bytes():
     model = Maxout(5, 10, pieces=2)
     model.b += 1
@@ -29,6 +30,7 @@ def test_simple_model_roundtrip_bytes():
     assert model.b[0, 0] == 1
 
 
+@pytest.mark.models
 def test_multi_model_roundtrip_bytes():
     model = chain(Maxout(5, 10, pieces=2), Maxout(2, 3))
     model._layers[0].b += 1
@@ -41,6 +43,7 @@ def test_multi_model_roundtrip_bytes():
     assert model._layers[1].b[0, 0] == 2
 
 
+@pytest.mark.models
 def test_multi_model_load_missing_dims():
     model = chain(Maxout(5, 10, pieces=2), Maxout(2, 3))
     model._layers[0].b += 1

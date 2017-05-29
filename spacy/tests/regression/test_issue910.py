@@ -70,8 +70,8 @@ def temp_save_model(model):
 
 
 
-@pytest.mark.models
-def test_issue910(train_data, additional_entity_types):
+@pytest.mark.models('en')
+def test_issue910(EN, train_data, additional_entity_types):
     '''Test that adding entities and resuming training works passably OK.
     There are two issues here:
 
@@ -79,8 +79,7 @@ def test_issue910(train_data, additional_entity_types):
     2) There's no way to set the learning rate for the weight update, so we
         end up out-of-scale, causing it to learn too fast.
     '''
-    nlp = English()
-    doc = nlp(u"I am looking for a restaurant in Berlin")
+    doc = EN(u"I am looking for a restaurant in Berlin")
     ents_before_train = [(ent.label_, ent.text) for ent in doc.ents]
     # Fine tune the ner model
     for entity_type in additional_entity_types:

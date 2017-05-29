@@ -4,7 +4,18 @@ from __future__ import unicode_literals
 from ..tokens import Doc
 from ..attrs import ORTH, POS, HEAD, DEP
 
+import pytest
 import numpy
+
+
+MODELS = {}
+
+
+def load_test_model(model):
+    if model not in MODELS:
+        module = pytest.importorskip(model)
+        MODELS[model] = module.load()
+    return MODELS[model]
 
 
 def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None):
