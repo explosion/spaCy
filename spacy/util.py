@@ -179,7 +179,7 @@ def get_package_path(name):
     """
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
-    pkg = importlib.import_module(package_name)
+    pkg = importlib.import_module(name)
     return Path(pkg.__file__).parent
 
 
