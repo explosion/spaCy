@@ -453,7 +453,9 @@ def model_from_bytes(model, bytes_data):
     for layer in queue:
         if hasattr(layer, '_mem'):
             params = weights[i]
-            flat_mem = layer._mem._mem.ravel() 
+            layer._mem._get_blob(params.size)
+            layer._mem._i -= params.size
+            flat_mem = layer._mem._mem.ravel()
             flat_params = params.ravel()
             flat_mem[:flat_params.size] = flat_params
             layer._mem._offsets.update(metas[i])
