@@ -352,8 +352,7 @@ p
 
 p
     |  By default, spaCy's tokenizer will split emoji into separate tokens. This
-    |  means that you can create a pattern for one or more emoji tokens. In this
-    |  case, a sequence of identical emoji should be treated as one instance.
+    |  means that you can create a pattern for one or more emoji tokens.
     |  Valid hashtags usually consist of a #[code #], plus a sequence of
     |  ASCII characters with no whitespace, making them easy to match as well.
 
@@ -368,8 +367,8 @@ p
     neg_emoji = [u'😞', u'😠', u'😩', u'😢', u'😭', u'😒'] # negative emoji
 
     # add patterns to match one or more emoji tokens
-    pos_patterns = [[{'ORTH': emoji, 'OP': '+'}] for emoji in pos_emoji]
-    neg_patterns = [[{'ORTH': emoji, 'OP': '+'}] for emoji in neg_emoji]
+    pos_patterns = [[{'ORTH': emoji}] for emoji in pos_emoji]
+    neg_patterns = [[{'ORTH': emoji}] for emoji in neg_emoji]
 
     matcher.add('HAPPY', label_sentiment, *pos_patterns) # add positive pattern
     matcher.add('SAD', label_sentiment, *neg_patterns) # add negative pattern
@@ -397,9 +396,9 @@ p
 
     def label_sentiment(matcher, doc, i, matches):
         match_id, start, end = matches[i]
-        if match_id is 'HAPPY':
+        if doc.vocab.strings[match_id] == 'HAPPY': # don't forget to get string!
             doc.sentiment += 0.1 # add 0.1 for positive sentiment
-        elif match_id is 'SAD':
+        elif doc.vocab.strings[match_id] == 'SAD':
             doc.sentiment -= 0.1 # subtract 0.1 for negative sentiment
         span = doc[start : end]
         emoji = Emojipedia.search(span[0].text) # get data for emoji

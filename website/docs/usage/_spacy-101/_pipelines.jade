@@ -63,3 +63,16 @@ p
 
 +code(false, "json").
     "pipeline": ["tensorizer", "tagger", "parser", "ner"]
+
+p
+    |  Although you can mix and match pipeline components, their
+    |  #[strong order and combination] is usually important. Some components may
+    |  require certain modifications on the #[code Doc] to process it. For
+    |  example, the default pipeline first applies the tensorizer, which
+    |  pre-processes the doc and encodes its internal
+    |  #[strong meaning representations] as an array of floats, also called a
+    |  #[strong tensor]. This includes the tokens and their context, which is
+    |  required for the next component, the tagger, to make predictions of the
+    |  part-of-speech tags. Because spaCy's models are neural network models,
+    |  they only "speak" tensors and expect the input #[code Doc] to have
+    |  a #[code tensor].

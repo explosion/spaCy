@@ -6,6 +6,25 @@ from ...strings import StringStore
 import pytest
 
 
+def test_stringstore_from_api_docs(stringstore):
+    apple_hash = stringstore.add('apple')
+    assert apple_hash == 8566208034543834098
+    assert stringstore[apple_hash] == u'apple'
+
+    assert u'apple' in stringstore
+    assert u'cherry' not in stringstore
+
+    orange_hash = stringstore.add('orange')
+    all_strings = [s for s in stringstore]
+    assert all_strings == [u'apple', u'orange']
+
+    banana_hash = stringstore.add('banana')
+    assert len(stringstore) == 3
+    assert banana_hash == 2525716904149915114
+    assert stringstore[banana_hash] == u'banana'
+    assert stringstore[u'banana'] == banana_hash
+
+
 @pytest.mark.parametrize('text1,text2,text3', [(b'Hello', b'goodbye', b'hello')])
 def test_stringstore_save_bytes(stringstore, text1, text2, text3):
     key = stringstore.add(text1)

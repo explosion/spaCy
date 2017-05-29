@@ -53,9 +53,9 @@ p
 +code.
     doc = nlp(u'Apple is looking at buying U.K. startup for $1 billion')
     apple = doc[0]
-    assert [apple.pos_, apple.pos] == [u'PROPN', 17049293600679659579L]
-    assert [apple.tag_, apple.tag] == [u'NNP', 15794550382381185553L]
-    assert [apple.shape_, apple.shape] == [u'Xxxxx', 16072095006890171862L]
+    assert [apple.pos_, apple.pos] == [u'PROPN', 17049293600679659579]
+    assert [apple.tag_, apple.tag] == [u'NNP', 15794550382381185553]
+    assert [apple.shape_, apple.shape] == [u'Xxxxx', 16072095006890171862]
     assert apple.is_alpha == True
     assert apple.is_punct == False
 
@@ -72,16 +72,16 @@ p
 
 +code.
     doc = nlp(u'I love coffee')
-    coffee_hash = nlp.vocab.strings[u'coffee'] # 3197928453018144401L
+    coffee_hash = nlp.vocab.strings[u'coffee'] # 3197928453018144401
     coffee_text = nlp.vocab.strings[coffee_hash] # 'coffee'
 
-    assert doc[2].orth == coffee_hash == 3197928453018144401L
+    assert doc[2].orth == coffee_hash == 3197928453018144401
     assert doc[2].text == coffee_text == u'coffee'
 
-    beer_hash = doc.vocab.strings.add(u'beer') # 3073001599257881079L
+    beer_hash = doc.vocab.strings.add(u'beer') # 3073001599257881079
     beer_text = doc.vocab.strings[beer_hash] # 'beer'
 
-    unicorn_hash = doc.vocab.strings.add(u'🦄 ') # 18234233413267120783L
+    unicorn_hash = doc.vocab.strings.add(u'🦄 ') # 18234233413267120783
     unicorn_text = doc.vocab.strings[unicorn_hash] # '🦄 '
 
 +infobox

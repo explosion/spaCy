@@ -5,7 +5,7 @@ p
     |  #[+api("vocab") #[code Vocab]], that will be
     |  #[strong shared by multiple documents]. To save memory, spaCy also
     |  encodes all strings to #[strong hash values] – in this case for example,
-    |  "coffee" has the hash #[code 3197928453018144401L]. Entity labels like
+    |  "coffee" has the hash #[code 3197928453018144401]. Entity labels like
     |  "ORG" and part-of-speech tags like "VERB" are also encoded. Internally,
     |  spaCy only "speaks" in hash values.
 
@@ -17,7 +17,7 @@ p
     |  #[strong Doc]: A processed container of tokens in context.#[br]
     |  #[strong Vocab]: The collection of lexemes.#[br]
     |  #[strong StringStore]: The dictionary mapping hash values to strings, for
-    |  example #[code 3197928453018144401L] &rarr; "coffee".
+    |  example #[code 3197928453018144401] &rarr; "coffee".
 
 +image
     include ../../../assets/img/docs/vocab_stringstore.svg
@@ -35,8 +35,13 @@ p
 
 +code.
     doc = nlp(u'I like coffee')
-    assert doc.vocab.strings[u'coffee'] == 3197928453018144401L
-    assert doc.vocab.strings[3197928453018144401L] == u'coffee'
+    assert doc.vocab.strings[u'coffee'] == 3197928453018144401
+    assert doc.vocab.strings[3197928453018144401] == u'coffee'
+
++aside("What does 'L' at the end of a hash mean?")
+    |  If you return a hash value in the #[strong Python 2 interpreter], it'll
+    |  show up as #[code 3197928453018144401L]. The #[code L] just means "long
+    |  integer" – it's #[strong not] actually a part of the hash value.
 
 p
     |  Now that all strings are encoded, the entries in the vocabulary
@@ -65,9 +70,9 @@ p
 
 +table(["text", "orth", "shape", "prefix", "suffix", "is_alpha", "is_digit"])
     - var style = [0, 1, 1, 0, 0, 1, 1]
-    +annotation-row(["I", "4690420944186131903L", "X", "I", "I", true, false], style)
-    +annotation-row(["love", "3702023516439754181L", "xxxx", "l", "ove", true, false], style)
-    +annotation-row(["coffee", "3197928453018144401L", "xxxx", "c", "ffe", true, false], style)
+    +annotation-row(["I", "4690420944186131903", "X", "I", "I", true, false], style)
+    +annotation-row(["love", "3702023516439754181", "xxxx", "l", "ove", true, false], style)
+    +annotation-row(["coffee", "3197928453018144401", "xxxx", "c", "ffe", true, false], style)
 
 p
     |  The mapping of words to hashes doesn't depend on any state. To make sure
@@ -79,7 +84,7 @@ p
 
 p
     |  However, hashes #[strong cannot be reversed] and there's no way to
-    |  resolve #[code 3197928453018144401L] back to "coffee". All spaCy can do
+    |  resolve #[code 3197928453018144401] back to "coffee". All spaCy can do
     |  is look it up in the vocabulary. That's why you always need to make
     |  sure all objects you create have access to the same vocabulary. If they
     |  don't, spaCy might not be able to find the strings it needs.
@@ -89,17 +94,17 @@ p
     from spacy.vocab import Vocab
 
     doc = nlp(u'I like coffee') # original Doc
-    assert doc.vocab.strings[u'coffee'] == 3197928453018144401L # get hash
-    assert doc.vocab.strings[3197928453018144401L] == u'coffee' # 👍
+    assert doc.vocab.strings[u'coffee'] == 3197928453018144401 # get hash
+    assert doc.vocab.strings[3197928453018144401] == u'coffee' # 👍
 
     empty_doc = Doc(Vocab()) # new Doc with empty Vocab
-    # doc.vocab.strings[3197928453018144401L] will raise an error :(
+    # doc.vocab.strings[3197928453018144401] will raise an error :(
 
     empty_doc.vocab.strings.add(u'coffee') # add "coffee" and generate hash
-    assert doc.vocab.strings[3197928453018144401L] == u'coffee' # 👍
+    assert doc.vocab.strings[3197928453018144401] == u'coffee' # 👍
 
     new_doc = Doc(doc.vocab) # create new doc with first doc's vocab
-    assert doc.vocab.strings[3197928453018144401L] == u'coffee' # 👍
+    assert doc.vocab.strings[3197928453018144401] == u'coffee' # 👍
 
 p
     |  If the vocabulary doesn't contain a hash for "coffee", spaCy will
