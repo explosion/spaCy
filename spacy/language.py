@@ -132,7 +132,7 @@ class Language(object):
     Defaults = BaseDefaults
     lang = None
 
-    def __init__(self, vocab=True, make_doc=True, pipeline=None, meta={}):
+    def __init__(self, vocab=True, make_doc=True, pipeline=None, meta={}, **kwargs):
         """Initialise a Language object.
 
         vocab (Vocab): A `Vocab` object. If `True`, a vocab is created via
