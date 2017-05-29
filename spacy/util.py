@@ -453,11 +453,12 @@ def model_from_bytes(model, bytes_data):
     for layer in queue:
         if hasattr(layer, '_mem'):
             params = weights[i]
-            blob = layer._mem._get_blob(params.size)
-            blob[:] = params
-            layer._mem._offsets = metas[i]
+            flat_mem = layer._mem._mem.ravel() 
+            flat_params = params.ravel()
+            flat_mem[:flat_params.size] = flat_params
+            layer._mem._offsets.update(metas[i])
             if hasattr(layer, '_dims'):
-                layer._dims[i] = dims[i]
+                layer._dims.update(dims[i])
             i += 1
         if hasattr(layer, '_layers'):
             queue.extend(layer._layers)
