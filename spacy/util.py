@@ -434,20 +434,20 @@ def model_to_bytes(model):
                 weights.append(layer._mem.weights)
             else:
                 weights.append(layer._mem.weights.get())
-            metas.append(tuple(layer._mem._offsets))
+            metas.append(layer._mem._offsets)
             dims.append(getattr(layer, '_dims', None))
             i += 1
         if hasattr(layer, '_layers'):
             queue.extend(layer._layers)
-    data = {'metas': metas, 'weights': weights, 'dims': dims}
+    data = {'metas': ujson.dumps(metas), 'weights': weights, 'dims': ujson.dumps(dims)}
     return msgpack.dumps(data)
 
 
 def model_from_bytes(model, bytes_data):
     data = msgpack.loads(bytes_data)
     weights = data['weights']
-    metas = data['metas']
-    dims = data['dims']
+    metas = ujson.loads(data['metas'])
+    dims = ujson.loads(data['dims'])
     queue = [model]
     i = 0
     for layer in queue:
@@ -461,7 +461,7 @@ def model_from_bytes(model, bytes_data):
             i += 1
         if hasattr(layer, '_layers'):
             queue.extend(layer._layers)
- 
+
 
 def print_table(data, title=None):
     """Print data in table format.
