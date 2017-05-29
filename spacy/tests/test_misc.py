@@ -2,7 +2,7 @@
 from __future__ import unicode_literals
 
 from ..util import ensure_path
-from .._ml import model_to_bytes, model_from_bytes
+from ..util import model_to_bytes, model_from_bytes
 
 from pathlib import Path
 import pytest
