@@ -659,9 +659,10 @@ cdef class Parser:
 
     def to_bytes(self, **exclude):
         serializers = {
-            'model': lambda: util.model_to_bytes(self.model),
+            'lower_model': lambda: util.model_to_bytes(self.model[0]),
+            'upper_model': lambda: util.model_to_bytes(self.model[1]),
             'vocab': lambda: self.vocab.to_bytes(),
-            'moves': lambda: self.moves.to_bytes(vocab=False),
+            'moves': lambda: self.moves.to_bytes(strings=False),
             'cfg': lambda: ujson.dumps(self.cfg)
         }
         return util.to_bytes(serializers, exclude)
@@ -669,15 +670,19 @@ cdef class Parser:
     def from_bytes(self, bytes_data, **exclude):
         deserializers = {
             'vocab': lambda b: self.vocab.from_bytes(b),
-            'moves': lambda b: self.moves.from_bytes(b),
+            'moves': lambda b: self.moves.from_bytes(b, strings=False),
             'cfg': lambda b: self.cfg.update(ujson.loads(b)),
-            'model': lambda b: None
+            'lower_model': lambda b: None,
+            'upper_model': lambda b: None
         }
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
             if self.model is True:
                 self.model, cfg = self.Model(self.moves.n_moves)
-            util.model_from_bytes(self.model, msg['model'])
+            else:
+                cfg = {}
+            util.model_from_bytes(self.model[0], msg['lower_model'])
+            util.model_from_bytes(self.model[1], msg['upper_model'])
             self.cfg.update(cfg)
         return self
 

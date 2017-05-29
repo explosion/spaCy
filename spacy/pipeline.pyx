@@ -9,6 +9,7 @@ import numpy
 cimport numpy as np
 import cytoolz
 import util
+from collections import OrderedDict
 
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
 from thinc.neural import Model, Maxout, Softmax, Affine
@@ -158,18 +159,18 @@ class TokenVectorEncoder(object):
             yield
 
     def to_bytes(self, **exclude):
-        serialize = {
-            'model': lambda: util.model_to_bytes(self.model),
-            'vocab': lambda: self.vocab.to_bytes()
-        }
+        serialize = OrderedDict((
+            ('model', lambda: util.model_to_bytes(self.model)),
+            ('vocab', lambda: self.vocab.to_bytes())
+        ))
         return util.to_bytes(serialize, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
-        deserialize = {
-            'model': lambda b: util.model_from_bytes(self.model, b),
-            'vocab': lambda b: self.vocab.from_bytes(b)
-        }
-        util.from_bytes(deserialize, exclude)
+        deserialize = OrderedDict((
+            ('model', lambda b: util.model_from_bytes(self.model, b)),
+            ('vocab', lambda b: self.vocab.from_bytes(b))
+        ))
+        util.from_bytes(bytes_data, deserialize, exclude)
         return self
 
     def to_disk(self, path, **exclude):

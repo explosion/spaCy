@@ -9,6 +9,7 @@ from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.optimizers import Adam, SGD
 import random
 import ujson
+from collections import OrderedDict
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -154,7 +155,7 @@ class Language(object):
         if make_doc is True:
             factory = self.Defaults.create_tokenizer
             make_doc = factory(self, **meta.get('tokenizer', {}))
-        self.make_doc = make_doc
+        self.tokenizer = make_doc
         if pipeline is True:
             self.pipeline = self.Defaults.create_pipeline(self)
         elif pipeline:
@@ -195,6 +196,9 @@ class Language(object):
                 continue
             doc = proc(doc)
         return doc
+
+    def make_doc(self, text):
+        return self.tokenizer(text)
 
     def update(self, docs, golds, drop=0., sgd=None, losses=None):
         """Update the models in the pipeline.
@@ -425,19 +429,17 @@ class Language(object):
             from being serialized.
         RETURNS (bytes): The serialized form of the `Language` object.
         """
-        serializers = {
-            'vocab': lambda: self.vocab.to_bytes(),
-            'tokenizer': lambda: self.tokenizer.to_bytes(vocab=False),
-            'meta': lambda: ujson.dumps(self.meta)
-        }
-        for proc in self.pipeline:
-            if not hasattr(proc, 'name'):
-                continue
-            if proc.name in disable:
+        serializers = OrderedDict((
+            ('vocab', lambda: self.vocab.to_bytes()),
+            ('tokenizer', lambda: self.tokenizer.to_bytes(vocab=False)),
+            ('meta', lambda: ujson.dumps(self.meta))
+        ))
+        for i, proc in enumerate(self.pipeline):
+            if getattr(proc, 'name', None) in disable:
                 continue
             if not hasattr(proc, 'to_bytes'):
                 continue
-            serializers[proc.name] = lambda: proc.to_bytes(vocab=False)
+            serializers[i] = lambda: proc.to_bytes(vocab=False)
         return util.to_bytes(serializers, {})
 
     def from_bytes(self, bytes_data, disable=[]):
@@ -447,20 +449,18 @@ class Language(object):
         disable (list): Names of the pipeline components to disable.
         RETURNS (Language): The `Language` object.
         """
-        deserializers = {
-            'vocab': lambda b: self.vocab.from_bytes(b),
-            'tokenizer': lambda b: self.tokenizer.from_bytes(b, vocab=False),
-            'meta': lambda b: self.meta.update(ujson.loads(b))
-        }
-        for proc in self.pipeline:
-            if not hasattr(proc, 'name'):
+        deserializers = OrderedDict((
+            ('vocab', lambda b: self.vocab.from_bytes(b)),
+            ('tokenizer', lambda b: self.tokenizer.from_bytes(b, vocab=False)),
+            ('meta', lambda b: self.meta.update(ujson.loads(b)))
+        ))
+        for i, proc in enumerate(self.pipeline):
+            if getattr(proc, 'name', None) in disable:
                 continue
-            if proc.name in disable:
+            if not hasattr(proc, 'from_bytes'):
                 continue
-            if not hasattr(proc, 'to_disk'):
-                continue
-            deserializers[proc.name] = lambda b: proc.from_bytes(b, vocab=False)
-        util.from_bytes(deserializers, bytes_data, {})
+            deserializers[i] = lambda b: proc.from_bytes(b, vocab=False)
+        util.from_bytes(bytes_data, deserializers, {})
         return self
 
 

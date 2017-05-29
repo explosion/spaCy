@@ -11,6 +11,7 @@ import sys
 import textwrap
 import random
 import numpy
+import io
 
 import msgpack
 import msgpack_numpy
@@ -447,27 +448,25 @@ def model_to_bytes(model):
             i += 1
         if hasattr(layer, '_layers'):
             queue.extend(layer._layers)
-    data = {'metas': tuple(metas), 'weights': tuple(weights), 'dims':
-            tuple(dims)}
+    data = {'metas': metas, 'weights': weights, 'dims': dims}
     return msgpack.dumps(data)
 
 
 def model_from_bytes(model, bytes_data):
     data = msgpack.loads(bytes_data)
-    metas = data['metas']
     weights = data['weights']
+    metas = data['metas']
     dims = data['dims']
     queue = [model]
     i = 0
     for layer in queue:
         if hasattr(layer, '_mem'):
             params = weights[i]
-            flat_mem = layer._mem._mem.ravel()
-            flat_params = params.ravel()
-            flat_mem[:flat_params.size] = flat_params
-            layer._mem._offsets.update(metas[i])
+            blob = layer._mem._get_blob(params.size)
+            blob[:] = params
+            layer._mem._offsets = metas[i]
             if hasattr(layer, '_dims'):
-                layer._dims.update(dims[i])
+                layer._dims[i] = dims[i]
             i += 1
         if hasattr(layer, '_layers'):
             queue.extend(layer._layers)
