@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.mark.xfail
-@pytest.mark.models
+@pytest.mark.models('en')
 def test_issue758(EN):
     '''Test parser transition bug after label added.'''
     from ...matcher import merge_phrase

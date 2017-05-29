@@ -6,7 +6,7 @@ from ...matcher import Matcher
 import pytest
 
 
-@pytest.mark.models
+@pytest.mark.models('en')
 def test_issue429(EN):
     def merge_phrases(matcher, doc, i, matches):
       if i != len(matches) - 1:
