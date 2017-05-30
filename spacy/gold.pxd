@@ -8,6 +8,7 @@ from .syntax.transition_system cimport Transition
 cdef struct GoldParseC:
     int* tags
     int* heads
+    int* has_dep
     attr_t* labels
     int** brackets
     Transition* ner

@@ -385,6 +385,7 @@ cdef class GoldParse:
         self.c.tags = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.heads = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.labels = <attr_t*>self.mem.alloc(len(doc), sizeof(attr_t))
+        self.c.has_dep = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
 
         self.words = [None] * len(doc)
