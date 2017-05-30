@@ -89,12 +89,21 @@ cdef cppclass StateC:
             ids[11] = this.R(this.S(1), 1)
             ids[12] = this.R(this.S(1), 2)
         elif n == 6:
-            ids[0] = this.B(0)-1
+            if this.B(0) >= 0:
+                ids[0] = this.B(0)
+            else:
+                ids[0] = -1
             ids[1] = this.B(0)
             ids[2] = this.B(1)
             ids[3] = this.E(0)
-            ids[4] = this.E(0)-1
-            ids[5] = this.E(0)+1
+            if ids[3] >= 1:
+                ids[4] = this.E(0)-1
+            else:
+                ids[4] = -1
+            if ids[3] < (this.length+1):
+                ids[5] = this.E(0)+1
+            else:
+                ids[5] = -1
         else:
             # TODO error =/
             pass
