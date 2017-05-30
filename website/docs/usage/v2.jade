@@ -3,8 +3,17 @@
 include ../../_includes/_mixins
 
 p
-    |  We also re-wrote a large part of the documentation and usage workflows,
-    |  and added more examples.
+
+p
+    |  On this page, you'll find a summary of the #[+a("#features") new features],
+    |  information on the #[+a("#incompat") backwards incompatibilities],
+    |  including a handy overview of what's been renamed or deprecated.
+    |  To help you make the most of v2.0, we also
+    |  #[strong re-wrote almost all of the usage guides and API docs], and added
+    |  more real-world examples. If you're new to spaCy, or just want to brush
+    |  up on some NLP basics and the details of the library, check out
+    |  the #[+a("/docs/usage/spacy-101") spaCy 101 guide] that explains the most
+    |  important concepts with examples and illustrations.
 
 +h(2, "features") New features
 
@@ -13,14 +22,6 @@ p
     |  #[strong new features and improvements]. The #[+a("/docs/api") API docs]
     |  include additional  deprecation notes. New methods and functions that
     |  were introduced in this version are marked with a #[+tag-new(2)] tag.
-
-p
-    |  To help you make the most of v2.0, we also
-    |  #[strong re-wrote almost all of the usage guides and API docs], and added
-    |  more real-world examples. If you're new to spaCy, or just want to brush
-    |  up on some NLP basics and the details of the library, check out
-    |  the #[+a("/docs/usage/spacy-101") spaCy 101 guide] that explains the most
-    |  important concepts with examples and illustrations.
 
 +h(3, "features-pipelines") Improved processing pipelines
 
@@ -292,11 +293,10 @@ p
 
 +h(2, "migrating") Migrating from spaCy 1.x
 
-+list
-    +item Saving, loading and serialization.
-    +item Processing pipelines and language data.
-    +item Adding patterns and callbacks to the matcher.
-    +item Models trained with spaCy 1.x.
+p
+    |  If you've mostly been using spaCy for basic text processing, chances are
+    |  you won't even have to change your code at all. For all other cases,
+    |  we've tried to focus...
 
 +infobox("Some tips")
     |  Before migrating, we strongly recommend writing a few
@@ -341,6 +341,13 @@ p
 
 +h(3, "migrating-strings") Strings and hash values
 
+p
+    |  The change from integer IDs to hash values may not actually affect your
+    |  code very much. However, if you're adding strings to the vocab manually,
+    |  you now need to call #[+api("stringstore#add") #[code StringStore.add()]]
+    |  explicitly. You can also now be sure that the string-to-hash mapping will
+    |  always match across vocabularies.
+
 +code-new.
     nlp.vocab.strings.add(u'coffee')
     nlp.vocab.strings[u'coffee']       # 3197928453018144401
@@ -382,7 +389,7 @@ p
 p
     |  If you're using the matcher, you can now add patterns in one step. This
     |  should be easy to update – simply merge the ID, callback and patterns
-    |  into one call to #[+api("matcher#add") #[code matcher.add()]].
+    |  into one call to #[+api("matcher#add") #[code Matcher.add()]].
 
 +code-new.
     matcher.add('GoogleNow', merge_phrases, [{ORTH: 'Google'}, {ORTH: 'Now'}])
@@ -391,4 +398,11 @@ p
     matcher.add_entity('GoogleNow', on_match=merge_phrases)
     matcher.add_pattern('GoogleNow', [{ORTH: 'Google'}, {ORTH: 'Now'}])
 
-+h(3, "migrating-models") Trained models
+p
+    |  If you've been using #[strong acceptor functions], you'll need to move
+    |  this logic into the
+    |  #[+a("/docs/usage/rule-based-matching#on_match") #[code on_match] callbacks].
+    |  The callback function is invoked on every match and will give you access to
+    |  the doc, the index of the current match and all total matches. This lets
+    |  you both accept or reject the match, and define the actions to be
+    |  triggered.

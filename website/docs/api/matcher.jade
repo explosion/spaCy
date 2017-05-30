@@ -11,7 +11,9 @@ p Match sequences of tokens, based on pattern rules.
     |  patterns and a callback for a given match ID. #[code Matcher.get_entity]
     |  is now called #[+api("matcher#get") #[code matcher.get]].
     |  #[code Matcher.load] (not useful, as it didn't allow specifying callbacks),
-    |  and #[code Matcher.has_entity] (now redundant) have been removed.
+    |  and #[code Matcher.has_entity] (now redundant) have been removed. The
+    |  concept of "acceptor functions" has also been retired – this logic can
+    |  now be handled in the callback functions.
 
 +h(2, "init") Matcher.__init__
     +tag method
