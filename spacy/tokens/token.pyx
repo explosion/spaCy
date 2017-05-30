@@ -111,7 +111,7 @@ cdef class Token:
         RETURNS (float): A scalar similarity score. Higher is more similar.
         """
         if 'similarity' in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks['similarity'](self)
+            return self.doc.user_token_hooks['similarity'](self)
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
@@ -245,7 +245,10 @@ cdef class Token:
         def __get__(self):
             if 'vector' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['vector'](self)
-            return self.vocab.get_vector(self.c.lex.orth)
+            if self.has_vector:
+                return self.vocab.get_vector(self.c.lex.orth)
+            else:
+                return self.doc.tensor[self.i]
 
     property vector_norm:
         """The L2 norm of the token's vector representation.
