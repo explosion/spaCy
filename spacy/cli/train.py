@@ -88,8 +88,11 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
             with nlp.use_params(optimizer.averages):
                 with (output_path / ('model%d.pickle' % i)).open('wb') as file_:
                     dill.dump(nlp, file_, -1)
-                with (output_path / ('model%d.pickle' % i)).open('rb') as file_:
-                    nlp_loaded = dill.load(file_)
+                with (output_path / ('model%d.bin' % i)).open('wb') as file_:
+                    file_.write(nlp.to_bytes())
+                with (output_path / ('model%d.bin' % i)).open('rb') as file_:
+                    nlp_loaded = lang_class(pipeline=pipeline)
+                    nlp_loaded.from_bytes(file_.read())
                 scorer = nlp_loaded.evaluate(corpus.dev_docs(nlp_loaded, gold_preproc=False))
             print_progress(i, losses, scorer.scores)
     finally:
