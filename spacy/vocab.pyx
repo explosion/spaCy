@@ -392,25 +392,22 @@ def pickle_vocab(vocab):
     lex_attr_getters = vocab.lex_attr_getters
 
     lexemes_data = vocab.lexemes_to_bytes()
-    vectors_length = vocab.vectors_length
 
     return (unpickle_vocab,
         (sstore, morph, data_dir, lex_attr_getters,
-            lexemes_data, length, vectors_length))
+            lexemes_data, length))
 
 
 def unpickle_vocab(sstore, morphology, data_dir,
-        lex_attr_getters, bytes lexemes_data, int length, int vectors_length):
+        lex_attr_getters, bytes lexemes_data, int length):
     cdef Vocab vocab = Vocab()
     vocab.length = length
-    vocab.vectors_length = vectors_length
     vocab.strings = sstore
     vocab.morphology = morphology
     vocab.data_dir = data_dir
     vocab.lex_attr_getters = lex_attr_getters
     vocab.lexemes_from_bytes(lexemes_data)
     vocab.length = length
-    vocab.vectors_length = vectors_length
     return vocab
 
 
