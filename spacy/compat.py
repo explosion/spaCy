@@ -6,7 +6,7 @@ import ftfy
 import sys
 import ujson
 
-import thinc.neural.util
+from thinc.neural.util import copy_array
 
 try:
     import cPickle as pickle
@@ -34,7 +34,7 @@ copy_reg = copy_reg
 CudaStream = CudaStream
 cupy = cupy
 fix_text = ftfy.fix_text
-copy_array = thinc.neural.util.copy_array
+copy_array = copy_array
 
 is_python2 = six.PY2
 is_python3 = six.PY3
