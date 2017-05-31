@@ -41,7 +41,5 @@ def test_tokenizer_excludes_false_pos_emoticons(tokenizer, text, length):
 @pytest.mark.parametrize('text,length', [('can you still dunk?🍕🍔😵LOL', 8),
                                          ('i💙you', 3), ('🤘🤘yay!', 4)])
 def test_tokenizer_handles_emoji(tokenizer, text, length):
-    exceptions = ["hu"]
     tokens = tokenizer(text)
-    if tokens[0].lang_ not in exceptions:
-        assert len(tokens) == length
+    assert len(tokens) == length
