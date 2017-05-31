@@ -357,7 +357,7 @@ cdef class Tokenizer:
         """
         serializers = {
             'vocab': lambda: self.vocab.to_bytes(),
-            'prefix': lambda: self.prefix_search.__self__.pattern,
+            'prefix_search': lambda: self.prefix_search.__self__.pattern,
             'suffix_search': lambda: self.suffix_search.__self__.pattern,
             'infix_finditer': lambda: self.infix_finditer.__self__.pattern,
             'token_match': lambda: self.token_match.__self__.pattern,
@@ -375,19 +375,19 @@ cdef class Tokenizer:
         data = {}
         deserializers = {
             'vocab': lambda b: self.vocab.from_bytes(b),
-            'prefix': lambda b: data.setdefault('prefix', b),
+            'prefix_search': lambda b: data.setdefault('prefix', b),
             'suffix_search': lambda b: data.setdefault('suffix_search', b),
             'infix_finditer': lambda b: data.setdefault('infix_finditer', b),
             'token_match': lambda b: data.setdefault('token_match', b),
             'exceptions': lambda b: data.setdefault('rules', b)
         }
         msg = util.from_bytes(bytes_data, deserializers, exclude)
-        if 'prefix' in data:
-            self.prefix_search = re.compile(data['prefix']).search
-        if 'suffix' in data:
-            self.suffix_search = re.compile(data['suffix']).search
-        if 'infix' in data:
-            self.infix_finditer = re.compile(data['infix']).finditer
+        if 'prefix_search' in data:
+            self.prefix_search = re.compile(data['prefix_search']).search
+        if 'suffix_search' in data:
+            self.suffix_search = re.compile(data['suffix_search']).search
+        if 'infix_finditer' in data:
+            self.infix_finditer = re.compile(data['infix_finditer']).finditer
         if 'token_match' in data:
             self.token_match = re.compile(data['token_match']).search
         for string, substrings in data.get('rules', {}).items():
