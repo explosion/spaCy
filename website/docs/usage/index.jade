@@ -354,12 +354,14 @@ p
     python -c "import os; import spacy; print(os.path.dirname(spacy.__file__))"
 
 p
-    |  Then run #[code pytest] on that directory. The flags #[code --vectors],
-    |  #[code --slow] and #[code --model] are optional and enable additional
-    |  tests:
+    |  Then run #[code pytest] on that directory. The flags #[code --slow] and
+    |  #[code --model] are optional and enable additional tests.
 
 +code(false, "bash").
     # make sure you are using recent pytest version
     python -m pip install -U pytest
 
-    python -m pytest &lt;spacy-directory&gt; --vectors --models --slow
+    python -m pytest &lt;spacy-directory&gt;                 # basic tests
+    python -m pytest &lt;spacy-directory&gt; --slow          # basic and slow tests
+    python -m pytest &lt;spacy-directory&gt; --models --all  # basic and all model tests
+    python -m pytest &lt;spacy-directory&gt; --models --en   # basic and English model tests

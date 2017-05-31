@@ -108,8 +108,8 @@ mixin quickstart(groups, headline, description, hide_results)
                                 |  #[+help(group.help)]
                     .c-quickstart__fields
                         for option in group.options
-                            input.c-quickstart__input(class="c-quickstart__input--" + (group.input_style ? group.input_style : group.multiple ? "check" : "radio") type=group.multiple ? "checkbox" : "radio" name=group.id id=option.id value=option.id checked=option.checked)
-                            label.c-quickstart__label(for=option.id)!=option.title
+                            input.c-quickstart__input(class="c-quickstart__input--" + (group.input_style ? group.input_style : group.multiple ? "check" : "radio") type=group.multiple ? "checkbox" : "radio" name=group.id id="qs-#{option.id}" value=option.id checked=option.checked)
+                            label.c-quickstart__label(for="qs-#{option.id}")!=option.title
                                 if option.meta
                                     |  #[span.c-quickstart__label__meta (#{option.meta})]
                                 if option.help
