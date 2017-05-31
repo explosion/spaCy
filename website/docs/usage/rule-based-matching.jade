@@ -24,6 +24,7 @@ p
 
 +code.
     from spacy.matcher import Matcher
+    from spacy.attrs import LOWER, IS_PUNCT, ORTH
     matcher = Matcher(nlp.vocab)
     matcher.add_pattern("HelloWorld", [{LOWER: "hello"}, {IS_PUNCT: True}, {LOWER: "world"}])
 
