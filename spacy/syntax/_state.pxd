@@ -100,7 +100,7 @@ cdef cppclass StateC:
                 ids[4] = this.E(0)-1
             else:
                 ids[4] = -1
-            if ids[3] < (this.length+1):
+            if (ids[3]+1) < this.length:
                 ids[5] = this.E(0)+1
             else:
                 ids[5] = -1
