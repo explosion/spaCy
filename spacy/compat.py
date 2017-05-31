@@ -59,6 +59,11 @@ elif is_python3:
     json_dumps = lambda data: ujson.dumps(data, indent=2)
     path2str = lambda path: str(path)
 
+def getattr_(obj, name, *default):
+    if is_python3 and isinstance(name, bytes):
+        name = name.decode('utf8')
+    return getattr(obj, name, *default)
+
 
 def symlink_to(orig, dest):
     if is_python2 and is_windows:
