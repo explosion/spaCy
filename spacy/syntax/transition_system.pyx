@@ -157,22 +157,13 @@ cdef class TransitionSystem:
         return 1
 
     def to_disk(self, path, **exclude):
-        actions = list(self.move_names)
-        deserializers = {
-            'actions': lambda p: ujson.dump(p.open('w'), actions),
-            'strings': lambda p: self.strings.to_disk(p)
-        }
-        util.to_disk(path, deserializers, exclude)
+        with path.open('wb') as file_:
+            file_.write(self.to_bytes(**exclude))
 
     def from_disk(self, path, **exclude):
-        actions = []
-        deserializers = {
-            'strings': lambda p: self.strings.from_disk(p),
-            'actions': lambda p: actions.extend(ujson.load(p.open()))
-        }
-        util.from_disk(path, deserializers, exclude)
-        for move, label in actions:
-            self.add_action(move, label)
+        with path.open('rb') as file_:
+            byte_data = file_.read()
+        self.from_bytes(byte_data, **exclude)
         return self
 
     def to_bytes(self, **exclude):

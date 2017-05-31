@@ -44,6 +44,7 @@ from .. import util
 from ..util import get_async, get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
 from .._ml import Tok2Vec, doc2feats, rebatch
+from ..compat import json_dumps
 
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
@@ -633,11 +634,13 @@ cdef class Parser:
 
     def to_disk(self, path, **exclude):
         serializers = {
-            'model': lambda p: p.open('wb').write(
-                util.model_to_bytes(self.model)),
+            'lower_model': lambda p: p.open('wb').write(
+                util.model_to_bytes(self.model[0])),
+            'upper_model': lambda p: p.open('wb').write(
+                util.model_to_bytes(self.model[1])),
             'vocab': lambda p: self.vocab.to_disk(p),
             'moves': lambda p: self.moves.to_disk(p, strings=False),
-            'cfg': lambda p: ujson.dumps(p.open('w'), self.cfg)
+            'cfg': lambda p: p.open('w').write(json_dumps(self.cfg))
         }
         util.to_disk(path, serializers, exclude)
 
@@ -645,7 +648,7 @@ cdef class Parser:
         deserializers = {
             'vocab': lambda p: self.vocab.from_disk(p),
             'moves': lambda p: self.moves.from_disk(p, strings=False),
-            'cfg': lambda p: self.cfg.update(ujson.load((path/'cfg.json').open())),
+            'cfg': lambda p: self.cfg.update(ujson.load(p.open())),
             'model': lambda p: None
         }
         util.from_disk(path, deserializers, exclude)
@@ -653,7 +656,14 @@ cdef class Parser:
             path = util.ensure_path(path)
             if self.model is True:
                 self.model, cfg = self.Model(**self.cfg)
-            util.model_from_disk(self.model, path / 'model')
+            else:
+                cfg = {}
+            with (path / 'lower_model').open('rb') as file_:
+                bytes_data = file_.read()
+            util.model_from_bytes(self.model[0], bytes_data)
+            with (path / 'upper_model').open('rb') as file_:
+                bytes_data = file_.read()
+            util.model_from_bytes(self.model[1], bytes_data)
             self.cfg.update(cfg)
         return self
 

@@ -16,6 +16,7 @@ from .symbols import NAMES as SYMBOLS_BY_INT
 
 from .typedefs cimport hash_t
 from . import util
+from .compat import json_dumps
 
 
 cpdef hash_t hash_string(unicode string) except 0:
@@ -201,7 +202,7 @@ cdef class StringStore:
         path = util.ensure_path(path)
         strings = list(self)
         with path.open('w') as file_:
-            ujson.dump(strings, file_)
+            file_.write(json_dumps(strings))
 
     def from_disk(self, path):
         """Loads state from a directory. Modifies the object in place and

@@ -12,6 +12,7 @@ MODELS = {}
 
 
 def load_test_model(model):
+    """Load a model if it's installed as a package, otherwise skip."""
     if model not in MODELS:
         module = pytest.importorskip(model)
         MODELS[model] = module.load()

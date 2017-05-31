@@ -239,6 +239,16 @@ cdef class Vocab:
                 Token.set_struct_attr(token, attr_id, value)
         return tokens
 
+    @property
+    def vectors_length(self):
+        raise NotImplementedError
+
+    def clear_vectors(self):
+        """Drop the current vector table. Because all vectors must be the same
+        width, you have to call this to change the size of the vectors.
+        """
+        raise NotImplementedError
+
     def get_vector(self, orth):
         """Retrieve a vector for a word in the vocabulary.
 
@@ -250,6 +260,16 @@ cdef class Vocab:
             of shape (300,) and dtype float32.
 
         RAISES: If no vectors data is loaded, ValueError is raised.
+        """
+        raise NotImplementedError
+
+    def set_vector(self, orth, vector):
+        """Set a vector for a word in the vocabulary.
+
+        Words can be referenced by string or int ID.
+
+        RETURNS:
+            None
         """
         raise NotImplementedError
 

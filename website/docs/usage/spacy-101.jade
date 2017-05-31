@@ -2,6 +2,13 @@
 
 include ../../_includes/_mixins
 
+p
+    |  Whether you're new to spaCy, or just want to brush up on some
+    |  NLP basics and implementation details – this page should have you covered.
+    |  Each section will explain one of spaCy's features in simple terms and
+    |  with examples or illustrations. Some sections will also reappear across
+    |  the usage guides as a quick introcution.
+
 +aside("Help us improve the docs")
     |  Did you spot a mistake or come across explanations that
     |  are unclear? We always appreciate improvement
@@ -13,6 +20,23 @@ include ../../_includes/_mixins
 
 +grid.o-no-block
     +grid-col("half")
+        p
+            |  spaCy is a #[strong free, open-source library] for advanced
+            |  #[strong Natural Language Processing] (NLP) in Python.
+
+        p
+            |  If you're working with a lot of text, you'll eventually want to
+            |  know more about it. For example, what's it about? What do the
+            |  words mean in context? Who is doing what to whom? What companies
+            |  and products are mentioned? Which texts are similar to each other?
+
+        p
+            |  spaCy is designed specifically for #[strong production use] and
+            |  helps you build applications that process and "understand"
+            |  large volumes of text. It can be used to build
+            |  #[strong information extraction] or
+            |  #[strong natural language understanding] systems, or to
+            |  pre-process text for #[strong deep learning].
 
     +grid-col("half")
         +infobox
@@ -30,6 +54,29 @@ include ../../_includes/_mixins
                 +item #[+a("#training") Training]
                 +item #[+a("#architecture") Architecture]
                 +item #[+a("#community") Community & FAQ]
+
++h(3, "what-spacy-isnt") What spaCy isn't
+
++list
+    +item #[strong spaCy is not a platform or "an API"].
+        |  Unlike a platform, spaCy does not provide a software as a service, or
+        |  a web application. It's an open-source library designed to help you
+        |  build NLP applications, not a consumable service.
+    +item #[strong spaCy is not an out-of-the-box chat bot engine].
+        |  While spaCy can be used to power conversational applications, it's
+        |  not designed specifically for chat bots, and only provides the
+        |  underlying text processing capabilities.
+    +item #[strong spaCy is not research software].
+        |  It's is built on the latest research, but unlike
+        |  #[+a("https://github./nltk/nltk") NLTK], which is intended for
+        |  teaching and research, spaCy follows a more opinionated approach and
+        |  focuses on production usage. Its aim is to provide you with the best
+        |  possible general-purpose solution for text processing and machine learning
+        |  with text input – but this also means that there's only one implementation
+        |  of each component.
+    +item #[strong spaCy is not a company].
+        |  It's an open-source library. Our company publishing spaCy and other
+        |  software is called #[+a(COMPANY_URL, true) Explosion AI].
 
 +h(2, "features") Features
 
