@@ -6,8 +6,8 @@ from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from cymem.cymem cimport Pool
 from preshed.maps cimport PreshMap
+import regex as re
 
-import dill
 from .strings cimport hash_string
 from . import util
 cimport cython
@@ -344,8 +344,8 @@ cdef class Tokenizer:
             strings or `Path`-like objects.
         RETURNS (Tokenizer): The modified `Tokenizer` object.
         """
-        with path.open('wb') as file_:
-            bytes_data = file_.read(path)
+        with path.open('rb') as file_:
+            bytes_data = file_.read()
         self.from_bytes(bytes_data, **exclude)
         return self
 
@@ -383,12 +383,12 @@ cdef class Tokenizer:
         }
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'prefix' in data:
-            self.prefix_search = re.compile(data['prefix'])
+            self.prefix_search = re.compile(data['prefix']).search
         if 'suffix' in data:
-            self.suffix_search = re.compile(data['suffix'])
+            self.suffix_search = re.compile(data['suffix']).search
         if 'infix' in data:
-            self.infix_finditer = re.compile(data['infix'])
+            self.infix_finditer = re.compile(data['infix']).finditer
         if 'token_match' in data:
-            self.token_match = re.compile(data['token_match'])
+            self.token_match = re.compile(data['token_match']).search
         for string, substrings in data.get('rules', {}).items():
             self.add_special_case(string, substrings)
