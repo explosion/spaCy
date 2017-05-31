@@ -79,7 +79,7 @@ def is_config(python2=None, python3=None, windows=None, linux=None, osx=None):
 def normalize_string_keys(old):
     '''Given a dictionary, make sure keys are unicode strings, not bytes.'''
     new = {}
-    for key, value in old:
+    for key, value in old.items():
         if isinstance(key, bytes_):
             new[key.decode('utf8')] = value
         else:
