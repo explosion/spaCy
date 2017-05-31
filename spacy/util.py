@@ -13,6 +13,7 @@ import random
 import numpy
 import io
 import dill
+from collections import OrderedDict
 
 import msgpack
 import msgpack_numpy
@@ -408,7 +409,7 @@ def get_raw_input(description, default=False):
 
 
 def to_bytes(getters, exclude):
-    serialized = {}
+    serialized = OrderedDict()
     for key, getter in getters.items():
         if key not in exclude:
             serialized[key] = getter()
@@ -421,6 +422,24 @@ def from_bytes(bytes_data, setters, exclude):
         if key not in exclude:
             setter(msg[key])
     return msg
+
+
+def to_disk(path, writers, exclude):
+    path = ensure_path(path)
+    if not path.exists():
+        path.mkdir()
+    for key, writer in writers.items():
+        if key not in exclude:
+            writer(path / key)
+    return path
+
+
+def from_disk(path, readers, exclude):
+    path = ensure_path(path)
+    for key, reader in readers.items():
+        if key not in exclude:
+            reader(path / key)
+    return path
 
 
 # This stuff really belongs in thinc -- but I expect

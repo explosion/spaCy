@@ -96,6 +96,13 @@ class BaseDefaults(object):
 
     factories = {
         'make_doc': create_tokenizer,
+        'tensorizer': lambda nlp, **cfg: [TokenVectorEncoder(nlp.vocab, **cfg)],
+        'tagger': lambda nlp, **cfg: [NeuralTagger(nlp.vocab, **cfg)],
+        'parser': lambda nlp, **cfg: [
+            NeuralDependencyParser(nlp.vocab, **cfg),
+            nonproj.deprojectivize],
+        'ner': lambda nlp, **cfg: [NeuralEntityRecognizer(nlp.vocab, **cfg)],
+        # Temporary compatibility -- delete after pivot
         'token_vectors': lambda nlp, **cfg: [TokenVectorEncoder(nlp.vocab, **cfg)],
         'tags': lambda nlp, **cfg: [NeuralTagger(nlp.vocab, **cfg)],
         'dependencies': lambda nlp, **cfg: [
@@ -358,37 +365,35 @@ class Language(object):
         for doc in docs:
             yield doc
 
-    def to_disk(self, path, disable=[]):
+    def to_disk(self, path, disable=tuple()):
         """Save the current state to a directory.  If a model is loaded, this
         will include the model.
 
         path (unicode or Path): A path to a directory, which will be created if
             it doesn't exist. Paths may be either strings or `Path`-like objects.
-        disable (list): Nameds of pipeline components to disable and prevent
+        disable (list): Names of pipeline components to disable and prevent
             from being saved.
 
         EXAMPLE:
             >>> nlp.to_disk('/path/to/models')
         """
         path = util.ensure_path(path)
-        with path.open('wb') as file_:
-            file_.write(self.to_bytes(disable))
-        #serializers = {
-        #    'vocab': lambda p: self.vocab.to_disk(p),
-        #    'tokenizer': lambda p: self.tokenizer.to_disk(p, vocab=False),
-        #    'meta.json': lambda p: ujson.dump(p.open('w'), self.meta)
-        #}
-        #for proc in self.pipeline:
-        #    if not hasattr(proc, 'name'):
-        #        continue
-        #    if proc.name in disable:
-        #        continue
-        #    if not hasattr(proc, 'to_disk'):
-        #        continue
-        #    serializers[proc.name] = lambda p: proc.to_disk(p, vocab=False)
-        #util.to_disk(serializers, path)
+        serializers = OrderedDict((
+            ('vocab', lambda p: self.vocab.to_disk(p)),
+            ('tokenizer', lambda p: self.tokenizer.to_disk(p, vocab=False)),
+            ('meta.json', lambda p: p.open('w').write(json_dumps(self.meta)))
+        ))
+        for proc in self.pipeline:
+            if not hasattr(proc, 'name'):
+                continue
+            if proc.name in disable:
+                continue
+            if not hasattr(proc, 'to_disk'):
+                continue
+            serializers[proc.name] = lambda p, proc=proc: proc.to_disk(p, vocab=False)
+        util.to_disk(path, serializers, {p: False for p in disable})
 
-    def from_disk(self, path, disable=[]):
+    def from_disk(self, path, disable=tuple()):
         """Loads state from a directory. Modifies the object in place and
         returns it. If the saved `Language` object contains a model, the
         model will be loaded.
@@ -403,24 +408,21 @@ class Language(object):
             >>> nlp = Language().from_disk('/path/to/models')
         """
         path = util.ensure_path(path)
-        with path.open('rb') as file_:
-            bytes_data = file_.read()
-        return self.from_bytes(bytes_data, disable)
-        #deserializers = {
-        #    'vocab': lambda p: self.vocab.from_disk(p),
-        #    'tokenizer': lambda p: self.tokenizer.from_disk(p, vocab=False),
-        #    'meta.json': lambda p: ujson.dump(p.open('w'), self.meta)
-        #}
-        #for proc in self.pipeline:
-        #    if not hasattr(proc, 'name'):
-        #        continue
-        #    if proc.name in disable:
-        #        continue
-        #    if not hasattr(proc, 'to_disk'):
-        #        continue
-        #    deserializers[proc.name] = lambda p: proc.from_disk(p, vocab=False)
-        #util.from_disk(deserializers, path)
-        #return self
+        deserializers = OrderedDict((
+            ('vocab', lambda p: self.vocab.from_disk(p)),
+            ('tokenizer', lambda p: self.tokenizer.from_disk(p, vocab=False)),
+            ('meta.json', lambda p: p.open('w').write(json_dumps(self.meta)))
+        ))
+        for proc in self.pipeline:
+            if not hasattr(proc, 'name'):
+                continue
+            if proc.name in disable:
+                continue
+            if not hasattr(proc, 'to_disk'):
+                continue
+            deserializers[proc.name] = lambda p, proc=proc: proc.from_disk(p, vocab=False)
+        util.from_disk(path, deserializers, {p: False for p in disable})
+        return self
 
     def to_bytes(self, disable=[]):
         """Serialize the current state to a binary string.

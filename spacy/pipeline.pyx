@@ -41,7 +41,7 @@ from .parts_of_speech import X
 
 class TokenVectorEncoder(object):
     """Assign position-sensitive vectors to tokens, using a CNN or RNN."""
-    name = 'tok2vec'
+    name = 'tensorizer'
 
     @classmethod
     def Model(cls, width=128, embed_size=7500, **cfg):
@@ -176,17 +176,19 @@ class TokenVectorEncoder(object):
         return self
 
     def to_disk(self, path, **exclude):
-        serialize = {
-            'model': lambda p: p.open('w').write(util.model_to_bytes(self.model)),
-            'vocab': lambda p: self.vocab.to_disk(p)
-        }
+        serialize = OrderedDict((
+            ('model', lambda p: p.open('wb').write(util.model_to_bytes(self.model))),
+            ('vocab', lambda p: self.vocab.to_disk(p))
+        ))
         util.to_disk(path, serialize, exclude)
 
     def from_disk(self, path, **exclude):
-        deserialize = {
-            'model': lambda p: util.model_from_bytes(self.model, p.open('rb').read()),
-            'vocab': lambda p: self.vocab.from_disk(p)
-        }
+        if self.model is True:
+            self.model = self.Model()
+        deserialize = OrderedDict((
+            ('model', lambda p: util.model_from_bytes(self.model, p.open('rb').read())),
+            ('vocab', lambda p: self.vocab.from_disk(p))
+        ))
         util.from_disk(path, deserialize, exclude)
         return self
 
@@ -315,7 +317,7 @@ class NeuralTagger(object):
 
     def to_disk(self, path, **exclude):
         serialize = {
-            'model': lambda p: p.open('w').write(util.model_to_bytes(self.model)),
+            'model': lambda p: p.open('wb').write(util.model_to_bytes(self.model)),
             'vocab': lambda p: self.vocab.to_disk(p)
         }
         util.to_disk(path, serialize, exclude)
@@ -420,7 +422,7 @@ cdef class NeuralDependencyParser(NeuralParser):
 
 
 cdef class NeuralEntityRecognizer(NeuralParser):
-    name = 'entity'
+    name = 'ner'
     TransitionSystem = BiluoPushDown
 
     nr_feature = 6
