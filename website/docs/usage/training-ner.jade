@@ -37,6 +37,51 @@ p
     |  #[strong experiment on your own data] to find a solution that works best
     |  for you.
 
++h(2, "example") Example
+
++code.
+    import random
+    from spacy.lang.en import English
+    from spacy.gold import GoldParse, biluo_tags_from_offsets
+
+    def main(model_dir=None):
+        train_data = [
+            ('Who is Shaka Khan?',
+                [(len('Who is '), len('Who is Shaka Khan'), 'PERSON')]),
+            ('I like London and Berlin.',
+                [(len('I like '), len('I like London'), 'LOC'),
+                (len('I like London and '), len('I like London and Berlin'), 'LOC')])
+        ]
+        nlp = English(pipeline=['tensorizer', 'ner'])
+        get_data = lambda: reformat_train_data(nlp.tokenizer, train_data)
+        optimizer = nlp.begin_training(get_data)
+        for itn in range(100):
+            random.shuffle(train_data)
+            losses = {}
+            for raw_text, entity_offsets in train_data:
+                doc = nlp.make_doc(raw_text)
+                gold = GoldParse(doc, entities=entity_offsets)
+                nlp.update([doc], [gold], drop=0.5, sgd=optimizer, losses=losses)
+        nlp.to_disk(model_dir)
+
++code.
+    def reformat_train_data(tokenizer, examples):
+        """Reformat data to match JSON format"""
+        output = []
+        for i, (text, entity_offsets) in enumerate(examples):
+            doc = tokenizer(text)
+            ner_tags = biluo_tags_from_offsets(tokenizer(text), entity_offsets)
+            words = [w.text for w in doc]
+            tags = ['-'] * len(doc)
+            heads = [0] * len(doc)
+            deps = [''] * len(doc)
+            sentence = (range(len(doc)), words, tags, heads, deps, ner_tags)
+            output.append((text, [(sentence, [])]))
+        return output
+
+p.u-text-right
+    +button(gh("spaCy", "examples/training/train_ner.py"), false, "secondary").u-text-tag View full example
+
 +h(2, "saving-loading") Saving and loading
 
 p
