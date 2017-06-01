@@ -160,7 +160,7 @@ class TokenVectorEncoder(object):
 
     def to_bytes(self, **exclude):
         serialize = OrderedDict((
-            ('model', lambda: util.model_to_bytes(self.model)),
+            ('model', lambda: self.model.to_bytes()),
             ('vocab', lambda: self.vocab.to_bytes())
         ))
         return util.to_bytes(serialize, exclude)
@@ -177,7 +177,7 @@ class TokenVectorEncoder(object):
 
     def to_disk(self, path, **exclude):
         serialize = OrderedDict((
-            ('model', lambda p: p.open('wb').write(util.model_to_bytes(self.model))),
+            ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
             ('vocab', lambda p: self.vocab.to_disk(p))
         ))
         util.to_disk(path, serialize, exclude)
@@ -298,7 +298,7 @@ class NeuralTagger(object):
 
     def to_bytes(self, **exclude):
         serialize = OrderedDict((
-            ('model', lambda: util.model_to_bytes(self.model)),
+            ('model', lambda: self.model.to_bytes()),
             ('vocab', lambda: self.vocab.to_bytes())
         ))
         return util.to_bytes(serialize, exclude)
@@ -318,7 +318,7 @@ class NeuralTagger(object):
 
     def to_disk(self, path, **exclude):
         serialize = {
-            'model': lambda p: p.open('wb').write(util.model_to_bytes(self.model)),
+            'model': lambda p: p.open('wb').write(self.model.to_bytes()),
             'vocab': lambda p: self.vocab.to_disk(p)
         }
         util.to_disk(path, serialize, exclude)
