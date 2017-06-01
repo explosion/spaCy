@@ -118,17 +118,20 @@
 
     "dependenyparser": {
         "title": "DependencyParser",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
     },
 
     "entityrecognizer": {
         "title": "EntityRecognizer",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
     },
 
     "dependencyparser": {
         "title": "DependencyParser",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
     },
 
     "tokenizer": {
@@ -139,7 +142,8 @@
 
     "tagger": {
         "title": "Tagger",
-        "tag": "class"
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
     },
 
     "goldparse": {
