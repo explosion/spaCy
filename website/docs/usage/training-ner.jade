@@ -8,22 +8,23 @@ p
     |  particularly useful as a "quick and dirty solution", if you have only a
     |  few corrections or annotations.
 
-+under-construction
-
 +h(2, "improving-accuracy") Improving accuracy on existing entity types
 
 p
     |  To update the model, you first need to create an instance of
-    |  #[+api("goldparse") #[code spacy.gold.GoldParse]], with the entity labels
-    |  you want to learn. You will then pass this instance to the
-    |  #[+api("entityrecognizer#update") #[code EntityRecognizer.update()]]
-    |  method.
+    |  #[+api("goldparse") #[code GoldParse]], with the entity labels
+    |  you want to learn. You'll usually need to provide many examples to
+    |  meaningfully improve the system — a few hundred is a good start, although
+    |  more is better.
+
++image
+    include ../../assets/img/docs/training-loop.svg
+    .u-text-right
+        +button("/assets/img/docs/training-loop.svg", false, "secondary").u-text-tag View large graphic
 
 p
-    |  You'll usually need to provide many examples to meaningfully improve the
-    |  system — a few hundred is a good start, although more is better. You
-    |  should avoid iterating over the same few examples multiple times, or the
-    |  model is likely to "forget" how to annotate other examples. If you
+    |  You should avoid iterating over the same few examples multiple times, or
+    |  the model is likely to "forget" how to annotate other examples. If you
     |  iterate over the same few examples, you're effectively changing the loss
     |  function. The optimizer will find a way to minimize the loss on your
     |  examples, without regard for the consequences on the examples it's no
@@ -38,6 +39,8 @@ p
     |  for you.
 
 +h(2, "example") Example
+
++under-construction
 
 +code.
     import random
