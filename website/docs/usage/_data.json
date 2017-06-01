@@ -44,7 +44,8 @@
     "spacy-101": {
         "title": "spaCy 101 – Everything you need to know",
         "next": "lightning-tour",
-        "quickstart": true
+        "quickstart": true,
+        "preview": "101"
     },
 
     "lightning-tour": {

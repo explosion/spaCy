@@ -22,3 +22,14 @@
 -       var branch = ALPHA ? 'develop' : branch
 -       return 'https://github.com/' + SOCIAL.github + '/' + repo + (filepath ? '/blob/' + (branch || 'master') + '/' + filepath : '' );
 -   }
+
+
+//- Get social images
+
+-   function getSocialImg() {
+-       var base = SITE_URL + '/assets/img/social/preview_'
+-       var image = 'default'
+-       if (preview) image = preview
+-       else if (SECTION == 'docs') image = 'docs'
+-       return base + image + '.jpg'
+-   }
