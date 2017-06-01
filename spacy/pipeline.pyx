@@ -194,7 +194,7 @@ class TokenVectorEncoder(object):
 
 
 class NeuralTagger(object):
-    name = 'nn_tagger'
+    name = 'tagger'
     def __init__(self, vocab, model=True):
         self.vocab = vocab
         self.model = model
