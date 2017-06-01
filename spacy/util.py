@@ -452,60 +452,6 @@ def from_disk(path, readers, exclude):
     return path
 
 
-# This stuff really belongs in thinc -- but I expect
-# to refactor how all this works in thinc anyway.
-# What a mess!
-def model_to_bytes(model):
-    weights = []
-    queue = [model]
-    i = 0
-    for layer in queue:
-        if hasattr(layer, '_mem'):
-            weights.append({
-                'dims': normalize_string_keys(getattr(layer, '_dims', {})),
-                'params': []})
-            if hasattr(layer, 'seed'):
-                weights[-1]['seed'] = layer.seed
-
-            for (id_, name), (start, row, shape) in layer._mem._offsets.items():
-                if row == 1:
-                    continue
-                param = layer._mem.get((id_, name))
-                if not isinstance(layer._mem.weights, numpy.ndarray):
-                    param = param.get()
-                weights[-1]['params'].append(
-                    {
-                        'name': name,
-                        'offset': start,
-                        'shape': shape,
-                        'value': param,
-                    }
-                )
-            i += 1
-        if hasattr(layer, '_layers'):
-            queue.extend(layer._layers)
-    return msgpack.dumps({'weights': weights})
-
-
-def model_from_bytes(model, bytes_data):
-    data = msgpack.loads(bytes_data)
-    weights = data['weights']
-    queue = [model]
-    i = 0
-    for layer in queue:
-        if hasattr(layer, '_mem'):
-            if 'seed' in weights[i]:
-                layer.seed = weights[i]['seed']
-            for dim, value in weights[i]['dims'].items():
-                setattr(layer, dim, value)
-            for param in weights[i]['params']:
-                dest = getattr(layer, param['name'])
-                copy_array(dest, param['value'])
-            i += 1
-        if hasattr(layer, '_layers'):
-            queue.extend(layer._layers)
-
-
 def print_table(data, title=None):
     """Print data in table format.
 

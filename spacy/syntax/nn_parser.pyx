@@ -660,10 +660,10 @@ cdef class Parser:
                 cfg = {}
             with (path / 'lower_model').open('rb') as file_:
                 bytes_data = file_.read()
-            util.model_from_bytes(self.model[0], bytes_data)
+            self.model[0].from_bytes(bytes_data)
             with (path / 'upper_model').open('rb') as file_:
                 bytes_data = file_.read()
-            util.model_from_bytes(self.model[1], bytes_data)
+            self.model[1].from_bytes(bytes_data)
             self.cfg.update(cfg)
         return self
 
@@ -691,8 +691,8 @@ cdef class Parser:
                 self.model, cfg = self.Model(self.moves.n_moves)
             else:
                 cfg = {}
-            util.model_from_bytes(self.model[0], msg['lower_model'])
-            util.model_from_bytes(self.model[1], msg['upper_model'])
+            self.model[0].from_bytes(msg['lower_model'])
+            util.model[1].from_bytes(msg['upper_model'])
             self.cfg.update(cfg)
         return self
 

@@ -169,7 +169,7 @@ class TokenVectorEncoder(object):
         if self.model is True:
             self.model = self.Model()
         deserialize = OrderedDict((
-            ('model', lambda b: util.model_from_bytes(self.model, b)),
+            ('model', lambda b: self.model.from_bytes(b)),
             ('vocab', lambda b: self.vocab.from_bytes(b))
         ))
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -186,7 +186,7 @@ class TokenVectorEncoder(object):
         if self.model is True:
             self.model = self.Model()
         deserialize = OrderedDict((
-            ('model', lambda p: util.model_from_bytes(self.model, p.open('rb').read())),
+            ('model', lambda p: self.model.from_bytes(p.open('rb').read())),
             ('vocab', lambda p: self.vocab.from_disk(p))
         ))
         util.from_disk(path, deserialize, exclude)
@@ -307,7 +307,7 @@ class NeuralTagger(object):
             if self.model is True:
                 token_vector_width = util.env_opt('token_vector_width', 128)
                 self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
-                util.model_from_bytes(self.model, b)
+                self.model.from_bytes(b)
         deserialize = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('model', lambda b: load_model(b)),
@@ -324,7 +324,7 @@ class NeuralTagger(object):
 
     def from_disk(self, path, **exclude):
         deserialize = {
-            'model': lambda p: util.model_from_bytes(self.model, p.open('rb').read()),
+            'model': lambda p: self.model.from_bytes(p.open('rb').read()),
             'vocab': lambda p: self.vocab.from_disk(p)
         }
         util.from_disk(path, deserialize, exclude)

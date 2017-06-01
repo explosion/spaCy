@@ -188,10 +188,10 @@ def setup_package():
             ext_modules=ext_modules,
             install_requires=[
                 'numpy>=1.7',
-                'murmurhash>=0.26,<0.27',
+                'murmurhash>=0.28,<0.29',
                 'cymem>=1.30,<1.32',
                 'preshed>=1.0.0,<2.0.0',
-                'thinc>=6.6.0,<6.7.0',
+                'thinc>=6.7.0,<6.8.0',
                 'plac<1.0.0,>=0.9.6',
                 'pip>=9.0.0,<10.0.0',
                 'six',
