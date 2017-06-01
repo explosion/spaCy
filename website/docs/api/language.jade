@@ -141,10 +141,10 @@ p
 p Update the models in the pipeline.
 
 +aside-code("Example").
-    with nlp.begin_training(gold, use_gpu=True) as (trainer, optimizer):
-        for epoch in trainer.epochs(gold):
-            for docs, golds in epoch:
-                state = nlp.update(docs, golds, sgd=optimizer)
+    for raw_text, entity_offsets in train_data:
+        doc = nlp.make_doc(raw_text)
+        gold = GoldParse(doc, entities=entity_offsets)
+        nlp.update([doc], [gold], drop=0.5, sgd=optimizer)
 
 +table(["Name", "Type", "Description"])
     +row
@@ -173,17 +173,13 @@ p Update the models in the pipeline.
         +cell Results from the update.
 
 +h(2, "begin_training") Language.begin_training
-    +tag contextmanager
+    +tag method
 
 p
-    |  Allocate models, pre-process training data and acquire a trainer and
-    |  optimizer. Used as a contextmanager.
+    |  Allocate models, pre-process training data and acquire an optimizer.
 
 +aside-code("Example").
-    with nlp.begin_training(gold, use_gpu=True) as (trainer, optimizer):
-        for epoch in trainer.epochs(gold):
-            for docs, golds in epoch:
-                state = nlp.update(docs, golds, sgd=optimizer)
+    optimizer = nlp.begin_training(gold_tuples)
 
 +table(["Name", "Type", "Description"])
     +row
@@ -199,7 +195,7 @@ p
     +footrow
         +cell yields
         +cell tuple
-        +cell A trainer and an optimizer.
+        +cell An optimizer.
 
 +h(2, "use_params") Language.use_params
     +tag contextmanager
