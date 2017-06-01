@@ -635,9 +635,9 @@ cdef class Parser:
     def to_disk(self, path, **exclude):
         serializers = {
             'lower_model': lambda p: p.open('wb').write(
-                util.model_to_bytes(self.model[0])),
+                self.model[0].to_bytes()),
             'upper_model': lambda p: p.open('wb').write(
-                util.model_to_bytes(self.model[1])),
+                self.model[1].to_bytes()),
             'vocab': lambda p: self.vocab.to_disk(p),
             'moves': lambda p: self.moves.to_disk(p, strings=False),
             'cfg': lambda p: p.open('w').write(json_dumps(self.cfg))
@@ -669,8 +669,8 @@ cdef class Parser:
 
     def to_bytes(self, **exclude):
         serializers = {
-            'lower_model': lambda: util.model_to_bytes(self.model[0]),
-            'upper_model': lambda: util.model_to_bytes(self.model[1]),
+            'lower_model': lambda: self.model[0].to_bytes(),
+            'upper_model': lambda: self.model[1].to_bytes(),
             'vocab': lambda: self.vocab.to_bytes(),
             'moves': lambda: self.moves.to_bytes(strings=False),
             'cfg': lambda: ujson.dumps(self.cfg)
@@ -692,7 +692,7 @@ cdef class Parser:
             else:
                 cfg = {}
             self.model[0].from_bytes(msg['lower_model'])
-            util.model[1].from_bytes(msg['upper_model'])
+            self.model[1].from_bytes(msg['upper_model'])
             self.cfg.update(cfg)
         return self
 
