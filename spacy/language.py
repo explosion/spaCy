@@ -421,7 +421,10 @@ class Language(object):
             if not hasattr(proc, 'to_disk'):
                 continue
             deserializers[proc.name] = lambda p, proc=proc: proc.from_disk(p, vocab=False)
-        util.from_disk(path, deserializers, {p: False for p in disable})
+        exclude = {p: False for p in disable}
+        if not (path / 'vocab').exists():
+            exclude['vocab'] = True
+        util.from_disk(path, deserializers, exclude)
         return self
 
     def to_bytes(self, disable=[]):
