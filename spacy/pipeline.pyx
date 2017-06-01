@@ -279,8 +279,9 @@ class NeuralTagger(object):
                     else:
                         new_tag_map[tag] = {POS: X}
         cdef Vocab vocab = self.vocab
-        vocab.morphology = Morphology(vocab.strings, new_tag_map,
-                                      vocab.morphology.lemmatizer)
+        if new_tag_map:
+            vocab.morphology = Morphology(vocab.strings, new_tag_map,
+                                          vocab.morphology.lemmatizer)
         token_vector_width = pipeline[0].model.nO
         if self.model is True:
             self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
