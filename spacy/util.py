@@ -423,11 +423,11 @@ def to_bytes(getters, exclude):
     for key, getter in getters.items():
         if key not in exclude:
             serialized[key] = getter()
-    return msgpack.dumps(serialized)
+    return msgpack.dumps(serialized, use_bin_type=True, encoding='utf8')
 
 
 def from_bytes(bytes_data, setters, exclude):
-    msg = msgpack.loads(bytes_data)
+    msg = msgpack.loads(bytes_data, encoding='utf8')
     for key, setter in setters.items():
         if key not in exclude:
             setter(msg[key])
