@@ -201,11 +201,12 @@ p
     prefix_re = re.compile(r'''[\[\(&quot;&apos;]''')
     suffix_re = re.compile(r'''[\]\)&quot;&apos;]''')
 
-    def create_tokenizer(nlp):
+    def custom_tokenizer(nlp):
         return Tokenizer(nlp.vocab, prefix_search=prefix_re.search,
                                     suffix_search=suffix_re.search)
 
-    nlp = spacy.load('en', tokenizer=create_tokenizer)
+    nlp = spacy.load('en')
+    nlp.tokenizer = custom_tokenizer(nlp)
 
 p
     |  If you need to subclass the tokenizer instead, the relevant methods to
