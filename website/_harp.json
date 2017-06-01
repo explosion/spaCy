@@ -77,7 +77,8 @@
             { "id": "model", "title": "Models", "multiple": true, "options": [
                 { "id": "en", "title": "English", "meta": "50MB" },
                 { "id": "de", "title": "German", "meta": "645MB" },
-                { "id": "fr", "title": "French", "meta": "1.33GB" }]
+                { "id": "fr", "title": "French", "meta": "1.33GB" },
+                { "id": "es", "title": "Spanish", "meta": "377MB"}]
             }
         ],
 
@@ -85,7 +86,8 @@
             { "id": "lang", "title": "Language", "options": [
                 { "id": "en", "title": "English", "checked": true },
                 { "id": "de", "title": "German" },
-                { "id": "fr", "title": "French" }]
+                { "id": "fr", "title": "French" },
+                { "id": "es", "title": "Spanish" }]
             },
             { "id": "load", "title": "Loading style", "options": [
                 { "id": "spacy", "title": "Use spacy.load()", "checked": true, "help": "Use spaCy's built-in loader to load the model by name." },
@@ -108,7 +110,17 @@
             ],
             "fr": [
                 { "id": "fr_depvec_web_lg", "lang": "French", "feats": [1, 1, 0, 1], "size": "1.33 GB", "license": "CC BY-NC" }
+            ],
+            "es": [
+                { "id": "es_core_web_md", "lang": "Spanish", "feats": [1, 1, 1, 1], "size": "377 MB", "license": "CC BY-SA"}
             ]
+        },
+
+        "EXAMPLE_SENTENCES": {
+            "en": "This is a sentence.",
+            "de": "Dies ist ein Satz.",
+            "fr": "C'est une phrase.",
+            "es": "Esto es una frase."
         },
 
         "ALPHA": true,
