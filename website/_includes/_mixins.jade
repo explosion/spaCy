@@ -107,13 +107,13 @@ mixin button(url, trusted, ...style)
     height   - [integer] optional height to clip code block to
 
 mixin code(label, language, icon, height)
-    pre.c-code-block.o-block(class="lang-#{(language || DEFAULT_SYNTAX)}" class=icon ? "c-code-block--has-icon" : "" style=height ? "height: #{height}px" : "")&attributes(attributes)
+    pre.c-code-block.o-block(class="lang-#{(language || DEFAULT_SYNTAX)}" class=icon ? "c-code-block--has-icon" : null style=height ? "height: #{height}px" : null)&attributes(attributes)
         if label
             h4.u-text-label.u-text-label--dark=label
 
         if icon
             - var classes = {'accept': 'u-color-green', 'reject': 'u-color-red'}
-            .c-code-block__icon(class=classes[icon] || "" class=classes[icon] ? "c-code-block__icon--border" : "")
+            .c-code-block__icon(class=classes[icon] || null class=classes[icon] ? "c-code-block__icon--border" : null)
                 +icon(icon, 18)
 
         code.c-code-block__content
