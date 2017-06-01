@@ -1,9 +1,8 @@
 from __future__ import unicode_literals, print_function
-import json
-import pathlib
+
 import random
 
-import spacy.lang.en
+from spacy.lang.en import English
 from spacy.gold import GoldParse, biluo_tags_from_offsets
 
 
@@ -34,7 +33,7 @@ def main(model_dir=None):
             (len('I like London and '), len('I like London and Berlin'), 'LOC')]
         )
     ]
-    nlp = spacy.lang.en.English(pipeline=['tensorizer', 'ner'])
+    nlp = English(pipeline=['tensorizer', 'ner'])
     get_data = lambda: reformat_train_data(nlp.tokenizer, train_data)
     optimizer = nlp.begin_training(get_data)
     for itn in range(100):
@@ -55,7 +54,7 @@ def main(model_dir=None):
     print("Load from", model_dir)
     nlp = spacy.lang.en.English(pipeline=['tensorizer', 'ner'])
     nlp.from_disk(model_dir)
-    for raw_text, _ in train_data: 
+    for raw_text, _ in train_data:
         doc = nlp(raw_text)
         for word in doc:
             print(word.text, word.ent_type_, word.ent_iob_)
