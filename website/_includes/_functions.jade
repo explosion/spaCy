@@ -19,5 +19,6 @@
 //- Generate GitHub links
 
 -   function gh(repo, filepath, branch) {
+-       var branch = ALPHA ? 'develop' : branch
 -       return 'https://github.com/' + SOCIAL.github + '/' + repo + (filepath ? '/blob/' + (branch || 'master') + '/' + filepath : '' );
 -   }
