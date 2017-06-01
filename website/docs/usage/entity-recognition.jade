@@ -154,40 +154,29 @@ p
     |  To provide training examples to the entity recogniser, you'll first need
     |  to create an instance of the #[+api("goldparse") #[code GoldParse]] class.
     |  You can specify your annotations in a stand-off format or as token tags.
-
-+code.
-    import random
-    import spacy
-    from spacy.gold import GoldParse
-    from spacy.pipeline import EntityRecognizer
-
-    train_data = [('Who is Chaka Khan?', [(7, 17, 'PERSON')]),
-                  ('I like London and Berlin.', [(7, 13, 'LOC'), (18, 24, 'LOC')])]
-
-    nlp = spacy.load('en', entity=False, parser=False)
-    ner = EntityRecognizer(nlp.vocab, entity_types=['PERSON', 'LOC'])
-
-    for itn in range(5):
-        random.shuffle(train_data)
-        for raw_text, entity_offsets in train_data:
-            doc = nlp.make_doc(raw_text)
-            gold = GoldParse(doc, entities=entity_offsets)
-
-            nlp.tagger(doc)
-            ner.update(doc, gold)
-
-p
     |  If a character offset in your entity annotations don't fall on a token
     |  boundary, the #[code GoldParse] class will treat that annotation as a
     |  missing value.  This allows for more realistic training, because the
     |  entity recogniser is allowed to learn from examples that may feature
     |  tokenizer errors.
 
-+aside-code("Example").
++code.
+    train_data = [('Who is Chaka Khan?', [(7, 17, 'PERSON')]),
+                  ('I like London and Berlin.', [(7, 13, 'LOC'), (18, 24, 'LOC')])]
+
++code.
     doc = Doc(nlp.vocab, [u'rats', u'make', u'good', u'pets'])
     gold = GoldParse(doc, [u'U-ANIMAL', u'O', u'O', u'O'])
-    ner = EntityRecognizer(nlp.vocab, entity_types=['ANIMAL'])
-    ner.update(doc, gold)
+
++infobox
+    |  For more details on #[strong training and updating] the named entity
+    |  recognizer, see the usage guides on #[+a("/docs/usage/training") training]
+    |  and #[+a("/docs/usage/training-ner") training the named entity recognizer],
+    |  or check out the runnable
+    |  #[+src(gh("spaCy", "examples/training/train_ner.py")) training script]
+    |  on GitHub.
+
++h(3, "updating-biluo") The BILUO Scheme
 
 p
     |  You can also provide token-level entity annotation, using the
