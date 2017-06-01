@@ -8,6 +8,8 @@ p
     |  particularly useful as a "quick and dirty solution", if you have only a
     |  few corrections or annotations.
 
++under-construction
+
 +h(2, "improving-accuracy") Improving accuracy on existing entity types
 
 p
@@ -15,16 +17,7 @@ p
     |  #[+api("goldparse") #[code spacy.gold.GoldParse]], with the entity labels
     |  you want to learn. You will then pass this instance to the
     |  #[+api("entityrecognizer#update") #[code EntityRecognizer.update()]]
-    |  method. For example:
-
-+code.
-    import spacy
-    from spacy.gold import GoldParse
-
-    nlp = spacy.load('en')
-    doc = nlp.make_doc(u'Facebook released React in 2014')
-    gold = GoldParse(doc, entities=['U-ORG', 'O', 'U-TECHNOLOGY', 'O', 'U-DATE'])
-    nlp.entity.update(doc, gold)
+    |  method.
 
 p
     |  You'll usually need to provide many examples to meaningfully improve the
@@ -43,100 +36,6 @@ p
     |  Ultimately, this is an empirical process: you'll need to
     |  #[strong experiment on your own data] to find a solution that works best
     |  for you.
-
-+h(2, "adding") Adding a new entity type
-
-p
-    |  You can add new entity types to an existing model. Let's say we want to
-    |  recognise the category #[code TECHNOLOGY]. The new category will include
-    |  programming languages, frameworks and platforms. First, we need to
-    |  register the new entity type:
-
-+code.
-    nlp.entity.add_label('TECHNOLOGY')
-
-p
-    |  Next, iterate over your examples, calling #[code entity.update()]. As
-    |  above, we want to avoid iterating over only a small number of sentences.
-    |  A useful compromise is to run the model over a number of plain-text
-    |  sentences, and pass the entities to #[code GoldParse], as "true"
-    |  annotations. This encourages the optimizer to find a solution that
-    |  predicts the new category with minimal difference from the previous
-    |  output.
-
-+h(2, "example") Example: Adding and training an #[code ANIMAL] entity
-
-+under-construction
-
-p
-    |  This script shows how to add a new entity type to an existing pre-trained
-    |  NER model. To keep the example short and simple, only four sentences are
-    |  provided as examples. In practice, you'll need many more —
-    |  #[strong a few hundred] would be a good start. You will also likely need
-    |  to mix in #[strong examples of other entity types], which might be
-    |  obtained by running the entity recognizer over unlabelled sentences, and
-    |  adding their annotations to the training set.
-
-p
-    |  For the full, runnable script of this example, see
-    |  #[+src(gh("spacy", "examples/training/train_new_entity_type.py")) train_new_entity_type.py].
-
-+code("Training the entity recognizer").
-    import spacy
-    from spacy.pipeline import EntityRecognizer
-    from spacy.gold import GoldParse
-    from spacy.tagger import Tagger
-    import random
-
-    model_name = 'en'
-    entity_label = 'ANIMAL'
-    output_directory = '/path/to/model'
-    train_data = [
-        ("Horses are too tall and they pretend to care about your feelings",
-        [(0, 6, 'ANIMAL')]),
-        ("horses are too tall and they pretend to care about your feelings",
-        [(0, 6, 'ANIMAL')]),
-        ("horses pretend to care about your feelings",
-        [(0, 6, 'ANIMAL')]),
-        ("they pretend to care about your feelings, those horses",
-        [(48, 54, 'ANIMAL')])
-    ]
-
-    nlp = spacy.load(model_name)
-    nlp.entity.add_label(entity_label)
-    ner = train_ner(nlp, train_data, output_directory)
-
-    def train_ner(nlp, train_data, output_dir):
-        # Add new words to vocab
-        for raw_text, _ in train_data:
-            doc = nlp.make_doc(raw_text)
-            for word in doc:
-                _ = nlp.vocab[word.orth]
-
-        for itn in range(20):
-            random.shuffle(train_data)
-            for raw_text, entity_offsets in train_data:
-                gold = GoldParse(doc, entities=entity_offsets)
-                doc = nlp.make_doc(raw_text)
-                nlp.tagger(doc)
-                loss = nlp.entity.update(doc, gold)
-        nlp.save_to_directory(output_dir)
-
-p
-    +button(gh("spaCy", "examples/training/train_new_entity_type.py"), false, "secondary") Full example
-
-p
-    |  The actual training is performed by looping over the examples, and
-    |  calling #[code nlp.entity.update()]. The #[code update()] method steps
-    |  through the words of the input. At each word, it makes a prediction. It
-    |  then consults the annotations provided on the #[code GoldParse] instance,
-    |  to see whether it was right. If it was wrong, it adjusts its weights so
-    |  that the correct action will score higher next time.
-
-p
-    |  After training your model, you can
-    |  #[+a("/docs/usage/saving-loading") save it to a directory]. We recommend
-    |  wrapping models as Python packages, for ease of deployment.
 
 +h(2, "saving-loading") Saving and loading
 

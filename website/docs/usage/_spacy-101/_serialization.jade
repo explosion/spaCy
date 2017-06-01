@@ -1,12 +1,12 @@
 //- 💫 DOCS > USAGE > SPACY 101 > SERIALIZATION
 
 p
-    |  If you've been modifying the pipeline, vocabulary vectors and entities, or made
-    |  updates to the model, you'll eventually want
-    |  to #[strong save your progress] – for example, everything that's in your #[code nlp]
-    |  object. This means you'll have to translate its contents and structure
-    |  into a format that can be saved, like a file or a byte string. This
-    |  process is called serialization. spaCy comes with
+    |  If you've been modifying the pipeline, vocabulary, vectors and entities,
+    |  or made updates to the model, you'll eventually want to
+    |  #[strong save your progress] – for example, everything that's in your
+    |  #[code nlp] object. This means you'll have to translate its contents and
+    |  structure into a format that can be saved, like a file or a byte string.
+    |  This process is called serialization. spaCy comes with
     |  #[strong built-in serialization methods] and supports the
     |  #[+a("http://www.diveintopython3.net/serializing.html#dump") Pickle protocol].
 
@@ -45,11 +45,7 @@ p
     |  #[code Vocab] holds the context-independent information about the words,
     |  tags and labels, and their #[strong hash values]. If the #[code Vocab]
     |  wasn't saved with the #[code Doc], spaCy wouldn't know how to resolve
-    |  those IDs – for example, the word text or the dependency labels. You
-    |  might be saving #[code 446] for "whale", but in a different vocabulary,
-    |  this ID could map to "VERB". Similarly, if your document was processed by
-    |  a German model, its vocab will include the specific
-    |  #[+a("/docs/api/annotation#dependency-parsing-german") German dependency labels].
+    |  those IDs back to strings.
 
 +code.
     moby_dick = open('moby_dick.txt', 'r') # open a large document

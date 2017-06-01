@@ -170,7 +170,7 @@ p
     python -m spacy download de # default German model
     python -m spacy download fr # default French model
     python -m spacy download es # default Spanish model
-    python -m spacy download xx_ent_web_md # multi-language NER
+    python -m spacy download xx_ent_wiki_sm # multi-language NER
 
 p
     |  spaCy v2.0 comes with new and improved neural network models for English,
@@ -294,9 +294,6 @@ p
 +h(2, "migrating") Migrating from spaCy 1.x
 
 p
-    |  If you've mostly been using spaCy for basic text processing, chances are
-    |  you won't even have to change your code at all. For all other cases,
-    |  we've tried to focus...
 
 +infobox("Some tips")
     |  Before migrating, we strongly recommend writing a few
@@ -338,6 +335,11 @@ p
 +code-old.
     nlp.save_to_directory('/model')
     nlp.vocab.dump('/vocab')
+
+p
+    |  If you've trained models with input from v1.x, you'll need to
+    |  #[strong retrain them] with spaCy v2.0. All previous models will not
+    |  be compatible with the new version.
 
 +h(3, "migrating-strings") Strings and hash values
 

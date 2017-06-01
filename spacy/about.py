@@ -3,11 +3,11 @@
 # https://github.com/pypa/warehouse/blob/master/warehouse/__about__.py
 
 __title__ = 'spacy'
-__version__ = '1.8.2'
+__version__ = '2.0.0'
 __summary__ = 'Industrial-strength Natural Language Processing (NLP) with Python and Cython'
 __uri__ = 'https://spacy.io'
-__author__ = 'Matthew Honnibal'
-__email__ = 'matt@explosion.ai'
+__author__ = 'Explosion AI'
+__email__ = 'contact@explosion.ai'
 __license__ = 'MIT'
 
 __docs_models__ = 'https://spacy.io/docs/usage/models'
