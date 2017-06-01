@@ -2,7 +2,8 @@
     "sidebar": {
         "Introduction": {
             "Facts & Figures": "./",
-            "Languages": "language-models"
+            "Languages": "language-models",
+            "Annotation Specs": "annotation"
         },
         "Top-level": {
             "spacy": "spacy",
@@ -26,9 +27,6 @@
             "GoldParse": "goldparse",
             "GoldCorpus": "goldcorpus",
             "Binder": "binder"
-        },
-        "Other": {
-            "Annotation Specs": "annotation"
         }
     },
 
