@@ -22,7 +22,7 @@ import ujson
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
-from .compat import copy_array, normalize_string_keys
+from .compat import copy_array, normalize_string_keys, getattr_
 
 
 LANGUAGES = {}
