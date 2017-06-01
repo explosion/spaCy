@@ -78,7 +78,7 @@
                 { "id": "en", "title": "English", "meta": "50MB" },
                 { "id": "de", "title": "German", "meta": "645MB" },
                 { "id": "fr", "title": "French", "meta": "1.33GB" },
-                { "id": "es", "title": "Spanish", "meta": "377MB"}]
+                { "id": "es", "title": "Spanish", "meta": "378MB"}]
             }
         ],
 
@@ -112,7 +112,7 @@
                 { "id": "fr_depvec_web_lg", "lang": "French", "feats": [1, 1, 0, 1], "size": "1.33 GB", "license": "CC BY-NC" }
             ],
             "es": [
-                { "id": "es_core_web_md", "lang": "Spanish", "feats": [1, 1, 1, 1], "size": "377 MB", "license": "CC BY-SA"}
+                { "id": "es_core_web_md", "lang": "Spanish", "feats": [1, 1, 1, 1], "size": "378 MB", "license": "CC BY-SA"}
             ]
         },
 
