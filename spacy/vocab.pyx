@@ -315,7 +315,6 @@ cdef class Vocab:
         getters = OrderedDict((
             ('strings', lambda: self.strings.to_bytes()),
             ('lexemes', lambda: self.lexemes_to_bytes()),
-            ('tag_map', lambda: self.morphology.tag_map),
         ))
         return util.to_bytes(getters, exclude)
 
@@ -326,13 +325,9 @@ cdef class Vocab:
         **exclude: Named attributes to prevent from being loaded.
         RETURNS (Vocab): The `Vocab` object.
         """
-        def set_tag_map(tag_map):
-            self.morphology = Morphology(self.strings, tag_map,
-                                        self.morphology.lemmatizer)
         setters = OrderedDict((
             ('strings', lambda b: self.strings.from_bytes(b)),
             ('lexemes', lambda b: self.lexemes_from_bytes(b)),
-            ('tag_map', lambda b: set_tag_map(b))
         ))
         return util.from_bytes(bytes_data, setters, exclude)
 

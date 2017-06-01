@@ -10,6 +10,7 @@ cimport numpy as np
 import cytoolz
 import util
 from collections import OrderedDict
+import ujson
 
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
 from thinc.neural import Model, Maxout, Softmax, Affine
@@ -33,6 +34,7 @@ from .gold cimport GoldParse
 from .morphology cimport Morphology
 from .vocab cimport Vocab
 from .syntax import nonproj
+from .compat import json_dumps
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
 from ._ml import rebatch, Tok2Vec, flatten, get_col, doc2feats
@@ -308,7 +310,7 @@ class NeuralTagger(object):
             if self.model is True:
                 token_vector_width = util.env_opt('token_vector_width', 128)
                 self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
-                self.model.from_bytes(b)
+            self.model.from_bytes(b)
         deserialize = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('model', lambda b: load_model(b)),
@@ -317,17 +319,33 @@ class NeuralTagger(object):
         return self
 
     def to_disk(self, path, **exclude):
-        serialize = {
-            'model': lambda p: p.open('wb').write(self.model.to_bytes()),
-            'vocab': lambda p: self.vocab.to_disk(p)
-        }
+        serialize = OrderedDict((
+            ('vocab', lambda p: self.vocab.to_disk(p)),
+            ('tag_map', lambda p: p.open('w').write(json_dumps(
+                self.vocab.morphology.tag_map))),
+            ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
+        ))
         util.to_disk(path, serialize, exclude)
 
     def from_disk(self, path, **exclude):
-        deserialize = {
-            'model': lambda p: self.model.from_bytes(p.open('rb').read()),
-            'vocab': lambda p: self.vocab.from_disk(p)
-        }
+        def load_model(p):
+            if self.model is True:
+                token_vector_width = util.env_opt('token_vector_width', 128)
+                self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
+            self.model.from_bytes(p.open('rb').read())
+
+        def load_tag_map(p):
+            with p.open() as file_:
+                tag_map = ujson.loads(file_.read())
+            self.vocab.morphology = Morphology(
+                self.vocab.strings, tag_map=tag_map,
+                lemmatizer=self.vocab.morphology.lemmatizer)
+
+        deserialize = OrderedDict((
+            ('vocab', lambda p: self.vocab.from_disk(p)),
+            ('tag_map', load_tag_map),
+            ('model', load_model),
+        ))
         util.from_disk(path, deserialize, exclude)
         return self
 
