@@ -54,6 +54,7 @@ cdef class Vocab:
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
         self.strings = StringStore()
+        self.length = 0
         if strings:
             for string in strings:
                 _ = self[string]
@@ -62,8 +63,6 @@ cdef class Vocab:
                 self.strings.add(name)
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
-
-        self.length = 1
 
     property lang:
         def __get__(self):
