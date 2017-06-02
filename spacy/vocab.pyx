@@ -54,16 +54,15 @@ cdef class Vocab:
         self._by_hash = PreshMap()
         self._by_orth = PreshMap()
         self.strings = StringStore()
+        self.length = 0
         if strings:
             for string in strings:
-                self.strings.add(string)
+                _ = self[string]
         for name in tag_map.keys():
             if name:
                 self.strings.add(name)
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
-
-        self.length = 1
 
     property lang:
         def __get__(self):
@@ -329,7 +328,8 @@ cdef class Vocab:
             ('strings', lambda b: self.strings.from_bytes(b)),
             ('lexemes', lambda b: self.lexemes_from_bytes(b)),
         ))
-        return util.from_bytes(bytes_data, setters, exclude)
+        util.from_bytes(bytes_data, setters, exclude)
+        return self
 
     def lexemes_to_bytes(self):
         cdef hash_t key
