@@ -675,6 +675,10 @@ cdef class Parser:
             'moves': lambda: self.moves.to_bytes(strings=False),
             'cfg': lambda: ujson.dumps(self.cfg)
         }
+        if 'model' in exclude:
+            exclude['lower_model'] = True
+            exclude['upper_model'] = True
+            exclude.pop('model')
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
