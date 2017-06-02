@@ -329,7 +329,8 @@ cdef class Vocab:
             ('strings', lambda b: self.strings.from_bytes(b)),
             ('lexemes', lambda b: self.lexemes_from_bytes(b)),
         ))
-        return util.from_bytes(bytes_data, setters, exclude)
+        util.from_bytes(bytes_data, setters, exclude)
+        return self
 
     def lexemes_to_bytes(self):
         cdef hash_t key
