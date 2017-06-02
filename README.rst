@@ -17,7 +17,7 @@ MIT license.
     :target: https://travis-ci.org/explosion/spaCy
     :alt: Travis Build Status
     
-.. image:: https://img.shields.io/appveyor/ci/explosion/spacy.svg?style=flat-square
+.. image:: https://img.shields.io/appveyor/ci/explosion/spacy/master.svg?style=flat-square
     :target: https://ci.appveyor.com/project/explosion/spacy
     :alt: Appveyor Build Status
 
