@@ -6,37 +6,13 @@ from ...deprecated import PRON_LEMMA
 
 
 _exc = {
-    "al": [
-        {ORTH: "a", LEMMA: "a", TAG: ADP},
-        {ORTH: "l", LEMMA: "el", TAG: DET}],
-
-    "consigo": [
-        {ORTH: "con", LEMMA: "con"},
-        {ORTH: "sigo", LEMMA: PRON_LEMMA, NORM: "sí"}],
-
-    "conmigo": [
-        {ORTH: "con", LEMMA: "con"},
-        {ORTH: "migo", LEMMA: PRON_LEMMA, NORM: "mí"}],
-
-    "contigo": [
-        {ORTH: "con", LEMMA: "con"},
-        {ORTH: "tigo", LEMMA: PRON_LEMMA, NORM: "ti"}],
-
-    "del": [
-        {ORTH: "de", LEMMA: "de", TAG: ADP},
-        {ORTH: "l", LEMMA: "el", TAG: DET}],
-
-    "pel": [
-        {ORTH: "pe", LEMMA: "per", TAG: ADP},
-        {ORTH: "l", LEMMA: "el", TAG: DET}],
-
     "pal": [
         {ORTH: "pa", LEMMA: "para"},
-        {ORTH: "l", LEMMA: "el"}],
+        {ORTH: "l", LEMMA: "el", NORM: "el"}],
 
     "pala": [
         {ORTH: "pa", LEMMA: "para"},
-        {ORTH: "la"}]
+        {ORTH: "la", LEMMA: "la", NORM: "la"}]
 }
 
 
