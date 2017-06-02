@@ -303,7 +303,9 @@ class NeuralTagger(object):
         serialize = OrderedDict((
             ('model', lambda: self.model.to_bytes()),
             ('vocab', lambda: self.vocab.to_bytes()),
-            ('tag_map', lambda: msgpack.dumps(self.vocab.morphology.tag_map))
+            ('tag_map', lambda: msgpack.dumps(self.vocab.morphology.tag_map,
+                                             use_bin_type=True,
+                                             encoding='utf8'))
         ))
         return util.to_bytes(serialize, exclude)
 
@@ -315,7 +317,7 @@ class NeuralTagger(object):
             self.model.from_bytes(b)
 
         def load_tag_map(b):
-            tag_map = msgpack.loads(b)
+            tag_map = msgpack.loads(b, encoding='utf8')
             self.vocab.morphology = Morphology(
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer)
@@ -330,8 +332,10 @@ class NeuralTagger(object):
     def to_disk(self, path, **exclude):
         serialize = OrderedDict((
             ('vocab', lambda p: self.vocab.to_disk(p)),
-            ('tag_map', lambda p: p.open('w').write(msgpack.dumps(
-                self.vocab.morphology.tag_map))),
+            ('tag_map', lambda p: p.open('wb').write(msgpack.dumps(
+                self.vocab.morphology.tag_map,
+                use_bin_type=True,
+                encoding='utf8'))),
             ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
         ))
         util.to_disk(path, serialize, exclude)
@@ -344,8 +348,8 @@ class NeuralTagger(object):
             self.model.from_bytes(p.open('rb').read())
 
         def load_tag_map(p):
-            with p.open() as file_:
-                tag_map = msgpack.loads(file_.read())
+            with p.open('rb') as file_:
+                tag_map = msgpack.loads(file_.read(), encoding='utf8')
             self.vocab.morphology = Morphology(
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer)
