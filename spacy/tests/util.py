@@ -3,9 +3,14 @@ from __future__ import unicode_literals
 
 from ..tokens import Doc
 from ..attrs import ORTH, POS, HEAD, DEP
+from ..compat import path2str
 
 import pytest
 import numpy
+import tempfile
+import shutil
+import contextlib
+from pathlib import Path
 
 
 MODELS = {}
@@ -17,6 +22,20 @@ def load_test_model(model):
         module = pytest.importorskip(model)
         MODELS[model] = module.load()
     return MODELS[model]
+
+
+@contextlib.contextmanager
+def make_tempfile(mode='r'):
+    f = tempfile.TemporaryFile(mode=mode)
+    yield f
+    f.close()
+
+
+@contextlib.contextmanager
+def make_tempdir():
+    d = Path(tempfile.mkdtemp())
+    yield d
+    shutil.rmtree(path2str(d))
 
 
 def get_doc(vocab, words=[], pos=None, heads=None, deps=None, tags=None, ents=None):
