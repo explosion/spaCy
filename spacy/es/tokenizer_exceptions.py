@@ -6,44 +6,15 @@ from ..language_data import PRON_LEMMA, DET_LEMMA
 
 
 TOKENIZER_EXCEPTIONS = {
-    "al": [
-        {ORTH: "a", LEMMA: "a", TAG: ADP},
-        {ORTH: "el", LEMMA: "el", TAG: DET}
-    ],
-
-    "consigo": [
-        {ORTH: "con", LEMMA: "con"},
-        {ORTH: "sigo", LEMMA: PRON_LEMMA, NORM: "sí"}
-    ],
-
-    "conmigo": [
-        {ORTH: "con", LEMMA: "con"},
-        {ORTH: "migo", LEMMA: PRON_LEMMA, NORM: "mí"}
-    ],
-
-    "contigo": [
-        {ORTH: "con", LEMMA: "con"},
-        {ORTH: "tigo", LEMMA: PRON_LEMMA, NORM: "ti"}
-    ],
-
-    "del": [
-        {ORTH: "de", LEMMA: "de", TAG: ADP},
-        {ORTH: "l", LEMMA: "el", TAG: DET}
-    ],
-
-    "pel": [
-        {ORTH: "pe", LEMMA: "per", TAG: ADP},
-        {ORTH: "l", LEMMA: "el", TAG: DET}
-    ],
 
     "pal": [
         {ORTH: "pa", LEMMA: "para"},
-        {ORTH: "l", LEMMA: DET_LEMMA, NORM: "el"}
+        {ORTH: "el", LEMMA: DET_LEMMA, NORM: "el"}
     ],
 
     "pala": [
         {ORTH: "pa", LEMMA: "para"},
-        {ORTH: "la", LEMMA: DET_LEMMA}
+        {ORTH: "la", LEMMA: DET_LEMMA, NORM: "la"}
     ],
 
     "aprox.": [
