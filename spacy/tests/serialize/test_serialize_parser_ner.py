@@ -2,12 +2,17 @@
 from __future__ import unicode_literals
 
 from ..util import make_tempdir
-from ...pipeline import NeuralDependencyParser as Parser
+from ...pipeline import NeuralDependencyParser as DependencyParser
+from ...pipeline import NeuralEntityRecognizer as EntityRecognizer
 
 import pytest
 
 
-def test_serialize_parser_roundtrip_bytes(en_vocab):
+test_parsers = [DependencyParser, EntityRecognizer]
+
+
+@pytest.mark.parametrize('Parser', test_parsers)
+def test_serialize_parser_roundtrip_bytes(en_vocab, Parser):
     parser = Parser(en_vocab)
     parser.model, _ = parser.Model(0)
     parser_b = parser.to_bytes()
@@ -17,7 +22,8 @@ def test_serialize_parser_roundtrip_bytes(en_vocab):
     assert new_parser.to_bytes() == parser_b
 
 
-def test_serialize_parser_roundtrip_disk(en_vocab):
+@pytest.mark.parametrize('Parser', test_parsers)
+def test_serialize_parser_roundtrip_disk(en_vocab, Parser):
     parser = Parser(en_vocab)
     parser.model, _ = parser.Model(0)
     with make_tempdir() as d:
