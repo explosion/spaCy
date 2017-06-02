@@ -9,8 +9,8 @@ import pytest
 
 @pytest.fixture
 def taggers(en_vocab):
-    tagger1 = Tagger(en_vocab, True)
-    tagger2 = Tagger(en_vocab, True)
+    tagger1 = Tagger(en_vocab)
+    tagger2 = Tagger(en_vocab)
     tagger1.model = tagger1.Model(None, None)
     tagger2.model = tagger2.Model(None, None)
     return (tagger1, tagger2)
