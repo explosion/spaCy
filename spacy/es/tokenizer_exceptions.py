@@ -6,10 +6,9 @@ from ..language_data import PRON_LEMMA, DET_LEMMA
 
 
 TOKENIZER_EXCEPTIONS = {
-
     "pal": [
         {ORTH: "pa", LEMMA: "para"},
-        {ORTH: "el", LEMMA: DET_LEMMA, NORM: "el"}
+        {ORTH: "l", LEMMA: DET_LEMMA, NORM: "el"}
     ],
 
     "pala": [
