@@ -56,7 +56,7 @@ cdef class Vocab:
         self.strings = StringStore()
         if strings:
             for string in strings:
-                self.strings.add(string)
+                _ = self[string]
         for name in tag_map.keys():
             if name:
                 self.strings.add(name)
