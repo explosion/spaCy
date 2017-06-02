@@ -5,7 +5,7 @@
 # coding: utf-8
 from __future__ import unicode_literals, print_function
 
-from collections import Counter
+from collections import Counter, OrderedDict
 import ujson
 import contextlib
 
@@ -668,13 +668,13 @@ cdef class Parser:
         return self
 
     def to_bytes(self, **exclude):
-        serializers = {
-            'lower_model': lambda: self.model[0].to_bytes(),
-            'upper_model': lambda: self.model[1].to_bytes(),
-            'vocab': lambda: self.vocab.to_bytes(),
-            'moves': lambda: self.moves.to_bytes(strings=False),
-            'cfg': lambda: ujson.dumps(self.cfg)
-        }
+        serializers = OrderedDict((
+            ('lower_model', lambda: self.model[0].to_bytes()),
+            ('upper_model', lambda: self.model[1].to_bytes()),
+            ('vocab', lambda: self.vocab.to_bytes()),
+            ('moves', lambda: self.moves.to_bytes(strings=False)),
+            ('cfg', lambda: ujson.dumps(self.cfg))
+        ))
         if 'model' in exclude:
             exclude['lower_model'] = True
             exclude['upper_model'] = True
@@ -682,21 +682,23 @@ cdef class Parser:
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
-        deserializers = {
-            'vocab': lambda b: self.vocab.from_bytes(b),
-            'moves': lambda b: self.moves.from_bytes(b, strings=False),
-            'cfg': lambda b: self.cfg.update(ujson.loads(b)),
-            'lower_model': lambda b: None,
-            'upper_model': lambda b: None
-        }
+        deserializers = OrderedDict((
+            ('vocab', lambda b: self.vocab.from_bytes(b)),
+            ('moves', lambda b: self.moves.from_bytes(b, strings=False)),
+            ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
+            ('lower_model', lambda b: None),
+            ('upper_model', lambda b: None)
+        ))
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'model' not in exclude:
             if self.model is True:
                 self.model, cfg = self.Model(self.moves.n_moves)
             else:
                 cfg = {}
-            self.model[0].from_bytes(msg['lower_model'])
-            self.model[1].from_bytes(msg['upper_model'])
+            if 'lower_model' in msg:
+                self.model[0].from_bytes(msg['lower_model'])
+            if 'upper_model' in msg:
+                self.model[1].from_bytes(msg['upper_model'])
             self.cfg.update(cfg)
         return self
 
