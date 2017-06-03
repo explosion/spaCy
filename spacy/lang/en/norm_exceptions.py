@@ -1754,8 +1754,7 @@ _exc = {
 }
 
 
+NORM_EXCEPTIONS = {}
+
 for string, norm in _exc.items():
-    _exc[string.title()] = norm
-
-
-NORM_EXCEPTIONS = _exc
+    NORM_EXCEPTIONS[string.title()] = norm
