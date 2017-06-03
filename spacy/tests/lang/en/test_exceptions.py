@@ -102,3 +102,16 @@ def test_en_tokenizer_handles_times(en_tokenizer, text):
     tokens = en_tokenizer(text)
     assert len(tokens) == 2
     assert tokens[1].lemma_ in ["a.m.", "p.m."]
+
+
+@pytest.mark.parametrize('text,norms', [("I'm", ["i", "am"]), ("shan't", ["shall", "not"])])
+def test_en_tokenizer_norm_exceptions(en_tokenizer, text, norms):
+    tokens = en_tokenizer(text)
+    assert [token.norm_ for token in tokens] == norms
+
+
+@pytest.mark.xfail
+@pytest.mark.parametrize('text,norm', [("radicalised", "radicalized"), ("cuz", "because")])
+def test_en_lex_attrs_norm_exceptions(en_tokenizer, text, norm):
+    tokens = en_tokenizer(text)
+    assert tokens[0].norm_ == norm

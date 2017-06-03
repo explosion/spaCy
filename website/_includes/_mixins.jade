@@ -383,3 +383,14 @@ mixin annotation-row(annots, style)
             else
                 +cell=cell
         block
+
+
+//- Table of contents, to be used with +item mixins for links
+    col - [string] width of column (see +grid-col)
+
+mixin table-of-contents(col)
+    +grid-col(col || "half")
+        +infobox
+            +label.o-block-small Table of contents
+            +list("numbers").u-text-small.o-no-block
+                block
