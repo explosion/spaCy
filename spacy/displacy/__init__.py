@@ -56,7 +56,12 @@ def serve(docs, style='dep', page=True, minify=False, options={}, manual=False,
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
     httpd = simple_server.make_server('0.0.0.0', port, app)
     prints("Using the '%s' visualizer" % style, title="Serving on port %d..." % port)
-    httpd.serve_forever()
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        prints("Shutting down server on port %d." % port)
+    finally:
+        httpd.server_close()
 
 
 def app(environ, start_response):
