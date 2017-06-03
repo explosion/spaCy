@@ -741,7 +741,7 @@ cdef class Doc:
         token.spacy = self.c[end-1].spacy
         for attr_name, attr_value in attributes.items():
             if attr_name == TAG:
-                self.vocab.morphology.assign_tag(token, attr_value) 
+                self.vocab.morphology.assign_tag(token, attr_value)
             else:
                 Token.set_struct_attr(token, attr_name, attr_value)
         # Begin by setting all the head indices to absolute token positions
