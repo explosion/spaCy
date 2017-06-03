@@ -3,32 +3,51 @@
 include ../../_includes/_mixins
 
 p
-    |  Adding full support for a language touches many different parts of the
-    |  spaCy library. This guide explains how to fit everything together, and
-    |  points you to the specific workflows for each component. Obviously,
-    |  there are lots of ways you can organise your code when you implement
-    |  your own #[+api("language") #[code Language]] class. This guide will
-    |  focus on how it's done within spaCy. For full language support, we'll
-    |  need to:
+        |  Adding full support for a language touches many different parts of the
+        |  spaCy library. This guide explains how to fit everything together, and
+        |  points you to the specific workflows for each component.
 
-+list("numbers")
-    +item
-        |  Create a #[strong #[code Language] subclass].
-    +item
-        |  Define custom #[strong language data], like a stop list and tokenizer
-        |  exceptions.
-    +item
-        |  #[strong Test] the new language tokenizer.
-    +item
-        |  #[strong Build the vocabulary], including word frequencies, Brown
-        |  clusters and word vectors.
-    +item
-        |  Set up a #[strong model direcory] and #[strong train] the tagger and
-        |  parser.
++grid.o-no-block
+    +grid-col("half")
+        p
+            |  Obviously, there are lots of ways you can organise your code when
+            |  you implement your own language data. This guide will focus on
+            |  how it's done within spaCy. For full language support, you'll
+            |  need to create a #[code Language] subclass, define custom
+            |  #[strong language data], like a stop list and tokenizer
+            |  exceptions and test the new tokenizer. Once the language is set
+            |  up, you can #[strong build the vocabulary], including word
+            |  frequencies, Brown clusters and word vectors. Finally, you can
+            |  #[strong train the tagger and parser], and save the model to a
+            |  directory.
 
-p
-    |  For some languages, you may also want to develop a solution for
-    |  lemmatization and morphological analysis.
+        p
+            |  For some languages, you may also want to develop a solution for
+            |  lemmatization and morphological analysis.
+
+    +table-of-contents
+        +item #[+a("#language-subclass") The Language subclass]
+        +item #[+a("#language-data") Adding language data]
+        +item #[+a("#stop-workds") Stop words]
+        +item #[+a("#tokenizer-exceptions") Tokenizer exceptions]
+        +item #[+a("#norm-exceptions") Norm exceptions]
+        +item #[+a("#lex-attrs") Lexical attributes]
+        +item #[+a("#lemmatizer") Lemmatizer]
+        +item #[+a("#tag-map") Tag map]
+        +item #[+a("#morph-rules") Morph rules]
+        +item #[+a("#testing") Testing the tokenizer]
+        +item #[+a("#vocabulary") Building the vocabulary]
+        +item #[+a("#training") Training]
+
++aside("Working on spaCy's source")
+    |  To add a new language to spaCy, you'll need to
+    |  #[strong modify the library&apos;s code]. The easiest way to do this is to
+    |  clone the #[+src(gh("spaCy")) repository] and #[strong build spaCy from source].
+    |  For more information on this, see the #[+a("/docs/usage") installation guide].
+    |  Unlike spaCy's core, which is mostly written in Cython, all language
+    |  data is stored in regular Python files. This means that you won't have to
+    |  rebuild anything in between – you can simply make edits and reload spaCy
+    |  to test them.
 
 +h(2, "language-subclass") Creating a #[code Language] subclass
 
@@ -122,6 +141,14 @@ p
         +cell
             |  Special-case rules for the tokenizer, for example, contractions
             |  and abbreviations containing punctuation.
+
+    +row
+        +cell #[+src(gh("spaCy", "spacy/lang/norm_exceptions.py")) norm_exceptions.py]
+        +cell
+            |  #[code NORM_EXCEPTIONS] (dict)
+        +cell
+            |  Special-case rules for normalising tokens and assigning norms,
+            |  for example American vs. British spelling.
 
     +row
         +cell #[+src(gh("spaCy", "spacy/lang/punctuation.py")) punctuation.py]
@@ -235,7 +262,7 @@ p
     TOKENIZER_EXCEPTIONS = {
         "don't": [
             {ORTH: "do", LEMMA: "do"},
-            {ORTH: "n't", LEMMA: "not", TAG: "RB"}]
+            {ORTH: "n't", LEMMA: "not", NORM: "not", TAG: "RB"}]
     }
 
 +infobox("Important note")
@@ -286,7 +313,7 @@ p
 p
     |  When adding the tokenizer exceptions to the #[code Defaults], you can use
     |  the #[+api("util#update_exc") #[code update_exc()]] helper function to merge
-    |  them with the global base  exceptions (including one-letter abbreviations
+    |  them with the global base exceptions (including one-letter abbreviations
     |  and emoticons). The function performs a basic check to make sure
     |  exceptions are provided in the correct format. It can take any number of
     |  exceptions dicts as its arguments, and will update and overwrite the
@@ -303,12 +330,73 @@ p
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     # {"a.": [{ORTH: "a.", LEMMA: "all"}], ":)": [{ORTH: ":)"}]}
 
-//-+aside("About spaCy's custom pronoun lemma")
++infobox("About spaCy's custom pronoun lemma")
     |  Unlike verbs and common nouns, there's no clear base form of a personal
     |  pronoun. Should the lemma of "me" be "I", or should we normalize person
     |  as well, giving "it" — or maybe "he"? spaCy's solution is to introduce a
     |  novel symbol, #[code.u-nowrap -PRON-], which is used as the lemma for
     |  all personal pronouns.
+
++h(3, "norm-exceptions") Norm exceptions
+
+p
+    |  In addition to #[code ORTH] or #[code LEMMA], tokenizer exceptions can
+    |  also set a #[code NORM] attribute. This is useful to specify a normalised
+    |  version of the token – for example, the norm of "n't" is "not". By default,
+    |  a token's norm equals its lowercase text. If the lowercase spelling of a
+    |  word exists, norms should always be in lowercase.
+
++aside-code("Accessing norms").
+    doc = nlp(u"I can't")
+    assert [t.norm_ for t in doc] == ['i', 'can', 'not']
+
+p
+    |  spaCy usually tries to normalise words with different spellings to a single,
+    |  common spelling. This has no effect on any other token attributes, or
+    |  tokenization in general, but it ensures that
+    |  #[strong equivalent tokens receive similar representations]. This can
+    |  improve the model's predictions on words that weren't common in the
+    |  training data, but are equivalent to other words – for example, "realize"
+    |  and "realise", or "thx" and "thanks".
+
+p
+    |  Similarly, spaCy also includes
+    |  #[+src(gh("spaCy", "spacy/lang/norm_exceptions.py")) global base norms]
+    |  for normalising different styles of quotation marks and currency
+    |  symbols. Even though #[code $] and #[code €] are very different, spaCy
+    |  normalises them both to #[code $]. This way, they'll always be seen as
+    |  similar, no matter how common they were in the training data.
+
+p
+    |  Norm exceptions can be provided as a simple dictionary. For more examples,
+    |  see the English
+    |  #[+src(gh("spaCy", "spacy/lang/en/norm_exceptions.py")) norm_exceptions.py].
+
++code("Example").
+    NORM_EXCEPTIONS = {
+        "cos": "because",
+        "fav": "favorite",
+        "accessorise": "accessorize",
+        "accessorised": "accessorized"
+    }
+
+p
+    |  To add the custom norm exceptions lookup table, you can use the
+    |  #[code add_lookups()] helper functions. It takes the default attribute
+    |  getter function as its first argument, plus a variable list of
+    |  dictionaries. If a string's norm is found in one of the dictionaries,
+    |  that value is used – otherwise, the default function is called and the
+    |  token is assigned its default norm.
+
++code.
+    lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM],
+                                         NORM_EXCEPTIONS, BASE_NORMS)
+
+p
+    |  The order of the dictionaries is also the lookup order – so if your
+    |  language's norm exceptions overwrite any of the global exceptions, they
+    |  should be added first. Also note that the tokenizer exceptions will
+    |  always have priority over the atrribute getters.
 
 +h(3, "lex-attrs") Lexical attributes
 
