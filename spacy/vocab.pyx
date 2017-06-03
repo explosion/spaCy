@@ -231,11 +231,13 @@ cdef class Vocab:
             props = intify_attrs(props, strings_map=self.strings, _do_deprecated=True)
             token = &tokens[i]
             # Set the special tokens up to have arbitrary attributes
-            token.lex = <LexemeC*>self.get_by_orth(self.mem, props[attrs.ORTH])
+            lex = <LexemeC*>self.get_by_orth(self.mem, props[attrs.ORTH])
+            token.lex = lex
             if attrs.TAG in props:
                 self.morphology.assign_tag(token, props[attrs.TAG])
             for attr_id, value in props.items():
                 Token.set_struct_attr(token, attr_id, value)
+                Lexeme.set_struct_attr(lex, attr_id, value)
         return tokens
 
     @property

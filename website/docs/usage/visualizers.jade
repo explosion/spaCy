@@ -59,9 +59,11 @@ p
     |  to customise the layout, for example:
 
 +aside("Important note")
-    |  There's currently a known issue with the #[code compact] mode for long
-    |  sentences with arrow spacing. If the spacing is larger than the arc
-    |  itself, it'll cause the arc and its label to flip.
+    |  There's currently a known issue with the #[code compact] mode for
+    |  sentences with short arrows and long dependency labels, that causes labels
+    |  longer than the arrow to wrap. So if you come across this problem,
+    |  especially when using custom labels, you'll have to increase the
+    |  #[code distance] setting in the #[code options] to allow longer arcs.
 
 +table(["Name", "Type", "Description", "Default"])
     +row

@@ -56,7 +56,12 @@ def serve(docs, style='dep', page=True, minify=False, options={}, manual=False,
     render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
     httpd = simple_server.make_server('0.0.0.0', port, app)
     prints("Using the '%s' visualizer" % style, title="Serving on port %d..." % port)
-    httpd.serve_forever()
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        prints("Shutting down server on port %d." % port)
+    finally:
+        httpd.server_close()
 
 
 def app(environ, start_response):
@@ -65,12 +70,13 @@ def app(environ, start_response):
     return [res]
 
 
-def parse_deps(doc, options={}):
+def parse_deps(orig_doc, options={}):
     """Generate dependency parse in {'words': [], 'arcs': []} format.
 
     doc (Doc): Document do parse.
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
+    doc = Doc(orig_doc.vocab).from_bytes(orig_doc.to_bytes())
     if options.get('collapse_punct', True):
         spans = []
         for word in doc[:-1]:

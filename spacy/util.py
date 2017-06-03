@@ -299,6 +299,22 @@ def compile_infix_regex(entries):
     return re.compile(expression)
 
 
+def add_lookups(default_func, *lookups):
+    """Extend an attribute function with special cases. If a word is in the
+    lookups, the value is returned. Otherwise the previous function is used.
+
+    default_func (callable): The default function to execute.
+    *lookups (dict): Lookup dictionary mapping string to attribute value.
+    RETURNS (callable): Lexical attribute getter.
+    """
+    def get_attr(string):
+        for lookup in lookups:
+            if string in lookup:
+                return lookup[string]
+        return default_func(string)
+    return get_attr
+
+
 def update_exc(base_exceptions, *addition_dicts):
     """Update and validate tokenizer exceptions. Will overwrite exceptions.
 
