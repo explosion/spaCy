@@ -65,12 +65,13 @@ def app(environ, start_response):
     return [res]
 
 
-def parse_deps(doc, options={}):
+def parse_deps(orig_doc, options={}):
     """Generate dependency parse in {'words': [], 'arcs': []} format.
 
     doc (Doc): Document do parse.
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
+    doc = Doc(orig_doc.vocab).from_bytes(orig_doc.to_bytes())
     if options.get('collapse_punct', True):
         spans = []
         for word in doc[:-1]:
