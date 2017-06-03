@@ -27,14 +27,14 @@ from .. import displacy
     dev_data=("location of JSON-formatted development data (optional)", "positional", None, str),
     n_iter=("number of iterations", "option", "n", int),
     n_sents=("number of sentences", "option", "ns", int),
-    use_gpu=("Use GPU", "flag", "G", bool),
+    use_gpu=("Use GPU", "option", "g", int),
     resume=("Whether to resume training", "flag", "R", bool),
     no_tagger=("Don't train tagger", "flag", "T", bool),
     no_parser=("Don't train parser", "flag", "P", bool),
     no_entities=("Don't train NER", "flag", "N", bool)
 )
 def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
-          use_gpu=False, resume=False, no_tagger=False, no_parser=False, no_entities=False):
+          use_gpu=-1, resume=False, no_tagger=False, no_parser=False, no_entities=False):
     """
     Train a model. Expects data in spaCy's JSON format.
     """
@@ -76,7 +76,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
     corpus = GoldCorpus(train_path, dev_path, limit=n_sents)
     n_train_docs = corpus.count_train()
 
-    optimizer = nlp.begin_training(lambda: corpus.train_tuples, use_gpu=use_gpu)
+    optimizer = nlp.begin_training(lambda: corpus.train_tuples, device=use_gpu)
 
     print("Itn.\tLoss\tUAS\tNER P.\tNER R.\tNER F.\tTag %\tToken %")
     try:

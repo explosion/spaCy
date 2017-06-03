@@ -279,9 +279,14 @@ class Language(object):
                 for word in annots[1]:
                     _ = self.vocab[word]
         contexts = []
-        if cfg.get('use_gpu'):
+        if cfg.get('device', -1) >= 0:
+            import cupy.cuda.device
+            device = cupy.cuda.device.Device(cfg['device'])
+            device.use()
             Model.ops = CupyOps()
             Model.Ops = CupyOps
+        else:
+            device = None
         for proc in self.pipeline:
             if hasattr(proc, 'begin_training'):
                 context = proc.begin_training(get_gold_tuples(),
@@ -296,6 +301,7 @@ class Language(object):
         optimizer = Adam(Model.ops, learn_rate, L2=L2, beta1=beta1,
                          beta2=beta2, eps=eps)
         optimizer.max_grad_norm = max_grad_norm
+        optimizer.device = device
         return optimizer
 
     def evaluate(self, docs_golds):
