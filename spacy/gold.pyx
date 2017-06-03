@@ -195,7 +195,6 @@ class GoldCorpus(object):
     def count_train(self):
         n = 0
         for raw_text, paragraph_tuples in self.train_tuples:
-        for _ in self.train_tuples:
             n += len(paragraph_tuples)
         return n
 
