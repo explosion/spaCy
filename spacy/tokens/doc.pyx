@@ -437,7 +437,8 @@ cdef class Doc:
         """
         def __get__(self):
             if 'sents' in self.user_hooks:
-                return self.user_hooks['sents'](self)
+                yield from self.user_hooks['sents'](self)
+                return
 
             if not self.is_parsed:
                 raise ValueError(
