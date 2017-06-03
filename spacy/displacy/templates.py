@@ -21,7 +21,7 @@ TPL_DEP_WORDS = """
 TPL_DEP_ARCS = """
 <g class="displacy-arrow">
     <path class="displacy-arc" id="arrow-{id}-{i}" stroke-width="{stroke}px" d="{arc}" fill="none" stroke="currentColor"/>
-    <text dy="1.25em" style="font-size: 0.8em">
+    <text dy="1.25em" style="font-size: 0.8em; letter-spacing: 1px">
         <textPath xlink:href="#arrow-{id}-{i}" class="displacy-label" startOffset="50%" fill="currentColor" text-anchor="middle">{label}</textPath>
     </text>
     <path class="displacy-arrowhead" d="{head}" fill="currentColor"/>

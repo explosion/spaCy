@@ -2,6 +2,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+from collections import OrderedDict
 from cython.operator cimport dereference as deref
 from cython.operator cimport preincrement as preinc
 from cymem.cymem cimport Pool
@@ -355,14 +356,14 @@ cdef class Tokenizer:
         **exclude: Named attributes to prevent from being serialized.
         RETURNS (bytes): The serialized form of the `Tokenizer` object.
         """
-        serializers = {
-            'vocab': lambda: self.vocab.to_bytes(),
-            'prefix_search': lambda: self.prefix_search.__self__.pattern,
-            'suffix_search': lambda: self.suffix_search.__self__.pattern,
-            'infix_finditer': lambda: self.infix_finditer.__self__.pattern,
-            'token_match': lambda: self.token_match.__self__.pattern,
-            'exceptions': lambda: self._rules
-        }
+        serializers = OrderedDict((
+            ('vocab', lambda: self.vocab.to_bytes()),
+            ('prefix_search', lambda: self.prefix_search.__self__.pattern),
+            ('suffix_search', lambda: self.suffix_search.__self__.pattern),
+            ('infix_finditer', lambda: self.infix_finditer.__self__.pattern),
+            ('token_match', lambda: self.token_match.__self__.pattern),
+            ('exceptions', lambda: OrderedDict(sorted(self._rules.items())))
+        ))
         return util.to_bytes(serializers, exclude)
 
     def from_bytes(self, bytes_data, **exclude):
@@ -372,15 +373,15 @@ cdef class Tokenizer:
         **exclude: Named attributes to prevent from being loaded.
         RETURNS (Tokenizer): The `Tokenizer` object.
         """
-        data = {}
-        deserializers = {
-            'vocab': lambda b: self.vocab.from_bytes(b),
-            'prefix_search': lambda b: data.setdefault('prefix', b),
-            'suffix_search': lambda b: data.setdefault('suffix_search', b),
-            'infix_finditer': lambda b: data.setdefault('infix_finditer', b),
-            'token_match': lambda b: data.setdefault('token_match', b),
-            'exceptions': lambda b: data.setdefault('rules', b)
-        }
+        data = OrderedDict()
+        deserializers = OrderedDict((
+            ('vocab', lambda b: self.vocab.from_bytes(b)),
+            ('prefix_search', lambda b: data.setdefault('prefix', b)),
+            ('suffix_search', lambda b: data.setdefault('suffix_search', b)),
+            ('infix_finditer', lambda b: data.setdefault('infix_finditer', b)),
+            ('token_match', lambda b: data.setdefault('token_match', b)),
+            ('exceptions', lambda b: data.setdefault('rules', b))
+        ))
         msg = util.from_bytes(bytes_data, deserializers, exclude)
         if 'prefix_search' in data:
             self.prefix_search = re.compile(data['prefix_search']).search
@@ -392,3 +393,4 @@ cdef class Tokenizer:
             self.token_match = re.compile(data['token_match']).search
         for string, substrings in data.get('rules', {}).items():
             self.add_special_case(string, substrings)
+        return self

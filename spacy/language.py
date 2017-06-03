@@ -301,7 +301,7 @@ class Language(object):
     def evaluate(self, docs_golds):
         docs, golds = zip(*docs_golds)
         scorer = Scorer()
-        for doc, gold in zip(self.pipe(docs), golds):
+        for doc, gold in zip(self.pipe(docs, batch_size=32), golds):
             scorer.score(doc, gold)
             doc.tensor = None
         return scorer

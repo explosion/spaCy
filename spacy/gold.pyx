@@ -212,7 +212,7 @@ class GoldCorpus(object):
 
     def dev_docs(self, nlp, gold_preproc=False):
         gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc)
-        gold_docs = nlp.preprocess_gold(gold_docs)
+        #gold_docs = nlp.preprocess_gold(gold_docs)
         yield from gold_docs
 
     @classmethod
@@ -227,7 +227,7 @@ class GoldCorpus(object):
                                   gold_preproc)
             golds = cls._make_golds(docs, paragraph_tuples)
             for doc, gold in zip(docs, golds):
-                if not max_length or len(doc) < max_length:
+                if (not max_length) or len(doc) < max_length:
                     yield doc, gold
 
     @classmethod
@@ -235,17 +235,17 @@ class GoldCorpus(object):
         if raw_text is not None:
             return [nlp.make_doc(raw_text)]
         else:
-            return [Doc(nlp.vocab, words=sent_tuples[0][1])
-                for sent_tuples in paragraph_tuples]
+            return [Doc(nlp.vocab, words=sent_tuples[1])
+                for (sent_tuples, brackets) in paragraph_tuples]
 
     @classmethod
     def _make_golds(cls, docs, paragraph_tuples):
+        assert len(docs) == len(paragraph_tuples)
         if len(docs) == 1:
-            return [GoldParse.from_annot_tuples(docs[0], sent_tuples[0])
-                    for sent_tuples in paragraph_tuples]
+            return [GoldParse.from_annot_tuples(docs[0], paragraph_tuples[0][0])]
         else:
-            return [GoldParse.from_annot_tuples(doc, sent_tuples[0])
-                    for doc, sent_tuples in zip(docs, paragraph_tuples)]
+            return [GoldParse.from_annot_tuples(doc, sent_tuples)
+                    for doc, (sent_tuples, brackets) in zip(docs, paragraph_tuples)]
 
     @staticmethod
     def walk_corpus(path):
