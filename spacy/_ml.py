@@ -13,7 +13,7 @@ from thinc import describe
 from thinc.describe import Dimension, Synapses, Biases, Gradient
 from thinc.neural._classes.affine import _set_dimensions_if_needed
 
-from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP
+from .attrs import ID, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP
 from .tokens.doc import Doc
 
 import numpy
@@ -131,14 +131,14 @@ class PrecomputableMaxouts(Model):
         return Yfp, backward
 
 def Tok2Vec(width, embed_size, preprocess=None):
-    cols = [ID, LOWER, PREFIX, SUFFIX, SHAPE]
+    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
-        lower = get_col(cols.index(LOWER))   >> HashEmbed(width, embed_size, name='embed_lower')
+        norm = get_col(cols.index(NORM))   >> HashEmbed(width, embed_size, name='embed_lower')
         prefix = get_col(cols.index(PREFIX)) >> HashEmbed(width, embed_size//2, name='embed_prefix')
         suffix = get_col(cols.index(SUFFIX)) >> HashEmbed(width, embed_size//2, name='embed_suffix')
         shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size//2, name='embed_shape')
 
-        embed = (lower | prefix | suffix | shape )
+        embed = (norm | prefix | suffix | shape )
         tok2vec = (
             with_flatten(
                 asarray(Model.ops, dtype='uint64')
@@ -148,7 +148,7 @@ def Tok2Vec(width, embed_size, preprocess=None):
                 >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
                 >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
                 >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3)),
-            pad=4, ndim=5)
+            pad=4)
         )
         if preprocess not in (False, None):
             tok2vec = preprocess >> tok2vec
@@ -243,7 +243,7 @@ def zero_init(model):
 
 
 def doc2feats(cols=None):
-    cols = [ID, LOWER, PREFIX, SUFFIX, SHAPE]
+    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE]
     def forward(docs, drop=0.):
         feats = []
         for doc in docs:
