@@ -141,7 +141,7 @@ p
                 else:
                     tokens.append(substring)
                     substring = ''
-            tokens.extend(suffixes)
+            tokens.extend(reversed(suffixes))
             return tokens
 
 p
