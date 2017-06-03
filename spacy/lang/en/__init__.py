@@ -21,7 +21,7 @@ class EnglishDefaults(Language.Defaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
     lex_attr_getters[LANG] = lambda text: 'en'
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM],
-                                         BASE_NORMS, NORM_EXCEPTIONS)
+                                         NORM_EXCEPTIONS, BASE_NORMS)
     lex_attr_getters.update(LEX_ATTRS)
 
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
