@@ -392,3 +392,4 @@ cdef class Tokenizer:
             self.token_match = re.compile(data['token_match']).search
         for string, substrings in data.get('rules', {}).items():
             self.add_special_case(string, substrings)
+        return self
