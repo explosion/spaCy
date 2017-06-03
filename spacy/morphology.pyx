@@ -38,7 +38,7 @@ cdef class Morphology:
         self.strings = string_store
         self.tag_map = {}
         self.lemmatizer = lemmatizer
-        self.n_tags = len(tag_map) + 1
+        self.n_tags = len(tag_map)
         self.tag_names = tuple(sorted(tag_map.keys()))
         self.reverse_index = {}
 
