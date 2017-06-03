@@ -44,11 +44,12 @@ p
         +item #[+a("#annotations-token") Tokenization]
         +item #[+a("#annotations-pos-deps") POS tags and dependencies]
         +item #[+a("#annotations-ner") Named entities]
-        +item #[+a("#vectors-similarity") Word vectos and similarity]
+        +item #[+a("#vectors-similarity") Word vectors and similarity]
         +item #[+a("#pipelines") Pipelines]
         +item #[+a("#vocab") Vocab, hashes and lexemes]
         +item #[+a("#serialization") Serialization]
         +item #[+a("#training") Training]
+        +item #[+a("#language-data") Language data]
         +item #[+a("#architecture") Architecture]
         +item #[+a("#community") Community & FAQ]
 
@@ -254,6 +255,16 @@ include _spacy-101/_training
     |  training data and how to improve spaCy's named entity recognition models,
     |  see the usage guides on #[+a("/docs/usage/training") training] and
     |  #[+a("/docs/usage/training-ner") training the named entity recognizer].
+
++h(2, "language-data") Language data
+
+include _spacy-101/_language-data
+
++infobox
+    |  To learn more about the individual components of the language data and
+    |  how to #[strong add a new language] to spaCy in preparation for training
+    |  a language model, see the usage guide on
+    |  #[+a("/docs/usage/adding-languages") adding languages].
 
 +h(2, "architecture") Architecture
 

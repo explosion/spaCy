@@ -26,9 +26,9 @@ p
             |  lemmatization and morphological analysis.
 
     +table-of-contents
+        +item #[+a("#101") Language data 101]
         +item #[+a("#language-subclass") The Language subclass]
-        +item #[+a("#language-data") Adding language data]
-        +item #[+a("#stop-workds") Stop words]
+        +item #[+a("#stop-words") Stop words]
         +item #[+a("#tokenizer-exceptions") Tokenizer exceptions]
         +item #[+a("#norm-exceptions") Norm exceptions]
         +item #[+a("#lex-attrs") Lexical attributes]
@@ -48,6 +48,106 @@ p
     |  data is stored in regular Python files. This means that you won't have to
     |  rebuild anything in between – you can simply make edits and reload spaCy
     |  to test them.
+
++h(2, "101") Language data 101
+
+include _spacy-101/_language-data
+
+p
+    |  The individual components #[strong expose variables] that can be imported
+    |  within a language module, and added to the language's #[code Defaults].
+    |  Some components, like the punctuation rules, usually don't need much
+    |  customisation and can simply be imported from the global rules. Others,
+    |  like the tokenizer and norm exceptions, are very specific and will make
+    |  a big difference to spaCy's performance on the particular language and
+    |  training a language model.
+
+
++table(["Variable", "Type", "Description"])
+    +row
+        +cell #[code STOP_WORDS]
+        +cell set
+        +cell Individual words.
+
+    +row
+        +cell #[code TOKENIZER_EXCEPTIONS]
+        +cell dict
+        +cell Keyed by strings mapped to list of one dict per token with token attributes.
+
+    +row
+        +cell #[code TOKEN_MATCH]
+        +cell regex
+        +cell Regexes to match complex tokens, e.g. URLs.
+
+    +row
+        +cell #[code NORM_EXCEPTIONS]
+        +cell dict
+        +cell Keyed by strings, mapped to their norms.
+
+    +row
+        +cell #[code TOKENIZER_PREFIXES]
+        +cell list
+        +cell Strings or regexes, usually not customised.
+
+    +row
+        +cell #[code TOKENIZER_SUFFIXES]
+        +cell list
+        +cell Strings or regexes, usually not customised.
+
+    +row
+        +cell #[code TOKENIZER_INFIXES]
+        +cell list
+        +cell Strings or regexes, usually not customised.
+
+    +row
+        +cell #[code LEX_ATTRS]
+        +cell dict
+        +cell Attribute ID mapped to function.
+
+    +row
+        +cell #[code LOOKUP]
+        +cell dict
+        +cell Keyed by strings mapping to their lemma.
+
+    +row
+        +cell #[code LEMMA_RULES], #[code LEMMA_INDEX], #[code LEMMA_EXC]
+        +cell dict
+        +cell Lemmatization rules, keyed by part of speech.
+
+    +row
+        +cell #[code TAG_MAP]
+        +cell dict
+        +cell
+            |  Keyed by strings mapped to
+            |  #[+a("http://universaldependencies.org/u/pos/all.html") Universal Dependencies]
+            |  tags.
+
+    +row
+        +cell #[code MORPH_RULES]
+        +cell dict
+        +cell Keyed by strings mapped to a dict of their morphological features.
+
++aside("Should I ever update the global data?")
+    |  Reuseable language data is collected as atomic pieces in the root of the
+    |  #[+src(gh("spaCy", "lang")) spacy.lang] package. Often, when a new
+    |  language is added, you'll find a pattern or symbol that's missing. Even
+    |  if it isn't common in other languages, it might be best to add it to the
+    |  shared language data, unless it has some conflicting interpretation. For
+    |  instance, we don't expect to see guillemot quotation symbols
+    |  (#[code &raquo;] and #[code &laquo;]) in English text. But if we do see
+    |  them, we'd probably prefer the tokenizer to split them off.
+
++infobox("For languages with non-latin characters")
+    |  In order for the tokenizer to split suffixes, prefixes and infixes, spaCy
+    |  needs to know the language's character set. If the language you're adding
+    |  uses non-latin characters, you might need to add the required character
+    |  classes to the global
+    |  #[+src(gh("spacy", "spacy/lang/char_classes.py")) char_classes.py].
+    |  spaCy uses the #[+a("https://pypi.python.org/pypi/regex/") #[code regex] library]
+    |  to keep this simple and readable. If the language requires very specific
+    |  punctuation rules, you should consider overwriting the default regular
+    |  expressions with your own in the language's #[code Defaults].
+
 
 +h(2, "language-subclass") Creating a #[code Language] subclass
 
@@ -95,7 +195,7 @@ p
     # set default export – this allows the language class to be lazy-loaded
     __all__ = ['Xxxxx']
 
-+aside("Why lazy-loading?")
++infobox("Why lazy-loading?")
     |  Some languages contain large volumes of custom data, like lemmatizer
     |  loopup tables, or complex regular expression that are expensive to
     |  compute. As of spaCy v2.0, #[code Language] classes are not imported on
@@ -104,111 +204,6 @@ p
     |  your application, you can use the
     |  #[+api("util#get_lang_class") #[code util.get_lang_class()]] helper
     |  function with the two-letter language code as its argument.
-
-+h(2, "language-data") Adding language data
-
-p
-    |  Every language is full of exceptions and special cases, especially
-    |  amongst the most common words. Some of these exceptions are shared
-    |  between multiple languages, while others are entirely idiosyncratic.
-    |  spaCy makes it easy to deal with these exceptions on a case-by-case
-    |  basis, by defining simple rules and exceptions. The exceptions data is
-    |  defined in Python the
-    |  #[+src(gh("spacy-dev-resources", "templates/new_language")) language data],
-    |  so that Python functions can be used to help you generalise and combine
-    |  the data as you require.
-
-p
-    |  Here's an overview of the individual components that can be included
-    |  in the language data. For more details on them, see the sections below.
-
-+image
-    include ../../assets/img/docs/language_data.svg
-    .u-text-right
-        +button("/assets/img/docs/language_data.svg", false, "secondary").u-text-tag View large graphic
-
-+table(["File name", "Variables", "Description"])
-    +row
-        +cell #[+src(gh("spacy-dev-resources", "templates/new_language/stop_words.py")) stop_words.py]
-        +cell #[code STOP_WORDS] (set)
-        +cell
-            |  List of most common words. Matching tokens will return #[code True]
-            |  for #[code is_stop].
-
-    +row
-        +cell #[+src(gh("spacy-dev-resources", "templates/new_language/tokenizer_exceptions.py")) tokenizer_exceptions.py]
-        +cell #[code TOKENIZER_EXCEPTIONS] (dict), #[code TOKEN_MATCH] (regex)
-        +cell
-            |  Special-case rules for the tokenizer, for example, contractions
-            |  and abbreviations containing punctuation.
-
-    +row
-        +cell #[+src(gh("spaCy", "spacy/lang/norm_exceptions.py")) norm_exceptions.py]
-        +cell
-            |  #[code NORM_EXCEPTIONS] (dict)
-        +cell
-            |  Special-case rules for normalising tokens and assigning norms,
-            |  for example American vs. British spelling.
-
-    +row
-        +cell #[+src(gh("spaCy", "spacy/lang/punctuation.py")) punctuation.py]
-        +cell
-            |  #[code TOKENIZER_PREFIXES], #[code TOKENIZER_SUFFIXES],
-            |  #[code TOKENIZER_INFIXES] (dicts)
-        +cell Regular expressions for splitting tokens, e.g. on punctuation.
-
-    +row
-        +cell #[+src(gh("spacy-dev-resources", "templates/new_language/lex_attrs.py")) lex_attrs.py]
-        +cell #[code LEX_ATTRS] (dict)
-        +cell
-            |  Functions for setting lexical attributes on tokens, e.g.
-            |  #[code is_punct] or #[code like_num].
-
-    +row
-        +cell #[+src(gh("spacy-dev-resources", "templates/new_language/lemmatizer.py")) lemmatizer.py]
-        +cell #[code LOOKUP] (dict)
-        +cell
-            |  Lookup-based lemmatization table. If more lemmatizer data is
-            |  available, it should live in #[code /lemmatizer/lookup.py].
-
-    +row
-        +cell /lemmatizer
-        +cell #[code LEMMA_RULES], #[code LEMMA_INDEX], #[code LEMMA_EXC] (dicts)
-        +cell Lemmatization rules, keyed by part of speech.
-
-    +row
-        +cell #[+src(gh("spacy-dev-resources", "templates/new_language/tag_map.py")) tag_map.py]
-        +cell #[code TAG_MAP] (dict)
-        +cell
-            |  Dictionary mapping strings in your tag set to
-            |  #[+a("http://universaldependencies.org/u/pos/all.html") Universal Dependencies]
-            |  tags.
-
-    +row
-        +cell #[+src(gh()) morph_rules.py]
-        +cell #[code MORPH_RULES] (dict)
-        +cell Exception rules for morphological analysis of irregular words.
-
-+aside("Should I ever update the global data?")
-    |  Reuseable language data is collected as atomic pieces in the root of the
-    |  #[+src(gh("spaCy", "lang")) spacy.lang] package. Often, when a new
-    |  language is added, you'll find a pattern or symbol that's missing. Even
-    |  if it isn't common in other languages, it might be best to add it to the
-    |  shared language data, unless it has some conflicting interpretation. For
-    |  instance, we don't expect to see guillemot quotation symbols
-    |  (#[code &raquo;] and #[code &laquo;]) in English text. But if we do see
-    |  them, we'd probably prefer the tokenizer to split them off.
-
-+infobox("For languages with non-latin characters")
-    |  In order for the tokenizer to split suffixes, prefixes and infixes, spaCy
-    |  needs to know the language's character set. If the language you're adding
-    |  uses non-latin characters, you might need to add the required character
-    |  classes to the global
-    |  #[+src(gh("spacy", "spacy/lang/char_classes.py")) char_classes.py].
-    |  spaCy uses the #[+a("https://pypi.python.org/pypi/regex/") #[code regex] library]
-    |  to keep this simple and readable. If the language requires very specific
-    |  punctuation rules, you should consider overwriting the default regular
-    |  expressions with your own in the language's #[code Defaults].
 
 +h(3, "stop-words") Stop words
 
