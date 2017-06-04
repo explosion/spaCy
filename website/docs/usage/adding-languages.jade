@@ -349,10 +349,12 @@ p
     |  a token's norm equals its lowercase text. If the lowercase spelling of a
     |  word exists, norms should always be in lowercase.
 
-+aside-code("Accessing norms").
++aside-code("Norms vs. lemmas").
     doc = nlp(u"I'm gonna")
     norms = [token.norm_ for token in doc]
+    lemmas = [token.lemma_ for token in doc]
     assert norms == ['i', 'am', 'going', 'to']
+    assert lemmas == ['i', 'be', 'go', 'to']
 
 p
     |  spaCy usually tries to normalise words with different spellings to a single,
