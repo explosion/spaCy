@@ -286,7 +286,8 @@ class NeuralTagger(object):
         cdef Vocab vocab = self.vocab
         if new_tag_map:
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
-                                          vocab.morphology.lemmatizer)
+                                          vocab.morphology.lemmatizer,
+                                          exc=vocab.morphology.exc)
         token_vector_width = pipeline[0].model.nO
         if self.model is True:
             self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
@@ -322,7 +323,9 @@ class NeuralTagger(object):
             tag_map = msgpack.loads(b, encoding='utf8')
             self.vocab.morphology = Morphology(
                 self.vocab.strings, tag_map=tag_map,
-                lemmatizer=self.vocab.morphology.lemmatizer)
+                lemmatizer=self.vocab.morphology.lemmatizer,
+                exc=self.vocab.morphology.exc)
+ 
         deserialize = OrderedDict((
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('tag_map', load_tag_map),
@@ -354,7 +357,9 @@ class NeuralTagger(object):
                 tag_map = msgpack.loads(file_.read(), encoding='utf8')
             self.vocab.morphology = Morphology(
                 self.vocab.strings, tag_map=tag_map,
-                lemmatizer=self.vocab.morphology.lemmatizer)
+                lemmatizer=self.vocab.morphology.lemmatizer,
+                exc=self.vocab.morphology.exc)
+ 
 
         deserialize = OrderedDict((
             ('vocab', lambda p: self.vocab.from_disk(p)),
