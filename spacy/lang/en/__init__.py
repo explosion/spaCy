@@ -31,7 +31,7 @@ class EnglishDefaults(Language.Defaults):
     lemma_rules = dict(LEMMA_RULES)
     lemma_index = dict(LEMMA_INDEX)
     lemma_exc = dict(LEMMA_EXC)
-    sytax_iterators = dict(SYNTAX_ITERATORS)
+    syntax_iterators = dict(SYNTAX_ITERATORS)
 
 
 class English(Language):
