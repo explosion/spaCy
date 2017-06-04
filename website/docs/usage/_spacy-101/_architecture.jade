@@ -1,0 +1,15 @@
+//- 💫 DOCS > USAGE > SPACY 101 > ARCHITECTURE
+
+p
+    |  The central data structures in spaCy are the #[code Doc] and the #[code Vocab].
+    |  The #[code doc] object owns the sequence of tokens and all their annotations.
+    |  the #[code vocab] owns a set of look-up tables that make common information
+    |  available across documents. By centralising strings, word vectors and lexical
+    |  attributes, we avoid storing multiple copies of this data. This saves memory, and
+    |  ensures there's a single source of truth. Text annotations are also designed to
+    |  allow a single source of truth: the #[code Doc] object owns the data, and
+    |  #[code Span] and #[code Token] are views that point into it. The #[code Doc]
+    |  object is constructed by the #[code Tokenizer], and then modified in-place by
+    |  the components of the pipeline. The #[code Language] object coordinates these
+    |  components. It takes raw text and sends it through the pipeline, returning
+    |  an annotated document. It also orchestrates training and serialisation.
