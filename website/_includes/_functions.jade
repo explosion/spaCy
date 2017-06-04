@@ -28,8 +28,8 @@
 
 -   function getSocialImg() {
 -       var base = SITE_URL + '/assets/img/social/preview_'
--       var image = 'default'
+-       var image = ALPHA ? 'alpha' : 'default'
 -       if (preview) image = preview
--       else if (SECTION == 'docs') image = 'docs'
+-       else if (SECTION == 'docs' && !ALPHA) image = 'docs'
 -       return base + image + '.jpg'
 -   }
