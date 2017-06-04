@@ -417,6 +417,7 @@ def read_json(location):
     location (Path): Path to JSON file.
     RETURNS (dict): Loaded JSON content.
     """
+    location = ensure_path(location)
     with location.open('r', encoding='utf8') as f:
         return ujson.load(f)
 
