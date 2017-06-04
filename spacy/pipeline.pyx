@@ -235,6 +235,7 @@ class NeuralTagger(object):
             for j, tag_id in enumerate(doc_tag_ids):
                 vocab.morphology.assign_tag_id(&doc.c[j], tag_id)
                 idx += 1
+        doc.is_tagged = True
 
     def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
         docs, tokvecs = docs_tokvecs
