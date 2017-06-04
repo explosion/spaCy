@@ -65,13 +65,15 @@ p
         |  not designed specifically for chat bots, and only provides the
         |  underlying text processing capabilities.
     +item #[strong spaCy is not research software].
-        |  It's is built on the latest research, but unlike
-        |  #[+a("https://github./nltk/nltk") NLTK], which is intended for
-        |  teaching and research, spaCy follows a more opinionated approach and
-        |  focuses on production usage. Its aim is to provide you with the best
-        |  possible general-purpose solution for text processing and machine learning
-        |  with text input – but this also means that there's only one implementation
-        |  of each component.
+        |  It's is built on the latest research, but it's designed to get
+        |  things done. This leads to fairly different design decisions than
+        |  #[+a("https://github./nltk/nltk") NLTK]
+        |  or #[+a("https://stanfordnlp.github.io/CorenlP") CoreNLP], which were
+        |  created as platforms for teaching and research.  The main difference
+        |  is that spaCy is integrated and opinionated. We try to avoid asking
+        |  the user to choose between multiple algorithms that deliver equivalent
+        |  functionality.  Keeping our menu small lets us deliver generally better
+        |  performance and developer experience.
     +item #[strong spaCy is not a company].
         |  It's an open-source library. Our company publishing spaCy and other
         |  software is called #[+a(COMPANY_URL, true) Explosion AI].
@@ -79,7 +81,7 @@ p
 +h(2, "features") Features
 
 p
-    |  Across the documentations, you'll come across mentions of spaCy's
+    |  Across the documentation, you'll come across mentions of spaCy's
     |  features and capabilities. Some of them refer to linguistic concepts,
     |  while others are related to more general machine learning functionality.
 
@@ -171,7 +173,9 @@ p
 p
     |  Even though a #[code Doc] is processed – e.g. split into individual words
     |  and annotated – it still holds #[strong all information of the original text],
-    |  like whitespace characters. This way, you'll never lose any information
+    |  like whitespace characters. You can always get the offset of a token into the
+    |  original string, or reconstruct the original by joining the tokens and their
+    |  trailing whitespace. This way, you'll never lose any information
     |  when processing text with spaCy.
 
 +h(3, "annotations-token") Tokenization
