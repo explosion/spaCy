@@ -155,7 +155,7 @@ def get_model_meta(path):
     meta = read_json(meta_path)
     for setting in ['lang', 'name', 'version']:
         if setting not in meta:
-            raise IOError('No %s setting found in model meta.json' % setting)
+            raise ValueError('No %s setting found in model meta.json' % setting)
     return meta
 
 
