@@ -21,13 +21,8 @@ p
     +qs({config: 'venv', os: 'linux'}) source .env/bin/activate
     +qs({config: 'venv', os: 'windows'}) .env\Scripts\activate
 
-    +qs({config: 'gpu', os: 'mac'}) export CUDA_HOME=/usr/local/cuda-8.0
-    +qs({config: 'gpu', os: 'mac'}) export PATH=$PATH:$CUDA_HOME/bin
-    +qs({config: 'gpu', os: 'linux'}) export CUDA_HOME=/usr/local/cuda-8.0
-    +qs({config: 'gpu', os: 'linux'}) export PATH=$PATH:$CUDA_HOME/bin
-    +qs({config: 'gpu', package: 'pip'}) pip install -U chainer
-    +qs({config: 'gpu', package: 'source'}) pip install -U chainer
-    +qs({config: 'gpu', package: 'conda'}) conda install -c anaconda chainer
+    +qs({config: 'gpu', os: 'mac'}) export PATH=$PATH:/usr/local/cuda-8.0/bin
+    +qs({config: 'gpu', os: 'linux'}) export PATH=$PATH:/usr/local/cuda-8.0/bin
 
     +qs({package: 'pip'}) pip install -U spacy
     +qs({package: 'conda'}) conda install -c conda-forge spacy
