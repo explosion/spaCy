@@ -1,6 +1,5 @@
 from __future__ import unicode_literals
 import json
-import os
 import random
 import contextlib
 import shutil
@@ -9,7 +8,6 @@ import tempfile
 from pathlib import Path
 
 
-import pathlib
 from ...gold import GoldParse
 from ...pipeline import EntityRecognizer
 from ...lang.en import English
