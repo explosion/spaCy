@@ -350,8 +350,9 @@ p
     |  word exists, norms should always be in lowercase.
 
 +aside-code("Accessing norms").
-    doc = nlp(u"I can't")
-    assert [t.norm_ for t in doc] == ['i', 'can', 'not']
+    doc = nlp(u"I'm gonna")
+    norms = [token.norm_ for token in doc]
+    assert norms == ['i', 'am', 'going', 'to']
 
 p
     |  spaCy usually tries to normalise words with different spellings to a single,
