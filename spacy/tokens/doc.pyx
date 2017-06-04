@@ -65,8 +65,13 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return Lexeme.get_struct_attr(token.lex, feat_name)
 
 def _get_chunker(lang):
-    cls = util.get_lang_class(lang)
-    return cls.Defaults.syntax_iterators.get('noun_chunks')
+    try:
+        cls = util.get_lang_class(lang)
+    except ImportError:
+        return None
+    except KeyError:
+        return None
+    return cls.Defaults.syntax_iterators.get(u'noun_chunks')
 
 cdef class Doc:
     """A sequence of Token objects. Access sentences and named entities, export
