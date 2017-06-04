@@ -478,7 +478,7 @@ def print_table(data, title=None):
     if isinstance(data, dict):
         data = list(data.items())
     tpl_row = '    {:<15}' * len(data[0])
-    table = '\n'.join([tpl_row.format(l, v) for l, v in data])
+    table = '\n'.join([tpl_row.format(l, unicode_(v)) for l, v in data])
     if title:
         print('\n    \033[93m{}\033[0m'.format(title))
     print('\n{}\n'.format(table))
@@ -491,11 +491,12 @@ def print_markdown(data, title=None):
     title (unicode or None): Title, will be rendered as headline 2.
     """
     def excl_value(value):
-        return Path(value).exists() # contains path (personal info)
+        # contains path, i.e. personal info
+        return isinstance(value, basestring_) and Path(value).exists()
 
     if isinstance(data, dict):
         data = list(data.items())
-    markdown = ["* **{}:** {}".format(l, v) for l, v in data if not excl_value(v)]
+    markdown = ["* **{}:** {}".format(l, unicode_(v)) for l, v in data if not excl_value(v)]
     if title:
         print("\n## {}".format(title))
     print('\n{}\n'.format('\n'.join(markdown)))
