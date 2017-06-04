@@ -104,14 +104,11 @@ p
     |  recommend using pip with a direct link, instead of relying on spaCy's
     |  #[+api("cli#download") #[code download]] command.
 
-p
++infobox
     |  You can also add the direct download link to your application's
-    |  #[code requirements.txt]. For more information on this, see the
-    |  #[+a("https://pip.pypa.io/en/latest/reference/pip_install/#requirements-file-format") pip documentation].
-    |  This will only install the package and not trigger any of spaCy's internal
-    |  commands like #[code download] or #[code link]. So you'll have to make
-    |  sure to create a link for your model manually, or
-    |  #[+a("#usage-import") import it as a module] instead.
+    |  #[code requirements.txt]. For more details,
+    |  see the usage guide on
+    |  #[+a("/docs/usage/production-use#models") working with models in production].
 
 
 +h(3, "download-manual") Manual download and installation
@@ -228,6 +225,10 @@ p
     |  is not installed, as your code will raise an #[code ImportError]
     |  immediately, instead of failing somewhere down the line when calling
     |  #[code spacy.load()].
+
++infobox
+    |  For more details, see the usage guide on
+    |  #[+a("/docs/usage/production-use#models") working with models in production].
 
 +h(2, "own-models") Using your own models
 
