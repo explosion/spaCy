@@ -278,7 +278,7 @@ cdef class Vocab:
         """Check whether a word has a vector. Returns False if no
         vectors have been loaded. Words can be looked up by string
         or int ID."""
-        raise NotImplementedError
+        return False
 
     def to_disk(self, path):
         """Save the current state to a directory.
