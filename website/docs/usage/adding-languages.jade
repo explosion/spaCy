@@ -42,6 +42,7 @@ p
         +item #[+a("#tokenizer-exceptions") Tokenizer exceptions]
         +item #[+a("#norm-exceptions") Norm exceptions]
         +item #[+a("#lex-attrs") Lexical attributes]
+        +item #[+a("#syntax-iterators") Syntax iterators]
         +item #[+a("#lemmatizer") Lemmatizer]
         +item #[+a("#tag-map") Tag map]
         +item #[+a("#morph-rules") Morph rules]
@@ -103,6 +104,13 @@ p
         +cell #[code LEX_ATTRS]
         +cell dict
         +cell Attribute ID mapped to function.
+
+    +row
+        +cell #[code SYNTAX_ITERATORS]
+        +cell dict
+        +cell
+            |  Iterator ID mapped to function. Currently only supports
+            |  #[code 'noun_chunks'].
 
     +row
         +cell #[code LOOKUP]
@@ -341,9 +349,12 @@ p
     |  a token's norm equals its lowercase text. If the lowercase spelling of a
     |  word exists, norms should always be in lowercase.
 
-+aside-code("Accessing norms").
-    doc = nlp(u"I can't")
-    assert [t.norm_ for t in doc] == ['i', 'can', 'not']
++aside-code("Norms vs. lemmas").
+    doc = nlp(u"I'm gonna realise")
+    norms = [token.norm_ for token in doc]
+    lemmas = [token.lemma_ for token in doc]
+    assert norms == ['i', 'am', 'going', 'to', 'realize']
+    assert lemmas == ['i', 'be', 'go', 'to', 'realise']
 
 p
     |  spaCy usually tries to normalise words with different spellings to a single,
@@ -448,6 +459,33 @@ p
     |  dictionary in the language's defaults via
     |  #[code lex_attr_getters.update(LEX_ATTRS)], only the new custom functions
     |  are overwritten.
+
++h(3, "syntax-iterators") Syntax iterators
+
+p
+    |  Syntax iterators are functions that compute views of a #[code Doc]
+    |  object based on its syntax. At the moment, this data is only used for
+    |  extracting
+    |  #[+a("/docs/usage/dependency-parse#noun-chunks") noun chunks], which
+    |  are available as the #[+api("doc#noun_chunks") #[code Doc.noun_chunks]]
+    |  property. Because base noun phrases work differently across languages,
+    |  the rules to compute them are part of the individual language's data. If
+    |  a language does not include a noun chunks iterator, the property won't
+    |  be available. For examples, see the existing syntax iterators:
+
++aside-code("Noun chunks example").
+    doc = nlp(u'A phrase with another phrase occurs.')
+    chunks = list(doc.noun_chunks)
+    assert chunks[0].text == "A phrase"
+    assert chunks[1].text == "another phrase"
+
++table(["Language", "Source"])
+    for lang, lang_id in {en: "English", de: "German", es: "Spanish"}
+        +row
+            +cell=lang
+            +cell
+                +src(gh("spaCy", "spacy/lang/" + lang_id + "/syntax_iterators.py"))
+                    |  lang/#{lang_id}/syntax_iterators.py
 
 +h(3, "lemmatizer") Lemmatizer
 
@@ -604,6 +642,8 @@ p
 
 +h(2, "vocabulary") Building the vocabulary
 
++under-construction
+
 p
     |  spaCy expects that common words will be cached in a
     |  #[+api("vocab") #[code Vocab]] instance. The vocabulary caches lexical
@@ -697,6 +737,8 @@ p
 
 +h(3, "word-vectors") Training the word vectors
 
++under-construction
+
 p
     |  #[+a("https://en.wikipedia.org/wiki/Word2vec") Word2vec] and related
     |  algorithms let you train useful word similarity models from unlabelled
@@ -730,6 +772,8 @@ p
         └── config.json
 
 +h(2, "train-tagger-parser") Training the tagger and parser
+
++under-construction
 
 p
     |  You can now train the model using a corpus for your language annotated
