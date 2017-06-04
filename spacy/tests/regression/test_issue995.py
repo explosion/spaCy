@@ -4,7 +4,7 @@ import pytest
 
 
 @pytest.mark.models('en')
-def test_issue955(EN, doc):
+def test_issue955(EN):
     '''Test that we don't have any nested noun chunks'''
     doc = EN('Does flight number three fifty-four require a connecting flight'
              ' to get to Boston?')
