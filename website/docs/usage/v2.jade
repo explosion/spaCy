@@ -3,7 +3,46 @@
 include ../../_includes/_mixins
 
 p
-    |  We're very excited to finally introduce spaCy v2.0.
+    |  We're very excited to finally introduce spaCy v2.0. This release features
+    |  entirely new deep learning-powered models for spaCy's tagger, parser and
+    |  entity recognizer. The new models are #[strong 20x smaller] than the linear
+    |  models that have powered spaCy until now: from 300mb to only 14mb.  Speed
+    |  and accuracy are currently comparable to the 1.x models: speed on CPU is
+    |  slightly lower, while accuracy is slightly higher. We expect performance to
+    |  improve quickly between now and the release date, as we run more experiments
+    |  and optimize the implementation.
+
+p
+    |  The main usability improvements you'll notice in spaCy 2 are around the
+    |  defining, training and loading your own models and components. The new neural
+    |  network models make it much easier to train a model from scratch, or update
+    |  an existing model with a few examples. In v1, the statistical models depended
+    |  on the state of the vocab. If you taught the model a new word, you would have
+    |  to save and load a lot of data -- otherwise the model wouldn't correctly
+    |  recall the features of your new example. That's no longer the case. Due to some
+    |  clever use of hashing, the statistical models never change size, even as they
+    |  learn new vocabulary items. The whole pipeline is also now fully differentiable,
+    |  so even if you don't have explicitly annotated data, you can update spaCy using
+    |  all the latest deep learning tricks: adversarial training, noise contrastive
+    |  estimation, reinforcement learning, etc.
+
+p
+    |  Finally, we've made several usability improvements that are particularly helpful
+    |  for production deployments.  spaCy 2 now fully supports the Pickle protocol,
+    |  making it easy to use spaCy with Apache Spark. The string-to-integer mapping is
+    |  no longer stateful, making it easy to reconcile annotations made in different
+    |  processes. Models are smaller and use less memory, and the APIs for serialization
+    |  are now much more consistent.
+
+p
+    |  Because we'e made so many architectural changes to the library, we've tried to
+    |  keep breaking changes to a minimum. A lot of projects follow the philosophy that
+    |  if you're going to break anything, you may as well break everything. We think
+    |  migration is easier if there's a logic to what's changed. We've therefore followed
+    |  a policy of avoiding breaking changes to the #[code Doc], #[code Span] and #[code Token]
+    |  objects. This way, you can focus on only migrating the code that does training, loading
+    |  and serialisation --- in other words, code that works with the #[code nlp] object directly.
+    |  Code that uses the annotations should continue to work.
 
 p
     |  On this page, you'll find a summary of the #[+a("#features") new features],
