@@ -350,11 +350,11 @@ p
     |  word exists, norms should always be in lowercase.
 
 +aside-code("Norms vs. lemmas").
-    doc = nlp(u"I'm gonna")
+    doc = nlp(u"I'm gonna realise")
     norms = [token.norm_ for token in doc]
     lemmas = [token.lemma_ for token in doc]
-    assert norms == ['i', 'am', 'going', 'to']
-    assert lemmas == ['i', 'be', 'go', 'to']
+    assert norms == ['i', 'am', 'going', 'to', 'realize']
+    assert lemmas == ['i', 'be', 'go', 'to', 'realise']
 
 p
     |  spaCy usually tries to normalise words with different spellings to a single,
