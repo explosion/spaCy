@@ -26,6 +26,7 @@ def test_en_ner_consistency_bug(EN):
     EN.entity(tokens)
 
 
+@pytest.mark.skip
 @pytest.mark.models('en')
 def test_en_ner_unit_end_gazetteer(EN):
     '''Test a bug in the interaction between the NER model and the gazetteer'''

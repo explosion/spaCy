@@ -40,7 +40,8 @@ def test_en_lemmatizer_punct(en_lemmatizer):
 @pytest.mark.models('en')
 def test_en_lemmatizer_lemma_assignment(EN):
     text = "Bananas in pyjamas are geese."
-    doc = EN.tokenizer(text)
+    doc = EN.make_doc(text)
+    EN.tensorizer(doc)
     assert all(t.lemma_ == '' for t in doc)
     EN.tagger(doc)
     assert all(t.lemma_ != '' for t in doc)
