@@ -3,57 +3,68 @@
 include ../../_includes/_mixins
 
 p
-    |  We're very excited to finally introduce spaCy v2.0. This release features
-    |  entirely new deep learning-powered models for spaCy's tagger, parser and
-    |  entity recognizer. The new models are #[strong 20x smaller] than the linear
-    |  models that have powered spaCy until now: from 300mb to only 14mb.  Speed
-    |  and accuracy are currently comparable to the 1.x models: speed on CPU is
-    |  slightly lower, while accuracy is slightly higher. We expect performance to
-    |  improve quickly between now and the release date, as we run more experiments
-    |  and optimize the implementation.
-
-p
-    |  The main usability improvements you'll notice in spaCy 2 are around the
-    |  defining, training and loading your own models and components. The new neural
-    |  network models make it much easier to train a model from scratch, or update
-    |  an existing model with a few examples. In v1, the statistical models depended
-    |  on the state of the vocab. If you taught the model a new word, you would have
-    |  to save and load a lot of data -- otherwise the model wouldn't correctly
-    |  recall the features of your new example. That's no longer the case. Due to some
-    |  clever use of hashing, the statistical models never change size, even as they
-    |  learn new vocabulary items. The whole pipeline is also now fully differentiable,
-    |  so even if you don't have explicitly annotated data, you can update spaCy using
-    |  all the latest deep learning tricks: adversarial training, noise contrastive
-    |  estimation, reinforcement learning, etc.
-
-p
-    |  Finally, we've made several usability improvements that are particularly helpful
-    |  for production deployments.  spaCy 2 now fully supports the Pickle protocol,
-    |  making it easy to use spaCy with Apache Spark. The string-to-integer mapping is
-    |  no longer stateful, making it easy to reconcile annotations made in different
-    |  processes. Models are smaller and use less memory, and the APIs for serialization
-    |  are now much more consistent.
-
-p
-    |  Because we'e made so many architectural changes to the library, we've tried to
-    |  keep breaking changes to a minimum. A lot of projects follow the philosophy that
-    |  if you're going to break anything, you may as well break everything. We think
-    |  migration is easier if there's a logic to what's changed. We've therefore followed
-    |  a policy of avoiding breaking changes to the #[code Doc], #[code Span] and #[code Token]
-    |  objects. This way, you can focus on only migrating the code that does training, loading
-    |  and serialisation --- in other words, code that works with the #[code nlp] object directly.
-    |  Code that uses the annotations should continue to work.
-
-p
-    |  On this page, you'll find a summary of the #[+a("#features") new features],
-    |  information on the #[+a("#incompat") backwards incompatibilities],
-    |  including a handy overview of what's been renamed or deprecated.
-    |  To help you make the most of v2.0, we also
+    |  We're very excited to finally introduce spaCy v2.0! On this page, you'll
+    |  find a summary of the new features, information on the backwards
+    |  incompatibilities, including a handy overview of what's been renamed or
+    |  deprecated. To help you make the most of v2.0, we also
     |  #[strong re-wrote almost all of the usage guides and API docs], and added
     |  more real-world examples. If you're new to spaCy, or just want to brush
     |  up on some NLP basics and the details of the library, check out
     |  the #[+a("/docs/usage/spacy-101") spaCy 101 guide] that explains the most
     |  important concepts with examples and illustrations.
+
++h(2, "summary") Summary
+
++grid.o-no-block
+    +grid-col("half")
+
+        p This release features
+            |  entirely new #[strong deep learning-powered models] for spaCy's tagger,
+            |  parser and entity recognizer. The new models are #[strong 20x smaller]
+            |  than the linear models that have powered spaCy until now: from 300 MB to
+            |  only 14 MB.
+
+        p
+            |  We've also made several usability improvements that are
+            |  particularly helpful for #[strong production deployments]. spaCy
+            |  v2 now fully supports the Pickle protocol, making it easy to use
+            |  spaCy with #[+a("https://spark.apache.org/") Apache Spark]. The
+            |  string-to-integer mapping is #[strong no longer stateful], making
+            |  it easy to reconcile annotations made in different processes.
+            |  Models are smaller and use less memory, and the APIs for serialization
+            |  are now much more consistent.
+
+    +table-of-contents
+        +item #[+a("#summary") Summary]
+        +item #[+a("#features") New features]
+        +item #[+a("#features-pipelines") Improved processing pipelines]
+        +item #[+a("#features-hash-ids") Hash values instead of integer IDs]
+        +item #[+a("#features-serializer") Saving, loading and serialization]
+        +item #[+a("#features-displacy") displaCy visualizer]
+        +item #[+a("#features-language") Language data and lazy loading]
+        +item #[+a("#features-matcher") Revised matcher API]
+        +item #[+a("#features-models") Neural network models]
+        +item #[+a("#incompat") Backwards incompatibilities]
+        +item #[+a("#migrating") Migrating from spaCy v1.x]
+        +item #[+a("#benchmarks") Benchmarks]
+
+p
+    |  The main usability improvements you'll notice in spaCy v2.0 are around
+    |  #[strong defining, training and loading your own models] and components.
+    |  The new neural network models make it much easier to train a model from
+    |  scratch, or update an existing model with a few examples. In v1.x, the
+    |  statistical models depended on the state of the #[code Vocab]. If you
+    |  taught the model a new word, you would have to save and load a lot of
+    |  data — otherwise the model wouldn't correctly recall the features of your
+    |  new example. That's no longer the case.
+
+p
+    |  Due to some clever use of hashing, the statistical models
+    |  #[strong never change size], even as they learn new vocabulary items.
+    |  The whole pipeline is also now fully differentiable. Even if you don't
+    |  have explicitly annotated data, you can update spaCy using all the
+    |  #[strong latest deep learning tricks] like adversarial training, noise
+    |  contrastive estimation or reinforcement learning.
 
 +h(2, "features") New features
 
@@ -334,19 +345,23 @@ p
 +h(2, "migrating") Migrating from spaCy 1.x
 
 p
+    |  Because we'e made so many architectural changes to the library, we've
+    |  tried to #[strong keep breaking changes to a minimum]. A lot of projects
+    |  follow the philosophy that if you're going to break anything, you may as
+    |  well break everything. We think migration is easier if there's a logic to
+    |  what has changed.
 
-+infobox("Some tips")
-    |  Before migrating, we strongly recommend writing a few
-    |  #[strong simple tests] specific to how you're using spaCy in your
-    |  application. This makes it easier to check whether your code requires
-    |  changes, and if so, which parts are affected.
-    |  (By the way, feel free contribute your tests to
-    |  #[+src(gh("spaCy", "spacy/tests")) our test suite] – this will also ensure
-    |  we never accidentally introduce a bug in a workflow that's
-    |  important to you.) If you've trained your own models, keep in mind that
-    |  your train and runtime inputs must match. This means you'll have to
-    |  #[strong retrain your models] with spaCy v2.0 to make them compatible.
+p
+    |  We've therefore followed a policy of avoiding breaking changes to the
+    |  #[code Doc], #[code Span] and #[code Token] objects. This way, you can
+    |  focus on only migrating the code that does training, loading and
+    |  serialization — in other words, code that works with the #[code nlp]
+    |  object directly. Code that uses the annotations should continue to work.
 
++infobox("Important note")
+    |  If you've trained your own models, keep in mind that your train and
+    |  runtime inputs must match. This means you'll have to
+    |  #[strong retrain your models] with spaCy v2.0.
 
 +h(3, "migrating-saving-loading") Saving, loading and serialization
 
@@ -448,3 +463,21 @@ p
     |  the doc, the index of the current match and all total matches. This lets
     |  you both accept or reject the match, and define the actions to be
     |  triggered.
+
++h(2, "benchmarks") Benchmarks
+
++table(["Model", "Version", "Type", "UAS", "LAS", "NER F", "POS", "w/s"])
+    +row
+        +cell #[code en_core_web_sm]
+        for cell in ["2.0.0", "neural", "", "", "", "", ""]
+            +cell=cell
+
+    +row
+        +cell #[code es_dep_web_sm]
+        for cell in ["2.0.0", "neural", "", "", "", "", ""]
+            +cell=cell
+
+    +row("divider")
+        +cell #[code en_core_web_sm]
+        for cell in ["1.1.0", "linear", "", "", "", "", ""]
+            +cell=cell
