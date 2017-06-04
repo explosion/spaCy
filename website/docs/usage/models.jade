@@ -104,6 +104,16 @@ p
     |  recommend using pip with a direct link, instead of relying on spaCy's
     |  #[+api("cli#download") #[code download]] command.
 
+p
+    |  You can also add the direct download link to your application's
+    |  #[code requirements.txt]. For more information on this, see the
+    |  #[+a("https://pip.pypa.io/en/latest/reference/pip_install/#requirements-file-format") pip documentation].
+    |  This will only install the package and not trigger any of spaCy's internal
+    |  commands like #[code download] or #[code link]. So you'll have to make
+    |  sure to create a link for your model manually, or
+    |  #[+a("#usage-import") import it as a module] instead.
+
+
 +h(3, "download-manual") Manual download and installation
 
 p
