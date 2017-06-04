@@ -19,6 +19,7 @@ def test_issue429(EN):
     matcher = Matcher(EN.vocab)
     matcher.add('TEST', merge_phrases, [{'ORTH': 'a'}])
     doc = EN.make_doc('a b c')
+    EN.tensorizer(doc)
     EN.tagger(doc)
     matcher(doc)
     EN.entity(doc)

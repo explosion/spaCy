@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 import pytest
 
 
+@pytest.mark.xfail
 @pytest.mark.models('en')
 def test_issue704(EN):
     """Test that sentence boundaries are detected correctly."""
