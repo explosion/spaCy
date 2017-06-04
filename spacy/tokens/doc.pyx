@@ -255,7 +255,7 @@ cdef class Doc:
                 return self.user_hooks['has_vector'](self)
             elif any(token.has_vector for token in self):
                 return True
-            elif self.tensor:
+            elif self.tensor is not None:
                 return True
             else:
                 return False
@@ -275,7 +275,7 @@ cdef class Doc:
             elif self.has_vector and len(self):
                 self._vector = sum(t.vector for t in self) / len(self)
                 return self._vector
-            elif self.tensor:
+            elif self.tensor is not None:
                 self._vector = self.tensor.mean(axis=0)
                 return self._vector
             else:
