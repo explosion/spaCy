@@ -21,7 +21,7 @@ def link(cmd, origin, link_name, force=False):
     directory. Linking models allows loading them via spacy.load(link_name).
     """
     if util.is_package(origin):
-        model_path = util.get_package_path(model)
+        model_path = util.get_package_path(origin)
     else:
         model_path = Path(origin)
     if not model_path.exists():
@@ -45,5 +45,5 @@ def link(cmd, origin, link_name, force=False):
                title="Error: Couldn't link model to '%s'" % link_name)
         raise
     prints("%s --> %s" % (path2str(model_path), path2str(link_path)),
-           "You can now load the model via spacy.load('%s')." % link_name,
+           "You can now load the model via spacy.load('%s')" % link_name,
            title="Linking successful")
