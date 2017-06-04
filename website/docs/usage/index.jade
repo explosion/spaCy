@@ -21,13 +21,8 @@ p
     +qs({config: 'venv', os: 'linux'}) source .env/bin/activate
     +qs({config: 'venv', os: 'windows'}) .env\Scripts\activate
 
-    +qs({config: 'gpu', os: 'mac'}) export CUDA_HOME=/usr/local/cuda-8.0
-    +qs({config: 'gpu', os: 'mac'}) export PATH=$PATH:$CUDA_HOME/bin
-    +qs({config: 'gpu', os: 'linux'}) export CUDA_HOME=/usr/local/cuda-8.0
-    +qs({config: 'gpu', os: 'linux'}) export PATH=$PATH:$CUDA_HOME/bin
-    +qs({config: 'gpu', package: 'pip'}) pip install -U chainer
-    +qs({config: 'gpu', package: 'source'}) pip install -U chainer
-    +qs({config: 'gpu', package: 'conda'}) conda install -c anaconda chainer
+    +qs({config: 'gpu', os: 'mac'}) export PATH=$PATH:/usr/local/cuda-8.0/bin
+    +qs({config: 'gpu', os: 'linux'}) export PATH=$PATH:/usr/local/cuda-8.0/bin
 
     +qs({package: 'pip'}) pip install -U spacy
     +qs({package: 'conda'}) conda install -c conda-forge spacy
@@ -96,26 +91,14 @@ p
     |  #[+a("http://chainer.org") Chainer]'s CuPy module, which provides
     |  a NumPy-compatible interface for GPU arrays.
 
-+aside("Why is this so complicated?")
-    |  Installing Chainer when no GPU is available currently causes an
-    |  error. We therefore do not specify Chainer as a dependency. However,
-    |  CuPy will be split out into
-    |  #[+a("https://www.slideshare.net/beam2d/chainer-v2-alpha/7") its own package]
-    |  in Chainer v2.0. We'll have a smoother installation process for this
-    |  in an upcoming version.
-
 p
     |  First, install follows the normal CUDA installation procedure. Next, set
     |  your environment variables so that the installation will be able to find
-    |  CUDA. Next, install Chainer, and check that CuPy can be imported
-    |  correctly. Finally, install spaCy.
+    |  CUDA. Finally, install spaCy.
 
 +code(false, "bash").
    export CUDA_HOME=/usr/local/cuda-8.0 # Or wherever your CUDA is
    export PATH=$PATH:$CUDA_HOME/bin
-
-   pip install chainer
-   python -c "import cupy; assert cupy" # Check it installed
 
    pip install spacy
    python -c "import thinc.neural.gpu_ops" # Check the GPU ops were built
