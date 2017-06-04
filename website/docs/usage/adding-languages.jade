@@ -7,6 +7,16 @@ p
         |  spaCy library. This guide explains how to fit everything together, and
         |  points you to the specific workflows for each component.
 
++aside("Working on spaCy's source")
+    |  To add a new language to spaCy, you'll need to
+    |  #[strong modify the library&apos;s code]. The easiest way to do this is to
+    |  clone the #[+src(gh("spaCy")) repository] and #[strong build spaCy from source].
+    |  For more information on this, see the #[+a("/docs/usage") installation guide].
+    |  Unlike spaCy's core, which is mostly written in Cython, all language
+    |  data is stored in regular Python files. This means that you won't have to
+    |  rebuild anything in between – you can simply make edits and reload spaCy
+    |  to test them.
+
 +grid.o-no-block
     +grid-col("half")
         p
@@ -38,16 +48,6 @@ p
         +item #[+a("#testing") Testing the tokenizer]
         +item #[+a("#vocabulary") Building the vocabulary]
         +item #[+a("#training") Training]
-
-+aside("Working on spaCy's source")
-    |  To add a new language to spaCy, you'll need to
-    |  #[strong modify the library&apos;s code]. The easiest way to do this is to
-    |  clone the #[+src(gh("spaCy")) repository] and #[strong build spaCy from source].
-    |  For more information on this, see the #[+a("/docs/usage") installation guide].
-    |  Unlike spaCy's core, which is mostly written in Cython, all language
-    |  data is stored in regular Python files. This means that you won't have to
-    |  rebuild anything in between – you can simply make edits and reload spaCy
-    |  to test them.
 
 +h(2, "101") Language data 101
 
