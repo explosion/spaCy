@@ -107,7 +107,8 @@ class BaseDefaults(object):
         'tags': lambda nlp, **cfg: [NeuralTagger(nlp.vocab, **cfg)],
         'dependencies': lambda nlp, **cfg: [
             NeuralDependencyParser(nlp.vocab, **cfg),
-            nonproj.deprojectivize],
+            nonproj.deprojectivize,
+        ],
         'entities': lambda nlp, **cfg: [NeuralEntityRecognizer(nlp.vocab, **cfg)],
     }
 
@@ -126,6 +127,7 @@ class BaseDefaults(object):
     lemma_index = {}
     morph_rules = {}
     lex_attr_getters = LEX_ATTRS
+    syntax_iterators = {}
 
 
 class Language(object):
