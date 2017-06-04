@@ -71,6 +71,15 @@ p
     |  models from any location using a custom name via
     |  #[+api("spacy#load") #[code spacy.load()]].
 
++infobox("Important note")
+    |  In spaCy v1.x, you had to use the model data directory to set up a shortcut
+    |  link for a local path. As of v2.0, spaCy expects all shortcut links to
+    |  be #[strong loadable model packages]. If you want to load a data directory,
+    |  call #[+api("spacy#load") #[code spacy.load()]] or
+    |  #[+api("language#from_disk") #[code Language.from_disk()]] with the path,
+    |  or use the #[+api("cli#package") #[code package]] command to create a
+    |  model package.
+
 +code(false, "bash").
     python -m spacy link [origin] [link_name] [--force]
 
