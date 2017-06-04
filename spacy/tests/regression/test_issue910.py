@@ -79,7 +79,8 @@ def test_issue910(EN, train_data, additional_entity_types):
     2) There's no way to set the learning rate for the weight update, so we
         end up out-of-scale, causing it to learn too fast.
     '''
-    doc = EN(u"I am looking for a restaurant in Berlin")
+    nlp = EN
+    doc = nlp(u"I am looking for a restaurant in Berlin")
     ents_before_train = [(ent.label_, ent.text) for ent in doc.ents]
     # Fine tune the ner model
     for entity_type in additional_entity_types:
