@@ -89,8 +89,8 @@ def _min_edit_path(cand_words, gold_words):
     # TODO: Fix this --- just do it properly, make the full edit matrix and
     # then walk back over it...
     # Preprocess inputs
-    cand_words = [punct_re.sub('', w) for w in cand_words]
-    gold_words = [punct_re.sub('', w) for w in gold_words]
+    cand_words = [punct_re.sub('', w).lower() for w in cand_words]
+    gold_words = [punct_re.sub('', w).lower() for w in gold_words]
 
     if cand_words == gold_words:
         return 0, ''.join(['M' for _ in gold_words])
