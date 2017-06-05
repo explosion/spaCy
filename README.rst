@@ -4,12 +4,10 @@ spaCy: Industrial-strength NLP
 spaCy is a library for advanced natural language processing in Python and
 Cython. spaCy is built on  the very latest research, but it isn't researchware.
 It was designed from day one to be used in real products. spaCy currently supports
-English, German and French, as well as tokenization for Spanish, Italian,
-Portuguese, Dutch, Swedish, Finnish, Norwegian, Hungarian, Bengali, Hebrew,
-Chinese and Japanese. It's commercial open-source software, released under the
-MIT license.
-
-📊 **Help us improve the library!** `Take the spaCy user survey <https://survey.spacy.io>`_.
+English, German, French and Spanish, as well as tokenization for Italian,
+Portuguese, Dutch, Swedish, Finnish, Norwegian, Danish, Hungarian, Polish,
+Bengali, Hebrew, Chinese and Japanese. It's commercial open-source software,
+released under the MIT license.
 
 💫 **Version 1.8 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
@@ -85,7 +83,7 @@ Features
 * GIL-free **multi-threading**
 * Efficient binary serialization
 * Easy **deep learning** integration
-* Statistical models for **English** and **German**
+* Statistical models for **English**, **German**, **French** and **Spanish**
 * State-of-the-art speed
 * Robust, rigorously evaluated accuracy
 
@@ -197,7 +195,7 @@ To load a model, use ``spacy.load()`` with the model's shortcut link:
 .. code:: python
 
     import spacy
-    nlp = spacy.load('en_default')
+    nlp = spacy.load('en')
     doc = nlp(u'This is a sentence.')
 
 If you've installed a model via pip, you can also ``import`` it directly and
@@ -313,7 +311,7 @@ and ``--model`` are optional and enable additional tests:
     # make sure you are using recent pytest version
     python -m pip install -U pytest
 
-    python -m pytest <spacy-directory> --vectors --models --slow
+    python -m pytest <spacy-directory>
 
 🛠 Changelog
 ============
