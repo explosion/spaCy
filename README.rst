@@ -9,7 +9,7 @@ Portuguese, Dutch, Swedish, Finnish, Norwegian, Hungarian, Bengali, Hebrew,
 Chinese and Japanese. It's commercial open-source software, released under the
 MIT license.
 
-📊 **Help us improve the library!** `Take the spaCy user survey <https://survey.spacy.io>`_.
+⭐️ **Test spaCy v2.0.0 alpha and the new models!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/tag/v2.0.0-alpha>`_
 
 💫 **Version 1.8 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
