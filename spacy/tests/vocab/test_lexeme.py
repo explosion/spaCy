@@ -63,7 +63,6 @@ def test_lexeme_bytes_roundtrip(en_vocab):
     alpha = en_vocab['alpha']
     assert one.orth != alpha.orth
     assert one.lower != alpha.lower
-    print(one.orth, alpha.orth)
     alpha.from_bytes(one.to_bytes())
 
     assert one.orth_ == alpha.orth_

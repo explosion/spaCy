@@ -234,7 +234,7 @@ cdef class Token:
         def __get__(self):
             if 'has_vector' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['has_vector'](self)
-            return self.vocab.has_vector(self.lex.c.orth)
+            return self.vocab.has_vector(self.c.lex.orth)
 
     property vector:
         """A real-valued meaning representation.

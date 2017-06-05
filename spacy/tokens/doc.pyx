@@ -26,7 +26,6 @@ from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUST
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
 from ..attrs cimport SENT_START
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
-from ..syntax.iterators import CHUNKERS
 from ..util import normalize_slice
 from ..compat import is_config
 from .. import about
@@ -65,6 +64,14 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
     else:
         return Lexeme.get_struct_attr(token.lex, feat_name)
 
+def _get_chunker(lang):
+    try:
+        cls = util.get_lang_class(lang)
+    except ImportError:
+        return None
+    except KeyError:
+        return None
+    return cls.Defaults.syntax_iterators.get(u'noun_chunks')
 
 cdef class Doc:
     """A sequence of Token objects. Access sentences and named entities, export
@@ -117,7 +124,7 @@ cdef class Doc:
         self.user_data = {}
         self._py_tokens = []
         self._vector = None
-        self.noun_chunks_iterator = CHUNKERS.get(self.vocab.lang)
+        self.noun_chunks_iterator = _get_chunker(self.vocab.lang)
         cdef unicode orth
         cdef bint has_space
         if orths_and_spaces is None and words is not None:
@@ -255,7 +262,7 @@ cdef class Doc:
                 return self.user_hooks['has_vector'](self)
             elif any(token.has_vector for token in self):
                 return True
-            elif self.tensor:
+            elif self.tensor is not None:
                 return True
             else:
                 return False
@@ -275,7 +282,7 @@ cdef class Doc:
             elif self.has_vector and len(self):
                 self._vector = sum(t.vector for t in self) / len(self)
                 return self._vector
-            elif self.tensor:
+            elif self.tensor is not None:
                 self._vector = self.tensor.mean(axis=0)
                 return self._vector
             else:

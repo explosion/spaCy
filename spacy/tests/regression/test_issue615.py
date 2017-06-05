@@ -27,7 +27,6 @@ def test_issue615(en_tokenizer):
     matcher = Matcher(doc.vocab)
     matcher.add(label, merge_phrases, pattern)
     match = matcher(doc)
-    print(match)
     entities = list(doc.ents)
 
     assert entities != [] #assertion 1

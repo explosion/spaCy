@@ -26,12 +26,12 @@ def test_en_lemmatizer_base_forms(en_lemmatizer):
     assert en_lemmatizer.noun('dive', {'number': 'plur'}) == set(['diva'])
 
 
-@pytest.mark.models
+@pytest.mark.models('en')
 def test_en_lemmatizer_base_form_verb(en_lemmatizer):
     assert en_lemmatizer.verb('saw', {'verbform': 'past'}) == set(['see'])
 
 
-@pytest.mark.models
+@pytest.mark.models('en')
 def test_en_lemmatizer_punct(en_lemmatizer):
     assert en_lemmatizer.punct('“') == set(['"'])
     assert en_lemmatizer.punct('“') == set(['"'])
@@ -40,7 +40,8 @@ def test_en_lemmatizer_punct(en_lemmatizer):
 @pytest.mark.models('en')
 def test_en_lemmatizer_lemma_assignment(EN):
     text = "Bananas in pyjamas are geese."
-    doc = EN.tokenizer(text)
+    doc = EN.make_doc(text)
+    EN.tensorizer(doc)
     assert all(t.lemma_ == '' for t in doc)
     EN.tagger(doc)
     assert all(t.lemma_ != '' for t in doc)

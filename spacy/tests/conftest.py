@@ -13,7 +13,7 @@ from .. import util
 
 _languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'he', 'hu', 'it', 'nb',
               'nl', 'pl', 'pt', 'sv', 'xx']
-_models = {'en': ['en_core_web_sm', 'en_core_web_md'],
+_models = {'en': ['en_depent_web_sm', 'en_core_web_md'],
            'de': ['de_core_news_md'],
            'fr': ['fr_depvec_web_lg'],
            'xx': ['xx_ent_web_md']}
@@ -22,25 +22,29 @@ _models = {'en': ['en_core_web_sm', 'en_core_web_md'],
 # only used for tests that require loading the models
 # in all other cases, use specific instances
 
-@pytest.fixture(params=_models['en'], scope="session")
+@pytest.fixture(params=_models['en'])
 def EN(request):
     return load_test_model(request.param)
 
 
-@pytest.fixture(params=_models['de'], scope="session")
+@pytest.fixture(params=_models['de'])
 def DE(request):
     return load_test_model(request.param)
 
 
-@pytest.fixture(params=_models['fr'], scope="session")
+@pytest.fixture(params=_models['fr'])
 def FR(request):
     return load_test_model(request.param)
 
 
-@pytest.fixture(params=_languages)
-def tokenizer(request):
-    lang = util.get_lang_class(request.param)
-    return lang.Defaults.create_tokenizer()
+#@pytest.fixture(params=_languages)
+#def tokenizer(request):
+    #lang = util.get_lang_class(request.param)
+    #return lang.Defaults.create_tokenizer()
+
+@pytest.fixture
+def tokenizer():
+    return util.get_lang_class('xx').Defaults.create_tokenizer()
 
 
 @pytest.fixture
@@ -68,7 +72,7 @@ def de_tokenizer():
     return util.get_lang_class('de').Defaults.create_tokenizer()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def fr_tokenizer():
     return util.get_lang_class('fr').Defaults.create_tokenizer()
 
@@ -143,4 +147,4 @@ def pytest_runtest_setup(item):
     if item.get_marker('models'):
         for arg in item.get_marker('models').args:
             if not item.config.getoption("--%s" % arg) and not item.config.getoption("--all"):
-                pytest.skip()
+                pytest.skip("need --%s or --all option to run" % arg)

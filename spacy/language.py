@@ -107,7 +107,8 @@ class BaseDefaults(object):
         'tags': lambda nlp, **cfg: [NeuralTagger(nlp.vocab, **cfg)],
         'dependencies': lambda nlp, **cfg: [
             NeuralDependencyParser(nlp.vocab, **cfg),
-            nonproj.deprojectivize],
+            nonproj.deprojectivize,
+        ],
         'entities': lambda nlp, **cfg: [NeuralEntityRecognizer(nlp.vocab, **cfg)],
     }
 
@@ -126,6 +127,7 @@ class BaseDefaults(object):
     lemma_index = {}
     morph_rules = {}
     lex_attr_getters = LEX_ATTRS
+    syntax_iterators = {}
 
 
 class Language(object):
@@ -181,6 +183,35 @@ class Language(object):
             else:
                 flat_list.append(pipe)
         self.pipeline = flat_list
+
+    # Conveniences to access pipeline components
+    @property
+    def tensorizer(self):
+        return self.get_component('tensorizer')
+
+    @property
+    def tagger(self):
+        return self.get_component('tagger')
+
+    @property
+    def parser(self):
+        return self.get_component('parser')
+
+    @property
+    def entity(self):
+        return self.get_component('ner')
+
+    @property
+    def matcher(self):
+        return self.get_component('matcher')
+
+    def get_component(self, name): 
+        if self.pipeline in (True, None):
+            return None
+        for proc in self.pipeline:
+            if hasattr(proc, 'name') and proc.name.endswith(name):
+                return proc
+        return None
 
     def __call__(self, text, disable=[]):
         """'Apply the pipeline to some text. The text can span multiple sentences,

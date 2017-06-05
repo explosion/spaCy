@@ -104,6 +104,13 @@ p
     |  recommend using pip with a direct link, instead of relying on spaCy's
     |  #[+api("cli#download") #[code download]] command.
 
++infobox
+    |  You can also add the direct download link to your application's
+    |  #[code requirements.txt]. For more details,
+    |  see the usage guide on
+    |  #[+a("/docs/usage/production-use#models") working with models in production].
+
+
 +h(3, "download-manual") Manual download and installation
 
 p
@@ -118,15 +125,15 @@ p
     └── en_core_web_md-1.2.0.tar.gz       # downloaded archive
         ├── meta.json                     # model meta data
         ├── setup.py                      # setup file for pip installation
-        └── en_core_web_md                # model directory
+        └── en_core_web_md                # 📦 model package
             ├── __init__.py               # init for pip installation
             ├── meta.json                 # model meta data
             └── en_core_web_md-1.2.0      # model data
 
 p
-    |  You can place the model data directory anywhere on your local file system.
-    |  To use it with spaCy, simply assign it a name by creating a
-    |  #[+a("#usage") shortcut link] for the data directory.
+    |  You can place the #[strong model package directory] anywhere on your
+    |  local file system. To use it with spaCy, simply assign it a name by
+    |  creating a #[+a("#usage") shortcut link] for the data directory.
 
 +h(2, "usage") Using models with spaCy
 
@@ -136,9 +143,9 @@ p
 
 +code.
     import spacy
-    nlp = spacy.load('en')              # load model with shortcut link "en"
-    nlp = spacy.load('en_core_web_sm')  # load model package "en_core_web_sm"
-    nlp = spacy.load('/path/to/model')  # load model from a directory
+    nlp = spacy.load('en')                       # load model with shortcut link "en"
+    nlp = spacy.load('en_core_web_sm')           # load model package "en_core_web_sm"
+    nlp = spacy.load('/path/to/en_core_web_sm')  # load package from a directory
 
     doc = nlp(u'This is a sentence.')
 
@@ -218,6 +225,10 @@ p
     |  is not installed, as your code will raise an #[code ImportError]
     |  immediately, instead of failing somewhere down the line when calling
     |  #[code spacy.load()].
+
++infobox
+    |  For more details, see the usage guide on
+    |  #[+a("/docs/usage/production-use#models") working with models in production].
 
 +h(2, "own-models") Using your own models
 

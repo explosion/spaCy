@@ -27,7 +27,7 @@ def info(cmd, model=None, markdown=False):
         meta_path = model_path / 'meta.json'
         if not meta_path.is_file():
             util.prints(meta_path, title="Can't find model meta.json", exits=1)
-        meta = read_json(meta_path)
+        meta = util.read_json(meta_path)
         if model_path.resolve() != model_path:
             meta['link'] = path2str(model_path)
             meta['source'] = path2str(model_path.resolve())

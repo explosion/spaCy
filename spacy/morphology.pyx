@@ -33,7 +33,7 @@ def _normalize_props(props):
 
 
 cdef class Morphology:
-    def __init__(self, StringStore string_store, tag_map, lemmatizer):
+    def __init__(self, StringStore string_store, tag_map, lemmatizer, exc=None):
         self.mem = Pool()
         self.strings = string_store
         self.tag_map = {}
@@ -53,9 +53,14 @@ cdef class Morphology:
             self.rich_tags[i].pos = attrs[POS]
             self.reverse_index[self.rich_tags[i].name] = i
         self._cache = PreshMapArray(self.n_tags)
+        self.exc = {}
+        if exc is not None:
+            for (tag_str, orth_str), attrs in exc.items():
+                self.add_special_case(tag_str, orth_str, attrs)
 
     def __reduce__(self):
-        return (Morphology, (self.strings, self.tag_map, self.lemmatizer), None, None)
+        return (Morphology, (self.strings, self.tag_map, self.lemmatizer,
+                             self.exc), None, None)
 
     cdef int assign_tag(self, TokenC* token, tag) except -1:
         if isinstance(tag, basestring):
@@ -106,6 +111,7 @@ cdef class Morphology:
             tag (unicode): The part-of-speech tag to key the exception.
             orth (unicode): The word-form to key the exception.
         """
+        self.exc[(tag_str, orth_str)] = dict(attrs)
         tag = self.strings.add(tag_str)
         tag_id = self.reverse_index[tag]
         orth = self.strings[orth_str]

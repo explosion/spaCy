@@ -9,7 +9,8 @@ LIST_ICONS = [r'[\p{So}--[°]]']
 _currency = r'\$|¢|£|€|¥|฿'
 _quotes = QUOTES.replace("'", '')
 
-_prefixes = ([r'\+'] + LIST_PUNCT + LIST_ELLIPSES + LIST_QUOTES + LIST_ICONS)
+_prefixes = ([r'\+'] + LIST_PUNCT + LIST_ELLIPSES + LIST_QUOTES + LIST_ICONS +
+             [r'[,.:](?=[{a}])'.format(a=ALPHA)])
 
 _suffixes = (LIST_PUNCT + LIST_ELLIPSES + LIST_QUOTES + LIST_ICONS +
              [r'(?<=[0-9])\+',
@@ -21,7 +22,7 @@ _suffixes = (LIST_PUNCT + LIST_ELLIPSES + LIST_QUOTES + LIST_ICONS +
 
 _infixes = (LIST_ELLIPSES + LIST_ICONS +
             [r'(?<=[{}])\.(?=[{}])'.format(ALPHA_LOWER, ALPHA_UPPER),
-             r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),
+             r'(?<=[{a}])[,!?](?=[{a}])'.format(a=ALPHA),
              r'(?<=[{a}"])[:<>=](?=[{a}])'.format(a=ALPHA),
              r'(?<=[{a}])--(?=[{a}])'.format(a=ALPHA),
              r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),

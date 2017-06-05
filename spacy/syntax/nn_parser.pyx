@@ -164,6 +164,7 @@ cdef class precompute_hiddens:
         return best, backprop
 
 
+
 cdef void sum_state_features(float* output,
         const float* cached, const int* token_ids, int B, int F, int O) nogil:
     cdef int idx, b, f, i

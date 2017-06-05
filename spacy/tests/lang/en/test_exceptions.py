@@ -110,7 +110,6 @@ def test_en_tokenizer_norm_exceptions(en_tokenizer, text, norms):
     assert [token.norm_ for token in tokens] == norms
 
 
-@pytest.mark.xfail
 @pytest.mark.parametrize('text,norm', [("radicalised", "radicalized"), ("cuz", "because")])
 def test_en_lex_attrs_norm_exceptions(en_tokenizer, text, norm):
     tokens = en_tokenizer(text)
