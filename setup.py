@@ -45,7 +45,7 @@ MOD_NAMES = [
     'spacy.syntax.ner',
     'spacy.symbols',
     'spacy.vectors',
-    'spacy.syntax.iterators']
+]
 
 
 COMPILE_OPTIONS =  {
