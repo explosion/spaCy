@@ -8,10 +8,8 @@ p
     |  to train these vectors is the #[+a("https://en.wikipedia.org/wiki/Word2vec") word2vec]
     |  family of algorithms. The default
     |  #[+a("/docs/usage/models#available") English model] installs
-    |  300-dimensional vectors trained on the Common Crawl
-    |  corpus using the #[+a("http://nlp.stanford.edu/projects/glove/") GloVe]
-    |  algorithm. The GloVe common crawl vectors have become a de facto
-    |  standard for practical NLP.
+    |  300-dimensional vectors trained on the
+    |  #[+a("http://commoncrawl.org") Common Crawl] corpus.
 
 +aside("Tip: Training a word2vec model")
     |  If you need to train a word2vec model, we recommend the implementation in
@@ -22,6 +20,129 @@ p
 
 include _spacy-101/_similarity
 include _spacy-101/_word-vectors
+
++h(2, "similarity-context") Similarities in context
+
+p
+    |  Aside from spaCy's built-in word vectors, which were trained on a lot of
+    |  text with a wide vocabulary, the parsing, tagging and NER models also
+    |  rely on vector representations of the #[strong meanings of words in context].
+    |  As the first component of the
+    |  #[+a("/docs/usage/language-processing-pipeline") processing pipeline], the
+    |  tensorizer encodes a document's internal meaning representations as an
+    |  array of floats, also called a tensor. This allows spaCy to make a
+    |  reasonable guess at a word's meaning, based on its surrounding words.
+    |  Even if a word hasn't been seen before, spaCy will know #[em something]
+    |  about it. Because spaCy uses a 4-layer convolutional network, the
+    |  tensors are sensitive to up to #[strong four words on either side] of a
+    |  word.
+
+p
+    |  For example, here are three sentences containing the out-of-vocabulary
+    |  word "labrador" in different contexts.
+
++code.
+    doc1 = nlp(u"The labrador barked.")
+    doc2 = nlp(u"The labrador swam.")
+    doc3 = nlp(u"the labrador people live in canada.")
+
+    for doc in [doc1, doc2, doc3]:
+        labrador = doc[1]
+        dog = nlp(u"dog")
+        print(labrador.similarity(dog))
+
+p
+    |  Even though the model has never seen the word "labrador", it can make a
+    |  fairly accurate prediction of its similarity to "dog" in different
+    |  contexts.
+
++table(["Context", "labrador.similarity(dog)"])
+    +row
+        +cell The #[strong labrador] barked.
+        +cell #[code 0.56] #[+procon("pro")]
+
+    +row
+        +cell The #[strong labrador] swam.
+        +cell #[code 0.48] #[+procon("con")]
+
+    +row
+        +cell the #[strong labrador] people live in canada.
+        +cell #[code 0.39] #[+procon("con")]
+
+p
+    |  The same also works for whole documents. Here, the variance of the
+    |  similarities is lower, as all words and their order are taken into
+    |  account. However, the context-specific similarity is often still
+    |  reflected pretty accurately.
+
++code.
+    doc1 = nlp(u"Paris is the largest city in France.")
+    doc2 = nlp(u"Ljubljana is the capital of Lithuania.")
+    doc3 = nlp(u"An emu is a large bird.")
+
+    for doc in [doc1, doc2, doc3]:
+        for other_doc in [doc1, doc2, doc3]:
+            print(doc.similarity(other_doc))
+
+p
+    |  Even though the sentences about Paris and Ljubljana consist of different
+    |  words and entities, they both describe the same concept and are seen as
+    |  more similar than the sentence about emus. In this case, even a misspelled
+    |  version of "Ljubljana" would still produce very similar results.
+
++table
+    - var examples = {"Paris is the largest city in France.": [1, 0.84, 0.65], "Ljubljana is the capital of Lithuania.": [0.84, 1, 0.52], "An emu is a large bird.": [0.65, 0.52, 1]}
+    - var counter = 0
+
+    +row
+    +row
+        +cell
+        for _, label in examples
+            +cell=label
+
+    each cells, label in examples
+        +row(counter ? null : "divider")
+            +cell=label
+            for cell in cells
+                +cell.u-text-center #[code=cell.toFixed(2)]
+                    |  #[+procon(cell < 0.7 ? "con" : cell != 1 ? "pro" : "neutral")]
+        - counter++
+
+p
+    |  Sentences that consist of the same words in different order will likely
+    |  be seen as very similar – but never identical.
+
++code.
+    docs = [nlp(u"dog bites man"), nlp(u"man bites dog"),
+            nlp(u"man dog bites"), nlp(u"dog man bites")]
+
+    for doc in docs:
+    for other_doc in docs:
+        print(doc.similarity(other_doc))
+
+p
+    |  Interestingly, "man bites dog" and "man dog bites" are seen as slightly
+    |  more similar than "man bites dog" and "dog bites man". This may be a
+    |  conincidence – or the result of "man" being interpreted as both sentence's
+    |  subject.
+
++table
+    - var examples = {"dog bites man": [1, 0.9, 0.89, 0.92], "man bites dog": [0.9, 1, 0.93, 0.9], "man dog bites": [0.89, 0.93, 1, 0.92], "dog man bites": [0.92, 0.9, 0.92, 1]}
+    - var counter = 0
+
+    +row
+    +row
+        +cell
+        for _, label in examples
+            +cell.u-text-center=label
+
+    each cells, label in examples
+        +row(counter ? null : "divider")
+            +cell=label
+            for cell in cells
+                +cell.u-text-center #[code=cell.toFixed(2)]
+                    |  #[+procon(cell < 0.7 ? "con" : cell != 1 ? "pro" : "neutral")]
+        - counter++
 
 +h(2, "custom") Customising word vectors
 
@@ -36,7 +157,3 @@ p
     |  behaviours by modifying the #[code doc.user_hooks],
     |  #[code doc.user_span_hooks] and #[code doc.user_token_hooks]
     |  dictionaries.
-
-+h(2, "similarity") Similarity
-
-+under-construction
