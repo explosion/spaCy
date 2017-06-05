@@ -303,7 +303,8 @@ class Language(object):
             >>>        for docs, golds in epoch:
             >>>            state = nlp.update(docs, golds, sgd=optimizer)
         """
-        self.pipeline.append(NeuralLabeller(self.vocab))
+        if self.parser:
+            self.pipeline.append(NeuralLabeller(self.vocab))
         # Populate vocab
         for _, annots_brackets in get_gold_tuples():
             for annots, _ in annots_brackets:
