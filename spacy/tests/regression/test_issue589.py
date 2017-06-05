@@ -7,7 +7,6 @@ from ..util import get_doc
 import pytest
 
 
-@pytest.mark.xfail
 def test_issue589():
     vocab = Vocab()
     vocab.strings.set_frozen(True)

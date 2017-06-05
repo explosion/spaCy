@@ -30,6 +30,7 @@ def fr_tokenizer_w_infix():
     return French.Defaults.create_tokenizer()
 
 
+@pytest.mark.skip
 @pytest.mark.parametrize('text,expected_tokens', [("l'avion", ["l'", "avion"]),
                                                   ("j'ai", ["j'", "ai"])])
 def test_issue768(fr_tokenizer_w_infix, text, expected_tokens):

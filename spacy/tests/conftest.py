@@ -13,7 +13,7 @@ from .. import util
 
 _languages = ['bn', 'da', 'de', 'en', 'es', 'fi', 'fr', 'he', 'hu', 'it', 'nb',
               'nl', 'pl', 'pt', 'sv', 'xx']
-_models = {'en': ['en_core_web_sm', 'en_depent_web_sm', 'en_core_web_md'],
+_models = {'en': ['en_depent_web_sm', 'en_core_web_md'],
            'de': ['de_core_news_md'],
            'fr': ['fr_depvec_web_lg'],
            'xx': ['xx_ent_web_md']}
@@ -22,82 +22,82 @@ _models = {'en': ['en_core_web_sm', 'en_depent_web_sm', 'en_core_web_md'],
 # only used for tests that require loading the models
 # in all other cases, use specific instances
 
-@pytest.fixture(params=_models['en'], scope='session')
+@pytest.fixture(params=_models['en'])
 def EN(request):
     return load_test_model(request.param)
 
 
-@pytest.fixture(params=_models['de'], scope='session')
+@pytest.fixture(params=_models['de'])
 def DE(request):
     return load_test_model(request.param)
 
 
-@pytest.fixture(params=_models['fr'], scope='session')
+@pytest.fixture(params=_models['fr'])
 def FR(request):
     return load_test_model(request.param)
 
 
-@pytest.fixture(params=_languages, scope='module')
+@pytest.fixture(params=_languages)
 def tokenizer(request):
     lang = util.get_lang_class(request.param)
     return lang.Defaults.create_tokenizer()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def en_tokenizer():
     return util.get_lang_class('en').Defaults.create_tokenizer()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def en_vocab():
     return util.get_lang_class('en').Defaults.create_vocab()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def en_parser():
     return util.get_lang_class('en').Defaults.create_parser()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def es_tokenizer():
     return util.get_lang_class('es').Defaults.create_tokenizer()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def de_tokenizer():
     return util.get_lang_class('de').Defaults.create_tokenizer()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def fr_tokenizer():
     return util.get_lang_class('fr').Defaults.create_tokenizer()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def hu_tokenizer():
     return util.get_lang_class('hu').Defaults.create_tokenizer()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def fi_tokenizer():
     return util.get_lang_class('fi').Defaults.create_tokenizer()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def sv_tokenizer():
     return util.get_lang_class('sv').Defaults.create_tokenizer()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def bn_tokenizer():
     return util.get_lang_class('bn').Defaults.create_tokenizer()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def he_tokenizer():
     return util.get_lang_class('he').Defaults.create_tokenizer()
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def nb_tokenizer():
     return util.get_lang_class('nb').Defaults.create_tokenizer()
 
@@ -107,7 +107,7 @@ def stringstore():
     return StringStore()
 
 
-@pytest.fixture(scope='module')
+@pytest.fixture
 def en_entityrecognizer():
      return util.get_lang_class('en').Defaults.create_entity()
 
@@ -143,4 +143,4 @@ def pytest_runtest_setup(item):
     if item.get_marker('models'):
         for arg in item.get_marker('models').args:
             if not item.config.getoption("--%s" % arg) and not item.config.getoption("--all"):
-                pytest.skip()
+                pytest.skip("need --%s or --all option to run" % arg)

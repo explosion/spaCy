@@ -26,12 +26,12 @@ def test_en_lemmatizer_base_forms(en_lemmatizer):
     assert en_lemmatizer.noun('dive', {'number': 'plur'}) == set(['diva'])
 
 
-@pytest.mark.models
+@pytest.mark.models('en')
 def test_en_lemmatizer_base_form_verb(en_lemmatizer):
     assert en_lemmatizer.verb('saw', {'verbform': 'past'}) == set(['see'])
 
 
-@pytest.mark.models
+@pytest.mark.models('en')
 def test_en_lemmatizer_punct(en_lemmatizer):
     assert en_lemmatizer.punct('“') == set(['"'])
     assert en_lemmatizer.punct('“') == set(['"'])
