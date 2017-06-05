@@ -29,11 +29,11 @@ p
     |  #[strong #[+procon("con", 16)] similarity:] dissimilar (lower is less similar)
 
 +table(["", "dog", "cat", "banana"])
-    each cells, label in {"dog": [1.00, 0.80, 0.24], "cat": [0.80, 1.00, 0.28], "banana": [0.24, 0.28, 1.00]}
+    each cells, label in {"dog": [1, 0.8, 0.24], "cat": [0.8, 1, 0.28], "banana": [0.24, 0.28, 1]}
         +row
             +cell.u-text-label.u-color-theme=label
             for cell in cells
-                +cell #[code=cell.toFixed(2)]
+                +cell.u-text-center #[code=cell.toFixed(2)]
                     |  #[+procon(cell < 0.5 ? "con" : cell != 1 ? "pro" : "neutral")]
 
 p

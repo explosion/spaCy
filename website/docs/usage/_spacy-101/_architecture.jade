@@ -70,14 +70,57 @@ p
         +cell Map strings to and from hash values.
 
     +row
-        +row
         +cell #[+api("tokenizer") #[code Tokenizer]]
         +cell
             |  Segment text, and create #[code Doc] objects with the discovered
             |  segment boundaries.
 
     +row
+        +cell #[code Lemmatizer]
+        +cell
+            |  Determine the base forms of words.
+
+    +row
         +cell #[+api("matcher") #[code Matcher]]
         +cell
             |  Match sequences of tokens, based on pattern rules, similar to
             |  regular expressions.
+
+
++h(3, "architecture-pipeline") Pipeline components
+
++table(["Name", "Description"])
+    +row
+        +cell #[+api("tagger") #[code Tagger]]
+        +cell Annotate part-of-speech tags on #[code Doc] objects.
+
+    +row
+        +cell #[+api("dependencyparser") #[code DependencyParser]]
+        +cell Annotate syntactic dependencies on #[code Doc] objects.
+
+    +row
+        +cell #[+api("entityrecognizer") #[code EntityRecognizer]]
+        +cell
+            |  Annotate named entities, e.g. persons or products, on #[code Doc]
+            |  objects.
+
++h(3, "architecture-other") Other classes
+
++table(["Name", "Description"])
+    +row
+        +cell #[+api("vectors") #[code Vectors]]
+        +cell Container class for vector data keyed by string.
+
+    +row
+        +cell #[+api("binder") #[code Binder]]
+        +cell Container class for serializing collections of #[code Doc] objects.
+
+    +row
+        +cell #[+api("goldparse") #[code GoldParse]]
+        +cell Collection for training annotations.
+
+    +row
+        +cell #[+api("goldcorpus") #[code GoldCorpus]]
+        +cell
+            |  An annotated corpus, using the JSON file format. Manages
+            |  annotations for tagging, dependency parsing and NER.

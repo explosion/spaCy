@@ -111,6 +111,13 @@ p
         +cell #[+procon("pro")]
 
     +row
+        +cell #[strong Lemmatization]
+        +cell
+            |  Assigning the base forms of words. For example, the lemma of
+            |  "was" is "be", and the lemma of "rats" is "rat".
+        +cell #[+procon("pro")]
+
+    +row
         +cell #[strong Sentence Boundary Detection] (SBD)
         +cell Finding and segmenting individual sentences.
         +cell #[+procon("pro")]
@@ -273,40 +280,6 @@ include _spacy-101/_language-data
 +h(2, "architecture") Architecture
 
 include _spacy-101/_architecture.jade
-
-+h(3, "architecture-pipeline") Pipeline components
-
-+table(["Name", "Description"])
-    +row
-        +cell #[+api("tagger") #[code Tagger]]
-        +cell Annotate part-of-speech tags on #[code Doc] objects.
-
-    +row
-        +cell #[+api("dependencyparser") #[code DependencyParser]]
-        +cell Annotate syntactic dependencies on #[code Doc] objects.
-
-    +row
-        +cell #[+api("entityrecognizer") #[code EntityRecognizer]]
-        +cell
-            |  Annotate named entities, e.g. persons or products, on #[code Doc]
-            |  objects.
-
-+h(3, "architecture-other") Other classes
-
-+table(["Name", "Description"])
-    +row
-        +cell #[+api("binder") #[code Binder]]
-        +cell Container class for serializing collections of #[code Doc] objects.
-
-    +row
-        +cell #[+api("goldparse") #[code GoldParse]]
-        +cell Collection for training annotations.
-
-    +row
-        +cell #[+api("goldcorpus") #[code GoldCorpus]]
-        +cell
-            |  An annotated corpus, using the JSON file format. Manages
-            |  annotations for tagging, dependency parsing and NER.
 
 +h(2, "community") Community & FAQ
 

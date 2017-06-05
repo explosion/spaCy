@@ -11,7 +11,7 @@
             "POS tagging": "pos-tagging",
             "Using the parse": "dependency-parse",
             "Entity recognition": "entity-recognition",
-            "Word vectors": "word-vectors-similarities",
+            "Vectors & similarity": "word-vectors-similarities",
             "Custom tokenization": "customizing-tokenizer",
             "Rule-based matching": "rule-based-matching",
             "Adding languages": "adding-languages",
