@@ -22,7 +22,7 @@ p
             |  entirely new #[strong deep learning-powered models] for spaCy's tagger,
             |  parser and entity recognizer. The new models are #[strong 20x smaller]
             |  than the linear models that have powered spaCy until now: from 300 MB to
-            |  only 14 MB.
+            |  only 15 MB.
 
         p
             |  We've also made several usability improvements that are
@@ -247,12 +247,12 @@ p
             |  #[code spacy.lang.xx]
 
     +row
-        +cell #[code spacy.orth]
-        +cell #[code spacy.lang.xx.lex_attrs]
+        +cell #[code orth]
+        +cell #[code lang.xx.lex_attrs]
 
     +row
-        +cell #[code cli.model]
-        +cell -
+        +cell #[code syntax.syntax_iterators]
+        +cell #[code lang.xx.syntax_iterators]
 
     +row
         +cell #[code Language.save_to_directory]
@@ -266,8 +266,6 @@ p
         +cell
             |  #[code Vocab.load]
             |  #[code Vocab.load_lexemes]
-            |  #[code Vocab.load_vectors]
-            |  #[code Vocab.load_vectors_from_bin_loc]
         +cell
             |  #[+api("vocab#from_disk") #[code Vocab.from_disk]]
             |  #[+api("vocab#from_bytes") #[code Vocab.from_bytes]]
@@ -275,10 +273,24 @@ p
     +row
         +cell
             |  #[code Vocab.dump]
+        +cell
+            |  #[+api("vocab#to_disk") #[code Vocab.to_disk]]#[br]
+            |  #[+api("vocab#to_bytes") #[code Vocab.to_bytes]]
+
+    +row
+        +cell
+            |  #[code Vocab.load_vectors]
+            |  #[code Vocab.load_vectors_from_bin_loc]
+        +cell
+            |  #[+api("vectors#from_disk") #[code Vectors.from_disk]]
+            |  #[+api("vectors#from_bytes") #[code Vectors.from_bytes]]
+
+    +row
+        +cell
             |  #[code Vocab.dump_vectors]
         +cell
-            |  #[+api("vocab#to_disk") #[code Vocab.to_disk]]
-            |  #[+api("vocab#to_bytes") #[code Vocab.to_bytes]]
+            |  #[+api("vectors#to_disk") #[code Vectors.to_disk]]
+            |  #[+api("vectors#to_bytes") #[code Vectors.to_bytes]]
 
     +row
         +cell
@@ -296,7 +308,9 @@ p
 
     +row
         +cell #[code Tokenizer.load]
-        +cell -
+        +cell
+            |  #[+api("tokenizer#from_disk") #[code Tokenizer.from_disk]]
+            |  #[+api("tokenizer#from_bytes") #[code Tokenizer.from_bytes]]
 
     +row
         +cell #[code Tagger.load]
@@ -341,6 +355,10 @@ p
     +row
         +cell #[code Token.is_ancestor_of]
         +cell #[+api("token#is_ancestor") #[code Token.is_ancestor]]
+
+    +row
+        +cell #[code cli.model]
+        +cell -
 
 +h(2, "migrating") Migrating from spaCy 1.x
 
@@ -466,18 +484,27 @@ p
 
 +h(2, "benchmarks") Benchmarks
 
++under-construction
+
++aside("Data sources")
+    |  #[strong Parser, tagger, NER:] #[+a("https://www.gabormelli.com/RKB/OntoNotes_Corpus") OntoNotes 5]#[br]
+    |  #[strong Word vectors:] #[+a("http://commoncrawl.org") Common Crawl]#[br]
+
+p The evaluation was conducted on raw text with no gold standard information.
+
 +table(["Model", "Version", "Type", "UAS", "LAS", "NER F", "POS", "w/s"])
-    +row
-        +cell #[code en_core_web_sm]
-        for cell in ["2.0.0", "neural", "", "", "", "", ""]
-            +cell=cell
+    mixin benchmark-row(name, details, values, highlight, style)
+        +row(style)
+            +cell #[code=name]
+            for cell in details
+                +cell=cell
+            for cell, i in values
+                +cell.u-text-right
+                    if highlight && highlight[i]
+                        strong=cell
+                    else
+                        !=cell
 
-    +row
-        +cell #[code es_dep_web_sm]
-        for cell in ["2.0.0", "neural", "", "", "", "", ""]
-            +cell=cell
-
-    +row("divider")
-        +cell #[code en_core_web_sm]
-        for cell in ["1.1.0", "linear", "", "", "", "", ""]
-            +cell=cell
+    +benchmark-row("en_core_web_sm", ["2.0.0", "neural"], ["91.2", "89.2", "82.6", "96.6", "10,300"], [1, 1, 1, 0, 0])
+    +benchmark-row("en_core_web_sm", ["1.2.0", "linear"], ["86.6", "83.8", "78.5", "96.6", "25,700"], [0, 0, 0, 0, 1], "divider")
+    +benchmark-row("en_core_web_md", ["1.2.1", "linear"], ["90.6", "88.5", "81.4", "96.7", "18,800"], [0, 0, 0, 1, 0])
