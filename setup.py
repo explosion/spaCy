@@ -43,8 +43,7 @@ MOD_NAMES = [
     'spacy.cfile',
     'spacy.matcher',
     'spacy.syntax.ner',
-    'spacy.symbols',
-    'spacy.syntax.iterators']
+    'spacy.symbols']
 
 
 COMPILE_OPTIONS =  {
