@@ -17,9 +17,12 @@ from .tagger import Tagger
 from .lemmatizer import Lemmatizer
 from .syntax.parser import get_templates
 from .syntax import nonproj
+
 from .pipeline import NeuralDependencyParser, EntityRecognizer
 from .pipeline import TokenVectorEncoder, NeuralTagger, NeuralEntityRecognizer
 from .pipeline import NeuralLabeller
+from .pipeline import SimilarityHook
+
 from .compat import json_dumps
 from .attrs import IS_STOP
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
@@ -112,6 +115,7 @@ class BaseDefaults(object):
             nonproj.deprojectivize,
         ],
         'entities': lambda nlp, **cfg: [NeuralEntityRecognizer(nlp.vocab, **cfg)],
+        'similarity': lambda nlp, **cfg: [SimilarityHook(nlp.vocab, **cfg)]
     }
 
     token_match = TOKEN_MATCH
