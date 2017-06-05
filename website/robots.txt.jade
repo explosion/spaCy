@@ -1,5 +1,9 @@
 //- 💫 ROBOTS.TXT
 
-if environment != "deploy" || ALPHA
+if environment != "deploy"
     | User-agent: *
+    | Disallow: /
+
+if ALPHA
+    | User-agent: Googlebot
     | Disallow: /

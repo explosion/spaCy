@@ -5,7 +5,7 @@
 
         "SITENAME": "spaCy",
         "SLOGAN": "Industrial-strength Natural Language Processing in Python",
-        "SITE_URL": "https://spacy.io",
+        "SITE_URL": "https://alpha.spacy.io",
         "EMAIL": "contact@explosion.ai",
 
         "COMPANY": "Explosion AI",
@@ -14,8 +14,8 @@
 
         "SPACY_VERSION": "1.8",
         "LATEST_NEWS": {
-            "url": "https://survey.spacy.io/",
-            "title": "Take the spaCy user survey and help us improve the library!"
+            "url": "https://github.com/explosion/spaCy/releases/tag/v2.0.0-alpha",
+            "title": "Test spaCy v2.0.0 alpha!"
         },
 
         "SOCIAL": {
