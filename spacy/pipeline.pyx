@@ -281,6 +281,8 @@ class NeuralTagger(object):
                         new_tag_map[tag] = orig_tag_map[tag]
                     else:
                         new_tag_map[tag] = {POS: X}
+        if 'SP' not in new_tag_map:
+            new_tag_map['SP'] = orig_tag_map.get('SP', {POS: X})
         cdef Vocab vocab = self.vocab
         if new_tag_map:
             vocab.morphology = Morphology(vocab.strings, new_tag_map,
