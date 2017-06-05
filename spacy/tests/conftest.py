@@ -37,10 +37,14 @@ def FR(request):
     return load_test_model(request.param)
 
 
-@pytest.fixture(params=_languages)
-def tokenizer(request):
-    lang = util.get_lang_class(request.param)
-    return lang.Defaults.create_tokenizer()
+#@pytest.fixture(params=_languages)
+#def tokenizer(request):
+    #lang = util.get_lang_class(request.param)
+    #return lang.Defaults.create_tokenizer()
+
+@pytest.fixture
+def tokenizer():
+    return util.get_lang_class('xx').Defaults.create_tokenizer()
 
 
 @pytest.fixture

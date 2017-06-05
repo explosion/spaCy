@@ -115,6 +115,7 @@ TEST_CASES = [
     pytest.mark.xfail(("Hello world.Today is Tuesday.Mr. Smith went to the store and bought 1,000.That is a lot.", ["Hello world.", "Today is Tuesday.", "Mr. Smith went to the store and bought 1,000.", "That is a lot."]))
 ]
 
+@pytest.mark.skip
 @pytest.mark.models('en')
 @pytest.mark.parametrize('text,expected_sents', TEST_CASES)
 def test_en_sbd_prag(EN, text, expected_sents):

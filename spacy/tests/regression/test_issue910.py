@@ -99,6 +99,4 @@ def test_issue910(EN, train_data, additional_entity_types):
         loaded_ner(doc)
         ents = {(ent.start_char, ent.end_char): ent.label_ for ent in doc.ents}
         for start, end, label in entity_offsets:
-            if (start, end) not in ents:
-                print(ents)
             assert ents[(start, end)] == label
