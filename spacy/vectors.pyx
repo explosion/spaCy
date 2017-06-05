@@ -43,7 +43,6 @@ cdef class Vectors:
             key = self.strings.add(key)
         i = self.key2i[key]
         self.data[i] = vector
-        print("Set", i, vector)
 
     def __iter__(self):
         yield from self.data
