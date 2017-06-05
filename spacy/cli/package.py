@@ -80,7 +80,7 @@ def generate_meta():
     settings = [('lang', 'Model language', 'en'),
                 ('name', 'Model name', 'model'),
                 ('version', 'Model version', '0.0.0'),
-                ('spacy_version', 'Required spaCy version', '>=2.0.0,<3.0.0'),
+                ('spacy_version', 'Required spaCy version', '>=%s,<3.0.0' % about.__version__),
                 ('description', 'Model description', False),
                 ('author', 'Author', False),
                 ('email', 'Author email', False),
@@ -92,6 +92,8 @@ def generate_meta():
         response = util.get_raw_input(desc, default)
         meta[setting] = default if response == '' and default else response
     meta['pipeline'] = generate_pipeline()
+    if about.__title__ != 'spacy':
+        meta['parent_package'] = about.__title__
     return meta
 
 
