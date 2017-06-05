@@ -44,6 +44,7 @@ MOD_NAMES = [
     'spacy.matcher',
     'spacy.syntax.ner',
     'spacy.symbols',
+    'spacy.vectors',
     'spacy.syntax.iterators']
 
 
