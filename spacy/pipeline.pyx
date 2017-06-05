@@ -18,6 +18,9 @@ from thinc.neural import Model, Maxout, Softmax, Affine
 from thinc.neural._classes.hash_embed import HashEmbed
 from thinc.neural.util import to_categorical
 
+from thinc.neural.pooling import Pooling, max_pool, mean_pool
+from thinc.neural._classes.difference import Siamese, CauchySimilarity
+
 from thinc.neural._classes.convolution import ExtractWindow
 from thinc.neural._classes.resnet import Residual
 from thinc.neural._classes.batchnorm import BatchNorm as BN
@@ -362,7 +365,6 @@ class NeuralTagger(object):
                 self.vocab.strings, tag_map=tag_map,
                 lemmatizer=self.vocab.morphology.lemmatizer,
                 exc=self.vocab.morphology.exc)
- 
 
         deserialize = OrderedDict((
             ('vocab', lambda p: self.vocab.from_disk(p)),
@@ -419,6 +421,104 @@ class NeuralLabeller(NeuralTagger):
         loss = (d_scores**2).sum()
         d_scores = self.model.ops.unflatten(d_scores, [len(d) for d in docs])
         return float(loss), d_scores
+
+
+class SimilarityHook(object):
+    """
+    Experimental
+
+    A pipeline component to install a hook for supervised similarity into
+    Doc objects. Requires a Tensorizer to pre-process documents. The similarity
+    model can be any object obeying the Thinc Model interface. By default,
+    the model concatenates the elementwise mean and elementwise max of the two
+    tensors, and compares them using the Cauchy-like similarity function
+    from Chen (2013):
+
+        similarity = 1. / (1. + (W * (vec1-vec2)**2).sum())
+
+    Where W is a vector of dimension weights, initialized to 1.
+    """
+    name = 'similarity'
+    def __init__(self, vocab, model=True):
+        self.vocab = vocab
+        self.model = model
+
+    @classmethod
+    def Model(cls, length):
+        return Siamese(Pooling(max_pool, mean_pool), CauchySimilarity(length))
+
+    def __call__(self, doc):
+        '''Install similarity hook'''
+        doc.user_hooks['similarity'] = self.predict
+        return doc
+
+    def pipe(self, docs, **kwargs):
+        for doc in docs:
+            yield self(doc)
+
+    def predict(self, doc1, doc2):
+        return self.model.predict([(doc1.tensor, doc2.tensor)])
+
+    def update(self, doc1_tensor1_doc2_tensor2, golds, sgd=None, drop=0.):
+        doc1s, tensor1s, doc2s, tensor2s = doc1_tensor1_doc2_tensor2
+        sims, bp_sims = self.model.begin_update(zip(tensor1s, tensor2s),
+                                                drop=drop)
+        d_tensor1s, d_tensor2s = bp_sims(golds, sgd=sgd)
+
+        return d_tensor1s, d_tensor2s
+
+    def begin_training(self, _, pipeline=None):
+        """
+        Allocate model, using width from tensorizer in pipeline.
+
+        gold_tuples (iterable): Gold-standard training data.
+        pipeline (list): The pipeline the model is part of.
+        """
+        if self.model is True:
+            self.model = self.Model(pipeline[0].model.nO)
+
+    def use_params(self, params):
+        """Replace weights of models in the pipeline with those provided in the
+        params dictionary.
+
+        params (dict): A dictionary of parameters keyed by model ID.
+        """
+        with self.model.use_params(params):
+            yield
+
+    def to_bytes(self, **exclude):
+        serialize = OrderedDict((
+            ('model', lambda: self.model.to_bytes()),
+            ('vocab', lambda: self.vocab.to_bytes())
+        ))
+        return util.to_bytes(serialize, exclude)
+
+    def from_bytes(self, bytes_data, **exclude):
+        if self.model is True:
+            self.model = self.Model()
+        deserialize = OrderedDict((
+            ('model', lambda b: self.model.from_bytes(b)),
+            ('vocab', lambda b: self.vocab.from_bytes(b))
+        ))
+        util.from_bytes(bytes_data, deserialize, exclude)
+        return self
+
+    def to_disk(self, path, **exclude):
+        serialize = OrderedDict((
+            ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
+            ('vocab', lambda p: self.vocab.to_disk(p))
+        ))
+        util.to_disk(path, serialize, exclude)
+
+    def from_disk(self, path, **exclude):
+        if self.model is True:
+            self.model = self.Model()
+        deserialize = OrderedDict((
+            ('model', lambda p: self.model.from_bytes(p.open('rb').read())),
+            ('vocab', lambda p: self.vocab.from_disk(p))
+        ))
+        util.from_disk(path, deserialize, exclude)
+        return self
 
 
 cdef class EntityRecognizer(LinearParser):
