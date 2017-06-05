@@ -106,6 +106,44 @@ p
         +cell #[code Language]
         +cell #[code Language] class with the loaded model.
 
++h(2, "load_model_from_path") util.load_model_from_path
+    +tag function
+    +tag-new(2)
+
+p
+    |  Load a model from a data directory path. Creates the
+    |  #[+api("language") #[code Language]] class and pipeline based on the
+    |  directory's meta.json and then calls
+    |  #[+api("language#from_disk") #[code from_disk()]] with the path. This
+    |  function also makes it easy to test a new model that you haven't packaged
+    |  yet.
+
++aside-code("Example").
+    nlp = load_model_from_path('/path/to/data')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code model_path]
+        +cell unicode
+        +cell Path to model data directory.
+
+    +row
+        +cell #[code meta]
+        +cell dict
+        +cell
+            |  Model meta data. If #[code False], spaCy will try to load the
+            |  meta from a meta.json in the same directory.
+
+    +row
+        +cell #[code **overrides]
+        +cell -
+        +cell Specific overrides, like pipeline components to disable.
+
+    +footrow
+        +cell returns
+        +cell #[code Language]
+        +cell #[code Language] class with the loaded model.
+
 +h(2, "load_model_from_init_py") util.load_model_from_init_py
     +tag function
     +tag-new(2)
