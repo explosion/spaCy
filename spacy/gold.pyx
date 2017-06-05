@@ -177,7 +177,7 @@ class GoldCorpus(object):
             gold_tuples = read_json_file(loc)
             for item in gold_tuples:
                 yield item
-                i += 1
+                i += len(item[1])
                 if self.limit and i >= self.limit:
                     break
 
@@ -194,8 +194,12 @@ class GoldCorpus(object):
 
     def count_train(self):
         n = 0
+        i = 0
         for raw_text, paragraph_tuples in self.train_tuples:
-            n += len(paragraph_tuples)
+            n += sum([len(s[0][1]) for s in paragraph_tuples])
+            if self.limit and i >= self.limit:
+                break
+            i += len(paragraph_tuples)
         return n
 
     def train_docs(self, nlp, gold_preproc=False,
