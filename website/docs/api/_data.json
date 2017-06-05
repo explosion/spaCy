@@ -24,6 +24,7 @@
             "Lexeme": "lexeme",
             "Vocab": "vocab",
             "StringStore": "stringstore",
+            "Vectors": "vectors",
             "GoldParse": "goldparse",
             "GoldCorpus": "goldcorpus",
             "Binder": "binder"
@@ -162,6 +163,12 @@
         "title": "Binder",
         "tag": "class",
         "source": "spacy/tokens/binder.pyx"
+    },
+
+    "vectors": {
+        "title": "Vectors",
+        "tag": "class",
+        "source": "spacy/vectors.pyx"
     },
 
     "annotation": {
