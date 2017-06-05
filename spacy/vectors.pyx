@@ -27,7 +27,7 @@ cdef class Vectors:
             self.key2i[self.strings.add(string)] = i
 
     def __reduce__(self):
-        raise NotImplementedError
+        return (Vectors, (self.strings, self.data))
 
     def __getitem__(self, key):
         if isinstance(key, basestring):
