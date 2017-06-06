@@ -14,8 +14,8 @@
 
         "SPACY_VERSION": "1.8",
         "LATEST_NEWS": {
-            "url": "https://survey.spacy.io/",
-            "title": "Take the spaCy user survey and help us improve the library!"
+            "url": "/docs/usage/models",
+            "title": "The first official Spanish model is here!"
         },
 
         "SOCIAL": {
@@ -76,7 +76,8 @@
             { "id": "model", "title": "Models", "multiple": true, "options": [
                 { "id": "en", "title": "English", "meta": "50MB" },
                 { "id": "de", "title": "German", "meta": "645MB" },
-                { "id": "fr", "title": "French", "meta": "1.33GB" }]
+                { "id": "fr", "title": "French", "meta": "1.33GB" },
+                { "id": "es", "title": "Spanish", "meta": "377MB"}]
             }
         ],
 
