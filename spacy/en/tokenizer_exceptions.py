@@ -491,6 +491,16 @@ OTHER = {
         {ORTH: "'s", LEMMA: PRON_LEMMA, NORM: "us"}
     ],
 
+    "won't": [
+        {ORTH: "wo", LEMMA: "will"},
+        {ORTH: "n't", LEMMA: "not"}
+    ],
+
+    "Won't": [
+        {ORTH: "Wo", LEMMA: "will"},
+        {ORTH: "n't", LEMMA: "not"}
+    ],
+
     "\u2014": [
         {ORTH: "\u2014", TAG: ":", LEMMA: "--"}
     ],
