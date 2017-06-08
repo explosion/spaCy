@@ -68,6 +68,8 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
     batch_sizes = util.compounding(util.env_opt('batch_from', 1),
                                    util.env_opt('batch_to', 64),
                                    util.env_opt('batch_compound', 1.001))
+    gold_preproc = util.env_opt('gold_preproc', False)
+    noise_level = util.env_opt('noise_level', 0.25)
 
     if resume:
         prints(output_path / 'model19.pickle', title="Resuming training")
@@ -86,7 +88,9 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                 i += 20
             with tqdm.tqdm(total=n_train_words, leave=False) as pbar:
                 train_docs = corpus.train_docs(nlp, projectivize=True,
-                                               gold_preproc=False, max_length=0)
+                                               gold_preproc=gold_preproc,
+                                               noise_level=noise_level,
+                                               max_length=0)
                 losses = {}
                 for batch in minibatch(train_docs, size=batch_sizes):
                     docs, golds = zip(*batch)
@@ -105,7 +109,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                 scorer = nlp_loaded.evaluate(
                             corpus.dev_docs(
                                 nlp_loaded,
-                                gold_preproc=False))
+                                gold_preproc=gold_preproc))
                 acc_loc =(output_path / ('model%d' % i) / 'accuracy.json')
                 with acc_loc.open('w') as file_:
                     file_.write(json_dumps(scorer.scores))
