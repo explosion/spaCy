@@ -181,7 +181,7 @@ p
     from spacy.vocab import Vocab
 
     nlp = spacy.load('en')
-    moby_dick = open('moby_dick.txt', 'r')
+    moby_dick = open('moby_dick.txt', 'r').read()
     doc = nlp(moby_dick)
     doc.to_disk('/moby_dick.bin')
 
