@@ -15,6 +15,16 @@ class Tree(object):
     def __getitem__(self, item):
         return self.nodes[item]
 
+    def add_node(self, node, attr_dict=None):
+        attr_dict = attr_dict or {}
+        self.nodes[node] = attr_dict
+
+    def add_edge(self, u, v, dep=None):
+        if u not in self.nodes or v not in self.nodes:
+            raise ValueError("Each node must be defined before adding an edge.")
+
+        self.adjacency[u][v] = dep
+
     def number_of_nodes(self):
         return len(self)
     
@@ -67,16 +77,6 @@ class Tree(object):
 
 
 class DependencyPattern(Tree):
-    def add_node(self, node, attr_dict=None):
-        attr_dict = attr_dict or {}
-        self.nodes[node] = attr_dict
-
-    def add_edge(self, u, v, dep=None):
-        if u not in self.nodes or v not in self.nodes:
-            raise ValueError("Each node must be defined before adding an edge.")
-
-        self.adjacency[u][v] = dep
-
     @property
     def root_node(self):
         if self.number_of_nodes() == 1:
