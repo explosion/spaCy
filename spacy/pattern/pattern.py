@@ -282,10 +282,6 @@ def match_token(token,
         'lemma': lambda t: t.lemma_,
     }
 
-    if lower:
-        bind_map = {key: lambda t: func(t).lower() for key, func in
-                    bind_map.items()}
-
     for target_key, target_value in target_attributes.items():
         is_special_key = target_key[0] == '_'
 
@@ -297,6 +293,9 @@ def match_token(token,
 
         if target_key in bind_map:
             token_attr = bind_map[target_key](token)
+
+            if lower:
+                token_attr = token_attr.lower()
 
             if hasattr(target_value, 'match'):  # if it is a compiled regex
                 if target_value.match(token_attr) is None:
