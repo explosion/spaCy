@@ -38,7 +38,17 @@ class PatternParser(object):
         if not pattern.nodes:
             return
 
+        cls.check_pattern(pattern)
         return pattern
+
+    @staticmethod
+    def check_pattern(pattern):
+        if not pattern.is_connected():
+            raise ValueError("The pattern tree must be a fully connected "
+                             "graph.")
+
+        if pattern.root_node is None:
+            raise ValueError("The root node of the tree could not be found.")
 
     @classmethod
     def _parse_line(cls, stream, pattern, lineno):
