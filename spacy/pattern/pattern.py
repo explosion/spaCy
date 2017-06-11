@@ -104,8 +104,10 @@ class DependencyTree(Tree):
 
         for token in doc:
             self.nodes[token.i] = token
-            # inverse the dependency to have an actual tree
-            self.adjacency[token.head.i][token.i] = token.dep_
+
+            if token.head.i != token.i:
+                # inverse the dependency to have an actual tree
+                self.adjacency[token.head.i][token.i] = token.dep_
 
     def __getitem__(self, item):
         return self.nodes[item]
