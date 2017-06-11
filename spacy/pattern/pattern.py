@@ -280,6 +280,7 @@ def match_token(token,
     bind_map = {
         'word': lambda t: t.orth_,
         'lemma': lambda t: t.lemma_,
+        'ent': lambda t: t.ent_type_,
     }
 
     for target_key, target_value in target_attributes.items():
