@@ -130,6 +130,10 @@ class DependencyTree(Tree):
         pattern_root_node_attr = pattern[pattern_root_node]
         dep_root_nodes = self.match_nodes(pattern_root_node_attr)
 
+        if not dep_root_nodes:
+            logger.debug("No node matches the pattern root "
+                         "'{}'".format(pattern_root_node_attr))
+
         matches = []
         for candidate_root_node in dep_root_nodes:
             match_list = subtree_in_graph(candidate_root_node, self,
