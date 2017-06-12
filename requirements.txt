@@ -7,6 +7,7 @@ thinc>=6.5.0,<6.6.0
 murmurhash>=0.26,<0.27
 plac<1.0.0,>=0.9.6
 six
+html5lib==1.0b8
 ujson>=1.35
 dill>=0.2,<0.3
 requests>=2.13.0,<3.0.0
