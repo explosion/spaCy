@@ -5,6 +5,7 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
 from .punctuation import TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .stop_words import STOP_WORDS
 from .lemmatizer import LOOKUP
+from .syntax_iterators import SYNTAX_ITERATORS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -24,6 +25,7 @@ class FrenchDefaults(Language.Defaults):
     infixes = tuple(TOKENIZER_INFIXES)
     suffixes = tuple(TOKENIZER_SUFFIXES)
     token_match = TOKEN_MATCH
+    syntax_iterators = dict(SYNTAX_ITERATORS)
 
     @classmethod
     def create_lemmatizer(cls, nlp=None):
