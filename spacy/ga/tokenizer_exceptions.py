@@ -1,4 +1,5 @@
-/ coding: utf8
+# encoding: utf8
+# Irish
 from __future__ import unicode_literals
 
 from ..symbols import *
