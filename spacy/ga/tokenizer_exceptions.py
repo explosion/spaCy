@@ -45,7 +45,7 @@ TOKENIZER_EXCEPTIONS = {
 
     "ded'": [
         {ORTH: "de", LEMMA: "de", NORM: "de"},
-        {ORTH: "d'", LEMMA: "mo", NORM: "do"}
+        {ORTH: "d'", LEMMA: "do", NORM: "do"}
     ],
 
     "lem'": [
@@ -56,6 +56,10 @@ TOKENIZER_EXCEPTIONS = {
     "led'": [
         {ORTH: "le", LEMMA: "le", NORM: "le"},
         {ORTH: "d'", LEMMA: "mo", NORM: "do"}
+    ],
+
+    "m'": [
+        {ORTH: "m'", LEMMA: "mo", NORM: "mo"}
     ],
 
     "a.C.n.": [
@@ -211,3 +215,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
 }
+
+ORTH_ONLY = [
+    "d'",
+]
