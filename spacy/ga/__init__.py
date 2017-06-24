@@ -8,3 +8,4 @@ class Irish(Language):
         lex_attr_getters[LANG] = lambda text: 'ga'
 
         stop_words = STOP_WORDS
+        tokenizer_exceptions = TOKENIZER_EXCEPTIONS
