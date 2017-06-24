@@ -14,6 +14,7 @@ from ..fi import Finnish
 from ..bn import Bengali
 from ..he import Hebrew
 from ..nb import Norwegian
+from ..ga import Irish
 
 
 from ..tokens import Doc
@@ -28,7 +29,7 @@ import pytest
 
 
 LANGUAGES = [English, German, Spanish, Italian, French, Portuguese, Dutch,
-             Swedish, Hungarian, Finnish, Bengali, Norwegian]
+             Swedish, Hungarian, Finnish, Bengali, Norwegian, Irish]
 
 
 @pytest.fixture(params=LANGUAGES)
@@ -93,6 +94,10 @@ def he_tokenizer():
 @pytest.fixture
 def nb_tokenizer():
     return Norwegian.Defaults.create_tokenizer()
+
+@pytest.fixture
+def ga_tokenizer():
+    return Irish.Defaults.create_tokenizer()
 
 @pytest.fixture
 def stringstore():
