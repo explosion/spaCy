@@ -1,4 +1,4 @@
-# coding: utf8
+/ coding: utf8
 from __future__ import unicode_literals
 
 from ..symbols import *
@@ -61,7 +61,7 @@ TOKENIZER_EXCEPTIONS = {
         {ORTH: "a.", LEMMA: "ante"},
         {ORTH: "C.", LEMMA: "Christum"},
         {ORTH: "n.", LEMMA: "natum"},
-    ]
+    ],
 
     "Aib.": [
         {ORTH: "Aib.", LEMMA: "Aibreán"}
@@ -145,27 +145,27 @@ TOKENIZER_EXCEPTIONS = {
     "R.C.": [
         {ORTH: "Rr.", LEMMA: "roimh"},
         {ORTH: "C.", LEMMA: "Críost"}
-    ]
+    ],
 
     "r.Ch.": [
         {ORTH: "r.", LEMMA: "roimh"},
         {ORTH: "Ch.", LEMMA: "Críost"}
-    ]
+    ],
 
     "r.Chr.": [
         {ORTH: "r.", LEMMA: "roimh"},
         {ORTH: "Chr.", LEMMA: "Críost"}
-    ]
+    ],
 
     "R.Ch.": [
         {ORTH: "R.", LEMMA: "roimh"},
         {ORTH: "Ch.", LEMMA: "Críost"}
-    ]
+    ],
 
     "R.Chr.": [
         {ORTH: "R.", LEMMA: "roimh"},
         {ORTH: "Chr.", LEMMA: "Críost"}
-    ]
+    ],
 
     "Samh.": [
         {ORTH: "Samh.", LEMMA: "Samhain"}
@@ -179,7 +179,7 @@ TOKENIZER_EXCEPTIONS = {
     "srl.": [
         {ORTH: "s", LEMMA: "agus"},
         {ORTH: "rl.", LEMMA: "araile"}
-    ]
+    ],
 
     "tAth.": [
         {ORTH: "tAth.", LEMMA: "athair"}
