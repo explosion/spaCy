@@ -25,51 +25,6 @@ _exc = {
         {ORTH: "le", LEMMA: "le", NORM: "le", POS: ADP},
         {ORTH: "d'", LEMMA: "mo", NORM: "do", POS: DET}],
 
-    "a.C.n.": [
-        {ORTH: "a.", LEMMA: "ante", POS: X},
-        {ORTH: "C.", LEMMA: "Christum", POS: X},
-        {ORTH: "n.", LEMMA: "natum", POS: X}],
-
-    "m.sh.": [
-        {ORTH: "m.", LEMMA: "mar", POS: ADP},
-        {ORTH: "sh.", LEMMA: "sampla", POS: NOUN}],
-
-    "M.F.": [
-        {ORTH: "M.", LEMMA: "Meán", POS: NOUN},
-        {ORTH: "F.", LEMMA: "Fómhar", POS: NOUN}],
-
-    "M.Fómh.": [
-        {ORTH: "M.", LEMMA: "Meán", POS: NOUN},
-        {ORTH: "Fómh.", LEMMA: "Fómhar", POS: NOUN}],
-
-    "R.C.": [
-        {ORTH: "R.", LEMMA: "roimh", POS: ADP},
-        {ORTH: "C.", LEMMA: "Críost", POS: NOUN}],
-
-    "r.Ch.": [
-        {ORTH: "r.", LEMMA: "roimh", POS: ADP},
-        {ORTH: "Ch.", LEMMA: "Críost", POS: NOUN}],
-
-    "r.Chr.": [
-        {ORTH: "r.", LEMMA: "roimh", POS: ADP},
-        {ORTH: "Chr.", LEMMA: "Críost", POS: NOUN}],
-
-    "R.Ch.": [
-        {ORTH: "R.", LEMMA: "roimh", POS: ADP},
-        {ORTH: "Ch.", LEMMA: "Críost", POS: NOUN}],
-
-    "R.Chr.": [
-        {ORTH: "R.", LEMMA: "roimh", POS: ADP},
-        {ORTH: "Chr.", LEMMA: "Críost", POS: NOUN}],
-
-    "⁊rl.": [
-        {ORTH: "⁊", LEMMA: "agus", POS: CCONJ},
-        {ORTH: "rl.", LEMMA: "araile", POS: ADJ}],
-
-    "srl.": [
-        {ORTH: "s", LEMMA: "agus", POS: CCONJ},
-        {ORTH: "rl.", LEMMA: "araile", POS: ADJ}],
-
 }
 
 for exc_data in [
@@ -84,6 +39,17 @@ for exc_data in [
     {ORTH: "Aib.", LEMMA: "Aibreán", POS: NOUN},
     {ORTH: "Ath.", LEMMA: "athair", POS: NOUN},
     {ORTH: "Beal.", LEMMA: "Bealtaine", POS: NOUN},
+    {ORTH: "a.C.n.", LEMMA: "ante Christum natum", POS: X},
+    {ORTH: "m.sh.", LEMMA: "mar shampla", POS: ADV},
+    {ORTH: "M.F.", LEMMA: "Meán Fómhair", POS: NOUN},
+    {ORTH: "M.Fómh.", LEMMA: "Meán Fómhair", POS: NOUN},
+    {ORTH: "D.F.", LEMMA: "Deireadh Fómhair", POS: NOUN},
+    {ORTH: "D.Fómh.", LEMMA: "Deireadh Fómhair", POS: NOUN},
+    {ORTH: "R.C.", LEMMA: "roimh Chríost", POS: ADV},
+    {ORTH: "r.Ch.", LEMMA: "roimh Chríost", POS: ADV},
+    {ORTH: "r.Chr.", LEMMA: "roimh Chríost", POS: ADV},
+    {ORTH: "⁊rl.", LEMMA: "agus araile", POS: ADV},
+    {ORTH: "srl.", LEMMA: "agus araile", POS: ADV},
     {ORTH: "Co.", LEMMA: "contae", POS: NOUN},
     {ORTH: "Ean.", LEMMA: "Eanáir", POS: NOUN},
     {ORTH: "Feab.", LEMMA: "Feabhra", POS: NOUN},
