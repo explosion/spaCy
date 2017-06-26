@@ -9,6 +9,7 @@ from ..structs cimport TokenC, Entity
 from ..lexeme cimport Lexeme
 from ..symbols cimport punct
 from ..attrs cimport IS_SPACE
+from ..typedefs cimport attr_t
 
 
 cdef inline bint is_space_token(const TokenC* token) nogil:
@@ -70,6 +71,45 @@ cdef cppclass StateC:
         free(this._buffer - PADDING)
         free(this._stack - PADDING)
         free(this.shifted - PADDING)
+
+    void set_context_tokens(int* ids, int n) nogil:
+        if n == 13:
+            ids[0] = this.B(0)
+            ids[1] = this.B(1)
+            ids[2] = this.S(0)
+            ids[3] = this.S(1)
+            ids[4] = this.S(2)
+            ids[5] = this.L(this.S(0), 1)
+            ids[6] = this.L(this.S(0), 2)
+            ids[6] = this.R(this.S(0), 1)
+            ids[7] = this.L(this.B(0), 1)
+            ids[8] = this.R(this.S(0), 2)
+            ids[9] = this.L(this.S(1), 1)
+            ids[10] = this.L(this.S(1), 2)
+            ids[11] = this.R(this.S(1), 1)
+            ids[12] = this.R(this.S(1), 2)
+        elif n == 6:
+            if this.B(0) >= 0:
+                ids[0] = this.B(0)
+            else:
+                ids[0] = -1
+            ids[1] = this.B(0)
+            ids[2] = this.B(1)
+            ids[3] = this.E(0)
+            if ids[3] >= 1:
+                ids[4] = this.E(0)-1
+            else:
+                ids[4] = -1
+            if (ids[3]+1) < this.length:
+                ids[5] = this.E(0)+1
+            else:
+                ids[5] = -1
+        else:
+            # TODO error =/
+            pass
+        for i in range(n):
+            if ids[i] >= 0:
+                ids[i] += this.offset
 
     int S(int i) nogil const:
         if i >= this._s_i:
@@ -238,7 +278,7 @@ cdef cppclass StateC:
         this._s_i -= 1
         this.shifted[this.B(0)] = True
 
-    void add_arc(int head, int child, int label) nogil:
+    void add_arc(int head, int child, attr_t label) nogil:
         if this.has_head(child):
             this.del_arc(this.H(child), child)
 
@@ -282,7 +322,7 @@ cdef cppclass StateC:
             h.l_edge = this.L_(h_i, 2).l_edge if h.l_kids >= 2 else h_i
             h.l_kids -= 1
 
-    void open_ent(int label) nogil:
+    void open_ent(attr_t label) nogil:
         this._ents[this._e_i].start = this.B(0)
         this._ents[this._e_i].label = label
         this._ents[this._e_i].end = -1
@@ -294,7 +334,7 @@ cdef cppclass StateC:
         this._ents[this._e_i-1].end = this.B(0)+1
         this._sent[this.B(0)].ent_iob = 1
 
-    void set_ent_tag(int i, int ent_iob, int ent_type) nogil:
+    void set_ent_tag(int i, int ent_iob, attr_t ent_type) nogil:
         if 0 <= i < this.length:
             this._sent[i].ent_iob = ent_iob
             this._sent[i].ent_type = ent_type
@@ -305,16 +345,18 @@ cdef cppclass StateC:
             this._break = this._b_i
 
     void clone(const StateC* src) nogil:
+        this.length = src.length
         memcpy(this._sent, src._sent, this.length * sizeof(TokenC))
         memcpy(this._stack, src._stack, this.length * sizeof(int))
         memcpy(this._buffer, src._buffer, this.length * sizeof(int))
         memcpy(this._ents, src._ents, this.length * sizeof(Entity))
         memcpy(this.shifted, src.shifted, this.length * sizeof(this.shifted[0]))
-        this.length = src.length
         this._b_i = src._b_i
         this._s_i = src._s_i
         this._e_i = src._e_i
         this._break = src._break
+        this.offset = src.offset
+        this._empty_token = src._empty_token
 
     void fast_forward() nogil:
         # space token attachement policy:

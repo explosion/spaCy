@@ -10,27 +10,28 @@ _html = {}
 IS_JUPYTER = is_in_jupyter()
 
 
-def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER, options={}):
+def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER,
+          options={}, manual=False):
     """Render displaCy visualisation.
 
     docs (list or Doc): Document(s) to visualise.
     style (unicode): Visualisation style, 'dep' or 'ent'.
     page (bool): Render markup as full HTML page.
     minify (bool): Minify HTML markup.
-    jupyter (bool): Experimental, use Jupyter's display() to output markup.
+    jupyter (bool): Experimental, use Jupyter's `display()` to output markup.
     options (dict): Visualiser-specific options, e.g. colors.
+    manual (bool): Don't parse `Doc` and instead, expect a dict or list of dicts.
     RETURNS (unicode): Rendered HTML markup.
     """
-    if isinstance(docs, Doc):
-        docs = [docs]
-    if style == 'dep':
-        renderer = DependencyRenderer(options=options)
-        parsed = [parse_deps(doc, options) for doc in docs]
-    elif style == 'ent':
-        renderer = EntityRenderer(options=options)
-        parsed = [parse_ents(doc, options) for doc in docs]
-    else:
+    factories = {'dep': (DependencyRenderer, parse_deps),
+                 'ent': (EntityRenderer, parse_ents)}
+    if style not in factories:
         raise ValueError("Unknown style: %s" % style)
+    if isinstance(docs, Doc) or isinstance(docs, dict):
+        docs = [docs]
+    renderer, converter = factories[style]
+    renderer = renderer(options=options)
+    parsed = [converter(doc, options) for doc in docs] if not manual else docs
     _html['parsed'] = renderer.render(parsed, page=page, minify=minify).strip()
     html = _html['parsed']
     if jupyter: # return HTML rendered by IPython display()
@@ -39,7 +40,8 @@ def render(docs, style='dep', page=False, minify=False, jupyter=IS_JUPYTER, opti
     return html
 
 
-def serve(docs, style='dep', page=True, minify=False, options={}, port=5000):
+def serve(docs, style='dep', page=True, minify=False, options={}, manual=False,
+          port=5000):
     """Serve displaCy visualisation.
 
     docs (list or Doc): Document(s) to visualise.
@@ -47,13 +49,19 @@ def serve(docs, style='dep', page=True, minify=False, options={}, port=5000):
     page (bool): Render markup as full HTML page.
     minify (bool): Minify HTML markup.
     options (dict): Visualiser-specific options, e.g. colors.
+    manual (bool): Don't parse `Doc` and instead, expect a dict or list of dicts.
     port (int): Port to serve visualisation.
     """
     from wsgiref import simple_server
-    render(docs, style=style, page=page, minify=minify, options=options)
+    render(docs, style=style, page=page, minify=minify, options=options, manual=manual)
     httpd = simple_server.make_server('0.0.0.0', port, app)
     prints("Using the '%s' visualizer" % style, title="Serving on port %d..." % port)
-    httpd.serve_forever()
+    try:
+        httpd.serve_forever()
+    except KeyboardInterrupt:
+        prints("Shutting down server on port %d." % port)
+    finally:
+        httpd.server_close()
 
 
 def app(environ, start_response):
@@ -62,12 +70,13 @@ def app(environ, start_response):
     return [res]
 
 
-def parse_deps(doc, options={}):
+def parse_deps(orig_doc, options={}):
     """Generate dependency parse in {'words': [], 'arcs': []} format.
 
     doc (Doc): Document do parse.
     RETURNS (dict): Generated dependency parse keyed by words and arcs.
     """
+    doc = Doc(orig_doc.vocab).from_bytes(orig_doc.to_bytes())
     if options.get('collapse_punct', True):
         spans = []
         for word in doc[:-1]:

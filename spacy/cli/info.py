@@ -1,6 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import plac
 import platform
 from pathlib import Path
 
@@ -9,17 +10,30 @@ from .. import about
 from .. import util
 
 
-def info(model=None, markdown=False):
+@plac.annotations(
+    model=("optional: shortcut link of model", "positional", None, str),
+    markdown=("generate Markdown for GitHub issues", "flag", "md", str)
+)
+def info(cmd, model=None, markdown=False):
+    """Print info about spaCy installation. If a model shortcut link is
+    speficied as an argument, print model information. Flag --markdown
+    prints details in Markdown for easy copy-pasting to GitHub issues.
+    """
     if model:
-        data_path = util.get_data_path()
-        data = util.parse_package_meta(data_path / model, require=True)
-        model_path = Path(__file__).parent / data_path / model
-        if model_path.resolve() != model_path:
-            data['link'] = path2str(model_path)
-            data['source'] = path2str(model_path.resolve())
+        if util.is_package(model):
+            model_path = util.get_package_path(model)
         else:
-            data['source'] = path2str(model_path)
-        print_info(data, 'model %s' % model, markdown)
+            model_path = util.get_data_path() / model
+        meta_path = model_path / 'meta.json'
+        if not meta_path.is_file():
+            util.prints(meta_path, title="Can't find model meta.json", exits=1)
+        meta = util.read_json(meta_path)
+        if model_path.resolve() != model_path:
+            meta['link'] = path2str(model_path)
+            meta['source'] = path2str(model_path.resolve())
+        else:
+            meta['source'] = path2str(model_path)
+        print_info(meta, 'model %s' % model, markdown)
     else:
         data = {'spaCy version': about.__version__,
                 'Location': path2str(Path(__file__).parent.parent),

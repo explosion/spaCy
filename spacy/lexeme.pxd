@@ -27,7 +27,7 @@ cdef class Lexeme:
     cdef inline SerializedLexemeC c_to_bytes(const LexemeC* lex) nogil:
         cdef SerializedLexemeC lex_data
         buff = <const unsigned char*>&lex.flags
-        end = <const unsigned char*>&lex.l2_norm + sizeof(lex.l2_norm)
+        end = <const unsigned char*>&lex.sentiment + sizeof(lex.sentiment)
         for i in range(sizeof(lex_data.data)):
             lex_data.data[i] = buff[i]
         return lex_data
@@ -35,7 +35,7 @@ cdef class Lexeme:
     @staticmethod
     cdef inline void c_from_bytes(LexemeC* lex, SerializedLexemeC lex_data) nogil:
         buff = <unsigned char*>&lex.flags
-        end = <unsigned char*>&lex.l2_norm + sizeof(lex.l2_norm)
+        end = <unsigned char*>&lex.sentiment + sizeof(lex.sentiment)
         for i in range(sizeof(lex_data.data)):
             buff[i] = lex_data.data[i]
 

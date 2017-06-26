@@ -2,15 +2,16 @@
 from __future__ import unicode_literals
 
 from .char_classes import LIST_PUNCT, LIST_ELLIPSES, LIST_QUOTES, LIST_CURRENCY
-from .char_classes import ALPHA_LOWER, ALPHA_UPPER, ALPHA, HYPHENS, QUOTES
-from .char_classes import CURRENCY, UNITS
+from .char_classes import LIST_ICONS, ALPHA_LOWER, ALPHA_UPPER, ALPHA, HYPHENS
+from .char_classes import QUOTES, CURRENCY, UNITS
 
 
 _prefixes = (['§', '%', '=', r'\+'] + LIST_PUNCT + LIST_ELLIPSES + LIST_QUOTES +
-             LIST_CURRENCY)
+             LIST_CURRENCY + LIST_ICONS)
 
 
-_suffixes = (["'s", "'S", "’s", "’S"] + LIST_PUNCT + LIST_ELLIPSES + LIST_QUOTES +
+_suffixes = (LIST_PUNCT + LIST_ELLIPSES + LIST_QUOTES + LIST_ICONS +
+             ["'s", "'S", "’s", "’S"] +
              [r'(?<=[0-9])\+',
               r'(?<=°[FfCcKk])\.',
               r'(?<=[0-9])(?:{})'.format(CURRENCY),
@@ -19,7 +20,7 @@ _suffixes = (["'s", "'S", "’s", "’S"] + LIST_PUNCT + LIST_ELLIPSES + LIST_QU
               r'(?<=[{a}][{a}])\.'.format(a=ALPHA_UPPER)])
 
 
-_infixes = (LIST_ELLIPSES +
+_infixes = (LIST_ELLIPSES + LIST_ICONS +
             [r'(?<=[0-9])[+\-\*^](?=[0-9-])',
              r'(?<=[{}])\.(?=[{}])'.format(ALPHA_LOWER, ALPHA_UPPER),
              r'(?<=[{a}]),(?=[{a}])'.format(a=ALPHA),

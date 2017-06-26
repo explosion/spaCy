@@ -5,10 +5,13 @@ from __future__ import unicode_literals, print_function
 import io
 import re
 import ujson
+import random
+import cytoolz
 
 from .syntax import nonproj
 from .util import ensure_path
 from . import util
+from .tokens import Doc
 
 
 def tags_to_entities(tags):
@@ -86,8 +89,8 @@ def _min_edit_path(cand_words, gold_words):
     # TODO: Fix this --- just do it properly, make the full edit matrix and
     # then walk back over it...
     # Preprocess inputs
-    cand_words = [punct_re.sub('', w) for w in cand_words]
-    gold_words = [punct_re.sub('', w) for w in gold_words]
+    cand_words = [punct_re.sub('', w).lower() for w in cand_words]
+    gold_words = [punct_re.sub('', w).lower() for w in gold_words]
 
     if cand_words == gold_words:
         return 0, ''.join(['M' for _ in gold_words])
@@ -139,8 +142,164 @@ def _min_edit_path(cand_words, gold_words):
     return prev_costs[n_gold], previous_row[-1]
 
 
-def read_json_file(loc, docs_filter=None, make_supertags=True, limit=None):
-    make_supertags = util.env_opt('make_supertags', make_supertags)
+def minibatch(items, size=8):
+    '''Iterate over batches of items. `size` may be an iterator,
+    so that batch-size can vary on each step.
+    '''
+    items = iter(items)
+    while True:
+        batch_size = next(size) #if hasattr(size, '__next__') else size
+        batch = list(cytoolz.take(int(batch_size), items))
+        if len(batch) == 0:
+            break
+        yield list(batch)
+
+
+class GoldCorpus(object):
+    """An annotated corpus, using the JSON file format. Manages
+    annotations for tagging, dependency parsing and NER."""
+    def __init__(self, train_path, dev_path, gold_preproc=True, limit=None):
+        """Create a GoldCorpus.
+
+        train_path (unicode or Path): File or directory of training data.
+        dev_path (unicode or Path): File or directory of development data.
+        """
+        self.train_path = util.ensure_path(train_path)
+        self.dev_path = util.ensure_path(dev_path)
+        self.limit = limit
+        self.train_locs = self.walk_corpus(self.train_path)
+        self.dev_locs = self.walk_corpus(self.dev_path)
+
+    @property
+    def train_tuples(self):
+        i = 0
+        for loc in self.train_locs:
+            gold_tuples = read_json_file(loc)
+            for item in gold_tuples:
+                yield item
+                i += len(item[1])
+                if self.limit and i >= self.limit:
+                    break
+
+    @property
+    def dev_tuples(self):
+        i = 0
+        for loc in self.dev_locs:
+            gold_tuples = read_json_file(loc)
+            for item in gold_tuples:
+                yield item
+                i += 1
+                if self.limit and i >= self.limit:
+                    break
+
+    def count_train(self):
+        n = 0
+        i = 0
+        for raw_text, paragraph_tuples in self.train_tuples:
+            n += sum([len(s[0][1]) for s in paragraph_tuples])
+            if self.limit and i >= self.limit:
+                break
+            i += len(paragraph_tuples)
+        return n
+
+    def train_docs(self, nlp, gold_preproc=False,
+                   projectivize=False, max_length=None,
+                   noise_level=0.0):
+        train_tuples = self.train_tuples
+        if projectivize:
+            train_tuples = nonproj.preprocess_training_data(
+                               self.train_tuples)
+        random.shuffle(train_tuples)
+        gold_docs = self.iter_gold_docs(nlp, train_tuples, gold_preproc,
+                                        max_length=max_length,
+                                        noise_level=noise_level)
+        yield from gold_docs
+
+    def dev_docs(self, nlp, gold_preproc=False):
+        gold_docs = self.iter_gold_docs(nlp, self.dev_tuples, gold_preproc)
+        #gold_docs = nlp.preprocess_gold(gold_docs)
+        yield from gold_docs
+
+    @classmethod
+    def iter_gold_docs(cls, nlp, tuples, gold_preproc, max_length=None,
+                       noise_level=0.0):
+        for raw_text, paragraph_tuples in tuples:
+            if gold_preproc:
+                raw_text = None
+            else:
+                paragraph_tuples = merge_sents(paragraph_tuples)
+
+            docs = cls._make_docs(nlp, raw_text, paragraph_tuples,
+                                  gold_preproc, noise_level=noise_level)
+            golds = cls._make_golds(docs, paragraph_tuples)
+            for doc, gold in zip(docs, golds):
+                if (not max_length) or len(doc) < max_length:
+                    yield doc, gold
+
+    @classmethod
+    def _make_docs(cls, nlp, raw_text, paragraph_tuples, gold_preproc,
+                   noise_level=0.0):
+        if raw_text is not None:
+            raw_text = add_noise(raw_text, noise_level)
+            return [nlp.make_doc(raw_text)]
+        else:
+            return [Doc(nlp.vocab, words=add_noise(sent_tuples[1], noise_level))
+                for (sent_tuples, brackets) in paragraph_tuples]
+
+    @classmethod
+    def _make_golds(cls, docs, paragraph_tuples):
+        assert len(docs) == len(paragraph_tuples)
+        if len(docs) == 1:
+            return [GoldParse.from_annot_tuples(docs[0], paragraph_tuples[0][0])]
+        else:
+            return [GoldParse.from_annot_tuples(doc, sent_tuples)
+                    for doc, (sent_tuples, brackets) in zip(docs, paragraph_tuples)]
+
+    @staticmethod
+    def walk_corpus(path):
+        if not path.is_dir():
+            return [path]
+        paths = [path]
+        locs = []
+        seen = set()
+        for path in paths:
+            if str(path) in seen:
+                continue
+            seen.add(str(path))
+            if path.parts[-1].startswith('.'):
+                continue
+            elif path.is_dir():
+                paths.extend(path.iterdir())
+            elif path.parts[-1].endswith('.json'):
+                locs.append(path)
+        return locs
+
+
+def add_noise(orig, noise_level):
+    if random.random() >= noise_level:
+        return orig
+    elif type(orig) == list:
+        corrupted = [_corrupt(word, noise_level) for word in orig]
+        corrupted = [w for w in corrupted if w]
+        return corrupted
+    else:
+        return ''.join(_corrupt(c, noise_level) for c in orig)
+
+
+def _corrupt(c, noise_level):
+    if random.random() >= noise_level:
+        return c
+    elif c == ' ':
+        return '\n'
+    elif c == '\n':
+        return ' '
+    elif c in ['.', "'", "!", "?"]:
+        return ''
+    else:
+        return c.lower()
+
+
+def read_json_file(loc, docs_filter=None, limit=None):
     loc = ensure_path(loc)
     if loc.is_dir():
         for filename in loc.iterdir():
@@ -173,16 +332,14 @@ def read_json_file(loc, docs_filter=None, make_supertags=True, limit=None):
                         if labels[-1].lower() == 'root':
                             labels[-1] = 'ROOT'
                         ner.append(token.get('ner', '-'))
-                        if make_supertags:
-                            tags[-1] = '-'.join((tags[-1], labels[-1], ner[-1]))
                     sents.append([
                         [ids, words, tags, heads, labels, ner],
-                        sent.get('brackets', [])])
+                         sent.get('brackets', [])])
                 if sents:
                     yield [paragraph.get('raw', None), sents]
 
 
-def _iob_to_biluo(tags):
+def iob_to_biluo(tags):
     out = []
     curr_label = None
     tags = list(tags)
@@ -225,25 +382,17 @@ cdef class GoldParse:
 
     def __init__(self, doc, annot_tuples=None, words=None, tags=None, heads=None,
                  deps=None, entities=None, make_projective=False):
-        """
-        Create a GoldParse.
+        """Create a GoldParse.
 
-        Arguments:
-            doc (Doc):
-                The document the annotations refer to.
-            words:
-                A sequence of unicode word strings.
-            tags:
-                A sequence of strings, representing tag annotations.
-            heads:
-                A sequence of integers, representing syntactic head offsets.
-            deps:
-                A sequence of strings, representing the syntactic relation types.
-            entities:
-                A sequence of named entity annotations, either as BILUO tag strings,
-                or as (start_char, end_char, label) tuples, representing the entity
-                positions.
-        Returns (GoldParse): The newly constructed object.
+        doc (Doc): The document the annotations refer to.
+        words (iterable): A sequence of unicode word strings.
+        tags (iterable): A sequence of strings, representing tag annotations.
+        heads (iterable): A sequence of integers, representing syntactic head offsets.
+        deps (iterable): A sequence of strings, representing the syntactic relation types.
+        entities (iterable): A sequence of named entity annotations, either as
+            BILUO tag strings, or as `(start_char, end_char, label)` tuples,
+            representing the entity positions.
+        RETURNS (GoldParse): The newly constructed object.
         """
         if words is None:
             words = [token.text for token in doc]
@@ -268,7 +417,8 @@ cdef class GoldParse:
         # These are filled by the tagger/parser/entity recogniser
         self.c.tags = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.heads = <int*>self.mem.alloc(len(doc), sizeof(int))
-        self.c.labels = <int*>self.mem.alloc(len(doc), sizeof(int))
+        self.c.labels = <attr_t*>self.mem.alloc(len(doc), sizeof(attr_t))
+        self.c.has_dep = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
 
         self.words = [None] * len(doc)
@@ -295,7 +445,10 @@ cdef class GoldParse:
             else:
                 self.words[i] = words[gold_i]
                 self.tags[i] = tags[gold_i]
-                self.heads[i] = self.gold_to_cand[heads[gold_i]]
+                if heads[gold_i] is None:
+                    self.heads[i] = None
+                else:
+                    self.heads[i] = self.gold_to_cand[heads[gold_i]]
                 self.labels[i] = deps[gold_i]
                 self.ner[i] = entities[gold_i]
 
@@ -304,59 +457,49 @@ cdef class GoldParse:
             raise Exception("Cycle found: %s" % cycle)
 
         if make_projective:
-            proj_heads,_ = nonproj.PseudoProjectivity.projectivize(self.heads, self.labels)
+            proj_heads,_ = nonproj.projectivize(self.heads, self.labels)
             self.heads = proj_heads
 
     def __len__(self):
-        """
-        Get the number of gold-standard tokens.
+        """Get the number of gold-standard tokens.
 
-        Returns (int): The number of gold-standard tokens.
+        RETURNS (int): The number of gold-standard tokens.
         """
         return self.length
 
     @property
     def is_projective(self):
-        """
-        Whether the provided syntactic annotations form a projective dependency
-        tree.
+        """Whether the provided syntactic annotations form a projective
+        dependency tree.
         """
         return not nonproj.is_nonproj_tree(self.heads)
 
 
 def biluo_tags_from_offsets(doc, entities):
-    """
-    Encode labelled spans into per-token tags, using the Begin/In/Last/Unit/Out
-    scheme (biluo).
+    """Encode labelled spans into per-token tags, using the Begin/In/Last/Unit/Out
+    scheme (BILUO).
 
-    Arguments:
-        doc (Doc):
-            The document that the entity offsets refer to. The output tags will
-            refer to the token boundaries within the document.
+    doc (Doc): The document that the entity offsets refer to. The output tags
+        will refer to the token boundaries within the document.
+    entities (iterable): A sequence of `(start, end, label)` triples. `start` and
+        `end` should be character-offset integers denoting the slice into the
+        original string.
 
-        entities (sequence):
-            A sequence of (start, end, label) triples. start and end should be
-            character-offset integers denoting the slice into the original string.
+    RETURNS (list): A list of unicode strings, describing the tags. Each tag
+        string will be of the form either "", "O" or "{action}-{label}", where
+        action is one of "B", "I", "L", "U". The string "-" is used where the
+        entity offsets don't align with the tokenization in the `Doc` object. The
+        training algorithm will view these as missing values. "O" denotes a
+        non-entity token. "B" denotes the beginning of a multi-token entity,
+        "I" the inside of an entity of three or more tokens, and "L" the end
+        of an entity of two or more tokens. "U" denotes a single-token entity.
 
-    Returns:
-        tags (list):
-            A list of unicode strings, describing the tags. Each tag string will
-            be of the form either "", "O" or "{action}-{label}", where action is one
-            of "B", "I", "L", "U". The string "-" is used where the entity
-            offsets don't align with the tokenization in the Doc object. The
-            training algorithm will view these as missing values. "O" denotes
-            a non-entity token. "B" denotes the beginning of a multi-token entity,
-            "I" the inside of an entity of three or more tokens, and "L" the end
-            of an entity of two or more tokens. "U" denotes a single-token entity.
-
-    Example:
-        text = 'I like London.'
-        entities = [(len('I like '), len('I like London'), 'LOC')]
-        doc = nlp.tokenizer(text)
-
-        tags = biluo_tags_from_offsets(doc, entities)
-
-        assert tags == ['O', 'O', 'U-LOC', 'O']
+    EXAMPLE:
+        >>> text = 'I like London.'
+        >>> entities = [(len('I like '), len('I like London'), 'LOC')]
+        >>> doc = nlp.tokenizer(text)
+        >>> tags = biluo_tags_from_offsets(doc, entities)
+        >>> assert tags == ['O', 'O', 'U-LOC', 'O']
     """
     starts = {token.idx: token.i for token in doc}
     ends = {token.idx+len(token): token.i for token in doc}

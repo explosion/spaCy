@@ -6,6 +6,8 @@ import ftfy
 import sys
 import ujson
 
+from thinc.neural.util import copy_array
+
 try:
     import cPickle as pickle
 except ImportError:
@@ -32,6 +34,7 @@ copy_reg = copy_reg
 CudaStream = CudaStream
 cupy = cupy
 fix_text = ftfy.fix_text
+copy_array = copy_array
 
 is_python2 = six.PY2
 is_python3 = six.PY3
@@ -56,6 +59,11 @@ elif is_python3:
     json_dumps = lambda data: ujson.dumps(data, indent=2)
     path2str = lambda path: str(path)
 
+def getattr_(obj, name, *default):
+    if is_python3 and isinstance(name, bytes):
+        name = name.decode('utf8')
+    return getattr(obj, name, *default)
+
 
 def symlink_to(orig, dest):
     if is_python2 and is_windows:
@@ -71,3 +79,16 @@ def is_config(python2=None, python3=None, windows=None, linux=None, osx=None):
             (windows == None or windows == is_windows) and
             (linux == None or linux == is_linux) and
             (osx == None or osx == is_osx))
+
+
+def normalize_string_keys(old):
+    '''Given a dictionary, make sure keys are unicode strings, not bytes.'''
+    new = {}
+    for key, value in old.items():
+        if isinstance(key, bytes_):
+            new[key.decode('utf8')] = value
+        else:
+            new[key] = value
+    return new
+
+

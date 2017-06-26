@@ -83,6 +83,7 @@ cpdef enum attr_id_t:
     ENT_IOB
     ENT_TYPE
     HEAD
+    SENT_START
     SPACY
     PROB
 

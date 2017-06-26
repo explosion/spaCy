@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import pytest
 
 
-def test_tokenizer_handles_long_text(en_tokenizer):
+def test_en_tokenizer_handles_long_text(en_tokenizer):
     text = """Tributes pour in for late British Labour Party leader
 
 Tributes poured in from around the world Thursday
@@ -30,10 +30,9 @@ untimely death" of the rapier-tongued Scottish barrister and parliamentarian.
     ("""'Me too!', Mr. P. Delaware cried. """, 11),
     ("They ran about 10km.", 6),
     pytest.mark.xfail(("But then the 6,000-year ice age came...", 10))])
-def test_tokenizer_handles_cnts(en_tokenizer, text, length):
+def test_en_tokenizer_handles_cnts(en_tokenizer, text, length):
     tokens = en_tokenizer(text)
     assert len(tokens) == length
-
 
 
 @pytest.mark.parametrize('text,match', [

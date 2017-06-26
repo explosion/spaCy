@@ -68,6 +68,7 @@ def test_doc_token_api_is_properties(en_vocab):
     assert doc[5].like_email
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize('text,vectors', [
     ("apples oranges ldskbjls", ["apples -1 -1 -1", "oranges -1 -1 0"])
 ])
@@ -99,8 +100,8 @@ def test_doc_token_api_ancestors(en_tokenizer):
     assert [t.text for t in doc[1].ancestors] == ["saw"]
     assert [t.text for t in doc[2].ancestors] == []
 
-    assert doc[2].is_ancestor_of(doc[7])
-    assert not doc[6].is_ancestor_of(doc[2])
+    assert doc[2].is_ancestor(doc[7])
+    assert not doc[6].is_ancestor(doc[2])
 
 
 def test_doc_token_api_head_setter(en_tokenizer):
@@ -155,3 +156,15 @@ def test_doc_token_api_head_setter(en_tokenizer):
     assert doc[3].left_edge.i == 0
     assert doc[4].left_edge.i == 0
     assert doc[2].left_edge.i == 0
+
+
+def test_sent_start(en_tokenizer):
+    doc = en_tokenizer(u'This is a sentence. This is another.')
+    assert not doc[0].sent_start
+    assert not doc[5].sent_start
+    doc[5].sent_start = True
+    assert doc[5].sent_start
+    assert not doc[0].sent_start
+    doc.is_parsed = True
+    assert len(list(doc.sents)) == 2
+

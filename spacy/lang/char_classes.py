@@ -20,7 +20,6 @@ _upper = [_latin_upper]
 _lower = [_latin_lower]
 _uncased = [_bengali, _hebrew]
 
-
 ALPHA = merge_char_classes(_upper + _lower + _uncased)
 ALPHA_LOWER = merge_char_classes(_lower + _uncased)
 ALPHA_UPPER = merge_char_classes(_upper + _uncased)
@@ -33,13 +32,14 @@ _currency = r'\$ £ € ¥ ฿ US\$ C\$ A\$'
 _punct = r'… , : ; \! \? ¿ ¡ \( \) \[ \] \{ \} < > _ # \* &'
 _quotes = r'\' \'\' " ” “ `` ` ‘ ´ ‚ , „ » «'
 _hyphens = '- – — -- ---'
-
+_other_symbols = r'[\p{So}]'
 
 UNITS = merge_chars(_units)
 CURRENCY = merge_chars(_currency)
 QUOTES = merge_chars(_quotes)
 PUNCT = merge_chars(_punct)
 HYPHENS = merge_chars(_hyphens)
+ICONS = _other_symbols
 
 LIST_UNITS = split_chars(_units)
 LIST_CURRENCY = split_chars(_currency)
@@ -47,3 +47,4 @@ LIST_QUOTES = split_chars(_quotes)
 LIST_PUNCT = split_chars(_punct)
 LIST_HYPHENS = split_chars(_hyphens)
 LIST_ELLIPSES = [r'\.\.+', '…']
+LIST_ICONS = [_other_symbols]

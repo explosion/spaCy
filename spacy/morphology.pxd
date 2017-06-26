@@ -30,6 +30,7 @@ cdef class Morphology:
     cdef public object n_tags
     cdef public object reverse_index
     cdef public object tag_names
+    cdef public object exc
 
     cdef RichTagC* rich_tags
     cdef PreshMapArray _cache

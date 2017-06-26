@@ -18,12 +18,11 @@ class DependencyRenderer(object):
                         offset_x, color, bg, font)
         """
         self.compact = options.get('compact', False)
-        distance, arrow_width = (85, 8) if self.compact else (175, 10)
         self.word_spacing = options.get('word_spacing', 45)
-        self.arrow_spacing = options.get('arrow_spacing', 20)
-        self.arrow_width = options.get('arrow_width', arrow_width)
+        self.arrow_spacing = options.get('arrow_spacing', 12 if self.compact else 20)
+        self.arrow_width = options.get('arrow_width', 6 if self.compact else 10)
         self.arrow_stroke = options.get('arrow_stroke', 2)
-        self.distance = options.get('distance', distance)
+        self.distance = options.get('distance', 150 if self.compact else 175)
         self.offset_x = options.get('offset_x', 50)
         self.color = options.get('color', '#000000')
         self.bg = options.get('bg', '#ffffff')
@@ -99,6 +98,8 @@ class DependencyRenderer(object):
         x_end = (self.offset_x+(end-start)*self.distance+start*self.distance
                  -self.arrow_spacing*(self.highest_level-level)/4)
         y_curve = self.offset_y-level*self.distance/2
+        if self.compact:
+            y_curve = self.offset_y-level*self.distance/6
         if y_curve == 0 and len(self.levels) > 5:
             y_curve = -self.distance
         arrowhead = self.get_arrowhead(direction, x_start, y, x_end)
@@ -175,7 +176,7 @@ class EntityRenderer(object):
         minify (bool): Minify HTML markup.
         RETURNS (unicode): Rendered HTML markup.
         """
-        rendered = [self.render_ents(p['text'], p['ents'], p['title']) for p in parsed]
+        rendered = [self.render_ents(p['text'], p['ents'], p.get('title', None)) for p in parsed]
         if page:
             docs = ''.join([TPL_FIGURE.format(content=doc) for doc in rendered])
             markup = TPL_PAGE.format(content=docs)

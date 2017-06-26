@@ -18,7 +18,7 @@ p
 
     # Construction 2
     from spacy.tokens import Doc
-    doc = doc = Doc(nlp.vocab, words=[u'hello', u'world', u'!'],
+    doc = Doc(nlp.vocab, words=[u'hello', u'world', u'!'],
                                spaces=[True, False, False])
 
 +h(2, "init") Doc.__init__
@@ -48,7 +48,7 @@ p
             |  specified. Defaults to a sequence of #[code True].
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Doc]
         +cell The newly constructed object.
 
@@ -64,7 +64,7 @@ p
     doc = nlp(u'Give it back! He pleaded.')
     assert doc[0].text == 'Give'
     assert doc[-1].text == '.'
-    span = doc[1:1]
+    span = doc[1:3]
     assert span.text == 'it back'
 
 +table(["Name", "Type", "Description"])
@@ -74,7 +74,7 @@ p
         +cell The index of the token.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Token]
         +cell The token at #[code doc[i]].
 
@@ -97,7 +97,7 @@ p
         +cell The slice of the document to get.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Span]
         +cell The span at #[code doc[start : end]].
 
@@ -109,9 +109,8 @@ p
     |  easily accessed.
 
 +aside-code("Example").
-    doc = nlp(u'Give it back! He pleaded.')
-    for token in doc:
-        print(token.text, token.tag_)
+    doc = nlp(u'Give it back')
+    assert [t.text for t in doc] == [u'Give', u'it', u'back']
 
 p
     |  This is the main way of accessing #[+api("token") #[code Token]] objects,
@@ -122,7 +121,7 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Token]
         +cell A #[code Token] object.
 
@@ -137,20 +136,21 @@ p Get the number of tokens in the document.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell int
         +cell The number of tokens in the document.
 
 +h(2, "similarity") Doc.similarity
     +tag method
-    +tag requires model
+    +tag-model("vectors")
 
 p
     |  Make a semantic similarity estimate. The default estimate is cosine
     |  similarity using an average of word vectors.
 
 +aside-code("Example").
-    apples, and, oranges = nlp(u'apples and oranges')
+    apples = nlp(u'I like apples')
+    oranges = nlp(u'I like oranges')
     apples_oranges = apples.similarity(oranges)
     oranges_apples = oranges.similarity(apples)
     assert apples_oranges == oranges_apples
@@ -164,7 +164,7 @@ p
             |  #[code Span], #[code Token] and #[code Lexeme] objects.
 
     +footrow
-        +cell return
+        +cell returns
         +cell float
         +cell A scalar similarity score. Higher is more similar.
 
@@ -177,11 +177,10 @@ p
     |  of the given attribute ID.
 
 +aside-code("Example").
-    from spacy import attrs
+    from spacy.attrs import ORTH
     doc = nlp(u'apple apple orange banana')
-    tokens.count_by(attrs.ORTH)
-    # {12800L: 1, 11880L: 2, 7561L: 1}
-    tokens.to_array([attrs.ORTH])
+    assert doc.count_by(ORTH) == {7024L: 1, 119552L: 1, 2087L: 2}
+    doc.to_array([attrs.ORTH])
     # array([[11880], [11880], [7561], [12800]])
 
 +table(["Name", "Type", "Description"])
@@ -191,7 +190,7 @@ p
         +cell The attribute ID
 
     +footrow
-        +cell return
+        +cell returns
         +cell dict
         +cell A dictionary mapping attributes to integer counts.
 
@@ -216,7 +215,7 @@ p
         +cell A list of attribute ID ints.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code numpy.ndarray[ndim=2, dtype='int32']]
         +cell
             |  The exported attributes as a 2D numpy array, with one row per
@@ -236,6 +235,7 @@ p
     np_array = doc.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
     doc2 = Doc(doc.vocab)
     doc2.from_array([LOWER, POS, ENT_TYPE, IS_ALPHA], np_array)
+    assert doc.text == doc2.text
 
 +table(["Name", "Type", "Description"])
     +row
@@ -249,9 +249,50 @@ p
         +cell The attribute values to load.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Doc]
         +cell Itself.
+
++h(2, "to_disk") Doc.to_disk
+    +tag method
+    +tag-new(2)
+
+p Save the current state to a directory.
+
++aside-code("Example").
+    doc.to_disk('/path/to/doc')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory, which will be created if it doesn't exist.
+            |  Paths may be either strings or #[code Path]-like objects.
+
++h(2, "from_disk") Doc.from_disk
+    +tag method
+    +tag-new(2)
+
+p Loads state from a directory. Modifies the object in place and returns it.
+
++aside-code("Example").
+    from spacy.tokens import Doc
+    from spacy.vocab import Vocab
+    doc = Doc(Vocab()).from_disk('/path/to/doc')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory. Paths may be either strings or
+            |  #[code Path]-like objects.
+
+    +footrow
+        +cell returns
+        +cell #[code Doc]
+        +cell The modified #[code Doc] object.
 
 +h(2, "to_bytes") Doc.to_bytes
     +tag method
@@ -264,7 +305,7 @@ p Serialize, i.e. export the document contents to a binary string.
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell bytes
         +cell
             |  A losslessly serialized copy of the #[code Doc], including all
@@ -290,9 +331,9 @@ p Deserialize, i.e. import the document contents from a binary string.
         +cell The string to load from.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Doc]
-        +cell Itself.
+        +cell The #[code Doc] object.
 
 +h(2, "merge") Doc.merge
     +tag method
@@ -306,8 +347,7 @@ p
 +aside-code("Example").
     doc = nlp(u'Los Angeles start.')
     doc.merge(0, len('Los Angeles'), 'NNP', 'Los Angeles', 'GPE')
-    print([token.text for token in doc])
-    # ['Los Angeles', 'start', '.']
+    assert [t.text for t in doc] == [u'Los Angeles', u'start', u'.']
 
 +table(["Name", "Type", "Description"])
     +row
@@ -329,7 +369,7 @@ p
             |  the span.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Token]
         +cell
             |  The newly merged token, or #[code None] if the start and end
@@ -337,7 +377,7 @@ p
 
 +h(2, "print_tree") Doc.print_tree
     +tag method
-    +tag requires model
+    +tag-model("parse")
 
 p
     |  Returns the parse trees in JSON (dict) format. Especially useful for
@@ -364,42 +404,13 @@ p
         +cell Don't include arcs or modifiers.
 
     +footrow
-        +cell return
+        +cell returns
         +cell dict
         +cell Parse tree as dict.
 
-+h(2, "text") Doc.text
-    +tag property
-
-p A unicode representation of the document text.
-
-+aside-code("Example").
-    text = u'Give it back! He pleaded.'
-    doc = nlp(text)
-    assert doc.text == text
-
-+table(["Name", "Type", "Description"])
-    +footrow
-        +cell return
-        +cell unicode
-        +cell The original verbatim text of the document.
-
-+h(2, "text_with_ws") Doc.text_with_ws
-    +tag property
-
-p
-    |  An alias of #[code Doc.text], provided for duck-type compatibility with
-    |  #[code Span] and #[code Token].
-
-+table(["Name", "Type", "Description"])
-    +footrow
-        +cell return
-        +cell unicode
-        +cell The original verbatim text of the document.
-
 +h(2, "ents") Doc.ents
     +tag property
-    +tag requires model
+    +tag-model("NER")
 
 p
     |  Iterate over the entities in the document. Yields named-entity
@@ -415,13 +426,13 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Span]
         +cell Entities in the document.
 
 +h(2, "noun_chunks") Doc.noun_chunks
     +tag property
-    +tag requires model
+    +tag-model("parse")
 
 p
     |  Iterate over the base noun phrases in the document. Yields base
@@ -438,13 +449,13 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Span]
         +cell Noun chunks in the document.
 
 +h(2, "sents") Doc.sents
     +tag property
-    +tag requires model
+    +tag-model("parse")
 
 p
     |  Iterate over the sentences in the document. Sentence spans have no label.
@@ -460,50 +471,82 @@ p
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell yield
+        +cell yields
         +cell #[code Span]
         +cell Sentences in the document.
 
 +h(2, "has_vector") Doc.has_vector
     +tag property
-    +tag requires model
+    +tag-model("vectors")
 
 p
     |  A boolean value indicating whether a word vector is associated with the
     |  object.
 
 +aside-code("Example").
-    apple = nlp(u'apple')
-    assert apple.has_vector
+    doc = nlp(u'I like apples')
+    assert doc.has_vector
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell bool
         +cell Whether the document has a vector data attached.
 
 +h(2, "vector") Doc.vector
     +tag property
-    +tag requires model
+    +tag-model("vectors")
 
 p
     |  A real-valued meaning representation. Defaults to an average of the
     |  token vectors.
 
 +aside-code("Example").
-    apple = nlp(u'apple')
-    (apple.vector.dtype, apple.vector.shape)
-    # (dtype('float32'), (300,))
+    apples = nlp(u'I like apples')
+    assert doc.vector.dtype == 'float32'
+    assert doc.vector.shape == (300,)
 
 +table(["Name", "Type", "Description"])
     +footrow
-        +cell return
+        +cell returns
         +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
         +cell A 1D numpy array representing the document's semantics.
+
++h(2, "vector_norm") Doc.vector_norm
+    +tag property
+    +tag-model("vectors")
+
+p
+    |  The L2 norm of the document's vector representation.
+
++aside-code("Example").
+    doc1 = nlp(u'I like apples')
+    doc2 = nlp(u'I like oranges')
+    doc1.vector_norm # 4.54232424414368
+    doc2.vector_norm # 3.304373298575751
+    assert doc1.vector_norm != doc2.vector_norm
+
++table(["Name", "Type", "Description"])
+    +footrow
+        +cell returns
+        +cell float
+        +cell The L2 norm of the vector representation.
 
 +h(2, "attributes") Attributes
 
 +table(["Name", "Type", "Description"])
+    +row
+        +cell #[code text]
+        +cell unicode
+        +cell A unicode representation of the document text.
+
+    +row
+        +cell #[code text_with_ws]
+        +cell unicode
+        +cell
+            |  An alias of #[code Doc.text], provided for duck-type compatibility
+            |  with #[code Span] and #[code Token].
+
     +row
         +cell #[code mem]
         +cell #[code Pool]
@@ -513,6 +556,11 @@ p
         +cell #[code vocab]
         +cell #[code Vocab]
         +cell The store of lexical types.
+
+    +row
+        +cell #[code tensor]
+        +cell object
+        +cell Container for dense vector representations.
 
     +row
         +cell #[code user_data]

@@ -5,11 +5,14 @@ from __future__ import unicode_literals
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
 from cymem.cymem cimport Pool
 from thinc.typedefs cimport weight_t
-from collections import defaultdict
+from collections import defaultdict, OrderedDict
+import ujson
 
+from .. import util
 from ..structs cimport TokenC
 from .stateclass cimport StateClass
 from ..attrs cimport TAG, HEAD, DEP, ENT_TYPE, ENT_IOB
+from ..typedefs cimport attr_t
 
 
 cdef weight_t MIN_SCORE = -90000
@@ -26,7 +29,7 @@ cdef void* _init_state(Pool mem, int length, void* tokens) except NULL:
 
 
 cdef class TransitionSystem:
-    def __init__(self, StringStore string_table, dict labels_by_action, _freqs=None):
+    def __init__(self, StringStore string_table, labels_by_action):
         self.mem = Pool()
         self.strings = string_table
         self.n_moves = 0
@@ -34,28 +37,20 @@ cdef class TransitionSystem:
 
         self.c = <Transition*>self.mem.alloc(self._size, sizeof(Transition))
 
-        for action, label_strs in sorted(labels_by_action.items()):
+        for action, label_strs in labels_by_action.items():
             for label_str in label_strs:
                 self.add_action(int(action), label_str)
-        self.root_label = self.strings['ROOT']
-        self.freqs = {} if _freqs is None else _freqs
-        for attr in (TAG, HEAD, DEP, ENT_TYPE, ENT_IOB):
-            self.freqs[attr] = defaultdict(int)
-            self.freqs[attr][0] = 1
-        # Ensure we've seen heads. Need an official dependency length limit...
-        for i in range(10024):
-            self.freqs[HEAD][i] = 1
-            self.freqs[HEAD][-i] = 1
+        self.root_label = self.strings.add('ROOT')
         self.init_beam_state = _init_state
 
     def __reduce__(self):
-        labels_by_action = {}
+        labels_by_action = OrderedDict()
         cdef Transition t
         for trans in self.c[:self.n_moves]:
             label_str = self.strings[trans.label]
             labels_by_action.setdefault(trans.move, []).append(label_str)
         return (self.__class__,
-                (self.strings, labels_by_action, self.freqs),
+                (self.strings, labels_by_action),
                 None, None)
 
     def init_batch(self, docs):
@@ -69,6 +64,29 @@ cdef class TransitionSystem:
             offset += len(doc)
         return states
 
+    def get_oracle_sequence(self, doc, GoldParse gold):
+        cdef Pool mem = Pool()
+        costs = <float*>mem.alloc(self.n_moves, sizeof(float))
+        is_valid = <int*>mem.alloc(self.n_moves, sizeof(int))
+
+        cdef StateClass state = StateClass(doc, offset=0)
+        self.initialize_state(state.c)
+        history = []
+        while not state.is_final():
+            self.set_costs(is_valid, costs, state, gold)
+            for i in range(self.n_moves):
+                if is_valid[i] and costs[i] <= 0:
+                    action = self.c[i]
+                    history.append(i)
+                    action.do(state.c, action.label)
+                    break
+            else:
+                print(gold.words)
+                print(gold.ner)
+                print(history)
+                raise ValueError("Could not find gold move")
+        return history
+
     cdef int initialize_state(self, StateC* state) nogil:
         pass
 
@@ -78,13 +96,13 @@ cdef class TransitionSystem:
     def finalize_doc(self, doc):
         pass
 
-    cdef int preprocess_gold(self, GoldParse gold) except -1:
+    def preprocess_gold(self, GoldParse gold):
         raise NotImplementedError
 
     cdef Transition lookup_transition(self, object name) except *:
         raise NotImplementedError
 
-    cdef Transition init_transition(self, int clas, int move, int label) except *:
+    cdef Transition init_transition(self, int clas, int move, attr_t label) except *:
         raise NotImplementedError
 
     def is_valid(self, StateClass stcls, move_name):
@@ -100,24 +118,76 @@ cdef class TransitionSystem:
                        StateClass stcls, GoldParse gold) except -1:
         cdef int i
         self.set_valid(is_valid, stcls.c)
+        cdef int n_gold = 0
         for i in range(self.n_moves):
             if is_valid[i]:
                 costs[i] = self.c[i].get_cost(stcls, &gold.c, self.c[i].label)
+                n_gold += costs[i] <= 0
             else:
                 costs[i] = 9000
+        if n_gold <= 0:
+            print(gold.words)
+            print(gold.ner)
+            print([gold.c.ner[i].clas for i in range(gold.length)])
+            print([gold.c.ner[i].move for i in range(gold.length)])
+            print([gold.c.ner[i].label for i in range(gold.length)])
+            print("Self labels", [self.c[i].label for i in range(self.n_moves)])
+            raise ValueError(
+                "Could not find a gold-standard action to supervise "
+                "the entity recognizer\n"
+                "The transition system has %d actions." % (self.n_moves))
 
-    def add_action(self, int action, label):
-        if not isinstance(label, int):
-            label = self.strings[label]
+    def add_action(self, int action, label_name):
+        cdef attr_t label_id
+        if not isinstance(label_name, int):
+            label_id = self.strings.add(label_name)
+        else:
+            label_id = label_name
         # Check we're not creating a move we already have, so that this is
         # idempotent
         for trans in self.c[:self.n_moves]:
-            if trans.move == action and trans.label == label:
+            if trans.move == action and trans.label == label_id:
                 return 0
         if self.n_moves >= self._size:
             self._size *= 2
             self.c = <Transition*>self.mem.realloc(self.c, self._size * sizeof(self.c[0]))
-
-        self.c[self.n_moves] = self.init_transition(self.n_moves, action, label)
+        self.c[self.n_moves] = self.init_transition(self.n_moves, action, label_id)
+        assert self.c[self.n_moves].label == label_id
         self.n_moves += 1
         return 1
+
+    def to_disk(self, path, **exclude):
+        with path.open('wb') as file_:
+            file_.write(self.to_bytes(**exclude))
+
+    def from_disk(self, path, **exclude):
+        with path.open('rb') as file_:
+            byte_data = file_.read()
+        self.from_bytes(byte_data, **exclude)
+        return self
+
+    def to_bytes(self, **exclude):
+        transitions = []
+        for trans in self.c[:self.n_moves]:
+            transitions.append({
+                'clas': trans.clas,
+                'move': trans.move,
+                'label': self.strings[trans.label],
+                'name': self.move_name(trans.move, trans.label)
+            })
+        serializers = {
+            'transitions': lambda: ujson.dumps(transitions),
+            'strings': lambda: self.strings.to_bytes()
+        }
+        return util.to_bytes(serializers, exclude)
+
+    def from_bytes(self, bytes_data, **exclude):
+        transitions = []
+        deserializers = {
+            'transitions': lambda b: transitions.extend(ujson.loads(b)),
+            'strings': lambda b: self.strings.from_bytes(b)
+        }
+        msg = util.from_bytes(bytes_data, deserializers, exclude)
+        for trans in transitions:
+            self.add_action(trans['move'], trans['label'])
+        return self

@@ -3,8 +3,8 @@ pathlib
 numpy>=1.7
 cymem>=1.30,<1.32
 preshed>=1.0.0,<2.0.0
-thinc>=6.6.0,<6.7.0
-murmurhash>=0.26,<0.27
+thinc>=6.7.3,<6.8.0
+murmurhash>=0.28,<0.29
 plac<1.0.0,>=0.9.6
 six
 ujson>=1.35
@@ -14,3 +14,6 @@ regex==2017.4.5
 ftfy>=4.4.2,<5.0.0
 pytest>=3.0.6,<4.0.0
 pip>=9.0.0,<10.0.0
+mock>=2.0.0,<3.0.0
+msgpack-python
+msgpack-numpy

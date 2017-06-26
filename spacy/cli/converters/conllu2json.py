@@ -73,10 +73,10 @@ def generate_sentence(sent):
     tokens = []
     for i, id in enumerate(id_):
         token = {}
-        token["orth"] = word[id]
-        token["tag"] = tag[id]
-        token["head"] = head[id] - i
-        token["dep"] = dep[id]
+        token["orth"] = word[i]
+        token["tag"] = tag[i]
+        token["head"] = head[i] - id
+        token["dep"] = dep[i]
         tokens.append(token)
     sentence["tokens"] = tokens
     return sentence

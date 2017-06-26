@@ -2,15 +2,14 @@
 from __future__ import unicode_literals
 
 from ...matcher import Matcher
-from ...attrs import ORTH, LOWER
 
 import pytest
 
 
-pattern1 = [[{LOWER: 'celtics'}], [{LOWER: 'boston'}, {LOWER: 'celtics'}]]
-pattern2 = [[{LOWER: 'boston'}, {LOWER: 'celtics'}], [{LOWER: 'celtics'}]]
-pattern3 = [[{LOWER: 'boston'}], [{LOWER: 'boston'}, {LOWER: 'celtics'}]]
-pattern4 = [[{LOWER: 'boston'}, {LOWER: 'celtics'}], [{LOWER: 'boston'}]]
+pattern1 = [[{'LOWER': 'celtics'}], [{'LOWER': 'boston'}, {'LOWER': 'celtics'}]]
+pattern2 = [[{'LOWER': 'boston'}, {'LOWER': 'celtics'}], [{'LOWER': 'celtics'}]]
+pattern3 = [[{'LOWER': 'boston'}], [{'LOWER': 'boston'}, {'LOWER': 'celtics'}]]
+pattern4 = [[{'LOWER': 'boston'}, {'LOWER': 'celtics'}], [{'LOWER': 'boston'}]]
 
 
 @pytest.fixture
@@ -24,10 +23,11 @@ def doc(en_tokenizer):
 def test_issue118(doc, pattern):
     """Test a bug that arose from having overlapping matches"""
     ORG = doc.vocab.strings['ORG']
-    matcher = Matcher(doc.vocab, {'BostonCeltics': ('ORG', {}, pattern)})
+    matcher = Matcher(doc.vocab)
+    matcher.add("BostonCeltics", None, *pattern)
 
     assert len(list(doc.ents)) == 0
-    matches = [(ent_type, start, end) for ent_id, ent_type, start, end in matcher(doc)]
+    matches = [(ORG, start, end) for _, start, end in matcher(doc)]
     assert matches == [(ORG, 9, 11), (ORG, 10, 11)]
     doc.ents = matches[:1]
     ents = list(doc.ents)
@@ -41,10 +41,11 @@ def test_issue118(doc, pattern):
 def test_issue118_prefix_reorder(doc, pattern):
     """Test a bug that arose from having overlapping matches"""
     ORG = doc.vocab.strings['ORG']
-    matcher = Matcher(doc.vocab, {'BostonCeltics': ('ORG', {}, pattern)})
+    matcher = Matcher(doc.vocab)
+    matcher.add('BostonCeltics', None, *pattern)
 
     assert len(list(doc.ents)) == 0
-    matches = [(ent_type, start, end) for ent_id, ent_type, start, end in matcher(doc)]
+    matches = [(ORG, start, end) for _, start, end in matcher(doc)]
     doc.ents += tuple(matches)[1:]
     assert matches == [(ORG, 9, 10), (ORG, 9, 11)]
     ents = doc.ents

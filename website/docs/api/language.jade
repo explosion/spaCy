@@ -2,79 +2,69 @@
 
 include ../../_includes/_mixins
 
-p A text processing pipeline.
+p
+    |  A text-processing pipeline. Usually you'll load this once per process,
+    |  and pass the instance around your application.
 
-+h(2, "attributes") Attributes
++h(2, "init") Language.__init__
+    +tag method
+
+p Initialise a #[code Language] object.
+
++aside-code("Example").
+    from spacy.language import Language
+    nlp = Language(pipeline=['token_vectors', 'tags',
+                             'dependencies'])
+
+    from spacy.lang.en import English
+    nlp = English()
 
 +table(["Name", "Type", "Description"])
     +row
         +cell #[code vocab]
         +cell #[code Vocab]
-        +cell A container for the lexical types.
-
-    +row
-        +cell #[code tokenizer]
-        +cell #[code Tokenizer]
-        +cell Find word boundaries and create #[code Doc] object.
-
-    +row
-        +cell #[code tagger]
-        +cell #[code Tagger]
-        +cell Annotate #[code Doc] objects with POS tags.
-
-    +row
-        +cell #[code parser]
-        +cell #[code DependencyParser]
-        +cell Annotate #[code Doc] objects with syntactic dependencies.
-
-    +row
-        +cell #[code entity]
-        +cell #[code EntityRecognizer]
-        +cell Annotate #[code Doc] objects with named entities.
-
-    +row
-        +cell #[code matcher]
-        +cell #[code Matcher]
-        +cell Rule-based sequence matcher.
+        +cell
+            |  A #[code Vocab] object. If #[code True], a vocab is created via
+            |  #[code Language.Defaults.create_vocab].
 
     +row
         +cell #[code make_doc]
-        +cell #[code lambda text: Doc]
-        +cell Create a #[code Doc] object from unicode text.
+        +cell callable
+        +cell
+            |  A function that takes text and returns a #[code Doc] object.
+            |  Usually a #[code Tokenizer].
 
     +row
         +cell #[code pipeline]
-        +cell -
-        +cell Sequence of annotation functions.
+        +cell list
+        +cell
+            |  A list of annotation processes or IDs of annotation, processes,
+            |  e.g. a #[code Tagger] object, or #[code 'tagger']. IDs are looked
+            |  up in #[code Language.Defaults.factories].
 
-
-+h(2, "init") Language.__init__
-    +tag method
-
-p Create or load the pipeline.
-
-+table(["Name", "Type", "Description"])
     +row
-        +cell #[code **overrides]
-        +cell -
-        +cell Keyword arguments indicating which defaults to override.
+        +cell #[code meta]
+        +cell dict
+        +cell
+            |  Custom meta data for the #[code Language] class. Is written to by
+            |  models to add model meta data.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Language]
         +cell The newly constructed object.
 
 +h(2, "call") Language.__call__
     +tag method
 
-p Apply the pipeline to a single text.
+p
+    |  Apply the pipeline to some text. The text can span multiple sentences,
+    |  and can contain arbtrary whitespace. Alignment into the original string
+    |  is preserved.
 
 +aside-code("Example").
-    from spacy.en import English
-    nlp = English()
-    doc = nlp('An example sentence. Another example sentence.')
-    doc[0].orth_, doc[0].head.tag_
-    # ('An', 'NN')
+    doc = nlp(u'An example sentence. Another sentence.')
+    assert (doc[0].text, doc[0].head.tag_) == ('An', 'NN')
 
 +table(["Name", "Type", "Description"])
     +row
@@ -83,24 +73,25 @@ p Apply the pipeline to a single text.
         +cell The text to be processed.
 
     +row
-        +cell #[code tag]
-        +cell bool
-        +cell Whether to apply the part-of-speech tagger.
-
-    +row
-        +cell #[code parse]
-        +cell bool
-        +cell Whether to apply the syntactic dependency parser.
-
-    +row
-        +cell #[code entity]
-        +cell bool
-        +cell Whether to apply the named entity recognizer.
+        +cell #[code disable]
+        +cell list
+        +cell
+            |  Names of pipeline components to
+            |  #[+a("/docs/usage/language-processing-pipeline#disabling") disable].
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Doc]
-        +cell A container for accessing the linguistic annotations.
+        +cell A container for accessing the annotations.
+
++infobox("⚠️ Deprecation note")
+    .o-block
+        |  Pipeline components to prevent from being loaded can now be added as
+        |  a list to #[code disable], instead of specifying one keyword argument
+        |  per component.
+
+    +code-new doc = nlp(u"I don't want parsed", disable=['parser'])
+    +code-old doc = nlp(u"I don't want parsed", parse=False)
 
 +h(2, "pipe") Language.pipe
     +tag method
@@ -132,23 +123,296 @@ p
         +cell int
         +cell The number of texts to buffer.
 
-    +footrow
-        +cell yield
-        +cell #[code Doc]
-        +cell Containers for accessing the linguistic annotations.
+    +row
+        +cell #[code disable]
+        +cell list
+        +cell
+            |  Names of pipeline components to
+            |  #[+a("/docs/usage/language-processing-pipeline#disabling") disable].
 
-+h(2, "save_to_directory") Language.save_to_directory
+    +footrow
+        +cell yields
+        +cell #[code Doc]
+        +cell Documents in the order of the original text.
+
++h(2, "update") Language.update
     +tag method
 
-p Save the #[code Vocab], #[code StringStore] and pipeline to a directory.
+p Update the models in the pipeline.
+
++aside-code("Example").
+    for raw_text, entity_offsets in train_data:
+        doc = nlp.make_doc(raw_text)
+        gold = GoldParse(doc, entities=entity_offsets)
+        nlp.update([doc], [gold], drop=0.5, sgd=optimizer)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code docs]
+        +cell iterable
+        +cell A batch of #[code Doc] objects.
+
+    +row
+        +cell #[code golds]
+        +cell iterable
+        +cell A batch of #[code GoldParse] objects.
+
+    +row
+        +cell #[code drop]
+        +cell float
+        +cell The dropout rate.
+
+    +row
+        +cell #[code sgd]
+        +cell callable
+        +cell An optimizer.
+
+    +footrow
+        +cell returns
+        +cell dict
+        +cell Results from the update.
+
++h(2, "begin_training") Language.begin_training
+    +tag method
+
+p
+    |  Allocate models, pre-process training data and acquire an optimizer.
+
++aside-code("Example").
+    optimizer = nlp.begin_training(gold_tuples)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code gold_tuples]
+        +cell iterable
+        +cell Gold-standard training data.
+
+    +row
+        +cell #[code **cfg]
+        +cell -
+        +cell Config parameters.
+
+    +footrow
+        +cell yields
+        +cell tuple
+        +cell An optimizer.
+
++h(2, "use_params") Language.use_params
+    +tag contextmanager
+    +tag method
+
+p
+    |  Replace weights of models in the pipeline with those provided in the
+    |  params dictionary. Can be used as a contextmanager, in which case, models
+    |  go back to their original weights after the block.
+
++aside-code("Example").
+    with nlp.use_params(optimizer.averages):
+        nlp.to_disk('/tmp/checkpoint')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code params]
+        +cell dict
+        +cell A dictionary of parameters keyed by model ID.
+
+    +row
+        +cell #[code **cfg]
+        +cell -
+        +cell Config parameters.
+
++h(2, "preprocess_gold") Language.preprocess_gold
+
+p
+    |  Can be called before training to pre-process gold data. By default, it
+    |  handles nonprojectivity and adds missing tags to the tag map.
+
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code docs_golds]
+        +cell iterable
+        +cell Tuples of #[code Doc] and #[code GoldParse] objects.
+
+    +footrow
+        +cell yields
+        +cell tuple
+        +cell Tuples of #[code Doc] and #[code GoldParse] objects.
+
++h(2, "to_disk") Language.to_disk
+    +tag method
+    +tag-new(2)
+
+p
+    |  Save the current state to a directory. If a model is loaded, this will
+    |  #[strong include the model].
+
++aside-code("Example").
+    nlp.to_disk('/path/to/models')
 
 +table(["Name", "Type", "Description"])
     +row
         +cell #[code path]
-        +cell string or pathlib path
-        +cell Path to save the model.
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory, which will be created if it doesn't exist.
+            |  Paths may be either strings or #[code Path]-like objects.
+
+    +row
+        +cell #[code disable]
+        +cell list
+        +cell
+            |  Names of pipeline components to
+            |  #[+a("/docs/usage/language-processing-pipeline#disabling") disable]
+            |  and prevent from being saved.
+
++h(2, "from_disk") Language.from_disk
+    +tag method
+    +tag-new(2)
+
+p
+    |  Loads state from a directory. Modifies the object in place and returns
+    |  it. If the saved #[code Language] object contains a model, the
+    |  #[strong model will be loaded].
+
++aside-code("Example").
+    from spacy.language import Language
+    nlp = Language().from_disk('/path/to/models')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell
+            |  A path to a directory. Paths may be either strings or
+            |  #[code Path]-like objects.
+
+    +row
+        +cell #[code disable]
+        +cell list
+        +cell
+            |  Names of pipeline components to
+            |  #[+a("/docs/usage/language-processing-pipeline#disabling") disable].
 
     +footrow
-        +cell return
-        +cell #[code None]
-        +cell -
+        +cell returns
+        +cell #[code Language]
+        +cell The modified #[code Language] object.
+
++infobox("⚠️ Deprecation note")
+    .o-block
+        |  As of spaCy v2.0, the #[code save_to_directory] method has been
+        |  renamed to #[code to_disk], to improve consistency across classes.
+        |  Pipeline components to prevent from being loaded can now be added as
+        |  a list to #[code disable], instead of specifying one keyword argument
+        |  per component.
+
+    +code-new nlp = English().from_disk(disable=['tagger', 'ner'])
+    +code-old nlp = spacy.load('en', tagger=False, entity=False)
+
++h(2, "to_bytes") Language.to_bytes
+    +tag method
+
+p Serialize the current state to a binary string.
+
++aside-code("Example").
+    nlp_bytes = nlp.to_bytes()
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code disable]
+        +cell list
+        +cell
+            |  Names of pipeline components to
+            |  #[+a("/docs/usage/language-processing-pipeline#disabling") disable]
+            |  and prevent from being serialized.
+
+    +footrow
+        +cell returns
+        +cell bytes
+        +cell The serialized form of the #[code Language] object.
+
++h(2, "from_bytes") Language.from_bytes
+    +tag method
+
+p Load state from a binary string.
+
++aside-code("Example").
+    fron spacy.lang.en import English
+    nlp_bytes = nlp.to_bytes()
+    nlp2 = English()
+    nlp2.from_bytes(nlp_bytes)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code bytes_data]
+        +cell bytes
+        +cell The data to load from.
+
+    +row
+        +cell #[code disable]
+        +cell list
+        +cell
+            |  Names of pipeline components to
+            |  #[+a("/docs/usage/language-processing-pipeline#disabling") disable].
+
+    +footrow
+        +cell returns
+        +cell #[code Language]
+        +cell The #[code Language] object.
+
++infobox("⚠️ Deprecation note")
+    .o-block
+        |  Pipeline components to prevent from being loaded can now be added as
+        |  a list to #[code disable], instead of specifying one keyword argument
+        |  per component.
+
+    +code-new nlp = English().from_bytes(bytes, disable=['tagger', 'ner'])
+    +code-old nlp = English().from_bytes('en', tagger=False, entity=False)
+
++h(2, "attributes") Attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code vocab]
+        +cell #[code Vocab]
+        +cell A container for the lexical types.
+
+    +row
+        +cell #[code tokenizer]
+        +cell #[code Tokenizer]
+        +cell The tokenizer.
+
+    +row
+        +cell #[code make_doc]
+        +cell #[code lambda text: Doc]
+        +cell Create a #[code Doc] object from unicode text.
+
+    +row
+        +cell #[code pipeline]
+        +cell list
+        +cell Sequence of annotation functions.
+
+    +row
+        +cell #[code meta]
+        +cell dict
+        +cell
+            |  Custom meta data for the Language class. If a model is loaded,
+            |  contains meta data of the model.
+
++h(2, "class-attributes") Class attributes
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code Defaults]
+        +cell class
+        +cell
+            |  Settings, data and factory methods for creating the
+            |  #[code nlp] object and processing pipeline.
+
+    +row
+        +cell #[code lang]
+        +cell unicode
+        +cell
+            |  Two-letter language ID, i.e.
+            |  #[+a("https://en.wikipedia.org/wiki/List_of_ISO_639-1_codes") ISO code].

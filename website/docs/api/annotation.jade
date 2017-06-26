@@ -14,11 +14,12 @@ p
     |  (#[code ' ']) is included as a token.
 
 +aside-code("Example").
-    from spacy.en import English
-    nlp = English(parser=False)
+    from spacy.lang.en import English
+    nlp = English()
     tokens = nlp('Some\nspaces  and\ttab characters')
-    print([t.orth_ for t in tokens])
-    # ['Some', '\n', 'spaces', ' ', 'and', '\t', 'tab', 'characters']
+    tokens_text = [t.text for t in tokens]
+    assert tokens_text == ['Some', '\n', 'spaces', ' ', 'and',
+                           '\t', 'tab', 'characters']
 
 p
     |  The whitespace tokens are useful for much the same reason punctuation is
@@ -38,6 +39,11 @@ p
 
 +h(2, "pos-tagging") Part-of-speech Tagging
 
++aside("Tip: Understanding tags")
+    |  You can also use #[code spacy.explain()] to get the escription for the
+    |  string representation of a tag. For example,
+    |  #[code spacy.explain("RB")] will return "adverb".
+
 include _annotation/_pos-tags
 
 +h(2, "lemmatization") Lemmatization
@@ -50,26 +56,74 @@ p A "lemma" is the uninflected form of a word. In English, this means:
     +item #[strong Nouns]: The form like "dog", not "dogs"; like "child", not "children"
     +item #[strong Verbs]: The form like "write", not "writes", "writing", "wrote" or "written"
 
-+aside("About spaCy's custom pronoun lemma")
-    |  Unlike verbs and common nouns, there's no clear base form of a personal
-    |  pronoun. Should the lemma of "me" be "I", or should we normalize person
-    |  as well, giving "it" — or maybe "he"? spaCy's solution is to introduce a
-    |  novel symbol, #[code.u-nowrap -PRON-], which is used as the lemma for
-    |  all personal pronouns.
-
 p
     |  The lemmatization data is taken from
     |  #[+a("https://wordnet.princeton.edu") WordNet]. However, we also add a
     |  special case for pronouns: all pronouns are lemmatized to the special
     |  token #[code -PRON-].
 
++infobox("About spaCy's custom pronoun lemma")
+    |  Unlike verbs and common nouns, there's no clear base form of a personal
+    |  pronoun. Should the lemma of "me" be "I", or should we normalize person
+    |  as well, giving "it" — or maybe "he"? spaCy's solution is to introduce a
+    |  novel symbol, #[code -PRON-], which is used as the lemma for
+    |  all personal pronouns.
+
 +h(2, "dependency-parsing") Syntactic Dependency Parsing
+
++aside("Tip: Understanding labels")
+    |  You can also use #[code spacy.explain()] to get the description for the
+    |  string representation of a label. For example,
+    |  #[code spacy.explain("prt")] will return "particle".
 
 include _annotation/_dep-labels
 
 +h(2, "named-entities") Named Entity Recognition
 
++aside("Tip: Understanding entity types")
+    |  You can also use #[code spacy.explain()] to get the description for the
+    |  string representation of an entity label. For example,
+    |  #[code spacy.explain("LANGUAGE")] will return "any named language".
+
 include _annotation/_named-entities
+
++h(3, "biluo") BILUO Scheme
+
+p
+    |  spaCy translates character offsets into the BILUO scheme, in order to
+    |  decide the cost of each action given the current state of the entity
+    |  recognizer. The costs are then used to calculate the gradient of the
+    |  loss, to train the model.
+
++aside("Why BILUO, not IOB?")
+    |  There are several coding schemes for encoding entity annotations as
+    |  token tags.  These coding schemes are equally expressive, but not
+    |  necessarily equally learnable.
+    |  #[+a("http://www.aclweb.org/anthology/W09-1119") Ratinov and Roth]
+    |  showed that the minimal #[strong Begin], #[strong In], #[strong Out]
+    |  scheme was more difficult to learn than the #[strong BILUO] scheme that
+    |  we use, which explicitly marks boundary tokens.
+
++table([ "Tag", "Description" ])
+    +row
+        +cell #[code #[span.u-color-theme B] EGIN]
+        +cell The first token of a multi-token entity.
+
+    +row
+        +cell #[code #[span.u-color-theme I] N]
+        +cell An inner token of a multi-token entity.
+
+    +row
+        +cell #[code #[span.u-color-theme L] AST]
+        +cell The final token of a multi-token entity.
+
+    +row
+        +cell #[code #[span.u-color-theme U] NIT]
+        +cell A single-token entity.
+
+    +row
+        +cell #[code #[span.u-color-theme O] UT]
+        +cell A non-entity token.
 
 +h(2, "json-input") JSON input format for training
 

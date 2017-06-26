@@ -1,3 +1,4 @@
+import ujson
 from thinc.api import add, layerize, chain, clone, concatenate, with_flatten
 from thinc.neural import Model, Maxout, Softmax, Affine
 from thinc.neural._classes.hash_embed import HashEmbed
@@ -7,15 +8,24 @@ from thinc.neural._classes.convolution import ExtractWindow
 from thinc.neural._classes.static_vectors import StaticVectors
 from thinc.neural._classes.batchnorm import BatchNorm
 from thinc.neural._classes.resnet import Residual
+from thinc.neural import ReLu
 from thinc import describe
 from thinc.describe import Dimension, Synapses, Biases, Gradient
 from thinc.neural._classes.affine import _set_dimensions_if_needed
 
-from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP
+from .attrs import ID, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP
 from .tokens.doc import Doc
 
 import numpy
+import io
 
+
+def _init_for_precomputed(W, ops):
+    if (W**2).sum() != 0.:
+        return
+    reshaped = W.reshape((W.shape[1], W.shape[0] * W.shape[2]))
+    ops.xavier_uniform_init(reshaped)
+    W[:] = reshaped.reshape(W.shape)
 
 @describe.on_data(_set_dimensions_if_needed)
 @describe.attributes(
@@ -23,8 +33,8 @@ import numpy
     nF=Dimension("Number of features"),
     nO=Dimension("Output size"),
     W=Synapses("Weights matrix",
-        lambda obj: (obj.nO, obj.nF, obj.nI),
-        lambda W, ops: ops.xavier_uniform_init(W)),
+        lambda obj: (obj.nF, obj.nO, obj.nI),
+        lambda W, ops: _init_for_precomputed(W, ops)),
     b=Biases("Bias vector",
         lambda obj: (obj.nO,)),
     d_W=Gradient("W"),
@@ -39,25 +49,25 @@ class PrecomputableAffine(Model):
 
     def begin_update(self, X, drop=0.):
         # X: (b, i)
-        # Xf: (b, f, i)
+        # Yf: (b, f, i)
         # dY: (b, o)
         # dYf: (b, f, o)
-        #Yf = numpy.einsum('bi,ofi->bfo', X, self.W)
+        #Yf = numpy.einsum('bi,foi->bfo', X, self.W)
         Yf = self.ops.xp.tensordot(
-                X, self.W, axes=[[1], [2]]).transpose((0, 2, 1))
+                X, self.W, axes=[[1], [2]])
         Yf += self.b
         def backward(dY_ids, sgd=None):
+            tensordot = self.ops.xp.tensordot
             dY, ids = dY_ids
             Xf = X[ids]
 
+            #dXf = numpy.einsum('bo,foi->bfi', dY, self.W)
+            dXf = tensordot(dY, self.W, axes=[[1], [1]])
             #dW = numpy.einsum('bo,bfi->ofi', dY, Xf)
-            dW = self.ops.xp.tensordot(dY, Xf, axes=[[0], [0]])
-            db = dY.sum(axis=0)
-            #dXf = numpy.einsum('bo,ofi->bfi', dY, self.W)
-            dXf = self.ops.xp.tensordot(dY, self.W, axes=[[1], [0]])
-
-            self.d_W += dW
-            self.d_b += db
+            dW = tensordot(dY, Xf, axes=[[0], [0]])
+            # ofi -> foi
+            self.d_W += dW.transpose((1, 0, 2))
+            self.d_b += dY.sum(axis=0)
 
             if sgd is not None:
                 sgd(self._mem.weights, self._mem.gradient, key=self.id)
@@ -80,10 +90,10 @@ class PrecomputableAffine(Model):
     d_b=Gradient("b")
 )
 class PrecomputableMaxouts(Model):
-    def __init__(self, nO=None, nI=None, nF=None, pieces=3, **kwargs):
+    def __init__(self, nO=None, nI=None, nF=None, nP=3, **kwargs):
         Model.__init__(self, **kwargs)
         self.nO = nO
-        self.nP = pieces
+        self.nP = nP
         self.nI = nI
         self.nF = nF
 
@@ -121,37 +131,103 @@ class PrecomputableMaxouts(Model):
         return Yfp, backward
 
 def Tok2Vec(width, embed_size, preprocess=None):
-    cols = [ID, LOWER, PREFIX, SUFFIX, SHAPE]
+    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
-        lower = get_col(cols.index(LOWER))   >> HashEmbed(width, embed_size)
-        prefix = get_col(cols.index(PREFIX)) >> HashEmbed(width, embed_size//2)
-        suffix = get_col(cols.index(SUFFIX)) >> HashEmbed(width, embed_size//2)
-        shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size//2)
+        norm = get_col(cols.index(NORM))   >> HashEmbed(width, embed_size, name='embed_lower')
+        prefix = get_col(cols.index(PREFIX)) >> HashEmbed(width, embed_size//2, name='embed_prefix')
+        suffix = get_col(cols.index(SUFFIX)) >> HashEmbed(width, embed_size//2, name='embed_suffix')
+        shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size//2, name='embed_shape')
 
+        embed = (norm | prefix | suffix | shape )
         tok2vec = (
-            flatten
-            >> (lower | prefix | suffix | shape )
-            >> Maxout(width, width*4, pieces=3)
-            >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-            >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-            >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-            >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+            with_flatten(
+                asarray(Model.ops, dtype='uint64')
+                >> embed
+                >> Maxout(width, width*4, pieces=3)
+                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3)),
+            pad=4)
         )
         if preprocess not in (False, None):
             tok2vec = preprocess >> tok2vec
         # Work around thinc API limitations :(. TODO: Revise in Thinc 7
         tok2vec.nO = width
+        tok2vec.embed = embed
     return tok2vec
 
 
-def get_col(idx):
+def asarray(ops, dtype):
     def forward(X, drop=0.):
+        return ops.asarray(X, dtype=dtype), None
+    return layerize(forward)
+
+
+def foreach(layer):
+    def forward(Xs, drop=0.):
+        results = []
+        backprops = []
+        for X in Xs:
+            result, bp = layer.begin_update(X, drop=drop)
+            results.append(result)
+            backprops.append(bp)
+        def backward(d_results, sgd=None):
+            dXs = []
+            for d_result, backprop in zip(d_results, backprops):
+                dXs.append(backprop(d_result, sgd))
+            return dXs
+        return results, backward
+    model = layerize(forward)
+    model._layers.append(layer)
+    return model
+
+
+def rebatch(size, layer):
+    ops = layer.ops
+    def forward(X, drop=0.):
+        if X.shape[0] < size:
+            return layer.begin_update(X)
+        parts = _divide_array(X, size)
+        results, bp_results = zip(*[layer.begin_update(p, drop=drop)
+                                    for p in parts])
+        y = ops.flatten(results)
+        def backward(dy, sgd=None):
+            d_parts = [bp(y, sgd=sgd) for bp, y in
+                       zip(bp_results, _divide_array(dy, size))]
+            try:
+                dX = ops.flatten(d_parts)
+            except TypeError:
+                dX = None
+            except ValueError:
+                dX = None
+            return dX
+        return y, backward
+    model = layerize(forward)
+    model._layers.append(layer)
+    return model
+
+
+def _divide_array(X, size):
+    parts = []
+    index = 0
+    while index < len(X):
+        parts.append(X[index : index + size])
+        index += size
+    return parts
+
+
+def get_col(idx):
+    assert idx >= 0, idx
+    def forward(X, drop=0.):
+        assert idx >= 0, idx
         if isinstance(X, numpy.ndarray):
             ops = NumpyOps()
         else:
             ops = CupyOps()
         output = ops.xp.ascontiguousarray(X[:, idx], dtype=X.dtype)
         def backward(y, sgd=None):
+            assert idx >= 0, idx
             dX = ops.allocate(X.shape)
             dX[:, idx] += y
             return dX
@@ -167,20 +243,16 @@ def zero_init(model):
 
 
 def doc2feats(cols=None):
-    cols = [ID, LOWER, PREFIX, SUFFIX, SHAPE]
+    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE]
     def forward(docs, drop=0.):
         feats = []
         for doc in docs:
-            if 'cached_feats' not in doc.user_data:
-                doc.user_data['cached_feats'] = model.ops.asarray(
-                                                    doc.to_array(cols),
-                                                    dtype='uint64')
-            feats.append(doc.user_data['cached_feats'])
-            assert feats[-1].dtype == 'uint64'
+            feats.append(doc.to_array(cols))
         return feats, None
     model = layerize(forward)
     model.cols = cols
     return model
+
 
 def print_shape(prefix):
     def forward(X, drop=0.):

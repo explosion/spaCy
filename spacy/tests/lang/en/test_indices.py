@@ -7,7 +7,7 @@ from __future__ import unicode_literals
 import pytest
 
 
-def test_simple_punct(en_tokenizer):
+def test_en_simple_punct(en_tokenizer):
     text = "to walk, do foo"
     tokens = en_tokenizer(text)
     assert tokens[0].idx == 0
@@ -17,7 +17,7 @@ def test_simple_punct(en_tokenizer):
     assert tokens[4].idx == 12
 
 
-def test_complex_punct(en_tokenizer):
+def test_en_complex_punct(en_tokenizer):
     text = "Tom (D., Ill.)!"
     tokens = en_tokenizer(text)
     assert tokens[0].idx == 0

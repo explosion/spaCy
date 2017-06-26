@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from ..util import get_doc, assert_docs_equal
 from ...tokens import Doc
+from ...vocab import Vocab
 
 import pytest
 
@@ -21,6 +22,15 @@ def test_serialize_empty_doc(en_vocab):
     assert len(doc) == len(doc2)
     for token1, token2 in zip(doc, doc2):
         assert token1.text == token2.text
+
+
+@pytest.mark.xfail
+@pytest.mark.parametrize('text', ['rat'])
+def test_serialize_vocab(en_vocab, text):
+    text_hash = en_vocab.strings.add(text)
+    vocab_bytes = en_vocab.to_bytes()
+    new_vocab = Vocab().from_bytes(vocab_bytes)
+    assert new_vocab.strings(text_hash) == text
 
 #
 #@pytest.mark.parametrize('text', [TEXT])

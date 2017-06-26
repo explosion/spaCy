@@ -1,0 +1,24 @@
+//- 💫 DOCS > API > GOLDCORPUS
+
+include ../../_includes/_mixins
+
+p
+    |  An annotated corpus, using the JSON file format. Manages annotations for
+    |  tagging, dependency parsing and NER.
+
++h(2, "init") GoldCorpus.__init__
+    +tag method
+    +tag-new(2)
+
+p Create a #[code GoldCorpus].
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code train_path]
+        +cell unicode or #[code Path]
+        +cell File or directory of training data.
+
+    +row
+        +cell #[code dev_path]
+        +cell unicode or #[code Path]
+        +cell File or directory of development data.

@@ -4,12 +4,13 @@ include ../../_includes/_mixins
 
 p
     |  As of v2.0, spaCy comes with a built-in visualization suite. For more
-    |  info and examples, see the usage workflow on
+    |  info and examples, see the usage guide on
     |  #[+a("/docs/usage/visualizers") visualizing spaCy].
 
 
-+h(2, "serve") serve
++h(2, "serve") displacy.serve
     +tag method
+    +tag-new(2)
 
 p
     |  Serve a dependency parse tree or named entity visualization to view it
@@ -55,13 +56,23 @@ p
         +cell #[code {}]
 
     +row
+        +cell #[code manual]
+        +cell bool
+        +cell
+            |  Don't parse #[code Doc] and instead, expect a dict or list of
+            |  dicts. #[+a("/docs/usage/visualizers#manual-usage") See here]
+            |  for formats and examples.
+        +cell #[code False]
+
+    +row
         +cell #[code port]
         +cell int
         +cell Port to serve visualization.
         +cell #[code 5000]
 
-+h(2, "render") render
++h(2, "render") displacy.render
     +tag method
+    +tag-new(2)
 
 p Render a dependency parse tree or named entity visualization.
 
@@ -111,8 +122,17 @@ p Render a dependency parse tree or named entity visualization.
         +cell #[+a("#options") Visualizer-specific options], e.g. colors.
         +cell #[code {}]
 
+    +row
+        +cell #[code manual]
+        +cell bool
+        +cell
+            |  Don't parse #[code Doc] and instead, expect a dict or list of
+            |  dicts. #[+a("/docs/usage/visualizers#manual-usage") See here]
+            |  for formats and examples.
+        +cell #[code False]
+
     +footrow
-        +cell return
+        +cell returns
         +cell unicode
         +cell Rendered HTML markup.
         +cell
@@ -185,7 +205,7 @@ p
         +cell #[code arrow_spacing]
         +cell int
         +cell Spacing between arrows in px to avoid overlaps.
-        +cell #[code 20]
+        +cell #[code 20] / #[code 12] (compact)
 
     +row
         +cell #[code word_spacing]
@@ -218,7 +238,7 @@ p
         +cell #[code colors]
         +cell dict
         +cell
-            |  Color overrides. Entity types in lowercase should be mapped to
+            |  Color overrides. Entity types in uppercase should be mapped to
             |  color names or values.
         +cell #[code {}]
 

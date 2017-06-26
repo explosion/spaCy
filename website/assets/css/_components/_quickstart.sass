@@ -6,6 +6,9 @@
     display: none
     background: $color-subtle-light
 
+    &:not([style]) + .c-quickstart__info
+        display: none
+
 .c-quickstart__content
     padding: 2rem 3rem
 
@@ -81,7 +84,15 @@
     &:before
         color: $color-theme
         margin-right: 1em
+
+    &.c-quickstart__line--bash:before
         content: "$"
+
+    &.c-quickstart__line--python:before
+        content: ">>>"
+
+    &.c-quickstart__line--divider
+        padding: 1.5rem 0
 
 .c-quickstart__code
     font-size: 1.6rem

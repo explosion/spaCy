@@ -11,18 +11,50 @@ p
     |  #[code spaces] booleans, which allow you to maintain alignment of the
     |  tokens into the original string.
 
-+aside("See Also")
-    |  If you haven't read up on spaCy's #[+a("data-model") data model] yet,
-    |  you should probably have a look. The main point to keep in mind is that
-    |  spaCy's #[code Doc] doesn't copy or refer to the original string. The
-    |  string is reconstructed from the tokens when required.
++h(2, "101") Tokenizer 101
 
+include _spacy-101/_tokenization
+
++h(3, "101-data") Tokenizer data
+
+p
+    |  #[strong Global] and #[strong language-specific] tokenizer data is
+    |  supplied via the language data in #[+src(gh("spaCy", "spacy/lang")) spacy/lang].
+    |  The tokenizer exceptions define special cases like "don't" in English,
+    |  which needs to be split into two tokens: #[code {ORTH: "do"}] and
+    |  #[code {ORTH: "n't", LEMMA: "not"}]. The prefixes, suffixes and infixes
+    |  mosty define punctuation rules – for example, when to split off periods
+    |  (at the end of a sentence), and when to leave token containing periods
+    |  intact (abbreviations like "U.S.").
+
++image
+    include ../../assets/img/docs/language_data.svg
+    .u-text-right
+        +button("/assets/img/docs/language_data.svg", false, "secondary").u-text-tag View large graphic
+
++infobox
+    |  For more details on the language-specific data, see the
+    |  usage guide on #[+a("/docs/usage/adding-languages") adding languages].
 
 +h(2, "special-cases") Adding special case tokenization rules
 
 p
     |  Most domains have at least some idiosyncracies that require custom
-    |  tokenization rules. Here's how to add a special case rule to an existing
+    |  tokenization rules. This could be very certain expressions, or
+    |  abbreviations only used in this specific field.
+
++aside("Language data vs. custom tokenization")
+    |  Tokenization rules that are specific to one language, but can be
+    |  #[strong generalised across that language] should ideally live in the
+    |  language data in #[+src(gh("spaCy", "spacy/lang")) spacy/lang] – we
+    |  always appreciate pull requests! Anything that's specific to a domain or
+    |  text type – like financial trading abbreviations, or Bavarian youth slang
+    |  – should be added as a special case rule to your tokenizer instance. If
+    |  you're dealing with a lot of customisations, it might make sense to create
+    |  an entirely custom subclass.
+
+p
+    |  Here's how to add a special case rule to an existing
     |  #[+api("tokenizer") #[code Tokenizer]] instance:
 
 +code.
@@ -30,15 +62,12 @@ p
     from spacy.symbols import ORTH, LEMMA, POS
 
     nlp = spacy.load('en')
-    assert [w.text for w in nlp(u'gimme that')] == [u'gimme', u'that']
-    nlp.tokenizer.add_special_case(u'gimme',
-        [
-            {
-                ORTH: u'gim',
-                LEMMA: u'give',
-                POS: u'VERB'},
-            {
-                ORTH: u'me'}])
+    doc = nlp(u'gimme that') # phrase to tokenize
+    assert [w.text for w in doc] == [u'gimme', u'that'] # current tokenization
+
+    # add special case rule
+    special_case = [{ORTH: u'gim', LEMMA: u'give', POS: u'VERB'}, {ORTH: u'me'}]
+    nlp.tokenizer.add_special_case(u'gimme', special_case)
     assert [w.text for w in nlp(u'gimme that')] == [u'gim', u'me', u'that']
     assert [w.lemma_ for w in nlp(u'gimme that')] == [u'give', u'me', u'that']
 
@@ -55,9 +84,8 @@ p
     |  The special case rules have precedence over the punctuation splitting:
 
 +code.
-    nlp.tokenizer.add_special_case(u'...gimme...?',
-        [{
-            ORTH: u'...gimme...?', LEMMA: u'give', TAG: u'VB'}])
+    special_case = [{ORTH: u'...gimme...?', LEMMA: u'give', TAG: u'VB'}]
+    nlp.tokenizer.add_special_case(u'...gimme...?', special_case)
     assert len(nlp(u'...gimme...?')) == 1
 
 p
@@ -113,7 +141,7 @@ p
                 else:
                     tokens.append(substring)
                     substring = ''
-            tokens.extend(suffixes)
+            tokens.extend(reversed(suffixes))
             return tokens
 
 p
@@ -137,8 +165,8 @@ p
 +h(2, "native-tokenizers") Customizing spaCy's Tokenizer class
 
 p
-    |  Let's imagine you wanted to create a tokenizer for a new language. There
-    |  are four things you would need to define:
+    |  Let's imagine you wanted to create a tokenizer for a new language or
+    |  specific domain. There are four things you would need to define:
 
 +list("numbers")
     +item
@@ -170,14 +198,15 @@ p
     import re
     from spacy.tokenizer import Tokenizer
 
-    prefix_re = re.compile(r'''[\[\(&quot;']''')
-    suffix_re = re.compile(r'''[\]\)&quot;']''')
-    def create_tokenizer(nlp):
-        return Tokenizer(nlp.vocab,
-                prefix_search=prefix_re.search,
-                suffix_search=suffix_re.search)
+    prefix_re = re.compile(r'''[\[\(&quot;&apos;]''')
+    suffix_re = re.compile(r'''[\]\)&quot;&apos;]''')
 
-    nlp = spacy.load('en', tokenizer=create_make_doc)
+    def custom_tokenizer(nlp):
+        return Tokenizer(nlp.vocab, prefix_search=prefix_re.search,
+                                    suffix_search=suffix_re.search)
+
+    nlp = spacy.load('en')
+    nlp.tokenizer = custom_tokenizer(nlp)
 
 p
     |  If you need to subclass the tokenizer instead, the relevant methods to
@@ -187,29 +216,68 @@ p
 +h(2, "custom-tokenizer") Hooking an arbitrary tokenizer into the pipeline
 
 p
-    |  You can pass a custom tokenizer using the #[code make_doc] keyword, when
-    |  you're creating the pipeline:
+    |  The tokenizer is the first component of the processing pipeline and the
+    |  only one that can't be replaced by writing to #[code nlp.pipeline]. This
+    |  is because it has a different signature from all the other components:
+    |  it takes a text and returns a #[code Doc], whereas all other components
+    |  expect to already receive a tokenized #[code Doc].
 
-+code.
-    import spacy
++image
+    include ../../assets/img/docs/pipeline.svg
+    .u-text-right
+        +button("/assets/img/docs/pipeline.svg", false, "secondary").u-text-tag View large graphic
 
-    nlp = spacy.load('en', make_doc=my_tokenizer)
 
 p
-    |  However, this approach often leaves us with a chicken-and-egg problem.
-    |  To construct the tokenizer, we usually want attributes of the #[code nlp]
-    |  pipeline. Specifically, we want the tokenizer to hold a reference to the
-    |  pipeline's vocabulary object. Let's say we have the following class as
-    |  our tokenizer:
-
+    |  To overwrite the existing tokenizer, you need to replace
+    |  #[code nlp.tokenizer] with a custom function that takes a text, and
+    |  returns a #[code Doc].
 
 +code.
-    import spacy
+    nlp = spacy.load('en')
+    nlp.tokenizer = my_tokenizer
+
++table(["Argument", "Type", "Description"])
+    +row
+        +cell #[code text]
+        +cell unicode
+        +cell The raw text to tokenize.
+
+    +footrow
+        +cell returns
+        +cell #[code Doc]
+        +cell The tokenized document.
+
++infobox("Important note: using a custom tokenizer")
+    .o-block
+        |  In spaCy v1.x, you had to add a custom tokenizer by passing it to the
+        |  #[code make_doc] keyword argument, or by passing a tokenizer "factory"
+        |  to #[code create_make_doc]. This was unnecessarily complicated. Since
+        |  spaCy v2.0, you can simply write to #[code nlp.tokenizer]. If your
+        |  tokenizer needs the vocab, you can write a function and use
+        |  #[code nlp.vocab].
+
+    +code-new.
+        nlp.tokenizer = my_tokenizer
+        nlp.tokenizer = my_tokenizer_factory(nlp.vocab)
+    +code-old.
+        nlp = spacy.load('en', make_doc=my_tokenizer)
+        nlp = spacy.load('en', create_make_doc=my_tokenizer_factory)
+
++h(3, "custom-tokenizer-example") Example: A custom whitespace tokenizer
+
+p
+    |  To construct the tokenizer, we usually want attributes of the #[code nlp]
+    |  pipeline. Specifically, we want the tokenizer to hold a reference to the
+    |  vocabulary object. Let's say we have the following class as
+    |  our tokenizer:
+
++code.
     from spacy.tokens import Doc
 
     class WhitespaceTokenizer(object):
-        def __init__(self, nlp):
-            self.vocab = nlp.vocab
+        def __init__(self, vocab):
+            self.vocab = vocab
 
         def __call__(self, text):
             words = text.split(' ')
@@ -218,28 +286,12 @@ p
             return Doc(self.vocab, words=words, spaces=spaces)
 
 p
-    |  As you can see, we need a #[code vocab] instance to construct this — but
-    |  we won't get the #[code vocab] instance until we get back the #[code nlp]
-    |  object from #[code spacy.load()]. The simplest solution is to build the
-    |  object in two steps:
+    |  As you can see, we need a #[code Vocab] instance to construct this — but
+    |  we won't have it until we get back the loaded #[code nlp] object. The
+    |  simplest solution is to build the tokenizer in two steps. This also means
+    |  that you can reuse the "tokenizer factory" and initialise it with
+    |  different instances of #[code Vocab].
 
 +code.
     nlp = spacy.load('en')
-    nlp.make_doc = WhitespaceTokenizer(nlp)
-
-p
-    |  You can instead pass the class to the #[code create_make_doc] keyword,
-    |  which is invoked as callback once the #[code nlp] object is ready:
-
-+code.
-    nlp = spacy.load('en', create_make_doc=WhitespaceTokenizer)
-
-p
-    |  Finally, you can of course create your own subclasses, and create a bound
-    |  #[code make_doc] method. The disadvantage of this approach is that spaCy
-    |  uses inheritance to give each language-specific pipeline its own class.
-    |  If you're working with multiple languages, a naive solution will
-    |  therefore require one custom class per language you're working with.
-    |  This might be at least annoying. You may be able to do something more
-    |  generic by doing some clever magic with metaclasses or mixins, if that's
-    |  the sort of thing you're into.
+    nlp.tokenizer = WhitespaceTokenizer(nlp.vocab)

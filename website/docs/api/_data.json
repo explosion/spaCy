@@ -3,7 +3,13 @@
         "Introduction": {
             "Facts & Figures": "./",
             "Languages": "language-models",
-            "Philosophy": "philosophy"
+            "Annotation Specs": "annotation"
+        },
+        "Top-level": {
+            "spacy": "spacy",
+            "displacy": "displacy",
+            "Utility Functions": "util",
+            "Command line": "cli"
         },
         "Classes": {
             "Doc": "doc",
@@ -18,14 +24,10 @@
             "Lexeme": "lexeme",
             "Vocab": "vocab",
             "StringStore": "stringstore",
-            "GoldParse": "goldparse"
-        },
-        "Other": {
-            "Command line": "cli",
-            "displaCy": "displacy",
-            "Utility Functions": "util",
-            "Annotation Specs": "annotation",
-            "Feature Scheme": "features"
+            "Vectors": "vectors",
+            "GoldParse": "goldparse",
+            "GoldCorpus": "goldcorpus",
+            "Binder": "binder"
         }
     },
 
@@ -43,95 +45,133 @@
         "title": "Philosophy"
     },
 
-    "language": {
-        "title": "Language",
-        "tag": "class"
-    },
-
-    "doc": {
-        "title": "Doc",
-        "tag": "class"
-    },
-
-    "token": {
-        "title": "Token",
-        "tag": "class"
-    },
-
-    "span": {
-        "title": "Span",
-        "tag": "class"
-    },
-
-    "lexeme": {
-        "title": "Lexeme",
-        "tag": "class"
-    },
-
-    "vocab": {
-        "title": "Vocab",
-        "tag": "class"
-    },
-
-    "stringstore": {
-        "title": "StringStore",
-        "tag": "class"
-    },
-
-    "matcher": {
-        "title": "Matcher",
-        "tag": "class"
-    },
-
-    "dependenyparser": {
-        "title": "DependencyParser",
-        "tag": "class"
-    },
-
-    "entityrecognizer": {
-        "title": "EntityRecognizer",
-        "tag": "class"
-    },
-
-    "dependencyparser": {
-        "title": "DependencyParser",
-        "tag": "class"
-    },
-
-    "tokenizer": {
-        "title": "Tokenizer",
-        "tag": "class"
-    },
-
-    "tagger": {
-        "title": "Tagger",
-        "tag": "class"
-    },
-
-    "goldparse": {
-        "title": "GoldParse",
-        "tag": "class"
-    },
-
-    "cli": {
-        "title": "Command Line Interface",
+    "spacy": {
+        "title": "spaCy top-level functions",
+        "source": "spacy/__init__.py",
         "next": "displacy"
     },
 
     "displacy": {
         "title": "displaCy",
-        "tag": "module"
+        "tag": "module",
+        "source": "spacy/displacy",
+        "next": "util"
     },
 
     "util": {
-        "title": "Utility Functions"
+        "title": "Utility Functions",
+        "source": "spacy/util.py",
+        "next": "cli"
+    },
+
+    "cli": {
+        "title": "Command Line Interface",
+        "source": "spacy/cli"
+    },
+
+    "language": {
+        "title": "Language",
+        "tag": "class",
+        "source": "spacy/language.py"
+    },
+
+    "doc": {
+        "title": "Doc",
+        "tag": "class",
+        "source": "spacy/tokens/doc.pyx"
+    },
+
+    "token": {
+        "title": "Token",
+        "tag": "class",
+        "source": "spacy/tokens/token.pyx"
+    },
+
+    "span": {
+        "title": "Span",
+        "tag": "class",
+        "source": "spacy/tokens/span.pyx"
+    },
+
+    "lexeme": {
+        "title": "Lexeme",
+        "tag": "class",
+        "source": "spacy/lexeme.pyx"
+    },
+
+    "vocab": {
+        "title": "Vocab",
+        "tag": "class",
+        "source": "spacy/vocab.pyx"
+    },
+
+    "stringstore": {
+        "title": "StringStore",
+        "tag": "class",
+        "source": "spacy/strings.pyx"
+    },
+
+    "matcher": {
+        "title": "Matcher",
+        "tag": "class",
+        "source": "spacy/matcher.pyx"
+    },
+
+    "dependenyparser": {
+        "title": "DependencyParser",
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
+    },
+
+    "entityrecognizer": {
+        "title": "EntityRecognizer",
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
+    },
+
+    "dependencyparser": {
+        "title": "DependencyParser",
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
+    },
+
+    "tokenizer": {
+        "title": "Tokenizer",
+        "tag": "class",
+        "source": "spacy/tokenizer.pyx"
+    },
+
+    "tagger": {
+        "title": "Tagger",
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
+    },
+
+    "goldparse": {
+        "title": "GoldParse",
+        "tag": "class",
+        "source": "spacy/gold.pyx"
+    },
+
+    "goldcorpus": {
+        "title": "GoldCorpus",
+        "tag": "class",
+        "source": "spacy/gold.pyx"
+    },
+
+    "binder": {
+        "title": "Binder",
+        "tag": "class",
+        "source": "spacy/tokens/binder.pyx"
+    },
+
+    "vectors": {
+        "title": "Vectors",
+        "tag": "class",
+        "source": "spacy/vectors.pyx"
     },
 
     "annotation": {
         "title": "Annotation Specifications"
-    },
-
-    "features": {
-        "title": "Linear Model Feature Scheme"
     }
 }
