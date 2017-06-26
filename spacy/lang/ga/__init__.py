@@ -11,7 +11,7 @@ from ...util import update_exc
 
 
 class Irish(Language):
-    lang = 'nb'
+    lang = 'ga'
 
     class Defaults(Language.Defaults):
         lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
