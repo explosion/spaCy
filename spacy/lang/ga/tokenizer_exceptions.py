@@ -43,7 +43,7 @@ _exc = {
         {ORTH: "Fómh.", LEMMA: "Fómhar", POS: NOUN}],
 
     "R.C.": [
-        {ORTH: "Rr.", LEMMA: "roimh", POS: ADP},
+        {ORTH: "R.", LEMMA: "roimh", POS: ADP},
         {ORTH: "C.", LEMMA: "Críost", POS: NOUN}],
 
     "r.Ch.": [
