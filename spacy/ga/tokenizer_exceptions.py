@@ -210,8 +210,15 @@ TOKENIZER_EXCEPTIONS = {
         {ORTH: "Uimh.", LEMMA: "uimhir"}
     ],
 
+    "B'": [
+        {ORTH: "B'", LEMMA: "ba"}
+    ],
+
+    "b'": [
+        {ORTH: "b'", LEMMA: "ba"}
+    ],
 }
 
 ORTH_ONLY = [
-    "d'",
+    "d'", "D'"
 ]
