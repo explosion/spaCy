@@ -58,6 +58,8 @@ for exc_data in [
     {ORTH: "Feab.", LEMMA: "Feabhra", POS: NOUN},
     {ORTH: "gCo.", LEMMA: "contae", POS: NOUN},
     {ORTH: ".i.", LEMMA: "eadhon", POS: ADV},
+    {ORTH: "B'", LEMMA: "ba", POS: AUX},
+    {ORTH: "b'", LEMMA: "ba", POS: AUX},
     {ORTH: "lch.", LEMMA: "leathanach", POS: NOUN},
     {ORTH: "Lch.", LEMMA: "leathanach", POS: NOUN},
     {ORTH: "lgh.", LEMMA: "leathanach", POS: NOUN},
@@ -77,7 +79,7 @@ for exc_data in [
     _exc[exc_data[ORTH]] = [dict(exc_data)],
 
 for orth in [
-    "d'"]:
+    "d'", "D'"]:
     _exc[orth] = [{ORTH: orth}]
 
 
