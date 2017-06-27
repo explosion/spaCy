@@ -55,17 +55,15 @@ TOKENIZER_EXCEPTIONS = {
 
     "led'": [
         {ORTH: "le", LEMMA: "le", NORM: "le"},
-        {ORTH: "d'", LEMMA: "mo", NORM: "do"}
+        {ORTH: "d'", LEMMA: "do", NORM: "do"}
     ],
 
     "m'": [
-        {ORTH: "m'", LEMMA: "mo", NORM: "mo"}
+        {ORTH: "m'", LEMMA: "mo"}
     ],
 
     "a.C.n.": [
-        {ORTH: "a.", LEMMA: "ante"},
-        {ORTH: "C.", LEMMA: "Christum"},
-        {ORTH: "n.", LEMMA: "natum"},
+        {ORTH: "a.C.n.", LEMMA: "ante Christum natum"}
     ],
 
     "Aib.": [
@@ -121,8 +119,7 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "m.sh.": [
-        {ORTH: "m.", LEMMA: "mar"},
-        {ORTH: "sh.", LEMMA: "sampla"}
+        {ORTH: "m.sh.", LEMMA: "mar shampla"}
     ],
 
     "Már.": [
@@ -134,13 +131,19 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "M.F.": [
-        {ORTH: "M.", LEMMA: "Meán"},
-        {ORTH: "F.", LEMMA: "Fómhar"}
+        {ORTH: "M.F.", LEMMA: "Meán Fómhair"}
     ],
 
     "M.Fómh.": [
-        {ORTH: "M.", LEMMA: "Meán"},
-        {ORTH: "Fómh.", LEMMA: "Fómhar"}
+        {ORTH: "M.Fómh.", LEMMA: "Meán Fómhair"}
+    ],
+
+    "D.F.": [
+        {ORTH: "D.F.", LEMMA: "Deireadh Fómhair"}
+    ],
+
+    "D.Fómh.": [
+        {ORTH: "D.Fómh.", LEMMA: "Deireadh Fómhair"}
     ],
 
     "Noll.": [
@@ -148,28 +151,23 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "R.C.": [
-        {ORTH: "Rr.", LEMMA: "roimh"},
-        {ORTH: "C.", LEMMA: "Críost"}
+        {ORTH: "R.C.", LEMMA: "roimh Chríost"}
     ],
 
     "r.Ch.": [
-        {ORTH: "r.", LEMMA: "roimh"},
-        {ORTH: "Ch.", LEMMA: "Críost"}
+        {ORTH: "r.Ch.", LEMMA: "roimh Chríost"}
     ],
 
     "r.Chr.": [
-        {ORTH: "r.", LEMMA: "roimh"},
-        {ORTH: "Chr.", LEMMA: "Críost"}
+        {ORTH: "r.Chr.", LEMMA: "roimh Chríost"}
     ],
 
     "R.Ch.": [
-        {ORTH: "R.", LEMMA: "roimh"},
-        {ORTH: "Ch.", LEMMA: "Críost"}
+        {ORTH: "R.Ch.", LEMMA: "roimh Chríost"}
     ],
 
     "R.Chr.": [
-        {ORTH: "R.", LEMMA: "roimh"},
-        {ORTH: "Chr.", LEMMA: "Críost"}
+        {ORTH: "R.Chr.", LEMMA: "roimh Chríost"}
     ],
 
     "Samh.": [
@@ -177,13 +175,11 @@ TOKENIZER_EXCEPTIONS = {
     ],
 
     "⁊rl.": [
-        {ORTH: "⁊", LEMMA: "agus"},
-        {ORTH: "rl.", LEMMA: "araile"}
+        {ORTH: "⁊rl.", LEMMA: "agus araile"}
     ],
 
     "srl.": [
-        {ORTH: "s", LEMMA: "agus"},
-        {ORTH: "rl.", LEMMA: "araile"}
+        {ORTH: "srl.", LEMMA: "agus araile"}
     ],
 
     "tAth.": [
