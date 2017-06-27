@@ -25,6 +25,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Ines Montani, [@ines](https://github.com/ines)
 * J Nicolas Schrading, [@NSchrading](https://github.com/NSchrading)
 * Janneke van der Zwaan, [@jvdzwaan](https://github.com/jvdzwaan)
+* Jim Regan, [@jimregan](https://github.com/jimregan)
 * Jordan Suchow, [@suchow](https://github.com/suchow)
 * Josh Reeter, [@jreeter](https://github.com/jreeter)
 * Juan Miguel Cejuela, [@juanmirocks](https://github.com/juanmirocks)
