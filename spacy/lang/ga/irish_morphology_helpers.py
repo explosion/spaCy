@@ -8,25 +8,25 @@ class IrishMorph:
     vowels = broad_vowels + slender_vowels
 
     def ends_dentals(word):
-        if word[-1:] in ['d', 'n', 't', 's']:
+        if word != "" and word[-1] in ['d', 'n', 't', 's']:
             return True
         else:
             return False
 
     def devoice(word):
-        if word[-2] == 's' and word[-1] == 'd':
+        if len(word) > 2 and word[-2] == 's' and word[-1] == 'd':
             return word[:-1] + 't'
         else:
             return word
 
     def ends_with_vowel(word):
-        return word[-1] in vowels
+        return word != "" and word[-1] in vowels
 
     def starts_with_vowel(word):
-        return word[0] in vowels
+        return word != "" and word[0] in vowels
 
     def deduplicate(word):
-        if word[-2] == word[-1] and word[-1] in consonants:
+        if len(word) > 2 and word[-2] == word[-1] and word[-1] in consonants:
             return word[:-1]
         else:
             return word
