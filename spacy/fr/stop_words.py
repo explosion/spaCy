@@ -86,3 +86,28 @@ votre vous vous-mêmes vu vé vôtre vôtres
 
 zut
 """.split())
+
+
+
+# Number words
+
+NUM_WORDS = set("""
+zero un deux trois quatre cinq six sept huit neuf dix
+onze douze treize quatorze quinze seize dix-sept dix-huit dix-neuf 
+vingt trente quanrante cinquante soixante septante quatre-vingt huitante nonante
+cent mille mil million milliard billion quadrillion quintillion
+sextillion septillion octillion nonillion decillion
+""".split())
+
+# Ordinal words
+
+ORDINAL_WORDS = set("""
+premier deuxième second troisième quatrième cinquième sixième septième huitième neuvième dixième
+onzième douzième treizième quatorzième quinzième seizième dix-septième dix-huitième dix-neufième 
+vingtième trentième quanrantième cinquantième soixantième septantième quatre-vingtième huitantième nonantième
+centième millième millionnième milliardième billionnième quadrillionnième quintillionnième
+sextillionnième septillionnième octillionnième nonillionnième decillionnième
+""".split())
+
+
+
