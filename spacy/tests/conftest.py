@@ -79,6 +79,7 @@ def fi_tokenizer():
 
 @pytest.fixture
 def ja_tokenizer():
+    janome = pytest.importorskip("janome")
     return Japanese.Defaults.create_tokenizer()
 
 
