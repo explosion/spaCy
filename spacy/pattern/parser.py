@@ -1,9 +1,9 @@
 # coding: utf-8
 
 from spacy.compat import intern, queue
+from spacy.strings import hash_string
 from operator import itemgetter
 import re
-from hashlib import md5
 import json
 
 from .pattern import DependencyPattern
@@ -294,8 +294,8 @@ class Token(tuple):
         return tuple.__new__(cls, (lineno, intern(str(type)), value))
 
     def hash(self):
-        string = str(self.value)
-        return md5(string.encode('utf-8')).hexdigest()
+        string = self.value
+        return hash_string(string)
 
     def __repr__(self):
         return 'Token(%r, %r, %r)' % (
