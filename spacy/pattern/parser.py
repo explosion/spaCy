@@ -237,25 +237,6 @@ class PatternParser(object):
             yield Token(lineno, token, value)
 
 
-class Token(tuple):
-    """Token class."""
-    __slots__ = ()
-    lineno, type, value = (property(itemgetter(x)) for x in range(3))
-
-    def __new__(cls, lineno, type, value):
-        return tuple.__new__(cls, (lineno, intern(str(type)), value))
-
-    def hash(self):
-        string = str(self.value)
-        return md5(string.encode('utf-8')).hexdigest()
-
-    def __repr__(self):
-        return 'Token(%r, %r, %r)' % (
-            self.lineno,
-            self.type,
-            self.value)
-
-
 class Reader(object):
     """A class used by the :class:`PatternParser` to tokenize the `text`."""
     __slots__ = ('text', 'pos')
@@ -283,7 +264,7 @@ class Reader(object):
         return s
 
     def next(self):
-        return self.text[self.pos:self.pos+1]
+        return self.text[self.pos:self.pos + 1]
 
     def remaining(self):
         return len(self.text) - self.pos
@@ -299,6 +280,28 @@ class Reader(object):
 
     def __str__(self):
         return self.text[self.pos:]
+
+
+# The following classes were copied from Jinja2, a BSD-licensed project,
+# and slightly modified: Token, TokenStreamIterator, TokenStream.
+
+class Token(tuple):
+    """Token class."""
+    __slots__ = ()
+    lineno, type, value = (property(itemgetter(x)) for x in range(3))
+
+    def __new__(cls, lineno, type, value):
+        return tuple.__new__(cls, (lineno, intern(str(type)), value))
+
+    def hash(self):
+        string = str(self.value)
+        return md5(string.encode('utf-8')).hexdigest()
+
+    def __repr__(self):
+        return 'Token(%r, %r, %r)' % (
+            self.lineno,
+            self.type,
+            self.value)
 
 
 class TokenStreamIterator(object):
