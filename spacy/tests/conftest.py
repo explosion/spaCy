@@ -105,6 +105,9 @@ def he_tokenizer():
 def nb_tokenizer():
     return util.get_lang_class('nb').Defaults.create_tokenizer()
 
+@pytest.fixture
+def da_tokenizer():
+    return util.get_lang_class('da').Defaults.create_tokenizer()
 
 @pytest.fixture
 def stringstore():
