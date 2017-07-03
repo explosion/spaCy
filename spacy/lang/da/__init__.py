@@ -5,6 +5,7 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
 from .morph_rules import MORPH_RULES
+from ..tag_map import TAG_MAP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -21,6 +22,7 @@ class DanishDefaults(Language.Defaults):
 
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     #morph_rules = dict(MORPH_RULES)
+    tag_map = dict(TAG_MAP)
     stop_words = set(STOP_WORDS)
 
 
