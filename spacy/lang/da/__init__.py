@@ -4,6 +4,7 @@ from __future__ import unicode_literals
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .stop_words import STOP_WORDS
 from .lex_attrs import LEX_ATTRS
+from .morph_rules import MORPH_RULES
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
 from ..norm_exceptions import BASE_NORMS
@@ -19,6 +20,7 @@ class DanishDefaults(Language.Defaults):
     lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
 
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    #morph_rules = dict(MORPH_RULES)
     stop_words = set(STOP_WORDS)
 
 
