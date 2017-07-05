@@ -41,3 +41,22 @@ want waren was wat we wel werd wezen wie wij wil worden
 
 zal ze zei zelf zich zij zijn zo zonder zou
 """.split())
+
+
+# Number words
+
+NUM_WORDS = set("""
+nul een één twee drie vier vijf zes zeven acht negen tien elf twaalf dertien
+veertien twintig dertig veertig vijftig zestig zeventig tachtig negentig honderd
+duizend miljoen miljard biljoen biljard triljoen triljard
+""".split())
+
+
+# Ordinal words
+
+ORDINAL_WORDS = set("""
+eerste tweede derde vierde vijfde zesde zevende achtste negende tiende elfde
+twaalfde dertiende veertiende twintigste dertigste veertigste vijftigste
+zestigste zeventigste tachtigste negentigste honderdste duizendste miljoenste
+miljardste biljoenste biljardste triljoenste triljardste
+""".split())
