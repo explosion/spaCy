@@ -5,7 +5,8 @@ from .tokenizer_exceptions import TOKEN_MATCH
 from .language_data import *
 from ..attrs import LANG
 from ..language import Language
-
+from ..lemmatizerlookup import Lemmatizer
+from .lemmatization import LOOK_UP
 
 class Hungarian(Language):
     lang = 'hu'
@@ -24,3 +25,10 @@ class Hungarian(Language):
         stop_words = set(STOP_WORDS)
 
         token_match = TOKEN_MATCH
+
+        @classmethod
+        def create_lemmatizer(cls, nlp=None):
+            return Lemmatizer(LOOK_UP)
+
+
+EXPORT = Hungarian

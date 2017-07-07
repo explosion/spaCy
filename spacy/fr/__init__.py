@@ -6,7 +6,8 @@ from ..attrs import LANG
 
 from .language_data import *
 from .punctuation import TOKENIZER_INFIXES, TOKENIZER_SUFFIXES
-
+from ..lemmatizerlookup import Lemmatizer
+from .lemmatization import LOOK_UP
 
 class FrenchDefaults(BaseDefaults):
     lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
@@ -22,8 +23,15 @@ class FrenchDefaults(BaseDefaults):
         cls.tokenizer_exceptions = get_tokenizer_exceptions()
         return super(FrenchDefaults, cls).create_tokenizer(nlp)
 
+    @classmethod
+    def create_lemmatizer(cls, nlp=None):
+        return Lemmatizer(LOOK_UP)
+
 
 class French(Language):
     lang = 'fr'
 
     Defaults = FrenchDefaults
+
+
+EXPORT = French

@@ -15,3 +15,6 @@ class Finnish(Language):
 
         tokenizer_exceptions = TOKENIZER_EXCEPTIONS
         stop_words = STOP_WORDS
+
+
+EXPORT = Finnish

@@ -32,3 +32,6 @@ class English(Language):
         # Special-case hack for loading the GloVe vectors, to support <1.0
         overrides = fix_glove_vectors_loading(overrides)
         Language.__init__(self, **overrides)
+
+
+EXPORT = English
