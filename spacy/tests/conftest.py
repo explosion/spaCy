@@ -27,7 +27,7 @@ from pathlib import Path
 import os
 import pytest
 
-
+# These languages get run through generic tokenizer tests
 LANGUAGES = [English, German, Spanish, Italian, French, Portuguese, Dutch,
              Swedish, Hungarian, Finnish, Bengali, Norwegian]
 
