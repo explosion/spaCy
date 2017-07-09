@@ -28,7 +28,7 @@ import os
 import pytest
 
 
-LANGUAGES = [English, German, Spanish, Italian, Japanese, French, Portuguese, Dutch,
+LANGUAGES = [English, German, Spanish, Italian, French, Portuguese, Dutch,
              Swedish, Hungarian, Finnish, Bengali, Norwegian]
 
 
