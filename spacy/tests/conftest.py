@@ -5,6 +5,7 @@ from ..en import English
 from ..de import German
 from ..es import Spanish
 from ..it import Italian
+from ..ja import Japanese
 from ..fr import French
 from ..pt import Portuguese
 from ..nl import Dutch
@@ -26,7 +27,7 @@ from pathlib import Path
 import os
 import pytest
 
-
+# These languages get run through generic tokenizer tests
 LANGUAGES = [English, German, Spanish, Italian, French, Portuguese, Dutch,
              Swedish, Hungarian, Finnish, Bengali, Norwegian]
 
@@ -74,6 +75,12 @@ def hu_tokenizer():
 @pytest.fixture
 def fi_tokenizer():
     return Finnish.Defaults.create_tokenizer()
+
+
+@pytest.fixture
+def ja_tokenizer():
+    janome = pytest.importorskip("janome")
+    return Japanese.Defaults.create_tokenizer()
 
 
 @pytest.fixture
