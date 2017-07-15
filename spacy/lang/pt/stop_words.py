@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 
 STOP_WORDS = set("""
+	
 a, a cada, a menos que, a quem, a respeito, a respeito de, a seguir, abaixo, aberto, abertura, abre, abrir, acabar, acabou, achado, achar, acima, acontece, acreditam, acrescentou, adicional, adjetivo, adotou, afeta, afetados, afetando, afetou, agora, agradar, agradece, agradecer, agrupados, agrupamento, ah, ainda, ajudar, algo, algum, algum dia, alguma, algumas, alguns, alguém, alto, além, além de, além disso, ambas, ambos, amplamente, ano, anos, anotou, anterior, anteriormente, antes, anunciar, ao contrário, ao invés de, ao lado, ao lado de, ao longo, ao longo de, ao mesmo, ao redor de, aparente, aparentemente, apenas, apesar, apoiado, apontado, apontar, apreciar, apresenta, apresentado, apresentando, apresentar, apresentou, aprofundamento, apropriado, após, aquela, aquelas, aquele, aqueles, aqui, aqui está, aquilo, arrumar, as, assim, associada, ato, através, através de, atrás, atualmente, até, auto, aí, à, às, área, áreas, ao, aos, aquela, aquelas, aquele, aqueles, aquilo, acerca, adeus, agora, ali, além, ano, anos, apoia, apoio, apontar, após, área, assim, através
 
 baixo, baixos, bastante, bem sucedido, bens, bilhão, bilhões, bom, breve, brevemente, bem, boa
