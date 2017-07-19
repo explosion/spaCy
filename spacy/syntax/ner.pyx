@@ -127,6 +127,8 @@ cdef class BiluoPushDown(TransitionSystem):
         if name == '-' or name == None:
             move_str = 'M'
             label = 0
+        elif name == '!O':
+            return Transition(clas=0, move=ISNT, label=0, score=0)
         elif '-' in name:
             move_str, label_str = name.split('-', 1)
             # Hacky way to denote 'not this entity'
@@ -308,6 +310,9 @@ cdef class In:
         elif g_act == UNIT:
             # I, Gold U --> True iff next tag == O
             return next_act != OUT
+        # Support partial supervision in the form of "not this label"
+        elif g_act == ISNT:
+            return 0
         else:
             return 1
 
@@ -349,6 +354,9 @@ cdef class Last:
             return 0
         elif g_act == UNIT:
             # L, Gold U --> True
+            return 0
+        # Support partial supervision in the form of "not this label"
+        elif g_act == ISNT:
             return 0
         else:
             return 1
@@ -418,7 +426,9 @@ cdef class Out:
         cdef int g_act = gold.ner[s.B(0)].move
         cdef attr_t g_tag = gold.ner[s.B(0)].label
 
-        if g_act == MISSING or g_act == ISNT:
+        if g_act == ISNT and g_tag == 0:
+            return 1
+        elif g_act == MISSING or g_act == ISNT:
             return 0
         elif g_act == BEGIN:
             # O, Gold B --> False
