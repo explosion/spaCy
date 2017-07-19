@@ -36,7 +36,7 @@ def parser(vocab, arc_eager):
 
 @pytest.fixture
 def model(arc_eager, tok2vec):
-    return Parser.Model(arc_eager.n_moves, token_vector_width=tok2vec.nO)
+    return Parser.Model(arc_eager.n_moves, token_vector_width=tok2vec.nO)[0]
 
 @pytest.fixture
 def doc(vocab):
@@ -45,29 +45,29 @@ def doc(vocab):
 @pytest.fixture
 def gold(doc):
     return GoldParse(doc, heads=[1, 1, 1], deps=['L', 'ROOT', 'R'])
+
+
 def test_can_init_nn_parser(parser):
     assert parser.model is None
 
 
 def test_build_model(parser):
-    parser.model = Parser.Model(parser.moves.n_moves)
+    parser.model = Parser.Model(parser.moves.n_moves)[0]
     assert parser.model is not None
 
 
-@pytest.mark.xfail
 def test_predict_doc(parser, tok2vec, model, doc):
-    doc.tensor = tok2vec([doc])
+    doc.tensor = tok2vec([doc])[0]
     parser.model = model
     parser(doc)
 
 
-@pytest.mark.xfail
 def test_update_doc(parser, tok2vec, model, doc, gold):
     parser.model = model
     tokvecs, bp_tokvecs = tok2vec.begin_update([doc])
-    d_tokvecs = parser.update((doc, tokvecs), gold)
-    assert d_tokvecs.shape == tokvecs.shape
+    d_tokvecs = parser.update(([doc], tokvecs), [gold])
+    assert d_tokvecs[0].shape == tokvecs[0].shape
     def optimize(weights, gradient, key=None):
         weights -= 0.001 * gradient
     bp_tokvecs(d_tokvecs, sgd=optimize)
-    assert d_tokvecs.sum() == 0.
+    assert d_tokvecs[0].sum() == 0.
