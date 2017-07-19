@@ -42,10 +42,89 @@ from .compat import json_dumps
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
 from ._ml import rebatch, Tok2Vec, flatten, get_col, doc2feats
+from ._ml import build_text_classifier
 from .parts_of_speech import X
 
 
-class TokenVectorEncoder(object):
+class BaseThincComponent(object):
+    name = None
+
+    @classmethod
+    def Model(cls, *shape, **kwargs):
+        raise NotImplementedError
+
+    def __init__(self, vocab, model=True, **cfg):
+        raise NotImplementedError
+
+    def __call__(self, doc):
+        scores = self.predict([doc])
+        self.set_annotations([doc], scores)
+        return doc
+
+    def pipe(self, stream, batch_size=128, n_threads=-1):
+        for docs in cytoolz.partition_all(batch_size, stream):
+            docs = list(docs)
+            scores = self.predict(docs)
+            self.set_annotations(docs, scores)
+            yield from docs
+
+    def predict(self, docs):
+        raise NotImplementedError
+
+    def set_annotations(self, docs, scores):
+        raise NotImplementedError
+
+    def update(self, docs_tensors, golds, state=None, drop=0., sgd=None, losses=None):
+        raise NotImplementedError
+
+    def get_loss(self, docs, golds, scores):
+        raise NotImplementedError
+
+    def begin_training(self, gold_tuples, pipeline=None):
+        token_vector_width = pipeline[0].model.nO
+        if self.model is True:
+            self.model = self.Model(1, token_vector_width)
+
+    def use_params(self, params):
+        with self.model.use_params(params):
+            yield
+
+    def to_bytes(self, **exclude):
+        serialize = OrderedDict((
+            ('model', lambda: self.model.to_bytes()),
+            ('vocab', lambda: self.vocab.to_bytes())
+        ))
+        return util.to_bytes(serialize, exclude)
+
+    def from_bytes(self, bytes_data, **exclude):
+        if self.model is True:
+            self.model = self.Model()
+        deserialize = OrderedDict((
+            ('model', lambda b: self.model.from_bytes(b)),
+            ('vocab', lambda b: self.vocab.from_bytes(b))
+        ))
+        util.from_bytes(bytes_data, deserialize, exclude)
+        return self
+
+    def to_disk(self, path, **exclude):
+        serialize = OrderedDict((
+            ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
+            ('vocab', lambda p: self.vocab.to_disk(p))
+        ))
+        util.to_disk(path, serialize, exclude)
+
+    def from_disk(self, path, **exclude):
+        if self.model is True:
+            self.model = self.Model()
+        deserialize = OrderedDict((
+            ('model', lambda p: self.model.from_bytes(p.open('rb').read())),
+            ('vocab', lambda p: self.vocab.from_disk(p))
+        ))
+        util.from_disk(path, deserialize, exclude)
+        return self
+
+
+class TokenVectorEncoder(BaseThincComponent):
     """Assign position-sensitive vectors to tokens, using a CNN or RNN."""
     name = 'tensorizer'
 
@@ -155,51 +234,8 @@ class TokenVectorEncoder(object):
         if self.model is True:
             self.model = self.Model()
 
-    def use_params(self, params):
-        """Replace weights of models in the pipeline with those provided in the
-        params dictionary.
 
-        params (dict): A dictionary of parameters keyed by model ID.
-        """
-        with self.model.use_params(params):
-            yield
-
-    def to_bytes(self, **exclude):
-        serialize = OrderedDict((
-            ('model', lambda: self.model.to_bytes()),
-            ('vocab', lambda: self.vocab.to_bytes())
-        ))
-        return util.to_bytes(serialize, exclude)
-
-    def from_bytes(self, bytes_data, **exclude):
-        if self.model is True:
-            self.model = self.Model()
-        deserialize = OrderedDict((
-            ('model', lambda b: self.model.from_bytes(b)),
-            ('vocab', lambda b: self.vocab.from_bytes(b))
-        ))
-        util.from_bytes(bytes_data, deserialize, exclude)
-        return self
-
-    def to_disk(self, path, **exclude):
-        serialize = OrderedDict((
-            ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
-            ('vocab', lambda p: self.vocab.to_disk(p))
-        ))
-        util.to_disk(path, serialize, exclude)
-
-    def from_disk(self, path, **exclude):
-        if self.model is True:
-            self.model = self.Model()
-        deserialize = OrderedDict((
-            ('model', lambda p: self.model.from_bytes(p.open('rb').read())),
-            ('vocab', lambda p: self.vocab.from_disk(p))
-        ))
-        util.from_disk(path, deserialize, exclude)
-        return self
-
-
-class NeuralTagger(object):
+class NeuralTagger(BaseThincComponent):
     name = 'tagger'
     def __init__(self, vocab, model=True):
         self.vocab = vocab
@@ -252,7 +288,6 @@ class NeuralTagger(object):
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
 
         d_tokvecs = bp_tag_scores(d_tag_scores, sgd=sgd)
-
         return d_tokvecs
 
     def get_loss(self, docs, golds, scores):
@@ -423,7 +458,7 @@ class NeuralLabeller(NeuralTagger):
         return float(loss), d_scores
 
 
-class SimilarityHook(object):
+class SimilarityHook(BaseThincComponent):
     """
     Experimental
 
@@ -477,48 +512,65 @@ class SimilarityHook(object):
         if self.model is True:
             self.model = self.Model(pipeline[0].model.nO)
 
-    def use_params(self, params):
-        """Replace weights of models in the pipeline with those provided in the
-        params dictionary.
 
-        params (dict): A dictionary of parameters keyed by model ID.
-        """
-        with self.model.use_params(params):
-            yield
+class TextClassifier(BaseThincComponent):
+    name = 'text-classifier'
 
-    def to_bytes(self, **exclude):
-        serialize = OrderedDict((
-            ('model', lambda: self.model.to_bytes()),
-            ('vocab', lambda: self.vocab.to_bytes())
-        ))
-        return util.to_bytes(serialize, exclude)
+    @classmethod
+    def Model(cls, nr_class, width=64, **cfg):
+        return build_text_classifier(nr_class, width, **cfg)
 
-    def from_bytes(self, bytes_data, **exclude):
+    def __init__(self, vocab, model=True, **cfg):
+        self.vocab = vocab
+        self.model = model
+        self.labels = cfg.get('labels', ['LABEL'])
+
+    def __call__(self, doc):
+        scores = self.predict([doc])
+        self.set_annotations([doc], scores)
+        return doc
+
+    def pipe(self, stream, batch_size=128, n_threads=-1):
+        for docs in cytoolz.partition_all(batch_size, stream):
+            docs = list(docs)
+            scores = self.predict(docs)
+            self.set_annotations(docs, scores)
+            yield from docs
+
+    def predict(self, docs):
+        scores = self.model(docs)
+        scores = self.model.ops.asarray(scores)
+        return scores
+
+    def set_annotations(self, docs, scores):
+        for i, doc in enumerate(docs):
+            for j, label in self.labels:
+                doc.cats[label] = float(scores[i, j])
+
+    def update(self, docs_tensors, golds, state=None, drop=0., sgd=None, losses=None):
+        docs, tensors = docs_tensors
+        scores, bp_scores = self.model.begin_update(docs, drop=drop)
+        loss, d_scores = self.get_loss(docs, golds, scores)
+        d_tensors = bp_scores(d_scores, sgd=sgd)
+        if losses is not None:
+            losses.setdefault(self.name, 0.0)
+            losses[self.name] += loss
+        return d_tensors
+
+    def get_loss(self, docs, golds, scores):
+        truths = numpy.zeros((len(golds), len(self.labels)), dtype='f')
+        for i, gold in enumerate(golds):
+            for j, label in enumerate(self.labels):
+                truths[i, j] = label in gold.cats
+        truths = self.model.ops.asarray(truths)
+        d_scores = (scores-truths) / scores.shape[0]
+        mean_square_error = ((scores-truths)**2).sum(axis=1).mean()
+        return mean_square_error, d_scores
+
+    def begin_training(self, gold_tuples, pipeline=None):
+        token_vector_width = pipeline[0].model.nO
         if self.model is True:
-            self.model = self.Model()
-        deserialize = OrderedDict((
-            ('model', lambda b: self.model.from_bytes(b)),
-            ('vocab', lambda b: self.vocab.from_bytes(b))
-        ))
-        util.from_bytes(bytes_data, deserialize, exclude)
-        return self
-
-    def to_disk(self, path, **exclude):
-        serialize = OrderedDict((
-            ('model', lambda p: p.open('wb').write(self.model.to_bytes())),
-            ('vocab', lambda p: self.vocab.to_disk(p))
-        ))
-        util.to_disk(path, serialize, exclude)
-
-    def from_disk(self, path, **exclude):
-        if self.model is True:
-            self.model = self.Model()
-        deserialize = OrderedDict((
-            ('model', lambda p: self.model.from_bytes(p.open('rb').read())),
-            ('vocab', lambda p: self.vocab.from_disk(p))
-        ))
-        util.from_disk(path, deserialize, exclude)
-        return self
+            self.model = self.Model(len(self.labels), token_vector_width)
 
 
 cdef class EntityRecognizer(LinearParser):
@@ -568,6 +620,14 @@ cdef class NeuralEntityRecognizer(NeuralParser):
     TransitionSystem = BiluoPushDown
 
     nr_feature = 6
+
+    def predict_confidences(self, docs):
+        tensors = [d.tensor for d in docs]
+        samples = []
+        for i in range(10):
+            states = self.parse_batch(docs, tensors, drop=0.3)
+            for state in states:
+                samples.append(self._get_entities(state))
 
     def __reduce__(self):
         return (NeuralEntityRecognizer, (self.vocab, self.moves, self.model), None, None)
