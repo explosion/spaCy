@@ -2,7 +2,10 @@
 from __future__ import unicode_literals
 
 from thinc.typedefs cimport weight_t
+from thinc.extra.search cimport Beam
 from collections import OrderedDict
+import numpy
+from thinc.neural.ops import NumpyOps
 
 from .stateclass cimport StateClass
 from ._state cimport StateC
@@ -121,6 +124,22 @@ cdef class BiluoPushDown(TransitionSystem):
         for i in range(gold.length):
             gold.c.ner[i] = self.lookup_transition(gold.ner[i])
         return gold
+
+    def get_beam_annot(self, Beam beam):
+        entities = {}
+        probs = beam.probs
+        for i in range(beam.size):
+            stcls = <StateClass>beam.at(i)
+            if stcls.is_final():
+                self.finalize_state(stcls.c)
+                prob = probs[i]
+                for j in range(stcls.c._e_i):
+                    start = stcls.c._ents[j].start
+                    end = stcls.c._ents[j].end
+                    label = stcls.c._ents[j].label
+                    entities.setdefault((start, end, label), 0.0)
+                    entities[(start, end, label)] += prob
+        return entities
 
     cdef Transition lookup_transition(self, object name) except *:
         cdef attr_t label

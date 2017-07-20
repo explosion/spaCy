@@ -137,6 +137,10 @@ cdef class TransitionSystem:
                 "the entity recognizer\n"
                 "The transition system has %d actions." % (self.n_moves))
 
+    def get_class_name(self, int clas):
+        act = self.c[clas]
+        return self.move_name(act.move, act.label)
+
     def add_action(self, int action, label_name):
         cdef attr_t label_id
         if not isinstance(label_name, int):

@@ -10,6 +10,8 @@ from libc.stdint cimport uint32_t
 from libc.string cimport memcpy
 from cymem.cymem cimport Pool
 from collections import OrderedDict
+from thinc.extra.search cimport Beam
+import numpy
 
 from .stateclass cimport StateClass
 from ._state cimport StateC, is_space_token
@@ -510,3 +512,23 @@ cdef class ArcEager(TransitionSystem):
                     "State at failure:\n"
                     "%s" % (self.n_moves, stcls.print_state(gold.words)))
         assert n_gold >= 1
+
+    def get_beam_annot(self, Beam beam):
+        length = (<StateClass>beam.at(0)).c.length
+        heads = [{} for _ in range(length)]
+        deps = [{} for _ in range(length)]
+        probs = beam.probs
+        for i in range(beam.size):
+            stcls = <StateClass>beam.at(i)
+            self.finalize_state(stcls.c)
+            if stcls.is_final():
+                prob = probs[i]
+                for j in range(stcls.c.length):
+                    head = j + stcls.c._sent[j].head
+                    dep = stcls.c._sent[j].dep
+                    heads[j].setdefault(head, 0.0)
+                    heads[j][head] += prob
+                    deps[j].setdefault(dep, 0.0)
+                    deps[j][dep] += prob
+        return heads, deps
+
