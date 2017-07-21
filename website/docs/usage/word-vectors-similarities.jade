@@ -77,7 +77,7 @@ p
 
 +code.
     doc1 = nlp(u"Paris is the largest city in France.")
-    doc2 = nlp(u"Ljubljana is the capital of Lithuania.")
+    doc2 = nlp(u"Vilnius is the capital of Lithuania.")
     doc3 = nlp(u"An emu is a large bird.")
 
     for doc in [doc1, doc2, doc3]:
@@ -85,13 +85,13 @@ p
             print(doc.similarity(other_doc))
 
 p
-    |  Even though the sentences about Paris and Ljubljana consist of different
+    |  Even though the sentences about Paris and Vilnius consist of different
     |  words and entities, they both describe the same concept and are seen as
     |  more similar than the sentence about emus. In this case, even a misspelled
-    |  version of "Ljubljana" would still produce very similar results.
+    |  version of "Vilnius" would still produce very similar results.
 
 +table
-    - var examples = {"Paris is the largest city in France.": [1, 0.84, 0.65], "Ljubljana is the capital of Lithuania.": [0.84, 1, 0.52], "An emu is a large bird.": [0.65, 0.52, 1]}
+    - var examples = {"Paris is the largest city in France.": [1, 0.85, 0.65], "Vilnius is the capital of Lithuania.": [0.85, 1, 0.55], "An emu is a large bird.": [0.65, 0.55, 1]}
     - var counter = 0
 
     +row
