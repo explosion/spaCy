@@ -513,8 +513,8 @@ class SimilarityHook(BaseThincComponent):
             self.model = self.Model(pipeline[0].model.nO)
 
 
-class TextClassifier(BaseThincComponent):
-    name = 'text-classifier'
+class TextCategorizer(BaseThincComponent):
+    name = 'textcat'
 
     @classmethod
     def Model(cls, nr_class, width=64, **cfg):
