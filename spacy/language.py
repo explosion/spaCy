@@ -22,6 +22,7 @@ from .pipeline import NeuralDependencyParser, EntityRecognizer
 from .pipeline import TokenVectorEncoder, NeuralTagger, NeuralEntityRecognizer
 from .pipeline import NeuralLabeller
 from .pipeline import SimilarityHook
+from .pipeline import TextCategorizer
 
 from .compat import json_dumps
 from .attrs import IS_STOP
@@ -107,6 +108,8 @@ class BaseDefaults(object):
             NeuralDependencyParser(nlp.vocab, **cfg),
             nonproj.deprojectivize],
         'ner': lambda nlp, **cfg: [NeuralEntityRecognizer(nlp.vocab, **cfg)],
+        'similarity': lambda nlp, **cfg: [SimilarityHook(nlp.vocab, **cfg)],
+        'textcat': lambda nlp, **cfg: [TextCategorizer(nlp.vocab, **cfg)],
         # Temporary compatibility -- delete after pivot
         'token_vectors': lambda nlp, **cfg: [TokenVectorEncoder(nlp.vocab, **cfg)],
         'tags': lambda nlp, **cfg: [NeuralTagger(nlp.vocab, **cfg)],
@@ -115,7 +118,6 @@ class BaseDefaults(object):
             nonproj.deprojectivize,
         ],
         'entities': lambda nlp, **cfg: [NeuralEntityRecognizer(nlp.vocab, **cfg)],
-        'similarity': lambda nlp, **cfg: [SimilarityHook(nlp.vocab, **cfg)]
     }
 
     token_match = TOKEN_MATCH
