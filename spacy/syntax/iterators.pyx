@@ -117,4 +117,5 @@ def es_noun_chunks(obj):
         token = next_token(token)
 
 
-CHUNKERS = {'en': english_noun_chunks, 'de': german_noun_chunks, 'es': es_noun_chunks}
+CHUNKERS = {'en': english_noun_chunks, 'de': german_noun_chunks, 'es': es_noun_chunks,
+            None: english_noun_chunks, '': english_noun_chunks}
