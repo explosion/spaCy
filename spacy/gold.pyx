@@ -148,7 +148,7 @@ def minibatch(items, size=8):
     '''
     items = iter(items)
     while True:
-        batch_size = next(size) if hasattr(size, '__next__') else size
+        batch_size = next(size) #if hasattr(size, '__next__') else size
         batch = list(cytoolz.take(int(batch_size), items))
         if len(batch) == 0:
             break
