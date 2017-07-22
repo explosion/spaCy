@@ -15,7 +15,6 @@ def test_issue955(doc):
     '''Test that we don't have any nested noun chunks'''
     seen_tokens = set()
     for np in doc.noun_chunks:
-        print(np.text, np.root.text, np.root.dep_, np.root.tag_)
         for word in np:
             key = (word.i, word.text)
             assert key not in seen_tokens
