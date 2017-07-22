@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 from .. import language_data as base
 from ..language_data import update_exc, strings_to_exc
 
-from .stop_words import STOP_WORDS
+from .word_sets import STOP_WORDS, NUM_WORDS
 
 
 STOP_WORDS = set(STOP_WORDS)
