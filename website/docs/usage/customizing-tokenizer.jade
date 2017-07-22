@@ -113,7 +113,7 @@ p
                 else:
                     tokens.append(substring)
                     substring = ''
-            tokens.extend(suffixes)
+            tokens.extend(reversed(suffixes))
             return tokens
 
 p
@@ -214,7 +214,7 @@ p
         def __call__(self, text):
             words = text.split(' ')
             # All tokens 'own' a subsequent space character in this tokenizer
-            spaces = [True] * len(word)
+            spaces = [True] * len(words)
             return Doc(self.vocab, words=words, spaces=spaces)
 
 p

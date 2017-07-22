@@ -4,18 +4,22 @@ spaCy: Industrial-strength NLP
 spaCy is a library for advanced natural language processing in Python and
 Cython. spaCy is built on  the very latest research, but it isn't researchware.
 It was designed from day one to be used in real products. spaCy currently supports
-English, German and French, as well as tokenization for Spanish, Italian,
+English, German, French and Spanish, as well as tokenization for Italian,
 Portuguese, Dutch, Swedish, Finnish, Norwegian, Hungarian, Bengali, Hebrew,
 Chinese and Japanese. It's commercial open-source software, released under the
 MIT license.
 
-📊 **Help us improve the library!** `Take the spaCy user survey <https://survey.spacy.io>`_.
+⭐️ **Test spaCy v2.0.0 alpha and the new models!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/tag/v2.0.0-alpha>`_
 
 💫 **Version 1.8 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square
     :target: https://travis-ci.org/explosion/spaCy
-    :alt: Build Status
+    :alt: Travis Build Status
+    
+.. image:: https://img.shields.io/appveyor/ci/explosion/spacy/master.svg?style=flat-square
+    :target: https://ci.appveyor.com/project/explosion/spacy
+    :alt: Appveyor Build Status
 
 .. image:: https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square
     :target: https://github.com/explosion/spaCy/releases
@@ -85,7 +89,7 @@ Features
 * GIL-free **multi-threading**
 * Efficient binary serialization
 * Easy **deep learning** integration
-* Statistical models for **English** and **German**
+* Statistical models for **English**, **German**, **French** and **Spanish**
 * State-of-the-art speed
 * Robust, rigorously evaluated accuracy
 

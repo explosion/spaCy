@@ -14,8 +14,8 @@
 
         "SPACY_VERSION": "1.8",
         "LATEST_NEWS": {
-            "url": "https://survey.spacy.io/",
-            "title": "Take the spaCy user survey and help us improve the library!"
+            "url": "/docs/usage/models",
+            "title": "The first official Spanish model is here!"
         },
 
         "SOCIAL": {
@@ -55,7 +55,33 @@
             }
         },
 
-        "V_CSS": "1.6",
+        "QUICKSTART": [
+            { "id": "os", "title": "Operating system", "options": [
+                { "id": "mac", "title": "macOS / OSX", "checked": true },
+                { "id": "windows", "title": "Windows" },
+                { "id": "linux", "title": "Linux" }]
+            },
+            { "id": "package", "title": "Package manager", "options": [
+                { "id": "pip", "title": "pip", "checked": true },
+                { "id": "conda", "title": "conda" },
+                { "id": "source", "title": "from source" }]
+            },
+            { "id": "python", "title": "Python version", "options": [
+                { "id": 2, "title": "2.x" },
+                { "id": 3, "title": "3.x", "checked": true }]
+            },
+            { "id": "config", "title": "Configuration", "multiple": true, "options": [
+                {"id": "venv", "title": "virtualenv", "help": "Use a virtual environment and install spaCy into a user directory" }]
+            },
+            { "id": "model", "title": "Models", "multiple": true, "options": [
+                { "id": "en", "title": "English", "meta": "50MB" },
+                { "id": "de", "title": "German", "meta": "645MB" },
+                { "id": "fr", "title": "French", "meta": "1.33GB" },
+                { "id": "es", "title": "Spanish", "meta": "377MB"}]
+            }
+        ],
+
+        "V_CSS": "1.7",
         "V_JS": "1.2",
         "DEFAULT_SYNTAX": "python",
         "ANALYTICS": "UA-58931649-1",

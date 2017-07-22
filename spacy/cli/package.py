@@ -47,7 +47,7 @@ def package(input_dir, output_dir, meta_path, force):
 
 def check_dirs(input_path, output_path, meta_path):
     if not input_path.exists():
-        util.sys_exit(unicode_(input_path.as_poisx), title="Model directory not found")
+        util.sys_exit(unicode_(input_path.as_posix()), title="Model directory not found")
     if not output_path.exists():
         util.sys_exit(unicode_(output_path), title="Output directory not found")
     if meta_path and not meta_path.exists():

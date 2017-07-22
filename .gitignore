@@ -1,50 +1,45 @@
-# Vim
-*.swp
-*.sw*
-Profile.prof
-tmp/
-.dev
-.denv
-.pypyenv
-.eggs
-*.tgz
-.sass-cache
-.python-version
-
-MANIFEST
-
+# spaCy
+spacy/data/
 corpora/
 models/
 keys/
 
-spacy/syntax/*.cpp
-spacy/syntax/*.html
-spacy/en/*.cpp
-spacy/tokens/*.cpp
-spacy/serialize/*.cpp
-spacy/en/data/*
-spacy/*.cpp
-spacy/ner/*.cpp
-spacy/orthography/*.cpp
-ext/murmurhash.cpp
-ext/sparsehash.cpp
+# Website
+website/www/
+website/_deploy.sh
+website/package.json
+website/announcement.jade
+website/.gitignore
 
-/spacy/data/
-
-_build/
-.env/
-tmp/
+# Cython / C extensions
 cythonize.json
-
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-
-# C extensions
+spacy/*.html
+*.cpp
 *.so
 
-# Distribution / packaging
+# Vim / VSCode / editors
+*.swp
+*.sw*
+Profile.prof
+.vscode
+.sass-cache
+
+# Python
 .Python
+.python-version
+__pycache__/
+*.py[cod]
+.env/
+.env2/
+.env3/
+.~env/
+.venv
+venv/
+.dev
+.denv
+.pypyenv
+
+# Distribution / packaging
 env/
 bin/
 build/
@@ -59,6 +54,12 @@ var/
 *.egg-info/
 .installed.cfg
 *.egg
+.eggs
+MANIFEST
+
+# Temporary files
+*.~*
+tmp/
 
 # Installer logs
 pip-log.txt
@@ -87,25 +88,16 @@ coverage.xml
 *.log
 *.pot
 
-# Windows local helper files
+# Windows
 *.bat
+Thumbs.db
+Desktop.ini
 
 # Mac OS X
 *.DS_Store
 
-# Temporary files / Dropbox hack
-*.~*
-
 # Komodo project files
 *.komodoproject
 
-# Website
-website/_deploy.sh
-website/package.json
-website/announcement.jade
-website/www/
-website/.gitignore
-
-# Python virtualenv
-venv
-venv/*
+# Other
+*.tgz

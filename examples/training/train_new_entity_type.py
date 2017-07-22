@@ -52,6 +52,7 @@ def train_ner(nlp, train_data, output_dir):
         random.shuffle(train_data)
         loss = 0.
         for raw_text, entity_offsets in train_data:
+            doc = nlp.make_doc(raw_text)
             gold = GoldParse(doc, entities=entity_offsets)
             # By default, the GoldParse class assumes that the entities
             # described by offset are complete, and all other words should
@@ -63,7 +64,6 @@ def train_ner(nlp, train_data, output_dir):
             #for i in range(len(gold.ner)):
                 #if not gold.ner[i].endswith('ANIMAL'):
                 #    gold.ner[i] = '-'
-            doc = nlp.make_doc(raw_text)
             nlp.tagger(doc)
             # As of 1.9, spaCy's parser now lets you supply a dropout probability
             # This might help the model generalize better from only a few

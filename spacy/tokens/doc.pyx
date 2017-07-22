@@ -29,6 +29,7 @@ from ..serialize.bits cimport BitArray
 from ..util import normalize_slice
 from ..syntax.iterators import CHUNKERS
 from ..compat import is_config
+from .. import about
 
 
 DEF PADDING = 5
@@ -403,9 +404,8 @@ cdef class Doc:
             if not self.is_parsed:
                 raise ValueError(
                     "noun_chunks requires the dependency parse, which "
-                    "requires data to be installed. If you haven't done so, run: "
-                    "\npython -m spacy download %s\n"
-                    "to install the data" % self.vocab.lang)
+                    "requires data to be installed. For more info, see the "
+                    "documentation: \n%s\n" % about.__docs_models__)
             # Accumulate the result before beginning to iterate over it. This prevents
             # the tokenisation from being changed out from under us during the iteration.
             # The tricky thing here is that Span accepts its tokenisation changing,
@@ -431,14 +431,14 @@ cdef class Doc:
         """
         def __get__(self):
             if 'sents' in self.user_hooks:
-                return self.user_hooks['sents'](self)
+                yield from self.user_hooks['sents'](self)
+                return
 
             if not self.is_parsed:
                 raise ValueError(
-                    "sentence boundary detection requires the dependency parse, which "
-                    "requires data to be installed. If you haven't done so, run: "
-                    "\npython -m spacy download %s\n"
-                    "to install the data" % self.vocab.lang)
+                    "Sentence boundary detection requires the dependency parse, which "
+                    "requires data to be installed. For more info, see the "
+                    "documentation: \n%s\n" % about.__docs_models__)
             cdef int i
             start = 0
             for i in range(1, self.length):

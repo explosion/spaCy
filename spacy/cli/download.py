@@ -79,5 +79,5 @@ def check_error_depr(model):
             "As of v1.7.0, the download all command is deprecated. Please "
             "download the models individually via spacy.download [model name] "
             "or pip install. For more info on this, see the documentation: "
-            "{d}".format(d=about.__docs__),
+            "{d}".format(d=about.__docs_models__),
             title="Deprecated command")
