@@ -58,3 +58,4 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Yanhao Yang, [@YanhaoYang](https://github.com/YanhaoYang)
 * Yasuaki Uechi, [@uetchy](https://github.com/uetchy)
 * Yubing Dong, [@tomtung](https://github.com/tomtung)
+* Yuval Pinter, [@yuvalpinter](https://github.com/yuvalpinter)
