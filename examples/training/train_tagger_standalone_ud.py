@@ -1,3 +1,17 @@
+'''
+This example shows training of the POS tagger without the Language class,
+showing the APIs of the atomic components.
+
+This example was adapted from the gist here:
+
+https://gist.github.com/kamac/a7bc139f62488839a8118214a4d932f2
+
+Issue discussing the gist:
+
+https://github.com/explosion/spaCy/issues/1179
+
+The example was written for spaCy 1.8.2.
+'''
 from __future__ import unicode_literals
 from __future__ import print_function
 

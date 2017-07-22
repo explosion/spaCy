@@ -24,8 +24,8 @@ For more details, see the documentation:
 * Training the Named Entity Recognizer: https://spacy.io/docs/usage/train-ner
 * Saving and loading models: https://spacy.io/docs/usage/saving-loading
 
-Developed for: spaCy 1.7.6
-Last tested for: spaCy 1.7.6
+Developed for: spaCy 1.9.0
+Last tested for: spaCy 1.9.0
 """
 from __future__ import unicode_literals, print_function
 
