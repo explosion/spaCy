@@ -17,6 +17,7 @@
             "Span": "span",
             "Language": "language",
             "Tokenizer": "tokenizer",
+            "Tensorizer": "tensorizer",
             "Tagger": "tagger",
             "DependencyParser": "dependencyparser",
             "EntityRecognizer": "entityrecognizer",
@@ -143,6 +144,12 @@
 
     "tagger": {
         "title": "Tagger",
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
+    },
+
+    "tensorizer": {
+        "title": "Tensorizer",
         "tag": "class",
         "source": "spacy/pipeline.pyx"
     },
