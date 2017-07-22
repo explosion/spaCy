@@ -23,6 +23,7 @@ from .pipeline import TokenVectorEncoder, NeuralTagger, NeuralEntityRecognizer
 from .pipeline import NeuralLabeller
 from .pipeline import SimilarityHook
 from .pipeline import TextCategorizer
+from . import about
 
 from .compat import json_dumps
 from .attrs import IS_STOP
@@ -149,8 +150,8 @@ class Language(object):
     Defaults = BaseDefaults
     lang = None
 
-    def __init__(self, vocab=True, make_doc=True, pipeline=None, meta={},
-            disable=tuple(), **kwargs):
+    def __init__(self, vocab=True, make_doc=True, pipeline=None,
+                 meta={}, disable=tuple(), **kwargs):
         """Initialise a Language object.
 
         vocab (Vocab): A `Vocab` object. If `True`, a vocab is created via
@@ -167,7 +168,7 @@ class Language(object):
             models to add model meta data.
         RETURNS (Language): The newly constructed object.
         """
-        self.meta = dict(meta)
+        self._meta = dict(meta)
         if vocab is True:
             factory = self.Defaults.create_vocab
             vocab = factory(self, **meta.get('vocab', {}))
@@ -198,6 +199,28 @@ class Language(object):
             else:
                 flat_list.append(pipe)
         self.pipeline = flat_list
+
+    @property
+    def meta(self):
+        self._meta.setdefault('lang', self.vocab.lang)
+        self._meta.setdefault('name', '')
+        self._meta.setdefault('version', '0.0.0')
+        self._meta.setdefault('spacy_version', about.__version__)
+        self._meta.setdefault('description', '')
+        self._meta.setdefault('author', '')
+        self._meta.setdefault('email', '')
+        self._meta.setdefault('url', '')
+        self._meta.setdefault('license', '')
+        pipeline = []
+        for component in self.pipeline:
+            if hasattr(component, 'name'):
+                pipeline.append(component.name)
+        self._meta['pipeline'] = pipeline
+        return self._meta
+
+    @meta.setter
+    def meta(self, value):
+        self._meta = value
 
     # Conveniences to access pipeline components
     @property
