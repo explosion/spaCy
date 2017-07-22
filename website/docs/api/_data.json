@@ -21,6 +21,7 @@
             "Tagger": "tagger",
             "DependencyParser": "dependencyparser",
             "EntityRecognizer": "entityrecognizer",
+            "TextCategorizer": "textcategorizer",
             "Matcher": "matcher",
             "Lexeme": "lexeme",
             "Vocab": "vocab",
@@ -126,6 +127,12 @@
 
     "entityrecognizer": {
         "title": "EntityRecognizer",
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
+    },
+
+    "textcategorizer": {
+        "title": "TextCategorizer",
         "tag": "class",
         "source": "spacy/pipeline.pyx"
     },
