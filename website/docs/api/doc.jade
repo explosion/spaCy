@@ -558,9 +558,19 @@ p
         +cell The store of lexical types.
 
     +row
-        +cell #[code tensor]
+        +cell #[code tensor] #[+tag-new(2)]
         +cell object
         +cell Container for dense vector representations.
+
+    +row
+        +cell #[code cats] #[+tag-new(2)]
+        +cell dictionary
+        +cell
+            |  Maps either a label to a score for categories applied to whole
+            |  document, or #[code (start_char, end_char, label)] to score for
+            |  categories applied to spans. #[code start_char] and #[code end_char]
+            |  should be character offsets, label can be either a string or an
+            |  integer ID, and score should be a float.
 
     +row
         +cell #[code user_data]

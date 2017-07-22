@@ -17,9 +17,11 @@
             "Span": "span",
             "Language": "language",
             "Tokenizer": "tokenizer",
+            "Tensorizer": "tensorizer",
             "Tagger": "tagger",
             "DependencyParser": "dependencyparser",
             "EntityRecognizer": "entityrecognizer",
+            "TextCategorizer": "textcategorizer",
             "Matcher": "matcher",
             "Lexeme": "lexeme",
             "Vocab": "vocab",
@@ -129,6 +131,12 @@
         "source": "spacy/pipeline.pyx"
     },
 
+    "textcategorizer": {
+        "title": "TextCategorizer",
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
+    },
+
     "dependencyparser": {
         "title": "DependencyParser",
         "tag": "class",
@@ -143,6 +151,12 @@
 
     "tagger": {
         "title": "Tagger",
+        "tag": "class",
+        "source": "spacy/pipeline.pyx"
+    },
+
+    "tensorizer": {
+        "title": "Tensorizer",
         "tag": "class",
         "source": "spacy/pipeline.pyx"
     },
