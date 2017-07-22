@@ -230,7 +230,7 @@ cdef class Span:
             # so it's okay once we have the Span objects. See Issue #375
             spans = []
             for start, end, label in self.doc.noun_chunks_iterator(self):
-                spans.append(Span(self, start, end, label=label))
+                spans.append(Span(self.doc, start, end, label=label))
             for span in spans:
                 yield span
 
