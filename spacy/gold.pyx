@@ -148,7 +148,7 @@ def minibatch(items, size=8):
     '''
     items = iter(items)
     while True:
-        batch_size = next(size) #if hasattr(size, '__next__') else size
+        batch_size = next(size) if hasattr(size, '__next__') else size
         batch = list(cytoolz.take(int(batch_size), items))
         if len(batch) == 0:
             break
@@ -428,17 +428,7 @@ cdef class GoldParse:
         self.c.has_dep = <int*>self.mem.alloc(len(doc), sizeof(int))
         self.c.ner = <Transition*>self.mem.alloc(len(doc), sizeof(Transition))
 
-        self.cats = []
-        for item in cats:
-            if isinstance(item, int):
-                self.cats.append((0, len(doc.text), self.vocab.strings[item]))
-            elif isinstance(item, str):
-                self.cats.append((0, len(doc.text), item))
-            elif hasattr(item, '__len__') and len(item) == 3:
-                start_char, end_char, label = item
-                if isinstance(label, int):
-                    label = self.vocab.strings[label]
-                self.cats.append((start_char, end_char, label))
+        self.cats = list(cats)
         self.words = [None] * len(doc)
         self.tags = [None] * len(doc)
         self.heads = [None] * len(doc)
