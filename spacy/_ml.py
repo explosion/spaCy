@@ -411,11 +411,12 @@ def uniqued(layer, column=0):
 
 
 def build_text_classifier(nr_class, width=64, **cfg):
+    nr_vector = cfg.get('nr_vector', 1000)
     with Model.define_operators({'>>': chain, '+': add, '|': concatenate, '**': clone}):
-        embed_lower = HashEmbed(width, 1000, column=1)
-        embed_prefix = HashEmbed(width//2, 1000, column=2)
-        embed_suffix = HashEmbed(width//2, 1000, column=3)
-        embed_shape = HashEmbed(width//2, 1000, column=4)
+        embed_lower = HashEmbed(width, nr_vector, column=1)
+        embed_prefix = HashEmbed(width//2, nr_vector, column=2)
+        embed_suffix = HashEmbed(width//2, nr_vector, column=3)
+        embed_shape = HashEmbed(width//2, nr_vector, column=4)
 
         model = (
             FeatureExtracter([ORTH, LOWER, PREFIX, SUFFIX, SHAPE])
