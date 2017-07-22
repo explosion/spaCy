@@ -22,5 +22,6 @@ TAG_MAP = {
     "CCONJ":    {POS: CCONJ}, # U20
     "ADJ":      {POS: ADJ},
     "VERB":     {POS: VERB},
-    "PART":     {POS: PART}
+    "PART":     {POS: PART},
+    'SP':       {POS: SPACE}
 }
