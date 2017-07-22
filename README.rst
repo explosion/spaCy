@@ -63,11 +63,12 @@ MIT license.
 💬 Where to ask questions
 ==========================
 
+Please understand that we won't be able to provide individual support via email. We also believe that help is much more valuable if it's shared publicly, so that more people can benefit from it.
+
 ====================== ===
 **Bug reports**        `GitHub issue tracker`_
 **Usage questions**    `StackOverflow`_, `Gitter chat`_, `Reddit user group`_
 **General discussion** `Gitter chat`_, `Reddit user group`_
-**Commercial support** contact@explosion.ai
 ====================== ===
 
 .. _GitHub issue tracker: https://github.com/explosion/spaCy/issues
