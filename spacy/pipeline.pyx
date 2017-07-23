@@ -120,10 +120,17 @@ class BaseThincComponent(object):
         deserialize = OrderedDict((
             ('model', lambda p: self.model.from_bytes(p.open('rb').read())),
             ('vocab', lambda p: self.vocab.from_disk(p)),
-            ('cfg', lambda p: self.cfg.update(ujson.load(p.open()))),
+            ('cfg', lambda p: self.cfg.update(_load_cfg(p)))
         ))
         util.from_disk(path, deserialize, exclude)
         return self
+
+
+def _load_cfg(path):
+    if path.exists():
+        return ujson.load(path.open())
+    else:
+        return {}
 
 
 class TokenVectorEncoder(BaseThincComponent):
