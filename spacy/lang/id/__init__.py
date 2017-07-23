@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from .stop_words import STOP_WORDS
+from .punctuation import TOKENIZER_SUFFIXES, TOKENIZER_PREFIXES
 from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .norm_exceptions import NORM_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
@@ -20,6 +21,8 @@ class IndonesianDefaults(Language.Defaults):
 
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = set(STOP_WORDS)
+    prefixes = tuple(TOKENIZER_PREFIXES)
+    suffixes = tuple(TOKENIZER_SUFFIXES)
 
 
 class Indonesian(Language):
