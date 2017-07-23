@@ -27,7 +27,6 @@ ALPHA_UPPER = merge_char_classes(_upper + _uncased)
 
 _units = ('km km² km³ m m² m³ dm dm² dm³ cm cm² cm³ mm mm² mm³ ha µm nm yd in ft '
           'kg g mg µg t lb oz m/s km/h kmh mph hPa Pa mbar mb MB kb KB gb GB tb '
-          'kHz MHz GHz mAh '
           'TB T G M K')
 _currency = r'\$ £ € ¥ ฿ US\$ C\$ A\$'
 _punct = r'… , : ; \! \? ¿ ¡ \( \) \[ \] \{ \} < > _ # \* &'
