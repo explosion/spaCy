@@ -6,9 +6,9 @@ from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .lex_attrs import LEX_ATTRS
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
-from ..language import Language
-from ..attrs import LANG
-from ..util import uptade_exc
+from ...language import Language
+from ...attrs import LANG
+from ...util import update_exc
 
 
 class IndonesianDefaults(Language.Defaults):
@@ -17,7 +17,7 @@ class IndonesianDefaults(Language.Defaults):
 
     lex_attr_getters.update(LEX_ATTRS)
 
-    tokenizer_exceptions = uptade_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = set(STOP_WORDS)
 
 
