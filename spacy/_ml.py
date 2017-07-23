@@ -15,6 +15,7 @@ from thinc.describe import Dimension, Synapses, Biases, Gradient
 from thinc.neural._classes.affine import _set_dimensions_if_needed
 from thinc.api import FeatureExtracter, with_getitem
 from thinc.neural.pooling import Pooling, max_pool, mean_pool
+from thinc.linear.linear import LinearModel
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP
 from .tokens.doc import Doc
@@ -365,51 +366,6 @@ def preprocess_doc(docs, drop=0.):
     return (keys, vals, lengths), None
 
 
-# This belongs in thinc
-def wrap(func, *child_layers):
-    model = layerize(func)
-    model._layers.extend(child_layers)
-    def on_data(self, X, y):
-        for child in self._layers:
-            for hook in child.on_data_hooks:
-                hook(child, X, y)
-    model.on_data_hooks.append(on_data)
-    return model
-
-# This belongs in thinc
-def uniqued(layer, column=0):
-    '''Group inputs to a layer, so that the layer only has to compute
-    for the unique values. The data is transformed back before output, and the same
-    transformation is applied for the gradient. Effectively, this is a cache
-    local to each minibatch.
-
-    The uniqued wrapper is useful for word inputs, because common words are
-    seen often, but we may want to compute complicated features for the words,
-    using e.g. character LSTM.
-    '''
-    def uniqued_fwd(X, drop=0.):
-        keys = X[:, column]
-        if not isinstance(keys, numpy.ndarray):
-            keys = keys.get()
-        uniq_keys, ind, inv, counts = numpy.unique(keys, return_index=True,
-                                                    return_inverse=True,
-                                                    return_counts=True)
-        Y_uniq, bp_Y_uniq = layer.begin_update(X[ind], drop=drop)
-        Y = Y_uniq[inv].reshape((X.shape[0],) + Y_uniq.shape[1:])
-        def uniqued_bwd(dY, sgd=None):
-            dY_uniq = layer.ops.allocate(Y_uniq.shape, dtype='f')
-            layer.ops.scatter_add(dY_uniq, inv, dY)
-            d_uniques = bp_Y_uniq(dY_uniq, sgd=sgd)
-            if d_uniques is not None:
-                dX = (d_uniques / counts)[inv]
-                return dX
-            else:
-                return None
-        return Y, uniqued_bwd
-    model = wrap(uniqued_fwd, layer)
-    return model
-
-
 def build_text_classifier(nr_class, width=64, **cfg):
     nr_vector = cfg.get('nr_vector', 1000)
     with Model.define_operators({'>>': chain, '+': add, '|': concatenate, '**': clone}):
@@ -418,23 +374,32 @@ def build_text_classifier(nr_class, width=64, **cfg):
         embed_suffix = HashEmbed(width//2, nr_vector, column=3)
         embed_shape = HashEmbed(width//2, nr_vector, column=4)
 
-        model = (
+        cnn_model = (
             FeatureExtracter([ORTH, LOWER, PREFIX, SUFFIX, SHAPE])
             >> _flatten_add_lengths
             >> with_getitem(0,
-                uniqued(
-                    (embed_lower | embed_prefix | embed_suffix | embed_shape) 
-                    >> Maxout(width, width+(width//2)*3)
-                )
+                (embed_lower | embed_prefix | embed_suffix | embed_shape) 
+                >> Maxout(width, width+(width//2)*3)
                 >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
                 >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
                 >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
             )
             >> Pooling(mean_pool, max_pool)
             >> Residual(ReLu(width*2, width*2))
-            >> zero_init(Affine(nr_class, width*2, drop_factor=0.0))
+        )
+        linear_model = (
+            _preprocess_doc
+            >> LinearModel(nr_class)
             >> logistic
         )
+
+        model = (
+            #(linear_model | cnn_model)
+            cnn_model
+            >> zero_init(Affine(nr_class, width*2+nr_class, drop_factor=0.0))
+            >> logistic
+        )
+ 
     model.lsuv = False
     return model
 
