@@ -27,7 +27,7 @@ LIST_CURRENCY = split_chars(_currency)
 
 _prefixes = TOKENIZER_PREFIXES + LIST_CURRENCY + [HTML_PREFIX] + ['[Kk]e-', '/', '—']
 
-_suffixes = TOKENIZER_SUFFIXES + [r'\-[Nn]ya', '—'] + [
+_suffixes = TOKENIZER_SUFFIXES + [r'\-[Nn]ya', '—', '-'] + [
         r'(?<=[0-9])(?:{c})'.format(c=CURRENCY),
         r'(?<=[0-9])(?:{u})'.format(u=UNITS),
         r'(?<=[0-9])%',
