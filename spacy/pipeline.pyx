@@ -417,7 +417,7 @@ class NeuralTagger(BaseThincComponent):
             ('vocab', lambda p: self.vocab.from_disk(p)),
             ('tag_map', load_tag_map),
             ('model', load_model),
-            ('cfg', lambda p: self.cfg.update(ujson.load(p.open()))),
+            ('cfg', lambda p: self.cfg.update(_load_cfg(p)))
         ))
         util.from_disk(path, deserialize, exclude)
         return self
