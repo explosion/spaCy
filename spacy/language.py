@@ -10,6 +10,7 @@ from thinc.neural.optimizers import Adam, SGD
 import random
 import ujson
 from collections import OrderedDict
+import itertools
 
 from .tokenizer import Tokenizer
 from .vocab import Vocab
@@ -25,7 +26,7 @@ from .pipeline import SimilarityHook
 from .pipeline import TextCategorizer
 from . import about
 
-from .compat import json_dumps
+from .compat import json_dumps, izip
 from .attrs import IS_STOP
 from .lang.punctuation import TOKENIZER_PREFIXES, TOKENIZER_SUFFIXES, TOKENIZER_INFIXES
 from .lang.tokenizer_exceptions import TOKEN_MATCH
@@ -411,7 +412,7 @@ class Language(object):
             except StopIteration:
                 pass
 
-    def pipe(self, texts, n_threads=2, batch_size=1000, disable=[]):
+    def pipe(self, texts, tuples=False, n_threads=2, batch_size=1000, disable=[]):
         """Process texts as a stream, and yield `Doc` objects in order. Supports
         GIL-free multi-threading.
 
@@ -427,8 +428,16 @@ class Language(object):
             >>>     for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
             >>>         assert doc.is_parsed
         """
+        if tuples:
+            text_context1, text_context2 = itertools.tee(texts)
+            texts = (tc[0] for tc in text_context1)
+            contexts = (tc[1] for tc in text_context2)
+            docs = self.pipe(texts, n_threads=n_threads, batch_size=batch_size,
+                             disable=disable)
+            for doc, context in izip(docs, contexts):
+                yield (doc, context)
+            return
         docs = (self.make_doc(text) for text in texts)
-        docs = texts
         for proc in self.pipeline:
             name = getattr(proc, 'name', None)
             if name in disable:

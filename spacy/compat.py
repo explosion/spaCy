@@ -5,6 +5,7 @@ import six
 import ftfy
 import sys
 import ujson
+import itertools
 
 from thinc.neural.util import copy_array
 
@@ -35,6 +36,7 @@ CudaStream = CudaStream
 cupy = cupy
 fix_text = ftfy.fix_text
 copy_array = copy_array
+izip = getattr(itertools, 'izip', zip)
 
 is_python2 = six.PY2
 is_python3 = six.PY3
