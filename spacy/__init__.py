@@ -13,5 +13,10 @@ def load(name, **overrides):
     return util.load_model(name, **overrides)
 
 
+def blank(name, **kwargs):
+    LangClass = util.get_lang_class(name)
+    return LangClass(**kwargs)
+
+
 def info(model=None, markdown=False):
     return cli_info(None, model, markdown)
