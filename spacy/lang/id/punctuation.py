@@ -12,9 +12,10 @@ _units = (_units + 's bit Gbps Mbps mbps Kbps kbps ƒ ppi px '
           'juta jt jutaan mill?iar million bil[l]?iun bilyun billion '
           )
 _currency = (_currency + r'Rp IDR RMB SGD S\$ ')
-_months = ('Januari Februari Maret April Mei Juni Juli Agustus September Oktober November Desember '
-           'January February March May June July August October December '
-           'Jan Feb Mar Jun Jul Aug Sept Oct Okt Nov Des ')
+_months = ('Januari Februari Maret April Mei Juni Juli Agustus September '
+           'Oktober November Desember January February March May June '
+           'July August October December Jan Feb Mar Jun Jul Aug Sept '
+           'Oct Okt Nov Des ')
 
 
 UNITS = merge_chars(_units)
@@ -27,7 +28,7 @@ LIST_CURRENCY = split_chars(_currency)
 
 _prefixes = TOKENIZER_PREFIXES + LIST_CURRENCY + [HTML_PREFIX] + ['/', '—']
 
-_suffixes = TOKENIZER_SUFFIXES + [r'\-[Nn]ya', '-[KkMm]u' '-el', '[—-]'] + [
+_suffixes = TOKENIZER_SUFFIXES + [r'\-[Nn]ya', '-[KkMm]u', '[—-]'] + [
         r'(?<=[0-9])(?:{c})'.format(c=CURRENCY),
         r'(?<=[0-9])(?:{u})'.format(u=UNITS),
         r'(?<=[0-9])%',
