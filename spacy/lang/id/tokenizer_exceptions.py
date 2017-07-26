@@ -31,19 +31,23 @@ for orth in ID_BASE_EXCEPTIONS:
         _exc[orth_caps] = [{ORTH: orth_caps}]
 
 
-_hyphen_prefix = """Abdur Abdus Abou Aboul Abror Abshar Abu Abubakar Abul
-Aero Agri Agro Ahmadi Ahmed Air abd abdel abdul ad adz afro al ala ali all
+_hyphen_prefix = """abdur abdus abou aboul abror abshar abu abubakar abul
+aero agri agro ahmadi ahmed air abd abdel abdul ad adz afro al ala ali all
 amir an antar anti ar as ash asy at ath az bekas ber best bi co di double
 dual duo e eco eks el era ex full hi high i in inter intra ke kontra korona
 kuartal lintas m macro makro me mem meng micro mid mikro mini multi neo nge
 no non on pan pasca pe pem poli poly post pra pre pro re se self serba seri
-sub super t trans ultra un x """.split()
+sub super t trans ultra un x""".split()
 
 _hyphen_infix = """me-kan me-kannya men-kan men-kannya meng-kannya ke-an
 ke-annya di-kan di-kannya de-isasi ber-an berke-an""".split()
 
+_hyphen_suffix = """el"""
+
 _regular_exp = ['^{p}-*$'.format(p=prefix) for prefix in _hyphen_prefix]
-_regular_exp += ['^{0}-*-{1}$'.format(*infix.split('-')) for infix in _hyphen_infix]
+_regular_exp = ['^{p}-*$'.format(p=prefix.title()) for prefix in _hyphen_prefix]
+_regular_exp += ['^{0}-*-{1}$'.format(*infix.title().split('-')) for infix in _hyphen_infix]
+_regular_exp = ['^*-{s}$'.format(s=suffix) for suffix in _hyphen_suffix]
 _regular_exp.append(URL_PATTERN)
 
 
