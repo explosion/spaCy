@@ -19,15 +19,15 @@ _months = ('Januari Februari Maret April Mei Juni Juli Agustus September Oktober
 
 UNITS = merge_chars(_units)
 CURRENCY = merge_chars(_currency)
-HTML_PREFIX = r'<(b|strong|i|em|p|span|div|br)\s?/>'
-HTML_SUFFIX = r'</(b|strong|i|em|p|span|div)>'
+HTML_PREFIX = r'<(b|strong|i|em|p|span|div|br)\s?/>|<a([^>]+)>'
+HTML_SUFFIX = r'</(b|strong|i|em|p|span|div|a)>'
 MONTHS = merge_chars(_months)
 LIST_CURRENCY = split_chars(_currency)
 
 
-_prefixes = TOKENIZER_PREFIXES + LIST_CURRENCY + [HTML_PREFIX] + ['[Kk]e-', '/', '—']
+_prefixes = TOKENIZER_PREFIXES + LIST_CURRENCY + [HTML_PREFIX] + ['/', '—']
 
-_suffixes = TOKENIZER_SUFFIXES + [r'\-[Nn]ya', '—', '-'] + [
+_suffixes = TOKENIZER_SUFFIXES + [r'\-[Nn]ya', '-[KkMm]u' '-el', '[—-]'] + [
         r'(?<=[0-9])(?:{c})'.format(c=CURRENCY),
         r'(?<=[0-9])(?:{u})'.format(u=UNITS),
         r'(?<=[0-9])%',
