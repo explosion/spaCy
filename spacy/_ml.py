@@ -4,18 +4,22 @@ from thinc.neural import Model, Maxout, Softmax, Affine
 from thinc.neural._classes.hash_embed import HashEmbed
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module
+import random
 
 from thinc.neural._classes.convolution import ExtractWindow
 from thinc.neural._classes.static_vectors import StaticVectors
 from thinc.neural._classes.batchnorm import BatchNorm
 from thinc.neural._classes.resnet import Residual
 from thinc.neural import ReLu
+from thinc.neural._classes.selu import SELU
 from thinc import describe
 from thinc.describe import Dimension, Synapses, Biases, Gradient
 from thinc.neural._classes.affine import _set_dimensions_if_needed
 from thinc.api import FeatureExtracter, with_getitem
-from thinc.neural.pooling import Pooling, max_pool, mean_pool
+from thinc.neural.pooling import Pooling, max_pool, mean_pool, sum_pool
+from thinc.neural._classes.attention import ParametricAttention
 from thinc.linear.linear import LinearModel
+from thinc.api import uniqued, wrap
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP
 from .tokens.doc import Doc
@@ -367,7 +371,7 @@ def preprocess_doc(docs, drop=0.):
 
 
 def build_text_classifier(nr_class, width=64, **cfg):
-    nr_vector = cfg.get('nr_vector', 1000)
+    nr_vector = cfg.get('nr_vector', 200)
     with Model.define_operators({'>>': chain, '+': add, '|': concatenate, '**': clone}):
         embed_lower = HashEmbed(width, nr_vector, column=1)
         embed_prefix = HashEmbed(width//2, nr_vector, column=2)
@@ -378,25 +382,26 @@ def build_text_classifier(nr_class, width=64, **cfg):
             FeatureExtracter([ORTH, LOWER, PREFIX, SUFFIX, SHAPE])
             >> _flatten_add_lengths
             >> with_getitem(0,
-                (embed_lower | embed_prefix | embed_suffix | embed_shape) 
-                >> Maxout(width, width+(width//2)*3)
+                uniqued(
+                  (embed_lower | embed_prefix | embed_suffix | embed_shape) 
+                  >> Maxout(width, width+(width//2)*3))
                 >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
                 >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
                 >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
             )
-            >> Pooling(mean_pool, max_pool)
-            >> Residual(ReLu(width*2, width*2))
+            >> ParametricAttention(width,)
+            >> Pooling(sum_pool)
+            >> ReLu(width, width)
+            >> zero_init(Affine(nr_class, width, drop_factor=0.0))
         )
         linear_model = (
             _preprocess_doc
-            >> LinearModel(nr_class)
-            >> logistic
+            >> LinearModel(nr_class, drop_factor=0.)
         )
 
         model = (
-            #(linear_model | cnn_model)
-            cnn_model
-            >> zero_init(Affine(nr_class, width*2+nr_class, drop_factor=0.0))
+            (linear_model | cnn_model)
+            >> zero_init(Affine(nr_class, nr_class*2, drop_factor=0.0))
             >> logistic
         )
  
