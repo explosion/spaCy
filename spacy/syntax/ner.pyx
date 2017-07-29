@@ -141,6 +141,23 @@ cdef class BiluoPushDown(TransitionSystem):
                     entities[(start, end, label)] += prob
         return entities
 
+    def get_beam_parses(self, Beam beam):
+        parses = []
+        probs = beam.probs
+        for i in range(beam.size):
+            stcls = <StateClass>beam.at(i)
+            if stcls.is_final():
+                self.finalize_state(stcls.c)
+                prob = probs[i]
+                parse = []
+                for j in range(stcls.c._e_i):
+                    start = stcls.c._ents[j].start
+                    end = stcls.c._ents[j].end
+                    label = stcls.c._ents[j].label
+                    parse.append((start, end, self.strings[label]))
+                parses.append((prob, parse))
+        return parses
+
     cdef Transition lookup_transition(self, object name) except *:
         cdef attr_t label
         if name == '-' or name == None:
