@@ -44,10 +44,11 @@ ke-annya di-kan di-kannya de-isasi ber-an berke-an""".split()
 
 _hyphen_suffix = """el"""
 
-_regular_exp = ['^{p}-*$'.format(p=prefix) for prefix in _hyphen_prefix]
-_regular_exp = ['^{p}-*$'.format(p=prefix.title()) for prefix in _hyphen_prefix]
-_regular_exp += ['^{0}-*-{1}$'.format(*infix.title().split('-')) for infix in _hyphen_infix]
-_regular_exp = ['^*-{s}$'.format(s=suffix) for suffix in _hyphen_suffix]
+_regular_exp = ['^{p}-.*$'.format(p=prefix) for prefix in _hyphen_prefix]
+_regular_exp += ['^{p}-.*$'.format(p=prefix.title()) for prefix in _hyphen_prefix]
+_regular_exp += ['^{p}-.*$'.format(p=prefix.upper()) for prefix in _hyphen_prefix]
+_regular_exp += ['^{0}-.*-{1}$'.format(*infix.title().split('-')) for infix in _hyphen_infix]
+_regular_exp += ['^.*-{s}$'.format(s=suffix) for suffix in _hyphen_suffix]
 _regular_exp.append(URL_PATTERN)
 
 
