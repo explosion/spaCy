@@ -31,8 +31,8 @@ def like_num(text):
     if text in _num_words:
         return True
     if text.count('-') == 1:
-        pre, num = text.split('-')
-        if pre in ['Ke', 'ke'] and (num.isdigit() or num in _num_words):
+        _, num = text.split('-')
+        if num.isdigit() or num in _num_words:
             return True
     return False
 
