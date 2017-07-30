@@ -483,7 +483,7 @@ cdef class GoldParse:
         return not nonproj.is_nonproj_tree(self.heads)
 
 
-def biluo_tags_from_offsets(doc, entities):
+def biluo_tags_from_offsets(doc, entities, missing='O'):
     """Encode labelled spans into per-token tags, using the Begin/In/Last/Unit/Out
     scheme (BILUO).
 
@@ -535,7 +535,7 @@ def biluo_tags_from_offsets(doc, entities):
             if i in entity_chars:
                 break
         else:
-            biluo[token.i] = 'O'
+            biluo[token.i] = missing
     return biluo
 
 
