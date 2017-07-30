@@ -11,7 +11,7 @@ _units = (_units + 's bit Gbps Mbps mbps Kbps kbps ƒ ppi px '
           'ratus rb ribu ribuan '
           'juta jt jutaan mill?iar million bil[l]?iun bilyun billion '
           )
-_currency = (_currency + r'Rp IDR RMB SGD S\$ ')
+_currency = (_currency + r' Rp IDR RMB SGD S\$')
 _months = ('Januari Februari Maret April Mei Juni Juli Agustus September '
            'Oktober November Desember January February March May June '
            'July August October December Jan Feb Mar Jun Jul Aug Sept '
@@ -25,7 +25,7 @@ HTML_SUFFIX = r'</(b|strong|i|em|p|span|div|a)>'
 MONTHS = merge_chars(_months)
 LIST_CURRENCY = split_chars(_currency)
 
-
+TOKENIZER_PREFIXES.remove('#') # hashtag
 _prefixes = TOKENIZER_PREFIXES + LIST_CURRENCY + [HTML_PREFIX] + ['/', '—']
 
 _suffixes = TOKENIZER_SUFFIXES + [r'\-[Nn]ya', '-[KkMm]u', '[—-]'] + [
