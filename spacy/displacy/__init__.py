@@ -3,6 +3,7 @@ from __future__ import unicode_literals
 
 from .render import DependencyRenderer, EntityRenderer
 from ..tokens import Doc
+from ..compat import b_to_str
 from ..util import prints, is_in_jupyter
 
 
@@ -65,7 +66,9 @@ def serve(docs, style='dep', page=True, minify=False, options={}, manual=False,
 
 
 def app(environ, start_response):
-    start_response('200 OK', [('Content-type', 'text/html; charset=utf-8')])
+    # headers and status need to be bytes in Python 2, see #1227
+    headers = [(b_to_str(b'Content-type'), b_to_str(b'text/html; charset=utf-8'))]
+    start_response(b_to_str(b'200 OK'), headers)
     res = _html['parsed'].encode(encoding='utf-8')
     return [res]
 
