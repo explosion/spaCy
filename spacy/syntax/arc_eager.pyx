@@ -362,7 +362,7 @@ cdef class ArcEager(TransitionSystem):
         if not self.has_gold(gold):
             return None
         for i in range(gold.length):
-            if gold.heads[i] is None: # Missing values
+            if gold.heads[i] is None or gold.labels[i] is None: # Missing values
                 gold.c.heads[i] = i
                 gold.c.has_dep[i] = False
             else:
