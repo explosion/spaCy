@@ -61,6 +61,14 @@ elif is_python3:
     json_dumps = lambda data: ujson.dumps(data, indent=2)
     path2str = lambda path: str(path)
 
+
+def b_to_str(b_str):
+    if is_python2:
+        return b_str
+    # important: if no encoding is set, string becomes "b'...'"
+    return str(b_str, encoding='utf8')
+
+
 def getattr_(obj, name, *default):
     if is_python3 and isinstance(name, bytes):
         name = name.decode('utf8')
