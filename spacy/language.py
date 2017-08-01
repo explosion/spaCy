@@ -292,6 +292,11 @@ class Language(object):
             >>>        for docs, golds in epoch:
             >>>            state = nlp.update(docs, golds, sgd=optimizer)
         """
+        if len(docs) != len(golds):
+            raise IndexError("Update expects same number of docs and golds "
+                "Got: %d, %d" % (len(docs), len(golds)))
+        if len(docs) == 0:
+            return
         tok2vec = self.pipeline[0]
         feats = tok2vec.doc2feats(docs)
         grads = {}
