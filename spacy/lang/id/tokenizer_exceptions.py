@@ -36,7 +36,7 @@ amir an antar anti ar as ash asy at ath az bekas ber best bi co di double
 dual duo e eco eks el era ex full hi high i in inter intra ke kontra korona
 kuartal lintas m macro makro me mem meng micro mid mikro mini multi neo nge
 no non on pan pasca pe pem poli poly post pra pre pro re se self serba seri
-sub super t trans u ultra un x \#""".split()
+sub super t trans u ultra un x""".split()
 
 _hyphen_infix = """ber-an berke-an de-isasi di-kan di-kannya di-nya ke-an
 ke-annya me-kan me-kannya men-kan men-kannya meng-kannya pe-an pen-an
