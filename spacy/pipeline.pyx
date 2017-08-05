@@ -253,23 +253,25 @@ class NeuralTagger(BaseThincComponent):
         self.cfg = dict(cfg)
 
     def __call__(self, doc):
-        tags = self.predict([doc.tensor])
+        tags = self.predict(([doc], [doc.tensor]))
         self.set_annotations([doc], tags)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in cytoolz.partition_all(batch_size, stream):
+            docs = list(docs)
             tokvecs = [d.tensor for d in docs]
-            tag_ids = self.predict(tokvecs)
+            tag_ids = self.predict((docs, tokvecs))
             self.set_annotations(docs, tag_ids)
             yield from docs
 
-    def predict(self, tokvecs):
-        scores = self.model(tokvecs)
+    def predict(self, docs_tokvecs):
+        scores = self.model(docs_tokvecs)
         scores = self.model.ops.flatten(scores)
         guesses = scores.argmax(axis=1)
         if not isinstance(guesses, numpy.ndarray):
             guesses = guesses.get()
+        tokvecs = docs_tokvecs[1]
         guesses = self.model.ops.unflatten(guesses,
                     [tv.shape[0] for tv in tokvecs])
         return guesses
@@ -295,7 +297,7 @@ class NeuralTagger(BaseThincComponent):
         if self.model.nI is None:
             self.model.nI = tokvecs[0].shape[1]
 
-        tag_scores, bp_tag_scores = self.model.begin_update(tokvecs, drop=drop)
+        tag_scores, bp_tag_scores = self.model.begin_update(docs_tokvecs, drop=drop)
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
 
         d_tokvecs = bp_tag_scores(d_tag_scores, sgd=sgd)

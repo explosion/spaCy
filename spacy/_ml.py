@@ -346,16 +346,16 @@ def get_token_vectors(tokens_attrs_vectors, drop=0.):
 
 
 def fine_tune(model1, combine=None):
-    def fine_tune_fwd(docs, drop=0.):
+    def fine_tune_fwd(docs_tokvecs, drop=0.):
+        docs, tokvecs = docs_tokvecs
+        lengths = model.ops.asarray([len(doc) for doc in docs], dtype='i')
         X1, bp_X1 = model1.begin_update(docs)
-        lengths = [len(doc) for doc in docs]
-        X2 = model1.ops.flatten(X1)
 
         def fine_tune_bwd(d_output, sgd=None):
-            bp_X1(d_output, sgd=sgd)
+            bp_X1(model1.ops.flatten(d_output), sgd=sgd)
             return d_output
 
-        return (X1+X2, lengths), fine_tune_bwd
+        return model1.ops.unflatten(X1+X2, lengths), fine_tune_bwd
     model = wrap(fine_tune_fwd)
     return model
 
@@ -410,30 +410,21 @@ def preprocess_doc(docs, drop=0.):
 def build_tagger_model(nr_class, token_vector_width, **cfg):
     with Model.define_operators({'>>': chain, '+': add}):
         # Input: (doc, tensor) tuples
-        embed_docs = with_getitem(0, 
+        embed_docs = ( 
             FeatureExtracter([NORM])
+            >> flatten
             >> HashEmbed(token_vector_width, 1000)
-            >> flatten_add_lengths
         )
  
         model = ( 
             fine_tune(embed_docs)
-            >> 
-            with_getitem(0, 
-                FeatureExtracter([NORM])
-                >> HashEmbed(token_vector_width, 1000)
-                >> flatten_add_lengths
-            )
-            >> with_getitem(1,
-                flatten_add_lengths) 
-            >> add_tuples
             >> with_flatten(
                 Maxout(token_vector_width, token_vector_width)
                 >> Softmax(nr_class, token_vector_width)
             )
         )
-        return model
-
+    model.nI = None
+    return model
 
 
 def build_text_classifier(nr_class, width=64, **cfg):
