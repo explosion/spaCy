@@ -248,15 +248,10 @@ cdef class Parser:
                         nI=token_vector_width)
 
         with Model.use_device('cpu'):
-            if depth == 0:
-                upper = chain()
-                upper.is_noop = True
-            else:
-                upper = chain(
-                    clone(Maxout(hidden_width), (depth-1)),
-                    zero_init(Affine(nr_class, drop_factor=0.0))
-                )
-                upper.is_noop = False
+            upper = chain(
+                clone(Maxout(hidden_width), (depth-1)),
+                zero_init(Affine(nr_class, drop_factor=0.0))
+            )
         # TODO: This is an unfortunate hack atm!
         # Used to set input dimensions in network.
         lower.begin_training(lower.ops.allocate((500, token_vector_width)))
@@ -394,18 +389,11 @@ cdef class Parser:
         cdef np.ndarray scores
         c_token_ids = <int*>token_ids.data
         c_is_valid = <int*>is_valid.data
-        cdef int has_hidden = not getattr(vec2scores, 'is_noop', False)
         while not next_step.empty():
-            if not has_hidden:
-                for i in cython.parallel.prange(
-                        next_step.size(), num_threads=6, nogil=True):
-                    self._parse_step(next_step[i],
-                        feat_weights, nr_class, nr_feat, nr_piece)
-            else:
-                for i in range(next_step.size()):
-                    st = next_step[i]
-                    st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
-                    self.moves.set_valid(&c_is_valid[i*nr_class], st)
+            for i in range(next_step.size()):
+                st = next_step[i]
+                st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
+                self.moves.set_valid(&c_is_valid[i*nr_class], st)
                 vectors = state2vec(token_ids[:next_step.size()])
                 scores = vec2scores(vectors)
                 c_scores = <float*>scores.data
@@ -460,28 +448,6 @@ cdef class Parser:
                 beam.check_done(_check_final_state, NULL)
             beams.append(beam)
         return beams
-
-    cdef void _parse_step(self, StateC* state,
-            const float* feat_weights,
-            int nr_class, int nr_feat, int nr_piece) nogil:
-        '''This only works with no hidden layers -- fast but inaccurate'''
-        #for i in cython.parallel.prange(next_step.size(), num_threads=4, nogil=True):
-        #    self._parse_step(next_step[i], feat_weights, nr_class, nr_feat)
-        token_ids = <int*>calloc(nr_feat, sizeof(int))
-        scores = <float*>calloc(nr_class * nr_piece, sizeof(float))
-        is_valid = <int*>calloc(nr_class, sizeof(int))
-
-        state.set_context_tokens(token_ids, nr_feat)
-        sum_state_features(scores,
-            feat_weights, token_ids, 1, nr_feat, nr_class * nr_piece)
-        self.moves.set_valid(is_valid, state)
-        guess = arg_maxout_if_valid(scores, is_valid, nr_class, nr_piece)
-        action = self.moves.c[guess]
-        action.do(state, action.label)
-
-        free(is_valid)
-        free(scores)
-        free(token_ids)
 
     def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
         if losses is not None and self.name not in losses:
