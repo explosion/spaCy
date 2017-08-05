@@ -350,6 +350,7 @@ def fine_tune(model1, combine=None):
         docs, tokvecs = docs_tokvecs
         lengths = model.ops.asarray([len(doc) for doc in docs], dtype='i')
         X1, bp_X1 = model1.begin_update(docs)
+        X2 = model1.ops.flatten(tokvecs)
 
         def fine_tune_bwd(d_output, sgd=None):
             bp_X1(model1.ops.flatten(d_output), sgd=sgd)
