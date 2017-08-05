@@ -19,7 +19,7 @@ from thinc.api import FeatureExtracter, with_getitem
 from thinc.neural.pooling import Pooling, max_pool, mean_pool, sum_pool
 from thinc.neural._classes.attention import ParametricAttention
 from thinc.linear.linear import LinearModel
-from thinc.api import uniqued, wrap
+from thinc.api import uniqued, wrap, flatten_add_lengths
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP
 from .tokens.doc import Doc
@@ -53,6 +53,27 @@ def _logistic(X, drop=0.):
     return Y, logistic_bwd
 
 
+@layerize
+def add_tuples(X, drop=0.):
+    """Give inputs of sequence pairs, where each sequence is (vals, length),
+    sum the values, returning a single sequence.
+
+    If input is:
+    ((vals1, length), (vals2, length)
+    Output is:
+    (vals1+vals2, length)
+
+    vals are a single tensor for the whole batch.
+    """
+    (vals1, length1), (vals2, length2) = X
+    assert length1 == length2
+
+    def add_tuples_bwd(dY, sgd=None):
+        return (dY, dY)
+
+    return (vals1+vals2, length), add_tuples_bwd
+
+
 def _zero_init(model):
     def _zero_init_impl(self, X, y):
         self.W.fill(0)
@@ -60,6 +81,7 @@ def _zero_init(model):
     if model.W is not None:
         model.W.fill(0.)
     return model
+
 
 @layerize
 def _preprocess_doc(docs, drop=0.):
@@ -72,13 +94,13 @@ def _preprocess_doc(docs, drop=0.):
     return (keys, vals, lengths), None
 
 
-
 def _init_for_precomputed(W, ops):
     if (W**2).sum() != 0.:
         return
     reshaped = W.reshape((W.shape[1], W.shape[0] * W.shape[2]))
     ops.xavier_uniform_init(reshaped)
     W[:] = reshaped.reshape(W.shape)
+
 
 @describe.on_data(_set_dimensions_if_needed)
 @describe.attributes(
@@ -323,6 +345,21 @@ def get_token_vectors(tokens_attrs_vectors, drop=0.):
     return vectors, backward
 
 
+def fine_tune(model1, combine=None):
+    def fine_tune_fwd(docs, drop=0.):
+        X1, bp_X1 = model1.begin_update(docs)
+        lengths = [len(doc) for doc in docs]
+        X2 = model1.ops.flatten(X1)
+
+        def fine_tune_bwd(d_output, sgd=None):
+            bp_X1(d_output, sgd=sgd)
+            return d_output
+
+        return (X1+X2, lengths), fine_tune_bwd
+    model = wrap(fine_tune_fwd)
+    return model
+
+
 @layerize
 def flatten(seqs, drop=0.):
     if isinstance(seqs[0], numpy.ndarray):
@@ -368,6 +405,35 @@ def preprocess_doc(docs, drop=0.):
     keys = ops.xp.concatenate(keys)
     vals = ops.allocate(keys.shape[0]) + 1
     return (keys, vals, lengths), None
+
+
+def build_tagger_model(nr_class, token_vector_width, **cfg):
+    with Model.define_operators({'>>': chain, '+': add}):
+        # Input: (doc, tensor) tuples
+        embed_docs = with_getitem(0, 
+            FeatureExtracter([NORM])
+            >> HashEmbed(token_vector_width, 1000)
+            >> flatten_add_lengths
+        )
+ 
+        model = ( 
+            fine_tune(embed_docs)
+            >> 
+            with_getitem(0, 
+                FeatureExtracter([NORM])
+                >> HashEmbed(token_vector_width, 1000)
+                >> flatten_add_lengths
+            )
+            >> with_getitem(1,
+                flatten_add_lengths) 
+            >> add_tuples
+            >> with_flatten(
+                Maxout(token_vector_width, token_vector_width)
+                >> Softmax(nr_class, token_vector_width)
+            )
+        )
+        return model
+
 
 
 def build_text_classifier(nr_class, width=64, **cfg):

@@ -42,7 +42,7 @@ from .compat import json_dumps
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
 from ._ml import rebatch, Tok2Vec, flatten, get_col, doc2feats
-from ._ml import build_text_classifier
+from ._ml import build_text_classifier, build_tagger_model
 from .parts_of_speech import X
 
 
@@ -346,10 +346,8 @@ class NeuralTagger(BaseThincComponent):
 
     @classmethod
     def Model(cls, n_tags, token_vector_width):
-        return with_flatten(
-            chain(Maxout(token_vector_width, token_vector_width),
-                  Softmax(n_tags, token_vector_width)))
-
+        return build_tagger_model(n_tags, token_vector_width)
+ 
     def use_params(self, params):
         with self.model.use_params(params):
             yield
@@ -455,10 +453,8 @@ class NeuralLabeller(NeuralTagger):
 
     @classmethod
     def Model(cls, n_tags, token_vector_width):
-        return with_flatten(
-            chain(Maxout(token_vector_width, token_vector_width),
-                  Softmax(n_tags, token_vector_width)))
-
+        return build_tagger_model(n_tags, token_vector_width)
+    
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
         cdef int idx = 0
