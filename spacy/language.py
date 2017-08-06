@@ -382,9 +382,13 @@ class Language(object):
         return optimizer
 
     def evaluate(self, docs_golds):
-        docs, golds = zip(*docs_golds)
         scorer = Scorer()
-        for doc, gold in zip(self.pipe(docs, batch_size=32), golds):
+        docs, golds = zip(*docs_golds)
+        docs = list(docs)
+        golds = list(golds)
+        for pipe in self.pipeline:
+            docs = pipe.pipe(docs)
+        for doc, gold in zip(docs, golds):
             scorer.score(doc, gold)
             doc.tensor = None
         return scorer
