@@ -296,7 +296,6 @@ class NeuralTagger(BaseThincComponent):
 
         if self.model.nI is None:
             self.model.nI = tokvecs[0].shape[1]
-
         tag_scores, bp_tag_scores = self.model.begin_update(docs_tokvecs, drop=drop)
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
 
@@ -432,7 +431,7 @@ class NeuralLabeller(NeuralTagger):
 
     @property
     def labels(self):
-        return self.cfg.get('labels', {})
+        return self.cfg.setdefault('labels', {})
 
     @labels.setter
     def labels(self, value):
