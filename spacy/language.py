@@ -387,7 +387,12 @@ class Language(object):
         docs = list(docs)
         golds = list(golds)
         for pipe in self.pipeline:
-            docs = pipe.pipe(docs)
+            if not hasattr(pipe, 'pipe'):
+                for doc in docs:
+                    pipe(doc)
+            else:
+                docs = list(pipe.pipe(docs))
+        assert len(docs) == len(golds)
         for doc, gold in zip(docs, golds):
             scorer.score(doc, gold)
             doc.tensor = None
