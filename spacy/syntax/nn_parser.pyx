@@ -237,6 +237,7 @@ cdef class Parser:
         token_vector_width = util.env_opt('token_vector_width', token_vector_width)
         hidden_width = util.env_opt('hidden_width', hidden_width)
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces', 2)
+        tensors = Tok2Vec(token_vector_width, 7500, preprocess=doc2feats())
         if parser_maxout_pieces == 1:
             lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
                         nF=cls.nr_feature,
@@ -263,7 +264,7 @@ cdef class Parser:
             'hidden_width': hidden_width,
             'maxout_pieces': parser_maxout_pieces
         }
-        return (lower, upper), cfg
+        return (tensors, lower, upper), cfg
 
     def __init__(self, Vocab vocab, moves=True, model=True, **cfg):
         """
@@ -366,6 +367,7 @@ cdef class Parser:
             tokvecses = [tokvecses]
 
         tokvecs = self.model[0].ops.flatten(tokvecses)
+        tokvecs += self.model[0].ops.flatten(self.model[0](docs))
 
         nr_state = len(docs)
         nr_class = self.moves.n_moves
@@ -417,6 +419,7 @@ cdef class Parser:
         cdef int nr_class = self.moves.n_moves
         cdef StateClass stcls, output
         tokvecs = self.model[0].ops.flatten(tokvecses)
+        tokvecs += self.model[0].ops.flatten(self.model[0](docs))
         cuda_stream = get_cuda_stream()
         state2vec, vec2scores = self.get_batch_model(len(docs), tokvecs,
                                                      cuda_stream, 0.0)
@@ -457,6 +460,9 @@ cdef class Parser:
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
+        my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs, drop=0.)
+        my_tokvecs = self.model[0].ops.flatten(my_tokvecs)
+        tokvecs += my_tokvecs
 
         cuda_stream = get_cuda_stream()
 
@@ -506,7 +512,9 @@ cdef class Parser:
                 break
         self._make_updates(d_tokvecs,
             backprops, sgd, cuda_stream)
-        return self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
+        d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
+        #bp_my_tokvecs(d_tokvecs, sgd=sgd)
+        return d_tokvecs
 
     def _init_gold_batch(self, whole_docs, whole_golds):
         """Make a square batch, of length equal to the shortest doc. A long
@@ -569,7 +577,7 @@ cdef class Parser:
         return names
 
     def get_batch_model(self, batch_size, tokvecs, stream, dropout):
-        lower, upper = self.model
+        _, lower, upper = self.model
         state2vec = precompute_hiddens(batch_size, tokvecs,
                         lower, stream, drop=dropout)
         return state2vec, upper
@@ -659,10 +667,12 @@ cdef class Parser:
 
     def to_disk(self, path, **exclude):
         serializers = {
-            'lower_model': lambda p: p.open('wb').write(
+            'tok2vec_model': lambda p: p.open('wb').write(
                 self.model[0].to_bytes()),
-            'upper_model': lambda p: p.open('wb').write(
+            'lower_model': lambda p: p.open('wb').write(
                 self.model[1].to_bytes()),
+            'upper_model': lambda p: p.open('wb').write(
+                self.model[2].to_bytes()),
             'vocab': lambda p: self.vocab.to_disk(p),
             'moves': lambda p: self.moves.to_disk(p, strings=False),
             'cfg': lambda p: p.open('w').write(json_dumps(self.cfg))
@@ -683,24 +693,29 @@ cdef class Parser:
                 self.model, cfg = self.Model(**self.cfg)
             else:
                 cfg = {}
-            with (path / 'lower_model').open('rb') as file_:
+            with (path / 'tok2vec_model').open('rb') as file_:
                 bytes_data = file_.read()
             self.model[0].from_bytes(bytes_data)
-            with (path / 'upper_model').open('rb') as file_:
+            with (path / 'lower_model').open('rb') as file_:
                 bytes_data = file_.read()
             self.model[1].from_bytes(bytes_data)
+            with (path / 'upper_model').open('rb') as file_:
+                bytes_data = file_.read()
+            self.model[2].from_bytes(bytes_data)
             self.cfg.update(cfg)
         return self
 
     def to_bytes(self, **exclude):
         serializers = OrderedDict((
-            ('lower_model', lambda: self.model[0].to_bytes()),
-            ('upper_model', lambda: self.model[1].to_bytes()),
+            ('tok2vec_model', lambda: self.model[0].to_bytes()),
+            ('lower_model', lambda: self.model[1].to_bytes()),
+            ('upper_model', lambda: self.model[2].to_bytes()),
             ('vocab', lambda: self.vocab.to_bytes()),
             ('moves', lambda: self.moves.to_bytes(strings=False)),
             ('cfg', lambda: ujson.dumps(self.cfg))
         ))
         if 'model' in exclude:
+            exclude['tok2vec_model'] = True
             exclude['lower_model'] = True
             exclude['upper_model'] = True
             exclude.pop('model')
@@ -711,6 +726,7 @@ cdef class Parser:
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('moves', lambda b: self.moves.from_bytes(b, strings=False)),
             ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
+            ('tok2vec_model', lambda b: None),
             ('lower_model', lambda b: None),
             ('upper_model', lambda b: None)
         ))
@@ -720,10 +736,12 @@ cdef class Parser:
                 self.model, cfg = self.Model(self.moves.n_moves)
             else:
                 cfg = {}
+            if 'tok2vec_model' in msg:
+                self.model[0].from_bytes(msg['tok2vec_model'])
             if 'lower_model' in msg:
-                self.model[0].from_bytes(msg['lower_model'])
+                self.model[1].from_bytes(msg['lower_model'])
             if 'upper_model' in msg:
-                self.model[1].from_bytes(msg['upper_model'])
+                self.model[2].from_bytes(msg['upper_model'])
             self.cfg.update(cfg)
         return self
 
