@@ -5,6 +5,7 @@ from thinc.neural._classes.hash_embed import HashEmbed
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module
 import random
+import cytoolz
 
 from thinc.neural._classes.convolution import ExtractWindow
 from thinc.neural._classes.static_vectors import StaticVectors
@@ -207,9 +208,9 @@ class PrecomputableMaxouts(Model):
 
 
 def Tok2Vec(width, embed_size, preprocess=None):
-    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE]
+    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
-        norm = get_col(cols.index(NORM))   >> HashEmbed(width, embed_size, name='embed_lower')
+        norm = get_col(cols.index(NORM))     >> HashEmbed(width, embed_size, name='embed_lower')
         prefix = get_col(cols.index(PREFIX)) >> HashEmbed(width, embed_size//2, name='embed_prefix')
         suffix = get_col(cols.index(SUFFIX)) >> HashEmbed(width, embed_size//2, name='embed_suffix')
         shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size//2, name='embed_shape')
@@ -218,7 +219,7 @@ def Tok2Vec(width, embed_size, preprocess=None):
         tok2vec = (
             with_flatten(
                 asarray(Model.ops, dtype='uint64')
-                >> embed
+                >> uniqued(embed, column=5)
                 >> Maxout(width, width*4, pieces=3)
                 >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
                 >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
@@ -319,7 +320,7 @@ def zero_init(model):
 
 
 def doc2feats(cols=None):
-    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE]
+    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     def forward(docs, drop=0.):
         feats = []
         for doc in docs:
@@ -345,19 +346,26 @@ def get_token_vectors(tokens_attrs_vectors, drop=0.):
     return vectors, backward
 
 
-def fine_tune(model1, combine=None):
+def fine_tune(embedding, combine=None):
+    if combine is not None:
+        raise NotImplementedError(
+            "fine_tune currently only supports addition. Set combine=None")
     def fine_tune_fwd(docs_tokvecs, drop=0.):
         docs, tokvecs = docs_tokvecs
         lengths = model.ops.asarray([len(doc) for doc in docs], dtype='i')
-        X1, bp_X1 = model1.begin_update(docs)
-        X2 = model1.ops.flatten(tokvecs)
+
+        vecs, bp_vecs = embedding.begin_update(docs, drop=drop)
+        
+        output = embedding.ops.unflatten(
+                    embedding.ops.flatten(tokvecs)
+                    + embedding.ops.flatten(vecs),
+                    lengths)
 
         def fine_tune_bwd(d_output, sgd=None):
-            bp_X1(model1.ops.flatten(d_output), sgd=sgd)
+            bp_vecs(d_output, sgd=sgd)
             return d_output
-
-        return model1.ops.unflatten(X1+X2, lengths), fine_tune_bwd
-    model = wrap(fine_tune_fwd)
+        return output, fine_tune_bwd
+    model = wrap(fine_tune_fwd, embedding)
     return model
 
 
@@ -407,18 +415,18 @@ def preprocess_doc(docs, drop=0.):
     vals = ops.allocate(keys.shape[0]) + 1
     return (keys, vals, lengths), None
 
+def getitem(i):
+    def getitem_fwd(X, drop=0.):
+        return X[i], None
+    return layerize(getitem_fwd)
 
 def build_tagger_model(nr_class, token_vector_width, **cfg):
     with Model.define_operators({'>>': chain, '+': add}):
         # Input: (doc, tensor) tuples
-        embed_docs = ( 
-            FeatureExtracter([NORM])
-            >> flatten
-            >> HashEmbed(token_vector_width, 1000)
-        )
+        private_tok2vec = Tok2Vec(token_vector_width, 7500, preprocess=doc2feats())
  
         model = ( 
-            fine_tune(embed_docs)
+            fine_tune(private_tok2vec)
             >> with_flatten(
                 Maxout(token_vector_width, token_vector_width)
                 >> Softmax(nr_class, token_vector_width)
