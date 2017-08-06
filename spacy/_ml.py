@@ -10,6 +10,7 @@ import cytoolz
 from thinc.neural._classes.convolution import ExtractWindow
 from thinc.neural._classes.static_vectors import StaticVectors
 from thinc.neural._classes.batchnorm import BatchNorm
+from thinc.neural._classes.layernorm import LayerNorm as LN
 from thinc.neural._classes.resnet import Residual
 from thinc.neural import ReLu
 from thinc.neural._classes.selu import SELU
@@ -220,11 +221,11 @@ def Tok2Vec(width, embed_size, preprocess=None):
             with_flatten(
                 asarray(Model.ops, dtype='uint64')
                 >> uniqued(embed, column=5)
-                >> Maxout(width, width*4, pieces=3)
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3)),
+                >> LN(Maxout(width, width*4, pieces=3))
+                >> Residual(ExtractWindow(nW=1) >> SELU(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> SELU(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> SELU(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> SELU(width, width*3)),
             pad=4)
         )
         if preprocess not in (False, None):
