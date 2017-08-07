@@ -60,7 +60,7 @@ GLOSSARY = {
     'JJR':          'adjective, comparative',
     'JJS':          'adjective, superlative',
     'LS':           'list item marker',
-    'MD':           'verb, modal auxillary',
+    'MD':           'verb, modal auxiliary',
     'NIL':          'missing tag',
     'NN':           'noun, singular or mass',
     'NNP':          'noun, proper singular',
@@ -91,7 +91,7 @@ GLOSSARY = {
     'NFP':          'superfluous punctuation',
     'GW':           'additional word in multi-word expression',
     'XX':           'unknown',
-    'BES':          'auxillary "be"',
+    'BES':          'auxiliary "be"',
     'HVS':          'forms of "have"',
 
 
