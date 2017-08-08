@@ -15,9 +15,9 @@ def noun_chunks(obj):
     # and not just "eine Tasse", same for "das Thema Familie".
     labels = ['sb', 'oa', 'da', 'nk', 'mo', 'ag', 'ROOT', 'root', 'cj', 'pd', 'og', 'app']
     doc = obj.doc # Ensure works on both Doc and Span.
-    np_label = doc.vocab.strings['NP']
-    np_deps = set(doc.vocab.strings[label] for label in labels)
-    close_app = doc.vocab.strings['nk']
+    np_label = doc.vocab.strings.add('NP')
+    np_deps = set(doc.vocab.strings.add(label) for label in labels)
+    close_app = doc.vocab.strings.add('nk')
 
     rbracket = 0
     for i, word in enumerate(obj):

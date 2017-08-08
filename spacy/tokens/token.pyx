@@ -23,10 +23,14 @@ from .. import about
 
 
 cdef class Token:
-    """
-    An individual token --- i.e. a word, punctuation symbol, whitespace, etc.
-    """
+    """An individual token – i.e. a word, punctuation symbol, whitespace, etc."""
     def __cinit__(self, Vocab vocab, Doc doc, int offset):
+        """Construct a `Token` object.
+
+        vocab (Vocab): A storage container for lexical types.
+        doc (Doc): The parent document.
+        offset (int): The index of the token within the document.
+        """
         self.vocab = vocab
         self.doc = doc
         self.c = &self.doc.c[offset]
@@ -36,8 +40,9 @@ cdef class Token:
         return hash((self.doc, self.i))
 
     def __len__(self):
-        """
-        Number of unicode characters in token.text.
+        """The number of unicode characters in the token, i.e. `token.text`.
+
+        RETURNS (int): The number of unicode characters in the token.
         """
         return self.c.lex.length
 
@@ -75,49 +80,51 @@ cdef class Token:
             raise ValueError(op)
 
     cpdef bint check_flag(self, attr_id_t flag_id) except -1:
-        """
-        Check the value of a boolean flag.
+        """Check the value of a boolean flag.
 
-        Arguments:
-            flag_id (int): The ID of the flag attribute.
-        Returns:
-            is_set (bool): Whether the flag is set.
+        flag_id (int): The ID of the flag attribute.
+        RETURNS (bool): Whether the flag is set.
+
+        EXAMPLE:
+            >>> from spacy.attrs import IS_TITLE
+            >>> doc = nlp(u'Give it back! He pleaded.')
+            >>> token = doc[0]
+            >>> token.check_flag(IS_TITLE)
+            True
         """
         return Lexeme.c_check_flag(self.c.lex, flag_id)
 
     def nbor(self, int i=1):
-        """
-        Get a neighboring token.
+        """Get a neighboring token.
 
-        Arguments:
-            i (int): The relative position of the token to get. Defaults to 1.
-        Returns:
-            neighbor (Token): The token at position self.doc[self.i+i]
+        i (int): The relative position of the token to get. Defaults to 1.
+        RETURNS (Token): The token at position `self.doc[self.i+i]`.
         """
         return self.doc[self.i+i]
 
     def similarity(self, other):
-        """
-        Compute a semantic similarity estimate. Defaults to cosine over vectors.
+        """Make a semantic similarity estimate. The default estimate is cosine
+        similarity using an average of word vectors.
 
-        Arguments:
-            other:
-                The object to compare with. By default, accepts Doc, Span,
-                Token and Lexeme objects.
-        Returns:
-            score (float): A scalar similarity score. Higher is more similar.
+        other (object): The object to compare with. By default, accepts `Doc`,
+            `Span`, `Token` and `Lexeme` objects.
+        RETURNS (float): A scalar similarity score. Higher is more similar.
         """
         if 'similarity' in self.doc.user_token_hooks:
-                return self.doc.user_token_hooks['similarity'](self)
+            return self.doc.user_token_hooks['similarity'](self)
         if self.vector_norm == 0 or other.vector_norm == 0:
             return 0.0
         return numpy.dot(self.vector, other.vector) / (self.vector_norm * other.vector_norm)
 
     property lex_id:
+        """ID of the token's lexical type.
+
+        RETURNS (int): ID of the token's lexical type."""
         def __get__(self):
             return self.c.lex.id
 
     property rank:
+        # TODO: add docstring
         def __get__(self):
             return self.c.lex.id
 
@@ -126,10 +133,19 @@ cdef class Token:
             return self.text_with_ws
 
     property text:
+        """A unicode representation of the token text.
+
+        RETURNS (unicode): The original verbatim text of the token.
+        """
         def __get__(self):
             return self.orth_
 
     property text_with_ws:
+        """The text content of the token with a trailing whitespace character if
+        it has one.
+
+        RETURNS (unicode): The text content of the span (with trailing whitespace).
+        """
         def __get__(self):
             cdef unicode orth = self.vocab.strings[self.c.lex.orth]
             if self.c.spacy:
@@ -184,9 +200,13 @@ cdef class Token:
             return self.c.lex.suffix
 
     property lemma:
+        """Base form of the word, with no inflectional suffixes.
+
+        RETURNS (uint64): Token lemma.
+        """
         def __get__(self):
             return self.c.lemma
-        def __set__(self, int lemma):
+        def __set__(self, attr_t lemma):
             self.c.lemma = lemma
 
     property pos:
@@ -196,62 +216,50 @@ cdef class Token:
     property tag:
         def __get__(self):
             return self.c.tag
-        def __set__(self, int tag):
+        def __set__(self, attr_t tag):
             self.vocab.morphology.assign_tag(self.c, tag)
 
     property dep:
         def __get__(self):
             return self.c.dep
-        def __set__(self, int label):
+        def __set__(self, attr_t label):
             self.c.dep = label
 
     property has_vector:
-        """
-        A boolean value indicating whether a word vector is associated with the object.
+        """A boolean value indicating whether a word vector is associated with
+        the object.
+
+        RETURNS (bool): Whether a word vector is associated with the object.
         """
         def __get__(self):
             if 'has_vector' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['has_vector'](self)
-            cdef int i
-            for i in range(self.vocab.vectors_length):
-                if self.c.lex.vector[i] != 0:
-                    return True
-            else:
-                return False
+            return self.vocab.has_vector(self.c.lex.orth)
 
     property vector:
-        """
-        A real-valued meaning representation.
+        """A real-valued meaning representation.
 
-        Type: numpy.ndarray[ndim=1, dtype='float32']
+        RETURNS (numpy.ndarray[ndim=1, dtype='float32']): A 1D numpy array
+            representing the token's semantics.
         """
         def __get__(self):
             if 'vector' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['vector'](self)
-            cdef int length = self.vocab.vectors_length
-            if length == 0:
-                raise ValueError(
-                    "Word vectors set to length 0. This may be because you "
-                    "don't have a model installed or loaded, or because your "
-                    "model doesn't include word vectors. For more info, see "
-                    "the documentation: \n%s\n" % about.__docs_models__
-                )
-            vector_view = <float[:length,]>self.c.lex.vector
-            return numpy.asarray(vector_view)
-
-    property repvec:
-        def __get__(self):
-            raise AttributeError("repvec was renamed to vector in v0.100")
-
-    property has_repvec:
-        def __get__(self):
-            raise AttributeError("has_repvec was renamed to has_vector in v0.100")
+            if self.has_vector:
+                return self.vocab.get_vector(self.c.lex.orth)
+            else:
+                return self.doc.tensor[self.i]
 
     property vector_norm:
+        """The L2 norm of the token's vector representation.
+
+        RETURNS (float): The L2 norm of the vector representation.
+        """
         def __get__(self):
             if 'vector_norm' in self.doc.user_token_hooks:
                 return self.doc.user_token_hooks['vector_norm'](self)
-            return self.c.lex.l2_norm
+            vector = self.vector 
+            return numpy.sqrt((vector ** 2).sum())
 
     property n_lefts:
         def __get__(self):
@@ -260,6 +268,18 @@ cdef class Token:
     property n_rights:
         def __get__(self):
             return self.c.r_kids
+
+    property sent_start:
+        def __get__(self):
+            return self.c.sent_start
+
+        def __set__(self, bint value):
+            if self.doc.is_parsed:
+                raise ValueError(
+                    'Refusing to write to token.sent_start if its document is parsed, '
+                    'because this may cause inconsistent state. '
+                    'See https://github.com/spacy-io/spaCy/issues/235 for workarounds.')
+            self.c.sent_start = value
 
     property lefts:
         def __get__(self):
@@ -324,28 +344,26 @@ cdef class Token:
                 yield from word.subtree
 
     property left_edge:
-        """
-        The leftmost token of this token's syntactic descendents.
+        """The leftmost token of this token's syntactic descendents.
 
-        Returns: Token The first token such that self.is_ancestor(token)
+        RETURNS (Token): The first token such that `self.is_ancestor(token)`.
         """
         def __get__(self):
             return self.doc[self.c.l_edge]
 
     property right_edge:
-        """
-        The rightmost token of this token's syntactic descendents.
+        """The rightmost token of this token's syntactic descendents.
 
-        Returns: Token The last token such that self.is_ancestor(token)
+        RETURNS (Token): The last token such that `self.is_ancestor(token)`.
         """
         def __get__(self):
             return self.doc[self.c.r_edge]
 
     property ancestors:
-        """
-        A sequence of this token's syntactic ancestors.
+        """A sequence of this token's syntactic ancestors.
 
-        Yields: Token A sequence of ancestor tokens such that ancestor.is_ancestor(self)
+        YIELDS (Token): A sequence of ancestor tokens such that
+            `ancestor.is_ancestor(self)`.
         """
         def __get__(self):
             cdef const TokenC* head_ptr = self.c
@@ -357,33 +375,25 @@ cdef class Token:
                 yield self.doc[head_ptr - (self.c - self.i)]
                 i += 1
 
-    def is_ancestor_of(self, descendant):
-        # TODO: Remove after backward compatibility check.
-        return self.is_ancestor(descendant)
-
     def is_ancestor(self, descendant):
-        """
-        Check whether this token is a parent, grandparent, etc. of another
+        """Check whether this token is a parent, grandparent, etc. of another
         in the dependency tree.
 
-        Arguments:
-            descendant (Token): Another token.
-        Returns:
-            is_ancestor (bool): Whether this token is the ancestor of the descendant.
+        descendant (Token): Another token.
+        RETURNS (bool): Whether this token is the ancestor of the descendant.
         """
         if self.doc is not descendant.doc:
             return False
         return any( ancestor.i == self.i for ancestor in descendant.ancestors )
 
     property head:
-        """
-        The syntactic parent, or "governor", of this token.
+        """The syntactic parent, or "governor", of this token.
 
-        Returns: Token
+        RETURNS (Token): The token head.
         """
         def __get__(self):
-            """
-            The token predicted by the parser to be the head of the current token.
+            """The token predicted by the parser to be the head of the current
+            token.
             """
             return self.doc[self.i + self.c.head]
         def __set__(self, Token new_head):
@@ -399,7 +409,7 @@ cdef class Token:
             cdef int rel_newhead_i = new_head.i - self.i
 
             # is the new head a descendant of the old head
-            cdef bint is_desc = old_head.is_ancestor_of(new_head)
+            cdef bint is_desc = old_head.is_ancestor(new_head)
 
             cdef int new_edge
             cdef Token anc, child
@@ -477,10 +487,9 @@ cdef class Token:
             self.c.head = rel_newhead_i
 
     property conjuncts:
-        """
-        A sequence of coordinated tokens, including the token itself.
+        """A sequence of coordinated tokens, including the token itself.
 
-        Yields: Token A coordinated token
+        YIELDS (Token): A coordinated token.
         """
         def __get__(self):
             """Get a list of conjoined words."""
@@ -495,25 +504,50 @@ cdef class Token:
                             yield from word.conjuncts
 
     property ent_type:
+        """Named entity type.
+
+        RETURNS (uint64): Named entity type.
+        """
         def __get__(self):
             return self.c.ent_type
+        def __set__(self, ent_type):
+            self.c.ent_type = ent_type
 
     property ent_iob:
+        """IOB code of named entity tag. `1="I", 2="O", 3="B"`. 0 means no tag
+        is assigned.
+
+        RETURNS (uint64): IOB code of named entity tag.
+        """
         def __get__(self):
             return self.c.ent_iob
 
     property ent_type_:
+        """Named entity type.
+
+        RETURNS (unicode): Named entity type.
+        """
         def __get__(self):
             return self.vocab.strings[self.c.ent_type]
+        def __set__(self, ent_type):
+            self.c.ent_type = self.vocab.strings.add(ent_type)
 
     property ent_iob_:
+        """IOB code of named entity tag. "B" means the token begins an entity,
+        "I" means it is inside an entity, "O" means it is outside an entity, and
+        "" means no entity tag is set.
+
+        RETURNS (unicode): IOB code of named entity tag.
+        """
         def __get__(self):
             iob_strings = ('', 'I', 'O', 'B')
             return iob_strings[self.c.ent_iob]
 
     property ent_id:
-        """
-        An (integer) entity ID. Usually assigned by patterns in the Matcher.
+        """ID of the entity the token is an instance of, if any. Usually
+        assigned by patterns in the Matcher.
+
+        RETURNS (uint64): ID of the entity.
         """
         def __get__(self):
             return self.c.ent_id
@@ -522,14 +556,16 @@ cdef class Token:
             self.c.ent_id = key
 
     property ent_id_:
-        """
-        A (string) entity ID. Usually assigned by patterns in the Matcher.
+        """ID of the entity the token is an instance of, if any. Usually
+        assigned by patterns in the Matcher.
+
+        RETURNS (unicode): ID of the entity.
         """
         def __get__(self):
             return self.vocab.strings[self.c.ent_id]
 
         def __set__(self, name):
-            self.c.ent_id = self.vocab.strings[name]
+            self.c.ent_id = self.vocab.strings.add(name)
 
     property whitespace_:
         def __get__(self):
@@ -564,10 +600,14 @@ cdef class Token:
             return self.vocab.strings[self.c.lex.lang]
 
     property lemma_:
+        """Base form of the word, with no inflectional suffixes.
+
+        RETURNS (unicode): Token lemma.
+        """
         def __get__(self):
             return self.vocab.strings[self.c.lemma]
         def __set__(self, unicode lemma_):
-            self.c.lemma = self.vocab.strings[lemma_]
+            self.c.lemma = self.vocab.strings.add(lemma_)
 
     property pos_:
         def __get__(self):
@@ -577,13 +617,13 @@ cdef class Token:
         def __get__(self):
             return self.vocab.strings[self.c.tag]
         def __set__(self, tag):
-            self.tag = self.vocab.strings[tag]
+            self.tag = self.vocab.strings.add(tag)
 
     property dep_:
         def __get__(self):
             return self.vocab.strings[self.c.dep]
         def __set__(self, unicode label):
-            self.c.dep = self.vocab.strings[label]
+            self.c.dep = self.vocab.strings.add(label)
 
     property is_oov:
         def __get__(self): return Lexeme.c_check_flag(self.c.lex, IS_OOV)

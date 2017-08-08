@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import pytest
 
 
-@pytest.mark.models
+@pytest.mark.models('en')
 @pytest.mark.parametrize('text,i', [("Jane's got a new car", 1),
                                     ("Jane thinks that's a nice car", 3)])
 def test_issue401(EN, text, i):

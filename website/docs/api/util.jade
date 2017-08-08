@@ -1,12 +1,10 @@
-//- 💫 DOCS > API > ANNOTATION SPECS
+//- 💫 DOCS > API > UTIL
 
 include ../../_includes/_mixins
 
 p
     |  spaCy comes with a small collection of utility functions located in
     |  #[+src(gh("spaCy", "spacy/util.py")) spacy/util.py].
-
-+infobox("Important note")
     |  Because utility functions are mostly intended for
     |  #[strong internal use within spaCy], their behaviour may change with
     |  future releases. The functions documented on this page should be safe
@@ -14,7 +12,7 @@ p
     |  recommend having additional tests in place if your application depends on
     |  any of spaCy's utilities.
 
-+h(2, "get_data_path") get_data_path
++h(2, "get_data_path") util.get_data_path
     +tag function
 
 p
@@ -28,11 +26,11 @@ p
         +cell Only return path if it exists, otherwise return #[code None].
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Path] / #[code None]
         +cell Data path or #[code None].
 
-+h(2, "set_data_path") set_data_path
++h(2, "set_data_path") util.set_data_path
     +tag function
 
 p
@@ -49,7 +47,7 @@ p
         +cell unicode or #[code Path]
         +cell Path to new data directory.
 
-+h(2, "get_lang_class") get_lang_class
++h(2, "get_lang_class") util.get_lang_class
     +tag function
 
 p
@@ -70,18 +68,27 @@ p
         +cell Two-letter language code, e.g. #[code 'en'].
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code Language]
         +cell Language class.
 
-+h(2, "resolve_model_path") resolve_model_path
++h(2, "load_model") util.load_model
     +tag function
+    +tag-new(2)
 
-p Resolve a model name or string to a model path.
+p
+    |  Load a model from a shortcut link, package or data path. If called with a
+    |  shortcut link or package name, spaCy will assume the model is a Python
+    |  package and import and call its #[code load()] method. If called with a
+    |  path, spaCy will assume it's a data directory, read the language and
+    |  pipeline settings from the meta.json and initialise a #[code Language]
+    |  class. The model data will then be loaded in via
+    |  #[+api("language#from_disk") #[code Language.from_disk()]].
 
 +aside-code("Example").
-    model_path = util.resolve_model_path('en')
-    model_path = util.resolve_model_path('/path/to/en')
+    nlp = util.load_model('en')
+    nlp = util.load_model('en_core_web_sm', disable=['ner'])
+    nlp = util.load_model('/path/to/data')
 
 +table(["Name", "Type", "Description"])
     +row
@@ -89,12 +96,106 @@ p Resolve a model name or string to a model path.
         +cell unicode
         +cell Package name, shortcut link or model path.
 
+    +row
+        +cell #[code **overrides]
+        +cell -
+        +cell Specific overrides, like pipeline components to disable.
+
     +footrow
-        +cell return
-        +cell #[code Path]
+        +cell returns
+        +cell #[code Language]
+        +cell #[code Language] class with the loaded model.
+
++h(2, "load_model_from_path") util.load_model_from_path
+    +tag function
+    +tag-new(2)
+
+p
+    |  Load a model from a data directory path. Creates the
+    |  #[+api("language") #[code Language]] class and pipeline based on the
+    |  directory's meta.json and then calls
+    |  #[+api("language#from_disk") #[code from_disk()]] with the path. This
+    |  function also makes it easy to test a new model that you haven't packaged
+    |  yet.
+
++aside-code("Example").
+    nlp = load_model_from_path('/path/to/data')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code model_path]
+        +cell unicode
         +cell Path to model data directory.
 
-+h(2, "is_package") is_package
+    +row
+        +cell #[code meta]
+        +cell dict
+        +cell
+            |  Model meta data. If #[code False], spaCy will try to load the
+            |  meta from a meta.json in the same directory.
+
+    +row
+        +cell #[code **overrides]
+        +cell -
+        +cell Specific overrides, like pipeline components to disable.
+
+    +footrow
+        +cell returns
+        +cell #[code Language]
+        +cell #[code Language] class with the loaded model.
+
++h(2, "load_model_from_init_py") util.load_model_from_init_py
+    +tag function
+    +tag-new(2)
+
+p
+    |  A helper function to use in the #[code load()] method of a model package's
+    |  #[+src(gh("spacy-dev-resources", "templates/model/en_model_name/__init__.py")) __init__.py].
+
++aside-code("Example").
+    from spacy.util import load_model_from_init_py
+
+    def load(**overrides):
+        return load_model_from_init_py(__file__, **overrides)
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code init_file]
+        +cell unicode
+        +cell Path to model's __init__.py, i.e. #[code __file__].
+
+    +row
+        +cell #[code **overrides]
+        +cell -
+        +cell Specific overrides, like pipeline components to disable.
+
+    +footrow
+        +cell returns
+        +cell #[code Language]
+        +cell #[code Language] class with the loaded model.
+
++h(2, "get_model_meta") util.get_model_meta
+    +tag function
+    +tag-new(2)
+
+p
+    |  Get a model's meta.json from a directory path and validate its contents.
+
++aside-code("Example").
+    meta = util.get_model_meta('/path/to/model')
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code path]
+        +cell unicode or #[code Path]
+        +cell Path to model directory.
+
+    +footrow
+        +cell returns
+        +cell dict
+        +cell The model's meta data.
+
++h(2, "is_package") util.is_package
     +tag function
 
 p
@@ -112,20 +213,22 @@ p
         +cell Name of package.
 
     +footrow
-        +cell return
+        +cell returns
         +cell #[code bool]
         +cell #[code True] if installed package, #[code False] if not.
 
-+h(2, "get_model_package_path") get_model_package_path
++h(2, "get_package_path") util.get_package_path
     +tag function
+    +tag-new(2)
 
 p
-    |  Get path to a #[+a("/docs/usage/models") model package] installed via pip.
-    |  Currently imports the package to find it and parse its meta data.
+    |  Get path to an installed package. Mainly used to resolve the location of
+    |  #[+a("/docs/usage/models") model packages]. Currently imports the package
+    |  to find its path.
 
 +aside-code("Example").
-    util.get_model_package_path('en_core_web_sm')
-    # /usr/lib/python3.6/site-packages/en_core_web_sm/en_core_web_sm-1.2.0
+    util.get_package_path('en_core_web_sm')
+    # /usr/lib/python3.6/site-packages/en_core_web_sm
 
 +table(["Name", "Type", "Description"])
     +row
@@ -134,40 +237,32 @@ p
         +cell Name of installed package.
 
     +footrow
-        +cell return
-        +cell #[code Path]
-        +cell Path to model data directory.
-
-+h(2, "parse_package_meta") parse_package_meta
-    +tag function
-
-p
-    |  Check if a #[code meta.json] exists in a model package and return its
-    |  contents.
-
-+aside-code("Example").
-    if util.is_package('en_core_web_sm'):
-        path = util.get_model_package_path('en_core_web_sm')
-        meta = util.parse_package_meta(path, require=True)
-        # {'name': 'core_web_sm', 'lang': 'en', ...}
-
-+table(["Name", "Type", "Description"])
-    +row
-        +cell #[code package_path]
+        +cell returns
         +cell #[code Path]
         +cell Path to model package directory.
 
-    +row
-        +cell #[code require]
-        +cell #[code bool]
-        +cell If #[code True], raise error if no #[code meta.json] is found.
++h(2, "is_in_jupyter") util.is_in_jupyter
+    +tag function
+    +tag-new(2)
 
+p
+    |  Check if user is running spaCy from a #[+a("https://jupyter.org") Jupyter]
+    |  notebook by detecting the IPython kernel. Mainly used for the
+    |  #[+api("displacy") #[code displacy]] visualizer.
+
++aside-code("Example").
+    html = '&lt;h1&gt;Hello world!&lt;/h1&gt;'
+    if util.is_in_jupyter():
+        from IPython.core.display import display, HTML
+        return display(HTML(html))
+
++table(["Name", "Type", "Description"])
     +footrow
-        +cell return
-        +cell dict / #[code None]
-        +cell Model meta data or #[code None].
+        +cell returns
+        +cell bool
+        +cell #[code True] if in Jupyter, #[code False] if not.
 
-+h(2, "update_exc") update_exc
++h(2, "update_exc") util.update_exc
     +tag function
 
 p
@@ -194,24 +289,25 @@ p
         +cell Exception dictionaries to add to the base exceptions, in order.
 
     +footrow
-        +cell return
+        +cell returns
         +cell dict
         +cell Combined tokenizer exceptions.
 
 
-+h(2, "prints") prints
++h(2, "prints") util.prints
     +tag function
+    +tag-new(2)
 
 p
     |  Print a formatted, text-wrapped message with optional title. If a text
     |  argument is a #[code Path], it's converted to a string. Should only
-    |  be used for interactive components like the #[+a("/docs/usage/cli") CLI].
+    |  be used for interactive components like the #[+api("cli") cli].
 
 +aside-code("Example").
     data_path = Path('/some/path')
     if not path.exists():
         util.prints("Can't find the path.", data_path,
-                    title="Error", exits=True)
+                    title="Error", exits=1)
 
 +table(["Name", "Type", "Description"])
     +row
@@ -223,5 +319,6 @@ p
         +cell #[code **kwargs]
         +cell -
         +cell
-            |  #[code title] is rendered as coloured headline. #[code exits=True]
-            |  performs system exit after printing.
+            |  #[code title] is rendered as coloured headline. #[code exits]
+            |  performs system exit after printing, using the value of the
+            |  argument as the exit code, e.g. #[code exits=1].

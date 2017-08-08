@@ -9,9 +9,20 @@ import regex as re
 from pathlib import Path
 import sys
 import textwrap
+import random
+import numpy
+import io
+import dill
+from collections import OrderedDict
+
+import msgpack
+import msgpack_numpy
+msgpack_numpy.patch()
+import ujson
 
 from .symbols import ORTH
 from .compat import cupy, CudaStream, path2str, basestring_, input_, unicode_
+from .compat import copy_array, normalize_string_keys, getattr_
 
 
 LANGUAGES = {}
@@ -77,25 +88,92 @@ def ensure_path(path):
         return path
 
 
-def resolve_model_path(name):
-    """Resolve a model name or string to a model path.
+def load_model(name, **overrides):
+    """Load a model from a shortcut link, package or data path.
 
     name (unicode): Package name, shortcut link or model path.
-    RETURNS (Path): Path to model data directory.
+    **overrides: Specific overrides, like pipeline components to disable.
+    RETURNS (Language): `Language` class with the loaded model.
     """
     data_path = get_data_path()
     if not data_path or not data_path.exists():
         raise IOError("Can't find spaCy data path: %s" % path2str(data_path))
     if isinstance(name, basestring_):
-        if (data_path / name).exists(): # in data dir or shortcut link
-            return (data_path / name)
-        if is_package(name): # installed as a package
-            return get_model_package_path(name)
-        if Path(name).exists(): # path to model
-            return Path(name)
-    elif hasattr(name, 'exists'): # Path or Path-like object
-        return name
+        if name in set([d.name for d in data_path.iterdir()]): # in data dir / shortcut
+            return load_model_from_link(name, **overrides)
+        if is_package(name): # installed as package
+            return load_model_from_package(name, **overrides)
+        if Path(name).exists(): # path to model data directory
+            return load_model_from_path(Path(name), **overrides)
+    elif hasattr(name, 'exists'): # Path or Path-like to model data
+        return load_model_from_path(name, **overrides)
     raise IOError("Can't find model '%s'" % name)
+
+
+def load_model_from_link(name, **overrides):
+    """Load a model from a shortcut link, or directory in spaCy data path."""
+    init_file = get_data_path() / name / '__init__.py'
+    spec = importlib.util.spec_from_file_location(name, init_file)
+    try:
+        cls = importlib.util.module_from_spec(spec)
+    except AttributeError:
+        raise IOError(
+            "Cant' load '%s'. If you're using a shortcut link, make sure it "
+            "points to a valid model package (not just a data directory)." % name)
+    spec.loader.exec_module(cls)
+    return cls.load(**overrides)
+
+
+def load_model_from_package(name, **overrides):
+    """Load a model from an installed package."""
+    cls = importlib.import_module(name)
+    return cls.load(**overrides)
+
+
+def load_model_from_path(model_path, meta=False, **overrides):
+    """Load a model from a data directory path. Creates Language class with
+    pipeline from meta.json and then calls from_disk() with path."""
+    if not meta:
+        meta = get_model_meta(model_path)
+    cls = get_lang_class(meta['lang'])
+    nlp = cls(pipeline=meta.get('pipeline', True), meta=meta, **overrides)
+    return nlp.from_disk(model_path)
+
+
+def load_model_from_init_py(init_file, **overrides):
+    """Helper function to use in the `load()` method of a model package's
+    __init__.py.
+
+    init_file (unicode): Path to model's __init__.py, i.e. `__file__`.
+    **overrides: Specific overrides, like pipeline components to disable.
+    RETURNS (Language): `Language` class with loaded model.
+    """
+    model_path = Path(init_file).parent
+    meta = get_model_meta(model_path)
+    data_dir = '%s_%s-%s' % (meta['lang'], meta['name'], meta['version'])
+    data_path = model_path / data_dir
+    if not model_path.exists():
+        raise ValueError("Can't find model directory: %s" % path2str(data_path))
+    return load_model_from_path(data_path, meta, **overrides)
+
+
+def get_model_meta(path):
+    """Get model meta.json from a directory path and validate its contents.
+
+    path (unicode or Path): Path to model directory.
+    RETURNS (dict): The model's meta data.
+    """
+    model_path = ensure_path(path)
+    if not model_path.exists():
+        raise ValueError("Can't find model directory: %s" % path2str(model_path))
+    meta_path = model_path / 'meta.json'
+    if not meta_path.is_file():
+        raise IOError("Could not read meta.json from %s" % meta_path)
+    meta = read_json(meta_path)
+    for setting in ['lang', 'name', 'version']:
+        if setting not in meta:
+            raise ValueError('No %s setting found in model meta.json' % setting)
+    return meta
 
 
 def is_package(name):
@@ -111,40 +189,21 @@ def is_package(name):
     return False
 
 
-def get_model_package_path(package_name):
-    """Get path to a model package installed via pip.
+def get_package_path(name):
+    """Get the path to an installed package.
 
-    package_name (unicode): Name of installed package.
-    RETURNS (Path): Path to model data directory.
+    name (unicode): Package name.
+    RETURNS (Path): Path to installed package.
     """
     # Here we're importing the module just to find it. This is worryingly
     # indirect, but it's otherwise very difficult to find the package.
-    # Python's installation and import rules are very complicated.
-    pkg = importlib.import_module(package_name)
-    package_path = Path(pkg.__file__).parent.parent
-    meta = parse_package_meta(package_path / package_name)
-    model_name = '%s-%s' % (package_name, meta['version'])
-    return package_path / package_name / model_name
-
-
-def parse_package_meta(package_path, require=True):
-    """Check if a meta.json exists in a package and return its contents.
-
-    package_path (Path): Path to model package directory.
-    require (bool): If True, raise error if no meta.json is found.
-    RETURNS (dict or None): Model meta.json data or None.
-    """
-    location = package_path / 'meta.json'
-    if location.is_file():
-        return read_json(location)
-    elif require:
-        raise IOError("Could not read meta.json from %s" % location)
-    else:
-        return None
+    pkg = importlib.import_module(name)
+    return Path(pkg.__file__).parent
 
 
 def is_in_jupyter():
-    """Check if user is in a Jupyter notebook. Mainly used for displaCy.
+    """Check if user is running spaCy from a Jupyter notebook by detecting the
+    IPython kernel. Mainly used for the displaCy visualizer.
 
     RETURNS (bool): True if in Jupyter, False if not.
     """
@@ -173,6 +232,41 @@ def get_async(stream, numpy_array):
         return array
 
 
+def itershuffle(iterable, bufsize=1000):
+    """Shuffle an iterator. This works by holding `bufsize` items back
+    and yielding them sometime later. Obviously, this is not unbiased –
+    but should be good enough for batching. Larger bufsize means less bias.
+    From https://gist.github.com/andres-erbsen/1307752
+
+    iterable (iterable): Iterator to shuffle.
+    bufsize (int): Items to hold back.
+    YIELDS (iterable): The shuffled iterator.
+    """
+    iterable = iter(iterable)
+    buf = []
+    try:
+        while True:
+            for i in range(random.randint(1, bufsize-len(buf))):
+                buf.append(iterable.next())
+            random.shuffle(buf)
+            for i in range(random.randint(1, bufsize)):
+                if buf:
+                    yield buf.pop()
+                else:
+                    break
+    except StopIteration:
+        random.shuffle(buf)
+        while buf:
+            yield buf.pop()
+        raise StopIteration
+
+
+_PRINT_ENV = False
+def set_env_log(value):
+    global _PRINT_ENV
+    _PRINT_ENV = value
+
+
 def env_opt(name, default=None):
     if type(default) is float:
         type_convert = float
@@ -180,14 +274,17 @@ def env_opt(name, default=None):
         type_convert = int
     if 'SPACY_' + name.upper() in os.environ:
         value = type_convert(os.environ['SPACY_' + name.upper()])
-        print(name, "=", repr(value), "via", "$SPACY_" + name.upper())
+        if _PRINT_ENV:
+            print(name, "=", repr(value), "via", "$SPACY_" + name.upper())
         return value
     elif name in os.environ:
         value = type_convert(os.environ[name])
-        print(name, "=", repr(value), "via", '$' + name)
+        if _PRINT_ENV:
+            print(name, "=", repr(value), "via", '$' + name)
         return value
     else:
-        print(name, '=', repr(default), "by default")
+        if _PRINT_ENV:
+            print(name, '=', repr(default), "by default")
         return default
 
 
@@ -217,6 +314,22 @@ def compile_suffix_regex(entries):
 def compile_infix_regex(entries):
     expression = '|'.join([piece for piece in entries if piece.strip()])
     return re.compile(expression)
+
+
+def add_lookups(default_func, *lookups):
+    """Extend an attribute function with special cases. If a word is in the
+    lookups, the value is returned. Otherwise the previous function is used.
+
+    default_func (callable): The default function to execute.
+    *lookups (dict): Lookup dictionary mapping string to attribute value.
+    RETURNS (callable): Lexical attribute getter.
+    """
+    def get_attr(string):
+        for lookup in lookups:
+            if string in lookup:
+                return lookup[string]
+        return default_func(string)
+    return get_attr
 
 
 def update_exc(base_exceptions, *addition_dicts):
@@ -286,10 +399,33 @@ def normalize_slice(length, start, stop, step=None):
     return start, stop
 
 
-def check_renamed_kwargs(renamed, kwargs):
-    for old, new in renamed.items():
-        if old in kwargs:
-            raise TypeError("Keyword argument %s now renamed to %s" % (old, new))
+def compounding(start, stop, compound):
+    """Yield an infinite series of compounding values. Each time the
+    generator is called, a value is produced by multiplying the previous
+    value by the compound rate.
+
+    EXAMPLE:
+      >>> sizes = compounding(1., 10., 1.5)
+      >>> assert next(sizes) == 1.
+      >>> assert next(sizes) == 1 * 1.5
+      >>> assert next(sizes) == 1.5 * 1.5
+    """
+    def clip(value):
+        return max(value, stop) if (start>stop) else min(value, stop)
+    curr = float(start)
+    while True:
+        yield clip(curr)
+        curr *= compound
+
+
+def decaying(start, stop, decay):
+    """Yield an infinite series of linearly decaying values."""
+    def clip(value):
+        return max(value, stop) if (start>stop) else min(value, stop)
+    nr_upd = 1.
+    while True:
+        yield clip(start * 1./(1. + decay * nr_upd))
+        nr_upd += 1
 
 
 def read_json(location):
@@ -298,6 +434,7 @@ def read_json(location):
     location (Path): Path to JSON file.
     RETURNS (dict): Loaded JSON content.
     """
+    location = ensure_path(location)
     with location.open('r', encoding='utf8') as f:
         return ujson.load(f)
 
@@ -315,6 +452,40 @@ def get_raw_input(description, default=False):
     return user_input
 
 
+def to_bytes(getters, exclude):
+    serialized = OrderedDict()
+    for key, getter in getters.items():
+        if key not in exclude:
+            serialized[key] = getter()
+    return msgpack.dumps(serialized, use_bin_type=True, encoding='utf8')
+
+
+def from_bytes(bytes_data, setters, exclude):
+    msg = msgpack.loads(bytes_data, encoding='utf8')
+    for key, setter in setters.items():
+        if key not in exclude and key in msg:
+            setter(msg[key])
+    return msg
+
+
+def to_disk(path, writers, exclude):
+    path = ensure_path(path)
+    if not path.exists():
+        path.mkdir()
+    for key, writer in writers.items():
+        if key not in exclude:
+            writer(path / key)
+    return path
+
+
+def from_disk(path, readers, exclude):
+    path = ensure_path(path)
+    for key, reader in readers.items():
+        if key not in exclude:
+            reader(path / key)
+    return path
+
+
 def print_table(data, title=None):
     """Print data in table format.
 
@@ -324,7 +495,7 @@ def print_table(data, title=None):
     if isinstance(data, dict):
         data = list(data.items())
     tpl_row = '    {:<15}' * len(data[0])
-    table = '\n'.join([tpl_row.format(l, v) for l, v in data])
+    table = '\n'.join([tpl_row.format(l, unicode_(v)) for l, v in data])
     if title:
         print('\n    \033[93m{}\033[0m'.format(title))
     print('\n{}\n'.format(table))
@@ -337,11 +508,12 @@ def print_markdown(data, title=None):
     title (unicode or None): Title, will be rendered as headline 2.
     """
     def excl_value(value):
-        return Path(value).exists() # contains path (personal info)
+        # contains path, i.e. personal info
+        return isinstance(value, basestring_) and Path(value).exists()
 
     if isinstance(data, dict):
         data = list(data.items())
-    markdown = ["* **{}:** {}".format(l, v) for l, v in data if not excl_value(v)]
+    markdown = ["* **{}:** {}".format(l, unicode_(v)) for l, v in data if not excl_value(v)]
     if title:
         print("\n## {}".format(title))
     print('\n{}\n'.format('\n'.join(markdown)))
@@ -353,13 +525,13 @@ def prints(*texts, **kwargs):
     *texts (unicode): Texts to print. Each argument is rendered as paragraph.
     **kwargs: 'title' becomes coloured headline. 'exits'=True performs sys exit.
     """
-    exits = kwargs.get('exits', False)
+    exits = kwargs.get('exits', None)
     title = kwargs.get('title', None)
     title = '\033[93m{}\033[0m\n'.format(_wrap(title)) if title else ''
     message = '\n\n'.join([_wrap(text) for text in texts])
     print('\n{}{}\n'.format(title, message))
-    if exits:
-        sys.exit(0)
+    if exits is not None:
+        sys.exit(exits)
 
 
 def _wrap(text, wrap_max=80, indent=4):

@@ -5,6 +5,7 @@ import numpy
 import pytest
 
 
+@pytest.mark.xfail
 @pytest.mark.parametrize('text', ["Hello"])
 def test_vocab_add_vector(en_vocab, text):
     en_vocab.resize_vectors(10)

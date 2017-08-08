@@ -5,6 +5,9 @@ import six
 import ftfy
 import sys
 import ujson
+import itertools
+
+from thinc.neural.util import copy_array
 
 try:
     import cPickle as pickle
@@ -32,6 +35,8 @@ copy_reg = copy_reg
 CudaStream = CudaStream
 cupy = cupy
 fix_text = ftfy.fix_text
+copy_array = copy_array
+izip = getattr(itertools, 'izip', zip)
 
 is_python2 = six.PY2
 is_python3 = six.PY3
@@ -57,6 +62,19 @@ elif is_python3:
     path2str = lambda path: str(path)
 
 
+def b_to_str(b_str):
+    if is_python2:
+        return b_str
+    # important: if no encoding is set, string becomes "b'...'"
+    return str(b_str, encoding='utf8')
+
+
+def getattr_(obj, name, *default):
+    if is_python3 and isinstance(name, bytes):
+        name = name.decode('utf8')
+    return getattr(obj, name, *default)
+
+
 def symlink_to(orig, dest):
     if is_python2 and is_windows:
         import subprocess
@@ -71,3 +89,16 @@ def is_config(python2=None, python3=None, windows=None, linux=None, osx=None):
             (windows == None or windows == is_windows) and
             (linux == None or linux == is_linux) and
             (osx == None or osx == is_osx))
+
+
+def normalize_string_keys(old):
+    '''Given a dictionary, make sure keys are unicode strings, not bytes.'''
+    new = {}
+    for key, value in old.items():
+        if isinstance(key, bytes_):
+            new[key.decode('utf8')] = value
+        else:
+            new[key] = value
+    return new
+
+

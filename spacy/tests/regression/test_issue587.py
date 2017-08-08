@@ -7,14 +7,16 @@ from ...attrs import IS_PUNCT, ORTH
 import pytest
 
 
-@pytest.mark.models
-def test_issue587(EN):
+def test_issue587(en_tokenizer):
     """Test that Matcher doesn't segfault on particular input"""
-    matcher = Matcher(EN.vocab)
-    content = '''a b; c'''
-    matcher.add(entity_key='1', label='TEST', attrs={}, specs=[[{ORTH: 'a'}, {ORTH: 'b'}]])
-    matcher(EN(content))
-    matcher.add(entity_key='2', label='TEST', attrs={}, specs=[[{ORTH: 'a'}, {ORTH: 'b'}, {IS_PUNCT: True}, {ORTH: 'c'}]])
-    matcher(EN(content))
-    matcher.add(entity_key='3', label='TEST', attrs={}, specs=[[{ORTH: 'a'}, {ORTH: 'b'}, {IS_PUNCT: True}, {ORTH: 'd'}]])
-    matcher(EN(content))
+    doc = en_tokenizer('a b; c')
+    matcher = Matcher(doc.vocab)
+    matcher.add('TEST1', None, [{ORTH: 'a'}, {ORTH: 'b'}])
+    matches = matcher(doc)
+    assert len(matches) == 1
+    matcher.add('TEST2', None, [{ORTH: 'a'}, {ORTH: 'b'}, {IS_PUNCT: True}, {ORTH: 'c'}])
+    matches = matcher(doc)
+    assert len(matches) == 2
+    matcher.add('TEST3', None, [{ORTH: 'a'}, {ORTH: 'b'}, {IS_PUNCT: True}, {ORTH: 'd'}])
+    matches = matcher(doc)
+    assert len(matches) == 2

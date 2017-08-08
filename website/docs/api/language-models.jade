@@ -2,7 +2,10 @@
 
 include ../../_includes/_mixins
 
-p spaCy currently supports the following languages and capabilities:
+p
+    |  spaCy currently provides models for the following languages and
+    |  capabilities:
+
 
 +aside-code("Download language models", "bash").
     python -m spacy download en
@@ -22,12 +25,16 @@ p spaCy currently supports the following languages and capabilities:
 
     +row
         +cell French #[code fr]
-        each icon in [ "pro", "pro", "con", "pro", "con", "pro", "pro", "con" ]
+        each icon in [ "pro", "con", "con", "pro", "con", "pro", "pro", "con" ]
             +cell.u-text-center #[+procon(icon)]
 
-+h(2, "available") Available models
+    +row
+        +cell Spanish #[code es]
+        each icon in [ "pro", "pro", "con", "pro", "pro", "pro", "pro", "con" ]
+            +cell.u-text-center #[+procon(icon)]
 
-include ../usage/_models-list
+p
+    +button("/docs/usage/models", true, "primary") See available models
 
 +h(2, "alpha-support") Alpha tokenization support
 
@@ -52,9 +59,35 @@ p
     |  #[+a("https://github.com/mocobeta/janome") Janome].
 
 +table([ "Language", "Code", "Source" ])
-    each language, code in { es: "Spanish", it: "Italian", pt: "Portuguese", nl: "Dutch", sv: "Swedish", fi: "Finnish", nb: "Norwegian Bokmål", da: "Danish", hu: "Hungarian", pl: "Polish", bn: "Bengali", he: "Hebrew", zh: "Chinese", ja: "Japanese" }
+    each language, code in { it: "Italian", pt: "Portuguese", nl: "Dutch", sv: "Swedish", fi: "Finnish", nb: "Norwegian Bokmål", da: "Danish", hu: "Hungarian", pl: "Polish", bn: "Bengali", he: "Hebrew", zh: "Chinese", ja: "Japanese" }
         +row
             +cell #{language}
             +cell #[code=code]
             +cell
                 +src(gh("spaCy", "spacy/lang/" + code)) lang/#{code}
+
++h(2, "multi-language") Multi-language support
+    +tag-new(2)
+
+p
+    |  As of v2.0, spaCy supports models trained on more than one language. This
+    |  is especially useful for named entity recognition. The language ID used
+    |  for multi-language or language-neutral models is #[code xx]. The
+    |  language class, a generic subclass containing only the base language data,
+    |  can be found in #[+src(gh("spaCy", "spacy/lang/xx")) lang/xx].
+
+p
+    |  To load your model with the neutral, multi-language class, simply set
+    |  #[code "language": "xx"] in your
+    |  #[+a("/docs/usage/saving-loading#models-generating") model package]'s
+    |  meta.json. You can also import the class directly, or call
+    |  #[+api("util#get_lang_class") #[code util.get_lang_class()]] for
+    |  lazy-loading.
+
++code("Standard import").
+    from spacy.lang.xx import MultiLanguage
+    nlp = MultiLanguage()
+
++code("With lazy-loading").
+    from spacy.util import get_lang_class
+    nlp = get_lang_class('xx')

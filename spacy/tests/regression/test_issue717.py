@@ -4,7 +4,7 @@ from __future__ import unicode_literals
 import pytest
 
 
-@pytest.mark.models
+@pytest.mark.models('en')
 @pytest.mark.parametrize('text1,text2',
     [("You're happy", "You are happy"),
      ("I'm happy", "I am happy"),

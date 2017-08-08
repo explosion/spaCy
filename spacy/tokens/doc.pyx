@@ -11,7 +11,6 @@ import struct
 import dill
 
 from libc.string cimport memcpy, memset
-from libc.stdint cimport uint32_t
 from libc.math cimport sqrt
 
 from .span cimport Span
@@ -21,14 +20,16 @@ from .token cimport Token
 from .printers import parse_tree
 from ..lexeme cimport Lexeme, EMPTY_LEXEME
 from ..typedefs cimport attr_t, flags_t
+from ..attrs import intify_attrs
 from ..attrs cimport attr_id_t
 from ..attrs cimport ID, ORTH, NORM, LOWER, SHAPE, PREFIX, SUFFIX, LENGTH, CLUSTER
 from ..attrs cimport LENGTH, POS, LEMMA, TAG, DEP, HEAD, SPACY, ENT_IOB, ENT_TYPE
+from ..attrs cimport SENT_START
 from ..parts_of_speech cimport CCONJ, PUNCT, NOUN, univ_pos_t
-from ..syntax.iterators import CHUNKERS
 from ..util import normalize_slice
 from ..compat import is_config
 from .. import about
+from .. import util
 
 
 DEF PADDING = 5
@@ -52,6 +53,8 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
         return token.dep
     elif feat_name == HEAD:
         return token.head
+    elif feat_name == SENT_START:
+        return token.sent_start
     elif feat_name == SPACY:
         return token.spacy
     elif feat_name == ENT_IOB:
@@ -61,6 +64,14 @@ cdef attr_t get_token_attr(const TokenC* token, attr_id_t feat_name) nogil:
     else:
         return Lexeme.get_struct_attr(token.lex, feat_name)
 
+def _get_chunker(lang):
+    try:
+        cls = util.get_lang_class(lang)
+    except ImportError:
+        return None
+    except KeyError:
+        return None
+    return cls.Defaults.syntax_iterators.get(u'noun_chunks')
 
 cdef class Doc:
     """A sequence of Token objects. Access sentences and named entities, export
@@ -106,6 +117,7 @@ cdef class Doc:
         self.is_tagged = False
         self.is_parsed = False
         self.sentiment = 0.0
+        self.cats = {}
         self.user_hooks = {}
         self.user_token_hooks = {}
         self.user_span_hooks = {}
@@ -113,7 +125,7 @@ cdef class Doc:
         self.user_data = {}
         self._py_tokens = []
         self._vector = None
-        self.noun_chunks_iterator = CHUNKERS.get(self.vocab.lang)
+        self.noun_chunks_iterator = _get_chunker(self.vocab.lang)
         cdef unicode orth
         cdef bint has_space
         if orths_and_spaces is None and words is not None:
@@ -149,6 +161,10 @@ cdef class Doc:
 
     def __getitem__(self, object i):
         """Get a `Token` or `Span` object.
+
+        i (int or tuple) The index of the token, or the slice of the document to get.
+        RETURNS (Token or Span): The token at `doc[i]]`, or the span at
+            `doc[start : end]`.
 
         EXAMPLE:
             >>> doc[i]
@@ -197,6 +213,8 @@ cdef class Doc:
     def __len__(self):
         """The number of tokens in the document.
 
+        RETURNS (int): The number of tokens in the document.
+
         EXAMPLE:
             >>> len(doc)
         """
@@ -243,8 +261,12 @@ cdef class Doc:
         def __get__(self):
             if 'has_vector' in self.user_hooks:
                 return self.user_hooks['has_vector'](self)
-
-            return any(token.has_vector for token in self)
+            elif any(token.has_vector for token in self):
+                return True
+            elif self.tensor is not None:
+                return True
+            else:
+                return False
 
     property vector:
         """A real-valued meaning representation. Defaults to an average of the
@@ -256,18 +278,25 @@ cdef class Doc:
         def __get__(self):
             if 'vector' in self.user_hooks:
                 return self.user_hooks['vector'](self)
-            if self._vector is None:
-                if len(self):
-                    self._vector = sum(t.vector for t in self) / len(self)
-                else:
-                    return numpy.zeros((self.vocab.vectors_length,), dtype='float32')
-            return self._vector
+            if self._vector is not None:
+                return self._vector
+            elif self.has_vector and len(self):
+                self._vector = sum(t.vector for t in self) / len(self)
+                return self._vector
+            elif self.tensor is not None:
+                self._vector = self.tensor.mean(axis=0)
+                return self._vector
+            else:
+                return numpy.zeros((self.vocab.vectors_length,), dtype='float32')
 
         def __set__(self, value):
             self._vector = value
 
     property vector_norm:
-        # TODO: docstrings / docs
+        """The L2 norm of the document's vector representation.
+
+        RETURNS (float): The L2 norm of the vector representation.
+        """
         def __get__(self):
             if 'vector_norm' in self.user_hooks:
                 return self.user_hooks['vector_norm'](self)
@@ -282,10 +311,6 @@ cdef class Doc:
 
         def __set__(self, value):
             self._vector_norm = value
-
-    @property
-    def string(self):
-        return self.text
 
     property text:
         """A unicode representation of the document text.
@@ -324,7 +349,7 @@ cdef class Doc:
             cdef int i
             cdef const TokenC* token
             cdef int start = -1
-            cdef int label = 0
+            cdef attr_t label = 0
             output = []
             for i in range(self.length):
                 token = &self.c[i]
@@ -420,7 +445,8 @@ cdef class Doc:
         """
         def __get__(self):
             if 'sents' in self.user_hooks:
-                return self.user_hooks['sents'](self)
+                yield from self.user_hooks['sents'](self)
+                return
 
             if not self.is_parsed:
                 raise ValueError(
@@ -482,8 +508,8 @@ cdef class Doc:
         cdef np.ndarray[attr_t, ndim=2] output
         # Make an array from the attributes --- otherwise our inner loop is Python
         # dict iteration.
-        cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.int32)
-        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.int32)
+        cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
+        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.uint64)
         for i in range(self.length):
             for j, feature in enumerate(attr_ids):
                 output[i, j] = get_token_attr(&self.c[i], feature)
@@ -550,14 +576,16 @@ cdef class Doc:
         for i in range(self.length):
             self.c[i] = parsed[i]
 
-    def from_array(self, attrs, int[:, :] array):
-        """Load attributes from a numpy array. Write to a `Doc` object, from an
-        `(M, N)` array of attributes.
-
-        attrs (ints): A list of attribute ID ints.
-        array (numpy.ndarray[ndim=2, dtype='int32']) The attribute values to load.
-        RETURNS (Doc): Itself.
-        """
+    def from_array(self, attrs, array):
+        if SENT_START in attrs and HEAD in attrs:
+            raise ValueError(
+                "Conflicting attributes specified in doc.from_array():\n"
+                "(HEAD, SENT_START)\n"
+                "The HEAD attribute currently sets sentence boundaries implicitly,\n"
+                "based on the tree structure. This means the HEAD attribute would "
+                "potentially override the sentence boundaries set by SENT_START.\n"
+                "See https://github.com/spacy-io/spaCy/issues/235 for details and "
+                "workarounds, and to propose solutions.")
         cdef int i, col
         cdef attr_id_t attr_id
         cdef TokenC* tokens = self.c
@@ -584,23 +612,45 @@ cdef class Doc:
         self.is_tagged = bool(TAG in attrs or POS in attrs)
         return self
 
-    def to_bytes(self):
+    def to_disk(self, path, **exclude):
+        """Save the current state to a directory.
+
+        path (unicode or Path): A path to a directory, which will be created if
+            it doesn't exist. Paths may be either strings or `Path`-like objects.
+        """
+        with path.open('wb') as file_:
+            file_.write(self.to_bytes(**exclude))
+
+    def from_disk(self, path, **exclude):
+        """Loads state from a directory. Modifies the object in place and
+        returns it.
+
+        path (unicode or Path): A path to a directory. Paths may be either
+            strings or `Path`-like objects.
+        RETURNS (Doc): The modified `Doc` object.
+        """
+        with path.open('rb') as file_:
+            bytes_data = file_.read()
+        self.from_bytes(bytes_data, **exclude)
+
+    def to_bytes(self, **exclude):
         """Serialize, i.e. export the document contents to a binary string.
 
         RETURNS (bytes): A losslessly serialized copy of the `Doc`, including
             all annotations.
         """
-        return dill.dumps(
-            (self.text,
-            self.to_array([LENGTH,SPACY,TAG,LEMMA,HEAD,DEP,ENT_IOB,ENT_TYPE]),
-            self.sentiment,
-            self.tensor,
-            self.noun_chunks_iterator,
-            self.user_data,
-            (self.user_hooks, self.user_token_hooks, self.user_span_hooks)),
-            protocol=-1)
+        array_head = [LENGTH,SPACY,TAG,LEMMA,HEAD,DEP,ENT_IOB,ENT_TYPE]
+        serializers = {
+            'text': lambda: self.text,
+            'array_head': lambda: array_head,
+            'array_body': lambda: self.to_array(array_head),
+            'sentiment': lambda: self.sentiment,
+            'tensor': lambda: self.tensor,
+            'user_data': lambda: self.user_data
+        }
+        return util.to_bytes(serializers, exclude)
 
-    def from_bytes(self, data):
+    def from_bytes(self, bytes_data, **exclude):
         """Deserialize, i.e. import the document contents from a binary string.
 
         data (bytes): The string to load from.
@@ -608,27 +658,36 @@ cdef class Doc:
         """
         if self.length != 0:
             raise ValueError("Cannot load into non-empty Doc")
-        cdef int[:, :] attrs
+        deserializers = {
+            'text': lambda b: None,
+            'array_head': lambda b: None,
+            'array_body': lambda b: None,
+            'sentiment': lambda b: None,
+            'tensor': lambda b: None,
+            'user_data': lambda user_data: self.user_data.update(user_data)
+        }
+
+        msg = util.from_bytes(bytes_data, deserializers, exclude)
+
+        cdef attr_t[:, :] attrs
         cdef int i, start, end, has_space
-        fields = dill.loads(data)
-        text, attrs = fields[:2]
-        self.sentiment, self.tensor = fields[2:4]
-        self.noun_chunks_iterator, self.user_data = fields[4:6]
-        self.user_hooks, self.user_token_hooks, self.user_span_hooks = fields[6]
+        self.sentiment = msg['sentiment']
+        self.tensor = msg['tensor']
 
         start = 0
         cdef const LexemeC* lex
         cdef unicode orth_
+        text = msg['text']
+        attrs = msg['array_body']
         for i in range(attrs.shape[0]):
             end = start + attrs[i, 0]
             has_space = attrs[i, 1]
             orth_ = text[start:end]
             lex = self.vocab.get(self.mem, orth_)
             self.push_back(lex, has_space)
-
             start = end + has_space
-        self.from_array([TAG,LEMMA,HEAD,DEP,ENT_IOB,ENT_TYPE],
-            attrs[:, 2:])
+        self.from_array(msg['array_head'][2:],
+                        attrs[:, 2:])
         return self
 
     def merge(self, int start_idx, int end_idx, *args, **attributes):
@@ -647,14 +706,12 @@ cdef class Doc:
         if len(args) == 3:
             # TODO: Warn deprecation
             tag, lemma, ent_type = args
-            attributes[TAG] = self.vocab.strings[tag]
-            attributes[LEMMA] = self.vocab.strings[lemma]
-            attributes[ENT_TYPE] = self.vocab.strings[ent_type]
+            attributes[TAG] = tag
+            attributes[LEMMA] = lemma
+            attributes[ENT_TYPE] = ent_type
         elif not args:
-            # TODO: This code makes little sense overall. We're still
-            # ignoring most of the attributes?
             if "label" in attributes and 'ent_type' not in attributes:
-                if type(attributes["label"]) == int:
+                if isinstance(attributes["label"], int):
                     attributes[ENT_TYPE] = attributes["label"]
                 else:
                     attributes[ENT_TYPE] = self.vocab.strings[attributes["label"]]
@@ -667,6 +724,12 @@ cdef class Doc:
                 "Arguments supplied:\n%s\n"
                 "Keyword arguments:%s\n" % (len(args), repr(args), repr(attributes)))
 
+        # More deprecated attribute handling =/
+        if 'label' in attributes:
+            attributes['ent_type'] = attributes.pop('label')
+
+        attributes = intify_attrs(attributes, strings_map=self.vocab.strings)
+
         cdef int start = token_by_start(self.c, self.length, start_idx)
         if start == -1:
             return None
@@ -676,13 +739,6 @@ cdef class Doc:
         # Currently we have the token index, we want the range-end index
         end += 1
         cdef Span span = self[start:end]
-        tag = self.vocab.strings[attributes.get(TAG, span.root.tag)]
-        lemma = self.vocab.strings[attributes.get(LEMMA, span.root.lemma)]
-        ent_type = self.vocab.strings[attributes.get(ENT_TYPE, span.root.ent_type)]
-        ent_id = attributes.get('ent_id', span.root.ent_id)
-        if isinstance(ent_id, basestring):
-            ent_id = self.vocab.strings[ent_id]
-
         # Get LexemeC for newly merged token
         new_orth = ''.join([t.text_with_ws for t in span])
         if span[-1].whitespace_:
@@ -691,18 +747,11 @@ cdef class Doc:
         # House the new merged token where it starts
         cdef TokenC* token = &self.c[start]
         token.spacy = self.c[end-1].spacy
-        if tag in self.vocab.morphology.tag_map:
-            self.vocab.morphology.assign_tag(token, tag)
-        else:
-            token.tag = self.vocab.strings[tag]
-        token.lemma = self.vocab.strings[lemma]
-        if ent_type == 'O':
-            token.ent_iob = 2
-            token.ent_type = 0
-        else:
-            token.ent_iob = 3
-            token.ent_type = self.vocab.strings[ent_type]
-        token.ent_id = ent_id
+        for attr_name, attr_value in attributes.items():
+            if attr_name == TAG:
+                self.vocab.morphology.assign_tag(token, attr_value)
+            else:
+                Token.set_struct_attr(token, attr_name, attr_value)
         # Begin by setting all the head indices to absolute token positions
         # This is easier to work with for now than the offsets
         # Before thinking of something simpler, beware the case where a dependency

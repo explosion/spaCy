@@ -44,7 +44,8 @@ MOD_NAMES = [
     'spacy.matcher',
     'spacy.syntax.ner',
     'spacy.symbols',
-    'spacy.syntax.iterators']
+    'spacy.vectors',
+]
 
 
 COMPILE_OPTIONS =  {
@@ -188,10 +189,10 @@ def setup_package():
             ext_modules=ext_modules,
             install_requires=[
                 'numpy>=1.7',
-                'murmurhash>=0.26,<0.27',
+                'murmurhash>=0.28,<0.29',
                 'cymem>=1.30,<1.32',
                 'preshed>=1.0.0,<2.0.0',
-                'thinc>=6.6.0,<6.7.0',
+                'thinc>=6.8.0,<6.9.0',
                 'plac<1.0.0,>=0.9.6',
                 'pip>=9.0.0,<10.0.0',
                 'six',
@@ -200,7 +201,9 @@ def setup_package():
                 'dill>=0.2,<0.3',
                 'requests>=2.13.0,<3.0.0',
                 'regex==2017.4.5',
-                'ftfy>=4.4.2,<5.0.0'],
+                'ftfy>=4.4.2,<5.0.0',
+                'msgpack-python',
+                'msgpack-numpy'],
             classifiers=[
                 'Development Status :: 5 - Production/Stable',
                 'Environment :: Console',

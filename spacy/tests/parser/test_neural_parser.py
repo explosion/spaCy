@@ -1,7 +1,6 @@
 # coding: utf8
 from __future__ import unicode_literals
 from thinc.neural import Model
-from mock import Mock
 import pytest
 import numpy
 
@@ -36,7 +35,7 @@ def parser(vocab, arc_eager):
 
 @pytest.fixture
 def model(arc_eager, tok2vec):
-    return Parser.Model(arc_eager.n_moves, token_vector_width=tok2vec.nO)
+    return Parser.Model(arc_eager.n_moves, token_vector_width=tok2vec.nO)[0]
 
 @pytest.fixture
 def doc(vocab):
@@ -45,36 +44,37 @@ def doc(vocab):
 @pytest.fixture
 def gold(doc):
     return GoldParse(doc, heads=[1, 1, 1], deps=['L', 'ROOT', 'R'])
+
+
 def test_can_init_nn_parser(parser):
     assert parser.model is None
 
 
 def test_build_model(parser):
-    parser.model = Parser.Model(parser.moves.n_moves)
+    parser.model = Parser.Model(parser.moves.n_moves)[0]
     assert parser.model is not None
 
 
 def test_predict_doc(parser, tok2vec, model, doc):
-    state = {}
-    state['tokvecs'] = tok2vec([doc])
+    doc.tensor = tok2vec([doc])[0]
     parser.model = model
-    parser(doc, state=state)
+    parser(doc)
 
 
 def test_update_doc(parser, tok2vec, model, doc, gold):
     parser.model = model
     tokvecs, bp_tokvecs = tok2vec.begin_update([doc])
-    state = {'tokvecs': tokvecs, 'bp_tokvecs': bp_tokvecs}
-    state = parser.update(doc, gold, state=state)
-    loss1 = state['parser_loss']
-    assert loss1 > 0
-    state = parser.update(doc, gold, state=state)
-    loss2 = state['parser_loss']
-    assert loss2 == loss1
+    d_tokvecs = parser.update(([doc], tokvecs), [gold])
+    assert d_tokvecs[0].shape == tokvecs[0].shape
     def optimize(weights, gradient, key=None):
         weights -= 0.001 * gradient
-    state = parser.update(doc, gold, sgd=optimize, state=state)
-    loss3 = state['parser_loss']
-    state = parser.update(doc, gold, sgd=optimize, state=state)
-    lossr = state['parser_loss']
-    assert loss3 < loss2
+    bp_tokvecs(d_tokvecs, sgd=optimize)
+    assert d_tokvecs[0].sum() == 0.
+
+
+def test_predict_doc_beam(parser, tok2vec, model, doc):
+    doc.tensor = tok2vec([doc])[0]
+    parser.model = model
+    parser(doc, beam_width=32, beam_density=0.001)
+    for word in doc:
+        print(word.text, word.head, word.dep_)

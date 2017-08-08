@@ -41,6 +41,11 @@ cdef class StateClass:
     def is_final(self):
         return self.c.is_final()
 
+    def copy(self):
+        cdef StateClass new_state = StateClass.init(self.c._sent, self.c.length)
+        new_state.c.clone(self.c)
+        return new_state
+
     def print_state(self, words):
         words = list(words) + ['_']
         top = words[self.S(0)] + '_%d' % self.S_(0).head

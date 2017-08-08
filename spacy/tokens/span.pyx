@@ -21,14 +21,14 @@ from .. import about
 
 cdef class Span:
     """A slice from a Doc object."""
-    def __cinit__(self, Doc doc, int start, int end, int label=0, vector=None,
+    def __cinit__(self, Doc doc, int start, int end, attr_t label=0, vector=None,
                   vector_norm=None):
         """Create a `Span` object from the slice `doc[start : end]`.
 
         doc (Doc): The parent document.
         start (int): The index of the first token of the span.
         end (int): The index of the first token after the span.
-        label (int): A label to attach to the Span, e.g. for named entities.
+        label (uint64): A label to attach to the Span, e.g. for named entities.
         vector (ndarray[ndim=1, dtype='float32']): A meaning representation of the span.
         RETURNS (Span): The newly constructed object.
         """
@@ -43,6 +43,7 @@ cdef class Span:
             self.end_char = self.doc[end - 1].idx + len(self.doc[end - 1])
         else:
             self.end_char = 0
+        assert label in doc.vocab.strings, label
         self.label = label
         self._vector = vector
         self._vector_norm = vector_norm
@@ -66,6 +67,10 @@ cdef class Span:
         return hash((self.doc, self.label, self.start_char, self.end_char))
 
     def __len__(self):
+        """Get the number of tokens in the span.
+
+        RETURNS (int): The number of tokens in the span.
+        """
         self._recalculate_indices()
         if self.end < self.start:
             return 0
@@ -77,6 +82,16 @@ cdef class Span:
         return self.text.encode('utf-8')
 
     def __getitem__(self, object i):
+        """Get a `Token` or a `Span` object
+
+        i (int or tuple): The index of the token within the span, or slice of
+            the span to get.
+        RETURNS (Token or Span): The token at `span[i]`.
+
+        EXAMPLE:
+            >>> span[0]
+            >>> span[1:3]
+        """
         self._recalculate_indices()
         if isinstance(i, slice):
             start, end = normalize_slice(len(self), i.start, i.stop, i.step)
@@ -88,12 +103,17 @@ cdef class Span:
                 return self.doc[self.start + i]
 
     def __iter__(self):
+        """Iterate over `Token` objects.
+
+        YIELDS (Token): A `Token` object.
+        """
         self._recalculate_indices()
         for i in range(self.start, self.end):
             yield self.doc[i]
 
     def merge(self, *args, **attributes):
-        """Retokenize the document, such that the span is merged into a single token.
+        """Retokenize the document, such that the span is merged into a single
+        token.
 
         **attributes: Attributes to assign to the merged token. By default,
             attributes are inherited from the syntactic root token of the span.
@@ -102,7 +122,7 @@ cdef class Span:
         return self.doc.merge(self.start_char, self.end_char, *args, **attributes)
 
     def similarity(self, other):
-        """ Make a semantic similarity estimate. The default estimate is cosine
+        """Make a semantic similarity estimate. The default estimate is cosine
         similarity using an average of word vectors.
 
         other (object): The object to compare with. By default, accepts `Doc`,
@@ -149,14 +169,23 @@ cdef class Span:
             return self.doc[root.l_edge : root.r_edge + 1]
 
     property has_vector:
-        # TODO: docstring
+        """A boolean value indicating whether a word vector is associated with
+        the object.
+
+        RETURNS (bool): Whether a word vector is associated with the object.
+        """
         def __get__(self):
             if 'has_vector' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['has_vector'](self)
             return any(token.has_vector for token in self)
 
     property vector:
-        # TODO: docstring
+        """A real-valued meaning representation. Defaults to an average of the
+        token vectors.
+
+        RETURNS (numpy.ndarray[ndim=1, dtype='float32']): A 1D numpy array
+            representing the span's semantics.
+        """
         def __get__(self):
             if 'vector' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['vector'](self)
@@ -165,7 +194,10 @@ cdef class Span:
             return self._vector
 
     property vector_norm:
-        # TODO: docstring
+        """The L2 norm of the document's vector representation.
+
+        RETURNS (float): The L2 norm of the vector representation.
+        """
         def __get__(self):
             if 'vector_norm' in self.doc.user_span_hooks:
                 return self.doc.user_span_hooks['vector'](self)
@@ -187,7 +219,10 @@ cdef class Span:
                 return sum([token.sentiment for token in self]) / len(self)
 
     property text:
-        # TODO: docstring
+        """A unicode representation of the span text.
+
+        RETURNS (unicode): The original verbatim text of the span.
+        """
         def __get__(self):
             text = self.text_with_ws
             if self[-1].whitespace_:
@@ -195,7 +230,11 @@ cdef class Span:
             return text
 
     property text_with_ws:
-        # TODO: docstring
+        """The text content of the span with a trailing whitespace character if
+        the last token has one.
+
+        RETURNS (unicode): The text content of the span (with trailing whitespace).
+        """
         def __get__(self):
             return u''.join([t.text_with_ws for t in self])
 
@@ -218,6 +257,7 @@ cdef class Span:
             # The tricky thing here is that Span accepts its tokenisation changing,
             # so it's okay once we have the Span objects. See Issue #375
             spans = []
+            cdef attr_t label
             for start, end, label in self.doc.noun_chunks_iterator(self):
                 spans.append(Span(self, start, end, label=label))
             for span in spans:
@@ -241,15 +281,15 @@ cdef class Span:
 
             The head of 'new' is 'York', and the head of "York" is "like"
 
-            >>> toks[new].head.orth_
+            >>> toks[new].head.text
             'York'
-            >>> toks[york].head.orth_
+            >>> toks[york].head.text
             'like'
 
             Create a span for "New York". Its root is "York".
 
             >>> new_york = toks[new:york+1]
-            >>> new_york.root.orth_
+            >>> new_york.root.text
             'York'
 
             Here's a more complicated case, raised by issue #214:
@@ -339,7 +379,7 @@ cdef class Span:
     property ent_id:
         """An (integer) entity ID. Usually assigned by patterns in the `Matcher`.
 
-        RETURNS (int): The entity ID.
+        RETURNS (uint64): The entity ID.
         """
         def __get__(self):
             return self.root.ent_id
@@ -370,7 +410,10 @@ cdef class Span:
             return ''.join([t.string for t in self]).strip()
 
     property lemma_:
-        # TODO: docstring
+        """The span's lemma.
+
+        RETURNS (unicode): The span's lemma.
+        """
         def __get__(self):
             return ' '.join([t.lemma_ for t in self]).strip()
 
@@ -390,7 +433,10 @@ cdef class Span:
             return ''.join([t.string for t in self])
 
     property label_:
-        # TODO: docstring
+        """The span's label.
+
+        RETURNS (unicode): The span's label.
+        """
         def __get__(self):
             return self.doc.vocab.strings[self.label]
 

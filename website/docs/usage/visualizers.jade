@@ -4,7 +4,7 @@ include ../../_includes/_mixins
 
 p
     |  As of v2.0, our popular visualizers, #[+a(DEMOS_URL + "/displacy") displaCy]
-    |  and #[+a(DEMOS_URL + "displacy-ent") displaCy #[sup ENT]] are finally an
+    |  and #[+a(DEMOS_URL + "/displacy-ent") displaCy #[sup ENT]] are finally an
     |  official part of the library. Visualizing a dependency parse or named
     |  entities in a text is not only a fun NLP demo – it can also be incredibly
     |  helpful in speeding up development and debugging your code and training
@@ -29,6 +29,7 @@ p
     |  standards.
 
 +h(2, "getting-started") Getting started
+    +tag-new(2)
 
 p
     |  The quickest way visualize  #[code Doc] is to use
@@ -57,6 +58,13 @@ p
 p
     |  The argument #[code options] lets you specify a dictionary of settings
     |  to customise the layout, for example:
+
++aside("Important note")
+    |  There's currently a known issue with the #[code compact] mode for
+    |  sentences with short arrows and long dependency labels, that causes labels
+    |  longer than the arrow to wrap. So if you come across this problem,
+    |  especially when using custom labels, you'll have to increase the
+    |  #[code distance] setting in the #[code options] to allow longer arcs.
 
 +table(["Name", "Type", "Description", "Default"])
     +row
@@ -180,8 +188,8 @@ p
 p
     |  If you don't need the web server and just want to generate the markup
     |  – for example, to export it to a file or serve it in a custom
-    |  way – you can use #[+api("displacy#render") #[code displacy.render]]
-    |  instead. It works the same, but returns a string containing the markup.
+    |  way – you can use #[+api("displacy#render") #[code displacy.render]].
+    |  It works the same way, but returns a string containing the markup.
 
 +code("Example").
     import spacy
@@ -220,10 +228,32 @@ p
     |  a standalone graphic.) So instead of rendering all #[code Doc]s at one,
     |  loop over them and export them separately.
 
+
++h(3, "examples-export-svg") Example: Export SVG graphics of dependency parses
+
++code("Example").
+    import spacy
+    from spacy import displacy
+    from pathlib import Path
+
+    nlp = spacy.load('en')
+    sentences = ["This is an example.", "This is another one."]
+    for sent in sentences:
+        doc = nlp(sentence)
+        svg = displacy.render(doc, style='dep')
+        file_name = '-'.join([w.text for w in doc if not w.is_punct]) + '.svg'
+        output_path = Path('/images/' + file_name)
+        output_path.open('w', encoding='utf-8').write(svg)
+
+p
+    |  The above code will generate the dependency visualizations and them to
+    |  two files, #[code This-is-an-example.svg] and #[code This-is-another-one.svg].
+
+
 +h(2, "jupyter") Using displaCy in Jupyter notebooks
 
 p
-    |  displaCy is able to detect whether you're within a
+    |  displaCy is able to detect whether you're working in a
     |  #[+a("https://jupyter.org") Jupyter] notebook, and will return markup
     |  that can be rendered in a cell straight away. When you export your
     |  notebook, the visualizations will be included as HTML.
@@ -257,28 +287,6 @@ p
     html = displacy.render(doc, style='dep')
     return display(HTML(html))
 
-+h(2, "examples") Usage examples
-
-+h(3, "examples-export-svg") Export SVG graphics of dependency parses
-
-+code("Example").
-    import spacy
-    from spacy import displacy
-    from pathlib import Path
-
-    nlp = spacy.load('en')
-    sentences = ["This is an example.", "This is another one."]
-    for sent in sentences:
-        doc = nlp(sentence)
-        svg = displacy.render(doc, style='dep')
-        file_name = '-'.join([w.text for w in doc if not w.is_punct]) + '.svg'
-        output_path = Path('/images/' + file_name)
-        output_path.open('w', encoding='utf-8').write(svg)
-
-p
-    |  The above code will generate the dependency visualizations and them to
-    |  two files, #[code This-is-an-example.svg] and #[code This-is-another-one.svg].
-
 +h(2, "manual-usage") Rendering data manually
 
 p
@@ -287,24 +295,17 @@ p
     |  #[+a("http://www.nltk.org") NLTK] or
     |  #[+a("https://github.com/tensorflow/models/tree/master/syntaxnet") SyntaxNet].
     |  Simply convert the dependency parse or recognised entities to displaCy's
-    |  format and import #[code DependencyRenderer] or #[code EntityRenderer]
-    |  from #[code spacy.displacy.render]. A renderer class can be is initialised
-    |  with a dictionary of options. To generate the visualization markup, call
-    |  the renderer's #[code render()] method on a list of dictionaries (one
-    |  per visualization).
-
+    |  format and set #[code manual=True] on either #[code render()] or
+    |  #[code serve()].
 
 +aside-code("Example").
-    from spacy.displacy.render import EntityRenderer
-
     ex = [{'text': 'But Google is starting from behind.',
            'ents': [{'start': 4, 'end': 10, 'label': 'ORG'}],
            'title': None}]
-    renderer = EntityRenderer()
-    html = renderer.render(ex)
+    html = displacy.render(ex, style='ent', manual=True)
 
-+code("DependencyRenderer input").
-    [{
++code("DEP input").
+    {
         'words': [
             {'text': 'This', 'tag': 'DT'},
             {'text': 'is', 'tag': 'VBZ'},
@@ -314,11 +315,70 @@ p
             {'start': 0, 'end': 1, 'label': 'nsubj', 'dir': 'left'},
             {'start': 2, 'end': 3, 'label': 'det', 'dir': 'left'},
             {'start': 1, 'end': 3, 'label': 'attr', 'dir': 'right'}]
-    }]
+    }
 
-+code("EntityRenderer input").
-    [{
++code("ENT input").
+    {
         'text': 'But Google is starting from behind.',
         'ents': [{'start': 4, 'end': 10, 'label': 'ORG'}],
         'title': None
-    }]
+    }
+
++h(2, "webapp") Using displaCy in a web application
+
+p
+    |  If you want to use the visualizers as part of a web application, for
+    |  example to create something like our
+    |  #[+a(DEMOS_URL + "/displacy") online demo], it's not recommended to
+    |  simply wrap and serve the displaCy renderer. Instead, you should only
+    |  rely on the server to perform spaCy's processing capabilities, and use
+    |  #[+a(gh("displacy")) displaCy.js] to render the JSON-formatted output.
+
++aside("Why not return the HTML by the server?")
+    |  It's certainly possible to just have your server return the markup.
+    |  But outputting raw, unsanitised HTML is risky and makes your app vulnerable to
+    |  #[+a("https://en.wikipedia.org/wiki/Cross-site_scripting") cross-site scripting]
+    |  (XSS). All your user needs to do is find a way to make spaCy return text
+    |  like #[code &lt;script src="malicious-code.js"&gt;&lt;script&gt;], which
+    |  is pretty easy in NER mode. Instead of relying on the server to render
+    |  and sanitise HTML, you can do this on the client in JavaScript.
+    |  displaCy.js creates the markup as DOM nodes and will never insert raw
+    |  HTML.
+
+p
+    |  The #[code parse_deps] function takes a #[code Doc] object and returns
+    |  a dictionary in a format that can be rendered by displaCy.
+
++code("Example").
+    import spacy
+    from spacy import displacy
+
+    nlp = spacy.load('en')
+
+    def displacy_service(text):
+        doc = nlp(text)
+        return displacy.parse_deps(doc)
+
+p
+    |  Using a library like #[+a("https://falconframework.org/") Falcon] or
+    |  #[+a("http://www.hug.rest/") Hug], you can easily turn the above code
+    |  into a simple REST API that receives a text and returns a JSON-formatted
+    |  parse. In your front-end, include #[+a(gh("displacy")) displacy.js] and
+    |  initialise it with the API URL and the ID or query selector of the
+    |  container to render the visualisation in, e.g. #[code '#displacy'] for
+    |  #[code &lt;div id="displacy"&gt;].
+
++code("script.js", "javascript").
+    var displacy = new displaCy('http://localhost:8080', {
+        container: '#displacy'
+    })
+
+    function parse(text) {
+        displacy.parse(text);
+    }
+
+p
+    |  When you call #[code parse()], it will make a request to your API,
+    |  receive the JSON-formatted parse and render it in your container. To
+    |  create an interactive experience, you could trigger this function by
+    |  a button and read the text from an #[code &lt;input&gt;] field.

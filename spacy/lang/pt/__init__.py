@@ -7,26 +7,30 @@ from .lex_attrs import LEX_ATTRS
 from .lemmatizer import LOOKUP
 
 from ..tokenizer_exceptions import BASE_EXCEPTIONS
+from ..norm_exceptions import BASE_NORMS
 from ...language import Language
 from ...lemmatizerlookup import Lemmatizer
-from ...attrs import LANG
-from ...util import update_exc
+from ...attrs import LANG, NORM
+from ...util import update_exc, add_lookups
+
+
+class PortugueseDefaults(Language.Defaults):
+    lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
+    lex_attr_getters[LANG] = lambda text: 'pt'
+    lex_attr_getters[NORM] = add_lookups(Language.Defaults.lex_attr_getters[NORM], BASE_NORMS)
+    lex_attr_getters.update(LEX_ATTRS)
+
+    tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
+    stop_words = set(STOP_WORDS)
+
+    @classmethod
+    def create_lemmatizer(cls, nlp=None):
+        return Lemmatizer(LOOKUP)
 
 
 class Portuguese(Language):
     lang = 'pt'
-
-    class Defaults(Language.Defaults):
-        lex_attr_getters = dict(Language.Defaults.lex_attr_getters)
-        lex_attr_getters[LANG] = lambda text: 'pt'
-        lex_attr_getters.update(LEX_ATTRS)
-
-        tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
-        stop_words = set(STOP_WORDS)
-
-        @classmethod
-        def create_lemmatizer(cls, nlp=None):
-            return Lemmatizer(LOOKUP)
+    Defaults = PortugueseDefaults
 
 
 __all__ = ['Portuguese']

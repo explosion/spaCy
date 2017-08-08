@@ -85,6 +85,7 @@ IDS = {
     "ENT_IOB": ENT_IOB,
     "ENT_TYPE": ENT_TYPE,
     "HEAD": HEAD,
+    "SENT_START": SENT_START,
     "SPACY": SPACY,
     "PROB": PROB,
     "LANG": LANG,
@@ -149,6 +150,9 @@ def intify_attrs(stringy_attrs, strings_map=None, _do_deprecated=False):
         else:
             int_key = IDS[name.upper()]
         if strings_map is not None and isinstance(value, basestring):
-            value = strings_map[value]
+            if hasattr(strings_map, 'add'):
+                value = strings_map.add(value)
+            else:
+                value = strings_map[value]
         inty_attrs[int_key] = value
     return inty_attrs

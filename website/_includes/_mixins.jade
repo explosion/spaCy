@@ -34,17 +34,17 @@ mixin src(url)
         +a(url)
             block
 
-        |   #[+icon("code", 16).o-icon--inline.u-color-subtle]
+        |   #[+icon("code", 16).o-icon--inline.u-color-theme]
 
 
 //- API link (with added tag and automatically generated path)
     path - [string] path to API docs page relative to /docs/api/
 
 mixin api(path)
-    +a("/docs/api/" + path, true)(target="_self").u-no-border.u-inline-block
+    +a("/docs/api/" + path, true)(target="_self").u-no-border.u-inline-block.u-nowrap
         block
 
-        |  #[+icon("book", 18).o-icon--inline.u-color-subtle]
+        |  #[+icon("book", 18).o-icon--inline.u-color-theme]
 
 
 //- Help icon with tooltip
@@ -103,14 +103,32 @@ mixin button(url, trusted, ...style)
     label    - [string] aside title (optional or false for no label)
     language - [string] language for syntax highlighting (default: "python")
                supports basic relevant languages available for PrismJS
+    icon     - [string] icon to display next to code block, mostly used for old/new
+    height   - [integer] optional height to clip code block to
 
-mixin code(label, language)
-    pre.c-code-block.o-block(class="lang-#{(language || DEFAULT_SYNTAX)}")&attributes(attributes)
+mixin code(label, language, icon, height)
+    pre.c-code-block.o-block(class="lang-#{(language || DEFAULT_SYNTAX)}" class=icon ? "c-code-block--has-icon" : null style=height ? "height: #{height}px" : null)&attributes(attributes)
         if label
             h4.u-text-label.u-text-label--dark=label
 
+        if icon
+            - var classes = {'accept': 'u-color-green', 'reject': 'u-color-red'}
+            .c-code-block__icon(class=classes[icon] || null class=classes[icon] ? "c-code-block__icon--border" : null)
+                +icon(icon, 18)
+
         code.c-code-block__content
             block
+
+
+//- Code blocks to display old/new versions
+
+mixin code-old()
+    +code(false, false, "reject").o-block-small
+        block
+
+mixin code-new()
+    +code(false, false, "accept").o-block-small
+        block
 
 
 //- CodePen embed
@@ -160,8 +178,29 @@ mixin label()
 //- Tag
 
 mixin tag()
-    span.u-text-tag.u-text-tag--spaced(aria-hidden="true")
+    span.u-text-tag.u-text-tag--spaced(aria-hidden="true")&attributes(attributes)
         block
+
+
+//- "Requires model" tag with tooltip and list of capabilities
+    ...capabs - [string] Required model capabilities, e.g. "vectors".
+
+mixin tag-model(...capabs)
+    - var intro = "To use this functionality, spaCy needs a model to be installed"
+    - var ext = capabs.length ? " that supports the following capabilities: " + capabs.join(', ') : ""
+    +tag Requires model
+    +help(intro + ext + ".").u-color-theme
+
+
+//- "New" tag to label features new in a specific version
+    By using a separate mixin with a version ID, it becomes easy to quickly
+    enable/disable tags without having to modify the markup in the docs.
+    version - [string or integer] version number, without "v" prefix
+
+mixin tag-new(version)
+    - var version = (typeof version == 'number') ? version.toFixed(1) : version
+    +tag(data-tooltip="This feature is new and was introduced in spaCy v#{version}.")
+        | v#{version}
 
 
 //- List
@@ -324,7 +363,34 @@ mixin pos-row(tag, pos, morph, desc)
                     |  #[code=m]
         +cell.u-text-small=desc
 
+
 mixin dep-row(label, desc)
     +row
         +cell #[code=label]
         +cell=desc
+
+
+//- Table rows for linguistic annotations
+    annots [array] - array of cell content
+    style [array] array of 1 (display as code) or 0 (display as text)
+
+mixin annotation-row(annots, style)
+    +row
+        for cell, i in annots
+            if style && style[i]
+                - cell = (typeof(cell) != 'boolean') ? cell : cell ? 'True' : 'False'
+                +cell #[code=cell]
+            else
+                +cell=cell
+        block
+
+
+//- Table of contents, to be used with +item mixins for links
+    col - [string] width of column (see +grid-col)
+
+mixin table-of-contents(col)
+    +grid-col(col || "half")
+        +infobox
+            +label.o-block-small Table of contents
+            +list("numbers").u-text-small.o-no-block
+                block
