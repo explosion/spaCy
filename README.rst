@@ -4,18 +4,22 @@ spaCy: Industrial-strength NLP
 spaCy is a library for advanced natural language processing in Python and
 Cython. spaCy is built on  the very latest research, but it isn't researchware.
 It was designed from day one to be used in real products. spaCy currently supports
-English, German and French, as well as tokenization for Spanish, Italian,
+English, German, French and Spanish, as well as tokenization for Italian,
 Portuguese, Dutch, Swedish, Finnish, Norwegian, Hungarian, Bengali, Hebrew,
 Chinese and Japanese. It's commercial open-source software, released under the
 MIT license.
 
-📊 **Help us improve the library!** `Take the spaCy user survey <https://survey.spacy.io>`_.
+⭐️ **Test spaCy v2.0.0 alpha and the new models!** `Read the release notes. <https://github.com/explosion/spaCy/releases/tag/v2.0.0-alpha>`_
 
-💫 **Version 1.8 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
+💫 **Version 1.9 out now!** `Read the release notes here. <https://github.com/explosion/spaCy/releases/>`_
 
 .. image:: https://img.shields.io/travis/explosion/spaCy/master.svg?style=flat-square
     :target: https://travis-ci.org/explosion/spaCy
-    :alt: Build Status
+    :alt: Travis Build Status
+
+.. image:: https://img.shields.io/appveyor/ci/explosion/spacy/master.svg?style=flat-square
+    :target: https://ci.appveyor.com/project/explosion/spacy
+    :alt: Appveyor Build Status
 
 .. image:: https://img.shields.io/github/release/explosion/spacy.svg?style=flat-square
     :target: https://github.com/explosion/spaCy/releases
@@ -59,11 +63,12 @@ MIT license.
 💬 Where to ask questions
 ==========================
 
+Please understand that we won't be able to provide individual support via email. We also believe that help is much more valuable if it's shared publicly, so that more people can benefit from it.
+
 ====================== ===
 **Bug reports**        `GitHub issue tracker`_
 **Usage questions**    `StackOverflow`_, `Gitter chat`_, `Reddit user group`_
 **General discussion** `Gitter chat`_, `Reddit user group`_
-**Commercial support** contact@explosion.ai
 ====================== ===
 
 .. _GitHub issue tracker: https://github.com/explosion/spaCy/issues
@@ -85,7 +90,7 @@ Features
 * GIL-free **multi-threading**
 * Efficient binary serialization
 * Easy **deep learning** integration
-* Statistical models for **English** and **German**
+* Statistical models for **English**, **German**, **French** and **Spanish**
 * State-of-the-art speed
 * Robust, rigorously evaluated accuracy
 
@@ -321,6 +326,7 @@ and ``--model`` are optional and enable additional tests:
 =========== ============== ===========
 Version     Date           Description
 =========== ============== ===========
+`v1.9.0`_   ``2017-07-22`` Spanish model, alpha support for Norwegian & Japanese, and bug fixes
 `v1.8.2`_   ``2017-04-26`` French model and small improvements
 `v1.8.1`_   ``2017-04-23`` Saving, loading and training bug fixes
 `v1.8.0`_   ``2017-04-16`` Better NER training, saving and loading
@@ -354,6 +360,7 @@ Version     Date           Description
 `v0.93`_    ``2015-09-22`` Bug fixes to word vectors
 =========== ============== ===========
 
+.. _v1.9.0: https://github.com/explosion/spaCy/releases/tag/v1.9.0
 .. _v1.8.2: https://github.com/explosion/spaCy/releases/tag/v1.8.2
 .. _v1.8.1: https://github.com/explosion/spaCy/releases/tag/v1.8.1
 .. _v1.8.0: https://github.com/explosion/spaCy/releases/tag/v1.8.0

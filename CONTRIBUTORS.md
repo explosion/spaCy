@@ -3,6 +3,7 @@
 This is a list of everyone who has made significant contributions to spaCy, in alphabetical order. Thanks a lot for the great work!
 
 * Adam Bittlingmayer, [@bittlingmayer](https://github.com/bittlingmayer)
+* Alexis Eidelman, [@AlexisEidelman](https://github.com/AlexisEidelman)
 * Andreas Grivas, [@andreasgrv](https://github.com/andreasgrv)
 * Andrew Poliakov, [@pavlin99th](https://github.com/pavlin99th)
 * Aniruddha Adhikary [@aniruddha-adhikary](https://github.com/aniruddha-adhikary)
@@ -16,6 +17,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Daniel Vila Suero, [@dvsrepo](https://github.com/dvsrepo)
 * Dmytro Sadovnychyi, [@sadovnychyi](https://github.com/sadovnychyi)
 * Eric Zhao, [@ericzhao28](https://github.com/ericzhao28)
+* Francisco Aranda, [@frascuchon](https://github.com/frascuchon)
 * Greg Baker, [@solresol](https://github.com/solresol)
 * Grégory Howard, [@Gregory-Howard](https://github.com/Gregory-Howard)
 * György Orosz, [@oroszgy](https://github.com/oroszgy)
@@ -24,6 +26,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Ines Montani, [@ines](https://github.com/ines)
 * J Nicolas Schrading, [@NSchrading](https://github.com/NSchrading)
 * Janneke van der Zwaan, [@jvdzwaan](https://github.com/jvdzwaan)
+* Jim Regan, [@jimregan](https://github.com/jimregan)
 * Jordan Suchow, [@suchow](https://github.com/suchow)
 * Josh Reeter, [@jreeter](https://github.com/jreeter)
 * Juan Miguel Cejuela, [@juanmirocks](https://github.com/juanmirocks)
@@ -45,6 +48,7 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Sam Bozek, [@sambozek](https://github.com/sambozek)
 * Sasho Savkov, [@savkov](https://github.com/savkov)
 * Shuvanon Razik, [@shuvanon](https://github.com/shuvanon)
+* Swier, [@swierh](https://github.com/swierh)
 * Thomas Tanon, [@Tpt](https://github.com/Tpt)
 * Tiago Rodrigues, [@TiagoMRodrigues](https://github.com/TiagoMRodrigues)
 * Vsevolod Solovyov, [@vsolovyov](https://github.com/vsolovyov)
@@ -54,3 +58,4 @@ This is a list of everyone who has made significant contributions to spaCy, in a
 * Yanhao Yang, [@YanhaoYang](https://github.com/YanhaoYang)
 * Yasuaki Uechi, [@uetchy](https://github.com/uetchy)
 * Yubing Dong, [@tomtung](https://github.com/tomtung)
+* Yuval Pinter, [@yuvalpinter](https://github.com/yuvalpinter)

@@ -19,11 +19,11 @@ p Here's a minimal example. We first add a pattern that specifies three tokens:
 p
     |  Once we've added the pattern, we can use the #[code matcher] as a
     |  callable, to receive a list of #[code (ent_id, start, end)] tuples.
-    |  Note that #[code LOWER] and #[code IS_PUNCT] are data attributes
-    |  of #[code spacy.attrs].
 
 +code.
     from spacy.matcher import Matcher
+    from spacy.attrs import IS_PUNCT, LOWER
+    
     matcher = Matcher(nlp.vocab)
     matcher.add_pattern("HelloWorld", [{LOWER: "hello"}, {IS_PUNCT: True}, {LOWER: "world"}])
 

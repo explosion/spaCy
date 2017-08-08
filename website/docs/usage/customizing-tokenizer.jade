@@ -21,7 +21,7 @@ p
 +h(2, "special-cases") Adding special case tokenization rules
 
 p
-    |  Most domains have at least some idiosyncracies that require custom
+    |  Most domains have at least some idiosyncrasies that require custom
     |  tokenization rules. Here's how to add a special case rule to an existing
     |  #[+api("tokenizer") #[code Tokenizer]] instance:
 
@@ -113,7 +113,7 @@ p
                 else:
                     tokens.append(substring)
                     substring = ''
-            tokens.extend(suffixes)
+            tokens.extend(reversed(suffixes))
             return tokens
 
 p
@@ -214,7 +214,7 @@ p
         def __call__(self, text):
             words = text.split(' ')
             # All tokens 'own' a subsequent space character in this tokenizer
-            spaces = [True] * len(word)
+            spaces = [True] * len(words)
             return Doc(self.vocab, words=words, spaces=spaces)
 
 p

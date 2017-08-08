@@ -30,6 +30,8 @@ Profile.prof
 __pycache__/
 *.py[cod]
 .env/
+.env2/
+.env3/
 .~env/
 .venv
 venv/
