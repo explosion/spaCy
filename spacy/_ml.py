@@ -222,11 +222,11 @@ def Tok2Vec(width, embed_size, preprocess=None):
                 asarray(Model.ops, dtype='uint64')
                 >> uniqued(embed, column=5)
                 >> LN(Maxout(width, width*4, pieces=3))
-                >> Residual(ExtractWindow(nW=1) >> SELU(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> SELU(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> SELU(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> SELU(width, width*3)),
-            pad=4)
+                >> Residual(ExtractWindow(nW=1) >> LN(Maxout(width, width*3)))
+                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3)),
+                pad=4)
         )
         if preprocess not in (False, None):
             tok2vec = preprocess >> tok2vec
@@ -432,8 +432,8 @@ def build_tagger_model(nr_class, token_vector_width, **cfg):
     with Model.define_operators({'>>': chain, '+': add}):
         # Input: (doc, tensor) tuples
         private_tok2vec = Tok2Vec(token_vector_width, 7500, preprocess=doc2feats())
- 
-        model = ( 
+
+        model = (
             fine_tune(private_tok2vec)
             >> with_flatten(
                 Maxout(token_vector_width, token_vector_width)
@@ -457,7 +457,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
             >> _flatten_add_lengths
             >> with_getitem(0,
                 uniqued(
-                  (embed_lower | embed_prefix | embed_suffix | embed_shape) 
+                  (embed_lower | embed_prefix | embed_suffix | embed_shape)
                   >> Maxout(width, width+(width//2)*3))
                 >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
                 >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
@@ -478,7 +478,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
             >> zero_init(Affine(nr_class, nr_class*2, drop_factor=0.0))
             >> logistic
         )
- 
+
     model.lsuv = False
     return model
 
