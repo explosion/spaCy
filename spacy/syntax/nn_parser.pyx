@@ -37,7 +37,8 @@ from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
 
 from thinc.api import layerize, chain, noop, clone
-from thinc.neural import Model, Affine, ELU, ReLu, Maxout
+from thinc.neural import Model, Affine, ReLu, Maxout
+from thinc.neural._classes.selu import SELU
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module
 
@@ -238,8 +239,9 @@ cdef class Parser:
         token_vector_width = util.env_opt('token_vector_width', token_vector_width)
         hidden_width = util.env_opt('hidden_width', hidden_width)
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces', 2)
-        tensors = fine_tune(Tok2Vec(token_vector_width, 7500,
-                    preprocess=doc2feats(cols=[ID, NORM, PREFIX, SUFFIX, TAG])))
+        embed_size = util.env_opt('embed_size', 7500)
+        tensors = fine_tune(Tok2Vec(token_vector_width, embed_size,
+                    preprocess=doc2feats(cols=[ID, NORM, PREFIX, SUFFIX, SHAPE])))
         if parser_maxout_pieces == 1:
             lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
                         nF=cls.nr_feature,
@@ -252,7 +254,7 @@ cdef class Parser:
 
         with Model.use_device('cpu'):
             upper = chain(
-                clone(Maxout(hidden_width), (depth-1)),
+                clone(SELU(hidden_width), (depth-1)),
                 zero_init(Affine(nr_class, drop_factor=0.0))
             )
         # TODO: This is an unfortunate hack atm!
