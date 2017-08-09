@@ -40,7 +40,6 @@ venv/
 
 # Distribution / packaging
 env/
-bin/
 build/
 develop-eggs/
 dist/
