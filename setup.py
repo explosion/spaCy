@@ -187,6 +187,7 @@ def setup_package():
             url=about['__uri__'],
             license=about['__license__'],
             ext_modules=ext_modules,
+            scripts=['bin/spacy'],
             install_requires=[
                 'numpy>=1.7',
                 'murmurhash>=0.28,<0.29',
