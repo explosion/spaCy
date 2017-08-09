@@ -513,7 +513,7 @@ cdef class Parser:
         self._make_updates(d_tokvecs,
             backprops, sgd, cuda_stream)
         d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
-        #bp_my_tokvecs(d_tokvecs, sgd=sgd)
+        bp_my_tokvecs(d_tokvecs, sgd=sgd)
         return d_tokvecs
 
     def _init_gold_batch(self, whole_docs, whole_golds):
