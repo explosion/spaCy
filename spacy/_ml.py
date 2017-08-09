@@ -221,7 +221,7 @@ def Tok2Vec(width, embed_size, preprocess=None):
             with_flatten(
                 asarray(Model.ops, dtype='uint64')
                 >> embed
-                >> LN(Maxout(width, width*4, pieces=3))
+                >> Maxout(width, width*4, pieces=3)
                 >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
                 >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
                 >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
