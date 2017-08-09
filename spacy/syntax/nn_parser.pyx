@@ -59,8 +59,9 @@ from ..structs cimport TokenC
 from ..tokens.doc cimport Doc
 from ..strings cimport StringStore
 from ..gold cimport GoldParse
-from ..attrs cimport TAG, DEP
+from ..attrs cimport ID, TAG, DEP, ORTH, NORM, PREFIX, SUFFIX, TAG
 
+USE_FINE_TUNE = True
 
 def get_templates(*args, **kwargs):
     return []
@@ -237,7 +238,8 @@ cdef class Parser:
         token_vector_width = util.env_opt('token_vector_width', token_vector_width)
         hidden_width = util.env_opt('hidden_width', hidden_width)
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces', 2)
-        tensors = fine_tune(Tok2Vec(token_vector_width, 7500, preprocess=doc2feats()))
+        tensors = fine_tune(Tok2Vec(token_vector_width, 7500,
+                    preprocess=doc2feats(cols=[ID, NORM, PREFIX, SUFFIX, TAG])))
         if parser_maxout_pieces == 1:
             lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
                         nF=cls.nr_feature,
@@ -367,7 +369,8 @@ cdef class Parser:
             tokvecses = [tokvecses]
 
         tokvecs = self.model[0].ops.flatten(tokvecses)
-        tokvecs += self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
+        if USE_FINE_TUNE:
+            tokvecs += self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
 
         nr_state = len(docs)
         nr_class = self.moves.n_moves
@@ -419,7 +422,8 @@ cdef class Parser:
         cdef int nr_class = self.moves.n_moves
         cdef StateClass stcls, output
         tokvecs = self.model[0].ops.flatten(tokvecses)
-        tokvecs += self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
+        if USE_FINE_TUNE:
+            tokvecs += self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
         cuda_stream = get_cuda_stream()
         state2vec, vec2scores = self.get_batch_model(len(docs), tokvecs,
                                                      cuda_stream, 0.0)
@@ -460,9 +464,10 @@ cdef class Parser:
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
-        my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=0.)
-        my_tokvecs = self.model[0].ops.flatten(my_tokvecs)
-        tokvecs += my_tokvecs
+        if USE_FINE_TUNE:
+            my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=0.)
+            my_tokvecs = self.model[0].ops.flatten(my_tokvecs)
+            tokvecs += my_tokvecs
 
         cuda_stream = get_cuda_stream()
 
@@ -513,7 +518,8 @@ cdef class Parser:
         self._make_updates(d_tokvecs,
             backprops, sgd, cuda_stream)
         d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
-        bp_my_tokvecs(d_tokvecs, sgd=sgd)
+        if USE_FINE_TUNE:
+            bp_my_tokvecs(d_tokvecs, sgd=sgd)
         return d_tokvecs
 
     def _init_gold_batch(self, whole_docs, whole_golds):
