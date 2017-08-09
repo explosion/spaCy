@@ -220,12 +220,12 @@ def Tok2Vec(width, embed_size, preprocess=None):
         tok2vec = (
             with_flatten(
                 asarray(Model.ops, dtype='uint64')
-                >> uniqued(embed, column=5)
+                >> embed
                 >> LN(Maxout(width, width*4, pieces=3))
-                >> Residual(ExtractWindow(nW=1) >> LN(Maxout(width, width*3)))
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3)),
+                >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
+                >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3)),
                 pad=4)
         )
         if preprocess not in (False, None):
@@ -321,7 +321,8 @@ def zero_init(model):
 
 
 def doc2feats(cols=None):
-    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
+    if cols is None:
+        cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     def forward(docs, drop=0.):
         feats = []
         for doc in docs:
