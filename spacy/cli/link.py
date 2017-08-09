@@ -14,7 +14,7 @@ from .. import util
     link_name=("name of shortuct link to create", "positional", None, str),
     force=("force overwriting of existing link", "flag", "f", bool)
 )
-def link(cmd, origin, link_name, force=False):
+def link(cmd, origin, link_name, force=False, model_path=None):
     """
     Create a symlink for models within the spacy/data directory. Accepts
     either the name of a pip package, or the local path to the model data
@@ -23,7 +23,7 @@ def link(cmd, origin, link_name, force=False):
     if util.is_package(origin):
         model_path = util.get_package_path(origin)
     else:
-        model_path = Path(origin)
+        model_path = Path(origin) if model_path is None else Path(model_path)
     if not model_path.exists():
         prints("The data should be located in %s" % path2str(model_path),
                title="Can't locate model data", exits=1)
