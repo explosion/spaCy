@@ -8,7 +8,7 @@ import subprocess
 import sys
 
 from .link import link
-from ..util import prints
+from ..util import prints, get_package_path
 from .. import about
 
 
@@ -32,7 +32,11 @@ def download(cmd, model, direct=False):
         version = get_version(model_name, compatibility)
         download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model_name, v=version))
         try:
-            link(None, model_name, model, force=True)
+            # Get package path here because link uses
+            # pip.get_installed_distributions() to check if model is a package,
+            # which fails if model was just installed via subprocess
+            package_path = get_package_path(model_name)
+            link(None, model_name, model, force=True, model_path=package_path)
         except:
             # Dirty, but since spacy.download and the auto-linking is mostly
             # a convenience wrapper, it's best to show a success message and
