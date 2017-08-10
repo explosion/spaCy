@@ -241,7 +241,7 @@ cdef class Parser:
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces', 2)
         embed_size = util.env_opt('embed_size', 7500)
         tensors = fine_tune(Tok2Vec(token_vector_width, embed_size,
-                    preprocess=doc2feats(cols=[ID, NORM, PREFIX, SUFFIX, SHAPE])))
+                    preprocess=doc2feats()))
         if parser_maxout_pieces == 1:
             lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
                         nF=cls.nr_feature,
@@ -254,7 +254,7 @@ cdef class Parser:
 
         with Model.use_device('cpu'):
             upper = chain(
-                clone(SELU(hidden_width), (depth-1)),
+                clone(Maxout(hidden_width), (depth-1)),
                 zero_init(Affine(nr_class, drop_factor=0.0))
             )
         # TODO: This is an unfortunate hack atm!
