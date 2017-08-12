@@ -99,8 +99,6 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                 util.set_env_log(False)
                 epoch_model_path = output_path / ('model%d' % i)
                 nlp.to_disk(epoch_model_path)
-                with (output_path / ('model%d.pickle' % i)).open('wb') as file_:
-                    dill.dump(nlp, file_, -1)
                 nlp_loaded = lang_class(pipeline=pipeline)
                 nlp_loaded = nlp_loaded.from_disk(epoch_model_path)
                 scorer = nlp_loaded.evaluate(
