@@ -210,14 +210,14 @@ class PrecomputableMaxouts(Model):
         return Yfp, backward
 
 
-def drop_layer(layer, factor=1.0):
+def drop_layer(layer, factor=2.):
     def drop_layer_fwd(X, drop=0.):
         drop *= factor
         mask = layer.ops.get_dropout_mask((1,), drop)
-        if mask is not None and mask[0] == 0.:
-            return X, lambda dX, sgd=None: dX
-        else:
+        if mask is None or mask > 0:
             return layer.begin_update(X, drop=drop)
+        else:
+            return X, lambda dX, sgd=None: dX
     return wrap(drop_layer_fwd, layer)
 
 
@@ -229,17 +229,17 @@ def Tok2Vec(width, embed_size, preprocess=None):
         suffix = get_col(cols.index(SUFFIX)) >> HashEmbed(width, embed_size//2, name='embed_suffix')
         shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size//2, name='embed_shape')
 
-        embed = (norm | prefix | suffix | shape )
+        embed = (norm | prefix | suffix | shape ) >> Maxout(width, width*4, pieces=3)
         tok2vec = (
             with_flatten(
                 asarray(Model.ops, dtype='uint64')
-                >> uniqued(embed >> Maxout(width, width*4, pieces=3), column=5)
-                >> Residual(
-                    (ExtractWindow(nW=1)    >> ReLu(width, width*3))
-                    >> (ExtractWindow(nW=1) >> ReLu(width, width*3))
-                    >> (ExtractWindow(nW=1) >> ReLu(width, width*3))
-                    >> (ExtractWindow(nW=1) >> ReLu(width, width*3))
-                ), pad=4)
+                >> uniqued(embed, column=5)
+                >> drop_layer(
+                    Residual(
+                        (ExtractWindow(nW=1) >> ReLu(width, width*3))
+                    )
+                ) ** 4, pad=4
+            )
         )
         if preprocess not in (False, None):
             tok2vec = preprocess >> tok2vec
