@@ -23,8 +23,10 @@ from thinc.neural._classes.attention import ParametricAttention
 from thinc.linear.linear import LinearModel
 from thinc.api import uniqued, wrap, flatten_add_lengths
 
+
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP
 from .tokens.doc import Doc
+from . import util
 
 import numpy
 import io
@@ -208,6 +210,17 @@ class PrecomputableMaxouts(Model):
         return Yfp, backward
 
 
+def drop_layer(layer, factor=1.0):
+    def drop_layer_fwd(X, drop=0.):
+        drop *= factor
+        mask = layer.ops.get_dropout_mask((1,), drop)
+        if mask is not None and mask[0] == 0.:
+            return X, lambda dX, sgd=None: dX
+        else:
+            return layer.begin_update(X, drop=drop)
+    return wrap(drop_layer_fwd, layer)
+
+
 def Tok2Vec(width, embed_size, preprocess=None):
     cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
@@ -220,13 +233,13 @@ def Tok2Vec(width, embed_size, preprocess=None):
         tok2vec = (
             with_flatten(
                 asarray(Model.ops, dtype='uint64')
-                >> embed
-                >> Maxout(width, width*4, pieces=3)
-                >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3)),
-                pad=4)
+                >> uniqued(embed >> Maxout(width, width*4, pieces=3), column=5)
+                >> Residual(
+                    (ExtractWindow(nW=1)    >> ReLu(width, width*3))
+                    >> (ExtractWindow(nW=1) >> ReLu(width, width*3))
+                    >> (ExtractWindow(nW=1) >> ReLu(width, width*3))
+                    >> (ExtractWindow(nW=1) >> ReLu(width, width*3))
+                ), pad=4)
         )
         if preprocess not in (False, None):
             tok2vec = preprocess >> tok2vec
@@ -430,9 +443,10 @@ def getitem(i):
     return layerize(getitem_fwd)
 
 def build_tagger_model(nr_class, token_vector_width, **cfg):
+    embed_size = util.env_opt('embed_size', 7500)
     with Model.define_operators({'>>': chain, '+': add}):
         # Input: (doc, tensor) tuples
-        private_tok2vec = Tok2Vec(token_vector_width, 7500, preprocess=doc2feats())
+        private_tok2vec = Tok2Vec(token_vector_width, embed_size, preprocess=doc2feats())
 
         model = (
             fine_tune(private_tok2vec)
