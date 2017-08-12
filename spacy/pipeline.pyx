@@ -284,6 +284,8 @@ class NeuralTagger(BaseThincComponent):
         cdef Vocab vocab = self.vocab
         for i, doc in enumerate(docs):
             doc_tag_ids = batch_tag_ids[i]
+            if hasattr(doc_tag_ids, 'get'):
+                doc_tag_ids = doc_tag_ids.get()
             for j, tag_id in enumerate(doc_tag_ids):
                 # Don't clobber preset POS tags
                 if doc.c[j].tag == 0 and doc.c[j].pos == 0:
