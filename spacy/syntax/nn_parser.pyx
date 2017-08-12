@@ -529,23 +529,29 @@ cdef class Parser:
 
     def update_beam(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
         docs, tokvecs = docs_tokvecs
+        lengths = [len(d) for d in docs]
         tokvecs = self.model[0].ops.flatten(tokvecs)
+        states, golds, max_moves = self._init_gold_batch(docs, golds)
 
         cuda_stream = get_cuda_stream()
-        state2vec, vec2scores = self.get_batch_model(len(docs), tokvecs, cuda_stream, 0.0)
+        state2vec, vec2scores = self.get_batch_model(len(states), tokvecs, cuda_stream, 0.0)
 
-        states_d_scores, backprops = _beam_utils.update_beam(self.moves, self.nr_feature,
-                                        docs, tokvecs, golds,
+        states_d_scores, backprops = _beam_utils.update_beam(self.moves, self.nr_feature, max_moves,
+                                        states, tokvecs, golds,
                                         state2vec, vec2scores,
                                         drop, sgd, losses)
         backprop_lower = []
         for i, d_scores in enumerate(states_d_scores):
             ids, bp_vectors, bp_scores = backprops[i]
             d_vector = bp_scores(d_scores, sgd=sgd)
-            backprop_lower.append((
-                get_async(cuda_stream, ids),
-                get_async(cuda_stream, d_vector),
-                bp_vectors))
+            if isinstance(self.model[0].ops, CupyOps) \
+            and not isinstance(ids, state2vec.ops.xp.ndarray):
+                backprop_lower.append((
+                    get_async(cuda_stream, ids),
+                    get_async(cuda_stream, d_vector),
+                    bp_vectors))
+            else:
+                backprop_lower.append((ids, d_vector, bp_vectors))
         d_tokvecs = self.model[0].ops.allocate(tokvecs.shape)
         self._make_updates(d_tokvecs, backprop_lower, sgd, cuda_stream)
         lengths = [len(doc) for doc in docs]
