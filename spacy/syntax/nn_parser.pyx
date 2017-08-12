@@ -47,6 +47,7 @@ from .. import util
 from ..util import get_async, get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
 from .._ml import Tok2Vec, doc2feats, rebatch, fine_tune
+from .._ml import Residual, drop_layer
 from ..compat import json_dumps
 
 from . import _parse_features
@@ -255,7 +256,7 @@ cdef class Parser:
 
         with Model.use_device('cpu'):
             upper = chain(
-                clone(Maxout(hidden_width), (depth-1)),
+                clone(drop_layer(Residual(Maxout(hidden_width))), (depth-1)),
                 zero_init(Affine(nr_class, drop_factor=0.0))
             )
         # TODO: This is an unfortunate hack atm!
