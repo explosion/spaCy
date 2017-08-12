@@ -63,6 +63,7 @@ from ..tokens.doc cimport Doc
 from ..strings cimport StringStore
 from ..gold cimport GoldParse
 from ..attrs cimport ID, TAG, DEP, ORTH, NORM, PREFIX, SUFFIX, TAG
+from . import _beam_utils
 
 USE_FINE_TUNE = True
 
@@ -256,7 +257,7 @@ cdef class Parser:
 
         with Model.use_device('cpu'):
             upper = chain(
-                clone(drop_layer(Residual(Maxout(hidden_width))), (depth-1)),
+                clone(Residual(ReLu(hidden_width)), (depth-1)),
                 zero_init(Affine(nr_class, drop_factor=0.0))
             )
         # TODO: This is an unfortunate hack atm!
@@ -525,6 +526,30 @@ cdef class Parser:
         if USE_FINE_TUNE:
             bp_my_tokvecs(d_tokvecs, sgd=sgd)
         return d_tokvecs
+
+    def update_beam(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
+        docs, tokvecs = docs_tokvecs
+        tokvecs = self.model[0].ops.flatten(tokvecs)
+
+        cuda_stream = get_cuda_stream()
+        state2vec, vec2scores = self.get_batch_model(len(docs), tokvecs, cuda_stream, 0.0)
+
+        states_d_scores, backprops = _beam_utils.update_beam(self.moves, self.nr_feature,
+                                        docs, tokvecs, golds,
+                                        state2vec, vec2scores,
+                                        drop, sgd, losses)
+        backprop_lower = []
+        for i, d_scores in enumerate(states_d_scores):
+            ids, bp_vectors, bp_scores = backprops[i]
+            d_vector = bp_scores(d_scores, sgd=sgd)
+            backprop_lower.append((
+                get_async(cuda_stream, ids),
+                get_async(cuda_stream, d_vector),
+                bp_vectors))
+        d_tokvecs = self.model[0].ops.allocate(tokvecs.shape)
+        self._make_updates(d_tokvecs, backprop_lower, sgd, cuda_stream)
+        lengths = [len(doc) for doc in docs]
+        return self.model[0].ops.unflatten(d_tokvecs, lengths)
 
     def _init_gold_batch(self, whole_docs, whole_golds):
         """Make a square batch, of length equal to the shortest doc. A long
