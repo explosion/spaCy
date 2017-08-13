@@ -138,7 +138,7 @@ class TokenVectorEncoder(BaseThincComponent):
     name = 'tensorizer'
 
     @classmethod
-    def Model(cls, width=128, embed_size=7500, **cfg):
+    def Model(cls, width=128, embed_size=4000, **cfg):
         """Create a new statistical model for the class.
 
         width (int): Output size of the model.
