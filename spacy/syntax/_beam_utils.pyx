@@ -1,4 +1,5 @@
 # cython: infer_types=True
+# cython: profile=True
 cimport numpy as np
 import numpy
 from cpython.ref cimport PyObject, Py_INCREF, Py_XDECREF
@@ -155,8 +156,6 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
     backprops = []
     violns = [MaxViolation() for _ in range(len(states))]
     for t in range(max_steps):
-        if pbeam.is_done and gbeam.is_done:
-            break
         beam_maps.append({})
         states, p_indices, g_indices = get_states(pbeam, gbeam, beam_maps[-1], nr_update)
         if not states:
@@ -174,16 +173,6 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
 
         for i, violn in enumerate(violns):
             violn.check_crf(pbeam[i], gbeam[i])
-    # The non-monotonic oracle makes it difficult to ensure final costs are
-    # correct. Therefore do final correction
-    cdef Beam pred
-    for i, (pred, gold_parse) in enumerate(zip(pbeam, golds)):
-        for j in range(pred.size):
-            if is_gold(<StateClass>pred.at(j), gold_parse, moves.strings):
-                pred._states[j].loss = 0.0
-            elif pred._states[j].loss == 0.0:
-                pred._states[j].loss = 1.0
-        violn.check_crf(pred, gbeam[i])
 
     histories = [(v.p_hist + v.g_hist) for v in violns]
     losses = [(v.p_probs + v.g_probs) for v in violns]
@@ -199,20 +188,18 @@ def get_states(pbeams, gbeams, beam_map, nr_update):
     g_indices = []
     cdef Beam pbeam, gbeam
     for eg_id, (pbeam, gbeam) in enumerate(zip(pbeams, gbeams)):
-        if pbeam.loss > 0 and pbeam.min_score > (gbeam.score + nr_update):
-            continue
         p_indices.append([])
-        for j in range(pbeam.size):
-            state = <StateClass>pbeam.at(j)
+        for i in range(pbeam.size):
+            state = <StateClass>pbeam.at(i)
             if not state.is_final():
-                key = tuple([eg_id] + pbeam.histories[j])
+                key = tuple([eg_id] + pbeam.histories[i])
                 seen[key] = len(states)
                 p_indices[-1].append(len(states))
-                states.append(<StateClass>pbeam.at(j))
+                states.append(<StateClass>pbeam.at(i))
         beam_map.update(seen)
         g_indices.append([])
         for i in range(gbeam.size):
-            state = <StateClass>gbeam.at(j)
+            state = <StateClass>gbeam.at(i)
             if not state.is_final():
                 key = tuple([eg_id] + gbeam.histories[i])
                 if key in seen:
@@ -243,17 +230,17 @@ def get_gradient(nr_class, beam_maps, histories, losses):
     nr_step = len(beam_maps)
     grads = []
     for beam_map in beam_maps:
-        if beam_map:
-            grads.append(numpy.zeros((max(beam_map.values())+1, nr_class), dtype='f'))
-        else:
-            grads.append(None)
+        grads.append(numpy.zeros((max(beam_map.values())+1, nr_class), dtype='f'))
+    assert len(histories) == len(losses)
     for eg_id, hists in enumerate(histories):
         for loss, hist in zip(losses[eg_id], hists):
             key = tuple([eg_id])
             for j, clas in enumerate(hist):
-                if grads[j] is None:
-                    continue
-                i = beam_maps[j][key]
+                try:
+                    i = beam_maps[j][key]
+                except:
+                    print(sorted(beam_maps[j].items()))
+                    raise
                 # In step j, at state i action clas
                 # resulted in loss
                 grads[j][i, clas] += loss

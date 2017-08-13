@@ -66,7 +66,7 @@ from ..attrs cimport ID, TAG, DEP, ORTH, NORM, PREFIX, SUFFIX, TAG
 from . import _beam_utils
 
 USE_FINE_TUNE = True
-BEAM_PARSE = False
+BEAM_PARSE = True
 
 def get_templates(*args, **kwargs):
     return []
@@ -348,6 +348,8 @@ cdef class Parser:
                 The number of threads with which to work on the buffer in parallel.
         Yields (Doc): Documents, in order.
         """
+        if BEAM_PARSE:
+            beam_width = 8
         cdef Doc doc
         cdef Beam beam
         for docs in cytoolz.partition_all(batch_size, docs):
@@ -439,6 +441,8 @@ cdef class Parser:
                                                      cuda_stream, 0.0)
         beams = []
         cdef int offset = 0
+        cdef int j = 0
+        cdef int k
         for doc in docs:
             beam = Beam(nr_class, beam_width, min_density=beam_density)
             beam.initialize(self.moves.init_beam_state, doc.length, doc.c)
@@ -451,16 +455,22 @@ cdef class Parser:
                 states = []
                 for i in range(beam.size):
                     stcls = <StateClass>beam.at(i)
-                    states.append(stcls)
+                    # This way we avoid having to score finalized states
+                    # We do have to take care to keep indexes aligned, though
+                    if not stcls.is_final():
+                        states.append(stcls)
                 token_ids = self.get_token_ids(states)
                 vectors = state2vec(token_ids)
                 scores = vec2scores(vectors)
+                j = 0
+                c_scores = <float*>scores.data
                 for i in range(beam.size):
                     stcls = <StateClass>beam.at(i)
                     if not stcls.is_final():
                         self.moves.set_valid(beam.is_valid[i], stcls.c)
-                        for j in range(nr_class):
-                            beam.scores[i][j] = scores[i, j]
+                        for k in range(nr_class):
+                            beam.scores[i][k] = c_scores[j * scores.shape[1] + k]
+                        j += 1
                 beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
                 beam.check_done(_check_final_state, NULL)
             beams.append(beam)
@@ -540,6 +550,7 @@ cdef class Parser:
             losses[self.name] = 0.
         docs, tokvecs = docs_tokvecs
         lengths = [len(d) for d in docs]
+        assert min(lengths) >= 1
         tokvecs = self.model[0].ops.flatten(tokvecs)
         if USE_FINE_TUNE:
             my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
@@ -554,9 +565,14 @@ cdef class Parser:
         states_d_scores, backprops = _beam_utils.update_beam(self.moves, self.nr_feature, max_moves,
                                         states, tokvecs, golds,
                                         state2vec, vec2scores,
-                                        drop, sgd, losses)
+                                        drop, sgd, losses,
+                                        width=8)
         backprop_lower = []
         for i, d_scores in enumerate(states_d_scores):
+            if d_scores is None:
+                continue
+            if losses is not None:
+                losses[self.name] += (d_scores**2).sum()
             ids, bp_vectors, bp_scores = backprops[i]
             d_vector = bp_scores(d_scores, sgd=sgd)
             if isinstance(self.model[0].ops, CupyOps) \
@@ -617,14 +633,10 @@ cdef class Parser:
         xp = get_array_module(d_tokvecs)
         for ids, d_vector, bp_vector in backprops:
             d_state_features = bp_vector(d_vector, sgd=sgd)
-            active_feats = ids * (ids >= 0)
-            active_feats = active_feats.reshape((ids.shape[0], ids.shape[1], 1))
-            if hasattr(xp, 'scatter_add'):
-                xp.scatter_add(d_tokvecs,
-                    ids, d_state_features * active_feats)
-            else:
-                xp.add.at(d_tokvecs,
-                    ids, d_state_features * active_feats)
+            mask = ids >= 0
+            indices = xp.nonzero(mask)
+            self.model[0].ops.scatter_add(d_tokvecs, ids[indices],
+                d_state_features[indices])
 
     @property
     def move_names(self):
