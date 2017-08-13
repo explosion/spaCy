@@ -305,14 +305,17 @@ class Language(object):
             grads[key] = (W, dW)
         pipes = list(self.pipeline[1:])
         random.shuffle(pipes)
+        tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
+        all_d_tokvecses = [tok2vec.model.ops.allocate(tv.shape) for tv in tokvecses]
         for proc in pipes:
             if not hasattr(proc, 'update'):
                 continue
-            tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
             d_tokvecses = proc.update((docs, tokvecses), golds,
                                       drop=drop, sgd=get_grads, losses=losses)
             if update_tensors and d_tokvecses is not None:
-                bp_tokvecses(d_tokvecses, sgd=sgd)
+                for i, d_tv in enumerate(d_tokvecses):
+                    all_d_tokvecses[i] += d_tv
+        bp_tokvecses(all_d_tokvecses, sgd=sgd)
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)
         # Clear the tensor variable, to free GPU memory.
