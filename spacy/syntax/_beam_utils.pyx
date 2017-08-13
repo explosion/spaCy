@@ -57,7 +57,7 @@ cdef class ParserBeam(object):
         for state in states:
             beam = Beam(self.moves.n_moves, width, density)
             beam.initialize(self.moves.init_beam_state, state.c.length, state.c._sent)
-            for i in range(beam.size):
+            for i in range(beam.width):
                 st = <StateClass>beam.at(i)
                 st.c.offset = state.c.offset
             self.beams.append(beam)
@@ -81,7 +81,7 @@ cdef class ParserBeam(object):
     def advance(self, scores, follow_gold=False):
         cdef Beam beam
         for i, beam in enumerate(self.beams):
-            if beam.is_done:
+            if beam.is_done or not scores[i].size:
                 continue
             self._set_scores(beam, scores[i])
             if self.golds is not None:
@@ -92,6 +92,12 @@ cdef class ParserBeam(object):
             else:
                 beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
             beam.check_done(_check_final_state, NULL)
+            if beam.is_done:
+                for j in range(beam.size):
+                    if is_gold(<StateClass>beam.at(j), self.golds[i], self.moves.strings):
+                        beam._states[j].loss = 0.0
+                    elif beam._states[j].loss == 0.0:
+                        beam._states[j].loss = 1.0
 
     def _set_scores(self, Beam beam, float[:, ::1] scores):
         cdef float* c_scores = &scores[0, 0]
@@ -152,32 +158,49 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
                        width=width, density=density)
     gbeam = ParserBeam(moves, states, golds,
                        width=width, density=0.0)
+    cdef StateClass state
     beam_maps = []
     backprops = []
     violns = [MaxViolation() for _ in range(len(states))]
     for t in range(max_steps):
+        # The beam maps let us find the right row in the flattened scores
+        # arrays for each state. States are identified by (example id, history).
+        # We keep a different beam map for each step (since we'll have a flat
+        # scores array for each step). The beam map will let us take the per-state
+        # losses, and compute the gradient for each (step, state, class).
         beam_maps.append({})
+        # Gather all states from the two beams in a list. Some stats may occur
+        # in both beams. To figure out which beam each state belonged to,
+        # we keep two lists of indices, p_indices and g_indices
         states, p_indices, g_indices = get_states(pbeam, gbeam, beam_maps[-1], nr_update)
         if not states:
             break
+        # Now that we have our flat list of states, feed them through the model
         token_ids = get_token_ids(states, nr_feature)
         vectors, bp_vectors = state2vec.begin_update(token_ids, drop=drop)
         scores, bp_scores = vec2scores.begin_update(vectors, drop=drop)
 
+        # Store the callbacks for the backward pass
         backprops.append((token_ids, bp_vectors, bp_scores))
 
+        # Unpack the flat scores into lists for the two beams. The indices arrays
+        # tell us which example and state the scores-row refers to.
         p_scores = [numpy.ascontiguousarray(scores[indices], dtype='f') for indices in p_indices]
         g_scores = [numpy.ascontiguousarray(scores[indices], dtype='f')  for indices in g_indices]
+        # Now advance the states in the beams. The gold beam is contrained to
+        # to follow only gold analyses.
         pbeam.advance(p_scores)
         gbeam.advance(g_scores, follow_gold=True)
-
+        # Track the "maximum violation", to use in the update.
         for i, violn in enumerate(violns):
             violn.check_crf(pbeam[i], gbeam[i])
 
-    histories = [(v.p_hist + v.g_hist) for v in violns]
-    losses = [(v.p_probs + v.g_probs) for v in violns]
+    # Only make updates if we have non-gold states
+    histories = [((v.p_hist + v.g_hist) if v.p_hist else []) for v in violns]
+    losses = [((v.p_probs + v.g_probs) if v.p_probs else []) for v in violns]
     states_d_scores = get_gradient(moves.n_moves, beam_maps,
                                    histories, losses)
+    assert len(states_d_scores) == len(backprops), (len(states_d_scores), len(backprops))
     return states_d_scores, backprops
 
 
@@ -187,17 +210,20 @@ def get_states(pbeams, gbeams, beam_map, nr_update):
     p_indices = []
     g_indices = []
     cdef Beam pbeam, gbeam
+    assert len(pbeams) == len(gbeams)
     for eg_id, (pbeam, gbeam) in enumerate(zip(pbeams, gbeams)):
         p_indices.append([])
+        g_indices.append([])
+        if pbeam.loss > 0 and pbeam.min_score > gbeam.score:
+            continue
         for i in range(pbeam.size):
             state = <StateClass>pbeam.at(i)
             if not state.is_final():
                 key = tuple([eg_id] + pbeam.histories[i])
                 seen[key] = len(states)
                 p_indices[-1].append(len(states))
-                states.append(<StateClass>pbeam.at(i))
+                states.append(state)
         beam_map.update(seen)
-        g_indices.append([])
         for i in range(gbeam.size):
             state = <StateClass>gbeam.at(i)
             if not state.is_final():
@@ -207,10 +233,10 @@ def get_states(pbeams, gbeams, beam_map, nr_update):
                 else:
                     g_indices[-1].append(len(states))
                     beam_map[key] = len(states)
-                    states.append(<StateClass>gbeam.at(i))
-    p_indices = [numpy.asarray(idx, dtype='i') for idx in p_indices]
-    g_indices = [numpy.asarray(idx, dtype='i') for idx in g_indices]
-    return states, p_indices, g_indices
+                    states.append(state)
+    p_idx = [numpy.asarray(idx, dtype='i') for idx in p_indices]
+    g_idx = [numpy.asarray(idx, dtype='i') for idx in g_indices]
+    return states, p_idx, g_idx
 
 
 def get_gradient(nr_class, beam_maps, histories, losses):
@@ -230,20 +256,17 @@ def get_gradient(nr_class, beam_maps, histories, losses):
     nr_step = len(beam_maps)
     grads = []
     for beam_map in beam_maps:
-        grads.append(numpy.zeros((max(beam_map.values())+1, nr_class), dtype='f'))
+        if beam_map:
+            grads.append(numpy.zeros((max(beam_map.values())+1, nr_class), dtype='f'))
     assert len(histories) == len(losses)
     for eg_id, hists in enumerate(histories):
         for loss, hist in zip(losses[eg_id], hists):
             key = tuple([eg_id])
             for j, clas in enumerate(hist):
-                try:
-                    i = beam_maps[j][key]
-                except:
-                    print(sorted(beam_maps[j].items()))
-                    raise
+                i = beam_maps[j][key]
                 # In step j, at state i action clas
                 # resulted in loss
-                grads[j][i, clas] += loss
+                grads[j][i, clas] += loss / len(histories)
                 key = key + tuple([clas])
     return grads
 
