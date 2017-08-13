@@ -66,7 +66,7 @@ from ..attrs cimport ID, TAG, DEP, ORTH, NORM, PREFIX, SUFFIX, TAG
 from . import _beam_utils
 
 USE_FINE_TUNE = True
-BEAM_PARSE = True
+BEAM_PARSE = False
 
 def get_templates(*args, **kwargs):
     return []
@@ -336,7 +336,7 @@ cdef class Parser:
             return output
 
     def pipe(self, docs, int batch_size=1000, int n_threads=2,
-             beam_width=4, beam_density=0.001):
+             beam_width=1, beam_density=0.001):
         """
         Process a stream of documents.
 
