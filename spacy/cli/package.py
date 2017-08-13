@@ -15,10 +15,11 @@ from .. import about
 @plac.annotations(
     input_dir=("directory with model data", "positional", None, str),
     output_dir=("output parent directory", "positional", None, str),
-    meta=("path to meta.json", "option", "m", str),
+    meta_path=("path to meta.json", "option", "m", str),
+    create_meta=("create meta.json, even if one exists in directory", "flag", "c", bool),
     force=("force overwriting of existing folder in output directory", "flag", "f", bool)
 )
-def package(cmd, input_dir, output_dir, meta=None, force=False):
+def package(cmd, input_dir, output_dir, meta_path=None, create_meta=False, force=False):
     """
     Generate Python package for model data, including meta and required
     installation files. A new directory will be created in the specified
@@ -26,7 +27,7 @@ def package(cmd, input_dir, output_dir, meta=None, force=False):
     """
     input_path = util.ensure_path(input_dir)
     output_path = util.ensure_path(output_dir)
-    meta_path = util.ensure_path(meta)
+    meta_path = util.ensure_path(meta_path)
     if not input_path or not input_path.exists():
         prints(input_path, title="Model directory not found", exits=1)
     if not output_path or not output_path.exists():
@@ -38,7 +39,7 @@ def package(cmd, input_dir, output_dir, meta=None, force=False):
     template_manifest = get_template('MANIFEST.in')
     template_init = get_template('xx_model_name/__init__.py')
     meta_path = meta_path or input_path / 'meta.json'
-    if meta_path.is_file():
+    if not create_meta and meta_path.is_file():
         prints(meta_path, title="Reading meta.json from file")
         meta = util.read_json(meta_path)
     else:
