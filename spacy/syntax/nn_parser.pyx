@@ -66,6 +66,7 @@ from ..attrs cimport ID, TAG, DEP, ORTH, NORM, PREFIX, SUFFIX, TAG
 from . import _beam_utils
 
 USE_FINE_TUNE = True
+BEAM_PARSE = True
 
 def get_templates(*args, **kwargs):
     return []
@@ -335,7 +336,7 @@ cdef class Parser:
             return output
 
     def pipe(self, docs, int batch_size=1000, int n_threads=2,
-             beam_width=1, beam_density=0.001):
+             beam_width=4, beam_density=0.001):
         """
         Process a stream of documents.
 
@@ -348,14 +349,18 @@ cdef class Parser:
         Yields (Doc): Documents, in order.
         """
         cdef Doc doc
+        cdef Beam beam
         for docs in cytoolz.partition_all(batch_size, docs):
             docs = list(docs)
             tokvecs = [doc.tensor for doc in docs]
             if beam_width == 1:
                 parse_states = self.parse_batch(docs, tokvecs)
             else:
-                parse_states = self.beam_parse(docs, tokvecs,
-                                    beam_width=beam_width, beam_density=beam_density)
+                beams = self.beam_parse(docs, tokvecs,
+                            beam_width=beam_width, beam_density=beam_density)
+                parse_states = []
+                for beam in beams:
+                    parse_states.append(<StateClass>beam.at(0))
             self.set_annotations(docs, parse_states)
             yield from docs
 
@@ -462,6 +467,9 @@ cdef class Parser:
         return beams
 
     def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
+        if BEAM_PARSE:
+            return self.update_beam(docs_tokvecs, golds, drop=drop, sgd=sgd,
+                                    losses=losses)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         docs, tokvec_lists = docs_tokvecs
@@ -528,9 +536,16 @@ cdef class Parser:
         return d_tokvecs
 
     def update_beam(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
+        if losses is not None and self.name not in losses:
+            losses[self.name] = 0.
         docs, tokvecs = docs_tokvecs
         lengths = [len(d) for d in docs]
         tokvecs = self.model[0].ops.flatten(tokvecs)
+        if USE_FINE_TUNE:
+            my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
+            my_tokvecs = self.model[0].ops.flatten(my_tokvecs)
+            tokvecs += my_tokvecs
+
         states, golds, max_moves = self._init_gold_batch(docs, golds)
 
         cuda_stream = get_cuda_stream()
@@ -554,8 +569,10 @@ cdef class Parser:
                 backprop_lower.append((ids, d_vector, bp_vectors))
         d_tokvecs = self.model[0].ops.allocate(tokvecs.shape)
         self._make_updates(d_tokvecs, backprop_lower, sgd, cuda_stream)
-        lengths = [len(doc) for doc in docs]
-        return self.model[0].ops.unflatten(d_tokvecs, lengths)
+        d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, lengths)
+        if USE_FINE_TUNE:
+            bp_my_tokvecs(d_tokvecs, sgd=sgd)
+        return d_tokvecs
 
     def _init_gold_batch(self, whole_docs, whole_golds):
         """Make a square batch, of length equal to the shortest doc. A long

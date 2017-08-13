@@ -60,10 +60,16 @@ cdef class ParserBeam(object):
                 st = <StateClass>beam.at(i)
                 st.c.offset = state.c.offset
             self.beams.append(beam)
+
+    def __dealloc__(self):
+        if self.beams is not None:
+            for beam in self.beams:
+                if beam is not None:
+                    _cleanup(beam)
     
     @property
     def is_done(self):
-        return all(beam.is_done for beam in self.beams)
+        return all(b.is_done for b in self.beams)
 
     def __getitem__(self, i):
         return self.beams[i]
@@ -77,28 +83,31 @@ cdef class ParserBeam(object):
             self._set_scores(beam, scores[i])
             if self.golds is not None:
                 self._set_costs(beam, self.golds[i], follow_gold=follow_gold)
-        if follow_gold:
-            assert self.golds is not None
-            beam.advance(_transition_state, NULL, <void*>self.moves.c)
-        else:
-            beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
-        beam.check_done(_check_final_state, NULL)
+            if follow_gold:
+                assert self.golds is not None
+                beam.advance(_transition_state, NULL, <void*>self.moves.c)
+            else:
+                beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
+            beam.check_done(_check_final_state, NULL)
 
-    def _set_scores(self, Beam beam, scores):
+    def _set_scores(self, Beam beam, float[:, ::1] scores):
+        cdef float* c_scores = &scores[0, 0]
         for i in range(beam.size):
             state = <StateClass>beam.at(i)
             if not state.is_final():
                 for j in range(beam.nr_class):
-                    beam.scores[i][j] = scores[i, j]
-            self.moves.set_valid(beam.is_valid[i], state.c)
+                    beam.scores[i][j] = c_scores[i * beam.nr_class + j]
+                self.moves.set_valid(beam.is_valid[i], state.c)
 
     def _set_costs(self, Beam beam, GoldParse gold, int follow_gold=False):
         for i in range(beam.size):
             state = <StateClass>beam.at(i)
-            self.moves.set_costs(beam.is_valid[i], beam.costs[i], state, gold)
-            if follow_gold:
-                for j in range(beam.nr_class):
-                    beam.is_valid[i][j] *= beam.costs[i][j] <= 0
+            if not state.c.is_final():
+                self.moves.set_costs(beam.is_valid[i], beam.costs[i], state, gold)
+                if follow_gold:
+                    for j in range(beam.nr_class):
+                        if beam.costs[i][j] >= 1:
+                            beam.is_valid[i][j] = 0
  
 
 def get_token_ids(states, int n_tokens):
@@ -122,7 +131,7 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
     pbeam = ParserBeam(moves, states, golds,
                        width=width, density=density)
     gbeam = ParserBeam(moves, states, golds,
-                       width=width, density=density)
+                       width=width, density=0.0)
     beam_maps = []
     backprops = []
     violns = [MaxViolation() for _ in range(len(states))]
@@ -145,7 +154,7 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
 
         for i, violn in enumerate(violns):
             violn.check_crf(pbeam[i], gbeam[i])
-    
+
     histories = [(v.p_hist + v.g_hist) for v in violns]
     losses = [(v.p_probs + v.g_probs) for v in violns]
     states_d_scores = get_gradient(moves.n_moves, beam_maps,
