@@ -277,7 +277,8 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+    def update(self, docs, golds, drop=0., sgd=None, losses=None,
+            update_tensors=False):
         """Update the models in the pipeline.
 
         docs (iterable): A batch of `Doc` objects.
@@ -304,14 +305,17 @@ class Language(object):
             grads[key] = (W, dW)
         pipes = list(self.pipeline[1:])
         random.shuffle(pipes)
+        tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
+        all_d_tokvecses = [tok2vec.model.ops.allocate(tv.shape) for tv in tokvecses]
         for proc in pipes:
             if not hasattr(proc, 'update'):
                 continue
-            tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
             d_tokvecses = proc.update((docs, tokvecses), golds,
                                       drop=drop, sgd=get_grads, losses=losses)
-            if d_tokvecses is not None:
-                bp_tokvecses(d_tokvecses, sgd=sgd)
+            if update_tensors and d_tokvecses is not None:
+                for i, d_tv in enumerate(d_tokvecses):
+                    all_d_tokvecses[i] += d_tv
+        bp_tokvecses(all_d_tokvecses, sgd=sgd)
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)
         # Clear the tensor variable, to free GPU memory.
@@ -381,9 +385,18 @@ class Language(object):
         return optimizer
 
     def evaluate(self, docs_golds):
-        docs, golds = zip(*docs_golds)
         scorer = Scorer()
-        for doc, gold in zip(self.pipe(docs, batch_size=32), golds):
+        docs, golds = zip(*docs_golds)
+        docs = list(docs)
+        golds = list(golds)
+        for pipe in self.pipeline:
+            if not hasattr(pipe, 'pipe'):
+                for doc in docs:
+                    pipe(doc)
+            else:
+                docs = list(pipe.pipe(docs))
+        assert len(docs) == len(golds)
+        for doc, gold in zip(docs, golds):
             scorer.score(doc, gold)
             doc.tensor = None
         return scorer
