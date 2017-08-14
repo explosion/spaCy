@@ -3,7 +3,7 @@
 # https://github.com/pypa/warehouse/blob/master/warehouse/__about__.py
 
 __title__ = 'spacy-nightly'
-__version__ = '2.0.0a7'
+__version__ = '2.0.0a8'
 __summary__ = 'Industrial-strength Natural Language Processing (NLP) with Python and Cython'
 __uri__ = 'https://spacy.io'
 __author__ = 'Explosion AI'
