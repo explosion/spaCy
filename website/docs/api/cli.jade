@@ -5,16 +5,7 @@ include ../../_includes/_mixins
 p
     |  As of v1.7.0, spaCy comes with new command line helpers to download and
     |  link models and show useful debugging information. For a list of available
-    |  commands, type #[code python -m spacy]. To make the command even more
-    |  convenient, we recommend
-    |  #[+a("https://askubuntu.com/questions/17536/how-do-i-create-a-permanent-bash-alias/17537#17537") creating an alias]
-    |  mapping #[code python -m spacy] to #[code spacy].
-
-+aside("Why python -m?")
-    |  The problem with a global entry point is that it's resolved by looking up
-    |  entries in your #[code PATH] environment variable. This can give you
-    |  unexpected results, like executing the wrong spaCy installation.
-    |  #[code python -m] prevents fallbacks to system modules.
+    |  commands, type #[code spacy --help].
 
 +infobox("⚠️ Deprecation note")
     |  As of spaCy 2.0, the #[code model] command to initialise a model data
@@ -33,8 +24,8 @@ p
     |  Direct downloads don't perform any compatibility checks and require the
     |  model name to be specified with its version (e.g., #[code en_core_web_sm-1.2.0]).
 
-+code(false, "bash").
-    python -m spacy download [model] [--direct]
++code(false, "bash", "$").
+    spacy download [model] [--direct]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -80,8 +71,8 @@ p
     |  or use the #[+api("cli#package") #[code package]] command to create a
     |  model package.
 
-+code(false, "bash").
-    python -m spacy link [origin] [link_name] [--force]
++code(false, "bash", "$").
+    spacy link [origin] [link_name] [--force]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -112,8 +103,8 @@ p
     |  markup to copy-paste into #[+a(gh("spacy") + "/issues") GitHub issues].
 
 +code(false, "bash").
-    python -m spacy info [--markdown]
-    python -m spacy info [model] [--markdown]
+    spacy info [--markdown]
+    spacy info [model] [--markdown]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -139,8 +130,8 @@ p
     |  functions. The right converter is chosen based on the file extension of
     |  the input file. Currently only supports #[code .conllu].
 
-+code(false, "bash").
-    python -m spacy convert [input_file] [output_dir] [--n-sents] [--morphology]
++code(false, "bash", "$").
+    spacy convert [input_file] [output_dir] [--n-sents] [--morphology]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -174,8 +165,8 @@ p
     |  Train a model. Expects data in spaCy's
     |  #[+a("/docs/api/annotation#json-input") JSON format].
 
-+code(false, "bash").
-    python -m spacy train [lang] [output_dir] [train_data] [dev_data] [--n-iter] [--n-sents] [--use-gpu] [--no-tagger] [--no-parser] [--no-entities]
++code(false, "bash", "$").
+    spacy train [lang] [output_dir] [train_data] [dev_data] [--n-iter] [--n-sents] [--use-gpu] [--no-tagger] [--no-parser] [--no-entities]
 
 +table(["Argument", "Type", "Description"])
     +row
@@ -345,8 +336,8 @@ p
     |  sure you're always using the latest versions. This means you need to be
     |  connected to the internet to use this command.
 
-+code(false, "bash").
-    python -m spacy package [input_dir] [output_dir] [--meta] [--force]
++code(false, "bash", "$").
+    spacy package [input_dir] [output_dir] [--meta] [--force]
 
 +table(["Argument", "Type", "Description"])
     +row
