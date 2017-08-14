@@ -557,20 +557,20 @@ cdef class Parser:
             my_tokvecs = self.model[0].ops.flatten(my_tokvecs)
             tokvecs += my_tokvecs
 
-        states, golds, max_moves = self._init_gold_batch(docs, golds)
+        states = self.moves.init_batch(docs)
+        for gold in golds:
+            self.moves.preprocess_gold(gold)
 
         cuda_stream = get_cuda_stream()
         state2vec, vec2scores = self.get_batch_model(len(states), tokvecs, cuda_stream, 0.0)
 
-        states_d_scores, backprops = _beam_utils.update_beam(self.moves, self.nr_feature, max_moves,
+        states_d_scores, backprops = _beam_utils.update_beam(self.moves, self.nr_feature, 500,
                                         states, tokvecs, golds,
                                         state2vec, vec2scores,
                                         drop, sgd, losses,
                                         width=8)
         backprop_lower = []
         for i, d_scores in enumerate(states_d_scores):
-            if d_scores is None:
-                continue
             if losses is not None:
                 losses[self.name] += (d_scores**2).sum()
             ids, bp_vectors, bp_scores = backprops[i]
