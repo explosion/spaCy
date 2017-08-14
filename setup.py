@@ -36,7 +36,6 @@ MOD_NAMES = [
     'spacy.syntax.transition_system',
     'spacy.syntax.arc_eager',
     'spacy.syntax._parse_features',
-    'spacy.syntax._beam_utils',
     'spacy.gold',
     'spacy.tokens.doc',
     'spacy.tokens.span',
