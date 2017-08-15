@@ -86,11 +86,7 @@ cdef class ParserBeam(object):
             self._set_scores(beam, scores[i])
             if self.golds is not None:
                 self._set_costs(beam, self.golds[i], follow_gold=follow_gold)
-            if follow_gold:
-                assert self.golds is not None
-                beam.advance(_transition_state, NULL, <void*>self.moves.c)
-            else:
-                beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
+            beam.advance(_transition_state, NULL, <void*>self.moves.c)
             beam.check_done(_check_final_state, NULL)
             if beam.is_done:
                 for j in range(beam.size):

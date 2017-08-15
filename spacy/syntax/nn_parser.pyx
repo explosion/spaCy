@@ -471,7 +471,7 @@ cdef class Parser:
                         for k in range(nr_class):
                             beam.scores[i][k] = c_scores[j * scores.shape[1] + k]
                         j += 1
-                beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
+                beam.advance(_transition_state, NULL, <void*>self.moves.c)
                 beam.check_done(_check_final_state, NULL)
             beams.append(beam)
         return beams
