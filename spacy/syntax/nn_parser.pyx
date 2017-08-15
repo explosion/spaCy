@@ -411,7 +411,7 @@ cdef class Parser:
                 st = next_step[i]
                 st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
                 self.moves.set_valid(&c_is_valid[i*nr_class], st)
-                vectors = state2vec(token_ids[:next_step.size()])
+            vectors = state2vec(token_ids[:next_step.size()])
             scores = vec2scores(vectors)
             c_scores = <float*>scores.data
             for i in range(next_step.size()):
