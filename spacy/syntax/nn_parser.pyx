@@ -38,6 +38,7 @@ from preshed.maps cimport map_get
 
 from thinc.api import layerize, chain, noop, clone
 from thinc.neural import Model, Affine, ReLu, Maxout
+from thinc.neural._classes.batchnorm import BatchNorm as BN
 from thinc.neural._classes.selu import SELU
 from thinc.neural._classes.layernorm import LayerNorm
 from thinc.neural.ops import NumpyOps, CupyOps
@@ -258,7 +259,7 @@ cdef class Parser:
 
         with Model.use_device('cpu'):
             upper = chain(
-                clone(Residual(ReLu(hidden_width)), (depth-1)),
+                clone(Maxout(hidden_width), (depth-1)),
                 zero_init(Affine(nr_class, drop_factor=0.0))
             )
         # TODO: This is an unfortunate hack atm!
@@ -321,6 +322,8 @@ cdef class Parser:
             beam_width = self.cfg.get('beam_width', 1)
         if beam_density is None:
             beam_density = self.cfg.get('beam_density', 0.001)
+        if BEAM_PARSE:
+            beam_width = 16
         cdef Beam beam
         if beam_width == 1:
             states = self.parse_batch([doc], [doc.tensor])
@@ -349,7 +352,7 @@ cdef class Parser:
         Yields (Doc): Documents, in order.
         """
         if BEAM_PARSE:
-            beam_width = 8
+            beam_width = 16
         cdef Doc doc
         cdef Beam beam
         for docs in cytoolz.partition_all(batch_size, docs):
@@ -427,7 +430,7 @@ cdef class Parser:
                     next_step.push_back(st)
         return states
 
-    def beam_parse(self, docs, tokvecses, int beam_width=8, float beam_density=0.001):
+    def beam_parse(self, docs, tokvecses, int beam_width=16, float beam_density=0.001):
         cdef Beam beam
         cdef np.ndarray scores
         cdef Doc doc
@@ -471,13 +474,13 @@ cdef class Parser:
                         for k in range(nr_class):
                             beam.scores[i][k] = c_scores[j * scores.shape[1] + k]
                         j += 1
-                beam.advance(_transition_state, NULL, <void*>self.moves.c)
+                beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
                 beam.check_done(_check_final_state, NULL)
             beams.append(beam)
         return beams
 
     def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
-        if BEAM_PARSE:
+        if BEAM_PARSE and numpy.random.random() >= 0.5:
             return self.update_beam(docs_tokvecs, golds, drop=drop, sgd=sgd,
                                     losses=losses)
         if losses is not None and self.name not in losses:
@@ -568,7 +571,7 @@ cdef class Parser:
                                         states, tokvecs, golds,
                                         state2vec, vec2scores,
                                         drop, sgd, losses,
-                                        width=8)
+                                        width=16)
         backprop_lower = []
         for i, d_scores in enumerate(states_d_scores):
             if losses is not None:
@@ -633,9 +636,10 @@ cdef class Parser:
         xp = get_array_module(d_tokvecs)
         for ids, d_vector, bp_vector in backprops:
             d_state_features = bp_vector(d_vector, sgd=sgd)
-            mask = (ids >= 0).reshape((ids.shape[0], ids.shape[1], 1))
-            self.model[0].ops.scatter_add(d_tokvecs, ids,
-                d_state_features * mask)
+            mask = ids >= 0
+            d_state_features *= mask.reshape(ids.shape + (1,))
+            self.model[0].ops.scatter_add(d_tokvecs, ids * mask,
+                d_state_features)
 
     @property
     def move_names(self):
@@ -651,7 +655,7 @@ cdef class Parser:
                         lower, stream, drop=dropout)
         return state2vec, upper
 
-    nr_feature = 13
+    nr_feature = 8
 
     def get_token_ids(self, states):
         cdef StateClass state
