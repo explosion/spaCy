@@ -134,3 +134,9 @@ def test_tokenizer_splits_em_dash_infix(en_tokenizer):
     assert tokens[6].text == "Puddleton"
     assert tokens[7].text == "?"
     assert tokens[8].text == "\u2014"
+
+@pytest.mark.parametrize('case', [('a2g', 1), ('24g', 2), ('20,000mb', 2), ('23,342,212.93m/s', 2), ('12321.34in', 2)])
+def test_num_unit_suffix_split(en_tokenizer, case):
+    unsplit, exp_len = case
+    res = en_tokenizer(unsplit)
+    assert len(res) == exp_len
