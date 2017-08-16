@@ -351,6 +351,20 @@ cdef class ArcEager(TransitionSystem):
         def __get__(self):
             return (SHIFT, REDUCE, LEFT, RIGHT, BREAK)
 
+    def is_gold_parse(self, StateClass state, GoldParse gold):
+        predicted = set()
+        truth = set()
+        for i in range(gold.length):
+            if gold.cand_to_gold[i] is None:
+                continue
+            if state.safe_get(i).dep:
+                predicted.add((i, state.H(i), self.strings[state.safe_get(i).dep]))
+            else:
+                predicted.add((i, state.H(i), 'ROOT'))
+            id_, word, tag, head, dep, ner = gold.orig_annot[gold.cand_to_gold[i]]
+            truth.add((id_, head, dep))
+        return truth == predicted
+
     def has_gold(self, GoldParse gold, start=0, end=None):
         end = end or len(gold.heads)
         if all([tag is None for tag in gold.heads[start:end]]):
