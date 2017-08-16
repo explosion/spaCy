@@ -74,7 +74,16 @@ cdef cppclass StateC:
         free(this.shifted - PADDING)
 
     void set_context_tokens(int* ids, int n) nogil:
-        if n == 13:
+        if n == 8:
+            ids[0] = this.B(0)
+            ids[1] = this.B(1)
+            ids[2] = this.S(0)
+            ids[3] = this.S(1)
+            ids[4] = this.H(this.S(0))
+            ids[5] = this.L(this.B(0), 1)
+            ids[6] = this.L(this.S(0), 2)
+            ids[7] = this.R(this.S(0), 1)
+        elif n == 13:
             ids[0] = this.B(0)
             ids[1] = this.B(1)
             ids[2] = this.S(0)
