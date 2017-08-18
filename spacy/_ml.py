@@ -21,7 +21,6 @@ from thinc.neural.pooling import Pooling, max_pool, mean_pool, sum_pool
 from thinc.neural._classes.attention import ParametricAttention
 from thinc.linear.linear import LinearModel
 from thinc.api import uniqued, wrap, flatten_add_lengths
-from thinc.neural._classes.rnn import BiLSTM
 
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP
