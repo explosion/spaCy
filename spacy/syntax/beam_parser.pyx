@@ -34,6 +34,7 @@ from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from .parser cimport Parser
+from ._beam_utils import is_gold
 
 
 DEBUG = False
@@ -107,7 +108,7 @@ cdef class BeamParser(Parser):
             # The non-monotonic oracle makes it difficult to ensure final costs are
             # correct. Therefore do final correction
             for i in range(pred.size):
-                if self.moves.is_gold_parse(<StateClass>pred.at(i), gold_parse):
+                if is_gold(<StateClass>pred.at(i), gold_parse, self.moves.strings):
                     pred._states[i].loss = 0.0
                 elif pred._states[i].loss == 0.0:
                     pred._states[i].loss = 1.0
@@ -213,7 +214,7 @@ def _check_train_integrity(Beam pred, Beam gold, GoldParse gold_parse, Transitio
         if not pred._states[i].is_done or pred._states[i].loss == 0:
             continue
         state = <StateClass>pred.at(i)
-        if moves.is_gold_parse(state, gold_parse) == True:
+        if is_gold(state, gold_parse, moves.strings) == True:
             for dep in gold_parse.orig_annot:
                 print(dep[1], dep[3], dep[4])
             print("Cost", pred._states[i].loss)
@@ -227,7 +228,7 @@ def _check_train_integrity(Beam pred, Beam gold, GoldParse gold_parse, Transitio
         if not gold._states[i].is_done:
             continue
         state = <StateClass>gold.at(i)
-        if moves.is_gold(state, gold_parse) == False:
+        if is_gold(state, gold_parse, moves.strings) == False:
             print("Truth")
             for dep in gold_parse.orig_annot:
                 print(dep[1], dep[3], dep[4])
@@ -237,16 +238,3 @@ def _check_train_integrity(Beam pred, Beam gold, GoldParse gold_parse, Transitio
             raise Exception("Gold parse is not gold-standard")
 
 
-def is_gold(StateClass state, GoldParse gold, StringStore strings):
-    predicted = set()
-    truth = set()
-    for i in range(gold.length):
-        if gold.cand_to_gold[i] is None:
-            continue
-        if state.safe_get(i).dep:
-            predicted.add((i, state.H(i), strings[state.safe_get(i).dep]))
-        else:
-            predicted.add((i, state.H(i), 'ROOT'))
-        id_, word, tag, head, dep, ner = gold.orig_annot[gold.cand_to_gold[i]]
-        truth.add((id_, head, dep))
-    return truth == predicted

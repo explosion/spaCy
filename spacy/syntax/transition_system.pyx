@@ -99,9 +99,6 @@ cdef class TransitionSystem:
     def preprocess_gold(self, GoldParse gold):
         raise NotImplementedError
 
-    def is_gold_parse(self, StateClass state, GoldParse gold):
-        raise NotImplementedError
-
     cdef Transition lookup_transition(self, object name) except *:
         raise NotImplementedError
 
@@ -110,6 +107,8 @@ cdef class TransitionSystem:
 
     def is_valid(self, StateClass stcls, move_name):
         action = self.lookup_transition(move_name)
+        if action.move == 0:
+            return False
         return action.is_valid(stcls.c, action.label)
 
     cdef int set_valid(self, int* is_valid, const StateC* st) nogil:

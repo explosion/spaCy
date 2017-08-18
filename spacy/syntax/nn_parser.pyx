@@ -37,9 +37,7 @@ from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
 
 from thinc.api import layerize, chain, noop, clone
-from thinc.neural import Model, Affine, ELU, ReLu, Maxout
 from thinc.neural import Model, Affine, ReLu, Maxout
-from thinc.neural._classes.batchnorm import BatchNorm as BN
 from thinc.neural._classes.selu import SELU
 from thinc.neural._classes.layernorm import LayerNorm
 from thinc.neural.ops import NumpyOps, CupyOps
@@ -48,10 +46,10 @@ from thinc.neural.util import get_array_module
 from .. import util
 from ..util import get_async, get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
-from .._ml import Tok2Vec, doc2feats, rebatch
+from .._ml import Tok2Vec, doc2feats, rebatch, fine_tune
+from .._ml import Residual, drop_layer
 from ..compat import json_dumps
 
-from . import _beam_utils
 from . import _parse_features
 from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
@@ -64,8 +62,11 @@ from ..structs cimport TokenC
 from ..tokens.doc cimport Doc
 from ..strings cimport StringStore
 from ..gold cimport GoldParse
-from ..attrs cimport TAG, DEP
+from ..attrs cimport ID, TAG, DEP, ORTH, NORM, PREFIX, SUFFIX, TAG
+from . import _beam_utils
 
+USE_FINE_TUNE = True
+BEAM_PARSE = True
 
 def get_templates(*args, **kwargs):
     return []
@@ -237,11 +238,14 @@ cdef class Parser:
     Base class of the DependencyParser and EntityRecognizer.
     """
     @classmethod
-    def Model(cls, nr_class, token_vector_width=128, hidden_width=128, depth=1, **cfg):
+    def Model(cls, nr_class, token_vector_width=128, hidden_width=300, depth=1, **cfg):
         depth = util.env_opt('parser_hidden_depth', depth)
         token_vector_width = util.env_opt('token_vector_width', token_vector_width)
         hidden_width = util.env_opt('hidden_width', hidden_width)
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces', 2)
+        embed_size = util.env_opt('embed_size', 4000)
+        tensors = fine_tune(Tok2Vec(token_vector_width, embed_size,
+                    preprocess=doc2feats()))
         if parser_maxout_pieces == 1:
             lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
                         nF=cls.nr_feature,
@@ -253,15 +257,10 @@ cdef class Parser:
                         nI=token_vector_width)
 
         with Model.use_device('cpu'):
-            if depth == 0:
-                upper = chain()
-                upper.is_noop = True
-            else:
-                upper = chain(
-                    clone(Maxout(hidden_width), (depth-1)),
-                    zero_init(Affine(nr_class, drop_factor=0.0))
-                )
-                upper.is_noop = False
+            upper = chain(
+                clone(Residual(ReLu(hidden_width)), (depth-1)),
+                zero_init(Affine(nr_class, drop_factor=0.0))
+            )
         # TODO: This is an unfortunate hack atm!
         # Used to set input dimensions in network.
         lower.begin_training(lower.ops.allocate((500, token_vector_width)))
@@ -273,7 +272,7 @@ cdef class Parser:
             'hidden_width': hidden_width,
             'maxout_pieces': parser_maxout_pieces
         }
-        return (lower, upper), cfg
+        return (tensors, lower, upper), cfg
 
     def __init__(self, Vocab vocab, moves=True, model=True, **cfg):
         """
@@ -299,10 +298,6 @@ cdef class Parser:
             self.moves = self.TransitionSystem(self.vocab.strings, {})
         else:
             self.moves = moves
-        if 'beam_width' not in cfg:
-            cfg['beam_width'] = util.env_opt('beam_width', 1)
-        if 'beam_density' not in cfg:
-            cfg['beam_density'] = util.env_opt('beam_density', 0.0)
         self.cfg = cfg
         if 'actions' in self.cfg:
             for action, labels in self.cfg.get('actions', {}).items():
@@ -325,7 +320,7 @@ cdef class Parser:
         if beam_width is None:
             beam_width = self.cfg.get('beam_width', 1)
         if beam_density is None:
-            beam_density = self.cfg.get('beam_density', 0.0)
+            beam_density = self.cfg.get('beam_density', 0.001)
         cdef Beam beam
         if beam_width == 1:
             states = self.parse_batch([doc], [doc.tensor])
@@ -341,7 +336,7 @@ cdef class Parser:
             return output
 
     def pipe(self, docs, int batch_size=1000, int n_threads=2,
-             beam_width=None, beam_density=None):
+             beam_width=1, beam_density=0.001):
         """
         Process a stream of documents.
 
@@ -353,21 +348,21 @@ cdef class Parser:
                 The number of threads with which to work on the buffer in parallel.
         Yields (Doc): Documents, in order.
         """
-        cdef StateClass parse_state
-        if beam_width is None:
-            beam_width = self.cfg.get('beam_width', 1)
-        if beam_density is None:
-            beam_density = self.cfg.get('beam_density', 0.0)
+        if BEAM_PARSE:
+            beam_width = 8
         cdef Doc doc
-        queue = []
+        cdef Beam beam
         for docs in cytoolz.partition_all(batch_size, docs):
             docs = list(docs)
-            tokvecs = [d.tensor for d in docs]
+            tokvecs = [doc.tensor for doc in docs]
             if beam_width == 1:
                 parse_states = self.parse_batch(docs, tokvecs)
             else:
-                parse_states = self.beam_parse(docs, tokvecs,
-                                    beam_width=beam_width, beam_density=beam_density)
+                beams = self.beam_parse(docs, tokvecs,
+                            beam_width=beam_width, beam_density=beam_density)
+                parse_states = []
+                for beam in beams:
+                    parse_states.append(<StateClass>beam.at(0))
             self.set_annotations(docs, parse_states)
             yield from docs
 
@@ -382,8 +377,12 @@ cdef class Parser:
             int nr_class, nr_feat, nr_piece, nr_dim, nr_state
         if isinstance(docs, Doc):
             docs = [docs]
+        if isinstance(tokvecses, np.ndarray):
+            tokvecses = [tokvecses]
 
         tokvecs = self.model[0].ops.flatten(tokvecses)
+        if USE_FINE_TUNE:
+            tokvecs += self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
 
         nr_state = len(docs)
         nr_class = self.moves.n_moves
@@ -407,27 +406,20 @@ cdef class Parser:
         cdef np.ndarray scores
         c_token_ids = <int*>token_ids.data
         c_is_valid = <int*>is_valid.data
-        cdef int has_hidden = not getattr(vec2scores, 'is_noop', False)
         while not next_step.empty():
-            if not has_hidden:
-                for i in cython.parallel.prange(
-                        next_step.size(), num_threads=6, nogil=True):
-                    self._parse_step(next_step[i],
-                        feat_weights, nr_class, nr_feat, nr_piece)
-            else:
-                for i in range(next_step.size()):
-                    st = next_step[i]
-                    st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
-                    self.moves.set_valid(&c_is_valid[i*nr_class], st)
+            for i in range(next_step.size()):
+                st = next_step[i]
+                st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
+                self.moves.set_valid(&c_is_valid[i*nr_class], st)
                 vectors = state2vec(token_ids[:next_step.size()])
-                scores = vec2scores(vectors)
-                c_scores = <float*>scores.data
-                for i in range(next_step.size()):
-                    st = next_step[i]
-                    guess = arg_max_if_valid(
-                        &c_scores[i*nr_class], &c_is_valid[i*nr_class], nr_class)
-                    action = self.moves.c[guess]
-                    action.do(st, action.label)
+            scores = vec2scores(vectors)
+            c_scores = <float*>scores.data
+            for i in range(next_step.size()):
+                st = next_step[i]
+                guess = arg_max_if_valid(
+                    &c_scores[i*nr_class], &c_is_valid[i*nr_class], nr_class)
+                action = self.moves.c[guess]
+                action.do(st, action.label)
             this_step, next_step = next_step, this_step
             next_step.clear()
             for st in this_step:
@@ -435,18 +427,22 @@ cdef class Parser:
                     next_step.push_back(st)
         return states
 
-    def beam_parse(self, docs, tokvecses, int beam_width=3, float beam_density=0.001):
+    def beam_parse(self, docs, tokvecses, int beam_width=8, float beam_density=0.001):
         cdef Beam beam
         cdef np.ndarray scores
         cdef Doc doc
         cdef int nr_class = self.moves.n_moves
         cdef StateClass stcls, output
         tokvecs = self.model[0].ops.flatten(tokvecses)
+        if USE_FINE_TUNE:
+            tokvecs += self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
         cuda_stream = get_cuda_stream()
         state2vec, vec2scores = self.get_batch_model(len(docs), tokvecs,
                                                      cuda_stream, 0.0)
         beams = []
         cdef int offset = 0
+        cdef int j = 0
+        cdef int k
         for doc in docs:
             beam = Beam(nr_class, beam_width, min_density=beam_density)
             beam.initialize(self.moves.init_beam_state, doc.length, doc.c)
@@ -459,58 +455,42 @@ cdef class Parser:
                 states = []
                 for i in range(beam.size):
                     stcls = <StateClass>beam.at(i)
-                    states.append(stcls)
+                    # This way we avoid having to score finalized states
+                    # We do have to take care to keep indexes aligned, though
+                    if not stcls.is_final():
+                        states.append(stcls)
                 token_ids = self.get_token_ids(states)
                 vectors = state2vec(token_ids)
                 scores = vec2scores(vectors)
+                j = 0
+                c_scores = <float*>scores.data
                 for i in range(beam.size):
                     stcls = <StateClass>beam.at(i)
                     if not stcls.is_final():
                         self.moves.set_valid(beam.is_valid[i], stcls.c)
-                        for j in range(nr_class):
-                            beam.scores[i][j] = scores[i, j]
+                        for k in range(nr_class):
+                            beam.scores[i][k] = c_scores[j * scores.shape[1] + k]
+                        j += 1
                 beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
                 beam.check_done(_check_final_state, NULL)
             beams.append(beam)
         return beams
 
-    cdef void _parse_step(self, StateC* state,
-            const float* feat_weights,
-            int nr_class, int nr_feat, int nr_piece) nogil:
-        '''This only works with no hidden layers -- fast but inaccurate'''
-        #for i in cython.parallel.prange(next_step.size(), num_threads=4, nogil=True):
-        #    self._parse_step(next_step[i], feat_weights, nr_class, nr_feat)
-        token_ids = <int*>calloc(nr_feat, sizeof(int))
-        scores = <float*>calloc(nr_class * nr_piece, sizeof(float))
-        is_valid = <int*>calloc(nr_class, sizeof(int))
-
-        state.set_context_tokens(token_ids, nr_feat)
-        sum_state_features(scores,
-            feat_weights, token_ids, 1, nr_feat, nr_class * nr_piece)
-        self.moves.set_valid(is_valid, state)
-        guess = arg_maxout_if_valid(scores, is_valid, nr_class, nr_piece)
-        action = self.moves.c[guess]
-        action.do(state, action.label)
-
-        free(is_valid)
-        free(scores)
-        free(token_ids)
-
     def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
-        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.5:
-            return self.update_beam(docs_tokvecs, golds,
-                    self.cfg['beam_width'], self.cfg['beam_density'],
-                    drop=drop, sgd=sgd, losses=losses)
+        if BEAM_PARSE:
+            return self.update_beam(docs_tokvecs, golds, drop=drop, sgd=sgd,
+                                    losses=losses)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         docs, tokvec_lists = docs_tokvecs
         tokvecs = self.model[0].ops.flatten(tokvec_lists)
-        my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
-        tokvecs += self.model[0].ops.flatten(my_tokvecs)
-
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
+        if USE_FINE_TUNE:
+            my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
+            my_tokvecs = self.model[0].ops.flatten(my_tokvecs)
+            tokvecs += my_tokvecs
 
         cuda_stream = get_cuda_stream()
 
@@ -537,13 +517,13 @@ cdef class Parser:
             scores, bp_scores = vec2scores.begin_update(vector, drop=drop)
 
             d_scores = self.get_batch_loss(states, golds, scores)
-            d_vector = bp_scores(d_scores / d_scores.shape[0], sgd=sgd)
+            d_vector = bp_scores(d_scores, sgd=sgd)
             if drop != 0:
                 d_vector *= mask
 
             if isinstance(self.model[0].ops, CupyOps) \
             and not isinstance(token_ids, state2vec.ops.xp.ndarray):
-                # Move token_ids and d_vector to CPU, asynchronously
+                # Move token_ids and d_vector to GPU, asynchronously
                 backprops.append((
                     get_async(cuda_stream, token_ids),
                     get_async(cuda_stream, d_vector),
@@ -561,24 +541,21 @@ cdef class Parser:
         self._make_updates(d_tokvecs,
             backprops, sgd, cuda_stream)
         d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
-        bp_my_tokvecs(d_tokvecs, sgd=sgd)
+        if USE_FINE_TUNE:
+            bp_my_tokvecs(d_tokvecs, sgd=sgd)
         return d_tokvecs
 
-    def update_beam(self, docs_tokvecs, golds, width=None, density=None,
-            drop=0., sgd=None, losses=None):
-        if width is None:
-            width = self.cfg.get('beam_width', 2)
-        if density is None:
-            density = self.cfg.get('beam_density', 0.0)
+    def update_beam(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         docs, tokvecs = docs_tokvecs
         lengths = [len(d) for d in docs]
         assert min(lengths) >= 1
         tokvecs = self.model[0].ops.flatten(tokvecs)
-        my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
-        my_tokvecs = self.model[0].ops.flatten(my_tokvecs)
-        tokvecs += my_tokvecs
+        if USE_FINE_TUNE:
+            my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
+            my_tokvecs = self.model[0].ops.flatten(my_tokvecs)
+            tokvecs += my_tokvecs
 
         states = self.moves.init_batch(docs)
         for gold in golds:
@@ -590,8 +567,8 @@ cdef class Parser:
         states_d_scores, backprops = _beam_utils.update_beam(self.moves, self.nr_feature, 500,
                                         states, tokvecs, golds,
                                         state2vec, vec2scores,
-                                        width, density,
-                                        sgd=sgd, drop=drop, losses=losses)
+                                        drop, sgd, losses,
+                                        width=8)
         backprop_lower = []
         for i, d_scores in enumerate(states_d_scores):
             if losses is not None:
@@ -609,7 +586,8 @@ cdef class Parser:
         d_tokvecs = self.model[0].ops.allocate(tokvecs.shape)
         self._make_updates(d_tokvecs, backprop_lower, sgd, cuda_stream)
         d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, lengths)
-        bp_my_tokvecs(d_tokvecs, sgd=sgd)
+        if USE_FINE_TUNE:
+            bp_my_tokvecs(d_tokvecs, sgd=sgd)
         return d_tokvecs
 
     def _init_gold_batch(self, whole_docs, whole_golds):
@@ -656,9 +634,9 @@ cdef class Parser:
         for ids, d_vector, bp_vector in backprops:
             d_state_features = bp_vector(d_vector, sgd=sgd)
             mask = ids >= 0
-            d_state_features *= mask.reshape(ids.shape + (1,))
-            self.model[0].ops.scatter_add(d_tokvecs, ids * mask,
-                d_state_features)
+            indices = xp.nonzero(mask)
+            self.model[0].ops.scatter_add(d_tokvecs, ids[indices],
+                d_state_features[indices])
 
     @property
     def move_names(self):
@@ -669,12 +647,12 @@ cdef class Parser:
         return names
 
     def get_batch_model(self, batch_size, tokvecs, stream, dropout):
-        lower, upper = self.model
+        _, lower, upper = self.model
         state2vec = precompute_hiddens(batch_size, tokvecs,
                         lower, stream, drop=dropout)
         return state2vec, upper
 
-    nr_feature = 8
+    nr_feature = 13
 
     def get_token_ids(self, states):
         cdef StateClass state
@@ -759,10 +737,12 @@ cdef class Parser:
 
     def to_disk(self, path, **exclude):
         serializers = {
-            'lower_model': lambda p: p.open('wb').write(
+            'tok2vec_model': lambda p: p.open('wb').write(
                 self.model[0].to_bytes()),
-            'upper_model': lambda p: p.open('wb').write(
+            'lower_model': lambda p: p.open('wb').write(
                 self.model[1].to_bytes()),
+            'upper_model': lambda p: p.open('wb').write(
+                self.model[2].to_bytes()),
             'vocab': lambda p: self.vocab.to_disk(p),
             'moves': lambda p: self.moves.to_disk(p, strings=False),
             'cfg': lambda p: p.open('w').write(json_dumps(self.cfg))
@@ -783,24 +763,29 @@ cdef class Parser:
                 self.model, cfg = self.Model(**self.cfg)
             else:
                 cfg = {}
-            with (path / 'lower_model').open('rb') as file_:
+            with (path / 'tok2vec_model').open('rb') as file_:
                 bytes_data = file_.read()
             self.model[0].from_bytes(bytes_data)
-            with (path / 'upper_model').open('rb') as file_:
+            with (path / 'lower_model').open('rb') as file_:
                 bytes_data = file_.read()
             self.model[1].from_bytes(bytes_data)
+            with (path / 'upper_model').open('rb') as file_:
+                bytes_data = file_.read()
+            self.model[2].from_bytes(bytes_data)
             self.cfg.update(cfg)
         return self
 
     def to_bytes(self, **exclude):
         serializers = OrderedDict((
-            ('lower_model', lambda: self.model[0].to_bytes()),
-            ('upper_model', lambda: self.model[1].to_bytes()),
+            ('tok2vec_model', lambda: self.model[0].to_bytes()),
+            ('lower_model', lambda: self.model[1].to_bytes()),
+            ('upper_model', lambda: self.model[2].to_bytes()),
             ('vocab', lambda: self.vocab.to_bytes()),
             ('moves', lambda: self.moves.to_bytes(strings=False)),
             ('cfg', lambda: ujson.dumps(self.cfg))
         ))
         if 'model' in exclude:
+            exclude['tok2vec_model'] = True
             exclude['lower_model'] = True
             exclude['upper_model'] = True
             exclude.pop('model')
@@ -811,6 +796,7 @@ cdef class Parser:
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('moves', lambda b: self.moves.from_bytes(b, strings=False)),
             ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
+            ('tok2vec_model', lambda b: None),
             ('lower_model', lambda b: None),
             ('upper_model', lambda b: None)
         ))
@@ -820,10 +806,12 @@ cdef class Parser:
                 self.model, cfg = self.Model(self.moves.n_moves)
             else:
                 cfg = {}
+            if 'tok2vec_model' in msg:
+                self.model[0].from_bytes(msg['tok2vec_model'])
             if 'lower_model' in msg:
-                self.model[0].from_bytes(msg['lower_model'])
+                self.model[1].from_bytes(msg['lower_model'])
             if 'upper_model' in msg:
-                self.model[1].from_bytes(msg['upper_model'])
+                self.model[2].from_bytes(msg['upper_model'])
             self.cfg.update(cfg)
         return self
 
