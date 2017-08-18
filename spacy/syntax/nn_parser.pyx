@@ -37,14 +37,11 @@ from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
 
 from thinc.api import layerize, chain, noop, clone
-<<<<<<< HEAD
 from thinc.neural import Model, Affine, ELU, ReLu, Maxout
-=======
 from thinc.neural import Model, Affine, ReLu, Maxout
 from thinc.neural._classes.batchnorm import BatchNorm as BN
 from thinc.neural._classes.selu import SELU
 from thinc.neural._classes.layernorm import LayerNorm
->>>>>>> feature/nn-beam-parser
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module
 
@@ -68,10 +65,6 @@ from ..strings cimport StringStore
 from ..gold cimport GoldParse
 from ..attrs cimport TAG, DEP
 
-<<<<<<< HEAD
-=======
-USE_FINE_TUNE = True
->>>>>>> feature/nn-beam-parser
 
 def get_templates(*args, **kwargs):
     return []
@@ -259,7 +252,6 @@ cdef class Parser:
                         nI=token_vector_width)
 
         with Model.use_device('cpu'):
-<<<<<<< HEAD
             if depth == 0:
                 upper = chain()
                 upper.is_noop = True
@@ -269,12 +261,6 @@ cdef class Parser:
                     zero_init(Affine(nr_class, drop_factor=0.0))
                 )
                 upper.is_noop = False
-=======
-            upper = chain(
-                clone(Maxout(hidden_width), (depth-1)),
-                zero_init(Affine(nr_class, drop_factor=0.0))
-            )
->>>>>>> feature/nn-beam-parser
         # TODO: This is an unfortunate hack atm!
         # Used to set input dimensions in network.
         lower.begin_training(lower.ops.allocate((500, token_vector_width)))
@@ -422,7 +408,6 @@ cdef class Parser:
         c_is_valid = <int*>is_valid.data
         cdef int has_hidden = not getattr(vec2scores, 'is_noop', False)
         while not next_step.empty():
-<<<<<<< HEAD
             if not has_hidden:
                 for i in cython.parallel.prange(
                         next_step.size(), num_threads=6, nogil=True):
@@ -442,21 +427,6 @@ cdef class Parser:
                         &c_scores[i*nr_class], &c_is_valid[i*nr_class], nr_class)
                     action = self.moves.c[guess]
                     action.do(st, action.label)
-=======
-            for i in range(next_step.size()):
-                st = next_step[i]
-                st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
-                self.moves.set_valid(&c_is_valid[i*nr_class], st)
-            vectors = state2vec(token_ids[:next_step.size()])
-            scores = vec2scores(vectors)
-            c_scores = <float*>scores.data
-            for i in range(next_step.size()):
-                st = next_step[i]
-                guess = arg_max_if_valid(
-                    &c_scores[i*nr_class], &c_is_valid[i*nr_class], nr_class)
-                action = self.moves.c[guess]
-                action.do(st, action.label)
->>>>>>> feature/nn-beam-parser
             this_step, next_step = next_step, this_step
             next_step.clear()
             for st in this_step:
@@ -526,13 +496,10 @@ cdef class Parser:
         free(token_ids)
 
     def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
-<<<<<<< HEAD
-=======
         if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.5:
             return self.update_beam(docs_tokvecs, golds,
                     self.cfg['beam_width'], self.cfg['beam_density'],
                     drop=drop, sgd=sgd, losses=losses)
->>>>>>> feature/nn-beam-parser
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         docs, tokvec_lists = docs_tokvecs
@@ -589,9 +556,6 @@ cdef class Parser:
                 break
         self._make_updates(d_tokvecs,
             backprops, sgd, cuda_stream)
-<<<<<<< HEAD
-        return self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
-=======
         d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
         if USE_FINE_TUNE:
             bp_my_tokvecs(d_tokvecs, sgd=sgd)
@@ -646,7 +610,6 @@ cdef class Parser:
         if USE_FINE_TUNE:
             bp_my_tokvecs(d_tokvecs, sgd=sgd)
         return d_tokvecs
->>>>>>> feature/nn-beam-parser
 
     def _init_gold_batch(self, whole_docs, whole_golds):
         """Make a square batch, of length equal to the shortest doc. A long
@@ -691,21 +654,10 @@ cdef class Parser:
         xp = get_array_module(d_tokvecs)
         for ids, d_vector, bp_vector in backprops:
             d_state_features = bp_vector(d_vector, sgd=sgd)
-<<<<<<< HEAD
-            active_feats = ids * (ids >= 0)
-            active_feats = active_feats.reshape((ids.shape[0], ids.shape[1], 1))
-            if hasattr(xp, 'scatter_add'):
-                xp.scatter_add(d_tokvecs,
-                    ids, d_state_features * active_feats)
-            else:
-                xp.add.at(d_tokvecs,
-                    ids, d_state_features * active_feats)
-=======
             mask = ids >= 0
             d_state_features *= mask.reshape(ids.shape + (1,))
             self.model[0].ops.scatter_add(d_tokvecs, ids * mask,
                 d_state_features)
->>>>>>> feature/nn-beam-parser
 
     @property
     def move_names(self):
