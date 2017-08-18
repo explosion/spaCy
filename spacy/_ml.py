@@ -8,7 +8,8 @@ import random
 
 from thinc.neural._classes.convolution import ExtractWindow
 from thinc.neural._classes.static_vectors import StaticVectors
-from thinc.neural._classes.batchnorm import BatchNorm
+from thinc.neural._classes.batchnorm import BatchNorm as BN
+from thinc.neural._classes.layernorm import LayerNorm as LN
 from thinc.neural._classes.resnet import Residual
 from thinc.neural import ReLu
 from thinc.neural._classes.selu import SELU
@@ -19,7 +20,9 @@ from thinc.api import FeatureExtracter, with_getitem
 from thinc.neural.pooling import Pooling, max_pool, mean_pool, sum_pool
 from thinc.neural._classes.attention import ParametricAttention
 from thinc.linear.linear import LinearModel
-from thinc.api import uniqued, wrap
+from thinc.api import uniqued, wrap, flatten_add_lengths
+from thinc.neural._classes.rnn import BiLSTM
+
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP
 from .tokens.doc import Doc
@@ -192,17 +195,17 @@ def Tok2Vec(width, embed_size, preprocess=None):
         suffix = get_col(cols.index(SUFFIX)) >> HashEmbed(width, embed_size//2, name='embed_suffix')
         shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size//2, name='embed_shape')
 
-        embed = (norm | prefix | suffix | shape )
+        embed = (norm | prefix | suffix | shape ) >> LN(Maxout(width, width*4, pieces=3))
         tok2vec = (
             with_flatten(
                 asarray(Model.ops, dtype='uint64')
-                >> embed
-                >> Maxout(width, width*4, pieces=3)
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3))
-                >> Residual(ExtractWindow(nW=1) >> Maxout(width, width*3)),
-            pad=4)
+                >> uniqued(embed, column=5)
+                >> drop_layer(
+                    Residual(
+                        (ExtractWindow(nW=1) >> BN(Maxout(width, width*3)))
+                    )
+                ) ** 4, pad=4
+            )
         )
         if preprocess not in (False, None):
             tok2vec = preprocess >> tok2vec
@@ -321,6 +324,40 @@ def get_token_vectors(tokens_attrs_vectors, drop=0.):
     def backward(d_output, sgd=None):
         return (tokens, d_output)
     return vectors, backward
+
+
+def fine_tune(embedding, combine=None):
+    if combine is not None:
+        raise NotImplementedError(
+            "fine_tune currently only supports addition. Set combine=None")
+    def fine_tune_fwd(docs_tokvecs, drop=0.):
+        docs, tokvecs = docs_tokvecs
+        lengths = model.ops.asarray([len(doc) for doc in docs], dtype='i')
+
+        vecs, bp_vecs = embedding.begin_update(docs, drop=drop)
+        flat_tokvecs = embedding.ops.flatten(tokvecs)
+        flat_vecs = embedding.ops.flatten(vecs)
+        alpha = model.mix
+        minus = 1-model.mix
+        output = embedding.ops.unflatten(
+                   (alpha * flat_tokvecs + minus * flat_vecs), lengths)
+
+        def fine_tune_bwd(d_output, sgd=None):
+            flat_grad = model.ops.flatten(d_output)
+            model.d_mix += flat_tokvecs.dot(flat_grad.T).sum()
+            model.d_mix += 1-flat_vecs.dot(flat_grad.T).sum()
+            
+            bp_vecs([d_o * minus for d_o in d_output], sgd=sgd)
+            d_output = [d_o * alpha for d_o in d_output]
+            sgd(model._mem.weights, model._mem.gradient, key=model.id)
+            model.mix = model.ops.xp.minimum(model.mix, 1.0)
+            return d_output
+        return output, fine_tune_bwd
+    model = wrap(fine_tune_fwd, embedding)
+    model.mix = model._mem.add((model.id, 'mix'), (1,))
+    model.mix.fill(0.0)
+    model.d_mix = model._mem.add_gradient((model.id, 'd_mix'), (model.id, 'mix'))
+    return model
 
 
 @layerize
