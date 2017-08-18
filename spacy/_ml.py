@@ -5,6 +5,7 @@ from thinc.neural._classes.hash_embed import HashEmbed
 from thinc.neural.ops import NumpyOps, CupyOps
 from thinc.neural.util import get_array_module
 import random
+import cytoolz
 
 from thinc.neural._classes.convolution import ExtractWindow
 from thinc.neural._classes.static_vectors import StaticVectors
@@ -26,6 +27,7 @@ from thinc.neural._classes.rnn import BiLSTM
 
 from .attrs import ID, ORTH, LOWER, NORM, PREFIX, SUFFIX, SHAPE, TAG, DEP
 from .tokens.doc import Doc
+from . import util
 
 import numpy
 import io
@@ -56,6 +58,27 @@ def _logistic(X, drop=0.):
     return Y, logistic_bwd
 
 
+@layerize
+def add_tuples(X, drop=0.):
+    """Give inputs of sequence pairs, where each sequence is (vals, length),
+    sum the values, returning a single sequence.
+
+    If input is:
+    ((vals1, length), (vals2, length)
+    Output is:
+    (vals1+vals2, length)
+
+    vals are a single tensor for the whole batch.
+    """
+    (vals1, length1), (vals2, length2) = X
+    assert length1 == length2
+
+    def add_tuples_bwd(dY, sgd=None):
+        return (dY, dY)
+
+    return (vals1+vals2, length), add_tuples_bwd
+
+
 def _zero_init(model):
     def _zero_init_impl(self, X, y):
         self.W.fill(0)
@@ -63,6 +86,7 @@ def _zero_init(model):
     if model.W is not None:
         model.W.fill(0.)
     return model
+
 
 @layerize
 def _preprocess_doc(docs, drop=0.):
@@ -75,13 +99,13 @@ def _preprocess_doc(docs, drop=0.):
     return (keys, vals, lengths), None
 
 
-
 def _init_for_precomputed(W, ops):
     if (W**2).sum() != 0.:
         return
     reshaped = W.reshape((W.shape[1], W.shape[0] * W.shape[2]))
     ops.xavier_uniform_init(reshaped)
     W[:] = reshaped.reshape(W.shape)
+
 
 @describe.on_data(_set_dimensions_if_needed)
 @describe.attributes(
@@ -187,10 +211,21 @@ class PrecomputableMaxouts(Model):
         return Yfp, backward
 
 
+def drop_layer(layer, factor=2.):
+    def drop_layer_fwd(X, drop=0.):
+        drop *= factor
+        mask = layer.ops.get_dropout_mask((1,), drop)
+        if mask is None or mask > 0:
+            return layer.begin_update(X, drop=drop)
+        else:
+            return X, lambda dX, sgd=None: dX
+    return wrap(drop_layer_fwd, layer)
+
+
 def Tok2Vec(width, embed_size, preprocess=None):
-    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE]
+    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     with Model.define_operators({'>>': chain, '|': concatenate, '**': clone, '+': add}):
-        norm = get_col(cols.index(NORM))   >> HashEmbed(width, embed_size, name='embed_lower')
+        norm = get_col(cols.index(NORM))     >> HashEmbed(width, embed_size, name='embed_lower')
         prefix = get_col(cols.index(PREFIX)) >> HashEmbed(width, embed_size//2, name='embed_prefix')
         suffix = get_col(cols.index(SUFFIX)) >> HashEmbed(width, embed_size//2, name='embed_suffix')
         shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size//2, name='embed_shape')
@@ -300,7 +335,8 @@ def zero_init(model):
 
 
 def doc2feats(cols=None):
-    cols = [ID, NORM, PREFIX, SUFFIX, SHAPE]
+    if cols is None:
+        cols = [ID, NORM, PREFIX, SUFFIX, SHAPE, ORTH]
     def forward(docs, drop=0.):
         feats = []
         for doc in docs:
@@ -337,25 +373,22 @@ def fine_tune(embedding, combine=None):
         vecs, bp_vecs = embedding.begin_update(docs, drop=drop)
         flat_tokvecs = embedding.ops.flatten(tokvecs)
         flat_vecs = embedding.ops.flatten(vecs)
-        alpha = model.mix
-        minus = 1-model.mix
         output = embedding.ops.unflatten(
-                   (alpha * flat_tokvecs + minus * flat_vecs), lengths)
+                   (model.mix[0] * flat_vecs + model.mix[1] * flat_tokvecs),
+                    lengths)
 
         def fine_tune_bwd(d_output, sgd=None):
+            bp_vecs(d_output, sgd=sgd)
             flat_grad = model.ops.flatten(d_output)
-            model.d_mix += flat_tokvecs.dot(flat_grad.T).sum()
-            model.d_mix += 1-flat_vecs.dot(flat_grad.T).sum()
-            
-            bp_vecs([d_o * minus for d_o in d_output], sgd=sgd)
-            d_output = [d_o * alpha for d_o in d_output]
-            sgd(model._mem.weights, model._mem.gradient, key=model.id)
-            model.mix = model.ops.xp.minimum(model.mix, 1.0)
+            model.d_mix[1] += flat_tokvecs.dot(flat_grad.T).sum()
+            model.d_mix[0] += flat_vecs.dot(flat_grad.T).sum()
+            if sgd is not None:
+                sgd(model._mem.weights, model._mem.gradient, key=model.id)
             return d_output
         return output, fine_tune_bwd
     model = wrap(fine_tune_fwd, embedding)
-    model.mix = model._mem.add((model.id, 'mix'), (1,))
-    model.mix.fill(0.0)
+    model.mix = model._mem.add((model.id, 'mix'), (2,))
+    model.mix.fill(1.)
     model.d_mix = model._mem.add_gradient((model.id, 'd_mix'), (model.id, 'mix'))
     return model
 
@@ -406,6 +439,27 @@ def preprocess_doc(docs, drop=0.):
     vals = ops.allocate(keys.shape[0]) + 1
     return (keys, vals, lengths), None
 
+def getitem(i):
+    def getitem_fwd(X, drop=0.):
+        return X[i], None
+    return layerize(getitem_fwd)
+
+def build_tagger_model(nr_class, token_vector_width, **cfg):
+    embed_size = util.env_opt('embed_size', 7500)
+    with Model.define_operators({'>>': chain, '+': add}):
+        # Input: (doc, tensor) tuples
+        private_tok2vec = Tok2Vec(token_vector_width, embed_size, preprocess=doc2feats())
+
+        model = (
+            fine_tune(private_tok2vec)
+            >> with_flatten(
+                Maxout(token_vector_width, token_vector_width)
+                >> Softmax(nr_class, token_vector_width)
+            )
+        )
+    model.nI = None
+    return model
+
 
 def build_text_classifier(nr_class, width=64, **cfg):
     nr_vector = cfg.get('nr_vector', 200)
@@ -420,7 +474,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
             >> _flatten_add_lengths
             >> with_getitem(0,
                 uniqued(
-                  (embed_lower | embed_prefix | embed_suffix | embed_shape) 
+                  (embed_lower | embed_prefix | embed_suffix | embed_shape)
                   >> Maxout(width, width+(width//2)*3))
                 >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
                 >> Residual(ExtractWindow(nW=1) >> ReLu(width, width*3))
@@ -441,7 +495,7 @@ def build_text_classifier(nr_class, width=64, **cfg):
             >> zero_init(Affine(nr_class, nr_class*2, drop_factor=0.0))
             >> logistic
         )
- 
+
     model.lsuv = False
     return model
 
