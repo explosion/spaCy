@@ -9,7 +9,7 @@ import cytoolz
 
 from thinc.neural._classes.convolution import ExtractWindow
 from thinc.neural._classes.static_vectors import StaticVectors
-from thinc.neural._classes.batchnorm import BatchNorm as BN
+from thinc.neural._classes.batchnorm import BatchNorm
 from thinc.neural._classes.layernorm import LayerNorm as LN
 from thinc.neural._classes.resnet import Residual
 from thinc.neural import ReLu
@@ -229,14 +229,14 @@ def Tok2Vec(width, embed_size, preprocess=None):
         suffix = get_col(cols.index(SUFFIX)) >> HashEmbed(width, embed_size//2, name='embed_suffix')
         shape = get_col(cols.index(SHAPE))   >> HashEmbed(width, embed_size//2, name='embed_shape')
 
-        embed = (norm | prefix | suffix | shape ) >> LN(Maxout(width, width*4, pieces=3))
+        embed = (norm | prefix | suffix | shape ) >> Maxout(width, width*4, pieces=3)
         tok2vec = (
             with_flatten(
                 asarray(Model.ops, dtype='uint64')
                 >> uniqued(embed, column=5)
                 >> drop_layer(
                     Residual(
-                        (ExtractWindow(nW=1) >> BN(Maxout(width, width*3)))
+                        (ExtractWindow(nW=1) >> ReLu(width, width*3))
                     )
                 ) ** 4, pad=4
             )
