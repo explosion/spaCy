@@ -113,7 +113,7 @@ def load_model(name, **overrides):
 def load_model_from_link(name, **overrides):
     """Load a model from a shortcut link, or directory in spaCy data path."""
     init_file = get_data_path() / name / '__init__.py'
-    spec = importlib.util.spec_from_file_location(name, init_file)
+    spec = importlib.util.spec_from_file_location(name, str(init_file))
     try:
         cls = importlib.util.module_from_spec(spec)
     except AttributeError:

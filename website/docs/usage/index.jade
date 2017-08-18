@@ -32,10 +32,10 @@ p
     +qs({package: 'source'}) pip install -r requirements.txt
     +qs({package: 'source'}) pip install -e .
 
-    +qs({model: 'en'}) python -m spacy download en
-    +qs({model: 'de'}) python -m spacy download de
-    +qs({model: 'fr'}) python -m spacy download fr
-    +qs({model: 'es'}) python -m spacy download es
+    +qs({model: 'en'}) spacy download en
+    +qs({model: 'de'}) spacy download de
+    +qs({model: 'fr'}) spacy download fr
+    +qs({model: 'es'}) spacy download es
 
 +h(2, "installation") Installation instructions
 
@@ -52,7 +52,7 @@ p Using pip, spaCy releases are currently only available as source packages.
     |  and available models, see the #[+a("/docs/usage/models") docs on models].
 
     +code.o-no-block.
-        python -m spacy download en
+        spacy download en
 
         &gt;&gt;&gt; import spacy
         &gt;&gt;&gt; nlp = spacy.load('en')
@@ -312,7 +312,9 @@ p
     |  This error may occur when running the #[code spacy] command from the
     |  command line. spaCy does not currently add an entry to our #[code PATH]
     |  environment variable, as this can lead to unexpected results, especially
-    |  when using #[code virtualenv]. Run the command with #[code python -m],
+    |  when using #[code virtualenv]. Instead, spaCy adds an auto-alias that
+    |  maps #[code spacy] to #[code python -m spacy]. If this is not working as
+    |  expected, run the command with #[code python -m], yourself –
     |  for example #[code python -m spacy download en]. For more info on this,
     |  see #[+api("cli#download") download].
 

@@ -277,8 +277,7 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, docs, golds, drop=0., sgd=None, losses=None,
-            update_tensors=False):
+    def update(self, docs, golds, drop=0., sgd=None, losses=None):
         """Update the models in the pipeline.
 
         docs (iterable): A batch of `Doc` objects.
@@ -311,7 +310,7 @@ class Language(object):
             tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
             d_tokvecses = proc.update((docs, tokvecses), golds,
                                       drop=drop, sgd=get_grads, losses=losses)
-            if update_tensors and d_tokvecses is not None:
+            if d_tokvecses is not None:
                 bp_tokvecses(d_tokvecses, sgd=sgd)
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)
@@ -382,18 +381,9 @@ class Language(object):
         return optimizer
 
     def evaluate(self, docs_golds):
-        scorer = Scorer()
         docs, golds = zip(*docs_golds)
-        docs = list(docs)
-        golds = list(golds)
-        for pipe in self.pipeline:
-            if not hasattr(pipe, 'pipe'):
-                for doc in docs:
-                    pipe(doc)
-            else:
-                docs = list(pipe.pipe(docs))
-        assert len(docs) == len(golds)
-        for doc, gold in zip(docs, golds):
+        scorer = Scorer()
+        for doc, gold in zip(self.pipe(docs, batch_size=32), golds):
             scorer.score(doc, gold)
             doc.tensor = None
         return scorer

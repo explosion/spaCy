@@ -44,7 +44,7 @@ from thinc.neural.util import get_array_module
 from .. import util
 from ..util import get_async, get_cuda_stream
 from .._ml import zero_init, PrecomputableAffine, PrecomputableMaxouts
-from .._ml import Tok2Vec, doc2feats, rebatch, fine_tune
+from .._ml import Tok2Vec, doc2feats, rebatch
 from ..compat import json_dumps
 
 from . import _parse_features
@@ -237,7 +237,6 @@ cdef class Parser:
         token_vector_width = util.env_opt('token_vector_width', token_vector_width)
         hidden_width = util.env_opt('hidden_width', hidden_width)
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces', 2)
-        tensors = fine_tune(Tok2Vec(token_vector_width, 7500, preprocess=doc2feats()))
         if parser_maxout_pieces == 1:
             lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
                         nF=cls.nr_feature,
@@ -249,10 +248,15 @@ cdef class Parser:
                         nI=token_vector_width)
 
         with Model.use_device('cpu'):
-            upper = chain(
-                clone(Maxout(hidden_width), (depth-1)),
-                zero_init(Affine(nr_class, drop_factor=0.0))
-            )
+            if depth == 0:
+                upper = chain()
+                upper.is_noop = True
+            else:
+                upper = chain(
+                    clone(Maxout(hidden_width), (depth-1)),
+                    zero_init(Affine(nr_class, drop_factor=0.0))
+                )
+                upper.is_noop = False
         # TODO: This is an unfortunate hack atm!
         # Used to set input dimensions in network.
         lower.begin_training(lower.ops.allocate((500, token_vector_width)))
@@ -264,7 +268,7 @@ cdef class Parser:
             'hidden_width': hidden_width,
             'maxout_pieces': parser_maxout_pieces
         }
-        return (tensors, lower, upper), cfg
+        return (lower, upper), cfg
 
     def __init__(self, Vocab vocab, moves=True, model=True, **cfg):
         """
@@ -340,10 +344,12 @@ cdef class Parser:
                 The number of threads with which to work on the buffer in parallel.
         Yields (Doc): Documents, in order.
         """
+        cdef StateClass parse_state
         cdef Doc doc
+        queue = []
         for docs in cytoolz.partition_all(batch_size, docs):
             docs = list(docs)
-            tokvecs = [doc.tensor for doc in docs]
+            tokvecs = [d.tensor for d in docs]
             if beam_width == 1:
                 parse_states = self.parse_batch(docs, tokvecs)
             else:
@@ -363,11 +369,8 @@ cdef class Parser:
             int nr_class, nr_feat, nr_piece, nr_dim, nr_state
         if isinstance(docs, Doc):
             docs = [docs]
-        if isinstance(tokvecses, np.ndarray):
-            tokvecses = [tokvecses]
 
         tokvecs = self.model[0].ops.flatten(tokvecses)
-        tokvecs += self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
 
         nr_state = len(docs)
         nr_class = self.moves.n_moves
@@ -391,20 +394,27 @@ cdef class Parser:
         cdef np.ndarray scores
         c_token_ids = <int*>token_ids.data
         c_is_valid = <int*>is_valid.data
+        cdef int has_hidden = not getattr(vec2scores, 'is_noop', False)
         while not next_step.empty():
-            for i in range(next_step.size()):
-                st = next_step[i]
-                st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
-                self.moves.set_valid(&c_is_valid[i*nr_class], st)
+            if not has_hidden:
+                for i in cython.parallel.prange(
+                        next_step.size(), num_threads=6, nogil=True):
+                    self._parse_step(next_step[i],
+                        feat_weights, nr_class, nr_feat, nr_piece)
+            else:
+                for i in range(next_step.size()):
+                    st = next_step[i]
+                    st.set_context_tokens(&c_token_ids[i*nr_feat], nr_feat)
+                    self.moves.set_valid(&c_is_valid[i*nr_class], st)
                 vectors = state2vec(token_ids[:next_step.size()])
-            scores = vec2scores(vectors)
-            c_scores = <float*>scores.data
-            for i in range(next_step.size()):
-                st = next_step[i]
-                guess = arg_max_if_valid(
-                    &c_scores[i*nr_class], &c_is_valid[i*nr_class], nr_class)
-                action = self.moves.c[guess]
-                action.do(st, action.label)
+                scores = vec2scores(vectors)
+                c_scores = <float*>scores.data
+                for i in range(next_step.size()):
+                    st = next_step[i]
+                    guess = arg_max_if_valid(
+                        &c_scores[i*nr_class], &c_is_valid[i*nr_class], nr_class)
+                    action = self.moves.c[guess]
+                    action.do(st, action.label)
             this_step, next_step = next_step, this_step
             next_step.clear()
             for st in this_step:
@@ -419,7 +429,6 @@ cdef class Parser:
         cdef int nr_class = self.moves.n_moves
         cdef StateClass stcls, output
         tokvecs = self.model[0].ops.flatten(tokvecses)
-        tokvecs += self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
         cuda_stream = get_cuda_stream()
         state2vec, vec2scores = self.get_batch_model(len(docs), tokvecs,
                                                      cuda_stream, 0.0)
@@ -452,6 +461,28 @@ cdef class Parser:
             beams.append(beam)
         return beams
 
+    cdef void _parse_step(self, StateC* state,
+            const float* feat_weights,
+            int nr_class, int nr_feat, int nr_piece) nogil:
+        '''This only works with no hidden layers -- fast but inaccurate'''
+        #for i in cython.parallel.prange(next_step.size(), num_threads=4, nogil=True):
+        #    self._parse_step(next_step[i], feat_weights, nr_class, nr_feat)
+        token_ids = <int*>calloc(nr_feat, sizeof(int))
+        scores = <float*>calloc(nr_class * nr_piece, sizeof(float))
+        is_valid = <int*>calloc(nr_class, sizeof(int))
+
+        state.set_context_tokens(token_ids, nr_feat)
+        sum_state_features(scores,
+            feat_weights, token_ids, 1, nr_feat, nr_class * nr_piece)
+        self.moves.set_valid(is_valid, state)
+        guess = arg_maxout_if_valid(scores, is_valid, nr_class, nr_piece)
+        action = self.moves.c[guess]
+        action.do(state, action.label)
+
+        free(is_valid)
+        free(scores)
+        free(token_ids)
+
     def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
@@ -460,9 +491,6 @@ cdef class Parser:
         if isinstance(docs, Doc) and isinstance(golds, GoldParse):
             docs = [docs]
             golds = [golds]
-        my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=0.)
-        my_tokvecs = self.model[0].ops.flatten(my_tokvecs)
-        tokvecs += my_tokvecs
 
         cuda_stream = get_cuda_stream()
 
@@ -512,9 +540,7 @@ cdef class Parser:
                 break
         self._make_updates(d_tokvecs,
             backprops, sgd, cuda_stream)
-        d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
-        #bp_my_tokvecs(d_tokvecs, sgd=sgd)
-        return d_tokvecs
+        return self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
 
     def _init_gold_batch(self, whole_docs, whole_golds):
         """Make a square batch, of length equal to the shortest doc. A long
@@ -577,7 +603,7 @@ cdef class Parser:
         return names
 
     def get_batch_model(self, batch_size, tokvecs, stream, dropout):
-        _, lower, upper = self.model
+        lower, upper = self.model
         state2vec = precompute_hiddens(batch_size, tokvecs,
                         lower, stream, drop=dropout)
         return state2vec, upper
@@ -667,12 +693,10 @@ cdef class Parser:
 
     def to_disk(self, path, **exclude):
         serializers = {
-            'tok2vec_model': lambda p: p.open('wb').write(
-                self.model[0].to_bytes()),
             'lower_model': lambda p: p.open('wb').write(
-                self.model[1].to_bytes()),
+                self.model[0].to_bytes()),
             'upper_model': lambda p: p.open('wb').write(
-                self.model[2].to_bytes()),
+                self.model[1].to_bytes()),
             'vocab': lambda p: self.vocab.to_disk(p),
             'moves': lambda p: self.moves.to_disk(p, strings=False),
             'cfg': lambda p: p.open('w').write(json_dumps(self.cfg))
@@ -693,29 +717,24 @@ cdef class Parser:
                 self.model, cfg = self.Model(**self.cfg)
             else:
                 cfg = {}
-            with (path / 'tok2vec_model').open('rb') as file_:
-                bytes_data = file_.read()
-            self.model[0].from_bytes(bytes_data)
             with (path / 'lower_model').open('rb') as file_:
                 bytes_data = file_.read()
-            self.model[1].from_bytes(bytes_data)
+            self.model[0].from_bytes(bytes_data)
             with (path / 'upper_model').open('rb') as file_:
                 bytes_data = file_.read()
-            self.model[2].from_bytes(bytes_data)
+            self.model[1].from_bytes(bytes_data)
             self.cfg.update(cfg)
         return self
 
     def to_bytes(self, **exclude):
         serializers = OrderedDict((
-            ('tok2vec_model', lambda: self.model[0].to_bytes()),
-            ('lower_model', lambda: self.model[1].to_bytes()),
-            ('upper_model', lambda: self.model[2].to_bytes()),
+            ('lower_model', lambda: self.model[0].to_bytes()),
+            ('upper_model', lambda: self.model[1].to_bytes()),
             ('vocab', lambda: self.vocab.to_bytes()),
             ('moves', lambda: self.moves.to_bytes(strings=False)),
             ('cfg', lambda: ujson.dumps(self.cfg))
         ))
         if 'model' in exclude:
-            exclude['tok2vec_model'] = True
             exclude['lower_model'] = True
             exclude['upper_model'] = True
             exclude.pop('model')
@@ -726,7 +745,6 @@ cdef class Parser:
             ('vocab', lambda b: self.vocab.from_bytes(b)),
             ('moves', lambda b: self.moves.from_bytes(b, strings=False)),
             ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
-            ('tok2vec_model', lambda b: None),
             ('lower_model', lambda b: None),
             ('upper_model', lambda b: None)
         ))
@@ -736,12 +754,10 @@ cdef class Parser:
                 self.model, cfg = self.Model(self.moves.n_moves)
             else:
                 cfg = {}
-            if 'tok2vec_model' in msg:
-                self.model[0].from_bytes(msg['tok2vec_model'])
             if 'lower_model' in msg:
-                self.model[1].from_bytes(msg['lower_model'])
+                self.model[0].from_bytes(msg['lower_model'])
             if 'upper_model' in msg:
-                self.model[2].from_bytes(msg['upper_model'])
+                self.model[1].from_bytes(msg['upper_model'])
             self.cfg.update(cfg)
         return self
 

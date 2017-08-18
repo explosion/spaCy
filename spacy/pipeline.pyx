@@ -42,7 +42,7 @@ from .compat import json_dumps
 
 from .attrs import ID, LOWER, PREFIX, SUFFIX, SHAPE, TAG, DEP, POS
 from ._ml import rebatch, Tok2Vec, flatten, get_col, doc2feats
-from ._ml import build_text_classifier, build_tagger_model
+from ._ml import build_text_classifier
 from .parts_of_speech import X
 
 
@@ -253,25 +253,23 @@ class NeuralTagger(BaseThincComponent):
         self.cfg = dict(cfg)
 
     def __call__(self, doc):
-        tags = self.predict(([doc], [doc.tensor]))
+        tags = self.predict([doc.tensor])
         self.set_annotations([doc], tags)
         return doc
 
     def pipe(self, stream, batch_size=128, n_threads=-1):
         for docs in cytoolz.partition_all(batch_size, stream):
-            docs = list(docs)
             tokvecs = [d.tensor for d in docs]
-            tag_ids = self.predict((docs, tokvecs))
+            tag_ids = self.predict(tokvecs)
             self.set_annotations(docs, tag_ids)
             yield from docs
 
-    def predict(self, docs_tokvecs):
-        scores = self.model(docs_tokvecs)
+    def predict(self, tokvecs):
+        scores = self.model(tokvecs)
         scores = self.model.ops.flatten(scores)
         guesses = scores.argmax(axis=1)
         if not isinstance(guesses, numpy.ndarray):
             guesses = guesses.get()
-        tokvecs = docs_tokvecs[1]
         guesses = self.model.ops.unflatten(guesses,
                     [tv.shape[0] for tv in tokvecs])
         return guesses
@@ -296,7 +294,8 @@ class NeuralTagger(BaseThincComponent):
 
         if self.model.nI is None:
             self.model.nI = tokvecs[0].shape[1]
-        tag_scores, bp_tag_scores = self.model.begin_update(docs_tokvecs, drop=drop)
+
+        tag_scores, bp_tag_scores = self.model.begin_update(tokvecs, drop=drop)
         loss, d_tag_scores = self.get_loss(docs, golds, tag_scores)
 
         d_tokvecs = bp_tag_scores(d_tag_scores, sgd=sgd)
@@ -347,8 +346,10 @@ class NeuralTagger(BaseThincComponent):
 
     @classmethod
     def Model(cls, n_tags, token_vector_width):
-        return build_tagger_model(n_tags, token_vector_width)
- 
+        return with_flatten(
+            chain(Maxout(token_vector_width, token_vector_width),
+                  Softmax(n_tags, token_vector_width)))
+
     def use_params(self, params):
         with self.model.use_params(params):
             yield
@@ -431,7 +432,7 @@ class NeuralLabeller(NeuralTagger):
 
     @property
     def labels(self):
-        return self.cfg.setdefault('labels', {})
+        return self.cfg.get('labels', {})
 
     @labels.setter
     def labels(self, value):
@@ -454,8 +455,10 @@ class NeuralLabeller(NeuralTagger):
 
     @classmethod
     def Model(cls, n_tags, token_vector_width):
-        return build_tagger_model(n_tags, token_vector_width)
-    
+        return with_flatten(
+            chain(Maxout(token_vector_width, token_vector_width),
+                  Softmax(n_tags, token_vector_width)))
+
     def get_loss(self, docs, golds, scores):
         scores = self.model.ops.flatten(scores)
         cdef int idx = 0
