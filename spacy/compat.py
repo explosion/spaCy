@@ -46,6 +46,7 @@ is_osx = sys.platform == 'darwin'
 
 
 if is_python2:
+    import imp
     bytes_ = str
     unicode_ = unicode
     basestring_ = basestring
@@ -54,6 +55,7 @@ if is_python2:
     path2str = lambda path: str(path).decode('utf8')
 
 elif is_python3:
+    import importlib.util
     bytes_ = bytes
     unicode_ = str
     basestring_ = str
@@ -102,3 +104,12 @@ def normalize_string_keys(old):
     return new
 
 
+def import_file(name, loc):
+    loc = str(loc)
+    if is_python2:
+        return imp.load_source(name, loc)
+    else:
+        spec = importlib.util.spec_from_file_location(name, str(init_file))
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
