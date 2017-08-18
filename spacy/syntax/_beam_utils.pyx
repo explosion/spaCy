@@ -49,7 +49,7 @@ cdef class ParserBeam(object):
     cdef public object dones
 
     def __init__(self, TransitionSystem moves, states, golds,
-            int width=4, float density=0.001):
+            int width, float density):
         self.moves = moves
         self.states = states
         self.golds = golds
@@ -89,7 +89,10 @@ cdef class ParserBeam(object):
             self._set_scores(beam, scores[i])
             if self.golds is not None:
                 self._set_costs(beam, self.golds[i], follow_gold=follow_gold)
-            beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
+            if follow_gold:
+                beam.advance(_transition_state, NULL, <void*>self.moves.c)
+            else:
+                beam.advance(_transition_state, _hash_state, <void*>self.moves.c)
             beam.check_done(_check_final_state, NULL)
             if beam.is_done and self.golds is not None:
                 for j in range(beam.size):
@@ -145,15 +148,16 @@ def get_token_ids(states, int n_tokens):
 nr_update = 0
 def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
                 states, tokvecs, golds,
-                state2vec, vec2scores, drop=0., sgd=None,
-                losses=None, int width=4, float density=0.001):
+                state2vec, vec2scores, 
+                int width, float density,
+                sgd=None, losses=None, drop=0.):
     global nr_update
     cdef MaxViolation violn
     nr_update += 1
     pbeam = ParserBeam(moves, states, golds,
                        width=width, density=density)
     gbeam = ParserBeam(moves, states, golds,
-                       width=width, density=density)
+                       width=width, density=0.0)
     cdef StateClass state
     beam_maps = []
     backprops = []
@@ -194,13 +198,13 @@ def update_beam(TransitionSystem moves, int nr_feature, int max_steps,
             violn.check_crf(pbeam[i], gbeam[i])
     histories = []
     losses = []
-    for i, violn in enumerate(violns):
-        if violn.cost < 1:
-            histories.append([])
-            losses.append([])
-        else:
+    for violn in violns:
+        if violn.p_hist:
             histories.append(violn.p_hist + violn.g_hist)
             losses.append(violn.p_probs + violn.g_probs)
+        else:
+            histories.append([])
+            losses.append([])
     states_d_scores = get_gradient(moves.n_moves, beam_maps, histories, losses)
     return states_d_scores, backprops[:len(states_d_scores)]
 
@@ -215,10 +219,6 @@ def get_states(pbeams, gbeams, beam_map, nr_update):
     for eg_id, (pbeam, gbeam) in enumerate(zip(pbeams, gbeams)):
         p_indices.append([])
         g_indices.append([])
-        if pbeam.loss > 0 and pbeam.min_score > (gbeam.score + numpy.sqrt(nr_update)):
-            pbeams.dones[eg_id] = True
-            gbeams.dones[eg_id] = True
-            continue
         for i in range(pbeam.size):
             state = <StateClass>pbeam.at(i)
             if not state.is_final():
@@ -269,9 +269,12 @@ def get_gradient(nr_class, beam_maps, histories, losses):
     assert len(histories) == len(losses)
     for eg_id, hists in enumerate(histories):
         for loss, hist in zip(losses[eg_id], hists):
-            if abs(loss) == 0.0 or numpy.isnan(loss):
+            if loss == 0.0 or numpy.isnan(loss):
                 continue
             key = tuple([eg_id])
+            # Adjust loss for length
+            avg_loss = loss / len(hist)
+            loss += avg_loss * (nr_step - len(hist))
             for j, clas in enumerate(hist):
                 i = beam_maps[j][key]
                 # In step j, at state i action clas

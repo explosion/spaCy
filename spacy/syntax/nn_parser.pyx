@@ -67,7 +67,6 @@ from ..attrs cimport ID, TAG, DEP, ORTH, NORM, PREFIX, SUFFIX, TAG
 from . import _beam_utils
 
 USE_FINE_TUNE = True
-BEAM_PARSE = True
 
 def get_templates(*args, **kwargs):
     return []
@@ -299,6 +298,10 @@ cdef class Parser:
             self.moves = self.TransitionSystem(self.vocab.strings, {})
         else:
             self.moves = moves
+        if 'beam_width' not in cfg:
+            cfg['beam_width'] = util.env_opt('beam_width', 1)
+        if 'beam_density' not in cfg:
+            cfg['beam_density'] = util.env_opt('beam_density', 0.0)
         self.cfg = cfg
         if 'actions' in self.cfg:
             for action, labels in self.cfg.get('actions', {}).items():
@@ -321,9 +324,7 @@ cdef class Parser:
         if beam_width is None:
             beam_width = self.cfg.get('beam_width', 1)
         if beam_density is None:
-            beam_density = self.cfg.get('beam_density', 0.001)
-        if BEAM_PARSE:
-            beam_width = 16
+            beam_density = self.cfg.get('beam_density', 0.0)
         cdef Beam beam
         if beam_width == 1:
             states = self.parse_batch([doc], [doc.tensor])
@@ -339,7 +340,7 @@ cdef class Parser:
             return output
 
     def pipe(self, docs, int batch_size=1000, int n_threads=2,
-             beam_width=1, beam_density=0.001):
+             beam_width=None, beam_density=None):
         """
         Process a stream of documents.
 
@@ -351,8 +352,10 @@ cdef class Parser:
                 The number of threads with which to work on the buffer in parallel.
         Yields (Doc): Documents, in order.
         """
-        if BEAM_PARSE:
-            beam_width = 16
+        if beam_width is None:
+            beam_width = self.cfg.get('beam_width', 1)
+        if beam_density is None:
+            beam_density = self.cfg.get('beam_density', 0.0)
         cdef Doc doc
         cdef Beam beam
         for docs in cytoolz.partition_all(batch_size, docs):
@@ -430,7 +433,7 @@ cdef class Parser:
                     next_step.push_back(st)
         return states
 
-    def beam_parse(self, docs, tokvecses, int beam_width=16, float beam_density=0.001):
+    def beam_parse(self, docs, tokvecses, int beam_width=3, float beam_density=0.001):
         cdef Beam beam
         cdef np.ndarray scores
         cdef Doc doc
@@ -480,9 +483,10 @@ cdef class Parser:
         return beams
 
     def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
-        if BEAM_PARSE and numpy.random.random() >= 0.5:
-            return self.update_beam(docs_tokvecs, golds, drop=drop, sgd=sgd,
-                                    losses=losses)
+        if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.5:
+            return self.update_beam(docs_tokvecs, golds,
+                    self.cfg['beam_width'], self.cfg['beam_density'],
+                    drop=drop, sgd=sgd, losses=losses)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         docs, tokvec_lists = docs_tokvecs
@@ -548,7 +552,12 @@ cdef class Parser:
             bp_my_tokvecs(d_tokvecs, sgd=sgd)
         return d_tokvecs
 
-    def update_beam(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
+    def update_beam(self, docs_tokvecs, golds, width=None, density=None,
+            drop=0., sgd=None, losses=None):
+        if width is None:
+            width = self.cfg.get('beam_width', 2)
+        if density is None:
+            density = self.cfg.get('beam_density', 0.0)
         if losses is not None and self.name not in losses:
             losses[self.name] = 0.
         docs, tokvecs = docs_tokvecs
@@ -570,8 +579,8 @@ cdef class Parser:
         states_d_scores, backprops = _beam_utils.update_beam(self.moves, self.nr_feature, 500,
                                         states, tokvecs, golds,
                                         state2vec, vec2scores,
-                                        drop, sgd, losses,
-                                        width=16)
+                                        width, density,
+                                        sgd=sgd, drop=drop, losses=losses)
         backprop_lower = []
         for i, d_scores in enumerate(states_d_scores):
             if losses is not None:
