@@ -28,6 +28,7 @@ MOD_NAMES = [
     'spacy.pipeline',
     'spacy.syntax.stateclass',
     'spacy.syntax._state',
+    'spacy.syntax._beam_utils',
     'spacy.tokenizer',
     'spacy._cfile',
     'spacy.syntax.parser',
