@@ -78,16 +78,3 @@ def test_predict_doc_beam(parser, tok2vec, model, doc):
     parser(doc, beam_width=32, beam_density=0.001)
     for word in doc:
         print(word.text, word.head, word.dep_)
-
-
-def test_update_doc_beam(parser, tok2vec, model, doc, gold):
-    parser.model = model
-    tokvecs, bp_tokvecs = tok2vec.begin_update([doc])
-    d_tokvecs = parser.update_beam(([doc], tokvecs), [gold])
-    assert d_tokvecs[0].shape == tokvecs[0].shape
-    def optimize(weights, gradient, key=None):
-        weights -= 0.001 * gradient
-    bp_tokvecs(d_tokvecs, sgd=optimize)
-    assert d_tokvecs[0].sum() == 0.
-
-

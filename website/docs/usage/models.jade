@@ -20,7 +20,7 @@ p
 +quickstart(QUICKSTART_MODELS, "Quickstart", "Install a default model, get the code to load it from within spaCy and an example to test it. For more options, see the section on available models below.")
     for models, lang in MODELS
         - var package = (models.length == 1) ? models[0] : models.find(function(m) { return m.def })
-        +qs({lang: lang}) python -m spacy download #{lang}
+        +qs({lang: lang}) spacy download #{lang}
         +qs({lang: lang}, "divider")
         +qs({lang: lang, load: "module"}, "python") import #{package.id}
         +qs({lang: lang, load: "module"}, "python") nlp = #{package.id}.load()
@@ -52,16 +52,16 @@ p
     |  #[+api("cli#download") #[code download]] command. It takes care of
     |  finding the best-matching model compatible with your spaCy installation.
 
-- var models = Object.keys(MODELS).map(function(lang) { return "python -m spacy download " + lang })
+- var models = Object.keys(MODELS).map(function(lang) { return "spacy download " + lang })
 +code(false, "bash").
     # out-of-the-box: download best-matching default model
-    #{Object.keys(MODELS).map(function(l) {return "python -m spacy download " + l}).join('\n')}
+    #{Object.keys(MODELS).map(function(l) {return "spacy download " + l}).join('\n')}
 
     # download best-matching version of specific model for your spaCy installation
-    python -m spacy download en_core_web_md
+    spacy download en_core_web_md
 
     # download exact model version (doesn't create shortcut link)
-    python -m spacy download en_core_web_md-1.2.0 --direct
+    spacy download en_core_web_md-1.2.0 --direct
 
 p
     |  The download command will #[+a("#download-pip") install the model] via
@@ -72,7 +72,7 @@ p
 
 +code(false, "bash").
     pip install spacy
-    python -m spacy download en
+    spacy download en
 
 +code.
     import spacy
@@ -179,8 +179,8 @@ p
     |  model names or IDs. And your system already comes with a native solution
     |  to mapping unicode aliases to file paths: symbolic links.
 
-+code(false, "bash").
-    python -m spacy link [package name or path] [shortcut] [--force]
++code(false, "bash", "$").
+    spacy link [package name or path] [shortcut] [--force]
 
 p
     |  The first argument is the #[strong package name] (if the model was

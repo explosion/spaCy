@@ -385,7 +385,6 @@ cdef class ArcEager(TransitionSystem):
         for i in range(self.n_moves):
             if self.c[i].move == move and self.c[i].label == label:
                 return self.c[i]
-        return Transition(clas=0, move=MISSING, label=0)
 
     def move_name(self, int move, attr_t label):
         label_str = self.strings[label]

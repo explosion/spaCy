@@ -34,7 +34,6 @@ from ._parse_features cimport CONTEXT_SIZE
 from ._parse_features cimport fill_context
 from .stateclass cimport StateClass
 from .parser cimport Parser
-from ._beam_utils import is_gold
 
 
 DEBUG = False
@@ -238,3 +237,16 @@ def _check_train_integrity(Beam pred, Beam gold, GoldParse gold_parse, Transitio
             raise Exception("Gold parse is not gold-standard")
 
 
+def is_gold(StateClass state, GoldParse gold, StringStore strings):
+    predicted = set()
+    truth = set()
+    for i in range(gold.length):
+        if gold.cand_to_gold[i] is None:
+            continue
+        if state.safe_get(i).dep:
+            predicted.add((i, state.H(i), strings[state.safe_get(i).dep]))
+        else:
+            predicted.add((i, state.H(i), 'ROOT'))
+        id_, word, tag, head, dep, ner = gold.orig_annot[gold.cand_to_gold[i]]
+        truth.add((id_, head, dep))
+    return truth == predicted

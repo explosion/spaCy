@@ -37,7 +37,6 @@ cdef cppclass StateC:
         this.shifted = <bint*>calloc(length + (PADDING * 2), sizeof(bint))
         this._sent = <TokenC*>calloc(length + (PADDING * 2), sizeof(TokenC))
         this._ents = <Entity*>calloc(length + (PADDING * 2), sizeof(Entity))
-        this.offset = 0
         cdef int i
         for i in range(length + (PADDING * 2)):
             this._ents[i].end = -1

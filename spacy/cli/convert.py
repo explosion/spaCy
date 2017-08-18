@@ -21,10 +21,10 @@ CONVERTERS = {
 @plac.annotations(
     input_file=("input file", "positional", None, str),
     output_dir=("output directory for converted file", "positional", None, str),
-    n_sents=("Number of sentences per doc", "option", "n", int),
+    n_sents=("Number of sentences per doc", "option", "n", float),
     morphology=("Enable appending morphology to tags", "flag", "m", bool)
 )
-def convert(cmd, input_file, output_dir, n_sents=1, morphology=False):
+def convert(cmd, input_file, output_dir, n_sents, morphology):
     """
     Convert files into JSON format for use with train command and other
     experiment management functions.
