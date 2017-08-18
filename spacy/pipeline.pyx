@@ -654,14 +654,6 @@ cdef class NeuralEntityRecognizer(NeuralParser):
 
     nr_feature = 6
 
-    def predict_confidences(self, docs):
-        tensors = [d.tensor for d in docs]
-        samples = []
-        for i in range(10):
-            states = self.parse_batch(docs, tensors, drop=0.3)
-            for state in states:
-                samples.append(self._get_entities(state))
-
     def __reduce__(self):
         return (NeuralEntityRecognizer, (self.vocab, self.moves, self.model), None, None)
 

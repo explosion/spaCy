@@ -107,7 +107,7 @@ cdef class BeamParser(Parser):
             # The non-monotonic oracle makes it difficult to ensure final costs are
             # correct. Therefore do final correction
             for i in range(pred.size):
-                if is_gold(<StateClass>pred.at(i), gold_parse, self.moves.strings):
+                if self.moves.is_gold_parse(<StateClass>pred.at(i), gold_parse):
                     pred._states[i].loss = 0.0
                 elif pred._states[i].loss == 0.0:
                     pred._states[i].loss = 1.0
@@ -213,7 +213,7 @@ def _check_train_integrity(Beam pred, Beam gold, GoldParse gold_parse, Transitio
         if not pred._states[i].is_done or pred._states[i].loss == 0:
             continue
         state = <StateClass>pred.at(i)
-        if is_gold(state, gold_parse, moves.strings) == True:
+        if moves.is_gold_parse(state, gold_parse) == True:
             for dep in gold_parse.orig_annot:
                 print(dep[1], dep[3], dep[4])
             print("Cost", pred._states[i].loss)
@@ -227,7 +227,7 @@ def _check_train_integrity(Beam pred, Beam gold, GoldParse gold_parse, Transitio
         if not gold._states[i].is_done:
             continue
         state = <StateClass>gold.at(i)
-        if is_gold(state, gold_parse, moves.strings) == False:
+        if moves.is_gold(state, gold_parse) == False:
             print("Truth")
             for dep in gold_parse.orig_annot:
                 print(dep[1], dep[3], dep[4])
