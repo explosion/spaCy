@@ -62,18 +62,26 @@ cdef class Token:
 
     def __richcmp__(self, Token other, int op):
         # http://cython.readthedocs.io/en/latest/src/userguide/special_methods.html
+        cdef Doc my_doc = self.doc
+        cdef Doc other_doc = other.doc
         my = self.idx
         their = other.idx if other is not None else None
         if op == 0:
             return my < their
         elif op == 2:
-            return my == their
+            if my_doc is other_doc:
+                return my == their
+            else:
+                return False
         elif op == 4:
             return my > their
         elif op == 1:
             return my <= their
         elif op == 3:
-            return my != their
+            if my_doc is other_doc:
+                return my != their
+            else:
+                return True
         elif op == 5:
             return my >= their
         else:
