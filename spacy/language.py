@@ -95,7 +95,7 @@ class BaseDefaults(object):
         meta = nlp.meta if nlp is not None else {}
         # Resolve strings, like "cnn", "lstm", etc
         pipeline = []
-        for entry in cls.pipeline:
+        for entry in meta.get('pipeline', []):
             if entry in disable or getattr(entry, 'name', entry) in disable:
                 continue
             factory = cls.Defaults.factories[entry]
