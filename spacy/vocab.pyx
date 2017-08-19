@@ -22,6 +22,7 @@ from .structs cimport SerializedLexemeC
 from .compat import copy_reg, pickle
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs
+from .vectors import Vectors
 from . import util
 from . import attrs
 from . import symbols
@@ -63,6 +64,7 @@ cdef class Vocab:
                 self.strings.add(name)
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
+        self.vectors = Vectors(self.strings, 300)
 
     property lang:
         def __get__(self):
