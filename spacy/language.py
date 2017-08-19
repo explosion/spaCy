@@ -430,11 +430,16 @@ class Language(object):
             except StopIteration:
                 pass
 
-    def pipe(self, texts, tuples=False, n_threads=2, batch_size=1000, disable=[]):
+    def pipe(self, texts, as_tuples=False, n_threads=2, batch_size=1000,
+            disable=[]):
         """Process texts as a stream, and yield `Doc` objects in order. Supports
         GIL-free multi-threading.
 
         texts (iterator): A sequence of texts to process.
+        as_tuples (bool):
+            If set to True, inputs should be a sequence of
+            (text, context) tuples. Output will then be a sequence of
+            (doc, context) tuples. Defaults to False.
         n_threads (int): The number of worker threads to use. If -1, OpenMP will
             decide how many to use at run time. Default is 2.
         batch_size (int): The number of texts to buffer.
@@ -446,7 +451,7 @@ class Language(object):
             >>>     for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
             >>>         assert doc.is_parsed
         """
-        if tuples:
+        if as_tuples:
             text_context1, text_context2 = itertools.tee(texts)
             texts = (tc[0] for tc in text_context1)
             contexts = (tc[1] for tc in text_context2)
