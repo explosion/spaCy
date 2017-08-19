@@ -32,8 +32,6 @@ cdef class Vectors:
         self.data = data
         self.key2row = {}
         self.keys = np.ndarray((self.data.shape[0],), dtype='uint64') 
-        for string in strings:
-            self.add(string)
 
     def __reduce__(self):
         return (Vectors, (self.strings, self.data))
@@ -101,13 +99,15 @@ cdef class Vectors:
 
     def from_disk(self, path, **exclude):
         def load_keys(path):
-            self.keys = numpy.load(path)
-            for i, key in enumerate(self.keys):
-                self.keys[i] = key
-                self.key2row[key] = i
+            if path.exists():
+                self.keys = numpy.load(path)
+                for i, key in enumerate(self.keys):
+                    self.keys[i] = key
+                    self.key2row[key] = i
 
         def load_vectors(path):
-            self.data = numpy.load(path)
+            if path.exists():
+                self.data = numpy.load(path)
 
         serializers = OrderedDict((
             ('keys', load_keys),
