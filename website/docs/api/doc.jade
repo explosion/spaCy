@@ -148,8 +148,7 @@ p Create a #[code Span] object from the slice #[code doc.text[start : end]].
 
 +aside-code("Example").
     doc = nlp(u'I like New York')
-    label = doc.vocab.strings['GPE']
-    span = doc.char_span(7, 15, label=label)
+    span = doc.char_span(7, 15, label=u'GPE')
     assert span.text == 'New York'
 
 +table(["Name", "Type", "Description"])
@@ -165,7 +164,7 @@ p Create a #[code Span] object from the slice #[code doc.text[start : end]].
 
     +row
         +cell #[code label]
-        +cell uint64
+        +cell uint64 / unicode
         +cell A label to attach to the Span, e.g. for named entities.
 
     +row
