@@ -89,3 +89,10 @@ def test_spans_are_hashable(en_tokenizer):
     span3 = tokens[0:2]
     assert hash(span3) == hash(span1)
  
+
+def test_spans_by_character(doc):
+    span1 = doc[1:-2]
+    span2 = doc.char_span(span1.start_char, span1.end_char, label='GPE')
+    assert span1.start_char == span2.start_char
+    assert span1.end_char == span2.end_char
+    assert span2.label_ == 'GPE'
