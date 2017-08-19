@@ -4,16 +4,12 @@ from collections import OrderedDict
 import msgpack
 import msgpack_numpy
 msgpack_numpy.patch()
-from cymem.cymem cimport Pool
 cimport numpy as np
-from libcpp.vector cimport vector
 
 from .typedefs cimport attr_t
 from .strings cimport StringStore
 from . import util
-from ._cfile cimport CFile
-
-MAX_VEC_SIZE = 10000
+from .compat import basestring_
 
 
 cdef class Vectors:
@@ -60,7 +56,21 @@ cdef class Vectors:
         yield from self.data
 
     def __len__(self):
-        return len(self.strings)
+        # TODO: Fix the quadratic behaviour here!
+        return max(self.key2row.values())
+
+    def __contains__(self, key):
+        if isinstance(key, basestring_):
+            key = self.strings[key]
+        return key in self.key2row
+
+    def add_key(self, string, vector=None):
+        key = self.strings.add(string)
+        next_i = len(self) + 1
+        self.keys[next_i] = key
+        self.key2row[key] = next_i
+        if vector is not None:
+            self.data[next_i] = vector
 
     def items(self):
         for i, string in enumerate(self.strings):
@@ -75,9 +85,9 @@ cdef class Vectors:
 
     def to_disk(self, path, **exclude):
         serializers = OrderedDict((
-            ('vectors', lambda p: numpy.save(p.open('wb'), self.data)),
+            ('vectors', lambda p: numpy.save(p.open('wb'), self.data, allow_pickle=False)),
             ('strings.json', self.strings.to_disk),
-            ('keys', lambda p: numpy.save(p.open('wb'), self.keys)),
+            ('keys', lambda p: numpy.save(p.open('wb'), self.keys, allow_pickle=False)),
         ))
         return util.to_disk(path, serializers, exclude)
 

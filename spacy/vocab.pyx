@@ -19,7 +19,7 @@ from .tokens.token cimport Token
 from .attrs cimport PROB, LANG
 from .structs cimport SerializedLexemeC
 
-from .compat import copy_reg, pickle
+from .compat import copy_reg, pickle, basestring_
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs
 from .vectors import Vectors
@@ -244,7 +244,7 @@ cdef class Vocab:
 
     @property
     def vectors_length(self):
-        raise NotImplementedError
+        return len(self.vectors)
 
     def clear_vectors(self):
         """Drop the current vector table. Because all vectors must be the same
@@ -264,7 +264,9 @@ cdef class Vocab:
 
         RAISES: If no vectors data is loaded, ValueError is raised.
         """
-        raise NotImplementedError
+        if isinstance(orth, basestring_):
+            orth = self.strings.add(orth)
+        return self.vectors[orth]
 
     def set_vector(self, orth, vector):
         """Set a vector for a word in the vocabulary.
@@ -274,13 +276,17 @@ cdef class Vocab:
         RETURNS:
             None
         """
-        raise NotImplementedError
+        if not isinstance(orth, basestring_):
+            orth = self.strings[orth]
+        self.vectors.add_key(orth, vector=vector)
 
     def has_vector(self, orth):
         """Check whether a word has a vector. Returns False if no
         vectors have been loaded. Words can be looked up by string
         or int ID."""
-        return False
+        if isinstance(orth, basestring_):
+            orth = self.strings.add(orth)
+        return orth in self.vectors
 
     def to_disk(self, path, **exclude):
         """Save the current state to a directory.
