@@ -151,10 +151,11 @@ cdef class Span:
         # Make an array from the attributes --- otherwise our inner loop is Python
         # dict iteration.
         cdef np.ndarray[attr_t, ndim=1] attr_ids = numpy.asarray(py_attr_ids, dtype=numpy.uint64)
-        output = numpy.ndarray(shape=(self.length, len(attr_ids)), dtype=numpy.uint64)
+        cdef int length = self.end - self.start
+        output = numpy.ndarray(shape=(length, len(attr_ids)), dtype=numpy.uint64)
         for i in range(self.start, self.end):
             for j, feature in enumerate(attr_ids):
-                output[i, j] = get_token_attr(&self.doc.c[i], feature)
+                output[i-self.start, j] = get_token_attr(&self.doc.c[i], feature)
         return output
 
     cpdef int _recalculate_indices(self) except -1:
