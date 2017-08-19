@@ -2,6 +2,7 @@
 from __future__ import unicode_literals
 
 from ..util import get_doc
+from ...attrs import ORTH, LENGTH
 
 import pytest
 
@@ -96,3 +97,12 @@ def test_spans_by_character(doc):
     assert span1.start_char == span2.start_char
     assert span1.end_char == span2.end_char
     assert span2.label_ == 'GPE'
+
+
+def test_span_to_array(doc):
+    span = doc[1:-2]
+    arr = span.to_array([ORTH, LENGTH])
+    assert arr.shape == (len(span), 2)
+    assert arr[0, 0] == span[0].orth
+    assert arr[0, 1] == len(span[0])
+
