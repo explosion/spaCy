@@ -140,6 +140,44 @@ p Get the number of tokens in the document.
         +cell int
         +cell The number of tokens in the document.
 
++h(2, "char_span") Doc.char_span
+    +tag method
+    +tag-new(2)
+
+p Create a #[code Span] object from the slice #[code doc.text[start : end]].
+
++aside-code("Example").
+    doc = nlp(u'I like New York')
+    label = doc.vocab.strings['GPE']
+    span = doc.char_span(7, 15, label=label)
+    assert span.text == 'New York'
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code start]
+        +cell int
+        +cell The index of the first character of the span.
+
+    +row
+        +cell #[code end]
+        +cell int
+        +cell The index of the first character after the span.
+
+    +row
+        +cell #[code label]
+        +cell uint64
+        +cell A label to attach to the Span, e.g. for named entities.
+
+    +row
+        +cell #[code vector]
+        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
+        +cell A meaning representation of the span.
+
+    +footrow
+        +cell returns
+        +cell #[code Span]
+        +cell The newly constructed object.
+
 +h(2, "similarity") Doc.similarity
     +tag method
     +tag-model("vectors")
@@ -211,12 +249,12 @@ p
 +table(["Name", "Type", "Description"])
     +row
         +cell #[code attr_ids]
-        +cell ints
+        +cell list
         +cell A list of attribute ID ints.
 
     +footrow
         +cell returns
-        +cell #[code numpy.ndarray[ndim=2, dtype='int32']]
+        +cell #[code.u-break numpy.ndarray[ndim=2, dtype='int32']]
         +cell
             |  The exported attributes as a 2D numpy array, with one row per
             |  token and one column per attribute.
@@ -245,7 +283,7 @@ p
 
     +row
         +cell #[code array]
-        +cell #[code numpy.ndarray[ndim=2, dtype='int32']]
+        +cell #[code.u-break numpy.ndarray[ndim=2, dtype='int32']]
         +cell The attribute values to load.
 
     +footrow
@@ -509,7 +547,7 @@ p
 +table(["Name", "Type", "Description"])
     +footrow
         +cell returns
-        +cell #[code numpy.ndarray[ndim=1, dtype='float32']]
+        +cell #[code.u-break numpy.ndarray[ndim=1, dtype='float32']]
         +cell A 1D numpy array representing the document's semantics.
 
 +h(2, "vector_norm") Doc.vector_norm
