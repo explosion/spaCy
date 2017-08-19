@@ -1,3 +1,4 @@
+from __future__ import unicode_literals
 from libc.stdint cimport int32_t, uint64_t
 import numpy
 from collections import OrderedDict
@@ -32,7 +33,7 @@ cdef class Vectors:
         self.key2row = {}
         self.keys = np.ndarray((self.data.shape[0],), dtype='uint64') 
         for string in strings:
-            self.add_key(string)
+            self.add(string)
 
     def __reduce__(self):
         return (Vectors, (self.strings, self.data))
@@ -94,7 +95,6 @@ cdef class Vectors:
     def to_disk(self, path, **exclude):
         serializers = OrderedDict((
             ('vectors', lambda p: numpy.save(p.open('wb'), self.data, allow_pickle=False)),
-            ('strings.json', self.strings.to_disk),
             ('keys', lambda p: numpy.save(p.open('wb'), self.keys, allow_pickle=False)),
         ))
         return util.to_disk(path, serializers, exclude)
@@ -112,7 +112,6 @@ cdef class Vectors:
         serializers = OrderedDict((
             ('keys', load_keys),
             ('vectors', load_vectors),
-            ('strings.json', self.strings.from_disk),
         ))
         util.from_disk(path, serializers, exclude)
         return self
@@ -125,7 +124,6 @@ cdef class Vectors:
                 return msgpack.dumps(self.data)
         serializers = OrderedDict((
             ('keys', lambda: msgpack.dumps(self.keys)),
-            ('strings', lambda: self.strings.to_bytes()),
             ('vectors', serialize_weights)
         ))
         return util.to_bytes(serializers, exclude)
@@ -138,13 +136,13 @@ cdef class Vectors:
                 self.data = msgpack.loads(b)
 
         def load_keys(keys):
+            self.keys.resize((len(keys),))
             for i, key in enumerate(keys):
                 self.keys[i] = key
                 self.key2row[key] = i
 
         deserializers = OrderedDict((
             ('keys', lambda b: load_keys(msgpack.loads(b))),
-            ('strings', lambda b: self.strings.from_bytes(b)),
             ('vectors', deserialize_weights)
         ))
         util.from_bytes(data, deserializers, exclude)

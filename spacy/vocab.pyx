@@ -303,7 +303,7 @@ cdef class Vocab:
         with (path / 'lexemes.bin').open('wb') as file_:
             file_.write(self.lexemes_to_bytes())
         if self.vectors is not None:
-            self.vectors.to_disk(path, exclude='strings.json')
+            self.vectors.to_disk(path)
 
     def from_disk(self, path, **exclude):
         """Loads state from a directory. Modifies the object in place and
@@ -318,7 +318,7 @@ cdef class Vocab:
         with (path / 'lexemes.bin').open('rb') as file_:
             self.lexemes_from_bytes(file_.read())
         if self.vectors is not None:
-            self.vectors.from_disk(path, exclude='string.json')
+            self.vectors.from_disk(path, exclude='strings.json')
         return self
 
     def to_bytes(self, **exclude):
@@ -331,7 +331,7 @@ cdef class Vocab:
             if self.vectors is None:
                 return None
             else:
-                return self.vectors.to_bytes(exclude='strings')
+                return self.vectors.to_bytes(exclude='strings.json')
  
         getters = OrderedDict((
             ('strings', lambda: self.strings.to_bytes()),
