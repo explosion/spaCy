@@ -145,6 +145,35 @@ p
         +cell float
         +cell A scalar similarity score. Higher is more similar.
 
++h(2, "to_array") Span.to_array
+    +tag method
+    +tag-new(2)
+
+p
+    |  Given a list of #[code M] attribute IDs, export the tokens to a numpy
+    |  #[code ndarray] of shape #[code (N, M)], where #[code N] is the length of
+    |  the document. The values will be 32-bit integers.
+
++aside-code("Example").
+    from spacy.attrs import LOWER, POS, ENT_TYPE, IS_ALPHA
+    doc = nlp(u'I like New York in Autumn.')
+    span = doc[2:3]
+    # All strings mapped to integers, for easy export to numpy
+    np_array = span.to_array([LOWER, POS, ENT_TYPE, IS_ALPHA])
+
++table(["Name", "Type", "Description"])
+    +row
+        +cell #[code attr_ids]
+        +cell list
+        +cell A list of attribute ID ints.
+
+    +footrow
+        +cell returns
+        +cell #[code.u-break numpy.ndarray[long, ndim=2]]
+        +cell
+            |  A feature matrix, with one row per word, and one column per
+            |  attribute indicated in the input #[code attr_ids].
+
 +h(2, "merge") Span.merge
     +tag method
 
