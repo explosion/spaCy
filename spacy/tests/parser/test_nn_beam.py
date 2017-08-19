@@ -63,7 +63,7 @@ def vector_size():
 
 @pytest.fixture
 def beam(moves, states, golds, beam_width):
-    return ParserBeam(moves, states, golds, width=beam_width)
+    return ParserBeam(moves, states, golds, width=beam_width, density=0.0)
 
 @pytest.fixture
 def scores(moves, batch_size, beam_width):
