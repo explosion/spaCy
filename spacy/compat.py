@@ -109,7 +109,7 @@ def import_file(name, loc):
     if is_python2:
         return imp.load_source(name, loc)
     else:
-        spec = importlib.util.spec_from_file_location(name, str(init_file))
+        spec = importlib.util.spec_from_file_location(name, str(loc))
         module = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(module)
         return module
