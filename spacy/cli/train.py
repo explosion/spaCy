@@ -94,7 +94,7 @@ def train(cmd, lang, output_dir, train_data, dev_data, n_iter=20, n_sents=0,
                     docs, golds = zip(*batch)
                     nlp.update(docs, golds, sgd=optimizer,
                                drop=next(dropout_rates), losses=losses,
-                               update_tensors=True)
+                               update_shared=True)
                     pbar.update(sum(len(doc) for doc in docs))
 
             with nlp.use_params(optimizer.averages):
