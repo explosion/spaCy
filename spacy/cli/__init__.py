@@ -4,3 +4,4 @@ from .link import link
 from .package import package
 from .train import train
 from .convert import convert
+from .model import model
