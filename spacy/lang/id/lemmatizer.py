@@ -1,7 +1,7 @@
 # coding: utf8
 from __future__ import unicode_literals
 
-ID_BASE_LEMMA = {
+LOOKUP = {
     'berabad-abad': 'abad',
     'keabadian': 'abadi',
     'keabadiannya': 'abadi',
@@ -27878,7 +27878,6 @@ ID_BASE_LEMMA = {
     'redam-redam': 'redam',
     'bermerek': 'merek',
     'bermereknya': 'merek',
-    'mereka': 'reka',
     'merekanya': 'reka',
     'merekalah': 'reka',
     'merekakan': 'reka',
@@ -36882,6 +36881,3 @@ ID_BASE_LEMMA = {
     'berzikiri': 'zikir',
     'perzonaan': 'zona'
 }
-
-LOOKUP = {}
-LOOKUP.update(ID_BASE_LEMMA)
