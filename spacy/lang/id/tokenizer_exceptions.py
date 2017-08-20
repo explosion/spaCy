@@ -30,6 +30,23 @@ for orth in ID_BASE_EXCEPTIONS:
         _exc[orth_caps] = [{ORTH: orth_caps}]
 
 
+for orth in [
+    "'d", "a.m.", "Adm.", "Bros.", "co.", "Co.", "Corp.", "D.C.", "Dr.", "e.g.",
+    "E.g.", "E.G.", "Gen.", "Gov.", "i.e.", "I.e.", "I.E.", "Inc.", "Jr.",
+    "Ltd.", "Md.", "Messrs.", "Mo.", "Mont.", "Mr.", "Mrs.", "Ms.", "p.m.",
+    "Ph.D.", "Rep.", "Rev.", "Sen.", "St.", "vs.",
+    "B.A.", "B.Ch.E.", "B.Sc.", "Dr.", "Dra.", "Drs.", "Hj.", "Ka.", "Kp.",
+    "M.Ag.", "M.Hum.", "M.Kes,", "M.Kom.", "M.M.", "M.P.", "M.Pd.", "M.Sc.",
+    "M.Si.", "M.Sn.", "M.T.", "M.Th.", "No.", "Pjs.", "Plt.", "R.A.", "S.Ag.",
+    "S.E.", "S.H.", "S.Hut.", "S.K.M.", "S.Kedg.", "S.Kedh.", "S.Kom.",
+    "S.Pd.", "S.Pol.", "S.Psi.", "S.S.", "S.Sos.", "S.T.", "S.Tekp.", "S.Th.",
+    "a.l.", "a.n.", "a.s.", "b.d.", "d.a.", "d.l.", "d/h", "dkk.", "dll.",
+    "dr.", "drh.", "ds.", "dsb.", "dst.", "faks.", "fax.", "hlm.", "i/o",
+    "n.b.", "p.p." "pjs.", "s.d.", "tel.", "u.p.",
+    ]:
+    _exc[orth] = [{ORTH: orth}]
+
+
 _hyphen_prefix = """abdur abdus abou aboul abror abshar abu abubakar abul
 aero agri agro ahmadi ahmed air abd abdel abdul ad adz afro al ala ali all
 amir an antar anti ar as ash asy at ath az bekas ber best bi co di double
