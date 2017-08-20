@@ -483,6 +483,9 @@ cdef class Parser:
         return beams
 
     def update(self, docs_tokvecs, golds, drop=0., sgd=None, losses=None):
+        docs_tokvecs, golds = self._filter_unlabelled(docs_tokvecs, golds)
+        if not golds:
+            return None
         if self.cfg.get('beam_width', 1) >= 2 and numpy.random.random() >= 0.5:
             return self.update_beam(docs_tokvecs, golds,
                     self.cfg['beam_width'], self.cfg['beam_density'],
@@ -555,6 +558,9 @@ cdef class Parser:
 
     def update_beam(self, docs_tokvecs, golds, width=None, density=None,
             drop=0., sgd=None, losses=None):
+        docs_tokvecs, golds = self._filter_unlabelled(docs_tokvecs, golds)
+        if not golds:
+            return None
         if width is None:
             width = self.cfg.get('beam_width', 2)
         if density is None:
@@ -604,6 +610,15 @@ cdef class Parser:
         if USE_FINE_TUNE:
             bp_my_tokvecs(d_tokvecs, sgd=sgd)
         return d_tokvecs
+
+    def _filter_unlabelled(self, docs_tokvecs, golds):
+        '''Remove inputs that have no relevant labels before update'''
+        has_golds = [self.moves.has_gold(gold) for gold in golds]
+        docs, tokvecs = docs_tokvecs
+        docs = [docs[i] for i, has_gold in enumerate(has_golds) if has_gold]
+        tokvecs = [tokvecs[i] for i, has_gold in enumerate(has_golds) if has_gold]
+        golds = [golds[i] for i, has_gold in enumerate(has_golds) if has_gold]
+        return (docs, tokvecs), golds
 
     def _init_gold_batch(self, whole_docs, whole_golds):
         """Make a square batch, of length equal to the shortest doc. A long
