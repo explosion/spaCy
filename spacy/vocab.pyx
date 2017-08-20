@@ -19,9 +19,10 @@ from .tokens.token cimport Token
 from .attrs cimport PROB, LANG
 from .structs cimport SerializedLexemeC
 
-from .compat import copy_reg, pickle
+from .compat import copy_reg, pickle, basestring_
 from .lemmatizer import Lemmatizer
 from .attrs import intify_attrs
+from .vectors import Vectors
 from . import util
 from . import attrs
 from . import symbols
@@ -63,6 +64,7 @@ cdef class Vocab:
                 self.strings.add(name)
         self.lex_attr_getters = lex_attr_getters
         self.morphology = Morphology(self.strings, tag_map, lemmatizer)
+        self.vectors = Vectors(self.strings, 300)
 
     property lang:
         def __get__(self):
@@ -242,13 +244,15 @@ cdef class Vocab:
 
     @property
     def vectors_length(self):
-        raise NotImplementedError
+        return len(self.vectors)
 
-    def clear_vectors(self):
+    def clear_vectors(self, new_dim=None):
         """Drop the current vector table. Because all vectors must be the same
         width, you have to call this to change the size of the vectors.
         """
-        raise NotImplementedError
+        if new_dim is None:
+            new_dim = self.vectors.data.shape[1]
+        self.vectors = Vectors(self.strings, new_dim)
 
     def get_vector(self, orth):
         """Retrieve a vector for a word in the vocabulary.
@@ -262,7 +266,9 @@ cdef class Vocab:
 
         RAISES: If no vectors data is loaded, ValueError is raised.
         """
-        raise NotImplementedError
+        if isinstance(orth, basestring_):
+            orth = self.strings.add(orth)
+        return self.vectors[orth]
 
     def set_vector(self, orth, vector):
         """Set a vector for a word in the vocabulary.
@@ -272,15 +278,19 @@ cdef class Vocab:
         RETURNS:
             None
         """
-        raise NotImplementedError
+        if not isinstance(orth, basestring_):
+            orth = self.strings[orth]
+        self.vectors.add(orth, vector=vector)
 
     def has_vector(self, orth):
         """Check whether a word has a vector. Returns False if no
         vectors have been loaded. Words can be looked up by string
         or int ID."""
-        return False
+        if isinstance(orth, basestring_):
+            orth = self.strings.add(orth)
+        return orth in self.vectors
 
-    def to_disk(self, path):
+    def to_disk(self, path, **exclude):
         """Save the current state to a directory.
 
         path (unicode or Path): A path to a directory, which will be created if
@@ -292,8 +302,10 @@ cdef class Vocab:
         self.strings.to_disk(path / 'strings.json')
         with (path / 'lexemes.bin').open('wb') as file_:
             file_.write(self.lexemes_to_bytes())
+        if self.vectors is not None:
+            self.vectors.to_disk(path)
 
-    def from_disk(self, path):
+    def from_disk(self, path, **exclude):
         """Loads state from a directory. Modifies the object in place and
         returns it.
 
@@ -305,6 +317,8 @@ cdef class Vocab:
         self.strings.from_disk(path / 'strings.json')
         with (path / 'lexemes.bin').open('rb') as file_:
             self.lexemes_from_bytes(file_.read())
+        if self.vectors is not None:
+            self.vectors.from_disk(path, exclude='strings.json')
         return self
 
     def to_bytes(self, **exclude):
@@ -313,9 +327,16 @@ cdef class Vocab:
         **exclude: Named attributes to prevent from being serialized.
         RETURNS (bytes): The serialized form of the `Vocab` object.
         """
+        def deserialize_vectors():
+            if self.vectors is None:
+                return None
+            else:
+                return self.vectors.to_bytes(exclude='strings.json')
+ 
         getters = OrderedDict((
             ('strings', lambda: self.strings.to_bytes()),
             ('lexemes', lambda: self.lexemes_to_bytes()),
+            ('vectors', deserialize_vectors)
         ))
         return util.to_bytes(getters, exclude)
 
@@ -326,9 +347,15 @@ cdef class Vocab:
         **exclude: Named attributes to prevent from being loaded.
         RETURNS (Vocab): The `Vocab` object.
         """
+        def serialize_vectors(b):
+            if self.vectors is None:
+                return None
+            else:
+                return self.vectors.from_bytes(b, exclude='strings')
         setters = OrderedDict((
             ('strings', lambda b: self.strings.from_bytes(b)),
             ('lexemes', lambda b: self.lexemes_from_bytes(b)),
+            ('vectors', lambda b: serialize_vectors(b))
         ))
         util.from_bytes(bytes_data, setters, exclude)
         return self

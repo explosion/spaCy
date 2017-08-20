@@ -238,6 +238,29 @@ cdef class Doc:
     def doc(self):
         return self
 
+    def char_span(self, int start_idx, int end_idx, label=0, vector=None):
+        """Create a `Span` object from the slice `doc.text[start : end]`.
+
+        doc (Doc): The parent document.
+        start (int): The index of the first character of the span.
+        end (int): The index of the first character after the span.
+        label (uint64 or string): A label to attach to the Span, e.g. for named entities.
+        vector (ndarray[ndim=1, dtype='float32']): A meaning representation of the span.
+        RETURNS (Span): The newly constructed object.
+        """
+        if not isinstance(label, int):
+            label = self.vocab.strings.add(label)
+        cdef int start = token_by_start(self.c, self.length, start_idx)
+        if start == -1:
+            return None
+        cdef int end = token_by_end(self.c, self.length, end_idx)
+        if end == -1:
+            return None
+        # Currently we have the token index, we want the range-end index
+        end += 1
+        cdef Span span = Span(self, start, end, label=label, vector=vector)
+        return span
+
     def similarity(self, other):
         """Make a semantic similarity estimate. The default estimate is cosine
         similarity using an average of word vectors.

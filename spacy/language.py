@@ -95,7 +95,7 @@ class BaseDefaults(object):
         meta = nlp.meta if nlp is not None else {}
         # Resolve strings, like "cnn", "lstm", etc
         pipeline = []
-        for entry in cls.pipeline:
+        for entry in meta.get('pipeline', []):
             if entry in disable or getattr(entry, 'name', entry) in disable:
                 continue
             factory = cls.Defaults.factories[entry]
@@ -277,7 +277,8 @@ class Language(object):
     def make_doc(self, text):
         return self.tokenizer(text)
 
-    def update(self, docs, golds, drop=0., sgd=None, losses=None):
+    def update(self, docs, golds, drop=0., sgd=None, losses=None,
+            update_tensors=False):
         """Update the models in the pipeline.
 
         docs (iterable): A batch of `Doc` objects.
@@ -304,14 +305,17 @@ class Language(object):
             grads[key] = (W, dW)
         pipes = list(self.pipeline[1:])
         random.shuffle(pipes)
+        tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
+        all_d_tokvecses = [tok2vec.model.ops.allocate(tv.shape) for tv in tokvecses]
         for proc in pipes:
             if not hasattr(proc, 'update'):
                 continue
-            tokvecses, bp_tokvecses = tok2vec.model.begin_update(feats, drop=drop)
             d_tokvecses = proc.update((docs, tokvecses), golds,
                                       drop=drop, sgd=get_grads, losses=losses)
-            if d_tokvecses is not None:
-                bp_tokvecses(d_tokvecses, sgd=sgd)
+            if update_tensors and d_tokvecses is not None:
+                for i, d_tv in enumerate(d_tokvecses):
+                    all_d_tokvecses[i] += d_tv
+        bp_tokvecses(all_d_tokvecses, sgd=sgd)
         for key, (W, dW) in grads.items():
             sgd(W, dW, key=key)
         # Clear the tensor variable, to free GPU memory.
@@ -381,9 +385,18 @@ class Language(object):
         return optimizer
 
     def evaluate(self, docs_golds):
-        docs, golds = zip(*docs_golds)
         scorer = Scorer()
-        for doc, gold in zip(self.pipe(docs, batch_size=32), golds):
+        docs, golds = zip(*docs_golds)
+        docs = list(docs)
+        golds = list(golds)
+        for pipe in self.pipeline:
+            if not hasattr(pipe, 'pipe'):
+                for doc in docs:
+                    pipe(doc)
+            else:
+                docs = list(pipe.pipe(docs))
+        assert len(docs) == len(golds)
+        for doc, gold in zip(docs, golds):
             scorer.score(doc, gold)
             doc.tensor = None
         return scorer
@@ -417,11 +430,16 @@ class Language(object):
             except StopIteration:
                 pass
 
-    def pipe(self, texts, tuples=False, n_threads=2, batch_size=1000, disable=[]):
+    def pipe(self, texts, as_tuples=False, n_threads=2, batch_size=1000,
+            disable=[]):
         """Process texts as a stream, and yield `Doc` objects in order. Supports
         GIL-free multi-threading.
 
         texts (iterator): A sequence of texts to process.
+        as_tuples (bool):
+            If set to True, inputs should be a sequence of
+            (text, context) tuples. Output will then be a sequence of
+            (doc, context) tuples. Defaults to False.
         n_threads (int): The number of worker threads to use. If -1, OpenMP will
             decide how many to use at run time. Default is 2.
         batch_size (int): The number of texts to buffer.
@@ -433,7 +451,7 @@ class Language(object):
             >>>     for doc in nlp.pipe(texts, batch_size=50, n_threads=4):
             >>>         assert doc.is_parsed
         """
-        if tuples:
+        if as_tuples:
             text_context1, text_context2 = itertools.tee(texts)
             texts = (tc[0] for tc in text_context1)
             contexts = (tc[1] for tc in text_context2)

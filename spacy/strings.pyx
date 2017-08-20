@@ -215,7 +215,10 @@ cdef class StringStore:
         path = util.ensure_path(path)
         with path.open('r') as file_:
             strings = ujson.load(file_)
+        prev = list(self)
         self._reset_and_load(strings)
+        for word in prev:
+            self.add(word)
         return self
 
     def to_bytes(self, **exclude):
@@ -234,7 +237,10 @@ cdef class StringStore:
         RETURNS (StringStore): The `StringStore` object.
         """
         strings = ujson.loads(bytes_data)
+        prev = list(self)
         self._reset_and_load(strings)
+        for word in prev:
+            self.add(word)
         return self
 
     def set_frozen(self, bint is_frozen):
