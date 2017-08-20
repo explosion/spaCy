@@ -3,7 +3,7 @@ from __future__ import unicode_literals
 
 from .stop_words import STOP_WORDS
 from .punctuation import TOKENIZER_SUFFIXES, TOKENIZER_PREFIXES, TOKENIZER_INFIXES
-from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS, TOKEN_MATCH
+from .tokenizer_exceptions import TOKENIZER_EXCEPTIONS
 from .norm_exceptions import NORM_EXCEPTIONS
 from .lemmatizer import LOOKUP
 from .lex_attrs import LEX_ATTRS
@@ -24,7 +24,6 @@ class IndonesianDefaults(Language.Defaults):
 
     tokenizer_exceptions = update_exc(BASE_EXCEPTIONS, TOKENIZER_EXCEPTIONS)
     stop_words = set(STOP_WORDS)
-    token_match = TOKEN_MATCH
     prefixes = tuple(TOKENIZER_PREFIXES)
     suffixes = tuple(TOKENIZER_SUFFIXES)
     infixes = tuple(TOKENIZER_INFIXES)
