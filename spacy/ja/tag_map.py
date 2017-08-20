@@ -46,7 +46,7 @@ TAG_MAP = {
 
     "代名詞,*,*,*":{POS: PRON},
     "動詞,一般,*,*":{POS: VERB},
-    "動詞,非自立可能,*,*":{POS: AUX}, # XXX VERB if alone, AUX otherwise
+    "動詞,非自立可能,*,*":{POS: VERB}, # XXX VERB if alone, AUX otherwise
     "動詞,非自立可能,*,*,AUX":{POS: AUX},
     "動詞,非自立可能,*,*,VERB":{POS: VERB},
     "副詞,*,*,*":{POS: ADV},
