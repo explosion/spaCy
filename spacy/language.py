@@ -245,7 +245,7 @@ class Language(object):
     def matcher(self):
         return self.get_component('matcher')
 
-    def get_component(self, name): 
+    def get_component(self, name):
         if self.pipeline in (True, None):
             return None
         for proc in self.pipeline:
@@ -322,8 +322,8 @@ class Language(object):
                     all_d_tokvecses[i] += d_tv
         if update_shared and bp_tokvecses is not None:
             bp_tokvecses(all_d_tokvecses, sgd=sgd)
-            for key, (W, dW) in grads.items():
-                sgd(W, dW, key=key)
+        for key, (W, dW) in grads.items():
+            sgd(W, dW, key=key)
         # Clear the tensor variable, to free GPU memory.
         # If we don't do this, the memory leak gets pretty
         # bad, because we may be holding part of a batch.
