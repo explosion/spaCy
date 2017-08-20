@@ -388,7 +388,7 @@ def fine_tune(embedding, combine=None):
         return output, fine_tune_bwd
     model = wrap(fine_tune_fwd, embedding)
     model.mix = model._mem.add((model.id, 'mix'), (1,))
-    model.mix.fill(0.0)
+    model.mix.fill(0.5)
     model.d_mix = model._mem.add_gradient((model.id, 'd_mix'), (model.id, 'mix'))
     return model
 
