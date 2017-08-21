@@ -81,7 +81,8 @@ TAG_MAP = {
     "名詞,普通名詞,助数詞可能,*":{POS: NOUN}, # counter / unit
     "名詞,普通名詞,副詞可能,*":{POS: NOUN},
 
-    "連体詞,*,*,*":{POS: ADJ}, # XXX note この、その etc. should be DET
+    "連体詞,*,*,*":{POS: ADJ}, # XXX this has exceptions based on literal token
     "連体詞,*,*,*,ADJ":{POS: ADJ}, 
+    "連体詞,*,*,*,PRON":{POS: PRON}, 
     "連体詞,*,*,*,DET":{POS: DET}, 
 }

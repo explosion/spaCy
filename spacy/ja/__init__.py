@@ -87,9 +87,6 @@ class JapaneseTagger(object):
         # 1. get raw JP tags
         # 2. add features to tags as necessary for UD
 
-        # TODO: if the text has been tokenized, this info is already available
-        # How to set the data when tokenizing or save it for the tagger to find?
-
         dtokens = detailed_tokens(self.tokenizer, tokens.text)
         rawtags = list(map(resolve_pos, dtokens))
         self.tagger.tag_from_strings(tokens, rawtags)
