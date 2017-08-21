@@ -370,24 +370,20 @@ def fine_tune(embedding, combine=None):
         vecs, bp_vecs = embedding.begin_update(docs, drop=drop)
         flat_tokvecs = embedding.ops.flatten(tokvecs)
         flat_vecs = embedding.ops.flatten(vecs)
-        alpha = model.mix
-        minus = 1-model.mix
         output = embedding.ops.unflatten(
-                   (alpha * flat_tokvecs + minus * flat_vecs), lengths)
+                   (model.mix[0] * flat_tokvecs + model.mix[1] * flat_vecs), lengths)
 
         def fine_tune_bwd(d_output, sgd=None):
             flat_grad = model.ops.flatten(d_output)
-            model.d_mix += flat_tokvecs.dot(flat_grad.T).sum()
-            model.d_mix += 1-flat_vecs.dot(flat_grad.T).sum()
+            model.d_mix[0] += flat_tokvecs.dot(flat_grad.T).sum()
+            model.d_mix[1] += flat_vecs.dot(flat_grad.T).sum()
 
-            bp_vecs([d_o * minus for d_o in d_output], sgd=sgd)
-            d_output = [d_o * alpha for d_o in d_output]
+            bp_vecs([d_o * model.mix[1] for d_o in d_output], sgd=sgd)
             sgd(model._mem.weights, model._mem.gradient, key=model.id)
-            model.mix = model.ops.xp.minimum(model.mix, 1.0)
-            return d_output
+            return [d_o * model.mix[0] for d_o in d_output]
         return output, fine_tune_bwd
     model = wrap(fine_tune_fwd, embedding)
-    model.mix = model._mem.add((model.id, 'mix'), (1,))
+    model.mix = model._mem.add((model.id, 'mix'), (2,))
     model.mix.fill(0.5)
     model.d_mix = model._mem.add_gradient((model.id, 'd_mix'), (model.id, 'mix'))
     return model
