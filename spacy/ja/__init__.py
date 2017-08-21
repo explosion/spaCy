@@ -16,14 +16,21 @@ from collections import namedtuple
 
 ShortUnitWord = namedtuple('ShortUnitWord', ['surface', 'base_form', 'part_of_speech'])
 
+def try_mecab_import():
+    """Mecab is required for Japanese support, so check for it.
+
+    It it's not available blow up and explain how to fix it."""
+    try:
+        import MeCab
+        return MeCab
+    except ImportError:
+        raise ImportError("Japanese support requires MeCab: "
+                          "https://github.com/SamuraiT/mecab-python3")
+
 class JapaneseTokenizer(object):
     def __init__(self, cls, nlp=None):
         self.vocab = nlp.vocab if nlp is not None else cls.create_vocab(nlp)
-        try:
-            import MeCab
-        except ImportError:
-            raise ImportError("The Japanese tokenizer requires the MeCab library: "
-                              "https://github.com/SamuraiT/mecab-python3")
+        MeCab = try_mecab_import()
         self.tokenizer = MeCab.Tagger()
 
     def __call__(self, text):
@@ -70,12 +77,7 @@ def detailed_tokens(tokenizer, text):
 
 class JapaneseTagger(object):
     def __init__(self, vocab):
-        try:
-            import MeCab
-        except ImportError:
-            raise ImportError("The Japanese tagger requires the MeCab library: "
-                              "https://github.com/SamuraiT/mecab-python3")
-
+        MeCab = try_mecab_import()
         self.tagger = Tagger(vocab)
         self.tokenizer = MeCab.Tagger()
 
