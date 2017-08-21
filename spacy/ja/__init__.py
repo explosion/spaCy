@@ -51,9 +51,10 @@ def resolve_pos(token):
     # PoS mappings.
 
     if token.part_of_speech == '連体詞,*,*,*':
-        # determiner-likes get DET, otherwise ADJ
         if re.match('^[こそあど此其彼]の', token.surface):
             return token.part_of_speech + ',DET'
+        if re.match('^[こそあど此其彼]', token.surface):
+            return token.part_of_speech + ',PRON'
         else:
             return token.part_of_speech + ',ADJ'
     return token.part_of_speech
