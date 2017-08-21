@@ -276,7 +276,10 @@ for verb_data in [
     {ORTH: "are", LEMMA: "be", TAG: "VBP", "number": 2},
     {ORTH: "is", LEMMA: "be", TAG: "VBZ"},
     {ORTH: "was", LEMMA: "be"},
-    {ORTH: "were", LEMMA: "be"}
+    {ORTH: "were", LEMMA: "be"},
+    {ORTH: "have"},
+    {ORTH: "has", LEMMA: "have"},
+    {ORTH: "dare"}
 ]:
     verb_data_tc = dict(verb_data)
     verb_data_tc[ORTH] = verb_data_tc[ORTH].title()
