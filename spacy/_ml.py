@@ -218,7 +218,10 @@ def drop_layer(layer, factor=2.):
             return layer.begin_update(X, drop=drop)
         else:
             return X, lambda dX, sgd=None: dX
-    return wrap(drop_layer_fwd, layer)
+
+    model = wrap(drop_layer_fwd, layer)
+    model.predict = layer
+    return model
 
 
 def Tok2Vec(width, embed_size, preprocess=None):
@@ -382,10 +385,18 @@ def fine_tune(embedding, combine=None):
             sgd(model._mem.weights, model._mem.gradient, key=model.id)
             return [d_o * model.mix[0] for d_o in d_output]
         return output, fine_tune_bwd
+
+    def fine_tune_predict(docs_tokvecs):
+        docs, tokvecs = docs_tokvecs
+        vecs = embedding(docs)
+        return [model.mix[0]*tv+model.mix[1]*v
+                for tv, v in zip(tokvecs, vecs)]
+
     model = wrap(fine_tune_fwd, embedding)
     model.mix = model._mem.add((model.id, 'mix'), (2,))
     model.mix.fill(0.5)
     model.d_mix = model._mem.add_gradient((model.id, 'd_mix'), (model.id, 'mix'))
+    model.predict = fine_tune_predict
     return model
 
 
