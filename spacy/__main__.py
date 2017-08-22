@@ -7,6 +7,7 @@ if __name__ == '__main__':
     import plac
     import sys
     from spacy.cli import download, link, info, package, train, convert, model
+    from spacy.cli import profile
     from spacy.util import prints
 
     commands = {
@@ -16,7 +17,8 @@ if __name__ == '__main__':
         'train': train,
         'convert': convert,
         'package': package,
-        'model': model
+        'model': model,
+        'profile': profile,
     }
     if len(sys.argv) == 1:
         prints(', '.join(commands), title="Available commands", exits=1)
