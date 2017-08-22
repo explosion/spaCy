@@ -303,7 +303,10 @@ cdef class Doc:
                 return self.user_hooks['vector'](self)
             if self._vector is not None:
                 return self._vector
-            elif self.has_vector and len(self):
+            elif not len(self):
+                self._vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
+                return self._vector
+            elif self.has_vector:
                 vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
                 for token in self.c[:self.length]:
                     vector += self.vocab.get_vector(token.lex.orth)
