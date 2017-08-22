@@ -84,6 +84,7 @@ def ja_tokenizer():
 
 @pytest.fixture
 def japanese():
+    pytest.importorskip("MeCab")
     return Japanese()
 
 @pytest.fixture
