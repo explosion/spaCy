@@ -304,7 +304,10 @@ cdef class Doc:
             if self._vector is not None:
                 return self._vector
             elif self.has_vector and len(self):
-                self._vector = sum(t.vector for t in self) / len(self)
+                vector = numpy.zeros((self.vocab.vectors_length,), dtype='f')
+                for token in self.c[:self.length]:
+                    vector += self.vocab.get_vector(token.lex.orth)
+                self._vector = vector / len(self)
                 return self._vector
             elif self.tensor is not None:
                 self._vector = self.tensor.mean(axis=0)
