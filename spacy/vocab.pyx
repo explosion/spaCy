@@ -244,7 +244,7 @@ cdef class Vocab:
 
     @property
     def vectors_length(self):
-        return len(self.vectors)
+        return self.vectors.data.shape[0]
 
     def clear_vectors(self, new_dim=None):
         """Drop the current vector table. Because all vectors must be the same
