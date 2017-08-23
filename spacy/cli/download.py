@@ -24,28 +24,29 @@ def download(cmd, model, direct=False):
     with version.
     """
     if direct:
-        download_model('{m}/{m}.tar.gz'.format(m=model))
+        dl = download_model('{m}/{m}.tar.gz'.format(m=model))
     else:
         shortcuts = get_json(about.__shortcuts__, "available shortcuts")
         model_name = shortcuts.get(model, model)
         compatibility = get_compatibility()
         version = get_version(model_name, compatibility)
-        download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model_name, v=version))
-        try:
-            # Get package path here because link uses
-            # pip.get_installed_distributions() to check if model is a package,
-            # which fails if model was just installed via subprocess
-            package_path = get_package_path(model_name)
-            link(None, model_name, model, force=True, model_path=package_path)
-        except:
-            # Dirty, but since spacy.download and the auto-linking is mostly
-            # a convenience wrapper, it's best to show a success message and
-            # loading instructions, even if linking fails.
-            prints("Creating a shortcut link for 'en' didn't work (maybe you "
-                   "don't have admin permissions?), but you can still load "
-                   "the model via its full package name:",
-                   "nlp = spacy.load('%s')" % model_name,
-                   title="Download successful")
+        dl = download_model('{m}-{v}/{m}-{v}.tar.gz'.format(m=model_name, v=version))
+        if dl == 0:
+            try:
+                # Get package path here because link uses
+                # pip.get_installed_distributions() to check if model is a package,
+                # which fails if model was just installed via subprocess
+                package_path = get_package_path(model_name)
+                link(None, model_name, model, force=True, model_path=package_path)
+            except:
+                # Dirty, but since spacy.download and the auto-linking is mostly
+                # a convenience wrapper, it's best to show a success message and
+                # loading instructions, even if linking fails.
+                prints("Creating a shortcut link for 'en' didn't work (maybe you "
+                    "don't have admin permissions?), but you can still load "
+                    "the model via its full package name:",
+                    "nlp = spacy.load('%s')" % model_name,
+                    title="Download successful")
 
 
 def get_json(url, desc):
@@ -77,6 +78,6 @@ def get_version(model, comp):
 
 def download_model(filename):
     download_url = about.__download_url__ + '/' + filename
-    subprocess.call([sys.executable, '-m',
+    return subprocess.call([sys.executable, '-m',
         'pip', 'install', '--no-cache-dir', download_url],
         env=os.environ.copy())
