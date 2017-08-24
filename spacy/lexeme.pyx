@@ -171,6 +171,8 @@ cdef class Lexeme:
     property rank:
         def __get__(self):
             return self.c.id
+        def __set__(self, value):
+            self.c.id = value
 
     property sentiment:
         def __get__(self):
