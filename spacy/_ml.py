@@ -382,7 +382,8 @@ def fine_tune(embedding, combine=None):
             model.d_mix[1] += flat_vecs.dot(flat_grad.T).sum()
 
             bp_vecs([d_o * model.mix[1] for d_o in d_output], sgd=sgd)
-            sgd(model._mem.weights, model._mem.gradient, key=model.id)
+            if sgd is not None:
+                sgd(model._mem.weights, model._mem.gradient, key=model.id)
             return [d_o * model.mix[0] for d_o in d_output]
         return output, fine_tune_bwd
 

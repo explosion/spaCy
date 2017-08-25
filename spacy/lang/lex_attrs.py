@@ -137,6 +137,7 @@ LEX_ATTRS = {
     attrs.IS_UPPER: lambda string: string.isupper(),
     attrs.IS_STOP: lambda string: False,
     attrs.IS_OOV: lambda string: True,
+    attrs.PROB: lambda string: -20.,
     attrs.LIKE_EMAIL: like_email,
     attrs.LIKE_NUM: like_num,
     attrs.IS_PUNCT: is_punct,

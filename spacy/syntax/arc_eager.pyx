@@ -20,7 +20,7 @@ from .transition_system cimport do_func_t, get_cost_func_t
 from .transition_system cimport move_cost_func_t, label_cost_func_t
 from ..gold cimport GoldParse
 from ..gold cimport GoldParseC
-from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE, IS_SPACE
+from ..attrs cimport TAG, HEAD, DEP, ENT_IOB, ENT_TYPE, IS_SPACE, IS_PUNCT
 from ..lexeme cimport Lexeme
 from ..structs cimport TokenC
 
@@ -249,7 +249,13 @@ cdef class Break:
         elif st.stack_depth() < 1:
             return False
         else:
-            return True
+            prev = st.B_(0)-1
+            if Lexeme.c_check_flag(prev.lex, IS_PUNCT):
+                return True
+            elif Lexeme.c_check_flag(prev.lex, IS_SPACE):
+                return True
+            else:
+                return False
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
