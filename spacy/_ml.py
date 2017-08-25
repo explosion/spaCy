@@ -239,7 +239,7 @@ def Tok2Vec(width, embed_size, preprocess=None):
                 >> uniqued(embed, column=5)
                 >> drop_layer(
                     Residual(
-                        (ExtractWindow(nW=1) >> BN(Maxout(width, width*3)))
+                        (ExtractWindow(nW=1) >> LN(Maxout(width, width*3)))
                     )
                 ) ** 4, pad=4
             )
