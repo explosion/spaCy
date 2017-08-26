@@ -1,31 +1,49 @@
 # coding: utf8
 from __future__ import unicode_literals
 
+import bz2
 import gzip
 import math
 from ast import literal_eval
 from pathlib import Path
+
+import numpy as np
+import spacy
 from preshed.counter import PreshCounter
 
-import spacy
-from ..compat import fix_text
 from .. import util
+from ..compat import fix_text
 
 
-def model(cmd, lang, model_dir, freqs_data, clusters_data, vectors_data):
+def model(cmd, lang, model_dir, freqs_data, clusters_data, vectors_data,
+          min_doc_freq=5, min_word_freq=200):
     model_path = Path(model_dir)
     freqs_path = Path(freqs_data)
     clusters_path = Path(clusters_data) if clusters_data else None
     vectors_path = Path(vectors_data) if vectors_data else None
 
     check_dirs(freqs_path, clusters_path, vectors_path)
-    # vocab = util.get_lang_class(lang).Defaults.create_vocab()
+    vocab = util.get_lang_class(lang).Defaults.create_vocab()
     nlp = spacy.blank(lang)
     vocab = nlp.vocab
-    probs, oov_prob = read_probs(freqs_path)
+    probs, oov_prob = read_probs(
+        freqs_path, min_doc_freq=int(min_doc_freq), min_freq=int(min_doc_freq))
     clusters = read_clusters(clusters_path) if clusters_path else {}
     populate_vocab(vocab, clusters, probs, oov_prob)
+    add_vectors(vocab, vectors_path)
     create_model(model_path, nlp)
+
+
+def add_vectors(vocab, vectors_path):
+    with bz2.BZ2File(vectors_path.as_posix()) as f:
+        num_words, dim = next(f).split()
+        vocab.clear_vectors(int(dim))
+        for line in f:
+            word_w_vector = line.decode("utf8").strip().split(" ")
+            word = word_w_vector[0]
+            vector = np.array([float(val) for val in word_w_vector[1:]])
+            if word in vocab:
+                vocab.set_vector(word, vector)
 
 
 def create_model(model_path, model):
