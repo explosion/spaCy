@@ -249,13 +249,7 @@ cdef class Break:
         elif st.stack_depth() < 1:
             return False
         else:
-            prev = st.B_(0)-1
-            if Lexeme.c_check_flag(prev.lex, IS_PUNCT):
-                return True
-            elif Lexeme.c_check_flag(prev.lex, IS_SPACE):
-                return True
-            else:
-                return False
+            return True
 
     @staticmethod
     cdef int transition(StateC* st, attr_t label) nogil:
@@ -292,7 +286,7 @@ cdef class Break:
         return 0
 
 cdef int _get_root(int word, const GoldParseC* gold) nogil:
-    while gold.heads[word] != word and not gold.has_dep[word] and word >= 0:
+    while gold.heads[word] != word and gold.has_dep[word] and word >= 0:
         word = gold.heads[word]
     if not gold.has_dep[word]:
         return -1
@@ -522,9 +516,11 @@ cdef class ArcEager(TransitionSystem):
                     "before training and after parsing. Either pass make_projective=True "
                     "to the GoldParse class, or use PseudoProjectivity.preprocess_training_data")
             else:
+                print(gold.orig_annot)
                 print(gold.words)
                 print(gold.heads)
                 print(gold.labels)
+                print(gold.sent_starts)
                 raise ValueError(
                     "Could not find a gold-standard action to supervise the dependency "
                     "parser.\n"
