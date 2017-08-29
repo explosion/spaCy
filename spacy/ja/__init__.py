@@ -66,11 +66,15 @@ def detailed_tokens(tokenizer, text):
     node = node.next # first node is beginning of sentence and empty, skip it
     words = []
     while node.posid != 0:
+        surface = node.surface
+        base = surface
         parts = node.feature.split(',')
         pos = ','.join(parts[0:4])
-        reading = parts[6]
-        base = parts[7]
-        surface = parts[8]
+
+        if len(parts) > 6:
+            # this information is only available for words in the tokenizer dictionary
+            reading = parts[6]
+            base = parts[7]
 
         words.append( ShortUnitWord(surface, base, pos) )
         node = node.next
