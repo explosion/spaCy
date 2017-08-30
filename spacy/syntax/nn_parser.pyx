@@ -36,7 +36,7 @@ from murmurhash.mrmr cimport hash64
 from preshed.maps cimport MapStruct
 from preshed.maps cimport map_get
 
-from thinc.api import layerize, chain, noop, clone
+from thinc.api import layerize, chain, noop, clone, with_flatten
 from thinc.neural import Model, Affine, ReLu, Maxout
 from thinc.neural._classes.batchnorm import BatchNorm as BN
 from thinc.neural._classes.selu import SELU
@@ -245,7 +245,7 @@ cdef class Parser:
         parser_maxout_pieces = util.env_opt('parser_maxout_pieces', 2)
         embed_size = util.env_opt('embed_size', 4000)
         tensors = fine_tune(Tok2Vec(token_vector_width, embed_size,
-                    preprocess=doc2feats()))
+                                    preprocess=doc2feats()))
         if parser_maxout_pieces == 1:
             lower = PrecomputableAffine(hidden_width if depth >= 1 else nr_class,
                         nF=cls.nr_feature,
@@ -393,7 +393,7 @@ cdef class Parser:
 
         tokvecs = self.model[0].ops.flatten(tokvecses)
         if USE_FINE_TUNE:
-            tokvecs += self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
+            tokvecs = self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
 
         nr_state = len(docs)
         nr_class = self.moves.n_moves
@@ -453,7 +453,7 @@ cdef class Parser:
         cdef StateClass stcls, output
         tokvecs = self.model[0].ops.flatten(tokvecses)
         if USE_FINE_TUNE:
-            tokvecs += self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
+            tokvecs = self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
         cuda_stream = get_cuda_stream()
         state2vec, vec2scores = self.get_batch_model(len(docs), tokvecs,
                                                      cuda_stream, 0.0)
@@ -531,9 +531,8 @@ cdef class Parser:
             docs = [docs]
             golds = [golds]
         if USE_FINE_TUNE:
-            my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
-            my_tokvecs = self.model[0].ops.flatten(my_tokvecs)
-            tokvecs += my_tokvecs
+            tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
+            tokvecs = self.model[0].ops.flatten(tokvecs)
 
         cuda_stream = get_cuda_stream()
 
@@ -586,7 +585,7 @@ cdef class Parser:
             backprops, sgd, cuda_stream)
         d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, [len(d) for d in docs])
         if USE_FINE_TUNE:
-            bp_my_tokvecs(d_tokvecs, sgd=sgd)
+            d_tokvecs = bp_my_tokvecs(d_tokvecs, sgd=sgd)
         return d_tokvecs
 
     def update_beam(self, docs_tokvecs, golds, width=None, density=None,
@@ -606,9 +605,8 @@ cdef class Parser:
         assert min(lengths) >= 1
         tokvecs = self.model[0].ops.flatten(tokvecs)
         if USE_FINE_TUNE:
-            my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
-            my_tokvecs = self.model[0].ops.flatten(my_tokvecs)
-            tokvecs += my_tokvecs
+            tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
+            tokvecs = self.model[0].ops.flatten(tokvecs)
 
         states = self.moves.init_batch(docs)
         for gold in golds:
@@ -642,7 +640,7 @@ cdef class Parser:
         self._make_updates(d_tokvecs, backprop_lower, sgd, cuda_stream)
         d_tokvecs = self.model[0].ops.unflatten(d_tokvecs, lengths)
         if USE_FINE_TUNE:
-            bp_my_tokvecs(d_tokvecs, sgd=sgd)
+            d_tokvecs = bp_my_tokvecs(d_tokvecs, sgd=sgd)
         return d_tokvecs
 
     def _init_gold_batch(self, whole_docs, whole_golds):
