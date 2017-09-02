@@ -638,12 +638,13 @@ class TextCategorizer(BaseThincComponent):
         return mean_square_error, d_scores
 
     def begin_training(self, gold_tuples=tuple(), pipeline=None):
-        if pipeline:
+        if pipeline and getattr(pipeline[0], 'name', None) == 'tensorizer':
             token_vector_width = pipeline[0].model.nO
         else:
             token_vector_width = 64
         if self.model is True:
-            self.model = self.Model(len(self.labels), token_vector_width)
+            self.model = self.Model(len(self.labels), token_vector_width,
+                                    **self.cfg)
 
 
 cdef class EntityRecognizer(LinearParser):
