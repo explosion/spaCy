@@ -46,6 +46,43 @@ from ._ml import build_text_classifier, build_tagger_model
 from .parts_of_speech import X
 
 
+class SentenceSegmenter(object):
+    '''A simple spaCy hook, to allow custom sentence boundary detection logic
+    (that doesn't require the dependency parse).
+
+    To change the sentence boundary detection strategy, pass a generator
+    function `strategy` on initialization, or assign a new strategy to
+    the .strategy attribute.
+
+    Sentence detection strategies should be generators that take `Doc` objects
+    and yield `Span` objects for each sentence.
+    '''
+    name = 'sbd'
+
+    def __init__(self, vocab, strategy=None):
+        self.vocab = vocab
+        if strategy is None or strategy == 'on_punct':
+            strategy = self.split_on_punct
+        self.strategy = strategy
+
+    def __call__(self, doc):
+        doc.user_hooks['sents'] = self.strategy
+
+    @staticmethod
+    def split_on_punct(doc):
+        start = 0
+        seen_period = False
+        for i, word in enumerate(doc):
+            if seen_period and not word.is_punct:
+                yield doc[start : word.i]
+                start = word.i
+                seen_period = False
+            elif word.text in ['.', '!', '?']:
+                seen_period = True
+        if start < len(doc):
+            yield doc[start : len(doc)]
+
+
 class BaseThincComponent(object):
     name = None
 
