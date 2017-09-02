@@ -517,7 +517,9 @@ def build_text_classifier(nr_class, width=64, **cfg):
             model = (
                 SpacyVectors
                 >> flatten_add_lengths
-                >> with_getitem(0, LN(Affine(width, 300)))
+                >> with_getitem(0,
+                    Affine(width, 300)
+                )
                 >> ParametricAttention(width)
                 >> Pooling(sum_pool)
                 >> Residual(ReLu(width, width)) ** 2
