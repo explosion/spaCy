@@ -614,6 +614,49 @@ cdef class Doc:
         self.is_tagged = bool(TAG in attrs or POS in attrs)
         return self
 
+
+    def get_lca_matrix(self):
+        '''
+        Calculates the lowest common ancestor matrix
+        for a given Spacy doc.
+        Returns LCA matrix containing the integer index
+        of the ancestor, or -1 if no common ancestor is
+        found (ex if span excludes a necessary ancestor).
+        Apologies about the recursion, but the
+        impact on performance is negligible given
+        the natural limitations on the depth of a typical human sentence.
+        '''
+
+        def __pairwise_lca(token_j, token_k, lca_matrix):
+            if lca_matrix[token_j.i][token_k.i] != -2:
+                return lca_matrix[token_j.i][token_k.i]
+            elif token_j == token_k:
+                lca_index = token_j.i
+            elif token_k.head == token_j:
+                lca_index = token_j.i
+            elif token_j.head == token_k:
+                lca_index = token_k.i
+            elif (token_j.head == token_j) and (token_k.head == token_k):
+                lca_index = -1
+            else:
+                lca_index = __pairwise_lca(token_j.head, token_k.head, lca_matrix)
+            lca_matrix[token_j.i][token_k.i] = lca_index
+            lca_matrix[token_k.i][token_j.i] = lca_index
+
+            return lca_index
+
+        lca_matrix = numpy.empty((len(self), len(self)), dtype=numpy.int32)
+        lca_matrix.fill(-2)
+        for j in range(len(self)):
+            token_j = self[j]
+            for k in range(len(self)):
+                token_k = self[k]
+                lca_matrix[j][k] = __pairwise_lca(token_j, token_k, lca_matrix)
+                lca_matrix[k][j] = lca_matrix[j][k]
+
+        return lca_matrix
+
+
     def to_bytes(self):
         """
         Serialize, producing a byte string.
