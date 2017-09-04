@@ -3,7 +3,7 @@
 if [ "${VIA}" == "pypi" ]; then
     rm -rf *
     pip install spacy
-    python -m spacy.en.download
+    python -m spacy download en
     python -m spacy.de.download
 fi
 
