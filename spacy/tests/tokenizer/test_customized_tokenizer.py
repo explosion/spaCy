@@ -1,7 +1,7 @@
 # coding: utf-8
 from __future__ import unicode_literals
 
-from ...lang.en import English
+from ...en import English
 from ...tokenizer import Tokenizer
 from ... import util
 
