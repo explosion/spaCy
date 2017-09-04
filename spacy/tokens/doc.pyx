@@ -626,7 +626,14 @@ cdef class Doc:
         impact on performance is negligible given
         the natural limitations on the depth of a typical human sentence.
         '''
-
+        # Efficiency notes:
+        # 
+        # We can easily improve the performance here by iterating in Cython.
+        # To loop over the tokens in Cython, the easiest way is:
+        # for token in doc.c[:doc.c.length]:
+        #     head = token + token.head
+        # Both token and head will be TokenC* here. The token.head attribute
+        # is an integer offset.
         def __pairwise_lca(token_j, token_k, lca_matrix):
             if lca_matrix[token_j.i][token_k.i] != -2:
                 return lca_matrix[token_j.i][token_k.i]
@@ -649,7 +656,7 @@ cdef class Doc:
         lca_matrix.fill(-2)
         for j in range(len(self)):
             token_j = self[j]
-            for k in range(len(self)):
+            for k in range(j, len(self)):
                 token_k = self[k]
                 lca_matrix[j][k] = __pairwise_lca(token_j, token_k, lca_matrix)
                 lca_matrix[k][j] = lca_matrix[j][k]
