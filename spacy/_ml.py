@@ -212,12 +212,14 @@ class PrecomputableMaxouts(Model):
 
 def drop_layer(layer, factor=2.):
     def drop_layer_fwd(X, drop=0.):
-        drop *= factor
-        mask = layer.ops.get_dropout_mask((1,), drop)
-        if mask is None or mask > 0:
+        if drop <= 0.:
             return layer.begin_update(X, drop=drop)
         else:
-            return X, lambda dX, sgd=None: dX
+            coinflip = layer.ops.xp.random.random()
+            if (coinflip / factor) >= drop:
+                return layer.begin_update(X, drop=drop)
+            else:
+                return X, lambda dX, sgd=None: dX
 
     model = wrap(drop_layer_fwd, layer)
     model.predict = layer
@@ -362,6 +364,8 @@ def get_token_vectors(tokens_attrs_vectors, drop=0.):
     def backward(d_output, sgd=None):
         return (tokens, d_output)
     return vectors, backward
+
+
 def fine_tune(embedding, combine=None):
     if combine is not None:
         raise NotImplementedError(
