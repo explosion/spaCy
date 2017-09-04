@@ -142,7 +142,7 @@ class BaseThincComponent(object):
 
         deserialize = OrderedDict((
             ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
-            ('model', lambda b: self.model.from_bytes(b)),
+            ('model', load_model),
             ('vocab', lambda b: self.vocab.from_bytes(b))
         ))
         util.from_bytes(bytes_data, deserialize, exclude)
