@@ -9,8 +9,8 @@ import pytest
 
 @pytest.fixture
 def tokenizer(en_vocab):
-    prefix_re = util.compile_prefix_regex(nlp_model.Defaults.prefixes)
-    suffix_re = util.compile_suffix_regex(nlp_model.Defaults.suffixes)
+    prefix_re = util.compile_prefix_regex(English.Defaults.prefixes)
+    suffix_re = util.compile_suffix_regex(English.Defaults.suffixes)
     custom_infixes = ['\.\.\.+',
                       '(?<=[0-9])-(?=[0-9])',
                       # '(?<=[0-9]+),(?=[0-9]+)',
