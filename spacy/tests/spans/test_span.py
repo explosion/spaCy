@@ -54,6 +54,17 @@ def test_spans_span_sent(doc):
     assert doc[6:7].sent.root.left_edge.text == 'This'
 
 
+def test_spans_lca_matrix(en_tokenizer):
+    """Test span's lca matrix generation"""
+    tokens = en_tokenizer('the lazy dog slept')
+    doc = get_doc(tokens.vocab, [t.text for t in tokens], heads=[2, 1, 1, 0])
+    lca = doc[:2].get_lca_matrix()
+    assert(lca[0, 0] == 0)
+    assert(lca[0, 1] == -1)
+    assert(lca[1, 0] == -1)
+    assert(lca[1, 1] == 1)
+
+
 def test_spans_default_sentiment(en_tokenizer):
     """Test span.sentiment property's default averaging behaviour"""
     text = "good stuff bad stuff"
