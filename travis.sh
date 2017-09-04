@@ -2,7 +2,7 @@
 
 if [ "${VIA}" == "pypi" ]; then
     rm -rf *
-    pip install spacy
+    pip install spacy-nightly
     python -m spacy download en
 fi
 
