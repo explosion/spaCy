@@ -393,8 +393,7 @@ cdef class Parser:
 
         tokvecs = self.model[0].ops.flatten(tokvecses)
         if USE_FINE_TUNE:
-            # TODO: This is incorrect! Unhack when training next model
-            tokvecs += self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
+            tokvecs = self.model[0].ops.flatten(self.model[0]((docs, tokvecses)))
 
         nr_state = len(docs)
         nr_class = self.moves.n_moves
@@ -532,8 +531,8 @@ cdef class Parser:
             docs = [docs]
             golds = [golds]
         if USE_FINE_TUNE:
-            my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
-            tokvecs += self.model[0].ops.flatten(my_tokvecs)
+            tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
+            tokvecs = self.model[0].ops.flatten(tokvecs)
 
         cuda_stream = get_cuda_stream()
 
@@ -606,8 +605,8 @@ cdef class Parser:
         assert min(lengths) >= 1
         tokvecs = self.model[0].ops.flatten(tokvecs)
         if USE_FINE_TUNE:
-            my_tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
-            tokvecs += self.model[0].ops.flatten(my_tokvecs)
+            tokvecs, bp_my_tokvecs = self.model[0].begin_update(docs_tokvecs, drop=drop)
+            tokvecs = self.model[0].ops.flatten(tokvecs)
 
         states = self.moves.init_batch(docs)
         for gold in golds:
