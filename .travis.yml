@@ -14,7 +14,7 @@ os:
 env:
   - VIA=compile LC_ALL=en_US.ascii 
   - VIA=compile
-  - VIA=pypi_nightly
+  #- VIA=pypi_nightly
 
 install:
   - "./travis.sh"
