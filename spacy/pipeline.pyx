@@ -142,7 +142,7 @@ class BaseThincComponent(object):
 
         deserialize = OrderedDict((
             ('cfg', lambda b: self.cfg.update(ujson.loads(b))),
-            ('model', lambda b: self.model.from_bytes(b)),
+            ('model', load_model),
             ('vocab', lambda b: self.vocab.from_bytes(b))
         ))
         util.from_bytes(bytes_data, deserialize, exclude)
@@ -417,7 +417,8 @@ class NeuralTagger(BaseThincComponent):
     def from_bytes(self, bytes_data, **exclude):
         def load_model(b):
             if self.model is True:
-                token_vector_width = util.env_opt('token_vector_width', 128)
+                token_vector_width = util.env_opt('token_vector_width',
+                        self.cfg.get('token_vector_width', 128))
                 self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
             self.model.from_bytes(b)
 
@@ -451,7 +452,8 @@ class NeuralTagger(BaseThincComponent):
     def from_disk(self, path, **exclude):
         def load_model(p):
             if self.model is True:
-                token_vector_width = util.env_opt('token_vector_width', 128)
+                token_vector_width = util.env_opt('token_vector_width',
+                        self.cfg.get('token_vector_width', 128))
                 self.model = self.Model(self.vocab.morphology.n_tags, token_vector_width)
             self.model.from_bytes(p.open('rb').read())
 

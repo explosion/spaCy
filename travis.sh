@@ -2,9 +2,8 @@
 
 if [ "${VIA}" == "pypi" ]; then
     rm -rf *
-    pip install spacy
-    python -m spacy.en.download
-    python -m spacy.de.download
+    pip install spacy-nightly
+    python -m spacy download en
 fi
 
 if [[ "${VIA}" == "sdist" && "${TRAVIS_PULL_REQUEST}" == "false" ]]; then

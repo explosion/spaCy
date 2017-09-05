@@ -59,7 +59,8 @@ MORPH_RULES = {
 
     "VBP": {
         "are":          {LEMMA: "be", "VerbForm": "Fin", "Tense": "Pres", "Mood": "Ind"},
-        "'re":          {LEMMA: "be", "VerbForm": "Fin", "Tense": "Pres", "Mood": "Ind"}
+        "'re":          {LEMMA: "be", "VerbForm": "Fin", "Tense": "Pres", "Mood": "Ind"},
+        "am":           {LEMMA: "be", "VerbForm": "Fin", "Person": "One", "Tense": "Pres", "Mood": "Ind"},
     },
 
     "VBD": {
